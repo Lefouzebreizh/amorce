@@ -12,9 +12,9 @@ import {
   type Clip,
   type MediaAsset,
   type MusicTrack,
+  type ExportPreset,
   type Project,
   type SfxId,
-  type ExportPreset,
   type SoundCue,
 } from './types.ts';
 
@@ -28,8 +28,39 @@ export type Selection =
   | { kind: 'cue'; id: string }
   | null;
 
+/** Un état antérieur du projet, conservé pour pouvoir y revenir. */
+type Snapshot = { project: Project; label: string };
+
+/** Profondeur de l'historique. Au-delà, les états les plus anciens tombent. */
+const HISTORY_LIMIT = 60;
+
+/**
+ * Délai en deçà duquel deux modifications de même nature n'en font qu'une.
+ *
+ * Sans ce regroupement, un simple glissement de jauge produirait des dizaines
+ * d'entrées et il faudrait autant d'annulations pour revenir en arrière.
+ */
+const COALESCE_MS = 600;
+
+/**
+ * Modifications susceptibles d'être regroupées.
+ *
+ * Uniquement celles qui viennent d'une commande continue — jauge qu'on fait
+ * glisser, texte qu'on saisit — où chaque valeur intermédiaire n'a pas de sens
+ * en soi. Un geste discret n'est jamais fondu dans le précédent : découper un
+ * plan juste après l'avoir ajouté doit s'annuler en deux fois, sinon
+ * l'annulation en défait plus que ce qu'on croyait.
+ */
+const COALESCING = new Set(['reglage', 'texte-reglage', 'son-reglage', 'musique-reglage', 'nom']);
+
 type StudioState = {
   project: Project;
+  /** États antérieurs, du plus ancien au plus récent. */
+  past: Snapshot[];
+  /** États annulés, prêts à être rétablis. */
+  future: Snapshot[];
+  undo: () => void;
+  redo: () => void;
   selection: Selection;
   /** Position de la tête de lecture, en secondes. */
   playhead: number;
@@ -60,6 +91,12 @@ type StudioState = {
   updateClip: (id: string, patch: Partial<Clip>) => void;
   removeClip: (id: string) => void;
   duplicateClip: (id: string) => void;
+  /** Découpe un plan en morceaux d'environ `target` secondes. */
+  chopClip: (id: string, target?: number) => void;
+  /** Pose un bruitage sur chaque raccord qui n'en a pas encore. */
+  addSoundsOnCuts: () => void;
+  /** Relance l'attention là où l'analyse a repéré un creux. */
+  fillTensionGaps: (moments: number[]) => void;
   moveClip: (from: number, to: number) => void;
   splitClipAtPlayhead: () => void;
 
@@ -104,8 +141,75 @@ function reclamp<T extends { project: Project; playhead: number }>(state: T): T 
   return state.playhead > limit ? { ...state, playhead: limit } : state;
 }
 
-export const useStudio = create<StudioState>((set, get) => ({
+export const useStudio = create<StudioState>((set, get) => {
+  /** Nature et instant de la dernière modification, pour le regroupement. */
+  let lastLabel = '';
+  let lastAt = 0;
+
+  /**
+   * Applique une modification du projet en la rendant annulable.
+   *
+   * Les changements qui ne touchent pas au projet — sélection, tête de lecture,
+   * réglages d'affichage — passent directement par `set` : les inscrire dans
+   * l'historique obligerait à annuler plusieurs fois pour défaire une seule
+   * action réelle.
+   */
+  const mutate = (label: string, producer: (state: StudioState) => Partial<StudioState>) =>
+    set((state) => {
+      const patch = producer(state);
+      if (!patch.project || patch.project === state.project) return patch;
+
+      const now = Date.now();
+      const merge = COALESCING.has(label) && label === lastLabel && now - lastAt < COALESCE_MS;
+      lastLabel = label;
+      lastAt = now;
+
+      return {
+        ...patch,
+        past: merge ? state.past : [...state.past, { project: state.project, label }].slice(-HISTORY_LIMIT),
+        future: [],
+      };
+    });
+
+  return {
   project: emptyProject(),
+  past: [],
+  future: [],
+
+  undo: () =>
+    set((state) => {
+      const previous = state.past[state.past.length - 1];
+      if (!previous) return state;
+
+      // Le regroupement est rompu : sans cela, la modification suivante
+      // viendrait se fondre dans une entrée qui n'existe plus.
+      lastLabel = '';
+      return {
+        project: previous.project,
+        past: state.past.slice(0, -1),
+        future: [{ project: state.project, label: previous.label }, ...state.future].slice(0, HISTORY_LIMIT),
+        selection: null,
+        playing: false,
+        playhead: Math.min(state.playhead, totalDuration(previous.project.clips)),
+      };
+    }),
+
+  redo: () =>
+    set((state) => {
+      const [next, ...rest] = state.future;
+      if (!next) return state;
+
+      lastLabel = '';
+      return {
+        project: next.project,
+        past: [...state.past, { project: state.project, label: next.label }].slice(-HISTORY_LIMIT),
+        future: rest,
+        selection: null,
+        playing: false,
+        playhead: Math.min(state.playhead, totalDuration(next.project.clips)),
+      };
+    }),
+
   selection: null,
   playhead: 0,
   playing: false,
@@ -118,10 +222,10 @@ export const useStudio = create<StudioState>((set, get) => ({
   setQualityChoice: (qualityChoice) => set({ qualityChoice, qualityRescued: false }),
 
   addAssets: (assets) =>
-    set((state) => ({ project: { ...state.project, assets: [...state.project.assets, ...assets] } })),
+    mutate('import', (state) => ({ project: { ...state.project, assets: [...state.project.assets, ...assets] } })),
 
   removeAsset: (assetId) =>
-    set((state) => {
+    mutate('import-retrait', (state) => {
       const asset = state.project.assets.find((a) => a.id === assetId);
       if (asset) URL.revokeObjectURL(asset.url);
       return reclamp({
@@ -136,7 +240,7 @@ export const useStudio = create<StudioState>((set, get) => ({
     }),
 
   appendClip: (assetId) =>
-    set((state) => {
+    mutate('ajout-plan', (state) => {
       const asset = state.project.assets.find((a) => a.id === assetId);
       if (!asset) return state;
       const clip: Clip = {
@@ -154,7 +258,7 @@ export const useStudio = create<StudioState>((set, get) => ({
     }),
 
   updateClip: (id, patch) =>
-    set((state) =>
+    mutate('reglage', (state) =>
       reclamp({
         ...state,
         project: {
@@ -165,7 +269,7 @@ export const useStudio = create<StudioState>((set, get) => ({
     ),
 
   removeClip: (id) =>
-    set((state) =>
+    mutate('retrait-plan', (state) =>
       reclamp({
         ...state,
         project: { ...state.project, clips: state.project.clips.filter((c) => c.id !== id) },
@@ -183,7 +287,7 @@ export const useStudio = create<StudioState>((set, get) => ({
    * répétition.
    */
   duplicateClip: (id) =>
-    set((state) => {
+    mutate('duplication', (state) => {
       const index = state.project.clips.findIndex((c) => c.id === id);
       if (index === -1) return state;
 
@@ -196,8 +300,88 @@ export const useStudio = create<StudioState>((set, get) => ({
       };
     }),
 
+  /**
+   * Découpe un plan en morceaux réguliers.
+   *
+   * C'est le geste que réclame l'analyse quand un plan s'étire, et le plus
+   * coûteux à faire à la main : il faudrait déplacer la tête de lecture et
+   * couper une dizaine de fois de suite. Les morceaux s'enchaînent en coupe
+   * franche, la cadence la plus nerveuse.
+   */
+  chopClip: (id, target = 2) =>
+    mutate('decoupage', (state) => {
+      const index = state.project.clips.findIndex((c) => c.id === id);
+      if (index === -1) return state;
+
+      const clip = state.project.clips[index];
+      const sourceSpan = clip.outPoint - clip.inPoint;
+      const shown = sourceSpan / Math.max(0.1, clip.speed);
+      const pieces = Math.floor(shown / Math.max(0.5, target));
+      if (pieces < 2) return state;
+
+      const step = sourceSpan / pieces;
+      const chopped: Clip[] = Array.from({ length: pieces }, (_, piece) => ({
+        ...clip,
+        id: uid('clip'),
+        inPoint: clip.inPoint + piece * step,
+        outPoint: clip.inPoint + (piece + 1) * step,
+        // Le premier morceau hérite de la transition d'origine ; les suivants
+        // s'enchaînent sec, sans quoi le découpage perdrait sa nervosité.
+        transition: piece === 0 ? clip.transition : 'cut',
+        transitionDuration: piece === 0 ? clip.transitionDuration : 0,
+      }));
+
+      const clips = [...state.project.clips];
+      clips.splice(index, 1, ...chopped);
+      return reclamp({ ...state, project: { ...state.project, clips }, selection: null });
+    }),
+
+  /**
+   * Pose un bruitage sur chaque raccord.
+   *
+   * Les raccords déjà sonorisés sont laissés tels quels : la fonction peut être
+   * relancée après un nouveau découpage sans empiler les sons au même endroit.
+   */
+  addSoundsOnCuts: () =>
+    mutate('sons-auto', (state) => {
+      const placed = layoutClips(state.project.clips);
+      const cycle: SfxId[] = ['boom', 'whoosh', 'punch', 'swipe', 'whoosh', 'subdrop'];
+      const added: SoundCue[] = [];
+
+      const isFree = (time: number) =>
+        ![...state.project.cues, ...added].some((c) => Math.abs(c.time - time) < 0.15);
+
+      if (isFree(0.02)) added.push({ id: uid('sfx'), sfx: 'punch', time: 0.02, gain: 0.9 });
+
+      placed.slice(1).forEach((item, index) => {
+        const at = Math.max(0, item.start);
+        if (isFree(at)) {
+          added.push({ id: uid('sfx'), sfx: cycle[index % cycle.length], time: at, gain: 0.85 });
+        }
+      });
+
+      if (added.length === 0) return state;
+      return { project: { ...state.project, cues: [...state.project.cues, ...added] } };
+    }),
+
+  /** Pose une ponctuation sonore aux instants signalés par l'analyse. */
+  fillTensionGaps: (moments) =>
+    mutate('relance', (state) => {
+      const added: SoundCue[] = [];
+      const isFree = (time: number) =>
+        ![...state.project.cues, ...added].some((c) => Math.abs(c.time - time) < 0.2);
+
+      for (const moment of moments) {
+        const at = Math.max(0, moment + 0.3);
+        if (isFree(at)) added.push({ id: uid('sfx'), sfx: 'sparkle', time: at, gain: 0.7 });
+      }
+
+      if (added.length === 0) return state;
+      return { project: { ...state.project, cues: [...state.project.cues, ...added] } };
+    }),
+
   moveClip: (from, to) =>
-    set((state) => {
+    mutate('deplacement', (state) => {
       const clips = [...state.project.clips];
       if (from < 0 || from >= clips.length || to < 0 || to >= clips.length) return state;
       const [moved] = clips.splice(from, 1);
@@ -207,7 +391,7 @@ export const useStudio = create<StudioState>((set, get) => ({
     }),
 
   splitClipAtPlayhead: () =>
-    set((state) => {
+    mutate('coupe', (state) => {
       const { clips } = state.project;
       const placed = layoutClips(clips);
       // Chaque moitié doit rester au-dessus du plancher, sinon la coupe crée un
@@ -243,7 +427,7 @@ export const useStudio = create<StudioState>((set, get) => ({
    * texte abîmé.
    */
   addCaption: (style = 'punch') =>
-    set((state) => {
+    mutate('ajout-texte', (state) => {
       const start = state.playhead;
       const end = start + 2;
 
@@ -271,7 +455,7 @@ export const useStudio = create<StudioState>((set, get) => ({
     }),
 
   updateCaption: (id, patch) =>
-    set((state) => ({
+    mutate('texte-reglage', (state) => ({
       project: {
         ...state.project,
         captions: state.project.captions.map((c) => (c.id === id ? { ...c, ...patch } : c)),
@@ -279,13 +463,13 @@ export const useStudio = create<StudioState>((set, get) => ({
     })),
 
   removeCaption: (id) =>
-    set((state) => ({
+    mutate('retrait-texte', (state) => ({
       project: { ...state.project, captions: state.project.captions.filter((c) => c.id !== id) },
       selection: state.selection?.kind === 'caption' && state.selection.id === id ? null : state.selection,
     })),
 
   addCue: (sfx, time) =>
-    set((state) => {
+    mutate('ajout-son', (state) => {
       const cue: SoundCue = { id: uid('sfx'), sfx, time: time ?? state.playhead, gain: 0.8 };
       return {
         project: { ...state.project, cues: [...state.project.cues, cue] },
@@ -294,30 +478,31 @@ export const useStudio = create<StudioState>((set, get) => ({
     }),
 
   updateCue: (id, patch) =>
-    set((state) => ({
+    mutate('son-reglage', (state) => ({
       project: { ...state.project, cues: state.project.cues.map((c) => (c.id === id ? { ...c, ...patch } : c)) },
     })),
 
   removeCue: (id) =>
-    set((state) => ({
+    mutate('retrait-son', (state) => ({
       project: { ...state.project, cues: state.project.cues.filter((c) => c.id !== id) },
       selection: state.selection?.kind === 'cue' && state.selection.id === id ? null : state.selection,
     })),
 
   setMusic: (music) =>
-    set((state) => {
+    mutate('musique', (state) => {
       if (state.project.music) URL.revokeObjectURL(state.project.music.url);
       return { project: { ...state.project, music } };
     }),
 
   updateMusic: (patch) =>
-    set((state) => ({
+    mutate('musique-reglage', (state) => ({
       project: { ...state.project, music: state.project.music ? { ...state.project.music, ...patch } : null },
     })),
 
   select: (selection) => set({ selection }),
   setPlayhead: (time) => set((state) => ({ playhead: clamp(time, 0, totalDuration(state.project.clips)) })),
   setPlaying: (playing) => set({ playing }),
-  renameProject: (name) => set((state) => ({ project: { ...state.project, name } })),
+  renameProject: (name) => mutate('nom', (state) => ({ project: { ...state.project, name } })),
   duration: () => totalDuration(get().project.clips),
-}));
+  };
+});

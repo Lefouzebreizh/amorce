@@ -4,7 +4,26 @@ import { useStudio } from '@/lib/store';
 import { clipDuration } from '@/lib/timeline';
 import { TRANSITION_LABELS } from '@/lib/transitions';
 import { MIN_CLIP_DURATION, type ClipMotion, type TransitionKind } from '@/lib/types';
-import { Button, Choice, EmptyState, Field, Hint, Panel, Slider } from '../ui';
+import { Actions, Button, Choice, Collapsible, EmptyState, Field, Hint, Panel, Slider } from '../ui';
+
+/**
+ * Réglages du plan sélectionné.
+ *
+ * L'ordre est délibéré : d'abord des gestes qui produisent un résultat
+ * prévisible en un appui, ensuite seulement les jauges, repliées.
+ *
+ * Une jauge demande de choisir une valeur — « quel point de sortie ? », « quelle
+ * vitesse ? » — ce que quelqu'un qui n'a jamais monté ne sait pas trancher, et
+ * ne devrait pas avoir à trancher pour obtenir un résultat correct. « Découper
+ * en plans de 2 s » ne demande rien et fait exactement ce que l'analyse
+ * réclame.
+ */
+
+/** Durée visée par le découpage automatique, en secondes. */
+const CHOP_TARGET = 2;
+
+/** Au-delà, un plan gagne à être découpé. */
+const LONG_SHOT = 3.5;
 
 /** Ce que chaque transition raconte, sans jargon de monteur. */
 const TRANSITION_HELP: Record<TransitionKind, string> = {
@@ -17,21 +36,15 @@ const TRANSITION_HELP: Record<TransitionKind, string> = {
   glitch: 'L’image décroche une fraction de seconde.',
 };
 
-const MOTION_HELP: Record<ClipMotion, string> = {
-  none: 'Plan fixe.',
-  zoomIn: 'On se rapproche lentement.',
-  zoomOut: 'On s’éloigne lentement.',
-  panLeft: 'Glissement vers la gauche.',
-  panRight: 'Glissement vers la droite.',
-  shake: 'Tremblement, pour l’impact.',
+const MOTION_LABELS: Record<ClipMotion, { label: string; help: string }> = {
+  none: { label: 'Fixe', help: 'Plan fixe.' },
+  zoomIn: { label: 'Zoom avant', help: 'On se rapproche lentement.' },
+  zoomOut: { label: 'Zoom arrière', help: 'On s’éloigne lentement.' },
+  panLeft: { label: 'Vers la gauche', help: 'Glissement vers la gauche.' },
+  panRight: { label: 'Vers la droite', help: 'Glissement vers la droite.' },
+  shake: { label: 'Tremblement', help: 'Tremblement, pour l’impact.' },
 };
 
-/**
- * Réglages du plan sélectionné.
- *
- * Les points d'entrée et de sortie sont exprimés dans le média source, pas sur
- * la timeline : raccourcir un plan ne déplace donc rien de ce qui précède.
- */
 export function ClipPanel() {
   const selection = useStudio((s) => s.selection);
   const clips = useStudio((s) => s.project.clips);
@@ -39,16 +52,16 @@ export function ClipPanel() {
   const updateClip = useStudio((s) => s.updateClip);
   const removeClip = useStudio((s) => s.removeClip);
   const duplicateClip = useStudio((s) => s.duplicateClip);
+  const chopClip = useStudio((s) => s.chopClip);
   const moveClip = useStudio((s) => s.moveClip);
 
   const clip = selection?.kind === 'clip' ? clips.find((c) => c.id === selection.id) : undefined;
 
   if (!clip) {
     return (
-      <Panel title="2 · Monter" subtitle="Sélectionne un plan sur la timeline pour le régler.">
+      <Panel title="2 · Monter" subtitle="Touche un plan sur la timeline pour le régler.">
         <EmptyState title="Aucun plan sélectionné">
-          Clique sur un bloc de la timeline. Tu pourras y régler sa durée, sa vitesse, la transition qui
-          l’amène et son mouvement de caméra.
+          Les blocs juste au-dessus de cette zone sont tes plans. Touches-en un.
         </EmptyState>
         <div className="mt-3">
           <Hint>
@@ -64,43 +77,86 @@ export function ClipPanel() {
   const index = clips.findIndex((c) => c.id === clip.id);
   const sourceDuration = asset?.duration ?? clip.outPoint;
   const shown = clipDuration(clip);
+  const pieces = Math.floor(shown / CHOP_TARGET);
+
+  /** Ne garde que le début du plan, sur la durée demandée. */
+  const keepFirst = (seconds: number) =>
+    updateClip(clip.id, { outPoint: Math.min(sourceDuration, clip.inPoint + seconds * clip.speed) });
 
   return (
     <div className="space-y-3">
-      <Panel
-        title={`Plan ${index + 1}`}
-        subtitle={asset?.name}
-        action={
-          <Button variant="danger" onClick={() => removeClip(clip.id)} title="Supprimer ce plan">
-            Supprimer
-          </Button>
-        }
-      >
-        <Field
-          label="Place dans le montage"
-          value={`${index + 1} sur ${clips.length}`}
-          help="Sur téléphone, le glisser-déposer n’est pas fiable : ces boutons déplacent le plan."
-        >
-          <div className="flex gap-1.5">
-            <Button
-              className="flex-1"
-              onClick={() => moveClip(index, index - 1)}
-              disabled={index === 0}
-              title="Déplacer vers le début"
-            >
-              ◀ Reculer
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={() => moveClip(index, index + 1)}
-              disabled={index === clips.length - 1}
-              title="Déplacer vers la fin"
-            >
-              Avancer ▶
-            </Button>
-          </div>
-        </Field>
+      <Panel title={`Plan ${index + 1} sur ${clips.length}`} subtitle={asset?.name}>
+        <p className="mb-3 rounded-xl border border-edge bg-slab/60 px-3 py-2 text-xs text-muted">
+          Durée à l’écran : <span className="font-mono text-mist">{shown.toFixed(1)} s</span>
+          {shown > LONG_SHOT && ' — trop long, l’attention retombe.'}
+        </p>
 
+        {shown > LONG_SHOT && (
+          <Button
+            variant="primary"
+            className="mb-1.5 w-full"
+            onClick={() => chopClip(clip.id, CHOP_TARGET)}
+          >
+            ✂ Découper en {pieces} plans de {CHOP_TARGET} s
+          </Button>
+        )}
+
+        <Actions>
+          <Button onClick={() => keepFirst(2)} disabled={shown <= 2.05}>
+            Garder 2 s
+          </Button>
+          <Button onClick={() => keepFirst(shown / 2)} disabled={shown / 2 < MIN_CLIP_DURATION}>
+            Couper de moitié
+          </Button>
+          <Button onClick={() => duplicateClip(clip.id)}>⧉ Dupliquer</Button>
+          <Button onClick={() => updateClip(clip.id, { speed: clip.speed === 1 ? 0.5 : 1 })}>
+            {clip.speed === 1 ? '🐢 Ralentir ×2' : '↺ Vitesse normale'}
+          </Button>
+          <Button onClick={() => moveClip(index, index - 1)} disabled={index === 0}>
+            ◀ Reculer
+          </Button>
+          <Button onClick={() => moveClip(index, index + 1)} disabled={index === clips.length - 1}>
+            Avancer ▶
+          </Button>
+        </Actions>
+
+        <Button variant="danger" className="mt-1.5 w-full" onClick={() => removeClip(clip.id)}>
+          Supprimer ce plan
+        </Button>
+      </Panel>
+
+      <Panel title="Mouvement" subtitle="Un plan qui bouge retient mieux qu’un plan fixe.">
+        <Choice
+          value={clip.motion}
+          onChange={(motion) => updateClip(clip.id, { motion })}
+          options={(Object.keys(MOTION_LABELS) as ClipMotion[]).map((id) => ({
+            value: id,
+            label: MOTION_LABELS[id].label,
+            description: MOTION_LABELS[id].help,
+          }))}
+        />
+      </Panel>
+
+      {index > 0 ? (
+        <Panel title="Transition entrante" subtitle="Comment ce plan succède au précédent.">
+          <Choice
+            value={clip.transition}
+            onChange={(transition) => updateClip(clip.id, { transition })}
+            options={(Object.keys(TRANSITION_LABELS) as TransitionKind[]).map((id) => ({
+              value: id,
+              label: TRANSITION_LABELS[id],
+              description: TRANSITION_HELP[id],
+            }))}
+          />
+        </Panel>
+      ) : (
+        <Hint>
+          Le premier plan n’a pas de transition entrante : il doit démarrer net. Les premières images
+          sont trop précieuses pour être passées en fondu.
+        </Hint>
+      )}
+
+      <Collapsible label="Réglage fin — si tu veux ajuster toi-même">
         <Field
           label="Début dans le rush"
           value={`${clip.inPoint.toFixed(2)} s`}
@@ -121,7 +177,7 @@ export function ClipPanel() {
         <Field
           label="Fin dans le rush"
           value={`${clip.outPoint.toFixed(2)} s`}
-          help={`Coupe avant que le plan ne s’essouffle. Tu ne peux pas dépasser ${sourceDuration.toFixed(1)} s, la longueur du rush d’origine.`}
+          help={`Tu ne peux pas dépasser ${sourceDuration.toFixed(1)} s, la longueur du rush d’origine.`}
         >
           <Slider
             ariaLabel="Point de fin"
@@ -138,7 +194,7 @@ export function ClipPanel() {
         <Field
           label="Vitesse"
           value={`${clip.speed.toFixed(2)}×`}
-          help="Au-dessus de 1, le plan est accéléré et raccourci. En dessous, il ralentit et s’allonge : à 0,50×, un rush de 2 s en occupe 4."
+          help="Au-dessus de 1, le plan est accéléré et raccourci. En dessous, il ralentit et s’allonge."
         >
           <Slider
             ariaLabel="Vitesse de lecture"
@@ -165,70 +221,23 @@ export function ClipPanel() {
           />
         </Field>
 
-        <p className="rounded-xl border border-edge bg-slab/60 px-3 py-2 text-xs text-muted">
-          Durée à l’écran : <span className="font-mono text-mist">{shown.toFixed(2)} s</span>
-          {shown > 3.5 && ' — c’est long, pense à raccourcir.'}
-        </p>
-
-        <Button className="mt-3 w-full" onClick={() => duplicateClip(clip.id)}>
-          ⧉ Dupliquer ce plan
-        </Button>
-        <p className="mt-1.5 text-xs leading-relaxed text-muted">
-          Ton rush est court ? Duplique-le et règle la copie autrement — autre cadrage, autre vitesse,
-          autre transition. C’est ce qui permet d’atteindre 15 à 30 s à partir de quelques secondes de
-          matière.
-        </p>
-      </Panel>
-
-      <Panel title="Mouvement" subtitle="Un plan qui bouge retient mieux qu’un plan fixe.">
-        <Choice
-          value={clip.motion}
-          onChange={(motion) => updateClip(clip.id, { motion })}
-          options={(Object.keys(MOTION_HELP) as ClipMotion[]).map((id) => ({
-            value: id,
-            label: { none: 'Fixe', zoomIn: 'Zoom avant', zoomOut: 'Zoom arrière', panLeft: 'Vers la gauche', panRight: 'Vers la droite', shake: 'Tremblement' }[id],
-            description: MOTION_HELP[id],
-          }))}
-        />
-      </Panel>
-
-      {index > 0 ? (
-        <Panel title="Transition entrante" subtitle="Comment ce plan succède au précédent.">
-          <Choice
-            value={clip.transition}
-            onChange={(transition) => updateClip(clip.id, { transition })}
-            options={(Object.keys(TRANSITION_LABELS) as TransitionKind[]).map((id) => ({
-              value: id,
-              label: TRANSITION_LABELS[id],
-              description: TRANSITION_HELP[id],
-            }))}
-          />
-
-          {clip.transition !== 'cut' && (
-            <div className="mt-3">
-              <Field
-                label="Durée de la transition"
-                value={`${clip.transitionDuration.toFixed(2)} s`}
-                help="Au-delà de 45 % du plus court des deux plans, la durée est automatiquement ramenée sous cette limite."
-              >
-                <Slider
-                  ariaLabel="Durée de la transition"
-                  min={0.05}
-                  max={1.5}
-                  step={0.05}
-                  value={clip.transitionDuration}
-                  onChange={(value) => updateClip(clip.id, { transitionDuration: value })}
-                />
-              </Field>
-            </div>
-          )}
-        </Panel>
-      ) : (
-        <Hint>
-          Le premier plan n’a pas de transition entrante : il doit démarrer net. Les premières images
-          sont trop précieuses pour être passées en fondu.
-        </Hint>
-      )}
+        {index > 0 && clip.transition !== 'cut' && (
+          <Field
+            label="Durée de la transition"
+            value={`${clip.transitionDuration.toFixed(2)} s`}
+            help="Au-delà de 45 % du plus court des deux plans, la durée est automatiquement ramenée sous cette limite."
+          >
+            <Slider
+              ariaLabel="Durée de la transition"
+              min={0.05}
+              max={1.5}
+              step={0.05}
+              value={clip.transitionDuration}
+              onChange={(value) => updateClip(clip.id, { transitionDuration: value })}
+            />
+          </Field>
+        )}
+      </Collapsible>
     </div>
   );
 }

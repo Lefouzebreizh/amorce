@@ -298,6 +298,14 @@ if (profile.mobile) {
   await page.locator('[aria-label="Timeline du montage"] [draggable], [aria-label="Timeline du montage"] div[title]').first().click();
   await page.waitForTimeout(800);
 
+  // Les jauges sont rangées derrière un bloc repliable : les gestes qui
+  // produisent un résultat prévisible passent devant, elles restent pour qui
+  // veut affiner. Il faut donc l'ouvrir avant de pouvoir en manipuler une.
+  const fineTuning = page.locator('summary:has-text("Réglage fin")');
+  check('Les jauges sont rangées en réglage fin', await fineTuning.isVisible());
+  await fineTuning.click();
+  await page.waitForTimeout(400);
+
   const slider = page.locator('input[aria-label="Point de fin"]');
   await slider.scrollIntoViewIfNeeded();
   const box = await slider.boundingBox();

@@ -66,6 +66,15 @@ export function Studio() {
       if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
 
       const store = useStudio.getState();
+
+      // Annulation au clavier, avec Maj pour rétablir — la convention partout.
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) store.redo();
+        else store.undo();
+        return;
+      }
+
       if (event.code === 'Space') {
         event.preventDefault();
         engine.toggle();

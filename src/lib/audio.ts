@@ -1,7 +1,7 @@
 'use client';
 
 import { scheduleSfx } from './sfx.ts';
-import type { Project } from './types.ts';
+import type { Project, SfxId } from './types.ts';
 
 /**
  * Mixage audio du montage.
@@ -19,6 +19,8 @@ const SCHEDULE_HORIZON = 0.25;
 export class AudioEngine {
   readonly context: AudioContext;
   private readonly master: GainNode;
+  private readonly sfxBus: GainNode;
+  private readonly limiter: DynamicsCompressorNode;
   private readonly recordDestination: MediaStreamAudioDestinationNode;
 
   private clipNodes = new Map<string, { source: MediaElementAudioSourceNode; gain: GainNode }>();
@@ -34,12 +36,40 @@ export class AudioEngine {
   constructor() {
     this.context = new AudioContext();
     this.master = this.context.createGain();
+
+    /*
+     * Un limiteur en bout de chaîne.
+     *
+     * Sans lui, il fallait garder chaque bruitage bas pour éviter que la somme
+     * des trois sources ne sature — et le résultat s'entendait à peine. Le
+     * limiteur écrête proprement les crêtes, ce qui autorise des niveaux bien
+     * plus francs sans jamais distordre.
+     */
+    this.limiter = this.context.createDynamicsCompressor();
+    this.limiter.threshold.value = -6;
+    this.limiter.knee.value = 6;
+    this.limiter.ratio.value = 12;
+    this.limiter.attack.value = 0.003;
+    this.limiter.release.value = 0.12;
+
+    /*
+     * Les bruitages ont leur propre bus, plus fort que le reste.
+     *
+     * Ils doivent percer le son d'origine des plans et la musique : c'est leur
+     * fonction même — marquer une coupe, souligner un impact. Noyés au même
+     * niveau que le fond, ils ne servent à rien.
+     */
+    this.sfxBus = this.context.createGain();
+    this.sfxBus.gain.value = 2.2;
+    this.sfxBus.connect(this.master);
+
+    this.master.connect(this.limiter);
     this.recordDestination = this.context.createMediaStreamDestination();
 
-    // Le bus part vers les enceintes ET vers la sortie d'enregistrement :
+    // La chaîne part vers les enceintes ET vers la sortie d'enregistrement :
     // pendant un export, l'utilisateur entend ce qui est en train d'être gravé.
-    this.master.connect(this.context.destination);
-    this.master.connect(this.recordDestination);
+    this.limiter.connect(this.context.destination);
+    this.limiter.connect(this.recordDestination);
   }
 
   /** Piste sonore à confier au `MediaRecorder` pendant l'export. */
@@ -125,6 +155,16 @@ export class AudioEngine {
     if (!playing && !element.paused) element.pause();
   }
 
+  /**
+   * Joue un bruitage immédiatement, pour le faire écouter avant de le poser.
+   *
+   * Il passe par le même bus que les bruitages du montage : une écoute plus
+   * faible que le résultat final induirait en erreur au moment de choisir.
+   */
+  audition(id: SfxId, gain = 0.85): void {
+    scheduleSfx(this.context, this.sfxBus, id, this.context.currentTime + 0.02, gain);
+  }
+
   /** Le navigateur suspend tout contexte audio créé hors d'un geste utilisateur. */
   async resume(): Promise<void> {
     if (this.context.state === 'suspended') await this.context.resume();
@@ -146,7 +186,7 @@ export class AudioEngine {
 
       this.scheduledCues.add(cue.id);
       this.liveSources.push(
-        ...scheduleSfx(this.context, this.master, cue.sfx, this.context.currentTime + Math.max(0, delta), cue.gain),
+        ...scheduleSfx(this.context, this.sfxBus, cue.sfx, this.context.currentTime + Math.max(0, delta), cue.gain),
       );
     }
   }

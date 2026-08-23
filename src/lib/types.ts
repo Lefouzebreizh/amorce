@@ -75,7 +75,20 @@ export type Caption = {
 };
 
 /** Bruitages de synthèse, générés en Web Audio (aucun fichier à héberger). */
-export type SfxId = 'whoosh' | 'boom' | 'ding' | 'riser' | 'pop' | 'click' | 'swipe';
+export type SfxId =
+  | 'whoosh'
+  | 'boom'
+  | 'ding'
+  | 'riser'
+  | 'pop'
+  | 'click'
+  | 'swipe'
+  | 'subdrop'
+  | 'reverse'
+  | 'sparkle'
+  | 'punch'
+  | 'zap'
+  | 'wind';
 
 /** Un bruitage déclenché à un instant précis de la timeline. */
 export type SoundCue = {

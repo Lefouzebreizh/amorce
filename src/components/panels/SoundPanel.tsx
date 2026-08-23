@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { loadMusicTrack } from '@/lib/media';
-import { scheduleSfx, SFX_LIBRARY } from '@/lib/sfx';
+import { SFX_LIBRARY } from '@/lib/sfx';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Button, Field, Hint, Panel, Slider } from '../ui';
@@ -31,7 +31,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
 
   const audition = async (id: (typeof SFX_LIBRARY)[number]['id']) => {
     const audio = await engine.ensureAudio();
-    scheduleSfx(audio.context, audio.context.destination, id, audio.context.currentTime + 0.02, 0.8);
+    audio.audition(id);
   };
 
   return (

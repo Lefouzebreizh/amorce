@@ -217,6 +217,63 @@ export function ScoreBadge({ score, compact = false }: { score: number; compact?
   );
 }
 
+/**
+ * Bloc repliable, fermé par défaut.
+ *
+ * Sert à ranger les réglages fins. Une jauge demande de choisir une valeur, ce
+ * qu'un débutant ne sait pas faire : la mettre au premier plan bloque plus
+ * qu'elle n'aide. Les gestes qui produisent un résultat prévisible passent
+ * devant ; les jauges restent accessibles pour qui veut affiner.
+ *
+ * `<details>` plutôt qu'un état React : le repli fonctionne même si rien n'est
+ * encore hydraté, et le navigateur gère l'accessibilité au clavier.
+ */
+export function Collapsible({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <details className="rounded-2xl border border-edge bg-panel/70">
+      <summary className="cursor-pointer list-none px-4 py-3 text-xs font-semibold text-muted select-none marker:content-none hover:text-mist">
+        {label} <span aria-hidden="true">▾</span>
+      </summary>
+      <div className="border-t border-edge px-4 py-3">{children}</div>
+    </details>
+  );
+}
+
+/** Rangée de gestes rapides, tous à effet immédiat et prévisible. */
+export function Actions({ children }: { children: ReactNode }) {
+  return <div className="grid grid-cols-2 gap-1.5">{children}</div>;
+}
+
+/**
+ * Boutons d'annulation et de rétablissement.
+ *
+ * Placés dans le bandeau, donc atteignables depuis n'importe quelle étape :
+ * une mauvaise manipulation se répare là où on la constate, pas en retournant
+ * dans le panneau qui l'a provoquée.
+ */
+export function UndoControls({
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
+}: {
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <Button variant="ghost" onClick={onUndo} disabled={!canUndo} title="Annuler la dernière action">
+        ↶
+      </Button>
+      <Button variant="ghost" onClick={onRedo} disabled={!canRedo} title="Rétablir">
+        ↷
+      </Button>
+    </div>
+  );
+}
+
 export function EmptyState({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-2xl border border-dashed border-edge bg-slab/40 px-4 py-8 text-center">

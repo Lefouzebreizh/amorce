@@ -249,3 +249,113 @@ test('les hauteurs proposées restent dans la zone lisible', () => {
     assert.ok(caption.y >= 0.15 && caption.y <= 0.85, `hauteur hors zone lisible : ${caption.y}`);
   }
 });
+
+test('annuler restitue l’état précédent du montage', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 10)]);
+  store.appendClip('a');
+  const [clip] = useStudio.getState().project.clips;
+
+  useStudio.getState().updateClip(clip.id, { outPoint: 4 });
+  assert.equal(useStudio.getState().duration(), 4);
+
+  useStudio.getState().undo();
+  assert.equal(useStudio.getState().duration(), 10, 'la durée d’origine devrait être restituée');
+});
+
+test('rétablir rejoue ce qui vient d’être annulé', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 10)]);
+  store.appendClip('a');
+  useStudio.getState().updateClip(useStudio.getState().project.clips[0].id, { outPoint: 4 });
+
+  useStudio.getState().undo();
+  useStudio.getState().redo();
+  assert.equal(useStudio.getState().duration(), 4);
+});
+
+test('annuler sans historique ne casse rien', () => {
+  assert.doesNotThrow(() => useStudio.getState().undo());
+  assert.doesNotThrow(() => useStudio.getState().redo());
+  assert.equal(useStudio.getState().project.clips.length, 0);
+});
+
+test('une nouvelle action efface le futur', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 10)]);
+  store.appendClip('a');
+  const id = useStudio.getState().project.clips[0].id;
+
+  useStudio.getState().updateClip(id, { outPoint: 4 });
+  useStudio.getState().undo();
+  assert.equal(useStudio.getState().future.length, 1);
+
+  useStudio.getState().updateClip(id, { outPoint: 6 });
+  assert.equal(useStudio.getState().future.length, 0, 'repartir dans une autre direction invalide le futur');
+});
+
+test('déplacer la tête de lecture n’entre pas dans l’historique', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 10)]);
+  store.appendClip('a');
+  const before = useStudio.getState().past.length;
+
+  useStudio.getState().setPlayhead(3);
+  useStudio.getState().select(null);
+  assert.equal(useStudio.getState().past.length, before, 'seules les modifications du projet sont annulables');
+});
+
+test('une seule annulation défait un découpage entier', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 20)]);
+  store.appendClip('a');
+  const id = useStudio.getState().project.clips[0].id;
+
+  useStudio.getState().chopClip(id, 2);
+  assert.ok(useStudio.getState().project.clips.length >= 8, 'le découpage devrait produire de nombreux plans');
+
+  useStudio.getState().undo();
+  assert.equal(useStudio.getState().project.clips.length, 1, 'un geste, une annulation');
+});
+
+test('découper produit des morceaux qui couvrent tout le plan d’origine', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 12)]);
+  store.appendClip('a');
+  const original = useStudio.getState().project.clips[0];
+
+  useStudio.getState().chopClip(original.id, 2);
+  const clips = useStudio.getState().project.clips;
+
+  assert.equal(clips[0].inPoint, original.inPoint);
+  assert.ok(Math.abs(clips[clips.length - 1].outPoint - original.outPoint) < 1e-9);
+  for (let i = 1; i < clips.length; i++) {
+    assert.ok(Math.abs(clips[i].inPoint - clips[i - 1].outPoint) < 1e-9, 'un trou entre deux morceaux');
+    assert.equal(clips[i].transition, 'cut', 'les morceaux internes s’enchaînent sec');
+  }
+});
+
+test('un plan déjà court ne se découpe pas', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 3)]);
+  store.appendClip('a');
+  useStudio.getState().updateClip(useStudio.getState().project.clips[0].id, { outPoint: 1.5 });
+
+  useStudio.getState().chopClip(useStudio.getState().project.clips[0].id, 2);
+  assert.equal(useStudio.getState().project.clips.length, 1);
+});
+
+test('poser des bruitages sur les raccords n’en empile pas deux au même endroit', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 10), asset('b', 10)]);
+  store.appendClip('a');
+  store.appendClip('b');
+
+  useStudio.getState().addSoundsOnCuts();
+  const premier = useStudio.getState().project.cues.length;
+  assert.ok(premier >= 2, 'un son au départ et un sur le raccord');
+
+  // Relancé après coup, il ne doit rien ajouter là où il y a déjà un son.
+  useStudio.getState().addSoundsOnCuts();
+  assert.equal(useStudio.getState().project.cues.length, premier);
+});

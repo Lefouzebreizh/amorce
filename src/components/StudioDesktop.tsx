@@ -7,7 +7,7 @@ import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Preview } from './Preview';
 import { Timeline } from './Timeline';
 import { STEPS, StepPanel, type StepId } from './steps';
-import { ScoreBadge } from './ui';
+import { ScoreBadge, UndoControls } from './ui';
 
 /**
  * Disposition ordinateur : trois colonnes.
@@ -70,6 +70,10 @@ export function StudioDesktop({
 function DesktopHeader() {
   const project = useStudio((s) => s.project);
   const analysis = useMemo(() => analyzeProject(project), [project]);
+  const undo = useStudio((s) => s.undo);
+  const redo = useStudio((s) => s.redo);
+  const canUndo = useStudio((s) => s.past.length > 0);
+  const canRedo = useStudio((s) => s.future.length > 0);
 
   return (
     <header className="flex shrink-0 items-center justify-between gap-4 border-b border-edge px-4 py-2.5">
@@ -80,7 +84,10 @@ function DesktopHeader() {
         </span>
       </div>
 
-      {analysis.shotCount > 0 && <ScoreBadge score={analysis.score} />}
+      <div className="flex items-center gap-3">
+        <UndoControls canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
+        {analysis.shotCount > 0 && <ScoreBadge score={analysis.score} />}
+      </div>
     </header>
   );
 }

@@ -7,7 +7,7 @@ import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Preview } from './Preview';
 import { Timeline } from './Timeline';
 import { STEPS, StepPanel, type StepId } from './steps';
-import { ScoreBadge } from './ui';
+import { ScoreBadge, UndoControls } from './ui';
 
 /**
  * Disposition téléphone.
@@ -96,6 +96,10 @@ export function StudioMobile({
 function MobileHeader() {
   const project = useStudio((s) => s.project);
   const analysis = useMemo(() => analyzeProject(project), [project]);
+  const undo = useStudio((s) => s.undo);
+  const redo = useStudio((s) => s.redo);
+  const canUndo = useStudio((s) => s.past.length > 0);
+  const canRedo = useStudio((s) => s.future.length > 0);
 
   return (
     <header
@@ -103,7 +107,10 @@ function MobileHeader() {
       style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}
     >
       <span className="font-display text-base tracking-tight text-mist">amorce</span>
-      {analysis.shotCount > 0 && <ScoreBadge score={analysis.score} compact />}
+      <div className="flex items-center gap-2">
+        <UndoControls canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
+        {analysis.shotCount > 0 && <ScoreBadge score={analysis.score} compact />}
+      </div>
     </header>
   );
 }

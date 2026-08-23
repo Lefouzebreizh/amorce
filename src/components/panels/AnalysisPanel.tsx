@@ -35,6 +35,9 @@ const STEP_LABEL: Record<StepId, string> = {
 /** En dessous, le critère mérite qu'on explique comment le redresser. */
 const REMEDY_THRESHOLD = 0.8;
 
+/** Durée visée par le découpage automatique, en secondes. */
+const CHOP_TARGET = 2;
+
 /**
  * Note de viralité.
  *
@@ -55,6 +58,45 @@ export function AnalysisPanel({
 }) {
   const project = useStudio((s) => s.project);
   const analysis = useMemo(() => analyzeProject(project), [project]);
+  const chopClip = useStudio((s) => s.chopClip);
+  const addSoundsOnCuts = useStudio((s) => s.addSoundsOnCuts);
+  const fillTensionGaps = useStudio((s) => s.fillTensionGaps);
+
+  /**
+   * Correction applicable en un appui, quand le geste ne demande aucun choix.
+   *
+   * Tout ne s'automatise pas : écrire une accroche ou choisir quoi couper
+   * relève de l'intention, et un bouton qui déciderait à la place produirait
+   * une vidéo que personne n'a voulue. Ces critères-là renvoient à l'étape
+   * correspondante plutôt que d'agir.
+   */
+  const autoFix = useMemo(() => {
+    const fixes: Partial<Record<CriterionId, { label: string; run: () => void }>> = {};
+
+    const longest = [...project.clips].sort(
+      (a, b) => (b.outPoint - b.inPoint) / b.speed - (a.outPoint - a.inPoint) / a.speed,
+    )[0];
+    if (longest && (longest.outPoint - longest.inPoint) / longest.speed > 3.5) {
+      fixes.rythme = {
+        label: `✂ Découper le plan le plus long en morceaux de ${CHOP_TARGET} s`,
+        run: () => chopClip(longest.id, CHOP_TARGET),
+      };
+    }
+
+    fixes.son = {
+      label: '♪ Poser un bruitage sur chaque coupe',
+      run: addSoundsOnCuts,
+    };
+
+    if (analysis.slumps.length > 0) {
+      fixes.tension = {
+        label: `✨ Relancer l’attention dans ${analysis.slumps.length} passage${analysis.slumps.length > 1 ? 's' : ''}`,
+        run: () => fillTensionGaps(analysis.slumps.map((slump) => slump.start)),
+      };
+    }
+
+    return fixes;
+  }, [project.clips, analysis.slumps, chopClip, addSoundsOnCuts, fillTensionGaps]);
 
   if (analysis.shotCount === 0) {
     return (
@@ -102,13 +144,29 @@ export function AnalysisPanel({
                       <span className="font-semibold">Comment corriger : </span>
                       {criterion.remedy}
                     </p>
-                    <Button
-                      variant="subtle"
-                      className="mt-1 px-0 text-[11px]"
-                      onClick={() => onStep(target)}
-                    >
-                      Aller à « {STEP_LABEL[target]} » →
-                    </Button>
+
+                    {autoFix[criterion.id] ? (
+                      <>
+                        <Button
+                          variant="primary"
+                          className="mt-2 w-full text-[11px]"
+                          onClick={autoFix[criterion.id]!.run}
+                        >
+                          {autoFix[criterion.id]!.label}
+                        </Button>
+                        <p className="mt-1 text-[10px] text-muted">
+                          Le bouton ↶ du bandeau annule si le résultat ne te plaît pas.
+                        </p>
+                      </>
+                    ) : (
+                      <Button
+                        variant="subtle"
+                        className="mt-1 px-0 text-[11px]"
+                        onClick={() => onStep(target)}
+                      >
+                        Aller à « {STEP_LABEL[target]} » →
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

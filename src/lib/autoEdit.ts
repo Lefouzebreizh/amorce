@@ -6,6 +6,7 @@ import {
   type Clip,
   type MediaAsset,
   type Project,
+  type SfxId,
   type SoundCue,
   type TransitionKind,
 } from './types.ts';
@@ -30,6 +31,14 @@ const MIN_SHOT = 0.9;
 
 /** Transitions alternées, pour éviter la monotonie d'un effet répété. */
 const TRANSITION_CYCLE: TransitionKind[] = ['zoomPunch', 'whipPan', 'fade', 'slideUp', 'flash'];
+
+/**
+ * Bruitages de raccord, alternés eux aussi.
+ *
+ * Le même souffle répété à chaque coupe cesse d'être entendu au bout de trois
+ * occurrences : c'est la variation qui maintient l'effet.
+ */
+const RACCORD_CYCLE: SfxId[] = ['boom', 'whoosh', 'punch', 'swipe', 'whoosh', 'subdrop'];
 
 /** Texte d'accroche déposé par défaut, explicitement à remplacer. */
 export const PLACEHOLDER_HOOK = 'Attends la fin 👀';
@@ -95,20 +104,39 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
   const cues: SoundCue[] = [];
   let cursor = 0;
 
+  // Un impact sur la toute première image : le son fait partie de l'accroche
+  // autant que le texte, et c'est lui qui fait lever les yeux.
+  cues.push({ id: uid('sfx'), sfx: 'punch', time: 0.02, gain: 0.9 });
+
   clips.forEach((clip, index) => {
     const clipLength = (clip.outPoint - clip.inPoint) / clip.speed;
+
     if (index > 0) {
       cursor -= clip.transitionDuration;
+      const at = Math.max(0, cursor);
+
       // Un souffle sur chaque raccord : c'est ce qui transforme une succession
       // de plans en un rythme perçu.
-      cues.push({ id: uid('sfx'), sfx: index === 1 ? 'boom' : 'whoosh', time: Math.max(0, cursor), gain: 0.7 });
+      cues.push({ id: uid('sfx'), sfx: RACCORD_CYCLE[(index - 1) % RACCORD_CYCLE.length], time: at, gain: 0.85 });
+
+      // Une aspiration juste avant le raccord fait anticiper la coupe.
+      if (at > 0.5) {
+        cues.push({ id: uid('sfx'), sfx: 'reverse', time: Math.max(0, at - 0.55), gain: 0.55 });
+      }
     }
+
     cursor += clipLength;
+
+    // Un plan qui s'étire est le premier endroit où l'attention retombe : on y
+    // pose une ponctuation à mi-parcours plutôt que de le laisser nu.
+    if (clipLength > 3.2) {
+      cues.push({ id: uid('sfx'), sfx: 'sparkle', time: cursor - clipLength / 2, gain: 0.6 });
+    }
   });
 
   // Une note finale signale que c'est terminé et appelle la boucle suivante.
   if (duration > 1.5) {
-    cues.push({ id: uid('sfx'), sfx: 'ding', time: Math.max(0, duration - 0.45), gain: 0.6 });
+    cues.push({ id: uid('sfx'), sfx: 'ding', time: Math.max(0, duration - 0.45), gain: 0.8 });
   }
 
   return { clips, captions, cues };
