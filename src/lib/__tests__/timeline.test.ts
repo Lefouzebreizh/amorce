@@ -1,0 +1,91 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { layoutClips, sliceAt, totalDuration, effectiveTransition } from '../timeline.ts';
+import { DEFAULT_CLIP, type Clip, type TransitionKind } from '../types.ts';
+
+function makeClip(seconds: number, transition: TransitionKind = 'cut', td = 0): Clip {
+  return {
+    ...DEFAULT_CLIP,
+    id: `c${seconds}-${transition}-${td}-${Math.round(Math.random() * 1e6)}`,
+    assetId: 'a',
+    outPoint: seconds,
+    transition,
+    transitionDuration: td,
+  };
+}
+
+test('des coupes franches mettent les clips bout à bout', () => {
+  const clips = [makeClip(3), makeClip(2), makeClip(5)];
+  const placed = layoutClips(clips);
+  assert.deepEqual(placed.map((p) => p.start), [0, 3, 5]);
+  assert.equal(totalDuration(clips), 10);
+});
+
+test('une transition raccourcit la durée totale du chevauchement', () => {
+  const clips = [makeClip(4), makeClip(4, 'fade', 1)];
+  assert.equal(totalDuration(clips), 7);
+  assert.equal(layoutClips(clips)[1].start, 3);
+});
+
+test('une transition trop longue est ramenée à 45% du plus court clip', () => {
+  // 10 s demandées entre un clip de 2 s et un clip de 4 s -> 45% de 2 s = 0,9 s.
+  assert.equal(effectiveTransition(makeClip(2), makeClip(4, 'fade', 10)), 0.9);
+});
+
+test('la vitesse comprime la durée du clip', () => {
+  const fast = { ...makeClip(6), speed: 2 };
+  assert.equal(totalDuration([fast]), 3);
+});
+
+test('jamais plus de deux clips visibles simultanément', () => {
+  // Des transitions volontairement démesurées sur des clips très courts.
+  const clips = [
+    makeClip(1, 'fade', 9),
+    makeClip(0.6, 'zoomPunch', 9),
+    makeClip(0.6, 'glitch', 9),
+    makeClip(1, 'whipPan', 9),
+  ];
+  const placed = layoutClips(clips);
+  const total = totalDuration(clips);
+
+  for (let t = 0; t < total; t += 0.005) {
+    const visible = placed.filter((p) => t >= p.start && t < p.end);
+    assert.ok(visible.length <= 2, `${visible.length} clips visibles à t=${t.toFixed(3)}`);
+  }
+});
+
+test('les clips restent dans l’ordre malgré des transitions extrêmes', () => {
+  const placed = layoutClips([makeClip(1, 'fade', 99), makeClip(1, 'fade', 99), makeClip(1, 'fade', 99)]);
+  for (let i = 1; i < placed.length; i++) {
+    assert.ok(placed[i].start > placed[i - 1].start, 'un clip démarre avant son prédécesseur');
+  }
+});
+
+test('sliceAt compose deux couches pendant la transition, une seule ensuite', () => {
+  const clips = [makeClip(4), makeClip(4, 'fade', 1)];
+  const placed = layoutClips(clips);
+
+  const during = sliceAt(placed, 3.5)!;
+  assert.ok(during.from, 'le clip sortant devrait être présent');
+  assert.equal(during.from!.placed.index, 0);
+  assert.equal(during.to.placed.index, 1);
+  assert.ok(Math.abs(during.progress - 0.5) < 1e-9);
+
+  const after = sliceAt(placed, 5)!;
+  assert.equal(after.from, null);
+  assert.equal(after.to.placed.index, 1);
+});
+
+test('sourceTime suit le point d’entrée et la vitesse', () => {
+  const clip = { ...makeClip(10), inPoint: 2, outPoint: 10, speed: 2 };
+  const placed = layoutClips([clip]);
+  // 1 s de timeline à vitesse 2 -> 2 s consommées dans la source, depuis 2 s.
+  assert.equal(sliceAt(placed, 1)!.to.sourceTime, 4);
+});
+
+test('au-delà de la fin, on fige sur la dernière image', () => {
+  const placed = layoutClips([makeClip(3)]);
+  const slice = sliceAt(placed, 99)!;
+  assert.equal(slice.to.placed.index, 0);
+  assert.ok(slice.to.sourceTime <= 3 && slice.to.sourceTime > 2.99);
+});
