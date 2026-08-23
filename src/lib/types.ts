@@ -72,7 +72,34 @@ export type Caption = {
   style: CaptionStyleId;
   /** Position verticale du centre du bloc, de 0 (haut) à 1 (bas). */
   y: number;
+  /** Couleur du texte. Absente, celle du style s'applique. */
+  color?: string;
+  /** Facteur de taille appliqué au corps du style. */
+  scale?: number;
 };
+
+/**
+ * Couleurs proposées pour un sous-titre.
+ *
+ * Volontairement peu nombreuses et toutes très contrastées : sur une image
+ * vidéo quelconque, un texte pastel devient illisible, et proposer une palette
+ * complète reviendrait à laisser choisir la mauvaise option.
+ */
+export const CAPTION_COLORS: { value: string; label: string }[] = [
+  { value: '#ffffff', label: 'Blanc' },
+  { value: '#ffe14d', label: 'Jaune' },
+  { value: '#22e37a', label: 'Vert' },
+  { value: '#ff5c68', label: 'Rouge' },
+  { value: '#48d2ff', label: 'Cyan' },
+  { value: '#0a0a0a', label: 'Noir' },
+];
+
+/** Tailles proposées, en facteur du corps défini par le style. */
+export const CAPTION_SCALES: { value: number; label: string }[] = [
+  { value: 0.72, label: 'Petit' },
+  { value: 1, label: 'Normal' },
+  { value: 1.3, label: 'Grand' },
+];
 
 /** Bruitages de synthèse, générés en Web Audio (aucun fichier à héberger). */
 export type SfxId =

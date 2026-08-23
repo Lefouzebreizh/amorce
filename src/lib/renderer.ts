@@ -1,6 +1,6 @@
 'use client';
 
-import { captionsAt, drawCaption, type FontSet } from './captions.ts';
+import { captionsAt, drawCaption, type CaptionBox, type FontSet } from './captions.ts';
 import { getLook, GradePipeline } from './grade.ts';
 import { layoutClips, sliceAt, type ActiveLayer, type PlacedClip } from './timeline.ts';
 import { applyTransition, type LayerDrawer, type LayerTransform } from './transitions.ts';
@@ -238,6 +238,14 @@ export type RenderOptions = {
   scale?: number;
   /** Halo sur les hautes lumières. Coupé sur les appareils lents. */
   bloom?: boolean;
+  /**
+   * Reçoit la position de chaque sous-titre tracé.
+   *
+   * Un texte dessiné dans un canvas n'est pas un élément du document : sans
+   * cette trace, rien ne permettrait de savoir lequel se trouve sous le doigt.
+   * La table est vidée puis remplie à chaque image.
+   */
+  captionBoxes?: Map<string, CaptionBox>;
 };
 
 /**
@@ -284,8 +292,10 @@ export function renderFrame(
     bloom: options.bloom ?? true,
   });
 
+  options.captionBoxes?.clear();
   for (const caption of captionsAt(project.captions, time)) {
-    drawCaption(ctx, caption, time, fonts);
+    const box = drawCaption(ctx, caption, time, fonts);
+    if (box) options.captionBoxes?.set(caption.id, box);
   }
 }
 

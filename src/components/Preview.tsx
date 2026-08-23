@@ -15,10 +15,19 @@ import { Button } from './ui';
  * prévisualisation sur la taille des sous-titres et sur la finesse du grain,
  * deux choses qui ne pardonnent pas à l'export.
  */
+/** Déplacement en dessous duquel un geste reste un simple appui. */
+const DRAG_THRESHOLD_PX = 6;
+
 export function Preview({ engine }: { engine: PlaybackEngine }) {
   const playing = useStudio((s) => s.playing);
   const clipCount = useStudio((s) => s.project.clips.length);
+  const captionCount = useStudio((s) => s.project.captions.length);
+  const select = useStudio((s) => s.select);
+  const updateCaption = useStudio((s) => s.updateCaption);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  /** Sous-titre saisi, et distance parcourue depuis l'appui initial. */
+  const gesture = useRef<{ id: string | null; startY: number; moved: boolean } | null>(null);
 
   // Le canvas appartient à ce composant, qui le déclare au moteur une fois posé
   // dans le document. Le moteur n'a ainsi aucune ref à faire transiter.
@@ -36,15 +45,60 @@ export function Preview({ engine }: { engine: PlaybackEngine }) {
      */
     <div className="flex min-h-[11rem] flex-1 flex-col items-center gap-2 overflow-hidden">
       <div className="relative flex min-h-[6rem] flex-1 items-center justify-center overflow-hidden">
+        {/*
+          Le canvas n'a pas d'enfants : un texte qui y est dessiné n'est pas un
+          élément du document et ne peut donc pas recevoir d'évènement. La
+          sélection passe par la table des rectangles remplie à chaque image, et
+          le geste est interprété ici : un appui sélectionne, un glissement
+          déplace, un appui hors texte lance ou arrête la lecture.
+        */}
         <canvas
           ref={canvasRef}
           width={OUTPUT_WIDTH}
           height={OUTPUT_HEIGHT}
-          onClick={engine.toggle}
-          aria-label="Prévisualisation du montage"
-          className="h-full max-h-full w-auto max-w-full cursor-pointer rounded-2xl border border-edge bg-black shadow-2xl shadow-black/60"
+          aria-label="Prévisualisation du montage — touche un texte pour le régler"
+          className="h-full max-h-full w-auto max-w-full cursor-pointer touch-none rounded-2xl border border-edge bg-black shadow-2xl shadow-black/60"
           style={{ aspectRatio: '9 / 16' }}
+          onPointerDown={(event) => {
+            const id = engine.captionAt(event.clientX, event.clientY);
+            gesture.current = { id, startY: event.clientY, moved: false };
+
+            if (id) {
+              // Saisir le pointeur garantit de recevoir les mouvements même si
+              // le doigt sort du canvas en cours de glissement.
+              event.currentTarget.setPointerCapture(event.pointerId);
+              select({ kind: 'caption', id });
+            }
+          }}
+          onPointerMove={(event) => {
+            const current = gesture.current;
+            if (!current?.id) return;
+
+            if (!current.moved && Math.abs(event.clientY - current.startY) < DRAG_THRESHOLD_PX) return;
+            current.moved = true;
+            updateCaption(current.id, { y: engine.toRelativeY(event.clientY) });
+          }}
+          onPointerUp={(event) => {
+            const current = gesture.current;
+            gesture.current = null;
+            if (current?.id) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+              return;
+            }
+            // Appui en dehors de tout texte : le canvas retrouve son rôle de
+            // bouton de lecture.
+            if (!current?.moved) engine.toggle();
+          }}
+          onPointerCancel={() => {
+            gesture.current = null;
+          }}
         />
+        {clipCount > 0 && captionCount > 0 && (
+          <p className="pointer-events-none absolute bottom-1 left-0 right-0 text-center text-[10px] text-muted">
+            Touche un texte pour le régler, fais-le glisser pour le déplacer
+          </p>
+        )}
+
         {clipCount === 0 && (
           // Message volontairement court et tronqué : dans un aperçu réduit à
           // quelques centimètres, un paragraphe déborderait par-dessus l'en-tête

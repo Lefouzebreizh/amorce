@@ -108,9 +108,12 @@ const MAX_TEXT_WIDTH = OUTPUT_WIDTH * 0.86;
 const LINE_HEIGHT_RATIO = 1.18;
 const POP_DURATION = 0.24;
 
-function fontString(style: CaptionStyle, fonts: FontSet): string {
-  return `${style.weight} ${style.fontSize}px ${fonts[style.family]}`;
+function fontString(style: CaptionStyle, fonts: FontSet, scale: number): string {
+  return `${style.weight} ${Math.round(style.fontSize * scale)}px ${fonts[style.family]}`;
 }
+
+/** Rectangle occupé par un sous-titre, en coordonnées de sortie. */
+export type CaptionBox = { x: number; y: number; width: number; height: number };
 
 /** Découpe le texte en lignes qui tiennent dans la largeur autorisée. */
 export function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
@@ -182,24 +185,33 @@ function roundedRect(
   ctx.closePath();
 }
 
-/** Dessine un sous-titre sur le canvas de sortie. */
+/**
+ * Dessine un sous-titre sur le canvas de sortie.
+ *
+ * Renvoie le rectangle occupé, dont l'interface se sert pour savoir quel
+ * sous-titre se trouve sous le doigt : sans cette information, un texte dessiné
+ * dans un canvas n'est pas plus cliquable qu'une image.
+ */
 export function drawCaption(
   ctx: CanvasRenderingContext2D,
   caption: Caption,
   time: number,
   fonts: FontSet,
-): void {
+): CaptionBox | null {
   const style = CAPTION_STYLES[caption.style];
   const text = style.uppercase ? caption.text.toUpperCase() : caption.text;
-  if (!text.trim()) return;
+  if (!text.trim()) return null;
+
+  const scale = caption.scale ?? 1;
+  const fontSize = style.fontSize * scale;
 
   ctx.save();
-  ctx.font = fontString(style, fonts);
+  ctx.font = fontString(style, fonts, scale);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
   const lines = wrapLines(ctx, text, MAX_TEXT_WIDTH);
-  const lineHeight = style.fontSize * LINE_HEIGHT_RATIO;
+  const lineHeight = fontSize * LINE_HEIGHT_RATIO;
   const blockHeight = lines.length * lineHeight;
   const centerY = caption.y * OUTPUT_HEIGHT;
 
@@ -212,9 +224,9 @@ export function drawCaption(
   }
 
   const firstLineY = centerY - blockHeight / 2 + lineHeight / 2;
+  const widest = Math.max(...lines.map((line) => ctx.measureText(line).width));
 
   if (style.box) {
-    const widest = Math.max(...lines.map((line) => ctx.measureText(line).width));
     roundedRect(
       ctx,
       OUTPUT_WIDTH / 2 - widest / 2 - style.box.paddingX,
@@ -227,15 +239,39 @@ export function drawCaption(
     ctx.fill();
   }
 
+  const color = caption.color ?? style.color;
+
   if (style.highlight) {
-    drawKaraokeLines(ctx, lines, caption, time, style, firstLineY, lineHeight);
+    drawKaraokeLines(ctx, lines, caption, time, style, firstLineY, lineHeight, scale);
   } else {
     lines.forEach((line, index) => {
-      drawStyledText(ctx, line, OUTPUT_WIDTH / 2, firstLineY + index * lineHeight, style, style.color);
+      drawStyledText(ctx, line, OUTPUT_WIDTH / 2, firstLineY + index * lineHeight, style, color, scale);
     });
   }
 
   ctx.restore();
+
+  /*
+   * Zone tactile élargie.
+   *
+   * Le rectangle strict du texte est difficile à viser au doigt, surtout sur
+   * une ligne courte. On l'étend d'une marge généreuse, quitte à ce que deux
+   * sous-titres voisins se chevauchent — le plus proche du point touché
+   * l'emporte de toute façon.
+   */
+  const padX = 40;
+  const padY = 24;
+  return {
+    x: OUTPUT_WIDTH / 2 - widest / 2 - padX,
+    y: centerY - blockHeight / 2 - padY,
+    width: widest + padX * 2,
+    height: blockHeight + padY * 2,
+  };
+}
+
+/** Vrai si le point est dans le rectangle. */
+export function boxContains(box: CaptionBox, x: number, y: number): boolean {
+  return x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height;
 }
 
 /** Trace un texte avec son contour et son ombre éventuels. */
@@ -246,15 +282,16 @@ function drawStyledText(
   y: number,
   style: CaptionStyle,
   color: string,
+  scale = 1,
 ): void {
   ctx.save();
   if (style.shadow) {
     ctx.shadowColor = style.shadow.color;
-    ctx.shadowBlur = style.shadow.blur;
-    ctx.shadowOffsetY = style.shadow.offsetY;
+    ctx.shadowBlur = style.shadow.blur * scale;
+    ctx.shadowOffsetY = style.shadow.offsetY * scale;
   }
   if (style.stroke) {
-    ctx.lineWidth = style.stroke.width;
+    ctx.lineWidth = style.stroke.width * scale;
     ctx.strokeStyle = style.stroke.color;
     ctx.lineJoin = 'round';
     ctx.miterLimit = 2;
@@ -276,6 +313,7 @@ function drawKaraokeLines(
   style: CaptionStyle,
   firstLineY: number,
   lineHeight: number,
+  scale = 1,
 ): void {
   const allWords = lines.flatMap((line) => line.split(' '));
   const active = activeWordIndex(caption, time, allWords.length);
@@ -297,11 +335,11 @@ function drawKaraokeLines(
         ctx.save();
         roundedRect(
           ctx,
-          x - 14,
-          y - style.fontSize * 0.58,
-          width + 28,
-          style.fontSize * 1.16,
-          16,
+          x - 14 * scale,
+          y - style.fontSize * scale * 0.58,
+          width + 28 * scale,
+          style.fontSize * scale * 1.16,
+          16 * scale,
         );
         ctx.fillStyle = style.highlight.color;
         ctx.fill();
@@ -315,7 +353,8 @@ function drawKaraokeLines(
         y,
         // Le contour noir nuit à la lisibilité sur le pavé de surlignage.
         isActive && style.highlight ? { ...style, stroke: undefined } : style,
-        isActive && style.highlight ? style.highlight.color2 : style.color,
+        isActive && style.highlight ? style.highlight.color2 : (caption.color ?? style.color),
+        scale,
       );
 
       x += width + spaceWidth;

@@ -530,6 +530,56 @@ if (profile.mobile) {
   await page.waitForTimeout(400);
 }
 
+// ------------------------------------- 4bis. Manipulation directe du texte
+if (profile.mobile) {
+  /*
+   * Un texte dessiné dans un canvas n'est pas un élément du document : rien ne
+   * garantit qu'il réponde au doigt sinon la table des rectangles remplie à
+   * chaque image. On vise donc la position réelle de l'accroche à l'écran.
+   */
+  // L'accroche ne couvre que le début du montage : la lecture s'étant arrêtée
+  // à la fin, il n'y aurait aucun texte à l'écran à cet instant.
+  await page.locator('input[aria-label="Position dans le montage"]').fill('1');
+  await page.waitForTimeout(600);
+
+  const canvasBox = await page.locator('canvas').boundingBox();
+  const captionY = canvasBox.y + canvasBox.height * 0.28;
+  const centerX = canvasBox.x + canvasBox.width / 2;
+
+  await page.mouse.click(centerX, captionY);
+  await page.waitForTimeout(700);
+
+  check(
+    'Toucher un texte dans l’aperçu le sélectionne',
+    await page.locator('text=Texte sélectionné').isVisible(),
+  );
+
+  const before = Number(await page.locator('input[aria-label="Position verticale"]').inputValue());
+
+  // Glissement vers le bas : le sous-titre doit suivre le doigt.
+  await touchDrag({ x: centerX, y: captionY }, { x: centerX, y: canvasBox.y + canvasBox.height * 0.6 });
+  await page.waitForTimeout(600);
+  const after = Number(await page.locator('input[aria-label="Position verticale"]').inputValue());
+
+  check(
+    'Faire glisser un texte le déplace',
+    after > before + 0.1,
+    `hauteur passée de ${before.toFixed(2)} à ${after.toFixed(2)}`,
+  );
+
+  // La couleur fait partie des réglages accessibles une fois le texte touché.
+  await page.locator('button[aria-label="Couleur Jaune"]').click();
+  await page.waitForTimeout(400);
+  check(
+    'Une couleur peut être appliquée au texte sélectionné',
+    (await page.locator('button[aria-label="Couleur Jaune"]').getAttribute('aria-pressed')) === 'true',
+  );
+
+  // On remet la hauteur d'origine pour ne pas fausser les mesures d'image.
+  await page.locator('input[aria-label="Position verticale"]').fill(String(before));
+  await page.waitForTimeout(300);
+}
+
 // ------------------------------------------------------- 5. Table de mixage
 await page.click('nav[aria-label="Étapes du montage"] button:has-text("Son")');
 await page.waitForTimeout(600);
@@ -580,6 +630,32 @@ try {
   check('Un fichier est téléchargé', true, download.suggestedFilename());
 } catch (error) {
   check('Un fichier est téléchargé', false, String(error).slice(0, 120));
+}
+
+if (!profile.mobile) {
+  // La bande-son seule : le mixage est déjà fait dans le graphe audio, seule la
+  // piste vidéo n'est pas jointe au flux enregistré.
+  await page.click('button:has-text("Son seul")');
+  await page.waitForTimeout(500);
+
+  const audioDownload = page.waitForEvent('download', { timeout: 60000 });
+  await page.click('text=Exporter la bande-son');
+  try {
+    const download = await audioDownload;
+    const audioPath = join(SHOTS, `${profile.id}-${download.suggestedFilename()}`);
+    await download.saveAs(audioPath);
+    const size = readFileSync(audioPath).length;
+    check(
+      'La bande-son s’exporte seule',
+      /\.(m4a|webm|ogg)$/.test(download.suggestedFilename()) && size > 2000,
+      `${download.suggestedFilename()} — ${(size / 1024).toFixed(0)} Ko`,
+    );
+  } catch (error) {
+    check('La bande-son s’exporte seule', false, String(error).slice(0, 100));
+  }
+
+  await page.click('button:has-text("Vidéo + son")');
+  await page.waitForTimeout(300);
 }
 
 const pageErrors = await page.evaluate(() => window.__probe.errors);

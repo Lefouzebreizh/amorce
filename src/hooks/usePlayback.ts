@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { AudioEngine } from '@/lib/audio';
-import type { FontSet } from '@/lib/captions';
+import { boxContains, type CaptionBox, type FontSet } from '@/lib/captions';
 import { GradePipeline } from '@/lib/grade';
 import { guessTier, PanicDetector, QualityGovernor, QUALITY_TIERS, tierById } from '@/lib/quality';
 import { ClipVideoPool, preloadCaptionFonts, renderFrame, syncPlayback } from '@/lib/renderer';
@@ -37,6 +37,16 @@ export type PlaybackEngine = {
   pause: () => void;
   toggle: () => void;
   seek: (time: number) => void;
+  /**
+   * Sous-titre situé sous un point de l'écran, ou null.
+   *
+   * Les coordonnées attendues sont celles de la fenêtre ; la conversion vers le
+   * repère de sortie est faite ici, puisque le facteur dépend de la taille
+   * d'affichage du canvas, qui change avec la mise en page.
+   */
+  captionAt: (clientX: number, clientY: number) => string | null;
+  /** Convertit une position verticale d'écran en hauteur de 0 à 1. */
+  toRelativeY: (clientY: number) => number;
   /** Ressources internes, dont l'export a besoin. */
   resources: () => { pool: ClipVideoPool; grade: GradePipeline; audio: AudioEngine | null };
   /** Prépare le mixage audio ; nécessite un geste utilisateur préalable. */
@@ -97,6 +107,7 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
   const gradeRef = useRef<GradePipeline | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
   const frameRef = useRef(0);
+  const captionBoxesRef = useRef(new Map<string, CaptionBox>());
 
   if (poolRef.current === null) poolRef.current = new ClipVideoPool();
   if (gradeRef.current === null) gradeRef.current = new GradePipeline();
@@ -200,6 +211,7 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
         frame: frameRef.current++,
         scale: tier.scale,
         bloom: tier.bloom,
+        captionBoxes: captionBoxesRef.current,
       });
 
       const work = performance.now() - now;
@@ -315,6 +327,46 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
     exportingRef.current = null;
   }, []);
 
+  /** Position du point dans le repère de sortie, ou null hors du canvas. */
+  const toOutput = useCallback((clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const bounds = canvas.getBoundingClientRect();
+    if (bounds.width === 0 || bounds.height === 0) return null;
+
+    return {
+      x: ((clientX - bounds.left) / bounds.width) * OUTPUT_WIDTH,
+      y: ((clientY - bounds.top) / bounds.height) * OUTPUT_HEIGHT,
+      inside:
+        clientX >= bounds.left &&
+        clientX <= bounds.right &&
+        clientY >= bounds.top &&
+        clientY <= bounds.bottom,
+    };
+  }, []);
+
+  const captionAt = useCallback(
+    (clientX: number, clientY: number) => {
+      const point = toOutput(clientX, clientY);
+      if (!point || !point.inside) return null;
+
+      // Le dernier tracé est au-dessus des autres : on parcourt à l'envers pour
+      // que ce soit lui qui réponde en cas de chevauchement.
+      const entries = [...captionBoxesRef.current.entries()].reverse();
+      return entries.find(([, box]) => boxContains(box, point.x, point.y))?.[0] ?? null;
+    },
+    [toOutput],
+  );
+
+  const toRelativeY = useCallback(
+    (clientY: number) => {
+      const point = toOutput(0, clientY);
+      return point ? Math.max(0.06, Math.min(0.94, point.y / OUTPUT_HEIGHT)) : 0.5;
+    },
+    [toOutput],
+  );
+
   const setCanvas = useCallback((canvas: HTMLCanvasElement | null) => {
     canvasRef.current = canvas;
   }, []);
@@ -324,7 +376,20 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
   // Identité stable : les consommateurs placent ce moteur dans les dépendances
   // de leurs effets, qui se relanceraient à chaque rendu sans cette mémoïsation.
   return useMemo(
-    () => ({ setCanvas, getCanvas, play, pause, toggle, seek, resources, ensureAudio, beginExport, endExport }),
-    [setCanvas, getCanvas, play, pause, toggle, seek, resources, ensureAudio, beginExport, endExport],
+    () => ({
+      setCanvas,
+      getCanvas,
+      play,
+      pause,
+      toggle,
+      seek,
+      captionAt,
+      toRelativeY,
+      resources,
+      ensureAudio,
+      beginExport,
+      endExport,
+    }),
+    [setCanvas, getCanvas, play, pause, toggle, seek, captionAt, toRelativeY, resources, ensureAudio, beginExport, endExport],
   );
 }

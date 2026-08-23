@@ -31,8 +31,9 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [audioOnly, setAudioOnly] = useState(false);
 
-  const format = pickFormat();
+  const format = pickFormat(audioOnly);
   const busy = progress !== null;
 
   const run = async () => {
@@ -54,6 +55,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         canvas,
         audio,
         duration,
+        audioOnly,
         startPlayback: engine.play,
         stopPlayback: engine.pause,
         currentTime: () => useStudio.getState().playhead,
@@ -75,7 +77,29 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
 
   return (
     <div className="space-y-3">
-      <Panel title="7 · Exporter" subtitle={`${OUTPUT_FPS} images par seconde, format vertical.`}>
+      <Panel
+        title="7 · Exporter"
+        subtitle={audioOnly ? 'Le mixage seul, sans image.' : `${OUTPUT_FPS} images par seconde, format vertical.`}
+      >
+        <Field
+          label="Que veux-tu récupérer ?"
+          help={
+            audioOnly
+              ? 'Seule la bande-son, mixage compris : le son de tes plans, les bruitages et la musique, réunis dans un fichier audio.'
+              : 'La vidéo complète, image et son.'
+          }
+        >
+          <Choice
+            value={audioOnly ? 'audio' : 'video'}
+            onChange={(value) => setAudioOnly(value === 'audio')}
+            options={[
+              { value: 'video', label: 'Vidéo + son', description: 'Le fichier à publier.' },
+              { value: 'audio', label: 'Son seul', description: 'La bande-son, à retoucher ailleurs.' },
+            ]}
+          />
+        </Field>
+
+        {!audioOnly && (
         <Field
           label="Définition"
           help={
@@ -94,6 +118,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
             }))}
           />
         </Field>
+        )}
 
         <label className="mb-3 block">
           <span className="mb-1.5 block text-xs font-semibold text-mist">Nom du fichier</span>
@@ -105,7 +130,11 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         </label>
 
         <Button variant="primary" className="w-full" onClick={run} disabled={busy || duration <= 0 || !format}>
-          {busy ? `Enregistrement… ${Math.round((progress ?? 0) * 100)} %` : '⬇ Exporter la vidéo'}
+          {busy
+            ? `Enregistrement… ${Math.round((progress ?? 0) * 100)} %`
+            : audioOnly
+              ? '⬇ Exporter la bande-son'
+              : '⬇ Exporter la vidéo'}
         </Button>
 
         {busy && (
@@ -128,9 +157,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         )}
 
         <dl className="mt-3 space-y-1 border-t border-edge pt-3 text-[11px] text-muted">
-          <Row label="Définition">
-            {width} × {height}
-          </Row>
+          <Row label="Définition">{audioOnly ? 'son seul' : `${width} × ${height}`}</Row>
           <Row label="Durée">{formatTime(duration)}</Row>
           <Row label="Format">{format ? format.label : 'non pris en charge'}</Row>
           <Row label="Temps d’export">environ {formatTime(duration)}</Row>

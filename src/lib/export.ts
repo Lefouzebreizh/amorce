@@ -31,10 +31,26 @@ const CANDIDATES: ExportFormat[] = [
   { mimeType: 'video/webm', extension: 'webm', label: 'WebM' },
 ];
 
+/**
+ * Formats audio seuls, pour récupérer la bande-son sans l'image.
+ *
+ * `audio/mp4` sans précision de codec est volontairement absent : le navigateur
+ * y place alors de l'Opus, et le fichier se retrouve nommé `.m4a` — une
+ * extension qui promet de l'AAC — avec un contenu que la plupart des lecteurs
+ * refusent d'ouvrir. Mieux vaut un `.webm` honnête qu'un `.m4a` trompeur.
+ */
+const AUDIO_CANDIDATES: ExportFormat[] = [
+  { mimeType: 'audio/mp4;codecs=mp4a.40.2', extension: 'm4a', label: 'M4A (AAC)' },
+  { mimeType: 'audio/webm;codecs=opus', extension: 'webm', label: 'WebM (Opus)' },
+  { mimeType: 'audio/ogg;codecs=opus', extension: 'ogg', label: 'OGG (Opus)' },
+  { mimeType: 'audio/webm', extension: 'webm', label: 'WebM' },
+];
+
 /** Meilleur format disponible sur ce navigateur. */
-export function pickFormat(): ExportFormat | null {
+export function pickFormat(audioOnly = false): ExportFormat | null {
   if (typeof MediaRecorder === 'undefined') return null;
-  return CANDIDATES.find((candidate) => MediaRecorder.isTypeSupported(candidate.mimeType)) ?? null;
+  const list = audioOnly ? AUDIO_CANDIDATES : CANDIDATES;
+  return list.find((candidate) => MediaRecorder.isTypeSupported(candidate.mimeType)) ?? null;
 }
 
 export type ExportResult = {
@@ -57,6 +73,13 @@ export type RecordParams = {
   isPlaying: () => boolean;
   onProgress?: (ratio: number) => void;
   signal?: AbortSignal;
+  /**
+   * N'enregistre que la bande-son.
+   *
+   * Le mixage des trois sources est déjà fait dans le graphe audio : il suffit
+   * de ne pas joindre la piste vidéo pour en récupérer le résultat seul.
+   */
+  audioOnly?: boolean;
 };
 
 /** Débit vidéo. Généreux : le grain et les dégradés sont coûteux à encoder. */
@@ -68,20 +91,26 @@ const TAIL_MS = 400;
 
 /** Enregistre le montage et renvoie le fichier obtenu. */
 export async function recordMontage(params: RecordParams): Promise<ExportResult> {
-  const format = pickFormat();
+  const audioOnly = params.audioOnly === true;
+  const format = pickFormat(audioOnly);
   if (!format) {
     throw new Error(
-      'Ce navigateur ne sait pas enregistrer de vidéo. Passe par Chrome, Edge ou Firefox à jour.',
+      'Ce navigateur ne sait pas enregistrer ce format. Passe par Chrome, Edge ou Firefox à jour.',
     );
   }
   if (params.duration <= 0) throw new Error('Il n’y a rien à exporter : la timeline est vide.');
 
+  // Le canvas continue de tourner pendant un export audio : c'est lui qui fait
+  // avancer la lecture, donc le son. Seule sa piste n'est pas jointe au flux.
   const videoStream = params.canvas.captureStream(OUTPUT_FPS);
-  const stream = new MediaStream([...videoStream.getVideoTracks(), ...params.audio.stream.getAudioTracks()]);
+  const stream = new MediaStream([
+    ...(audioOnly ? [] : videoStream.getVideoTracks()),
+    ...params.audio.stream.getAudioTracks(),
+  ]);
 
   const recorder = new MediaRecorder(stream, {
     mimeType: format.mimeType,
-    videoBitsPerSecond: VIDEO_BITRATE,
+    ...(audioOnly ? {} : { videoBitsPerSecond: VIDEO_BITRATE }),
     audioBitsPerSecond: AUDIO_BITRATE,
   });
 

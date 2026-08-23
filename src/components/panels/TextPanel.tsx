@@ -4,7 +4,7 @@ import { CAPTION_STYLES } from '@/lib/captions';
 import { HOOK_WINDOW } from '@/lib/analysis';
 import { hooksByFamily } from '@/lib/hooks';
 import { useStudio } from '@/lib/store';
-import type { CaptionStyleId } from '@/lib/types';
+import { CAPTION_COLORS, CAPTION_SCALES, type CaptionStyleId } from '@/lib/types';
 import { Button, Choice, Field, Hint, Panel, Slider } from '../ui';
 
 /**
@@ -154,6 +154,40 @@ export function TextPanel() {
             />
           </Field>
 
+          <Field label="Couleur" help="Toutes très contrastées : sur une image vidéo, un ton pâle devient illisible.">
+            <div className="flex flex-wrap gap-1.5">
+              {CAPTION_COLORS.map((option) => {
+                const active = (selected.color ?? '#ffffff') === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    title={option.label}
+                    aria-label={`Couleur ${option.label}`}
+                    aria-pressed={active}
+                    onClick={() => updateCaption(selected.id, { color: option.value })}
+                    className={`h-9 w-9 rounded-full border-2 transition-transform ${
+                      active ? 'scale-110 border-accent' : 'border-edge'
+                    }`}
+                    style={{ backgroundColor: option.value }}
+                  />
+                );
+              })}
+            </div>
+          </Field>
+
+          <Field label="Taille" help="Un texte plus grand porte plus loin, mais mange l’image.">
+            <Choice
+              value={String(selected.scale ?? 1)}
+              onChange={(value) => updateCaption(selected.id, { scale: Number(value) })}
+              columns={3}
+              options={CAPTION_SCALES.map((option) => ({
+                value: String(option.value),
+                label: option.label,
+              }))}
+            />
+          </Field>
+
           <Field label="Style" help="Punch pour l’accroche, Karaoké pour la narration, Cartouche pour l’info.">
             <Choice
               value={selected.style}
@@ -195,7 +229,7 @@ export function TextPanel() {
           <Field
             label="Hauteur à l’écran"
             value={`${Math.round(selected.y * 100)} %`}
-            help="Garde le texte entre 25 % et 70 % : le bas de l’écran est masqué par l’interface de l’application."
+            help="Tu peux aussi faire glisser le texte directement dans l’aperçu. Garde-le entre 25 % et 70 % : le bas de l’écran est masqué par l’interface de l’application."
           >
             <Slider
               ariaLabel="Position verticale"
