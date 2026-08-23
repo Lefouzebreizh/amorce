@@ -20,6 +20,8 @@ export class AudioEngine {
   readonly context: AudioContext;
   private readonly master: GainNode;
   private readonly sfxBus: GainNode;
+  private readonly clipsBus: GainNode;
+  private readonly musicBus: GainNode;
   private readonly limiter: DynamicsCompressorNode;
   private readonly recordDestination: MediaStreamAudioDestinationNode;
 
@@ -63,6 +65,19 @@ export class AudioEngine {
     this.sfxBus.gain.value = 2.2;
     this.sfxBus.connect(this.master);
 
+    /*
+     * Un bus par source.
+     *
+     * Chaque famille de sons arrive sur son propre point de réglage, ce qui
+     * permet de baisser le fond sans toucher aux bruitages — ou l'inverse —
+     * d'un seul geste, plutôt que plan par plan.
+     */
+    this.clipsBus = this.context.createGain();
+    this.clipsBus.connect(this.master);
+
+    this.musicBus = this.context.createGain();
+    this.musicBus.connect(this.master);
+
     this.master.connect(this.limiter);
     this.recordDestination = this.context.createMediaStreamDestination();
 
@@ -91,7 +106,7 @@ export class AudioEngine {
       const source = this.context.createMediaElementSource(video);
       const gain = this.context.createGain();
       source.connect(gain);
-      gain.connect(this.master);
+      gain.connect(this.clipsBus);
       this.clipNodes.set(clipId, { source, gain });
     } catch {
       // Élément déjà relié ailleurs : on continue sans son plutôt que de
@@ -106,6 +121,19 @@ export class AudioEngine {
       nodes.gain.disconnect();
       this.clipNodes.delete(clipId);
     }
+  }
+
+  /**
+   * Applique l'équilibre entre les trois sources.
+   *
+   * Le niveau des bruitages est multiplié par le facteur du bus, non remplacé :
+   * ce facteur compense leur brièveté, qu'un réglage à 100 % ne doit pas
+   * annuler.
+   */
+  applyMix(mix: { clips: number; sfx: number; music: number }): void {
+    this.clipsBus.gain.value = Math.max(0, Math.min(1, mix.clips));
+    this.sfxBus.gain.value = 2.2 * Math.max(0, Math.min(1, mix.sfx));
+    this.musicBus.gain.value = Math.max(0, Math.min(1, mix.music));
   }
 
   setClipVolume(clipId: string, volume: number): void {
@@ -130,7 +158,7 @@ export class AudioEngine {
         const source = this.context.createMediaElementSource(element);
         const gainNode = this.context.createGain();
         source.connect(gainNode);
-        gainNode.connect(this.master);
+        gainNode.connect(this.musicBus);
         this.musicElement = element;
         this.musicNodes = { source, gain: gainNode };
       }

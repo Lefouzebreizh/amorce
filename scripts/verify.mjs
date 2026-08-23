@@ -530,7 +530,29 @@ if (profile.mobile) {
   await page.waitForTimeout(400);
 }
 
-// ---------------------------------------------------------------- 5. Export
+// ------------------------------------------------------- 5. Table de mixage
+await page.click('nav[aria-label="Étapes du montage"] button:has-text("Son")');
+await page.waitForTimeout(600);
+
+// Chaque source doit avoir son propre réglage : c'est ce qui permet de faire
+// ressortir un bruitage sans toucher au son des plans un par un.
+for (const source of ['Son des vidéos', 'Bruitages', 'Musique']) {
+  check(`La source « ${source} » a son propre réglage`, await page.locator(`input[aria-label="${source}"]`).count() === 1);
+}
+
+const clipsFader = page.locator('input[aria-label="Son des vidéos"]');
+await clipsFader.scrollIntoViewIfNeeded();
+await clipsFader.fill('0.2');
+await page.waitForTimeout(400);
+check(
+  'Baisser une source n’affecte pas les autres',
+  (await page.locator('input[aria-label="Bruitages"]').inputValue()) === '1',
+  `son des vidéos à ${await clipsFader.inputValue()}, bruitages inchangés`,
+);
+await clipsFader.fill('0.75');
+await page.waitForTimeout(300);
+
+// ---------------------------------------------------------------- 6. Export
 await page.click('nav[aria-label="Étapes du montage"] button:has-text("Exporter")');
 await page.waitForTimeout(400);
 

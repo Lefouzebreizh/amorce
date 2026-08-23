@@ -1,4 +1,4 @@
-import { DEFAULT_CINEMA, type Clip, type Project } from './types.ts';
+import { DEFAULT_CINEMA, DEFAULT_MIX, type Clip, type Project } from './types.ts';
 
 /**
  * Calcul des positions sur la timeline.
@@ -139,5 +139,6 @@ export function emptyProject(): Project {
     cues: [],
     music: null,
     cinema: { ...DEFAULT_CINEMA },
+    mix: { ...DEFAULT_MIX },
   };
 }

@@ -187,6 +187,7 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
 
       const audio = audioRef.current;
       if (audio) {
+        audio.applyMix(project.mix);
         for (const clip of project.clips) audio.setClipVolume(clip.id, clip.volume);
         audio.syncMusic(project.music?.url ?? null, project.music?.gain ?? 0);
         audio.syncMusicPosition(project.music?.offset ?? 0, time, playing);

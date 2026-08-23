@@ -134,6 +134,31 @@ export function exportPreset(id: ExportPreset['id']): ExportPreset {
   return EXPORT_PRESETS.find((p) => p.id === id) ?? EXPORT_PRESETS[0];
 }
 
+/**
+ * Table de mixage.
+ *
+ * Trois sources se disputent la même sortie : le son d'origine des plans, les
+ * bruitages, la musique. Sans réglage séparé, un rush bruyant couvre les
+ * bruitages qu'on vient de poser, et le seul recours serait de baisser le
+ * volume de chaque plan un par un.
+ */
+export type MixSettings = {
+  /** Son d'origine des plans, de 0 à 1. */
+  clips: number;
+  /** Bruitages, de 0 à 1. */
+  sfx: number;
+  /** Musique de fond, de 0 à 1. */
+  music: number;
+};
+
+/**
+ * Équilibre de départ.
+ *
+ * Les bruitages passent devant : leur fonction est de marquer une coupe ou un
+ * impact, ce qu'ils ne peuvent pas faire au même niveau que le fond sonore.
+ */
+export const DEFAULT_MIX: MixSettings = { clips: 0.75, sfx: 1, music: 0.6 };
+
 /** Rendus colorimétriques disponibles. */
 export type LookId =
   | 'naturel'
@@ -172,6 +197,7 @@ export type Project = {
   cues: SoundCue[];
   music: MusicTrack | null;
   cinema: CinemaSettings;
+  mix: MixSettings;
 };
 
 /** Rendu par défaut : discrètement cinéma, sans bandes. */

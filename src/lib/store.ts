@@ -11,6 +11,7 @@ import {
   type CaptionStyleId,
   type Clip,
   type MediaAsset,
+  type MixSettings,
   type MusicTrack,
   type ExportPreset,
   type Project,
@@ -51,7 +52,7 @@ const COALESCE_MS = 600;
  * plan juste après l'avoir ajouté doit s'annuler en deux fois, sinon
  * l'annulation en défait plus que ce qu'on croyait.
  */
-const COALESCING = new Set(['reglage', 'texte-reglage', 'son-reglage', 'musique-reglage', 'nom']);
+const COALESCING = new Set(['reglage', 'texte-reglage', 'son-reglage', 'musique-reglage', 'mixage', 'nom']);
 
 type StudioState = {
   project: Project;
@@ -112,6 +113,8 @@ type StudioState = {
 
   // -- Musique --------------------------------------------------------------
   setMusic: (music: MusicTrack | null) => void;
+  /** Ajuste l'équilibre entre les trois sources sonores. */
+  setMix: (patch: Partial<MixSettings>) => void;
   updateMusic: (patch: Partial<MusicTrack>) => void;
 
   // -- Lecture --------------------------------------------------------------
@@ -486,6 +489,11 @@ export const useStudio = create<StudioState>((set, get) => {
     mutate('retrait-son', (state) => ({
       project: { ...state.project, cues: state.project.cues.filter((c) => c.id !== id) },
       selection: state.selection?.kind === 'cue' && state.selection.id === id ? null : state.selection,
+    })),
+
+  setMix: (patch) =>
+    mutate('mixage', (state) => ({
+      project: { ...state.project, mix: { ...state.project.mix, ...patch } },
     })),
 
   setMusic: (music) =>

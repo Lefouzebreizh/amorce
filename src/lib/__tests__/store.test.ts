@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
 import { useStudio } from '../store.ts';
 import { emptyProject } from '../timeline.ts';
-import { MIN_CLIP_DURATION, type MediaAsset } from '../types.ts';
+import { DEFAULT_MIX, MIN_CLIP_DURATION, type MediaAsset } from '../types.ts';
 import { PLACEHOLDER_HOOK } from '../autoEdit.ts';
 
 /**
@@ -358,4 +358,40 @@ test('poser des bruitages sur les raccords n’en empile pas deux au même endro
   // Relancé après coup, il ne doit rien ajouter là où il y a déjà un son.
   useStudio.getState().addSoundsOnCuts();
   assert.equal(useStudio.getState().project.cues.length, premier);
+});
+
+test('le mixage règle chaque source indépendamment', () => {
+  const store = useStudio.getState();
+  store.setMix({ clips: 0.2 });
+
+  const mix = useStudio.getState().project.mix;
+  assert.equal(mix.clips, 0.2);
+  assert.equal(mix.sfx, DEFAULT_MIX.sfx, 'les autres sources ne doivent pas bouger');
+  assert.equal(mix.music, DEFAULT_MIX.music);
+});
+
+test('les bruitages partent plus fort que le fond sonore', () => {
+  // Leur fonction est de marquer une coupe : au niveau du fond, ils s'y noient.
+  assert.ok(DEFAULT_MIX.sfx > DEFAULT_MIX.clips);
+  assert.ok(DEFAULT_MIX.clips > DEFAULT_MIX.music);
+});
+
+test('le mixage est annulable', () => {
+  const store = useStudio.getState();
+  store.setMix({ music: 0 });
+  assert.equal(useStudio.getState().project.mix.music, 0);
+
+  useStudio.getState().undo();
+  assert.equal(useStudio.getState().project.mix.music, DEFAULT_MIX.music);
+});
+
+test('un glissement continu du mixage ne compte que pour une annulation', () => {
+  const before = useStudio.getState().past.length;
+
+  // Ce que produit un doigt qui fait glisser une jauge.
+  for (const value of [0.9, 0.8, 0.7, 0.6, 0.5]) useStudio.getState().setMix({ clips: value });
+
+  assert.equal(useStudio.getState().past.length, before + 1, 'un geste, une entrée d’historique');
+  useStudio.getState().undo();
+  assert.equal(useStudio.getState().project.mix.clips, DEFAULT_MIX.clips);
 });

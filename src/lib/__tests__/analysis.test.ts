@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyzeProject, band, captionCoverage, findSlumps, tensionCurve } from '../analysis.ts';
-import { DEFAULT_CINEMA, DEFAULT_CLIP, type Caption, type Clip, type MediaAsset, type Project } from '../types.ts';
+import { DEFAULT_CINEMA, DEFAULT_CLIP, DEFAULT_MIX, type Caption, type Clip, type MediaAsset, type Project } from '../types.ts';
 
 let counter = 0;
 const nextId = () => `id${counter++}`;
@@ -29,7 +29,7 @@ function caption(start: number, end: number): Caption {
 }
 
 function project(overrides: Partial<Project> = {}): Project {
-  return { name: 't', assets: [asset()], clips: [], captions: [], cues: [], music: null, cinema: { ...DEFAULT_CINEMA }, ...overrides };
+  return { name: 't', assets: [asset()], clips: [], captions: [], cues: [], music: null, cinema: { ...DEFAULT_CINEMA }, mix: { ...DEFAULT_MIX }, ...overrides };
 }
 
 test('band vaut 1 dans la plage idéale et 0 aux bornes dures', () => {

@@ -14,6 +14,94 @@ import { Button, Field, Hint, Panel, Slider } from '../ui';
  * lire un nom, et c'est ce qui évite de couvrir la timeline de sons choisis au
  * hasard puis retirés un par un.
  */
+/**
+ * Table de mixage.
+ *
+ * Placée avant la bibliothèque de bruitages, parce que c'est le premier réglage
+ * qu'on cherche quand un son ne s'entend pas : ce n'est presque jamais le
+ * bruitage qui est trop faible, c'est le fond qui est trop fort.
+ */
+function MixerPanel() {
+  const mix = useStudio((s) => s.project.mix);
+  const setMix = useStudio((s) => s.setMix);
+  const hasMusic = useStudio((s) => s.project.music !== null);
+  const cueCount = useStudio((s) => s.project.cues.length);
+
+  // Le niveau d'avant la coupure, pour que la remettre restitue l'équilibre
+  // choisi plutôt qu'une valeur arbitraire.
+  const [memory, setMemory] = useState<Partial<typeof mix>>({});
+
+  const sources = [
+    {
+      key: 'clips' as const,
+      label: 'Son des vidéos',
+      help: 'Le son d’origine de tes rushes. Baisse-le si tes bruitages sont couverts.',
+      available: true,
+    },
+    {
+      key: 'sfx' as const,
+      label: 'Bruitages',
+      help: cueCount === 0 ? 'Aucun bruitage posé pour l’instant.' : `${cueCount} bruitage${cueCount > 1 ? 's' : ''} sur la timeline.`,
+      available: cueCount > 0,
+    },
+    {
+      key: 'music' as const,
+      label: 'Musique',
+      help: hasMusic ? 'Garde-la basse : elle porte l’ambiance, elle ne raconte rien.' : 'Aucune musique importée.',
+      available: hasMusic,
+    },
+  ];
+
+  return (
+    <Panel title="Table de mixage" subtitle="Chaque source se règle séparément.">
+      {sources.map((source) => {
+        const value = mix[source.key];
+        const muted = value === 0;
+
+        return (
+          <Field
+            key={source.key}
+            label={source.label}
+            value={muted ? 'coupé' : `${Math.round(value * 100)} %`}
+            help={source.help}
+          >
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                title={muted ? 'Remettre le son' : 'Couper cette source'}
+                onClick={() => {
+                  if (muted) setMix({ [source.key]: memory[source.key] ?? 0.75 });
+                  else {
+                    setMemory((previous) => ({ ...previous, [source.key]: value }));
+                    setMix({ [source.key]: 0 });
+                  }
+                }}
+              >
+                {muted ? '🔇' : '🔊'}
+              </Button>
+              <div className="min-w-0 flex-1">
+                <Slider
+                  ariaLabel={source.label}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={value}
+                  onChange={(next) => setMix({ [source.key]: next })}
+                />
+              </div>
+            </div>
+          </Field>
+        );
+      })}
+
+      <Hint>
+        Ce réglage s’applique à tout le montage et se retrouve tel quel dans le fichier exporté. Pour
+        couper le son d’un seul plan, passe par « Réglage fin » dans l’étape Monter.
+      </Hint>
+    </Panel>
+  );
+}
+
 export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
   const cues = useStudio((s) => s.project.cues);
   const music = useStudio((s) => s.project.music);
@@ -36,6 +124,8 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
 
   return (
     <div className="space-y-3">
+      <MixerPanel />
+
       <Panel
         title="4 · Bruitages"
         subtitle="Pose-en un sur chaque coupe : c’est ce qui transforme une suite de plans en rythme."
