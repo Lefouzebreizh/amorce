@@ -26,6 +26,20 @@ body {
   overscroll-behavior: none;
 }
 
+/*
+ * Supprime le délai de 300 ms et le zoom au double-appui sur les commandes,
+ * sans interdire le zoom à deux doigts : couper ce dernier rendrait les petits
+ * textes inaccessibles à qui en a besoin.
+ */
+button,
+[role='button'],
+input,
+label,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
 /* Barres de défilement discrètes, pour ne pas découper les panneaux. */
 * {
   scrollbar-width: thin;
@@ -61,6 +75,23 @@ input[type='range']::-moz-range-thumb {
   background: var(--color-mist);
   cursor: pointer;
   border: 3px solid var(--color-panel);
+}
+
+/* Pastille plus grosse au doigt : 16 px se manquent, 24 px s'attrapent. */
+@media (pointer: coarse) {
+  input[type='range'] {
+    height: 6px;
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  input[type='range']::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

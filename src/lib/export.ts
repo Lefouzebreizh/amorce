@@ -95,12 +95,17 @@ export async function recordMontage(params: RecordParams): Promise<ExportResult>
     recorder.onerror = () => reject(new Error('L’enregistrement s’est interrompu.'));
   });
 
-  // Des tranches régulières évitent de garder tout le fichier dans un seul bloc
-  // mémoire, ce qui poserait problème sur les montages longs.
-  recorder.start(1000);
   params.startPlayback();
 
   try {
+    // La lecture ne démarre pas instantanément : elle attend la reprise du
+    // contexte audio, qui est asynchrone. Enregistrer avant cet instant
+    // graverait une image figée en tête du fichier.
+    await waitForStart(params);
+
+    // Des tranches régulières évitent de garder tout le fichier dans un seul
+    // bloc mémoire, ce qui poserait problème sur les montages longs.
+    recorder.start(1000);
     await waitForEnd(params);
     // On laisse la dernière image traverser la chaîne d'encodage avant de couper.
     await delay(TAIL_MS);
@@ -120,13 +125,35 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** Délai au-delà duquel on considère que la lecture ne démarrera pas. */
+const START_TIMEOUT_MS = 5000;
+
+/** Attend que la lecture ait réellement commencé. */
+function waitForStart(params: RecordParams): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const startedAt = performance.now();
+
+    const tick = () => {
+      if (params.signal?.aborted) {
+        reject(new DOMException('Export annulé', 'AbortError'));
+        return;
+      }
+      // On se contente d'un démarrage constaté, ou d'un délai dépassé : mieux
+      // vaut un fichier avec quelques images de trop que pas de fichier du tout.
+      if (params.isPlaying() || performance.now() - startedAt > START_TIMEOUT_MS) {
+        resolve();
+        return;
+      }
+      requestAnimationFrame(tick);
+    };
+
+    requestAnimationFrame(tick);
+  });
+}
+
 /** Attend la fin de la lecture, en rendant compte de l'avancement. */
 function waitForEnd(params: RecordParams): Promise<void> {
   return new Promise((resolve, reject) => {
-    // La lecture met un instant à démarrer : sans ce délai de grâce, la boucle
-    // conclurait immédiatement que tout est terminé.
-    const startedAt = performance.now();
-
     const tick = () => {
       if (params.signal?.aborted) {
         reject(new DOMException('Export annulé', 'AbortError'));
@@ -136,8 +163,9 @@ function waitForEnd(params: RecordParams): Promise<void> {
       const time = params.currentTime();
       params.onProgress?.(Math.min(1, time / params.duration));
 
-      const started = performance.now() - startedAt > 500;
-      if (time >= params.duration - 0.02 || (started && !params.isPlaying())) {
+      // La lecture est déjà confirmée démarrée : son arrêt signifie donc la fin
+      // du montage, ou une interruption. Dans les deux cas, il faut couper.
+      if (time >= params.duration - 0.02 || !params.isPlaying()) {
         resolve();
         return;
       }

@@ -191,19 +191,21 @@ export class GradePipeline {
    *
    * `frame` sert uniquement à déplacer le grain d'une image à l'autre : un grain
    * figé se lirait comme une salissure sur l'objectif plutôt que comme de la
-   * matière argentique.
+   * matière argentique. `bloom` permet de couper le halo sur les appareils qui
+   * ne tiennent pas la cadence.
    */
   apply(
     ctx: CanvasRenderingContext2D,
     look: Look,
-    intensity: number,
-    frame: number,
-    bars: number,
+    options: { intensity: number; frame: number; bars: number; bloom?: boolean },
   ): void {
+    const { intensity, frame, bars, bloom = true } = options;
     const strength = Math.max(0, Math.min(1, intensity));
 
     if (strength > 0 && look.id !== 'naturel') {
-      this.drawBloom(ctx, look.bloom * strength);
+      // Le halo est de loin le traitement le plus lourd : il est le premier
+      // sacrifié quand l'appareil ne suit pas.
+      if (bloom) this.drawBloom(ctx, look.bloom * strength);
       this.drawTints(ctx, look, strength);
       this.drawFade(ctx, look.fade * strength);
       this.drawVignette(ctx, look.vignette * strength);

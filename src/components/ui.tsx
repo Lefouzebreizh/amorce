@@ -176,6 +176,47 @@ export function Hint({ children, tone = 'neutral' }: { children: ReactNode; tone
   );
 }
 
+/**
+ * Couleur associée à une note.
+ *
+ * Utilisée par le bandeau comme par le panneau d'analyse : une même note doit
+ * s'afficher de la même couleur partout, sans quoi le repère visuel ne veut
+ * plus rien dire. Le seuil accepte aussi bien une note sur 100 qu'un rapport
+ * de 0 à 1.
+ */
+export function scoreColor(score: number): string {
+  const ratio = score > 1 ? score / 100 : score;
+  if (ratio >= 0.75) return 'var(--color-accent)';
+  if (ratio >= 0.45) return 'var(--color-warn)';
+  return 'var(--color-danger)';
+}
+
+/**
+ * Pastille de note du bandeau.
+ *
+ * Portée par les deux dispositions. `role="status"` et le libellé explicite
+ * font annoncer la note par un lecteur d'écran, là où un simple nombre à côté
+ * du mot « Viralité » ne veut rien dire hors contexte visuel.
+ */
+export function ScoreBadge({ score, compact = false }: { score: number; compact?: boolean }) {
+  return (
+    <div
+      role="status"
+      aria-label={`Note de viralité : ${score} sur 100`}
+      className={`flex items-center gap-2 rounded-full border border-edge bg-slab ${
+        compact ? 'px-2.5 py-0.5' : 'px-3 py-1'
+      }`}
+    >
+      <span className="text-[11px] text-muted" aria-hidden="true">
+        Viralité
+      </span>
+      <span className="font-display text-sm" style={{ color: scoreColor(score) }} aria-hidden="true">
+        {score}
+      </span>
+    </div>
+  );
+}
+
 export function EmptyState({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-2xl border border-dashed border-edge bg-slab/40 px-4 py-8 text-center">

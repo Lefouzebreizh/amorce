@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { analyzeProject, type Analysis } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
-import { EmptyState, Hint, Panel } from '../ui';
+import { EmptyState, Hint, Panel, scoreColor } from '../ui';
 
 /**
  * Note de viralité.
@@ -51,7 +51,7 @@ export function AnalysisPanel({ engine }: { engine: PlaybackEngine }) {
                   className="h-full rounded-full transition-[width] duration-300"
                   style={{
                     width: `${Math.round(criterion.score * 100)}%`,
-                    backgroundColor: barColor(criterion.score),
+                    backgroundColor: scoreColor(criterion.score),
                   }}
                 />
               </div>
@@ -113,17 +113,11 @@ export function AnalysisPanel({ engine }: { engine: PlaybackEngine }) {
   );
 }
 
-function barColor(score: number): string {
-  if (score >= 0.75) return 'var(--color-accent)';
-  if (score >= 0.45) return 'var(--color-warn)';
-  return 'var(--color-danger)';
-}
-
 function ScoreHeader({ analysis }: { analysis: Analysis }) {
   return (
     <div className="flex items-center gap-4 rounded-xl border border-edge bg-slab px-4 py-3">
       <div className="text-center">
-        <p className="font-display text-4xl leading-none" style={{ color: barColor(analysis.score / 100) }}>
+        <p className="font-display text-4xl leading-none" style={{ color: scoreColor(analysis.score) }}>
           {analysis.score}
         </p>
         <p className="mt-0.5 text-[10px] text-muted">sur 100</p>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { AudioEngine } from '@/lib/audio';
 import type { FontSet } from '@/lib/captions';
 import { GradePipeline } from '@/lib/grade';
+import { guessTier, PanicDetector, QualityGovernor, QUALITY_TIERS, tierById } from '@/lib/quality';
 import { ClipVideoPool, preloadCaptionFonts, renderFrame, syncPlayback } from '@/lib/renderer';
 import { useStudio } from '@/lib/store';
 import { layoutClips } from '@/lib/timeline';
@@ -40,35 +41,58 @@ export type PlaybackEngine = {
   resources: () => { pool: ClipVideoPool; grade: GradePipeline; audio: AudioEngine | null };
   /** Prépare le mixage audio ; nécessite un geste utilisateur préalable. */
   ensureAudio: () => Promise<AudioEngine>;
+  /**
+   * Repasse en pleine définition et attend que le canvas soit redimensionné.
+   *
+   * L'export capture le flux du canvas : sa taille doit être définitive avant
+   * que l'enregistrement ne commence, sinon le fichier sortirait à la
+   * définition réduite de la prévisualisation.
+   */
+  beginExport: (scale?: number) => Promise<void>;
+  /** Rend la main à la surveillance de qualité. */
+  endExport: () => void;
 };
 
 /**
  * Contexte de dessin du canvas courant, mis en cache.
  *
- * `getContext` renvoie toujours le même objet pour un canvas donné, mais
- * l'appeler soixante fois par seconde reste du travail inutile. La définition
- * de sortie est (re)posée à chaque nouveau canvas : la réduction à l'écran est
- * purement affaire de CSS.
+ * La taille du canvas suit le palier de qualité, pas la définition de sortie :
+ * un téléphone dessine moins de pixels, tandis que la composition reste écrite
+ * en coordonnées 1080 × 1920. L'affichage à l'écran reste affaire de CSS.
  */
 function resolveContext(
   canvas: HTMLCanvasElement | null,
-  cache: React.RefObject<{ canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } | null>,
+  cache: React.RefObject<ContextCache | null>,
+  scale: number,
 ): CanvasRenderingContext2D | null {
   if (!canvas) return null;
-  if (cache.current?.canvas === canvas) return cache.current.ctx;
+  if (cache.current?.canvas === canvas && cache.current.scale === scale) return cache.current.ctx;
 
-  canvas.width = OUTPUT_WIDTH;
-  canvas.height = OUTPUT_HEIGHT;
+  // Redimensionner un canvas vide son contenu et réinitialise son contexte :
+  // on ne le fait donc qu'au changement réel d'échelle, pas à chaque image.
+  canvas.width = Math.round(OUTPUT_WIDTH * scale);
+  canvas.height = Math.round(OUTPUT_HEIGHT * scale);
   const ctx = canvas.getContext('2d', { alpha: false });
   if (!ctx) return null;
 
-  cache.current = { canvas, ctx };
+  cache.current = { canvas, ctx, scale };
   return ctx;
 }
 
+type ContextCache = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; scale: number };
+
 export function usePlayback(fonts: FontSet): PlaybackEngine {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const ctxRef = useRef<{ canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } | null>(null);
+  const ctxRef = useRef<ContextCache | null>(null);
+  const governorRef = useRef<QualityGovernor | null>(null);
+  const panicRef = useRef<PanicDetector | null>(null);
+  /**
+   * Échelle imposée pendant un export, ou null hors export.
+   *
+   * La définition de sortie prime alors sur la fluidité — c'est le fichier
+   * livré, il ne se rejoue pas.
+   */
+  const exportingRef = useRef<number | null>(null);
   const poolRef = useRef<ClipVideoPool | null>(null);
   const gradeRef = useRef<GradePipeline | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
@@ -76,6 +100,8 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
 
   if (poolRef.current === null) poolRef.current = new ClipVideoPool();
   if (gradeRef.current === null) gradeRef.current = new GradePipeline();
+  if (governorRef.current === null) governorRef.current = new QualityGovernor(guessTier());
+  if (panicRef.current === null) panicRef.current = new PanicDetector();
 
   // Les polices doivent être résolues avant le premier tracé : le canvas ne
   // déclenche aucun chargement et substituerait silencieusement une autre police.
@@ -104,13 +130,38 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
     let previous = performance.now();
 
     const loop = (now: number) => {
-      const delta = Math.min(0.25, (now - previous) / 1000);
+      const exporting = exportingRef.current !== null;
+
+      /*
+       * Le temps écoulé est borné pour absorber les longues interruptions —
+       * onglet passé en arrière-plan, machine en veille — qui feraient sinon
+       * bondir la tête de lecture de plusieurs secondes.
+       *
+       * Pendant un export, cette borne devient nuisible : sur un appareil lent,
+       * une image peut prendre plus longtemps qu'elle, et la tête de lecture
+       * avance alors moins vite que le temps réel. Le fichier produit s'allonge
+       * — vingt secondes mesurées pour un montage de sept — pendant que le son,
+       * lui, continue en temps réel : l'image et l'audio se désynchronisent.
+       *
+       * Sans borne, un appareil lent perd des images mais conserve la bonne
+       * durée et la bonne synchronisation, ce qui vaut infiniment mieux.
+       */
+      const delta = exporting ? (now - previous) / 1000 : Math.min(0.25, (now - previous) / 1000);
       previous = now;
+
+      const governor = governorRef.current!;
+      const choice = useStudio.getState().qualityChoice;
+      const pinned = choice === 'auto' ? null : tierById(choice);
+      if (pinned && pinned.id !== governor.current().id) governor.set(pinned);
+
+      const tier = exporting
+        ? { ...tierById('full'), scale: exportingRef.current! }
+        : governor.current();
 
       // Le canvas est retrouvé à chaque image plutôt que capturé au démarrage :
       // la boucle devient insensible à l'ordre de montage des composants et
       // survit à un remplacement du canvas.
-      const ctx = resolveContext(canvasRef.current, ctxRef);
+      const ctx = resolveContext(canvasRef.current, ctxRef, tier.scale);
       if (!ctx) {
         raf = requestAnimationFrame(loop);
         return;
@@ -142,7 +193,42 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
         if (playing) audio.scheduleUpcoming(project, time);
       }
 
-      renderFrame(ctx, project, time, pool, fonts, { placed, grade, frame: frameRef.current++ });
+      renderFrame(ctx, project, time, pool, fonts, {
+        placed,
+        grade,
+        frame: frameRef.current++,
+        scale: tier.scale,
+        bloom: tier.bloom,
+      });
+
+      const work = performance.now() - now;
+
+      // Le filet de sécurité veille en permanence, lecture ou non : composer
+      // l'image coûte le même prix à l'arrêt, et une interface figée l'est tout
+      // autant. Seul un export y échappe, la pleine définition y étant imposée.
+      if (pinned && !exporting) {
+        if (panicRef.current!.observe(work)) {
+          const index = QUALITY_TIERS.findIndex((t) => t.id === pinned.id);
+          const fallback = QUALITY_TIERS[Math.min(index + 1, QUALITY_TIERS.length - 1)];
+          governor.set(fallback);
+          useStudio.setState({
+            qualityChoice: 'auto',
+            effectiveQuality: fallback.id,
+            qualityRescued: true,
+          });
+          panicRef.current!.reset();
+        }
+      } else {
+        panicRef.current!.reset();
+      }
+
+      // L'ajustement automatique, lui, n'a de sens qu'en lecture : à l'arrêt,
+      // la charge mesurée ne dit rien de ce que coûtera le montage en marche.
+      if (playing && !exporting && !pinned) {
+        const changed = governor.observe(work, now);
+        if (changed) useStudio.setState({ effectiveQuality: changed.id });
+      }
+
       raf = requestAnimationFrame(loop);
     };
 
@@ -215,6 +301,19 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
     [],
   );
 
+  const beginExport = useCallback(async (scale = 1) => {
+    exportingRef.current = scale;
+    // Deux images d'attente : la première applique la nouvelle taille, la
+    // seconde garantit qu'elle a bien été composée avant toute capture.
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+  }, []);
+
+  const endExport = useCallback(() => {
+    exportingRef.current = null;
+  }, []);
+
   const setCanvas = useCallback((canvas: HTMLCanvasElement | null) => {
     canvasRef.current = canvas;
   }, []);
@@ -224,7 +323,7 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
   // Identité stable : les consommateurs placent ce moteur dans les dépendances
   // de leurs effets, qui se relanceraient à chaque rendu sans cette mémoïsation.
   return useMemo(
-    () => ({ setCanvas, getCanvas, play, pause, toggle, seek, resources, ensureAudio }),
-    [setCanvas, getCanvas, play, pause, toggle, seek, resources, ensureAudio],
+    () => ({ setCanvas, getCanvas, play, pause, toggle, seek, resources, ensureAudio, beginExport, endExport }),
+    [setCanvas, getCanvas, play, pause, toggle, seek, resources, ensureAudio, beginExport, endExport],
   );
 }

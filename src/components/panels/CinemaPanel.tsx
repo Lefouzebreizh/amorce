@@ -4,8 +4,10 @@
 'use client';
 
 import { LOOKS } from '@/lib/grade';
-import { useStudio } from '@/lib/store';
-import { Field, Hint, Panel, Slider } from '../ui';
+import { QUALITY_TIERS, tierById } from '@/lib/quality';
+import { useStudio, type QualityChoice } from '@/lib/store';
+import { useIsTouch } from '@/hooks/useMediaQuery';
+import { Choice, Field, Hint, Panel, Slider } from '../ui';
 
 /**
  * Rendu cinématographique.
@@ -97,6 +99,75 @@ export function CinemaPanel() {
           parfaitement lisible même avec un grain marqué.
         </Hint>
       </Panel>
+
+      <QualityPanel />
     </div>
+  );
+}
+
+/**
+ * Réglage de la finesse d'aperçu.
+ *
+ * Le point capital, répété ici parce qu'il est contre-intuitif : ce réglage ne
+ * touche qu'à l'aperçu. Sans cette précision, personne n'oserait le baisser, de
+ * peur d'abîmer la vidéo produite.
+ */
+function QualityPanel() {
+  const choice = useStudio((s) => s.qualityChoice);
+  const effective = useStudio((s) => s.effectiveQuality);
+  const setChoice = useStudio((s) => s.setQualityChoice);
+  const rescued = useStudio((s) => s.qualityRescued);
+  const touch = useIsTouch();
+
+  // Sur un appareil modeste, imposer la pleine définition ne dégrade pas que
+  // l'aperçu : la boucle de rendu accapare le processeur au point que
+  // l'interface elle-même cesse de répondre aux gestes.
+  const risky = touch && (choice === 'full' || choice === 'high');
+
+  const options: { value: QualityChoice; label: string; description?: string }[] = [
+    { value: 'auto', label: 'Automatique', description: 'S’ajuste si l’appareil peine.' },
+    ...QUALITY_TIERS.map((tier) => ({
+      value: tier.id as QualityChoice,
+      label: tier.label,
+      description: `${Math.round(tier.scale * 100)} % de la définition${tier.bloom ? '' : ', sans halo'}`,
+    })),
+  ];
+
+  return (
+    <Panel title="Finesse de l’aperçu" subtitle="N’affecte que l’affichage, jamais le fichier exporté.">
+      <Choice
+        value={choice}
+        onChange={setChoice}
+        options={options}
+        columns={2}
+      />
+
+      <p className="mt-3 text-xs leading-relaxed text-muted">
+        Palier appliqué :{' '}
+        <span className="text-mist">{choice === 'auto' ? tierById(effective).label : tierById(choice).label}</span>
+        {choice === 'auto' && ' — ajusté automatiquement selon la fluidité mesurée.'}
+      </p>
+
+      <div className="mt-3 space-y-2">
+        {rescued && (
+          <Hint tone="warn">
+            Ce palier bloquait l’application : elle ne répondait plus assez vite pour que tu puisses
+            revenir en arrière. La qualité est repassée en automatique. Ton montage est intact.
+          </Hint>
+        )}
+        {risky ? (
+          <Hint tone="warn">
+            Ce palier est lourd pour un téléphone : l’aperçu risque de saccader, et l’interface de
+            répondre au ralenti. Repasse en « Automatique » si tu sens que ça traîne — la qualité du
+            fichier exporté ne changera pas d’un iota.
+          </Hint>
+        ) : (
+          <Hint>
+            Sur téléphone, l’aperçu est volontairement moins fin pour rester fluide : juger un montage
+            sur une image qui saccade est impossible. L’export, lui, repasse toujours en 1080 × 1920.
+          </Hint>
+        )}
+      </div>
+    </Panel>
   );
 }

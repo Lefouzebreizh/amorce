@@ -86,6 +86,41 @@ export type SoundCue = {
   gain: number;
 };
 
+/**
+ * Définitions d'export proposées.
+ *
+ * L'enregistrement se faisant en temps réel, un appareil qui ne tient pas la
+ * cadence perd des images. Diviser le nombre de pixels par deux suffit souvent
+ * à retrouver un rendu fluide, pour une perte de finesse que le réencodage des
+ * plateformes efface de toute façon en grande partie.
+ */
+export type ExportPreset = {
+  id: 'full' | 'light';
+  label: string;
+  description: string;
+  /** Facteur appliqué à la définition de référence. */
+  scale: number;
+};
+
+export const EXPORT_PRESETS: ExportPreset[] = [
+  {
+    id: 'full',
+    label: '1080 × 1920',
+    description: 'Définition recommandée par les plateformes.',
+    scale: 1,
+  },
+  {
+    id: 'light',
+    label: '720 × 1280',
+    description: 'Deux fois moins de pixels : à choisir si l’export saccade.',
+    scale: 2 / 3,
+  },
+];
+
+export function exportPreset(id: ExportPreset['id']): ExportPreset {
+  return EXPORT_PRESETS.find((p) => p.id === id) ?? EXPORT_PRESETS[0];
+}
+
 /** Rendus colorimétriques disponibles. */
 export type LookId =
   | 'naturel'

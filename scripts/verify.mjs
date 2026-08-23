@@ -29,9 +29,40 @@ if (!existsSync(join(RUSHES, 'rush1.webm'))) {
 }
 mkdirSync(SHOTS, { recursive: true });
 
+/**
+ * Deux profils, une seule passe.
+ *
+ * Le téléphone n'est pas qu'un écran plus étroit : le pointeur est un doigt et
+ * le processeur est lent. Le second est bridé volontairement, sinon la
+ * dégradation automatique de qualité ne se déclencherait jamais sur une machine
+ * de développement et ne serait donc jamais éprouvée.
+ */
+const PROFILES = [
+  {
+    id: 'desktop',
+    label: 'Ordinateur',
+    context: { viewport: { width: 1600, height: 1000 } },
+    throttle: 1,
+    mobile: false,
+  },
+  {
+    id: 'mobile',
+    label: 'Téléphone',
+    context: {
+      viewport: { width: 390, height: 844 },
+      deviceScaleFactor: 3,
+      isMobile: true,
+      hasTouch: true,
+    },
+    throttle: 4,
+    mobile: true,
+  },
+];
+
 const results = [];
+let profileLabel = '';
 const check = (name, ok, detail = '') => {
-  results.push({ name, ok });
+  results.push({ name: `[${profileLabel}] ${name}`, ok });
   console.log(`${ok ? '  OK  ' : ' ECHEC'} | ${name}${detail ? ` — ${detail}` : ''}`);
 };
 
@@ -40,8 +71,22 @@ const browser = await chromium.launch({
   args: ['--autoplay-policy=no-user-gesture-required'],
 });
 
+for (const profile of PROFILES) {
+  profileLabel = profile.label;
+  console.log(`\n=== ${profile.label} ===`);
+  await runProfile(profile);
+}
+
+await browser.close();
+
+const failed = results.filter((r) => !r.ok);
+console.log(`\n--- BILAN : ${results.length - failed.length}/${results.length} vérifications passées ---`);
+for (const failure of failed) console.log(`  échec : ${failure.name}`);
+process.exit(failed.length ? 1 : 0);
+
+async function runProfile(profile) {
 const context = await browser.newContext({
-  viewport: { width: 1600, height: 1000 },
+  ...profile.context,
   acceptDownloads: true,
 });
 
@@ -77,37 +122,69 @@ await context.addInitScript(() => {
 });
 
 const page = await context.newPage();
+
+// Le bridage passe par le protocole de débogage : c'est le seul moyen de
+// simuler un appareil lent sans en avoir un sous la main.
+if (profile.throttle > 1) {
+  const client = await context.newCDPSession(page);
+  await client.send('Emulation.setCPUThrottlingRate', { rate: profile.throttle });
+}
+
 const consoleErrors = [];
 page.on('console', (message) => message.type() === 'error' && consoleErrors.push(message.text()));
 page.on('pageerror', (error) => consoleErrors.push(String(error)));
 
 try {
-  await page.goto(URL_BASE, { waitUntil: 'networkidle', timeout: 20000 });
+  await page.goto(URL_BASE, { waitUntil: 'networkidle', timeout: 30000 });
 } catch {
   console.error(`Serveur injoignable sur ${URL_BASE}. Lance : npm run dev`);
   process.exit(1);
 }
 check('La page se charge', await page.locator('text=Dépose tes vidéos').isVisible());
 
+if (profile.mobile) {
+  // Un débordement horizontal sur téléphone est le défaut de mise en page le
+  // plus courant, et le plus visible : la page se met à glisser latéralement.
+  const overflow = await page.evaluate(() => ({
+    scroll: document.documentElement.scrollWidth,
+    view: window.innerWidth,
+  }));
+  check('Aucun débordement horizontal', overflow.scroll <= overflow.view + 1, `${overflow.scroll} px pour ${overflow.view} px de large`);
+  check('La barre d’étapes est présente', await page.locator('nav[aria-label="Étapes du montage"]').isVisible());
+}
+
 // --------------------------------------------------------------- 1. Import
 await page.setInputFiles(
   'input[type=file][accept="video/*"]',
   [1, 2, 3, 4].map((i) => join(RUSHES, `rush${i}.webm`)),
 );
-await page.waitForTimeout(4000);
 
-const assetCount = await page.locator('li:has(img[alt=""])').count();
+// Décoder quatre vidéos prend un temps très variable selon l'appareil : on
+// attend le résultat plutôt qu'un délai arbitraire, qui serait soit trop court
+// sur téléphone bridé, soit inutilement long sur ordinateur.
+let assetCount = 0;
+try {
+  await page.waitForFunction(() => document.querySelectorAll('li img').length === 4, { timeout: 90000 });
+  assetCount = 4;
+} catch {
+  assetCount = await page.locator('li img').count();
+}
 check('Les quatre rushes sont importés', assetCount === 4, `${assetCount} dans la bibliothèque`);
 
-const thumbnailsOk = await page.evaluate(() =>
-  [...document.querySelectorAll('li img')].every((img) => img.src.startsWith('data:image/jpeg')),
+const thumbnails = await page.evaluate(() =>
+  [...document.querySelectorAll('li img')].map((img) => img.src.slice(0, 16)),
 );
-check('Les vignettes sont générées', thumbnailsOk);
+// Le comptage est explicite : un tableau vide satisferait un simple « every ».
+check(
+  'Les vignettes sont générées',
+  thumbnails.length === 4 && thumbnails.every((src) => src.startsWith('data:image/jpeg')),
+  `${thumbnails.length} vignettes`,
+);
 
 const meta = (await page.locator('li p.text-\\[11px\\]').first().textContent())?.trim();
 check('Les métadonnées sont lues', /\d+×\d+/.test(meta ?? ''), meta);
 
-await page.screenshot({ path: join(SHOTS, '01-import.png') });
+await page.screenshot({ path: join(SHOTS, `01-import-${profile.id}.png`) });
 
 // -------------------------------------------------------- 2. Montage express
 await page.click('text=Monter automatiquement');
@@ -118,16 +195,27 @@ const canvasSize = await page.evaluate(() => {
   return { width: canvas?.width, height: canvas?.height };
 });
 check(
-  'Le canvas est à la définition de sortie',
-  canvasSize.width === 1080 && canvasSize.height === 1920,
+  'Le canvas garde le rapport vertical 9:16',
+  Math.abs(canvasSize.width / canvasSize.height - 9 / 16) < 0.01,
   `${canvasSize.width}×${canvasSize.height}`,
 );
 
-const score = await page.locator('header div.rounded-full span.font-display').textContent();
-check('Une note de viralité est calculée', Number(score) > 0, `note ${score}/100`);
+// Ancré sur le libellé accessible : il vaut pour les deux dispositions et ne
+// casse pas au moindre remaniement de classes.
+const scoreLabel = await page.locator('header [role="status"]').getAttribute('aria-label');
+const score = Number(scoreLabel?.match(/(\d+)\s+sur\s+100/)?.[1]);
+check('Une note de viralité est calculée', score > 0, `note ${score}/100`);
 check('Le montage express a posé une accroche', await page.locator('text=Attends la fin').first().isVisible());
 
-await page.screenshot({ path: join(SHOTS, '02-montage.png') });
+await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
+
+// Sur téléphone, le panneau occupe la moitié basse : on le referme pour rendre
+// sa hauteur à l'aperçu avant de juger l'image.
+if (profile.mobile) {
+  await page.click('text=Fermer');
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: join(SHOTS, `02b-apercu-${profile.id}.png`) });
+}
 
 /** Mesure la luminosité, le détail et le niveau sonore de l'instant courant. */
 const sample = () =>
@@ -170,7 +258,7 @@ await page.waitForTimeout(600);
 const frames = [];
 for (let i = 0; i < 14; i++) {
   frames.push(await sample());
-  if (i === 3) await page.screenshot({ path: join(SHOTS, '03-lecture.png') });
+  if (i === 3) await page.screenshot({ path: join(SHOTS, `03-lecture-${profile.id}.png`) });
   await page.waitForTimeout(500);
 }
 
@@ -198,6 +286,19 @@ check(
   `${frames[0].playhead} → ${frames.at(-1).playhead}`,
 );
 
+// La largeur du canvas révèle le palier réellement appliqué : à définition de
+// sortie constante, elle vaut 1080 fois l'échelle en vigueur.
+const previewWidth = await page.evaluate(() => document.querySelector('canvas').width);
+if (profile.mobile) {
+  check(
+    'La qualité s’adapte à un appareil lent',
+    previewWidth < 1080,
+    `aperçu rendu en ${previewWidth} px de large au lieu de 1080`,
+  );
+} else {
+  check('L’aperçu suit un palier de qualité valide', previewWidth <= 1080 && previewWidth >= 360, `${previewWidth} px`);
+}
+
 // ------------------------------------------------------------ 4. Étalonnage
 /** Écart moyen entre canaux : proche de zéro, l'image est désaturée. */
 const chroma = () =>
@@ -219,7 +320,7 @@ const chroma = () =>
     return spread / count;
   });
 
-await page.click('nav >> text=5. Cinéma');
+await page.click('nav[aria-label="Étapes du montage"] button:has-text("Cinéma")');
 // La mesure se fait à pleine intensité : au dosage par défaut, une part de la
 // couleur subsiste volontairement et le contrôle n'aurait rien prouvé.
 await page.locator('input[aria-label="Intensité du rendu"]').fill('1');
@@ -230,7 +331,7 @@ const chromaNaturel = await chroma();
 await page.click('button:has-text("Noir et blanc")');
 await page.waitForTimeout(700);
 const chromaNoir = await chroma();
-await page.screenshot({ path: join(SHOTS, '04-cinema.png') });
+await page.screenshot({ path: join(SHOTS, `04-cinema-${profile.id}.png`) });
 
 check(
   'L’étalonnage agit sur l’image',
@@ -242,22 +343,107 @@ await page.click('button:has-text("Cinéma")');
 await page.locator('input[aria-label="Intensité du rendu"]').fill('0.7');
 await page.waitForTimeout(400);
 
+// Un choix explicite doit primer sur la surveillance automatique, y compris
+// sur l'appareil bridé qui vient tout juste de dégrader la qualité.
+//
+// On n'épingle pas la pleine définition sur le profil téléphone : elle est si
+// lourde sous processeur bridé que la boucle de rendu accapare le fil principal
+// et que l'interface ne répond plus. C'est précisément ce que l'application
+// signale désormais à l'utilisateur avant qu'il ne fasse ce choix.
+const pinned = profile.mobile
+  ? { label: 'Élevée', width: Math.round(1080 * 0.7) }
+  : { label: 'Maximale', width: 1080 };
+
+/*
+ * L'observateur est installé AVANT le clic, et échantillonne à chaque image
+ * depuis la page.
+ *
+ * Sur l'appareil bridé, la boucle de rendu sature le fil principal : une
+ * commande envoyée depuis l'extérieur n'y est exécutée que plusieurs secondes
+ * plus tard, quand l'état transitoire qu'on cherche à observer a déjà disparu.
+ * `textContent` plutôt que `innerText` : le premier ne force pas de calcul de
+ * mise en page, et l'échantillonnage doit rester bon marché.
+ */
+await page.evaluate(() => {
+  window.__trace = { widths: [], warned: false };
+  const sample = () => {
+    const canvas = document.querySelector('canvas');
+    if (canvas) window.__trace.widths.push(canvas.width);
+    if (document.body.textContent.includes('risque de saccader')) window.__trace.warned = true;
+    requestAnimationFrame(sample);
+  };
+  requestAnimationFrame(sample);
+});
+
+await page.click(`button:has-text("${pinned.label}")`);
+await page.waitForTimeout(profile.mobile ? 12000 : 3000);
+
+const trace = await page.evaluate(() => ({
+  sequence: window.__trace.widths.filter((w, i, all) => i === 0 || all[i - 1] !== w),
+  warned: window.__trace.warned,
+}));
+
+check(
+  'Un palier choisi à la main écrase la surveillance',
+  trace.sequence.includes(pinned.width),
+  `largeurs traversées : ${trace.sequence.join(' → ')} px`,
+);
+
+if (profile.mobile) {
+  check('Un palier lourd au doigt est signalé', trace.warned);
+
+  // À ce palier, l'appareil bridé tombe sous les cinq images par seconde et
+  // l'interface cesse de répondre : impossible d'atteindre le réglage fautif.
+  // Le filet de sécurité doit donc reprendre la main de lui-même. On exige
+  // d'avoir vu le palier lourd AVANT la retombée, sans quoi la vérification
+  // serait satisfaite par un palier qui n'aurait jamais été appliqué.
+  const pinnedAt = trace.sequence.indexOf(pinned.width);
+  const droppedAfter = pinnedAt >= 0 && trace.sequence.slice(pinnedAt + 1).some((w) => w < pinned.width);
+
+  check(
+    'Un palier qui fige l’interface est abandonné tout seul',
+    droppedAfter,
+    `retombé à ${trace.sequence.at(-1)} px sans intervention`,
+  );
+  check(
+    'La reprise en main est expliquée à l’utilisateur',
+    await page.locator('text=Ton montage est intact').isVisible(),
+  );
+} else {
+  // Sur une machine qui suit la cadence, le choix explicite doit tenir.
+  check(
+    'Un palier tenable n’est jamais abandonné',
+    trace.sequence.at(-1) === pinned.width,
+    `${trace.sequence.at(-1)} px`,
+  );
+  await page.click('button:has-text("Automatique")');
+  await page.waitForTimeout(400);
+}
+
 // ---------------------------------------------------------------- 5. Export
-await page.click('nav >> text=7. Exporter');
+await page.click('nav[aria-label="Étapes du montage"] button:has-text("Exporter")');
 await page.waitForTimeout(400);
 
-const format = (await page.locator('dd').nth(1).textContent())?.trim();
+if (profile.mobile) {
+  // Un téléphone doit pouvoir alléger sa sortie : l'enregistrement se faisant
+  // en direct, la pleine définition lui coûte des images perdues.
+  await page.click('button:has-text("720")');
+  await page.waitForTimeout(600);
+}
+const expected = profile.mobile ? { width: 720, height: 1280 } : { width: 1080, height: 1920 };
+
+const format = (await page.locator('dt:text-is("Format") + dd').textContent())?.trim();
 check('Un format d’export est disponible', !/non pris en charge/.test(format ?? ''), format);
 
 const downloading = page.waitForEvent('download', { timeout: 90000 });
 await page.click('text=Exporter la vidéo');
 await page.waitForTimeout(2500);
-await page.screenshot({ path: join(SHOTS, '05-export.png') });
+await page.screenshot({ path: join(SHOTS, `05-export-${profile.id}.png`) });
 
 let exportPath = null;
 try {
   const download = await downloading;
-  exportPath = join(SHOTS, download.suggestedFilename());
+  exportPath = join(SHOTS, `${profile.id}-${download.suggestedFilename()}`);
   await download.saveAs(exportPath);
   check('Un fichier est téléchargé', true, download.suggestedFilename());
 } catch (error) {
@@ -338,13 +524,16 @@ if (exportPath) {
 
   check('Le fichier exporté est lisible', info.ready === true, info.ready ? `${info.duration.toFixed(2)} s` : 'métadonnées illisibles');
   check(
-    'L’export est au format vertical attendu',
-    info.width === 1080 && info.height === 1920,
+    'L’export sort à la définition demandée',
+    info.width === expected.width && info.height === expected.height,
     `${info.width}×${info.height}`,
   );
+  // La capture se faisant en temps réel, un appareil lent ajoute un résidu de
+  // démarrage et de fermeture que la tolérance reconnaît.
+  const slack = profile.mobile ? 2 : 1.2;
   check(
     'L’export dure la longueur du montage',
-    Math.abs((info.duration ?? 0) - EXPECTED_DURATION) < 1.5,
+    Math.abs((info.duration ?? 0) - EXPECTED_DURATION) < slack,
     `${info.duration?.toFixed(2)} s pour ${EXPECTED_DURATION} s attendues`,
   );
   check('L’image de l’export n’est pas noire', (info.brightness ?? 0) > 6, `luminosité ${info.brightness?.toFixed(1)}`);
@@ -354,13 +543,10 @@ if (exportPath) {
   await probe.close();
 }
 
-await browser.close();
-
-const failed = results.filter((r) => !r.ok);
-console.log(`\n--- BILAN : ${results.length - failed.length}/${results.length} vérifications passées ---`);
 if (consoleErrors.length) {
-  console.log('\nErreurs console :');
-  for (const error of [...new Set(consoleErrors)].slice(0, 8)) console.log(`  ${error.slice(0, 200)}`);
+  console.log('  erreurs console :');
+  for (const error of [...new Set(consoleErrors)].slice(0, 5)) console.log(`    ${error.slice(0, 180)}`);
 }
-console.log(`Captures : ${SHOTS}`);
-process.exit(failed.length ? 1 : 0);
+
+await context.close();
+}

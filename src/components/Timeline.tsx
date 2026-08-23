@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useIsTouch } from '@/hooks/useMediaQuery';
 import { CAPTION_STYLES } from '@/lib/captions';
 import { formatTime } from '@/lib/media';
 import { SFX_LIBRARY } from '@/lib/sfx';
@@ -33,6 +34,9 @@ const RIGHT_GUTTER = 96;
 /** Hauteur réservée en haut pour l'étiquette de la tête de lecture. */
 const LABEL_ROW = 14;
 
+/** Marge conservée entre la tête de lecture et le bord, au défilement suivi. */
+const FOLLOW_MARGIN = 72;
+
 export function Timeline({ engine }: { engine: PlaybackEngine }) {
   const clips = useStudio((s) => s.project.clips);
   const captions = useStudio((s) => s.project.captions);
@@ -44,7 +48,9 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
   const duration = useStudio((s) => s.duration());
 
   const trackRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const touch = useIsTouch();
 
   const placed = layoutClips(clips);
   const width = Math.max(320, duration * PX_PER_SEC + RIGHT_GUTTER);
@@ -64,7 +70,13 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-edge bg-panel/70 p-3">
+    <div
+      ref={scrollRef}
+      // `pan-x` laisse le doigt faire défiler la timeline horizontalement tout
+      // en réservant le geste vertical à la page : sans cette précision, le
+      // navigateur choisit l'un ou l'autre et se trompe une fois sur deux.
+      className="overflow-x-auto overscroll-x-contain rounded-2xl border border-edge bg-panel/70 p-3 [touch-action:pan-x]"
+    >
       <div
         ref={trackRef}
         className="relative select-none"
@@ -81,7 +93,10 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
             return (
               <div
                 key={item.clip.id}
-                draggable
+                // Le glisser-déposer HTML5 ne répond pas au tactile : sur
+                // téléphone, le réordonnancement passe par les boutons du
+                // panneau de réglage du plan.
+                draggable={!touch}
                 onDragStart={() => setDragIndex(item.index)}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => {
@@ -130,14 +145,14 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
                   select({ kind: 'caption', id: caption.id });
                 }}
                 title={`${caption.text} — style ${CAPTION_STYLES[caption.style].label}`}
-                className={`absolute top-0 h-7 overflow-hidden rounded-md border px-1.5 text-left text-[10px] leading-7 whitespace-nowrap transition-colors ${
+                className={`absolute top-0 h-9 overflow-hidden rounded-md border px-2 text-left text-[11px] leading-9 whitespace-nowrap transition-colors ${
                   active
                     ? 'border-accent bg-accent/20 text-mist'
                     : 'border-edge bg-slab text-muted hover:border-muted hover:text-mist'
                 }`}
                 style={{
                   left: caption.start * PX_PER_SEC,
-                  width: Math.max(28, (caption.end - caption.start) * PX_PER_SEC),
+                  width: Math.max(44, (caption.end - caption.start) * PX_PER_SEC),
                 }}
               >
                 {caption.text || '(texte vide)'}
@@ -160,7 +175,7 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
                   select({ kind: 'cue', id: cue.id });
                 }}
                 title={`${descriptor?.label ?? cue.sfx} à ${cue.time.toFixed(2)} s`}
-                className={`absolute top-0 h-7 rounded-md border px-1.5 text-[10px] leading-7 whitespace-nowrap transition-colors ${
+                className={`absolute top-0 h-9 rounded-md border px-2 text-[11px] leading-9 whitespace-nowrap transition-colors ${
                   active
                     ? 'border-accent bg-accent/20 text-mist'
                     : 'border-edge bg-slab text-muted hover:border-muted hover:text-mist'
@@ -173,7 +188,7 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
           })}
         </Lane>
 
-        <Playhead />
+        <Playhead scrollRef={scrollRef} />
       </div>
     </div>
   );
@@ -181,8 +196,8 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
 
 function Lane({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="relative mt-1.5 h-7">
-      <span className="absolute -left-0 top-0 z-10 hidden text-[10px] text-muted">{label}</span>
+    <div className="relative mt-1.5 h-9">
+      <span className="sr-only">{label}</span>
       {children}
     </div>
   );
@@ -212,9 +227,25 @@ function TimeRuler({ duration }: { duration: number }) {
  * Il est le seul élément à changer soixante fois par seconde : le sortir de la
  * timeline évite de recalculer et de retracer toutes les pistes à chaque image.
  */
-function Playhead() {
+function Playhead({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement | null> }) {
   const playhead = useStudio((s) => s.playhead);
+  const playing = useStudio((s) => s.playing);
   const x = playhead * PX_PER_SEC;
+
+  // Sur un écran étroit, la tête de lecture sort du cadre au bout de quelques
+  // secondes. On fait suivre le défilement, mais uniquement pendant la lecture :
+  // le faire aussi à l'arrêt volerait le geste de quelqu'un qui explore son
+  // montage à la main.
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || !playing) return;
+
+    const left = container.scrollLeft;
+    const right = left + container.clientWidth;
+    if (x < left + FOLLOW_MARGIN || x > right - FOLLOW_MARGIN) {
+      container.scrollTo({ left: Math.max(0, x - container.clientWidth / 2), behavior: 'smooth' });
+    }
+  }, [x, playing, scrollRef]);
 
   return (
     <>

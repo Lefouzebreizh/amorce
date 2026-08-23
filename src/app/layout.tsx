@@ -28,6 +28,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#08080c',
+  width: 'device-width',
+  initialScale: 1,
+  // L'interface va jusque sous l'encoche et la barre système ; les marges de
+  // sécurité sont reprises là où elles comptent, pas imposées à toute la page.
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

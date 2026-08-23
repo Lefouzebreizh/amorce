@@ -227,6 +227,17 @@ export type RenderOptions = {
   grade?: GradePipeline;
   /** Numéro d'image, qui fait vivre le grain. */
   frame?: number;
+  /**
+   * Facteur appliqué à la définition de sortie.
+   *
+   * Le dessin reste écrit en coordonnées 1080 × 1920 : seule une transformation
+   * est posée sur le contexte. Un téléphone peut ainsi remplir quatre fois
+   * moins de pixels sans qu'une seule ligne de composition change, et l'export
+   * repasse à 1 pour retrouver la pleine définition.
+   */
+  scale?: number;
+  /** Halo sur les hautes lumières. Coupé sur les appareils lents. */
+  bloom?: boolean;
 };
 
 /**
@@ -245,6 +256,9 @@ export function renderFrame(
   fonts: FontSet,
   options: RenderOptions = {},
 ): void {
+  const scale = options.scale ?? 1;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
   ctx.save();
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
@@ -263,7 +277,12 @@ export function renderFrame(
     }
   }
 
-  options.grade?.apply(ctx, look, project.cinema.intensity, options.frame ?? 0, project.cinema.bars);
+  options.grade?.apply(ctx, look, {
+    intensity: project.cinema.intensity,
+    frame: options.frame ?? 0,
+    bars: project.cinema.bars,
+    bloom: options.bloom ?? true,
+  });
 
   for (const caption of captionsAt(project.captions, time)) {
     drawCaption(ctx, caption, time, fonts);

@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { downloadBlob, pickFormat, recordMontage, safeFilename } from '@/lib/export';
 import { formatTime } from '@/lib/media';
 import { useStudio } from '@/lib/store';
-import { OUTPUT_FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
+import { EXPORT_PRESETS, exportPreset, OUTPUT_FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
-import { Button, Hint, Panel } from '../ui';
+import { useIsTouch } from '@/hooks/useMediaQuery';
+import { Button, Choice, Field, Hint, Panel } from '../ui';
 
 /**
  * Export.
@@ -19,6 +20,13 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
   const project = useStudio((s) => s.project);
   const duration = useStudio((s) => s.duration());
   const renameProject = useStudio((s) => s.renameProject);
+  const presetId = useStudio((s) => s.exportPreset);
+  const setPreset = useStudio((s) => s.setExportPreset);
+  const touch = useIsTouch();
+
+  const preset = exportPreset(presetId);
+  const width = Math.round(OUTPUT_WIDTH * preset.scale);
+  const height = Math.round(OUTPUT_HEIGHT * preset.scale);
 
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +46,9 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
     try {
       const audio = await engine.ensureAudio();
       engine.seek(0);
+      // La prévisualisation tourne peut-être à définition réduite : on impose
+      // celle de l'export avant que le flux du canvas ne soit capturé.
+      await engine.beginExport(preset.scale);
 
       const result = await recordMontage({
         canvas,
@@ -58,12 +69,32 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
     } finally {
       setProgress(null);
       engine.pause();
+      engine.endExport();
     }
   };
 
   return (
     <div className="space-y-3">
-      <Panel title="7 · Exporter" subtitle={`${OUTPUT_WIDTH} × ${OUTPUT_HEIGHT}, ${OUTPUT_FPS} images par seconde.`}>
+      <Panel title="7 · Exporter" subtitle={`${OUTPUT_FPS} images par seconde, format vertical.`}>
+        <Field
+          label="Définition"
+          help={
+            touch
+              ? 'Sur téléphone, la définition réduite évite les images perdues : l’enregistrement se fait en direct, et l’appareil doit suivre.'
+              : 'La définition supérieure convient à toutes les plateformes.'
+          }
+        >
+          <Choice
+            value={presetId}
+            onChange={setPreset}
+            options={EXPORT_PRESETS.map((item) => ({
+              value: item.id,
+              label: item.label,
+              description: item.description,
+            }))}
+          />
+        </Field>
+
         <label className="mb-3 block">
           <span className="mb-1.5 block text-xs font-semibold text-mist">Nom du fichier</span>
           <input
@@ -97,6 +128,9 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         )}
 
         <dl className="mt-3 space-y-1 border-t border-edge pt-3 text-[11px] text-muted">
+          <Row label="Définition">
+            {width} × {height}
+          </Row>
           <Row label="Durée">{formatTime(duration)}</Row>
           <Row label="Format">{format ? format.label : 'non pris en charge'}</Row>
           <Row label="Temps d’export">environ {formatTime(duration)}</Row>
@@ -120,7 +154,8 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
       <Hint>
         L’export filme la prévisualisation pendant qu’elle joue : il dure donc aussi longtemps que ta
         vidéo, et tu l’entends défiler. Ne change pas d’onglet pendant ce temps, certains navigateurs
-        ralentissent les onglets en arrière-plan.
+        ralentissent les onglets en arrière-plan. Même si l’aperçu tourne en définition réduite pour
+        rester fluide, le fichier produit sort toujours dans la définition choisie ci-dessus.
       </Hint>
     </div>
   );

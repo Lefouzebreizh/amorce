@@ -38,6 +38,7 @@ export function ClipPanel() {
   const assets = useStudio((s) => s.project.assets);
   const updateClip = useStudio((s) => s.updateClip);
   const removeClip = useStudio((s) => s.removeClip);
+  const moveClip = useStudio((s) => s.moveClip);
 
   const clip = selection?.kind === 'clip' ? clips.find((c) => c.id === selection.id) : undefined;
 
@@ -74,6 +75,31 @@ export function ClipPanel() {
           </Button>
         }
       >
+        <Field
+          label="Place dans le montage"
+          value={`${index + 1} sur ${clips.length}`}
+          help="Sur téléphone, le glisser-déposer n’est pas fiable : ces boutons déplacent le plan."
+        >
+          <div className="flex gap-1.5">
+            <Button
+              className="flex-1"
+              onClick={() => moveClip(index, index - 1)}
+              disabled={index === 0}
+              title="Déplacer vers le début"
+            >
+              ◀ Reculer
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => moveClip(index, index + 1)}
+              disabled={index === clips.length - 1}
+              title="Déplacer vers la fin"
+            >
+              Avancer ▶
+            </Button>
+          </div>
+        </Field>
+
         <Field
           label="Début dans le rush"
           value={`${clip.inPoint.toFixed(2)} s`}

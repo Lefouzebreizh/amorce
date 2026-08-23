@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { uid } from './id';
 import { emptyProject, layoutClips, totalDuration } from './timeline';
+import type { QualityTier } from './quality';
 import {
   DEFAULT_CLIP,
   type Caption,
@@ -12,8 +13,12 @@ import {
   type MusicTrack,
   type Project,
   type SfxId,
+  type ExportPreset,
   type SoundCue,
 } from './types';
+
+/** Choix de qualité : « auto » laisse la surveillance décider. */
+export type QualityChoice = 'auto' | QualityTier['id'];
 
 /** Élément sélectionné dans l'éditeur : pilote le contenu du panneau de droite. */
 export type Selection =
@@ -28,6 +33,22 @@ type StudioState = {
   /** Position de la tête de lecture, en secondes. */
   playhead: number;
   playing: boolean;
+  /** Qualité demandée par l'utilisateur. */
+  qualityChoice: QualityChoice;
+  /**
+   * Palier réellement appliqué.
+   *
+   * Écrit par la boucle de rendu, jamais pendant le rendu React : la valeur de
+   * départ est donc une constante, identique côté serveur et côté navigateur,
+   * et la surveillance la corrige dès les premières images.
+   */
+  effectiveQuality: QualityTier['id'];
+  /** Vrai quand le filet de sécurité a repris la main sur un choix trop lourd. */
+  qualityRescued: boolean;
+  setQualityChoice: (choice: QualityChoice) => void;
+  /** Définition retenue pour le fichier produit. */
+  exportPreset: ExportPreset['id'];
+  setExportPreset: (id: ExportPreset['id']) => void;
 
   // -- Médias ---------------------------------------------------------------
   addAssets: (assets: MediaAsset[]) => void;
@@ -72,6 +93,13 @@ export const useStudio = create<StudioState>((set, get) => ({
   selection: null,
   playhead: 0,
   playing: false,
+  qualityChoice: 'auto',
+  effectiveQuality: 'high',
+  qualityRescued: false,
+  exportPreset: 'full',
+  setExportPreset: (exportPreset) => set({ exportPreset }),
+  // Un nouveau choix efface l'avertissement : l'utilisateur a repris la main.
+  setQualityChoice: (qualityChoice) => set({ qualityChoice, qualityRescued: false }),
 
   addAssets: (assets) =>
     set((state) => ({ project: { ...state.project, assets: [...state.project.assets, ...assets] } })),
