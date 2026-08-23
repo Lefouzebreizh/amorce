@@ -99,22 +99,29 @@ function connectNoise(
   return { source, gain, filter };
 }
 
-/** Planifie un bruitage sur le contexte audio, à l'instant `when`. */
+/**
+ * Planifie un bruitage sur le contexte audio, à l'instant `when`.
+ *
+ * Renvoie les sources créées : l'appelant en a besoin pour les interrompre si
+ * la lecture est mise en pause avant qu'elles n'aient fini de sonner.
+ */
 export function scheduleSfx(
   ctx: AnyAudioContext,
   dest: AudioNode,
   id: SfxId,
   when: number,
   gain = 0.8,
-): void {
+): AudioScheduledSourceNode[] {
   // Un déclenchement dans le passé ferait lever une exception au navigateur.
   const at = Math.max(when, ctx.currentTime);
   const level = Math.max(0, Math.min(1, gain));
-  if (level === 0) return;
+  const sources: AudioScheduledSourceNode[] = [];
+  if (level === 0) return sources;
 
   switch (id) {
     case 'whoosh': {
-      const { gain: g, filter } = connectNoise(ctx, dest, at, 0.5);
+      const { gain: g, filter, source } = connectNoise(ctx, dest, at, 0.5);
+      sources.push(source);
       filter.type = 'bandpass';
       filter.Q.value = 1.2;
       filter.frequency.setValueAtTime(400, at);
@@ -136,8 +143,10 @@ export function scheduleSfx(
       envelope(oscGain, at, level * 0.9, 0.008, 0.6);
       osc.start(at);
       osc.stop(at + 0.75);
+      sources.push(osc);
 
-      const { gain: g, filter } = connectNoise(ctx, dest, at, 0.25);
+      const { gain: g, filter, source } = connectNoise(ctx, dest, at, 0.25);
+      sources.push(source);
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(600, at);
       envelope(g, at, level * 0.3, 0.005, 0.2);
@@ -159,12 +168,14 @@ export function scheduleSfx(
         envelope(g, at, level * amplitude, 0.004, decay);
         osc.start(at);
         osc.stop(at + decay + 0.1);
+        sources.push(osc);
       }
       break;
     }
 
     case 'riser': {
-      const { gain: g, filter } = connectNoise(ctx, dest, at, 1.2);
+      const { gain: g, filter, source } = connectNoise(ctx, dest, at, 1.2);
+      sources.push(source);
       filter.type = 'highpass';
       filter.frequency.setValueAtTime(200, at);
       filter.frequency.exponentialRampToValueAtTime(7000, at + 1.15);
@@ -184,6 +195,7 @@ export function scheduleSfx(
       oscGain.gain.linearRampToValueAtTime(0, at + 1.2);
       osc.start(at);
       osc.stop(at + 1.25);
+      sources.push(osc);
       break;
     }
 
@@ -198,11 +210,13 @@ export function scheduleSfx(
       envelope(g, at, level * 0.6, 0.005, 0.13);
       osc.start(at);
       osc.stop(at + 0.2);
+      sources.push(osc);
       break;
     }
 
     case 'click': {
-      const { gain: g, filter } = connectNoise(ctx, dest, at, 0.06);
+      const { gain: g, filter, source } = connectNoise(ctx, dest, at, 0.06);
+      sources.push(source);
       filter.type = 'highpass';
       filter.frequency.setValueAtTime(2400, at);
       envelope(g, at, level * 0.4, 0.002, 0.04);
@@ -210,7 +224,8 @@ export function scheduleSfx(
     }
 
     case 'swipe': {
-      const { gain: g, filter } = connectNoise(ctx, dest, at, 0.3);
+      const { gain: g, filter, source } = connectNoise(ctx, dest, at, 0.3);
+      sources.push(source);
       filter.type = 'bandpass';
       filter.Q.value = 2.5;
       filter.frequency.setValueAtTime(3400, at);
@@ -219,4 +234,6 @@ export function scheduleSfx(
       break;
     }
   }
+
+  return sources;
 }
