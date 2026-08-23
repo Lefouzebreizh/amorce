@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { analyzeProject, type Analysis, type CriterionId } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
-import type { StepId } from '../steps';
+import type { StepId } from '@/lib/steps';
 import { Button, EmptyState, Hint, Panel, scoreColor } from '../ui';
 
 /**

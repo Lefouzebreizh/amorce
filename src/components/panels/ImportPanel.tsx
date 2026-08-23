@@ -7,6 +7,7 @@ import { useRef, useState } from 'react';
 import { applyAutoEdit } from '@/lib/autoEdit';
 import { formatTime, loadVideoAsset } from '@/lib/media';
 import { useStudio } from '@/lib/store';
+import { useIsHydrated } from '@/hooks/useMediaQuery';
 import { Button, EmptyState, Hint, Panel } from '../ui';
 
 /**
@@ -23,10 +24,18 @@ export function ImportPanel() {
   const removeAsset = useStudio((s) => s.removeAsset);
   const appendClip = useStudio((s) => s.appendClip);
 
-  const [busy, setBusy] = useState(false);
+  /**
+   * Avancement de l'import, ou null au repos.
+   *
+   * Décoder une vidéo prend plusieurs secondes sur un téléphone : sans compteur,
+   * l'utilisateur ne distingue pas une application qui travaille d'une
+   * application bloquée, et recommence ou ferme l'onglet.
+   */
+  const [busy, setBusy] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const ready = useIsHydrated();
 
   const ingest = async (files: FileList | File[]) => {
     const videos = [...files].filter((file) => file.type.startsWith('video/'));
@@ -35,24 +44,27 @@ export function ImportPanel() {
       return;
     }
 
-    setBusy(true);
     setError(null);
     const loaded = [];
     const failed: string[] = [];
 
-    for (const file of videos) {
+    for (const [index, file] of videos.entries()) {
+      setBusy({ done: index, total: videos.length });
       try {
-        loaded.push(await loadVideoAsset(file));
+        const asset = await loadVideoAsset(file);
+        loaded.push(asset);
+        // Chaque rush rejoint la bibliothèque dès qu'il est prêt : attendre le
+        // dernier pour tout afficher donne l'impression que rien n'avance.
+        addAssets([asset]);
       } catch {
         failed.push(file.name);
       }
     }
 
-    if (loaded.length > 0) addAssets(loaded);
     // On importe ce qui passe et on nomme ce qui échoue, plutôt que de tout
     // rejeter parce qu'un seul fichier pose problème.
     if (failed.length > 0) setError(`Fichiers illisibles : ${failed.join(', ')}`);
-    setBusy(false);
+    setBusy(null);
   };
 
   const autoEdit = () => {
@@ -79,12 +91,28 @@ export function ImportPanel() {
             void ingest(event.dataTransfer.files);
           }}
           onClick={() => inputRef.current?.click()}
-          className={`cursor-pointer rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${
-            dragging ? 'border-accent bg-accent/5' : 'border-edge hover:border-muted'
+          className={`rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${
+            !ready
+              ? 'cursor-wait border-edge opacity-60'
+              : dragging
+                ? 'cursor-pointer border-accent bg-accent/5'
+                : 'cursor-pointer border-edge hover:border-muted'
           }`}
         >
-          <p className="text-sm font-semibold text-mist">{busy ? 'Lecture en cours…' : 'Dépose tes vidéos ici'}</p>
-          <p className="mt-1 text-xs text-muted">ou clique pour les choisir · MP4, MOV, WebM</p>
+          <p className="text-sm font-semibold text-mist">
+            {!ready
+              ? 'Préparation du studio…'
+              : busy
+                ? `Lecture de la vidéo ${busy.done + 1} sur ${busy.total}…`
+                : 'Dépose tes vidéos ici'}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            {!ready
+              ? 'Encore un instant, l’application se met en place.'
+              : busy
+                ? 'Cela peut prendre un moment sur téléphone.'
+                : 'ou clique pour les choisir · MP4, MOV, WebM'}
+          </p>
           <input
             ref={inputRef}
             type="file"

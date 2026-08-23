@@ -21,7 +21,6 @@ const DRAG_THRESHOLD_PX = 6;
 export function Preview({ engine }: { engine: PlaybackEngine }) {
   const playing = useStudio((s) => s.playing);
   const clipCount = useStudio((s) => s.project.clips.length);
-  const captionCount = useStudio((s) => s.project.captions.length);
   const select = useStudio((s) => s.select);
   const updateCaption = useStudio((s) => s.updateCaption);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -93,12 +92,6 @@ export function Preview({ engine }: { engine: PlaybackEngine }) {
             gesture.current = null;
           }}
         />
-        {clipCount > 0 && captionCount > 0 && (
-          <p className="pointer-events-none absolute bottom-1 left-0 right-0 text-center text-[10px] text-muted">
-            Touche un texte pour le régler, fais-le glisser pour le déplacer
-          </p>
-        )}
-
         {clipCount === 0 && (
           // Message volontairement court et tronqué : dans un aperçu réduit à
           // quelques centimètres, un paragraphe déborderait par-dessus l'en-tête

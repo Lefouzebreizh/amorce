@@ -33,6 +33,24 @@ export function useMediaQuery(query: string, fallback = false): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
+/**
+ * Vrai une fois que React a pris la main sur le HTML envoyé par le serveur.
+ *
+ * Avant cet instant, la page est affichée mais morte : aucun gestionnaire n'est
+ * branché, et un appui ne produit rien. Sur un téléphone modeste, cette fenêtre
+ * dure assez longtemps pour qu'on croie l'application cassée.
+ *
+ * `useSyncExternalStore` donne la réponse sans effet ni `setState` : le rendu
+ * serveur reçoit `false`, le navigateur `true`, et React bascule de lui-même.
+ */
+export function useIsHydrated(): boolean {
+  return useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
+}
+
 /** Vrai sur les écrans étroits, où la disposition passe en une seule colonne. */
 export function useIsCompact(): boolean {
   return useMediaQuery('(max-width: 1023px)');

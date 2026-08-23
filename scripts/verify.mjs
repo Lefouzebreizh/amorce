@@ -74,7 +74,10 @@ const browser = await chromium.launch({
   args: ['--autoplay-policy=no-user-gesture-required'],
 });
 
-for (const profile of PROFILES) {
+// `AMORCE_PROFILE=mobile` n'exécute qu'un profil : indispensable pour isoler un
+// défaut et savoir s'il vient du profil lui-même ou de l'enchaînement.
+const only = process.env.AMORCE_PROFILE;
+for (const profile of PROFILES.filter((p) => !only || p.id === only)) {
   profileLabel = profile.label;
   console.log(`\n=== ${profile.label} ===`);
   await runProfile(profile);
@@ -174,7 +177,29 @@ try {
   console.error(`Serveur injoignable sur ${URL_BASE}. Lance : npm run dev`);
   process.exit(1);
 }
-check('La page se charge', await page.locator('text=Dépose tes vidéos').isVisible());
+/*
+ * On attend que l'application soit vivante, pas seulement affichée.
+ *
+ * Le HTML arrive avant que React n'y branche ses gestionnaires : d'ici là, un
+ * dépôt de fichier est purement et simplement perdu. La zone d'import annonce
+ * elle-même son état, ce qui donne un point d'attente fiable — et informe
+ * l'utilisateur du même coup.
+ */
+await page.locator('text=Dépose tes vidéos').waitFor({ state: 'visible', timeout: 60000 });
+check('L’application devient interactive', true);
+check(
+  'L’annulation est nommée, pas seulement symbolisée',
+  await page.locator('button:has-text("Annuler")').first().isVisible(),
+);
+
+// Le guidage doit être présent dès l'arrivée, et dire quoi faire en premier.
+const guide = page.locator('[aria-label="Prochaine étape"]');
+check('Une consigne est donnée dès l’ouverture', await guide.isVisible());
+check(
+  'La première consigne est d’importer',
+  /Importe tes vid/.test((await guide.textContent()) ?? ''),
+  ((await guide.textContent()) ?? '').slice(0, 60).replace(/\s+/g, ' '),
+);
 
 if (profile.mobile) {
   // Un débordement horizontal sur téléphone est le défaut de mise en page le
@@ -188,20 +213,37 @@ if (profile.mobile) {
 }
 
 // --------------------------------------------------------------- 1. Import
+const fileInputs = await page.locator('input[type=file][accept="video/*"]').count();
 await page.setInputFiles(
   'input[type=file][accept="video/*"]',
   [1, 2, 3, 4].map((i) => join(RUSHES, `rush${i}.webm`)),
 );
+const accepted = await page.evaluate(
+  () => document.querySelector('input[type=file][accept="video/*"]')?.files?.length ?? -1,
+);
+console.log(`     champs=${fileInputs} fichiers acceptés=${accepted}`);
 
 // Décoder quatre vidéos prend un temps très variable selon l'appareil : on
 // attend le résultat plutôt qu'un délai arbitraire, qui serait soit trop court
 // sur téléphone bridé, soit inutilement long sur ordinateur.
 let assetCount = 0;
 try {
-  await page.waitForFunction(() => document.querySelectorAll('li img').length === 4, { timeout: 90000 });
+  // Scrutation sur intervalle plutôt que sur `requestAnimationFrame` : la
+  // boucle de rendu occupe déjà cette file, et sur un appareil bridé la
+  // vérification s'y retrouve reléguée derrière chaque image composée.
+  await page.waitForFunction(() => document.querySelectorAll('li img').length === 4, undefined, {
+    timeout: 90000,
+    polling: 500,
+  });
   assetCount = 4;
 } catch {
   assetCount = await page.locator('li img').count();
+  const contexte = await page.evaluate(() => ({
+    zone: document.body.innerText.replace(/\s+/g, ' ').slice(0, 600),
+    erreurs: window.__probe.errors.slice(0, 3),
+  }));
+  console.log(`     état : ${contexte.zone}`);
+  if (contexte.erreurs.length) console.log(`     erreurs : ${contexte.erreurs.join(' | ')}`);
 }
 check('Les quatre rushes sont importés', assetCount === 4, `${assetCount} dans la bibliothèque`);
 
@@ -221,7 +263,9 @@ check('Les métadonnées sont lues', /\d+×\d+/.test(meta ?? ''), meta);
 await page.screenshot({ path: join(SHOTS, `01-import-${profile.id}.png`) });
 
 // -------------------------------------------------------- 2. Montage express
-await page.click('text=Monter automatiquement');
+// Le bandeau de guidage propose le même intitulé : on vise explicitement le
+// bouton du panneau d'import.
+await page.locator('button:has-text("Monter automatiquement (")').click();
 await page.waitForTimeout(1500);
 
 const canvasSize = await page.evaluate(() => {
@@ -291,6 +335,15 @@ if (profile.mobile) {
 check(
   'Le montage express a posé une accroche',
   await page.locator('text=Attends la fin').first().isVisible(),
+);
+
+// La consigne suit l'état réel du montage : une fois les plans posés, elle ne
+// doit plus parler d'import.
+const guideAfter = (await page.locator('[aria-label="Prochaine étape"]').textContent()) ?? '';
+check(
+  'La consigne s’adapte à l’avancement',
+  !/Importe tes vid/.test(guideAfter) && guideAfter.length > 20,
+  guideAfter.slice(0, 70).replace(/\s+/g, ' '),
 );
 
 if (profile.mobile) {
@@ -475,8 +528,13 @@ const pinned = { label: 'Maximale', width: 1080 };
  * mise en page, et l'échantillonnage doit rester bon marché.
  */
 await page.evaluate(() => {
-  window.__trace = { widths: [], warned: false };
+  window.__trace = { widths: [], gaps: [], warned: false };
+  let previous = performance.now();
   const sample = () => {
+    const now = performance.now();
+    window.__trace.gaps.push(now - previous);
+    previous = now;
+
     const canvas = document.querySelector('canvas');
     if (canvas) window.__trace.widths.push(canvas.width);
     if (document.body.textContent.includes('risque de saccader')) window.__trace.warned = true;
@@ -488,10 +546,14 @@ await page.evaluate(() => {
 await page.click(`button:has-text("${pinned.label}")`);
 await page.waitForTimeout(profile.mobile ? 12000 : 3000);
 
-const trace = await page.evaluate(() => ({
-  sequence: window.__trace.widths.filter((w, i, all) => i === 0 || all[i - 1] !== w),
-  warned: window.__trace.warned,
-}));
+const trace = await page.evaluate(() => {
+  const sorted = [...window.__trace.gaps].sort((a, b) => a - b);
+  return {
+    sequence: window.__trace.widths.filter((w, i, all) => i === 0 || all[i - 1] !== w),
+    warned: window.__trace.warned,
+    medianGap: Math.round(sorted[Math.floor(sorted.length / 2)] ?? 0),
+  };
+});
 
 check(
   'Un palier choisi à la main écrase la surveillance',
@@ -502,23 +564,36 @@ check(
 if (profile.mobile) {
   check('Un palier lourd au doigt est signalé', trace.warned);
 
-  // À ce palier, l'appareil bridé tombe sous les cinq images par seconde et
-  // l'interface cesse de répondre : impossible d'atteindre le réglage fautif.
-  // Le filet de sécurité doit donc reprendre la main de lui-même. On exige
-  // d'avoir vu le palier lourd AVANT la retombée, sans quoi la vérification
-  // serait satisfaite par un palier qui n'aurait jamais été appliqué.
+  /*
+   * Le contrat du filet de sécurité est conditionnel, et le test doit l'être
+   * aussi : il ne doit reprendre la main que si le palier choisi rend
+   * effectivement l'interface impraticable. Exiger un sauvetage inconditionnel
+   * reviendrait à exiger que l'application reste lente.
+   *
+   * On mesure donc la cadence réellement obtenue, et on vérifie l'une ou
+   * l'autre moitié du contrat selon ce qu'elle vaut.
+   */
+  const FROZEN_MS = 120;
   const pinnedAt = trace.sequence.indexOf(pinned.width);
   const droppedAfter = pinnedAt >= 0 && trace.sequence.slice(pinnedAt + 1).some((w) => w < pinned.width);
 
-  check(
-    'Un palier qui fige l’interface est abandonné tout seul',
-    droppedAfter,
-    `retombé à ${trace.sequence.at(-1)} px sans intervention`,
-  );
-  check(
-    'La reprise en main est expliquée à l’utilisateur',
-    await page.locator('text=Ton montage est intact').isVisible(),
-  );
+  if (trace.medianGap > FROZEN_MS) {
+    check(
+      'Un palier qui fige l’interface est abandonné tout seul',
+      droppedAfter,
+      `${trace.medianGap} ms par image → retombé à ${trace.sequence.at(-1)} px`,
+    );
+    check(
+      'La reprise en main est expliquée à l’utilisateur',
+      await page.locator('text=Ton montage est intact').isVisible(),
+    );
+  } else {
+    check(
+      'Un palier tenable n’est pas abandonné à tort',
+      !droppedAfter,
+      `${trace.medianGap} ms par image, aucun sauvetage nécessaire`,
+    );
+  }
 } else {
   // Sur une machine qui suit la cadence, le choix explicite doit tenir.
   check(
@@ -618,7 +693,7 @@ const format = (await page.locator('dt:text-is("Format") + dd').textContent())?.
 check('Un format d’export est disponible', !/non pris en charge/.test(format ?? ''), format);
 
 const downloading = page.waitForEvent('download', { timeout: 90000 });
-await page.click('text=Exporter la vidéo');
+await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
 await page.waitForTimeout(2500);
 await page.screenshot({ path: join(SHOTS, `05-export-${profile.id}.png`) });
 
@@ -639,7 +714,7 @@ if (!profile.mobile) {
   await page.waitForTimeout(500);
 
   const audioDownload = page.waitForEvent('download', { timeout: 60000 });
-  await page.click('text=Exporter la bande-son');
+  await page.locator('button:has-text("⬇ Exporter la bande-son")').click();
   try {
     const download = await audioDownload;
     const audioPath = join(SHOTS, `${profile.id}-${download.suggestedFilename()}`);
@@ -736,9 +811,16 @@ if (exportPath) {
     info.width === expected.width && info.height === expected.height,
     `${info.width}×${info.height}`,
   );
-  // La capture se faisant en temps réel, un appareil lent ajoute un résidu de
-  // démarrage et de fermeture que la tolérance reconnaît.
-  const slack = profile.mobile ? 2 : 1.2;
+  /*
+   * La capture se faisant en temps réel, l'enregistrement porte un résidu
+   * incompressible : le délai entre la demande de lecture et son démarrage
+   * effectif, puis la marge laissée en fin pour que la dernière image traverse
+   * la chaîne d'encodage. Sur un appareil bridé quatre fois, ces deux temps
+   * s'allongent d'autant. Ce qui est vérifié ici, c'est que la durée reste du
+   * bon ordre — le défaut qui avait été trouvé donnait vingt secondes pour un
+   * montage de sept.
+   */
+  const slack = profile.mobile ? 2.5 : 1.2;
   check(
     'L’export dure la longueur du montage',
     Math.abs((info.duration ?? 0) - EXPECTED_DURATION) < slack,

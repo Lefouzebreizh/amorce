@@ -6,7 +6,9 @@ import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Preview } from './Preview';
 import { Timeline } from './Timeline';
-import { STEPS, StepPanel, type StepId } from './steps';
+import { NextStep } from './NextStep';
+import { StepPanel } from './steps';
+import { STEPS, type StepId } from '@/lib/steps';
 import { ScoreBadge, UndoControls } from './ui';
 
 /**
@@ -84,8 +86,24 @@ export function StudioMobile({
               Fermer ✕
             </button>
           </div>
+
+          {/* La consigne ouvre le panneau : c'est panneau ouvert qu'on cherche
+              quoi faire, et l'en réserver à l'écran d'accueil la rendrait
+              absente au moment où elle sert le plus. */}
+          <div className="mb-3">
+            <NextStep onStep={onStep} />
+          </div>
+
           <StepPanel step={step} engine={engine} onStep={onStep} />
         </section>
+      )}
+
+      {/* Panneau fermé, la consigne prend sa place au-dessus de la barre
+          d'étapes : elle reste visible quoi qu'il arrive. */}
+      {!open && (
+        <div className="shrink-0 px-2 pb-2">
+          <NextStep onStep={onStep} />
+        </div>
       )}
 
       <TabBar step={step} onStep={onStep} />

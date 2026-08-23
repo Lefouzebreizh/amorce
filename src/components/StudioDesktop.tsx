@@ -6,7 +6,9 @@ import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Preview } from './Preview';
 import { Timeline } from './Timeline';
-import { STEPS, StepPanel, type StepId } from './steps';
+import { NextStep } from './NextStep';
+import { StepPanel } from './steps';
+import { STEPS, type StepId } from '@/lib/steps';
 import { ScoreBadge, UndoControls } from './ui';
 
 /**
@@ -59,7 +61,8 @@ export function StudioDesktop({
           </div>
         </section>
 
-        <aside className="w-full max-w-sm shrink-0 overflow-y-auto border-l border-edge p-3">
+        <aside className="w-full max-w-sm shrink-0 space-y-3 overflow-y-auto border-l border-edge p-3">
+          <NextStep onStep={onStep} />
           <StepPanel step={step} engine={engine} onStep={onStep} />
         </aside>
       </main>

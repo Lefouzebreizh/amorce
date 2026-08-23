@@ -7,7 +7,7 @@ import { useIsCompact } from '@/hooks/useMediaQuery';
 import { usePlayback } from '@/hooks/usePlayback';
 import { StudioDesktop } from './StudioDesktop';
 import { StudioMobile } from './StudioMobile';
-import { STEP_FOR_SELECTION, type StepId } from './steps';
+import { STEP_FOR_SELECTION, type StepId } from '@/lib/steps';
 
 /**
  * Point d'entrée du studio.

@@ -273,6 +273,18 @@ export function renderFrame(
   ctx.restore();
 
   const placed = options.placed ?? layoutClips(project.clips);
+
+  /*
+   * Rien à composer : on s'arrête au fond noir.
+   *
+   * Poursuivre appliquerait tout le post-traitement — dont le halo, qui redessine
+   * et floute une copie de l'image entière — à un cadre vide, pour un résultat
+   * strictement identique. Ce gaspillage tombait au pire moment : pendant
+   * l'import, où le décodage des rushes se dispute déjà le processeur, au point
+   * qu'un téléphone modeste n'arrivait plus au bout de sa bibliothèque.
+   */
+  if (placed.length === 0) return;
+
   const slice = sliceAt(placed, time);
   const look = getLook(project.cinema.look);
   const filter = options.grade ? options.grade.baseFilter(look, project.cinema.intensity) : 'none';

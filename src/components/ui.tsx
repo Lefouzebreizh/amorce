@@ -250,6 +250,9 @@ export function Actions({ children }: { children: ReactNode }) {
  * Placés dans le bandeau, donc atteignables depuis n'importe quelle étape :
  * une mauvaise manipulation se répare là où on la constate, pas en retournant
  * dans le panneau qui l'a provoquée.
+ *
+ * L'annulation porte son nom en toutes lettres. La flèche seule ne se
+ * reconnaît pas — le bouton était bien là, et personne ne l'avait vu.
  */
 export function UndoControls({
   canUndo,
@@ -264,10 +267,21 @@ export function UndoControls({
 }) {
   return (
     <div className="flex items-center gap-1">
-      <Button variant="ghost" onClick={onUndo} disabled={!canUndo} title="Annuler la dernière action">
-        ↶
+      <Button
+        variant={canUndo ? 'ghost' : 'subtle'}
+        onClick={onUndo}
+        disabled={!canUndo}
+        title="Annuler la dernière action (Ctrl+Z)"
+        className={canUndo ? 'font-semibold' : ''}
+      >
+        ↶ Annuler
       </Button>
-      <Button variant="ghost" onClick={onRedo} disabled={!canRedo} title="Rétablir">
+      <Button
+        variant={canRedo ? 'ghost' : 'subtle'}
+        onClick={onRedo}
+        disabled={!canRedo}
+        title="Rétablir ce qui vient d’être annulé"
+      >
         ↷
       </Button>
     </div>
