@@ -1,0 +1,44 @@
+/* Direction artistique AMORCE — valeurs validées (cahier des charges §2). */
+:root {
+  /* Fonds */
+  --bg-base: #0a0c10;
+  --bg-deep: #07080b;
+
+  /* Panneaux */
+  --panel: #12151c;
+  --panel-alt: #14171f;
+  --raised: #1b1f2a;
+
+  /* Bordures */
+  --border: #1f2430;
+  --border-strong: #2c3140;
+
+  /* Accents */
+  --accent: #3debd8;
+  --accent-2: #8b5cf6;
+  --accent-3: #ffb74d;
+  /* Dérivé DA : rouge du code couleur du score d'accroche (§3.4). */
+  --danger: #ff5f6d;
+
+  /* Texte */
+  --text: #e8eaf0;
+  --text-muted: #8b92a6;
+  --text-faint: #565d70;
+
+  /* Polices */
+  --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* Rythme */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --rail-w: 64px;
+  --library-w: 300px;
+  --score-w: 316px;
+  --topbar-h: 56px;
+  --timeline-h: 252px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}

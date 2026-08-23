@@ -1,0 +1,7 @@
+node_modules/
+dist/
+public/ffmpeg/
+*.local
+.DS_Store
+.vite/
+*.tsbuildinfo
