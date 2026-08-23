@@ -3,6 +3,7 @@ import { beforeEach, test } from 'node:test';
 import { useStudio } from '../store.ts';
 import { emptyProject } from '../timeline.ts';
 import { MIN_CLIP_DURATION, type MediaAsset } from '../types.ts';
+import { PLACEHOLDER_HOOK } from '../autoEdit.ts';
 
 /**
  * Le studio est un magasin unique : chaque test repart d'un projet vierge,
@@ -192,4 +193,59 @@ test('dupliquer un plan inexistant ne change rien', () => {
 
   useStudio.getState().duplicateClip('identifiant-inconnu');
   assert.equal(useStudio.getState().project.clips.length, 1);
+});
+
+test('un sous-titre ajouté ne reprend pas le texte de l’accroche automatique', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 10)]);
+  store.appendClip('a');
+  store.addCaption();
+
+  const [caption] = useStudio.getState().project.captions;
+  assert.notEqual(caption.text, PLACEHOLDER_HOOK, 'deux textes identiques se superposeraient sans prévenir');
+  assert.ok(caption.text.length > 0, 'un sous-titre vide ne se verrait pas à l’écran');
+});
+
+test('deux sous-titres simultanés sont posés à des hauteurs différentes', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 10)]);
+  store.appendClip('a');
+
+  useStudio.getState().setPlayhead(1);
+  useStudio.getState().addCaption();
+  useStudio.getState().addCaption();
+
+  const [first, second] = useStudio.getState().project.captions;
+  assert.ok(
+    Math.abs(first.y - second.y) > 0.08,
+    `les deux sous-titres se recouvrent : y=${first.y} et y=${second.y}`,
+  );
+});
+
+test('des sous-titres qui ne se croisent pas retrouvent la hauteur par défaut', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 20)]);
+  store.appendClip('a');
+
+  useStudio.getState().setPlayhead(0);
+  useStudio.getState().addCaption();
+  // Bien après la fin du premier : aucune raison de le décaler.
+  useStudio.getState().setPlayhead(10);
+  useStudio.getState().addCaption();
+
+  const [first, second] = useStudio.getState().project.captions;
+  assert.equal(first.y, second.y);
+});
+
+test('les hauteurs proposées restent dans la zone lisible', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 20)]);
+  store.appendClip('a');
+
+  useStudio.getState().setPlayhead(1);
+  for (let i = 0; i < 6; i++) useStudio.getState().addCaption();
+
+  for (const caption of useStudio.getState().project.captions) {
+    assert.ok(caption.y >= 0.15 && caption.y <= 0.85, `hauteur hors zone lisible : ${caption.y}`);
+  }
 });

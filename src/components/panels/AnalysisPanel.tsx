@@ -1,10 +1,39 @@
 'use client';
 
 import { useMemo } from 'react';
-import { analyzeProject, type Analysis } from '@/lib/analysis';
+import { analyzeProject, type Analysis, type CriterionId } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
-import { EmptyState, Hint, Panel, scoreColor } from '../ui';
+import type { StepId } from '../steps';
+import { Button, EmptyState, Hint, Panel, scoreColor } from '../ui';
+
+/**
+ * Étape qui corrige chaque critère.
+ *
+ * Une note sans chemin vers la correction laisse l'utilisateur chercher : le
+ * bouton nomme l'étape et y emmène directement.
+ */
+const STEP_FOR_CRITERION: Record<CriterionId, StepId> = {
+  hook: 'texte',
+  rythme: 'montage',
+  tension: 'montage',
+  texte: 'texte',
+  son: 'son',
+  format: 'montage',
+};
+
+const STEP_LABEL: Record<StepId, string> = {
+  import: 'Importer',
+  montage: 'Monter',
+  texte: 'Accroche',
+  son: 'Son',
+  cinema: 'Cinéma',
+  analyse: 'Analyser',
+  export: 'Exporter',
+};
+
+/** En dessous, le critère mérite qu'on explique comment le redresser. */
+const REMEDY_THRESHOLD = 0.8;
 
 /**
  * Note de viralité.
@@ -17,7 +46,13 @@ import { EmptyState, Hint, Panel, scoreColor } from '../ui';
  * et non sur le contenu des images. Le panneau le dit explicitement plutôt que
  * de laisser croire à un jugement sur la qualité du film.
  */
-export function AnalysisPanel({ engine }: { engine: PlaybackEngine }) {
+export function AnalysisPanel({
+  engine,
+  onStep,
+}: {
+  engine: PlaybackEngine;
+  onStep: (step: StepId) => void;
+}) {
   const project = useStudio((s) => s.project);
   const analysis = useMemo(() => analyzeProject(project), [project]);
 
@@ -37,27 +72,48 @@ export function AnalysisPanel({ engine }: { engine: PlaybackEngine }) {
       <Panel title="6 · Note de viralité" subtitle="Ce que la structure de ton montage laisse présager.">
         <ScoreHeader analysis={analysis} />
 
-        <div className="mt-4 space-y-2.5">
-          {analysis.criteria.map((criterion) => (
-            <div key={criterion.id}>
-              <div className="mb-1 flex items-baseline justify-between gap-2">
-                <span className="text-xs font-semibold text-mist">{criterion.label}</span>
-                <span className="font-mono text-[11px] text-muted">
-                  {Math.round(criterion.score * criterion.weight)} / {criterion.weight}
-                </span>
+        <div className="mt-4 space-y-3">
+          {analysis.criteria.map((criterion) => {
+            const target = STEP_FOR_CRITERION[criterion.id];
+            const needsWork = criterion.score < REMEDY_THRESHOLD;
+
+            return (
+              <div key={criterion.id}>
+                <div className="mb-1 flex items-baseline justify-between gap-2">
+                  <span className="text-xs font-semibold text-mist">{criterion.label}</span>
+                  <span className="font-mono text-[11px] text-muted">
+                    {Math.round(criterion.score * criterion.weight)} / {criterion.weight}
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-slab">
+                  <div
+                    className="h-full rounded-full transition-[width] duration-300"
+                    style={{
+                      width: `${Math.round(criterion.score * 100)}%`,
+                      backgroundColor: scoreColor(criterion.score),
+                    }}
+                  />
+                </div>
+                <p className="mt-1 text-[11px] leading-snug text-muted">{criterion.detail}</p>
+
+                {needsWork && (
+                  <div className="mt-1.5 rounded-lg border border-edge bg-slab/70 p-2.5">
+                    <p className="text-[11px] leading-relaxed text-mist">
+                      <span className="font-semibold">Comment corriger : </span>
+                      {criterion.remedy}
+                    </p>
+                    <Button
+                      variant="subtle"
+                      className="mt-1 px-0 text-[11px]"
+                      onClick={() => onStep(target)}
+                    >
+                      Aller à « {STEP_LABEL[target]} » →
+                    </Button>
+                  </div>
+                )}
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-slab">
-                <div
-                  className="h-full rounded-full transition-[width] duration-300"
-                  style={{
-                    width: `${Math.round(criterion.score * 100)}%`,
-                    backgroundColor: scoreColor(criterion.score),
-                  }}
-                />
-              </div>
-              <p className="mt-1 text-[11px] leading-snug text-muted">{criterion.detail}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Panel>
 

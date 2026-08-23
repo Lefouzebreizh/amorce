@@ -37,6 +37,14 @@ export type Criterion = {
   weight: number;
   /** Ce que mesure le critère, en une phrase. */
   detail: string;
+  /**
+   * Le geste à faire pour gagner des points, en une phrase impérative.
+   *
+   * Une note sans consigne ne sert à rien : savoir que le rythme vaut 0 sur 20
+   * ne dit pas quoi toucher. La consigne nomme donc l'outil et l'endroit, avec
+   * les valeurs mesurées, plutôt qu'un conseil de portée générale.
+   */
+  remedy: string;
 };
 
 /** Un passage où la tension retombe trop longtemps. */
@@ -247,6 +255,8 @@ export function analyzeProject(project: Project): Analysis {
   const son = Math.min(1, 0.75 * band(cuesPer10s, 1.2, 6, 0, 14) + (project.music ? 0.25 : 0));
   const format = 0.7 * band(duration, 7, 35, 2, 90) + 0.3 * verticalShare(project);
 
+  const hasEarlyCaption = project.captions.some((c) => c.start <= 1.2 && c.end > c.start);
+
   const criteria: Criterion[] = [
     {
       id: 'hook',
@@ -254,6 +264,11 @@ export function analyzeProject(project: Project): Analysis {
       score: hook,
       weight: 30,
       detail: `Les ${HOOK_WINDOW} premières secondes : texte d’accroche, première coupe, impact sonore.`,
+      remedy: !hasEarlyCaption
+        ? 'Ouvre Accroche et choisis une formule : elle se posera sur la toute première image.'
+        : shotCount === 1
+          ? 'Il n’y a qu’un seul plan : rien ne bouge dans les 3 premières secondes. Coupe-le en deux dans Monter, avec les ciseaux ✂ au-dessus de la timeline.'
+          : 'Rapproche ta première coupe (vise avant 2 s), et pose un bruitage sur la première seconde dans Son.',
     },
     {
       id: 'rythme',
@@ -261,6 +276,12 @@ export function analyzeProject(project: Project): Analysis {
       score: rythme,
       weight: 20,
       detail: `Cadence des coupes — ${averageShot.toFixed(1)} s par plan, le plus long fait ${longestShot.toFixed(1)} s.`,
+      remedy:
+        longestShot > 3.5
+          ? `Ton plan le plus long fait ${longestShot.toFixed(1)} s. Place la tête de lecture dedans et touche les ciseaux ✂ pour le couper en deux, autant de fois qu’il faut pour descendre sous 3 s.`
+          : averageShot < 1.1
+            ? 'Tes plans s’enchaînent trop vite pour être lus. Rallonge-les dans Monter, avec le curseur « Fin dans le rush ».'
+            : 'Varie la longueur des plans : une alternance court / long se remarque plus qu’une cadence régulière.',
     },
     {
       id: 'tension',
@@ -271,6 +292,10 @@ export function analyzeProject(project: Project): Analysis {
         slumps.length === 0
           ? 'Aucune retombée d’attention prolongée détectée.'
           : `${slumps.length} passage${slumps.length > 1 ? 's' : ''} où l’attention retombe trop longtemps.`,
+      remedy:
+        slumps.length === 0
+          ? 'Rien à corriger ici.'
+          : `Touche un passage signalé plus bas pour y aller, puis fais-y arriver quelque chose : une coupe, un bruitage ou l’apparition d’un texte.`,
     },
     {
       id: 'texte',
@@ -278,6 +303,10 @@ export function analyzeProject(project: Project): Analysis {
       score: texte,
       weight: 15,
       detail: `${Math.round(coverage * 100)} % de la vidéo est couverte par du texte à l’écran.`,
+      remedy:
+        coverage < 0.55
+          ? `Tu es à ${Math.round(coverage * 100)} %, vise 70 %. Dans Accroche, avance la tête de lecture et touche « + Ajouter » à chaque nouvelle idée.`
+          : 'Le texte sature l’image. Raccourcis quelques sous-titres pour laisser respirer entre deux phrases.',
     },
     {
       id: 'son',
@@ -285,6 +314,12 @@ export function analyzeProject(project: Project): Analysis {
       score: son,
       weight: 10,
       detail: `${cuesPer10s.toFixed(1)} bruitage${cuesPer10s >= 2 ? 's' : ''} pour 10 s${project.music ? ', musique de fond active' : ', pas de musique de fond'}.`,
+      remedy:
+        project.cues.length === 0
+          ? 'Ouvre Son, place-toi sur une coupe et pose un Whoosh. Écoute chaque bruitage avec ♪ avant de le poser.'
+          : !project.music
+            ? 'Ajoute une musique de fond dans Son : elle soude les plans entre eux.'
+            : 'Ponctue davantage tes coupes avec des bruitages.',
     },
     {
       id: 'format',
@@ -292,6 +327,12 @@ export function analyzeProject(project: Project): Analysis {
       score: format,
       weight: 5,
       detail: `Durée totale de ${duration.toFixed(1)} s et cadrage des sources.`,
+      remedy:
+        duration > 35
+          ? `${duration.toFixed(0)} s, c’est long. Raccourcis ou supprime des plans pour descendre sous 35 s.`
+          : duration < 7
+            ? 'Trop court. Ajoute un rush, ou duplique un plan existant depuis Monter.'
+            : 'Durée idéale. Vérifie que tes rushes sont bien verticaux.',
     },
   ];
 

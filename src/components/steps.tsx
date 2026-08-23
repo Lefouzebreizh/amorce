@@ -40,7 +40,16 @@ export const STEPS: Step[] = [
 /** Étape vers laquelle amener l'utilisateur quand il sélectionne un élément. */
 export const STEP_FOR_SELECTION = { clip: 'montage', caption: 'texte', cue: 'son' } as const;
 
-export function StepPanel({ step, engine }: { step: StepId; engine: PlaybackEngine }) {
+export function StepPanel({
+  step,
+  engine,
+  onStep,
+}: {
+  step: StepId;
+  engine: PlaybackEngine;
+  /** Permet à un panneau de renvoyer vers l'étape qui corrige un défaut. */
+  onStep: (step: StepId) => void;
+}) {
   switch (step) {
     case 'import':
       return <ImportPanel />;
@@ -53,7 +62,7 @@ export function StepPanel({ step, engine }: { step: StepId; engine: PlaybackEngi
     case 'cinema':
       return <CinemaPanel />;
     case 'analyse':
-      return <AnalysisPanel engine={engine} />;
+      return <AnalysisPanel engine={engine} onStep={onStep} />;
     case 'export':
       return <ExportPanel engine={engine} />;
   }

@@ -121,3 +121,51 @@ test('les descentes de tension sont horodatées dans la timeline', () => {
   assert.ok(slump, 'une alerte était attendue');
   assert.ok(slump.start >= 2 && slump.end <= analysis.duration + 0.1);
 });
+
+test('chaque critère porte une consigne de correction non vide', () => {
+  const clips = [clip(20)];
+  for (const criterion of analyzeProject(project({ clips })).criteria) {
+    assert.ok(criterion.remedy.length > 10, `${criterion.id} sans consigne exploitable`);
+    assert.ok(criterion.detail.length > 10, `${criterion.id} sans description`);
+  }
+});
+
+test('la consigne du hook dépend de ce qui manque réellement', () => {
+  const clips = [clip(2), clip(2), clip(2)];
+
+  // Sans accroche, la consigne doit renvoyer vers la pose d'un texte.
+  const sansTexte = analyzeProject(project({ clips })).criteria.find((c) => c.id === 'hook')!;
+  assert.match(sansTexte.remedy, /Accroche/);
+
+  // Avec une accroche mais un seul plan, c'est la coupe qui manque.
+  const seulPlan = analyzeProject(
+    project({ clips: [clip(20)], captions: [caption(0, 2)] }),
+  ).criteria.find((c) => c.id === 'hook')!;
+  assert.match(seulPlan.remedy, /ciseaux|couper/i);
+});
+
+test('la consigne de rythme cite la durée du plan fautif', () => {
+  const rythme = analyzeProject(project({ clips: [clip(19.5)] })).criteria.find((c) => c.id === 'rythme')!;
+  assert.match(rythme.remedy, /19\.5 s/, 'la consigne doit nommer le plan à couper');
+});
+
+test('la consigne sur le son dépend de ce qui est déjà en place', () => {
+  const clips = [clip(2), clip(2)];
+
+  const sansRien = analyzeProject(project({ clips })).criteria.find((c) => c.id === 'son')!;
+  assert.match(sansRien.remedy, /Whoosh/);
+
+  const avecBruitages = analyzeProject(
+    project({ clips, cues: [{ id: nextId(), sfx: 'whoosh', time: 1, gain: 0.8 }] }),
+  ).criteria.find((c) => c.id === 'son')!;
+  assert.match(avecBruitages.remedy, /musique/);
+});
+
+test('un critère au maximum ne réclame aucune correction urgente', () => {
+  const clips = Array.from({ length: 8 }, () => clip(1.6));
+  const cues = Array.from({ length: 6 }, (_, i) => ({ id: nextId(), sfx: 'whoosh' as const, time: i * 2, gain: 0.8 }));
+  const tension = analyzeProject(project({ clips, cues })).criteria.find((c) => c.id === 'tension')!;
+
+  assert.equal(tension.score, 1);
+  assert.match(tension.remedy, /Rien à corriger/);
+});

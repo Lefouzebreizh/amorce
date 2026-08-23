@@ -60,7 +60,7 @@ export function StudioDesktop({
         </section>
 
         <aside className="w-full max-w-sm shrink-0 overflow-y-auto border-l border-edge p-3">
-          <StepPanel step={step} engine={engine} />
+          <StepPanel step={step} engine={engine} onStep={onStep} />
         </aside>
       </main>
     </div>

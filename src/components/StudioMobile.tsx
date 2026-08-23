@@ -84,7 +84,7 @@ export function StudioMobile({
               Fermer ✕
             </button>
           </div>
-          <StepPanel step={step} engine={engine} />
+          <StepPanel step={step} engine={engine} onStep={onStep} />
         </section>
       )}
 

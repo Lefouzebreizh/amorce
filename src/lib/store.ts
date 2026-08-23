@@ -230,16 +230,39 @@ export const useStudio = create<StudioState>((set, get) => ({
       return { project: { ...state.project, clips: next }, selection: { kind: 'clip', id: tail.id } };
     }),
 
+  /**
+   * Ajoute un sous-titre à la position de lecture.
+   *
+   * Le texte par défaut est neutre, et non une accroche toute faite : la même
+   * phrase que celle posée par le montage express produisait deux sous-titres
+   * identiques, superposés à l'écran, sans que rien ne signale qu'il y en avait
+   * deux.
+   *
+   * La hauteur est décalée si un autre sous-titre occupe déjà l'instant visé,
+   * pour la même raison : deux textes au même endroit se lisent comme un seul
+   * texte abîmé.
+   */
   addCaption: (style = 'punch') =>
     set((state) => {
       const start = state.playhead;
+      const end = start + 2;
+
+      const occupied = state.project.captions
+        .filter((c) => c.start < end && c.end > start)
+        .map((c) => c.y);
+
+      // On descend par paliers jusqu'à trouver une hauteur libre, sans jamais
+      // sortir de la zone lisible.
+      const candidates = [0.5, 0.32, 0.66, 0.2, 0.78];
+      const free = candidates.find((y) => occupied.every((taken) => Math.abs(taken - y) > 0.08));
+
       const caption: Caption = {
         id: uid('cap'),
-        text: 'Attends la fin 👀',
+        text: 'Ton texte ici',
         start,
-        end: start + 2,
+        end,
         style,
-        y: 0.5,
+        y: free ?? 0.5,
       };
       return {
         project: { ...state.project, captions: [...state.project.captions, caption] },
