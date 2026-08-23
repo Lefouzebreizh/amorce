@@ -1,4 +1,4 @@
-import type { Clip, Project } from './types';
+import { DEFAULT_CINEMA, type Clip, type Project } from './types.ts';
 
 /**
  * Calcul des positions sur la timeline.
@@ -131,5 +131,13 @@ export function sliceAt(placed: PlacedClip[], t: number): FrameSlice | null {
 
 /** Projet vide, point de départ de l'application. */
 export function emptyProject(): Project {
-  return { name: 'Nouveau montage', assets: [], clips: [], captions: [], cues: [], music: null };
+  return {
+    name: 'Nouveau montage',
+    assets: [],
+    clips: [],
+    captions: [],
+    cues: [],
+    music: null,
+    cinema: { ...DEFAULT_CINEMA },
+  };
 }

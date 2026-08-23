@@ -1,0 +1,325 @@
+import { OUTPUT_HEIGHT, OUTPUT_WIDTH, type Caption, type CaptionStyleId } from './types.ts';
+
+/**
+ * Sous-titres incrustés.
+ *
+ * La majorité du public regarde sans le son : le texte à l'écran n'est pas une
+ * option de confort, c'est le principal vecteur du message. Les styles ci-dessous
+ * privilégient donc tous la lisibilité sur un petit écran — corps large, fort
+ * contraste, contour épais pour tenir sur n'importe quelle image.
+ */
+
+/** Polices résolues à l'exécution et transmises au moteur de rendu. */
+export type FontSet = {
+  /** Police d'affichage, très grasse, pour les accroches. */
+  display: string;
+  /** Police de texte courant. */
+  body: string;
+};
+
+type CaptionStyle = {
+  id: CaptionStyleId;
+  label: string;
+  description: string;
+  /** Corps de la police en pixels, pour une sortie de 1080 px de large. */
+  fontSize: number;
+  weight: number;
+  family: keyof FontSet;
+  uppercase: boolean;
+  color: string;
+  stroke?: { color: string; width: number };
+  shadow?: { color: string; blur: number; offsetY: number };
+  /** Cartouche plein derrière le texte. */
+  box?: { color: string; paddingX: number; paddingY: number; radius: number };
+  /** Surlignage du mot en cours de prononciation. */
+  highlight?: { color: string; color2: string };
+  /** Apparition en rebond. */
+  pop: boolean;
+};
+
+export const CAPTION_STYLES: Record<CaptionStyleId, CaptionStyle> = {
+  punch: {
+    id: 'punch',
+    label: 'Punch',
+    description: 'Gros titre contouré, celui qui tient le hook.',
+    fontSize: 104,
+    weight: 900,
+    family: 'display',
+    uppercase: true,
+    color: '#ffffff',
+    stroke: { color: '#000000', width: 16 },
+    shadow: { color: 'rgba(0,0,0,0.55)', blur: 26, offsetY: 8 },
+    pop: true,
+  },
+  karaoke: {
+    id: 'karaoke',
+    label: 'Karaoké',
+    description: 'Le mot prononcé s’allume — imbattable pour retenir l’œil.',
+    fontSize: 88,
+    weight: 900,
+    family: 'display',
+    uppercase: true,
+    color: '#ffffff',
+    stroke: { color: '#000000', width: 14 },
+    highlight: { color: '#22e37a', color2: '#04150c' },
+    pop: false,
+  },
+  neon: {
+    id: 'neon',
+    label: 'Néon',
+    description: 'Halo coloré, lisible même sur une image chargée.',
+    fontSize: 92,
+    weight: 900,
+    family: 'display',
+    uppercase: true,
+    color: '#ffffff',
+    stroke: { color: '#0a0a12', width: 10 },
+    shadow: { color: '#48d2ff', blur: 44, offsetY: 0 },
+    pop: true,
+  },
+  minimal: {
+    id: 'minimal',
+    label: 'Minimal',
+    description: 'Discret, pour ne pas manger l’image.',
+    fontSize: 62,
+    weight: 700,
+    family: 'body',
+    uppercase: false,
+    color: '#ffffff',
+    shadow: { color: 'rgba(0,0,0,0.75)', blur: 18, offsetY: 3 },
+    pop: false,
+  },
+  subtitle: {
+    id: 'subtitle',
+    label: 'Cartouche',
+    description: 'Bandeau sombre classique, lisibilité garantie.',
+    fontSize: 56,
+    weight: 600,
+    family: 'body',
+    uppercase: false,
+    color: '#ffffff',
+    box: { color: 'rgba(0,0,0,0.72)', paddingX: 28, paddingY: 16, radius: 14 },
+    pop: false,
+  },
+};
+
+/** Largeur maximale du bloc de texte, en pixels de sortie. */
+const MAX_TEXT_WIDTH = OUTPUT_WIDTH * 0.86;
+const LINE_HEIGHT_RATIO = 1.18;
+const POP_DURATION = 0.24;
+
+function fontString(style: CaptionStyle, fonts: FontSet): string {
+  return `${style.weight} ${style.fontSize}px ${fonts[style.family]}`;
+}
+
+/** Découpe le texte en lignes qui tiennent dans la largeur autorisée. */
+export function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [];
+
+  const lines: string[] = [];
+  let current = words[0];
+
+  for (const word of words.slice(1)) {
+    const candidate = `${current} ${word}`;
+    if (ctx.measureText(candidate).width <= maxWidth) {
+      current = candidate;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  }
+  lines.push(current);
+  return lines;
+}
+
+/**
+ * Facteur d'échelle de l'animation d'apparition.
+ *
+ * Dépasse volontairement 1 en cours de route : le léger rebond est ce qui rend
+ * l'apparition perceptible en une fraction de seconde.
+ */
+export function popScale(elapsed: number): number {
+  if (elapsed >= POP_DURATION) return 1;
+  if (elapsed < 0) return 0;
+  const p = elapsed / POP_DURATION;
+  return 0.72 + 0.34 * Math.sin(p * Math.PI * 0.85) + 0.28 * p;
+}
+
+/**
+ * Index du mot « prononcé » à cet instant, pour le style karaoké.
+ *
+ * Faute de piste de parole analysable, la durée du sous-titre est répartie
+ * uniformément entre ses mots. C'est une approximation, mais elle suffit à
+ * produire le mouvement continu qui retient le regard.
+ */
+export function activeWordIndex(caption: Caption, time: number, wordCount: number): number {
+  const span = Math.max(0.001, caption.end - caption.start);
+  const progress = (time - caption.start) / span;
+  return Math.min(wordCount - 1, Math.max(0, Math.floor(progress * wordCount)));
+}
+
+/** Sous-titres visibles à l'instant donné. */
+export function captionsAt(captions: Caption[], time: number): Caption[] {
+  return captions.filter((c) => time >= c.start && time <= c.end);
+}
+
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+): void {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+}
+
+/** Dessine un sous-titre sur le canvas de sortie. */
+export function drawCaption(
+  ctx: CanvasRenderingContext2D,
+  caption: Caption,
+  time: number,
+  fonts: FontSet,
+): void {
+  const style = CAPTION_STYLES[caption.style];
+  const text = style.uppercase ? caption.text.toUpperCase() : caption.text;
+  if (!text.trim()) return;
+
+  ctx.save();
+  ctx.font = fontString(style, fonts);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const lines = wrapLines(ctx, text, MAX_TEXT_WIDTH);
+  const lineHeight = style.fontSize * LINE_HEIGHT_RATIO;
+  const blockHeight = lines.length * lineHeight;
+  const centerY = caption.y * OUTPUT_HEIGHT;
+
+  // L'animation part du centre du bloc pour que le rebond reste symétrique.
+  if (style.pop) {
+    const scale = popScale(time - caption.start);
+    ctx.translate(OUTPUT_WIDTH / 2, centerY);
+    ctx.scale(scale, scale);
+    ctx.translate(-OUTPUT_WIDTH / 2, -centerY);
+  }
+
+  const firstLineY = centerY - blockHeight / 2 + lineHeight / 2;
+
+  if (style.box) {
+    const widest = Math.max(...lines.map((line) => ctx.measureText(line).width));
+    roundedRect(
+      ctx,
+      OUTPUT_WIDTH / 2 - widest / 2 - style.box.paddingX,
+      firstLineY - lineHeight / 2 - style.box.paddingY,
+      widest + style.box.paddingX * 2,
+      blockHeight + style.box.paddingY * 2,
+      style.box.radius,
+    );
+    ctx.fillStyle = style.box.color;
+    ctx.fill();
+  }
+
+  if (style.highlight) {
+    drawKaraokeLines(ctx, lines, caption, time, style, firstLineY, lineHeight);
+  } else {
+    lines.forEach((line, index) => {
+      drawStyledText(ctx, line, OUTPUT_WIDTH / 2, firstLineY + index * lineHeight, style, style.color);
+    });
+  }
+
+  ctx.restore();
+}
+
+/** Trace un texte avec son contour et son ombre éventuels. */
+function drawStyledText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  style: CaptionStyle,
+  color: string,
+): void {
+  ctx.save();
+  if (style.shadow) {
+    ctx.shadowColor = style.shadow.color;
+    ctx.shadowBlur = style.shadow.blur;
+    ctx.shadowOffsetY = style.shadow.offsetY;
+  }
+  if (style.stroke) {
+    ctx.lineWidth = style.stroke.width;
+    ctx.strokeStyle = style.stroke.color;
+    ctx.lineJoin = 'round';
+    ctx.miterLimit = 2;
+    ctx.strokeText(text, x, y);
+  }
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+/** Trace les lignes en surlignant le mot courant. */
+function drawKaraokeLines(
+  ctx: CanvasRenderingContext2D,
+  lines: string[],
+  caption: Caption,
+  time: number,
+  style: CaptionStyle,
+  firstLineY: number,
+  lineHeight: number,
+): void {
+  const allWords = lines.flatMap((line) => line.split(' '));
+  const active = activeWordIndex(caption, time, allWords.length);
+  const spaceWidth = ctx.measureText(' ').width;
+  let wordCursor = 0;
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const words = lines[lineIndex].split(' ');
+    const lineWidth = ctx.measureText(lines[lineIndex]).width;
+    const y = firstLineY + lineIndex * lineHeight;
+    let x = OUTPUT_WIDTH / 2 - lineWidth / 2;
+
+    for (const word of words) {
+      const width = ctx.measureText(word).width;
+      const isActive = wordCursor === active;
+      const centerX = x + width / 2;
+
+      if (isActive && style.highlight) {
+        ctx.save();
+        roundedRect(
+          ctx,
+          x - 14,
+          y - style.fontSize * 0.58,
+          width + 28,
+          style.fontSize * 1.16,
+          16,
+        );
+        ctx.fillStyle = style.highlight.color;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawStyledText(
+        ctx,
+        word,
+        centerX,
+        y,
+        // Le contour noir nuit à la lisibilité sur le pavé de surlignage.
+        isActive && style.highlight ? { ...style, stroke: undefined } : style,
+        isActive && style.highlight ? style.highlight.color2 : style.color,
+      );
+
+      x += width + spaceWidth;
+      wordCursor++;
+    }
+  }
+}

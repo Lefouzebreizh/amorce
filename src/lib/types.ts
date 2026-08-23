@@ -86,6 +86,26 @@ export type SoundCue = {
   gain: number;
 };
 
+/** Rendus colorimétriques disponibles. */
+export type LookId =
+  | 'naturel'
+  | 'cinema'
+  | 'blockbuster'
+  | 'argentique'
+  | 'nuit'
+  | 'or'
+  | 'noir'
+  | 'reve';
+
+/** Réglages du rendu cinématographique, appliqués à tout le montage. */
+export type CinemaSettings = {
+  look: LookId;
+  /** Dosage global du rendu, de 0 (aucun) à 1 (plein effet). */
+  intensity: number;
+  /** Hauteur des bandes cinémascope, de 0 (aucune) à 1. */
+  bars: number;
+};
+
 /** Musique de fond optionnelle, importée par l'utilisateur. */
 export type MusicTrack = {
   name: string;
@@ -103,7 +123,11 @@ export type Project = {
   captions: Caption[];
   cues: SoundCue[];
   music: MusicTrack | null;
+  cinema: CinemaSettings;
 };
+
+/** Rendu par défaut : discrètement cinéma, sans bandes. */
+export const DEFAULT_CINEMA: CinemaSettings = { look: 'cinema', intensity: 0.7, bars: 0 };
 
 /** Valeurs par défaut d'un clip fraîchement ajouté à la timeline. */
 export const DEFAULT_CLIP: Omit<Clip, 'id' | 'assetId' | 'outPoint'> = {
