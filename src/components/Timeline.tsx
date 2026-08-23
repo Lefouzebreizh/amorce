@@ -21,6 +21,18 @@ import type { PlaybackEngine } from '@/hooks/usePlayback';
 /** Échelle d'affichage. Un plan de 2 s occupe ainsi une largeur confortable. */
 const PX_PER_SEC = 64;
 
+/**
+ * Marge ajoutée à droite de la piste.
+ *
+ * Les éléments sont positionnés par leur bord gauche à leur instant : le
+ * dernier bruitage d'un montage déborderait donc de la largeur calculée, et son
+ * intitulé serait tronqué par le défilement horizontal.
+ */
+const RIGHT_GUTTER = 96;
+
+/** Hauteur réservée en haut pour l'étiquette de la tête de lecture. */
+const LABEL_ROW = 14;
+
 export function Timeline({ engine }: { engine: PlaybackEngine }) {
   const clips = useStudio((s) => s.project.clips);
   const captions = useStudio((s) => s.project.captions);
@@ -35,7 +47,7 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const placed = layoutClips(clips);
-  const width = Math.max(320, duration * PX_PER_SEC);
+  const width = Math.max(320, duration * PX_PER_SEC + RIGHT_GUTTER);
 
   const seekFromEvent = (event: React.MouseEvent<HTMLDivElement>) => {
     const bounds = trackRef.current?.getBoundingClientRect();
@@ -53,7 +65,12 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-edge bg-panel/70 p-3">
-      <div ref={trackRef} className="relative select-none" style={{ width }} onClick={seekFromEvent}>
+      <div
+        ref={trackRef}
+        className="relative select-none"
+        style={{ width, paddingTop: LABEL_ROW }}
+        onClick={seekFromEvent}
+      >
         <TimeRuler duration={duration} />
 
         {/* Piste des plans */}
@@ -179,7 +196,7 @@ function TimeRuler({ duration }: { duration: number }) {
       {ticks.map((second) => (
         <span
           key={second}
-          className="absolute top-0 border-l border-edge pl-1 font-mono text-[9px] text-muted"
+          className="absolute top-0 h-4 border-l border-edge pl-1 font-mono text-[9px] leading-4 text-muted"
           style={{ left: second * PX_PER_SEC }}
         >
           {second}s
@@ -197,13 +214,26 @@ function TimeRuler({ duration }: { duration: number }) {
  */
 function Playhead() {
   const playhead = useStudio((s) => s.playhead);
+  const x = playhead * PX_PER_SEC;
+
   return (
-    <div
-      className="pointer-events-none absolute top-0 bottom-0 z-20 w-px bg-accent"
-      style={{ left: playhead * PX_PER_SEC }}
-    >
-      <span className="absolute -top-0.5 -left-1 h-2 w-2 rounded-full bg-accent" />
-      <span className="absolute -top-4 -left-4 font-mono text-[9px] text-accent">{formatTime(playhead)}</span>
-    </div>
+    <>
+      <div
+        className="pointer-events-none absolute bottom-0 z-20 w-px bg-accent"
+        style={{ left: x, top: LABEL_ROW }}
+      >
+        <span className="absolute -top-0.5 -left-1 h-2 w-2 rounded-full bg-accent" />
+      </div>
+
+      {/* L'étiquette occupe sa propre bande, au-dessus de la règle des secondes,
+          et reste collée au bord gauche tant que la tête n'a pas assez avancé
+          pour la centrer sans la faire sortir du cadre. */}
+      <span
+        className="pointer-events-none absolute top-0 z-20 font-mono text-[9px] leading-none text-accent"
+        style={{ left: Math.max(0, x - 16) }}
+      >
+        {formatTime(playhead)}
+      </span>
+    </>
   );
 }
