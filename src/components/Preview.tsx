@@ -42,7 +42,7 @@ export function Preview({ engine }: { engine: PlaybackEngine }) {
           height={OUTPUT_HEIGHT}
           onClick={engine.toggle}
           aria-label="Prévisualisation du montage"
-          className="h-full max-h-full w-auto cursor-pointer rounded-2xl border border-edge bg-black shadow-2xl shadow-black/60"
+          className="h-full max-h-full w-auto max-w-full cursor-pointer rounded-2xl border border-edge bg-black shadow-2xl shadow-black/60"
           style={{ aspectRatio: '9 / 16' }}
         />
         {clipCount === 0 && (

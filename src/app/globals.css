@@ -33,11 +33,24 @@ body {
  */
 button,
 [role='button'],
-input,
+input:not([type='range']),
 label,
 select,
 textarea {
   touch-action: manipulation;
+}
+
+/*
+ * Les curseurs sont l'exception, et elle est capitale.
+ *
+ * `manipulation` autorise le navigateur à confisquer le geste horizontal pour
+ * faire défiler la page : la pastille ne suit plus le doigt et le réglage
+ * devient impossible à modifier au toucher. `none` rend le geste au curseur.
+ * Le défilement du panneau reste accessible partout ailleurs — un curseur est
+ * une cible étroite, on n'y démarre pas un défilement par mégarde.
+ */
+input[type='range'] {
+  touch-action: none;
 }
 
 /* Barres de défilement discrètes, pour ne pas découper les panneaux. */

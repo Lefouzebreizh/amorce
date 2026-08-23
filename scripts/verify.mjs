@@ -126,11 +126,42 @@ await context.addInitScript(() => {
 
 const page = await context.newPage();
 
-// Le bridage passe par le protocole de débogage : c'est le seul moyen de
-// simuler un appareil lent sans en avoir un sous la main.
-if (profile.throttle > 1) {
-  const client = await context.newCDPSession(page);
+// Le protocole de débogage sert à deux choses : brider le processeur pour
+// simuler un appareil lent, et produire de vrais évènements tactiles.
+const client = profile.mobile ? await context.newCDPSession(page) : null;
+if (client && profile.throttle > 1) {
   await client.send('Emulation.setCPUThrottlingRate', { rate: profile.throttle });
+}
+
+/**
+ * Fait glisser un doigt d'un point à un autre.
+ *
+ * `fill()` écrit la valeur directement dans le champ sans produire le moindre
+ * geste : il ne dirait rien d'un curseur devenu impossible à manipuler.
+ *
+ * Portée réelle, à ne pas surestimer : les évènements injectés ici arrivent
+ * directement au moteur de rendu et échappent donc à `touch-action`, que le
+ * navigateur applique en amont. Ce contrôle vérifie qu'un curseur réagit bien à
+ * une suite touchStart / touchMove / touchEnd, pas qu'aucune règle CSS ne
+ * confisque le geste.
+ */
+async function touchDrag(from, to, steps = 14) {
+  await client.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x: from.x, y: from.y }],
+  });
+  for (let step = 1; step <= steps; step++) {
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [
+        {
+          x: from.x + ((to.x - from.x) * step) / steps,
+          y: from.y + ((to.y - from.y) * step) / steps,
+        },
+      ],
+    });
+  }
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 }
 
 const consoleErrors = [];
@@ -261,6 +292,34 @@ check(
   'Le montage express a posé une accroche',
   await page.locator('text=Attends la fin').first().isVisible(),
 );
+
+if (profile.mobile) {
+  // Sélectionner un plan depuis la timeline ouvre l'étape qui sait le régler.
+  await page.locator('[aria-label="Timeline du montage"] [draggable], [aria-label="Timeline du montage"] div[title]').first().click();
+  await page.waitForTimeout(800);
+
+  const slider = page.locator('input[aria-label="Point de fin"]');
+  await slider.scrollIntoViewIfNeeded();
+  const box = await slider.boundingBox();
+  const before = Number(await slider.inputValue());
+
+  await touchDrag(
+    { x: box.x + box.width * 0.45, y: box.y + box.height / 2 },
+    { x: box.x + box.width * 0.95, y: box.y + box.height / 2 },
+  );
+  await page.waitForTimeout(500);
+  const after = Number(await slider.inputValue());
+
+  check(
+    'Un curseur se règle réellement au doigt',
+    after > before,
+    `point de fin porté de ${before.toFixed(2)} s à ${after.toFixed(2)} s`,
+  );
+
+  // Refermer pour rendre l'écran à l'aperçu avant la suite des mesures.
+  await page.click('text=Fermer');
+  await page.waitForTimeout(400);
+}
 
 /** Mesure la luminosité, le détail et le niveau sonore de l'instant courant. */
 const sample = () =>

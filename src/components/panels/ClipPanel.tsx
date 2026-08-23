@@ -38,6 +38,7 @@ export function ClipPanel() {
   const assets = useStudio((s) => s.project.assets);
   const updateClip = useStudio((s) => s.updateClip);
   const removeClip = useStudio((s) => s.removeClip);
+  const duplicateClip = useStudio((s) => s.duplicateClip);
   const moveClip = useStudio((s) => s.moveClip);
 
   const clip = selection?.kind === 'clip' ? clips.find((c) => c.id === selection.id) : undefined;
@@ -103,7 +104,7 @@ export function ClipPanel() {
         <Field
           label="Début dans le rush"
           value={`${clip.inPoint.toFixed(2)} s`}
-          help="Ce qui se trouve avant ce point est ignoré. Utile pour couper une amorce ratée."
+          help={`Ce qui se trouve avant ce point est ignoré. Le rush dure ${sourceDuration.toFixed(1)} s en tout.`}
         >
           <Slider
             ariaLabel="Point de début"
@@ -120,7 +121,7 @@ export function ClipPanel() {
         <Field
           label="Fin dans le rush"
           value={`${clip.outPoint.toFixed(2)} s`}
-          help="Coupe avant que le plan ne s’essouffle. Mieux vaut frustrer que lasser."
+          help={`Coupe avant que le plan ne s’essouffle. Tu ne peux pas dépasser ${sourceDuration.toFixed(1)} s, la longueur du rush d’origine.`}
         >
           <Slider
             ariaLabel="Point de fin"
@@ -137,7 +138,7 @@ export function ClipPanel() {
         <Field
           label="Vitesse"
           value={`${clip.speed.toFixed(2)}×`}
-          help="Au-dessus de 1, le plan est accéléré et raccourci d’autant."
+          help="Au-dessus de 1, le plan est accéléré et raccourci. En dessous, il ralentit et s’allonge : à 0,50×, un rush de 2 s en occupe 4."
         >
           <Slider
             ariaLabel="Vitesse de lecture"
@@ -167,6 +168,15 @@ export function ClipPanel() {
         <p className="rounded-xl border border-edge bg-slab/60 px-3 py-2 text-xs text-muted">
           Durée à l’écran : <span className="font-mono text-mist">{shown.toFixed(2)} s</span>
           {shown > 3.5 && ' — c’est long, pense à raccourcir.'}
+        </p>
+
+        <Button className="mt-3 w-full" onClick={() => duplicateClip(clip.id)}>
+          ⧉ Dupliquer ce plan
+        </Button>
+        <p className="mt-1.5 text-xs leading-relaxed text-muted">
+          Ton rush est court ? Duplique-le et règle la copie autrement — autre cadrage, autre vitesse,
+          autre transition. C’est ce qui permet d’atteindre 15 à 30 s à partir de quelques secondes de
+          matière.
         </p>
       </Panel>
 

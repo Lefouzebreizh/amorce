@@ -122,3 +122,74 @@ test('le premier plan ajouté démarre sans transition', () => {
   assert.equal(clips[0].transition, 'cut', 'rien ne précède le premier plan');
   assert.notEqual(clips[1].transition, 'cut');
 });
+
+test('dupliquer un plan insère la copie juste après l’original', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5), asset('b', 5)]);
+  store.appendClip('a');
+  store.appendClip('b');
+
+  const [first] = useStudio.getState().project.clips;
+  useStudio.getState().duplicateClip(first.id);
+
+  const clips = useStudio.getState().project.clips;
+  assert.equal(clips.length, 3);
+  assert.equal(clips[1].assetId, 'a', 'la copie devrait suivre immédiatement l’original');
+  assert.notEqual(clips[1].id, first.id, 'la copie doit avoir sa propre identité');
+  assert.equal(clips[2].assetId, 'b', 'les plans suivants sont décalés, pas remplacés');
+});
+
+test('la copie reprend les réglages de l’original et devient la sélection', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 8)]);
+  store.appendClip('a');
+
+  const [original] = useStudio.getState().project.clips;
+  useStudio.getState().updateClip(original.id, { inPoint: 1, outPoint: 3, speed: 0.5, motion: 'zoomIn' });
+  useStudio.getState().duplicateClip(original.id);
+
+  const copy = useStudio.getState().project.clips[1];
+  assert.deepEqual(
+    { inPoint: copy.inPoint, outPoint: copy.outPoint, speed: copy.speed, motion: copy.motion },
+    { inPoint: 1, outPoint: 3, speed: 0.5, motion: 'zoomIn' },
+  );
+  assert.deepEqual(useStudio.getState().selection, { kind: 'clip', id: copy.id });
+});
+
+test('dupliquer allonge le montage de la durée du plan copié', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5)]);
+  store.appendClip('a');
+  useStudio.getState().updateClip(useStudio.getState().project.clips[0].id, { outPoint: 2 });
+
+  assert.equal(useStudio.getState().duration(), 2);
+  useStudio.getState().duplicateClip(useStudio.getState().project.clips[0].id);
+
+  // La copie arrive avec la transition de l'original, qui consomme du temps :
+  // la durée totale est donc inférieure à la somme brute des deux plans.
+  const total = useStudio.getState().duration();
+  assert.ok(total > 2 && total <= 4, `durée totale inattendue : ${total}`);
+});
+
+test('ralentir un plan allonge sa place sur la timeline', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5)]);
+  store.appendClip('a');
+  const [clip] = useStudio.getState().project.clips;
+
+  useStudio.getState().updateClip(clip.id, { inPoint: 0, outPoint: 2, speed: 1 });
+  assert.equal(useStudio.getState().duration(), 2);
+
+  // Moitié moins vite : deux secondes de rush en occupent quatre à l'écran.
+  useStudio.getState().updateClip(clip.id, { speed: 0.5 });
+  assert.equal(useStudio.getState().duration(), 4);
+});
+
+test('dupliquer un plan inexistant ne change rien', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5)]);
+  store.appendClip('a');
+
+  useStudio.getState().duplicateClip('identifiant-inconnu');
+  assert.equal(useStudio.getState().project.clips.length, 1);
+});

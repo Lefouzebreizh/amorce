@@ -59,6 +59,7 @@ type StudioState = {
   appendClip: (assetId: string) => void;
   updateClip: (id: string, patch: Partial<Clip>) => void;
   removeClip: (id: string) => void;
+  duplicateClip: (id: string) => void;
   moveClip: (from: number, to: number) => void;
   splitClipAtPlayhead: () => void;
 
@@ -171,6 +172,29 @@ export const useStudio = create<StudioState>((set, get) => ({
         selection: state.selection?.kind === 'clip' && state.selection.id === id ? null : state.selection,
       }),
     ),
+
+  /**
+   * Insère une copie du plan juste après l'original.
+   *
+   * Les rushes générés par IA durent souvent deux ou trois secondes : sans
+   * duplication, il devient impossible d'atteindre les quinze à trente secondes
+   * qui font un format court tenable. La copie garde ses points d'entrée et de
+   * sortie — c'est en la retouchant qu'on obtient une variation plutôt qu'une
+   * répétition.
+   */
+  duplicateClip: (id) =>
+    set((state) => {
+      const index = state.project.clips.findIndex((c) => c.id === id);
+      if (index === -1) return state;
+
+      const copy: Clip = { ...state.project.clips[index], id: uid('clip') };
+      const clips = [...state.project.clips];
+      clips.splice(index + 1, 0, copy);
+      return {
+        project: { ...state.project, clips },
+        selection: { kind: 'clip', id: copy.id },
+      };
+    }),
 
   moveClip: (from, to) =>
     set((state) => {
