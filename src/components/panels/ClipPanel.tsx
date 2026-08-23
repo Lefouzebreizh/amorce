@@ -3,7 +3,7 @@
 import { useStudio } from '@/lib/store';
 import { clipDuration } from '@/lib/timeline';
 import { TRANSITION_LABELS } from '@/lib/transitions';
-import type { ClipMotion, TransitionKind } from '@/lib/types';
+import { MIN_CLIP_DURATION, type ClipMotion, type TransitionKind } from '@/lib/types';
 import { Button, Choice, EmptyState, Field, Hint, Panel, Slider } from '../ui';
 
 /** Ce que chaque transition raconte, sans jargon de monteur. */
@@ -108,10 +108,12 @@ export function ClipPanel() {
           <Slider
             ariaLabel="Point de début"
             min={0}
-            max={Math.max(0.1, sourceDuration - 0.1)}
+            max={Math.max(0, sourceDuration - MIN_CLIP_DURATION)}
             step={0.05}
             value={clip.inPoint}
-            onChange={(value) => updateClip(clip.id, { inPoint: Math.min(value, clip.outPoint - 0.1) })}
+            onChange={(value) =>
+              updateClip(clip.id, { inPoint: Math.min(value, clip.outPoint - MIN_CLIP_DURATION) })
+            }
           />
         </Field>
 
@@ -122,11 +124,13 @@ export function ClipPanel() {
         >
           <Slider
             ariaLabel="Point de fin"
-            min={0.1}
+            min={MIN_CLIP_DURATION}
             max={sourceDuration}
             step={0.05}
             value={clip.outPoint}
-            onChange={(value) => updateClip(clip.id, { outPoint: Math.max(value, clip.inPoint + 0.1) })}
+            onChange={(value) =>
+              updateClip(clip.id, { outPoint: Math.max(value, clip.inPoint + MIN_CLIP_DURATION) })
+            }
           />
         </Field>
 

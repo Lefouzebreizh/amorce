@@ -37,7 +37,27 @@ const LABEL_ROW = 14;
 /** Marge conservée entre la tête de lecture et le bord, au défilement suivi. */
 const FOLLOW_MARGIN = 72;
 
-export function Timeline({ engine }: { engine: PlaybackEngine }) {
+/** Largeur plancher d'un bloc, pour qu'il reste attrapable au doigt. */
+const MIN_BLOCK_WIDTH = 34;
+
+/** En dessous, le bloc n'a plus la place d'afficher quoi que ce soit. */
+const LABEL_THRESHOLD = 64;
+
+export function Timeline({
+  engine,
+  compact = false,
+}: {
+  engine: PlaybackEngine;
+  /**
+   * Version resserrée : seule la piste des plans est conservée.
+   *
+   * Sur un téléphone panneau ouvert, la hauteur manque. Les pistes texte et son
+   * sont alors les premières sacrifiées — leur contenu est de toute façon listé
+   * dans le panneau correspondant, alors que désigner un plan n'a pas
+   * d'équivalent ailleurs.
+   */
+  compact?: boolean;
+}) {
   const clips = useStudio((s) => s.project.clips);
   const captions = useStudio((s) => s.project.captions);
   const cues = useStudio((s) => s.project.cues);
@@ -72,10 +92,12 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
   return (
     <div
       ref={scrollRef}
+      role="group"
+      aria-label="Timeline du montage"
       // `pan-x` laisse le doigt faire défiler la timeline horizontalement tout
       // en réservant le geste vertical à la page : sans cette précision, le
       // navigateur choisit l'un ou l'autre et se trompe une fois sur deux.
-      className="overflow-x-auto overscroll-x-contain rounded-2xl border border-edge bg-panel/70 p-3 [touch-action:pan-x]"
+      className={`overflow-x-auto overscroll-x-contain rounded-2xl border border-edge bg-panel/70 [touch-action:pan-x] ${compact ? "p-2" : "p-3"}`}
     >
       <div
         ref={trackRef}
@@ -86,10 +108,14 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
         <TimeRuler duration={duration} />
 
         {/* Piste des plans */}
-        <div className="relative mt-1 h-16">
+        <div className={`relative mt-1 ${compact ? 'h-12' : 'h-16'}`}>
           {placed.map((item) => {
             const asset = assets.find((a) => a.id === item.clip.assetId);
             const active = selection?.kind === 'clip' && selection.id === item.clip.id;
+            const blockWidth = Math.max(MIN_BLOCK_WIDTH, item.duration * PX_PER_SEC);
+            // Un plan très court occupe quelques pixels : y forcer du texte le
+            // ferait s'empiler lettre par lettre et déborder du bloc.
+            const showLabels = blockWidth >= LABEL_THRESHOLD;
             return (
               <div
                 key={item.clip.id}
@@ -109,23 +135,29 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
                   select({ kind: 'clip', id: item.clip.id });
                 }}
                 title={`${asset?.name ?? 'Plan'} — ${item.duration.toFixed(1)} s`}
-                className={`absolute top-0 h-16 cursor-grab overflow-hidden rounded-lg border bg-cover bg-center transition-colors active:cursor-grabbing ${
+                className={`absolute top-0 ${compact ? 'h-12' : 'h-16'} cursor-grab overflow-hidden rounded-lg border bg-cover bg-center transition-colors active:cursor-grabbing ${
                   active ? 'border-accent ring-1 ring-accent' : 'border-edge hover:border-muted'
                 }`}
                 style={{
                   left: item.start * PX_PER_SEC,
-                  width: Math.max(18, item.duration * PX_PER_SEC),
+                  width: blockWidth,
                   backgroundImage: asset?.thumbnail ? `url(${asset.thumbnail})` : undefined,
                 }}
               >
-                <div className="flex h-full flex-col justify-between bg-gradient-to-t from-black/85 via-black/30 to-black/50 p-1.5">
-                  <span className="truncate text-[10px] font-semibold text-mist">
-                    {item.index + 1}. {asset?.name ?? 'Plan'}
-                  </span>
-                  <span className="text-[10px] text-mist/70">
-                    {item.duration.toFixed(1)} s
-                    {item.transitionIn > 0 && ` · ${TRANSITION_LABELS[item.clip.transition]}`}
-                  </span>
+                <div className="flex h-full flex-col justify-between overflow-hidden bg-gradient-to-t from-black/85 via-black/30 to-black/50 p-1.5">
+                  {showLabels ? (
+                    <>
+                      <span className="truncate text-[10px] font-semibold whitespace-nowrap text-mist">
+                        {item.index + 1}. {asset?.name ?? 'Plan'}
+                      </span>
+                      <span className="truncate text-[10px] whitespace-nowrap text-mist/70">
+                        {item.duration.toFixed(1)} s
+                        {item.transitionIn > 0 && ` · ${TRANSITION_LABELS[item.clip.transition]}`}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-[10px] font-semibold text-mist">{item.index + 1}</span>
+                  )}
                 </div>
               </div>
             );
@@ -133,6 +165,7 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
         </div>
 
         {/* Piste des sous-titres */}
+        {!compact && (
         <Lane label="Texte">
           {captions.map((caption) => {
             const active = selection?.kind === 'caption' && selection.id === caption.id;
@@ -160,8 +193,10 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
             );
           })}
         </Lane>
+        )}
 
         {/* Piste des bruitages */}
+        {!compact && (
         <Lane label="Son">
           {cues.map((cue) => {
             const active = selection?.kind === 'cue' && selection.id === cue.id;
@@ -187,6 +222,7 @@ export function Timeline({ engine }: { engine: PlaybackEngine }) {
             );
           })}
         </Lane>
+        )}
 
         <Playhead scrollRef={scrollRef} />
       </div>

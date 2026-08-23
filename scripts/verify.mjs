@@ -49,7 +49,10 @@ const PROFILES = [
     id: 'mobile',
     label: 'Téléphone',
     context: {
-      viewport: { width: 390, height: 844 },
+      // 640 px et non 844 : sur un téléphone réel, la barre d'adresse et la
+      // barre système amputent la hauteur. Mesurer sur l'écran nominal laissait
+      // passer un débordement qui écrasait l'aperçu jusqu'à le faire disparaître.
+      viewport: { width: 390, height: 640 },
       deviceScaleFactor: 3,
       isMobile: true,
       hasTouch: true,
@@ -205,9 +208,46 @@ check(
 const scoreLabel = await page.locator('header [role="status"]').getAttribute('aria-label');
 const score = Number(scoreLabel?.match(/(\d+)\s+sur\s+100/)?.[1]);
 check('Une note de viralité est calculée', score > 0, `note ${score}/100`);
-check('Le montage express a posé une accroche', await page.locator('text=Attends la fin').first().isVisible());
-
 await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
+
+if (profile.mobile) {
+  /*
+   * Panneau ouvert : c'est la configuration où la hauteur manque, et donc celle
+   * où la mise en page casse. On mesure les rectangles réels plutôt que de se
+   * fier à la présence des éléments — un aperçu écrasé à zéro reste bel et bien
+   * présent dans le document.
+   */
+  const layout = await page.evaluate(() => {
+    const rect = (selector) => document.querySelector(selector)?.getBoundingClientRect() ?? null;
+    const canvas = rect('canvas');
+    const transport = rect('[aria-label="Commandes de lecture"]');
+    const timeline = rect('[aria-label="Timeline du montage"]');
+
+    const overlaps = (a, b) =>
+      !!a && !!b && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+
+    return {
+      canvasHeight: Math.round(canvas?.height ?? 0),
+      canvasWidth: Math.round(canvas?.width ?? 0),
+      transportOverlapsTimeline: overlaps(transport, timeline),
+      canvasOverlapsTransport: overlaps(canvas, transport),
+      bottom: Math.round(Math.max(canvas?.bottom ?? 0, transport?.bottom ?? 0)),
+      viewportHeight: window.innerHeight,
+    };
+  });
+
+  check(
+    'L’aperçu garde une hauteur exploitable panneau ouvert',
+    layout.canvasHeight >= 80,
+    `${layout.canvasWidth}×${layout.canvasHeight} px affichés sur ${layout.viewportHeight} px de haut`,
+  );
+  check(
+    'Aucun élément n’en recouvre un autre panneau ouvert',
+    !layout.transportOverlapsTimeline && !layout.canvasOverlapsTransport,
+  );
+
+  await page.screenshot({ path: join(SHOTS, `02c-panneau-ouvert-${profile.id}.png`) });
+}
 
 // Sur téléphone, le panneau occupe la moitié basse : on le referme pour rendre
 // sa hauteur à l'aperçu avant de juger l'image.
@@ -216,6 +256,11 @@ if (profile.mobile) {
   await page.waitForTimeout(500);
   await page.screenshot({ path: join(SHOTS, `02b-apercu-${profile.id}.png`) });
 }
+
+check(
+  'Le montage express a posé une accroche',
+  await page.locator('text=Attends la fin').first().isVisible(),
+);
 
 /** Mesure la luminosité, le détail et le niveau sonore de l'instant courant. */
 const sample = () =>
@@ -350,9 +395,7 @@ await page.waitForTimeout(400);
 // lourde sous processeur bridé que la boucle de rendu accapare le fil principal
 // et que l'interface ne répond plus. C'est précisément ce que l'application
 // signale désormais à l'utilisateur avant qu'il ne fasse ce choix.
-const pinned = profile.mobile
-  ? { label: 'Élevée', width: Math.round(1080 * 0.7) }
-  : { label: 'Maximale', width: 1080 };
+const pinned = { label: 'Maximale', width: 1080 };
 
 /*
  * L'observateur est installé AVANT le clic, et échantillonne à chaque image

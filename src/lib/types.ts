@@ -164,6 +164,15 @@ export type Project = {
 /** Rendu par défaut : discrètement cinéma, sans bandes. */
 export const DEFAULT_CINEMA: CinemaSettings = { look: 'cinema', intensity: 0.7, bars: 0 };
 
+/**
+ * Durée plancher d'un plan, en secondes.
+ *
+ * En dessous, le plan n'a plus de sens : il ne se voit pas à la lecture, son
+ * bloc devient illisible sur la timeline, et un curseur manipulé au doigt y
+ * tombe bien trop facilement.
+ */
+export const MIN_CLIP_DURATION = 0.3;
+
 /** Valeurs par défaut d'un clip fraîchement ajouté à la timeline. */
 export const DEFAULT_CLIP: Omit<Clip, 'id' | 'assetId' | 'outPoint'> = {
   inPoint: 0,

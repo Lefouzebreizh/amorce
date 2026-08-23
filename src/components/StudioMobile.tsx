@@ -34,24 +34,42 @@ export function StudioMobile({
   const clipCount = useStudio((s) => s.project.clips.length);
   const open = step !== null;
 
+  /*
+   * Panneau ouvert, la hauteur devient la ressource rare, et il faut trancher :
+   * sur un écran de 640 px déjà amputé par la barre du navigateur, un aperçu
+   * utile, un panneau et une timeline ne tiennent pas ensemble.
+   *
+   * La timeline n'est donc conservée que pour l'étape de montage, la seule où
+   * désigner un plan n'a pas d'équivalent ailleurs — sous-titres et bruitages
+   * sont déjà listés dans leur propre panneau. Refermer le panneau, d'un seul
+   * appui sur l'onglet actif, rend l'écran entier à l'aperçu.
+   */
+  const showTimeline = clipCount > 0 && (!open || step === 'montage');
+
   return (
     // `100dvh` et non `100vh` : sur mobile, la barre d'adresse se replie en
     // cours de route et `vh` ne suit pas, ce qui ferait dépasser la page.
     <div className="flex h-[100dvh] flex-col overflow-hidden">
       <MobileHeader />
 
-      <section className="flex min-h-0 flex-1 flex-col gap-2 p-2">
+      <section className="flex min-h-[9rem] flex-1 flex-col gap-2 overflow-hidden p-2">
         <Preview engine={engine} />
-        {clipCount > 0 && (
+        {showTimeline && (
           <div className="shrink-0">
-            <Timeline engine={engine} />
+            <Timeline engine={engine} compact={open} />
           </div>
         )}
       </section>
 
       {open && (
         <section
-          className="h-[52dvh] shrink-0 overflow-y-auto overscroll-contain border-t border-edge bg-slab/95 px-2 pt-2 pb-4"
+          /*
+           * Volontairement sans `shrink-0` : sur un écran court, le panneau doit
+           * pouvoir céder de la hauteur à l'aperçu, dont la place minimale est
+           * garantie plus haut. Le figer produirait exactement le débordement
+           * qu'on cherche à éviter.
+           */
+          className="h-[38dvh] max-h-[24rem] min-h-[9rem] overflow-y-auto overscroll-contain border-t border-edge bg-slab/95 px-2 pt-2 pb-4"
           aria-label={STEPS.find((s) => s.id === step)?.label}
         >
           <div className="mb-2 flex items-center justify-between px-1">

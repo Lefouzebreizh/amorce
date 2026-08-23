@@ -28,8 +28,14 @@ export function Preview({ engine }: { engine: PlaybackEngine }) {
   }, [engine]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center gap-3">
-      <div className="relative flex min-h-0 flex-1 items-center justify-center">
+    /*
+     * Les hauteurs minimales ne sont pas décoratives : sans elles, un panneau
+     * ouvert sur un téléphone dont la barre d'adresse mange déjà l'écran ne
+     * laisse plus assez de place, l'aperçu s'écrase à zéro et la barre de
+     * lecture déborde par-dessus la timeline.
+     */
+    <div className="flex min-h-[11rem] flex-1 flex-col items-center gap-2 overflow-hidden">
+      <div className="relative flex min-h-[6rem] flex-1 items-center justify-center overflow-hidden">
         <canvas
           ref={canvasRef}
           width={OUTPUT_WIDTH}
@@ -40,9 +46,12 @@ export function Preview({ engine }: { engine: PlaybackEngine }) {
           style={{ aspectRatio: '9 / 16' }}
         />
         {clipCount === 0 && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-8">
-            <p className="max-w-[16rem] text-center text-sm leading-relaxed text-muted">
-              Importe tes vidéos, puis ajoute-les à la timeline pour voir le montage ici.
+          // Message volontairement court et tronqué : dans un aperçu réduit à
+          // quelques centimètres, un paragraphe déborderait par-dessus l'en-tête
+          // et la barre de lecture.
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden p-4">
+            <p className="line-clamp-3 max-w-[15rem] text-center text-xs leading-relaxed text-muted">
+              Importe tes vidéos pour voir le montage ici.
             </p>
           </div>
         )}
@@ -61,7 +70,11 @@ function Transport({ engine, playing }: { engine: PlaybackEngine; playing: boole
   const disabled = clips.length === 0;
 
   return (
-    <div className="w-full max-w-md shrink-0 rounded-2xl border border-edge bg-panel/70 px-3 py-2.5">
+    <div
+      role="group"
+      aria-label="Commandes de lecture"
+      className="w-full max-w-md shrink-0 rounded-2xl border border-edge bg-panel/70 px-3 py-2.5"
+    >
       <div className="flex items-center gap-3">
         <Button variant="primary" onClick={engine.toggle} disabled={disabled} title="Espace">
           {playing ? '❚❚' : '▶'}

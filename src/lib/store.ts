@@ -1,11 +1,12 @@
 'use client';
 
 import { create } from 'zustand';
-import { uid } from './id';
-import { emptyProject, layoutClips, totalDuration } from './timeline';
-import type { QualityTier } from './quality';
+import { uid } from './id.ts';
+import { emptyProject, layoutClips, totalDuration } from './timeline.ts';
+import type { QualityTier } from './quality.ts';
 import {
   DEFAULT_CLIP,
+  MIN_CLIP_DURATION,
   type Caption,
   type CaptionStyleId,
   type Clip,
@@ -15,7 +16,7 @@ import {
   type SfxId,
   type ExportPreset,
   type SoundCue,
-} from './types';
+} from './types.ts';
 
 /** Choix de qualité : « auto » laisse la surveillance décider. */
 export type QualityChoice = 'auto' | QualityTier['id'];
@@ -88,6 +89,20 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+/**
+ * Remet la tête de lecture dans les bornes du montage.
+ *
+ * Raccourcir ou supprimer un plan raccourcit le montage, et la tête de lecture
+ * peut se retrouver au-delà de la fin. Le lecteur affiche alors une position
+ * supérieure à la durée totale — vu sur un montage ramené à 0,1 s dont la tête
+ * restait à 2,1 s — et le curseur de défilement bute en butée sans correspondre
+ * à ce qui est affiché.
+ */
+function reclamp<T extends { project: Project; playhead: number }>(state: T): T {
+  const limit = totalDuration(state.project.clips);
+  return state.playhead > limit ? { ...state, playhead: limit } : state;
+}
+
 export const useStudio = create<StudioState>((set, get) => ({
   project: emptyProject(),
   selection: null,
@@ -108,14 +123,15 @@ export const useStudio = create<StudioState>((set, get) => ({
     set((state) => {
       const asset = state.project.assets.find((a) => a.id === assetId);
       if (asset) URL.revokeObjectURL(asset.url);
-      return {
+      return reclamp({
+        ...state,
         project: {
           ...state.project,
           assets: state.project.assets.filter((a) => a.id !== assetId),
           // Un clip ne peut pas survivre à la disparition de son média source.
           clips: state.project.clips.filter((c) => c.assetId !== assetId),
         },
-      };
+      });
     }),
 
   appendClip: (assetId) =>
@@ -137,18 +153,24 @@ export const useStudio = create<StudioState>((set, get) => ({
     }),
 
   updateClip: (id, patch) =>
-    set((state) => ({
-      project: {
-        ...state.project,
-        clips: state.project.clips.map((c) => (c.id === id ? { ...c, ...patch } : c)),
-      },
-    })),
+    set((state) =>
+      reclamp({
+        ...state,
+        project: {
+          ...state.project,
+          clips: state.project.clips.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+        },
+      }),
+    ),
 
   removeClip: (id) =>
-    set((state) => ({
-      project: { ...state.project, clips: state.project.clips.filter((c) => c.id !== id) },
-      selection: state.selection?.kind === 'clip' && state.selection.id === id ? null : state.selection,
-    })),
+    set((state) =>
+      reclamp({
+        ...state,
+        project: { ...state.project, clips: state.project.clips.filter((c) => c.id !== id) },
+        selection: state.selection?.kind === 'clip' && state.selection.id === id ? null : state.selection,
+      }),
+    ),
 
   moveClip: (from, to) =>
     set((state) => {
@@ -156,14 +178,20 @@ export const useStudio = create<StudioState>((set, get) => ({
       if (from < 0 || from >= clips.length || to < 0 || to >= clips.length) return state;
       const [moved] = clips.splice(from, 1);
       clips.splice(to, 0, moved);
-      return { project: { ...state.project, clips } };
+      // Réordonner change les transitions applicables, donc la durée totale.
+      return reclamp({ ...state, project: { ...state.project, clips } });
     }),
 
   splitClipAtPlayhead: () =>
     set((state) => {
       const { clips } = state.project;
       const placed = layoutClips(clips);
-      const target = placed.find((p) => state.playhead > p.start + 0.05 && state.playhead < p.end - 0.05);
+      // Chaque moitié doit rester au-dessus du plancher, sinon la coupe crée un
+      // fragment invisible que l'utilisateur devra retrouver pour le supprimer.
+      const target = placed.find(
+        (p) =>
+          state.playhead > p.start + MIN_CLIP_DURATION && state.playhead < p.end - MIN_CLIP_DURATION,
+      );
       if (!target) return state;
 
       const clip = target.clip;

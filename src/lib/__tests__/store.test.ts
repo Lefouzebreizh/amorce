@@ -1,0 +1,124 @@
+import assert from 'node:assert/strict';
+import { beforeEach, test } from 'node:test';
+import { useStudio } from '../store.ts';
+import { emptyProject } from '../timeline.ts';
+import { MIN_CLIP_DURATION, type MediaAsset } from '../types.ts';
+
+/**
+ * Le studio est un magasin unique : chaque test repart d'un projet vierge,
+ * sans quoi l'ordre d'exécution changerait les résultats.
+ */
+function reset() {
+  useStudio.setState({ project: emptyProject(), selection: null, playhead: 0, playing: false });
+}
+
+function asset(id: string, duration: number): MediaAsset {
+  return { id, name: `${id}.mp4`, url: `blob:${id}`, duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+}
+
+/** Monte deux plans de 5 s, coupe franche, et place la tête de lecture au bout. */
+function twoClipsAtEnd() {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5), asset('b', 5)]);
+  store.appendClip('a');
+  store.appendClip('b');
+  const clips = useStudio.getState().project.clips;
+  for (const clip of clips) useStudio.getState().updateClip(clip.id, { transition: 'cut' });
+  useStudio.getState().setPlayhead(9.5);
+  return useStudio.getState().project.clips;
+}
+
+beforeEach(reset);
+
+test('raccourcir un plan ramène la tête de lecture dans les bornes', () => {
+  const clips = twoClipsAtEnd();
+  assert.equal(useStudio.getState().playhead, 9.5);
+
+  // Le second plan tombe de 5 s à 1 s : le montage ne dure plus que 6 s.
+  useStudio.getState().updateClip(clips[1].id, { outPoint: 1 });
+
+  assert.equal(useStudio.getState().duration(), 6);
+  assert.equal(useStudio.getState().playhead, 6, 'la tête devrait être ramenée à la fin');
+});
+
+test('supprimer un plan ramène la tête de lecture dans les bornes', () => {
+  const clips = twoClipsAtEnd();
+  useStudio.getState().removeClip(clips[1].id);
+
+  assert.equal(useStudio.getState().duration(), 5);
+  assert.equal(useStudio.getState().playhead, 5);
+});
+
+test('retirer un média ramène la tête de lecture dans les bornes', () => {
+  twoClipsAtEnd();
+  // `removeAsset` libère une URL objet, absente hors navigateur.
+  const original = globalThis.URL.revokeObjectURL;
+  globalThis.URL.revokeObjectURL = () => undefined;
+  try {
+    useStudio.getState().removeAsset('b');
+  } finally {
+    globalThis.URL.revokeObjectURL = original;
+  }
+
+  assert.equal(useStudio.getState().duration(), 5);
+  assert.equal(useStudio.getState().playhead, 5);
+});
+
+test('une tête de lecture déjà dans les bornes n’est pas déplacée', () => {
+  const clips = twoClipsAtEnd();
+  useStudio.getState().setPlayhead(2);
+  useStudio.getState().updateClip(clips[1].id, { outPoint: 4 });
+
+  assert.equal(useStudio.getState().playhead, 2, 'aucune raison de bouger la tête de lecture');
+});
+
+test('allonger un plan ne touche pas à la tête de lecture', () => {
+  const clips = twoClipsAtEnd();
+  useStudio.getState().updateClip(clips[0].id, { outPoint: 5 });
+  assert.equal(useStudio.getState().playhead, 9.5);
+});
+
+test('la découpe refuse de produire un fragment sous la durée plancher', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5)]);
+  store.appendClip('a');
+
+  // Trop près du début : la première moitié serait plus courte que le plancher.
+  useStudio.getState().setPlayhead(MIN_CLIP_DURATION / 2);
+  useStudio.getState().splitClipAtPlayhead();
+  assert.equal(useStudio.getState().project.clips.length, 1, 'la coupe aurait dû être refusée');
+
+  // Trop près de la fin : c'est la seconde moitié qui serait trop courte.
+  useStudio.getState().setPlayhead(5 - MIN_CLIP_DURATION / 2);
+  useStudio.getState().splitClipAtPlayhead();
+  assert.equal(useStudio.getState().project.clips.length, 1, 'la coupe aurait dû être refusée');
+});
+
+test('une découpe au milieu produit deux plans qui conservent la durée totale', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5)]);
+  store.appendClip('a');
+
+  useStudio.getState().setPlayhead(2);
+  useStudio.getState().splitClipAtPlayhead();
+
+  const clips = useStudio.getState().project.clips;
+  assert.equal(clips.length, 2);
+  assert.equal(clips[0].outPoint, 2);
+  assert.equal(clips[1].inPoint, 2);
+  // La seconde moitié démarre sec : un fondu sur une coupe interne créerait un
+  // chevauchement avec la matière qui la précède immédiatement.
+  assert.equal(clips[1].transition, 'cut');
+  assert.equal(useStudio.getState().duration(), 5);
+});
+
+test('le premier plan ajouté démarre sans transition', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5), asset('b', 5)]);
+  store.appendClip('a');
+  store.appendClip('b');
+
+  const clips = useStudio.getState().project.clips;
+  assert.equal(clips[0].transition, 'cut', 'rien ne précède le premier plan');
+  assert.notEqual(clips[1].transition, 'cut');
+});
