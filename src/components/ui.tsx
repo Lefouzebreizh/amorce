@@ -1,6 +1,7 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
+import { useIsTouch } from '@/hooks/useMediaQuery';
 
 /**
  * Briques d'interface.
@@ -97,6 +98,28 @@ export function Button({
   );
 }
 
+/** Distance au bouton en deçà de laquelle on considère qu'on l'a saisi. */
+const THUMB_GRAB_PX = 28;
+
+/** Déplacement horizontal à partir duquel le geste est jugé intentionnel. */
+const HORIZONTAL_INTENT_PX = 8;
+
+/**
+ * Jauge de réglage.
+ *
+ * Au doigt, une jauge native pose un problème que rien ne laisse deviner :
+ * poser le doigt n'importe où sur la barre change la valeur immédiatement. Un
+ * défilement vertical amorcé sur une jauge déréglait donc le paramètre au
+ * passage — une vitesse passée à 3,20× sans que personne ne l'ait voulu.
+ *
+ * Le geste est donc arbitré ici : le défilement vertical reste à la page, et la
+ * valeur ne bouge que si le doigt s'est posé sur le bouton, ou s'il part
+ * franchement à l'horizontale. À la souris, le comportement natif est conservé
+ * — cliquer la barre pour s'y rendre y est utile et sans ambiguïté.
+ *
+ * Le champ natif reste en place : il porte la valeur, son intitulé accessible
+ * et la navigation au clavier.
+ */
 export function Slider({
   min,
   max,
@@ -112,17 +135,91 @@ export function Slider({
   onChange: (value: number) => void;
   ariaLabel: string;
 }) {
+  const touch = useIsTouch();
+  const trackRef = useRef<HTMLDivElement>(null);
+  const gesture = useRef<{ x: number; y: number; active: boolean } | null>(null);
+
+  /** Valeur correspondant à une position horizontale, calée sur le pas. */
+  const valueAt = (clientX: number): number => {
+    const bounds = trackRef.current?.getBoundingClientRect();
+    if (!bounds || bounds.width === 0) return value;
+
+    const ratio = Math.max(0, Math.min(1, (clientX - bounds.left) / bounds.width));
+    const raw = min + ratio * (max - min);
+    return Math.max(min, Math.min(max, Math.round(raw / step) * step));
+  };
+
+  /** Position actuelle du bouton, en pixels écran. */
+  const thumbX = (): number => {
+    const bounds = trackRef.current?.getBoundingClientRect();
+    if (!bounds) return 0;
+    const ratio = max === min ? 0 : (value - min) / (max - min);
+    return bounds.left + ratio * bounds.width;
+  };
+
   return (
-    <input
-      type="range"
-      className="w-full"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      aria-label={ariaLabel}
-      onChange={(event) => onChange(Number(event.target.value))}
-    />
+    <div
+      ref={trackRef}
+      // `pan-y` rend le geste vertical à la page ; l'horizontal reste à nous.
+      className="w-full [touch-action:pan-y]"
+      onPointerDown={
+        touch
+          ? (event) => {
+              const onThumb = Math.abs(event.clientX - thumbX()) <= THUMB_GRAB_PX;
+              gesture.current = { x: event.clientX, y: event.clientY, active: onThumb };
+              if (onThumb) {
+                event.currentTarget.setPointerCapture(event.pointerId);
+                onChange(valueAt(event.clientX));
+              }
+            }
+          : undefined
+      }
+      onPointerMove={
+        touch
+          ? (event) => {
+              const current = gesture.current;
+              if (!current) return;
+
+              if (!current.active) {
+                const dx = Math.abs(event.clientX - current.x);
+                const dy = Math.abs(event.clientY - current.y);
+                // Un mouvement d'abord vertical appartient au défilement : on ne
+                // reprend pas la main après coup, sous peine de déclencher le
+                // réglage en plein milieu d'un balayage.
+                if (dy > dx) {
+                  gesture.current = null;
+                  return;
+                }
+                if (dx < HORIZONTAL_INTENT_PX) return;
+                current.active = true;
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }
+
+              onChange(valueAt(event.clientX));
+            }
+          : undefined
+      }
+      onPointerUp={
+        touch
+          ? (event) => {
+              if (gesture.current?.active) event.currentTarget.releasePointerCapture(event.pointerId);
+              gesture.current = null;
+            }
+          : undefined
+      }
+      onPointerCancel={touch ? () => { gesture.current = null; } : undefined}
+    >
+      <input
+        type="range"
+        className={`w-full ${touch ? 'pointer-events-none' : ''}`}
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        aria-label={ariaLabel}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
+    </div>
   );
 }
 

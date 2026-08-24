@@ -41,18 +41,27 @@ function waitFor(el: HTMLMediaElement, event: string, timeoutMs = 45000): Promis
   });
 }
 
-/** Détecte la présence d'une piste audio, avec repli optimiste. */
+/**
+ * Détecte la présence d'une piste audio.
+ *
+ * Aucun navigateur ne l'expose de la même façon, et la plupart ne répondent
+ * qu'après avoir commencé à décoder — ce qui n'a pas encore eu lieu à l'import.
+ * On ne conclut donc à l'absence de son que sur une réponse franche : un
+ * compteur d'octets décodés encore à zéro ne prouve rien.
+ *
+ * Le doute profite au son. Se tromper dans ce sens fait au pire mixer du
+ * silence ; se tromper dans l'autre couperait une voix off sans le signaler.
+ */
 function detectAudio(video: HTMLVideoElement): boolean {
   const probe = video as HTMLVideoElement & {
     mozHasAudio?: boolean;
     webkitAudioDecodedByteCount?: number;
     audioTracks?: { length: number };
   };
+
   if (typeof probe.mozHasAudio === 'boolean') return probe.mozHasAudio;
-  if (typeof probe.webkitAudioDecodedByteCount === 'number') return probe.webkitAudioDecodedByteCount > 0;
   if (probe.audioTracks) return probe.audioTracks.length > 0;
-  // Indétectable sur ce navigateur : on suppose qu'il y a du son, quitte à
-  // mixer du silence. L'inverse ferait disparaître l'audio sans prévenir.
+  if ((probe.webkitAudioDecodedByteCount ?? 0) > 0) return true;
   return true;
 }
 

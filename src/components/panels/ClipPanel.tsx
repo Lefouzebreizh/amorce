@@ -79,6 +79,18 @@ export function ClipPanel() {
   const shown = clipDuration(clip);
   const pieces = Math.floor(shown / CHOP_TARGET);
 
+  /** Le plan montre-t-il moins que ce que contient le rush. */
+  const trimmed = sourceDuration - (clip.outPoint - clip.inPoint) > 0.4;
+
+  /*
+   * Le son est-il tronqué avec l'image.
+   *
+   * Un plan raccourci coupe aussi ce qu'on y entend. Sur un rush muet, aucune
+   * conséquence ; sur une voix off, la phrase s'arrête au milieu — et rien ne
+   * le signalait, alors que c'est la seule chose que le spectateur remarquera.
+   */
+  const soundCut = trimmed && clip.volume > 0 && (asset?.hasAudio ?? true);
+
   /** Ne garde que le début du plan, sur la durée demandée. */
   const keepFirst = (seconds: number) =>
     updateClip(clip.id, { outPoint: Math.min(sourceDuration, clip.inPoint + seconds * clip.speed) });
@@ -88,8 +100,36 @@ export function ClipPanel() {
       <Panel title={`Plan ${index + 1} sur ${clips.length}`} subtitle={asset?.name}>
         <p className="mb-3 rounded-xl border border-edge bg-slab/60 px-3 py-2 text-xs text-muted">
           Durée à l’écran : <span className="font-mono text-mist">{shown.toFixed(1)} s</span>
+          {trimmed && (
+            <>
+              {' '}
+              sur <span className="font-mono text-mist">{sourceDuration.toFixed(1)} s</span> de rush
+            </>
+          )}
           {shown > LONG_SHOT && ' — trop long, l’attention retombe.'}
         </p>
+
+        {soundCut && (
+          <div className="mb-1.5">
+            <Hint tone="warn">
+              Ce plan ne montre que {shown.toFixed(1)} s sur {sourceDuration.toFixed(1)} s. Si ton rush
+              contient une voix, elle est coupée en plein milieu — le bouton ci-dessous rétablit le plan
+              entier.
+            </Hint>
+          </div>
+        )}
+
+        {trimmed && (
+          <Button
+            variant={soundCut ? 'primary' : 'ghost'}
+            className="mb-1.5 w-full"
+            onClick={() =>
+              updateClip(clip.id, { inPoint: 0, outPoint: sourceDuration, speed: 1 })
+            }
+          >
+            ⟺ Tout le plan ({sourceDuration.toFixed(1)} s)
+          </Button>
+        )}
 
         {shown > LONG_SHOT && (
           <Button
@@ -109,7 +149,10 @@ export function ClipPanel() {
             Couper de moitié
           </Button>
           <Button onClick={() => duplicateClip(clip.id)}>⧉ Dupliquer</Button>
-          <Button onClick={() => updateClip(clip.id, { speed: clip.speed === 1 ? 0.5 : 1 })}>
+          <Button
+            onClick={() => updateClip(clip.id, { speed: clip.speed === 1 ? 0.5 : 1 })}
+            title="Allonge le plan, mais étire aussi le son : à éviter sur une voix."
+          >
             {clip.speed === 1 ? '🐢 Ralentir ×2' : '↺ Vitesse normale'}
           </Button>
           <Button onClick={() => moveClip(index, index - 1)} disabled={index === 0}>
@@ -120,7 +163,11 @@ export function ClipPanel() {
           </Button>
         </Actions>
 
-        <Button variant="danger" className="mt-1.5 w-full" onClick={() => removeClip(clip.id)}>
+        <p className="mt-2 text-[11px] leading-relaxed text-muted">
+          « Ralentir » allonge le plan mais étire aussi le son : à éviter si ton rush contient une voix.
+        </p>
+
+        <Button variant="danger" className="mt-2 w-full" onClick={() => removeClip(clip.id)}>
           Supprimer ce plan
         </Button>
       </Panel>

@@ -43,15 +43,24 @@ const RACCORD_CYCLE: SfxId[] = ['boom', 'whoosh', 'punch', 'swipe', 'whoosh', 's
 /** Texte d'accroche déposé par défaut, explicitement à remplacer. */
 export const PLACEHOLDER_HOOK = 'Attends la fin 👀';
 
-/** Découpe un rush en un plan de durée utile. */
-function cutFromAsset(asset: MediaAsset, index: number): Clip | null {
+/**
+ * Découpe un rush en un plan de durée utile.
+ *
+ * `keepWhole` conserve le rush entier au lieu de le ramener à la durée visée.
+ * C'est ce qu'il faut faire quand tout le propos tient dans un seul fichier :
+ * le tronquer couperait la voix en plein milieu, et rien à l'écran ne dirait
+ * qu'il manque six secondes de parole.
+ */
+function cutFromAsset(asset: MediaAsset, index: number, keepWhole: boolean): Clip | null {
   if (asset.duration <= 0.2) return null;
 
   // On entre après le tout début : les premières images d'un rendu IA sont
-  // souvent noires ou instables, le temps que la scène s'établisse.
-  const lead = Math.min(asset.duration * 0.08, 0.4);
+  // souvent noires ou instables, le temps que la scène s'établisse. Sur un rush
+  // qu'on garde entier, même cette amorce est conservée : elle peut porter les
+  // premiers mots.
+  const lead = keepWhole ? 0 : Math.min(asset.duration * 0.08, 0.4);
   const available = asset.duration - lead;
-  const length = Math.max(MIN_SHOT, Math.min(TARGET_SHOT, available));
+  const length = keepWhole ? available : Math.max(MIN_SHOT, Math.min(TARGET_SHOT, available));
 
   if (length < 0.3) return null;
 
@@ -79,8 +88,15 @@ export type AutoEditResult = {
 
 /** Construit un montage complet à partir des rushes. */
 export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
+  /*
+   * Un seul rush : tout le propos y est, y compris ce qu'on y entend. On le
+   * garde entier. Avec plusieurs rushes, on est face à une suite de plans à
+   * enchaîner, et les couper court est précisément ce qu'on attend.
+   */
+  const keepWhole = assets.length === 1;
+
   const clips = assets
-    .map((asset, index) => cutFromAsset(asset, index))
+    .map((asset, index) => cutFromAsset(asset, index, keepWhole))
     .filter((clip): clip is Clip => clip !== null)
     // Le premier plan retenu doit porter les réglages d'ouverture, même si des
     // rushes trop courts ont été écartés en amont.

@@ -377,6 +377,28 @@ if (profile.mobile) {
     `point de fin porté de ${before.toFixed(2)} s à ${after.toFixed(2)} s`,
   );
 
+  /*
+   * Le balayage vertical amorcé sur une jauge.
+   *
+   * C'est le geste qu'on fait cent fois pour parcourir un panneau, et il ne
+   * doit rien dérégler au passage — une vitesse passée à 3,20× sans que
+   * personne ne l'ait voulu est un montage abîmé sans qu'on sache pourquoi.
+   */
+  const boxApres = await slider.boundingBox();
+  const avantBalayage = Number(await slider.inputValue());
+
+  await touchDrag(
+    { x: boxApres.x + boxApres.width * 0.3, y: boxApres.y + boxApres.height / 2 },
+    { x: boxApres.x + boxApres.width * 0.3, y: boxApres.y - 220 },
+  );
+  await page.waitForTimeout(500);
+
+  check(
+    'Un balayage vertical ne dérègle pas la jauge qu’il traverse',
+    Number(await slider.inputValue()) === avantBalayage,
+    `valeur inchangée à ${avantBalayage.toFixed(2)}`,
+  );
+
   // Refermer pour rendre l'écran à l'aperçu avant la suite des mesures.
   await page.click('text=Fermer');
   await page.waitForTimeout(400);
@@ -605,6 +627,54 @@ if (profile.mobile) {
   await page.waitForTimeout(400);
 }
 
+// ------------------------------------ 3bis. Rétablir un plan à sa longueur
+if (profile.mobile) {
+  // La timeline n'est conservée que pour l'étape de montage quand un panneau
+  // occupe la moitié basse : il faut donc y passer avant de pouvoir désigner un
+  // plan.
+  await page.click('nav[aria-label="Étapes du montage"] button:has-text("Monter")');
+  await page.waitForTimeout(700);
+  await page.locator('[aria-label="Timeline du montage"] div[title]').first().click();
+  await page.waitForTimeout(800);
+
+  /*
+   * Rien ne doit condamner un plan à la longueur que le montage express lui a
+   * donnée : sur un rush qui porte une voix, ce raccourci coupe la phrase, et
+   * tous les autres gestes disponibles ne font que raccourcir davantage.
+   */
+  const restore = page.locator('button:has-text("Tout le plan")');
+  const avant = Number(await page.locator('input[aria-label="Point de fin"]').inputValue().catch(() => 0));
+
+  if ((await restore.count()) > 0) {
+    await restore.first().click();
+    await page.waitForTimeout(600);
+
+    await page.locator('summary:has-text("Réglage fin")').click();
+    await page.waitForTimeout(300);
+    const apres = Number(await page.locator('input[aria-label="Point de fin"]').inputValue());
+    const max = Number(await page.locator('input[aria-label="Point de fin"]').getAttribute('max'));
+
+    // La jauge avance par pas de 0,05 s : la valeur atteinte ne peut pas coller
+    // au maximum à mieux qu'un pas près.
+    check(
+      'Un plan peut être rétabli à toute sa longueur',
+      Math.abs(apres - max) <= 0.06 && apres > avant,
+      `point de fin porté à ${apres.toFixed(2)} s pour un rush de ${max.toFixed(2)} s`,
+    );
+
+    // On défait pour rendre au montage sa forme d'origine : les mesures qui
+    // suivent portent sur le résultat du montage express, pas sur ce plan
+    // rallongé.
+    await page.locator('button:has-text("Annuler")').first().click();
+    await page.waitForTimeout(500);
+  } else {
+    check('Un plan peut être rétabli à toute sa longueur', false, 'bouton absent');
+  }
+
+  await page.click('text=Fermer');
+  await page.waitForTimeout(400);
+}
+
 // ------------------------------------- 4bis. Manipulation directe du texte
 if (profile.mobile) {
   /*
@@ -631,8 +701,19 @@ if (profile.mobile) {
 
   const before = Number(await page.locator('input[aria-label="Position verticale"]').inputValue());
 
+  /*
+   * Le cadre est remesuré : sélectionner le texte ouvre le panneau de réglage,
+   * qui prend la moitié basse de l'écran et réduit l'aperçu d'autant. Viser
+   * avec les coordonnées d'avant reviendrait à pointer à côté.
+   */
+  const boxSelection = await page.locator('canvas').boundingBox();
+  const centerXSel = boxSelection.x + boxSelection.width / 2;
+
   // Glissement vers le bas : le sous-titre doit suivre le doigt.
-  await touchDrag({ x: centerX, y: captionY }, { x: centerX, y: canvasBox.y + canvasBox.height * 0.6 });
+  await touchDrag(
+    { x: centerXSel, y: boxSelection.y + boxSelection.height * before },
+    { x: centerXSel, y: boxSelection.y + boxSelection.height * 0.6 },
+  );
   await page.waitForTimeout(600);
   const after = Number(await page.locator('input[aria-label="Position verticale"]').inputValue());
 
