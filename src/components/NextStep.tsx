@@ -54,19 +54,27 @@ export function NextStep({ onStep }: { onStep: (step: StepId) => void }) {
   return (
     <section
       aria-label="Prochaine étape"
-      className={`rounded-2xl border px-3 py-2.5 ${
-        guide.done ? 'border-accent/40 bg-accent/5' : 'border-edge bg-panel'
+      /*
+       * Une bande accentuée sur le flanc plutôt qu'un cadre complet : elle
+       * désigne le bloc comme prioritaire sans l'enfermer, et se distingue des
+       * panneaux voisins qui, eux, n'ont plus de contour du tout.
+       */
+      className={`rounded-2xl border-l-[3px] px-3.5 py-3 ${
+        guide.done ? 'border-l-accent bg-accent/8' : 'border-l-warn bg-panel'
       }`}
     >
-      <p className="text-[10px] font-semibold tracking-wide text-muted uppercase">
+      <p
+        className="text-[11px] font-semibold tracking-[0.08em] uppercase"
+        style={{ color: guide.done ? 'var(--color-accent)' : 'var(--color-warn)' }}
+      >
         {guide.done ? 'Tu peux publier' : 'À faire maintenant'}
       </p>
-      <p className="mt-0.5 text-sm leading-snug font-semibold text-mist">{guide.title}</p>
-      <p className="mt-1 text-[11px] leading-relaxed text-muted">{guide.why}</p>
+      <p className="mt-1.5 text-[16px] leading-snug font-semibold text-mist">{guide.title}</p>
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{guide.why}</p>
 
       <Button
         variant={guide.done ? 'ghost' : 'primary'}
-        className="mt-2 w-full"
+        className="mt-3 w-full"
         onClick={() => run(guide.action)}
       >
         {guide.actionLabel}

@@ -23,11 +23,11 @@ export function Panel({
   action?: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-edge bg-panel/70 p-4">
-      <header className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-display text-sm tracking-wide text-mist uppercase">{title}</h3>
-          {subtitle && <p className="mt-1 text-xs leading-relaxed text-muted">{subtitle}</p>}
+    <section className="rounded-2xl bg-panel p-4">
+      <header className="mb-3.5 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-display text-[15px] leading-tight tracking-tight text-mist">{title}</h3>
+          {subtitle && <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{subtitle}</p>}
         </div>
         {action}
       </header>
@@ -50,13 +50,13 @@ export function Field({
   value?: string;
 }) {
   return (
-    <div className="mb-4 last:mb-0">
-      <div className="mb-1.5 flex items-baseline justify-between gap-2">
-        <span className="text-xs font-semibold text-mist">{label}</span>
-        {value && <span className="font-mono text-xs text-muted">{value}</span>}
+    <div className="mb-5 last:mb-0">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <span className="text-[13px] font-semibold text-mist">{label}</span>
+        {value && <span className="font-mono text-[13px] text-muted tabular-nums">{value}</span>}
       </div>
       {children}
-      {help && <p className="mt-1.5 text-xs leading-relaxed text-muted">{help}</p>}
+      {help && <p className="mt-2 text-[12.5px] leading-relaxed text-muted">{help}</p>}
     </div>
   );
 }
@@ -78,11 +78,17 @@ export function Button({
   className?: string;
   type?: 'button' | 'submit';
 }) {
+  /*
+   * Trois niveaux, trois traitements distincts.
+   *
+   * Le remplissage est ce qui hiérarchise, pas la bordure : quatre boutons
+   * cerclés du même trait se valent tous, et l'œil ne sait plus lequel presser.
+   */
   const styles: Record<string, string> = {
-    primary: 'bg-accent text-ink hover:bg-accent/85 font-semibold',
-    ghost: 'border border-edge bg-slab text-mist hover:border-muted hover:bg-panel',
-    subtle: 'text-muted hover:text-mist hover:bg-slab',
-    danger: 'border border-danger/40 text-danger hover:bg-danger/10',
+    primary: 'bg-accent text-ink font-semibold hover:bg-accent/85 active:bg-accent/75',
+    ghost: 'bg-raised text-mist hover:bg-edge active:bg-edge/70',
+    subtle: 'text-muted hover:text-mist hover:bg-raised/60',
+    danger: 'text-danger hover:bg-danger/10 active:bg-danger/15',
   };
 
   return (
@@ -91,7 +97,8 @@ export function Button({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${styles[variant]} ${className}`}
+      // 44 px de haut : la cible minimale qu'un doigt atteint sans viser.
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3.5 text-[13.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${styles[variant]} ${className}`}
     >
       {children}
     </button>
@@ -245,15 +252,15 @@ export function Choice<T extends string>({
             type="button"
             title={option.description}
             onClick={() => onChange(option.value)}
-            className={`rounded-xl border px-2.5 py-2 text-left text-xs transition-colors ${
+            className={`min-h-11 rounded-xl px-3 py-2.5 text-left text-[13px] transition-colors ${
               active
-                ? 'border-accent bg-accent/10 text-mist'
-                : 'border-edge bg-slab text-muted hover:border-muted hover:text-mist'
+                ? 'bg-raised text-mist ring-1 ring-accent/60'
+                : 'bg-slab text-muted hover:bg-raised hover:text-mist'
             }`}
           >
             <span className="block font-semibold">{option.label}</span>
             {option.description && (
-              <span className="mt-0.5 block text-[11px] leading-snug text-muted">{option.description}</span>
+              <span className="mt-1 block text-[12px] leading-snug text-muted">{option.description}</span>
             )}
           </button>
         );
@@ -265,12 +272,10 @@ export function Choice<T extends string>({
 /** Encart pédagogique, pour expliquer une notion plutôt qu'un réglage. */
 export function Hint({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'warn' }) {
   const tones = {
-    neutral: 'border-edge bg-slab/60 text-muted',
-    warn: 'border-warn/30 bg-warn/5 text-warn',
+    neutral: 'bg-slab text-muted',
+    warn: 'bg-warn/10 text-warn',
   };
-  return (
-    <p className={`rounded-xl border px-3 py-2.5 text-xs leading-relaxed ${tones[tone]}`}>{children}</p>
-  );
+  return <p className={`rounded-xl px-3.5 py-3 text-[12.5px] leading-relaxed ${tones[tone]}`}>{children}</p>;
 }
 
 /**
@@ -300,14 +305,18 @@ export function ScoreBadge({ score, compact = false }: { score: number; compact?
     <div
       role="status"
       aria-label={`Note de viralité : ${score} sur 100`}
-      className={`flex items-center gap-2 rounded-full border border-edge bg-slab ${
-        compact ? 'px-2.5 py-0.5' : 'px-3 py-1'
+      className={`flex items-center gap-2 rounded-full bg-raised ${
+        compact ? 'px-3 py-1' : 'px-3.5 py-1.5'
       }`}
     >
-      <span className="text-[11px] text-muted" aria-hidden="true">
+      <span className="text-[12px] text-muted" aria-hidden="true">
         Viralité
       </span>
-      <span className="font-display text-sm" style={{ color: scoreColor(score) }} aria-hidden="true">
+      <span
+        className="font-display text-[15px] tabular-nums"
+        style={{ color: scoreColor(score) }}
+        aria-hidden="true"
+      >
         {score}
       </span>
     </div>
@@ -327,11 +336,11 @@ export function ScoreBadge({ score, compact = false }: { score: number; compact?
  */
 export function Collapsible({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <details className="rounded-2xl border border-edge bg-panel/70">
-      <summary className="cursor-pointer list-none px-4 py-3 text-xs font-semibold text-muted select-none marker:content-none hover:text-mist">
-        {label} <span aria-hidden="true">▾</span>
+    <details className="rounded-2xl bg-panel">
+      <summary className="flex min-h-12 cursor-pointer list-none items-center px-4 text-[13px] font-semibold text-muted select-none marker:content-none hover:text-mist">
+        {label} <span aria-hidden="true" className="ml-1.5">▾</span>
       </summary>
-      <div className="border-t border-edge px-4 py-3">{children}</div>
+      <div className="px-4 pt-1 pb-4">{children}</div>
     </details>
   );
 }
@@ -387,9 +396,9 @@ export function UndoControls({
 
 export function EmptyState({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-edge bg-slab/40 px-4 py-8 text-center">
-      <p className="font-display text-sm text-mist uppercase">{title}</p>
-      <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-muted">{children}</p>
+    <div className="rounded-2xl bg-slab px-4 py-8 text-center">
+      <p className="font-display text-[15px] tracking-tight text-mist">{title}</p>
+      <p className="mx-auto mt-2 max-w-xs text-[12.5px] leading-relaxed text-muted">{children}</p>
     </div>
   );
 }

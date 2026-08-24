@@ -5,16 +5,38 @@
  * clair fausse la perception du contraste et de l'étalonnage.
  */
 @theme {
-  --color-ink: #08080c;
-  --color-slab: #101018;
-  --color-panel: #16161f;
-  --color-edge: #262633;
-  --color-mist: #e6e6ef;
-  --color-muted: #8f8fa6;
-  --color-accent: #22e37a;
+  /*
+   * Quatre plans de profondeur, du fond de page à la carte la plus haute.
+   *
+   * Les surfaces séparent les blocs mieux que les traits : une interface où
+   * tout est encadré se lit comme une pile de boîtes, et plus rien n'y ressort.
+   * Les bordures sont donc réservées à ce qui sépare vraiment — bandeaux, barre
+   * d'étapes — et à ce qui est sélectionné.
+   */
+  --color-ink: #07070b;
+  --color-slab: #101017;
+  --color-panel: #17171f;
+  --color-raised: #1f1f29;
+  --color-edge: #24242f;
+
+  /*
+   * Texte plus clair qu'auparavant.
+   *
+   * L'application s'utilise dehors, sur un téléphone, souvent à une main : un
+   * gris trop discret cesse simplement d'être lu, et l'explication qu'il porte
+   * ne sert alors plus à rien.
+   */
+  --color-mist: #f1f1f7;
+  --color-muted: #a2a2b6;
+
+  /*
+   * L'accent ne désigne qu'une chose : l'action à faire, et ce qui va bien.
+   * L'employer aussi pour les états actifs le rendait décoratif — donc muet.
+   */
+  --color-accent: #2ee87f;
   --color-accent-deep: #0d7a3f;
   --color-warn: #ffb340;
-  --color-danger: #ff5c68;
+  --color-danger: #ff6470;
 
   --font-display: var(--font-display-src), system-ui, sans-serif;
   --font-body: var(--font-body-src), system-ui, sans-serif;

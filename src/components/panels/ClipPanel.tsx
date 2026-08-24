@@ -98,7 +98,7 @@ export function ClipPanel() {
   return (
     <div className="space-y-3">
       <Panel title={`Plan ${index + 1} sur ${clips.length}`} subtitle={asset?.name}>
-        <p className="mb-3 rounded-xl border border-edge bg-slab/60 px-3 py-2 text-xs text-muted">
+        <p className="mb-3 rounded-xl bg-slab px-3 py-2.5 text-xs text-muted">
           Durée à l’écran : <span className="font-mono text-mist">{shown.toFixed(1)} s</span>
           {trimmed && (
             <>

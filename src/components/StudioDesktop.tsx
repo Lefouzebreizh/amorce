@@ -41,14 +41,14 @@ export function StudioDesktop({
                 type="button"
                 aria-current={active ? 'step' : undefined}
                 onClick={() => onStep(item.id)}
-                className={`rounded-xl border px-3 py-2 text-left transition-colors ${
-                  active ? 'border-accent bg-accent/10' : 'border-transparent hover:border-edge hover:bg-slab'
+                className={`rounded-xl px-3 py-2.5 text-left transition-colors ${
+                  active ? 'bg-raised ring-1 ring-accent/60' : 'hover:bg-slab'
                 }`}
               >
-                <span className={`text-xs font-semibold ${active ? 'text-mist' : 'text-muted'}`}>
+                <span className={`text-[13px] font-semibold ${active ? 'text-mist' : 'text-muted'}`}>
                   {item.index}. {item.label}
                 </span>
-                <span className="mt-0.5 block text-[11px] leading-snug text-muted">{item.hint}</span>
+                <span className="mt-1 block text-[12px] leading-snug text-muted">{item.hint}</span>
               </button>
             );
           })}
@@ -81,8 +81,8 @@ function DesktopHeader() {
   return (
     <header className="flex shrink-0 items-center justify-between gap-4 border-b border-edge px-4 py-2.5">
       <div className="flex items-baseline gap-3">
-        <span className="font-display text-lg tracking-tight text-mist">amorce</span>
-        <span className="hidden text-xs text-muted sm:block">
+        <span className="font-display text-xl tracking-tight text-mist">amorce</span>
+        <span className="hidden text-[13px] text-muted sm:block">
           Le studio qui rend tes vidéos IA virales — tout se passe dans ton navigateur
         </span>
       </div>

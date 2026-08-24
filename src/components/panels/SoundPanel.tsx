@@ -132,7 +132,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
       >
         <ul className="space-y-1.5">
           {SFX_LIBRARY.map((sfx) => (
-            <li key={sfx.id} className="flex items-center gap-2 rounded-xl border border-edge bg-slab p-1.5 pl-3">
+            <li key={sfx.id} className="flex items-center gap-2 rounded-xl bg-slab p-1.5 pl-3">
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-mist">{sfx.label}</p>
                 <p className="text-[11px] text-muted">{sfx.description}</p>
@@ -166,7 +166,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
                     type="button"
                     onClick={() => select({ kind: 'cue', id: cue.id })}
                     className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors ${
-                      selected?.id === cue.id ? 'border-accent bg-accent/10' : 'border-edge bg-slab hover:border-muted'
+                      selected?.id === cue.id ? 'bg-raised ring-1 ring-accent/60' : 'bg-slab hover:bg-raised'
                     }`}
                   >
                     <span className="text-xs font-semibold text-mist">
@@ -220,7 +220,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
       <Panel title="Musique de fond" subtitle="Facultative, mais elle soude les plans entre eux.">
         {music ? (
           <>
-            <div className="mb-3 flex items-center justify-between gap-2 rounded-xl border border-edge bg-slab px-3 py-2">
+            <div className="mb-3 flex items-center justify-between gap-2 rounded-xl bg-slab px-3 py-2">
               <p className="min-w-0 flex-1 truncate text-xs font-semibold text-mist">{music.name}</p>
               <Button variant="subtle" onClick={() => setMusic(null)} title="Retirer la musique">
                 ✕

@@ -156,7 +156,7 @@ export function ImportPanel() {
             {assets.map((asset) => (
               <li
                 key={asset.id}
-                className="flex items-center gap-2.5 rounded-xl border border-edge bg-slab p-1.5"
+                className="flex items-center gap-2.5 rounded-xl bg-slab p-1.5"
               >
                 {asset.thumbnail ? (
                   <img

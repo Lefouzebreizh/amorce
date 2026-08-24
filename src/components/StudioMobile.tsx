@@ -71,17 +71,17 @@ export function StudioMobile({
            * garantie plus haut. Le figer produirait exactement le débordement
            * qu'on cherche à éviter.
            */
-          className="h-[38dvh] max-h-[24rem] min-h-[9rem] overflow-y-auto overscroll-contain border-t border-edge bg-slab/95 px-2 pt-2 pb-4"
+          className="h-[38dvh] max-h-[24rem] min-h-[9rem] space-y-3 overflow-y-auto overscroll-contain border-t border-edge bg-slab px-3 pt-3 pb-5"
           aria-label={STEPS.find((s) => s.id === step)?.label}
         >
-          <div className="mb-2 flex items-center justify-between px-1">
-            <span className="font-display text-xs tracking-wide text-mist uppercase">
+          <div className="flex items-center justify-between px-0.5">
+            <span className="font-display text-[17px] tracking-tight text-mist">
               {STEPS.find((s) => s.id === step)?.label}
             </span>
             <button
               type="button"
               onClick={() => onStep(null)}
-              className="rounded-lg px-3 py-1.5 text-xs text-muted hover:text-mist"
+              className="-mr-1 min-h-11 rounded-lg px-3 text-[13px] text-muted hover:text-mist"
             >
               Fermer ✕
             </button>
@@ -90,9 +90,7 @@ export function StudioMobile({
           {/* La consigne ouvre le panneau : c'est panneau ouvert qu'on cherche
               quoi faire, et l'en réserver à l'écran d'accueil la rendrait
               absente au moment où elle sert le plus. */}
-          <div className="mb-3">
-            <NextStep onStep={onStep} />
-          </div>
+          <NextStep onStep={onStep} />
 
           <StepPanel step={step} engine={engine} onStep={onStep} />
         </section>
@@ -121,10 +119,10 @@ function MobileHeader() {
 
   return (
     <header
-      className="flex shrink-0 items-center justify-between gap-3 border-b border-edge px-3 py-2"
-      style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}
+      className="flex shrink-0 items-center justify-between gap-3 border-b border-edge px-3 py-2.5"
+      style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
     >
-      <span className="font-display text-base tracking-tight text-mist">amorce</span>
+      <span className="font-display text-[19px] tracking-tight text-mist">amorce</span>
       <div className="flex items-center gap-2">
         <UndoControls canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
         {analysis.shotCount > 0 && <ScoreBadge score={analysis.score} compact />}
@@ -157,12 +155,12 @@ function TabBar({ step, onStep }: { step: StepId | null; onStep: (step: StepId |
             // Un second appui sur l'étape ouverte referme le panneau et rend
             // toute la hauteur à l'aperçu.
             onClick={() => onStep(active ? null : item.id)}
-            className={`min-h-11 min-w-[4.75rem] shrink-0 rounded-xl border px-2 py-1.5 text-center transition-colors ${
-              active ? 'border-accent bg-accent/10 text-mist' : 'border-edge text-muted'
+            className={`min-h-12 min-w-[5.25rem] shrink-0 rounded-xl px-2 py-1.5 text-center transition-colors ${
+              active ? 'bg-raised text-mist ring-1 ring-accent/60' : 'text-muted hover:bg-slab'
             }`}
           >
-            <span className="block text-[10px] leading-none opacity-70">{item.index}</span>
-            <span className="mt-0.5 block text-[11px] leading-tight font-semibold">{item.label}</span>
+            <span className="block text-[11px] leading-none opacity-60">{item.index}</span>
+            <span className="mt-1 block text-[12.5px] leading-tight font-semibold">{item.label}</span>
           </button>
         );
       })}

@@ -82,7 +82,7 @@ export function TextPanel() {
                         useStudio.setState({ playhead });
                       }
                     }}
-                    className="w-full rounded-xl border border-edge bg-slab px-3 py-2 text-left transition-colors hover:border-muted"
+                    className="w-full rounded-xl bg-slab px-3 py-2 text-left transition-colors hover:border-muted"
                   >
                     <span className="block text-xs font-semibold text-mist">{template.text}</span>
                     <span className="mt-0.5 block text-[11px] leading-snug text-muted">{template.why}</span>
@@ -118,8 +118,8 @@ export function TextPanel() {
                     onClick={() => select({ kind: 'caption', id: caption.id })}
                     className={`w-full rounded-xl border px-3 py-2 text-left transition-colors ${
                       selected?.id === caption.id
-                        ? 'border-accent bg-accent/10'
-                        : 'border-edge bg-slab hover:border-muted'
+                        ? 'bg-raised ring-1 ring-accent/60'
+                        : 'bg-slab hover:bg-raised'
                     }`}
                   >
                     <span className="block truncate text-xs font-semibold text-mist">
@@ -150,7 +150,7 @@ export function TextPanel() {
               value={selected.text}
               rows={2}
               onChange={(event) => updateCaption(selected.id, { text: event.target.value })}
-              className="w-full resize-none rounded-xl border border-edge bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
+              className="w-full resize-none rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
             />
           </Field>
 

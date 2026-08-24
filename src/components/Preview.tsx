@@ -56,7 +56,9 @@ export function Preview({ engine }: { engine: PlaybackEngine }) {
           width={OUTPUT_WIDTH}
           height={OUTPUT_HEIGHT}
           aria-label="Prévisualisation du montage — touche un texte pour le régler"
-          className="h-full max-h-full w-auto max-w-full cursor-pointer touch-none rounded-2xl border border-edge bg-black shadow-2xl shadow-black/60"
+          // Ni bordure ni cadre : ce qui compte ici est l'image, et un contour
+          // la met au même rang que les panneaux qui l'entourent.
+          className="h-full max-h-full w-auto max-w-full cursor-pointer touch-none rounded-[20px] bg-black shadow-[0_18px_50px_-12px_rgba(0,0,0,0.9)]"
           style={{ aspectRatio: '9 / 16' }}
           onPointerDown={(event) => {
             const id = engine.captionAt(event.clientX, event.clientY);
@@ -120,7 +122,7 @@ function Transport({ engine, playing }: { engine: PlaybackEngine; playing: boole
     <div
       role="group"
       aria-label="Commandes de lecture"
-      className="w-full max-w-md shrink-0 rounded-2xl border border-edge bg-panel/70 px-3 py-2.5"
+      className="w-full max-w-md shrink-0 rounded-2xl bg-panel px-3 py-2.5"
     >
       <div className="flex items-center gap-3">
         <Button variant="primary" onClick={engine.toggle} disabled={disabled} title="Espace">
@@ -139,8 +141,9 @@ function Transport({ engine, playing }: { engine: PlaybackEngine; playing: boole
           onChange={(event) => engine.seek(Number(event.target.value))}
         />
 
-        <span className="shrink-0 font-mono text-xs text-muted tabular-nums">
-          {formatTime(playhead)} / {formatTime(duration)}
+        <span className="shrink-0 font-mono text-[13px] tabular-nums">
+          <span className="text-mist">{formatTime(playhead)}</span>
+          <span className="text-muted"> / {formatTime(duration)}</span>
         </span>
 
         <Button

@@ -139,7 +139,7 @@ export function AnalysisPanel({
                 <p className="mt-1 text-[11px] leading-snug text-muted">{criterion.detail}</p>
 
                 {needsWork && (
-                  <div className="mt-1.5 rounded-lg border border-edge bg-slab/70 p-2.5">
+                  <div className="mt-1.5 rounded-xl bg-slab p-3">
                     <p className="text-[11px] leading-relaxed text-mist">
                       <span className="font-semibold">Comment corriger : </span>
                       {criterion.remedy}
@@ -207,7 +207,7 @@ export function AnalysisPanel({
             {analysis.advice.map((item, index) => (
               <li
                 key={index}
-                className="flex gap-2.5 rounded-xl border border-edge bg-slab px-3 py-2"
+                className="flex gap-2.5 rounded-xl bg-slab px-3 py-2"
               >
                 <span className="shrink-0 font-mono text-xs font-semibold text-accent">+{item.impact}</span>
                 <span className="text-xs leading-relaxed text-mist">{item.message}</span>

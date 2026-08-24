@@ -83,8 +83,8 @@ export function Timeline({
 
   if (clips.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-edge bg-slab/40 px-4 py-6 text-center text-xs text-muted">
-        La timeline est vide. Ajoute un rush depuis la bibliothèque, à gauche.
+      <div className="rounded-2xl bg-panel px-4 py-6 text-center text-[12.5px] text-muted">
+        La timeline est vide. Ajoute un rush depuis la bibliothèque.
       </div>
     );
   }
@@ -97,7 +97,7 @@ export function Timeline({
       // `pan-x` laisse le doigt faire défiler la timeline horizontalement tout
       // en réservant le geste vertical à la page : sans cette précision, le
       // navigateur choisit l'un ou l'autre et se trompe une fois sur deux.
-      className={`overflow-x-auto overscroll-x-contain rounded-2xl border border-edge bg-panel/70 [touch-action:pan-x] ${compact ? "p-2" : "p-3"}`}
+      className={`overflow-x-auto overscroll-x-contain rounded-2xl bg-panel [touch-action:pan-x] ${compact ? 'p-2' : 'p-3'}`}
     >
       <div
         ref={trackRef}

@@ -125,7 +125,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
           <input
             value={project.name}
             onChange={(event) => renameProject(event.target.value)}
-            className="w-full rounded-xl border border-edge bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
+            className="w-full rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
           />
         </label>
 
