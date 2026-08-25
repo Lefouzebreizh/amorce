@@ -1,6 +1,6 @@
 #!/bin/bash
-# Prépare le conteneur d'une session distante : dépendances du studio Amorce, et
-# SDK Flutter + dépendances de Look & Find.
+# Prépare le conteneur d'une session distante : dépendances du studio Amorce,
+# SDK Flutter et dépendances de Look & Find, bibliothèques de la chaîne KDP.
 #
 # Pourquoi ce script existe : le conteneur d'une session web démarre sur un
 # dépôt fraîchement cloné, sans `node_modules` et sans SDK Flutter. Sans lui,
@@ -61,10 +61,16 @@ echo "── Look & Find : dépendances Dart"
 cd "$racine/look_and_find"
 flutter pub get
 
+echo "── Chaîne KDP : bibliothèques Python"
+# `--break-system-packages` : l'image est une Debian récente, où pip refuse
+# d'installer hors environnement virtuel. Un venv ici obligerait chaque commande
+# de la chaîne à l'activer d'abord, pour un conteneur qui n'héberge qu'un projet.
+python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF
+
 # Rend `flutter` et `dart` disponibles à la session elle-même, pas seulement à
 # ce script.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py"

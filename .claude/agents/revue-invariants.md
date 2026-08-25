@@ -1,6 +1,6 @@
 ---
 name: revue-invariants
-description: Relit un changement contre les invariants écrits de ce dépôt — ceux d'Amorce et ceux de Look & Find. À lancer avant de committer un changement qui touche au rendu, à l'audio, à l'export, au parcours de scan, au stockage local ou aux providers Riverpod. Ne cherche pas les bugs génériques (c'est le rôle de /code-review) mais les règles propres à ce dépôt, que rien d'autre ne connaît.
+description: Relit un changement contre les invariants écrits de ce dépôt — ceux d'Amorce, ceux de Look & Find et les décisions consignées dans la chaîne KDP. À lancer avant de committer un changement qui touche au rendu, à l'audio, à l'export, au parcours de scan, au stockage local ou aux providers Riverpod. Ne cherche pas les bugs génériques (c'est le rôle de /code-review) mais les règles propres à ce dépôt, que rien d'autre ne connaît.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -13,12 +13,15 @@ payée par un bug.
 ## Ce que tu fais
 
 1. Détermine le périmètre : `git diff` (ou le diff qu'on te désigne), puis
-   regarde **quel sous-projet** est touché.
+   regarde **quel projet** est touché.
    - `src/`, `scripts/`, racine → le studio **Amorce**, invariants dans
      `/CLAUDE.md`.
    - `look_and_find/` → l'application **Look & Find**, invariants dans
      `look_and_find/CLAUDE.md`.
-   - Les deux → traite les deux, mais ne mélange pas les listes.
+   - `kdp/` → la chaîne pré-presse, dont les décisions sont portées par les
+     docstrings de tête de chaque script (`kdp/pipeline/tout.py` explique
+     notamment pourquoi l'ordre des sept étapes n'est pas négociable).
+   - Plusieurs → traite-les tous, mais ne mélange pas les listes.
 2. **Lis le fichier d'invariants correspondant.** Ne travaille pas de mémoire :
    la liste évolue, et une règle mal citée est pire qu'une règle oubliée.
 3. Pour chaque ligne changée, demande-toi laquelle des règles elle pourrait

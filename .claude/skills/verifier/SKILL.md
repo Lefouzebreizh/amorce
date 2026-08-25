@@ -5,9 +5,9 @@ description: Lance la vérification du dépôt — typecheck, lint et tests pour
 
 # Vérifier ce dépôt
 
-Deux sous-projets indépendants, deux séquences. **Ne lance que celle du
-sous-projet touché** : les tests de l'un ne disent rien de l'autre, et les
-lancer tous les deux double l'attente pour rien.
+Trois projets indépendants, trois séquences. **Ne lance que celle du projet
+touché** : les tests de l'un ne disent rien des autres, et tout lancer triple
+l'attente pour rien.
 
 Commence par `git status --short` pour savoir où le changement a atterri.
 
@@ -57,6 +57,25 @@ npm run fixtures   # une seule fois : fabrique .fixtures/rushes/
 npm run dev        # dans un autre terminal
 npm run verify
 ```
+
+## Chaîne KDP — `kdp/`
+
+Pas de suite de tests : le juge est `kdp/pipeline/valider.py`, qui ouvre les
+deux PDF **tels qu'ils partiront chez l'imprimeur** et sort en erreur au
+premier contrôle qui échoue.
+
+```bash
+python3 kdp/pipeline/valider.py --interieur <pdf> --couverture <pdf>
+```
+
+Il demande donc des PDF déjà assemblés, à partir de rushes qui ne sont pas
+versionnés. Un changement qui ne touche qu'à un script de la chaîne se vérifie
+au minimum par `python3 -c "import kdp.pipeline.<module>"` — la compilation
+attrape déjà l'essentiel — et se signale comme **non vérifié de bout en bout**
+tant que la chaîne n'a pas tourné sur de vraies planches.
+
+Ce que `valider.py` ne voit pas, et qu'aucun script ne verra : si le dessin est
+beau, si le texte est juste, si l'histoire tient.
 
 ## Ce que la vérification ne dit pas
 

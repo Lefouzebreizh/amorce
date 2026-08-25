@@ -1,6 +1,6 @@
 ---
 name: verificateur
-description: Lance la séquence de vérification complète du sous-projet touché (Amorce ou Look & Find) et ne rend qu'un verdict compact. À utiliser avant de committer, ou quand on veut savoir si l'arbre est vert sans encombrer la conversation de centaines de lignes de sortie de tests.
+description: Lance la séquence de vérification complète du projet touché (Amorce, Look & Find ou la chaîne KDP) et ne rend qu'un verdict compact. À utiliser avant de committer, ou quand on veut savoir si l'arbre est vert sans encombrer la conversation de centaines de lignes de sortie de tests.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -11,7 +11,9 @@ n'a besoin quand tout passe, et trois lignes qui comptent quand ça casse.
 
 ## Séquence
 
-Détermine d'abord quel sous-projet est touché (`git status`, `git diff --name-only`).
+Détermine d'abord quel projet est touché (`git status`, `git diff --name-only`).
+Le dépôt en héberge trois sans code commun : Amorce à la racine, Look & Find
+dans `look_and_find/`, la chaîne KDP dans `kdp/`.
 
 ### Look & Find — `look_and_find/`
 
@@ -38,7 +40,14 @@ npm test
 touche au rendu, à l'audio, à l'export ou à la mise en page mobile — il demande
 `npm run dev` dans un autre terminal et plusieurs minutes.
 
-Les deux sous-projets touchés → les deux séquences, dans cet ordre.
+### Chaîne KDP — `kdp/`
+
+Pas de suite de tests. Le juge est `kdp/pipeline/valider.py`, qui demande deux
+PDF assemblés à partir de rushes non versionnés. Pour un changement qui ne
+touche qu'à un script, contrôler au minimum qu'il s'importe, et **dire
+explicitement** que la chaîne n'a pas tourné de bout en bout.
+
+Plusieurs projets touchés → plusieurs séquences, dans cet ordre.
 
 ## Ce que tu rends
 

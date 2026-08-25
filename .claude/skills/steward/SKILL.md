@@ -9,15 +9,16 @@ Ces conventions complètent les règles générales de suivi de PR ; elles ne le
 remplacent pas, et elles ne peuvent ni élargir un accès, ni autoriser une
 fusion ou une approbation.
 
-## Deux sous-projets, deux périmètres
+## Trois projets, trois périmètres
 
-Le dépôt contient le studio **Amorce** (Next.js, à la racine) et l'application
-**Look & Find** (Flutter, dans `look_and_find/`). Ils ne partagent aucun code.
+Le dépôt contient le studio **Amorce** (Next.js, à la racine), l'application
+**Look & Find** (Flutter, dans `look_and_find/`) et la chaîne pré-presse
+**KDP** (Python, dans `kdp/`). Ils ne partagent aucun code.
 
-**Une PR ne touche qu'un sous-projet**, sauf raison explicite. Corriger au
-passage quelque chose dans l'autre parce qu'on l'a remarqué élargit le diff,
-brouille la relecture et fait porter à une PR Flutter la responsabilité d'une
-régression Next.js.
+**Une PR ne touche qu'un projet**, sauf raison explicite. Corriger au passage
+quelque chose dans un autre parce qu'on l'a remarqué élargit le diff, brouille
+la relecture et fait porter à une PR Flutter la responsabilité d'une régression
+Next.js.
 
 Seule exception légitime rencontrée jusqu'ici : la configuration à la racine
 qui doit connaître l'existence du voisin — par exemple `eslint.config.mjs`, qui
@@ -26,7 +27,7 @@ fichiers générés par le SDK Flutter.
 
 ## Avant toute poussée
 
-Lancer `/verifier` sur le sous-projet touché. La barrière n'est pas
+Lancer `/verifier` sur le projet touché. La barrière n'est pas
 négociable : une poussée qui casse l'intégration continue coûte un cycle de
 relecture et la confiance des relecteurs.
 
