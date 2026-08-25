@@ -1,6 +1,8 @@
 'use client';
 
 import { uid } from './id';
+import { MUSIC_KEY } from './persist';
+import { saveFile } from './storage';
 import type { MediaAsset, MusicTrack } from './types';
 
 /**
@@ -9,6 +11,12 @@ import type { MediaAsset, MusicTrack } from './types';
  * Tout reste local : on crée une URL objet sur le fichier et on lit ses
  * métadonnées avec un élément <video> hors écran. Aucun octet ne part sur le
  * réseau, ce qui évite d'avoir à héberger — et à payer — le stockage des rushes.
+ *
+ * Le fichier est conservé au passage, pour que le montage se retrouve au
+ * rechargement. L'écriture est attendue : une fois le média apparu dans la
+ * bibliothèque, il est acquis. La rendre concurrente gagnerait quelques
+ * dixièmes de seconde au prix d'une fenêtre où un rechargement ferait
+ * disparaître le rush qu'on vient de voir s'afficher.
  */
 
 /** Attend un évènement du média, ou échoue au bout du délai imparti. */
@@ -102,7 +110,7 @@ export async function loadVideoAsset(file: File): Promise<MediaAsset> {
     video.currentTime = thumbAt;
     await waitFor(video, 'seeked', 25000).catch(() => undefined);
 
-    return {
+    const asset: MediaAsset = {
       id: uid('asset'),
       name: file.name,
       url,
@@ -112,6 +120,8 @@ export async function loadVideoAsset(file: File): Promise<MediaAsset> {
       thumbnail: grabThumbnail(video),
       hasAudio: detectAudio(video),
     };
+    await saveFile(asset.id, file);
+    return asset;
   } catch (error) {
     URL.revokeObjectURL(url);
     throw error;
@@ -127,6 +137,7 @@ export async function loadMusicTrack(file: File): Promise<MusicTrack> {
 
   try {
     await waitFor(audio, 'loadedmetadata');
+    await saveFile(MUSIC_KEY, file);
     return {
       name: file.name,
       url,

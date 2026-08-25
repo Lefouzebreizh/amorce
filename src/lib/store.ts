@@ -3,6 +3,8 @@
 import { create } from 'zustand';
 import { uid } from './id.ts';
 import { emptyProject, layoutClips, totalDuration } from './timeline.ts';
+import { MUSIC_KEY } from './persist.ts';
+import { deleteFile } from './storage.ts';
 import type { QualityTier } from './quality.ts';
 import {
   DEFAULT_CLIP,
@@ -118,6 +120,14 @@ type StudioState = {
   updateMusic: (patch: Partial<MusicTrack>) => void;
 
   // -- Lecture --------------------------------------------------------------
+  /**
+   * Remet en place un montage retrouvé au démarrage.
+   *
+   * Volontairement hors historique : annuler juste après l'ouverture doit
+   * ramener au geste précédent de l'utilisateur, pas vider son montage pour
+   * revenir au projet neuf qu'il n'a jamais vu.
+   */
+  restore: (project: Project) => void;
   select: (selection: Selection) => void;
   setPlayhead: (time: number) => void;
   setPlaying: (playing: boolean) => void;
@@ -231,6 +241,8 @@ export const useStudio = create<StudioState>((set, get) => {
     mutate('import-retrait', (state) => {
       const asset = state.project.assets.find((a) => a.id === assetId);
       if (asset) URL.revokeObjectURL(asset.url);
+      // Le fichier conservé n'a plus de média qui s'en réclame.
+      void deleteFile(assetId);
       return reclamp({
         ...state,
         project: {
@@ -499,6 +511,9 @@ export const useStudio = create<StudioState>((set, get) => {
   setMusic: (music) =>
     mutate('musique', (state) => {
       if (state.project.music) URL.revokeObjectURL(state.project.music.url);
+      // Un remplacement écrase le fichier au même emplacement ; un retrait doit
+      // l'effacer, sans quoi il resterait seul en base jusqu'au prochain import.
+      if (!music) void deleteFile(MUSIC_KEY);
       return { project: { ...state.project, music } };
     }),
 
@@ -507,6 +522,8 @@ export const useStudio = create<StudioState>((set, get) => {
       project: { ...state.project, music: state.project.music ? { ...state.project.music, ...patch } : null },
     })),
 
+  restore: (project) =>
+    set({ project, past: [], future: [], selection: null, playhead: 0, playing: false }),
   select: (selection) => set({ selection }),
   setPlayhead: (time) => set((state) => ({ playhead: clamp(time, 0, totalDuration(state.project.clips)) })),
   setPlaying: (playing) => set({ playing }),

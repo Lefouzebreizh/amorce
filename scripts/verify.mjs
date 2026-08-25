@@ -821,6 +821,56 @@ check(
   [...pageErrors, ...consoleErrors].slice(0, 2).join(' | '),
 );
 
+// -------------------------------------- 7. Reprise après un rechargement
+/*
+ * Le montage doit survivre à la fermeture de l'onglet.
+ *
+ * On recharge pour de vrai plutôt que d'interroger IndexedDB : ce qui compte
+ * n'est pas qu'un enregistrement existe, c'est que les rushes redeviennent
+ * lisibles. Un blob retrouvé mais dont l'URL n'aurait pas été recréée laisserait
+ * une bibliothèque d'apparence normale devant un aperçu noir.
+ */
+const scoreAvant = await page
+  .locator('header [role="status"]')
+  .getAttribute('aria-label')
+  .catch(() => null);
+
+await page.reload({ waitUntil: 'domcontentloaded' });
+
+let reprise = { assets: 0, score: null };
+try {
+  await page.waitForFunction(() => document.querySelectorAll('li img').length === 4, null, {
+    timeout: 20000,
+    polling: 500,
+  });
+  reprise = await page.evaluate(() => ({
+    assets: document.querySelectorAll('li img').length,
+    score: document.querySelector('header [role="status"]')?.getAttribute('aria-label') ?? null,
+  }));
+} catch {
+  reprise = await page.evaluate(() => ({
+    assets: document.querySelectorAll('li img').length,
+    score: document.querySelector('header [role="status"]')?.getAttribute('aria-label') ?? null,
+  }));
+}
+
+check(
+  'Les rushes sont retrouvés après rechargement',
+  reprise.assets === 4,
+  `${reprise.assets} médias dans la bibliothèque`,
+);
+
+// La note résume tout le projet : plans, sous-titres, bruitages, réglages. La
+// retrouver identique dit que le montage entier est revenu, pas seulement les
+// fichiers.
+check(
+  'Le montage est identique à ce qu’il était',
+  reprise.score !== null && reprise.score === scoreAvant,
+  `${reprise.score ?? 'aucune note'} (avant : ${scoreAvant ?? 'aucune'})`,
+);
+
+await page.screenshot({ path: join(SHOTS, `06-reprise-${profile.id}.png`) });
+
 // ------------------------------------------- 6. Relecture du fichier produit
 if (exportPath) {
   const probe = await context.newPage();
