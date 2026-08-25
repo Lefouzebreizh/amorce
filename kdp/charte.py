@@ -127,7 +127,9 @@ TOME_1: tuple[Page, ...] = (
     # c'est un identifiant de fichier fixé par la charte de nommage, pas un titre.
     Page(13, "TempetesEtBigorneaux",            "Tempête et bigorneaux",                "histoire"),
     Page(14, "LeSecretDesVaguesDYs",            "Le secret des vagues d'Ys",            "histoire"),
-    Page(15, "LaMagieDuFestNoz",                "La magie du fest-noz",                 "histoire"),
+    # « Fest Noz » gardé tel que la planche l'écrit, comme « OFF » en page 8 :
+    # traité en nom propre, il échappe à la mise en minuscules des titres.
+    Page(15, "LaMagieDuFestNoz",                "La magie du Fest Noz",                 "histoire"),
     Page(16, "LeMurmureDesEtoiles",             "Le murmure des étoiles",               "histoire"),
     Page(17, "LeGouterDesMenhirs",              "Le goûter des menhirs",                "atelier"),
     Page(18, "DessineTonAnimal",                "Dessine ton propre animal magique",    "atelier"),

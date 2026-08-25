@@ -108,7 +108,7 @@ trois systèmes cohabitent :
 | 10 | Fier comme un Paon | Fier comme un paon |
 | 13 | Tempête et Bigorneaux | Tempête et bigorneaux |
 | 14 | Le Secret des Vagues d'Ys | Le secret des vagues d'Ys |
-| 15 | La Magie du Fest Noz | La magie du fest-noz |
+| 15 | La Magie du Fest Noz | La magie du Fest Noz |
 | 16 | Le Murmure des Étoiles… | Le murmure des étoiles |
 
 Les pages 01, 04, 05 et 11 sont déjà conformes : c'est leur forme qu'il faut
@@ -198,13 +198,20 @@ La bulle du panneau 3 a sa queue qui remonte **dans le panneau 1**, et le
 macaron « 3 » est écrasé, illisible. C'est la seule planche où le gabarit 2 × 2
 est enfreint.
 
-### À trancher — « Fest Noz »
+### Tranché — « Fest Noz »
 
 L'orthographe bretonne établie est *fest-noz*, avec trait d'union et sans
-capitales (pluriel : *festoù-noz*). Les pages 15 et 16 écrivent « Fest Noz ». Un
-album qui revendique la Bretagne gagne à écrire le breton juste. Si vous
-préférez la forme francisée pour la lisibilité, gardez-la — mais alors dans les
-deux planches *et* sur la 4e.
+capitales (pluriel : *festoù-noz*). Les pages 15 et 16 écrivent « Fest Noz », la
+4e de couverture aussi.
+
+**Décision de l'auteur : on garde la forme des planches**, « Fest Noz ». Elle
+est désormais celle de `kdp/charte.py`. C'est un choix de lisibilité, assumé
+contre l'orthographe bretonne stricte, et il a l'avantage d'être déjà cohérent
+sur les trois supports où le mot apparaît — rien à régénérer de ce fait.
+
+Corollaire à tenir pour le Tome 2 : « Fest Noz » se traite comme un nom propre.
+Il garde ses capitales là où les autres titres passent en minuscules, exactement
+comme « OFF » en page 08.
 
 ### Ton — ce qui fonctionne, et qu'il ne faut pas toucher
 
