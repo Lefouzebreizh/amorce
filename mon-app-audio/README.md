@@ -7,11 +7,19 @@ synthèse et la récupération d'un son par son adresse sortent sur le réseau.
 ## Installation
 
 ```bash
+bash lancer.sh          # installe ce qu'il faut, puis ouvre l'interface
+bash lancer.sh --complet  # avec PyTorch et Whisper (plusieurs gigaoctets)
+```
+
+Ou à la main :
+
+```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-L'interface s'ouvre sur `http://localhost:8501`.
+L'interface s'ouvre sur `http://localhost:8501`. Dans un Codespace, le port est
+proposé automatiquement : le lien s'ouvre depuis le téléphone.
 
 `ffmpeg` n'est pas à installer à part : le paquet `imageio-ffmpeg` en fournit un.
 S'il y en a déjà un sur la machine, c'est celui-là qui sert. Sans ffmpeg du tout,
@@ -66,6 +74,7 @@ les cas difficiles :
 ## Arborescence
 
 ```
+lancer.sh              démarrage en une commande
 app.py                 l'interface (Streamlit) — aucune logique de traitement
 core/synchroniseur.py  transcription, appariement script/voix, découpe aux silences, SRT
 core/synthese.py       voix de synthèse (edge-tts) et minutage des mots
