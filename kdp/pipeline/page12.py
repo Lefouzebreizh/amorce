@@ -79,19 +79,27 @@ def _fond(bordure: Path, cote: int = 2600) -> bytes:
     return tampon.getvalue()
 
 
-def _triskell(page: fitz.Page, centre: fitz.Point, rayon: float) -> None:
-    """Triskell tracé en courbes, et non posé en image : il reste net à toute échelle."""
+def _triskell(page: fitz.Page, centre: fitz.Point, rayon: float,
+              tours: float = 0.95, points: int = 44) -> None:
+    """Triskell tracé, et non posé en image : net à toute échelle.
+
+    Trois spirales calculées, et non trois courbes de Bézier aux points de
+    contrôle devinés. Les deux essais précédents donnaient un trèfle puis un
+    gribouillis : une spirale ne s'approxime pas au jugé, elle s'écrit — le
+    rayon croît avec l'angle, et c'est tout.
+    """
     import math
     forme = page.new_shape()
     for tour in range(3):
-        a = tour * 2 * math.pi / 3
-
-        def loin(angle: float, facteur: float) -> fitz.Point:
-            return centre + fitz.Point(math.cos(angle) * rayon * facteur,
-                                       math.sin(angle) * rayon * facteur)
-
-        forme.draw_bezier(centre, loin(a, 1.15), loin(a + 1.5, 1.25), loin(a + 2.4, 0.55))
-    forme.finish(color=BRUN_PALE, width=1.4, closePath=False, lineCap=1)
+        depart = tour * 2 * math.pi / 3
+        ligne = []
+        for i in range(points):
+            t = i / (points - 1)
+            angle = depart + t * tours * 2 * math.pi
+            r = rayon * (0.08 + 0.92 * t ** 0.75)
+            ligne.append(centre + fitz.Point(math.cos(angle) * r, math.sin(angle) * r))
+        forme.draw_polyline(ligne)
+    forme.finish(color=BRUN_PALE, width=1.4, closePath=False, lineCap=1, lineJoin=1)
     forme.commit()
 
 

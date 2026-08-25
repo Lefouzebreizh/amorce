@@ -73,17 +73,21 @@ def interieur(planches: Path, complements: Path, cible: Path, tome: int = 1) -> 
 
     manquantes, composees = [], []
     for planche in charte.pages(tome):
+        # Une page composée l'emporte sur la planche, et non l'inverse. Elle
+        # existe pour deux raisons, et dans les deux cas elle est meilleure :
+        # soit la planche manque et il faut bien raconter l'histoire annoncée
+        # au sommaire, soit la planche existe mais a été refaite en vectoriel
+        # — page de garde presque vide, QR code à retracer — auquel cas elle
+        # est nette là où l'agrandissement rendait l'originale molle.
+        composee = sorted(complements.glob(f"{planche.numero:02d}_*.pdf"))
         chemin = _trouver(planches, charte.nom_de_page(planche.numero, planche.slug, ""))
+        if composee:
+            document.insert_pdf(fitz.open(str(composee[0])))
+            composees.append(planche.numero)
+            etat = "composée" if chemin else "composée, en attente de planche"
+            print(f"  page {len(document):02d}  {composee[0].name:52s} {etat}")
+            continue
         if chemin is None:
-            # Une planche absente peut avoir une page composée en attendant
-            # (voir page12.py). Mieux vaut une histoire en prose qu'un trou :
-            # le sommaire l'annonce, le livre doit la raconter.
-            secours = sorted(complements.glob(f"{planche.numero:02d}_*.pdf"))
-            if secours:
-                document.insert_pdf(fitz.open(str(secours[0])))
-                composees.append(planche.numero)
-                print(f"  page {len(document):02d}  {secours[0].name:52s} composée, en attente de planche")
-                continue
             feuille = document.new_page(width=largeur, height=hauteur)
             _carton(feuille, fitz.Rect(0, 0, largeur, hauteur),
                     charte.nom_de_page(planche.numero, planche.slug))
@@ -113,8 +117,7 @@ def interieur(planches: Path, complements: Path, cible: Path, tome: int = 1) -> 
     if total % 2:
         print(f"  ATTENTION : {total} pages, il en faut un nombre pair")
     if composees:
-        print(f"  À REMPLACER : planches {composees} rendues en page composée, "
-              f"faute d'illustration")
+        print(f"  pages composées : {composees}")
     if manquantes:
         print(f"  ATTENTION : cartons d'attente aux planches {manquantes}")
     return total

@@ -109,3 +109,33 @@ Gardez un dossier par tome — un mélange écraserait silencieusement des planc
 
 Le détail du Tome 2 — texte de bulle définitif, parchemins, prompts — est dans
 `kdp/tome2/DOSSIER.md`.
+
+## Les pages composées
+
+Certaines pages ne sont pas des illustrations mais des compositions, et elles
+l'emportent sur la planche quand les deux existent. Elles vivent dans le
+dossier des compléments, nommées par le numéro de page qu'elles occupent.
+
+| Page | Module | Pourquoi composée |
+| --- | --- | --- |
+| Faux-titre, mentions légales, solutions | `pages_texte.py` | Elles n'existent qu'en texte, et portent le volume au minimum de pages de KDP. |
+| 01 · Ce livre appartient à | `page_garde.py` | La planche fournie faisait 1024 px, soit 119 DPI : il aurait fallu l'agrandir deux fois et demie. Une page presque vide se trace mieux qu'elle ne s'agrandit. |
+| 15 · Le secret de l'hermine | `page12.py` | La planche n'existe pas ; le sommaire annonce l'histoire, le livre doit la raconter. En prose, en attendant. |
+| 26 · L'hymne | `hymne.py` | Le QR incrusté est remplacé par un tracé vectoriel. |
+
+### La règle du QR code
+
+**Un QR imprimé ne doit jamais pointer ailleurs que vers un domaine qu'on
+possède.** Une adresse de plateforme change ou disparaît, et le livre est déjà
+chez le lecteur. Un domaine que l'on contrôle sert d'aiguillage : le contenu
+peut déménager, la redirection se met à jour, et tous les exemplaires imprimés
+continuent de fonctionner.
+
+Deuxième règle, moins connue : **c'est la taille du plus petit carré qui décide
+si un téléphone lit**, pas la taille du code. En deçà de 0,6 mm, la lecture
+devient incertaine dès que l'éclairage baisse. `hymne.py` la mesure et prévient.
+
+La correction d'erreur est réglée sur Q et non sur H. Le maximum est fait pour
+les surfaces abîmées ou les codes portant un logo au centre ; sur une page de
+livre propre, il ne sert qu'à multiplier les modules, donc à les rétrécir —
+c'est lui qui faisait passer ce code-ci sous le seuil.
