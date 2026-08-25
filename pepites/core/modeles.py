@@ -367,6 +367,36 @@ class Verdict(Enum):
 
 
 @dataclass(frozen=True)
+class Constat:
+    """Ce qu'**une** source dit d'un jeton, avant tout jugement.
+
+    Tous les champs sont facultatifs, et `None` ne veut pas dire « non » : il
+    veut dire « cette source ne sait pas ». La distinction est la raison d'être
+    de ce type. GoPlus ne simule pas de revente, honeypot.is ne regarde pas la
+    concentration des détenteurs ; confondre « ne sait pas » avec « rien à
+    signaler » reviendrait à délivrer un quitus qu'aucune source n'a donné.
+
+    Le jugement, lui, est ailleurs — dans `skills/bouclier.py`. Une source
+    traduit, elle ne décide pas : c'est ce qui permet de remplacer RugCheck le
+    jour où il ferme son accès gratuit sans relire une ligne de logique.
+    """
+
+    source: str
+    honeypot: bool | None = None
+    taxe_achat_pct: float | None = None
+    taxe_vente_pct: float | None = None
+    contrat_verifie: bool | None = None
+    proprietaire_renonce: bool | None = None
+    emission_possible: bool | None = None        # l'offre peut encore grossir
+    gel_possible: bool | None = None             # les comptes peuvent être gelés
+    echange_pausable: bool | None = None
+    metadonnees_modifiables: bool | None = None  # Solana : nom et image changeables
+    lp_verrouillee_pct: float | None = None
+    top10_detenteurs_pct: float | None = None
+    remarques: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class Securite:
     """Ce que les analyseurs de contrat disent du jeton.
 
@@ -421,6 +451,14 @@ class Pepite:
     @property
     def candidat(self) -> Candidat:
         return self.observation.candidat
+
+    @property
+    def metriques(self) -> Metriques:
+        return self.observation.metriques
+
+    @property
+    def note(self) -> Note:
+        return self.observation.note
 
     @property
     def lien_dexscreener(self) -> str:

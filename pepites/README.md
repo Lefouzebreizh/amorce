@@ -30,24 +30,24 @@ pepites/
 │   └── stockage.py           # ✅ SQLite : relevés, alertes, portefeuilles
 ├── sources/                  # un client par API, aucune décision
 │   ├── dexscreener.py        # ✅
-│   ├── goplus.py             # ⬜
-│   ├── honeypot_is.py        # ⬜
-│   ├── rugcheck.py           # ⬜
-│   ├── etherscan.py          # ⬜
-│   └── solana_rpc.py         # ⬜
+│   ├── goplus.py             # ✅
+│   ├── honeypot_is.py        # ✅
+│   ├── rugcheck.py           # ✅
+│   ├── etherscan.py          # ✅
+│   └── solana_rpc.py         # ✅
 ├── skills/                   # les cinq skills
 │   ├── radar.py              # ✅ skill 1
-│   ├── bouclier.py           # ⬜ skill 2
+│   ├── bouclier.py           # ✅ skill 2
 │   ├── convergence.py        # ✅ skill 3 — pur, sans réseau
-│   ├── smart_money.py        # ⬜ skill 4
-│   └── telegram.py           # ⬜ skill 5
+│   ├── smart_money.py        # ✅ skill 4
+│   └── telegram.py           # ✅ skill 5
 ├── pipeline.py               # ✅ l'enchaînement des étages
 ├── rapport.py                # ✅ écriture de `pepites_radar.md`
 ├── main.py                   # ✅ `scan`, `purger`
-└── tests/                    # ✅ 81 tests, sans réseau
+└── tests/                    # ✅ 118 tests, sans réseau
 ```
 
-✅ écrit et testé · ⬜ à venir
+Les cinq skills sont écrits. Aucun test ne touche au réseau.
 
 La séparation `sources/` ↔ `skills/` est la seule qui compte : un module de
 `sources` connaît la forme JSON d'un service et rend des objets de
@@ -133,8 +133,17 @@ pour que les deux étages coûteux ne s'exécutent que sur vingt-cinq.
 | Solana | **Helius** (offre gratuite) | `getSignaturesForAddress` puis transactions analysées | oui, gratuite |
 | Solana | RPC public, en repli | `getTokenLargestAccounts` | non, mais souvent saturé |
 
-Le principe : `sort=asc` rend les **premiers** transferts du jeton, donc les
-premiers acheteurs. On les range dans SQLite avec le jeton et la date. Un
+**Côté Solana, ce ne sont pas les premiers acheteurs, et c'est assumé.**
+Remonter le premier achat demanderait de parcourir toutes les signatures du
+jeton, que le RPC rend de la plus récente à la plus ancienne : des centaines
+d'appels par jeton, pour une offre gratuite qui n'en supporte pas le dixième. On
+prend l'autre bout du même fil — les **plus gros porteurs actuels**. Signal plus
+faible, mais un portefeuille dominant sur une série de petits jetons qui montent
+ensuite reste ce qu'on cherche. Le rapport dit laquelle des deux lectures a
+servi ; les confondre serait se mentir.
+
+Côté EVM, le principe : `sort=asc` rend les **premiers** transferts du jeton, donc
+les premiers acheteurs. On les range dans SQLite avec le jeton et la date. Un
 portefeuille devient « intelligent » quand il apparaît tôt sur au moins trois
 jetons qui ont ensuite monté — pas avant. Sous ce seuil, c'est une coïncidence,
 et l'outil se met à suivre des robots d'arbitrage et des routeurs de DEX.
@@ -290,7 +299,13 @@ note_finale = note_convergence × facteur_sécurité + bonus_smart_money
   en pause possible ×0,70…
   **Un jeton rejeté vaut 0 quelle que soit sa note.** Aucune accélération de
   volume ne rachète un contrat dont on ne peut pas sortir.
-- **`bonus_smart_money` ∈ [0, 15]**, plafonné. C'est un indice, jamais une
+- **Aucune source n'a répondu → facteur 0,4**, ni rejet ni quitus. Une panne de
+  GoPlus ne doit pas délivrer un blanc-seing à tout le marché, mais elle ne doit
+  pas non plus faire disparaître le radar. Le rapport nomme les sources qui ont
+  répondu : « sûr » sans nom de source laisserait croire à une vérification qui
+  n'a pas eu lieu.
+- **`bonus_smart_money` ∈ [0, 15]**, plafonné (5 points par portefeuille reconnu,
+  trois suffisent à plafonner). C'est un indice, jamais une
   thèse : deux adresses réputées peuvent se tromper ensemble, et c'est même la
   mécanique de la plupart des sorties organisées. Un bonus, pas un facteur.
 
@@ -302,47 +317,46 @@ même jeton finit en sourdine — et c'est ce jour-là qu'il a raison.
 
 ## 5. Où en est le projet
 
-**Fait — la tranche verticale tourne de bout en bout**, du premier appel
-DexScreener au fichier `pepites_radar.md` : table des chaînes, réglages,
-structures du pipeline, client HTTP cadencé, mémoire SQLite, client
-DexScreener, radar, convergence, rapport, ligne de commande. 81 tests, aucun ne
-touche au réseau.
+**Les cinq skills tournent**, du premier appel DexScreener au message Telegram.
+118 tests, dont un qui traverse tout le tuyau sur client factice : deux scans à
+quinze minutes d'écart, confirmation, bouclier, alerte, puis silence.
 
-Le choix d'avoir commencé par `chaines.yaml` n'était pas de la mise en train :
-c'est le seul fichier qui nomme une blockchain. Les quatre sources appellent la
-même chaîne de quatre façons — DexScreener dit `bsc`, GoPlus dit `56`,
-Etherscan dit `chainid=56`. Sans cette table, chaque skill réinvente sa
-correspondance, et le premier oubli fait qu'un jeton passe l'analyse de momentum
-sans jamais passer l'analyse de sécurité. C'est le bug qu'on ne voit pas, parce
-qu'il ne produit aucune erreur : juste une alerte de trop.
+Ce qui reste **fragile ou incomplet**, dit franchement :
 
-**Pas encore fait** : le bouclier anti-rugpull (skill 2), le traqueur smart
-money (skill 4), le bot Telegram (skill 5). En attendant, le rapport dit en
-toutes lettres, en tête, que rien n'est vérifié.
-
-**Ce qui reste le plus fragile** est la largeur de la découverte, pas la
-notation : sans point d'entrée « toutes les paires actives », on ne voit qu'une
-fenêtre du marché. C'est la mémoire qui compense, en s'élargissant à chaque
-tour — raison de plus pour faire tourner le scan régulièrement plutôt que de
-temps en temps.
-
-**Ordre de la suite** : bouclier (skill 2), puis Telegram (skill 5), puis le
-traqueur (skill 4) — c'est le seul qui a besoin de deux à trois semaines de
-relevés avant de valoir quelque chose, et sa table est déjà là pour commencer à
-collecter.
+- **La largeur de la découverte**, et non la notation. Sans point d'entrée
+  « toutes les paires actives », on ne voit qu'une fenêtre du marché. C'est la
+  mémoire qui compense, en s'élargissant à chaque tour — raison de plus pour
+  faire tourner le scan régulièrement plutôt que de temps en temps.
+- **Le traqueur de portefeuilles ne vaut rien le premier jour.** Il ne consulte
+  aucune base d'adresses réputées : il fabrique la sienne, scan après scan.
+  Comptez deux à trois semaines avant qu'il ne dise quoi que ce soit, et
+  sachez que sur Solana il lit les gros porteurs, pas les premiers acheteurs.
+- **Sur Arbitrum, Avalanche, Polygon et Optimism, il n'y a pas de simulateur
+  d'achat/revente** comparable à honeypot.is : on n'y dispose que de l'analyse
+  statique. Le rapport nomme les sources, à chacun d'en tirer les conséquences.
+- **Rien n'a encore tourné contre l'API réelle** : l'environnement de
+  développement bloque les sorties réseau. Tout est validé sur des réponses
+  rejouées, dans leur forme documentée. Le premier `scan` en conditions réelles
+  reste à faire.
 
 ## 6. Commandes
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env                       # Telegram, pour plus tard
+cp .env.example .env                       # jeton Telegram, clés facultatives
 
 python3 main.py scan                       # un tour complet → pepites_radar.md
 python3 main.py scan --bavard              # avec le détail des appels
 python3 main.py purger --garder 30         # efface les vieux relevés
 
-python3 -m unittest discover -s tests      # 81 tests, sans réseau
+python3 -m unittest discover -s tests      # 118 tests, sans réseau
 ```
+
+Sans clé, le radar, la note et le bouclier fonctionnent tous les trois : GoPlus,
+honeypot.is et RugCheck répondent sans inscription. Seuls le traqueur
+(`ETHERSCAN_API_KEY`, `HELIUS_API_KEY`) et l'alerte (`TELEGRAM_BOT_TOKEN`,
+`TELEGRAM_CHAT_ID`) en demandent — et leur absence est signalée, jamais
+silencieuse.
 
 Un scan seul ne confirme rien : la persistance demande deux relevés espacés d'au
 moins dix minutes. Le premier tour remplit la mémoire, les suivants s'en

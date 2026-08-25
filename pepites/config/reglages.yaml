@@ -208,13 +208,23 @@ bouclier:
   note_minimale_pour_analyser: 55
   candidats_max_par_scan: 25
 
+  # Aucune source n'a répondu, ou aucune n'a rien su dire de décisif. Ce n'est
+  # pas un rejet — le service peut être en panne — mais ce n'est surtout pas un
+  # quitus. Le facteur descend assez pour qu'un jeton non vérifié ne passe pas
+  # devant un jeton vérifié, sans l'écarter tout à fait.
+  facteur_si_inconnu: 0.4
+
   # Éliminations nettes : aucune note ne les rachète.
   rejets:
     honeypot: true                  # la revente échoue en simulation
     taxe_achat_max_pct: 10
     taxe_vente_max_pct: 10
-    # Une autorité d'émission encore active sur Solana, c'est le droit de
-    # fabriquer autant de jetons qu'on veut. Idem pour le gel des comptes.
+    # **Solana uniquement.** Une autorité d'émission encore ouverte, c'est le
+    # droit d'imprimer autant de jetons qu'on veut, détenu par une seule clé,
+    # sans gouvernance ni délai. Idem pour l'autorité de gel.
+    # Côté EVM, `is_mintable` est bien trop courant pour être éliminatoire —
+    # beaucoup de jetons honnêtes gardent une émission sous vote ou sous délai.
+    # Il y devient une pénalité (`emission_possible` plus bas).
     mint_actif: true
     gel_actif: true
     # Une liquidité ni brûlée ni verrouillée peut être retirée en un bloc.

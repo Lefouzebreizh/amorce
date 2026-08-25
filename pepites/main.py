@@ -19,6 +19,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+# Les clés et le jeton Telegram vivent dans un `.env` non versionné. Chargé
+# avant tout import de skill : `Messager` lit son jeton dans l'environnement.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / ".env")
+except ImportError:      # l'outil marche sans, il n'alerte simplement pas
+    pass
+
 import pipeline                                   # noqa: E402
 import rapport                                    # noqa: E402
 from core.reglages import ReglagesInvalides, charger  # noqa: E402
@@ -38,22 +46,21 @@ def commande_scan(arguments) -> int:
     reglages = charger()
     with Memoire(arguments.base) as memoire:
         resultat = pipeline.scanner(reglages, memoire)
-        texte = rapport.composer(
-            resultat.observations, resultat.bilan, reglages,
-            resultat.debut, resultat.secondes, resultat.appels,
-        )
-        chemin = rapport.ecrire(texte, arguments.rapport)
+        chemin = rapport.ecrire(rapport.composer(resultat, reglages), arguments.rapport)
 
-    confirmes = [o for o in resultat.observations if o.confirme and not o.note.drapeaux]
+    retenues = resultat.retenues
     print(f"\n{resultat.bilan.resume()} en {resultat.secondes:.0f} s")
-    if confirmes:
-        print(f"{len(confirmes)} signal(s) confirmé(s) :")
-        for observation in confirmes[:10]:
-            candidat = observation.candidat
-            print(f"  {observation.note.total:5.0f}/100  {candidat.jeton.symbole:<12} "
-                  f"{candidat.jeton.chaine.nom:<12} {observation.lien_dexscreener}")
+    if retenues:
+        print(f"{len(retenues)} pépite(s) retenue(s) :")
+        for pepite in retenues[:10]:
+            candidat = pepite.candidat
+            print(f"  {pepite.note_finale:5.0f}/100  {candidat.jeton.symbole:<12} "
+                  f"{candidat.jeton.chaine.nom:<12} {pepite.securite.verdict.value:<9} "
+                  f"{pepite.lien_dexscreener}")
     else:
-        print("Aucun signal confirmé — c'est attendu au premier scan.")
+        print("Aucune pépite retenue — c'est attendu au premier scan.")
+    if resultat.alertes:
+        print(f"{len(resultat.alertes)} alerte(s) envoyée(s) sur Telegram.")
     print(f"\nRapport : {chemin}")
     return 0
 

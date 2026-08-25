@@ -11,7 +11,7 @@ from datetime import timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from aides import BASE, MAINTENANT, WETH, candidat, paire  # noqa: E402
+from aides import BASE, MAINTENANT, candidat, paire  # noqa: E402
 from core.modeles import Jeton  # noqa: E402
 from core.reglages import charger  # noqa: E402
 from skills.radar import filtrer, regrouper  # noqa: E402

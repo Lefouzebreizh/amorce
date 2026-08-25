@@ -112,6 +112,7 @@ class Convergence:
 class Bouclier:
     note_minimale_pour_analyser: float
     candidats_max_par_scan: int
+    facteur_si_inconnu: float
     rejets: dict
     penalites: dict
 
@@ -268,6 +269,7 @@ def lire_reglages(donnees: dict, chaines: dict[str, Chaine]) -> Reglages:
     bouclier = Bouclier(
         note_minimale_pour_analyser=float(bouclier_brut["note_minimale_pour_analyser"]),
         candidats_max_par_scan=int(bouclier_brut["candidats_max_par_scan"]),
+        facteur_si_inconnu=float(bouclier_brut["facteur_si_inconnu"]),
         rejets=dict(bouclier_brut["rejets"]),
         penalites=dict(bouclier_brut["penalites"]),
     )

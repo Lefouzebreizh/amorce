@@ -139,6 +139,38 @@ class ClientHttp:
             )
         return None
 
+    def poster(self, cle: str, url: str, charge: dict) -> dict | None:
+        """Envoie un corps JSON. Un seul usage aujourd'hui — Telegram —, mais
+        faire passer un message d'alerte par les paramètres d'une URL le
+        limiterait en longueur et le ferait apparaître dans les journaux."""
+        debit = self.debits.get(cle)
+        for essai in range(1, self.essais + 1):
+            if debit:
+                debit.attendre()
+            self.appels += 1
+            try:
+                reponse = self.session.post(url, json=charge, timeout=self.delai)
+            except requests.RequestException as erreur:
+                JOURNAL.warning("%s : %s (essai %d/%d)", cle, erreur, essai, self.essais)
+                self._patienter(essai)
+                continue
+            if reponse.status_code < 400:
+                self._echecs_d_affilee = 0
+                try:
+                    return reponse.json()
+                except ValueError:
+                    return {}
+            # Un jeton de bot invalide rend 401 : réessayer n'y changera rien,
+            # et le message doit dire *quoi* corriger.
+            if reponse.status_code < 500:
+                JOURNAL.error("%s : refus %d — %s", cle, reponse.status_code,
+                              reponse.text[:200])
+                self.echecs += 1
+                return None
+            self._patienter(essai)
+        self.echecs += 1
+        return None
+
     def _recul(self, essai: int) -> float:
         return min(ATTENTE_MAX, 2.0 ** essai)
 
