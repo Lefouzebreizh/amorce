@@ -45,7 +45,7 @@ scripts/          make-fixtures.mjs, verify.mjs (Playwright, hors bundle)
 | `transitions.ts` | Une transition = composer deux fonctions de dessin. Ajouter un effet ne touche pas au moteur. |
 | `grade.ts` | Étalonnage cinéma : filtres, teintes, vignettage, grain, halo. |
 | `captions.ts` | Styles de sous-titres et tracé canvas ; renvoie les boîtes pour la manipulation au doigt. |
-| `sfx.ts` | Bruitages **synthétisés** en Web Audio. Aucun fichier son n'est embarqué. |
+| `sfx.ts` | Bruitages **synthétisés** en Web Audio, réverbération comprise. Aucun fichier son n'est embarqué. |
 | `voice.ts` | Voix off : découpe du signal aux silences, répartition du texte sur les passages parlés, baisse du fond. Pur, testé. |
 | `audio.ts` | Mixage des quatre bus (clips / bruitages / musique / voix) et sortie enregistrable. |
 | `export.ts` | `MediaRecorder` sur le canvas + le bus audio. Négocie MP4 puis WebM. |
@@ -213,6 +213,13 @@ ne pas lancer `playwright install`.
   silencieusement une police système.
 - `URL.revokeObjectURL` doit accompagner toute suppression de média, de musique
   ou de voix (`removeAsset`, `setMusic`, `removeVoice`).
+- Un grave en sinus pur n'existe pas sur un téléphone : un haut-parleur ne
+  restitue rien sous ~400 Hz. Tout bruitage qui descend plus bas doit être
+  doublé de ses harmoniques (`impact` dans `sfx.ts`), sans quoi il est
+  simplement absent de l'appareil où le format court est regardé.
+- Les deux couches d'un impact se **partagent** le niveau demandé. Les faire
+  s'additionner ferait grimper la crête, et le limiteur commun, en l'écrasant,
+  ferait pomper tout le mixage à chaque frappe.
 - L'export MP4 n'existe que sous Chrome et Edge ; ailleurs le fichier sort en
   WebM. Ne pas supposer l'extension.
 
