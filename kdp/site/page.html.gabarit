@@ -1,0 +1,413 @@
+<title>Roussy &amp; Zéphy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@300..700&display=swap">
+<style>
+:root{
+  --nuit:#0A1220; --voute:#0F1A2E; --brume:#18263F; --creux:#22334F;
+  --papier:#F3EAD8; --papier-ombre:#DED0B6; --encre:#2A2016;
+  --or:#E9B65E; --or-sourd:#B98C3E; --violet:#9B7FD4; --cuivre:#D97A45;
+  --texte:#C9D3E4; --texte-doux:#8B9BB6; --texte-faible:#5F708C;
+  --trait:#22334F;
+  --pas:clamp(1rem,.6rem + 1.6vw,1.5rem);
+  --large:min(1180px,92vw);
+  --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Karla','Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--nuit); color:var(--texte);
+  font-family:var(--sans); font-size:clamp(1rem,.95rem + .2vw,1.075rem);
+  line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--serif); font-variation-settings:'SOFT' 40,'WONK' 1; margin:0; text-wrap:balance; line-height:1.1}
+p{margin:0}
+a{color:inherit}
+img{max-width:100%; display:block}
+.large{width:var(--large); margin-inline:auto}
+.oeil{font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; color:var(--texte-faible); font-weight:600}
+:where(a,button,input,summary):focus-visible{outline:2px solid var(--or); outline-offset:3px; border-radius:3px}
+
+/* ---------- héros ---------- */
+.ciel{position:relative; overflow:hidden; background:
+  radial-gradient(120% 90% at 50% -10%, #1B2C4A 0%, var(--voute) 45%, var(--nuit) 100%)}
+#etoiles{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
+.heros{position:relative; display:grid; gap:calc(var(--pas)*2.2); padding:clamp(3rem,7vw,6rem) 0 clamp(3.5rem,8vw,6.5rem);
+  grid-template-columns:1fr; align-items:center}
+@media(min-width:860px){.heros{grid-template-columns:1.05fr .95fr}}
+.heros h1{font-size:clamp(2.9rem,1.4rem + 6.2vw,5.4rem); font-weight:500; color:var(--papier); letter-spacing:-.02em}
+.heros h1 .et{color:var(--or); font-variation-settings:'SOFT' 90,'WONK' 1; font-weight:300}
+.accroche{font-family:var(--serif); font-size:clamp(1.2rem,1.05rem + .55vw,1.5rem); font-weight:300;
+  font-style:italic; color:var(--violet); margin-top:1rem; max-width:26ch; line-height:1.35}
+.pitch{margin-top:1.4rem; max-width:52ch; color:var(--texte-doux)}
+.actions{display:flex; flex-wrap:wrap; gap:.85rem; align-items:center; margin-top:2rem}
+.bouton{display:inline-flex; align-items:center; gap:.6rem; padding:.9rem 1.45rem; border-radius:2px;
+  background:var(--or); color:#22180A; font-weight:700; text-decoration:none; font-size:.95rem;
+  letter-spacing:.01em; border:0; cursor:pointer; transition:transform .18s ease, background .18s ease}
+.bouton:hover{background:#F5C673; transform:translateY(-2px)}
+.bouton-fin{display:inline-flex; align-items:center; padding:.9rem .2rem; color:var(--texte-doux);
+  text-decoration:none; font-size:.92rem}
+.bouton-fin span{border-bottom:1px solid var(--creux); padding-bottom:3px}
+.bouton-fin:hover{color:var(--or)} .bouton-fin:hover span{border-color:var(--or)}
+
+/* le livre posé */
+.socle{position:relative; justify-self:center; width:min(360px,80vw)}
+.socle::after{content:''; position:absolute; left:6%; right:6%; bottom:-26px; height:34px;
+  background:radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.55), transparent 70%); filter:blur(6px)}
+.couverture{aspect-ratio:1/1; background:var(--papier); border-radius:2px 6px 6px 2px;
+  box-shadow:-7px 0 0 var(--papier-ombre), -8px 0 0 #C9B996, 0 26px 50px rgba(0,0,0,.5);
+  display:grid; place-content:center; gap:.9rem; text-align:center; padding:2rem; color:var(--encre);
+  position:relative; overflow:hidden}
+.couverture::before{content:''; position:absolute; inset:14px; border:1px solid rgba(42,32,22,.16); border-radius:2px}
+.couverture .marque{font-family:var(--serif); font-size:1.9rem; font-weight:500; line-height:1.15}
+.couverture .tome{font-size:.72rem; letter-spacing:.24em; text-transform:uppercase; color:#8A7A5F}
+.couverture .attente{font-size:.78rem; color:#9C8B6E; font-style:italic; max-width:22ch; margin-inline:auto}
+.triskell{width:56px; height:56px; margin-inline:auto; opacity:.5}
+
+/* ---------- sections ---------- */
+section{padding:clamp(3.5rem,7vw,6rem) 0}
+.entete{display:flex; flex-direction:column; gap:.7rem; margin-bottom:clamp(1.8rem,3.5vw,2.8rem); max-width:60ch}
+.entete h2{font-size:clamp(1.75rem,1.35rem + 1.7vw,2.6rem); font-weight:500; color:var(--papier)}
+.entete p{color:var(--texte-doux); max-width:56ch}
+
+/* planches */
+.planches{display:grid; gap:calc(var(--pas)*1.1); grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.planche{background:var(--papier); padding:10px 10px 0; border-radius:2px; box-shadow:0 14px 32px rgba(0,0,0,.42)}
+.planche img{border-radius:1px}
+.planche-bonus{max-width:760px; margin-inline:auto}
+.planche figcaption{font-family:var(--serif); font-size:.88rem; font-style:italic; color:#6B5B44;
+  padding:.75rem .3rem .85rem; text-align:center}
+
+/* ---------- jeu ---------- */
+.jeu{background:linear-gradient(180deg,var(--voute),var(--nuit))}
+/* Un jeu de différences se joue en voyant les deux images d'un coup : on borne
+   la hauteur sur la fenêtre plutôt que la largeur sur la colonne. */
+.tableau{display:grid; gap:calc(var(--pas)*.9); grid-template-columns:1fr; justify-content:center}
+@media(min-width:760px){.tableau{grid-template-columns:repeat(2,auto)}
+  .vignette img{height:min(64vh,660px); width:auto}}
+.vignette{background:var(--papier); padding:9px; border-radius:2px;
+  box-shadow:0 14px 32px rgba(0,0,0,.42); cursor:crosshair; touch-action:manipulation}
+/* Les cercles se placent en pourcentage de l'IMAGE, pas de la vignette : le
+   passe-partout de 9 px fausserait le repère, et CSS ne sait pas multiplier un
+   pourcentage par une longueur dans un calc(). D'où ce cadre intermédiaire. */
+.cadre{position:relative; line-height:0}
+.cadre img{border-radius:1px}
+.etiquette{position:absolute; top:11px; left:11px; z-index:3; width:30px; height:30px; display:grid; place-content:center;
+  background:var(--papier); border:1px solid rgba(42,32,22,.35); font-family:var(--serif); font-weight:600;
+  color:var(--encre); font-size:.95rem; border-radius:2px}
+.trouve{position:absolute; border:3px solid var(--or); border-radius:50%; pointer-events:none;
+  box-shadow:0 0 0 3px rgba(233,182,94,.28), 0 0 22px rgba(233,182,94,.5); z-index:2;
+  animation:cercle .45s cubic-bezier(.2,.9,.3,1.3)}
+.trouve span{position:absolute; top:-11px; left:-11px; width:24px; height:24px; border-radius:50%;
+  background:var(--or); color:#22180A; font:700 .82rem/24px var(--sans); text-align:center}
+@keyframes cercle{from{transform:scale(1.7); opacity:0}to{transform:scale(1); opacity:1}}
+.rate{position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px; border-radius:50%;
+  border:2px solid rgba(217,122,69,.85); pointer-events:none; animation:rate .55s ease-out forwards}
+@keyframes rate{to{transform:scale(2.1); opacity:0}}
+
+.compteur{display:flex; flex-wrap:wrap; align-items:center; gap:1rem 1.6rem; margin-bottom:1.6rem}
+.jauge{display:flex; gap:6px}
+.perle{width:22px; height:22px; border-radius:50%; border:1.5px solid var(--creux); display:grid; place-content:center;
+  font-size:.7rem; font-weight:700; color:var(--texte-faible); transition:all .3s ease}
+.perle.on{background:var(--or); border-color:var(--or); color:#22180A}
+.score{font-family:var(--serif); font-size:1.15rem; color:var(--papier)}
+.aide{background:none; border:1px solid var(--trait); color:var(--texte-doux); padding:.55rem 1rem;
+  border-radius:2px; font:inherit; font-size:.85rem; cursor:pointer}
+.aide:hover:not(:disabled){border-color:var(--or); color:var(--or)}
+.aide:disabled{opacity:.35; cursor:default}
+.mot{min-height:1.6em; color:var(--violet); font-family:var(--serif); font-style:italic}
+.liste{margin:1.6rem 0 0; padding:0; list-style:none; display:grid; gap:.55rem}
+.liste li{display:grid; grid-template-columns:26px 1fr; gap:.7rem; align-items:baseline;
+  color:var(--texte-faible); font-size:.94rem}
+.liste li.on{color:var(--texte)}
+.liste b{font-family:var(--serif); color:var(--or-sourd); font-weight:600}
+.liste li.on b{color:var(--or)}
+
+/* ---------- imprimables & lettre ---------- */
+.duo{display:grid; gap:calc(var(--pas)*2); grid-template-columns:1fr}
+@media(min-width:900px){.duo{grid-template-columns:1.1fr .9fr}}
+.fiches{display:grid; gap:.9rem}
+.fiche{display:flex; gap:1rem; align-items:center; background:var(--brume); border:1px solid var(--trait);
+  border-radius:2px; padding:1rem 1.15rem; text-decoration:none; transition:border-color .2s ease, transform .2s ease}
+.fiche:hover{border-color:var(--or-sourd); transform:translateX(3px)}
+.fiche .icone{flex:none; width:38px; height:46px; background:var(--papier); border-radius:1px;
+  box-shadow:0 3px 8px rgba(0,0,0,.4); position:relative}
+.fiche .icone::after{content:''; position:absolute; inset:6px 6px auto; height:2px; background:var(--papier-ombre);
+  box-shadow:0 6px 0 var(--papier-ombre), 0 12px 0 var(--papier-ombre)}
+.fiche h3{font-size:1.02rem; font-weight:500; color:var(--papier)}
+.fiche p{font-size:.85rem; color:var(--texte-faible)}
+.lettre{background:var(--brume); border:1px solid var(--trait); border-radius:2px; padding:clamp(1.4rem,3vw,2rem)}
+.lettre h3{font-size:1.4rem; font-weight:500; color:var(--papier); margin-bottom:.6rem}
+.lettre p{color:var(--texte-doux); font-size:.94rem}
+.champ{display:flex; gap:.6rem; margin-top:1.3rem; flex-wrap:wrap}
+.champ input{flex:1 1 12rem; background:var(--nuit); border:1px solid var(--creux); color:var(--texte);
+  padding:.85rem 1rem; border-radius:2px; font:inherit}
+.champ input::placeholder{color:var(--texte-faible)}
+.mention{font-size:.78rem; color:var(--texte-faible); margin-top:.9rem}
+.merci{display:none; color:var(--or); font-family:var(--serif); font-style:italic; margin-top:1.3rem}
+
+/* ---------- parchemin & pied ---------- */
+.parchemin{border-block:1px solid var(--trait); text-align:center; padding:clamp(3rem,6vw,4.5rem) 0}
+.parchemin p{font-family:var(--serif); font-style:italic; font-weight:300; color:var(--papier);
+  font-size:clamp(1.3rem,1.05rem + 1.1vw,2rem); max-width:24ch; margin-inline:auto; line-height:1.35}
+.parchemin .oeil{margin-top:1.2rem; display:block}
+footer{padding:2.5rem 0 3.5rem; color:var(--texte-faible); font-size:.85rem;
+  display:flex; flex-wrap:wrap; gap:.6rem 1.5rem; justify-content:space-between; align-items:center}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important; transition-duration:.01ms !important}}
+</style>
+
+<div class="ciel">
+  <canvas id="etoiles" aria-hidden="true"></canvas>
+  <div class="large heros">
+    <div>
+      <span class="oeil">Album illustré · dès 4 ans</span>
+      <h1>Roussy <span class="et">&amp;</span> Zéphy</h1>
+      <p class="accroche">Et si ta différence était ta plus grande force ?</p>
+      <p class="pitch">Un petit renard qui ressent tout trop fort. Un zèbre ailé qui prend les mots au pied
+        de la lettre. Seize histoires pour apprivoiser ce qui fait peur — et quatre escales en Bretagne.</p>
+      <div class="actions">
+        <!-- REMPLACER href par le lien Amazon du livre -->
+        <a class="bouton" href="#" data-amazon>Commander sur Amazon</a>
+        <a class="bouton-fin" href="#bonus"><span>Lire l\u2019histoire bonus</span></a>
+      </div>
+    </div>
+    <div class="socle">
+      <div class="couverture">
+        <svg class="triskell" viewBox="0 0 100 100" aria-hidden="true">
+          <g fill="none" stroke="#8A7A5F" stroke-width="4" stroke-linecap="round">
+            <path d="M50 50c0-14 12-22 22-16s6 24-8 26"/>
+            <path d="M50 50c12 7 12 22 2 26s-22-8-18-21"/>
+            <path d="M50 50c-12 7-25-1-25-12s14-19 24-9"/>
+          </g>
+        </svg>
+        <span class="marque">Roussy &amp; Zéphy</span>
+        <span class="tome">Tome 1</span>
+        <span class="attente">La couverture arrive. Le livre, lui, est déjà écrit.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="large">
+  <div class="entete">
+    <span class="oeil">Quelques planches</span>
+    <h2>Chaque histoire tient en quatre images</h2>
+    <p>Roussy nomme ce qui pèse. Zéphy le prend au mot, littéralement. On rit, et le poids se déplace.
+      En bas de chaque planche, une phrase à garder.</p>
+  </div>
+  <div class="planches">
+    <figure class="planche"><img src="{{p10}}" alt="Planche : Fier comme un paon" loading="lazy">
+      <figcaption>Fier comme un paon</figcaption></figure>
+    <figure class="planche"><img src="{{p08}}" alt="Planche : Mon cerveau a oublié le bouton OFF" loading="lazy">
+      <figcaption>Mon cerveau a oublié le bouton OFF</figcaption></figure>
+    <figure class="planche"><img src="{{p11}}" alt="Planche : Se tenir à cœur" loading="lazy">
+      <figcaption>Se tenir à cœur</figcaption></figure>
+    <figure class="planche"><img src="{{p13}}" alt="Planche : Tempête et bigorneaux" loading="lazy">
+      <figcaption>Tempête et bigorneaux</figcaption></figure>
+  </div>
+</section>
+
+<section class="large" id="bonus">
+  <div class="entete">
+    <span class="oeil">Hors du livre</span>
+    <h2>Une histoire qui n'est nulle part ailleurs</h2>
+    <p>Celle-ci n'est pas dans le Tome 1 et ne le sera pas. Elle est ici, en entier,
+      gratuitement, parce qu'une histoire se lit mieux qu'une bande-annonce.</p>
+  </div>
+  <figure class="planche planche-bonus">
+    <img src="{{bonus}}" alt="Histoire bonus : Têtu comme un bourricot, quatre panneaux" loading="lazy">
+    <figcaption>Têtu comme un bourricot — inédit</figcaption>
+  </figure>
+</section>
+
+<section class="jeu" id="jeu">
+  <div class="large">
+    <div class="entete">
+      <span class="oeil">Page 17 · le goûter des menhirs</span>
+      <h2>Trouve les sept différences</h2>
+      <p>Le même goûter, deux fois. Sept choses ont changé, de la plus voyante à la plus retorse.
+        Touche l'endroit où tu crois en voir une.</p>
+    </div>
+    <div class="compteur">
+      <div class="jauge" id="jauge" role="status" aria-live="polite"></div>
+      <span class="score"><b id="score">0</b> sur 7</span>
+      <button class="aide" id="aide" type="button">Un indice</button>
+      <span class="mot" id="mot"></span>
+    </div>
+    <div class="tableau">
+      <div class="vignette" data-cote="A"><div class="cadre"><span class="etiquette">A</span><img src="{{A}}" alt="Le goûter des menhirs, image A"></div></div>
+      <div class="vignette" data-cote="B"><div class="cadre"><span class="etiquette">B</span><img src="{{B}}" alt="Le goûter des menhirs, image B"></div></div>
+    </div>
+    <ol class="liste" id="liste"></ol>
+  </div>
+</section>
+
+<section class="large">
+  <div class="duo">
+    <div>
+      <div class="entete">
+        <span class="oeil">À imprimer</span>
+        <h2>Le livre continue sur la table de la cuisine</h2>
+        <p>Trois pages à sortir de l'imprimante autant de fois qu'il le faut. Le coloriage part sur fond
+          blanc : votre cartouche vous remerciera.</p>
+      </div>
+      <div class="fiches">
+        <a class="fiche" href="/imprimables/roussy-et-zephy_coloriage.pdf"><span class="icone"></span>
+          <span><h3>Le coloriage</h3><p>Roussy et Zéphy au trait · A4</p></span></a>
+        <a class="fiche" href="/imprimables/roussy-et-zephy_dessine-ton-animal.pdf"><span class="icone"></span>
+          <span><h3>Dessine ton animal magique</h3><p>Un cadre vide, et des ailes s'il en veut · A4</p></span></a>
+        <a class="fiche" href="/imprimables/roussy-et-zephy_journal-de-lumiere.pdf"><span class="icone"></span>
+          <span><h3>Mon journal de lumière</h3><p>Trois questions, une page par jour · A4</p></span></a>
+      </div>
+    </div>
+    <div class="lettre">
+      <h3>Le Tome 2 s'écrit</h3>
+      <p>Dix nouvelles expressions prises au pied de la lettre, et deux histoires bretonnes.
+        Laissez votre adresse : vous saurez la date avant tout le monde, et un nouvel imprimable
+        arrive chaque mois.</p>
+      <!-- REMPLACER action par l'URL de votre outil d'e-mailing -->
+      <form class="champ" id="lettre-form" action="" method="post">
+        <label class="oeil" for="courriel" style="position:absolute;left:-9999px">Votre adresse e-mail</label>
+        <input id="courriel" name="email" type="email" required placeholder="votre@adresse.fr" autocomplete="email">
+        <button class="bouton" type="submit">Je m'inscris</button>
+      </form>
+      <p class="merci" id="merci">C'est noté. À très vite, du côté des étoiles.</p>
+      <p class="mention">Une lettre par mois au maximum. Désinscription en un clic.</p>
+    </div>
+  </div>
+</section>
+
+<div class="parchemin">
+  <div class="large">
+    <p>On ne peut pas empêcher les pensées de passer, mais on peut arrêter de leur payer un loyer.</p>
+    <span class="oeil">Page 8 · Mon cerveau a oublié le bouton OFF</span>
+  </div>
+</div>
+
+<footer class="large">
+  <span>Roussy &amp; Zéphy — texte et illustrations Erwann Lefouzèbreizh</span>
+  <span>Tome 1 · album carré 21,6 cm · 24 pages couleur</span>
+</footer>
+
+<script>
+const ZONES = {{ZONES}};
+
+/* ---- champ d'étoiles : la nuit de « Murmure des étoiles », en discret ---- */
+(function(){
+  const c = document.getElementById('etoiles');
+  const ctx = c.getContext('2d');
+  const doux = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let etoiles = [], t = 0, brut = 1;
+  function poser(){
+    brut = Math.min(devicePixelRatio || 1, 2);
+    const p = c.parentElement.getBoundingClientRect();
+    c.width = p.width * brut; c.height = p.height * brut;
+    const n = Math.round(p.width * p.height / 9000);
+    etoiles = Array.from({length: n}, () => ({
+      x: Math.random() * c.width, y: Math.random() * c.height,
+      r: (Math.random() * 1.25 + .35) * brut,
+      a: Math.random() * .55 + .12, v: Math.random() * .9 + .25,
+      d: Math.random() * Math.PI * 2,
+      or: Math.random() < .16
+    }));
+  }
+  function peindre(){
+    ctx.clearRect(0, 0, c.width, c.height);
+    for (const e of etoiles){
+      const s = doux ? 1 : (Math.sin(t * e.v + e.d) * .34 + .66);
+      ctx.globalAlpha = e.a * s;
+      ctx.fillStyle = e.or ? '#E9B65E' : '#DCE6F6';
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, 6.284); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    if (!doux){ t += .012; requestAnimationFrame(peindre); }
+  }
+  poser(); peindre();
+  addEventListener('resize', () => { poser(); if (doux) peindre(); });
+})();
+
+/* ---- le jeu ---- */
+(function(){
+  const trouvees = new Set();
+  const jauge = document.getElementById('jauge');
+  const score = document.getElementById('score');
+  const mot   = document.getElementById('mot');
+  const aide  = document.getElementById('aide');
+  const liste = document.getElementById('liste');
+
+  ZONES.forEach(z => {
+    const p = document.createElement('span');
+    p.className = 'perle'; p.id = 'perle' + z.n; p.textContent = z.n;
+    jauge.appendChild(p);
+    const li = document.createElement('li');
+    li.id = 'item' + z.n;
+    li.innerHTML = '<b>' + z.n + '</b><span>À trouver</span>';
+    liste.appendChild(li);
+  });
+
+  function marquer(z){
+    if (trouvees.has(z.n)) return;
+    trouvees.add(z.n);
+    document.querySelectorAll('.cadre').forEach(cadre => {
+      const rond = document.createElement('i');
+      rond.className = 'trouve';
+      // Un peu plus large que la zone : on entoure la différence, on ne la découpe pas.
+      const marge = 1.6;
+      rond.style.left   = (z.x - marge) + '%';
+      rond.style.top    = (z.y - marge * 0.55) + '%';
+      rond.style.width  = (z.w + marge * 2) + '%';
+      rond.style.height = (z.h + marge * 1.1) + '%';
+      if (cadre.parentElement.dataset.cote === 'B'){
+        const n = document.createElement('span'); n.textContent = z.n; rond.appendChild(n);
+      }
+      cadre.appendChild(rond);
+    });
+    const item = document.getElementById('item' + z.n);
+    item.classList.add('on');
+    item.querySelector('span').textContent = z.t;
+    document.getElementById('perle' + z.n).classList.add('on');
+    score.textContent = trouvees.size;
+    mot.textContent = trouvees.size === ZONES.length
+      ? 'Les sept ! Zéphy est vexé, il pensait que la septième tiendrait plus longtemps.'
+      : z.t;
+    if (trouvees.size === ZONES.length) aide.disabled = true;
+  }
+
+  function rater(v, x, y){
+    const p = document.createElement('i');
+    p.className = 'rate'; p.style.left = x + 'px'; p.style.top = y + 'px';
+    v.appendChild(p); setTimeout(() => p.remove(), 600);
+  }
+
+  document.querySelectorAll('.vignette').forEach(v => {
+    v.addEventListener('click', ev => {
+      const img = v.querySelector('img');
+      const r = img.getBoundingClientRect();
+      const px = (ev.clientX - r.left) / r.width * 100;
+      const py = (ev.clientY - r.top) / r.height * 100;
+      const marge = 2.2; // tolérance : un doigt n'est pas un curseur
+      const z = ZONES.find(z => !trouvees.has(z.n)
+        && px >= z.x - marge && px <= z.x + z.w + marge
+        && py >= z.y - marge && py <= z.y + z.h + marge);
+      if (z) marquer(z);
+      else { rater(v.querySelector('.cadre'),
+                   ev.clientX - r.left, ev.clientY - r.top);
+             mot.textContent = 'Pas ici. Regarde encore.'; }
+    });
+  });
+
+  aide.addEventListener('click', () => {
+    const z = ZONES.find(z => !trouvees.has(z.n));
+    if (z) mot.textContent = 'Cherche ' + z.ou + '.';
+  });
+})();
+
+/* ---- inscription ---- */
+document.getElementById('lettre-form').addEventListener('submit', e => {
+  if (!e.target.getAttribute('action')){
+    e.preventDefault();
+    e.target.style.display = 'none';
+    document.getElementById('merci').style.display = 'block';
+  }
+});
+</script>
