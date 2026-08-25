@@ -1,0 +1,228 @@
+# Les nombres qui décident.
+#
+# Deux étages, et l'ordre compte :
+#
+# 1. `filtres` — des éliminations franches. Un candidat qui n'y survit pas n'est
+#    pas noté du tout. C'est ce qui permet de faire tourner l'étage suivant sur
+#    cent jetons au lieu de mille, et donc de ne dépenser les appels réseau
+#    coûteux (sécurité, portefeuilles) que sur ce qui reste.
+#
+# 2. `convergence` — la note. Chaque critère est un **trapèze** et non un seuil,
+#    parce qu'un seuil est binaire et que tout manipulateur se place juste
+#    au-dessus, et parce qu'une note linéaire récompense l'extrême — or
+#    l'extrême, sur un jeton de 500 000 $, est presque toujours artificiel. Un
+#    trapèze dit l'inverse : il existe une zone saine, et **les deux** côtés de
+#    cette zone sont suspects. Un volume horaire à 400 % de la capitalisation
+#    n'est pas huit fois meilleur qu'à 50 % : c'est un sommet en train de se
+#    faire, pas une accumulation.
+#
+# Un trapèze s'écrit [entree, plateau_bas, plateau_haut, sortie] :
+#
+#   0 ────╱▔▔▔▔▔▔▔▔▔╲──── 0
+#         e  pb   ph  s
+#
+#   x ≤ e ou x ≥ s  → 0        (hors sujet, ou trop beau pour être vrai)
+#   pb ≤ x ≤ ph     → 1        (la zone qu'on cherche)
+#   entre les deux  → montée ou descente linéaire
+
+# ---------------------------------------------------------------------------
+# Étage 1 : éliminations
+# ---------------------------------------------------------------------------
+filtres:
+  # La liquidité plancher est définie par chaîne dans `chaines.yaml` : 80 000 $
+  # sur Ethereum n'a pas le même sens que 80 000 $ sur Solana.
+
+  # Bande de capitalisation. Sous 100 000 $, l'écart entre cours d'achat et de
+  # vente mange le gain avant qu'il n'existe. Au-dessus de 30 M$, le public est
+  # déjà là — ce n'est plus l'objet de cet outil.
+  market_cap_min_usd: 100000
+  market_cap_max_usd: 30000000
+
+  # Âge de la paire. Sous six heures, les ratios de la forme « volume 1 h sur
+  # volume 24 h » explosent par construction : le dénominateur n'existe pas
+  # encore. Tout jeton de deux heures obtiendrait la note maximale, et c'est
+  # exactement la fenêtre où l'on se fait retirer la liquidité sous les pieds.
+  age_min_heures: 6
+  # Passé six mois sans avoir dépassé 30 M$, ce n'est plus une pépite en
+  # sommeil, c'est un jeton mort qu'un robot réanime le temps d'une sortie.
+  age_max_jours: 180
+
+  # Sous ce niveau d'activité, aucun ratio n'a de sens statistique : trois
+  # transactions suffisent à fabriquer n'importe quelle accélération.
+  transactions_min_24h: 300
+  transactions_min_1h: 15
+
+  # Profondeur relative : liquidité rapportée à la capitalisation. Sous 2 %,
+  # une vente de 10 000 $ effondre le cours de moitié. La « capitalisation »
+  # affichée est alors une fiction.
+  profondeur_min: 0.02
+
+  # Capitalisation totalement diluée sur capitalisation circulante. Au-delà de
+  # 3, l'essentiel de l'offre est encore verrouillé quelque part et attend son
+  # déblocage — la hausse qu'on détecterait servirait de sortie à quelqu'un.
+  fdv_sur_mcap_max: 3.0
+
+  # Un cours déjà multiplié n'est plus une pré-hausse. Ces deux bornes ne
+  # notent pas : elles éliminent, parce qu'un candidat à +300 % en une heure
+  # n'a plus rien à offrir que le risque de racheter le sommet.
+  variation_1h_max_pct: 150
+  variation_24h_max_pct: 400
+
+# ---------------------------------------------------------------------------
+# Étage 2 : la note de convergence, sur 100
+# ---------------------------------------------------------------------------
+convergence:
+  criteres:
+
+    acceleration:
+      poids: 22
+      # (volume 1 h × 24) / volume 24 h. Vaut 1 quand l'heure écoulée ressemble
+      # à toutes les autres, 3 quand elle en fait trois fois plus. C'est le
+      # signal central : le volume bouge avant le cours, toujours.
+      # Au-delà de 40, ce n'est plus une accumulation discrète, c'est une
+      # bougie que tout le monde regarde déjà.
+      trapeze: [1.5, 3.0, 12.0, 40.0]
+
+    pression:
+      poids: 18
+      # volume 1 h / capitalisation. Ici je m'écarte de la règle courante
+      # « volume 1 h > 50 % de la capitalisation » : à ce niveau, la hausse
+      # n'est pas à venir, elle est en cours et l'on arrive en dernier. La zone
+      # d'accumulation d'un micro-cap se situe entre 5 % et 25 %.
+      trapeze: [0.02, 0.05, 0.25, 0.60]
+
+    discretion:
+      poids: 16
+      # Variation du cours sur 1 h, en pourcentage. Le cœur de la thèse : on
+      # veut du volume **sans** cours. Un jeton qui absorbe trois fois son
+      # volume habituel en ne montant que de 6 % a quelqu'un qui accumule en
+      # face ; à +45 %, la nouvelle est déjà publique.
+      # Le trapèze démarre légèrement sous zéro : une accumulation se fait
+      # souvent sur un repli.
+      trapeze: [-12.0, -2.0, 12.0, 35.0]
+
+    rotation:
+      poids: 12
+      # volume 24 h / liquidité. Mesure combien de fois le pool tourne dans la
+      # journée. Sous 0,3 le jeton dort ; au-delà de 20 le pool ne peut pas
+      # avoir absorbé ça honnêtement : c'est du volume fabriqué.
+      trapeze: [0.3, 1.0, 6.0, 20.0]
+
+    desequilibre:
+      poids: 10
+      # achats / (achats + ventes) sur 1 h. On veut une majorité d'acheteurs,
+      # pas l'unanimité : au-delà de 0,85 on ne regarde plus un marché mais
+      # soit un robot, soit — et c'est le cas dangereux — un jeton où les
+      # ventes échouent. Le drapeau `honeypot_ratio_achats` ci-dessous en fait
+      # une élimination.
+      trapeze: [0.45, 0.55, 0.72, 0.88]
+
+    profondeur:
+      poids: 8
+      # liquidité / capitalisation. Au-dessus de 5 %, le cours tient sous une
+      # vente réelle. Très au-dessus de 35 %, le pool pèse presque autant que
+      # le jeton : c'est fréquent sur un lancement honnête, mais ça veut aussi
+      # dire qu'il n'y a presque rien à faire monter.
+      trapeze: [0.02, 0.05, 0.35, 0.90]
+
+    taille_moyenne:
+      poids: 7
+      # volume 1 h / nombre de transactions 1 h, en dollars. Un ticket moyen à
+      # 8 $ sur 2 000 transactions, c'est un robot de volume qui se paie une
+      # place dans les classements. Un ticket moyen à 20 000 $ sur onze
+      # transactions, c'est une seule baleine, et le jour où elle sort il n'y a
+      # personne en face.
+      trapeze: [30.0, 120.0, 3000.0, 15000.0]
+
+    age:
+      poids: 7
+      # En heures. La zone utile va de trois jours à six semaines : assez vieux
+      # pour que le retrait de liquidité opportuniste ait déjà eu lieu, assez
+      # jeune pour que personne n'en parle encore.
+      trapeze: [6.0, 72.0, 1080.0, 4320.0]
+
+  # Drapeaux : pas des notes, des éliminations. Chacun décrit une signature de
+  # manipulation qu'aucun trapèze ne peut attraper, parce qu'elle porte sur la
+  # forme des données et non sur leur niveau.
+  drapeaux:
+    # Presque que des achats, et presque aucune vente en valeur absolue : la
+    # signature d'un jeton qu'on ne peut pas revendre. Le bouclier le
+    # confirmera, mais autant ne pas dépenser l'appel.
+    honeypot_ratio_achats: 0.92
+    honeypot_ventes_max: 5
+
+    # Achats et ventes à moins de 3 % l'un de l'autre, avec une rotation
+    # anormale : c'est un aller-retour sur soi-même. Un marché réel n'est
+    # jamais aussi symétrique.
+    lavage_symetrie_max: 0.03
+    lavage_rotation_min: 8.0
+
+  # La persistance. Un pic isolé sur un relevé est du bruit ; le même signal
+  # deux relevés de suite est un mouvement. C'est le filtre anti-faux-signal le
+  # plus efficace de tout l'outil, et il ne coûte pas un seul appel réseau — il
+  # coûte une base SQLite et un peu de patience.
+  persistance:
+    releves_requis: 2
+    ecart_min_minutes: 10
+    # Si la liquidité recule pendant que le volume accélère, ce n'est pas une
+    # accumulation : c'est une distribution, quelqu'un vide le pool dans
+    # l'enthousiasme. Non calculable au tout premier relevé — neutre alors.
+    chute_liquidite_max_pct: -8.0
+
+# ---------------------------------------------------------------------------
+# Étage 3 : sécurité et smart money, appliqués après la note
+# ---------------------------------------------------------------------------
+bouclier:
+  # Note de convergence minimale pour qu'un candidat mérite qu'on dépense des
+  # appels de sécurité sur lui. GoPlus répond ~30 fois par minute sans clé :
+  # on ne peut pas interroger mille jetons, et on n'a pas à le faire.
+  note_minimale_pour_analyser: 55
+  candidats_max_par_scan: 25
+
+  # Éliminations nettes : aucune note ne les rachète.
+  rejets:
+    honeypot: true                  # la revente échoue en simulation
+    taxe_achat_max_pct: 10
+    taxe_vente_max_pct: 10
+    # Une autorité d'émission encore active sur Solana, c'est le droit de
+    # fabriquer autant de jetons qu'on veut. Idem pour le gel des comptes.
+    mint_actif: true
+    gel_actif: true
+    # Une liquidité ni brûlée ni verrouillée peut être retirée en un bloc.
+    lp_verrouillee_min_pct: 50
+    # Dix portefeuilles qui tiennent plus de la moitié de l'offre décident
+    # seuls du cours. Les pools et les contrats de verrouillage connus sont
+    # exclus du calcul, sans quoi tout jeton honnête serait rejeté.
+    top10_detenteurs_max_pct: 50
+    contrat_non_verifie: false      # avertissement, pas rejet : fréquent sur les lancements récents
+
+  # Ce qui ne tue pas mais coûte des points : la note finale est multipliée par
+  # un facteur de sécurité entre 0 et 1.
+  penalites:
+    proprietaire_non_renonce: 0.85
+    contrat_non_verifie: 0.90
+    emission_possible: 0.80
+    metadonnees_modifiables: 0.90   # Solana : nom et image changeables après coup
+    echange_en_pause_possible: 0.70
+
+smart_money:
+  # Nombre de premiers acheteurs remontés par jeton. Au-delà, on paie des
+  # appels pour des portefeuilles qui n'ont pas de valeur de signal.
+  premiers_acheteurs: 40
+  # Un portefeuille n'est « intelligent » qu'après avoir été précoce sur
+  # plusieurs jetons qui ont ensuite performé. Sous ce seuil, c'est une
+  # coïncidence.
+  apparitions_min: 3
+  # Bonus ajouté à la note finale, plafonné : le suivi de portefeuilles est un
+  # indice, jamais une thèse. Deux adresses réputées peuvent se tromper
+  # ensemble, et c'est même le mécanisme de la plupart des sorties organisées.
+  bonus_max: 15
+
+alertes:
+  note_minimale: 70
+  # Ne pas ré-alerter sur le même jeton avant ce délai, sauf si la note a
+  # nettement progressé. Un radar qui prévient trois fois par heure du même
+  # jeton finit en sourdine, et c'est ce jour-là qu'il a raison.
+  silence_heures: 12
+  progression_pour_relancer: 12
+  max_par_scan: 5
