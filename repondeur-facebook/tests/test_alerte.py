@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Ce que le courriel de fin doit dire.
+"""Ce que la notification doit dire, et surtout ce qu'elle ne doit pas dire.
 
 Rien n'est envoyé : seule la mise en forme du bilan est vérifiable hors réseau,
-et c'est elle qui décide si le message sera ouvert ou pas.
+et c'est elle qui décide si la notification sera ouverte — ou si elle exposera
+quelque chose sur un écran de verrouillage.
 """
 
 import sys
@@ -10,32 +11,55 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core.alerte import rediger_bilan  # noqa: E402
+from core.alerte import Sonnette, rediger_bilan  # noqa: E402
 
 
 class TestBilan(unittest.TestCase):
-    def test_le_sujet_porte_le_nombre_de_commentaires_a_reprendre(self):
-        # C'est le chiffre qui décide s'il faut ouvrir le message.
-        sujet, _ = rediger_bilan([('Marie', 'Merci !')], [('Luc', 'un deuil')], [], True)
-        self.assertIn('1 répondu,', sujet)
-        self.assertIn('1 pour toi', sujet)
+    def test_le_titre_porte_ce_qui_attend_une_reponse(self):
+        # C'est le seul chiffre qui décide si on ouvre la notification.
+        titre, _, _ = rediger_bilan([('Marie', 'Merci !')], [('Luc', 'un deuil')], [], True)
+        self.assertIn('1 commentaire t’attend', titre)
 
-    def test_ce_qui_revient_a_l_humain_est_en_tete(self):
-        _, corps = rediger_bilan([('Marie', 'Merci !')], [('Luc', 'un deuil')], [], True)
-        self.assertLess(corps.index('Luc'), corps.index('Marie'))
+    def test_sans_rien_pour_toi_le_titre_le_dit(self):
+        titre, _, prioritaire = rediger_bilan([('Marie', 'Merci !')], [], [], True)
+        self.assertIn('Rien pour toi', titre)
+        self.assertFalse(prioritaire)
 
-    def test_la_simulation_se_dit_dans_le_sujet(self):
-        sujet, corps = rediger_bilan([('Marie', 'Merci !')], [], [], False)
-        self.assertIn('[simulation]', sujet)
-        self.assertIn('simulation', corps)
+    def test_ce_qui_t_attend_passe_en_priorite_haute(self):
+        # La priorité haute perce le mode silencieux : elle est réservée à ça,
+        # sinon elle ne veut plus rien dire.
+        _, _, prioritaire = rediger_bilan([], [('Luc', 'un deuil')], [], True)
+        self.assertTrue(prioritaire)
 
-    def test_un_echec_est_rapporte_avec_son_motif(self):
-        _, corps = rediger_bilan([], [], [('Marie', 'envoi : jeton expiré')], True)
-        self.assertIn('jeton expiré', corps)
+    def test_la_raison_ne_sort_jamais_dans_la_notification(self):
+        # Une notification s'affiche sur un écran verrouillé, dans le métro.
+        # Le prénom suffit à savoir qu'il y a à faire ; le reste attend l'écran.
+        titre, corps, _ = rediger_bilan([], [('Luc', 'sa mère est décédée')], [], True)
+        self.assertIn('Luc', corps)
+        self.assertNotIn('décédée', corps + titre)
 
-    def test_une_execution_sans_rien_a_faire_le_dit(self):
-        _, corps = rediger_bilan([], [], [], True)
-        self.assertIn('Aucun nouveau commentaire', corps)
+    def test_le_texte_des_reponses_ne_sort_pas_non_plus(self):
+        _, corps, _ = rediger_bilan([('Marie', 'Merci Marie, ça me touche !')], [], [], True)
+        self.assertNotIn('ça me touche', corps)
+        self.assertIn('1 réponse publiée', corps)
+
+    def test_la_simulation_se_dit(self):
+        titre, corps, _ = rediger_bilan([('Marie', 'Merci !')], [], [], False)
+        self.assertIn('simulation', titre)
+        self.assertIn('rien n’a été envoyé', corps)
+
+    def test_un_echec_renvoie_au_journal(self):
+        _, corps, _ = rediger_bilan([], [], [('Marie', 'jeton expiré')], True)
+        self.assertIn('1 échec', corps)
+
+
+class TestSonnette(unittest.TestCase):
+    def test_sans_sujet_configure_il_n_y_a_pas_de_sonnette(self):
+        # L'alerte est facultative : le script doit tourner sans.
+        self.assertIsNone(Sonnette.depuis_environnement())
+
+    def test_le_serveur_par_defaut_est_le_service_public(self):
+        self.assertEqual(Sonnette(sujet='x').serveur, 'https://ntfy.sh')
 
 
 if __name__ == '__main__':

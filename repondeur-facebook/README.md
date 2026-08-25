@@ -20,16 +20,16 @@ python3 repondeur.py --publier     # publie pour de vrai
 3. Pour chaque commentaire restant, du plus ancien au plus récent, elle demande
    au modèle **soit** une réponse, **soit** de le laisser de côté.
 4. Elle publie les réponses, met un « j'aime », et s'arrête au bout de cinq.
-5. Elle t'envoie un courriel : d'abord ce qui t'attend, ensuite ce qui a été
-   répondu.
+5. Elle fait vibrer ton téléphone : d'abord ce qui t'attend, ensuite ce qui a
+   été fait.
 
 ## Les commentaires touchants te reviennent
 
 C'est le cœur du dispositif. Un deuil, une maladie, une confidence, un
 remerciement très personnel, une attaque à modérer, une question dont la
 réponse dépend de ce que tu es seul à savoir : le modèle ne répond pas. Il
-inscrit le commentaire dans la liste « À toi de répondre » du courriel, avec
-une ligne qui dit pourquoi, et passe au suivant.
+inscrit le commentaire dans la liste « À toi de répondre », avec une ligne qui
+dit pourquoi, et passe au suivant.
 
 La consigne est explicite : **dans le doute, il laisse.** Une réponse tiède
 sous un message bouleversant fait plus de mal que pas de réponse du tout ;
@@ -82,24 +82,32 @@ Trois secondes séparent deux publications : une rafale se voit, et se signale.
 - L'API masque parfois le nom de l'auteur, faute de permission : la réponse est
   alors écrite sans prénom, et le script continue.
 
-## L'alerte de fin
+## La notification de fin
 
-Un courriel, envoyé par `smtplib` — pas de dépendance pour dix lignes. Le sujet
-porte le seul chiffre qui décide s'il faut ouvrir le message : combien de
-commentaires t'attendent.
+Une notification **ntfy** : application gratuite, pas de compte, pas de
+forfait. Elle sert parce qu'une exécution prend plusieurs minutes — le temps
+des pauses entre deux actions — et qu'on passe à autre chose entre-temps.
 
-Le port choisit le chiffrement : 465 ouvre une session déjà chiffrée, 587
-démarre en clair et bascule par STARTTLS. Avec Gmail, il faut un « mot de passe
-d'application » ; le mot de passe du compte est refusé.
+```bash
+python3 essai_ntfy.py    # à lancer en premier : ça doit faire vibrer le téléphone
+```
 
-Une exécution qui n'a rien trouvé n'envoie rien. Le script est fait pour
-tourner régulièrement, et la plupart de ses passages ne verront rien de neuf :
-un courriel « rien à signaler » trois fois par jour finit par se classer sans
-être lu — et celui du jour où un commentaire t'attend avec lui.
+Le titre porte le seul chiffre qui décide si on ouvre : combien de commentaires
+attendent une réponse écrite à la main. Priorité haute dans ce cas-là
+seulement — une notification qui perce le silence trois fois par jour pour rien
+ne perce bientôt plus rien.
 
-Sans `ALERTE_SMTP_HOTE` ou sans `ALERTE_DESTINATAIRE`, aucun courriel n'est
-envoyé et le reste fonctionne. Une alerte qui échoue n'interrompt jamais
-l'exécution : les réponses sont publiées, c'est le travail.
+**Le nom du sujet est le mot de passe.** Qui le connaît reçoit tes
+notifications : `amorce-erwann` se devine, `amorce-6zpx1g89it9ryl` non.
+
+**Rien de sensible n'y figure.** Une notification s'affiche sur un écran
+verrouillé, dans le métro, à côté de quelqu'un : elle donne des prénoms et des
+nombres. Le texte des commentaires et la raison de chaque mise de côté restent
+à l'écran du script et dans le journal.
+
+Une exécution qui n'a rien trouvé n'envoie rien, et sans `NTFY_SUJET` le reste
+fonctionne. Une alerte qui échoue n'interrompt jamais l'exécution : les
+réponses sont publiées, c'est le travail.
 
 ## Vérifier
 

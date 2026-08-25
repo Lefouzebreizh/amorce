@@ -29,10 +29,11 @@ import time
 from pathlib import Path
 
 import anthropic
+import requests
 from dotenv import load_dotenv
 
 from core import redaction
-from core.alerte import Facteur, rediger_bilan
+from core.alerte import Sonnette, rediger_bilan
 from core.facebook import ErreurGraph, Graph
 from core.journal import Journal, retenir
 
@@ -138,22 +139,22 @@ def main() -> int:
 
 
 def prevenir(publiees, laissees, echecs, publie: bool) -> None:
-    """Le courriel de fin — sauf quand il n'y avait rien à faire.
+    """La notification de fin — sauf quand il n'y avait rien à faire.
 
     Le script est fait pour tourner régulièrement, et la plupart de ses
-    exécutions ne trouveront rien de neuf : un courriel « rien à signaler »
-    plusieurs fois par jour finit par se classer sans être lu, celui du jour où
-    un commentaire attend une réponse avec.
+    exécutions ne trouveront rien de neuf : une notification « rien à
+    signaler » plusieurs fois par jour finit par se balayer sans être lue,
+    celle du jour où un commentaire attend une réponse avec.
     """
-    facteur = Facteur.depuis_environnement()
-    if facteur is None or not (publiees or laissees or echecs):
+    sonnette = Sonnette.depuis_environnement()
+    if sonnette is None or not (publiees or laissees or echecs):
         return
-    sujet, corps = rediger_bilan(publiees, laissees, echecs, publie)
+    titre, corps, prioritaire = rediger_bilan(publiees, laissees, echecs, publie)
     try:
-        facteur.envoyer(sujet, corps)
-        print(f'\n📧 Bilan envoyé à {facteur.destinataire}.')
-    except OSError as erreur:
-        print(f'\n⚠️  Bilan non envoyé : {erreur}')
+        sonnette.envoyer(titre, corps, prioritaire)
+        print(f'\n🔔 Notification envoyée ({titre}).')
+    except (requests.RequestException, OSError) as erreur:
+        print(f'\n⚠️  Notification non envoyée : {erreur}')
 
 
 if __name__ == '__main__':
