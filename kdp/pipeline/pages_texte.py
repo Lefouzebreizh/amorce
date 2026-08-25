@@ -176,6 +176,6 @@ if __name__ == "__main__":
     a.add_argument("--bordure", required=True, help="planche dont on reprend le cadre")
     a.add_argument("--vers", required=True)
     a.add_argument("--annee", type=int, default=2026)
-    a.add_argument("--pages", type=int, default=24)
+    a.add_argument("--pages", type=int, default=30)
     args = a.parse_args()
     fabriquer(Path(args.bordure), Path(args.vers), args.annee, args.pages)

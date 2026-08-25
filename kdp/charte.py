@@ -111,31 +111,43 @@ class Page:
 # couverture. La casse suit la charte — minuscules sauf initiale et noms
 # propres — et non la capitalisation à l'anglaise des rushes actuels.
 TOME_1: tuple[Page, ...] = (
-    Page(1,  "FaireLeSinge",                    "Faire le singe",                       "histoire"),
-    Page(2,  "FaimDeLoup",                      "Avoir une faim de loup",               "histoire"),
-    Page(3,  "TempsDeChien",                    "Un temps de chien",                    "histoire"),
-    Page(4,  "ChatDansLaGorge",                 "Avoir un chat dans la gorge",          "histoire"),
-    Page(5,  "DonnerSaLangueAuChat",            "Donner sa langue au chat",             "histoire"),
-    Page(6,  "LaTeteDansLesNuages",             "La tête dans les nuages",              "histoire"),
-    Page(7,  "LAraigneeAuPlafond",              "L'araignée au plafond",                "histoire"),
-    Page(8,  "MonCerveauAOublieLeBoutonOff",    "Mon cerveau a oublié le bouton OFF",   "histoire"),
-    Page(9,  "LaFlammeQuiSeteint",              "La flamme qui s'éteint",               "histoire"),
-    Page(10, "FierCommeUnPaon",                 "Fier comme un paon",                   "histoire"),
-    Page(11, "SeTenirACoeur",                   "Se tenir à cœur",                      "histoire"),
-    Page(12, "LeSecretDeLHermine",              "Le secret de l'hermine",               "histoire"),
+    # Pages de garde : on entre dans le monde avant d'entrer dans les histoires.
+    Page(1,  "CeLivreAppartientA",             "Ce livre appartient à",                "garde"),
+    Page(2,  "CarteDeLIleBretonne",            "Carte de l'île bretonne",              "garde"),
+    Page(3,  "QuiEstQui",                      "Qui est qui ?",                        "garde"),
+    # Douze aventures d'émotions — les onze premières, plus « Le murmure des
+    # étoiles » qui ferme la série. C'est ce compte-là qu'annonce la quatrième.
+    Page(4,  "FaireLeSinge",                   "Faire le singe",                       "histoire"),
+    Page(5,  "FaimDeLoup",                     "Avoir une faim de loup",               "histoire"),
+    Page(6,  "TempsDeChien",                   "Un temps de chien",                    "histoire"),
+    Page(7,  "ChatDansLaGorge",                "Avoir un chat dans la gorge",          "histoire"),
+    Page(8,  "DonnerSaLangueAuChat",           "Donner sa langue au chat",             "histoire"),
+    Page(9,  "LaTeteDansLesNuages",            "La tête dans les nuages",              "histoire"),
+    Page(10, "LAraigneeAuPlafond",             "L'araignée au plafond",                "histoire"),
+    Page(11, "MonCerveauAOublieLeBoutonOff",   "Mon cerveau a oublié le bouton OFF",   "histoire"),
+    Page(12, "LaFlammeQuiSeteint",             "La flamme qui s'éteint",               "histoire"),
+    Page(13, "FierCommeUnPaon",                "Fier comme un paon",                   "histoire"),
+    Page(14, "SeTenirACoeur",                  "Se tenir à cœur",                      "histoire"),
+    # Quatre escales bretonnes.
+    Page(15, "LeSecretDeLHermine",             "Le secret de l'hermine",               "histoire"),
     # Titre au singulier, comme la planche ; le slug reste au pluriel parce que
     # c'est un identifiant de fichier fixé par la charte de nommage, pas un titre.
-    Page(13, "TempetesEtBigorneaux",            "Tempête et bigorneaux",                "histoire"),
-    Page(14, "LeSecretDesVaguesDYs",            "Le secret des vagues d'Ys",            "histoire"),
-    # « Fest Noz » gardé tel que la planche l'écrit, comme « OFF » en page 8 :
+    Page(16, "TempetesEtBigorneaux",           "Tempête et bigorneaux",                "histoire"),
+    Page(17, "LeSecretDesVaguesDYs",           "Le secret des vagues d'Ys",            "histoire"),
+    # « Fest Noz » gardé tel que la planche l'écrit, comme « OFF » en page 11 :
     # traité en nom propre, il échappe à la mise en minuscules des titres.
-    Page(15, "LaMagieDuFestNoz",                "La magie du Fest Noz",                 "histoire"),
-    Page(16, "LeMurmureDesEtoiles",             "Le murmure des étoiles",               "histoire"),
-    Page(17, "LeGouterDesMenhirs",              "Le goûter des menhirs",                "atelier"),
-    Page(18, "DessineTonAnimal",                "Dessine ton propre animal magique",    "atelier"),
-    Page(19, "Coloriage",                       "Coloriage",                            "atelier"),
-    Page(20, "MonJournalDeLumiere",             "Mon journal de lumière",               "atelier"),
-    Page(21, "MonHistoire",                     "Mon histoire",                         "auteur"),
+    Page(18, "LaMagieDuFestNoz",               "La magie du Fest Noz",                 "histoire"),
+    Page(19, "LeMurmureDesEtoiles",            "Le murmure des étoiles",               "histoire"),
+    # Ateliers.
+    Page(20, "LeGouterDesMenhirs",             "Le goûter des menhirs",                "atelier"),
+    Page(21, "LaMeteoDeMonCoeur",              "La météo de mon cœur",                 "atelier"),
+    Page(22, "DessineTonAnimal",               "Dessine ton propre animal magique",    "atelier"),
+    Page(23, "Coloriage",                      "Coloriage",                            "atelier"),
+    Page(24, "MonJournalDeLumiere",            "Mon journal de lumière",               "atelier"),
+    # Clôture : on récompense, on chante, puis l'auteur parle.
+    Page(25, "LeDiplomeDuPetitPhenix",         "Le diplôme du Petit Phénix",           "final"),
+    Page(26, "LHymne",                         "L'hymne de Roussy & Zéphy",            "final"),
+    Page(27, "MonHistoire",                    "Mon histoire",                         "auteur"),
 )
 
 # --- Ordre du Tome 2 ---------------------------------------------------------

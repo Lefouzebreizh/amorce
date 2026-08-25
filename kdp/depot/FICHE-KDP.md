@@ -71,7 +71,9 @@ ressentir : on apprend à vivre avec ce qu'on ressent.<br><br>
 <b>Dans ce livre :</b><br>
 • Douze aventures pour apprivoiser la peur, la colère, la tristesse et la honte<br>
 • Quatre escales en Bretagne — la tempête, les vagues d'Ys, le fest-noz, l'hermine<br>
-• Un jeu des sept différences, un coloriage et deux pages à remplir<br>
+• La carte de l'île, et la galerie des personnages<br>
+• Un jeu des sept différences, un coloriage, la météo du cœur et deux pages à remplir<br>
+• Un diplôme du Petit Phénix, à décerner<br>
 • Une phrase à garder au bas de chaque histoire<br><br>
 
 <i>« On ne peut pas empêcher les pensées de passer, mais on peut arrêter de leur
