@@ -56,3 +56,6 @@ patrimoine/config.json
 # Life-Organizer : état local et configuration de travail
 /life-organizer/donnees/
 /life-organizer/config.json
+
+# Worktrees temporaires des agents (outillage, jamais du contenu de projet)
+/.claude/worktrees/
