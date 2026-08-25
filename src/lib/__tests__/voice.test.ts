@@ -152,3 +152,25 @@ test('le fond se baisse avant le premier mot et remonte après le dernier', () =
   assert.ok(Math.abs(duckTarget(segments, 4.1, 0.7) - 0.3) < 1e-6);
   assert.equal(duckTarget(segments, 5, 0.7), 1);
 });
+
+test('un reste trop court est rendu au sous-titre voisin', () => {
+  const segments = speechSegments(envelopeWith(4, [[0.4, 1.6], [2.4, 3.6]]));
+  const words = alignWords('alerte le secteur zero neuf s effondre le titan d ombre s eveille', segments);
+  const blocks = groupIntoBlocks(words);
+
+  for (const block of blocks) {
+    const span = block[block.length - 1].end - block[0].start;
+    assert.ok(span >= 0.35, `« ${block.map((w) => w.text).join(' ')} » ne dure que ${span.toFixed(2)} s`);
+  }
+});
+
+test('le recollage ne franchit jamais un silence', () => {
+  const segments = speechSegments(envelopeWith(6, [[0.4, 2.4], [4.5, 4.75]]));
+  const blocks = groupIntoBlocks(alignWords('un deux trois quatre cinq six', segments));
+
+  // Un bloc reste court s'il est seul dans son passage : le recoller au
+  // précédent le ferait s'afficher pendant le blanc qui les sépare.
+  for (const block of blocks) {
+    assert.equal(new Set(block.map((w) => w.segment)).size, 1);
+  }
+});

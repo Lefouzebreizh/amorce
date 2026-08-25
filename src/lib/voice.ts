@@ -276,6 +276,15 @@ export type BlockOptions = {
 export const DEFAULT_BLOCK_OPTIONS: BlockOptions = { maxWords: 5, maxChars: 32 };
 
 /**
+ * Durée en deçà de laquelle un sous-titre ne se lit pas.
+ *
+ * Un découpage à la largeur laisse régulièrement un reste — un dernier mot,
+ * parfois une élision d'une seule lettre — qui hérite de deux dixièmes de
+ * seconde. À l'écran ce n'est pas un sous-titre, c'est un clignotement.
+ */
+const MIN_BLOCK = 0.35;
+
+/**
  * Regroupe les mots calés en sous-titres affichables.
  *
  * Une coupure est forcée à chaque silence : un sous-titre à cheval sur deux
@@ -301,6 +310,32 @@ export function groupIntoBlocks(words: TimedWord[], options: Partial<BlockOption
   }
 
   if (current.length > 0) blocks.push(current);
+
+  /*
+   * Recollage des restes.
+   *
+   * On rend le bloc trop court à son voisin, de préférence au précédent — c'est
+   * lui qui porte le début de la phrase. Jamais par-dessus un silence : mieux
+   * vaut un sous-titre bref qu'un sous-titre qui reste affiché pendant un blanc.
+   * On dépasse au besoin la largeur visée, un sous-titre un peu long valant
+   * toujours mieux qu'un sous-titre illisible.
+   */
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const block = blocks[i];
+    if (block[block.length - 1].end - block[0].start >= MIN_BLOCK) continue;
+
+    const previous = blocks[i - 1];
+    const next = blocks[i + 1];
+
+    if (previous && previous[0].segment === block[0].segment) {
+      previous.push(...block);
+      blocks.splice(i, 1);
+    } else if (next && next[0].segment === block[0].segment) {
+      next.unshift(...block);
+      blocks.splice(i, 1);
+    }
+  }
+
   return blocks;
 }
 
