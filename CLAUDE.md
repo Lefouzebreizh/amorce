@@ -174,11 +174,12 @@ la tête de lecture se retrouve au-delà de la fin.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **cinq projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **six projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
-Streamlit dans `mon-app-audio/` et l'assistant d'allocation d'actifs dans
-`patrimoine/` (qui ont chacun leur propre `README.md`). L'outillage ci-dessous
+Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
+`patrimoine/` et l'assistant de rangement Life-Organizer dans `life-organizer/`
+(qui ont chacun leur propre `README.md`). L'outillage ci-dessous
 existe parce que rien de générique ne connaît cette particularité.
 
 | Élément | Ce qu'il fait |
