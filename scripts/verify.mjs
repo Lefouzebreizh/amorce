@@ -285,6 +285,42 @@ const score = Number(scoreLabel?.match(/(\d+)\s+sur\s+100/)?.[1]);
 check('Une note de viralité est calculée', score > 0, `note ${score}/100`);
 await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
 
+/*
+ * Poser les réglages recommandés, et vérifier que la note bouge.
+ *
+ * C'est la seule preuve que la chaîne complète fonctionne : le bouton écrit
+ * dans le projet, l'analyse relit ce projet, et le chiffre affiché en découle.
+ * Un test unitaire vérifierait le calcul, pas le fait que l'appui aboutisse.
+ */
+{
+  const lireNote = async () => {
+    const label = await page.locator('header [role="status"]').getAttribute('aria-label');
+    return Number(label?.match(/(\d+)\s+sur\s+100/)?.[1]);
+  };
+
+  await page.click('nav[aria-label="Étapes du montage"] button:has-text("Analyser")');
+  await page.waitForTimeout(500);
+  const avant = await lireNote();
+
+  const poser = page.getByRole('button', { name: /Poser les réglages/ });
+  check('Le bouton de réglages recommandés est offert', await poser.isVisible());
+  await poser.scrollIntoViewIfNeeded();
+  await poser.click();
+  await page.waitForTimeout(900);
+
+  const apres = await lireNote();
+  check(
+    'Poser les réglages recommandés fait monter la note',
+    apres > avant,
+    `${avant} → ${apres} sur 100`,
+  );
+
+  // On rend le montage à son état d'origine : la suite du parcours mesure le
+  // résultat du montage express, pas celui du bouton.
+  await page.locator('button:has-text("Annuler")').first().click();
+  await page.waitForTimeout(600);
+}
+
 if (profile.mobile) {
   /*
    * Panneau ouvert : c'est la configuration où la hauteur manque, et donc celle

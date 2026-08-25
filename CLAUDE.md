@@ -54,6 +54,7 @@ scripts/          make-fixtures.mjs, verify.mjs (Playwright, hors bundle)
 | `analysis.ts` | Note de viralité sur 100 : hook 30, rythme 20, tension 20, sous-titres 15, son 10, format 5. |
 | `guide.ts` | Une seule consigne à la fois, ordonnée par ce qui bloque le plus. |
 | `autoEdit.ts` | Montage express : un projet complet à partir des seuls rushes. |
+| `autoFinish.ts` | Réglages recommandés posés sur un montage **existant** : trames de textes, bruitages, découpe. Ne remplace jamais ce qui est là. |
 | `store.ts` | Store Zustand, avec historique annuler/rétablir. |
 | `persistence.ts` | Reprise du montage : projet et fichiers rangés dans IndexedDB. Les fonctions de mise en forme sont pures et testées. |
 | `steps.ts` | Le parcours en 7 étapes, en données pures (séparé des composants pour rester testable). |
@@ -210,6 +211,12 @@ ne pas lancer `playwright install`.
   que `verify.mjs` attend. Les trois se tiennent. La note « son » ne compte à ce
   jour que les bruitages et la musique : un montage entièrement porté par une
   voix off y est sous-évalué.
+- `captionCoverage` écarte les sous-titres sans texte. Les emplacements vides
+  posés par « Poser les réglages » disent **où** il reste à écrire ; les compter
+  comme couverts noterait un écran resté vide.
+- `autoFinish` ajoute, il ne remplace pas. Un sous-titre déjà calé sur une voix
+  off représente un travail que personne n'accepterait de perdre en touchant un
+  bouton nommé « recommandé ».
 - `renderFrame` s'arrête au fond noir quand il n'y a aucun clip : poursuivre
   appliquerait le halo à un cadre vide, ce qui étranglait l'import sur
   téléphone.

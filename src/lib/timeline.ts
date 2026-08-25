@@ -125,6 +125,30 @@ export function placeOnCuts(starts: number[], count: number, from = 0): number[]
   return times;
 }
 
+/**
+ * Découpe un plan en morceaux d'environ `target` secondes.
+ *
+ * Renvoie le plan seul s'il est trop court pour être coupé en deux. Le premier
+ * morceau hérite de la transition d'origine ; les suivants s'enchaînent sec,
+ * sans quoi le découpage perdrait la nervosité qui le justifie.
+ */
+export function chopped(clip: Clip, target: number, makeId: () => string): Clip[] {
+  const sourceSpan = clip.outPoint - clip.inPoint;
+  const shown = sourceSpan / Math.max(0.1, clip.speed);
+  const pieces = Math.floor(shown / Math.max(0.5, target));
+  if (pieces < 2) return [clip];
+
+  const step = sourceSpan / pieces;
+  return Array.from({ length: pieces }, (_, piece) => ({
+    ...clip,
+    id: makeId(),
+    inPoint: clip.inPoint + piece * step,
+    outPoint: clip.inPoint + (piece + 1) * step,
+    transition: piece === 0 ? clip.transition : ('cut' as const),
+    transitionDuration: piece === 0 ? clip.transitionDuration : 0,
+  }));
+}
+
 /** Une couche vidéo à dessiner pour une image donnée. */
 export type ActiveLayer = {
   placed: PlacedClip;

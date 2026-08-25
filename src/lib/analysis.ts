@@ -109,6 +109,10 @@ export function captionCoverage(captions: Caption[], duration: number): number {
   if (duration <= 0 || captions.length === 0) return 0;
 
   const intervals = captions
+    // Un sous-titre sans texte n'affiche rien : le compter comme couvert
+    // gonflerait la note d'un écran resté vide. Les emplacements posés par
+    // « Poser les réglages » sont là pour dire où écrire, pas pour noter.
+    .filter((c) => c.text.trim().length > 0)
     .map((c) => [Math.max(0, Math.min(c.start, c.end)), Math.min(duration, Math.max(c.start, c.end))] as const)
     .filter(([start, end]) => end > start)
     .sort((a, b) => a[0] - b[0]);
