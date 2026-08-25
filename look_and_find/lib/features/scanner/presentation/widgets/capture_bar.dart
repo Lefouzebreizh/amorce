@@ -1,13 +1,16 @@
-/// La barre du bas du viseur : flash, déclencheur, accès à la liste.
+/// La barre du bas du viseur : galerie, déclencheur, accès à la liste.
 ///
 /// Le déclencheur fait 76 px et se tient au centre, à portée du pouce : on
 /// photographie souvent d'une seule main, l'autre tenant ou dégageant l'objet.
 /// Les deux commandes secondaires restent volontairement plus petites et plus
-/// discrètes — un flash aussi visible que le déclencheur se déclenche par
-/// erreur.
+/// discrètes.
+///
+/// Le flash n'est **pas** ici, et c'est un déplacement volontaire : à trois
+/// commandes secondaires, la barre devient trop dense pour un pouce, et le
+/// flash se déclenchait par erreur en visant la liste. Il est passé en haut à
+/// droite, là où toutes les applications photo le mettent.
 library;
 
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -16,16 +19,14 @@ import '../../../../core/theme/app_theme.dart';
 class CaptureBar extends StatelessWidget {
   const CaptureBar({
     super.key,
-    required this.flashMode,
-    required this.onFlash,
+    required this.onPickPhoto,
     required this.onCapture,
     required this.onOpenList,
     this.alertCount = 0,
     this.busy = false,
   });
 
-  final FlashMode flashMode;
-  final VoidCallback onFlash;
+  final VoidCallback onPickPhoto;
   final VoidCallback onCapture;
   final VoidCallback onOpenList;
 
@@ -44,10 +45,9 @@ class CaptureBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _RoundAction(
-            icon: _flashIcon,
-            label: _flashLabel,
-            active: flashMode != FlashMode.off,
-            onTap: onFlash,
+            icon: Icons.photo_library_outlined,
+            label: 'Identifier une photo déjà prise',
+            onTap: onPickPhoto,
           ),
           _Shutter(onTap: busy ? null : onCapture, busy: busy),
           _RoundAction(
@@ -63,17 +63,6 @@ class CaptureBar extends StatelessWidget {
     );
   }
 
-  IconData get _flashIcon => switch (flashMode) {
-    FlashMode.off => Icons.flash_off_rounded,
-    FlashMode.auto => Icons.flash_auto_rounded,
-    _ => Icons.flash_on_rounded,
-  };
-
-  String get _flashLabel => switch (flashMode) {
-    FlashMode.off => 'Flash éteint',
-    FlashMode.auto => 'Flash automatique',
-    _ => 'Flash forcé',
-  };
 }
 
 class _Shutter extends StatelessWidget {
@@ -127,14 +116,12 @@ class _RoundAction extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.active = false,
     this.badge = 0,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final bool active;
   final int badge;
 
   @override
@@ -153,11 +140,7 @@ class _RoundAction extends StatelessWidget {
             shape: BoxShape.circle,
             color: AppColors.ink.withValues(alpha: 0.45),
           ),
-          child: Icon(
-            icon,
-            size: 22,
-            color: active ? AppColors.warn : Colors.white,
-          ),
+          child: Icon(icon, size: 22, color: Colors.white),
         ),
       ),
     );

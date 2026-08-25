@@ -185,6 +185,55 @@ abstract class _$GeminiApiKey extends $Notifier<String> {
   }
 }
 
+/// Remplacé dans les tests par une implémentation qui rend une photo connue :
+/// la galerie du système n'est pas pilotable depuis un test.
+
+@ProviderFor(photoPicker)
+final photoPickerProvider = PhotoPickerProvider._();
+
+/// Remplacé dans les tests par une implémentation qui rend une photo connue :
+/// la galerie du système n'est pas pilotable depuis un test.
+
+final class PhotoPickerProvider
+    extends $FunctionalProvider<PhotoPicker, PhotoPicker, PhotoPicker>
+    with $Provider<PhotoPicker> {
+  /// Remplacé dans les tests par une implémentation qui rend une photo connue :
+  /// la galerie du système n'est pas pilotable depuis un test.
+  PhotoPickerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'photoPickerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$photoPickerHash();
+
+  @$internal
+  @override
+  $ProviderElement<PhotoPicker> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  PhotoPicker create(Ref ref) {
+    return photoPicker(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PhotoPicker value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PhotoPicker>(value),
+    );
+  }
+}
+
+String _$photoPickerHash() => r'6531c2621b68d66d20029cc77c2a3f449ffc5243';
+
 @ProviderFor(geminiVisionDataSource)
 final geminiVisionDataSourceProvider = GeminiVisionDataSourceProvider._();
 

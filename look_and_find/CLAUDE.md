@@ -92,17 +92,20 @@ d'y toucher.
 6. **Le prix de référence d'un favori ne bouge pas.** C'est lui qui rend une
    baisse mesurable ; le recalculer ferait glisser le repère avec le prix et
    aucune baisse ne serait jamais visible.
-7. **Une alerte s'acquitte, et l'acquittement porte un prix.** Un objet acquitté
+7. **Un seul chemin d'identification.** Le déclencheur et le choix d'une photo
+   dans la galerie passent tous deux par `_identifier` : deux chemins
+   divergeraient au premier changement d'invite ou de compression.
+8. **Une alerte s'acquitte, et l'acquittement porte un prix.** Un objet acquitté
    à 80 € ne resignale qu'en passant sous 80 €. Sans cela, la même alerte
    revient à chaque ouverture, on apprend à ne plus la voir, et la suivante —
    la vraie — passe inaperçue.
-8. **L'échelle en réalité augmentée est fixe** (`ArScale.fixed`). La fonction
+9. **L'échelle en réalité augmentée est fixe** (`ArScale.fixed`). La fonction
    répond à « est-ce que ça rentre » : laisser agrandir au doigt donnerait une
    réponse fausse et rassurante.
-9. **La caméra est libérée à la mise en pause.** Sur Android, le capteur est
+10. **La caméra est libérée à la mise en pause.** Sur Android, le capteur est
    une ressource exclusive : la garder en arrière-plan empêche les autres
    applications de l'ouvrir, et nous met nous-mêmes en échec au retour.
-10. **La photo est réduite hors du fil principal.** `ImageCompressor` passe par
+11. **La photo est réduite hors du fil principal.** `ImageCompressor` passe par
    `compute` ; le faire sur le fil de l'interface fait sauter des images juste
    au moment où l'utilisateur attend le retour du déclencheur.
 
@@ -120,6 +123,19 @@ déjà coûté un débogage :
   lu avant le premier `await`** (voir `ScanController.identify` et
   `ScanJournal.record`).
 - **`AsyncValue.valueOrNull` n'existe plus**, c'est `value`.
+- **`AsyncValue.when` cache les erreurs.** Un état peut être « en chargement »
+  **et** porter une erreur : `when` teste le chargement en premier, donc
+  l'erreur n'apparaît jamais. Passer par `render` (`core/utils/async_view.dart`),
+  qui met l'erreur d'abord. Avant cette correction, une caméra refusée faisait
+  tourner un indicateur indéfiniment au lieu d'expliquer quoi faire.
+- **Riverpod réessaie tout seul un provider en échec**, en doublant l'attente.
+  Bon pour un appel réseau, mauvais pour ce qui ne se débloque que par un geste
+  de l'utilisateur : la reprise en boucle maintient l'état en « chargement ».
+  `cameraSessionProvider` la désactive (`@Riverpod(retry: …)`) et laisse la
+  reprise au bouton « Réessayer ».
+- **Un provider `autoDispose` lu sans abonné est libéré aussitôt.** Deux
+  `container.read` successifs repartent d'un état neuf, ce qui donne des tests
+  qui « ne progressent jamais » sans message. Tenir un `container.listen`.
 - `keepAlive` n'est pas un confort. `ScanJournal` en a besoin parce que la
   baisse de prix est produite par le viseur et lue par la fiche, deux écrans
   qui ne coexistent jamais.
@@ -165,6 +181,7 @@ méthode testée.
 | `favorites_page_test.dart` | « Ma liste » montée pour de vrai : bandeau d'alerte, cumul, acquittement. |
 | `api_key_test.dart` | D'où vient la clé et laquelle gagne. |
 | `demarrage_test.dart` | Le seul test qui monte `app.dart` : câblage du thème, de la locale et des surcharges. |
+| `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
 
 Trois recettes utiles quand on ajoute un test :
 
@@ -179,6 +196,10 @@ Trois recettes utiles quand on ajoute un test :
 - **Agrandir la surface plutôt que faire défiler** (`tester.view.physicalSize`)
   sur une page longue : une assertion qui dépend d'un défilement dépend de la
   hauteur de tout ce qui la précède.
+- **`pumpAndSettle` est inutilisable sur le viseur** : l'ouverture de la caméra
+  n'aboutit jamais dans un test et son indicateur tourne sans fin. Avancer
+  l'horloge à la main, et surcharger `cameraSessionProvider` pour atteindre
+  l'écran d'échec.
 - **Envelopper toute écriture Hive de préparation dans `tester.runAsync`.**
   Dans un test de widget, l'horloge est simulée et n'avance qu'aux `pump` : une
   écriture attendue directement dans le corps du test ne se termine jamais, et

@@ -21,6 +21,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/network/app_exception.dart';
+import '../../../../core/utils/async_view.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../favorites/presentation/pages/favorites_page.dart';
 import '../../../favorites/presentation/providers/favorites_providers.dart';
@@ -30,6 +31,7 @@ import 'api_key_page.dart';
 import '../providers/scanner_providers.dart';
 import '../widgets/blocking_notice.dart';
 import '../widgets/capture_bar.dart';
+import '../widgets/flash_button.dart';
 import '../widgets/focus_ring.dart';
 import '../widgets/scan_status_sheet.dart';
 import '../widgets/viewfinder_overlay.dart';
@@ -79,6 +81,17 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
     }
   }
 
+  /// Identifier une photo déjà prise. Le chemin d'identification est
+  /// rigoureusement le même que celui du déclencheur : deux chemins
+  /// divergeraient au premier changement d'invite ou de compression.
+  Future<void> _choisirPhoto() async {
+    final photo = await ref.read(photoPickerProvider).pick();
+    if (photo == null || !mounted) return;
+
+    setState(() => _frozen = photo.bytes);
+    await _identifier(photo.bytes, photo.path);
+  }
+
   Future<void> _capture() async {
     final shot = await ref.read(cameraSessionProvider.notifier).capture();
     if (shot == null) return;
@@ -87,9 +100,13 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
     if (!mounted) return;
     setState(() => _frozen = bytes);
 
+    await _identifier(bytes, shot.path);
+  }
+
+  Future<void> _identifier(Uint8List bytes, String chemin) async {
     final product = await ref
         .read(scanControllerProvider.notifier)
-        .identify(bytes, imagePath: shot.path);
+        .identify(bytes, imagePath: chemin);
 
     if (!mounted || product == null) return;
 
@@ -155,14 +172,18 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          session.when(
+          // `render` et non `when` : voir `core/utils/async_view.dart`. Avec
+          // `when`, une caméra refusée reste sur l'indicateur de chargement et
+          // l'utilisateur n'apprend jamais ce qui bloque.
+          session.render(
             loading: () => const ColoredBox(
               color: Colors.black,
-              child: Center(child: CircularProgressIndicator()),
+              child: ChargementCentre(),
             ),
             error: (error, _) => _CameraError(
               error: error,
               onRetry: ref.read(cameraSessionProvider.notifier).restart,
+              onPickPhoto: _choisirPhoto,
             ),
             data: (controller) => _Preview(
               controller: controller,
@@ -173,6 +194,16 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
 
           if (_frozen == null && session.hasValue)
             const ViewfinderOverlay(hint: AppStrings.scannerHint),
+
+          if (_frozen == null && session.hasValue)
+            Positioned(
+              top: MediaQuery.viewPaddingOf(context).top + 12,
+              right: 16,
+              child: FlashButton(
+                mode: flash,
+                onTap: ref.read(flashSettingProvider.notifier).cycle,
+              ),
+            ),
 
           if (_focusPoint != null && _frozen == null)
             FocusRing(position: _focusPoint!),
@@ -192,10 +223,9 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
               right: 0,
               bottom: 20 + context.bottomInset,
               child: CaptureBar(
-                flashMode: flash,
                 alertCount: alerts.length,
                 busy: scan.isLoading,
-                onFlash: ref.read(flashSettingProvider.notifier).cycle,
+                onPickPhoto: _choisirPhoto,
                 onCapture: _capture,
                 onOpenList: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -261,10 +291,15 @@ class _Preview extends StatelessWidget {
 }
 
 class _CameraError extends StatelessWidget {
-  const _CameraError({required this.error, required this.onRetry});
+  const _CameraError({
+    required this.error,
+    required this.onRetry,
+    required this.onPickPhoto,
+  });
 
   final Object error;
   final VoidCallback onRetry;
+  final VoidCallback onPickPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -281,6 +316,10 @@ class _CameraError extends StatelessWidget {
           body: message,
           actionLabel: AppStrings.retry,
           onAction: onRetry,
+          // Un accès caméra refusé ne doit pas rendre l'application inutile :
+          // la photo de l'objet est peut-être déjà dans la galerie.
+          secondaryLabel: AppStrings.pickPhoto,
+          onSecondary: onPickPhoto,
         ),
       ),
     );

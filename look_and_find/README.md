@@ -13,7 +13,9 @@ sur le téléphone.
 ## Le parcours
 
 1. **Viser.** L'application s'ouvre sur le viseur. Pas de page d'accueil : le
-   geste qu'elle propose est à un appui de l'ouverture.
+   geste qu'elle propose est à un appui de l'ouverture. Une photo déjà prise
+   fait aussi bien l'affaire — utile quand l'objet a été vu ailleurs, quand la
+   pièce est sombre, ou quand la caméra ne s'ouvre pas.
 2. **Identifier.** La photo est réduite, envoyée au modèle, et revient en fiche
    produit structurée : nom, marque, catégorie, prix moyen, dimensions,
    marchands, alternatives moins chères.
@@ -186,6 +188,7 @@ signale plus rien.
 | `favorites_page_test.dart` | « Ma liste » montée pour de vrai : bandeau d'alerte, cumul des baisses, acquittement. |
 | `api_key_test.dart` | D'où vient la clé et laquelle gagne : la saisie l'emporte sur le build, et survit à un redémarrage. |
 | `demarrage_test.dart` | L'application démarrée de bout en bout — le seul test qui couvre `app.dart` et le parcours « pas de clé → saisie → viseur ». |
+| `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
 
 Ce qui ne peut pas être testé ainsi et demande un appareil : le décodage
 caméra, la mise au point, la session de réalité augmentée, et la qualité

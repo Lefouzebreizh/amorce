@@ -23,6 +23,7 @@ import '../../../favorites/presentation/providers/favorites_providers.dart';
 import '../../../product_detail/domain/entities/product.dart';
 import '../../data/datasources/api_key_store.dart';
 import '../../data/datasources/gemini_vision_datasource.dart';
+import '../../data/datasources/photo_picker.dart';
 import '../../data/repositories/scanner_repository_impl.dart';
 import '../../domain/repositories/scanner_repository.dart';
 import '../../domain/usecases/identify_product.dart';
@@ -72,6 +73,11 @@ class GeminiApiKey extends _$GeminiApiKey {
     state = AppConfig.compiledApiKey;
   }
 }
+
+/// Remplacé dans les tests par une implémentation qui rend une photo connue :
+/// la galerie du système n'est pas pilotable depuis un test.
+@Riverpod(keepAlive: true)
+PhotoPicker photoPicker(Ref ref) => const GalleryPhotoPicker();
 
 @Riverpod(keepAlive: true)
 GeminiVisionDataSource geminiVisionDataSource(Ref ref) =>

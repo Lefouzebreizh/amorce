@@ -18,7 +18,7 @@ final class CameraSessionProvider
     : super(
         from: null,
         argument: null,
-        retry: null,
+        retry: _pasDeRepriseAutomatique,
         name: r'cameraSessionProvider',
         isAutoDispose: true,
         dependencies: null,
@@ -33,7 +33,7 @@ final class CameraSessionProvider
   CameraSession create() => CameraSession();
 }
 
-String _$cameraSessionHash() => r'cfd978a168f917a05c5784b7f84f18f517daaa68';
+String _$cameraSessionHash() => r'a449611ab05e39e5bb68eae76e0ca9afefb0bb2b';
 
 abstract class _$CameraSession extends $AsyncNotifier<CameraController> {
   FutureOr<CameraController> build();

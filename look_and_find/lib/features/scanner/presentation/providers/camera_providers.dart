@@ -21,7 +21,19 @@ import '../../../../core/utils/extensions.dart';
 
 part 'camera_providers.g.dart';
 
-@riverpod
+/// Aucune reprise automatique.
+///
+/// Riverpod réessaie par défaut un provider en échec, en doublant l'attente.
+/// C'est le bon comportement pour un appel réseau ; c'est le mauvais ici. Un
+/// accès caméra refusé ne se débloque pas tout seul : il demande un geste dans
+/// les réglages du téléphone. Réessayer en boucle réveille le capteur pour
+/// rien, et — plus grave — laisse l'état en « chargement » indéfiniment, si
+/// bien que l'utilisateur n'apprend jamais ce qui bloque.
+///
+/// La reprise reste possible, mais explicite : c'est le bouton « Réessayer ».
+Duration? _pasDeRepriseAutomatique(int _, Object _) => null;
+
+@Riverpod(retry: _pasDeRepriseAutomatique)
 class CameraSession extends _$CameraSession {
   @override
   Future<CameraController> build() async {

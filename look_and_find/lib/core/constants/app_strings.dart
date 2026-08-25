@@ -19,6 +19,9 @@ class AppStrings {
   static const String scannerPermissionAction = 'Autoriser l\'appareil photo';
   static const String scannerNoCamera = 'Aucun appareil photo disponible.';
   static const String tapToFocus = 'Touchez pour faire la mise au point';
+  static const String pickPhoto = 'Choisir une photo';
+  static const String pickPhotoHint =
+      'Identifiez un objet à partir d\'une photo déjà prise.';
 
   // Configuration
   static const String missingKeyTitle = 'Clé Gemini absente';

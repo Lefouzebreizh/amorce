@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/utils/async_view.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../product_detail/domain/entities/product.dart';
 import '../../../product_detail/presentation/pages/product_detail_page.dart';
@@ -71,8 +72,8 @@ class _FavoritesTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final favorites = ref.watch(favoritesProvider);
 
-    return favorites.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+    return favorites.render(
+      loading: () => const ChargementCentre(),
       error: (error, _) => _Empty(
         icon: Icons.error_outline_rounded,
         title: AppStrings.errorGeneric,
@@ -147,8 +148,8 @@ class _HistoryTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(historyProvider);
 
-    return history.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+    return history.render(
+      loading: () => const ChargementCentre(),
       error: (error, _) => _Empty(
         icon: Icons.error_outline_rounded,
         title: AppStrings.errorGeneric,
