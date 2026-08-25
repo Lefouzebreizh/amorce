@@ -137,6 +137,7 @@ export function emptyProject(): Project {
     clips: [],
     captions: [],
     cues: [],
+    voices: [],
     music: null,
     cinema: { ...DEFAULT_CINEMA },
     mix: { ...DEFAULT_MIX },

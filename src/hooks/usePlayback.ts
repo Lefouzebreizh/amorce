@@ -202,6 +202,9 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
         for (const clip of project.clips) audio.setClipVolume(clip.id, clip.volume);
         audio.syncMusic(project.music?.url ?? null, project.music?.gain ?? 0);
         audio.syncMusicPosition(project.music?.offset ?? 0, time, playing);
+        audio.syncVoices(project.voices);
+        audio.syncVoicePositions(project.voices, time, playing);
+        audio.applyDucking(project.voices, project.mix.ducking, time);
         if (playing) audio.scheduleUpcoming(project, time);
       }
 

@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { uid } from './id.ts';
+import { captionsFromVoice } from './voice.ts';
 import { emptyProject, layoutClips, totalDuration } from './timeline.ts';
 import type { QualityTier } from './quality.ts';
 import {
@@ -17,6 +18,7 @@ import {
   type Project,
   type SfxId,
   type SoundCue,
+  type VoiceCue,
 } from './types.ts';
 
 /** Choix de qualité : « auto » laisse la surveillance décider. */
@@ -52,7 +54,15 @@ const COALESCE_MS = 600;
  * plan juste après l'avoir ajouté doit s'annuler en deux fois, sinon
  * l'annulation en défait plus que ce qu'on croyait.
  */
-const COALESCING = new Set(['reglage', 'texte-reglage', 'son-reglage', 'musique-reglage', 'mixage', 'nom']);
+const COALESCING = new Set([
+  'reglage',
+  'texte-reglage',
+  'son-reglage',
+  'musique-reglage',
+  'voix-reglage',
+  'mixage',
+  'nom',
+]);
 
 type StudioState = {
   project: Project;
@@ -110,6 +120,13 @@ type StudioState = {
   addCue: (sfx: SfxId, time?: number) => void;
   updateCue: (id: string, patch: Partial<SoundCue>) => void;
   removeCue: (id: string) => void;
+
+  // -- Voix off -------------------------------------------------------------
+  addVoices: (cues: VoiceCue[]) => void;
+  updateVoice: (id: string, patch: Partial<VoiceCue>) => void;
+  removeVoice: (id: string) => void;
+  /** Fabrique les sous-titres d'une réplique à partir de son texte. */
+  alignVoice: (id: string) => void;
 
   // -- Musique --------------------------------------------------------------
   setMusic: (music: MusicTrack | null) => void;
@@ -495,6 +512,57 @@ export const useStudio = create<StudioState>((set, get) => {
     mutate('mixage', (state) => ({
       project: { ...state.project, mix: { ...state.project.mix, ...patch } },
     })),
+
+  addVoices: (cues) =>
+    mutate('ajout-voix', (state) => ({
+      project: { ...state.project, voices: [...state.project.voices, ...cues] },
+    })),
+
+  updateVoice: (id, patch) =>
+    mutate('voix-reglage', (state) => ({
+      project: {
+        ...state.project,
+        voices: state.project.voices.map((v) => (v.id === id ? { ...v, ...patch } : v)),
+      },
+    })),
+
+  /**
+   * Retire une réplique, et avec elle les sous-titres qu'elle avait produits.
+   *
+   * Les garder laisserait à l'écran un texte que plus rien ne prononce, et il
+   * faudrait les retrouver un par un pour les effacer. Le geste reste annulable,
+   * ce qui suffit à couvrir le regret.
+   */
+  removeVoice: (id) =>
+    mutate('retrait-voix', (state) => {
+      const cue = state.project.voices.find((v) => v.id === id);
+      if (cue) URL.revokeObjectURL(cue.url);
+      return {
+        project: {
+          ...state.project,
+          voices: state.project.voices.filter((v) => v.id !== id),
+          captions: state.project.captions.filter((c) => c.voiceId !== id),
+        },
+      };
+    }),
+
+  alignVoice: (id) =>
+    mutate('calage-voix', (state) => {
+      const cue = state.project.voices.find((v) => v.id === id);
+      if (!cue) return state;
+
+      const produced = captionsFromVoice(cue.script, cue.segments, () => uid('cap'), {
+        offset: cue.start,
+      }).map((caption) => ({ ...caption, voiceId: id }));
+
+      return {
+        project: {
+          ...state.project,
+          // Les sous-titres de cette réplique sont remplacés, jamais complétés.
+          captions: [...state.project.captions.filter((c) => c.voiceId !== id), ...produced],
+        },
+      };
+    }),
 
   setMusic: (music) =>
     mutate('musique', (state) => {

@@ -1,7 +1,8 @@
 'use client';
 
 import { uid } from './id';
-import type { MediaAsset, MusicTrack } from './types';
+import { analyseVoice } from './voice';
+import type { MediaAsset, MusicTrack, VoiceCue } from './types';
 
 /**
  * Import de fichiers depuis le disque.
@@ -77,6 +78,33 @@ function grabThumbnail(video: HTMLVideoElement, maxWidth = 160): string {
   return canvas.toDataURL('image/jpeg', 0.7);
 }
 
+/**
+ * Explique pourquoi un fichier audio n'a pas pu être lu.
+ *
+ * « Fichier illisible » n'aide personne : la cause est presque toujours l'une de
+ * deux, et elles appellent des gestes opposés. Un fichier vide vient d'un
+ * espace de stockage en ligne que le sélecteur a rendu sans l'avoir téléchargé —
+ * le fichier est bon, c'est la copie qui manque. Un format non pris en charge
+ * demande au contraire de réexporter. Confondre les deux fait perdre un
+ * quart d'heure à chaque fois.
+ */
+function audioFailure(file: File): Error {
+  if (file.size === 0) {
+    return new Error(
+      `« ${file.name} » est arrivé vide. C’est le cas quand le fichier est encore dans le nuage : ouvre-le une fois depuis ton gestionnaire de fichiers pour le télécharger sur l’appareil, puis réessaie.`,
+    );
+  }
+
+  // `canPlayType` ne répond que sur le type déclaré, jamais sur le contenu :
+  // une réponse vide est un verdict, une réponse quelconque ne prouve rien.
+  if (file.type && document.createElement('audio').canPlayType(file.type) === '') {
+    return new Error(`Ce navigateur ne sait pas décoder le format ${file.type}. Réexporte en MP3 ou en WAV.`);
+  }
+
+  const size = file.size < 1024 * 1024 ? `${Math.round(file.size / 1024)} Ko` : `${(file.size / 1024 / 1024).toFixed(1)} Mo`;
+  return new Error(`« ${file.name} » n’a pas pu être décodé (${size}, ${file.type || 'type inconnu'}).`);
+}
+
 /** Transforme un fichier vidéo en média utilisable par le studio. */
 export async function loadVideoAsset(file: File): Promise<MediaAsset> {
   const url = URL.createObjectURL(file);
@@ -134,9 +162,50 @@ export async function loadMusicTrack(file: File): Promise<MusicTrack> {
       gain: 0.35,
       offset: 0,
     };
-  } catch (error) {
+  } catch {
     URL.revokeObjectURL(url);
-    throw error;
+    throw audioFailure(file);
+  }
+}
+
+/**
+ * Importe un fichier audio comme réplique de voix off.
+ *
+ * L'analyse du signal a lieu ici, une fois pour toutes : c'est le seul moment
+ * où l'on peut se permettre de décoder le fichier entier, et le résultat sert
+ * ensuite à chaque calage sans jamais y revenir.
+ *
+ * Un fichier illisible n'est pas fatal — on le pose sans segments plutôt que de
+ * rejeter l'import. La réplique s'entend, seul le calage automatique manque, et
+ * c'est bien plus utile qu'un message d'erreur devant un fichier qui, lui,
+ * s'entend parfaitement.
+ */
+export async function loadVoiceCue(file: File, context: BaseAudioContext, start = 0): Promise<VoiceCue> {
+  const url = URL.createObjectURL(file);
+
+  try {
+    const { duration, segments } = await analyseVoice(context, url);
+    return { id: uid('voix'), name: file.name, url, duration, start, gain: 1, script: '', segments };
+  } catch {
+    const audio = document.createElement('audio');
+    audio.preload = 'metadata';
+    audio.src = url;
+    try {
+      await waitFor(audio, 'loadedmetadata');
+    } catch {
+      URL.revokeObjectURL(url);
+      throw audioFailure(file);
+    }
+    return {
+      id: uid('voix'),
+      name: file.name,
+      url,
+      duration: Number.isFinite(audio.duration) ? audio.duration : 0,
+      start,
+      gain: 1,
+      script: '',
+      segments: [],
+    };
   }
 }
 

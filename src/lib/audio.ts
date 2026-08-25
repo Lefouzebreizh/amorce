@@ -1,13 +1,14 @@
 'use client';
 
 import { scheduleSfx } from './sfx.ts';
-import type { Project, SfxId } from './types.ts';
+import { duckTarget, timelineSpeech, type SpeechSegment } from './voice.ts';
+import type { Project, SfxId, VoiceCue } from './types.ts';
 
 /**
  * Mixage audio du montage.
  *
- * Trois sources se rejoignent sur un même bus : le son d'origine des clips, les
- * bruitages de synthèse et la musique de fond. Passer par Web Audio plutôt que
+ * Quatre sources se rejoignent sur un même bus : le son d'origine des clips, les
+ * bruitages de synthèse, la musique de fond et la voix off. Passer par Web Audio plutôt que
  * par le volume des éléments <video> est ce qui rend l'export possible — un
  * `MediaStreamAudioDestinationNode` fournit une piste sonore que
  * `MediaRecorder` sait enregistrer, ce qu'un élément média ne sait pas faire.
@@ -22,6 +23,10 @@ export class AudioEngine {
   private readonly sfxBus: GainNode;
   private readonly clipsBus: GainNode;
   private readonly musicBus: GainNode;
+  private readonly voiceBus: GainNode;
+  /** Nœuds de baisse, sous les seules sources que la voix doit couvrir. */
+  private readonly clipsDuck: GainNode;
+  private readonly musicDuck: GainNode;
   private readonly limiter: DynamicsCompressorNode;
   private readonly recordDestination: MediaStreamAudioDestinationNode;
 
@@ -29,6 +34,22 @@ export class AudioEngine {
   private musicElement: HTMLAudioElement | null = null;
   private musicNodes: { source: MediaElementAudioSourceNode; gain: GainNode } | null = null;
   private musicUrl: string | null = null;
+
+  private voiceNodes = new Map<
+    string,
+    { element: HTMLAudioElement; source: MediaElementAudioSourceNode; gain: GainNode; url: string }
+  >();
+
+  /**
+   * Passages parlés en cache, et la liste dont ils viennent.
+   *
+   * Les recalculer à chaque image coûterait un parcours de toutes les répliques
+   * soixante fois par seconde pour un résultat identique : la liste du projet
+   * est immuable, sa seule identité suffit à savoir si elle a changé.
+   */
+  private duckSource: VoiceCue[] | null = null;
+  private duckSegments: SpeechSegment[] = [];
+  private duckLevel = 1;
 
   /** Bruitages déjà programmés pour la lecture en cours. */
   private scheduledCues = new Set<string>();
@@ -73,10 +94,30 @@ export class AudioEngine {
      * d'un seul geste, plutôt que plan par plan.
      */
     this.clipsBus = this.context.createGain();
-    this.clipsBus.connect(this.master);
-
     this.musicBus = this.context.createGain();
-    this.musicBus.connect(this.master);
+    this.voiceBus = this.context.createGain();
+
+    /*
+     * Le fond passe par un nœud de baisse avant le mélange, la voix non.
+     *
+     * Un nœud séparé plutôt qu'un réglage du bus lui-même, parce que les deux
+     * valeurs n'ont ni la même origine ni le même rythme : l'une vient de la
+     * table de mixage et ne bouge qu'au geste de l'utilisateur, l'autre suit la
+     * parole en continu. Les écrire au même endroit ferait s'effacer l'une
+     * l'autre.
+     *
+     * Les bruitages y échappent volontairement : un impact qui fléchit parce
+     * qu'une réplique commence s'entend comme un défaut, pas comme un mixage.
+     */
+    this.clipsDuck = this.context.createGain();
+    this.musicDuck = this.context.createGain();
+    this.clipsBus.connect(this.clipsDuck);
+    this.clipsDuck.connect(this.master);
+    this.musicBus.connect(this.musicDuck);
+    this.musicDuck.connect(this.master);
+
+    // La voix ne subit aucune baisse : c'est elle qui la provoque.
+    this.voiceBus.connect(this.master);
 
     this.master.connect(this.limiter);
     this.recordDestination = this.context.createMediaStreamDestination();
@@ -124,16 +165,17 @@ export class AudioEngine {
   }
 
   /**
-   * Applique l'équilibre entre les trois sources.
+   * Applique l'équilibre entre les quatre sources.
    *
    * Le niveau des bruitages est multiplié par le facteur du bus, non remplacé :
    * ce facteur compense leur brièveté, qu'un réglage à 100 % ne doit pas
    * annuler.
    */
-  applyMix(mix: { clips: number; sfx: number; music: number }): void {
+  applyMix(mix: { clips: number; sfx: number; music: number; voice: number }): void {
     this.clipsBus.gain.value = Math.max(0, Math.min(1, mix.clips));
     this.sfxBus.gain.value = 2.2 * Math.max(0, Math.min(1, mix.sfx));
     this.musicBus.gain.value = Math.max(0, Math.min(1, mix.music));
+    this.voiceBus.gain.value = Math.max(0, Math.min(1, mix.voice));
   }
 
   setClipVolume(clipId: string, volume: number): void {
@@ -181,6 +223,95 @@ export class AudioEngine {
     if (Math.abs(element.currentTime - target) > 0.3) element.currentTime = Math.max(0, target);
     if (playing && element.paused) void element.play().catch(() => undefined);
     if (!playing && !element.paused) element.pause();
+  }
+
+  /**
+   * Met en place les répliques de voix off.
+   *
+   * Un élément média par réplique, jamais un élément partagé : deux répliques
+   * peuvent se chevaucher — une réponse qui coupe la fin d'une phrase — et un
+   * élément unique ne peut pas être à deux positions de lecture à la fois.
+   * C'est la même raison qui impose un `<video>` par clip côté image.
+   */
+  syncVoices(cues: VoiceCue[]): void {
+    // Répliques disparues, ou dont le fichier a changé : on les débranche.
+    for (const [id, nodes] of this.voiceNodes) {
+      const cue = cues.find((c) => c.id === id);
+      if (cue && cue.url === nodes.url) continue;
+      nodes.element.pause();
+      nodes.gain.disconnect();
+      this.voiceNodes.delete(id);
+    }
+
+    for (const cue of cues) {
+      let nodes = this.voiceNodes.get(cue.id);
+
+      if (!nodes) {
+        const element = document.createElement('audio');
+        element.src = cue.url;
+        element.preload = 'auto';
+        const source = this.context.createMediaElementSource(element);
+        const gain = this.context.createGain();
+        source.connect(gain);
+        gain.connect(this.voiceBus);
+        nodes = { element, source, gain, url: cue.url };
+        this.voiceNodes.set(cue.id, nodes);
+      }
+
+      nodes.gain.gain.value = Math.max(0, Math.min(1, cue.gain));
+    }
+  }
+
+  /**
+   * Aligne chaque réplique sur la tête de lecture.
+   *
+   * La tolérance est plus serrée que pour la musique : un décalage d'un tiers de
+   * seconde ne s'entend pas sur un fond sonore, mais sur une voix il désaccorde
+   * le sous-titre du mot prononcé — soit précisément ce que le calage vient de
+   * mettre en place.
+   */
+  syncVoicePositions(cues: VoiceCue[], time: number, playing: boolean): void {
+    for (const cue of cues) {
+      const nodes = this.voiceNodes.get(cue.id);
+      if (!nodes) continue;
+
+      const target = time - cue.start;
+
+      if (!playing || target < 0 || target >= cue.duration) {
+        if (!nodes.element.paused) nodes.element.pause();
+        // Remettre au début tant que la tête de lecture est en amont : sans
+        // cela, relancer la lecture reprendrait la réplique en plein milieu.
+        if (target < 0 && nodes.element.currentTime !== 0) nodes.element.currentTime = 0;
+        continue;
+      }
+
+      if (Math.abs(nodes.element.currentTime - target) > 0.15) {
+        nodes.element.currentTime = Math.max(0, target);
+      }
+      if (nodes.element.paused) void nodes.element.play().catch(() => undefined);
+    }
+  }
+
+  /**
+   * Baisse le fond pendant que la voix parle.
+   *
+   * On descend vite et on remonte lentement. L'inverse — remontée brusque —
+   * s'entend comme un défaut : la musique semble sauter à chaque virgule, alors
+   * qu'une remontée progressive passe pour un choix de mixage.
+   */
+  applyDucking(cues: VoiceCue[], depth: number, time: number): void {
+    if (cues !== this.duckSource) {
+      this.duckSegments = timelineSpeech(cues);
+      this.duckSource = cues;
+    }
+
+    const target = duckTarget(this.duckSegments, time, Math.max(0, Math.min(1, depth)));
+    if (target === this.duckLevel) return;
+
+    const constant = target < this.duckLevel ? 0.04 : 0.18;
+    this.clipsDuck.gain.setTargetAtTime(target, this.context.currentTime, constant);
+    this.musicDuck.gain.setTargetAtTime(target, this.context.currentTime, constant);
+    this.duckLevel = target;
   }
 
   /**
@@ -244,6 +375,11 @@ export class AudioEngine {
     this.resetSchedule();
     this.musicElement?.pause();
     this.musicNodes?.gain.disconnect();
+    for (const nodes of this.voiceNodes.values()) {
+      nodes.element.pause();
+      nodes.gain.disconnect();
+    }
+    this.voiceNodes.clear();
     for (const nodes of this.clipNodes.values()) nodes.gain.disconnect();
     this.clipNodes.clear();
     void this.context.close();
