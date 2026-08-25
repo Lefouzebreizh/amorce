@@ -37,15 +37,23 @@ là.
 > *Être têtu, ce n'est pas être fort. C'est oublier qu'un tout petit pas peut
 > tout débloquer.*
 
-**Trois corrections avant publication**, les mêmes que celles relevées dans le
-volume :
+**Corrections appliquées** (`kdp/lancement/corriger_bonus.py`) — au pixel, avec la
+seule matière de la planche : la fonte des bulles n'est aucune de celles dont on
+dispose, et les facteurs de condensation relevés d'une ligne à l'autre ne
+concordent pas assez pour retypographier sans que le raccord se voie.
 
-| Panneau | Relevé | Correction |
+| Panneau | Relevé | Fait |
 | --- | --- | --- |
-| Titre | Têtu comme un **B**ourricot | minuscule à « bourricot », comme la charte |
-| 3 | « **Ok** ! » | « D'accord ! » — la planche 1 a le même défaut |
-| 3 | « **…** Mais le goûter » | points de suspension en fin de réplique, pas en tête |
-| 4 | « ça **compte pas** ! » | « ça ne compte pas ! » — négation complète |
+| 3 | « **Ok !** On fait grève… » | supprimé, ligne recentrée. « Ok » est un anglicisme à demi capitalisé ; la forme juste, « OK », aurait demandé un K capital qui n'existe nulle part sur la planche |
+| 3 | « **…** Mais le goûter » | points de suspension en tête supprimés, ligne recentrée |
+| 4 | « ça **compte pas** ! » | « ça **ne** compte pas ! » — le « ne » est bâti avec le « n » de « Un » et le « e » de « de », deux lignes plus haut dans la même bulle, décalés des trente-deux pixels qui séparent les deux lignes de base |
+
+**Non fait : la casse du titre.** « Têtu comme un **B**ourricot » devrait s'écrire
+avec un b minuscule selon la charte. Le B est un capital calligraphique à
+parafe, deux fois la hauteur d'x, dans une écriture où les lettres sont liées :
+il n'existe aucun b minuscule ailleurs dans le titre, et le greffer à partir de
+la hampe du « h » de Zéphy se verrait. La décision déjà prise s'applique — les
+planches font foi, et la charte enregistre la forme normalisée.
 
 **Découpage pour le compte à rebours** — quatre panneaux plus la carte de
 parchemin, un par jour :
