@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyzeProject } from '../analysis.ts';
-import { CAPTION_SETS, applyFinish, buildFinish, captionSet, soundsOnCuts } from '../autoFinish.ts';
+import { CAPTION_SETS, applyFinish, buildFinish, captionSet, cinemaFor, soundsOnCuts, thinCues } from '../autoFinish.ts';
 import { emptyProject, totalDuration } from '../timeline.ts';
 import { DEFAULT_CLIP, type Caption, type MediaAsset, type Project } from '../types.ts';
 
@@ -142,10 +142,10 @@ test('les bruitages tombent sur les coupes', () => {
   assert.deepEqual(cues.map((c) => c.time).sort((a, b) => a - b), [0.02, 2, 4]);
 });
 
-test('un rendu déjà choisi est respecté, l’absence de parti pris est corrigée', () => {
+test('un rendu déjà choisi est respecté, l’absence de parti pris reçoit celui de la trame', () => {
   const naturel = bare([2, 2]);
   naturel.cinema = { ...naturel.cinema, look: 'naturel' };
-  assert.equal(run(naturel).cinema.look, 'cinema');
+  assert.equal(run(naturel).cinema.look, 'blockbuster');
 
   const choisi = bare([2, 2]);
   choisi.cinema = { ...choisi.cinema, look: 'argentique' };
@@ -168,4 +168,56 @@ test('un montage vide ne produit rien et ne casse pas', () => {
   const finished = applyFinish(vide, analyzeProject(vide), 'bande-annonce', counter());
   assert.deepEqual(finished.captions, []);
   assert.deepEqual(finished.clips, []);
+});
+
+test('l’allègement rend du silence entre les impacts', () => {
+  const project = bare([2, 2, 2, 2, 2]); // 10 s
+  // Quinze bruitages en dix secondes : le mur constaté sur un montage réel.
+  const cues = Array.from({ length: 15 }, (_, i) => ({
+    id: `s${i}`,
+    sfx: 'boom' as const,
+    time: i * 0.66,
+    gain: 0.85,
+  }));
+
+  const gardes = thinCues(cues, 10);
+
+  assert.ok(gardes.length < cues.length, 'rien n’a été retiré');
+  assert.ok(gardes.length >= 4, `il n’en reste que ${gardes.length}, le rythme disparaîtrait`);
+
+  // L'impact d'ouverture est celui qui fait lever les yeux : jamais sacrifié.
+  assert.equal(gardes[0].time, cues[0].time);
+
+  // Plus rien ne se confond à l'oreille.
+  for (let i = 1; i < gardes.length; i++) {
+    assert.ok(gardes[i].time - gardes[i - 1].time >= 1.5, `deux impacts collés à ${gardes[i].time} s`);
+  }
+  void project;
+});
+
+test('un montage déjà aéré n’est pas touché', () => {
+  const cues = [0, 3, 6, 9].map((t, i) => ({ id: `s${i}`, sfx: 'boom' as const, time: t, gain: 0.8 }));
+  assert.deepEqual(thinCues(cues, 12), cues);
+});
+
+test('la trame impose son rendu, sauf si un choix a été fait', () => {
+  const set = captionSet('bande-annonce');
+
+  // Absence de parti pris, et le rendu que pose le montage express : ni l'un ni
+  // l'autre n'est une décision.
+  assert.equal(cinemaFor(set, { look: 'naturel', intensity: 0.5, bars: 0 }).look, 'blockbuster');
+  assert.equal(cinemaFor(set, { look: 'cinema', intensity: 0.7, bars: 0 }).look, 'blockbuster');
+
+  // Un rendu choisi est une décision : on n'y touche pas.
+  assert.equal(cinemaFor(set, { look: 'argentique', intensity: 0.6, bars: 0 }).look, 'argentique');
+  assert.equal(cinemaFor(set, { look: 'noir', intensity: 0.4, bars: 0 }).intensity, 0.4);
+});
+
+test('la trame « Poser les réglages » applique bien le rendu', () => {
+  const project = bare([3, 3, 3]);
+  project.cinema = { look: 'cinema', intensity: 0.7, bars: 0 };
+  const finished = run(project);
+
+  assert.equal(finished.cinema.look, 'blockbuster');
+  assert.ok(finished.cinema.intensity >= 0.85);
 });

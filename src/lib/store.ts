@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { analyzeProject } from './analysis.ts';
 import { uid } from './id.ts';
-import { applyFinish, soundsOnCuts, tensionFills } from './autoFinish.ts';
+import { applyFinish, soundsOnCuts, tensionFills, thinCues } from './autoFinish.ts';
 import type { SharedFile } from './share.ts';
 import { captionsFromVoice } from './voice.ts';
 import { chopped, emptyProject, layoutClips, totalDuration } from './timeline.ts';
@@ -132,6 +132,8 @@ type StudioState = {
   fillTensionGaps: (moments: number[]) => void;
   /** Pose d'un coup textes, bruitages et découpe, sans rien remplacer. */
   applyRecommended: (setId: string) => void;
+  /** Retire les bruitages en trop, pour rendre du silence entre les impacts. */
+  thinSounds: () => void;
   moveClip: (from: number, to: number) => void;
   splitClipAtPlayhead: () => void;
 
@@ -410,6 +412,13 @@ export const useStudio = create<StudioState>((set, get) => {
    * point de vue de l'utilisateur, et devoir l'annuler en quinze fois serait
    * pire que de ne pas pouvoir l'annuler.
    */
+  thinSounds: () =>
+    mutate('allegement', (state) => {
+      const gardes = thinCues(state.project.cues, totalDuration(state.project.clips));
+      if (gardes.length === state.project.cues.length) return state;
+      return { project: { ...state.project, cues: gardes }, selection: null };
+    }),
+
   applyRecommended: (setId) =>
     mutate('reglages-recommandes', (state) =>
       reclamp({

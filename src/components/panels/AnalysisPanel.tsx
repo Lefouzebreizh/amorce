@@ -125,6 +125,7 @@ export function AnalysisPanel({
   const chopClip = useStudio((s) => s.chopClip);
   const addSoundsOnCuts = useStudio((s) => s.addSoundsOnCuts);
   const fillTensionGaps = useStudio((s) => s.fillTensionGaps);
+  const thinSounds = useStudio((s) => s.thinSounds);
 
   /**
    * Correction applicable en un appui, quand le geste ne demande aucun choix.
@@ -165,6 +166,12 @@ export function AnalysisPanel({
         label: '♪ Poser un bruitage sur chaque coupe',
         run: addSoundsOnCuts,
       };
+    } else {
+      // Trop de bruitages fatigue autant qu'aucun : le remède s'inverse.
+      fixes.son = {
+        label: '♪ Alléger : garder un impact toutes les 2,5 s',
+        run: thinSounds,
+      };
     }
 
     if (analysis.slumps.length > 0) {
@@ -175,7 +182,7 @@ export function AnalysisPanel({
     }
 
     return fixes;
-  }, [project, analysis.slumps, analysis.duration, chopClip, addSoundsOnCuts, fillTensionGaps]);
+  }, [project, analysis.slumps, analysis.duration, chopClip, addSoundsOnCuts, fillTensionGaps, thinSounds]);
 
   if (analysis.shotCount === 0) {
     return (
