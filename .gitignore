@@ -49,3 +49,6 @@ next-env.d.ts
 # Caches Python de la chaîne pré-presse
 __pycache__/
 *.pyc
+
+# Patrimoine réel de l'assistant d'allocation : ne sort jamais de la machine.
+patrimoine/config.json
