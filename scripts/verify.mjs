@@ -361,13 +361,24 @@ if (profile.mobile) {
 
   const slider = page.locator('input[aria-label="Point de fin"]');
   await slider.scrollIntoViewIfNeeded();
-  const box = await slider.boundingBox();
+
+  /**
+   * Abscisse du bouton de la jauge.
+   *
+   * Seul le bouton règle la valeur : partir d'un point quelconque de la barre
+   * ne produirait plus rien, et le test échouerait pour la bonne raison.
+   */
+  const thumbX = async () => {
+    const box = await slider.boundingBox();
+    const [value, min, max] = await slider.evaluate((el) => [+el.value, +el.min, +el.max]);
+    const ratio = max === min ? 0 : (value - min) / (max - min);
+    return { x: box.x + ratio * box.width, y: box.y + box.height / 2, box };
+  };
+
+  const depart = await thumbX();
   const before = Number(await slider.inputValue());
 
-  await touchDrag(
-    { x: box.x + box.width * 0.45, y: box.y + box.height / 2 },
-    { x: box.x + box.width * 0.95, y: box.y + box.height / 2 },
-  );
+  await touchDrag(depart, { x: depart.box.x + depart.box.width * 0.95, y: depart.y });
   await page.waitForTimeout(500);
   const after = Number(await slider.inputValue());
 
@@ -375,6 +386,31 @@ if (profile.mobile) {
     'Un curseur se règle réellement au doigt',
     after > before,
     `point de fin porté de ${before.toFixed(2)} s à ${after.toFixed(2)} s`,
+  );
+
+  /*
+   * Le glissement horizontal amorcé sur la barre, loin du bouton.
+   *
+   * Un panneau de réglages n'est qu'une pile de jauges : un pouce qui effleure
+   * en traversant en faisait bouger une, sans qu'on sache laquelle ni de
+   * combien. La barre affiche la valeur, elle ne la commande pas.
+   */
+  const apresReglage = await thumbX();
+  const avantEffleurement = Number(await slider.inputValue());
+  // Un point de la barre franchement à l'écart du bouton, du côté où il y a
+  // de la place.
+  const loin =
+    apresReglage.x - apresReglage.box.x > apresReglage.box.width / 2
+      ? apresReglage.box.x + apresReglage.box.width * 0.08
+      : apresReglage.box.x + apresReglage.box.width * 0.92;
+
+  await touchDrag({ x: loin, y: apresReglage.y }, { x: loin + 60, y: apresReglage.y });
+  await page.waitForTimeout(500);
+
+  check(
+    'Effleurer la barre ne règle rien, seul le bouton commande',
+    Number(await slider.inputValue()) === avantEffleurement,
+    `valeur inchangée à ${avantEffleurement.toFixed(2)}`,
   );
 
   /*
