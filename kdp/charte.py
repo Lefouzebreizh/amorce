@@ -123,7 +123,9 @@ TOME_1: tuple[Page, ...] = (
     Page(10, "FierCommeUnPaon",                 "Fier comme un paon",                   "histoire"),
     Page(11, "SeTenirACoeur",                   "Se tenir à cœur",                      "histoire"),
     Page(12, "LeSecretDeLHermine",              "Le secret de l'hermine",               "histoire"),
-    Page(13, "TempetesEtBigorneaux",            "Tempêtes et bigorneaux",               "histoire"),
+    # Titre au singulier, comme la planche ; le slug reste au pluriel parce que
+    # c'est un identifiant de fichier fixé par la charte de nommage, pas un titre.
+    Page(13, "TempetesEtBigorneaux",            "Tempête et bigorneaux",                "histoire"),
     Page(14, "LeSecretDesVaguesDYs",            "Le secret des vagues d'Ys",            "histoire"),
     Page(15, "LaMagieDuFestNoz",                "La magie du fest-noz",                 "histoire"),
     Page(16, "LeMurmureDesEtoiles",             "Le murmure des étoiles",               "histoire"),

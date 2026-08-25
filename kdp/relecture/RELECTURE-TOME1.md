@@ -106,7 +106,7 @@ trois systèmes cohabitent :
 | 08 | Mon Cerveau a Oublié le Bouton OFF | Mon cerveau a oublié le bouton OFF |
 | 09 | La Flamme qui s'éteint | La flamme qui s'éteint |
 | 10 | Fier comme un Paon | Fier comme un paon |
-| 13 | Tempête et Bigorneaux | Tempêtes et bigorneaux |
+| 13 | Tempête et Bigorneaux | Tempête et bigorneaux |
 | 14 | Le Secret des Vagues d'Ys | Le secret des vagues d'Ys |
 | 15 | La Magie du Fest Noz | La magie du fest-noz |
 | 16 | Le Murmure des Étoiles… | Le murmure des étoiles |
@@ -126,23 +126,36 @@ différent :
 | 4e de couverture | Titre de la planche | Nom de fichier de la charte | Tranché |
 | --- | --- | --- | --- |
 | Le Secret de l'Hermine | *(planche manquante)* | `LeSecretDeLHermine` | — |
-| **Le Phare dans la Tempête** | **Tempête et Bigorneaux** | `TempetesEtBigorneaux` | **ouvert** |
+| ~~Le Phare dans la Tempête~~ | **Tempête et bigorneaux** | `TempetesEtBigorneaux` | **la 4e a tort** |
 | ~~La Ville d'Ys~~ | **Le secret des vagues d'Ys** | `LeSecretDesVaguesDYs` | **la 4e a tort** |
 | La Magie du Fest Noz | La Magie du Fest Noz | `LaMagieDuFestNoz` | — |
 
 Un lecteur qui achète pour « Le Phare dans la Tempête » ne le trouvera pas dans
 la table. Il faut **un seul titre par histoire**, décidé une fois.
 
-**Décision de l'auteur, page 14 : c'est la 4e de couverture qui porte le mauvais
-titre.** « La Ville d'Ys » est abandonné ; le titre de référence est celui de la
-planche, **« Le secret des vagues d'Ys »**. Il est déjà inscrit dans
-`kdp/charte.py`. Conséquence concrète : la 4e de couverture est à régénérer — le
-texte étant pixellisé, la ligne ne peut pas être retouchée dans le PDF.
+**Décision de l'auteur : les planches font foi.** Partout où un titre diverge,
+c'est celui porté par l'illustration qui devient la référence, et la 4e de
+couverture qui se corrige.
 
-Reste ouvert, page 13 : « Le Phare dans la Tempête » (4e), « Tempête et
-Bigorneaux » (planche) et « Tempêtes et bigorneaux » (charte, au pluriel). Même
-arbitrage à rendre, et même conséquence : la 4e devra de toute façon être
-réémise, autant trancher les deux lignes en une seule fois.
+- **Page 14** — « La Ville d'Ys » est abandonné au profit de
+  **« Le secret des vagues d'Ys »**.
+- **Page 13** — « Le Phare dans la Tempête » est abandonné au profit de
+  **« Tempête et bigorneaux »**, au singulier comme sur la planche. La charte le
+  donnait au pluriel ; c'est la charte qui cède.
+
+Les deux titres de référence sont inscrits dans `kdp/charte.py`. Le nom de
+fichier `TempetesEtBigorneaux` reste au pluriel : c'est un identifiant, pas un
+titre, et le renommage déjà appliqué s'appuie dessus.
+
+Conséquence concrète, et elle n'est pas légère : **la 4e de couverture est à
+régénérer**. Le texte y est pixellisé, aucune de ces deux lignes ne peut être
+retouchée dans le PDF. Elle devait de toute façon repasser en production pour la
+résolution et pour la zone de sécurité — les trois corrections se font en une
+seule passe.
+
+Reste le seul titre qu'aucune planche ne peut encore contredire : **page 12,
+« Le Secret de l'Hermine »**, annoncé sur la 4e mais non illustré. Il fait donc
+référence par défaut, jusqu'à ce que la planche existe.
 
 En revanche, le décompte « 12 aventures + 4 histoires bonus » est **exact** :
 onze histoires d'émotions (p. 01-11) plus *Le murmure des étoiles* (p. 16) font
@@ -369,7 +382,6 @@ large parce que le côté reliure ne reçoit jamais de fond perdu.
 6. Vingt et une pages là où KDP en exige vingt-quatre, en nombre pair.
 7. Le jeu de la page 17 compte plus de différences qu'il n'en promet, et n'a
    pas de solution.
-8. Trois titres divergents entre 4e de couverture, planches et charte. Le cas
-   de la page 14 est tranché — la 4e a tort, le titre est « Le secret des vagues
-   d'Ys » — mais cela impose de régénérer la 4e de couverture, et la page 13
-   attend le même arbitrage.
+8. Titres divergents entre 4e de couverture, planches et charte : **tranché,
+   les planches font foi**. La 4e est donc à régénérer avec « Tempête et
+   bigorneaux » (p. 13) et « Le secret des vagues d'Ys » (p. 14).
