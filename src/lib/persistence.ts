@@ -170,6 +170,10 @@ export async function save(project: Project): Promise<void> {
       // Le lien objet désigne un fichier déjà en mémoire : `fetch` ne fait que
       // le relire, rien ne part sur le réseau.
       const blob = await (await fetch(ref.url)).blob();
+      // Ranger un fichier vide reviendrait à préparer une image noire pour la
+      // prochaine ouverture : mieux vaut n'avoir rien rangé du tout.
+      if (blob.size === 0) continue;
+
       const tx = db.transaction(STORE_FICHIERS, 'readwrite');
       await promise(tx.objectStore(STORE_FICHIERS).put(blob, ref.key));
     }
@@ -202,10 +206,23 @@ export async function load(): Promise<Project | null> {
     const keys = await promise(store.getAllKeys() as IDBRequest<IDBValidKey[]>);
     const blobs = await promise(store.getAll() as IDBRequest<Blob[]>);
 
+    /*
+     * Un fichier vide n'est pas un fichier.
+     *
+     * `if (blob)` ne suffit pas : un blob de zéro octet est vrai. Une écriture
+     * interrompue — le navigateur manque de place au milieu du rangement — en
+     * laisse précisément de cette sorte, et `createObjectURL` en fait un lien
+     * parfaitement valide qui ne décodera jamais rien. Le montage se rouvre
+     * alors normalement et sort noir, sans le moindre message.
+     *
+     * Ce qui n'a pas de contenu est donc traité comme absent : l'élément
+     * disparaît du projet, avec ce qui en dépendait, et l'utilisateur voit
+     * qu'il manque quelque chose au lieu de découvrir une image noire.
+     */
     const urls = new Map<string, string>();
     keys.forEach((key, index) => {
       const blob = blobs[index];
-      if (blob) urls.set(String(key), URL.createObjectURL(blob));
+      if (blob instanceof Blob && blob.size > 0) urls.set(String(key), URL.createObjectURL(blob));
     });
 
     const project = restoreProject(saved, urls);
