@@ -116,8 +116,26 @@ jobs:
       # précisément ce qui manque au conteneur de développement, et donc la
       # seule vérification que le lien natif avec les greffons (caméra, Hive,
       # visionneuse 3D) tient réellement.
+      # La clé est injectée depuis un secret du dépôt quand il existe, et
+      # l'étape reste verte s'il est absent : l'application démarre alors sur
+      # son écran de configuration, où la clé peut être saisie à la main.
+      #
+      # Attention à ce que cela implique : un `--dart-define` est une chaîne en
+      # clair dans le binaire, récupérable par qui obtient l'APK. L'artéfact
+      # d'un dépôt privé n'est téléchargeable que par ses collaborateurs, ce qui
+      # borne l'exposition — mais ne la supprime pas. Pour une diffusion plus
+      # large, ne pas renseigner le secret et laisser chacun saisir la sienne.
       - name: Construire l'APK de debug
-        run: flutter build apk --debug
+        env:
+          CLE: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -n "$CLE" ]; then
+            echo "Clé Gemini fournie par le secret du dépôt."
+            flutter build apk --debug --dart-define=GEMINI_API_KEY="$CLE"
+          else
+            echo "::notice::Aucun secret GEMINI_API_KEY : l'APK démarrera sur son écran de configuration."
+            flutter build apk --debug
+          fi
 
       - name: Publier l'APK
         uses: actions/upload-artifact@v4
