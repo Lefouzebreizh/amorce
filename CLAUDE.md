@@ -172,6 +172,35 @@ la tête de lecture se retrouve au-delà de la fin.
   navigateur (voir `effectiveQuality` dans `store.ts`), sinon l'hydratation
   diverge.
 
+## Outillage du dépôt (`.claude/`)
+
+Ce dépôt héberge **deux applications sans code commun** : le studio Amorce
+décrit ici, et l'application Flutter Look & Find dans `look_and_find/` (qui a
+son propre `CLAUDE.md`). L'outillage ci-dessous existe parce que rien de
+générique ne connaît cette particularité.
+
+| Élément | Ce qu'il fait |
+| --- | --- |
+| `hooks/session-start.sh` | Installe `node_modules` et le SDK Flutter épinglé au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `/verifier` | La séquence de vérification du sous-projet touché, et ce qu'elle ne couvre pas. |
+| `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
+| `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
+| Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
+| Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
+
+Le hook n'agit que sur une session distante (`CLAUDE_CODE_REMOTE`) : sur un
+poste de développement, le SDK appartient à son propriétaire.
+
+Deux règles qui découlent de la cohabitation :
+
+- **Une modification ne touche qu'un sous-projet**, sauf configuration à la
+  racine qui doit connaître le voisin — c'est le cas d'`eslint.config.mjs`,
+  qui ignore `look_and_find/**`, faute de quoi ESLint analyse les milliers de
+  fichiers JavaScript générés par le SDK Flutter.
+- La version de Flutter est épinglée **au même numéro** dans le hook et dans
+  `.github/workflows/look-and-find.yml`. Les faire diverger, c'est fabriquer un
+  « ça passe chez moi ».
+
 ## Vérifier
 
 Les tests unitaires (`src/lib/__tests__/`) couvrent ce qui est calculable hors
