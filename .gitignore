@@ -52,3 +52,7 @@ __pycache__/
 
 # Patrimoine réel de l'assistant d'allocation : ne sort jamais de la machine.
 patrimoine/config.json
+
+# Life-Organizer : état local et configuration de travail
+/life-organizer/donnees/
+/life-organizer/config.json
