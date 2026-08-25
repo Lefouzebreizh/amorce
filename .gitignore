@@ -49,3 +49,8 @@ next-env.d.ts
 # Caches Python de la chaîne pré-presse
 __pycache__/
 *.pyc
+
+# Paper-Manager : le coffre de documents et la configuration personnelle
+paper-manager/coffre/
+paper-manager/admin_config.json
+paper-manager/admin_config.json.bak
