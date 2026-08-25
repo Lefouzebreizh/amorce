@@ -62,7 +62,7 @@ def _trouver(dossier: Path, base: str) -> Path | None:
     return None
 
 
-def interieur(planches: Path, complements: Path, cible: Path) -> int:
+def interieur(planches: Path, complements: Path, cible: Path, tome: int = 1) -> int:
     gabarit = charte.GABARIT_INTERIEUR
     largeur, hauteur = gabarit.points
     document = fitz.open()
@@ -72,7 +72,7 @@ def interieur(planches: Path, complements: Path, cible: Path) -> int:
         print(f"  page {len(document):02d}  {nom}")
 
     manquantes, composees = [], []
-    for planche in charte.TOME_1:
+    for planche in charte.pages(tome):
         chemin = _trouver(planches, charte.nom_de_page(planche.numero, planche.slug, ""))
         if chemin is None:
             # Une planche absente peut avoir une page composée en attendant
@@ -97,7 +97,7 @@ def interieur(planches: Path, complements: Path, cible: Path) -> int:
     document.insert_pdf(fitz.open(str(complements / "99_solutions.pdf")))
     print(f"  page {len(document):02d}  99_solutions")
 
-    document.set_metadata({"title": "Roussy & Zéphy — Tome 1",
+    document.set_metadata({"title": f"Roussy & Zéphy — Tome {tome}",
                            "author": "Erwann Lefouzèbreizh",
                            "subject": f"Intérieur KDP {gabarit.largeur}x{gabarit.hauteur} po, "
                                       f"300 DPI, fond perdu"})
@@ -144,7 +144,7 @@ def couverture(planches: Path, cible: Path, pages: int) -> None:
     feuille.draw_rect(fitz.Rect((charte.FOND_PERDU + charte.FORMAT_ROGNE) * p, 0,
                                 bord_face, hauteur), color=None, fill=(0.98, 0.96, 0.90))
 
-    document.set_metadata({"title": "Roussy & Zéphy — Tome 1, couverture",
+    document.set_metadata({"title": "Roussy & Zéphy — couverture",
                            "author": "Erwann Lefouzèbreizh",
                            "subject": f"Couverture KDP, tranche {tranche:.4f} po pour {pages} pages"})
     cible.parent.mkdir(parents=True, exist_ok=True)
@@ -164,8 +164,10 @@ if __name__ == "__main__":
     a.add_argument("--planches", required=True)
     a.add_argument("--complements", required=True)
     a.add_argument("--vers", required=True)
+    a.add_argument("--tome", type=int, default=1, choices=sorted(charte.TOMES))
     args = a.parse_args()
     vers = Path(args.vers)
-    total = interieur(Path(args.planches), Path(args.complements), vers / "interieur_kdp.pdf")
+    total = interieur(Path(args.planches), Path(args.complements),
+                      vers / "interieur_kdp.pdf", args.tome)
     print()
     couverture(Path(args.planches), vers / "couverture_kdp.pdf", total)

@@ -92,3 +92,20 @@ regarder à l'écran, jamais à envoyer.
 | `kdp.py` | Les cinq sous-commandes. |
 | `relecture/RELECTURE-TOME1.md` | Relecture en trois passes, page par page. |
 | `relecture/TOME2-PISTES.md` | Expressions et prompts pour la suite. |
+
+## Deux tomes, une seule chaîne
+
+Le sommaire de chaque volume est dans `charte.py` (`TOME_1`, `TOME_2`) ; la
+mécanique ne change pas. Les outils prennent `--tome` :
+
+```bash
+python3 kdp/kdp.py --tome 2 controler --source nommes/
+python3 kdp/pipeline/assembler.py --tome 2 --planches … --complements … --vers …
+```
+
+**Un piège à connaître** : la règle de nommage ne contient pas le numéro de
+tome. `RoussyEtZephy_Page19_Coloriage.webp` existe donc dans les deux volumes.
+Gardez un dossier par tome — un mélange écraserait silencieusement des planches.
+
+Le détail du Tome 2 — texte de bulle définitif, parchemins, prompts — est dans
+`kdp/tome2/DOSSIER.md`.

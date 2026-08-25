@@ -138,5 +138,50 @@ TOME_1: tuple[Page, ...] = (
     Page(21, "MonHistoire",                     "Mon histoire",                         "auteur"),
 )
 
+# --- Ordre du Tome 2 ---------------------------------------------------------
+#
+# Même structure que le Tome 1 : douze aventures d'émotions, quatre escales
+# bretonnes, quatre pages d'atelier, la page de l'auteur. Le détail de chaque
+# histoire — texte de bulle, parchemin, prompt — est dans kdp/tome2/DOSSIER.md.
+
+TOME_2: tuple[Page, ...] = (
+    Page(1,  "LaBouleAuVentre",             "La boule au ventre",                "histoire"),
+    Page(2,  "MarcherSurDesOeufs",          "Marcher sur des œufs",              "histoire"),
+    Page(3,  "RireJaune",                   "Rire jaune",                        "histoire"),
+    Page(4,  "LaTeteCommeUnePassoire",      "La tête comme une passoire",        "histoire"),
+    Page(5,  "NePasEtreDansSonAssiette",    "Ne pas être dans son assiette",     "histoire"),
+    Page(6,  "AvoirLeCafard",               "Avoir le cafard",                   "histoire"),
+    Page(7,  "SeFaireDesCheveuxBlancs",     "Se faire des cheveux blancs",       "histoire"),
+    Page(8,  "EtreACoteDeSesPompes",        "Être à côté de ses pompes",         "histoire"),
+    Page(9,  "PrendreLaMouche",             "Prendre la mouche",                 "histoire"),
+    Page(10, "AvoirUnPoilDansLaMain",       "Avoir un poil dans la main",        "histoire"),
+    Page(11, "SeNoyerDansUnVerreDEau",      "Se noyer dans un verre d'eau",      "histoire"),
+    Page(12, "AvoirLeCoeurGros",            "Avoir le cœur gros",                "histoire"),
+    Page(13, "AvoirLePiedMarin",            "Avoir le pied marin",               "histoire"),
+    Page(14, "ChercherMidiAQuatorzeHeures", "Chercher midi à quatorze heures",   "histoire"),
+    Page(15, "AvoirLeVentEnPoupe",          "Avoir le vent en poupe",            "histoire"),
+    Page(16, "LeSommeilDuKorrigan",         "Le sommeil du korrigan",            "histoire"),
+    Page(17, "LeBalDesLucioles",            "Le bal des lucioles",               "atelier"),
+    Page(18, "DessineTaTempete",            "Dessine ta propre tempête",         "atelier"),
+    Page(19, "Coloriage",                   "Coloriage",                         "atelier"),
+    Page(20, "MonCarnetDeCourage",          "Mon carnet de courage",             "atelier"),
+    Page(21, "MonHistoire",                 "Mon histoire",                      "auteur"),
+)
+
+TOMES: dict[int, tuple[Page, ...]] = {1: TOME_1, 2: TOME_2}
+
+
+def pages(tome: int = 1) -> tuple[Page, ...]:
+    """Sommaire d'un tome. Les outils passent par là plutôt que par TOME_1.
+
+    Le nommage, l'assemblage et le contrôle sont les mêmes d'un tome à l'autre :
+    seul le sommaire change. Le câbler en dur aurait obligé à dupliquer la
+    chaîne au Tome 2, avec la certitude que les deux copies divergeraient.
+    """
+    if tome not in TOMES:
+        raise SystemExit(f"tome inconnu : {tome} (connus : {sorted(TOMES)})")
+    return TOMES[tome]
+
+
 COUVERTURE_FACE = "couverture_face"
 COUVERTURE_DOS = "couverture_dos"

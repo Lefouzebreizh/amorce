@@ -56,19 +56,19 @@ def _pliage(texte: str) -> str:
     return "".join(c for c in sans_accent.lower() if c.isalnum())
 
 
-def _index_des_pages() -> dict[str, charte.Page]:
+def _index_des_pages(tome: int = 1) -> dict[str, charte.Page]:
     """Clés de reconnaissance -> page. Le slug et le titre mènent au même endroit."""
     index: dict[str, charte.Page] = {}
-    for page in charte.TOME_1:
+    for page in charte.pages(tome):
         for cle in (page.slug, page.titre, f"page{page.numero:02d}"):
             index[_pliage(cle)] = page
     return index
 
 
-def identifier(nom: str) -> charte.Page | None:
+def identifier(nom: str, tome: int = 1) -> charte.Page | None:
     """Retrouve la page décrite par un nom de fichier, accents et casse ignorés."""
     plie = _pliage(Path(nom).stem)
-    index = _index_des_pages()
+    index = _index_des_pages(tome)
     if plie in index:
         return index[plie]
     # Nom composite (« RoussyEtZephy_Page07_LAraigneeAuPlafond », « 07-araignee »…) :
@@ -124,7 +124,7 @@ def commande_renommer(args: argparse.Namespace) -> int:
             for k, v in json.loads(Path(args.correspondance).read_text("utf-8")).items()
         }
 
-    par_numero = {p.numero: p for p in charte.TOME_1}
+    par_numero = {p.numero: p for p in charte.pages(args.tome)}
     plan: list[tuple[Path, str]] = []
     orphelins: list[Path] = []
 
@@ -148,7 +148,7 @@ def commande_renommer(args: argparse.Namespace) -> int:
             plan.append((chemin, f"{charte.COUVERTURE_DOS}{chemin.suffix.lower()}"))
             continue
 
-        page = identifier(chemin.name)
+        page = identifier(chemin.name, args.tome)
         if page is None:
             orphelins.append(chemin)
         else:
@@ -203,7 +203,7 @@ def commande_controler(args: argparse.Namespace) -> int:
 
     print(f"{'page':>4}  {'fichier':44s} {'pixels':>11s} {'DPI':>6s}  état")
     presentes = 0
-    for page in charte.TOME_1:
+    for page in charte.pages(args.tome):
         chemin = _trouver(source, charte.nom_de_page(page.numero, page.slug, ""))
         nom = charte.nom_de_page(page.numero, page.slug)
         if chemin is None:
@@ -239,7 +239,7 @@ def commande_controler(args: argparse.Namespace) -> int:
             if dpi < charte.DPI_CIBLE:
                 alertes.append(f"{nom} : {dpi:.0f} DPI")
 
-    total = len(charte.TOME_1)
+    total = len(charte.pages(args.tome))
     print(f"\n{presentes}/{total} illustration(s) intérieure(s) présente(s).")
     if total < charte.PAGES_MINIMUM_KDP:
         alertes.append(
@@ -342,7 +342,7 @@ def commande_interieur(args: argparse.Namespace) -> int:
 
     document = fitz.open()
     manquantes: list[int] = []
-    for page in charte.TOME_1:
+    for page in charte.pages(args.tome):
         feuille = document.new_page(width=largeur, height=hauteur)
         rect = fitz.Rect(0, 0, largeur, hauteur)
         chemin = _trouver(source, charte.nom_de_page(page.numero, page.slug, ""))
@@ -365,7 +365,7 @@ def commande_interieur(args: argparse.Namespace) -> int:
     document.close()
 
     poids = cible.stat().st_size / 1e6
-    print(f"\n{cible} — {len(charte.TOME_1)} pages, "
+    print(f"\n{cible} — {len(charte.pages(args.tome))} pages, "
           f"{gabarit.largeur}x{gabarit.hauteur} po, {poids:.1f} Mo")
     if manquantes:
         print(f"ATTENTION : cartons d'attente aux pages {manquantes}. "
@@ -379,7 +379,7 @@ def commande_interieur(args: argparse.Namespace) -> int:
 
 def commande_couverture(args: argparse.Namespace) -> int:
     source = Path(args.source)
-    pages = args.pages or max(len(charte.TOME_1), charte.PAGES_MINIMUM_KDP)
+    pages = args.pages or max(len(charte.pages(args.tome)), charte.PAGES_MINIMUM_KDP)
     gabarit, tranche = charte.gabarit_couverture(pages)
     largeur, hauteur = gabarit.points
 
@@ -495,6 +495,9 @@ def commande_epreuve(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     analyseur = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    # Le tome est commun à toutes les sous-commandes : seul le sommaire change
+    # d'un volume à l'autre, la mécanique est la même.
+    analyseur.add_argument("--tome", type=int, default=1, choices=sorted(charte.TOMES))
     sous = analyseur.add_subparsers(dest="commande", required=True)
 
     r = sous.add_parser("renommer", help="trier et renommer les rushes")
