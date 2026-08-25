@@ -30,7 +30,8 @@ changement touche au rendu, à l'audio, à l'export ou à la mise en page mobile
 ## Carte du code
 
 ```
-.claude/          hooks/session-start.sh (prépare la session distante), skills/verifier, skills/xiaomi
+.claude/          hooks/session-start.sh (prépare la session distante), skills/verifier, skills/xiaomi,
+                  agents/analyste-media (mesure un fichier envoyé), agents/verificateur (passe les contrôles)
 src/app/          layout.tsx (polices, thème, viewport), page.tsx (monte <Studio/>), globals.css (@theme Tailwind v4)
 src/lib/          toute la logique métier — c'est là que vit le studio
 src/hooks/        usePlayback (la boucle de rendu), usePersistence (la reprise), useSharedFiles (le partage), useMediaQuery
