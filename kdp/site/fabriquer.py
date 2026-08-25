@@ -30,6 +30,8 @@ from page17 import ECARTS, VIGNETTE_A, VIGNETTE_B  # noqa: E402
 # d'autant. Voir kdp/pipeline/bordure.py.
 RENTREE_BORDURE = 0.10
 APERCUS = ((10, "p10"), (8, "p08"), (11, "p11"), (13, "p13"))
+# L'histoire bonus n'appartient pas au tome : elle est passée à part.
+BONUS_DEFAUT = "bourricot.webp"
 
 
 def _jpeg(image: Image.Image, largeur: int, qualite: int) -> str:
@@ -46,7 +48,7 @@ def _planche(dossier: Path, numero: int) -> Path | None:
                  if (dossier / f"{base}{e}").exists()), None)
 
 
-def fabriquer(planches: Path, vers: Path) -> Path:
+def fabriquer(planches: Path, vers: Path, bonus_chemin: str | None = None) -> Path:
     gabarit = (Path(__file__).parent / "page.html.gabarit").read_text()
 
     jeu = _planche(planches, 17)
@@ -70,6 +72,13 @@ def fabriquer(planches: Path, vers: Path) -> Path:
         with Image.open(chemin) as brut:
             gabarit = gabarit.replace("{{%s}}" % cle, _jpeg(brut.convert("RGB"), 620, 74))
 
+    bonus = Path(bonus_chemin) if bonus_chemin else None
+    if bonus and bonus.exists():
+        with Image.open(bonus) as brut:
+            gabarit = gabarit.replace("{{bonus}}", _jpeg(brut.convert("RGB"), 900, 78))
+    else:
+        raise SystemExit(f"histoire bonus introuvable : {bonus}")
+
     zones = [{"n": e.rang, "t": e.intitule, "ou": e.ou,
               "x": round(e.boite[0] / 727 * 100, 2), "y": round(e.boite[1] / 1310 * 100, 2),
               "w": round((e.boite[2] - e.boite[0]) / 727 * 100, 2),
@@ -88,5 +97,6 @@ if __name__ == "__main__":
     a = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     a.add_argument("--planches", required=True)
     a.add_argument("--vers", required=True)
+    a.add_argument("--bonus", required=True, help="planche de l'histoire bonus")
     args = a.parse_args()
-    fabriquer(Path(args.planches), Path(args.vers))
+    fabriquer(Path(args.planches), Path(args.vers), args.bonus)

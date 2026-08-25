@@ -22,7 +22,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import charte  # noqa: E402
-from pipeline.normaliser import couleur_du_fond  # noqa: E402
+from pipeline.bordure import fond_charte  # noqa: E402
 
 POLICES = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
 CORPS, ITALIQUE, GRAS = (POLICES / f"Lora-{n}.ttf" for n in ("Regular", "Italic", "Bold"))
@@ -36,16 +36,10 @@ ENCRE = (0.16, 0.13, 0.11)
 
 
 def _fond(planche_source: Path, gabarit: charte.Gabarit) -> bytes:
-    """Bordure de la charte, intérieur rendu au papier vierge."""
-    with Image.open(planche_source) as brut:
-        planche = brut.convert("RGB")
-    w, h = planche.size
-    zone = (int(INTERIEUR[0] * w), int(INTERIEUR[1] * h),
-            int(INTERIEUR[2] * w), int(INTERIEUR[3] * h))
-    planche.paste(couleur_du_fond(planche), zone)
+    """Bordure de la charte sur papier nu, reconstruite plutôt que rebouchée."""
     import io
     tampon = io.BytesIO()
-    planche.save(tampon, format="PNG", compress_level=6)
+    fond_charte(planche_source, 2600).save(tampon, format="PNG", compress_level=6)
     return tampon.getvalue()
 
 

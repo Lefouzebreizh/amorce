@@ -81,6 +81,55 @@ def _fond_papier(contenu: Image.Image, papier: tuple[int, int, int]) -> Image.Im
     return canevas
 
 
+def fond_charte(donneuse: Path, cote: int, coin: float = COIN) -> Image.Image:
+    """Fond de page conforme à la charte : papier nu et grappes aux quatre angles.
+
+    Sert aux pages composées (faux-titre, mentions légales, conte de l'hermine,
+    solutions), qui n'ont pas d'illustration mais doivent porter le même cadre
+    que le reste du volume.
+
+    Pourquoi ne pas simplement reboucher l'intérieur d'une planche existante :
+    parce qu'une planche normalisée a vu ses motifs de bordure rentrer de 7 %,
+    si bien que le rebouchage les emporte et ne laisse qu'un filet et des
+    débris. Reconstruire le fond à partir de la seule grappe d'angle est plus
+    long à écrire et donne un résultat propre à toutes les résolutions.
+    """
+    with Image.open(donneuse) as brut:
+        modele = brut.convert("RGB")
+    canevas = _papier_procedural(couleur_du_fond(modele), cote)
+
+    grappe = extraire_coin(donneuse, coin)
+    grappe = grappe.resize((round(cote * coin), round(cote * coin)), Image.LANCZOS)
+    gw, gh = grappe.size
+    for miroir_x, miroir_y, position in ((False, False, (0, 0)),
+                                         (True, False, (cote - gw, 0)),
+                                         (False, True, (0, cote - gh)),
+                                         (True, True, (cote - gw, cote - gh))):
+        motif = grappe
+        if miroir_x:
+            motif = motif.transpose(Image.FLIP_LEFT_RIGHT)
+        if miroir_y:
+            motif = motif.transpose(Image.FLIP_TOP_BOTTOM)
+        canevas.paste(motif, position, motif)
+    return canevas
+
+
+def _papier_procedural(papier: tuple[int, int, int], cote: int,
+                       grain: int = 4) -> Image.Image:
+    """Papier crème au grain tiré au sort, sans motif répété.
+
+    Prélever une bande sur une planche existante puis la paver semblait plus
+    fidèle. En pratique la bande emporte ce qui traîne dans la marge — les
+    lignes du journal de la page 20, par exemple — et le pavage les répète en
+    rayures sur toute la hauteur. Un bruit calculé n'a pas ce défaut, et à cette
+    amplitude il se lit comme du grain de papier, pas comme du bruit.
+    """
+    generateur = np.random.default_rng(1789)
+    bruit = generateur.normal(0, grain, (cote, cote, 1))
+    fond = np.array(papier, dtype=np.float32) + bruit
+    return Image.fromarray(fond.clip(0, 255).astype(np.uint8))
+
+
 def poser(receveuse: Path, donneuse: Path, cible: Path, rentree: float = 0.135) -> None:
     """Réduit le contenu de la planche receveuse et lui pose la bordure."""
     with Image.open(receveuse) as brut:

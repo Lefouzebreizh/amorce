@@ -71,17 +71,28 @@ def interieur(planches: Path, complements: Path, cible: Path) -> int:
         document.insert_pdf(fitz.open(str(complements / f"{nom}.pdf")))
         print(f"  page {len(document):02d}  {nom}")
 
-    manquantes = []
+    manquantes, composees = [], []
     for planche in charte.TOME_1:
-        feuille = document.new_page(width=largeur, height=hauteur)
-        rect = fitz.Rect(0, 0, largeur, hauteur)
         chemin = _trouver(planches, charte.nom_de_page(planche.numero, planche.slug, ""))
         if chemin is None:
-            _carton(feuille, rect, charte.nom_de_page(planche.numero, planche.slug))
+            # Une planche absente peut avoir une page composée en attendant
+            # (voir page12.py). Mieux vaut une histoire en prose qu'un trou :
+            # le sommaire l'annonce, le livre doit la raconter.
+            secours = sorted(complements.glob(f"{planche.numero:02d}_*.pdf"))
+            if secours:
+                document.insert_pdf(fitz.open(str(secours[0])))
+                composees.append(planche.numero)
+                print(f"  page {len(document):02d}  {secours[0].name:52s} composée, en attente de planche")
+                continue
+            feuille = document.new_page(width=largeur, height=hauteur)
+            _carton(feuille, fitz.Rect(0, 0, largeur, hauteur),
+                    charte.nom_de_page(planche.numero, planche.slug))
             manquantes.append(planche.numero)
             print(f"  page {len(document):02d}  MANQUANTE — {planche.titre}")
         else:
-            print(f"  page {len(document):02d}  {chemin.name:52s} {_placer(feuille, rect, chemin)}")
+            feuille = document.new_page(width=largeur, height=hauteur)
+            note = _placer(feuille, fitz.Rect(0, 0, largeur, hauteur), chemin)
+            print(f"  page {len(document):02d}  {chemin.name:52s} {note}")
 
     document.insert_pdf(fitz.open(str(complements / "99_solutions.pdf")))
     print(f"  page {len(document):02d}  99_solutions")
@@ -101,6 +112,9 @@ def interieur(planches: Path, complements: Path, cible: Path) -> int:
         print(f"  ATTENTION : {total} pages, KDP en exige {charte.PAGES_MINIMUM_KDP}")
     if total % 2:
         print(f"  ATTENTION : {total} pages, il en faut un nombre pair")
+    if composees:
+        print(f"  À REMPLACER : planches {composees} rendues en page composée, "
+              f"faute d'illustration")
     if manquantes:
         print(f"  ATTENTION : cartons d'attente aux planches {manquantes}")
     return total

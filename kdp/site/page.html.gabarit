@@ -74,6 +74,7 @@ section{padding:clamp(3.5rem,7vw,6rem) 0}
 .planches{display:grid; gap:calc(var(--pas)*1.1); grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
 .planche{background:var(--papier); padding:10px 10px 0; border-radius:2px; box-shadow:0 14px 32px rgba(0,0,0,.42)}
 .planche img{border-radius:1px}
+.planche-bonus{max-width:760px; margin-inline:auto}
 .planche figcaption{font-family:var(--serif); font-size:.88rem; font-style:italic; color:#6B5B44;
   padding:.75rem .3rem .85rem; text-align:center}
 
@@ -167,7 +168,7 @@ footer{padding:2.5rem 0 3.5rem; color:var(--texte-faible); font-size:.85rem;
       <div class="actions">
         <!-- REMPLACER href par le lien Amazon du livre -->
         <a class="bouton" href="#" data-amazon>Commander sur Amazon</a>
-        <a class="bouton-fin" href="#jeu"><span>Jouer aux 7 différences</span></a>
+        <a class="bouton-fin" href="#bonus"><span>Lire l\u2019histoire bonus</span></a>
       </div>
     </div>
     <div class="socle">
@@ -204,6 +205,19 @@ footer{padding:2.5rem 0 3.5rem; color:var(--texte-faible); font-size:.85rem;
     <figure class="planche"><img src="{{p13}}" alt="Planche : Tempête et bigorneaux" loading="lazy">
       <figcaption>Tempête et bigorneaux</figcaption></figure>
   </div>
+</section>
+
+<section class="large" id="bonus">
+  <div class="entete">
+    <span class="oeil">Hors du livre</span>
+    <h2>Une histoire qui n'est nulle part ailleurs</h2>
+    <p>Celle-ci n'est pas dans le Tome 1 et ne le sera pas. Elle est ici, en entier,
+      gratuitement, parce qu'une histoire se lit mieux qu'une bande-annonce.</p>
+  </div>
+  <figure class="planche planche-bonus">
+    <img src="{{bonus}}" alt="Histoire bonus : Têtu comme un bourricot, quatre panneaux" loading="lazy">
+    <figcaption>Têtu comme un bourricot — inédit</figcaption>
+  </figure>
 </section>
 
 <section class="jeu" id="jeu">
