@@ -48,6 +48,21 @@ concordent pas assez pour retypographier sans que le raccord se voie.
 | 3 | « **…** Mais le goûter » | points de suspension en tête supprimés, ligne recentrée |
 | 4 | « ça **compte pas** ! » | « ça **ne** compte pas ! » — le « ne » est bâti avec le « n » de « Un » et le « e » de « de », deux lignes plus haut dans la même bulle, décalés des trente-deux pixels qui séparent les deux lignes de base |
 
+**Défaut de dessin corrigé, panneau 3.** Zéphy y a les yeux grands ouverts,
+mais ses pupilles mesuraient six pixels sur six dans un œil de cinquante sur
+quarante, serrées contre le coin interne : à taille réelle, le regard paraissait
+vide. Elles sont redessinées à une proportion de dessin animé, avec un reflet,
+tracées à quatre fois la taille puis réduites — une ellipse dessinée directement
+à cette échelle sortirait crénelée, et une pupille crénelée se voit plus qu'une
+pupille trop petite.
+
+C'est un défaut de **dessin**, pas de texte : le contrôle typographique ne peut
+rien contre cette famille-là. D'autres sont relevés dans
+`kdp/relecture/RELECTURE-TOME1.md` — Roussy en chaton page 19, une seule aile à
+Zéphy sur la même page, la queue de bulle du panneau 3 qui remonte dans le
+panneau 1 en page 7. Il faut un œil humain, et vous venez d'en apporter la
+preuve.
+
 **Non fait : la casse du titre.** « Têtu comme un **B**ourricot » devrait s'écrire
 avec un b minuscule selon la charte. Le B est un capital calligraphique à
 parafe, deux fois la hauteur d'x, dans une écriture où les lettres sont liées :

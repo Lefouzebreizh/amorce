@@ -106,6 +106,49 @@ def inserer_ne(image: Image.Image) -> None:
     image.paste(reste, (depart + total - l_reste - 3, 878))
 
 
+# --- Le regard du panneau 3 ---------------------------------------------------
+#
+# Zéphy y a les yeux grands ouverts, mais ses pupilles mesurent six pixels sur
+# six dans un œil de cinquante sur quarante, et se serrent contre le coin
+# interne. À taille réelle, le regard paraît vide. On les redessine à une
+# proportion de dessin animé, orientées vers Roussy, qui est en bas à gauche.
+
+REGARD = (
+    # (centre x, centre y, rayon horizontal, rayon vertical)
+    (519, 1100, 9.0, 9.5),      # œil gauche
+    (562, 1103, 10.0, 10.5),    # œil droit
+)
+PUPILLE = (17, 11, 5)           # relevé sur le trait de la planche
+REFLET = (250, 248, 244)
+
+
+def redessiner_le_regard(image: Image.Image, echelle: int = 4) -> None:
+    """Agrandit les pupilles du panneau 3 et leur rend un reflet.
+
+    Tracé à quatre fois la taille puis réduit : une ellipse dessinée directement
+    à cette échelle-là sortirait crénelée, et une pupille crénelée se voit plus
+    qu'une pupille trop petite.
+    """
+    from PIL import ImageDraw
+    for cx, cy, rx, ry in REGARD:
+        boite = (round(cx - rx - 3), round(cy - ry - 3),
+                 round(cx + rx + 4), round(cy + ry + 4))
+        morceau = image.crop(boite).resize(
+            ((boite[2] - boite[0]) * echelle, (boite[3] - boite[1]) * echelle),
+            Image.LANCZOS)
+        d = ImageDraw.Draw(morceau)
+        ox, oy = (cx - boite[0]) * echelle, (cy - boite[1]) * echelle
+        d.ellipse([ox - rx * echelle, oy - ry * echelle,
+                   ox + rx * echelle, oy + ry * echelle], fill=PUPILLE)
+        # Reflet en haut à gauche : c'est lui qui rend l'œil vivant.
+        r = rx * echelle * 0.30
+        d.ellipse([ox - rx * echelle * 0.42 - r, oy - ry * echelle * 0.40 - r,
+                   ox - rx * echelle * 0.42 + r, oy - ry * echelle * 0.40 + r],
+                  fill=REFLET)
+        image.paste(morceau.resize((boite[2] - boite[0], boite[3] - boite[1]),
+                                   Image.LANCZOS), boite[:2])
+
+
 def corriger(source: Path, cible: Path) -> None:
     with Image.open(source) as brut:
         image = brut.convert("RGB")
@@ -114,6 +157,8 @@ def corriger(source: Path, cible: Path) -> None:
         print(f"  {libelle} (recentrage {decalage:+d} px)")
     inserer_ne(image)
     print("  panneau 4, ligne 2 : « ne » rétabli, bâti avec le « n » et le « e » de la bulle")
+    redessiner_le_regard(image)
+    print("  panneau 3 : pupilles de Zéphy agrandies et pourvues d’un reflet")
     cible.parent.mkdir(parents=True, exist_ok=True)
     image.save(cible, compress_level=6)
     print(f"\n{cible}")
