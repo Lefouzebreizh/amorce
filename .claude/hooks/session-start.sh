@@ -75,10 +75,15 @@ echo "── Studio audio : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages \
   streamlit pydub imageio-ffmpeg edge-tts requests
 
+echo "── Répondeur Facebook : bibliothèques Python"
+# `requests` est déjà là pour le studio audio ; ces deux-là ne le sont pas, et
+# sans elles les tests du répondeur ne se lancent même pas.
+python3 -m pip install --quiet --break-system-packages anthropic python-dotenv
+
 # Rend `flutter` et `dart` disponibles à la session elle-même, pas seulement à
 # ce script.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
