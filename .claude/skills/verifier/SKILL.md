@@ -84,8 +84,9 @@ python3 -m unittest discover -s paper-manager/tests -q
 ```
 
 Couvre ce qui est calculable : arithmétique des échéances et des préavis,
-validation et réécriture d'`admin_config.json`, résolution des gabarits de
-formulaire et remplissage effectif d'un PDF. Le formulaire de test est fabriqué
+validation et réécriture d'`admin_config.json`, tableau de bord et fusion des
+alertes, format du fichier de rappels, résolution des gabarits de formulaire et
+remplissage effectif d'un PDF. Le formulaire de test est fabriqué
 à l'exécution — aucun binaire n'est versionné ici.
 
 Seul PyMuPDF est nécessaire, et il est déjà installé par le hook de démarrage

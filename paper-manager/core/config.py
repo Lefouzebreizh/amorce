@@ -29,7 +29,7 @@ import json
 import os
 import shutil
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, time
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
@@ -108,6 +108,15 @@ class _Bloc:
                 f"{self._ou(cle)} : « {valeur} » n'est pas une date AAAA-MM-JJ"
             ) from None
 
+    def heure(self, cle: str, defaut: str) -> time:
+        valeur = self.texte(cle, defaut) or defaut
+        try:
+            return time.fromisoformat(valeur)
+        except ValueError:
+            raise ErreurConfiguration(
+                f"{self._ou(cle)} : « {valeur} » n'est pas une heure HH:MM"
+            ) from None
+
     def choix(self, cle: str, enumeration: type, defaut: Any) -> Any:
         valeur = self.brut.get(cle)
         if valeur in (None, ""):
@@ -165,8 +174,7 @@ class Extraction:
 @dataclass(frozen=True)
 class Rappels:
     avant_echeance_jours: list[int]
-    heure: str
-    fuseau: str
+    heure: time
     sortie_ics: Path
     preavis_defaut_jours: int
     alerte_avant_defaut_jours: int
@@ -292,8 +300,7 @@ def _lire_rappels(bloc: _Bloc) -> Rappels:
         raise ErreurConfiguration("rappels.avant_echeance_jours : des nombres de jours sont attendus")
     return Rappels(
         avant_echeance_jours=sorted({int(j) for j in jours}, reverse=True),
-        heure=bloc.texte("heure", "08:00"),
-        fuseau=bloc.texte("fuseau", "Europe/Paris"),
+        heure=bloc.heure("heure", "08:00"),
         sortie_ics=Path(bloc.texte("sortie_ics", "coffre/rappels.ics")),
         preavis_defaut_jours=bloc.entier("preavis_defaut_jours", 30, minimum=0) or 0,
         alerte_avant_defaut_jours=bloc.entier("alerte_avant_defaut_jours", 45, minimum=0) or 0,

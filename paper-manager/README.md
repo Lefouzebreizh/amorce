@@ -6,9 +6,9 @@ besoin de sortir (la lecture d'un document par un modèle de vision, et
 uniquement si elle est activée).
 
 Ce fichier est le plan du projet. Écrits à ce jour : le modèle de données, la
-configuration, le tableau de bord des abonnements et le remplissage de
-formulaires PDF, avec leurs tests. Les autres modules sont des coquilles portant
-leur justification.
+configuration, le tableau de bord des abonnements, les rappels d'agenda et le
+remplissage de formulaires PDF, avec leurs tests. Les modules de lecture des
+documents et de courriers sont des coquilles portant leur justification.
 
 ## Les quatre modules
 
@@ -148,6 +148,39 @@ Ce que le calcul sait, et qui vaut d'être connu :
 - **Le statut décidé à la main survit au recalcul.** C'est la seule chose que
   le programme lit dans le fichier plutôt que de la calculer.
 
+## Les rappels d'agenda
+
+```bash
+python3 paper.py agenda                       # écrit coffre/rappels.ics
+python3 paper.py agenda --vers ailleurs.ics
+```
+
+Le fichier s'ouvre depuis le téléphone et ses événements entrent dans l'agenda.
+Pas de service qui tourne en tâche de fond : le rappel doit arriver là où on
+regarde déjà.
+
+- **Un événement par échéance, trois sonneries dedans** (30, 7 et 1 jours
+  avant, réglable par `rappels.avant_echeance_jours`). Un événement par rappel
+  remplirait l'agenda de trois lignes pour une seule chose à faire ; une seule
+  sonnerie tomberait forcément un jour où l'on ne peut rien faire.
+- **Le titre porte l'action** — « Résilier — Assurance habitation », et la
+  consigne complète en description. Un rappel qui oblige à rouvrir un dossier
+  pour savoir quoi faire est un rappel qu'on repousse.
+- **L'heure est flottante** : 8 h là où se trouve l'appareil. C'est ce qu'on
+  veut d'un rappel personnel, et cela évite d'embarquer un bloc `VTIMEZONE`,
+  trente lignes de règles de changement d'heure qui vieillissent.
+- **Les identifiants sont stables** : réimporter le fichier met à jour les
+  événements au lieu d'en créer des doubles.
+- **La sortie est déterministe** : même configuration, même jour, même fichier
+  à l'octet près. On peut le comparer au précédent pour voir ce qui a changé.
+- **Les échéances déjà passées n'y vont pas.** Un événement daté d'hier ne
+  prévient plus personne ; le tableau de bord, lui, continue de les afficher en
+  retard tant qu'elles ne sont pas traitées.
+
+Le fichier est écrit sans bibliothèque : il n'y a ici ni récurrence ni fuseau à
+gérer, et il restait trente lignes de format texte — moins que le coût d'une
+dépendance à installer sur chaque machine qui régénère le fichier.
+
 ## Remplir un PDF
 
 Un Cerfa, un mandat de prélèvement, un bulletin d'adhésion : les mêmes vingt
@@ -248,10 +281,10 @@ Sections, dans l'ordre du fichier :
 
 ```bash
 python3 paper.py etat [--traiter ID | --reporter ID]       # écrit
+python3 paper.py agenda [--vers coffre/rappels.ics]        # écrit
 python3 paper.py champs <formulaire.pdf> [--gabarit]       # écrit
 python3 paper.py remplir <plan.json> [--abonnement <id>]   # écrit
 python3 paper.py classer --source coffre/entree            # module 1, à venir
-python3 paper.py agenda --vers coffre/rappels.ics          # module 2, à venir
 python3 paper.py resilier <id-abonnement>                  # module 4, à venir
 ```
 
@@ -263,8 +296,8 @@ python3 -m unittest discover -s paper-manager/tests -v
 
 Les tests couvrent ce qui est calculable : l'arithmétique des échéances et des
 préavis, la validation et la réécriture de la configuration, le tableau de bord
-et la fusion des alertes, la résolution des gabarits et le remplissage effectif
-d'un PDF. Le formulaire de test est
+et la fusion des alertes, le format du fichier de rappels jusqu'au pliage des
+lignes, la résolution des gabarits et le remplissage effectif d'un PDF. Le formulaire de test est
 **fabriqué à l'exécution** — ce dépôt ne versionne aucun binaire, et un Cerfa
 vierge en est un.
 
@@ -273,6 +306,7 @@ une session distante par le hook du dépôt, pour la chaîne pré-presse KDP.
 
 ## Prochaine étape
 
-`core/calendrier.py` : les alertes deviennent un `.ics` que l'agenda du
-téléphone reprend. C'est le module qui fait sortir l'assistant de son terminal,
-et il n'a plus rien à calculer — tout est dans `abonnements.alertes()`.
+`core/resiliation.py` : le courrier prêt à signer. C'est le geste que le tableau
+de bord réclame et que rien ne produit encore ; `formulaires.py` sait déjà
+remplir un PDF, il reste à écrire les gabarits et les mentions qui rendent une
+résiliation opposable.

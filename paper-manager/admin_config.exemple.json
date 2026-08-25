@@ -98,7 +98,6 @@
       1
     ],
     "heure": "08:00",
-    "fuseau": "Europe/Paris",
     "sortie_ics": "coffre/rappels.ics",
     "preavis_defaut_jours": 30,
     "alerte_avant_defaut_jours": 45

@@ -14,10 +14,6 @@ Pillow>=10.0
 # projet, et il ne part que si `extraction.active` vaut true.
 anthropic>=0.40
 
-# Fabrication du fichier .ics repris par l'agenda du téléphone. Écrire un .ics
-# à la main paraît simple jusqu'aux règles de récurrence et de fuseau.
-icalendar>=6.0
-
 # Gabarits de courriers à trous. Un `str.format` suffirait pour une lettre, pas
 # pour une lettre qui a des conditions (engagement en cours, recommandé ou non).
 Jinja2>=3.1

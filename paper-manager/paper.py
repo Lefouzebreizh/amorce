@@ -8,15 +8,18 @@ pour ne rien avoir à retenir.
 Sous-commandes écrites :
 
     etat      le tableau de bord : ce que je paie, ce qui arrive, ce qu'il faut faire
+    agenda    les échéances vers un fichier .ics repris par l'agenda du téléphone
     champs    ce qu'un PDF déclare, et le squelette de plan qui va avec
     remplir   un formulaire rempli à partir d'un plan et de mes données
 
-Sous-commandes prévues : `classer` (module 1), `agenda` (module 2),
-`resilier` (module 4).
+Sous-commandes prévues : `classer` (module 1) et `resilier` (module 4).
 
 Règle commune : **rien n'est écrasé sans le dire.** Une commande qui déplace ou
 renomme simule par défaut et n'agit qu'avec `--appliquer` ; une commande qui
 produit un fichier neuf refuse d'écraser un fichier existant sans `--ecraser`.
+Seule exception, assumée : le fichier de rappels, qui n'est qu'un produit
+dérivé des alertes et se réécrit à chaque passage — le protéger obligerait à
+passer `--ecraser` chaque fois, ce qui reviendrait à ne plus rien protéger.
 """
 
 from __future__ import annotations
@@ -29,7 +32,8 @@ from pathlib import Path
 
 from dataclasses import replace
 
-from core.abonnements import Tableau, euros, tableau
+from core.abonnements import Tableau, alertes, euros, tableau
+from core.calendrier import evenements, rendre
 from core.config import ErreurConfiguration, charger, enregistrer_alertes
 from core.formulaires import ErreurFormulaire, charger_plan, lire_champs, remplir, resoudre
 from core.modele import StatutAlerte
@@ -98,6 +102,26 @@ def _afficher(etat: Tableau) -> None:
                     f"partir maintenant coûte {euros(ligne.cout_sortie)}")
         print(f"  {preavis}  {ligne.abonnement.libelle:<{largeur}}  "
               f"{euros(ligne.mensuel):>10}/mois{note}")
+
+
+def commande_agenda(arguments: argparse.Namespace) -> int:
+    configuration = charger(arguments.config)
+    aujourdhui = date.today()
+    ouvertes = alertes(configuration, aujourdhui)
+    liste = evenements(configuration, ouvertes, aujourdhui)
+
+    sortie = Path(arguments.vers) if arguments.vers else configuration.rappels.sortie_ics
+    sortie.parent.mkdir(parents=True, exist_ok=True)
+    # `newline=""` : sans lui, Python retraduirait les fins de ligne du texte et
+    # produirait des CRCRLF sur une machine Windows. La norme veut des CRLF.
+    sortie.write_text(rendre(liste, aujourdhui), encoding="utf-8", newline="")
+
+    print(f"{sortie} — {len(liste)} rappel(s).")
+    laissees = len(ouvertes) - len(liste)
+    if laissees:
+        print(f"{laissees} échéance(s) passée(s) ou traitée(s) laissée(s) de côté : "
+              "voir « paper.py etat ».")
+    return 0
 
 
 def commande_champs(arguments: argparse.Namespace) -> int:
@@ -170,6 +194,11 @@ def analyser(argv: list[str] | None = None) -> argparse.Namespace:
                       help="écrire les alertes recalculées dans la configuration")
     etat.add_argument("--config", default=str(RACINE / "admin_config.json"))
     etat.set_defaults(fonction=commande_etat)
+
+    agenda = commandes.add_parser("agenda", help="écrire les rappels dans un fichier .ics")
+    agenda.add_argument("--vers", help="fichier de sortie (défaut : rappels.sortie_ics)")
+    agenda.add_argument("--config", default=str(RACINE / "admin_config.json"))
+    agenda.set_defaults(fonction=commande_agenda)
 
     champs = commandes.add_parser("champs", help="lister les champs d'un PDF")
     champs.add_argument("pdf", help="le formulaire vierge")
