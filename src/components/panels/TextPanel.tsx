@@ -242,7 +242,11 @@ export function TextPanel() {
             />
           </Field>
 
-          <Field label="Apparition" value={`${selected.start.toFixed(2)} s`}>
+          <Field
+            label="Apparition"
+            value={`${selected.start.toFixed(2)} s`}
+            help="L’instant où le texte s’affiche. Il s’arrête toujours 0,2 s avant la disparition : en dessous, le sous-titre clignote sans être lu."
+          >
             <Slider
               ariaLabel="Instant d’apparition"
               min={0}

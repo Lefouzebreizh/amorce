@@ -59,6 +59,20 @@ Ce sont des problèmes de dessin, pas de fichier. Dans l'ordre d'efficacité :
 4. **Épaissir les contours**, en dernier : un cerne sauve une silhouette, il ne
    sauve pas une composition.
 
+## Ce que le contrôle ne voit pas : le texte
+
+Aucune des mesures ne juge la lisibilité d'un titre — il faudrait reconnaître le
+texte pour cela. C'est la raison d'être de `--vers` : **regarder la vignette**.
+
+Repère mesuré sur la couverture de *Roussy & Zéphy* (1600 × 1600, réduite à
+150 px) : le titre, qui occupe environ 7 % de la hauteur, reste net ; le
+sous-titre, à 2,5 %, devient une trace grise illisible. En dessous d'environ
+**5 % de la hauteur de la couverture**, un texte ne survit pas à la vignette.
+Ce qui doit être lu dans une liste — le titre, et lui seul — doit donc être gros
+au point de paraître exagéré sur l'écran où on le dessine.
+
+La quatrième de couverture n'est pas concernée : personne ne la lit en vignette.
+
 ## Les seuils sont provisoires, et c'est écrit dans le script
 
 Ils ont été posés sur des images d'essai, pas sur une bibliothèque de couvertures
@@ -66,6 +80,13 @@ réelles. Quand un contrôle échoue sur une couverture que l'œil trouve claire
 ou passe sur une couverture illisible — **c'est le seuil qu'il faut corriger**,
 en tête de `kdp/vignette.py`, avec la raison. Un rapport toujours vert ne sert à
 rien ; un rapport qui crie au loup finit ignoré, ce qui revient au même.
+
+Premier recalage sur du vrai : la couverture de *Roussy & Zéphy* passe les cinq
+contrôles avec de la marge (contraste 63, détachement 99 à 124 selon la zone
+déclarée, 16 masses). Les seuils ne sont donc pas trop sévères pour une
+illustration à l'aquarelle. À noter toutefois : « masses distinctes » sature à 16
+sur ce style, ce qui la rend muette entre une bonne et une moyenne couverture —
+elle n'attrape que les cas extrêmes.
 
 Une mesure a déjà été essayée puis retirée pour cette raison : la variance du
 laplacien, censée dire ce qui reste de trait après réduction. Elle récompense le
