@@ -1,6 +1,7 @@
 #!/bin/bash
 # Prépare le conteneur d'une session distante : dépendances du studio Amorce,
-# SDK Flutter et dépendances de Look & Find, bibliothèques de la chaîne KDP.
+# SDK Flutter et dépendances de Look & Find, bibliothèques de la chaîne KDP,
+# du studio audio et de l'assistant d'allocation.
 #
 # Pourquoi ce script existe : le conteneur d'une session web démarre sur un
 # dépôt fraîchement cloné, sans `node_modules` et sans SDK Flutter. Sans lui,
@@ -75,10 +76,13 @@ echo "── Studio audio : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages \
   streamlit pydub imageio-ffmpeg edge-tts requests
 
+echo "── Assistant d'allocation : bibliothèques Python"
+python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
+
 # Rend `flutter` et `dart` disponibles à la session elle-même, pas seulement à
 # ce script.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests"

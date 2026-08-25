@@ -174,15 +174,16 @@ la tête de lecture se retrouve au-delà de la fin.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **quatre projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **cinq projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
-`CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, et le studio audio
-Streamlit dans `mon-app-audio/` (qui a son propre `README.md`). L'outillage
-ci-dessous existe parce que rien de générique ne connaît cette particularité.
+`CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
+Streamlit dans `mon-app-audio/` et l'assistant d'allocation d'actifs dans
+`patrimoine/` (qui ont chacun leur propre `README.md`). L'outillage ci-dessous
+existe parce que rien de générique ne connaît cette particularité.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/` et de `mon-app-audio/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/` et de `patrimoine/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
