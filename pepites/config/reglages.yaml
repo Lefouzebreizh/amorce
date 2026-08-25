@@ -26,6 +26,26 @@
 #   entre les deux  → montée ou descente linéaire
 
 # ---------------------------------------------------------------------------
+# Étage 0 : l'ampleur de la découverte
+# ---------------------------------------------------------------------------
+# DexScreener n'expose aucun point d'entrée « toutes les paires actives » : il
+# faut recouper trois sources, et chacune coûte des appels. Ces trois nombres
+# sont le compromis entre la largeur du filet et la durée d'un tour.
+radar:
+  # Jetons repris des fiches et mises en avant récentes. C'est la source la
+  # plus riche en micro-caps — une recherche par jeton de cotation, elle,
+  # remonte surtout les grosses paires, que la bande de capitalisation écarte
+  # aussitôt.
+  jetons_en_vitrine_max: 120
+
+  # Jetons déjà relevés qu'on re-relève quoi qu'il arrive. Sans eux, la
+  # confirmation serait un coup de chance : la découverte de DexScreener est
+  # irrégulière, et un jeton peut sortir d'un tour de recherche sans que rien
+  # ne lui soit arrivé.
+  jetons_suivis_max: 200
+  suivi_depuis_heures: 48
+
+# ---------------------------------------------------------------------------
 # Étage 1 : éliminations
 # ---------------------------------------------------------------------------
 filtres:
@@ -156,6 +176,15 @@ convergence:
     # jamais aussi symétrique.
     lavage_symetrie_max: 0.03
     lavage_rotation_min: 8.0
+
+    # Un ticket moyen sous 15 $ répété plus de deux mille fois dans l'heure :
+    # la valeur médiane d'un échange passe sous celle d'un café, deux mille
+    # fois de suite. C'est de la rotation d'inventaire pour se payer une place
+    # dans les classements, pas de l'accumulation. Le critère « ticket moyen »
+    # ne pèse que 7 points et ne suffit pas à écarter ce cas : mesuré seul, un
+    # robot de volume note encore 88/100.
+    robot_ticket_max_usd: 15.0
+    robot_transactions_min: 2000
 
   # La persistance. Un pic isolé sur un relevé est du bruit ; le même signal
   # deux relevés de suite est un mouvement. C'est le filtre anti-faux-signal le

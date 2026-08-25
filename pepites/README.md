@@ -26,25 +26,25 @@ pepites/
 ├── core/
 │   ├── modeles.py            # ✅ ce qui circule d'un skill à l'autre
 │   ├── reglages.py           # ✅ chargement et validation de la configuration
-│   ├── reseau.py             # ⬜ session HTTP, débit par hôte, reprise sur erreur
-│   └── stockage.py           # ⬜ SQLite : relevés, alertes, portefeuilles
+│   ├── reseau.py             # ✅ session HTTP, débit par point d'entrée, reprise sur erreur
+│   └── stockage.py           # ✅ SQLite : relevés, alertes, portefeuilles
 ├── sources/                  # un client par API, aucune décision
-│   ├── dexscreener.py        # ⬜
+│   ├── dexscreener.py        # ✅
 │   ├── goplus.py             # ⬜
 │   ├── honeypot_is.py        # ⬜
 │   ├── rugcheck.py           # ⬜
 │   ├── etherscan.py          # ⬜
 │   └── solana_rpc.py         # ⬜
 ├── skills/                   # les cinq skills
-│   ├── radar.py              # ⬜ skill 1
+│   ├── radar.py              # ✅ skill 1
 │   ├── bouclier.py           # ⬜ skill 2
-│   ├── convergence.py        # ⬜ skill 3 — pur, sans réseau
+│   ├── convergence.py        # ✅ skill 3 — pur, sans réseau
 │   ├── smart_money.py        # ⬜ skill 4
 │   └── telegram.py           # ⬜ skill 5
-├── pipeline.py               # ⬜ l'enchaînement des cinq étages
-├── rapport.py                # ⬜ écriture de `pepites_radar.md`
-├── main.py                   # ⬜ `scan`, `rapport`, `test-telegram`
-└── tests/                    # ✅ 26 tests, sans réseau
+├── pipeline.py               # ✅ l'enchaînement des étages
+├── rapport.py                # ✅ écriture de `pepites_radar.md`
+├── main.py                   # ✅ `scan`, `purger`
+└── tests/                    # ✅ 81 tests, sans réseau
 ```
 
 ✅ écrit et testé · ⬜ à venir
@@ -261,6 +261,10 @@ Ils portent sur la *forme* des données, pas sur leur niveau. Chacun est une
 - **Lavage.** `|A1 − S1| / (A1+S1) < 0,03` **et** rotation > 8. Un marché réel
   n'est jamais symétrique à 3 % près. Croisé avec la rotation, c'est un
   aller-retour sur soi-même.
+- **Robot de volume.** Ticket moyen sous 15 $ répété plus de 2 000 fois dans
+  l'heure. Le critère « ticket moyen » ne pèse que 7 points : mesuré seul, ce
+  profil note encore **88/100**. Il fallait une élimination, pas des points en
+  moins.
 - **Distribution déguisée.** La liquidité recule de plus de 8 % pendant que le
   volume accélère : ce n'est pas une accumulation, c'est quelqu'un qui vide le
   pool dans l'enthousiasme. Non calculable au premier relevé — neutre alors.
@@ -298,28 +302,53 @@ même jeton finit en sourdine — et c'est ce jour-là qu'il a raison.
 
 ## 5. Où en est le projet
 
-**Fait.** La table d'identité des chaînes, les réglages, les structures de
-données du pipeline, le chargement validant, 26 tests.
+**Fait — la tranche verticale tourne de bout en bout**, du premier appel
+DexScreener au fichier `pepites_radar.md` : table des chaînes, réglages,
+structures du pipeline, client HTTP cadencé, mémoire SQLite, client
+DexScreener, radar, convergence, rapport, ligne de commande. 81 tests, aucun ne
+touche au réseau.
 
-Le choix de commencer par là n'est pas de la mise en train : `chaines.yaml` est
-le seul fichier qui nomme une blockchain. Les quatre sources appellent la même
-chaîne de quatre façons — DexScreener dit `bsc`, GoPlus dit `56`, Etherscan dit
-`chainid=56`, l'utilisateur dit « BNB Chain ». Sans cette table, chaque skill
-réinvente sa correspondance, et le premier oubli fait qu'un jeton passe
-l'analyse de momentum sans jamais passer l'analyse de sécurité. C'est le bug
-qu'on ne voit pas, parce qu'il ne produit aucune erreur : juste une alerte de
-trop.
+Le choix d'avoir commencé par `chaines.yaml` n'était pas de la mise en train :
+c'est le seul fichier qui nomme une blockchain. Les quatre sources appellent la
+même chaîne de quatre façons — DexScreener dit `bsc`, GoPlus dit `56`,
+Etherscan dit `chainid=56`. Sans cette table, chaque skill réinvente sa
+correspondance, et le premier oubli fait qu'un jeton passe l'analyse de momentum
+sans jamais passer l'analyse de sécurité. C'est le bug qu'on ne voit pas, parce
+qu'il ne produit aucune erreur : juste une alerte de trop.
 
-**À suivre**, dans cet ordre : `core/stockage.py` et `core/reseau.py`, puis
-`sources/dexscreener.py` + `skills/radar.py`, puis `skills/convergence.py`
-(testable de bout en bout sans réseau), puis le bouclier, le rapport, Telegram,
-et le traqueur en dernier — c'est le seul qui a besoin d'un historique avant de
-valoir quelque chose.
+**Pas encore fait** : le bouclier anti-rugpull (skill 2), le traqueur smart
+money (skill 4), le bot Telegram (skill 5). En attendant, le rapport dit en
+toutes lettres, en tête, que rien n'est vérifié.
+
+**Ce qui reste le plus fragile** est la largeur de la découverte, pas la
+notation : sans point d'entrée « toutes les paires actives », on ne voit qu'une
+fenêtre du marché. C'est la mémoire qui compense, en s'élargissant à chaque
+tour — raison de plus pour faire tourner le scan régulièrement plutôt que de
+temps en temps.
+
+**Ordre de la suite** : bouclier (skill 2), puis Telegram (skill 5), puis le
+traqueur (skill 4) — c'est le seul qui a besoin de deux à trois semaines de
+relevés avant de valoir quelque chose, et sa table est déjà là pour commencer à
+collecter.
 
 ## 6. Commandes
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env          # puis remplir le jeton Telegram
-python3 -m unittest discover -s tests
+cp .env.example .env                       # Telegram, pour plus tard
+
+python3 main.py scan                       # un tour complet → pepites_radar.md
+python3 main.py scan --bavard              # avec le détail des appels
+python3 main.py purger --garder 30         # efface les vieux relevés
+
+python3 -m unittest discover -s tests      # 81 tests, sans réseau
+```
+
+Un scan seul ne confirme rien : la persistance demande deux relevés espacés d'au
+moins dix minutes. Le premier tour remplit la mémoire, les suivants s'en
+servent. En usage réel, c'est une tâche planifiée — toutes les quinze minutes
+est un bon rythme :
+
+```cron
+*/15 * * * * cd /chemin/vers/pepites && /usr/bin/python3 main.py scan >> scan.log 2>&1
 ```

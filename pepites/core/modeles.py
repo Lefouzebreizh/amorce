@@ -273,6 +273,44 @@ class Metriques:
     age_heures: float
 
 
+# Nom du critère dans `reglages.yaml` → champ de `Metriques`. La table vit ici
+# parce que c'est le modèle qui décide de ce qui est mesurable : un critère
+# ajouté au fichier de réglages sans champ correspondant est refusé au
+# chargement, et non découvert au milieu du premier scan.
+CHAMPS_METRIQUES = {
+    "acceleration": "acceleration",
+    "pression": "pression",
+    "discretion": "discretion",
+    "rotation": "rotation",
+    "desequilibre": "desequilibre",
+    "profondeur": "profondeur",
+    "taille_moyenne": "taille_moyenne",
+    "age": "age_heures",
+}
+
+
+@dataclass(frozen=True)
+class Releve:
+    """Ce qu'on garde d'un candidat entre deux scans.
+
+    Volontairement maigre : de quoi répondre à la seule question que les API ne
+    savent pas traiter — *la liquidité monte-t-elle ou descend-elle pendant que
+    le volume accélère ?* Stocker davantage ferait grossir la base sans rien
+    ajouter au jugement.
+    """
+
+    chaine: str
+    adresse: str
+    vu_le: datetime
+    liquidite_usd: float
+    market_cap: float
+    volume_h1: float
+    volume_h24: float
+    prix_usd: float
+    note: float
+    acceleration: float
+
+
 @dataclass(frozen=True)
 class Note:
     """Le détail d'une note, jamais le seul total.
@@ -290,6 +328,31 @@ class Note:
     @property
     def retenu(self) -> bool:
         return not self.drapeaux
+
+
+@dataclass(frozen=True)
+class Observation:
+    """Un candidat mesuré, noté, et confronté au relevé précédent.
+
+    C'est la sortie de tout ce qui se calcule sans réseau. Un type à part, et
+    non un `Pepite` incomplet : tant que le bouclier n'a pas parlé, ces jetons
+    ne sont pas vérifiés, et rien dans le programme ne doit pouvoir les faire
+    passer pour tels.
+    """
+
+    candidat: Candidat
+    metriques: Metriques
+    note: Note
+    confirme: bool
+    raison_confirmation: str
+
+    @property
+    def lien_dexscreener(self) -> str:
+        return self.candidat.paire_principale.lien_dexscreener
+
+    @property
+    def lien_explorateur(self) -> str:
+        return self.candidat.jeton.chaine.lien_explorateur(self.candidat.jeton.adresse)
 
 
 # ---------------------------------------------------------------------------
@@ -349,18 +412,20 @@ class SmartMoney:
 class Pepite:
     """Un candidat qui a traversé les cinq étages."""
 
-    candidat: Candidat
-    metriques: Metriques
-    note: Note
+    observation: Observation
     securite: Securite
     smart_money: SmartMoney
     note_finale: float
     vu_le: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property
+    def candidat(self) -> Candidat:
+        return self.observation.candidat
+
+    @property
     def lien_dexscreener(self) -> str:
-        return self.candidat.paire_principale.lien_dexscreener
+        return self.observation.lien_dexscreener
 
     @property
     def lien_explorateur(self) -> str:
-        return self.candidat.jeton.chaine.lien_explorateur(self.candidat.jeton.adresse)
+        return self.observation.lien_explorateur

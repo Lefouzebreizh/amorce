@@ -24,7 +24,7 @@ from pathlib import Path
 
 import yaml
 
-from .modeles import Chaine, Trapeze
+from .modeles import CHAMPS_METRIQUES, Chaine, Trapeze
 
 RACINE = Path(__file__).resolve().parents[1]
 DOSSIER_CONFIG = RACINE / "config"
@@ -49,6 +49,13 @@ class Critere:
     nom: str
     poids: float
     trapeze: Trapeze
+
+
+@dataclass(frozen=True)
+class ReglagesRadar:
+    jetons_en_vitrine_max: int
+    jetons_suivis_max: int
+    suivi_depuis_heures: float
 
 
 @dataclass(frozen=True)
@@ -77,6 +84,8 @@ class Drapeaux:
     honeypot_ventes_max: int
     lavage_symetrie_max: float
     lavage_rotation_min: float
+    robot_ticket_max_usd: float
+    robot_transactions_min: int
 
 
 @dataclass(frozen=True)
@@ -125,6 +134,7 @@ class ReglagesAlertes:
 @dataclass(frozen=True)
 class Reglages:
     chaines: dict[str, Chaine]
+    radar: ReglagesRadar
     filtres: Filtres
     convergence: Convergence
     bouclier: Bouclier
@@ -179,6 +189,11 @@ def lire_convergence(donnees: dict) -> Convergence:
     criteres = []
     for nom, brut in bruts.items():
         ou = f"critère « {nom} »"
+        if nom not in CHAMPS_METRIQUES:
+            raise ReglagesInvalides(
+                f"{ou} : rien ne le mesure. Critères connus : "
+                f"{', '.join(sorted(CHAMPS_METRIQUES))}"
+            )
         try:
             trapeze = Trapeze.depuis_liste(_exiger(brut, "trapeze", ou))
         except ValueError as erreur:
@@ -207,6 +222,8 @@ def lire_convergence(donnees: dict) -> Convergence:
             honeypot_ventes_max=int(drapeaux["honeypot_ventes_max"]),
             lavage_symetrie_max=float(drapeaux["lavage_symetrie_max"]),
             lavage_rotation_min=float(drapeaux["lavage_rotation_min"]),
+            robot_ticket_max_usd=float(drapeaux["robot_ticket_max_usd"]),
+            robot_transactions_min=int(drapeaux["robot_transactions_min"]),
         ),
         persistance=Persistance(
             releves_requis=int(persistance["releves_requis"]),
@@ -217,6 +234,15 @@ def lire_convergence(donnees: dict) -> Convergence:
 
 
 def lire_reglages(donnees: dict, chaines: dict[str, Chaine]) -> Reglages:
+    radar_brut = _exiger(donnees, "radar", "réglages")
+    radar = ReglagesRadar(
+        jetons_en_vitrine_max=int(radar_brut["jetons_en_vitrine_max"]),
+        jetons_suivis_max=int(radar_brut["jetons_suivis_max"]),
+        suivi_depuis_heures=float(radar_brut["suivi_depuis_heures"]),
+    )
+    if radar.jetons_en_vitrine_max + radar.jetons_suivis_max <= 0:
+        raise ReglagesInvalides("le radar n'irait chercher aucun jeton")
+
     filtres_bruts = _exiger(donnees, "filtres", "réglages")
     filtres = Filtres(**{champ: filtres_bruts[champ] for champ in (
         "market_cap_min_usd", "market_cap_max_usd", "age_min_heures",
@@ -257,6 +283,7 @@ def lire_reglages(donnees: dict, chaines: dict[str, Chaine]) -> Reglages:
 
     return Reglages(
         chaines=chaines,
+        radar=radar,
         filtres=filtres,
         convergence=convergence,
         bouclier=bouclier,
