@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { analyzeProject } from './analysis.ts';
 import { uid } from './id.ts';
 import { applyFinish, soundsOnCuts, tensionFills } from './autoFinish.ts';
+import type { SharedFile } from './share.ts';
 import { captionsFromVoice } from './voice.ts';
 import { chopped, emptyProject, layoutClips, totalDuration } from './timeline.ts';
 import type { QualityTier } from './quality.ts';
@@ -100,6 +101,16 @@ type StudioState = {
    * une décision de l'utilisateur, et l'annuler n'aurait aucun sens.
    */
   storageError: string | null;
+  /**
+   * Fichiers reçus par le bouton « Partager », en attente d'une destination.
+   *
+   * Rien dans un fichier audio ne dit s'il s'agit d'une réplique ou d'un
+   * bruitage : c'est à l'utilisateur de trancher, et ils patientent ici en
+   * attendant. Hors du projet, donc hors de l'historique — tant qu'ils ne sont
+   * pas importés, ils n'en font pas partie.
+   */
+  sharedFiles: SharedFile[];
+  setSharedFiles: (files: SharedFile[]) => void;
   /** Définition retenue pour le fichier produit. */
   exportPreset: ExportPreset['id'];
   setExportPreset: (id: ExportPreset['id']) => void;
@@ -255,6 +266,8 @@ export const useStudio = create<StudioState>((set, get) => {
   effectiveQuality: 'high',
   qualityRescued: false,
   storageError: null,
+  sharedFiles: [],
+  setSharedFiles: (sharedFiles) => set({ sharedFiles }),
   exportPreset: 'full',
   setExportPreset: (exportPreset) => set({ exportPreset }),
   // Un nouveau choix efface l'avertissement : l'utilisateur a repris la main.
