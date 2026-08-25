@@ -4,9 +4,21 @@ import { useState } from 'react';
 import { loadMusicTrack, loadSampleCue, loadVoiceCue } from '@/lib/media';
 import { SFX_LIBRARY } from '@/lib/sfx';
 import { useStudio } from '@/lib/store';
+import { placeOnCuts, placeWithoutOverlap, shotStarts } from '@/lib/timeline';
 import type { SampleCue, VoiceCue } from '@/lib/types';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Button, Field, Hint, Panel, Slider } from '../ui';
+
+/**
+ * Types acceptés par les sélecteurs de fichiers audio.
+ *
+ * Les extensions sont listées en plus du type générique : sur Android, le
+ * sélecteur ouvert par le seul `audio/*` renvoie régulièrement un fichier de
+ * zéro octet quand l'entrée choisie vient d'un espace de stockage en ligne.
+ * Nommer les extensions oriente le système vers le fournisseur de documents,
+ * qui rend le fichier réel.
+ */
+const AUDIO_ACCEPT = 'audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac';
 
 /**
  * Bruitages et musique.
@@ -140,6 +152,7 @@ function MixerPanel() {
  */
 function SamplePanel() {
   const samples = useStudio((s) => s.project.samples);
+  const clips = useStudio((s) => s.project.clips);
   const playhead = useStudio((s) => s.playhead);
   const duration = useStudio((s) => s.duration());
   const addSamples = useStudio((s) => s.addSamples);
@@ -213,10 +226,10 @@ function SamplePanel() {
 
       <label className="block cursor-pointer rounded-xl border-2 border-dashed border-edge px-4 py-5 text-center transition-colors hover:border-muted">
         <span className="text-xs font-semibold text-mist">Choisir un ou plusieurs fichiers</span>
-        <span className="mt-1 block text-[11px] text-muted">MP3, WAV, M4A — posés à la position de lecture</span>
+        <span className="mt-1 block text-[11px] text-muted">MP3, WAV, M4A — posés sur les coupes, à partir de la lecture</span>
         <input
           type="file"
-          accept="audio/*"
+          accept={AUDIO_ACCEPT}
           multiple
           className="hidden"
           onChange={async (event) => {
@@ -226,11 +239,14 @@ function SamplePanel() {
 
             setError(null);
             try {
-              // Tous au même instant, contrairement aux répliques de voix : des
-              // bruitages choisis ensemble se superposent le plus souvent sur
-              // un même évènement, ils ne s'enchaînent pas.
+              // Une coupe chacun. Contrairement aux répliques de voix ils ont le
+              // droit de se superposer, mais empiler trois sons sur le même
+              // raccord n'en laisserait entendre qu'un.
+              const times = placeOnCuts(shotStarts(clips), files.length, playhead);
               const imported: SampleCue[] = [];
-              for (const file of files) imported.push(await loadSampleCue(file, playhead));
+              for (const [index, file] of files.entries()) {
+                imported.push(await loadSampleCue(file, times[index] ?? playhead));
+              }
               addSamples(imported);
               setOpenId(imported[0]?.id ?? null);
             } catch (cause) {
@@ -266,6 +282,7 @@ function SamplePanel() {
  */
 function VoicePanel({ engine }: { engine: PlaybackEngine }) {
   const voices = useStudio((s) => s.project.voices);
+  const clips = useStudio((s) => s.project.clips);
   const playhead = useStudio((s) => s.playhead);
   const duration = useStudio((s) => s.duration());
   const addVoices = useStudio((s) => s.addVoices);
@@ -278,11 +295,16 @@ function VoicePanel({ engine }: { engine: PlaybackEngine }) {
   const [busy, setBusy] = useState(false);
 
   /**
-   * Importe les fichiers choisis, bout à bout depuis la tête de lecture.
+   * Importe les fichiers choisis et les pose sur les coupes.
    *
-   * Les empiler au même instant serait absurde : quand on sélectionne dix
-   * répliques d'un coup, c'est qu'elles s'enchaînent. On les décale donc de leur
-   * propre durée, quitte à ce qu'il reste à les ajuster une par une.
+   * Une réplique par plan : c'est ainsi qu'un montage court est écrit, et c'est
+   * le seul placement qui tombe sur quelque chose. Les enchaîner bout à bout
+   * depuis la tête de lecture faisait démarrer la parole au milieu d'un plan,
+   * et il fallait ensuite déplacer chaque réplique à la main.
+   *
+   * Les durées ne sont connues qu'une fois les fichiers décodés : on les charge
+   * tous avant de décider où ils vont, faute de quoi on ne saurait pas si l'un
+   * déborde sur la coupe suivante.
    */
   const importFiles = async (files: File[]) => {
     setBusy(true);
@@ -292,14 +314,15 @@ function VoicePanel({ engine }: { engine: PlaybackEngine }) {
       // Le contexte audio sert à décoder le fichier pour l'analyser ; le clic
       // sur le sélecteur est le geste utilisateur qui autorise sa création.
       const audio = await engine.ensureAudio();
-      const imported: VoiceCue[] = [];
-      let cursor = playhead;
+      const loaded: VoiceCue[] = [];
+      for (const file of files) loaded.push(await loadVoiceCue(file, audio.context, playhead));
 
-      for (const file of files) {
-        const cue = await loadVoiceCue(file, audio.context, cursor);
-        imported.push(cue);
-        cursor += cue.duration;
-      }
+      const times = placeWithoutOverlap(
+        shotStarts(clips),
+        loaded.map((cue) => cue.duration),
+        playhead,
+      );
+      const imported = loaded.map((cue, index) => ({ ...cue, start: times[index] ?? cue.start }));
 
       addVoices(imported);
       setOpenId(imported[0]?.id ?? null);
@@ -409,10 +432,10 @@ function VoicePanel({ engine }: { engine: PlaybackEngine }) {
         <span className="text-xs font-semibold text-mist">
           {busy ? 'Analyse en cours…' : 'Choisir un ou plusieurs fichiers'}
         </span>
-        <span className="mt-1 block text-[11px] text-muted">MP3, WAV, M4A — posés bout à bout à la lecture</span>
+        <span className="mt-1 block text-[11px] text-muted">MP3, WAV, M4A — une réplique par plan, à partir de la lecture</span>
         <input
           type="file"
-          accept="audio/*"
+          accept={AUDIO_ACCEPT}
           multiple
           className="hidden"
           onChange={async (event) => {
@@ -598,7 +621,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
             <span className="mt-1 block text-[11px] text-muted">MP3, WAV, M4A</span>
             <input
               type="file"
-              accept="audio/*"
+              accept={AUDIO_ACCEPT}
               className="hidden"
               onChange={async (event) => {
                 const file = event.target.files?.[0];

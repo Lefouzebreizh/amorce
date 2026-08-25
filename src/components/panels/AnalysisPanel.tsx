@@ -2,10 +2,12 @@
 
 import { useMemo } from 'react';
 import { analyzeProject, type Analysis, type CriterionId } from '@/lib/analysis';
+import { CAPTION_SETS } from '@/lib/autoFinish';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
 import type { StepId } from '@/lib/steps';
-import { Button, EmptyState, Hint, Panel, scoreColor } from '../ui';
+import { useState } from 'react';
+import { Button, Choice, EmptyState, Field, Hint, Panel, scoreColor } from '../ui';
 
 /**
  * Étape qui corrige chaque critère.
@@ -37,6 +39,68 @@ const REMEDY_THRESHOLD = 0.8;
 
 /** Durée visée par le découpage automatique, en secondes. */
 const CHOP_TARGET = 2;
+
+/**
+ * Poser d'un coup les réglages recommandés.
+ *
+ * Placé juste au-dessus de la note, parce que c'est là qu'on constate le manque
+ * et là qu'on voit l'effet : le chiffre bouge sous les yeux.
+ *
+ * Le bloc nomme ce que le bouton ne fera pas. Un outil qui laisse croire qu'il
+ * a tout fait est pire qu'un outil qui ne fait rien : on publie sans relire.
+ */
+function RecommendedPanel() {
+  const applyRecommended = useStudio((s) => s.applyRecommended);
+  const [setId, setSetId] = useState(CAPTION_SETS[0].id);
+  const [done, setDone] = useState(false);
+
+  const chosen = CAPTION_SETS.find((set) => set.id === setId) ?? CAPTION_SETS[0];
+
+  return (
+    <Panel
+      title="Poser les réglages recommandés"
+      subtitle="Tout ce que la note récompense, d’un seul geste. Rien de ce que tu as déjà fait n’est remplacé."
+    >
+      <Field label="Trame de textes" help={chosen.why}>
+        <Choice
+          value={setId}
+          onChange={(value) => {
+            setSetId(value);
+            setDone(false);
+          }}
+          columns={3}
+          options={CAPTION_SETS.map((set) => ({ value: set.id, label: set.label }))}
+        />
+      </Field>
+
+      <Button
+        variant="primary"
+        className="w-full"
+        onClick={() => {
+          applyRecommended(setId);
+          setDone(true);
+        }}
+      >
+        ⚡ Poser les réglages
+      </Button>
+
+      <div className="mt-3">
+        {done ? (
+          <Hint tone="warn">
+            À toi de jouer : remplace les textes entre crochets, remplis les emplacements vides dans
+            Accroche, et importe une musique dans Son. Le studio ne voit pas tes images — il ne peut ni
+            écrire à ta place, ni inventer une bande-son.
+          </Hint>
+        ) : (
+          <Hint>
+            Découpe les plans de plus de 3,5 s, pose un bruitage sur chaque coupe et sur chaque creux
+            d’attention, et met en place la trame de textes. Annulable d’un seul geste.
+          </Hint>
+        )}
+      </div>
+    </Panel>
+  );
+}
 
 /**
  * Note de viralité.
@@ -111,6 +175,8 @@ export function AnalysisPanel({
 
   return (
     <div className="space-y-3">
+      <RecommendedPanel />
+
       <Panel title="6 · Note de viralité" subtitle="Ce que la structure de ton montage laisse présager.">
         <ScoreHeader analysis={analysis} />
 

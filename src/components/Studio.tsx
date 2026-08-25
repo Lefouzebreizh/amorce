@@ -5,6 +5,8 @@ import type { FontSet } from '@/lib/captions';
 import { useStudio } from '@/lib/store';
 import { useIsCompact } from '@/hooks/useMediaQuery';
 import { usePlayback } from '@/hooks/usePlayback';
+import { usePersistence } from '@/hooks/usePersistence';
+import { useSharedFiles } from '@/hooks/useSharedFiles';
 import { StudioDesktop } from './StudioDesktop';
 import { StudioMobile } from './StudioMobile';
 import { STEP_FOR_SELECTION, type StepId } from '@/lib/steps';
@@ -41,10 +43,16 @@ export function Studio() {
   const [fonts] = useState<FontSet>(readFonts);
   const engine = usePlayback(fonts);
   const compact = useIsCompact();
+  usePersistence();
 
   // Sur téléphone, aucun panneau n'est ouvert au départ : l'aperçu occupe tout
   // l'écran, et le parcours s'offre dans la barre du bas.
   const [step, setStep] = useState<StepId | null>('import');
+
+  // Un fichier partagé arrive sans que l'utilisateur ait ouvert quoi que ce
+  // soit : on l'amène là où il devra en décider, sinon les fichiers reçus
+  // attendraient dans un panneau qu'il n'a aucune raison d'ouvrir.
+  useSharedFiles(useCallback(() => setStep('import'), []));
 
   // Sélectionner un élément amène l'étape qui sait le régler. Le changement
   // passe par l'abonnement au store plutôt que par un effet dépendant de la

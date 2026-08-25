@@ -1,9 +1,12 @@
 'use client';
 
 import { create } from 'zustand';
+import { analyzeProject } from './analysis.ts';
 import { uid } from './id.ts';
+import { applyFinish, soundsOnCuts, tensionFills } from './autoFinish.ts';
+import type { SharedFile } from './share.ts';
 import { captionsFromVoice } from './voice.ts';
-import { emptyProject, layoutClips, totalDuration } from './timeline.ts';
+import { chopped, emptyProject, layoutClips, totalDuration } from './timeline.ts';
 import type { QualityTier } from './quality.ts';
 import {
   DEFAULT_CLIP,
@@ -91,6 +94,23 @@ type StudioState = {
   /** Vrai quand le filet de sécurité a repris la main sur un choix trop lourd. */
   qualityRescued: boolean;
   setQualityChoice: (choice: QualityChoice) => void;
+  /**
+   * Pourquoi le montage n'est pas conservé, ou null s'il l'est.
+   *
+   * Hors du projet, donc hors de l'historique : c'est un état de la machine, pas
+   * une décision de l'utilisateur, et l'annuler n'aurait aucun sens.
+   */
+  storageError: string | null;
+  /**
+   * Fichiers reçus par le bouton « Partager », en attente d'une destination.
+   *
+   * Rien dans un fichier audio ne dit s'il s'agit d'une réplique ou d'un
+   * bruitage : c'est à l'utilisateur de trancher, et ils patientent ici en
+   * attendant. Hors du projet, donc hors de l'historique — tant qu'ils ne sont
+   * pas importés, ils n'en font pas partie.
+   */
+  sharedFiles: SharedFile[];
+  setSharedFiles: (files: SharedFile[]) => void;
   /** Définition retenue pour le fichier produit. */
   exportPreset: ExportPreset['id'];
   setExportPreset: (id: ExportPreset['id']) => void;
@@ -110,6 +130,8 @@ type StudioState = {
   addSoundsOnCuts: () => void;
   /** Relance l'attention là où l'analyse a repéré un creux. */
   fillTensionGaps: (moments: number[]) => void;
+  /** Pose d'un coup textes, bruitages et découpe, sans rien remplacer. */
+  applyRecommended: (setId: string) => void;
   moveClip: (from: number, to: number) => void;
   splitClipAtPlayhead: () => void;
 
@@ -243,6 +265,9 @@ export const useStudio = create<StudioState>((set, get) => {
   qualityChoice: 'auto',
   effectiveQuality: 'high',
   qualityRescued: false,
+  storageError: null,
+  sharedFiles: [],
+  setSharedFiles: (sharedFiles) => set({ sharedFiles }),
   exportPreset: 'full',
   setExportPreset: (exportPreset) => set({ exportPreset }),
   // Un nouveau choix efface l'avertissement : l'utilisateur a repris la main.
@@ -340,26 +365,11 @@ export const useStudio = create<StudioState>((set, get) => {
       const index = state.project.clips.findIndex((c) => c.id === id);
       if (index === -1) return state;
 
-      const clip = state.project.clips[index];
-      const sourceSpan = clip.outPoint - clip.inPoint;
-      const shown = sourceSpan / Math.max(0.1, clip.speed);
-      const pieces = Math.floor(shown / Math.max(0.5, target));
-      if (pieces < 2) return state;
-
-      const step = sourceSpan / pieces;
-      const chopped: Clip[] = Array.from({ length: pieces }, (_, piece) => ({
-        ...clip,
-        id: uid('clip'),
-        inPoint: clip.inPoint + piece * step,
-        outPoint: clip.inPoint + (piece + 1) * step,
-        // Le premier morceau hérite de la transition d'origine ; les suivants
-        // s'enchaînent sec, sans quoi le découpage perdrait sa nervosité.
-        transition: piece === 0 ? clip.transition : 'cut',
-        transitionDuration: piece === 0 ? clip.transitionDuration : 0,
-      }));
+      const pieces = chopped(state.project.clips[index], target, () => uid('clip'));
+      if (pieces.length < 2) return state;
 
       const clips = [...state.project.clips];
-      clips.splice(index, 1, ...chopped);
+      clips.splice(index, 1, ...pieces);
       return reclamp({ ...state, project: { ...state.project, clips }, selection: null });
     }),
 
@@ -371,22 +381,7 @@ export const useStudio = create<StudioState>((set, get) => {
    */
   addSoundsOnCuts: () =>
     mutate('sons-auto', (state) => {
-      const placed = layoutClips(state.project.clips);
-      const cycle: SfxId[] = ['boom', 'whoosh', 'punch', 'swipe', 'whoosh', 'subdrop'];
-      const added: SoundCue[] = [];
-
-      const isFree = (time: number) =>
-        ![...state.project.cues, ...added].some((c) => Math.abs(c.time - time) < 0.15);
-
-      if (isFree(0.02)) added.push({ id: uid('sfx'), sfx: 'punch', time: 0.02, gain: 0.9 });
-
-      placed.slice(1).forEach((item, index) => {
-        const at = Math.max(0, item.start);
-        if (isFree(at)) {
-          added.push({ id: uid('sfx'), sfx: cycle[index % cycle.length], time: at, gain: 0.85 });
-        }
-      });
-
+      const added = soundsOnCuts(state.project.clips, state.project.cues, () => uid('sfx'));
       if (added.length === 0) return state;
       return { project: { ...state.project, cues: [...state.project.cues, ...added] } };
     }),
@@ -394,18 +389,26 @@ export const useStudio = create<StudioState>((set, get) => {
   /** Pose une ponctuation sonore aux instants signalés par l'analyse. */
   fillTensionGaps: (moments) =>
     mutate('relance', (state) => {
-      const added: SoundCue[] = [];
-      const isFree = (time: number) =>
-        ![...state.project.cues, ...added].some((c) => Math.abs(c.time - time) < 0.2);
-
-      for (const moment of moments) {
-        const at = Math.max(0, moment + 0.3);
-        if (isFree(at)) added.push({ id: uid('sfx'), sfx: 'sparkle', time: at, gain: 0.7 });
-      }
-
+      const added = tensionFills(moments, state.project.cues, () => uid('sfx'));
       if (added.length === 0) return state;
       return { project: { ...state.project, cues: [...state.project.cues, ...added] } };
     }),
+
+  /**
+   * Pose d'un coup tout ce que la notation récompense.
+   *
+   * Une seule entrée d'historique pour l'ensemble : c'est un geste unique du
+   * point de vue de l'utilisateur, et devoir l'annuler en quinze fois serait
+   * pire que de ne pas pouvoir l'annuler.
+   */
+  applyRecommended: (setId) =>
+    mutate('reglages-recommandes', (state) =>
+      reclamp({
+        ...state,
+        project: applyFinish(state.project, analyzeProject(state.project), setId, () => uid('auto')),
+        selection: null,
+      }),
+    ),
 
   moveClip: (from, to) =>
     mutate('deplacement', (state) => {
@@ -578,9 +581,30 @@ export const useStudio = create<StudioState>((set, get) => {
       const cue = state.project.voices.find((v) => v.id === id);
       if (!cue) return state;
 
+      /*
+       * Un sous-titre posé après la dernière image n'existe pas.
+       *
+       * Une réplique placée trop tard produisait des sous-titres au-delà de la
+       * fin du montage — vu à 13,9 s sur une vidéo de 13,6 s. Ils ne
+       * s'affichaient jamais, ne comptaient dans aucune couverture, et rien à
+       * l'écran ne disait pourquoi le calage semblait n'avoir rien fait.
+       *
+       * Ceux qui débordent sont ramenés à la fin, ceux qui commencent après
+       * sont écartés : mieux vaut perdre une phrase que d'en garder une
+       * invisible.
+       */
+      const limit = totalDuration(state.project.clips);
+
       const produced = captionsFromVoice(cue.script, cue.segments, () => uid('cap'), {
         offset: cue.start,
-      }).map((caption) => ({ ...caption, voiceId: id }));
+      })
+        .filter((caption) => limit <= 0 || caption.start < limit)
+        .map((caption) => ({
+          ...caption,
+          end: limit > 0 ? Math.min(caption.end, limit) : caption.end,
+          voiceId: id,
+        }))
+        .filter((caption) => caption.end > caption.start);
 
       return {
         project: {

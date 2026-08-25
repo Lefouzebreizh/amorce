@@ -75,8 +75,23 @@ export type Caption = {
   y: number;
   /** Couleur du texte. Absente, celle du style s'applique. */
   color?: string;
+  /**
+   * Couleur de la pastille qui surligne le mot prononcé, en karaoké.
+   *
+   * Absente, celle du style s'applique. La couleur du texte posé dessus n'est
+   * pas réglable : elle se déduit du contraste, sans quoi on pourrait composer
+   * un couple parfaitement illisible en deux gestes.
+   */
+  highlightColor?: string;
   /** Facteur de taille appliqué au corps du style. */
   scale?: number;
+  /**
+   * Le texte bat-il lentement au lieu de rester immobile.
+   *
+   * À réserver à ce qui presse — un compte à rebours, une question finale. Un
+   * montage où tout pulse n'attire l'œil sur rien.
+   */
+  pulse?: boolean;
   /**
    * Réplique de voix off dont ce sous-titre est issu, s'il en vient.
    *

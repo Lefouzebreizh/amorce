@@ -285,6 +285,42 @@ const score = Number(scoreLabel?.match(/(\d+)\s+sur\s+100/)?.[1]);
 check('Une note de viralité est calculée', score > 0, `note ${score}/100`);
 await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
 
+/*
+ * Poser les réglages recommandés, et vérifier que la note bouge.
+ *
+ * C'est la seule preuve que la chaîne complète fonctionne : le bouton écrit
+ * dans le projet, l'analyse relit ce projet, et le chiffre affiché en découle.
+ * Un test unitaire vérifierait le calcul, pas le fait que l'appui aboutisse.
+ */
+{
+  const lireNote = async () => {
+    const label = await page.locator('header [role="status"]').getAttribute('aria-label');
+    return Number(label?.match(/(\d+)\s+sur\s+100/)?.[1]);
+  };
+
+  await page.click('nav[aria-label="Étapes du montage"] button:has-text("Analyser")');
+  await page.waitForTimeout(500);
+  const avant = await lireNote();
+
+  const poser = page.getByRole('button', { name: /Poser les réglages/ });
+  check('Le bouton de réglages recommandés est offert', await poser.isVisible());
+  await poser.scrollIntoViewIfNeeded();
+  await poser.click();
+  await page.waitForTimeout(900);
+
+  const apres = await lireNote();
+  check(
+    'Poser les réglages recommandés fait monter la note',
+    apres > avant,
+    `${avant} → ${apres} sur 100`,
+  );
+
+  // On rend le montage à son état d'origine : la suite du parcours mesure le
+  // résultat du montage express, pas celui du bouton.
+  await page.locator('button:has-text("Annuler")').first().click();
+  await page.waitForTimeout(600);
+}
+
 if (profile.mobile) {
   /*
    * Panneau ouvert : c'est la configuration où la hauteur manque, et donc celle
@@ -361,13 +397,24 @@ if (profile.mobile) {
 
   const slider = page.locator('input[aria-label="Point de fin"]');
   await slider.scrollIntoViewIfNeeded();
-  const box = await slider.boundingBox();
+
+  /**
+   * Abscisse du bouton de la jauge.
+   *
+   * Seul le bouton règle la valeur : partir d'un point quelconque de la barre
+   * ne produirait plus rien, et le test échouerait pour la bonne raison.
+   */
+  const thumbX = async () => {
+    const box = await slider.boundingBox();
+    const [value, min, max] = await slider.evaluate((el) => [+el.value, +el.min, +el.max]);
+    const ratio = max === min ? 0 : (value - min) / (max - min);
+    return { x: box.x + ratio * box.width, y: box.y + box.height / 2, box };
+  };
+
+  const depart = await thumbX();
   const before = Number(await slider.inputValue());
 
-  await touchDrag(
-    { x: box.x + box.width * 0.45, y: box.y + box.height / 2 },
-    { x: box.x + box.width * 0.95, y: box.y + box.height / 2 },
-  );
+  await touchDrag(depart, { x: depart.box.x + depart.box.width * 0.95, y: depart.y });
   await page.waitForTimeout(500);
   const after = Number(await slider.inputValue());
 
@@ -375,6 +422,31 @@ if (profile.mobile) {
     'Un curseur se règle réellement au doigt',
     after > before,
     `point de fin porté de ${before.toFixed(2)} s à ${after.toFixed(2)} s`,
+  );
+
+  /*
+   * Le glissement horizontal amorcé sur la barre, loin du bouton.
+   *
+   * Un panneau de réglages n'est qu'une pile de jauges : un pouce qui effleure
+   * en traversant en faisait bouger une, sans qu'on sache laquelle ni de
+   * combien. La barre affiche la valeur, elle ne la commande pas.
+   */
+  const apresReglage = await thumbX();
+  const avantEffleurement = Number(await slider.inputValue());
+  // Un point de la barre franchement à l'écart du bouton, du côté où il y a
+  // de la place.
+  const loin =
+    apresReglage.x - apresReglage.box.x > apresReglage.box.width / 2
+      ? apresReglage.box.x + apresReglage.box.width * 0.08
+      : apresReglage.box.x + apresReglage.box.width * 0.92;
+
+  await touchDrag({ x: loin, y: apresReglage.y }, { x: loin + 60, y: apresReglage.y });
+  await page.waitForTimeout(500);
+
+  check(
+    'Effleurer la barre ne règle rien, seul le bouton commande',
+    Number(await slider.inputValue()) === avantEffleurement,
+    `valeur inchangée à ${avantEffleurement.toFixed(2)}`,
   );
 
   /*

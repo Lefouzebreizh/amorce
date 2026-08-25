@@ -108,6 +108,19 @@ const MAX_TEXT_WIDTH = OUTPUT_WIDTH * 0.86;
 const LINE_HEIGHT_RATIO = 1.18;
 const POP_DURATION = 0.24;
 
+/** Durée d'un aller-retour de la pulsation, en secondes. */
+const PULSE_PERIOD = 0.7;
+
+/**
+ * Amplitude de la pulsation.
+ *
+ * Volontairement faible. Un texte qui enfle de moitié cesse d'être un texte et
+ * devient un gadget ; à cinq pour cent, l'œil perçoit un battement sans jamais
+ * perdre le mot. C'est aussi ce qui garde le bloc dans la largeur autorisée,
+ * calculée elle sur la taille au repos.
+ */
+const PULSE_DEPTH = 0.05;
+
 function fontString(style: CaptionStyle, fonts: FontSet, scale: number): string {
   return `${style.weight} ${Math.round(style.fontSize * scale)}px ${fonts[style.family]}`;
 }
@@ -142,6 +155,19 @@ export function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth:
  * Dépasse volontairement 1 en cours de route : le léger rebond est ce qui rend
  * l'apparition perceptible en une fraction de seconde.
  */
+/**
+ * Facteur d'échelle de la pulsation, pour un texte qui doit battre.
+ *
+ * Un compte à rebours, un « plus que 3 jours », une question finale : ce sont
+ * les seuls textes qui gagnent à ne pas rester immobiles. Le battement se
+ * calcule à partir du temps de la timeline, jamais d'une horloge réelle —
+ * l'export doit produire exactement la même image que la prévisualisation.
+ */
+export function pulseScale(elapsed: number): number {
+  if (elapsed < 0) return 1;
+  return 1 + PULSE_DEPTH * Math.sin((2 * Math.PI * elapsed) / PULSE_PERIOD);
+}
+
 export function popScale(elapsed: number): number {
   if (elapsed >= POP_DURATION) return 1;
   if (elapsed < 0) return 0;
@@ -216,10 +242,14 @@ export function drawCaption(
   const centerY = caption.y * OUTPUT_HEIGHT;
 
   // L'animation part du centre du bloc pour que le rebond reste symétrique.
-  if (style.pop) {
-    const scale = popScale(time - caption.start);
+  // Apparition et pulsation se multiplient : le texte rebondit en arrivant,
+  // puis continue de battre, sans que l'une n'annule l'autre.
+  const elapsed = time - caption.start;
+  const animation = (style.pop ? popScale(elapsed) : 1) * (caption.pulse ? pulseScale(elapsed) : 1);
+
+  if (animation !== 1) {
     ctx.translate(OUTPUT_WIDTH / 2, centerY);
-    ctx.scale(scale, scale);
+    ctx.scale(animation, animation);
     ctx.translate(-OUTPUT_WIDTH / 2, -centerY);
   }
 
@@ -304,6 +334,26 @@ function drawStyledText(
   ctx.restore();
 }
 
+/**
+ * Texte lisible sur un fond donné : noir ou blanc, jamais autre chose.
+ *
+ * La luminance perçue n'est pas la moyenne des composantes — l'œil est bien
+ * plus sensible au vert qu'au bleu. Un jaune vif et un bleu vif ont la même
+ * moyenne et des luminances qui vont du simple au triple ; s'en remettre à la
+ * moyenne poserait du texte noir sur le bleu, illisible.
+ *
+ * Le choix n'est pas laissé à l'utilisateur : deux sélecteurs de couleur
+ * permettraient de composer un couple invisible en deux gestes.
+ */
+export function readableOn(background: string): string {
+  const hex = background.replace('#', '');
+  if (hex.length !== 6) return '#0a0a0a';
+
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance > 0.55 ? '#0a0a0a' : '#ffffff';
+}
+
 /** Trace les lignes en surlignant le mot courant. */
 function drawKaraokeLines(
   ctx: CanvasRenderingContext2D,
@@ -341,7 +391,7 @@ function drawKaraokeLines(
           style.fontSize * scale * 1.16,
           16 * scale,
         );
-        ctx.fillStyle = style.highlight.color;
+        ctx.fillStyle = caption.highlightColor ?? style.highlight.color;
         ctx.fill();
         ctx.restore();
       }
@@ -353,7 +403,14 @@ function drawKaraokeLines(
         y,
         // Le contour noir nuit à la lisibilité sur le pavé de surlignage.
         isActive && style.highlight ? { ...style, stroke: undefined } : style,
-        isActive && style.highlight ? style.highlight.color2 : (caption.color ?? style.color),
+        isActive && style.highlight
+          ? // Le style porte sa propre couleur de texte tant qu'on ne lui en a
+            // pas imposé une autre ; dès qu'on change la pastille, seul le
+            // contraste décide.
+            caption.highlightColor
+            ? readableOn(caption.highlightColor)
+            : style.highlight.color2
+          : (caption.color ?? style.color),
         scale,
       );
 

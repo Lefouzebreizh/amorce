@@ -30,7 +30,7 @@ export function StepPanel({
 }) {
   switch (step) {
     case 'import':
-      return <ImportPanel />;
+      return <ImportPanel engine={engine} />;
     case 'montage':
       return <ClipPanel />;
     case 'texte':
