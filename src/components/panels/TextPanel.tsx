@@ -176,6 +176,34 @@ export function TextPanel() {
             </div>
           </Field>
 
+          {CAPTION_STYLES[selected.style].highlight && (
+            <Field
+              label="Couleur du surlignage"
+              help="La pastille qui allume le mot prononcé. Le texte posé dessus passe au noir ou au blanc tout seul, selon ce qui reste lisible."
+            >
+              <div className="flex flex-wrap gap-1.5">
+                {CAPTION_COLORS.map((option) => {
+                  const active =
+                    (selected.highlightColor ?? CAPTION_STYLES[selected.style].highlight?.color) === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      title={option.label}
+                      aria-label={`Surlignage ${option.label}`}
+                      aria-pressed={active}
+                      onClick={() => updateCaption(selected.id, { highlightColor: option.value })}
+                      className={`h-9 w-9 rounded-full border-2 transition-transform ${
+                        active ? 'scale-110 border-accent' : 'border-edge'
+                      }`}
+                      style={{ backgroundColor: option.value }}
+                    />
+                  );
+                })}
+              </div>
+            </Field>
+          )}
+
           <Field label="Taille" help="Un texte plus grand porte plus loin, mais mange l’image.">
             <Choice
               value={String(selected.scale ?? 1)}
@@ -185,6 +213,20 @@ export function TextPanel() {
                 value: String(option.value),
                 label: option.label,
               }))}
+            />
+          </Field>
+
+          <Field
+            label="Battement"
+            help="Réserve-le à ce qui presse — un compte à rebours, la question finale. Si tout bat, plus rien n’attire l’œil."
+          >
+            <Choice
+              value={selected.pulse ? 'oui' : 'non'}
+              onChange={(value) => updateCaption(selected.id, { pulse: value === 'oui' })}
+              options={[
+                { value: 'non', label: 'Fixe' },
+                { value: 'oui', label: 'Pulse' },
+              ]}
             />
           </Field>
 

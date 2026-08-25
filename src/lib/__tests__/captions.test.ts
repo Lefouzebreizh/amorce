@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { boxContains, CAPTION_STYLES } from '../captions.ts';
+import { boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
 import { CAPTION_COLORS, CAPTION_SCALES, type CaptionStyleId } from '../types.ts';
 
 test('la détection sous le doigt inclut les bords du rectangle', () => {
@@ -58,4 +58,45 @@ test('chaque style de sous-titre reste lisible sur n’importe quelle image', ()
     );
     assert.ok(style.fontSize >= 50, `${id} : corps trop petit pour un écran de téléphone`);
   }
+});
+
+test('le texte du surlignage se déduit du contraste, pas d’un réglage', () => {
+  // Jaune vif et cyan : clairs, ils appellent du texte noir.
+  assert.equal(readableOn('#ffe14d'), '#0a0a0a');
+  assert.equal(readableOn('#48d2ff'), '#0a0a0a');
+  assert.equal(readableOn('#ffffff'), '#0a0a0a');
+
+  // Rouge et noir : sombres, ils appellent du texte blanc.
+  assert.equal(readableOn('#ff5c68'), '#ffffff');
+  assert.equal(readableOn('#0a0a0a'), '#ffffff');
+});
+
+test('la luminance perçue n’est pas la moyenne des composantes', () => {
+  /*
+   * Jaune et bleu ont des moyennes proches et des luminances opposées : c'est
+   * le cas qui condamne un calcul naïf. Du texte noir sur ce bleu serait
+   * illisible.
+   */
+  assert.equal(readableOn('#ffff00'), '#0a0a0a');
+  assert.equal(readableOn('#0000ff'), '#ffffff');
+});
+
+test('la pulsation reste discrète et ne s’annule jamais', () => {
+  // Échantillonné sur trois périodes : le texte ne doit ni disparaître ni
+  // déborder de la largeur calculée sur sa taille au repos.
+  for (let t = 0; t < 2.1; t += 0.01) {
+    const scale = pulseScale(t);
+    assert.ok(scale >= 0.94 && scale <= 1.06, `échelle hors bornes à ${t.toFixed(2)} s : ${scale}`);
+  }
+});
+
+test('la pulsation part de la taille au repos et ne dépend que du temps de montage', () => {
+  assert.equal(pulseScale(0), 1);
+  // Avant l'apparition, rien ne bat.
+  assert.equal(pulseScale(-1), 1);
+  // Même instant, même image : c'est ce qui garantit que l'export reproduit
+  // exactement la prévisualisation.
+  assert.equal(pulseScale(0.3), pulseScale(0.3));
+  // Un aller-retour complet ramène à la taille de départ.
+  assert.ok(Math.abs(pulseScale(0.7) - 1) < 1e-9);
 });

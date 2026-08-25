@@ -208,9 +208,11 @@ ne pas lancer `playwright install`.
 ## Pièges connus
 
 - Modifier un poids dans `analysis.ts` change ce que `guide.ts` propose et ce
-  que `verify.mjs` attend. Les trois se tiennent. La note « son » ne compte à ce
-  jour que les bruitages et la musique : un montage entièrement porté par une
-  voix off y est sous-évalué.
+  que `verify.mjs` attend. Les trois se tiennent — redistribuer la note « son »
+  vers la voix off a déplacé la note de référence du parcours de 87 à 86.
+- La note « son » compte les bruitages **de synthèse et importés ensemble** :
+  l'oreille ne les distingue pas, et n'en retenir qu'une sorte notait à zéro un
+  montage entièrement ponctué de fichiers déposés.
 - `captionCoverage` écarte les sous-titres sans texte. Les emplacements vides
   posés par « Poser les réglages » disent **où** il reste à écrire ; les compter
   comme couverts noterait un écran resté vide.
