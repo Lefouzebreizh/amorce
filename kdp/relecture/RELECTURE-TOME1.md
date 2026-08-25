@@ -123,18 +123,26 @@ généraliser. Les titres de référence sont inscrits dans `kdp/charte.py`.
 Le dos annonce quatre histoires bonus. Trois portent, sur la planche, un titre
 différent :
 
-| 4e de couverture | Titre de la planche | Nom de fichier de la charte |
-| --- | --- | --- |
-| Le Secret de l'Hermine | *(planche manquante)* | `LeSecretDeLHermine` |
-| **Le Phare dans la Tempête** | **Tempête et Bigorneaux** | `TempetesEtBigorneaux` |
-| **La Ville d'Ys** | **Le Secret des Vagues d'Ys** | `LeSecretDesVaguesDYs` |
-| La Magie du Fest Noz | La Magie du Fest Noz | `LaMagieDuFestNoz` |
+| 4e de couverture | Titre de la planche | Nom de fichier de la charte | Tranché |
+| --- | --- | --- | --- |
+| Le Secret de l'Hermine | *(planche manquante)* | `LeSecretDeLHermine` | — |
+| **Le Phare dans la Tempête** | **Tempête et Bigorneaux** | `TempetesEtBigorneaux` | **ouvert** |
+| ~~La Ville d'Ys~~ | **Le secret des vagues d'Ys** | `LeSecretDesVaguesDYs` | **la 4e a tort** |
+| La Magie du Fest Noz | La Magie du Fest Noz | `LaMagieDuFestNoz` | — |
 
 Un lecteur qui achète pour « Le Phare dans la Tempête » ne le trouvera pas dans
-la table. Il faut **un seul titre par histoire**, décidé une fois. Ma
-préférence : garder les titres de planche, plus imagés, et corriger la 4e — sauf
-pour la page 13 dont le titre de planche est au singulier (« Tempête ») alors
-que la charte le donne au pluriel.
+la table. Il faut **un seul titre par histoire**, décidé une fois.
+
+**Décision de l'auteur, page 14 : c'est la 4e de couverture qui porte le mauvais
+titre.** « La Ville d'Ys » est abandonné ; le titre de référence est celui de la
+planche, **« Le secret des vagues d'Ys »**. Il est déjà inscrit dans
+`kdp/charte.py`. Conséquence concrète : la 4e de couverture est à régénérer — le
+texte étant pixellisé, la ligne ne peut pas être retouchée dans le PDF.
+
+Reste ouvert, page 13 : « Le Phare dans la Tempête » (4e), « Tempête et
+Bigorneaux » (planche) et « Tempêtes et bigorneaux » (charte, au pluriel). Même
+arbitrage à rendre, et même conséquence : la 4e devra de toute façon être
+réémise, autant trancher les deux lignes en une seule fois.
 
 En revanche, le décompte « 12 aventures + 4 histoires bonus » est **exact** :
 onze histoires d'émotions (p. 01-11) plus *Le murmure des étoiles* (p. 16) font
@@ -361,4 +369,7 @@ large parce que le côté reliure ne reçoit jamais de fond perdu.
 6. Vingt et une pages là où KDP en exige vingt-quatre, en nombre pair.
 7. Le jeu de la page 17 compte plus de différences qu'il n'en promet, et n'a
    pas de solution.
-8. Trois titres divergents entre 4e de couverture, planches et charte.
+8. Trois titres divergents entre 4e de couverture, planches et charte. Le cas
+   de la page 14 est tranché — la 4e a tort, le titre est « Le secret des vagues
+   d'Ys » — mais cela impose de régénérer la 4e de couverture, et la page 13
+   attend le même arbitrage.
