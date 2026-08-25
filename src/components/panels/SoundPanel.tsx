@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { loadMusicTrack } from '@/lib/media';
+import { loadMusicTrack, loadSampleCue, loadVoiceCue } from '@/lib/media';
 import { SFX_LIBRARY } from '@/lib/sfx';
 import { useStudio } from '@/lib/store';
+import type { SampleCue, VoiceCue } from '@/lib/types';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Button, Field, Hint, Panel, Slider } from '../ui';
 
@@ -26,6 +27,7 @@ function MixerPanel() {
   const setMix = useStudio((s) => s.setMix);
   const hasMusic = useStudio((s) => s.project.music !== null);
   const cueCount = useStudio((s) => s.project.cues.length);
+  const voiceCount = useStudio((s) => s.project.voices.length);
 
   // Le niveau d'avant la coupure, pour que la remettre restitue l'équilibre
   // choisi plutôt qu'une valeur arbitraire.
@@ -49,6 +51,15 @@ function MixerPanel() {
       label: 'Musique',
       help: hasMusic ? 'Garde-la basse : elle porte l’ambiance, elle ne raconte rien.' : 'Aucune musique importée.',
       available: hasMusic,
+    },
+    {
+      key: 'voice' as const,
+      label: 'Voix off',
+      help:
+        voiceCount === 0
+          ? 'Aucune réplique importée.'
+          : 'Laisse-la en haut : dès qu’un mot se devine au lieu de s’entendre, le reste ne compte plus.',
+      available: voiceCount > 0,
     },
   ];
 
@@ -94,10 +105,332 @@ function MixerPanel() {
         );
       })}
 
+      {voiceCount > 0 && (
+        <Field
+          label="Baisse sous la voix"
+          value={mix.ducking === 0 ? 'aucune' : `−${Math.round(mix.ducking * 100)} %`}
+          help="Les plans et la musique descendent pendant que tu parles, puis remontent. Les bruitages n’y touchent pas : un impact qui fléchit s’entend comme un défaut."
+        >
+          <Slider
+            ariaLabel="Baisse du fond sous la voix"
+            min={0}
+            max={1}
+            step={0.05}
+            value={mix.ducking}
+            onChange={(next) => setMix({ ducking: next })}
+          />
+        </Field>
+      )}
+
       <Hint>
         Ce réglage s’applique à tout le montage et se retrouve tel quel dans le fichier exporté. Pour
         couper le son d’un seul plan, passe par « Réglage fin » dans l’étape Monter.
       </Hint>
+    </Panel>
+  );
+}
+
+/**
+ * Bruitages importés.
+ *
+ * Les sons de synthèse couvrent ce qui est abstrait — une coupe, un souffle,
+ * une tension. Ils ne peuvent rien pour ce qui doit être reconnaissable : un
+ * rugissement, un coup d'orchestre, une explosion de film. Plutôt que de
+ * prétendre le contraire, on laisse déposer les siens à côté.
+ */
+function SamplePanel() {
+  const samples = useStudio((s) => s.project.samples);
+  const playhead = useStudio((s) => s.playhead);
+  const duration = useStudio((s) => s.duration());
+  const addSamples = useStudio((s) => s.addSamples);
+  const updateSample = useStudio((s) => s.updateSample);
+  const removeSample = useStudio((s) => s.removeSample);
+
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <Panel
+      title="Tes propres bruitages"
+      subtitle="Pour ce qu’aucune synthèse ne sait faire : un rugissement, une explosion, un coup d’orchestre."
+    >
+      {samples.length > 0 && (
+        <ul className="mb-3 space-y-1.5">
+          {[...samples]
+            .sort((a, b) => a.start - b.start)
+            .map((sample) => {
+              const open = openId === sample.id;
+
+              return (
+                <li key={sample.id} className={`rounded-xl ${open ? 'bg-raised' : 'bg-slab'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(open ? null : sample.id)}
+                    className="flex min-h-11 w-full items-center justify-between gap-2 px-3 text-left"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-xs font-semibold text-mist">{sample.name}</span>
+                    <span className="font-mono text-[11px] text-muted">{sample.start.toFixed(2)} s</span>
+                  </button>
+
+                  {open && (
+                    <div className="px-3 pt-1 pb-3">
+                      <Field
+                        label="Position"
+                        value={`${sample.start.toFixed(2)} s`}
+                        help="Cale-le très légèrement avant l’image qu’il ponctue : le son doit l’annoncer, pas la suivre."
+                      >
+                        <Slider
+                          ariaLabel="Position du bruitage importé"
+                          min={0}
+                          max={Math.max(0.1, duration)}
+                          step={0.01}
+                          value={sample.start}
+                          onChange={(value) => updateSample(sample.id, { start: value })}
+                        />
+                      </Field>
+
+                      <Field label="Volume" value={`${Math.round(sample.gain * 100)} %`}>
+                        <Slider
+                          ariaLabel="Volume du bruitage importé"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          value={sample.gain}
+                          onChange={(value) => updateSample(sample.id, { gain: value })}
+                        />
+                      </Field>
+
+                      <Button variant="danger" className="w-full" onClick={() => removeSample(sample.id)}>
+                        Retirer
+                      </Button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+        </ul>
+      )}
+
+      <label className="block cursor-pointer rounded-xl border-2 border-dashed border-edge px-4 py-5 text-center transition-colors hover:border-muted">
+        <span className="text-xs font-semibold text-mist">Choisir un ou plusieurs fichiers</span>
+        <span className="mt-1 block text-[11px] text-muted">MP3, WAV, M4A — posés à la position de lecture</span>
+        <input
+          type="file"
+          accept="audio/*"
+          multiple
+          className="hidden"
+          onChange={async (event) => {
+            const files = [...(event.target.files ?? [])];
+            event.target.value = '';
+            if (files.length === 0) return;
+
+            setError(null);
+            try {
+              // Tous au même instant, contrairement aux répliques de voix : des
+              // bruitages choisis ensemble se superposent le plus souvent sur
+              // un même évènement, ils ne s'enchaînent pas.
+              const imported: SampleCue[] = [];
+              for (const file of files) imported.push(await loadSampleCue(file, playhead));
+              addSamples(imported);
+              setOpenId(imported[0]?.id ?? null);
+            } catch (cause) {
+              setError(cause instanceof Error ? cause.message : 'Fichier audio illisible par le navigateur.');
+            }
+          }}
+        />
+      </label>
+
+      {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+
+      <div className="mt-3">
+        <Hint>
+          Ils passent par la même jauge « Bruitages » que les sons de synthèse, mais sans leur
+          compensation de niveau : un fichier arrive déjà réglé, le remonter le ferait saturer.
+        </Hint>
+      </div>
+    </Panel>
+  );
+}
+
+/**
+ * Voix off.
+ *
+ * Une liste de répliques posées sur la timeline, et pour chacune son texte. Le
+ * texte n'est pas là pour la mémoire : c'est lui qu'on répartit sur le signal
+ * pour obtenir les sous-titres. Écrire la réplique, c'est donc sous-titrer.
+ *
+ * Le calage reste un geste explicite, jamais automatique à la frappe. On
+ * retouche un texte plusieurs fois de suite, et recaler à chaque lettre
+ * remplacerait les sous-titres soixante fois par phrase — pour un résultat
+ * intermédiaire qui n'a aucun sens.
+ */
+function VoicePanel({ engine }: { engine: PlaybackEngine }) {
+  const voices = useStudio((s) => s.project.voices);
+  const playhead = useStudio((s) => s.playhead);
+  const duration = useStudio((s) => s.duration());
+  const addVoices = useStudio((s) => s.addVoices);
+  const updateVoice = useStudio((s) => s.updateVoice);
+  const removeVoice = useStudio((s) => s.removeVoice);
+  const alignVoice = useStudio((s) => s.alignVoice);
+
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  /**
+   * Importe les fichiers choisis, bout à bout depuis la tête de lecture.
+   *
+   * Les empiler au même instant serait absurde : quand on sélectionne dix
+   * répliques d'un coup, c'est qu'elles s'enchaînent. On les décale donc de leur
+   * propre durée, quitte à ce qu'il reste à les ajuster une par une.
+   */
+  const importFiles = async (files: File[]) => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      // Le contexte audio sert à décoder le fichier pour l'analyser ; le clic
+      // sur le sélecteur est le geste utilisateur qui autorise sa création.
+      const audio = await engine.ensureAudio();
+      const imported: VoiceCue[] = [];
+      let cursor = playhead;
+
+      for (const file of files) {
+        const cue = await loadVoiceCue(file, audio.context, cursor);
+        imported.push(cue);
+        cursor += cue.duration;
+      }
+
+      addVoices(imported);
+      setOpenId(imported[0]?.id ?? null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Fichier audio illisible par le navigateur.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Panel
+      title="Voix off"
+      subtitle="Un fichier par réplique. Écris ce qui est dit, le studio en fait les sous-titres."
+    >
+      {voices.length > 0 && (
+        <ul className="mb-3 space-y-1.5">
+          {[...voices]
+            .sort((a, b) => a.start - b.start)
+            .map((voice) => {
+              const open = openId === voice.id;
+              const words = voice.script.split(/\s+/).filter(Boolean).length;
+
+              return (
+                <li key={voice.id} className={`rounded-xl ${open ? 'bg-raised' : 'bg-slab'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(open ? null : voice.id)}
+                    className="flex min-h-11 w-full items-center justify-between gap-2 px-3 text-left"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-xs font-semibold text-mist">{voice.name}</span>
+                    <span className="font-mono text-[11px] text-muted">{voice.start.toFixed(2)} s</span>
+                  </button>
+
+                  {open && (
+                    <div className="px-3 pt-1 pb-3">
+                      <Field
+                        label="Ce qui est dit"
+                        value={words > 0 ? `${words} mot${words > 1 ? 's' : ''}` : undefined}
+                        help="Le texte exact, mot pour mot. C'est lui qui sera réparti sur le signal."
+                      >
+                        <textarea
+                          value={voice.script}
+                          rows={3}
+                          placeholder="Alerte : le secteur 09 s'effondre…"
+                          onChange={(event) => updateVoice(voice.id, { script: event.target.value })}
+                          className="w-full resize-none rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
+                        />
+                      </Field>
+
+                      <div className="mb-5">
+                        <Button
+                          variant="primary"
+                          className="w-full"
+                          disabled={voice.script.trim() === '' || voice.segments.length === 0}
+                          onClick={() => alignVoice(voice.id)}
+                        >
+                          Caler les sous-titres
+                        </Button>
+                        <p className="mt-2 text-[12.5px] leading-relaxed text-muted">
+                          {voice.segments.length === 0
+                            ? 'Le signal de cette réplique n’a pas pu être analysé : elle s’entend, mais il faudra écrire ses sous-titres à la main.'
+                            : `${voice.segments.length} passage${voice.segments.length > 1 ? 's' : ''} parlé${
+                                voice.segments.length > 1 ? 's' : ''
+                              } détecté${voice.segments.length > 1 ? 's' : ''}. Recaler remplace les sous-titres précédents.`}
+                        </p>
+                      </div>
+
+                      <Field
+                        label="Position"
+                        value={`${voice.start.toFixed(2)} s`}
+                        help="Décale la réplique jusqu’à ce qu’elle tombe sur son plan. Les sous-titres suivront au prochain calage."
+                      >
+                        <Slider
+                          ariaLabel="Position de la réplique"
+                          min={0}
+                          max={Math.max(0.1, duration)}
+                          step={0.05}
+                          value={voice.start}
+                          onChange={(value) => updateVoice(voice.id, { start: value })}
+                        />
+                      </Field>
+
+                      <Field label="Volume" value={`${Math.round(voice.gain * 100)} %`}>
+                        <Slider
+                          ariaLabel="Volume de la réplique"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          value={voice.gain}
+                          onChange={(value) => updateVoice(voice.id, { gain: value })}
+                        />
+                      </Field>
+
+                      <Button variant="danger" className="w-full" onClick={() => removeVoice(voice.id)}>
+                        Supprimer la réplique et ses sous-titres
+                      </Button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+        </ul>
+      )}
+
+      <label className="block cursor-pointer rounded-xl border-2 border-dashed border-edge px-4 py-5 text-center transition-colors hover:border-muted">
+        <span className="text-xs font-semibold text-mist">
+          {busy ? 'Analyse en cours…' : 'Choisir un ou plusieurs fichiers'}
+        </span>
+        <span className="mt-1 block text-[11px] text-muted">MP3, WAV, M4A — posés bout à bout à la lecture</span>
+        <input
+          type="file"
+          accept="audio/*"
+          multiple
+          className="hidden"
+          onChange={async (event) => {
+            const files = [...(event.target.files ?? [])];
+            event.target.value = '';
+            if (files.length > 0) await importFiles(files);
+          }}
+        />
+      </label>
+
+      {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+
+      <div className="mt-3">
+        <Hint>
+          Le fichier est analysé dans ton navigateur et n’en sort pas. Le calage suit les silences
+          entre les phrases : il est d’autant plus juste que l’enregistrement est propre.
+        </Hint>
+      </div>
     </Panel>
   );
 }
@@ -125,6 +458,8 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
   return (
     <div className="space-y-3">
       <MixerPanel />
+      <VoicePanel engine={engine} />
+      <SamplePanel />
 
       <Panel
         title="4 · Bruitages"
@@ -272,8 +607,8 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
                 try {
                   setMusic(await loadMusicTrack(file));
                   setMusicError(null);
-                } catch {
-                  setMusicError('Fichier audio illisible par le navigateur.');
+                } catch (cause) {
+                  setMusicError(cause instanceof Error ? cause.message : 'Fichier audio illisible par le navigateur.');
                 }
               }}
             />

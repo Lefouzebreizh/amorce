@@ -45,8 +45,9 @@ scripts/          make-fixtures.mjs, verify.mjs (Playwright, hors bundle)
 | `transitions.ts` | Une transition = composer deux fonctions de dessin. Ajouter un effet ne touche pas au moteur. |
 | `grade.ts` | Étalonnage cinéma : filtres, teintes, vignettage, grain, halo. |
 | `captions.ts` | Styles de sous-titres et tracé canvas ; renvoie les boîtes pour la manipulation au doigt. |
-| `sfx.ts` | Bruitages **synthétisés** en Web Audio. Aucun fichier son n'est embarqué. |
-| `audio.ts` | Mixage des trois bus (clips / bruitages / musique) et sortie enregistrable. |
+| `sfx.ts` | Bruitages **synthétisés** en Web Audio, réverbération comprise. Aucun fichier son n'est embarqué. |
+| `voice.ts` | Voix off : découpe du signal aux silences, répartition du texte sur les passages parlés, baisse du fond. Pur, testé. |
+| `audio.ts` | Mixage des quatre bus (clips / bruitages / musique / voix) et sortie enregistrable. |
 | `export.ts` | `MediaRecorder` sur le canvas + le bus audio. Négocie MP4 puis WebM. |
 | `quality.ts` | Paliers de prévisualisation, `QualityGovernor` (ajustement) et `PanicDetector` (filet). |
 | `analysis.ts` | Note de viralité sur 100 : hook 30, rythme 20, tension 20, sous-titres 15, son 10, format 5. |
@@ -89,7 +90,9 @@ justifiée en tête du fichier concerné ; relire ce commentaire avant d'y touch
    calculé à partir de la taille réelle du canvas.
 5. **Le son passe par Web Audio, jamais par le volume des éléments média.**
    Les `<video>` sont `muted` ; c'est le graphe audio qui alimente à la fois les
-   haut-parleurs et `MediaRecorder`.
+   haut-parleurs et `MediaRecorder`. La baisse automatique sous la voix a ses
+   propres nœuds, sous les plans et la musique : l'écrire sur le gain des bus
+   effacerait le réglage de la table de mixage, et inversement.
 6. **Le temps écoulé est borné hors export, jamais pendant.** La borne absorbe
    une mise en veille ; pendant un export elle désynchronise l'image et le son
    et allonge le fichier. Voir la boucle de `usePlayback.ts`.
@@ -197,7 +200,9 @@ ne pas lancer `playwright install`.
 ## Pièges connus
 
 - Modifier un poids dans `analysis.ts` change ce que `guide.ts` propose et ce
-  que `verify.mjs` attend. Les trois se tiennent.
+  que `verify.mjs` attend. Les trois se tiennent. La note « son » ne compte à ce
+  jour que les bruitages et la musique : un montage entièrement porté par une
+  voix off y est sous-évalué.
 - `renderFrame` s'arrête au fond noir quand il n'y a aucun clip : poursuivre
   appliquerait le halo à un cadre vide, ce qui étranglait l'import sur
   téléphone.
@@ -206,8 +211,15 @@ ne pas lancer `playwright install`.
 - Le canvas ne déclenche pas le chargement d'une police : passer par
   `preloadCaptionFonts` avant tout tracé, sinon le navigateur substitue
   silencieusement une police système.
-- `URL.revokeObjectURL` doit accompagner toute suppression de média ou de
-  musique (`removeAsset`, `setMusic`).
+- `URL.revokeObjectURL` doit accompagner toute suppression de média, de musique
+  ou de voix (`removeAsset`, `setMusic`, `removeVoice`).
+- Un grave en sinus pur n'existe pas sur un téléphone : un haut-parleur ne
+  restitue rien sous ~400 Hz. Tout bruitage qui descend plus bas doit être
+  doublé de ses harmoniques (`impact` dans `sfx.ts`), sans quoi il est
+  simplement absent de l'appareil où le format court est regardé.
+- Les deux couches d'un impact se **partagent** le niveau demandé. Les faire
+  s'additionner ferait grimper la crête, et le limiteur commun, en l'écrasant,
+  ferait pomper tout le mixage à chaque frappe.
 - L'export MP4 n'existe que sous Chrome et Edge ; ailleurs le fichier sort en
   WebM. Ne pas supposer l'extension.
 
