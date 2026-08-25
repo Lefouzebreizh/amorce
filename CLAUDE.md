@@ -115,6 +115,24 @@ toujours s'annuler séparément.
 Après toute opération qui raccourcit le montage, passer par `reclamp` : sinon
 la tête de lecture se retrouve au-delà de la fin.
 
+## Modifier ce dépôt
+
+- **Chirurgical.** Chaque ligne changée doit se rattacher à la demande. Ne pas
+  « améliorer » au passage le code voisin, sa mise en forme, ni ses commentaires
+  — surtout pas ses commentaires : les blocs de tête portent la justification
+  des décisions, et c'est ce que ce dépôt a de plus précieux. Du code mort sans
+  rapport se signale, il ne se supprime pas.
+- **Ne nettoyer que ses propres restes** : un import ou une fonction rendus
+  inutiles par le changement en cours, rien d'autre.
+- **Le minimum qui résout le problème.** Pas d'abstraction pour un seul appel,
+  pas de configurabilité qu'on n'a pas demandée, pas de garde contre un cas
+  impossible.
+- **Dire ses hypothèses**, et s'arrêter pour demander quand deux lectures de la
+  demande mènent à deux travaux différents.
+- **Nommer la vérification avant d'écrire** : quelle commande dira que c'est
+  bon. `npm test` pour ce qui est calculable, `npm run verify` pour le rendu,
+  l'audio, l'export et le mobile.
+
 ## Conventions de code
 
 - **Français partout** : commentaires, noms d'affichage, messages d'erreur,
