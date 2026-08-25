@@ -10,7 +10,8 @@
     "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "fixtures": "node scripts/make-fixtures.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "verify:reprise": "node scripts/verify-reprise.mjs"
   },
   "dependencies": {
     "next": "16.3.2",

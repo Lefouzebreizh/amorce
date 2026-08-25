@@ -5,6 +5,7 @@ import type { FontSet } from '@/lib/captions';
 import { useStudio } from '@/lib/store';
 import { useIsCompact } from '@/hooks/useMediaQuery';
 import { usePlayback } from '@/hooks/usePlayback';
+import { usePersistence } from '@/hooks/usePersistence';
 import { StudioDesktop } from './StudioDesktop';
 import { StudioMobile } from './StudioMobile';
 import { STEP_FOR_SELECTION, type StepId } from '@/lib/steps';
@@ -41,6 +42,7 @@ export function Studio() {
   const [fonts] = useState<FontSet>(readFonts);
   const engine = usePlayback(fonts);
   const compact = useIsCompact();
+  usePersistence();
 
   // Sur téléphone, aucun panneau n'est ouvert au départ : l'aperçu occupe tout
   // l'écran, et le parcours s'offre dans la barre du bas.

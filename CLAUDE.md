@@ -19,6 +19,7 @@ npm run lint        # eslint (config plate, eslint-config-next)
 npm test            # tests unitaires (node --test, --experimental-strip-types)
 npm run fixtures    # fabrique quatre rushes de test dans .fixtures/rushes/
 npm run verify      # parcours complet dans un vrai Chromium (dev doit tourner)
+npm run verify:reprise  # le montage survit-il à un rechargement (dev doit tourner)
 ```
 
 Avant de pousser : `npm run typecheck && npm run lint && npm test`. Si le
@@ -54,6 +55,7 @@ scripts/          make-fixtures.mjs, verify.mjs (Playwright, hors bundle)
 | `guide.ts` | Une seule consigne à la fois, ordonnée par ce qui bloque le plus. |
 | `autoEdit.ts` | Montage express : un projet complet à partir des seuls rushes. |
 | `store.ts` | Store Zustand, avec historique annuler/rétablir. |
+| `persistence.ts` | Reprise du montage : projet et fichiers rangés dans IndexedDB. Les fonctions de mise en forme sont pures et testées. |
 | `steps.ts` | Le parcours en 7 étapes, en données pures (séparé des composants pour rester testable). |
 | `media.ts`, `hooks.ts`, `id.ts` | Import de fichiers, modèles d'accroches, identifiants. |
 
@@ -177,8 +179,8 @@ qualité, store. Ils utilisent `node:test` + `node:assert/strict`, sans
 dépendance ajoutée. Les intitulés sont des phrases françaises qui décrivent le
 comportement attendu.
 
-L'essentiel du studio — décodage vidéo, mixage, tracé canvas, enregistrement —
-ne peut pas être testé ainsi. `scripts/verify.mjs` pilote donc l'application
+L'essentiel du studio — décodage vidéo, mixage, tracé canvas, enregistrement,
+reprise après rechargement — ne peut pas être testé ainsi. `scripts/verify.mjs` pilote donc l'application
 pour de vrai et contrôle le résultat **sur les pixels et sur le signal sonore**,
 pas sur la présence d'éléments dans le DOM :
 
@@ -193,6 +195,11 @@ Le bridage du processeur sur le profil téléphone n'est pas décoratif : sans
 lui, la dégradation automatique de qualité ne se déclencherait jamais sur une
 machine de développement. Captures et fichiers exportés atterrissent dans
 `.fixtures/captures/`.
+
+`npm run verify:reprise` couvre à part ce que le parcours principal ne peut pas
+faire sans se réinitialiser : importer, recharger la page, et vérifier que le
+montage revient — puis le **lire**, parce qu'un projet restauré dont les liens
+pointent dans le vide s'affiche normalement et sort noir.
 
 Chromium est déjà installé dans cet environnement (`PLAYWRIGHT_BROWSERS_PATH`),
 ne pas lancer `playwright install`.
@@ -212,7 +219,18 @@ ne pas lancer `playwright install`.
   `preloadCaptionFonts` avant tout tracé, sinon le navigateur substitue
   silencieusement une police système.
 - `URL.revokeObjectURL` doit accompagner toute suppression de média, de musique
-  ou de voix (`removeAsset`, `setMusic`, `removeVoice`).
+  ou de voix (`removeAsset`, `setMusic`, `removeVoice`, `removeSample`).
+- La reprise se relit **après** le montage du composant, jamais dans l'état
+  initial : le serveur et le navigateur doivent partir des mêmes valeurs, sinon
+  la première image sort dans la mauvaise disposition. Elle s'abandonne aussi
+  si l'utilisateur a importé quelque chose entre-temps.
+- Un lien objet enregistré ne vaut rien à la relecture. `persistence.ts` les
+  vide au rangement et les recrée au retour ; conserver l'ancien produirait une
+  image noire sans le moindre message.
+- La reprise n'est pas une sauvegarde : un navigateur efface ce qu'on lui a
+  confié quand il manque de place. Ce qui perd son fichier est retiré du projet,
+  et les plans qui en dépendaient avec — un plan orphelin donnerait un montage
+  qui s'ouvre normalement et se révèle vide à la lecture.
 - Un grave en sinus pur n'existe pas sur un téléphone : un haut-parleur ne
   restitue rien sous ~400 Hz. Tout bruitage qui descend plus bas doit être
   doublé de ses harmoniques (`impact` dans `sfx.ts`), sans quoi il est

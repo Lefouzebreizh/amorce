@@ -91,6 +91,13 @@ type StudioState = {
   /** Vrai quand le filet de sécurité a repris la main sur un choix trop lourd. */
   qualityRescued: boolean;
   setQualityChoice: (choice: QualityChoice) => void;
+  /**
+   * Pourquoi le montage n'est pas conservé, ou null s'il l'est.
+   *
+   * Hors du projet, donc hors de l'historique : c'est un état de la machine, pas
+   * une décision de l'utilisateur, et l'annuler n'aurait aucun sens.
+   */
+  storageError: string | null;
   /** Définition retenue pour le fichier produit. */
   exportPreset: ExportPreset['id'];
   setExportPreset: (id: ExportPreset['id']) => void;
@@ -243,6 +250,7 @@ export const useStudio = create<StudioState>((set, get) => {
   qualityChoice: 'auto',
   effectiveQuality: 'high',
   qualityRescued: false,
+  storageError: null,
   exportPreset: 'full',
   setExportPreset: (exportPreset) => set({ exportPreset }),
   // Un nouveau choix efface l'avertissement : l'utilisateur a repris la main.

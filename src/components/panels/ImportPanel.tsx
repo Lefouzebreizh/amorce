@@ -19,6 +19,7 @@ import { Button, EmptyState, Hint, Panel } from '../ui';
  */
 export function ImportPanel() {
   const assets = useStudio((s) => s.project.assets);
+  const storageError = useStudio((s) => s.storageError);
   const clips = useStudio((s) => s.project.clips);
   const addAssets = useStudio((s) => s.addAssets);
   const removeAsset = useStudio((s) => s.removeAsset);
@@ -130,6 +131,10 @@ export function ImportPanel() {
           <p className="mt-2 rounded-xl border border-danger/40 bg-danger/5 px-3 py-2 text-xs text-danger">{error}</p>
         )}
       </Panel>
+
+      {storageError && assets.length > 0 && (
+        <Hint tone="warn">{storageError}</Hint>
+      )}
 
       {assets.length > 0 && (
         <Panel
