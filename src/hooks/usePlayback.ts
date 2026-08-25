@@ -8,7 +8,7 @@ import { guessTier, PanicDetector, QualityGovernor, QUALITY_TIERS, tierById } fr
 import { ClipVideoPool, preloadCaptionFonts, renderFrame, syncPlayback } from '@/lib/renderer';
 import { useStudio } from '@/lib/store';
 import { layoutClips } from '@/lib/timeline';
-import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
+import { OUTPUT_HEIGHT, OUTPUT_WIDTH, type Clip } from '@/lib/types';
 
 /**
  * Boucle de lecture.
@@ -107,6 +107,8 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
   const gradeRef = useRef<GradePipeline | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
   const frameRef = useRef(0);
+  /** Liste de plans déjà branchée sur le mixage, pour ne rebrancher qu'au changement. */
+  const attachedRef = useRef<Clip[] | null>(null);
   const captionBoxesRef = useRef(new Map<string, CaptionBox>());
 
   if (poolRef.current === null) poolRef.current = new ClipVideoPool();
@@ -198,6 +200,27 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
 
       const audio = audioRef.current;
       if (audio) {
+        /*
+         * Rebrancher le son des plans dès que la liste change.
+         *
+         * Le branchement n'avait lieu qu'une fois, à la création du moteur.
+         * Tout plan né ensuite — un découpage, un import, le bouton des
+         * réglages recommandés qui recoupe — s'affichait donc sans son, et
+         * rien ne le signalait : l'image était là. Mesuré sur un export réel,
+         * le son s'arrêtait net à la sixième seconde d'une vidéo de treize.
+         *
+         * `attachClip` sort immédiatement si le plan est déjà branché : on peut
+         * l'appeler sans crainte à chaque changement.
+         */
+        if (project.clips !== attachedRef.current) {
+          attachedRef.current = project.clips;
+          for (const clip of project.clips) {
+            const video = pool.get(clip.id);
+            if (video) audio.attachClip(clip.id, video);
+          }
+          audio.pruneClips(new Set(project.clips.map((c) => c.id)));
+        }
+
         audio.applyMix(project.mix);
         for (const clip of project.clips) audio.setClipVolume(clip.id, clip.volume);
         audio.syncMusic(project.music?.url ?? null, project.music?.gain ?? 0);
