@@ -24,12 +24,17 @@ import '../../../product_detail/domain/entities/product.dart';
 import 'gemini_prompt.dart';
 
 class GeminiVisionDataSource {
-  const GeminiVisionDataSource(this._dio);
+  const GeminiVisionDataSource(this._dio, this._apiKey);
 
   final Dio _dio;
 
+  /// Fournie par l'appelant plutôt que lue d'une constante globale : c'est ce
+  /// qui permet à une clé saisie dans l'application de remplacer celle du
+  /// build, et à un test de n'en fournir aucune.
+  final String _apiKey;
+
   Future<Product> identify(Uint8List photo, {CancelToken? cancelToken}) async {
-    if (!AppConfig.hasApiKey) throw const MissingApiKeyException();
+    if (_apiKey.isEmpty) throw const MissingApiKeyException();
 
     final base64 = await ImageCompressor.toBase64Jpeg(photo);
 
@@ -37,7 +42,7 @@ class GeminiVisionDataSource {
     try {
       response = await _dio.post<Map<String, dynamic>>(
         '/models/${AppConfig.geminiModel}:generateContent',
-        queryParameters: {'key': AppConfig.geminiApiKey},
+        queryParameters: {'key': _apiKey},
         cancelToken: cancelToken,
         data: {
           'contents': [

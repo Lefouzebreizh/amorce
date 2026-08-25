@@ -19,6 +19,8 @@ class BlockingNotice extends StatelessWidget {
     required this.body,
     this.actionLabel,
     this.onAction,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
   final IconData icon;
@@ -26,6 +28,12 @@ class BlockingNotice extends StatelessWidget {
   final String body;
   final String? actionLabel;
   final VoidCallback? onAction;
+
+  /// La seconde issue, quand il y en a une. Une caméra qui ne s'ouvre pas ne
+  /// laisse pas qu'un bouton « Réessayer » : la photo existe peut-être déjà
+  /// dans la galerie.
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +59,13 @@ class BlockingNotice extends StatelessWidget {
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 26),
               FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
+            if (secondaryLabel != null && onSecondary != null) ...[
+              const SizedBox(height: 10),
+              OutlinedButton(
+                onPressed: onSecondary,
+                child: Text(secondaryLabel!),
+              ),
             ],
           ],
         ),

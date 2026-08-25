@@ -13,6 +13,7 @@
 
     <application
         android:label="look_and_find"
+        android:allowBackup="false"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

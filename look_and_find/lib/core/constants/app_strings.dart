@@ -19,12 +19,17 @@ class AppStrings {
   static const String scannerPermissionAction = 'Autoriser l\'appareil photo';
   static const String scannerNoCamera = 'Aucun appareil photo disponible.';
   static const String tapToFocus = 'Touchez pour faire la mise au point';
+  static const String pickPhoto = 'Choisir une photo';
+  static const String pickPhotoHint =
+      'Identifiez un objet à partir d\'une photo déjà prise.';
 
   // Configuration
   static const String missingKeyTitle = 'Clé Gemini absente';
   static const String missingKeyBody =
-      'Relancez l\'application avec --dart-define=GEMINI_API_KEY=votre_clé. '
-      'La reconnaissance d\'objet ne peut pas fonctionner sans elle.';
+      'L\'identification d\'objet a besoin d\'une clé Gemini. Saisissez la '
+      'vôtre : elle reste sur ce téléphone.';
+  static const String enterKey = 'Saisir ma clé';
+  static const String settingsKey = 'Clé Gemini';
 
   // Fiche produit
   static const String bestOffer = 'Meilleure offre';

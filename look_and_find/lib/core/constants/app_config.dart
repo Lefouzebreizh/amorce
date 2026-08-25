@@ -1,11 +1,19 @@
 /// Réglages d'exécution de l'application.
 ///
-/// La clé Gemini n'est **pas** écrite dans le dépôt : elle est injectée au
-/// build par `--dart-define=GEMINI_API_KEY=…`. Un fichier de configuration
-/// versionné finit toujours par partir sur un dépôt public, et une clé
-/// d'inférence facturée à l'appel n'est pas une chose qu'on révoque à loisir.
-/// Le défaut vide n'est pas une négligence : `hasApiKey` s'en sert pour
-/// afficher un écran d'explication plutôt que de laisser l'appel partir et
+/// La clé Gemini n'est **pas** écrite dans le dépôt. Elle a deux origines
+/// possibles, dans cet ordre de priorité :
+///
+/// 1. celle que l'utilisateur a saisie dans l'application, rangée sur
+///    l'appareil (voir `ApiKeyStore`) ;
+/// 2. [compiledApiKey], injectée au build par `--dart-define`.
+///
+/// La saisie passe avant, et ce n'est pas arbitraire : une clé compilée est une
+/// chaîne en clair dans le binaire, récupérable par qui obtient l'APK, et sa
+/// rotation impose de tout reconstruire. Pouvoir la remplacer sans rebâtir est
+/// la seule façon de réagir vite à une clé fuitée.
+///
+/// Le défaut vide n'est pas une négligence : l'application démarre alors sur un
+/// écran qui propose de saisir une clé, plutôt que de laisser l'appel partir et
 /// échouer en 400 devant l'utilisateur.
 library;
 
@@ -13,9 +21,7 @@ class AppConfig {
   const AppConfig._();
 
   /// Injectée au build. Voir le README pour la commande complète.
-  static const String geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
-
-  static bool get hasApiKey => geminiApiKey.isNotEmpty;
+  static const String compiledApiKey = String.fromEnvironment('GEMINI_API_KEY');
 
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta';
@@ -43,4 +49,5 @@ class AppConfig {
   /// la fiche produit.
   static const String favoritesBox = 'favoris';
   static const String historyBox = 'historique';
+  static const String settingsBox = 'reglages';
 }

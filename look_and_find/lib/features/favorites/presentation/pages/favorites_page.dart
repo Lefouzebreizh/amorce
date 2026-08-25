@@ -14,9 +14,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/utils/async_view.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../product_detail/domain/entities/product.dart';
 import '../../../product_detail/presentation/pages/product_detail_page.dart';
+import '../../../scanner/presentation/pages/api_key_page.dart';
 import '../../domain/entities/favorite.dart';
 import '../providers/favorites_providers.dart';
 import '../widgets/alert_banner.dart';
@@ -34,6 +36,19 @@ class FavoritesPage extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(AppStrings.favoritesTitle),
+          // Le réglage de la clé vit ici plutôt que dans le viseur : une barre
+          // de capture à quatre commandes se touche par erreur, et une clé se
+          // règle une fois, pas à chaque photo.
+          actions: [
+            IconButton(
+              tooltip: AppStrings.settingsKey,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const ApiKeyPage()),
+              ),
+              icon: const Icon(Icons.key_rounded),
+            ),
+            const SizedBox(width: 4),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: AppStrings.tabFavorites),
@@ -57,8 +72,8 @@ class _FavoritesTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final favorites = ref.watch(favoritesProvider);
 
-    return favorites.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+    return favorites.render(
+      loading: () => const ChargementCentre(),
       error: (error, _) => _Empty(
         icon: Icons.error_outline_rounded,
         title: AppStrings.errorGeneric,
@@ -133,8 +148,8 @@ class _HistoryTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(historyProvider);
 
-    return history.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+    return history.render(
+      loading: () => const ChargementCentre(),
       error: (error, _) => _Empty(
         icon: Icons.error_outline_rounded,
         title: AppStrings.errorGeneric,
