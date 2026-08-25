@@ -5,9 +5,9 @@ strictement personnel : tout reste sur la machine, sauf le seul appel qui a
 besoin de sortir (la lecture d'un document par un modèle de vision, et
 uniquement si elle est activée).
 
-Ce fichier est le plan du projet. À ce stade, seuls l'ossature, le modèle de
-configuration et les décisions de conception existent — les modules sont des
-coquilles portant leur justification.
+Ce fichier est le plan du projet. Écrits à ce jour : le modèle de données, la
+configuration et le remplissage de formulaires PDF, avec leurs tests. Les autres
+modules sont des coquilles portant leur justification.
 
 ## Les quatre modules
 
@@ -16,7 +16,7 @@ coquilles portant leur justification.
 | 1. Scan & OCR | `core/scan.py`, `core/extraction.py`, `core/nommage.py` | Un fichier déposé devient un document identifié, nommé et rangé. |
 | 2. Calendrier | `core/calendrier.py` | Les dates repérées deviennent des rappels, dans l'agenda du téléphone. |
 | 3. Abonnements | `core/abonnements.py` | L'état des contrats, et l'alerte **avant** le préavis, pas après. |
-| 4. Résiliation | `core/resiliation.py` | Le courrier prêt à signer, avec les mentions qui le rendent opposable. |
+| 4. Résiliation | `core/resiliation.py`, `core/formulaires.py` | Le courrier prêt à signer, et le formulaire PDF rempli sans le remplir. |
 
 ## Arborescence
 
@@ -34,13 +34,17 @@ paper-manager/
 │   ├── extraction.py     module 1 — le texte devient des champs (nature, montant, dates)
 │   ├── nommage.py        module 1 — les champs deviennent un nom et un dossier
 │   ├── journal.py        l'index de ce qui a été traité, et la détection des doublons
+│   ├── formulaires.py    remplir un PDF : par ses champs, ou par coordonnées s'il est plat
 │   ├── calendrier.py     module 2 — les échéances deviennent un fichier .ics
 │   ├── abonnements.py    module 3 — l'état des contrats et le calcul des alertes
 │   └── resiliation.py    module 4 — le courrier, à partir d'un gabarit et du contrat
-├── modeles/              gabarits de courriers (texte à trous)
-├── tests/                à créer avec le premier module (unittest, comme mon-app-audio/)
+├── modeles/
+│   ├── formulaires/      un plan de remplissage par formulaire (JSON versionné)
+│   └── *.txt             gabarits de courriers (texte à trous)
+├── tests/                unittest, comme mon-app-audio/
 └── coffre/               ignoré par git — c'est là que vivent les documents
     ├── entree/           ce qu'on dépose, en vrac
+    ├── formulaires/      les PDF vierges (Cerfa, mandats) — binaires, donc hors dépôt
     ├── classes/          ce qui est rangé : classes/2026/energie/…
     ├── courriers/        ce qui est produit : lettres de résiliation, contestations
     └── documents.json    l'index tenu par la machine
@@ -63,11 +67,12 @@ fichier est relu et réémis tel quel. Toute réécriture est précédée d'une 
 en `admin_config.json.bak` : un fichier de configuration écrasé par un bug,
 c'est le projet entier qui redémarre à zéro.
 
-**3. Rien n'est déplacé sans avoir été montré.**
-Toute commande qui touche au disque simule par défaut et n'agit qu'avec
-`--appliquer`, comme `kdp/kdp.py renommer`. Un classement automatique dont on
-n'a pas vu la sortie une première fois est un classement qu'on ne fait pas
-confiance — et qu'on refait à la main.
+**3. Rien n'est écrasé sans le dire.**
+Une commande qui déplace ou renomme simule par défaut et n'agit qu'avec
+`--appliquer`, comme `kdp/kdp.py renommer` : un classement automatique dont on
+n'a pas vu la sortie une première fois est un classement qu'on refait à la main.
+Une commande qui produit un fichier neuf, elle, n'a rien à simuler — mais elle
+refuse d'écraser une sortie existante sans `--ecraser`.
 
 **4. Le nom du fichier est la base de données de secours.**
 `AAAA-MM-JJ_Emetteur_nature_montant.pdf`, par exemple
@@ -104,6 +109,41 @@ au plus tard `preavis_jours` avant. C'est cette date-là qui est calculée et
 alertée — alerter sur l'échéance, c'est alerter trop tard. La date d'avis
 d'échéance reçue de l'assureur est notée elle aussi : reçue en retard, elle
 rouvre un droit de résiliation.
+
+## Remplir un PDF
+
+Un Cerfa, un mandat de prélèvement, un bulletin d'adhésion : les mêmes vingt
+informations, une fois par an, recopiées à la main. Le repérage des champs se
+fait **une fois** et devient un plan JSON, rejoué ensuite sans y penser.
+
+```bash
+python3 paper.py champs coffre/formulaires/mon-cerfa.pdf              # ce que le PDF déclare
+python3 paper.py champs coffre/formulaires/mon-cerfa.pdf --gabarit \
+        > modeles/formulaires/mon-cerfa.json                          # le squelette à compléter
+python3 paper.py remplir modeles/formulaires/mon-cerfa.json --abonnement maif-habitation
+```
+
+Le plan associe chaque champ du PDF à un gabarit : `"{identite.prenom}
+{identite.nom}"`, `"{abonnement.reference_client}"`, `"Fait à {identite.ville},
+le {@aujourdhui}"`, ou `true` pour cocher une case. La syntaxe complète est dans
+`modeles/formulaires/README.md`.
+
+Quatre choix qui méritent d'être connus avant d'y toucher :
+
+- **Le PDF vierge n'est jamais modifié**, et le résultat est **aplati** : les
+  valeurs sont gravées dans la page. Un formulaire dont les champs restent
+  vivants s'imprime vierge chez qui ne régénère pas leur apparence — et c'est le
+  guichet qui le découvre. `--modifiable` garde les champs si on y tient.
+- **La valeur « cochée » n'est jamais écrite en dur** : elle vaut `/Yes` sur un
+  formulaire et `/1` sur le suivant. Le plan dit `true`, le module lit l'état que
+  la case déclare.
+- **Un champ du plan absent du PDF arrête tout.** Un Cerfa change de millésime et
+  renomme ses champs ; neuf champs remplis sur douze donnent un dossier qui a
+  l'air complet et revient trois semaines plus tard.
+- **Un PDF plat se remplit aussi**, par coordonnées (`positions` dans le plan).
+  Attention alors : les polices de base d'un PDF sont limitées au latin-1, et
+  `œ`, `€` ou le tiret cadratin y deviennent `?` sans le moindre avertissement.
+  Le module les transpose (`œ` → `oe`, `€` → `EUR`) — mesuré, pas supposé.
 
 ## Ce qui n'est pas fait, et pourquoi
 
@@ -169,14 +209,31 @@ Sections, dans l'ordre du fichier :
 ## Les commandes prévues
 
 ```bash
-python3 paper.py classer --source coffre/entree            # simule
-python3 paper.py classer --source coffre/entree --appliquer
-python3 paper.py etat                                      # le tableau de bord
-python3 paper.py agenda --vers coffre/rappels.ics          # module 2
-python3 paper.py resilier <id-abonnement> [--motif ...]    # module 4
+python3 paper.py champs <formulaire.pdf> [--gabarit]       # écrit
+python3 paper.py remplir <plan.json> [--abonnement <id>]   # écrit
+python3 paper.py classer --source coffre/entree            # module 1, à venir
+python3 paper.py etat                                      # module 3, à venir
+python3 paper.py agenda --vers coffre/rappels.ics          # module 2, à venir
+python3 paper.py resilier <id-abonnement>                  # module 4, à venir
 ```
+
+## Vérifier
+
+```bash
+python3 -m unittest discover -s paper-manager/tests -v
+```
+
+Les tests couvrent ce qui est calculable : l'arithmétique des échéances et des
+préavis, la validation et la réécriture de la configuration, la résolution des
+gabarits et le remplissage effectif d'un PDF. Le formulaire de test est
+**fabriqué à l'exécution** — ce dépôt ne versionne aucun binaire, et un Cerfa
+vierge en est un.
+
+Seul PyMuPDF est nécessaire au code écrit à ce jour ; il est déjà installé dans
+une session distante par le hook du dépôt, pour la chaîne pré-presse KDP.
 
 ## Prochaine étape
 
-Écrire `core/modele.py` et `core/config.py` avec leurs tests : ce sont les deux
-seuls modules purs (ni disque, ni réseau) et tout le reste s'appuie dessus.
+`core/abonnements.py` : le tableau de bord et le calcul des alertes. Tout ce
+dont il a besoin — échéance reconduite, date de préavis, mois restants — est
+déjà écrit et vérifié dans `core/modele.py`.
