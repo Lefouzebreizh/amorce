@@ -35,12 +35,26 @@ son propos, et c'est ce qui le rend utile plutôt que bavard.
 
 **La présence du sujet ne se rattrape pas.** Si les personnages occupent trop
 peu de la vignette, aucune typographie ne sauvera la couverture : il faut
-refaire l'illustration. C'est le seul verdict que le script rend.
+refaire l'illustration. C'est le seul verdict que le script rend — et il le rend
+en **trois états**, pas deux : *à refaire*, *à regarder*, *passe*.
+
+La zone intermédiaire n'est pas une timidité, c'est de l'honnêteté. Les seuils
+sont calibrés sur trois couvertures, et trois cas ne justifient pas une décision
+au point près. Entre le pire cas connu et le meilleur, le script dit qu'il ne
+sait pas et renvoie à l'œil. Un chiffre qui tranche sans preuve porte une
+autorité qu'il n'a pas méritée.
 
 **Le calme du bandeau de titre se rattrape**, par un voile ou un bandeau. Le
 script le mesure et prévient, sans condamner.
 
 ## Ce qu'il ne mesure pas, et pourquoi
+
+Un piège rencontré : mesuré sur une **couverture finie**, le script a d'abord
+condamné celle qu'il venait d'approuver à l'état d'illustration nue. Le bandeau
+crème du bas et le recadrage retirent de la surface sans que le sujet ait
+rétréci. Il exclut désormais le bandeau uni du calcul — mais le reste de l'écart
+tombe dans la zone d'incertitude, et c'est exactement pour ce genre de cas
+qu'elle existe.
 
 Deux mesures ont été écartées après calibration :
 

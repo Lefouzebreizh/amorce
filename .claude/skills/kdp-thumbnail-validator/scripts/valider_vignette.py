@@ -54,11 +54,17 @@ SATURATION_MIN, CLARTE_MIN = 0.25, 0.22
 # Bandeau où se pose le titre, en fraction de hauteur.
 BANDEAU_TITRE = (0.07, 0.30)
 
-# Part de la vignette que le sujet doit occuper. Calibré sur trois couvertures
-# de verdict connu : 107 et 162 pour mille pour deux jugées trop petites, 352
-# pour celle qui a été retenue. Le seuil est posé entre les deux groupes, et la
-# base de calibration est mince — trois cas. À revoir dès qu'il y en aura plus.
-PRESENCE_MINI = 200.0
+# Part de la vignette occupée par le sujet, en pour mille. Calibré sur trois
+# couvertures de verdict humain connu : 107 et 162 pour deux jugées trop
+# petites, 352 pour celle retenue.
+#
+# Trois cas ne justifient pas une décision au point près, et le prétendre serait
+# pire qu'inutile — un chiffre porte une autorité qu'il n'a pas méritée ici.
+# D'où trois états plutôt que deux : en dessous du pire cas connu on refait, au
+# dessus du meilleur on passe, et entre les deux **on regarde**. La zone
+# d'incertitude est large, et elle est honnête.
+PRESENCE_REFAIRE = 170.0
+PRESENCE_SURE = 300.0
 
 # Au-delà de cet écart de luminance, le bandeau du titre est trop agité pour
 # accueillir du texte tel quel. Ce n'est pas un échec : le composeur pose un
@@ -105,8 +111,22 @@ def mesurer(chemin: Path, teintes_sujet: dict[str, tuple[float, float]]) -> dict
     h0, h1 = (int(COTE_VIGNETTE * f) for f in BANDEAU_TITRE)
     bandeau = gris[h0:h1, :]
 
+    # Une couverture finie porte souvent un bandeau uni en bas, pour le nom de
+    # l'auteur. Le compter dans la surface fait chuter la présence du sujet sans
+    # qu'il ait rétréci : le seuil, calibré sur des illustrations nues, condamnait
+    # alors la couverture composée à partir de l'illustration qu'il venait
+    # d'approuver. On mesure donc sur la seule zone dessinée.
+    lignes_unies = gris[COTE_VIGNETTE // 2:].std(axis=1) < 4
+    hauteur_utile = COTE_VIGNETTE
+    for i, unie in enumerate(lignes_unies):
+        if unie and lignes_unies[i:].all():
+            hauteur_utile = COTE_VIGNETTE // 2 + i
+            break
+    aire_dessinee = max(1, hauteur_utile * COTE_VIGNETTE)
+
     return {
-        "presence": sujet.sum() / sujet.size * 1000,
+        "presence": sujet[:hauteur_utile].sum() / aire_dessinee * 1000,
+        "bandeau_uni": COTE_VIGNETTE - hauteur_utile,
         # Écart interquartile plutôt qu'écart-type : un dégradé de ciel gonfle
         # le second sans rien dire de la place disponible pour un titre.
         "agitation_bandeau": float(np.percentile(bandeau, 92) - np.percentile(bandeau, 8)),
@@ -115,10 +135,15 @@ def mesurer(chemin: Path, teintes_sujet: dict[str, tuple[float, float]]) -> dict
 
 
 def rapporter(chemin: Path, m: dict, vignette_vers: Path | None) -> bool:
-    passe = m["presence"] >= PRESENCE_MINI
+    p = m["presence"]
+    etat = "refaire" if p < PRESENCE_REFAIRE else ("passe" if p >= PRESENCE_SURE else "regarder")
+    marque = {"refaire": "ÉCHEC ", "regarder": " doute", "passe": "  ok  "}[etat]
     print(f"\n{chemin.name}")
-    print(f"  {'  ok  ' if passe else 'ÉCHEC '} présence du sujet        "
-          f"{m['presence']:7.1f} ‰  (minimum {PRESENCE_MINI:.0f})")
+    print(f"  {marque} présence du sujet        {p:7.1f} ‰  "
+          f"(refaire sous {PRESENCE_REFAIRE:.0f}, sûr au-dessus de {PRESENCE_SURE:.0f})")
+    if m["bandeau_uni"]:
+        print(f"         mesurée hors du bandeau uni du bas "
+              f"({m['bandeau_uni']} px sur {COTE_VIGNETTE})")
     agite = m["agitation_bandeau"] > BANDEAU_AGITE
     print(f"  {'  note' if agite else '  ok  '} bandeau du titre         "
           f"{m['agitation_bandeau']:7.1f}    "
@@ -129,14 +154,18 @@ def rapporter(chemin: Path, m: dict, vignette_vers: Path | None) -> bool:
         m["vignette"].save(vignette_vers)
         print(f"  vignette écrite : {vignette_vers}")
 
-    if passe:
+    if etat == "passe":
         print("  → PASSE. Regardez quand même la vignette : aucune mesure ne "
-              "remplace l'œil.")
+              "remplace l\'œil.")
+    elif etat == "regarder":
+        print("  → À REGARDER. La mesure tombe dans la zone où trois cas de "
+              "calibration ne\n     tranchent pas. Ouvrez la vignette : c\'est "
+              "votre œil qui décide, pas ce script.")
     else:
-        print("  → À REFAIRE. Les personnages occupent trop peu de la vignette, "
-              "et cela ne se rattrape\n     pas en typographie : les rapprocher, "
-              "les agrandir, ou alléger le décor.")
-    return passe
+        print("  → À REFAIRE. Le sujet occupe moins de place que la pire "
+              "couverture connue,\n     et cela ne se rattrape pas en "
+              "typographie : rapprocher, agrandir, alléger le décor.")
+    return etat != "refaire"
 
 
 def main(argv: list[str] | None = None) -> int:
