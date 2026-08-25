@@ -19,6 +19,7 @@ import '../../../product_detail/domain/entities/product.dart';
 import '../../../product_detail/presentation/pages/product_detail_page.dart';
 import '../../domain/entities/favorite.dart';
 import '../providers/favorites_providers.dart';
+import '../widgets/alert_banner.dart';
 import '../widgets/favorite_tile.dart';
 import '../widgets/history_tile.dart';
 import '../widgets/price_alert_sheet.dart';
@@ -71,12 +72,28 @@ class _FavoritesTab extends ConsumerWidget {
             body: AppStrings.noFavoritesBody,
           );
         }
+
+        final alerts = ref.watch(pendingAlertsProvider);
+        // Ce qui alerte remonte en tête, le reste garde l'ordre d'ajout : une
+        // baisse attendue ne doit pas se chercher au milieu de trente lignes.
+        final ordered = [
+          ...alerts,
+          ...list.where((f) => !f.isAlerting),
+        ];
+
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          itemCount: list.length,
+          itemCount: ordered.length + 1,
           separatorBuilder: (_, _) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
-            final favorite = list[index];
+            if (index == 0) {
+              return AlertBanner(
+                alerts: alerts,
+                onAcknowledge: () =>
+                    ref.read(acknowledgeAlertsProvider).all(list),
+              );
+            }
+            final favorite = ordered[index - 1];
             return FavoriteTile(
               favorite: favorite,
               onOpen: () => _open(context, favorite.product),

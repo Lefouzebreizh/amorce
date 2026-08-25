@@ -22,6 +22,7 @@ class FavoriteDto {
     'reference_price': favorite.referencePrice,
     'alert_threshold': favorite.alertThreshold,
     'last_checked_at': favorite.lastCheckedAt?.toIso8601String(),
+    'acknowledged_price': favorite.acknowledgedPrice,
   });
 
   /// `null` si l'enregistrement est illisible : une entrée corrompue est
@@ -45,6 +46,9 @@ class FavoriteDto {
         lastCheckedAt: DateTime.tryParse(
           json['last_checked_at'] as String? ?? '',
         ),
+        // Absent des favoris enregistrés avant l'ajout des alertes visibles :
+        // ils repartent sans acquittement, ce qui est le bon défaut.
+        acknowledgedPrice: (json['acknowledged_price'] as num?)?.toDouble(),
       );
     } catch (_) {
       return null;

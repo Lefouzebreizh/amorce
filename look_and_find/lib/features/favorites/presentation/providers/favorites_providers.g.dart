@@ -550,3 +550,111 @@ abstract class _$ScanJournal extends $Notifier<PriceDrop?> {
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(acknowledgeAlerts)
+final acknowledgeAlertsProvider = AcknowledgeAlertsProvider._();
+
+final class AcknowledgeAlertsProvider
+    extends
+        $FunctionalProvider<
+          AcknowledgeAlerts,
+          AcknowledgeAlerts,
+          AcknowledgeAlerts
+        >
+    with $Provider<AcknowledgeAlerts> {
+  AcknowledgeAlertsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'acknowledgeAlertsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$acknowledgeAlertsHash();
+
+  @$internal
+  @override
+  $ProviderElement<AcknowledgeAlerts> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AcknowledgeAlerts create(Ref ref) {
+    return acknowledgeAlerts(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AcknowledgeAlerts value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AcknowledgeAlerts>(value),
+    );
+  }
+}
+
+String _$acknowledgeAlertsHash() => r'389ac4a8a541e17bbe81959ff263e40ad00ee42f';
+
+/// Les objets passés sous leur seuil et non encore acquittés.
+///
+/// Dérivé du flux des favoris plutôt que relu à la demande : la pastille du
+/// viseur, la bannière de la liste et l'ordre des lignes doivent dire la même
+/// chose au même instant, et un calcul partagé est le seul moyen d'en être sûr
+/// sans code de synchronisation.
+
+@ProviderFor(pendingAlerts)
+final pendingAlertsProvider = PendingAlertsProvider._();
+
+/// Les objets passés sous leur seuil et non encore acquittés.
+///
+/// Dérivé du flux des favoris plutôt que relu à la demande : la pastille du
+/// viseur, la bannière de la liste et l'ordre des lignes doivent dire la même
+/// chose au même instant, et un calcul partagé est le seul moyen d'en être sûr
+/// sans code de synchronisation.
+
+final class PendingAlertsProvider
+    extends $FunctionalProvider<List<Favorite>, List<Favorite>, List<Favorite>>
+    with $Provider<List<Favorite>> {
+  /// Les objets passés sous leur seuil et non encore acquittés.
+  ///
+  /// Dérivé du flux des favoris plutôt que relu à la demande : la pastille du
+  /// viseur, la bannière de la liste et l'ordre des lignes doivent dire la même
+  /// chose au même instant, et un calcul partagé est le seul moyen d'en être sûr
+  /// sans code de synchronisation.
+  PendingAlertsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pendingAlertsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pendingAlertsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<Favorite>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<Favorite> create(Ref ref) {
+    return pendingAlerts(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<Favorite> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<Favorite>>(value),
+    );
+  }
+}
+
+String _$pendingAlertsHash() => r'f1f14c96546595f825bad1638eb2c17e42537ceb';
