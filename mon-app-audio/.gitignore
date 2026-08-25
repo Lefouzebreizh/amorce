@@ -1,0 +1,9 @@
+# Les fichiers de travail restent sur la machine : un rush de voix, une
+# bibliothèque de bruitages et un mixage exporté n'ont rien à faire dans
+# l'historique — seule l'arborescence est versionnée.
+stockage/**
+!stockage/**/
+!stockage/**/.gitkeep
+
+__pycache__/
+*.pyc

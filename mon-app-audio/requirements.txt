@@ -1,0 +1,25 @@
+# Interface visuelle. Streamlit rejoue le script entier à chaque interaction :
+# c'est ce qui permet à `app.py` de rester un enchaînement linéaire.
+streamlit>=1.40
+
+# Manipulation audio : découpe, superposition, gains, export.
+pydub>=0.25.1
+
+# Alignement au mot près. PyTorch et le modèle pèsent lourd (plusieurs gigaoctets
+# au premier téléchargement) et ne servent qu'à ce chemin-là : sans eux,
+# l'application se rabat sur la détection de silences et le dit.
+openai-whisper>=20231117
+torch>=2.0
+
+# Voix de synthèse, et minutage de chaque mot offert avec. Demande une connexion.
+edge-tts>=7.0
+
+# Récupération d'un bruitage depuis une adresse.
+requests>=2.31
+
+# ffmpeg livré sous forme de binaire statique. pydub n'embarque aucun codec et
+# Whisper décode par ffmpeg : sans lui, tout se limite au WAV. C'est la seule
+# façon de l'obtenir par un simple « pip install », sans installation système à
+# part — et si la machine en a déjà un, c'est celui-là qui sert
+# (voir `mixeur.outiller`).
+imageio-ffmpeg>=0.4.9

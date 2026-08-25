@@ -174,15 +174,19 @@ la tête de lecture se retrouve au-delà de la fin.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **trois projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **quatre projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
-`CLAUDE.md`), et la chaîne pré-presse KDP en Python dans `kdp/`. L'outillage
+`CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, et le studio audio
+Streamlit dans `mon-app-audio/` (qui a son propre `README.md`). L'outillage
 ci-dessous existe parce que rien de générique ne connaît cette particularité.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/` et de `mon-app-audio/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
+| `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
+| `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
+| `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
