@@ -586,9 +586,30 @@ export const useStudio = create<StudioState>((set, get) => {
       const cue = state.project.voices.find((v) => v.id === id);
       if (!cue) return state;
 
+      /*
+       * Un sous-titre posé après la dernière image n'existe pas.
+       *
+       * Une réplique placée trop tard produisait des sous-titres au-delà de la
+       * fin du montage — vu à 13,9 s sur une vidéo de 13,6 s. Ils ne
+       * s'affichaient jamais, ne comptaient dans aucune couverture, et rien à
+       * l'écran ne disait pourquoi le calage semblait n'avoir rien fait.
+       *
+       * Ceux qui débordent sont ramenés à la fin, ceux qui commencent après
+       * sont écartés : mieux vaut perdre une phrase que d'en garder une
+       * invisible.
+       */
+      const limit = totalDuration(state.project.clips);
+
       const produced = captionsFromVoice(cue.script, cue.segments, () => uid('cap'), {
         offset: cue.start,
-      }).map((caption) => ({ ...caption, voiceId: id }));
+      })
+        .filter((caption) => limit <= 0 || caption.start < limit)
+        .map((caption) => ({
+          ...caption,
+          end: limit > 0 ? Math.min(caption.end, limit) : caption.end,
+          voiceId: id,
+        }))
+        .filter((caption) => caption.end > caption.start);
 
       return {
         project: {
