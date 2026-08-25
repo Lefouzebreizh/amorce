@@ -98,7 +98,16 @@ seulement — une notification qui perce le silence trois fois par jour pour rie
 ne perce bientôt plus rien.
 
 **Le nom du sujet est le mot de passe.** Qui le connaît reçoit tes
-notifications : `amorce-erwann` se devine, `amorce-6zpx1g89it9ryl` non.
+notifications — et peut t'en envoyer. `amorce-erwann` se devine ; il en faut un
+tiré au hasard :
+
+```bash
+python3 -c "import secrets;print('amorce-'+secrets.token_hex(7))"
+```
+
+Il vit dans `config.env`, jamais dans le dépôt : celui-ci est public, et
+l'historique de git n'oublie rien. Un sujet qui s'est retrouvé dans un commit
+est un sujet à changer, pas à retirer.
 
 **Rien de sensible n'y figure.** Une notification s'affiche sur un écran
 verrouillé, dans le métro, à côté de quelqu'un : elle donne des prénoms et des

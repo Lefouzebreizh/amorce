@@ -9,17 +9,20 @@ un projet entier.
 Ce fichier ne dépend de rien d'autre que `requests` : il se copie tout seul sur
 le téléphone, sans le reste du dossier.
 
-    1. Installer l'application ntfy, s'abonner au sujet ci-dessous.
-    2. Remplacer SUJET par le même nom.
-    3. Lancer. Le téléphone doit sonner dans la seconde.
+    1. Tirer un nom de sujet au hasard :
+       python3 -c "import secrets;print('amorce-'+secrets.token_hex(7))"
+    2. Installer l'application ntfy, s'abonner à ce nom.
+    3. Le recopier dans SUJET ci-dessous, sur le téléphone.
+    4. Lancer. La notification doit arriver dans la seconde.
 """
 
 import requests
 
 # Le nom du sujet est le mot de passe : qui le connaît reçoit tes
-# notifications. Celui-ci a été tiré au hasard — le garder tel quel, ou en
-# tirer un autre, mais surtout ne pas prendre « amorce-erwann ».
-SUJET = 'amorce-6zpx1g89it9ryl'
+# notifications — et peut t'en envoyer. Il se remplit sur l'appareil et **ne se
+# committe jamais** : ce dépôt est public, et l'historique de git n'oublie
+# rien. Un nom écrit ici une fois est un nom à changer.
+SUJET = 'a-remplacer-par-le-tien'
 
 reponse = requests.post(
     'https://ntfy.sh',
