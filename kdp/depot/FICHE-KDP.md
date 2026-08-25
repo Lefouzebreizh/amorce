@@ -30,6 +30,11 @@ Le sous-titre est indexé par Amazon au même titre que le titre. C'est pour ça
 qu'il porte « émotions » et « différence » : ce sont les mots qu'un parent tape,
 et ils n'ont pas à être repris dans les mots-clés, qui serviront à autre chose.
 
+**Le titre reste court, et c'est une décision.** La couverture porte en plus un
+surtitre discret, « Les Merveilleuses Aventures de », qui évoque sans allonger
+la fiche produit. Un titre long se fait tronquer dans les listes et dilue le
+classement ; le surtitre, lui, ne coûte rien puisqu'il vit dans l'image.
+
 **Ne mettez pas « Tome 1 » dans le titre.** Utilisez le champ « Série » prévu
 pour ça : Amazon regroupe alors les volumes sur une page commune, et le Tome 2
 héritera de l'audience du premier.

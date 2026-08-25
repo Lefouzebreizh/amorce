@@ -53,69 +53,96 @@ deux plans, un texte long.
 
 ---
 
-## Direction
+## Direction retenue
 
-Le recueil ouvre en automne et se ferme sur une nuit étoilée. Deux directions
-tiennent, et il faut en choisir une :
+**La scène de falaise au couchant**, celle de la couverture que vous avez
+générée : mer d'Ardoise, phare à droite, ciel mauve et or. Elle est nettement la
+meilleure des trois essais au test des cent cinquante pixels — le titre passe,
+la scène tient, les couleurs sortent.
 
-**L'automne, lumière basse.** Roussy et Zéphy de face, assis côte à côte, dans
-les feuilles. Chaud, immédiatement lisible, cohérent avec les dix-sept planches.
-C'est le choix sûr.
+**Une seule chose change : les personnages se retournent.** Sur l'essai, Roussy
+et Zéphy sont de dos, face au couchant. C'est beau, c'est contemplatif, et à
+cent cinquante pixels le renard n'est plus qu'une tache orange. En jeunesse,
+l'acheteur doit rencontrer les héros dans la vignette ; c'est là que se joue le
+clic.
 
-**La nuit bretonne.** Fond bleu profond, les deux personnages de profil devant
-un phare, les ailes de Zéphy captant la dernière lumière. Beaucoup plus
-distinctif dans une liste de miniatures, où toutes les couvertures jeunesse sont
-claires — mais plus risqué, parce qu'une vignette sombre peut aussi disparaître.
-
-Ma préférence : **l'automne pour le Tome 1**, la nuit gardée pour le Tome 2. La
-série y gagne une progression, et le premier volume ne prend pas de risque.
+Le contre-jour n'est pas un problème, c'est un cadeau : le soleil passe derrière
+eux et leur pose un liseré doré sur tout le contour.
 
 ---
 
-## Contraintes de fabrication
+## Le titre, tranché
 
-- **Bordure végétale d'automne** comme les planches intérieures, mais **plus
-  légère** : en vignette, une bordure chargée mange le sujet.
-- **Fond papier crème** identique au reste.
-- Le titre doit tenir **hors de la zone de sécurité**, ce qui veut dire au moins
-  0,375 po du bord rogné — c'est le défaut relevé sur toutes les planches
-  actuelles, ne le reproduisez pas ici.
-- Prévoir **du calme derrière le titre** : pas de feuillage sous le texte.
+| Où | Ce qui s'écrit |
+| --- | --- |
+| Surtitre, petit | Les Merveilleuses Aventures de |
+| Titre, grand | **Roussy & Zéphy** |
+| Accroche | Et si ta différence était ta plus grande force ? |
+| Bas de couverture | Erwann Lefouzèbreizh · Tome 1 |
+
+Le titre déposé chez Amazon reste **« Roussy & Zéphy »**, court, identique au
+nom de la série. « Les Merveilleuses Aventures de » vit sur la couverture, en
+surtitre, où il évoque sans allonger la fiche produit.
+
+**Aucun de ces textes ne doit être généré dans l'image.** Ils sont posés en
+vectoriel par `couverture_face.py --pleine-page` : nets en vignette, et
+corrigeables en une ligne plutôt qu'en une régénération complète. L'essai
+fourni portait un titre incrusté qui ne correspondait ni à la charte ni à la
+fiche KDP — c'est exactement le piège.
 
 ---
 
 ## Prompt
 
-À préfixer du bloc de style commun de `TOME2-PISTES.md`, qui verrouille
-l'anatomie de Zéphy et les couleurs des deux personnages.
+À préfixer du bloc de style commun de `kdp/tome2/DOSSIER.md`, qui verrouille
+l'anatomie de Zéphy et la palette des deux personnages.
 
 ```
-Front cover of a square children's picture book, 2600 x 2600 pixels.
+Front cover illustration for a square children's picture book, 2600 x 2600
+pixels. NO TEXT ANYWHERE IN THE IMAGE — no title, no lettering, no signature.
 
-COMPOSITION: ROUSSY the red fox cub and ZEPHY the small winged zebra sitting
-side by side, facing the viewer, filling the central two thirds of the image.
-Warm low autumn light, soft watercolour, cream vintage paper texture. Behind
-them, a simple uncluttered Breton meadow with one distant standing stone — no
-busy background, no second scene.
+SCENE: the edge of a Breton clifftop at sunset. Below and behind, the Atlantic
+breaking against grey cliffs; a white lighthouse on the headland to the right,
+its lamp just lit. The sky is mauve and gold, high clouds catching the last
+light, a few gulls.
 
-Zephy's violet and gold wings half-open, catching the light. Roussy leaning
-slightly against him. Both calm and warm, looking straight out.
+ROUSSY and ZEPHY sit together on the grassy clifftop in the LOWER MIDDLE of the
+image, FACING THE VIEWER, three-quarter front, close enough to touch. The sun is
+behind them: a warm golden rim light runs along Roussy's fur and the edge of
+Zephy's half-open wings, while their faces stay warm and readable. Both calm and
+happy, looking straight out at the reader. They fill roughly the lower third of
+the image and read clearly even at thumbnail size.
 
-Light decorative border of autumn leaves and acorns around the four edges, much
-sparser than the interior pages, and leaving the top third clear.
+Small autumn details on the grass: oak leaves, acorns, two violet feathers, a
+few late wildflowers.
 
-Leave the top of the image empty and quiet: a title will be set there.
-Keep all illustration at least 0.4 inch from every edge.
-No text, no lettering, no title in the image.
+KEEP THE TOP THIRD QUIET: open sky only, no clouds of high contrast, nothing
+busy — a title will be set there in type.
+KEEP THE BOTTOM EIGHTH QUIET: plain grass, no detail — the author name goes there.
+Keep all important illustration at least 0.4 inch from every edge.
 ```
 
-Le titre, l'accroche et le nom d'auteur sont **posés ensuite en typographie**,
-par `couverture_face.py`. Ne les faites pas générer : un titre pixellisé se
-corrige en régénérant toute la couverture, alors qu'un titre vectoriel se
-change en une ligne — et sort net en vignette, ce qui est précisément là où
-tout se joue.
+Les deux consignes de calme, en haut et en bas, ne sont pas décoratives : ce
+sont les deux bandeaux où le texte se posera, et un ciel chargé y rendrait le
+titre illisible en vignette.
 
 ---
+
+## Une fois l'illustration reçue
+
+```bash
+python3 kdp/pipeline/couverture_face.py \
+        --illustration ma_couverture.png --pleine-page \
+        --bordure planche_avec_bordure.webp \
+        --vers couverture_face.pdf
+```
+
+`--voile` éclaircit doucement le ciel derrière le titre, et vaut 0,34 par
+défaut. Un titre sombre sur un ciel mauve tient à l'écran et se perd en
+vignette, où l'écart de clarté s'écrase ; le voile ne se voit pas à taille
+réelle. Le mettre à 0 si le ciel est déjà très clair.
+
+Puis refaire l'épreuve des cent cinquante pixels avant de valider.
 
 ## Après génération
 
