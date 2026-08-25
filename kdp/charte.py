@@ -183,5 +183,44 @@ def pages(tome: int = 1) -> tuple[Page, ...]:
     return TOMES[tome]
 
 
+# --- Palette des personnages -------------------------------------------------
+#
+# Relevée sur la planche de modèle fournie par l'auteur. Elle donne enfin de
+# quoi contrôler la dérive : le Tome 1 a vu la crinière de Zéphy virer au
+# moutarde en pages 6 et 9, et Roussy devenir un chaton en page 19. Un écart de
+# teinte se mesure, une dérive d'anatomie non — mais la couleur suffit déjà à
+# repérer une planche qui a décroché.
+
+PALETTE: dict[str, dict[str, str]] = {
+    "Roussy": {
+        "pelage":        "#E76F24",
+        "ventre":        "#FFF8F0",
+        "bout de queue": "#FFF8FF",
+        "pattes":        "#5A2214",
+        "oreille (int.)": "#FFCFC0",
+        "yeux":          "#C97A10",
+        "truffe":        "#4B1E4A",
+    },
+    "Zéphy": {
+        "robe":          "#FAFAFA",
+        "rayures":       "#1A1A1A",
+        "museau":        "#8A8A8A",
+        "sabots":        "#3E3E3E",
+        "crinière violette": "#8A4DCC",
+        "crinière or":   "#D4A017",
+        "bout de queue": "#9A6DDB",
+        "ailes violet":  "#8B5DD1",
+        "ailes or":      "#E9C46A",
+        "yeux":          "#7E57C2",
+    },
+}
+
+
+def rvb(code: str) -> tuple[int, int, int]:
+    """#E76F24 -> (231, 111, 36)"""
+    code = code.lstrip("#")
+    return tuple(int(code[i:i + 2], 16) for i in (0, 2, 4))
+
+
 COUVERTURE_FACE = "couverture_face"
 COUVERTURE_DOS = "couverture_dos"
