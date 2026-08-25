@@ -65,7 +65,9 @@ echo "── Chaîne KDP : bibliothèques Python"
 # `--break-system-packages` : l'image est une Debian récente, où pip refuse
 # d'installer hors environnement virtuel. Un venv ici obligerait chaque commande
 # de la chaîne à l'activer d'abord, pour un conteneur qui n'héberge qu'un projet.
-python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF
+# numpy : `coquilles.py` opère au pixel et `planches.py` mesure les bulles ;
+# ni Pillow ni PyMuPDF ne l'apportent.
+python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF numpy
 
 echo "── Studio audio : bibliothèques Python"
 # PyTorch et Whisper sont volontairement absents : six gigaoctets à installer à
