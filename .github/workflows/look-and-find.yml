@@ -1,0 +1,128 @@
+# Vérification de l'application Flutter `look_and_find/`.
+#
+# Ce workflow est le filet qui manque au poste de développement : la version du
+# SDK Flutter y est épinglée et vérifiée par empreinte, et le build Android s'y
+# fait pour de vrai — deux choses qu'on ne peut pas garantir sur une machine
+# personnelle où le SDK dérive au fil des `flutter upgrade`.
+#
+# L'APK de debug est publié en artéfact de l'exécution : c'est le chemin le plus
+# court entre une branche et un téléphone, sans avoir à installer quoi que ce
+# soit localement.
+#
+# Un seul travail, et non trois en parallèle : l'analyse et les tests durent
+# quelques secondes, alors que chaque travail supplémentaire repaie l'installation
+# du SDK. Enchaîner coûte moins cher que paralléliser, ici.
+
+name: Look & Find
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'look_and_find/**'
+      - '.github/workflows/look-and-find.yml'
+  pull_request:
+    paths:
+      - 'look_and_find/**'
+      - '.github/workflows/look-and-find.yml'
+  # Permet de relancer à la demande depuis l'onglet Actions, par exemple pour
+  # récupérer un APK sans avoir à pousser un commit.
+  workflow_dispatch:
+
+# Une poussée qui en remplace une autre annule l'exécution précédente : inutile
+# de construire un APK que personne n'installera.
+concurrency:
+  group: look-and-find-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.47.1'
+  FLUTTER_SHA256: 'a1d8166c0309267cb7dc99f1424eecf08b86946ad3b50723c6f59945964aea45'
+
+defaults:
+  run:
+    working-directory: look_and_find
+
+jobs:
+  verifier:
+    name: Analyser, tester, construire
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Le plugin Gradle de Flutter exige un JDK 17 ou plus. L'image Ubuntu en
+      # fournit un, mais lequel dépend de l'image du mois : le figer ici évite
+      # qu'un build passe en janvier et casse en mars sans qu'une ligne du dépôt
+      # ait bougé.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Le SDK est mis en cache sur sa version : sans cela, chaque exécution
+      # repasse deux à trois minutes à télécharger un tar de 1 Go.
+      - name: Restaurer le SDK Flutter
+        id: cache-flutter
+        uses: actions/cache@v4
+        with:
+          path: ~/flutter
+          key: flutter-${{ env.FLUTTER_VERSION }}-linux-x64
+
+      # Pas d'action tierce ici : l'archive officielle est épinglée à une
+      # version *et* à son empreinte. Une action non figée peut changer de
+      # comportement sans que le dépôt bouge d'une ligne.
+      - name: Installer Flutter ${{ env.FLUTTER_VERSION }}
+        if: steps.cache-flutter.outputs.cache-hit != 'true'
+        working-directory: ${{ runner.temp }}
+        run: |
+          archive="flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
+          curl -fsSL --retry 3 -o "$archive" \
+            "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/$archive"
+          echo "${FLUTTER_SHA256}  $archive" | sha256sum -c -
+          tar xf "$archive" -C "$HOME"
+
+      - name: Mettre Flutter dans le PATH
+        run: |
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+          git config --global --add safe.directory "$HOME/flutter"
+
+      - name: Version du SDK
+        run: flutter --version
+
+      - name: Récupérer les dépendances
+        run: flutter pub get
+
+      # Les fichiers `.g.dart` sont versionnés pour que le dépôt se construise
+      # sans codegen. Ce contrôle interdit qu'ils dérivent de leur source : un
+      # provider modifié sans régénération casserait le build de quelqu'un
+      # d'autre, jamais celui de son auteur.
+      - name: Vérifier que le code généré est à jour
+        run: |
+          dart run build_runner build
+          if ! git diff --exit-code -- '*.g.dart'; then
+            echo "::error::Du code généré est périmé. Lancez « dart run build_runner build » et committez le résultat."
+            exit 1
+          fi
+
+      - name: Analyser
+        run: flutter analyze
+
+      - name: Tester
+        run: flutter test --reporter=expanded
+
+      # Le SDK Android est déjà présent sur les images Ubuntu de GitHub : c'est
+      # précisément ce qui manque au conteneur de développement, et donc la
+      # seule vérification que le lien natif avec les greffons (caméra, Hive,
+      # visionneuse 3D) tient réellement.
+      - name: Construire l'APK de debug
+        run: flutter build apk --debug
+
+      - name: Publier l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: look-and-find-debug-apk
+          path: look_and_find/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
