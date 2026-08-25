@@ -21,6 +21,12 @@ python3 .claude/skills/kdp-thumbnail-validator/scripts/valider_vignette.py \
         couverture.png --vignettes epreuves/
 ```
 
+**Visez le panneau de première, jamais la couverture complète.** Un fichier de
+dépôt KDP contient le dos, la tranche et la première d'un seul tenant : le dos
+est du texte sur du papier, il occupe la moitié de l'image et écrase la mesure.
+La même couverture est passée de 194 à 321 pour mille rien qu'en la cadrant sur
+le bon panneau — l'erreur est facile et le verdict devient absurde.
+
 Il accepte les images et les PDF d'une page, et plusieurs fichiers d'un coup
 pour comparer des candidates. Il écrit les vignettes si on lui donne
 `--vignettes`, et **il faut les regarder** : aucune mesure ne remplace l'œil.
