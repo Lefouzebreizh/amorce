@@ -42,3 +42,10 @@ next-env.d.ts
 
 # Rushes de test et captures produits par les scripts de vérification
 .fixtures/
+
+# Plan de travail pré-presse KDP (rushes, PDF, épreuves)
+.travail/
+
+# Caches Python de la chaîne pré-presse
+__pycache__/
+*.pyc
