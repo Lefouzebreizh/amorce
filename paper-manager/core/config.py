@@ -4,10 +4,12 @@
 Ce fichier est écrit par deux mains — la mienne pour les contrats, le programme
 pour les alertes — et c'est de là que viennent ses règles :
 
-1. **Seule la section `alertes` est réécrite.** Le dictionnaire relu est
-   conservé tel quel et réémis dans son ordre d'origine, clés inconnues
-   comprises. Un programme qui reformate le fichier qu'on édite à la main est un
-   programme qu'on cesse d'éditer à la main.
+1. **Seule la section `alertes` est réécrite.** Le dictionnaire relu est réémis
+   dans son ordre d'origine, clés inconnues comprises : rien de ce qui a été
+   saisi n'est perdu ni déplacé. La **mise en forme**, elle, devient celle du
+   programme — deux espaces d'indentation, un objet par ligne. C'est le prix
+   d'un fichier réécrit sans analyseur qui conserve les blancs, et il se paie
+   une fois : à la deuxième écriture, le fichier ne bouge plus.
 2. **Copie avant écriture, puis remplacement atomique.** Une configuration
    tronquée par une coupure au milieu d'un `write`, c'est six mois de saisie de
    contrats perdus. `os.replace` est atomique sur le même système de fichiers,

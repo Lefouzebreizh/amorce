@@ -52,7 +52,7 @@ class LeModeleLivre(unittest.TestCase):
     def test_l_exemple_se_charge_sans_reproche(self):
         configuration = charger(EXEMPLE)
         self.assertEqual(len(configuration.abonnements), 4)
-        self.assertEqual(len(configuration.alertes), 3)
+        self.assertEqual(len(configuration.alertes), 4)
 
     def test_les_dates_d_alerte_de_l_exemple_sont_celles_que_le_calcul_donne(self):
         # L'exemple sert de documentation : une alerte écrite à la main qui

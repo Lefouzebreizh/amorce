@@ -88,6 +88,19 @@ def ajouter_mois(depart: date, mois: int) -> date:
     return date(annee, mois_cible, min(depart.day, calendar.monthrange(annee, mois_cible)[1]))
 
 
+def _avancer(origine: date, pas_mois: int, jusqu_a: date) -> date:
+    """Avance une date de périodes entières jusqu'à rattraper `jusqu_a`.
+
+    Le décalage se recalcule **depuis l'origine** à chaque fois, jamais de
+    proche en proche : le rabotage du jour se cumulerait sinon, et une échéance
+    au 31 janvier finirait au 28 février pour toujours.
+    """
+    periodes = 0
+    while ajouter_mois(origine, periodes * pas_mois) < jusqu_a:
+        periodes += 1
+    return ajouter_mois(origine, periodes * pas_mois)
+
+
 @dataclass(frozen=True)
 class Identite:
     """Ce qui remplit l'en-tête d'un courrier et l'état civil d'un formulaire."""
@@ -117,14 +130,33 @@ class Categorie:
 
 @dataclass(frozen=True)
 class Engagement:
-    """La période pendant laquelle partir coûte quelque chose."""
+    """La période pendant laquelle partir coûte quelque chose.
+
+    `fin` est la fin de la **première** période, celle qui engage. Les
+    reconductions tacites qui suivent n'engagent plus : c'est tout l'objet des
+    règles sur la reconduction et sur la résiliation infra-annuelle.
+    """
 
     debut: date | None = None
     fin: date | None = None
     duree_mois: int | None = None
 
+    @property
+    def terme(self) -> date | None:
+        """La date jusqu'à laquelle on est tenu.
+
+        Calculée depuis le début quand on le connaît, plutôt que lue dans `fin` :
+        il est trop facile d'écrire dans `fin` la prochaine date anniversaire
+        d'un contrat reconduit depuis cinq ans, et de se voir alors annoncer un
+        coût de sortie sur un contrat qu'on peut quitter gratuitement.
+        """
+        if self.debut is not None and self.duree_mois:
+            return ajouter_mois(self.debut, self.duree_mois)
+        return self.fin
+
     def en_cours(self, le: date) -> bool:
-        return self.fin is not None and le < self.fin
+        terme = self.terme
+        return terme is not None and le < terme
 
     def mois_restants(self, le: date) -> int:
         """Mois pleins restant à courir — le nombre d'échéances encore dues.
@@ -133,11 +165,11 @@ class Engagement:
         prélèvements (2/09 à 2/01) et non six. Un mois entamé de trop, et le coût
         annoncé d'un départ anticipé est faux.
         """
-        if not self.en_cours(le):
+        terme = self.terme
+        if not self.en_cours(le) or terme is None:
             return 0
-        assert self.fin is not None
-        mois = (self.fin.year - le.year) * 12 + self.fin.month - le.month
-        return max(0, mois - (1 if self.fin.day < le.day else 0))
+        mois = (terme.year - le.year) * 12 + terme.month - le.month
+        return max(0, mois - (1 if terme.day < le.day else 0))
 
 
 @dataclass
@@ -188,9 +220,16 @@ class Abonnement:
         if not self.reconduction_tacite:
             return fin if fin >= le else None
         pas = self.engagement.duree_mois or self.periodicite.mois or 12
-        while fin < le:
-            fin = ajouter_mois(fin, pas)
-        return fin
+        return _avancer(fin, pas, le)
+
+    def prochain_paiement(self, le: date) -> date | None:
+        """Le prochain prélèvement à venir, avancé lui aussi de période en période."""
+        if self.prochain_prelevement is None:
+            return None
+        pas = self.periodicite.mois
+        if pas == 0:
+            return self.prochain_prelevement if self.prochain_prelevement >= le else None
+        return _avancer(self.prochain_prelevement, pas, le)
 
     def date_preavis(self, le: date) -> date | None:
         """La date après laquelle il est trop tard. C'est elle qu'on alerte.

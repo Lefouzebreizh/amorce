@@ -6,8 +6,9 @@ besoin de sortir (la lecture d'un document par un modèle de vision, et
 uniquement si elle est activée).
 
 Ce fichier est le plan du projet. Écrits à ce jour : le modèle de données, la
-configuration et le remplissage de formulaires PDF, avec leurs tests. Les autres
-modules sont des coquilles portant leur justification.
+configuration, le tableau de bord des abonnements et le remplissage de
+formulaires PDF, avec leurs tests. Les autres modules sont des coquilles portant
+leur justification.
 
 ## Les quatre modules
 
@@ -63,9 +64,12 @@ risquer les six mois de saisie des contrats.
 **2. Les alertes vivent quand même dans la configuration.**
 Une alerte porte une décision (traitée, reportée, ignorée), donc elle est du
 côté humain. Le programme réécrit cette section, et elle seule ; le reste du
-fichier est relu et réémis tel quel. Toute réécriture est précédée d'une copie
-en `admin_config.json.bak` : un fichier de configuration écrasé par un bug,
-c'est le projet entier qui redémarre à zéro.
+fichier est réémis dans son ordre d'origine, clés inconnues comprises. Sa mise
+en forme, en revanche, devient celle du programme — c'est le prix d'un fichier
+réécrit sans analyseur qui conserve les blancs, et il ne se paie qu'une fois.
+Toute réécriture est précédée d'une copie en `admin_config.json.bak` : un
+fichier de configuration écrasé par un bug, c'est le projet entier qui
+redémarre à zéro.
 
 **3. Rien n'est écrasé sans le dire.**
 Une commande qui déplace ou renomme simule par défaut et n'agit qu'avec
@@ -109,6 +113,40 @@ au plus tard `preavis_jours` avant. C'est cette date-là qui est calculée et
 alertée — alerter sur l'échéance, c'est alerter trop tard. La date d'avis
 d'échéance reçue de l'assureur est notée elle aussi : reçue en retard, elle
 rouvre un droit de résiliation.
+
+## Le tableau de bord
+
+```bash
+python3 paper.py etat                                    # ce que je paie, ce qui arrive
+python3 paper.py etat --traiter <id-alerte>              # c'est fait
+python3 paper.py etat --reporter <id-alerte>             # revoir ça à l'échéance
+python3 paper.py etat --enregistrer                      # écrire les alertes recalculées
+```
+
+Il sort le total mensuel et annuel, la répartition par catégorie de la plus
+chère à la moins chère — c'est là qu'on cherche où couper —, les alertes du
+jour, puis les contrats classés par urgence de préavis.
+
+Ce que le calcul sait, et qui vaut d'être connu :
+
+- **La date affichée est celle du préavis**, jamais celle du terme. Un contrat
+  à deux mois de préavis qui se termine le 1er novembre n'est plus résiliable
+  après le 2 septembre.
+- **L'échéance d'un contrat reconduit avance toute seule.** Une ligne saisie en
+  2021 donne encore la bonne date en 2026 : une configuration qu'il faut tenir
+  à jour à la main n'est jamais à jour.
+- **Le coût d'un départ n'est chiffré que si l'engagement court encore** — celui
+  de la première période. Une assurance reconduite depuis quatre ans ne coûte
+  rien à quitter, et lui annoncer un coût de sortie ferait renoncer à résilier.
+- **Pas d'alerte sur un prélèvement mensuel.** Trente euros tous les mois ne
+  surprennent personne ; c'est la prime annuelle qui vide le compte. Une alerte
+  qui revient chaque mois est du bruit, dans un outil fait pour en supprimer.
+- **Une alerte de contrat devenue sans objet s'en va** (contrat résilié,
+  échéance déplacée). Une alerte dont la date est **passée** reste, jusqu'à ce
+  qu'on la marque traitée : la faire disparaître, ce serait décider à la place
+  de l'utilisateur que l'année reconduite n'était pas grave.
+- **Le statut décidé à la main survit au recalcul.** C'est la seule chose que
+  le programme lit dans le fichier plutôt que de la calculer.
 
 ## Remplir un PDF
 
@@ -185,7 +223,7 @@ Sections, dans l'ordre du fichier :
 | `libelle`, `emetteur`, `categorie` | Affichage, et rattachement des documents entrants. |
 | `montant`, `periodicite` | Total mensuel du tableau de bord, et date du prochain prélèvement. |
 | `reference_client` | La seule chose qu'un service client demande. Elle doit être dans le courrier. |
-| `engagement` | `debut`, `fin`, `duree_mois` : partir avant la fin coûte des mois restants. |
+| `engagement` | `debut`, `fin`, `duree_mois`. `fin` est la fin de la **première** période, celle qui engage — pas la prochaine date anniversaire d'un contrat reconduit dix fois. |
 | `reconduction_tacite`, `date_avis_echeance` | Le couple qui décide s'il reste un droit de résiliation. |
 | `preavis_jours` | Ce qui fait la date d'alerte. `0` pour un contrat résiliable à tout moment. |
 | `resiliable_en_ligne` | Un abonnement souscrit en ligne se résilie en ligne : pas de lettre à écrire. |
@@ -199,7 +237,7 @@ Sections, dans l'ordre du fichier :
 | Champ | À quoi il sert |
 | --- | --- |
 | `id` | Stable, pour retrouver l'alerte d'un passage à l'autre. |
-| `type` | `preavis`, `renouvellement`, `paiement`, `document_manquant`, `conservation`. |
+| `type` | `preavis`, `renouvellement`, `paiement` — calculés. `document_manquant` et `conservation` viendront avec le journal des documents. |
 | `source` | `abonnement:<id>` ou `document:<id>` — d'où elle vient. |
 | `echeance` | La date qui compte : celle du préavis, pas celle du contrat. |
 | `declenchement` | À partir de quand elle apparaît dans `paper.py etat`. |
@@ -209,10 +247,10 @@ Sections, dans l'ordre du fichier :
 ## Les commandes prévues
 
 ```bash
+python3 paper.py etat [--traiter ID | --reporter ID]       # écrit
 python3 paper.py champs <formulaire.pdf> [--gabarit]       # écrit
 python3 paper.py remplir <plan.json> [--abonnement <id>]   # écrit
 python3 paper.py classer --source coffre/entree            # module 1, à venir
-python3 paper.py etat                                      # module 3, à venir
 python3 paper.py agenda --vers coffre/rappels.ics          # module 2, à venir
 python3 paper.py resilier <id-abonnement>                  # module 4, à venir
 ```
@@ -224,8 +262,9 @@ python3 -m unittest discover -s paper-manager/tests -v
 ```
 
 Les tests couvrent ce qui est calculable : l'arithmétique des échéances et des
-préavis, la validation et la réécriture de la configuration, la résolution des
-gabarits et le remplissage effectif d'un PDF. Le formulaire de test est
+préavis, la validation et la réécriture de la configuration, le tableau de bord
+et la fusion des alertes, la résolution des gabarits et le remplissage effectif
+d'un PDF. Le formulaire de test est
 **fabriqué à l'exécution** — ce dépôt ne versionne aucun binaire, et un Cerfa
 vierge en est un.
 
@@ -234,6 +273,6 @@ une session distante par le hook du dépôt, pour la chaîne pré-presse KDP.
 
 ## Prochaine étape
 
-`core/abonnements.py` : le tableau de bord et le calcul des alertes. Tout ce
-dont il a besoin — échéance reconduite, date de préavis, mois restants — est
-déjà écrit et vérifié dans `core/modele.py`.
+`core/calendrier.py` : les alertes deviennent un `.ics` que l'agenda du
+téléphone reprend. C'est le module qui fait sortir l'assistant de son terminal,
+et il n'a plus rien à calculer — tout est dans `abonnements.alertes()`.

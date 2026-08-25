@@ -1,7 +1,6 @@
 {
   "_aide": "Modèle de configuration de Paper-Manager. Copier en admin_config.json, remplir, ne jamais committer la copie. Chaque section est expliquée dans README.md.",
   "version": 1,
-
   "identite": {
     "civilite": "Monsieur",
     "nom": "NOM",
@@ -12,7 +11,6 @@
     "courriel": "prenom.nom@exemple.fr",
     "telephone": "06 00 00 00 00"
   },
-
   "classement": {
     "racine": "coffre",
     "entree": "coffre/entree",
@@ -21,20 +19,52 @@
     "modele_nom": "{date}_{emetteur}_{nature}_{montant}",
     "modele_dossier": "{annee}/{categorie}",
     "categories": {
-      "energie":   { "libelle": "Énergie et eau",        "conservation_annees": 5 },
-      "telecom":   { "libelle": "Téléphonie et internet", "conservation_annees": 1 },
-      "assurance": { "libelle": "Assurances",             "conservation_annees": 2 },
-      "banque":    { "libelle": "Banque et crédit",       "conservation_annees": 5 },
-      "impots":    { "libelle": "Impôts",                 "conservation_annees": 3 },
-      "sante":     { "libelle": "Santé et mutuelle",      "conservation_annees": 2 },
-      "logement":  { "libelle": "Logement",               "conservation_annees": 3 },
-      "travail":   { "libelle": "Travail et retraite",    "conservation_annees": null },
-      "vehicule":  { "libelle": "Véhicule",               "conservation_annees": 2 },
-      "abonnement":{ "libelle": "Abonnements et services","conservation_annees": 1 },
-      "divers":    { "libelle": "Divers",                 "conservation_annees": 3 }
+      "energie": {
+        "libelle": "Énergie et eau",
+        "conservation_annees": 5
+      },
+      "telecom": {
+        "libelle": "Téléphonie et internet",
+        "conservation_annees": 1
+      },
+      "assurance": {
+        "libelle": "Assurances",
+        "conservation_annees": 2
+      },
+      "banque": {
+        "libelle": "Banque et crédit",
+        "conservation_annees": 5
+      },
+      "impots": {
+        "libelle": "Impôts",
+        "conservation_annees": 3
+      },
+      "sante": {
+        "libelle": "Santé et mutuelle",
+        "conservation_annees": 2
+      },
+      "logement": {
+        "libelle": "Logement",
+        "conservation_annees": 3
+      },
+      "travail": {
+        "libelle": "Travail et retraite",
+        "conservation_annees": null
+      },
+      "vehicule": {
+        "libelle": "Véhicule",
+        "conservation_annees": 2
+      },
+      "abonnement": {
+        "libelle": "Abonnements et services",
+        "conservation_annees": 1
+      },
+      "divers": {
+        "libelle": "Divers",
+        "conservation_annees": 3
+      }
     }
   },
-
   "extraction": {
     "active": true,
     "fournisseur": "anthropic",
@@ -43,22 +73,36 @@
     "confiance_minimale": 0.75,
     "a_relire_si_doute": true,
     "emetteurs_connus": {
-      "EDF": { "categorie": "energie", "motif": "(?i)\\bEDF\\b|Électricité de France" },
-      "Orange": { "categorie": "telecom", "motif": "(?i)\\bOrange\\b" },
-      "MAIF": { "categorie": "assurance", "motif": "(?i)\\bMAIF\\b" },
-      "DGFiP": { "categorie": "impots", "motif": "(?i)Direction générale des Finances publiques|DGFiP" }
+      "EDF": {
+        "categorie": "energie",
+        "motif": "(?i)\\bEDF\\b|Électricité de France"
+      },
+      "Orange": {
+        "categorie": "telecom",
+        "motif": "(?i)\\bOrange\\b"
+      },
+      "MAIF": {
+        "categorie": "assurance",
+        "motif": "(?i)\\bMAIF\\b"
+      },
+      "DGFiP": {
+        "categorie": "impots",
+        "motif": "(?i)Direction générale des Finances publiques|DGFiP"
+      }
     }
   },
-
   "rappels": {
-    "avant_echeance_jours": [30, 7, 1],
+    "avant_echeance_jours": [
+      30,
+      7,
+      1
+    ],
     "heure": "08:00",
     "fuseau": "Europe/Paris",
     "sortie_ics": "coffre/rappels.ics",
     "preavis_defaut_jours": 30,
     "alerte_avant_defaut_jours": 45
   },
-
   "abonnements": [
     {
       "id": "edf-domicile",
@@ -71,7 +115,11 @@
       "prochain_prelevement": "2026-09-05",
       "moyen_paiement": "prelevement",
       "reference_client": "0000000000",
-      "engagement": { "debut": "2023-04-01", "fin": null, "duree_mois": null },
+      "engagement": {
+        "debut": "2023-04-01",
+        "fin": null,
+        "duree_mois": null
+      },
       "reconduction_tacite": false,
       "date_avis_echeance": null,
       "preavis_jours": 0,
@@ -94,7 +142,11 @@
       "prochain_prelevement": "2026-09-12",
       "moyen_paiement": "prelevement",
       "reference_client": "000000000",
-      "engagement": { "debut": "2025-10-15", "fin": "2026-10-15", "duree_mois": 12 },
+      "engagement": {
+        "debut": "2025-10-15",
+        "fin": "2026-10-15",
+        "duree_mois": 12
+      },
       "reconduction_tacite": true,
       "date_avis_echeance": null,
       "preavis_jours": 30,
@@ -111,13 +163,17 @@
       "libelle": "Assurance habitation",
       "emetteur": "MAIF",
       "categorie": "assurance",
-      "montant": 214.80,
+      "montant": 214.8,
       "devise": "EUR",
       "periodicite": "annuelle",
       "prochain_prelevement": "2026-11-01",
       "moyen_paiement": "prelevement",
       "reference_client": "000000 X",
-      "engagement": { "debut": "2021-11-01", "fin": "2026-11-01", "duree_mois": 12 },
+      "engagement": {
+        "debut": "2021-11-01",
+        "fin": "2022-11-01",
+        "duree_mois": 12
+      },
       "reconduction_tacite": true,
       "date_avis_echeance": "2026-09-20",
       "preavis_jours": 60,
@@ -127,20 +183,24 @@
       "statut": "actif",
       "alerte_avant_jours": 90,
       "documents_attendus": "annuel",
-      "notes": "Souscrit depuis plus d'un an : résiliable à tout moment, avec un mois de préavis. Le préavis de 60 jours ne vaut que pour la date anniversaire."
+      "notes": "Engagement terminé depuis 2022 : partir ne coûte rien. Souscrit depuis plus d'un an, donc résiliable à tout moment avec un mois de préavis ; le préavis de 60 jours ne vaut que pour la date anniversaire."
     },
     {
       "id": "salle-sport",
       "libelle": "Salle de sport",
       "emetteur": "Fitness Exemple",
       "categorie": "abonnement",
-      "montant": 29.90,
+      "montant": 29.9,
       "devise": "EUR",
       "periodicite": "mensuelle",
       "prochain_prelevement": "2026-09-02",
       "moyen_paiement": "prelevement",
       "reference_client": "ADH-00000",
-      "engagement": { "debut": "2026-02-02", "fin": "2027-02-02", "duree_mois": 12 },
+      "engagement": {
+        "debut": "2026-02-02",
+        "fin": "2027-02-02",
+        "duree_mois": 12
+      },
       "reconduction_tacite": true,
       "date_avis_echeance": null,
       "preavis_jours": 30,
@@ -153,37 +213,46 @@
       "notes": "Aucun document reçu : rien à attendre dans le coffre, l'alerte vient du seul calendrier."
     }
   ],
-
   "alertes": [
     {
-      "id": "maif-habitation-preavis-2026",
+      "id": "maif-habitation-preavis-2026-09-02",
       "type": "preavis",
       "source": "abonnement:maif-habitation",
       "echeance": "2026-09-02",
-      "declenchement": "2026-08-03",
+      "declenchement": "2026-06-04",
       "statut": "ouverte",
-      "montant": 214.80,
-      "action": "Résilier l'assurance habitation MAIF avant le 02/09/2026 (60 jours avant l'échéance du 01/11) — lettre recommandée."
+      "montant": 214.8,
+      "action": "Résilier Assurance habitation (MAIF) avant le 02/09/2026 — 60 jours de préavis avant l'échéance du 01/11/2026. Lettre recommandée à MAIF — 79018 Niort Cedex 9."
     },
     {
-      "id": "orange-fibre-fin-engagement-2026",
-      "type": "renouvellement",
+      "id": "orange-fibre-preavis-2026-09-15",
+      "type": "preavis",
       "source": "abonnement:orange-fibre",
       "echeance": "2026-09-15",
-      "declenchement": "2026-08-16",
+      "declenchement": "2026-07-17",
       "statut": "reportee",
       "montant": 49.99,
-      "action": "Fin d'engagement Orange le 15/10/2026 : comparer les offres avant le 15/09 pour résilier sans frais."
+      "action": "Résilier Fibre + mobile (Orange) avant le 15/09/2026 — 30 jours de préavis avant l'échéance du 15/10/2026. En ligne : https://espace-client.orange.fr."
     },
     {
-      "id": "edf-2026-09-facture",
+      "id": "maif-habitation-paiement-2026-11-01",
       "type": "paiement",
-      "source": "document:2026-08-14_EDF_facture_78-42EUR",
-      "echeance": "2026-09-05",
-      "declenchement": "2026-08-29",
+      "source": "abonnement:maif-habitation",
+      "echeance": "2026-11-01",
+      "declenchement": "2026-10-25",
       "statut": "ouverte",
-      "montant": 78.42,
-      "action": "Prélèvement EDF de 78,42 € le 05/09/2026 : vérifier la provision sur le compte."
+      "montant": 214.8,
+      "action": "Prélèvement MAIF de 214,80 € le 01/11/2026 : vérifier la provision."
+    },
+    {
+      "id": "salle-sport-preavis-2027-01-03",
+      "type": "preavis",
+      "source": "abonnement:salle-sport",
+      "echeance": "2027-01-03",
+      "declenchement": "2026-11-04",
+      "statut": "ouverte",
+      "montant": 29.9,
+      "action": "Résilier Salle de sport (Fitness Exemple) avant le 03/01/2027 — 30 jours de préavis avant l'échéance du 02/02/2027. Lettre recommandée à Fitness Exemple — 1 avenue du Sport, 35000 Rennes."
     }
   ]
 }

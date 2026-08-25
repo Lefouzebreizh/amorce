@@ -7,11 +7,12 @@ pour ne rien avoir à retenir.
 
 Sous-commandes écrites :
 
+    etat      le tableau de bord : ce que je paie, ce qui arrive, ce qu'il faut faire
     champs    ce qu'un PDF déclare, et le squelette de plan qui va avec
     remplir   un formulaire rempli à partir d'un plan et de mes données
 
-Sous-commandes prévues : `classer` (module 1), `etat` (module 3),
-`agenda` (module 2), `resilier` (module 4).
+Sous-commandes prévues : `classer` (module 1), `agenda` (module 2),
+`resilier` (module 4).
 
 Règle commune : **rien n'est écrasé sans le dire.** Une commande qui déplace ou
 renomme simule par défaut et n'agit qu'avec `--appliquer` ; une commande qui
@@ -26,10 +27,77 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from core.config import ErreurConfiguration, charger
+from dataclasses import replace
+
+from core.abonnements import Tableau, euros, tableau
+from core.config import ErreurConfiguration, charger, enregistrer_alertes
 from core.formulaires import ErreurFormulaire, charger_plan, lire_champs, remplir, resoudre
+from core.modele import StatutAlerte
 
 RACINE = Path(__file__).resolve().parent
+
+
+def commande_etat(arguments: argparse.Namespace) -> int:
+    configuration = charger(arguments.config)
+    etat = tableau(configuration)
+
+    if arguments.traiter or arguments.reporter:
+        etat = _changer_statut(configuration, etat, arguments)
+
+    _afficher(etat)
+
+    if arguments.enregistrer:
+        enregistrer_alertes(configuration, etat.alertes)
+        print(f"\nAlertes enregistrées dans {configuration.chemin}.")
+    return 0
+
+
+def _changer_statut(configuration, etat: Tableau, arguments: argparse.Namespace) -> Tableau:
+    """Marque une alerte traitée ou reportée, et l'enregistre aussitôt.
+
+    Le statut est la seule chose que le programme ne calcule pas : la perdre
+    ferait revenir demain ce dont on s'est occupé aujourd'hui.
+    """
+    identifiant = arguments.traiter or arguments.reporter
+    statut = StatutAlerte.TRAITEE if arguments.traiter else StatutAlerte.REPORTEE
+    visees = [alerte for alerte in etat.alertes if alerte.id == identifiant]
+    if not visees:
+        ouvertes = ", ".join(a.id for a in etat.alertes if a.visible(etat.le)) or "aucune"
+        raise ErreurConfiguration(f"alerte « {identifiant} » inconnue (ouvertes : {ouvertes})")
+
+    fondues = [replace(a, statut=statut) if a.id == identifiant else a for a in etat.alertes]
+    enregistrer_alertes(configuration, fondues)
+    print(f"{identifiant} : {statut.value}.\n")
+    return replace(etat, alertes=fondues)
+
+
+def _afficher(etat: Tableau) -> None:
+    print(f"Tableau de bord — {etat.le:%d/%m/%Y}\n")
+    print(f"  {euros(etat.total_mensuel)} par mois, {euros(etat.total_annuel)} par an")
+    print("  " + "   ".join(f"{cle} {euros(montant)}" for cle, montant in etat.par_categorie.items()))
+
+    visibles = [alerte for alerte in etat.alertes if alerte.visible(etat.le)]
+    if visibles:
+        print(f"\n  À FAIRE ({len(visibles)})")
+        for alerte in visibles:
+            retard = (etat.le - alerte.echeance).days
+            delai = f"en retard de {retard} jours" if retard > 0 else f"dans {-retard} jours"
+            print(f"  ! {alerte.echeance:%d/%m/%Y}  {alerte.action}")
+            print(f"      {delai} · {alerte.id}")
+    sommeil = len(etat.alertes) - len(visibles)
+    if sommeil:
+        print(f"\n  {sommeil} alerte(s) en sommeil (reportée, traitée, ou pas encore d'actualité).")
+
+    print(f"\n  CONTRATS ({len(etat.lignes)})")
+    largeur = max((len(ligne.abonnement.libelle) for ligne in etat.lignes), default=0)
+    for ligne in etat.lignes:
+        preavis = f"{ligne.preavis:%d/%m/%Y}" if ligne.preavis else "     —    "
+        note = ""
+        if ligne.mois_restants:
+            note = (f"  engagement : {ligne.mois_restants} mois, "
+                    f"partir maintenant coûte {euros(ligne.cout_sortie)}")
+        print(f"  {preavis}  {ligne.abonnement.libelle:<{largeur}}  "
+              f"{euros(ligne.mensuel):>10}/mois{note}")
 
 
 def commande_champs(arguments: argparse.Namespace) -> int:
@@ -93,6 +161,15 @@ def commande_remplir(arguments: argparse.Namespace) -> int:
 def analyser(argv: list[str] | None = None) -> argparse.Namespace:
     analyseur = argparse.ArgumentParser(prog="paper.py", description=__doc__.splitlines()[0])
     commandes = analyseur.add_subparsers(dest="commande", required=True)
+
+    etat = commandes.add_parser("etat", help="le tableau de bord et les alertes")
+    etat.add_argument("--traiter", metavar="ID", help="marquer une alerte comme traitée")
+    etat.add_argument("--reporter", metavar="ID",
+                      help="masquer une alerte jusqu'à son échéance")
+    etat.add_argument("--enregistrer", action="store_true",
+                      help="écrire les alertes recalculées dans la configuration")
+    etat.add_argument("--config", default=str(RACINE / "admin_config.json"))
+    etat.set_defaults(fonction=commande_etat)
 
     champs = commandes.add_parser("champs", help="lister les champs d'un PDF")
     champs.add_argument("pdf", help="le formulaire vierge")

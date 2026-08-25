@@ -63,6 +63,30 @@ class ProchaineEcheance(unittest.TestCase):
         self.assertEqual(contrat_.prochaine_echeance(date(2026, 11, 1)), date(2026, 11, 1))
 
 
+    def test_une_echeance_au_31_ne_derive_pas_de_mois_en_mois(self):
+        # Le rabotage se cumulerait si l'avance se faisait de proche en proche :
+        # 31 janvier, 28 février, puis 28 pour toujours.
+        mensuel = contrat(
+            engagement=Engagement(fin=date(2026, 1, 31), duree_mois=1), reconduction_tacite=True
+        )
+        self.assertEqual(mensuel.prochaine_echeance(date(2026, 3, 1)), date(2026, 3, 31))
+        self.assertEqual(mensuel.prochaine_echeance(date(2026, 4, 1)), date(2026, 4, 30))
+        self.assertEqual(mensuel.prochaine_echeance(date(2026, 5, 1)), date(2026, 5, 31))
+
+
+class ProchainPaiement(unittest.TestCase):
+    def test_un_prelevement_passe_avance_a_la_periode_suivante(self):
+        mensuel = contrat(prochain_prelevement=date(2026, 9, 5))
+        self.assertEqual(mensuel.prochain_paiement(date(2026, 11, 20)), date(2026, 12, 5))
+
+    def test_un_paiement_unique_deja_passe_ne_revient_pas(self):
+        unique = contrat(periodicite=Periodicite.UNIQUE, prochain_prelevement=date(2026, 1, 5))
+        self.assertIsNone(unique.prochain_paiement(date(2026, 8, 25)))
+
+    def test_sans_date_de_prelevement_il_n_y_a_rien_a_annoncer(self):
+        self.assertIsNone(contrat().prochain_paiement(date(2026, 8, 25)))
+
+
 class DatesDAlerte(unittest.TestCase):
     def test_le_preavis_recule_l_echeance_du_nombre_de_jours_du_contrat(self):
         assurance = contrat(
@@ -99,6 +123,19 @@ class CoutDuContrat(unittest.TestCase):
         # Le motif du choix de Decimal : en float, ce total affiche 89.97000000000001.
         contrats = [contrat(montant=Decimal("29.99")) for _ in range(3)]
         self.assertEqual(sum(c.montant_mensuel for c in contrats), Decimal("89.97"))
+
+    def test_un_contrat_reconduit_depuis_des_annees_ne_coute_rien_a_quitter(self):
+        # Le piège : écrire dans `fin` la prochaine date anniversaire d'un contrat
+        # reconduit depuis cinq ans, et se voir annoncer un coût de sortie sur un
+        # contrat qu'on peut quitter gratuitement. Le terme se calcule depuis le
+        # début quand on le connaît.
+        assurance = Engagement(debut=date(2021, 11, 1), fin=date(2026, 11, 1), duree_mois=12)
+        self.assertEqual(assurance.terme, date(2022, 11, 1))
+        self.assertFalse(assurance.en_cours(date(2026, 8, 25)))
+        self.assertEqual(assurance.mois_restants(date(2026, 8, 25)), 0)
+
+    def test_sans_debut_connu_le_terme_reste_celui_qui_est_ecrit(self):
+        self.assertEqual(Engagement(fin=date(2027, 2, 2)).terme, date(2027, 2, 2))
 
     def test_les_mois_restants_chiffrent_ce_que_coute_un_depart(self):
         engagement = Engagement(debut=date(2026, 2, 2), fin=date(2027, 2, 2), duree_mois=12)
