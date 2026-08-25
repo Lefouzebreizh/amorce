@@ -20,6 +20,7 @@ npm test            # tests unitaires (node --test, --experimental-strip-types)
 npm run fixtures    # fabrique quatre rushes de test dans .fixtures/rushes/
 npm run verify      # parcours complet dans un vrai Chromium (dev doit tourner)
 npm run verify:reprise  # le montage survit-il à un rechargement (dev doit tourner)
+npm run verify:partage  # un fichier partagé par Android arrive-t-il (dev doit tourner)
 ```
 
 Avant de pousser : `npm run typecheck && npm run lint && npm test`. Si le
@@ -32,9 +33,9 @@ changement touche au rendu, à l'audio, à l'export ou à la mise en page mobile
 .claude/          hooks/session-start.sh (prépare la session distante), skills/verifier
 src/app/          layout.tsx (polices, thème, viewport), page.tsx (monte <Studio/>), globals.css (@theme Tailwind v4)
 src/lib/          toute la logique métier — c'est là que vit le studio
-src/hooks/        usePlayback (la boucle de rendu), useMediaQuery
+src/hooks/        usePlayback (la boucle de rendu), usePersistence (la reprise), useSharedFiles (le partage), useMediaQuery
 src/components/   coques et panneaux, presque sans logique
-scripts/          make-fixtures.mjs, verify.mjs (Playwright, hors bundle)
+scripts/          make-fixtures.mjs, verify*.mjs (Playwright, hors bundle)
 ```
 
 ### `src/lib` — cœur du studio
@@ -59,6 +60,7 @@ scripts/          make-fixtures.mjs, verify.mjs (Playwright, hors bundle)
 | `store.ts` | Store Zustand, avec historique annuler/rétablir. |
 | `persistence.ts` | Reprise du montage : projet et fichiers rangés dans IndexedDB. Les fonctions de mise en forme sont pures et testées. |
 | `steps.ts` | Le parcours en 7 étapes, en données pures (séparé des composants pour rester testable). |
+| `share.ts` | Fichiers reçus par le bouton « Partager » d'Android. Le service worker les dépose, ce module les relit. |
 | `media.ts`, `hooks.ts`, `id.ts` | Import de fichiers, modèles d'accroches, identifiants. |
 
 ### Composants
