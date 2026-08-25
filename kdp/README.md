@@ -27,7 +27,14 @@ python3 kdp/kdp.py couverture --source nommes/ --vers couverture_kdp.pdf --pages
 
 # 4. Vérifier ce que le massicot va emporter
 python3 kdp/kdp.py epreuve --source interieur_kdp.pdf --vers epreuve.pdf
+
+# 5. Vérifier ce que verra l'acheteur : la couverture réduite en vignette
+python3 kdp/vignette.py --source couverture_kdp.pdf --vers .travail/vignette.png
 ```
+
+`vignette.py` juge la lisibilité, pas le fichier : le personnage se détache-t-il
+encore à 150 px de large, ou la couverture est-elle devenue une tache ? Ses
+seuils sont les nôtres et se recalibrent — voir l'en-tête du script.
 
 `renommer` reconnaît seul un fichier dont le nom contient le titre ou le slug de
 l'histoire, accents et casse ignorés. Pour des noms opaques — ce que produisent
