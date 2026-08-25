@@ -2,7 +2,7 @@
 
 import { scheduleSfx } from './sfx.ts';
 import { duckTarget, timelineSpeech, type SpeechSegment } from './voice.ts';
-import type { Project, SfxId, VoiceCue } from './types.ts';
+import type { Project, SampleCue, SfxId, VoiceCue } from './types.ts';
 
 /**
  * Mixage audio du montage.
@@ -17,10 +17,27 @@ import type { Project, SfxId, VoiceCue } from './types.ts';
 /** Avance à laquelle les bruitages sont programmés avant de sonner. */
 const SCHEDULE_HORIZON = 0.25;
 
+/**
+ * Un fichier audio posé à un instant de la timeline.
+ *
+ * Une réplique de voix et un bruitage importé ne diffèrent que par leur
+ * destination dans le mixage : leur lecture, elle, obéit exactement aux mêmes
+ * règles. Le type commun évite d'en écrire deux fois la mécanique — et de ne
+ * corriger qu'une des deux copies le jour d'un défaut.
+ */
+type PlacedCue = { id: string; url: string; gain: number; start: number; duration: number };
+
+type PlacedNodes = Map<
+  string,
+  { element: HTMLAudioElement; source: MediaElementAudioSourceNode; gain: GainNode; url: string }
+>;
+
 export class AudioEngine {
   readonly context: AudioContext;
   private readonly master: GainNode;
   private readonly sfxBus: GainNode;
+  /** Sous-bus des seuls sons de synthèse, qui portent leur compensation. */
+  private readonly synthBus: GainNode;
   private readonly clipsBus: GainNode;
   private readonly musicBus: GainNode;
   private readonly voiceBus: GainNode;
@@ -35,10 +52,8 @@ export class AudioEngine {
   private musicNodes: { source: MediaElementAudioSourceNode; gain: GainNode } | null = null;
   private musicUrl: string | null = null;
 
-  private voiceNodes = new Map<
-    string,
-    { element: HTMLAudioElement; source: MediaElementAudioSourceNode; gain: GainNode; url: string }
-  >();
+  private voiceNodes: PlacedNodes = new Map();
+  private sampleNodes: PlacedNodes = new Map();
 
   /**
    * Passages parlés en cache, et la liste dont ils viennent.
@@ -83,8 +98,19 @@ export class AudioEngine {
      * niveau que le fond, ils ne servent à rien.
      */
     this.sfxBus = this.context.createGain();
-    this.sfxBus.gain.value = 2.2;
     this.sfxBus.connect(this.master);
+
+    /*
+     * La compensation de brièveté est descendue sur un sous-bus.
+     *
+     * Elle existe pour les sons de synthèse, très courts, qui s'entendraient à
+     * peine au niveau du fond. Un bruitage importé arrive déjà à son niveau :
+     * le multiplier par le même facteur le ferait saturer. Les deux se règlent
+     * malgré tout d'une seule jauge, puisqu'ils passent ensuite au même endroit.
+     */
+    this.synthBus = this.context.createGain();
+    this.synthBus.gain.value = 2.2;
+    this.synthBus.connect(this.sfxBus);
 
     /*
      * Un bus par source.
@@ -173,7 +199,7 @@ export class AudioEngine {
    */
   applyMix(mix: { clips: number; sfx: number; music: number; voice: number }): void {
     this.clipsBus.gain.value = Math.max(0, Math.min(1, mix.clips));
-    this.sfxBus.gain.value = 2.2 * Math.max(0, Math.min(1, mix.sfx));
+    this.sfxBus.gain.value = Math.max(0, Math.min(1, mix.sfx));
     this.musicBus.gain.value = Math.max(0, Math.min(1, mix.music));
     this.voiceBus.gain.value = Math.max(0, Math.min(1, mix.voice));
   }
@@ -226,70 +252,93 @@ export class AudioEngine {
   }
 
   /**
-   * Met en place les répliques de voix off.
+   * Met en place les fichiers posés sur la timeline.
    *
-   * Un élément média par réplique, jamais un élément partagé : deux répliques
-   * peuvent se chevaucher — une réponse qui coupe la fin d'une phrase — et un
-   * élément unique ne peut pas être à deux positions de lecture à la fois.
-   * C'est la même raison qui impose un `<video>` par clip côté image.
+   * Un élément média par fichier, jamais un élément partagé : deux d'entre eux
+   * peuvent se chevaucher — une réponse qui coupe la fin d'une phrase, un
+   * bruitage sur une réplique — et un élément unique ne peut pas être à deux
+   * positions de lecture à la fois. C'est la même raison qui impose un
+   * `<video>` par clip côté image.
    */
-  syncVoices(cues: VoiceCue[]): void {
-    // Répliques disparues, ou dont le fichier a changé : on les débranche.
-    for (const [id, nodes] of this.voiceNodes) {
+  private syncPlaced(nodes: PlacedNodes, cues: PlacedCue[], bus: GainNode): void {
+    // Fichiers disparus, ou dont la source a changé : on les débranche.
+    for (const [id, existing] of nodes) {
       const cue = cues.find((c) => c.id === id);
-      if (cue && cue.url === nodes.url) continue;
-      nodes.element.pause();
-      nodes.gain.disconnect();
-      this.voiceNodes.delete(id);
+      if (cue && cue.url === existing.url) continue;
+      existing.element.pause();
+      existing.gain.disconnect();
+      nodes.delete(id);
     }
 
     for (const cue of cues) {
-      let nodes = this.voiceNodes.get(cue.id);
+      let existing = nodes.get(cue.id);
 
-      if (!nodes) {
+      if (!existing) {
         const element = document.createElement('audio');
         element.src = cue.url;
         element.preload = 'auto';
         const source = this.context.createMediaElementSource(element);
         const gain = this.context.createGain();
         source.connect(gain);
-        gain.connect(this.voiceBus);
-        nodes = { element, source, gain, url: cue.url };
-        this.voiceNodes.set(cue.id, nodes);
+        gain.connect(bus);
+        existing = { element, source, gain, url: cue.url };
+        nodes.set(cue.id, existing);
       }
 
-      nodes.gain.gain.value = Math.max(0, Math.min(1, cue.gain));
+      existing.gain.gain.value = Math.max(0, Math.min(1, cue.gain));
     }
   }
 
   /**
-   * Aligne chaque réplique sur la tête de lecture.
+   * Aligne chaque fichier posé sur la tête de lecture.
    *
    * La tolérance est plus serrée que pour la musique : un décalage d'un tiers de
    * seconde ne s'entend pas sur un fond sonore, mais sur une voix il désaccorde
    * le sous-titre du mot prononcé — soit précisément ce que le calage vient de
-   * mettre en place.
+   * mettre en place — et sur un bruitage il le décolle de l'image qu'il ponctue.
    */
-  syncVoicePositions(cues: VoiceCue[], time: number, playing: boolean): void {
+  private syncPlacedPositions(nodes: PlacedNodes, cues: PlacedCue[], time: number, playing: boolean): void {
     for (const cue of cues) {
-      const nodes = this.voiceNodes.get(cue.id);
-      if (!nodes) continue;
+      const existing = nodes.get(cue.id);
+      if (!existing) continue;
 
       const target = time - cue.start;
 
       if (!playing || target < 0 || target >= cue.duration) {
-        if (!nodes.element.paused) nodes.element.pause();
+        if (!existing.element.paused) existing.element.pause();
         // Remettre au début tant que la tête de lecture est en amont : sans
-        // cela, relancer la lecture reprendrait la réplique en plein milieu.
-        if (target < 0 && nodes.element.currentTime !== 0) nodes.element.currentTime = 0;
+        // cela, relancer la lecture reprendrait le fichier en plein milieu.
+        if (target < 0 && existing.element.currentTime !== 0) existing.element.currentTime = 0;
         continue;
       }
 
-      if (Math.abs(nodes.element.currentTime - target) > 0.15) {
-        nodes.element.currentTime = Math.max(0, target);
+      if (Math.abs(existing.element.currentTime - target) > 0.15) {
+        existing.element.currentTime = Math.max(0, target);
       }
-      if (nodes.element.paused) void nodes.element.play().catch(() => undefined);
+      if (existing.element.paused) void existing.element.play().catch(() => undefined);
     }
+  }
+
+  /** Répliques de voix off : sur leur propre bus, celui qui provoque la baisse. */
+  syncVoices(cues: VoiceCue[]): void {
+    this.syncPlaced(this.voiceNodes, cues, this.voiceBus);
+  }
+
+  syncVoicePositions(cues: VoiceCue[], time: number, playing: boolean): void {
+    this.syncPlacedPositions(this.voiceNodes, cues, time, playing);
+  }
+
+  /**
+   * Bruitages importés : sur le bus des bruitages, mais pas sur le sous-bus des
+   * sons de synthèse — ils arrivent déjà à leur niveau et n'ont pas à être
+   * compensés.
+   */
+  syncSamples(cues: SampleCue[]): void {
+    this.syncPlaced(this.sampleNodes, cues, this.sfxBus);
+  }
+
+  syncSamplePositions(cues: SampleCue[], time: number, playing: boolean): void {
+    this.syncPlacedPositions(this.sampleNodes, cues, time, playing);
   }
 
   /**
@@ -321,7 +370,7 @@ export class AudioEngine {
    * faible que le résultat final induirait en erreur au moment de choisir.
    */
   audition(id: SfxId, gain = 0.85): void {
-    scheduleSfx(this.context, this.sfxBus, id, this.context.currentTime + 0.02, gain);
+    scheduleSfx(this.context, this.synthBus, id, this.context.currentTime + 0.02, gain);
   }
 
   /** Le navigateur suspend tout contexte audio créé hors d'un geste utilisateur. */
@@ -345,7 +394,7 @@ export class AudioEngine {
 
       this.scheduledCues.add(cue.id);
       this.liveSources.push(
-        ...scheduleSfx(this.context, this.sfxBus, cue.sfx, this.context.currentTime + Math.max(0, delta), cue.gain),
+        ...scheduleSfx(this.context, this.synthBus, cue.sfx, this.context.currentTime + Math.max(0, delta), cue.gain),
       );
     }
   }
@@ -375,11 +424,12 @@ export class AudioEngine {
     this.resetSchedule();
     this.musicElement?.pause();
     this.musicNodes?.gain.disconnect();
-    for (const nodes of this.voiceNodes.values()) {
+    for (const nodes of [...this.voiceNodes.values(), ...this.sampleNodes.values()]) {
       nodes.element.pause();
       nodes.gain.disconnect();
     }
     this.voiceNodes.clear();
+    this.sampleNodes.clear();
     for (const nodes of this.clipNodes.values()) nodes.gain.disconnect();
     this.clipNodes.clear();
     void this.context.close();

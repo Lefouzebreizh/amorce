@@ -17,6 +17,7 @@ import {
   type ExportPreset,
   type Project,
   type SfxId,
+  type SampleCue,
   type SoundCue,
   type VoiceCue,
 } from './types.ts';
@@ -60,6 +61,7 @@ const COALESCING = new Set([
   'son-reglage',
   'musique-reglage',
   'voix-reglage',
+  'bruitage-reglage',
   'mixage',
   'nom',
 ]);
@@ -120,6 +122,11 @@ type StudioState = {
   addCue: (sfx: SfxId, time?: number) => void;
   updateCue: (id: string, patch: Partial<SoundCue>) => void;
   removeCue: (id: string) => void;
+
+  // -- Bruitages importés ---------------------------------------------------
+  addSamples: (cues: SampleCue[]) => void;
+  updateSample: (id: string, patch: Partial<SampleCue>) => void;
+  removeSample: (id: string) => void;
 
   // -- Voix off -------------------------------------------------------------
   addVoices: (cues: VoiceCue[]) => void;
@@ -512,6 +519,26 @@ export const useStudio = create<StudioState>((set, get) => {
     mutate('mixage', (state) => ({
       project: { ...state.project, mix: { ...state.project.mix, ...patch } },
     })),
+
+  addSamples: (cues) =>
+    mutate('ajout-bruitage', (state) => ({
+      project: { ...state.project, samples: [...state.project.samples, ...cues] },
+    })),
+
+  updateSample: (id, patch) =>
+    mutate('bruitage-reglage', (state) => ({
+      project: {
+        ...state.project,
+        samples: state.project.samples.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+      },
+    })),
+
+  removeSample: (id) =>
+    mutate('retrait-bruitage', (state) => {
+      const cue = state.project.samples.find((c) => c.id === id);
+      if (cue) URL.revokeObjectURL(cue.url);
+      return { project: { ...state.project, samples: state.project.samples.filter((c) => c.id !== id) } };
+    }),
 
   addVoices: (cues) =>
     mutate('ajout-voix', (state) => ({

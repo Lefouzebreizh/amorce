@@ -2,7 +2,7 @@
 
 import { uid } from './id';
 import { analyseVoice } from './voice';
-import type { MediaAsset, MusicTrack, VoiceCue } from './types';
+import type { MediaAsset, MusicTrack, SampleCue, VoiceCue } from './types';
 
 /**
  * Import de fichiers depuis le disque.
@@ -206,6 +206,34 @@ export async function loadVoiceCue(file: File, context: BaseAudioContext, start 
       script: '',
       segments: [],
     };
+  }
+}
+
+/**
+ * Importe un fichier audio comme bruitage posé sur la timeline.
+ *
+ * Aucune analyse du signal, contrairement à une réplique de voix : on ne cale
+ * rien dessus, il n'y a que sa durée à connaître pour savoir quand il s'arrête.
+ */
+export async function loadSampleCue(file: File, start = 0): Promise<SampleCue> {
+  const url = URL.createObjectURL(file);
+  const audio = document.createElement('audio');
+  audio.preload = 'metadata';
+  audio.src = url;
+
+  try {
+    await waitFor(audio, 'loadedmetadata');
+    return {
+      id: uid('bruitage'),
+      name: file.name,
+      url,
+      duration: Number.isFinite(audio.duration) ? audio.duration : 0,
+      start,
+      gain: 0.9,
+    };
+  } catch {
+    URL.revokeObjectURL(url);
+    throw audioFailure(file);
   }
 }
 

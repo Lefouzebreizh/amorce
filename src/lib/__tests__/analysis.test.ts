@@ -29,7 +29,7 @@ function caption(start: number, end: number): Caption {
 }
 
 function project(overrides: Partial<Project> = {}): Project {
-  return { name: 't', assets: [asset()], clips: [], captions: [], cues: [], voices: [], music: null, cinema: { ...DEFAULT_CINEMA }, mix: { ...DEFAULT_MIX }, ...overrides };
+  return { name: 't', assets: [asset()], clips: [], captions: [], cues: [], samples: [], voices: [], music: null, cinema: { ...DEFAULT_CINEMA }, mix: { ...DEFAULT_MIX }, ...overrides };
 }
 
 test('band vaut 1 dans la plage idéale et 0 aux bornes dures', () => {

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { loadMusicTrack, loadVoiceCue } from '@/lib/media';
+import { loadMusicTrack, loadSampleCue, loadVoiceCue } from '@/lib/media';
 import { SFX_LIBRARY } from '@/lib/sfx';
 import { useStudio } from '@/lib/store';
-import type { VoiceCue } from '@/lib/types';
+import type { SampleCue, VoiceCue } from '@/lib/types';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Button, Field, Hint, Panel, Slider } from '../ui';
 
@@ -126,6 +126,128 @@ function MixerPanel() {
         Ce réglage s’applique à tout le montage et se retrouve tel quel dans le fichier exporté. Pour
         couper le son d’un seul plan, passe par « Réglage fin » dans l’étape Monter.
       </Hint>
+    </Panel>
+  );
+}
+
+/**
+ * Bruitages importés.
+ *
+ * Les sons de synthèse couvrent ce qui est abstrait — une coupe, un souffle,
+ * une tension. Ils ne peuvent rien pour ce qui doit être reconnaissable : un
+ * rugissement, un coup d'orchestre, une explosion de film. Plutôt que de
+ * prétendre le contraire, on laisse déposer les siens à côté.
+ */
+function SamplePanel() {
+  const samples = useStudio((s) => s.project.samples);
+  const playhead = useStudio((s) => s.playhead);
+  const duration = useStudio((s) => s.duration());
+  const addSamples = useStudio((s) => s.addSamples);
+  const updateSample = useStudio((s) => s.updateSample);
+  const removeSample = useStudio((s) => s.removeSample);
+
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <Panel
+      title="Tes propres bruitages"
+      subtitle="Pour ce qu’aucune synthèse ne sait faire : un rugissement, une explosion, un coup d’orchestre."
+    >
+      {samples.length > 0 && (
+        <ul className="mb-3 space-y-1.5">
+          {[...samples]
+            .sort((a, b) => a.start - b.start)
+            .map((sample) => {
+              const open = openId === sample.id;
+
+              return (
+                <li key={sample.id} className={`rounded-xl ${open ? 'bg-raised' : 'bg-slab'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(open ? null : sample.id)}
+                    className="flex min-h-11 w-full items-center justify-between gap-2 px-3 text-left"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-xs font-semibold text-mist">{sample.name}</span>
+                    <span className="font-mono text-[11px] text-muted">{sample.start.toFixed(2)} s</span>
+                  </button>
+
+                  {open && (
+                    <div className="px-3 pt-1 pb-3">
+                      <Field
+                        label="Position"
+                        value={`${sample.start.toFixed(2)} s`}
+                        help="Cale-le très légèrement avant l’image qu’il ponctue : le son doit l’annoncer, pas la suivre."
+                      >
+                        <Slider
+                          ariaLabel="Position du bruitage importé"
+                          min={0}
+                          max={Math.max(0.1, duration)}
+                          step={0.01}
+                          value={sample.start}
+                          onChange={(value) => updateSample(sample.id, { start: value })}
+                        />
+                      </Field>
+
+                      <Field label="Volume" value={`${Math.round(sample.gain * 100)} %`}>
+                        <Slider
+                          ariaLabel="Volume du bruitage importé"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          value={sample.gain}
+                          onChange={(value) => updateSample(sample.id, { gain: value })}
+                        />
+                      </Field>
+
+                      <Button variant="danger" className="w-full" onClick={() => removeSample(sample.id)}>
+                        Retirer
+                      </Button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+        </ul>
+      )}
+
+      <label className="block cursor-pointer rounded-xl border-2 border-dashed border-edge px-4 py-5 text-center transition-colors hover:border-muted">
+        <span className="text-xs font-semibold text-mist">Choisir un ou plusieurs fichiers</span>
+        <span className="mt-1 block text-[11px] text-muted">MP3, WAV, M4A — posés à la position de lecture</span>
+        <input
+          type="file"
+          accept="audio/*"
+          multiple
+          className="hidden"
+          onChange={async (event) => {
+            const files = [...(event.target.files ?? [])];
+            event.target.value = '';
+            if (files.length === 0) return;
+
+            setError(null);
+            try {
+              // Tous au même instant, contrairement aux répliques de voix : des
+              // bruitages choisis ensemble se superposent le plus souvent sur
+              // un même évènement, ils ne s'enchaînent pas.
+              const imported: SampleCue[] = [];
+              for (const file of files) imported.push(await loadSampleCue(file, playhead));
+              addSamples(imported);
+              setOpenId(imported[0]?.id ?? null);
+            } catch (cause) {
+              setError(cause instanceof Error ? cause.message : 'Fichier audio illisible par le navigateur.');
+            }
+          }}
+        />
+      </label>
+
+      {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+
+      <div className="mt-3">
+        <Hint>
+          Ils passent par la même jauge « Bruitages » que les sons de synthèse, mais sans leur
+          compensation de niveau : un fichier arrive déjà réglé, le remonter le ferait saturer.
+        </Hint>
+      </div>
     </Panel>
   );
 }
@@ -337,6 +459,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
     <div className="space-y-3">
       <MixerPanel />
       <VoicePanel engine={engine} />
+      <SamplePanel />
 
       <Panel
         title="4 · Bruitages"

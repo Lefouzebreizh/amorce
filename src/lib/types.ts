@@ -3,7 +3,7 @@
  *
  * Un projet = des médias sources (`MediaAsset`) découpés en `Clip`s posés bout à
  * bout sur une timeline, plus des calques par-dessus : sous-titres, bruitages
- * et voix off.
+ * — de synthèse ou importés — et voix off.
  *
  * Tout vit dans le navigateur : les fichiers ne sont jamais envoyés sur un serveur.
  */
@@ -132,6 +132,30 @@ export type SoundCue = {
   sfx: SfxId;
   /** Instant de déclenchement sur la timeline, en secondes. */
   time: number;
+  gain: number;
+};
+
+/**
+ * Un bruitage importé, posé à un instant de la timeline.
+ *
+ * Les sons de synthèse couvrent bien ce qui est abstrait — une coupe, un
+ * souffle, une tension. Ils ne peuvent rien pour ce qui doit être reconnaissable :
+ * un rugissement, un coup d'orchestre, une explosion de film. Ceux-là se
+ * fabriquent avec un modèle entraîné sur du son réel, ailleurs, et n'ont plus
+ * qu'à être déposés ici.
+ *
+ * Même forme qu'une réplique de voix, à deux différences près : rien à
+ * prononcer, et surtout aucune baisse du fond — un bruitage doit percer le
+ * mixage, pas lui faire de la place.
+ */
+export type SampleCue = {
+  id: string;
+  name: string;
+  /** URL objet du fichier, valable tant que l'onglet est ouvert. */
+  url: string;
+  duration: number;
+  /** Instant de la timeline où le bruitage commence, en secondes. */
+  start: number;
   gain: number;
 };
 
@@ -278,6 +302,7 @@ export type Project = {
   clips: Clip[];
   captions: Caption[];
   cues: SoundCue[];
+  samples: SampleCue[];
   voices: VoiceCue[];
   music: MusicTrack | null;
   cinema: CinemaSettings;
