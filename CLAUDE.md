@@ -236,7 +236,11 @@ montage revient — puis le **lire**, parce qu'un projet restauré dont les lien
 pointent dans le vide s'affiche normalement et sort noir.
 
 Chromium est déjà installé dans cet environnement (`PLAYWRIGHT_BROWSERS_PATH`),
-ne pas lancer `playwright install`.
+ne pas lancer `playwright install`. Sa révision n'est pas celle que Playwright
+attend, d'où `AMORCE_CHROMIUM=/opt/pw-browsers/chromium`, que `fixtures` et
+`verify` acceptent tous les deux — le hook de démarrage la pose désormais dans
+les sessions distantes, mais un `playwright install` réclamé signifie qu'elle
+manque.
 
 ## Pièges connus
 

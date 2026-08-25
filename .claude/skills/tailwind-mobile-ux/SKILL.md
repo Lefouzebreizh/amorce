@@ -72,7 +72,9 @@ Trois niveaux, du plus rapide au plus fidèle :
 # 1. Le profil téléphone de la vérification, bridé ×4 (indispensable : sans le
 #    bridage, la dégradation automatique de qualité ne se déclenche jamais).
 npm run dev                       # dans un terminal
+npm run fixtures                  # une fois : les rushes d'essai
 AMORCE_PROFILE=mobile npm run verify
+# Réclame `playwright install` ? Il manque AMORCE_CHROMIUM=/opt/pw-browsers/chromium.
 
 # 2. L'émulation du navigateur : outils de développement, appareil 393 × 873.
 #    Voit les débordements, ne voit ni le tactile réel ni la barre de gestes.
