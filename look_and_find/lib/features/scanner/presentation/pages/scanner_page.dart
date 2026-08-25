@@ -19,7 +19,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_config.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/network/app_exception.dart';
 import '../../../../core/utils/extensions.dart';
@@ -27,6 +26,7 @@ import '../../../favorites/presentation/pages/favorites_page.dart';
 import '../../../favorites/presentation/providers/favorites_providers.dart';
 import '../../../product_detail/presentation/pages/product_detail_page.dart';
 import '../providers/camera_providers.dart';
+import 'api_key_page.dart';
 import '../providers/scanner_providers.dart';
 import '../widgets/blocking_notice.dart';
 import '../widgets/capture_bar.dart';
@@ -105,6 +105,12 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
     _backToViewfinder();
   }
 
+  void _ouvrirReglageCle(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const ApiKeyPage()),
+    );
+  }
+
   void _backToViewfinder() {
     setState(() => _frozen = null);
     ref.read(scanControllerProvider.notifier).reset();
@@ -125,13 +131,15 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
 
   @override
   Widget build(BuildContext context) {
-    if (!AppConfig.hasApiKey) {
-      return const Scaffold(
+    if (ref.watch(geminiApiKeyProvider).isEmpty) {
+      return Scaffold(
         body: SafeArea(
           child: BlockingNotice(
             icon: Icons.key_off_rounded,
             title: AppStrings.missingKeyTitle,
             body: AppStrings.missingKeyBody,
+            actionLabel: AppStrings.enterKey,
+            onAction: () => _ouvrirReglageCle(context),
           ),
         ),
       );

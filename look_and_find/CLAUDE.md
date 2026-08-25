@@ -74,9 +74,12 @@ d'y toucher.
    celle d'une autre uniquement pour naviguer vers son écran, ou pour un
    composant partagé explicitement (`FavoriteButton`, qui appartient au suivi
    de prix et non à la fiche qui l'affiche).
-2. **La clé d'API n'entre jamais dans le dépôt.** Elle arrive par
-   `--dart-define`. Sans elle, l'application démarre et explique quoi faire ;
-   ne pas remplacer cet écran par un échec d'appel.
+2. **La clé d'API n'entre jamais dans le dépôt**, et la **saisie l'emporte sur
+   le build**. Une clé compilée est en clair dans le binaire et sa rotation
+   impose de reconstruire ; l'ordre de priorité de `geminiApiKeyProvider` est
+   ce qui permet d'y réagir en dix secondes. Sans aucune des deux,
+   l'application démarre et explique quoi faire ; ne pas remplacer cet écran
+   par un échec d'appel.
 3. **`ProductDto` ne lève sur aucun champ, sauf l'absence de titre.** Un
    marchand illisible est écarté, les autres sont conservés. Rendre la lecture
    stricte ferait disparaître des fiches entières pour un prix mal typé.
@@ -160,6 +163,8 @@ méthode testée.
 | `alerts_test.dart` | Ce qui doit être signalé, et surtout ce qui doit se taire une fois acquitté. |
 | `product_detail_page_test.dart` | La fiche montée pour de vrai. |
 | `favorites_page_test.dart` | « Ma liste » montée pour de vrai : bandeau d'alerte, cumul, acquittement. |
+| `api_key_test.dart` | D'où vient la clé et laquelle gagne. |
+| `demarrage_test.dart` | Le seul test qui monte `app.dart` : câblage du thème, de la locale et des surcharges. |
 
 Trois recettes utiles quand on ajoute un test :
 
@@ -196,6 +201,10 @@ Trois recettes utiles quand on ajoute un test :
   renvoyé qu'un `.glb` est consultable en 3D sur iPhone mais pas posable dans
   la pièce ; l'interface le dit déjà, ne pas le masquer.
 - L'historique est borné à soixante entrées, taillées à l'écriture.
+- Les surcharges de providers de `demarrage_test.dart` doublent celles de
+  `main.dart`, qui n'est pas appelable depuis un test. Ajouter une boîte Hive
+  sans les mettre à jour toutes les deux fait échouer le démarrage réel sans
+  qu'aucun test ne bronche.
 - Sans serveur, un prix ne peut bouger qu'au rescan. Ne pas ajouter de
   vocabulaire d'alerte de fond (« notification », « surveillance permanente ») :
   l'architecture ne le permet pas.

@@ -35,12 +35,23 @@ sur le téléphone.
 ```bash
 flutter pub get
 dart run build_runner build          # providers Riverpod générés
-flutter run --dart-define=GEMINI_API_KEY=votre_clé
+flutter run
 ```
 
-**La clé n'est pas dans le dépôt, et n'a pas à y être.** Elle est injectée au
-build par `--dart-define`. Sans elle, l'application démarre et explique quoi
-faire plutôt que d'échouer devant l'utilisateur.
+**La clé n'est pas dans le dépôt, et n'a pas à y être.** Elle a deux origines
+possibles, dans cet ordre :
+
+1. **saisie dans l'application** — au premier lancement, ou plus tard depuis
+   « Ma liste » ▸ 🔑 ;
+2. **injectée au build** par `flutter run --dart-define=GEMINI_API_KEY=…`.
+
+La saisie l'emporte, et ce n'est pas un détail de confort : une clé compilée
+est une chaîne **en clair dans le binaire**, récupérable par qui obtient l'APK,
+et sa rotation impose de tout reconstruire. Pouvoir la remplacer sans rebâtir
+est la seule façon de réagir vite à une clé fuitée.
+
+Sans aucune des deux, l'application démarre et explique quoi faire plutôt que
+d'échouer devant l'utilisateur.
 
 Obtenir une clé : [Google AI Studio](https://aistudio.google.com/apikey).
 
@@ -173,6 +184,8 @@ signale plus rien.
 | `scan_controller_test.dart` | L'enchaînement complet d'un scan, réseau et caméra remplacés par surcharge de providers. |
 | `product_detail_page_test.dart` | La fiche montée pour de vrai : hiérarchie des offres, alternatives filtrées, bascule du favori. |
 | `favorites_page_test.dart` | « Ma liste » montée pour de vrai : bandeau d'alerte, cumul des baisses, acquittement. |
+| `api_key_test.dart` | D'où vient la clé et laquelle gagne : la saisie l'emporte sur le build, et survit à un redémarrage. |
+| `demarrage_test.dart` | L'application démarrée de bout en bout — le seul test qui couvre `app.dart` et le parcours « pas de clé → saisie → viseur ». |
 
 Ce qui ne peut pas être testé ainsi et demande un appareil : le décodage
 caméra, la mise au point, la session de réalité augmentée, et la qualité
@@ -185,6 +198,11 @@ d'identification du modèle lui-même.
 - La clé passe en paramètre d'URL ; l'intercepteur de trace la masque, mais une
   capture de trafic la verrait. Pour une mise en production, l'appel doit
   passer par un relais côté serveur.
+- La clé saisie est rangée en clair dans le stockage privé de l'application.
+  Les autres applications d'un téléphone non débridé n'y accèdent pas, et
+  `android:allowBackup="false"` empêche sa remontée vers le nuage — mais un
+  appareil débridé la lirait. Pour un secret de plus grande valeur, il faudrait
+  le trousseau du système (`flutter_secure_storage`).
 - Les photos sont écrites dans le dossier temporaire du système : une vignette
   d'historique peut disparaître alors que la fiche reste lisible. Les widgets
   d'image prévoient tous ce cas.

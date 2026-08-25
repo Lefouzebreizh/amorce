@@ -12,13 +12,16 @@ library;
 
 import 'dart:typed_data';
 
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/network/app_exception.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/result.dart';
+import '../../../../core/constants/app_config.dart';
 import '../../../favorites/presentation/providers/favorites_providers.dart';
 import '../../../product_detail/domain/entities/product.dart';
+import '../../data/datasources/api_key_store.dart';
 import '../../data/datasources/gemini_vision_datasource.dart';
 import '../../data/repositories/scanner_repository_impl.dart';
 import '../../domain/repositories/scanner_repository.dart';
@@ -27,8 +30,55 @@ import '../../domain/usecases/identify_product.dart';
 part 'scanner_providers.g.dart';
 
 @Riverpod(keepAlive: true)
+Box<String> settingsBox(Ref ref) => throw UnimplementedError(
+  'La boîte des réglages est surchargée au démarrage, dans main().',
+);
+
+@Riverpod(keepAlive: true)
+ApiKeyStore apiKeyStore(Ref ref) => ApiKeyStore(ref.watch(settingsBoxProvider));
+
+/// La clé effectivement utilisée : celle saisie dans l'application, sinon
+/// celle du build, sinon rien.
+///
+/// L'ordre compte. Une clé saisie l'emporte sur la clé compilée pour qu'une
+/// rotation n'impose pas de reconstruire l'application — c'est la seule façon
+/// de réagir vite à une clé fuitée.
+///
+/// C'est un notifier et non une simple lecture parce que `ApiKeyStore` lit Hive
+/// de façon synchrone, sans flux : porter la valeur ici est ce qui fait que le
+/// viseur quitte l'écran « clé absente » à l'instant où la saisie est validée.
+@Riverpod(keepAlive: true)
+class GeminiApiKey extends _$GeminiApiKey {
+  @override
+  String build() =>
+      ref.watch(apiKeyStoreProvider).read() ?? AppConfig.compiledApiKey;
+
+  bool get isConfigured => state.isNotEmpty;
+
+  Future<void> save(String valeur) async {
+    final store = ref.read(apiKeyStoreProvider);
+    await store.write(valeur);
+    // L'application peut avoir été fermée pendant l'écriture. Le rangement,
+    // lui, a abouti : au prochain démarrage, `build` relira la bonne valeur.
+    if (!ref.mounted) return;
+    state = valeur.trim();
+  }
+
+  /// Revient à la clé du build, s'il y en a une.
+  Future<void> forget() async {
+    final store = ref.read(apiKeyStoreProvider);
+    await store.clear();
+    if (!ref.mounted) return;
+    state = AppConfig.compiledApiKey;
+  }
+}
+
+@Riverpod(keepAlive: true)
 GeminiVisionDataSource geminiVisionDataSource(Ref ref) =>
-    GeminiVisionDataSource(ref.watch(dioProvider));
+    GeminiVisionDataSource(
+      ref.watch(dioProvider),
+      ref.watch(geminiApiKeyProvider),
+    );
 
 @Riverpod(keepAlive: true)
 ScannerRepository scannerRepository(Ref ref) =>
