@@ -24,6 +24,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/network/app_exception.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../favorites/presentation/pages/favorites_page.dart';
+import '../../../favorites/presentation/providers/favorites_providers.dart';
 import '../../../product_detail/presentation/pages/product_detail_page.dart';
 import '../providers/camera_providers.dart';
 import '../providers/scanner_providers.dart';
@@ -139,6 +140,7 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
     final session = ref.watch(cameraSessionProvider);
     final scan = ref.watch(scanControllerProvider);
     final flash = ref.watch(flashSettingProvider);
+    final alerts = ref.watch(pendingAlertsProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -183,6 +185,7 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
               bottom: 20 + context.bottomInset,
               child: CaptureBar(
                 flashMode: flash,
+                alertCount: alerts.length,
                 busy: scan.isLoading,
                 onFlash: ref.read(flashSettingProvider.notifier).cycle,
                 onCapture: _capture,

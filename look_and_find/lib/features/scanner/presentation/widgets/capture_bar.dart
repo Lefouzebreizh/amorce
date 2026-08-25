@@ -20,6 +20,7 @@ class CaptureBar extends StatelessWidget {
     required this.onFlash,
     required this.onCapture,
     required this.onOpenList,
+    this.alertCount = 0,
     this.busy = false,
   });
 
@@ -27,6 +28,12 @@ class CaptureBar extends StatelessWidget {
   final VoidCallback onFlash;
   final VoidCallback onCapture;
   final VoidCallback onOpenList;
+
+  /// Nombre d'objets suivis passés sous leur seuil. Sans cette pastille, une
+  /// baisse attendue depuis des semaines n'existe que pour qui pense à ouvrir
+  /// la liste — c'est-à-dire pour personne.
+  final int alertCount;
+
   final bool busy;
 
   @override
@@ -45,7 +52,10 @@ class CaptureBar extends StatelessWidget {
           _Shutter(onTap: busy ? null : onCapture, busy: busy),
           _RoundAction(
             icon: Icons.bookmark_border_rounded,
-            label: 'Ma liste',
+            label: alertCount == 0
+                ? 'Ma liste'
+                : 'Ma liste, $alertCount alerte${alertCount > 1 ? 's' : ''}',
+            badge: alertCount,
             onTap: onOpenList,
           ),
         ],
@@ -118,16 +128,18 @@ class _RoundAction extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.active = false,
+    this.badge = 0,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final bool active;
+  final int badge;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
+    final button = Semantics(
       button: true,
       label: label,
       child: InkResponse(
@@ -148,6 +160,41 @@ class _RoundAction extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    if (badge == 0) return button;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        button,
+        // La pastille porte l'accent « gain » et non l'accent « action » : ce
+        // qu'elle annonce, c'est de l'argent économisé, pas un geste à faire.
+        Positioned(
+          right: -2,
+          top: -2,
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.gain,
+              shape: BoxShape.circle,
+              // Un liseré de la couleur du fond détache la pastille de l'icône
+              // quelle que soit la scène derrière le viseur.
+              border: Border.all(color: AppColors.ink, width: 2),
+            ),
+            child: Text(
+              badge > 9 ? '9+' : '$badge',
+              style: const TextStyle(
+                color: AppColors.ink,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

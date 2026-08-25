@@ -15,6 +15,7 @@ import '../../data/datasources/favorites_local_datasource.dart';
 import '../../data/repositories/favorites_repository_impl.dart';
 import '../../domain/entities/favorite.dart';
 import '../../domain/repositories/favorites_repository.dart';
+import '../../domain/usecases/acknowledge_alerts.dart';
 import '../../domain/usecases/refresh_favorite_price.dart';
 import '../../domain/usecases/toggle_favorite.dart';
 
@@ -99,3 +100,18 @@ class ScanJournal extends _$ScanJournal {
 
   void consume() => state = null;
 }
+
+@Riverpod(keepAlive: true)
+AcknowledgeAlerts acknowledgeAlerts(Ref ref) =>
+    AcknowledgeAlerts(ref.watch(favoritesRepositoryProvider));
+
+/// Les objets passés sous leur seuil et non encore acquittés.
+///
+/// Dérivé du flux des favoris plutôt que relu à la demande : la pastille du
+/// viseur, la bannière de la liste et l'ordre des lignes doivent dire la même
+/// chose au même instant, et un calcul partagé est le seul moyen d'en être sûr
+/// sans code de synchronisation.
+@riverpod
+List<Favorite> pendingAlerts(Ref ref) => PendingAlerts.from(
+  ref.watch(favoritesProvider).value ?? const <Favorite>[],
+);

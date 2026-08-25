@@ -24,7 +24,9 @@ sur le téléphone.
    1:1 — la fonction répond à « est-ce que ça rentre », pas « est-ce que c'est
    joli ». Sans modèle 3D, les cotes et le volume prennent le relais.
 5. **Suivre.** Un cœur met l'objet dans la liste et fige le prix du jour. Chaque
-   nouveau scan du même objet vaut relevé de prix, et signale la baisse.
+   nouveau scan du même objet vaut relevé de prix. Ce qui est passé sous son
+   seuil se compte sur une pastille dans le viseur, se résume en tête de « Ma
+   liste » et remonte en haut des lignes — puis se tait dès qu'on l'a vu.
 
 ---
 
@@ -127,9 +129,17 @@ fausse et rassurante.
 
 **Le suivi de prix se met à jour au rescan, et rien d'autre.** Sans serveur,
 personne ne peut interroger les marchands pendant que le téléphone dort.
-Promettre une alerte de fond serait mentir sur ce que l'architecture permet.
-Chaque scan vaut donc relevé, et le prix de référence — celui du jour de la
-mise en favori — reste figé pour que la baisse soit mesurable.
+Promettre une notification de fond serait mentir sur ce que l'architecture
+permet. Chaque scan vaut donc relevé, et le prix de référence — celui du jour
+de la mise en favori — reste figé pour que la baisse soit mesurable.
+
+**Une alerte s'acquitte, et l'acquittement porte un prix.** Ce que le seuil
+déclenche se voit sans ouvrir l'application en entier : une pastille sur le
+bouton « Ma liste » du viseur. Mais un signal qui revient à chaque ouverture
+cesse d'être lu — et c'est alors la suivante, la vraie, qui passe inaperçue.
+« Vu » enregistre donc le prix du moment : l'objet ne resignale qu'en
+descendant encore. Changer le seuil remet l'acquittement à zéro, puisqu'il
+portait sur l'ancien.
 
 **La photo est réduite à 1024 px avant l'envoi.** Un cliché de capteur pèse 3 à
 5 Mo : sur réseau mobile, c'est cinq à dix secondes d'attente **avant** que
@@ -159,8 +169,10 @@ signale plus rien.
 | `app_exception_test.dart` | La traduction des échecs réseau, et lesquels méritent un bouton « Réessayer ». |
 | `formatters_test.dart` | Cotes manquantes omises plutôt qu'affichées à zéro ; conversion du volume. |
 | `ar_model_test.dart` | Ce que le format du modèle autorise, plateforme par plateforme. |
+| `alerts_test.dart` | Ce qui doit être signalé, et surtout ce qui doit se taire une fois acquitté. |
 | `scan_controller_test.dart` | L'enchaînement complet d'un scan, réseau et caméra remplacés par surcharge de providers. |
 | `product_detail_page_test.dart` | La fiche montée pour de vrai : hiérarchie des offres, alternatives filtrées, bascule du favori. |
+| `favorites_page_test.dart` | « Ma liste » montée pour de vrai : bandeau d'alerte, cumul des baisses, acquittement. |
 
 Ce qui ne peut pas être testé ainsi et demande un appareil : le décodage
 caméra, la mise au point, la session de réalité augmentée, et la qualité
@@ -178,6 +190,8 @@ d'identification du modèle lui-même.
   d'image prévoient tous ce cas.
 - L'historique est borné à soixante entrées ; au-delà, les plus anciennes sont
   supprimées à l'écriture.
+- Dans un test de widget, une écriture Hive attendue hors de `tester.runAsync`
+  ne se termine jamais : l'horloge y est simulée. Le test se fige sans message.
 - Modifier le schéma de `gemini_prompt.dart` sans modifier `product_dto.dart`
   fait silencieusement disparaître un champ de la fiche : les deux se tiennent.
 - `NumberFormat` en `fr_FR` fonctionne d'office, mais les **dates** demandent

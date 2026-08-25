@@ -19,6 +19,7 @@ class Favorite {
     required this.referencePrice,
     this.alertThreshold,
     this.lastCheckedAt,
+    this.acknowledgedPrice,
   });
 
   final Product product;
@@ -35,6 +36,12 @@ class Favorite {
 
   final DateTime? lastCheckedAt;
 
+  /// Prix auquel l'utilisateur a dit « vu » à l'alerte. Sans ce champ, un
+  /// objet passé sous son seuil resterait signalé indéfiniment : l'alerte
+  /// deviendrait un élément de décor, et la prochaine, la vraie, ne serait pas
+  /// vue non plus.
+  final double? acknowledgedPrice;
+
   double get currentPrice => BestOffer.of(product)?.price ?? product.averagePrice;
 
   double get delta => currentPrice - referencePrice;
@@ -45,16 +52,42 @@ class Favorite {
   bool get reachedThreshold =>
       alertThreshold != null && currentPrice <= alertThreshold!;
 
+  /// Ce que l'application a le droit de signaler *maintenant* : le seuil est
+  /// franchi, et soit l'utilisateur n'a rien acquitté, soit le prix a encore
+  /// baissé depuis. Un objet acquitté à 80 € ne resignale qu'en passant sous
+  /// 80 € — pas à chaque ouverture de l'écran.
+  bool get isAlerting {
+    if (!reachedThreshold) return false;
+    final seen = acknowledgedPrice;
+    return seen == null || currentPrice < seen - 0.01;
+  }
+
   Favorite copyWith({
     Product? product,
     double? alertThreshold,
     bool clearThreshold = false,
     DateTime? lastCheckedAt,
-  }) => Favorite(
-    product: product ?? this.product,
-    savedAt: savedAt,
-    referencePrice: referencePrice,
-    alertThreshold: clearThreshold ? null : (alertThreshold ?? this.alertThreshold),
-    lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
-  );
+    double? acknowledgedPrice,
+    bool clearAcknowledged = false,
+  }) {
+    // Toucher au seuil remet l'acquittement à zéro : il portait sur l'ancien
+    // seuil, et le conserver masquerait la première alerte du nouveau.
+    final thresholdTouched = clearThreshold || alertThreshold != null;
+    final seen = switch ((clearAcknowledged, thresholdTouched)) {
+      (true, _) => null,
+      (false, true) => acknowledgedPrice,
+      (false, false) => acknowledgedPrice ?? this.acknowledgedPrice,
+    };
+
+    return Favorite(
+      product: product ?? this.product,
+      savedAt: savedAt,
+      referencePrice: referencePrice,
+      alertThreshold: clearThreshold
+          ? null
+          : (alertThreshold ?? this.alertThreshold),
+      lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
+      acknowledgedPrice: seen,
+    );
+  }
 }

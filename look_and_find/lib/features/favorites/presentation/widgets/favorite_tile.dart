@@ -50,7 +50,16 @@ class FavoriteTile extends StatelessWidget {
       ),
       child: Material(
         color: AppColors.slab,
-        borderRadius: BorderRadius.circular(16),
+        // `shape` et non `borderRadius` : `Material` refuse les deux ensemble,
+        // et il faut `shape` pour poser un liseré. La bordure ne sert qu'à
+        // désigner ce qui alerte — l'ajouter à toutes les lignes reviendrait à
+        // ne rien désigner du tout.
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: favorite.isAlerting
+              ? const BorderSide(color: AppColors.gain, width: 1.5)
+              : BorderSide.none,
+        ),
         child: InkWell(
           onTap: onOpen,
           borderRadius: BorderRadius.circular(16),
@@ -101,7 +110,9 @@ class FavoriteTile extends StatelessWidget {
                       if (favorite.alertThreshold != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          'Alerte sous ${Formatters.price(favorite.alertThreshold!, product.currency)}',
+                          favorite.isAlerting
+                              ? 'Sous votre seuil de ${Formatters.price(favorite.alertThreshold!, product.currency)}'
+                              : 'Alerte sous ${Formatters.price(favorite.alertThreshold!, product.currency)}',
                           style: context.texts.bodySmall?.copyWith(
                             color: favorite.reachedThreshold
                                 ? AppColors.gain
