@@ -39,7 +39,13 @@ def _fond(planche_source: Path, gabarit: charte.Gabarit) -> bytes:
     """Bordure de la charte sur papier nu, reconstruite plutôt que rebouchée."""
     import io
     tampon = io.BytesIO()
-    fond_charte(planche_source, 2600).save(tampon, format="PNG", compress_level=6)
+    # Fond en JPEG et non en PNG, à l'inverse des planches. Ce fond-ci n'est
+    # pas une illustration : c'est un aplat crème au grain calculé, que le PNG
+    # stocke à 5,9 Mo là où un JPEG de haute qualité tient en un demi-mégaoctet
+    # sans différence visible. La règle « aucune compression destructive » vaut
+    # pour le dessin de l'auteur, pas pour un fond que ce dépôt fabrique.
+    fond_charte(planche_source, 2600).save(tampon, format="JPEG", quality=94,
+                                           optimize=True, subsampling=0)
     return tampon.getvalue()
 
 

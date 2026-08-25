@@ -69,7 +69,13 @@ PARCHEMIN = ("Le secret de l’hermine, ce n’est pas de n’avoir jamais de ta
 
 def _fond(bordure: Path, cote: int = 2600) -> bytes:
     tampon = io.BytesIO()
-    fond_charte(bordure, cote).save(tampon, format="PNG", compress_level=6)
+    # Fond en JPEG et non en PNG, à l'inverse des planches. Ce fond-ci n'est
+    # pas une illustration : c'est un aplat crème au grain calculé, que le PNG
+    # stocke à 5,9 Mo là où un JPEG de haute qualité tient en un demi-mégaoctet
+    # sans différence visible. La règle « aucune compression destructive » vaut
+    # pour le dessin de l'auteur, pas pour un fond que ce dépôt fabrique.
+    fond_charte(bordure, cote).save(tampon, format="JPEG", quality=94,
+                                    optimize=True, subsampling=0)
     return tampon.getvalue()
 
 

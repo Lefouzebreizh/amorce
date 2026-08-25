@@ -123,12 +123,12 @@ volume, et c'est pourquoi elle ouvre.*
 
 | | Bulle, telle qu'elle doit être lettrée |
 | --- | --- |
-| **1** | **Roussy :** J'ai une boule au ventre. Une grosse. Je crois qu'elle a des angles. |
-| **2** | **Zéphy :** Une boule ? Montre ! Elle est ronde ou carrée ? Parce qu'une boule carrée, ça ne se soigne pas pareil ! |
-| **3** | **Zéphy :** Elle n'était pas coincée. Elle était juste très en avance sur ta journée. |
-| **4** | **Roussy :** Elle est encore là, mais maintenant elle me tient chaud. |
+| **1** | **Roussy :** J’ai une boule au ventre. Une grosse. Je crois qu’elle a des angles. |
+| **2** | **Zéphy :** Une boule ? Montre ! Elle est ronde ou carrée ? Parce qu’une boule carrée, ça ne se soigne pas pareil ! |
+| **3** | **Zéphy :** Elle n’était pas coincée. Elle était juste très en avance sur ta journée. |
+| **4** | **Roussy :** Elle est encore là, mais maintenant elle me tient chaud. |
 
-> *La boule au ventre, ce n'est pas un ennemi. C'est ton courage qui s'échauffe.*
+> *La boule au ventre, ce n’est pas un ennemi. C’est ton courage qui s’échauffe.*
 
 ```
 Panel 1: dawn oak forest, ROUSSY curled up tight at the base of a huge oak, paws
@@ -151,12 +151,12 @@ cible du livre.*
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Chut. Je marche sur des œufs. Si je fais du bruit, tout casse. |
-| **2** | **Zéphy :** Ah ! Trop tard ! |
-| **3** | **Zéphy :** Regarde ce qu'il y avait dans la catastrophe. |
-| **4** | **Zéphy :** Certains œufs, c'est juste de la fête qui attend. |
+| **1** | **Roussy :** Chut. Je marche sur des œufs. Si je fais du bruit, tout casse. |
+| **2** | **Zéphy :** Ah ! Trop tard ! |
+| **3** | **Zéphy :** Regarde ce qu’il y avait dans la catastrophe. |
+| **4** | **Zéphy :** Certains œufs, c’est juste de la fête qui attend. |
 
-> *À force de marcher sur des œufs, on oublie qu'on a le droit de courir.*
+> *À force de marcher sur des œufs, on oublie qu’on a le droit de courir.*
 
 ```
 Panel 1: forest clearing carpeted with pale speckled eggs, ROUSSY tiptoeing in
@@ -178,12 +178,12 @@ culpabiliser celui qui porte le masque.*
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Non, non, tout va bien ! Ha. Ha. |
-| **2** | **Zéphy :** Hmm. Jaune moutarde. Toi, d'habitude, tu ris orange. |
-| **3** | **Zéphy :** Tu peux le laisser là. Il t'attendra si tu en as besoin. |
-| **4** | **Roussy :** Celui-là, il fatigue moins. |
+| **1** | **Roussy :** Non, non, tout va bien ! Ha. Ha. |
+| **2** | **Zéphy :** Hmm. Jaune moutarde. Toi, d’habitude, tu ris orange. |
+| **3** | **Zéphy :** Tu peux le laisser là. Il t’attendra si tu en as besoin. |
+| **4** | **Roussy :** Celui-là, il fatigue moins. |
 
-> *Un rire jaune, c'est un vrai rire qui a mis son manteau. On a le droit de l'enlever.*
+> *Un rire jaune, c’est un vrai rire qui a mis son manteau. On a le droit de l’enlever.*
 
 ```
 Panel 1: small forest gathering, ROUSSY wearing a bright mustard-yellow grin
@@ -204,12 +204,12 @@ yellow mask sleeps on the stump in the background.
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** J'ai la tête comme une passoire ! J'ai déjà perdu trois idées ce matin ! |
-| **2** | **Zéphy :** Excellente nouvelle. Ce n'est pas une passoire, c'est un arrosoir. |
-| **3** | **Zéphy :** Tu ne perds rien, Roussy. Tu sèmes. |
-| **4** | **Roussy :** Il m'en reste combien ? **Zéphy :** Aucune idée. Regarde le jardin. |
+| **1** | **Roussy :** J’ai la tête comme une passoire ! J’ai déjà perdu trois idées ce matin ! |
+| **2** | **Zéphy :** Excellente nouvelle. Ce n’est pas une passoire, c’est un arrosoir. |
+| **3** | **Zéphy :** Tu ne perds rien, Roussy. Tu sèmes. |
+| **4** | **Roussy :** Il m’en reste combien ? **Zéphy :** Aucune idée. Regarde le jardin. |
 
-> *Une tête qui laisse passer, c'est une tête qui fait de la place.*
+> *Une tête qui laisse passer, c’est une tête qui fait de la place.*
 
 ```
 Panel 1: ROUSSY running after small glowing word-shapes falling out of holes in
@@ -231,12 +231,12 @@ nommer, et qu'on leur reproche de ne pas expliquer.*
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Je ne sais pas ce que j'ai. Je ne suis pas dans mon assiette. |
-| **2** | **Zéphy :** Effectivement. Tu es assis à côté. De trois bons centimètres. |
-| **3** | **Zéphy :** On ne se remet pas dans son assiette en sautant dedans. On s'assoit au bord, et on attend que ça revienne. |
-| **4** | **Roussy :** Je suis revenu. **Zéphy :** Je sais. Ton assiette a arrêté de faire la tête. |
+| **1** | **Roussy :** Je ne sais pas ce que j’ai. Je ne suis pas dans mon assiette. |
+| **2** | **Zéphy :** Effectivement. Tu es assis à côté. De trois bons centimètres. |
+| **3** | **Zéphy :** On ne se remet pas dans son assiette en sautant dedans. On s’assoit au bord, et on attend que ça revienne. |
+| **4** | **Roussy :** Je suis revenu. **Zéphy :** Je sais. Ton assiette a arrêté de faire la tête. |
 
-> *Il y a des jours sans raison. Ils s'en vont sans raison aussi.*
+> *Il y a des jours sans raison. Ils s’en vont sans raison aussi.*
 
 ```
 Panel 1: cosy wooden kitchen, ROUSSY sitting dejected on the table right NEXT to
@@ -258,12 +258,12 @@ rien.*
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** J'ai le cafard. Je ne sais même pas pourquoi. |
-| **2** | **Zéphy :** Il est là. Il a l'air très bien élevé. |
-| **3** | **Zéphy :** On ne le chasse pas. On lui demande ce qu'il veut. |
-| **4** | **Roussy :** Il voulait juste être vu. |
+| **1** | **Roussy :** J’ai le cafard. Je ne sais même pas pourquoi. |
+| **2** | **Zéphy :** Il est là. Il a l’air très bien élevé. |
+| **3** | **Zéphy :** On ne le chasse pas. On lui demande ce qu’il veut. |
+| **4** | **Roussy :** Il voulait juste être vu. |
 
-> *Le cafard ne s'écrase pas. Il s'écoute, puis il s'en va tout seul.*
+> *Le cafard ne s’écrase pas. Il s’écoute, puis il s’en va tout seul.*
 
 ```
 Panel 1: dim wooden cabin interior, ROUSSY buried under a knitted blanket, only
@@ -284,10 +284,10 @@ suitcase, tipping its hat; Roussy and Zephy waving from the door.
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Et si ? Et si ? Et si ? |
-| **2** | **Zéphy :** À ce rythme-là, tu seras tout blanc avant le goûter. |
-| **3** | **Zéphy :** Chaque cheveu blanc, c'est un souci que tu as déjà porté. |
-| **4** | **Roussy :** Alors j'ai déjà survécu à tout ça ? **Zéphy :** Toutes les fois. |
+| **1** | **Roussy :** Et si ? Et si ? Et si ? |
+| **2** | **Zéphy :** À ce rythme-là, tu seras tout blanc avant le goûter. |
+| **3** | **Zéphy :** Chaque cheveu blanc, c’est un souci que tu as déjà porté. |
+| **4** | **Roussy :** Alors j’ai déjà survécu à tout ça ? **Zéphy :** Toutes les fois. |
 
 > *Les cheveux blancs ne comptent pas les malheurs. Ils comptent les fois où tu as tenu.*
 
@@ -311,10 +311,10 @@ et que personne ne leur explique.*
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Je suis là, mais je ne suis pas là. |
-| **2** | **Zéphy :** Tes pompes sont parties sans toi ! Et elles vont vite, en plus ! |
-| **3** | **Zéphy :** On ne les rattrape pas en courant. On s'assoit, et on les appelle. |
-| **4** | **Roussy :** Ah. Le sol. Je ne me souvenais pas que c'était si solide. |
+| **1** | **Roussy :** Je suis là, mais je ne suis pas là. |
+| **2** | **Zéphy :** Tes pompes sont parties sans toi ! Et elles vont vite, en plus ! |
+| **3** | **Zéphy :** On ne les rattrape pas en courant. On s’assoit, et on les appelle. |
+| **4** | **Roussy :** Ah. Le sol. Je ne me souvenais pas que c’était si solide. |
 
 > *Revenir dans ses pompes, ça ne se force pas. Ça se demande gentiment.*
 
@@ -338,12 +338,12 @@ fardeau, et c'est le second qui fait le plus mal.*
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Ce n'est PAS drôle ! |
-| **2** | **Zéphy :** Tu as pris la mouche. Elle est là, dans ta patte. Tu la serres très fort. |
-| **3** | **Zéphy :** Elle ne t'a rien fait, tu sais. Elle passait. |
-| **4** | **Roussy :** Elle est repartie. **Zéphy :** Et toi aussi, du coup. |
+| **1** | **Roussy :** Ce n’est PAS drôle ! |
+| **2** | **Zéphy :** Tu as pris la mouche. Elle est là, dans ta patte. Tu la serres très fort. |
+| **3** | **Zéphy :** Elle ne t’a rien fait, tu sais. Elle passait. |
+| **4** | **Roussy :** Elle est repartie. **Zéphy :** Et toi aussi, du coup. |
 
-> *Prendre la mouche, c'est facile. La reposer, c'est ça qui demande du courage.*
+> *Prendre la mouche, c’est facile. La reposer, c’est ça qui demande du courage.*
 
 ```
 Panel 1: forest path, ROUSSY furious, ears flat, fur bristling, shouting;
@@ -365,12 +365,12 @@ qu'elle fabrique.*
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Je devrais commencer. Je vais commencer. Je commence dans une minute. |
-| **2** | **Zéphy :** Ah, voilà. Tu as un poil dans la main. Un beau. Il a même des feuilles. |
-| **3** | **Zéphy :** On ne l'arrache pas. Ça pousse quand on a peur de mal faire. |
-| **4** | **Roussy :** J'ai commencé. **Zéphy :** Et regarde : il fleurit. |
+| **1** | **Roussy :** Je devrais commencer. Je vais commencer. Je commence dans une minute. |
+| **2** | **Zéphy :** Ah, voilà. Tu as un poil dans la main. Un beau. Il a même des feuilles. |
+| **3** | **Zéphy :** On ne l’arrache pas. Ça pousse quand on a peur de mal faire. |
+| **4** | **Roussy :** J’ai commencé. **Zéphy :** Et regarde : il fleurit. |
 
-> *Le poil dans la main n'est pas de la paresse. C'est une peur qui s'est assise.*
+> *Le poil dans la main n’est pas de la paresse. C’est une peur qui s’est assise.*
 
 ```
 Panel 1: ROUSSY lying on his back in the ferns, staring at the sky, a half-built
@@ -393,12 +393,12 @@ minimiser : ce qui est petit vu de loin ne l'est pas vu de dedans.*
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** C'est une catastrophe. C'est fini. Tout est fini. |
-| **2** | **Zéphy :** Bon. Techniquement, tu es en train de te noyer dans un verre d'eau. |
-| **3** | **Zéphy :** Ça ne veut pas dire que ce n'est rien. Ça veut dire que tu as pied. |
-| **4** | **Roussy :** J'avais pied depuis le début. **Zéphy :** Oui. Mais tu ne le savais pas, alors c'était vrai quand même. |
+| **1** | **Roussy :** C’est une catastrophe. C’est fini. Tout est fini. |
+| **2** | **Zéphy :** Bon. Techniquement, tu es en train de te noyer dans un verre d’eau. |
+| **3** | **Zéphy :** Ça ne veut pas dire que ce n’est rien. Ça veut dire que tu as pied. |
+| **4** | **Roussy :** J’avais pied depuis le début. **Zéphy :** Oui. Mais tu ne le savais pas, alors c’était vrai quand même. |
 
-> *Se noyer dans un verre d'eau, ce n'est pas exagérer. C'est ne pas encore savoir où est le fond.*
+> *Se noyer dans un verre d’eau, ce n’est pas exagérer. C’est ne pas encore savoir où est le fond.*
 
 ```
 Panel 1: ROUSSY dramatically flailing, drawn as if drowning, inside an enormous
@@ -420,12 +420,12 @@ aussi : la consolation ne vient pas d'en haut.*
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Je ne peux plus avancer. Il est trop gros. |
-| **2** | **Zéphy :** Confirmé : trois fois la taille normale. Officiellement, tu as un cœur de géant. |
-| **3** | **Zéphy :** À deux, ça pèse la moitié. C'est des maths. |
-| **4** | **Roussy :** Il est redevenu petit. **Zéphy :** Non. Il est redevenu portable. |
+| **1** | **Roussy :** Je ne peux plus avancer. Il est trop gros. |
+| **2** | **Zéphy :** Confirmé : trois fois la taille normale. Officiellement, tu as un cœur de géant. |
+| **3** | **Zéphy :** À deux, ça pèse la moitié. C’est des maths. |
+| **4** | **Roussy :** Il est redevenu petit. **Zéphy :** Non. Il est redevenu portable. |
 
-> *Un cœur gros n'est pas un cœur cassé. C'est un cœur qui a beaucoup aimé.*
+> *Un cœur gros n’est pas un cœur cassé. C’est un cœur qui a beaucoup aimé.*
 
 ```
 Panel 1: ROUSSY walking bent forward under an enormous glowing red heart on his
@@ -452,12 +452,12 @@ géographie qui existe — Bréhat, Locronan, la pointe du Raz, Brocéliande.
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Je n'ai pas le pied marin, Zéphy. Je n'ai que des pieds de terre. |
-| **2** | **Zéphy :** Regarde les tiens. Ils sont déjà en train d'apprendre sans te demander ton avis. |
-| **3** | **Roussy :** Ils bougent tout seuls ! **Zéphy :** Ils écoutent la mer. Toi, tu écoutais ta peur. |
-| **4** | **Roussy :** Je tiens debout ! **Zéphy :** Tu tenais debout depuis un moment. Tu viens juste de t'en apercevoir. |
+| **1** | **Roussy :** Je n’ai pas le pied marin, Zéphy. Je n’ai que des pieds de terre. |
+| **2** | **Zéphy :** Regarde les tiens. Ils sont déjà en train d’apprendre sans te demander ton avis. |
+| **3** | **Roussy :** Ils bougent tout seuls ! **Zéphy :** Ils écoutent la mer. Toi, tu écoutais ta peur. |
+| **4** | **Roussy :** Je tiens debout ! **Zéphy :** Tu tenais debout depuis un moment. Tu viens juste de t’en apercevoir. |
 
-> *Le pied marin ne s'apprend pas sur le quai. Il s'apprend en tanguant.*
+> *Le pied marin ne s’apprend pas sur le quai. Il s’apprend en tanguant.*
 
 ```
 Breton setting: a small wooden boat off the Île de Bréhat, pink granite rocks,
@@ -482,12 +482,12 @@ the swell, ZEPHY beside him with wings half-open, pink granite islands behind.
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Attends. Si je fais ça, il se passera peut-être ça. Et si ça arrive, alors sûrement… |
-| **2** | **Zéphy :** Il est midi. Le cadran le dit. Toi, tu cherches midi à quatorze heures. |
-| **3** | **Roussy :** Mais il faut bien réfléchir ! **Zéphy :** Réfléchir, oui. Deux heures d'avance sur le soleil, non. |
-| **4** | **Roussy :** Il est midi. **Zéphy :** Et le goûter est à quatre heures. Une chose à la fois. |
+| **1** | **Roussy :** Attends. Si je fais ça, il se passera peut-être ça. Et si ça arrive, alors sûrement… |
+| **2** | **Zéphy :** Il est midi. Le cadran le dit. Toi, tu cherches midi à quatorze heures. |
+| **3** | **Roussy :** Mais il faut bien réfléchir ! **Zéphy :** Réfléchir, oui. Deux heures d’avance sur le soleil, non. |
+| **4** | **Roussy :** Il est midi. **Zéphy :** Et le goûter est à quatre heures. Une chose à la fois. |
 
-> *Chercher midi à quatorze heures, c'est arriver fatigué à une heure qui n'existait pas.*
+> *Chercher midi à quatorze heures, c’est arriver fatigué à une heure qui n’existait pas.*
 
 ```
 Breton setting: the granite square of Locronan, old stone houses, a large
@@ -510,12 +510,12 @@ between them, calm; the sundial's shadow clean and simple behind them.
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Je rame et je n'avance pas. |
-| **2** | **Zéphy :** Bon. Mon vent est en panne. |
-| **3** | **Zéphy :** Ah ! Il attendait juste que j'arrête de forcer. |
-| **4** | **Roussy :** On file ! **Zéphy :** Ne remercie pas. Remercie l'ouest. |
+| **1** | **Roussy :** Je rame et je n’avance pas. |
+| **2** | **Zéphy :** Bon. Mon vent est en panne. |
+| **3** | **Zéphy :** Ah ! Il attendait juste que j’arrête de forcer. |
+| **4** | **Roussy :** On file ! **Zéphy :** Ne remercie pas. Remercie l’ouest. |
 
-> *Le vent ne vient pas parce qu'on rame plus fort. Il vient parce qu'on a tenu jusque-là.*
+> *Le vent ne vient pas parce qu’on rame plus fort. Il vient parce qu’on a tenu jusque-là.*
 
 ```
 Breton setting: the cliffs of the Pointe du Raz, a small wooden boat, a
@@ -537,12 +537,12 @@ wind in mane and fur.
 
 | | |
 | --- | --- |
-| **1** | **Roussy :** Même mes moutons ne dorment pas. |
-| **2** | **Le korrigan :** C'est vous qui pensez si fort ? On vous entend jusque sous la terre. |
-| **3** | **Le korrigan :** Moi, je ne compte pas. Je range. Une pensée, une pierre. |
-| **4** | **Zéphy :** Il dort. **Le korrigan :** Évidemment. Son mur est fini. |
+| **1** | **Roussy :** Même mes moutons ne dorment pas. |
+| **2** | **Le korrigan :** C’est vous qui pensez si fort ? On vous entend jusque sous la terre. |
+| **3** | **Le korrigan :** Moi, je ne compte pas. Je range. Une pensée, une pierre. |
+| **4** | **Zéphy :** Il dort. **Le korrigan :** Évidemment. Son mur est fini. |
 
-> *On ne s'endort pas en chassant ses pensées. On s'endort en leur trouvant une place.*
+> *On ne s’endort pas en chassant ses pensées. On s’endort en leur trouvant une place.*
 
 ```
 Breton setting: Brocéliande forest at night, moonlight through oaks, mossy

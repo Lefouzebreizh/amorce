@@ -69,7 +69,12 @@ def composer(bordure: Path, illustration: Path, cible: Path,
     fond = fond_charte(bordure, cote_px).resize(
         (cote_px, round(cote_px * hauteur / largeur)), Image.LANCZOS)
     tampon = io.BytesIO()
-    fond.save(tampon, format="PNG", compress_level=6)
+    # Fond en JPEG et non en PNG, à l'inverse des planches. Ce fond-ci n'est
+    # pas une illustration : c'est un aplat crème au grain calculé, que le PNG
+    # stocke à 5,9 Mo là où un JPEG de haute qualité tient en un demi-mégaoctet
+    # sans différence visible. La règle « aucune compression destructive » vaut
+    # pour le dessin de l'auteur, pas pour un fond que ce dépôt fabrique.
+    fond.save(tampon, format="JPEG", quality=94, optimize=True, subsampling=0)
 
     document = fitz.open()
     page = document.new_page(width=largeur, height=hauteur)
