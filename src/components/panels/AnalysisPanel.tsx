@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { analyzeProject, type Analysis, type CriterionId } from '@/lib/analysis';
+import { analyzeProject, SFX_PER_10S, type Analysis, type CriterionId } from '@/lib/analysis';
 import { CAPTION_SETS } from '@/lib/autoFinish';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
@@ -147,10 +147,25 @@ export function AnalysisPanel({
       };
     }
 
-    fixes.son = {
-      label: '♪ Poser un bruitage sur chaque coupe',
-      run: addSoundsOnCuts,
-    };
+    /*
+     * On ne propose d'en poser que s'il en manque.
+     *
+     * Le bouton était offert sans condition : sur un montage déjà ponctué de
+     * onze bruitages pour dix secondes, il conseillait d'en ajouter et faisait
+     * baisser la note à l'appui. Un remède qui aggrave est pire qu'aucun
+     * remède, parce qu'on lui fait confiance.
+     */
+    const cuesPer10s =
+      analysis.duration > 0
+        ? ((project.cues.length + project.samples.length) / analysis.duration) * 10
+        : 0;
+
+    if (cuesPer10s < SFX_PER_10S.max) {
+      fixes.son = {
+        label: '♪ Poser un bruitage sur chaque coupe',
+        run: addSoundsOnCuts,
+      };
+    }
 
     if (analysis.slumps.length > 0) {
       fixes.tension = {
@@ -160,7 +175,7 @@ export function AnalysisPanel({
     }
 
     return fixes;
-  }, [project.clips, analysis.slumps, chopClip, addSoundsOnCuts, fillTensionGaps]);
+  }, [project, analysis.slumps, analysis.duration, chopClip, addSoundsOnCuts, fillTensionGaps]);
 
   if (analysis.shotCount === 0) {
     return (

@@ -199,6 +199,16 @@ export function findSlumps(curve: { time: number; value: number }[]): TensionSlu
   return slumps;
 }
 
+/**
+ * Densité de bruitages visée, pour dix secondes de montage.
+ *
+ * Exportée parce que la notation n'est pas seule à s'en servir : l'interface
+ * doit savoir s'il en manque avant de proposer d'en poser. Le bouton était
+ * offert sans condition, et conseillait donc d'en ajouter à un montage qui en
+ * comptait déjà onze pour dix secondes — la note baissait à l'appui.
+ */
+export const SFX_PER_10S = { min: 1.2, max: 6 };
+
 /** Note les trois premières secondes, là où le spectateur décide de rester. */
 function scoreHook(project: Project, placed: PlacedClip[], duration: number): number {
   if (placed.length === 0) return 0;
@@ -273,7 +283,7 @@ export function analyzeProject(project: Project): Analysis {
    */
   const son = Math.min(
     1,
-    0.6 * band(cuesPer10s, 1.2, 6, 0, 14) + (project.music ? 0.2 : 0) + (hasVoice ? 0.2 : 0),
+    0.6 * band(cuesPer10s, SFX_PER_10S.min, SFX_PER_10S.max, 0, 14) + (project.music ? 0.2 : 0) + (hasVoice ? 0.2 : 0),
   );
   const format = 0.7 * band(duration, 7, 35, 2, 90) + 0.3 * verticalShare(project);
 
