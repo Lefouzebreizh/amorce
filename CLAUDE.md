@@ -29,6 +29,7 @@ changement touche au rendu, à l'audio, à l'export ou à la mise en page mobile
 ## Carte du code
 
 ```
+.claude/          hooks/session-start.sh (prépare la session distante), skills/verifier
 src/app/          layout.tsx (polices, thème, viewport), page.tsx (monte <Studio/>), globals.css (@theme Tailwind v4)
 src/lib/          toute la logique métier — c'est là que vit le studio
 src/hooks/        usePlayback (la boucle de rendu), useMediaQuery
@@ -197,13 +198,24 @@ lui, la dégradation automatique de qualité ne se déclencherait jamais sur une
 machine de développement. Captures et fichiers exportés atterrissent dans
 `.fixtures/captures/`.
 
+`npm run verify:partage` couvre la réception d'un fichier par le bouton
+« Partager » d'Android : le service worker reçoit un vrai POST multipart, range
+le fichier, et — contrôle le plus important — **ne met rien en cache**.
+
 `npm run verify:reprise` couvre à part ce que le parcours principal ne peut pas
 faire sans se réinitialiser : importer, recharger la page, et vérifier que le
 montage revient — puis le **lire**, parce qu'un projet restauré dont les liens
 pointent dans le vide s'affiche normalement et sort noir.
 
 Chromium est déjà installé dans cet environnement (`PLAYWRIGHT_BROWSERS_PATH`),
-ne pas lancer `playwright install`.
+ne pas lancer `playwright install`. Le hook de démarrage le présente sous le
+numéro de révision qu'attend Playwright et installe ffmpeg, dont dépend la
+mesure du silence dans le fichier exporté.
+
+**Un niveau crête ne prouve pas qu'il y a du son.** Il est atteint par la
+première seconde : un export dont tout le reste est muet le passe sans broncher.
+C'est ce qui a laissé passer un montage silencieux à partir de la sixième
+seconde. Voir `.claude/skills/verifier` pour la mesure seconde par seconde.
 
 ## Pièges connus
 
