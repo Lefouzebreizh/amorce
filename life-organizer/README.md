@@ -93,16 +93,11 @@ inutile de convertir puis d'agrandir une photo floue qu'on allait jeter.
 ```bash
 cd life-organizer
 
-# 1. Le squelette est-il complet et la configuration lisible ?
-python3 - <<'PY'
-import json, pathlib
-attendus = ["noyau", "modules/scan_ocr", "modules/calendrier", "modules/nettoyage",
-            "modules/conversion", "modules/upscale", "modules/classement", "tests"]
-manquants = [d for d in attendus if not pathlib.Path(d).is_dir()]
-print("Dossiers manquants :", manquants or "aucun")
-config = json.load(open("organizer_config.json"))
-print("Configuration lue :", len(config), "sections —", ", ".join(config))
-PY
+# 1. La configuration est-elle cohérente ?
+python3 organizer.py verifier
+
+# Ce que sait faire chaque module, et lesquels sont écrits
+python3 organizer.py --help
 
 # 2. Les dépendances (une fois les modules écrits)
 pip install -r requirements.txt

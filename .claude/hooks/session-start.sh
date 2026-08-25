@@ -1,7 +1,7 @@
 #!/bin/bash
 # Prépare le conteneur d'une session distante : dépendances du studio Amorce,
 # SDK Flutter et dépendances de Look & Find, bibliothèques de la chaîne KDP,
-# du studio audio et de l'assistant d'allocation.
+# du studio audio, de l'assistant d'allocation et de Life-Organizer.
 #
 # Pourquoi ce script existe : le conteneur d'une session web démarre sur un
 # dépôt fraîchement cloné, sans `node_modules` et sans SDK Flutter. Sans lui,
@@ -79,10 +79,17 @@ python3 -m pip install --quiet --break-system-packages \
 echo "── Assistant d'allocation : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
 
+echo "── Life-Organizer : bibliothèques Python"
+# Real-ESRGAN et PyTorch sont volontairement absents : plusieurs gigaoctets pour
+# un module désactivé par défaut. `tesseract` n'est pas un paquet Python et
+# s'installe à part ; `outils_externes.py` désactive proprement l'OCR sans lui.
+python3 -m pip install --quiet --break-system-packages \
+  Pillow python-dateutil pypdf ImageHash opencv-python-headless imageio-ffmpeg
+
 # Rend `flutter` et `dart` disponibles à la session elle-même, pas seulement à
 # ce script.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
