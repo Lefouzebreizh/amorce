@@ -201,8 +201,9 @@ Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
 `patrimoine/`, la chaîne de montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/` et l'assistant de
 rangement Life-Organizer dans `life-organizer/` (qui ont chacun leur propre
-`README.md`). L'outillage ci-dessous existe parce que rien de générique ne
-connaît cette particularité.
+`README.md`) — plus un volet sans code, `tiktok/`, où se travaillent les
+concepts et les scripts avant tout montage. L'outillage ci-dessous existe parce
+que rien de générique ne connaît cette particularité.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
@@ -216,6 +217,7 @@ connaît cette particularité.
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
 | `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
+| `/tiktok` | La ligne éditoriale du volet TikTok, ses huit concepts répétables, les deux seuls dispositifs de tournage et la façon dont un script s'écrit ici. |
 | `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
 | `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
