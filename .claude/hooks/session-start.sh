@@ -122,6 +122,11 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
   fi
 fi
 
+echo "── Volet TikTok : bibliothèque du carnet"
+# `tiktok/carnet.py` fabrique le PDF de tournage depuis les Markdown du volet.
+# Sans reportlab, la seule chose qu'on emporte en tournage ne se fabrique pas.
+python3 -m pip install --quiet --break-system-packages reportlab
+
 echo "── Amorce : Chromium pour le parcours de vérification"
 # L'environnement fournit un Chromium, mais sous un autre numéro de révision que
 # celui que Playwright réclame — il refuse alors de démarrer et conseille un
