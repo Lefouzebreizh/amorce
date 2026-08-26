@@ -133,8 +133,11 @@ la tête de lecture se retrouve au-delà de la fin.
 - **Le minimum qui résout le problème.** Pas d'abstraction pour un seul appel,
   pas de configurabilité qu'on n'a pas demandée, pas de garde contre un cas
   impossible.
-- **Dire ses hypothèses**, et s'arrêter pour demander quand deux lectures de la
-  demande mènent à deux travaux différents.
+- **Décider plutôt que demander.** Face à deux lectures possibles, retenir la
+  meilleure, l'écrire noir sur blanc, et avancer — une question posée coûte un
+  aller-retour, une hypothèse fausse coûte un correctif. Ne s'arrêter que
+  devant l'irréversible : une suppression, une publication, un travail existant
+  qu'un choix détruirait.
 - **Nommer la vérification avant d'écrire** : quelle commande dira que c'est
   bon. `npm test` pour ce qui est calculable, `npm run verify` pour le rendu,
   l'audio, l'export et le mobile.
@@ -288,6 +291,15 @@ ne pas lancer `playwright install`.
   WebM. Ne pas supposer l'extension.
 
 ## Git
+
+**Mener la pull request de bout en bout** : l'ouvrir soi-même dès qu'un lot de
+travail est complet, la faire passer la barrière de vérification, la fusionner.
+Attendre une relecture qui ne viendra pas ne protège de rien et laisse le
+travail hors de `main`, là où il ne sert à personne et où il pourrit.
+
+Ce qui ne se fusionne pas seul : une intégration continue rouge, un conflit non
+résolu, ou un changement qui détruit un travail existant. Dans ces trois cas
+seulement, s'arrêter et dire ce qui bloque.
 
 Branche de travail : `claude/claude-md-docs-q02dr7`. Messages de commit en
 français, à l'infinitif, décrivant l'intention plutôt que le fichier touché —
