@@ -1,12 +1,12 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, analyse et tests pour l'application Flutter Look & Find. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
+description: Lance la vérification du projet touché — typecheck, lint et tests pour le studio Amorce, analyse et tests pour Look & Find, tests Python pour le studio audio et le radar crypto, validation des PDF pour la chaîne KDP. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
 ---
 
 # Vérifier ce dépôt
 
-Trois projets indépendants, trois séquences. **Ne lance que celle du projet
-touché** : les tests de l'un ne disent rien des autres, et tout lancer triple
+Cinq projets indépendants, cinq séquences. **Ne lance que celle du projet
+touché** : les tests de l'un ne disent rien des autres, et tout lancer multiplie
 l'attente pour rien.
 
 Commence par `git status --short` pour savoir où le changement a atterri.
@@ -77,6 +77,37 @@ tant que la chaîne n'a pas tourné sur de vraies planches.
 Ce que `valider.py` ne voit pas, et qu'aucun script ne verra : si le dessin est
 beau, si le texte est juste, si l'histoire tient.
 
+## Studio audio — `mon-app-audio/`
+
+```bash
+python3 -m unittest discover -s mon-app-audio/tests
+```
+
+Ce qui est couvert : le plan d'atténuation, le recollage des tranches, la
+normalisation — du calcul d'intervalles et du signal synthétisé, sans toucher au
+disque. Ce qui ne l'est pas : l'alignement par Whisper, qui demande PyTorch, et
+la voix de synthèse, qui demande une connexion. Un changement sur ces deux
+chemins-là se signale comme non vérifié.
+
+## Radar crypto — `pepites/`
+
+```bash
+cd pepites
+python3 -m unittest discover -s tests    # ~120 tests, aucun ne touche au réseau
+python3 profils.py                       # l'effet des réglages sur six profils connus
+```
+
+`profils.py` en plus **si et seulement si** le changement touche à un seuil, à
+un trapèze, à une pondération ou à un filtre : il montre d'un coup d'œil si la
+discrimination entre les six profils de marché tient encore. Les tests seuls
+diraient qu'ils passent sans dire que la note du profil « accumulation » est
+tombée de 100 à 48.
+
+Ce qu'aucun des deux ne dit : **si une API a changé de forme**. Rien n'a encore
+tourné contre DexScreener ni GoPlus en conditions réelles ; tout est validé sur
+des réponses rejouées. Un changement dans `pepites/sources/` se signale comme non
+vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
+
 ## Ce que la vérification ne dit pas
 
 - **Le build Android et iOS.** Le SDK Android n'est pas installable dans ce
@@ -86,6 +117,10 @@ beau, si le texte est juste, si l'histoire tient.
   `flutter analyze`.
 - **La caméra, la réalité augmentée, la qualité d'identification du modèle.**
   Elles demandent un appareil réel.
+- **Les appels réseau du radar crypto.** La politique réseau des sessions
+  distantes refuse `api.dexscreener.com` et les services de sécurité : un scan
+  lancé ici s'arrête sur « Réseau indisponible » au bout d'une trentaine de
+  secondes. Ce n'est pas une panne de l'outil.
 
 Dire lesquelles de ces limites s'appliquent au changement en cours fait partie
 du compte rendu. Un « tout est vert » qui tait ce qui n'a pas été vérifié est

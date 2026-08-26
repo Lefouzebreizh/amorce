@@ -350,7 +350,14 @@ python3 main.py scan --bavard              # avec le détail des appels
 python3 main.py purger --garder 30         # efface les vieux relevés
 
 python3 -m unittest discover -s tests      # 118 tests, sans réseau
+python3 profils.py                         # l'effet des réglages sur six profils connus
 ```
+
+`profils.py` est l'instrument de réglage : il fait passer six profils de marché
+de côté — celui qu'on cherche et les cinq façons de se tromper — par les vrais
+filtres et la vraie note. On bouge un seuil, on relance, on lit la colonne qui a
+bougé. Un scan réel ne répond pas à cette question : il dépend du marché du
+moment et deux tours ne sont jamais comparables.
 
 Sans clé, le radar, la note et le bouclier fonctionnent tous les trois : GoPlus,
 honeypot.is et RugCheck répondent sans inscription. Seuls le traqueur
