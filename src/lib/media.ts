@@ -107,6 +107,21 @@ function audioFailure(file: File): Error {
 
 /** Transforme un fichier vidéo en média utilisable par le studio. */
 export async function loadVideoAsset(file: File): Promise<MediaAsset> {
+  /*
+   * Le fichier vide se dit avant toute tentative de décodage.
+   *
+   * Le chemin audio le faisait déjà ; celui des rushes laissait le décodeur
+   * échouer et rendait « format non pris en charge », ce qui envoie chercher un
+   * autre encodage alors que le fichier est bon — c'est la copie qui manque.
+   * Sur Android, un rush choisi depuis un stockage en ligne arrive à zéro octet
+   * tant qu'il n'a pas été téléchargé sur l'appareil.
+   */
+  if (file.size === 0) {
+    throw new Error(
+      `« ${file.name} » est arrivé vide. C’est le cas quand le fichier est encore dans le nuage : ouvre-le une fois depuis ton gestionnaire de fichiers pour le télécharger sur l’appareil, puis réessaie.`,
+    );
+  }
+
   const url = URL.createObjectURL(file);
   const video = document.createElement('video');
   video.preload = 'auto';
