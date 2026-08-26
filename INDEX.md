@@ -24,13 +24,19 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge déjà cinq chantiers sans code commun. Une idée nouvelle
-s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un sixième front.
+Ce dépôt héberge huit chantiers actifs sans code commun, plus deux en sommeil.
+Une idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir
+un front de plus. La liste vieillit vite — recompter avant de noter.
 
-| Chantier | Ce que c'est | Pile |
-| --- | --- | --- |
-| **Amorce** (racine) | Studio de montage vertical pour rushes IA, 100 % navigateur. | Next.js 15, React 19, Tailwind v4 |
-| **Look & Find** (`look_and_find/`) | Application mobile de scan / recherche. | Flutter, Riverpod 3 |
-| **Chaîne KDP** (`kdp/`) | Pré-presse et validation de couvertures pour Amazon KDP. | Python |
-| **Studio audio** (`mon-app-audio/`) | Outil audio. | Python, Streamlit |
-| **Patrimoine** (`patrimoine/`) | Assistant d'allocation d'actifs. | Python |
+| Chantier | Ce que c'est | Pile | État |
+| --- | --- | --- | --- |
+| **Amorce** (racine) | Studio de montage vertical pour rushes IA, 100 % navigateur. | Next.js 15, React 19, Tailwind v4 | actif |
+| **Look & Find** (`look_and_find/`) | Application mobile de scan / recherche. | Flutter, Riverpod 3 | actif |
+| **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures et validation de niches. | Python | actif |
+| **Paper-Manager** (`paper-manager/`) | Assistant administratif : scan, échéances, résiliations. | Python | actif |
+| **Life-Organizer** (`life-organizer/`) | Rangement de fichiers personnels. | Python | actif |
+| **Répondeur Facebook** (`repondeur-facebook/`) | Réponses aux commentaires via l'API Graph. | Python | actif |
+| **Chaîne de montage** (`montage-auto/`) | Montage automatisé. | Python | actif |
+| **Volet TikTok** (`tiktok/`) | Concepts et scripts, sans code. | — | actif |
+| _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
+| _Patrimoine_ (`archives-backlog/patrimoine/`) | Allocation d'actifs. | Python | en sommeil |

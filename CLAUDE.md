@@ -121,6 +121,26 @@ toujours s'annuler séparément.
 Après toute opération qui raccourcit le montage, passer par `reclamp` : sinon
 la tête de lecture se retrouve au-delà de la fin.
 
+## Rythme de travail
+
+Le propriétaire du dépôt travaille depuis un téléphone, souvent par messages
+courts. Deux règles en découlent, et elles priment sur la prudence par défaut :
+
+- **Décider plutôt que demander.** Devant deux options techniques défendables,
+  prendre la meilleure, l'appliquer, et **dire laquelle et pourquoi** en une
+  ligne. Une question posée coûte un aller-retour ; une décision annoncée se
+  corrige d'un mot. Ne s'arrêter que si les deux lectures mènent à deux travaux
+  entièrement différents.
+- **Mener les PR de bout en bout.** Ouvrir la pull request, la vérifier, la
+  faire passer au vert et la fusionner sans attendre qu'on le demande. Les
+  branches de ce dépôt touchent presque toutes au hook de démarrage et à ce
+  fichier : chaque jour d'attente ajoute un conflit à résoudre.
+
+Ce qui reste à demander, et qu'aucune de ces deux règles ne couvre : ce qui
+part **en public au nom de quelqu'un** (un commentaire publié, un message à la
+communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
+Là, l'aller-retour vaut son prix.
+
 ## Modifier ce dépôt
 
 - **Chirurgical.** Chaque ligne changée doit se rattacher à la demande. Ne pas
@@ -133,11 +153,6 @@ la tête de lecture se retrouve au-delà de la fin.
 - **Le minimum qui résout le problème.** Pas d'abstraction pour un seul appel,
   pas de configurabilité qu'on n'a pas demandée, pas de garde contre un cas
   impossible.
-- **Décider plutôt que demander.** Face à deux lectures possibles, retenir la
-  meilleure, l'écrire noir sur blanc, et avancer — une question posée coûte un
-  aller-retour, une hypothèse fausse coûte un correctif. Ne s'arrêter que
-  devant l'irréversible : une suppression, une publication, un travail existant
-  qu'un choix détruirait.
 - **Nommer la vérification avant d'écrire** : quelle commande dira que c'est
   bon. `npm test` pour ce qui est calculable, `npm run verify` pour le rendu,
   l'audio, l'export et le mobile.
@@ -177,32 +192,58 @@ la tête de lecture se retrouve au-delà de la fin.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **cinq projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
-`CLAUDE.md`), et la chaîne pré-presse KDP en Python dans `kdp/`. Deux chantiers mis en
-sommeil vivent sous `archives-backlog/` — le studio audio Streamlit
-(`mon-app-audio/`) et l'assistant d'allocation d'actifs (`patrimoine/`) — avec
-leur code, leurs tests verts et leur `README.md` : mis de côté, pas abandonnés. L'outillage ci-dessous
-existe parce que rien de générique ne connaît cette particularité.
+`CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
+montage automatisée dans `montage-auto/`, le répondeur de commentaires Facebook
+dans `repondeur-facebook/`, l'assistant de rangement Life-Organizer dans
+`life-organizer/` et l'assistant administratif Paper-Manager dans
+`paper-manager/` (qui ont chacun leur propre `README.md`) — plus un volet sans
+code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
+montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
+audio Streamlit (`mon-app-audio/`) et l'assistant d'allocation d'actifs
+(`patrimoine/`), avec leur code, leurs tests verts et leur condition de reprise
+— mis de côté, pas abandonnés. L'outillage ci-dessous existe parce que rien de
+générique ne connaît cette particularité.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, et des deux chantiers en sommeil sous `archives-backlog/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `montage-auto/` et des deux chantiers en sommeil sous `archives-backlog/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
+| `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
+| `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
 | `/idee-faisabilite` | La grille de notation d'une idée sur 10, le dossier où atterrit sa fiche, et le script qui tient `INDEX.md` à jour. |
 | `/audit-code-ia` | Auditer une base de code générée par IA : le relevé mécanique de `scan.py`, les trois défauts qu'aucune expression régulière ne trouve, et le classement par ce qui cassera en premier. |
+| `/paper-manager` | Où poser chaque fichier dans l'assistant administratif, la frontière entre ce que l'humain décide et ce que la machine calcule, et les huit pièges qui coûtent un bogue. |
+| `/formulaire-pdf` | Remplir un Cerfa avec `paper-manager` : repérer les champs une fois, écrire un plan rejouable, et les cinq pièges du format PDF. |
+| `/resilier-un-contrat` | Jusqu'à quand on peut encore partir sans frais, quel texte invoquer, et le courrier prêt à signer. |
+| `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
+| `/tiktok` | La ligne éditoriale du volet TikTok, ses huit concepts répétables, les deux seuls dispositifs de tournage et la façon dont un script s'écrit ici. |
+| `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
+| `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
+| `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
+| `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
+| `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
+| `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
 
 Le hook n'agit que sur une session distante (`CLAUDE_CODE_REMOTE`) : sur un
 poste de développement, le SDK appartient à son propriétaire.
 
-Deux règles qui découlent de la cohabitation :
+Un plugin extérieur est déclaré dans `.claude/settings.json` :
+`frontend-design`, publié par Anthropic. Il recoupe `/custom-frontend-designer`
+sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu'il
+porte les règles d'identité d'Amorce là où le plugin vise une esthétique
+générique. Le plugin reste utile partout ailleurs.
+
+Trois règles qui découlent de la cohabitation :
 
 - **Une modification ne touche qu'un seul projet**, sauf configuration à la
   racine qui doit connaître ses voisins — c'est le cas d'`eslint.config.mjs`,
@@ -211,6 +252,13 @@ Deux règles qui découlent de la cohabitation :
 - La version de Flutter est épinglée **au même numéro** dans le hook et dans
   `.github/workflows/look-and-find.yml`. Les faire diverger, c'est fabriquer un
   « ça passe chez moi ».
+- Les bibliothèques installées par `.github/workflows/tests-python.yml` sont
+  **volontairement plus courtes** que celles du hook, et il ne faut pas les
+  aligner. Le hook prépare une session où l'on *exécute* les programmes, ce qui
+  demande streamlit, PyTorch, Pillow et PyMuPDF ; le workflow n'installe que ce
+  que les *tests* atteignent, mesuré dans un environnement vierge. Recopier la
+  liste du hook ferait passer la vérification de vingt secondes à plusieurs
+  minutes sans couvrir une assertion de plus.
 
 ## Vérifier
 
@@ -291,15 +339,6 @@ ne pas lancer `playwright install`.
   WebM. Ne pas supposer l'extension.
 
 ## Git
-
-**Mener la pull request de bout en bout** : l'ouvrir soi-même dès qu'un lot de
-travail est complet, la faire passer la barrière de vérification, la fusionner.
-Attendre une relecture qui ne viendra pas ne protège de rien et laisse le
-travail hors de `main`, là où il ne sert à personne et où il pourrit.
-
-Ce qui ne se fusionne pas seul : une intégration continue rouge, un conflit non
-résolu, ou un changement qui détruit un travail existant. Dans ces trois cas
-seulement, s'arrêter et dire ce qui bloque.
 
 Branche de travail : `claude/claude-md-docs-q02dr7`. Messages de commit en
 français, à l'infinitif, décrivant l'intention plutôt que le fichier touché —

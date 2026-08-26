@@ -84,9 +84,14 @@ L'idée se greffe-t-elle sur ce qui tourne déjà ?
 
 | Chantier | Ce que c'est | Ampleur |
 | --- | --- | --- |
-| **Look & Find** (`look_and_find/`) | Application mobile. Flutter, Riverpod 3. | ~76 fichiers |
-| **Amorce** (racine) | Montage vidéo vertical, 100 % navigateur. Next.js 15, React 19, Tailwind v4. | ~56 fichiers |
-| **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures Amazon KDP. Python. | ~26 fichiers |
+| **Look & Find** (`look_and_find/`) | Application mobile. Flutter, Riverpod 3. | actif |
+| **Amorce** (racine) | Montage vidéo vertical, 100 % navigateur. Next.js 15, React 19, Tailwind v4. | actif |
+| **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures et validation de niches. Python. | actif |
+| **Paper-Manager** (`paper-manager/`) | Assistant administratif : scan, échéances, résiliations. Python. | actif |
+| **Life-Organizer** (`life-organizer/`) | Rangement de fichiers personnels. Python. | actif |
+| **Répondeur Facebook** (`repondeur-facebook/`) | Réponses aux commentaires via l'API Graph. Python. | actif |
+| **Chaîne de montage** (`montage-auto/`) | Montage automatisé. Python. | actif |
+| **Volet TikTok** (`tiktok/`) | Concepts et scripts. Sans code. | actif |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. Python, Streamlit. | **en sommeil** |
 | _Patrimoine_ (`archives-backlog/patrimoine/`) | Allocation d'actifs. Python. | **en sommeil** |
 
@@ -96,13 +101,10 @@ personne ne les fait avancer. S'y greffer réveille un chantier au lieu d'en
 accompagner un — plafonner l'alignement à 6 dans ce cas.
 
 Ne pas juger l'ampleur au nombre de fichiers : `patrimoine/` en compte deux et
-fait passer vingt-sept tests. Compter les tests verts plutôt, et recompter
-avant de noter — la liste vieillit :
+fait passer vingt-sept tests. Compter les tests verts plutôt — et recompter la
+liste avant de noter, car elle vieillit vite : elle est passée de cinq à dix
+entrées en une journée.
 
-```bash
-find <dossier> -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.dart' \
-  -o -name '*.py' \) -not -path '*/.dart_tool/*' -not -path '*/build/*' | wc -l
-```
 
 Ne pas se fier non plus aux dates de commit pour juger de l'activité — un
 clone frais les écrase toutes le même jour.

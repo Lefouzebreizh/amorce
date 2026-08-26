@@ -24,7 +24,7 @@ import '../../../product_detail/domain/entities/product.dart';
 import 'gemini_prompt.dart';
 
 class GeminiVisionDataSource {
-  const GeminiVisionDataSource(this._dio, this._apiKey);
+  GeminiVisionDataSource(this._dio, this._apiKey);
 
   final Dio _dio;
 
@@ -32,6 +32,20 @@ class GeminiVisionDataSource {
   /// qui permet à une clé saisie dans l'application de remplacer celle du
   /// build, et à un test de n'en fournir aucune.
   final String _apiKey;
+
+  /// La dernière réponse brute du modèle, telle qu'elle est arrivée.
+  ///
+  /// **À quoi ça sert, et pourquoi c'est gardé.** Quand une fiche affiche un
+  /// prix fantaisiste ou un marchand inventé, une seule question compte : le
+  /// modèle l'a-t-il dit, ou l'avons-nous mal lu ? Sans cette trace, y répondre
+  /// demande de rejouer le scan avec un débogueur branché — c'est-à-dire jamais,
+  /// puisque le problème apparaît sur un téléphone, en situation.
+  ///
+  /// Gardée en mémoire seulement, et seulement la dernière : elle ne survit pas
+  /// à la fermeture de l'application, et n'occupe pas le stockage. C'est
+  /// suffisant pour le geste réel — scanner, voir que c'est faux, regarder.
+  String? get lastRawAnswer => _lastRawAnswer;
+  String? _lastRawAnswer;
 
   Future<Product> identify(Uint8List photo, {CancelToken? cancelToken}) async {
     if (_apiKey.isEmpty) throw const MissingApiKeyException();
@@ -101,6 +115,9 @@ class GeminiVisionDataSource {
     if (text is! String || text.trim().isEmpty) {
       throw const UnreadableAnswerException();
     }
+    // Retenue avant le décodage : une réponse illisible est justement celle
+    // qu'on a le plus besoin de pouvoir regarder.
+    _lastRawAnswer = text;
 
     final ProductDto dto;
     try {
