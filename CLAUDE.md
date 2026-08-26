@@ -130,7 +130,7 @@ la tête de lecture se retrouve au-delà de la fin.
 ## Rythme de travail
 
 Le propriétaire du dépôt travaille depuis un téléphone, souvent par messages
-courts. Deux règles en découlent, et elles priment sur la prudence par défaut :
+courts. Trois règles en découlent, et elles priment sur la prudence par défaut :
 
 - **Décider plutôt que demander.** Devant deux options techniques défendables,
   prendre la meilleure, l'appliquer, et **dire laquelle et pourquoi** en une
@@ -141,7 +141,6 @@ courts. Deux règles en découlent, et elles priment sur la prudence par défaut
   faire passer au vert et la fusionner sans attendre qu'on le demande. Les
   branches de ce dépôt touchent presque toutes au hook de démarrage et à ce
   fichier : chaque jour d'attente ajoute un conflit à résoudre.
-
 - **Passer le relais avant que le fil ne pèse.** Une conversation longue est
   relue en entier à chaque message, captures d'écran comprises : elle finit par
   coûter plus cher que le travail qu'elle porte. Dès qu'un fil change de sujet
@@ -149,7 +148,7 @@ courts. Deux règles en découlent, et elles priment sur la prudence par défaut
   la précédente, et donner son nom. La mémoire du projet est dans ce fichier et
   dans les compétences, pas dans la discussion — on ne perd rien.
 
-Ce qui reste à demander, et qu'aucune de ces deux règles ne couvre : ce qui
+Ce qui reste à demander, et qu'aucune de ces trois règles ne couvre : ce qui
 part **en public au nom de quelqu'un** (un commentaire publié, un message à la
 communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
 Là, l'aller-retour vaut son prix.
@@ -231,7 +230,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `montage-auto/`, de `tiktok/` et des deux chantiers en sommeil sous `archives-backlog/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe, au démarrage d'une session distante : les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé, les bibliothèques Python de `kdp/`, `montage-auto/`, `repondeur-facebook/`, `life-organizer/`, `tiktok/`, de l'extraction multiformat et des deux chantiers en sommeil sous `archives-backlog/`, plus le Chromium du parcours de vérification. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
