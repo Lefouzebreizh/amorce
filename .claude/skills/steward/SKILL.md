@@ -6,8 +6,10 @@ description: Conventions de ce dépôt pour mener une pull request jusqu'à la f
 # Mener une PR sur ce dépôt
 
 Ces conventions complètent les règles générales de suivi de PR ; elles ne les
-remplacent pas, et elles ne peuvent ni élargir un accès, ni autoriser une
-fusion ou une approbation.
+remplacent pas, et elles ne peuvent pas élargir un accès. L'autorisation
+d'ouvrir et de fusionner, elle, vient du propriétaire du dépôt — elle est dans
+`CLAUDE.md`, « Rythme de travail », et ce fichier ne fait qu'en donner la
+mécanique.
 
 ## Un dépôt, plusieurs projets sans code commun
 
@@ -52,24 +54,32 @@ PR de ce dépôt se relit sur ses justifications autant que sur son diff.
 Découper par intention : trois intentions distinctes font trois commits, même
 si elles ont été écrites dans la même session.
 
-## Quand la CI se déclenche sur une PR, et quand elle ne se déclenche pas
+## Ouvrir et fusionner
 
-**L'ouverture d'une PR par un assistant ne lance rien.** Elle passe par un jeton
-d'application GitHub, et GitHub refuse d'en déclencher un workflow — protection
-contre les boucles.
+Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
+`CLAUDE.md`. Ce qui l'accompagne, et qu'on oublie :
 
-**Une poussée sur la branche, si.** L'événement `pull_request` part alors
-normalement (`synchronize`), et la PR obtient son verdict.
-
-Conséquence pratique : une PR ouverte puis laissée telle quelle reste sans CI,
-indéfiniment, sans que rien ne le signale. Ne pas l'attendre — **la déclencher
-à la main** (`workflow_dispatch` sur la branche, depuis l'onglet Actions ou par
-l'API), puis vérifier le verdict **sur l'empreinte exacte qui sera fusionnée**.
-Un commit poussé après le déclenchement invalide le résultat précédent.
-
-Ne jamais fusionner sur la seule foi d'une vérification locale quand le
-workflow couvre quelque chose que la machine de développement ne sait pas faire
-— le build Android en est le cas type.
+- **Partir de `main` à jour, et le revérifier juste avant d'ouvrir.** Plusieurs
+  sessions travaillent ce dépôt en parallèle. Deux branches y ont fabriqué
+  Life-Organizer chacune dans son coin ; la seconde a été refaite sur la base
+  fusionnée. Ce qui est fusionné gagne — s'y couler coûte toujours moins cher
+  que réconcilier deux architectures.
+- **Fusion par commit de fusion**, comme le reste de l'historique.
+- **La description est le compte rendu que l'historique gardera** : pourquoi,
+  ce que la décision coûte, et ce qui n'a pas été vérifié. Le workflow ne se
+  déclenchant que sur `look_and_find/**`, une PR qui n'y touche pas n'a aucun
+  contrôle automatique : c'est `/verifier` qui tient lieu de filet, et il faut
+  l'avoir lancé pour de vrai.
+- **L'ouverture d'une PR ne déclenche aucune CI.** Elle passe par un jeton
+  d'application GitHub, que GitHub refuse comme source de workflow — protection
+  contre les boucles. Une *poussée* sur la branche, elle, déclenche bien
+  l'événement `pull_request`. Une PR ouverte puis laissée telle quelle reste
+  donc sans contrôle, indéfiniment, sans que rien ne le signale : ne pas
+  l'attendre, la déclencher à la main (`workflow_dispatch` sur la branche).
+- **Vérifier le verdict sur l'empreinte exacte qui sera fusionnée.** Un commit
+  poussé après le déclenchement invalide le résultat précédent — et s'il ne
+  touche pas `look_and_find/**`, il ne relance rien du tout. C'est la façon la
+  plus discrète de fusionner du non-vérifié en croyant le contraire.
 
 ## Diagnostiquer un échec d'intégration continue
 

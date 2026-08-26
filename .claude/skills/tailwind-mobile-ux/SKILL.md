@@ -14,6 +14,20 @@ donne environ **393 px CSS de large**. Le profil « téléphone » de
 `scripts/verify.mjs` en simule 390 × 640 — 640 et non la hauteur nominale, parce
 que la barre d'adresse et la barre système amputent réellement l'écran.
 
+
+## Le Xiaomi est le terrain, pas la cible
+
+Tout ce qui suit part de cet appareil parce que c'est celui qui sert à juger.
+Mais **une mise en page calée sur un modèle casse chez tout le monde sauf son
+auteur** — et il ne le voit jamais. Un téléphone n'a pas un viewport, une gamme
+en a des dizaines : de 360 à 440 points de large en usage courant, avec des
+encoches de tailles différentes et une taille de police que l'utilisateur a pu
+doubler.
+
+Vérifiez donc aux extrémités, pas seulement sur l'appareil sous la main. Trois
+largeurs couvrent l'essentiel : **360**, **390**, **430**. Ce qui tient à 360 et
+à 430 tient partout entre les deux.
+
 ## Les sept pièges, et la parade
 
 **1. La hauteur qui ment.** `100vh` compte la barre d'adresse dépliée : le bas de
@@ -72,7 +86,9 @@ Trois niveaux, du plus rapide au plus fidèle :
 # 1. Le profil téléphone de la vérification, bridé ×4 (indispensable : sans le
 #    bridage, la dégradation automatique de qualité ne se déclenche jamais).
 npm run dev                       # dans un terminal
+npm run fixtures                  # une fois : les rushes d'essai
 AMORCE_PROFILE=mobile npm run verify
+# Réclame `playwright install` ? Il manque AMORCE_CHROMIUM=/opt/pw-browsers/chromium.
 
 # 2. L'émulation du navigateur : outils de développement, appareil 393 × 873.
 #    Voit les débordements, ne voit ni le tactile réel ni la barre de gestes.

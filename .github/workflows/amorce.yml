@@ -1,0 +1,83 @@
+# Vérification du studio Amorce — la barrière d'avant-poussée, rejouée sur une
+# machine neutre.
+#
+# Ce workflow ne couvre que ce qui est calculable hors navigateur : typage, lint
+# et tests unitaires. Le parcours `npm run verify` en est volontairement absent.
+# Il pilote un vrai Chromium contre un serveur de développement, bride le
+# processeur pour déclencher la dégradation de qualité, et juge sur les pixels et
+# le signal sonore : plusieurs minutes, un résultat qui dépend de la charge de la
+# machine, et une image d'exécution partagée qui n'est pas celle du conteneur de
+# développement. En faire une barrière obligatoire produirait surtout des échecs
+# qu'on relance sans les lire — ce qui coûte plus de confiance qu'il n'en rend.
+# Il reste le filet à passer localement avant de toucher au rendu, à l'audio, à
+# l'export ou à la mise en page mobile.
+#
+# Les trois étapes sont séparées pour que le résumé dise laquelle a cassé, et
+# `!cancelled()` les laisse toutes parler : un typage rouge n'empêche pas de
+# savoir si les tests le sont aussi.
+
+name: Amorce
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'eslint.config.mjs'
+      - 'next.config.ts'
+      - 'postcss.config.mjs'
+      - '.github/workflows/amorce.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'eslint.config.mjs'
+      - 'next.config.ts'
+      - 'postcss.config.mjs'
+      - '.github/workflows/amorce.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: amorce-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    name: Typer, linter, tester
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 au minimum : `npm test` lit du TypeScript directement, par
+      # `--experimental-strip-types`, qui n'existe pas avant la 22.6.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # `npm ci` et non `npm install` : la première respecte le verrou à la
+      # lettre et échoue s'il a dérivé du package.json, la seconde le réécrit en
+      # silence — ce qui ferait vérifier autre chose que ce qui est versionné.
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Typer
+        if: ${{ !cancelled() }}
+        run: npm run typecheck
+
+      - name: Linter
+        if: ${{ !cancelled() }}
+        run: npm run lint
+
+      - name: Tester
+        if: ${{ !cancelled() }}
+        run: npm test

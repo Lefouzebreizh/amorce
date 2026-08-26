@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyzeProject } from '../analysis.ts';
-import { CAPTION_SETS, applyFinish, buildFinish, captionSet, soundsOnCuts } from '../autoFinish.ts';
+import { CAPTION_SETS, applyFinish, buildFinish, captionSet, soundsOnCuts, thinCues } from '../autoFinish.ts';
 import { emptyProject, totalDuration } from '../timeline.ts';
-import { DEFAULT_CLIP, type Caption, type MediaAsset, type Project } from '../types.ts';
+import { DEFAULT_CLIP, type Caption, type MediaAsset, type Project, type SoundCue } from '../types.ts';
 
 /** Identifiants prévisibles, pour pouvoir comparer ce qui est produit. */
 function counter() {
@@ -168,4 +168,38 @@ test('un montage vide ne produit rien et ne casse pas', () => {
   const finished = applyFinish(vide, analyzeProject(vide), 'bande-annonce', counter());
   assert.deepEqual(finished.captions, []);
   assert.deepEqual(finished.clips, []);
+});
+
+test('l’allègement ramène les bruitages dans la plage visée', () => {
+  const cues = Array.from({ length: 20 }, (_, i) => ({ id: `s${i}`, sfx: 'boom', time: i * 0.5, gain: 1 }) satisfies SoundCue);
+  const gardes = thinCues(cues, 10);
+  // Six pour dix secondes est le haut de la plage : au-delà, la notation punit.
+  assert.ok(gardes.length <= 6, `${gardes.length} bruitages gardés pour 10 s`);
+  assert.ok(gardes.length >= 2, 'jamais moins de deux, sinon la ponctuation disparaît');
+});
+
+test('l’allègement garde l’ordre du montage, sans trier sur autre chose', () => {
+  const cues = Array.from({ length: 12 }, (_, i) => ({ id: `s${i}`, sfx: 'boom', time: i * 0.8, gain: 1 }) satisfies SoundCue);
+  const gardes = thinCues(cues, 10);
+  const temps = gardes.map((c) => c.time);
+  assert.deepEqual(temps, [...temps].sort((a, b) => a - b));
+});
+
+test('un montage déjà dans la plage n’est pas allégé', () => {
+  const cues = Array.from({ length: 4 }, (_, i) => ({ id: `s${i}`, sfx: 'boom', time: i * 2, gain: 1 }) satisfies SoundCue);
+  assert.equal(thinCues(cues, 10).length, 4);
+});
+
+test('poser un bruitage par coupe dégrade le son d’un montage déjà ponctué', () => {
+  // La raison d'être du bouton conditionné : le remède abîmait ce qu'il visait.
+  const dense: Project = {
+    ...bare([2, 2, 2, 2, 2]),
+    cues: Array.from({ length: 8 }, (_, i) => ({ id: `s${i}`, sfx: 'boom', time: i * 1.2, gain: 1 }) satisfies SoundCue),
+  };
+  const son = (p: Project) => analyzeProject(p).criteria.find((c) => c.id === 'son')?.score ?? 0;
+  const ajoutes = soundsOnCuts(dense.clips, dense.cues, (() => { let n = 0; return () => `n${n++}`; })());
+  assert.ok(
+    son({ ...dense, cues: [...dense.cues, ...ajoutes] }) < son(dense),
+    'sans cette baisse, le bouton conditionné n’aurait plus de raison d’être',
+  );
 });

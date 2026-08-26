@@ -32,7 +32,12 @@ POLICE = Path("/mnt/skills/examples/canvas-design/canvas-fonts/InstrumentSans-Re
 # Relevés au pixel sur la planche d'origine (1600 x 1600).
 GAUCHE = 600                       # début du texte, après la puce
 LIGNES_DE_BASE = (1199, 1262, 1325, 1388)
-ZONE = (590, 1150, 1210, 1412)     # à reboucher : le texte, jamais les puces
+# À reboucher : le texte, jamais les puces (qui s'arrêtent vers x 572).
+# La bande commence bien avant l'encre — à 590 avec un fondu de 14, la rampe
+# tombait sur le premier glyphe et n'en effaçait que la moitié : le « L » de
+# « Le Phare » a laissé un filet gris devant « Tempête ». La rampe ne doit
+# jamais rencontrer d'encre.
+ZONE = (576, 1146, 1214, 1416)
 TAILLE = 53                        # donne 38 px de hauteur de capitale
 CONDENSATION = 0.792               # mesuré sur les deux lignes conservées
 ENCRE = (6, 5, 3)
@@ -71,7 +76,7 @@ def corriger(source: Path, cible: Path) -> None:
     # Rebouchage à bords fondus : un rectangle de papier posé net se repère à
     # sa lisière, même quand la couleur est juste, parce que le grain s'arrête.
     largeur, hauteur = ZONE[2] - ZONE[0], ZONE[3] - ZONE[1]
-    fondu = 14
+    fondu = 6
     rampe = np.minimum(
         np.clip(np.minimum(np.arange(hauteur), hauteur - 1 - np.arange(hauteur)) / fondu, 0, 1)[:, None],
         np.clip(np.minimum(np.arange(largeur), largeur - 1 - np.arange(largeur)) / fondu, 0, 1)[None, :])
