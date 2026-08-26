@@ -53,6 +53,13 @@ TOME = "Tome 1"
 # vignette de cent cinquante pixels, là où tout se joue, et corrigeable en une
 # ligne plutôt qu'en une régénération.
 CLAIR = (0.99, 0.97, 0.93)
+CREME = (0.957, 0.933, 0.878)      # le papier de la charte
+OR_SOURD = (0.72, 0.58, 0.30)
+# Le bandeau commence sous les pattes des personnages, pas dessus. À 0,878 il
+# tombait pile sur elles et donnait l'impression d'un muret ; l'herbe est plus
+# bas. La contrainte inverse est la zone de sécurité : le texte doit finir à
+# 0,375 po du trait de coupe, ce qui interdit de descendre davantage.
+BANDEAU = 0.888
 SOMBRE = (0.20, 0.13, 0.06)
 
 
@@ -108,7 +115,7 @@ def _voile(page: fitz.Page, cadre: fitz.Rect, force: float) -> None:
 
 def composer(bordure: Path, illustration: Path, cible: Path,
              cote_px: int = 2600, pleine_page: bool = False,
-             voile: float = 0.34) -> None:
+             voile: float = 0.34, voile_bas: float = 0.62) -> None:
     largeur = (charte.FORMAT_ROGNE + charte.FOND_PERDU) * charte.POUCE_EN_POINTS
     hauteur = (charte.FORMAT_ROGNE + 2 * charte.FOND_PERDU) * charte.POUCE_EN_POINTS
 
@@ -168,13 +175,27 @@ def composer(bordure: Path, illustration: Path, cible: Path,
                           stream=vig.getvalue())
         dpi = vignette.width / (pl / charte.POUCE_EN_POINTS)
     else:
-        _voile(page, fitz.Rect(gauche - 26, 0.795 * hauteur,
-                               droite + 26, 0.925 * hauteur), voile * 0.8)
+        # Bandeau crème plutôt qu'un voile. Le bas d'une couverture d'album est
+        # occupé par les personnages eux-mêmes : il n'y a pas de zone calme à
+        # éclaircir, et un voile assez fort pour rendre le nom lisible ternirait
+        # le dessin. Le bandeau est le geste des albums jeunesse — il se lit
+        # comme une intention, pas comme une rustine, et il garantit le contraste.
+        page.draw_rect(fitz.Rect(0, BANDEAU * hauteur, largeur, hauteur),
+                       color=None, fill=CREME)
+        page.draw_line(fitz.Point(0, BANDEAU * hauteur),
+                       fitz.Point(largeur, BANDEAU * hauteur),
+                       color=OR_SOURD, width=1.1)
 
-    _poser(page, fitz.Rect(gauche, 0.805 * hauteur, droite, 0.858 * hauteur),
-           AUTEUR, "corps", 16, encre)
-    _poser(page, fitz.Rect(gauche, 0.864 * hauteur, droite, 0.905 * hauteur),
-           TOME, "ital", 12, pale)
+    if pleine_page:
+        _poser(page, fitz.Rect(gauche, 0.900 * hauteur, droite, 0.930 * hauteur),
+               AUTEUR, "corps", 14, BRUN)
+        _poser(page, fitz.Rect(gauche, 0.928 * hauteur, droite, 0.950 * hauteur),
+               TOME, "ital", 10, BRUN_PALE)
+    else:
+        _poser(page, fitz.Rect(gauche, 0.805 * hauteur, droite, 0.858 * hauteur),
+               AUTEUR, "corps", 16, encre)
+        _poser(page, fitz.Rect(gauche, 0.864 * hauteur, droite, 0.905 * hauteur),
+               TOME, "ital", 12, pale)
 
     document.set_metadata({"title": f"{TITRE} — première de couverture",
                            "author": AUTEUR})
@@ -199,7 +220,10 @@ if __name__ == "__main__":
     a.add_argument("--pleine-page", action="store_true",
                    help="l'illustration couvre tout le panneau, le texte se pose dessus")
     a.add_argument("--voile", type=float, default=0.34,
-                   help="éclaircissement du ciel derrière le texte, 0 pour aucun")
+                   help="éclaircissement du ciel derrière le titre, 0 pour aucun")
+    a.add_argument("--voile-bas", type=float, default=0.62,
+                   help="éclaircissement derrière le nom de l'auteur")
     args = a.parse_args()
     composer(Path(args.bordure), Path(args.illustration), Path(args.vers),
-             pleine_page=args.pleine_page, voile=args.voile)
+             pleine_page=args.pleine_page, voile=args.voile,
+             voile_bas=args.voile_bas)
