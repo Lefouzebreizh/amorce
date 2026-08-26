@@ -44,24 +44,42 @@ PLATEFORMES = {
     "youtube": -14.0, "podcast": -16.0, "tv": -23.0,
 }
 
-# La phrase d'intention se traduit ici. Premier mot-clé reconnu qui gagne ;
-# les valeurs restent contredisables par --musique-db et --baisse-db.
+# La phrase d'intention se traduit ici, en ÉCART à la voix et non en gain
+# absolu. Mesuré au banc d'essai : sur des sources où la musique était déjà
+# onze décibels sous la voix, appliquer les « -16 dB » du tableau l'enterrait
+# vingt-sept décibels plus bas, donc inaudible. Seul l'écart a un sens, et un
+# gain absolu n'en a aucun : la normalisation finale remet de toute façon
+# l'ensemble à la cible de la plateforme.
+# Premier mot-clé reconnu qui gagne ; contredisable par --ecart-db et --baisse-db.
 INTENTIONS = [
-    (("calme", "intime", "témoignage", "temoignage", "doux"), -18.0, 12.0),
-    (("tutoriel", "voix off", "explication", "démonstration", "demonstration", "tuto"), -16.0, 10.0),
-    (("produit", "présentation", "presentation"), -14.0, 10.0),
-    (("rythmé", "rythme", "sport", "accroche", "dynamique", "énergique", "energique"), -8.0, 8.0),
-    (("ambiance", "voyage", "paysage", "sans parole", "musical"), -6.0, 10.0),
+    (("calme", "intime", "témoignage", "temoignage", "doux"), 20.0, 12.0),
+    (("tutoriel", "voix off", "explication", "démonstration", "demonstration", "tuto"), 16.0, 10.0),
+    (("produit", "présentation", "presentation"), 14.0, 10.0),
+    (("rythmé", "rythme", "sport", "accroche", "dynamique", "énergique", "energique"), 10.0, 8.0),
+    (("ambiance", "voyage", "paysage", "sans parole", "musical"), 12.0, 10.0),
 ]
-INTENTION_DEFAUT = (-16.0, 10.0)
+INTENTION_DEFAUT = (16.0, 10.0)
 
 
 def reglages_depuis_intention(phrase: str) -> tuple[float, float]:
     minuscule = phrase.lower()
-    for mots, musique_db, baisse_db in INTENTIONS:
+    for mots, ecart_db, baisse_db in INTENTIONS:
         if any(mot in minuscule for mot in mots):
-            return musique_db, baisse_db
+            return ecart_db, baisse_db
     return INTENTION_DEFAUT
+
+
+def gain_musique(loudness_voix: float | None, loudness_musique: float | None,
+                 ecart_db: float) -> float:
+    """Le gain qui pose la musique `ecart_db` sous la voix, telles qu'elles sont.
+
+    Sans voix, le gain de la musique n'a aucun effet : elle est seule, et la
+    normalisation finale la ramène à la cible quoi qu'on fasse ici. On ne touche
+    donc à rien plutôt que d'appliquer un chiffre qui ne veut rien dire.
+    """
+    if loudness_voix is None or loudness_musique is None:
+        return 0.0
+    return round((loudness_voix - ecart_db) - loudness_musique, 1)
 
 
 def enveloppe_baisse(segments: list[dict], baisse_db: float,
@@ -214,7 +232,10 @@ def main() -> None:
     analyseur.add_argument("--plateforme", default="tiktok", choices=sorted(PLATEFORMES))
     analyseur.add_argument("--intention", default="",
                            help="la phrase de l'utilisateur, d'où sont déduits les niveaux")
-    analyseur.add_argument("--musique-db", type=float, help="contredit l'intention")
+    analyseur.add_argument("--ecart-db", type=float,
+                           help="de combien la musique se pose sous la voix (contredit l'intention)")
+    analyseur.add_argument("--musique-db", type=float,
+                           help="gain absolu de la musique, court-circuite le calcul d'écart")
     analyseur.add_argument("--baisse-db", type=float, help="profondeur de la baisse sous la voix")
     analyseur.add_argument("--voix-db", type=float, default=0.0)
     analyseur.add_argument("--fondu", type=float, default=2.0, help="fondu de sortie, en secondes")
@@ -226,8 +247,8 @@ def main() -> None:
     if not options.video.exists():
         sys.exit(f"Vidéo introuvable : {options.video}")
 
-    musique_db, baisse_db = reglages_depuis_intention(options.intention)
-    options.musique_db = options.musique_db if options.musique_db is not None else musique_db
+    ecart_db, baisse_db = reglages_depuis_intention(options.intention)
+    options.ecart_db = options.ecart_db if options.ecart_db is not None else ecart_db
     options.baisse_db = options.baisse_db if options.baisse_db is not None else baisse_db
     options.sortie = options.sortie or options.video.with_name(
         options.video.stem + "-bande-son" + options.video.suffix
@@ -240,6 +261,17 @@ def main() -> None:
 
     source_voix = options.video if options.voix_de_la_video else options.voix
     segments = passages_parles(ff, source_voix, duree) if source_voix else []
+
+    # Les deux sources se mesurent avant tout réglage : c'est ce qui distingue
+    # « la musique seize décibels sous la voix » de « la musique à -16 dB ».
+    if options.musique_db is None:
+        voix_mesuree = mesurer_loudness(ff, source_voix, cible) if source_voix else None
+        musique_mesuree = mesurer_loudness(ff, options.musique, cible) if options.musique else None
+        options.musique_db = gain_musique(
+            voix_mesuree["loudness_lufs"] if voix_mesuree else None,
+            musique_mesuree["loudness_lufs"] if musique_mesuree else None,
+            options.ecart_db,
+        )
 
     with tempfile.TemporaryDirectory() as dossier:
         temporaire = Path(dossier) / "mixage.wav"
@@ -263,6 +295,7 @@ def main() -> None:
         "cible_lufs": cible,
         "duree_s": round(duree, 2),
         "decide": {
+            "ecart_db": options.ecart_db if source_voix and options.musique else None,
             "musique_db": options.musique_db,
             "baisse_db": options.baisse_db if source_voix and options.musique else None,
             "voix_db": options.voix_db,
@@ -287,8 +320,10 @@ def main() -> None:
     print(f"  Mesuré : {final['loudness_lufs']:.1f} LUFS · "
           f"vrai pic {final['vrai_pic_dbtp']:.1f} dBTP · "
           f"étendue {final['etendue_lu']:.1f} LU  → {verdict} ({options.plateforme})")
+    ecart = fiche["decide"]["ecart_db"]
     print(f"  Décidé : musique {options.musique_db:+.0f} dB"
-          + (f", plongeant de {baisse:.0f} dB sous la voix" if baisse else "")
+          + (f" (soit {ecart:.0f} dB sous la voix)" if ecart is not None else "")
+          + (f", plongeant de {baisse:.0f} dB de plus sous la parole" if baisse else "")
           + f" · fondu de sortie {options.fondu:.1f} s")
     print("  À changer d'un mot : « plus de musique », « la voix devant », « plus calme »")
 

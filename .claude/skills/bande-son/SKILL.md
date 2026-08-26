@@ -30,7 +30,7 @@ réponse ne se devine pas : la plateforme de destination, quand elle n'est pas
 dite. Le reste s'infère de la vidéo (durée, format, présence de parole).
 
 **3. Mixer.** `scripts/monter.py` fait le montage complet : boucle et fondu de
-la musique, baisse sous la voix par chaîne latérale, mixage, normalisation en
+la musique, plongée sous les passages parlés, mixage, normalisation en
 deux passes, remultiplexage sans ré-encoder l'image.
 
 **4. Rendre la carte du mixage.** Pas un fichier lâché sans un mot. Toujours
@@ -39,8 +39,8 @@ ces trois blocs :
 ```
 Bande-son — <fichier de sortie>
   Mesuré : -14,1 LUFS · vrai pic -1,2 dBTP · étendue 6,8 LU  → conforme <plateforme>
-  Décidé : musique -16 dB, plongeant à -26 dB sous la voix (baisse de 10 dB)
-           fondu de sortie 2 s · bruitages : aucun
+  Décidé : musique -5 dB (soit 16 dB sous la voix), plongeant de 10 dB de plus
+           sous la parole · fondu de sortie 2 s · bruitages : aucun
   À changer d'un mot : « plus de musique », « la voix devant », « plus calme »
 ```
 
@@ -63,13 +63,22 @@ fichier qui passait pourtant les mesures avant encodage.
 
 ## De la phrase aux réglages
 
-| L'intention dit… | Musique | Baisse sous la voix | Bruitages |
+Les décibels ci-dessous sont **l'écart entre la musique et la voix**, jamais un
+gain absolu. C'est la même distinction qu'entre « la musique seize décibels sous
+la voix » et « la musique à -16 dB » : la première a un sens, la seconde n'en a
+aucun tant qu'on ne sait pas à quel niveau la voix a été enregistrée. Mesurer
+les deux sources d'abord, puis calculer le gain qui produit l'écart voulu.
+
+| L'intention dit… | Musique sous la voix | Plongée pendant la parole | Bruitages |
 | --- | --- | --- | --- |
-| voix off, tutoriel, explication | -16 dB | 10 à 12 dB | rares, ponctuation seulement |
-| ambiance, voyage, sans parole | -6 dB | — | discrets, sous le rythme |
-| rythmé, sport, accroche courte | -8 dB | 8 dB | marqués, sur les coupes |
-| calme, intime, témoignage | -18 dB | 12 dB | aucun |
-| démonstration produit | -14 dB | 10 dB | un par geste montré |
+| voix off, tutoriel, explication | 16 dB | 10 à 12 dB de plus | rares, ponctuation seulement |
+| ambiance, voyage, sans parole | — (musique seule) | — | discrets, sous le rythme |
+| rythmé, sport, accroche courte | 10 dB | 8 dB de plus | marqués, sur les coupes |
+| calme, intime, témoignage | 20 dB | 12 dB de plus | aucun |
+| démonstration produit | 14 dB | 10 dB de plus | un par geste montré |
+
+Sans voix, le gain de la musique n'a aucun effet : elle est seule et la
+normalisation finale la ramène à la cible quoi qu'on fasse. Ne rien y toucher.
 
 Détails et cas limites : `references/intentions.md`.
 
@@ -102,6 +111,12 @@ Détails et cas limites : `references/intentions.md`.
    2 s, aligné sur la dernière image).
 8. **Mesurer le fichier final, pas le mixage avant encodage.** C'est le seul
    chiffre qui correspond à ce que la plateforme recevra.
+9. **Un gain de musique absolu ne veut rien dire.** Mesuré au banc d'essai : sur
+   des sources où la musique arrivait déjà onze décibels sous la voix,
+   appliquer « -16 dB » l'enterrait vingt-sept décibels plus bas, donc
+   inaudible. Ce qui se règle est l'écart entre les deux, après les avoir
+   mesurées — `monter.py` le calcule, mais quiconque mixe à la main doit y
+   penser aussi.
 
 ## Outillage
 
