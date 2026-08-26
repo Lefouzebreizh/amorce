@@ -82,13 +82,28 @@ Compter le coût **récurrent**, pas seulement le ticket d'entrée : un serveur 
 
 L'idée se greffe-t-elle sur ce qui tourne déjà ?
 
-| Chantier | Ce que c'est |
-| --- | --- |
-| **Amorce** (racine) | Montage vidéo vertical, 100 % navigateur. Next.js 15, React 19, Tailwind v4. |
-| **Look & Find** (`look_and_find/`) | Application mobile. Flutter, Riverpod 3. |
-| **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures Amazon KDP. Python. |
-| **Studio audio** (`mon-app-audio/`) | Outil audio. Python, Streamlit. |
-| **Patrimoine** (`patrimoine/`) | Allocation d'actifs. Python. |
+| Chantier | Ce que c'est | Ampleur |
+| --- | --- | --- |
+| **Look & Find** (`look_and_find/`) | Application mobile. Flutter, Riverpod 3. | ~76 fichiers |
+| **Amorce** (racine) | Montage vidéo vertical, 100 % navigateur. Next.js 15, React 19, Tailwind v4. | ~56 fichiers |
+| **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures Amazon KDP. Python. | ~26 fichiers |
+| **Studio audio** (`mon-app-audio/`) | Outil audio. Python, Streamlit. | ~8 fichiers |
+| **Patrimoine** (`patrimoine/`) | Allocation d'actifs. Python. | ~2 fichiers |
+
+**Un dossier n'est pas un chantier.** Les deux derniers sont des amorces, pas
+des bases de code sur lesquelles s'appuyer : s'aligner sur `patrimoine/` et ses
+deux fichiers ne réutilise rien. Recompter avant de noter — la liste vieillit,
+et un alignement adossé à une coquille vide est la façon la plus discrète de
+gonfler un score :
+
+```bash
+find <dossier> -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.dart' \
+  -o -name '*.py' \) -not -path '*/.dart_tool/*' -not -path '*/build/*' | wc -l
+```
+
+Sous ~15 fichiers, plafonner l'alignement à 6 : il n'y a pas encore de quoi
+se greffer. Ne pas se fier aux dates de commit pour juger de l'activité — un
+clone frais les écrase toutes le même jour.
 
 | Note | Ce que ça veut dire |
 | --- | --- |
