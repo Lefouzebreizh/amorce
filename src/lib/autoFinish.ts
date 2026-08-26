@@ -1,4 +1,4 @@
-import { type Analysis } from './analysis.ts';
+import { SFX_PER_10S, type Analysis } from './analysis.ts';
 import { chopped, layoutClips, totalDuration } from './timeline.ts';
 import {
   type Caption,
@@ -229,6 +229,35 @@ function captionsFor(
   }
 
   return added;
+}
+
+/**
+ * Écarte les bruitages en trop, pour rendre du silence entre les impacts.
+ *
+ * Le remède inverse de `soundsOnCuts`, et il en a besoin : trop de bruitages
+ * fatigue autant qu'aucun, et proposer d'en ajouter à un montage saturé revient
+ * à conseiller ce qui abîme. On garde le premier de chaque intervalle plutôt
+ * que d'en choisir un « meilleur » : leur ordre porte le rythme du montage, et
+ * un tri sur le niveau le détruirait.
+ */
+export function thinCues(cues: SoundCue[], duration: number): SoundCue[] {
+  if (duration <= 0 || cues.length === 0) return cues;
+
+  const vise = Math.max(2, Math.round((duration / 10) * SFX_PER_10S.max));
+  if (cues.length <= vise) return cues;
+
+  const ecart = duration / vise;
+  const ordonnes = [...cues].sort((a, b) => a.time - b.time);
+  const gardes: SoundCue[] = [];
+
+  for (const cue of ordonnes) {
+    const dernier = gardes[gardes.length - 1];
+    // La tolérance absorbe l'arrondi du calcul d'écart : sans elle, un impact
+    // tombant pile sur la limite serait écarté sans raison.
+    if (!dernier || cue.time - dernier.time >= ecart - 1e-6) gardes.push(cue);
+  }
+
+  return gardes;
 }
 
 export type FinishResult = {
