@@ -9,6 +9,29 @@ script : trier les rushes, contrôler ce qui bloque, assembler les PDF.
 pip install Pillow PyMuPDF
 ```
 
+Le validateur de niches ci-dessous ne dépend que de la bibliothèque standard.
+
+## En amont de tout : faut-il écrire ce livre ?
+
+`kdp_niche_validator.py` répond à la question qui précède la chaîne. Il lit
+ensemble les trois chiffres d'un mot-clé — le BSR moyen des trois premiers
+livres, leur nombre d'avis, leur prix — et rend un verdict, une note sur 100 et
+un rapport Markdown.
+
+```bash
+python3 kdp/kdp_niche_validator.py --mot-cle "carnet de gratitude" \
+        --bsr 38000 --avis 120 --prix 12.99 --vers .travail/gratitude.md
+```
+
+Il sort en erreur sur une niche disqualifiée, ce qui permet d'en enchaîner
+plusieurs et de ne garder que celles qui passent. Le piège du relevé est le
+**BSR de sous-catégorie** : les seuils du script sont ceux du rang de boutique,
+et confondre les deux fait passer un désert pour une mine d'or.
+
+Ses seuils de décision et son barème sont commentés en tête de fichier, et se
+recalibrent — c'est prévu. `python3 -m unittest discover -s kdp/tests` vérifie
+que le recalibrage n'a rien cassé.
+
 ## Parcours complet
 
 ```bash

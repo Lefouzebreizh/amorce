@@ -107,6 +107,15 @@ référencer en cercle et plus aucune ne serait extractible.
 
 ## Décisions et ce qu'elles coûtent
 
+**La réponse brute reste consultable.** Quand une fiche affiche un prix
+fantaisiste ou un marchand inventé, une seule question compte : le modèle l'a-t-il
+dit, ou l'avons-nous mal lu ? La réponse décide de ce qu'il faut corriger —
+l'invite ou la lecture. L'icône `{}` en tête de fiche montre ce que Gemini a
+réellement renvoyé, et le bouton « Copier » sert au geste réel : coller cette
+réponse dans une conversation pour faire corriger l'invite. Seule la dernière
+est retenue, en mémoire, et elle ne survit pas à la fermeture — c'est assez pour
+le moment où l'on s'en sert, et cela n'occupe pas le stockage.
+
 **Sortie JSON contrainte plutôt qu'extraction de texte.** L'appel passe un
 `responseSchema` avec `responseMimeType: application/json` : le décodage du
 modèle est contraint, il ne peut plus produire de préambule ni de bloc de code.
@@ -189,6 +198,7 @@ signale plus rien.
 | `api_key_test.dart` | D'où vient la clé et laquelle gagne : la saisie l'emporte sur le build, et survit à un redémarrage. |
 | `demarrage_test.dart` | L'application démarrée de bout en bout — le seul test qui couvre `app.dart` et le parcours « pas de clé → saisie → viseur ». |
 | `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
+| `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé : la réponse est retenue même quand elle est inexploitable. |
 
 Ce qui ne peut pas être testé ainsi et demande un appareil : le décodage
 caméra, la mise au point, la session de réalité augmentée, et la qualité

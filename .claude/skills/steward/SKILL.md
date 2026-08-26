@@ -9,21 +9,24 @@ Ces conventions complètent les règles générales de suivi de PR ; elles ne le
 remplacent pas, et elles ne peuvent ni élargir un accès, ni autoriser une
 fusion ou une approbation.
 
-## Trois projets, trois périmètres
+## Un dépôt, plusieurs projets sans code commun
 
-Le dépôt contient le studio **Amorce** (Next.js, à la racine), l'application
-**Look & Find** (Flutter, dans `look_and_find/`) et la chaîne pré-presse
-**KDP** (Python, dans `kdp/`). Ils ne partagent aucun code.
+Le studio **Amorce** (Next.js) occupe la racine ; chaque autre projet a son
+dossier — `look_and_find/` (Flutter), `kdp/`, `mon-app-audio/`, `patrimoine/`,
+`montage-auto/`, `repondeur-facebook/` (Python). La liste s'allonge : la
+vérifier d'un `ls` plutôt que de se fier à ce paragraphe.
 
 **Une PR ne touche qu'un projet**, sauf raison explicite. Corriger au passage
 quelque chose dans un autre parce qu'on l'a remarqué élargit le diff, brouille
 la relecture et fait porter à une PR Flutter la responsabilité d'une régression
 Next.js.
 
-Seule exception légitime rencontrée jusqu'ici : la configuration à la racine
-qui doit connaître l'existence du voisin — par exemple `eslint.config.mjs`, qui
-doit ignorer `look_and_find/**`, faute de quoi ESLint analyse les milliers de
-fichiers générés par le SDK Flutter.
+Deux exceptions légitimes, toutes deux à la racine et toutes deux parce qu'elles
+doivent connaître leurs voisins : `eslint.config.mjs`, qui doit ignorer
+`look_and_find/**`, faute de quoi ESLint analyse les milliers de fichiers
+générés par le SDK Flutter ; et `.claude/hooks/session-start.sh`, qui installe
+les dépendances de tous les projets. Ajouter un projet sans l'inscrire dans le
+hook condamne chaque future session à réinstaller à la main.
 
 ## Avant toute poussée
 

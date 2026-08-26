@@ -10,6 +10,7 @@
  * Prérequis : `npm run fixtures` puis `npm run dev` dans un autre terminal.
  * Usage : npm run verify
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -68,6 +69,45 @@ const check = (name, ok, detail = '') => {
   results.push({ name: `[${profileLabel}] ${name}`, ok });
   console.log(`${ok ? '  OK  ' : ' ECHEC'} | ${name}${detail ? ` — ${detail}` : ''}`);
 };
+
+/**
+ * Compte les secondes de silence total dans un fichier exporté.
+ *
+ * Renvoie null si ffmpeg n'est pas installé : le parcours doit rester
+ * exécutable sans lui, et l'absence de mesure vaut mieux qu'un faux verdict.
+ */
+function mesurerSilence(fichier) {
+  try {
+    // Sonder `ffmpeg`, le seul binaire que cette fonction appelle. Gardé sur
+    // `ffprobe`, le contrôle s'abstenait là où il pouvait mesurer : plusieurs
+    // installations — dont `imageio-ffmpeg` — ne livrent que le premier.
+    execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+  } catch {
+    return null;
+  }
+
+  const pcm = execFileSync(
+    'ffmpeg',
+    ['-hide_banner', '-v', 'quiet', '-i', fichier, '-vn', '-ac', '1', '-ar', '8000', '-f', 's16le', '-'],
+    { maxBuffer: 64 * 1024 * 1024 },
+  );
+
+  const RATE = 8000;
+  const total = Math.floor(pcm.length / 2 / RATE);
+  let muettes = 0;
+
+  for (let s = 0; s < total; s++) {
+    let carre = 0;
+    for (let i = 0; i < RATE; i++) {
+      const v = pcm.readInt16LE((s * RATE + i) * 2) / 32768;
+      carre += v * v;
+    }
+    // −60 dB : en dessous, il ne s'agit plus d'un passage discret mais d'un trou.
+    if (Math.sqrt(carre / RATE) < 0.001) muettes++;
+  }
+
+  return { muettes, total };
+}
 
 const browser = await chromium.launch({
   executablePath: process.env.AMORCE_CHROMIUM || undefined,
@@ -981,6 +1021,33 @@ if (exportPath) {
   );
   check('L’image de l’export n’est pas noire', (info.brightness ?? 0) > 6, `luminosité ${info.brightness?.toFixed(1)}`);
   check('L’export contient une piste sonore', (info.rms ?? 0) > 0.001, `niveau crête ${info.rms?.toFixed(4)}`);
+
+  /*
+   * Le son ne doit pas s'arrêter en cours de route.
+   *
+   * Un niveau crête suffisant ne prouve rien : il est atteint par la première
+   * seconde. Le défaut trouvé sur un export réel laissait du son de la première
+   * à la cinquième seconde puis le silence numérique absolu jusqu'à la fin —
+   * la moitié de la vidéo muette, sans que rien ne le signale, parce que
+   * l'image, elle, était là.
+   *
+   * La cause : les plans n'étaient branchés sur le mixage qu'une fois, à la
+   * création du moteur audio. Tout plan né ensuite — un découpage, un import —
+   * s'affichait sans son.
+   *
+   * Le contrôle demande ffmpeg, qui n'est pas garanti sur toutes les machines :
+   * son absence est dite, jamais silencieuse.
+   */
+  const silence = mesurerSilence(exportPath);
+  if (silence === null) {
+    console.log('  —    | Silence non mesuré (ffmpeg absent)');
+  } else {
+    check(
+      'Le son ne s’interrompt pas en cours de montage',
+      silence.muettes <= 1,
+      `${silence.muettes} s de silence total sur ${silence.total} s`,
+    );
+  }
 
   console.log(`\n  fichier : ${((info.bytes ?? 0) / 1024 / 1024).toFixed(2)} Mo — ${exportPath}`);
   await probe.close();
