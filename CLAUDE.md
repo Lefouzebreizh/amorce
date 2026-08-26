@@ -285,10 +285,13 @@ Trois règles qui découlent de la cohabitation :
   couvrir une assertion de plus. Quand un nouveau test importe une bibliothèque
   absente, la CI le dit en clair et c'est ce fichier-là qu'on complète.
 - **Un nouveau projet Python est gardé sans rien déclarer.**
-  `.github/workflows/tests-python.yml` découvre les `*/tests` contenant des
-  `test_*.py` au lieu de les énumérer. Sa première version en listait cinq et
-  deux projets sont passés au travers le jour même : dans ce dépôt, une liste
-  écrite à la main est fausse le lendemain, et fausse en silence.
+  `.github/workflows/tests-python.yml` découvre les dossiers `tests` contenant
+  des `test_*.py`, jusqu'au troisième niveau, au lieu de les énumérer. Sa
+  première version en listait cinq et deux projets sont passés au travers le
+  jour même ; la deuxième ne regardait que `*/tests` et a cessé de couvrir les
+  deux chantiers le jour où ils sont passés sous `archives-backlog/`. Les deux
+  fois, la couverture a baissé sans qu'une ligne rouge n'apparaisse : dans ce
+  dépôt, ce qui énumère est faux le lendemain, et faux en silence.
 
 ## Vérifier
 
