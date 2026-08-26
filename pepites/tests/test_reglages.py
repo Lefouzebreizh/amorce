@@ -106,6 +106,23 @@ class TestRefus(unittest.TestCase):
         with self.assertRaises(ReglagesInvalides):
             lire_chaines(brutes)
 
+    def test_une_troisieme_famille_de_chaine_est_refusee(self):
+        # Sui, Aptos, TON : le radar ne route que deux familles, et trois
+        # endroits traitent le « pas EVM » comme « Solana ». Sans ce refus, une
+        # telle chaîne partirait vers les services Solana et finirait en verdict
+        # inconnu, sans un message — branchée en apparence, muette en pratique.
+        brutes = copy.deepcopy(chaines_brutes())
+        brutes["sui"] = {
+            "nom": "Sui", "goplus": "sui", "honeypot_is": None,
+            "explorateur": "https://suiscan.xyz/mainnet/coin/",
+            "liquidite_min_usd": 30000, "sensible_a_la_casse": True,
+            "quotes": ["0x2::sui::SUI"],
+        }
+        with self.assertRaises(ReglagesInvalides) as capture:
+            lire_chaines(brutes)
+        # Le message doit dire quoi faire, pas seulement que c'est refusé.
+        self.assertIn("source de sécurité", str(capture.exception))
+
     def test_honeypot_is_declare_sur_une_chaine_non_evm_est_refuse(self):
         brutes = copy.deepcopy(chaines_brutes())
         brutes["solana"]["honeypot_is"] = 101

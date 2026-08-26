@@ -14,7 +14,8 @@ vaut ; ce fichier-ci dit **où écrire** et **ce qu'on ne casse pas**.
 
 | Ce qu'on ajoute | Où | Ce qu'on ne fait pas |
 | --- | --- | --- |
-| Une blockchain | une entrée dans `config/chaines.yaml` | nommer une chaîne ailleurs — aucun autre fichier n'a le droit |
+| Une blockchain **EVM ou Solana** | une entrée dans `config/chaines.yaml` | nommer une chaîne ailleurs — aucun autre fichier n'a le droit |
+| Une blockchain d'une **autre famille** (Sui, Aptos, TON) | d'abord une source de sécurité et un relevé de portefeuilles dans `sources/`, ensuite le YAML | croire que le YAML suffit — voir le piège en fin de fichier |
 | Un service d'API | `sources/<service>.py` | y mettre un seuil ou une élimination |
 | Un critère de notation | `config/reglages.yaml` **et** `CHAMPS_METRIQUES` dans `core/modeles.py` | oublier de rééquilibrer les poids à 100 |
 | Une règle de décision | le skill concerné, dans `skills/` | la glisser dans une source |
@@ -101,6 +102,13 @@ non vérifié en conditions réelles tant qu'un vrai `main.py scan` n'a pas tour
 
 ## Les pièges, déjà payés une fois chacun
 
+- **Le radar ne route que deux familles de chaînes.** `est_evm` est dérivé de
+  l'identifiant GoPlus, et trois endroits traitent le `else` comme « Solana » :
+  `sources/goplus.py`, `skills/bouclier.py`, `skills/smart_money.py`. Une
+  troisième famille partirait vers les services Solana et finirait en verdict
+  `INCONNU` sans un message — branchée en apparence, muette en pratique. Le
+  chargement la refuse désormais, en disant quoi écrire ; ce refus est la seule
+  raison pour laquelle les trois `else` ont le droit de rester des `else`.
 - **DexScreener n'a pas de point d'entrée « toutes les paires ».** Beaucoup de
   tutoriels le supposent ; il n'existe pas. La découverte recoupe trois sources,
   dont notre propre mémoire. C'est le point faible de l'outil, pas la notation.

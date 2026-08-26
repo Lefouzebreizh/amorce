@@ -172,7 +172,7 @@ def lire_chaines(donnees: dict) -> dict[str, Chaine]:
                 f"{ou} : honeypot.is ne simule que des chaînes EVM"
             )
 
-        chaines[cle] = Chaine(
+        chaine = Chaine(
             cle=cle,
             nom=_exiger(brut, "nom", ou),
             goplus=goplus,
@@ -182,6 +182,20 @@ def lire_chaines(donnees: dict) -> dict[str, Chaine]:
             quotes=quotes,
             sensible_a_la_casse=sensible,
         )
+        # Le radar ne connaît que deux familles, et trois routages traitent le
+        # « pas EVM » comme « Solana ». Une troisième famille ne lèverait rien :
+        # elle partirait vers les services Solana et finirait en verdict
+        # inconnu, sans un message. Le refus doit donc tomber ici, une fois, et
+        # dire ce qu'il faut écrire pour lever l'obstacle.
+        if not (chaine.est_evm or chaine.est_solana):
+            raise ReglagesInvalides(
+                f"{ou} : famille inconnue. `goplus` vaut « {goplus} », or le "
+                "radar ne route que deux familles — un identifiant numérique "
+                "pour EVM, « solana » pour Solana. Brancher une troisième "
+                "demande d'abord une source de sécurité et un relevé de "
+                "portefeuilles pour elle, dans `sources/`."
+            )
+        chaines[cle] = chaine
     return chaines
 
 

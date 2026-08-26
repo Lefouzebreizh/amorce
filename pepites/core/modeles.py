@@ -96,7 +96,25 @@ class Chaine:
 
     @property
     def est_evm(self) -> bool:
+        """Vrai pour une chaîne EVM, dont l'identifiant GoPlus est numérique.
+
+        **Le radar ne connaît que deux familles**, et trois routages s'appuient
+        dessus : `sources/goplus.py`, `skills/bouclier.py` et
+        `skills/smart_money.py` traitent le `else` comme « Solana ». Une
+        troisième famille — Sui, Aptos, TON — n'y déclencherait aucune erreur :
+        elle partirait vers le point d'entrée Solana de GoPlus, puis RugCheck,
+        puis `getTokenLargestAccounts`, pour finir en verdict `INCONNU` sans un
+        message. Une chaîne qui a l'air branchée et ne l'est pas.
+
+        C'est pourquoi `lire_chaines` refuse au chargement toute chaîne qui
+        n'est ni EVM ni Solana : l'hypothèse des deux familles est vérifiée à
+        un seul endroit, et le `else` a le droit de rester un `else`.
+        """
         return self.goplus.isdigit()
+
+    @property
+    def est_solana(self) -> bool:
+        return self.goplus == "solana"
 
     def normaliser(self, adresse: str) -> str:
         """Met une adresse sous la forme comparable de sa chaîne.
