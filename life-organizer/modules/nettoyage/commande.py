@@ -1,0 +1,224 @@
+"""Le branchement de `organizer nettoyer` : arguments, affichage, code de sortie.
+
+Aucun calcul ici : la liste affichée et les déplacements viennent des mêmes
+décisions, dans le même ordre, pour qu'une simulation soit une lecture fidèle de
+ce que fera `--appliquer`.
+
+Deux partis pris d'affichage :
+
+- **La netteté passe avant les doublons**, et pas seulement dans le code. Une
+  photo floue écartée n'a plus à être comparée : c'est un décodage de moins par
+  photo jetée, et cela évite surtout qu'une photo nette soit retirée comme
+  quasi-doublon de sa propre version ratée.
+- **On montre d'abord ce qu'on garde, ensuite ce qu'on écarte.** Une liste qui
+  commence par ce qu'on retire se lit comme une menace, alors que la commande,
+  par défaut, ne retire rien.
+"""
+
+from __future__ import annotations
+
+import argparse
+import time
+from pathlib import Path
+
+from noyau import fichiers
+from noyau.journal import Journal
+from noyau.modele import ECARTER
+
+from . import regles, traitement
+
+# Au-delà, la liste cesse d'être lue et devient un mur. Le journal, lui, porte
+# tout : ce qui n'est pas affiché n'est pas pour autant caché.
+LIGNES_AFFICHEES = 12
+
+
+def ajouter_arguments(analyseur: argparse.ArgumentParser) -> None:
+    analyseur.add_argument(
+        "dossiers", nargs="*", type=Path,
+        help="dossiers à examiner (défaut : dossiers.entree de la configuration)",
+    )
+    analyseur.add_argument(
+        "--ressemblance", metavar="NIVEAU",
+        help="à quel point deux photos doivent se ressembler : "
+             + ", ".join(f"{nom} ({distance})" for nom, distance in regles.NIVEAUX_DE_RESSEMBLANCE.items())
+             + ", ou un nombre de bits de 0 à 64 "
+               "(défaut : nettoyage_medias.doublons.distance_max)",
+    )
+    analyseur.add_argument(
+        "--appliquer", action="store_true",
+        help="déplacer en quarantaine (par défaut : simulation)",
+    )
+
+
+def executer(options: argparse.Namespace, config: dict) -> int:
+    medias_config = config.get("nettoyage_medias", {})
+    reglages_flou = medias_config.get("flou", {})
+    reglages_doublons = medias_config.get("doublons", {})
+
+    if not reglages_flou.get("actif", True) and not reglages_doublons.get("actif", True):
+        print("Flou et doublons sont tous deux désactivés dans la configuration.")
+        return 0
+
+    try:
+        ressemblance = regles.resoudre_ressemblance(
+            options.ressemblance, reglages_doublons.get("distance_max", 5)
+        )
+    except ValueError as erreur:
+        print(erreur)
+        return 2
+
+    dossiers = options.dossiers or [
+        Path(dossier) for dossier in config.get("dossiers", {}).get("entree", [])
+    ]
+    if not dossiers:
+        print("Aucun dossier à examiner : voir dossiers.entree dans la configuration.")
+        return 2
+
+    # `--appliquer` est la seule façon de passer à l'acte. La configuration ne
+    # peut qu'aller dans le sens de la prudence : une commande qui déplacerait
+    # des photos parce qu'un JSON porte `simulation_par_defaut: false` quelque
+    # part serait exactement la mauvaise surprise que la décision 3 évite.
+    simulation = not options.appliquer
+    journal = Journal(_chemin(config.get("dossiers", {}).get("journal")), simulation=simulation)
+    quarantaine = _chemin(config.get("dossiers", {}).get("quarantaine"))
+
+    # Le parcours n'a lieu qu'une fois : les deux passes travaillent sur la même
+    # liste, la seconde amputée de ce que la première a écarté.
+    chemins = list(fichiers.parcourir(
+        dossiers,
+        extensions=traitement.EXTENSIONS_PHOTO,
+        exclusions=config.get("dossiers", {}).get("exclusions", []),
+        consigner=journal.incident,
+    ))
+    print(f"{len(chemins)} photo(s) trouvée(s) dans {len(dossiers)} dossier(s).")
+    if not chemins:
+        _incidents(journal)
+        return 0
+
+    liberes = 0
+    nettetes: dict[Path, float] = {}
+    if reglages_flou.get("actif", True):
+        chemins, octets, nettetes = _passe_nettete(
+            chemins, reglages_flou, quarantaine, journal
+        )
+        liberes += octets
+
+    if reglages_doublons.get("actif", True) and chemins:
+        liberes += _passe_doublons(
+            chemins, config, ressemblance, quarantaine, journal, nettetes
+        )
+
+    retention = config.get("securite", {}).get("retention_quarantaine_jours", 30)
+    purges = fichiers.purger_quarantaine(quarantaine, retention, journal)
+    if purges:
+        print(f"\n{purges} dépôt(s) de quarantaine de plus de {retention} jours purgé(s) : "
+              "c'est là que l'espace est réellement rendu.")
+
+    print(f"\n{_taille(liberes)} à récupérer au total.")
+    if simulation:
+        print("Simulation : rien n'a été déplacé. Pour appliquer : --appliquer")
+    else:
+        print(f"Déplacé en quarantaine : {quarantaine}")
+        print(f"Rien n'est supprimé — la purge attend {retention} jours.")
+    _incidents(journal)
+    return 0
+
+
+def _passe_nettete(chemins, reglages, quarantaine, journal
+                   ) -> tuple[list[Path], int, dict[Path, float]]:
+    """Écarte les floues et rend ce qui reste, les octets libérés, et les netteté.
+
+    Les netteté mesurées voyagent jusqu'à la passe des doublons : c'est ce qui
+    lui permet de garder l'originale plutôt que la version ratée quand les deux
+    ont la même définition.
+    """
+    if reglages.get("ignorer_si_visage_detecte", True) \
+            and not traitement.detection_de_visages_disponible():
+        # Annoncé avant d'analyser : découvrir après coup qu'une protection
+        # promise par la configuration n'a pas tourné, c'est l'apprendre une
+        # fois les photos déjà déplacées.
+        print("  ⚠ Cet OpenCV ne fournit pas de détecteur de visages : la protection "
+              "« ne pas écarter une photo où un visage est reconnu » ne s'appliquera pas.")
+
+    medias = traitement.mesurer_nettete(chemins, reglages, consigner=journal.incident)
+    maintenant = time.time()
+    decisions = [regles.decider_nettete(media, reglages, maintenant) for media in medias]
+    ecartees = [decision for decision in decisions if decision.geste == ECARTER]
+
+    decompte = regles.compter(decisions)
+    print(f"\nNetteté : {decompte.get(ECARTER, 0)} floue(s) sur {len(medias)} mesurée(s).")
+    for decision in ecartees[:LIGNES_AFFICHEES]:
+        print(f"  Écarter {decision.media.chemin} — {decision.motif}")
+    if len(ecartees) > LIGNES_AFFICHEES:
+        print(f"  … et {len(ecartees) - LIGNES_AFFICHEES} autre(s)")
+
+    liberes = traitement.ecarter_flous(decisions, quarantaine, journal)
+    retirees = regles.chemins_ecartes(decisions)
+    # Ce que la première passe n'a pas su ouvrir ne repart pas vers la seconde :
+    # elle échouerait dessus à son tour et le consignerait une deuxième fois.
+    restants = [media.chemin for media in medias if media.chemin not in retirees]
+    nettetes = {media.chemin: media.nettete for media in medias
+                if media.nettete is not None}
+    return restants, liberes, nettetes
+
+
+def _passe_doublons(chemins, config, ressemblance, quarantaine, journal, nettetes) -> int:
+    """Regroupe les quasi-identiques parmi ce qui reste et rend les octets libérés."""
+    print(f"\nRessemblance : {ressemblance.distance_max} bits sur "
+          f"{regles.BITS_DU_HACHAGE} — {ressemblance.origine}")
+    avertissement = regles.avertissement_ressemblance(ressemblance.distance_max)
+    if avertissement:
+        print(f"  ⚠ {avertissement}")
+
+    doublons, examinees = traitement.detecter(
+        chemins, config, ressemblance.distance_max, journal, nettetes
+    )
+    if not doublons:
+        print(f"Aucune photo quasi-identique parmi les {examinees} restantes.")
+        if ressemblance.distance_max < regles.NIVEAUX_DE_RESSEMBLANCE["large"]:
+            print("Pour chercher plus large : --ressemblance large")
+        return 0
+
+    for doublon in doublons[:LIGNES_AFFICHEES]:
+        print(f"\n  Garder  {doublon.conserve.chemin} "
+              f"({doublon.conserve.largeur}×{doublon.conserve.hauteur}, "
+              f"{_taille(doublon.conserve.poids_octets)})")
+        for media in doublon.ecartes:
+            distance = regles.distance_de_hamming(
+                doublon.conserve.empreinte_perceptuelle, media.empreinte_perceptuelle
+            )
+            print(f"  Écarter {media.chemin} "
+                  f"({media.largeur}×{media.hauteur}, {_taille(media.poids_octets)}, "
+                  f"distance {distance})")
+    if len(doublons) > LIGNES_AFFICHEES:
+        print(f"\n  … et {len(doublons) - LIGNES_AFFICHEES} autre(s) groupe(s)")
+
+    ecartees = sum(len(doublon.ecartes) for doublon in doublons)
+    print(f"\n{len(doublons)} groupe(s), {ecartees} photo(s) en trop.")
+    return traitement.ecarter(doublons, quarantaine, journal)
+
+
+def _incidents(journal: Journal) -> None:
+    """Les fichiers enjambés, en fin de course.
+
+    En fin et non au fil de l'eau : un dossier de sauvegarde peut en produire
+    des centaines, et ils noieraient la seule liste qui compte.
+    """
+    if not journal.incidents:
+        return
+    print(f"\n{len(journal.incidents)} fichier(s) ignoré(s) :")
+    for incident in journal.incidents[:5]:
+        print(f"  · {incident}")
+    if len(journal.incidents) > 5:
+        print(f"  … et {len(journal.incidents) - 5} autre(s)")
+
+
+def _chemin(valeur: str | None) -> Path | None:
+    return Path(valeur).expanduser() if valeur else None
+
+
+def _taille(octets: int) -> str:
+    for unite, seuil in (("Go", 1024 ** 3), ("Mo", 1024 ** 2), ("ko", 1024)):
+        if octets >= seuil:
+            return f"{octets / seuil:.1f} {unite}".replace(".", ",")
+    return f"{octets} o"

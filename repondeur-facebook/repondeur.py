@@ -11,10 +11,12 @@ Cinq décisions tiennent ce fichier :
 2. **En simulation, le journal ne bouge pas.** Un essai qui marquerait les
    commentaires comme traités les ferait disparaître de la vraie exécution
    suivante — sans qu'aucune réponse n'ait jamais été publiée.
-3. **Chaque commentaire reçoit un « j'aime », la parole est l'exception.**
-   C'est ce que fait une personne réelle : elle aime beaucoup, elle répond peu.
-   Répondre à tout s'entend immédiatement comme un automate, et fait perdre
-   leur valeur aux réponses qui comptent.
+3. **Presque chaque commentaire reçoit un « j'aime », la parole est
+   l'exception.** C'est ce que fait une personne réelle : elle aime beaucoup,
+   elle répond peu. Répondre à tout s'entend immédiatement comme un automate,
+   et fait perdre leur valeur aux réponses qui comptent. La seule exception est
+   `moderation` : sous une attaque ou une accusation, un pouce levé ne dit plus
+   « j'ai lu », il dit « et ça me va » — devant toute la communauté.
 4. **Le rythme est tenu ici**, pas dans les modules : plafonds, heures, pauses
    tirées au hasard et quota Facebook sont des décisions d'exécution.
 5. **Un quota atteint arrête tout, tout de suite.** Facebook demande une pause ;
@@ -117,7 +119,9 @@ def main() -> int:
             echecs.append((commentaire.auteur, f'rédaction : {erreur}'))
             continue
 
-        if verdict.a_laisser:
+        if verdict.geste == redaction.MODERATION:
+            print(f'🚫 À modérer, sans « j\'aime » — {verdict.raison}')
+        elif verdict.a_laisser:
             print(f'✋ À toi de répondre — {verdict.raison}')
         elif verdict.a_ecrire:
             print(f'💬 {verdict.reponse}')
@@ -132,9 +136,11 @@ def main() -> int:
         # jamais une réponse en double (voir `journal.py`).
         journal.reserver(commentaire.id, verdict.geste)
         try:
-            # Le « j'aime » d'abord, et dans les trois cas : c'est le geste qui
-            # dit « j'ai lu », et il vaut même sous un commentaire qu'on laisse.
-            graph.aimer(commentaire.id)
+            # Le « j'aime » d'abord : c'est le geste qui dit « j'ai lu », et il
+            # vaut même sous un commentaire qu'on laisse à l'humain. Sauf sous
+            # ce qui est à modérer, où il vaudrait approbation.
+            if verdict.a_aimer:
+                graph.aimer(commentaire.id)
             if verdict.a_ecrire:
                 graph.repondre(commentaire.id, verdict.reponse)
             print('   ✔ fait')

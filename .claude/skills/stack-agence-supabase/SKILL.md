@@ -17,8 +17,8 @@ exécute dans le navigateur, aucun fichier de l'utilisateur ne part ailleurs. Ne
 jamais y ajouter Supabase, une Server Action ou une route serveur.
 
 Un projet client vit dans **son propre dossier à la racine** — `client-xyz/` —
-au même titre que `look_and_find/`, `kdp/`, `mon-app-audio/`, `patrimoine/`,
-`montage-auto/` et `repondeur-facebook/`.
+au même titre que les autres projets du dépôt, qu'énumère `CLAUDE.md` (les
+citer ici ferait une seconde liste, qui se périmerait au projet suivant).
 Trois branchements sont à faire à la création, faute de quoi l'outillage
 commun casse :
 
