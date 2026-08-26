@@ -84,9 +84,15 @@ justifiée en tête du fichier concerné ; relire ce commentaire avant d'y touch
 2. **Au plus deux couches vidéo.** `timeline.ts` borne toute transition à 45 %
    du plus court des deux clips. Le moteur s'appuie dessus pour ne jamais
    composer plus de deux couches. Relever cette limite casse le rendu.
-3. **Un élément `<video>` par clip, pas par média.** Deux clips peuvent
-   découper le même rush et se chevaucher ; un élément partagé ne peut pas être
-   à deux positions de lecture à la fois.
+3. **Un élément `<video>` par clip, pas par média — et six au plus à la fois.**
+   Deux clips peuvent découper le même rush et se chevaucher ; un élément
+   partagé ne peut pas être à deux positions de lecture à la fois. Mais leur
+   nombre est borné à `DECODEURS_MAX`, un navigateur Android n'accordant que six
+   à huit décodeurs : au-delà, les plans en trop ne produisent aucune image et
+   l'export sort noir sans erreur. `ClipVideoPool.sync` ne garde donc chargés
+   que les plans proches de la tête de lecture, et rend les identifiants
+   retenus — que la boucle de rendu répercute sur le graphe audio, faute de quoi
+   un plan dont l'élément a été recréé reviendrait muet.
 4. **La composition s'écrit toujours en coordonnées 1080 × 1920.** La qualité
    d'aperçu n'agit que par une transformation d'échelle posée sur le contexte
    (`RenderOptions.scale`). Aucune position, aucun corps de police ne doit être
