@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { analyzeProject } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
@@ -22,15 +22,6 @@ import { ScoreBadge, UndoControls } from './ui';
  * L'aperçu reste donc visible en permanence, plus petit quand un panneau est
  * ouvert. C'est le compromis qu'impose un écran de téléphone : on ne peut pas
  * avoir à la fois une grande image et un panneau de réglages confortable.
- *
- * **Toutes les étapes sont dans la même page.** Elles se suivent dans la zone
- * défilante, et la barre du bas amène à l'une d'elles au lieu de masquer les
- * autres. N'afficher qu'une étape à la fois donnait sept écrans dont aucun ne
- * disait ce qu'il y avait dans les six autres : on cherchait la voix off dans
- * les bruitages, on ne savait pas qu'un réglage existait.
- *
- * L'aperçu, lui, ne défile pas. C'est ce qui rend la page unique tenable :
- * ailleurs, on règle un curseur en regardant le vide.
  */
 export function StudioMobile({
   engine,
@@ -44,61 +35,18 @@ export function StudioMobile({
 }) {
   const clipCount = useStudio((s) => s.project.clips.length);
   const open = step !== null;
-  const flux = useRef<HTMLElement>(null);
-  /**
-   * Instant du dernier défilement provoqué par un appui.
-   *
-   * L'observation de ce qui est à l'écran met à jour l'onglet actif pendant
-   * qu'on fait défiler. Mais un appui déclenche lui aussi un défilement, et
-   * les sections traversées en chemin réclameraient l'onglet tour à tour :
-   * la barre clignoterait et finirait sur la mauvaise. On l'ignore donc le
-   * temps que le défilement provoqué s'achève.
-   */
-  const guide = useRef(0);
-
-  // Amener la section demandée, sans brusquerie.
-  useEffect(() => {
-    if (!step || !flux.current) return;
-    guide.current = Date.now();
-    flux.current.querySelector(`#section-${step}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [step]);
-
-  // Suivre ce qu'on regarde, pour que la barre dise la vérité.
-  useEffect(() => {
-    const zone = flux.current;
-    if (!zone) return;
-
-    const observateur = new IntersectionObserver(
-      (entrees) => {
-        if (Date.now() - guide.current < 700) return;
-        const visible = entrees.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        const id = visible?.target.id.replace('section-', '') as StepId | undefined;
-        if (id && id !== step) onStep(id);
-      },
-      { root: zone, rootMargin: '0px 0px -70% 0px' },
-    );
-
-    for (const item of STEPS) {
-      const cible = zone.querySelector(`#section-${item.id}`);
-      if (cible) observateur.observe(cible);
-    }
-    return () => observateur.disconnect();
-  }, [step, onStep]);
 
   /*
-   * La timeline descend dans la section Monter, au lieu de rester sous l'aperçu.
+   * Panneau ouvert, la hauteur devient la ressource rare, et il faut trancher :
+   * sur un écran de 640 px déjà amputé par la barre du navigateur, un aperçu
+   * utile, un panneau et une timeline ne tiennent pas ensemble.
    *
-   * Mesuré sur un écran de 640 px : elle coûtait 98 px en permanence, la barre
-   * de transport 66, et il ne restait que 104 px de haut à l'image — 59 px de
-   * large. Or c'est sur cette image qu'on touche et déplace les sous-titres.
-   * La manipulation directe, le geste le plus naturel du studio, devenait
-   * impossible pour montrer une timeline dont on ne se sert qu'au montage.
-   *
-   * Dans le flux, elle ne coûte rien au reste du temps et ne provoque aucun
-   * saut quand le défilement change l'étape courante. Hors zone de réglages,
-   * elle reprend sa place sous l'aperçu, qui dispose alors de tout l'écran.
+   * La timeline n'est donc conservée que pour l'étape de montage, la seule où
+   * désigner un plan n'a pas d'équivalent ailleurs — sous-titres et bruitages
+   * sont déjà listés dans leur propre panneau. Refermer le panneau, d'un seul
+   * appui sur l'onglet actif, rend l'écran entier à l'aperçu.
    */
-  const showTimeline = clipCount > 0 && !open;
+  const showTimeline = clipCount > 0 && (!open || step === 'montage');
 
   return (
     // `100dvh` et non `100vh` : sur mobile, la barre d'adresse se replie en
@@ -106,16 +54,7 @@ export function StudioMobile({
     <div className="flex h-[100dvh] flex-col overflow-hidden">
       <MobileHeader />
 
-      {/*
-        L'aperçu ne descend pas sous 13 rem.
-
-        C'est sur lui qu'on touche et qu'on déplace les textes : à 59 px de
-        large — ce que donnait une zone de réglages trop gourmande — viser un
-        sous-titre au doigt devient impossible, et la manipulation directe, qui
-        est le geste le plus naturel du studio, disparaît sans qu'on comprenne
-        pourquoi.
-      */}
-      <section className="flex min-h-[13rem] flex-1 flex-col gap-2 overflow-hidden p-2">
+      <section className="flex min-h-[9rem] flex-1 flex-col gap-2 overflow-hidden p-2">
         <Preview engine={engine} />
         {showTimeline && (
           <div className="shrink-0">
@@ -126,17 +65,19 @@ export function StudioMobile({
 
       {open && (
         <section
-          ref={flux}
           /*
-           * Volontairement sans `shrink-0` : sur un écran court, la zone doit
+           * Volontairement sans `shrink-0` : sur un écran court, le panneau doit
            * pouvoir céder de la hauteur à l'aperçu, dont la place minimale est
-           * garantie plus haut. La figer produirait exactement le débordement
+           * garantie plus haut. Le figer produirait exactement le débordement
            * qu'on cherche à éviter.
            */
-          className="h-[34dvh] max-h-[22rem] min-h-[8rem] overflow-y-auto overscroll-contain border-t border-edge bg-slab px-3 pt-3 pb-5"
-          aria-label="Toutes les étapes"
+          className="h-[38dvh] max-h-[24rem] min-h-[9rem] space-y-3 overflow-y-auto overscroll-contain border-t border-edge bg-slab px-3 pt-3 pb-5"
+          aria-label={STEPS.find((s) => s.id === step)?.label}
         >
-          <div className="mb-3 flex items-center justify-end">
+          <div className="flex items-center justify-between px-0.5">
+            <span className="font-display text-[17px] tracking-tight text-mist">
+              {STEPS.find((s) => s.id === step)?.label}
+            </span>
             <button
               type="button"
               onClick={() => onStep(null)}
@@ -146,22 +87,12 @@ export function StudioMobile({
             </button>
           </div>
 
-          {/* La consigne reste en tête du flux : c'est en cherchant quoi faire
-              qu'on la veut, et elle ne doit pas dépendre de l'étape regardée. */}
+          {/* La consigne ouvre le panneau : c'est panneau ouvert qu'on cherche
+              quoi faire, et l'en réserver à l'écran d'accueil la rendrait
+              absente au moment où elle sert le plus. */}
           <NextStep onStep={onStep} />
 
-          {STEPS.map((item) => (
-            <section key={item.id} id={`section-${item.id}`} className="scroll-mt-3 pt-6 first:pt-4">
-              <div className="mb-2 flex items-baseline gap-2 px-0.5">
-                <span className="font-mono text-[12px] text-muted">{item.index}</span>
-                <span className="font-display text-[17px] tracking-tight text-mist">{item.label}</span>
-              </div>
-              <div className="space-y-3">
-                {item.id === 'montage' && clipCount > 0 && <Timeline engine={engine} compact />}
-                <StepPanel step={item.id} engine={engine} onStep={onStep} />
-              </div>
-            </section>
-          ))}
+          <StepPanel step={step} engine={engine} onStep={onStep} />
         </section>
       )}
 
