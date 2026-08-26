@@ -17,9 +17,10 @@ npm run build       # build de production
 npm run typecheck   # tsc --noEmit
 npm run lint        # eslint (config plate, eslint-config-next)
 npm test            # tests unitaires (node --test, --experimental-strip-types)
-npm run fixtures    # fabrique quatre rushes de test dans .fixtures/rushes/
+npm run fixtures    # quatre rushes dans .fixtures/rushes/, deux images dans .fixtures/images/
 npm run verify      # parcours complet dans un vrai Chromium (dev doit tourner)
 npm run verify:reprise  # le montage survit-il à un rechargement (dev doit tourner)
+npm run verify:images   # un défilé d'images fixes rend-il autre chose que du noir
 ```
 
 Avant de pousser : `npm run typecheck && npm run lint && npm test`. Si le
@@ -58,7 +59,7 @@ scripts/          make-fixtures.mjs, verify.mjs (Playwright, hors bundle)
 | `store.ts` | Store Zustand, avec historique annuler/rétablir. |
 | `persistence.ts` | Reprise du montage : projet et fichiers rangés dans IndexedDB. Les fonctions de mise en forme sont pures et testées. |
 | `steps.ts` | Le parcours en 7 étapes, en données pures (séparé des composants pour rester testable). |
-| `media.ts`, `hooks.ts`, `id.ts` | Import de fichiers, modèles d'accroches, identifiants. |
+| `media.ts`, `hooks.ts`, `id.ts` | Import de fichiers — rushes **et images fixes** —, modèles d'accroches, identifiants. |
 
 ### Composants
 
@@ -92,7 +93,11 @@ justifiée en tête du fichier concerné ; relire ce commentaire avant d'y touch
    l'export sort noir sans erreur. `ClipVideoPool.sync` ne garde donc chargés
    que les plans proches de la tête de lecture, et rend les identifiants
    retenus — que la boucle de rendu répercute sur le graphe audio, faute de quoi
-   un plan dont l'élément a été recréé reviendrait muet.
+   un plan dont l'élément a été recréé reviendrait muet. Ce plafond ne vaut que
+   pour les rushes : une image fixe est portée par un `<img>`, ne mobilise aucun
+   décodeur, et reste chargée quel qu'en soit le nombre. Le graphe audio passe
+   par `getVideo`, jamais par `get` — brancher une source Web Audio sur une
+   image lèverait au premier plan fixe, et couperait le son de tout le reste.
 4. **La composition s'écrit toujours en coordonnées 1080 × 1920.** La qualité
    d'aperçu n'agit que par une transformation d'échelle posée sur le contexte
    (`RenderOptions.scale`). Aucune position, aucun corps de police ne doit être
@@ -307,7 +312,7 @@ pour de vrai et contrôle le résultat **sur les pixels et sur le signal sonore*
 pas sur la présence d'éléments dans le DOM :
 
 ```bash
-npm run fixtures    # une fois : fabrique .fixtures/rushes/
+npm run fixtures    # une fois : fabrique .fixtures/rushes/ et .fixtures/images/
 npm run dev         # dans un autre terminal
 npm run verify      # profil ordinateur, puis profil téléphone bridé ×4
 AMORCE_PROFILE=mobile npm run verify   # un seul profil, pour isoler un défaut
@@ -322,6 +327,11 @@ machine de développement. Captures et fichiers exportés atterrissent dans
 faire sans se réinitialiser : importer, recharger la page, et vérifier que le
 montage revient — puis le **lire**, parce qu'un projet restauré dont les liens
 pointent dans le vide s'affiche normalement et sort noir.
+
+`npm run verify:images` monte dix plans d'images fixes — délibérément plus que
+`DECODEURS_MAX` — et échantillonne les pixels sur toute la longueur. C'est le
+seul contrôle qui verrait une image fixe cesser de se tracer : elle ne lève
+aucune erreur, elle rend du noir.
 
 Chromium est déjà installé dans cet environnement (`PLAYWRIGHT_BROWSERS_PATH`),
 ne pas lancer `playwright install`. Sa révision n'est pas celle que Playwright

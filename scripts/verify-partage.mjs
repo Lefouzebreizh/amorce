@@ -17,7 +17,11 @@ import { chromium } from 'playwright';
 
 const BASE = 'http://localhost:3000';
 
-const browser = await chromium.launch();
+// Même variable que les autres scripts : elle désigne le Chromium déjà présent
+// sur la machine, quand celui de Playwright n'y a pas été téléchargé.
+const browser = await chromium.launch({
+  executablePath: process.env.AMORCE_CHROMIUM || undefined,
+});
 const page = await browser.newPage();
 
 let bad = 0;

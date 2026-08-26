@@ -14,7 +14,7 @@ function reset() {
 }
 
 function asset(id: string, duration: number): MediaAsset {
-  return { id, name: `${id}.mp4`, url: `blob:${id}`, duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+  return { id, name: `${id}.mp4`, kind: 'video', url: `blob:${id}`, duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
 }
 
 /** Monte deux plans de 5 s, coupe franche, et place la tête de lecture au bout. */

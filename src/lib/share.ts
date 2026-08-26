@@ -35,15 +35,15 @@ export function sharedCount(search: string): number {
 }
 
 /**
- * Un fichier partagé est-il une vidéo.
+ * Un fichier partagé va-t-il à la bibliothèque : rush ou image fixe.
  *
  * Le type déclaré prime, mais Android le laisse parfois vide : l'extension
  * tranche alors, faute de quoi un rush arriverait dans la voix off.
  */
-export function isVideo(file: { type: string; name: string }): boolean {
-  if (file.type.startsWith('video/')) return true;
+export function isVisuel(file: { type: string; name: string }): boolean {
+  if (file.type.startsWith('video/') || file.type.startsWith('image/')) return true;
   if (file.type.startsWith('audio/')) return false;
-  return /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(file.name);
+  return /\.(mp4|webm|mov|m4v|avi|mkv|png|jpe?g|webp|gif|avif|heic|heif)$/i.test(file.name);
 }
 
 /** Rend un fichier partagé exploitable par les fonctions d'import. */
