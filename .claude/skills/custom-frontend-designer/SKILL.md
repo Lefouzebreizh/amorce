@@ -95,7 +95,12 @@ npm run verify                        # dès que le rendu ou la mise en page bou
 
 `npm run verify` pilote un vrai Chromium sur deux profils, dont un téléphone
 bridé ×4, et contrôle des pixels — c'est le seul filet qui voie un débordement
-ou un contraste perdu. Il demande `npm run dev` dans un autre terminal.
+ou un contraste perdu. Il demande `npm run dev` dans un autre terminal, et
+`npm run fixtures` une fois pour fabriquer les rushes d'essai.
+
+Si l'un des deux réclame `playwright install`, c'est qu'il manque
+`AMORCE_CHROMIUM=/opt/pw-browsers/chromium` : le navigateur est là, sa révision
+n'est simplement pas celle que Playwright attend. Ne pas lancer l'installation.
 
 ## Avant de rendre la main
 

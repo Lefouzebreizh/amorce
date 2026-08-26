@@ -67,7 +67,9 @@ echo "── Chaîne KDP : bibliothèques Python"
 # `--break-system-packages` : l'image est une Debian récente, où pip refuse
 # d'installer hors environnement virtuel. Un venv ici obligerait chaque commande
 # de la chaîne à l'activer d'abord, pour un conteneur qui n'héberge qu'un projet.
-python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF
+# numpy : `coquilles.py` opère au pixel et `planches.py` mesure les bulles ;
+# ni Pillow ni PyMuPDF ne l'apportent.
+python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF numpy
 
 echo "── Studio audio : bibliothèques Python"
 # PyTorch et Whisper sont volontairement absents : six gigaoctets à installer à
@@ -168,6 +170,15 @@ fi
 # ce script.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
+fi
+
+# Chromium de vérification. L'image en fournit un (révision 1194), Playwright en
+# réclame un autre (1234) : sans chemin explicite, `npm run fixtures` et
+# `npm run verify` s'arrêtent en demandant `playwright install`, que ce dépôt
+# interdit — l'installation retéléchargerait un navigateur déjà présent.
+if [ -x /opt/pw-browsers/chromium ] && [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+  echo "export AMORCE_CHROMIUM=/opt/pw-browsers/chromium" >> "$CLAUDE_ENV_FILE"
+  echo "── Amorce : Chromium de vérification signalé à la session"
 fi
 
 echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
