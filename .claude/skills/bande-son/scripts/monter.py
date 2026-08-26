@@ -176,8 +176,15 @@ def construire_mixage(ff: str, options, duree: float, temporaire: Path,
             f"afade=t=out:st={debut_fondu:.3f}:d={options.fondu}[mus]"
         )
     if "voix" in etiquettes:
+        # `adelay` plutôt qu'un fichier de silence fabriqué à côté : une voix off
+        # ne commence jamais sur la première image, et poser un décalage ne doit
+        # pas obliger à réécrire le fichier source.
+        decalage = ""
+        if options.voix_debut > 0:
+            millisecondes = int(options.voix_debut * 1000)
+            decalage = f",adelay={millisecondes}|{millisecondes}"
         chaines.append(
-            f"[{etiquettes['voix']}]{format_commun},volume={options.voix_db}dB[voix]"
+            f"[{etiquettes['voix']}]{format_commun},volume={options.voix_db}dB{decalage}[voix]"
         )
 
     if "musique" in etiquettes and "voix" in etiquettes:
@@ -238,6 +245,8 @@ def main() -> None:
                            help="gain absolu de la musique, court-circuite le calcul d'écart")
     analyseur.add_argument("--baisse-db", type=float, help="profondeur de la baisse sous la voix")
     analyseur.add_argument("--voix-db", type=float, default=0.0)
+    analyseur.add_argument("--voix-debut", type=float, default=0.0, metavar="SECONDES",
+                           help="à quel instant la voix off commence (défaut : 0)")
     analyseur.add_argument("--fondu", type=float, default=2.0, help="fondu de sortie, en secondes")
     analyseur.add_argument("--sortie", type=Path)
     analyseur.add_argument("--json", action="store_true", help="ne rendre que la fiche JSON")
@@ -261,6 +270,12 @@ def main() -> None:
 
     source_voix = options.video if options.voix_de_la_video else options.voix
     segments = passages_parles(ff, source_voix, duree) if source_voix else []
+    if options.voix_debut and not options.voix_de_la_video:
+        # Décaler aussi les passages parlés : la plongée de la musique se calcule
+        # dessus, et une baisse qui tombe avant la voix s'entend comme un trou.
+        segments = [{"debut_s": s["debut_s"] + options.voix_debut,
+                     "fin_s": min(duree, s["fin_s"] + options.voix_debut)}
+                    for s in segments if s["debut_s"] + options.voix_debut < duree]
 
     # Les deux sources se mesurent avant tout réglage : c'est ce qui distingue
     # « la musique seize décibels sous la voix » de « la musique à -16 dB ».
@@ -299,6 +314,7 @@ def main() -> None:
             "musique_db": options.musique_db,
             "baisse_db": options.baisse_db if source_voix and options.musique else None,
             "voix_db": options.voix_db,
+            "voix_debut_s": options.voix_debut,
             "fondu_s": options.fondu,
             **laterale,
         },
