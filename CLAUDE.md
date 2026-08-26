@@ -174,13 +174,16 @@ la tête de lecture se retrouve au-delà de la fin.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **six projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
 Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
-`patrimoine/` et le socle de production livré aux clients dans `agence/` (qui
-ont chacun leur propre `README.md`). L'outillage ci-dessous existe parce que
-rien de générique ne connaît cette particularité.
+`patrimoine/`, la chaîne de montage automatisée dans `montage-auto/`, le
+répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
+rangement Life-Organizer dans `life-organizer/` et le socle de production livré
+aux clients dans `agence/` (qui ont chacun leur propre `README.md`).
+L'outillage ci-dessous existe parce que rien de générique ne connaît cette
+particularité.
 
 `agence/` est un projet Next.js complet — Supabase, authentification, RLS — et
 non un dossier d'Amorce : ses propres `package.json`, `tsconfig.json` et
@@ -193,18 +196,34 @@ intégration continue vit dans `.github/workflows/agence.yml`.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/` et de `patrimoine/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/`, de `patrimoine/` et de `montage-auto/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
+| `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
+| `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
+| `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
+| `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
+| `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
+| `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
+| `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
+| `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
+| `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
 
 Le hook n'agit que sur une session distante (`CLAUDE_CODE_REMOTE`) : sur un
 poste de développement, le SDK appartient à son propriétaire.
+
+Un plugin extérieur est déclaré dans `.claude/settings.json` :
+`frontend-design`, publié par Anthropic. Il recoupe `/custom-frontend-designer`
+sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu'il
+porte les règles d'identité d'Amorce là où le plugin vise une esthétique
+générique. Le plugin reste utile partout ailleurs.
 
 Deux règles qui découlent de la cohabitation :
 
