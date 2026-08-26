@@ -60,9 +60,16 @@ npm run verify
 
 ## Chaîne KDP — `kdp/`
 
-Pas de suite de tests : le juge est `kdp/pipeline/valider.py`, qui ouvre les
-deux PDF **tels qu'ils partiront chez l'imprimeur** et sort en erreur au
-premier contrôle qui échoue.
+Une seule partie de la chaîne est testable hors fichiers : le validateur de
+niches, qui n'est que du calcul.
+
+```bash
+python3 -m unittest discover -s kdp/tests
+```
+
+Pour tout le reste, le juge est `kdp/pipeline/valider.py`, qui ouvre les deux
+PDF **tels qu'ils partiront chez l'imprimeur** et sort en erreur au premier
+contrôle qui échoue.
 
 ```bash
 python3 kdp/pipeline/valider.py --interieur <pdf> --couverture <pdf>

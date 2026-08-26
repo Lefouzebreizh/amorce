@@ -46,6 +46,9 @@ next-env.d.ts
 # Plan de travail pré-presse KDP (rushes, PDF, épreuves)
 .travail/
 
+# Rapports de validation de niche, écrits là où on lance le script
+rapport_niche.md
+
 # Caches Python de la chaîne pré-presse
 __pycache__/
 *.pyc
