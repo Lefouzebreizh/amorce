@@ -235,6 +235,8 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
 | `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
+| `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
+| `/stack-agence-supabase` | Réaliser un projet client sur la stack de l'agence (Next.js 16, Supabase, RLS, shadcn) : ordre de travail, SQL durci, cinq règles de sécurité. Hors Amorce. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
@@ -299,7 +301,11 @@ montage revient — puis le **lire**, parce qu'un projet restauré dont les lien
 pointent dans le vide s'affiche normalement et sort noir.
 
 Chromium est déjà installé dans cet environnement (`PLAYWRIGHT_BROWSERS_PATH`),
-ne pas lancer `playwright install`.
+ne pas lancer `playwright install`. Sa révision n'est pas celle que Playwright
+attend, d'où `AMORCE_CHROMIUM=/opt/pw-browsers/chromium`, que `fixtures` et
+`verify` acceptent tous les deux — le hook de démarrage la pose désormais dans
+les sessions distantes, mais un `playwright install` réclamé signifie qu'elle
+manque.
 
 ## Pièges connus
 
