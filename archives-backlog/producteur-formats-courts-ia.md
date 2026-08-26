@@ -1,5 +1,15 @@
 # Producteur de formats courts IA
 
+> **En pause — pivot du 26/08/2026.** Rien dans la fiche ne s'est révélé faux :
+> le score de 7/10 tient, la niche est tranchée, l'étape 1 est prête. Ce qui a
+> tranché est ailleurs — il fallait **créer le désir** chez le client, là où
+> l'audit de code trouve un client déjà en douleur. À charge égale, la douleur
+> se vend mieux que l'envie.
+>
+> **Ce qui la ferait remonter :** un cabinet comptable, un organisme de
+> formation ou un éditeur SaaS qui demande spontanément une vidéo. La chaîne
+> technique reste montée, la reprise coûterait un week-end.
+
 > **Hypothèses posées faute de réponses** — trois questions restent ouvertes en
 > bas de fiche. Le score tient entre 6 et 8 selon les réponses ; il ne bascule
 > pas au-delà, c'est ce qui autorise à écrire la fiche maintenant.

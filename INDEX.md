@@ -17,7 +17,8 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 | Idée | Statut | Score | Fiche | Prochain pas |
 | --- | --- | --- | --- | --- |
-| Producteur de formats courts IA | **Faisable** | 7/10 | [fiche](projets-actifs/producteur-formats-courts-ia.md) | Démo TVA 30 s pour 1 cabinet comptable local (< 48 h) |
+| Producteur de formats courts IA | **En pause** | 7/10 | [fiche](archives-backlog/producteur-formats-courts-ia.md) | Reprendre si un prospect demande spontanément |
+| Audit & reprise de code généré par IA | **Faisable** | 8/10 | [fiche](projets-actifs/audit-reprise-code-genere-ia.md) | 1 audit gratuit d'une page, envoyé non sollicité (< 48 h) |
 
 ## Terrain existant (base du critère « Alignement »)
 
