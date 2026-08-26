@@ -1,0 +1,30 @@
+# Lecture et écriture d'images, conversion HEIC/PNG/JPG, lecture des données EXIF
+# qui portent la date de prise de vue — celle sur laquelle le classement s'appuie
+# avant de se rabattre sur la date de modification, souvent celle d'une copie.
+Pillow>=10.3
+
+# Ouverture des HEIC des iPhone, que Pillow ne sait pas décoder seul.
+pillow-heif>=0.16
+
+# Lecture du texte des PDF déjà numériques. Le passage par l'OCR coûte cent fois
+# plus cher : on ne rastérise que les PDF qui ne rendent aucun texte.
+pypdf>=4.2
+
+# Hachage perceptuel (pHash) pour rapprocher deux images visuellement identiques
+# dont les octets diffèrent — recadrage, recompression, capture d'écran.
+ImageHash>=4.3
+
+# Analyse de netteté (variance du laplacien, transformée de Fourier) et détection
+# de visages. La variante « headless » évite d'installer les bibliothèques
+# graphiques de Qt, inutiles pour un outil en ligne de commande.
+opencv-python-headless>=4.9
+
+# Analyse des dates en français dans le texte extrait des documents.
+python-dateutil>=2.9
+
+# Ffmpeg n'est PAS listé ici : c'est un binaire système, pas un paquet Python.
+#   Debian/Ubuntu : sudo apt install ffmpeg tesseract-ocr tesseract-ocr-fra
+#   macOS         : brew install ffmpeg tesseract tesseract-lang
+#
+# Real-ESRGAN et PyTorch non plus : plusieurs gigaoctets pour le seul module
+# d'agrandissement, désactivé par défaut. Qui en a besoin les installe à part.
