@@ -44,6 +44,30 @@ Elles ont toutes coûté un aller-retour. Les relire vaut mieux que les répéte
 - **Un défaut de dessin échappe à tout script.** C'est l'auteur qui a vu le
   regard vide. Mesurer avant de corriger, et avant de contester.
 
+## Manière de travailler avec l'auteur
+
+**Devant un choix technique, trancher et avancer.** Ne pas remonter une question
+dont la réponse se déduit d'une mesure, d'une contrainte du format ou d'une
+règle déjà écrite ici. Choisir la meilleure solution, l'appliquer, et dire en
+une phrase ce qui a été choisi et pourquoi — l'auteur corrige après coup si le
+choix ne lui va pas, et cela coûte toujours moins cher qu'un aller-retour.
+
+Cela ne change rien à la discipline de mesure : **ne pas savoir n'autorise pas à
+deviner.** Devant un fait incertain on mesure, puis on tranche. La règle porte
+sur ce qu'on fait après la mesure, pas sur le droit de s'en passer.
+
+Trois cas continuent de remonter à l'auteur, parce que la bonne réponse n'y est
+pas technique :
+
+- **La voix du livre.** Un titre, une réplique, le ton d'un parchemin. Deux
+  lectures de la demande y donnent deux livres différents.
+- **Ce qui sort vers le monde.** Publier, envoyer, dépenser. Une fois parti,
+  cela ne se reprend pas.
+- **Ce qu'il est le seul à savoir.** Une adresse, une date, un prix, un choix
+  commercial.
+
+Partout ailleurs : décider, faire, et le dire.
+
 ## Ce qui n'est pas versionné
 
 Les planches, les PDF et les épreuves vivent dans `.travail/`, ignoré par git.
