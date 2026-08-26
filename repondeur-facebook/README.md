@@ -157,6 +157,26 @@ Une exécution qui n'a rien trouvé n'envoie rien, et sans `NTFY_SUJET` le reste
 fonctionne. Une alerte qui échoue n'interrompt jamais l'exécution : les
 réponses sont publiées, c'est le travail.
 
+## Éprouver le ton avant tout le reste
+
+Facebook n'est pas nécessaire pour savoir si la voix te ressemble :
+
+```bash
+python3 essai_ton.py                       # huit commentaires inventés
+python3 essai_ton.py -c "ton commentaire"  # un cas à toi
+```
+
+La série couvre les trois gestes **et** les pièges : un texte trop court, un
+bravo, une question, un doute, une confidence, une question dont la réponse
+n'appartient qu'à toi, une attaque, et une tentative de détournement de
+consigne. Le geste attendu s'affiche à côté du geste obtenu — un repère, pas
+un verdict : le modèle a le droit d'hésiter entre « j'aime » et réponse sur un
+commentaire tiède. Ce qui se relit vraiment, ce sont les réponses écrites.
+
+Aucun jeton Facebook n'est lu, aucun journal n'est touché. Seule
+`ANTHROPIC_API_KEY` est nécessaire, et la série entière coûte quelques
+centimes.
+
 ## Vérifier
 
 ```bash
