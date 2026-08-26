@@ -1,43 +1,32 @@
-# Vérification des cinq projets Python du dépôt.
+# Vérification des suites Python du dépôt — toutes celles qui existent, y
+# compris celles qui n'existaient pas quand ce fichier a été écrit.
 #
-# Aucun d'eux n'était gardé jusqu'ici : les suites existaient, mais rien ne les
-# lançait hors du poste de développement. Une régression dans la chaîne KDP ou
-# le répondeur Facebook pouvait donc atterrir sur `main` sans qu'une ligne rouge
-# n'apparaisse nulle part.
+# Aucune n'était gardée jusqu'ici : les tests existaient, mais rien ne les
+# lançait hors du poste de développement. Une régression pouvait donc atterrir
+# sur `main` sans qu'une ligne rouge n'apparaisse nulle part.
 #
-# Les trois dépendances installées ici ne sont pas celles des projets : ce sont
-# celles que les *tests* atteignent, mesurées dans un environnement vierge, pas
-# recopiées d'un requirements.txt. La distinction est délibérée et ne doit pas
-# être « corrigée » vers la liste du hook de démarrage : celui-ci prépare une
-# session où l'on exécute les programmes, ce qui demande streamlit, PyTorch,
-# Pillow et PyMuPDF — plusieurs gigaoctets que les tests ne touchent jamais.
-# Les aligner ferait passer cette vérification de vingt secondes à plusieurs
-# minutes sans couvrir une assertion de plus.
+# Les suites ne sont pas énumérées, elles sont découvertes. La première version
+# de ce fichier en listait cinq ; deux projets sont apparus dans la soirée et
+# sont passés au travers sans que rien ne le signale. Dans un dépôt qui grossit
+# à ce rythme, une liste écrite à la main est fausse le lendemain — et fausse en
+# silence, ce qui est la pire des deux façons.
 #
-# Un seul travail, et non cinq en parallèle, pour la même raison que dans le
-# workflow de Look & Find : les cinq suites réunies durent moins d'une seconde,
-# alors que chaque travail supplémentaire repaierait l'installation.
+# Pas de filtre de chemins non plus, pour la même raison : il faudrait le
+# rallonger à chaque nouveau projet, et l'oubli ne se verrait pas. Le travail
+# entier dure une quinzaine de secondes ; le filtre économiserait moins qu'il ne
+# coûterait en oublis.
+#
+# Les bibliothèques viennent de `.github/requirements-tests.txt` : ce sont
+# celles que les *tests* atteignent, mesurées dans un environnement vierge, et
+# volontairement bien plus courtes que celles du hook de démarrage. Voir l'en-
+# tête de ce fichier-là.
 
 name: Tests Python
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'kdp/**'
-      - 'mon-app-audio/**'
-      - 'montage-auto/**'
-      - 'patrimoine/**'
-      - 'repondeur-facebook/**'
-      - '.github/workflows/tests-python.yml'
   pull_request:
-    paths:
-      - 'kdp/**'
-      - 'mon-app-audio/**'
-      - 'montage-auto/**'
-      - 'patrimoine/**'
-      - 'repondeur-facebook/**'
-      - '.github/workflows/tests-python.yml'
   workflow_dispatch:
 
 concurrency:
@@ -46,7 +35,7 @@ concurrency:
 
 jobs:
   tester:
-    name: Lancer les cinq suites
+    name: Lancer les suites Python
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -58,30 +47,47 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: pip
+          cache-dependency-path: .github/requirements-tests.txt
 
       - name: Installer ce que les tests atteignent
-        run: python -m pip install --quiet pydub tabulate requests
+        run: python -m pip install --quiet -r .github/requirements-tests.txt
 
-      # Chaque suite est une étape à part : le nom de celle qui casse se lit
-      # dans le résumé, sans dérouler le journal. `!cancelled()` les laisse
-      # toutes s'exécuter même après un échec — savoir que trois suites sur cinq
-      # sont rouges vaut mieux que de s'arrêter à la première.
-      - name: Chaîne pré-presse KDP
-        if: ${{ !cancelled() }}
-        run: python -m unittest discover -s kdp/tests
+      # Une seule étape, mais un groupe repliable par suite : le résumé reste
+      # lisible, et `::error::` fait remonter le nom du projet fautif en tête de
+      # l'exécution sans avoir à dérouler le journal.
+      #
+      # La boucle ne s'arrête pas au premier rouge. Savoir que trois suites sur
+      # sept sont cassées vaut mieux que de s'arrêter à la première et de
+      # découvrir les deux autres au prochain tour.
+      - name: Lancer chaque suite
+        run: |
+          echec=0
+          trouvees=0
+          for tests in */tests; do
+            # Un dossier `tests/` sans fichier `test_*.py` n'est pas une suite
+            # Python : le sauter évite qu'un projet d'une autre langue fasse
+            # échouer la découverte.
+            ls "$tests"/test_*.py >/dev/null 2>&1 || continue
+            projet="${tests%/tests}"
+            trouvees=$((trouvees + 1))
+            echo "::group::$projet"
+            if python -m unittest discover -s "$tests" --verbose; then
+              echo "::endgroup::"
+            else
+              echo "::endgroup::"
+              echo "::error title=$projet::La suite de tests de « $projet » est rouge."
+              echec=1
+            fi
+          done
 
-      - name: Studio audio
-        if: ${{ !cancelled() }}
-        run: python -m unittest discover -s mon-app-audio/tests
+          # Une découverte vide serait passée pour un succès : sept suites qui
+          # disparaissent d'un coup est plus probablement un `cd` de travers
+          # qu'un dépôt réellement vidé de ses tests.
+          if [ "$trouvees" -eq 0 ]; then
+            echo "::error::Aucune suite de tests trouvée — la découverte est cassée."
+            exit 1
+          fi
 
-      - name: Chaîne de montage
-        if: ${{ !cancelled() }}
-        run: python -m unittest discover -s montage-auto/tests
-
-      - name: Assistant d'allocation
-        if: ${{ !cancelled() }}
-        run: python -m unittest discover -s patrimoine/tests
-
-      - name: Répondeur Facebook
-        if: ${{ !cancelled() }}
-        run: python -m unittest discover -s repondeur-facebook/tests
+          echo "$trouvees suite(s) exécutée(s)."
+          exit $echec

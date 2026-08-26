@@ -1,0 +1,17 @@
+# Ce que les *tests* du dépôt atteignent — pas ce que les projets exigent pour
+# tourner. La distinction fait la différence entre une vérification de quinze
+# secondes et une de plusieurs minutes : streamlit, PyTorch, Whisper et edge-tts
+# sont absents parce qu'aucune assertion ne les traverse, alors que le hook de
+# démarrage doit bien les installer pour qu'on puisse *exécuter* les programmes.
+#
+# Liste mesurée, pas recopiée : environnement vierge, les suites lancées, et on
+# ajoute ce qui manque. Quand un nouveau test importe une bibliothèque absente
+# d'ici, la CI le dit en clair (« ModuleNotFoundError ») et c'est ce fichier
+# qu'il faut compléter — un seul endroit, exprès.
+
+pydub          # studio audio : découpe et mixage
+tabulate       # assistant d'allocation : tableaux console
+requests       # répondeur Facebook, cours des cryptos
+numpy          # chaîne pré-presse : mesure des planches
+Pillow         # chaîne pré-presse : ouverture des images
+pymupdf        # assistant administratif : lecture des PDF

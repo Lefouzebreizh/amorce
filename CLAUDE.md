@@ -252,13 +252,19 @@ Trois règles qui découlent de la cohabitation :
 - La version de Flutter est épinglée **au même numéro** dans le hook et dans
   `.github/workflows/look-and-find.yml`. Les faire diverger, c'est fabriquer un
   « ça passe chez moi ».
-- Les bibliothèques installées par `.github/workflows/tests-python.yml` sont
-  **volontairement plus courtes** que celles du hook, et il ne faut pas les
-  aligner. Le hook prépare une session où l'on *exécute* les programmes, ce qui
-  demande streamlit, PyTorch, Pillow et PyMuPDF ; le workflow n'installe que ce
-  que les *tests* atteignent, mesuré dans un environnement vierge. Recopier la
-  liste du hook ferait passer la vérification de vingt secondes à plusieurs
-  minutes sans couvrir une assertion de plus.
+- Les bibliothèques de `.github/requirements-tests.txt` sont **volontairement
+  plus courtes** que celles du hook, et il ne faut pas les aligner. Le hook
+  prépare une session où l'on *exécute* les programmes, ce qui demande
+  streamlit, PyTorch et Whisper ; le fichier de la CI n'installe que ce que les
+  *tests* atteignent, mesuré dans un environnement vierge. Recopier la liste du
+  hook ferait passer la vérification de quinze secondes à plusieurs minutes sans
+  couvrir une assertion de plus. Quand un nouveau test importe une bibliothèque
+  absente, la CI le dit en clair et c'est ce fichier-là qu'on complète.
+- **Un nouveau projet Python est gardé sans rien déclarer.**
+  `.github/workflows/tests-python.yml` découvre les `*/tests` contenant des
+  `test_*.py` au lieu de les énumérer. Sa première version en listait cinq et
+  deux projets sont passés au travers le jour même : dans ce dépôt, une liste
+  écrite à la main est fausse le lendemain, et fausse en silence.
 
 ## Vérifier
 
