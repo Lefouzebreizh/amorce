@@ -11,6 +11,13 @@
 # à ce rythme, une liste écrite à la main est fausse le lendemain — et fausse en
 # silence, ce qui est la pire des deux façons.
 #
+# La découverte descend jusqu'au troisième niveau, et pas seulement au premier :
+# les chantiers mis en sommeil vivent sous `archives-backlog/<projet>/tests`. La
+# version précédente ne regardait que `*/tests` et a cessé de les couvrir le jour
+# où ils ont été déplacés — silencieusement, en passant de sept suites à cinq.
+# Or leur condition de reprise est précisément que leurs tests soient restés
+# verts : une suite qu'on ne lance plus ne dit plus rien de ce qu'elle garde.
+#
 # Pas de filtre de chemins non plus, pour la même raison : il faudrait le
 # rallonger à chaque nouveau projet, et l'oubli ne se verrait pas. Le travail
 # entier dure une quinzaine de secondes ; le filtre économiserait moins qu'il ne
@@ -64,12 +71,16 @@ jobs:
         run: |
           echec=0
           trouvees=0
-          for tests in */tests; do
+          # `-maxdepth 3` attrape `<projet>/tests` comme
+          # `archives-backlog/<projet>/tests`, sans descendre dans les
+          # dépendances installées.
+          for tests in $(find . -maxdepth 3 -type d -name tests \
+                              -not -path '*/node_modules/*' | sort); do
             # Un dossier `tests/` sans fichier `test_*.py` n'est pas une suite
             # Python : le sauter évite qu'un projet d'une autre langue fasse
             # échouer la découverte.
             ls "$tests"/test_*.py >/dev/null 2>&1 || continue
-            projet="${tests%/tests}"
+            projet="${tests#./}"; projet="${projet%/tests}"
             trouvees=$((trouvees + 1))
             echo "::group::$projet"
             if python -m unittest discover -s "$tests" --verbose; then
