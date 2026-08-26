@@ -132,6 +132,12 @@ non vérifié en conditions réelles tant qu'un vrai `main.py scan` n'a pas tour
 - **Les adresses EVM se comparent en minuscules, celles de Solana pas.** En
   base58, `A` et `a` sont deux comptes différents : confondre les deux ferait
   passer un faux USDC pour le vrai. `Chaine.normaliser()` tranche, rien d'autre.
+- **Et `sensible_a_la_casse` a un second rôle que son nom n'annonce pas.** Les
+  adresses de cotation rangées au chargement servent aussi de **terme de
+  recherche** DexScreener dans `radar.decouvrir`. Sur une chaîne où la casse
+  compte, l'oublier ne lève rien : la recherche ne correspond à rien, la chaîne
+  entière devient muette, et le rapport se lit comme un marché calme. Vérifier
+  le drapeau avant de déclarer les `quotes`, pas après.
 - **`pairCreatedAt` est en millisecondes**, et absent sur certains pools. Sans
   date, l'âge vaut 0 et le filtre écarte le candidat — c'est le bon sens de
   l'échec : on ne mise pas sur un pool dont on ignore la date.

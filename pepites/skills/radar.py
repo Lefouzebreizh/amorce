@@ -72,6 +72,14 @@ def decouvrir(client: ClientHttp, reglages: Reglages, memoire: Memoire | None = 
             paires.setdefault((paire.jeton.chaine.cle, paire.adresse.lower()), paire)
 
     # 1. Largeur : une recherche par jeton de cotation et par chaîne.
+    #
+    # Attention : `chaine.quotes` contient les adresses **telles que rangées**
+    # au chargement — minuscules sur EVM, casse préservée sur les chaînes qui la
+    # distinguent. Elles servent ici de terme de recherche, ce qui donne à
+    # `sensible_a_la_casse` un second rôle que son nom n'annonce pas : sur une
+    # chaîne où l'adresse est sensible à la casse, l'oublier ne provoque aucune
+    # erreur — la recherche ne correspond simplement à rien, la chaîne entière
+    # devient muette, et le rapport se lit comme un marché calme.
     for chaine in reglages.chaines.values():
         for quote in sorted(chaine.quotes):
             ajouter(dexscreener.rechercher(client, quote, reglages.chaines, releve_le))
