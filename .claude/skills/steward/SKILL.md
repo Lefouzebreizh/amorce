@@ -52,6 +52,22 @@ PR de ce dépôt se relit sur ses justifications autant que sur son diff.
 Découper par intention : trois intentions distinctes font trois commits, même
 si elles ont été écrites dans la même session.
 
+## La CI ne se déclenche pas toute seule sur une PR
+
+**Une PR ouverte par un assistant ne lance aucun workflow.** GitHub refuse
+délibérément de déclencher des exécutions à partir d'un jeton d'application, pour
+éviter qu'un workflow n'en engendre un autre sans fin. Le dépôt n'a d'ailleurs
+jamais enregistré une seule exécution sur l'événement `pull_request`.
+
+Conséquence pratique : **attendre la CI d'une PR, c'est attendre indéfiniment**.
+Avant de fusionner, la déclencher à la main sur la branche —
+`workflow_dispatch`, depuis l'onglet Actions ou par l'API — puis vérifier son
+verdict. C'est la seule preuve disponible que la branche passe.
+
+Ne jamais fusionner sur la seule foi d'une vérification locale quand le
+workflow couvre quelque chose que la machine de développement ne sait pas faire
+— le build Android en est le cas type.
+
 ## Diagnostiquer un échec d'intégration continue
 
 Le workflow `Look & Find` ne se déclenche que sur `look_and_find/**` et sur
