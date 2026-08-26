@@ -293,6 +293,89 @@ Trois règles qui découlent de la cohabitation :
   fois, la couverture a baissé sans qu'une ligne rouge n'apparaisse : dans ce
   dépôt, ce qui énumère est faux le lendemain, et faux en silence.
 
+## Connecteurs
+
+Les connecteurs ne se déclarent pas dans le dépôt : ils vivent dans le compte
+claude.ai et se coupent **par conversation**. Ce qui suit est donc un tri, pas
+une configuration — mais un tri qui, faute d'être écrit, se refait à chaque
+session.
+
+| Connecteur | Ce qu'il sert |
+| --- | --- |
+| Adobe | `media_enhance_speech` pour une voix off, `video_metadata` et `video_render_frame` pour la fiche technique d'un rush, les outils de police pour les couvertures KDP, `image_vectorize`. Le plus sous-employé de tous. |
+| Gmail | Les factures, les avis d'échéance et les accusés de résiliation de `paper-manager` arrivent là. |
+| Google Agenda | Les échéances que calcule le module `calendrier` de Life-Organizer doivent atterrir quelque part. |
+| Google Drive | Source de fichiers pour `nettoyer` et `ranger`. |
+
+Ce qui ne sert pas — écrit plutôt que simplement éteint, parce qu'un connecteur
+se rallume tout seul dans la conversation suivante :
+
+- **Canva** recoupe Adobe sur presque tout et n'apporte rien qu'il n'ait. Deux
+  outils pour le même geste, c'est un choix à refaire à chaque fois.
+- **Indeed** n'a de rapport avec aucun des projets.
+- **Notion** et **Airtable** feraient un second endroit où vit la mémoire du
+  projet. Elle est dans ce fichier, dans `INDEX.md`, dans `inbox/` et dans les
+  compétences ; en ouvrir un deuxième, c'est garantir que dans trois mois
+  personne ne saura plus lequel fait foi.
+- **Vercel** attendra un déploiement réel : `agence/README.md` dit « n'importe
+  quel hébergeur Node ou Vercel », et rien n'y est déployé.
+
+Deux manques, de nature différente :
+
+- **GitHub n'est pas un connecteur**, et depuis une session distante l'API
+  GitHub n'est pas la voie d'ouverture d'une PR. Constaté ici plutôt que
+  supposé : l'application GitHub de Claude est installée sur le compte, sur tous
+  les dépôts, avec l'écriture sur les demandes d'extraction ; `git push` passe ;
+  la politique de sortie du mandataire n'interdit pas `api.github.com` ; et
+  `POST /repos/…/pulls` répond malgré tout `403 GitHub access is not enabled for
+  this session`. Rien à réparer côté GitHub : **la PR s'ouvre depuis l'interface
+  de la session**, sur la vue des changements, et la branche poussée l'attend
+  là. Une session distante mène donc ses PR de bout en bout à un clic près, et
+  ce clic n'est ni un oubli de configuration ni un droit manquant. Ne pas
+  repartir en chasse dans les réglages : ce chemin-là a déjà été parcouru pour
+  rien.
+- **Supabase** est le seul ajout qui se défende. `agence/README.md` demande,
+  pour chaque client, de créer le projet, de coller `schema.sql` **à la main**
+  dans l'éditeur SQL, puis de rejouer `verifier-rls.sql`. C'est le geste le plus
+  répété du socle, et le seul dont l'erreur est une faille plutôt qu'un bogue.
+
+## Les compétences, mesurées plutôt que supposées
+
+Les compétences de `.claude/skills/` ne se marchent pas dessus : mesuré sur
+leurs descriptions, le recoupement le plus fort est de 0,14, et les paires qui
+se croisent négocient déjà leur frontière par écrit — `/extraction-multiformat`
+renvoie explicitement à `/transcription-media` pour la parole, `/tiktok` renvoie
+à `/charte-editoriale` pour le ton. Il n'y a rien à dédoublonner entre elles.
+
+Restait un soupçon : les compétences **générales** que Claude apporte ont des
+descriptions volontairement larges — la générale `pdf` annonce couvrir le
+remplissage de formulaires, ce que `/formulaire-pdf` fait ici avec l'outillage
+de `paper-manager`. Sur le papier, les deux répondent à « remplis ce Cerfa ».
+
+**Essayé, et le soupçon est faux.** Deux phrases posées à un `claude -p` lancé
+dans ce dépôt, avec la vraie liste de compétences :
+
+| Ce qu'on tape | Ce qui se déclenche |
+| --- | --- |
+| « j'ai le cerfa 15646*01 […] tu peux me le remplir ? » | `/formulaire-pdf` |
+| « regarde rush-03.mp4 […] dis-moi ce qui se dit dedans » | `/transcription-media` |
+
+Celle du dépôt gagne dans les deux cas, sans qu'on ait rien à écrire. Une
+description précise et ancrée sur des projets nommés l'emporte sur une
+description large : c'est ce que fait déjà chaque description d'ici, et c'est la
+raison de ne pas les raccourcir.
+
+Cela ne rend pas la règle inutile, cela la remet à sa place — un départage pour
+le jour où ce ne sera pas évident, pas la réparation d'un défaut constaté :
+**sur un formulaire administratif, un média local ou un texte destiné à son
+public, c'est celle du dépôt qui prime.** La générale connaît le format, celle
+du dépôt connaît le projet.
+
+Et une mise en garde qui vaut plus que la règle : **cette page-là se mesure, elle
+ne se relit pas.** Le soupçon ci-dessus était solide à la lecture des deux
+descriptions, et faux à l'essai. Deux minutes de `claude -p` ont tranché ce
+qu'un après-midi de raisonnement aurait mal tranché.
+
 ## Vérifier
 
 Les tests unitaires (`src/lib/__tests__/`) couvrent ce qui est calculable hors
