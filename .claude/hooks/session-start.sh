@@ -109,6 +109,48 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
   fi
 fi
 
+echo "── Amorce : Chromium pour le parcours de vérification"
+# L'environnement fournit un Chromium, mais sous un autre numéro de révision que
+# celui que Playwright réclame — il refuse alors de démarrer et conseille un
+# `playwright install` que cet environnement interdit. Sans ce pont,
+# `npm run fixtures` et `npm run verify` — le seul filet réel du studio — ne
+# s'exécutent pas du tout en session distante.
+#
+# On fabrique une arborescence de liens portant le numéro attendu, pointant sur
+# le navigateur réellement présent. Rien n'est copié : ce sont des liens.
+SOURCE_DIR=/opt/pw-browsers
+SHIM_DIR="$HOME/.cache/amorce-playwright"
+
+if [ -d "$SOURCE_DIR" ] && [ -f "$racine/node_modules/playwright-core/browsers.json" ]; then
+  ATTENDU=$(node -p "require('$racine/node_modules/playwright-core/browsers.json').browsers.find(b => b.name === 'chromium').revision" 2>/dev/null || echo '')
+  PRESENT=$(ls -d "$SOURCE_DIR"/chromium-* 2>/dev/null | head -1 | sed 's/.*chromium-//' || echo '')
+
+  if [ -n "$ATTENDU" ] && [ -n "$PRESENT" ] && [ "$ATTENDU" != "$PRESENT" ]; then
+    HEADLESS="$SHIM_DIR/chromium_headless_shell-$ATTENDU/chrome-headless-shell-linux64"
+    COMPLET="$SHIM_DIR/chromium-$ATTENDU/chrome-linux"
+    mkdir -p "$HEADLESS" "$COMPLET"
+
+    ln -sfn "$SOURCE_DIR/chromium_headless_shell-$PRESENT/chrome-linux/"* "$HEADLESS/" 2>/dev/null || true
+    # Playwright cherche ce nom précis ; le binaire présent s'appelle autrement.
+    ln -sfn "$SOURCE_DIR/chromium_headless_shell-$PRESENT/chrome-linux/headless_shell" "$HEADLESS/chrome-headless-shell"
+    ln -sfn "$SOURCE_DIR/chromium-$PRESENT/chrome-linux/"* "$COMPLET/" 2>/dev/null || true
+
+    for marqueur in INSTALLATION_COMPLETE DEPENDENCIES_VALIDATED; do
+      cp -f "$SOURCE_DIR/chromium_headless_shell-$PRESENT/$marqueur" "$SHIM_DIR/chromium_headless_shell-$ATTENDU/" 2>/dev/null || true
+      cp -f "$SOURCE_DIR/chromium-$PRESENT/$marqueur" "$SHIM_DIR/chromium-$ATTENDU/" 2>/dev/null || true
+    done
+
+    ln -sfn "$SOURCE_DIR"/ffmpeg-* "$SHIM_DIR/" 2>/dev/null || true
+
+    if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+      echo "export PLAYWRIGHT_BROWSERS_PATH=\"$SHIM_DIR\"" >> "$CLAUDE_ENV_FILE"
+    fi
+    echo "   Chromium $PRESENT présenté comme $ATTENDU"
+  else
+    echo "   révision déjà conforme"
+  fi
+fi
+
 # Rend `flutter` et `dart` disponibles à la session elle-même, pas seulement à
 # ce script.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
