@@ -174,19 +174,22 @@ la tête de lecture se retrouve au-delà de la fin.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **huit projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
 Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
 `patrimoine/`, la chaîne de montage automatisée dans `montage-auto/`, le
-répondeur de commentaires Facebook dans `repondeur-facebook/` et l'assistant
-administratif Paper-Manager dans `paper-manager/` (qui ont chacun leur propre
-`README.md`). L'outillage ci-dessous existe parce que rien de générique ne
-connaît cette particularité.
+répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
+rangement Life-Organizer dans `life-organizer/` et l'assistant administratif
+Paper-Manager dans `paper-manager/` (qui ont chacun leur propre `README.md`).
+L'outillage ci-dessous existe parce que rien de générique ne connaît cette
+particularité.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
 | `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/`, de `patrimoine/` et de `montage-auto/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
+| `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
@@ -198,6 +201,8 @@ connaît cette particularité.
 | `/resilier-un-contrat` | Jusqu'à quand on peut encore partir sans frais, quel texte invoquer, et le courrier prêt à signer. |
 | `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
 | `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
+| `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
+| `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |

@@ -326,6 +326,37 @@ def construire_timeline(projet, elements: list):
     return timeline
 
 
+def preparer_montage(rushes: list[Path]) -> bool:
+    """Enchaîne connexion, projet, import et timeline. Rend `True` si tout a tenu.
+
+    Sortie de `main()` le jour où l'orchestrateur a eu besoin de la même
+    séquence : la dupliquer aurait laissé les deux versions diverger sur
+    l'ordre des appels, qui est précisément ce que ce fichier a de délicat.
+    """
+    resolve = connecter_resolve()
+    if resolve is None:
+        return False
+
+    # La cadence est lue avant toute création de projet : c'est elle qui décide
+    # du réglage, et le réglage doit précéder le premier import.
+    cadence = detecter_cadence(rushes[0])
+
+    projet = creer_projet(resolve, cadence)
+    if projet is None:
+        return False
+
+    elements = importer_rushes(resolve, projet, rushes)
+    if not elements:
+        return False
+
+    if construire_timeline(projet, elements) is None:
+        return False
+
+    resolve.OpenPage("edit")
+    print("\nTerminé : Resolve est sur la page Montage, timeline prête.")
+    return True
+
+
 # --------------------------------------------------------------------------
 # Ligne de commande
 # --------------------------------------------------------------------------
@@ -367,28 +398,7 @@ def main() -> int:
             )
         return 1
 
-    resolve = connecter_resolve()
-    if resolve is None:
-        return 1
-
-    # La cadence est lue avant toute création de projet : c'est elle qui décide
-    # du réglage, et le réglage doit précéder le premier import.
-    cadence = detecter_cadence(rushes[0])
-
-    projet = creer_projet(resolve, cadence)
-    if projet is None:
-        return 1
-
-    elements = importer_rushes(resolve, projet, rushes)
-    if not elements:
-        return 1
-
-    if construire_timeline(projet, elements) is None:
-        return 1
-
-    resolve.OpenPage("edit")
-    print("\nTerminé : Resolve est sur la page Montage, timeline prête.")
-    return 0
+    return 0 if preparer_montage(rushes) else 1
 
 
 if __name__ == "__main__":
