@@ -86,9 +86,11 @@ pas des curseurs indépendants.
 ## Ce qu'on ne bouge pas
 
 - **`age_min_heures` en dessous de 6.** Sous six heures, l'accélération explose
-  par construction : le dénominateur sur 24 h n'existe pas encore. Tout jeton de
-  deux heures obtiendrait la note maximale, et c'est précisément la fenêtre du
-  retrait de liquidité. C'est le filtre le plus important de l'outil.
+  par construction : le dénominateur sur 24 h n'existe pas encore. Mesuré — à
+  `age_min_heures: 1`, le profil « pool de deux heures » passe de *écarté* à
+  **93/100**, très au-dessus du seuil d'alerte. L'outil se mettrait à prévenir
+  sur des pools de deux heures, c'est-à-dire précisément dans la fenêtre du
+  retrait de liquidité. C'est le filtre le plus important du radar.
 - **`releves_requis` à 1.** La persistance est le meilleur filtre
   anti-faux-signal du projet et elle ne coûte aucun appel réseau. La désactiver
   pour « voir plus de résultats » revient à alerter sur chaque hoquet
@@ -101,9 +103,14 @@ pas des curseurs indépendants.
   contrôlés, ce qui est le contraire exact de ce que fait cet outil.
 - **La pression `V1/MarketCap` remontée vers 50 %.** La règle qui circule sur les
   réseaux dit « volume 1 h > 50 % de la capitalisation ». À ce niveau la hausse
-  n'est pas à venir, elle est en cours, et on arrive en dernier. Le plateau à
-  5–25 % est un choix argumenté, pas un oubli — le remonter transforme le radar
-  en détecteur de sommets.
+  n'est pas à venir, elle est en cours, et on arrive en dernier.
+  Mesuré, avec `trapeze: [0.1, 0.5, 2.0, 5.0]` : « accumulation » tombe de
+  **100 à 82** (elle perd la totalité des 18 points de pression, son volume à 6 %
+  de la capitalisation passant sous la borne d'entrée) pendant que « sommet en
+  cours » **monte de 40 à 46**. L'écart entre ce qu'on cherche et ce qu'on fuit
+  se réduit de 60 points à 36 : la discrimination perd 40 % de sa force, et le
+  réglage aveugle le détecteur sur la zone même qu'il devait viser. Le plateau à
+  5–25 % est un choix argumenté, pas un oubli.
 
 ## Après un réglage
 
