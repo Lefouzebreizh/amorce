@@ -40,7 +40,7 @@ from dotenv import load_dotenv
 
 from core import redaction, rythme
 from core.alerte import Sonnette, rediger_bilan
-from core.facebook import ErreurGraph, ErreurQuota, Graph
+from core.facebook import VERSION_PAR_DEFAUT, ErreurGraph, ErreurQuota, Graph
 from core.journal import Journal, retenir
 
 ICI = Path(__file__).resolve().parent
@@ -72,7 +72,7 @@ def main() -> int:
         print('❌ ANTHROPIC_API_KEY est attendu dans config.env')
         return 1
 
-    graph = Graph(jeton, id_source, os.getenv('FB_API_VERSION') or 'v23.0')
+    graph = Graph(jeton, id_source, os.getenv('FB_API_VERSION') or VERSION_PAR_DEFAUT)
     plume = anthropic.Anthropic()
     journal = Journal(options.journal)
 
