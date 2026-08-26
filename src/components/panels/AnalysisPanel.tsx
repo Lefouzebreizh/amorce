@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { analyzeProject, type Analysis, type CriterionId } from '@/lib/analysis';
+import { analyzeProject, SFX_PER_10S, type Analysis, type CriterionId } from '@/lib/analysis';
 import { CAPTION_SETS } from '@/lib/autoFinish';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
@@ -124,6 +124,7 @@ export function AnalysisPanel({
   const analysis = useMemo(() => analyzeProject(project), [project]);
   const chopClip = useStudio((s) => s.chopClip);
   const addSoundsOnCuts = useStudio((s) => s.addSoundsOnCuts);
+  const thinSounds = useStudio((s) => s.thinSounds);
   const fillTensionGaps = useStudio((s) => s.fillTensionGaps);
 
   /**
@@ -147,10 +148,28 @@ export function AnalysisPanel({
       };
     }
 
-    fixes.son = {
-      label: '♪ Poser un bruitage sur chaque coupe',
-      run: addSoundsOnCuts,
-    };
+    /*
+     * On ne propose d'en poser que s'il en manque.
+     *
+     * Le bouton était offert sans condition. Sur un montage déjà ponctué, il
+     * conseillait d'en ajouter et faisait baisser le critère qu'il prétend
+     * relever : mesuré, le « son » tombe de 0,60 à 0,45 dès trois bruitages
+     * pour dix secondes, et à zéro au-delà de onze. La note globale pouvait
+     * pourtant monter, les mêmes bruitages nourrissant la tension — c'est ce
+     * qui rendait le défaut invisible.
+     *
+     * Un remède qui aggrave est pire qu'aucun remède, parce qu'on lui fait
+     * confiance. Au-delà de la plage visée, on propose donc l'inverse.
+     */
+    const cuesPer10s =
+      analysis.duration > 0
+        ? ((project.cues.length + project.samples.length) / analysis.duration) * 10
+        : 0;
+
+    fixes.son =
+      cuesPer10s < SFX_PER_10S.max
+        ? { label: '♪ Poser un bruitage sur chaque coupe', run: addSoundsOnCuts }
+        : { label: '♪ Alléger : laisser respirer entre les impacts', run: thinSounds };
 
     if (analysis.slumps.length > 0) {
       fixes.tension = {
@@ -160,7 +179,7 @@ export function AnalysisPanel({
     }
 
     return fixes;
-  }, [project.clips, analysis.slumps, chopClip, addSoundsOnCuts, fillTensionGaps]);
+  }, [project.clips, project.cues, project.samples, analysis.slumps, analysis.duration, chopClip, addSoundsOnCuts, thinSounds, fillTensionGaps]);
 
   if (analysis.shotCount === 0) {
     return (
