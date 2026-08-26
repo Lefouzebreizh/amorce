@@ -192,11 +192,20 @@ générique ne connaît cette particularité.
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
+| `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
+| `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
+| `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
 
 Le hook n'agit que sur une session distante (`CLAUDE_CODE_REMOTE`) : sur un
 poste de développement, le SDK appartient à son propriétaire.
+
+Un plugin extérieur est déclaré dans `.claude/settings.json` :
+`frontend-design`, publié par Anthropic. Il recoupe `/custom-frontend-designer`
+sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu'il
+porte les règles d'identité d'Amorce là où le plugin vise une esthétique
+générique. Le plugin reste utile partout ailleurs.
 
 Deux règles qui découlent de la cohabitation :
 

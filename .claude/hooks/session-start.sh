@@ -87,6 +87,28 @@ echo "── Chaîne de montage : bibliothèques Python"
 # deux paquets-là et fonctionne dès le démarrage de la session.
 python3 -m pip install --quiet --break-system-packages elevenlabs tqdm
 
+echo "── Extraction multiformat : bibliothèques Python"
+# Ce que `/extraction-multiformat` et `/transcription-media` ne peuvent pas
+# faire sans elles : lire un HEIC d'iPhone, dater une photo, ouvrir un EPUB,
+# sortir un tableau de PDF. Quatre secondes d'installation pour des compétences
+# qui, sinon, ne savent qu'annoncer ce qui leur manque.
+# Volontairement absents : opencv (ffmpeg suffit aux images clés),
+# faster-whisper (lourd, et il télécharge son modèle au premier usage),
+# tesseract (paquet système). Les fiches disent comment les ajouter au besoin.
+python3 -m pip install --quiet --break-system-packages \
+  exifread pillow-heif ebooklib pdfplumber chardet mutagen
+
+# `imageio-ffmpeg`, installé plus haut pour le studio audio, embarque un ffmpeg
+# statique complet — mais sous un nom que rien ne trouve. Le lier suffit à
+# rendre la vidéo et l'audio exploitables, sans installer de paquet système.
+if ! command -v ffmpeg >/dev/null 2>&1; then
+  binaire_ffmpeg="$(python3 -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())' 2>/dev/null || true)"
+  if [ -n "$binaire_ffmpeg" ] && [ -x "$binaire_ffmpeg" ]; then
+    ln -sf "$binaire_ffmpeg" /usr/local/bin/ffmpeg 2>/dev/null \
+      && echo "   ffmpeg $("$binaire_ffmpeg" -version | head -1 | cut -d' ' -f3) relié depuis imageio-ffmpeg"
+  fi
+fi
+
 # Rend `flutter` et `dart` disponibles à la session elle-même, pas seulement à
 # ce script.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
