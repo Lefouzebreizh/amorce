@@ -7,7 +7,9 @@ auraient six façons de les lire, et un jour l'un d'eux supprimerait pour de bon
 
 `verifier` doit fonctionner avant toutes les autres, puisque tout le reste
 dépend de la configuration. `nettoyer` lui a succédé : photos floues puis
-photos quasi-identiques, dans cet ordre — les vidéos restent à écrire.
+photos quasi-identiques, dans cet ordre — les vidéos restent à écrire. Puis
+`ranger`, qui vient après pour une raison : ranger d'abord, c'est classer
+soigneusement des doublons et des photos ratées.
 
 Un module écrit se branche ici en trois lignes : sa `commande.py` pose ses
 arguments et reçoit la configuration déjà chargée. Le point d'entrée ne connaît
@@ -22,6 +24,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from modules.classement import commande as commande_classement  # noqa: E402
 from modules.nettoyage import commande as commande_nettoyage  # noqa: E402
 from noyau.config import charger, valider  # noqa: E402
 
@@ -87,20 +90,34 @@ def commande_verifier(options: argparse.Namespace) -> int:
     return 0
 
 
-def commande_nettoyer(options: argparse.Namespace) -> int:
-    """Les photos floues, puis les quasi-identiques. Les vidéos restent à écrire."""
+def config_valide(options: argparse.Namespace) -> dict | None:
+    """La configuration, ou `None` après avoir dit ce qui cloche.
+
+    Refuser de travailler sur une configuration douteuse : les seuils en
+    sortent, et un seuil aberrant met des photos en quarantaine ou range deux
+    mille fichiers au mauvais endroit sans jamais échouer.
+    """
     chemin = config_utilisee(options.config)
     config = charger(chemin)
     problemes = valider(config)
-    if problemes:
-        # Refuser de travailler sur une configuration douteuse : le seuil de
-        # ressemblance en sort, et un seuil aberrant met des photos en
-        # quarantaine sans jamais échouer.
-        print(f"Configuration inutilisable ({chemin}) :")
-        for probleme in problemes:
-            print(f"  · {probleme}")
-        return 1
-    return commande_nettoyage.executer(options, config)
+    if not problemes:
+        return config
+    print(f"Configuration inutilisable ({chemin}) :")
+    for probleme in problemes:
+        print(f"  · {probleme}")
+    return None
+
+
+def commande_nettoyer(options: argparse.Namespace) -> int:
+    """Les photos floues, puis les quasi-identiques. Les vidéos restent à écrire."""
+    config = config_valide(options)
+    return commande_nettoyage.executer(options, config) if config else 1
+
+
+def commande_ranger(options: argparse.Namespace) -> int:
+    """Le rangement dans la bibliothèque : catégorie, thème, date."""
+    config = config_valide(options)
+    return commande_classement.executer(options, config) if config else 1
 
 
 def commande_a_venir(nom: str) -> int:
@@ -128,6 +145,10 @@ def main() -> int:
         if nom == "nettoyer":
             commande_nettoyage.ajouter_arguments(module)
             module.set_defaults(faire=commande_nettoyer)
+            continue
+        if nom == "ranger":
+            commande_classement.ajouter_arguments(module)
+            module.set_defaults(faire=commande_ranger)
             continue
         module.add_argument("--appliquer", action="store_true",
                             help="agir pour de vrai (par défaut : simulation)")

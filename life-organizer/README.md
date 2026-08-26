@@ -9,9 +9,10 @@ une clé d'API est explicitement renseignée pour l'OCR ou l'agrandissement (deu
 options désactivées par défaut).
 
 > État : squelette d'architecture. `organizer_config.json` est complet et
-> validé ; les six modules sont décrits ci-dessous, et le module `nettoyage` est
-> écrit pour les photos — flou puis quasi-doublons (`organizer nettoyer`). Les
-> vidéos abîmées restent à faire.
+> validé ; les six modules sont décrits ci-dessous. Deux sont écrits :
+> `nettoyage` pour les photos — flou puis quasi-doublons (`organizer nettoyer`,
+> les vidéos abîmées restent à faire) — et `classement`, qui range documents,
+> photos et vidéos par thème et par date (`organizer ranger`).
 
 ## Arborescence
 
@@ -84,7 +85,7 @@ tôt ou tard dans une sauvegarde ou un partage d'écran.
 | 3 | `nettoyage` | un dossier de photos et vidéos | liste des flous, des quasi-doublons et des vidéos illisibles ; déplacement en quarantaine |
 | 4 | `conversion` | photos HEIC/PNG, vidéos MKV/AVI | JPG et MP4, avec le gain d'espace mesuré avant de remplacer quoi que ce soit |
 | 5 | `upscale` | photos et vidéos basse définition | version agrandie posée **à côté** de l'originale, jamais à la place |
-| 6 | `classement` | tout ce qui précède | `Photos/2026/08 - Août/`, `Documents/Administratif/Impôts/2026/` |
+| 6 | `classement` | tout ce qui précède | `Photos/2024/03 - mars/`, `Documents/Administratif/Impôts/` |
 
 Le module 1 alimente le 2 (une facture scannée devient une échéance) et le 6
 (un type détecté devient un dossier). Le 3 précède le 4, qui précède le 5 :
@@ -113,6 +114,46 @@ Les outils externes ne sont pas des dépendances Python : `ffmpeg` pour la vidé
 et `tesseract` pour l'OCR s'installent par le gestionnaire de paquets du système.
 `noyau/outils_externes.py` les cherche au démarrage et désactive proprement le
 module concerné s'ils manquent, plutôt que d'échouer au milieu d'un traitement.
+
+## Ranger
+
+```bash
+python3 organizer.py ranger                      # simulation sur dossiers.entree
+python3 organizer.py ranger ~/Téléchargements    # un dossier précis
+python3 organizer.py ranger --vers /disque/Photos --appliquer
+python3 organizer.py ranger ~/Life-Organizer/Bibliotheque   # reprendre la bibliothèque
+```
+
+Ce que la commande décide, et pourquoi :
+
+- **Le thème l'emporte sur la date, pour les documents.** Un avis d'imposition
+  se retrouve par son sujet ; personne n'a jamais cherché « le document
+  administratif de mars 2024 ». Les photos, elles, se rangent par date — c'est
+  la seule chose dont on se souvienne d'un souvenir. Les mots-clés sont dans
+  `classement.themes`, et le premier thème de la liste l'emporte : c'est un
+  ordre de priorité qu'on maîtrise, là où un score laisserait deviner pourquoi
+  la facture d'électricité est partie chez « Banque ».
+- **Le motif dit d'où vient la date.** « mars 2024, d'après nom_de_fichier » ou
+  « d'après la date de modification, faute de mieux ». Sans cette mention, rien
+  ne distingue une photo rangée sur sa vraie date de prise de vue d'une photo
+  rangée sur la date où une sauvegarde a été restaurée — et c'est la différence
+  entre un souvenir retrouvé et dix ans de souvenirs empilés sous le mois
+  courant.
+- **Sans date fiable, direction `À dater`** plutôt qu'une année devinée. Trente
+  photos dans un dossier « À dater » se traitent en dix minutes ; trente photos
+  noyées dans la mauvaise année ne se retrouvent jamais.
+- **Une extension inconnue reste où elle est**, et le compte rendu la nomme :
+  c'est une ligne à ajouter à `classement.categories`. Déplacer vers un
+  fourre-tout ce que la configuration ne sait pas nommer rendrait le rangement
+  plus dur qu'avant.
+- **La bibliothèque n'est pas parcourue d'office**, même si elle se trouve sous
+  un dossier d'entrée : un fichier déjà rangé dont la date d'origine a disparu
+  repartirait dans le mois courant, et le rangement déferait son propre
+  travail. La nommer en argument reste possible.
+- **Le déplacement est vérifié** quand
+  `securite.verifier_empreinte_apres_deplacement` vaut `true` : la copie est
+  relue et comparée à l'original **avant** que celui-ci ne soit retiré. C'est le
+  seul ordre qui protège d'une copie tronquée entre deux disques.
 
 ## Configuration
 

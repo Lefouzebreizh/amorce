@@ -368,9 +368,18 @@ manque.
 
 ## Git
 
-Branche de travail : `claude/claude-md-docs-q02dr7`. Messages de commit en
-français, à l'infinitif, décrivant l'intention plutôt que le fichier touché —
-par exemple « Séparer les trois sources sonores en une table de mixage ».
+Une branche `claude/…` par sujet. Messages de commit en français, à
+l'infinitif, décrivant l'intention plutôt que le fichier touché — par exemple
+« Séparer les trois sources sonores en une table de mixage ».
+
+Les PR se mènent de bout en bout (voir « Rythme de travail »), et se fusionnent
+par commit de fusion, comme le reste de l'historique.
+
+**Partir de `main` à jour, et le revérifier avant d'ouvrir.** Ce dépôt reçoit
+plusieurs sessions en parallèle : deux branches y ont construit Life-Organizer
+chacune de son côté, et la seconde a dû être refaite. Ce qui est fusionné gagne,
+toujours — se couler dans la base commune coûte moins cher que réconcilier deux
+architectures.
 
 `AGENTS.md` est réécrit par `next dev` : le committer avec le reste plutôt que
 de chercher à le retirer d'un diff.
