@@ -14,8 +14,8 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from core.redaction import (  # noqa: E402
-    A_TOI, LONGUEUR_MAX, REACTION, REPONSE, assainir, construire_message,
-    lire_verdict, rediger,
+    A_TOI, LONGUEUR_MAX, MODERATION, REACTION, REPONSE, assainir,
+    construire_message, lire_verdict, rediger,
 )
 
 
@@ -74,10 +74,34 @@ class TestVerdict(unittest.TestCase):
         self.assertFalse(verdict.a_ecrire)
         self.assertFalse(verdict.a_laisser)
 
-    def test_un_commentaire_touchant_revient_a_l_humain(self):
+    def test_un_commentaire_touchant_revient_a_l_humain_et_reste_aime(self):
+        # Le « j'aime » dit « j'ai lu » : c'est ce qu'attend quelqu'un qui se confie.
         verdict = lire_verdict({'geste': A_TOI, 'raison': 'un deuil', 'reponse': ''})
         self.assertTrue(verdict.a_laisser)
+        self.assertTrue(verdict.a_aimer)
         self.assertEqual(verdict.reponse, '')
+
+    def test_un_commentaire_a_moderer_revient_a_l_humain_sans_j_aime(self):
+        # Un pouce levé sous une accusation publique ne dit plus « j'ai lu »
+        # mais « et ça me va », devant toute la communauté.
+        verdict = lire_verdict({'geste': MODERATION, 'raison': 'une attaque',
+                                'reponse': ''})
+        self.assertTrue(verdict.a_laisser)
+        self.assertFalse(verdict.a_aimer)
+        self.assertFalse(verdict.a_ecrire)
+
+    def test_une_moderation_sans_raison_en_recoit_une(self):
+        # La raison s'affiche à l'écran et part dans le journal : elle ne peut
+        # pas être vide, sinon on ne sait pas pourquoi rien n'a été aimé.
+        verdict = lire_verdict({'geste': MODERATION, 'raison': '', 'reponse': ''})
+        self.assertTrue(verdict.raison)
+
+    def test_les_trois_autres_gestes_aiment(self):
+        for geste in (REACTION, REPONSE, A_TOI):
+            with self.subTest(geste=geste):
+                verdict = lire_verdict({'geste': geste, 'raison': 'x',
+                                        'reponse': 'Une vraie réponse.'})
+                self.assertTrue(verdict.a_aimer)
 
     def test_une_reponse_annoncee_mais_vide_retombe_sur_la_reaction(self):
         # Mieux vaut un « j'aime » qu'un commentaire vide publié.

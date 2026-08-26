@@ -21,5 +21,9 @@
         "repo": "anthropics/claude-code"
       }
     }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/ligne-etat.sh"
   }
 }
