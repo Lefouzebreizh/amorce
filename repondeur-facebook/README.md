@@ -157,6 +157,24 @@ Une exécution qui n'a rien trouvé n'envoie rien, et sans `NTFY_SUJET` le reste
 fonctionne. Une alerte qui échoue n'interrompt jamais l'exécution : les
 réponses sont publiées, c'est le travail.
 
+## Se mettre à jour
+
+Le téléphone n'a pas git. `maj.py` va chercher la dernière version du projet
+sur GitHub et remplace les fichiers en place :
+
+```bash
+python3 maj.py
+```
+
+Il ne dépend que de la bibliothèque standard — c'est le script qu'on lance
+quand quelque chose ne va pas, il ne peut pas dépendre d'une installation qui
+serait justement le problème. Et il **n'écrase jamais `config.env` ni
+`journal.jsonl`** : les clés et la mémoire des commentaires traités
+appartiennent à la machine, pas au dépôt.
+
+Le compte rendu ne liste que ce qui a changé. Sur dix fichiers dont un seul
+bouge, c'est cette ligne-là qu'on veut voir.
+
 ## Éprouver le ton avant tout le reste
 
 Facebook n'est pas nécessaire pour savoir si la voix te ressemble :
