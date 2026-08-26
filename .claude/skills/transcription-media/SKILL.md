@@ -83,6 +83,22 @@ Si l'image porte du texte (diapositives, tableau filmé, sous-titres gravés
 dans l'image), passe les images extraites à un OCR — voir
 `references/images.md` du skill `extraction-multiformat`.
 
+## Juger un niveau sonore
+
+Quand la question porte sur la qualité du son plutôt que sur son contenu — « est-ce
+exploitable », « c'est trop fort ? » — une mesure vaut mieux qu'une écoute :
+
+```bash
+ffmpeg -hide_banner -nostats -i FICHIER -filter_complex volumedetect -f null /dev/null 2>&1 \
+  | grep -E "mean_volume|max_volume"
+```
+
+Une moyenne autour de **−14 à −16 dB** avec des crêtes vers **−1 dB** est saine.
+Au-dessus de −10 dB de moyenne, le son est trop fort : les plateformes le
+ramèneront elles-mêmes, en lui prenant sa dynamique au passage — le montage
+sortira donc plus plat que s'il avait été livré au bon niveau. Très en dessous
+de −20 dB, il faudra monter le volume pour entendre, et le souffle avec.
+
 ## Restituer une transcription
 
 Le texte brut de whisper est une matière première, pas une réponse. Ce qu'on
