@@ -167,8 +167,8 @@ réponses sont publiées, c'est le travail.
 
 ## Se mettre à jour
 
-Le téléphone n'a pas git. `maj.py` va chercher la dernière version du projet
-sur GitHub et remplace les fichiers en place :
+Le téléphone n'a pas git. `maj.py` va chercher sur GitHub la dernière version
+fusionnée dans `main` et remplace les fichiers en place :
 
 ```bash
 python3 maj.py

@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
+description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
 ---
 
 # Vérifier ce dépôt
@@ -125,6 +125,22 @@ tant que la chaîne n'a pas tourné sur de vraies planches.
 Ce que `valider.py` ne voit pas, et qu'aucun script ne verra : si le dessin est
 beau, si le texte est juste, si l'histoire tient.
 
+## Paper-Manager — `paper-manager/`
+
+```bash
+python3 -m unittest discover -s paper-manager/tests -q
+```
+
+Couvre ce qui est calculable : arithmétique des échéances et des préavis,
+validation et réécriture d'`admin_config.json`, tableau de bord et fusion des
+alertes, format du fichier de rappels, choix du gabarit de résiliation et
+mentions obligatoires du courrier, résolution des gabarits de formulaire et
+remplissage effectif d'un PDF. Le formulaire de test est fabriqué
+à l'exécution — aucun binaire n'est versionné ici.
+
+Seul PyMuPDF est nécessaire, et il est déjà installé par le hook de démarrage
+pour la chaîne KDP. Ce que les tests ne disent pas : qu'un Cerfa réel a bien les
+noms de champs que son plan lui prête — cela ne se voit qu'en le remplissant.
 ## Studio audio — `mon-app-audio/`
 
 ```bash

@@ -121,6 +121,26 @@ toujours s'annuler séparément.
 Après toute opération qui raccourcit le montage, passer par `reclamp` : sinon
 la tête de lecture se retrouve au-delà de la fin.
 
+## Rythme de travail
+
+Le propriétaire du dépôt travaille depuis un téléphone, souvent par messages
+courts. Deux règles en découlent, et elles priment sur la prudence par défaut :
+
+- **Décider plutôt que demander.** Devant deux options techniques défendables,
+  prendre la meilleure, l'appliquer, et **dire laquelle et pourquoi** en une
+  ligne. Une question posée coûte un aller-retour ; une décision annoncée se
+  corrige d'un mot. Ne s'arrêter que si les deux lectures mènent à deux travaux
+  entièrement différents.
+- **Mener les PR de bout en bout.** Ouvrir la pull request, la vérifier, la
+  faire passer au vert et la fusionner sans attendre qu'on le demande. Les
+  branches de ce dépôt touchent presque toutes au hook de démarrage et à ce
+  fichier : chaque jour d'attente ajoute un conflit à résoudre.
+
+Ce qui reste à demander, et qu'aucune de ces deux règles ne couvre : ce qui
+part **en public au nom de quelqu'un** (un commentaire publié, un message à la
+communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
+Là, l'aller-retour vaut son prix.
+
 ## Modifier ce dépôt
 
 - **Chirurgical.** Chaque ligne changée doit se rattacher à la demande. Ne pas
@@ -174,25 +194,27 @@ la tête de lecture se retrouve au-delà de la fin.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
 Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
 `patrimoine/`, la chaîne de montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
-rangement Life-Organizer dans `life-organizer/` et le socle de production livré
-aux clients dans `agence/` (qui ont chacun leur propre `README.md`).
-L'outillage ci-dessous existe parce que rien de générique ne connaît cette
-particularité.
+rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
+Paper-Manager dans `paper-manager/` et le socle de production livré aux clients
+dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
+code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
+montage. L'outillage ci-dessous existe parce que rien de générique ne connaît
+cette particularité.
 
 `agence/` est un projet Next.js complet — Supabase, authentification, RLS — et
 non un dossier d'Amorce : ses propres `package.json`, `tsconfig.json` et
 `eslint.config.mjs`, ses propres `node_modules`, et l'alias `@/…` pointe vers
 `agence/src/`. Il se vérifie depuis son dossier (`npm run lint`,
 `npm run typecheck`, `npm test`, `npm run build`, plus `npm run test:rls` pour
-les politiques de sécurité), jamais depuis la racine —
-d'où son exclusion de l'ESLint et du `tsconfig.json` de la racine. Son
-intégration continue vit dans `.github/workflows/agence.yml`.
+les politiques de sécurité), jamais depuis la racine — d'où son exclusion de
+l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
+`.github/workflows/agence.yml`.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
@@ -205,7 +227,11 @@ intégration continue vit dans `.github/workflows/agence.yml`.
 | `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
+| `/paper-manager` | Où poser chaque fichier dans l'assistant administratif, la frontière entre ce que l'humain décide et ce que la machine calcule, et les huit pièges qui coûtent un bogue. |
+| `/formulaire-pdf` | Remplir un Cerfa avec `paper-manager` : repérer les champs une fois, écrire un plan rejouable, et les cinq pièges du format PDF. |
+| `/resilier-un-contrat` | Jusqu'à quand on peut encore partir sans frais, quel texte invoquer, et le courrier prêt à signer. |
 | `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
+| `/tiktok` | La ligne éditoriale du volet TikTok, ses huit concepts répétables, les deux seuls dispositifs de tournage et la façon dont un script s'écrit ici. |
 | `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
 | `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
@@ -225,7 +251,7 @@ sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu
 porte les règles d'identité d'Amorce là où le plugin vise une esthétique
 générique. Le plugin reste utile partout ailleurs.
 
-Deux règles qui découlent de la cohabitation :
+Trois règles qui découlent de la cohabitation :
 
 - **Une modification ne touche qu'un seul projet**, sauf configuration à la
   racine qui doit connaître ses voisins — c'est le cas d'`eslint.config.mjs`,
@@ -234,6 +260,13 @@ Deux règles qui découlent de la cohabitation :
 - La version de Flutter est épinglée **au même numéro** dans le hook et dans
   `.github/workflows/look-and-find.yml`. Les faire diverger, c'est fabriquer un
   « ça passe chez moi ».
+- Les bibliothèques installées par `.github/workflows/tests-python.yml` sont
+  **volontairement plus courtes** que celles du hook, et il ne faut pas les
+  aligner. Le hook prépare une session où l'on *exécute* les programmes, ce qui
+  demande streamlit, PyTorch, Pillow et PyMuPDF ; le workflow n'installe que ce
+  que les *tests* atteignent, mesuré dans un environnement vierge. Recopier la
+  liste du hook ferait passer la vérification de vingt secondes à plusieurs
+  minutes sans couvrir une assertion de plus.
 
 ## Vérifier
 
