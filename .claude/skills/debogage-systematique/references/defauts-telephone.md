@@ -8,8 +8,10 @@ La règle : **quand un défaut ne se reproduit pas ici, regarder d'abord du côt
 de l'appareil.** Une journée entière est passée à corriger du code pour des
 symptômes dont deux venaient du téléphone.
 
-Ces observations ne sont pas des correctifs. Plusieurs désignent des manques
-que le code ne traite toujours pas : c'est dit à chaque fois.
+Ces observations ne sont pas des correctifs. Ce que le code traite ou non est
+dit à chaque fois — et vérifié dans le code, pas supposé : une première version
+de cette fiche annonçait trois manques qui n'en étaient pas, faute d'avoir
+cherché les bons mots dans un dépôt écrit en français.
 
 ## Le sélecteur de fichiers rend zéro octet
 
@@ -27,10 +29,13 @@ Ce qui débloque l'utilisateur :
 - l'envoyer dans une conversation avec soi-même, puis le télécharger ;
 - le bouton **Partager**, qui transmet les octets réels.
 
-**Non traité aujourd'hui.** L'import ne distingue pas ce cas d'un format refusé,
-et `public/sw.js` ne déclare pas de cible de partage. Les deux mériteraient de
-l'être : le message générique envoie l'utilisateur chercher un autre format,
-c'est-à-dire dans la mauvaise direction.
+**Traité.** L'import dit explicitement qu'un fichier est arrivé vide et donne le
+geste qui débloque, au lieu du « format non pris en charge » qui envoyait
+chercher un autre encodage — la mauvaise direction, puisque le fichier est bon.
+Le partage fonctionne de bout en bout : `manifest.webmanifest` déclare la cible
+`/partage`, et `public/sw.js` intercepte le dépôt pour le ranger avant de rendre
+la main à l'application. Aucune route serveur n'est nécessaire, ce qui préserve
+le principe du studio.
 
 ## Le débit de l'export s'effondre
 
@@ -63,9 +68,12 @@ Deux pistes, aucune confirmée :
   par plan — l'invariant n°3, nécessaire — et huit plans redécoupés en font bien
   davantage. Les navigateurs Android plafonnent souvent entre six et huit. Le
   remède serait de ne garder chargés que les plans proches de la tête de lecture.
-- **Un fichier rangé vide**, qui produit un lien valide ne décodant rien.
-  `persistence.ts` ne refuse toujours ni d'écrire ni de relire un blob de zéro
-  octet.
+- **Un fichier rangé vide**, qui produit un lien valide ne décodant rien. Un
+  `Blob` de zéro octet est `truthy` et `createObjectURL` lui rend un lien
+  parfaitement formé : le montage se rouvrait normalement et sortait noir, sans
+  message. `persistence.ts` refuse désormais de l'écrire comme de le relire, et
+  le traite comme un fichier perdu — l'élément et les plans qui en dépendaient
+  sont retirés, ce que la reprise savait déjà faire.
 
 **Le test qui tranche**, à demander avant toute correction : ramener la tête de
 lecture à zéro et lire. Si l'image apparaît, l'export capture avant que les
@@ -78,9 +86,10 @@ Le montage a disparu et il a fallu tout réimporter, alors que
 place : les rushes pèsent plusieurs dizaines de mégaoctets, et un navigateur
 efface ce qu'on lui a confié quand il en manque.
 
-**Non traité aujourd'hui.** Rien n'avertit l'utilisateur quand le rangement
-échoue ; le montage disparaît sans un mot. Le lui dire à l'étape Importer
-vaudrait mieux qu'un projet qui s'ouvre vide.
+**Traité.** `usePersistence.ts` pose un `storageError` quand l'écriture échoue —
+« ton montage ne peut pas être conservé : il n'y a plus de place sur cet
+appareil, exporte avant de fermer » — et l'efface dès qu'une écriture repasse.
+Vérifier que l'utilisateur l'a vu avant de chercher ailleurs.
 
 ## La note ne regarde jamais les pixels
 
