@@ -174,12 +174,13 @@ la tête de lecture se retrouve au-delà de la fin.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **six projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **sept projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
 Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
-`patrimoine/` et la chaîne de montage automatisée dans `montage-auto/` (qui ont
-chacun leur propre `README.md`). L'outillage ci-dessous existe parce que rien de
+`patrimoine/`, la chaîne de montage automatisée dans `montage-auto/` et le
+répondeur de commentaires Facebook dans `repondeur-facebook/` (qui ont chacun
+leur propre `README.md`). L'outillage ci-dessous existe parce que rien de
 générique ne connaît cette particularité.
 
 | Élément | Ce qu'il fait |
@@ -191,6 +192,8 @@ générique ne connaît cette particularité.
 | `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
+| `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
+| `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |

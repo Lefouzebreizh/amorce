@@ -5,8 +5,8 @@ description: Lance la vérification du dépôt — typecheck, lint et tests pour
 
 # Vérifier ce dépôt
 
-Trois projets indépendants, trois séquences. **Ne lance que celle du projet
-touché** : les tests de l'un ne disent rien des autres, et tout lancer triple
+Des projets indépendants, une séquence chacun. **Ne lance que celle du projet
+touché** : les tests de l'un ne disent rien des autres, et tout lancer multiplie
 l'attente pour rien.
 
 Commence par `git status --short` pour savoir où le changement a atterri.
@@ -83,6 +83,31 @@ tant que la chaîne n'a pas tourné sur de vraies planches.
 
 Ce que `valider.py` ne voit pas, et qu'aucun script ne verra : si le dessin est
 beau, si le texte est juste, si l'histoire tient.
+
+## Studio audio — `mon-app-audio/`
+
+```bash
+python3 -m unittest discover -s mon-app-audio/tests
+```
+
+Le plan d'atténuation se vérifie sans son, sur des intervalles ; le reste du
+mixage sur un signal synthétisé, sans jamais toucher au disque. Ce qu'aucun
+test ne dit : si le mixage **s'entend** bien. Cela demande une écoute.
+
+## Répondeur Facebook — `repondeur-facebook/`
+
+```bash
+python3 -m unittest discover -s repondeur-facebook/tests
+```
+
+Hors réseau : ni Facebook, ni modèle. Ils couvrent le dépouillement des
+réponses de l'API, le tri, la mémoire des commentaires traités, la mise au
+propre du texte et la mise en forme de la notification.
+
+Ce qu'ils ne disent pas, et qui doit figurer dans le compte rendu : si le jeton
+a les bonnes permissions, si le ton ressemble à celui de l'auteur, et si le
+modèle met de côté les bons commentaires. Cela se regarde **en simulation**
+(sans `--publier`), sur de vrais commentaires.
 
 ## Ce que la vérification ne dit pas
 

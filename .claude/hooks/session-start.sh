@@ -76,6 +76,11 @@ echo "── Studio audio : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages \
   streamlit pydub imageio-ffmpeg edge-tts requests
 
+echo "── Répondeur Facebook : bibliothèques Python"
+# `requests` est déjà là pour le studio audio ; ces deux-là ne le sont pas, et
+# sans elles les tests du répondeur ne se lancent même pas.
+python3 -m pip install --quiet --break-system-packages anthropic python-dotenv
+
 echo "── Assistant d'allocation : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
 
@@ -115,4 +120,4 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
