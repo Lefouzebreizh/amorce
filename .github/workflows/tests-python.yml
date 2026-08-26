@@ -1,0 +1,87 @@
+# Vérification des cinq projets Python du dépôt.
+#
+# Aucun d'eux n'était gardé jusqu'ici : les suites existaient, mais rien ne les
+# lançait hors du poste de développement. Une régression dans la chaîne KDP ou
+# le répondeur Facebook pouvait donc atterrir sur `main` sans qu'une ligne rouge
+# n'apparaisse nulle part.
+#
+# Les trois dépendances installées ici ne sont pas celles des projets : ce sont
+# celles que les *tests* atteignent, mesurées dans un environnement vierge, pas
+# recopiées d'un requirements.txt. La distinction est délibérée et ne doit pas
+# être « corrigée » vers la liste du hook de démarrage : celui-ci prépare une
+# session où l'on exécute les programmes, ce qui demande streamlit, PyTorch,
+# Pillow et PyMuPDF — plusieurs gigaoctets que les tests ne touchent jamais.
+# Les aligner ferait passer cette vérification de vingt secondes à plusieurs
+# minutes sans couvrir une assertion de plus.
+#
+# Un seul travail, et non cinq en parallèle, pour la même raison que dans le
+# workflow de Look & Find : les cinq suites réunies durent moins d'une seconde,
+# alors que chaque travail supplémentaire repaierait l'installation.
+
+name: Tests Python
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kdp/**'
+      - 'mon-app-audio/**'
+      - 'montage-auto/**'
+      - 'patrimoine/**'
+      - 'repondeur-facebook/**'
+      - '.github/workflows/tests-python.yml'
+  pull_request:
+    paths:
+      - 'kdp/**'
+      - 'mon-app-audio/**'
+      - 'montage-auto/**'
+      - 'patrimoine/**'
+      - 'repondeur-facebook/**'
+      - '.github/workflows/tests-python.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: tests-python-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tester:
+    name: Lancer les cinq suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version figée plutôt que « latest » : une image qui change de Python du
+      # jour au lendemain ferait rougir une branche que personne n'a touchée.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installer ce que les tests atteignent
+        run: python -m pip install --quiet pydub tabulate requests
+
+      # Chaque suite est une étape à part : le nom de celle qui casse se lit
+      # dans le résumé, sans dérouler le journal. `!cancelled()` les laisse
+      # toutes s'exécuter même après un échec — savoir que trois suites sur cinq
+      # sont rouges vaut mieux que de s'arrêter à la première.
+      - name: Chaîne pré-presse KDP
+        if: ${{ !cancelled() }}
+        run: python -m unittest discover -s kdp/tests
+
+      - name: Studio audio
+        if: ${{ !cancelled() }}
+        run: python -m unittest discover -s mon-app-audio/tests
+
+      - name: Chaîne de montage
+        if: ${{ !cancelled() }}
+        run: python -m unittest discover -s montage-auto/tests
+
+      - name: Assistant d'allocation
+        if: ${{ !cancelled() }}
+        run: python -m unittest discover -s patrimoine/tests
+
+      - name: Répondeur Facebook
+        if: ${{ !cancelled() }}
+        run: python -m unittest discover -s repondeur-facebook/tests

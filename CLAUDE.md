@@ -210,7 +210,7 @@ sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu
 porte les règles d'identité d'Amorce là où le plugin vise une esthétique
 générique. Le plugin reste utile partout ailleurs.
 
-Deux règles qui découlent de la cohabitation :
+Trois règles qui découlent de la cohabitation :
 
 - **Une modification ne touche qu'un seul projet**, sauf configuration à la
   racine qui doit connaître ses voisins — c'est le cas d'`eslint.config.mjs`,
@@ -219,6 +219,13 @@ Deux règles qui découlent de la cohabitation :
 - La version de Flutter est épinglée **au même numéro** dans le hook et dans
   `.github/workflows/look-and-find.yml`. Les faire diverger, c'est fabriquer un
   « ça passe chez moi ».
+- Les bibliothèques installées par `.github/workflows/tests-python.yml` sont
+  **volontairement plus courtes** que celles du hook, et il ne faut pas les
+  aligner. Le hook prépare une session où l'on *exécute* les programmes, ce qui
+  demande streamlit, PyTorch, Pillow et PyMuPDF ; le workflow n'installe que ce
+  que les *tests* atteignent, mesuré dans un environnement vierge. Recopier la
+  liste du hook ferait passer la vérification de vingt secondes à plusieurs
+  minutes sans couvrir une assertion de plus.
 
 ## Vérifier
 
