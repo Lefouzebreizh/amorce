@@ -1,19 +1,23 @@
 ---
 name: extraction-multiformat
 description: >-
-  Lire et extraire le contenu d'un fichier que Claude ne peut pas ouvrir
-  nativement, en écrivant et exécutant un script Python local plutôt qu'en
-  déclarant le format illisible. Couvre les images (JPEG, PNG, HEIC, RAW) et
-  leurs métadonnées EXIF/GPS, les livres numériques (EPUB, MOBI), les archives
-  (ZIP, RAR, 7z, tar), les bases SQLite, les fichiers d'encodage douteux et
-  surtout les binaires dont on ignore le format ou dont l'extension ment.
-  Commence toujours par identifier le fichier sur ses octets de tête, car un
-  « .jpg » d'iPhone est souvent un HEIC et un « .xls » d'ERP souvent un CSV.
-  À utiliser dès qu'on te soumet un fichier à analyser, résumer, fouiller ou
-  convertir et qu'il n'est pas du texte simple — y compris quand la demande dit
-  seulement « c'est quoi ce fichier », « tu peux lire ça », « extrais-moi les
-  données de ce truc », « d'où vient cette photo », « ça s'ouvre avec quoi »,
-  ou quand un fichier n'a pas d'extension du tout. Pour la vidéo, l'audio et la
+  Ouvrir un fichier non textuel pour répondre à une question dessus, en écrivant
+  et exécutant un script Python local plutôt qu'en déclarant le format
+  illisible. Couvre les images (JPEG, PNG, HEIC, RAW/CR2/NEF) — métadonnées
+  EXIF, date de prise de vue, géolocalisation, appareil, et le **texte présent
+  dans l'image** par OCR (capture d'écran, scan, tableau photographié) ; les
+  livres numériques (EPUB, MOBI) dont on veut les chapitres ou le texte brut ;
+  les archives (ZIP, RAR, 7z, tar) ; les bases SQLite ; les encodages douteux ;
+  et les fichiers dont on ignore le format, qui n'ont pas d'extension, dont
+  l'extension ment, ou **que l'application habituelle refuse d'ouvrir** — un
+  « .xls » qu'Excel déclare invalide est presque toujours un CSV. Commencer
+  toujours par identifier le fichier sur ses octets de tête, car un « .jpg »
+  d'iPhone est souvent un HEIC. À utiliser dès qu'un fichier local doit être lu,
+  fouillé, daté, trié ou converti — y compris quand la demande n'évoque aucune
+  difficulté et décrit seulement la tâche : « extrais les trois premiers
+  chapitres de cet epub », « trie ces photos par date de prise de vue »,
+  « récupère le texte de cette capture », « c'est quoi ce fichier », « d'où
+  vient cette photo », « ça s'ouvre avec quoi ». Pour la vidéo, l'audio et la
   transcription de parole, utiliser plutôt le skill transcription-media.
 ---
 

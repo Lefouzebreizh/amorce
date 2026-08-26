@@ -1,19 +1,24 @@
 ---
 name: transcription-media
 description: >-
-  Analyser une vidéo ou un fichier audio que Claude ne peut pas lire
-  directement — MP4, MOV, MKV, WebM, AVI, MP3, WAV, M4A, FLAC, OGG — en
-  exécutant ffmpeg et un modèle de transcription local plutôt qu'en déclarant
-  le fichier inaccessible. Sert à transcrire la parole avec horodatage, extraire
-  la piste sonore, tirer des images clés, lire la fiche technique (durée,
-  codecs, pistes), récupérer des sous-titres incrustés, ou repérer un passage
-  précis. À utiliser dès qu'on te soumet un média et qu'on demande ce qu'il
-  raconte, ce qui s'y dit, ce qu'on y voit, combien de temps il dure ou à quel
-  moment un sujet est abordé — y compris quand la demande dit seulement
-  « écoute ça », « résume cette vidéo », « qu'est-ce qu'ils disent »,
-  « transcris-moi cet enregistrement », « fais-moi les notes de cette réunion »,
-  ou « à quelle minute il parle de X ». Tout se fait en local, sans clé API et
-  sans que le fichier quitte la machine.
+  Ouvrir une vidéo ou un fichier audio pour dire ce qu'il contient — MP4, MOV,
+  MKV, WebM, AVI, MP3, WAV, M4A, FLAC, OGG — en exécutant ffmpeg et un modèle
+  de transcription local, plutôt qu'en déclarant le fichier inaccessible.
+  Transcrire la parole avec horodatage, quelle que soit la langue, la durée ou
+  l'accent ; extraire la piste sonore ; tirer des images clés pour voir ce qui
+  est filmé ; lire la fiche technique (durée, codecs, pistes) ; **récupérer des
+  sous-titres incrustés**, qui donnent le texte exact sans transcrire ; repérer
+  le moment où un sujet est abordé. À utiliser dès qu'un média est soumis et
+  qu'on demande ce qu'il raconte, ce qui s'y dit, ce qu'on y voit, combien de
+  temps il dure ou à quelle minute quelque chose survient — y compris sans nom
+  de fichier précis, et quand la demande dit seulement « écoute ça », « résume
+  cette vidéo », « qu'est-ce qu'ils disent », « transcris l'interview », « fais
+  les notes de cette réunion », « il y a des sous-titres dedans ? ». Tout se
+  fait en local, sans clé API et sans que le fichier quitte la machine.
+  Ne pas déclencher pour une question théorique ou un conseil d'outillage sans
+  média à ouvrir (« quel modèle whisper choisir », « mp4 ou mkv »), ni pour un
+  défaut de l'application Amorce — son désynchronisé, export vide — qui relève
+  de debogage-systematique.
 ---
 
 # Vidéo et audio
