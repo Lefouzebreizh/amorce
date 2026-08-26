@@ -79,10 +79,18 @@ python3 -m pip install --quiet --break-system-packages \
 echo "── Assistant d'allocation : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
 
+echo "── Chaîne de montage : bibliothèques Python"
+# PyTorch est volontairement absent, pour la même raison que dans le studio
+# audio : deux gigaoctets pour un seul chemin de code. Il ne sert ici qu'à dire
+# s'il y a un GPU avant de lancer Wav2Lip — et Wav2Lip lui-même est un dépôt à
+# cloner, avec ses propres dépendances. La voix off, elle, ne demande que ces
+# deux paquets-là et fonctionne dès le démarrage de la session.
+python3 -m pip install --quiet --break-system-packages elevenlabs tqdm
+
 # Rend `flutter` et `dart` disponibles à la session elle-même, pas seulement à
 # ce script.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
