@@ -88,9 +88,22 @@ qu'on attaque d'une niche qu'on surveille.
 
 | Axe | Poids | Pourquoi ce poids |
 | --- | ---: | --- |
-| Demande (BSR) | 50 | Sans acheteurs, ni la concurrence ni le prix ne comptent. |
+| Demande (BSR) | 60 | Sans acheteurs, ni la concurrence ni le prix ne comptent. |
 | Concurrence (avis) | 30 | C'est le mur à franchir, mais il se contourne. |
-| Rentabilité (prix) | 20 | La seule des trois qu'on décide soi-même, après coup. |
+| Rentabilité (prix) | 10 | La seule des trois qu'on décide soi-même, après coup. |
+
+La rentabilité en valait 20 et les a rendus à la demande, après un premier
+recalibrage sur trois niches contrastées où elle a noté 20/20 aux trois. La
+quasi-totalité des brochés KDP se vend entre 9,99 et 19,99, c'est-à-dire sur le
+palier plat de la courbe : l'axe distribuait une prime à l'inscription plutôt
+qu'une mesure. Ses dix points restants suffisent à attraper les deux cas où le
+prix dit vraiment quelque chose — le livre à 4,99 qui ne couvrira pas son
+impression, celui à 34,99 que personne n'achètera.
+
+**C'est le genre de constat à répéter sur vos propres relevés.** Un axe dont la
+note ne bouge jamais ne sépare rien, quel que soit son poids ; si la concurrence
+se met elle aussi à noter toujours pareil, c'est ses bornes qu'il faut resserrer,
+pas son poids qu'il faut augmenter.
 
 Les deux premières échelles sont **logarithmiques**, parce que le BSR et les avis
 le sont : entre 5 000 et 10 000 il y a le même écart de réalité qu'entre 100 000

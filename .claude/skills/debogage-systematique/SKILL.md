@@ -95,6 +95,12 @@ lieu du graphe audio. L'agent `revue-invariants` fait cette relecture.
 **4. Remonte à la source de la mauvaise valeur.** Là où l'erreur éclate est
 rarement là où elle naît. Voir `references/tracage-a-rebours.md`.
 
+Si le défaut est signalé depuis un téléphone et ne se reproduit pas en
+vérification, la source est souvent l'appareil lui-même — fichier importé à
+zéro octet, débit d'export effondré, décodeurs vidéo saturés. Ces cas sont
+mesurés dans `references/defauts-telephone.md`, à lire avant de chercher dans
+le code.
+
 **5. Formule une hypothèse qui prédit quelque chose d'observable.** « Je pense
 que X est la cause, donc si je regarde Y je devrais voir Z. » Une hypothèse
 qu'aucune observation ne peut démentir n'en est pas une.
