@@ -23,6 +23,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../ar_view/presentation/pages/ar_view_page.dart';
 import '../../../favorites/presentation/providers/favorites_providers.dart';
 import '../../../favorites/presentation/widgets/favorite_button.dart';
+import '../../../scanner/presentation/pages/raw_answer_page.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/usecases/best_offer.dart';
 import '../widgets/alternative_card.dart';
@@ -185,7 +186,19 @@ class _PhotoHeader extends StatelessWidget {
       pinned: true,
       expandedHeight: 280,
       backgroundColor: AppColors.ink,
-      actions: [FavoriteButton(product: product), const SizedBox(width: 4)],
+      actions: [
+        FavoriteButton(product: product),
+        // Discret et sans étiquette : c'est un outil de diagnostic, pas une
+        // fonction du parcours. Il ne doit pas concurrencer le cœur.
+        IconButton(
+          tooltip: 'Réponse du modèle',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const RawAnswerPage()),
+          ),
+          icon: const Icon(Icons.data_object_rounded, size: 20),
+        ),
+        const SizedBox(width: 4),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,

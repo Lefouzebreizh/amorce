@@ -71,6 +71,10 @@ class ReglesDeVerdict(unittest.TestCase):
 class Bareme(unittest.TestCase):
     """Les propriétés qui doivent survivre à un recalibrage des seuils."""
 
+    def test_les_trois_poids_font_cent(self):
+        """Le rapport annonce « / 100 » : redistribuer sans recompter le ferait mentir."""
+        self.assertEqual(POIDS_DEMANDE + POIDS_CONCURRENCE + POIDS_RENTABILITE, 100.0)
+
     def test_la_note_reste_dans_ses_bornes(self):
         for bsr, avis, prix in ((1, 0, 14.99), (5_000_000, 90_000, 0.0),
                                 (75_000, 300, 9.99)):
