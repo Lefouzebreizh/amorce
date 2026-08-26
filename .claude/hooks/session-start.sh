@@ -1,6 +1,7 @@
 #!/bin/bash
 # Prépare le conteneur d'une session distante : dépendances du studio Amorce,
-# SDK Flutter et dépendances de Look & Find, bibliothèques de la chaîne KDP.
+# SDK Flutter et dépendances de Look & Find, bibliothèques de la chaîne KDP,
+# du studio audio et de l'assistant d'allocation.
 #
 # Pourquoi ce script existe : le conteneur d'une session web démarre sur un
 # dépôt fraîchement cloné, sans `node_modules` et sans SDK Flutter. Sans lui,
@@ -80,10 +81,43 @@ echo "── Répondeur Facebook : bibliothèques Python"
 # sans elles les tests du répondeur ne se lancent même pas.
 python3 -m pip install --quiet --break-system-packages anthropic python-dotenv
 
+echo "── Assistant d'allocation : bibliothèques Python"
+python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
+
+echo "── Chaîne de montage : bibliothèques Python"
+# PyTorch est volontairement absent, pour la même raison que dans le studio
+# audio : deux gigaoctets pour un seul chemin de code. Il ne sert ici qu'à dire
+# s'il y a un GPU avant de lancer Wav2Lip — et Wav2Lip lui-même est un dépôt à
+# cloner, avec ses propres dépendances. La voix off, elle, ne demande que ces
+# deux paquets-là et fonctionne dès le démarrage de la session.
+python3 -m pip install --quiet --break-system-packages elevenlabs tqdm
+
+echo "── Extraction multiformat : bibliothèques Python"
+# Ce que `/extraction-multiformat` et `/transcription-media` ne peuvent pas
+# faire sans elles : lire un HEIC d'iPhone, dater une photo, ouvrir un EPUB,
+# sortir un tableau de PDF. Quatre secondes d'installation pour des compétences
+# qui, sinon, ne savent qu'annoncer ce qui leur manque.
+# Volontairement absents : opencv (ffmpeg suffit aux images clés),
+# faster-whisper (lourd, et il télécharge son modèle au premier usage),
+# tesseract (paquet système). Les fiches disent comment les ajouter au besoin.
+python3 -m pip install --quiet --break-system-packages \
+  exifread pillow-heif ebooklib pdfplumber chardet mutagen
+
+# `imageio-ffmpeg`, installé plus haut pour le studio audio, embarque un ffmpeg
+# statique complet — mais sous un nom que rien ne trouve. Le lier suffit à
+# rendre la vidéo et l'audio exploitables, sans installer de paquet système.
+if ! command -v ffmpeg >/dev/null 2>&1; then
+  binaire_ffmpeg="$(python3 -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())' 2>/dev/null || true)"
+  if [ -n "$binaire_ffmpeg" ] && [ -x "$binaire_ffmpeg" ]; then
+    ln -sf "$binaire_ffmpeg" /usr/local/bin/ffmpeg 2>/dev/null \
+      && echo "   ffmpeg $("$binaire_ffmpeg" -version | head -1 | cut -d' ' -f3) relié depuis imageio-ffmpeg"
+  fi
+fi
+
 # Rend `flutter` et `dart` disponibles à la session elle-même, pas seulement à
 # ce script.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
