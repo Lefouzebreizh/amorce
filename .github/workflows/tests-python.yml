@@ -64,7 +64,13 @@ jobs:
         run: |
           echec=0
           trouvees=0
-          for tests in */tests; do
+          # Deux niveaux, pas un : les chantiers mis en sommeil vivent sous
+          # `archives-backlog/<projet>/tests`. Leur code tourne et leurs tests
+          # passent — les sortir de la découverte en même temps que du chemin
+          # racine les aurait laissés pourrir sans qu'aucune ligne rouge ne le
+          # dise, ce qui est précisément le silence contre lequel ce fichier a
+          # été écrit.
+          for tests in */tests */*/tests; do
             # Un dossier `tests/` sans fichier `test_*.py` n'est pas une suite
             # Python : le sauter évite qu'un projet d'une autre langue fasse
             # échouer la découverte.
@@ -81,9 +87,9 @@ jobs:
             fi
           done
 
-          # Une découverte vide serait passée pour un succès : sept suites qui
-          # disparaissent d'un coup est plus probablement un `cd` de travers
-          # qu'un dépôt réellement vidé de ses tests.
+          # Une découverte vide serait passée pour un succès : toutes les
+          # suites qui disparaissent d'un coup, c'est plus probablement un `cd`
+          # de travers qu'un dépôt réellement vidé de ses tests.
           if [ "$trouvees" -eq 0 ]; then
             echo "::error::Aucune suite de tests trouvée — la découverte est cassée."
             exit 1
