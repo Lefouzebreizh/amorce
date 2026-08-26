@@ -5,10 +5,10 @@ strictement personnel : tout reste sur la machine, sauf le seul appel qui a
 besoin de sortir (la lecture d'un document par un modèle de vision, et
 uniquement si elle est activée).
 
-Ce fichier est le plan du projet. Écrits à ce jour : le modèle de données, la
-configuration, le tableau de bord des abonnements, les rappels d'agenda et le
-remplissage de formulaires PDF, avec leurs tests. Les modules de lecture des
-documents et de courriers sont des coquilles portant leur justification.
+Ce fichier est le plan du projet. Trois modules sur quatre sont écrits et
+vérifiés : calendrier, abonnements, résiliation — plus le remplissage de
+formulaires PDF. Seul le module de lecture des documents (scan et extraction)
+reste une coquille portant sa justification.
 
 ## Les quatre modules
 
@@ -216,6 +216,48 @@ Quatre choix qui méritent d'être connus avant d'y toucher :
   `œ`, `€` ou le tiret cadratin y deviennent `?` sans le moindre avertissement.
   Le module les transpose (`œ` → `oe`, `€` → `EUR`) — mesuré, pas supposé.
 
+## Le courrier de résiliation
+
+```bash
+python3 paper.py resilier maif-habitation              # un PDF prêt à signer
+python3 paper.py resilier orange-fibre --texte         # à coller dans un formulaire en ligne
+python3 paper.py resilier salle-sport --gabarit resiliation_simple --motif "un déménagement"
+```
+
+Quatre gabarits dans `modeles/`, et **c'est la situation juridique qui choisit**,
+pas un `si` à l'intérieur d'un texte : un gabarit truffé de conditions n'est plus
+relisible, et c'est une lettre qu'on signe de son nom.
+
+| Situation | Gabarit | Date d'effet |
+| --- | --- | --- |
+| Avis d'échéance **reçu** trop tard (moins de 15 jours avant la fin du préavis) | `resiliation_avis_tardif` | au terme |
+| Le préavis peut encore être respecté | `resiliation_echeance` | au terme — ni mois de plus, ni pénalité |
+| Assurance ou mutuelle en cours depuis plus d'un an, hors délai de préavis | `resiliation_infra_annuelle` | un mois après réception |
+| Tout le reste | `resiliation_simple` | un mois |
+
+Ce qui mérite d'être connu avant d'y toucher :
+
+- **Le gabarit garantit le fond.** `controler` vérifie que le courrier composé
+  porte la référence client, le contrat visé, la date d'effet et la demande de
+  confirmation écrite — et **refuse de produire un fichier** s'il en manque une.
+  Une lettre sans référence client se fait classer sans suite.
+- **Le gabarit doit s'accorder avec la date d'effet calculée.** Un texte qui
+  annonce un effet « un mois après réception » sous une date d'effet calculée au
+  terme se contredit, et c'est le genre d'incohérence qu'un service client
+  relève avant de refuser. Un test compose le courrier de chaque contrat à
+  quatre dates différentes pour s'en assurer.
+- **Un avis d'échéance à venir ne fonde aucun droit.** `date_avis_echeance` est
+  une date de réception : tant qu'elle est dans le futur, la lettre ne peut pas
+  affirmer avoir reçu ce courrier.
+- **Le texte invoqué dépend de qui est en face** : code des assurances pour un
+  assureur, code de la sécurité sociale pour une complémentaire santé, code de
+  la consommation pour tout le reste. Citer le mauvais affaiblit précisément la
+  lettre qu'on voulait rendre opposable.
+- **La lettre est datée du jour de sa composition**, pas de son impression :
+  tous ses délais sont calculés à cette date.
+- **Rien n'est envoyé.** Un courrier administratif parti tout seul ne se
+  rattrape pas.
+
 ## Ce qui n'est pas fait, et pourquoi
 
 - **Pas de base SQLite.** Quelques dizaines d'abonnements et quelques milliers
@@ -284,8 +326,8 @@ python3 paper.py etat [--traiter ID | --reporter ID]       # écrit
 python3 paper.py agenda [--vers coffre/rappels.ics]        # écrit
 python3 paper.py champs <formulaire.pdf> [--gabarit]       # écrit
 python3 paper.py remplir <plan.json> [--abonnement <id>]   # écrit
+python3 paper.py resilier <id> [--texte] [--motif ...]     # écrit
 python3 paper.py classer --source coffre/entree            # module 1, à venir
-python3 paper.py resilier <id-abonnement>                  # module 4, à venir
 ```
 
 ## Vérifier
@@ -297,7 +339,8 @@ python3 -m unittest discover -s paper-manager/tests -v
 Les tests couvrent ce qui est calculable : l'arithmétique des échéances et des
 préavis, la validation et la réécriture de la configuration, le tableau de bord
 et la fusion des alertes, le format du fichier de rappels jusqu'au pliage des
-lignes, la résolution des gabarits et le remplissage effectif d'un PDF. Le formulaire de test est
+lignes, le choix du gabarit de résiliation et les mentions obligatoires du
+courrier, la résolution des gabarits et le remplissage effectif d'un PDF. Le formulaire de test est
 **fabriqué à l'exécution** — ce dépôt ne versionne aucun binaire, et un Cerfa
 vierge en est un.
 
@@ -306,7 +349,7 @@ une session distante par le hook du dépôt, pour la chaîne pré-presse KDP.
 
 ## Prochaine étape
 
-`core/resiliation.py` : le courrier prêt à signer. C'est le geste que le tableau
-de bord réclame et que rien ne produit encore ; `formulaires.py` sait déjà
-remplir un PDF, il reste à écrire les gabarits et les mentions qui rendent une
-résiliation opposable.
+Le module 1, le seul qui manque : `scan.py`, `extraction.py`, `nommage.py` et
+`journal.py`. C'est aussi le seul qui sort sur le réseau, et celui qui débloque
+les deux types d'alerte encore inertes — la facture attendue qui n'arrive pas,
+et le document qu'on peut jeter.

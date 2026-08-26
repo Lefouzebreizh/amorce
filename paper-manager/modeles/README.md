@@ -3,15 +3,21 @@
 Un gabarit par situation, en texte, avec des trous au format Jinja. Le module
 `core/resiliation.py` les remplit ; il n'en écrit jamais un de zéro.
 
-Prévus :
+Écrits :
 
-| Fichier | Situation |
-| --- | --- |
-| `resiliation_simple.txt` | Contrat sans engagement, résiliable à tout moment. |
-| `resiliation_echeance.txt` | Reconduction tacite, résiliation à la date anniversaire dans les délais de préavis. |
-| `resiliation_avis_tardif.txt` | Avis d'échéance reçu trop tard : la résiliation reste possible hors délai. |
-| `resiliation_infra_annuelle.txt` | Assurance ou complémentaire souscrite depuis plus d'un an. |
-| `contestation_facture.txt` | Montant contesté, avec la demande de justificatif. |
+| Fichier | Situation | Date d'effet |
+| --- | --- | --- |
+| `resiliation_echeance.txt` | Le préavis peut encore être respecté. | au terme |
+| `resiliation_avis_tardif.txt` | Avis d'échéance **reçu** moins de quinze jours avant la fin du préavis. | au terme |
+| `resiliation_infra_annuelle.txt` | Assurance ou mutuelle en cours depuis plus d'un an, hors délai. | un mois |
+| `resiliation_simple.txt` | Tout le reste. Texte neutre, sans affirmation sur l'engagement. | un mois |
+
+`core.resiliation.choisir_gabarit` décide ; `--gabarit` force. Le texte invoqué
+(`{fondement}`) dépend de la catégorie du contrat, parce qu'un assureur et un
+opérateur télécom ne relèvent pas du même code.
+
+Reste à écrire : `contestation_facture.txt`. Elle vise un **document** et non un
+contrat — sans `journal.py`, elle ne saurait pas de quelle facture elle parle.
 
 Les mentions qui doivent figurer dans **tous** les courriers de résiliation, et
 qui sont la raison d'être des gabarits : identité et adresse complètes,

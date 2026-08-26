@@ -11,8 +11,9 @@ Sous-commandes écrites :
     agenda    les échéances vers un fichier .ics repris par l'agenda du téléphone
     champs    ce qu'un PDF déclare, et le squelette de plan qui va avec
     remplir   un formulaire rempli à partir d'un plan et de mes données
+    resilier  le courrier de résiliation, prêt à relire et à signer
 
-Sous-commandes prévues : `classer` (module 1) et `resilier` (module 4).
+Sous-commande prévue : `classer` (module 1).
 
 Règle commune : **rien n'est écrasé sans le dire.** Une commande qui déplace ou
 renomme simule par défaut et n'agit qu'avec `--appliquer` ; une commande qui
@@ -37,6 +38,7 @@ from core.calendrier import evenements, rendre
 from core.config import ErreurConfiguration, charger, enregistrer_alertes
 from core.formulaires import ErreurFormulaire, charger_plan, lire_champs, remplir, resoudre
 from core.modele import StatutAlerte
+from core.resiliation import ErreurCourrier, composer, rendre_pdf
 
 RACINE = Path(__file__).resolve().parent
 
@@ -182,6 +184,38 @@ def commande_remplir(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def commande_resilier(arguments: argparse.Namespace) -> int:
+    configuration = charger(arguments.config)
+    abonnement = configuration.abonnement(arguments.abonnement)
+    aujourdhui = date.today()
+    courrier = composer(configuration, abonnement, aujourdhui,
+                        gabarit=arguments.gabarit, motif=arguments.motif or "")
+
+    extension = "txt" if arguments.texte else "pdf"
+    sortie = Path(arguments.vers) if arguments.vers else (
+        configuration.classement.courriers
+        / f"{aujourdhui:%Y-%m-%d}_resiliation_{abonnement.id}.{extension}")
+    if sortie.exists() and not arguments.ecraser:
+        raise ErreurCourrier(f"{sortie} existe déjà — passer --ecraser pour le remplacer")
+
+    if arguments.texte:
+        sortie.parent.mkdir(parents=True, exist_ok=True)
+        sortie.write_text(f"Objet : {courrier.objet}\n\n{courrier.corps}\n", encoding="utf-8")
+    else:
+        rendre_pdf(courrier, configuration.identite, sortie)
+
+    print(f"{sortie}\n  gabarit « {courrier.gabarit} », effet demandé au "
+          f"{courrier.date_effet:%d/%m/%Y}.")
+    if courrier.recommande:
+        print("  À envoyer en recommandé avec accusé de réception : en cas de litige, "
+              "c'est la preuve de l'envoi qui fait foi.")
+    if abonnement.resiliable_en_ligne and abonnement.adresse_resiliation:
+        print(f"  Ce contrat se résilie aussi en ligne : {abonnement.adresse_resiliation}"
+              " — le courrier reste utile comme preuve (--texte pour le coller dans un formulaire).")
+    print("  Rien n'a été envoyé : relire, signer, poster.")
+    return 0
+
+
 def analyser(argv: list[str] | None = None) -> argparse.Namespace:
     analyseur = argparse.ArgumentParser(prog="paper.py", description=__doc__.splitlines()[0])
     commandes = analyseur.add_subparsers(dest="commande", required=True)
@@ -217,6 +251,17 @@ def analyser(argv: list[str] | None = None) -> argparse.Namespace:
     remplir_.add_argument("--config", default=str(RACINE / "admin_config.json"))
     remplir_.set_defaults(fonction=commande_remplir)
 
+    resilier = commandes.add_parser("resilier", help="produire le courrier de résiliation")
+    resilier.add_argument("abonnement", help="identifiant du contrat à résilier")
+    resilier.add_argument("--gabarit", help="forcer un gabarit de modeles/ (sans l'extension)")
+    resilier.add_argument("--motif", help="motif à citer, si on souhaite en donner un")
+    resilier.add_argument("--texte", action="store_true",
+                          help="sortir en texte, pour coller dans un formulaire en ligne")
+    resilier.add_argument("--vers", help="fichier de sortie")
+    resilier.add_argument("--ecraser", action="store_true", help="remplacer la sortie existante")
+    resilier.add_argument("--config", default=str(RACINE / "admin_config.json"))
+    resilier.set_defaults(fonction=commande_resilier)
+
     return analyseur.parse_args(argv)
 
 
@@ -224,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
     arguments = analyser(argv)
     try:
         return arguments.fonction(arguments)
-    except (ErreurConfiguration, ErreurFormulaire) as erreur:
+    except (ErreurConfiguration, ErreurFormulaire, ErreurCourrier) as erreur:
         print(f"paper.py : {erreur}", file=sys.stderr)
         return 2
 

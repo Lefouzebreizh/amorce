@@ -1,6 +1,6 @@
 ---
 name: paper-manager
-description: Recette pour développer l'assistant administratif Paper-Manager (`paper-manager/`) — où poser chaque fichier, la frontière entre ce que l'humain décide et ce que la machine calcule, et les huit pièges d'arithmétique de dates, de montants et de réécriture de configuration qui ont chacun déjà coûté un bogue. À utiliser dès qu'on touche à `paper-manager/`, qu'on ajoute un module au parcours scan / calendrier / abonnements / résiliation, ou qu'une demande parle d'abonnements suivis, d'échéance, de préavis, de reconduction tacite, de tableau de bord de contrats ou de rappels d'agenda.
+description: Recette pour développer l'assistant administratif Paper-Manager (`paper-manager/`) — où poser chaque fichier, la frontière entre ce que l'humain décide et ce que la machine calcule, et les huit pièges d'arithmétique de dates, de montants et de réécriture de configuration qui ont chacun déjà coûté un bogue. À utiliser dès qu'on écrit ou modifie du code sous `paper-manager/` : un module du parcours scan / calendrier / abonnements / résiliation, un réglage de `admin_config.json`, une sous-commande de `paper.py`, un test. Pour *se servir* de l'assistant plutôt que le développer, voir `/resilier-un-contrat` et `/formulaire-pdf`.
 ---
 
 # Travailler sur Paper-Manager

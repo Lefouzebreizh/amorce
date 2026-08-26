@@ -191,6 +191,7 @@ ci-dessous existe parce que rien de générique ne connaît cette particularité
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
 | `/paper-manager` | Où poser chaque fichier dans l'assistant administratif, la frontière entre ce que l'humain décide et ce que la machine calcule, et les huit pièges qui coûtent un bogue. |
 | `/formulaire-pdf` | Remplir un Cerfa avec `paper-manager` : repérer les champs une fois, écrire un plan rejouable, et les cinq pièges du format PDF. |
+| `/resilier-un-contrat` | Jusqu'à quand on peut encore partir sans frais, quel texte invoquer, et le courrier prêt à signer. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
