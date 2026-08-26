@@ -109,6 +109,12 @@ non vérifié en conditions réelles tant qu'un vrai `main.py scan` n'a pas tour
   un rejet ou un blanc-seing, selon le sens de l'erreur.
 - **GoPlus omet les champs qu'il ne sait pas** au lieu de les mettre à zéro.
   D'où `_drapeau()`, qui rend `None` sur l'absence. Voir l'invariant 2.
+- **La part de liquidité verrouillée est la seule grandeur du bouclier dont une
+  valeur *basse* est le danger.** Toutes les autres — taxes, concentration — se
+  croisent au maximum ; celle-là se croise au **minimum**, sinon une source
+  généreuse annule le rejet d'une source prudente et rouvre la porte au retrait
+  de liquidité. Ce défaut a été introduit une fois, en écrivant `_maximum` par
+  symétrie avec les voisines.
 - **Une liste `lp_holders` vide rend `None`, pas `0`.** Zéro pour cent de
   liquidité verrouillée est un rejet net ; « on ne sait pas » ne doit pas en
   être un.

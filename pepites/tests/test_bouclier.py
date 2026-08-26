@@ -62,6 +62,22 @@ class TestJugement(unittest.TestCase):
         self.assertIs(securite.verdict, Verdict.REJETE)
         self.assertIn("verrouillée", securite.rejets[0])
 
+    def test_une_source_genereuse_ne_couvre_pas_une_liquidite_non_verrouillee(self):
+        # La part verrouillée est la seule grandeur du bouclier dont une valeur
+        # *basse* est le danger : la croiser au maximum laisserait un « 95 % »
+        # annuler un « 10 % » et rouvrirait la porte au retrait de liquidité.
+        prudente = Constat(source="GoPlus", honeypot=False, lp_verrouillee_pct=10.0)
+        genereuse = Constat(source="Autre", honeypot=False, lp_verrouillee_pct=95.0)
+        securite = juger([genereuse, prudente], REGLAGES, est_evm=True)
+        self.assertIs(securite.verdict, Verdict.REJETE)
+        self.assertEqual(securite.lp_verrouillee_pct, 10.0)
+
+    def test_la_concentration_se_croise_bien_dans_l_autre_sens(self):
+        # Là, c'est le haut qui inquiète : on retient la source la plus alarmante.
+        basse = Constat(source="GoPlus", honeypot=False, top10_detenteurs_pct=12.0)
+        haute = Constat(source="Autre", honeypot=False, top10_detenteurs_pct=71.0)
+        self.assertIs(juger([basse, haute], REGLAGES, est_evm=True).verdict, Verdict.REJETE)
+
     def test_dix_porteurs_qui_tiennent_la_moitie_sont_un_rejet(self):
         concentre = Constat(source="GoPlus", honeypot=False, top10_detenteurs_pct=71.0)
         self.assertIs(juger([concentre], REGLAGES, est_evm=True).verdict, Verdict.REJETE)

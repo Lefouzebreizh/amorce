@@ -46,8 +46,24 @@ def _rassurant(constats: list[Constat], champ: str) -> bool | None:
 
 
 def _maximum(constats: list[Constat], champ: str) -> float | None:
+    """Pour les mesures où c'est le **haut** qui inquiète : taxes, concentration."""
     valeurs = [getattr(c, champ) for c in constats if getattr(c, champ) is not None]
     return max(valeurs) if valeurs else None
+
+
+def _minimum(constats: list[Constat], champ: str) -> float | None:
+    """Pour les mesures où c'est le **bas** qui inquiète — il n'y en a qu'une, et
+    elle est facile à croiser du mauvais côté.
+
+    La part de liquidité verrouillée est la seule grandeur du bouclier dont une
+    valeur *basse* est le danger. La croiser au maximum reviendrait à retenir la
+    source la plus optimiste, ce qui contredit la règle du fichier et, en
+    pratique, laisse une source généreuse annuler le rejet d'une autre : un
+    « 95 % verrouillé » couvrirait un « 10 % » et rouvrirait la porte au retrait
+    de liquidité, qui est le mécanisme d'arnaque le plus courant.
+    """
+    valeurs = [getattr(c, champ) for c in constats if getattr(c, champ) is not None]
+    return min(valeurs) if valeurs else None
 
 
 def juger(constats: list[Constat], reglages: ReglagesBouclier, est_evm: bool) -> Securite:
@@ -65,7 +81,7 @@ def juger(constats: list[Constat], reglages: ReglagesBouclier, est_evm: bool) ->
     metadonnees = _alarmant(constats, "metadonnees_modifiables")
     verifie = _rassurant(constats, "contrat_verifie")
     renonce = _rassurant(constats, "proprietaire_renonce")
-    lp = _maximum(constats, "lp_verrouillee_pct")
+    lp = _minimum(constats, "lp_verrouillee_pct")
     top10 = _maximum(constats, "top10_detenteurs_pct")
 
     rejets: list[str] = []
