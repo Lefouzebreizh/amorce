@@ -121,6 +121,26 @@ toujours s'annuler séparément.
 Après toute opération qui raccourcit le montage, passer par `reclamp` : sinon
 la tête de lecture se retrouve au-delà de la fin.
 
+## Rythme de travail
+
+Le propriétaire du dépôt travaille depuis un téléphone, souvent par messages
+courts. Deux règles en découlent, et elles priment sur la prudence par défaut :
+
+- **Décider plutôt que demander.** Devant deux options techniques défendables,
+  prendre la meilleure, l'appliquer, et **dire laquelle et pourquoi** en une
+  ligne. Une question posée coûte un aller-retour ; une décision annoncée se
+  corrige d'un mot. Ne s'arrêter que si les deux lectures mènent à deux travaux
+  entièrement différents.
+- **Mener les PR de bout en bout.** Ouvrir la pull request, la vérifier, la
+  faire passer au vert et la fusionner sans attendre qu'on le demande. Les
+  branches de ce dépôt touchent presque toutes au hook de démarrage et à ce
+  fichier : chaque jour d'attente ajoute un conflit à résoudre.
+
+Ce qui reste à demander, et qu'aucune de ces deux règles ne couvre : ce qui
+part **en public au nom de quelqu'un** (un commentaire publié, un message à la
+communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
+Là, l'aller-retour vaut son prix.
+
 ## Modifier ce dépôt
 
 - **Chirurgical.** Chaque ligne changée doit se rattacher à la demande. Ne pas
