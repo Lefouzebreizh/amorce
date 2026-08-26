@@ -21,9 +21,21 @@ existe pour que la même idée reçoive la même note à trois semaines d'interv
 4. **Router** la fiche vers le bon dossier selon le score.
 5. **Écrire** la fiche et mettre à jour `INDEX.md`.
 
-Les étapes 1 et 2 se font dans la conversation. Ne pas écrire de fiche avant
-d'avoir les réponses : une fiche fondée sur des hypothèses inventées vaut moins
-que pas de fiche, parce qu'elle a l'air fiable.
+Les étapes 1 et 2 se font dans la conversation.
+
+**Ne pas écrire de fiche sur des hypothèses inventées en silence** : elle a
+l'air fiable et ne l'est pas. Mais attendre les réponses n'est pas toujours
+juste non plus. Le test est la **robustesse du score** : noter l'idée sous la
+lecture la plus pessimiste des questions ouvertes, puis sous la plus optimiste.
+
+- L'écart franchit une frontière de routage (≤ 3 / 4–6 / ≥ 7) → l'idée part en
+  `/inbox/` avec les questions, et rien d'autre. Écrire la suite serait tirer à
+  pile ou face.
+- L'écart reste dans la même case → écrire la fiche tout de suite, avec les
+  hypothèses **nommées en tête** et les questions en bas. Une fiche annotée fait
+  avancer ; une question sans fiche fait attendre.
+
+Dans les deux cas les hypothèses s'écrivent, jamais elles ne se supposent.
 
 ## La grille de notation
 
@@ -84,6 +96,12 @@ L'idée se greffe-t-elle sur ce qui tourne déjà ?
 | 7–8 | Projet distinct mais même pile technique et même public. |
 | 5–6 | Sixième front, sans rapport avec les cinq autres. |
 | 1–4 | Sixième front **et** pile inconnue **et** public différent. |
+
+### Quand la moyenne tombe entre deux
+
+Arrondir **vers le bas**. Le demi-point qui ferait basculer vient toujours du
+critère qu'on connaît le moins bien, et c'est toujours celui qu'on a noté avec
+optimisme. Un 6,5 est un 6.
 
 ### La correction qui empêche de se mentir
 

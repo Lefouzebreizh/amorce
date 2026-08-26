@@ -17,7 +17,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 | Idée | Statut | Score | Fiche | Prochain pas |
 | --- | --- | --- | --- | --- |
-| _(vide — rien n'est encore entré)_ | — | — | — | — |
+| Producteur de formats courts IA | **Faisable** | 7/10 | [fiche](projets-actifs/producteur-formats-courts-ia.md) | Démo non sollicitée à 1 entreprise locale (< 48 h) |
 
 ## Terrain existant (base du critère « Alignement »)
 
