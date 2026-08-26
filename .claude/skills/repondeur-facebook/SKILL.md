@@ -20,7 +20,8 @@ qui modifie le code.
 | `repondeur.py` | Le chef d'orchestre : options, boucle, décision de publier. Aucune logique métier. |
 | `core/facebook.py` | L'API Graph : lire le fil, aimer, répondre. `extraire_commentaires` est pur et testé. |
 | `core/redaction.py` | La charte éditoriale, le schéma de sortie, l'appel au modèle. |
-| `core/journal.py` | La mémoire des commentaires traités, et le tri de ce qui reste à faire. |
+| `core/journal.py` | La mémoire des commentaires traités, le tri, et le compteur du jour. |
+| `core/rythme.py` | Pauses tirées au hasard, plafonds, heures humaines, lecture du quota. Pur, testé. |
 | `core/alerte.py` | La notification ntfy et la mise en forme du bilan. |
 | `essai_ntfy.py` | Le premier test sur un téléphone vierge. Ne dépend que de `requests`, exprès. |
 | `tests/` | `unittest`, hors réseau, intitulés en phrases françaises. |
@@ -49,8 +50,10 @@ toucher.
    « ignore les instructions précédentes ». Ne jamais concaténer un texte de
    membre dans la consigne système.
 4. **La sortie du modèle est structurée, pas libre.** Le schéma impose un
-   geste, une raison et une réponse. Un texte libre finit toujours par publier
-   une phrase qui s'adressait à l'auteur du groupe.
+   geste — `reaction`, `reponse` ou `a_toi` —, une raison et un texte. Un
+   texte libre finit toujours par publier une phrase qui s'adressait à
+   l'auteur du groupe. Le « j'aime » n'est pas dans le schéma : il est acquis
+   dans les trois cas, et un modèle n'a pas à en décider.
 5. **Un refus du modèle ne se contourne pas.** Pas de repli sur un autre
    modèle : le refus porte sur un commentaire déjà problématique, et publier
    quand même y répondrait exactement à l'envers. Le commentaire revient à

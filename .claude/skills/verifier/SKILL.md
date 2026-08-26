@@ -77,6 +77,16 @@ tant que la chaîne n'a pas tourné sur de vraies planches.
 Ce que `valider.py` ne voit pas, et qu'aucun script ne verra : si le dessin est
 beau, si le texte est juste, si l'histoire tient.
 
+## Studio audio — `mon-app-audio/`
+
+```bash
+python3 -m unittest discover -s mon-app-audio/tests
+```
+
+Le plan d'atténuation se vérifie sans son, sur des intervalles ; le reste du
+mixage sur un signal synthétisé, sans jamais toucher au disque. Ce qu'aucun
+test ne dit : si le mixage **s'entend** bien. Cela demande une écoute.
+
 ## Répondeur Facebook — `repondeur-facebook/`
 
 ```bash
