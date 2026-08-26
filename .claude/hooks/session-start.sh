@@ -72,7 +72,7 @@ echo "── Studio audio : bibliothèques Python"
 # PyTorch et Whisper sont volontairement absents : six gigaoctets à installer à
 # chaque nouvel environnement, pour un chemin d'alignement que l'application sait
 # remplacer par la détection de silences. Qui en a besoin les installe avec
-# `pip install -r mon-app-audio/requirements.txt`.
+# `pip install -r archives-backlog/mon-app-audio/requirements.txt`.
 python3 -m pip install --quiet --break-system-packages \
   streamlit pydub imageio-ffmpeg edge-tts requests
 
@@ -85,4 +85,4 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests"

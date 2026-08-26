@@ -87,22 +87,24 @@ L'idée se greffe-t-elle sur ce qui tourne déjà ?
 | **Look & Find** (`look_and_find/`) | Application mobile. Flutter, Riverpod 3. | ~76 fichiers |
 | **Amorce** (racine) | Montage vidéo vertical, 100 % navigateur. Next.js 15, React 19, Tailwind v4. | ~56 fichiers |
 | **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures Amazon KDP. Python. | ~26 fichiers |
-| **Studio audio** (`mon-app-audio/`) | Outil audio. Python, Streamlit. | ~8 fichiers |
-| **Patrimoine** (`patrimoine/`) | Allocation d'actifs. Python. | ~2 fichiers |
+| _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. Python, Streamlit. | **en sommeil** |
+| _Patrimoine_ (`archives-backlog/patrimoine/`) | Allocation d'actifs. Python. | **en sommeil** |
 
-**Un dossier n'est pas un chantier.** Les deux derniers sont des amorces, pas
-des bases de code sur lesquelles s'appuyer : s'aligner sur `patrimoine/` et ses
-deux fichiers ne réutilise rien. Recompter avant de noter — la liste vieillit,
-et un alignement adossé à une coquille vide est la façon la plus discrète de
-gonfler un score :
+**Un chantier en sommeil ne porte pas un alignement.** Les deux derniers sont
+sous `archives-backlog/` : leur code tourne et leurs tests passent, mais
+personne ne les fait avancer. S'y greffer réveille un chantier au lieu d'en
+accompagner un — plafonner l'alignement à 6 dans ce cas.
+
+Ne pas juger l'ampleur au nombre de fichiers : `patrimoine/` en compte deux et
+fait passer vingt-sept tests. Compter les tests verts plutôt, et recompter
+avant de noter — la liste vieillit :
 
 ```bash
 find <dossier> -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.dart' \
   -o -name '*.py' \) -not -path '*/.dart_tool/*' -not -path '*/build/*' | wc -l
 ```
 
-Sous ~15 fichiers, plafonner l'alignement à 6 : il n'y a pas encore de quoi
-se greffer. Ne pas se fier aux dates de commit pour juger de l'activité — un
+Ne pas se fier non plus aux dates de commit pour juger de l'activité — un
 clone frais les écrase toutes le même jour.
 
 | Note | Ce que ça veut dire |
