@@ -124,7 +124,8 @@
       "verifier_integrite": true,
       "duree_minimale_secondes": 1.0,
       "taille_minimale_ko": 64,
-      "signaler_sans_piste_video": true
+      "signaler_sans_piste_video": true,
+      "ignorer_si_modifiee_recemment_minutes": 5
     }
   },
 
