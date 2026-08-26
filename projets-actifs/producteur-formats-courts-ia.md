@@ -75,6 +75,43 @@ mois de développement n'apportent pas : est-ce que quelqu'un paie pour ça.
    heures de main, l'activité plafonne à un salaire, jamais plus. L'étape 2
    existe pour mesurer cette heure avant de s'engager.
 
+## Niche
+
+Trois critères décident, et aucun n'est la taille du marché : **produire sans
+tourner** (il n'y a pas de caméra sur place), **récurrence** du besoin, et un
+**budget marketing déjà dépensé ailleurs** — un client qui ne paie rien ne
+commencera pas par nous.
+
+| Niche | Sans tournage | Récurrence | Budget | Accès | Concurrence | Note |
+| --- | --- | --- | --- | --- | --- | --- |
+| Professions réglementées | 10 | 9 | 9 | 5 | 8 | **8/10** |
+| Organismes de formation | 9 | 8 | 7 | 7 | 6 | 7/10 |
+| Éditeurs SaaS B2B | 9 | 7 | 8 | 6 | 5 | 7/10 |
+| Artisans du bâtiment | 6 | 7 | 5 | 8 | 6 | 6/10 |
+| Auteurs indés / KDP | 10 | 5 | 3 | 9 | 7 | 5/10 (plafonné) |
+
+**Retenue : professions réglementées** (experts-comptables, avocats, notaires).
+
+Le contenu y est purement informationnel — « ce qui change au 1ᵉʳ janvier pour
+votre TVA » en 30 s — donc l'absence de tournage cesse d'être une limite pour
+devenir le format lui-même. La loi changeant en permanence, la récurrence est
+structurelle et non commerciale : un contenu daté doit être refait, personne
+n'a besoin d'être convaincu de renouveler.
+
+Le point faible est l'accès (5/10) : cycle long, profession prudente, secrétariat
+filtrant. Il est assumé, parce qu'il est la contrepartie de la faible
+concurrence — les niches faciles d'accès sont saturées par construction.
+
+**Écartées, et pourquoi :**
+
+- **Restauration, immobilier, salles de sport, e-commerce** — premières idées de
+  tout le monde, donc prix effondrés ; et les deux premières exigent de filmer
+  le réel, exactement ce qu'on ne sait pas faire.
+- **Auteurs indés / KDP** — l'accès est excellent et l'alignement avec `kdp/`
+  séduisant, mais le budget à 3/10 déclenche le plafond de la grille. Une niche
+  sans argent n'est pas une niche. Bon terrain d'entraînement gratuit, jamais
+  un client.
+
 ## Questions ouvertes
 
 Les réponses déplacent le score ; la fiche sera reprise ensuite.
@@ -82,9 +119,7 @@ Les réponses déplacent le score ; la fiche sera reprise ensuite.
 1. **Les avatars sont-ils indispensables, ou négociable ?** Les retirer fait
    passer la fiche de 7 à 8 — c'est le levier le plus rentable de toute la
    grille.
-2. **Un secteur en tête ?** (restauration, immobilier, artisanat, coaching…)
-   Sans angle vertical, le critère rentabilité tombe de 5 à 3, et le plafond
-   s'applique : score 5.
+2. ~~Un secteur en tête ?~~ **Tranchée** — voir « Niche » ci-dessous.
 3. **Forfait mensuel ou vidéo à l'unité ?** Le forfait rend l'activité
    prévisible et finançable ; l'unité la condamne à recommencer la vente chaque
    mois.
