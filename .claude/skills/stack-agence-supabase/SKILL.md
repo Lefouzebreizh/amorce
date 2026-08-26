@@ -19,14 +19,29 @@ jamais y ajouter Supabase, une Server Action ou une route serveur.
 Un projet client vit dans **son propre dossier à la racine** — `client-xyz/` —
 au même titre que les autres projets du dépôt, qu'énumère `CLAUDE.md` (les
 citer ici ferait une seconde liste, qui se périmerait au projet suivant).
-Trois branchements sont à faire à la création, faute de quoi l'outillage
+Quatre branchements sont à faire à la création, faute de quoi l'outillage
 commun casse :
 
 | Fichier | Ce qu'il faut y ajouter | Pourquoi |
 | --- | --- | --- |
 | `eslint.config.mjs` | `client-xyz/**` dans `globalIgnores` | La configuration de la racine est celle d'Amorce. Appliquée au projet client, elle signale des erreurs sur un code qui a ses propres règles. Le projet client lance son propre `npm run lint` depuis son dossier. |
 | `.claude/hooks/session-start.sh` | l'installation de ses dépendances | Sans quoi chaque session distante redémarre sur un dossier sans `node_modules`. |
+| `tsconfig.json` | `client-xyz` dans `exclude` | Celui de la racine compile `**/*.ts` et fait pointer `@/…` vers `src/` d'Amorce. Sans l'exclusion, `npm run typecheck` à la racine échoue sur chaque import du projet client. |
 | `.gitignore` | `client-xyz/.env.local` | Une clé poussée est une clé à révoquer, et l'historique la garde. |
+
+## Une implémentation de référence existe
+
+`agence/` est un projet client complet et vérifié, écrit sur cette stack :
+authentification, profils créés par trigger, mot de passe oublié, CRUD sous
+RLS, espace d'administration, tests unitaires et contrôle des politiques.
+**Le lire avant d'écrire vaut mieux que le reconstruire** — notamment
+`src/lib/supabase/` (les clients et le garde de session), `src/lib/actions/`
+(la forme d'état que tous les formulaires partagent) et `supabase/schema.sql`,
+qui est le même socle durci que `assets/init.sql`, appliqué à un domaine réel.
+
+Ce qu'il ne dispense pas de faire : le cadrage, le schéma du client, et
+l'adaptation des contrôles de sécurité à son domaine. Un socle recopié sans
+ces trois-là donne une démo, pas une livraison.
 
 ## L'ordre de travail
 
