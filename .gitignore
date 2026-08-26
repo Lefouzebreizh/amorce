@@ -60,3 +60,10 @@ patrimoine/config.json
 # retéléchargeables, et le dépôt ne versionne aucun binaire.
 montage-auto/models/
 montage-auto/Wav2Lip/
+
+# Life-Organizer : état local et configuration de travail
+/life-organizer/donnees/
+/life-organizer/config.json
+
+# Worktrees temporaires des agents (outillage, jamais du contenu de projet)
+/.claude/worktrees/
