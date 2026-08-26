@@ -87,6 +87,7 @@ L'idée se greffe-t-elle sur ce qui tourne déjà ?
 | **Look & Find** (`look_and_find/`) | Application mobile. Flutter, Riverpod 3. | actif |
 | **Amorce** (racine) | Montage vidéo vertical, 100 % navigateur. Next.js 15, React 19, Tailwind v4. | actif |
 | **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures et validation de niches. Python. | actif |
+| **Socle Agence** (`agence/`) | Applications clients. Next.js 16, Supabase, RLS. | actif |
 | **Paper-Manager** (`paper-manager/`) | Assistant administratif : scan, échéances, résiliations. Python. | actif |
 | **Life-Organizer** (`life-organizer/`) | Rangement de fichiers personnels. Python. | actif |
 | **Répondeur Facebook** (`repondeur-facebook/`) | Réponses aux commentaires via l'API Graph. Python. | actif |

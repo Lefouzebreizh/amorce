@@ -84,9 +84,15 @@ justifiée en tête du fichier concerné ; relire ce commentaire avant d'y touch
 2. **Au plus deux couches vidéo.** `timeline.ts` borne toute transition à 45 %
    du plus court des deux clips. Le moteur s'appuie dessus pour ne jamais
    composer plus de deux couches. Relever cette limite casse le rendu.
-3. **Un élément `<video>` par clip, pas par média.** Deux clips peuvent
-   découper le même rush et se chevaucher ; un élément partagé ne peut pas être
-   à deux positions de lecture à la fois.
+3. **Un élément `<video>` par clip, pas par média — et six au plus à la fois.**
+   Deux clips peuvent découper le même rush et se chevaucher ; un élément
+   partagé ne peut pas être à deux positions de lecture à la fois. Mais leur
+   nombre est borné à `DECODEURS_MAX`, un navigateur Android n'accordant que six
+   à huit décodeurs : au-delà, les plans en trop ne produisent aucune image et
+   l'export sort noir sans erreur. `ClipVideoPool.sync` ne garde donc chargés
+   que les plans proches de la tête de lecture, et rend les identifiants
+   retenus — que la boucle de rendu répercute sur le graphe audio, faute de quoi
+   un plan dont l'élément a été recréé reviendrait muet.
 4. **La composition s'écrit toujours en coordonnées 1080 × 1920.** La qualité
    d'aperçu n'agit que par une transformation d'échelle posée sur le contexte
    (`RenderOptions.scale`). Aucune position, aucun corps de police ne doit être
@@ -192,13 +198,14 @@ Là, l'aller-retour vaut son prix.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
-montage automatisée dans `montage-auto/`, le répondeur de commentaires Facebook
-dans `repondeur-facebook/`, l'assistant de rangement Life-Organizer dans
-`life-organizer/` et l'assistant administratif Paper-Manager dans
-`paper-manager/` (qui ont chacun leur propre `README.md`) — plus un volet sans
+montage automatisée dans `montage-auto/`, le
+répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
+rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
+Paper-Manager dans `paper-manager/` et le socle de production livré aux clients
+dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
 code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
 montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
 audio Streamlit (`mon-app-audio/`) et l'assistant d'allocation d'actifs
@@ -206,9 +213,18 @@ audio Streamlit (`mon-app-audio/`) et l'assistant d'allocation d'actifs
 — mis de côté, pas abandonnés. L'outillage ci-dessous existe parce que rien de
 générique ne connaît cette particularité.
 
+`agence/` est un projet Next.js complet — Supabase, authentification, RLS — et
+non un dossier d'Amorce : ses propres `package.json`, `tsconfig.json` et
+`eslint.config.mjs`, ses propres `node_modules`, et l'alias `@/…` pointe vers
+`agence/src/`. Il se vérifie depuis son dossier (`npm run lint`,
+`npm run typecheck`, `npm test`, `npm run build`, plus `npm run test:rls` pour
+les politiques de sécurité), jamais depuis la racine — d'où son exclusion de
+l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
+`.github/workflows/agence.yml`.
+
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `montage-auto/` et des deux chantiers en sommeil sous `archives-backlog/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `montage-auto/` et des deux chantiers en sommeil sous `archives-backlog/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
@@ -227,6 +243,8 @@ générique ne connaît cette particularité.
 | `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
 | `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
+| `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
+| `/stack-agence-supabase` | Réaliser un projet client sur la stack de l'agence (Next.js 16, Supabase, RLS, shadcn) : ordre de travail, SQL durci, cinq règles de sécurité. Hors Amorce. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
@@ -252,13 +270,19 @@ Trois règles qui découlent de la cohabitation :
 - La version de Flutter est épinglée **au même numéro** dans le hook et dans
   `.github/workflows/look-and-find.yml`. Les faire diverger, c'est fabriquer un
   « ça passe chez moi ».
-- Les bibliothèques installées par `.github/workflows/tests-python.yml` sont
-  **volontairement plus courtes** que celles du hook, et il ne faut pas les
-  aligner. Le hook prépare une session où l'on *exécute* les programmes, ce qui
-  demande streamlit, PyTorch, Pillow et PyMuPDF ; le workflow n'installe que ce
-  que les *tests* atteignent, mesuré dans un environnement vierge. Recopier la
-  liste du hook ferait passer la vérification de vingt secondes à plusieurs
-  minutes sans couvrir une assertion de plus.
+- Les bibliothèques de `.github/requirements-tests.txt` sont **volontairement
+  plus courtes** que celles du hook, et il ne faut pas les aligner. Le hook
+  prépare une session où l'on *exécute* les programmes, ce qui demande
+  streamlit, PyTorch et Whisper ; le fichier de la CI n'installe que ce que les
+  *tests* atteignent, mesuré dans un environnement vierge. Recopier la liste du
+  hook ferait passer la vérification de quinze secondes à plusieurs minutes sans
+  couvrir une assertion de plus. Quand un nouveau test importe une bibliothèque
+  absente, la CI le dit en clair et c'est ce fichier-là qu'on complète.
+- **Un nouveau projet Python est gardé sans rien déclarer.**
+  `.github/workflows/tests-python.yml` découvre les `*/tests` contenant des
+  `test_*.py` au lieu de les énumérer. Sa première version en listait cinq et
+  deux projets sont passés au travers le jour même : dans ce dépôt, une liste
+  écrite à la main est fausse le lendemain, et fausse en silence.
 
 ## Vérifier
 
@@ -291,7 +315,11 @@ montage revient — puis le **lire**, parce qu'un projet restauré dont les lien
 pointent dans le vide s'affiche normalement et sort noir.
 
 Chromium est déjà installé dans cet environnement (`PLAYWRIGHT_BROWSERS_PATH`),
-ne pas lancer `playwright install`.
+ne pas lancer `playwright install`. Sa révision n'est pas celle que Playwright
+attend, d'où `AMORCE_CHROMIUM=/opt/pw-browsers/chromium`, que `fixtures` et
+`verify` acceptent tous les deux — le hook de démarrage la pose désormais dans
+les sessions distantes, mais un `playwright install` réclamé signifie qu'elle
+manque.
 
 ## Pièges connus
 

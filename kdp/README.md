@@ -51,9 +51,27 @@ python3 kdp/kdp.py couverture --source nommes/ --vers couverture_kdp.pdf --pages
 # 4. Vérifier ce que le massicot va emporter
 python3 kdp/kdp.py epreuve --source interieur_kdp.pdf --vers epreuve.pdf
 
-# 5. Vérifier ce que verra l'acheteur : la couverture réduite en vignette
+# 5. Contrôler les planches sources — avant d'assembler quoi que ce soit
+python3 kdp/planches.py nommes/
+
+# 5 bis. Une planche refaite raconte-t-elle encore la même chose ?
+python3 kdp/reprise.py --avant nommes/ --apres reprises/
+
+# 6. Vérifier ce que verra l'acheteur : la couverture réduite en vignette
 python3 kdp/vignette.py --source couverture_kdp.pdf --vers .travail/vignette.png
 ```
+
+`planches.py` mesure ce qu'aucun œil ne juge sur un écran : la résolution
+effective une fois posée sur le gabarit, la hauteur d'œil du texte des bulles en
+millimètres imprimés, l'épaisseur du trait et sa netteté. Il passe **avant**
+l'assemblage, quand il est encore temps de refaire une planche. Ses tests :
+`python3 -m unittest discover -s kdp/tests`.
+
+`reprise.py` sert au moment où l'on régénère des planches en plus haute
+définition : le générateur redessine et il dérive. Il compare les masses, pas
+les pixels — deux dessins de la même scène n'ont aucun pixel en commun — et il
+nomme la zone qui a bougé, parce qu'un quart redessiné laisse la note d'ensemble
+rassurante.
 
 `vignette.py` juge la lisibilité, pas le fichier : le personnage se détache-t-il
 encore à 150 px de large, ou la couverture est-elle devenue une tache ? Ses
