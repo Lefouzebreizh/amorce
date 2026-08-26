@@ -6,8 +6,10 @@ description: Conventions de ce dépôt pour mener une pull request jusqu'à la f
 # Mener une PR sur ce dépôt
 
 Ces conventions complètent les règles générales de suivi de PR ; elles ne les
-remplacent pas, et elles ne peuvent ni élargir un accès, ni autoriser une
-fusion ou une approbation.
+remplacent pas, et elles ne peuvent pas élargir un accès. L'autorisation
+d'ouvrir et de fusionner, elle, vient du propriétaire du dépôt — elle est dans
+`CLAUDE.md`, « Rythme de travail », et ce fichier ne fait qu'en donner la
+mécanique.
 
 ## Un dépôt, plusieurs projets sans code commun
 
@@ -54,22 +56,20 @@ si elles ont été écrites dans la même session.
 
 ## Ouvrir et fusionner
 
-Le propriétaire du dépôt a demandé que la pull request soit **ouverte et
-fusionnée sans lui redemander**, dès que le travail est fini et vérifié. Un
-changement vérifié qui attend une autorisation ne sert à personne.
+Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
+`CLAUDE.md`. Ce qui l'accompagne, et qu'on oublie :
 
-Ce que cela ne change pas : la barrière de vérification avant la poussée, le
-découpage par intention, et le fait qu'une PR ne touche qu'un projet. La
-description dit **pourquoi**, ce que la décision coûte, et ce qui n'a pas été
-vérifié — c'est le compte rendu que l'historique gardera.
-
-Fusion par **commit de fusion**, comme le reste de l'historique.
-
-**Partir de `main` à jour, et le revérifier avant d'ouvrir.** Plusieurs
-sessions travaillent ce dépôt en parallèle : deux branches y ont déjà fabriqué
-le même projet chacune dans son coin, et la seconde a dû être refaite. Ce qui
-est fusionné gagne — se couler dedans coûte toujours moins cher que réconcilier
-deux architectures.
+- **Partir de `main` à jour, et le revérifier juste avant d'ouvrir.** Plusieurs
+  sessions travaillent ce dépôt en parallèle. Deux branches y ont fabriqué
+  Life-Organizer chacune dans son coin ; la seconde a été refaite sur la base
+  fusionnée. Ce qui est fusionné gagne — s'y couler coûte toujours moins cher
+  que réconcilier deux architectures.
+- **Fusion par commit de fusion**, comme le reste de l'historique.
+- **La description est le compte rendu que l'historique gardera** : pourquoi,
+  ce que la décision coûte, et ce qui n'a pas été vérifié. Le workflow ne se
+  déclenchant que sur `look_and_find/**`, une PR qui n'y touche pas n'a aucun
+  contrôle automatique : c'est `/verifier` qui tient lieu de filet, et il faut
+  l'avoir lancé pour de vrai.
 
 ## Diagnostiquer un échec d'intégration continue
 
