@@ -66,6 +66,20 @@ class Validation(unittest.TestCase):
         config["abonnements"][0]["date_prochain_prelevement"] = "12/09/2026"
         self.assertTrue(any("AAAA-MM-JJ" in p for p in valider(config)))
 
+    def test_une_distance_de_ressemblance_aberrante_est_signalee(self):
+        # Mal réglé, ce seuil ne fait pas échouer la commande : il la fait
+        # réussir en rapprochant des photos sans rapport.
+        config = copy.deepcopy(MODELE)
+        config["nettoyage_medias"]["doublons"]["distance_max"] = 200
+        self.assertTrue(any("distance_max" in p for p in valider(config)))
+
+    def test_une_distance_de_ressemblance_nulle_est_acceptee(self):
+        # 0 veut dire « strictement le même rendu » : c'est un réglage légitime,
+        # pas une valeur manquante.
+        config = copy.deepcopy(MODELE)
+        config["nettoyage_medias"]["doublons"]["distance_max"] = 0
+        self.assertEqual([p for p in valider(config) if "distance_max" in p], [])
+
     def test_une_cle_dapi_en_clair_est_refusee(self):
         config = copy.deepcopy(MODELE)
         config["upscale"]["api"]["cle"] = "sk-quelque-chose"

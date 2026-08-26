@@ -117,7 +117,7 @@
       "hachage": "phash",
       "distance_max": 5,
       "conserver": "meilleure_definition",
-      "departager_par": ["definition", "poids", "date_la_plus_ancienne"],
+      "departager_par": ["nettete", "definition", "poids", "date_la_plus_ancienne"],
       "comparer_entre_dossiers": true
     },
     "videos": {

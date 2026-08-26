@@ -76,6 +76,21 @@ def valider(config: dict) -> list[str]:
     if not isinstance(retention, int) or retention < 1:
         problemes.append("securite.retention_quarantaine_jours doit être un entier ≥ 1")
 
+    # Le seuil de ressemblance des doublons est le seul réglage de ce fichier
+    # qui, mal saisi, ne fait pas échouer la commande : il la fait réussir en
+    # rapprochant n'importe quoi. Un 50 tapé pour 5 met en quarantaine la moitié
+    # d'un dossier de photos. Les autres réglages de la section (nom du hachage,
+    # critères de départage) sont refusés par le module lui-même, dès le premier
+    # appel et avant tout décodage — les redire ici en ferait une seconde source
+    # de vérité à tenir à jour.
+    doublons = config.get("nettoyage_medias", {}).get("doublons", {})
+    distance = doublons.get("distance_max", 5)
+    if not isinstance(distance, int) or isinstance(distance, bool) or not 0 <= distance <= 64:
+        problemes.append(
+            "nettoyage_medias.doublons.distance_max doit être un entier entre 0 et 64 "
+            "(bits d'un pHash). Repères : 0 identiques, 2 stricte, 5 prudente, 10 large"
+        )
+
     extensions_vues: dict[str, str] = {}
     for categorie, extensions in config.get("classement", {}).get("categories", {}).items():
         for extension in extensions:

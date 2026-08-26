@@ -5,8 +5,14 @@ Le point d'entrée est unique parce que les six modules partagent la même
 configuration, le même journal et la même quarantaine. Six scripts séparés
 auraient six façons de les lire, et un jour l'un d'eux supprimerait pour de bon.
 
-`verifier` est la seule commande déjà écrite : c'est celle qui doit fonctionner
-avant toutes les autres, puisque tout le reste dépend de la configuration.
+`verifier` doit fonctionner avant toutes les autres, puisque tout le reste
+dépend de la configuration. `nettoyer` lui a succédé : photos floues puis
+photos quasi-identiques, dans cet ordre — les vidéos restent à écrire.
+
+Un module écrit se branche ici en trois lignes : sa `commande.py` pose ses
+arguments et reçoit la configuration déjà chargée. Le point d'entrée ne connaît
+donc rien de ses réglages — sans quoi ce fichier grossirait de six sections qui
+ne se ressemblent pas.
 """
 
 from __future__ import annotations
@@ -16,6 +22,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from modules.nettoyage import commande as commande_nettoyage  # noqa: E402
 from noyau.config import charger, valider  # noqa: E402
 
 RACINE = Path(__file__).resolve().parent
@@ -25,7 +32,7 @@ RACINE = Path(__file__).resolve().parent
 MODULES = [
     ("scan", "Lire les documents, en extraire dates et montants, les renommer"),
     ("calendrier", "Échéances de paiement, abonnements, lettres de résiliation"),
-    ("nettoyer", "Écarter photos floues, quasi-doublons et vidéos inutilisables"),
+    ("nettoyer", "Écarter les photos floues et les quasi-doublons (vidéos à venir)"),
     ("convertir", "HEIC → JPG, MKV → MP4, compression sans perte visible"),
     ("upscaler", "Agrandir les photos et vidéos basse définition"),
     ("ranger", "Classer par date, par type et par thématique"),
@@ -80,6 +87,22 @@ def commande_verifier(options: argparse.Namespace) -> int:
     return 0
 
 
+def commande_nettoyer(options: argparse.Namespace) -> int:
+    """Les photos floues, puis les quasi-identiques. Les vidéos restent à écrire."""
+    chemin = config_utilisee(options.config)
+    config = charger(chemin)
+    problemes = valider(config)
+    if problemes:
+        # Refuser de travailler sur une configuration douteuse : le seuil de
+        # ressemblance en sort, et un seuil aberrant met des photos en
+        # quarantaine sans jamais échouer.
+        print(f"Configuration inutilisable ({chemin}) :")
+        for probleme in problemes:
+            print(f"  · {probleme}")
+        return 1
+    return commande_nettoyage.executer(options, config)
+
+
 def commande_a_venir(nom: str) -> int:
     print(f"« {nom} » n'est pas encore écrit.")
     print("La recette d'écriture d'un module est dans /module-life-organizer :")
@@ -102,6 +125,10 @@ def main() -> int:
 
     for nom, aide in MODULES:
         module = sous.add_parser(nom, help=aide)
+        if nom == "nettoyer":
+            commande_nettoyage.ajouter_arguments(module)
+            module.set_defaults(faire=commande_nettoyer)
+            continue
         module.add_argument("--appliquer", action="store_true",
                             help="agir pour de vrai (par défaut : simulation)")
         module.set_defaults(faire=lambda _options, nom=nom: commande_a_venir(nom))

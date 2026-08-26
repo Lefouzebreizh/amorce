@@ -9,7 +9,9 @@ une clé d'API est explicitement renseignée pour l'OCR ou l'agrandissement (deu
 options désactivées par défaut).
 
 > État : squelette d'architecture. `organizer_config.json` est complet et
-> validé ; les six modules sont décrits ci-dessous mais pas encore écrits.
+> validé ; les six modules sont décrits ci-dessous, et le module `nettoyage` est
+> écrit pour les photos — flou puis quasi-doublons (`organizer nettoyer`). Les
+> vidéos abîmées restent à faire.
 
 ## Arborescence
 
@@ -99,7 +101,8 @@ python3 organizer.py verifier
 # Ce que sait faire chaque module, et lesquels sont écrits
 python3 organizer.py --help
 
-# 2. Les dépendances (une fois les modules écrits)
+# 2. Les dépendances. `nettoyer` a besoin de Pillow, d'ImageHash et d'OpenCV ;
+#    les autres modules ajouteront les leurs à mesure qu'ils seront écrits.
 pip install -r requirements.txt
 
 # 3. Les tests unitaires — logique pure, aucune dépendance externe requise
@@ -126,13 +129,49 @@ cp organizer_config.json ~/.config/life-organizer/config.json
 | `securite` | simulation par défaut, refus de la suppression directe, durée de rétention |
 | `classement` | schéma des dossiers, extensions par catégorie, thèmes et leurs mots-clés |
 | `scan_ocr` | moteur, langues, seuil de confiance, modèle de nom, champs extraits |
-| `nettoyage_medias` | seuils de flou, distance de hachage perceptuel, intégrité vidéo |
+| `nettoyage_medias` | seuils de flou, ressemblance des doublons (voir plus bas), intégrité vidéo |
 | `conversion` | règles de format, qualité, gain minimal pour valider un remplacement |
 | `upscale` | modèle, facteur, taille source maximale, appareil de calcul |
 | `abonnements` | un objet par abonnement : montant, périodicité, préavis, statut |
 | `echeances` | paiements datés et leurs rappels |
 | `alertes` | canaux, jours de préavis, seuil de hausse de prix, abonnement dormant |
 | `resiliation` | expéditeur des lettres, ton, dossier de sortie |
+
+### Régler la ressemblance des doublons
+
+`nettoyage_medias.doublons.distance_max` dit **à quel point deux photos doivent
+se ressembler** pour n'en garder qu'une. Chaque photo est réduite à une empreinte
+perceptuelle de 64 bits (pHash) qui décrit l'image et non le fichier : une photo
+recadrée, recompressée ou passée par une messagerie garde la même empreinte alors
+qu'elle n'a plus un octet en commun avec l'originale. Le réglage est le nombre de
+bits qui ont le droit de différer — 0 pour le même rendu exact, 64 pour n'importe
+quoi.
+
+| Niveau | Bits | Ce qu'il rapproche |
+| --- | --- | --- |
+| `identique` | 0 | une copie, un « photo (1).jpg » |
+| `stricte` | 2 | la même photo recompressée ou redimensionnée |
+| `prudente` | 5 | + un léger recadrage, un filtre — **le défaut** |
+| `large` | 10 | + les rafales : plusieurs déclenchements de la même scène |
+
+Le défaut est prudent parce que deux photos d'une rafale ne sont pas des
+doublons : on ne veut pas se voir retirer la seule où tout le monde a les yeux
+ouverts. Le réglage se change pour de bon dans la configuration, ou le temps
+d'une commande :
+
+```bash
+python3 organizer.py nettoyer ~/Images            # simulation, seuil configuré
+python3 organizer.py nettoyer ~/Images --ressemblance large
+python3 organizer.py nettoyer ~/Images --ressemblance 8      # en bits
+python3 organizer.py nettoyer ~/Images --ressemblance stricte --appliquer
+```
+
+Sans `--appliquer`, la commande dit seulement ce qu'elle ferait. Avec, les
+surnuméraires partent dans la quarantaine datée, avec un fichier `origines.jsonl`
+qui note d'où venait chacun : rien n'est supprimé, rien n'est irréversible.
+Celle qu'on garde est choisie par `conserver` puis `departager_par` — meilleure
+définition d'abord, puis poids, puis la plus ancienne, qui est presque toujours
+l'originale.
 
 Deux réglages méritent d'être lus avant de lancer quoi que ce soit :
 
