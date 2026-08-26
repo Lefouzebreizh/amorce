@@ -184,9 +184,12 @@ générique ne connaît cette particularité.
 | Élément | Ce qu'il fait |
 | --- | --- |
 | `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, `mon-app-audio/` et `pepites/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `/naviguer-le-depot` | Quel projet répond à quelle demande, quels dossiers ne jamais parcourir, et par quel fichier entrer selon la question. |
+| `/deboguer` | Reproduire avant de diagnostiquer : ce qui est reproductible ici, ce qui ne l'est pas, et les huit pannes maison qui ne lèvent aucune erreur. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
+| `/usine-a-themes` | Les jetons `@theme` d'Amorce : ce que chaque famille de couleurs signifie, et comment décliner une palette sans casser les rôles. |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
 | `/radar-crypto` | Où poser chaque fichier du radar `pepites/`, l'ordre des cinq skills qu'on ne réarrange pas, et les six invariants qui empêchent un faux quitus de sécurité. |
