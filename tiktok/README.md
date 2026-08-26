@@ -85,23 +85,29 @@ avec un crochet non rempli est un script pas fini.
 Ce dernier point est le seul qui rende le reste utile. Un script sans son
 résultat, c'est une intuition ; avec son résultat, c'est une leçon.
 
-## Les six scripts écrits
+## Les sept scripts écrits
 
-Ils couvrent les six concepts les plus productifs, et se tournent tous avec les
-deux seuls dispositifs ci-dessus.
+Ils couvrent les concepts les plus productifs, et se tournent tous avec les deux
+seuls dispositifs ci-dessus.
 
-| Script | Concept | Durée |
-| --- | --- | --- |
-| `01-je-ne-sais-pas-monter` | B4 — l'épisode qui ouvre le feuilleton | 28 s |
-| `02-le-son-avant-l-image` | A1 — le réglage que je n'avais pas compris | 30 s |
-| `03-meme-rush-deux-montages` | A2 — même rush, deux montages | 32 s |
-| `04-le-grave-que-ton-telephone-n-entend-pas` | A3 — le son que personne n'entend | 34 s |
-| `05-les-chiffres-du-jour-15` | B1 — les chiffres du jour N | 30 s |
-| `06-trois-prompts-un-plan` | A4 — trois prompts, un plan | 32 s |
+| Script | Concept | Durée | Tournable sans savoir monter |
+| --- | --- | --- | --- |
+| `01-je-ne-sais-pas-monter` | B4 — l'épisode qui ouvre le feuilleton | 29 s | oui |
+| `07-je-construis-mes-outils` | B1 / A1 — le blocage comme matière | 32 s | oui |
+| `02-le-son-avant-l-image` | A1 — le réglage que je n'avais pas compris | 30 s | non |
+| `03-meme-rush-deux-montages` | A2 — même rush, deux montages | 32 s | non |
+| `04-le-grave-que-ton-telephone-n-entend-pas` | A3 — le son que personne n'entend | 34 s | oui |
+| `05-les-chiffres-du-jour-15` | B1 — les chiffres du jour N | 30 s | non |
+| `06-trois-prompts-un-plan` | A4 — trois prompts, un plan | 32 s | non |
 
-Dans cet ordre, ils font aussi une première quinzaine cohérente : le 01 ouvre,
-le 02 tient la promesse que le 01 a faite, et le 05 revient dire ce que tout ça
-a donné.
+La dernière colonne compte : **trois d'entre eux se tournent avant de savoir
+monter.** Le 01 et le 07 ne demandent que ta voix, tes images et ton écran ; le
+04 se démontre au son. Les quatre autres attendent que tu aies une timeline —
+c'est normal, ils parlent de montage.
+
+Dans l'ordre, ils font une première quinzaine cohérente : le 01 ouvre, le 07
+explique le retard sans s'en excuser, le 02 tient la promesse que le 01 a faite,
+et le 05 revient dire ce que tout ça a donné.
 
 ## Ce qu'on ne fait pas
 
