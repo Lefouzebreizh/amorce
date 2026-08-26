@@ -52,17 +52,20 @@ PR de ce dépôt se relit sur ses justifications autant que sur son diff.
 Découper par intention : trois intentions distinctes font trois commits, même
 si elles ont été écrites dans la même session.
 
-## La CI ne se déclenche pas toute seule sur une PR
+## Quand la CI se déclenche sur une PR, et quand elle ne se déclenche pas
 
-**Une PR ouverte par un assistant ne lance aucun workflow.** GitHub refuse
-délibérément de déclencher des exécutions à partir d'un jeton d'application, pour
-éviter qu'un workflow n'en engendre un autre sans fin. Le dépôt n'a d'ailleurs
-jamais enregistré une seule exécution sur l'événement `pull_request`.
+**L'ouverture d'une PR par un assistant ne lance rien.** Elle passe par un jeton
+d'application GitHub, et GitHub refuse d'en déclencher un workflow — protection
+contre les boucles.
 
-Conséquence pratique : **attendre la CI d'une PR, c'est attendre indéfiniment**.
-Avant de fusionner, la déclencher à la main sur la branche —
-`workflow_dispatch`, depuis l'onglet Actions ou par l'API — puis vérifier son
-verdict. C'est la seule preuve disponible que la branche passe.
+**Une poussée sur la branche, si.** L'événement `pull_request` part alors
+normalement (`synchronize`), et la PR obtient son verdict.
+
+Conséquence pratique : une PR ouverte puis laissée telle quelle reste sans CI,
+indéfiniment, sans que rien ne le signale. Ne pas l'attendre — **la déclencher
+à la main** (`workflow_dispatch` sur la branche, depuis l'onglet Actions ou par
+l'API), puis vérifier le verdict **sur l'empreinte exacte qui sera fusionnée**.
+Un commit poussé après le déclenchement invalide le résultat précédent.
 
 Ne jamais fusionner sur la seule foi d'une vérification locale quand le
 workflow couvre quelque chose que la machine de développement ne sait pas faire
