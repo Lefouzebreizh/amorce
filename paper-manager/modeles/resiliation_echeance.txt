@@ -1,0 +1,11 @@
+Objet : Résiliation à l'échéance du contrat {abonnement.libelle} — référence client {abonnement.reference_client}
+
+Madame, Monsieur,
+
+Par la présente, je vous informe de ma décision de résilier le contrat {abonnement.libelle} souscrit auprès de {abonnement.emetteur} sous la référence client {abonnement.reference_client}.
+
+Cette résiliation prend effet à l'échéance du contrat, soit le {effet}, dans le respect du préavis de {abonnement.preavis_jours} jours prévu aux conditions générales. La présente lettre s'oppose donc à toute reconduction tacite au-delà de cette date.
+
+Je vous remercie de m'adresser une confirmation écrite de cette résiliation précisant sa date exacte de prise d'effet, et de cesser tout prélèvement à compter de celle-ci.
+
+Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.

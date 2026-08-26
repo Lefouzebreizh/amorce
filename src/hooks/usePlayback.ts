@@ -120,22 +120,10 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
     void preloadCaptionFonts(fonts);
   }, [fonts]);
 
-  // Le pool suit la composition du projet, sans passer par la boucle de rendu.
-  useEffect(
-    () =>
-      useStudio.subscribe((state) => {
-        poolRef.current?.sync(state.project.clips, state.project.assets);
-      }),
-    [],
-  );
-
   useEffect(() => {
     const pool = poolRef.current;
     const grade = gradeRef.current;
     if (!pool || !grade) return;
-
-    const state = useStudio.getState();
-    pool.sync(state.project.clips, state.project.assets);
 
     let raf = 0;
     let previous = performance.now();
@@ -194,10 +182,32 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
         store.setPlayhead(time);
       }
 
+      /*
+       * Le pool ne garde chargés que les plans proches de la tête de lecture.
+       * C'est ici, et pas dans un abonnement au store, parce que la fenêtre
+       * dépend du temps courant autant que de la composition du projet.
+       */
+      const charges = pool.sync(placed, project.assets, time);
+
       syncPlayback(placed, pool, time, playing);
 
       const audio = audioRef.current;
       if (audio) {
+        /*
+         * Le graphe audio suit la même fenêtre.
+         *
+         * `attachClip` refuse de rebrancher un identifiant qu'il connaît déjà —
+         * un élément média ne peut être relié qu'à une seule source Web Audio
+         * dans toute sa vie. Sans la purge, un plan dont l'élément a été libéré
+         * puis recréé reviendrait donc muet, sans que rien ne le signale.
+         * Les deux appels sont sans effet quand la fenêtre n'a pas bougé.
+         */
+        audio.pruneClips(charges);
+        for (const id of charges) {
+          const video = pool.get(id);
+          if (video) audio.attachClip(id, video);
+        }
+
         audio.applyMix(project.mix);
         for (const clip of project.clips) audio.setClipVolume(clip.id, clip.volume);
         audio.syncMusic(project.music?.url ?? null, project.music?.gain ?? 0);
@@ -272,13 +282,9 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
 
     // Le branchement ne peut avoir lieu qu'une fois le contexte audio créé,
     // donc au plus tôt au premier geste de l'utilisateur.
-    const { project } = useStudio.getState();
-    poolRef.current?.sync(project.clips, project.assets);
-    for (const clip of project.clips) {
-      const video = poolRef.current?.get(clip.id);
-      if (video) audio.attachClip(clip.id, video);
-    }
-    audio.pruneClips(new Set(project.clips.map((c) => c.id)));
+    // Le branchement des plans est tenu par la boucle de rendu, qui seule sait
+    // quels éléments la fenêtre garde chargés. Ne reste ici que ce que le geste
+    // de l'utilisateur débloque : le contexte audio lui-même.
     return audio;
   }, []);
 

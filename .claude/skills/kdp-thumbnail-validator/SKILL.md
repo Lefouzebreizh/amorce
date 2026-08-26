@@ -45,6 +45,42 @@ franche.
 | Détachement du sujet | écart entre les extrêmes du personnage et la médiane de ce qui l'entoure | le personnage a la valeur de son décor, il disparaît à cette taille |
 | Masses distinctes | aplats pesant chacun au moins 3 % de la vignette | trop peu de zones : la couverture sera confondue avec ses voisines |
 
+## Ce que l'outil ne mesure pas : le texte
+
+Les cinq contrôles portent sur l'image — des valeurs, des masses, des écarts.
+**Aucun ne sait lire.** Une couverture peut passer les cinq au vert et avoir son
+slogan et son nom d'auteur illisibles : c'est arrivé sur celle de ce dépôt, 55 de
+contraste et 92 de détachement, deux lignes sur quatre perdues à 150 px.
+
+Ce n'est pas forcément un défaut. Un slogan n'a pas à se lire dans une vignette
+de boutique ; il doit se lire sur la fiche produit. D'où **deux tailles, deux
+questions** :
+
+| Taille | Ce qui doit passer |
+| --- | --- |
+| **150 px** — vignette de résultats | le titre, le personnage, l'ambiance. Rien d'autre. |
+| **~500 px** — fiche produit | tout le reste : surtitre, accroche, nom d'auteur, mention de tome. |
+
+Rendez les deux et regardez-les. Une ligne illisible à 500 px se corrige par le
+contraste et le corps, jamais en la déplaçant sur un fond plus calme : il n'y a
+pas de fond calme sur une couverture qui marche.
+
+## Deux pièges mesurés
+
+**Ne visez jamais la couverture complète.** Un fichier de dépôt KDP contient le
+dos, la tranche et la première d'un seul tenant. Le dos est du texte sur du
+papier : il occupe la moitié de l'image et écrase toutes les mesures. Une même
+couverture est passée de 194 à 321 pour mille de présence du sujet rien qu'en
+la cadrant sur le bon panneau — le verdict devient absurde sans rien signaler.
+
+**Un seuil vaut ce que vaut sa calibration.** Une première version de ce
+contrôle, calibrée sur trois couvertures dont le verdict humain était connu,
+acceptait celle qui avait été rejetée et rejetait celle qui avait été retenue :
+deux de ses mesures étaient mal posées. Avant de faire confiance à un seuil,
+demandez sur quoi il a été calibré — et si la base est mince, préférez un
+verdict qui dit « je ne sais pas, regardez » à une frontière inventée. Un
+chiffre qui tranche sans preuve porte une autorité qu'il n'a pas méritée.
+
 ## Ce qu'on fait d'un échec
 
 Ce sont des problèmes de dessin, pas de fichier. Dans l'ordre d'efficacité :

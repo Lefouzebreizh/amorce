@@ -72,11 +72,16 @@ Deux pistes, aucune confirmée :
   soixante secondes en demanderait donc vingt-cinq à cinquante, quand un
   navigateur Android en accorde six à huit.
 
-  Le remède serait de ne garder chargés que les plans proches de la tête de
-  lecture. Attention en le posant : `attachClip` refuse de rebrancher un
-  identifiant déjà connu du graphe audio, si bien qu'un élément détruit puis
-  recréé pour le même plan reviendrait **muet**. Une fenêtre glissante doit donc
-  purger le nœud audio en même temps que l'élément.
+  **Traité.** `ClipVideoPool.sync` ne garde plus chargés que les six plans les
+  plus proches de la tête de lecture, et rend les identifiants retenus ; la
+  boucle de rendu purge puis rebranche le graphe audio sur cette même fenêtre.
+  Sans cette purge, `attachClip` refuserait de rebrancher un identifiant qu'il
+  connaît déjà — un élément média ne se relie qu'à une seule source Web Audio
+  dans toute sa vie — et le plan recréé reviendrait muet, en silence.
+
+  Ce que cela ne prouve pas : le Chromium de bureau n'ayant pas le plafond
+  d'Android, la borne est vérifiée, pas le symptôme qu'elle prévient. Si un
+  export noir revient du téléphone après ce changement, la cause est ailleurs.
 - **Un fichier rangé vide**, qui produit un lien valide ne décodant rien. Un
   `Blob` de zéro octet est `truthy` et `createObjectURL` lui rend un lien
   parfaitement formé : le montage se rouvrait normalement et sortait noir, sans

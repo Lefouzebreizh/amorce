@@ -1,0 +1,93 @@
+# Vérification des suites Python du dépôt — toutes celles qui existent, y
+# compris celles qui n'existaient pas quand ce fichier a été écrit.
+#
+# Aucune n'était gardée jusqu'ici : les tests existaient, mais rien ne les
+# lançait hors du poste de développement. Une régression pouvait donc atterrir
+# sur `main` sans qu'une ligne rouge n'apparaisse nulle part.
+#
+# Les suites ne sont pas énumérées, elles sont découvertes. La première version
+# de ce fichier en listait cinq ; deux projets sont apparus dans la soirée et
+# sont passés au travers sans que rien ne le signale. Dans un dépôt qui grossit
+# à ce rythme, une liste écrite à la main est fausse le lendemain — et fausse en
+# silence, ce qui est la pire des deux façons.
+#
+# Pas de filtre de chemins non plus, pour la même raison : il faudrait le
+# rallonger à chaque nouveau projet, et l'oubli ne se verrait pas. Le travail
+# entier dure une quinzaine de secondes ; le filtre économiserait moins qu'il ne
+# coûterait en oublis.
+#
+# Les bibliothèques viennent de `.github/requirements-tests.txt` : ce sont
+# celles que les *tests* atteignent, mesurées dans un environnement vierge, et
+# volontairement bien plus courtes que celles du hook de démarrage. Voir l'en-
+# tête de ce fichier-là.
+
+name: Tests Python
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-python-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tester:
+    name: Lancer les suites Python
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version figée plutôt que « latest » : une image qui change de Python du
+      # jour au lendemain ferait rougir une branche que personne n'a touchée.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: .github/requirements-tests.txt
+
+      - name: Installer ce que les tests atteignent
+        run: python -m pip install --quiet -r .github/requirements-tests.txt
+
+      # Une seule étape, mais un groupe repliable par suite : le résumé reste
+      # lisible, et `::error::` fait remonter le nom du projet fautif en tête de
+      # l'exécution sans avoir à dérouler le journal.
+      #
+      # La boucle ne s'arrête pas au premier rouge. Savoir que trois suites sur
+      # sept sont cassées vaut mieux que de s'arrêter à la première et de
+      # découvrir les deux autres au prochain tour.
+      - name: Lancer chaque suite
+        run: |
+          echec=0
+          trouvees=0
+          for tests in */tests; do
+            # Un dossier `tests/` sans fichier `test_*.py` n'est pas une suite
+            # Python : le sauter évite qu'un projet d'une autre langue fasse
+            # échouer la découverte.
+            ls "$tests"/test_*.py >/dev/null 2>&1 || continue
+            projet="${tests%/tests}"
+            trouvees=$((trouvees + 1))
+            echo "::group::$projet"
+            if python -m unittest discover -s "$tests" --verbose; then
+              echo "::endgroup::"
+            else
+              echo "::endgroup::"
+              echo "::error title=$projet::La suite de tests de « $projet » est rouge."
+              echec=1
+            fi
+          done
+
+          # Une découverte vide serait passée pour un succès : sept suites qui
+          # disparaissent d'un coup est plus probablement un `cd` de travers
+          # qu'un dépôt réellement vidé de ses tests.
+          if [ "$trouvees" -eq 0 ]; then
+            echo "::error::Aucune suite de tests trouvée — la découverte est cassée."
+            exit 1
+          fi
+
+          echo "$trouvees suite(s) exécutée(s)."
+          exit $echec
