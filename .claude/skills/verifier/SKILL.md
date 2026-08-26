@@ -83,9 +83,21 @@ NEXT_PUBLIC_SUPABASE_URL="https://exemple.supabase.co" \
 NEXT_PUBLIC_SUPABASE_ANON_KEY="cle-de-compilation" npm run build
 ```
 
-Ce qu'aucune de ces trois commandes ne voit : les politiques RLS. Une politique
-trop large se lit dans `supabase/schema.sql` ou s'éprouve depuis deux comptes
-sur un vrai projet Supabase, jamais depuis TypeScript.
+Les politiques RLS, elles, ne se vérifient pas depuis TypeScript. Elles ont
+leur propre contrôle, sur un vrai PostgreSQL :
+
+```bash
+docker run --rm -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 --name pg postgres:16
+PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres npm run test:rls
+```
+
+Vingt contrôles : ce qu'un utilisateur, un administrateur et un visiteur
+anonyme peuvent lire et écrire. **À relancer dès qu'on touche à
+`supabase/schema.sql`** — c'est le seul filet de cette partie-là, et une
+politique trop large ne se remarque qu'en production.
+
+Sans PostgreSQL sous la main, le même fichier (`supabase/verifier-rls.sql`) se
+colle dans l'éditeur SQL d'un projet Supabase : il annule tout ce qu'il crée.
 
 ## Chaîne KDP — `kdp/`
 

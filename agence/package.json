@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --experimental-strip-types --import ./tests/resolveur-alias.mjs --test \"src/**/*.test.ts\"",
+    "test:rls": "bash tests/rls/executer.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

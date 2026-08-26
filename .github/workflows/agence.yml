@@ -10,8 +10,13 @@
 # `'use client'` manquante, une fonction passée en propriété d'un composant
 # serveur, un export non asynchrone dans un fichier `'use server'`.
 #
-# Un seul travail, et non quatre en parallèle : chacun repaierait l'installation
-# des dépendances, plus longue que l'ensemble des vérifications.
+# Un seul travail pour ces quatre commandes, et non quatre en parallèle : chacun
+# repaierait l'installation des dépendances, plus longue que l'ensemble des
+# vérifications.
+#
+# Le second travail, lui, est bien séparé : il éprouve les politiques RLS sur un
+# vrai PostgreSQL, sans avoir besoin d'une seule dépendance npm. Rien ne le fait
+# attendre le premier, et un échec de l'un ne masque pas l'autre.
 
 name: Socle Agence
 
@@ -81,3 +86,41 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  politiques:
+    name: Politiques RLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Le seul contrôle qui voie ce qu'aucune ligne de TypeScript ne peut dire :
+    # ce que PostgreSQL accepte de servir à qui. Il applique le schéma sur une
+    # base neuve, puis rejoue les tentatives d'accès d'un utilisateur, d'un
+    # administrateur et d'un visiteur anonyme.
+    services:
+      postgres:
+        # Version épinglée pour que le contrôle ne change pas de comportement
+        # sans qu'une ligne du dépôt ait bougé. Le script ne dépend d'aucune
+        # extension : il tourne sur toute version encore maintenue.
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # `psql` est déjà présent sur les images Ubuntu de GitHub, et le script
+      # n'a besoin de rien d'autre : ni Node, ni `node_modules`.
+      - name: Contrôler les politiques
+        run: npm run test:rls

@@ -110,6 +110,7 @@ Modifier la fiche d'un client se fait avec lui, pas à sa place.
 
 ```
 supabase/schema.sql      tables, RLS, privilèges de colonnes, triggers
+supabase/verifier-rls.sql  contrôle des politiques, à rejouer sur le projet client
 src/proxy.ts             rafraîchissement de session (ex-middleware, renommé en Next.js 16)
 src/app/                 routes — (auth) public, (prive) sous session, auth/confirmer
 src/components/ui/       briques d'interface (Shadcn/ui, écrites à la main)
@@ -118,7 +119,7 @@ src/lib/actions/         Server Actions — les seules écritures
 src/lib/supabase/        clients serveur, session, proxy
 src/lib/                 types de la base, validation Zod, formats d'affichage
 src/lib/__tests__/       tests unitaires (node:test)
-tests/                   résolveur d'alias `@/…` pour l'exécution des tests
+tests/                   résolveur d'alias et harnais du contrôle RLS
 ```
 
 La règle de découpage : **l'interface ne parle jamais à la base.** Un composant
@@ -146,9 +147,10 @@ npm run lint        # ESLint, `any` interdit
 npm run typecheck   # tsc --noEmit
 npm test            # tests unitaires (node --test, sans dépendance ajoutée)
 npm run build       # build de production
+npm run test:rls    # politiques de sécurité, sur un vrai PostgreSQL
 ```
 
-Les quatre doivent passer avant toute livraison, et le workflow
+Les cinq doivent passer avant toute livraison, et le workflow
 `.github/workflows/agence.yml` les rejoue sur chaque poussée qui touche
 `agence/`.
 
@@ -159,11 +161,38 @@ non asynchrone dans un fichier `'use server'`. Il réclame les variables
 d'environnement ; les valeurs de `.env.example` suffisent à le faire aboutir,
 elles ne suffisent évidemment pas à faire fonctionner l'application.
 
-Les tests couvrent ce qui se calcule hors navigateur et hors base : validation
-des formulaires, statistiques du tableau de bord, rapprochement des fiches
-clients, formats d'affichage, et le filtre anti-redirection ouverte. Ce
-qu'aucun d'eux ne voit : les politiques RLS, qui s'éprouvent depuis deux
-comptes sur un vrai projet Supabase.
+Les tests unitaires couvrent ce qui se calcule hors navigateur et hors base :
+validation des formulaires, statistiques du tableau de bord, rapprochement des
+fiches clients, formats d'affichage, et le filtre anti-redirection ouverte.
+
+### Les politiques de sécurité
+
+Ni TypeScript, ni les tests unitaires, ni le build ne voient une politique RLS.
+Une politique trop large ne se remarque qu'en production, et par la mauvaise
+personne. `supabase/verifier-rls.sql` est le seul endroit où la question « qui
+peut lire quoi » reçoit une réponse vérifiée : il crée trois comptes, tente
+depuis chacun ce qui doit être refusé, et annule tout à la fin.
+
+**Sur le projet du client** : coller le fichier dans l'éditeur SQL de Supabase
+et l'exécuter. Aucun message signifie que tout est conforme ; un contrôle qui
+échoue dit lequel, en français. Rien n'est laissé derrière — la transaction est
+annulée.
+
+**En local ou en intégration continue** : le même fichier tourne sur un
+PostgreSQL ordinaire, `tests/rls/socle-supabase.sql` fournissant ce que Supabase
+apporte d'office (rôles, `auth.users`, `auth.uid()`, privilèges par défaut).
+
+```bash
+docker run --rm -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 --name pg postgres:16
+PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres npm run test:rls
+```
+
+Les vingt contrôles ont été éprouvés par mutation : en rendant à `authenticated`
+le privilège d'écriture sur toute la table `profiles` — le schéma d'origine du
+cahier des charges — le script s'arrête sur *« FAILLE : un utilisateur peut
+s'accorder le rôle administrateur »*. En élargissant la politique des projets à
+`using (true)`, il s'arrête sur *« Alice voit des projets qui ne sont pas les
+siens »*. Un contrôle qui ne casse jamais ne prouve rien.
 
 ## Déployer
 
