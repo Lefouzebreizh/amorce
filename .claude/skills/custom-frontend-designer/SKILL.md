@@ -1,85 +1,106 @@
 ---
 name: custom-frontend-designer
-description: Concevoir et coder une interface distinctive pour Amorce, le studio de montage vertical — panneaux d'étape, coques ordinateur et téléphone, briques de ui.tsx, jetons Tailwind v4. À charger avant d'ajouter un écran, un panneau, un réglage ou un composant à Amorce, avant de retoucher sa mise en page, et dès qu'il est question d'interface, d'apparence, de composant React ou de Tailwind dans ce dépôt. Complète CLAUDE.md, qui porte les règles ; celle-ci porte le métier.
+description: Concevoir et coder une interface pour le studio Amorce — Next.js 15, React 19, Tailwind v4. Dit où atterrit chaque fichier, quelles briques existent déjà, et les cinq règles de style qui font l'identité de l'application (surfaces plutôt que contours, accent unique, jetons de thème, aide obligatoire sous chaque réglage, un seul panneau pour les deux coques). À utiliser dès qu'on ajoute ou retouche un écran, un panneau, un composant, une mise en page, une couleur, une animation ou un état vide dans `src/` — y compris quand la demande dit seulement « rends ça plus beau », « refais cet écran » ou « ajoute un bouton ».
 ---
 
 # Dessiner une interface pour Amorce
 
-`CLAUDE.md` à la racine porte **les règles** — jetons `@theme`, extensions
-explicites, `'use client'`, invariants du moteur de rendu. Les relire avant de
-commencer ; cette skill ne les répète pas.
+Amorce est un studio de montage vertical : on y juge des images en permanence.
+L'interface n'est donc pas un habillage, c'est un instrument de mesure — tout ce
+qui brille, clignote ou colore sans raison fausse le jugement de celui qui
+monte. « Moderne » ici veut dire **calme, rapide, et lisible à une main dehors**,
+pas décoré.
 
-Ce qui suit porte **le métier** : comment faire une interface qui ne ressemble
-pas à un gabarit, à l'intérieur de ces règles.
+## Où atterrit le code
 
-## Ce qu'est Amorce, et ce que ça impose
+| Besoin | Fichier |
+| --- | --- |
+| Une brique réutilisable (bouton, panneau, jauge) | `src/components/ui.tsx` |
+| Le contenu d'une étape | `src/components/panels/*.tsx` |
+| L'aiguillage étape → panneau | `src/components/steps.tsx` |
+| La disposition d'ensemble | `StudioDesktop.tsx` (trois colonnes) / `StudioMobile.tsx` (une colonne + onglets) |
+| Une couleur, une police, un réglage global | `src/app/globals.css`, bloc `@theme` |
 
-Un studio de montage vertical qui tourne **entièrement dans le navigateur**.
-Aucun fichier ne part sur un serveur. L'utilisateur arrive avec des rushes et
-repart avec un fichier exporté, en sept étapes.
+**Les panneaux d'étape sont les mêmes des deux côtés.** Seule la coque change.
+Dupliquer un panneau « pour le mobile » est la façon la plus sûre de faire
+diverger les deux interfaces en trois commits.
 
-Deux conséquences pour toute interface qu'on y ajoute :
+## Les cinq règles qui font l'identité
 
-**L'aperçu est le sujet.** Tout le reste est autour. Rien ne se superpose à
-l'aperçu — un panneau flottant masque précisément ce qu'on est en train de
-régler. Si un réglage a besoin d'être vu en même temps que son effet, il va à
-côté, pas dessus.
+Chacune est justifiée dans le fichier concerné ; relire le commentaire avant de
+s'en écarter.
 
-**L'utilisateur n'est pas monteur.** Il ne sait pas ce qu'est une transition en
-fondu enchaîné ni un bus audio. D'où la règle que `Field` impose dans le code :
-**chaque réglage porte une phrase qui dit ce qu'il fait**. Un curseur sans
-explication est un curseur qu'on ne touchera pas. Ce n'est pas de la
-documentation, c'est ce qui rend le réglage utilisable.
+1. **Le design se fait par surfaces empilées, pas par contours.** Cinq plans de
+   profondeur existent (`ink`, `slab`, `panel`, `raised`, `edge`). Une bordure
+   est réservée à ce qui sépare vraiment (bandeau, barre d'étapes) et à ce qui
+   est sélectionné. Une interface où tout est encadré se lit comme une pile de
+   boîtes et plus rien n'y ressort.
+2. **L'accent ne désigne qu'une chose : l'action à faire, et ce qui va bien.**
+   S'en servir aussi pour les états actifs le rend décoratif, donc muet. Un
+   écran a un accent, pas cinq.
+3. **Aucune valeur hexadécimale dans une classe.** Les couleurs sont des jetons
+   déclarés dans `@theme` : `bg-panel`, `text-muted`, `border-edge`. Une couleur
+   inventée sur place échappe au thème et vieillit seule.
+4. **`Field` impose un texte d'aide à côté de chaque réglage.** Ce n'est pas une
+   politesse : un curseur sans phrase qui dit ce qu'il fait est un curseur qu'on
+   ne touchera pas. Si l'aide est difficile à écrire, c'est souvent le réglage
+   qui est mal conçu.
+5. **Cibles tactiles d'au moins 44 px** (`min-h-11`), même sur ordinateur. Voir
+   la compétence `tailwind-mobile-ux` pour le reste du terrain mobile.
 
-## Le langage visuel
+## Réutiliser avant d'inventer
 
-**Par surfaces, pas par contours.** Les plans se distinguent par empilement de
-fonds — `slab`, `panel`, `raised` — et non par des bordures. Une bordure est
-réservée à ce qui sépare vraiment, ou à ce qui est sélectionné. Une interface
-faite de cadres imbriqués a l'air d'un formulaire administratif ; une interface
-faite de surfaces a de la profondeur.
+`ui.tsx` fournit déjà : `Panel`, `Field`, `Button`, `Slider` (qui arbitre entre
+régler et faire défiler au doigt), `Choice`, `Hint`, `Collapsible`, `Actions`,
+`UndoControls`, `ScoreBadge`, `EmptyState`. Un nouveau composant se justifie
+quand aucune de ces briques ne dit la chose — pas quand l'une d'elles demande un
+réglage de plus.
 
-**L'accent ne désigne qu'une chose : l'action à faire.** Et ce qui va bien. Si
-trois éléments sont en accent sur un écran, aucun n'attire l'œil. Avant de
-mettre de l'accent, demandez-vous : est-ce l'action suivante ? Si non, c'est du
-`mist` ou du `muted`.
+Quand une brique manque vraiment, l'ajouter **dans `ui.tsx`** plutôt que dans le
+panneau qui en a besoin : c'est ce qui empêche trois boutons différents de
+coexister.
 
-**Le vide est un matériau.** Un panneau dense se lit moins vite qu'un panneau
-aéré, même s'il montre plus. Sur une étape, une seule chose doit sauter aux
-yeux.
+## Ce qui rend une interface vivante ici
 
-## Un panneau, une fois
+- **Le rythme, pas l'ornement.** Une hiérarchie tient à l'espacement et à la
+  taille, pas à des traits. Un bloc respire, un groupe se serre.
+- **La profondeur raconte l'importance.** Ce qui est manipulé monte d'un plan
+  (`raised`), ce qui est contexte reste au fond (`slab`).
+- **Le mouvement sert à ne pas perdre l'utilisateur**, jamais à impressionner.
+  Transitions sur les couleurs, l'opacité et les transformations — jamais sur
+  des propriétés qui recalculent la mise en page. `globals.css` réduit déjà
+  toutes les durées sous `prefers-reduced-motion`, ne pas contourner ce garde-fou
+  avec une animation JavaScript.
+- **Deux polices, deux rôles** : `font-display` pour les titres, `font-body`
+  pour tout le reste. Une troisième fonte n'ajoute pas du caractère, elle en
+  retire.
+- **L'état vide est un écran à part entière** (`EmptyState`) : il dit quoi faire
+  ensuite. Une zone vide sans phrase est un cul-de-sac.
 
-`steps.tsx` aiguille vers `panels/*`, et **les panneaux sont rigoureusement les
-mêmes des deux côtés**. Seule la coque change : `StudioDesktop` en trois
-colonnes, `StudioMobile` en une colonne avec barre d'onglets.
+## Deux pièges propres à ce dépôt
 
-Ne jamais dupliquer un panneau pour le mobile. Le jour où le réglage change,
-une des deux copies est oubliée — et c'est toujours celle qu'on ne teste pas.
-Si un panneau ne tient pas en mobile, c'est le panneau qu'il faut simplifier,
-pas la coque qu'il faut contourner.
+- **Rien ne se superpose à l'aperçu.** Un panneau flottant masque précisément ce
+  qu'on est en train de régler.
+- **La première image doit sortir dans la bonne disposition.** Une source
+  extérieure à React (taille d'écran, préférence système) se lit avec
+  `useSyncExternalStore` — un effet + `setState` fait sortir la première image
+  en disposition d'ordinateur avant de corriger, et cela se voit.
 
-## Éviter le gabarit
+## Vérifier
 
-Une interface générée ressemble vite à toutes les autres : cartes arrondies
-partout, ombres douces uniformes, un dégradé, des icônes en tête de section, du
-centrage systématique. Rien de tout cela n'est faux ; c'est simplement ce que
-produit l'absence de décision.
+```bash
+npm run typecheck && npm run lint     # toujours
+npm run verify                        # dès que le rendu ou la mise en page bouge
+```
 
-Décidez au moins une chose par écran. Une hiérarchie typographique qui vienne du
-sujet — un studio de montage a des durées, des numéros de plan, des formes
-d'onde, tout cela veut des chiffres tabulaires et de la précision. Un rythme
-d'espacement qui vous appartienne. Un endroit, un seul, où l'interface se permet
-un geste.
+`npm run verify` pilote un vrai Chromium sur deux profils, dont un téléphone
+bridé ×4, et contrôle des pixels — c'est le seul filet qui voie un débordement
+ou un contraste perdu. Il demande `npm run dev` dans un autre terminal.
 
-Et gardez le reste tranquille. Une audace par écran suffit ; deux se battent.
+## Avant de rendre la main
 
-## Avant de dire que c'est fini
-
-`npm run typecheck && npm run lint && npm test` sur ce qui est calculable.
-
-Puis, si le changement touche au rendu, à l'audio, à l'export ou au mobile :
-**`npm run verify`**. C'est le seul filet réel — il pilote un vrai Chromium et
-contrôle le résultat sur les pixels et sur le signal sonore, pas sur la présence
-d'éléments dans le DOM. Une interface qui passe les tests unitaires et rate
-`verify` est cassée.
+- Chaque nouveau réglage a sa phrase d'aide.
+- Aucune couleur en dur, aucun `border` posé par réflexe.
+- L'écran tient en 390 px de large sans défilement horizontal.
+- Le mobile et l'ordinateur passent par le même panneau.
+- L'accent ne désigne qu'une seule chose à l'écran.

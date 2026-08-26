@@ -105,11 +105,17 @@ export function Button({
   );
 }
 
-/** Distance au bouton en deçà de laquelle on considère qu'on l'a saisi. */
-const THUMB_GRAB_PX = 28;
+/**
+ * Distance au bouton en deçà de laquelle on considère qu'on l'a saisi.
+ *
+ * Généreuse, parce que le bouton est la seule cible : la barre ne répondant
+ * plus, rien ne se dispute ce rayon. Il porte la zone saisissable à 72 px de
+ * large, bien au-delà des 44 px d'un doigt.
+ */
+const THUMB_GRAB_PX = 36;
 
-/** Déplacement horizontal à partir duquel le geste est jugé intentionnel. */
-const HORIZONTAL_INTENT_PX = 8;
+/** Déplacement à partir duquel on tranche entre régler et faire défiler. */
+const INTENT_PX = 6;
 
 /**
  * Jauge de réglage.
@@ -119,10 +125,19 @@ const HORIZONTAL_INTENT_PX = 8;
  * défilement vertical amorcé sur une jauge déréglait donc le paramètre au
  * passage — une vitesse passée à 3,20× sans que personne ne l'ait voulu.
  *
- * Le geste est donc arbitré ici : le défilement vertical reste à la page, et la
- * valeur ne bouge que si le doigt s'est posé sur le bouton, ou s'il part
- * franchement à l'horizontale. À la souris, le comportement natif est conservé
- * — cliquer la barre pour s'y rendre y est utile et sans ambiguïté.
+ * Le geste est arbitré ici, et **seul le bouton règle la valeur**. Poser le
+ * doigt sur la barre ne fait rien, même en partant à l'horizontale : dans un
+ * panneau qui n'est qu'une pile de jauges, un pouce qui effleure en fait bouger
+ * une sans qu'on sache laquelle ni de combien. La barre reste la lecture de la
+ * valeur, le bouton en est la commande.
+ *
+ * Rien ne bouge non plus au simple contact du bouton : la valeur ne suit qu'à
+ * partir d'un déplacement franc, et un départ vertical rend la main à la page.
+ * Le décalage entre le doigt et le bouton est conservé, sinon saisir le bouton
+ * par son bord ferait sauter la valeur avant même d'avoir bougé.
+ *
+ * À la souris, le comportement natif est conservé — cliquer la barre pour s'y
+ * rendre y est utile et sans ambiguïté.
  *
  * Le champ natif reste en place : il porte la valeur, son intitulé accessible
  * et la navigation au clavier.
@@ -144,7 +159,7 @@ export function Slider({
 }) {
   const touch = useIsTouch();
   const trackRef = useRef<HTMLDivElement>(null);
-  const gesture = useRef<{ x: number; y: number; active: boolean } | null>(null);
+  const gesture = useRef<{ x: number; y: number; offset: number; active: boolean } | null>(null);
 
   /** Valeur correspondant à une position horizontale, calée sur le pas. */
   const valueAt = (clientX: number): number => {
@@ -172,12 +187,14 @@ export function Slider({
       onPointerDown={
         touch
           ? (event) => {
-              const onThumb = Math.abs(event.clientX - thumbX()) <= THUMB_GRAB_PX;
-              gesture.current = { x: event.clientX, y: event.clientY, active: onThumb };
-              if (onThumb) {
-                event.currentTarget.setPointerCapture(event.pointerId);
-                onChange(valueAt(event.clientX));
-              }
+              // Hors du bouton, on ne retient rien : la barre est inerte.
+              if (Math.abs(event.clientX - thumbX()) > THUMB_GRAB_PX) return;
+              gesture.current = {
+                x: event.clientX,
+                y: event.clientY,
+                offset: thumbX() - event.clientX,
+                active: false,
+              };
             }
           : undefined
       }
@@ -190,19 +207,19 @@ export function Slider({
               if (!current.active) {
                 const dx = Math.abs(event.clientX - current.x);
                 const dy = Math.abs(event.clientY - current.y);
-                // Un mouvement d'abord vertical appartient au défilement : on ne
-                // reprend pas la main après coup, sous peine de déclencher le
-                // réglage en plein milieu d'un balayage.
-                if (dy > dx) {
+                // Un mouvement d'abord vertical appartient au défilement, même
+                // parti du bouton : on ne reprend pas la main après coup, sous
+                // peine de déclencher le réglage en plein milieu d'un balayage.
+                if (dy > dx && dy > INTENT_PX) {
                   gesture.current = null;
                   return;
                 }
-                if (dx < HORIZONTAL_INTENT_PX) return;
+                if (dx < INTENT_PX) return;
                 current.active = true;
                 event.currentTarget.setPointerCapture(event.pointerId);
               }
 
-              onChange(valueAt(event.clientX));
+              onChange(valueAt(event.clientX + current.offset));
             }
           : undefined
       }

@@ -1,93 +1,110 @@
 ---
 name: tailwind-mobile-ux
-description: Rendre une interface Amorce utilisable au doigt sur un téléphone tenu à la verticale — plages de viewport, zones d'atteinte du pouce, encoches et barres de geste, hauteur réelle du navigateur, et la boucle de vérification sous processeur bridé. À charger avant de toucher à la coque mobile, à un panneau qui doit tenir sur un écran étroit, ou dès qu'il est question de tactile, de téléphone, de portrait, de safe area, de 100vh ou de mise en page responsive dans ce dépôt.
+description: Régler l'affichage tactile vertical d'Amorce pour un smartphone Xiaomi (HyperOS/MIUI, Chrome Android, écran ~20:9) — hauteur utile réelle, barre de gestes, zone du pouce, cibles tactiles, gestes qui entrent en conflit avec le défilement, assombrissement automatique de Chrome, taille de police système. À utiliser dès qu'une demande parle de téléphone, de mobile, de tactile, de portrait, de « ça déborde », « c'est trop petit », « je n'arrive pas à attraper », « ça scrolle quand je règle », ou quand on retouche `StudioMobile.tsx`, un bandeau, une barre d'onglets ou un curseur.
 ---
 
-# Le mobile, de plein droit
+# Le terrain : un Xiaomi tenu à une main, en vertical
 
-`CLAUDE.md` pose les règles — `min-h-11`, `100dvh`, `env(safe-area-inset-*)`,
-rien de superposé à l'aperçu. Cette skill explique **pourquoi elles existent** et
-ce qu'elles ne couvrent pas.
+Le format court se regarde debout, dehors, à une main, sur un écran très haut et
+étroit. Tout ce qui suit vient de là. Les parades sont déjà en place dans le
+dépôt : la plupart du travail consiste à **ne pas les défaire**.
 
-## On ne conçoit jamais pour un modèle de téléphone
+Repère de taille : un Xiaomi à 1080 px physiques et un rapport de pixels de 2,75
+donne environ **393 px CSS de large**. Le profil « téléphone » de
+`scripts/verify.mjs` en simule 390 × 640 — 640 et non la hauteur nominale, parce
+que la barre d'adresse et la barre système amputent réellement l'écran.
 
-C'est l'erreur la plus coûteuse, parce qu'elle est invisible sur l'appareil de
-celui qui l'a commise. Un téléphone n'a pas un viewport, une gamme en a des
-dizaines : de **360 à 440 points de large** en usage courant, avec des encoches
-de tailles différentes, des barres de geste présentes ou non, et une taille de
-police que l'utilisateur a pu doubler.
 
-Visez des **plages**, et vérifiez aux extrémités. Une mise en page qui tient à
-360 et à 440 tient partout entre les deux. Une mise en page calée sur un modèle
-casse chez tout le monde sauf son auteur.
+## Le Xiaomi est le terrain, pas la cible
 
-Trois largeurs suffisent pour couvrir l'essentiel : **360** (petit Android),
-**390** (le plus courant), **430** (grand format).
+Tout ce qui suit part de cet appareil parce que c'est celui qui sert à juger.
+Mais **une mise en page calée sur un modèle casse chez tout le monde sauf son
+auteur** — et il ne le voit jamais. Un téléphone n'a pas un viewport, une gamme
+en a des dizaines : de 360 à 440 points de large en usage courant, avec des
+encoches de tailles différentes et une taille de police que l'utilisateur a pu
+doubler.
 
-## La hauteur ment
+Vérifiez donc aux extrémités, pas seulement sur l'appareil sous la main. Trois
+largeurs couvrent l'essentiel : **360**, **390**, **430**. Ce qui tient à 360 et
+à 430 tient partout entre les deux.
 
-`100vh` est la hauteur du navigateur **barres masquées**. Sur mobile, la barre
-d'adresse est visible au chargement puis se rétracte au défilement : une
-interface en `100vh` déborde à l'ouverture, et le bouton principal est sous
-l'écran au moment précis où l'utilisateur le cherche.
+## Les sept pièges, et la parade
 
-`100dvh` suit la hauteur réelle. C'est la seule raison de la règle, et elle
-suffit à la justifier.
+**1. La hauteur qui ment.** `100vh` compte la barre d'adresse dépliée : le bas de
+l'interface passe sous l'écran, et c'est là que sont les boutons.
+→ `h-[100dvh]`, jamais `100vh`. Déjà en place dans `StudioMobile.tsx`.
 
-## Les bords ne sont pas à vous
+**2. La barre de gestes.** HyperOS pose une barre de navigation par gestes en bas
+de l'écran ; un bouton collé au bord devient inatteignable, ou pire, déclenche le
+retour système.
+→ `env(safe-area-inset-bottom)` sur tout bandeau fixe, avec un plancher :
+`style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}`. Même
+chose en haut pour l'encoche.
 
-En haut, l'encoche ou la pilule. En bas, la barre de geste — et sur Amorce, la
-barre d'onglets s'y trouve. Un bouton posé à moins de la marge système est
-soit masqué, soit déclenche un geste du téléphone au lieu de l'action prévue.
+**3. Le doigt n'est pas une souris.** En dessous de 44 px, on vise à côté et on
+recommence.
+→ `min-h-11` sur tout ce qui se touche. Vaut aussi pour les petits boutons de
+texte : un « Retirer » de 13 px de haut est un piège.
 
-`env(safe-area-inset-*)` sur tout ce qui touche un bord. Et rappelez-vous que
-ces valeurs sont **nulles sur ordinateur** : les utiliser ne coûte rien là où
-elles ne servent pas.
+**4. Le geste volé.** Amorcer un balayage vertical sur un curseur en changeait la
+valeur : `touch-action: none` donne au curseur *tous* les gestes, défilement
+compris.
+→ L'arbitrage se fait dans le composant `Slider`, qui distingue une intention
+horizontale d'un simple défilement (`globals.css` explique pourquoi la règle
+globale a été retirée). Ne pas remettre de `touch-action` sur un curseur.
 
-## Le pouce décide de la mise en page
+**5. Chrome qui assombrit d'autorité.** Android peut appliquer un thème sombre
+automatique aux pages qui ne se déclarent pas. Amorce est déjà sombre par choix
+— une zone laissée en clair, ou une couleur posée en dur hors du thème, se fait
+recolorer sans prévenir.
+→ Passer par les jetons `@theme`. Une couleur inventée sur place est justement
+celle que le navigateur se croira autorisé à changer.
 
-Sur un téléphone tenu d'une main, le pouce atteint confortablement le **tiers
-bas** de l'écran et le **côté** de la main qui tient. Le haut de l'écran demande
-de changer de prise.
+**6. La police système agrandie.** Beaucoup de gens règlent MIUI sur une police
+plus grande. Une hauteur fixée en pixels tronque alors le texte au lieu de
+s'adapter.
+→ Hauteurs minimales (`min-h-*`) plutôt que hauteurs fixes ; laisser le contenu
+pousser. Vérifier en zoomant à 150 % dans le navigateur.
 
-Conséquence directe pour un studio de montage : **les actions fréquentes vont en
-bas**, les réglages rares peuvent monter. La barre d'onglets en bas n'est pas une
-mode, c'est là que le pouce est.
+**7. Ce qui masque ce qu'on règle.** Un panneau flottant au-dessus de l'aperçu
+cache exactement l'image dont on juge le réglage.
+→ Rien ne se superpose à l'aperçu. Les réglages vivent dans le tiroir du bas,
+qui pousse l'aperçu au lieu de le recouvrir.
 
-Et **44 points au minimum** pour toute cible tactile — pas parce qu'un doigt
-mesure 44 points, mais parce qu'il touche large et imprécis, en marchant, d'une
-main. Une cible de 32 points se rate une fois sur cinq.
+## La zone du pouce
 
-## Ce qui n'existe pas au doigt
+Sur un écran de 20:9 tenu à une main, le tiers haut est hors de portée sans
+changer de prise. L'action principale et la navigation vivent **en bas** — c'est
+pourquoi la barre d'onglets et le tiroir de réglages sont là. Ce qui monte en
+haut : ce qu'on regarde (l'aperçu, le titre d'étape), pas ce qu'on touche.
 
-**Le survol.** Toute information qui n'apparaît qu'au survol est invisible sur
-téléphone. Si un réglage a besoin d'une explication, elle est écrite à côté —
-c'est ce que `Field` impose, et c'est une règle mobile avant d'être une règle
-d'accessibilité.
+## Essayer pour de vrai
 
-**Le clic droit, le glisser fin, le double-clic.** Ce qui demande de la précision
-demande une alternative.
-
-**La patience.** Un téléphone décode de la vidéo, mixe de l'audio et dessine sur
-un canvas avec un budget thermique. C'est pour ça que le studio a un
-`QualityGovernor` : l'interface doit survivre à une dégradation de qualité sans
-sauter, et sans le cacher à l'utilisateur.
-
-## Vérifier pour de vrai
+Trois niveaux, du plus rapide au plus fidèle :
 
 ```bash
+# 1. Le profil téléphone de la vérification, bridé ×4 (indispensable : sans le
+#    bridage, la dégradation automatique de qualité ne se déclenche jamais).
+npm run dev                       # dans un terminal
 AMORCE_PROFILE=mobile npm run verify
+
+# 2. L'émulation du navigateur : outils de développement, appareil 393 × 873.
+#    Voit les débordements, ne voit ni le tactile réel ni la barre de gestes.
+
+# 3. Le vrai téléphone, sur le même réseau que l'ordinateur :
+npx next dev -H 0.0.0.0           # puis http://<ip-de-l-ordinateur>:3000
 ```
 
-Le profil téléphone **bride le processeur d'un facteur quatre**, et ce n'est pas
-décoratif : sans ce bridage, la dégradation automatique de qualité ne se
-déclencherait jamais sur une machine de développement, et l'on croirait le
-chemin mobile testé alors qu'on n'aurait testé que le confortable.
+Le troisième niveau est le seul qui montre la barre de gestes, la police système
+et la vraie perception du contraste en plein jour. C'est celui qui a fait
+remonter le gris du texte : `--color-muted` a été éclairci parce qu'un gris
+discret cesse simplement d'être lu dehors.
 
-Une interface qui n'a pas été vue sous bridage n'a pas été vue.
+## Avant de rendre la main
 
-## Le test qui ne coûte rien
-
-Réduisez la fenêtre à 360 points de large, mettez la police système à sa plus
-grande taille, et refaites le parcours du début à la fin. La plupart des défauts
-mobiles se voient là, en trois minutes, sans appareil.
+- Aucun défilement horizontal en 390 px de large.
+- Rien d'important dans les 48 px du bas hors `safe-area`.
+- Tout ce qui se touche fait au moins 44 px.
+- Le défilement vertical fonctionne en partant d'un curseur.
+- L'aperçu n'est jamais recouvert.
+- `AMORCE_PROFILE=mobile npm run verify` passe.

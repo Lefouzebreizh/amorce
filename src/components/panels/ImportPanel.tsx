@@ -5,10 +5,114 @@
 
 import { useRef, useState } from 'react';
 import { applyAutoEdit } from '@/lib/autoEdit';
-import { formatTime, loadVideoAsset } from '@/lib/media';
+import { formatTime, loadSampleCue, loadVideoAsset, loadVoiceCue } from '@/lib/media';
+import { isVideo, toFile } from '@/lib/share';
 import { useStudio } from '@/lib/store';
+import { placeOnCuts, placeWithoutOverlap, shotStarts } from '@/lib/timeline';
 import { useIsHydrated } from '@/hooks/useMediaQuery';
+import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Button, EmptyState, Hint, Panel } from '../ui';
+
+/**
+ * Fichiers arrivés par le bouton « Partager ».
+ *
+ * Rien dans un fichier audio ne dit s'il s'agit d'une réplique ou d'un bruitage.
+ * Deviner mènerait la moitié du temps au mauvais panneau, où l'utilisateur ne
+ * les chercherait pas : on demande, une fois pour le lot entier. Les vidéos, elles,
+ * n'ont aucune ambiguïté et rejoignent la bibliothèque quoi qu'il arrive.
+ */
+function SharedTray({ engine }: { engine: PlaybackEngine }) {
+  const shared = useStudio((s) => s.sharedFiles);
+  const setShared = useStudio((s) => s.setSharedFiles);
+  const clips = useStudio((s) => s.project.clips);
+  const playhead = useStudio((s) => s.playhead);
+  const addAssets = useStudio((s) => s.addAssets);
+  const addVoices = useStudio((s) => s.addVoices);
+  const addSamples = useStudio((s) => s.addSamples);
+
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (shared.length === 0) return null;
+
+  const videos = shared.filter(isVideo);
+  const sounds = shared.filter((file) => !isVideo(file));
+
+  const accept = async (kind: 'voix' | 'bruitage') => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      if (videos.length > 0) {
+        const assets = [];
+        for (const file of videos) assets.push(await loadVideoAsset(toFile(file)));
+        addAssets(assets);
+      }
+
+      if (sounds.length > 0 && kind === 'voix') {
+        const audio = await engine.ensureAudio();
+        const loaded = [];
+        for (const file of sounds) loaded.push(await loadVoiceCue(toFile(file), audio.context, playhead));
+
+        const times = placeWithoutOverlap(shotStarts(clips), loaded.map((cue) => cue.duration), playhead);
+        addVoices(loaded.map((cue, index) => ({ ...cue, start: times[index] ?? cue.start })));
+      }
+
+      if (sounds.length > 0 && kind === 'bruitage') {
+        const times = placeOnCuts(shotStarts(clips), sounds.length, playhead);
+        const loaded = [];
+        for (const [index, file] of sounds.entries()) {
+          loaded.push(await loadSampleCue(toFile(file), times[index] ?? playhead));
+        }
+        addSamples(loaded);
+      }
+
+      setShared([]);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Fichier illisible par le navigateur.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Panel
+      title={`${shared.length} fichier${shared.length > 1 ? 's' : ''} reçu${shared.length > 1 ? 's' : ''} par partage`}
+      subtitle="Dis-moi ce que c'est, et je les place sur les coupes."
+      action={
+        <Button variant="ghost" onClick={() => setShared([])} title="Ignorer ces fichiers">
+          Ignorer
+        </Button>
+      }
+    >
+      <ul className="mb-3 space-y-1.5">
+        {shared.map((file, index) => (
+          <li key={`${file.name}-${index}`} className="flex items-center gap-2 rounded-xl bg-slab px-3 py-2">
+            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-mist">{file.name}</span>
+            <span className="font-mono text-[11px] text-muted">{Math.round(file.blob.size / 1024)} Ko</span>
+          </li>
+        ))}
+      </ul>
+
+      {sounds.length > 0 ? (
+        <div className="grid grid-cols-2 gap-1.5">
+          <Button variant="primary" disabled={busy} onClick={() => void accept('voix')}>
+            Ce sont des voix
+          </Button>
+          <Button variant="ghost" disabled={busy} onClick={() => void accept('bruitage')}>
+            Ce sont des bruitages
+          </Button>
+        </div>
+      ) : (
+        <Button variant="primary" className="w-full" disabled={busy} onClick={() => void accept('voix')}>
+          Ajouter à la bibliothèque
+        </Button>
+      )}
+
+      {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+    </Panel>
+  );
+}
 
 /**
  * Import des rushes et bibliothèque.
@@ -17,8 +121,9 @@ import { Button, EmptyState, Hint, Panel } from '../ui';
  * court entre « j'ai des fichiers » et « j'ai une vidéo », et c'est celui que
  * prendra quiconque n'a jamais monté.
  */
-export function ImportPanel() {
+export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
   const assets = useStudio((s) => s.project.assets);
+  const storageError = useStudio((s) => s.storageError);
   const clips = useStudio((s) => s.project.clips);
   const addAssets = useStudio((s) => s.addAssets);
   const removeAsset = useStudio((s) => s.removeAsset);
@@ -75,6 +180,10 @@ export function ImportPanel() {
 
   return (
     <div className="space-y-3">
+      {/* En tête : c'est ce bloc qui a fait basculer l'utilisateur sur cette
+          étape, le reléguer sous la zone d'import le mettrait hors de vue. */}
+      <SharedTray engine={engine} />
+
       <Panel
         title="1 · Importer"
         subtitle="Tes fichiers restent sur ton ordinateur : rien n’est envoyé sur un serveur."
@@ -131,6 +240,10 @@ export function ImportPanel() {
         )}
       </Panel>
 
+      {storageError && assets.length > 0 && (
+        <Hint tone="warn">{storageError}</Hint>
+      )}
+
       {assets.length > 0 && (
         <Panel
           title="Montage express"
@@ -145,6 +258,24 @@ export function ImportPanel() {
           </p>
         </Panel>
       )}
+
+      {/*
+        Sans cette consigne, la cible de partage resterait dormante : Android ne
+        la propose qu'à une application installée, et rien dans l'interface ne
+        laisserait deviner qu'elle existe.
+      */}
+      <Panel
+        title="Un fichier refusé, ou arrivé vide ?"
+        subtitle="Le sélecteur d’Android rend parfois un fichier de zéro octet quand il vient du nuage."
+      >
+        <Hint>
+          Installe Amorce sur ton écran d’accueil — menu de ton navigateur, « Installer
+          l’application ». Tu pourras alors envoyer tes fichiers par le bouton <b>Partager</b> depuis
+          ton gestionnaire de fichiers : ce chemin transmet les octets réels, et il aboutit là où le
+          sélecteur échoue. Rien ne part pour autant sur un serveur, le partage est reçu par ton
+          navigateur.
+        </Hint>
+      </Panel>
 
       <Panel title="Bibliothèque" subtitle={`${assets.length} rush${assets.length > 1 ? 'es' : ''} importé${assets.length > 1 ? 's' : ''}`}>
         {assets.length === 0 ? (

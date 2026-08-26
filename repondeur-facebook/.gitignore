@@ -1,0 +1,9 @@
+# Jetons d'accès et mots de passe : jamais dans l'historique.
+config.env
+
+# La mémoire des commentaires déjà traités appartient à la machine qui fait
+# tourner le script, pas au dépôt.
+journal.jsonl
+
+__pycache__/
+*.pyc

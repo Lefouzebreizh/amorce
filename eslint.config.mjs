@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // L'application Flutter voisine. Elle a son propre analyseur
+    // (`flutter analyze`) et ses propres règles ; ESLint n'y trouverait que
+    // les milliers de fichiers JavaScript générés par le SDK dans
+    // `look_and_find/build/`, qu'aucune règle de ce dépôt ne concerne.
+    "look_and_find/**",
   ]),
 ]);
 

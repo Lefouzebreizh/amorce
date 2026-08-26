@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Amorce">
+  <!--
+    Icône d'installation, en SVG plutôt qu'en PNG.
+
+    L'invariant du dépôt interdit tout binaire versionné : un fichier texte
+    reste lisible dans un diff et n'alourdit pas le clone. Le motif tient dans
+    le cercle central de 80 % du cadre, seule zone qu'Android garantit de ne pas
+    rogner quand il applique sa propre forme de masque.
+  -->
+  <rect width="512" height="512" fill="#07070b" />
+  <g transform="translate(256 256)">
+    <!-- Le cadre vertical du format court, ouvert en bas comme une amorce. -->
+    <path
+      d="M-74 -128 h148 a20 20 0 0 1 20 20 v216 a20 20 0 0 1 -20 20 h-40"
+      fill="none"
+      stroke="#2ee87f"
+      stroke-width="26"
+      stroke-linecap="round"
+    />
+    <!-- La tête de lecture, posée sur le bord ouvert. -->
+    <circle cx="-74" cy="128" r="30" fill="#2ee87f" />
+  </g>
+</svg>

@@ -1,8 +1,12 @@
 'use client';
 
 import { create } from 'zustand';
+import { analyzeProject } from './analysis.ts';
 import { uid } from './id.ts';
-import { emptyProject, layoutClips, totalDuration } from './timeline.ts';
+import { applyFinish, soundsOnCuts, tensionFills } from './autoFinish.ts';
+import type { SharedFile } from './share.ts';
+import { captionsFromVoice } from './voice.ts';
+import { chopped, emptyProject, layoutClips, totalDuration } from './timeline.ts';
 import type { QualityTier } from './quality.ts';
 import {
   DEFAULT_CLIP,
@@ -16,7 +20,9 @@ import {
   type ExportPreset,
   type Project,
   type SfxId,
+  type SampleCue,
   type SoundCue,
+  type VoiceCue,
 } from './types.ts';
 
 /** Choix de qualité : « auto » laisse la surveillance décider. */
@@ -36,6 +42,15 @@ type Snapshot = { project: Project; label: string };
 const HISTORY_LIMIT = 60;
 
 /**
+ * Durée minimale d'un sous-titre ajouté à la main, en secondes.
+ *
+ * En deçà, il clignote au lieu de se lire. C'est la borne qui s'applique quand
+ * la tête de lecture est si près de la fin qu'il n'y a plus deux secondes
+ * devant elle.
+ */
+const MIN_CAPTION_SPAN = 0.8;
+
+/**
  * Délai en deçà duquel deux modifications de même nature n'en font qu'une.
  *
  * Sans ce regroupement, un simple glissement de jauge produirait des dizaines
@@ -52,7 +67,16 @@ const COALESCE_MS = 600;
  * plan juste après l'avoir ajouté doit s'annuler en deux fois, sinon
  * l'annulation en défait plus que ce qu'on croyait.
  */
-const COALESCING = new Set(['reglage', 'texte-reglage', 'son-reglage', 'musique-reglage', 'mixage', 'nom']);
+const COALESCING = new Set([
+  'reglage',
+  'texte-reglage',
+  'son-reglage',
+  'musique-reglage',
+  'voix-reglage',
+  'bruitage-reglage',
+  'mixage',
+  'nom',
+]);
 
 type StudioState = {
   project: Project;
@@ -79,6 +103,23 @@ type StudioState = {
   /** Vrai quand le filet de sécurité a repris la main sur un choix trop lourd. */
   qualityRescued: boolean;
   setQualityChoice: (choice: QualityChoice) => void;
+  /**
+   * Pourquoi le montage n'est pas conservé, ou null s'il l'est.
+   *
+   * Hors du projet, donc hors de l'historique : c'est un état de la machine, pas
+   * une décision de l'utilisateur, et l'annuler n'aurait aucun sens.
+   */
+  storageError: string | null;
+  /**
+   * Fichiers reçus par le bouton « Partager », en attente d'une destination.
+   *
+   * Rien dans un fichier audio ne dit s'il s'agit d'une réplique ou d'un
+   * bruitage : c'est à l'utilisateur de trancher, et ils patientent ici en
+   * attendant. Hors du projet, donc hors de l'historique — tant qu'ils ne sont
+   * pas importés, ils n'en font pas partie.
+   */
+  sharedFiles: SharedFile[];
+  setSharedFiles: (files: SharedFile[]) => void;
   /** Définition retenue pour le fichier produit. */
   exportPreset: ExportPreset['id'];
   setExportPreset: (id: ExportPreset['id']) => void;
@@ -98,6 +139,8 @@ type StudioState = {
   addSoundsOnCuts: () => void;
   /** Relance l'attention là où l'analyse a repéré un creux. */
   fillTensionGaps: (moments: number[]) => void;
+  /** Pose d'un coup textes, bruitages et découpe, sans rien remplacer. */
+  applyRecommended: (setId: string) => void;
   moveClip: (from: number, to: number) => void;
   splitClipAtPlayhead: () => void;
 
@@ -110,6 +153,18 @@ type StudioState = {
   addCue: (sfx: SfxId, time?: number) => void;
   updateCue: (id: string, patch: Partial<SoundCue>) => void;
   removeCue: (id: string) => void;
+
+  // -- Bruitages importés ---------------------------------------------------
+  addSamples: (cues: SampleCue[]) => void;
+  updateSample: (id: string, patch: Partial<SampleCue>) => void;
+  removeSample: (id: string) => void;
+
+  // -- Voix off -------------------------------------------------------------
+  addVoices: (cues: VoiceCue[]) => void;
+  updateVoice: (id: string, patch: Partial<VoiceCue>) => void;
+  removeVoice: (id: string) => void;
+  /** Fabrique les sous-titres d'une réplique à partir de son texte. */
+  alignVoice: (id: string) => void;
 
   // -- Musique --------------------------------------------------------------
   setMusic: (music: MusicTrack | null) => void;
@@ -219,6 +274,9 @@ export const useStudio = create<StudioState>((set, get) => {
   qualityChoice: 'auto',
   effectiveQuality: 'high',
   qualityRescued: false,
+  storageError: null,
+  sharedFiles: [],
+  setSharedFiles: (sharedFiles) => set({ sharedFiles }),
   exportPreset: 'full',
   setExportPreset: (exportPreset) => set({ exportPreset }),
   // Un nouveau choix efface l'avertissement : l'utilisateur a repris la main.
@@ -316,26 +374,11 @@ export const useStudio = create<StudioState>((set, get) => {
       const index = state.project.clips.findIndex((c) => c.id === id);
       if (index === -1) return state;
 
-      const clip = state.project.clips[index];
-      const sourceSpan = clip.outPoint - clip.inPoint;
-      const shown = sourceSpan / Math.max(0.1, clip.speed);
-      const pieces = Math.floor(shown / Math.max(0.5, target));
-      if (pieces < 2) return state;
-
-      const step = sourceSpan / pieces;
-      const chopped: Clip[] = Array.from({ length: pieces }, (_, piece) => ({
-        ...clip,
-        id: uid('clip'),
-        inPoint: clip.inPoint + piece * step,
-        outPoint: clip.inPoint + (piece + 1) * step,
-        // Le premier morceau hérite de la transition d'origine ; les suivants
-        // s'enchaînent sec, sans quoi le découpage perdrait sa nervosité.
-        transition: piece === 0 ? clip.transition : 'cut',
-        transitionDuration: piece === 0 ? clip.transitionDuration : 0,
-      }));
+      const pieces = chopped(state.project.clips[index], target, () => uid('clip'));
+      if (pieces.length < 2) return state;
 
       const clips = [...state.project.clips];
-      clips.splice(index, 1, ...chopped);
+      clips.splice(index, 1, ...pieces);
       return reclamp({ ...state, project: { ...state.project, clips }, selection: null });
     }),
 
@@ -347,22 +390,7 @@ export const useStudio = create<StudioState>((set, get) => {
    */
   addSoundsOnCuts: () =>
     mutate('sons-auto', (state) => {
-      const placed = layoutClips(state.project.clips);
-      const cycle: SfxId[] = ['boom', 'whoosh', 'punch', 'swipe', 'whoosh', 'subdrop'];
-      const added: SoundCue[] = [];
-
-      const isFree = (time: number) =>
-        ![...state.project.cues, ...added].some((c) => Math.abs(c.time - time) < 0.15);
-
-      if (isFree(0.02)) added.push({ id: uid('sfx'), sfx: 'punch', time: 0.02, gain: 0.9 });
-
-      placed.slice(1).forEach((item, index) => {
-        const at = Math.max(0, item.start);
-        if (isFree(at)) {
-          added.push({ id: uid('sfx'), sfx: cycle[index % cycle.length], time: at, gain: 0.85 });
-        }
-      });
-
+      const added = soundsOnCuts(state.project.clips, state.project.cues, () => uid('sfx'));
       if (added.length === 0) return state;
       return { project: { ...state.project, cues: [...state.project.cues, ...added] } };
     }),
@@ -370,18 +398,26 @@ export const useStudio = create<StudioState>((set, get) => {
   /** Pose une ponctuation sonore aux instants signalés par l'analyse. */
   fillTensionGaps: (moments) =>
     mutate('relance', (state) => {
-      const added: SoundCue[] = [];
-      const isFree = (time: number) =>
-        ![...state.project.cues, ...added].some((c) => Math.abs(c.time - time) < 0.2);
-
-      for (const moment of moments) {
-        const at = Math.max(0, moment + 0.3);
-        if (isFree(at)) added.push({ id: uid('sfx'), sfx: 'sparkle', time: at, gain: 0.7 });
-      }
-
+      const added = tensionFills(moments, state.project.cues, () => uid('sfx'));
       if (added.length === 0) return state;
       return { project: { ...state.project, cues: [...state.project.cues, ...added] } };
     }),
+
+  /**
+   * Pose d'un coup tout ce que la notation récompense.
+   *
+   * Une seule entrée d'historique pour l'ensemble : c'est un geste unique du
+   * point de vue de l'utilisateur, et devoir l'annuler en quinze fois serait
+   * pire que de ne pas pouvoir l'annuler.
+   */
+  applyRecommended: (setId) =>
+    mutate('reglages-recommandes', (state) =>
+      reclamp({
+        ...state,
+        project: applyFinish(state.project, analyzeProject(state.project), setId, () => uid('auto')),
+        selection: null,
+      }),
+    ),
 
   moveClip: (from, to) =>
     mutate('deplacement', (state) => {
@@ -431,8 +467,18 @@ export const useStudio = create<StudioState>((set, get) => {
    */
   addCaption: (style = 'punch') =>
     mutate('ajout-texte', (state) => {
-      const start = state.playhead;
-      const end = start + 2;
+      /*
+       * Un sous-titre posé après la dernière image n'existe pas.
+       *
+       * Il ne s'affiche jamais, ne compte dans aucune couverture, et rien à
+       * l'écran ne le dit : on le voit dans la liste, on le croit posé. C'est
+       * arrivé en ajoutant un texte avec la tête de lecture au bout du montage
+       * — 14,7 s → 16,7 s sur une vidéo de 14,7 s. On le ramène donc dans les
+       * bornes, quitte à le raccourcir.
+       */
+      const limit = totalDuration(state.project.clips);
+      const end = limit > 0 ? Math.min(limit, state.playhead + 2) : state.playhead + 2;
+      const start = limit > 0 ? Math.max(0, Math.min(state.playhead, end - MIN_CAPTION_SPAN)) : state.playhead;
 
       const occupied = state.project.captions
         .filter((c) => c.start < end && c.end > start)
@@ -495,6 +541,98 @@ export const useStudio = create<StudioState>((set, get) => {
     mutate('mixage', (state) => ({
       project: { ...state.project, mix: { ...state.project.mix, ...patch } },
     })),
+
+  addSamples: (cues) =>
+    mutate('ajout-bruitage', (state) => ({
+      project: { ...state.project, samples: [...state.project.samples, ...cues] },
+    })),
+
+  updateSample: (id, patch) =>
+    mutate('bruitage-reglage', (state) => ({
+      project: {
+        ...state.project,
+        samples: state.project.samples.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+      },
+    })),
+
+  removeSample: (id) =>
+    mutate('retrait-bruitage', (state) => {
+      const cue = state.project.samples.find((c) => c.id === id);
+      if (cue) URL.revokeObjectURL(cue.url);
+      return { project: { ...state.project, samples: state.project.samples.filter((c) => c.id !== id) } };
+    }),
+
+  addVoices: (cues) =>
+    mutate('ajout-voix', (state) => ({
+      project: { ...state.project, voices: [...state.project.voices, ...cues] },
+    })),
+
+  updateVoice: (id, patch) =>
+    mutate('voix-reglage', (state) => ({
+      project: {
+        ...state.project,
+        voices: state.project.voices.map((v) => (v.id === id ? { ...v, ...patch } : v)),
+      },
+    })),
+
+  /**
+   * Retire une réplique, et avec elle les sous-titres qu'elle avait produits.
+   *
+   * Les garder laisserait à l'écran un texte que plus rien ne prononce, et il
+   * faudrait les retrouver un par un pour les effacer. Le geste reste annulable,
+   * ce qui suffit à couvrir le regret.
+   */
+  removeVoice: (id) =>
+    mutate('retrait-voix', (state) => {
+      const cue = state.project.voices.find((v) => v.id === id);
+      if (cue) URL.revokeObjectURL(cue.url);
+      return {
+        project: {
+          ...state.project,
+          voices: state.project.voices.filter((v) => v.id !== id),
+          captions: state.project.captions.filter((c) => c.voiceId !== id),
+        },
+      };
+    }),
+
+  alignVoice: (id) =>
+    mutate('calage-voix', (state) => {
+      const cue = state.project.voices.find((v) => v.id === id);
+      if (!cue) return state;
+
+      /*
+       * Un sous-titre posé après la dernière image n'existe pas.
+       *
+       * Une réplique placée trop tard produisait des sous-titres au-delà de la
+       * fin du montage — vu à 13,9 s sur une vidéo de 13,6 s. Ils ne
+       * s'affichaient jamais, ne comptaient dans aucune couverture, et rien à
+       * l'écran ne disait pourquoi le calage semblait n'avoir rien fait.
+       *
+       * Ceux qui débordent sont ramenés à la fin, ceux qui commencent après
+       * sont écartés : mieux vaut perdre une phrase que d'en garder une
+       * invisible.
+       */
+      const limit = totalDuration(state.project.clips);
+
+      const produced = captionsFromVoice(cue.script, cue.segments, () => uid('cap'), {
+        offset: cue.start,
+      })
+        .filter((caption) => limit <= 0 || caption.start < limit)
+        .map((caption) => ({
+          ...caption,
+          end: limit > 0 ? Math.min(caption.end, limit) : caption.end,
+          voiceId: id,
+        }))
+        .filter((caption) => caption.end > caption.start);
+
+      return {
+        project: {
+          ...state.project,
+          // Les sous-titres de cette réplique sont remplacés, jamais complétés.
+          captions: [...state.project.captions.filter((c) => c.voiceId !== id), ...produced],
+        },
+      };
+    }),
 
   setMusic: (music) =>
     mutate('musique', (state) => {

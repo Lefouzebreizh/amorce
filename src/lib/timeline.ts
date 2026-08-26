@@ -65,6 +65,90 @@ export function totalDuration(clips: Clip[]): number {
   return placed.length === 0 ? 0 : placed[placed.length - 1].end;
 }
 
+/**
+ * Où poser des fichiers audio importés.
+ *
+ * Les déposer tous au même instant n'a aucun sens : quand on choisit plusieurs
+ * fichiers d'un coup, c'est qu'ils se répartissent sur le montage. Et les mettre
+ * bout à bout depuis la tête de lecture donne un enchaînement qui ne tombe sur
+ * rien — la parole démarre au milieu d'un plan, le bruitage arrive après la
+ * coupe qu'il devait annoncer.
+ *
+ * On les pose donc **sur les coupes**, qui sont les seuls instants où quelque
+ * chose se produit déjà à l'image. C'est là qu'un son a une raison d'être.
+ */
+export function shotStarts(clips: Clip[], from = 0): number[] {
+  return layoutClips(clips)
+    .map((p) => Math.max(0, p.start))
+    .filter((start) => start >= from - 1e-6);
+}
+
+/**
+ * Instants de dépôt pour une suite de fichiers qui ne doivent pas se recouvrir.
+ *
+ * C'est le cas de la voix : deux répliques qui se chevauchent sont
+ * inaudibles. Chacune prend donc la première coupe qui vient après la fin de la
+ * précédente ; à court de coupes, elles s'enchaînent bout à bout.
+ */
+export function placeWithoutOverlap(starts: number[], durations: number[], from = 0): number[] {
+  const times: number[] = [];
+  let earliest = from;
+
+  for (const duration of durations) {
+    const cut = starts.find((start) => start >= earliest - 1e-6);
+    const at = cut ?? earliest;
+    times.push(at);
+    earliest = at + duration;
+  }
+
+  return times;
+}
+
+/**
+ * Instants de dépôt pour des fichiers qui peuvent se superposer.
+ *
+ * C'est le cas des bruitages : rien n'interdit qu'un impact et un souffle
+ * sonnent ensemble. Chacun prend une coupe distincte tant qu'il en reste, pour
+ * ne pas empiler trois sons sur le même raccord.
+ */
+export function placeOnCuts(starts: number[], count: number, from = 0): number[] {
+  const available = starts.filter((start) => start >= from - 1e-6);
+  const times: number[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const previous = times[times.length - 1];
+    // À court de coupes, on espace d'une seconde plutôt que de tout empiler —
+    // mais le tout premier tombe bien là où on l'a demandé.
+    times.push(available[i] ?? (previous === undefined ? from : previous + 1));
+  }
+
+  return times;
+}
+
+/**
+ * Découpe un plan en morceaux d'environ `target` secondes.
+ *
+ * Renvoie le plan seul s'il est trop court pour être coupé en deux. Le premier
+ * morceau hérite de la transition d'origine ; les suivants s'enchaînent sec,
+ * sans quoi le découpage perdrait la nervosité qui le justifie.
+ */
+export function chopped(clip: Clip, target: number, makeId: () => string): Clip[] {
+  const sourceSpan = clip.outPoint - clip.inPoint;
+  const shown = sourceSpan / Math.max(0.1, clip.speed);
+  const pieces = Math.floor(shown / Math.max(0.5, target));
+  if (pieces < 2) return [clip];
+
+  const step = sourceSpan / pieces;
+  return Array.from({ length: pieces }, (_, piece) => ({
+    ...clip,
+    id: makeId(),
+    inPoint: clip.inPoint + piece * step,
+    outPoint: clip.inPoint + (piece + 1) * step,
+    transition: piece === 0 ? clip.transition : ('cut' as const),
+    transitionDuration: piece === 0 ? clip.transitionDuration : 0,
+  }));
+}
+
 /** Une couche vidéo à dessiner pour une image donnée. */
 export type ActiveLayer = {
   placed: PlacedClip;
@@ -137,6 +221,8 @@ export function emptyProject(): Project {
     clips: [],
     captions: [],
     cues: [],
+    samples: [],
+    voices: [],
     music: null,
     cinema: { ...DEFAULT_CINEMA },
     mix: { ...DEFAULT_MIX },

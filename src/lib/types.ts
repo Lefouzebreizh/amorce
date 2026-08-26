@@ -2,7 +2,8 @@
  * Modèle de données d'Amorce.
  *
  * Un projet = des médias sources (`MediaAsset`) découpés en `Clip`s posés bout à
- * bout sur une timeline, plus des calques par-dessus : sous-titres et bruitages.
+ * bout sur une timeline, plus des calques par-dessus : sous-titres, bruitages
+ * — de synthèse ou importés — et voix off.
  *
  * Tout vit dans le navigateur : les fichiers ne sont jamais envoyés sur un serveur.
  */
@@ -74,8 +75,31 @@ export type Caption = {
   y: number;
   /** Couleur du texte. Absente, celle du style s'applique. */
   color?: string;
+  /**
+   * Couleur de la pastille qui surligne le mot prononcé, en karaoké.
+   *
+   * Absente, celle du style s'applique. La couleur du texte posé dessus n'est
+   * pas réglable : elle se déduit du contraste, sans quoi on pourrait composer
+   * un couple parfaitement illisible en deux gestes.
+   */
+  highlightColor?: string;
   /** Facteur de taille appliqué au corps du style. */
   scale?: number;
+  /**
+   * Le texte bat-il lentement au lieu de rester immobile.
+   *
+   * À réserver à ce qui presse — un compte à rebours, une question finale. Un
+   * montage où tout pulse n'attire l'œil sur rien.
+   */
+  pulse?: boolean;
+  /**
+   * Réplique de voix off dont ce sous-titre est issu, s'il en vient.
+   *
+   * Ce lien rend le calage rejouable : retoucher le texte puis recaler remplace
+   * les sous-titres précédents au lieu d'en empiler une seconde série par-dessus
+   * la première.
+   */
+  voiceId?: string;
 };
 
 /**
@@ -127,6 +151,63 @@ export type SoundCue = {
 };
 
 /**
+ * Un bruitage importé, posé à un instant de la timeline.
+ *
+ * Les sons de synthèse couvrent bien ce qui est abstrait — une coupe, un
+ * souffle, une tension. Ils ne peuvent rien pour ce qui doit être reconnaissable :
+ * un rugissement, un coup d'orchestre, une explosion de film. Ceux-là se
+ * fabriquent avec un modèle entraîné sur du son réel, ailleurs, et n'ont plus
+ * qu'à être déposés ici.
+ *
+ * Même forme qu'une réplique de voix, à deux différences près : rien à
+ * prononcer, et surtout aucune baisse du fond — un bruitage doit percer le
+ * mixage, pas lui faire de la place.
+ */
+export type SampleCue = {
+  id: string;
+  name: string;
+  /** URL objet du fichier, valable tant que l'onglet est ouvert. */
+  url: string;
+  duration: number;
+  /** Instant de la timeline où le bruitage commence, en secondes. */
+  start: number;
+  gain: number;
+};
+
+/**
+ * Une réplique de voix off, posée à un instant de la timeline.
+ *
+ * Une liste plutôt qu'une piste unique, parce que c'est ainsi qu'arrive une
+ * voix générée : un fichier par réplique, à placer chacun en face de son plan.
+ * Les concaténer à la main hors du studio obligerait à tout refaire dès qu'un
+ * plan bouge d'une demi-seconde.
+ *
+ * Le texte voyage avec le son : c'est lui qui donne les sous-titres, et le
+ * séparer de sa réplique reviendrait à devoir les réassocier à chaque calage.
+ */
+export type VoiceCue = {
+  id: string;
+  name: string;
+  /** URL objet du fichier, valable tant que l'onglet est ouvert. */
+  url: string;
+  duration: number;
+  /** Instant de la timeline où la réplique commence, en secondes. */
+  start: number;
+  gain: number;
+  /** Texte prononcé, d'où sont tirés les sous-titres. */
+  script: string;
+  /**
+   * Passages parlés détectés dans le fichier, en secondes depuis son début.
+   *
+   * Conservés plutôt que recalculés : l'analyse demande de décoder tout le
+   * fichier, ce qui se paie en centaines de millisecondes sur téléphone. Elle a
+   * lieu une fois à l'import, et sert ensuite aussi bien au calage des
+   * sous-titres qu'à la baisse automatique du fond.
+   */
+  segments: { start: number; end: number }[];
+};
+
+/**
  * Définitions d'export proposées.
  *
  * L'enregistrement se faisant en temps réel, un appareil qui ne tient pas la
@@ -164,10 +245,10 @@ export function exportPreset(id: ExportPreset['id']): ExportPreset {
 /**
  * Table de mixage.
  *
- * Trois sources se disputent la même sortie : le son d'origine des plans, les
- * bruitages, la musique. Sans réglage séparé, un rush bruyant couvre les
- * bruitages qu'on vient de poser, et le seul recours serait de baisser le
- * volume de chaque plan un par un.
+ * Quatre sources se disputent la même sortie : le son d'origine des plans, les
+ * bruitages, la musique et la voix off. Sans réglage séparé, un rush bruyant
+ * couvre les bruitages qu'on vient de poser, et le seul recours serait de
+ * baisser le volume de chaque plan un par un.
  */
 export type MixSettings = {
   /** Son d'origine des plans, de 0 à 1. */
@@ -176,6 +257,16 @@ export type MixSettings = {
   sfx: number;
   /** Musique de fond, de 0 à 1. */
   music: number;
+  /** Voix off, de 0 à 1. */
+  voice: number;
+  /**
+   * Baisse appliquée au fond pendant que la voix parle, de 0 (aucune) à 1.
+   *
+   * Le geste manuel qu'elle remplace — descendre la musique sur chaque réplique
+   * puis la remonter — est le plus fastidieux du montage sonore, et celui qu'on
+   * refait entièrement dès qu'une réplique se décale.
+   */
+  ducking: number;
 };
 
 /**
@@ -183,8 +274,12 @@ export type MixSettings = {
  *
  * Les bruitages passent devant : leur fonction est de marquer une coupe ou un
  * impact, ce qu'ils ne peuvent pas faire au même niveau que le fond sonore.
+ *
+ * La voix passe devant tout le reste, et à plein niveau : dès qu'un mot se
+ * devine au lieu de s'entendre, plus rien d'autre dans le montage n'a
+ * d'importance.
  */
-export const DEFAULT_MIX: MixSettings = { clips: 0.75, sfx: 1, music: 0.6 };
+export const DEFAULT_MIX: MixSettings = { clips: 0.75, sfx: 1, music: 0.6, voice: 1, ducking: 0.7 };
 
 /** Rendus colorimétriques disponibles. */
 export type LookId =
@@ -222,6 +317,8 @@ export type Project = {
   clips: Clip[];
   captions: Caption[];
   cues: SoundCue[];
+  samples: SampleCue[];
+  voices: VoiceCue[];
   music: MusicTrack | null;
   cinema: CinemaSettings;
   mix: MixSettings;

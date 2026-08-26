@@ -101,7 +101,10 @@ export function nextStep(project: Project, analysis: Analysis = analyzeProject(p
     };
   }
 
-  if (project.cues.length < Math.max(2, Math.floor(analysis.duration / 8))) {
+  // Bruitages de synthèse et fichiers déposés comptent ensemble : l'oreille ne
+  // les distingue pas, et réclamer des whooshs à quelqu'un qui a déposé ses
+  // propres impacts serait absurde.
+  if (project.cues.length + project.samples.length < Math.max(2, Math.floor(analysis.duration / 8))) {
     return {
       title: 'Ponctue tes coupes',
       why: 'Un bruitage sur chaque raccord transforme une suite de plans en rythme. C’est ce qui s’entend le plus.',

@@ -29,7 +29,7 @@ function caption(start: number, end: number): Caption {
 }
 
 function project(overrides: Partial<Project> = {}): Project {
-  return { name: 't', assets: [asset()], clips: [], captions: [], cues: [], music: null, cinema: { ...DEFAULT_CINEMA }, mix: { ...DEFAULT_MIX }, ...overrides };
+  return { name: 't', assets: [asset()], clips: [], captions: [], cues: [], samples: [], voices: [], music: null, cinema: { ...DEFAULT_CINEMA }, mix: { ...DEFAULT_MIX }, ...overrides };
 }
 
 test('band vaut 1 dans la plage idéale et 0 aux bornes dures', () => {
@@ -168,4 +168,40 @@ test('un critère au maximum ne réclame aucune correction urgente', () => {
 
   assert.equal(tension.score, 1);
   assert.match(tension.remedy, /Rien à corriger/);
+});
+
+test('une voix off compte dans la note du son', () => {
+  const clips = [clip(2), clip(2)];
+  const cues = [{ id: nextId(), sfx: 'whoosh' as const, time: 1, gain: 0.8 }];
+
+  const sans = analyzeProject(project({ clips, cues })).criteria.find((c) => c.id === 'son')!;
+  const avec = analyzeProject(
+    project({
+      clips,
+      cues,
+      voices: [
+        { id: nextId(), name: 'v.mp3', url: 'blob:v', duration: 2, start: 0, gain: 1, script: 'salut', segments: [] },
+      ],
+    }),
+  ).criteria.find((c) => c.id === 'son')!;
+
+  // Un montage porté par une voix était noté comme un montage muet.
+  assert.ok(avec.score > sans.score, `la voix n’ajoute rien (${sans.score} → ${avec.score})`);
+});
+
+test('un bruitage importé compte autant qu’un bruitage de synthèse', () => {
+  const clips = [clip(2), clip(2)];
+
+  const synthese = analyzeProject(
+    project({ clips, cues: [{ id: nextId(), sfx: 'boom', time: 1, gain: 0.9 }] }),
+  ).criteria.find((c) => c.id === 'son')!;
+
+  const importe = analyzeProject(
+    project({
+      clips,
+      samples: [{ id: nextId(), name: 'boum.wav', url: 'blob:b', duration: 1, start: 1, gain: 0.9 }],
+    }),
+  ).criteria.find((c) => c.id === 'son')!;
+
+  assert.equal(importe.score, synthese.score);
 });

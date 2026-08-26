@@ -109,6 +109,10 @@ export function captionCoverage(captions: Caption[], duration: number): number {
   if (duration <= 0 || captions.length === 0) return 0;
 
   const intervals = captions
+    // Un sous-titre sans texte n'affiche rien : le compter comme couvert
+    // gonflerait la note d'un écran resté vide. Les emplacements posés par
+    // « Poser les réglages » sont là pour dire où écrire, pas pour noter.
+    .filter((c) => c.text.trim().length > 0)
     .map((c) => [Math.max(0, Math.min(c.start, c.end)), Math.min(duration, Math.max(c.start, c.end))] as const)
     .filter(([start, end]) => end > start)
     .sort((a, b) => a[0] - b[0]);
@@ -242,7 +246,11 @@ export function analyzeProject(project: Project): Analysis {
   const slumps = findSlumps(curve);
   const averageShot = duration / shotCount;
   const coverage = captionCoverage(project.captions, duration);
-  const cuesPer10s = (project.cues.length / duration) * 10;
+  // Les bruitages importés comptent autant que ceux de synthèse : à l'oreille
+  // rien ne les distingue, et n'en retenir qu'une sorte notait à zéro un
+  // montage entièrement ponctué de fichiers déposés.
+  const cuesPer10s = ((project.cues.length + project.samples.length) / duration) * 10;
+  const hasVoice = project.voices.some((v) => v.duration > 0);
 
   // Le plan le plus long donne le meilleur signal d'un montage qui s'endort.
   const longestShot = Math.max(...placed.map((p) => p.duration));
@@ -252,7 +260,21 @@ export function analyzeProject(project: Project): Analysis {
   const rythme = 0.65 * band(averageShot, 1.1, 2.8, 0.25, 7) + 0.35 * band(longestShot, 0, 3.5, 0, 9);
   const tension = Math.max(0, 1 - slumpRatio * 2.2 - Math.min(0.35, slumps.length * 0.08));
   const texte = band(coverage, 0.55, 0.95, 0, 1.01);
-  const son = Math.min(1, 0.75 * band(cuesPer10s, 1.2, 6, 0, 14) + (project.music ? 0.25 : 0));
+  /*
+   * Le son se juge sur trois apports, non sur deux.
+   *
+   * La voix off n'y pesait rien : un montage entièrement porté par une voix —
+   * le cas de toute vidéo qui raconte quelque chose — était noté comme un
+   * montage muet, et le guide continuait à réclamer des bruitages par-dessus
+   * une bande déjà pleine.
+   *
+   * La ponctuation garde la part principale : c'est elle qui donne le rythme,
+   * et c'est le seul apport dont l'absence s'entend immédiatement.
+   */
+  const son = Math.min(
+    1,
+    0.6 * band(cuesPer10s, 1.2, 6, 0, 14) + (project.music ? 0.2 : 0) + (hasVoice ? 0.2 : 0),
+  );
   const format = 0.7 * band(duration, 7, 35, 2, 90) + 0.3 * verticalShare(project);
 
   const hasEarlyCaption = project.captions.some((c) => c.start <= 1.2 && c.end > c.start);
@@ -313,13 +335,17 @@ export function analyzeProject(project: Project): Analysis {
       label: 'Son',
       score: son,
       weight: 10,
-      detail: `${cuesPer10s.toFixed(1)} bruitage${cuesPer10s >= 2 ? 's' : ''} pour 10 s${project.music ? ', musique de fond active' : ', pas de musique de fond'}.`,
+      detail: `${cuesPer10s.toFixed(1)} bruitage${cuesPer10s >= 2 ? 's' : ''} pour 10 s${project.music ? ', musique de fond' : ''}${hasVoice ? ', voix off' : ''}${!project.music && !hasVoice ? ', ni musique ni voix off' : ''}.`,
       remedy:
-        project.cues.length === 0
+        project.cues.length + project.samples.length === 0
           ? 'Ouvre Son, place-toi sur une coupe et pose un Whoosh. Écoute chaque bruitage avec ♪ avant de le poser.'
           : !project.music
             ? 'Ajoute une musique de fond dans Son : elle soude les plans entre eux.'
-            : 'Ponctue davantage tes coupes avec des bruitages.',
+            : // La musique passe avant : elle s'importe en un geste, là où une voix
+              // off est un tournage en soi. On ne réclame pas le plus lourd d'abord.
+              !hasVoice
+              ? 'Ajoute une voix off dans Son : elle porte le propos, et ses sous-titres se calent tout seuls.'
+              : 'Ponctue davantage tes coupes avec des bruitages.',
     },
     {
       id: 'format',

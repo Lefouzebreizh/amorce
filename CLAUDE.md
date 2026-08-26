@@ -19,6 +19,7 @@ npm run lint        # eslint (config plate, eslint-config-next)
 npm test            # tests unitaires (node --test, --experimental-strip-types)
 npm run fixtures    # fabrique quatre rushes de test dans .fixtures/rushes/
 npm run verify      # parcours complet dans un vrai Chromium (dev doit tourner)
+npm run verify:reprise  # le montage survit-il à un rechargement (dev doit tourner)
 ```
 
 Avant de pousser : `npm run typecheck && npm run lint && npm test`. Si le
@@ -45,14 +46,17 @@ scripts/          make-fixtures.mjs, verify.mjs (Playwright, hors bundle)
 | `transitions.ts` | Une transition = composer deux fonctions de dessin. Ajouter un effet ne touche pas au moteur. |
 | `grade.ts` | Étalonnage cinéma : filtres, teintes, vignettage, grain, halo. |
 | `captions.ts` | Styles de sous-titres et tracé canvas ; renvoie les boîtes pour la manipulation au doigt. |
-| `sfx.ts` | Bruitages **synthétisés** en Web Audio. Aucun fichier son n'est embarqué. |
-| `audio.ts` | Mixage des trois bus (clips / bruitages / musique) et sortie enregistrable. |
+| `sfx.ts` | Bruitages **synthétisés** en Web Audio, réverbération comprise. Aucun fichier son n'est embarqué. |
+| `voice.ts` | Voix off : découpe du signal aux silences, répartition du texte sur les passages parlés, baisse du fond. Pur, testé. |
+| `audio.ts` | Mixage des quatre bus (clips / bruitages / musique / voix) et sortie enregistrable. |
 | `export.ts` | `MediaRecorder` sur le canvas + le bus audio. Négocie MP4 puis WebM. |
 | `quality.ts` | Paliers de prévisualisation, `QualityGovernor` (ajustement) et `PanicDetector` (filet). |
 | `analysis.ts` | Note de viralité sur 100 : hook 30, rythme 20, tension 20, sous-titres 15, son 10, format 5. |
 | `guide.ts` | Une seule consigne à la fois, ordonnée par ce qui bloque le plus. |
 | `autoEdit.ts` | Montage express : un projet complet à partir des seuls rushes. |
+| `autoFinish.ts` | Réglages recommandés posés sur un montage **existant** : trames de textes, bruitages, découpe. Ne remplace jamais ce qui est là. |
 | `store.ts` | Store Zustand, avec historique annuler/rétablir. |
+| `persistence.ts` | Reprise du montage : projet et fichiers rangés dans IndexedDB. Les fonctions de mise en forme sont pures et testées. |
 | `steps.ts` | Le parcours en 7 étapes, en données pures (séparé des composants pour rester testable). |
 | `media.ts`, `hooks.ts`, `id.ts` | Import de fichiers, modèles d'accroches, identifiants. |
 
@@ -89,7 +93,9 @@ justifiée en tête du fichier concerné ; relire ce commentaire avant d'y touch
    calculé à partir de la taille réelle du canvas.
 5. **Le son passe par Web Audio, jamais par le volume des éléments média.**
    Les `<video>` sont `muted` ; c'est le graphe audio qui alimente à la fois les
-   haut-parleurs et `MediaRecorder`.
+   haut-parleurs et `MediaRecorder`. La baisse automatique sous la voix a ses
+   propres nœuds, sous les plans et la musique : l'écrire sur le gain des bus
+   effacerait le réglage de la table de mixage, et inversement.
 6. **Le temps écoulé est borné hors export, jamais pendant.** La borne absorbe
    une mise en veille ; pendant un export elle désynchronise l'image et le son
    et allonge le fichier. Voir la boucle de `usePlayback.ts`.
@@ -166,6 +172,59 @@ la tête de lecture se retrouve au-delà de la fin.
   navigateur (voir `effectiveQuality` dans `store.ts`), sinon l'hydratation
   diverge.
 
+## Outillage du dépôt (`.claude/`)
+
+Ce dépôt héberge **huit projets sans code commun** : le studio Amorce décrit
+ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
+`CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
+Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
+`patrimoine/`, la chaîne de montage automatisée dans `montage-auto/`, le
+répondeur de commentaires Facebook dans `repondeur-facebook/` et l'assistant de
+rangement Life-Organizer dans `life-organizer/` (qui ont chacun leur propre
+`README.md`). L'outillage ci-dessous existe parce que rien de générique ne
+connaît cette particularité.
+
+| Élément | Ce qu'il fait |
+| --- | --- |
+| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/`, de `patrimoine/` et de `montage-auto/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
+| `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
+| `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
+| `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
+| `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
+| `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
+| `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
+| `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
+| `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
+| `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
+| `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
+| `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
+| `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
+| `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
+| `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
+| `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
+| Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
+| Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
+
+Le hook n'agit que sur une session distante (`CLAUDE_CODE_REMOTE`) : sur un
+poste de développement, le SDK appartient à son propriétaire.
+
+Un plugin extérieur est déclaré dans `.claude/settings.json` :
+`frontend-design`, publié par Anthropic. Il recoupe `/custom-frontend-designer`
+sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu'il
+porte les règles d'identité d'Amorce là où le plugin vise une esthétique
+générique. Le plugin reste utile partout ailleurs.
+
+Deux règles qui découlent de la cohabitation :
+
+- **Une modification ne touche qu'un seul projet**, sauf configuration à la
+  racine qui doit connaître ses voisins — c'est le cas d'`eslint.config.mjs`,
+  qui ignore `look_and_find/**`, faute de quoi ESLint analyse les milliers de
+  fichiers JavaScript générés par le SDK Flutter.
+- La version de Flutter est épinglée **au même numéro** dans le hook et dans
+  `.github/workflows/look-and-find.yml`. Les faire diverger, c'est fabriquer un
+  « ça passe chez moi ».
+
 ## Vérifier
 
 Les tests unitaires (`src/lib/__tests__/`) couvrent ce qui est calculable hors
@@ -174,8 +233,8 @@ qualité, store. Ils utilisent `node:test` + `node:assert/strict`, sans
 dépendance ajoutée. Les intitulés sont des phrases françaises qui décrivent le
 comportement attendu.
 
-L'essentiel du studio — décodage vidéo, mixage, tracé canvas, enregistrement —
-ne peut pas être testé ainsi. `scripts/verify.mjs` pilote donc l'application
+L'essentiel du studio — décodage vidéo, mixage, tracé canvas, enregistrement,
+reprise après rechargement — ne peut pas être testé ainsi. `scripts/verify.mjs` pilote donc l'application
 pour de vrai et contrôle le résultat **sur les pixels et sur le signal sonore**,
 pas sur la présence d'éléments dans le DOM :
 
@@ -191,13 +250,28 @@ lui, la dégradation automatique de qualité ne se déclencherait jamais sur une
 machine de développement. Captures et fichiers exportés atterrissent dans
 `.fixtures/captures/`.
 
+`npm run verify:reprise` couvre à part ce que le parcours principal ne peut pas
+faire sans se réinitialiser : importer, recharger la page, et vérifier que le
+montage revient — puis le **lire**, parce qu'un projet restauré dont les liens
+pointent dans le vide s'affiche normalement et sort noir.
+
 Chromium est déjà installé dans cet environnement (`PLAYWRIGHT_BROWSERS_PATH`),
 ne pas lancer `playwright install`.
 
 ## Pièges connus
 
 - Modifier un poids dans `analysis.ts` change ce que `guide.ts` propose et ce
-  que `verify.mjs` attend. Les trois se tiennent.
+  que `verify.mjs` attend. Les trois se tiennent — redistribuer la note « son »
+  vers la voix off a déplacé la note de référence du parcours de 87 à 86.
+- La note « son » compte les bruitages **de synthèse et importés ensemble** :
+  l'oreille ne les distingue pas, et n'en retenir qu'une sorte notait à zéro un
+  montage entièrement ponctué de fichiers déposés.
+- `captionCoverage` écarte les sous-titres sans texte. Les emplacements vides
+  posés par « Poser les réglages » disent **où** il reste à écrire ; les compter
+  comme couverts noterait un écran resté vide.
+- `autoFinish` ajoute, il ne remplace pas. Un sous-titre déjà calé sur une voix
+  off représente un travail que personne n'accepterait de perdre en touchant un
+  bouton nommé « recommandé ».
 - `renderFrame` s'arrête au fond noir quand il n'y a aucun clip : poursuivre
   appliquerait le halo à un cadre vide, ce qui étranglait l'import sur
   téléphone.
@@ -206,8 +280,26 @@ ne pas lancer `playwright install`.
 - Le canvas ne déclenche pas le chargement d'une police : passer par
   `preloadCaptionFonts` avant tout tracé, sinon le navigateur substitue
   silencieusement une police système.
-- `URL.revokeObjectURL` doit accompagner toute suppression de média ou de
-  musique (`removeAsset`, `setMusic`).
+- `URL.revokeObjectURL` doit accompagner toute suppression de média, de musique
+  ou de voix (`removeAsset`, `setMusic`, `removeVoice`, `removeSample`).
+- La reprise se relit **après** le montage du composant, jamais dans l'état
+  initial : le serveur et le navigateur doivent partir des mêmes valeurs, sinon
+  la première image sort dans la mauvaise disposition. Elle s'abandonne aussi
+  si l'utilisateur a importé quelque chose entre-temps.
+- Un lien objet enregistré ne vaut rien à la relecture. `persistence.ts` les
+  vide au rangement et les recrée au retour ; conserver l'ancien produirait une
+  image noire sans le moindre message.
+- La reprise n'est pas une sauvegarde : un navigateur efface ce qu'on lui a
+  confié quand il manque de place. Ce qui perd son fichier est retiré du projet,
+  et les plans qui en dépendaient avec — un plan orphelin donnerait un montage
+  qui s'ouvre normalement et se révèle vide à la lecture.
+- Un grave en sinus pur n'existe pas sur un téléphone : un haut-parleur ne
+  restitue rien sous ~400 Hz. Tout bruitage qui descend plus bas doit être
+  doublé de ses harmoniques (`impact` dans `sfx.ts`), sans quoi il est
+  simplement absent de l'appareil où le format court est regardé.
+- Les deux couches d'un impact se **partagent** le niveau demandé. Les faire
+  s'additionner ferait grimper la crête, et le limiteur commun, en l'écrasant,
+  ferait pomper tout le mixage à chaque frappe.
 - L'export MP4 n'existe que sous Chrome et Edge ; ailleurs le fichier sort en
   WebM. Ne pas supposer l'extension.
 
