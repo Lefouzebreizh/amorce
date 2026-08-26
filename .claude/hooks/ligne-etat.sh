@@ -14,6 +14,11 @@
 #    réponse du modèle, et seulement pour un abonnement Pro ou Max. Tant qu'il
 #    manque, on affiche ce qu'on a — afficher « 0 % » serait une information
 #    fausse, pas une information manquante.
+# 4. **La lecture est déposée en passant.** Claude Code ne transmet ces chiffres
+#    qu'ici : aucune commande, aucun fichier ne permet de les retrouver
+#    autrement. La ligne d'état les écrit donc au vol dans un fichier de
+#    passage, d'où la compétence `/jauge` les relit. Sans ce dépôt, elle
+#    n'aurait rien à lire et devrait inventer.
 
 entree=$(cat)
 
@@ -61,3 +66,13 @@ for morceau in "${morceaux[@]}"; do
   ligne+=$morceau
 done
 printf '%s\n' "$ligne"
+
+# Le dépôt pour `/jauge`. Il échoue en silence : une ligne d'état qui se
+# plaindrait d'un disque plein remplacerait la jauge par un message d'erreur,
+# à chaque rafraîchissement.
+cinq_pourcent=$(lire '.rate_limits.five_hour.used_percentage')
+if [[ -n $cinq_pourcent ]]; then
+  printf '%s' "$entree" \
+    | jq -c '{rate_limits, model: .model.display_name, releve: now}' \
+    > "${TMPDIR:-/tmp}/claude-jauge-$(id -u).json" 2>/dev/null || true
+fi
