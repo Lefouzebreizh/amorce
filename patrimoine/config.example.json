@@ -1,0 +1,83 @@
+{
+  "devise": "EUR",
+
+  "profil": {
+    "appetence_risque": "equilibre",
+    "horizon_annees": 15,
+    "apport_mensuel": 500,
+    "cibles_pct": {
+      "bourse": 50,
+      "crypto": 8,
+      "immobilier": 32,
+      "liquidites": 10
+    },
+    "bande_tolerance_pct": 5
+  },
+
+  "actifs": {
+    "bourse": [
+      {
+        "nom": "Amundi MSCI World",
+        "ticker": "CW8.PA",
+        "quantite": 38,
+        "pru": 402.5,
+        "enveloppe": "PEA"
+      },
+      {
+        "nom": "iShares Core S&P 500",
+        "ticker": "CSPX.AS",
+        "quantite": 12,
+        "pru": 480.1,
+        "enveloppe": "CTO"
+      },
+      {
+        "nom": "Amundi Euro Govies 7-10Y",
+        "ticker": "X13.DE",
+        "quantite": 60,
+        "pru": 152.0,
+        "enveloppe": "AV"
+      }
+    ],
+
+    "crypto": [
+      {
+        "nom": "Bitcoin",
+        "id_coingecko": "bitcoin",
+        "quantite": 0.145,
+        "pru": 27400.0,
+        "conservation": "cold-wallet"
+      },
+      {
+        "nom": "Ethereum",
+        "id_coingecko": "ethereum",
+        "quantite": 2.3,
+        "pru": 1850.0,
+        "conservation": "exchange"
+      }
+    ],
+
+    "immobilier": [
+      {
+        "nom": "Studio Rennes centre",
+        "valeur_estimee": 148000,
+        "capital_restant_du": 76500,
+        "loyer_mensuel_brut": 620,
+        "charges_annuelles": 1850,
+        "date_estimation": "2026-06-30"
+      },
+      {
+        "nom": "SCPI Epargne Pierre",
+        "valeur_estimee": 21000,
+        "capital_restant_du": 0,
+        "loyer_mensuel_brut": 92,
+        "charges_annuelles": 0,
+        "date_estimation": "2026-07-15"
+      }
+    ],
+
+    "liquidites": [
+      { "nom": "Livret A", "montant": 12000, "taux_annuel_pct": 1.7 },
+      { "nom": "Fonds euro (AV)", "montant": 9500, "taux_annuel_pct": 2.5 }
+    ]
+  }
+}
