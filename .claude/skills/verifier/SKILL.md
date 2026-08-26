@@ -5,7 +5,7 @@ description: Lance la vérification du projet touché — typecheck, lint et tes
 
 # Vérifier ce dépôt
 
-Cinq projets indépendants, cinq séquences. **Ne lance que celle du projet
+Des projets indépendants, une séquence chacun. **Ne lance que celle du projet
 touché** : les tests de l'un ne disent rien des autres, et tout lancer multiplie
 l'attente pour rien.
 
@@ -60,9 +60,16 @@ npm run verify
 
 ## Chaîne KDP — `kdp/`
 
-Pas de suite de tests : le juge est `kdp/pipeline/valider.py`, qui ouvre les
-deux PDF **tels qu'ils partiront chez l'imprimeur** et sort en erreur au
-premier contrôle qui échoue.
+Une seule partie de la chaîne est testable hors fichiers : le validateur de
+niches, qui n'est que du calcul.
+
+```bash
+python3 -m unittest discover -s kdp/tests
+```
+
+Pour tout le reste, le juge est `kdp/pipeline/valider.py`, qui ouvre les deux
+PDF **tels qu'ils partiront chez l'imprimeur** et sort en erreur au premier
+contrôle qui échoue.
 
 ```bash
 python3 kdp/pipeline/valider.py --interieur <pdf> --couverture <pdf>
@@ -83,17 +90,15 @@ beau, si le texte est juste, si l'histoire tient.
 python3 -m unittest discover -s mon-app-audio/tests
 ```
 
-Ce qui est couvert : le plan d'atténuation, le recollage des tranches, la
-normalisation — du calcul d'intervalles et du signal synthétisé, sans toucher au
-disque. Ce qui ne l'est pas : l'alignement par Whisper, qui demande PyTorch, et
-la voix de synthèse, qui demande une connexion. Un changement sur ces deux
-chemins-là se signale comme non vérifié.
+Le plan d'atténuation se vérifie sans son, sur des intervalles ; le reste du
+mixage sur un signal synthétisé, sans jamais toucher au disque. Ce qu'aucun
+test ne dit : si le mixage **s'entend** bien. Cela demande une écoute.
 
 ## Radar crypto — `pepites/`
 
 ```bash
 cd pepites
-python3 -m unittest discover -s tests    # ~120 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 121 tests, aucun ne touche au réseau
 python3 profils.py                       # l'effet des réglages sur six profils connus
 ```
 
@@ -107,6 +112,21 @@ Ce qu'aucun des deux ne dit : **si une API a changé de forme**. Rien n'a encore
 tourné contre DexScreener ni GoPlus en conditions réelles ; tout est validé sur
 des réponses rejouées. Un changement dans `pepites/sources/` se signale comme non
 vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
+
+## Répondeur Facebook — `repondeur-facebook/`
+
+```bash
+python3 -m unittest discover -s repondeur-facebook/tests
+```
+
+Hors réseau : ni Facebook, ni modèle. Ils couvrent le dépouillement des
+réponses de l'API, le tri, la mémoire des commentaires traités, la mise au
+propre du texte et la mise en forme de la notification.
+
+Ce qu'ils ne disent pas, et qui doit figurer dans le compte rendu : si le jeton
+a les bonnes permissions, si le ton ressemble à celui de l'auteur, et si le
+modèle met de côté les bons commentaires. Cela se regarde **en simulation**
+(sans `--publier`), sur de vrais commentaires.
 
 ## Ce que la vérification ne dit pas
 

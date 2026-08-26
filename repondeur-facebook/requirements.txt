@@ -1,0 +1,9 @@
+# Appels à l'API Graph de Facebook, et notifications ntfy.
+requests>=2.31
+
+# Lecture de config.env. Les identifiants ne sont ni dans le code, ni dans
+# l'historique : ils vivent dans un fichier ignoré par git.
+python-dotenv>=1.0
+
+# Rédaction des réponses.
+anthropic>=0.40

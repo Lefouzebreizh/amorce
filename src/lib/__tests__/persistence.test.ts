@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { fileKey, fileRefs, restoreProject, serializeProject, worthSaving } from '../persistence.ts';
+import { fichierExploitable, fileKey, fileRefs, restoreProject, serializeProject, worthSaving } from '../persistence.ts';
 import { emptyProject } from '../timeline.ts';
 import { DEFAULT_CLIP, type Project } from '../types.ts';
 
@@ -101,4 +101,23 @@ test('une musique effacée ne laisse pas de piste morte', () => {
 test('un format inconnu est refusé plutôt que deviné', () => {
   const saved = serializeProject(project());
   assert.equal(restoreProject({ ...saved, format: 99 }, allUrls(project())), null);
+});
+
+test('un fichier rangé vide est traité comme perdu, pas comme valide', () => {
+  // Un Blob de zéro octet est `truthy` : sans garde, il produisait un lien qui
+  // ne décode rien, et le montage se rouvrait normalement pour sortir noir.
+  assert.equal(fichierExploitable(new Blob([])), false);
+  assert.equal(fichierExploitable(undefined), false);
+  assert.equal(fichierExploitable(new Blob(['x'])), true);
+});
+
+test('un rush dont le fichier était vide emporte ses plans', () => {
+  const original = project();
+  const urls = allUrls(original);
+  // Ce que fait la relecture d'un fichier de zéro octet, une fois écarté.
+  urls.delete(fileKey('asset', 'a1'));
+
+  const restored = restoreProject(serializeProject(original), urls);
+  assert.equal(restored?.assets.length, 1);
+  assert.equal(restored?.clips.every((c) => c.assetId !== 'a1'), true);
 });
