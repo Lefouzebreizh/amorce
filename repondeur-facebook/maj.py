@@ -32,7 +32,10 @@ import zipfile
 from pathlib import Path
 
 DEPOT = 'Lefouzebreizh/amorce'
-BRANCHE = 'claude/facebook-responder-permissions-d8s8r5'
+# `main`, et pas la branche de travail du moment : une correction n'existe pour
+# le téléphone qu'une fois fusionnée, et c'est très bien ainsi — ce script sert
+# à récupérer ce qui est validé, pas ce qui est en cours d'écriture.
+BRANCHE = 'main'
 DOSSIER = 'repondeur-facebook'
 INTOUCHABLES = {'config.env', 'journal.jsonl'}
 
