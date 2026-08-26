@@ -76,8 +76,85 @@ echo "── Studio audio : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages \
   streamlit pydub imageio-ffmpeg edge-tts requests
 
+echo "── Répondeur Facebook : bibliothèques Python"
+# `requests` est déjà là pour le studio audio ; ces deux-là ne le sont pas, et
+# sans elles les tests du répondeur ne se lancent même pas.
+python3 -m pip install --quiet --break-system-packages anthropic python-dotenv
+
 echo "── Assistant d'allocation : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
+
+echo "── Chaîne de montage : bibliothèques Python"
+# PyTorch est volontairement absent, pour la même raison que dans le studio
+# audio : deux gigaoctets pour un seul chemin de code. Il ne sert ici qu'à dire
+# s'il y a un GPU avant de lancer Wav2Lip — et Wav2Lip lui-même est un dépôt à
+# cloner, avec ses propres dépendances. La voix off, elle, ne demande que ces
+# deux paquets-là et fonctionne dès le démarrage de la session.
+python3 -m pip install --quiet --break-system-packages elevenlabs tqdm
+
+echo "── Extraction multiformat : bibliothèques Python"
+# Ce que `/extraction-multiformat` et `/transcription-media` ne peuvent pas
+# faire sans elles : lire un HEIC d'iPhone, dater une photo, ouvrir un EPUB,
+# sortir un tableau de PDF. Quatre secondes d'installation pour des compétences
+# qui, sinon, ne savent qu'annoncer ce qui leur manque.
+# Volontairement absents : opencv (ffmpeg suffit aux images clés),
+# faster-whisper (lourd, et il télécharge son modèle au premier usage),
+# tesseract (paquet système). Les fiches disent comment les ajouter au besoin.
+python3 -m pip install --quiet --break-system-packages \
+  exifread pillow-heif ebooklib pdfplumber chardet mutagen
+
+# `imageio-ffmpeg`, installé plus haut pour le studio audio, embarque un ffmpeg
+# statique complet — mais sous un nom que rien ne trouve. Le lier suffit à
+# rendre la vidéo et l'audio exploitables, sans installer de paquet système.
+if ! command -v ffmpeg >/dev/null 2>&1; then
+  binaire_ffmpeg="$(python3 -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())' 2>/dev/null || true)"
+  if [ -n "$binaire_ffmpeg" ] && [ -x "$binaire_ffmpeg" ]; then
+    ln -sf "$binaire_ffmpeg" /usr/local/bin/ffmpeg 2>/dev/null \
+      && echo "   ffmpeg $("$binaire_ffmpeg" -version | head -1 | cut -d' ' -f3) relié depuis imageio-ffmpeg"
+  fi
+fi
+
+echo "── Amorce : Chromium pour le parcours de vérification"
+# L'environnement fournit un Chromium, mais sous un autre numéro de révision que
+# celui que Playwright réclame — il refuse alors de démarrer et conseille un
+# `playwright install` que cet environnement interdit. Sans ce pont,
+# `npm run fixtures` et `npm run verify` — le seul filet réel du studio — ne
+# s'exécutent pas du tout en session distante.
+#
+# On fabrique une arborescence de liens portant le numéro attendu, pointant sur
+# le navigateur réellement présent. Rien n'est copié : ce sont des liens.
+SOURCE_DIR=/opt/pw-browsers
+SHIM_DIR="$HOME/.cache/amorce-playwright"
+
+if [ -d "$SOURCE_DIR" ] && [ -f "$racine/node_modules/playwright-core/browsers.json" ]; then
+  ATTENDU=$(node -p "require('$racine/node_modules/playwright-core/browsers.json').browsers.find(b => b.name === 'chromium').revision" 2>/dev/null || echo '')
+  PRESENT=$(ls -d "$SOURCE_DIR"/chromium-* 2>/dev/null | head -1 | sed 's/.*chromium-//' || echo '')
+
+  if [ -n "$ATTENDU" ] && [ -n "$PRESENT" ] && [ "$ATTENDU" != "$PRESENT" ]; then
+    HEADLESS="$SHIM_DIR/chromium_headless_shell-$ATTENDU/chrome-headless-shell-linux64"
+    COMPLET="$SHIM_DIR/chromium-$ATTENDU/chrome-linux"
+    mkdir -p "$HEADLESS" "$COMPLET"
+
+    ln -sfn "$SOURCE_DIR/chromium_headless_shell-$PRESENT/chrome-linux/"* "$HEADLESS/" 2>/dev/null || true
+    # Playwright cherche ce nom précis ; le binaire présent s'appelle autrement.
+    ln -sfn "$SOURCE_DIR/chromium_headless_shell-$PRESENT/chrome-linux/headless_shell" "$HEADLESS/chrome-headless-shell"
+    ln -sfn "$SOURCE_DIR/chromium-$PRESENT/chrome-linux/"* "$COMPLET/" 2>/dev/null || true
+
+    for marqueur in INSTALLATION_COMPLETE DEPENDENCIES_VALIDATED; do
+      cp -f "$SOURCE_DIR/chromium_headless_shell-$PRESENT/$marqueur" "$SHIM_DIR/chromium_headless_shell-$ATTENDU/" 2>/dev/null || true
+      cp -f "$SOURCE_DIR/chromium-$PRESENT/$marqueur" "$SHIM_DIR/chromium-$ATTENDU/" 2>/dev/null || true
+    done
+
+    ln -sfn "$SOURCE_DIR"/ffmpeg-* "$SHIM_DIR/" 2>/dev/null || true
+
+    if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+      echo "export PLAYWRIGHT_BROWSERS_PATH=\"$SHIM_DIR\"" >> "$CLAUDE_ENV_FILE"
+    fi
+    echo "   Chromium $PRESENT présenté comme $ATTENDU"
+  else
+    echo "   révision déjà conforme"
+  fi
+fi
 
 # Rend `flutter` et `dart` disponibles à la session elle-même, pas seulement à
 # ce script.
@@ -85,4 +162,4 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
