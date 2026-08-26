@@ -250,7 +250,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
 | `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
-| `/stack-agence-supabase` | Réaliser un projet client sur la stack de l'agence (Next.js 16, Supabase, RLS, shadcn) : ordre de travail, SQL durci, cinq règles de sécurité. Hors Amorce. |
+| `/stack-agence-supabase` | Où partir pour un projet client — le socle `agence/`, déjà écrit — et les deux règles qu'il ne fait pas respecter seul. Amaigrie : ce que son `README` dit déjà en a été retiré. Hors Amorce. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
