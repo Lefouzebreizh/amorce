@@ -42,3 +42,33 @@ next-env.d.ts
 
 # Rushes de test et captures produits par les scripts de vérification
 .fixtures/
+
+# Plan de travail pré-presse KDP (rushes, PDF, épreuves)
+.travail/
+
+# Rapports de validation de niche, écrits là où on lance le script
+rapport_niche.md
+
+# Caches Python de la chaîne pré-presse
+__pycache__/
+*.pyc
+
+# Patrimoine réel de l'assistant d'allocation : ne sort jamais de la machine.
+patrimoine/config.json
+
+# Poids des modèles et clone de Wav2Lip : plusieurs centaines de mégaoctets,
+# retéléchargeables, et le dépôt ne versionne aucun binaire.
+montage-auto/models/
+montage-auto/Wav2Lip/
+
+# Life-Organizer : état local et configuration de travail
+/life-organizer/donnees/
+/life-organizer/config.json
+
+# Worktrees temporaires des agents (outillage, jamais du contenu de projet)
+/.claude/worktrees/
+
+# Paper-Manager : le coffre de documents et la configuration personnelle
+paper-manager/coffre/
+paper-manager/admin_config.json
+paper-manager/admin_config.json.bak

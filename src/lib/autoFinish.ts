@@ -4,8 +4,8 @@ import {
   type Caption,
   type CaptionStyleId,
   type CinemaSettings,
-  type LookId,
   type Clip,
+  type LookId,
   type Project,
   type SfxId,
   type SoundCue,
@@ -246,21 +246,7 @@ function captionsFor(
   return added;
 }
 
-/**
- * Rendu à appliquer, ou celui déjà en place s'il a été choisi.
- *
- * `naturel` est l'absence de parti pris, `cinema` est ce que le montage express
- * pose sans qu'on le lui demande : ni l'un ni l'autre n'est une décision. Tout
- * autre rendu en est une, et on n'y touche pas.
- */
-export function cinemaFor(set: CaptionSet, actuel: CinemaSettings): CinemaSettings {
-  const choisi = actuel.look !== 'naturel' && actuel.look !== 'cinema';
-  if (choisi || !set.look) return actuel;
-
-  return { ...actuel, look: set.look, intensity: Math.max(actuel.intensity, 0.85) };
-}
-
-/** Densité de bruitages visée par l'allègement, pour dix secondes. */
+/** Densité de bruitages qu'on vise en allégeant, pour dix secondes. */
 const SFX_TARGET_PER_10S = 4;
 
 /**
@@ -291,6 +277,20 @@ export function thinCues(cues: SoundCue[], duration: number): SoundCue[] {
   }
 
   return gardes;
+}
+
+/**
+ * Rendu à appliquer, ou celui déjà en place s'il a été choisi.
+ *
+ * `naturel` est l'absence de parti pris, `cinema` est ce que le montage express
+ * pose sans qu'on le lui demande : ni l'un ni l'autre n'est une décision. Tout
+ * autre rendu en est une, et on n'y touche pas.
+ */
+export function cinemaFor(set: CaptionSet, actuel: CinemaSettings): CinemaSettings {
+  const choisi = actuel.look !== 'naturel' && actuel.look !== 'cinema';
+  if (choisi || !set.look) return actuel;
+
+  return { ...actuel, look: set.look, intensity: Math.max(actuel.intensity, 0.85) };
 }
 
 export type FinishResult = {

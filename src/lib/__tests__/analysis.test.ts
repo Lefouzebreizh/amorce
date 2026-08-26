@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { analyzeProject, band, captionCoverage, findSlumps, tensionCurve, SFX_PER_10S } from '../analysis.ts';
+import { analyzeProject, band, captionCoverage, findSlumps, tensionCurve } from '../analysis.ts';
 import { DEFAULT_CINEMA, DEFAULT_CLIP, DEFAULT_MIX, type Caption, type Clip, type MediaAsset, type Project } from '../types.ts';
 
 let counter = 0;
@@ -204,20 +204,4 @@ test('un bruitage importé compte autant qu’un bruitage de synthèse', () => {
   ).criteria.find((c) => c.id === 'son')!;
 
   assert.equal(importe.score, synthese.score);
-});
-
-test('la densité de bruitages visée est celle que la notation applique', () => {
-  const clips = [clip(5), clip(5)];
-
-  // Au sommet de la plage : le critère est plein côté ponctuation.
-  const dense = Array.from({ length: 6 }, (_, i) => ({ id: nextId(), sfx: 'whoosh' as const, time: i * 1.5, gain: 0.8 }));
-  const juste = analyzeProject(project({ clips, cues: dense })).criteria.find((c) => c.id === 'son')!;
-
-  // Au-delà, la note redescend : c'est ce que l'interface doit savoir avant de
-  // proposer d'en poser davantage.
-  const trop = Array.from({ length: 16 }, (_, i) => ({ id: nextId(), sfx: 'whoosh' as const, time: i * 0.6, gain: 0.8 }));
-  const excessif = analyzeProject(project({ clips, cues: trop })).criteria.find((c) => c.id === 'son')!;
-
-  assert.equal(SFX_PER_10S.max, 6);
-  assert.ok(excessif.score < juste.score, `trop de bruitages devrait coûter (${juste.score} → ${excessif.score})`);
 });

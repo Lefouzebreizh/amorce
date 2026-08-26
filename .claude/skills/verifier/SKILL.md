@@ -1,101 +1,189 @@
 ---
 name: verifier
-description: Prouver qu'un changement d'Amorce fonctionne — lancer les parcours navigateur, mesurer le son d'un fichier exporté, lire les pistes d'un rush sans codec. À utiliser dès qu'on touche au rendu, à l'audio, à l'export ou à la mise en page mobile, et pour diagnostiquer un export dont le son ou l'image pose problème.
+description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
 ---
 
-# Vérifier Amorce
+# Vérifier ce dépôt
 
-L'essentiel du studio ne se teste pas hors navigateur. `npm test` couvre le
-calculable ; tout ce qui touche au décodage, au mixage, au tracé et à
-l'enregistrement demande un vrai Chromium et de vraies mesures.
+Des projets indépendants, une séquence chacun. **Ne lance que celle du projet
+touché** : les tests de l'un ne disent rien des autres, et tout lancer multiplie
+l'attente pour rien.
 
-Ce qui suit est ce que la pratique a appris, y compris les défauts qu'aucun
-autre contrôle n'aurait vus.
+Commence par `git status --short` pour savoir où le changement a atterri.
 
-## Les quatre parcours
-
-Tous exigent `npm run dev` dans un autre terminal, et `npm run fixtures` une
-fois pour fabriquer `.fixtures/rushes/`.
-
-| Commande | Ce qu'elle prouve |
-| --- | --- |
-| `npm run verify` | Le parcours complet, profil ordinateur puis téléphone bridé ×4 |
-| `npm run verify:reprise` | Le montage revient après un rechargement, et se relit |
-| `npm run verify:partage` | Le service worker reçoit un fichier partagé, et ne met rien en cache |
-
-Le bridage du processeur sur le profil téléphone n'est pas décoratif : sans lui,
-la dégradation automatique de qualité ne se déclencherait jamais.
-
-## Mesurer le son d'un fichier exporté
-
-**Un niveau crête ne prouve rien.** Il est atteint par la première seconde. Un
-export dont tout le reste est muet passe ce contrôle sans broncher — c'est
-exactement le défaut qui a été trouvé : du son de la première à la cinquième
-seconde, puis le silence numérique absolu jusqu'à la treizième.
-
-Ce qu'il faut regarder, c'est la répartition dans le temps :
+## Look & Find — `look_and_find/`
 
 ```bash
-ffmpeg -v quiet -i FICHIER.mp4 -vn -ac 1 -ar 8000 -f s16le - | python3 -c "
-import sys, struct, math
-d = sys.stdin.buffer.read(); n = len(d)//2
-v = struct.unpack(f'<{n}h', d[:n*2]); r = 8000
-for s in range(n//r):
-    b = v[s*r:(s+1)*r]
-    rms = math.sqrt(sum(x*x for x in b)/len(b))/32768
-    db = 20*math.log10(rms) if rms > 0 else -99
-    print(f'{s:3d} s {db:6.1f} dB ' + '█'*max(0, int((db+60)/1.5)))
-"
+cd look_and_find
+flutter pub get
+dart run build_runner build
+git diff --exit-code -- '*.g.dart'
+flutter analyze
+flutter test --reporter=failures-only
 ```
 
-Une seconde sous −60 dB est un trou, pas un passage discret. `npm run verify`
-fait cette mesure automatiquement quand ffmpeg est présent.
+Dans l'ordre, et sans en sauter :
 
-Le niveau global se lit plus vite :
+- `build_runner` **avant** l'analyse : un provider annoté `@riverpod` modifié
+  sans régénération produit une erreur de compilation trompeuse, qui pointe le
+  fichier généré plutôt que la source.
+- `git diff --exit-code -- '*.g.dart'` reproduit le contrôle de l'intégration
+  continue. Les `.g.dart` sont versionnés pour que le dépôt se construise sans
+  codegen ; s'ils dérivent, le build casse chez tout le monde **sauf** chez
+  l'auteur du changement.
+- `flutter analyze` doit sortir exactement `No issues found!`. Ce dépôt ne
+  tolère pas d'avertissement : un avertissement toléré en cache dix autres.
+
+Si `flutter` est introuvable, le hook de démarrage n'a pas tourné. Le relancer
+à la main : `.claude/hooks/session-start.sh` (il installe le SDK épinglé dans
+`$HOME/flutter`).
+
+## Amorce — racine du dépôt
 
 ```bash
-ffmpeg -i FICHIER.mp4 -af volumedetect -f null - 2>&1 | grep -E "mean_volume|max_volume"
+npm run typecheck
+npm run lint
+npm test
 ```
 
-Un montage sain tourne autour de −17 dB de moyenne et frôle 0 dB en crête.
-
-## Lire les pistes d'un rush sans aucun codec
-
-Utile quand le navigateur refuse un fichier : la structure MP4 se lit en Python
-pur, et dit si une piste audio existe et ce qu'elle pèse. Un rush dont le son a
-été détruit par un outil de découpe extérieur n'a **aucune** piste `soun`.
+`npm run verify` en plus **si et seulement si** le changement touche au rendu,
+à l'audio, à l'export ou à la mise en page mobile. Il pilote un vrai Chromium
+et contrôle les pixels et le signal sonore ; il demande `npm run dev` dans un
+autre terminal et plusieurs minutes. C'est le seul filet réel pour ces
+sujets-là, et il ne se remplace pas par des tests unitaires.
 
 ```bash
-ffprobe -v error -show_entries stream=codec_type,codec_name,duration,bit_rate \
-  -of default=noprint_wrappers=1 FICHIER.mp4
+npm run fixtures   # une seule fois : fabrique .fixtures/rushes/
+npm run dev        # dans un autre terminal
+npm run verify
 ```
 
-Un débit audio autour de 200 kb/s indique une piste réelle ; l'absence de ligne
-`codec_type=audio` indique un fichier muet à la source.
+## Socle Agence — `agence/`
 
-## Ce que ces mesures ont déjà trouvé
+```bash
+cd agence
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
 
-- **Le son coupé à mi-montage.** Les plans n'étaient branchés sur le mixage
-  qu'une fois, à la création du moteur audio ; tout plan né ensuite — un
-  découpage, un import, le bouton des réglages recommandés — s'affichait sans
-  son. Voir `usePlayback.ts`.
-- **Les sous-titres hors champ.** Un texte posé au-delà de la dernière image ne
-  s'affiche jamais et ne compte dans aucune couverture, mais figure dans la
-  liste comme les autres.
-- **Un remède qui aggrave.** Le bouton « Poser un bruitage sur chaque coupe »
-  était offert sans condition, y compris à un montage qui en comptait déjà le
-  double de la plage visée.
+Les quatre, et depuis `agence/` : le projet a son propre `tsconfig.json` et son
+propre ESLint, la racine l'ignore volontairement. Le workflow
+`.github/workflows/agence.yml` rejoue exactement cette séquence.
 
-## L'environnement distant
+Le `build` n'est pas facultatif ici. C'est lui qui attrape ce que `tsc` laisse
+passer dans une application App Router : une directive `'use client'`
+manquante, un composant serveur qui reçoit une fonction en propriété, un export
+non asynchrone dans un fichier `'use server'`. Il réclame les variables
+d'environnement — les valeurs d'exemple suffisent :
 
-Le hook `.claude/hooks/session-start.sh` installe les dépendances, présente le
-Chromium disponible sous le numéro de révision qu'attend Playwright, et installe
-ffmpeg. Ne pas lancer `playwright install` : cet environnement l'interdit.
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://exemple.supabase.co" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="cle-de-compilation" npm run build
+```
 
-## Le piège qui n'est pas dans le code
+Les politiques RLS, elles, ne se vérifient pas depuis TypeScript. Elles ont
+leur propre contrôle, sur un vrai PostgreSQL :
 
-Sur Android, le sélecteur de fichiers rend régulièrement un fichier de **zéro
-octet** quand l'entrée choisie vient d'un espace de stockage en ligne. Le
-fichier est bon, c'est la copie qui manque. Le studio le dit désormais
-explicitement, et accepte le bouton « Partager » qui, lui, transmet les octets
-réels — à condition que l'application soit installée sur l'écran d'accueil.
+```bash
+docker run --rm -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 --name pg postgres:16
+PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres npm run test:rls
+```
+
+Vingt contrôles : ce qu'un utilisateur, un administrateur et un visiteur
+anonyme peuvent lire et écrire. **À relancer dès qu'on touche à
+`supabase/schema.sql`** — c'est le seul filet de cette partie-là, et une
+politique trop large ne se remarque qu'en production.
+
+Sans PostgreSQL sous la main, le même fichier (`supabase/verifier-rls.sql`) se
+colle dans l'éditeur SQL d'un projet Supabase : il annule tout ce qu'il crée.
+
+## Chaîne KDP — `kdp/`
+
+Une seule partie de la chaîne est testable hors fichiers : le validateur de
+niches, qui n'est que du calcul.
+
+```bash
+python3 -m unittest discover -s kdp/tests
+```
+
+Pour tout le reste, le juge est `kdp/pipeline/valider.py`, qui ouvre les deux
+PDF **tels qu'ils partiront chez l'imprimeur** et sort en erreur au premier
+contrôle qui échoue.
+
+```bash
+python3 kdp/pipeline/valider.py --interieur <pdf> --couverture <pdf>
+```
+
+Il demande donc des PDF déjà assemblés, à partir de rushes qui ne sont pas
+versionnés. Un changement qui ne touche qu'à un script de la chaîne se vérifie
+au minimum par `python3 -c "import kdp.pipeline.<module>"` — la compilation
+attrape déjà l'essentiel — et se signale comme **non vérifié de bout en bout**
+tant que la chaîne n'a pas tourné sur de vraies planches.
+
+Ce que `valider.py` ne voit pas, et qu'aucun script ne verra : si le dessin est
+beau, si le texte est juste, si l'histoire tient.
+
+## Paper-Manager — `paper-manager/`
+
+```bash
+python3 -m unittest discover -s paper-manager/tests -q
+```
+
+Couvre ce qui est calculable : arithmétique des échéances et des préavis,
+validation et réécriture d'`admin_config.json`, tableau de bord et fusion des
+alertes, format du fichier de rappels, choix du gabarit de résiliation et
+mentions obligatoires du courrier, résolution des gabarits de formulaire et
+remplissage effectif d'un PDF. Le formulaire de test est fabriqué
+à l'exécution — aucun binaire n'est versionné ici.
+
+Seul PyMuPDF est nécessaire, et il est déjà installé par le hook de démarrage
+pour la chaîne KDP. Ce que les tests ne disent pas : qu'un Cerfa réel a bien les
+noms de champs que son plan lui prête — cela ne se voit qu'en le remplissant.
+## Studio audio — `mon-app-audio/`
+
+```bash
+python3 -m unittest discover -s mon-app-audio/tests
+```
+
+Le plan d'atténuation se vérifie sans son, sur des intervalles ; le reste du
+mixage sur un signal synthétisé, sans jamais toucher au disque. Ce qu'aucun
+test ne dit : si le mixage **s'entend** bien. Cela demande une écoute.
+
+## Répondeur Facebook — `repondeur-facebook/`
+
+```bash
+python3 -m unittest discover -s repondeur-facebook/tests
+```
+
+Hors réseau : ni Facebook, ni modèle. Ils couvrent le dépouillement des
+réponses de l'API, le tri, la mémoire des commentaires traités, la mise au
+propre du texte et la mise en forme de la notification.
+
+Ce qu'ils ne disent pas, et qui doit figurer dans le compte rendu : si le jeton
+a les bonnes permissions, si le ton ressemble à celui de l'auteur, et si le
+modèle met de côté les bons commentaires. Cela se regarde **en simulation**
+(sans `--publier`), sur de vrais commentaires.
+
+## Ce que la vérification ne dit pas
+
+- **Le build Android et iOS.** Le SDK Android n'est pas installable dans ce
+  conteneur : `dl.google.com` est refusé par le mandataire réseau. C'est le
+  workflow `Look & Find` qui construit l'APK, à chaque poussée, et le publie
+  en artéfact. Ne jamais conclure « prêt à livrer » sur la seule foi de
+  `flutter analyze`.
+- **La caméra, la réalité augmentée, la qualité d'identification du modèle.**
+  Elles demandent un appareil réel.
+
+Dire lesquelles de ces limites s'appliquent au changement en cours fait partie
+du compte rendu. Un « tout est vert » qui tait ce qui n'a pas été vérifié est
+un compte rendu faux.
+
+## Rendre compte
+
+Une ligne par étape, puis le détail des seuls échecs. Si un test casse, citer
+son intitulé, le fichier et l'écart constaté — pas la sortie brute.
+
+Pour une vérification lourde dont on ne veut pas la sortie dans la
+conversation, déléguer à l'agent `verificateur`, qui ne rend qu'un verdict.

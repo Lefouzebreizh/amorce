@@ -78,7 +78,10 @@ const check = (name, ok, detail = '') => {
  */
 function mesurerSilence(fichier) {
   try {
-    execFileSync('ffprobe', ['-version'], { stdio: 'ignore' });
+    // Sonder `ffmpeg`, le seul binaire que cette fonction appelle. Gardé sur
+    // `ffprobe`, le contrôle s'abstenait là où il pouvait mesurer : plusieurs
+    // installations — dont `imageio-ffmpeg` — ne livrent que le premier.
+    execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
   } catch {
     return null;
   }

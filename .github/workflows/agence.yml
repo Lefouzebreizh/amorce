@@ -1,0 +1,126 @@
+# Vérification du socle de production `agence/`.
+#
+# Le projet vit à côté d'Amorce, avec ses propres `package.json`, `tsconfig.json`
+# et ESLint : la racine l'ignore volontairement, et rien ne le vérifierait donc
+# sans ce workflow.
+#
+# Les quatre commandes sont celles qu'on lance à la main avant de livrer, dans
+# le même ordre. Le `build` ferme la marche parce qu'il est le seul à voir ce
+# que `tsc` laisse passer dans une application App Router : une directive
+# `'use client'` manquante, une fonction passée en propriété d'un composant
+# serveur, un export non asynchrone dans un fichier `'use server'`.
+#
+# Un seul travail pour ces quatre commandes, et non quatre en parallèle : chacun
+# repaierait l'installation des dépendances, plus longue que l'ensemble des
+# vérifications.
+#
+# Le second travail, lui, est bien séparé : il éprouve les politiques RLS sur un
+# vrai PostgreSQL, sans avoir besoin d'une seule dépendance npm. Rien ne le fait
+# attendre le premier, et un échec de l'un ne masque pas l'autre.
+
+name: Socle Agence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'agence/**'
+      - '.github/workflows/agence.yml'
+  pull_request:
+    paths:
+      - 'agence/**'
+      - '.github/workflows/agence.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: agence-${{ github.ref }}
+  cancel-in-progress: true
+
+# Le build a besoin d'une configuration Supabase pour démarrer, mais d'aucune
+# base joignable : rien n'est interrogé à la compilation, les pages privées
+# étant toutes rendues à la demande. Ces valeurs factices suffisent donc, et
+# aucun secret n'a à être confié à l'intégration continue.
+env:
+  NEXT_PUBLIC_SUPABASE_URL: 'https://exemple.supabase.co'
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'cle-de-compilation'
+  NEXT_TELEMETRY_DISABLED: '1'
+
+defaults:
+  run:
+    working-directory: agence
+
+jobs:
+  verifier:
+    name: Lint, types, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 au minimum : les tests s'exécutent sur les sources TypeScript
+      # sans compilation préalable (`--experimental-strip-types`), et le
+      # résolveur d'alias repose sur `module.registerHooks`.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          # Le dépôt contient plusieurs verrous ; sans ce chemin, le cache
+          # serait calculé sur celui d'Amorce et ne servirait jamais.
+          cache-dependency-path: agence/package-lock.json
+
+      # `npm ci` et non `npm install` : il installe exactement le verrou et
+      # échoue s'il diverge de `package.json`, au lieu de le réécrire en
+      # silence.
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  politiques:
+    name: Politiques RLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Le seul contrôle qui voie ce qu'aucune ligne de TypeScript ne peut dire :
+    # ce que PostgreSQL accepte de servir à qui. Il applique le schéma sur une
+    # base neuve, puis rejoue les tentatives d'accès d'un utilisateur, d'un
+    # administrateur et d'un visiteur anonyme.
+    services:
+      postgres:
+        # Version épinglée pour que le contrôle ne change pas de comportement
+        # sans qu'une ligne du dépôt ait bougé. Le script ne dépend d'aucune
+        # extension : il tourne sur toute version encore maintenue.
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # `psql` est déjà présent sur les images Ubuntu de GitHub, et le script
+      # n'a besoin de rien d'autre : ni Node, ni `node_modules`.
+      - name: Contrôler les politiques
+        run: npm run test:rls

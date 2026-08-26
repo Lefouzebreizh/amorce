@@ -1,0 +1,11 @@
+Objet : Résiliation du contrat {abonnement.libelle} — avis d'échéance tardif — référence client {abonnement.reference_client}
+
+Madame, Monsieur,
+
+Par la présente, je vous informe de ma décision de résilier le contrat {abonnement.libelle} souscrit auprès de {abonnement.emetteur} sous la référence client {abonnement.reference_client}.
+
+L'avis d'échéance relatif à ce contrat m'est parvenu le {abonnement.date_avis_echeance}, soit moins de quinze jours avant la fin du délai de préavis, voire après celle-ci. En application de {fondement}, je dispose de ce fait d'un délai supplémentaire pour mettre fin au contrat, et j'entends l'exercer. Cette résiliation prendra effet au {effet}.
+
+Je vous remercie de m'adresser une confirmation écrite de cette résiliation précisant sa date exacte de prise d'effet, de cesser tout prélèvement à compter de celle-ci, et de me rembourser toute somme prélevée au titre de la période postérieure.
+
+Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.

@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyzeProject } from '../analysis.ts';
-import { CAPTION_SETS, applyFinish, buildFinish, captionSet, cinemaFor, soundsOnCuts, thinCues } from '../autoFinish.ts';
+import {
+  CAPTION_SETS,
+  applyFinish,
+  buildFinish,
+  captionSet,
+  cinemaFor,
+  soundsOnCuts,
+  thinCues,
+} from '../autoFinish.ts';
 import { emptyProject, totalDuration } from '../timeline.ts';
 import { DEFAULT_CLIP, type Caption, type MediaAsset, type Project } from '../types.ts';
 
@@ -143,6 +151,8 @@ test('les bruitages tombent sur les coupes', () => {
 });
 
 test('un rendu déjà choisi est respecté, l’absence de parti pris reçoit celui de la trame', () => {
+  // La trame pose désormais son propre rendu, plus le générique « cinema » :
+  // une bande-annonce n'a pas la couleur d'un tutoriel.
   const naturel = bare([2, 2]);
   naturel.cinema = { ...naturel.cinema, look: 'naturel' };
   assert.equal(run(naturel).cinema.look, 'blockbuster');
@@ -150,28 +160,27 @@ test('un rendu déjà choisi est respecté, l’absence de parti pris reçoit ce
   const choisi = bare([2, 2]);
   choisi.cinema = { ...choisi.cinema, look: 'argentique' };
   assert.equal(run(choisi).cinema.look, 'argentique');
+
+  // Une trame sans rendu déclaré ne touche à rien.
+  const tutoriel = bare([2, 2]);
+  tutoriel.cinema = { ...tutoriel.cinema, look: 'naturel' };
+  assert.equal(run(tutoriel, 'tutoriel').cinema.look, 'naturel');
 });
 
-test('les trois trames sont utilisables et distinctes', () => {
-  assert.equal(new Set(CAPTION_SETS.map((s) => s.id)).size, CAPTION_SETS.length);
-  for (const set of CAPTION_SETS) {
-    assert.ok(set.slots.length >= 3, `${set.id} n’a pas assez de textes`);
-    assert.equal(set.slots[0].at, 0, `${set.id} ne commence pas à la première image`);
-    assert.equal(captionSet(set.id).id, set.id);
-  }
-  // Un identifiant inconnu retombe sur la première trame plutôt que d'échouer.
-  assert.equal(captionSet('inconnue').id, CAPTION_SETS[0].id);
+test('la trame impose son rendu, sauf si un choix a été fait', () => {
+  const set = captionSet('bande-annonce');
+
+  // Absence de parti pris, et le rendu que pose le montage express : ni l'un ni
+  // l'autre n'est une décision.
+  assert.equal(cinemaFor(set, { look: 'naturel', intensity: 0.5, bars: 0 }).look, 'blockbuster');
+  assert.equal(cinemaFor(set, { look: 'cinema', intensity: 0.7, bars: 0 }).look, 'blockbuster');
+
+  // Un rendu choisi est une décision : on n'y touche pas.
+  assert.equal(cinemaFor(set, { look: 'argentique', intensity: 0.6, bars: 0 }).look, 'argentique');
+  assert.equal(cinemaFor(set, { look: 'noir', intensity: 0.4, bars: 0 }).intensity, 0.4);
 });
 
-test('un montage vide ne produit rien et ne casse pas', () => {
-  const vide = emptyProject();
-  const finished = applyFinish(vide, analyzeProject(vide), 'bande-annonce', counter());
-  assert.deepEqual(finished.captions, []);
-  assert.deepEqual(finished.clips, []);
-});
-
-test('l’allègement rend du silence entre les impacts', () => {
-  const project = bare([2, 2, 2, 2, 2]); // 10 s
+test('les bruitages en trop sont retirés, l’ouverture jamais', () => {
   // Quinze bruitages en dix secondes : le mur constaté sur un montage réel.
   const cues = Array.from({ length: 15 }, (_, i) => ({
     id: `s${i}`,
@@ -192,7 +201,6 @@ test('l’allègement rend du silence entre les impacts', () => {
   for (let i = 1; i < gardes.length; i++) {
     assert.ok(gardes[i].time - gardes[i - 1].time >= 1.5, `deux impacts collés à ${gardes[i].time} s`);
   }
-  void project;
 });
 
 test('un montage déjà aéré n’est pas touché', () => {
@@ -200,24 +208,20 @@ test('un montage déjà aéré n’est pas touché', () => {
   assert.deepEqual(thinCues(cues, 12), cues);
 });
 
-test('la trame impose son rendu, sauf si un choix a été fait', () => {
-  const set = captionSet('bande-annonce');
-
-  // Absence de parti pris, et le rendu que pose le montage express : ni l'un ni
-  // l'autre n'est une décision.
-  assert.equal(cinemaFor(set, { look: 'naturel', intensity: 0.5, bars: 0 }).look, 'blockbuster');
-  assert.equal(cinemaFor(set, { look: 'cinema', intensity: 0.7, bars: 0 }).look, 'blockbuster');
-
-  // Un rendu choisi est une décision : on n'y touche pas.
-  assert.equal(cinemaFor(set, { look: 'argentique', intensity: 0.6, bars: 0 }).look, 'argentique');
-  assert.equal(cinemaFor(set, { look: 'noir', intensity: 0.4, bars: 0 }).intensity, 0.4);
+test('les trois trames sont utilisables et distinctes', () => {
+  assert.equal(new Set(CAPTION_SETS.map((s) => s.id)).size, CAPTION_SETS.length);
+  for (const set of CAPTION_SETS) {
+    assert.ok(set.slots.length >= 3, `${set.id} n’a pas assez de textes`);
+    assert.equal(set.slots[0].at, 0, `${set.id} ne commence pas à la première image`);
+    assert.equal(captionSet(set.id).id, set.id);
+  }
+  // Un identifiant inconnu retombe sur la première trame plutôt que d'échouer.
+  assert.equal(captionSet('inconnue').id, CAPTION_SETS[0].id);
 });
 
-test('la trame « Poser les réglages » applique bien le rendu', () => {
-  const project = bare([3, 3, 3]);
-  project.cinema = { look: 'cinema', intensity: 0.7, bars: 0 };
-  const finished = run(project);
-
-  assert.equal(finished.cinema.look, 'blockbuster');
-  assert.ok(finished.cinema.intensity >= 0.85);
+test('un montage vide ne produit rien et ne casse pas', () => {
+  const vide = emptyProject();
+  const finished = applyFinish(vide, analyzeProject(vide), 'bande-annonce', counter());
+  assert.deepEqual(finished.captions, []);
+  assert.deepEqual(finished.clips, []);
 });

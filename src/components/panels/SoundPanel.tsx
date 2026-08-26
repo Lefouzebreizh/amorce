@@ -202,7 +202,11 @@ function SamplePanel() {
                         />
                       </Field>
 
-                      <Field label="Volume" value={`${Math.round(sample.gain * 100)} %`}>
+                      <Field
+                        label="Volume"
+                        help="Le niveau de ce son déposé. Un bruitage se remarque sans couvrir ce qu’il ponctue : poussé au-delà de 80 %, il passe devant la voix."
+                        value={`${Math.round(sample.gain * 100)} %`}
+                      >
                         <Slider
                           ariaLabel="Volume du bruitage importé"
                           min={0}
@@ -406,7 +410,11 @@ function VoicePanel({ engine }: { engine: PlaybackEngine }) {
                         />
                       </Field>
 
-                      <Field label="Volume" value={`${Math.round(voice.gain * 100)} %`}>
+                      <Field
+                        label="Volume"
+                        help="Le niveau de cette réplique. Les plans et la musique baissent déjà d’eux-mêmes pendant qu’elle parle : inutile de la pousser pour l’entendre."
+                        value={`${Math.round(voice.gain * 100)} %`}
+                      >
                         <Slider
                           ariaLabel="Volume de la réplique"
                           min={0}
@@ -523,7 +531,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
                   <button
                     type="button"
                     onClick={() => select({ kind: 'cue', id: cue.id })}
-                    className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors ${
+                    className={`flex min-h-11 w-full items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors ${
                       selected?.id === cue.id ? 'bg-raised ring-1 ring-accent/60' : 'bg-slab hover:bg-raised'
                     }`}
                   >
@@ -562,7 +570,11 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
             />
           </Field>
 
-          <Field label="Volume" value={`${Math.round(selected.gain * 100)} %`}>
+          <Field
+            label="Volume"
+            help="Le niveau de ce bruitage. Il doit se remarquer sans couvrir le mot qu’il ponctue."
+            value={`${Math.round(selected.gain * 100)} %`}
+          >
             <Slider
               ariaLabel="Volume du bruitage"
               min={0}

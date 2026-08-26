@@ -42,6 +42,15 @@ type Snapshot = { project: Project; label: string };
 const HISTORY_LIMIT = 60;
 
 /**
+ * Durée minimale d'un sous-titre ajouté à la main, en secondes.
+ *
+ * En deçà, il clignote au lieu de se lire. C'est la borne qui s'applique quand
+ * la tête de lecture est si près de la fin qu'il n'y a plus deux secondes
+ * devant elle.
+ */
+const MIN_CAPTION_SPAN = 0.8;
+
+/**
  * Délai en deçà duquel deux modifications de même nature n'en font qu'une.
  *
  * Sans ce regroupement, un simple glissement de jauge produirait des dizaines
@@ -172,15 +181,6 @@ type StudioState = {
   renameProject: (name: string) => void;
   duration: () => number;
 };
-
-/**
- * Durée minimale d'un sous-titre ajouté à la main, en secondes.
- *
- * En deçà, il clignote au lieu de se lire. C'est la borne qui s'applique quand
- * la tête de lecture est si près de la fin qu'il n'y a plus deux secondes
- * devant elle.
- */
-const MIN_CAPTION_SPAN = 0.8;
 
 /** Ramène une valeur dans l'intervalle [min, max]. */
 export function clamp(value: number, min: number, max: number): number {
@@ -411,6 +411,10 @@ export const useStudio = create<StudioState>((set, get) => {
    * Une seule entrée d'historique pour l'ensemble : c'est un geste unique du
    * point de vue de l'utilisateur, et devoir l'annuler en quinze fois serait
    * pire que de ne pas pouvoir l'annuler.
+   */
+  /*
+   * Alléger, c'est retirer — donc une seule entrée d'historique, et la
+   * sélection abandonnée : elle peut désigner un bruitage qui vient de partir.
    */
   thinSounds: () =>
     mutate('allegement', (state) => {

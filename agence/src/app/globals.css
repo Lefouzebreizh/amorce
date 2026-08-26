@@ -1,0 +1,158 @@
+@import 'tailwindcss';
+
+/*
+ * Jetons de couleur, dans la convention de Shadcn/ui : chaque surface a sa
+ * paire fond / texte, et les composants ne connaissent que ces noms. Changer la
+ * charte d'un client se fait donc ici, dans ce seul bloc, sans toucher à un
+ * composant.
+ *
+ * Les couleurs sont écrites en oklch : l'espace est perceptuellement uniforme,
+ * si bien qu'une même variation de clarté se lit pareil sur toutes les teintes.
+ * C'est ce qui permet de dériver un thème sombre sans reprendre chaque valeur
+ * une à une.
+ */
+
+:root {
+  --radius: 0.7rem;
+
+  --background: oklch(0.99 0.003 258);
+  --foreground: oklch(0.21 0.02 265);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 265);
+
+  --muted: oklch(0.968 0.005 258);
+  --muted-foreground: oklch(0.53 0.02 262);
+
+  --primary: oklch(0.52 0.2 267);
+  --primary-foreground: oklch(0.985 0.005 258);
+
+  --secondary: oklch(0.968 0.005 258);
+  --secondary-foreground: oklch(0.28 0.02 265);
+
+  --accent: oklch(0.955 0.02 267);
+  --accent-foreground: oklch(0.33 0.09 267);
+
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(0.985 0.005 258);
+
+  /*
+   * Vert et ambre servent d'encre sur un aplat de la même teinte à 15 %
+   * d'opacité (les pastilles de statut). Ils sont donc choisis sombres en
+   * thème clair et clairs en thème sombre : une couleur d'état lisible prime
+   * sur une couleur d'état jolie.
+   */
+  --success: oklch(0.52 0.13 152);
+  --success-foreground: oklch(0.985 0.005 258);
+
+  --warning: oklch(0.55 0.12 70);
+  --warning-foreground: oklch(0.3 0.06 70);
+
+  --border: oklch(0.922 0.006 258);
+  --input: oklch(0.922 0.006 258);
+  --ring: oklch(0.52 0.2 267);
+}
+
+/*
+ * Thème sombre. Il suit le réglage du système : aucun bouton ne le commande,
+ * donc aucun état à conserver, et rien à synchroniser entre le serveur et le
+ * navigateur — la première image sort déjà dans la bonne palette.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.16 0.014 266);
+    --foreground: oklch(0.965 0.005 258);
+
+    --card: oklch(0.205 0.016 266);
+    --card-foreground: oklch(0.965 0.005 258);
+
+    --muted: oklch(0.255 0.016 266);
+    --muted-foreground: oklch(0.7 0.018 262);
+
+    --primary: oklch(0.68 0.16 267);
+    --primary-foreground: oklch(0.17 0.03 267);
+
+    --secondary: oklch(0.255 0.016 266);
+    --secondary-foreground: oklch(0.965 0.005 258);
+
+    --accent: oklch(0.29 0.045 267);
+    --accent-foreground: oklch(0.9 0.05 267);
+
+    --destructive: oklch(0.64 0.2 25);
+    --destructive-foreground: oklch(0.16 0.014 266);
+
+    --success: oklch(0.76 0.14 152);
+    --success-foreground: oklch(0.16 0.014 266);
+
+    --warning: oklch(0.82 0.12 78);
+    --warning-foreground: oklch(0.88 0.09 78);
+
+    --border: oklch(0.3 0.016 266);
+    --input: oklch(0.33 0.016 266);
+    --ring: oklch(0.68 0.16 267);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /*
+   * Pile de polices du système. Aucune police n'est téléchargée : c'est
+   * autant de requêtes en moins au premier affichage, aucun fichier binaire
+   * dans le dépôt, et un rendu déjà familier sur chaque plateforme. Un client
+   * qui tient à sa police de marque la branche ici via `next/font`.
+   */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+   * Un anneau de focus visible sur tout ce qui se traverse au clavier. Le
+   * retirer « parce que c'est plus propre » rend l'application inutilisable
+   * sans souris, et c'est le premier point relevé en audit d'accessibilité.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}

@@ -8,7 +8,7 @@ import { guessTier, PanicDetector, QualityGovernor, QUALITY_TIERS, tierById } fr
 import { ClipVideoPool, preloadCaptionFonts, renderFrame, syncPlayback } from '@/lib/renderer';
 import { useStudio } from '@/lib/store';
 import { layoutClips } from '@/lib/timeline';
-import { OUTPUT_HEIGHT, OUTPUT_WIDTH, type Clip } from '@/lib/types';
+import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
 
 /**
  * Boucle de lecture.
@@ -107,8 +107,6 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
   const gradeRef = useRef<GradePipeline | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
   const frameRef = useRef(0);
-  /** Liste de plans déjà branchée sur le mixage, pour ne rebrancher qu'au changement. */
-  const attachedRef = useRef<Clip[] | null>(null);
   const captionBoxesRef = useRef(new Map<string, CaptionBox>());
 
   if (poolRef.current === null) poolRef.current = new ClipVideoPool();
@@ -122,22 +120,10 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
     void preloadCaptionFonts(fonts);
   }, [fonts]);
 
-  // Le pool suit la composition du projet, sans passer par la boucle de rendu.
-  useEffect(
-    () =>
-      useStudio.subscribe((state) => {
-        poolRef.current?.sync(state.project.clips, state.project.assets);
-      }),
-    [],
-  );
-
   useEffect(() => {
     const pool = poolRef.current;
     const grade = gradeRef.current;
     if (!pool || !grade) return;
-
-    const state = useStudio.getState();
-    pool.sync(state.project.clips, state.project.assets);
 
     let raf = 0;
     let previous = performance.now();
@@ -196,29 +182,30 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
         store.setPlayhead(time);
       }
 
+      /*
+       * Le pool ne garde chargés que les plans proches de la tête de lecture.
+       * C'est ici, et pas dans un abonnement au store, parce que la fenêtre
+       * dépend du temps courant autant que de la composition du projet.
+       */
+      const charges = pool.sync(placed, project.assets, time);
+
       syncPlayback(placed, pool, time, playing);
 
       const audio = audioRef.current;
       if (audio) {
         /*
-         * Rebrancher le son des plans dès que la liste change.
+         * Le graphe audio suit la même fenêtre.
          *
-         * Le branchement n'avait lieu qu'une fois, à la création du moteur.
-         * Tout plan né ensuite — un découpage, un import, le bouton des
-         * réglages recommandés qui recoupe — s'affichait donc sans son, et
-         * rien ne le signalait : l'image était là. Mesuré sur un export réel,
-         * le son s'arrêtait net à la sixième seconde d'une vidéo de treize.
-         *
-         * `attachClip` sort immédiatement si le plan est déjà branché : on peut
-         * l'appeler sans crainte à chaque changement.
+         * `attachClip` refuse de rebrancher un identifiant qu'il connaît déjà —
+         * un élément média ne peut être relié qu'à une seule source Web Audio
+         * dans toute sa vie. Sans la purge, un plan dont l'élément a été libéré
+         * puis recréé reviendrait donc muet, sans que rien ne le signale.
+         * Les deux appels sont sans effet quand la fenêtre n'a pas bougé.
          */
-        if (project.clips !== attachedRef.current) {
-          attachedRef.current = project.clips;
-          for (const clip of project.clips) {
-            const video = pool.get(clip.id);
-            if (video) audio.attachClip(clip.id, video);
-          }
-          audio.pruneClips(new Set(project.clips.map((c) => c.id)));
+        audio.pruneClips(charges);
+        for (const id of charges) {
+          const video = pool.get(id);
+          if (video) audio.attachClip(id, video);
         }
 
         audio.applyMix(project.mix);
@@ -295,13 +282,9 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
 
     // Le branchement ne peut avoir lieu qu'une fois le contexte audio créé,
     // donc au plus tôt au premier geste de l'utilisateur.
-    const { project } = useStudio.getState();
-    poolRef.current?.sync(project.clips, project.assets);
-    for (const clip of project.clips) {
-      const video = poolRef.current?.get(clip.id);
-      if (video) audio.attachClip(clip.id, video);
-    }
-    audio.pruneClips(new Set(project.clips.map((c) => c.id)));
+    // Le branchement des plans est tenu par la boucle de rendu, qui seule sait
+    // quels éléments la fenêtre garde chargés. Ne reste ici que ce que le geste
+    // de l'utilisateur débloque : le contexte audio lui-même.
     return audio;
   }, []);
 
