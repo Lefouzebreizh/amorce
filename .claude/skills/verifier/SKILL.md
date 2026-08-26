@@ -1,11 +1,11 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, analyse et tests pour l'application Flutter Look & Find. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
+description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
 ---
 
 # Vérifier ce dépôt
 
-Trois projets indépendants, trois séquences. **Ne lance que celle du projet
+Des projets indépendants, une séquence chacun. **Ne lance que celle du projet
 touché** : les tests de l'un ne disent rien des autres, et tout lancer triple
 l'attente pour rien.
 
@@ -57,6 +57,33 @@ npm run fixtures   # une seule fois : fabrique .fixtures/rushes/
 npm run dev        # dans un autre terminal
 npm run verify
 ```
+
+## Socle Agence — `agence/`
+
+```bash
+cd agence
+npm run lint
+npm run typecheck
+npm run build
+```
+
+Les trois, et depuis `agence/` : le projet a son propre `tsconfig.json` et son
+propre ESLint, la racine l'ignore volontairement.
+
+Le `build` n'est pas facultatif ici. C'est lui qui attrape ce que `tsc` laisse
+passer dans une application App Router : une directive `'use client'`
+manquante, un composant serveur qui reçoit une fonction en propriété, un export
+non asynchrone dans un fichier `'use server'`. Il réclame les variables
+d'environnement — les valeurs d'exemple suffisent :
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://exemple.supabase.co" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="cle-de-compilation" npm run build
+```
+
+Ce qu'aucune de ces trois commandes ne voit : les politiques RLS. Une politique
+trop large se lit dans `supabase/schema.sql` ou s'éprouve depuis deux comptes
+sur un vrai projet Supabase, jamais depuis TypeScript.
 
 ## Chaîne KDP — `kdp/`
 

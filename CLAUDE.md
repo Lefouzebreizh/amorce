@@ -174,16 +174,24 @@ la tête de lecture se retrouve au-delà de la fin.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **cinq projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **six projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
-Streamlit dans `mon-app-audio/` et l'assistant d'allocation d'actifs dans
-`patrimoine/` (qui ont chacun leur propre `README.md`). L'outillage ci-dessous
-existe parce que rien de générique ne connaît cette particularité.
+Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
+`patrimoine/` et le socle de production livré aux clients dans `agence/` (qui
+ont chacun leur propre `README.md`). L'outillage ci-dessous existe parce que
+rien de générique ne connaît cette particularité.
+
+`agence/` est un projet Next.js complet — Supabase, authentification, RLS — et
+non un dossier d'Amorce : ses propres `package.json`, `tsconfig.json` et
+`eslint.config.mjs`, ses propres `node_modules`, et l'alias `@/…` pointe vers
+`agence/src/`. Il se vérifie depuis son dossier (`npm run lint`,
+`npm run typecheck`, `npm run build`), jamais depuis la racine — d'où son
+exclusion de l'ESLint et du `tsconfig.json` de la racine.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/` et de `patrimoine/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/` et de `patrimoine/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |

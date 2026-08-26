@@ -1,7 +1,7 @@
 #!/bin/bash
-# Prépare le conteneur d'une session distante : dépendances du studio Amorce,
-# SDK Flutter et dépendances de Look & Find, bibliothèques de la chaîne KDP,
-# du studio audio et de l'assistant d'allocation.
+# Prépare le conteneur d'une session distante : dépendances du studio Amorce et
+# du socle agence, SDK Flutter et dépendances de Look & Find, bibliothèques de
+# la chaîne KDP, du studio audio et de l'assistant d'allocation.
 #
 # Pourquoi ce script existe : le conteneur d'une session web démarre sur un
 # dépôt fraîchement cloné, sans `node_modules` et sans SDK Flutter. Sans lui,
@@ -33,6 +33,12 @@ readonly FLUTTER_HOME="$HOME/flutter"
 
 echo "── Amorce : dépendances npm"
 cd "$racine"
+npm install --no-audit --no-fund --silent
+
+echo "── Socle Agence : dépendances npm"
+# Projet Next.js indépendant, avec son propre `package.json` : les dépendances
+# de la racine ne lui servent à rien, et les siennes ne doivent pas remonter.
+cd "$racine/agence"
 npm install --no-audit --no-fund --silent
 
 echo "── Look & Find : SDK Flutter $FLUTTER_VERSION"
@@ -85,4 +91,4 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests"
