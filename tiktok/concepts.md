@@ -57,7 +57,7 @@ c'est pourtant là que se joue la moitié de l'effet. Le spectateur regarde sur
 un téléphone, avec un haut-parleur de téléphone : la démonstration se vérifie
 sur son appareil pendant qu'il la regarde. C'est imparable.
 
-**Il te faut** le studio audio (`mon-app-audio/`) ou les bruitages de synthèse
+**Il te faut** `/bande-son`, qui mesure et mixe, ou les bruitages de synthèse
 d'Amorce (`src/lib/sfx.ts`).
 **Cadence** : une fois tous les dix jours — c'est un sujet dense, il s'use si
 on l'enchaîne.
