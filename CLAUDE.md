@@ -204,7 +204,7 @@ Là, l'aller-retour vaut son prix.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
 montage automatisée dans `montage-auto/`, le
@@ -230,7 +230,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe, au démarrage d'une session distante : les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé, les bibliothèques Python de `kdp/`, `montage-auto/`, `repondeur-facebook/`, `life-organizer/`, `tiktok/`, de l'extraction multiformat et des deux chantiers en sommeil sous `archives-backlog/`, plus le Chromium du parcours de vérification. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe, au démarrage d'une session distante : les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé, les bibliothèques Python de `kdp/`, `montage-auto/`, `repondeur-facebook/`, `life-organizer/`, `tiktok/`, de l'extraction multiformat et des deux chantiers en sommeil sous `archives-backlog/`, plus le Chromium du parcours de vérification. Le script fait foi — cette liste-ci a déjà pris trois projets de retard. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
