@@ -1,8 +1,13 @@
 # Chaîne de montage automatisée
 
-Trois scripts indépendants, à lancer dans l'ordre. Chacun rend un fichier que le
-suivant consomme, et chacun rend un code de retour non nul en cas d'échec — ils
-s'enchaînent donc avec `&&` sans risquer de traiter un fichier absent.
+Un texte et une vidéo de visage à l'entrée, une timeline DaVinci Resolve à la
+sortie. En une commande :
+
+```bash
+python faire_ma_video.py --text "Bienvenue dans cette nouvelle vidéo !" --video mon_visage.mp4
+```
+
+Ou maillon par maillon, chacun utilisable seul :
 
 ```bash
 # 1. Le texte devient une voix off
@@ -15,8 +20,53 @@ python auto_lipsync.py --video mon_visage.mp4 --audio voice.mp3 --output rendu_f
 python prepare_my_edit.py --file rendu_final.mp4
 ```
 
-Les trois marchent aussi séparément : le troisième dérushe n'importe quel
-dossier de rushes, sans rien devoir aux deux premiers.
+Chacun rend un code de retour non nul en cas d'échec — ils s'enchaînent donc
+avec `&&` sans risquer de traiter un fichier absent. Le troisième dérushe aussi
+n'importe quel dossier de rushes, sans rien devoir aux deux premiers.
+
+## `faire_ma_video.py` — la chaîne entière
+
+Ce qu'il ajoute aux trois autres tient en un mot : la **reprise**. Une étape
+n'est rejouée que si ses entrées ont changé.
+
+| Ce qui change | Ce qui est refait |
+| --- | --- |
+| Rien (on relance la commande) | rien |
+| Le texte, la voix, le modèle | la voix, **et** le lip-sync |
+| `--pads`, `--resize-factor`, `--nosmooth` | le lip-sync seul |
+| La vidéo source | le lip-sync seul |
+| La vidéo finale effacée à la main | le lip-sync seul |
+| `--refaire` | tout |
+
+Les deux règles derrière ce tableau :
+
+- **Réutiliser un fichier périmé est pire que tout recalculer.** Un texte
+  corrigé et une voix inchangée donneraient une vidéo qui s'ouvre normalement et
+  dit la mauvaise chose. L'empreinte porte donc sur les entrées de l'étape,
+  jamais sur la seule présence de son fichier de sortie.
+- **Après un échec, la voix déjà produite est réutilisée.** Elle est faite, elle
+  est bonne, elle est payée — la redemander à ElevenLabs coûterait des crédits
+  pour un fichier rigoureusement identique.
+
+L'état est un `.chaine.json` déposé dans le dossier de travail (`.chaine/` à côté
+de la sortie, ou `--travail`). Illisible ou effacé, il ne bloque rien : tout est
+simplement refait.
+
+| Option | Défaut | Rôle |
+| --- | --- | --- |
+| `--text` / `--text-file` | — | Le texte, en clair ou dans un fichier UTF-8. L'un des deux. |
+| `--video` | — | La vidéo du visage. Obligatoire. |
+| `--output` | `rendu_final.mp4` | La vidéo finale. |
+| `--travail` | `.chaine/` | Où vivent la voix intermédiaire et l'état. |
+| `--sans-resolve` | non | S'arrête à la vidéo, sans toucher à Resolve. |
+| `--refaire` | non | Refait tout, même l'inchangé. |
+
+Les options `--voice`, `--model`, `--pads`, `--resize-factor` et `--nosmooth`
+sont passées telles quelles aux maillons concernés.
+
+Si Resolve n'est pas ouvert, la vidéo n'est pas perdue pour autant : le script
+dit où elle est et donne la commande pour l'importer plus tard. Le livrable est
+la vidéo, pas la timeline.
 
 ## Installation
 

@@ -56,10 +56,18 @@ AVIS_FAIBLE_CONCURRENCE = 300     # au-delà, la preuve sociale des installés e
 # La demande pèse le plus lourd : sans acheteurs, ni la concurrence ni le prix
 # n'ont d'importance. Le prix pèse le moins : c'est la seule des trois variables
 # qu'on décide soi-même après coup.
+#
+# La rentabilité valait 20 points au premier jet, et les a rendus à la demande.
+# Motif : sur trois niches d'essai contrastées, elle a noté 20/20 aux trois. La
+# quasi-totalité des brochés KDP se vend entre 9,99 et 19,99, c'est-à-dire sur
+# le palier plat de la courbe — un axe qui ne sépare jamais rien n'est pas un
+# axe, c'est une prime à l'inscription. Il en garde dix, assez pour attraper le
+# livre à 4,99 qui ne couvrira pas son impression et celui à 34,99 que personne
+# n'achètera, et la note utile se joue désormais sur 90 plutôt que sur 80.
 
-POIDS_DEMANDE = 50.0
+POIDS_DEMANDE = 60.0
 POIDS_CONCURRENCE = 30.0
-POIDS_RENTABILITE = 20.0
+POIDS_RENTABILITE = 10.0
 
 # Bornes des échelles logarithmiques. Au-delà du plafond, la note est pleine :
 # distinguer un BSR de 2 000 d'un BSR de 4 000 n'aide personne à choisir.
@@ -68,18 +76,21 @@ BSR_PLANCHER = 300_000
 AVIS_PLAFOND = 20
 AVIS_PLANCHER = 1_000
 
-# Rendement du prix, par ancrages interpolés linéairement. La courbe monte
-# jusqu'au palier des broché rentables, puis redescend : au-delà d'une vingtaine
-# d'euros, l'acheteur d'un livre indépendant sans auteur connu se cabre, et le
-# gain de marge est payé par une perte de conversion.
+# Rendement du prix, par ancrages interpolés linéairement, en **fraction** de
+# POIDS_RENTABILITE et non en points : les deux se règlent séparément, et une
+# courbe en points absolus ne saurait plus atteindre son maximum le jour où le
+# poids change. La courbe monte jusqu'au palier des brochés rentables, puis
+# redescend : au-delà d'une vingtaine d'euros, l'acheteur d'un livre indépendant
+# sans auteur connu se cabre, et le gain de marge est payé par une perte de
+# conversion.
 COURBE_PRIX = [
-    (0.00, 0.0),
-    (2.99, 5.0),    # sous 2,99, la redevance ebook tombe à 35 % et le broché ne couvre pas l'impression
-    (6.99, 13.0),
-    (9.99, 20.0),   # le palier confortable commence ici
-    (19.99, 20.0),  # et finit là
-    (29.99, 11.0),
-    (49.99, 3.0),
+    (0.00, 0.00),
+    (2.99, 0.25),   # sous 2,99, la redevance ebook tombe à 35 % et le broché ne couvre pas l'impression
+    (6.99, 0.65),
+    (9.99, 1.00),   # le palier confortable commence ici
+    (19.99, 1.00),  # et finit là
+    (29.99, 0.55),
+    (49.99, 0.15),
 ]
 
 # BSR -> ventes par jour. Règle d'ordre de grandeur, calée sur deux repères
@@ -127,7 +138,7 @@ def _decimal(valeur: float, decimales: int = 1) -> str:
 
 
 def _interpoler(valeur: float, ancres: list[tuple[float, float]]) -> float:
-    """Lit une courbe donnée par points, en la prolongeant à plat aux deux bouts."""
+    """Lit une courbe donnée par ancrages, en la prolongeant à plat aux deux bouts."""
     if valeur <= ancres[0][0]:
         return ancres[0][1]
     for (x1, y1), (x2, y2) in zip(ancres, ancres[1:]):
@@ -273,7 +284,7 @@ def score_niche(bsr: float, reviews: float, price: float) -> Niche:
     # n'a encore parlé — et log10(0) n'existe pas.
     note_concurrence = _note_log(max(reviews, 1), AVIS_PLAFOND, AVIS_PLANCHER,
                                  POIDS_CONCURRENCE)
-    note_rentabilite = _interpoler(price, COURBE_PRIX)
+    note_rentabilite = POIDS_RENTABILITE * _interpoler(price, COURBE_PRIX)
 
     ventes = VENTES_PAR_JOUR_A_RANG_UN / bsr
     redevance = price * TAUX_REDEVANCE

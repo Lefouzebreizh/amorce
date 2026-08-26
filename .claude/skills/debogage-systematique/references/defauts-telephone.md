@@ -65,9 +65,23 @@ difficile à lire.
 Deux pistes, aucune confirmée :
 
 - **Le nombre de vidéos décodables en même temps.** Le studio crée un `<video>`
-  par plan — l'invariant n°3, nécessaire — et huit plans redécoupés en font bien
-  davantage. Les navigateurs Android plafonnent souvent entre six et huit. Le
-  remède serait de ne garder chargés que les plans proches de la tête de lecture.
+  par plan — l'invariant n°3, nécessaire — et n'en borne pas le nombre. Mesuré :
+  le montage express des quatre rushes de test en réclame **4**, et douze
+  découpes sur ces mêmes 7,5 secondes en portent le compte à **13**. La relation
+  est linéaire, un décodeur par plan. Un format court réaliste de trente à
+  soixante secondes en demanderait donc vingt-cinq à cinquante, quand un
+  navigateur Android en accorde six à huit.
+
+  **Traité.** `ClipVideoPool.sync` ne garde plus chargés que les six plans les
+  plus proches de la tête de lecture, et rend les identifiants retenus ; la
+  boucle de rendu purge puis rebranche le graphe audio sur cette même fenêtre.
+  Sans cette purge, `attachClip` refuserait de rebrancher un identifiant qu'il
+  connaît déjà — un élément média ne se relie qu'à une seule source Web Audio
+  dans toute sa vie — et le plan recréé reviendrait muet, en silence.
+
+  Ce que cela ne prouve pas : le Chromium de bureau n'ayant pas le plafond
+  d'Android, la borne est vérifiée, pas le symptôme qu'elle prévient. Si un
+  export noir revient du téléphone après ce changement, la cause est ailleurs.
 - **Un fichier rangé vide**, qui produit un lien valide ne décodant rien. Un
   `Blob` de zéro octet est `truthy` et `createObjectURL` lui rend un lien
   parfaitement formé : le montage se rouvrait normalement et sortait noir, sans

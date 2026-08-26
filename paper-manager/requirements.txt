@@ -1,0 +1,15 @@
+# La seule dépendance du code écrit à ce jour ; les suivantes arriveront avec le
+# module qui les utilise.
+#
+# Lecture des PDF : extraction du texte quand il y en a déjà un, rendu en image
+# quand il n'y en a pas, remplissage et aplatissement des formulaires. PyMuPDF
+# fait les quatre, et il est déjà utilisé par la chaîne pré-presse de ce dépôt.
+PyMuPDF>=1.24
+
+# Redressement et recadrage d'une photo de document avant lecture. Une facture
+# photographiée de travers se lit mal, quel que soit le lecteur derrière.
+Pillow>=10.0
+
+# Lecture du document par un modèle de vision. C'est le seul appel réseau du
+# projet, et il ne part que si `extraction.active` vaut true.
+anthropic>=0.40

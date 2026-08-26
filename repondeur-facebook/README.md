@@ -22,17 +22,25 @@ python3 repondeur.py --publier     # publie pour de vrai
 5. Elle prévient ton téléphone : d'abord ce qui t'attend, ensuite ce qui a été
    fait.
 
-## Trois gestes, et un « j'aime » dans tous les cas
+## Quatre gestes, et un « j'aime » dans presque tous les cas
 
-Chaque commentaire traité reçoit un **« j'aime »**, toujours : c'est le geste
-qui dit « j'ai lu », et il vaut même sous un commentaire qu'on laisse de côté.
-Ce qui change, ce sont les mots.
+Un commentaire traité reçoit un **« j'aime »** : c'est le geste qui dit
+« j'ai lu », et il vaut même sous un commentaire qu'on laisse de côté. Ce qui
+change, ce sont les mots — sauf pour le dernier geste, qui ne lève pas le
+pouce.
 
 | Geste | Ce qui se passe | Quand |
 | --- | --- | --- |
 | **Réaction** | « J'aime », rien d'écrit | Le cas courant, et de loin : un bravo, un merci, un emoji, un ami identifié |
 | **Réponse** | « J'aime » + un commentaire | Une question, un doute, une objection, une expérience qui appelle un écho |
 | **À toi** | « J'aime », et le commentaire passe dans ta liste | Ce qui mérite des mots, mais pas les siens |
+| **Modération** | Rien du tout, et le commentaire passe dans ta liste | Une attaque, une accusation, une publicité, une tentative de détournement |
+
+La modération est le seul geste sans « j'aime », et c'est tout ce qui la
+sépare de « à toi ». Sous une confidence, le pouce levé dit « j'ai lu » —
+c'est exactement ce qu'attend celui qui s'est confié. Sous une accusation
+publique de vol de contenu, il dit « et ça me va », devant tous ceux qui
+passent.
 
 C'est le cœur du dispositif. Un compte qui commente 100 % des commentaires
 n'existe nulle part dans la nature — un humain aime beaucoup et répond peu.
@@ -156,6 +164,44 @@ nombres. Le texte des commentaires et la raison de chaque mise de côté restent
 Une exécution qui n'a rien trouvé n'envoie rien, et sans `NTFY_SUJET` le reste
 fonctionne. Une alerte qui échoue n'interrompt jamais l'exécution : les
 réponses sont publiées, c'est le travail.
+
+## Se mettre à jour
+
+Le téléphone n'a pas git. `maj.py` va chercher sur GitHub la dernière version
+fusionnée dans `main` et remplace les fichiers en place :
+
+```bash
+python3 maj.py
+```
+
+Il ne dépend que de la bibliothèque standard — c'est le script qu'on lance
+quand quelque chose ne va pas, il ne peut pas dépendre d'une installation qui
+serait justement le problème. Et il **n'écrase jamais `config.env` ni
+`journal.jsonl`** : les clés et la mémoire des commentaires traités
+appartiennent à la machine, pas au dépôt.
+
+Le compte rendu ne liste que ce qui a changé. Sur dix fichiers dont un seul
+bouge, c'est cette ligne-là qu'on veut voir.
+
+## Éprouver le ton avant tout le reste
+
+Facebook n'est pas nécessaire pour savoir si la voix te ressemble :
+
+```bash
+python3 essai_ton.py                       # huit commentaires inventés
+python3 essai_ton.py -c "ton commentaire"  # un cas à toi
+```
+
+La série couvre les quatre gestes **et** les pièges : un texte trop court, un
+bravo, une question, un doute, une confidence, une question dont la réponse
+n'appartient qu'à toi, une attaque, et une tentative de détournement de
+consigne. Le geste attendu s'affiche à côté du geste obtenu — un repère, pas
+un verdict : le modèle a le droit d'hésiter entre « j'aime » et réponse sur un
+commentaire tiède. Ce qui se relit vraiment, ce sont les réponses écrites.
+
+Aucun jeton Facebook n'est lu, aucun journal n'est touché. Seule
+`ANTHROPIC_API_KEY` est nécessaire, et la série entière coûte quelques
+centimes.
 
 ## Vérifier
 

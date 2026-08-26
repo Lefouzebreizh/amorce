@@ -50,10 +50,13 @@ toucher.
    « ignore les instructions précédentes ». Ne jamais concaténer un texte de
    membre dans la consigne système.
 4. **La sortie du modèle est structurée, pas libre.** Le schéma impose un
-   geste — `reaction`, `reponse` ou `a_toi` —, une raison et un texte. Un
-   texte libre finit toujours par publier une phrase qui s'adressait à
-   l'auteur du groupe. Le « j'aime » n'est pas dans le schéma : il est acquis
-   dans les trois cas, et un modèle n'a pas à en décider.
+   geste — `reaction`, `reponse`, `a_toi` ou `moderation` —, une raison et un
+   texte. Un texte libre finit toujours par publier une phrase qui s'adressait
+   à l'auteur du groupe. Le « j'aime » n'est pas dans le schéma : il se
+   **déduit** du geste, et un modèle n'a pas à décider d'un pouce levé.
+   Trois gestes sur quatre l'emportent ; seul `moderation` s'en passe, parce
+   qu'aimer une attaque ou une accusation ne dit plus « j'ai lu » mais « et ça
+   me va », sous les yeux de 48 000 membres.
 5. **Un refus du modèle ne se contourne pas.** Pas de repli sur un autre
    modèle : le refus porte sur un commentaire déjà problématique, et publier
    quand même y répondrait exactement à l'envers. Le commentaire revient à

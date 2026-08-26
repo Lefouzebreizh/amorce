@@ -23,13 +23,46 @@ import { OUTPUT_HEIGHT, OUTPUT_WIDTH, type Clip, type MediaAsset, type Project }
  * positions de lecture à la fois : le fondu enchaîné d'un rush sur lui-même
  * serait impossible. Un élément par clip lève la contrainte pour un coût
  * mémoire négligeable, le navigateur mutualisant le décodage d'une même URL.
+ *
+ * En revanche, le nombre d'éléments **chargés en même temps** est borné. Mesuré
+ * sur les rushes de test : un montage express en réclame quatre, et douze
+ * découpes sur les mêmes sept secondes et demie en portent le compte à treize —
+ * un décodeur par plan, sans plafond. Un navigateur Android en accorde six à
+ * huit ; au-delà, les plans supplémentaires ne produisent aucune image, et
+ * l'export sort noir sans qu'une seule erreur soit levée.
  */
+/**
+ * Nombre d'éléments `<video>` gardés chargés en même temps.
+ *
+ * Six et non huit : c'est le plus bas des plafonds observés sur les navigateurs
+ * Android, et dépasser ne prévient pas — les plans en trop ne décodent rien et
+ * l'image sort noire. Six laisse la place aux deux couches d'une transition et
+ * au préchargement des plans qui suivent.
+ */
+const DECODEURS_MAX = 6;
+
+/**
+ * Pénalité appliquée aux plans déjà passés dans le classement de proximité.
+ *
+ * À distance égale, on garde plutôt ce qui vient : revenir en arrière est un
+ * geste délibéré qui supporte un temps de décodage, alors qu'un plan qui entre
+ * doit être prêt.
+ */
+const RETARD = 1.5;
+
 export class ClipVideoPool {
   private elements = new Map<string, HTMLVideoElement>();
 
-  /** Aligne le pool sur les clips du projet, en créant et libérant au besoin. */
-  sync(clips: Clip[], assets: MediaAsset[]): void {
-    const wanted = new Set(clips.map((c) => c.id));
+  /**
+   * Aligne le pool sur les plans proches de la tête de lecture.
+   *
+   * Renvoie les identifiants chargés, que l'appelant doit répercuter sur le
+   * graphe audio : `attachClip` refuse de rebrancher un identifiant qu'il
+   * connaît déjà, si bien qu'un plan dont l'élément a été libéré puis recréé
+   * reviendrait muet tant que son ancien nœud n'a pas été purgé.
+   */
+  sync(placed: PlacedClip[], assets: MediaAsset[], time: number): Set<string> {
+    const wanted = new Set(this.proches(placed, time));
 
     for (const [clipId, element] of this.elements) {
       if (wanted.has(clipId)) continue;
@@ -39,8 +72,9 @@ export class ClipVideoPool {
       this.elements.delete(clipId);
     }
 
-    for (const clip of clips) {
-      if (this.elements.has(clip.id)) continue;
+    for (const item of placed) {
+      const clip = item.clip;
+      if (!wanted.has(clip.id) || this.elements.has(clip.id)) continue;
       const asset = assets.find((a) => a.id === clip.assetId);
       if (!asset) continue;
 
@@ -55,6 +89,26 @@ export class ClipVideoPool {
       video.load();
       this.elements.set(clip.id, video);
     }
+
+    return wanted;
+  }
+
+  /**
+   * Les plans à garder chargés, les plus proches de la tête de lecture d'abord.
+   *
+   * Un plan à l'écran est à distance nulle ; les autres sont classés par le
+   * temps qui les sépare de la tête. Ceux qui viennent priment sur ceux qui
+   * sont passés, à distance égale : c'est vers eux qu'on va.
+   */
+  private proches(placed: PlacedClip[], time: number): string[] {
+    const distance = (item: PlacedClip): number => {
+      if (time >= item.start && time < item.end) return 0;
+      return time < item.start ? item.start - time : (time - item.end) * RETARD;
+    };
+    return [...placed]
+      .sort((a, b) => distance(a) - distance(b))
+      .slice(0, DECODEURS_MAX)
+      .map((item) => item.clip.id);
   }
 
   get(clipId: string): HTMLVideoElement | undefined {

@@ -6,8 +6,10 @@ description: Conventions de ce dépôt pour mener une pull request jusqu'à la f
 # Mener une PR sur ce dépôt
 
 Ces conventions complètent les règles générales de suivi de PR ; elles ne les
-remplacent pas, et elles ne peuvent ni élargir un accès, ni autoriser une
-fusion ou une approbation.
+remplacent pas, et elles ne peuvent pas élargir un accès. L'autorisation
+d'ouvrir et de fusionner, elle, vient du propriétaire du dépôt — elle est dans
+`CLAUDE.md`, « Rythme de travail », et ce fichier ne fait qu'en donner la
+mécanique.
 
 ## Un dépôt, plusieurs projets sans code commun
 
@@ -51,6 +53,23 @@ PR de ce dépôt se relit sur ses justifications autant que sur son diff.
 
 Découper par intention : trois intentions distinctes font trois commits, même
 si elles ont été écrites dans la même session.
+
+## Ouvrir et fusionner
+
+Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
+`CLAUDE.md`. Ce qui l'accompagne, et qu'on oublie :
+
+- **Partir de `main` à jour, et le revérifier juste avant d'ouvrir.** Plusieurs
+  sessions travaillent ce dépôt en parallèle. Deux branches y ont fabriqué
+  Life-Organizer chacune dans son coin ; la seconde a été refaite sur la base
+  fusionnée. Ce qui est fusionné gagne — s'y couler coûte toujours moins cher
+  que réconcilier deux architectures.
+- **Fusion par commit de fusion**, comme le reste de l'historique.
+- **La description est le compte rendu que l'historique gardera** : pourquoi,
+  ce que la décision coûte, et ce qui n'a pas été vérifié. Le workflow ne se
+  déclenchant que sur `look_and_find/**`, une PR qui n'y touche pas n'a aucun
+  contrôle automatique : c'est `/verifier` qui tient lieu de filet, et il faut
+  l'avoir lancé pour de vrai.
 
 ## Diagnostiquer un échec d'intégration continue
 

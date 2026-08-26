@@ -1,7 +1,8 @@
 #!/bin/bash
-# Prépare le conteneur d'une session distante : dépendances du studio Amorce,
-# SDK Flutter et dépendances de Look & Find, bibliothèques de la chaîne KDP,
-# du studio audio, de l'assistant d'allocation et du radar crypto.
+# Prépare le conteneur d'une session distante : dépendances du studio Amorce et
+# du socle agence, SDK Flutter et dépendances de Look & Find, bibliothèques de
+# la chaîne KDP, du studio audio, de l'assistant d'allocation, de la chaîne de
+# montage, du répondeur Facebook, de Life-Organizer et du radar crypto.
 #
 # Pourquoi ce script existe : le conteneur d'une session web démarre sur un
 # dépôt fraîchement cloné, sans `node_modules` et sans SDK Flutter. Sans lui,
@@ -35,6 +36,12 @@ echo "── Amorce : dépendances npm"
 cd "$racine"
 npm install --no-audit --no-fund --silent
 
+echo "── Socle Agence : dépendances npm"
+# Projet Next.js indépendant, avec son propre `package.json` : les dépendances
+# de la racine ne lui servent à rien, et les siennes ne doivent pas remonter.
+cd "$racine/agence"
+npm install --no-audit --no-fund --silent
+
 echo "── Look & Find : SDK Flutter $FLUTTER_VERSION"
 if [ -x "$FLUTTER_HOME/bin/flutter" ]; then
   echo "   déjà installé"
@@ -66,22 +73,17 @@ echo "── Chaîne KDP : bibliothèques Python"
 # `--break-system-packages` : l'image est une Debian récente, où pip refuse
 # d'installer hors environnement virtuel. Un venv ici obligerait chaque commande
 # de la chaîne à l'activer d'abord, pour un conteneur qui n'héberge qu'un projet.
-python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF
+# numpy : `coquilles.py` opère au pixel et `planches.py` mesure les bulles ;
+# ni Pillow ni PyMuPDF ne l'apportent.
+python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF numpy
 
 echo "── Studio audio : bibliothèques Python"
 # PyTorch et Whisper sont volontairement absents : six gigaoctets à installer à
 # chaque nouvel environnement, pour un chemin d'alignement que l'application sait
 # remplacer par la détection de silences. Qui en a besoin les installe avec
-# `pip install -r mon-app-audio/requirements.txt`.
+# `pip install -r archives-backlog/mon-app-audio/requirements.txt`.
 python3 -m pip install --quiet --break-system-packages \
   streamlit pydub imageio-ffmpeg edge-tts requests
-
-echo "── Radar crypto : bibliothèques Python"
-# Trois paquets légers. `requests` est déjà installé plus haut pour le studio
-# audio, mais le répéter coûte une seconde et évite qu'un changement là-haut
-# casse le radar en silence.
-python3 -m pip install --quiet --break-system-packages \
-  requests PyYAML python-dotenv
 
 echo "── Répondeur Facebook : bibliothèques Python"
 # `requests` est déjà là pour le studio audio ; ces deux-là ne le sont pas, et
@@ -110,6 +112,19 @@ echo "── Extraction multiformat : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages \
   exifread pillow-heif ebooklib pdfplumber chardet mutagen
 
+echo "── Life-Organizer : bibliothèques Python"
+# Real-ESRGAN et PyTorch sont volontairement absents : plusieurs gigaoctets pour
+# un module désactivé par défaut. `tesseract` n'est pas un paquet Python et
+# s'installe à part ; `outils_externes.py` désactive proprement l'OCR sans lui.
+python3 -m pip install --quiet --break-system-packages \
+  Pillow python-dateutil pypdf ImageHash opencv-python-headless imageio-ffmpeg
+
+echo "── Radar crypto : bibliothèques Python"
+# Trois paquets légers. `requests` est déjà installé plus haut, mais le répéter
+# coûte une seconde et évite qu'un changement là-haut casse le radar en silence.
+python3 -m pip install --quiet --break-system-packages \
+  requests PyYAML python-dotenv
+
 # `imageio-ffmpeg`, installé plus haut pour le studio audio, embarque un ffmpeg
 # statique complet — mais sous un nom que rien ne trouve. Le lier suffit à
 # rendre la vidéo et l'audio exploitables, sans installer de paquet système.
@@ -120,6 +135,11 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
       && echo "   ffmpeg $("$binaire_ffmpeg" -version | head -1 | cut -d' ' -f3) relié depuis imageio-ffmpeg"
   fi
 fi
+
+echo "── Volet TikTok : bibliothèque du carnet"
+# `tiktok/carnet.py` fabrique le PDF de tournage depuis les Markdown du volet.
+# Sans reportlab, la seule chose qu'on emporte en tournage ne se fabrique pas.
+python3 -m pip install --quiet --break-system-packages reportlab
 
 echo "── Amorce : Chromium pour le parcours de vérification"
 # L'environnement fournit un Chromium, mais sous un autre numéro de révision que
@@ -169,4 +189,13 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$FLUTTER_HOME/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Radar crypto : cd pepites && python3 -m unittest discover -s tests"
+# Chromium de vérification. L'image en fournit un (révision 1194), Playwright en
+# réclame un autre (1234) : sans chemin explicite, `npm run fixtures` et
+# `npm run verify` s'arrêtent en demandant `playwright install`, que ce dépôt
+# interdit — l'installation retéléchargerait un navigateur déjà présent.
+if [ -x /opt/pw-browsers/chromium ] && [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+  echo "export AMORCE_CHROMIUM=/opt/pw-browsers/chromium" >> "$CLAUDE_ENV_FILE"
+  echo "── Amorce : Chromium de vérification signalé à la session"
+fi
+
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests — Radar crypto : cd pepites && python3 -m unittest discover -s tests"

@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { analyzeProject } from './analysis.ts';
 import { uid } from './id.ts';
-import { applyFinish, soundsOnCuts, tensionFills } from './autoFinish.ts';
+import { applyFinish, soundsOnCuts, tensionFills, thinCues } from './autoFinish.ts';
 import type { SharedFile } from './share.ts';
 import { captionsFromVoice } from './voice.ts';
 import { chopped, emptyProject, layoutClips, totalDuration } from './timeline.ts';
@@ -137,6 +137,8 @@ type StudioState = {
   chopClip: (id: string, target?: number) => void;
   /** Pose un bruitage sur chaque raccord qui n'en a pas encore. */
   addSoundsOnCuts: () => void;
+  /** Écarte les bruitages en trop, pour rendre du silence entre les impacts. */
+  thinSounds: () => void;
   /** Relance l'attention là où l'analyse a repéré un creux. */
   fillTensionGaps: (moments: number[]) => void;
   /** Pose d'un coup textes, bruitages et découpe, sans rien remplacer. */
@@ -393,6 +395,15 @@ export const useStudio = create<StudioState>((set, get) => {
       const added = soundsOnCuts(state.project.clips, state.project.cues, () => uid('sfx'));
       if (added.length === 0) return state;
       return { project: { ...state.project, cues: [...state.project.cues, ...added] } };
+    }),
+
+  thinSounds: () =>
+    mutate('allegement', (state) => {
+      const gardes = thinCues(state.project.cues, totalDuration(state.project.clips));
+      if (gardes.length === state.project.cues.length) return state;
+      // La sélection peut désigner un bruitage qu'on vient d'écarter : la vider
+      // évite un panneau de réglages ouvert sur un objet qui n'existe plus.
+      return { project: { ...state.project, cues: gardes }, selection: null };
     }),
 
   /** Pose une ponctuation sonore aux instants signalés par l'analyse. */
