@@ -86,26 +86,29 @@ d'y toucher.
 4. **Un seul DTO pour le réseau et pour Hive.** Pas de `TypeAdapter` généré :
    la boîte contient du JSON relu par le même parseur tolérant, ce qui évite
    une migration binaire à chaque champ ajouté à la fiche.
-5. **Le schéma de `gemini_prompt.dart` et la lecture de `product_dto.dart` se
+5. **La réponse brute est retenue avant le décodage.** Une réponse illisible
+   est justement celle qu'on a le plus besoin de pouvoir regarder ; l'enregistrer
+   après un décodage réussi la perdrait dans le seul cas qui compte.
+6. **Le schéma de `gemini_prompt.dart` et la lecture de `product_dto.dart` se
    tiennent.** Modifier l'un sans l'autre fait silencieusement disparaître un
    champ de la fiche, sans qu'aucun test ne l'attrape.
-6. **Le prix de référence d'un favori ne bouge pas.** C'est lui qui rend une
+7. **Le prix de référence d'un favori ne bouge pas.** C'est lui qui rend une
    baisse mesurable ; le recalculer ferait glisser le repère avec le prix et
    aucune baisse ne serait jamais visible.
-7. **Un seul chemin d'identification.** Le déclencheur et le choix d'une photo
+8. **Un seul chemin d'identification.** Le déclencheur et le choix d'une photo
    dans la galerie passent tous deux par `_identifier` : deux chemins
    divergeraient au premier changement d'invite ou de compression.
-8. **Une alerte s'acquitte, et l'acquittement porte un prix.** Un objet acquitté
+9. **Une alerte s'acquitte, et l'acquittement porte un prix.** Un objet acquitté
    à 80 € ne resignale qu'en passant sous 80 €. Sans cela, la même alerte
    revient à chaque ouverture, on apprend à ne plus la voir, et la suivante —
    la vraie — passe inaperçue.
-9. **L'échelle en réalité augmentée est fixe** (`ArScale.fixed`). La fonction
+10. **L'échelle en réalité augmentée est fixe** (`ArScale.fixed`). La fonction
    répond à « est-ce que ça rentre » : laisser agrandir au doigt donnerait une
    réponse fausse et rassurante.
-10. **La caméra est libérée à la mise en pause.** Sur Android, le capteur est
+11. **La caméra est libérée à la mise en pause.** Sur Android, le capteur est
    une ressource exclusive : la garder en arrière-plan empêche les autres
    applications de l'ouvrir, et nous met nous-mêmes en échec au retour.
-11. **La photo est réduite hors du fil principal.** `ImageCompressor` passe par
+12. **La photo est réduite hors du fil principal.** `ImageCompressor` passe par
    `compute` ; le faire sur le fil de l'interface fait sauter des images juste
    au moment où l'utilisateur attend le retour du déclencheur.
 
@@ -182,6 +185,7 @@ méthode testée.
 | `api_key_test.dart` | D'où vient la clé et laquelle gagne. |
 | `demarrage_test.dart` | Le seul test qui monte `app.dart` : câblage du thème, de la locale et des surcharges. |
 | `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
+| `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé. Le patron du faux `Dio` est là si un autre test en a besoin. |
 
 Trois recettes utiles quand on ajoute un test :
 
