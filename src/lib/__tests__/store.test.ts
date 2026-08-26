@@ -395,3 +395,28 @@ test('un glissement continu du mixage ne compte que pour une annulation', () => 
   useStudio.getState().undo();
   assert.equal(useStudio.getState().project.mix.clips, DEFAULT_MIX.clips);
 });
+
+test('un sous-titre ajouté ne peut pas tomber après la dernière image', () => {
+  twoClipsAtEnd();
+  const limit = useStudio.getState().duration();
+
+  // La tête de lecture est au bout : sans borne, le texte se poserait de 10 s
+  // à 12 s sur un montage de 10 s, et ne s'afficherait jamais.
+  useStudio.getState().setPlayhead(limit);
+  useStudio.getState().addCaption();
+
+  const caption = useStudio.getState().project.captions.at(-1)!;
+  assert.ok(caption.end <= limit + 1e-9, `le texte finit à ${caption.end} pour un montage de ${limit}`);
+  assert.ok(caption.start >= 0);
+  assert.ok(caption.end - caption.start >= 0.8 - 1e-9, 'il doit rester lisible');
+});
+
+test('un sous-titre ajouté au milieu garde ses deux secondes', () => {
+  twoClipsAtEnd();
+  useStudio.getState().setPlayhead(2);
+  useStudio.getState().addCaption();
+
+  const caption = useStudio.getState().project.captions.at(-1)!;
+  assert.equal(caption.start, 2);
+  assert.equal(caption.end, 4);
+});

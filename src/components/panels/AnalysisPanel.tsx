@@ -254,7 +254,7 @@ export function AnalysisPanel({
                 <button
                   type="button"
                   onClick={() => engine.seek(slump.start)}
-                  className="w-full rounded-lg border border-warn/30 bg-warn/5 px-2.5 py-1.5 text-left text-[11px] text-warn transition-colors hover:bg-warn/10"
+                  className="flex min-h-11 w-full items-center rounded-lg border border-warn/30 bg-warn/5 px-2.5 py-1.5 text-left text-[11px] text-warn transition-colors hover:bg-warn/10"
                 >
                   {slump.duration.toFixed(1)} s de creux à partir de {slump.start.toFixed(1)} s — cliquer pour
                   y aller

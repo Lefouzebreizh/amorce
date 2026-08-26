@@ -42,6 +42,15 @@ type Snapshot = { project: Project; label: string };
 const HISTORY_LIMIT = 60;
 
 /**
+ * Durée minimale d'un sous-titre ajouté à la main, en secondes.
+ *
+ * En deçà, il clignote au lieu de se lire. C'est la borne qui s'applique quand
+ * la tête de lecture est si près de la fin qu'il n'y a plus deux secondes
+ * devant elle.
+ */
+const MIN_CAPTION_SPAN = 0.8;
+
+/**
  * Délai en deçà duquel deux modifications de même nature n'en font qu'une.
  *
  * Sans ce regroupement, un simple glissement de jauge produirait des dizaines
@@ -458,8 +467,18 @@ export const useStudio = create<StudioState>((set, get) => {
    */
   addCaption: (style = 'punch') =>
     mutate('ajout-texte', (state) => {
-      const start = state.playhead;
-      const end = start + 2;
+      /*
+       * Un sous-titre posé après la dernière image n'existe pas.
+       *
+       * Il ne s'affiche jamais, ne compte dans aucune couverture, et rien à
+       * l'écran ne le dit : on le voit dans la liste, on le croit posé. C'est
+       * arrivé en ajoutant un texte avec la tête de lecture au bout du montage
+       * — 14,7 s → 16,7 s sur une vidéo de 14,7 s. On le ramène donc dans les
+       * bornes, quitte à le raccourcir.
+       */
+      const limit = totalDuration(state.project.clips);
+      const end = limit > 0 ? Math.min(limit, state.playhead + 2) : state.playhead + 2;
+      const start = limit > 0 ? Math.max(0, Math.min(state.playhead, end - MIN_CAPTION_SPAN)) : state.playhead;
 
       const occupied = state.project.captions
         .filter((c) => c.start < end && c.end > start)
