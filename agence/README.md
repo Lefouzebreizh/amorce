@@ -43,10 +43,13 @@ Pour tester sans boîte mail, désactiver la confirmation par courriel dans
 | Accueil | `/` | Vitrine publique, aiguillage vers la connexion |
 | Inscription | `/inscription` | Création du compte ; le profil est créé par un trigger PostgreSQL |
 | Connexion | `/connexion` | Ouverture de session ; retour à la page demandée |
+| Mot de passe oublié | `/mot-de-passe-oublie` | Envoi du lien de récupération |
+| Nouveau mot de passe | `/nouveau-mot-de-passe` | Choix du mot de passe, sous la session ouverte par le lien |
 | Tableau de bord | `/tableau-de-bord` | Indicateurs et cinq derniers projets |
 | Projets | `/projets` | Liste filtrable par statut, filtre porté par l'URL |
 | Fiche projet | `/projets/[id]` | Modification et suppression |
 | Mon compte | `/compte` | Nom, entreprise, rôle attribué |
+| Administration | `/administration` | Réservé au rôle `admin` : comptes, projets, montants |
 
 ## Trois barrières, pas une
 
@@ -79,6 +82,30 @@ projet :
 Aucune clé n'est écrite dans le code : tout passe par `.env.local`, et la clé
 `service_role`, qui contourne la RLS, n'est lue nulle part.
 
+Deux conséquences visibles à l'usage :
+
+- **« Mot de passe oublié » répond la même chose dans tous les cas.** Dire
+  « compte inconnu » transformerait le formulaire en outil de vérification
+  d'adresses : on saurait, sans mot de passe, qui est client de l'agence.
+- **`/administration` renvoie un 404 à qui n'est pas administrateur**, et non un
+  refus : un refus confirmerait que la page existe et inviterait à insister.
+
+## Nommer un administrateur
+
+Le rôle ne se change pas depuis l'application — c'est tout l'objet des
+privilèges de colonnes posés par le schéma. Il se donne depuis l'éditeur SQL de
+Supabase :
+
+```sql
+update public.profiles
+   set role = 'admin'
+ where id = (select id from auth.users where email = 'vous@exemple.fr');
+```
+
+L'espace d'administration apparaît alors dans la navigation, en lecture seule :
+les politiques `Un administrateur lit …` ouvrent la lecture, jamais l'écriture.
+Modifier la fiche d'un client se fait avec lui, pas à sa place.
+
 ## Carte du code
 
 ```
@@ -90,6 +117,8 @@ src/components/          composants métier : formulaires, listes, navigation
 src/lib/actions/         Server Actions — les seules écritures
 src/lib/supabase/        clients serveur, session, proxy
 src/lib/                 types de la base, validation Zod, formats d'affichage
+src/lib/__tests__/       tests unitaires (node:test)
+tests/                   résolveur d'alias `@/…` pour l'exécution des tests
 ```
 
 La règle de découpage : **l'interface ne parle jamais à la base.** Un composant
@@ -115,12 +144,26 @@ Le module « projets » est fait pour être recopié. Dans l'ordre :
 ```bash
 npm run lint        # ESLint, `any` interdit
 npm run typecheck   # tsc --noEmit
+npm test            # tests unitaires (node --test, sans dépendance ajoutée)
 npm run build       # build de production
 ```
 
-Les trois doivent passer avant toute livraison. Le build a besoin des variables
-d'environnement : les valeurs de `.env.example` suffisent à le faire aboutir,
+Les quatre doivent passer avant toute livraison, et le workflow
+`.github/workflows/agence.yml` les rejoue sur chaque poussée qui touche
+`agence/`.
+
+Le `build` n'est pas facultatif : il est le seul à voir ce que `tsc` laisse
+passer dans une application App Router — une directive `'use client'`
+manquante, une fonction passée en propriété d'un composant serveur, un export
+non asynchrone dans un fichier `'use server'`. Il réclame les variables
+d'environnement ; les valeurs de `.env.example` suffisent à le faire aboutir,
 elles ne suffisent évidemment pas à faire fonctionner l'application.
+
+Les tests couvrent ce qui se calcule hors navigateur et hors base : validation
+des formulaires, statistiques du tableau de bord, rapprochement des fiches
+clients, formats d'affichage, et le filtre anti-redirection ouverte. Ce
+qu'aucun d'eux ne voit : les politiques RLS, qui s'éprouvent depuis deux
+comptes sur un vrai projet Supabase.
 
 ## Déployer
 

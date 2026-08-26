@@ -186,8 +186,9 @@ rien de générique ne connaît cette particularité.
 non un dossier d'Amorce : ses propres `package.json`, `tsconfig.json` et
 `eslint.config.mjs`, ses propres `node_modules`, et l'alias `@/…` pointe vers
 `agence/src/`. Il se vérifie depuis son dossier (`npm run lint`,
-`npm run typecheck`, `npm run build`), jamais depuis la racine — d'où son
-exclusion de l'ESLint et du `tsconfig.json` de la racine.
+`npm run typecheck`, `npm test`, `npm run build`), jamais depuis la racine —
+d'où son exclusion de l'ESLint et du `tsconfig.json` de la racine. Son
+intégration continue vit dans `.github/workflows/agence.yml`.
 
 | Élément | Ce qu'il fait |
 | --- | --- |

@@ -33,6 +33,23 @@ export const schemaInscription = z.object({
   entreprise: texteFacultatif(120),
 });
 
+export const schemaAdresse = z.object({
+  email: z.email({ message: 'Adresse électronique invalide.' }),
+});
+
+export const schemaNouveauMotDePasse = z
+  .object({
+    motDePasse: z.string().min(8, 'Huit caractères au minimum.'),
+    confirmation: z.string().min(1, 'Retapez le mot de passe.'),
+  })
+  // La confirmation n'est pas une coquetterie : la saisie est masquée, et une
+  // faute de frappe enfermerait dehors quelqu'un qui vient justement de perdre
+  // son accès.
+  .refine((valeurs) => valeurs.motDePasse === valeurs.confirmation, {
+    message: 'Les deux saisies diffèrent.',
+    path: ['confirmation'],
+  });
+
 export const schemaProfil = z.object({
   nomComplet: z.string().trim().min(2, 'Indiquez votre nom.').max(120),
   entreprise: texteFacultatif(120),

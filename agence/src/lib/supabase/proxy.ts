@@ -19,13 +19,24 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 import { lireConfigSupabase } from '@/lib/env';
+import { PAGE_NOUVEAU_MOT_DE_PASSE } from '@/lib/navigation';
 import type { Database } from '@/lib/types';
 
-/** Espaces qui exigent une session. */
-const PREFIXES_PRIVES = ['/tableau-de-bord', '/projets', '/compte'];
+/*
+ * Espaces qui exigent une session. Le choix d'un nouveau mot de passe en fait
+ * partie : le lien de récupération ouvre une session avant d'y mener, et sans
+ * elle la page n'a personne à modifier.
+ */
+const PREFIXES_PRIVES = [
+  '/tableau-de-bord',
+  '/projets',
+  '/compte',
+  '/administration',
+  PAGE_NOUVEAU_MOT_DE_PASSE,
+];
 
 /** Pages d'authentification, sans intérêt pour qui est déjà connecté. */
-const PAGES_AUTH = ['/connexion', '/inscription'];
+const PAGES_AUTH = ['/connexion', '/inscription', '/mot-de-passe-oublie'];
 
 export async function actualiserSession(requete: NextRequest): Promise<NextResponse> {
   const { url, cleAnonyme } = lireConfigSupabase();

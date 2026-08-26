@@ -17,7 +17,7 @@ export default async function LayoutPrive({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
-      <BarreLaterale nom={nom} detail={detail} />
+      <BarreLaterale nom={nom} detail={detail} estAdministrateur={profil?.role === 'admin'} />
       {/*
         `pb-28` sur téléphone : la barre d'onglets est fixée en bas, et sans
         cette réserve elle recouvre la dernière ligne de chaque page.

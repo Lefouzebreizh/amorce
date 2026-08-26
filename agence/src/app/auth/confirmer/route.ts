@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 
+import { destinationSure } from '@/lib/navigation';
 import { creerClientServeur } from '@/lib/supabase/server';
 
 /*
@@ -15,6 +16,11 @@ import { creerClientServeur } from '@/lib/supabase/server';
  *
  * Un gestionnaire de route peut écrire des cookies : c'est ici, et non dans une
  * page, que la session issue du lien est posée.
+ *
+ * Le paramètre `suivant` dit où déposer l'utilisateur ensuite — le parcours de
+ * récupération l'envoie choisir un mot de passe plutôt que sur le tableau de
+ * bord. Il est filtré comme partout ailleurs : un lien de courriel est
+ * exactement le genre d'adresse qu'on fabrique pour autrui.
  */
 
 const TYPES_ACCEPTES = [
@@ -35,6 +41,7 @@ export async function GET(requete: NextRequest): Promise<NextResponse> {
   const code = searchParams.get('code');
   const empreinte = searchParams.get('token_hash');
   const type = searchParams.get('type');
+  const destination = destinationSure(searchParams.get('suivant'));
 
   try {
     const client = await creerClientServeur();
@@ -42,13 +49,13 @@ export async function GET(requete: NextRequest): Promise<NextResponse> {
     if (code) {
       const { error } = await client.auth.exchangeCodeForSession(code);
       if (!error) {
-        return NextResponse.redirect(new URL('/tableau-de-bord', origin));
+        return NextResponse.redirect(new URL(destination, origin));
       }
       console.error('[socle-agence] confirmation', error.message);
     } else if (empreinte && estTypeAccepte(type)) {
       const { error } = await client.auth.verifyOtp({ type, token_hash: empreinte });
       if (!error) {
-        return NextResponse.redirect(new URL('/tableau-de-bord', origin));
+        return NextResponse.redirect(new URL(destination, origin));
       }
       console.error('[socle-agence] confirmation', error.message);
     }

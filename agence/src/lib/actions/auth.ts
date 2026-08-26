@@ -14,11 +14,20 @@ import type { AuthError } from '@supabase/supabase-js';
 
 import { echec, journaliser, succes, type EtatFormulaire } from '@/lib/actions/etat';
 import { lireUrlDuSite } from '@/lib/env';
+import {
+  APRES_CONNEXION,
+  PAGE_NOUVEAU_MOT_DE_PASSE,
+  destinationSure,
+} from '@/lib/navigation';
 import { creerClientServeur } from '@/lib/supabase/server';
 import { lireSession } from '@/lib/supabase/session';
-import { analyser, schemaConnexion, schemaInscription } from '@/lib/validation';
-
-const APRES_CONNEXION = '/tableau-de-bord';
+import {
+  analyser,
+  schemaAdresse,
+  schemaConnexion,
+  schemaInscription,
+  schemaNouveauMotDePasse,
+} from '@/lib/validation';
 
 export async function seConnecter(
   _etat: EtatFormulaire,
@@ -97,6 +106,82 @@ export async function sInscrire(
   redirect(APRES_CONNEXION);
 }
 
+export async function demanderReinitialisation(
+  _etat: EtatFormulaire,
+  donnees: FormData,
+): Promise<EtatFormulaire> {
+  const analyse = analyser(schemaAdresse, donnees);
+
+  if (!analyse.valide) {
+    return echec('Vérifiez les champs signalés.', analyse.erreurs);
+  }
+
+  try {
+    const client = await creerClientServeur();
+    const { error } = await client.auth.resetPasswordForEmail(analyse.donnees.email, {
+      redirectTo: `${lireUrlDuSite()}/auth/confirmer?suivant=${encodeURIComponent(
+        PAGE_NOUVEAU_MOT_DE_PASSE,
+      )}`,
+    });
+
+    // Seule la limite d'envoi est dite à l'utilisateur : elle le concerne, il
+    // peut agir dessus. Le reste est journalisé.
+    if (error?.code === 'over_email_send_rate_limit') {
+      return echec(traduireErreurAuth(error));
+    }
+
+    if (error) {
+      console.error('[socle-agence] réinitialisation', error.code, error.message);
+    }
+  } catch (cause) {
+    console.error('[socle-agence]', cause);
+  }
+
+  /*
+   * La même phrase, que l'adresse existe ou non — et donc aussi en cas
+   * d'incident d'envoi. Répondre « compte inconnu » transformerait ce
+   * formulaire en outil de vérification d'adresses : on saurait, sans mot de
+   * passe, qui est client de l'agence.
+   */
+  return succes(
+    'Si un compte existe pour cette adresse, un lien de réinitialisation vient de partir.',
+  );
+}
+
+export async function definirMotDePasse(
+  _etat: EtatFormulaire,
+  donnees: FormData,
+): Promise<EtatFormulaire> {
+  const analyse = analyser(schemaNouveauMotDePasse, donnees);
+
+  if (!analyse.valide) {
+    return echec('Vérifiez les champs signalés.', analyse.erreurs);
+  }
+
+  // Le lien de récupération ouvre une vraie session : sans elle, la demande ne
+  // vient pas du destinataire du courriel.
+  const session = await lireSession();
+
+  if (!session) {
+    return echec('Votre lien a expiré ou a déjà servi. Demandez-en un nouveau.');
+  }
+
+  try {
+    const { error } = await session.client.auth.updateUser({
+      password: analyse.donnees.motDePasse,
+    });
+
+    if (error) {
+      return echec(traduireErreurAuth(error));
+    }
+  } catch (cause) {
+    return journaliser(cause, "Le mot de passe n'a pas pu être changé. Réessayez dans un instant.");
+  }
+
+  revalidatePath('/', 'layout');
+  redirect(APRES_CONNEXION);
+}
+
 export async function seDeconnecter(): Promise<void> {
   const session = await lireSession();
 
@@ -106,22 +191,6 @@ export async function seDeconnecter(): Promise<void> {
 
   revalidatePath('/', 'layout');
   redirect('/connexion');
-}
-
-/**
- * N'accepte qu'un chemin interne. Reprendre tel quel le paramètre `suivant`
- * ouvrirait une redirection vers un domaine tiers : le lien de connexion,
- * légitime en apparence, déposerait l'utilisateur sur une copie du site.
- */
-function destinationSure(valeur: FormDataEntryValue | null): string {
-  if (typeof valeur !== 'string') {
-    return APRES_CONNEXION;
-  }
-
-  const estCheminInterne =
-    valeur.startsWith('/') && !valeur.startsWith('//') && !valeur.includes('\\');
-
-  return estCheminInterne ? valeur : APRES_CONNEXION;
 }
 
 /**
@@ -140,6 +209,11 @@ function traduireErreurAuth(erreur: AuthError): string {
       return 'Un compte existe déjà avec cette adresse.';
     case 'weak_password':
       return 'Mot de passe trop simple : allongez-le ou variez les caractères.';
+    case 'same_password':
+      return "Ce mot de passe est déjà le vôtre. Choisissez-en un autre.";
+    case 'reauthentication_needed':
+    case 'session_not_found':
+      return 'Votre lien a expiré ou a déjà servi. Demandez-en un nouveau.';
     case 'over_email_send_rate_limit':
     case 'over_request_rate_limit':
       return 'Trop de tentatives. Patientez une minute avant de réessayer.';

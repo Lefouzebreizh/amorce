@@ -11,7 +11,7 @@
  * cookie, que n'importe qui peut fabriquer ; `getUser()` fait valider le jeton
  * par le serveur d'authentification.
  */
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 import { creerClientServeur, type ClientSupabase } from '@/lib/supabase/server';
@@ -61,4 +61,29 @@ export async function lireProfil(session: Session): Promise<Profil | null> {
     .maybeSingle();
 
   return data;
+}
+
+/**
+ * Session d'un administrateur, ou page introuvable.
+ *
+ * `notFound()` et non un refus explicite : répondre « accès refusé » confirme
+ * l'existence de l'espace d'administration et invite à insister. Un 404 ne dit
+ * rien.
+ *
+ * Ce garde protège l'écran, pas les données : même contourné, il n'ouvrirait
+ * rien de plus, la politique RLS `is_admin()` décidant seule de ce que
+ * PostgreSQL accepte de servir.
+ */
+export async function exigerAdministrateur(): Promise<{
+  session: Session;
+  profil: Profil;
+}> {
+  const session = await exigerSession();
+  const profil = await lireProfil(session);
+
+  if (!profil || profil.role !== 'admin') {
+    notFound();
+  }
+
+  return { session, profil };
 }

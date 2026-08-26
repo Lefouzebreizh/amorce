@@ -33,12 +33,23 @@ export default async function PageConnexion({
         ) : null}
 
         <FormulaireConnexion suivant={suivant} />
-        <p className="text-sm text-muted-foreground">
-          Pas encore de compte ?{' '}
-          <Link href="/inscription" className="font-medium text-primary hover:underline">
-            En créer un
-          </Link>
-        </p>
+
+        <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+          <p>
+            <Link
+              href="/mot-de-passe-oublie"
+              className="font-medium text-primary hover:underline"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </p>
+          <p>
+            Pas encore de compte ?{' '}
+            <Link href="/inscription" className="font-medium text-primary hover:underline">
+              En créer un
+            </Link>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

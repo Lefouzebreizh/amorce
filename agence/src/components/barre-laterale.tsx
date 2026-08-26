@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FolderKanban, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
+import { FolderKanban, LayoutDashboard, LogOut, ShieldCheck, UserRound } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { seDeconnecter } from '@/lib/actions/auth';
@@ -23,13 +23,25 @@ const LIENS = [
   { href: '/compte', libelle: 'Mon compte', Icone: UserRound },
 ] as const;
 
+const LIEN_ADMINISTRATION = {
+  href: '/administration',
+  libelle: 'Administration',
+  Icone: ShieldCheck,
+} as const;
+
 type ProprietesBarre = {
   nom: string;
   detail: string;
+  estAdministrateur: boolean;
 };
 
-export function BarreLaterale({ nom, detail }: ProprietesBarre) {
+export function BarreLaterale({ nom, detail, estAdministrateur }: ProprietesBarre) {
   const chemin = usePathname();
+
+  // Le lien n'apparaît que pour un administrateur — mais c'est un confort, pas
+  // une protection : la page elle-même redemande le rôle, et la RLS décide
+  // seule de ce que la base accepte de servir.
+  const liens = estAdministrateur ? [...LIENS, LIEN_ADMINISTRATION] : LIENS;
 
   const estActif = (href: string) => chemin === href || chemin.startsWith(`${href}/`);
 
@@ -41,7 +53,7 @@ export function BarreLaterale({ nom, detail }: ProprietesBarre) {
         </Link>
 
         <nav className="flex flex-1 flex-col gap-1">
-          {LIENS.map(({ href, libelle, Icone }) => (
+          {liens.map(({ href, libelle, Icone }) => (
             <Link
               key={href}
               href={href}
@@ -79,13 +91,17 @@ export function BarreLaterale({ nom, detail }: ProprietesBarre) {
           'pb-[env(safe-area-inset-bottom)]',
         )}
       >
-        {LIENS.map(({ href, libelle, Icone }) => (
+        {liens.map(({ href, libelle, Icone }) => (
           <Link
             key={href}
             href={href}
             aria-current={estActif(href) ? 'page' : undefined}
             className={cn(
-              'flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium',
+              // `leading-tight` et `px-1` : avec quatre onglets sur un écran
+              // étroit, « Tableau de bord » passe sur deux lignes plutôt que
+              // d'être coupé.
+              'flex min-h-16 flex-1 flex-col items-center justify-center gap-1 px-1',
+              'text-center text-xs font-medium leading-tight',
               estActif(href) ? 'text-primary' : 'text-muted-foreground',
             )}
           >
@@ -98,7 +114,7 @@ export function BarreLaterale({ nom, detail }: ProprietesBarre) {
   );
 }
 
-function Identite({ nom, detail }: ProprietesBarre) {
+function Identite({ nom, detail }: Omit<ProprietesBarre, 'estAdministrateur'>) {
   return (
     <div className="flex min-w-0 items-center gap-3">
       <span
