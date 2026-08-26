@@ -12,8 +12,7 @@ Deux décisions y sont tenues :
    échouer au millième fichier sur deux mille est le meilleur moyen de perdre le
    travail des neuf cent quatre-vingt-dix-neuf premiers.
 
-Reste à écrire : `empreinte` (SHA d'un fichier), `purger_quarantaine` (après
-`securite.retention_quarantaine_jours`) et `deplacer` (rangement).
+Reste à écrire : rien. `empreinte`, `purger_quarantaine` et `deplacer` sont là.
 """
 
 from __future__ import annotations
@@ -172,3 +171,45 @@ def purger_quarantaine(dossier_quarantaine: Path, retention_jours: int, journal)
                 continue
         purges += 1
     return purges
+
+
+def empreinte(chemin: Path, taille_bloc: int = 1 << 20) -> str:
+    """SHA-256 d'un fichier, lu par blocs d'un mégaoctet.
+
+    Par blocs et non d'un coup : une vidéo de quatre gigaoctets chargée en
+    mémoire fait tomber la machine, et c'est précisément sur les gros fichiers
+    qu'un déplacement entre deux disques mérite d'être vérifié.
+    """
+    from hashlib import sha256
+
+    resume = sha256()
+    with chemin.open("rb") as flux:
+        while bloc := flux.read(taille_bloc):
+            resume.update(bloc)
+    return resume.hexdigest()
+
+
+def deplacer(source: Path, destination: Path, verifier: bool = False) -> Path:
+    """Range un fichier à sa destination (ou au premier nom libre) et rend le chemin écrit.
+
+    Quand `verifier` est demandé
+    (`securite.verifier_empreinte_apres_deplacement`), la copie est relue et
+    comparée à l'original **avant** que celui-ci ne soit retiré. C'est le seul
+    ordre qui protège : `shutil.move` entre deux disques copie puis supprime, et
+    une copie tronquée par un disque plein ou un câble USB qui lâche laisserait
+    un fichier abîmé et plus aucun original pour le remplacer.
+    """
+    destination = nom_disponible(destination)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    if not verifier:
+        shutil.move(str(source), str(destination))
+        return destination
+
+    attendue = empreinte(source)
+    shutil.copy2(str(source), str(destination))
+    if empreinte(destination) != attendue:
+        destination.unlink(missing_ok=True)
+        raise OSError(f"copie abîmée de {source} : l'original n'a pas été touché")
+    source.unlink()
+    return destination

@@ -124,8 +124,8 @@ export function AnalysisPanel({
   const analysis = useMemo(() => analyzeProject(project), [project]);
   const chopClip = useStudio((s) => s.chopClip);
   const addSoundsOnCuts = useStudio((s) => s.addSoundsOnCuts);
-  const fillTensionGaps = useStudio((s) => s.fillTensionGaps);
   const thinSounds = useStudio((s) => s.thinSounds);
+  const fillTensionGaps = useStudio((s) => s.fillTensionGaps);
 
   /**
    * Correction applicable en un appui, quand le geste ne demande aucun choix.
@@ -151,28 +151,25 @@ export function AnalysisPanel({
     /*
      * On ne propose d'en poser que s'il en manque.
      *
-     * Le bouton était offert sans condition : sur un montage déjà ponctué de
-     * onze bruitages pour dix secondes, il conseillait d'en ajouter et faisait
-     * baisser la note à l'appui. Un remède qui aggrave est pire qu'aucun
-     * remède, parce qu'on lui fait confiance.
+     * Le bouton était offert sans condition. Sur un montage déjà ponctué, il
+     * conseillait d'en ajouter et faisait baisser le critère qu'il prétend
+     * relever : mesuré, le « son » tombe de 0,60 à 0,45 dès trois bruitages
+     * pour dix secondes, et à zéro au-delà de onze. La note globale pouvait
+     * pourtant monter, les mêmes bruitages nourrissant la tension — c'est ce
+     * qui rendait le défaut invisible.
+     *
+     * Un remède qui aggrave est pire qu'aucun remède, parce qu'on lui fait
+     * confiance. Au-delà de la plage visée, on propose donc l'inverse.
      */
     const cuesPer10s =
       analysis.duration > 0
         ? ((project.cues.length + project.samples.length) / analysis.duration) * 10
         : 0;
 
-    if (cuesPer10s < SFX_PER_10S.max) {
-      fixes.son = {
-        label: '♪ Poser un bruitage sur chaque coupe',
-        run: addSoundsOnCuts,
-      };
-    } else {
-      // Trop de bruitages fatigue autant qu'aucun : le remède s'inverse.
-      fixes.son = {
-        label: '♪ Alléger : garder un impact toutes les 2,5 s',
-        run: thinSounds,
-      };
-    }
+    fixes.son =
+      cuesPer10s < SFX_PER_10S.max
+        ? { label: '♪ Poser un bruitage sur chaque coupe', run: addSoundsOnCuts }
+        : { label: '♪ Alléger : laisser respirer entre les impacts', run: thinSounds };
 
     if (analysis.slumps.length > 0) {
       fixes.tension = {
@@ -182,17 +179,7 @@ export function AnalysisPanel({
     }
 
     return fixes;
-  }, [
-    project.clips,
-    project.cues,
-    project.samples,
-    analysis.slumps,
-    analysis.duration,
-    chopClip,
-    addSoundsOnCuts,
-    fillTensionGaps,
-    thinSounds,
-  ]);
+  }, [project.clips, project.cues, project.samples, analysis.slumps, analysis.duration, chopClip, addSoundsOnCuts, thinSounds, fillTensionGaps]);
 
   if (analysis.shotCount === 0) {
     return (

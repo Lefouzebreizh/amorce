@@ -142,6 +142,13 @@ courts. Deux règles en découlent, et elles priment sur la prudence par défaut
   branches de ce dépôt touchent presque toutes au hook de démarrage et à ce
   fichier : chaque jour d'attente ajoute un conflit à résoudre.
 
+- **Passer le relais avant que le fil ne pèse.** Une conversation longue est
+  relue en entier à chaque message, captures d'écran comprises : elle finit par
+  coûter plus cher que le travail qu'elle porte. Dès qu'un fil change de sujet
+  ou s'alourdit, créer la session suivante avec un résumé de reprise, archiver
+  la précédente, et donner son nom. La mémoire du projet est dans ce fichier et
+  dans les compétences, pas dans la discussion — on ne perd rien.
+
 Ce qui reste à demander, et qu'aucune de ces deux règles ne couvre : ce qui
 part **en public au nom de quelqu'un** (un commentaire publié, un message à la
 communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
@@ -368,9 +375,18 @@ manque.
 
 ## Git
 
-Branche de travail : `claude/claude-md-docs-q02dr7`. Messages de commit en
-français, à l'infinitif, décrivant l'intention plutôt que le fichier touché —
-par exemple « Séparer les trois sources sonores en une table de mixage ».
+Une branche `claude/…` par sujet. Messages de commit en français, à
+l'infinitif, décrivant l'intention plutôt que le fichier touché — par exemple
+« Séparer les trois sources sonores en une table de mixage ».
+
+Les PR se mènent de bout en bout (voir « Rythme de travail »), et se fusionnent
+par commit de fusion, comme le reste de l'historique.
+
+**Partir de `main` à jour, et le revérifier avant d'ouvrir.** Ce dépôt reçoit
+plusieurs sessions en parallèle : deux branches y ont construit Life-Organizer
+chacune de son côté, et la seconde a dû être refaite. Ce qui est fusionné gagne,
+toujours — se couler dans la base commune coûte moins cher que réconcilier deux
+architectures.
 
 `AGENTS.md` est réécrit par `next dev` : le committer avec le reste plutôt que
 de chercher à le retirer d'un diff.

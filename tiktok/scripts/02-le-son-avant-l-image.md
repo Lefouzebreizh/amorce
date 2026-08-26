@@ -48,8 +48,8 @@ Le son avant l'image. Un tiers de seconde, et la coupe disparaît.
 
 ## Ce qui peut rater
 
-- **La différence ne s'entend pas au casque du monteur mais pas au
-  haut-parleur du téléphone.** Réécouter les deux extraits sur un téléphone,
+- **La différence s'entend au casque, et plus du tout au haut-parleur du
+  téléphone.** Réécouter les deux extraits sur un téléphone,
   haut-parleur, avant de valider. Si ça ne s'entend pas là, la vidéo ne dit
   rien.
 - **Les deux extraits sont trop longs.** Cinq secondes chacun, pas plus : on

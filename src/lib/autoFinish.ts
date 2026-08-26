@@ -1,11 +1,10 @@
-import { type Analysis } from './analysis.ts';
+import { SFX_PER_10S, type Analysis } from './analysis.ts';
 import { chopped, layoutClips, totalDuration } from './timeline.ts';
 import {
   type Caption,
   type CaptionStyleId,
   type CinemaSettings,
   type Clip,
-  type LookId,
   type Project,
   type SfxId,
   type SoundCue,
@@ -60,18 +59,6 @@ export type CaptionSet = {
   label: string;
   /** Ce que la trame raconte, en une phrase. */
   why: string;
-  /**
-   * Rendu qui va avec la trame.
-   *
-   * Une bande-annonce n'a pas la couleur d'un tutoriel. Le rendu n'étant noté
-   * nulle part, personne ne pense à le régler — et un montage sans parti pris
-   * visuel reste une suite de plans, quelle que soit sa note.
-   *
-   * Il n'est appliqué que si l'utilisateur n'a rien choisi lui-même : `cinema`
-   * est ce que pose le montage express, `naturel` est l'absence de choix. Tout
-   * autre rendu est une décision, et ne se remplace pas.
-   */
-  look?: LookId;
   slots: CaptionSlot[];
 };
 
@@ -92,7 +79,6 @@ export const CAPTION_SETS: CaptionSet[] = [
     id: 'bande-annonce',
     label: 'Bande-annonce',
     why: 'Un titre, une menace, un dévoilement, une question qui appelle la suite.',
-    look: 'blockbuster',
     slots: [
       { text: '[TITRE] — ÉPISODE [02]', style: 'neon', color: '#ffe14d', scale: 1.3, y: 0.22, at: 0, span: 0.17 },
       { text: '[Ce qui menace]', style: 'punch', y: 0.72, at: 0.22, span: 0.2 },
@@ -115,7 +101,6 @@ export const CAPTION_SETS: CaptionSet[] = [
     id: 'histoire',
     label: 'Histoire',
     why: 'Une situation, un basculement, ce qu’on en retire. Le récit se regarde jusqu’au bout.',
-    look: 'argentique',
     slots: [
       { text: 'Le jour où j’ai [tout perdu]', style: 'punch', y: 0.28, at: 0, span: 0.18 },
       { text: '[Ce qui s’est passé]', style: 'karaoke', y: 0.72, at: 0.24, span: 0.2 },
@@ -246,25 +231,19 @@ function captionsFor(
   return added;
 }
 
-/** Densité de bruitages qu'on vise en allégeant, pour dix secondes. */
-const SFX_TARGET_PER_10S = 4;
-
 /**
- * Retire les bruitages en trop.
+ * Écarte les bruitages en trop, pour rendre du silence entre les impacts.
  *
- * Un impact chaque seconde n'est plus un rythme, c'est un mur : le silence
- * entre deux impacts est ce qui donne du poids aux impacts. Vu sur un montage
- * réel — quinze bruitages en quinze secondes, dont l'auteur disait « c'est
- * nul » alors que sa note affichait 95.
- *
- * On garde le premier, puis on avance en refusant tout ce qui tombe trop près
- * du dernier retenu : l'espacement reste régulier, et l'impact d'ouverture —
- * celui qui fait lever les yeux — n'est jamais celui qu'on sacrifie.
+ * Le remède inverse de `soundsOnCuts`, et il en a besoin : trop de bruitages
+ * fatigue autant qu'aucun, et proposer d'en ajouter à un montage saturé revient
+ * à conseiller ce qui abîme. On garde le premier de chaque intervalle plutôt
+ * que d'en choisir un « meilleur » : leur ordre porte le rythme du montage, et
+ * un tri sur le niveau le détruirait.
  */
 export function thinCues(cues: SoundCue[], duration: number): SoundCue[] {
   if (duration <= 0 || cues.length === 0) return cues;
 
-  const vise = Math.max(2, Math.round((duration / 10) * SFX_TARGET_PER_10S));
+  const vise = Math.max(2, Math.round((duration / 10) * SFX_PER_10S.max));
   if (cues.length <= vise) return cues;
 
   const ecart = duration / vise;
@@ -273,24 +252,12 @@ export function thinCues(cues: SoundCue[], duration: number): SoundCue[] {
 
   for (const cue of ordonnes) {
     const dernier = gardes[gardes.length - 1];
+    // La tolérance absorbe l'arrondi du calcul d'écart : sans elle, un impact
+    // tombant pile sur la limite serait écarté sans raison.
     if (!dernier || cue.time - dernier.time >= ecart - 1e-6) gardes.push(cue);
   }
 
   return gardes;
-}
-
-/**
- * Rendu à appliquer, ou celui déjà en place s'il a été choisi.
- *
- * `naturel` est l'absence de parti pris, `cinema` est ce que le montage express
- * pose sans qu'on le lui demande : ni l'un ni l'autre n'est une décision. Tout
- * autre rendu en est une, et on n'y touche pas.
- */
-export function cinemaFor(set: CaptionSet, actuel: CinemaSettings): CinemaSettings {
-  const choisi = actuel.look !== 'naturel' && actuel.look !== 'cinema';
-  if (choisi || !set.look) return actuel;
-
-  return { ...actuel, look: set.look, intensity: Math.max(actuel.intensity, 0.85) };
 }
 
 export type FinishResult = {
@@ -340,7 +307,7 @@ export function buildFinish(
     captions,
     cues,
     // Le rendu n'est pas noté : on ne corrige que l'absence de parti pris.
-    cinema: cinemaFor(captionSet(setId), project.cinema),
+    cinema: project.cinema.look === 'naturel' ? { ...project.cinema, look: 'cinema' } : project.cinema,
   };
 }
 

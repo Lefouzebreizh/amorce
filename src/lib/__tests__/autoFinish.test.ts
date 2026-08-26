@@ -1,17 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyzeProject } from '../analysis.ts';
-import {
-  CAPTION_SETS,
-  applyFinish,
-  buildFinish,
-  captionSet,
-  cinemaFor,
-  soundsOnCuts,
-  thinCues,
-} from '../autoFinish.ts';
+import { CAPTION_SETS, applyFinish, buildFinish, captionSet, soundsOnCuts, thinCues } from '../autoFinish.ts';
 import { emptyProject, totalDuration } from '../timeline.ts';
-import { DEFAULT_CLIP, type Caption, type MediaAsset, type Project } from '../types.ts';
+import { DEFAULT_CLIP, type Caption, type MediaAsset, type Project, type SoundCue } from '../types.ts';
 
 /** Identifiants prévisibles, pour pouvoir comparer ce qui est produit. */
 function counter() {
@@ -150,62 +142,14 @@ test('les bruitages tombent sur les coupes', () => {
   assert.deepEqual(cues.map((c) => c.time).sort((a, b) => a - b), [0.02, 2, 4]);
 });
 
-test('un rendu déjà choisi est respecté, l’absence de parti pris reçoit celui de la trame', () => {
-  // La trame pose désormais son propre rendu, plus le générique « cinema » :
-  // une bande-annonce n'a pas la couleur d'un tutoriel.
+test('un rendu déjà choisi est respecté, l’absence de parti pris est corrigée', () => {
   const naturel = bare([2, 2]);
   naturel.cinema = { ...naturel.cinema, look: 'naturel' };
-  assert.equal(run(naturel).cinema.look, 'blockbuster');
+  assert.equal(run(naturel).cinema.look, 'cinema');
 
   const choisi = bare([2, 2]);
   choisi.cinema = { ...choisi.cinema, look: 'argentique' };
   assert.equal(run(choisi).cinema.look, 'argentique');
-
-  // Une trame sans rendu déclaré ne touche à rien.
-  const tutoriel = bare([2, 2]);
-  tutoriel.cinema = { ...tutoriel.cinema, look: 'naturel' };
-  assert.equal(run(tutoriel, 'tutoriel').cinema.look, 'naturel');
-});
-
-test('la trame impose son rendu, sauf si un choix a été fait', () => {
-  const set = captionSet('bande-annonce');
-
-  // Absence de parti pris, et le rendu que pose le montage express : ni l'un ni
-  // l'autre n'est une décision.
-  assert.equal(cinemaFor(set, { look: 'naturel', intensity: 0.5, bars: 0 }).look, 'blockbuster');
-  assert.equal(cinemaFor(set, { look: 'cinema', intensity: 0.7, bars: 0 }).look, 'blockbuster');
-
-  // Un rendu choisi est une décision : on n'y touche pas.
-  assert.equal(cinemaFor(set, { look: 'argentique', intensity: 0.6, bars: 0 }).look, 'argentique');
-  assert.equal(cinemaFor(set, { look: 'noir', intensity: 0.4, bars: 0 }).intensity, 0.4);
-});
-
-test('les bruitages en trop sont retirés, l’ouverture jamais', () => {
-  // Quinze bruitages en dix secondes : le mur constaté sur un montage réel.
-  const cues = Array.from({ length: 15 }, (_, i) => ({
-    id: `s${i}`,
-    sfx: 'boom' as const,
-    time: i * 0.66,
-    gain: 0.85,
-  }));
-
-  const gardes = thinCues(cues, 10);
-
-  assert.ok(gardes.length < cues.length, 'rien n’a été retiré');
-  assert.ok(gardes.length >= 4, `il n’en reste que ${gardes.length}, le rythme disparaîtrait`);
-
-  // L'impact d'ouverture est celui qui fait lever les yeux : jamais sacrifié.
-  assert.equal(gardes[0].time, cues[0].time);
-
-  // Plus rien ne se confond à l'oreille.
-  for (let i = 1; i < gardes.length; i++) {
-    assert.ok(gardes[i].time - gardes[i - 1].time >= 1.5, `deux impacts collés à ${gardes[i].time} s`);
-  }
-});
-
-test('un montage déjà aéré n’est pas touché', () => {
-  const cues = [0, 3, 6, 9].map((t, i) => ({ id: `s${i}`, sfx: 'boom' as const, time: t, gain: 0.8 }));
-  assert.deepEqual(thinCues(cues, 12), cues);
 });
 
 test('les trois trames sont utilisables et distinctes', () => {
@@ -224,4 +168,38 @@ test('un montage vide ne produit rien et ne casse pas', () => {
   const finished = applyFinish(vide, analyzeProject(vide), 'bande-annonce', counter());
   assert.deepEqual(finished.captions, []);
   assert.deepEqual(finished.clips, []);
+});
+
+test('l’allègement ramène les bruitages dans la plage visée', () => {
+  const cues = Array.from({ length: 20 }, (_, i) => ({ id: `s${i}`, sfx: 'boom', time: i * 0.5, gain: 1 }) satisfies SoundCue);
+  const gardes = thinCues(cues, 10);
+  // Six pour dix secondes est le haut de la plage : au-delà, la notation punit.
+  assert.ok(gardes.length <= 6, `${gardes.length} bruitages gardés pour 10 s`);
+  assert.ok(gardes.length >= 2, 'jamais moins de deux, sinon la ponctuation disparaît');
+});
+
+test('l’allègement garde l’ordre du montage, sans trier sur autre chose', () => {
+  const cues = Array.from({ length: 12 }, (_, i) => ({ id: `s${i}`, sfx: 'boom', time: i * 0.8, gain: 1 }) satisfies SoundCue);
+  const gardes = thinCues(cues, 10);
+  const temps = gardes.map((c) => c.time);
+  assert.deepEqual(temps, [...temps].sort((a, b) => a - b));
+});
+
+test('un montage déjà dans la plage n’est pas allégé', () => {
+  const cues = Array.from({ length: 4 }, (_, i) => ({ id: `s${i}`, sfx: 'boom', time: i * 2, gain: 1 }) satisfies SoundCue);
+  assert.equal(thinCues(cues, 10).length, 4);
+});
+
+test('poser un bruitage par coupe dégrade le son d’un montage déjà ponctué', () => {
+  // La raison d'être du bouton conditionné : le remède abîmait ce qu'il visait.
+  const dense: Project = {
+    ...bare([2, 2, 2, 2, 2]),
+    cues: Array.from({ length: 8 }, (_, i) => ({ id: `s${i}`, sfx: 'boom', time: i * 1.2, gain: 1 }) satisfies SoundCue),
+  };
+  const son = (p: Project) => analyzeProject(p).criteria.find((c) => c.id === 'son')?.score ?? 0;
+  const ajoutes = soundsOnCuts(dense.clips, dense.cues, (() => { let n = 0; return () => `n${n++}`; })());
+  assert.ok(
+    son({ ...dense, cues: [...dense.cues, ...ajoutes] }) < son(dense),
+    'sans cette baisse, le bouton conditionné n’aurait plus de raison d’être',
+  );
 });

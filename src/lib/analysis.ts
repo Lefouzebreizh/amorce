@@ -202,10 +202,14 @@ export function findSlumps(curve: { time: number; value: number }[]): TensionSlu
 /**
  * Densité de bruitages visée, pour dix secondes de montage.
  *
- * Exportée parce que la notation n'est pas seule à s'en servir : l'interface
+ * Exportée parce que la notation n'est plus seule à s'en servir : l'interface
  * doit savoir s'il en manque avant de proposer d'en poser. Le bouton était
- * offert sans condition, et conseillait donc d'en ajouter à un montage qui en
- * comptait déjà onze pour dix secondes — la note baissait à l'appui.
+ * offert sans condition, et conseillait donc d'en ajouter à un montage déjà
+ * saturé. Mesuré : à partir de trois bruitages pour dix secondes, poser un
+ * impact sur chaque coupe fait **baisser** le critère « son » — 0,60 à 0,45,
+ * puis 0,22 à six, puis zéro à onze. La note globale, elle, pouvait monter,
+ * parce que les mêmes bruitages nourrissent la tension : c'est ce qui masquait
+ * les dégâts.
  */
 export const SFX_PER_10S = { min: 1.2, max: 6 };
 

@@ -12,7 +12,20 @@ tiktok/
   concepts.md        les huit formats répétables, et lequel choisir
   modele-script.md   le gabarit vierge à recopier
   scripts/           les scripts écrits, prêts à tourner
+  carnet.py          fabrique le PDF qu'on emporte en tournage
 ```
+
+## Le carnet
+
+```bash
+python3 tiktok/carnet.py      # → .fixtures/carnet-tiktok.pdf
+```
+
+Tout ce dossier, en un PDF au format d'un téléphone : c'est la seule forme qui
+serve une main tenant déjà une caméra. Il se **régénère**, il ne se corrige
+pas — les Markdown ci-dessus font foi, sans quoi les deux divergent dès la
+première retouche et plus personne ne sait lequel dit vrai. Le fichier produit
+n'est pas versionné : le dépôt ne porte aucun binaire.
 
 ## La ligne
 
@@ -90,7 +103,7 @@ résultat, c'est une intuition ; avec son résultat, c'est une leçon.
 Ils couvrent les concepts les plus productifs, et se tournent tous avec les deux
 seuls dispositifs ci-dessus.
 
-| Script | Concept | Durée | Tournable sans savoir monter |
+| Script | Concept | Durée | Sans montage |
 | --- | --- | --- | --- |
 | `01-je-ne-sais-pas-monter` | B4 — l'épisode qui ouvre le feuilleton | 29 s | oui |
 | `07-je-construis-mes-outils` | B1 / A1 — le blocage comme matière | 32 s | oui |
@@ -100,8 +113,8 @@ seuls dispositifs ci-dessus.
 | `05-les-chiffres-du-jour-15` | B1 — les chiffres du jour N | 30 s | non |
 | `06-trois-prompts-un-plan` | A4 — trois prompts, un plan | 32 s | non |
 
-La dernière colonne compte : **trois d'entre eux se tournent avant de savoir
-monter.** Le 01 et le 07 ne demandent que ta voix, tes images et ton écran ; le
+La mention « sans montage » compte : **trois d'entre eux se tournent avant de
+savoir monter.** Le 01 et le 07 ne demandent que ta voix, tes images et ton écran ; le
 04 se démontre au son. Les quatre autres attendent que tu aies une timeline —
 c'est normal, ils parlent de montage.
 
