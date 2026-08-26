@@ -11,21 +11,23 @@ Trois décisions tiennent ce fichier :
 2. **Un fichier qui s'allonge, pas un fichier qu'on réécrit.** Une ligne JSON
    ajoutée à la fin ne peut pas corrompre les précédentes ; une réécriture
    complète interrompue, si.
-3. **Le tri vit ici.** Décider à quoi répondre, c'est presque uniquement
-   décider ce qu'on n'a pas déjà fait — et le reste des critères tient en trois
-   lignes. Un module de plus pour ça n'apporterait qu'un import.
+3. **Le tri vit ici.** Décider ce qu'il reste à traiter, c'est presque
+   uniquement décider ce qu'on n'a pas déjà fait. Un module de plus pour ça
+   n'apporterait qu'un import.
+4. **Le journal sert aussi de compteur du jour.** Le plafond quotidien a besoin
+   de savoir ce qui a déjà été fait aujourd'hui, y compris lors d'une exécution
+   précédente : cette mémoire-là est déjà sur le disque, inutile d'en tenir une
+   seconde.
 """
 
 from __future__ import annotations
 
 import json
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from .facebook import Commentaire
-
-LONGUEUR_MIN = 3   # « ok », « 👍 » : rien à quoi répondre, et y répondre fait robot
 
 
 class Journal:
@@ -34,12 +36,15 @@ class Journal:
     def __init__(self, chemin: Path):
         self.chemin = chemin
         self.connus: set[str] = set()
+        self.dates: list[str] = []
         if chemin.exists():
             for ligne in chemin.read_text(encoding='utf-8').splitlines():
                 if not ligne.strip():
                     continue
                 try:
-                    self.connus.add(json.loads(ligne)['id'])
+                    entree = json.loads(ligne)
+                    self.connus.add(entree['id'])
+                    self.dates.append(entree.get('quand', ''))
                 except (ValueError, KeyError):
                     continue  # une ligne tronquée par une coupure ne condamne pas le reste
 
@@ -48,28 +53,40 @@ class Journal:
 
     def reserver(self, id_commentaire: str, note: str = '') -> None:
         """Marque un commentaire comme pris en charge, avant tout envoi."""
+        quand = datetime.now(timezone.utc).isoformat(timespec='seconds')
         self.connus.add(id_commentaire)
+        self.dates.append(quand)
         self.chemin.parent.mkdir(parents=True, exist_ok=True)
         with self.chemin.open('a', encoding='utf-8') as fichier:
             fichier.write(json.dumps({
                 'id': id_commentaire,
-                'quand': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                'quand': quand,
                 'note': note,
             }, ensure_ascii=False) + '\n')
 
+    def compte_du_jour(self, aujourdhui: date | None = None) -> int:
+        """Combien de commentaires ont déjà été pris en charge aujourd'hui.
 
-def retenir(commentaires: Iterable[Commentaire], journal: Journal,
-            longueur_min: int = LONGUEUR_MIN) -> list[Commentaire]:
+        En temps universel, comme les dates inscrites : comparer une date locale
+        à un horodatage UTC ferait sauter le plafond entre minuit et deux heures
+        du matin, précisément la tranche où il compte le plus.
+        """
+        jour = (aujourdhui or datetime.now(timezone.utc).date()).isoformat()
+        return sum(1 for quand in self.dates if quand.startswith(jour))
+
+
+def retenir(commentaires: Iterable[Commentaire], journal: Journal) -> list[Commentaire]:
     """Les commentaires auxquels il reste quelque chose à faire, du plus ancien au plus récent.
 
     Du plus ancien au plus récent parce qu'une exécution bornée doit rattraper
     le retard, pas écrémer les nouveautés en laissant le reste vieillir.
     """
+    # Aucun filtre sur la longueur : un « 👍 » mérite lui aussi sa réaction.
+    # C'est `redaction.rediger` qui décide ensuite s'il y a des mots à écrire.
     a_faire = [
         c for c in commentaires
         if c.id not in journal
         and not c.de_nous
         and not c.deja_repondu
-        and len(c.texte.strip()) >= longueur_min
     ]
     return sorted(a_faire, key=lambda c: c.publie_le)

@@ -63,13 +63,17 @@ class Sonnette:
         ).raise_for_status()
 
 
-def rediger_bilan(publiees: list[tuple[str, str]], laissees: list[tuple[str, str]],
-                  echecs: list[tuple[str, str]], publie: bool) -> tuple[str, str, bool]:
+def rediger_bilan(publiees: list[tuple[str, str]], reactions: list[str],
+                  laissees: list[tuple[str, str]], echecs: list[tuple[str, str]],
+                  publie: bool) -> tuple[str, str, bool]:
     """Le titre, le corps et l'urgence de la notification. Pur, pour être vérifiable.
 
     Le titre porte le seul chiffre qui décide si on ouvre : combien de
     commentaires attendent une réponse écrite à la main. Les raisons, elles,
     n'y sont pas — voir la décision 4 en tête de fichier.
+
+    Les réactions sont comptées, pas listées : elles sont le cas courant, et
+    une notification qui déroule vingt prénoms ne se lit plus.
     """
     mode = '' if publie else ' (simulation)'
 
@@ -82,11 +86,16 @@ def rediger_bilan(publiees: list[tuple[str, str]], laissees: list[tuple[str, str
     lignes = []
     if laissees:
         lignes.append('À toi : ' + ', '.join(auteur for auteur, _ in laissees))
+
+    faits = []
+    if reactions:
+        faits.append(f'{len(reactions)} réaction' + ('s' if len(reactions) > 1 else ''))
     if publiees:
         pluriel = 's' if len(publiees) > 1 else ''
-        lignes.append(f'{len(publiees)} réponse{pluriel} publiée{pluriel}'
-                      if publie else
-                      f'{len(publiees)} réponse{pluriel} prête{pluriel} (rien n’a été envoyé)')
+        faits.append(f'{len(publiees)} réponse{pluriel}')
+    if faits:
+        lignes.append(', '.join(faits) + ('' if publie else ' (rien n’a été envoyé)'))
+
     if echecs:
         pluriel = 's' if len(echecs) > 1 else ''
         lignes.append(f'{len(echecs)} échec{pluriel} — à regarder dans le journal')

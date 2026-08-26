@@ -19,6 +19,10 @@ Quatre décisions tiennent ce fichier :
 4. **Rien n'est envoyé en JSON.** L'API Graph attend un formulaire ; un corps
    JSON passe parfois, et se fait ignorer silencieusement le reste du temps —
    la requête répond 200 et le commentaire n'est jamais publié.
+5. **Un dépassement de quota est une erreur à part.** Les codes 4, 17, 32 et
+   613 veulent dire « stop », pas « réessaie » : insister, c'est taper plus fort
+   sur une porte fermée, et c'est ce qui transforme une pause de quelques
+   minutes en blocage de plusieurs heures.
 """
 
 from __future__ import annotations
@@ -27,12 +31,19 @@ from dataclasses import dataclass
 
 import requests
 
+from . import rythme
+
 VERSION_PAR_DEFAUT = 'v23.0'   # encore servie ; à relever quand Facebook l'annonce éteinte
 DELAI_S = 20
+CODES_QUOTA = {4, 17, 32, 613}
 
 
 class ErreurGraph(RuntimeError):
     """L'API a répondu autre chose que ce qui était demandé."""
+
+
+class ErreurQuota(ErreurGraph):
+    """Facebook demande une pause. On la prend : réessayer aggrave."""
 
 
 @dataclass(frozen=True)
@@ -87,6 +98,7 @@ class Graph:
         self.id_source = id_source
         self.base = f'https://graph.facebook.com/{version}'
         self.session = requests.Session()
+        self.quota = 0.0   # dernier pourcentage de quota annoncé par Facebook
 
     def _lire(self, chemin: str, **params) -> dict:
         reponse = self.session.get(
@@ -104,8 +116,9 @@ class Graph:
         )
         return self._depouiller(reponse)
 
-    @staticmethod
-    def _depouiller(reponse: requests.Response) -> dict:
+    def _depouiller(self, reponse: requests.Response) -> dict:
+        self.quota = max(self.quota, rythme.quota_consomme(reponse.headers))
+
         try:
             charge = reponse.json()
         except ValueError:
@@ -119,10 +132,13 @@ class Graph:
 
         if 'error' in charge:
             erreur = charge['error']
-            raise ErreurGraph(
+            detail = (
                 f"{erreur.get('message', 'erreur inconnue')} "
                 f"(type {erreur.get('type', '?')}, code {erreur.get('code', '?')})"
             )
+            if erreur.get('code') in CODES_QUOTA:
+                raise ErreurQuota(detail)
+            raise ErreurGraph(detail)
         if not reponse.ok:
             raise ErreurGraph(f'code HTTP {reponse.status_code}')
 

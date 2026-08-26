@@ -8,9 +8,12 @@ d'une version d'API à l'autre, et c'est elle qu'on vérifie.
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core.facebook import extraire_commentaires  # noqa: E402
+from core.facebook import (  # noqa: E402
+    ErreurGraph, ErreurQuota, Graph, extraire_commentaires,
+)
 
 NOUS = '100'
 
@@ -69,6 +72,47 @@ class TestExtraction(unittest.TestCase):
         anonyme = {'id': 'c7', 'message': 'Merci !', 'created_time': '2026-08-20T10:00:00+0000'}
         [c] = extraire_commentaires(charge(anonyme), NOUS)
         self.assertEqual(c.auteur, 'Anonyme')
+
+
+def reponse_factice(charge, entetes=None, code=200):
+    return SimpleNamespace(json=lambda: charge, headers=entetes or {},
+                           status_code=code, ok=code < 400)
+
+
+class TestDepouillement(unittest.TestCase):
+    def setUp(self):
+        self.graph = Graph('jeton', '42')
+
+    def test_un_depassement_de_quota_est_une_erreur_a_part(self):
+        # Les codes 4, 17, 32 et 613 veulent dire « stop », pas « réessaie » :
+        # insister transforme une pause de minutes en blocage d'heures.
+        for code in (4, 17, 32, 613):
+            with self.subTest(code=code):
+                charge = {'error': {'message': 'trop de requêtes', 'code': code}}
+                with self.assertRaises(ErreurQuota):
+                    self.graph._depouiller(reponse_factice(charge))
+
+    def test_une_erreur_ordinaire_reste_ordinaire(self):
+        charge = {'error': {'message': 'jeton expiré', 'code': 190}}
+        with self.assertRaises(ErreurGraph) as capture:
+            self.graph._depouiller(reponse_factice(charge))
+        self.assertNotIsInstance(capture.exception, ErreurQuota)
+
+    def test_le_quota_annonce_est_retenu_au_plus_haut(self):
+        # Il sert à s'arrêter avant le mur, donc il ne redescend pas en cours
+        # d'exécution : c'est le pire moment vu qui compte.
+        self.graph._depouiller(reponse_factice({}, {'X-App-Usage': '{"call_count": 60}'}))
+        self.graph._depouiller(reponse_factice({}, {'X-App-Usage': '{"call_count": 10}'}))
+        self.assertEqual(self.graph.quota, 60.0)
+
+    def test_une_page_html_le_dit_plutot_que_de_parler_de_jeton(self):
+        # L'erreur classique : viser facebook.com au lieu de graph.facebook.com.
+        illisible = SimpleNamespace(
+            json=lambda: (_ for _ in ()).throw(ValueError()),
+            headers={}, status_code=200, ok=True)
+        with self.assertRaises(ErreurGraph) as capture:
+            self.graph._depouiller(illisible)
+        self.assertIn('API Graph', str(capture.exception))
 
 
 if __name__ == '__main__':

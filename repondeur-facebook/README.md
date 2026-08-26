@@ -15,13 +15,32 @@ python3 repondeur.py --publier     # publie pour de vrai
 
 1. Elle lit les commentaires des cinq dernières publications.
 2. Elle écarte ce qui n'a rien à recevoir : ce que tu as déjà traité, tes
-   propres commentaires, ceux sous lesquels tu as déjà répondu, et les « 👍 »
-   tout seuls.
-3. Pour chaque commentaire restant, du plus ancien au plus récent, elle demande
-   au modèle **soit** une réponse, **soit** de le laisser de côté.
-4. Elle publie les réponses, met un « j'aime », et s'arrête au bout de cinq.
-5. Elle fait vibrer ton téléphone : d'abord ce qui t'attend, ensuite ce qui a
-   été fait.
+   propres commentaires, et ceux sous lesquels tu as déjà répondu.
+3. Pour chaque commentaire restant, du plus ancien au plus récent, elle choisit
+   **un geste parmi trois**.
+4. Elle agit, à un rythme humain, et s'arrête au bout de cinq.
+5. Elle prévient ton téléphone : d'abord ce qui t'attend, ensuite ce qui a été
+   fait.
+
+## Trois gestes, et un « j'aime » dans tous les cas
+
+Chaque commentaire traité reçoit un **« j'aime »**, toujours : c'est le geste
+qui dit « j'ai lu », et il vaut même sous un commentaire qu'on laisse de côté.
+Ce qui change, ce sont les mots.
+
+| Geste | Ce qui se passe | Quand |
+| --- | --- | --- |
+| **Réaction** | « J'aime », rien d'écrit | Le cas courant, et de loin : un bravo, un merci, un emoji, un ami identifié |
+| **Réponse** | « J'aime » + un commentaire | Une question, un doute, une objection, une expérience qui appelle un écho |
+| **À toi** | « J'aime », et le commentaire passe dans ta liste | Ce qui mérite des mots, mais pas les siens |
+
+C'est le cœur du dispositif. Un compte qui commente 100 % des commentaires
+n'existe nulle part dans la nature — un humain aime beaucoup et répond peu.
+Répondre à tout s'entend immédiatement comme un automate, et fait perdre leur
+valeur aux réponses qui comptent.
+
+Un « 👍 » tout seul ne coûte même pas un appel au modèle : le geste ne fait
+aucun doute.
 
 ## Les commentaires touchants te reviennent
 
@@ -56,16 +75,36 @@ Pour qu'un commentaire soit repris à la prochaine exécution, il suffit de
 retirer sa ligne du fichier. Le journal n'est pas versionné : il appartient à
 la machine qui fait tourner le script.
 
+## Le rythme, ou comment ne pas se faire prendre pour une machine
+
+Le vrai risque n'est pas le bannissement — tu passes par l'API officielle avec
+une application déclarée. C'est la **mise en pause** par Facebook, et le
+**signalement pour spam** par tes membres. Le second est le plus grave.
+
+- **Des pauses tirées au hasard**, entre 40 s et 2 min 30. Un `sleep(3)` produit
+  des horodatages espacés à la milliseconde près : une signature aussi nette
+  qu'une empreinte.
+- **Deux plafonds** : 5 par exécution, 25 par jour. Sans le second, trois
+  lancements dans la même heure font sauter le premier.
+- **Des heures humaines** : rien entre 23 h et 7 h. En pleine nuit, le script
+  refuse de publier et te propose la simulation.
+- **Le quota de Facebook est lu**, pas deviné : l'API l'annonce en pourcentage
+  à chaque réponse, et on s'arrête à 75 %.
+- **Les codes 4, 17, 32 et 613 arrêtent tout.** Ils veulent dire « stop », pas
+  « réessaie » : insister transforme une pause de quelques minutes en blocage
+  de plusieurs heures.
+
 ## Réglages
 
 | Option | Par défaut | Ce qu'elle change |
 | --- | --- | --- |
-| `--publier` | absent | Publie réellement. Sans elle, simulation. |
+| `--publier` | absent | Agit réellement. Sans elle, simulation. |
 | `--publications N` | 5 | Nombre de publications récentes examinées. |
-| `--maximum N` | 5 | Nombre maximum de réponses en une exécution. |
+| `--maximum N` | 5 | Nombre maximum de commentaires traités en une exécution. |
 | `--journal chemin` | `journal.jsonl` | Où est rangée la mémoire. |
 
-Trois secondes séparent deux publications : une rafale se voit, et se signale.
+Le plafond quotidien, lui, ne se règle pas en ligne de commande : c'est une
+protection, pas un confort.
 
 ## Ce qu'il faut côté Facebook
 

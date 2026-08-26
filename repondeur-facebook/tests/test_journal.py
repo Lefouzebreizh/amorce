@@ -9,6 +9,7 @@ répertoire temporaire.
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -48,6 +49,19 @@ class TestJournal(unittest.TestCase):
     def test_le_journal_absent_part_simplement_vide(self):
         self.assertNotIn('c1', Journal(self.chemin))
 
+    def test_le_compte_du_jour_ne_retient_que_les_lignes_du_jour(self):
+        # C'est ce compteur qui tient le plafond quotidien d'une exécution à
+        # l'autre : trois lancements dans la même heure doivent s'additionner.
+        journal = Journal(self.chemin)
+        journal.reserver('c1')
+        journal.reserver('c2')
+        self.assertEqual(journal.compte_du_jour(), 2)
+        self.assertEqual(journal.compte_du_jour(date(2020, 1, 1)), 0)
+
+    def test_le_compte_du_jour_survit_a_une_relecture(self):
+        Journal(self.chemin).reserver('c1')
+        self.assertEqual(Journal(self.chemin).compte_du_jour(), 1)
+
 
 class TestTri(unittest.TestCase):
     def setUp(self):
@@ -65,9 +79,11 @@ class TestTri(unittest.TestCase):
     def test_un_commentaire_deja_repondu_est_ecarte(self):
         self.assertEqual(retenir([com('c1', deja_repondu=True)], self.journal), [])
 
-    def test_un_pouce_seul_est_ecarte(self):
-        # Répondre à « 👍 » n'apporte rien et s'entend comme un automate.
-        self.assertEqual(retenir([com('c1', texte='👍')], self.journal), [])
+    def test_un_pouce_seul_reste_a_traiter(self):
+        # Il ne recevra pas de mots, mais il recevra un « j'aime » : c'est
+        # `redaction.rediger` qui tranche, pas le tri.
+        self.assertEqual([c.id for c in retenir([com('c1', texte='👍')], self.journal)],
+                         ['c1'])
 
     def test_les_plus_anciens_passent_en_premier(self):
         # Une exécution bornée doit rattraper le retard, pas écrémer les
