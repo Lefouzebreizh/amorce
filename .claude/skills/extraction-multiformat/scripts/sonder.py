@@ -213,13 +213,29 @@ def identifier(chemin: str) -> tuple[str, str]:
     return "inconnu", "binaire non identifié"
 
 
+def _binaire_present(nom: str) -> bool:
+    """ffmpeg mérite un traitement particulier : `imageio-ffmpeg` en embarque un
+    statique et se retrouve installé comme dépendance d'autres outils. Le
+    déclarer absent parce qu'il n'est pas dans le PATH ferait réclamer une
+    installation à quelqu'un qui a déjà le binaire."""
+    if shutil.which(nom):
+        return True
+    if nom in ("ffmpeg", "ffprobe"):
+        try:
+            import imageio_ffmpeg
+            return nom == "ffmpeg" and os.path.exists(imageio_ffmpeg.get_ffmpeg_exe())
+        except Exception:
+            return False
+    return False
+
+
 def _outils(besoins: list[str]) -> list[tuple[str, bool]]:
     """Pour chaque besoin, dit s'il est présent. Un « ! » préfixe un binaire."""
     etat = []
     for besoin in besoins:
         if besoin.startswith("!"):
             nom = besoin[1:]
-            etat.append((nom, shutil.which(nom) is not None))
+            etat.append((nom, _binaire_present(nom)))
         else:
             try:
                 etat.append((besoin, find_spec(besoin) is not None))

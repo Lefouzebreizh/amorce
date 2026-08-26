@@ -199,6 +199,12 @@ existe parce que rien de générique ne connaît cette particularité.
 Le hook n'agit que sur une session distante (`CLAUDE_CODE_REMOTE`) : sur un
 poste de développement, le SDK appartient à son propriétaire.
 
+Un plugin extérieur est déclaré dans `.claude/settings.json` :
+`frontend-design`, publié par Anthropic. Il recoupe `/custom-frontend-designer`
+sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu'il
+porte les règles d'identité d'Amorce là où le plugin vise une esthétique
+générique. Le plugin reste utile partout ailleurs.
+
 Deux règles qui découlent de la cohabitation :
 
 - **Une modification ne touche qu'un seul projet**, sauf configuration à la

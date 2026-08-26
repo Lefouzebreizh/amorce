@@ -9,7 +9,6 @@ tous ceux que tu rencontreras.
 Avec `ebooklib`, le chemin propre :
 
 ```python
-import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
 
@@ -17,14 +16,23 @@ livre = epub.read_epub(chemin)
 print("Titre :", livre.get_metadata("DC", "title"))
 print("Auteur:", livre.get_metadata("DC", "creator"))
 
-for item in livre.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+# Parcourir le `spine`, et surtout pas `get_items_of_type(ITEM_DOCUMENT)` :
+# celui-ci rend les chapitres dans l'ordre du manifeste, qui n'est pas l'ordre
+# de lecture. Mesuré sur un livre à deux chapitres rangés à l'envers, il sort
+# le second en premier — sans la moindre erreur, donc sans qu'on le remarque.
+for idref, _ in livre.spine:
+    item = livre.get_item_with_id(idref)
     texte = BeautifulSoup(item.get_content(), "html.parser").get_text("\n", strip=True)
     if texte:
         print(f"\n===== {item.get_name()} =====\n{texte}")
 ```
 
-Sans `ebooklib`, la bibliothèque standard fait le même travail. Garder ce
-repli en tête évite d'imposer une installation pour un fichier unique :
+Sans `ebooklib`, la bibliothèque standard fait le même travail. Ce repli sert
+deux fois : il évite d'imposer une installation pour un fichier unique, et il
+lit des EPUB qu'`ebooklib` refuse. Ce dernier exige que le `container.xml`
+porte son espace de noms OCF et s'arrête sur « Can not find container file »
+quand il manque — ce qui arrive avec les fichiers produits par des outils de
+conversion. `zipfile` ne s'en soucie pas et lit quand même :
 
 ```python
 import zipfile

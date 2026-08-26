@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -33,17 +34,99 @@ import sys
 TAUX_TRANSCRIPTION = 16000
 
 
+def _resoudre_ffmpeg() -> str | None:
+    """Trouve ffmpeg, y compris quand il n'est pas dans le PATH.
+
+    `imageio-ffmpeg` embarque un ffmpeg statique complet et se retrouve installé
+    un peu partout comme dépendance d'autres outils. S'en servir évite de
+    réclamer une installation système à quelqu'un qui a déjà le binaire sur son
+    disque sans le savoir."""
+    trouve = shutil.which("ffmpeg")
+    if trouve:
+        return trouve
+    try:
+        import imageio_ffmpeg
+        chemin = imageio_ffmpeg.get_ffmpeg_exe()
+        return chemin if os.path.exists(chemin) else None
+    except Exception:
+        return None
+
+
+FFMPEG = _resoudre_ffmpeg()
+FFPROBE = shutil.which("ffprobe")
+
+
 def _dispo(binaire: str) -> bool:
-    return shutil.which(binaire) is not None
+    return {"ffmpeg": FFMPEG, "ffprobe": FFPROBE}.get(
+        binaire, shutil.which(binaire)) is not None
 
 
 def _exiger_ffmpeg(action: str) -> bool:
-    if _dispo("ffmpeg"):
+    if FFMPEG:
         return True
     print(f"✗ {action} : ffmpeg est absent.", file=sys.stderr)
     print("  → macOS : brew install ffmpeg   |   Debian/Ubuntu : sudo apt install ffmpeg",
           file=sys.stderr)
     return False
+
+
+def _sonder_par_ffmpeg(chemin: str) -> str:
+    """ffmpeg décrit le fichier sur sa sortie d'erreur avant de renoncer,
+    faute de destination. C'est ce texte qu'on lit quand ffprobe manque."""
+    return subprocess.run([FFMPEG, "-hide_banner", "-i", chemin],
+                          capture_output=True, text=True).stderr
+
+
+def _duree(chemin: str) -> float | None:
+    """Durée en secondes, par ffprobe si présent, sinon par ffmpeg."""
+    if FFPROBE:
+        r = subprocess.run([FFPROBE, "-v", "error", "-show_entries",
+                            "format=duration", "-of", "csv=p=0", chemin],
+                           capture_output=True, text=True)
+        try:
+            return float(r.stdout.strip())
+        except ValueError:
+            return None
+    if not FFMPEG:
+        return None
+    m = re.search(r"Duration: (\d+):(\d\d):(\d\d\.\d+)", _sonder_par_ffmpeg(chemin))
+    if not m:
+        return None
+    h, mn, sec = m.groups()
+    return int(h) * 3600 + int(mn) * 60 + float(sec)
+
+
+def _info_par_ffmpeg(chemin: str) -> dict:
+    """Fiche technique sans ffprobe. imageio-ffmpeg ne livre que ffmpeg, or
+    c'est l'installation la plus répandue : s'en contenter plutôt que de
+    dégrader vers la seule taille du fichier."""
+    texte = _sonder_par_ffmpeg(chemin)
+    duree = _duree(chemin) or 0.0
+    o = os.path.getsize(chemin)
+    lisible = f"{o / 1024:.0f} Ko" if o < 1024 ** 2 else f"{o / 1024 ** 2:.1f} Mo"
+    print(f"\n── {os.path.basename(chemin)}  ({lisible})")
+    print(f"   durée     : {int(duree // 60)} min {duree % 60:.1f} s")
+
+    a_du_son = a_de_l_image = False
+    for ligne in texte.splitlines():
+        ligne = ligne.strip()
+        if not ligne.startswith("Stream #"):
+            continue
+        detail = ligne.split(": ", 2)[-1]
+        if ": Video:" in ligne:
+            a_de_l_image = True
+            print(f"   vidéo     : {detail}")
+        elif ": Audio:" in ligne:
+            a_du_son = True
+            print(f"   audio     : {detail}")
+        elif ": Subtitle:" in ligne:
+            print(f"   ⭑ sous-titres présents — les extraire plutôt que transcrire :")
+            print(f"     ffmpeg -i \"{chemin}\" -map 0:s:0 sous-titres.srt")
+
+    if not a_du_son:
+        print("   ⚠ aucune piste audio : rien à transcrire, l'analyse sera visuelle")
+    print("   (ffprobe absent : fiche lue sur la sortie de ffmpeg)")
+    return {"_a_du_son": a_du_son, "_a_de_l_image": a_de_l_image, "taille_octets": o}
 
 
 def _info_sans_ffprobe(chemin: str) -> dict:
@@ -73,11 +156,11 @@ def _info_sans_ffprobe(chemin: str) -> dict:
 
 def info(chemin: str) -> dict:
     """Fiche technique du média. Sans ffprobe, se rabat sur ce qui est lisible."""
-    if not _dispo("ffprobe"):
-        return _info_sans_ffprobe(chemin)
+    if not FFPROBE:
+        return _info_par_ffmpeg(chemin) if FFMPEG else _info_sans_ffprobe(chemin)
 
     sortie = subprocess.run(
-        ["ffprobe", "-v", "error", "-print_format", "json",
+        [FFPROBE, "-v", "error", "-print_format", "json",
          "-show_format", "-show_streams", chemin],
         capture_output=True, text=True)
     if sortie.returncode != 0:
@@ -128,7 +211,7 @@ def extraire_audio(chemin: str, sortie: str) -> str | None:
         return None
     cible = os.path.join(sortie, os.path.splitext(os.path.basename(chemin))[0] + ".wav")
     resultat = subprocess.run(
-        ["ffmpeg", "-v", "error", "-y", "-i", chemin, "-vn",
+        [FFMPEG, "-v", "error", "-y", "-i", chemin, "-vn",
          "-ac", "1", "-ar", str(TAUX_TRANSCRIPTION), "-c:a", "pcm_s16le", cible],
         capture_output=True, text=True)
     if resultat.returncode != 0:
@@ -146,12 +229,8 @@ def extraire_images(chemin: str, sortie: str, nombre: int) -> list[str]:
     """
     if not _exiger_ffmpeg("extraction d'images"):
         return []
-    donnees = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "csv=p=0", chemin], capture_output=True, text=True)
-    try:
-        duree = float(donnees.stdout.strip())
-    except ValueError:
+    duree = _duree(chemin)
+    if duree is None:
         print("✗ durée illisible, impossible de répartir les images", file=sys.stderr)
         return []
 
@@ -163,7 +242,7 @@ def extraire_images(chemin: str, sortie: str, nombre: int) -> list[str]:
         instant = duree * (i + 0.5) / nombre
         cible = os.path.join(sortie, f"image_{i:02d}_{int(instant)}s.jpg")
         r = subprocess.run(
-            ["ffmpeg", "-v", "error", "-y", "-ss", f"{instant:.2f}",
+            [FFMPEG, "-v", "error", "-y", "-ss", f"{instant:.2f}",
              "-i", chemin, "-frames:v", "1", "-q:v", "3", cible],
             capture_output=True, text=True)
         if r.returncode == 0 and os.path.exists(cible):
