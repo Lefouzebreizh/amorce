@@ -194,16 +194,17 @@ Là, l'aller-retour vaut son prix.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **huit projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
 Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
 `patrimoine/`, la chaîne de montage automatisée dans `montage-auto/`, le
-répondeur de commentaires Facebook dans `repondeur-facebook/` et l'assistant de
-rangement Life-Organizer dans `life-organizer/` (qui ont chacun leur propre
-`README.md`) — plus un volet sans code, `tiktok/`, où se travaillent les
-concepts et les scripts avant tout montage. L'outillage ci-dessous existe parce
-que rien de générique ne connaît cette particularité.
+répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
+rangement Life-Organizer dans `life-organizer/` et l'assistant administratif
+Paper-Manager dans `paper-manager/` (qui ont chacun leur propre `README.md`) —
+plus un volet sans code, `tiktok/`, où se travaillent les concepts et les
+scripts avant tout montage. L'outillage ci-dessous existe parce que rien de
+générique ne connaît cette particularité.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
@@ -216,6 +217,9 @@ que rien de générique ne connaît cette particularité.
 | `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
+| `/paper-manager` | Où poser chaque fichier dans l'assistant administratif, la frontière entre ce que l'humain décide et ce que la machine calcule, et les huit pièges qui coûtent un bogue. |
+| `/formulaire-pdf` | Remplir un Cerfa avec `paper-manager` : repérer les champs une fois, écrire un plan rejouable, et les cinq pièges du format PDF. |
+| `/resilier-un-contrat` | Jusqu'à quand on peut encore partir sans frais, quel texte invoquer, et le courrier prêt à signer. |
 | `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
 | `/tiktok` | La ligne éditoriale du volet TikTok, ses huit concepts répétables, les deux seuls dispositifs de tournage et la façon dont un script s'écrit ici. |
 | `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
@@ -239,7 +243,7 @@ sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu
 porte les règles d'identité d'Amorce là où le plugin vise une esthétique
 générique. Le plugin reste utile partout ailleurs.
 
-Deux règles qui découlent de la cohabitation :
+Trois règles qui découlent de la cohabitation :
 
 - **Une modification ne touche qu'un seul projet**, sauf configuration à la
   racine qui doit connaître ses voisins — c'est le cas d'`eslint.config.mjs`,
@@ -248,6 +252,13 @@ Deux règles qui découlent de la cohabitation :
 - La version de Flutter est épinglée **au même numéro** dans le hook et dans
   `.github/workflows/look-and-find.yml`. Les faire diverger, c'est fabriquer un
   « ça passe chez moi ».
+- Les bibliothèques installées par `.github/workflows/tests-python.yml` sont
+  **volontairement plus courtes** que celles du hook, et il ne faut pas les
+  aligner. Le hook prépare une session où l'on *exécute* les programmes, ce qui
+  demande streamlit, PyTorch, Pillow et PyMuPDF ; le workflow n'installe que ce
+  que les *tests* atteignent, mesuré dans un environnement vierge. Recopier la
+  liste du hook ferait passer la vérification de vingt secondes à plusieurs
+  minutes sans couvrir une assertion de plus.
 
 ## Vérifier
 

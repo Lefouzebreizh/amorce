@@ -1,0 +1,11 @@
+Objet : Résiliation du contrat {abonnement.libelle} — référence client {abonnement.reference_client}
+
+Madame, Monsieur,
+
+Par la présente, je vous informe de ma décision de résilier le contrat {abonnement.libelle} souscrit auprès de {abonnement.emetteur} sous la référence client {abonnement.reference_client}.
+
+Je vous demande de bien vouloir prendre en compte cette résiliation avec effet au {effet}, ou à la première date à laquelle elle peut légalement intervenir si celle-ci lui est postérieure.
+
+Je vous remercie de m'adresser une confirmation écrite de cette résiliation précisant sa date exacte de prise d'effet, et de cesser tout prélèvement à compter de celle-ci. Le cas échéant, je vous remercie de me rembourser la part d'abonnement déjà réglée et non consommée.
+
+Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
