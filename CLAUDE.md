@@ -142,6 +142,13 @@ courts. Deux règles en découlent, et elles priment sur la prudence par défaut
   branches de ce dépôt touchent presque toutes au hook de démarrage et à ce
   fichier : chaque jour d'attente ajoute un conflit à résoudre.
 
+- **Passer le relais avant que le fil ne pèse.** Une conversation longue est
+  relue en entier à chaque message, captures d'écran comprises : elle finit par
+  coûter plus cher que le travail qu'elle porte. Dès qu'un fil change de sujet
+  ou s'alourdit, créer la session suivante avec un résumé de reprise, archiver
+  la précédente, et donner son nom. La mémoire du projet est dans ce fichier et
+  dans les compétences, pas dans la discussion — on ne perd rien.
+
 Ce qui reste à demander, et qu'aucune de ces deux règles ne couvre : ce qui
 part **en public au nom de quelqu'un** (un commentaire publié, un message à la
 communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
