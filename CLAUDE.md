@@ -159,8 +159,6 @@ Là, l'aller-retour vaut son prix.
 - **Le minimum qui résout le problème.** Pas d'abstraction pour un seul appel,
   pas de configurabilité qu'on n'a pas demandée, pas de garde contre un cas
   impossible.
-- **Dire ses hypothèses**, et s'arrêter pour demander quand deux lectures de la
-  demande mènent à deux travaux différents.
 - **Nommer la vérification avant d'écrire** : quelle commande dira que c'est
   bon. `npm test` pour ce qui est calculable, `npm run verify` pour le rendu,
   l'audio, l'export et le mobile.
@@ -202,16 +200,18 @@ Là, l'aller-retour vaut son prix.
 
 Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
-`CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
-Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
-`patrimoine/`, la chaîne de montage automatisée dans `montage-auto/`, le
+`CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
+montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
 rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
 Paper-Manager dans `paper-manager/` et le socle de production livré aux clients
 dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
 code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
-montage. L'outillage ci-dessous existe parce que rien de générique ne connaît
-cette particularité.
+montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
+audio Streamlit (`mon-app-audio/`) et l'assistant d'allocation d'actifs
+(`patrimoine/`), avec leur code, leurs tests verts et leur condition de reprise
+— mis de côté, pas abandonnés. L'outillage ci-dessous existe parce que rien de
+générique ne connaît cette particularité.
 
 `agence/` est un projet Next.js complet — Supabase, authentification, RLS — et
 non un dossier d'Amorce : ses propres `package.json`, `tsconfig.json` et
@@ -224,7 +224,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/`, de `patrimoine/` et de `montage-auto/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `montage-auto/` et des deux chantiers en sommeil sous `archives-backlog/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
@@ -233,6 +233,8 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
+| `/idee-faisabilite` | La grille de notation d'une idée sur 10, le dossier où atterrit sa fiche, et le script qui tient `INDEX.md` à jour. |
+| `/audit-code-ia` | Auditer une base de code générée par IA : le relevé mécanique de `scan.py`, les trois défauts qu'aucune expression régulière ne trouve, et le classement par ce qui cassera en premier. |
 | `/paper-manager` | Où poser chaque fichier dans l'assistant administratif, la frontière entre ce que l'humain décide et ce que la machine calcule, et les huit pièges qui coûtent un bogue. |
 | `/formulaire-pdf` | Remplir un Cerfa avec `paper-manager` : repérer les champs une fois, écrire un plan rejouable, et les cinq pièges du format PDF. |
 | `/resilier-un-contrat` | Jusqu'à quand on peut encore partir sans frais, quel texte invoquer, et le courrier prêt à signer. |
