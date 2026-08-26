@@ -33,7 +33,7 @@ import requests
 
 from . import rythme
 
-VERSION_PAR_DEFAUT = 'v23.0'   # encore servie ; à relever quand Facebook l'annonce éteinte
+VERSION_PAR_DEFAUT = 'v26.0'   # celle que Meta sert aujourd'hui ; à relever quand elle s'éteint
 DELAI_S = 20
 CODES_QUOTA = {4, 17, 32, 613}
 
