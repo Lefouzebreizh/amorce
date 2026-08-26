@@ -133,8 +133,12 @@ la tête de lecture se retrouve au-delà de la fin.
 - **Le minimum qui résout le problème.** Pas d'abstraction pour un seul appel,
   pas de configurabilité qu'on n'a pas demandée, pas de garde contre un cas
   impossible.
-- **Dire ses hypothèses**, et s'arrêter pour demander quand deux lectures de la
-  demande mènent à deux travaux différents.
+- **Trancher plutôt que demander.** Quand deux lectures de la demande mènent à
+  deux travaux différents, choisir la meilleure, l'écrire noir sur blanc en une
+  ligne, et continuer. Une question fait perdre un aller-retour ; une hypothèse
+  énoncée se corrige en un mot. Ne s'arrêter que devant l'irréversible — une
+  suppression, une poussée sur une branche qui n'est pas la sienne, un envoi
+  vers l'extérieur.
 - **Nommer la vérification avant d'écrire** : quelle commande dira que c'est
   bon. `npm test` pour ce qui est calculable, `npm run verify` pour le rendu,
   l'audio, l'export et le mobile.
@@ -305,9 +309,20 @@ ne pas lancer `playwright install`.
 
 ## Git
 
-Branche de travail : `claude/claude-md-docs-q02dr7`. Messages de commit en
-français, à l'infinitif, décrivant l'intention plutôt que le fichier touché —
-par exemple « Séparer les trois sources sonores en une table de mixage ».
+Une branche `claude/…` par sujet. Messages de commit en français, à
+l'infinitif, décrivant l'intention plutôt que le fichier touché — par exemple
+« Séparer les trois sources sonores en une table de mixage ».
+
+**Ouvrir la pull request et la fusionner fait partie du travail**, sans
+attendre qu'on le demande : un changement vérifié qui dort sur une branche ne
+sert à personne. La barrière reste la vérification du projet touché, avant la
+poussée — pas l'autorisation. Fusion par commit de fusion, comme le reste de
+l'historique.
+
+Avant de commencer, `git fetch origin main` : ce dépôt reçoit plusieurs
+sessions en parallèle, et deux branches ont déjà construit le même projet
+chacune de son côté. Ce qui est fusionné gagne, toujours — refaire son travail
+sur la base commune coûte moins cher que fusionner deux architectures.
 
 `AGENTS.md` est réécrit par `next dev` : le committer avec le reste plutôt que
 de chercher à le retirer d'un diff.

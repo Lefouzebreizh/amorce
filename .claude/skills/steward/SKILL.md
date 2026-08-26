@@ -52,6 +52,25 @@ PR de ce dépôt se relit sur ses justifications autant que sur son diff.
 Découper par intention : trois intentions distinctes font trois commits, même
 si elles ont été écrites dans la même session.
 
+## Ouvrir et fusionner
+
+Le propriétaire du dépôt a demandé que la pull request soit **ouverte et
+fusionnée sans lui redemander**, dès que le travail est fini et vérifié. Un
+changement vérifié qui attend une autorisation ne sert à personne.
+
+Ce que cela ne change pas : la barrière de vérification avant la poussée, le
+découpage par intention, et le fait qu'une PR ne touche qu'un projet. La
+description dit **pourquoi**, ce que la décision coûte, et ce qui n'a pas été
+vérifié — c'est le compte rendu que l'historique gardera.
+
+Fusion par **commit de fusion**, comme le reste de l'historique.
+
+**Partir de `main` à jour, et le revérifier avant d'ouvrir.** Plusieurs
+sessions travaillent ce dépôt en parallèle : deux branches y ont déjà fabriqué
+le même projet chacune dans son coin, et la seconde a dû être refaite. Ce qui
+est fusionné gagne — se couler dedans coûte toujours moins cher que réconcilier
+deux architectures.
+
 ## Diagnostiquer un échec d'intégration continue
 
 Le workflow `Look & Find` ne se déclenche que sur `look_and_find/**` et sur
