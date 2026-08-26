@@ -200,21 +200,31 @@ Là, l'aller-retour vaut son prix.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, le studio audio
 Streamlit dans `mon-app-audio/`, l'assistant d'allocation d'actifs dans
 `patrimoine/`, la chaîne de montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
-rangement Life-Organizer dans `life-organizer/` et l'assistant administratif
-Paper-Manager dans `paper-manager/` (qui ont chacun leur propre `README.md`) —
-plus un volet sans code, `tiktok/`, où se travaillent les concepts et les
-scripts avant tout montage. L'outillage ci-dessous existe parce que rien de
-générique ne connaît cette particularité.
+rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
+Paper-Manager dans `paper-manager/` et le socle de production livré aux clients
+dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
+code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
+montage. L'outillage ci-dessous existe parce que rien de générique ne connaît
+cette particularité.
+
+`agence/` est un projet Next.js complet — Supabase, authentification, RLS — et
+non un dossier d'Amorce : ses propres `package.json`, `tsconfig.json` et
+`eslint.config.mjs`, ses propres `node_modules`, et l'alias `@/…` pointe vers
+`agence/src/`. Il se vérifie depuis son dossier (`npm run lint`,
+`npm run typecheck`, `npm test`, `npm run build`, plus `npm run test:rls` pour
+les politiques de sécurité), jamais depuis la racine — d'où son exclusion de
+l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
+`.github/workflows/agence.yml`.
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe `node_modules`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/`, de `patrimoine/` et de `montage-auto/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `mon-app-audio/`, de `patrimoine/` et de `montage-auto/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |

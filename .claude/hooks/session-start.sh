@@ -1,8 +1,8 @@
 #!/bin/bash
-# Prépare le conteneur d'une session distante : dépendances du studio Amorce,
-# SDK Flutter et dépendances de Look & Find, bibliothèques de la chaîne KDP,
-# du studio audio, de l'assistant d'allocation, de la chaîne de montage, du
-# répondeur Facebook et de Life-Organizer.
+# Prépare le conteneur d'une session distante : dépendances du studio Amorce et
+# du socle agence, SDK Flutter et dépendances de Look & Find, bibliothèques de
+# la chaîne KDP, du studio audio, de l'assistant d'allocation, de la chaîne de
+# montage, du répondeur Facebook et de Life-Organizer.
 #
 # Pourquoi ce script existe : le conteneur d'une session web démarre sur un
 # dépôt fraîchement cloné, sans `node_modules` et sans SDK Flutter. Sans lui,
@@ -34,6 +34,12 @@ readonly FLUTTER_HOME="$HOME/flutter"
 
 echo "── Amorce : dépendances npm"
 cd "$racine"
+npm install --no-audit --no-fund --silent
+
+echo "── Socle Agence : dépendances npm"
+# Projet Next.js indépendant, avec son propre `package.json` : les dépendances
+# de la racine ne lui servent à rien, et les siennes ne doivent pas remonter.
+cd "$racine/agence"
 npm install --no-audit --no-fund --silent
 
 echo "── Look & Find : SDK Flutter $FLUTTER_VERSION"
@@ -181,4 +187,4 @@ if [ -x /opt/pw-browsers/chromium ] && [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "── Amorce : Chromium de vérification signalé à la session"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
