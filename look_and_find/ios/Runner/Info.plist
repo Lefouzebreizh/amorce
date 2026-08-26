@@ -14,6 +14,8 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Look &amp; Find lit la photo que vous choisissez pour identifier l'objet qu'elle montre. Aucune autre photo n'est consultée.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Look &amp; Find utilise l'appareil photo pour identifier l'objet que vous visez. La photo est envoyée au service d'identification, et n'est conservée que sur votre téléphone.</string>
 	<key>LSApplicationQueriesSchemes</key>
