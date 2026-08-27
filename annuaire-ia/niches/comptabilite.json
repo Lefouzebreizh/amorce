@@ -1,0 +1,54 @@
+{
+  "niche": {
+    "id": "comptabilite",
+    "nom": "IA Comptabilité",
+    "emoji": "📊",
+    "domaine": "https://ia-comptabilite.fr",
+    "metier": "experts-comptables et collaborateurs de cabinet",
+    "h1_accent": "L'IA du cabinet",
+    "h1_suite": "qui supprime la saisie",
+    "slogan": "Collecte des pièces, imputation, révision, factures fournisseurs : les outils qui rendent au collaborateur le temps du conseil.",
+    "meta_titre": "IA Comptabilité — les outils d'intelligence artificielle pour les cabinets d'expertise comptable",
+    "meta_description": "Collecte automatisée des pièces, reconnaissance de factures, pré-imputation, révision assistée : le comparatif des outils IA testés en cabinet. Prix, avis détaillés et limites réelles.",
+    "theme": {
+      "primaire": "#10b981",
+      "secondaire": "#34d399"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur."
+  },
+  "outils": [
+    {
+      "id": "pennylane",
+      "nom": "Pennylane",
+      "categorie": "Plateforme comptable",
+      "prix": "À partir de 29 €/mois par dossier",
+      "description_courte": "La plateforme qui met le client et le cabinet dans le même fichier, avec la pré-imputation faite avant l'arrivée du collaborateur.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/pennylane",
+      "score_avis": 4.6,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nPennylane a changé la nature du travail en cabinet : le client dépose, l'outil reconnaît, catégorise et rapproche du relevé bancaire, et le collaborateur arrive sur un dossier déjà à 80 %. Le modèle apprend des corrections passées, dossier par dossier, si bien que la troisième facture d'un même fournisseur ne demande plus rien. Le rythme de clôture passe d'une bousculade trimestrielle à un suivi continu.\n\n## Points forts\n- Pré-imputation qui s'améliore réellement dossier par dossier\n- Rapprochement bancaire automatique via connexion aux banques\n- Le client voit sa trésorerie en direct : moins d'appels, plus de valeur perçue\n- Tableaux de bord de gestion qui ouvrent la porte à une mission de conseil facturable\n\n## Points faibles\n- Basculer un portefeuille depuis un logiciel historique demande un vrai projet\n- Facturation au dossier : les très petits clients pèsent lourd en proportion\n- Les cas de TVA complexes demandent toujours une reprise manuelle\n\n## Idéal pour\nLes cabinets de taille moyenne qui veulent sortir de la production pure et vendre du conseil, sans embaucher un collaborateur de plus."
+    },
+    {
+      "id": "dext",
+      "nom": "Dext",
+      "categorie": "Collecte de pièces",
+      "prix": "À partir de 25 €/mois",
+      "description_courte": "La fin de la boîte à chaussures : le client photographie, l'outil lit, le cabinet reçoit une pièce exploitable.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/dext",
+      "score_avis": 4.5,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nDext fait une chose depuis longtemps et la fait très bien : extraire d'une photo de ticket ou d'un PDF de facture le fournisseur, la date, le montant, la TVA et le numéro de pièce, puis les pousser dans le logiciel comptable. La reconnaissance dépasse aujourd'hui les 95 % sur les documents nets, et la relance automatique des clients qui ne déposent rien règle le vrai problème du cabinet — pas la lecture, la collecte.\n\n## Points forts\n- Extraction fiable, y compris sur des tickets froissés photographiés de travers\n- Relances automatiques des clients en retard de dépôt, sans intervention du cabinet\n- Connecteurs vers la quasi-totalité des logiciels comptables du marché\n- Récupération directe des factures depuis les boîtes mail et les fournisseurs en ligne\n\n## Points faibles\n- Ne fait que la collecte : ce n'est pas une plateforme comptable complète\n- Les factures multi-pages avec ventilation analytique demandent une reprise\n- Le coût s'ajoute à celui du logiciel de production déjà en place\n\n## Idéal pour\nLes cabinets qui gardent leur logiciel de production historique et veulent supprimer la saisie sans changer tout leur système d'information."
+    },
+    {
+      "id": "vic-ai",
+      "nom": "Vic.ai",
+      "categorie": "Factures fournisseurs",
+      "prix": "Sur devis",
+      "description_courte": "Le traitement des factures fournisseurs en autonomie : l'outil impute, contrôle et propose le paiement, l'humain arbitre les exceptions.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/vic-ai",
+      "score_avis": 4.2,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nVic.ai vise plus haut que la lecture de facture : il apprend les règles d'imputation d'une entreprise à partir de son historique et traite en autonomie la majorité du flux fournisseurs, en n'envoyant à un humain que ce qui sort de l'ordinaire. Sur un volume de plusieurs milliers de factures par mois, le taux de traitement sans intervention dépasse souvent les deux tiers — c'est là que l'économie devient visible au bilan.\n\n## Points forts\n- Apprentissage des règles d'imputation propres à l'entreprise, sans paramétrage lourd\n- Détection des doublons et des écarts de prix par rapport aux commandes\n- Circuit de validation intégré, avec relances des approbateurs\n- Piste d'audit complète sur chaque décision automatique\n\n## Points faibles\n- Il faut un historique conséquent avant que l'autonomie devienne réelle\n- Pensé pour les directions financières, pas pour un cabinet à petits dossiers\n- Le paramétrage initial mobilise une ressource interne pendant plusieurs semaines\n\n## Idéal pour\nLes directions financières et les cabinets qui externalisent la comptabilité fournisseurs de grands comptes, avec des volumes qui ne se traitent plus à la main."
+    }
+  ]
+}

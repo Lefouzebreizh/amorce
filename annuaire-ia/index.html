@@ -3,15 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Boîte à Outils IA — L'annuaire et le comparateur des meilleurs outils d'intelligence artificielle</title>
-<meta name="description" content="Comparez les 10 outils IA qui font vraiment gagner des heures : rédaction, design, création vidéo, voix off, productivité. Prix, notes, avis détaillés et points faibles assumés.">
+
+<!-- Niche servie quand l'adresse ne porte aucun paramètre `?niche=`. Chaque
+     domaine déploie le même fichier et ne change que cette ligne : c'est le
+     seul point de configuration d'un site du réseau. -->
+<meta name="niche-par-defaut" content="immobilier">
+
+<title>Chargement…</title>
+<meta name="description" content="">
 <meta name="robots" content="index, follow, max-image-preview:large">
-<link rel="canonical" href="https://exemple.com/">
+<link rel="canonical" href="">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Boîte à Outils IA">
-<meta property="og:title" content="Boîte à Outils IA — le comparateur des outils IA qui font gagner des heures">
-<meta property="og:description" content="10 outils IA testés, notés et classés par métier : rédaction, design, vidéo, voix, productivité.">
-<meta property="og:url" content="https://exemple.com/">
+<meta property="og:site_name" content="">
+<meta property="og:title" content="">
+<meta property="og:description" content="">
+<meta property="og:url" content="">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
@@ -31,8 +37,16 @@
   }
 </style>
 <style>
-  /* Le halo du fond ne doit jamais intercepter un clic ni allonger la page :
-     il est posé en calque fixe, derrière tout, sans surface cliquable. */
+  /* Les couleurs de niche passent par des variables CSS, jamais par des classes
+     Tailwind fabriquées à la volée : le CDN compile ce qu'il voit dans le DOM,
+     et une classe `from-[#eab308]` construite en JavaScript arriverait parfois
+     après le premier rendu. Une variable, elle, s'applique au moment où on
+     l'écrit. Toutes les surfaces accentuées du site tapent dans ces deux-là. */
+  :root {
+    --teinte-1: #8b5cf6;
+    --teinte-2: #3b82f6;
+  }
+
   /* Le style vient d'un CDN : sur un réseau filtré ou lent, il peut arriver en
      retard ou pas du tout. Ces deux règles ne sont pas décoratives, ce sont
      celles dont l'absence casse la page au lieu de l'enlaidir — sans `hidden`,
@@ -40,7 +54,31 @@
   .hidden { display: none !important; }
   body { background: #07070f; color: #c9c9e6; font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
 
-  .halo { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+  /* Le halo du fond ne doit jamais intercepter un clic ni allonger la page :
+     calque fixe, derrière tout, sans surface cliquable. */
+  .halo { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+  .halo span { position: absolute; border-radius: 9999px; filter: blur(120px); display: block; }
+  .halo-1 { top: -10rem; left: -8rem; height: 36rem; width: 36rem; background: color-mix(in srgb, var(--teinte-1) 28%, transparent); }
+  .halo-2 { top: 6rem; right: -10rem; height: 32rem; width: 32rem; background: color-mix(in srgb, var(--teinte-2) 24%, transparent); }
+  .halo-3 { bottom: 0; left: 33%; height: 28rem; width: 28rem; background: color-mix(in srgb, var(--teinte-1) 14%, transparent); }
+
+  .degrade-texte {
+    background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .bouton-accent {
+    background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
+    color: #fff; transition: filter .15s ease;
+  }
+  .bouton-accent:hover { filter: brightness(1.15); }
+  .pastille-accent { background: var(--teinte-1); }
+  .texte-accent { color: var(--teinte-2); }
+  .bandeau-accent { background-image: linear-gradient(90deg, color-mix(in srgb, var(--teinte-1) 20%, transparent), color-mix(in srgb, var(--teinte-2) 8%, transparent)); }
+  .carte:hover { border-color: color-mix(in srgb, var(--teinte-1) 60%, transparent); }
+  .champ:focus { border-color: var(--teinte-1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teinte-1) 35%, transparent); }
+  .puce::before { background: var(--teinte-1); }
+  .neuf { background: color-mix(in srgb, var(--teinte-1) 18%, transparent); color: var(--teinte-2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-1) 40%, transparent); }
+
   html { scroll-behavior: smooth; }
   body.fige { overflow: hidden; }
   @media (prefers-reduced-motion: reduce) {
@@ -52,36 +90,31 @@
 <body class="bg-nuit text-brume font-sans antialiased min-h-dvh">
 
 <div class="halo" aria-hidden="true">
-  <div class="absolute -top-40 -left-32 h-[36rem] w-[36rem] rounded-full bg-violet-600/25 blur-[120px]"></div>
-  <div class="absolute top-24 right-[-10rem] h-[32rem] w-[32rem] rounded-full bg-blue-600/20 blur-[120px]"></div>
-  <div class="absolute bottom-0 left-1/3 h-[28rem] w-[28rem] rounded-full bg-fuchsia-700/10 blur-[130px]"></div>
+  <span class="halo-1"></span><span class="halo-2"></span><span class="halo-3"></span>
 </div>
 
 <header class="mx-auto max-w-6xl px-5 pt-14 pb-8 text-center sm:pt-20">
   <p class="inline-flex items-center gap-2 rounded-full bg-relief/80 px-4 py-1.5 text-xs font-medium tracking-wide text-sourdine ring-1 ring-bord">
-    <span class="h-1.5 w-1.5 rounded-full bg-violet-400"></span>
-    Mise à jour <span id="date-maj">2026</span> · <span id="compteur-entete">10</span> outils testés
+    <span class="pastille-accent h-1.5 w-1.5 rounded-full"></span>
+    Mise à jour <span id="date-maj">…</span> · <span id="compteur-entete">…</span> outils testés
   </p>
   <h1 class="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl">
-    La <span class="bg-gradient-to-r from-violet-400 via-indigo-400 to-blue-400 bg-clip-text text-transparent">Boîte à Outils IA</span><br class="hidden sm:block">
-    des pros pressés
+    <span id="h1-accent" class="degrade-texte"></span><br class="hidden sm:block">
+    <span id="h1-suite"></span>
   </h1>
-  <p id="slogan" class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-sourdine sm:text-lg">
-    Le comparateur des IA qui font vraiment gagner des heures — testées, notées, classées par métier.
-  </p>
+  <p id="slogan" class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-sourdine sm:text-lg"></p>
 </header>
 
 <main class="mx-auto max-w-6xl px-5 pb-24">
 
   <section class="sticky top-0 z-30 -mx-5 mb-8 border-b border-bord/60 bg-nuit/80 px-5 py-4 backdrop-blur-xl">
-    <label for="recherche" class="sr-only">Rechercher un outil IA</label>
+    <label for="recherche" class="sr-only">Rechercher un outil</label>
     <div class="relative">
       <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-sourdine" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
       </svg>
-      <input id="recherche" type="search" autocomplete="off"
-        placeholder="Rechercher : vidéo, voix off, rédaction, gratuit…"
-        class="min-h-12 w-full rounded-2xl border border-bord bg-panneau/90 py-3 pl-12 pr-4 text-base text-white placeholder:text-sourdine/70 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40">
+      <input id="recherche" type="search" autocomplete="off" placeholder="Rechercher un outil…"
+        class="champ min-h-12 w-full rounded-2xl border border-bord bg-panneau/90 py-3 pl-12 pr-4 text-base text-white outline-none transition placeholder:text-sourdine/70">
     </div>
     <div id="filtres" class="mt-3 flex flex-wrap gap-2" role="group" aria-label="Filtrer par catégorie"></div>
   </section>
@@ -92,21 +125,21 @@
 
   <div id="vide" class="hidden rounded-3xl border border-bord bg-panneau/60 px-6 py-16 text-center">
     <p class="text-lg font-semibold text-white">Aucun outil ne correspond</p>
-    <p class="mx-auto mt-2 max-w-md text-sm text-sourdine">Essayez un mot plus court — « vidéo », « voix », « gratuit » — ou remettez le filtre sur « Tous ».</p>
-    <button type="button" data-action="reinitialiser" class="mt-6 min-h-11 rounded-xl bg-violet-600 px-5 font-semibold text-white transition hover:bg-violet-500">Réinitialiser la recherche</button>
+    <p class="mx-auto mt-2 max-w-md text-sm text-sourdine">Essayez un mot plus court, ou remettez le filtre sur « Tous ».</p>
+    <button type="button" data-action="reinitialiser" class="bouton-accent mt-6 min-h-11 rounded-xl px-5 font-semibold">Réinitialiser la recherche</button>
   </div>
 
   <div id="erreur" class="hidden rounded-3xl border border-red-500/40 bg-red-950/30 px-6 py-10 text-center">
-    <p class="text-lg font-semibold text-white">Impossible de charger <code>outils.json</code></p>
+    <p class="text-lg font-semibold text-white">Impossible de charger la base <code id="erreur-fichier"></code></p>
     <p class="mx-auto mt-2 max-w-lg text-sm text-sourdine">
-      Un navigateur refuse de lire un fichier local en <code>file://</code>. Lancez un serveur depuis ce dossier :
+      Un navigateur refuse de lire un fichier local en <code>file://</code>, et une niche inconnue n'a pas de base. Lancez un serveur depuis ce dossier :
     </p>
     <code class="mt-4 inline-block rounded-lg bg-nuit px-4 py-2 text-sm text-violet-300">npx serve .</code>
   </div>
 
   <footer class="mt-20 border-t border-bord/60 pt-8 text-center text-xs leading-relaxed text-sourdine">
     <p id="transparence" class="mx-auto max-w-2xl"></p>
-    <p class="mt-4">© <span id="annee"></span> Boîte à Outils IA — comparateur indépendant d'outils d'intelligence artificielle.</p>
+    <p class="mt-4">© <span id="annee"></span> <span id="pied-nom"></span> — comparateur indépendant d'outils d'intelligence artificielle.</p>
   </footer>
 </main>
 
@@ -114,9 +147,9 @@
   <div data-action="fermer" class="absolute inset-0 bg-nuit/80 backdrop-blur-sm"></div>
   <div class="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-6">
     <article class="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-bord bg-panneau shadow-2xl sm:rounded-3xl">
-      <header class="flex items-start gap-4 border-b border-bord/70 bg-gradient-to-r from-violet-600/20 to-blue-600/10 px-6 py-5">
+      <header class="bandeau-accent flex items-start gap-4 border-b border-bord/70 px-6 py-5">
         <div class="min-w-0 flex-1">
-          <p id="modale-categorie" class="text-xs font-semibold uppercase tracking-wider text-violet-300"></p>
+          <p id="modale-categorie" class="texte-accent text-xs font-semibold uppercase tracking-wider"></p>
           <h2 id="modale-titre" class="mt-1 truncate text-2xl font-bold text-white"></h2>
           <div id="modale-meta" class="mt-2 flex flex-wrap items-center gap-3 text-sm text-sourdine"></div>
         </div>
@@ -128,7 +161,7 @@
       <div id="modale-corps" class="flex-1 overflow-y-auto px-6 py-6"></div>
       <footer class="border-t border-bord/70 bg-relief/40 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <a id="modale-lien" href="#" target="_blank" rel="sponsored noopener"
-          class="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 font-semibold text-white transition hover:from-violet-500 hover:to-blue-500">
+          class="bouton-accent flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 font-semibold">
           Voir l'outil <span class="text-xs font-normal opacity-80">(lien affilié)</span>
         </a>
       </footer>
@@ -137,18 +170,22 @@
 </div>
 
 <script type="application/ld+json" id="donnees-structurees">{}</script>
-
 <script>
 (() => {
   'use strict';
 
-  /* Toutes les données viennent d'`outils.json` : le HTML ne contient aucune
-     fiche en dur, pour qu'ajouter un outil ne demande jamais de toucher au
-     gabarit. Le lien profond s'écrit `?outil=id` et non `#id` : un fragment
-     n'est pas une URL distincte pour un moteur de recherche, et le sitemap
-     n'aurait alors qu'une seule adresse à proposer. */
+  /* Dix sites, un seul fichier. La niche se lit dans l'adresse (`?niche=btp`),
+     sinon dans la balise `niche-par-defaut` que chaque domaine positionne au
+     déploiement, sinon `immobilier`. Tout le reste — titre, slogan, couleurs,
+     balises sociales — sort du JSON de la niche : le gabarit ne connaît aucun
+     métier, et ajouter un onzième site ne demande qu'un fichier de plus.
 
-  const etat = { outils: [], categorie: 'Tous', recherche: '', ouvert: null, dernierFocus: null };
+     Les fiches s'adressent en `?outil=<id>` et non `#id` : un fragment n'est
+     pas une URL distincte pour un moteur de recherche, et le sitemap n'aurait
+     alors qu'une seule adresse par site à proposer. */
+
+  const NICHE_DEFAUT = 'immobilier';
+  const etat = { niche: null, outils: [], categorie: 'Tous', recherche: '', ouvert: null, dernierFocus: null };
 
   const $ = (sel) => document.querySelector(sel);
   const grille = $('#grille');
@@ -156,15 +193,35 @@
   const champ = $('#recherche');
   const modale = $('#modale');
 
-  const CATEGORIES_COULEURS = {
-    'Rédaction': 'bg-violet-500/15 text-violet-300 ring-violet-500/30',
-    'Recherche': 'bg-sky-500/15 text-sky-300 ring-sky-500/30',
-    'Design': 'bg-fuchsia-500/15 text-fuchsia-300 ring-fuchsia-500/30',
-    'Création Vidéo': 'bg-indigo-500/15 text-indigo-300 ring-indigo-500/30',
-    'Audio & Voix': 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30',
-    'Productivité': 'bg-amber-500/15 text-amber-300 ring-amber-500/30',
-  };
-  const classeCategorie = (c) => CATEGORIES_COULEURS[c] || 'bg-slate-500/15 text-slate-300 ring-slate-500/30';
+  /* L'identifiant vient de l'URL : il finit dans un chemin de fichier. Sans ce
+     filtre, `?niche=../../etc/passwd` serait un chemin valide pour `fetch`. */
+  const identifiantValide = (brut) => /^[a-z0-9-]{1,40}$/.test(brut);
+
+  function nicheDuDomaine() {
+    const brut = (document.querySelector('meta[name="niche-par-defaut"]')?.content || NICHE_DEFAUT).trim().toLowerCase();
+    return identifiantValide(brut) ? brut : NICHE_DEFAUT;
+  }
+
+  function idDeNiche() {
+    const demande = new URLSearchParams(location.search).get('niche');
+    if (!demande) return nicheDuDomaine();
+    const brut = demande.trim().toLowerCase();
+    return identifiantValide(brut) ? brut : nicheDuDomaine();
+  }
+
+  /* La couleur d'une sous-catégorie est déduite de son nom : une niche peut
+     inventer la sienne sans qu'on ait à déclarer quoi que ce soit ici. */
+  function teinteCategorie(nom) {
+    let h = 0;
+    for (const c of nom) h = (h * 31 + c.codePointAt(0)) % 360;
+    return h;
+  }
+  function peindreBadge(element, categorie) {
+    const h = teinteCategorie(categorie);
+    element.style.color = `hsl(${h} 80% 72%)`;
+    element.style.background = `hsl(${h} 80% 55% / .15)`;
+    element.style.boxShadow = `inset 0 0 0 1px hsl(${h} 80% 60% / .35)`;
+  }
 
   /* --- Étoiles ---------------------------------------------------------- */
   function etoiles(score) {
@@ -184,18 +241,19 @@
 
   /* --- Mini-article ----------------------------------------------------- */
   /* La description longue est du texte, jamais du HTML : elle est convertie en
-     nœuds DOM. Un `innerHTML` ferait de chaque fiche de la base une porte
-     d'entrée pour du script injecté. */
+     nœuds DOM. Un `innerHTML` ferait de chaque fiche de la base — et donc de
+     chaque outil injecté par l'auto-pilote — une porte d'entrée pour du script
+     injecté. */
   function articleVersDom(texte) {
     const frag = document.createDocumentFragment();
     let liste = null;
-    for (const ligne of texte.split('\n')) {
+    for (const ligne of String(texte || '').split('\n')) {
       const l = ligne.trim();
       if (!l) { liste = null; continue; }
       if (l.startsWith('## ')) {
         liste = null;
         const h = document.createElement('h3');
-        h.className = 'mt-6 mb-2 text-sm font-bold uppercase tracking-wider text-violet-300 first:mt-0';
+        h.className = 'texte-accent mt-6 mb-2 text-sm font-bold uppercase tracking-wider first:mt-0';
         h.textContent = l.slice(3);
         frag.append(h);
       } else if (l.startsWith('- ')) {
@@ -205,7 +263,7 @@
           frag.append(liste);
         }
         const li = document.createElement('li');
-        li.className = 'relative pl-5 text-sm leading-relaxed text-brume before:absolute before:left-0 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-violet-400';
+        li.className = 'puce relative pl-5 text-sm leading-relaxed text-brume before:absolute before:left-0 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full';
         li.textContent = l.slice(2);
         liste.append(li);
       } else {
@@ -220,30 +278,47 @@
   }
 
   /* --- Cartes ----------------------------------------------------------- */
+  const JOURS_NOUVEAUTE = 21;
+  function estRecent(date) {
+    if (!date) return false;
+    const ajout = Date.parse(date);
+    return Number.isFinite(ajout) && (Date.now() - ajout) < JOURS_NOUVEAUTE * 864e5;
+  }
+
   function carte(outil) {
     const article = document.createElement('article');
-    article.className = 'group flex flex-col rounded-2xl border border-bord bg-panneau/70 p-5 transition hover:-translate-y-1 hover:border-violet-500/60 hover:bg-panneau';
+    article.className = 'carte group flex flex-col rounded-2xl border border-bord bg-panneau/70 p-5 transition hover:-translate-y-1 hover:bg-panneau';
 
     const haut = document.createElement('div');
     haut.className = 'flex items-start justify-between gap-3';
 
     const badge = document.createElement('span');
-    badge.className = `rounded-full px-3 py-1 text-xs font-semibold ring-1 ${classeCategorie(outil.categorie)}`;
+    badge.className = 'rounded-full px-3 py-1 text-xs font-semibold';
     badge.textContent = outil.categorie;
+    peindreBadge(badge, outil.categorie);
 
     const note = document.createElement('span');
     note.className = 'flex shrink-0 items-center gap-1.5 text-sm font-semibold text-white';
     note.append(etoiles(outil.score_avis));
     const chiffre = document.createElement('span');
-    chiffre.textContent = outil.score_avis.toFixed(1);
+    chiffre.textContent = Number(outil.score_avis).toFixed(1);
     note.append(chiffre);
     note.setAttribute('aria-label', `Note ${outil.score_avis} sur 5`);
 
     haut.append(badge, note);
 
     const titre = document.createElement('h2');
-    titre.className = 'mt-4 text-xl font-bold text-white';
-    titre.textContent = outil.nom;
+    titre.className = 'mt-4 flex flex-wrap items-center gap-2 text-xl font-bold text-white';
+    titre.append(document.createTextNode(outil.nom));
+    /* Le badge « Nouveau » rend visible le travail de l'auto-pilote : sans lui,
+       un outil ajouté cette nuit se noie dans la grille et le visiteur régulier
+       n'a aucune raison de revenir. */
+    if (estRecent(outil.date_ajout)) {
+      const neuf = document.createElement('span');
+      neuf.className = 'neuf rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider';
+      neuf.textContent = 'Nouveau';
+      titre.append(neuf);
+    }
 
     const prix = document.createElement('p');
     prix.className = 'mt-1 text-sm font-medium text-emerald-300';
@@ -260,7 +335,7 @@
     lien.href = outil.lien_affiliation;
     lien.target = '_blank';
     lien.rel = 'sponsored noopener';
-    lien.className = 'flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-4 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500';
+    lien.className = 'bouton-accent flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold';
     lien.textContent = 'Voir l’outil';
     const mention = document.createElement('span');
     mention.className = 'ml-1.5 text-[11px] font-normal opacity-80';
@@ -270,7 +345,7 @@
     const savoir = document.createElement('button');
     savoir.type = 'button';
     savoir.dataset.outil = outil.id;
-    savoir.className = 'min-h-11 w-full rounded-xl border border-bord bg-relief/60 px-4 text-sm font-semibold text-sourdine transition hover:border-violet-500/60 hover:text-white';
+    savoir.className = 'min-h-11 w-full rounded-xl border border-bord bg-relief/60 px-4 text-sm font-semibold text-sourdine transition hover:text-white';
     savoir.textContent = 'En savoir plus';
 
     actions.append(lien, savoir);
@@ -306,7 +381,6 @@
       b.type = 'button';
       b.dataset.categorie = c;
       b.textContent = c;
-      filtres.append(b);
       return b;
     }));
     peindreFiltres();
@@ -316,10 +390,31 @@
     for (const b of filtres.children) {
       const actif = b.dataset.categorie === etat.categorie;
       b.className = actif
-        ? 'min-h-11 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-4 text-sm font-semibold text-white'
-        : 'min-h-11 rounded-xl border border-bord bg-panneau/70 px-4 text-sm font-medium text-sourdine transition hover:border-violet-500/50 hover:text-white';
+        ? 'bouton-accent min-h-11 rounded-xl px-4 text-sm font-semibold'
+        : 'min-h-11 rounded-xl border border-bord bg-panneau/70 px-4 text-sm font-medium text-sourdine transition hover:text-white';
       b.setAttribute('aria-pressed', String(actif));
     }
+  }
+
+  /* --- Balises de tête --------------------------------------------------- */
+  /* Toutes les adresses portent `?niche=<id>` — y compris l'accueil, et y
+     compris sur un domaine qui sert déjà cette niche par défaut. C'est la même
+     forme que celle écrite dans le sitemap : deux formes concurrentes pour la
+     même page, ce sont deux pages en double aux yeux de Google. */
+  const baliseMeta = (nom, valeur) => {
+    const b = document.querySelector(`meta[name="${nom}"], meta[property="${nom}"]`);
+    if (b) b.content = valeur;
+  };
+  function adresse(suffixe) {
+    return new URL(suffixe, location.href.split('?')[0]).href;
+  }
+  function tete({ titre, description, suffixe }) {
+    document.title = titre;
+    baliseMeta('description', description);
+    baliseMeta('og:title', titre);
+    baliseMeta('og:description', description);
+    baliseMeta('og:url', adresse(suffixe));
+    document.querySelector('link[rel="canonical"]').href = adresse(suffixe);
   }
 
   /* --- Modale ----------------------------------------------------------- */
@@ -337,7 +432,7 @@
     note.className = 'flex items-center gap-1.5 font-semibold text-white';
     note.append(etoiles(outil.score_avis));
     const chiffre = document.createElement('span');
-    chiffre.textContent = `${outil.score_avis.toFixed(1)}/5`;
+    chiffre.textContent = `${Number(outil.score_avis).toFixed(1)}/5`;
     note.append(chiffre);
     const prix = document.createElement('span');
     prix.className = 'font-medium text-emerald-300';
@@ -351,12 +446,13 @@
     document.body.classList.add('fige');
     $('#modale-lien').focus();
 
-    /* Le titre et la description suivent l'outil ouvert : c'est ce que lit un
-       moteur de recherche qui arrive directement sur `?outil=id`. */
-    document.title = `${outil.nom} — avis, prix et alternatives | Boîte à Outils IA`;
-    metaDescription(outil.description_courte);
-    canonique(`?outil=${outil.id}`);
-    if (pousserHistorique) history.pushState({ outil: outil.id }, '', `?outil=${outil.id}`);
+    const suffixe = `?niche=${etat.niche.id}&outil=${outil.id}`;
+    tete({
+      titre: `${outil.nom} — avis, prix et alternatives | ${etat.niche.nom}`,
+      description: outil.description_courte,
+      suffixe,
+    });
+    if (pousserHistorique) history.pushState({ outil: outil.id }, '', suffixe);
   }
 
   function fermer(pousserHistorique = true) {
@@ -364,30 +460,21 @@
     etat.ouvert = null;
     modale.classList.add('hidden');
     document.body.classList.remove('fige');
-    document.title = TITRE_ORIGINE;
-    metaDescription(DESCRIPTION_ORIGINE);
-    canonique('');
-    if (pousserHistorique) history.pushState({}, '', location.pathname);
+    const suffixe = `?niche=${etat.niche.id}`;
+    tete({ titre: etat.niche.meta_titre, description: etat.niche.meta_description, suffixe });
+    if (pousserHistorique) history.pushState({}, '', suffixe);
     if (etat.dernierFocus) etat.dernierFocus.focus();
   }
 
-  const TITRE_ORIGINE = document.title;
-  const DESCRIPTION_ORIGINE = document.querySelector('meta[name="description"]').content;
-  const metaDescription = (t) => { document.querySelector('meta[name="description"]').content = t; };
-  const canonique = (suffixe) => {
-    const balise = document.querySelector('link[rel="canonical"]');
-    balise.href = new URL(suffixe || './', balise.href).href;
-  };
-
   /* --- Données structurées ---------------------------------------------- */
   /* Une seule liste, chaque outil décrit comme application logicielle avec sa
-     note : c'est ce qui permet aux étoiles d'apparaître dans les résultats de
+     note : c'est ce qui fait apparaître les étoiles dans les résultats de
      recherche, et c'est la seule source de trafic gratuite d'un annuaire. */
   function baliserSchema() {
     document.getElementById('donnees-structurees').textContent = JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'ItemList',
-      name: TITRE_ORIGINE,
+      name: etat.niche.meta_titre,
       numberOfItems: etat.outils.length,
       itemListElement: etat.outils.map((o, i) => ({
         '@type': 'ListItem',
@@ -397,6 +484,7 @@
           name: o.nom,
           applicationCategory: o.categorie,
           description: o.description_courte,
+          datePublished: o.date_ajout,
           offers: { '@type': 'Offer', description: o.prix },
           aggregateRating: {
             '@type': 'AggregateRating',
@@ -407,6 +495,26 @@
         },
       })),
     });
+  }
+
+  /* --- Habillage de la niche -------------------------------------------- */
+  function habiller(niche) {
+    document.documentElement.style.setProperty('--teinte-1', niche.theme?.primaire || '#8b5cf6');
+    document.documentElement.style.setProperty('--teinte-2', niche.theme?.secondaire || '#3b82f6');
+
+    $('#h1-accent').textContent = niche.h1_accent;
+    $('#h1-suite').textContent = niche.h1_suite;
+    $('#slogan').textContent = niche.slogan;
+    $('#transparence').textContent = niche.note_transparence;
+    $('#pied-nom').textContent = niche.nom;
+    $('#recherche').placeholder = `Rechercher parmi les outils ${niche.nom}…`;
+    baliseMeta('og:site_name', niche.nom);
+
+    if (niche.emoji) {
+      document.querySelector('link[rel="icon"]').href =
+        `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">${niche.emoji}</text></svg>`)}`;
+    }
+    tete({ titre: niche.meta_titre, description: niche.meta_description, suffixe: `?niche=${niche.id}` });
   }
 
   /* --- Événements ------------------------------------------------------- */
@@ -447,25 +555,51 @@
   });
 
   /* --- Démarrage -------------------------------------------------------- */
+  async function charger(id) {
+    const reponse = await fetch(`niches/${id}.json`, { cache: 'no-cache' });
+    if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
+    const donnees = await reponse.json();
+    if (!donnees?.niche?.id || !Array.isArray(donnees.outils)) throw new Error('base incomplète');
+    return donnees;
+  }
+
   async function demarrer() {
+    const demande = idDeNiche();
+    const repli = nicheDuDomaine();
     let donnees;
     try {
-      const reponse = await fetch('outils.json', { cache: 'no-cache' });
-      if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
-      donnees = await reponse.json();
+      donnees = await charger(demande);
     } catch (erreur) {
-      console.error(erreur);
+      /* Un paramètre `?niche=` inconnu — lien mal recopié, adresse inventée —
+         ne doit pas donner une page d'erreur à un visiteur : on sert la niche
+         du domaine. Le panneau d'erreur reste pour le seul cas où c'est cette
+         base-là qui manque, et là il y a vraiment quelque chose à corriger. */
+      console.warn(`Niche « ${demande} » indisponible.`, erreur);
+      if (demande !== repli) {
+        try { donnees = await charger(repli); } catch (secondEchec) { console.error(secondEchec); }
+      }
+    }
+    if (!donnees) {
+      $('#erreur-fichier').textContent = `niches/${repli}.json`;
       $('#erreur').classList.remove('hidden');
       $('#compteur').textContent = '';
+      document.title = 'Base introuvable';
       return;
     }
 
+    etat.niche = donnees.niche;
     etat.outils = donnees.outils;
-    $('#slogan').textContent = donnees.site.slogan;
-    $('#transparence').textContent = donnees.site.note_transparence;
+    habiller(donnees.niche);
+
     $('#compteur-entete').textContent = etat.outils.length;
     $('#annee').textContent = new Date().getFullYear();
-    $('#date-maj').textContent = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    /* La date affichée est celle du dernier outil ajouté, pas celle du jour :
+       un site qui affiche « mis à jour aujourd'hui » sans rien avoir changé
+       ment à son visiteur, et c'est exactement ce que l'auto-pilote permet
+       d'éviter — il y a une vraie date à montrer. */
+    const dates = etat.outils.map((o) => Date.parse(o.date_ajout)).filter(Number.isFinite);
+    const derniere = dates.length ? new Date(Math.max(...dates)) : new Date();
+    $('#date-maj').textContent = derniere.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
     construireFiltres();
     afficher();

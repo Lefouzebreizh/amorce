@@ -1,11 +1,13 @@
 {
   "name": "annuaire-ia",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Annuaire et comparateur d'outils IA — page unique, sans serveur ni base de données.",
+  "description": "Réseau d'annuaires d'outils IA — un gabarit, une base par niche, sans serveur ni base de données.",
   "type": "module",
   "scripts": {
     "start": "npx --yes serve . --listen 8080",
+    "autopilot": "node auto-pilot.js",
+    "autopilot:essai": "node auto-pilot.js --dry-run",
     "sitemap": "node generate-sitemap.js"
   }
 }
