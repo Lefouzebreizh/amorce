@@ -53,6 +53,9 @@ Court. Il est lu une fois, pour redémarrer, puis n'est plus jamais consulté.
 ```markdown
 ## Reprise — [sujet en trois mots]
 
+**Le but à terme :** [ce que cette discussion cherche à obtenir au bout du
+compte — pas la tâche du jour]
+
 **Où on en est :** [une phrase : ce qui est fusionné, ce qui reste ouvert]
 
 **Le prochain pas :** [une action, assez précise pour être commencée sans
@@ -64,6 +67,14 @@ rien relire]
 
 **Où c'est écrit :** [fichiers à ouvrir — fiche, skill, section de CLAUDE.md]
 ```
+
+**Le but vient en premier, et il n'est pas facultatif.** C'est la seule ligne du
+résumé qui ne se périme pas : l'état est faux le lendemain, le prochain pas est
+franchi dans l'heure, le but tient jusqu'à ce qu'il soit atteint. C'est aussi la
+seule qui permette au fil suivant de refuser une bonne idée qui n'y mène pas —
+sans elle, une session enchaîne des pas justes vers une destination que personne
+n'a choisie. S'il ne tient pas en une ligne, c'est que le fil porte deux sujets :
+en ouvrir deux.
 
 Ne pas y recopier ce que le dépôt dit déjà : la fiche projet, la grille de
 notation, les invariants. Le résumé **pointe**, il ne duplique pas. Un résumé

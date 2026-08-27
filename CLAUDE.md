@@ -171,6 +171,20 @@ pistage sans consentement, binaire versionné.
 
 ## 9. AU DÉMARRAGE
 
+**Lire ce fichier avant le premier geste, à chaque nouveau fil.** Il est joint au
+contexte tout seul — mais joint n'est pas lu, et une session qui enchaîne sur le
+résumé de la précédente hérite de son état sans hériter de ses règles. C'est
+ainsi qu'on redemande une fusion déjà autorisée une fois pour toutes, ou qu'on
+pose un projet sans le déclarer aux six endroits.
+
+**Et tout résumé de reprise s'ouvre sur le but à terme**, avant l'état et avant
+le prochain pas : une ligne qui dit ce que cette discussion cherche à obtenir au
+bout du compte, pas ce qu'elle fait ce matin. « Où on en est » et « le prochain
+pas » se périment en une journée ; le but, non — et c'est lui, et lui seul, qui
+permet de juger si le prochain pas proposé est le bon. Un fil qui a perdu son
+but avance vite dans une direction que personne n'a choisie. Gabarit dans
+`/relais`.
+
 Le hook `.claude/hooks/session-start.sh` installe tout seul. Pas de compétence
 `auto-update-godmode` : quatre s'en partagent le travail — `/etat-du-depot`,
 `/capacites-session`, `/coherence-depot`, `/jauge`.
