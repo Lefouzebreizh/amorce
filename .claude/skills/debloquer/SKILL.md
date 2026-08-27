@@ -143,6 +143,20 @@ git log --oneline -1 origin/main
 git merge-base --is-ancestor <ton-commit> origin/main && echo "déjà fusionné"
 ```
 
+Symptôme voisin, et faux celui-là : un outil annonce des commits **non poussés**
+et « aucune branche distante » alors que la poussée vient de réussir. Un clone
+fait en `--depth 1` pose un refspec mono-branche
+(`+refs/heads/main:refs/remotes/origin/main`) : `origin/<branche>` n'est jamais
+créé en local, et tout ce qui juge l'état sur cette référence conclut à tort.
+La poussée, elle, est bien arrivée — `git ls-remote --heads origin <branche>` le
+dit, et c'est lui qui fait foi. L'élargir une fois :
+
+```bash
+git config --unset-all remote.origin.fetch
+git config --add remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+git fetch origin
+```
+
 Si c'est déjà fusionné, la branche repart de la base commune, elle ne se
 poursuit pas :
 
