@@ -56,17 +56,19 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
+- **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
+  Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
+  sont dans son `public/llms.txt`, pas ici.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — deux
   chantiers en sommeil : `mon-app-audio/` et `patrimoine/`, tests verts, mis de
   côté et non abandonnés.
 
 Build vert obligatoire avant toute poussée.
 
-**Cap — pas encore un état.** Aucun projet n'utilise Cloudflare aujourd'hui,
-mais c'est la direction quand du stockage devient nécessaire : **R2** pour les
-fichiers lourds, **D1** pour une base légère, **Workers** pour ce qui doit
-tourner près de l'utilisateur. Le premier projet qui doit héberger des binaires
-y va, plutôt que d'inventer autre chose — c'est ce qui donne son issue à
+**Cap, et désormais un état.** `hypersensible-bienveillance/` est le premier
+projet à y être : **R2** pour les fichiers lourds, **D1** pour une base légère,
+**Workers** pour ce qui doit tourner près de l'utilisateur. Le prochain projet
+qui doit héberger des binaires y va aussi, plutôt que d'inventer autre chose — c'est ce qui donne son issue à
 l'invariant « aucun binaire versionné » : les PDF de KDP, les rushes de
 `montage-auto`, les exports d'`agence` n'ont pas leur place dans Git, et il leur
 faut bien un ailleurs.

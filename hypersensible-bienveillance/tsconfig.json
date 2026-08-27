@@ -1,0 +1,17 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    // `node` est déclaré explicitement, et `@types/node` est une dépendance de ce
+    // projet-ci. Sans cela, la vérification passe en local et casse sur le runner :
+    // ce dossier est niché dans un dépôt multi-projets, TypeScript remonte
+    // l'arborescence à la recherche des types, et il trouvait celui du studio
+    // Amorce, un cran plus haut. L'intégration continue n'installe que ce
+    // projet — plus de parent à emprunter, et `node:test` devenait introuvable.
+    "types": ["@cloudflare/workers-types", "node"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*", "functions/**/*", "tests/**/*", "*.mjs"],
+  "exclude": ["node_modules", "dist", ".wrangler", ".astro"]
+}

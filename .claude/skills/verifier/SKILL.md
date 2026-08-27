@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, validation des bases et parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
+description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, tests, types et build pour le site hypersensible-bienveillance, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, validation des bases et parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
 ---
 
 # Vérifier ce dépôt
@@ -126,6 +126,36 @@ est là.
 
 **À lancer avant de pousser un changement Python**, et en premier réflexe quand
 la CI est rouge alors que tout passe en local.
+
+## Hypersensible & Bienveillance — `hypersensible-bienveillance/`
+
+```bash
+cd hypersensible-bienveillance
+npm test          # moteur CNV et lecture de journal — node --test, sans dépendance
+npm run check     # astro check + tsc --noEmit
+npm run build     # le seul à voir ce que tsc laisse passer
+```
+
+Les trois, et depuis le dossier : le projet a son propre `tsconfig.json`, ses
+propres types Cloudflare et son propre `node_modules`, la racine l'ignore
+volontairement. Le workflow `.github/workflows/hypersensible.yml` rejoue
+exactement cette séquence.
+
+**Ce que ces trois commandes ne voient pas**, et c'est l'essentiel du produit :
+le quota des cinq analyses quotidiennes, le radar branché sur D1, et la tournée
+de veille. Rien de tout cela ne tourne sous `astro dev`, qui ne sert que les
+pages — seul wrangler exécute les Pages Functions :
+
+```bash
+npm run db:init                 # base D1 locale, rejouable sans doublon
+npm run build && npm run preview   # site + fonctions sur :8788
+npm run cron                    # puis curl "localhost:8787/__scheduled?cron=0+4+*+*+*"
+```
+
+Le quota s'éprouve en appelant six fois `/api/reforme` sans `src` : cinq 200,
+puis un 429. Avec `{"src":"groupe"}`, il ne se déclenche jamais — c'est la
+promesse faite aux 48 000 membres, et c'est ce qu'il faut revérifier après toute
+retouche de `functions/api/reforme.ts`.
 
 ## Socle Agence — `agence/`
 
