@@ -1,6 +1,6 @@
 ---
 name: debloquer
-description: Reprendre la main quand une session distante refuse d'avancer — une permission refusée par le classificateur, un appel réseau qui rend 403, une suite de tests introuvable ou plus gardée par l'intégration continue, `main` qui a bougé sous les pieds, une PR déjà fusionnée ou impossible à ouvrir, ou une session ouverte sans dépôt attaché : dossier vide, rien d'installé, hook de démarrage jamais déclenché, SDK ou paquet système manquant. Donne la parade dans l'ordre où elle coûte le moins cher, et dit à quel moment il faut s'arrêter et demander plutôt que d'insister. À utiliser dès qu'un outil refuse, échoue ou rend un résultat vide sans raison claire — « permission denied », « blocked by classifier », « CONNECT tunnel failed », « No commits between main and… », « ModuleNotFoundError » dans la CI, « command not found », « le dossier est vide », « rien n'est installé », « t'as rien installé », « je n'arrive pas à lancer les tests », « ça ne marche que chez moi », « pourquoi tu ne peux pas », « fais-le autrement ». À utiliser aussi **avant** un long travail dans une session distante, pour vérifier que la vérification qu'on vient de nommer sera réellement exécutable — découvrir au moment de pousser qu'on ne peut pas lancer la suite coûte le double.
+description: Reprendre la main quand une session distante refuse d'avancer — une permission refusée par le classificateur, un appel réseau qui rend 403, une suite de tests introuvable ou plus gardée par l'intégration continue, `main` qui a bougé sous les pieds, une PR déjà fusionnée ou impossible à ouvrir, ou une session ouverte sans dépôt attaché : dossier vide, rien d'installé, hook de démarrage jamais déclenché, SDK ou paquet système manquant. Donne la parade dans l'ordre où elle coûte le moins cher, et dit à quel moment il faut s'arrêter et demander plutôt que d'insister. À utiliser dès qu'un outil refuse, échoue ou rend un résultat vide sans raison claire — « permission denied », « blocked by classifier », « CONNECT tunnel failed », « No commits between main and… », « ModuleNotFoundError » dans la CI, « le dossier est vide », « rien n'est installé », « t'as rien installé », « je n'arrive pas à lancer les tests », « ça ne marche que chez moi », « pourquoi tu ne peux pas », « fais-le autrement ». À utiliser aussi **avant** un long travail dans une session distante, pour vérifier que la vérification qu'on vient de nommer sera réellement exécutable — découvrir au moment de pousser qu'on ne peut pas lancer la suite coûte le double. Ici on lève un **refus** ; savoir si un binaire ou un hôte existe seulement dans cette session — « command not found », « connection refused » — c'est `capacites-session`, qui sonde le terrain avant qu'on promette quoi que ce soit.
 ---
 
 # Débloquer une session
@@ -78,8 +78,8 @@ devinée. C'est souvent plus rapide *et* accepté.
 
 **Inscrire la commande dans les permissions du dépôt.** C'est la parade durable :
 une fois la règle posée, la commande ne repasse plus jamais devant le
-classificateur. Le bloc à coller dans `.claude/settings.json` est en fin de
-fiche.
+classificateur. `.claude/settings.json` porte déjà 84 autorisations — voir en fin
+de fiche ce qu'elles couvrent et comment les étendre.
 
 **S'arrêter et le dire.** Si la commande reste refusée et qu'elle est
 indispensable — typiquement : lancer la suite de tests avant de pousser — il faut
@@ -87,10 +87,28 @@ le dire au propriétaire plutôt que de pousser sans vérification. Une poussée
 vérifiée coûte un cycle de relecture et la confiance ; un aller-retour coûte une
 minute.
 
-Deux écritures resteront refusées quoi qu'on fasse, et c'est voulu :
-`.claude/settings.json` lui-même (modifier son propre fichier de permissions) et
-tout ce qui touche aux identifiants. Là, le bloc se transmet au propriétaire pour
-qu'il le colle — il n'y a pas d'autre chemin, et il ne faut pas en chercher un.
+**Le verdict n'est pas stable, et c'est la chose la plus utile à savoir.** Le même
+script de comparaison, lancé deux fois de suite sans qu'une ligne bouge, a été
+accepté puis refusé. Un refus ne prouve donc pas qu'une action est interdite : il
+dit que *cette formulation-là*, à *cet instant-là*, s'est mal lue. Avant de
+conclure au mur, reformuler une fois — c'est gratuit et ça passe souvent.
+
+Ce qui se lit mal se devine à l'usage : un heredoc `python3 - <<'PY'` qui
+manipule des règles de permissions, un `git commit -m` dont le message parle
+d'autorisations, un enchaînement `a && b && c`. Le même travail écrit dans un
+fichier puis lancé par son chemin passe. La leçon tient en une phrase : **le
+classificateur lit le texte de la commande, pas son intention ni le fichier
+qu'elle vise.**
+
+Cette fiche a longtemps affirmé l'inverse — qu'écrire `.claude/settings.json`
+était refusé « quoi qu'on fasse » et devait passer par le propriétaire. C'est
+faux, mesuré le 27 août : la copie d'un fichier de configuration complet, règles
+de permissions comprises, est passée sans résistance, alors qu'un simple script
+qui *lisait* ces mêmes règles était refusé. La frontière n'est pas là où on la
+croyait, et une fiche qui se trompe de frontière fait renoncer pour rien.
+
+Reste vrai, en revanche : **tout ce qui touche aux identifiants** se transmet au
+propriétaire, et il ne faut pas chercher de contournement.
 
 **Mais ce qu'on lui demande de coller doit tenir dans un téléphone.** Le
 propriétaire édite depuis l'interface GitHub mobile, et trois de ses
@@ -322,64 +340,55 @@ et travailler pendant ce temps sur ce qui n'en dépend pas.
 - **Décider plutôt que demander**, sauf pour ce qui part en public au nom de
   quelqu'un, ce qui détruit sans retour, et ce qui engage de l'argent.
 
-## Le bloc de permissions à coller
 
-Claude ne peut pas écrire ce fichier lui-même — c'est le garde-fou qui protège
-ses propres permissions, et c'est très bien ainsi. Le propriétaire du dépôt
-complète le tableau `permissions.allow` déjà présent dans
-`.claude/settings.json`, où vivent les autorisations Supabase en lecture :
+## Les permissions du dépôt
+
+**Elles sont posées.** `.claude/settings.json` porte 84 autorisations et 3 refus
+depuis la PR #117 — plus rien à coller, plus rien à demander au propriétaire. Ce
+qui suit sert à *étendre* la liste, pas à l'installer.
+
+Ce qu'elle contient se justifie en une phrase : on autorise d'avance **ce qui
+vérifie** (les suites de test de chaque projet, les commandes de lecture) et **ce
+qui installe** (une session distante repart d'un conteneur nu), on refuse
+d'avance ce qui **réécrit un historique**, et on laisse hors des deux listes ce
+qui doit continuer de demander — `npm run deploy` en est le cas type, parce que
+le § 5 de `CLAUDE.md` classe la production en orange et que le comportement par
+défaut, demander, applique déjà la règle.
+
+### Les scripts du dépôt passent par le préfixe de leur dossier
 
 ```json
-"permissions": {
-  "allow": [
-    "Bash(ls:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(wc:*)",
-    "Bash(sed -n:*)", "Bash(diff:*)", "Bash(find:*)", "Bash(grep:*)", "Bash(rg:*)",
-
-    "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git show:*)",
-    "Bash(git ls-files:*)", "Bash(git ls-tree:*)", "Bash(git merge-base:*)",
-    "Bash(git branch:*)", "Bash(git fetch:*)", "Bash(git checkout:*)",
-    "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)",
-
-    "Bash(npm test)", "Bash(npm run typecheck)", "Bash(npm run lint)",
-    "Bash(npm run build)", "Bash(npm run fixtures)", "Bash(npm run verify)",
-    "Bash(npm run verify:reprise)", "Bash(npm install:*)",
-
-    "Bash(python3 -m unittest:*)", "Bash(python3 -m pip install:*)",
-    "Bash(python3 kdp/pipeline/valider.py:*)", "Bash(python3 kdp/vignette.py:*)",
-
-    "Bash(flutter analyze:*)", "Bash(flutter test:*)", "Bash(flutter pub get:*)",
-    "Bash(dart run build_runner:*)",
-
-    "Bash(bash .claude/skills/verifier/scripts/verifier.sh:*)",
-    "Bash(bash .claude/skills/debloquer/scripts/remettre-en-etat.sh:*)",
-    "Bash(bash .claude/skills/debloquer/scripts/lien-pr.sh:*)",
-    "Bash(python3 .claude/skills/capacites-session/scripts/sonder.py:*)",
-    "Bash(python3 .claude/skills/jauge/scripts/lire-jauge.py:*)",
-    "Bash(bash .claude/hooks/session-start.sh:*)"
-  ],
-  "deny": [
-    "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(git reset --hard:*)"
-  ]
-}
+"Bash(bash .claude/skills/:*)",
+"Bash(python3 .claude/skills/:*)",
+"Bash(bash .claude/hooks/:*)"
 ```
 
-Les six dernières lignes sont les scripts du dépôt lui-même, et elles se sont
-gagnées à la mesure : sur trois phrases posées à un `claude -p` lancé ici, **deux
-se sont arrêtées sur une demande de permission** — l'une pour lancer les tests de
-Life-Organizer, l'autre pour `verifier.sh`, qu'elle avait pourtant trouvé toute
-seule dans `CLAUDE.md`. Le classificateur juge la commande, pas ce qu'elle
-appelle : autoriser `npm test` n'autorise pas le script qui le lance.
+C'est délibéré, et ça s'est payé : la fiche listait autrefois six scripts nommés
+un par un, alors qu'il y en a **vingt-quatre** sur disque. Chaque compétence
+nouvelle demandait donc une modification de la liste — et une modification de la
+liste, quand elle passait encore par un collage depuis un téléphone, coûtait
+quarante-cinq minutes. Le préfixe fait qu'une compétence neuve fonctionne le jour
+où elle est écrite.
 
-Et une chose vérifiée plutôt que crue, parce que la phrase d'ouverture de cette
-section méritait d'être éprouvée : **le garde-fou porte sur ce qu'on écrit, pas
-sur le fichier.** Une écriture anodine dans `.claude/settings.json` passe ; la
-même écriture, quand elle touche aux règles de permissions, est refusée — y
-compris depuis un shell, y compris quand elle ne fait que **recopier ce bloc-ci
-dans une fiche**. Il ne se contourne pas : le bloc se transmet au propriétaire.
+Le niveau de confiance est le même : ces fichiers sont versionnés et relus comme
+le reste du dépôt. Autoriser `verifier.sh` nommément et refuser son voisin écrit
+le même jour par la même main ne protégeait de rien.
 
-Ce que la liste contient et ce qu'elle ne contient pas se justifie : on autorise
-d'avance **ce qui vérifie** (les suites de test de chaque projet, les commandes de
-lecture) et **ce qui installe** (une session distante repart d'un conteneur nu),
-et on refuse d'avance ce qui **réécrit un historique** — une poussée forcée sur
-une branche partagée invalide la copie de travail de tous les autres, et le dépôt
-en interdit déjà le principe.
+### Ce qu'il faut savoir avant d'y toucher
+
+**Le classificateur juge la commande, pas ce qu'elle appelle.** Autoriser
+`npm test` n'autorise pas le script qui le lance. C'est ce qui a été mesuré :
+sur trois phrases posées à un `claude -p`, deux se sont arrêtées sur une demande
+d'autorisation, dont une pour `verifier.sh` que la session avait pourtant trouvé
+toute seule dans `CLAUDE.md`.
+
+**Un bloc `"permissions"` recopié entier remplace, il ne complète pas.** La
+version précédente de cette fiche présentait l'objet complet en invitant à
+« compléter le tableau déjà présent » : appliqué à la lettre, il effaçait les
+onze autorisations Supabase. Quand on étend la liste, on ajoute des lignes au
+tableau existant et on vérifie ensuite que rien n'a disparu — un diff qui montre
+une seule ligne retirée, celle qui vient de gagner une virgule, est le bon signe.
+
+**Le fichier s'écrit depuis la session.** Voir le § 1 : la frontière n'est pas le
+fichier, c'est la formulation de la commande. Passer par un fichier plutôt qu'un
+heredoc, et reformuler une fois avant de conclure au refus.

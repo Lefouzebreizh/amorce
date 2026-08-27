@@ -60,6 +60,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nPopmenu part d'un constat simple : la carte est la page la plus consultée d'un restaurant, et presque toujours un PDF illisible sur téléphone. L'outil en fait une page interactive, où chaque plat a ses photos et ses avis, et se sert de ces données pour alimenter le marketing — courriels, messages texte, publications, réponses aux avis en ligne rédigées dans le ton de la maison.\n\n## Points forts\n- Carte interactive et référençable, là où un PDF n'apporte aucun trafic\n- Réponses aux avis rédigées automatiquement, ce que personne ne fait sérieusement\n- Courriels et messages texte déclenchés sur le comportement réel des clients\n- Site, carte, réservation et marketing dans un même abonnement\n\n## Points faibles\n- Facturation mensuelle élevée pour un établissement indépendant\n- Fonctionnalités calibrées pour le marché américain\n- Migrer un site existant vers leur plateforme est un engagement de long terme\n\n## Idéal pour\nLes restaurants et petites chaînes dont la présence en ligne se limite à une carte en PDF et à une page sociale mise à jour de loin en loin.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "tenzo",
+      "nom": "Tenzo",
+      "categorie": "Pilotage",
+      "prix": "À partir de 100 £/mois par établissement",
+      "description_courte": "Tous les chiffres du restaurant réunis dans un tableau de bord, avec l'alerte envoyée quand quelque chose sort de l'ordinaire.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/tenzo",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nTenzo agrège la caisse, le planning, les stocks et les avis en ligne dans un même tableau de bord, et surtout envoie une alerte quand un indicateur décroche — coût matière qui grimpe, ticket moyen qui baisse, note d'avis qui chute sur un établissement. C'est le passage du reporting hebdomadaire que personne ne lit au signal qui arrive au moment où l'on peut encore agir.\n\n## Points forts\n- Connecte les logiciels de caisse et de planning déjà en place\n- Alertes envoyées sur téléphone, plutôt qu'un rapport à aller consulter\n- Comparaison entre établissements d'un même groupe, sur des bases homogènes\n- Prévision de ventes correcte pour un outil de pilotage généraliste\n\n## Points faibles\n- Sans données de caisse propres, les indicateurs mentent\n- Facturé par établissement : le coût grimpe vite sur un réseau\n- Moins fin que les outils spécialisés sur le planning et la matière\n\n## Idéal pour\nLes gérants de plusieurs établissements qui découvrent les mauvais chiffres en fin de mois, quand il n'y a plus rien à corriger.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }
