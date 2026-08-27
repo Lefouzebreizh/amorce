@@ -33,6 +33,12 @@ const fs = require('fs');
 const path = require('path');
 
 const FICHIER = path.join(__dirname, 'outils.json');
+const DOSSIER_VIVIER = path.join(__dirname, 'vivier');
+
+// En dessous de ce seuil, publier tous les deux jours ne tient plus une
+// semaine. L'alerte sort dans le journal du workflow, seul endroit qu'on
+// regarde quand la chaîne tourne sans personne.
+const SEUIL_ALERTE = 3;
 
 /* ────────────────────────────────────────────────────────────────────────────
    Le vivier. Quinze fiches prêtes à publier, dans leur ordre de parution.
@@ -179,6 +185,54 @@ const BACKLOG = [
 
 /* ── Utilitaires ─────────────────────────────────────────────────────────── */
 
+/**
+ * Fiches supplémentaires déposées dans `vivier/`, un fichier JSON par outil
+ * (ou un tableau d'outils dans un même fichier).
+ *
+ * Le tableau ci-dessus suffit à trente jours de publication ; au trente et
+ * unième, il faut le rallonger. Éditer un fichier de mille lignes depuis un
+ * téléphone pour ajouter une fiche est le genre de friction qui fait qu'on ne
+ * le fait pas — et un site qui cesse de publier meurt en silence. Déposer un
+ * petit fichier dans un dossier, en revanche, se fait n'importe où, et
+ * `nouvelle-fiche.mjs` en écrit le squelette.
+ *
+ * Les fiches du dossier passent après celles du code : l'ordre de parution
+ * déjà décidé ne bouge pas quand on rallonge la file.
+ */
+function chargerVivier() {
+  if (!fs.existsSync(DOSSIER_VIVIER)) { return []; }
+  const fiches = [];
+  fs.readdirSync(DOSSIER_VIVIER)
+    .filter((nom) => nom.endsWith('.json'))
+    .sort()
+    .forEach((nom) => {
+      const chemin = path.join(DOSSIER_VIVIER, nom);
+      let contenu;
+      try {
+        contenu = JSON.parse(fs.readFileSync(chemin, 'utf8'));
+      } catch (e) {
+        throw new Error('vivier/' + nom + ' est illisible : ' + e.message);
+      }
+      const lot = Array.isArray(contenu) ? contenu : [contenu];
+      lot.forEach((fiche) => {
+        if (!fiche || typeof fiche.id !== 'string' || !fiche.id) {
+          throw new Error('vivier/' + nom + ' contient une fiche sans identifiant.');
+        }
+        fiches.push(fiche);
+      });
+    });
+  return fiches;
+}
+
+// Une fiche fabriquée par `nouvelle-fiche.mjs` et laissée en l'état ne doit
+// jamais partir en ligne : la chaîne publie sans relecture humaine, donc c'est
+// ici, et nulle part ailleurs, qu'on peut encore l'arrêter.
+function incomplete(fiche) {
+  return Object.values(fiche).some(
+    (valeur) => typeof valeur === 'string' && valeur.includes('À COMPLÉTER')
+  );
+}
+
 function dateDuJour() {
   const maintenant = new Date();
   const mois = String(maintenant.getMonth() + 1).padStart(2, '0');
@@ -223,10 +277,23 @@ function main() {
 
   const catalogue = lireCatalogue();
   const dejaLa = new Set(catalogue.map((o) => String(o && o.id)));
-  const restants = BACKLOG.filter((o) => !dejaLa.has(o.id));
+  const vus = new Set();
+  const vivier = BACKLOG.concat(chargerVivier()).filter((o) => {
+    // Une même fiche présente dans le code et dans le dossier serait publiée
+    // deux fois sous deux dates : on ne garde que la première rencontrée.
+    if (vus.has(o.id)) { return false; }
+    vus.add(o.id);
+    return true;
+  });
+  const publiables = vivier.filter((o) => !dejaLa.has(o.id));
+  const restants = publiables.filter((o) => !incomplete(o));
+  const enChantier = publiables.length - restants.length;
 
   console.log('· Catalogue actuel  : ' + catalogue.length + ' outil(s)');
-  console.log('· Vivier disponible : ' + restants.length + ' fiche(s) en attente');
+  console.log('· Vivier disponible : ' + restants.length + ' fiche(s) prête(s)');
+  if (enChantier > 0) {
+    console.log('· ' + enChantier + ' fiche(s) encore marquée(s) « À COMPLÉTER » : gardée(s) hors ligne.');
+  }
 
   if (restants.length === 0) {
     console.log('· Vivier épuisé : rien à publier aujourd\'hui, le catalogue reste inchangé.');
@@ -240,12 +307,26 @@ function main() {
 
   console.log('· Publié : ' + choisi.nom + ' (' + choisi.categorie + ') — ' + choisi.date_ajout);
   console.log('· Nouveau total : ' + catalogue.length + ' outil(s)');
-  console.log('· Restera ensuite ' + (restants.length - 1) + ' fiche(s) au vivier.');
+
+  const reste = restants.length - 1;
+  console.log('· Restera ensuite ' + reste + ' fiche(s) au vivier, soit ' + (reste * 2) + ' jours.');
+  if (reste <= SEUIL_ALERTE) {
+    console.log('');
+    console.log('⚠ Vivier presque vide. Rallongez-le avant la panne sèche :');
+    console.log('  node nouvelle-fiche.mjs "Nom de l\'outil" Categorie');
+  }
 }
 
-try {
-  main();
-} catch (e) {
-  console.error('✗ Auto-pilote interrompu : ' + e.message);
-  process.exit(1);
+if (require.main === module) {
+  try {
+    main();
+  } catch (e) {
+    console.error('✗ Auto-pilote interrompu : ' + e.message);
+    process.exit(1);
+  }
 }
+
+// Exporté pour `verifier.mjs`, qui contrôle les fiches en attente avec les
+// mêmes règles que celles déjà publiées — une fiche fautive doit être signalée
+// avant sa parution, pas le matin où elle sort.
+module.exports = { BACKLOG, chargerVivier, dateDuJour };

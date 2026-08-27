@@ -16,6 +16,10 @@
 #   est épuisé, l'auto-pilote ne modifie rien et le workflow se termine en vert
 #   sans commit vide — un historique de commits « aucun changement » rendrait
 #   illisible celui des vraies publications.
+# * `verifier.mjs` tourne **avant** le commit. Personne ne relit ce qui part :
+#   si une fiche est fautive ou le sitemap périmé, le seul moment où l'on peut
+#   encore arrêter la chaîne, c'est celui-ci. Un dépôt sain vaut mieux qu'une
+#   publication tenue coûte que coûte.
 
 name: Auto-pilote Radar IA
 
@@ -66,6 +70,10 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
         run: node generate-sitemap.js
 
+      - name: Contrôler avant de committer
+        working-directory: ia-affiliation
+        run: node verifier.mjs
+
       - name: Committer et pousser les changements
         run: |
           set -euo pipefail
@@ -78,4 +86,23 @@ jobs:
           fi
           NOMBRE=$(node -e "console.log(require('./ia-affiliation/outils.json').length)")
           git commit -m "Publier une nouvelle fiche outil (catalogue à ${NOMBRE})"
-          git push origin HEAD:main
+          # Un humain ayant poussé sur main entre-temps ferait échouer le push et
+          # perdre la publication du jour. On se replace au-dessus de lui plutôt
+          # que d'abandonner : la fiche ajoutée ne touche à rien d'autre.
+          git push origin HEAD:main || {
+            echo "Push refusé, main a bougé : rebase puis seconde tentative."
+            git pull --rebase origin main
+            git push origin HEAD:main
+          }
+
+  mettre_en_ligne:
+    name: Mettre le site en ligne
+    needs: publier
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    # Un commit poussé par le jeton d'Actions ne déclenche aucun workflow : sans
+    # cet appel explicite, la fiche du jour n'apparaîtrait sur le site qu'au
+    # cycle suivant.
+    uses: ./.github/workflows/radar-ia-pages.yml

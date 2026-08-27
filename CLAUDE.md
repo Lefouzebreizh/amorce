@@ -247,6 +247,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/resilier-un-contrat` | Jusqu'à quand on peut encore partir sans frais, quel texte invoquer, et le courrier prêt à signer. |
 | `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
 | `/tiktok` | La ligne éditoriale du volet TikTok, ses huit concepts répétables, les deux seuls dispositifs de tournage et la façon dont un script s'écrit ici. |
+| `/radar-ia` | Le site d'affiliation auto-piloté : les quatre commandes qui remplacent tout geste manuel, les onze pièges déjà payés — dont celui du CDN absent, qui faisait passer au vert un test de rendu alors que rien ne s'ouvrait — et le tableau symptôme → cause. |
 | `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
 | `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
@@ -367,6 +368,21 @@ dans ce dépôt, avec la vraie liste de compétences :
 | --- | --- |
 | « j'ai le cerfa 15646*01 […] tu peux me le remplir ? » | `/formulaire-pdf` |
 | « regarde rush-03.mp4 […] dis-moi ce qui se dit dedans » | `/transcription-media` |
+
+Et une mesure qui a servi à corriger une compétence plutôt qu'à la confirmer.
+La première description de `/radar-ia` couvrait « le site ne publie plus rien »
+mais **pas** son geste le plus fréquent :
+
+| Ce qu'on tape | Avant | Après |
+| --- | --- | --- |
+| « ajoute Cursor et Gamma à la liste des outils » | *aucune* | `/radar-ia` |
+| « remplace tous les liens d'affiliation » | `/radar-ia` | `/radar-ia` |
+| « le son a disparu à l'export sur mon téléphone » | `/debogage-systematique` | `/debogage-systematique` |
+| « écris-moi trois accroches pour une vidéo sur les outils IA » | `/charte-editoriale` | `/charte-editoriale` |
+
+Il manquait la phrase que l'on tape vraiment. Une description qui décrit le
+projet déclenche sur les pannes ; il faut y écrire aussi le **geste ordinaire**,
+celui qu'on répète et qu'on formule sans jamais nommer le projet.
 
 Celle du dépôt gagne dans les deux cas, sans qu'on ait rien à écrire. Une
 description précise et ancrée sur des projets nommés l'emporte sur une

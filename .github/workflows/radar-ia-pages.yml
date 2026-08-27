@@ -1,0 +1,69 @@
+# Mise en ligne de Radar IA sur GitHub Pages.
+#
+# Sans ce workflow, l'auto-pilote publiait dans le dépôt et nulle part ailleurs :
+# le catalogue grossissait, mais aucun visiteur ne voyait rien. C'est ici que
+# « déployé en direct » devient vrai.
+#
+# `workflow_call` n'est pas un ornement. Un commit poussé avec le jeton
+# automatique de GitHub Actions **ne déclenche aucun autre workflow** — c'est
+# une protection anti-boucle du produit, pas un réglage. L'auto-pilote appelle
+# donc ce workflow lui-même, en fin de course, faute de quoi une publication ne
+# serait mise en ligne qu'au cycle suivant, deux jours plus tard.
+#
+# Seul `ia-affiliation/` est publié : le dépôt héberge dix projets, et les neuf
+# autres n'ont rien à faire sur un site public.
+
+name: Radar IA — mise en ligne
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ia-affiliation/**'
+      - '.github/workflows/radar-ia-pages.yml'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une mise en ligne à la fois, et on garde la plus récente : deux déploiements
+# concurrents se disputeraient le même environnement.
+concurrency:
+  group: pages-radar-ia
+  cancel-in-progress: true
+
+jobs:
+  deployer:
+    name: Publier le dossier du site
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.miseEnLigne.outputs.page_url }}
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          # `ref: main` explicitement, et non le SHA du déclencheur. Appelé par
+          # l'auto-pilote, ce workflow hérite du SHA d'avant sa publication : on
+          # mettrait en ligne le catalogue de l'avant-veille sans que rien ne
+          # signale l'erreur.
+          ref: main
+
+      - name: Contrôler le site avant de le montrer
+        run: node ia-affiliation/verifier.mjs
+
+      - name: Préparer Pages
+        uses: actions/configure-pages@v5
+
+      - name: Empaqueter le dossier du site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ia-affiliation
+
+      - name: Mettre en ligne
+        id: miseEnLigne
+        uses: actions/deploy-pages@v4
