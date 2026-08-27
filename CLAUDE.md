@@ -257,6 +257,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/api-tierce-verifiee` | Lire la surface réelle d'une bibliothèque avant d'écrire contre elle, et provoquer l'erreur pour connaître sa vraie classe — ce qui a attrapé un `except` qui n'attrapait rien. |
 | `/relais` | Clore un fil devenu lourd sans rien perdre : l'état se rassemble depuis le dépôt, jamais de mémoire. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
+| `/nouveau-projet` | Les six endroits où un projet se déclare pour être installé, vérifié et gardé — et ce qui se déclare tout seul. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/debloquer` | Ce qui arrête une session distante et comment repartir : permission refusée par le classificateur, mandataire réseau qui rend 403, `main` fusionné sous les pieds, suite de tests sortie du champ de la CI. Dit aussi quand s'arrêter et demander. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
