@@ -19,6 +19,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/debogage-systematique` | >- Diagnostiquer un bug, un test qui échoue ou un comportement inattendu en trouvant la cause avant de proposer le moindre correctif. Dit quelle… |
 | `/demarrer-projet-client` | Fabriquer un nouveau projet client de l'agence à partir du socle `agence/` — copie, renommage, branchements à la racine, intégration continue, en une… |
 | `/dependance-indisponible` | Livrer quand ce dont le code a besoin n'est pas là — clé d'API absente, GPU manquant, logiciel propriétaire non installé, réseau filtré, poids de… |
+| `/deposer-sur-kdp` | Accompagner le dépôt d'un livre papier sur Amazon KDP une fois les fichiers prêts — l'ordre réel des trois onglets, les réglages d'impression qui ne… |
 | `/etalonner` | Faire tenir ensemble les plans d'un montage, puis poser un rendu filmique — détection des coupes, mesure de la luminance et de la dominante de chaque… |
 | `/etat-du-depot` | Répondre « qu'y a-t-il dans ce dépôt et où en est-ce » par une mesure plutôt que par une liste écrite à la main — les chantiers **découverts**… |
 | `/extraction-multiformat` | >- Ouvrir un fichier non textuel pour répondre à une question dessus, en écrivant et exécutant un script Python local plutôt qu'en déclarant le… |
