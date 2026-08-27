@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, LayoutDashboard, ShieldCheck, Zap } from 'lucide-react';
 
+import { PiedDePage } from '@/components/pied-de-page';
 import { variantesBouton } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
 import { lireSession } from '@/lib/supabase/session';
@@ -72,6 +73,8 @@ export default async function PageAccueil() {
           texte="Les pages arrivent déjà remplies, sans écran de chargement au premier affichage."
         />
       </section>
+
+      <PiedDePage />
     </main>
   );
 }
