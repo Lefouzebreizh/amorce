@@ -234,7 +234,12 @@ doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
 GitHub passe par le serveur MCP (`mcp__github__*`), jamais par `gh` ni `curl` :
 l'appel direct rend 403, et c'est l'outil qu'il faut changer, pas la
-configuration. Supabase : lecture d'office, `execute_sql` et `apply_migration`
+configuration. Cet accès se donne à la **conversation**, jamais par le dépôt :
+une session peut naître sans lui, et rien ne le signale. Le contrôler donc **au
+premier message** et le dire aussitôt — découvrir à la poussée qu'on ne pourra
+pas fusionner coûte un cycle entier, mesuré sur la PR #94.
+
+Supabase : lecture d'office, `execute_sql` et `apply_migration`
 non. Adobe, Gmail, Agenda et Drive servent le média, les factures, les échéances
 et les fichiers.
 

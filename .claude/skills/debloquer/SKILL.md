@@ -130,6 +130,27 @@ moment de pousser fait perdre le cycle entier. Le repli est de pousser la
 branche et de laisser le propriétaire ouvrir la PR — pas de chercher une
 troisième voie, il n'y en a pas.
 
+Et une chose qui ressemble à une disparition sans en être une :
+**un outil MCP peut cesser de répondre en cours de session sous son nom lisible
+et continuer de répondre sous son identifiant.** Mesuré ici :
+`mcp__Claude_Code_Remote__get_session` a marché, puis a rendu « No such tool
+available » une heure plus tard, quand `mcp__bf7c680d-…__get_session` passait
+toujours. Le serveur n'était pas parti — c'est l'alias qui avait cessé de
+résoudre.
+
+Deux conséquences, et la seconde est un défaut latent :
+
+- Devant « No such tool available », essayer la forme en identifiant avant de
+  conclure que la capacité est perdue. L'identifiant se lit dans le nom complet
+  d'un outil du même serveur.
+- Une entrée de `permissions.allow` écrite sur le nom lisible peut cesser de
+  correspondre au milieu d'une session. Les onze entrées `mcp__Supabase__*` de
+  `.claude/settings.json` portent ce risque : le jour où l'alias ne résout plus,
+  la lecture accordée d'office redemande une confirmation, sans que rien
+  n'explique pourquoi. Ce fichier ne se corrige pas depuis une session — il est
+  refusé par construction — donc la parade est de le savoir, et de le signaler
+  au propriétaire plutôt que de chercher ce qui a changé dans le dépôt.
+
 Symptôme le plus déroutant : `create_pull_request` rend **« No commits between
 main and <branche> »**. Ça ne veut pas dire que le travail a disparu, mais qu'il
 est **déjà dans `main`** — quelqu'un a fusionné la PR entre-temps.
