@@ -94,10 +94,30 @@ fiche KDP — c'est exactement le piège.
 
 ## Prompt
 
-À préfixer du bloc de style commun de `kdp/tome2/DOSSIER.md`, qui verrouille
-l'anatomie de Zéphy et la palette des deux personnages.
+**Le prompt ci-dessous est complet : il se colle tel quel.** N'y préfixez pas le
+bloc de style de `kdp/tome2/DOSSIER.md` — la moitié de ce bloc décrit une
+planche intérieure (grille de bande dessinée 2×2, médaillons numérotés, bulles
+de dialogue, titre en script, parchemin) et produirait ici une couverture en
+planche de BD, exactement ce que la direction retenue écarte.
+
+Ce qu'il fallait en garder — le style d'aquarelle, et surtout **les deux
+descriptions de personnages qui verrouillent l'anatomie de Zéphy** — est déjà
+repris ci-dessous. C'est ce verrou qui évite la dérive constatée au Tome 1 :
+crinière moutarde en pages 6 et 9, Roussy en chaton page 19.
 
 ```
+Children's book illustration, soft watercolour and coloured-pencil style, warm
+vintage cream paper texture, gentle autumn palette.
+
+ROUSSY: a small slender red fox cub, copper-orange fur, white chest and white
+tail tip, amber eyes, expressive eyebrows. Quadruped fox anatomy, never
+humanised.
+
+ZEPHY: a small winged zebra foal. Realistic equine anatomy — four hooves, no
+human torso, no hands. Black and white stripes, mane and tail tuft in violet and
+gold, large feathered wings in violet fading to gold. Comic, rubbery, highly
+expressive face.
+
 Front cover illustration for a square children's picture book, 2600 x 2600
 pixels. NO TEXT ANYWHERE IN THE IMAGE — no title, no lettering, no signature.
 
