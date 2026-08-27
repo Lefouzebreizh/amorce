@@ -91,24 +91,32 @@ as commencé quoi récemment ?
   soignée contredit la phrase « elle est moche ». Tourne-la, monte-la en une
   heure, publie-la. Sa valeur est d'exister le jour 1.
 
-## Une décision à prendre avant de publier
+## Ce qui a été publié le jour 1, et la dette que ça crée
 
-Une version de 11 s existe déjà, montée le [ ] — **par la machine, pas par
-toi**. Elle a été taillée dans une première prise de voix : les quatre phrases
-qui restaient vraies ont été gardées, les deux qui ne l'étaient plus ont été
-coupées. Elle ne porte donc ni les quatre ans, ni la BD, ni les sept jours.
+**C'est la version courte qui est sortie, et ce n'est pas toi qui l'as montée.**
 
-Sur une chaîne dont le sujet est « j'apprends à monter en public », qui a monté
-n'est pas un détail d'attribution. Deux sorties, et les deux sont honnêtes :
+Elle dure 10,87 s et ne porte que quatre phrases — l'accroche, l'engagement,
+« elle est moche et je la publie quand même », et le rendez-vous. Elle a été
+taillée dans la première prise de voix : les quatre phrases restées vraies ont
+été gardées, les deux que les sept derniers jours avaient rendues fausses ont
+été coupées. Ni les quatre ans, ni la BD, ni les sept jours n'y sont donc.
 
-- **Publier celle-là**, et le dire dans la vidéo 2 : « celle d'hier, c'est une
-  IA qui l'a montée. Aujourd'hui j'essaie tout seul. » C'est un bon épisode 2,
-  et il tient la promesse du feuilleton.
-- **Refaire celle-ci** dans le studio, avec les trois phrases manquantes
-  enregistrées. C'est la version complète, et c'est toi qui l'auras montée.
+Le montage est l'œuvre de la machine : recadrage des six images, transitions,
+sous-titres calés, export vérifié. Le choix a été fait en connaissance de
+cause — publier le jour 1 valait mieux qu'attendre une version parfaite.
 
-Aucune des deux n'est à recommander d'avance : elles engagent ce que tu
-racontes, pas une question technique.
+**La vidéo 2 doit le dire.** Pas par scrupule : parce que c'est le meilleur
+épisode 2 possible sur une chaîne dont le sujet est d'apprendre à monter en
+public. « Celle d'hier, c'est une IA qui l'a montée. Aujourd'hui j'essaie tout
+seul » ouvre exactement la boucle que le feuilleton promet — et un spectateur
+qui découvre la chose plus tard, tout seul, la vit comme une omission.
+
+**Et il reste une version complète à faire**, avec les trois phrases jamais
+enregistrées : « Quatre ans que je fabrique des images avec l'IA », « Il y a
+deux semaines, j'ai fini une BD pour enfants. J'ai commencé le tome 2 », « Le
+montage, ça fait sept jours ». C'est le déroulé écrit plus haut. Elle n'est pas
+perdue : elle fait un excellent rappel au jour 30, quand il y aura de quoi
+comparer.
 
 ## Variante, le jour où tu auras une timeline
 
