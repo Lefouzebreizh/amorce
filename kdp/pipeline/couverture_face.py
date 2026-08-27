@@ -187,9 +187,16 @@ def composer(bordure: Path, illustration: Path, cible: Path,
                        color=OR_SOURD, width=1.1)
 
     if pleine_page:
-        _poser(page, fitz.Rect(gauche, 0.900 * hauteur, droite, 0.930 * hauteur),
+        # Le bas du bloc auteur se déduit de la zone de sécurité au lieu de se
+        # viser en fraction de hauteur. C'est en le visant à l'œil que « Tome 1 »
+        # est descendu à 0,354 po du trait de coupe, sous les 0,375 po que le
+        # commentaire de BANDEAU énonce pourtant deux écrans plus haut. Rien ne
+        # le signalait : un texte dans la zone de sécurité s'imprime
+        # normalement, jusqu'au jour où le massicot tombe mal.
+        bas = hauteur - (charte.FOND_PERDU + 0.375) * charte.POUCE_EN_POINTS
+        _poser(page, fitz.Rect(gauche, bas - 31, droite, bas - 13),
                AUTEUR, "corps", 14, BRUN)
-        _poser(page, fitz.Rect(gauche, 0.928 * hauteur, droite, 0.950 * hauteur),
+        _poser(page, fitz.Rect(gauche, bas - 14, droite, bas),
                TOME, "ital", 10, BRUN_PALE)
     else:
         _poser(page, fitz.Rect(gauche, 0.805 * hauteur, droite, 0.858 * hauteur),
