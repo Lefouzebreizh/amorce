@@ -122,21 +122,31 @@ projet. C'est la seule liste tenue à jour quand un projet déménage. La lire p
 que de deviner un chemin.
 
 **Est-elle réellement lancée ?** `.github/workflows/tests-python.yml` découvre les
-suites plutôt que de les énumérer, ce qui est la bonne idée — mais le motif de
-découverte a une profondeur. Un projet rangé un cran plus bas
-(`archives-backlog/patrimoine/tests`) sort du champ sans qu'aucune ligne rouge
-n'apparaisse : les tests existent, ils sont verts, et plus personne ne les lance.
+suites plutôt que de les énumérer, ce qui est la bonne idée — mais toute
+découverte a une profondeur. Le motif a déjà été `*/tests`, et le jour où le
+studio audio et l'assistant d'allocation sont descendus sous `archives-backlog/`,
+leurs soixante-deux tests sont sortis du champ sans qu'aucune ligne rouge
+n'apparaisse : les tests existaient, ils étaient verts, et plus personne ne les
+lançait. C'est le mode d'échec le plus coûteux du dépôt, parce qu'il est
+silencieux — et il l'est doublement quand « tests verts » est la condition de
+reprise écrite sur la fiche d'un projet en sommeil.
 
-C'est le mode d'échec le plus coûteux du dépôt, parce qu'il est silencieux.
-Après tout déplacement de projet, vérifier que la découverte le voit encore :
+La boucle passe aujourd'hui par `find -maxdepth 3`, ce qui couvre un projet
+rangé un cran plus bas. Un quatrième niveau sortirait encore du champ : après
+tout déplacement, refaire tourner la découverte à la main et compter.
 
 ```bash
-git ls-files '*/tests/test_*.py' '*/*/tests/test_*.py'
+for tests in $(find . -maxdepth 3 -type d -name tests -not -path '*/node_modules/*' | sort); do
+  ls "$tests"/test_*.py >/dev/null 2>&1 && echo "$tests"
+done
 ```
 
-et comparer avec ce que la boucle du workflow couvre. Quand un test importe une
-bibliothèque absente, c'est `.github/requirements-tests.txt` qu'on complète — un
-seul endroit, exprès, et volontairement plus court que le hook.
+Quand un test importe une bibliothèque absente, c'est
+`.github/requirements-tests.txt` qu'on complète — un seul endroit, exprès, et
+volontairement plus court que le hook. Avant d'ajouter une suite à la CI,
+vérifier ce qu'elle atteint vraiment : une dépendance importée **tardivement**,
+dans le corps d'une fonction qu'aucune assertion ne traverse, n'a pas à y
+figurer.
 
 ## 5. Ce qui fait gagner le plus de temps
 
@@ -156,8 +166,9 @@ seul endroit, exprès, et volontairement plus court que le hook.
 ## Le bloc de permissions à coller
 
 Claude ne peut pas écrire ce fichier lui-même — c'est le garde-fou qui protège
-ses propres permissions, et c'est très bien ainsi. Le propriétaire du dépôt le
-colle dans `.claude/settings.json`, au même niveau que `hooks` et `statusLine` :
+ses propres permissions, et c'est très bien ainsi. Le propriétaire du dépôt
+complète le tableau `permissions.allow` déjà présent dans
+`.claude/settings.json`, où vivent les autorisations Supabase en lecture :
 
 ```json
 "permissions": {
