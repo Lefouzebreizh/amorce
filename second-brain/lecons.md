@@ -112,3 +112,25 @@ n'avait vu.
 
 **Portée générale :** l'outil manquant coûte une heure ; le contournement répété
 coûte toutes les heures suivantes.
+
+---
+
+## Un système qui publie tout seul doit regarder ce qu'il publie
+
+*Coût évité : onze sites cassés pendant une semaine.*
+
+L'auto-pilote du réseau d'annuaires valide ses données avant et après écriture,
+puis pousse sur `main`. Sa poussée ne redéclenche aucun workflow — c'est voulu,
+sans quoi elle bouclerait. Personne ne relit le diff. Donc rien ne regardait la
+page.
+
+Or la validation juge la **structure** : un nom d'outil de soixante-dix
+caractères passe les 0 erreur de `valider.js` et déborde la grille sur un écran
+de 390 px. Fabriqué exprès pour vérifier, le défaut est bien sorti — rouge au
+parcours en navigateur, vert à la validation des données.
+
+**Portée générale :** la question n'est pas « ce qui part est-il valide » mais
+« qui regarde ce qui part ». Un contrôle qu'on juge trop lent pour une pull
+request — parce qu'on le relancerait sans le lire — devient exactement le bon
+contrôle là où personne ne relit rien. Et il se pose **avant** la publication,
+pas après : ne rien publier est un incident visible et réversible.
