@@ -5,6 +5,36 @@ description: Fabriquer la bande-son d'une vidéo — voix off **synthétisée su
 
 # Le son se juge en LUFS, pas en décibels de crête
 
+## Un bruitage grave doit être porté sur le téléphone
+
+Le défaut ne s'entendait pas au casque, et c'est ce qui le rendait durable.
+Mesurée en filtrant la palette comme le fait un haut-parleur de téléphone —
+rien sous 400 Hz — elle rendait ceci :
+
+| bruitage | avant | après | gain |
+| --- | --- | --- | --- |
+| grondement | **−72,1 dB** | −41,4 dB | **+30,7** |
+| nappe_sombre | −39,4 dB | −30,5 dB | +8,9 |
+| boom | −40,2 dB | −34,7 dB | +5,5 |
+| rugissement | −33,4 dB | −31,7 dB | +1,7 |
+
+Le grondement à −72 dB n'était pas discret : il était **absent** de l'appareil
+où le format court est regardé.
+
+`porter_sur_telephone()` applique la parade du mastering, déjà éprouvée dans
+`src/lib/sfx.ts` : on ne remonte pas le grave, on lui **fabrique ses
+harmoniques** par redressement puis saturation douce. Les partiels 2f, 3f, 4f…
+passent, et l'oreille reconstruit le fondamental manquant.
+
+**Les deux couches se partagent le niveau, elles ne s'y ajoutent pas.** Les
+additionner ferait grimper la crête, et le limiteur commun, en l'écrasant,
+ferait pomper tout le mixage à chaque frappe. Vérifié : la crête de la palette
+est restée à 0,890 avant comme après, et les quatre bruitages déjà aigus n'ont
+pas bougé de plus de 0,3 dB.
+
+Le `poids` se règle par bruitage — un impact bref supporte plus d'harmoniques
+qu'une nappe tenue, qui devient agressive avant d'être plus audible.
+
 ## La voix off se fabrique ici, sans clé
 
 Le dépôt a longtemps tenu la synthèse vocale pour hors de portée : pas de clé
