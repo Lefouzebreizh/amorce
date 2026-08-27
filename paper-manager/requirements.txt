@@ -1,5 +1,7 @@
-# La seule dépendance du code écrit à ce jour ; les suivantes arriveront avec le
-# module qui les utilise.
+# Ce que le projet exige pour *tourner*. Ce que ses tests atteignent est une
+# liste plus courte, tenue dans `.github/requirements-tests.txt` — la distinction
+# fait la différence entre une vérification de quinze secondes et une de
+# plusieurs minutes.
 #
 # Lecture des PDF : extraction du texte quand il y en a déjà un, rendu en image
 # quand il n'y en a pas, remplissage et aplatissement des formulaires. PyMuPDF
@@ -19,3 +21,9 @@ anthropic>=1.0
 # La forme de ce que le modèle doit rendre, validée par le SDK avant qu'on la
 # revalide nous-mêmes. Atteinte par les tests, donc déclarée aussi à la CI.
 pydantic>=2.0
+
+# L'écran du tableau de bord (`interface/app.py`). Nécessaire à *exécuter*
+# l'interface, jamais à la vérifier : ce qui se teste vit dans `interface/rendu.py`,
+# qui ne l'importe pas. Volontairement absent de `.github/requirements-tests.txt`
+# — son installation seule pèse plus que toute la suite de ce projet.
+streamlit>=1.40

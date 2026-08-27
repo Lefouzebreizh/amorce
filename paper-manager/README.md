@@ -40,6 +40,10 @@ paper-manager/
 │   ├── calendrier.py     module 2 — les échéances deviennent un fichier .ics
 │   ├── abonnements.py    module 3 — l'état des contrats et le calcul des alertes
 │   └── resiliation.py    module 4 — le courrier, à partir d'un gabarit et du contrat
+├── interface/
+│   ├── app.py            l'écran du tableau de bord, en Streamlit — lecture seule
+│   ├── rendu.py          sa mise en forme, sans Streamlit : c'est ce qui se teste
+│   └── lancer.sh         démarrage en une commande
 ├── modeles/
 │   ├── formulaires/      un plan de remplissage par formulaire (JSON versionné)
 │   └── *.txt             gabarits de courriers (texte à trous)
@@ -211,6 +215,45 @@ Ce que le calcul sait, et qui vaut d'être connu :
   mieux vaut garder un an de trop que jeter un justificatif encore utile. Et
   **rien n'est jamais supprimé** : le programme signale.
 
+## L'écran, depuis le téléphone
+
+```bash
+bash interface/lancer.sh              # http://localhost:8502
+PORT=8600 bash interface/lancer.sh    # ailleurs
+```
+
+Le même tableau de bord que `python3 paper.py etat`, mais lisible à bout de
+bras : le total du mois, la répartition par catégorie de la plus chère à la
+moins chère, ce qu'il y a à faire aujourd'hui, et les contrats classés par
+urgence de préavis.
+
+- **Il ne calcule rien.** L'écran appelle `core.abonnements.tableau()` et
+  affiche ce qu'il rend. Ce n'est pas une élégance : un total réécrit dans
+  l'affichage finirait par diverger de celui que les tests vérifient, sans que
+  rien ne le signale — et c'est l'écran qu'on croirait, parce que c'est l'écran
+  qu'on regarde. Les deux affichages se comparent d'ailleurs côte à côte, sur
+  la configuration d'exemple, et disent le même mot.
+- **Il ne fait que lire.** Aucun bouton, aucune écriture. Marquer une alerte
+  traitée reste `python3 paper.py etat --traiter <id>` : une alerte fermée d'un
+  pouce distrait dans un couloir, c'est une échéance perdue.
+- **Les jauges sont deux barres horizontales**, jamais un cercle — la règle du
+  dépôt (`CLAUDE.md` §2, `/tailwind-mobile-ux`), et sa raison est le terrain :
+  la WebView de MIUI tronque les jauges circulaires en SVG. Deux et non une,
+  parce que la fenêtre courte (ce qu'il y a à faire aujourd'hui) ne laisse
+  jamais voir venir la longue (les préavis des trois prochains mois).
+- **`admin_config.json` absent n'est pas une panne.** Il est personnel et
+  ignoré par git : sur une machine neuve, il n'existe pas. L'écran affiche
+  alors la commande à taper, et rien d'autre.
+- **Ce qui se teste est dans `interface/rendu.py`**, qui n'importe pas
+  Streamlit. `app.py`, lui, l'importe — et la CI du dépôt ne l'installe pas
+  exprès, pour que la vérification reste à quinze secondes.
+
+Ce qui ne se voit qu'en le faisant, et qui reste donc à confirmer : le rendu
+réel sur le téléphone de référence, où la barre d'adresse de Chrome et la barre
+de gestes de HyperOS amputent la hauteur annoncée. Il a été mesuré ici dans un
+Chromium à 393 × 873, ce qui voit les débordements mais ni le tactile ni la
+police système.
+
 ## Les rappels d'agenda
 
 ```bash
@@ -326,9 +369,9 @@ Ce qui mérite d'être connu avant d'y toucher :
 - **Pas de base SQLite.** Quelques dizaines d'abonnements et quelques milliers
   de documents ; du JSON se lit, se corrige à la main et se sauvegarde par une
   copie de fichier.
-- **Pas d'interface web pour l'instant.** Le tableau de bord du module 3 est
-  d'abord `python3 paper.py etat`. Le jour où la ligne de commande ne suffira
-  plus, c'est un `interface/app.py` en Streamlit, comme `mon-app-audio/`.
+- **L'interface ne fait que lire.** `interface/app.py` affiche le tableau de
+  bord ; tout ce qui écrit — marquer une alerte traitée, classer un dépôt,
+  produire un courrier — reste à `python3 paper.py`. Voir plus bas.
 - **Pas de relève de boîte mail.** Beaucoup de factures arrivent par courriel,
   et c'est la suite logique — mais c'est un cinquième module, avec ses propres
   questions d'authentification.
@@ -403,12 +446,21 @@ Les tests couvrent ce qui est calculable : l'arithmétique des échéances et de
 préavis, la validation et la réécriture de la configuration, le tableau de bord
 et la fusion des alertes, le format du fichier de rappels jusqu'au pliage des
 lignes, le choix du gabarit de résiliation et les mentions obligatoires du
-courrier, la résolution des gabarits et le remplissage effectif d'un PDF. Le formulaire de test est
-**fabriqué à l'exécution** — ce dépôt ne versionne aucun binaire, et un Cerfa
-vierge en est un.
+courrier, la résolution des gabarits et le remplissage effectif d'un PDF, et la
+mise en forme du tableau de bord. Le formulaire de test est **fabriqué à
+l'exécution** — ce dépôt ne versionne aucun binaire, et un Cerfa vierge en est
+un.
 
-Seul PyMuPDF est nécessaire au code écrit à ce jour ; il est déjà installé dans
-une session distante par le hook du dépôt, pour la chaîne pré-presse KDP.
+**La suite ne traverse jamais Streamlit.** `interface/app.py` l'importe,
+`interface/rendu.py` non : c'est là que vit tout ce qui se vérifie de
+l'affichage, et c'est ce qui garde la vérification à quinze secondes. La
+distinction est écrite en tête de `.github/requirements-tests.txt`, et il ne
+faut pas ajouter Streamlit à ce fichier pour « faire bonne mesure » — aucune
+assertion ne le traverse.
+
+PyMuPDF, `anthropic` et `pydantic` sont nécessaires aux tests ; Streamlit ne
+l'est qu'à l'exécution de l'écran. Le hook du dépôt les installe tous dans une
+session distante.
 
 ## Ce qui n'a pas pu être vérifié ici
 
@@ -424,6 +476,12 @@ relire » est faite pour que ça se voie sans rien perdre.
 
 ## Prochaine étape
 
-L'interface : le tableau de bord tient dans un terminal, et `archives-backlog/
-mon-app-audio/` montre qu'un Streamlit se pose en une soirée quand le calcul est
-déjà écrit et vérifié.
+**Les gestes**, maintenant que l'écran a fait ses preuves : marquer une alerte
+traitée ou reportée depuis le téléphone, sans revenir au terminal. C'est la
+seule écriture qui manque vraiment au quotidien — les autres commandes
+(`classer`, `resilier`, `remplir`) produisent des fichiers qu'on veut de toute
+façon relire avant de s'en servir.
+
+**La relève de boîte mail** ensuite, le cinquième module : beaucoup de factures
+arrivent par courriel, et les déposer à la main dans `coffre/entree/` est le
+geste qui reste.
