@@ -204,7 +204,7 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
          */
         audio.pruneClips(charges);
         for (const id of charges) {
-          const video = pool.get(id);
+          const video = pool.getVideo(id);
           if (video) audio.attachClip(id, video);
         }
 

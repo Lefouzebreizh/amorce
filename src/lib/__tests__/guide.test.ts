@@ -8,7 +8,7 @@ let counter = 0;
 const id = () => `g${counter++}`;
 
 function asset(duration = 30): MediaAsset {
-  return { id: 'a', name: 'r.mp4', url: 'blob:a', duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+  return { id: 'a', name: 'r.mp4', kind: 'video', url: 'blob:a', duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
 }
 
 function clip(seconds: number): Clip {

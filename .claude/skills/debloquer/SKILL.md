@@ -255,6 +255,36 @@ Il pousse la branche et rend un lien qui ouvre le formulaire **déjà rempli**,
 titre et corps pris dans les commits — ce sont eux qui portent l'intention. Le
 geste restant tient en un appui, ce qui compte quand on lit depuis un téléphone.
 
+## 3 bis. Vercel est rouge sur toutes les PR à la fois
+
+```
+Vercel — Deployment rate limited — retry in 24 hours.
+```
+
+Ce n'est pas un échec de la PR : c'est le quota de déploiement du compte,
+épuisé par le nombre de fusions du jour. Ce dépôt en a passé plus de trente en
+une journée, et le déploiement d'aperçu se déclenche à chaque poussée sur
+chaque branche.
+
+Deux choses le distinguent d'un vrai échec, et il faut les vérifier plutôt que
+de le supposer :
+
+- **le message nomme le quota**, pas un test ni un build ;
+- **toutes les PR ouvertes sont rouges en même temps**, y compris celles qui ne
+  touchent aucun fichier de l'application.
+
+Dans ce cas, la vérification du dépôt reste le juge — `npm run typecheck`,
+`npm run lint`, `npm test`. Une PR verte en local dont le seul rouge est ce
+quota se fusionne : attendre vingt-quatre heures gèlerait tout le dépôt, et le
+retard se paie en conflits sur les fichiers partagés.
+
+Ne pas relancer le déploiement : le quota ne se recharge pas plus vite parce
+qu'on insiste. Et le **dire** dans la PR ou à l'auteur, sinon le prochain qui
+regarde croit à une régression et cherche une cause qui n'existe pas.
+
+Un rouge qui persiste au-delà de vingt-quatre heures, ou qui ne frappe qu'une
+seule PR, n'est plus celui-là : reprendre au diagnostic normal.
+
 ## 4. Une suite de tests introuvable, ou plus gardée
 
 **Où est la commande.** La dernière ligne de `hooks/session-start.sh` — celle que

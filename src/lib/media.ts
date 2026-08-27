@@ -2,6 +2,7 @@
 
 import { uid } from './id';
 import { analyseVoice } from './voice';
+import { IMAGE_DURATION } from './types';
 import type { MediaAsset, MusicTrack, SampleCue, VoiceCue } from './types';
 
 /**
@@ -13,7 +14,11 @@ import type { MediaAsset, MusicTrack, SampleCue, VoiceCue } from './types';
  */
 
 /** Attend un évènement du média, ou échoue au bout du délai imparti. */
-function waitFor(el: HTMLMediaElement, event: string, timeoutMs = 45000): Promise<void> {
+function waitFor(
+  el: HTMLMediaElement | HTMLImageElement,
+  event: string,
+  timeoutMs = 45000,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       el.removeEventListener(event, onDone);
@@ -67,14 +72,18 @@ function detectAudio(video: HTMLVideoElement): boolean {
 }
 
 /** Capture une image du média et la renvoie en data URL. */
-function grabThumbnail(video: HTMLVideoElement, maxWidth = 160): string {
-  const ratio = video.videoHeight / video.videoWidth || 16 / 9;
+function grabThumbnail(source: HTMLVideoElement | HTMLImageElement, maxWidth = 160): string {
+  const [sw, sh] =
+    source instanceof HTMLVideoElement
+      ? [source.videoWidth, source.videoHeight]
+      : [source.naturalWidth, source.naturalHeight];
+  const ratio = sh / sw || 16 / 9;
   const canvas = document.createElement('canvas');
   canvas.width = maxWidth;
   canvas.height = Math.round(maxWidth * ratio);
   const ctx = canvas.getContext('2d');
   if (!ctx) return '';
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL('image/jpeg', 0.7);
 }
 
@@ -148,6 +157,7 @@ export async function loadVideoAsset(file: File): Promise<MediaAsset> {
     return {
       id: uid('asset'),
       name: file.name,
+      kind: 'video',
       url,
       duration: Number.isFinite(video.duration) ? video.duration : 0,
       width: video.videoWidth,
@@ -159,6 +169,74 @@ export async function loadVideoAsset(file: File): Promise<MediaAsset> {
     URL.revokeObjectURL(url);
     throw error;
   }
+}
+
+/**
+ * Transforme une image fixe en média utilisable par le studio.
+ *
+ * C'est le chemin des illustrations, des pages, des captures — tout ce qui
+ * existe déjà et qui n'a jamais été filmé. Sans lui, une chaîne dont la
+ * matière première est dessinée ne peut pas faire sa première vidéo, et
+ * l'échec se présente sous la forme d'un fichier « refusé » qui envoie
+ * chercher un problème d'encodage inexistant.
+ *
+ * Aucune durée n'est mesurée : une image n'en a pas. On lui accorde
+ * `IMAGE_DURATION`, que la timeline pourra raccourcir à volonté.
+ */
+export async function loadImageAsset(file: File): Promise<MediaAsset> {
+  // Même piège qu'aux rushes : sur Android, un fichier encore dans le nuage
+  // arrive à zéro octet, et « format non pris en charge » enverrait réexporter
+  // une image parfaitement valide.
+  if (file.size === 0) {
+    throw new Error(
+      `« ${file.name} » est arrivé vide. C’est le cas quand le fichier est encore dans le nuage : ouvre-le une fois depuis ton gestionnaire de fichiers pour le télécharger sur l’appareil, puis réessaie.`,
+    );
+  }
+
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  image.decoding = 'async';
+  // Le tracé sur canvas d'une image d'origine étrangère souillerait le
+  // contexte et rendrait l'export impossible. Les URL objet sont de même
+  // origine, mais l'attribut est posé avant `src`, comme pour les rushes.
+  image.crossOrigin = 'anonymous';
+  image.src = url;
+
+  try {
+    await waitFor(image, 'load');
+
+    if (!image.naturalWidth || !image.naturalHeight) {
+      throw new Error(`« ${file.name} » n’a pas pu être décodé comme image.`);
+    }
+
+    return {
+      id: uid('asset'),
+      name: file.name,
+      kind: 'image',
+      url,
+      duration: IMAGE_DURATION,
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      thumbnail: grabThumbnail(image),
+      // Une image n'a pas de son. Le dire franchement évite que le graphe
+      // audio tente de brancher une source sur un élément qui n'en est pas un.
+      hasAudio: false,
+    };
+  } catch (error) {
+    URL.revokeObjectURL(url);
+    throw error;
+  }
+}
+
+/**
+ * Importe un fichier de la bibliothèque, quel qu'il soit.
+ *
+ * Le type MIME décide, et lui seul : c'est la seule information disponible
+ * avant d'avoir tenté un décodage, et se tromper de décodeur produit un
+ * message d'erreur qui désigne la mauvaise cause.
+ */
+export function loadAsset(file: File): Promise<MediaAsset> {
+  return file.type.startsWith('image/') ? loadImageAsset(file) : loadVideoAsset(file);
 }
 
 /** Importe un fichier audio comme musique de fond. */

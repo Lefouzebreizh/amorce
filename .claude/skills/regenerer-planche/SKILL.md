@@ -116,6 +116,37 @@ titre de la donneuse qui transparaît. Dans ce projet, c'est l'auteur qui a
 repéré le regard vide de Zéphy et la bordure qui ne collait pas — deux défauts
 qu'aucun script n'avait relevés.
 
+## Quand le générateur ne coopère pas
+
+Il n'y a jamais de cul-de-sac : chaque échec a une sortie qui ne demande pas de
+recommencer.
+
+**Il dessine du texte malgré l'interdiction.** C'est le cas le plus fréquent.
+Ne pas redemander trois fois — recadrer la planche sur ses cases et laisser
+`greffe.py` poser le contenu dans le cadre : le titre et le parchemin de la
+donneuse sont de toute façon recouverts. Si le texte est *dans* les cases, il
+reste les bulles peintes : les garder telles quelles et ne pas lettrer, ou
+peindre du papier dessus avant de lettrer, avec un bord franc.
+
+**Il ne monte pas à 2600 px.** Sans importance en soi : c'est
+l'agrandissement qui compte, et une planche de 1600 px reste à ×1,62, sous la
+limite. Lancer `remplacer.py` et lire le verdict — il tranche mieux qu'une
+règle.
+
+**Il change les personnages** — museau différent, ailes pâles, torse humain.
+Une seule case ratée sur quatre ne condamne pas la planche : greffer les trois
+bonnes et garder la case d'origine pour la quatrième, en composant à la main la
+zone concernée. Trois cases sur quatre valent mieux qu'un aller-retour.
+
+**Rien ne convient après deux essais.** Garder la planche d'origine et le dire.
+Une planche à ×1,62 dans le style du volume vaut mieux qu'une planche neuve qui
+décroche — la mesure l'a montré une fois, et l'œil de l'auteur une autre.
+
+**Le dossier n'a pas la page** que l'on veut lettrer. `lettrage.py` lève une
+erreur nommée plutôt que de composer n'importe quoi. Écrire la section
+manquante dans le `DOSSIER.md` du tome : titre, quatre répliques, parchemin,
+et le bloc d'invite. Le format est celui des pages voisines.
+
 ## Les pièges déjà payés
 
 | Symptôme | Cause | Parade |

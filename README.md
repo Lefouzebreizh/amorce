@@ -51,8 +51,8 @@ L'interface est numérotée de 1 à 7 plutôt que de présenter tous les outils 
 plat. Un débutant suit l'ordre ; un habitué clique directement sur l'étape qui
 l'intéresse.
 
-1. **Importer** — dépose les rushes. Le bouton *Montage express* assemble seul un
-   projet complet, à retoucher ensuite.
+1. **Importer** — dépose les rushes, ou des images fixes. Le bouton *Montage
+   express* assemble seul un projet complet, à retoucher ensuite.
 2. **Monter** — ordre des plans, points d'entrée et de sortie, vitesse,
    transition entrante, mouvement de caméra.
 3. **Accroche** — le texte des trois premières secondes, avec dix formules
@@ -87,6 +87,15 @@ distribution est le taux de complétion, et il s'effondre avec la longueur.
 **Un seul chemin de rendu.** `renderFrame` est le seul endroit qui sait à quoi
 ressemble une image du montage. La prévisualisation et l'export l'appellent tous
 les deux : ce qui est affiché est, par construction, ce qui sera enregistré.
+
+**Une image fixe est un plan comme un autre.** Une illustration, une page, une
+capture entrent dans la bibliothèque au même titre qu'un rush : elles n'ont ni
+son ni tête de lecture, et le mouvement de caméra du plan leur tient lieu de
+mouvement. Sans cela, quiconque publie ce qu'il dessine ne peut pas faire sa
+première vidéo — et l'échec se présente sous la forme d'un fichier « refusé »
+qui envoie chercher un problème d'encodage inexistant. Une image ne compte pas
+non plus dans le plafond de décodeurs vidéo : elle n'en mobilise aucun, et un
+défilé de douze pages tiendrait autrement de six.
 
 **Un élément vidéo par clip, et non par fichier source.** Deux clips peuvent
 découper le même rush et se chevaucher pendant une transition ; un élément
@@ -131,9 +140,10 @@ donc l'application pour de vrai et contrôle le résultat sur les pixels et sur 
 signal sonore :
 
 ```bash
-npm run fixtures    # fabrique quatre rushes de test (aucun binaire versionné)
-npm run dev         # dans un autre terminal
-npm run verify      # importe, monte, lit, étalonne, exporte, puis rejoue le fichier
+npm run fixtures       # quatre rushes et deux illustrations (aucun binaire versionné)
+npm run dev            # dans un autre terminal
+npm run verify         # importe, monte, lit, étalonne, exporte, puis rejoue le fichier
+npm run verify:images  # un défilé d'images fixes, plus long que le plafond de décodeurs
 ```
 
 `verify` exécute deux profils à la suite : un ordinateur, puis un téléphone dont
