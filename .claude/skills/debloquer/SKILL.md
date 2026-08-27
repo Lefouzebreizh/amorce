@@ -92,6 +92,30 @@ Deux écritures resteront refusées quoi qu'on fasse, et c'est voulu :
 tout ce qui touche aux identifiants. Là, le bloc se transmet au propriétaire pour
 qu'il le colle — il n'y a pas d'autre chemin, et il ne faut pas en chercher un.
 
+**Mais ce qu'on lui demande de coller doit tenir dans un téléphone.** Le
+propriétaire édite depuis l'interface GitHub mobile, et trois de ses
+comportements ont coûté quarante-cinq minutes et six allers-retours en une
+matinée. Ils sont invisibles à l'écran, et aucun n'est de sa faute :
+
+- **Le collage insère au curseur, il ne remplace pas.** Un « tout sélectionner »
+  qui ne prend pas laisse l'ancien contenu en place et le neuf par-dessus. Le
+  fichier est passé de 76 à 105 lignes, avec `statusLine` trois fois. Ne jamais
+  demander de remplacer une portion : faire **supprimer le fichier**, puis le
+  recréer dans un éditeur vide, où rien ne peut se mélanger.
+- **Le champ « nom de fichier » mange le point de tête.** Le fichier recréé est
+  arrivé dans `claude/` au lieu de `.claude/` — et l'interface, traduite en
+  français, affiche « Claude » pour les deux : l'erreur est illisible à l'écran.
+  Vérifier le chemin depuis le dépôt (`git ls-tree -r origin/main`), jamais sur
+  la capture.
+- **La traduction automatique francise l'affichage du code.** « autorisations »,
+  « permettre », `"repo":"anthropique/code Claude"` : le fichier réel est intact,
+  c'est la page qui ment. Ne jamais diagnostiquer un JSON sur une capture — le
+  lire depuis le dépôt.
+
+Et une fois le fichier posé, **son emplacement se déplace sans toucher au
+contenu** : `git mv` n'accorde aucune permission nouvelle et passe le garde-fou,
+là où réécrire le fichier serait refusé. C'est ce qui a réparé le point manquant.
+
 ## 2. Le réseau rend 403
 
 Symptôme : `CONNECT tunnel failed, response 403`, ou un `curl` qui rend le code
