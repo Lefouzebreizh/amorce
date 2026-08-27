@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
+description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
 ---
 
 # Vérifier ce dépôt
@@ -57,6 +57,45 @@ npm run fixtures   # une seule fois : fabrique .fixtures/rushes/
 npm run dev        # dans un autre terminal
 npm run verify
 ```
+
+## Réseau d'annuaires IA — `annuaire-ia/`
+
+```bash
+node .claude/skills/annuaire-ia/scripts/verifier.mjs        # niche par défaut
+node .claude/skills/annuaire-ia/scripts/verifier.mjs btp    # une niche précise
+```
+
+Seize contrôles dans un vrai Chromium, une quinzaine de secondes. Le projet n'a
+ni compilation, ni typecheck, ni lint : c'est la seule chose qui dise s'il
+marche. Voir `/annuaire-ia` pour ce que chaque contrôle garde — et pour la
+raison de regarder les captures même quand tout est vert.
+
+## Toutes les suites Python, comme la CI
+
+```bash
+.claude/skills/verifier/scripts/comme-la-ci.sh          # les sept suites
+.claude/skills/verifier/scripts/comme-la-ci.sh kdp      # une seule
+```
+
+**Lancer les suites depuis le dépôt ne prouve rien.** Une session Claude Code a
+des fichiers que la CI n'a pas — `/mnt/skills/…`, des rushes non versionnés,
+ffmpeg posé par le hook — et le hook installe des bibliothèques que
+`.github/requirements-tests.txt` n'installe pas. Des tests verts ici sont donc
+régulièrement rouges là-bas : `main` est resté rouge cinq exécutions durant sur
+une police introuvable, et ce rouge-là masquait l'état des six autres projets.
+
+Le script supprime les trois écarts d'un coup : il copie les seuls fichiers
+suivis par git (contenu du répertoire de travail compris), exécute dans un
+environnement n'ayant que les bibliothèques de la CI, et pose la police du
+lettrage comme le fait le workflow. Premier passage une minute, les suivants une
+vingtaine de secondes.
+
+Il signale aussi, sans faire échouer, les chemins de session écrits en dur —
+la seule chose qu'aucune exécution locale ne peut détecter, puisque le fichier
+est là.
+
+**À lancer avant de pousser un changement Python**, et en premier réflexe quand
+la CI est rouge alors que tout passe en local.
 
 ## Socle Agence — `agence/`
 

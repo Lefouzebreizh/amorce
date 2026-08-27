@@ -72,3 +72,6 @@ montage-auto/Wav2Lip/
 paper-manager/coffre/
 paper-manager/admin_config.json
 paper-manager/admin_config.json.bak
+
+# Cache de .claude/skills/verifier/scripts/comme-la-ci.sh
+.verif-ci/

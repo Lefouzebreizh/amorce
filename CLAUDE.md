@@ -210,8 +210,9 @@ ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
 rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
-Paper-Manager dans `paper-manager/`, l'annuaire d'outils IA dans `annuaire-ia/`
-et le socle de production livré aux clients dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
+Paper-Manager dans `paper-manager/`, le réseau d'annuaires d'outils IA dans
+`annuaire-ia/` et le socle de production livré aux clients dans `agence/` (qui
+ont chacun leur propre `README.md`) — plus un volet sans
 code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
 montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
 audio Streamlit (`mon-app-audio/`) et l'assistant d'allocation d'actifs
@@ -233,7 +234,8 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `hooks/session-start.sh` | Installe, au démarrage d'une session distante : les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé, les bibliothèques Python de `kdp/`, `montage-auto/`, `repondeur-facebook/`, `life-organizer/`, `tiktok/`, de l'extraction multiformat et des deux chantiers en sommeil sous `archives-backlog/`, plus le Chromium du parcours de vérification. Le script fait foi — cette liste-ci a déjà pris trois projets de retard. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
-| `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
+| `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. Porte `scripts/comme-la-ci.sh`, qui rejoue les sept suites Python comme un runner GitHub — sur les seuls fichiers versionnés, dans un environnement n'ayant que les bibliothèques de la CI. C'est ce qui attrape le vert en session, rouge ailleurs. |
+| `/annuaire-ia` | Vérifier un site du réseau d'annuaires — seize contrôles Chromium, seule chose qui dise qu'une page sans compilation marche — et ce qui, dans ce projet, part en public tout seul. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
 | `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
