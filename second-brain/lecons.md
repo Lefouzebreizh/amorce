@@ -134,3 +134,25 @@ parcours en navigateur, vert à la validation des données.
 request — parce qu'on le relancerait sans le lire — devient exactement le bon
 contrôle là où personne ne relit rien. Et il se pose **avant** la publication,
 pas après : ne rien publier est un incident visible et réversible.
+
+---
+
+## Une durée mesurée en session n'est pas la durée en CI
+
+*Coût : un chiffre faux d'un facteur vingt, écrit dans trois fichiers.*
+
+Le parcours en navigateur du réseau d'annuaires : **315 s** mesurées ici, **16 s**
+sur un runner GitHub. J'avais écrit les 315 s dans un commentaire de workflow,
+dans un message de commit et dans une compétence — en argument de coût, c'est-à-
+dire précisément là où le chiffre sert à décider.
+
+La cause n'est pas la puissance de la machine. Le mandataire de cette session
+bloque le CDN des polices : chaque `waitUntil: 'networkidle'` attend l'expiration
+de requêtes qui n'aboutiront jamais. La lenteur mesurait le mandataire, pas le
+parcours.
+
+**Portée générale :** dès qu'une mesure porte sur du temps et que le code touche
+au réseau, elle décrit cet environnement-ci, pas celui qui compte. Ou bien on la
+refait là où le code tournera, ou bien on l'écrit avec la condition qui la rend
+vraie. Un chiffre nu, dans un argument de coût, se retourne contre la décision
+qu'il a servi à prendre.
