@@ -238,6 +238,8 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/fusionner-main` | Résoudre un conflit sur les quatre fichiers partagés. Il a la même forme dix fois sur dix : deux sessions ont ajouté à la même liste, et il faut garder les deux. |
 | `/reprise-de-session` | Écrire le résumé qui permet de repartir ailleurs sans rien perdre, et reconnaître le moment où le fil coûte plus que le travail. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
+| `/capacites-session` | Ce que cette session-ci sait faire — binaires, bibliothèques, hôtes joignables, modèles — et le repli de ce qui manque. Sondé en une seconde, affiché au démarrage. |
+| `/branche-partagee` | De combien la branche a pris du retard, quels commits sont déjà passés dans `main` par une autre session, et quoi faire ensuite. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
 | `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
@@ -255,6 +257,9 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
 | `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
 | `/stack-agence-supabase` | Où partir pour un projet client — le socle `agence/`, déjà écrit — et les deux règles qu'il ne fait pas respecter seul. Amaigrie : ce que son `README` dit déjà en a été retiré. Hors Amorce. |
+| `/dependance-indisponible` | Livrer quand la clé, le GPU, le logiciel ou le réseau manquent : l'échelle de repli, les quatre choses qui transforment une absence visible en défaut invisible, et ce qu'on écrit en rendant le travail. |
+| `/api-tierce-verifiee` | Lire la surface réelle d'une bibliothèque avant d'écrire contre elle, et provoquer l'erreur pour connaître sa vraie classe — ce qui a attrapé un `except` qui n'attrapait rien. |
+| `/relais` | Clore un fil devenu lourd sans rien perdre : l'état se rassemble depuis le dépôt, jamais de mémoire. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
