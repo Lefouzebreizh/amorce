@@ -186,6 +186,18 @@ Ce que le calcul sait, et qui vaut d'être connu :
   de l'utilisateur que l'année reconduite n'était pas grave.
 - **Le statut décidé à la main survit au recalcul.** C'est la seule chose que
   le programme lit dans le fichier plutôt que de la calculer.
+- **La facture attendue qui n'arrive pas** ne se signale que si l'on a **déjà
+  vu** un document de cet émetteur. Sans cette garde, chaque abonnement crierait
+  au premier passage : l'assistant ne saurait pas distinguer une facture
+  manquante d'un coffre qu'on vient d'ouvrir, et c'est le faux signal qui fait
+  ignorer les vrais. Un délai de grâce s'ajoute à la période — une facture
+  mensuelle n'arrive pas le même jour tous les mois.
+- **Ce qu'on peut jeter est groupé par catégorie et par année.** Cinq ans de
+  factures d'énergie font soixante documents : une alerte par document noierait
+  tout le reste, alors qu'« les douze factures de 2020 peuvent être jetées » se
+  traite d'un geste. Le groupe n'expire qu'avec son document le plus récent —
+  mieux vaut garder un an de trop que jeter un justificatif encore utile. Et
+  **rien n'est jamais supprimé** : le programme signale.
 
 ## Les rappels d'agenda
 
@@ -351,7 +363,7 @@ Sections, dans l'ordre du fichier :
 | Champ | À quoi il sert |
 | --- | --- |
 | `id` | Stable, pour retrouver l'alerte d'un passage à l'autre. |
-| `type` | `preavis`, `renouvellement`, `paiement` — calculés. `document_manquant` et `conservation` viendront avec le journal des documents. |
+| `type` | `preavis`, `renouvellement`, `paiement`, `document_manquant`, `conservation` — tous calculés. Les deux derniers demandent le journal des documents. |
 | `source` | `abonnement:<id>` ou `document:<id>` — d'où elle vient. |
 | `echeance` | La date qui compte : celle du préavis, pas celle du contrat. |
 | `declenchement` | À partir de quand elle apparaît dans `paper.py etat`. |
@@ -388,11 +400,11 @@ une session distante par le hook du dépôt, pour la chaîne pré-presse KDP.
 
 ## Prochaine étape
 
-Les deux alertes encore inertes, que le journal permet enfin de calculer :
-`document_manquant` — une facture mensuelle qui cesse d'arriver, visible par
-`journal.derniers_de()` — et `conservation`, le document qu'on peut jeter passé
-sa durée légale, déjà inscrite par catégorie dans la configuration.
+Le chemin par modèle de vision dans `extraction.py`, pour les documents scannés
+dont les motifs n'ont rien à lire — `scan.py` sait déjà en rendre les pages en
+image. Il demande une clé d'API, absente de l'environnement de développement :
+à écrire avec son échelle de repli, et à ne faire partir que si la clé existe.
 
-Puis le chemin par modèle de vision dans `extraction.py`, pour les documents
-scannés dont les motifs n'ont rien à lire. Il demande une clé d'API, absente de
-l'environnement de développement : à écrire avec son échelle de repli.
+Ensuite seulement, l'interface : le tableau de bord tient dans un terminal, et
+`mon-app-audio/` montre qu'un Streamlit se pose en une soirée quand le calcul
+est déjà écrit et vérifié.
