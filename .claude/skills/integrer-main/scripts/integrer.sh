@@ -33,6 +33,11 @@ vert()  { printf '\033[32m%s\033[0m\n' "$*"; }
 jaune() { printf '\033[33m%s\033[0m\n' "$*"; }
 rouge() { printf '\033[31m%s\033[0m\n' "$*"; }
 
+if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
+  printf '\033[31m%s\033[0m\n' "Hors d'un dépôt git : se placer dans le dépôt avant de lancer ce script."
+  exit 1
+fi
+
 branche="$(git rev-parse --abbrev-ref HEAD)"
 if [ "$branche" = "main" ]; then
   rouge "Sur main : il n'y a rien à intégrer. Créer une branche claude/… d'abord."

@@ -252,6 +252,9 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
 | `/stack-agence-supabase` | Où partir pour un projet client — le socle `agence/`, déjà écrit — et les deux règles qu'il ne fait pas respecter seul. Amaigrie : ce que son `README` dit déjà en a été retiré. Hors Amorce. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
+| `/integrer-main` | Intégrer `main` et fusionner sans perdre de cycle : un script qui classe les conflits, les listes de la racine qui se télescopent, et quelle CI tourne vraiment. |
+| `/passer-le-relais` | Clore une session et ouvrir la suivante sans rien perdre : ce que le résumé porte, et ce qui va plutôt dans le dépôt. |
+| `/nouveau-projet` | Les six endroits où un projet se déclare pour être installé, vérifié et gardé — et ce qui se déclare tout seul. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
 | `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |

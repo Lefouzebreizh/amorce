@@ -10,7 +10,13 @@
 # pas refaire — ne se fabrique pas : c'est elle qu'on écrit à la main.
 
 set -uo pipefail
-cd "$(git rev-parse --show-toplevel)" || exit 1
+
+if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
+  printf '\033[31m%s\033[0m\n' "Hors d'un dépôt git : se placer dans le dépôt avant de lancer ce script."
+  exit 1
+fi
+
+cd "$(git rev-parse --show-toplevel)"
 
 branche="$(git rev-parse --abbrev-ref HEAD)"
 echo "## État au $(date '+%d/%m/%Y %H:%M')"
