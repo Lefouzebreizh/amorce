@@ -30,6 +30,25 @@ Trois moments, et ce sont les seuls :
 3. **Avant d'annoncer.** Une promesse tenue à moitié coûte plus cher qu'un
    « voici ce qui est possible ici, voici ce qui demandera votre machine ».
 
+## Une sonde est un instantané, pas une vérité
+
+Le terrain bouge pendant la session. Mesuré ici : `ffprobe` était réellement
+absent au démarrage — le hook le disait, la sonde le confirmait — et il était là
+vingt minutes plus tard, sans que rien dans le dépôt n'ait changé. L'image
+continue de se garnir après le premier message.
+
+Deux conséquences, et la seconde est celle qu'on oublie :
+
+- **Après un échec inexpliqué**, re-sonder avant de conclure. Ce qui manquait
+  peut être arrivé.
+- **Après un succès inattendu** aussi. Une capacité qui réapparaît invalide une
+  limite annoncée à l'utilisateur : lui avoir dit « impossible ici » et ne pas y
+  revenir laisse une fausse contrainte en place, parfois pour des semaines.
+
+La sonde ne se mémorise donc pas d'un tour de conversation à l'autre. Elle coûte
+une seconde ; la relancer est toujours moins cher que raisonner sur un état
+périmé.
+
 ## Ce qui manque a presque toujours un repli
 
 Le script les affiche à côté du manque, au moment où on les lit. Les quatre qui
