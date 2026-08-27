@@ -99,7 +99,18 @@ lettrage, ou régénérer une fois de plus avec une invite plus précise.
 
 ## 5. Regarder, toujours
 
-Rendre la page et l'ouvrir, à côté d'une planche voisine. Aucune mesure ne voit
+Rendre la page et l'ouvrir, à côté d'une planche voisine. Pour juger le volume
+entier — le style qui décroche, la bordure qui ne colle pas — passer par des
+planches-contact plutôt que d'ouvrir les planches une à une :
+
+```bash
+python3 kdp/contact.py --planches .travail/normalisees2 --vers .travail/contact
+```
+
+Quatre par feuille à 740 px : les cases et le texte des bulles restent lisibles,
+et vingt-sept planches tiennent en sept regards au lieu de vingt-sept.
+
+Aucune mesure ne voit
 une bulle posée sur un museau, un médaillon effacé, un style qui décroche, ni un
 titre de la donneuse qui transparaît. Dans ce projet, c'est l'auteur qui a
 repéré le regard vide de Zéphy et la bordure qui ne collait pas — deux défauts
