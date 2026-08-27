@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Supabase__list_projects",
+      "mcp__Supabase__list_organizations",
+      "mcp__Supabase__list_tables",
+      "mcp__Supabase__list_migrations",
+      "mcp__Supabase__list_extensions",
+      "mcp__Supabase__get_project",
+      "mcp__Supabase__get_project_url",
+      "mcp__Supabase__get_advisors",
+      "mcp__Supabase__get_cost",
+      "mcp__Supabase__search_docs",
+      "mcp__Supabase__generate_typescript_types"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-code-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-code-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-code"
+      }
+    }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/ligne-etat.sh"
+  }
+}
