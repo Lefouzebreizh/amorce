@@ -5,6 +5,34 @@ description: Fabriquer la bande-son d'une vidéo — voix off **synthétisée su
 
 # Le son se juge en LUFS, pas en décibels de crête
 
+## L'écart par défaut vide la queue quand la voix ne remplit pas la vidéo
+
+Trouvé en assemblant une démonstration, et la mesure ne l'a pas vu : le montage
+sortait à −14,2 LUFS, **conforme TikTok**, et les quatre dernières secondes
+étaient vides. Seul le tracé du niveau l'a montré.
+
+La cause n'est pas un défaut de `monter.py` mais une hypothèse de son réglage
+par défaut. Seize décibels sous la voix est la valeur juste de la diffusion —
+quand la parole occupe toute la durée. Sur une vidéo de 14,8 s dont la voix ne
+couvre que 8,7 s, le lit se retrouve à **−44 dB absolus** : inaudible dès que la
+voix s'arrête, c'est-à-dire précisément là où il devrait porter.
+
+```
+              corps    queue    écart
+défaut        −16 dB   −44 dB   28 dB   ← la queue est morte
+--ecart-db 9  −16 dB   −30 dB   14 dB
+--musique-db -12  −16 dB  −30 dB  14 dB   ← retenu
+```
+
+**La règle qui s'en déduit :** dès que la voix laisse plus de deux secondes de
+queue, poser le gain de musique à la main (`--musique-db`, autour de −12) plutôt
+que de laisser calculer un écart. L'écart raisonne sur la voix ; il ne sait rien
+de ce qui se passe quand elle se tait.
+
+C'est aussi un rappel de pourquoi `/voir-le-son` passe avant la livraison : la
+sonie intégrée est une moyenne, et une moyenne conforme peut cacher un quart de
+vidéo silencieux.
+
 ## La musique se fabrique aussi, à partir d'une intention
 
 `scripts/musique.py` produit un lit sonore de la durée voulue. Cinq ambiances,
