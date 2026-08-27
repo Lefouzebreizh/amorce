@@ -188,21 +188,52 @@ légende et sa colonne de boutons.
 
 ## Ce qui reste à vérifier
 
-Une seule chose, et le reste est mesuré.
+Deux choses, et elles tiennent au même fichier manquant.
 
 **L'instant exact où « breach » commence** dans le deuxième passage. Il est
-estimé au débit moyen (≈ 9,0 s dans le montage), pas mesuré. Le jour où une
-transcription mot à mot est possible — sur un poste où `huggingface.co` n'est
-pas bloqué, ou avec un modèle déjà en cache — elle donne la valeur et permet de
-scinder la carte 2.
+estimé au débit moyen (≈ 9,0 s dans le montage), pas mesuré. Ce n'est plus un
+blocage technique : `scripts/asr_hors_ligne.py --instants` date chaque mot hors
+ligne, sans Hugging Face, et le fait déjà sur la narration du générateur.
+Il ne manque que la prise ElevenLabs elle-même, que le dépôt ne porte pas —
+un dépôt du fichier, et la carte 2 se scinde dans la minute.
 
-**Le fichier de voix reste introuvable.** La génération redéposée le 27 août ne
-la contient pas : son audio est quasi mono (le canal latéral est 28 dB sous le
-centre) et la bande de parole 800–3500 Hz n'y forme aucune structure de parole
-— elle est au contraire au plus bas (2 à 6 % de l'énergie) sur 7,5 → 9,5 s, là
-où la voix devrait porter. C'est la bande-son du générateur.
-Mesurer « breach » demande donc bien `ElevenLabs_titan_1_m2.mp3`, que l'auteur
-seul peut redéposer.
+**La génération porte une narration, et ce n'est pas la tienne.** Une première
+lecture de ce fichier a conclu qu'il ne contenait aucune parole : l'énergie dans
+la bande 800–3500 Hz n'y faisait pas de structure nette, et un éclair à 4,5 s y
+montait à 38 % comme l'aurait fait une syllabe. **Cette conclusion était
+fausse.** Lancée pour de bon, la reconnaissance sort une phrase, et deux modèles
+indépendants s'accordent sur les mots :
+
+> *« Rift 0-5 is breached. The shadow titan takes flight. »*
+
+| Mot | Instant |
+| --- | --- |
+| `RIFT` | 0,04 s |
+| `ZERO` · `FIVE` | 2,28 · 2,84 s |
+| `IS` · `BREACH'D` | 3,28 · **3,48 s** |
+| `THE` · `SHADOW` · `TITAN` | 4,08 · 4,32 · 4,80 s |
+| `TAKES` · `FLIGHT` | 5,40 · 5,80 s |
+
+**Ce n'est pas le texte du dépôt** — qui dit *« Zero-Five, breach open »* et
+*« the shadow titan awakens »*. Deux mots sur trois diffèrent aux endroits qui
+comptent. La lecture la plus simple est que le générateur a écrit et dit sa
+propre narration, et que la prise ElevenLabs la remplace. Elle n'est pas
+vérifiée, et une seule personne peut la trancher.
+
+**Ce que ça change, et ce que ça ne change pas.** Rien de la pose calculée
+ci-dessus : elle place la prise ElevenLabs sur les images, et cette narration-ci
+n'est pas elle. Mais deux choses méritent d'être sues avant de monter — la
+narration du générateur occupe 0,04 → 5,80 s et devra être **coupée ou baissée**
+sous la voix off, faute de quoi deux textes parleront en même temps ; et si la
+prise ElevenLabs se révélait être cette narration extraite, alors ses trois
+passages écrits plus haut (0,84–2,90 et 3,14–5,44) ne collent pas aux mots
+mesurés, et c'est ce tableau-là qu'il faudrait reprendre.
+
+**La leçon, plus utile que le résultat.** Une courbe d'énergie ne dit pas s'il y
+a une voix : un choc l'occupe comme une syllabe, et une voix mixée bas s'y
+cache. Devant le doute, on transcrit au lieu de raisonner sur des courbes —
+`scripts/asr_hors_ligne.py` le fait hors ligne, sans Hugging Face, et c'est ce
+qui a tranché ici.
 
 **Le reste est mesuré** : les trois passages viennent de l'enveloppe du fichier
 de voix, le décalage de 7,15 s d'une soustraction, et les instants d'image du
