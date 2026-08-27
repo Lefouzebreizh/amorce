@@ -44,6 +44,32 @@ Deux conséquences qui se paient cher si on les ignore :
 - **Un projet qui n'est pas en Python** a besoin de son propre workflow, avec
   ses filtres de chemins — voir `amorce.yml`, `agence.yml`, `look-and-find.yml`.
 
+## Le piège du projet niché
+
+Il ne concerne aucune des six déclarations, et il coûte pourtant un aller-retour
+d'intégration continue à chaque fois.
+
+**Un projet JavaScript ou TypeScript posé ici emprunte les paquets de ses
+voisins sans le dire.** TypeScript remonte l'arborescence à la recherche des
+types, et npm remonte pour résoudre les modules. Un sous-projet qui oublie de
+déclarer `@types/node` le trouve donc chez Amorce, un cran plus haut, et sa
+vérification passe. La CI, elle, n'installe que le dossier du projet : plus de
+parent à emprunter, et la même commande rend quatre `ts(2591)`.
+
+Mesuré sur `hypersensible-bienveillance/` : trois `npm run check` verts en
+session, rouge au premier passage sur le runner.
+
+La parade est de vérifier **hors du dépôt**, ce qui prend une minute et
+reproduit exactement le runner :
+
+```bash
+tar --exclude=node_modules -cf - -C <projet> . | (mkdir -p /tmp/repro && tar -xf - -C /tmp/repro)
+cd /tmp/repro && npm ci && npm test && npm run check && npm run build
+```
+
+Une suite Python n'a pas ce problème — elle n'importe rien du parent. C'est
+propre aux projets Node.
+
 ## Une recette, ou pas
 
 Un projet ne mérite une compétence (`.claude/skills/`) que s'il porte des
