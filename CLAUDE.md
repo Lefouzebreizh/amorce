@@ -261,6 +261,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/debloquer` | Ce qui arrête une session distante et comment repartir : permission refusée par le classificateur, mandataire réseau qui rend 403, `main` fusionné sous les pieds, suite de tests sortie du champ de la CI. Dit aussi quand s'arrêter et demander. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
 | `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
+| `/trier-les-rushes` | Inventorier un lot de médias d'un coup : doublons par empreinte, meilleure définition, quelle prise garder parmi quatre, où quelqu'un parle. Née d'un plan écarté qui portait, au bit près, la seule voix utilisable. |
 | `/voir-le-son` | Dessiner un média pour pouvoir le juger : spectrogramme, courbe de sonie, planche de vignettes. Né d'un montage mesuré conforme et pourtant muet sur téléphone — une moyenne dit qu'un son est fort, jamais qu'il est bon. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
