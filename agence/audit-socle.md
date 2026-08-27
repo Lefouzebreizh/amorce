@@ -107,7 +107,7 @@ quatorze portent le jeton**.
 
 ---
 
-## 5. Les Server Actions ne sont pas testées
+## 5. Les Server Actions ne sont pas testées — **corrigé**
 
 **Le fait :** 34 tests unitaires, tous sur des fonctions pures — validation,
 mise en forme, navigation, agrégats d'administration. Les **neuf actions
@@ -118,6 +118,17 @@ en base et tout ce qui porte les gardes, n'en ont aucun.
 précédents difficiles à réparer sans en créer d'autres. Le jour où un correctif
 touche `exigerSession`, rien ne le dit : la garantie du socle repose alors sur la
 relecture, à chaque fois.
+
+**Corrigé le 27 août 2026** : 25 tests couvrent les neuf actions, portés à 66 en
+tout. Ils tiennent les garanties, pas la mécanique — le propriétaire d'un projet
+vient de la session et jamais du formulaire, la mise à jour vise la ligne par son
+identifiant *et* par son propriétaire, le profil n'écrit jamais la colonne du
+rôle, la connexion refuse une destination hors du site, et la demande de
+réinitialisation répond la même phrase que l'adresse existe ou non.
+
+Les actions sont testées telles quelles, sans les réécrire : le harnais
+(`__tests__/aides-actions.ts`) simule leurs quatre voisins — session, client
+Supabase, invalidation de cache, redirection.
 
 ---
 
@@ -130,7 +141,7 @@ calendrier.
 | Option | Contenu | Délai |
 | --- | --- | --- |
 | **Arrêter l'hémorragie** | Constats 1 à 3 — **livrés** | fait |
-| **Remise en état** | Reste le n°2 (un réglage Supabase) et le n°5, des tests sur les neuf actions serveur | 1 à 2 jours |
+| **Remise en état** | Constats 4 et 5 — **livrés**. Reste le n°2 : un réglage dans l'interface Supabase | 5 minutes |
 | **Ne rien faire** | — | Coût attendu : la première base client qui dérive expose les données de tous les comptes, sans que rien ne l'annonce. Le reste peut attendre. |
 
 _Le constat n°1 est le seul qui ne se rattrape pas après coup : les données
