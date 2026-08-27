@@ -2,15 +2,15 @@
 # machine neutre.
 #
 # Ce workflow ne couvre que ce qui est calculable hors navigateur : typage, lint
-# et tests unitaires. Le parcours `npm run verify` en est volontairement absent.
-# Il pilote un vrai Chromium contre un serveur de développement, bride le
-# processeur pour déclencher la dégradation de qualité, et juge sur les pixels et
-# le signal sonore : plusieurs minutes, un résultat qui dépend de la charge de la
-# machine, et une image d'exécution partagée qui n'est pas celle du conteneur de
-# développement. En faire une barrière obligatoire produirait surtout des échecs
-# qu'on relance sans les lire — ce qui coûte plus de confiance qu'il n'en rend.
-# Il reste le filet à passer localement avant de toucher au rendu, à l'audio, à
-# l'export ou à la mise en page mobile.
+# et tests unitaires, rendus en une quarantaine de secondes.
+#
+# Le parcours `npm run verify` a désormais **son propre workflow**,
+# `amorce-verify.yml`. Ce commentaire affirmait jusqu'ici qu'il était trop
+# instable pour servir de barrière ; c'était une supposition, et la mesure l'a
+# démentie — 85 vérifications sur 85, deux passages de suite, verdict identique.
+# Il est séparé non par méfiance mais par vitesse : faire attendre quatre minutes
+# de navigateur à un typage qui répond en quarante secondes coûterait ce délai à
+# chaque poussée.
 #
 # Les trois étapes sont séparées pour que le résumé dise laquelle a cassé, et
 # `!cancelled()` les laisse toutes parler : un typage rouge n'empêche pas de
