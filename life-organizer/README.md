@@ -10,9 +10,9 @@ options désactivées par défaut).
 
 > État : squelette d'architecture. `organizer_config.json` est complet et
 > validé ; les six modules sont décrits ci-dessous. Deux sont écrits :
-> `nettoyage` pour les photos — flou puis quasi-doublons (`organizer nettoyer`,
-> les vidéos abîmées restent à faire) — et `classement`, qui range documents,
-> photos et vidéos par thème et par date (`organizer ranger`).
+> `nettoyage`, complet — photos floues, quasi-doublons puis vidéos abîmées
+> (`organizer nettoyer`) — et `classement`, qui range documents, photos et
+> vidéos par thème et par date (`organizer ranger`).
 
 ## Arborescence
 
@@ -154,6 +154,52 @@ Ce que la commande décide, et pourquoi :
   `securite.verifier_empreinte_apres_deplacement` vaut `true` : la copie est
   relue et comparée à l'original **avant** que celui-ci ne soit retiré. C'est le
   seul ordre qui protège d'une copie tronquée entre deux disques.
+
+## Inspecter les vidéos
+
+La troisième passe de `organizer nettoyer` ne cherche ni une image ratée ni une
+image en trop : elle cherche le fichier qui ne s'ouvrira plus le jour où on
+voudra le revoir. Elle a besoin de **ffprobe et de ffmpeg**, qui sont un paquet
+système et non un paquet Python (`sudo apt install ffmpeg`). Sans eux, la passe
+le dit et ne tourne pas — elle ne devine pas.
+
+Ce qu'elle constate, et le geste qui suit :
+
+| Constat | Geste |
+| --- | --- |
+| ffprobe n'ouvre pas le conteneur, et le fichier est sous `taille_minimale_ko` | quarantaine — « vide ou tronquée » |
+| ffprobe n'ouvre pas le conteneur, et le fichier a un poids normal | quarantaine — « illisible », avec le mot exact de l'outil |
+| la fin du fichier ne se décode pas | quarantaine — « fin de fichier corrompue » |
+| durée sous `duree_minimale_secondes` | quarantaine — « trop courte » |
+| aucune piste vidéo (un `.mp4` qui ne porte que du son) | **gardé** et signalé |
+| le fichier a été modifié il y a moins de `ignorer_si_modifiee_recemment_minutes` | **gardé**, sans être jugé |
+
+Quatre choix méritent leur explication :
+
+- **Le poids ne condamne jamais seul.** Il ne fait que nommer « vide ou
+  tronquée » ce que l'inspection a déjà déclaré illisible. Mesuré sur un vrai
+  dossier : un MKV de quatre secondes en 320×240 pèse 20 ko et se lit
+  parfaitement — en faisant du poids un critère de plein droit, il partait en
+  quarantaine, et son motif masquait au passage le vrai diagnostic des quatre
+  fichiers réellement abîmés, tous plus petits que le seuil.
+- **Seule la fin du fichier est décodée**, sur trois secondes. C'est là qu'est
+  la coupure d'un transfert interrompu, d'une carte mémoire retirée trop tôt ou
+  d'une copie sur un disque plein — et c'est le seul symptôme d'un fichier
+  tronqué, dont l'en-tête reste intact et continue d'annoncer la durée
+  d'origine. **Ce que cela ne voit pas :** une corruption au milieu d'un fichier
+  par ailleurs complet. La chercher demanderait de décoder l'intégralité de
+  chaque vidéo, soit plusieurs minutes par gigaoctet.
+- **Une pochette d'album n'est pas une piste vidéo.** Un fichier sonore avec
+  jaquette porte un flux « video » d'une seule image ; le compter ferait passer
+  un enregistrement pour une vidéo, et le signalement ne se déclencherait jamais
+  sur les fichiers qu'il vise.
+- **Un téléchargement en cours ressemble trait pour trait à un fichier
+  tronqué** : en-tête complet, fin absente. C'est le seul faux positif que cette
+  passe produirait en masse, et il viserait précisément ce que l'utilisateur est
+  en train de récupérer — d'où le délai de grâce, réglable.
+
+Une durée absente n'est jamais tenue pour nulle : beaucoup de MKV et tous les
+flux enregistrés en direct n'annoncent aucune durée et se lisent très bien.
 
 ## Configuration
 

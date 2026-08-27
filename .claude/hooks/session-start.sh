@@ -130,6 +130,16 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
   fi
 fi
 
+# Le paquet n'embarque que `ffmpeg` : il n'y a pas de `ffprobe` à lier. Dit ici
+# parce qu'une session distante a donc un ffmpeg et pas de ffprobe — la
+# combinaison exacte où `organizer nettoyer` lit l'en-tête des vidéos sans
+# décoder leur fin, et où un fichier tronqué passe inaperçu sans que rien
+# n'échoue. Le paquet système reste le seul moyen d'avoir les deux.
+if ! command -v ffprobe >/dev/null 2>&1; then
+  echo "   ffprobe absent (imageio-ffmpeg ne le fournit pas) : l'inspection des vidéos"
+  echo "   de Life-Organizer ne tournera pas — sudo apt install ffmpeg pour l'activer"
+fi
+
 echo "── Volet TikTok : bibliothèque du carnet"
 # `tiktok/carnet.py` fabrique le PDF de tournage depuis les Markdown du volet.
 # Sans reportlab, la seule chose qu'on emporte en tournage ne se fabrique pas.
