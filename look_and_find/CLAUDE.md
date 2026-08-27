@@ -31,7 +31,10 @@ workflow `Look & Find` échoue si l'un d'eux a dérivé de sa source.
 Ce que la machine de développement ne peut pas vérifier : le build Android
 (SDK absent du conteneur), la caméra, la session de réalité augmentée. Le
 workflow GitHub construit l'APK de debug à chaque poussée et le publie en
-artéfact — c'est le chemin le plus court vers un vrai téléphone.
+artéfact — c'est le chemin le plus court vers un vrai téléphone. Le protocole
+d'essai correspondant est écrit dans `ESSAI-APPAREIL.md`, pensé pour être suivi
+sans rien relire d'autre : le rédiger a coûté moins cher que de répondre trois
+fois aux mêmes questions de sideload MIUI.
 
 **Ce qu'elle peut vérifier depuis peu**, et qui demandait auparavant ce même
 aller-retour de vingt minutes : la qualité de l'identification. Les deux
@@ -205,6 +208,7 @@ méthode testée.
 | `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé. Le patron du faux `Dio` est là si un autre test en a besoin. |
 | `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |
+| `requete_gemini_test.dart` | Ce qui part réellement vers Gemini, et l'égalité avec ce qu'enverrait `tool/banc_invite.dart`. |
 
 Trois recettes utiles quand on ajoute un test :
 

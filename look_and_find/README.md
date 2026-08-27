@@ -199,10 +199,17 @@ signale plus rien.
 | `demarrage_test.dart` | L'application démarrée de bout en bout — le seul test qui couvre `app.dart` et le parcours « pas de clé → saisie → viseur ». |
 | `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé : la réponse est retenue même quand elle est inexploitable. |
+| `requete_gemini_test.dart` | Ce qui **part** réellement vers Gemini : modèle visé, invite avant la photo, décodage contraint par le schéma. Le dernier maillon, qu'un faux `Dio` rendant une réponse toute faite ne regardait pas. |
+| `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |
 
 Ce qui ne peut pas être testé ainsi et demande un appareil : le décodage
 caméra, la mise au point, la session de réalité augmentée, et la qualité
 d'identification du modèle lui-même.
+
+Ce dernier point est le seul inconnu qui reste, et il se lève en cinq minutes :
+**[`ESSAI-APPAREIL.md`](ESSAI-APPAREIL.md)** dit quoi installer, quoi scanner,
+ce qui compte comme réussite, et quoi renvoyer quand ça cloche. Entre-temps,
+`tool/banc_invite.dart` éprouve l'invite depuis un terminal, sans appareil.
 
 ---
 
