@@ -239,3 +239,61 @@ select
     u.raw_user_meta_data ->> 'avatar_url'
 from auth.users u
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- 10. Effacement du compte, par son titulaire
+-- ---------------------------------------------------------------------------
+
+/*
+ * Le RGPD donne à toute personne le droit d'obtenir l'effacement de ses données
+ * (article 17). Sur un socle qui collecte nom, entreprise et adresse
+ * électronique, ce n'est pas une option de confort : c'est une obligation, et
+ * elle doit être exerçable sans écrire à personne.
+ *
+ * La difficulté est que l'identité vit dans `auth.users`, table de Supabase que
+ * la clé publique ne touche pas. La voie habituelle est d'appeler
+ * `auth.admin.deleteUser()` avec la clé `service_role` — celle qui contourne
+ * toute la RLS. La faire porter à l'application reviendrait à loger dans le
+ * serveur applicatif un passe-partout de la base entière, pour un usage que
+ * l'utilisateur déclenche lui-même : mauvais échange.
+ *
+ * Cette fonction fait le même travail en restant dans le schéma, qui est déjà
+ * la frontière de sécurité de ce socle. Trois propriétés la rendent sûre, et
+ * aucune n'est décorative :
+ *
+ *   - **Elle ne prend aucun paramètre.** Il n'existe donc aucune façon de la
+ *     pointer sur le compte d'un autre : la cible est `auth.uid()`, lue du
+ *     jeton, et rien d'autre ne peut l'influencer.
+ *   - **`security definer` avec `search_path` vide.** Elle s'exécute avec les
+ *     droits du propriétaire — c'est ce qui lui donne accès à `auth.users` —
+ *     mais ne peut pas être détournée en plaçant une table homonyme dans un
+ *     schéma que l'appelant contrôle.
+ *   - **`EXECUTE` retiré à `public`**, accordé au seul rôle `authenticated` :
+ *     un visiteur anonyme, dont `auth.uid()` est nul, ne peut pas même
+ *     l'appeler pour voir ce qui se passe.
+ *
+ * Le reste part par les clés étrangères : `profiles` est en `on delete
+ * cascade` sur `auth.users`, et `projects` sur `profiles`. Aucune ligne de
+ * l'utilisateur ne survit, et rien n'est à nettoyer à la main — un effacement
+ * qui oublie une table est un effacement qui n'a pas eu lieu.
+ */
+create or replace function public.supprimer_mon_compte()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  demandeur uuid := (select auth.uid());
+begin
+  if demandeur is null then
+    raise exception 'Aucune session : l''effacement ne s''exerce que sur son propre compte.'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  delete from auth.users where id = demandeur;
+end;
+$$;
+
+revoke all on function public.supprimer_mon_compte() from public;
+grant execute on function public.supprimer_mon_compte() to authenticated;
