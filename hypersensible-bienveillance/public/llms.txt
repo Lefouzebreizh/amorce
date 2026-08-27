@@ -141,6 +141,14 @@ répondent alors « indisponible », et c'est normal. Pour les essayer, passer p
   faisant perdre le premier point de chaque courbe sans le moindre signal.
 - **`ctx.waitUntil` dans le gestionnaire `scheduled`** : sans lui, l'archive R2
   et le courriel d'alerte partent parfois dans le vide.
+- **Les types de Node se déclarent ici, ils ne s'empruntent pas.** TypeScript
+  remonte l'arborescence à la recherche des types : ce dossier étant niché dans
+  un dépôt multi-projets, il trouvait le `@types/node` du studio Amorce, un cran
+  plus haut, et `npm run check` passait sur un paquet que ce projet ne déclarait
+  pas. L'intégration continue n'installe que ce dossier — plus de parent à
+  emprunter, et `node:test` devenait introuvable. Vert en session, rouge sur le
+  runner, quatre fois `ts(2591)`. Vaut pour toute dépendance de types ajoutée
+  ici : la déclarer dans ce `package.json`, jamais compter sur le voisin.
 - **Un prix n'est relevé que sur un site qui a répondu.** Prolonger la courbe
   d'un site en panne inventerait une mesure.
 
