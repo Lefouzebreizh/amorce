@@ -71,6 +71,42 @@ cache exactement l'image dont on juge le réglage.
 → Rien ne se superpose à l'aperçu. Les réglages vivent dans le tiroir du bas,
 qui pousse l'aperçu au lieu de le recouvrir.
 
+## Une jauge se fait en barres, jamais en cercle
+
+Toute progression affichée — quota, avancement, budget — se rend en **deux
+barres horizontales**, et rien d'autre.
+
+La raison est le terrain : la WebView de MIUI tronque les jauges circulaires en
+SVG, l'écran de 6,67 pouces rend un cercle illisible au pouce, et la moindre
+bibliothèque de graphiques pèse plus que la page entière. Une barre pèse trois
+lignes et se lit d'un coup d'œil, à bout de bras, en marchant.
+
+```html
+<div class="space-y-3 text-xl">
+  <div>
+    <div class="flex justify-between"><span>Aujourd'hui</span><span>3/5</span></div>
+    <div class="w-full h-6 bg-slab rounded-full overflow-hidden">
+      <div class="h-6 bg-accent rounded-full" style="width:60%"></div>
+    </div>
+  </div>
+  <div>
+    <div class="flex justify-between"><span>Semaine</span><span>12/35</span></div>
+    <div class="w-full h-6 bg-slab rounded-full overflow-hidden">
+      <div class="h-6 bg-accent rounded-full" style="width:34%"></div>
+    </div>
+  </div>
+</div>
+```
+
+Deux barres et non une : la fenêtre courte dit ce qu'on peut faire maintenant,
+la longue décide de la fin de semaine — et on ne la voit jamais venir en ne
+regardant que la première.
+
+La valeur se lit dans `localStorage`, jamais par le réseau : une jauge qui
+attend une réponse est une jauge qu'on ne consulte pas. Le texte à 20 px au
+minimum, la barre à `h-6` — en dessous, le pouce couvre la mesure qu'il vient
+lire.
+
 ## La zone du pouce
 
 Sur un écran de 20:9 tenu à une main, le tiers haut est hors de portée sans
