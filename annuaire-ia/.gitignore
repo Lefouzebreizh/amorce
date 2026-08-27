@@ -1,0 +1,5 @@
+# Fabriqués par generate-sitemap.js au moment du déploiement, avec la vraie
+# adresse du site : les versionner reviendrait à publier un sitemap pointant
+# vers le domaine d’exemple.
+sitemap.xml
+robots.txt

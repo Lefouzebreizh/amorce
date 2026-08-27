@@ -204,14 +204,14 @@ Là, l'aller-retour vaut son prix.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
 montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
 rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
-Paper-Manager dans `paper-manager/` et le socle de production livré aux clients
-dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
+Paper-Manager dans `paper-manager/`, l'annuaire d'outils IA dans `annuaire-ia/`
+et le socle de production livré aux clients dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
 code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
 montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
 audio Streamlit (`mon-app-audio/`) et l'assistant d'allocation d'actifs
@@ -234,6 +234,8 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
+| `/capacites-session` | Ce que cette session-ci sait faire — binaires, bibliothèques, hôtes joignables, modèles — et le repli de ce qui manque. Sondé en une seconde, affiché au démarrage. |
+| `/branche-partagee` | De combien la branche a pris du retard, quels commits sont déjà passés dans `main` par une autre session, et quoi faire ensuite. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
 | `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
@@ -251,8 +253,12 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
 | `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
 | `/stack-agence-supabase` | Où partir pour un projet client — le socle `agence/`, déjà écrit — et les deux règles qu'il ne fait pas respecter seul. Amaigrie : ce que son `README` dit déjà en a été retiré. Hors Amorce. |
+| `/dependance-indisponible` | Livrer quand la clé, le GPU, le logiciel ou le réseau manquent : l'échelle de repli, les quatre choses qui transforment une absence visible en défaut invisible, et ce qu'on écrit en rendant le travail. |
+| `/api-tierce-verifiee` | Lire la surface réelle d'une bibliothèque avant d'écrire contre elle, et provoquer l'erreur pour connaître sa vraie classe — ce qui a attrapé un `except` qui n'attrapait rien. |
+| `/relais` | Clore un fil devenu lourd sans rien perdre : l'état se rassemble depuis le dépôt, jamais de mémoire. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
+| `/debloquer` | Ce qui arrête une session distante et comment repartir : permission refusée par le classificateur, mandataire réseau qui rend 403, `main` fusionné sous les pieds, suite de tests sortie du champ de la CI. Dit aussi quand s'arrêter et demander. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
 | `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
 | `/trier-les-rushes` | Inventorier un lot de médias d'un coup : doublons par empreinte, meilleure définition, quelle prise garder parmi quatre, où quelqu'un parle. Née d'un plan écarté qui portait, au bit près, la seule voix utilisable. |
@@ -323,20 +329,23 @@ se rallume tout seul dans la conversation suivante :
 - **Vercel** attendra un déploiement réel : `agence/README.md` dit « n'importe
   quel hébergeur Node ou Vercel », et rien n'y est déployé.
 
-Un manque, et il ne se comble pas :
+Un cas à part, qui n'est ni un connecteur ni un manque :
 
-- **GitHub n'est pas un connecteur**, et depuis une session distante l'API
-  GitHub n'est pas la voie d'ouverture d'une PR. Constaté ici plutôt que
-  supposé : l'application GitHub de Claude est installée sur le compte, sur tous
-  les dépôts, avec l'écriture sur les demandes d'extraction ; `git push` passe ;
-  la politique de sortie du mandataire n'interdit pas `api.github.com` ; et
-  `POST /repos/…/pulls` répond malgré tout `403 GitHub access is not enabled for
-  this session`. Rien à réparer côté GitHub : **la PR s'ouvre depuis l'interface
-  de la session**, sur la vue des changements, et la branche poussée l'attend
-  là. Une session distante mène donc ses PR de bout en bout à un clic près, et
-  ce clic n'est ni un oubli de configuration ni un droit manquant. Ne pas
-  repartir en chasse dans les réglages : ce chemin-là a déjà été parcouru pour
-  rien.
+- **GitHub passe par un serveur MCP**, et c'est par lui qu'une session distante
+  ouvre ses PR : les outils `mcp__github__*` (`create_pull_request`,
+  `merge_pull_request`, la lecture des contrôles d'intégration continue).
+  Mesuré, pas supposé — la PR #69 a été ouverte, suivie et fusionnée sans jamais
+  toucher l'interface de la session.
+
+  Ce qui ne marche pas, et qui figurait ici comme un verrou général alors que
+  ce n'en est pas un : appeler `api.github.com` **en direct**, au `curl` ou par
+  la commande `gh`. `POST /repos/…/pulls` répond alors `403 GitHub access is not
+  enabled for this session`, quand bien même l'application GitHub de Claude est
+  installée sur le compte avec l'écriture sur les demandes d'extraction, et que
+  `git push` passe. Le jeton n'est pas dans l'environnement, il est derrière le
+  serveur MCP. Ne pas conclure de ce 403 que la voie est fermée, et ne pas
+  repartir en chasse dans les réglages : c'est l'outil employé qu'il faut
+  changer, pas la configuration.
 
 Et une règle de permissions, écrite dans `.claude/settings.json` plutôt que
 réaccordée à chaque session : les outils Supabase qui **lisent** y sont

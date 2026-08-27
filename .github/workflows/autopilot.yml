@@ -1,0 +1,68 @@
+# Auto-pilote du réseau d'annuaires IA.
+#
+# Un annuaire figé cesse d'être exploré : Google revient sur un site à la
+# fréquence à laquelle il y trouve du neuf. Ce travail programmé publie un
+# outil par niche tous les deux jours, refabrique les sitemaps et pousse
+# directement sur `main` — sans qu'une session soit ouverte.
+#
+# Deux points à ne pas défaire :
+#
+# - **Le jeton par défaut suffit**, à condition de lui accorder l'écriture
+#   (`permissions: contents: write`). Une poussée faite avec ce jeton ne
+#   redéclenche pas les workflows, ce qui évite toute boucle.
+# - **`concurrency` sérialise les exécutions.** Deux exécutions simultanées
+#   pousseraient sur la même branche et la seconde échouerait en rejet.
+name: Auto-pilote annuaire IA
+
+on:
+  schedule:
+    # Tous les deux jours à 08:00 UTC.
+    - cron: '0 8 */2 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: autopilot-annuaire-ia
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: annuaire-ia
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Publier un outil par niche
+        run: node auto-pilot.js
+
+      - name: Refabriquer les sitemaps
+        run: node generate-sitemap.js
+
+      - name: Committer et pousser
+        run: |
+          set -euo pipefail
+          git config user.name  "Auto-pilote Annuaire IA"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add niches sitemaps
+          if git diff --cached --quiet; then
+            echo "Rien de neuf : les réserves sont épuisées."
+            exit 0
+          fi
+          git commit -m "Publier les outils du jour sur les sites du réseau"
+          # La branche a pu bouger pendant l'exécution : on rejoue par-dessus
+          # plutôt que d'échouer en rejet.
+          git pull --rebase origin main
+          git push origin HEAD:main

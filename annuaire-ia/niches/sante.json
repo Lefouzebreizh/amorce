@@ -1,0 +1,65 @@
+{
+  "niche": {
+    "id": "sante",
+    "nom": "IA Santé",
+    "emoji": "🩺",
+    "domaine": "https://ia-sante.fr",
+    "metier": "médecins et professionnels de santé",
+    "h1_accent": "L'IA du cabinet médical",
+    "h1_suite": "qui rend du temps au patient",
+    "slogan": "Compte rendu de consultation, aide à la prescription, imagerie, courriers : les outils qui reprennent l'administratif, pas la décision.",
+    "meta_titre": "IA Santé — les outils d'intelligence artificielle pour médecins et professionnels de santé",
+    "meta_description": "Compte rendu de consultation automatisé, information sur le médicament, aide au diagnostic en imagerie, courriers médicaux : le comparatif des outils IA testés en cabinet. Prix, avis, cadre réglementaire.",
+    "theme": {
+      "primaire": "#14b8a6",
+      "secondaire": "#2dd4bf"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur. Aucun outil listé ici ne remplace un jugement clinique."
+  },
+  "outils": [
+    {
+      "id": "nabla",
+      "nom": "Nabla",
+      "categorie": "Compte rendu de consultation",
+      "prix": "Freemium — à partir d'environ 120 €/mois",
+      "description_courte": "L'assistant qui écoute la consultation et rédige l'observation : le médecin regarde son patient au lieu de son écran.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/nabla",
+      "score_avis": 4.7,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nNabla transcrit la consultation et en tire une observation structurée — motif, antécédents, examen, conclusion, conduite à tenir — poussée dans le logiciel métier. C'est le meilleur exemple d'IA en santé qui ne touche pas à la décision médicale et se contente de reprendre l'administratif : deux à trois minutes récupérées par consultation, soit près d'une heure sur une journée pleine. Conçu en France, avec un cadre de traitement des données pensé pour le secteur.\n\n## Points forts\n- Observation structurée selon les habitudes du praticien, pas un résumé brut\n- Excellente tenue du vocabulaire médical français, y compris les abréviations\n- Intégration avec les principaux logiciels de cabinet\n- Aucune interprétation diagnostique : l'outil retranscrit, le médecin conclut\n\n## Points faibles\n- Le consentement du patient à l'enregistrement doit être recueilli à chaque fois\n- Les consultations à plusieurs voix, avec un accompagnant, brouillent la transcription\n- Le tarif se justifie sur un exercice à fort volume, moins en activité partielle\n\n## Idéal pour\nLes médecins généralistes et spécialistes en secteur libéral qui terminent leurs journées par une heure de rédaction de comptes rendus."
+    },
+    {
+      "id": "posos",
+      "nom": "Posos",
+      "categorie": "Information médicament",
+      "prix": "Freemium — à partir d'environ 20 €/mois",
+      "description_courte": "La question de prescription posée en français, la réponse sourcée en quelques secondes : interactions, grossesse, insuffisance rénale.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/posos",
+      "score_avis": 4.4,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nChercher une interaction médicamenteuse dans une base classique prend plusieurs minutes et une consultation n'en dispose pas. Posos accepte la question telle qu'on la poserait à un confrère — posologie chez l'insuffisant rénal, compatibilité avec une grossesse, association à risque — et rend une réponse courte avec ses références. Le service est français, ce qui compte pour la conformité des sources aux recommandations en vigueur.\n\n## Points forts\n- Question posée en langage naturel, sans syntaxe de base de données à connaître\n- Réponses référencées, remontant aux recommandations et aux résumés des caractéristiques\n- Cas particuliers bien couverts : grossesse, allaitement, pédiatrie, insuffisance rénale\n- Application mobile utilisable pendant la consultation, en quelques secondes\n\n## Points faibles\n- Outil d'information, jamais de prescription : la responsabilité reste entière\n- La formule gratuite limite le nombre de requêtes mensuelles\n- Les situations très rares renvoient parfois à une simple citation de source\n\n## Idéal pour\nLes prescripteurs de ville confrontés à la polymédication, et les pharmaciens d'officine qui doivent trancher une interaction au comptoir."
+    },
+    {
+      "id": "aidoc",
+      "nom": "Aidoc",
+      "categorie": "Imagerie médicale",
+      "prix": "Sur devis (établissements)",
+      "description_courte": "L'analyse des examens d'imagerie en tâche de fond : les urgences vitales remontent en tête de liste de lecture.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/aidoc",
+      "score_avis": 4.3,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nAidoc s'insère dans le flux de travail radiologique et analyse les examens dès leur acquisition pour signaler les situations critiques — hémorragie intracrânienne, embolie pulmonaire, pneumothorax. L'apport n'est pas de diagnostiquer à la place du radiologue mais de réordonner la liste de lecture : l'examen urgent cesse d'attendre son tour derrière quarante examens de routine. Les gains publiés portent sur des dizaines de minutes de délai de prise en charge.\n\n## Points forts\n- Priorisation automatique de la liste de lecture sur les urgences vitales\n- Plusieurs modules validés cliniquement et marqués pour un usage médical\n- S'intègre au système d'archivage existant sans changer les habitudes de lecture\n- Le radiologue garde la main : l'outil signale, il ne conclut pas\n\n## Points faibles\n- Déploiement d'établissement : totalement hors de portée d'un cabinet de ville\n- Les faux positifs demandent un temps de vérification qu'il faut accepter\n- Chaque module se négocie séparément : le périmètre monte vite en coût\n\n## Idéal pour\nLes services d'imagerie hospitaliers et les groupes de radiologie dont le délai de lecture des urgences est un enjeu de prise en charge."
+    },
+    {
+      "id": "therapixel",
+      "nom": "Therapixel",
+      "categorie": "Imagerie médicale",
+      "prix": "Sur devis",
+      "description_courte": "La seconde lecture en dépistage du cancer du sein, sur des performances mesurées lors de comparaisons internationales.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/therapixel",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nTherapixel s'est fait connaître en se classant en tête d'une comparaison internationale sur la lecture de mammographies. L'outil assiste la seconde lecture du dépistage organisé, poste où la double lecture humaine est obligatoire et où la démographie médicale rend cette obligation difficile à tenir. Le radiologue garde évidemment la décision : l'outil trie et signale.\n\n## Points forts\n- Performances établies sur des jeux de données de comparaison publics\n- Répond à une tension réelle de démographie médicale sur le dépistage organisé\n- Marquage médical européen et éditeur français\n- S'intègre aux stations de lecture existantes\n\n## Points faibles\n- Périmètre volontairement étroit : la mammographie et rien d'autre\n- Cadre du dépistage organisé strictement encadré, l'usage se négocie institutionnellement\n- Achat de structure, sans version d'essai possible\n\n## Idéal pour\nLes centres de radiologie et structures de gestion du dépistage organisé, confrontés à la raréfaction des lecteurs disponibles.",
+      "date_ajout": "2026-08-27"
+    }
+  ]
+}
