@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { PiedDePage } from '@/components/pied-de-page';
+
 /*
  * Coque des pages d'authentification : une carte centrée, rien d'autre à
  * l'écran. Toute navigation supplémentaire ici est une occasion de partir sans
@@ -12,6 +14,9 @@ export default function LayoutAuth({ children }: { children: React.ReactNode }) 
         Socle Agence
       </Link>
       <div className="w-full max-w-md">{children}</div>
+      <div className="w-full max-w-md">
+        <PiedDePage />
+      </div>
     </div>
   );
 }

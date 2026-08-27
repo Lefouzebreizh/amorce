@@ -53,7 +53,12 @@ returns uuid
 language sql
 stable
 as $$
-  select nullif(current_setting('request.jwt.claims', true)::json ->> 'sub', '')::uuid;
+  -- `nullif` **avant** la conversion, comme le fait Supabase : un paramètre vide
+  -- ou absent doit rendre nul, pas lever « invalid input syntax for type json ».
+  -- L'ordre inverse paraît équivalent et ne l'est pas — il fait échouer toute
+  -- politique évaluée hors session, et le contrôle accuse alors le mauvais
+  -- coupable.
+  select (nullif(current_setting('request.jwt.claims', true), '')::json ->> 'sub')::uuid;
 $$;
 
 grant usage on schema public to anon, authenticated, service_role;

@@ -2,10 +2,15 @@ import { strict as assert } from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 
 import { ETAT_INITIAL } from '@/lib/actions/etat';
-import { clientFactice, formulaire, poserLeDecor } from '@/lib/__tests__/aides-actions';
+import {
+  attendreRedirection,
+  clientFactice,
+  formulaire,
+  poserLeDecor,
+} from '@/lib/__tests__/aides-actions';
 
 const decor = poserLeDecor(import.meta.url);
-const { mettreAJourProfil } = await import('@/lib/actions/profil');
+const { mettreAJourProfil, supprimerMonCompte } = await import('@/lib/actions/profil');
 
 const PROFIL = { nomComplet: 'Alice Martin', entreprise: 'Atelier Martin' };
 
@@ -17,6 +22,7 @@ function connecte(resultat?: unknown) {
 
 beforeEach(() => {
   decor.invalidations.length = 0;
+  decor.redirections.length = 0;
 });
 
 describe('mettre à jour le profil', () => {
@@ -59,5 +65,46 @@ describe('mettre à jour le profil', () => {
     assert.equal(etat.statut, 'erreur');
     assert.ok(!etat.message.includes('policy'));
     assert.ok(!etat.message.includes('profiles'));
+  });
+});
+
+describe('effacer son compte', () => {
+  it('n’envoie aucun identifiant : la base efface `auth.uid()` et rien d’autre', async () => {
+    // C'est la garantie centrale, et elle est structurelle : la fonction du
+    // schéma ne prend pas de paramètre. Une requête forgée n'a donc aucun champ
+    // où glisser le compte de quelqu'un d'autre.
+    const espion = connecte({ error: null });
+
+    await attendreRedirection(() => supprimerMonCompte());
+
+    assert.deepEqual(espion.premier('rpc'), ['supprimer_mon_compte']);
+  });
+
+  it('coupe la session localement, sans la présenter à un compte disparu', async () => {
+    const espion = connecte({ error: null });
+
+    await attendreRedirection(() => supprimerMonCompte());
+
+    assert.deepEqual(espion.premier('signOut'), [{ scope: 'local' }]);
+  });
+
+  it('renvoie à l’accueil, pas à un espace privé devenu vide', async () => {
+    connecte({ error: null });
+
+    const cible = await attendreRedirection(() => supprimerMonCompte());
+
+    assert.equal(cible, '/');
+    assert.deepEqual(decor.invalidations, [['/', 'layout']]);
+  });
+
+  it('ne déconnecte ni ne redirige quand la base a refusé', async () => {
+    // Sortir l'utilisateur de sa session alors que son compte existe encore
+    // lui ferait croire à un effacement qui n'a pas eu lieu.
+    const espion = connecte({ error: { message: 'permission denied for table users' } });
+
+    await supprimerMonCompte();
+
+    assert.equal(espion.premier('signOut'), undefined);
+    assert.equal(decor.redirections.length, 0);
   });
 });
