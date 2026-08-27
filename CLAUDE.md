@@ -32,13 +32,18 @@ soir ?** Si non, ça ne sort pas.
 Interface : 18 px minimum, gros contrastes, pas d'autoplay,
 `prefers-reduced-motion` respecté, cibles ≥ 44 px, `100dvh` et non `100vh`.
 Terrain de référence : Redmi Note 12 Plus, Chrome Android, ~20:9, batterie sans
-restriction et assombrissement MIUI coupé. Détail dans `/tailwind-mobile-ux`.
+restriction et assombrissement MIUI coupé. Toute jauge se fait en **deux barres
+horizontales**, jamais en cercle ni en bibliothèque — code et raison dans
+`/tailwind-mobile-ux`.
 
 ## 3. MÉMOIRE
 
-La mémoire vit dans ce fichier, dans `.claude/skills/` et dans `INDEX.md` —
-jamais dans la discussion. Une leçon s'écrit dans la compétence concernée le
-jour même, sinon elle est perdue. Fil qui s'alourdit → `/relais`.
+La mémoire vit dans ce fichier, dans `.claude/skills/`, dans `INDEX.md` et dans
+`second-brain/` — jamais dans la discussion. Ce qui vaut pour **un** projet va
+dans sa compétence ; ce qui traverse les projets va dans `second-brain/lecons.md`,
+et ce qui se recopie tel quel dans `kits/`. Le jour même : le lendemain on se
+souvient du correctif et plus de la cause, et c'est la cause qui vaut. Fil qui
+s'alourdit → `/relais`.
 
 ## 4. STACK
 
@@ -59,7 +64,48 @@ Build vert obligatoire avant toute poussée. R2 / D1 / Workers ne sont utilisés
 nulle part aujourd'hui : les écrire ici comme acquis serait faux. À poser comme
 cap si un projet les adopte.
 
-## 5. ANTI-BLOCAGE
+## 5. SENSIBLE, ET JAMAIS À L'ARRÊT
+
+Par défaut, autonomie : tu ne demandes pas. Deux niveaux font exception.
+
+**Orange — confirmation rapide** : pousser sur `main`, déployer en production,
+dépenser plus d'un dollar, modifier `~/.claude/`, installer une dépendance
+payante, supprimer une sauvegarde.
+
+**Rouge — accord explicite** : supprimer sans sauvegarde, toucher aux données
+personnelles (Drive, Gmail, contacts), sortir la moindre donnée des 48 000,
+dépenser plus de cinq dollars, écrire dans une base de production, écraser un
+abri qui tourne.
+
+Format : *« ⚠️ SENSIBLE : je vais [action] parce que [raison]. Coût [X], risque
+[Y]. J'y vais ? En attendant je continue sur autre chose. »*
+
+**Et surtout : la question posée, on enchaîne.** Jamais « j'attends ton
+approbation » comme dernière phrase — trois tâches parallèles à la place :
+alléger le coût, améliorer l'affichage sur le téléphone, écrire une idée dans
+`second-brain/`. La réponse arrive, on reprend. Si c'est non, on propose moins
+cher.
+
+## 6. COÛT
+
+Être bloqué en pleine tâche parce qu'on a trop dépensé est un échec de
+préparation, pas de chance. `/jauge` avant un gros lot.
+
+- **Lectures groupées** : plusieurs fichiers en un seul tour, jamais cinq appels
+  qui se suivent.
+- **Livrer tôt.** Un résultat qui tourne vaut mieux que le bon résultat annoncé
+  au quinzième message.
+- **Trois essais par bug**, puis on livre la version dégradée qui marche et on
+  écrit la cause dans `second-brain/lecons.md`. Le quatrième essai coûte plus
+  que le défaut.
+- **Explorer petit, finir grand** : brouillon avec le modèle et les réglages les
+  moins chers, qualité maximale sur la seule version finale.
+- **Rien de lourd sans raison** : pas de bibliothèque de graphiques ni
+  d'animation pour ce qu'une `div` et Tailwind font.
+- **Ce qui a été calculé se garde.** Une mesure refaite deux fois est une
+  mesure payée deux fois.
+
+## 7. ANTI-BLOCAGE
 
 Capacité qui manque → `skill-creator`, on fabrique (dossier, code, doc), on s'en
 sert dans la foulée. Trois par session au plus. Vérifier la doc officielle avant
@@ -75,7 +121,7 @@ mensonge dans la liste.
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
 
-## 6. DONE, ET CE QU'ON NE FAIT JAMAIS
+## 8. DONE, ET CE QU'ON NE FAIT JAMAIS
 
 **Done** = vérification verte + **regardé, pas seulement mesuré** + leçon écrite.
 
@@ -88,7 +134,7 @@ choisir.
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
 
-## 7. AU DÉMARRAGE
+## 9. AU DÉMARRAGE
 
 Le hook `.claude/hooks/session-start.sh` installe tout seul. Pas de compétence
 `auto-update-godmode` : quatre s'en partagent le travail — `/etat-du-depot`,
@@ -97,7 +143,7 @@ Le hook `.claude/hooks/session-start.sh` installe tout seul. Pas de compétence
 Après avoir ajouté un projet, une compétence ou un agent : `/coherence-depot`.
 C'est le geste qui rend la documentation fausse.
 
-## 8. CONTEXTE PROJET CONSERVÉ
+## 10. CONTEXTE PROJET CONSERVÉ
 
 ### Commandes
 
