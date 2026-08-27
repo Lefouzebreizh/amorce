@@ -230,9 +230,6 @@ ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
 rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
-Paper-Manager dans `paper-manager/`, le réseau d'annuaires d'outils IA dans
-`annuaire-ia/` et le socle de production livré aux clients dans `agence/` (qui
-ont chacun leur propre `README.md`) — plus un volet sans
 Paper-Manager dans `paper-manager/`, le réseau de onze annuaires d'outils IA dans `annuaire-ia/`
 et le socle de production livré aux clients dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
 code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
@@ -258,7 +255,6 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/etat-du-depot` | L'inventaire du dépôt, **découvert** et non recopié : chantiers, lignes, commits, tests, écart avec `main`. À lancer avant d'écrire où que ce soit un chiffre sur le dépôt — ici, une liste tenue à la main est fausse le lendemain, et fausse en silence. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. Porte `scripts/comme-la-ci.sh`, qui rejoue les sept suites Python comme un runner GitHub — sur les seuls fichiers versionnés, dans un environnement n'ayant que les bibliothèques de la CI. C'est ce qui attrape le vert en session, rouge ailleurs. |
-| `/annuaire-ia` | Vérifier un site du réseau d'annuaires — seize contrôles Chromium, seule chose qui dise qu'une page sans compilation marche — et ce qui, dans ce projet, part en public tout seul. |
 | `/capacites-session` | Ce que cette session-ci sait faire — binaires, bibliothèques, hôtes joignables, modèles — et le repli de ce qui manque. Sondé en une seconde, affiché au démarrage. |
 | `/branche-partagee` | De combien la branche a pris du retard, quels commits sont déjà passés dans `main` par une autre session, et quoi faire ensuite. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |

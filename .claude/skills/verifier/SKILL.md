@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
+description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, validation des bases et parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
 ---
 
 # Vérifier ce dépôt
@@ -61,14 +61,14 @@ npm run verify
 ## Réseau d'annuaires IA — `annuaire-ia/`
 
 ```bash
-node .claude/skills/annuaire-ia/scripts/verifier.mjs        # niche par défaut
-node .claude/skills/annuaire-ia/scripts/verifier.mjs btp    # une niche précise
+cd annuaire-ia
+npm run valider          # les bases : erreurs et alertes
+npm run verifier         # le parcours Chromium
 ```
 
-Seize contrôles dans un vrai Chromium, une quinzaine de secondes. Le projet n'a
-ni compilation, ni typecheck, ni lint : c'est la seule chose qui dise s'il
-marche. Voir `/annuaire-ia` pour ce que chaque contrôle garde — et pour la
-raison de regarder les captures même quand tout est vert.
+Vingt-cinq contrôles dans un vrai Chromium. Le projet n'a ni typecheck ni lint :
+c'est la seule chose qui dise s'il marche, et onze sites tombent ensemble.
+Voir `/reseau-annuaires` pour ce que chacun garde.
 
 ## Toutes les suites Python, comme la CI
 
