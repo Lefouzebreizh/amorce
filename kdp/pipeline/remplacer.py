@@ -18,6 +18,7 @@ et texte comprises, il mesure le lettrage vectoriel plutôt que le dessin.
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -110,11 +111,65 @@ def remplacer(neuve: Path, page: int, dossier: Path, travail: Path,
     return {"pdf": pdf, "planche": greffee, "mesures": mesures}
 
 
+def _page_du_nom(chemin: Path, tome: int) -> int | None:
+    """Retrouve la page d'une planche à son nom : numéro, ou slug."""
+    if (m := re.search(r"[Pp]age[ _-]?(\d{1,2})", chemin.stem)):
+        return int(m.group(1))
+    nu = re.sub(r"[^a-z0-9]", "", chemin.stem.lower())
+    for p in charte.pages(tome):
+        if re.sub(r"[^a-z0-9]", "", p.slug.lower()) in nu:
+            return p.numero
+    return None
+
+
+def lot(dossier_planches: Path, dossier: Path, travail: Path, tome: int = 1,
+        reperes: bool = False) -> list[dict]:
+    """Traite un dossier entier de planches régénérées.
+
+    Seize planches ne doivent pas demander seize commandes ni seize
+    comparaisons de mémoire : le tableau final est le livrable, pas les lignes
+    qui défilent. Une planche dont on ne sait pas à quelle page elle appartient
+    est signalée et sautée, jamais devinée — se tromper de page poserait le
+    texte d'une histoire sur le dessin d'une autre.
+    """
+    trouvees = sorted(p for p in dossier_planches.iterdir()
+                      if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"))
+    faits, ignores = [], []
+    for chemin in trouvees:
+        page = _page_du_nom(chemin, tome)
+        if page is None:
+            ignores.append(chemin.name)
+            continue
+        print(f"\n─── {chemin.name}  →  page {page}")
+        faits.append({**remplacer(chemin, page, dossier, travail, tome,
+                                  reperes=reperes), "page": page,
+                      "source": chemin.name})
+
+    print(f"\n{'':─<64}\n  RÉCAPITULATIF\n")
+    print(f"  {'page':>4}  {'ancienne':>9}  {'nouvelle':>9}  verdict")
+    gagnees = 0
+    for f in sorted(faits, key=lambda x: x["page"]):
+        m = f["mesures"]
+        if "ancienne" in m:
+            ecart = m["nouvelle"] - m["ancienne"]
+            gagnees += ecart >= 0
+            verdict = f"{'gagne' if ecart >= 0 else 'PERD':>5} {abs(ecart):.0f}"
+            print(f"  {f['page']:>4}  {m['ancienne']:9.0f}  {m['nouvelle']:9.0f}  {verdict}")
+        else:
+            print(f"  {f['page']:>4}  {'—':>9}  {m['nouvelle']:9.0f}  (pas de référence)")
+    print(f"\n  {gagnees} planche(s) sur {len(faits)} gagnent en piqué.")
+    if ignores:
+        print(f"\n  IGNORÉES, page introuvable dans leur nom : {', '.join(ignores)}")
+        print(f"    les renommer avec « PageNN » ou le slug de la page.")
+    return faits
+
+
 if __name__ == "__main__":
     import argparse
     a = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    a.add_argument("--neuve", required=True, help="planche régénérée, sans texte ni bordure")
-    a.add_argument("--page", type=int, required=True)
+    a.add_argument("--neuve", help="planche régénérée, sans texte ni bordure")
+    a.add_argument("--lot", help="dossier de planches, traitées d'un coup")
+    a.add_argument("--page", type=int)
     a.add_argument("--tome", type=int, default=1, choices=sorted(charte.TOMES))
     a.add_argument("--dossier", help="DOSSIER.md du tome (déduit du tome si absent)")
     a.add_argument("--travail", default=".travail")
@@ -122,8 +177,15 @@ if __name__ == "__main__":
     a.add_argument("--reperes", action="store_true",
                    help="tracer les boîtes à vide plutôt que lettrer")
     args = a.parse_args()
+    if bool(args.neuve) == bool(args.lot):
+        raise SystemExit("choisir --neuve (une planche) ou --lot (un dossier)")
     dossier = Path(args.dossier) if args.dossier else \
         Path(__file__).parents[1] / f"tome{args.tome}/DOSSIER.md"
-    remplacer(Path(args.neuve), args.page, dossier, Path(args.travail),
-              args.tome, Path(args.donneuse) if args.donneuse else None,
-              reperes=args.reperes)
+    if args.lot:
+        lot(Path(args.lot), dossier, Path(args.travail), args.tome, args.reperes)
+    else:
+        if args.page is None:
+            raise SystemExit("--page est requis avec --neuve")
+        remplacer(Path(args.neuve), args.page, dossier, Path(args.travail),
+                  args.tome, Path(args.donneuse) if args.donneuse else None,
+                  reperes=args.reperes)

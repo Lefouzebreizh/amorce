@@ -98,7 +98,10 @@ export function restoreProject(saved: SavedProject, urls: Map<string, string>): 
 
   const project = saved.project;
   const assets = project.assets
-    .map((a) => ({ ...a, url: urls.get(fileKey('asset', a.id)) ?? '' }))
+    // `kind` n'existait pas avant l'arrivée des images fixes : un projet
+    // enregistré à l'époque n'en porte pas, et tout ce qu'il contient est
+    // forcément un rush.
+    .map((a) => ({ ...a, kind: a.kind ?? 'video', url: urls.get(fileKey('asset', a.id)) ?? '' }))
     .filter((a) => a.url !== '');
   const keptAssets = new Set(assets.map((a) => a.id));
 

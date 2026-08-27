@@ -5,8 +5,8 @@
 
 import { useRef, useState } from 'react';
 import { applyAutoEdit } from '@/lib/autoEdit';
-import { formatTime, loadSampleCue, loadVideoAsset, loadVoiceCue } from '@/lib/media';
-import { isVideo, toFile } from '@/lib/share';
+import { formatTime, loadAsset, loadSampleCue, loadVoiceCue } from '@/lib/media';
+import { isVisuel, toFile } from '@/lib/share';
 import { useStudio } from '@/lib/store';
 import { placeOnCuts, placeWithoutOverlap, shotStarts } from '@/lib/timeline';
 import { useIsHydrated } from '@/hooks/useMediaQuery';
@@ -18,8 +18,9 @@ import { Button, EmptyState, Hint, Panel } from '../ui';
  *
  * Rien dans un fichier audio ne dit s'il s'agit d'une réplique ou d'un bruitage.
  * Deviner mènerait la moitié du temps au mauvais panneau, où l'utilisateur ne
- * les chercherait pas : on demande, une fois pour le lot entier. Les vidéos, elles,
- * n'ont aucune ambiguïté et rejoignent la bibliothèque quoi qu'il arrive.
+ * les chercherait pas : on demande, une fois pour le lot entier. Les vidéos et
+ * les images, elles, n'ont aucune ambiguïté et rejoignent la bibliothèque quoi
+ * qu'il arrive.
  */
 function SharedTray({ engine }: { engine: PlaybackEngine }) {
   const shared = useStudio((s) => s.sharedFiles);
@@ -35,17 +36,17 @@ function SharedTray({ engine }: { engine: PlaybackEngine }) {
 
   if (shared.length === 0) return null;
 
-  const videos = shared.filter(isVideo);
-  const sounds = shared.filter((file) => !isVideo(file));
+  const visuels = shared.filter(isVisuel);
+  const sounds = shared.filter((file) => !isVisuel(file));
 
   const accept = async (kind: 'voix' | 'bruitage') => {
     setBusy(true);
     setError(null);
 
     try {
-      if (videos.length > 0) {
+      if (visuels.length > 0) {
         const assets = [];
-        for (const file of videos) assets.push(await loadVideoAsset(toFile(file)));
+        for (const file of visuels) assets.push(await loadAsset(toFile(file)));
         addAssets(assets);
       }
 
@@ -143,23 +144,25 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
   const ready = useIsHydrated();
 
   const ingest = async (files: FileList | File[]) => {
-    const videos = [...files].filter((file) => file.type.startsWith('video/'));
-    if (videos.length === 0) {
-      setError('Aucun fichier vidéo reconnu. Formats attendus : MP4, MOV, WebM.');
+    const visuels = [...files].filter(
+      (file) => file.type.startsWith('video/') || file.type.startsWith('image/'),
+    );
+    if (visuels.length === 0) {
+      setError('Aucun fichier reconnu. Vidéos : MP4, MOV, WebM. Images : PNG, JPEG, WebP.');
       return;
     }
 
     setError(null);
-    const loaded = [];
     const failed: string[] = [];
 
-    for (const [index, file] of videos.entries()) {
-      setBusy({ done: index, total: videos.length });
+    for (const [index, file] of visuels.entries()) {
+      setBusy({ done: index, total: visuels.length });
       try {
-        const asset = await loadVideoAsset(file);
-        loaded.push(asset);
-        // Chaque rush rejoint la bibliothèque dès qu'il est prêt : attendre le
-        // dernier pour tout afficher donne l'impression que rien n'avance.
+        // Le type MIME choisit le décodeur : tenter une image avec un élément
+        // <video> rendrait « format non pris en charge » sur un fichier sain.
+        const asset = await loadAsset(file);
+        // Chaque fichier rejoint la bibliothèque dès qu'il est prêt : attendre
+        // le dernier pour tout afficher donne l'impression que rien n'avance.
         addAssets([asset]);
       } catch {
         failed.push(file.name);
@@ -212,20 +215,20 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
             {!ready
               ? 'Préparation du studio…'
               : busy
-                ? `Lecture de la vidéo ${busy.done + 1} sur ${busy.total}…`
-                : 'Dépose tes vidéos ici'}
+                ? `Lecture du fichier ${busy.done + 1} sur ${busy.total}…`
+                : 'Dépose tes vidéos ou tes images ici'}
           </p>
           <p className="mt-1 text-xs text-muted">
             {!ready
               ? 'Encore un instant, l’application se met en place.'
               : busy
                 ? 'Cela peut prendre un moment sur téléphone.'
-                : 'ou clique pour les choisir · MP4, MOV, WebM'}
+                : 'ou clique pour les choisir · MP4, MOV, WebM · PNG, JPEG, WebP'}
           </p>
           <input
             ref={inputRef}
             type="file"
-            accept="video/*"
+            accept="video/*,image/*"
             multiple
             className="hidden"
             onChange={(event) => {
@@ -281,6 +284,8 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
         {assets.length === 0 ? (
           <EmptyState title="Rien pour l’instant">
             Importe tes vidéos IA ci-dessus. Une dizaine de plans de 2 à 5 secondes suffit largement.
+            Une illustration, une page, une capture font aussi bien l’affaire : une image fixe devient
+            un plan qu’un mouvement de caméra fait vivre.
           </EmptyState>
         ) : (
           <ul className="space-y-1.5">

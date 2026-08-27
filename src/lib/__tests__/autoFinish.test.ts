@@ -20,7 +20,7 @@ function counter() {
 }
 
 function asset(id: string): MediaAsset {
-  return { id, name: `${id}.mp4`, url: `blob:${id}`, duration: 30, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+  return { id, name: `${id}.mp4`, kind: 'video', url: `blob:${id}`, duration: 30, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
 }
 
 /** Un montage nu : des plans, rien d'autre. C'est le cas qu'on vient corriger. */

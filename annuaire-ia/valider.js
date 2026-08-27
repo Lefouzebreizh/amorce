@@ -152,6 +152,20 @@ export function validerBase(base, nomFichier, releve = creerReleve()) {
     return releve;
   }
 
+  /* Un outil vendu « sur devis » se négocie en six mois avec un commercial :
+     aucun programme d'affiliation derrière, donc aucune commission possible.
+     Ils ont leur place — ce sont souvent les meilleurs du métier, et c'est
+     l'autorité du site qui amène le trafic — mais une niche qui n'est faite
+     que de ceux-là ne rapportera jamais un centime. Mesuré au lancement :
+     juridique n'avait que ça, btp et rh trois sur quatre. */
+  const surDevis = base.outils.filter((o) => /sur devis/i.test(String(o.prix ?? ''))).length;
+  if (base.outils.length >= 3 && surDevis * 2 > base.outils.length) {
+    alerter(
+      releve, 'niche-peu-monetisable',
+      `${ou} — ${surDevis} outils sur ${base.outils.length} sont « sur devis » : cette niche ne peut presque rien rapporter`
+    );
+  }
+
   const vus = new Set();
   for (const outil of base.outils) {
     validerOutil(outil, ou, releve, { dateRequise: true });

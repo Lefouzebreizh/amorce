@@ -1,0 +1,14 @@
+# Appels HTTP vers DexScreener, GoPlus, Honeypot.is, RugCheck, Telegram. La
+# bibliothèque standard suffirait techniquement, mais `requests` apporte la
+# session persistante — et une session qui garde sa connexion TCP ouverte divise
+# par trois le temps d'un scan de 300 paires.
+requests>=2.31
+
+# Les seuils, les pondérations et la table des chaînes vivent dans des fichiers
+# YAML plutôt que dans le code : régler un détecteur, c'est bouger des nombres
+# vingt fois de suite, et chaque réglage doit se relire sans ouvrir un module.
+PyYAML>=6.0
+
+# Les clés d'API et le jeton Telegram viennent d'un `.env` non versionné. Un
+# jeton de bot publié dans un dépôt est un bot volé dans l'heure.
+python-dotenv>=1.0

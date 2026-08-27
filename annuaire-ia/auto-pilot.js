@@ -73,7 +73,18 @@ function publierUnOutil({ fichier, base }) {
   if (reserve.length === 0) return { etat: 'sans-reserve' };
   if (candidats.length === 0) return { etat: 'epuisee' };
 
-  const choisi = candidats[Math.floor(Math.random() * candidats.length)];
+  /* Tant que la niche compte plus d'outils « sur devis » que de libre-service,
+     on publie d'abord ceux qui peuvent rapporter. Un outil vendu par un
+     commercial n'a pas de programme d'affiliation : trois niches sur onze
+     étaient dans ce cas au lancement, et le site le mieux référencé du monde
+     ne rapporte rien s'il ne pointe que vers des devis. La règle est ici,
+     dans le tirage, plutôt que dans une consigne à se rappeler. */
+  const estDevis = (o) => /sur devis/i.test(String(o.prix ?? ''));
+  const devisEnLigne = base.outils.filter(estDevis).length;
+  const prioritaires = candidats.filter((o) => !estDevis(o));
+  const urne = devisEnLigne * 2 > base.outils.length && prioritaires.length ? prioritaires : candidats;
+
+  const choisi = urne[Math.floor(Math.random() * urne.length)];
   base.outils.push({ ...choisi, date_ajout: aujourdhui() });
   valider(base, fichier);
 
@@ -277,6 +288,131 @@ Là où le home staging virtuel classique meuble une pièce vide, Reimagine Home
 Les mandats sur biens datés ou à rénover, où la difficulté n'est pas de meubler mais de faire imaginer autre chose que l'existant.`,
     },
     {
+      id: `styldod`,
+      nom: `Styldod`,
+      categorie: `Home staging`,
+      prix: `À partir de 16 $ par visuel, sans abonnement`,
+      description_courte: `Le home staging virtuel facturé à l'image, avec retouche illimitée jusqu'à ce que le rendu convienne.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/styldod`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Là où les outils entièrement automatiques sortent un résultat en trente secondes qu'il faut parfois relancer dix fois, Styldod combine génération et reprise humaine : on commande une image, on demande des ajustements, on paie à l'unité. Pour une agence qui traite deux ou trois mandats vides par mois, la facture reste dérisoire face à un abonnement mensuel jamais amorti.
+
+## Points forts
+- Facturation à l'image : aucun abonnement à amortir sur un mois creux
+- Retouches illimitées incluses jusqu'à validation du rendu
+- Suppression du mobilier existant, rénovation virtuelle et détourage au même endroit
+- Rendus plus propres que les générateurs entièrement automatiques sur les pièces complexes
+
+## Points faibles
+- Délai de quelques heures là où l'automatique répond en secondes
+- Le coût grimpe vite si l'on veut décliner tout un portefeuille
+- Interface et support en anglais uniquement
+
+## Idéal pour
+Les agences qui sortent quelques mandats vides par mois et veulent un visuel irréprochable sans engagement mensuel.`,
+    },
+    {
+      id: `collov-ai`,
+      nom: `Collov AI`,
+      categorie: `Home staging`,
+      prix: `Freemium — à partir de 20 $/mois`,
+      description_courte: `Le réaménagement d'une pièce en une trentaine de styles, avec la structure du bien conservée.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/collov-ai`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Collov s'adresse d'abord aux professionnels de la décoration, ce qui se voit dans la qualité des ambiances proposées : les styles sont cohérents, meublés avec du mobilier plausible plutôt qu'avec des objets impossibles. La formule gratuite suffit à juger sur un vrai mandat avant d'engager quoi que ce soit.
+
+## Points forts
+- Une trentaine de styles cohérents, du scandinave au bord de mer
+- Murs, sols et ouvertures conservés : la pièce reste reconnaissable
+- Version gratuite réellement utilisable pour un premier essai
+- Traitement par lot pour décliner une même pièce en plusieurs ambiances
+
+## Points faibles
+- Les très grandes pièces ouvertes demandent souvent plusieurs essais
+- Le mobilier proposé n'est pas achetable en France, ce qui limite l'usage commercial
+- La mention du caractère virtuel de l'aménagement reste à votre charge
+
+## Idéal pour
+Les négociateurs qui publient eux-mêmes leurs annonces et veulent tester deux ou trois ambiances avant de choisir la photo de couverture.`,
+    },
+    {
+      id: `homestyler`,
+      nom: `Homestyler`,
+      categorie: `Plan & 3D`,
+      prix: `Freemium — à partir de 20 $/mois`,
+      description_courte: `Le plan d'aménagement en 3D dessiné en quelques minutes, à partir d'un plan coté ou d'une photo.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/homestyler`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Un acheteur qui ne se projette pas dans un bien à rénover ne fait pas d'offre. Homestyler permet de dessiner en une demi-heure la distribution possible d'un plateau, meublée et texturée, et d'en sortir des vues 3D à joindre à l'annonce. Ce n'est pas de l'architecture, c'est un argument de vente que personne d'autre ne met dans son dossier.
+
+## Points forts
+- Prise en main en une heure, sans compétence en dessin technique
+- Rendus 3D et vues aériennes exportables directement
+- Bibliothèque de mobilier très fournie, avec dimensions réelles
+- Formule gratuite suffisante pour un ou deux projets par mois
+
+## Points faibles
+- Le rendu reste en deçà des outils d'architecture professionnels
+- Rien n'est aux normes : c'est illustratif, jamais un plan de travaux
+- Le travail de saisie du plan reste manuel et prend du temps
+
+## Idéal pour
+Les mandats sur biens à rénover ou à redistribuer, où le frein à l'offre est l'incapacité de l'acheteur à imaginer autre chose que l'existant.`,
+    },
+    {
+      id: `bombbomb`,
+      nom: `BombBomb`,
+      categorie: `Prospection`,
+      prix: `À partir de 39 $/mois`,
+      description_courte: `Le courriel de prospection remplacé par une vidéo personnelle, avec le suivi de qui l'a vraiment regardée.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/bombbomb`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Un message de prospection écrit se noie ; une vidéo de quarante secondes où l'on voit le visage du négociateur ouvre nettement plus. BombBomb enregistre, héberge et insère la vidéo dans le courriel, puis dit qui l'a ouverte, regardée, et jusqu'où. L'aide à la rédaction et les modèles font le reste du travail répétitif.
+
+## Points forts
+- Taux d'ouverture et de réponse très supérieurs au courriel texte en prospection
+- Suivi précis des visionnages : on sait qui relancer et quand
+- Enregistrement depuis le téléphone, entre deux visites
+- S'intègre aux principaux logiciels de gestion de contacts
+
+## Points faibles
+- Il faut accepter de se filmer, ce qui écarte une partie des utilisateurs
+- Facturé par utilisateur : une équipe de cinq revient cher
+- Pensé pour le marché américain, sans localisation française
+
+## Idéal pour
+Les négociateurs qui prospectent par courriel et n'obtiennent plus de réponse, et les équipes qui veulent se distinguer sur un secteur saturé.`,
+    },
+    {
+      id: `chatbase`,
+      nom: `Chatbase`,
+      categorie: `Capture de contacts`,
+      prix: `Freemium — à partir de 40 $/mois`,
+      description_courte: `Un assistant posé sur le site de l'agence, nourri de vos annonces, qui répond la nuit et laisse le numéro du visiteur.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/chatbase`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+La majorité des visiteurs d'un site d'agence arrivent le soir et repartent sans laisser de trace. Chatbase installe en une heure un assistant entraîné sur vos propres pages — annonces, honoraires, secteurs — qui répond aux questions courantes et récupère un contact avant que le visiteur ne reparte. Aucune compétence technique, un extrait de code à coller.
+
+## Points forts
+- Entraîné sur vos pages et vos documents : il répond juste, pas en général
+- Installation en une heure, une ligne de code à coller sur le site
+- Récupération du contact intégrée, poussée vers le courriel ou le logiciel de gestion
+- Journal complet des conversations : on découvre ce que les visiteurs demandent vraiment
+
+## Points faibles
+- Un assistant mal cadré invente : les honoraires et les mentions légales se verrouillent à la main
+- Facturé au volume de messages, imprévisible sur un pic de trafic
+- Il faut réentraîner à chaque changement de catalogue
+
+## Idéal pour
+Les agences dont le site reçoit du trafic le soir et le week-end sans que personne ne soit là pour répondre.`,
+    },
+    {
       id: `hektor`,
       nom: `Hektor`,
       categorie: `CRM & pilotage`,
@@ -379,32 +515,6 @@ Prospeneo appartient à la courte liste des logiciels immobiliers français dont
 
 ## Idéal pour
 Les agences qui s'équipent pour la première fois, ou celles prêtes à échanger la sécurité d'un grand parc contre un outil plus moderne.`,
-    },
-    {
-      id: `collov-ai`,
-      nom: `Collov AI`,
-      categorie: `Home staging`,
-      prix: `Palier gratuit, puis abonnement mensuel`,
-      description_courte: `Le réaménagement virtuel d'une pièce en quelques secondes, avec plusieurs styles proposés à partir d'une seule photo.`,
-      lien_affiliation: `https://exemple-affiliation.com/go/collov-ai`,
-      score_avis: 4.0,
-      description_longue: `## Notre verdict
-Le home staging virtuel a cessé d'être un gadget le jour où le rendu est devenu assez propre pour ne pas se remarquer. Collov produit plusieurs propositions d'aménagement à partir d'une photo, ce qui sert moins à embellir qu'à faire imaginer : c'est exactement le blocage sur un bien vide ou daté. Reste la règle qui prime sur la technique — une image retouchée doit être annoncée comme telle, sous peine de tomber dans la tromperie.
-
-## Points forts
-- Plusieurs styles d'aménagement proposés à partir d'une seule photo
-- Rendu assez propre pour une annonce, sans studio ni photographe
-- Palier gratuit permettant d'éprouver le rendu sur ses propres biens
-- Utile aussi en amont, pour orienter un vendeur sur ce qu'il faut dégager
-
-## Points faibles
-- La mention du caractère virtuel de la projection est une obligation d'information
-- La géométrie de la pièce est parfois altérée : à relire avant publication
-- Plusieurs essais nécessaires pour obtenir un rendu utilisable
-- Outil anglophone, sans accompagnement en français
-
-## Idéal pour
-Les mandats sur biens vides, datés ou encombrés, où la difficulté n'est pas de montrer le bien mais de faire imaginer autre chose.`,
     },
   ],
 
@@ -533,6 +643,131 @@ Doxel compare l'ouvrage réellement construit à la maquette et au planning, à 
 
 ## Idéal pour
 Les maîtres d'ouvrage et entreprises générales sur des projets techniques — hôpitaux, industrie, data centers — où l'écart entre le facturé et le posé coûte cher.`,
+    },
+    {
+      id: `fieldwire`,
+      nom: `Fieldwire`,
+      categorie: `Suivi de chantier`,
+      prix: `Freemium — à partir de 39 $/mois par utilisateur`,
+      description_courte: `Les plans, les tâches et les réserves dans la poche de chaque compagnon, hors ligne compris.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/fieldwire`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Fieldwire fait ce que la plupart des outils de chantier promettent sans le tenir : être réellement utilisé par les gens qui sont sur le chantier. Plans à jour dans le téléphone, tâche épinglée à un endroit précis, photo, hors ligne au sous-sol. La formule gratuite couvre trois utilisateurs et un chantier, ce qui suffit à juger sans réunion d'achat.
+
+## Points forts
+- Formule gratuite réellement utilisable : trois utilisateurs, un chantier
+- Fonctionne hors ligne, ce qui est la réalité d'un sous-sol ou d'un dernier étage
+- Version de plan toujours à jour : plus personne ne travaille sur l'indice précédent
+- Adopté par les compagnons, pas seulement par l'encadrement
+
+## Points faibles
+- Facturé par utilisateur : équiper tout le monde chiffre vite
+- Le module de planning reste basique face aux logiciels dédiés
+- Pas d'analyse d'avancement automatique : c'est de la saisie assistée
+
+## Idéal pour
+Les entreprises de second œuvre et les conducteurs de travaux qui relèvent encore leurs réserves sur carnet et retapent le soir.`,
+    },
+    {
+      id: `buildertrend`,
+      nom: `Buildertrend`,
+      categorie: `Gestion d’entreprise`,
+      prix: `À partir de 199 $/mois`,
+      description_courte: `Devis, planning, achats, facturation et espace client dans un seul outil, pour une entreprise de moins de cinquante personnes.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/buildertrend`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Le vrai coût d'une entreprise de bâtiment de taille moyenne n'est pas sur le chantier, il est dans les allers-retours : un client qui appelle pour savoir où en est le chantier, un devis modifié trois fois, une facture oubliée. Buildertrend rassemble tout et donne au client son propre accès, ce qui coupe la moitié des appels.
+
+## Points forts
+- Espace client autonome : le maître d'ouvrage voit l'avancement sans téléphoner
+- Du devis à la facture dans le même outil, sans ressaisie
+- Rédaction assistée des comptes rendus et des courriers de chantier
+- Application mobile complète, utilisable depuis le chantier
+
+## Points faibles
+- Abonnement mensuel élevé pour une petite structure
+- Conçu pour le marché nord-américain : la TVA et les mentions françaises demandent des contournements
+- Le déploiement complet demande plusieurs semaines de mise en route
+
+## Idéal pour
+Les entreprises générales et constructeurs de maisons individuelles de dix à cinquante personnes qui pilotent encore au tableur et au téléphone.`,
+    },
+    {
+      id: `houzz-pro`,
+      nom: `Houzz Pro`,
+      categorie: `Gestion d’entreprise`,
+      prix: `À partir de 85 $/mois`,
+      description_courte: `La vitrine, les devis et le suivi de chantier réunis, avec la visualisation 3D pour faire signer le client.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/houzz-pro`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Houzz Pro tire son intérêt d'un endroit inattendu : il apporte des contacts en même temps que l'outil de gestion. Pour un artisan ou un maître d'œuvre, la vitrine, le devis chiffré, la visualisation 3D de la pièce rénovée et le suivi de chantier tiennent dans un seul abonnement, et la 3D est ce qui fait signer un client hésitant.
+
+## Points forts
+- Apporte du contact entrant, ce qu'aucun autre outil de gestion ne fait
+- Visualisation 3D de la rénovation intégrée au devis
+- Devis, factures et suivi de chantier dans le même endroit
+- Tarif accessible à un artisan seul ou à une petite équipe
+
+## Points faibles
+- L'apport de contacts est très inégal hors des grandes villes américaines
+- Moins profond que les outils spécialisés sur chaque fonction
+- Le catalogue produits est inutilisable depuis la France
+
+## Idéal pour
+Les artisans, décorateurs et maîtres d'œuvre qui cherchent autant des chantiers qu'un outil pour les gérer.`,
+    },
+    {
+      id: `bluebeam`,
+      nom: `Bluebeam Revu`,
+      categorie: `Plans & documents`,
+      prix: `À partir de 260 $ par an`,
+      description_courte: `Le standard du plan annoté en PDF : mesures, calques, comparaison d'indices et travail à plusieurs sur le même document.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/bluebeam`,
+      score_avis: 4.5,
+      description_longue: `## Notre verdict
+Bluebeam est l'outil que tout le monde finit par avoir, parce que le PDF reste la monnaie d'échange du bâtiment. Mesures à l'échelle, comptages, superposition de deux indices pour voir ce qui a changé, annotations partagées en direct : c'est le couteau suisse du dossier de plans, et la comparaison automatique d'indices vaut à elle seule le prix.
+
+## Points forts
+- Comparaison automatique de deux indices de plan : ce qui a changé saute aux yeux
+- Mesures, surfaces et comptages directement sur le PDF, à l'échelle
+- Sessions partagées : plusieurs personnes annotent le même plan en direct
+- Licence annuelle, sans abonnement mensuel qui court
+
+## Points faibles
+- Interface dense, héritée de vingt ans d'ajouts successifs
+- Windows d'abord : la version pour tablette est en retrait
+- Aucune reconnaissance automatique : c'est de l'outillage manuel très puissant
+
+## Idéal pour
+Les économistes, conducteurs de travaux et bureaux d'études qui vivent dans les dossiers de plans PDF.`,
+    },
+    {
+      id: `knowify`,
+      nom: `Knowify`,
+      categorie: `Chiffrage & rentabilité`,
+      prix: `À partir de 99 $/mois`,
+      description_courte: `Le chiffrage relié à la réalité du chantier : on voit en direct si l'affaire tient encore sa marge.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/knowify`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Une entreprise du bâtiment découvre trop souvent à la clôture qu'un chantier a perdu de l'argent. Knowify relie le devis, les heures pointées et les achats, et affiche l'écart au fil de l'eau. Ce n'est pas spectaculaire ; c'est le seul moyen de corriger pendant qu'il en est encore temps, plutôt que d'en tirer une leçon trois mois après.
+
+## Points forts
+- Marge suivie en direct par chantier, pas découverte à la clôture
+- Pointage des heures depuis le téléphone, rattaché au bon poste
+- Devis structurés par lots, réutilisables d'une affaire à l'autre
+- Facturation à l'avancement gérée nativement
+
+## Points faibles
+- Suppose un pointage discipliné : sans les heures, l'outil ne dit rien
+- Comptabilité et paie américaines : l'export vers un cabinet français demande un travail
+- Interface austère, sans effort de séduction
+
+## Idéal pour
+Les entreprises de dix à trente compagnons qui savent qu'un chantier sur cinq perd de l'argent sans savoir lequel.`,
     },
     {
       id: `finalcad`,
@@ -793,6 +1028,131 @@ Visier assemble les données de paie, de temps et de gestion des talents en un m
 Les directions des ressources humaines multi-sites qui n'ont pas de vision consolidée fiable de leur masse salariale et de leurs départs.`,
     },
     {
+      id: `manatal`,
+      nom: `Manatal`,
+      categorie: `Sourcing`,
+      prix: `À partir de 19 $/mois par utilisateur`,
+      description_courte: `Le logiciel de recrutement qui enrichit chaque candidature avec les profils publics et note l’adéquation au poste.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/manatal`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Manatal est l’un des rares logiciels de suivi des candidatures à tarif accessible qui fasse réellement quelque chose d’intelligent : à partir d’un CV, il retrouve les profils publics du candidat, complète la fiche et propose une note d’adéquation à l’offre. Pour un cabinet de deux personnes, c’est le niveau d’outillage qu’avaient les grands groupes il y a cinq ans.
+
+## Points forts
+- Enrichissement automatique des profils depuis les réseaux publics
+- Note d’adéquation candidat/poste, avec les critères qui la justifient
+- Tarif par utilisateur assumable par un cabinet de deux ou trois personnes
+- Page carrière et diffusion multi-plateformes incluses
+
+## Points faibles
+- La note d’adéquation reste une aide au tri, jamais une décision
+- Enrichissement moins riche sur les profils français que sur les anglophones
+- Le support répond en anglais, sur des horaires asiatiques
+
+## Idéal pour
+Les cabinets de recrutement et PME qui gèrent encore leurs candidatures dans une boîte mail et un tableur.`,
+    },
+    {
+      id: `workable`,
+      nom: `Workable`,
+      categorie: `Sourcing`,
+      prix: `À partir de 189 $/mois`,
+      description_courte: `La diffusion d’offres sur deux cents sites, le vivier de quatre cents millions de profils et le tri assisté, en libre-service.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/workable`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Workable a le mérite d’être complet et de s’acheter en ligne sans passer par un commercial. Diffusion en un clic, base de profils à contacter directement, rédaction d’offres assistée, entretiens structurés : c’est la plateforme qu’on prend quand on recrute régulièrement mais qu’on n’a pas d’équipe recrutement dédiée pour piloter un projet lourd.
+
+## Points forts
+- Achat et mise en service en libre-service, sans cycle commercial
+- Diffusion automatique sur les principaux sites d’emploi
+- Vivier de profils intégré, avec prise de contact directe
+- Trames d’entretien structuré et grilles d’évaluation fournies
+
+## Points faibles
+- Tarif d’entrée élevé pour une structure qui recrute deux fois par an
+- Le vivier est nettement plus riche en anglophone
+- Les fonctions les plus utiles sont réservées aux formules hautes
+
+## Idéal pour
+Les entreprises de cinquante à cinq cents salariés qui recrutent en continu sans service recrutement constitué.`,
+    },
+    {
+      id: `breezy-hr`,
+      nom: `Breezy HR`,
+      categorie: `Présélection`,
+      prix: `Freemium — à partir de 189 $/mois`,
+      description_courte: `Le recrutement en tableau visuel, avec entretiens vidéo différés et questionnaires de présélection inclus.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/breezy-hr`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Breezy présente le recrutement comme un tableau que l’on fait glisser, ce qui suffit à faire adopter l’outil par des managers qui n’ouvriront jamais un logiciel RH. Les questionnaires éliminatoires et l’entretien vidéo différé sont inclus dès les formules basses, là où d’autres les facturent en supplément. La formule gratuite couvre un poste ouvert en permanence.
+
+## Points forts
+- Formule gratuite permanente pour un poste ouvert : idéal pour juger
+- Tableau visuel adopté sans formation par les managers opérationnels
+- Questionnaires de présélection et entretien vidéo différé inclus
+- Rédaction d’offres et résumés de candidature assistés
+
+## Points faibles
+- Le tarif grimpe fortement dès qu’on ouvre plusieurs postes
+- Moins puissant que les grandes plateformes sur le sourcing actif
+- Interface uniquement en anglais
+
+## Idéal pour
+Les PME et startups qui ouvrent deux ou trois postes à la fois et veulent impliquer les managers dans le tri.`,
+    },
+    {
+      id: `hireflix`,
+      nom: `Hireflix`,
+      categorie: `Présélection`,
+      prix: `À partir de 75 $/mois`,
+      description_courte: `L’entretien vidéo différé sans engagement : le candidat répond quand il veut, le recruteur visionne en accéléré.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/hireflix`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Hireflix fait une seule chose et la vend au prix d’un abonnement logiciel plutôt qu’au prix d’une plateforme d’entreprise. On enregistre ses questions, le candidat répond en vidéo à son rythme, le recruteur visionne en accéléré et partage un lien au manager. Sur vingt candidatures, la présélection passe d’une semaine de créneaux téléphoniques à une soirée.
+
+## Points forts
+- Prix d’un logiciel, pas d’une plateforme d’entreprise
+- Aucune limite d’entretiens sur les formules payantes
+- Partage par lien : le manager donne son avis sans compte à créer
+- Se branche sur les principaux logiciels de suivi des candidatures
+
+## Points faibles
+- L’entretien différé fait abandonner une partie des candidats qualifiés
+- Aucune analyse automatique, et c’est un choix assumé de l’éditeur
+- Rien d’autre que l’entretien vidéo : ce n’est pas un outil de gestion
+
+## Idéal pour
+Les recruteurs qui perdent leurs journées en présélections téléphoniques de sept minutes.`,
+    },
+    {
+      id: `fetcher`,
+      nom: `Fetcher`,
+      categorie: `Sourcing`,
+      prix: `À partir de 549 $/mois`,
+      description_courte: `Le sourcing délégué à la machine : elle cherche, qualifie et envoie les séquences de contact, vous validez.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/fetcher`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Fetcher inverse la charge : au lieu de chercher des profils, on décrit le poste et l’outil apporte chaque semaine une liste qualifiée, avec les séquences de courriels déjà prêtes. Le recruteur passe son temps à valider ou écarter, ce qui affine le modèle. Sur un poste technique en tension, c’est la différence entre dix approches par semaine et cent.
+
+## Points forts
+- Le vivier arrive tout seul chaque semaine, sans requête à écrire
+- Séquences de contact automatiques, avec relances
+- Le modèle apprend des profils validés et écartés
+- Statistiques de diversité du vivier, utiles pour élargir un recrutement
+
+## Points faibles
+- Tarif d’entrée qui suppose un volume de recrutement réel
+- Couverture bien meilleure sur les profils nord-américains
+- Un mauvais cadrage initial fait remonter des profils hors sujet pendant des semaines
+
+## Idéal pour
+Les équipes recrutement qui ont épuisé leurs viviers habituels sur des postes techniques en tension.`,
+    },
+    {
       id: `flatchr`,
       nom: `Flatchr`,
       categorie: `Présélection`,
@@ -1051,6 +1411,131 @@ L'intérêt de Sage Copilot n'est pas d'être le meilleur assistant du marché, 
 Les cabinets et directions financières déjà équipés Sage, qui veulent un premier usage utile sans conduire un projet.`,
     },
     {
+      id: `ramp`,
+      nom: `Ramp`,
+      categorie: `Notes de frais`,
+      prix: `Gratuit — les revenus viennent de l’interchange bancaire`,
+      description_courte: `Les cartes d’entreprise, les dépenses et les justificatifs rapprochés tout seuls, sans abonnement.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/ramp`,
+      score_avis: 4.5,
+      description_longue: `## Notre verdict
+Ramp est l’anomalie du secteur : la plateforme est gratuite, financée par la commission d’interchange sur les cartes. Chaque dépense est rapprochée de son justificatif, les règles de politique interne sont appliquées à la volée, et les abonnements dormants sont signalés. Une direction financière y trouve en général plusieurs milliers d’euros de dépenses oubliées le premier mois.
+
+## Points forts
+- Aucun abonnement : le modèle repose sur les cartes, pas sur une licence
+- Rapprochement automatique dépense / justificatif, avec relance du salarié
+- Détection des abonnements dormants et des doublons de fournisseurs
+- Export propre vers les principaux logiciels comptables
+
+## Points faibles
+- Disponible aux États-Unis d’abord : la couverture européenne reste partielle
+- Suppose d’adopter leurs cartes, donc de changer de banque de fonctionnement
+- L’intégration avec un cabinet français demande un travail d’export
+
+## Idéal pour
+Les entreprises en croissance dont les dépenses partent dans tous les sens et qui n’ont aucune visibilité avant la clôture.`,
+    },
+    {
+      id: `expensify`,
+      nom: `Expensify`,
+      categorie: `Notes de frais`,
+      prix: `Freemium — à partir de 5 $/mois par utilisateur`,
+      description_courte: `Le justificatif photographié, lu et transformé en note de frais avant même d’avoir quitté le restaurant.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/expensify`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Expensify est l’outil qui a rendu la note de frais supportable : on photographie le ticket, la lecture automatique en tire le montant, la date et le marchand, la note se crée seule et part en validation. Le rapprochement avec la carte bancaire d’entreprise ferme la boucle. Simple, éprouvé, et gratuit jusqu’à vingt-cinq notes par mois.
+
+## Points forts
+- Lecture des tickets fiable, y compris froissés et photographiés de travers
+- Formule gratuite jusqu’à vingt-cinq notes par mois
+- Rapprochement automatique avec les cartes d’entreprise
+- Application mobile parmi les plus abouties du secteur
+
+## Points faibles
+- Le tarif par utilisateur pèse dans une entreprise où tout le monde note des frais
+- Les règles de politique interne sont moins fines que chez les spécialistes
+- Support en anglais uniquement
+
+## Idéal pour
+Les entreprises de dix à cent salariés dont les notes de frais arrivent en retard, en vrac, et se traitent à la main.`,
+    },
+    {
+      id: `docyt`,
+      nom: `Docyt`,
+      categorie: `Extraction de documents`,
+      prix: `À partir de 50 $/mois`,
+      description_courte: `La comptabilité tenue en continu : factures lues, écritures proposées, rapprochement bancaire quotidien.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/docyt`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Docyt vise le point d’équilibre entre le simple lecteur de factures et la plateforme complète : les documents sont lus, catégorisés selon l’historique du dossier, et les écritures poussées dans le logiciel comptable existant. Le cabinet garde son outil de production, le client obtient des chiffres à jour toute l’année plutôt qu’une fois par trimestre.
+
+## Points forts
+- Se greffe sur le logiciel comptable en place, sans migration
+- Catégorisation qui apprend de l’historique du dossier
+- Rapprochement bancaire quotidien plutôt que trimestriel
+- Tableaux de bord de gestion pour le client final
+
+## Points faibles
+- Pensé pour le plan comptable américain : la TVA française demande du paramétrage
+- La mise en route d’un dossier prend plusieurs semaines
+- Peu de références en France, support en anglais
+
+## Idéal pour
+Les cabinets qui veulent vendre du suivi mensuel plutôt que de la production trimestrielle, sans changer d’outil.`,
+    },
+    {
+      id: `keeper`,
+      nom: `Keeper`,
+      categorie: `Révision`,
+      prix: `À partir de 8 $/mois par dossier`,
+      description_courte: `La liste des questions à poser au client, générée toute seule, et le portail où il répond.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/keeper`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Keeper attaque le seul goulot d’étranglement réel d’un cabinet : les opérations non identifiées dont seul le client connaît la nature. L’outil repère les écritures douteuses, formule la question, la pose au client dans un portail clair, et relance. Le collaborateur reprend un dossier où les réponses sont déjà là, et le tarif au dossier reste dérisoire.
+
+## Points forts
+- Questions au client générées automatiquement à partir des anomalies
+- Portail simple, que les clients utilisent réellement
+- Relances automatiques : le cabinet cesse d’être l’huissier de son dossier
+- Tarif au dossier, très bas, sans engagement
+
+## Points faibles
+- Connecté d’abord aux logiciels anglo-saxons dominants
+- Ne fait pas de production comptable : c’est un outil de révision
+- Les clients qui ne répondaient pas au téléphone ne répondent pas plus au portail
+
+## Idéal pour
+Les cabinets dont les clôtures traînent des semaines faute de réponses clients.`,
+    },
+    {
+      id: `fyle`,
+      nom: `Fyle`,
+      categorie: `Notes de frais`,
+      prix: `À partir de 8 $/mois par utilisateur`,
+      description_courte: `Le justificatif envoyé par message texte ou courriel, sans application à installer ni salarié à former.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/fyle`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+L’échec de la plupart des outils de notes de frais est humain : les salariés n’installent pas l’application. Fyle contourne le problème — on transfère le courriel du reçu, ou on envoie une photo par message texte, et la note se crée. L’alerte en temps réel sur la carte bancaire réclame le justificatif dans la minute qui suit l’achat.
+
+## Points forts
+- Aucune application à installer : courriel ou message texte suffisent
+- Alerte en temps réel sur la carte, le justificatif est réclamé dans la minute
+- Règles de politique interne vérifiées à la saisie, pas à la validation
+- S’intègre aux principaux logiciels comptables
+
+## Points faibles
+- Tarif par utilisateur qui grimpe avec l’effectif
+- Fonctions de reporting en retrait des grands acteurs
+- Documentation et support en anglais
+
+## Idéal pour
+Les entreprises dont les salariés ne rendent jamais leurs justificatifs et où l’application dédiée a déjà échoué.`,
+    },
+    {
       id: `cegid-pulse`,
       nom: `Cegid Pulse`,
       categorie: `Plateforme comptable`,
@@ -1307,6 +1792,131 @@ L'argument de Lexis+ AI est celui de la source : les réponses s'appuient sur un
 
 ## Idéal pour
 Les cabinets déjà abonnés à l'écosystème LexisNexis, qui veulent une recherche augmentée sans changer de fournisseur documentaire.`,
+    },
+    {
+      id: `clio`,
+      nom: `Clio`,
+      categorie: `Gestion de cabinet`,
+      prix: `À partir de 49 $/mois par utilisateur`,
+      description_courte: `La gestion de cabinet de référence, avec l’assistant qui résume un dossier et rédige un courrier depuis les pièces.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/clio`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Clio est ce que la plupart des cabinets anglo-saxons utilisent pour tenir dossiers, temps et facturation, et son assistant travaille sur les données du cabinet plutôt que dans le vide : résumé d’un dossier volumineux, brouillon de courrier appuyé sur les pièces, recherche en langage courant dans les archives. L’abonnement se prend en ligne, sans passer par un commercial.
+
+## Points forts
+- Assistant branché sur les dossiers réels du cabinet, pas sur un corpus général
+- Dossiers, temps passé, facturation et paiement dans un seul outil
+- Achat en libre-service, tarif par utilisateur lisible
+- Portail client sécurisé pour l’échange de pièces
+
+## Points faibles
+- Conçu pour le droit anglo-saxon : la facturation à l’acte française demande des contournements
+- Le coût par utilisateur pèse dans un cabinet de plus de dix personnes
+- Aucune base jurisprudentielle française intégrée
+
+## Idéal pour
+Les cabinets qui tiennent encore leurs dossiers dans des dossiers réseau et leur temps dans un tableur.`,
+    },
+    {
+      id: `gavel`,
+      nom: `Gavel`,
+      categorie: `Automatisation de documents`,
+      prix: `À partir de 83 $/mois`,
+      description_courte: `Le modèle d’acte transformé en questionnaire : on répond, le document sort rempli et cohérent.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/gavel`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Un cabinet qui produit vingt fois le même type d’acte perd un temps considérable à copier, coller et oublier une occurrence sur trois. Gavel transforme un modèle en questionnaire : on répond aux questions, le document sort complet, avec les clauses conditionnelles au bon endroit. Le questionnaire peut même être ouvert au client, qui remplit lui-même.
+
+## Points forts
+- Le modèle se construit à partir d’un document Word existant, sans langage à apprendre
+- Clauses conditionnelles gérées proprement, sans oubli d’occurrence
+- Questionnaire ouvrable au client : la collecte d’informations cesse d’être un aller-retour
+- Rentabilise un acte répétitif dès la dixième occurrence
+
+## Points faibles
+- Sans acte répétitif à automatiser, l’outil ne sert à rien
+- La mise en place d’un premier modèle demande une demi-journée
+- Interface en anglais, sans support français
+
+## Idéal pour
+Les cabinets et services juridiques qui produisent en série des baux, des statuts, des transactions ou des contrats de travail.`,
+    },
+    {
+      id: `genie-ai`,
+      nom: `Genie AI`,
+      categorie: `Rédaction de contrats`,
+      prix: `Freemium — à partir de 49 $/mois`,
+      description_courte: `La bibliothèque de modèles de contrats commentés, avec l’assistant de rédaction et de relecture greffé dans Word.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/genie-ai`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Genie combine deux choses rarement réunies : une bibliothèque ouverte de modèles de contrats réels, et un assistant qui rédige ou relit dans Word en s’appuyant dessus. Pour une petite structure sans bibliothèque interne, c’est un point de départ crédible plutôt qu’une page blanche, et la relecture signale les clauses manquantes par rapport aux usages du type de contrat.
+
+## Points forts
+- Bibliothèque de modèles réels, commentés, consultable gratuitement
+- Assistant intégré à Word : rien à changer dans les habitudes
+- Relecture qui signale les clauses absentes ou déséquilibrées
+- Formule gratuite suffisante pour juger sur un contrat
+
+## Points faibles
+- Modèles de droit anglais : à ne jamais reprendre tels quels en droit français
+- La responsabilité de la relecture reste entière, l’outil ne conseille pas
+- Fonctions collaboratives limitées face aux plateformes contractuelles
+
+## Idéal pour
+Les juristes d’entreprise isolés et les petits cabinets qui repartent d’une page blanche à chaque contrat.`,
+    },
+    {
+      id: `robin-ai`,
+      nom: `Robin AI`,
+      categorie: `Analyse de contrats`,
+      prix: `À partir de 89 $/mois`,
+      description_courte: `La relecture de contrat qui explique chaque clause en français courant et propose la reformulation.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/robin-ai`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Robin s’est fait connaître sur la revue contractuelle de masse en entreprise, mais sa formule d’entrée est achetable en ligne et vise le contrat isolé : on dépose un accord reçu, l’outil explique chaque clause en langage clair, signale ce qui s’écarte du marché et propose une reformulation à renvoyer. C’est un second regard à quatre-vingt-dix euros plutôt qu’à quatre cents.
+
+## Points forts
+- Explication clause par clause en langage clair, utile face à un client non juriste
+- Signale les stipulations qui s’écartent des usages du marché
+- Reformulation proposée, prête à être envoyée en contre-proposition
+- Formule d’entrée en libre-service, sans engagement annuel
+
+## Points faibles
+- Entraîné d’abord sur le droit anglais : prudence sur les contrats français
+- Le dépôt d’un contrat confidentiel chez un tiers demande une vérification préalable
+- Aucune valeur de conseil : c’est une aide à la lecture
+
+## Idéal pour
+Les juristes d’entreprise et avocats qui reçoivent des contrats rédigés par la partie adverse et n’ont pas le temps de tout éplucher.`,
+    },
+    {
+      id: `patentpal`,
+      nom: `PatentPal`,
+      categorie: `Propriété intellectuelle`,
+      prix: `À partir de 100 $/mois`,
+      description_courte: `La rédaction des parties formelles d’une demande de brevet, générées à partir des revendications.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/patentpal`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Une demande de brevet contient une part considérable de texte formel : description des figures, résumé, reformulations des revendications. PatentPal génère ces sections à partir des revendications, dans le format attendu, et laisse au conseil le seul travail qui compte — la stratégie de protection. Le gain se compte en heures facturables récupérées par dossier.
+
+## Points forts
+- Génère les sections formelles à partir des seules revendications
+- Respecte les formats attendus par les offices
+- Export direct vers Word, prêt à relire
+- Abonnement mensuel en libre-service, résiliable
+
+## Points faibles
+- Périmètre étroit : uniquement la rédaction de brevets
+- Formats calés sur l’office américain, adaptation nécessaire ailleurs
+- Toute génération demande une relecture attentive du conseil
+
+## Idéal pour
+Les conseils en propriété industrielle et cabinets de brevets qui passent des heures sur des sections dont la valeur ajoutée est nulle.`,
     },
     {
       id: `ordalie`,
@@ -1568,6 +2178,131 @@ Laisser des élèves dialoguer librement avec une intelligence artificielle est 
 Les établissements qui veulent autoriser un usage encadré plutôt que d'interdire un outil que les élèves utilisent déjà en dehors du cours.`,
     },
     {
+      id: `quizizz-ai`,
+      nom: `Quizizz`,
+      categorie: `Activités interactives`,
+      prix: `Freemium — à partir de 8 $/mois`,
+      description_courte: `Le quiz de classe généré à partir d’un support, joué en direct ou en autonomie, corrigé tout seul.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/quizizz-ai`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Quizizz est déjà dans des millions de classes ; ses fonctions génératives ont supprimé la partie fastidieuse — écrire les questions. On dépose un texte, un chapitre ou un lien, l’outil propose des questions avec des distracteurs plausibles, et le rendu ludique fait participer des élèves qui ne lèvent jamais la main.
+
+## Points forts
+- Questions générées à partir de vos propres supports, pas d’une banque générique
+- Distracteurs plausibles : le quiz évalue au lieu de se deviner
+- Correction et statistiques automatiques, élève par élève
+- Formule gratuite très généreuse, adoptée mondialement
+
+## Points faibles
+- Les questions générées demandent une relecture disciplinaire
+- Le format ludique ne convient pas à toutes les évaluations
+- Suppose un appareil connecté par élève ou par binôme
+
+## Idéal pour
+Les enseignants qui veulent une évaluation formative rapide sans passer une soirée à écrire vingt questions.`,
+    },
+    {
+      id: `kahoot`,
+      nom: `Kahoot!`,
+      categorie: `Activités interactives`,
+      prix: `Freemium — à partir de 4 $/mois`,
+      description_courte: `Le quiz en direct que toute une classe connaît déjà, avec les questions écrites par la machine.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/kahoot`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Kahoot n’a rien à prouver côté engagement : le format est entré dans les mœurs scolaires. Le générateur de questions en fait un outil de préparation et non plus seulement d’animation — on colle un texte, on obtient une session complète. C’est le moyen le plus rapide de réveiller une classe en fin de journée.
+
+## Points forts
+- Format connu de tous : aucune explication à donner aux élèves
+- Questions générées à partir d’un texte, d’un document ou d’un sujet
+- Rapports de participation exportables pour le suivi
+- Tarif enseignant très bas, formule gratuite fonctionnelle
+
+## Points faibles
+- Fonctions génératives réservées aux formules payantes
+- L’aspect compétitif ne convient pas à toutes les classes
+- Peu adapté aux questions ouvertes et au raisonnement long
+
+## Idéal pour
+Les enseignants qui veulent réviser un chapitre en dix minutes sans préparer la séance la veille.`,
+    },
+    {
+      id: `eduaide-ai`,
+      nom: `Eduaide.ai`,
+      categorie: `Préparation de cours`,
+      prix: `Freemium — à partir de 10 $/mois`,
+      description_courte: `Une centaine de générateurs pédagogiques, alignables sur un référentiel de compétences donné.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/eduaide-ai`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Eduaide se distingue par la finesse de ses générateurs : plus de cent types de ressources — séquence, consigne différenciée, question de discussion, grille d’évaluation — et surtout la possibilité de tout aligner sur un référentiel de compétences fourni. C’est ce qui le rend transposable hors du système américain, contrairement à ses concurrents.
+
+## Points forts
+- Plus de cent générateurs, chacun avec sa trame propre
+- Alignement possible sur un référentiel de compétences que l’on fournit
+- Espace de travail qui conserve et réorganise les ressources produites
+- Formule gratuite suffisante pour un usage hebdomadaire
+
+## Points faibles
+- Interface dense : trouver le bon générateur demande un temps d’adaptation
+- Le rendu français est correct mais moins nuancé que l’anglais
+- Toute ressource demande une relecture disciplinaire
+
+## Idéal pour
+Les enseignants et formateurs qui travaillent par compétences et refont chaque année les mêmes supports.`,
+    },
+    {
+      id: `padlet`,
+      nom: `Padlet`,
+      categorie: `Supports de cours`,
+      prix: `Freemium — à partir de 7 $/mois`,
+      description_courte: `Le mur collaboratif que les élèves alimentent, avec la génération de contenus et d’images intégrée.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/padlet`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Padlet est devenu un réflexe : un mur, un lien, et trente élèves déposent leurs contributions sans compte à créer. Les fonctions génératives ajoutent le montage du support — plan de leçon, images d’illustration, cartes mentales — directement dans le mur. C’est l’outil du travail de groupe qui ne demande aucune logistique.
+
+## Points forts
+- Aucun compte élève nécessaire : un lien suffit
+- Contributions en direct, visibles de toute la classe
+- Génération d’images et de plans intégrée au mur
+- Formule gratuite pour trois murs, largement suffisante pour essayer
+
+## Points faibles
+- Les fonctions génératives sont réservées aux formules payantes
+- Sans cadre posé, le mur devient vite illisible
+- L’hébergement des contributions d’élèves demande une vérification côté établissement
+
+## Idéal pour
+Les enseignants qui font travailler en groupe et perdent un quart d’heure à chaque séance en logistique de connexion.`,
+    },
+    {
+      id: `classpoint-ai`,
+      nom: `ClassPoint`,
+      categorie: `Supports de cours`,
+      prix: `Freemium — à partir de 8 $/mois`,
+      description_courte: `L’interactivité greffée directement dans PowerPoint, sans changer d’outil ni refaire ses diapositives.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/classpoint-ai`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+La plupart des enseignants ont déjà leurs supports, en PowerPoint, et ne les referont pas. ClassPoint s’y installe : depuis une diapositive existante, il génère des questions, lance un vote, récupère les réponses des élèves, annote en direct. Zéro migration, ce qui est la seule raison pour laquelle un outil de ce type finit par être utilisé.
+
+## Points forts
+- Fonctionne dans PowerPoint : aucun support à refaire
+- Questions générées à partir du contenu de la diapositive affichée
+- Réponses des élèves collectées en direct, sans quitter la présentation
+- Formule gratuite fonctionnelle pour un usage régulier
+
+## Points faibles
+- Windows et PowerPoint obligatoires : rien pour Google Slides
+- Les questions générées restent de surface sur un contenu complexe
+- Suppose un appareil connecté par élève
+
+## Idéal pour
+Les enseignants et formateurs qui ont des années de diapositives et refusent, à juste titre, de tout refaire.`,
+    },
+    {
       id: `nolej`,
       nom: `Nolej`,
       categorie: `Supports de cours`,
@@ -1618,58 +2353,6 @@ Kwyk a une qualité que peu d'outils partagent : il est construit sur les progra
 
 ## Idéal pour
 Les professeurs de mathématiques qui veulent donner du travail différencié sans multiplier par trente le temps de correction.`,
-    },
-    {
-      id: `eduaide-ai`,
-      nom: `Eduaide.ai`,
-      categorie: `Préparation de cours`,
-      prix: `Palier gratuit, puis abonnement annuel`,
-      description_courte: `Une centaine de types de ressources pédagogiques générées à partir d'un objectif d'apprentissage.`,
-      lien_affiliation: `https://exemple-affiliation.com/go/eduaide-ai`,
-      score_avis: 4.0,
-      description_longue: `## Notre verdict
-Eduaide se distingue par l'étendue du catalogue : on ne demande pas « fais-moi un cours », on choisit le type de ressource — questionnement socratique, grille d'évaluation, activité de closure, plan différencié — et l'outil produit ce format-là. Cette contrainte de format est précisément ce qui évite la bouillie générique que produisent les assistants généralistes sur une consigne vague.
-
-## Points forts
-- Catalogue étendu de types de ressources, chacun avec sa forme propre
-- La contrainte de format évite les productions génériques
-- Palier gratuit suffisant pour se faire un avis
-- Outil d'assistance à la rédaction intégré pour retoucher
-
-## Points faibles
-- Conçu pour le système scolaire américain : vocabulaire et niveaux à transposer
-- Rien n'est aligné sur les programmes français
-- Relecture indispensable avant tout usage en classe
-- Interface anglophone
-
-## Idéal pour
-Les enseignants à l'aise en anglais qui cherchent la variété des formats plutôt qu'un alignement sur le programme.`,
-    },
-    {
-      id: `quizizz-ai`,
-      nom: `Quizizz AI`,
-      categorie: `Différenciation`,
-      prix: `Palier gratuit, puis offre établissement`,
-      description_courte: `Les quiz de classe générés depuis un support, avec adaptation du niveau élève par élève.`,
-      lien_affiliation: `https://exemple-affiliation.com/go/quizizz-ai`,
-      score_avis: 4.1,
-      description_longue: `## Notre verdict
-Quizizz était déjà installé dans beaucoup de classes avant l'arrivée des fonctions génératives ; celles-ci ont surtout supprimé le travail de saisie, qui était le vrai frein. On importe un support, on obtient un questionnaire, et le niveau s'ajuste selon les réponses de chaque élève. C'est une évolution discrète d'un outil connu, ce qui est souvent préférable à l'adoption d'un outil de plus.
-
-## Points forts
-- Génération du questionnaire depuis un document existant
-- Adaptation du niveau au fil des réponses de chaque élève
-- Outil déjà connu de beaucoup d'élèves : aucune acclimatation
-- Palier gratuit largement utilisable en classe
-
-## Points faibles
-- Les questions générées demandent une relecture, surtout en sciences
-- Le côté ludique convient mal à certains niveaux et certaines disciplines
-- Fonctions avancées réservées aux offres établissement
-- Données d'élèves hébergées hors de France
-
-## Idéal pour
-Les enseignants qui utilisent déjà les quiz en classe et veulent supprimer le temps de saisie, pas changer de méthode.`,
     },
     {
       id: `lalilo`,
@@ -1824,6 +2507,131 @@ MarketMan lit les factures fournisseurs, met à jour les prix d'achat et recalcu
 
 ## Idéal pour
 Les restaurants et groupes dont le coût matière dérive et qui n'ont aucune fiche technique à jour pour comprendre où part la marge.`,
+    },
+    {
+      id: `owner-com`,
+      nom: `Owner`,
+      categorie: `Marketing & tendances`,
+      prix: `À partir de 99 $/mois`,
+      description_courte: `Le site, la commande en direct et le marketing du restaurant, pour cesser de laisser un tiers du chiffre aux plateformes.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/owner-com`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Owner s’attaque au sujet qui fâche : la commission prélevée par les plateformes de livraison. L’outil monte un site de commande à la marque du restaurant, l’optimise pour la recherche locale, et relance automatiquement les clients par courriel et message texte. L’objectif affiché est de basculer une part des commandes en direct.
+
+## Points forts
+- Commande en direct, sans commission de plateforme
+- Site optimisé pour la recherche locale, ce que peu de restaurants ont
+- Relances automatiques des clients qui ne sont pas revenus
+- Mise en service prise en charge, sans travail technique du restaurateur
+
+## Points faibles
+- Abonnement mensuel réel, à amortir sur le volume récupéré
+- Ne remplace pas la visibilité des plateformes sur la clientèle de passage
+- Marché américain d’abord, avec les habitudes de commande correspondantes
+
+## Idéal pour
+Les restaurants qui font du volume en livraison et voient partir un tiers de leur chiffre en commissions.`,
+    },
+    {
+      id: `7shifts`,
+      nom: `7shifts`,
+      categorie: `Prévision & planning`,
+      prix: `Freemium — à partir de 35 $/mois par établissement`,
+      description_courte: `Le planning d’équipe calé sur les ventes prévues, avec les échanges de postes gérés par l’équipe elle-même.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/7shifts`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Le planning est le poste où un restaurant gagne ou perd sa marge, et celui que personne n’a le temps de refaire. 7shifts prévoit les ventes à l’heure, propose le planning correspondant, et laisse l’équipe gérer ses échanges depuis son téléphone. La formule gratuite couvre un établissement et une trentaine de personnes.
+
+## Points forts
+- Formule gratuite pour un établissement, rare dans cette catégorie
+- Prévision des ventes à l’heure, qui pilote le nombre de personnes en salle
+- Échanges de postes gérés par l’équipe, sans passer par le gérant
+- Coût de main-d’œuvre suivi en pourcentage du chiffre, en direct
+
+## Points faibles
+- Le droit du travail français n’est pas pris en charge nativement
+- La prévision demande plusieurs mois d’historique de caisse pour valoir quelque chose
+- Les modules avancés font grimper l’abonnement rapidement
+
+## Idéal pour
+Les restaurants dont le planning se fait le dimanche soir sur un tableur et coûte deux points de marge chaque mois.`,
+    },
+    {
+      id: `marginedge`,
+      nom: `MarginEdge`,
+      categorie: `Achats & stocks`,
+      prix: `À partir de 330 $/mois par établissement`,
+      description_courte: `Les factures fournisseurs lues à la ligne, et le coût de chaque plat recalculé toutes les nuits.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/marginedge`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+MarginEdge lit les factures fournisseurs jusqu’au détail de chaque ligne, ce qui permet de suivre le prix réel de chaque ingrédient au jour le jour, et de voir immédiatement qu’un plat vedette est passé sous le seuil de rentabilité. C’est le poste où la marge fuit sans que personne ne le voie, et le seul chiffre qui le montre.
+
+## Points forts
+- Lecture des factures à la ligne, pas seulement du total
+- Coût de revient de chaque plat recalculé chaque nuit
+- Alerte sur les hausses de prix fournisseurs
+- Commande fournisseurs depuis le même outil
+
+## Points faibles
+- Abonnement élevé pour un établissement unique
+- La saisie initiale des fiches techniques est un travail long et ingrat
+- Réseau de fournisseurs pensé pour le marché américain
+
+## Idéal pour
+Les restaurants et petits groupes dont le coût matière dérive sans que les fiches techniques soient à jour.`,
+    },
+    {
+      id: `jolt`,
+      nom: `Jolt`,
+      categorie: `Pilotage`,
+      prix: `À partir d’environ 100 $/mois par établissement`,
+      description_courte: `Les listes de contrôle d’ouverture et de fermeture, les températures et les tâches, prouvées et horodatées.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/jolt`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Jolt remplace le classeur d’hygiène et les listes affichées en cuisine par des contrôles horodatés avec photo. En cas de contrôle sanitaire, la traçabilité est immédiate ; au quotidien, le gérant sait ce qui a été fait sans être sur place. Les étiquettes de date de péremption imprimées à la demande suppriment une non-conformité classique.
+
+## Points forts
+- Traçabilité horodatée et photographiée, opposable en contrôle
+- Le gérant voit à distance ce qui a été fait, et par qui
+- Étiquetage des dates de péremption imprimé à la demande
+- Adopté facilement par les équipes, y compris saisonnières
+
+## Points faibles
+- Matériel à prévoir : tablette et imprimante d’étiquettes
+- Le paramétrage des listes demande une vraie mise à plat des procédures
+- Pensé pour la réglementation américaine, à adapter aux obligations françaises
+
+## Idéal pour
+Les groupes multi-sites et les établissements à fort renouvellement d’équipe, où les procédures ne tiennent que si elles sont vérifiables.`,
+    },
+    {
+      id: `menu-tiger`,
+      nom: `MenuTiger`,
+      categorie: `Réservation`,
+      prix: `Freemium — à partir de 19 $/mois`,
+      description_courte: `La carte en code-barres à scanner, modifiable en une minute, avec la commande à table et les statistiques de plats.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/menu-tiger`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+La carte figée en PDF est le plus mauvais choix qu’un restaurant puisse faire : illisible sur téléphone, invisible pour Google, impossible à corriger un jour de rupture. MenuTiger la remplace par une carte web scannable, modifiable en une minute, qui prend les commandes à table et dit quels plats sont réellement consultés.
+
+## Points forts
+- Carte modifiable en une minute, y compris en plein service
+- Commande et paiement à table, sans application à installer pour le client
+- Statistiques de consultation : on voit quels plats attirent l’œil
+- Formule gratuite pour un établissement et une carte
+
+## Points faibles
+- Le code-barres à scanner reste diversement apprécié de la clientèle
+- Les fonctions de commande sont réservées aux formules payantes
+- Ne remplace pas un logiciel de caisse
+
+## Idéal pour
+Les restaurants dont la carte est encore un PDF illisible sur téléphone, et qui la réimpriment à chaque changement de prix.`,
     },
     {
       id: `malou`,
@@ -2087,27 +2895,126 @@ Les centres de radiologie et structures de gestion du dépistage organisé, conf
       id: `heidi-health`,
       nom: `Heidi Health`,
       categorie: `Compte rendu de consultation`,
-      prix: `Gratuit, puis environ 150 $/mois par praticien`,
-      description_courte: `Le compte rendu rédigé pendant que la consultation se déroule, avec un palier gratuit qui suffit pour se faire un avis.`,
+      prix: `Freemium — à partir de 99 $/mois`,
+      description_courte: `L’assistant de consultation avec une formule gratuite réellement utilisable : l’observation se rédige pendant qu’on écoute.`,
       lien_affiliation: `https://exemple-affiliation.com/go/heidi-health`,
-      score_avis: 4.4,
+      score_avis: 4.5,
       description_longue: `## Notre verdict
-Heidi est l'un des rares assistants de consultation qu'on peut essayer sérieusement sans engager un euro : le palier gratuit couvre les consultations et la dictée sans limite de nombre. C'est décisif dans un métier où l'on ne change pas d'outil sur une démonstration commerciale. Le rebrand de février 2026 a fait passer l'abonnement praticien d'environ 99 à 150 $ par mois, et il faut le savoir avant de bâtir une habitude dessus.
+Heidi occupe une place rare : un assistant de documentation clinique dont la version gratuite couvre un usage quotidien normal. La consultation est transcrite, l’observation structurée selon le modèle du praticien, et les courriers d’adressage se rédigent dans la foulée. Pour un médecin libéral qui veut juger avant d’engager un abonnement, c’est le seul point d’entrée sans friction.
 
 ## Points forts
-- Palier gratuit réellement utilisable : consultations et dictée sans plafond
-- Modèles de note personnalisables, adaptés à une spécialité précise
-- Interface pensée pour être ouverte pendant l'échange, pas après
-- Essai de quatorze jours sur l'offre payante, sans engagement
+- Formule gratuite qui couvre un usage quotidien, pas une démonstration
+- Modèles d’observation personnalisables par spécialité
+- Courriers d’adressage et ordonnances rédigés dans la foulée
+- Fonctionne dans le navigateur, sans installation
 
 ## Points faibles
-- Le renvoi automatique vers le dossier patient n'est pas inclus dans l'offre praticien : la note se recopie à la main
-- Les fonctions avancées du palier gratuit sont limitées à dix actions par mois
-- Hausse tarifaire de 50 % en 2026, sur un outil qu'on adopte pour des années
-- Pas d'ancrage français : l'accompagnement et les intégrations visent d'abord le monde anglophone
+- Le consentement du patient à l’enregistrement doit être recueilli à chaque consultation
+- L’hébergement des données de santé est à vérifier au regard du cadre français
+- Le français est correct mais moins abouti que l’anglais sur les termes rares
 
 ## Idéal pour
-Le praticien qui veut éprouver un assistant de consultation sur ses vraies journées avant de payer, et qui accepte de recopier la note dans son logiciel métier.`,
+Les médecins libéraux qui veulent essayer un assistant de consultation sans engager un abonnement à trois chiffres.`,
+    },
+    {
+      id: `freed`,
+      nom: `Freed`,
+      categorie: `Compte rendu de consultation`,
+      prix: `À partir de 99 $/mois`,
+      description_courte: `L’assistant de documentation pensé pour le praticien seul : on lance, on parle, la note est prête à la fin.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/freed`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Freed a été conçu par et pour des cliniciens en exercice, ce qui se voit à la simplicité : un bouton, aucune configuration, et une note qui apprend le style du praticien au fil des corrections. Pas de projet, pas d’intégration à négocier — c’est un abonnement individuel qu’on prend le matin et qu’on utilise l’après-midi.
+
+## Points forts
+- Aucune configuration : utilisable dès la première consultation
+- Apprend le style de rédaction du praticien à partir des corrections
+- Abonnement individuel en libre-service, résiliable à tout moment
+- Essai gratuit sur plusieurs consultations avant tout engagement
+
+## Points faibles
+- Aucune intégration au dossier patient : la note se copie à la main
+- Optimisé pour l’anglais américain, le français reste secondaire
+- Le cadre réglementaire européen sur les données de santé demande une vérification préalable
+
+## Idéal pour
+Le praticien seul, sans service informatique, qui veut arrêter de finir ses journées par une heure de rédaction.`,
+    },
+    {
+      id: `consensus`,
+      nom: `Consensus`,
+      categorie: `Recherche & veille`,
+      prix: `Freemium — à partir de 12 $/mois`,
+      description_courte: `La question clinique posée en français, la réponse tirée des publications scientifiques avec le niveau de preuve.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/consensus`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Consensus interroge deux cents millions d’articles scientifiques et rend, pour une question donnée, ce que dit réellement la littérature : proportion d’études favorables, qualité des travaux, citations à l’appui. Pour tenir à jour sa pratique sans y consacrer ses soirées, c’est l’outil qui transforme une heure de lecture en trois minutes de vérification.
+
+## Points forts
+- Réponses appuyées sur des publications réelles, jamais inventées
+- Indication du niveau de preuve et du consensus entre études
+- Version gratuite largement suffisante pour un usage hebdomadaire
+- Utile bien au-delà de la médecine : toute question de recherche
+
+## Points faibles
+- Ne remplace pas la lecture d’un article : c’est une porte d’entrée
+- Ne couvre que ce qui est publié et indexé
+- Interface et résumés en anglais
+
+## Idéal pour
+Les praticiens et internes qui veulent vérifier ce que dit la littérature sur une question précise, entre deux consultations.`,
+    },
+    {
+      id: `elicit`,
+      nom: `Elicit`,
+      categorie: `Recherche & veille`,
+      prix: `Freemium — à partir de 12 $/mois`,
+      description_courte: `La revue de littérature semi-automatisée : cent articles lus, résumés et rangés dans un tableau comparatif.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/elicit`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Elicit fait le travail ingrat d’une revue de littérature : trouver les articles pertinents, en extraire la population, la méthode, les effectifs et les résultats, et ranger le tout dans un tableau comparable ligne à ligne. Ce qui demandait deux semaines à un interne se ramène à une après-midi de vérification — la vérification restant indispensable.
+
+## Points forts
+- Extraction structurée des données de chaque article, en tableau
+- Sélection des articles pertinents à partir d’une question en langage courant
+- Export du tableau, exploitable dans un travail publiable
+- Formule gratuite suffisante pour une première revue
+
+## Points faibles
+- Chaque extraction doit être recoupée avec l’article : les erreurs existent
+- Couvre mal la littérature non anglophone
+- Le crédit gratuit s’épuise vite sur une revue sérieuse
+
+## Idéal pour
+Les internes, chefs de clinique et praticiens hospitaliers qui doivent produire une revue de littérature sans y passer un mois.`,
+    },
+    {
+      id: `glass-health`,
+      nom: `Glass Health`,
+      categorie: `Aide au raisonnement`,
+      prix: `Freemium — à partir de 30 $/mois`,
+      description_courte: `Le tableau clinique saisi en une phrase, et le diagnostic différentiel structuré qui revient, avec le plan d’examens.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/glass-health`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Glass ne prétend pas diagnostiquer : il propose un différentiel structuré à partir d’un résumé clinique, et un plan d’exploration cohérent. L’intérêt est le filet — la pathologie rare à laquelle on n’avait pas pensé apparaît dans la liste. C’est un second avis instantané, et l’outil ne cesse de rappeler que la décision reste au clinicien.
+
+## Points forts
+- Différentiel structuré, hiérarchisé, avec les arguments pour et contre
+- Plan d’examens proposé, cohérent avec les hypothèses
+- Rappelle explicitement que la décision reste médicale
+- Formule gratuite pour juger sur des cas réels
+
+## Points faibles
+- Aucune valeur diagnostique : c’est une aide à la réflexion, rien de plus
+- Recommandations calées sur les référentiels américains
+- Aucune donnée patient ne doit y être saisie en clair
+
+## Idéal pour
+Les urgentistes et généralistes qui veulent un second regard structuré sur un tableau clinique atypique.`,
     },
     {
       id: `freed-ai`,
@@ -2340,6 +3247,131 @@ Sur un catalogue où le client ne sait pas quoi choisir — cosmétique, complé
 
 ## Idéal pour
 Les boutiques de cosmétique, de nutrition ou de matériel technique dont les clients hésitent entre des références qu'ils ne savent pas départager.`,
+    },
+    {
+      id: `adcreative-ai`,
+      nom: `AdCreative.ai`,
+      categorie: `Publicité`,
+      prix: `À partir de 39 $/mois`,
+      description_courte: `Les visuels publicitaires générés par dizaines, notés sur leur potentiel de conversion avant d’être diffusés.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/adcreative-ai`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Le coût d’acquisition monte parce que les créations s’usent : la même image affichée trois semaines cesse de convertir. AdCreative en produit des dizaines aux formats de chaque régie, à la charte de la marque, et attribue à chacune une note de performance prévue à partir des campagnes passées. On teste dix visuels là où on en produisait un.
+
+## Points forts
+- Déclinaison automatique à tous les formats des régies publicitaires
+- Note de performance prévue avant diffusion, qui évite de brûler du budget
+- Charte de marque respectée : couleurs, police, logo
+- Génération de textes d’annonce assortis aux visuels
+
+## Points faibles
+- La note de performance reste une estimation, jamais une garantie
+- Le système de crédits s’épuise vite dès qu’on itère sérieusement
+- Les visuels générés se ressemblent si l’on ne varie pas les consignes
+
+## Idéal pour
+Les boutiques qui dépensent en publicité et voient leur coût d’acquisition monter faute de renouveler leurs créations.`,
+    },
+    {
+      id: `postscript`,
+      nom: `Postscript`,
+      categorie: `E-mailing & CRM`,
+      prix: `Freemium — à partir de 100 $/mois`,
+      description_courte: `Le message texte marketing fait correctement : segments, scénarios, et une vendeuse virtuelle qui répond aux réponses.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/postscript`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Le message texte a des taux d’ouverture que le courriel n’atteindra jamais, et un potentiel de nuisance équivalent s’il est mal fait. Postscript apporte le cadre : consentement propre, segments comportementaux, scénarios de panier abandonné, et un agent conversationnel qui répond aux réponses des clients au lieu de les laisser dans le vide.
+
+## Points forts
+- Taux d’ouverture sans commune mesure avec le courriel
+- Agent conversationnel qui traite les réponses des clients
+- Segments construits sur le comportement d’achat réel
+- Formule gratuite jusqu’à un premier seuil d’envois
+
+## Points faibles
+- Le message texte marketing est strictement encadré en Europe : consentement à vérifier
+- Facturé à l’envoi : une campagne mal ciblée coûte cher
+- Couverture et tarifs pensés pour le marché nord-américain
+
+## Idéal pour
+Les boutiques dont la base clients est déjà là et qui n’en tirent qu’une newsletter mensuelle.`,
+    },
+    {
+      id: `yotpo`,
+      nom: `Yotpo`,
+      categorie: `Preuve sociale`,
+      prix: `Freemium — à partir de 15 $/mois`,
+      description_courte: `Les avis clients collectés, résumés et affichés là où ils font acheter, avec les photos des clients.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/yotpo`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Une fiche produit sans avis ne convertit pas, et une fiche avec deux cents avis illisibles ne convertit pas davantage. Yotpo collecte les avis par relance automatique, en extrait les points saillants sous forme de synthèse lisible, et affiche les photos envoyées par les clients. Les extraits d’avis remontent aussi dans les résultats de recherche.
+
+## Points forts
+- Relance automatique après achat : le volume d’avis décolle réellement
+- Synthèse des avis en quelques lignes, plus lue que la liste complète
+- Photos clients affichées, ce qui convertit mieux que le texte seul
+- Balisage qui fait apparaître les étoiles dans les résultats de recherche
+
+## Points faibles
+- Le tarif grimpe fortement avec le nombre de commandes
+- Les modules avancés sont facturés séparément
+- La modération des avis demande une attention réelle
+
+## Idéal pour
+Les boutiques dont les fiches produits n’ont aucun avis, ou des avis que personne ne lit.`,
+    },
+    {
+      id: `zipchat-ai`,
+      nom: `Zipchat AI`,
+      categorie: `Service client`,
+      prix: `À partir de 49 $/mois`,
+      description_courte: `L’agent qui vend au lieu de simplement répondre : il conseille un produit, gère l’objection et pousse au panier.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/zipchat-ai`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+La plupart des assistants de boutique répondent aux questions de livraison. Zipchat est construit pour vendre : il connaît le catalogue, recommande une référence, traite l’objection sur le prix ou la taille, et propose l’ajout au panier. Le chiffre d’affaires attribué aux conversations est affiché, ce qui rend l’arbitrage simple.
+
+## Points forts
+- Conçu pour la vente, pas seulement pour le support
+- Chiffre d’affaires attribué aux conversations, mesurable
+- Se nourrit du catalogue automatiquement, sans base de connaissances à écrire
+- Répond dans plusieurs langues, y compris en français
+
+## Points faibles
+- Un agent trop insistant dégrade l’expérience : le ton se règle avec soin
+- Facturé au volume de conversations, imprévisible en période de soldes
+- Sans catalogue riche, il n’a rien à recommander
+
+## Idéal pour
+Les boutiques dont le trafic est correct mais qui transforment mal, faute de conseil au moment de l’hésitation.`,
+    },
+    {
+      id: `prisync`,
+      nom: `Prisync`,
+      categorie: `Analyse & attribution`,
+      prix: `À partir de 99 $/mois`,
+      description_courte: `Le prix des concurrents suivi en continu, et le vôtre ajusté automatiquement selon vos règles.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/prisync`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Sur un catalogue de mille références, personne ne peut suivre à la main ce que font trois concurrents. Prisync relève leurs prix plusieurs fois par jour, signale les écarts et peut ajuster les vôtres selon des règles que vous posez — jamais sous la marge minimale. C’est le poste où l’on perd des ventes sans jamais savoir pourquoi.
+
+## Points forts
+- Relevé automatique des prix concurrents, plusieurs fois par jour
+- Règles de repositionnement avec plancher de marge respecté
+- Historique des prix : on voit les cycles promotionnels des concurrents
+- Se branche sur les plateformes de commerce courantes
+
+## Points faibles
+- Le paramétrage initial des correspondances de produits est fastidieux
+- Une guerre des prix automatisée détruit la marge : les règles se posent avec prudence
+- Facturé au nombre de références suivies
+
+## Idéal pour
+Les boutiques sur des marchés où le prix décide, et qui découvrent leurs pertes de ventes après coup.`,
     },
     {
       id: `iadvize`,
@@ -2600,6 +3632,131 @@ Forma déplace les analyses environnementales là où elles servent : au moment 
 Les agences d'urbanisme et les équipes de projet urbain qui doivent justifier leurs choix d'implantation sur des critères environnementaux.`,
     },
     {
+      id: `d5-render`,
+      nom: `D5 Render`,
+      categorie: `Rendu IA`,
+      prix: `Freemium — à partir de 38 $/mois`,
+      description_courte: `Le rendu en temps réel, avec la synchronisation en direct depuis Revit, SketchUp, Rhino ou Archicad.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/d5-render`,
+      score_avis: 4.5,
+      description_longue: `## Notre verdict
+D5 a changé l’économie du rendu d’agence : on travaille dans une vue temps réel plutôt que d’attendre un calcul, et la maquette reste synchronisée avec le logiciel de conception. Les fonctions génératives ajoutent les matières, la végétation et l’ambiance sans quitter la scène. La formule gratuite est réellement utilisable, ce qui est rare à ce niveau.
+
+## Points forts
+- Rendu en temps réel : plus d’attente de calcul entre deux essais
+- Synchronisation en direct avec les logiciels de conception courants
+- Bibliothèque de matières et de végétation très fournie
+- Formule gratuite qui permet de juger sur un vrai projet
+
+## Points faibles
+- Demande une carte graphique correcte : un portable de bureau ne suffit pas
+- La courbe d’apprentissage reste réelle pour qui n’a jamais fait de rendu
+- L’export vidéo est réservé aux formules payantes
+
+## Idéal pour
+Les agences qui sous-traitent encore leurs perspectives et veulent reprendre la main sans embaucher un infographiste.`,
+    },
+    {
+      id: `enscape`,
+      nom: `Enscape`,
+      categorie: `Rendu IA`,
+      prix: `À partir de 58 $/mois`,
+      description_courte: `Le rendu temps réel intégré au logiciel de conception, sans jamais exporter la maquette.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/enscape`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Enscape est installé dans un très grand nombre d’agences pour une seule raison : il vit à l’intérieur de Revit ou de SketchUp. On appuie sur un bouton, la fenêtre de rendu s’ouvre sur la vue en cours, et toute modification apparaît instantanément. Le client voit le projet évoluer pendant la réunion, ce qui raccourcit les allers-retours.
+
+## Points forts
+- Aucun export : le rendu vit dans le logiciel de conception
+- Modifications visibles instantanément, y compris devant le client
+- Visites en réalité virtuelle et panoramas partageables par lien
+- Standard de fait : les compétences se trouvent facilement
+
+## Points faibles
+- Abonnement par utilisateur qui pèse dans une agence de dix personnes
+- Moins photoréaliste que les moteurs de rendu spécialisés
+- Windows uniquement pour la version complète
+
+## Idéal pour
+Les agences qui présentent des projets en réunion et perdent des semaines en allers-retours sur des images figées.`,
+    },
+    {
+      id: `vizcom`,
+      nom: `Vizcom`,
+      categorie: `Esquisse`,
+      prix: `Freemium — à partir de 20 $/mois`,
+      description_courte: `Le croquis à main levée transformé en image rendue en quelques secondes, sans perdre le trait d’origine.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/vizcom`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Vizcom vient du design produit et s’applique remarquablement bien à l’architecture en phase amont : on dessine, l’outil habille le trait sans réinventer le volume, et l’on ajuste style et matières en direct. C’est l’outil de la recherche de forme, celui qu’on utilise avant qu’il n’y ait quoi que ce soit à modéliser.
+
+## Points forts
+- Le trait dessiné est respecté : ce n’est pas une image générée à côté
+- Rendu en quelques secondes, compatible avec une séance de recherche
+- Contrôle fin du style et des matières, sans consigne à rédiger
+- Formule gratuite pour juger sur ses propres croquis
+
+## Points faibles
+- Aucun lien avec les logiciels de conception : tout part d’une image
+- La cohérence d’une série d’images reste difficile à tenir
+- Le rendu final n’a pas la précision d’un moteur de rendu
+
+## Idéal pour
+Les architectes qui dessinent encore à la main en phase de recherche et veulent montrer une intention avant toute modélisation.`,
+    },
+    {
+      id: `spacely-ai`,
+      nom: `Spacely AI`,
+      categorie: `Rendu IA`,
+      prix: `Freemium — à partir de 15 $/mois`,
+      description_courte: `Le réaménagement intérieur généré à partir d’une photo ou d’un plan, en une trentaine de styles.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/spacely-ai`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Spacely est l’outil d’appoint : une photo de pièce existante, un style, et l’on obtient en trente secondes une proposition d’aménagement présentable à un client. Ce n’est pas de la conception, c’est un support de discussion — et à quinze dollars par mois, il remplace l’après-midi passée à chercher des références sur des sites de décoration.
+
+## Points forts
+- Résultat en trente secondes à partir d’une simple photo
+- Une trentaine de styles, du minimaliste au classique
+- Génère aussi des vues d’extérieur et de façade
+- Tarif très accessible, formule gratuite pour essayer
+
+## Points faibles
+- La géométrie de la pièce est parfois réinterprétée : à vérifier
+- Rien à voir avec un projet : c’est un support de discussion
+- Les résultats demandent souvent plusieurs essais
+
+## Idéal pour
+Les maîtres d’œuvre et décorateurs qui doivent proposer trois ambiances à un client dès le premier rendez-vous.`,
+    },
+    {
+      id: `magicplan`,
+      nom: `magicplan`,
+      categorie: `Faisabilité`,
+      prix: `Freemium — à partir de 10 $/mois`,
+      description_courte: `Le relevé d’un logement fait au téléphone en marchant, avec le plan coté qui se dessine tout seul.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/magicplan`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Le relevé d’existant est un travail long et sans intérêt intellectuel. magicplan utilise la caméra et les capteurs du téléphone pour produire un plan coté en marchant dans les pièces, avec une précision suffisante pour une étude de faisabilité ou un devis. Le plan s’exporte ensuite vers les logiciels de conception.
+
+## Points forts
+- Relevé complet d’un appartement en une vingtaine de minutes, seul
+- Plan coté généré automatiquement, exportable en DXF et PDF
+- Photos et annotations rattachées aux pièces relevées
+- Formule gratuite pour un ou deux projets par mois
+
+## Points faibles
+- Précision insuffisante pour un dossier d’exécution : c’est du relevé rapide
+- Les téléphones sans capteur de profondeur donnent des résultats inégaux
+- Les surfaces vitrées et les miroirs perturbent la mesure
+
+## Idéal pour
+Les maîtres d’œuvre, architectes d’intérieur et diagnostiqueurs qui relèvent encore au télémètre et redessinent le soir.`,
+    },
+    {
       id: `snaptrude`,
       nom: `Snaptrude`,
       categorie: `Esquisse`,
@@ -2676,58 +3833,6 @@ Hypar s'adresse aux agences qui répètent : mêmes typologies, mêmes règles d
 
 ## Idéal pour
 Les agences qui traitent des programmes répétitifs — logement, bureaux, équipements — et veulent cesser de refaire la même étude.`,
-    },
-    {
-      id: `d5-render`,
-      nom: `D5 Render`,
-      categorie: `Rendu IA`,
-      prix: `Palier gratuit, puis abonnement annuel`,
-      description_courte: `Le rendu en temps réel avec des fonctions génératives pour habiller une scène sans la modéliser entièrement.`,
-      lien_affiliation: `https://exemple-affiliation.com/go/d5-render`,
-      score_avis: 4.2,
-      description_longue: `## Notre verdict
-D5 s'est imposé chez beaucoup d'agences parce qu'il donne un rendu convaincant sans la liturgie des moteurs traditionnels. Les fonctions génératives y servent l'accessoire plutôt que l'essentiel : végétation, matières, ciels, ambiance — tout ce qui coûte des heures et que le client ne regarde qu'une seconde. Le palier gratuit permet d'en juger sur un projet réel, ce qui est rare dans cette catégorie.
-
-## Points forts
-- Rendu en temps réel, avec retour immédiat pendant les réglages
-- Fonctions génératives pour l'habillage, là où le temps se perd
-- Palier gratuit utilisable sur un vrai projet
-- Passerelles directes avec les principaux outils de conception
-
-## Points faibles
-- Demande une carte graphique correcte : le poste de travail compte
-- Les rendus génératifs se ressemblent vite si on ne reprend rien
-- Abonnement annuel sur les paliers utiles en agence
-- Ne dispense pas d'un œil : un beau rendu peut mentir sur le projet
-
-## Idéal pour
-Les agences qui produisent leurs images en interne et veulent réduire le temps d'habillage sans passer par un prestataire.`,
-    },
-    {
-      id: `enscape`,
-      nom: `Enscape`,
-      categorie: `Rendu IA`,
-      prix: `Sur devis (abonnement par poste)`,
-      description_courte: `La visualisation temps réel branchée directement dans Revit, SketchUp ou Rhino, sans exporter quoi que ce soit.`,
-      lien_affiliation: `https://exemple-affiliation.com/go/enscape`,
-      score_avis: 4.1,
-      description_longue: `## Notre verdict
-L'intérêt d'Enscape n'a jamais été la qualité d'image absolue mais l'absence de rupture : la vue se met à jour pendant qu'on modifie le modèle, dans le logiciel de conception lui-même. C'est ce qui en fait un outil de réunion autant que de production — on modifie devant le client au lieu de promettre une image pour la semaine suivante. Les fonctions génératives récentes complètent l'habillage sans changer cette logique.
-
-## Points forts
-- Aucun export : la visualisation vit dans l'outil de conception
-- Mise à jour immédiate pendant la modification du modèle
-- Utilisable en réunion, devant le client
-- Intégré aux principaux logiciels d'agence
-
-## Points faibles
-- Aucun tarif public, abonnement par poste
-- Qualité d'image en retrait des moteurs de rendu dédiés
-- Exigeant pour la carte graphique
-- L'immédiateté pousse à décider vite, parfois trop
-
-## Idéal pour
-Les agences qui veulent montrer et arbitrer en séance plutôt que de produire des images entre deux réunions.`,
     },
   ],
 
@@ -2856,6 +3961,131 @@ Un assistant qui rédige a peu de valeur ; un assistant qui agit dans les outils
 
 ## Idéal pour
 Les petites structures sans équipe technique, dont les processus reposent sur des copier-coller entre cinq outils différents.`,
+    },
+    {
+      id: `grammarly`,
+      nom: `Grammarly`,
+      categorie: `Rédaction`,
+      prix: `Freemium — à partir de 12 $/mois`,
+      description_courte: `La relecture qui vit dans tous vos outils : orthographe, ton, clarté, et la réécriture proposée sur place.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/grammarly`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Grammarly n’écrit pas à votre place, il rattrape ce qui vous échappe — et il le fait partout, dans la messagerie, le traitement de texte, le navigateur, sans qu’on ait à coller son texte quelque part. Le réglage du ton est ce qui a le plus de valeur en usage professionnel : le même message peut sortir ferme, cordial ou neutre.
+
+## Points forts
+- Présent dans tous les outils : rien à copier-coller nulle part
+- Réglage du ton, précieux sur un courriel délicat
+- Excellente prise en charge de l’anglais professionnel
+- Formule gratuite déjà très utile au quotidien
+
+## Points faibles
+- Le français reste nettement en retrait de l’anglais
+- Les suggestions de style lissent parfois une voix personnelle
+- L’extension analyse ce que vous écrivez : à écarter des documents confidentiels
+
+## Idéal pour
+Ceux qui écrivent en anglais professionnel toute la journée et n’ont personne pour relire avant l’envoi.`,
+    },
+    {
+      id: `otter-ai`,
+      nom: `Otter.ai`,
+      categorie: `Productivité`,
+      prix: `Freemium — à partir de 17 $/mois`,
+      description_courte: `La réunion transcrite, résumée, et les décisions extraites — sans que personne n’ait pris de notes.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/otter-ai`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Otter s’invite dans la réunion, la transcrit en direct et rend, à la fin, un résumé avec les points d’action attribués. Le gain n’est pas la transcription — c’est que plus personne ne prend de notes, donc que tout le monde participe. Sur cinq réunions par semaine, cela rend plusieurs heures et supprime le débat sur ce qui avait été décidé.
+
+## Points forts
+- Rejoint automatiquement les réunions des principaux outils de visioconférence
+- Résumé et points d’action extraits, pas seulement une transcription brute
+- Recherche dans l’historique de toutes les réunions passées
+- Formule gratuite de plusieurs centaines de minutes par mois
+
+## Points faibles
+- Le français est correct mais moins fiable que l’anglais sur les accents marqués
+- L’enregistrement d’une réunion demande l’accord explicite des participants
+- La distinction des locuteurs se perd quand plusieurs parlent ensemble
+
+## Idéal pour
+Les équipes qui sortent des réunions sans compte rendu et rediscutent trois jours plus tard de ce qui avait été décidé.`,
+    },
+    {
+      id: `fathom`,
+      nom: `Fathom`,
+      categorie: `Productivité`,
+      prix: `Freemium — à partir de 19 $/mois`,
+      description_courte: `Le preneur de notes de réunion dont la version gratuite est complète, sans limite de minutes.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/fathom`,
+      score_avis: 4.5,
+      description_longue: `## Notre verdict
+Fathom a fait un choix rare : la version gratuite est illimitée en durée d’enregistrement et de transcription, avec les résumés. On ne paie que pour les fonctions d’équipe et l’intégration au logiciel commercial. Pour un indépendant ou une petite structure, c’est l’outil de compte rendu qui ne coûte rien et qu’on garde.
+
+## Points forts
+- Version gratuite illimitée en minutes, ce qui n’existe presque nulle part
+- Résumés disponibles en quelques secondes après la fin de la réunion
+- Extraits horodatés partageables, sans envoyer l’enregistrement entier
+- Pousse les comptes rendus dans les logiciels commerciaux courants
+
+## Points faibles
+- L’accord des participants à l’enregistrement reste obligatoire
+- Moins fin que la concurrence sur la distinction des locuteurs en français
+- Les fonctions d’équipe sont réservées aux formules payantes
+
+## Idéal pour
+Les indépendants et petites équipes qui enchaînent les rendez-vous en visioconférence et n’en gardent aucune trace.`,
+    },
+    {
+      id: `ideogram`,
+      nom: `Ideogram`,
+      categorie: `Design`,
+      prix: `Freemium — à partir de 8 $/mois`,
+      description_courte: `Le générateur d’images qui écrit correctement le texte : affiches, logos et visuels avec des mots lisibles.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/ideogram`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Le texte incrusté est le point faible historique des générateurs d’images : slogans déformés, lettres inventées. Ideogram a fait de la typographie sa spécialité, et rend des affiches, des vignettes et des visuels de marque où le texte est lisible du premier coup. Pour tout ce qui porte un mot, il évite la reprise systématique dans un logiciel de mise en page.
+
+## Points forts
+- Texte incrusté lisible, ce qui reste rare parmi les générateurs
+- Excellent sur les affiches, vignettes et visuels typographiques
+- Formule gratuite avec un quota quotidien réellement utilisable
+- Contrôle du format et du style sans consigne compliquée
+
+## Points faibles
+- Moins photoréaliste que les spécialistes de l’image
+- Les typographies exactes d’une marque ne sont pas reproductibles
+- Le rendu des mains et des visages reste inférieur à la concurrence
+
+## Idéal pour
+Ceux qui fabriquent des visuels portant du texte — vignettes, affiches, publications — et repassent systématiquement par un logiciel de mise en page.`,
+    },
+    {
+      id: `framer`,
+      nom: `Framer`,
+      categorie: `Productivité`,
+      prix: `Freemium — à partir de 5 $/mois`,
+      description_courte: `Le site web décrit en une phrase, publié en ligne dans la foulée, sans une ligne de code.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/framer`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Framer a réuni deux mondes qui ne se parlaient pas : la souplesse d’un outil de design et la publication d’un vrai site. On décrit ce qu’on veut, la structure sort, on ajuste au pixel, et l’on publie sur son domaine en un clic. Pour une page de présentation ou un site vitrine, c’est plus rapide que n’importe quel gabarit à remplir.
+
+## Points forts
+- Du texte au site publié sans passer par un développeur
+- Contrôle réel de la mise en page, contrairement aux gabarits figés
+- Hébergement, domaine et statistiques inclus
+- Formule gratuite pour publier un premier site
+
+## Points faibles
+- Le rendu par défaut est reconnaissable si l’on ne retouche rien
+- Les sites très riches en contenu deviennent lourds à maintenir
+- Le référencement demande un travail que l’outil ne fait pas à votre place
+
+## Idéal pour
+Les indépendants et petites structures qui ont besoin d’un site de présentation crédible cette semaine, pas dans deux mois.`,
     },
     {
       id: `mistral-le-chat`,

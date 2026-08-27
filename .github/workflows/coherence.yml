@@ -1,0 +1,56 @@
+# Le dépôt dit-il encore vrai sur lui-même ?
+#
+# `CLAUDE.md`, les compétences et le hook de démarrage sont ce qu'une session
+# neuve lit avant d'écrire une ligne. Ils ont un défaut unique mais coûteux :
+# **aucun test n'échoue sur une phrase**. Un projet ajouté par une session
+# pendant qu'une autre travaillait, et la liste des projets est fausse — pour
+# tout le monde, jusqu'à ce que quelqu'un relise quatre cents lignes.
+#
+# Relevé sur une seule journée : « trois projets » quand il y en avait six, une
+# section annonçant deux règles et en listant trois, une ligne d'outillage qui
+# cachait cinq installations du hook, quatre compétences absentes de leur propre
+# table. Aucune n'était trouvable autrement qu'en relisant tout, et personne ne
+# relit tout — c'est précisément ce qu'un runner sait faire à chaque poussée.
+#
+# **Pas de filtre de chemins**, et c'est le cœur du fichier : la dérive la plus
+# fréquente vient d'une branche qui ajoute un projet ou une compétence *sans
+# toucher* à `CLAUDE.md`. Un filtre sur `CLAUDE.md` laisserait passer exactement
+# le cas qu'on veut attraper. Le contrôle est en bibliothèque standard pure et
+# dure moins d'une seconde : il n'y a rien à économiser.
+#
+# **Son propre travail**, et non une étape des tests Python : ceux-ci installent
+# des bibliothèques et téléchargent une police. Faire dépendre un contrôle d'une
+# seconde d'un travail qui peut rouge pour une raison sans rapport, c'est se
+# préparer à le désactiver le jour où il gênera.
+#
+# Il n'échoue que sur ce qui est **démontrablement faux**. Les « à regarder »
+# s'affichent sans bloquer : un projet sans ligne dans le hook n'a peut-être
+# rien à installer, et un contrôle qui crie faux est un contrôle qu'on cesse de
+# lire — le jour où il a raison, plus personne ne le croit.
+
+name: Cohérence du dépôt
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: coherence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  controler:
+    name: Ce que le dépôt dit de lui-même
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pas de `setup-python` : le contrôle n'utilise que la bibliothèque
+      # standard, et le Python de l'image suffit. Une étape de moins est une
+      # raison de moins de rougir pour rien.
+      - name: Compter des deux côtés
+        run: python3 .claude/skills/coherence-depot/scripts/verifier-coherence.py

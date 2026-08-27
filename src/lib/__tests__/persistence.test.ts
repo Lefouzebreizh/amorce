@@ -8,8 +8,8 @@ function project(): Project {
   return {
     ...emptyProject(),
     assets: [
-      { id: 'a1', name: 'r1.mp4', url: 'blob:un', duration: 4, width: 1080, height: 1920, thumbnail: '', hasAudio: true },
-      { id: 'a2', name: 'r2.mp4', url: 'blob:deux', duration: 4, width: 1080, height: 1920, thumbnail: '', hasAudio: true },
+      { id: 'a1', name: 'r1.mp4', kind: 'video', url: 'blob:un', duration: 4, width: 1080, height: 1920, thumbnail: '', hasAudio: true },
+      { id: 'a2', name: 'r2.mp4', kind: 'video', url: 'blob:deux', duration: 4, width: 1080, height: 1920, thumbnail: '', hasAudio: true },
     ],
     clips: [
       { ...DEFAULT_CLIP, id: 'c1', assetId: 'a1', outPoint: 4 },

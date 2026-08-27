@@ -55,6 +55,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Se vérifie depuis son dossier, jamais depuis la racine.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
+- **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
+  lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
+  gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
+  aux API de sécurité, qui répondent trente fois par minute.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
@@ -203,7 +207,8 @@ verdict par projet suivi de ce qu'elle ne couvre pas.
 
 `npm run dev | build | typecheck | lint | test` — Amorce. `npm run fixtures`
 puis `npm run verify` : parcours complet dans un vrai Chromium, plus
-`verify:reprise` et `verify:partage`. Les tests unitaires ne voient ni le canvas,
+`verify:reprise`, `verify:partage` et `verify:images`. Les tests unitaires ne
+voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
 
@@ -214,7 +219,12 @@ ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lanc
 2. **Deux couches vidéo au plus.** `timeline.ts` borne toute transition à 45 %
    du plus court des deux clips.
 3. **Un `<video>` par clip, six au plus.** Un navigateur Android n'accorde que
-   six à huit décodeurs ; au-delà, l'export sort noir sans erreur.
+   six à huit décodeurs ; au-delà, l'export sort noir sans erreur. Le plafond ne
+   vaut que pour les rushes : une image fixe est portée par un `<img>`, ne
+   mobilise aucun décodeur, et reste chargée quel qu'en soit le nombre. Le
+   graphe audio passe donc par `getVideo`, jamais par `get` — brancher une
+   source Web Audio sur une image lèverait au premier plan fixe et couperait le
+   son de tout le reste.
 4. **Composition toujours en 1080 × 1920.** La qualité d'aperçu n'agit que par
    une transformation d'échelle.
 5. **Le son passe par Web Audio**, jamais par le volume des éléments média.

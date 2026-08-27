@@ -249,9 +249,82 @@ end $$;
 
 reset role;
 
+-- ---------------------------------------------------------------------------
+-- L'effacement du compte, qui touche `auth.users`
+-- ---------------------------------------------------------------------------
+
+-- Cette fonction est la seule du socle à écrire hors de `public`. Elle mérite
+-- donc d'être éprouvée comme une politique : ce qu'elle refuse compte autant
+-- que ce qu'elle fait.
+
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+
+do $$
+declare
+  refuse boolean := false;
+begin
+  begin
+    perform public.supprimer_mon_compte();
+  exception when insufficient_privilege then
+    refuse := true;
+  end;
+  if not refuse then
+    raise exception 'FAILLE : un visiteur anonyme peut appeler l''effacement de compte.';
+  end if;
+end $$;
+
+reset role;
+
+select set_config('request.jwt.claims',
+  '{"sub": "22222222-2222-2222-2222-222222222222", "role": "authenticated"}', true);
+set local role authenticated;
+
+do $$
+declare
+  refuse boolean := false;
+begin
+  -- La fonction ne prend aucun paramètre : viser le compte d'un autre n'est pas
+  -- « refusé », c'est impossible à formuler. Ce contrôle-ci garde cette forme,
+  -- car lui ajouter un argument un jour rouvrirait la porte en silence.
+  begin
+    perform public.supprimer_mon_compte('11111111-1111-1111-1111-111111111111');
+  exception when undefined_function then
+    refuse := true;
+  end;
+  if not refuse then
+    raise exception 'FAILLE : l''effacement accepte un identifiant en argument.';
+  end if;
+
+  perform public.supprimer_mon_compte();
+end $$;
+
+reset role;
+
 do $$
 begin
-  raise notice 'Politiques conformes : lecture, écriture, rôles et anonymat contrôlés.';
+  if exists (select 1 from auth.users where id = '22222222-2222-2222-2222-222222222222') then
+    raise exception 'Le compte effacé existe encore.';
+  end if;
+
+  if exists (select 1 from public.profiles where id = '22222222-2222-2222-2222-222222222222') then
+    raise exception 'Le profil du compte effacé a survécu : la cascade ne suit pas.';
+  end if;
+
+  if exists (select 1 from public.projects
+              where user_id = '22222222-2222-2222-2222-222222222222') then
+    raise exception 'Les projets du compte effacé ont survécu : la cascade ne suit pas.';
+  end if;
+
+  -- Et surtout : personne d'autre n'a été emporté.
+  if not exists (select 1 from auth.users where id = '11111111-1111-1111-1111-111111111111') then
+    raise exception 'FAILLE : l''effacement a emporté le compte d''un autre.';
+  end if;
+end $$;
+
+do $$
+begin
+  raise notice 'Politiques conformes : lecture, écriture, rôles, anonymat et effacement contrôlés.';
 end $$;
 
 -- Rien de tout cela ne reste : les comptes de test, leurs profils et leurs

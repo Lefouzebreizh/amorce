@@ -149,11 +149,36 @@ python3 scripts/asr_hors_ligne.py media.mp4 --instants
 python3 scripts/asr_hors_ligne.py media.mp4 --pocketsphinx
 ```
 
-**Whisper ne rend aucun instant**, seulement du texte : c'est une propriété du
-modèle, pas un réglage. Dater un mot demande un zipformer, et il n'en existe pas
-de français dans cette release — vérifié par requête, pas supposé. Pour du
-français à dater, le repli est de découper à l'enveloppe et de répartir le texte
-sur les passages, ce que fait déjà `src/lib/voice.ts` du studio.
+**Deux pièges, et le second est sournois.**
+
+`from_whisper` a pour défaut `language="en"` et **ne prévient pas** : sur du
+français il rend de l'anglais grammatical et faux, qu'on relit sans broncher.
+Le script renverse ce défaut à `fr` parce que ce dépôt est francophone, mais
+`--langue` reste à poser dès qu'on sort du français.
+
+`--instants` (zipformer) n'existe qu'en anglais : aucun modèle français dans
+cette release, vérifié par requête. Et son premier jeton tombe volontiers à
+0,00 s par artefact de décodage. **Recouper avec `--passages` avant de croire
+un instant** : sur le clip qui a motivé ces scripts, le zipformer annonçait un
+mot à 0,04 s là où la parole ne commence qu'à 1,86 s.
+
+## Les passages parlés, dans n'importe quelle langue
+
+C'est le relevé qui sert vraiment à caler une voix off sur des images : pas un
+mur de texte, mais « le passage 2 commence à 4,20 s ».
+
+```bash
+python3 scripts/asr_hors_ligne.py media.mp4 --passages --modele base
+```
+
+Silero VAD (640 ko) donne les bornes — **il ne dépend d'aucune langue** — et
+Whisper transcrit chaque passage. Sortent les instants, les durées, le texte,
+et les respirations entre passages.
+
+C'est la bonne réponse au « français à dater » : un seuil posé à la main sur
+l'enveloppe se trompe dès qu'un bruitage couvre une syllabe, et c'est
+exactement ainsi qu'une session a conclu « pas de voix » sur un fichier qui en
+portait une, mixée bas.
 
 ## Relever les instants d'un montage
 

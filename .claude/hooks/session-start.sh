@@ -32,6 +32,26 @@ readonly FLUTTER_VERSION='3.47.1'
 readonly FLUTTER_SHA256='a1d8166c0309267cb7dc99f1424eecf08b86946ad3b50723c6f59945964aea45'
 readonly FLUTTER_HOME="$HOME/flutter"
 
+# La ligne d'accueil se compose ici, un élément par projet, au lieu de vivre
+# dans une seule chaîne de mille caractères en fin de fichier. Cette chaîne
+# était un conflit garanti : tout projet ajouté devait la modifier, donc deux
+# branches ouvertes en même temps se marchaient dessus à coup sûr. Chaque bloc
+# déclare désormais sa commande chez lui, et git fusionne tout seul.
+commandes=(
+  "Amorce : npm run typecheck|lint|test"
+  "Socle Agence : (dans agence/) npm run lint|typecheck|test|build"
+  "Hypersensible : (dans hypersensible-bienveillance/) npm test, npm run check, npm run build"
+  "Look & Find : flutter analyze|test"
+  "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
+  "Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests"
+  "Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests"
+  "Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
+  "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
+  "Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
+  "Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
+  "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
+)
+
 echo "── Amorce : dépendances npm"
 cd "$racine"
 npm install --no-audit --no-fund --silent
@@ -120,6 +140,12 @@ echo "── Extraction multiformat : bibliothèques Python"
 # tesseract (paquet système). Les fiches disent comment les ajouter au besoin.
 python3 -m pip install --quiet --break-system-packages \
   exifread pillow-heif ebooklib pdfplumber chardet mutagen
+
+echo "── Radar crypto : bibliothèques Python"
+# Trois paquets légers. `requests` est déjà installé plus haut, mais le répéter
+# coûte une seconde et évite qu'un changement là-haut casse le radar en silence.
+python3 -m pip install --quiet --break-system-packages \
+  requests PyYAML python-dotenv
 
 echo "── Life-Organizer : bibliothèques Python"
 # Real-ESRGAN et PyTorch sont volontairement absents : plusieurs gigaoctets pour
@@ -290,4 +316,9 @@ if [ -f "$racine/.claude/skills/capacites-session/scripts/sonder.py" ]; then
   echo "── Capacités : $(python3 "$racine/.claude/skills/capacites-session/scripts/sonder.py" --court)"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Hypersensible : (dans hypersensible-bienveillance/) npm test, npm run check, npm run build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests — Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
+accueil=""
+for commande in "${commandes[@]}"; do
+  [ -n "$accueil" ] && accueil+=" — "
+  accueil+="$commande"
+done
+echo "── Prêt. $accueil"

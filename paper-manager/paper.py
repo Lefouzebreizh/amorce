@@ -48,7 +48,10 @@ RACINE = Path(__file__).resolve().parent
 
 def commande_etat(arguments: argparse.Namespace) -> int:
     configuration = charger(arguments.config)
-    etat = tableau(configuration)
+    # Le journal débloque deux types d'alerte ; son absence n'est pas une erreur,
+    # c'est un coffre qu'on n'a pas encore rempli.
+    journal = charger_journal(configuration.classement.racine / "documents.json")
+    etat = tableau(configuration, journal=journal)
 
     if arguments.traiter or arguments.reporter:
         etat = _changer_statut(configuration, etat, arguments)
@@ -112,7 +115,8 @@ def _afficher(etat: Tableau) -> None:
 def commande_agenda(arguments: argparse.Namespace) -> int:
     configuration = charger(arguments.config)
     aujourdhui = date.today()
-    ouvertes = alertes(configuration, aujourdhui)
+    journal = charger_journal(configuration.classement.racine / "documents.json")
+    ouvertes = alertes(configuration, aujourdhui, journal=journal)
     liste = evenements(configuration, ouvertes, aujourdhui)
 
     sortie = Path(arguments.vers) if arguments.vers else configuration.rappels.sortie_ics

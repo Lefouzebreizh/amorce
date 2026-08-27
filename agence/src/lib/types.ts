@@ -112,6 +112,12 @@ export type Database = {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      // Sans argument, et c'est sa garantie : la cible est `auth.uid()`, jamais
+      // un identifiant fourni par l'appelant.
+      supprimer_mon_compte: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
