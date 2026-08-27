@@ -126,7 +126,12 @@ def controler_competences(claude_md: str, releve: Releve) -> None:
     if not dossier.is_dir():
         return
     sur_disque = {d.name for d in dossier.iterdir() if (d / "SKILL.md").is_file()}
-    citees = set(re.findall(r"`/([a-z0-9-]+)`", claude_md))
+    # La table détaillée vit dans une référence générée depuis le disque : la
+    # tenir à la main dans CLAUDE.md la rendait fausse le lendemain de chaque
+    # ajout. On cherche donc les citations dans les deux fichiers.
+    table = RACINE / ".claude" / "references" / "competences.md"
+    texte = claude_md + (table.read_text(encoding="utf-8") if table.is_file() else "")
+    citees = set(re.findall(r"`/([a-z0-9-]+)`", texte))
 
     absentes = sorted(sur_disque - citees)
     releve.faux_si(
