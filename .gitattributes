@@ -1,0 +1,27 @@
+# Résolution automatique des conflits sur ce que toutes les sessions écrivent.
+#
+# Ce dépôt reçoit plusieurs sessions en parallèle, et elles se rencontrent
+# toujours au même endroit. Mesure sur les soixante dernières fusions : onze
+# conflits, dont neuf touchant `CLAUDE.md`, qui est modifié par un commit sur
+# cinq. Aucun n'était un désaccord — deux sessions ajoutaient chacune une ligne
+# au même tableau, et la résolution consistait invariablement à garder les deux
+# côtés.
+#
+# `merge=union` fait exactement cela. Les fusions conflictuelles de
+# l'historique, rejouées avec lui, redonnent le fichier que la résolution
+# manuelle avait produit, et le nombre de conflits tombe de onze à cinq — les
+# cinq restants venant d'une ligne du hook de démarrage, traitée à sa source.
+#
+# Restreint au Markdown, et délibérément pas étendu aux scripts : sur
+# `session-start.sh`, la même expérience a montré qu'union garde les deux
+# versions d'une ligne modifiée de part et d'autre — soit deux `echo`
+# contradictoires, et sur une affectation de variable ce serait pire. Un texte
+# gagne à garder les deux versions, du code non.
+#
+# Le prix à payer : une ligne réécrite des deux côtés apparaîtra en double au
+# lieu de lever un conflit. Cela se voit à la relecture du diff, qui reste due
+# — et c'est sans commune mesure avec le coût d'un conflit à chaque fusion.
+CLAUDE.md               merge=union
+*/CLAUDE.md             merge=union
+INDEX.md                merge=union
+.claude/skills/**/*.md  merge=union
