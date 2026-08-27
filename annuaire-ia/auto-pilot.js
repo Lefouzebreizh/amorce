@@ -534,6 +534,136 @@ Doxel compare l'ouvrage réellement construit à la maquette et au planning, à 
 ## Idéal pour
 Les maîtres d'ouvrage et entreprises générales sur des projets techniques — hôpitaux, industrie, data centers — où l'écart entre le facturé et le posé coûte cher.`,
     },
+    {
+      id: `finalcad`,
+      nom: `Finalcad`,
+      categorie: `Réserves & qualité`,
+      prix: `Sur devis`,
+      description_courte: `Les réserves relevées sur le plan depuis le téléphone, et l'historique complet de l'opération à la livraison.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/finalcad`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Éditeur parisien fondé en 2011, Finalcad a compris avant les autres que le point de collecte des données de chantier n'est pas le bureau mais la poche du conducteur de travaux. Tout se relève sur le plan depuis le téléphone, y compris hors réseau, et remonte ensuite. La partie automatisée sert surtout à extraire l'information utile des maquettes et des plans pour la remettre entre les mains des équipes de terrain.
+
+## Points forts
+- Relevé sur plan depuis le mobile, utilisable en zone sans réseau
+- Éditeur français avec deux cents personnes et quinze ans de terrain
+- Extraction automatique de données depuis les maquettes et plans 2D
+- Historique complet de l'opération, exploitable à la réception
+
+## Points faibles
+- Aucun tarif public : déploiement négocié
+- Le bénéfice suppose que toutes les entreprises jouent le jeu — c'est le vrai obstacle
+- Fonctionnalités riches, donc paramétrage initial à prévoir
+- Recouvre en partie ce que font les grandes plateformes généralistes
+
+## Idéal pour
+Les entreprises générales et maîtres d'œuvre qui veulent que les réserves cessent de vivre sur des tirages papier annotés.`,
+    },
+    {
+      id: `kairnial`,
+      nom: `Kairnial`,
+      categorie: `Suivi de chantier`,
+      prix: `Sur devis`,
+      description_courte: `La collaboration sur maquette 2D et 3D pour les grosses opérations, choisie par les majors du bâtiment français.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/kairnial`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Kairnial vise franchement le haut du marché : les opérations où la maquette numérique est un livrable contractuel et où des dizaines d'intervenants doivent travailler sur le même modèle. Bouygues, Eiffage et Suez figurent parmi ses clients, ce qui en dit long sur le type de projet auquel il est taillé. La contrepartie est mécanique — sur un chantier de trois entreprises, la moitié des fonctions ne servira jamais.
+
+## Points forts
+- Collaboration sur maquettes 2D et 3D depuis n'importe quel appareil
+- Couvre toutes les phases du cycle, de la conception à l'exploitation
+- Éprouvé chez les majors françaises du bâtiment
+- Gestion documentaire à la hauteur des exigences contractuelles des grosses opérations
+
+## Points faibles
+- Surdimensionné, et donc trop cher, pour une entreprise de taille moyenne
+- Aucun tarif public
+- Suppose une maquette numérique déjà en place et tenue à jour
+- Déploiement long, qui relève du projet d'entreprise
+
+## Idéal pour
+Les grandes opérations avec maquette numérique contractuelle et de nombreux intervenants à coordonner sur le même modèle.`,
+    },
+    {
+      id: `bulldozair`,
+      nom: `BulldozAIR`,
+      categorie: `Réserves & qualité`,
+      prix: `Sur devis`,
+      description_courte: `Le suivi visuel de chantier pour les équipes de terrain, sans le poids d'une plateforme de major.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/bulldozair`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+BulldozAIR occupe le créneau que les plateformes lourdes laissent vide : une équipe qui veut relever, photographier et suivre l'avancement sans conduire un projet informatique. L'outil s'adapte à tous les corps d'état plutôt que de se spécialiser, ce qui en fait un choix raisonnable pour une entreprise qui intervient sur des chantiers de nature variable.
+
+## Points forts
+- Prise en main rapide par des équipes de terrain non informaticiennes
+- Suivi visuel de l'avancement, photo à l'appui
+- S'adapte à tous les corps d'état, sans paramétrage métier lourd
+- Éditeur français, échelle humaine
+
+## Points faibles
+- Aucun tarif public
+- Moins outillé que les plateformes des majors sur la gestion documentaire
+- Périmètre volontairement limité au terrain
+- Peu adapté aux opérations à maquette numérique contractuelle
+
+## Idéal pour
+Les entreprises de taille moyenne qui veulent structurer le suivi de chantier sans embarquer une plateforme conçue pour des opérations à cent millions.`,
+    },
+    {
+      id: `procore`,
+      nom: `Procore`,
+      categorie: `Suivi de chantier`,
+      prix: `Sur devis`,
+      description_courte: `La plateforme de gestion de construction la plus déployée au monde, avec une couche d'automatisation sur les données du chantier.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/procore`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Procore est l'acteur de référence à l'échelle internationale, et cela se traduit surtout par l'étendue : gestion financière, documents, qualité, sécurité et planning dans un même ensemble. Pour une entreprise française, la question n'est pas la qualité de l'outil mais l'adéquation — les usages et le vocabulaire viennent du marché nord-américain, et l'écart se paie en temps de paramétrage.
+
+## Points forts
+- Périmètre fonctionnel très large, du financier au terrain
+- Écosystème d'intégrations sans équivalent
+- Recul d'usage considérable, sur tous types d'ouvrages
+- Automatisation appuyée sur un volume de données de chantier rare
+
+## Points faibles
+- Conçu pour le marché nord-américain : vocabulaire et pratiques à traduire
+- Coût élevé, et tarification par volume d'activité
+- Déploiement lourd, rarement rentable sous une certaine taille
+- Accompagnement en français inégal selon les modules
+
+## Idéal pour
+Les entreprises qui travaillent à l'international ou qui cherchent une plateforme unique plutôt qu'un assemblage d'outils spécialisés.`,
+    },
+    {
+      id: `autodesk-construction-cloud`,
+      nom: `Autodesk Construction Cloud`,
+      categorie: `Suivi de chantier`,
+      prix: `Sur devis`,
+      description_courte: `La continuité entre la conception et le chantier, pour ceux qui travaillent déjà sous Revit.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/autodesk-construction-cloud`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+L'argument tient en une phrase : si la maquette est faite sous Revit, la chaîne de chantier qui la prolonge sans rupture de format vaut mieux qu'une autre, même excellente. Autodesk Construction Cloud joue exactement là, avec des fonctions d'analyse qui signalent les risques et les écarts avant qu'ils ne deviennent des reprises. L'enfermement dans l'écosystème est le prix à payer, et il est réel.
+
+## Points forts
+- Continuité sans rupture depuis la conception sous Revit
+- Analyse automatique des risques et des écarts d'exécution
+- Modules cohérents entre eux, du plan à la réception
+- Éditeur pérenne, feuille de route lisible
+
+## Points faibles
+- Enfermement marqué dans l'écosystème Autodesk
+- Aucun tarif public, et abonnements qui s'accumulent
+- Peu d'intérêt si la conception ne passe pas par Revit
+- Poids fonctionnel disproportionné pour de petites opérations
+
+## Idéal pour
+Les maîtres d'œuvre et entreprises dont la conception est déjà sous Revit, et qui perdent du temps à convertir des formats entre le bureau et le chantier.`,
+    },
   ],
 
   rh: [
@@ -1948,6 +2078,136 @@ Forma déplace les analyses environnementales là où elles servent : au moment 
 
 ## Idéal pour
 Les agences d'urbanisme et les équipes de projet urbain qui doivent justifier leurs choix d'implantation sur des critères environnementaux.`,
+    },
+    {
+      id: `snaptrude`,
+      nom: `Snaptrude`,
+      categorie: `Esquisse`,
+      prix: `Freemium, puis abonnement par utilisateur`,
+      description_courte: `L'esquisse dessinée dans le navigateur qui devient un modèle exploitable, sans repasser par la case modélisation.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/snaptrude`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+La perte de temps classique de l'agence n'est pas l'esquisse, c'est sa re-saisie : ce qui a été dessiné vite est remodélisé lentement dans l'outil de production. Snaptrude attaque exactement ce point — l'esquisse se fait dans le navigateur, à plusieurs, et sort en modèle exploitable plutôt qu'en image morte. Les surfaces et les métrés suivent au fur et à mesure, ce qui rend la discussion avec le client plus honnête dès les premières minutes.
+
+## Points forts
+- Travail à plusieurs dans le navigateur, sans installation
+- L'esquisse produit un modèle exploitable, pas seulement une image
+- Surfaces et métrés calculés en continu pendant la conception
+- Passerelles vers les outils de production courants
+
+## Points faibles
+- Ne remplace pas un outil de production sur les phases avancées
+- Le travail dans le navigateur montre ses limites sur les projets lourds
+- Écosystème plus jeune que celui des éditeurs installés
+- Abonnement par utilisateur, qui pèse sur une petite agence
+
+## Idéal pour
+Les agences qui perdent du temps entre l'esquisse et la modélisation, et celles qui veulent chiffrer des surfaces devant le client plutôt qu'après.`,
+    },
+    {
+      id: `architechtures`,
+      nom: `Architechtures`,
+      categorie: `Faisabilité`,
+      prix: `Sur devis`,
+      description_courte: `Les variantes de projet résidentiel générées à partir des contraintes de la parcelle et du programme, chiffrées d'emblée.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/architechtures`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Sur le logement, la phase de faisabilité consiste à explorer des hypothèses qu'on n'a jamais le temps d'explorer toutes. L'outil renverse la contrainte : on saisit la parcelle, les règles et le programme, il produit des variantes avec leurs surfaces et leurs coûts. La valeur n'est pas dans le projet qu'il propose — un architecte n'en veut pas — mais dans les quinze qu'il permet d'éliminer en une matinée.
+
+## Points forts
+- Variantes générées à partir des vraies contraintes de parcelle et de programme
+- Chiffrage et surfaces attachés à chaque hypothèse
+- Fait gagner la phase où l'on décide sans avoir le temps de comparer
+- Sortie exploitable dans les outils de conception
+
+## Points faibles
+- Périmètre résidentiel : peu utile hors logement
+- Aucun tarif public
+- Le rendu formel reste générique : c'est un outil de faisabilité, pas de projet
+- Suppose une saisie rigoureuse des règles applicables
+
+## Idéal pour
+Les agences et promoteurs qui doivent trancher vite entre plusieurs hypothèses d'implantation sur une parcelle, avec les surfaces et les coûts en face.`,
+    },
+    {
+      id: `hypar`,
+      nom: `Hypar`,
+      categorie: `Conception générative`,
+      prix: `Freemium, puis abonnement`,
+      description_courte: `La règle métier de l'agence transformée en générateur réutilisable, plutôt que refaite à la main sur chaque projet.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/hypar`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Hypar s'adresse aux agences qui répètent : mêmes typologies, mêmes règles d'implantation, mêmes gabarits d'un projet à l'autre. Au lieu de refaire, on encode une fois la logique et on la rejoue. C'est plus proche de l'outillage que du dessin, ce qui explique la barrière d'entrée réelle — il faut quelqu'un dans l'agence que la logique ne rebute pas.
+
+## Points forts
+- Capitalise le savoir-faire de l'agence au lieu de le refaire à chaque projet
+- Générateurs partageables entre projets et entre équipes
+- Particulièrement rentable sur les programmes répétitifs
+- Palier gratuit pour évaluer l'approche
+
+## Points faibles
+- Barrière d'entrée réelle : plus proche de l'outillage que du dessin
+- Sans profil un peu technique dans l'agence, l'outil dort
+- Peu d'intérêt sur des projets tous singuliers
+- Écosystème restreint
+
+## Idéal pour
+Les agences qui traitent des programmes répétitifs — logement, bureaux, équipements — et veulent cesser de refaire la même étude.`,
+    },
+    {
+      id: `d5-render`,
+      nom: `D5 Render`,
+      categorie: `Rendu IA`,
+      prix: `Palier gratuit, puis abonnement annuel`,
+      description_courte: `Le rendu en temps réel avec des fonctions génératives pour habiller une scène sans la modéliser entièrement.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/d5-render`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+D5 s'est imposé chez beaucoup d'agences parce qu'il donne un rendu convaincant sans la liturgie des moteurs traditionnels. Les fonctions génératives y servent l'accessoire plutôt que l'essentiel : végétation, matières, ciels, ambiance — tout ce qui coûte des heures et que le client ne regarde qu'une seconde. Le palier gratuit permet d'en juger sur un projet réel, ce qui est rare dans cette catégorie.
+
+## Points forts
+- Rendu en temps réel, avec retour immédiat pendant les réglages
+- Fonctions génératives pour l'habillage, là où le temps se perd
+- Palier gratuit utilisable sur un vrai projet
+- Passerelles directes avec les principaux outils de conception
+
+## Points faibles
+- Demande une carte graphique correcte : le poste de travail compte
+- Les rendus génératifs se ressemblent vite si on ne reprend rien
+- Abonnement annuel sur les paliers utiles en agence
+- Ne dispense pas d'un œil : un beau rendu peut mentir sur le projet
+
+## Idéal pour
+Les agences qui produisent leurs images en interne et veulent réduire le temps d'habillage sans passer par un prestataire.`,
+    },
+    {
+      id: `enscape`,
+      nom: `Enscape`,
+      categorie: `Rendu IA`,
+      prix: `Sur devis (abonnement par poste)`,
+      description_courte: `La visualisation temps réel branchée directement dans Revit, SketchUp ou Rhino, sans exporter quoi que ce soit.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/enscape`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+L'intérêt d'Enscape n'a jamais été la qualité d'image absolue mais l'absence de rupture : la vue se met à jour pendant qu'on modifie le modèle, dans le logiciel de conception lui-même. C'est ce qui en fait un outil de réunion autant que de production — on modifie devant le client au lieu de promettre une image pour la semaine suivante. Les fonctions génératives récentes complètent l'habillage sans changer cette logique.
+
+## Points forts
+- Aucun export : la visualisation vit dans l'outil de conception
+- Mise à jour immédiate pendant la modification du modèle
+- Utilisable en réunion, devant le client
+- Intégré aux principaux logiciels d'agence
+
+## Points faibles
+- Aucun tarif public, abonnement par poste
+- Qualité d'image en retrait des moteurs de rendu dédiés
+- Exigeant pour la carte graphique
+- L'immédiateté pousse à décider vite, parfois trop
+
+## Idéal pour
+Les agences qui veulent montrer et arbitrer en séance plutôt que de produire des images entre deux réunions.`,
     },
   ],
 
