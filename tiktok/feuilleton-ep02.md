@@ -111,11 +111,12 @@ une éteinte (Zéro-Cinq, derrière nous), une qui vient de se briser
 (Zéro-Quatre), trois encore scellées. Puis la dernière image : **le titan
 tourne la tête** — pas vers nous, vers l'horizon.
 
-**La fin est silencieuse, et c'est délibéré.** L'EP01 se termine sur un
-rugissement à 13,18 s. Refaire un rugissement, c'est dire au spectateur qu'il
-a déjà vu cet épisode. Une tête qui tourne sans un son, après huit secondes de
-grondement, se remarque davantage que n'importe quel cri — et c'est la seule
-chose que le spectateur doit emporter : **ça ne s'arrête pas là.**
+**La fin est silencieuse, et c'est délibéré.** L'EP01 se termine sur la corne
+qui s'embrase, de 14,13 à 14,88 s — un climax d'image, sans un mot. Le refaire,
+c'est dire au spectateur qu'il a déjà vu cet épisode. Une tête qui tourne sans
+un son, après quatre secondes de falaise, se remarque davantage que n'importe
+quel cri — et c'est la seule chose que le spectateur doit emporter : **ça ne
+s'arrête pas là.**
 
 ## Où la voix se pose
 
