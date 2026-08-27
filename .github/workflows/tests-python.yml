@@ -64,7 +64,15 @@ jobs:
         run: |
           echec=0
           trouvees=0
-          for tests in */tests; do
+          # Deux profondeurs, et pas une seule : un projet mis en sommeil descend
+          # d'un cran sous `archives-backlog/` sans cesser d'avoir des tests
+          # verts — c'est même la condition écrite de sa reprise. Avec le seul
+          # motif `*/tests`, les soixante-deux tests du studio audio et de
+          # l'assistant d'allocation ont cessé d'être lancés le jour de leur
+          # déplacement, sans qu'une ligne rouge n'apparaisse nulle part. Un
+          # motif qui ne correspond à rien reste écarté par le garde de la ligne
+          # suivante, comme n'importe quel dossier sans `test_*.py`.
+          for tests in */tests archives-backlog/*/tests; do
             # Un dossier `tests/` sans fichier `test_*.py` n'est pas une suite
             # Python : le sauter évite qu'un projet d'une autre langue fasse
             # échouer la découverte.
