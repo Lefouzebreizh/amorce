@@ -142,7 +142,11 @@ sert dans la foulée. Trois par session au plus. Vérifier la doc officielle ava
 d'écrire contre une API : `/api-tierce-verifiee`.
 
 Avant de promettre un résultat qui dépend du réseau ou d'un outil :
-`/capacites-session`. Aujourd'hui **ni clé fal.ai, ni clé ElevenLabs**.
+`/capacites-session`. Aujourd'hui **ni clé fal.ai, ni clé ElevenLabs** — mais la
+**voix off, elle, se fabrique** : `bande-son/scripts/voix.py`, par sherpa-onnx,
+modèle pris en release GitHub, 25× le temps réel et rien qui sorte de la
+machine. Deux chemins avaient été essayés et déclarés impossibles ; c'est le
+troisième qui répond.
 `fal-flux-image`, `fal-luma-video`, `fal-upscaler`, `eleven-sfx` se construisent
 le jour où les clés arrivent : une compétence qui ne peut pas tourner est un
 mensonge dans la liste.

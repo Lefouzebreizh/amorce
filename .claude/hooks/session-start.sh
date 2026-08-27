@@ -197,7 +197,7 @@ echo "── Paper-Manager : bibliothèques Python"
 # où `archives-backlog/` disparaît, l'interface de ce projet ne s'éteigne pas
 # avec lui — pip ne réinstalle rien quand la version présente convient.
 python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow streamlit
-echo "── Reconnaissance de parole hors Hugging Face"
+echo "── Parole hors Hugging Face : reconnaissance et synthèse"
 # `faster-whisper` reste volontairement absent : il est lourd, et surtout ses
 # poids vivent sur `huggingface.co`, que la politique de sortie des sessions
 # distantes refuse. `sherpa-onnx` prend le relais — ses modèles sont publiés
@@ -205,6 +205,11 @@ echo "── Reconnaissance de parole hors Hugging Face"
 # chercher. La bibliothèque seule pèse peu ; les modèles ne descendent qu'à la
 # demande, dans ~/.cache, et une seule fois.
 python3 -m pip install --quiet --break-system-packages sherpa-onnx numpy
+
+# `matplotlib` sert au regard porté sur un média : sans lui, `/voir-le-son` meurt
+# à l'import et le seul filet qui *montre* un défaut sonore n'existe plus. Il
+# était absent, et la compétence était donc annoncée sans pouvoir tourner.
+python3 -m pip install --quiet --break-system-packages matplotlib
 
 echo "── Volet TikTok : bibliothèque du carnet"
 # `tiktok/carnet.py` fabrique le PDF de tournage depuis les Markdown du volet.

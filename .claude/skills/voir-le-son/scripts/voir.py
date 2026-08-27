@@ -48,12 +48,32 @@ def ffmpeg():
         raise SystemExit("ffmpeg introuvable : installe-le avant de relancer.")
 
 
+def ffprobe():
+    """Chemin de ffprobe, cherché avant d'être déduit.
+
+    Le déduire du chemin de ffmpeg par remplacement de chaîne suppose que les
+    deux binaires cohabitent. C'est faux dès qu'ffmpeg vient d'un paquet Python
+    et ffprobe du système : ici, /usr/local/bin/ffmpeg et /usr/bin/ffprobe. Le
+    chemin fabriqué n'existait pas, et le script mourait sur un FileNotFoundError
+    qui ne nommait pas la cause.
+    """
+    trouve = shutil.which("ffprobe")
+    if trouve:
+        return trouve
+    deduit = ffmpeg().replace("ffmpeg", "ffprobe")
+    if Path(deduit).exists():
+        return deduit
+    raise SystemExit(
+        "ffprobe introuvable. Il ne vient pas avec imageio-ffmpeg : "
+        "l'installer par le système (apt install ffmpeg) ou l'ajouter au PATH.")
+
+
 def lancer(args):
     return subprocess.run(args, capture_output=True, text=True)
 
 
 def duree(source):
-    r = lancer([ffmpeg().replace("ffmpeg", "ffprobe"), "-v", "error",
+    r = lancer([ffprobe(), "-v", "error",
                 "-show_entries", "format=duration", "-of", "csv=p=0", str(source)])
     try:
         return float(r.stdout.strip())
@@ -62,7 +82,7 @@ def duree(source):
 
 
 def a_du_son(source):
-    r = lancer([ffmpeg().replace("ffmpeg", "ffprobe"), "-v", "error", "-select_streams", "a",
+    r = lancer([ffprobe(), "-v", "error", "-select_streams", "a",
                 "-show_entries", "stream=codec_name", "-of", "csv=p=0", str(source)])
     return bool(r.stdout.strip())
 

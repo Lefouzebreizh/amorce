@@ -1,9 +1,40 @@
 ---
 name: bande-son
-description: Fabriquer la bande-son d'une vidéo — musique, voix off, bruitages — et la sortir au bon niveau pour la plateforme visée, à partir d'une simple phrase d'intention. Mesure le fichier, propose les réglages, mixe avec ffmpeg, puis vérifie le résultat en LUFS et en vrai pic. À utiliser dès qu'une vidéo et du son se croisent : « fais-moi la bande-son de ce clip », « quel volume pour la musique », « la musique couvre ma voix », « le son est trop faible sur TikTok », « ajoute une ambiance », « il manque du rythme » — et aussi quand un fichier .mp4 ou .mov arrive avec une intention de montage mais rien de dit sur le son. Ne pas attendre le mot « LUFS » : personne ne le prononce, et c'est précisément le réglage qui manque. Cette compétence *fabrique* le son ; pour **juger** un fichier déjà mixé — « ça sonne amateur », « on n'entend rien » — c'est `voir-le-son` qui regarde d'abord, et on revient ici pour corriger.
+description: Fabriquer la bande-son d'une vidéo — voix off **synthétisée sur la machine**, musique, bruitages — et la sortir au bon niveau pour la plateforme visée, à partir d'une simple phrase d'intention. Mesure le fichier, propose les réglages, mixe avec ffmpeg, puis vérifie le résultat en LUFS et en vrai pic. À utiliser dès qu'une vidéo et du son se croisent : « fais-moi la bande-son de ce clip », « quel volume pour la musique », « la musique couvre ma voix », « le son est trop faible sur TikTok », « ajoute une ambiance », « il manque du rythme », « fais-moi une voix off », « je n'ai pas de voix », « lis ce script à voix haute » — et aussi quand un fichier .mp4 ou .mov arrive avec une intention de montage mais rien de dit sur le son. Ne pas attendre le mot « LUFS » : personne ne le prononce, et c'est précisément le réglage qui manque. Cette compétence *fabrique* le son ; pour **juger** un fichier déjà mixé — « ça sonne amateur », « on n'entend rien » — c'est `voir-le-son` qui regarde d'abord, et on revient ici pour corriger.
 ---
 
 # Le son se juge en LUFS, pas en décibels de crête
+
+## La voix off se fabrique ici, sans clé
+
+Le dépôt a longtemps tenu la synthèse vocale pour hors de portée : pas de clé
+ElevenLabs, et `edge-tts` passe par un hôte que le mandataire refuse. La
+conclusion était juste sur les deux chemins essayés, et fausse sur le troisième.
+
+`scripts/voix.py` produit une voix off française **sur la machine**, par
+sherpa-onnx, dont les modèles sont publiés en objets de release GitHub — l'hôte
+qui répond, là où Hugging Face est bloqué. Mesuré : 6,1 s de parole en 20 s la
+première fois (65 Mo de modèle téléchargés), puis un instant, à 25× le temps
+réel.
+
+```bash
+python3 scripts/voix.py --check
+python3 scripts/voix.py --texte "Ce soir, on ne cherche pas à aller plus vite." --sortie voix.wav
+python3 scripts/voix.py --fichier script.txt --sortie voix.wav --vitesse 0.95
+```
+
+Deux voix : `siwis` (neutre, lisible) et `upmc` (grain plus marqué). La sortie
+est du WAV brut — c'est `monter.py` qui pose ensuite la loudness de la
+plateforme, et convertir ici ajouterait une perte avant le mixage.
+
+Passée à `voir-le-son`, cette voix perd **4 à 5 dB** sur un haut-parleur de
+téléphone : son fondamental descend sous les 400 Hz, mais ses formants n'y sont
+pas, et ce sont eux qui portent l'intelligibilité.
+
+**Ce qui n'est toujours pas fabricable ici : la musique.** `bruitages.py` couvre
+les impacts, grondements, crépitements et nappes ; une mélodie, une harmonie,
+une rythmique, non. Le repli honnête reste une piste libre de droits déposée à
+la main.
 
 C'est l'erreur qui coûte une journée. Un mixage calé à -1 dBFS de **crête** peut
 mesurer -22 LUFS de **loudness** : il ne sature pas, la forme d'onde remplit

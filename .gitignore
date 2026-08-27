@@ -95,3 +95,8 @@ kits/**/*.m4a
 kits/**/*.wav
 kits/**/*.mp3
 kits/**/*.flac
+
+# Images produites par /voir-le-son — spectrogrammes, courbes, planches de
+# vignettes. Se refabriquent d'une commande, et le dépôt ne versionne aucun
+# binaire.
+/regard/
