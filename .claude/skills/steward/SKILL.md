@@ -123,12 +123,12 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   contrôle, indéfiniment, sans que rien ne le signale : ne pas l'attendre, la
   déclencher à la main (`workflow_dispatch` sur la branche).
 
-  Une *poussée* sur la branche est censée déclencher `pull_request`, elle — mais
-  ne pas s'y fier sans regarder : deux poussées depuis une même session, l'une
-  avant l'ouverture de la PR et l'autre après, n'ont rien déclenché du tout,
-  quand des branches voisines recevaient leur exécution dans la même minute. Le
-  déclenchement manuel, lui, n'a jamais manqué, et c'est la seule voie qui
-  dispense de vérifier qu'elle a marché.
+  Une *poussée* sur la branche déclenche `pull_request`, elle — mais pas à tous
+  les coups, et c'est ce qui la rend traître. Trois poussées d'une même session
+  sur la même branche : les deux premières n'ont rien déclenché, la troisième
+  oui. Rien ne distinguait la troisième, sinon que le dépôt recevait moins de
+  monde à cette minute-là. Le déclenchement manuel, lui, n'a jamais manqué :
+  c'est la seule voie qui dispense d'aller vérifier qu'elle a marché.
 - **Vérifier le verdict sur l'empreinte exacte qui sera fusionnée.** Un commit
   poussé après le déclenchement invalide le résultat précédent, et ne relance
   que les workflows dont le filtre de chemins l'accepte — `tests-python`
