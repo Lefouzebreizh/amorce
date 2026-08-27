@@ -22,10 +22,16 @@
 #   jeton d'Actions ne déclenche aucun workflow — protection anti-boucle de
 #   GitHub, pas un réglage. Sans cet appel explicite, l'outil publié le lundi
 #   n'apparaîtrait en ligne que le mercredi, et rien ne le signalerait.
-# * **Sans les secrets, on prévient et on continue.** Tant que le compte
-#   Cloudflare n'existe pas, échouer rendrait l'auto-pilote rouge tous les deux
-#   jours — et une barrière rouge en permanence est une barrière qu'on cesse de
-#   lire. La publication dans le dépôt, elle, a bien eu lieu.
+# * **Sans les secrets, on prévient, on continue — et on ouvre un billet.**
+#   Échouer rendrait l'auto-pilote rouge tous les deux jours, et une barrière
+#   rouge en permanence est une barrière qu'on cesse de lire ; la publication
+#   dans le dépôt, elle, a bien eu lieu. Mais l'avertissement seul ne suffit
+#   pas, et c'est mesuré : cinq exécutions vertes de suite n'ont **rien**
+#   déposé, deux sessions ont cru la mise en ligne faite, et personne ne l'a
+#   vu — il faut ouvrir le journal d'exécution pour lire un avertissement.
+#   Un billet, lui, arrive dans les notifications. Il se referme tout seul au
+#   premier dépôt réussi : une alerte qu'on doit fermer à la main finit par
+#   rester ouverte pour rien.
 #
 # Réglages à faire une fois, côté GitHub (Settings → Secrets and variables →
 # Actions) : `CLOUDFLARE_API_TOKEN` (permission « Cloudflare Pages — Edit ») et
@@ -45,6 +51,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 # Deux dépôts simultanés sur le même projet Pages se marchent dessus ; on garde
 # le plus récent, qui contient de toute façon ce que portait le précédent.
@@ -134,6 +141,36 @@ jobs:
           console.log('\nDossier de dépôt conforme.');
           "
 
+      # Un avertissement vit dans le journal d'exécution, que personne n'ouvre.
+      # Celui-ci arrive dans les notifications, et une seule fois : si le billet
+      # est déjà ouvert, on n'y ajoute rien.
+      - name: Signaler que le réseau n'est toujours pas en ligne
+        if: steps.secrets.outputs.pret == 'non'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          titre="Le réseau d'annuaires n'est pas encore en ligne"
+          existant=$(gh issue list --state open --search "$titre in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existant" ]; then
+            echo "Billet #$existant déjà ouvert, rien à ajouter."
+            exit 0
+          fi
+          cat > /tmp/corps.md <<'TEXTE'
+          Les onze sites sont construits et contrôlés à chaque poussée, mais **rien n'est déposé** : les secrets Cloudflare manquent, l'étape de dépôt est sautée, et l'exécution reste verte.
+
+          Tant que ce billet est ouvert, le réseau publie dans le dépôt et nulle part ailleurs — les balises canoniques annoncent une adresse que personne ne sert.
+
+          Trois gestes, une fois pour toutes :
+
+          1. **Cloudflare** → Workers & Pages → un projet Pages nommé exactement `annuaire-ia`, en *Direct Upload*.
+          2. **GitHub** → Settings → Secrets and variables → Actions → `CLOUDFLARE_API_TOKEN` (permission *Cloudflare Pages — Edit*) et `CLOUDFLARE_ACCOUNT_ID`.
+          3. **Actions** → « Annuaire IA — mise en ligne » → *Run workflow*.
+
+          Ce billet se referme tout seul au premier dépôt réussi.
+          TEXTE
+          gh issue create --title "$titre" --body-file /tmp/corps.md
+
       - name: Déposer sur Cloudflare Pages
         if: steps.secrets.outputs.pret == 'oui'
         env:
@@ -144,3 +181,17 @@ jobs:
             --project-name=annuaire-ia \
             --branch=main \
             --commit-dirty=true
+
+      # Le premier dépôt réussi rend le billet caduc : le laisser ouvert
+      # apprendrait à ignorer les billets de ce dépôt.
+      - name: Refermer le billet de mise en ligne
+        if: steps.secrets.outputs.pret == 'oui'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          titre="Le réseau d'annuaires n'est pas encore en ligne"
+          existant=$(gh issue list --state open --search "$titre in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existant" ]; then
+            gh issue close "$existant" --comment "Premier dépôt réussi : le réseau est en ligne."
+          fi
