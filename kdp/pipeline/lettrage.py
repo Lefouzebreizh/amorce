@@ -53,10 +53,15 @@ CASES = [(0.075, 0.095, 0.487, 0.485), (0.513, 0.095, 0.925, 0.485),
 
 # Boîtes offertes aux bulles d'une case, selon leur nombre, en fractions de case.
 # La hauteur n'est qu'un plafond : la bulle se replie sur son texte.
+# Le coin haut-gauche appartient au médaillon : aucune bulle n'y commence,
+# sans quoi le numéro et la bulle se recouvrent l'un l'autre selon l'ordre de
+# tracé, et l'ordre de lecture des quatre cases se perd.
+MEDAILLON = 0.115
 OFFRE = {
-    1: [(0.06, 0.04, 0.94, 0.34)],
-    2: [(0.02, 0.04, 0.47, 0.34), (0.53, 0.11, 0.98, 0.42)],
-    3: [(0.02, 0.03, 0.44, 0.30), (0.56, 0.03, 0.98, 0.30), (0.18, 0.33, 0.82, 0.60)],
+    1: [(MEDAILLON, 0.04, 0.94, 0.34)],
+    2: [(MEDAILLON, 0.04, 0.50, 0.34), (0.53, 0.11, 0.98, 0.42)],
+    3: [(MEDAILLON, 0.03, 0.47, 0.30), (0.56, 0.03, 0.98, 0.30),
+        (0.18, 0.33, 0.82, 0.60)],
 }
 
 # Exceptions seulement : (tome, page, numéro de case) → boîtes de remplacement.
@@ -183,9 +188,6 @@ def composer(planche: Path, cible: Path, page_dossier: dict, tome: int,
 
     posees = 0
     for indice, case in enumerate(cases):
-        _medaillon(page, fitz.Point(case.x0 + case.width * 0.055,
-                                    case.y0 + case.height * 0.06),
-                   case.width * 0.038, indice + 1)
         ligne = next((t for n, t in page_dossier["repliques"]
                       if int(n) == indice + 1), "")
         if not ligne:
@@ -205,6 +207,13 @@ def composer(planche: Path, cible: Path, page_dossier: dict, tome: int,
             posees += 1
         if reperes:
             page.draw_rect(case, color=(1, 0, 0), width=2)
+
+    # Après les bulles : une bulle posée par-dessus effacerait le numéro, et
+    # avec lui l'ordre de lecture des quatre cases.
+    for indice, case in enumerate(cases):
+        _medaillon(page, fitz.Point(case.x0 + case.width * 0.055,
+                                    case.y0 + case.height * 0.06),
+                   case.width * 0.038, indice + 1)
 
     if page_dossier["parchemin"]:
         page.insert_textbox(fitz.Rect(largeur * 0.14, hauteur * 0.905,
