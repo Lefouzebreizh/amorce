@@ -26,7 +26,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import charte  # noqa: E402
 
-POLICES = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
+POLICES = charte.POLICES
 CORPS = POLICES / "Lora-Regular.ttf"
 CORPS_ITALIQUE = POLICES / "Lora-Italic.ttf"
 TITRE = POLICES / "Lora-Bold.ttf"
