@@ -40,6 +40,15 @@ interface CorpsRequete {
 
 const QUOTA_PAR_DEFAUT = 5;
 
+/**
+ * Sel de repli, et il n'a qu'un seul usage légitime : le développement local,
+ * où wrangler ne pose pas `cf-connecting-ip` et où tout le monde partage donc
+ * déjà la même empreinte. Sa valeur est publique — elle est dans ce dépôt.
+ *
+ * En production, il n'est jamais atteint : voir le garde-fou plus bas.
+ */
+const SEL_LOCAL = 'sel-local-a-remplacer';
+
 function json(charge: unknown, statut = 200, entetes: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(charge), {
     status: statut,
@@ -124,8 +133,28 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // même pour remettre son compteur à zéro. En local, wrangler ne pose rien :
   // tout le monde partage alors la même empreinte, ce qui est exactement ce
   // qu'il faut pour essayer la limite à la main.
-  const adresse = request.headers.get('cf-connecting-ip') ?? '127.0.0.1';
-  const empreinte = await empreinteAdresse(adresse, env.SEL_QUOTA ?? 'sel-local-a-remplacer');
+  const adresseReelle = request.headers.get('cf-connecting-ip');
+
+  // Garde-fou : du vrai trafic Cloudflare, et pas de sel.
+  //
+  // Le repli `SEL_LOCAL` est écrit en clair dans ce dépôt. S'en servir ici
+  // reviendrait à hacher des adresses réelles sans sel : une IPv4 tient dans
+  // 32 bits, et retrouver celle qui est derrière un SHA-256 non salé prend
+  // quelques secondes sur un ordinateur portable. La deuxième règle du projet
+  // n'y survivrait pas, et l'empreinte serait déjà en base quand on s'en
+  // apercevrait.
+  //
+  // Alors on sert et on ne compte pas — exactement ce que fait déjà la panne de
+  // base juste en dessous, et pour la même raison : un secret que l'exploitant
+  // a oublié de poser n'est pas la faute de la personne qui écrit. Le quota
+  // sauté coûte quelques analyses ; l'empreinte écrite ne se reprend pas.
+  if (adresseReelle && !env.SEL_QUOTA) {
+    console.error('SEL_QUOTA absente : quota désactivé, aucune empreinte écrite.');
+    return json({ ...reformuler(controle.texte), acces: 'degrade', restant: null, quota });
+  }
+
+  const adresse = adresseReelle ?? '127.0.0.1';
+  const empreinte = await empreinteAdresse(adresse, env.SEL_QUOTA ?? SEL_LOCAL);
 
   let restant: number | null;
   try {
