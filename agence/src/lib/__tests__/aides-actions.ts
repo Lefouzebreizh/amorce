@@ -66,6 +66,9 @@ export function clientFactice(resultat: unknown = { data: null, error: null }) {
 
   const client = {
     from: enregistrer('from'),
+    // Les fonctions du schéma s'appellent par `rpc` : c'est par là que passe
+    // l'effacement du compte, qui n'a pas de table à viser.
+    rpc: enregistrer('rpc'),
     // `auth` est un objet, pas une méthode : ses appels mènent aux maillons.
     auth: new Proxy(
       {},

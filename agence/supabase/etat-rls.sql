@@ -97,6 +97,30 @@ begin
     raise exception 'is_admin() manque, n''est plus « security definer », ou son search_path n''est plus figé.';
   end if;
 
-  raise notice 'Base conforme au socle : RLS active, cinq politiques, rôle verrouillé, is_admin() intacte.';
+  -- 6. `supprimer_mon_compte()` écrit dans `auth.users` : c'est la fonction la
+  -- plus puissante du socle. Trois dérives la rendraient dangereuse, et aucune
+  -- ne se voit à l'usage — l'application continuerait de fonctionner.
+  if not exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'supprimer_mon_compte'
+      and p.prosecdef
+      and p.pronargs = 0
+      and coalesce(array_to_string(p.proconfig, ','), '') like '%search_path=%'
+  ) then
+    raise exception 'supprimer_mon_compte() manque, a gagné un argument, n''est plus « security definer », ou son search_path n''est plus figé.';
+  end if;
+
+  -- Le droit d'exécution laissé à `public` est la dérive silencieuse par
+  -- excellence : elle ouvre la fonction à tout porteur de la clé publique, et
+  -- rien dans l'application ne change d'apparence. Le socle a déjà eu à
+  -- reprendre exactement cet oubli sur une autre fonction.
+  if has_function_privilege('public', 'public.supprimer_mon_compte()', 'execute')
+     or has_function_privilege('public', 'public.handle_new_user()', 'execute')
+     or has_function_privilege('public', 'public.is_admin()', 'execute') then
+    raise exception 'Une fonction du socle est exécutable par « public » : le droit a été réaccordé après la livraison.';
+  end if;
+
+  raise notice 'Base conforme au socle : RLS active, cinq politiques, rôle verrouillé, fonctions intactes.';
 end
 $$;

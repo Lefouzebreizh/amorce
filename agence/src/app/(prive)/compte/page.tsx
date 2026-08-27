@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { BoutonSupprimerCompte } from '@/components/bouton-supprimer-compte';
 import { FormulaireProfil } from '@/components/formulaire-profil';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,6 +52,24 @@ export default async function PageCompte() {
             valeur={<Badge variante="information">{LIBELLES_ROLE[profil?.role ?? 'user']}</Badge>}
           />
           <Ligne intitule="Compte créé le" valeur={formaterDateHeure(session.utilisateur.created_at)} />
+        </CardContent>
+      </Card>
+
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle>Effacer mon compte</CardTitle>
+          <CardDescription>
+            {/*
+              Le RGPD (article 17) donne droit à l'effacement, et il doit
+              s'exercer sans écrire à personne. Le mettre derrière un courriel
+              au support reviendrait à ne pas l'accorder.
+            */}
+            Le droit à l&apos;effacement s&apos;exerce ici, tout de suite et sans avoir à le
+            demander.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BoutonSupprimerCompte />
         </CardContent>
       </Card>
     </div>
