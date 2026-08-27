@@ -371,6 +371,45 @@ et travailler pendant ce temps sur ce qui n'en dépend pas.
   quelqu'un, ce qui détruit sans retour, et ce qui engage de l'argent.
 
 
+## 7. Une flotte de sessions bloquées sur des blocages qui n'existent plus
+
+Une session distante déclare son blocage **une fois**, dans son `needs_action`,
+et ne le révise jamais. Elle n'a aucun moyen d'apprendre qu'entre-temps sa
+branche a été fusionnée, sa PR ouverte, son sujet traité par une voisine. Le
+blocage reste donc affiché, à l'identique, indéfiniment — et c'est le
+propriétaire qui paie le tri.
+
+Mesuré le 27 août : **sur six blocages affichés, deux étaient faux et deux
+étaient périmés.** Une session réclamait qu'on déverrouille `main` pour fusionner
+une PR qui n'existait plus depuis des heures ; une autre demandait un dépôt dont
+le sujet était déjà en ligne. Il restait deux décisions réelles. Le tri à la main
+a coûté une session entière.
+
+```bash
+python3 .claude/skills/debloquer/scripts/trier-les-blocages.py --fichier sessions.json
+```
+
+Le script ne sait pas appeler le serveur MCP : on lui donne la sortie de
+`list_sessions`. Il rend trois verdicts, et le troisième est le plus important —
+**périmé** (démontrable : branche disparue, ou zéro commit d'avance, ou session
+archivée), **vivant** (la demande est humaine : un identifiant, une URL, une
+capture — git n'en sait rien), **à regarder** (une piste, qui demande dix
+secondes d'œil humain).
+
+Trois choses apprises en l'écrivant, et chacune l'aurait rendu faux :
+
+- **Le verdict porte sur la demande, jamais sur la branche seule.** Une session
+  attendait des identifiants Cloudflare depuis une branche déjà fusionnée : juger
+  la branche l'aurait classée « périmé » alors que personne n'avait envoyé les
+  identifiants. Git ne tranche que ce que git décide.
+- **L'ascendance ment après un écrasement.** `git branch --no-merged` a signalé
+  sept branches, dont trois fusionnées le matin même : le squash détache les
+  commits de leur descendance. Le seul juge est le contenu.
+- **Le contenu ment aussi**, quand le travail a été refait sous un autre nom.
+  Une branche portait 523 lignes de persistance absentes de `main`… qui y
+  existaient sous `persistence.ts` au lieu de `persist.ts`. Aucune comparaison
+  automatique n'attrape ça — d'où « à regarder » plutôt qu'un verdict tranché.
+
 ## Les permissions du dépôt
 
 **Elles sont posées.** `.claude/settings.json` porte 84 autorisations et 3 refus
