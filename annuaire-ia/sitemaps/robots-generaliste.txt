@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://boite-a-outils-ia.fr/sitemap.xml

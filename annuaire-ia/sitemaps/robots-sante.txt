@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ia-sante.fr/sitemap.xml

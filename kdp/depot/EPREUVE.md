@@ -53,23 +53,33 @@ Voici ce que je prends pour cet album-ci, et pourquoi.
 
 ---
 
-## La liste de contrôle, l'album en main
+> **Les numéros ci-dessous sont ceux du livre imprimé**, pas ceux des planches.
+> Le livre s'ouvre sur deux pages de titre composées, si bien que la planche N
+> tombe en page N + 2 : l'hymne, vingt-sixième planche, est en page 28. C'est le
+> numéro imprimé qui compte quand on tient l'album.
 
 À faire dans cet ordre. Chaque point est là parce qu'il ne peut pas être vérifié
 autrement qu'en le tenant.
 
-### 1. Le QR de l'hymne, page 26 — **le plus urgent**
+### 1. Le QR de l'hymne, page 28 — **le plus urgent**
 
 Sortez le téléphone et scannez-le. C'est le seul élément du livre dont rien, sur
-un écran, ne prouve qu'il fonctionnera : il est tracé à 0,63 mm par carré, au-dessus
-du seuil de lecture, mais l'encre s'étale légèrement sur le papier et c'est
-exactement ce qui tue un code marginal. S'il ne se lit pas du premier coup, à
-bout de bras, sous une lumière ordinaire : il faut l'agrandir avant publication.
+un écran, ne prouve qu'il fonctionnera : il est tracé à 0,73 mm par carré — au-dessus
+du seuil de 0,6, mais l'encre s'étale sur le papier et c'est exactement ce qui
+tue un code juste. **Scannez-le avec l'appareil photo natif du téléphone**, pas
+avec une application tierce : l'adresse est encodée sans « https:// », ce que
+les caméras d'iPhone et d'Android reconnaissent, mais que quelques applications
+anciennes affichent en texte au lieu de l'ouvrir.
+
+S'il ne se lit pas du premier coup, à bout de bras, sous une lumière ordinaire,
+il n'y a pas de correctif simple : l'emplacement a été mesuré, il ne peut pas
+grandir sans recouvrir la queue de Zéphy. Il faudrait redessiner le bas de la
+planche.
 
 ### 2. Les deux crèmes
 
-Ouvrez la **page 1** (page de garde, fond fabriqué par script) à côté d'une
-**planche dessinée**, la page 4 par exemple. Sur écran, les deux crèmes sont
+Ouvrez la **page 1** (page de titre, fond fabriqué par script) à côté d'une
+**planche dessinée**, la page 6 par exemple. Sur écran, les deux crèmes sont
 identiques. À l'impression, un fond en aplat et une aquarelle ne réagissent pas
 pareil à l'encre. Si l'écart se voit à la lumière du jour, il se corrige d'une
 ligne — mais il faut le voir.
@@ -80,7 +90,7 @@ Le massicot peut emporter jusqu'à **3 mm sur n'importe quel bord**, et pas le
 même d'un exemplaire à l'autre. Regardez surtout :
 - la **bordure végétale** de chaque planche : est-elle rognée d'un côté plus
   que de l'autre ?
-- la **page 25, Le Diplôme** — c'est la page mesurée la plus serrée du livre,
+- la **page 27, Le Diplôme** — c'est la page mesurée la plus serrée du livre,
   son trait passe à 4,6 mm du pli. Le cadre est-il avalé par la reliure ?
 
 ### 4. La reliure
@@ -88,17 +98,17 @@ même d'un exemplaire à l'autre. Regardez surtout :
 Trente pages, c'est mince pour un dos carré collé : la tranche fait **1,72 mm**.
 - La couverture est-elle bien centrée, ou le dessin de face déborde-t-il sur la
   tranche ?
-- **Le livre s'ouvre-t-il assez à plat** pour qu'un enfant colorie la page 23
+- **Le livre s'ouvre-t-il assez à plat** pour qu'un enfant colorie la page 25
   sans le tenir de force ? C'est un album d'ateliers : s'il se referme tout
   seul, les pages à dessiner ne servent à rien.
 
 ### 5. Les pages d'atelier
 
-Prenez un crayon et un feutre, et **écrivez vraiment** sur les pages 22, 23, 24.
+Prenez un crayon et un feutre, et **écrivez vraiment** sur les pages 24, 25 et 26.
 Le feutre traverse-t-il ? Les lignes du journal sont-elles assez visibles pour
 guider, assez discrètes pour ne pas gêner ?
 
-### 6. Le jeu des sept différences, page 17
+### 6. Le jeu des sept différences, page 22
 
 Faites-le. Sans regarder la page des solutions. Les sept écarts ont été posés et
 vérifiés au pixel, mais l'encre écrase les nuances : un changement de teinte

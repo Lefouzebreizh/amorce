@@ -204,14 +204,14 @@ Là, l'aller-retour vaut son prix.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **neuf projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
 montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
 rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
-Paper-Manager dans `paper-manager/` et le socle de production livré aux clients
-dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
+Paper-Manager dans `paper-manager/`, l'annuaire d'outils IA dans `annuaire-ia/`
+et le socle de production livré aux clients dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
 code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
 montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
 audio Streamlit (`mon-app-audio/`) et l'assistant d'allocation d'actifs
@@ -250,11 +250,12 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
 | `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
-| `/stack-agence-supabase` | Réaliser un projet client sur la stack de l'agence (Next.js 16, Supabase, RLS, shadcn) : ordre de travail, SQL durci, cinq règles de sécurité. Hors Amorce. |
-| `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, quel workflow couvre quoi et comment le déclencher — aucune vérification ne démarre seule sur une PR ouverte par une session — et ce qu'une session distante ne sait pas faire. |
+| `/stack-agence-supabase` | Où partir pour un projet client — le socle `agence/`, déjà écrit — et les deux règles qu'il ne fait pas respecter seul. Amaigrie : ce que son `README` dit déjà en a été retiré. Hors Amorce. |
+| `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, quel workflow garde quoi et comment le déclencher, et ce qu'une session distante ne sait pas faire. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
 | `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
+| `/voir-le-son` | Dessiner un média pour pouvoir le juger : spectrogramme, courbe de sonie, planche de vignettes. Né d'un montage mesuré conforme et pourtant muet sur téléphone — une moyenne dit qu'un son est fort, jamais qu'il est bon. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
 
@@ -292,6 +293,98 @@ Trois règles qui découlent de la cohabitation :
   deux chantiers le jour où ils sont passés sous `archives-backlog/`. Les deux
   fois, la couverture a baissé sans qu'une ligne rouge n'apparaisse : dans ce
   dépôt, ce qui énumère est faux le lendemain, et faux en silence.
+
+## Connecteurs
+
+Les connecteurs ne se déclarent pas dans le dépôt : ils vivent dans le compte
+claude.ai et se coupent **par conversation**. Ce qui suit est donc un tri, pas
+une configuration — mais un tri qui, faute d'être écrit, se refait à chaque
+session.
+
+| Connecteur | Ce qu'il sert |
+| --- | --- |
+| Adobe | `media_enhance_speech` pour une voix off, `video_metadata` et `video_render_frame` pour la fiche technique d'un rush, les outils de police pour les couvertures KDP, `image_vectorize`. Le plus sous-employé de tous. |
+| Gmail | Les factures, les avis d'échéance et les accusés de résiliation de `paper-manager` arrivent là. |
+| Google Agenda | Les échéances que calcule le module `calendrier` de Life-Organizer doivent atterrir quelque part. |
+| Google Drive | Source de fichiers pour `nettoyer` et `ranger`. |
+| Supabase | Le geste le plus répété du socle `agence/` : `apply_migration` pose `schema.sql`, `execute_sql` rejoue `verifier-rls.sql`. Essayé de bout en bout sur un projet neuf — ce qui passe, ce qui ne passe pas et ce que `get_advisors` se trompe à signaler est écrit dans `/stack-agence-supabase`. |
+
+Ce qui ne sert pas — écrit plutôt que simplement éteint, parce qu'un connecteur
+se rallume tout seul dans la conversation suivante :
+
+- **Canva** recoupe Adobe sur presque tout et n'apporte rien qu'il n'ait. Deux
+  outils pour le même geste, c'est un choix à refaire à chaque fois.
+- **Indeed** n'a de rapport avec aucun des projets.
+- **Notion** et **Airtable** feraient un second endroit où vit la mémoire du
+  projet. Elle est dans ce fichier, dans `INDEX.md`, dans `inbox/` et dans les
+  compétences ; en ouvrir un deuxième, c'est garantir que dans trois mois
+  personne ne saura plus lequel fait foi.
+- **Vercel** attendra un déploiement réel : `agence/README.md` dit « n'importe
+  quel hébergeur Node ou Vercel », et rien n'y est déployé.
+
+Un cas à part, qui n'est ni un connecteur ni un manque :
+
+- **GitHub passe par un serveur MCP**, et c'est par lui qu'une session distante
+  ouvre ses PR : les outils `mcp__github__*` (`create_pull_request`,
+  `merge_pull_request`, la lecture des contrôles d'intégration continue).
+  Mesuré, pas supposé — la PR #69 a été ouverte, suivie et fusionnée sans jamais
+  toucher l'interface de la session.
+
+  Ce qui ne marche pas, et qui figurait ici comme un verrou général alors que
+  ce n'en est pas un : appeler `api.github.com` **en direct**, au `curl` ou par
+  la commande `gh`. `POST /repos/…/pulls` répond alors `403 GitHub access is not
+  enabled for this session`, quand bien même l'application GitHub de Claude est
+  installée sur le compte avec l'écriture sur les demandes d'extraction, et que
+  `git push` passe. Le jeton n'est pas dans l'environnement, il est derrière le
+  serveur MCP. Ne pas conclure de ce 403 que la voie est fermée, et ne pas
+  repartir en chasse dans les réglages : c'est l'outil employé qu'il faut
+  changer, pas la configuration.
+
+Et une règle de permissions, écrite dans `.claude/settings.json` plutôt que
+réaccordée à chaque session : les outils Supabase qui **lisent** y sont
+autorisés d'office, `execute_sql` et `apply_migration` **non**. Ces deux-là
+écrivent dans une vraie base, et sur le geste dont l'erreur est une faille
+plutôt qu'un bogue, une demande de confirmation vaut son aller-retour. La liste
+est écrite sur le nom `Supabase` ; ce connecteur est apparu sous deux noms dans
+une même session, l'autre étant un identifiant opaque, et lequel des deux tient
+d'une session à l'autre reste à mesurer.
+
+## Les compétences, mesurées plutôt que supposées
+
+Les compétences de `.claude/skills/` ne se marchent pas dessus : mesuré sur
+leurs descriptions, le recoupement le plus fort est de 0,14, et les paires qui
+se croisent négocient déjà leur frontière par écrit — `/extraction-multiformat`
+renvoie explicitement à `/transcription-media` pour la parole, `/tiktok` renvoie
+à `/charte-editoriale` pour le ton. Il n'y a rien à dédoublonner entre elles.
+
+Restait un soupçon : les compétences **générales** que Claude apporte ont des
+descriptions volontairement larges — la générale `pdf` annonce couvrir le
+remplissage de formulaires, ce que `/formulaire-pdf` fait ici avec l'outillage
+de `paper-manager`. Sur le papier, les deux répondent à « remplis ce Cerfa ».
+
+**Essayé, et le soupçon est faux.** Deux phrases posées à un `claude -p` lancé
+dans ce dépôt, avec la vraie liste de compétences :
+
+| Ce qu'on tape | Ce qui se déclenche |
+| --- | --- |
+| « j'ai le cerfa 15646*01 […] tu peux me le remplir ? » | `/formulaire-pdf` |
+| « regarde rush-03.mp4 […] dis-moi ce qui se dit dedans » | `/transcription-media` |
+
+Celle du dépôt gagne dans les deux cas, sans qu'on ait rien à écrire. Une
+description précise et ancrée sur des projets nommés l'emporte sur une
+description large : c'est ce que fait déjà chaque description d'ici, et c'est la
+raison de ne pas les raccourcir.
+
+Cela ne rend pas la règle inutile, cela la remet à sa place — un départage pour
+le jour où ce ne sera pas évident, pas la réparation d'un défaut constaté :
+**sur un formulaire administratif, un média local ou un texte destiné à son
+public, c'est celle du dépôt qui prime.** La générale connaît le format, celle
+du dépôt connaît le projet.
+
+Et une mise en garde qui vaut plus que la règle : **cette page-là se mesure, elle
+ne se relit pas.** Le soupçon ci-dessus était solide à la lecture des deux
+descriptions, et faux à l'essai. Deux minutes de `claude -p` ont tranché ce
+qu'un après-midi de raisonnement aurait mal tranché.
 
 ## Vérifier
 

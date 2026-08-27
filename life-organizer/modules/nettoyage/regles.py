@@ -1,4 +1,4 @@
-"""Décider si une photo est floue, si deux photos sont la même, et laquelle garder.
+"""Décider si une photo est floue, si deux photos sont la même, et si une vidéo est abîmée.
 
 Trois décisions tiennent ce fichier :
 
@@ -32,7 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from noyau.modele import ECARTER, GARDER, Decision, Doublon, Media
+from noyau.modele import ECARTER, GARDER, SIGNALER, Decision, Doublon, Media, Video
 
 # Un pHash fait 64 bits : la distance de Hamming va donc de 0 (même image) à 64
 # (l'image et son négatif). Les valeurs utiles tiennent dans le premier quart.
@@ -389,3 +389,109 @@ def compter(decisions: list[Decision]) -> dict[str, int]:
 def chemins_ecartes(decisions: list[Decision]) -> set:
     """Ce que la passe de netteté retire du lot avant la recherche de doublons."""
     return {decision.media.chemin for decision in decisions if decision.geste == ECARTER}
+
+
+# ──────────────────────────── Les vidéos abîmées ─────────────────────────────
+#
+# Quatre refus de trancher, et la raison de chacun :
+#
+# - **Un fichier léger n'est pas un fichier abîmé.** `taille_minimale_ko` ne
+#   décide de rien : il ne fait que nommer « vide ou tronquée » ce que
+#   l'inspection a déjà déclaré illisible.
+# - **Une durée non mesurée n'est pas une durée nulle.** Beaucoup de MKV et tous
+#   les flux enregistrés en direct n'annoncent aucune durée dans leur en-tête et
+#   se lisent parfaitement. Les compter pour zéro mettrait en quarantaine un
+#   format entier.
+# - **Un fichier sans piste vidéo n'est pas un fichier abîmé.** Un `.mp4` qui ne
+#   porte que du son est un enregistrement, pas un rebut : il se signale, il ne
+#   s'écarte pas.
+# - **Un fichier qu'on vient de modifier n'est pas jugé.** Un téléchargement ou
+#   un import en cours a exactement les symptômes d'une vidéo tronquée : en-tête
+#   complet, fin absente. C'est le seul faux positif que cette passe produit en
+#   masse, et il vise précisément ce que l'utilisateur est en train de récupérer.
+
+DUREE_MINIMALE_PAR_DEFAUT = 1.0
+TAILLE_MINIMALE_KO_PAR_DEFAUT = 64
+IGNORER_SI_MODIFIEE_RECEMMENT_MINUTES_PAR_DEFAUT = 5
+SECONDES_PAR_MINUTE = 60
+
+
+def est_trop_courte(duree_secondes: float | None, minimum: float) -> bool:
+    """Une durée absente n'est jamais trop courte : on ne juge pas ce qu'on n'a pas lu."""
+    if duree_secondes is None:
+        return False
+    return duree_secondes < minimum
+
+
+def est_modifiee_recemment(date_horodatage: float, maintenant: float, minutes: int) -> bool:
+    """Vrai si le fichier a bougé il y a moins de `minutes`. Zéro désactive la protection."""
+    if minutes <= 0:
+        return False
+    return date_horodatage > maintenant - minutes * SECONDES_PAR_MINUTE
+
+
+def _verdict_video(video: Video, reglages: dict) -> Decision:
+    """Le constat brut, avant le garde-fou du fichier en cours d'écriture.
+
+    **Le poids ne condamne jamais à lui seul.** Il ne fait que nommer ce qu'on a
+    déjà constaté illisible : un fichier de zéro octet est vide avant d'être
+    illisible, et c'est « vide » qui dit à son propriétaire s'il doit chercher
+    une sauvegarde ou hausser les épaules. Mesuré sur un vrai dossier : un MKV
+    de quatre secondes en 320×240 pèse 20 ko et se lit parfaitement. En faisant
+    du poids un critère de plein droit, il partait en quarantaine — et son motif
+    masquait au passage le vrai diagnostic des quatre fichiers réellement
+    abîmés, tous plus petits que le seuil.
+    """
+    if not video.lisible:
+        taille_minimale = float(
+            reglages.get("taille_minimale_ko", TAILLE_MINIMALE_KO_PAR_DEFAUT)
+        ) * 1024
+        if video.poids_octets < taille_minimale:
+            return Decision(
+                video, ECARTER,
+                f"vide ou tronquée ({video.poids_octets} o, "
+                f"sous le minimum de {taille_minimale / 1024:.0f} ko)",
+            )
+        return Decision(video, ECARTER, f"illisible — {video.diagnostic or 'aucun flux exploitable'}")
+
+    if video.erreur_de_fin:
+        return Decision(video, ECARTER, f"fin de fichier corrompue — {video.erreur_de_fin}")
+
+    duree_minimale = float(reglages.get("duree_minimale_secondes", DUREE_MINIMALE_PAR_DEFAUT))
+    if est_trop_courte(video.duree_secondes, duree_minimale):
+        return Decision(
+            video, ECARTER,
+            f"trop courte ({video.duree_secondes:.2f} s, minimum {duree_minimale:g} s)",
+        )
+
+    if not video.piste_video:
+        if reglages.get("signaler_sans_piste_video", True):
+            return Decision(video, SIGNALER, "aucune piste vidéo : c'est un fichier sonore")
+        return Decision(video, GARDER, "aucune piste vidéo, signalement désactivé")
+
+    duree = f"{video.duree_secondes:.0f} s" if video.duree_secondes is not None else "durée inconnue"
+    return Decision(video, GARDER, f"lisible ({duree})")
+
+
+def decider_video(video: Video, reglages: dict, maintenant: float) -> Decision:
+    """Rend le geste à poser sur une vidéo, et la phrase qui le justifie.
+
+    Le constat d'abord, la protection ensuite : une vidéo saine n'a besoin
+    d'aucun garde-fou, et n'interroger la date que sur ce qui allait être écarté
+    évite de retenir la moitié d'un dossier fraîchement copié.
+    """
+    decision = _verdict_video(video, reglages)
+    if decision.geste != ECARTER:
+        return decision
+
+    minutes = int(reglages.get(
+        "ignorer_si_modifiee_recemment_minutes",
+        IGNORER_SI_MODIFIEE_RECEMMENT_MINUTES_PAR_DEFAUT,
+    ))
+    if est_modifiee_recemment(video.date_horodatage, maintenant, minutes):
+        return Decision(
+            video, GARDER,
+            f"{decision.motif} — mais modifiée il y a moins de {minutes} min "
+            "(fichier peut-être en cours d'écriture)",
+        )
+    return decision
