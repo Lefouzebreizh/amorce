@@ -266,7 +266,9 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/retouche-planche` | Corriger au pixel une illustration dont le texte est incrusté, avec la matière de la planche — sans police importée ni régénération. |
 | `/roussy-zephy` | La charte du recueil illustré : personnages, palette, mécanique des histoires en quatre temps, gabarit de planche. |
 | `/typographie-francaise` | Les règles typographiques françaises pour tout texte qui partira en image ou en impression. |
-| `/etat-du-depot` | Qui travaille déjà sur le sujet, et si ce que le dépôt dit de lui-même est encore vrai. Deux scripts qui mesurent au lieu de supposer. |
+| `/regenerer-planche` | Remplacer une planche du recueil par une version régénérée : l'invite, la greffe dans le cadre, le lettrage, le verdict chiffré. |
+| `/sortir-les-fichiers` | Mettre à l'abri ce que la session contient et que Git ne porte pas, avant que le conteneur soit effacé. |
+| `/coherence-depot` | Ce que le dépôt affirme de lui-même est-il encore vrai : projets, compétences, agents, chemins, comptes annoncés. Compte des deux côtés au lieu de relire. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
 
