@@ -104,6 +104,14 @@ préparation, pas de chance. `/jauge` avant un gros lot.
 
 - **Lectures groupées** : plusieurs fichiers en un seul tour, jamais cinq appels
   qui se suivent.
+- **Ce qui ne se lit pas l'un l'autre part en même temps.** La mise à la queue
+  leu leu ne casse jamais rien — elle coûte, en silence. Mesuré sur la barrière
+  d'Amorce, la plus lancée du dépôt : **25,5 s en série, 7,9 s en parallèle** ;
+  `tsc`, ESLint et `node --test` ne se lisent pas l'un l'autre, et
+  `verifier.sh` les lance ensemble. Vaut aussi pour plusieurs `claude -p` posés
+  en même temps, et pour ce qui est long : on lance en tâche de fond, on
+  travaille sur ce qui n'en dépend pas, on ne réinterroge pas toutes les
+  trente secondes.
 - **Livrer tôt.** Un résultat qui tourne vaut mieux que le bon résultat annoncé
   au quinzième message.
 - **Trois essais par bug**, puis on livre la version dégradée qui marche et on
@@ -158,11 +166,16 @@ C'est le geste qui rend la documentation fausse.
 
 ### Commandes
 
+Avant de pousser, une seule commande, quel que soit le projet touché :
+`bash .claude/skills/verifier/scripts/verifier.sh`. Elle déduit de ce qui a
+changé les projets concernés, lance leurs séquences **en parallèle**, et rend un
+verdict par projet suivi de ce qu'elle ne couvre pas.
+
 `npm run dev | build | typecheck | lint | test` — Amorce. `npm run fixtures`
 puis `npm run verify` : parcours complet dans un vrai Chromium, plus
 `verify:reprise` et `verify:partage`. Les tests unitaires ne voient ni le canvas,
-ni le son, ni l'export, ni le mobile — seul `verify` les couvre. `/verifier`
-donne la séquence de chaque projet.
+ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
+à part. `/verifier` garde le pourquoi de chaque étape.
 
 ### Invariants d'Amorce — les casser casse l'application
 

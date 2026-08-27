@@ -9,7 +9,37 @@ Des projets indépendants, une séquence chacun. **Ne lance que celle du projet
 touché** : les tests de l'un ne disent rien des autres, et tout lancer multiplie
 l'attente pour rien.
 
-Commence par `git status --short` pour savoir où le changement a atterri.
+## Une commande
+
+```bash
+bash .claude/skills/verifier/scripts/verifier.sh
+```
+
+Elle regarde ce qui a changé depuis `origin/main` — commité ou non —, en déduit
+les projets concernés, lance leurs séquences **toutes en même temps**, et rend un
+verdict par projet avec le détail des seuls échecs. Elle finit par ce que la
+vérification ne couvre pas, calculé sur les projets touchés.
+
+Deux raisons de passer par elle plutôt que de recopier les séquences ci-dessous :
+
+- **Elle ne se trompe pas de périmètre.** Choisir à la main, c'est reprendre à
+  chaque fois trois décisions — où le changement a atterri, quelle séquence lui
+  correspond, dans quel ordre — dont l'erreur la plus probable est aussi la plus
+  coûteuse : oublier une suite. Les suites Python sont **découvertes**, comme
+  dans `.github/workflows/tests-python.yml` : un projet nouveau est gardé sans
+  avoir rien à déclarer.
+- **Elle est trois fois plus rapide.** Mesuré sur la barrière d'Amorce, la plus
+  lancée du dépôt : 25,5 s en série, 7,9 s en parallèle. `tsc`, ESLint et
+  `node --test` ne se lisent pas l'un l'autre ; les mettre à la queue leu leu
+  n'était qu'une habitude.
+
+`--base=<ref>` change le point de comparaison, `--tout` vérifie le dépôt entier
+sans regarder ce qui a changé. Le code de sortie vaut 0 si tout est vert.
+
+Ce qui suit reste la référence : ce que chaque séquence contrôle, dans quel
+ordre et **pourquoi**. À lire quand une étape casse, quand il faut lancer un
+filet que le script ne lance pas de lui-même — `npm run verify`, les politiques
+RLS —, ou quand on ajoute un projet.
 
 ## Look & Find — `look_and_find/`
 
