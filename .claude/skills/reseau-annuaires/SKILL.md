@@ -257,7 +257,11 @@ Trois choses, et il vaut mieux les dire que les découvrir :
   deux passages avant la fin.
 - **Poser les vrais liens d'affiliation.** Tant qu'ils sont en
   `exemple-affiliation.com`, `valider.js` le rappelle à chaque exécution et le
-  réseau ne rapporte rien.
+  réseau ne rapporte rien. **La recherche est déjà faite** :
+  `annuaire-ia/AFFILIATION.md` donne les huit programmes ouverts à ouvrir en
+  premier avec leur commission et leur adresse d'inscription, ceux qui sont
+  fermés ou inexistants — Canva, Notion, et aucun des grands modèles — et ce
+  qu'il faut noter de chaque programme obtenu. Il reste à créer les comptes.
 - **Acheter les domaines** — et seulement ceux qui le méritent. Sept des onze
   noms d'origine étaient déjà pris par des tiers, dont au moins un revendeur de
   liens : mesuré au DNS, contrôlé sur deux domaines inventés qui, eux, ne

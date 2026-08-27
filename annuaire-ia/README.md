@@ -28,6 +28,11 @@ Deux travaux automatisés à la racine du dépôt :
 `.github/workflows/autopilot.yml` publie et pousse tous les deux jours ;
 `.github/workflows/annuaire-ia.yml` est la barrière de vérification.
 
+
+**Les liens d'affiliation sont encore ceux de démonstration.** Les programmes
+à ouvrir, leurs commissions et leurs adresses d'inscription sont rassemblés dans
+[`AFFILIATION.md`](AFFILIATION.md).
+
 ## Les onze sites
 
 | Niche | Métier visé | Domaine prévu |
