@@ -286,6 +286,57 @@ def controler_listes_numerotees(claude_md: str, releve: Releve) -> None:
         )
 
 
+def controler_declencheurs_partages(releve: Releve) -> None:
+    """Deux fiches qui citent le même symptôme se disputent le déclenchement.
+
+    Une compétence se déclenche sur sa description. Quand deux descriptions
+    revendiquent « command not found » ou « ça sonne amateur », le modèle
+    tranche au jugé — et il tranche mal, sans que rien ne le signale.
+
+    Un renvoi explicite d'une fiche vers l'autre vaut frontière tracée : la
+    paire est alors délibérée, et sort du relevé. C'est ce qui distingue un
+    chevauchement assumé d'une collision oubliée.
+    """
+    descriptions: dict[str, str] = {}
+    for fiche in sorted((RACINE / ".claude" / "skills").glob("*/SKILL.md")):
+        entete = re.match(r"^---\n(.*?)\n---", fiche.read_text(encoding="utf-8"), re.S)
+        if not entete:
+            continue
+        nom = re.search(r"^name:\s*(.+)$", entete.group(1), re.M)
+        desc = re.search(r"^description:\s*(.+?)(?=\n\w+:|\Z)", entete.group(1), re.M | re.S)
+        if nom and desc:
+            descriptions[nom.group(1).strip()] = " ".join(desc.group(1).split())
+
+    revendications: dict[str, set[str]] = {}
+    for nom, description in descriptions.items():
+        for brut in re.findall(r"«\s*(.+?)\s*»", description):
+            symptome = brut.lower().strip(" .?!")
+            if len(symptome) > 2:
+                revendications.setdefault(symptome, set()).add(nom)
+
+    tracees = {
+        (nom, autre)
+        for nom, description in descriptions.items()
+        for autre in descriptions
+        if autre != nom and re.search(rf"[`/]{re.escape(autre)}\b", description)
+    }
+
+    collisions: dict[tuple[str, str], list[str]] = {}
+    for symptome, noms in revendications.items():
+        for a in sorted(noms):
+            for b in sorted(noms):
+                if a < b and (a, b) not in tracees and (b, a) not in tracees:
+                    collisions.setdefault((a, b), []).append(symptome)
+
+    for (a, b), symptomes in sorted(collisions.items()):
+        cites = ", ".join(f"« {s} »" for s in sorted(symptomes))
+        releve.regarder_si(
+            True,
+            f"{a} et {b} revendiquent {cites} sans que l'une renvoie à l'autre — "
+            f"tracer la frontière dans la description de celle qui doit céder",
+        )
+
+
 def main(argv: list[str]) -> int:
     claude_md = (RACINE / "CLAUDE.md").read_text(encoding="utf-8")
     releve = Releve()
@@ -297,6 +348,7 @@ def main(argv: list[str]) -> int:
     controler_listes_numerotees(claude_md, releve)
     controler_hook(releve)
     controler_tests_python(releve)
+    controler_declencheurs_partages(releve)
 
     for message in releve.faux:
         print(f"  ✗  {message}")

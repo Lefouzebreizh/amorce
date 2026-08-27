@@ -13,6 +13,18 @@
       "mcp__Supabase__search_docs",
       "mcp__Supabase__generate_typescript_types",
 
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_projects",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_organizations",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_tables",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_migrations",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_extensions",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__get_project",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__get_project_url",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__get_advisors",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__get_cost",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__search_docs",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__generate_typescript_types",
+
       "mcp__github__get_me",
       "mcp__github__get_commit",
       "mcp__github__get_file_contents",

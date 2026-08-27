@@ -35,7 +35,11 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 sys.path.insert(0, str(Path(__file__).parent))
-from scan import EXPOSE, SECRETS  # motifs partagés : un seul endroit à corriger
+# Motifs *et* filtres de faux positifs : un seul endroit à corriger. Hériter
+# des seuls motifs ne suffisait pas — sur le bundle d'une vraie application,
+# les clés publiables sont partout, et les signaler comme des fuites est le
+# constat le plus coûteux du métier.
+from scan import EXPOSE, PUBLIABLE, SECRETS, anodin
 
 AGENT = "audit-code-ia/1.0 (releve passif de surface publique)"
 DELAI = 0.3        # entre deux requêtes : on lit un site, on ne le martèle pas
@@ -187,11 +191,15 @@ def main():
         nom = source.rsplit("/", 1)[-1][:60] or source
         for ligne in contenu.splitlines():
             for etiquette, motif in SECRETS:
-                if motif.search(ligne):
-                    secrets.append(f"{nom} — {etiquette}")
-                    break
+                m = motif.search(ligne)
+                if not m:
+                    continue
+                if m.lastindex and m.lastindex >= 2 and anodin(m.group(2)):
+                    continue
+                secrets.append(f"{nom} — {etiquette}")
+                break
             m = EXPOSE.search(ligne)
-            if m:
+            if m and not PUBLIABLE.search(m.group(0)):
                 exposes.append(f"{nom} — {m.group(0)}")
         for etiquette, motif, recopiable in SERVICES:
             m = motif.search(contenu)

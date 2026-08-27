@@ -137,6 +137,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nUn assistant qui rédige a peu de valeur ; un assistant qui agit dans les outils de l'entreprise en a beaucoup. Zapier Agents s'appuie sur le plus large catalogue de connexions du marché pour exécuter des tâches réelles : qualifier un formulaire entrant, créer la fiche dans le logiciel commercial, prévenir la bonne personne, rédiger la réponse. C'est de l'automatisation qui sait décider, là où les scénarios classiques suivaient une règle rigide.\n\n## Points forts\n- Le catalogue de connexions le plus large, sans développement\n- L'agent décide selon le contenu, là où un scénario classique suivait une règle fixe\n- Se construit en langage courant, sans compétence technique\n- Historique d'exécution consultable, indispensable pour corriger un comportement\n\n## Points faibles\n- Les coûts grimpent vite avec le nombre de tâches exécutées\n- Un agent mal cadré agit dans de vrais systèmes : le bac à sable est indispensable\n- Le diagnostic d'un enchaînement raté reste laborieux\n\n## Idéal pour\nLes petites structures sans équipe technique, dont les processus reposent sur des copier-coller entre cinq outils différents.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "suno",
+      "nom": "Suno",
+      "categorie": "Audio & Voix",
+      "prix": "Freemium — à partir de 10 $/mois",
+      "description_courte": "La musique originale générée à la demande : un habillage sonore libre de droits, dans le style et la durée voulus.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/suno",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nSuno produit des morceaux complets à partir d'une description, avec voix chantée si on le demande. Pour un habillage de format court, une musique d'attente ou un fond de vidéo de marque, cela remplace les banques de musique où tout le monde puise les mêmes titres. La formule payante donne les droits d'usage commercial, ce qui est le point qui décide réellement d'un abonnement.\n\n## Points forts\n- Morceaux complets et cohérents, pas seulement des boucles\n- Droits d'usage commercial sur les formules payantes\n- Durée et style pilotables, ce qui évite le montage acrobatique\n- Version gratuite suffisante pour juger de la qualité\n\n## Points faibles\n- Les paroles générées demandent presque toujours une réécriture\n- Le cadre juridique de ces générations reste discuté : lire les conditions\n- Les mixages manquent de dynamique face à une production professionnelle\n\n## Idéal pour\nLes créateurs de formats courts, les podcasteurs et les équipes marketing qui veulent un habillage sonore qui ne ressemble pas à celui du voisin.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

@@ -45,8 +45,10 @@ annuaire-ia/
 Le travail programmé est à `.github/workflows/autopilot.yml`, la barrière à
 `.github/workflows/annuaire-ia.yml`.
 
-**L'auto-pilote passe `verifier.mjs` avant de pousser** — cinq minutes, tous les
-deux jours. C'est le seul endroit où le parcours en navigateur est obligatoire,
+**L'auto-pilote passe `verifier.mjs` avant de pousser** — 41 s tous les deux
+jours (25 s d'installation de Chromium, 16 s de parcours), mesurées sur une vraie
+exécution. Cinq minutes en session, mais c'est le CDN bloqué par le mandataire
+qui les fabrique, pas le parcours. C'est le seul endroit où le parcours en navigateur est obligatoire,
 et la raison tient à ce qui distingue cette exécution de toutes les autres :
 elle écrit sur `main` sans qu'un humain relise, et sa poussée ne redéclenche
 aucun workflow. Sans cette étape, rien ne regarde jamais la page publiée. Un

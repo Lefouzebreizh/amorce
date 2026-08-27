@@ -60,6 +60,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nSeekOut agrège des centaines de millions de profils venus de sources publiques variées — dépôts de code, publications scientifiques, brevets, réseaux professionnels — et permet de chercher sur des critères que les bases classiques ignorent. Pour un poste technique rare, c'est la différence entre les vingt mêmes profils que tous les cabinets contactent et un vivier réellement neuf.\n\n## Points forts\n- Sources bien au-delà des réseaux professionnels habituels\n- Recherche par compétence démontrée, pas seulement par intitulé de poste\n- Filtres de diversité utiles pour élargir un vivier trop homogène\n- Séquences de contact intégrées, avec suivi des réponses\n\n## Points faibles\n- Couverture nettement plus riche sur les profils américains\n- Tarification annuelle par licence, lourde pour une équipe de deux recruteurs\n- La qualité des données publiques est inégale : des profils obsolètes remontent\n\n## Idéal pour\nLes recruteurs de profils techniques rares — développement, données, recherche — qui ont épuisé les viviers classiques.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "visier",
+      "nom": "Visier",
+      "categorie": "Analyse RH",
+      "prix": "Sur devis",
+      "description_courte": "Les chiffres sociaux enfin lisibles : turnover, absentéisme, équité salariale, avec la question posée en français.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/visier",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nVisier assemble les données de paie, de temps et de gestion des talents en un modèle unique, puis répond à des questions posées en langage courant : quel service perd le plus de monde, à quel moment de l'ancienneté les départs se produisent, où subsiste un écart salarial injustifié. C'est ce qui remplace le tableur trimestriel que personne ne lit par un tableau de bord que la direction ouvre.\n\n## Points forts\n- Question posée en français, réponse immédiate : plus d'aller-retour avec le contrôle de gestion\n- Indicateurs sociaux calculés de façon homogène entre filiales et pays\n- Détection des écarts de rémunération, obligation qui devient une routine\n- Prévision des départs, avec les facteurs associés\n\n## Points faibles\n- La consolidation initiale des sources est le vrai chantier, et il est long\n- Réservé aux entreprises de taille conséquente\n- Les prévisions de départ demandent un cadre d'usage clair pour ne pas devenir un outil de surveillance\n\n## Idéal pour\nLes directions des ressources humaines multi-sites qui n'ont pas de vision consolidée fiable de leur masse salariale et de leurs départs.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

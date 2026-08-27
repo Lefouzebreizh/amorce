@@ -67,6 +67,11 @@ signalent une table sans RLS ou une fonction `security definer` sans
 `search_path` ; le script, lui, essaie les attaques et vérifie qu'elles
 échouent.
 
+Sur une base **déjà livrée**, ni l'un ni l'autre : `supabase/etat-rls.sql` ne
+lit que les catalogues, sans rien écrire, et répond à la question qui se pose
+après coup — la base ressemble-t-elle encore à ce que le dépôt décrit ? Un
+schéma se modifie aussi facilement qu'il s'applique, un soir de débogage.
+
 ### 4. Les clés — et celle qu'on ne prend jamais
 
 `get_project_url` et `get_publishable_keys` donnent les deux variables de

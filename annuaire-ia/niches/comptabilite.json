@@ -60,6 +60,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nKlippa lit un ticket ou une facture en quelques secondes, extrait le montant, la taxe, le fournisseur, et applique les règles de la politique de frais : plafond dépassé, dépense non éligible, doublon avec une note déjà passée. Le contrôle se fait donc à la saisie et non trois semaines plus tard, ce qui supprime l'essentiel des allers-retours entre le salarié et la comptabilité.\n\n## Points forts\n- Reconnaissance fiable sur les tickets froissés et les factures étrangères\n- Contrôle des règles internes appliqué au moment du dépôt\n- Détection des doublons et des fraudes simples sur les justificatifs\n- Tarif par utilisateur accessible aux structures moyennes\n\n## Points faibles\n- La configuration fine des règles demande un vrai temps de paramétrage\n- Périmètre limité aux frais : ce n'est pas un outil comptable complet\n- Le rapprochement avec les cartes bancaires d'entreprise reste perfectible\n\n## Idéal pour\nLes entreprises de cinquante à cinq cents salariés dont les notes de frais reviennent en boucle faute d'être contrôlées à la source.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "booke-ai",
+      "nom": "Booke AI",
+      "categorie": "Révision",
+      "prix": "À partir de 20 $/mois par dossier",
+      "description_courte": "L'assistant de révision qui repère les écritures douteuses et pose les questions au client à votre place.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/booke-ai",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nLa clôture d'un dossier bloque toujours au même endroit : les opérations non identifiées, dont seul le client connaît la nature. Booke détecte les écritures incohérentes, formule la question dans un portail simple et relance jusqu'à obtenir la réponse. Le collaborateur cesse d'être l'huissier de son propre dossier et reprend la main quand les réponses sont là.\n\n## Points forts\n- Détection des incohérences et des doublons avant la révision proprement dite\n- Relance automatique du client, avec un portail qu'il sait utiliser\n- Se greffe sur les principaux logiciels de tenue du marché\n- Tarif au dossier, lisible pour un cabinet\n\n## Points faibles\n- Couverture limitée aux logiciels anglo-saxons dominants\n- Ne remplace ni la révision ni le jugement professionnel\n- Les clients qui ne répondaient pas au téléphone ne répondent pas davantage au portail\n\n## Idéal pour\nLes cabinets dont les clôtures traînent faute de réponses clients, et qui relancent encore par courriels manuels en fin de trimestre.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }
