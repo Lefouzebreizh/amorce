@@ -71,6 +71,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nJuro remplace le cycle de vie contractuel par pièces jointes — dix versions d'un même document dans autant de boîtes mail — par un espace unique où le contrat se rédige, se négocie, se signe et se surveille. La partie intelligente résume les écarts entre versions, extrait les engagements et alerte sur les échéances de renouvellement, celles que tout le monde découvre trop tard.\n\n## Points forts\n- Un seul document vivant, du modèle à la signature\n- Résumé automatique des modifications proposées par la partie adverse\n- Alertes sur les échéances et les reconductions tacites\n- Modèles en libre service pour les équipes opérationnelles, sous contrôle juridique\n\n## Points faibles\n- Adapté aux contrats répétitifs, moins aux opérations sur mesure\n- Bascule des contrats existants longue et rarement complète\n- Suppose que les équipes commerciales acceptent de quitter le traitement de texte\n\n## Idéal pour\nLes directions juridiques de croissance dont le volume de contrats standards explose et qui deviennent le point de blocage de l'entreprise.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "robin-ai",
+      "nom": "Robin AI",
+      "categorie": "Analyse de contrats",
+      "prix": "À partir de 89 $/mois",
+      "description_courte": "La relecture de contrat qui explique chaque clause en français courant et propose la reformulation.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/robin-ai",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nRobin s’est fait connaître sur la revue contractuelle de masse en entreprise, mais sa formule d’entrée est achetable en ligne et vise le contrat isolé : on dépose un accord reçu, l’outil explique chaque clause en langage clair, signale ce qui s’écarte du marché et propose une reformulation à renvoyer. C’est un second regard à quatre-vingt-dix euros plutôt qu’à quatre cents.\n\n## Points forts\n- Explication clause par clause en langage clair, utile face à un client non juriste\n- Signale les stipulations qui s’écartent des usages du marché\n- Reformulation proposée, prête à être envoyée en contre-proposition\n- Formule d’entrée en libre-service, sans engagement annuel\n\n## Points faibles\n- Entraîné d’abord sur le droit anglais : prudence sur les contrats français\n- Le dépôt d’un contrat confidentiel chez un tiers demande une vérification préalable\n- Aucune valeur de conseil : c’est une aide à la lecture\n\n## Idéal pour\nLes juristes d’entreprise et avocats qui reçoivent des contrats rédigés par la partie adverse et n’ont pas le temps de tout éplucher.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

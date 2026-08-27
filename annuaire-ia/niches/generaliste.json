@@ -148,6 +148,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nSuno produit des morceaux complets à partir d'une description, avec voix chantée si on le demande. Pour un habillage de format court, une musique d'attente ou un fond de vidéo de marque, cela remplace les banques de musique où tout le monde puise les mêmes titres. La formule payante donne les droits d'usage commercial, ce qui est le point qui décide réellement d'un abonnement.\n\n## Points forts\n- Morceaux complets et cohérents, pas seulement des boucles\n- Droits d'usage commercial sur les formules payantes\n- Durée et style pilotables, ce qui évite le montage acrobatique\n- Version gratuite suffisante pour juger de la qualité\n\n## Points faibles\n- Les paroles générées demandent presque toujours une réécriture\n- Le cadre juridique de ces générations reste discuté : lire les conditions\n- Les mixages manquent de dynamique face à une production professionnelle\n\n## Idéal pour\nLes créateurs de formats courts, les podcasteurs et les équipes marketing qui veulent un habillage sonore qui ne ressemble pas à celui du voisin.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "gemini",
+      "nom": "Gemini",
+      "categorie": "Rédaction",
+      "prix": "Freemium — à partir de 22 €/mois",
+      "description_courte": "L'assistant de Google, branché sur la messagerie, les documents et le tableur que l'entreprise utilise déjà.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/gemini",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nLa force de Gemini n'est pas d'être le meilleur rédacteur, c'est d'être là où le travail se fait déjà : dans la boîte mail, dans le document partagé, dans le tableur. Résumer un fil de discussion de trente messages, rédiger une réponse en s'appuyant sur les pièces jointes, remplir une colonne de tableur à partir d'une consigne — autant de gestes que l'on ne fait pas si l'outil est dans un autre onglet.\n\n## Points forts\n- Intégré à la messagerie, aux documents et au tableur de l'espace de travail\n- Traite le texte, l'image, l'audio et la vidéo dans le même échange\n- Très grande fenêtre de contexte, y compris sur les formules payantes d'entrée\n- Recherche web intégrée, avec des réponses à jour\n\n## Points faibles\n- Les intégrations les plus utiles supposent un abonnement professionnel complet\n- Ton par défaut plus scolaire que les concurrents sur les textes longs\n- Les fonctions évoluent vite, ce qui déroute les utilisateurs occasionnels\n\n## Idéal pour\nLes entreprises déjà installées dans l'espace de travail Google, qui veulent un usage quotidien sans changer d'outil ni de réflexe.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

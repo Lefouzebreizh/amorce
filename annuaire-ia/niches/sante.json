@@ -71,6 +71,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nLifen s'attaque à une plaie administrative française : le compte rendu qui n'arrive pas au médecin traitant. L'outil identifie automatiquement le destinataire dans l'annuaire santé, choisit le canal disponible — messagerie sécurisée, dossier partagé, courrier papier en dernier recours — et trace l'envoi. Ce n'est pas spectaculaire, c'est simplement le poste où un secrétariat perd le plus de temps.\n\n## Points forts\n- Identification automatique du destinataire dans l'annuaire national\n- Choix du canal d'envoi géré tout seul, papier compris si nécessaire\n- Traçabilité complète des envois, opposable en cas de litige\n- Intégration aux logiciels hospitaliers français\n\n## Points faibles\n- Utile surtout dans le contexte réglementaire français\n- Déploiement à mener avec la direction des systèmes d'information\n- L'annuaire national comporte des données obsolètes qui ressortent\n\n## Idéal pour\nLes établissements et cabinets de groupe dont les secrétariats passent leurs journées à chercher des adresses de confrères et à relancer des envois.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "glass-health",
+      "nom": "Glass Health",
+      "categorie": "Aide au raisonnement",
+      "prix": "Freemium — à partir de 30 $/mois",
+      "description_courte": "Le tableau clinique saisi en une phrase, et le diagnostic différentiel structuré qui revient, avec le plan d’examens.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/glass-health",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nGlass ne prétend pas diagnostiquer : il propose un différentiel structuré à partir d’un résumé clinique, et un plan d’exploration cohérent. L’intérêt est le filet — la pathologie rare à laquelle on n’avait pas pensé apparaît dans la liste. C’est un second avis instantané, et l’outil ne cesse de rappeler que la décision reste au clinicien.\n\n## Points forts\n- Différentiel structuré, hiérarchisé, avec les arguments pour et contre\n- Plan d’examens proposé, cohérent avec les hypothèses\n- Rappelle explicitement que la décision reste médicale\n- Formule gratuite pour juger sur des cas réels\n\n## Points faibles\n- Aucune valeur diagnostique : c’est une aide à la réflexion, rien de plus\n- Recommandations calées sur les référentiels américains\n- Aucune donnée patient ne doit y être saisie en clair\n\n## Idéal pour\nLes urgentistes et généralistes qui veulent un second regard structuré sur un tableau clinique atypique.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

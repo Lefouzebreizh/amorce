@@ -71,6 +71,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nLaisser des élèves dialoguer librement avec une intelligence artificielle est un problème de responsabilité avant d'être un problème pédagogique. SchoolAI crée des espaces cadrés par l'enseignant, sur un objectif précis, dont il garde la visibilité complète : chaque échange est consultable, et les signaux inquiétants sont remontés. C'est ce qui rend l'usage défendable devant une direction et devant des familles.\n\n## Points forts\n- Visibilité complète de l'enseignant sur les échanges de la classe\n- Espaces cadrés par objectif : l'outil ne sort pas du sujet de la séance\n- Remontée des signaux de détresse et des usages problématiques\n- Tableau de bord des blocages, élève par élève\n\n## Points faibles\n- Contenus et programmes alignés sur le système éducatif américain\n- Le cadre réglementaire européen sur les données des mineurs demande une vérification préalable\n- L'établissement doit trancher une politique d'usage avant tout déploiement\n\n## Idéal pour\nLes établissements qui veulent autoriser un usage encadré plutôt que d'interdire un outil que les élèves utilisent déjà en dehors du cours.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "kahoot",
+      "nom": "Kahoot!",
+      "categorie": "Activités interactives",
+      "prix": "Freemium — à partir de 4 $/mois",
+      "description_courte": "Le quiz en direct que toute une classe connaît déjà, avec les questions écrites par la machine.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/kahoot",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nKahoot n’a rien à prouver côté engagement : le format est entré dans les mœurs scolaires. Le générateur de questions en fait un outil de préparation et non plus seulement d’animation — on colle un texte, on obtient une session complète. C’est le moyen le plus rapide de réveiller une classe en fin de journée.\n\n## Points forts\n- Format connu de tous : aucune explication à donner aux élèves\n- Questions générées à partir d’un texte, d’un document ou d’un sujet\n- Rapports de participation exportables pour le suivi\n- Tarif enseignant très bas, formule gratuite fonctionnelle\n\n## Points faibles\n- Fonctions génératives réservées aux formules payantes\n- L’aspect compétitif ne convient pas à toutes les classes\n- Peu adapté aux questions ouvertes et au raisonnement long\n\n## Idéal pour\nLes enseignants qui veulent réviser un chapitre en dix minutes sans préparer la séance la veille.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

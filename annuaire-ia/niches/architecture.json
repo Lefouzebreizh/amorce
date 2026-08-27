@@ -71,6 +71,17 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nLookX se distingue par ses modèles entraînés sur des corpus architecturaux identifiés, ce qui donne des rendus stylistiquement cohérents plutôt qu'un collage d'influences. Une agence peut aussi entraîner un modèle sur son propre travail, et retrouver son écriture d'une planche à l'autre — le vrai problème des images générées en concours, où l'hétérogénéité se voit immédiatement.\n\n## Points forts\n- Modèles par style architectural, plus cohérents qu'un générateur généraliste\n- Entraînement possible sur les images de l'agence, pour tenir une écriture\n- Traite l'extérieur, l'intérieur et le paysage\n- Formule gratuite pour évaluer avant d'engager\n\n## Points faibles\n- Génération à partir d'images, sans lien avec les logiciels de conception\n- L'entraînement d'un modèle propre demande un corpus conséquent\n- Résultats inégaux sur les programmes techniques\n\n## Idéal pour\nLes agences qui rendent des concours et dont les planches perdent en force parce que les images ne se ressemblent pas entre elles.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "spacely-ai",
+      "nom": "Spacely AI",
+      "categorie": "Rendu IA",
+      "prix": "Freemium — à partir de 15 $/mois",
+      "description_courte": "Le réaménagement intérieur généré à partir d’une photo ou d’un plan, en une trentaine de styles.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/spacely-ai",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nSpacely est l’outil d’appoint : une photo de pièce existante, un style, et l’on obtient en trente secondes une proposition d’aménagement présentable à un client. Ce n’est pas de la conception, c’est un support de discussion — et à quinze dollars par mois, il remplace l’après-midi passée à chercher des références sur des sites de décoration.\n\n## Points forts\n- Résultat en trente secondes à partir d’une simple photo\n- Une trentaine de styles, du minimaliste au classique\n- Génère aussi des vues d’extérieur et de façade\n- Tarif très accessible, formule gratuite pour essayer\n\n## Points faibles\n- La géométrie de la pièce est parfois réinterprétée : à vérifier\n- Rien à voir avec un projet : c’est un support de discussion\n- Les résultats demandent souvent plusieurs essais\n\n## Idéal pour\nLes maîtres d’œuvre et décorateurs qui doivent proposer trois ambiances à un client dès le premier rendez-vous.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }
