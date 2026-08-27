@@ -12,29 +12,23 @@ les répertoires racine qui contiennent du code. Ajouter un dixième chantier ne
 demande donc de le déclarer nulle part, ce qui est la seule façon connue de ne
 pas se retrouver avec un inventaire faux.
 
-Deux usages, et le second compte autant que le premier :
+Ce script répond à « qu'y a-t-il dans ce dépôt et où en est-ce » :
 
-    python3 .claude/outils/etat.py              # les chantiers, leur activité
-    python3 .claude/outils/etat.py --outillage  # ce que la machine sait faire
+    python3 .claude/skills/etat-du-depot/scripts/inventaire.py
 
-`--outillage` existe parce qu'une session distante n'a pas toujours ce qu'on
-croit : ni `ffprobe`, ni `pdftotext`, ni `tesseract` ne sont installés ici, alors
-que les tâches qui les appellent d'ordinaire sont courantes. Chercher la
-commande absente, échouer, puis chercher une parade coûte plusieurs minutes à
-chaque fois — et se termine parfois par « ce n'est pas possible », ce qui est
-faux. Le script mesure donc ce qui est là et **nomme la parade** pour ce qui
-manque.
+Il ne dit rien de ce que la *machine* sait faire — binaires, bibliothèques,
+hôtes joignables. C'est le travail de `capacites-session`, dont la sonde va
+plus loin que ne le ferait un doublon écrit ici.
 """
 
 from __future__ import annotations
 
 import argparse
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-RACINE = Path(__file__).resolve().parents[2]
+RACINE = Path(__file__).resolve().parents[4]
 
 # Ce qui n'est pas un chantier : outillage, dépendances, sorties de travail.
 IGNORES = {
@@ -43,37 +37,6 @@ IGNORES = {
     '__pycache__', '.venv', 'venv', 'build', 'dist', 'coverage',
 }
 CODE = ('*.py', '*.ts', '*.tsx', '*.dart', '*.mjs')
-
-# Ce qu'on cherche à savoir faire, et par quoi remplacer ce qui manque.
-# Le remède est écrit ici plutôt que découvert à chaque fois : c'est du temps
-# repris sur une impasse qu'on a déjà rencontrée.
-PARADES = {
-    'ffprobe': "utiliser `ffmpeg -i <fichier>` : les mêmes métadonnées sortent sur stderr",
-    'pdftotext': "utiliser pdfplumber (`page.extract_text()`) ou pymupdf (`page.get_text()`)",
-    'pdfinfo': "utiliser pymupdf : `len(pymupdf.open(f))` et `page.rect`",
-    'qpdf': "utiliser pypdf : `PdfWriter` fusionne, découpe et pivote",
-    'tesseract': "aucune OCR locale — décrire l'image plutôt que d'en extraire le texte, "
-                 "ou installer pytesseract *et* le binaire",
-    'convert': "utiliser Pillow (`PIL.Image`), qui couvre recadrage, échelle et conversion",
-    'gh': "utiliser les outils MCP `mcp__github__*` : PR, revues, état des vérifications",
-}
-PARADES_PY = {
-    'matplotlib': "à installer si besoin (`pip install --break-system-packages matplotlib`) ; "
-                  "pour un rendu soigné en PDF, reportlab est déjà là",
-    'pytesseract': "sans le binaire tesseract il ne sert à rien — voir la parade de `tesseract`",
-    'openpyxl': "à installer pour lire ou écrire un .xlsx",
-    'docx': "`python-docx`, à installer pour produire un .docx",
-    'pptx': "`python-pptx`, à installer pour produire un .pptx",
-    'whisper': "transcription locale absente ; l'installer prend plusieurs minutes et "
-               "plusieurs gigaoctets — le dire avant de lancer",
-    'torch': "absent volontairement : deux gigaoctets pour un seul chemin de code",
-}
-
-BINAIRES = ['git', 'node', 'npm', 'python3', 'flutter', 'dart', 'jq', 'ffmpeg',
-            'ffprobe', 'pdftotext', 'pdfinfo', 'qpdf', 'tesseract', 'convert', 'gh']
-MODULES = ['PIL', 'pymupdf', 'pypdf', 'reportlab', 'pdfplumber', 'numpy', 'pandas',
-           'requests', 'yaml', 'bs4', 'matplotlib', 'pytesseract', 'openpyxl',
-           'docx', 'pptx', 'whisper', 'torch']
 
 
 def git(*args: str) -> str:
@@ -162,45 +125,12 @@ def afficher_etat() -> None:
         print(f'\n{n} compétences · {len(list((RACINE / ".claude" / "agents").glob("*.md")))} agents')
 
 
-def afficher_outillage() -> None:
-    manquants = []
-    print('Binaires')
-    for b in BINAIRES:
-        ok = shutil.which(b) is not None
-        print(f'  {b:<12}{"présent" if ok else "ABSENT"}')
-        if not ok:
-            manquants.append(b)
-
-    print('\nModules Python')
-    for m in MODULES:
-        code = subprocess.run([sys.executable, '-c', f'import {m}'],
-                              capture_output=True, check=False).returncode
-        print(f'  {m:<12}{"présent" if code == 0 else "ABSENT"}')
-        if code != 0:
-            manquants.append(m)
-
-    parades = [(m, PARADES.get(m) or PARADES_PY.get(m)) for m in manquants]
-    parades = [(m, p) for m, p in parades if p]
-    if parades:
-        print('\nCe qui manque a une parade — aucune de ces tâches n’est impossible :')
-        for nom, parade in parades:
-            print(f'  {nom} → {parade}')
-    autres = [m for m in manquants if not (PARADES.get(m) or PARADES_PY.get(m))]
-    if autres:
-        print(f'\nAbsents sans parade consignée : {", ".join(autres)}')
-        print('  Installer avec `pip install --break-system-packages <paquet>`, '
-              'puis ajouter la parade ici.')
-
 
 def main() -> int:
-    analyse = argparse.ArgumentParser(
-        description='État du dépôt : chantiers découverts, activité, et outillage '
-                    'réellement disponible.')
-    analyse.add_argument('--outillage', action='store_true',
-                         help='Lister les binaires et modules présents, et la parade '
-                              'de chaque absent.')
-    arguments = analyse.parse_args()
-    afficher_outillage() if arguments.outillage else afficher_etat()
+    argparse.ArgumentParser(
+        description='Inventaire du dépôt : chantiers découverts, leur activité, '
+                    'et l’écart avec origin/main.').parse_args()
+    afficher_etat()
     return 0
 
 

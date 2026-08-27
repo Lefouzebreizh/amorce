@@ -1,84 +1,66 @@
 ---
 name: etat-du-depot
-description: Répondre « où en est le dépôt » et « est-ce que je peux faire ça ici » par une mesure plutôt que par une liste écrite à la main, avec `.claude/outils/etat.py` — les chantiers découverts et leur activité, l'écart avec `main`, et l'outillage réellement installé avec la parade de chaque absent (ni `ffprobe`, ni `pdftotext`, ni `tesseract`, ni `gh` ne sont là, et aucun ne bloque). À utiliser au début d'une session, avant de s'engager dans un gros travail, avant d'écrire un compte rendu ou un résumé du dépôt, et dès qu'une demande dit « où on en est », « fais le point », « qu'est-ce qu'il y a dans ce dépôt », « combien de projets », « c'est possible de… », « tu peux lire ce format », « il me faut un PDF / un tableur / une transcription » — y compris quand une commande vient d'échouer avec « command not found ».
+description: Répondre « qu'y a-t-il dans ce dépôt et où en est-ce » par une mesure plutôt que par une liste écrite à la main — les chantiers **découverts** (jamais énumérés), leurs lignes, commits et tests, la dernière touche de chacun, et l'écart de la branche avec `main`. À utiliser au début d'une session, et surtout **avant d'écrire noir sur blanc un chiffre sur le dépôt** : compte rendu, résumé de reprise, fiche d'idée, mise à jour de `CLAUDE.md`. À utiliser dès qu'une demande dit « où on en est », « fais le point », « qu'est-ce qu'il y a dans ce dépôt », « combien de projets », « lequel est abandonné », « résume l'atelier ». Pour ce que la *machine* sait faire — binaires, bibliothèques, réseau — c'est `capacites-session` ; pour le retard d'une branche et ses conflits, `branche-partagee`.
 ---
 
-# Ce dépôt rend fausses les listes qu'on écrit à la main
+# Ici, une liste écrite à la main est fausse le lendemain
 
-Deux fois déjà, un inventaire tenu à la main a menti sans que rien ne le
-signale : `CLAUDE.md` a annoncé dix projets là où il en énumérait neuf, et la
-ligne du hook a listé les dépendances installées avec trois projets de retard.
-Un texte périmé ne casse aucun test — c'est ce qui le rend coûteux.
+Le décompte des projets de `CLAUDE.md` a dû être recorrigé **trois fois en une
+semaine**. La ligne du hook a listé les dépendances installées avec trois projets
+de retard. Aucune de ces erreurs n'a fait rougir un test : un texte périmé ne
+casse rien, il désinforme simplement la session suivante.
 
-Le script ne connaît donc pas les chantiers : il les **découvre**, en cherchant
-les répertoires racine qui contiennent du code ou des commits. Un dixième
-chantier apparu ce matin y figure sans que personne l'ait déclaré.
-
-```bash
-python3 .claude/outils/etat.py
-```
-
-Il rend la branche, la tête, **l'écart avec `origin/main`** — avec le renvoi vers
-`/fusionner-main` s'il y a du retard — l'état de l'arbre, puis un chantier par
-ligne : lignes de code, commits, fichiers de test, dernière touche.
-
-Les trois colonnes se lisent ensemble. Beaucoup de lignes et peu de commits, sur
-un chantier posé il y a plusieurs jours, c'est un projet né d'une session et
-jamais rouvert. Zéro test sur un chantier qui en a mille, c'est ce qui cassera
-en premier.
-
-## « Est-ce que c'est possible ici ? » — presque toujours oui
+Le script ne connaît donc pas les chantiers, il les **découvre** — tout
+répertoire racine portant du code ou des commits. Un chantier apparu ce matin y
+figure sans que personne l'ait déclaré, et un chantier archivé en disparaît tout
+seul.
 
 ```bash
-python3 .claude/outils/etat.py --outillage
+python3 .claude/skills/etat-du-depot/scripts/inventaire.py
 ```
 
-Une session distante n'a pas ce qu'on croit. `ffprobe`, `pdftotext`, `pdfinfo`,
-`qpdf`, `tesseract`, `convert` et `gh` sont **absents**, alors que ce sont les
-commandes que l'on tape d'instinct pour lire un média, un PDF ou une PR.
+Il rend la branche, la tête, l'écart avec `origin/main`, l'état de l'arbre, puis
+un chantier par ligne : lignes de code, commits, fichiers de test, dernière
+touche.
 
-Ce qui rend l'absence coûteuse n'est pas l'absence : c'est de la découvrir en
-plein travail, d'échouer, puis de conclure « ce n'est pas possible » — ce qui est
-faux six fois sur sept. Le script liste donc ce qui manque **et la parade** :
+## Lire les colonnes ensemble
 
-| Réflexe absent | Ce qui le remplace, déjà installé |
+Aucune ne dit grand-chose seule ; croisées, elles racontent le dépôt.
+
+**Beaucoup de lignes, peu de commits, dernière touche ancienne** — un projet né
+d'une seule session et jamais rouvert. Ce n'est pas un défaut en soi : ce dépôt
+assume des chantiers en sommeil, et `INDEX.md` leur donne une condition de
+reprise. Mais un chantier dormant qui n'a *pas* de fiche est un oubli, pas une
+décision.
+
+**Beaucoup de lignes, zéro test** — ce qui cassera en premier, et sans prévenir.
+
+**Zéro ligne mais des commits** — un volet sans code (`tiktok/`) ou un chantier
+qui vient de naître.
+
+## Le moment où il faut vraiment s'en servir
+
+Avant d'**écrire un chiffre sur le dépôt** quelque part : compte rendu, résumé de
+reprise, fiche d'idée, ou la phrase de `CLAUDE.md`. C'est exactement là que
+l'inventaire d'hier se recopie sans qu'on y pense — et c'est l'erreur que ce
+script existe pour rendre impossible.
+
+Au **début d'une session** aussi : le dépôt reçoit plusieurs sessions en
+parallèle, et la branche courante peut être en retard de plusieurs fusions sans
+que rien ne le signale. La ligne « Écart » le dit en une seconde et renvoie vers
+`branche-partagee` quand il y a du retard.
+
+## Ce qu'il ne fait pas, et qui le fait
+
+Il compte, il ne juge pas — et il s'arrête au dépôt.
+
+| La question | Où elle se traite |
 | --- | --- |
-| `ffprobe` | `ffmpeg -i <fichier>` — mêmes métadonnées, sur la sortie d'erreur |
-| `pdftotext` | pdfplumber (`extract_text`) ou pymupdf (`get_text`) |
-| `pdfinfo` | pymupdf : `len(pymupdf.open(f))`, `page.rect` |
-| `qpdf` | pypdf : `PdfWriter` fusionne, découpe, pivote |
-| `convert` | Pillow : recadrage, échelle, conversion |
-| `gh` | les outils MCP `mcp__github__*` |
+| Que sait faire cette machine ? binaires, bibliothèques, réseau | `capacites-session` |
+| De combien ma branche est-elle en retard, et quoi faire du conflit | `branche-partagee` |
+| Ce chantier mérite-t-il d'être poursuivi | `INDEX.md` et `/idee-faisabilite` |
+| Les PR ouvertes, les vérifications, les revues | les outils `mcp__github__*` |
 
-Sont réellement indisponibles, et il faut le **dire plutôt que le contourner
-mal** : l'OCR (pas de `tesseract`) et la transcription locale (ni `whisper`, ni
-`torch` — plusieurs minutes et plusieurs gigaoctets à installer, à annoncer
-avant de se lancer).
-
-Le reste s'installe en une commande, `pip install --break-system-packages <paquet>`.
-L'image est une Debian récente où pip refuse d'écrire hors environnement
-virtuel ; le drapeau n'est pas une négligence, il est déjà utilisé par le hook de
-démarrage pour la même raison.
-
-**Quand une parade manque à la table, l'ajouter au script** après s'en être
-servi. C'est ce qui empêche la prochaine session de repayer la même impasse.
-
-## Quand s'en servir
-
-**Au début d'une session**, avant de toucher quoi que ce soit : le dépôt bouge
-vite, et la branche courante est peut-être déjà en retard de cinq fusions.
-
-**Avant d'écrire un compte rendu**, un résumé de reprise ou une fiche d'idée —
-partout où un chiffre sur le dépôt va être écrit noir sur blanc. Recopier
-l'inventaire d'hier, c'est exactement l'erreur que ce script existe pour éviter.
-
-**Quand une commande vient d'échouer** avec « command not found » : la réponse
-est probablement dans `--outillage`, avec le remplaçant.
-
-## Ce que le script ne dit pas
-
-Il compte, il ne juge pas. Il ne dit ni si le code est bon, ni si un chantier
-mérite d'être poursuivi — pour ça, `INDEX.md` et les fiches de `/idee-faisabilite`
-portent la décision, avec une note et une condition de reprise. Il ignore aussi
-tout ce qui vit sur GitHub : PR ouvertes, vérifications, revues se lisent avec
-les outils `mcp__github__*`.
+Ne pas dupliquer ces réponses ici : deux compétences qui disent la même chose se
+déclenchent l'une à la place de l'autre, et la moins bonne gagne une fois sur
+deux.
