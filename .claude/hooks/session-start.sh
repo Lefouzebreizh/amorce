@@ -244,6 +244,16 @@ else
   echo "   dépôt distant injoignable, liste non consultée"
 fi
 
+# Réseau d'annuaires IA : rien à installer — il emprunte les dépendances
+# d'Amorce (Tailwind pour compiler sa feuille, Playwright pour son parcours) et
+# n'a pas de node_modules à lui. Ce qui se dit ici est ce qu'une session ne peut
+# pas deviner : combien de publications l'auto-pilote tient encore. Quand cette
+# réserve tombe à zéro, rien ne casse — les onze sites cessent simplement de
+# bouger, et Google cesse de revenir.
+if [ -f "$racine/annuaire-ia/alerte-reserve.js" ]; then
+  echo "── Réseau d'annuaires : $(cd "$racine/annuaire-ia" && node alerte-reserve.js 2>&1 | head -1)"
+fi
+
 # Ce que cette session-ci sait faire. Une seconde, et cela évite de découvrir
 # en pleine tâche qu'un hôte est refusé ou qu'un binaire manque — quatre détours
 # en une nuit avant que cette ligne n'existe.
@@ -251,4 +261,4 @@ if [ -f "$racine/.claude/skills/capacites-session/scripts/sonder.py" ]; then
   echo "── Capacités : $(python3 "$racine/.claude/skills/capacites-session/scripts/sonder.py" --court)"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests — Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"

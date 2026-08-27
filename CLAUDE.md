@@ -230,7 +230,7 @@ ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
 rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
-Paper-Manager dans `paper-manager/`, l'annuaire d'outils IA dans `annuaire-ia/`
+Paper-Manager dans `paper-manager/`, le réseau de onze annuaires d'outils IA dans `annuaire-ia/`
 et le socle de production livré aux clients dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
 code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
 montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
@@ -269,6 +269,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/resilier-un-contrat` | Jusqu'à quand on peut encore partir sans frais, quel texte invoquer, et le courrier prêt à signer. |
 | `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
 | `/tiktok` | La ligne éditoriale du volet TikTok, ses huit concepts répétables, les deux seuls dispositifs de tournage et la façon dont un script s'écrit ici. |
+| `/reseau-annuaires` | Le réseau de onze sites d'affiliation d'`annuaire-ia/` : la carte, les huit invariants, les pièges déjà payés — dont le CDN dont l'absence rendait les pages illisibles sans qu'aucun test ne le voie — et les recettes pour ajouter un outil, une niche, ou réalimenter la réserve. |
 | `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
 | `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
