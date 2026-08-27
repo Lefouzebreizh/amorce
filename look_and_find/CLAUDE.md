@@ -256,13 +256,18 @@ Trois recettes utiles quand on ajoute un test :
   `main.dart`, qui n'est pas appelable depuis un test. Ajouter une boîte Hive
   sans les mettre à jour toutes les deux fait échouer le démarrage réel sans
   qu'aucun test ne bronche.
-- **`AppConfig.geminiModel` a une date de péremption.** Google arrête ses
-  modèles à date annoncée : la génération 1.5 répond déjà 404, et l'application
-  a passé un temps à pointer dessus. Un modèle retiré ne dégrade rien, il fait
-  échouer *tous* les scans d'un coup, sur tous les appareils, sans qu'une ligne
-  du dépôt ait bougé — et la panne ressemble à un problème de réseau. D'où
-  `ModelUnavailableException`, qui nomme le modèle et la constante. Pour savoir
-  ce qui est servi : `dart run tool/banc_invite.dart --modeles`.
+- **`AppConfig.geminiModel` est un alias (`gemini-flash-latest`), pas un
+  numéro.** Google arrête ses modèles à date annoncée : la génération 1.5, sur
+  laquelle l'application a pointé, répond déjà 404. Un modèle retiré ne dégrade
+  rien, il fait échouer *tous* les scans d'un coup, sur tous les appareils, sans
+  qu'une ligne du dépôt ait bougé — et la panne ressemble à un problème de
+  réseau. L'alias supprime cette falaise au prix d'un comportement qui peut
+  glisser quand Google avance la version ; c'est le bon côté du marché tant
+  qu'une réponse douteuse se diagnostique en cinq secondes avec
+  `tool/rejouer.dart`. Ne pas y substituer un numéro figé sans se donner un
+  moyen d'apprendre l'extinction autrement que par un utilisateur. Filet :
+  `ModelUnavailableException`. Ce qui est servi pour une clé :
+  `dart run tool/banc_invite.dart --modeles`.
 - Sans serveur, un prix ne peut bouger qu'au rescan. Ne pas ajouter de
   vocabulaire d'alerte de fond (« notification », « surveillance permanente ») :
   l'architecture ne le permet pas.
