@@ -143,15 +143,23 @@ class Memoire:
             prix_usd=ligne["prix_usd"], note=ligne["note"], acceleration=ligne["acceleration"],
         )
 
-    def jetons_suivis(self, depuis_heures: float = 48.0, minimum: float = 0.0) -> list[tuple[str, str]]:
+    def jetons_suivis(self, depuis_heures: float = 48.0, minimum: float = 0.0,
+                      maintenant: datetime | None = None) -> list[tuple[str, str]]:
         """Les jetons déjà relevés récemment, à re-relever quoi qu'il arrive.
 
         C'est ce qui rend la persistance possible : la découverte de
         DexScreener est irrégulière, et un jeton peut disparaître d'un tour de
         recherche sans que rien ne lui soit arrivé. S'il fallait qu'il soit
         redécouvert par hasard pour être confirmé, aucun signal ne le serait.
+
+        `maintenant` est l'instant du scan, et non l'heure qu'il est. Les deux
+        se confondent en production, jamais dans un test : une fenêtre calculée
+        sur l'horloge réelle rend un résultat qui dépend du jour où on la
+        demande, et la suite s'est effectivement mise au rouge toute seule
+        quarante-huit heures après avoir été écrite, sans qu'une ligne change.
         """
-        seuil = _iso(datetime.now(timezone.utc) - timedelta(hours=depuis_heures))
+        maintenant = maintenant or datetime.now(timezone.utc)
+        seuil = _iso(maintenant - timedelta(hours=depuis_heures))
         lignes = self.connexion.execute(
             "SELECT DISTINCT chaine, adresse FROM releves WHERE vu_le >= ? AND note >= ?",
             (seuil, minimum),
