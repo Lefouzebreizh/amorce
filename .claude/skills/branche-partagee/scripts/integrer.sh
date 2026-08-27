@@ -13,8 +13,8 @@
 # « neuf projets » suivi de dix éléments — le genre d'erreur qui survit des mois.
 #
 # Usage :
-#   bash .claude/skills/integrer-main/scripts/integrer.sh          # intègre
-#   bash .claude/skills/integrer-main/scripts/integrer.sh --etat   # ne fait que regarder
+#   bash .claude/skills/branche-partagee/scripts/integrer.sh          # intègre
+#   bash .claude/skills/branche-partagee/scripts/integrer.sh --etat   # ne fait que regarder
 
 set -uo pipefail
 

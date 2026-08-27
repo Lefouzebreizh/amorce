@@ -64,7 +64,7 @@ cherche.
    installer rend le projet invérifiable ailleurs que chez soi.
 4. `CLAUDE.md` et `/verifier`, ensemble : déclarer un projet sans dire comment
    le vérifier ne sert à personne.
-5. La PR — voir `/integrer-main`, ces fichiers de la racine sont exactement
+5. La PR — voir `/branche-partagee`, ces fichiers de la racine sont exactement
    ceux qui entrent en conflit.
 
 ## Avant d'écrire la première ligne
