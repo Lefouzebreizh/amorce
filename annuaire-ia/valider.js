@@ -222,11 +222,29 @@ export function validerReseau(backlog = null, releve = creerReleve()) {
         continue;
       }
       const vus = new Set();
+      // Les noms sont relevés en plus des identifiants : deux entrées du même
+      // outil sous deux identifiants différents passaient jusqu'ici sans rien
+      // déclencher, et l'auto-pilote les publiait toutes les deux — deux fiches
+      // identiques sur un site dont toute la conception évite la duplication.
+      // C'est arrivé en fusionnant deux réserves écrites en parallèle, où le
+      // dédoublonnage s'était fait sur l'identifiant seul. Alerte et non erreur :
+      // la page reste parfaitement fonctionnelle, elle est seulement moins
+      // crédible — et bloquer une publication pour cela coûterait plus cher.
+      const noms = new Map();
       for (const outil of reserve) {
         validerOutil(outil, `réserve ${niche}`, releve, { dateRequise: false });
         if (outil?.id) {
           if (vus.has(outil.id)) releve.erreurs.push(`réserve ${niche} — identifiant en double : ${outil.id}`);
           vus.add(outil.id);
+        }
+        if (outil?.nom) {
+          const cle = outil.nom.trim().toLowerCase();
+          if (noms.has(cle)) {
+            alerter(releve, 'reserve-nom-double',
+              `réserve ${niche} — « ${outil.nom} » deux fois, sous ${noms.get(cle)} et ${outil.id} : il sera publié en double`);
+          } else {
+            noms.set(cle, outil.id);
+          }
         }
       }
     }

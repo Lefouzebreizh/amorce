@@ -3017,32 +3017,6 @@ Glass ne prétend pas diagnostiquer : il propose un différentiel structuré à 
 Les urgentistes et généralistes qui veulent un second regard structuré sur un tableau clinique atypique.`,
     },
     {
-      id: `freed-ai`,
-      nom: `Freed`,
-      categorie: `Compte rendu de consultation`,
-      prix: `39 à 119 $/mois par praticien`,
-      description_courte: `L'assistant de consultation au tarif le plus bas du marché, avec des paliers affichés publiquement — ce qui est rare ici.`,
-      lien_affiliation: `https://exemple-affiliation.com/go/freed-ai`,
-      score_avis: 4.2,
-      description_longue: `## Notre verdict
-Freed fait deux choses que ses concurrents évitent : il affiche ses prix, et il commence à 39 $. Dans un secteur où presque tous les tarifs passent par un rendez-vous commercial, c'est en soi un argument — on sait ce qu'on paiera avant d'avoir donné son numéro. Le palier d'entrée plafonne à quarante comptes rendus par mois, ce qui ne tient pas une activité à temps plein : la vraie comparaison se fait sur l'offre à 79 $, sans limite.
-
-## Points forts
-- Tarifs publics et lisibles, trois paliers, sans passage obligé par un commercial
-- Palier à 79 $/mois sans limite de comptes rendus, taillé pour une activité quotidienne
-- Essai de sept jours sans carte bancaire
-- Le palier haut ajoute le renvoi vers le dossier patient et la proposition de codage
-
-## Points faibles
-- Le palier d'entrée à 39 $ plafonne à quarante notes : la plupart des praticiens le dépasseront
-- Le renvoi vers le dossier patient n'arrive qu'à 119 $
-- Outil conçu pour le système de santé américain, codage compris
-- Pas d'hébergement de données de santé en France à ce jour
-
-## Idéal pour
-Le praticien seul qui veut un tarif connu d'avance et sans négociation, et qui documente en anglais ou accepte de relire une note en français produite par un outil anglophone.`,
-    },
-    {
       id: `suki-ai`,
       nom: `Suki`,
       categorie: `Compte rendu de consultation`,

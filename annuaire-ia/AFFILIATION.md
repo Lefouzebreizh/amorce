@@ -37,6 +37,8 @@ sans validation manuelle, et public du réseau qui achète réellement ce produi
 | 6 | **Gorgias** | 20 % récurrent | [gorgias.com/affiliate-program](https://www.gorgias.com/affiliate-program) — aussi sur PartnerStack | Gorgias (e-commerce) | Taux lu |
 | 7 | **Photoroom** | 20 % sur les abonnements, cookie 30 j | [photoroom.com/affiliates](https://www.photoroom.com/affiliates) — via **Awin** | Photoroom (e-commerce) | Taux, cookie et réseau lus |
 | 8 | **Descript** | 15 % récurrent | Programme public | Descript (généraliste) | Taux lu |
+| 9 | **Jasper** | 25 % récurrent 12 mois, 30 % au-delà de cent clients | Programme public | Jasper (e-commerce, en réserve) | Taux et palier lus |
+| 10 | **HeyGen** | Programme public, taux à confirmer | Page partenaires du site | HeyGen (généraliste, en réserve) | Existence lue, taux non lu |
 
 Les quatre premiers sont récurrents : une inscription qui reste payée douze
 mois vaut mieux qu'une prime unique plus élevée.
@@ -77,6 +79,26 @@ partenaire discret, réservé aux revendeurs et aux prescripteurs.
   Vente par cycle commercial long : **l'apporteur d'affaires y rapporte
   davantage que l'affilié**, mais cela se négocie et ne s'automatise pas.
   À garder pour plus tard, quand le trafic prouvera qu'il y a matière.
+
+## Ce qui n'est pas encore en ligne
+
+L'auto-pilote publie un outil par niche tous les deux jours : les 136 outils
+ci-dessous arriveront sur les pages dans les semaines qui viennent. Ils sont
+listés pour qu'aucun ne passe en silence, **pas** pour être traités aujourd'hui —
+un programme ouvert avant la publication de la fiche ne rapporte rien.
+
+La marche à suivre est la même que plus haut : pied de page du site, puis
+`<nom> partner program`, puis PartnerStack et Awin. Deux repères tirés de ce
+qui a déjà été cherché — **les outils vidéo et de création ont les programmes
+les plus généreux et acceptent presque tous de nouveaux partenaires**, et
+**les éditeurs français ont rarement un programme d'affiliation mais souvent
+un statut de prescripteur**, qui se demande par courriel.
+
+Trois cas déjà tranchés dans cette liste : **Grammarly** paie à l'acte et non
+en récurrent (environ 20 $ par abonnement, 0,20 $ par compte gratuit),
+**Jasper** et **HeyGen** sont dans le tableau de tête ci-dessus.
+
+7shifts, Abridge, AdCreative.ai, Adobe Firefly, Algolia, Apimo, Architechtures, ArkoAI, Autodesk Construction Cloud, Autodesk Forma, Beetween, Bluebeam Revu, BombBomb, Botmind, Breezy HR, Brisk Teaching, Buildertrend, BulldozAIR, Cegid Pulse, Chaintrust, Chatbase, ClassPoint, Clio, CoCounsel (Thomson Reuters), Collov AI, Consensus, Curipod, D5 Render, DAX Copilot, DeepL, Docyt, Eduaide.ai, Eightfold AI, Elicit, Enscape, Epique AI, Expensify, Fathom, Fetcher, Fieldwire, Finalcad, Fireflies.ai, Flatchr, Framer, Freed, Fulll, Fyle, Gavel, Gemini, GenIA-L (Lefebvre Dalloz), Genie AI, Glass Health, Gleamer, Grammarly, Guestonline, Heidi Health, Hektor, HeyGen, Hireflix, Homestyler, Houzz Pro, Hypar, iAdvize, Ideogram, Innovorder, Inqom, Ironclad, Jasper, Jimini AI, Jolt, Kahoot!, Kairnial, Keeper, Knowify, Koust, Kreo, Kwyk, Lalilo, Leena AI, Legora, Lengow, Lucca, magicplan, Maket, Malou, Manatal, MarginEdge, MarketMan, MenuTiger, Milvue, Mistral Le Chat, MyUnisoft, Napkin AI, Netty, Nolej, Nory, Nosto, NotebookLM, nPlan, OpenSpace, Ordalie, Otter.ai, Owner, Padlet, Paradox (Olivia), PatentPal, Postscript, Predictice, Prisync, Procore, Prospeneo, Quizizz, Ramp, Rebuy, Reimagine Home AI, Robin AI, Rossum, Sage Copilot, SmartRecruiters, Snaptrude, Spacely AI, Spellbook, Styldod, Suki, Sunday, Synapse Medicine, Taleez, Tiime, Triple Whale, Twee, Vizcom, Workable, Yanport, Yotpo, Zenchef, Zipchat AI.
 
 ## Ce qu'il faut noter pour chaque programme obtenu
 
