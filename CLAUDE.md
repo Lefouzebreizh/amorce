@@ -213,7 +213,17 @@ erreurs, tests, commits ; identifiants de code en anglais.
 ### Git
 
 Une branche `claude/…` par sujet, messages à l'infinitif décrivant l'intention.
-PR menées de bout en bout : ouvrir, vérifier, passer au vert, fusionner.
+
+**Ouvrir la PR et la fusionner dès que le lot tient debout**, sans attendre
+qu'on le demande et sans grouper : ouvrir, vérifier, passer au vert, fusionner.
+Un lot qui tient debout est un lot dont la vérification passe et qui se décrit
+en une phrase — pas un lot « fini ».
+
+Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
+plusieurs sessions en parallèle, et une branche qui attend collectionne les
+conflits sur les mêmes fichiers — `CLAUDE.md`, le hook, la table des
+compétences. Une seule nuit à retarder a produit trois conflits sur le même
+fichier, chacun résolu à la main. Fusionner tôt les évite tous.
 
 **Partir de `main` à jour et le revérifier avant d'ouvrir** : ce dépôt reçoit
 plusieurs sessions en parallèle, et quelques heures suffisent à périmer une
