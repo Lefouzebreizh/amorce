@@ -78,6 +78,41 @@ tierce sous 200 Hz donne une bouillie que ni le mode ni le timbre ne rattrapent.
 `--graine` change le chant sans toucher à l'harmonie : c'est le réglage à
 tourner quand une prise « ne va pas » sans qu'on sache dire pourquoi.
 
+## Une voix qui sonne robotique se corrige par la ponctuation, pas par le modèle
+
+Retour d'écoute : « la voix est robotique, essaie l'autre modèle ». Changer de
+modèle a **empiré** les choses, et la mesure le dit.
+
+Ce qui fait entendre « récité » plutôt que « dit », c'est l'ampleur de la
+mélodie — l'écart entre les hauteurs basses et hautes d'une phrase. Une voix
+humaine posée couvre 8 à 14 demi-tons ; sous 6, l'oreille décroche.
+
+| variante | ampleur | respirations |
+| --- | --- | --- |
+| `siwis` 0,94, phrase longue | 8,6 demi-tons | 5 |
+| `upmc` 0,94, phrase longue | **6,7** | 6 |
+| `upmc` 0,90 + ponctuation refaite | 7,2 | 10 |
+| **`siwis` 0,90 + ponctuation refaite** | **11,0** | 9 |
+| `siwis` 0,82 + ponctuation refaite | 11,4 | 9 |
+
+**Le levier est le texte.** Ces synthèses tirent leur prosodie de la ponctuation :
+chaque point remet la mélodie à zéro et pose une respiration. Découper en
+phrases courtes a gagné 2,4 demi-tons d'ampleur et presque doublé les pauses,
+sans changer un mot du sens.
+
+```
+Avant : « Je connais, la mienne non plus pendant des années. »
+Après  : « Je connais. La mienne non plus, pendant des années. »
+```
+
+Écrire pour l'oreille n'est donc pas une coquetterie de rédaction : c'est le
+réglage principal de la synthèse. Un texte écrit pour l'œil sonnera récité quel
+que soit le modèle.
+
+`--vitesse` vient en second, entre 0,88 et 0,92 : plus lent gagne encore un peu
+d'ampleur, mais traîne. `upmc` reste utile pour un autre grain de voix, pas pour
+plus de vie.
+
 ## Un bruitage grave doit être porté sur le téléphone
 
 Le défaut ne s'entendait pas au casque, et c'est ce qui le rendait durable.
