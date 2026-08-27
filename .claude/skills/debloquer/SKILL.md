@@ -1,6 +1,6 @@
 ---
 name: debloquer
-description: Reprendre la main quand une session distante refuse d'avancer — une permission refusée par le classificateur, un appel réseau qui rend 403, une suite de tests introuvable ou plus gardée par l'intégration continue, `main` qui a bougé sous les pieds ou une PR déjà fusionnée. Donne la parade dans l'ordre où elle coûte le moins cher, et dit à quel moment il faut s'arrêter et demander plutôt que d'insister. À utiliser dès qu'un outil refuse, échoue ou rend un résultat vide sans raison claire — « permission denied », « blocked by classifier », « CONNECT tunnel failed », « No commits between main and… », « ModuleNotFoundError » dans la CI, « je n'arrive pas à lancer les tests », « ça ne marche que chez moi », « pourquoi tu ne peux pas », « fais-le autrement ». À utiliser aussi **avant** un long travail dans une session distante, pour vérifier que la vérification qu'on vient de nommer sera réellement exécutable — découvrir au moment de pousser qu'on ne peut pas lancer la suite coûte le double.
+description: Reprendre la main quand une session distante refuse d'avancer — une permission refusée par le classificateur, un appel réseau qui rend 403, une suite de tests introuvable ou plus gardée par l'intégration continue, `main` qui a bougé sous les pieds, une PR déjà fusionnée, ou une session ouverte sans dépôt attaché : dossier vide, rien d'installé, hook de démarrage jamais déclenché. Donne la parade dans l'ordre où elle coûte le moins cher, et dit à quel moment il faut s'arrêter et demander plutôt que d'insister. À utiliser dès qu'un outil refuse, échoue ou rend un résultat vide sans raison claire — « permission denied », « blocked by classifier », « CONNECT tunnel failed », « No commits between main and… », « ModuleNotFoundError » dans la CI, « le dossier est vide », « rien n'est installé », « je n'arrive pas à lancer les tests », « ça ne marche que chez moi », « pourquoi tu ne peux pas », « fais-le autrement ». À utiliser aussi **avant** un long travail dans une session distante, pour vérifier que la vérification qu'on vient de nommer sera réellement exécutable — découvrir au moment de pousser qu'on ne peut pas lancer la suite coûte le double.
 ---
 
 # Débloquer une session
@@ -16,6 +16,41 @@ commande**. Découper une commande composée pour qu'elle soit lisible, oui.
 Déguiser une écriture en test, non — ce serait contourner l'intention du garde-
 fou, et cette intention est la seule chose qui protège le dépôt d'une session
 partie de travers.
+
+## Avant tout : la session a-t-elle un dépôt ?
+
+Ce mur-là ne ressemble pas à un refus, et c'est ce qui le rend cher : rien ne
+proteste. `/home/user` est vide, `git status` répond qu'on n'est pas dans un
+dépôt, et les trois parades ci-dessous ne servent à rien parce qu'il n'y a rien
+à débloquer.
+
+Une session distante peut s'ouvrir **sans source attachée**. Vécu : dix minutes
+à sonder un conteneur avant de comprendre que le dépôt n'y était simplement pas.
+
+```
+mcp__Claude_Code_Remote__list_repos          # le trouver
+mcp__Claude_Code_Remote__add_repo            # l'attacher (access: "push")
+git clone --depth 1 <url> /home/user/amorce  # UNE fois, sans rien en parallèle
+mcp__Claude_Code_Remote__register_repo_root  # charge CLAUDE.md et les compétences
+```
+
+Un clone à la fois : le mandataire plafonne ce dépôt à deux opérations git
+simultanées, et une seconde tentative fait échouer les deux (`429`). Si le
+dossier existe déjà, `git -C … rev-parse HEAD` dit s'il est bon avant
+d'envisager de le supprimer.
+
+Puis, et c'est **la moitié qu'on oublie**, relancer le hook de démarrage à la
+main :
+
+```bash
+CLAUDE_PROJECT_DIR=/home/user/amorce bash .claude/hooks/session-start.sh
+```
+
+Il ne s'est pas déclenché : au moment où la session s'est ouverte, il n'y avait
+pas de dépôt à préparer. Sans ce rattrapage, la session paraît prête et rien
+n'est installé — `node_modules` absents, pas de SDK Flutter, pas de Chromium —
+et on l'apprend une commande à la fois. Le script est idempotent et prend
+plusieurs minutes : le lancer en tâche de fond et travailler pendant ce temps.
 
 ## 1. Une permission refusée
 
