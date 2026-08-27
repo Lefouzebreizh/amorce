@@ -119,8 +119,8 @@ jobs:
             fi
           done
 
-          # Une découverte vide serait passée pour un succès : huit suites qui
-          # disparaissent d'un coup est plus probablement un `cd` de travers
+          # Une découverte vide serait passée pour un succès : toutes les suites
+          # disparaissant d'un coup est plus probablement un `cd` de travers
           # qu'un dépôt réellement vidé de ses tests.
           if [ "$trouvees" -eq 0 ]; then
             echo "::error::Aucune suite de tests trouvée — la découverte est cassée."
