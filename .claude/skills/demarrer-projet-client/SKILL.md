@@ -48,6 +48,22 @@ Les trois branchements à la racine sont l'unique cas où une modification touch
 légitimement plusieurs projets : c'est de la configuration qui doit connaître
 ses voisins.
 
+## Deux déclarations que le script ne fait pas
+
+Un projet de ce dépôt se déclare à six endroits — c'est `/nouveau-projet` qui
+les tient. Le script en couvre mécaniquement ce qui est propre à un projet
+TypeScript (les deux configurations de la racine, le hook, le workflow). Restent
+deux gestes d'écriture, que personne ne peut faire à votre place parce qu'ils
+demandent une phrase juste :
+
+- **`CLAUDE.md`, la phrase d'en-tête** : y ajouter le projet et son dossier, et
+  **recompter** — le nombre est écrit en toutes lettres. Sans cela, les sessions
+  suivantes ignorent son existence.
+- **`.claude/skills/verifier/SKILL.md`** : sa séquence de vérification et ce
+  qu'elle ne couvre pas. Sans cela, personne ne sait comment savoir si c'est
+  vert. Pour un projet issu du socle, la séquence est celle d'`agence/` —
+  `npm run lint|typecheck|test|build`, plus `test:rls` pour les politiques.
+
 ## Après la commande
 
 Le projet tourne, mais il parle à une base qui n'existe pas encore. Dans
@@ -63,7 +79,9 @@ l'ordre :
 3. **Le domaine du client.** Le schéma livré contient deux tables de
    démonstration (`profiles`, `projects`). Les remplacer est le vrai travail :
    `/cadrage-brief-client` pour le périmètre écrit, `/stack-agence-supabase`
-   pour l'ordre de réalisation et les cinq règles de sécurité.
+   pour l'ordre de réalisation et les règles de sécurité — c'est elle qui décrit
+   en prose ce que ce script exécute, et elle reste la référence dès qu'on
+   s'écarte du chemin mécanique.
 
 ## Ce que le script ne fait pas, volontairement
 

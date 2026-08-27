@@ -17,6 +17,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/custom-frontend-designer` | Concevoir et coder une interface pour le studio Amorce — Next.js 15, React 19, Tailwind v4. Dit où atterrit chaque fichier, quelles briques existent… |
 | `/debloquer` | Reprendre la main quand une session distante refuse d'avancer — une permission refusée par le classificateur, un appel réseau qui rend 403, une suite… |
 | `/debogage-systematique` | >- Diagnostiquer un bug, un test qui échoue ou un comportement inattendu en trouvant la cause avant de proposer le moindre correctif. Dit quelle… |
+| `/demarrer-projet-client` | Fabriquer un nouveau projet client de l'agence à partir du socle `agence/` — copie, renommage, branchements à la racine, intégration continue, en une… |
 | `/dependance-indisponible` | Livrer quand ce dont le code a besoin n'est pas là — clé d'API absente, GPU manquant, logiciel propriétaire non installé, réseau filtré, poids de… |
 | `/etalonner` | Faire tenir ensemble les plans d'un montage, puis poser un rendu filmique — détection des coupes, mesure de la luminance et de la dominante de chaque… |
 | `/etat-du-depot` | Répondre « qu'y a-t-il dans ce dépôt et où en est-ce » par une mesure plutôt que par une liste écrite à la main — les chantiers **découverts**… |
@@ -42,6 +43,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/sortir-les-fichiers` | Mettre à l'abri ce qu'une session distante contient et que le dépôt Git ne porte pas — planches, rushes, PDF de dépôt, exports, captures — avant que… |
 | `/stack-agence-supabase` | Réaliser une application client sur la stack standardisée de l'agence — Next.js 16 (App Router, React 19), TypeScript strict, Tailwind + shadcn/ui,… |
 | `/steward` | Conventions de ce dépôt pour mener une pull request jusqu'à la fusion — style des commits, barrière de vérification avant toute poussée, et… |
+| `/supabase-en-direct` | Piloter un projet Supabase depuis la session, quand le serveur MCP Supabase est connecté — appliquer le schéma en migration, éprouver les politiques… |
 | `/tailwind-mobile-ux` | Régler l'affichage tactile vertical d'Amorce pour un smartphone Xiaomi (HyperOS/MIUI, Chrome Android, écran ~20:9) — hauteur utile réelle, barre de… |
 | `/tiktok` | Travailler les concepts et les scripts TikTok d'Erwann (`tiktok/`) — la ligne éditoriale à deux sujets, les huit formats répétables, les deux seuls… |
 | `/transcription-media` | >- Ouvrir une vidéo ou un fichier audio pour dire ce qu'il contient — MP4, MOV, MKV, WebM, AVI, MP3, WAV, M4A, FLAC, OGG — en exécutant ffmpeg et un… |
