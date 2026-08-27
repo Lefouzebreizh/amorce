@@ -36,7 +36,7 @@ from core.abonnements import Tableau, alertes, euros, tableau
 from core.calendrier import evenements, rendre
 from core.config import ErreurConfiguration, charger, enregistrer_alertes
 from core.formulaires import ErreurFormulaire, charger_plan, lire_champs, remplir, resoudre
-from core.extraction import a_relire, extraire
+from core.extraction import ErreurVision, Vision, a_relire, extraire
 from core.journal import charger as charger_journal, enregistrer as enregistrer_journal
 from core.modele import StatutAlerte
 from core.nommage import ErreurNommage, destination, libre
@@ -237,6 +237,12 @@ def commande_classer(arguments: argparse.Namespace) -> int:
 
     journal = charger_journal(classement.racine / "documents.json")
     aujourdhui = date.today()
+    # Le chemin par modèle n'existe que si la configuration l'autorise. Sans
+    # clé, `cle_api()` rend None et le SDK cherche ailleurs — un jeton, un
+    # profil ouvert — plutôt que de conclure à sa place.
+    vision = Vision(modele=configuration.extraction.modele,
+                    cle=configuration.extraction.cle_api()) \
+        if configuration.extraction.active and configuration.extraction.modele else None
     ranges: list[tuple[Path, Path]] = []
     a_revoir: list[tuple[Path, list[str]]] = []
     # Deux raisons très différentes de ne pas classer un fichier, et les
@@ -249,7 +255,7 @@ def commande_classer(arguments: argparse.Namespace) -> int:
     for fichier in sorted(p for p in entree.iterdir() if p.is_file()):
         try:
             lecture = lire(fichier, dossier_images=classement.racine / "rendus")
-        except ErreurLecture as erreur:
+        except (ErreurLecture, ErreurVision) as erreur:
             # Un fichier illisible n'arrête pas le lot : les autres sont déposés
             # en même temps, et les traiter vaut mieux que de tout suspendre.
             a_revoir.append((fichier, [str(erreur)]))
@@ -262,7 +268,12 @@ def commande_classer(arguments: argparse.Namespace) -> int:
             doublons_du_lot.append(fichier)
             continue
 
-        document = extraire(lecture, configuration.extraction.emetteurs_connus, aujourdhui)
+        try:
+            document = extraire(lecture, configuration.extraction.emetteurs_connus, aujourdhui,
+                                vision=vision, seuil=configuration.extraction.confiance_minimale)
+        except ErreurVision as erreur:
+            a_revoir.append((fichier, [str(erreur)]))
+            continue
         manques = a_relire(document, configuration.extraction.confiance_minimale)
         if manques:
             a_revoir.append((fichier, manques))
@@ -371,7 +382,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return arguments.fonction(arguments)
     except (ErreurConfiguration, ErreurFormulaire, ErreurCourrier,
-            ErreurLecture, ErreurNommage) as erreur:
+            ErreurLecture, ErreurNommage, ErreurVision) as erreur:
         print(f"paper.py : {erreur}", file=sys.stderr)
         return 2
 

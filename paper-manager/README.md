@@ -127,6 +127,18 @@ l'inscrire au journal. **Rien ne bouge sans `--appliquer`** — un classement
 dont on n'a pas vu la sortie une première fois est un classement qu'on refait à
 la main.
 
+**Le modèle de vision est le recours, pas la règle.** Il ne part que si trois
+conditions sont réunies : `extraction.active`, une page rendue en image — ce que
+`scan.py` ne fait que faute de texte utile — et une confiance sous le seuil.
+Autrement dit, il ne part que pour les scans et les photos, jamais pour une
+facture téléchargée qui porte son texte. **Il complète, il n'écrase jamais** :
+un champ lu derrière son étiquette se retrouve en rouvrant le document, un champ
+rendu par un modèle non, et échanger le premier contre le second serait troquer
+du sûr contre du probable. Ce qu'il rend traverse exactement les mêmes contrôles
+que les motifs — montant plausible, date dans la fenêtre permise, nature de la
+liste — et pèse moins dans la confiance, parce que rien ne vient confirmer sa
+lecture.
+
 Ce que la lecture sait faire sans réseau, et pourquoi c'est suffisant la plupart
 du temps : une facture française est un document très régulier. « Net à payer »,
 « Référence client », une date en JJ/MM/AAAA sont des motifs, pas de la
@@ -398,13 +410,20 @@ vierge en est un.
 Seul PyMuPDF est nécessaire au code écrit à ce jour ; il est déjà installé dans
 une session distante par le hook du dépôt, pour la chaîne pré-presse KDP.
 
+## Ce qui n'a pas pu être vérifié ici
+
+Le chemin par modèle est éprouvé avec un client de substitution : la requête
+construite, la validation de ce qui revient, la fusion avec les motifs et le
+comportement en cas de panne. **Un vrai appel n'a jamais été fait** — aucune clé
+n'est présente dans l'environnement de développement. Reste donc à confirmer, le
+jour où une clé existe, que l'API rend bien la forme attendue.
+
+Les motifs, eux, ne diront jamais si une **vraie** facture d'un fournisseur donné
+les suit. Cela ne se verra qu'en déposant de vrais documents, et la pile « à
+relire » est faite pour que ça se voie sans rien perdre.
+
 ## Prochaine étape
 
-Le chemin par modèle de vision dans `extraction.py`, pour les documents scannés
-dont les motifs n'ont rien à lire — `scan.py` sait déjà en rendre les pages en
-image. Il demande une clé d'API, absente de l'environnement de développement :
-à écrire avec son échelle de repli, et à ne faire partir que si la clé existe.
-
-Ensuite seulement, l'interface : le tableau de bord tient dans un terminal, et
-`mon-app-audio/` montre qu'un Streamlit se pose en une soirée quand le calcul
-est déjà écrit et vérifié.
+L'interface : le tableau de bord tient dans un terminal, et `archives-backlog/
+mon-app-audio/` montre qu'un Streamlit se pose en une soirée quand le calcul est
+déjà écrit et vérifié.

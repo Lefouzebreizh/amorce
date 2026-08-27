@@ -11,8 +11,13 @@ Les décisions :
    `api.anthropic.com` répond, mais aucune clé n'est présente dans cet
    environnement — et une facture française est un document très régulier.
    « Net à payer », « Référence client », une date en JJ/MM/AAAA : ce sont des
-   motifs, pas de la compréhension. Le modèle reste le recours pour ce que les
-   motifs ne trouvent pas, et il ne part que si une clé existe.
+   motifs, pas de la compréhension. Le modèle est le recours pour ce que les
+   motifs ne trouvent pas — un scan, une photo — et il ne part que si une clé
+   existe. **Il complète, il ne remplace jamais** : un champ lu derrière son
+   étiquette est vérifiable, un champ rendu par un modèle ne l'est pas.
+   `anthropic` et `pydantic` s'importent **dans la fonction** et non en tête :
+   la lecture par motifs doit rester utilisable sans rien installer, et c'est
+   elle qui tourne dans l'intégration continue.
 2. **Rien de ce qui est trouvé n'est cru sur parole.** Un montant doit être un
    nombre plausible, une date doit tomber entre 1990 et aujourd'hui, la nature
    doit appartenir à la liste connue. Ce qui ne passe pas ne devient pas un
@@ -47,7 +52,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -136,12 +141,14 @@ class Champs:
         """
         points = 0.0
         poids = {
-            "emetteur": {"connu": 0.30},
-            "montant": {"etiquete": 0.25, "devine": 0.08},
-            "date_emission": {"etiquete": 0.20, "iso": 0.20, "devine": 0.07},
-            "date_limite": {"etiquete": 0.10},
-            "reference": {"etiquete": 0.10, "devine": 0.03},
-            "nature": {"connu": 0.05},
+            # Le modèle vaut mieux qu'un champ ramassé au hasard et moins qu'un
+            # champ étiqueté : il lit l'image, mais rien ne confirme sa lecture.
+            "emetteur": {"connu": 0.30, "modele": 0.24},
+            "montant": {"etiquete": 0.25, "devine": 0.08, "modele": 0.20},
+            "date_emission": {"etiquete": 0.20, "iso": 0.20, "devine": 0.07, "modele": 0.16},
+            "date_limite": {"etiquete": 0.10, "modele": 0.08},
+            "reference": {"etiquete": 0.10, "devine": 0.03, "modele": 0.08},
+            "nature": {"connu": 0.05, "modele": 0.04},
         }
         for champ, comment in self.trouvailles.items():
             points += poids.get(champ, {}).get(comment, 0.0)
@@ -337,8 +344,14 @@ def champs_de(texte: str, connus: dict[str, dict[str, str]], le: date) -> Champs
     return resultat
 
 
-def extraire(lecture: Lecture, connus: dict[str, dict[str, str]], le: date) -> Document:
+def extraire(lecture: Lecture, connus: dict[str, dict[str, str]], le: date,
+             vision: Vision | None = None, seuil: float = 0.0) -> Document:
     """Un fichier lu devient un document, avec sa confiance.
+
+    Une panne du chemin par modèle n'est pas rattrapée ici : elle remonte. Le
+    modèle n'ayant été appelé que parce que les motifs ne suffisaient pas, le
+    document part de toute façon à relire, et son appelant dira pourquoi plutôt
+    que de le ranger sur une lecture incomplète.
 
     Les motifs sont essayés sur **tout** texte présent, si court soit-il. Le seuil
     de `scan.a_du_texte` répond à « faut-il rendre la page en image ? », pas à
@@ -347,6 +360,15 @@ def extraire(lecture: Lecture, connus: dict[str, dict[str, str]], le: date) -> D
     Essayer ne coûte rien — c'est la confiance qui dit ce que ça valait.
     """
     champs = champs_de(lecture.texte, connus, le)
+
+    # Le modèle ne part que si les motifs n'ont pas suffi, et qu'il y a une image
+    # à lui montrer. Un document dont le texte a tout donné n'a rien à gagner à
+    # un aller-retour payant — et `scan.py` ne rend les pages en image que
+    # lorsqu'il n'y avait pas de texte utile.
+    if vision is not None and lecture.images and champs.confiance < seuil:
+        bruts = lire_par_modele(lecture.images, vision.modele, vision.cle, vision.client)
+        champs = completer(champs, champs_de_modele(bruts, connus, le))
+
     return Document(
         id="",
         chemin=str(lecture.chemin),
@@ -360,6 +382,178 @@ def extraire(lecture: Lecture, connus: dict[str, dict[str, str]], le: date) -> D
         empreinte=lecture.empreinte,
         confiance=champs.confiance,
     )
+
+
+# Ce que le modèle rend passe par les mêmes contrôles que le reste : un montant
+# doit être un nombre plausible, une date doit tomber dans la fenêtre permise.
+# Il rend donc des chaînes, jamais des nombres — c'est notre analyseur qui
+# tranche, et pas la mise en forme du modèle.
+INVITE = """Tu lis un document administratif français scanné.
+
+Rends uniquement ce que tu vois écrit, sans rien déduire ni compléter :
+- emetteur : le nom de l'organisme qui a émis le document
+- nature : facture, avis, contrat, courrier, releve, attestation ou bulletin
+- montant : la somme à payer, telle qu'écrite (par exemple « 78,42 »)
+- date_emission : la date du document, au format AAAA-MM-JJ
+- date_limite : la date limite de paiement, au format AAAA-MM-JJ
+- reference : la référence ou le numéro de client
+
+Laisse un champ vide si tu ne le vois pas. Ne devine pas : un champ absent se
+corrige, un champ inventé se propage."""
+
+MODELE_DEFAUT = "claude-opus-5"
+JETONS_MAX = 2000
+TYPES_IMAGE = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+               ".gif": "image/gif", ".webp": "image/webp"}
+
+
+class ErreurVision(Exception):
+    """Le chemin par modèle n'a pas pu être emprunté. Jamais fatal : on retombe
+    sur ce que les motifs ont trouvé."""
+
+
+@dataclass(frozen=True)
+class Vision:
+    """De quoi emprunter le chemin par modèle, ou de quoi savoir qu'on ne peut pas."""
+
+    modele: str = MODELE_DEFAUT
+    cle: str | None = None
+    client: object | None = None
+
+
+def _bloc_image(chemin: Path) -> dict:
+    """Une page rendue devient un bloc d'image pour la requête."""
+    import base64
+
+    genre = TYPES_IMAGE.get(chemin.suffix.lower())
+    if genre is None:
+        raise ErreurVision(
+            f"{chemin.name} : format d'image non accepté par le modèle "
+            f"(acceptés : {', '.join(sorted(TYPES_IMAGE))})"
+        )
+    return {
+        "type": "image",
+        "source": {"type": "base64", "media_type": genre,
+                   "data": base64.standard_b64encode(chemin.read_bytes()).decode("ascii")},
+    }
+
+
+def lire_par_modele(images: list[Path], modele: str = MODELE_DEFAUT,
+                    cle: str | None = None, client: object | None = None) -> dict[str, str]:
+    """Demande au modèle ce qu'il voit sur les pages rendues.
+
+    Rend un dictionnaire de chaînes brutes, que `champs_de_modele` valide
+    ensuite. Ce partage est délibéré : ce qui sort d'un modèle traverse
+    exactement les mêmes contrôles que ce qui sort d'un motif.
+    """
+    if not images:
+        raise ErreurVision("aucune page rendue : rien à montrer au modèle")
+    if client is None:
+        try:
+            import anthropic
+        except ImportError:
+            raise ErreurVision(
+                "la bibliothèque « anthropic » n'est pas installée : "
+                "pip install anthropic, ou s'en tenir à la lecture par motifs"
+            ) from None
+        # Une clé absente de la configuration ne veut pas dire qu'il n'y en a
+        # pas : le SDK sait aussi lire ANTHROPIC_AUTH_TOKEN et un profil ouvert
+        # par « ant auth login ». On le laisse chercher plutôt que de conclure.
+        client = anthropic.Anthropic(api_key=cle) if cle else anthropic.Anthropic()
+
+    from pydantic import BaseModel
+
+    class ChampsLus(BaseModel):
+        emetteur: str = ""
+        nature: str = ""
+        montant: str = ""
+        date_emission: str = ""
+        date_limite: str = ""
+        reference: str = ""
+
+    contenu = [_bloc_image(image) for image in images]
+    contenu.append({"type": "text", "text": INVITE})
+    try:
+        reponse = client.messages.parse(
+            model=modele,
+            max_tokens=JETONS_MAX,
+            messages=[{"role": "user", "content": contenu}],
+            output_format=ChampsLus,
+        )
+    except Exception as erreur:
+        # Volontairement large : clé absente, quota, réseau coupé, modèle retiré
+        # — la cause change, la conduite non. Le message est conservé tel quel,
+        # c'est lui qui dira quoi corriger.
+        raise ErreurVision(f"lecture par modèle impossible : {erreur}") from None
+    lus = reponse.parsed_output
+    return {champ: getattr(lus, champ, "") or "" for champ in
+            ("emetteur", "nature", "montant", "date_emission", "date_limite", "reference")}
+
+
+def champs_de_modele(bruts: dict[str, str], connus: dict[str, dict[str, str]],
+                     le: date) -> Champs:
+    """Valide ce que le modèle a rendu, avec les contrôles de la lecture par motifs.
+
+    Un modèle lit l'image directement et se trompe rarement, mais rien ne vient
+    confirmer ce qu'il dit : ses champs pèsent donc moins qu'un champ lu derrière
+    son étiquette. Et ce qui ne passe pas la validation devient une absence,
+    exactement comme ailleurs.
+    """
+    resultat = Champs()
+
+    emetteur = bruts.get("emetteur", "").strip()
+    if emetteur:
+        resultat.emetteur = emetteur
+        nom, categorie, _ = emetteur_de(emetteur, connus)
+        resultat.categorie = categorie if nom else "divers"
+        resultat.trouvailles["emetteur"] = "modele"
+
+    nature = sans_accent(bruts.get("nature", "")).strip()
+    for candidate in Nature:
+        if nature and nature == candidate.value:
+            resultat.nature = candidate
+            resultat.trouvailles["nature"] = "modele"
+            break
+
+    montants_lus = montants(normaliser(bruts.get("montant", "")))
+    if montants_lus:
+        resultat.montant = montants_lus[0]
+        resultat.trouvailles["montant"] = "modele"
+
+    for champ, cle_brute in (("date_emission", "date_emission"), ("date_limite", "date_limite")):
+        trouvees = dates(bruts.get(cle_brute, ""), le)
+        if trouvees:
+            setattr(resultat, champ, trouvees[0][0])
+            resultat.trouvailles[champ] = "modele"
+
+    reference = bruts.get("reference", "").strip()
+    if reference:
+        resultat.reference = reference
+        resultat.trouvailles["reference"] = "modele"
+
+    return resultat
+
+
+def completer(motifs: Champs, modele: Champs) -> Champs:
+    """Le modèle comble les trous, il n'écrase rien.
+
+    Un champ lu derrière son étiquette est vérifiable — on peut rouvrir le
+    document et le retrouver au même endroit. Un champ rendu par un modèle ne
+    l'est pas : le laisser prendre la place du premier échangerait du sûr contre
+    du probable.
+    """
+    fondu = replace(motifs, trouvailles=dict(motifs.trouvailles))
+    for champ in ("emetteur", "nature", "montant", "date_emission", "date_limite", "reference"):
+        if champ in fondu.trouvailles:
+            continue
+        valeur = getattr(modele, champ)
+        if valeur in (None, "", Nature.INCONNUE):
+            continue
+        setattr(fondu, champ, valeur)
+        fondu.trouvailles[champ] = modele.trouvailles.get(champ, "modele")
+        if champ == "emetteur":
+            fondu.categorie = modele.categorie
+    return fondu
 
 
 def a_relire(document: Document, seuil: float) -> list[str]:

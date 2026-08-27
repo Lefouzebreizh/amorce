@@ -11,5 +11,11 @@ PyMuPDF>=1.24
 Pillow>=10.0
 
 # Lecture du document par un modèle de vision. C'est le seul appel réseau du
-# projet, et il ne part que si `extraction.active` vaut true.
-anthropic>=0.40
+# projet, et il ne part que si `extraction.active` vaut true et que les motifs
+# n'ont pas suffi. Les deux s'importent **dans la fonction** : la lecture par
+# motifs, elle, tourne sans rien installer d'autre que PyMuPDF.
+anthropic>=1.0
+
+# La forme de ce que le modèle doit rendre, validée par le SDK avant qu'on la
+# revalide nous-mêmes. Atteinte par les tests, donc déclarée aussi à la CI.
+pydantic>=2.0
