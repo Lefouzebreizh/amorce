@@ -297,6 +297,14 @@ collectionne les conflits. Une PR verte se fusionne ; on l'annonce faite, au
 passé. Les seules choses qui s'arrêtent encore pour demander sont celles de la
 section 5, et la fusion n'en est pas.
 
+**Armer la fusion automatique à l'ouverture**, avec `enable_pr_auto_merge`,
+plutôt que de sonder les contrôles en boucle jusqu'au vert. La surveillance
+manuelle a deux défauts que la fusion automatique n'a pas : elle brûle du
+contexte à chaque sondage, et elle meurt avec la session — une PR verte reste
+alors ouverte à attendre quelqu'un. Armée, GitHub fusionne seul dès que les
+contrôles passent, téléphone éteint. On sonde encore quand l'outil refuse
+d'armer, et seulement là.
+
 Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
 plusieurs sessions en parallèle, et une branche qui attend collectionne les
 conflits sur les mêmes fichiers — `CLAUDE.md`, le hook, la table des
