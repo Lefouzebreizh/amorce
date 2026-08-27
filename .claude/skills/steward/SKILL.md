@@ -66,16 +66,62 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   que réconcilier deux architectures.
 - **Fusion par commit de fusion**, comme le reste de l'historique.
 - **La description est le compte rendu que l'historique gardera** : pourquoi,
-  ce que la décision coûte, et ce qui n'a pas été vérifié. Le workflow ne se
-  déclenchant que sur `look_and_find/**`, une PR qui n'y touche pas n'a aucun
-  contrôle automatique : c'est `/verifier` qui tient lieu de filet, et il faut
-  l'avoir lancé pour de vrai.
+  ce que la décision coûte, et ce qui n'a pas été vérifié.
+
+### Aucune PR de ce dépôt ne déclenche l'intégration continue
+
+Les quatre workflows déclarent pourtant `on: pull_request`. Malgré cela, le
+dépôt n'a **jamais** produit un seul run sur cet événement — zéro sur toute son
+histoire, vérifié en listant les exécutions filtrées par `event=pull_request`.
+Les runs ne partent qu'au `push` sur `main`, c'est-à-dire **après** la fusion.
+
+Deux conséquences, et la première est la plus coûteuse à découvrir seul :
+
+- **Attendre que « la CI passe » sur une PR, c'est attendre indéfiniment.**
+  Le filet avant fusion est `/verifier`, lancé pour de vrai, et rien d'autre.
+- **La fusion est le début du contrôle, pas sa fin.** Après avoir fusionné,
+  regarder le run déclenché sur `main` et le mener au vert comme s'il s'agissait
+  encore de la PR — c'est le même travail, il arrive simplement plus tard.
+
+## `main` bouge sous les pieds
+
+Plusieurs sessions fusionnent en parallèle, parfois à quelques minutes
+d'intervalle. Une PR ouverte sur un `main` vieux de vingt minutes peut être
+refusée à la fusion pour conflit — c'est arrivé trois fois d'affilée sur la même
+PR, chaque tentative étant doublée par une fusion concurrente.
+
+La boucle qui en vient à bout :
+
+```bash
+git fetch origin main
+git merge origin/main          # résoudre s'il le faut
+/verifier                      # sur le projet touché
+git push
+```
+
+puis **fusionner immédiatement**. Chaque minute entre la poussée et la fusion
+est une occasion de recommencer.
+
+Les conflits tombent presque toujours dans les trois mêmes fichiers, parce que
+tous les projets s'y déclarent :
+
+| Fichier | Ce qui s'y heurte |
+| --- | --- |
+| `CLAUDE.md` | La liste des projets et son compte en toutes lettres — « neuf », « dix »… |
+| `.claude/hooks/session-start.sh` | Le commentaire de tête et la ligne d'accueil finale, que chaque projet allonge |
+| `.claude/skills/verifier/SKILL.md` | La description et l'ordre des séquences |
+
+**Ils sont additifs, sans exception rencontrée à ce jour** : les deux côtés
+ajoutent un projet, aucun ne contredit l'autre. Garder les deux apports et
+recompter, plutôt que choisir un côté — choisir, c'est effacer le travail d'une
+autre session.
 
 ## Diagnostiquer un échec d'intégration continue
 
-Le workflow `Look & Find` ne se déclenche que sur `look_and_find/**` et sur
-lui-même. Un échec vient presque toujours de l'une de ces causes, dans cet
-ordre de fréquence :
+Chaque workflow ne surveille que son projet (`look_and_find/**`, `agence/**`,
+les `*/tests` Python…) et lui-même. Un échec de `Look & Find` — le plus
+fréquent, parce que c'est le plus lourd — vient presque toujours de l'une de
+ces causes, dans cet ordre :
 
 1. **« Du code généré est périmé »** — `dart run build_runner build` puis
    committer les `.g.dart`. Ne jamais retirer ce contrôle pour faire passer le
