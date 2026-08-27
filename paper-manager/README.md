@@ -5,10 +5,11 @@ strictement personnel : tout reste sur la machine, sauf le seul appel qui a
 besoin de sortir (la lecture d'un document par un modèle de vision, et
 uniquement si elle est activée).
 
-Ce fichier est le plan du projet. Trois modules sur quatre sont écrits et
-vérifiés : calendrier, abonnements, résiliation — plus le remplissage de
-formulaires PDF. Seul le module de lecture des documents (scan et extraction)
-reste une coquille portant sa justification.
+Ce fichier est le plan du projet. Sont écrits et vérifiés : le calendrier,
+les abonnements, la résiliation, le remplissage de formulaires PDF, et — du
+module 1 — la lecture d'un fichier déposé, son nommage et le journal. Reste
+`extraction.py` : reconnaître les champs d'un document, seul endroit qui sorte
+sur le réseau.
 
 ## Les quatre modules
 

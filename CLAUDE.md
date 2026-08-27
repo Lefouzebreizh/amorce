@@ -56,17 +56,19 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
+- **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
+  Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
+  sont dans son `public/llms.txt`, pas ici.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — deux
   chantiers en sommeil : `mon-app-audio/` et `patrimoine/`, tests verts, mis de
   côté et non abandonnés.
 
 Build vert obligatoire avant toute poussée.
 
-**Cap — pas encore un état.** Aucun projet n'utilise Cloudflare aujourd'hui,
-mais c'est la direction quand du stockage devient nécessaire : **R2** pour les
-fichiers lourds, **D1** pour une base légère, **Workers** pour ce qui doit
-tourner près de l'utilisateur. Le premier projet qui doit héberger des binaires
-y va, plutôt que d'inventer autre chose — c'est ce qui donne son issue à
+**Cap, et désormais un état.** `hypersensible-bienveillance/` est le premier
+projet à y être : **R2** pour les fichiers lourds, **D1** pour une base légère,
+**Workers** pour ce qui doit tourner près de l'utilisateur. Le prochain projet
+qui doit héberger des binaires y va aussi, plutôt que d'inventer autre chose — c'est ce qui donne son issue à
 l'invariant « aucun binaire versionné » : les PDF de KDP, les rushes de
 `montage-auto`, les exports d'`agence` n'ont pas leur place dans Git, et il leur
 faut bien un ailleurs.
@@ -79,7 +81,8 @@ une évolution mais un reniement.
 
 Par défaut, autonomie : tu ne demandes pas. Deux niveaux font exception.
 
-**Orange — confirmation rapide** : pousser sur `main`, déployer en production,
+**Orange — confirmation rapide** : pousser **directement** sur `main` sans
+passer par une PR, déployer en production,
 dépenser plus d'un dollar, modifier `~/.claude/`, installer une dépendance
 payante, supprimer une sauvegarde.
 
@@ -87,6 +90,10 @@ payante, supprimer une sauvegarde.
 personnelles (Drive, Gmail, contacts), sortir la moindre donnée des 48 000,
 dépenser plus de cinq dollars, écrire dans une base de production, écraser un
 abri qui tourne.
+
+**Fusionner une PR verte n'est ni orange ni rouge**, alors même que cela écrit
+sur `main`. C'est le geste courant de ce dépôt, et le classer sensible faisait
+hésiter les sessions entre cette liste-ci et la section Git — voir plus bas.
 
 Format : *« ⚠️ SENSIBLE : je vais [action] parce que [raison]. Coût [X], risque
 [Y]. J'y vais ? En attendant je continue sur autre chose. »*
@@ -240,6 +247,19 @@ Une branche `claude/…` par sujet, messages à l'infinitif décrivant l'intenti
 qu'on le demande et sans grouper : ouvrir, vérifier, passer au vert, fusionner.
 Un lot qui tient debout est un lot dont la vérification passe et qui se décrit
 en une phrase — pas un lot « fini ».
+
+**C'est une autorisation permanente, et elle est explicite.** Elle vaut pour
+toutes les sessions et toutes les branches, sans être redemandée. Elle prime
+sur la consigne d'ambiance de Claude Code, qui veut qu'on n'ouvre pas de PR
+sans demande : ici, la demande est écrite une fois pour toutes, et c'est ce
+paragraphe.
+
+**Demander est la faute, pas la prudence.** « Dis-moi si tu veux que je
+fusionne » en fin de message coûte un aller-retour depuis un téléphone pour
+une réponse qui est toujours oui, et laisse pendant ce temps une branche qui
+collectionne les conflits. Une PR verte se fusionne ; on l'annonce faite, au
+passé. Les seules choses qui s'arrêtent encore pour demander sont celles de la
+section 5, et la fusion n'en est pas.
 
 Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
 plusieurs sessions en parallèle, et une branche qui attend collectionne les

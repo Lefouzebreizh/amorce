@@ -80,6 +80,7 @@ while IFS= read -r f; do
   case "$f" in
     agence/*)        inscrire agence ;;
     look_and_find/*) inscrire flutter ;;
+    hypersensible-bienveillance/*) inscrire hypersensible ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
                      inscrire amorce ;;
   esac
@@ -149,6 +150,21 @@ lancer_agence() {
   return $e
 }
 
+lancer_hypersensible() {
+  local d="hypersensible-bienveillance"; local j="$journal/hypersensible"; local e=0
+  ( cd "$d" || exit 1
+    etape "$j.test"  "tests"  npm test || exit 1 ) || e=1
+  ( cd "$d" || exit 1
+    etape "$j.types" "types"  npm run check || exit 1 ) || e=1
+  # Le build ferme la marche : il est le seul à voir ce que `tsc` laisse passer
+  # — une feuille de style qui ne compile pas, un import de composant qui ne se
+  # résout pas, un script client qui casse au regroupement.
+  ( cd "$d" || exit 1
+    etape "$j.build" "build"  npm run build || exit 1 ) || e=1
+  cat "$j".{test,types,build} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_flutter() {
   local j="$journal/flutter"; local e=0
   if ! command -v flutter >/dev/null 2>&1; then
@@ -177,6 +193,7 @@ for p in $projets; do
     amorce)  lancer_amorce  & pid_de[amorce]=$! ;;
     agence)  lancer_agence  & pid_de[agence]=$! ;;
     flutter) lancer_flutter & pid_de[flutter]=$! ;;
+    hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
   esac
 done
@@ -194,6 +211,7 @@ nom_lisible() {
     amorce)  echo "Amorce (studio)" ;;
     agence)  echo "Socle Agence" ;;
     flutter) echo "Look & Find" ;;
+    hypersensible) echo "Hypersensible & Bienveillance" ;;
     py:*)    echo "${1#py:}" ;;
   esac
 }
@@ -236,6 +254,12 @@ case " $projets " in
   *" flutter "*)
     echo "  • les builds Android et iOS, la caméra et la réalité augmentée :"
     echo "    appareil réel ou workflow Look & Find, jamais ce conteneur" ;;
+esac
+case " $projets " in
+  *" hypersensible "*)
+    echo "  • le quota des cinq analyses, le radar et la tournée de veille :"
+    echo "    npm run db:init, npm run preview, npm run cron — rien de tout cela"
+    echo "    ne tourne sous astro dev, seul wrangler sert les Pages Functions" ;;
 esac
 case " $projets " in
   *" py:kdp "*)

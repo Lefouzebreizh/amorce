@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+import Radar from '../components/Radar.astro';
+import AppCnv from '../components/AppCnv.astro';
+import AppJournal from '../components/AppJournal.astro';
+---
+
+<Base
+  titre="Hypersensible & Bienveillance — reformuler ce qui pique, sans s'y perdre"
+  description="Deux outils gratuits pour hypersensibles : reformuler en Communication Non Violente le message qui t'a blessé, et tenir un journal émotionnel qui ne quitte pas ton navigateur. Plus un radar des prix de dix applications de bien-être."
+>
+  <section class="py-6 sm:py-10">
+    <p class="etiquette">L’humain donne le cap, l’IA accélère le chemin.</p>
+    <h1 class="mt-5 text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.05]">
+      Ce message t’a serré la gorge.<br />
+      <span
+        class="bg-gradient-to-r from-cyan to-violet bg-clip-text text-transparent"
+        >On va le relire ensemble.</span
+      >
+    </h1>
+    <p class="mt-6 max-w-2xl text-lg text-estompe leading-relaxed">
+      J’ai conduit des 44 tonnes pendant des années. On y apprend une chose : ce n’est pas la
+      charge qui casse, c’est de la porter mal arrimée. Ces deux outils ne t’enlèvent rien —
+      ils t’aident à arrimer.
+    </p>
+
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="#reponse-bienveillante" role="button" class="bouton-accent">Reformuler un message</a>
+      <a href="#journal-emotionnel" role="button" class="bouton-discret">Ouvrir le journal</a>
+      <a href="#radar" role="button" class="bouton-discret">Voir le radar</a>
+    </div>
+
+    <dl class="mt-12 grid gap-4 sm:grid-cols-3">
+      <div class="carte p-5">
+        <dt class="aide">Membres du groupe</dt>
+        <dd class="mt-1 text-2xl font-semibold tabular-nums">48 000</dd>
+        <p class="aide mt-2">Accès illimité pour eux, sans compte ni carte bancaire.</p>
+      </div>
+      <div class="carte p-5">
+        <dt class="aide">Textes enregistrés</dt>
+        <dd class="mt-1 text-2xl font-semibold tabular-nums">0</dd>
+        <p class="aide mt-2">Rien de ce que tu écris ici n’est stocké, nulle part.</p>
+      </div>
+      <div class="carte p-5">
+        <dt class="aide">Prix pour essayer</dt>
+        <dd class="mt-1 text-2xl font-semibold tabular-nums">0 €</dd>
+        <p class="aide mt-2">Cinq analyses par jour en arrivant d’ailleurs. Puis c’est toi qui vois.</p>
+      </div>
+    </dl>
+  </section>
+
+  <div class="mt-16 flex flex-col gap-20">
+    <Radar />
+    <AppCnv />
+    <AppJournal />
+
+    <section class="carte p-6 sm:p-8">
+      <h2 class="titre-section">Gratuit suffit</h2>
+      <p class="aide mt-3 max-w-2xl">
+        Le groupe n’est pas un produit, et il ne le deviendra pas. Ceux qui arrivent par là ont
+        tout, sans limite. Les cinq analyses quotidiennes ne concernent que les visiteurs de
+        passage — et si l’outil t’a servi et que tu veux qu’il reste gratuit pour les 48 000
+        autres, le soutien est à 19 €, une fois, et c’est tout.
+      </p>
+      <p class="aide mt-3">Personne ne te le redemandera. Il n’y a pas de bandeau qui revient.</p>
+    </section>
+  </div>
+</Base>

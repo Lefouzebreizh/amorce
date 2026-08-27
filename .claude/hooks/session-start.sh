@@ -42,6 +42,13 @@ echo "── Socle Agence : dépendances npm"
 cd "$racine/agence"
 npm install --no-audit --no-fund --silent
 
+echo "── Hypersensible & Bienveillance : dépendances npm"
+# Projet Astro + Cloudflare indépendant. Le `.npmrc` du dossier existe pour la
+# même raison que ce bloc : lancé sans `cd`, npm remonte jusqu'à la racine et
+# installe Astro dans les dépendances du studio Amorce.
+cd "$racine/hypersensible-bienveillance"
+npm install --no-audit --no-fund --silent
+
 echo "── Look & Find : SDK Flutter $FLUTTER_VERSION"
 if [ -x "$FLUTTER_HOME/bin/flutter" ]; then
   echo "   déjà installé"
@@ -283,4 +290,4 @@ if [ -f "$racine/.claude/skills/capacites-session/scripts/sonder.py" ]; then
   echo "── Capacités : $(python3 "$racine/.claude/skills/capacites-session/scripts/sonder.py" --court)"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests — Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Hypersensible : (dans hypersensible-bienveillance/) npm test, npm run check, npm run build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests — Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
