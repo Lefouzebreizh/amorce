@@ -660,6 +660,136 @@ L'intérêt de Sage Copilot n'est pas d'être le meilleur assistant du marché, 
 ## Idéal pour
 Les cabinets et directions financières déjà équipés Sage, qui veulent un premier usage utile sans conduire un projet.`,
     },
+    {
+      id: `cegid-pulse`,
+      nom: `Cegid Pulse`,
+      categorie: `Plateforme comptable`,
+      prix: `Sur devis`,
+      description_courte: `La production comptable de Cegid avec l'IA intégrée au moteur, pas posée à côté — le socle le plus répandu des cabinets français.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/cegid-pulse`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+L'IA comptable qui compte n'est pas celle qu'on ajoute, c'est celle qui est déjà dans l'outil où la production se fait. Cegid Pulse joue exactement là : l'automatisation vit dans le moteur de production, et l'association avec un outil de capture comme Dext est devenue un standard de fait dans les cabinets français. C'est moins spectaculaire qu'un assistant conversationnel, et beaucoup plus utile au quotidien.
+
+## Points forts
+- IA intégrée à la production, sans passerelle à maintenir entre deux outils
+- Éditeur installé, présent dans une grande part des cabinets français
+- S'associe naturellement aux outils de capture de pièces du marché
+- Continuité réglementaire assurée par un acteur qui suit la norme française
+
+## Points faibles
+- Aucun tarif public : tout passe par un devis et un projet
+- Changer de socle de production est un chantier, pas une souscription
+- Enfermement dans l'écosystème d'un éditeur unique
+- Peu adapté à une petite structure qui cherche la souplesse
+
+## Idéal pour
+Les cabinets qui veulent l'automatisation là où se fait réellement la production, et qui acceptent d'engager un projet plutôt qu'un abonnement.`,
+    },
+    {
+      id: `myunisoft`,
+      nom: `MyUnisoft`,
+      categorie: `Plateforme comptable`,
+      prix: `Sur devis`,
+      description_courte: `La plateforme comptable française en ligne, pensée pour que le cabinet et son client travaillent dans le même outil.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/myunisoft`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+MyUnisoft s'est construite sur une idée simple : la rupture entre l'outil du cabinet et celui du client est la source de la moitié des allers-retours. Tout se passe donc sur la même plateforme, avec l'automatisation de la pré-comptabilité en amont. L'éditeur publie ses propres relevés d'usage — plus d'un expert-comptable sur deux déclare déjà se servir d'IA, surtout pour accélérer la saisie et l'extraction — ce qui traduit assez bien où se trouve le gain réel aujourd'hui.
+
+## Points forts
+- Cabinet et client sur le même outil : moins d'échanges de fichiers
+- Automatisation concentrée sur la pré-comptabilité, là où le temps se perd
+- Éditeur français, calé sur la norme et le calendrier fiscal d'ici
+- Plateforme en ligne, sans installation sur les postes
+
+## Points faibles
+- Tarification sur devis, non comparable d'un coup d'œil
+- Le bénéfice suppose que les clients acceptent d'entrer dans l'outil
+- Migration depuis un socle existant à ne pas sous-estimer
+- Moins d'ancienneté que les grands éditeurs historiques
+
+## Idéal pour
+Les cabinets qui veulent réduire les allers-retours avec leurs clients plutôt que d'ajouter un outil de plus à une chaîne déjà longue.`,
+    },
+    {
+      id: `chaintrust`,
+      nom: `Chaintrust`,
+      categorie: `Collecte de pièces`,
+      prix: `Sur devis`,
+      description_courte: `La capture de pièces qui ne choisit pas son camp : compatible avec les principaux logiciels de production français.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/chaintrust`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Le piège de la capture de pièces est l'attachement : la plupart des outils performants tirent le cabinet vers l'écosystème de leur éditeur. Chaintrust revendique l'inverse et se branche sur les principaux logiciels de production du marché français — Cegid, Sage, MyUnisoft, Pennylane, Fulll, Quadratus et d'autres. Pour un cabinet qui ne veut pas parier sur un socle unique, ou qui en fait cohabiter plusieurs selon les portefeuilles, c'est l'argument décisif.
+
+## Points forts
+- Agnostique : compatible avec les principaux logiciels de production français
+- Permet de garder son socle de production tout en changeant d'outil de capture
+- Utile aux cabinets qui font cohabiter plusieurs environnements
+- Périmètre clair, sans chercher à devenir une plateforme de plus
+
+## Points faibles
+- Aucun tarif public
+- Un outil de plus dans la chaîne, avec sa propre courbe d'apprentissage
+- Ne couvre que la capture : la production reste ailleurs
+- L'avantage de l'agnosticisme s'estompe si le socle de production intègre déjà la capture
+
+## Idéal pour
+Les cabinets multi-environnements, et ceux qui veulent améliorer la collecte sans se lier davantage à l'éditeur de leur logiciel de production.`,
+    },
+    {
+      id: `inqom`,
+      nom: `Inqom`,
+      categorie: `Révision`,
+      prix: `Sur devis`,
+      description_courte: `La production comptable automatisée par un éditeur français, jusqu'aux contrôles de révision.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/inqom`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Inqom fait partie des acteurs français qui ont misé tôt sur l'automatisation de la production plutôt que sur la seule saisie. L'intérêt se joue en fin de dossier : ce qui reste à faire quand les écritures sont passées — les contrôles, les incohérences, les pièces manquantes. C'est le moment où un cabinet perd le plus de temps, et celui où l'automatisation se voit le mieux.
+
+## Points forts
+- Automatisation poussée au-delà de la saisie, jusqu'aux contrôles
+- Éditeur français, aligné sur les obligations locales
+- Se connecte aux outils de capture agnostiques du marché
+- Positionnement clair sur la production de cabinet
+
+## Points faibles
+- Tarification sur devis
+- Marché en forte consolidation : la trajectoire des éditeurs indépendants est incertaine
+- Suppose de revoir l'organisation du dossier pour tirer le gain
+- Moins visible que les têtes d'affiche du secteur
+
+## Idéal pour
+Les cabinets qui ont déjà réglé la collecte de pièces et cherchent le gain suivant, là où le collaborateur passe ses dernières heures : la révision.`,
+    },
+    {
+      id: `fulll`,
+      nom: `Fulll`,
+      categorie: `Plateforme comptable`,
+      prix: `Sur devis`,
+      description_courte: `Un socle de production français de plus, retenu ici parce qu'il figure parmi ceux que les outils de capture savent tous alimenter.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/fulll`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Fulll appartient au petit groupe de socles de production que les outils de capture du marché français prennent en charge par défaut — ce qui, en pratique, compte autant que la liste de fonctions. Un cabinet qui choisit son logiciel de production choisit surtout ce à quoi il pourra le brancher pendant dix ans. Sur ce critère-là, Fulll est un choix sûr, sans être le plus spectaculaire.
+
+## Points forts
+- Reconnu par les principaux outils de capture de pièces français
+- Éditeur français, suivi réglementaire assuré
+- Approche en ligne, sans parc logiciel à maintenir
+- Alternative crédible aux deux ou trois éditeurs dominants
+
+## Points faibles
+- Aucun tarif public
+- Moins mis en avant que les leaders du marché, documentation moins abondante
+- Le changement de socle reste un projet lourd, quel que soit l'éditeur
+- L'apport propre de l'IA est moins différenciant que chez les spécialistes
+
+## Idéal pour
+Les cabinets qui veulent sortir du duopole des grands éditeurs sans se couper de l'écosystème d'outils qui gravite autour.`,
+    },
   ],
 
   juridique: [
@@ -787,6 +917,137 @@ L'argument de Lexis+ AI est celui de la source : les réponses s'appuient sur un
 
 ## Idéal pour
 Les cabinets déjà abonnés à l'écosystème LexisNexis, qui veulent une recherche augmentée sans changer de fournisseur documentaire.`,
+    },
+    {
+      id: `ordalie`,
+      nom: `Ordalie`,
+      categorie: `Assistant juridique`,
+      prix: `Gratuit (10 requêtes/semaine), puis à partir de 46 € HT/mois`,
+      description_courte: `L'IA juridique entraînée sur le droit français, hébergée en France, au tarif d'un avocat seul et non d'un cabinet d'affaires.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/ordalie`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+La plupart des IA juridiques sérieuses se vendent au cabinet, par contrat annuel, à des montants qui excluent d'emblée l'avocat installé seul. Ordalie prend le problème par l'autre bout : un palier gratuit permanent, un abonnement à deux chiffres, aucun engagement long. Les modèles sont entraînés sur le droit français et l'hébergement est en France sous certification ISO 27001 — deux points qui, en 2026, ne sont plus des arguments commerciaux mais des conditions d'exercice. Partenariat officiel avec le Barreau de Paris depuis 2024.
+
+## Points forts
+- Palier gratuit permanent : dix requêtes par semaine, de quoi se faire un avis réel
+- Modèles entraînés spécifiquement sur le droit français, pas traduits de l'anglais
+- Hébergement en France, certification ISO 27001
+- Extraction, océrisation, analyse de jurisprudence et génération de clauses dans un seul outil
+- Essai complet de quatorze jours, sans engagement
+
+## Points faibles
+- Aucune intégration native avec les logiciels de gestion de cabinet : le va-et-vient reste manuel
+- Ni facturation ni agenda automatisés — ce n'est pas un outil de gestion
+- Les tarifs annoncés varient selon les sources : à confirmer au moment de souscrire
+- L'analyse prédictive est annoncée pour 2026, elle n'est pas encore là
+
+## Idéal pour
+L'avocat seul, le jeune confrère qui s'installe et les cabinets de deux ou trois personnes, qui veulent une IA juridique française sans engager le budget d'un grand cabinet.`,
+    },
+    {
+      id: `jimini-ai`,
+      nom: `Jimini AI`,
+      categorie: `Analyse de contrats`,
+      prix: `Sur devis`,
+      description_courte: `La revue de contrat par une IA française à hébergement de santé certifié, adossée à un partenariat avec le Barreau de Paris.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/jimini-ai`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Jimini s'est fait une place sur la revue de contrats en misant sur ce que les grands acteurs anglophones ne peuvent pas offrir : un hébergement souverain certifié et un ancrage professionnel local. Le partenariat avec le Barreau de Paris, qui a ouvert un accès gratuit de trois mois aux cabinets de un à vingt avocats, en dit long sur le positionnement — se faire adopter par les petites structures plutôt que conquérir les cabinets d'affaires. Fondée en 2023 à Paris.
+
+## Points forts
+- Hébergement souverain certifié, argument décisif sur des données clients sensibles
+- Spécialisation revue de contrat, plutôt qu'un assistant généraliste dilué
+- Partenariat avec le Barreau de Paris, avec accès d'essai pour les petits cabinets
+- Éditeur français, interlocuteur joignable dans le même fuseau
+
+## Points faibles
+- Aucun tarif public : il faut passer par un devis
+- Jeune éditeur, moins de recul que les acteurs installés
+- Périmètre contractuel : ne remplace pas un outil de recherche jurisprudentielle
+- Le marché se consolide vite, et l'indépendance des petits acteurs n'est jamais acquise
+
+## Idéal pour
+Les cabinets et directions juridiques qui traitent du contrat en volume et pour qui la localisation des données n'est pas négociable.`,
+    },
+    {
+      id: `genia-l`,
+      nom: `GenIA-L (Lefebvre Dalloz)`,
+      categorie: `Recherche juridique`,
+      prix: `À partir d'environ 250 € HT/mois par utilisateur`,
+      description_courte: `L'assistant qui ne répond que sur le fonds documentaire Dalloz et Francis Lefebvre — jamais sur ce qu'un modèle croit savoir.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/genia-l`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+La faiblesse structurelle d'une IA généraliste en droit est qu'elle produit des références plausibles. GenIA-L répond au problème par la contrainte : l'assistant ne puise que dans le fonds propriétaire de l'éditeur — Dalloz, Francis Lefebvre, Éditions Législatives — et rien d'autre. On échange de la couverture contre de la fiabilité, ce qui est le bon sens du métier. Lancé en mars 2024, complété fin 2025 par un module de dépôt de documents et d'aide à la rédaction.
+
+## Points forts
+- Réponses adossées à un fonds documentaire de référence, vérifiable
+- Continuité avec des sources que la profession utilise déjà quotidiennement
+- Module d'aide à la rédaction et de dépôt de documents depuis fin 2025
+- Éditeur établi de longue date : pérennité rarement en cause
+
+## Points faibles
+- Tarif élevé pour un praticien seul, à partir d'environ 250 € HT par mois
+- Enfermé dans un fonds propriétaire : ce qui n'y est pas n'existe pas pour l'assistant
+- Suppose un abonnement à l'écosystème de l'éditeur pour tirer la pleine valeur
+- Moins agile que les jeunes acteurs sur les fonctions récentes
+
+## Idéal pour
+Les cabinets et directions juridiques déjà installés dans l'écosystème Lefebvre Dalloz, qui veulent une recherche augmentée sans jamais quitter des sources qu'ils peuvent citer.`,
+    },
+    {
+      id: `legora`,
+      nom: `Legora`,
+      categorie: `Assistant juridique`,
+      prix: `Sur devis — environ 3 000 $/utilisateur/an, minimum dix postes`,
+      description_courte: `L'assistant collaboratif qui a percé chez les grands cabinets européens, vendu par lots de dix postes minimum.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/legora`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Legora s'est imposé en quelques années comme l'alternative européenne aux assistants juridiques américains, avec une approche collaborative : le travail se fait à plusieurs sur les mêmes documents, revues et tableaux d'analyse. Le modèle commercial ne laisse aucune ambiguïté sur la cible — un plancher de dix postes et un engagement annuel écartent d'emblée les petites structures. Les montants ne sont pas publiés : ceux qui circulent viennent d'acheteurs et de rapports de marché.
+
+## Points forts
+- Pensé pour le travail à plusieurs sur un même dossier, pas pour l'usage solitaire
+- Adoption documentée dans de grands cabinets européens
+- Tableaux d'analyse comparée de documents, utiles en due diligence
+- Alternative européenne crédible aux plateformes américaines
+
+## Points faibles
+- Plancher de dix postes : inaccessible en dessous d'une certaine taille
+- Tarif non public, et les estimations varient du simple au double selon les sources
+- Frais de mise en œuvre et de formation en supplément
+- Engagement annuel, peu compatible avec un essai prudent
+
+## Idéal pour
+Les cabinets d'au moins dix juristes qui travaillent à plusieurs sur des dossiers documentaires lourds, et qui veulent un éditeur européen.`,
+    },
+    {
+      id: `cocounsel`,
+      nom: `CoCounsel (Thomson Reuters)`,
+      categorie: `Assistant juridique`,
+      prix: `Sur devis`,
+      description_courte: `L'assistant juridique adossé au fonds Thomson Reuters, taillé pour les tâches longues : revue de pièces, synthèse, recherche.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/cocounsel`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Né chez Casetext puis passé sous pavillon Thomson Reuters, CoCounsel est l'un des rares assistants juridiques à avoir été éprouvé à grande échelle avant la vague générative actuelle. Sa force est le travail de fond : revue de lots de pièces, synthèse de dépositions, préparation de recherche — les tâches qui mangent des soirées entières. Sa limite pour un praticien français est franche : le fonds documentaire et les usages visés sont d'abord ceux du droit américain.
+
+## Points forts
+- Adossé à un fonds documentaire et à un éditeur de premier plan
+- Efficace sur les tâches longues et répétitives plutôt que sur la seule question ponctuelle
+- Recul d'usage supérieur à la plupart des concurrents
+- Intégré à un écosystème professionnel déjà en place dans beaucoup de structures
+
+## Points faibles
+- Orientation nette vers le droit américain : la pertinence chute sur des questions de droit français
+- Aucun tarif public, contrat négocié
+- Suppose l'écosystème de l'éditeur pour être rentable
+- Peu adapté à un cabinet français qui ne traite pas de dossiers internationaux
+
+## Idéal pour
+Les structures qui traitent des dossiers de droit américain ou internationaux, et qui cherchent à absorber de gros volumes de pièces sans y passer les nuits.`,
     },
   ],
 
