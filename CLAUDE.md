@@ -341,9 +341,14 @@ réaccordée à chaque session : les outils Supabase qui **lisent** y sont
 autorisés d'office, `execute_sql` et `apply_migration` **non**. Ces deux-là
 écrivent dans une vraie base, et sur le geste dont l'erreur est une faille
 plutôt qu'un bogue, une demande de confirmation vaut son aller-retour. La liste
-est écrite sur le nom `Supabase` ; ce connecteur est apparu sous deux noms dans
-une même session, l'autre étant un identifiant opaque, et lequel des deux tient
-d'une session à l'autre reste à mesurer.
+est écrite **deux fois**, et c'est mesuré, pas prudentiel : ce connecteur
+s'expose tantôt sous le nom `Supabase`, tantôt sous un identifiant opaque
+(`f3258232-…`), et les deux formes sont apparues dans une même session — le
+serveur s'étant reconnecté sous l'autre nom en cours de route. Une règle
+`mcp__Supabase__…` ne couvre alors rien, sans que rien ne le signale : la
+demande d'autorisation revient simplement, et on croit à un oubli. D'où les
+onze outils listés sous les deux préfixes. Le jour où une seule forme subsiste,
+l'autre moitié de la liste ne coûte rien à laisser.
 
 ## Les compétences, mesurées plutôt que supposées
 
