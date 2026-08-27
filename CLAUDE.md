@@ -1,400 +1,321 @@
 @AGENTS.md
 
-# Amorce — guide du dépôt
+# CLAUDE.md — cerveau du dépôt
 
-Studio de montage vertical pour rushes générés par IA. **Tout s'exécute dans le
-navigateur** : aucun fichier n'est envoyé sur un serveur, il n'y a ni base de
-données, ni API, ni route serveur. Next.js ne sert qu'à livrer une page unique.
+## 0. GOD MODE
 
-Le `README.md` s'adresse à l'utilisateur (parcours, note de viralité, choix
-techniques justifiés). Ce fichier-ci s'adresse à qui modifie le code.
+Autonomie totale, zéro permission. Tu construis, tu vérifies, tu montres. 80 % action.
 
-## Commandes
+Trois exceptions, et elles seules : ce qui part **en public au nom d'Erwann**
+(48 000 membres, une réponse publiée ne se retire pas), ce qui **détruit sans
+retour**, ce qui **engage de l'argent**.
 
-```bash
-npm run dev         # serveur de développement, http://localhost:3000
-npm run build       # build de production
-npm run typecheck   # tsc --noEmit
-npm run lint        # eslint (config plate, eslint-config-next)
-npm test            # tests unitaires (node --test, --experimental-strip-types)
-npm run fixtures    # fabrique quatre rushes de test dans .fixtures/rushes/
-npm run verify      # parcours complet dans un vrai Chromium (dev doit tourner)
-npm run verify:reprise  # le montage survit-il à un rechargement (dev doit tourner)
-```
+Agents parallèles et `TodoWrite` quand la tâche le mérite — pas par défaut :
+cinq agents sur une tâche simple brûlent la fenêtre hebdomadaire. `/jauge` avant
+un gros lot.
 
-Avant de pousser : `npm run typecheck && npm run lint && npm test`. Si le
-changement touche au rendu, à l'audio, à l'export ou à la mise en page mobile,
-`npm run verify` est le seul filet réel — voir « Vérifier » plus bas.
+## 1. ADN
 
-## Carte du code
+- **Cap** : l'humain donne la direction, l'outil accélère le chemin.
+- **Voix** : directe, viscérale, fraternelle. Depuis la bande d'arrêt d'urgence,
+  jamais depuis la voie rapide. Détail dans `/charte-editoriale`.
+- **Mission** : des abris solides et accessibles pour 48 000 hypersensibles,
+  créatifs et cabossés.
+- **Zéro cringe, zéro procédé qui manipule.** Le public visé est exactement
+  celui que l'urgence fabriquée et la culpabilisation blessent le plus.
 
-```
-src/app/          layout.tsx (polices, thème, viewport), page.tsx (monte <Studio/>), globals.css (@theme Tailwind v4)
-src/lib/          toute la logique métier — c'est là que vit le studio
-src/hooks/        usePlayback (la boucle de rendu), useMediaQuery
-src/components/   coques et panneaux, presque sans logique
-scripts/          make-fixtures.mjs, verify.mjs (Playwright, hors bundle)
-```
+## 2. FILTRE 48K
 
-### `src/lib` — cœur du studio
+Test avant de livrer : **est-ce que ça aide une vraie personne à dormir mieux ce
+soir ?** Si non, ça ne sort pas.
 
-| Fichier | Rôle |
-| --- | --- |
-| `types.ts` | Modèle de données (`Project`, `Clip`, `Caption`, `SoundCue`…) et constantes de sortie. Point de départ pour comprendre le reste. |
-| `timeline.ts` | Placement des clips, chevauchements de transitions, `sliceAt` (que dessiner à l'instant t). Pur, testé. |
-| `renderer.ts` | `renderFrame` : **le** compositeur. Plus `ClipVideoPool` et `syncPlayback`. |
-| `transitions.ts` | Une transition = composer deux fonctions de dessin. Ajouter un effet ne touche pas au moteur. |
-| `grade.ts` | Étalonnage cinéma : filtres, teintes, vignettage, grain, halo. |
-| `captions.ts` | Styles de sous-titres et tracé canvas ; renvoie les boîtes pour la manipulation au doigt. |
-| `sfx.ts` | Bruitages **synthétisés** en Web Audio, réverbération comprise. Aucun fichier son n'est embarqué. |
-| `voice.ts` | Voix off : découpe du signal aux silences, répartition du texte sur les passages parlés, baisse du fond. Pur, testé. |
-| `audio.ts` | Mixage des quatre bus (clips / bruitages / musique / voix) et sortie enregistrable. |
-| `export.ts` | `MediaRecorder` sur le canvas + le bus audio. Négocie MP4 puis WebM. |
-| `quality.ts` | Paliers de prévisualisation, `QualityGovernor` (ajustement) et `PanicDetector` (filet). |
-| `analysis.ts` | Note de viralité sur 100 : hook 30, rythme 20, tension 20, sous-titres 15, son 10, format 5. |
-| `guide.ts` | Une seule consigne à la fois, ordonnée par ce qui bloque le plus. |
-| `autoEdit.ts` | Montage express : un projet complet à partir des seuls rushes. |
-| `autoFinish.ts` | Réglages recommandés posés sur un montage **existant** : trames de textes, bruitages, découpe. Ne remplace jamais ce qui est là. |
-| `store.ts` | Store Zustand, avec historique annuler/rétablir. |
-| `persistence.ts` | Reprise du montage : projet et fichiers rangés dans IndexedDB. Les fonctions de mise en forme sont pures et testées. |
-| `steps.ts` | Le parcours en 7 étapes, en données pures (séparé des composants pour rester testable). |
-| `media.ts`, `hooks.ts`, `id.ts` | Import de fichiers, modèles d'accroches, identifiants. |
+Interface : 18 px minimum, gros contrastes, pas d'autoplay,
+`prefers-reduced-motion` respecté, cibles ≥ 44 px, `100dvh` et non `100vh`.
+Terrain de référence : Redmi Note 12 Plus, Chrome Android, ~20:9, batterie sans
+restriction et assombrissement MIUI coupé. Toute jauge se fait en **deux barres
+horizontales**, jamais en cercle ni en bibliothèque — code et raison dans
+`/tailwind-mobile-ux`.
 
-### Composants
+## 3. MÉMOIRE
 
-`Studio.tsx` tient le moteur de lecture, les polices et l'étape courante, puis
-choisit entre `StudioDesktop` (trois colonnes) et `StudioMobile` (une colonne,
-barre d'onglets). **Les panneaux d'étape sont rigoureusement les mêmes des deux
-côtés** — `steps.tsx` aiguille vers `panels/*`, seule la coque change. Ne pas
-dupliquer un panneau pour le mobile.
+La mémoire vit dans ce fichier, dans `.claude/skills/`, dans `INDEX.md` et dans
+`second-brain/` — jamais dans la discussion. Ce qui vaut pour **un** projet va
+dans sa compétence ; ce qui traverse les projets va dans `second-brain/lecons.md`,
+et ce qui se recopie tel quel dans `kits/`. Le jour même : le lendemain on se
+souvient du correctif et plus de la cause, et c'est la cause qui vaut. Fil qui
+s'alourdit → `/relais`.
 
-`ui.tsx` fournit les briques (`Panel`, `Field`, `Button`…). `Field` **impose**
-un texte d'aide à côté de chaque réglage : un curseur sans phrase qui dit ce
-qu'il fait est un curseur qu'on ne touchera pas.
+## 4. STACK
 
-## Invariants à ne pas casser
+Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 
-Ces règles sont la raison pour laquelle l'application fonctionne. Chacune est
-justifiée en tête du fichier concerné ; relire ce commentaire avant d'y toucher.
+- **Amorce** (racine) — Next.js **16.3.2**, React 19, Tailwind v4, TypeScript
+  strict. Tout tourne dans le navigateur : ni serveur, ni base, ni route API.
+- **agence/** — Next.js 16, Supabase (PostgreSQL + RLS), Server Actions, shadcn.
+  Se vérifie depuis son dossier, jamais depuis la racine.
+- **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
+- **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
+- **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
+  lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
+  gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
+  aux API de sécurité, qui répondent trente fois par minute.
+- **annuaire-ia/** — onze sites de niche à gabarit partagé.
+- **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
+  Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
+  sont dans son `public/llms.txt`, pas ici.
+- **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — deux
+  chantiers en sommeil : `mon-app-audio/` et `patrimoine/`, tests verts, mis de
+  côté et non abandonnés.
 
-1. **Un seul chemin de rendu.** `renderFrame` est le seul endroit qui sait à
-   quoi ressemble une image. Prévisualisation et export l'appellent tous les
-   deux. Ne jamais ajouter un tracé « juste pour l'aperçu » ou « juste pour
-   l'export » : l'écart entre les deux réapparaîtrait aussitôt.
-2. **Au plus deux couches vidéo.** `timeline.ts` borne toute transition à 45 %
-   du plus court des deux clips. Le moteur s'appuie dessus pour ne jamais
-   composer plus de deux couches. Relever cette limite casse le rendu.
-3. **Un élément `<video>` par clip, pas par média — et six au plus à la fois.**
-   Deux clips peuvent découper le même rush et se chevaucher ; un élément
-   partagé ne peut pas être à deux positions de lecture à la fois. Mais leur
-   nombre est borné à `DECODEURS_MAX`, un navigateur Android n'accordant que six
-   à huit décodeurs : au-delà, les plans en trop ne produisent aucune image et
-   l'export sort noir sans erreur. `ClipVideoPool.sync` ne garde donc chargés
-   que les plans proches de la tête de lecture, et rend les identifiants
-   retenus — que la boucle de rendu répercute sur le graphe audio, faute de quoi
-   un plan dont l'élément a été recréé reviendrait muet.
-4. **La composition s'écrit toujours en coordonnées 1080 × 1920.** La qualité
-   d'aperçu n'agit que par une transformation d'échelle posée sur le contexte
-   (`RenderOptions.scale`). Aucune position, aucun corps de police ne doit être
-   calculé à partir de la taille réelle du canvas.
-5. **Le son passe par Web Audio, jamais par le volume des éléments média.**
-   Les `<video>` sont `muted` ; c'est le graphe audio qui alimente à la fois les
-   haut-parleurs et `MediaRecorder`. La baisse automatique sous la voix a ses
-   propres nœuds, sous les plans et la musique : l'écrire sur le gain des bus
-   effacerait le réglage de la table de mixage, et inversement.
-6. **Le temps écoulé est borné hors export, jamais pendant.** La borne absorbe
-   une mise en veille ; pendant un export elle désynchronise l'image et le son
-   et allonge le fichier. Voir la boucle de `usePlayback.ts`.
-7. **Les sous-titres sont tracés après l'étalonnage.** Jamais grainés ni
-   assombris : en format court, la lisibilité prime sur l'esthétique.
-8. **Aucun binaire versionné.** Rushes de test, captures et exports vont dans
-   `.fixtures/` (ignoré). Les bruitages sont synthétisés, les polices viennent
-   de `next/font`.
+Build vert obligatoire avant toute poussée.
 
-## Store et historique
+**Cap, et désormais un état.** `hypersensible-bienveillance/` est le premier
+projet à y être : **R2** pour les fichiers lourds, **D1** pour une base légère,
+**Workers** pour ce qui doit tourner près de l'utilisateur. Le prochain projet
+qui doit héberger des binaires y va aussi, plutôt que d'inventer autre chose — c'est ce qui donne son issue à
+l'invariant « aucun binaire versionné » : les PDF de KDP, les rushes de
+`montage-auto`, les exports d'`agence` n'ont pas leur place dans Git, et il leur
+faut bien un ailleurs.
 
-Toutes les modifications du **projet** passent par `mutate(label, producer)`
-dans `store.ts`, qui empile un instantané annulable. Ce qui ne touche pas au
-projet — sélection, tête de lecture, réglages d'affichage — passe par `set`
-directement : l'inscrire dans l'historique obligerait à annuler plusieurs fois
-pour défaire une seule action.
+**Amorce en est exclue, définitivement.** Sa promesse fondatrice est qu'aucun
+fichier ne quitte l'appareil : lui adjoindre un stockage distant ne serait pas
+une évolution mais un reniement.
 
-Les libellés listés dans `COALESCING` fondent deux modifications successives
-en une (600 ms). N'y ajouter **que** des commandes continues — jauge qu'on fait
-glisser, texte qu'on saisit. Un geste discret (découper, dupliquer) doit
-toujours s'annuler séparément.
+## 5. SENSIBLE, ET JAMAIS À L'ARRÊT
 
-Après toute opération qui raccourcit le montage, passer par `reclamp` : sinon
-la tête de lecture se retrouve au-delà de la fin.
+Par défaut, autonomie : tu ne demandes pas. Deux niveaux font exception.
 
-## Rythme de travail
+**Orange — confirmation rapide** : pousser **directement** sur `main` sans
+passer par une PR, déployer en production,
+dépenser plus d'un dollar, modifier `~/.claude/`, installer une dépendance
+payante, supprimer une sauvegarde.
 
-Le propriétaire du dépôt travaille depuis un téléphone, souvent par messages
-courts. Deux règles en découlent, et elles priment sur la prudence par défaut :
+**Rouge — accord explicite** : supprimer sans sauvegarde, toucher aux données
+personnelles (Drive, Gmail, contacts), sortir la moindre donnée des 48 000,
+dépenser plus de cinq dollars, écrire dans une base de production, écraser un
+abri qui tourne.
 
-- **Décider plutôt que demander.** Devant deux options techniques défendables,
-  prendre la meilleure, l'appliquer, et **dire laquelle et pourquoi** en une
-  ligne. Une question posée coûte un aller-retour ; une décision annoncée se
-  corrige d'un mot. Ne s'arrêter que si les deux lectures mènent à deux travaux
-  entièrement différents.
-- **Mener les PR de bout en bout.** Ouvrir la pull request, la vérifier, la
-  faire passer au vert et la fusionner sans attendre qu'on le demande. Les
-  branches de ce dépôt touchent presque toutes au hook de démarrage et à ce
-  fichier : chaque jour d'attente ajoute un conflit à résoudre.
+**Fusionner une PR verte n'est ni orange ni rouge**, alors même que cela écrit
+sur `main`. C'est le geste courant de ce dépôt, et le classer sensible faisait
+hésiter les sessions entre cette liste-ci et la section Git — voir plus bas.
 
-- **Passer le relais avant que le fil ne pèse.** Une conversation longue est
-  relue en entier à chaque message, captures d'écran comprises : elle finit par
-  coûter plus cher que le travail qu'elle porte. Dès qu'un fil change de sujet
-  ou s'alourdit, créer la session suivante avec un résumé de reprise, archiver
-  la précédente, et donner son nom. La mémoire du projet est dans ce fichier et
-  dans les compétences, pas dans la discussion — on ne perd rien.
+Format : *« ⚠️ SENSIBLE : je vais [action] parce que [raison]. Coût [X], risque
+[Y]. J'y vais ? En attendant je continue sur autre chose. »*
 
-Ce qui reste à demander, et qu'aucune de ces deux règles ne couvre : ce qui
-part **en public au nom de quelqu'un** (un commentaire publié, un message à la
-communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
-Là, l'aller-retour vaut son prix.
+**Et surtout : la question posée, on enchaîne.** Jamais « j'attends ton
+approbation » comme dernière phrase — trois tâches parallèles à la place :
+alléger le coût, améliorer l'affichage sur le téléphone, écrire une idée dans
+`second-brain/`. La réponse arrive, on reprend. Si c'est non, on propose moins
+cher.
 
-## Modifier ce dépôt
+## 6. COÛT
 
-- **Chirurgical.** Chaque ligne changée doit se rattacher à la demande. Ne pas
-  « améliorer » au passage le code voisin, sa mise en forme, ni ses commentaires
-  — surtout pas ses commentaires : les blocs de tête portent la justification
-  des décisions, et c'est ce que ce dépôt a de plus précieux. Du code mort sans
-  rapport se signale, il ne se supprime pas.
-- **Ne nettoyer que ses propres restes** : un import ou une fonction rendus
-  inutiles par le changement en cours, rien d'autre.
-- **Le minimum qui résout le problème.** Pas d'abstraction pour un seul appel,
-  pas de configurabilité qu'on n'a pas demandée, pas de garde contre un cas
-  impossible.
-- **Nommer la vérification avant d'écrire** : quelle commande dira que c'est
-  bon. `npm test` pour ce qui est calculable, `npm run verify` pour le rendu,
-  l'audio, l'export et le mobile.
+Être bloqué en pleine tâche parce qu'on a trop dépensé est un échec de
+préparation, pas de chance. `/jauge` avant un gros lot.
 
-## Conventions de code
+- **Lectures groupées** : plusieurs fichiers en un seul tour, jamais cinq appels
+  qui se suivent.
+- **Ce qui ne se lit pas l'un l'autre part en même temps.** La mise à la queue
+  leu leu ne casse jamais rien — elle coûte, en silence. Mesuré sur la barrière
+  d'Amorce, la plus lancée du dépôt : **25,5 s en série, 7,9 s en parallèle** ;
+  `tsc`, ESLint et `node --test` ne se lisent pas l'un l'autre, et
+  `verifier.sh` les lance ensemble. Vaut aussi pour plusieurs `claude -p` posés
+  en même temps, et pour ce qui est long : on lance en tâche de fond, on
+  travaille sur ce qui n'en dépend pas, on ne réinterroge pas toutes les
+  trente secondes.
+- **Livrer tôt.** Un résultat qui tourne vaut mieux que le bon résultat annoncé
+  au quinzième message.
+- **Trois essais par bug**, puis on livre la version dégradée qui marche et on
+  écrit la cause dans `second-brain/lecons.md`. Le quatrième essai coûte plus
+  que le défaut.
+- **Explorer petit, finir grand** : brouillon avec le modèle et les réglages les
+  moins chers, qualité maximale sur la seule version finale.
+- **Rien de lourd sans raison** : pas de bibliothèque de graphiques ni
+  d'animation pour ce qu'une `div` et Tailwind font.
+- **Ce qui a été calculé se garde.** Une mesure refaite deux fois est une
+  mesure payée deux fois.
 
-- **Français partout** : commentaires, noms d'affichage, messages d'erreur,
-  intitulés de tests, messages de commit. Les identifiants de code restent en
-  anglais (`clipDuration`, `PlacedClip`), les libellés métier en français
-  (`'ajout-plan'`, `'reglage'`).
-- **Les commentaires disent pourquoi, pas quoi.** La convention du dépôt est un
-  bloc en tête de fichier qui explique la décision de conception, et des
-  commentaires ponctuels qui justifient un choix contre-intuitif, souvent avec
-  la mesure qui l'a motivé. Ne pas paraphraser le code.
-- **Extensions `.ts` explicites dans `src/lib`** pour tout module atteignable
-  depuis un test : `npm test` exécute les fichiers directement avec la
-  résolution ESM de Node, qui n'invente pas d'extension. Les composants
-  utilisent l'alias `@/…` sans extension (résolution du bundler).
-- `'use client'` sur les modules qui touchent au navigateur (`audio`, `export`,
-  `media`, `renderer`, `store`) et sur tous les composants. Seuls
-  `app/layout.tsx` et `app/page.tsx` sont des composants serveur.
-- **Tailwind v4** : les couleurs sont des jetons déclarés dans `@theme`
-  (`ink`, `slab`, `panel`, `raised`, `edge`, `mist`, `muted`, `accent`…). Pas de
-  valeur hexadécimale en dur dans une classe. Le design se fait par **surfaces**
-  empilées, pas par contours : une bordure est réservée à ce qui sépare vraiment
-  ou à ce qui est sélectionné. L'accent ne désigne qu'une chose : l'action à
-  faire, et ce qui va bien.
-- **Mobile de plein droit** : cibles tactiles d'au moins 44 px (`min-h-11`),
-  `100dvh` et non `100vh`, `env(safe-area-inset-*)` sur les bandeaux, rien de
-  superposé à l'aperçu — un panneau flottant masque précisément ce qu'on règle.
-- Lire une source extérieure à React avec `useSyncExternalStore`
-  (`useMediaQuery.ts`), pas avec un effet + `setState` : la première image
-  sortirait dans la mauvaise disposition.
-- Les valeurs de l'état initial doivent être identiques côté serveur et côté
-  navigateur (voir `effectiveQuality` dans `store.ts`), sinon l'hydratation
-  diverge.
+## 7. ANTI-BLOCAGE
 
-## Outillage du dépôt (`.claude/`)
+Capacité qui manque → `skill-creator`, on fabrique (dossier, code, doc), on s'en
+sert dans la foulée. Trois par session au plus. Vérifier la doc officielle avant
+d'écrire contre une API : `/api-tierce-verifiee`.
 
-Ce dépôt héberge **des projets sans code commun** : le studio Amorce décrit
-ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
-`CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
-montage automatisée dans `montage-auto/`, le
-répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
-rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
-Paper-Manager dans `paper-manager/`, le radar de pépites crypto dans `pepites/`
-et le socle de production livré aux clients dans `agence/` (qui ont chacun leur
-propre `README.md`) — plus un volet sans
-code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
-montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
-audio Streamlit (`mon-app-audio/`) et l'assistant d'allocation d'actifs
-(`patrimoine/`), avec leur code, leurs tests verts et leur condition de reprise
-— mis de côté, pas abandonnés. L'outillage ci-dessous existe parce que rien de
-générique ne connaît cette particularité.
+Avant de promettre un résultat qui dépend du réseau ou d'un outil :
+`/capacites-session`. Aujourd'hui **ni clé fal.ai, ni clé ElevenLabs**.
+`fal-flux-image`, `fal-luma-video`, `fal-upscaler`, `eleven-sfx` se construisent
+le jour où les clés arrivent : une compétence qui ne peut pas tourner est un
+mensonge dans la liste.
 
-`agence/` est un projet Next.js complet — Supabase, authentification, RLS — et
-non un dossier d'Amorce : ses propres `package.json`, `tsconfig.json` et
-`eslint.config.mjs`, ses propres `node_modules`, et l'alias `@/…` pointe vers
-`agence/src/`. Il se vérifie depuis son dossier (`npm run lint`,
-`npm run typecheck`, `npm test`, `npm run build`, plus `npm run test:rls` pour
-les politiques de sécurité), jamais depuis la racine — d'où son exclusion de
-l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
-`.github/workflows/agence.yml`.
+**La transcription, elle, marche** — et ce blocage-ci a coûté deux sessions
+avant d'être levé. `huggingface.co` est refusé par le mandataire, comme
+`alphacephei.com` et `openaipublic.azureedge.net` : aucun poids de
+`faster-whisper` ne s'y télécharge. Deux hôtes restent ouverts et suffisent :
+**PyPI en direct** (listé dans le `noProxy` du mandataire, donc toute roue
+embarquant un modèle s'installe) et **les objets de release GitHub**
+(`release-assets.githubusercontent.com` répond), où sont publiés les modèles
+sherpa-onnx, Whisper compris. Ni TLS ni mandataire touchés. Un zipformer rend en
+plus un instant par mot — il n'en existe pas de français, vérifié par requête.
 
-| Élément | Ce qu'il fait |
-| --- | --- |
-| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `montage-auto/`, de `tiktok/`, de `pepites/` et des deux chantiers en sommeil sous `archives-backlog/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
-| `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
-| `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
-| `/naviguer-le-depot` | Quel projet répond à quelle demande, quels dossiers ne jamais parcourir, et par quel fichier entrer selon la question. |
-| `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
-| `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
-| `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
-| `/usine-a-themes` | Les jetons `@theme` d'Amorce : ce que chaque famille de couleurs signifie, et comment décliner une palette sans casser les rôles. |
-| `/radar-crypto` | Où poser chaque fichier du radar `pepites/`, l'ordre des cinq skills qu'on ne réarrange pas, et les six invariants qui empêchent un faux quitus de sécurité. |
-| `/regler-le-radar` | Diagnostiquer un scan décevant depuis l'entonnoir du rapport, et mesurer un changement de seuil sur six profils de marché avec `pepites/profils.py`. |
-| `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
-| `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
-| `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
-| `/idee-faisabilite` | La grille de notation d'une idée sur 10, le dossier où atterrit sa fiche, et le script qui tient `INDEX.md` à jour. |
-| `/audit-code-ia` | Auditer une base de code générée par IA : le relevé mécanique de `scan.py`, les trois défauts qu'aucune expression régulière ne trouve, et le classement par ce qui cassera en premier. |
-| `/paper-manager` | Où poser chaque fichier dans l'assistant administratif, la frontière entre ce que l'humain décide et ce que la machine calcule, et les huit pièges qui coûtent un bogue. |
-| `/formulaire-pdf` | Remplir un Cerfa avec `paper-manager` : repérer les champs une fois, écrire un plan rejouable, et les cinq pièges du format PDF. |
-| `/resilier-un-contrat` | Jusqu'à quand on peut encore partir sans frais, quel texte invoquer, et le courrier prêt à signer. |
-| `/charte-editoriale` | La voix de l'auteur pour tout texte destiné à son public, les tournures qui trahissent une écriture automatique, et ce qu'on ne rédige jamais à sa place. |
-| `/tiktok` | La ligne éditoriale du volet TikTok, ses huit concepts répétables, les deux seuls dispositifs de tournage et la façon dont un script s'écrit ici. |
-| `/repondeur-facebook` | Ce que le répondeur publie en public au nom de quelqu'un : les huit invariants, les pièges de l'API Graph, le rythme humain et les contraintes du téléphone. |
-| `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
-| `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
-| `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
-| `/stack-agence-supabase` | Réaliser un projet client sur la stack de l'agence (Next.js 16, Supabase, RLS, shadcn) : ordre de travail, SQL durci, cinq règles de sécurité. Hors Amorce. |
-| `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
-| `/fusionner-main` | Résoudre les conflits des trois fichiers partagés en repartant de `main` plutôt qu'en recollant ligne à ligne. |
-| `/passer-le-relais` | Clore un fil devenu long : ce qu'on pousse d'abord, ce qui ne survit pas, et le résumé de reprise en six sections. |
-| `/nouvelle-competence` | Écrire une compétence ici sans doublon : vérifier `main` aussi, découper par tâche, laisser l'outillage dans le projet. |
-| `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
-| `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
-| `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
-| Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
-| Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
+Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
+refuse d'avancer : `/debloquer`.
 
-Le hook n'agit que sur une session distante (`CLAUDE_CODE_REMOTE`) : sur un
-poste de développement, le SDK appartient à son propriétaire.
+## 8. DONE, ET CE QU'ON NE FAIT JAMAIS
 
-Un plugin extérieur est déclaré dans `.claude/settings.json` :
-`frontend-design`, publié par Anthropic. Il recoupe `/custom-frontend-designer`
-sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu'il
-porte les règles d'identité d'Amorce là où le plugin vise une esthétique
-générique. Le plugin reste utile partout ailleurs.
+**Done** = vérification verte + **regardé, pas seulement mesuré** + leçon écrite.
 
-Trois règles qui découlent de la cohabitation :
+Le « regardé » n'est pas décoratif : six montages ont été livrés en une nuit,
+chacun mesuré conforme, chacun rejeté à l'écoute. Le défaut se voyait en une
+seconde sur un spectrogramme que personne n'avait tiré. Pour un média,
+`/voir-le-son` avant de livrer ; pour un lot, `/trier-les-rushes` avant de
+choisir.
 
-- **Une modification ne touche qu'un seul projet**, sauf configuration à la
-  racine qui doit connaître ses voisins — c'est le cas d'`eslint.config.mjs`,
-  qui ignore `look_and_find/**`, faute de quoi ESLint analyse les milliers de
-  fichiers JavaScript générés par le SDK Flutter.
-- La version de Flutter est épinglée **au même numéro** dans le hook et dans
-  `.github/workflows/look-and-find.yml`. Les faire diverger, c'est fabriquer un
-  « ça passe chez moi ».
-- Les bibliothèques de `.github/requirements-tests.txt` sont **volontairement
-  plus courtes** que celles du hook, et il ne faut pas les aligner. Le hook
-  prépare une session où l'on *exécute* les programmes, ce qui demande
-  streamlit, PyTorch et Whisper ; le fichier de la CI n'installe que ce que les
-  *tests* atteignent, mesuré dans un environnement vierge. Recopier la liste du
-  hook ferait passer la vérification de quinze secondes à plusieurs minutes sans
-  couvrir une assertion de plus. Quand un nouveau test importe une bibliothèque
-  absente, la CI le dit en clair et c'est ce fichier-là qu'on complète.
-- **Un nouveau projet Python est gardé sans rien déclarer.**
-  `.github/workflows/tests-python.yml` découvre les `*/tests` contenant des
-  `test_*.py` au lieu de les énumérer. Sa première version en listait cinq et
-  deux projets sont passés au travers le jour même : dans ce dépôt, une liste
-  écrite à la main est fausse le lendemain, et fausse en silence.
+**Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
+pistage sans consentement, binaire versionné.
 
-## Vérifier
+## 9. AU DÉMARRAGE
 
-Les tests unitaires (`src/lib/__tests__/`) couvrent ce qui est calculable hors
-navigateur : timeline, notation, guidage, étalonnage, sous-titres, paliers de
-qualité, store. Ils utilisent `node:test` + `node:assert/strict`, sans
-dépendance ajoutée. Les intitulés sont des phrases françaises qui décrivent le
-comportement attendu.
+**Lire ce fichier avant le premier geste, à chaque nouveau fil.** Il est joint au
+contexte tout seul — mais joint n'est pas lu, et une session qui enchaîne sur le
+résumé de la précédente hérite de son état sans hériter de ses règles. C'est
+ainsi qu'on redemande une fusion déjà autorisée une fois pour toutes, ou qu'on
+pose un projet sans le déclarer aux six endroits.
 
-L'essentiel du studio — décodage vidéo, mixage, tracé canvas, enregistrement,
-reprise après rechargement — ne peut pas être testé ainsi. `scripts/verify.mjs` pilote donc l'application
-pour de vrai et contrôle le résultat **sur les pixels et sur le signal sonore**,
-pas sur la présence d'éléments dans le DOM :
+**Et tout résumé de reprise s'ouvre sur le but à terme**, avant l'état et avant
+le prochain pas : une ligne qui dit ce que cette discussion cherche à obtenir au
+bout du compte, pas ce qu'elle fait ce matin. « Où on en est » et « le prochain
+pas » se périment en une journée ; le but, non — et c'est lui, et lui seul, qui
+permet de juger si le prochain pas proposé est le bon. Un fil qui a perdu son
+but avance vite dans une direction que personne n'a choisie. Gabarit dans
+`/relais`.
 
-```bash
-npm run fixtures    # une fois : fabrique .fixtures/rushes/
-npm run dev         # dans un autre terminal
-npm run verify      # profil ordinateur, puis profil téléphone bridé ×4
-AMORCE_PROFILE=mobile npm run verify   # un seul profil, pour isoler un défaut
-```
+Le hook `.claude/hooks/session-start.sh` installe tout seul. Pas de compétence
+`auto-update-godmode` : quatre s'en partagent le travail — `/etat-du-depot`,
+`/capacites-session`, `/coherence-depot`, `/jauge`.
 
-Le bridage du processeur sur le profil téléphone n'est pas décoratif : sans
-lui, la dégradation automatique de qualité ne se déclencherait jamais sur une
-machine de développement. Captures et fichiers exportés atterrissent dans
-`.fixtures/captures/`.
+Après avoir ajouté un projet, une compétence ou un agent : `/coherence-depot`.
+C'est le geste qui rend la documentation fausse.
 
-`npm run verify:reprise` couvre à part ce que le parcours principal ne peut pas
-faire sans se réinitialiser : importer, recharger la page, et vérifier que le
-montage revient — puis le **lire**, parce qu'un projet restauré dont les liens
-pointent dans le vide s'affiche normalement et sort noir.
+## 10. CONTEXTE PROJET CONSERVÉ
 
-Chromium est déjà installé dans cet environnement (`PLAYWRIGHT_BROWSERS_PATH`),
-ne pas lancer `playwright install`. Sa révision n'est pas celle que Playwright
-attend, d'où `AMORCE_CHROMIUM=/opt/pw-browsers/chromium`, que `fixtures` et
-`verify` acceptent tous les deux — le hook de démarrage la pose désormais dans
-les sessions distantes, mais un `playwright install` réclamé signifie qu'elle
-manque.
+### Commandes
 
-## Pièges connus
+Avant de pousser, une seule commande, quel que soit le projet touché :
+`bash .claude/skills/verifier/scripts/verifier.sh`. Elle déduit de ce qui a
+changé les projets concernés, lance leurs séquences **en parallèle**, et rend un
+verdict par projet suivi de ce qu'elle ne couvre pas.
 
-- Modifier un poids dans `analysis.ts` change ce que `guide.ts` propose et ce
-  que `verify.mjs` attend. Les trois se tiennent — redistribuer la note « son »
-  vers la voix off a déplacé la note de référence du parcours de 87 à 86.
-- La note « son » compte les bruitages **de synthèse et importés ensemble** :
-  l'oreille ne les distingue pas, et n'en retenir qu'une sorte notait à zéro un
-  montage entièrement ponctué de fichiers déposés.
-- `captionCoverage` écarte les sous-titres sans texte. Les emplacements vides
-  posés par « Poser les réglages » disent **où** il reste à écrire ; les compter
-  comme couverts noterait un écran resté vide.
-- `autoFinish` ajoute, il ne remplace pas. Un sous-titre déjà calé sur une voix
-  off représente un travail que personne n'accepterait de perdre en touchant un
-  bouton nommé « recommandé ».
-- `renderFrame` s'arrête au fond noir quand il n'y a aucun clip : poursuivre
-  appliquerait le halo à un cadre vide, ce qui étranglait l'import sur
-  téléphone.
-- Un `<canvas>` redimensionné est vidé et son contexte réinitialisé — d'où le
-  cache de `resolveContext`, qui ne redimensionne qu'au changement d'échelle.
-- Le canvas ne déclenche pas le chargement d'une police : passer par
-  `preloadCaptionFonts` avant tout tracé, sinon le navigateur substitue
-  silencieusement une police système.
-- `URL.revokeObjectURL` doit accompagner toute suppression de média, de musique
-  ou de voix (`removeAsset`, `setMusic`, `removeVoice`, `removeSample`).
-- La reprise se relit **après** le montage du composant, jamais dans l'état
-  initial : le serveur et le navigateur doivent partir des mêmes valeurs, sinon
-  la première image sort dans la mauvaise disposition. Elle s'abandonne aussi
-  si l'utilisateur a importé quelque chose entre-temps.
-- Un lien objet enregistré ne vaut rien à la relecture. `persistence.ts` les
-  vide au rangement et les recrée au retour ; conserver l'ancien produirait une
-  image noire sans le moindre message.
-- La reprise n'est pas une sauvegarde : un navigateur efface ce qu'on lui a
-  confié quand il manque de place. Ce qui perd son fichier est retiré du projet,
-  et les plans qui en dépendaient avec — un plan orphelin donnerait un montage
-  qui s'ouvre normalement et se révèle vide à la lecture.
-- Un grave en sinus pur n'existe pas sur un téléphone : un haut-parleur ne
-  restitue rien sous ~400 Hz. Tout bruitage qui descend plus bas doit être
-  doublé de ses harmoniques (`impact` dans `sfx.ts`), sans quoi il est
-  simplement absent de l'appareil où le format court est regardé.
-- Les deux couches d'un impact se **partagent** le niveau demandé. Les faire
-  s'additionner ferait grimper la crête, et le limiteur commun, en l'écrasant,
-  ferait pomper tout le mixage à chaque frappe.
-- L'export MP4 n'existe que sous Chrome et Edge ; ailleurs le fichier sort en
-  WebM. Ne pas supposer l'extension.
+`npm run dev | build | typecheck | lint | test` — Amorce. `npm run fixtures`
+puis `npm run verify` : parcours complet dans un vrai Chromium, plus
+`verify:reprise`, `verify:partage` et `verify:images`. Les tests unitaires ne
+voient ni le canvas,
+ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
+à part. `/verifier` garde le pourquoi de chaque étape.
 
-## Git
+### Invariants d'Amorce — les casser casse l'application
 
-Une branche `claude/…` par sujet. Messages de commit en français, à
-l'infinitif, décrivant l'intention plutôt que le fichier touché — par exemple
-« Séparer les trois sources sonores en une table de mixage ».
+1. **Un seul chemin de rendu.** `renderFrame` est le seul à savoir à quoi
+   ressemble une image ; aperçu et export l'appellent tous deux.
+2. **Deux couches vidéo au plus.** `timeline.ts` borne toute transition à 45 %
+   du plus court des deux clips.
+3. **Un `<video>` par clip, six au plus.** Un navigateur Android n'accorde que
+   six à huit décodeurs ; au-delà, l'export sort noir sans erreur. Le plafond ne
+   vaut que pour les rushes : une image fixe est portée par un `<img>`, ne
+   mobilise aucun décodeur, et reste chargée quel qu'en soit le nombre. Le
+   graphe audio passe donc par `getVideo`, jamais par `get` — brancher une
+   source Web Audio sur une image lèverait au premier plan fixe et couperait le
+   son de tout le reste.
+4. **Composition toujours en 1080 × 1920.** La qualité d'aperçu n'agit que par
+   une transformation d'échelle.
+5. **Le son passe par Web Audio**, jamais par le volume des éléments média.
+6. **Le temps écoulé est borné hors export, jamais pendant.**
+7. **Les sous-titres sont tracés après l'étalonnage**, jamais grainés.
+8. **Aucun binaire versionné.** Rushes et exports dans `.fixtures/` (ignoré).
 
-Les PR se mènent de bout en bout (voir « Rythme de travail »), et se fusionnent
-par commit de fusion, comme le reste de l'historique.
+### Pièges connus — chacun a coûté un débogage
 
-**Partir de `main` à jour, et le revérifier avant d'ouvrir.** Ce dépôt reçoit
-plusieurs sessions en parallèle : deux branches y ont construit Life-Organizer
-chacune de son côté, et la seconde a dû être refaite. Ce qui est fusionné gagne,
-toujours — se couler dans la base commune coûte moins cher que réconcilier deux
-architectures.
+- Un poids changé dans `analysis.ts` déplace ce que `guide.ts` propose et ce que
+  `verify.mjs` attend : les trois se tiennent.
+- La note « son » compte les bruitages de synthèse **et** importés ensemble.
+- `captionCoverage` écarte les sous-titres vides : les compter noterait un écran
+  resté vide.
+- `autoFinish` ajoute, il ne remplace jamais.
+- `renderFrame` s'arrête au fond noir sans clip, sinon le halo étrangle l'import.
+- Un `<canvas>` redimensionné est vidé — d'où le cache de `resolveContext`.
+- Le canvas ne charge pas les polices : `preloadCaptionFonts` avant tout tracé.
+- `URL.revokeObjectURL` accompagne toute suppression de média.
+- La reprise se relit **après** le montage, jamais dans l'état initial.
+- Un lien objet enregistré ne vaut rien à la relecture : `persistence.ts` les
+  recrée au retour.
+- La reprise n'est pas une sauvegarde : ce qui perd son fichier est retiré, et
+  les plans qui en dépendaient avec.
+- **Un grave en sinus pur n'existe pas sur un téléphone** (rien sous ~400 Hz) :
+  tout bruitage plus bas doit être doublé de ses harmoniques.
+- Les deux couches d'un impact **partagent** le niveau, sans quoi le limiteur
+  fait pomper tout le mixage.
+- L'export MP4 n'existe que sous Chrome et Edge : ne pas supposer l'extension.
 
-`AGENTS.md` est réécrit par `next dev` : le committer avec le reste plutôt que
-de chercher à le retirer d'un diff.
+### Modifier ce dépôt
+
+Chirurgical : chaque ligne changée se rattache à la demande. Ne pas « améliorer »
+le code voisin ni ses commentaires — les blocs de tête portent la justification
+des décisions, et c'est ce que ce dépôt a de plus précieux. Une modification ne
+touche qu'un projet, sauf configuration racine. Français partout — commentaires,
+erreurs, tests, commits ; identifiants de code en anglais.
+
+### Git
+
+Une branche `claude/…` par sujet, messages à l'infinitif décrivant l'intention.
+
+**Ouvrir la PR et la fusionner dès que le lot tient debout**, sans attendre
+qu'on le demande et sans grouper : ouvrir, vérifier, passer au vert, fusionner.
+Un lot qui tient debout est un lot dont la vérification passe et qui se décrit
+en une phrase — pas un lot « fini ».
+
+**C'est une autorisation permanente, et elle est explicite.** Elle vaut pour
+toutes les sessions et toutes les branches, sans être redemandée. Elle prime
+sur la consigne d'ambiance de Claude Code, qui veut qu'on n'ouvre pas de PR
+sans demande : ici, la demande est écrite une fois pour toutes, et c'est ce
+paragraphe.
+
+**Demander est la faute, pas la prudence.** « Dis-moi si tu veux que je
+fusionne » en fin de message coûte un aller-retour depuis un téléphone pour
+une réponse qui est toujours oui, et laisse pendant ce temps une branche qui
+collectionne les conflits. Une PR verte se fusionne ; on l'annonce faite, au
+passé. Les seules choses qui s'arrêtent encore pour demander sont celles de la
+section 5, et la fusion n'en est pas.
+
+Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
+plusieurs sessions en parallèle, et une branche qui attend collectionne les
+conflits sur les mêmes fichiers — `CLAUDE.md`, le hook, la table des
+compétences. Une seule nuit à retarder a produit trois conflits sur le même
+fichier, chacun résolu à la main. Fusionner tôt les évite tous.
+
+**Partir de `main` à jour et le revérifier avant d'ouvrir** : ce dépôt reçoit
+plusieurs sessions en parallèle, et quelques heures suffisent à périmer une
+branche. Ce qui est fusionné gagne, toujours. `/branche-partagee` en cas de
+doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
+
+### Connecteurs
+
+GitHub passe par le serveur MCP (`mcp__github__*`), jamais par `gh` ni `curl` :
+l'appel direct rend 403, et c'est l'outil qu'il faut changer, pas la
+configuration. Cet accès se donne à la **conversation**, jamais par le dépôt :
+une session peut naître sans lui, et rien ne le signale. Le contrôler donc **au
+premier message** et le dire aussitôt — découvrir à la poussée qu'on ne pourra
+pas fusionner coûte un cycle entier, mesuré sur la PR #94.
+
+Supabase : lecture d'office, `execute_sql` et `apply_migration`
+non — et la liste est écrite **deux fois**, sous le nom `Supabase` et sous
+l'identifiant opaque `f3258232-…`. Ce n'est pas de la prudence : le serveur
+s'est déconnecté sous un nom et revenu sous l'autre en pleine session, deux fois
+le même jour. Une règle écrite sur une seule forme ne couvre alors rien, et rien
+ne le signale — la demande d'autorisation revient, et on croit à un oubli. Adobe, Gmail, Agenda et Drive servent le média, les factures, les échéances
+et les fichiers.
+
+---
+
+*Les compétences se déclenchent seules ; table générée dans
+`.claude/references/competences.md`. L'agent `revue-invariants` relit un diff
+contre les invariants écrits, l'agent `verificateur` rend un verdict sans
+déverser la sortie des tests. `/etat-du-depot` pour l'inventaire du jour.*

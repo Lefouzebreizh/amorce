@@ -1,0 +1,55 @@
+{
+  "_": "Le montage sonore d'un clip vertical en trois actes — un sorcier, une faille, un dragon mécanique. Sert de modèle pour la MÉTHODE, pas pour ses valeurs : il montre qu'une pose se cale sur un geste visible et jamais sur une grille régulière. Ses instants, eux, n'ont pas été relevés sur un fichier — confrontés à la génération réelle du clip ils s'en écartent jusqu'à près de trois secondes, et tiktok/feuilleton-ep01.md porte le relevé image par image. Ne jamais les recopier dans un vrai montage : ce plan-ci se rejoue sur ses propres mesures.",
+  "duree": 15.5,
+  "fondu_final": 0.4,
+  "gain_ambiance": 0.5,
+  "gain_effets": 0.8,
+  "reverberation_s": 1.5,
+  "reverberation_melange": 0.28,
+
+  "poses": [
+    { "note": "Acte 1 — le lit s'installe avant la première image : une entrée franche à 0 s s'entend comme une erreur",
+      "bruitage": "nappe_sombre", "instant": 0.0, "gain": 0.9, "duree": 6.6, "fondamentale": 41.2, "graine": 11 },
+    { "bruitage": "grondement", "instant": 0.0, "gain": 0.35, "duree": 6.0, "graine": 12 },
+
+    { "note": "les runes s'allument — du métal frappé, pas un carillon",
+      "bruitage": "choc_metal", "instant": 1.88, "gain": 0.42, "duree": 0.5, "fondamentale": 340.0, "graine": 13 },
+    { "bruitage": "choc_metal", "instant": 2.02, "gain": 0.30, "duree": 0.4, "fondamentale": 505.0, "graine": 14 },
+    { "note": "le regard s'embrase",
+      "bruitage": "electricite", "instant": 3.40, "gain": 0.55, "duree": 1.0, "graine": 15 },
+    { "note": "la Terre se fissure",
+      "bruitage": "boom", "instant": 4.54, "gain": 1.0, "duree": 2.4, "hauteur": 78.0, "graine": 16 },
+    { "note": "les débris qui retombent : une ponctuation, donc réverbérée, contrairement au lit de braises de l'acte 3",
+      "bruitage": "crepitement", "couche": "effets", "instant": 4.60, "gain": 0.5, "duree": 1.6, "densite": 26, "graine": 17 },
+    { "bruitage": "electricite", "instant": 4.58, "gain": 0.35, "duree": 0.8, "graine": 18 },
+
+    { "note": "Acte 2 — la montée démarre 0,55 s avant la coupe : un mouvement qui commence sur l'image arrive déjà en retard",
+      "bruitage": "montee", "instant": 4.95, "gain": 0.6, "duree": 1.45, "graine": 21 },
+    { "note": "le sceau runique claque (coupe à 5,50 s)",
+      "bruitage": "choc_metal", "instant": 5.50, "gain": 0.65, "duree": 0.7, "fondamentale": 262.0, "graine": 22 },
+    { "bruitage": "electricite", "instant": 5.52, "gain": 0.4, "duree": 1.4, "graine": 23 },
+    { "bruitage": "nappe_sombre", "instant": 5.50, "gain": 0.7, "duree": 2.4, "fondamentale": 55.0, "graine": 24 },
+    { "note": "la faille s'ouvre — montée descendante, elle referme au lieu d'annoncer",
+      "bruitage": "montee", "instant": 6.30, "gain": 0.5, "duree": 1.6, "descendante": true, "graine": 25 },
+    { "bruitage": "boom", "instant": 6.52, "gain": 0.5, "duree": 1.6, "hauteur": 62.0, "graine": 26 },
+
+    { "note": "Acte 3 — l'apparition du dragon (coupe à 7,50 s), le point le plus fort du montage",
+      "bruitage": "boom", "instant": 7.42, "gain": 1.15, "duree": 3.2, "hauteur": 92.0, "graine": 31 },
+    { "bruitage": "grondement", "instant": 7.40, "gain": 1.0, "duree": 8.2, "graine": 32 },
+    { "bruitage": "crepitement", "instant": 7.40, "gain": 0.5, "duree": 8.2, "densite": 14, "graine": 33 },
+    { "bruitage": "nappe_sombre", "instant": 7.40, "gain": 0.65, "duree": 8.2, "fondamentale": 36.7, "graine": 34 },
+
+    { "note": "il avance — le grave donne la masse, le métal dit que c'est une machine",
+      "bruitage": "boom", "instant": 9.58, "gain": 0.55, "duree": 1.3, "hauteur": 70.0, "graine": 35 },
+    { "bruitage": "choc_metal", "instant": 9.60, "gain": 0.4, "duree": 0.35, "fondamentale": 190.0, "graine": 36 },
+    { "bruitage": "boom", "instant": 11.08, "gain": 0.6, "duree": 1.3, "hauteur": 74.0, "graine": 37 },
+    { "bruitage": "choc_metal", "instant": 11.10, "gain": 0.45, "duree": 0.35, "fondamentale": 205.0, "graine": 38 },
+
+    { "note": "il inspire",
+      "bruitage": "montee", "instant": 12.30, "gain": 0.5, "duree": 1.2, "graine": 39 },
+    { "note": "le rugissement",
+      "bruitage": "rugissement", "instant": 13.18, "gain": 1.0, "duree": 2.5, "graine": 41 },
+    { "bruitage": "boom", "instant": 13.20, "gain": 0.85, "duree": 2.8, "hauteur": 105.0, "graine": 42 },
+    { "bruitage": "electricite", "instant": 13.24, "gain": 0.5, "duree": 1.8, "graine": 43 }
+  ]
+}

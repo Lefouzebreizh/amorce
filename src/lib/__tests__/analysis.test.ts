@@ -10,6 +10,7 @@ function asset(overrides: Partial<MediaAsset> = {}): MediaAsset {
   return {
     id: 'a1',
     name: 'rush.mp4',
+    kind: 'video',
     url: 'blob:x',
     duration: 60,
     width: 1080,

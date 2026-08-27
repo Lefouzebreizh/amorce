@@ -44,9 +44,29 @@ Minimum **24 pages**, et un **nombre pair**. Retirer une page d'un volume pair
 le rend impair : il faut alors en retirer deux, ou en ajouter une. Le compte se
 vérifie avant de toucher au sommaire, pas après.
 
+## Les quatre contrôles, et ce que chacun voit
+
+| Commande | Ce qu'elle seule voit |
+| --- | --- |
+| `kdp/kdp.py controler --source DOSSIER` | résolution et rapport, page par page, selon la charte du tome — la référence |
+| `kdp/planches.py DOSSIER` | le **texte des bulles** : hauteur d'œil en millimètres imprimés, épaisseur du trait, netteté des glyphes. Se lance sur n'importe quel dossier, hors charte comprise |
+| `kdp/vignette.py --source COUVERTURE --vers vignette.png` | la couverture réduite à 150 px, mesurée : contraste, détachement du sujet, masses distinctes |
+| `kdp/reprise.py --avant ANCIEN --apres NOUVEAU` | ce qui a **dérivé** entre deux versions d'une planche, et dans quelle zone |
+
+Les deux premiers se recoupent sur le DPI, et c'est voulu : `controler` juge le
+volume attendu, `planches` juge un dossier quelconque.
+
+`reprise.py` sert au moment où l'on régénère : le générateur redessine, il ne
+grandit pas. Sur vingt planches reprises, les trois qui ont bougé ne se voient
+pas à l'œil.
+
 ## Le seul test qui compte pour une couverture
 
-Réduire le projet à **150 pixels** et regarder. Si on ne reconnaît pas le sujet
+Réduire le projet à **150 pixels** et regarder. `kdp/vignette.py` le fait et
+mesure ce qu'il en reste, mais **regarder la vignette reste le contrôle** : la
+mesure ne dit rien de la lisibilité du titre. Repère relevé sur le Tome 1 : un
+texte sous **5 % de la hauteur** de la couverture ne survit pas à la réduction —
+le titre à 7 % passe, le sous-titre à 2,5 % disparaît. Si on ne reconnaît pas le sujet
 à cette taille, la couverture est ratée quelle que soit sa beauté en grand :
 c'est la vignette d'une liste marchande, pas l'affiche.
 

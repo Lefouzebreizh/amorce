@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyzeProject } from '../analysis.ts';
-import { CAPTION_SETS, applyFinish, buildFinish, captionSet, soundsOnCuts, thinCues } from '../autoFinish.ts';
+import {
+  CAPTION_SETS,
+  applyFinish,
+  buildFinish,
+  captionSet,
+  cinemaFor,
+  soundsOnCuts,
+  thinCues,
+} from '../autoFinish.ts';
 import { emptyProject, totalDuration } from '../timeline.ts';
 import { DEFAULT_CLIP, type Caption, type MediaAsset, type Project, type SoundCue } from '../types.ts';
 
@@ -12,7 +20,7 @@ function counter() {
 }
 
 function asset(id: string): MediaAsset {
-  return { id, name: `${id}.mp4`, url: `blob:${id}`, duration: 30, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+  return { id, name: `${id}.mp4`, kind: 'video', url: `blob:${id}`, duration: 30, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
 }
 
 /** Un montage nu : des plans, rien d'autre. C'est le cas qu'on vient corriger. */
@@ -142,14 +150,34 @@ test('les bruitages tombent sur les coupes', () => {
   assert.deepEqual(cues.map((c) => c.time).sort((a, b) => a - b), [0.02, 2, 4]);
 });
 
-test('un rendu déjà choisi est respecté, l’absence de parti pris est corrigée', () => {
+test('un rendu déjà choisi est respecté, l’absence de parti pris reçoit celui de la trame', () => {
+  // La trame pose désormais son propre rendu plutôt que le générique
+  // « cinema » : une bande-annonce n'a pas la couleur d'un tutoriel.
   const naturel = bare([2, 2]);
   naturel.cinema = { ...naturel.cinema, look: 'naturel' };
-  assert.equal(run(naturel).cinema.look, 'cinema');
+  assert.equal(run(naturel).cinema.look, 'blockbuster');
 
   const choisi = bare([2, 2]);
   choisi.cinema = { ...choisi.cinema, look: 'argentique' };
   assert.equal(run(choisi).cinema.look, 'argentique');
+
+  // Une trame qui ne déclare aucun rendu ne touche à rien.
+  const tutoriel = bare([2, 2]);
+  tutoriel.cinema = { ...tutoriel.cinema, look: 'naturel' };
+  assert.equal(run(tutoriel, 'tutoriel').cinema.look, 'naturel');
+});
+
+test('la trame impose son rendu, sauf si un choix a été fait', () => {
+  const set = captionSet('bande-annonce');
+
+  // Absence de parti pris, et le rendu que pose le montage express : ni l'un ni
+  // l'autre n'est une décision.
+  assert.equal(cinemaFor(set, { look: 'naturel', intensity: 0.5, bars: 0 }).look, 'blockbuster');
+  assert.equal(cinemaFor(set, { look: 'cinema', intensity: 0.7, bars: 0 }).look, 'blockbuster');
+
+  // Un rendu choisi est une décision : on n'y touche pas, ni à son intensité.
+  assert.equal(cinemaFor(set, { look: 'argentique', intensity: 0.6, bars: 0 }).look, 'argentique');
+  assert.equal(cinemaFor(set, { look: 'noir', intensity: 0.4, bars: 0 }).intensity, 0.4);
 });
 
 test('les trois trames sont utilisables et distinctes', () => {

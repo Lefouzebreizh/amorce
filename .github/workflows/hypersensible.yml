@@ -1,0 +1,69 @@
+# Vérification du site hypersensible-bienveillance.com.
+#
+# Le projet vit à côté d'Amorce avec ses propres `package.json`, `tsconfig.json`
+# et `node_modules` : la racine l'ignore volontairement — voir les commentaires
+# de `eslint.config.mjs` et de `tsconfig.json` — et rien ne le vérifierait donc
+# sans ce workflow.
+#
+# Trois commandes dans l'ordre où on les lance à la main. Le `build` ferme la
+# marche parce qu'il est le seul à voir ce que `tsc` laisse passer : une feuille
+# de style qui ne compile pas, un composant Astro dont l'import ne se résout
+# pas, un script client qui casse au regroupement.
+#
+# Un seul travail plutôt que trois en parallèle : chacun repaierait
+# l'installation des dépendances, plus longue que l'ensemble des vérifications.
+
+name: Hypersensible & Bienveillance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'hypersensible-bienveillance/**'
+      - '.github/workflows/hypersensible.yml'
+  pull_request:
+    paths:
+      - 'hypersensible-bienveillance/**'
+      - '.github/workflows/hypersensible.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: hypersensible-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: hypersensible-bienveillance
+
+jobs:
+  verifier:
+    name: Tests, types, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 au minimum : les tests s'exécutent sur les sources TypeScript
+      # sans compilation préalable (`--experimental-strip-types`).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          # Le dépôt contient plusieurs verrous ; sans ce chemin, le cache
+          # serait calculé sur celui d'Amorce et ne servirait jamais.
+          cache-dependency-path: hypersensible-bienveillance/package-lock.json
+
+      # `npm ci` et non `npm install` : il installe exactement le verrou et
+      # échoue s'il diverge de `package.json`, au lieu de le réécrire en silence.
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Tests
+        run: npm test
+
+      - name: Types
+        run: npm run check
+
+      - name: Build
+        run: npm run build

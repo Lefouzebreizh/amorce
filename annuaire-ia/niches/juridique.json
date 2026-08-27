@@ -1,0 +1,76 @@
+{
+  "niche": {
+    "id": "juridique",
+    "nom": "IA Juridique",
+    "emoji": "⚖️",
+    "domaine": "https://ia-juridique.fr",
+    "metier": "avocats et juristes d'entreprise",
+    "h1_accent": "L'IA des juristes",
+    "h1_suite": "qui rend ses heures utiles",
+    "slogan": "Recherche, analyse de contrats, rédaction, jurisprudence : les outils qui abattent la recherche brute pour laisser place au raisonnement.",
+    "meta_titre": "IA Juridique — les outils IA des avocats et juristes",
+    "meta_description": "Recherche juridique, analyse de contrats, rédaction, jurisprudence : les outils IA testés en cabinet. Prix, avis et limites déontologiques.",
+    "theme": {
+      "primaire": "#8b5cf6",
+      "secondaire": "#a78bfa"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur."
+  },
+  "outils": [
+    {
+      "id": "harvey",
+      "nom": "Harvey",
+      "categorie": "Assistant juridique",
+      "prix": "Sur devis (cabinets et directions juridiques)",
+      "description_courte": "L'assistant entraîné sur la matière juridique : il lit le dossier, rédige la note et cite ses sources.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/harvey",
+      "score_avis": 4.5,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nHarvey se distingue des assistants généralistes sur un point décisif : il travaille sur les documents du dossier et sur des bases juridiques identifiées, et il indique d'où vient chaque affirmation. Analyse d'une masse de pièces, première trame de conclusions, comparaison de clauses entre vingt contrats : le travail de défrichage qu'un collaborateur facturait en heures se ramène à une relecture critique.\n\n## Points forts\n- Réponses assorties de leurs sources, vérifiables pièce par pièce\n- Traitement de volumes documentaires qu'aucune équipe ne lit intégralement\n- Environnement pensé pour la confidentialité des dossiers, avec cloisonnement client\n- Modèles de tâches propres au métier : diligence, revue contractuelle, note de synthèse\n\n## Points faibles\n- Tarification et déploiement réservés aux structures d'une certaine taille\n- Le collaborateur reste responsable : toute citation doit être vérifiée avant remise\n- Couverture du droit français en progrès mais encore derrière celle du droit anglo-saxon\n\n## Idéal pour\nLes cabinets d'affaires et directions juridiques qui traitent des dossiers volumineux et cherchent à réaffecter les heures de recherche vers l'analyse."
+    },
+    {
+      "id": "doctrine",
+      "nom": "Doctrine",
+      "categorie": "Recherche juridique",
+      "prix": "Sur devis — à partir d'environ 100 €/mois",
+      "description_courte": "La recherche juridique française augmentée : jurisprudence, doctrine et actualité fouillées en langage naturel.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/doctrine",
+      "score_avis": 4.4,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nDoctrine reste la porte d'entrée la plus efficace vers le droit français : décisions de toutes les juridictions, textes, doctrine et actualité dans une même interface, interrogeables par une question posée en français courant. Les fonctions d'analyse résument une décision longue, repèrent les moyens retenus et proposent les arrêts voisins — ce qui remplace la demi-journée passée à remonter une chaîne jurisprudentielle.\n\n## Points forts\n- Le fonds jurisprudentiel français le plus complet et le mieux tenu à jour\n- Résumé automatique des décisions longues, avec les moyens mis en évidence\n- Alertes sur un contentieux, une partie ou un thème suivi\n- Interface pensée pour l'avocat, pas pour le documentaliste\n\n## Points faibles\n- Le résumé automatique doit être recoupé avec la décision : il lisse les nuances\n- Le coût par utilisateur pèse dans une petite structure\n- Périmètre strictement français : inutile sur un dossier international\n\n## Idéal pour\nTout avocat ou juriste dont la matière première est la jurisprudence française, du cabinet individuel à la direction juridique."
+    },
+    {
+      "id": "luminance",
+      "nom": "Luminance",
+      "categorie": "Analyse de contrats",
+      "prix": "Sur devis",
+      "description_courte": "Deux mille contrats passés au crible en une nuit : clauses atypiques, échéances oubliées et risques signalés.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/luminance",
+      "score_avis": 4.3,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nLuminance a été conçu pour la revue documentaire de masse, celle des opérations de rachat et des audits contractuels. L'outil classe les contrats, repère les clauses qui s'écartent du standard, extrait les dates de renouvellement, les plafonds de responsabilité et les clauses de changement de contrôle. Là où une équipe lisait pendant trois semaines, la cartographie sort en une nuit et l'humain se concentre sur les anomalies.\n\n## Points forts\n- Détection des clauses atypiques sans avoir à décrire à l'avance ce que l'on cherche\n- Extraction structurée des échéances et des engagements sur tout un portefeuille\n- Comparaison automatique à un modèle de référence, écart par écart\n- Fonctionne sur des documents mal numérisés, ce qui est la réalité des archives\n\n## Points faibles\n- L'investissement ne se justifie qu'à partir de volumes importants\n- La qualité des résultats dépend d'un paramétrage initial mené avec l'éditeur\n- Rien ne remplace la lecture des contrats structurants du dossier\n\n## Idéal pour\nLes directions juridiques qui ne savent pas ce que contient leur propre portefeuille contractuel, et les cabinets qui mènent des audits d'acquisition."
+    },
+    {
+      "id": "lexis-plus-ai",
+      "nom": "Lexis+ AI",
+      "categorie": "Recherche juridique",
+      "prix": "Sur devis",
+      "description_courte": "La recherche juridique adossée à un fonds éditorial vérifié, avec des réponses rédigées et systématiquement référencées.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/lexis-plus-ai",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nL'argument de Lexis+ AI est celui de la source : les réponses s'appuient sur un fonds éditorial contrôlé, et chaque affirmation renvoie à un document consultable. Sur une matière où une citation inventée peut coûter une sanction disciplinaire, cette contrainte de traçabilité vaut plus que l'élégance de la rédaction. L'outil produit aussi des trames d'argumentaire et des synthèses de dossier.\n\n## Points forts\n- Réponses systématiquement rattachées à une source consultable\n- Fonds éditorial et doctrine intégrés, pas seulement la jurisprudence brute\n- Synthèses de dossier et trames d'argumentation dans le même environnement\n- Éditeur établi, avec les garanties contractuelles qui vont avec\n\n## Points faibles\n- Fonds français moins complet que celui des acteurs spécialisés locaux\n- Abonnement onéreux, indexé sur le nombre d'utilisateurs\n- Interface héritée d'un outil documentaire ancien, moins fluide que les nouveaux venus\n\n## Idéal pour\nLes cabinets déjà abonnés à l'écosystème LexisNexis, qui veulent une recherche augmentée sans changer de fournisseur documentaire.",
+      "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "juro",
+      "nom": "Juro",
+      "categorie": "Gestion contractuelle",
+      "prix": "Sur devis",
+      "description_courte": "Le contrat de bout en bout : rédaction, négociation, signature et échéances suivies, sans repasser par la pièce jointe.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/juro",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nJuro remplace le cycle de vie contractuel par pièces jointes — dix versions d'un même document dans autant de boîtes mail — par un espace unique où le contrat se rédige, se négocie, se signe et se surveille. La partie intelligente résume les écarts entre versions, extrait les engagements et alerte sur les échéances de renouvellement, celles que tout le monde découvre trop tard.\n\n## Points forts\n- Un seul document vivant, du modèle à la signature\n- Résumé automatique des modifications proposées par la partie adverse\n- Alertes sur les échéances et les reconductions tacites\n- Modèles en libre service pour les équipes opérationnelles, sous contrôle juridique\n\n## Points faibles\n- Adapté aux contrats répétitifs, moins aux opérations sur mesure\n- Bascule des contrats existants longue et rarement complète\n- Suppose que les équipes commerciales acceptent de quitter le traitement de texte\n\n## Idéal pour\nLes directions juridiques de croissance dont le volume de contrats standards explose et qui deviennent le point de blocage de l'entreprise.",
+      "date_ajout": "2026-08-27"
+    }
+  ]
+}

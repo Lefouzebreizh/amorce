@@ -1,0 +1,140 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  titre: string;
+  description: string;
+}
+
+const { titre, description } = Astro.props;
+const quota = 5;
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titre}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Erwann Lefouzèbreizh" />
+    <meta property="og:title" content={titre} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta name="theme-color" content="#0B0F19" />
+    <link rel="canonical" href={Astro.url.href} />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🕯️</text></svg>"
+    />
+
+    <!--
+      Détection de la source, en ligne et non différée : elle doit avoir eu lieu
+      avant le premier pixel. Différée, on verrait « 5 analyses restantes »
+      clignoter une demi-seconde sur l'écran de quelqu'un qui vient du groupe et
+      n'a aucun quota. C'est précisément la promesse que ce site tient.
+      sessionStorage et non localStorage : l'accès vaut pour la visite, pas pour
+      la vie — et un téléphone prêté ne transmet pas l'accès de son propriétaire.
+    -->
+    <script is:inline define:vars={{ quota }}>
+      (function () {
+        try {
+          var parametre = new URLSearchParams(window.location.search).get('src');
+          if (parametre) sessionStorage.setItem('hb-src', parametre);
+          var src = sessionStorage.getItem('hb-src');
+          document.documentElement.dataset.src = src || 'externe';
+          if (sessionStorage.getItem('hb-restant') === null) {
+            sessionStorage.setItem('hb-restant', String(quota));
+          }
+        } catch (erreur) {
+          // Navigation privée stricte : le stockage lève au lieu de rendre null.
+          // On dégrade vers l'accès externe plutôt que de casser la page.
+          document.documentElement.dataset.src = 'externe';
+        }
+      })();
+    </script>
+  </head>
+
+  <body class="min-h-dvh">
+    <a
+      href="#contenu"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-cyan focus:px-4 focus:py-2 focus:text-fond"
+    >
+      Aller au contenu
+    </a>
+
+    <header class="sticky top-0 z-40 border-b border-bord/60 bg-fond/80 backdrop-blur">
+      <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+        <a href="/" class="flex items-center gap-2 font-semibold tracking-tight">
+          <span aria-hidden="true" class="text-lg">🕯️</span>
+          <span class="hidden sm:inline">Hypersensible &amp; Bienveillance</span>
+          <span class="sm:hidden">H&amp;B</span>
+        </a>
+        <div class="flex items-center gap-3">
+          <a href="/app/reponse-bienveillante" class="aide hover:text-texte transition hidden md:inline">Réponse</a>
+          <a href="/app/journal-emotionnel" class="aide hover:text-texte transition hidden md:inline">Journal</a>
+          <span
+            id="badge-acces"
+            class="etiquette"
+            role="status"
+            aria-live="polite"
+            data-quota={quota}>Chargement…</span
+          >
+        </div>
+      </nav>
+    </header>
+
+    <main id="contenu" class="mx-auto max-w-6xl px-4 py-10 sm:py-14">
+      <slot />
+    </main>
+
+    <footer class="border-t border-bord/60 mt-16">
+      <div class="mx-auto max-w-6xl px-4 py-10 grid gap-6 sm:grid-cols-2">
+        <div>
+          <p class="font-semibold">L’humain donne le cap, l’IA accélère le chemin.</p>
+          <p class="aide mt-2">
+            Erwann Lefouzèbreizh — ancien chauffeur de 44 tonnes, aujourd’hui à la barre d’un
+            groupe de 48 000 personnes. Ici, l’abri n’est pas un produit.
+          </p>
+        </div>
+        <div class="aide sm:text-right">
+          <p>Aucun texte saisi sur ce site n’est enregistré.</p>
+          <p class="mt-1">Le journal ne quitte jamais ton navigateur.</p>
+          <p class="mt-1">Le radar ne prend aucune commission.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Le badge est le seul endroit de la page qui dit à quel régime on est.
+      // Il se met à jour depuis la réponse de l'API et non depuis un compteur
+      // local : c'est le serveur qui compte, l'affichage ne fait que le répéter.
+      const badge = document.getElementById('badge-acces');
+      if (badge) {
+        const quota = Number(badge.dataset.quota ?? 5);
+
+        const peindre = () => {
+          let src = 'externe';
+          let restant = quota;
+          try {
+            src = sessionStorage.getItem('hb-src') ?? 'externe';
+            restant = Number(sessionStorage.getItem('hb-restant') ?? quota);
+          } catch { /* stockage refusé : on garde les valeurs par défaut */ }
+
+          if (src === 'groupe') {
+            badge.textContent = 'Accès Communauté illimité';
+            badge.className =
+              'inline-flex items-center rounded-full border border-cyan/40 bg-cyan/10 px-3 py-1 text-xs font-medium text-cyan';
+          } else {
+            badge.textContent = `${Math.max(0, restant)}/${quota} analyses restantes`;
+            badge.className = 'etiquette';
+          }
+        };
+
+        peindre();
+        document.addEventListener('hb:quota', peindre);
+      }
+    </script>
+  </body>
+</html>

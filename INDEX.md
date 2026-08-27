@@ -24,7 +24,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge neuf chantiers actifs sans code commun, plus deux en sommeil.
+Ce dépôt héberge dix chantiers actifs sans code commun, plus deux en sommeil.
 Une idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir
 un front de plus. La liste vieillit vite — recompter avant de noter.
 
@@ -39,5 +39,6 @@ un front de plus. La liste vieillit vite — recompter avant de noter.
 | **Répondeur Facebook** (`repondeur-facebook/`) | Réponses aux commentaires via l'API Graph. | Python | actif |
 | **Chaîne de montage** (`montage-auto/`) | Montage automatisé. | Python | actif |
 | **Volet TikTok** (`tiktok/`) | Concepts et scripts, sans code. | — | actif |
+| **Annuaire IA** (`annuaire-ia/`) | Annuaire et comparateur d'outils IA, affiliation. | HTML, Tailwind CDN, JS natif | actif |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
 | _Patrimoine_ (`archives-backlog/patrimoine/`) | Allocation d'actifs. | Python | en sommeil |

@@ -12,8 +12,7 @@ Sous-commandes écrites :
     champs    ce qu'un PDF déclare, et le squelette de plan qui va avec
     remplir   un formulaire rempli à partir d'un plan et de mes données
     resilier  le courrier de résiliation, prêt à relire et à signer
-
-Sous-commande prévue : `classer` (module 1).
+    classer   lire ce qui a été déposé, le nommer, et le ranger sur demande
 
 Règle commune : **rien n'est écrasé sans le dire.** Une commande qui déplace ou
 renomme simule par défaut et n'agit qu'avec `--appliquer` ; une commande qui
@@ -37,7 +36,11 @@ from core.abonnements import Tableau, alertes, euros, tableau
 from core.calendrier import evenements, rendre
 from core.config import ErreurConfiguration, charger, enregistrer_alertes
 from core.formulaires import ErreurFormulaire, charger_plan, lire_champs, remplir, resoudre
+from core.extraction import a_relire, extraire
+from core.journal import charger as charger_journal, enregistrer as enregistrer_journal
 from core.modele import StatutAlerte
+from core.nommage import ErreurNommage, destination, libre
+from core.scan import ErreurLecture, lire
 from core.resiliation import ErreurCourrier, composer, rendre_pdf
 
 RACINE = Path(__file__).resolve().parent
@@ -45,7 +48,10 @@ RACINE = Path(__file__).resolve().parent
 
 def commande_etat(arguments: argparse.Namespace) -> int:
     configuration = charger(arguments.config)
-    etat = tableau(configuration)
+    # Le journal débloque deux types d'alerte ; son absence n'est pas une erreur,
+    # c'est un coffre qu'on n'a pas encore rempli.
+    journal = charger_journal(configuration.classement.racine / "documents.json")
+    etat = tableau(configuration, journal=journal)
 
     if arguments.traiter or arguments.reporter:
         etat = _changer_statut(configuration, etat, arguments)
@@ -109,7 +115,8 @@ def _afficher(etat: Tableau) -> None:
 def commande_agenda(arguments: argparse.Namespace) -> int:
     configuration = charger(arguments.config)
     aujourdhui = date.today()
-    ouvertes = alertes(configuration, aujourdhui)
+    journal = charger_journal(configuration.classement.racine / "documents.json")
+    ouvertes = alertes(configuration, aujourdhui, journal=journal)
     liste = evenements(configuration, ouvertes, aujourdhui)
 
     sortie = Path(arguments.vers) if arguments.vers else configuration.rappels.sortie_ics
@@ -216,6 +223,93 @@ def commande_resilier(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def commande_classer(arguments: argparse.Namespace) -> int:
+    """Lit ce qui a été déposé, le nomme, et — seulement si on le demande — le range.
+
+    Simule par défaut : un classement automatique dont on n'a pas vu la sortie
+    une première fois est un classement qu'on refait à la main.
+    """
+    configuration = charger(arguments.config)
+    classement = configuration.classement
+    entree = Path(arguments.source) if arguments.source else classement.entree
+    if not entree.is_dir():
+        raise ErreurConfiguration(f"{entree} n'est pas un dossier où déposer des documents")
+
+    journal = charger_journal(classement.racine / "documents.json")
+    aujourdhui = date.today()
+    ranges: list[tuple[Path, Path]] = []
+    a_revoir: list[tuple[Path, list[str]]] = []
+    # Deux raisons très différentes de ne pas classer un fichier, et les
+    # confondre inquiète : « déjà rangé la semaine dernière » est une bonne
+    # nouvelle, « deux copies dans le même dépôt » demande de choisir.
+    deja_classes: list[Path] = []
+    doublons_du_lot: list[Path] = []
+    connues = set(journal.documents)
+
+    for fichier in sorted(p for p in entree.iterdir() if p.is_file()):
+        try:
+            lecture = lire(fichier, dossier_images=classement.racine / "rendus")
+        except ErreurLecture as erreur:
+            # Un fichier illisible n'arrête pas le lot : les autres sont déposés
+            # en même temps, et les traiter vaut mieux que de tout suspendre.
+            a_revoir.append((fichier, [str(erreur)]))
+            continue
+
+        if lecture.empreinte in connues:
+            deja_classes.append(fichier)
+            continue
+        if journal.connu(lecture.empreinte):
+            doublons_du_lot.append(fichier)
+            continue
+
+        document = extraire(lecture, configuration.extraction.emetteurs_connus, aujourdhui)
+        manques = a_relire(document, configuration.extraction.confiance_minimale)
+        if manques:
+            a_revoir.append((fichier, manques))
+            continue
+        try:
+            vers = libre(destination(document, classement.classes, classement.modele_dossier,
+                                     classement.modele_nom, fichier.suffix or ".pdf"))
+        except ErreurNommage as erreur:
+            a_revoir.append((fichier, [str(erreur)]))
+            continue
+        ranges.append((fichier, vers))
+        journal.inscrire(replace(document, id=vers.stem, chemin=str(vers)))
+
+    _rendre_compte(ranges, a_revoir, deja_classes, doublons_du_lot, entree)
+
+    if arguments.appliquer and ranges:
+        for depuis, vers in ranges:
+            vers.parent.mkdir(parents=True, exist_ok=True)
+            depuis.rename(vers)
+        enregistrer_journal(journal)
+        print(f"\n{len(ranges)} document(s) rangé(s), journal à jour.")
+    elif ranges:
+        print("\nSimulation : rien n'a bougé. « --appliquer » pour ranger pour de bon.")
+    return 0
+
+
+def _rendre_compte(ranges, a_revoir, deja_classes, doublons_du_lot, entree) -> None:
+    print(f"Dépôt : {entree}\n")
+    if not (ranges or a_revoir or deja_classes or doublons_du_lot):
+        print("  Rien à classer.")
+        return
+    for depuis, vers in ranges:
+        print(f"  → {depuis.name}\n      {vers}")
+    if deja_classes:
+        print(f"\n  {len(deja_classes)} déjà rangé(s) lors d'un passage précédent : "
+              + ", ".join(f.name for f in deja_classes))
+    if doublons_du_lot:
+        print(f"\n  {len(doublons_du_lot)} copie(s) d'un fichier du même dépôt, "
+              "laissée(s) de côté : " + ", ".join(f.name for f in doublons_du_lot))
+    if a_revoir:
+        print(f"\n  À RELIRE ({len(a_revoir)}) — laissés dans le dépôt")
+        for fichier, raisons in a_revoir:
+            print(f"  ? {fichier.name}")
+            for raison in raisons:
+                print(f"      {raison}")
+
+
 def analyser(argv: list[str] | None = None) -> argparse.Namespace:
     analyseur = argparse.ArgumentParser(prog="paper.py", description=__doc__.splitlines()[0])
     commandes = analyseur.add_subparsers(dest="commande", required=True)
@@ -262,6 +356,13 @@ def analyser(argv: list[str] | None = None) -> argparse.Namespace:
     resilier.add_argument("--config", default=str(RACINE / "admin_config.json"))
     resilier.set_defaults(fonction=commande_resilier)
 
+    classer = commandes.add_parser("classer", help="lire, nommer et ranger ce qui a été déposé")
+    classer.add_argument("--source", help="dossier de dépôt (défaut : classement.entree)")
+    classer.add_argument("--appliquer", action="store_true",
+                         help="déplacer pour de bon, au lieu de simuler")
+    classer.add_argument("--config", default=str(RACINE / "admin_config.json"))
+    classer.set_defaults(fonction=commande_classer)
+
     return analyseur.parse_args(argv)
 
 
@@ -269,7 +370,8 @@ def main(argv: list[str] | None = None) -> int:
     arguments = analyser(argv)
     try:
         return arguments.fonction(arguments)
-    except (ErreurConfiguration, ErreurFormulaire, ErreurCourrier) as erreur:
+    except (ErreurConfiguration, ErreurFormulaire, ErreurCourrier,
+            ErreurLecture, ErreurNommage) as erreur:
         print(f"paper.py : {erreur}", file=sys.stderr)
         return 2
 

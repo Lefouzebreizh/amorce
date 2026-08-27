@@ -31,7 +31,14 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import charte  # noqa: E402
 
-ADRESSE_PAR_DEFAUT = "https://roussyetzephy.fr/hymne"
+# Encodée sans « https:// », pour deux raisons qui vont dans le même sens. Le
+# préfixe coûte quatre modules de plus — 29 au lieu de 25 — et il n'y a nulle
+# part où les prendre : le bloc du bas remplit déjà l'espace entre la légende
+# peinte dans la planche et le cadre, et le creux au-dessus est occupé par la
+# queue de Zéphy dès qu'on l'élargit à la largeur du bloc. Surtout, l'adresse
+# encodée devient alors identique à celle imprimée dessous : une seule route à
+# créer sur le site, rien à se rappeler dans deux ans.
+ADRESSE_PAR_DEFAUT = "roussyetzephy.fr/hymne"
 
 # Emplacement du QR incrusté, en fraction de la planche d'origine, puis reporté
 # dans le repère de la planche normalisée — dont le contenu a été rentré de 7 %.
@@ -44,11 +51,14 @@ MODULE_MINIMUM_MM = 0.6
 
 # Correction d'erreur. Le maximum (H, 30 %) est fait pour les surfaces abîmées
 # ou les codes portant un logo au centre ; sur une page de livre propre il ne
-# sert qu'à gonfler le nombre de modules, donc à les rétrécir. Q donne 25 % de
-# récupération et rend le code lisible là où H ne l'était plus.
-CORRECTION = "q"
+# sert qu'à gonfler le nombre de modules, donc à les rétrécir. M donne 15 % de
+# récupération — largement de quoi encaisser une page cornée — et tient en 25
+# modules là où Q en réclame 29. Sur un emplacement qu'on ne peut pas agrandir,
+# ces quatre modules valent plus que les dix points de récupération : ils font
+# passer le carré de 0,63 à 0,73 mm.
+CORRECTION = "m"
 
-POLICES = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
+POLICES = charte.POLICES
 BRUN_PALE = (0.45, 0.34, 0.20)
 
 

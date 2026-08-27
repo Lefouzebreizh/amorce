@@ -6,9 +6,12 @@ Trois fichiers, dans cet ordre :
 - `traitement.py` — mesurer la netteté (laplacien, Fourier), calculer les empreintes perceptuelles, contrôler l'intégrité des vidéos. OpenCV s'importe dans le corps des fonctions.
 - `commande.py` — arguments, affichage, code de sortie.
 
-Écrit à ce jour : les quasi-doublons de photos (empreinte perceptuelle et seuil
-de ressemblance réglable). Le flou et l'intégrité vidéo restent à faire ; ils
-viendront s'ajouter dans les mêmes trois fichiers, pas à côté.
+Écrit à ce jour : les trois volets. Le flou (variance du laplacien), les
+quasi-doublons de photos (empreinte perceptuelle et seuil de ressemblance
+réglable) et l'intégrité des vidéos (ffprobe pour l'en-tête, ffmpeg pour la
+fin du fichier). Les vidéos ne passent ni par la netteté ni par les doublons :
+ce qu'on y cherche n'est ni une image ratée ni une image en trop, c'est le
+fichier qui ne s'ouvrira plus.
 
 Réglages dans `organizer_config.json`, section « nettoyage_medias ».
 """

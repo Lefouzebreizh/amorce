@@ -15,8 +15,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from core.abonnements import alertes, euros, fusionner, tableau  # noqa: E402
 from core.config import charger  # noqa: E402
+from core.journal import Journal  # noqa: E402
 from core.modele import (  # noqa: E402
-    Alerte, Periodicite, StatutAbonnement, StatutAlerte, TypeAlerte,
+    Alerte, Document, Periodicite, StatutAbonnement, StatutAlerte, TypeAlerte,
 )
 
 EXEMPLE = Path(__file__).resolve().parents[1] / "admin_config.exemple.json"
@@ -186,3 +187,99 @@ class MiseEnForme(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DocumentManquant(unittest.TestCase):
+    """La facture attendue qui n'arrive pas — l'alerte que le journal débloque."""
+
+    def journal_avec(self, *dates_emission, emetteur="EDF", categorie="energie"):
+        registre = Journal(chemin=Path("x"))
+        for numero, jour in enumerate(dates_emission):
+            registre.inscrire(Document(
+                id=f"d{numero}", chemin="x", emetteur=emetteur, categorie=categorie,
+                date_emission=jour, empreinte=f"e{numero}"))
+        return registre
+
+    def manquants(self, registre, le=LE_JOUR):
+        return [a for a in alertes(configuration(), le, journal=registre)
+                if a.type is TypeAlerte.DOCUMENT_MANQUANT]
+
+    def test_une_facture_mensuelle_en_retard_declenche_l_alerte(self):
+        # Dernière facture le 14/05, période de 31 jours, grâce de 15 : au 25/08
+        # il en manque largement une.
+        alerte = self.manquants(self.journal_avec(date(2026, 5, 14)))
+        self.assertEqual(len(alerte), 1)
+        self.assertIn("14/05/2026", alerte[0].action)
+        self.assertIn("chaque mois", alerte[0].action)
+
+    def test_le_delai_de_grace_evite_de_crier_au_loup_chaque_mois(self):
+        # Une facture mensuelle n'arrive pas le même jour : au trente-cinquième
+        # jour, il n'y a encore rien à signaler.
+        registre = self.journal_avec(date(2026, 7, 24))
+        self.assertEqual(self.manquants(registre, date(2026, 8, 28)), [])
+
+    def test_sans_aucun_document_connu_l_assistant_se_tait(self):
+        # Il ne saurait pas distinguer une facture manquante d'un coffre qu'on
+        # vient d'ouvrir — et c'est le faux signal qui fait ignorer les vrais.
+        self.assertEqual(self.manquants(Journal(chemin=Path("x"))), [])
+
+    def test_un_contrat_qui_n_attend_aucun_document_ne_declenche_rien(self):
+        # La salle de sport n'envoie rien : `documents_attendus` y vaut null.
+        registre = self.journal_avec(date(2026, 1, 5), emetteur="Fitness Exemple",
+                                     categorie="abonnement")
+        self.assertEqual(self.manquants(registre), [])
+
+    def test_sans_journal_l_alerte_n_est_ni_calculee_ni_niee(self):
+        calculees = [a for a in alertes(configuration(), LE_JOUR)
+                     if a.type is TypeAlerte.DOCUMENT_MANQUANT]
+        self.assertEqual(calculees, [])
+
+
+class Conservation(unittest.TestCase):
+    """Ce qu'on a le droit de jeter — groupé, et jamais supprimé."""
+
+    def journal_de(self, categorie, annee, combien=3):
+        registre = Journal(chemin=Path("x"))
+        for mois in range(1, combien + 1):
+            registre.inscrire(Document(
+                id=f"{categorie}-{annee}-{mois}", chemin="x", emetteur="Orange",
+                categorie=categorie, date_emission=date(annee, mois, 5),
+                empreinte=f"{categorie}{annee}{mois}"))
+        return registre
+
+    def conservations(self, registre, le=LE_JOUR):
+        return [a for a in alertes(configuration(), le, journal=registre)
+                if a.type is TypeAlerte.CONSERVATION]
+
+    def test_une_annee_perimee_donne_une_seule_alerte_pour_tout_le_groupe(self):
+        # Cinq ans de factures font soixante documents : une alerte par document
+        # noierait tout le reste.
+        trouvees = self.conservations(self.journal_de("telecom", 2020))
+        self.assertEqual(len(trouvees), 1)
+        self.assertIn("3 document(s)", trouvees[0].action)
+        self.assertIn("2020", trouvees[0].action)
+
+    def test_le_groupe_n_expire_qu_avec_son_document_le_plus_recent(self):
+        # Mieux vaut garder un an de trop que jeter un justificatif encore utile.
+        registre = self.journal_de("telecom", 2025, combien=2)   # conservation : 1 an
+        self.assertEqual(self.conservations(registre, date(2026, 2, 1)), [])
+        self.assertEqual(len(self.conservations(registre, date(2026, 3, 1))), 1)
+
+    def test_une_categorie_a_garder_a_vie_ne_propose_jamais_de_jeter(self):
+        # `travail` porte conservation_annees à null : un bulletin de paie.
+        self.assertEqual(self.conservations(self.journal_de("travail", 1995)), [])
+
+    def test_l_alerte_dit_que_rien_n_a_ete_supprime(self):
+        trouvees = self.conservations(self.journal_de("telecom", 2020))
+        self.assertIn("Rien n'a été supprimé", trouvees[0].action)
+
+    def test_deux_categories_donnent_deux_alertes_distinctes(self):
+        registre = self.journal_de("telecom", 2020)
+        for mois in (1, 2):
+            registre.inscrire(Document(id=f"e{mois}", chemin="x", emetteur="EDF",
+                categorie="energie", date_emission=date(2018, mois, 5), empreinte=f"x{mois}"))
+        self.assertEqual(len(self.conservations(registre)), 2)
+
+    def test_sans_journal_aucune_conservation_n_est_proposee(self):
+        self.assertEqual([a for a in alertes(configuration(), LE_JOUR)
+                          if a.type is TypeAlerte.CONSERVATION], [])
