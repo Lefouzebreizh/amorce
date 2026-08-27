@@ -29,7 +29,15 @@ class AppConfig {
   /// Modèle multimodal. `flash` plutôt que `pro` : sur un viseur, la latence
   /// perçue compte plus que le dernier point de précision, et l'identification
   /// d'un objet courant ne demande pas le grand modèle.
-  static const String geminiModel = 'gemini-1.5-flash';
+  ///
+  /// **Cette ligne a une date de péremption.** Google arrête ses modèles : la
+  /// génération 1.5 répond déjà 404, et chaque version suivante a sa date
+  /// d'extinction annoncée. Un modèle retiré ne dégrade rien, il fait échouer
+  /// *tous* les scans d'un coup — d'où [ModelUnavailableException], qui nomme
+  /// le coupable au lieu de laisser croire à une panne réseau. Pour savoir ce
+  /// qui est servi aujourd'hui, sans deviner :
+  /// `dart run tool/banc_invite.dart --modeles`.
+  static const String geminiModel = 'gemini-3.6-flash';
 
   /// Au-delà, la photo est recompressée avant l'envoi : le temps passé sur le
   /// réseau mobile dépasse vite le temps d'inférence.

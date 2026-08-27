@@ -5,6 +5,7 @@ library;
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:look_and_find/core/constants/app_config.dart';
 import 'package:look_and_find/core/network/app_exception.dart';
 
 DioException _erreur(DioExceptionType type, {int? statut}) => DioException(
@@ -43,6 +44,7 @@ void main() {
         400: isA<InvalidRequestException>(),
         401: isA<AuthException>(),
         403: isA<AuthException>(),
+        404: isA<ModelUnavailableException>(),
         429: isA<QuotaException>(),
         500: isA<ServerException>(),
         503: isA<ServerException>(),
@@ -57,6 +59,17 @@ void main() {
           reason: 'statut $statut',
         );
       });
+    });
+
+    test('un 404 désigne le modèle, pas la photo', () {
+      // Google arrête ses modèles à date annoncée. Le jour où celui d'AppConfig
+      // s'éteint, tous les scans tombent en même temps : le message doit
+      // envoyer vers la constante à changer, pas vers le réseau.
+      final erreur = AppException.from(
+        _erreur(DioExceptionType.badResponse, statut: 404),
+      );
+      expect(erreur.message, contains(AppConfig.geminiModel));
+      expect(erreur.isRetryable, isFalse);
     });
 
     test('laisse passer une AppException déjà traduite', () {

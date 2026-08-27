@@ -24,6 +24,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/fonctionnalite-flutter` | Recette pour ajouter ou modifier une fonctionnalité de l'application Flutter Look & Find — où placer chaque fichier selon la Clean Architecture du… |
 | `/formulaire-pdf` | Remplir un formulaire PDF — Cerfa, mandat de prélèvement, bulletin d'adhésion, dossier à compléter — avec l'outillage de `paper-manager` : repérer… |
 | `/idee-faisabilite` | Capturer une idée en vrac, la noter sur 10 selon quatre critères (temps, complexité technique, coût/rentabilité, alignement avec les cinq chantiers… |
+| `/identification-produit` | Corriger ce que Look & Find affiche après un scan — trancher d'abord entre une erreur du modèle et une erreur de lecture avec la réponse brute, puis… |
 | `/jauge` | Dire où en est la consommation de l'abonnement Claude — la fenêtre de cinq heures et celle de sept jours — et ce qu'elle permet encore de faire… |
 | `/kdp-niche-validator` | Valider un mot-clé KDP avant d'écrire le livre — dit si une niche vend assez (BSR), si la place est prenable (nombre d'avis) et si la marge existe… |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture de livre reste lisible réduite à la taille d'une vignette de boutique (150 px de large) — fabrique la vignette et mesure… |
