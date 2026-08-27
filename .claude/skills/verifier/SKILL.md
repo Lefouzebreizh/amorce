@@ -156,9 +156,14 @@ Les politiques RLS, elles, ne se vérifient pas depuis TypeScript. Elles ont
 leur propre contrôle, sur un vrai PostgreSQL :
 
 ```bash
-docker run --rm -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 --name pg postgres:16
-PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres npm run test:rls
+npm run test:rls
 ```
+
+Rien à préparer : sans serveur joignable, le script monte lui-même un
+PostgreSQL éphémère dans un répertoire temporaire et le jette en sortant.
+C'est la seule voie en session distante, où `docker` existe sans démon
+derrière. Pour viser un serveur existant, les variables habituelles de libpq
+suffisent (`PGHOST`, `PGUSER`, `PGPASSWORD`).
 
 Vingt contrôles : ce qu'un utilisateur, un administrateur et un visiteur
 anonyme peuvent lire et écrire. **À relancer dès qu'on touche à

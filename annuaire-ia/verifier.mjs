@@ -159,7 +159,11 @@ for (const { niche, outils } of aParcourir) {
     cartes, { timeout: 5000 }
   );
   const filtres = await page.locator('#grille article').count();
-  verifier(`recherche « ${motif} »`, filtres >= 1 && filtres <= cartes, `${filtres} carte(s)`);
+  /* Strictement moins, comme l'annonce le commentaire ci-dessus. Avec `<=`, une
+     recherche qui ne filtre plus rien — le champ ignoré, la casse mal traitée —
+     passait au vert : la grille entière satisfait `filtres <= cartes`. C'est le
+     défaut le plus discret de cet écran, puisque la page a l'air normale. */
+  verifier(`recherche « ${motif} »`, filtres >= 1 && filtres < cartes, `${filtres}/${cartes} carte(s)`);
   await page.fill('#recherche', '');
 
   /* Filtre : le compte attendu se calcule sur la base, il suit donc chaque

@@ -48,6 +48,29 @@ couramment 20 dB — invisible à l'oreille, décisif à l'arrivée.
 
 ---
 
+## Une cible de plateforme n'est pas ce que les gens livrent
+
+*Coût : six heures, et huit versions rejetées.*
+
+La cible TikTok est −14 LUFS. Elle est écrite dans la compétence, elle est
+juste, et je l'ai visée religieusement toute une nuit pendant que l'auteur
+répétait que le son n'allait pas.
+
+Son propre montage du même film, fait dans une autre application, mesurait
+**−7,3 LUFS** — deux fois plus fort. Sur la bande qu'un téléphone restitue,
+l'écart était de 6,3 dB. Ma version sortait deux fois moins présente dans le
+fil, et aucun contrôle ne le signalait puisqu'elle était *conforme*.
+
+**Ce qui a débloqué : mesurer une référence qu'il aime plutôt que suivre une
+spécification.** Sept chiffres comparés côte à côte ont donné en une minute ce
+que six heures d'itération n'avaient pas trouvé — et deux d'entre eux, le
+niveau des noirs (1,6 contre 22,1) et la sonie, expliquaient tout.
+
+**Portée générale :** une norme dit ce qui est admissible, jamais ce qui est
+attendu. Quand quelqu'un dit « c'est nul » et que tout est conforme, lui
+demander un exemple qu'il trouve réussi, et le mesurer. Un écart chiffré entre
+deux fichiers vaut mieux que dix itérations au jugé.
+
 ## Un compresseur à attaque rapide mange exactement ce qui fait l'impact
 
 *Coût : trois rendus.*
