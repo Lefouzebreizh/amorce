@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --import ./tests/resolveur-alias.mjs --test \"src/**/*.test.ts\"",
+    "test": "node --experimental-strip-types --experimental-test-module-mocks --import ./tests/resolveur-alias.mjs --test \"src/**/*.test.ts\"",
     "test:rls": "bash tests/rls/executer.sh",
     "etat:rls": "psql -v ON_ERROR_STOP=1 -f supabase/etat-rls.sql",
     "typecheck": "tsc --noEmit"
