@@ -131,11 +131,20 @@ sert dans la foulée. Trois par session au plus. Vérifier la doc officielle ava
 d'écrire contre une API : `/api-tierce-verifiee`.
 
 Avant de promettre un résultat qui dépend du réseau ou d'un outil :
-`/capacites-session`. Aujourd'hui **ni clé fal.ai, ni clé ElevenLabs**, et
-Hugging Face refusé par le mandataire — donc pas de transcription automatique.
+`/capacites-session`. Aujourd'hui **ni clé fal.ai, ni clé ElevenLabs**.
 `fal-flux-image`, `fal-luma-video`, `fal-upscaler`, `eleven-sfx` se construisent
 le jour où les clés arrivent : une compétence qui ne peut pas tourner est un
 mensonge dans la liste.
+
+**La transcription, elle, marche** — et ce blocage-ci a coûté deux sessions
+avant d'être levé. `huggingface.co` est refusé par le mandataire, comme
+`alphacephei.com` et `openaipublic.azureedge.net` : aucun poids de
+`faster-whisper` ne s'y télécharge. Deux hôtes restent ouverts et suffisent :
+**PyPI en direct** (listé dans le `noProxy` du mandataire, donc toute roue
+embarquant un modèle s'installe) et **les objets de release GitHub**
+(`release-assets.githubusercontent.com` répond), où sont publiés les modèles
+sherpa-onnx, Whisper compris. Ni TLS ni mandataire touchés. Un zipformer rend en
+plus un instant par mot — il n'en existe pas de français, vérifié par requête.
 
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.

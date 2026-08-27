@@ -137,9 +137,21 @@ fi
 # combinaison exacte où `organizer nettoyer` lit l'en-tête des vidéos sans
 # décoder leur fin, et où un fichier tronqué passe inaperçu sans que rien
 # n'échoue. Le paquet système reste le seul moyen d'avoir les deux.
+# Le paquet système donne les deux, et une session distante y a droit. L'y
+# installer plutôt que de le conseiller : `relever_instants.py` en dépend, et
+# une session qui doit d'abord découvrir qu'il manque perd le quart d'heure que
+# ce hook existe pour économiser.
+#
+# `apt-get update` n'est pas décoratif. Sans lui, les listes livrées avec
+# l'image sont périmées et l'installation meurt en 404 sur des dépendances
+# annexes (les pilotes mesa, notamment) — mesuré, pas supposé.
 if ! command -v ffprobe >/dev/null 2>&1; then
-  echo "   ffprobe absent (imageio-ffmpeg ne le fournit pas) : l'inspection des vidéos"
-  echo "   de Life-Organizer ne tournera pas — sudo apt install ffmpeg pour l'activer"
+  if apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq ffmpeg >/dev/null 2>&1; then
+    echo "   ffmpeg + ffprobe installés depuis le paquet système"
+  else
+    echo "   ffprobe absent (imageio-ffmpeg ne le fournit pas) : l'inspection des"
+    echo "   vidéos ne tournera pas — apt-get update && apt-get install -y ffmpeg"
+  fi
 fi
 
 echo "── Paper-Manager : bibliothèques Python"
@@ -148,6 +160,14 @@ echo "── Paper-Manager : bibliothèques Python"
 # installé ici : c'est le seul appel réseau du projet, il ne part que si
 # `extraction.active` vaut true, et personne ne devrait le découvrir installé.
 python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow
+echo "── Reconnaissance de parole hors Hugging Face"
+# `faster-whisper` reste volontairement absent : il est lourd, et surtout ses
+# poids vivent sur `huggingface.co`, que la politique de sortie des sessions
+# distantes refuse. `sherpa-onnx` prend le relais — ses modèles sont publiés
+# dans une release GitHub, hôte autorisé, et `asr_hors_ligne.py` va les y
+# chercher. La bibliothèque seule pèse peu ; les modèles ne descendent qu'à la
+# demande, dans ~/.cache, et une seule fois.
+python3 -m pip install --quiet --break-system-packages sherpa-onnx numpy
 
 echo "── Volet TikTok : bibliothèque du carnet"
 # `tiktok/carnet.py` fabrique le PDF de tournage depuis les Markdown du volet.
