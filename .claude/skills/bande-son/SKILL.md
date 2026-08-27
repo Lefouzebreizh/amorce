@@ -15,6 +15,49 @@ remonter ce qui manque.
 Donc : mesurer avant de toucher, viser une cible chiffrée, vérifier après.
 Le reste de cette recette découle de là.
 
+## LRA : la mesure qui explique « on n'entend rien »
+
+La sonie dit à quel point c'est fort. Elle ne dit rien de ce qui **ressort**.
+La plage de dynamique — `LRA`, rendue par le même `ebur128` — dit l'écart entre
+les passages calmes et les passages forts, et c'est elle qu'il faut lire quand
+un mixage conforme s'entend comme du silence.
+
+```bash
+ffmpeg -hide_banner -i film.mp4 -af ebur128=framelog=verbose -f null - 2>&1 \
+  | grep -E "^\s+(I|LRA):" | tail -2
+```
+
+| LRA | Ce que ça donne |
+| --- | --- |
+| < 3 LU | Tout au même niveau. L'oreille ne distingue plus rien : perçu comme « pas de son », quelle que soit la sonie. |
+| 4 – 6 LU | Tenable pour un format court très dense. |
+| 6 – 10 LU | Une bande-annonce qui respire : creux avant les crêtes. |
+| > 12 LU | Les passages calmes deviennent inaudibles dans un fil de réseau social. |
+
+Un montage mesuré ici à **−8,4 LUFS et LRA 2,1** — plus fort que la référence
+de l'auteur — a été rejeté huit fois pour « pas de son ». La cause était un lit
+sonore posé **en continu** sous tous les plans : le retirer et ne le laisser
+revenir que par touches a rendu LRA 6,8, sans toucher au niveau moyen.
+
+**Trois conséquences pratiques.**
+
+**Un creux se réduit, il ne se comble pas.** Remonter le bloc le plus faible
+jusqu'au niveau des voix a fait retomber LRA de 6,8 à 3,5 : on avait rebouché
+le trou en supprimant la dynamique qui le rendait nécessaire. Un creux doit
+cesser d'être un silence, pas cesser d'être un creux.
+
+**Un limiteur ne rend pas plus fort.** Mesuré sur ce mixage : au-delà de deux
+décibels de gain, +2 dB de plus n'achetaient que 0,6 LUFS et coûtaient 0,8 LU.
+Le limiteur reprend en dynamique ce qu'il donne en niveau.
+
+**Une double passe de `loudnorm` écrase LRA** quand le mixage est déjà dense —
+2,1 LU en sortie contre 4,7 en entrée. Pour un master déjà mixé, préférer un
+gain fixe suivi d'un `alimiter` qui ne touche que la crête :
+
+```bash
+-af "volume=2dB,alimiter=limit=0.92:attack=8:release=200:level=disabled"
+```
+
 ## Le parcours, en quatre gestes
 
 **1. Mesurer avant de toucher.** `scripts/sonometre.py` sur chaque source rend
