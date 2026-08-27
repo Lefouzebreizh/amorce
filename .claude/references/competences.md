@@ -7,7 +7,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | compétence | ce qu'elle fait |
 | --- | --- |
 | `/api-tierce-verifiee` | Écrire du code contre une bibliothèque ou une API qu'on ne connaît pas de première main — SDK, service en ligne, module livré avec un logiciel — en… |
-| `/audit-code-ia` | Auditer une base de code générée par IA qui ne tient plus en production, et livrer un rapport d'une page classé par ce qui cassera en premier. Relève… |
+| `/audit-code-ia` | Auditer une application générée par IA qui ne tient plus en production — depuis son dépôt quand il y en a un, sinon depuis la surface publique de… |
 | `/bande-son` | Fabriquer la bande-son d'une vidéo — musique, voix off, bruitages — et la sortir au bon niveau pour la plateforme visée, à partir d'une simple phrase… |
 | `/branche-partagee` | Travailler sur une branche pendant que d'autres sessions font avancer `main` — savoir en une commande de combien on a pris du retard, quels commits… |
 | `/cadrage-brief-client` | Transformer le brief d'un client en cahier des charges exploitable — questionnaire en cinq points (objectif, utilisateurs, fonctionnalités, données,… |
@@ -30,10 +30,14 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/kdp-niche-validator` | Valider un mot-clé KDP avant d'écrire le livre — dit si une niche vend assez (BSR), si la place est prenable (nombre d'avis) et si la marge existe… |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture de livre reste lisible réduite à la taille d'une vignette de boutique (150 px de large) — fabrique la vignette et mesure… |
 | `/module-life-organizer` | Dans quel ordre écrire un module de l'assistant de rangement Life-Organizer, et les quatre pièges du domaine qui coûtent chacun une reprise complète… |
+| `/naviguer-le-depot` | Trouver vite le bon fichier dans ce dépôt à onze projets sans noyer le contexte — quel projet répond à quelle demande, quels dossiers ne jamais… |
 | `/nouveau-projet` | Ajouter un projet à ce dépôt multi-projets sans rien oublier — les six endroits où il doit se déclarer pour être installé, vérifié, gardé par… |
+| `/nouvelle-competence` | Écrire une compétence pour ce dépôt sans en fabriquer un doublon ni un doublon d'intention — vérifier d'abord ce qui existe **y compris sur `main`**,… |
 | `/paper-manager` | Recette pour développer l'assistant administratif Paper-Manager (`paper-manager/`) — où poser chaque fichier, la frontière entre ce que l'humain… |
 | `/prepresse-kdp` | Règles de préparation d'un livre illustré pour l'impression à la demande KDP — résolution, fond perdu, zone de sécurité, calcul de tranche, compte de… |
+| `/radar-crypto` | Où poser chaque fichier du radar crypto `pepites/`, l'ordre des cinq skills qu'on ne réarrange pas, les six invariants qui empêchent l'outil de… |
 | `/regenerer-planche` | Remplacer une planche illustrée du recueil Roussy & Zéphy par une version régénérée — décider si le remplacement en vaut la peine, écrire l'invite… |
+| `/regler-le-radar` | Régler le détecteur de pépites crypto et diagnostiquer un scan décevant — lire l'entonnoir de `pepites_radar.md` pour savoir quel seuil bouger,… |
 | `/relais` | Clore un fil de conversation devenu lourd et en ouvrir un neuf sans rien perdre — rassemble l'état réel depuis le dépôt (branche, PR ouvertes,… |
 | `/repondeur-facebook` | Toucher au répondeur de commentaires Facebook (`repondeur-facebook/`) — où atterrit chaque fichier, les huit invariants qui empêchent une réponse en… |
 | `/reseau-annuaires` | >- Travailler sur le réseau d'annuaires d'outils IA (`annuaire-ia/`) — onze sites de niche qui partagent un gabarit, une feuille de style compilée et… |
@@ -49,6 +53,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/transcription-media` | >- Ouvrir une vidéo ou un fichier audio pour dire ce qu'il contient — MP4, MOV, MKV, WebM, AVI, MP3, WAV, M4A, FLAC, OGG — en exécutant ffmpeg et un… |
 | `/trier-les-rushes` | Inventorier d'un coup un lot de médias déposé en vrac — quinze, trente, cinquante fichiers — au lieu de les ouvrir un par un. Relève les doublons par… |
 | `/typographie-francaise` | Règles de typographie française pour du texte destiné à l'impression ou au lettrage — espaces insécables, guillemets, apostrophes, points de… |
-| `/verifier` | Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et… |
+| `/usine-a-themes` | Fabriquer ou retoucher la palette d'Amorce — les jetons `@theme` de Tailwind v4 dans `src/app/globals.css`, ce que chaque famille de couleurs… |
+| `/verifier` | Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, tests, types… |
 | `/video-du-jour` | Fabriquer un fichier vidéo publiable à partir d'un script TikTok, d'une prise de voix et d'images — analyse et découpe de la voix, recadrage 9:16 sur… |
 | `/voir-le-son` | Regarder un média au lieu de le mesurer — spectrogramme, courbe de sonie et planche de vignettes rendus en images que Claude peut réellement lire. À… |

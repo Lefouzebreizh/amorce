@@ -88,6 +88,24 @@ Les fichiers qui se télescopent, et ce qu'il faut y regarder :
 | `.claude/skills/verifier/SKILL.md` | Son préambule ne compte plus les projets, exprès : ne pas réintroduire un nombre |
 | `.github/requirements-tests.txt` | Ne jamais y recopier la liste du hook — voir l'en-tête du fichier |
 
+## Ce qui a déjà été déminé
+
+Deux aimants à conflits ont été retirés — inutile de les recréer :
+
+- **La ligne d'accueil du hook** ne s'écrit plus d'un bloc. Les commandes sont
+  déclarées dans un tableau `commandes=(…)`, une ligne par projet, et la ligne
+  se compose à la fin. Avant, c'était plus de mille caractères sur une seule
+  ligne que tout nouveau projet devait modifier : un conflit garanti par projet
+  ajouté, sur un fichier que toutes les branches touchent.
+- **Le décompte de projets de `CLAUDE.md`** a disparu de sa phrase
+  d'introduction. Il est passé de « cinq » à « onze » en quelques semaines, se
+  trompait entre-temps, et forçait une retouche de la même ligne à chaque
+  arrivée. L'énumération qui suit dit la même chose sans se périmer.
+
+Si un conflit se répète au même endroit, chercher cette forme-là : **une ligne
+unique que tout le monde doit modifier**. La découper vaut mieux que documenter
+comment la résoudre.
+
 ## La course qu'on perd en fusionnant
 
 `main` peut bouger **entre** la dernière intégration et l'appel à la fusion.

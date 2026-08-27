@@ -55,6 +55,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Se vérifie depuis son dossier, jamais depuis la racine.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
+- **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
+  lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
+  gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
+  aux API de sécurité, qui répondent trente fois par minute.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
