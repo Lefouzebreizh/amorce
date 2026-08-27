@@ -1,0 +1,150 @@
+{
+  "seuils": {
+    "sonie_lufs": -20.0,
+    "telephone_db": -22.0,
+    "duree_s": {
+      "impacts": 0.5,
+      "whooshes": 0.8,
+      "dragons": 1.5,
+      "magic": 0.6,
+      "crowds": 2.0,
+      "atmos": 2.0
+    }
+  },
+  "total": 9,
+  "utilisables": 9,
+  "sons": [
+    {
+      "id": "energie-scifi",
+      "chemin": "kits/sfx/atmos/energie-scifi.wav",
+      "tags": [
+        "atmos",
+        "energie",
+        "scifi"
+      ],
+      "duree": 2.6,
+      "sonie_lufs": -8.6,
+      "telephone_db": -14.9,
+      "silences": 0,
+      "utilisable": true,
+      "ecarte_parce_que": []
+    },
+    {
+      "id": "rugissement-dragon",
+      "chemin": "kits/sfx/dragons/rugissement-dragon.wav",
+      "tags": [
+        "dragon",
+        "dragons",
+        "rugissement"
+      ],
+      "duree": 2.0,
+      "sonie_lufs": -10.3,
+      "telephone_db": -18.6,
+      "silences": 0,
+      "utilisable": true,
+      "ecarte_parce_que": []
+    },
+    {
+      "id": "eclair-craquant",
+      "chemin": "kits/sfx/impacts/eclair-craquant.wav",
+      "tags": [
+        "craquant",
+        "eclair",
+        "impacts"
+      ],
+      "duree": 1.0,
+      "sonie_lufs": -7.4,
+      "telephone_db": -15.1,
+      "silences": 0,
+      "utilisable": true,
+      "ecarte_parce_que": []
+    },
+    {
+      "id": "foudre",
+      "chemin": "kits/sfx/impacts/foudre.wav",
+      "tags": [
+        "foudre",
+        "impacts"
+      ],
+      "duree": 1.48,
+      "sonie_lufs": -13.5,
+      "telephone_db": -21.0,
+      "silences": 0,
+      "utilisable": true,
+      "ecarte_parce_que": []
+    },
+    {
+      "id": "pas-du-titan",
+      "chemin": "kits/sfx/impacts/pas-du-titan.wav",
+      "tags": [
+        "impacts",
+        "titan"
+      ],
+      "duree": 0.85,
+      "sonie_lufs": -7.6,
+      "telephone_db": -13.6,
+      "silences": 0,
+      "utilisable": true,
+      "ecarte_parce_que": []
+    },
+    {
+      "id": "magie-du-sorcier",
+      "chemin": "kits/sfx/magic/magie-du-sorcier.wav",
+      "tags": [
+        "magic",
+        "magie",
+        "sorcier"
+      ],
+      "duree": 3.0,
+      "sonie_lufs": -12.6,
+      "telephone_db": -18.9,
+      "silences": 0,
+      "utilisable": true,
+      "ecarte_parce_que": []
+    },
+    {
+      "id": "runes-rotatives",
+      "chemin": "kits/sfx/magic/runes-rotatives.wav",
+      "tags": [
+        "magic",
+        "rotatives",
+        "runes"
+      ],
+      "duree": 0.73,
+      "sonie_lufs": -8.3,
+      "telephone_db": -13.8,
+      "silences": 0,
+      "utilisable": true,
+      "ecarte_parce_que": []
+    },
+    {
+      "id": "faille-dimensionnelle",
+      "chemin": "kits/sfx/whooshes/faille-dimensionnelle.wav",
+      "tags": [
+        "dimensionnelle",
+        "faille",
+        "whooshes"
+      ],
+      "duree": 1.42,
+      "sonie_lufs": -8.3,
+      "telephone_db": -14.3,
+      "silences": 0,
+      "utilisable": true,
+      "ecarte_parce_que": []
+    },
+    {
+      "id": "druide-avertissement",
+      "chemin": "kits/voice/takes/druide-avertissement.wav",
+      "tags": [
+        "avertissement",
+        "druide"
+      ],
+      "duree": 6.3,
+      "sonie_lufs": -9.1,
+      "telephone_db": -16.2,
+      "silences": 0,
+      "utilisable": true,
+      "ecarte_parce_que": []
+    }
+  ]
+}
