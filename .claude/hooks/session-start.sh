@@ -192,7 +192,11 @@ echo "── Paper-Manager : bibliothèques Python"
 # page en image, remplir un formulaire et l'aplatir. `anthropic` n'est pas
 # installé ici : c'est le seul appel réseau du projet, il ne part que si
 # `extraction.active` vaut true, et personne ne devrait le découvrir installé.
-python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow
+# streamlit : l'écran du tableau de bord (`interface/app.py`). Le studio audio
+# l'installe déjà quelques lignes plus haut ; il est répété ici pour que le jour
+# où `archives-backlog/` disparaît, l'interface de ce projet ne s'éteigne pas
+# avec lui — pip ne réinstalle rien quand la version présente convient.
+python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow streamlit
 echo "── Reconnaissance de parole hors Hugging Face"
 # `faster-whisper` reste volontairement absent : il est lourd, et surtout ses
 # poids vivent sur `huggingface.co`, que la politique de sortie des sessions
