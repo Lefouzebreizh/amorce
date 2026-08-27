@@ -96,10 +96,34 @@ as commencé quoi récemment ?
 **C'est la version courte qui est sortie, et ce n'est pas toi qui l'as montée.**
 
 Elle dure 10,87 s et ne porte que quatre phrases — l'accroche, l'engagement,
-« elle est moche et je la publie quand même », et le rendez-vous. Elle a été
-taillée dans la première prise de voix : les quatre phrases restées vraies ont
-été gardées, les deux que les sept derniers jours avaient rendues fausses ont
-été coupées. Ni les quatre ans, ni la BD, ni les sept jours n'y sont donc.
+« elle est moche et je la publie quand même », et le rendez-vous.
+
+**Elle a été taillée dans la première prise de voix, enregistrée sur le script
+d'avant `c5a2f98`** — celui qui comptait six phrases. Quatre ont été gardées.
+Les deux coupées sont précisément celles que ce commit a corrigées parce
+qu'elles étaient fausses : « Ça fait deux ans que j'écris et que je dessine »
+et « Le montage, jamais ». Elles ne figurent nulle part ailleurs dans ce
+fichier, d'où la peine de les nommer ici.
+
+Les trois phrases vraies qui les remplacent — les quatre ans, la BD, les sept
+jours — **n'ont jamais été enregistrées** : elles ont été écrites après la
+prise. La version complète n'est donc pas un remontage de rushes existants,
+c'est une **reprise de voix**. La confusion coûte cher : elle laisserait croire
+qu'un fichier contenant ces trois phrases dort quelque part.
+
+**Un chiffre ne se recoupe pas, et mieux vaut le savoir avant de rechronométrer.**
+Les quatre phrases gardées font 35 mots. À 3,2 mots/s — le débit mesuré sur
+cette prise-là, annoncé plus haut — cela donne 10,94 s de parole seule, soit
+*plus* que les 10,87 s de la vidéo. Il ne reste donc aucune place pour un
+silence, et surtout pas pour la **seconde de silence pleine** que « L'accroche »
+désigne comme la seule chose qui tienne les trois premières secondes.
+
+De deux choses l'une, et elles ne s'arbitrent pas au raisonnement. Soit ces
+quatre phrases-là sont dites plus vite que 3,2 — un débit moyen relevé sur six
+phrases ne vaut pas pour un sous-ensemble, et c'est l'explication la plus
+simple. Soit le montage a mangé le silence, et la vidéo a perdu ce qui la
+tenait. **Rechronométrer sur le fichier publié tranche** : c'est une
+soustraction, pas une opinion.
 
 Le montage est l'œuvre de la machine : recadrage des six images, transitions,
 sous-titres calés, export vérifié. Le choix a été fait en connaissance de
@@ -130,6 +154,12 @@ il faut un montage à montrer.
 
 ## Après publication
 
-- **Publié le** : [ ]
+- **Publié le** : [ ] — *la version courte est sortie le jour 1, c'est écrit
+  plus haut ; seule la date manque, et une date ne s'invente pas.*
 - **Vues / rétention** : [ ]
 - **Ce que j'en retiens** : [ ]
+
+Tant que le premier crochet est ouvert, ce script compte pour **non fini** au
+sens du `README` — alors qu'il a produit une vidéo. C'est la seule
+contradiction que ce fichier porte encore, et elle se lève en écrivant une
+date.
