@@ -130,7 +130,7 @@ la tête de lecture se retrouve au-delà de la fin.
 ## Rythme de travail
 
 Le propriétaire du dépôt travaille depuis un téléphone, souvent par messages
-courts. Trois règles en découlent, et elles priment sur la prudence par défaut :
+courts. Six règles en découlent, et elles priment sur la prudence par défaut :
 
 - **Décider plutôt que demander.** Devant deux options techniques défendables,
   prendre la meilleure, l'appliquer, et **dire laquelle et pourquoi** en une
@@ -148,10 +148,30 @@ courts. Trois règles en découlent, et elles priment sur la prudence par défau
   la précédente, et donner son nom. La mémoire du projet est dans ce fichier et
   dans les compétences, pas dans la discussion — on ne perd rien.
 
-Ce qui reste à demander, et qu'aucune de ces trois règles ne couvre : ce qui
-part **en public au nom de quelqu'un** (un commentaire publié, un message à la
-communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
-Là, l'aller-retour vaut son prix.
+- **Ne jamais rester bloqué faute d'outil.** Quand une capacité manque, la
+  fabriquer plutôt que la contourner : `skill-creator`, le dossier, le script,
+  la doc, et on s'en sert dans la foulée. Deux compétences d'ici sont nées ainsi
+  le même soir — `/voir-le-son` parce qu'un son ne pouvait pas s'écouter,
+  `/trier-les-rushes` parce qu'un lot de cinquante fichiers ne pouvait pas se
+  lire un par un. L'outil manquant coûte une heure ; le contournement répété
+  coûte toutes les suivantes.
+- **Regarder avant de livrer, pas après la plainte.** Six versions d'un même
+  montage ont été rendues en une nuit, chacune mesurée conforme, chacune rejetée
+  à l'écoute. Le défaut se voyait en une seconde sur un spectrogramme que
+  personne n'avait tiré. Livrer vite ne vaut que si l'on a regardé : c'est ce
+  qui sépare « beaucoup d'action » de « beaucoup de reprises ».
+- **Ce qui marche dans un projet est porté aux autres.** Neuf chantiers sans
+  code commun, mais les mêmes gestes reviennent : une barrière de vérification,
+  un gabarit d'accroche, une façon de départager quatre prises. Porter la
+  solution plutôt que la réinventer est le seul avantage réel qu'un dépôt à neuf
+  projets a sur neuf dépôts séparés.
+
+Ce qui reste à demander, et qu'aucune de ces six règles ne couvre : ce qui
+part **en public au nom de quelqu'un**, ce qui **détruit** sans retour, et ce
+qui **engage de l'argent**. Là, l'aller-retour vaut son prix — et il le vaut
+d'autant plus que « en public » veut dire ici sous les yeux des quarante-huit
+mille membres du groupe, où une réponse maladroite publiée au nom de quelqu'un
+ne se retire pas.
 
 ## Modifier ce dépôt
 
