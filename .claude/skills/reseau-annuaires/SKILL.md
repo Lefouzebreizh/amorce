@@ -168,6 +168,23 @@ annuaire qui recommande un outil mort ou hors sujet perd la seule chose qu'il
 vend. En cas de doute sur l'existence ou le prix d'un outil, chercher plutôt
 que supposer : c'est du contenu qui partira en ligne sans relecture.
 
+Et une contrainte qu'on découvre trop tard si personne ne l'écrit :
+**privilégier les outils vendus en libre-service**, avec un prix affiché. Un
+outil « sur devis » se négocie six mois avec un commercial : aucun programme
+d'affiliation derrière, donc aucune commission possible. Au lancement,
+`juridique` n'avait que ceux-là, `btp` et `rh` trois sur quatre — trois sites
+parfaitement référencés et structurellement incapables de rapporter un centime.
+
+Ils ont leur place : ce sont souvent les meilleurs du métier, et c'est
+l'autorité du site qui amène le trafic. Mais **une niche a besoin d'une
+majorité d'outils monétisables**, et deux garde-fous le rappellent sans qu'on
+ait à s'en souvenir :
+
+- `valider.js` alerte (`niche-peu-monetisable`) dès que plus de la moitié des
+  outils en ligne d'une niche sont « sur devis » ;
+- `auto-pilot.js` publie alors en priorité les candidats en libre-service,
+  jusqu'à ce que la niche repasse au-dessus de la moitié.
+
 ### Créer un douzième site
 
 ```bash
