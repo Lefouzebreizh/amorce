@@ -25,6 +25,37 @@ représentation qui rend le défaut visible plutôt qu'un second chiffre.
 
 ---
 
+## Le travail refait ne se voit nulle part, et c'est ce qui le rend cher
+
+*Coût : huit cents lignes écrites deux fois, plus six branches ouvertes le même
+soir sur la même friction.*
+
+Une session a construit un socle Supabase durci — schéma, contrôles RLS,
+squelette de Server Actions — pendant qu'une autre livrait `agence/`, qui portait
+déjà exactement les mêmes gardes. Rien n'avait échoué : les deux travaux étaient
+justes, vérifiés, verts. Ils étaient simplement le même.
+
+Ce gaspillage-là n'apparaît dans aucun historique. Un conflit de fusion se
+compte, un test rouge se compte ; du travail jeté avant d'être committé ne
+laisse pas de trace, et l'on ne corrige jamais ce qu'on ne mesure pas. C'est
+pourquoi il a fallu deux répétitions pour le voir — la seconde fois, six
+branches ouvertes travaillaient la même friction, dont une portant déjà la
+moitié de ce qui était en cours d'écriture.
+
+La parade tient en trente secondes : lire les branches actives avant de
+construire. Elle a été posée dans le hook de démarrage plutôt que dans une
+compétence, parce que l'angle mort est précisément qu'on ne pense pas à
+regarder — et qu'une compétence doit se déclencher pour servir, là où un hook
+s'exécute toujours. Elle a servi sur le commit qui l'introduisait, en faisant
+retirer du lot un changement qu'une autre branche portait déjà.
+
+**Portée générale :** avant d'écrire, chercher qui écrit déjà la même chose, et
+placer ce rappel là où il ne dépend pas d'y penser. Quand deux travaux justes se
+recouvrent, celui qui est fusionné gagne — se couler dans la base commune coûte
+toujours moins que réconcilier deux versions défendables.
+
+---
+
 ## Ce qui compte dans un lot se voit par comparaison, pas isolément
 
 *Coût : un plan écarté qui portait la seule voix utilisable.*
