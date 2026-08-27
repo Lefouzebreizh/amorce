@@ -21,6 +21,27 @@ Ce qui donne sa taille à une bête n'est pas le niveau de son attaque mais la
 Comme partout ici, rien ne vit sous 400 Hz tout seul : un haut-parleur de
 téléphone n'en restitue rien, et une créature inaudible sur l'appareil où la
 vidéo est regardée n'existe pas.
+
+**Avertissement payé cher.** Le grondement de ce fichier est une pile
+d'harmoniques : sur un spectrogramme il dessine des bandes parallèles, et à
+l'oreille il s'entend comme un orgue, pas comme une gorge. Désaccorder les
+rangs de un ou deux pour cent n'y change rien.
+
+Et l'issue évidente — retirer la synthèse, ne garder que des prises réelles —
+échoue autrement : les prises graves d'une bibliothèque sont du grave *pur*,
+et les saturer pour leur fabriquer des harmoniques audibles sur téléphone
+recrée exactement le même peigne, puisqu'un grondement basse fréquence est
+lui-même presque harmonique.
+
+**La seule sortie est le matériau.** Chercher dans le lot la prise qui porte
+déjà du vrai aigu — se mesurer au-dessus de 400 Hz sans traitement — et la
+décliner : transposée vers le bas, transposée vers le haut, ralentie. Les
+prises graves ne servent alors qu'au poids, filtrées sous 400 Hz, là où elles
+vivent. Mesuré sur un dragon : −13,0 / −12,4 / −12,8 / −13,4 dB sur trois
+secondes, contre onze décibels d'affaissement par toutes les autres méthodes.
+
+Ce module reste utile quand aucune prise du lot n'a d'aigu — mais son
+grondement doit alors rester minoritaire dans le mixage.
 """
 
 from __future__ import annotations
@@ -64,7 +85,12 @@ def grondement(t, f0=72.0, modulation=11.0):
                         (11, 0.38), (13, 0.34), (16, 0.28), (20, 0.22),
                         (25, 0.16), (31, 0.11)):
         # Un léger glissando descendant : une bête qui expire perd en hauteur.
-        f = f0 * rang * (1.0 - 0.10 * t / max(t[-1], 1e-9))
+        # Désaccord par rang et tremblement lent : sans eux, les rangs
+        # s'alignent en peigne — visible en bandes parallèles sur un
+        # spectrogramme, audible comme un synthétiseur.
+        ecart = 1.0 + 0.014 * np.sin(rang * 2.7) + 0.006 * rang
+        tremble = 1.0 + 0.010 * np.sin(2 * np.pi * (1.7 + 0.31 * rang) * t)
+        f = f0 * rang * ecart * tremble * (1.0 - 0.10 * t / max(t[-1], 1e-9))
         s += poids * np.sin(2 * np.pi * f * t + poids * np.sin(2 * np.pi * 2.3 * t))
     gorge = 0.62 + 0.38 * (0.5 + 0.5 * np.sin(2 * np.pi * modulation * t))
     gorge *= 0.80 + 0.20 * np.sin(2 * np.pi * 3.7 * t + 1.1)

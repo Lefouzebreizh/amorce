@@ -394,3 +394,60 @@ l'étalonnage. Quand deux prises ne montrent pas le même visage, aucun réglage
 de couleur ne les réconcilie — il faut en choisir une. Le critère n'est pas
 « lequel est le plus beau » mais « lequel porte ce que le film doit dire » :
 ici, celui dont la réplique était presque entière dans son propre rush.
+
+---
+
+## On ne rend pas un grave audible : on cherche la prise qui a déjà de l'aigu
+
+*Coût : cinq rendus, et un « des bruits bizarres » qui disait vrai.*
+
+Un grondement de créature synthétisé — pile d'harmoniques modulée en amplitude —
+tenait parfaitement le niveau et sonnait faux. Le spectrogramme le montrait
+d'un coup d'œil : **des bandes horizontales parallèles**, un peigne. À l'oreille,
+un orgue, pas une gorge. Désaccorder les rangs de 1,4 % n'a rien changé.
+
+L'issue évidente — retirer la synthèse, n'empiler que des enregistrements — a
+supprimé le peigne et rendu la créature **inaudible sur téléphone** : les prises
+graves d'une bibliothèque sont du grave *pur*. Et les saturer pour leur
+fabriquer des harmoniques recrée exactement le même peigne, puisqu'un grondement
+basse fréquence est lui-même presque harmonique. Les deux chemins mènent au même
+mur, pour la même raison.
+
+Ce qui a débloqué : mesurer les prises **une par une au-dessus de 400 Hz, sans
+traitement**. Une seule du lot portait du vrai aigu — −15,6 dB nativement, quand
+les « colossal mecha dragon » plafonnaient à −28. C'est elle, déclinée
+(transposée vers le bas, vers le haut, ralentie), qui fait le son ; les prises
+graves ne servent plus qu'au poids, filtrées sous 400 Hz.
+
+Résultat : **−13,0 / −12,4 / −12,8 / −13,4 dB** sur trois secondes, contre onze
+décibels d'affaissement par toutes les autres méthodes.
+
+**Portée générale :** aucun traitement ne fabrique une bande de fréquences qui
+n'est pas dans la source. Devant un son qui doit exister sur un petit
+haut-parleur, la première question n'est pas « comment le remonter » mais
+« laquelle de mes prises a déjà quelque chose là-haut ». Et un défaut décrit
+comme « bizarre » plutôt que « faible » désigne presque toujours une régularité
+que l'oreille entend comme artificielle — elle se voit sur un spectrogramme en
+une seconde, et sur aucun chiffre.
+
+---
+
+## Combler un trou et écraser la dynamique sont le même geste mal dosé
+
+*Coût : trois itérations, chacune corrigeant la précédente.*
+
+Un trou réel — le son tombant à −50 dB sur la bande d'un téléphone entre deux
+plans — a été comblé en remontant tout le bloc au niveau des voix. Le trou a
+disparu et LRA est tombé de 4,9 à 2,4 : le bloc de foule sortait désormais
+**plus fort que la réplique du druide**, ce qui est faux dramatiquement autant
+que techniquement.
+
+La correction ne s'est faite proprement qu'en écrivant la cible bloc par bloc
+avant de toucher un seul réglage — ouverture basse, voix au-dessus de la foule,
+créature au-dessus de tout — puis en calculant le gain de chaque piste par
+`cible − mesure`, au lieu de tâtonner.
+
+**Portée générale :** un mixage se règle par une table de cibles relatives
+écrite d'avance, pas par retouches successives. Trois itérations au jugé
+avaient produit trois défauts différents ; une table et une soustraction ont
+donné le bon résultat du premier coup.
