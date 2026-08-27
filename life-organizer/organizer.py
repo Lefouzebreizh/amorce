@@ -6,10 +6,10 @@ configuration, le même journal et la même quarantaine. Six scripts séparés
 auraient six façons de les lire, et un jour l'un d'eux supprimerait pour de bon.
 
 `verifier` doit fonctionner avant toutes les autres, puisque tout le reste
-dépend de la configuration. `nettoyer` lui a succédé : photos floues puis
-photos quasi-identiques, dans cet ordre — les vidéos restent à écrire. Puis
-`ranger`, qui vient après pour une raison : ranger d'abord, c'est classer
-soigneusement des doublons et des photos ratées.
+dépend de la configuration. `nettoyer` lui a succédé : photos floues, photos
+quasi-identiques, puis vidéos abîmées, dans cet ordre. Puis `ranger`, qui vient
+après pour une raison : ranger d'abord, c'est classer soigneusement des
+doublons et des photos ratées.
 
 Un module écrit se branche ici en trois lignes : sa `commande.py` pose ses
 arguments et reçoit la configuration déjà chargée. Le point d'entrée ne connaît
@@ -35,7 +35,7 @@ RACINE = Path(__file__).resolve().parent
 MODULES = [
     ("scan", "Lire les documents, en extraire dates et montants, les renommer"),
     ("calendrier", "Échéances de paiement, abonnements, lettres de résiliation"),
-    ("nettoyer", "Écarter les photos floues et les quasi-doublons (vidéos à venir)"),
+    ("nettoyer", "Écarter les photos floues, les quasi-doublons et les vidéos abîmées"),
     ("convertir", "HEIC → JPG, MKV → MP4, compression sans perte visible"),
     ("upscaler", "Agrandir les photos et vidéos basse définition"),
     ("ranger", "Classer par date, par type et par thématique"),
@@ -109,7 +109,7 @@ def config_valide(options: argparse.Namespace) -> dict | None:
 
 
 def commande_nettoyer(options: argparse.Namespace) -> int:
-    """Les photos floues, puis les quasi-identiques. Les vidéos restent à écrire."""
+    """Les photos floues, puis les quasi-identiques, puis les vidéos abîmées."""
     config = config_valide(options)
     return commande_nettoyage.executer(options, config) if config else 1
 

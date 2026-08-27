@@ -210,6 +210,18 @@ begin
 end;
 $$;
 
+-- Même reprise de privilèges que pour `is_admin()` plus haut : sans elle,
+-- PostgreSQL laisse l'EXECUTE par défaut à PUBLIC, et Supabase publie la
+-- fonction en `/rest/v1/rpc/handle_new_user` — son linter le signale sur un
+-- projet neuf. Mesuré : l'appel direct est de toute façon refusé
+-- (« trigger functions can only be called as triggers »), donc la brèche est
+-- close par PostgreSQL avant de l'être par le privilège. La ligne reste parce
+-- qu'une fonction SECURITY DEFINER laissée ouverte est un avertissement de
+-- plus à trier chez chaque client, et qu'un tri se fait mal quand il est long.
+-- Le déclencheur, lui, ne dépend pas de ce privilège : il continue de créer le
+-- profil et d'en recopier les métadonnées.
+revoke all on function public.handle_new_user() from public;
+
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
     after insert on auth.users

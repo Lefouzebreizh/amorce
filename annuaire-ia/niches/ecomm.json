@@ -1,0 +1,65 @@
+{
+  "niche": {
+    "id": "ecomm",
+    "nom": "IA E-commerce",
+    "emoji": "🛒",
+    "domaine": "https://ia-ecommerce.fr",
+    "metier": "e-commerçants et responsables de boutique en ligne",
+    "h1_accent": "L'IA de la boutique",
+    "h1_suite": "qui fait grimper le panier",
+    "slogan": "Visuels produits, fiches, service client, e-mailing, personnalisation : les outils qui font travailler la boutique pendant qu'on dort.",
+    "meta_titre": "IA E-commerce — les outils d'intelligence artificielle pour boutiques en ligne",
+    "meta_description": "Visuels produits automatisés, fiches optimisées, support client, e-mailing prédictif, recommandations : le comparatif des outils IA testés sur des boutiques réelles. Prix, avis détaillés, retours mesurés.",
+    "theme": {
+      "primaire": "#06b6d4",
+      "secondaire": "#38bdf8"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur."
+  },
+  "outils": [
+    {
+      "id": "photoroom",
+      "nom": "Photoroom",
+      "categorie": "Visuels produits",
+      "prix": "Freemium — à partir de 10 €/mois",
+      "description_courte": "Le studio photo dans le téléphone : détourage, fond, ombre portée et déclinaison en tous formats, en quelques secondes.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/photoroom",
+      "score_avis": 4.6,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nPhotoroom, éditeur français, a rendu accessible ce qui coûtait une séance photo : un produit posé sur une table devient un visuel de catalogue, détouré proprement, avec un fond généré cohérent et une ombre portée crédible. Le traitement par lot est ce qui compte réellement quand on référence trois cents articles : on dépose le dossier, on récupère la série au même format.\n\n## Points forts\n- Détourage d'une précision rare, y compris sur les cheveux, le verre et les textiles fins\n- Traitement par lot : une gamme entière traitée d'un coup, au même gabarit\n- Fonds générés qui tiennent la lumière et l'ombre du produit d'origine\n- Application mobile complète : le visuel se fait depuis la réserve, sans ordinateur\n\n## Points faibles\n- Les fonds générés se répètent d'un visuel à l'autre si l'on ne varie pas les consignes\n- Les produits très réfléchissants demandent une reprise manuelle\n- La formule gratuite marque les exports et limite la définition\n\n## Idéal pour\nLes boutiques en ligne qui photographient elles-mêmes leurs produits et n'ont ni studio, ni budget photographe, ni temps de retouche."
+    },
+    {
+      "id": "gorgias",
+      "nom": "Gorgias",
+      "categorie": "Service client",
+      "prix": "À partir de 10 $/mois",
+      "description_courte": "Le support qui répond seul aux questions de suivi de commande, et n'appelle un humain que pour ce qui mérite un humain.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/gorgias",
+      "score_avis": 4.4,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nDans une boutique en ligne, la majorité des messages entrants sont trois questions : où est ma commande, comment je retourne, avez-vous cette taille. Gorgias branche le support sur les données de la boutique et laisse son agent automatique traiter ces cas de bout en bout, remboursement et changement d'adresse compris. Le taux de résolution sans intervention humaine dépasse couramment 30 %, et l'équipe se concentre sur les litiges.\n\n## Points forts\n- L'agent voit les commandes et agit dessus : il ne se contente pas de répondre\n- Tous les canaux réunis — courriel, chat, réseaux sociaux, téléphone\n- Attribution du chiffre d'affaires généré par le support, visible dans l'outil\n- Prise en main rapide sur les plateformes de commerce courantes\n\n## Points faibles\n- Facturation à la conversation : un pic de saison fait grimper la note\n- Sans base de connaissances soignée, l'agent automatique répond mal\n- La rédaction française demande un travail de ton pour ne pas sonner robotique\n\n## Idéal pour\nLes boutiques dont le service client sature à chaque opération commerciale et qui recrutent des saisonniers faute d'automatisation."
+    },
+    {
+      "id": "klaviyo",
+      "nom": "Klaviyo",
+      "categorie": "E-mailing & CRM",
+      "prix": "Freemium — à partir de 20 $/mois",
+      "description_courte": "Les scénarios de relance qui rapportent le plus par euro dépensé, avec les segments calculés sur le comportement réel.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/klaviyo",
+      "score_avis": 4.5,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nKlaviyo reste la référence de la relance en commerce en ligne, et ses fonctions prédictives sont ce qui le distingue d'un simple outil d'envoi : date de prochaine commande estimée, valeur vie client prévue, risque de perte du client. Ces prévisions alimentent des segments qui déclenchent le bon message au bon moment — la relance de panier abandonné n'étant que le plus connu de la dizaine de scénarios rentables.\n\n## Points forts\n- Segments prédictifs calculés sur le comportement d'achat, sans travail de données\n- Bibliothèque de scénarios éprouvés, activables en une après-midi\n- Attribution du chiffre d'affaires par scénario : on sait ce qui rapporte\n- Courriel et message texte pilotés depuis la même logique de segmentation\n\n## Points faibles\n- Le tarif suit la taille de la base : il grimpe fort passé quelques dizaines de milliers de contacts\n- Puissance qui se paie en complexité : la prise en main réelle prend des semaines\n- Les prévisions demandent un historique conséquent pour valoir quelque chose\n\n## Idéal pour\nLes boutiques passé le premier palier de chiffre d'affaires, dont la base de clients existe déjà et n'est pas exploitée au-delà de la newsletter mensuelle."
+    },
+    {
+      "id": "octane-ai",
+      "nom": "Octane AI",
+      "categorie": "Personnalisation",
+      "prix": "À partir de 50 $/mois",
+      "description_courte": "Le questionnaire qui recommande le bon produit et collecte, au passage, les données clients qui alimenteront les relances.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/octane-ai",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nSur un catalogue où le client ne sait pas quoi choisir — cosmétique, complément, matériel technique — le questionnaire de recommandation transforme mieux que n'importe quelle page catégorie. Octane AI construit ces parcours sans développement, en tire une recommandation argumentée, et enregistre les réponses comme autant de critères de segmentation pour les relances suivantes.\n\n## Points forts\n- Taux de transformation nettement supérieur à une navigation par catégorie\n- Réponses conservées comme données de segmentation exploitables ensuite\n- Construction du parcours sans développement, en quelques heures\n- Se branche sur les outils de relance courants\n\n## Points faibles\n- Sans catalogue à choix complexe, l'outil n'apporte rien\n- Un questionnaire trop long fait chuter le taux d'achèvement\n- Il faut du trafic pour que le gain mesuré soit significatif\n\n## Idéal pour\nLes boutiques de cosmétique, de nutrition ou de matériel technique dont les clients hésitent entre des références qu'ils ne savent pas départager.",
+      "date_ajout": "2026-08-27"
+    }
+  ]
+}

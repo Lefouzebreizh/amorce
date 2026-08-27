@@ -11,6 +11,13 @@
 # à ce rythme, une liste écrite à la main est fausse le lendemain — et fausse en
 # silence, ce qui est la pire des deux façons.
 #
+# La découverte descend jusqu'au troisième niveau, et pas seulement au premier :
+# les chantiers mis en sommeil vivent sous `archives-backlog/<projet>/tests`. La
+# version précédente ne regardait que `*/tests` et a cessé de les couvrir le jour
+# où ils ont été déplacés — silencieusement, en passant de sept suites à cinq.
+# Or leur condition de reprise est précisément que leurs tests soient restés
+# verts : une suite qu'on ne lance plus ne dit plus rien de ce qu'elle garde.
+#
 # Pas de filtre de chemins non plus, pour la même raison : il faudrait le
 # rallonger à chaque nouveau projet, et l'oubli ne se verrait pas. Le travail
 # entier dure une quinzaine de secondes ; le filtre économiserait moins qu'il ne
@@ -53,6 +60,26 @@ jobs:
       - name: Installer ce que les tests atteignent
         run: python -m pip install --quiet -r .github/requirements-tests.txt
 
+      # Les tests de lettrage kdp ouvrent la police pour de vrai — ils
+      # vérifient quels glyphes Lora dessine, ce qu'aucun bouchon ne peut
+      # simuler. Le dépôt ne versionne pas de binaire et le chemin par défaut
+      # n'existe que dans une session Claude Code : sans cette étape, six
+      # erreurs « cannot open Lora-Regular.ttf » rougissent toute la suite, ce
+      # qui a masqué l'état des six autres projets cinq exécutions durant.
+      #
+      # Le fichier suivi est la police variable de google/fonts, non figée à un
+      # commit : si l'amont change la couverture en glyphes de Lora, ces tests
+      # doivent rougir — c'est exactement ce qu'ils gardent. `curl -f` fait
+      # échouer l'étape bruyamment plutôt que d'écrire un fichier vide.
+      - name: Poser la police du lettrage
+        run: |
+          polices="$RUNNER_TEMP/polices"
+          amont=https://raw.githubusercontent.com/google/fonts/main/ofl/lora
+          mkdir -p "$polices"
+          curl -sSfL -o "$polices/Lora-Regular.ttf" "$amont/Lora%5Bwght%5D.ttf"
+          curl -sSfL -o "$polices/Lora-Italic.ttf" "$amont/Lora-Italic%5Bwght%5D.ttf"
+          echo "KDP_POLICES=$polices" >> "$GITHUB_ENV"
+
       # Une seule étape, mais un groupe repliable par suite : le résumé reste
       # lisible, et `::error::` fait remonter le nom du projet fautif en tête de
       # l'exécution sans avoir à dérouler le journal.
@@ -64,20 +91,16 @@ jobs:
         run: |
           echec=0
           trouvees=0
-          # Deux profondeurs, et pas une seule : un projet mis en sommeil descend
-          # d'un cran sous `archives-backlog/` sans cesser d'avoir des tests
-          # verts — c'est même la condition écrite de sa reprise. Avec le seul
-          # motif `*/tests`, les soixante-deux tests du studio audio et de
-          # l'assistant d'allocation ont cessé d'être lancés le jour de leur
-          # déplacement, sans qu'une ligne rouge n'apparaisse nulle part. Un
-          # motif qui ne correspond à rien reste écarté par le garde de la ligne
-          # suivante, comme n'importe quel dossier sans `test_*.py`.
-          for tests in */tests archives-backlog/*/tests; do
+          # `-maxdepth 3` attrape `<projet>/tests` comme
+          # `archives-backlog/<projet>/tests`, sans descendre dans les
+          # dépendances installées.
+          for tests in $(find . -maxdepth 3 -type d -name tests \
+                              -not -path '*/node_modules/*' | sort); do
             # Un dossier `tests/` sans fichier `test_*.py` n'est pas une suite
             # Python : le sauter évite qu'un projet d'une autre langue fasse
             # échouer la découverte.
             ls "$tests"/test_*.py >/dev/null 2>&1 || continue
-            projet="${tests%/tests}"
+            projet="${tests#./}"; projet="${projet%/tests}"
             trouvees=$((trouvees + 1))
             echo "::group::$projet"
             if python -m unittest discover -s "$tests" --verbose; then

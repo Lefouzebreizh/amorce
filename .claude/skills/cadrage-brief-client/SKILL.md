@@ -89,8 +89,13 @@ Un lot est livrable et démontrable seul. Trois lots typiques :
 | 3 — Confort | Recherche, exports, notifications, tableau de bord | Le client arrête d'ouvrir son tableur. |
 
 Le lot 1 n'est jamais négociable : la sécurité se pose au début ou elle se
-repose entièrement. Le lot 3 se négocie toujours — c'est là que se trouve la
-variable d'ajustement quand le budget est tenu.
+repose entièrement. Mais il est **déjà écrit** — c'est le socle `agence/`, qui
+porte l'authentification, les rôles et la RLS durcie. L'estimer comme du
+développement neuf reviendrait à facturer quatre jours pour un `git clone` ;
+compter le temps réel, celui d'adapter le schéma au domaine du client.
+
+Le lot 3 se négocie toujours — c'est là que se trouve la variable d'ajustement
+quand le budget est tenu.
 
 Ce qui n'entre dans aucun lot s'écrit dans une section **hors périmètre**,
 nommément. Un besoin non listé est un besoin qui sera réclamé gratuitement.
