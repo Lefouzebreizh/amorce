@@ -1,0 +1,70 @@
+# Barrière du réseau d'annuaires — ce qui empêche onze sites de tomber ensemble.
+#
+# Ces sites n'ont ni compilateur, ni typage, ni test unitaire possible : leur
+# contenu est du JSON qu'aucun outil ne relit, et l'auto-pilote y écrit tout
+# seul avant de pousser sur `main`. Sans ce workflow, une virgule en trop dans
+# une base part en ligne et le site concerné affiche une page d'erreur jusqu'à
+# ce que quelqu'un s'en aperçoive — ce qui, sur un réseau qu'on ne consulte
+# pas tous les jours, peut prendre une semaine.
+#
+# Ce qui est vérifié ici est **déterministe et rapide** : les données, la
+# feuille de style, la construction des sites. Le parcours en navigateur
+# (`npm run verifier`) en est volontairement absent, pour la même raison que
+# celui d'Amorce : il demande un vrai Chromium, sa durée dépend de la charge de
+# la machine, et une barrière qu'on relance sans la lire coûte plus de
+# confiance qu'elle n'en rend. Il reste le filet à passer localement avant de
+# toucher au gabarit ou à la feuille.
+name: Annuaire IA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'annuaire-ia/**'
+      - '.github/workflows/annuaire-ia.yml'
+  pull_request:
+    paths:
+      - 'annuaire-ia/**'
+      - '.github/workflows/annuaire-ia.yml'
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: annuaire-ia
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # Tailwind et PostCSS viennent des dépendances d'Amorce, à la racine.
+      - name: Installer les dépendances du dépôt
+        working-directory: .
+        run: npm ci
+
+      - name: Valider les bases et la réserve
+        run: node valider.js
+
+      # Le CSS est versionné parce qu'il n'y a pas de compilation au
+      # déploiement. Une classe ajoutée sans recompiler ne se verrait qu'à
+      # l'œil, sur un écran, un jour où personne ne regarde.
+      - name: La feuille compilée est-elle à jour
+        if: '!cancelled()'
+        run: node construire-styles.mjs --verifier
+
+      # Même raison pour les sitemaps : ils partent en ligne tels quels.
+      - name: Les sitemaps sont-ils à jour
+        if: '!cancelled()'
+        run: |
+          node generate-sitemap.js
+          git diff --exit-code -- sitemaps \
+            || { echo "Les sitemaps ont bougé : lancer npm run sitemap et committer."; exit 1; }
+
+      - name: Construire les onze sites
+        if: '!cancelled()'
+        run: node construire-sites.js

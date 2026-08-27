@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
+description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, validation des bases et parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
 ---
 
 # Vérifier ce dépôt
@@ -58,6 +58,45 @@ npm run dev        # dans un autre terminal
 npm run verify
 ```
 
+## Réseau d'annuaires IA — `annuaire-ia/`
+
+```bash
+cd annuaire-ia
+npm run valider          # les bases : erreurs et alertes
+npm run verifier         # le parcours Chromium
+```
+
+Vingt-cinq contrôles dans un vrai Chromium. Le projet n'a ni typecheck ni lint :
+c'est la seule chose qui dise s'il marche, et onze sites tombent ensemble.
+Voir `/reseau-annuaires` pour ce que chacun garde.
+
+## Toutes les suites Python, comme la CI
+
+```bash
+.claude/skills/verifier/scripts/comme-la-ci.sh          # les sept suites
+.claude/skills/verifier/scripts/comme-la-ci.sh kdp      # une seule
+```
+
+**Lancer les suites depuis le dépôt ne prouve rien.** Une session Claude Code a
+des fichiers que la CI n'a pas — `/mnt/skills/…`, des rushes non versionnés,
+ffmpeg posé par le hook — et le hook installe des bibliothèques que
+`.github/requirements-tests.txt` n'installe pas. Des tests verts ici sont donc
+régulièrement rouges là-bas : `main` est resté rouge cinq exécutions durant sur
+une police introuvable, et ce rouge-là masquait l'état des six autres projets.
+
+Le script supprime les trois écarts d'un coup : il copie les seuls fichiers
+suivis par git (contenu du répertoire de travail compris), exécute dans un
+environnement n'ayant que les bibliothèques de la CI, et pose la police du
+lettrage comme le fait le workflow. Premier passage une minute, les suivants une
+vingtaine de secondes.
+
+Il signale aussi, sans faire échouer, les chemins de session écrits en dur —
+la seule chose qu'aucune exécution locale ne peut détecter, puisque le fichier
+est là.
+
+**À lancer avant de pousser un changement Python**, et en premier réflexe quand
+la CI est rouge alors que tout passe en local.
+
 ## Socle Agence — `agence/`
 
 ```bash
@@ -87,9 +126,14 @@ Les politiques RLS, elles, ne se vérifient pas depuis TypeScript. Elles ont
 leur propre contrôle, sur un vrai PostgreSQL :
 
 ```bash
-docker run --rm -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 --name pg postgres:16
-PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres npm run test:rls
+npm run test:rls
 ```
+
+Rien à préparer : sans serveur joignable, le script monte lui-même un
+PostgreSQL éphémère dans un répertoire temporaire et le jette en sortant.
+C'est la seule voie en session distante, où `docker` existe sans démon
+derrière. Pour viser un serveur existant, les variables habituelles de libpq
+suffisent (`PGHOST`, `PGUSER`, `PGPASSWORD`).
 
 Vingt contrôles : ce qu'un utilisateur, un administrateur et un visiteur
 anonyme peuvent lire et écrire. **À relancer dès qu'on touche à
