@@ -526,3 +526,44 @@ ouvertes n'est pas un ornement de démarrage : c'est la première recherche à
 faire quand on bute. Lire un titre de branche coûte une seconde ; refaire son
 travail coûte la nuit. Et ce qu'on récupère porte les mesures de l'autre, pas
 seulement son code.
+
+---
+
+## Ce qui fait bouger une image fixe, c'est la parallaxe, pas le zoom
+
+*Coût : quatre tentatives ratées, dont trois abandonnées faute de méthode.*
+
+Un plan tiré d'une image fixe et animé au zoom — même lent, même en diagonale —
+se lit toujours comme une photographie qu'on agrandit. Trois corrections
+successives (zoom plus rapide, scintillement, braises) ont toutes échoué, et
+l'auteur répétait « l'image n'est toujours pas animée » sans qu'aucune mesure
+ne lui donne raison.
+
+**Le premier progrès a été de changer de mesure.** `scene_score` compte les
+changements de plan, pas le mouvement : un zoom rigide change des pixels sans
+produire de mouvement apparent, et il notait donc « bon ». L'écart moyen entre
+images consécutives, lui, dit ce que l'œil voit :
+
+| | mouvement |
+| --- | --- |
+| plan animé au zoom | 4,1 |
+| rush le plus calme du montage | 10,5 |
+| rush le plus vif | 22,8 |
+
+**Le remède est la parallaxe.** Dans un vrai plan, ce qui est proche se déplace
+plus vite que ce qui est loin, et c'est cet **écart** — pas le déplacement —
+que l'œil lit comme une caméra. Deux couches tirées de la même image, masques
+verticaux à bords fondus, vitesses opposées : 4,1 → 8,2 hors montage, et 9,8
+une fois le mouvement du montage ajouté par-dessus.
+
+Trois choses mesurées qui n'ont rien apporté, et qu'il ne faut pas refaire : le
+scintillement des éclairs (+0,08), le tremblement d'air (+0,01), et un premier
+réglage de parallaxe à 34 pixels sur deux secondes — soit trois dixièmes de
+pixel par image, **sous le pas de l'échantillonnage**, donc rendu à 2,45, pire
+que le zoom qu'il remplaçait.
+
+**Portée générale :** quand un défaut décrit par un humain ne se voit dans aucun
+chiffre, la mesure est le premier suspect, pas la description. Et quand un
+réglage améliore la théorie sans améliorer le résultat, vérifier son ordre de
+grandeur avant d'en chercher un autre : ici, l'effet était juste et l'amplitude
+cent fois trop faible.
