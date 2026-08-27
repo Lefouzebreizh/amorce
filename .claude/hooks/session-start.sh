@@ -74,8 +74,10 @@ echo "── Chaîne KDP : bibliothèques Python"
 # d'installer hors environnement virtuel. Un venv ici obligerait chaque commande
 # de la chaîne à l'activer d'abord, pour un conteneur qui n'héberge qu'un projet.
 # numpy : `coquilles.py` opère au pixel et `planches.py` mesure les bulles ;
-# ni Pillow ni PyMuPDF ne l'apportent.
-python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF numpy
+# ni Pillow ni PyMuPDF ne l'apportent. segno : `hymne.py` grave un QR code sur
+# la page de l'hymne, et c'est le seul module de la chaîne qui ne s'importait
+# pas ici — un défaut invisible tant qu'aucun test ne le touche.
+python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF numpy segno
 
 echo "── Studio audio : bibliothèques Python"
 # PyTorch et Whisper sont volontairement absents : six gigaoctets à installer à
