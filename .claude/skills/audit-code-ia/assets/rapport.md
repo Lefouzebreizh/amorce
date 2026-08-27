@@ -2,8 +2,14 @@
 
 **Pour :** [Nom] · **Le :** [date] · **Portée :** [dépôt / URL publique examinée]
 
-_Audit réalisé sur [le dépôt public / l'accès communiqué le …]. Cinq constats,
-classés par ce qui cassera en premier — pas par gravité théorique._
+_Audit réalisé sur [le dépôt public / la surface publique de l'application /
+l'accès communiqué le …]. Cinq constats, classés par ce qui cassera en premier
+— pas par gravité théorique._
+
+_**Où ce relevé s'est arrêté :** [je n'ai lu que ce que votre application sert
+à n'importe quel visiteur — la page, ses fichiers JavaScript, ses en-têtes. Je
+n'ai forgé aucune requête et rien tenté contre vos données : cela demande votre
+accord, et c'est la partie qui reste à vérifier.]_
 
 ---
 
