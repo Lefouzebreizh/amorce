@@ -131,3 +131,13 @@ jobs:
           else
             gh issue create --title "$titre" --body-file /tmp/corps-reserve.md
           fi
+
+  # Une poussée faite avec le jeton d'Actions ne déclenche aucun workflow :
+  # sans cet appel, l'outil publié ci-dessus attendrait le cycle suivant pour
+  # apparaître en ligne, soit deux jours pendant lesquels le dépôt et le site
+  # racontent deux choses différentes.
+  mettre_en_ligne:
+    name: Mettre le réseau en ligne
+    needs: publier
+    uses: ./.github/workflows/annuaire-ia-pages.yml
+    secrets: inherit

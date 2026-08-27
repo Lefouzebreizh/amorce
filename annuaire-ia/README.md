@@ -47,6 +47,20 @@ Deux travaux automatisés à la racine du dépôt :
 Les domaines sont écrits dans chaque base (`niche.domaine`) : c'est de là que
 les sitemaps et les sites construits les lisent. Les changer là suffit.
 
+## Mise en ligne
+
+Automatique : toute poussée sur `main` touchant ce dossier construit les onze
+sites et les dépose sur Cloudflare Pages, sous un projet unique où chaque niche
+occupe son sous-dossier. L'auto-pilote appelle le même workflow après avoir
+publié.
+
+Les adresses publiques se règlent en une commande, jamais à la main :
+
+```bash
+node regler-domaines.mjs --etat
+node regler-domaines.mjs btp https://ia-btp.fr
+```
+
 ## Tester en local
 
 Un navigateur refuse de lire un `.json` en `file://` : il faut un serveur, même

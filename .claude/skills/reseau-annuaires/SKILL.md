@@ -199,6 +199,30 @@ accroches, slogan, balises, trois outils, cinq en réserve.
 
 ### Déployer
 
+**C'est automatique depuis la mise en place de Cloudflare Pages.** Toute
+poussée sur `main` qui touche `annuaire-ia/` construit et dépose les onze
+sites, et l'auto-pilote appelle le même workflow juste après avoir publié —
+sans quoi l'outil du jour n'apparaîtrait en ligne que deux jours plus tard,
+une poussée faite au jeton d'Actions ne redéclenchant aucun workflow.
+
+Les onze sites vivent sous un seul projet Pages, chacun dans son sous-dossier
+(`annuaire-ia.pages.dev/btp/`). Le gabarit s'en accommode sans changement :
+toutes ses références sont relatives. Le jour où un domaine est acheté, une
+commande bascule cette niche-là :
+
+```bash
+node regler-domaines.mjs --etat                        # les onze adresses
+node regler-domaines.mjs btp https://ia-btp.fr         # une niche sur son domaine
+node regler-domaines.mjs --base https://xxx.pages.dev  # tout le réseau
+```
+
+`niche.domaine` fabrique la balise canonique, le sitemap et le robots.txt.
+Une valeur fausse ne casse **rien de visible** et annonce pourtant à Google que
+la version de référence de la page est ailleurs — d'où l'outil plutôt qu'onze
+retouches à la main.
+
+Pour construire à la main sans déployer :
+
 ```bash
 npm run styles && npm run sites
 ```
@@ -234,5 +258,10 @@ Trois choses, et il vaut mieux les dire que les découvrir :
 - **Poser les vrais liens d'affiliation.** Tant qu'ils sont en
   `exemple-affiliation.com`, `valider.js` le rappelle à chaque exécution et le
   réseau ne rapporte rien.
-- **Acheter les domaines.** Ils sont écrits dans les bases (`niche.domaine`) et
-  servent à fabriquer les sitemaps ; rien ne vérifie qu'ils existent.
+- **Acheter les domaines** — et seulement ceux qui le méritent. Sept des onze
+  noms d'origine étaient déjà pris par des tiers, dont au moins un revendeur de
+  liens : mesuré au DNS, contrôlé sur deux domaines inventés qui, eux, ne
+  résolvent rien. Le réseau tourne donc sur `*.pages.dev` le temps de savoir
+  quelles niches amènent du monde ; on achète ensuite pour celles-là, avec
+  `regler-domaines.mjs`. Rien ne vérifie qu'un domaine écrit dans une base
+  existe, ni qu'il est à nous.
