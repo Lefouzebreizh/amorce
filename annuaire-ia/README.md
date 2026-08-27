@@ -28,6 +28,11 @@ Deux travaux automatisés à la racine du dépôt :
 `.github/workflows/autopilot.yml` publie et pousse tous les deux jours ;
 `.github/workflows/annuaire-ia.yml` est la barrière de vérification.
 
+
+**Les liens d'affiliation sont encore ceux de démonstration.** Les programmes
+à ouvrir, leurs commissions et leurs adresses d'inscription sont rassemblés dans
+[`AFFILIATION.md`](AFFILIATION.md).
+
 ## Les onze sites
 
 | Niche | Métier visé | Domaine prévu |
@@ -46,6 +51,20 @@ Deux travaux automatisés à la racine du dépôt :
 
 Les domaines sont écrits dans chaque base (`niche.domaine`) : c'est de là que
 les sitemaps et les sites construits les lisent. Les changer là suffit.
+
+## Mise en ligne
+
+Automatique : toute poussée sur `main` touchant ce dossier construit les onze
+sites et les dépose sur Cloudflare Pages, sous un projet unique où chaque niche
+occupe son sous-dossier. L'auto-pilote appelle le même workflow après avoir
+publié.
+
+Les adresses publiques se règlent en une commande, jamais à la main :
+
+```bash
+node regler-domaines.mjs --etat
+node regler-domaines.mjs btp https://ia-btp.fr
+```
 
 ## Tester en local
 
@@ -89,6 +108,12 @@ Il tient une **réserve de cinq outils par niche**, déjà rédigés, dans
 `auto-pilot.js`. À chaque exécution il en publie un par site, tiré au sort
 parmi ceux qui ne sont pas en ligne, daté du jour. Le travail programmé fait
 la même chose tous les deux jours à 08:00 UTC, puis committe et pousse.
+
+Il publie en priorité les outils **vendus en libre-service** tant qu'une niche
+compte plus d'outils « sur devis » que d'outils à prix affiché. Un outil vendu
+par un commercial n'a pas de programme d'affiliation : au lancement, `juridique`
+n'avait que ceux-là, `btp` et `rh` trois sur quatre. `valider.js` le signale, le
+tirage le corrige.
 
 Quand il ne reste que deux passages, il **ouvre un billet** sur le dépôt. C'est
 volontaire : une réserve vide ne casse rien — le script continue de tourner

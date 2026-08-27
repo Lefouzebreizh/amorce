@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ia-restauration.fr/sitemap.xml
+Sitemap: https://ma-panoplie-ia.com/restauration/sitemap.xml

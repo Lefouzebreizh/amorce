@@ -152,6 +152,20 @@ export function validerBase(base, nomFichier, releve = creerReleve()) {
     return releve;
   }
 
+  /* Un outil vendu « sur devis » se négocie en six mois avec un commercial :
+     aucun programme d'affiliation derrière, donc aucune commission possible.
+     Ils ont leur place — ce sont souvent les meilleurs du métier, et c'est
+     l'autorité du site qui amène le trafic — mais une niche qui n'est faite
+     que de ceux-là ne rapportera jamais un centime. Mesuré au lancement :
+     juridique n'avait que ça, btp et rh trois sur quatre. */
+  const surDevis = base.outils.filter((o) => /sur devis/i.test(String(o.prix ?? ''))).length;
+  if (base.outils.length >= 3 && surDevis * 2 > base.outils.length) {
+    alerter(
+      releve, 'niche-peu-monetisable',
+      `${ou} — ${surDevis} outils sur ${base.outils.length} sont « sur devis » : cette niche ne peut presque rien rapporter`
+    );
+  }
+
   const vus = new Set();
   for (const outil of base.outils) {
     validerOutil(outil, ou, releve, { dateRequise: true });
@@ -208,11 +222,29 @@ export function validerReseau(backlog = null, releve = creerReleve()) {
         continue;
       }
       const vus = new Set();
+      // Les noms sont relevés en plus des identifiants : deux entrées du même
+      // outil sous deux identifiants différents passaient jusqu'ici sans rien
+      // déclencher, et l'auto-pilote les publiait toutes les deux — deux fiches
+      // identiques sur un site dont toute la conception évite la duplication.
+      // C'est arrivé en fusionnant deux réserves écrites en parallèle, où le
+      // dédoublonnage s'était fait sur l'identifiant seul. Alerte et non erreur :
+      // la page reste parfaitement fonctionnelle, elle est seulement moins
+      // crédible — et bloquer une publication pour cela coûterait plus cher.
+      const noms = new Map();
       for (const outil of reserve) {
         validerOutil(outil, `réserve ${niche}`, releve, { dateRequise: false });
         if (outil?.id) {
           if (vus.has(outil.id)) releve.erreurs.push(`réserve ${niche} — identifiant en double : ${outil.id}`);
           vus.add(outil.id);
+        }
+        if (outil?.nom) {
+          const cle = outil.nom.trim().toLowerCase();
+          if (noms.has(cle)) {
+            alerter(releve, 'reserve-nom-double',
+              `réserve ${niche} — « ${outil.nom} » deux fois, sous ${noms.get(cle)} et ${outil.id} : il sera publié en double`);
+          } else {
+            noms.set(cle, outil.id);
+          }
         }
       }
     }

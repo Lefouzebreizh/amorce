@@ -31,7 +31,10 @@ workflow `Look & Find` échoue si l'un d'eux a dérivé de sa source.
 Ce que la machine de développement ne peut pas vérifier : le build Android
 (SDK absent du conteneur), la caméra, la session de réalité augmentée. Le
 workflow GitHub construit l'APK de debug à chaque poussée et le publie en
-artéfact — c'est le chemin le plus court vers un vrai téléphone.
+artéfact — c'est le chemin le plus court vers un vrai téléphone. Le protocole
+d'essai correspondant est écrit dans `ESSAI-APPAREIL.md`, pensé pour être suivi
+sans rien relire d'autre : le rédiger a coûté moins cher que de répondre trois
+fois aux mêmes questions de sideload MIUI.
 
 **Ce qu'elle peut vérifier depuis peu**, et qui demandait auparavant ce même
 aller-retour de vingt minutes : la qualité de l'identification. Les deux
@@ -205,6 +208,8 @@ méthode testée.
 | `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé. Le patron du faux `Dio` est là si un autre test en a besoin. |
 | `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |
+| `requete_gemini_test.dart` | Ce qui part réellement vers Gemini, et l'égalité avec ce qu'enverrait `tool/banc_invite.dart`. |
+| `diagnostic_reponse_test.dart` | La fidélité du diagnostic de `tool/lecture_fiche.dart` : ne rien signaler que le DTO accepte, ne rien taire de ce qu'il écarte. Un verdict inversé fait corriger le mauvais fichier. |
 
 Trois recettes utiles quand on ajoute un test :
 
@@ -256,13 +261,18 @@ Trois recettes utiles quand on ajoute un test :
   `main.dart`, qui n'est pas appelable depuis un test. Ajouter une boîte Hive
   sans les mettre à jour toutes les deux fait échouer le démarrage réel sans
   qu'aucun test ne bronche.
-- **`AppConfig.geminiModel` a une date de péremption.** Google arrête ses
-  modèles à date annoncée : la génération 1.5 répond déjà 404, et l'application
-  a passé un temps à pointer dessus. Un modèle retiré ne dégrade rien, il fait
-  échouer *tous* les scans d'un coup, sur tous les appareils, sans qu'une ligne
-  du dépôt ait bougé — et la panne ressemble à un problème de réseau. D'où
-  `ModelUnavailableException`, qui nomme le modèle et la constante. Pour savoir
-  ce qui est servi : `dart run tool/banc_invite.dart --modeles`.
+- **`AppConfig.geminiModel` est un alias (`gemini-flash-latest`), pas un
+  numéro.** Google arrête ses modèles à date annoncée : la génération 1.5, sur
+  laquelle l'application a pointé, répond déjà 404. Un modèle retiré ne dégrade
+  rien, il fait échouer *tous* les scans d'un coup, sur tous les appareils, sans
+  qu'une ligne du dépôt ait bougé — et la panne ressemble à un problème de
+  réseau. L'alias supprime cette falaise au prix d'un comportement qui peut
+  glisser quand Google avance la version ; c'est le bon côté du marché tant
+  qu'une réponse douteuse se diagnostique en cinq secondes avec
+  `tool/rejouer.dart`. Ne pas y substituer un numéro figé sans se donner un
+  moyen d'apprendre l'extinction autrement que par un utilisateur. Filet :
+  `ModelUnavailableException`. Ce qui est servi pour une clé :
+  `dart run tool/banc_invite.dart --modeles`.
 - Sans serveur, un prix ne peut bouger qu'au rescan. Ne pas ajouter de
   vocabulaire d'alerte de fond (« notification », « surveillance permanente ») :
   l'architecture ne le permet pas.

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ia-ecommerce.fr/sitemap.xml
+Sitemap: https://ma-panoplie-ia.com/ecomm/sitemap.xml

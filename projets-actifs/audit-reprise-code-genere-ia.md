@@ -202,3 +202,96 @@ distincte** : ce qui se vend ici n'est pas le relevé — le cas ci-dessus montr
 qu'un relevé automatique aurait produit onze faux positifs — mais le tri, le
 classement, et le correctif écrit. À surveiller quand même : si l'un d'eux
 ajoute un service humain, il arrive avec le flux d'acquisition déjà constitué.
+
+---
+
+## Plan de bataille
+
+Le goulot n'est pas la production, c'est l'acquisition — et depuis que
+`scan_surface.py` existe, **qualifier une cible coûte trente secondes au lieu
+d'une soirée**. Tout le plan découle de ça : aller large sur les cibles, pas
+profond sur une seule.
+
+**Le partage du travail est net.** À toi : la liste, les envois, les réponses —
+c'est humain, ça se fait au navigateur, et ça part en ton nom. À moi : le tri,
+le classement, le correctif écrit, le chiffrage, le texte du rapport. Ne jamais
+attendre l'un pour faire l'autre.
+
+### Phase 0 — trancher les trois questions ouvertes (30 min, une fois)
+
+Elles bloquent la rédaction du rapport, pas la prospection. Recommandations :
+
+1. **Signer aussi les réparations**, mais jamais sans audit préalable. L'audit
+   seul plafonne autour de 1 000 €/mois ; et l'actif visé — la grille
+   réutilisable — se construit pendant les reprises, pas pendant les audits.
+2. **Limiter la pile à JS/TS + Supabase/Firebase.** Pas parce que le reste est
+   dur, mais parce que le scan, le gabarit et la bibliothèque de correctifs ne
+   se capitalisent que si les cibles se répètent. Refuser Python et Rails ne
+   coûte presque rien à ce volume et double la réutilisation.
+3. **Une seule reprise en chantier à la fois.** Cinq projets tournent déjà ici,
+   et une reprise supporte mal l'interruption.
+
+### Phase 1 — la liste (une soirée, toi)
+
+**Vingt** applications déployées, construites par IA, avec un palier payant.
+Où chercher : vitrines Lovable / Bolt / v0, Product Hunt sur six mois,
+Indie Hackers, r/SaaS, X sur « built with Lovable » + MRR, et côté français les
+forums no-code, les Discord no-code et LinkedIn.
+
+Filtrer dans cet ordre, du moins cher au plus cher :
+
+1. une page de tarifs avec un vrai palier payant — c'est le filtre décisif ;
+2. un contact joignable, avec un nom d'humain ;
+3. l'application répond.
+
+**Et rien d'autre.** Surtout ne pas essayer de deviner si elle est cassée :
+c'est précisément ce que le scan fait pour trente secondes.
+
+### Phase 2 — le tri mécanique (10 min, moi)
+
+`scan_surface.py` sur les vingt, tu me colles les relevés. Je fais le tri.
+
+**Attendre un taux de succès bas.** Le seul cas mené jusqu'au bout a rendu onze
+constats bruts et zéro constat réel. Sur vingt cibles, tabler sur quatre à six
+qui portent quelque chose de vrai. Ce n'est pas un échec du scan : c'est le
+scan qui fait son travail, et c'est exactement ce qui rend le tri vendable.
+
+### Phase 3 — trois rapports, pas un
+
+La fiche disait d'en auditer **une**. C'était écrit quand un audit coûtait une
+soirée. Un envoi unique est un échantillon de taille 1 : le silence n'y apprend
+rien. Trois envois la même semaine, même gabarit — ce sont les **écarts entre
+les réponses** qui portent l'information.
+
+### Phase 4 — le ton, et c'est là qu'on peut tout perdre
+
+Un courrier de sécurité non sollicité se lit comme un racket, sauf s'il est
+construit pour ne pas l'être. Quatre règles, non négociables :
+
+- **Le correctif du n°1 est donné entier, gratuit, applicable sans nous.** C'est
+  la seule chose qui sépare l'aide du chantage.
+- **Aucune échéance, aucune urgence**, jamais « avant que quelqu'un d'autre ne
+  le trouve ». Le filtre 48K vaut ici aussi : l'urgence fabriquée blesse
+  exactement les gens qu'on veut servir.
+- **Dire où le relevé s'est arrêté** : « je n'ai lu que ce que votre site sert à
+  n'importe quel visiteur, je n'ai rien forcé ».
+- **Ne publier le constat nulle part.** Jamais, sous aucune forme, quelle que
+  soit la réponse — y compris l'absence de réponse.
+
+### Phase 5 — mesurer, et le seuil de décision
+
+Écrire chaque envoi dans un tableau : date, cible, constat n°1, réponse.
+
+- **≥ 2 réponses sur 10 envois** (« combien pour le reste ? ») → l'offre tient,
+  passer à l'étape 2 et facturer.
+- **0 réponse sur 10** → ce n'est pas le rapport, c'est la cible. **Changer de
+  canal avant de changer de texte** — réécrire le rapport est le réflexe, et
+  c'est celui qui fait perdre un mois.
+
+### La parade sur la concurrence
+
+Talon, supashield, VibeGuard vendent le scan automatique. Un prospect qui
+répond « j'ai déjà passé un scanner » n'est pas perdu : **c'est le mieux
+qualifié du lot**. Il a une liste de quarante lignes que personne n'a classée,
+et il est déjà convaincu que le problème existe. L'offre, c'est le classement —
+et le cas ci-dessus prouve ce que l'automatique rend seul.

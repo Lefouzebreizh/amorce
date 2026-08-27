@@ -168,6 +168,23 @@ annuaire qui recommande un outil mort ou hors sujet perd la seule chose qu'il
 vend. En cas de doute sur l'existence ou le prix d'un outil, chercher plutôt
 que supposer : c'est du contenu qui partira en ligne sans relecture.
 
+Et une contrainte qu'on découvre trop tard si personne ne l'écrit :
+**privilégier les outils vendus en libre-service**, avec un prix affiché. Un
+outil « sur devis » se négocie six mois avec un commercial : aucun programme
+d'affiliation derrière, donc aucune commission possible. Au lancement,
+`juridique` n'avait que ceux-là, `btp` et `rh` trois sur quatre — trois sites
+parfaitement référencés et structurellement incapables de rapporter un centime.
+
+Ils ont leur place : ce sont souvent les meilleurs du métier, et c'est
+l'autorité du site qui amène le trafic. Mais **une niche a besoin d'une
+majorité d'outils monétisables**, et deux garde-fous le rappellent sans qu'on
+ait à s'en souvenir :
+
+- `valider.js` alerte (`niche-peu-monetisable`) dès que plus de la moitié des
+  outils en ligne d'une niche sont « sur devis » ;
+- `auto-pilot.js` publie alors en priorité les candidats en libre-service,
+  jusqu'à ce que la niche repasse au-dessus de la moitié.
+
 ### Créer un douzième site
 
 ```bash
@@ -181,6 +198,30 @@ alors « en chantier », sans bloquer la chaîne. Reste le travail éditorial :
 accroches, slogan, balises, trois outils, cinq en réserve.
 
 ### Déployer
+
+**C'est automatique depuis la mise en place de Cloudflare Pages.** Toute
+poussée sur `main` qui touche `annuaire-ia/` construit et dépose les onze
+sites, et l'auto-pilote appelle le même workflow juste après avoir publié —
+sans quoi l'outil du jour n'apparaîtrait en ligne que deux jours plus tard,
+une poussée faite au jeton d'Actions ne redéclenchant aucun workflow.
+
+Les onze sites vivent sous un seul projet Pages, chacun dans son sous-dossier
+(`annuaire-ia.pages.dev/btp/`). Le gabarit s'en accommode sans changement :
+toutes ses références sont relatives. Le jour où un domaine est acheté, une
+commande bascule cette niche-là :
+
+```bash
+node regler-domaines.mjs --etat                        # les onze adresses
+node regler-domaines.mjs btp https://ia-btp.fr         # une niche sur son domaine
+node regler-domaines.mjs --base https://xxx.pages.dev  # tout le réseau
+```
+
+`niche.domaine` fabrique la balise canonique, le sitemap et le robots.txt.
+Une valeur fausse ne casse **rien de visible** et annonce pourtant à Google que
+la version de référence de la page est ailleurs — d'où l'outil plutôt qu'onze
+retouches à la main.
+
+Pour construire à la main sans déployer :
 
 ```bash
 npm run styles && npm run sites
@@ -216,6 +257,15 @@ Trois choses, et il vaut mieux les dire que les découvrir :
   deux passages avant la fin.
 - **Poser les vrais liens d'affiliation.** Tant qu'ils sont en
   `exemple-affiliation.com`, `valider.js` le rappelle à chaque exécution et le
-  réseau ne rapporte rien.
-- **Acheter les domaines.** Ils sont écrits dans les bases (`niche.domaine`) et
-  servent à fabriquer les sitemaps ; rien ne vérifie qu'ils existent.
+  réseau ne rapporte rien. **La recherche est déjà faite** :
+  `annuaire-ia/AFFILIATION.md` donne les huit programmes ouverts à ouvrir en
+  premier avec leur commission et leur adresse d'inscription, ceux qui sont
+  fermés ou inexistants — Canva, Notion, et aucun des grands modèles — et ce
+  qu'il faut noter de chaque programme obtenu. Il reste à créer les comptes.
+- **Acheter les domaines** — et seulement ceux qui le méritent. Sept des onze
+  noms d'origine étaient déjà pris par des tiers, dont au moins un revendeur de
+  liens : mesuré au DNS, contrôlé sur deux domaines inventés qui, eux, ne
+  résolvent rien. Le réseau tourne donc sur `*.pages.dev` le temps de savoir
+  quelles niches amènent du monde ; on achète ensuite pour celles-là, avec
+  `regler-domaines.mjs`. Rien ne vérifie qu'un domaine écrit dans une base
+  existe, ni qu'il est à nous.

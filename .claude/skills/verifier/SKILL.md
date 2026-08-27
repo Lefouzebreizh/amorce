@@ -103,7 +103,7 @@ Voir `/reseau-annuaires` pour ce que chacun garde.
 ## Toutes les suites Python, comme la CI
 
 ```bash
-.claude/skills/verifier/scripts/comme-la-ci.sh          # les sept suites
+.claude/skills/verifier/scripts/comme-la-ci.sh          # toutes les suites
 .claude/skills/verifier/scripts/comme-la-ci.sh kdp      # une seule
 ```
 
@@ -228,6 +228,23 @@ tant que la chaîne n'a pas tourné sur de vraies planches.
 
 Ce que `valider.py` ne voit pas, et qu'aucun script ne verra : si le dessin est
 beau, si le texte est juste, si l'histoire tient.
+
+## Radar crypto — `pepites/`
+
+```bash
+cd pepites
+python3 -m unittest discover -s tests    # 121 tests, aucun ne touche au réseau
+python3 profils.py                       # l'effet des réglages sur six profils connus
+```
+
+`profils.py` en plus **si et seulement si** le changement touche à un seuil, à
+un trapèze, à une pondération ou à un filtre : les tests diraient qu'ils passent
+sans dire que la note du profil « accumulation » est tombée de 100 à 48.
+
+Ce qu'aucun des deux ne dit : **si une API a changé de forme**. Rien n'a tourné
+contre DexScreener ni GoPlus en conditions réelles ; tout est validé sur des
+réponses rejouées. Un changement dans `pepites/sources/` se signale comme non
+vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 
 ## Paper-Manager — `paper-manager/`
 

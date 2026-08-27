@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ia-juridique.fr/sitemap.xml
+Sitemap: https://ma-panoplie-ia.com/juridique/sitemap.xml

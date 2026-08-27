@@ -183,3 +183,171 @@ Deux filets qu'on peut cesser de soupçonner.
 **Portée générale :** un contrôle vert dit deux choses très différentes — « j'ai
 regardé et c'est bon » ou « je n'ai rien regardé ». Rien ne les distingue dans
 un rapport de tests, et seul un défaut fabriqué exprès les sépare.
+
+---
+
+## Un niveau conforme et une dynamique nulle s'entendent comme du silence
+
+*Coût : une nuit entière, et huit versions rejetées pour « pas de son ».*
+
+Un montage mesuré à −8,4 LUFS — plus fort que la référence de l'auteur, donc
+au-dessus de tout soupçon — s'entendait comme s'il n'y avait rien. La mesure
+qui le disait n'était pas la sonie mais la **plage de dynamique : LRA 2,1 LU**.
+L'ouverture, les voix et le rugissement final sortaient au même niveau à un
+décibel près. Sans écart, l'oreille cesse de distinguer et n'entend plus qu'une
+bouillie constante ; le niveau moyen, lui, reste parfait.
+
+La cause tenait à un lit sonore posé **en continu** sous tous les plans. Le
+retirer, et ne le laisser revenir que par touches courtes, a rendu LRA 6,8.
+
+Deuxième piège, et il s'est refermé aussitôt : en comblant un creux de sept
+décibels dans le bloc de foule, LRA est retombé de 6,8 à 3,5. **On avait
+rebouché le trou en supprimant la dynamique qui le rendait nécessaire.** Un
+creux doit rester un creux ; il doit seulement cesser d'être un silence.
+
+**Portée générale :** dès que quelqu'un dit « on n'entend rien » et que la sonie
+est conforme, lire LRA avant tout le reste. En dessous de 3 LU il n'y a plus de
+film, quel que soit le niveau. Et un limiteur ne rend pas plus fort : au-delà de
+deux décibels de gain, il reprend en dynamique ce qu'il donne en niveau —
+mesuré ici, +2 dB n'achetaient que 0,6 LUFS et coûtaient 0,8 LU.
+
+---
+
+## Transcrire les pistes règle en une minute ce que le calage ne règle jamais
+
+*Coût : plusieurs sessions à recaler une voix qui n'aurait pas dû être là.*
+
+« Il y a un mélange », « c'est mal synchronisé », « ce ne sont pas les bonnes
+paroles » : trois remarques traitées comme des problèmes de calage, sans succès.
+
+Transcrites côte à côte, la voix off générée et le son natif du plan disaient
+**mot pour mot la même phrase** — « Warning! Sector 99 is collapsing. The cyber
+hydra titan awakens ». Ce n'était pas un défaut de synchronisation, c'était un
+doublon. Aucune quantité de recalage ne l'aurait résolu.
+
+La même transcription a révélé qu'un plan mis à zéro « pour cause de double
+voix » portait en réalité une réplique **différente**, jamais entendue, qui
+manquait au film.
+
+**Portée générale :** devant un défaut de son qui porte de la parole, comparer
+les **textes** avant les formes d'onde. Une transcription coûte une minute et
+tranche entre un problème de calage et un problème de contenu — deux choses
+qu'aucune mesure de signal ne distingue.
+
+---
+
+## La capacité déclarée impossible l'était dans le mauvais cadrage
+
+*Coût : trois sessions à répéter « synchronisation labiale impossible ».*
+
+`torch` absent, `huggingface.co` et `api.sync.so` refusés : aucun modèle de
+re-synchronisation labiale ne tourne ici. Le constat était exact, et la
+conclusion fausse — parce que la question posée était « comment caler une voix
+sur des lèvres » alors qu'elle aurait dû être « pourquoi cette voix n'est-elle
+pas celle du plan ».
+
+Les rushes générés **parlent déjà**, avec leur propre son. Un plan monté avec sa
+piste native est synchrone par construction : il n'y a rien à recaler. La voix
+off plaquée était la cause du problème, pas son remède.
+
+**Portée générale :** avant de déclarer une capacité indisponible, vérifier
+qu'on ne cherche pas à refabriquer une chose que le matériau contient déjà.
+« L'outil manque » et « je m'y prends à l'envers » se ressemblent beaucoup vus
+de l'intérieur.
+## Une compétence ne se mesure pas contre un modèle nu, mais contre le dépôt
+
+*Huit agents lancés exprès pour trancher, et le résultat est un résultat nul.*
+
+Deux compétences fraîchement écrites — `api-tierce-verifiee` et
+`dependance-indisponible` — mises à l'épreuve sur quatre tâches, chacune jouée
+deux fois : une fois avec la compétence, une fois sans. Les compétences avaient
+été retirées du dossier pour que les témoins ne les voient pas, et lues par
+chemin explicite du côté « avec ».
+
+Le critère central était vérifiable sans jugement : **les symboles empruntés au
+SDK existent-ils dans le paquet publié ?** Le piège était réel — le SDK Deepgram
+7.x est généré par Fern et n'a plus aucun des noms de la v3 (`DeepgramError`,
+`PrerecordedOptions` : tous absents), donc un code écrit de mémoire plante à
+l'import.
+
+**Les deux côtés ont réussi.** Avec comme sans, les agents ont téléchargé le
+paquet, relevé les vraies classes, découvert que clé invalide et quota
+remontent la même `ApiError` nue, et que les pannes réseau traversent en
+`httpx.RequestError` sans dériver d'`OSError`. Zéro symbole inventé de part et
+d'autre.
+
+Coût mesuré de la compétence, lui, bien réel : **+10 % de jetons, +23 % de
+durée** en moyenne sur les quatre tâches.
+
+L'explication tient en une phrase, et c'est elle qui vaut : **le témoin n'est
+pas un modèle nu, c'est un modèle qui lit `CLAUDE.md`.** Une compétence qui ne
+fait que redire la culture déjà écrite du dépôt ne peut pas se distinguer d'un
+témoin qui l'a lue. Ce qu'elle mesure alors n'est pas « est-ce que ça aide »,
+mais « est-ce que ça aide *en plus de ce qui est déjà là* » — et la réponse est
+souvent non.
+
+**Portée générale :** avant d'écrire une compétence, se demander ce qu'elle dit
+que `CLAUDE.md` ne dit pas. Si la réponse tient en une phrase, cette phrase va
+dans `CLAUDE.md`, pas dans un fichier de plus.
+
+## Un instrument de mesure se vérifie avant son verdict
+
+*Corollaire du précédent, trouvé en se prenant les pieds dedans.*
+
+Le premier passage du correcteur automatique annonçait des écarts nets. Aucun
+n'a survécu à l'inspection :
+
+- « pas de mode de contrôle préalable » — le témoin en avait un, nommé
+  `--verifier` ; l'expression régulière cherchait `--check` ;
+- « pas éprouvé sans la dépendance » — le fichier s'appelait
+  `verifier_erreurs.py` et portait treize provocations d'erreurs ;
+- « symbole inexistant dans le SDK » — c'étaient les exceptions métier que
+  l'agent **définit lui-même**, plus `httpx.RequestError` cherché dans le
+  mauvais paquet, plus `ModuleNotFoundError`, oublié de la liste des primitives ;
+- un dernier `X` fantôme venait d'une chaîne d'affichage, `"utiliser stripe.X"`.
+
+Quatre familles de faux positifs, et le verdict initial était entièrement faux
+— dans le sens flatteur pour l'hypothèse qu'on testait, ce qui est le pire des
+sens.
+
+**Portée générale :** un correcteur écrit par celui qui espère un résultat doit
+être éprouvé sur un cas dont on connaît la réponse avant qu'on croie ce qu'il
+dit. La question à lui poser est la même que pour un test : **quel défaut le
+rendrait rouge ?** Ici, la bonne épreuve était de le passer sur une sortie
+connue pour être correcte, et de vérifier qu'il ne trouve rien.
+
+---
+
+## Une suite verte en session ne dit rien de la CI
+
+`pepites` et `kdp` sont tombés le même jour sur le même défaut, à six minutes
+d'intervalle, sans que rien ne les relie : `ModuleNotFoundError` en intégration
+continue, sur des suites vertes en session.
+
+La cause est structurelle. Le hook de démarrage installe ce dont les projets ont
+besoin pour **tourner** ; la CI installe `.github/requirements-tests.txt`, qui
+est ce que les **tests** atteignent. Les deux listes ne sont pas la même, et
+c'est voulu — l'une ferait passer la vérification de quinze secondes à plusieurs
+minutes. Mais un projet neuf qui apporte une dépendance la déclare naturellement
+dans son `requirements.txt` et dans le hook, jamais dans la troisième liste. Le
+manque est alors invisible partout où l'on travaille, et visible seulement là où
+personne ne regarde avant d'avoir poussé.
+
+**Le geste qui l'attrape avant la CI**, et qui coûte trente secondes :
+
+```sh
+python3 -m venv /tmp/vierge
+/tmp/vierge/bin/python -m pip install -r .github/requirements-tests.txt
+/tmp/vierge/bin/python -m unittest discover -s <projet>/tests
+```
+
+Ce n'est pas une simulation de la CI, c'est la CI : même liste, même commande.
+Lancé après coup ce jour-là, il a rendu les deux défauts d'un coup — dont un
+qui tenait `main` au rouge et, avec lui, toutes les PR ouvertes.
+
+**Portée générale, et c'est là qu'est la leçon :** une vérification ne vaut que
+par l'environnement où elle tourne. Un poste de travail accumule ce que les
+sessions précédentes y ont installé, et devient un menteur d'autant plus
+convaincant qu'il est vert. Chaque fois qu'une machine propre exécutera le code,
+il faut avoir essayé sur une machine propre — la question n'est jamais « est-ce
+que ça passe ? » mais « ça passe *avec quoi installé* ? ».

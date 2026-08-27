@@ -55,6 +55,71 @@ npm run cron
 curl "http://localhost:8787/__scheduled?cron=0+4+*+*+*"
 ```
 
+## Mettre en ligne
+
+Rien de tout cela n'a encore été fait : le site tourne en local, la base D1
+distante n'existe pas, et `database_id` vaut `local-d1-id` dans les deux
+configurations — un marqueur, pas un identifiant.
+
+**L'ordre compte, et une étape ne peut pas se rattraper après coup :** le sel du
+hachage des adresses doit exister *avant* le premier déploiement. Sans lui, le
+code retombe sur `sel-local-a-remplacer`, une valeur écrite en clair dans ce
+dépôt — les empreintes ne seraient alors salées par rien du tout. C'est pour
+cela que le projet Pages est créé vide, avant d'être déployé : un projet vide
+accepte déjà ses secrets.
+
+```bash
+# 1. S'identifier auprès de Cloudflare (ou poser CLOUDFLARE_API_TOKEN).
+npx wrangler login
+
+# 2. Créer la base. La commande rend un `database_id` — le garder sous la main.
+npx wrangler d1 create hypersensible-db
+
+# 3. Reporter cet identifiant dans les DEUX configurations, à la place de
+#    `local-d1-id` : wrangler.toml et wrangler.veille.toml. Les Pages et le
+#    Worker de veille doivent viser la même base, sans quoi le radar affiche
+#    des prix que la tournée de nuit écrit ailleurs.
+
+# 4. Créer le seau des archives quotidiennes.
+npx wrangler r2 bucket create emotions-data
+
+# 5. Poser le schéma sur la base DISTANTE. `npm run db:init` ne fait que le
+#    local : sans `--remote`, la base en ligne resterait vide et chaque route
+#    répondrait « no such table ».
+npx wrangler d1 execute DB --remote --file=./schema.sql
+
+# 6. Créer le projet Pages vide, pour pouvoir lui donner son sel avant qu'il
+#    ne serve la moindre requête.
+npx wrangler pages project create hypersensible-bienveillance
+
+# 7. Les deux secrets. Le sel : n'importe quelle chaîne longue et aléatoire,
+#    par exemple `openssl rand -base64 32`. Le changer plus tard remet tous
+#    les compteurs de quota à zéro — sans autre dégât.
+npx wrangler pages secret put SEL_QUOTA
+npx wrangler secret put RESEND_API_KEY --config wrangler.veille.toml
+
+# 8. Déployer : le site et ses fonctions, puis la tournée de nuit.
+npm run build && npm run deploy
+npm run deploy:veille
+```
+
+Puis vérifier, dans cet ordre — chaque ligne échoue d'une manière différente :
+
+```bash
+curl -s https://<domaine>/api/radar | head -c 300      # attendu : "simule": true
+curl -s -X POST https://<domaine>/api/reforme \
+  -H 'content-type: application/json' \
+  -d '{"texte":"tu ne réponds jamais","src":"externe"}' | head -c 200
+npx wrangler pages secret list                          # SEL_QUOTA doit y être
+npx wrangler tail --config wrangler.veille.toml         # la tournée de 04 h 00
+```
+
+> **Tant que le radar est simulé, ne pas brancher le domaine public.** La
+> troisième règle dit que ce qui est simulé est annoncé, et la page l'annonce ;
+> elle ne dit pas qu'un radar de démonstration mérite d'être publié. `RADAR_SIMULE`
+> et `SIMULER_PRIX` tombent ensemble à « 0 » le jour où l'analyseur de tarifs
+> existe — c'est ce jour-là que le domaine se branche.
+
 ## Vérifier
 
 ```bash

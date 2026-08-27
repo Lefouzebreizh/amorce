@@ -22,7 +22,11 @@ if (!existsSync(RUSHES) || readdirSync(RUSHES).length === 0) {
 
 const files = readdirSync(RUSHES).map((f) => join(RUSHES, f));
 
-const browser = await chromium.launch();
+// Même variable que les autres scripts : elle désigne le Chromium déjà présent
+// sur la machine, quand celui de Playwright n'y a pas été téléchargé.
+const browser = await chromium.launch({
+  executablePath: process.env.AMORCE_CHROMIUM || undefined,
+});
 const page = await browser.newPage();
 
 let bad = 0;
@@ -55,7 +59,7 @@ const sample = () =>
   });
 
 await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
-await page.setInputFiles('input[type=file][accept="video/*"]', files);
+await page.setInputFiles('input[type=file][accept*="video/*"]', files);
 await page.waitForFunction(() => document.querySelectorAll('li img').length >= 4, { timeout: 90000 });
 await page.getByRole("button", { name: /⚡ Monter automatiquement/ }).click();
 await page.waitForTimeout(1500);

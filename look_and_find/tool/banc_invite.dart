@@ -132,26 +132,7 @@ Future<void> _identifier(
     reponse = await dio.post<Map<String, dynamic>>(
       '/models/${AppConfig.geminiModel}:generateContent',
       queryParameters: {'key': cle},
-      data: {
-        'contents': [
-          {
-            'parts': [
-              {'text': GeminiPrompt.instruction},
-              {
-                'inline_data': {
-                  'mime_type': 'image/jpeg',
-                  'data': base64Encode(jpeg),
-                },
-              },
-            ],
-          },
-        ],
-        'generationConfig': {
-          'temperature': 0.1,
-          'responseMimeType': 'application/json',
-          'responseSchema': GeminiPrompt.responseSchema,
-        },
-      },
+      data: GeminiPrompt.corpsRequete(base64Encode(jpeg)),
     );
   } on DioException catch (erreur) {
     final code = erreur.response?.statusCode;

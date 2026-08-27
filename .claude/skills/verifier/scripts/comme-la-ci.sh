@@ -94,7 +94,11 @@ if suspects:
         print(f"           {s}")
     print("           → à poser par variable d'environnement le jour où un test l'atteint.")
 PY
-for tests in $(find . -maxdepth 3 -type d -name tests -not -path '*/node_modules/*' | sort); do
+# Deux découvertes, comme la CI : les projets à `-maxdepth 3`, et l'arbre des
+# compétences, plus profond, à part — relever la profondeur générale ferait
+# entrer les `tests/` des paquets installés sous `.venv`.
+for tests in $( { find . -maxdepth 3 -type d -name tests -not -path '*/node_modules/*'
+                  find .claude/skills -maxdepth 3 -type d -name tests 2>/dev/null ; } | sort -u); do
   ls "$tests"/test_*.py >/dev/null 2>&1 || continue
   projet="${tests#./}"; projet="${projet%/tests}"
   [ -n "$filtre" ] && [[ "$projet" != *"$filtre"* ]] && continue

@@ -105,7 +105,7 @@ seuls dispositifs ci-dessus.
 
 | Script | Concept | Durée | Sans montage |
 | --- | --- | --- | --- |
-| `01-je-ne-sais-pas-monter` | B4 — l'épisode qui ouvre le feuilleton | 29 s | oui |
+| `01-je-ne-sais-pas-monter` | B4 — l'épisode qui ouvre le feuilleton | 24 s | oui |
 | `07-je-construis-mes-outils` | B1 / A1 — le blocage comme matière | 32 s | oui |
 | `02-le-son-avant-l-image` | A1 — le réglage que je n'avais pas compris | 30 s | non |
 | `03-meme-rush-deux-montages` | A2 — même rush, deux montages | 32 s | non |

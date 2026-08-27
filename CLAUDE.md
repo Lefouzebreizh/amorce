@@ -55,6 +55,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Se vérifie depuis son dossier, jamais depuis la racine.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
+- **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
+  lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
+  gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
+  aux API de sécurité, qui répondent trente fois par minute.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
@@ -177,6 +181,18 @@ résumé de la précédente hérite de son état sans hériter de ses règles. C
 ainsi qu'on redemande une fusion déjà autorisée une fois pour toutes, ou qu'on
 pose un projet sans le déclarer aux six endroits.
 
+**Nommer la session au premier message.** Un fil s'appelle `Rôle — Sujet` et
+se renomme avec `set_session_title` dès que ces deux-là sont connus : le rôle
+tel que le premier prompt le pose (« Act en tant que Solo-Founder, Lead
+Developer, Expert SEO… » → `Solo-Founder · SEO`), le sujet tel que le dépôt le
+nomme. Le rôle seul ne suffit pas, et c'est mesuré : trois sessions du même
+matin ont travaillé sur le réseau d'annuaires en ouvrant sur ce rôle-là, et
+s'appelleraient donc toutes pareil — une quatrième était bloquée à demander
+laquelle des trois garder. Le sujet seul, lui, perd la casquette sous laquelle
+le travail a été demandé, et c'est elle qui explique pourquoi ce fil-ci parle
+de référencement quand le voisin parle de montage. Sans prompt de rôle, le
+sujet seul suffit.
+
 **Et tout résumé de reprise s'ouvre sur le but à terme**, avant l'état et avant
 le prochain pas : une ligne qui dit ce que cette discussion cherche à obtenir au
 bout du compte, pas ce qu'elle fait ce matin. « Où on en est » et « le prochain
@@ -203,7 +219,8 @@ verdict par projet suivi de ce qu'elle ne couvre pas.
 
 `npm run dev | build | typecheck | lint | test` — Amorce. `npm run fixtures`
 puis `npm run verify` : parcours complet dans un vrai Chromium, plus
-`verify:reprise` et `verify:partage`. Les tests unitaires ne voient ni le canvas,
+`verify:reprise`, `verify:partage` et `verify:images`. Les tests unitaires ne
+voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
 
@@ -214,7 +231,12 @@ ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lanc
 2. **Deux couches vidéo au plus.** `timeline.ts` borne toute transition à 45 %
    du plus court des deux clips.
 3. **Un `<video>` par clip, six au plus.** Un navigateur Android n'accorde que
-   six à huit décodeurs ; au-delà, l'export sort noir sans erreur.
+   six à huit décodeurs ; au-delà, l'export sort noir sans erreur. Le plafond ne
+   vaut que pour les rushes : une image fixe est portée par un `<img>`, ne
+   mobilise aucun décodeur, et reste chargée quel qu'en soit le nombre. Le
+   graphe audio passe donc par `getVideo`, jamais par `get` — brancher une
+   source Web Audio sur une image lèverait au premier plan fixe et couperait le
+   son de tout le reste.
 4. **Composition toujours en 1080 × 1920.** La qualité d'aperçu n'agit que par
    une transformation d'échelle.
 5. **Le son passe par Web Audio**, jamais par le volume des éléments média.
@@ -274,6 +296,14 @@ une réponse qui est toujours oui, et laisse pendant ce temps une branche qui
 collectionne les conflits. Une PR verte se fusionne ; on l'annonce faite, au
 passé. Les seules choses qui s'arrêtent encore pour demander sont celles de la
 section 5, et la fusion n'en est pas.
+
+**Armer la fusion automatique à l'ouverture**, avec `enable_pr_auto_merge`,
+plutôt que de sonder les contrôles en boucle jusqu'au vert. La surveillance
+manuelle a deux défauts que la fusion automatique n'a pas : elle brûle du
+contexte à chaque sondage, et elle meurt avec la session — une PR verte reste
+alors ouverte à attendre quelqu'un. Armée, GitHub fusionne seul dès que les
+contrôles passent, téléphone éteint. On sonde encore quand l'outil refuse
+d'armer, et seulement là.
 
 Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
 plusieurs sessions en parallèle, et une branche qui attend collectionne les

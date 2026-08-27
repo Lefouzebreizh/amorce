@@ -11,6 +11,9 @@ endroit de l'application où l'on corrige sans pouvoir tout prévoir — d'où c
 recette, qui remplace l'intuition par deux mesures.
 
 Lire `look_and_find/CLAUDE.md` pour les invariants ; ce document ne les répète pas.
+Pour faire faire l'essai au propriétaire plutôt que le décrire à chaque fois,
+`look_and_find/ESSAI-APPAREIL.md` est le protocole prêt à suivre — y renvoyer
+plutôt que réexpliquer où trouver l'APK ou quoi scanner.
 
 ## 1. Trancher avant de corriger
 

@@ -1,6 +1,6 @@
 # Projet Cloudflare Pages : la coquille statique d'Astro (`dist/`) plus les
 # Pages Functions de `functions/`. Le Worker de veille quotidienne a sa propre
-# configuration dans `workers/wrangler.toml` — Pages ne sait pas déclencher de
+# configuration dans `wrangler.veille.toml` — Pages ne sait pas déclencher de
 # tâche planifiée, seul un Worker le peut, et les deux se rejoignent sur la
 # même base D1.
 

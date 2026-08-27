@@ -253,13 +253,13 @@ if (profile.mobile) {
 }
 
 // --------------------------------------------------------------- 1. Import
-const fileInputs = await page.locator('input[type=file][accept="video/*"]').count();
+const fileInputs = await page.locator('input[type=file][accept*="video/*"]').count();
 await page.setInputFiles(
-  'input[type=file][accept="video/*"]',
+  'input[type=file][accept*="video/*"]',
   [1, 2, 3, 4].map((i) => join(RUSHES, `rush${i}.webm`)),
 );
 const accepted = await page.evaluate(
-  () => document.querySelector('input[type=file][accept="video/*"]')?.files?.length ?? -1,
+  () => document.querySelector('input[type=file][accept*="video/*"]')?.files?.length ?? -1,
 );
 console.log(`     champs=${fileInputs} fichiers acceptés=${accepted}`);
 

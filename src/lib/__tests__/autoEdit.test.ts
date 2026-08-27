@@ -2,10 +2,14 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { buildAutoEdit } from '../autoEdit.ts';
 import { totalDuration } from '../timeline.ts';
-import type { MediaAsset } from '../types.ts';
+import { IMAGE_DURATION, type MediaAsset } from '../types.ts';
 
 function asset(id: string, duration: number): MediaAsset {
-  return { id, name: `${id}.mp4`, url: `blob:${id}`, duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+  return { id, name: `${id}.mp4`, kind: 'video', url: `blob:${id}`, duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+}
+
+function image(id: string): MediaAsset {
+  return { ...asset(id, IMAGE_DURATION), name: `${id}.png`, kind: 'image', hasAudio: false };
 }
 
 test('un rush unique est conservé entier', () => {
@@ -70,4 +74,32 @@ test('les bruitages posés restent dans les bornes du montage', () => {
 test('aucun rush, aucun montage', () => {
   const result = buildAutoEdit([]);
   assert.deepEqual([result.clips.length, result.captions.length, result.cues.length], [0, 0, 0]);
+});
+
+test('une image fixe unique n’est pas conservée entière', () => {
+  /*
+   * L'exception au cas précédent. Une image ne porte aucune parole qu'on
+   * couperait : la garder entière ne protège rien et pose six secondes
+   * d'immobilité, exactement ce que l'analyse pénalise.
+   */
+  const { clips } = buildAutoEdit([image('i')]);
+
+  assert.equal(clips.length, 1);
+  const longueur = clips[0].outPoint - clips[0].inPoint;
+  assert.ok(longueur < IMAGE_DURATION, `un plan de ${longueur}s, soit l’image entière`);
+  assert.ok(longueur <= 2.5, 'au-delà de 2,5 s, l’analyse compte une retombée d’attention');
+});
+
+test('une image fixe reçoit un mouvement de caméra', () => {
+  /*
+   * C'est tout ce qui sépare un diaporama d'un montage : sans mouvement, une
+   * image fixe est un arrêt sur image, et le spectateur passe.
+   */
+  const { clips } = buildAutoEdit([image('i1'), image('i2'), image('i3')]);
+
+  assert.equal(clips[0].motion, 'zoomIn', 'l’ouverture avance');
+  assert.ok(
+    clips.some((clip) => clip.motion !== 'none'),
+    'au moins un plan bouge',
+  );
 });

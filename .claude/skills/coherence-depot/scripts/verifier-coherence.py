@@ -268,7 +268,9 @@ def controler_listes_numerotees(claude_md: str, releve: Releve) -> None:
     for index, ligne in enumerate(lignes):
         annonce = re.search(
             r"\b(un|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)\s+"
-            r"(règles?|points?|décisions?|pièges?|invariants?|raisons?|parades?)\b",
+            r"(règles?|points?|décisions?|pièges?|invariants?|raisons?|parades?|"
+            r"garde-fous?|contrôles?|étapes?|conséquences?|gestes?|conditions?|"
+            r"chantiers?|verrous?|filets?)\b",
             ligne, re.IGNORECASE)
         if not annonce or ":" not in ligne:
             continue

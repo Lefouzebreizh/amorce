@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ia-btp.fr/sitemap.xml
+Sitemap: https://ma-panoplie-ia.com/btp/sitemap.xml
