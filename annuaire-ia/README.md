@@ -90,6 +90,12 @@ Il tient une **réserve de cinq outils par niche**, déjà rédigés, dans
 parmi ceux qui ne sont pas en ligne, daté du jour. Le travail programmé fait
 la même chose tous les deux jours à 08:00 UTC, puis committe et pousse.
 
+Il publie en priorité les outils **vendus en libre-service** tant qu'une niche
+compte plus d'outils « sur devis » que d'outils à prix affiché. Un outil vendu
+par un commercial n'a pas de programme d'affiliation : au lancement, `juridique`
+n'avait que ceux-là, `btp` et `rh` trois sur quatre. `valider.js` le signale, le
+tirage le corrige.
+
 Quand il ne reste que deux passages, il **ouvre un billet** sur le dépôt. C'est
 volontaire : une réserve vide ne casse rien — le script continue de tourner
 sans rien publier, l'intégration continue reste verte, et le réseau se fige en
