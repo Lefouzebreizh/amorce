@@ -183,3 +183,39 @@ Deux filets qu'on peut cesser de soupçonner.
 **Portée générale :** un contrôle vert dit deux choses très différentes — « j'ai
 regardé et c'est bon » ou « je n'ai rien regardé ». Rien ne les distingue dans
 un rapport de tests, et seul un défaut fabriqué exprès les sépare.
+
+---
+
+## Une suite verte en session ne dit rien de la CI
+
+`pepites` et `kdp` sont tombés le même jour sur le même défaut, à six minutes
+d'intervalle, sans que rien ne les relie : `ModuleNotFoundError` en intégration
+continue, sur des suites vertes en session.
+
+La cause est structurelle. Le hook de démarrage installe ce dont les projets ont
+besoin pour **tourner** ; la CI installe `.github/requirements-tests.txt`, qui
+est ce que les **tests** atteignent. Les deux listes ne sont pas la même, et
+c'est voulu — l'une ferait passer la vérification de quinze secondes à plusieurs
+minutes. Mais un projet neuf qui apporte une dépendance la déclare naturellement
+dans son `requirements.txt` et dans le hook, jamais dans la troisième liste. Le
+manque est alors invisible partout où l'on travaille, et visible seulement là où
+personne ne regarde avant d'avoir poussé.
+
+**Le geste qui l'attrape avant la CI**, et qui coûte trente secondes :
+
+```sh
+python3 -m venv /tmp/vierge
+/tmp/vierge/bin/python -m pip install -r .github/requirements-tests.txt
+/tmp/vierge/bin/python -m unittest discover -s <projet>/tests
+```
+
+Ce n'est pas une simulation de la CI, c'est la CI : même liste, même commande.
+Lancé après coup ce jour-là, il a rendu les deux défauts d'un coup — dont un
+qui tenait `main` au rouge et, avec lui, toutes les PR ouvertes.
+
+**Portée générale, et c'est là qu'est la leçon :** une vérification ne vaut que
+par l'environnement où elle tourne. Un poste de travail accumule ce que les
+sessions précédentes y ont installé, et devient un menteur d'autant plus
+convaincant qu'il est vert. Chaque fois qu'une machine propre exécutera le code,
+il faut avoir essayé sur une machine propre — la question n'est jamais « est-ce
+que ça passe ? » mais « ça passe *avec quoi installé* ? ».
