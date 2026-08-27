@@ -16,9 +16,12 @@ type Options = { changes?: number; leve?: string | null; outils?: Outil[] };
 
 function baseFactice({ changes = 0, leve = null, outils = [] }: Options = {}) {
   const vues: { sql: string; liaisons: unknown[] }[] = [];
+  const preparees: string[] = [];
   const db = {
     vues,
+    preparees,
     prepare(sql: string) {
+      preparees.push(sql);
       const requete = {
         sql,
         liaisons: [] as unknown[],
@@ -73,6 +76,44 @@ test('une base qui refuse la purge ne fait pas tomber la tournée', async () => 
   const bilan = await purgerQuotas({ DB: db });
   assert.equal(bilan.supprimes, 0);
   assert.match(bilan.echec ?? '', /no such table/);
+});
+
+test('en lecture réelle, un prix déclaré une seule fois est écrit', async (t) => {
+  const page = `<script type="application/ld+json">
+    {"@type":"Product","offers":{"@type":"Offer","price":"11.49"}}</script>`;
+  t.mock.method(globalThis, 'fetch', async () => new Response(page, { status: 200 }));
+
+  const db = baseFactice({
+    outils: [{ id: 1, name: 'Calm', url: 'https://exemple.test', current_price: 12.99 }],
+  });
+  const bilan = await tournee({ DB: db, SIMULER_PRIX: '0' });
+
+  assert.equal(bilan.simule, false);
+  assert.equal(bilan.muets, 0);
+  const ecrits = db.preparees.filter((sql) => /INSERT INTO price_history/.test(sql));
+  assert.equal(ecrits.length, 1, 'le prix lu doit donner un point de courbe');
+});
+
+test('en lecture réelle, un site qui déclare deux tarifs n’écrit rien', async (t) => {
+  // Le cas qui compte : mensuel et annuel sur la même page. Écrire l'un des
+  // deux fabriquerait la courbe que ce projet refuse de fabriquer.
+  const page = `<script type="application/ld+json">
+    {"@type":"Product","offers":[{"price":"12.99"},{"price":"99.00"}]}</script>`;
+  t.mock.method(globalThis, 'fetch', async () => new Response(page, { status: 200 }));
+
+  const db = baseFactice({
+    outils: [{ id: 1, name: 'Calm', url: 'https://exemple.test', current_price: 12.99 }],
+  });
+  const bilan = await tournee({ DB: db, SIMULER_PRIX: '0' });
+
+  assert.equal(bilan.muets, 1);
+  assert.match(bilan.detailMuets[0].raison ?? '', /2 montants/);
+  // Aucune écriture de prix : ni `current_price`, ni point de courbe. On
+  // regarde ce qui a été *préparé*, car les écritures partent par `batch`.
+  const ecrits = db.preparees.filter((sql) =>
+    /UPDATE tools SET current_price|INSERT INTO price_history/.test(sql),
+  );
+  assert.deepEqual(ecrits, []);
 });
 
 test('le bilan de la tournée porte le résultat de la purge', async (t) => {

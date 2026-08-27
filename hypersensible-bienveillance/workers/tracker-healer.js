@@ -30,8 +30,17 @@
  * c'est exactement ce que ce projet reproche aux autres.
  */
 
+import { lirePrix } from './prix.js';
+
 /** Un lien lent n'est pas un lien mort : on laisse dix secondes, pas plus. */
 const DELAI_MAX_MS = 10_000;
+
+/**
+ * Plafond de lecture d'une page, en octets. Une page de tarifs qui déclare son
+ * prix le fait dans son en-tête ; charger trois mégaoctets de scripts pour le
+ * trouver ferait dépasser la mémoire du Worker sur dix sites en parallèle.
+ */
+const TAILLE_MAX_PAGE = 512 * 1024;
 
 /** Amplitude de la variation simulée, en fraction du prix courant. */
 const AMPLITUDE = 0.05;
@@ -64,6 +73,36 @@ async function verifier(url) {
     return { ok: reponse.ok, statut: reponse.status, detail: reponse.ok ? null : `HTTP ${reponse.status}` };
   } catch (erreur) {
     return { ok: false, statut: 0, detail: erreur?.name === 'TimeoutError' ? 'délai dépassé' : String(erreur?.message ?? erreur) };
+  }
+}
+
+/**
+ * Charge une page et rend son contenu, pour y lire un prix déclaré.
+ *
+ * Un `GET` là où le healer se contente d'un `HEAD` : on a besoin du corps.
+ * Même contrat que `verifier` — ne lève jamais, un site injoignable est un
+ * résultat. Le corps est tronqué au plafond : au-delà, la page n'a de toute
+ * façon pas déclaré son prix dans son en-tête.
+ */
+async function relever(url) {
+  try {
+    const reponse = await fetch(url, {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(DELAI_MAX_MS),
+      headers: { 'user-agent': 'hypersensible-bienveillance-veille/1.0 (+https://hypersensible-bienveillance.com)' },
+    });
+    if (!reponse.ok) {
+      return { ok: false, statut: reponse.status, detail: `HTTP ${reponse.status}`, html: '' };
+    }
+    const texte = await reponse.text();
+    return { ok: true, statut: reponse.status, detail: null, html: texte.slice(0, TAILLE_MAX_PAGE) };
+  } catch (erreur) {
+    return {
+      ok: false,
+      statut: 0,
+      detail: erreur?.name === 'TimeoutError' ? 'délai dépassé' : String(erreur?.message ?? erreur),
+      html: '',
+    };
   }
 }
 
@@ -165,12 +204,17 @@ async function tournee(env) {
 
   const simuler = (env.SIMULER_PRIX ?? '1') === '1';
   const pannes = [];
+  const muets = [];
   const ecritures = [];
   const instantane = [];
 
+  // En simulation, un `HEAD` suffit : on ne lit rien de la page. Sinon il faut
+  // le corps, donc un `GET`.
+  const sonder = simuler ? verifier : relever;
+
   // Les dix vérifications partent ensemble : en série, dix sites lents
   // additionnent leurs délais et la tournée frôle la minute pour rien.
-  const etats = await Promise.all(outils.map((outil) => verifier(outil.url)));
+  const etats = await Promise.all(outils.map((outil) => sonder(outil.url)));
 
   for (let i = 0; i < outils.length; i += 1) {
     const outil = outils[i];
@@ -184,16 +228,26 @@ async function tournee(env) {
 
     // Un prix n'est relevé que sur un site qui a répondu. Prolonger la courbe
     // d'un site en panne inventerait une mesure là où il n'y en a pas eu.
-    if (etat.ok && simuler) {
-      const nouveau = prixSimule(outil.current_price);
+    //
+    // Et depuis la lecture réelle, une seconde façon de ne pas répondre : un
+    // site joignable qui ne **déclare** aucun prix, ou qui en déclare
+    // plusieurs. Elle se traite comme la première — on n'écrit pas.
+    const lu = etat.ok && !simuler ? lirePrix(etat.html) : null;
+    const nouveau = simuler && etat.ok ? prixSimule(outil.current_price) : lu?.montant ?? null;
+
+    if (etat.ok && nouveau !== null) {
       ecritures.push(
         env.DB.prepare('UPDATE tools SET current_price = ?2 WHERE id = ?1').bind(outil.id, nouveau),
         env.DB.prepare(
           'INSERT INTO price_history (tool_id, price, checked_at) VALUES (?1, ?2, CURRENT_TIMESTAMP)',
         ).bind(outil.id, nouveau),
       );
-      instantane.push({ id: outil.id, nom: outil.name, prix: nouveau, joignable: true });
+      instantane.push({
+        id: outil.id, nom: outil.name, prix: nouveau, joignable: true,
+        source: simuler ? 'simule' : lu.source,
+      });
     } else {
+      if (etat.ok && lu) muets.push({ nom: outil.name, raison: lu.raison });
       instantane.push({ id: outil.id, nom: outil.name, prix: outil.current_price, joignable: etat.ok });
     }
   }
@@ -230,6 +284,11 @@ async function tournee(env) {
     verifies: outils.length,
     pannes: pannes.length,
     simule: simuler,
+    // Combien de sites joignables n'ont déclaré aucun prix exploitable. Tant
+    // que ce nombre n'est pas nul en lecture réelle, `SIMULER_PRIX` ne peut
+    // pas tomber à « 0 » : le radar aurait des courbes qui s'arrêtent.
+    muets: muets.length,
+    detailMuets: muets,
     quotas,
     alerte,
   };
@@ -268,4 +327,4 @@ export default {
 // suffi à faire échouer le démarrage du Worker entier, avec une erreur qui
 // nomme la constante et pas la règle. Les tests unitaires n'en voyaient rien —
 // seul `npm run cron` le montre. N'exporter que des fonctions.
-export { tournee, prixSimule, verifier, purgerQuotas };
+export { tournee, prixSimule, verifier, relever, purgerQuotas };
