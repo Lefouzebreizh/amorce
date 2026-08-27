@@ -482,3 +482,47 @@ créature au-dessus de tout — puis en calculant le gain de chaque piste par
 écrite d'avance, pas par retouches successives. Trois itérations au jugé
 avaient produit trois défauts différents ; une table et une soustraction ont
 donné le bon résultat du premier coup.
+
+---
+
+## Descendre le registre pour « faire épique » sort du spectre du téléphone
+
+*Coût : un rendu, et douze décibels.*
+
+Une nappe de bande-annonce écrite avec une fondamentale à 55 Hz — deux octaves
+sous la référence habituelle, « parce que c'est une bande-annonce » — perdait
+**12,2 dB** une fois filtrée comme le fait un haut-parleur de téléphone. La
+cause était arithmétique : la nappe posée une octave et demie au-dessus de la
+basse tombait à 155 Hz, et tout le registre utile vivait sous le plancher.
+
+Fondamentale remontée à 110 Hz, triade portée deux octaves plus haut, une
+octave discrète encore au-dessus : **0,9 dB de perte**, dans la fourchette
+mesurée de l'outil du dépôt.
+
+**Portée générale :** le poids d'un son se fabrique par les **harmoniques du
+grave**, jamais en descendant le registre. Descendre déplace l'énergie hors de
+ce que l'appareil restitue, et le résultat est plus faible en paraissant plus
+grave à la conception.
+
+---
+
+## Chercher ce qu'une session voisine a déjà résolu avant de le refaire
+
+*Gain : une heure, et un résultat quatre fois meilleur que le mien.*
+
+Après six itérations ratées sur le son d'un montage, le hook de démarrage
+signalait une branche parallèle nommée « Fabriquer la musique de fond, dernier
+trou de la chaîne son ». Elle contenait `porter_sur_telephone`, une fonction
+mesurée à 0,6–1,2 dB de perte, là où ma propre saturation en perdait 3,4 — et
+la raison qui m'avait échappé : **les deux couches se partagent le niveau, elles
+ne s'y ajoutent pas**, et il faut un redressement avant la saturation pour
+obtenir les harmoniques paires.
+
+Le hook posait déjà la question — « Avant de construire : l'une d'elles fait-elle
+déjà ce travail ? » — et je l'avais lue six fois sans y répondre.
+
+**Portée générale :** dans un dépôt à plusieurs sessions, la liste des branches
+ouvertes n'est pas un ornement de démarrage : c'est la première recherche à
+faire quand on bute. Lire un titre de branche coûte une seconde ; refaire son
+travail coûte la nuit. Et ce qu'on récupère porte les mesures de l'autre, pas
+seulement son code.
