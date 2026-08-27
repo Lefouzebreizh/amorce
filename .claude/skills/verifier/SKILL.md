@@ -103,7 +103,7 @@ Voir `/reseau-annuaires` pour ce que chacun garde.
 ## Toutes les suites Python, comme la CI
 
 ```bash
-.claude/skills/verifier/scripts/comme-la-ci.sh          # les sept suites
+.claude/skills/verifier/scripts/comme-la-ci.sh          # toutes les suites
 .claude/skills/verifier/scripts/comme-la-ci.sh kdp      # une seule
 ```
 

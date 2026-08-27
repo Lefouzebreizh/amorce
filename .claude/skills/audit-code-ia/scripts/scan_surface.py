@@ -39,7 +39,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 # des seuls motifs ne suffisait pas — sur le bundle d'une vraie application,
 # les clés publiables sont partout, et les signaler comme des fuites est le
 # constat le plus coûteux du métier.
-from scan import EXPOSE, PUBLIABLE, SECRETS, anodin
+from scan import EXPOSE, PUBLIABLE, SECRETS, anodin, jeton_a_privileges
 
 AGENT = "audit-code-ia/1.0 (releve passif de surface publique)"
 DELAI = 0.3        # entre deux requêtes : on lit un site, on ne le martèle pas
@@ -198,6 +198,9 @@ def main():
                     continue
                 secrets.append(f"{nom} — {etiquette}")
                 break
+            privilege = jeton_a_privileges(ligne)
+            if privilege:
+                secrets.append(f"{nom} — {privilege}")
             m = EXPOSE.search(ligne)
             if m and not PUBLIABLE.search(m.group(0)):
                 exposes.append(f"{nom} — {m.group(0)}")
