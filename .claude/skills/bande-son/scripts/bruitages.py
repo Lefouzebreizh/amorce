@@ -62,6 +62,52 @@ def _haut(signal_entrant, coupure, ordre=4):
     return filtres.sosfilt(sos, signal_entrant)
 
 
+def porter_sur_telephone(signal_entrant, poids=1.0, plancher=400.0):
+    """Rend un grave audible sur un haut-parleur qui ne le restitue pas.
+
+    Un haut-parleur de téléphone ne descend pas sous ~400 Hz. Un bruitage dont
+    toute l'énergie vit en dessous n'est pas « plus discret » sur l'appareil où
+    le format court est regardé : il est **absent**. Mesuré sur la palette de ce
+    fichier, le grondement tombait à −60 dB une fois filtré comme le fait un
+    téléphone — rien ne passait.
+
+    La parade est celle du mastering, et elle est déjà éprouvée dans le studio
+    Amorce (`src/lib/sfx.ts`, fonction `impact`) : on ne remonte pas le grave,
+    on lui **fabrique ses harmoniques**. Un redressement suivi d'une saturation
+    douce engendre les partiels 2f, 3f, 4f… du contenu grave ; eux passent, et
+    l'oreille reconstruit le fondamental manquant — c'est le phénomène de la
+    fondamentale absente. Le son garde son poids sur une enceinte, et existe
+    enfin sur un téléphone.
+
+    Le point qui a coûté un débogage dans Amorce, et qu'on répète ici : **les
+    deux couches se partagent le niveau demandé, elles ne s'y ajoutent pas.**
+    Les additionner faisait grimper la crête d'un tiers, et le limiteur commun,
+    en l'écrasant, faisait plonger tout le reste du mixage à chaque frappe — on
+    entendait la musique pomper au rythme des impacts.
+
+    `poids` dose les harmoniques face au signal propre : 0 les supprime, 1 les
+    met à parité, au-delà le son devient agressif avant d'être plus audible.
+    """
+    grave = _bas(signal_entrant, plancher)
+    if numpy.max(numpy.abs(grave)) < 1e-6:
+        return signal_entrant          # rien à porter : le son est déjà en haut
+
+    # Le redressement double la fréquence et crée les harmoniques paires ; la
+    # tangente hyperbolique ajoute les impaires et borne la sortie. Les deux
+    # ensemble donnent un spectre riche plutôt qu'un simple bourdon à 2f.
+    excite = numpy.tanh(3.0 * numpy.abs(grave) - 0.5 * numpy.mean(numpy.abs(grave)))
+    # On ne garde que ce qu'un téléphone restitue vraiment : au-dessus du
+    # plancher, et sous 4 kHz où sa membrane cesse d'être efficace.
+    excite = _bande(excite, plancher, 4000.0)
+
+    crete = numpy.max(numpy.abs(excite))
+    if crete > 0:
+        excite *= numpy.max(numpy.abs(grave)) / crete
+
+    part = 1.0 / (1.0 + poids)
+    return signal_entrant * part + excite * part * poids
+
+
 def _irregulier(n, lissage, graine):
     """Une marche aléatoire lissée, entre 0 et 1. Le contraire d'un oscillateur.
 
@@ -92,7 +138,9 @@ def boom(duree: float, hauteur: float, graine: int) -> numpy.ndarray:
     corps *= numpy.exp(-3.4 * t / duree)
     coup = _bande(generateur.normal(0, 1, n), 160, 520) * numpy.exp(-26 * t)
 
-    return (0.55 * corps + 0.28 * coup + 0.17 * claquement) * 1.25
+    # Sans ce passage, tout ce qui précède est inaudible sur un
+    # téléphone : l'énergie de ce bruitage vit sous les 400 Hz.
+    return porter_sur_telephone((0.55 * corps + 0.28 * coup + 0.17 * claquement) * 1.25, poids=1.0)
 
 
 def choc_metal(duree: float, fondamentale: float, graine: int) -> numpy.ndarray:
@@ -125,7 +173,9 @@ def grondement(duree: float, graine: int) -> numpy.ndarray:
     n = secondes(duree)
     generateur = numpy.random.default_rng(graine)
     masse = _bas(generateur.normal(0, 1, n), 95)
-    return masse * (0.35 + 0.65 * _irregulier(n, 0.7, graine + 1)) * 3.0
+    # Sans ce passage, tout ce qui précède est inaudible sur un
+    # téléphone : l'énergie de ce bruitage vit sous les 400 Hz.
+    return porter_sur_telephone(masse * (0.35 + 0.65 * _irregulier(n, 0.7, graine + 1)) * 3.0, poids=0.9)
 
 
 def crepitement(duree: float, densite: float, graine: int) -> numpy.ndarray:
@@ -213,7 +263,9 @@ def rugissement(duree: float, graine: int) -> numpy.ndarray:
     souffle = _bande(generateur.normal(0, 1, n), 380, 3400)
     souffle *= (0.4 + 0.6 * numpy.abs(gorge)) * _irregulier(n, 14, graine + 2)
 
-    return (0.62 * gorge + 0.38 * souffle) * enveloppe * 1.35
+    # Sans ce passage, tout ce qui précède est inaudible sur un
+    # téléphone : l'énergie de ce bruitage vit sous les 400 Hz.
+    return porter_sur_telephone((0.62 * gorge + 0.38 * souffle) * enveloppe * 1.35, poids=0.8)
 
 
 def nappe_sombre(duree: float, fondamentale: float, graine: int) -> numpy.ndarray:
@@ -241,7 +293,9 @@ def nappe_sombre(duree: float, fondamentale: float, graine: int) -> numpy.ndarra
     filtre = numpy.zeros(n)
     for tranche in tranches:
         filtre[tranche] = _bas(son[tranche], float(ouverture[tranche[0]]))
-    return filtre * 0.42
+    # Sans ce passage, tout ce qui précède est inaudible sur un
+    # téléphone : l'énergie de ce bruitage vit sous les 400 Hz.
+    return porter_sur_telephone(filtre * 0.42, poids=0.6)
 
 
 def reverberation(entree, duree, melange, graine):
