@@ -1,17 +1,27 @@
 #!/usr/bin/env node
 /**
- * Fabrique `sitemap.xml` et `robots.txt` à partir de `outils.json`.
+ * Fabrique un sitemap et un robots.txt par niche, dans `sitemaps/`.
  *
- * Une page unique ne donne qu'une seule adresse à Google, et un annuaire dont
- * une seule URL est indexée ne captera jamais les recherches par nom d'outil —
- * qui sont l'essentiel du trafic qualifié. Chaque fiche est donc adressable par
- * `?outil=<id>` : un paramètre de requête est une URL distincte pour un moteur,
- * là où un fragment `#id` n'en est pas une. L'index.html sert ces adresses sans
- * configuration de serveur particulière, et ouvre la bonne fiche au chargement.
+ * Dix domaines, dix sitemaps : un moteur de recherche n'accepte dans un
+ * sitemap que des adresses du domaine où ce sitemap est servi, et un fichier
+ * unique mélangeant les dix sites serait rejeté en bloc. L'adresse de chaque
+ * site est donc écrite dans sa propre base (`niche.domaine`), à côté du reste
+ * de sa configuration — c'est le seul endroit où un site du réseau se décrit.
+ *
+ * Deux règles qui ont l'air de détails et n'en sont pas :
+ *
+ * - **Les adresses portent toujours `?niche=<id>`**, y compris l'accueil d'un
+ *   domaine qui sert déjà cette niche par défaut. C'est exactement la forme que
+ *   `index.html` écrit dans sa balise canonique ; deux formes concurrentes pour
+ *   la même page, ce sont deux pages en double aux yeux de Google.
+ * - **`lastmod` est la vraie date d'ajout de l'outil**, jamais la date du jour.
+ *   Un sitemap qui déclare tout modifié à chaque exécution perd sa crédibilité
+ *   auprès du moteur, qui cesse alors de s'y fier pour prioriser son
+ *   exploration — soit précisément ce qu'on lui demande.
  *
  * Usage :
- *   node generate-sitemap.js https://mon-site.com
- *   SITE_URL=https://mon-site.com node generate-sitemap.js
+ *   node generate-sitemap.js                        adresse lue dans chaque niche
+ *   node generate-sitemap.js https://mon-site.com   même adresse pour toutes (essai local)
  */
 
 import fs from 'node:fs';
@@ -19,89 +29,117 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const racine = path.dirname(fileURLToPath(import.meta.url));
-
-function urlDuSite() {
-  const brut = process.argv[2] || process.env.SITE_URL;
-  if (!brut) {
-    console.error(
-      'Adresse du site manquante.\n' +
-      '  node generate-sitemap.js https://mon-site.com\n' +
-      '  SITE_URL=https://mon-site.com node generate-sitemap.js'
-    );
-    process.exit(1);
-  }
-  let url;
-  try {
-    url = new URL(brut);
-  } catch {
-    console.error(`Adresse invalide : ${brut}`);
-    process.exit(1);
-  }
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-    console.error(`Adresse invalide : ${brut}`);
-    process.exit(1);
-  }
-  // Base terminée par « / » : sans elle, `new URL('?outil=x', base)` écraserait
-  // le dernier segment du chemin quand le site est servi dans un sous-dossier.
-  return url.origin + url.pathname.replace(/\/*$/, '/');
-}
+const dossierNiches = path.join(racine, 'niches');
+const dossierSortie = path.join(racine, 'sitemaps');
 
 const echapper = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-function lireOutils() {
-  const fichier = path.join(racine, 'outils.json');
-  const donnees = JSON.parse(fs.readFileSync(fichier, 'utf8'));
-  if (!Array.isArray(donnees.outils) || donnees.outils.length === 0) {
-    throw new Error('outils.json ne contient aucun outil.');
+/** Base terminée par « / » : sans elle, `new URL('?x', base)` écraserait le
+ *  dernier segment du chemin quand le site est servi dans un sous-dossier. */
+function normaliser(brut, provenance) {
+  let url;
+  try {
+    url = new URL(brut);
+  } catch {
+    throw new Error(`Adresse invalide (${provenance}) : ${brut}`);
   }
-  for (const outil of donnees.outils) {
-    if (!outil.id) throw new Error(`Un outil sans identifiant : ${outil.nom || '(sans nom)'}`);
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+    throw new Error(`Adresse invalide (${provenance}) : ${brut}`);
   }
-  return donnees.outils;
+  return url.origin + url.pathname.replace(/\/*$/, '/');
 }
 
-function main() {
-  const base = urlDuSite();
-  const outils = lireOutils();
-  const jour = new Date().toISOString().slice(0, 10);
+function lireNiches() {
+  if (!fs.existsSync(dossierNiches)) throw new Error(`Dossier introuvable : ${dossierNiches}`);
+  const fichiers = fs.readdirSync(dossierNiches).filter((f) => f.endsWith('.json')).sort();
+  if (fichiers.length === 0) throw new Error('Aucune base de niche dans niches/.');
+  return fichiers.map((f) => {
+    const base = JSON.parse(fs.readFileSync(path.join(dossierNiches, f), 'utf8'));
+    if (!base?.niche?.id) throw new Error(`${f} : bloc « niche » absent ou sans identifiant.`);
+    if (!Array.isArray(base.outils) || base.outils.length === 0) throw new Error(`${f} : aucun outil.`);
+    for (const outil of base.outils) {
+      if (!outil.id) throw new Error(`${f} : un outil sans identifiant (${outil.nom || 'sans nom'}).`);
+    }
+    return base;
+  });
+}
 
-  const entrees = [
-    { adresse: base, priorite: '1.0', frequence: 'daily' },
-    ...outils.map((outil) => ({
-      adresse: new URL(`?outil=${encodeURIComponent(outil.id)}`, base).href,
-      priorite: '0.8',
-      frequence: 'weekly',
-    })),
-  ];
+/** Faute de date d'ajout, on retombe sur la date de modification du fichier :
+ *  toujours plus honnête qu'une date du jour inventée. */
+function jour(valeur, secours) {
+  const t = Date.parse(valeur);
+  return Number.isFinite(t) ? new Date(t).toISOString().slice(0, 10) : secours;
+}
 
-  const sitemap =
+function sitemap(entrees) {
+  return (
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     entrees
       .map(
-        ({ adresse, priorite, frequence }) =>
+        ({ adresse, date, priorite, frequence }) =>
           '  <url>\n' +
           `    <loc>${echapper(adresse)}</loc>\n` +
-          `    <lastmod>${jour}</lastmod>\n` +
+          `    <lastmod>${date}</lastmod>\n` +
           `    <changefreq>${frequence}</changefreq>\n` +
           `    <priority>${priorite}</priority>\n` +
           '  </url>\n'
       )
       .join('') +
-    '</urlset>\n';
-
-  const robots =
-    'User-agent: *\n' +
-    'Allow: /\n\n' +
-    `Sitemap: ${new URL('sitemap.xml', base).href}\n`;
-
-  fs.writeFileSync(path.join(racine, 'sitemap.xml'), sitemap, 'utf8');
-  fs.writeFileSync(path.join(racine, 'robots.txt'), robots, 'utf8');
-
-  console.log(`sitemap.xml écrit — ${entrees.length} adresses (1 accueil + ${outils.length} fiches)`);
-  console.log(`robots.txt écrit — pointe vers ${new URL('sitemap.xml', base).href}`);
-  console.log('Dernière étape : déclarer le sitemap dans Google Search Console pour forcer l’exploration.');
+    '</urlset>\n'
+  );
 }
 
-main();
+function main() {
+  const impose = process.argv[2] || process.env.SITE_URL;
+  const niches = lireNiches();
+  const secours = new Date().toISOString().slice(0, 10);
+
+  fs.mkdirSync(dossierSortie, { recursive: true });
+
+  let total = 0;
+  for (const { niche, outils } of niches) {
+    if (!impose && !niche.domaine) {
+      throw new Error(
+        `${niche.id} : aucun « domaine » dans sa base.\n` +
+        '  Ajoutez-le, ou passez une adresse commune : node generate-sitemap.js https://mon-site.com'
+      );
+    }
+    const base = normaliser(impose || niche.domaine, impose ? 'ligne de commande' : `niches/${niche.id}.json`);
+    const dates = outils.map((o) => jour(o.date_ajout, secours));
+    const plusRecente = dates.slice().sort().at(-1);
+
+    const entrees = [
+      { adresse: new URL(`?niche=${niche.id}`, base).href, date: plusRecente, priorite: '1.0', frequence: 'daily' },
+      ...outils.map((outil, i) => ({
+        adresse: new URL(`?niche=${niche.id}&outil=${encodeURIComponent(outil.id)}`, base).href,
+        date: dates[i],
+        priorite: '0.8',
+        frequence: 'weekly',
+      })),
+    ];
+
+    const nomSitemap = `sitemap-${niche.id}.xml`;
+    fs.writeFileSync(path.join(dossierSortie, nomSitemap), sitemap(entrees), 'utf8');
+    fs.writeFileSync(
+      path.join(dossierSortie, `robots-${niche.id}.txt`),
+      'User-agent: *\nAllow: /\n\n' + `Sitemap: ${new URL('sitemap.xml', base).href}\n`,
+      'utf8'
+    );
+
+    total += entrees.length;
+    console.log(`  ${nomSitemap.padEnd(30)} ${entrees.length} adresses — ${base}`);
+  }
+
+  console.log(`\n${niches.length} sitemaps écrits dans sitemaps/, ${total} adresses au total.`);
+  console.log('Au déploiement : sitemap-<niche>.xml devient sitemap.xml à la racine du domaine,');
+  console.log('robots-<niche>.txt devient robots.txt, puis on déclare le sitemap dans Search Console.');
+}
+
+try {
+  main();
+} catch (erreur) {
+  console.error(erreur.message);
+  process.exit(1);
+}

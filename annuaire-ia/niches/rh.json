@@ -1,0 +1,54 @@
+{
+  "niche": {
+    "id": "rh",
+    "nom": "IA RH",
+    "emoji": "👥",
+    "domaine": "https://ia-rh.fr",
+    "metier": "recruteurs et responsables des ressources humaines",
+    "h1_accent": "L'IA des RH",
+    "h1_suite": "qui recrutent mieux, pas plus vite",
+    "slogan": "Sourcing, entretiens, offres d'emploi, expérience collaborateur : les outils qui rendent du temps aux RH sans déshumaniser le process.",
+    "meta_titre": "IA RH — les outils d'intelligence artificielle pour le recrutement et les ressources humaines",
+    "meta_description": "Sourcing automatisé, comptes rendus d'entretien, rédaction d'offres, chatbot candidat : le comparatif des outils IA testés pour les équipes RH. Prix, avis détaillés et risques juridiques signalés.",
+    "theme": {
+      "primaire": "#3b82f6",
+      "secondaire": "#60a5fa"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur."
+  },
+  "outils": [
+    {
+      "id": "metaview",
+      "nom": "Metaview",
+      "categorie": "Entretiens",
+      "prix": "Freemium — à partir de 20 $/mois",
+      "description_courte": "Le compte rendu d'entretien écrit tout seul : le recruteur écoute le candidat au lieu de prendre des notes.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/metaview",
+      "score_avis": 4.6,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nUn entretien où le recruteur tape est un entretien à moitié écouté. Metaview transcrit, structure et résume l'échange selon la trame de l'entreprise — parcours, motivations, prétentions, points de vigilance — et pousse le compte rendu dans l'outil de suivi des candidatures. Sur dix entretiens par semaine, le temps récupéré représente presque une journée entière.\n\n## Points forts\n- Compte rendu structuré selon la grille d'évaluation maison, pas un résumé générique\n- Intégration directe avec les principaux logiciels de suivi des candidatures\n- Restitution des propos du candidat, citations à l'appui, utile en débriefing\n- Repère les questions oubliées par rapport à la trame prévue\n\n## Points faibles\n- L'enregistrement exige le consentement explicite du candidat, sans ambiguïté\n- La transcription du français reste en retrait de celle de l'anglais sur les accents marqués\n- Aucune aide à la décision : l'outil restitue, il n'évalue pas — et c'est tant mieux\n\n## Idéal pour\nLes recruteurs en cabinet ou en entreprise qui enchaînent les entretiens et rendent des comptes rendus tardifs, incomplets, ou jamais."
+    },
+    {
+      "id": "hirevue",
+      "nom": "HireVue",
+      "categorie": "Présélection",
+      "prix": "Sur devis",
+      "description_courte": "L'entretien vidéo différé à grande échelle : mille candidatures traitées sans mille créneaux de téléphone.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/hirevue",
+      "score_avis": 4.1,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nHireVue règle un problème de volume : sur un recrutement de masse, la présélection téléphonique est le goulot d'étranglement. Le candidat répond en vidéo quand il veut, le recruteur visionne en accéléré, et les évaluations structurées remplacent l'impression laissée par un appel de sept minutes. L'éditeur a abandonné l'analyse du visage et de la voix — c'était la partie la plus contestable, et sa disparition rend l'outil défendable.\n\n## Points forts\n- Absorbe des volumes de candidatures qu'aucune équipe ne traite au téléphone\n- Grilles d'évaluation structurées, identiques pour tous les candidats\n- Le candidat répond en dehors des heures de bureau : moins d'abandons\n- Tests métier et mises en situation intégrés au même parcours\n\n## Points faibles\n- L'entretien différé rebute une partie des candidats, qui abandonnent en cours\n- Tout usage d'aide à la décision automatisée relève d'obligations d'information strictes\n- Coût et lourdeur de déploiement hors de portée d'une PME\n\n## Idéal pour\nLes grandes entreprises et les recruteurs de volume — distribution, centres d'appels, alternance — qui reçoivent des centaines de candidatures par poste."
+    },
+    {
+      "id": "textio",
+      "nom": "Textio",
+      "categorie": "Rédaction d'offres",
+      "prix": "Sur devis",
+      "description_courte": "L'analyse en direct des offres d'emploi et des retours de performance : ce que vos mots disent vraiment, et à qui.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/textio",
+      "score_avis": 4.3,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nTextio mesure l'effet réel du vocabulaire d'une offre sur les candidatures reçues, à partir d'un historique massif de recrutements. Un terme trop guerrier, une liste d'exigences interminable, un jargon interne : chaque élément est signalé avec son impact estimé sur le taux et la diversité des candidatures. Le second usage, plus récent, porte sur les retours d'évaluation annuelle, où les formulations vagues frappent statistiquement certains profils davantage.\n\n## Points forts\n- Suggestions appuyées sur des données de candidatures, pas sur une opinion de style\n- Alerte sur les formulations qui restreignent le vivier sans raison métier\n- S'utilise dans le navigateur, directement dans l'outil de publication\n- Le module d'évaluation professionnelle en fait un outil RH, pas seulement de recrutement\n\n## Points faibles\n- Modèle calibré d'abord sur le marché anglophone : le français est moins précis\n- Sans engagement de l'équipe, les suggestions sont ignorées et l'abonnement dort\n- Aucune formule d'entrée : l'accès se négocie au niveau entreprise\n\n## Idéal pour\nLes équipes de marque employeur qui publient beaucoup d'offres et constatent un vivier trop étroit ou trop homogène sans savoir d'où cela vient."
+    }
+  ]
+}
