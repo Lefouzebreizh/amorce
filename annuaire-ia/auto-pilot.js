@@ -276,6 +276,136 @@ Là où le home staging virtuel classique meuble une pièce vide, Reimagine Home
 ## Idéal pour
 Les mandats sur biens datés ou à rénover, où la difficulté n'est pas de meubler mais de faire imaginer autre chose que l'existant.`,
     },
+    {
+      id: `hektor`,
+      nom: `Hektor`,
+      categorie: `CRM & pilotage`,
+      prix: `Environ 70 à 150 €/mois selon les modules`,
+      description_courte: `Le logiciel d'agence le plus répandu de France, avec l'IA posée dans le flux de travail plutôt que dans un onglet séparé.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/hektor`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Sur ce métier, l'IA utile n'est pas arrivée par des outils à part : elle est entrée dans le logiciel où l'agent passe déjà ses journées. Hektor, édité par La Boîte Immo, revendique huit mille cinq cents agences et quinze ans d'existence — c'est la position d'où l'on peut se permettre d'automatiser sans que personne n'ait à changer d'habitude. Les fonctions génératives servent d'abord la rédaction et le suivi des contacts, là où le temps se perd vraiment.
+
+## Points forts
+- Parc installé considérable : formation, entraide et intégrations abondantes
+- IA intégrée au flux de travail existant, sans outil supplémentaire à ouvrir
+- Tarification modulaire, on ne paie que les briques utilisées
+- Éditeur français, au fait des obligations d'affichage et de mandat
+
+## Points faibles
+- Le prix grimpe vite à mesure que les modules s'ajoutent
+- Modularité qui rend la comparaison difficile avec des offres tout compris
+- Un parc ancien s'accompagne d'un héritage d'interface
+- Changer de CRM immobilier reste un déménagement, pas une bascule
+
+## Idéal pour
+Les agences qui veulent de l'IA sans projet ni nouvel outil, directement là où leurs mandats et leurs contacts sont déjà rangés.`,
+    },
+    {
+      id: `netty`,
+      nom: `Netty`,
+      categorie: `CRM & pilotage`,
+      prix: `À partir de 89 €/mois, site web inclus`,
+      description_courte: `Le logiciel d'agence qui inclut le site vitrine dans l'abonnement, avec quinze jours d'essai et un tarif affiché.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/netty`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Netty joue la lisibilité là où ses concurrents jouent la modularité : un tarif affiché, le site internet de l'agence compris dans l'abonnement, quinze jours pour se décider. Pour une agence de deux à dix personnes qui ne veut pas piloter deux prestataires, c'est un argument concret. En contrepartie, ses fonctions d'IA sont plus légères que celles des concurrents qui en ont fait leur axe.
+
+## Points forts
+- Tarif public et lisible, sans devis préalable
+- Site web de l'agence inclus : un prestataire de moins
+- Essai gratuit de quinze jours, engagement limité
+- Interface simple, prise en main rapide pour une petite équipe
+
+## Points faibles
+- Fonctions d'IA plus limitées que chez les concurrents qui en ont fait leur axe
+- Le confort du tout-en-un se paie en souplesse si l'agence grandit
+- Moins d'intégrations tierces que les acteurs à large parc
+- Le site inclus contraint la liberté éditoriale de l'agence
+
+## Idéal pour
+Les agences de deux à dix personnes qui veulent un outil clair et un site web, sans négocier ni empiler les modules.`,
+    },
+    {
+      id: `apimo`,
+      nom: `Apimo`,
+      categorie: `CRM & pilotage`,
+      prix: `Sur devis`,
+      description_courte: `Un des rares logiciels d'agence à IA native, taillé pour les réseaux et les agences qui travaillent à l'international.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/apimo`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Apimo figure dans le petit groupe de logiciels immobiliers français dont l'IA est native plutôt qu'ajoutée après coup — la distinction se sent à l'usage, quand l'automatisation n'oblige pas à sortir de l'écran courant. Sa particularité est l'ouverture vers l'international, avec une diffusion multilingue qui sert les agences travaillant avec une clientèle étrangère : littoral, montagne, grandes villes.
+
+## Points forts
+- IA native, intégrée au fonctionnement plutôt que greffée
+- Diffusion multilingue, utile sur les marchés à clientèle étrangère
+- Adapté aux réseaux et aux agences multi-sites
+- Ouverture technique vers les portails et les outils tiers
+
+## Points faibles
+- Aucun tarif public : comparaison impossible sans devis
+- Richesse fonctionnelle qui suppose un temps de paramétrage
+- Surdimensionné pour une agence indépendante à un seul point de vente
+- La courbe d'apprentissage est plus raide que chez les offres simples
+
+## Idéal pour
+Les réseaux, les agences multi-sites et celles dont une part des acquéreurs vient de l'étranger.`,
+    },
+    {
+      id: `prospeneo`,
+      nom: `Prospeneo`,
+      categorie: `CRM & pilotage`,
+      prix: `Sur devis`,
+      description_courte: `Un logiciel d'agence à IA native, cité aux côtés des acteurs installés sans en avoir le parc — ni les habitudes.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/prospeneo`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Prospeneo appartient à la courte liste des logiciels immobiliers français dont l'IA est native. C'est un choix d'outsider : moins de parc installé que les leaders, donc moins d'héritage d'interface et de compromis techniques, mais aussi moins de recul et un écosystème d'intégrations plus étroit. Ce compromis vaut d'être examiné par une agence qui monte son organisation plutôt que par une qui la migre.
+
+## Points forts
+- IA pensée dans le produit dès l'origine, sans couche ajoutée
+- Éditeur plus récent, moins d'héritage technique à porter
+- Approche adaptée à une agence qui construit son organisation
+- Interlocuteur accessible, ce que les grands parcs ne permettent plus
+
+## Points faibles
+- Aucun tarif public
+- Parc installé restreint : peu d'entraide, peu de retours d'expérience publics
+- Écosystème d'intégrations plus étroit que celui des leaders
+- Le pari sur un éditeur jeune n'est jamais neutre sur un outil central
+
+## Idéal pour
+Les agences qui s'équipent pour la première fois, ou celles prêtes à échanger la sécurité d'un grand parc contre un outil plus moderne.`,
+    },
+    {
+      id: `collov-ai`,
+      nom: `Collov AI`,
+      categorie: `Home staging`,
+      prix: `Palier gratuit, puis abonnement mensuel`,
+      description_courte: `Le réaménagement virtuel d'une pièce en quelques secondes, avec plusieurs styles proposés à partir d'une seule photo.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/collov-ai`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Le home staging virtuel a cessé d'être un gadget le jour où le rendu est devenu assez propre pour ne pas se remarquer. Collov produit plusieurs propositions d'aménagement à partir d'une photo, ce qui sert moins à embellir qu'à faire imaginer : c'est exactement le blocage sur un bien vide ou daté. Reste la règle qui prime sur la technique — une image retouchée doit être annoncée comme telle, sous peine de tomber dans la tromperie.
+
+## Points forts
+- Plusieurs styles d'aménagement proposés à partir d'une seule photo
+- Rendu assez propre pour une annonce, sans studio ni photographe
+- Palier gratuit permettant d'éprouver le rendu sur ses propres biens
+- Utile aussi en amont, pour orienter un vendeur sur ce qu'il faut dégager
+
+## Points faibles
+- La mention du caractère virtuel de la projection est une obligation d'information
+- La géométrie de la pièce est parfois altérée : à relire avant publication
+- Plusieurs essais nécessaires pour obtenir un rendu utilisable
+- Outil anglophone, sans accompagnement en français
+
+## Idéal pour
+Les mandats sur biens vides, datés ou encombrés, où la difficulté n'est pas de montrer le bien mais de faire imaginer autre chose.`,
+    },
   ],
 
   btp: [
