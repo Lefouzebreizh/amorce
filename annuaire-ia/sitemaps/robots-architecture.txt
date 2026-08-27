@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ia-architecture.fr/sitemap.xml
+Sitemap: https://annuaire-ia.pages.dev/architecture/sitemap.xml

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ia-immobilier.fr/sitemap.xml
+Sitemap: https://annuaire-ia.pages.dev/immobilier/sitemap.xml

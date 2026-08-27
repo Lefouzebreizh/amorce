@@ -1,0 +1,146 @@
+# Mise en ligne du réseau d'annuaires sur Cloudflare Pages.
+#
+# Jusqu'ici le réseau publiait dans le dépôt et nulle part ailleurs : onze
+# sites parfaitement construits, zéro visiteur possible. `construire-sites.js`
+# fabriquait déjà `dist/<niche>/` ; il manquait la main qui dépose le dossier.
+#
+# Quatre décisions, chacune payée par une mesure ou par un piège connu :
+#
+# * **Un seul projet Pages, onze sous-dossiers.** `dist/` déposé tel quel donne
+#   `…/immobilier/`, `…/btp/`, et le gabarit s'en accommode sans une ligne de
+#   changement : mesuré, toutes ses références sont relatives (`styles.css`,
+#   `niches/<id>.json`). C'est la forme la moins chère pour la phase de mesure ;
+#   le jour où un domaine est acheté, `regler-domaines.mjs <niche> <adresse>`
+#   bascule cette niche-là et elle seule.
+# * **Production uniquement (`--branch=main`).** Le gabarit réécrit sa balise
+#   canonique depuis l'adresse courante — vérifié : servi en local, il se
+#   déclare canonique sur `127.0.0.1`. Un déploiement d'aperçu, servi sur son
+#   propre sous-domaine `*.pages.dev`, se déclarerait donc canonique lui aussi
+#   et concurrencerait la production dans l'index. On ne déploie que la
+#   production, et le problème n'existe pas.
+# * **Appelable par l'auto-pilote (`workflow_call`).** Une poussée faite avec le
+#   jeton d'Actions ne déclenche aucun workflow — protection anti-boucle de
+#   GitHub, pas un réglage. Sans cet appel explicite, l'outil publié le lundi
+#   n'apparaîtrait en ligne que le mercredi, et rien ne le signalerait.
+# * **Sans les secrets, on prévient et on continue.** Tant que le compte
+#   Cloudflare n'existe pas, échouer rendrait l'auto-pilote rouge tous les deux
+#   jours — et une barrière rouge en permanence est une barrière qu'on cesse de
+#   lire. La publication dans le dépôt, elle, a bien eu lieu.
+#
+# Réglages à faire une fois, côté GitHub (Settings → Secrets and variables →
+# Actions) : `CLOUDFLARE_API_TOKEN` (permission « Cloudflare Pages — Edit ») et
+# `CLOUDFLARE_ACCOUNT_ID`. Côté Cloudflare : un projet Pages nommé exactement
+# `annuaire-ia`, créé en « Direct Upload ».
+
+name: Annuaire IA — mise en ligne
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'annuaire-ia/**'
+      - '.github/workflows/annuaire-ia-pages.yml'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+# Deux dépôts simultanés sur le même projet Pages se marchent dessus ; on garde
+# le plus récent, qui contient de toute façon ce que portait le précédent.
+concurrency:
+  group: pages-annuaire-ia
+  cancel-in-progress: true
+
+jobs:
+  deployer:
+    name: Construire et déposer les onze sites
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: annuaire-ia
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          # `main` explicitement, et non le SHA du déclencheur : appelé par
+          # l'auto-pilote, ce workflow hérite sinon de l'état d'avant la
+          # publication et met en ligne le catalogue de l'avant-veille.
+          ref: main
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # Tailwind vient des dépendances d'Amorce, à la racine — même motif que
+      # la barrière de vérification du réseau.
+      - name: Installer les dépendances du dépôt
+        working-directory: .
+        run: npm ci
+
+      - name: Les secrets Cloudflare sont-ils posés
+        id: secrets
+        env:
+          JETON: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          COMPTE: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$JETON" ] || [ -z "$COMPTE" ]; then
+            echo "::warning::Cloudflare non configuré : les sites sont construits mais pas déposés. Poser CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID dans les secrets du dépôt."
+            echo "pret=non" >> "$GITHUB_OUTPUT"
+          else
+            echo "pret=oui" >> "$GITHUB_OUTPUT"
+          fi
+
+      # `construire-sites.js` valide les bases et s'arrête sur la première
+      # erreur : une base cassée ne peut pas atteindre l'hébergeur.
+      - name: Construire les onze sites
+        run: |
+          node construire-styles.mjs
+          node construire-sites.js
+
+      # Le parcours en navigateur n'est PAS rejoué ici, et c'est délibéré :
+      # `verifier.mjs` sert les sources, pas `dist/`, et l'auto-pilote l'a déjà
+      # passé avant de pousser. Le relancer coûterait trois minutes par dépôt
+      # pour redire ce qu'on sait.
+      #
+      # Ce qui n'était vérifié nulle part, en revanche, c'est le dossier
+      # réellement déposé : un site oublié ou une balise canonique restée sur
+      # l'adresse d'un tiers ne casse rien de visible et s'indexe pourtant.
+      - name: Contrôler ce qui va être déposé
+        run: |
+          node -e "
+          const fs = require('node:fs'), path = require('node:path');
+          const niches = fs.readdirSync('niches').filter(f => f.endsWith('.json'));
+          let fautes = 0;
+          for (const f of niches) {
+            const base = JSON.parse(fs.readFileSync(path.join('niches', f), 'utf8'));
+            const id = base.niche.id;
+            if (!base.outils.length) { console.log('  (' + id + ') niche vide, non construite'); continue; }
+            const dossier = path.join('dist', id);
+            for (const attendu of ['index.html', 'styles.css', 'sitemap.xml', 'robots.txt', 'niches/' + id + '.json']) {
+              if (!fs.existsSync(path.join(dossier, attendu))) { console.error('  ✗ ' + id + ' : ' + attendu + ' manquant'); fautes++; }
+            }
+            const page = fs.readFileSync(path.join(dossier, 'index.html'), 'utf8');
+            const canonique = /<link rel=\"canonical\" href=\"([^\"]*)\">/.exec(page)?.[1] ?? '';
+            if (!canonique.startsWith(base.niche.domaine)) {
+              console.error('  ✗ ' + id + ' : canonique ' + canonique + ' hors du domaine ' + base.niche.domaine);
+              fautes++;
+            } else { console.log('  ✓ ' + id.padEnd(14) + canonique); }
+          }
+          if (fautes) { console.error('\n' + fautes + ' faute(s) : rien n\'est déposé.'); process.exit(1); }
+          console.log('\nDossier de dépôt conforme.');
+          "
+
+      - name: Déposer sur Cloudflare Pages
+        if: steps.secrets.outputs.pret == 'oui'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler@4 pages deploy dist \
+            --project-name=annuaire-ia \
+            --branch=main \
+            --commit-dirty=true
