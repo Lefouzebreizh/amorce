@@ -94,6 +94,7 @@ def decouvrir(client: ClientHttp, reglages: Reglages, memoire: Memoire | None = 
         suivis = memoire.jetons_suivis(
             depuis_heures=reglages.radar.suivi_depuis_heures,
             minimum=reglages.bouclier.note_minimale_pour_analyser,
+            maintenant=releve_le,
         )
         for cle_chaine, adresse in suivis[: reglages.radar.jetons_suivis_max]:
             chaine = reglages.chaines.get(cle_chaine)

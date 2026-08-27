@@ -59,9 +59,20 @@ class TestMemoire(unittest.TestCase):
         # On re-relève ce qui vaut la peine d'être confirmé, pas tout ce qui a
         # traversé le radar une fois.
         self.enregistrer(MAINTENANT, note=80.0)
-        suivis = self.memoire.jetons_suivis(minimum=55.0)
+        suivis = self.memoire.jetons_suivis(minimum=55.0, maintenant=MAINTENANT)
         self.assertEqual(len(suivis), 1)
-        self.assertEqual(self.memoire.jetons_suivis(minimum=90.0), [])
+        self.assertEqual(
+            self.memoire.jetons_suivis(minimum=90.0, maintenant=MAINTENANT), [])
+
+    def test_la_fenetre_de_suivi_se_compte_depuis_le_scan_et_non_depuis_l_horloge(self):
+        # Sans instant injecté, cette suite passait au vert le jour où elle a
+        # été écrite puis au rouge quarante-huit heures plus tard, toute seule.
+        # Un test qui dépend du jour où on le lance ne prouve rien deux fois.
+        self.enregistrer(MAINTENANT, note=80.0)
+        tard = MAINTENANT + timedelta(hours=47)
+        self.assertEqual(len(self.memoire.jetons_suivis(maintenant=tard)), 1)
+        trop_tard = MAINTENANT + timedelta(hours=49)
+        self.assertEqual(self.memoire.jetons_suivis(maintenant=trop_tard), [])
 
     def test_la_purge_efface_les_vieux_releves_et_garde_les_recents(self):
         from datetime import datetime, timezone
