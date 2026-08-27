@@ -82,7 +82,15 @@ jobs:
       # Il tourne donc AVANT la poussée : un parcours rouge ne publie rien et le
       # réseau reste dans l'état qui marchait. Ne rien publier est un incident
       # visible et réversible ; publier onze pages cassées ne l'est pas.
-      # Cinq minutes environ, tous les deux jours.
+      #
+      # Le coût est dérisoire, et le chiffre mérite d'être écrit parce qu'il
+      # dément celui qu'on mesure en session : **41 s** ici — 25 s pour poser
+      # Chromium, 16 s pour les 213 contrôles sur les onze niches — contre les
+      # 315 s relevées dans un conteneur Claude Code. L'écart n'est pas la
+      # puissance de la machine : le mandataire y bloque le CDN des polices, et
+      # chaque `waitUntil: 'networkidle'` attend l'expiration de requêtes qui
+      # n'aboutiront jamais. Une durée mesurée en session ne dit rien de la
+      # durée en CI dès qu'une page charge une ressource distante.
       - name: Installer Chromium pour le parcours
         working-directory: .
         run: npx playwright install --with-deps chromium
