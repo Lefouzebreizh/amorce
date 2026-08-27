@@ -41,6 +41,14 @@ Elles ont toutes coûté un aller-retour. Les relire vaut mieux que les répéte
 - **Le fondu d'un masque ne doit jamais rencontrer d'encre**, sinon fantôme.
 - **La tranche se calcule sur le nombre de pages du PDF final**, pas sur le
   nombre d'illustrations.
+- **« Texture de papier » dans une invite lave tout le dessin.** Le générateur
+  la pose *par-dessus* l'illustration au lieu de la mettre dessous : contraste
+  écrasé, contours mous. La première régénération de « Faire le singe » en est
+  sortie moins piquée que la planche qu'elle devait remplacer — 808 contre 853
+  à la taille d'impression, alors qu'elle était deux fois moins agrandie.
+- **Ne pas faire générer la bordure d'une planche à remplacer.** Elle ne
+  ressemblera jamais tout à fait aux autres, et cela se voit au feuilletage.
+  Demander les cases seules, puis `greffe.py` les pose dans le cadre du volume.
 - **Un défaut de dessin échappe à tout script.** C'est l'auteur qui a vu le
   regard vide. Mesurer avant de corriger, et avant de contester.
 

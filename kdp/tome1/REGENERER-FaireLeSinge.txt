@@ -1,68 +1,72 @@
-════════════════════════════════════════════════════════════════════════
-  RÉGÉNÉRER « FAIRE LE SINGE » — illustration seule, SANS AUCUN TEXTE
-  À coller tel quel. Demander la résolution maximale disponible.
-════════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════
+  RÉGÉNÉRER « FAIRE LE SINGE »  —  version 2
+  Quatre cases seules. Ni texte, ni bordure. Résolution maximale.
+═══════════════════════════════════════════════════════════════════════
 
-Children's book illustration, soft watercolour and coloured-pencil style, warm
-vintage cream paper texture, gentle autumn palette.
+Children's picture-book illustration in RICH, SATURATED WATERCOLOUR with bold
+confident black ink linework. Strong tonal contrast, vivid autumn colours,
+crisp well-defined outlines. Clean cream background.
 
-ROUSSY: a small slender red fox cub, copper-orange fur, white chest and white
-tail tip, amber eyes, expressive eyebrows. Quadruped fox anatomy, never
-humanised.
+Do NOT overlay any paper grain, aging, sepia wash, canvas texture or vintage
+filter on top of the artwork — it flattens the colours and softens every edge.
+The artwork must look freshly painted and sharp.
+
+ROUSSY: a small slender red fox cub, deep copper-orange fur, white chest and
+white tail tip, warm amber eyes, dark brown paws, expressive eyebrows.
+Quadruped fox anatomy, never humanised.
 
 ZEPHY: a small winged zebra foal. Realistic equine anatomy — four hooves, no
-human torso, no hands. Black and white stripes, mane and tail tuft in violet and
-gold, large feathered wings in violet fading to gold. Comic, rubbery, highly
-expressive face; tongue out, eyes crossed.
+human torso, no hands. Crisp black and white stripes. Mane and tail tuft in
+DEEP VIOLET and RICH GOLD. LARGE spread feathered wings, deep violet at the top
+fading to warm gold at the tips — vivid and saturated, never pale lavender.
+Comic, rubbery, highly expressive face; tongue out, eyes crossed.
 
-LAYOUT: square 2x2 comic grid, four equal panels of the same size, thin ornate
-corner frames. Decorative border of autumn leaves, oak leaves, acorns and violet
-feathers running around all four edges and bleeding off the page. An empty
-unfurled parchment scroll across the bottom.
+LAYOUT: square image, a 2x2 grid of four equal panels, each panel framed by a
+thin simple double line. Narrow cream margin around the grid. Below the grid, an
+empty unfurled parchment scroll.
 
 Panel 1: mossy autumn forest, ROUSSY sitting alone on a mossy stump, ears down,
-eyes sad, small mushrooms around him.
-Panel 2: bright sky with soft clouds, ZEPHY flying with an opened banana skin
-draped over his head like a wig, tongue out, gurning.
-Panel 3: sunny meadow, ROUSSY throwing his head back laughing, ZEPHY sitting
-beside him grinning, a ladybird on the grass.
+eyes sad, small mushrooms and fallen leaves around him.
+Panel 2: bright blue sky with soft white clouds, ZEPHY flying with an opened
+banana skin draped over his head like a wig, tongue out, gurning, wings wide.
+Panel 3: sunny green meadow, ROUSSY throwing his head back laughing, ZEPHY
+sitting beside him grinning, a ladybird on the grass.
 Panel 4: same meadow, both laughing together, ROUSSY sitting up on his hind legs
-with paws in the air, ZEPHY laughing with wings half raised, small flowers and a
-spider on the grass.
+with paws in the air, ZEPHY laughing with wings raised, wildflowers and a spider
+on the grass.
 
-════════════════════════════════════════════════════════════════════════
-  ABSOLUMENT AUCUN TEXTE — c'est la consigne la plus importante
-════════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════
+  LES DEUX CONSIGNES QUI COMPTENT PLUS QUE TOUT LE RESTE
+═══════════════════════════════════════════════════════════════════════
 
-NO TEXT ANYWHERE IN THE IMAGE. No title, no speech bubbles, no lettering, no
-words, no letters, no numbers, no panel numbers, no signature, no watermark.
-The parchment scroll at the bottom must be COMPLETELY BLANK.
+1.  AUCUN TEXTE NULLE PART. No title, no speech bubbles, no lettering, no
+    words, no letters, no numbers, no panel numbers, no signature, no
+    watermark. The parchment scroll must be COMPLETELY BLANK.
 
-Leave the UPPER THIRD of each of the four panels visually calm and uncluttered —
-open sky, plain foliage or empty ground — with the characters placed in the
-lower two thirds of their panel. That space stays empty on purpose.
+2.  AUCUNE BORDURE DÉCORATIVE. No leaves, no acorns, no feathers, no
+    ornamental frame around the page. Only the four panels, their thin double
+    frames, and the blank scroll, on plain cream. The book's own border will be
+    added afterwards.
 
-Leave a clear empty cream band across the very top of the page, above the
-panels, with nothing drawn in it except the leaf border at the edges.
+Leave the UPPER THIRD of each panel visually calm — open sky, plain foliage or
+empty ground — with the characters in the lower two thirds. That space receives
+the speech bubbles.
 
 Render as a SQUARE image at the highest resolution available — 2600 x 2600
-pixels or more. Do not upscale a smaller image: generate large.
+pixels or more. Generate large; do not upscale a small image. If the tool offers
+a quality, detail or steps setting, put it at maximum.
 
-════════════════════════════════════════════════════════════════════════
-  CE QUI SERA AJOUTÉ ENSUITE, EN VECTORIEL — ne pas le dessiner
-════════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════
+  ENSUITE, ICI
+═══════════════════════════════════════════════════════════════════════
 
-  · le titre « Roussy & Zéphy - Faire le singe » en haut
-  · les quatre médaillons numérotés 1 à 4
-  · les quatre bulles et leur texte
-  · la phrase du parchemin
+  python3 kdp/pipeline/greffe.py --neuve <la planche> \
+      --donneuse .travail/normalisees2/RoussyEtZephy_Page05_FaimDeLoup.png \
+      --vers .travail/nouveaux2/RoussyEtZephy_Page04_FaireLeSinge.png
 
-Rien de tout cela ne doit apparaître dans l'image générée.
-
-Le lettrage se pose ensuite avec :
-
-  python3 kdp/pipeline/lettrage.py --planche <la nouvelle planche> \
+  python3 kdp/pipeline/lettrage.py --planche <le résultat> \
       --dossier kdp/tome1/DOSSIER.md --page 4 --vers page04.pdf
 
-Ajouter --reperes pour dessiner d'abord les boîtes à vide et vérifier
-qu'aucune bulle ne couvre le personnage qui parle.
+`greffe.py` pose le contenu dans le cadre du volume — bordure exacte au pixel.
+`lettrage.py` trace titre, bulles, médaillons et parchemin. Ajouter --reperes
+pour vérifier d'abord qu'aucune bulle ne couvre le personnage qui parle.
