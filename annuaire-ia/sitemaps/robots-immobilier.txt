@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://annuaire-ia.pages.dev/immobilier/sitemap.xml
+Sitemap: https://ma-panoplie-ia.com/immobilier/sitemap.xml
