@@ -87,38 +87,51 @@ def frappe(duree, f0=58.0, brillance=0.55):
 def construire(duree, coupes, voix, sortie):
     t = np.arange(int(duree * SR)) / SR
 
-    # L'enveloppe générale. Ses creux sont volontaires : ce sont eux qui
-    # laissent les crêtes du montage exister.
-    general = env(t, [
-        (0.0, 0.26), (1.4, 0.16), (6.5, 0.18), (10.2, 0.20),
-        (10.4, 0.66), (11.6, 0.34), (12.7, 0.30), (12.8, 0.74),
-        (14.2, 0.38), (16.9, 0.44), (17.1, 0.92), (18.4, 0.46),
-        (19.4, 0.52), (19.5, 0.86), (20.6, 0.44), (21.3, 0.46),
-        (21.4, 1.00), (22.4, 0.42), (duree, 0.0),
-    ])
+    # L'enveloppe générale se **déduit des coupes** au lieu d'être écrite à la
+    # main. Une enveloppe codée en dur ne survit pas au premier remontage : on
+    # change l'ordre des plans, la musique continue de gonfler aux anciens
+    # instants, et plus rien ne tombe juste.
+    #
+    # La règle : creux juste avant chaque coupe, crête à la coupe, retour au
+    # calme ensuite. Ce sont les creux qui font exister les crêtes — une
+    # enveloppe sans eux écrase la plage dynamique du mixage.
+    points = [(0.0, 0.26)]
+    for i, (d, force) in enumerate(coupes):
+        plancher = 0.16 + 0.22 * (d / duree)
+        points.append((max(0.0, d - 0.12), plancher))
+        points.append((d, min(1.0, 0.34 + 0.72 * force)))
+        suivante = coupes[i + 1][0] if i + 1 < len(coupes) else duree
+        creux = d + min(1.3, (suivante - d) * 0.55)
+        if creux < suivante:
+            points.append((creux, plancher + 0.16))
+    points.append((duree, 0.0))
+    points.sort(key=lambda x: x[0])
+    general = env(t, points)
 
     # Le bourdon tient tout le film ; la tierce et la quinte n'entrent qu'à la
     # montée, sinon l'accord est complet dès la première seconde et il ne reste
     # plus rien à donner.
     mix = voix_grave(t, D2) * 0.55
     mix += voix_grave(t, D1) * 0.30
-    mix += cordes(t, A2) * env(t, [(0, 0.0), (6.5, 0.0), (10.4, 0.22), (17.0, 0.34), (duree, 0.10)])
-    mix += cordes(t, F3) * env(t, [(0, 0.0), (12.6, 0.0), (12.9, 0.20), (17.0, 0.30), (duree, 0.08)])
-    mix += cordes(t, D3) * env(t, [(0, 0.0), (17.0, 0.0), (17.2, 0.26), (duree, 0.12)])
+    sommet = max(coupes, key=lambda c: c[1])[0]
+    pulse = coupes[len(coupes) // 2][0] if len(coupes) > 2 else duree * 0.45
+    mix += cordes(t, A2) * env(t, [(0, 0.0), (pulse - 0.6, 0.0), (pulse, 0.22), (sommet, 0.34), (duree, 0.10)])
+    mix += cordes(t, F3) * env(t, [(0, 0.0), (sommet - 4.2, 0.0), (sommet - 3.9, 0.20), (sommet, 0.30), (duree, 0.08)])
+    mix += cordes(t, D3) * env(t, [(0, 0.0), (sommet - 0.1, 0.0), (sommet + 0.1, 0.26), (duree, 0.12)])
 
     # La montée : un souffle qui gagne en aigu jusqu'à la coupe du dragon.
-    montee = bruit_souffle(t, 700) * env(t, [(0, 0), (12.8, 0.0), (17.05, 0.34), (17.2, 0.0), (duree, 0)])
+    montee = bruit_souffle(t, 700) * env(t, [(0, 0), (max(0.0, sommet - 4.3), 0.0), (sommet - 0.05, 0.34), (sommet + 0.1, 0.0), (duree, 0)])
     mix += montee
 
     # Une pulsation, à partir de la foudre seulement. Avant, le film respire.
     for k in range(200):
-        d = 10.4 + k * 0.60
+        d = pulse + k * 0.60
         if d > duree - 0.4:
             break
         i = int(d * SR)
         f = frappe(0.34, 62.0, 0.42)
         n = min(len(f), len(mix) - i)
-        mix[i:i + n] += f[:n] * (0.11 + 0.13 * min(1.0, (d - 10.4) / 8.0))
+        mix[i:i + n] += f[:n] * (0.11 + 0.13 * min(1.0, (d - pulse) / 8.0))
 
     # Les coupes du montage. Chacune reçoit un coup, et c'est ce qui fait que la
     # musique paraît écrite pour ce film-ci.

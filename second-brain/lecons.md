@@ -351,3 +351,46 @@ sessions précédentes y ont installé, et devient un menteur d'autant plus
 convaincant qu'il est vert. Chaque fois qu'une machine propre exécutera le code,
 il faut avoir essayé sur une machine propre — la question n'est jamais « est-ce
 que ça passe ? » mais « ça passe *avec quoi installé* ? ».
+
+---
+
+## Ce qui donne sa taille à une créature est sa tenue, pas son attaque
+
+*Coût : trois livraisons, et « on n'entend pas le dragon » répété deux fois.*
+
+Un souffle de dragon mesuré à −15,5 dB sur la bande d'un téléphone — au niveau
+du rugissement final, donc réputé bon — restait inaudible. Découpé seconde par
+seconde, le même fichier disait autre chose : **attaque −12,9 dB, corps −21,6,
+fin −30,3.** Les prises de bibliothèque font deux secondes et vident toute leur
+énergie en sept dixièmes. Posé sous un plan de trois secondes, un tel son ne
+s'entend pas comme une bête mais comme un coup suivi d'un trou.
+
+Trois prises superposées et décalées sur un grondement harmonique tiennent
+maintenant les trois secondes à moins de huit décibels d'écart.
+
+**Portée générale :** une moyenne sur un bruitage entier cache sa forme. Devant
+un son qui « ne s'entend pas » alors que son niveau est bon, le découper en
+tranches avant toute autre chose — c'est la tenue qu'on mesure, pas le pic. Et
+ce qui vaut pour une créature vaut pour une nappe, une ambiance, un moteur :
+tout ce qui doit durer.
+
+---
+
+## Un plan magnifique qui casse la continuité coûte plus qu'il ne rapporte
+
+*Coût : trois remontages, dont deux pour garder un plan qu'il fallait couper.*
+
+Deux rushes portaient un druide au visage cyan, un troisième un druide au visage
+magenta. Étalonnés, l'écart de chroma est tombé de neuf à trois points — et ils
+restaient deux personnages. Le spectateur ne voyait pas un étalonnage
+approximatif, il voyait quelqu'un d'autre arriver et couper la réplique en cours.
+
+Le plan sacrifié était le plus spectaculaire du lot : la foudre planétaire. Le
+garder a coûté deux allers-retours ; le couper a rendu au film sa continuité,
+et accessoirement sa durée cible.
+
+**Portée générale :** la continuité d'un personnage ne se rattrape pas à
+l'étalonnage. Quand deux prises ne montrent pas le même visage, aucun réglage
+de couleur ne les réconcilie — il faut en choisir une. Le critère n'est pas
+« lequel est le plus beau » mais « lequel porte ce que le film doit dire » :
+ici, celui dont la réplique était presque entière dans son propre rush.
