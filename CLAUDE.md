@@ -256,6 +256,11 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
 | `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
 | `/voir-le-son` | Dessiner un média pour pouvoir le juger : spectrogramme, courbe de sonie, planche de vignettes. Né d'un montage mesuré conforme et pourtant muet sur téléphone — une moyenne dit qu'un son est fort, jamais qu'il est bon. |
+| `/prepresse-kdp` | Préparer un livre illustré pour l'impression à la demande : résolution, fond perdu, zone de sécurité, calcul de tranche, boucle de validation. |
+| `/retouche-planche` | Corriger au pixel une illustration dont le texte est incrusté, avec la matière de la planche — sans police importée ni régénération. |
+| `/roussy-zephy` | La charte du recueil illustré : personnages, palette, mécanique des histoires en quatre temps, gabarit de planche. |
+| `/typographie-francaise` | Les règles typographiques françaises pour tout texte qui partira en image ou en impression. |
+| `/etat-du-depot` | Qui travaille déjà sur le sujet, et si ce que le dépôt dit de lui-même est encore vrai. Deux scripts qui mesurent au lieu de supposer. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
 
@@ -268,7 +273,7 @@ sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu
 porte les règles d'identité d'Amorce là où le plugin vise une esthétique
 générique. Le plugin reste utile partout ailleurs.
 
-Trois règles qui découlent de la cohabitation :
+Quatre règles qui découlent de la cohabitation :
 
 - **Une modification ne touche qu'un seul projet**, sauf configuration à la
   racine qui doit connaître ses voisins — c'est le cas d'`eslint.config.mjs`,
