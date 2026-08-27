@@ -35,6 +35,7 @@ Usage :
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -125,7 +126,12 @@ def controler_competences(claude_md: str, releve: Releve) -> None:
     if not dossier.is_dir():
         return
     sur_disque = {d.name for d in dossier.iterdir() if (d / "SKILL.md").is_file()}
-    citees = set(re.findall(r"`/([a-z0-9-]+)`", claude_md))
+    # La table détaillée vit dans une référence générée depuis le disque : la
+    # tenir à la main dans CLAUDE.md la rendait fausse le lendemain de chaque
+    # ajout. On cherche donc les citations dans les deux fichiers.
+    table = RACINE / ".claude" / "references" / "competences.md"
+    texte = claude_md + (table.read_text(encoding="utf-8") if table.is_file() else "")
+    citees = set(re.findall(r"`/([a-z0-9-]+)`", texte))
 
     absentes = sorted(sur_disque - citees)
     releve.faux_si(
@@ -154,6 +160,22 @@ def controler_agents(claude_md: str, releve: Releve) -> None:
     )
 
 
+def manifeste_avec_dependances(package: Path) -> bool:
+    """Un `package.json` sans dépendance n'a rien à installer.
+
+    Le réseau d'annuaires en porte un pour ses seuls scripts npm : le signaler
+    comme absent du hook réclamerait une installation qui n'installerait rien,
+    et cet avertissement-là reviendrait à chaque session sans rien à corriger.
+    """
+    if not package.is_file():
+        return False
+    try:
+        manifeste = json.loads(package.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return True  # illisible : mieux vaut le signaler que le taire
+    return bool(manifeste.get("dependencies") or manifeste.get("devDependencies"))
+
+
 def controler_hook(releve: Releve) -> None:
     hook = RACINE / ".claude" / "hooks" / "session-start.sh"
     if not hook.is_file():
@@ -165,8 +187,8 @@ def controler_hook(releve: Releve) -> None:
     for projet in sorted(projets_reels()):
         court = projet.split("/")[-1]
         installable = any(
-            (RACINE / projet / f).exists() for f in ("requirements.txt", "package.json", "pubspec.yaml")
-        )
+            (RACINE / projet / f).exists() for f in ("requirements.txt", "pubspec.yaml")
+        ) or manifeste_avec_dependances(RACINE / projet / "package.json")
         releve.regarder_si(
             installable and court.lower() not in texte and projet.lower() not in texte,
             f"« {projet} » a des dépendances à installer mais n'apparaît pas dans "
@@ -185,6 +207,13 @@ def controler_tests_python(releve: Releve) -> None:
 
     for dossier in sorted(RACINE.rglob("tests")):
         if "node_modules" in dossier.parts or not dossier.is_dir():
+            continue
+        # Les dossiers en point sont des caches ignorés par git — `.verif-ci/`
+        # (le rejeu local de la CI) y copie le dépôt entier et y installe un
+        # environnement Python, ce qui faisait remonter vingt-quatre suites
+        # fantômes, dont celles de numpy. Aucun projet de ce dépôt n'a ses
+        # tests sous un dossier en point.
+        if any(part.startswith(".") for part in dossier.parts):
             continue
         if not any(dossier.glob("test_*.py")):
             continue

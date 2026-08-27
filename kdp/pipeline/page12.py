@@ -34,7 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import charte  # noqa: E402
 from pipeline.bordure import fond_charte  # noqa: E402
 
-POLICES = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
+POLICES = charte.POLICES
 CORPS, ITALIQUE, GRAS = (POLICES / f"Lora-{n}.ttf" for n in ("Regular", "Italic", "Bold"))
 
 BRUN, BRUN_PALE, ENCRE = (0.36, 0.24, 0.12), (0.45, 0.34, 0.20), (0.16, 0.13, 0.11)

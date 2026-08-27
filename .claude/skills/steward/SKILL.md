@@ -119,10 +119,16 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   donc qu'un contrôle qui ne dit rien de son contenu.
 - **L'ouverture d'une PR ne déclenche aucune CI.** Elle passe par un jeton
   d'application GitHub, que GitHub refuse comme source de workflow — protection
-  contre les boucles. Une *poussée* sur la branche, elle, déclenche bien
-  l'événement `pull_request`. Une PR ouverte puis laissée telle quelle reste
-  donc sans contrôle, indéfiniment, sans que rien ne le signale : ne pas
-  l'attendre, la déclencher à la main (`workflow_dispatch` sur la branche).
+  contre les boucles. Une PR ouverte puis laissée telle quelle reste donc sans
+  contrôle, indéfiniment, sans que rien ne le signale : ne pas l'attendre, la
+  déclencher à la main (`workflow_dispatch` sur la branche).
+
+  Une *poussée* sur la branche déclenche `pull_request`, elle — mais pas à tous
+  les coups, et c'est ce qui la rend traître. Trois poussées d'une même session
+  sur la même branche : les deux premières n'ont rien déclenché, la troisième
+  oui. Rien ne distinguait la troisième, sinon que le dépôt recevait moins de
+  monde à cette minute-là. Le déclenchement manuel, lui, n'a jamais manqué :
+  c'est la seule voie qui dispense d'aller vérifier qu'elle a marché.
 - **Vérifier le verdict sur l'empreinte exacte qui sera fusionnée.** Un commit
   poussé après le déclenchement invalide le résultat précédent, et ne relance
   que les workflows dont le filtre de chemins l'accepte — `tests-python`
@@ -173,10 +179,19 @@ ouvrir une nouvelle demande — jamais empiler sur un historique déjà fusionn�
 pas exposé au shell : `curl` sur l'API ne mènera nulle part. Les exécutions se
 lisent par les outils GitHub (`mcp__github__actions_list`, méthodes
 `list_workflow_runs` puis `list_workflow_jobs`), qui donnent l'état étape par
-étape. Chercher un contournement en ligne de commande est du temps perdu.
+étape. Chercher un contournement en ligne de commande est du temps perdu. Une
+branche fusionnée ne se supprime pas non plus d'ici — `git push origin :branche`
+échoue sur `the remote end hung up unexpectedly`. C'est cosmétique, le
+propriétaire la retire d'un bouton sur la page de la PR : ne pas insister, et ne
+pas le présenter comme un défaut du dépôt.
 
 Ne pas sonder en boucle : une exécution dure de quinze secondes à sept minutes
 selon le workflow. Attendre par une commande de fond, puis relire une fois.
+
+Ne pas relancer non plus par réflexe : chaque workflow groupe ses exécutions par
+référence avec `cancel-in-progress`, donc un second déclenchement tue le
+premier. Un run `cancelled` n'est pas un run vert — c'est un run dont on ne sait
+rien, et l'historique du dépôt en compte beaucoup.
 
 Cinq workflows gardent le dépôt, chacun sur son domaine :
 
