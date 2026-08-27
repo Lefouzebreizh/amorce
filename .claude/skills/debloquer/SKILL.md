@@ -170,13 +170,31 @@ Ce dépôt reçoit plusieurs sessions en parallèle. Deux branches y ont constru
 Life-Organizer chacune de son côté, et la seconde a dû être refaite.
 
 Un préalable, à contrôler **avant de promettre de mener la PR de bout en bout** :
-les outils `mcp__github__*` doivent être là. Le connecteur GitHub se coupe par
-conversation, et une session peut très bien tourner sans lui — mesuré ici, dans
-une session où `git push` passait, `gh` était absent et `api.github.com` rendait
-403 sur `/repos` : la branche part, la PR ne s'ouvre pas. Découvrir cela au
-moment de pousser fait perdre le cycle entier. Le repli est de pousser la
-branche et de laisser le propriétaire ouvrir la PR — pas de chercher une
-troisième voie, il n'y en a pas.
+les outils `mcp__github__*` doivent être là. Une session peut très bien tourner
+sans eux — mesuré ici, dans une session où `git push` passait, `gh` était absent
+et `api.github.com` rendait 403 sur `/repos` : la branche part, la PR ne s'ouvre
+pas. Découvrir cela au moment de pousser fait perdre le cycle entier. Le repli
+est de pousser la branche et de laisser le propriétaire ouvrir la PR — pas de
+chercher une troisième voie, il n'y en a pas.
+
+**Et l'absence ne se rattrape pas depuis la session.** Cette fiche a longtemps
+dit que « le connecteur GitHub se coupe par conversation » et que le rallumer
+était la parade. C'est faux, et c'est coûteux : la session part chercher un
+interrupteur qui n'existe pas. Mesuré dans une session sans `mcp__github__*` —
+l'inventaire des connecteurs du compte en rend dix (Adobe, Airtable, Canva,
+Gmail, Agenda, Drive, Indeed, Notion, Supabase, Vercel) et **aucun ne s'appelle
+GitHub** : pas éteint, absent. L'annuaire public des connecteurs MCP n'en
+propose pas davantage. GitHub n'est donc pas un connecteur qu'on bascule comme
+Gmail ; l'accès vient de l'intégration de première partie, celle-là même qui
+sert à `add_repo` — d'où une session qui pousse, clone et attache un dépôt très
+bien, sans posséder un seul outil `mcp__github__*`.
+
+Où se donne cet accès n'a **pas** été établi. Le supposer et l'écrire ici
+recréerait exactement le défaut qu'on corrige. Ce qui est acquis tient en une
+phrase : *aucun geste depuis la conversation ne fera apparaître ces outils*, et
+la fin du travail passe donc par le propriétaire. La référence, si quelqu'un
+veut trancher la question un jour, est
+<https://code.claude.com/docs/en/claude-code-on-the-web>.
 
 Et une chose qui ressemble à une disparition sans en être une :
 **un outil MCP peut cesser de répondre en cours de session sous son nom lisible
@@ -244,8 +262,9 @@ les règles changent, et il a pris cent lignes en une journée.
 **Et si la session n'a pas les outils `mcp__github__*`**, la PR ne s'ouvre pas
 d'ici — voir « Connecteurs » dans `CLAUDE.md` : le jeton est derrière le serveur
 MCP, un `403` de `api.github.com` en direct ne dit rien d'autre que « mauvais
-outil ». Le rallumage du connecteur est la vraie parade ; quand il faut malgré
-tout faire ouvrir la PR à la main, ne pas laisser la rédaction au propriétaire :
+outil ». Il n'y a rien à rallumer depuis la session (voir la section 3) : la PR
+s'ouvrira à la main, et le travail utile est de n'en laisser que le dernier
+appui au propriétaire, jamais la rédaction :
 
 ```bash
 bash .claude/skills/debloquer/scripts/lien-pr.sh
