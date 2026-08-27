@@ -215,6 +215,13 @@ def main():
     if len(sys.argv) < 2:
         raise SystemExit("usage : voir.py <média> [dossier de sortie]")
     source = Path(sys.argv[1])
+    # `etalonner.py`, la compétence sœur, prend sa sortie en `-o`. Ici elle est
+    # positionnelle, et sans ce garde-fou un `-o` mal placé crée un dossier
+    # nommé « -o » dans le dépôt sans que rien ne le signale.
+    if len(sys.argv) > 2 and sys.argv[2].startswith("-"):
+        raise SystemExit(
+            f"« {sys.argv[2]} » n'est pas une option ici : le dossier de sortie "
+            "est positionnel.\n  usage : voir.py <média> [dossier de sortie]")
     dossier = Path(sys.argv[2]) if len(sys.argv) > 2 else Path.cwd() / "regard"
     dossier.mkdir(parents=True, exist_ok=True)
     base = dossier / source.stem
