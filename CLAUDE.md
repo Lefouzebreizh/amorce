@@ -181,6 +181,18 @@ résumé de la précédente hérite de son état sans hériter de ses règles. C
 ainsi qu'on redemande une fusion déjà autorisée une fois pour toutes, ou qu'on
 pose un projet sans le déclarer aux six endroits.
 
+**Nommer la session au premier message.** Un fil s'appelle `Rôle — Sujet` et
+se renomme avec `set_session_title` dès que ces deux-là sont connus : le rôle
+tel que le premier prompt le pose (« Act en tant que Solo-Founder, Lead
+Developer, Expert SEO… » → `Solo-Founder · SEO`), le sujet tel que le dépôt le
+nomme. Le rôle seul ne suffit pas, et c'est mesuré : trois sessions du même
+matin ont travaillé sur le réseau d'annuaires en ouvrant sur ce rôle-là, et
+s'appelleraient donc toutes pareil — une quatrième était bloquée à demander
+laquelle des trois garder. Le sujet seul, lui, perd la casquette sous laquelle
+le travail a été demandé, et c'est elle qui explique pourquoi ce fil-ci parle
+de référencement quand le voisin parle de montage. Sans prompt de rôle, le
+sujet seul suffit.
+
 **Et tout résumé de reprise s'ouvre sur le but à terme**, avant l'état et avant
 le prochain pas : une ligne qui dit ce que cette discussion cherche à obtenir au
 bout du compte, pas ce qu'elle fait ce matin. « Où on en est » et « le prochain
