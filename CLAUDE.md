@@ -204,7 +204,7 @@ Là, l'aller-retour vaut son prix.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **plusieurs projets sans code commun** — `python3 .claude/outils/etat.py` en donne l'inventaire du jour, et ce nombre-là a déjà dû être recorrigé trois fois cette semaine : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
 montage automatisée dans `montage-auto/`, le
@@ -233,6 +233,10 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `hooks/session-start.sh` | Installe, au démarrage d'une session distante : les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé, les bibliothèques Python de `kdp/`, `montage-auto/`, `repondeur-facebook/`, `life-organizer/`, `tiktok/`, de l'extraction multiformat et des deux chantiers en sommeil sous `archives-backlog/`, plus le Chromium du parcours de vérification. Le script fait foi — cette liste-ci a déjà pris trois projets de retard. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
+| `.claude/outils/etat.py` | L'inventaire du dépôt, **découvert** et non recopié : chantiers, activité, écart avec `main`, et l'outillage réellement installé avec la parade de chaque absent. Écrit parce qu'ici une liste tenue à la main est fausse le lendemain, et fausse en silence. |
+| `/etat-du-depot` | Où en est le dépôt, et « est-ce que c'est possible ici » — la réponse est presque toujours oui, avec un autre outil que celui qu'on cherchait. |
+| `/fusionner-main` | Résoudre un conflit sur les quatre fichiers partagés. Il a la même forme dix fois sur dix : deux sessions ont ajouté à la même liste, et il faut garder les deux. |
+| `/reprise-de-session` | Écrire le résumé qui permet de repartir ailleurs sans rien perdre, et reconnaître le moment où le fil coûte plus que le travail. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
 | `/tailwind-mobile-ux` | Le terrain mobile réel — barre de gestes, hauteur utile, zone du pouce — et les sept parades déjà en place à ne pas défaire. |
