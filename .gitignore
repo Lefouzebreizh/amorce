@@ -80,3 +80,12 @@ paper-manager/admin_config.json.bak
 # (`npm run sites`) à partir des bases et de la feuille compilée. Les sitemaps,
 # eux, sont versionnés — ils sont ce que l'auto-pilote met à jour et poussent.
 /annuaire-ia/dist/
+
+# La bibliothèque de sons : les fichiers restent locaux, l'index les décrit.
+# Invariant n°8 — aucun binaire versionné. Ce sont les médias que le cap
+# Cloudflare R2 est destiné à héberger le jour où un projet en aura besoin.
+kits/**/*.wav
+kits/**/*.mp3
+kits/**/*.flac
+kits/**/*.ogg
+kits/**/*.m4a
