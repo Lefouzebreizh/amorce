@@ -12,6 +12,7 @@
 pydub          # studio audio : découpe et mixage
 tabulate       # assistant d'allocation : tableaux console
 requests       # répondeur Facebook, cours des cryptos
+PyYAML         # pépites : seuils et table des chaînes en YAML
 numpy          # chaîne pré-presse : mesure des planches
 Pillow         # chaîne pré-presse : ouverture des images
 pymupdf        # assistant administratif : lecture des PDF

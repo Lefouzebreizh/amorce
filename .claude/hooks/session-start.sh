@@ -102,6 +102,11 @@ python3 -m pip install --quiet --break-system-packages anthropic python-dotenv
 echo "── Assistant d'allocation : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
 
+echo "── Pépites : bibliothèques Python"
+# `requests` est déjà là. `PyYAML` porte les seuils et la table des chaînes,
+# `python-dotenv` les clés d'API — le radar ne démarre sans aucune des deux.
+python3 -m pip install --quiet --break-system-packages PyYAML python-dotenv
+
 echo "── Chaîne de montage : bibliothèques Python"
 # PyTorch est volontairement absent, pour la même raison que dans le studio
 # audio : deux gigaoctets pour un seul chemin de code. Il ne sert ici qu'à dire
@@ -290,4 +295,4 @@ if [ -f "$racine/.claude/skills/capacites-session/scripts/sonder.py" ]; then
   echo "── Capacités : $(python3 "$racine/.claude/skills/capacites-session/scripts/sonder.py" --court)"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Hypersensible : (dans hypersensible-bienveillance/) npm test, npm run check, npm run build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests — Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Hypersensible : (dans hypersensible-bienveillance/) npm test, npm run check, npm run build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Pépites : python3 -m unittest discover -s pepites/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests — Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"

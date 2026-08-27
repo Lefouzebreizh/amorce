@@ -270,6 +270,24 @@ a les bonnes permissions, si le ton ressemble à celui de l'auteur, et si le
 modèle met de côté les bons commentaires. Cela se regarde **en simulation**
 (sans `--publier`), sur de vrais commentaires.
 
+## Pépites — `pepites/`
+
+```bash
+python3 -m unittest discover -s pepites/tests
+```
+
+Cent vingt et un contrôles, **hors réseau** : aucune API n'est appelée, les
+réponses de DexScreener, GoPlus, Honeypot.is et RugCheck sont des bouchons. Ils
+couvrent la lecture des réglages YAML, le calcul de convergence, le bouclier
+anti-arnaque, le classement du radar, la persistance SQLite et la mise en forme
+de l'alerte Telegram.
+
+Ce qu'ils ne disent pas, et qui doit figurer dans le compte rendu : si les
+seuils repèrent quoi que ce soit d'intéressant **sur le marché réel**. Un
+détecteur dont tous les tests passent peut ne rien remonter pendant une semaine,
+ou tout remonter : cela ne se voit qu'en le laissant tourner sur de vraies
+paires, et cela ne se teste pas.
+
 ## Ce que la vérification ne dit pas
 
 - **Le build Android et iOS.** Le SDK Android n'est pas installable dans ce

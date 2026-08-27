@@ -54,7 +54,8 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 - **agence/** — Next.js 16, Supabase (PostgreSQL + RLS), Server Actions, shadcn.
   Se vérifie depuis son dossier, jamais depuis la racine.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
-- **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
+- **kdp/, life-organizer/, montage-auto/, paper-manager/, pepites/,
+  repondeur-facebook/** — Python.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
