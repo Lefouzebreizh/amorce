@@ -60,6 +60,26 @@ jobs:
       - name: Installer ce que les tests atteignent
         run: python -m pip install --quiet -r .github/requirements-tests.txt
 
+      # Les tests de lettrage kdp ouvrent la police pour de vrai — ils
+      # vérifient quels glyphes Lora dessine, ce qu'aucun bouchon ne peut
+      # simuler. Le dépôt ne versionne pas de binaire et le chemin par défaut
+      # n'existe que dans une session Claude Code : sans cette étape, six
+      # erreurs « cannot open Lora-Regular.ttf » rougissent toute la suite, ce
+      # qui a masqué l'état des six autres projets cinq exécutions durant.
+      #
+      # Le fichier suivi est la police variable de google/fonts, non figée à un
+      # commit : si l'amont change la couverture en glyphes de Lora, ces tests
+      # doivent rougir — c'est exactement ce qu'ils gardent. `curl -f` fait
+      # échouer l'étape bruyamment plutôt que d'écrire un fichier vide.
+      - name: Poser la police du lettrage
+        run: |
+          polices="$RUNNER_TEMP/polices"
+          amont=https://raw.githubusercontent.com/google/fonts/main/ofl/lora
+          mkdir -p "$polices"
+          curl -sSfL -o "$polices/Lora-Regular.ttf" "$amont/Lora%5Bwght%5D.ttf"
+          curl -sSfL -o "$polices/Lora-Italic.ttf" "$amont/Lora-Italic%5Bwght%5D.ttf"
+          echo "KDP_POLICES=$polices" >> "$GITHUB_ENV"
+
       # Une seule étape, mais un groupe repliable par suite : le résumé reste
       # lisible, et `::error::` fait remonter le nom du projet fautif en tête de
       # l'exécution sans avoir à dérouler le journal.

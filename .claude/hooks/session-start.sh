@@ -140,6 +140,13 @@ if ! command -v ffprobe >/dev/null 2>&1; then
   echo "   de Life-Organizer ne tournera pas — sudo apt install ffmpeg pour l'activer"
 fi
 
+echo "── Paper-Manager : bibliothèques Python"
+# PyMuPDF fait les quatre gestes du projet : lire le texte d'un PDF, rendre une
+# page en image, remplir un formulaire et l'aplatir. `anthropic` n'est pas
+# installé ici : c'est le seul appel réseau du projet, il ne part que si
+# `extraction.active` vaut true, et personne ne devrait le découvrir installé.
+python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow
+
 echo "── Volet TikTok : bibliothèque du carnet"
 # `tiktok/carnet.py` fabrique le PDF de tournage depuis les Markdown du volet.
 # Sans reportlab, la seule chose qu'on emporte en tournage ne se fabrique pas.
@@ -200,6 +207,13 @@ fi
 if [ -x /opt/pw-browsers/chromium ] && [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export AMORCE_CHROMIUM=/opt/pw-browsers/chromium" >> "$CLAUDE_ENV_FILE"
   echo "── Amorce : Chromium de vérification signalé à la session"
+fi
+
+# Ce que cette session-ci sait faire. Une seconde, et cela évite de découvrir
+# en pleine tâche qu'un hôte est refusé ou qu'un binaire manque — quatre détours
+# en une nuit avant que cette ligne n'existe.
+if [ -f "$racine/.claude/skills/capacites-session/scripts/sonder.py" ]; then
+  echo "── Capacités : $(python3 "$racine/.claude/skills/capacites-session/scripts/sonder.py" --court)"
 fi
 
 echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
