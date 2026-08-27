@@ -37,5 +37,5 @@ binding = "BUCKET_EMOTIONS"
 bucket_name = "emotions-data"
 
 # RESEND_API_KEY n'est pas ici : c'est un secret.
-#   wrangler secret put RESEND_API_KEY --config workers/wrangler.toml
+#   wrangler secret put RESEND_API_KEY --config wrangler.veille.toml
 # En local, le poser dans `workers/.dev.vars` (ignoré par git).
