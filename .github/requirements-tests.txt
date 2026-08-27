@@ -15,3 +15,4 @@ requests       # répondeur Facebook, cours des cryptos
 numpy          # chaîne pré-presse : mesure des planches
 Pillow         # chaîne pré-presse : ouverture des images
 pymupdf        # assistant administratif : lecture des PDF
+pydantic       # assistant administratif : forme de ce que rend le modèle de vision
