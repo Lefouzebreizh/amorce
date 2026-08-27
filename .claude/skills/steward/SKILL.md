@@ -109,6 +109,14 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   ce que la décision coûte, et ce qui n'a pas été vérifié. `/verifier` reste le
   filet à lancer pour de vrai avant de pousser : la CI vient après, et ce qui
   s'y découvre a déjà coûté un cycle.
+- **Savoir ce qui est réellement gardé.** `tests-python.yml` n'a **aucun filtre
+  de chemin** : il tourne sur toutes les PR et découvre les `*/tests` contenant
+  des `test_*.py` — vérifié sur des exécutions réelles, événement
+  `pull_request`, depuis des branches sans le moindre fichier Flutter. Les
+  autres workflows sont filtrés (`amorce.yml` sur `src/` et les configurations
+  de la racine, `agence.yml` sur `agence/**`, `look-and-find.yml` sur
+  `look_and_find/**`). Une PR qui ne touche qu'à `.claude/` ou à du Markdown n'a
+  donc qu'un contrôle qui ne dit rien de son contenu.
 - **L'ouverture d'une PR ne déclenche aucune CI.** Elle passe par un jeton
   d'application GitHub, que GitHub refuse comme source de workflow — protection
   contre les boucles. Une *poussée* sur la branche, elle, déclenche bien
@@ -116,9 +124,15 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   donc sans contrôle, indéfiniment, sans que rien ne le signale : ne pas
   l'attendre, la déclencher à la main (`workflow_dispatch` sur la branche).
 - **Vérifier le verdict sur l'empreinte exacte qui sera fusionnée.** Un commit
-  poussé après le déclenchement invalide le résultat précédent — et s'il ne
-  touche pas `look_and_find/**`, il ne relance rien du tout. C'est la façon la
-  plus discrète de fusionner du non-vérifié en croyant le contraire.
+  poussé après le déclenchement invalide le résultat précédent, et ne relance
+  que les workflows dont le filtre de chemins l'accepte — `tests-python`
+  toujours, les trois autres selon ce qu'il touche. C'est la façon la plus
+  discrète de fusionner du non-vérifié en croyant le contraire.
+- **Regarder si `main` est vert avant d'accuser sa propre branche.** Un chemin
+  de police écrit sous `/mnt/skills/`, qui n'existe que dans une session Claude
+  Code, a laissé `main` rouge cinq exécutions durant — et ce rouge masquait
+  l'état des six autres suites Python. Un échec identique sur `main` n'est pas
+  le sien : le porter s'il existe un correctif, le dire s'il n'y en a pas.
 
 ## Observer l'intégration continue
 

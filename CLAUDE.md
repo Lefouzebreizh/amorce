@@ -130,7 +130,7 @@ la tête de lecture se retrouve au-delà de la fin.
 ## Rythme de travail
 
 Le propriétaire du dépôt travaille depuis un téléphone, souvent par messages
-courts. Trois règles en découlent, et elles priment sur la prudence par défaut :
+courts. Six règles en découlent, et elles priment sur la prudence par défaut :
 
 - **Décider plutôt que demander.** Devant deux options techniques défendables,
   prendre la meilleure, l'appliquer, et **dire laquelle et pourquoi** en une
@@ -148,10 +148,30 @@ courts. Trois règles en découlent, et elles priment sur la prudence par défau
   la précédente, et donner son nom. La mémoire du projet est dans ce fichier et
   dans les compétences, pas dans la discussion — on ne perd rien.
 
-Ce qui reste à demander, et qu'aucune de ces trois règles ne couvre : ce qui
-part **en public au nom de quelqu'un** (un commentaire publié, un message à la
-communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
-Là, l'aller-retour vaut son prix.
+- **Ne jamais rester bloqué faute d'outil.** Quand une capacité manque, la
+  fabriquer plutôt que la contourner : `skill-creator`, le dossier, le script,
+  la doc, et on s'en sert dans la foulée. Deux compétences d'ici sont nées ainsi
+  le même soir — `/voir-le-son` parce qu'un son ne pouvait pas s'écouter,
+  `/trier-les-rushes` parce qu'un lot de cinquante fichiers ne pouvait pas se
+  lire un par un. L'outil manquant coûte une heure ; le contournement répété
+  coûte toutes les suivantes.
+- **Regarder avant de livrer, pas après la plainte.** Six versions d'un même
+  montage ont été rendues en une nuit, chacune mesurée conforme, chacune rejetée
+  à l'écoute. Le défaut se voyait en une seconde sur un spectrogramme que
+  personne n'avait tiré. Livrer vite ne vaut que si l'on a regardé : c'est ce
+  qui sépare « beaucoup d'action » de « beaucoup de reprises ».
+- **Ce qui marche dans un projet est porté aux autres.** Neuf chantiers sans
+  code commun, mais les mêmes gestes reviennent : une barrière de vérification,
+  un gabarit d'accroche, une façon de départager quatre prises. Porter la
+  solution plutôt que la réinventer est le seul avantage réel qu'un dépôt à neuf
+  projets a sur neuf dépôts séparés.
+
+Ce qui reste à demander, et qu'aucune de ces six règles ne couvre : ce qui
+part **en public au nom de quelqu'un**, ce qui **détruit** sans retour, et ce
+qui **engage de l'argent**. Là, l'aller-retour vaut son prix — et il le vaut
+d'autant plus que « en public » veut dire ici sous les yeux des quarante-huit
+mille membres du groupe, où une réponse maladroite publiée au nom de quelqu'un
+ne se retire pas.
 
 ## Modifier ce dépôt
 
@@ -204,7 +224,7 @@ Là, l'aller-retour vaut son prix.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **plusieurs projets sans code commun** — `/etat-du-depot` en donne l'inventaire du jour, et ce nombre-là a déjà dû être recorrigé trois fois cette semaine : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
 montage automatisée dans `montage-auto/`, le
@@ -233,6 +253,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `hooks/session-start.sh` | Installe, au démarrage d'une session distante : les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé, les bibliothèques Python de `kdp/`, `montage-auto/`, `repondeur-facebook/`, `life-organizer/`, `tiktok/`, de l'extraction multiformat et des deux chantiers en sommeil sous `archives-backlog/`, plus le Chromium du parcours de vérification. Le script fait foi — cette liste-ci a déjà pris trois projets de retard. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
+| `/etat-du-depot` | L'inventaire du dépôt, **découvert** et non recopié : chantiers, lignes, commits, tests, écart avec `main`. À lancer avant d'écrire où que ce soit un chiffre sur le dépôt — ici, une liste tenue à la main est fausse le lendemain, et fausse en silence. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
 | `/capacites-session` | Ce que cette session-ci sait faire — binaires, bibliothèques, hôtes joignables, modèles — et le repli de ce qui manque. Sondé en une seconde, affiché au démarrage. |
 | `/branche-partagee` | De combien la branche a pris du retard, quels commits sont déjà passés dans `main` par une autre session, et quoi faire ensuite. |
@@ -257,12 +278,20 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/api-tierce-verifiee` | Lire la surface réelle d'une bibliothèque avant d'écrire contre elle, et provoquer l'erreur pour connaître sa vraie classe — ce qui a attrapé un `except` qui n'attrapait rien. |
 | `/relais` | Clore un fil devenu lourd sans rien perdre : l'état se rassemble depuis le dépôt, jamais de mémoire. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
+| `/nouveau-projet` | Les six endroits où un projet se déclare pour être installé, vérifié et gardé — et ce qui se déclare tout seul. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/debloquer` | Ce qui arrête une session distante et comment repartir : permission refusée par le classificateur, mandataire réseau qui rend 403, `main` fusionné sous les pieds, suite de tests sortie du champ de la CI. Dit aussi quand s'arrêter et demander. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
 | `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
 | `/trier-les-rushes` | Inventorier un lot de médias d'un coup : doublons par empreinte, meilleure définition, quelle prise garder parmi quatre, où quelqu'un parle. Née d'un plan écarté qui portait, au bit près, la seule voix utilisable. |
 | `/voir-le-son` | Dessiner un média pour pouvoir le juger : spectrogramme, courbe de sonie, planche de vignettes. Né d'un montage mesuré conforme et pourtant muet sur téléphone — une moyenne dit qu'un son est fort, jamais qu'il est bon. |
+| `/prepresse-kdp` | Préparer un livre illustré pour l'impression à la demande : résolution, fond perdu, zone de sécurité, calcul de tranche, boucle de validation. |
+| `/retouche-planche` | Corriger au pixel une illustration dont le texte est incrusté, avec la matière de la planche — sans police importée ni régénération. |
+| `/roussy-zephy` | La charte du recueil illustré : personnages, palette, mécanique des histoires en quatre temps, gabarit de planche. |
+| `/typographie-francaise` | Les règles typographiques françaises pour tout texte qui partira en image ou en impression. |
+| `/regenerer-planche` | Remplacer une planche du recueil par une version régénérée : l'invite, la greffe dans le cadre, le lettrage, le verdict chiffré. |
+| `/sortir-les-fichiers` | Mettre à l'abri ce que la session contient et que Git ne porte pas, avant que le conteneur soit effacé. |
+| `/coherence-depot` | Ce que le dépôt affirme de lui-même est-il encore vrai : projets, compétences, agents, chemins, comptes annoncés. Compte des deux côtés au lieu de relire. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
 
@@ -275,7 +304,7 @@ sans le remplacer — **sur `src/`, c'est celui du dépôt qui prime**, parce qu
 porte les règles d'identité d'Amorce là où le plugin vise une esthétique
 générique. Le plugin reste utile partout ailleurs.
 
-Trois règles qui découlent de la cohabitation :
+Quatre règles qui découlent de la cohabitation :
 
 - **Une modification ne touche qu'un seul projet**, sauf configuration à la
   racine qui doit connaître ses voisins — c'est le cas d'`eslint.config.mjs`,

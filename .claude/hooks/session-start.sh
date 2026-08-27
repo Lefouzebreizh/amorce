@@ -140,6 +140,13 @@ if ! command -v ffprobe >/dev/null 2>&1; then
   echo "   de Life-Organizer ne tournera pas — sudo apt install ffmpeg pour l'activer"
 fi
 
+echo "── Paper-Manager : bibliothèques Python"
+# PyMuPDF fait les quatre gestes du projet : lire le texte d'un PDF, rendre une
+# page en image, remplir un formulaire et l'aplatir. `anthropic` n'est pas
+# installé ici : c'est le seul appel réseau du projet, il ne part que si
+# `extraction.active` vaut true, et personne ne devrait le découvrir installé.
+python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow
+
 echo "── Volet TikTok : bibliothèque du carnet"
 # `tiktok/carnet.py` fabrique le PDF de tournage depuis les Markdown du volet.
 # Sans reportlab, la seule chose qu'on emporte en tournage ne se fabrique pas.
