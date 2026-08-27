@@ -204,13 +204,14 @@ Là, l'aller-retour vaut son prix.
 
 ## Outillage du dépôt (`.claude/`)
 
-Ce dépôt héberge **dix projets sans code commun** : le studio Amorce décrit
+Ce dépôt héberge **onze projets sans code commun** : le studio Amorce décrit
 ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 `CLAUDE.md`), la chaîne pré-presse KDP en Python dans `kdp/`, la chaîne de
 montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
 rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
-Paper-Manager dans `paper-manager/`, l'annuaire d'outils IA dans `annuaire-ia/`
+Paper-Manager dans `paper-manager/`, l'annuaire d'outils IA dans `annuaire-ia/`,
+le site hypersensible-bienveillance.com dans `hypersensible-bienveillance/`
 et le socle de production livré aux clients dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
 code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
 montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
@@ -228,9 +229,18 @@ les politiques de sécurité), jamais depuis la racine — d'où son exclusion d
 l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 `.github/workflows/agence.yml`.
 
+`hypersensible-bienveillance/` est un site Astro + Cloudflare, et non un dossier
+d'Amorce : ses propres `package.json`, `tsconfig.json`, `node_modules` et son
+propre `.npmrc` — sans lui, `npm install` remonte jusqu'à la racine et installe
+Astro dans les dépendances du studio. Il se vérifie depuis son dossier
+(`npm test`, `npm run check`, `npm run build`), jamais depuis la racine, d'où
+son exclusion de l'ESLint et du `tsconfig.json` de la racine. Son intégration
+continue vit dans `.github/workflows/hypersensible.yml`, et ses décisions
+d'architecture dans son `public/llms.txt` plutôt que dans ce fichier-ci.
+
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe, au démarrage d'une session distante : les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé, les bibliothèques Python de `kdp/`, `montage-auto/`, `repondeur-facebook/`, `life-organizer/`, `tiktok/`, de l'extraction multiformat et des deux chantiers en sommeil sous `archives-backlog/`, plus le Chromium du parcours de vérification. Le script fait foi — cette liste-ci a déjà pris trois projets de retard. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe, au démarrage d'une session distante : les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé, celles du site `hypersensible-bienveillance/`, les bibliothèques Python de `kdp/`, `montage-auto/`, `repondeur-facebook/`, `life-organizer/`, `tiktok/`, de l'extraction multiformat et des deux chantiers en sommeil sous `archives-backlog/`, plus le Chromium du parcours de vérification. Le script fait foi — cette liste-ci a déjà pris trois projets de retard. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |

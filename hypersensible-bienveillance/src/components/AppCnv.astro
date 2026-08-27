@@ -1,0 +1,208 @@
+---
+/**
+ * Réponse bienveillante : on colle le message qui pique, on reçoit ce que son
+ * auteur aurait pu dire.
+ *
+ * Le texte saisi part vers `/api/reforme` et n'est écrit nulle part — ni en
+ * base, ni dans un journal, ni dans le stockage du navigateur. C'est la seule
+ * raison pour laquelle la phrase « rien n'est enregistré » du pied de page est
+ * vraie, et elle doit le rester.
+ */
+---
+
+<section id="reponse-bienveillante" class="scroll-mt-20">
+  <h2 class="titre-section">Réponse bienveillante</h2>
+  <p class="aide mt-2 max-w-2xl">
+    Colle le message qui t’est resté en travers. L’outil le réécrit en Communication Non
+    Violente : le fait, le sentiment, le besoin, la demande. Et une ligne d’humour, parce
+    qu’un message parfaitement bienveillant et parfaitement sérieux, personne ne l’envoie jamais.
+  </p>
+
+  <form id="formulaire-cnv" class="carte mt-6 p-5 sm:p-6 flex flex-col gap-4">
+    <div>
+      <label for="message-piquant" class="font-medium">Le message reçu</label>
+      <p class="aide mt-1 mb-2">
+        Tel quel, sans l’adoucir. Ce que tu écris ici n’est ni stocké ni relu par personne.
+      </p>
+      <textarea
+        id="message-piquant"
+        name="texte"
+        rows="4"
+        maxlength="2000"
+        required
+        class="champ"
+        placeholder="« Franchement t'es vraiment trop susceptible, on peut plus rien te dire. »"
+      ></textarea>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button type="submit" class="bouton-accent" id="bouton-reformuler">Reformuler</button>
+      <p class="aide" id="cnv-etat" role="status" aria-live="polite"></p>
+    </div>
+  </form>
+
+  <output id="resultat-cnv" for="formulaire-cnv" class="mt-6 hidden"></output>
+</section>
+
+<script>
+  /** Réponse d'analyse aboutie. */
+  interface Reponse {
+    observation: string;
+    sentiment: string;
+    besoin: string;
+    demande: string;
+    humour: string;
+    message: string;
+    intensite: number;
+    signaux: string[];
+    acces: string;
+    restant: number | null;
+    quota: number;
+  }
+
+  /** Réponse de refus : quota atteint, saisie invalide, méthode refusée. */
+  interface Refus {
+    error: string;
+    message: string;
+  }
+
+  const formulaire = document.getElementById('formulaire-cnv') as HTMLFormElement | null;
+  const champ = document.getElementById('message-piquant') as HTMLTextAreaElement | null;
+  const bouton = document.getElementById('bouton-reformuler') as HTMLButtonElement | null;
+  const etat = document.getElementById('cnv-etat');
+  const sortie = document.getElementById('resultat-cnv');
+
+  function echapper(texte: string): string {
+    const noeud = document.createElement('div');
+    noeud.textContent = texte;
+    return noeud.innerHTML;
+  }
+
+  function bloc(titre: string, contenu: string): string {
+    return `
+      <div class="border-l-2 border-violet/50 pl-4">
+        <p class="text-xs uppercase tracking-wider text-violet">${titre}</p>
+        <p class="mt-1">${echapper(contenu)}</p>
+      </div>`;
+  }
+
+  function afficher(reponse: Reponse) {
+    if (!sortie) return;
+    sortie.classList.remove('hidden');
+    sortie.innerHTML = `
+      <div class="carte p-5 sm:p-6 flex flex-col gap-5">
+        <div class="flex flex-wrap items-center gap-2">
+          ${reponse.signaux.map((s) => `<span class="etiquette">${echapper(s)}</span>`).join('')}
+          <span class="aide ml-auto tabular-nums">Charge du message : ${reponse.intensite}/100</span>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          ${bloc('Le fait', reponse.observation)}
+          ${bloc('Le sentiment', reponse.sentiment)}
+          ${bloc('Le besoin', reponse.besoin)}
+          ${bloc('La demande', reponse.demande)}
+        </div>
+        <div class="rounded-xl bg-fond/60 p-4">
+          <p class="text-xs uppercase tracking-wider text-cyan">À envoyer tel quel</p>
+          <p class="mt-2 whitespace-pre-line">${echapper(reponse.message)}</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <button type="button" class="bouton-discret" id="bouton-copier">Copier la réponse</button>
+          <p class="aide self-center" id="copie-etat" role="status" aria-live="polite"></p>
+        </div>
+      </div>`;
+
+    const copier = document.getElementById('bouton-copier');
+    const copieEtat = document.getElementById('copie-etat');
+    copier?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(reponse.message);
+        if (copieEtat) copieEtat.textContent = 'Copié. Relis-le une fois avant d’envoyer.';
+      } catch {
+        // Contexte non sécurisé ou permission refusée : on sélectionne le texte,
+        // l'utilisateur finit au clavier. Mieux qu'un bouton qui ne fait rien.
+        if (copieEtat) copieEtat.textContent = 'Copie refusée par le navigateur — sélectionne le texte à la main.';
+      }
+    });
+
+    sortie.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function afficherRefus(message: string, quotaAtteint: boolean) {
+    if (!sortie) return;
+    sortie.classList.remove('hidden');
+    sortie.innerHTML = `
+      <div class="carte p-5 sm:p-6 ${quotaAtteint ? 'border-cyan/40' : ''}">
+        <p>${echapper(message)}</p>
+        ${
+          quotaAtteint
+            ? `<p class="aide mt-3">
+                 Tu viens du groupe ? Reviens par le lien publié là-bas : l’accès y est illimité,
+                 et il le restera.
+               </p>`
+            : ''
+        }
+      </div>`;
+  }
+
+  formulaire?.addEventListener('submit', async (evenement) => {
+    evenement.preventDefault();
+    if (!champ || !bouton || !etat) return;
+
+    const texte = champ.value.trim();
+    if (texte.length < 3) {
+      etat.textContent = 'Colle le message en entier, même court.';
+      return;
+    }
+
+    let src = 'externe';
+    try {
+      src = sessionStorage.getItem('hb-src') ?? 'externe';
+    } catch { /* stockage refusé : régime externe, c'est le plus prudent */ }
+
+    bouton.disabled = true;
+    etat.textContent = 'Lecture en cours…';
+
+    try {
+      const reponse = await fetch('/api/reforme', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ texte, src }),
+      });
+      const charge = (await reponse.json()) as Reponse | Refus;
+
+      if (reponse.status === 429) {
+        afficherRefus((charge as Refus).message, true);
+        try {
+          sessionStorage.setItem('hb-restant', '0');
+        } catch { /* sans stockage, le badge reste sur sa dernière valeur */ }
+        document.dispatchEvent(new CustomEvent('hb:quota'));
+        etat.textContent = '';
+        return;
+      }
+
+      if (!reponse.ok) {
+        afficherRefus((charge as Refus).message ?? 'Quelque chose a coincé. Réessaie dans un instant.', false);
+        etat.textContent = '';
+        return;
+      }
+
+      const reussite = charge as Reponse;
+      afficher(reussite);
+      if (typeof reussite.restant === 'number') {
+        try {
+          sessionStorage.setItem('hb-restant', String(reussite.restant));
+        } catch { /* idem */ }
+        document.dispatchEvent(new CustomEvent('hb:quota'));
+      }
+      etat.textContent = '';
+    } catch {
+      afficherRefus(
+        'Impossible de joindre l’analyse. En développement, lance « npm run preview » : les fonctions Cloudflare ne tournent pas sous « astro dev ».',
+        false,
+      );
+      etat.textContent = '';
+    } finally {
+      bouton.disabled = false;
+    }
+  });
+</script>

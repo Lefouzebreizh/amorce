@@ -1,0 +1,30 @@
+{
+  "name": "hypersensible-bienveillance",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "wrangler pages dev",
+    "check": "astro check && tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "db:init": "wrangler d1 execute DB --local --yes --file=./schema.sql",
+    "db:console": "wrangler d1 execute DB --local --yes --command",
+    "cron": "wrangler dev --config wrangler.veille.toml --test-scheduled",
+    "deploy": "wrangler pages deploy",
+    "deploy:veille": "wrangler deploy --config wrangler.veille.toml"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.2.5",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.2.8",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@cloudflare/workers-types": "^5.20260827.1",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.126.0"
+  }
+}

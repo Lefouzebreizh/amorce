@@ -1,0 +1,39 @@
+# Projet Cloudflare Pages : la coquille statique d'Astro (`dist/`) plus les
+# Pages Functions de `functions/`. Le Worker de veille quotidienne a sa propre
+# configuration dans `workers/wrangler.toml` — Pages ne sait pas déclencher de
+# tâche planifiée, seul un Worker le peut, et les deux se rejoignent sur la
+# même base D1.
+
+name = "hypersensible-bienveillance"
+pages_build_output_dir = "dist"
+
+# nodejs_compat v2 (celle qui donne `node:crypto`, `node:buffer`…) n'existe
+# qu'à partir de cette date de compatibilité. La reculer désactiverait le
+# drapeau sans le moindre message d'erreur.
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ADMIN_EMAIL = "contact@hypersensible-bienveillance.com"
+QUOTA_GRATUIT = "5"
+PRIX_SOUTIEN = "19"
+# Tant que le Worker de veille fabrique les variations au lieu de les lire (voir
+# le bloc de tête de `workers/tracker-healer.js`), la page l'écrit noir sur
+# blanc. Les deux variables se lèvent ensemble, jamais l'une sans l'autre.
+RADAR_SIMULE = "1"
+
+# `database_id` est un marqueur tant que la base distante n'est pas créée :
+# en local, wrangler ne regarde que le nom du binding et range l'état dans
+# `.wrangler/state/`. À remplacer par l'identifiant rendu par
+# `wrangler d1 create hypersensible-db` avant le premier déploiement.
+[[d1_databases]]
+binding = "DB"
+database_name = "hypersensible-db"
+database_id = "local-d1-id"
+
+# Archive quotidienne des relevés du radar, déposée par le Worker de veille.
+# Une base D1 se purge ; un instantané JSON par jour permet de reconstruire
+# l'historique des prix si la table `price_history` est perdue.
+[[r2_buckets]]
+binding = "BUCKET_EMOTIONS"
+bucket_name = "emotions-data"
