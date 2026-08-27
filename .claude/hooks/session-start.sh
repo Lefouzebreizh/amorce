@@ -202,4 +202,39 @@ if [ -x /opt/pw-browsers/chromium ] && [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "── Amorce : Chromium de vérification signalé à la session"
 fi
 
+# Ce que les autres sessions construisent en ce moment.
+#
+# Ce dépôt reçoit plusieurs sessions en parallèle et rien ne les fait se voir.
+# Deux branches y ont construit Life-Organizer chacune de son côté ; une
+# session a écrit huit cents lignes de socle Supabase pendant qu'une autre
+# livrait `agence/` ; et le jour où ces lignes ont été écrites, six branches
+# ouvertes travaillaient la même friction. Aucun de ces gaspillages ne vient
+# d'une erreur de jugement : ils viennent d'un angle mort que trente secondes
+# de lecture suppriment.
+#
+# Placé dans le hook plutôt que dans une compétence, parce qu'une compétence
+# doit se déclencher pour servir alors que le hook s'exécute toujours — et que
+# l'angle mort est précisément qu'on ne pense pas à regarder.
+#
+# Tolérant à la panne : une session hors ligne doit démarrer quand même.
+echo "── Chantiers ouverts par d'autres sessions"
+if git -C "$racine" fetch --quiet --prune origin \
+     '+refs/heads/claude/*:refs/remotes/origin/claude/*' 2>/dev/null; then
+  courante="$(git -C "$racine" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+  autres="$(git -C "$racine" for-each-ref --sort=-committerdate \
+    --format='%(refname:short)|%(committerdate:relative)|%(contents:subject)' \
+    refs/remotes/origin/claude/ 2>/dev/null \
+    | grep -v "^origin/$courante|" | head -6 || true)"
+  if [ -n "$autres" ]; then
+    echo "$autres" | while IFS='|' read -r branche quand sujet; do
+      printf '   %s (%s)\n      %.72s\n' "${branche#origin/}" "$quand" "$sujet"
+    done
+    echo "   Avant de construire : l'une d'elles fait-elle déjà ce travail ?"
+  else
+    echo "   aucun — le champ est libre"
+  fi
+else
+  echo "   dépôt distant injoignable, liste non consultée"
+fi
+
 echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests"

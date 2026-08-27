@@ -483,5 +483,18 @@ chacune de son côté, et la seconde a dû être refaite. Ce qui est fusionné g
 toujours — se couler dans la base commune coûte moins cher que réconcilier deux
 architectures.
 
+**Les conflits additifs se résolvent seuls.** `.gitattributes` pose
+`merge=union` sur `CLAUDE.md`, `INDEX.md` et les compétences : quand deux
+sessions ajoutent chacune une ligne au même tableau, git garde les deux au lieu
+de lever un conflit. Mesuré sur soixante fusions, cela en fait tomber onze à
+cinq. Volontairement pas étendu aux scripts — union y garderait deux versions
+d'une même ligne, ce qu'un texte supporte et pas du code. Le diff reste à
+relire : une ligne réécrite des deux côtés apparaîtra en double.
+
+Le hook de démarrage annonce les **branches `claude/` actives** des autres
+sessions. Les regarder avant de construire coûte trente secondes et évite ce
+qui s'est déjà produit plusieurs fois ici : deux sessions bâtissant la même
+chose sans le savoir.
+
 `AGENTS.md` est réécrit par `next dev` : le committer avec le reste plutôt que
 de chercher à le retirer d'un diff.
