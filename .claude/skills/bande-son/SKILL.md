@@ -5,6 +5,51 @@ description: Fabriquer la bande-son d'une vidéo — voix off **synthétisée su
 
 # Le son se juge en LUFS, pas en décibels de crête
 
+## La musique se fabrique aussi, à partir d'une intention
+
+`scripts/musique.py` produit un lit sonore de la durée voulue. Cinq ambiances,
+chacune un mode, un tempo et une progression d'accords :
+
+```bash
+python3 scripts/musique.py --liste
+python3 scripts/musique.py --ambiance calme --duree 30 --sortie fond.wav
+python3 scripts/musique.py --ambiance espoir --graine 12   # autre chant, même harmonie
+```
+
+| ambiance | mode | pour |
+| --- | --- | --- |
+| `calme` | dorien 64 bpm | voix off posée, tutoriel, témoignage |
+| `melancolie` | éolien 58 bpm | récit personnel, ce qui s'est mal passé |
+| `lumineux` | lydien 72 bpm | ouverture, ce qui va mieux, fin d'épisode |
+| `espoir` | majeur 68 bpm | conclusion, appel doux, remerciement |
+| `attente` | éolien 60 bpm | suspension, question laissée ouverte |
+
+**Trois contraintes gouvernent ce fichier, et aucune n'est musicale.** Ce sont
+elles qui expliquent des choix qui paraîtraient timides ailleurs.
+
+1. **Ça passe sous une voix.** La bande 1,5–4 kHz porte l'intelligibilité des
+   consonnes ; la musique y est creusée de 5 dB. Ça ne s'entend pas seul et ça
+   change tout au mixage. Même raison pour l'absence de percussion sèche : un
+   transitoire fait plonger la voix à chaque coup dès qu'un compresseur les
+   partage.
+2. **Ça sort d'un haut-parleur de téléphone.** La basse passe par
+   `porter_sur_telephone`. Mesuré sur les cinq ambiances : **0,6 à 1,2 dB de
+   perte** une fois filtré comme le fait un téléphone — contre 30 dB pour un
+   grondement non traité.
+3. **Le public est hypersensible.** Pas de montée qui force, pas de crête qui
+   surprend. L'étendue dynamique est volontairement faible : ce qui fait un bon
+   disque fait une mauvaise musique de fond, parce qu'on monte le volume sur les
+   passages doux et qu'on sursaute ensuite.
+
+Deux points de facture qui s'entendent quand ils manquent : les enveloppes sont
+en cosinus et jamais linéaires — une rampe droite laisse un angle dans la forme
+d'onde, et cet angle s'entend comme un clic qu'on croit venir du fichier ; et la
+nappe est écartée d'une octave et demie au-dessus de la basse, parce qu'une
+tierce sous 200 Hz donne une bouillie que ni le mode ni le timbre ne rattrapent.
+
+`--graine` change le chant sans toucher à l'harmonie : c'est le réglage à
+tourner quand une prise « ne va pas » sans qu'on sache dire pourquoi.
+
 ## Un bruitage grave doit être porté sur le téléphone
 
 Le défaut ne s'entendait pas au casque, et c'est ce qui le rendait durable.
