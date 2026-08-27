@@ -454,7 +454,11 @@
     $('#slogan').textContent = niche.slogan;
     $('#transparence').textContent = niche.note_transparence;
     $('#pied-nom').textContent = niche.nom;
-    $('#recherche').placeholder = `Rechercher parmi les outils ${niche.nom}…`;
+    /* « Rechercher parmi les outils Boîte à Outils IA… » fait quarante-six
+       caractères : le champ le tronque en plein mot sur un écran de 390 px, et
+       le visiteur lit « …les outils IA Imr ». Le nom de la niche est déjà en
+       titre juste au-dessus ; la phrase courte dit la même chose et tient. */
+    $('#recherche').placeholder = `Chercher dans ${niche.nom}…`;
     baliseMeta('og:site_name', niche.nom);
 
     if (niche.emoji) {
