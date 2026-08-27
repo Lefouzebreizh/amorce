@@ -53,10 +53,25 @@ SECRETS = [
 BENIN = re.compile(
     r"""^(--|var\(|\$|#[0-9a-f]{3,8}$|rgb|hsl|/|\./|\.\./|[a-z]+([-_.][a-z]+)*$)""", re.I)
 
+# Le tri ci-dessus rate une famille entière : les classes utilitaires qui portent
+# un chiffre. `text-slate-500` mêle lettres et chiffres, donc il passe pour un
+# secret — et un fichier de thème en aligne des dizaines, exactement le tas de
+# faux positifs qu'on a failli envoyer une fois.
+#
+# Deux séparateurs au moins, c'est la frontière, et elle est assumée. Une classe
+# utilitaire en compte presque toujours deux (`bg-red-50`, `text-slate-500`) ;
+# un mot de passe fabriqué à la main en compte un (`hunter-2000`), et reste
+# signalé. Ce qui tombe entre les deux — une phrase de passe de trois mots et un
+# chiffre — est le prix payé, et il est bien plus faible que celui d'un rapport
+# ouvert sur trente constats de mise en page.
+UTILITAIRE = re.compile(r"^[a-z]+([-_.][a-z0-9]+){2,}$")
+
 
 def anodin(valeur):
-    """Une valeur qui a la forme d'un nom, d'une couleur ou d'un chemin."""
+    """Une valeur qui a la forme d'un nom, d'une couleur, d'un chemin ou d'une classe."""
     if BENIN.match(valeur):
+        return True
+    if UTILITAIRE.match(valeur):
         return True
     # Un secret sans le moindre chiffre est presque toujours une phrase, un nom
     # de classe ou un identifiant lisible ; les clés en produisent tous.

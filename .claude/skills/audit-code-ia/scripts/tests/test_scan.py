@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scan import anodin, jeton_a_privileges, role_jwt  # noqa: E402
+from scan import SECRETS, anodin, jeton_a_privileges, role_jwt  # noqa: E402
 
 
 def forger(charge):
@@ -92,8 +92,38 @@ class TestAnodin(unittest.TestCase):
             with self.subTest(valeur=valeur):
                 self.assertTrue(anodin(valeur))
 
+    def test_les_classes_utilitaires_aussi(self):
+        """Un fichier de thème en aligne des dizaines ; chacune est un faux positif."""
+        for valeur in ("text-slate-500", "bg-red-50", "ring-offset-2",
+                       "grid-cols-12", "font_size_14"):
+            with self.subTest(valeur=valeur):
+                self.assertTrue(anodin(valeur))
+
     def test_une_vraie_cle_ne_l_est_pas(self):
-        self.assertFalse(anodin("A1b2C3d4E5f6G7h8"))
+        for valeur in ("A1b2C3d4E5f6G7h8",
+                       "a1b2c3d4e5f6a1b2c3d4",     # minuscules, mais sans séparateur
+                       "hunter-2000"):             # un séparateur : sous la frontière
+            with self.subTest(valeur=valeur):
+                self.assertFalse(anodin(valeur))
+
+    def test_les_cles_de_forme_connue_ne_passent_pas_par_ce_tri(self):
+        """`anodin` ne filtre que le motif générique.
+
+        Une clé au préfixe reconnaissable est attrapée par son propre motif, qui
+        n'a pas de groupe de valeur et ne se fait donc jamais retrier — heureux,
+        parce qu'une clé sans le moindre chiffre passerait pour une phrase.
+        """
+        for etiquette, motif in SECRETS:
+            if etiquette == "clé OpenAI":
+                self.assertTrue(motif.search('k="sk-proj-AAAAAAAAAAAABBBB"'))
+                self.assertIsNone(motif.search('k="sk-court"'))
+                break
+        else:
+            self.fail("le motif « clé OpenAI » a disparu de SECRETS")
+
+    def test_un_jwt_n_est_jamais_anodin(self):
+        """Le jeton à privilèges ne doit pas se faire absoudre par la forme."""
+        self.assertFalse(anodin(forger({"role": "service_role"})))
 
 
 if __name__ == "__main__":
