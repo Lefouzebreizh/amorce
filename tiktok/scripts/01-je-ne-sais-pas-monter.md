@@ -70,6 +70,13 @@ Jour 1. Je ne sais pas monter, et je publie quand même.
 Un an, une vidéo par jour, en montrant les ratés autant que le reste. Toi, tu
 as commencé quoi récemment ?
 
+`#zebre365 #zebre #creeravecia #jecommence`
+
+La première ligne est le titre : c'est elle, et elle seule, qui s'affiche avant
+le « plus ». La question de fin n'est pas décorative — c'est ce qui sépare une
+publication d'un communiqué, et c'est elle qui fait les premiers commentaires.
+Convention des hashtags dans le `README` du dossier.
+
 ## Ce qui peut rater
 
 - **La BD ne se montre pas.** Elle sort en septembre, personne ne l'a vue. La

@@ -85,6 +85,30 @@ vidéo tiède.
 place : tes chiffres, tes délais, tes décisions. Un script qui part au tournage
 avec un crochet non rempli est un script pas fini.
 
+## Les hashtags
+
+Quatre, jamais plus, et chacun a un métier. Les empiler ne ramène rien : ce qui
+ramène, c'est qu'ils décrivent honnêtement la vidéo.
+
+| Hashtag | Ce qu'il fait |
+| --- | --- |
+| `#zebre365` | **Le tag de série.** Il n'appartient qu'à toi. Au jour 100, c'est lui l'archive du défi — le fil qu'on montre à qui arrive en cours de route. |
+| `#zebre` | **La communauté.** Le mot des hypersensibles, pas l'animal. Il atteint les gens qui se reconnaissent déjà là-dedans. |
+| `#creeravecia` | **Le sujet qui va chercher des inconnus.** |
+| `#jecommence` ou `#montagevideo` | **Ce dont parle cette vidéo-là**, et qui change d'une vidéo à l'autre. |
+
+**Sans accent, toujours.** La moitié des gens tapent sans, et un hashtag
+accentué fragmente son propre fil — `#créeravecia` et `#creeravecia` sont deux
+endroits différents, et le tien sera dans le mauvais.
+
+**Deux d'entre eux ne bougent jamais.** `#zebre365` et `#zebre` sont sur chaque
+vidéo, sans exception. Un tag de série qui saute une fois cesse d'être une
+archive : il devient une liste incomplète, et on ne s'en aperçoit qu'en
+cherchant la vidéo qui manque.
+
+**Ce que ce tableau ne sait pas** : lesquels portent *cette semaine*. Ça ne
+s'apprend qu'en publiant, et ça se note en bas des scripts — comme le reste.
+
 ## Le parcours d'une vidéo
 
 1. **Choisir un concept** dans `concepts.md`. Pas une idée : un concept, c'est
