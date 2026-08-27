@@ -321,20 +321,23 @@ se rallume tout seul dans la conversation suivante :
 - **Vercel** attendra un déploiement réel : `agence/README.md` dit « n'importe
   quel hébergeur Node ou Vercel », et rien n'y est déployé.
 
-Un manque, et il ne se comble pas :
+Un cas à part, qui n'est ni un connecteur ni un manque :
 
-- **GitHub n'est pas un connecteur**, et depuis une session distante l'API
-  GitHub n'est pas la voie d'ouverture d'une PR. Constaté ici plutôt que
-  supposé : l'application GitHub de Claude est installée sur le compte, sur tous
-  les dépôts, avec l'écriture sur les demandes d'extraction ; `git push` passe ;
-  la politique de sortie du mandataire n'interdit pas `api.github.com` ; et
-  `POST /repos/…/pulls` répond malgré tout `403 GitHub access is not enabled for
-  this session`. Rien à réparer côté GitHub : **la PR s'ouvre depuis l'interface
-  de la session**, sur la vue des changements, et la branche poussée l'attend
-  là. Une session distante mène donc ses PR de bout en bout à un clic près, et
-  ce clic n'est ni un oubli de configuration ni un droit manquant. Ne pas
-  repartir en chasse dans les réglages : ce chemin-là a déjà été parcouru pour
-  rien.
+- **GitHub passe par un serveur MCP**, et c'est par lui qu'une session distante
+  ouvre ses PR : les outils `mcp__github__*` (`create_pull_request`,
+  `merge_pull_request`, la lecture des contrôles d'intégration continue).
+  Mesuré, pas supposé — la PR #69 a été ouverte, suivie et fusionnée sans jamais
+  toucher l'interface de la session.
+
+  Ce qui ne marche pas, et qui figurait ici comme un verrou général alors que
+  ce n'en est pas un : appeler `api.github.com` **en direct**, au `curl` ou par
+  la commande `gh`. `POST /repos/…/pulls` répond alors `403 GitHub access is not
+  enabled for this session`, quand bien même l'application GitHub de Claude est
+  installée sur le compte avec l'écriture sur les demandes d'extraction, et que
+  `git push` passe. Le jeton n'est pas dans l'environnement, il est derrière le
+  serveur MCP. Ne pas conclure de ce 403 que la voie est fermée, et ne pas
+  repartir en chasse dans les réglages : c'est l'outil employé qu'il faut
+  changer, pas la configuration.
 
 Et une règle de permissions, écrite dans `.claude/settings.json` plutôt que
 réaccordée à chaque session : les outils Supabase qui **lisent** y sont
