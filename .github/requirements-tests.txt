@@ -16,3 +16,4 @@ numpy          # chaîne pré-presse : mesure des planches
 Pillow         # chaîne pré-presse : ouverture des images
 pymupdf        # assistant administratif : lecture des PDF
 PyYAML         # radar crypto : seuils et table des chaînes en YAML
+opencv-python-headless  # chaîne KDP : piqué des planches, gradient de Sobel
