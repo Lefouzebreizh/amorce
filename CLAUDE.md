@@ -254,7 +254,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/etat-du-depot` | L'inventaire du dépôt, **découvert** et non recopié : chantiers, lignes, commits, tests, écart avec `main`. À lancer avant d'écrire où que ce soit un chiffre sur le dépôt — ici, une liste tenue à la main est fausse le lendemain, et fausse en silence. |
-| `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
+| `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. Porte `scripts/comme-la-ci.sh`, qui rejoue les sept suites Python comme un runner GitHub — sur les seuls fichiers versionnés, dans un environnement n'ayant que les bibliothèques de la CI. C'est ce qui attrape le vert en session, rouge ailleurs. |
 | `/capacites-session` | Ce que cette session-ci sait faire — binaires, bibliothèques, hôtes joignables, modèles — et le repli de ce qui manque. Sondé en une seconde, affiché au démarrage. |
 | `/branche-partagee` | De combien la branche a pris du retard, quels commits sont déjà passés dans `main` par une autre session, et quoi faire ensuite. |
 | `/custom-frontend-designer` | Où atterrit un écran d'Amorce, quelles briques existent, et les cinq règles de style qui font l'identité de l'interface. |
