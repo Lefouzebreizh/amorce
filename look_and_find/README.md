@@ -201,6 +201,7 @@ signale plus rien.
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé : la réponse est retenue même quand elle est inexploitable. |
 | `requete_gemini_test.dart` | Ce qui **part** réellement vers Gemini : modèle visé, invite avant la photo, décodage contraint par le schéma. Le dernier maillon, qu'un faux `Dio` rendant une réponse toute faite ne regardait pas. |
 | `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |
+| `diagnostic_reponse_test.dart` | La fidélité du diagnostic qui désigne le fichier à corriger — il décide entre l'invite et la lecture, et un verdict inversé coûte une correction au mauvais endroit. |
 
 Ce qui ne peut pas être testé ainsi et demande un appareil : le décodage
 caméra, la mise au point, la session de réalité augmentée, et la qualité

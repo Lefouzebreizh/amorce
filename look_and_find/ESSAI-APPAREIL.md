@@ -1,6 +1,6 @@
 # L'essai sur téléphone, en cinq minutes
 
-Tout ce qui se décide hors appareil est verrouillé par 94 tests. Ce document
+Tout ce qui se décide hors appareil est verrouillé par 105 tests. Ce document
 couvre ce qui reste : ce qu'un modèle de langage répond sur un objet réel, et
 ce que l'application en fait sur un vrai écran.
 
