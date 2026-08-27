@@ -262,6 +262,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/kdp-niche-validator` | Décider si un mot-clé KDP mérite un livre, avec `kdp/kdp_niche_validator.py`. |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture reste lisible en vignette de boutique, avec `kdp/vignette.py`. |
 | `/fonctionnalite-flutter` | Où poser chaque fichier dans Look & Find, et les quatre pièges qui coûtent une heure. |
+| `/identification-produit` | Quand une fiche de Look & Find est fausse : trancher entre l'erreur du modèle et l'erreur de lecture avec la réponse brute, corriger l'invite ou le DTO sans les désynchroniser, et éprouver le résultat sans passer par le téléphone. |
 | `/idee-faisabilite` | La grille de notation d'une idée sur 10, le dossier où atterrit sa fiche, et le script qui tient `INDEX.md` à jour. |
 | `/audit-code-ia` | Auditer une base de code générée par IA : le relevé mécanique de `scan.py`, les trois défauts qu'aucune expression régulière ne trouve, et le classement par ce qui cassera en premier. |
 | `/paper-manager` | Où poser chaque fichier dans l'assistant administratif, la frontière entre ce que l'humain décide et ce que la machine calcule, et les huit pièges qui coûtent un bogue. |
