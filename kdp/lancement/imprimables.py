@@ -32,7 +32,7 @@ import charte  # noqa: E402
 
 A4 = (595.28, 841.89)          # points
 MARGE = 1.0 * 28.3465          # 1 cm, atteignable par toute imprimante domestique
-POLICE = Path("/mnt/skills/examples/canvas-design/canvas-fonts/Lora-Italic.ttf")
+POLICE = charte.POLICES / "Lora-Italic.ttf"
 
 
 @dataclass

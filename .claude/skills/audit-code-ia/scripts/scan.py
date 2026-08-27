@@ -34,14 +34,48 @@ SECRETS = [
     ("jeton Slack", re.compile(r"xox[baprs]-[0-9A-Za-z-]{10,}")),
     ("clé privée", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
     ("secret affecté en dur", re.compile(
-        r"""(?i)(api[_-]?key|secret|password|passwd|token)\s*[:=]\s*["'][^"'\s]{12,}["']""")),
+        r"""(?i)(api[_-]?key|secret|password|passwd|token)\s*[:=]\s*["']([^"'\s]{12,})["']""")),
 ]
+
+# Ce que le motif « secret affecté en dur » attrape et qui n'en est pas un. Sur
+# un premier audit réel, neuf de ses onze constats étaient des jetons de thème
+# (`token: "--muted-foreground"`) : un nom de variable CSS, pas un secret. Le
+# rapport en serait mort — le lecteur vérifie toujours le premier constat, et
+# s'il est faux il ne lit pas le deuxième.
+#
+# Le tri se fait sur la forme de la valeur, jamais sur celle de la clé : un vrai
+# secret mêle chiffres et lettres, un jeton de design est un mot en minuscules
+# et tirets.
+BENIN = re.compile(
+    r"""^(--|var\(|\$|#[0-9a-f]{3,8}$|rgb|hsl|/|\./|\.\./|[a-z]+([-_.][a-z]+)*$)""", re.I)
+
+
+def anodin(valeur):
+    """Une valeur qui a la forme d'un nom, d'une couleur ou d'un chemin."""
+    if BENIN.match(valeur):
+        return True
+    # Un secret sans le moindre chiffre est presque toujours une phrase, un nom
+    # de classe ou un identifiant lisible ; les clés en produisent tous.
+    return not any(c.isdigit() for c in valeur)
 
 # Une variable exposée au navigateur qui porte un nom de secret : la fuite la
 # plus fréquente des applications générées, parce que le préfixe a l'air d'un
 # détail de configuration.
 EXPOSE = re.compile(r"(NEXT_PUBLIC_|VITE_|REACT_APP_|PUBLIC_)\w*"
                     r"(KEY|SECRET|TOKEN|PASSWORD)\w*", re.I)
+
+# Sauf celles qui sont publiables par conception. Une clé `anon` de Supabase,
+# une configuration Firebase ou une clé publiable Stripe *doivent* partir au
+# navigateur : ce sont les identifiants publics du projet, et ce qui protège
+# réellement les données est la politique d'autorisation côté serveur.
+#
+# Les signaler comme une fuite est le faux positif le plus coûteux du métier :
+# c'est le premier constat que le client vérifie, il sait que c'est faux, et il
+# ne lit pas le second. Ce qui mérite un audit n'est pas qu'une clé publiable
+# soit visible, mais ce qu'elle permet de faire une fois en main.
+PUBLIABLE = re.compile(
+    r"(?i)(ANON_KEY|PUBLISHABLE|FIREBASE|SENTRY_DSN|POSTHOG|GA_|GTM_|MAPBOX|"
+    r"ALGOLIA_SEARCH|RECAPTCHA_SITE|CLERK_PUBLISHABLE|STRIPE_PUBLI)")
 
 RISQUES = [
     ("eval() sur une entrée", re.compile(r"\beval\s*\(")),
@@ -109,11 +143,19 @@ def main():
             if len(ligne) > 400:      # minifié : ni lisible ni pertinent
                 continue
             for nom, motif in SECRETS:
-                if motif.search(ligne):
-                    secrets.append(f"{rel}:{n} — {nom}")
-                    break
-            if EXPOSE.search(ligne):
-                exposes.append(f"{rel}:{n} — {EXPOSE.search(ligne).group(0)}")
+                m = motif.search(ligne)
+                if not m:
+                    continue
+                # Seul le motif générique porte un groupe de valeur ; les formes
+                # nommées (clé OpenAI, jeton GitHub) sont reconnaissables par
+                # construction et n'ont pas à être retriées.
+                if m.lastindex and m.lastindex >= 2 and anodin(m.group(2)):
+                    continue
+                secrets.append(f"{rel}:{n} — {nom}")
+                break
+            expose = EXPOSE.search(ligne)
+            if expose and not PUBLIABLE.search(expose.group(0)):
+                exposes.append(f"{rel}:{n} — {expose.group(0)}")
             for nom, motif in RISQUES:
                 if motif.search(ligne):
                     risques.append(f"{rel}:{n} — {nom}")

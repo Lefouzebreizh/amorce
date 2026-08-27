@@ -48,6 +48,52 @@ sans quoi l'outillage commun casse :
 | `.claude/hooks/session-start.sh` | y installer ses dépendances | Sans quoi chaque session distante redémarre sur un dossier sans `node_modules`. |
 | `.github/workflows/` | lui donner son workflow, sur le modèle d'`agence.yml` | La racine ne vérifie que ce qu'elle connaît : sans workflow propre, rien ne vérifie le projet. |
 
+## Le connecteur Supabase, mesuré sur un projet neuf
+
+Le `README` décrit le parcours manuel : coller `schema.sql` dans l'éditeur SQL,
+puis y rejouer `verifier-rls.sql`. Le connecteur supprime les deux collages.
+Essayé de bout en bout sur un projet vierge plutôt que supposé :
+
+| Fichier | Comment il passe |
+| --- | --- |
+| `supabase/schema.sql` | `apply_migration`, en **un seul appel**, le fichier tel quel. Rejoué ensuite sur le même projet sans rien casser — sa promesse d'être rejouable tient. |
+| `supabase/verifier-rls.sql` | `execute_sql`, le bloc `begin; … rollback;` entier en un appel. Les `set local role` fonctionnent, et le `rollback` ne laisse rien : zéro compte, zéro profil, zéro projet après coup. |
+| `supabase/etat-rls.sql` | **Ne passe pas.** Il ouvre sur `\set ON_ERROR_STOP on`, une méta-commande `psql` qu'une connexion SQL ne comprend pas. Celui-là reste un collage. |
+| `tests/rls/socle-supabase.sql` | **Ne doit pas y passer.** Il crée les rôles `anon`, `authenticated` et `service_role`, ce qui n'a de sens que sur le PostgreSQL jetable de la CI. Un vrai projet les a déjà. |
+
+**Créer le projet reste manuel** : le classificateur du mode auto refuse
+`create_project`, et de toute façon le mot de passe de la base ne doit pas
+transiter par une conversation. Une fois par client, c'est supportable.
+
+Une propriété du script qu'il faut connaître avant de lire son silence :
+`verifier-rls.sql` **porte son propre témoin négatif**. Ses contrôles exigent
+que certaines écritures soient *refusées* ; si la bascule de rôle échouait et
+qu'il tournait en superutilisateur, ces écritures passeraient et le script
+lèverait « FAILLE ». Sortir sans exception prouve donc à la fois que les
+politiques tiennent et que le contrôle a réellement eu lieu.
+
+## Ce que `get_advisors` ajoute, et ce qu'il faut lui refuser
+
+Le linter de Supabase voit une chose que `verifier-rls.sql` ne regarde pas :
+les fonctions `SECURITY DEFINER` publiées en `/rest/v1/rpc/…`. Sur le socle il
+en signalait deux, et **les deux se sont tranchées à la mesure, pas à la
+lecture** :
+
+- `handle_new_user()` gardait l'EXECUTE par défaut à PUBLIC, là où la section 4
+  du schéma reprend celui d'`is_admin()`. Corrigé — mais l'appel direct était
+  déjà refusé par PostgreSQL (« trigger functions can only be called as
+  triggers »). Incohérence réelle, faille non.
+- `is_admin()` reste signalée, et **doit le rester**. Retirer l'EXECUTE à
+  `authenticated`, comme le propose l'avertissement, fait tomber la politique
+  « Un administrateur lit tous les profils » sur `permission denied for function
+  is_admin` : une politique RLS s'évalue avec les droits de l'appelant, donc le
+  rôle qui la déclenche a besoin d'exécuter la fonction qu'elle interroge.
+
+D'où la règle : sur un projet client, l'avertissement `is_admin` est attendu et
+se laisse tel quel. Tout autre avertissement `SECURITY DEFINER` est un oubli de
+`revoke`, et se corrige dans `schema.sql`, jamais sur le projet seul — sinon le
+client suivant hérite du même oubli.
+
 ## Vérifier
 
 Depuis le dossier du projet, jamais depuis la racine — les cinq commandes sont

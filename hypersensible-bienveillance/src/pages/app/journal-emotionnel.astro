@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import AppJournal from '../../components/AppJournal.astro';
+---
+
+<Base
+  titre="Journal émotionnel — écrire sans que ça sorte de ton navigateur"
+  description="Un espace d'écriture libre pour hypersensibles. L'analyse tourne dans ton navigateur, rien n'est envoyé ni conservé, et le bouton « Libérer » efface tout."
+>
+  <AppJournal />
+  <p class="aide mt-10">
+    <a href="/" class="hover:text-cyan transition">← Revenir à l’accueil</a>
+  </p>
+</Base>

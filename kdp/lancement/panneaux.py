@@ -21,6 +21,7 @@ import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import charte  # noqa: E402
 from pipeline.bordure import fond_charte  # noqa: E402
 from pipeline.normaliser import couleur_du_fond  # noqa: E402
 
@@ -85,7 +86,7 @@ def carte_parchemin(phrase: str, source_bordure: Path, cible: Path,
     retypographie donc, dans la police et sur le papier de la charte.
     """
     from PIL import ImageDraw, ImageFont
-    polices = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
+    polices = charte.POLICES
     carte = fond_charte(source_bordure, cote)
     dessin = ImageDraw.Draw(carte)
 

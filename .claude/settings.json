@@ -1,4 +1,80 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__Supabase__list_projects",
+      "mcp__Supabase__list_organizations",
+      "mcp__Supabase__list_tables",
+      "mcp__Supabase__list_migrations",
+      "mcp__Supabase__list_extensions",
+      "mcp__Supabase__get_project",
+      "mcp__Supabase__get_project_url",
+      "mcp__Supabase__get_advisors",
+      "mcp__Supabase__get_cost",
+      "mcp__Supabase__search_docs",
+      "mcp__Supabase__generate_typescript_types",
+
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_projects",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_organizations",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_tables",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_migrations",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__list_extensions",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__get_project",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__get_project_url",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__get_advisors",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__get_cost",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__search_docs",
+      "mcp__f3258232-853b-4a14-b284-9a059be13a7a__generate_typescript_types",
+
+      "mcp__github__get_me",
+      "mcp__github__get_commit",
+      "mcp__github__get_file_contents",
+      "mcp__github__list_commits",
+      "mcp__github__list_branches",
+      "mcp__github__list_pull_requests",
+      "mcp__github__pull_request_read",
+      "mcp__github__search_code",
+      "mcp__github__search_pull_requests",
+      "mcp__github__create_pull_request",
+      "mcp__github__update_pull_request",
+      "mcp__github__add_issue_comment",
+
+      "Bash(ls:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(wc:*)",
+      "Bash(sed -n:*)", "Bash(diff:*)", "Bash(find:*)", "Bash(grep:*)", "Bash(rg:*)",
+      "Bash(cd:*)", "Bash(echo:*)", "Bash(mkdir:*)",
+
+      "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git show:*)",
+      "Bash(git ls-files:*)", "Bash(git ls-tree:*)", "Bash(git ls-remote:*)",
+      "Bash(git merge-base:*)", "Bash(git rev-parse:*)", "Bash(git rev-list:*)",
+      "Bash(git branch:*)", "Bash(git fetch:*)", "Bash(git checkout:*)",
+      "Bash(git switch:*)", "Bash(git merge:*)", "Bash(git mv:*)",
+      "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)",
+
+      "Bash(npm test)", "Bash(npm run typecheck)", "Bash(npm run lint)",
+      "Bash(npm run build)", "Bash(npm run fixtures)", "Bash(npm run verify)",
+      "Bash(npm run verify:reprise)", "Bash(npm run verify:partage)",
+      "Bash(npm run test:rls)", "Bash(npm run etat:rls)",
+      "Bash(npm run valider)", "Bash(npm run verifier)", "Bash(npm run sites)",
+      "Bash(npm run check)",
+      "Bash(npm install:*)", "Bash(npm ci:*)",
+
+      "Bash(python3 -m unittest:*)", "Bash(python3 -m pip install:*)",
+      "Bash(python3 kdp/pipeline/valider.py:*)", "Bash(python3 kdp/vignette.py:*)",
+      "Bash(python3 kdp/kdp_niche_validator.py:*)",
+      "Bash(python3 paper-manager/paper.py:*)",
+
+      "Bash(flutter analyze:*)", "Bash(flutter test:*)", "Bash(flutter pub get:*)",
+      "Bash(dart run build_runner:*)",
+
+      "Bash(bash .claude/skills/:*)",
+      "Bash(python3 .claude/skills/:*)",
+      "Bash(bash .claude/hooks/:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

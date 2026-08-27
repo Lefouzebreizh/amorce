@@ -1,6 +1,6 @@
 ---
 name: bande-son
-description: Fabriquer la bande-son d'une vidéo — musique, voix off, bruitages — et la sortir au bon niveau pour la plateforme visée, à partir d'une simple phrase d'intention. Mesure le fichier, propose les réglages, mixe avec ffmpeg, puis vérifie le résultat en LUFS et en vrai pic. À utiliser dès qu'une vidéo et du son se croisent : « fais-moi la bande-son de ce clip », « quel volume pour la musique », « la musique couvre ma voix », « le son est trop faible sur TikTok », « ajoute une ambiance », « ça sonne amateur », « il manque du rythme » — et aussi quand un fichier .mp4 ou .mov arrive avec une intention de montage mais rien de dit sur le son. Ne pas attendre le mot « LUFS » : personne ne le prononce, et c'est précisément le réglage qui manque.
+description: Fabriquer la bande-son d'une vidéo — musique, voix off, bruitages — et la sortir au bon niveau pour la plateforme visée, à partir d'une simple phrase d'intention. Mesure le fichier, propose les réglages, mixe avec ffmpeg, puis vérifie le résultat en LUFS et en vrai pic. À utiliser dès qu'une vidéo et du son se croisent : « fais-moi la bande-son de ce clip », « quel volume pour la musique », « la musique couvre ma voix », « le son est trop faible sur TikTok », « ajoute une ambiance », « il manque du rythme » — et aussi quand un fichier .mp4 ou .mov arrive avec une intention de montage mais rien de dit sur le son. Ne pas attendre le mot « LUFS » : personne ne le prononce, et c'est précisément le réglage qui manque. Cette compétence *fabrique* le son ; pour **juger** un fichier déjà mixé — « ça sonne amateur », « on n'entend rien » — c'est `voir-le-son` qui regarde d'abord, et on revient ici pour corriger.
 ---
 
 # Le son se juge en LUFS, pas en décibels de crête
@@ -60,6 +60,24 @@ Viser la cible, jamais la dépasser : au-dessus, la plateforme baisse **tout** l
 mixage, voix comprise, et le résultat sort plat. En dessous de -1 dBTP de marge,
 l'encodage AAC final repousse les crêtes au-delà de 0 et fait craquer un
 fichier qui passait pourtant les mesures avant encodage.
+
+## Une cible n'est pas une attente
+
+Le tableau ci-dessus dit ce que les plateformes **admettent**. Il ne dit pas ce
+que les créateurs **livrent**, et l'écart se paie cher.
+
+Constaté sur un montage réel : la version calée à −14 LUFS, donc conforme, a
+été rejetée huit fois. Le montage que l'auteur avait fait lui-même, du même
+film, mesurait **−7,3 LUFS** — six décibels plus fort, et six de plus sur la
+bande qu'un haut-parleur de téléphone restitue.
+
+Donc : quand quelqu'un juge un mixage mauvais alors qu'il est conforme, **lui
+demander un fichier qu'il trouve réussi et le mesurer**. Comparer sonie,
+dynamique et énergie au-dessus de 400 Hz entre les deux. Un écart chiffré
+tranche en une minute ce que l'itération au jugé ne trouve pas.
+
+La cible reste un plafond à ne pas dépasser sans raison. Elle n'a jamais été
+une consigne de ressemblance.
 
 ## De la phrase aux réglages
 

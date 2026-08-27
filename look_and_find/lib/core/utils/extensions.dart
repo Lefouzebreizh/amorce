@@ -4,6 +4,10 @@ library;
 
 import 'package:flutter/material.dart';
 
+// Réexporté pour que les widgets gardent un seul import, alors que le `domain`
+// n'emprunte que la partie sans Flutter.
+export 'iterables.dart';
+
 extension BuildContextX on BuildContext {
   ThemeData get theme => Theme.of(this);
   TextTheme get texts => Theme.of(this).textTheme;
@@ -24,16 +28,5 @@ extension BuildContextX on BuildContext {
           backgroundColor: isError ? Theme.of(this).colorScheme.error : null,
         ),
       );
-  }
-}
-
-extension IterableX<T> on Iterable<T> {
-  /// `firstWhere` sans exception : le cas « aucun marchand en stock » est
-  /// normal, il ne mérite pas un try/catch à chaque appel.
-  T? firstWhereOrNull(bool Function(T element) test) {
-    for (final element in this) {
-      if (test(element)) return element;
-    }
-    return null;
   }
 }

@@ -22,6 +22,12 @@ const eslintConfig = defineConfig([
     // et ses propres alias `@/…` : analysé depuis la racine, chaque import y
     // pointerait vers `src/` d'Amorce. Il se vérifie depuis `agence/`.
     "agence/**",
+    // Le site hypersensible-bienveillance.com. Projet Astro + Cloudflare
+    // autonome : ses propres `package.json`, `tsconfig.json` et `node_modules`,
+    // ses propres types (`@cloudflare/workers-types`) que le TypeScript de la
+    // racine ne connaît pas, et des Pages Functions qui n'ont rien de Next.js.
+    // Il se vérifie depuis son dossier : `npm run check`, `npm test`.
+    "hypersensible-bienveillance/**",
   ]),
 ]);
 

@@ -1,0 +1,19 @@
+{
+  "name": "annuaire-ia",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Réseau d'annuaires d'outils IA — un gabarit, une base par niche, sans serveur ni base de données.",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve . --listen 8080",
+    "valider": "node valider.js",
+    "verifier": "node verifier.mjs",
+    "styles": "node construire-styles.mjs",
+    "autopilot": "node auto-pilot.js",
+    "autopilot:essai": "node auto-pilot.js --dry-run",
+    "reserve": "node auto-pilot.js --etat-reserve",
+    "sitemap": "node generate-sitemap.js",
+    "sites": "node construire-sites.js",
+    "niche": "node nouvelle-niche.js"
+  }
+}

@@ -110,7 +110,8 @@ Modifier la fiche d'un client se fait avec lui, pas à sa place.
 
 ```
 supabase/schema.sql      tables, RLS, privilèges de colonnes, triggers
-supabase/verifier-rls.sql  contrôle des politiques, à rejouer sur le projet client
+supabase/verifier-rls.sql  contrôle des politiques, sur une base jetable (CI)
+supabase/etat-rls.sql    contrôle de dérive, en lecture seule, sur la base d'un client
 src/proxy.ts             rafraîchissement de session (ex-middleware, renommé en Next.js 16)
 src/app/                 routes — (auth) public, (prive) sous session, auth/confirmer
 src/components/ui/       briques d'interface (Shadcn/ui, écrites à la main)

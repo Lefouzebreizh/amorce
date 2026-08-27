@@ -1,0 +1,76 @@
+{
+  "niche": {
+    "id": "immobilier",
+    "nom": "IA Immobilier",
+    "emoji": "🏠",
+    "domaine": "https://ia-immobilier.fr",
+    "metier": "agents et négociateurs immobiliers",
+    "h1_accent": "L'IA des agents",
+    "h1_suite": "qui rentrent des mandats",
+    "slogan": "Estimation, visite virtuelle, home staging : les outils qui font signer un mandat avant le confrère d'en face.",
+    "meta_titre": "IA Immobilier — les outils IA pour agents immobiliers",
+    "meta_description": "Estimation, visite 3D, home staging virtuel, rédaction d’annonces : les outils IA testés pour les agences. Prix, avis détaillés et limites réelles.",
+    "theme": {
+      "primaire": "#f97316",
+      "secondaire": "#fb923c"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur."
+  },
+  "outils": [
+    {
+      "id": "pricehubble",
+      "nom": "PriceHubble",
+      "categorie": "Estimation",
+      "prix": "Sur devis — à partir d'environ 100 €/mois par agence",
+      "description_courte": "L'estimation immobilière automatisée qui sort un avis de valeur argumenté en deux minutes, chiffres du marché à l'appui.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/pricehubble",
+      "score_avis": 4.6,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nPriceHubble croise les transactions notariales, les annonces en cours et les caractéristiques du bien pour produire une fourchette de prix défendable devant un vendeur. Le vrai gain n'est pas la valeur elle-même — un bon négociateur la connaît — mais le dossier d'estimation imprimable qui l'accompagne : graphiques de marché, biens comparables, évolution du quartier. C'est ce document qui fait basculer un rendez-vous en mandat.\n\n## Points forts\n- Fourchette de valeur argumentée, avec les comparables affichés et sourcés\n- Rapport d'estimation à la charte de l'agence, prêt à laisser au vendeur\n- Widget d'estimation à poser sur le site de l'agence : générateur de contacts entrants\n- Suivi de la valeur d'un portefeuille dans le temps, utile en gestion locative\n\n## Points faibles\n- La précision s'effondre sur l'atypique : corps de ferme, loft, bien en indivision\n- Tarif calibré pour des agences à plusieurs négociateurs, difficile à absorber en solo\n- Les données sont plus fines en zone dense qu'en secteur rural\n\n## Idéal pour\nUne agence qui perd des mandats face à des confrères mieux outillés en rendez-vous d'estimation, et qui veut transformer un avis de valeur en argumentaire écrit."
+    },
+    {
+      "id": "matterport",
+      "nom": "Matterport",
+      "categorie": "Visite virtuelle",
+      "prix": "Freemium — à partir de 12 €/mois",
+      "description_courte": "La visite 3D qui filtre les curieux : le visiteur parcourt le bien avant de se déplacer, et arrive déjà convaincu.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/matterport",
+      "score_avis": 4.5,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nMatterport reste la référence de la visite immersive, et son intelligence artificielle fait aujourd'hui le travail qui coûtait le plus cher : reconstruction du plan coté à partir du scan, détection automatique des pièces, étiquetage du mobilier. Un scan de trente minutes avec un simple téléphone donne une visite navigable, un plan et une série de photos exploitables. Le tri des visites physiques qui en découle vaut à lui seul l'abonnement.\n\n## Points forts\n- Plan de masse coté généré automatiquement à partir du relevé\n- Scan possible au téléphone : plus besoin d'une caméra dédiée pour démarrer\n- Les biens présentés en 3D retiennent nettement plus longtemps sur les portails\n- Hébergement et partage par lien, sans installation côté visiteur\n\n## Points faibles\n- La qualité chute vite en basse lumière : un bien mal éclairé rend mal\n- Le temps de scan reste réel — comptez une demi-heure pour un T3\n- Les formules d'entrée limitent le nombre de biens actifs simultanément\n\n## Idéal pour\nLes agences qui vendent à distance, gèrent des biens loués et occupés, ou veulent réduire le nombre de visites inutiles sur un mandat exclusif."
+    },
+    {
+      "id": "virtual-staging-ai",
+      "nom": "Virtual Staging AI",
+      "categorie": "Home staging",
+      "prix": "À partir de 24 €/mois",
+      "description_courte": "Un appartement vide meublé en trente secondes : la photo qui déclenche le clic sur le portail, sans camion ni décorateur.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/virtual-staging-ai",
+      "score_avis": 4.3,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nUne photo de pièce vide ne se projette pas : le visiteur ne sait pas si son canapé tient. Virtual Staging AI meuble l'image en respectant la perspective et la lumière, dans le style demandé — scandinave, contemporain, familial. Le coût par photo tombe à quelques centimes là où un home staging physique se chiffre en centaines d'euros, et le délai passe de trois jours à une minute.\n\n## Points forts\n- Perspective et ombres cohérentes, y compris sur des pièces mansardées\n- Plusieurs ambiances proposées sur la même photo, pour tester ce qui convertit\n- Désencombrement automatique : le mobilier existant peut être retiré avant l'ajout\n- Facturé au volume, sans engagement de production minimale\n\n## Points faibles\n- Les reflets dans les miroirs et les vitres restent le point faible visible\n- Mentionner le caractère virtuel de l'ameublement est une obligation d'information\n- Les grandes pièces ouvertes demandent souvent deux ou trois essais\n\n## Idéal pour\nLes mandats sur biens vides ou meublés à contretemps, et toute annonce qui stagne faute d'un visuel de première photo qui donne envie."
+    },
+    {
+      "id": "write-homes",
+      "nom": "Write.homes",
+      "categorie": "Rédaction d'annonces",
+      "prix": "Freemium — à partir de 15 $/mois",
+      "description_courte": "L'annonce rédigée à partir des caractéristiques du bien, déclinée pour chaque portail et chaque réseau social.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/write-homes",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nRédiger trente annonces par mois est une corvée dont la qualité baisse à la troisième. Write.homes prend les caractéristiques saisies et produit un texte structuré, décliné aux formats des portails et des réseaux sociaux, avec les variantes de longueur qu'ils imposent. Le gain n'est pas dans la prose — elle reste sage — mais dans le fait que la trentième annonce vaut la première.\n\n## Points forts\n- Déclinaison automatique aux formats des différents portails\n- Variantes de ton : familial, investisseur, résidence secondaire\n- Textes de visite guidée et de publication sociale générés dans la foulée\n- Formule gratuite suffisante pour juger avant de payer\n\n## Points faibles\n- Style reconnaissable si l'on publie sans retoucher\n- Aucune connaissance des mentions obligatoires françaises : à vérifier soi-même\n- Ne se connecte pas aux logiciels de transaction du marché français\n\n## Idéal pour\nLes agences qui publient beaucoup et dont les annonces se ressemblent toutes parce qu'elles sont écrites à la chaîne en fin de journée.",
+      "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "restb-ai",
+      "nom": "Restb.ai",
+      "categorie": "Analyse de photos",
+      "prix": "Sur devis",
+      "description_courte": "La reconnaissance automatique de ce que montrent les photos d'un bien : pièces, état, équipements, prestations haut de gamme.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/restb-ai",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nRestb.ai regarde les photos d'une annonce et en tire des données exploitables : type de pièce, état d'entretien, présence d'une cuisine équipée, d'une cheminée, d'une piscine. Pour un portefeuille de plusieurs milliers de biens, c'est le seul moyen de qualifier des annonces sans qu'un humain ouvre chaque dossier — et de repérer celles dont les photos ne suivent pas la charte de l'agence.\n\n## Points forts\n- Détection des pièces et des équipements sans intervention humaine\n- Contrôle automatique de la qualité et de la conformité des photos publiées\n- Enrichissement des annonces existantes, ce qui améliore leur classement sur les portails\n- Interface de programmation propre, greffable sur un logiciel de transaction\n\n## Points faibles\n- Outil de développeur : il faut une équipe technique pour en tirer quelque chose\n- Aucun intérêt pour une agence à quelques dizaines de mandats\n- La détection d'état reste grossière sur les biens à rénover\n\n## Idéal pour\nLes réseaux, les portails et les éditeurs de logiciels immobiliers qui traitent des volumes de photos qu'aucune équipe ne peut relire.",
+      "date_ajout": "2026-08-27"
+    }
+  ]
+}

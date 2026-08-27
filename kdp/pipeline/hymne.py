@@ -58,7 +58,7 @@ MODULE_MINIMUM_MM = 0.6
 # passer le carré de 0,63 à 0,73 mm.
 CORRECTION = "m"
 
-POLICES = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
+POLICES = charte.POLICES
 BRUN_PALE = (0.45, 0.34, 0.20)
 
 
