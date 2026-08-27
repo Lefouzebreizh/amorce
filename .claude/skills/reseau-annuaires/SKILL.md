@@ -45,6 +45,14 @@ annuaire-ia/
 Le travail programmé est à `.github/workflows/autopilot.yml`, la barrière à
 `.github/workflows/annuaire-ia.yml`.
 
+**L'auto-pilote passe `verifier.mjs` avant de pousser** — cinq minutes, tous les
+deux jours. C'est le seul endroit où le parcours en navigateur est obligatoire,
+et la raison tient à ce qui distingue cette exécution de toutes les autres :
+elle écrit sur `main` sans qu'un humain relise, et sa poussée ne redéclenche
+aucun workflow. Sans cette étape, rien ne regarde jamais la page publiée. Un
+parcours rouge ne publie rien : ne rien publier est visible et réversible,
+publier onze pages cassées ne l'est pas.
+
 ## Vérifier — dans cet ordre
 
 ```bash
