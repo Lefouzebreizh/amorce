@@ -49,7 +49,9 @@ hypersensible-bienveillance/
 ├── functions/api/
 │   ├── reforme.ts           POST — quota + reformulation
 │   └── radar.ts             GET  — outils, prix, courbes
-├── workers/tracker-healer.js  tournée de nuit : vérification des liens + prix
+├── workers/
+│   ├── tracker-healer.js    tournée de nuit : liens, prix, purge des quotas
+│   └── prix.js              lecture d'un prix déclaré (JSON-LD, microdonnées, OG)
 ├── tests/                   node --test, sans dépendance
 └── public/llms.txt          ce fichier
 ```
@@ -150,7 +152,17 @@ répondent alors « indisponible », et c'est normal. Pour les essayer, passer p
   runner, quatre fois `ts(2591)`. Vaut pour toute dépendance de types ajoutée
   ici : la déclarer dans ce `package.json`, jamais compter sur le voisin.
 - **Un prix n'est relevé que sur un site qui a répondu.** Prolonger la courbe
-  d'un site en panne inventerait une mesure.
+  d'un site en panne inventerait une mesure. Depuis la lecture réelle, il y a
+  une **seconde** façon de ne pas répondre : un site joignable qui ne déclare
+  aucun prix, ou qui en déclare plusieurs — mensuel et annuel, prix barré et
+  prix courant. `workers/prix.js` rend alors `null`, et la tournée n'écrit
+  rien. Choisir entre deux tarifs déclarés serait fabriquer la courbe que ce
+  projet reproche aux autres. Le bilan de la tournée compte ces sites sous
+  `muets`.
+- **On ne cherche jamais un prix dans le texte visible.** Une page de tarifs en
+  affiche cinq et rien n'y dit lequel on suit. Seuls les formats *déclarés*
+  sont lus — JSON-LD `Offer`, `itemprop="price"`, `product:price:amount` — parce
+  qu'ils sont spécifiés, là où une apparence s'interprète.
 - **Le module d'entrée d'un Worker n'exporte que des fonctions.** `workerd`
   refuse au chargement tout export nommé qui n'est ni une fonction ni un
   `ExportedHandler` : une simple constante exportée de `tracker-healer.js`
@@ -166,7 +178,13 @@ répondent alors « indisponible », et c'est normal. Pour les essayer, passer p
 
 ## Ce qui reste à faire
 
-1. Un analyseur de tarifs par éditeur, pour remplacer la simulation. Le jour où
-   il existe : `SIMULER_PRIX` et `RADAR_SIMULE` passent à « 0 » ensemble, et
-   l'avertissement de la page disparaît tout seul.
+1. **Valider la lecture des prix sur les dix éditeurs.** La couche normalisée
+   existe et est branchée (`workers/prix.js`, `SIMULER_PRIX=0` la met en
+   service), mais elle n'a **jamais été confrontée aux dix vraies pages** : la
+   session qui l'a écrite n'avait pas d'accès réseau vers ces hôtes. Ce qu'il
+   reste : lancer une tournée en lecture réelle depuis un poste qui les joint,
+   lire le champ `muets` du bilan, et n'écrire un analyseur propre à un éditeur
+   que pour ceux qui y figurent. Tant que `muets` n'est pas à zéro,
+   `SIMULER_PRIX` et `RADAR_SIMULE` restent à « 1 » — un radar dont trois
+   courbes s'arrêtent est pire que le radar simulé qui s'annonce.
 2. Le parcours de soutien à 19 €, aujourd'hui annoncé mais pas outillé.
