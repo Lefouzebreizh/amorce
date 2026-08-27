@@ -30,39 +30,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validerBase, creerReleve } from './valider.js';
 
 const racine = path.dirname(fileURLToPath(import.meta.url));
 const dossierNiches = path.join(racine, 'niches');
 const ESSAI = process.argv.includes('--dry-run');
-
-const CHAMPS_REQUIS = [
-  'id', 'nom', 'categorie', 'prix',
-  'description_courte', 'description_longue',
-  'lien_affiliation', 'score_avis',
-];
+const ETAT = process.argv.includes('--etat-reserve');
 
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 
-/** Refuse une base que le site ne saurait pas afficher. */
+/* Ce qu'est une base valide est défini une seule fois, dans `valider.js` :
+   l'intégration continue et ce script doivent refuser exactement les mêmes
+   fichiers, sans quoi l'un laisserait passer ce que l'autre bloque. */
 function valider(base, fichier) {
-  const erreurs = [];
-  if (!base?.niche?.id) erreurs.push('bloc `niche` absent ou sans identifiant');
-  if (!Array.isArray(base?.outils) || base.outils.length === 0) erreurs.push('aucun outil');
-
-  const vus = new Set();
-  for (const outil of base?.outils ?? []) {
-    const nom = outil?.nom || outil?.id || '(sans nom)';
-    for (const champ of CHAMPS_REQUIS) {
-      if (outil?.[champ] === undefined || outil?.[champ] === '') erreurs.push(`${nom} : champ « ${champ} » manquant`);
-    }
-    if (typeof outil?.score_avis !== 'number') erreurs.push(`${nom} : score_avis doit être un nombre`);
-    if (outil?.id) {
-      if (vus.has(outil.id)) erreurs.push(`identifiant en double : ${outil.id}`);
-      vus.add(outil.id);
-    }
-  }
-  if (erreurs.length) {
-    throw new Error(`${path.basename(fichier)} invalide :\n    - ${erreurs.join('\n    - ')}`);
+  const releve = validerBase(base, path.basename(fichier), creerReleve());
+  if (releve.erreurs.length) {
+    throw new Error(`${path.basename(fichier)} invalide :\n    - ${releve.erreurs.join('\n    - ')}`);
   }
 }
 
@@ -100,7 +83,31 @@ function publierUnOutil({ fichier, base }) {
   return { etat: 'publie', outil: choisi, restants: candidats.length - 1 };
 }
 
+/** Combien de publications tient encore chaque niche. Le travail programmé
+ *  lit ce relevé pour ouvrir un billet **avant** que la réserve soit vide :
+ *  un auto-pilote qui tourne à vide ne se signale nulle part, et le réseau
+ *  s'arrête de bouger sans qu'une ligne rouge n'apparaisse. */
+function etatDeLaReserve() {
+  const niches = lireNiches();
+  const restant = {};
+  for (const { base } of niches) {
+    const enLigne = new Set(base.outils.map((o) => o.id));
+    restant[base.niche.id] = (BACKLOG[base.niche.id] ?? []).filter((o) => !enLigne.has(o.id)).length;
+  }
+  const valeurs = Object.values(restant);
+  return {
+    minimum: valeurs.length ? Math.min(...valeurs) : 0,
+    total: valeurs.reduce((n, v) => n + v, 0),
+    vides: Object.keys(restant).filter((id) => restant[id] === 0),
+    niches: restant,
+  };
+}
+
 function main() {
+  if (ETAT) {
+    console.log(JSON.stringify(etatDeLaReserve(), null, 2));
+    return;
+  }
   const niches = lireNiches();
   if (niches.length === 0) throw new Error('Aucune base de niche dans niches/.');
 
@@ -131,13 +138,17 @@ function main() {
   if (asec.length) {
     console.log(`Réserve à réalimenter : ${asec.join(', ')}.`);
   }
+  if (!ESSAI) {
+    const etat = etatDeLaReserve();
+    console.log(`Réserve : ${etat.total} outils, soit ${etat.minimum} passage(s) avant la panne sèche.`);
+  }
 }
 
 /* ------------------------------------------------------------------------ */
 /* Réserve : cinq outils par niche, rédigés et relus, en attente de publication */
 /* ------------------------------------------------------------------------ */
 
-const BACKLOG = {
+export const BACKLOG = {
 
   immobilier: [
     {
@@ -1548,4 +1559,11 @@ Les petites structures sans équipe technique, dont les processus reposent sur d
   ],
 };
 
-main();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  try {
+    main();
+  } catch (erreur) {
+    console.error(erreur.message);
+    process.exit(1);
+  }
+}

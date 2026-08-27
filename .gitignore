@@ -72,3 +72,8 @@ montage-auto/Wav2Lip/
 paper-manager/coffre/
 paper-manager/admin_config.json
 paper-manager/admin_config.json.bak
+
+# Réseau d'annuaires : les sites prêts à déposer se refabriquent d'une commande
+# (`npm run sites`) à partir des bases et de la feuille compilée. Les sitemaps,
+# eux, sont versionnés — ils sont ce que l'auto-pilote met à jour et poussent.
+/annuaire-ia/dist/

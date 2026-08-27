@@ -57,7 +57,7 @@ function lireNiches() {
   return fichiers.map((f) => {
     const base = JSON.parse(fs.readFileSync(path.join(dossierNiches, f), 'utf8'));
     if (!base?.niche?.id) throw new Error(`${f} : bloc « niche » absent ou sans identifiant.`);
-    if (!Array.isArray(base.outils) || base.outils.length === 0) throw new Error(`${f} : aucun outil.`);
+    if (!Array.isArray(base.outils)) throw new Error(`${f} : champ « outils » absent.`);
     for (const outil of base.outils) {
       if (!outil.id) throw new Error(`${f} : un outil sans identifiant (${outil.nom || 'sans nom'}).`);
     }
@@ -72,7 +72,25 @@ function jour(valeur, secours) {
   return Number.isFinite(t) ? new Date(t).toISOString().slice(0, 10) : secours;
 }
 
-function sitemap(entrees) {
+export function entreesDeNiche(niche, outils, base) {
+  const secours = new Date().toISOString().slice(0, 10);
+  const dates = outils.map((o) => jour(o.date_ajout, secours));
+  return [
+    { adresse: new URL(`?niche=${niche.id}`, base).href, date: dates.slice().sort().at(-1), priorite: '1.0', frequence: 'daily' },
+    ...outils.map((outil, i) => ({
+      adresse: new URL(`?niche=${niche.id}&outil=${encodeURIComponent(outil.id)}`, base).href,
+      date: dates[i],
+      priorite: '0.8',
+      frequence: 'weekly',
+    })),
+  ];
+}
+
+export function robots(base) {
+  return 'User-agent: *\nAllow: /\n\n' + `Sitemap: ${new URL('sitemap.xml', base).href}\n`;
+}
+
+export function sitemap(entrees) {
   return (
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
@@ -94,12 +112,17 @@ function sitemap(entrees) {
 function main() {
   const impose = process.argv[2] || process.env.SITE_URL;
   const niches = lireNiches();
-  const secours = new Date().toISOString().slice(0, 10);
 
   fs.mkdirSync(dossierSortie, { recursive: true });
 
   let total = 0;
   for (const { niche, outils } of niches) {
+    /* Une niche encore vide n'a rien à proposer à un moteur : la déclarer
+       reviendrait à faire explorer une page qui n'existe pas. */
+    if (outils.length === 0) {
+      console.log(`  ${`(${niche.id})`.padEnd(30)} niche vide, sitemap non écrit`);
+      continue;
+    }
     if (!impose && !niche.domaine) {
       throw new Error(
         `${niche.id} : aucun « domaine » dans sa base.\n` +
@@ -107,24 +130,13 @@ function main() {
       );
     }
     const base = normaliser(impose || niche.domaine, impose ? 'ligne de commande' : `niches/${niche.id}.json`);
-    const dates = outils.map((o) => jour(o.date_ajout, secours));
-    const plusRecente = dates.slice().sort().at(-1);
-
-    const entrees = [
-      { adresse: new URL(`?niche=${niche.id}`, base).href, date: plusRecente, priorite: '1.0', frequence: 'daily' },
-      ...outils.map((outil, i) => ({
-        adresse: new URL(`?niche=${niche.id}&outil=${encodeURIComponent(outil.id)}`, base).href,
-        date: dates[i],
-        priorite: '0.8',
-        frequence: 'weekly',
-      })),
-    ];
+    const entrees = entreesDeNiche(niche, outils, base);
 
     const nomSitemap = `sitemap-${niche.id}.xml`;
     fs.writeFileSync(path.join(dossierSortie, nomSitemap), sitemap(entrees), 'utf8');
     fs.writeFileSync(
       path.join(dossierSortie, `robots-${niche.id}.txt`),
-      'User-agent: *\nAllow: /\n\n' + `Sitemap: ${new URL('sitemap.xml', base).href}\n`,
+      robots(base),
       'utf8'
     );
 
@@ -137,9 +149,11 @@ function main() {
   console.log('robots-<niche>.txt devient robots.txt, puis on déclare le sitemap dans Search Console.');
 }
 
-try {
-  main();
-} catch (erreur) {
-  console.error(erreur.message);
-  process.exit(1);
+if (import.meta.url === `file://${process.argv[1]}`) {
+  try {
+    main();
+  } catch (erreur) {
+    console.error(erreur.message);
+    process.exit(1);
+  }
 }
