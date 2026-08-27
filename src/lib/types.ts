@@ -13,12 +13,40 @@ export const OUTPUT_WIDTH = 1080;
 export const OUTPUT_HEIGHT = 1920;
 export const OUTPUT_FPS = 30;
 
-/** Un fichier vidéo importé par l'utilisateur. */
+/**
+ * Durée accordée à une image fixe importée, en secondes.
+ *
+ * Une image n'a pas de durée : il faut donc lui en inventer une, et ce nombre
+ * est le plafond de ce qu'on pourra l'afficher. Six secondes sont déjà très
+ * au-delà de ce que le format court supporte — l'analyse pénalise tout plan
+ * qui passe 2,5 s — mais laissent la place à un plan d'ouverture tenu, sans
+ * qu'un montage express sur une seule image produise une minute d'immobilité.
+ */
+export const IMAGE_DURATION = 6;
+
+/**
+ * Nature d'un média importé.
+ *
+ * Une image fixe n'a ni piste sonore, ni tête de lecture, ni durée propre :
+ * partout où le moteur interroge un décodeur vidéo, il faut d'abord savoir
+ * qu'il n'y en a pas. Un média enregistré avant l'arrivée des images n'en
+ * porte pas — l'absence vaut donc `video`, et rien n'est à migrer.
+ */
+export type MediaKind = 'video' | 'image';
+
+/** Un fichier vidéo ou une image fixe importés par l'utilisateur. */
 export type MediaAsset = {
   id: string;
   name: string;
+  kind: MediaKind;
   /** URL objet du fichier, valable tant que l'onglet est ouvert. */
   url: string;
+  /**
+   * Durée exploitable, en secondes.
+   *
+   * Pour une image, c'est une convention : `IMAGE_DURATION`, la durée maximale
+   * qu'on peut lui donner à l'écran. Elle n'est pas mesurée, elle est offerte.
+   */
   duration: number;
   width: number;
   height: number;

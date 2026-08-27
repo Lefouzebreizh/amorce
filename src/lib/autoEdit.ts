@@ -92,8 +92,13 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
    * Un seul rush : tout le propos y est, y compris ce qu'on y entend. On le
    * garde entier. Avec plusieurs rushes, on est face à une suite de plans à
    * enchaîner, et les couper court est précisément ce qu'on attend.
+   *
+   * Une image fixe ne relève pas de ce raisonnement : elle ne porte aucune
+   * parole qu'on couperait en plein milieu, et la garder entière donnerait
+   * six secondes d'immobilité — le plan le plus sûrement pénalisé par
+   * l'analyse, et le plus sûrement passé par le spectateur.
    */
-  const keepWhole = assets.length === 1;
+  const keepWhole = assets.length === 1 && assets[0].kind !== 'image';
 
   const clips = assets
     .map((asset, index) => cutFromAsset(asset, index, keepWhole))

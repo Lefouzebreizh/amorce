@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isVideo, sharedCount } from '../share.ts';
+import { isVisuel, sharedCount } from '../share.ts';
 
 test('le compte annoncé par le partage se lit dans l’adresse', () => {
   assert.equal(sharedCount('?partage=3'), 3);
@@ -21,19 +21,26 @@ test('un compte absurde ne déclenche pas de lecture', () => {
 });
 
 test('le type déclaré décide de la destination', () => {
-  assert.equal(isVideo({ type: 'video/mp4', name: 'rush.mp4' }), true);
-  assert.equal(isVideo({ type: 'audio/mpeg', name: 'voix.mp3' }), false);
+  assert.equal(isVisuel({ type: 'video/mp4', name: 'rush.mp4' }), true);
+  assert.equal(isVisuel({ type: 'audio/mpeg', name: 'voix.mp3' }), false);
   // Un conteneur commun aux deux : c'est le type qui tranche, pas l'extension.
-  assert.equal(isVideo({ type: 'audio/mp4', name: 'voix.mp4' }), false);
+  assert.equal(isVisuel({ type: 'audio/mp4', name: 'voix.mp4' }), false);
+});
+
+test('une image fixe rejoint la bibliothèque, pas la voix off', () => {
+  assert.equal(isVisuel({ type: 'image/png', name: 'illustration.png' }), true);
+  assert.equal(isVisuel({ type: 'image/jpeg', name: 'couverture.jpg' }), true);
+  // Le format des captures d'écran d'un iPhone, que rien ne déclare sur Android.
+  assert.equal(isVisuel({ type: '', name: 'IMG_4312.HEIC' }), true);
 });
 
 test('l’extension tranche quand Android ne déclare aucun type', () => {
   // Android laisse le type vide plus souvent qu'on ne croit ; sans ce repli, un
   // rush partirait dans la voix off.
-  assert.equal(isVideo({ type: '', name: 'rush.MP4' }), true);
-  assert.equal(isVideo({ type: '', name: 'plan.webm' }), true);
-  assert.equal(isVideo({ type: '', name: 'ElevenLabs_druide.mp3' }), false);
+  assert.equal(isVisuel({ type: '', name: 'rush.MP4' }), true);
+  assert.equal(isVisuel({ type: '', name: 'plan.webm' }), true);
+  assert.equal(isVisuel({ type: '', name: 'ElevenLabs_druide.mp3' }), false);
   // Inconnu des deux côtés : traité comme un son, la destination la plus
   // fréquente et celle dont l'erreur se corrige d'un geste.
-  assert.equal(isVideo({ type: '', name: 'sans-extension' }), false);
+  assert.equal(isVisuel({ type: '', name: 'sans-extension' }), false);
 });
