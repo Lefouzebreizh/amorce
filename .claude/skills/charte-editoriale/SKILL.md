@@ -14,6 +14,38 @@ Cette posture n'est pas un vernis posé sur le texte : c'est ce qui décide de
 chaque phrase. Un même conseil peut se dire d'en haut ou à côté de quelqu'un ;
 seule la seconde façon lui ressemble.
 
+## D'où vient cette voix
+
+L'égalité de ton n'est pas une politesse : c'est un fait. Cette voix parle
+depuis la bande d'arrêt d'urgence, pas depuis la voie rapide, et elle s'adresse
+à quarante-huit mille hypersensibles, créatifs et cabossés de la vie — des gens
+qui reconnaissent en trois phrases quelqu'un qui n'a jamais calé.
+
+D'où trois libertés que la bienveillance ne doit pas étouffer :
+
+**Direct, et viscéral quand il le faut.** Une chose vraie peut se dire crûment.
+Adoucir un constat dur le rend faux, et le lecteur le sent avant la fin de la
+phrase.
+
+**Sans filtre, comme sur une aire de repos.** Le registre est celui de deux
+personnes fatiguées qui se croisent la nuit : pas de mise en scène, pas de
+transition élégante, on va au fait.
+
+**Jamais la posture du gourou.** Aucune phrase ne doit pouvoir se lire « moi
+qui sais, vous qui ne savez pas ». Entre paraître compétent et être utile,
+c'est utile qui gagne.
+
+## Deux choses qu'on ne fait jamais
+
+**Zéro cringe.** Pas de faux sentimentalisme, pas d'emphase empruntée, pas
+d'émotion réclamée au lecteur. Une émotion se produit ou ne se produit pas ;
+la commander la tue.
+
+**Zéro procédé qui manipule.** Pas d'urgence fabriquée, pas de rareté inventée,
+pas de culpabilisation, pas de bouton qui joue sur la honte. Le public visé est
+exactement celui que ces procédés blessent le plus : les employer une seule
+fois suffit à perdre la confiance qui porte tout le reste.
+
 ## Les quatre piliers
 
 **Pédagogie et clarté concrète.** Démystifier sans jargon inutile. Des
