@@ -7,7 +7,7 @@
 /// signalé en rupture que pas de repère du tout.
 library;
 
-import '../../../../core/utils/extensions.dart';
+import '../../../../core/utils/iterables.dart';
 import '../entities/product.dart';
 
 class BestOffer {
