@@ -1,0 +1,126 @@
+<!doctype html><html lang="fr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>L'hymne de Roussy &amp; Zéphy</title>
+<meta name="description" content="L'hymne du recueil Roussy &amp; Zéphy — à écouter et à chanter.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@300..700&display=swap">
+<style>
+:root{
+  --nuit:#0A1220; --voute:#0F1A2E; --papier:#F3EAD8; --encre:#2A2016;
+  --or:#E9B65E; --or-sourd:#B98C3E; --violet:#9B7FD4;
+  --texte:#C9D3E4; --texte-doux:#8B9BB6; --texte-faible:#5F708C; --trait:#22334F;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Karla','Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--nuit); color:var(--texte);
+  font-family:var(--sans); font-size:clamp(1rem,.95rem + .2vw,1.075rem);
+  line-height:1.6; min-height:100dvh;
+  padding:max(1.5rem,env(safe-area-inset-top)) 1.25rem max(2rem,env(safe-area-inset-bottom));
+  background-image:radial-gradient(120% 70% at 50% 0%,var(--voute) 0%,var(--nuit) 62%);
+}
+main{max-width:34rem; margin:0 auto}
+.chapeau{text-align:center; margin-bottom:1.75rem}
+.sur{font-size:.82rem; letter-spacing:.14em; text-transform:uppercase;
+     color:var(--texte-faible); margin:0 0 .45rem}
+h1{font-family:var(--serif); font-variation-settings:'SOFT' 40,'WONK' 1;
+   font-size:clamp(1.7rem,1.4rem + 1.6vw,2.4rem); font-weight:500;
+   line-height:1.12; margin:0; color:var(--papier); text-wrap:balance}
+
+/* Le lecteur ne s-affiche que si l-enregistrement existe : une commande morte
+   sous les doigts d-un enfant vaut moins que pas de commande du tout. */
+#lecteur{display:none; margin:1.75rem 0}
+#lecteur audio{width:100%; height:2.9rem}
+#bientot{
+  margin:1.75rem 0; padding:1rem 1.15rem; border:1px solid var(--trait);
+  border-left:3px solid var(--or-sourd); background:rgba(233,182,94,.05);
+  color:var(--texte-doux); font-size:.95rem;
+}
+#bientot b{color:var(--papier); font-weight:600}
+
+.paroles{
+  background:var(--papier); color:var(--encre); border-radius:2px;
+  padding:1.6rem 1.15rem; margin:0 0 1.5rem;
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 18px 40px -22px #000;
+}
+.paroles p{margin:0}
+/* Un vers qui déborde se poursuit en retrait, comme dans un carnet de chants :
+   centrer les paroles coupait « Zèbre dans l-âme, le / Phénix prend son envol »
+   au milieu d-une proposition, et on ne savait plus où recommencer à chanter. */
+.vers{
+  display:block; font-family:var(--serif);
+  font-size:clamp(.98rem,.92rem + .42vw,1.22rem);
+  font-style:italic; font-weight:400; line-height:1.75;
+  padding-left:1.15em; text-indent:-1.15em;
+}
+.vers + .vers{margin-top:.28em}
+
+.note{color:var(--texte-faible); font-size:.9rem; text-align:center; margin:1.5rem 0 0}
+.retour{
+  display:block; text-align:center; margin:2.25rem auto 0; max-width:20rem;
+  min-height:2.75rem; line-height:2.75rem; text-decoration:none;
+  color:var(--nuit); background:var(--or); border-radius:2px;
+  font-family:var(--serif); font-weight:600; font-size:1rem;
+}
+.retour:active{background:var(--or-sourd)}
+.pied{margin-top:2.5rem; text-align:center; color:var(--texte-faible); font-size:.82rem}
+.pied a{color:var(--texte-doux)}
+</style></head><body>
+<main>
+  <div class="chapeau">
+    <p class="sur">Roussy &amp; Zéphy · Tome 1</p>
+    <h1>L'hymne</h1>
+  </div>
+
+  <div id="lecteur">
+    <audio controls preload="none" src="hymne.mp3">
+      Votre navigateur ne sait pas lire ce fichier.
+    </audio>
+  </div>
+
+  <div id="bientot">
+    <b>L'enregistrement arrive.</b> En attendant, les paroles sont là —
+    l'hymne se chante très bien sans musique, et c'est même comme ça qu'il a
+    commencé.
+  </div>
+
+  <div class="paroles">
+    <p>
+      <span class="vers">Zèbre dans l'âme, le Phénix prend son envol</span>
+      <span class="vers">J'ai quitté la nuit, j'ai repris le contrôle&#8239;!</span>
+      <span class="vers">Aux commandes de ma vie, je ne lâche plus le volant</span>
+      <span class="vers">La résilience en force, je fonce droit devant&#8239;!</span>
+      <span class="vers">Ma route est tracée sous un ciel étincelant,</span>
+      <span class="vers">Je suis le capitaine, libre et indépendant&#8239;!</span>
+    </p>
+  </div>
+
+  <p class="note">Page&nbsp;28 du recueil.</p>
+
+  <a class="retour" href="/">Découvrir le livre</a>
+
+  <p class="pied">
+    <a href="/">roussyetzephy.fr</a>
+  </p>
+</main>
+<script>
+// On ne devine pas si le fichier est en ligne : on le demande. Tant qu-il
+// manque, la page reste utile au lieu d-offrir un bouton qui ne fait rien.
+(function () {
+  var a = document.querySelector('#lecteur audio');
+  a.addEventListener('canplay', montrer);
+  a.addEventListener('loadedmetadata', montrer);
+  a.addEventListener('error', function () { /* on ne touche à rien */ });
+  a.preload = 'metadata';
+  a.load();
+  function montrer() {
+    document.getElementById('lecteur').style.display = 'block';
+    document.getElementById('bientot').style.display = 'none';
+  }
+})();
+</script>
+</body></html>

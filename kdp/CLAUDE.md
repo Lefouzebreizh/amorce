@@ -41,8 +41,25 @@ Elles ont toutes coûté un aller-retour. Les relire vaut mieux que les répéte
 - **Le fondu d'un masque ne doit jamais rencontrer d'encre**, sinon fantôme.
 - **La tranche se calcule sur le nombre de pages du PDF final**, pas sur le
   nombre d'illustrations.
+- **« Texture de papier » dans une invite lave tout le dessin.** Le générateur
+  la pose *par-dessus* l'illustration au lieu de la mettre dessous : contraste
+  écrasé, contours mous. La première régénération de « Faire le singe » en est
+  sortie moins piquée que la planche qu'elle devait remplacer — 808 contre 853
+  à la taille d'impression, alors qu'elle était deux fois moins agrandie.
+- **Ne pas faire générer la bordure d'une planche à remplacer.** Elle ne
+  ressemblera jamais tout à fait aux autres, et cela se voit au feuilletage.
+  Demander les cases seules, puis `greffe.py` les pose dans le cadre du volume.
 - **Un défaut de dessin échappe à tout script.** C'est l'auteur qui a vu le
   regard vide. Mesurer avant de corriger, et avant de contester.
+- **Un chemin sous `/mnt/skills/` n'existe que dans une session Claude Code.**
+  Les polices du lettrage ont été écrites ainsi : les tests passaient dans la
+  session qui les écrivait et rougissaient partout ailleurs, laissant `main`
+  rouge cinq exécutions durant sans que la cause se lise nulle part. Tout
+  chemin hors du dépôt se pose désormais par variable d'environnement
+  (`KDP_POLICES`), avec le chemin de session pour seul défaut — et à **un seul
+  endroit**, `charte.POLICES` : les dix outils qui lettrent une page le
+  portaient chacun en dur, ce qui rendait la chaîne inexécutable ailleurs et
+  demandait dix corrections pour une seule décision.
 
 ## Manière de travailler avec l'auteur
 

@@ -1,0 +1,142 @@
+{
+  "niche": {
+    "id": "generaliste",
+    "nom": "Boîte à Outils IA",
+    "emoji": "⚡",
+    "domaine": "https://boite-a-outils-ia.fr",
+    "metier": "indépendants et petites équipes, tous métiers",
+    "h1_accent": "La Boîte à Outils IA",
+    "h1_suite": "des pros pressés",
+    "slogan": "Le comparateur des IA qui font vraiment gagner des heures — testées, notées, classées par métier.",
+    "meta_titre": "Boîte à Outils IA — le comparateur des meilleurs outils IA",
+    "meta_description": "Rédaction, design, vidéo, voix off, productivité : les outils IA qui font gagner des heures, testés et notés. Prix, avis et points faibles.",
+    "theme": {
+      "primaire": "#8b5cf6",
+      "secondaire": "#3b82f6"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, l'annuaire touche une commission si vous vous abonnez. Les prix sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur."
+  },
+  "outils": [
+    {
+      "id": "chatgpt",
+      "nom": "ChatGPT",
+      "categorie": "Rédaction",
+      "prix": "Freemium — à partir de 20$/mois",
+      "description_courte": "L'assistant polyvalent qui rédige, résume et corrige. Le point de départ de 80 % des usages professionnels de l'IA.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/chatgpt",
+      "score_avis": 4.7,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nChatGPT reste la porte d'entrée la plus rapide vers l'IA générative en entreprise. En version gratuite, il rédige déjà des e-mails, des fiches produit et des plans d'articles corrects. La version payante ouvre l'analyse de fichiers, la navigation web, la génération d'images et les GPT personnalisés — c'est là que le gain de temps devient mesurable, souvent deux à quatre heures par semaine sur des tâches de rédaction.\n\n## Points forts\n- Polyvalence inégalée : rédaction, code, analyse de données, traduction, brainstorming\n- Écosystème mature : applications mobile et bureau, extensions, GPT sur mesure sans écrire une ligne de code\n- Analyse de fichiers (PDF, tableurs, images) directement dans la conversation\n- Mémoire des préférences d'un échange à l'autre\n\n## Points faibles\n- Le style par défaut est reconnaissable : sans consigne de ton précise, les textes sonnent générique\n- Les sources ne sont pas systématiquement citées : tout chiffre doit être revérifié\n- La version gratuite bascule sur un modèle plus léger dès que l'usage s'intensifie\n\n## Idéal pour\nUn indépendant ou une petite équipe qui veut un seul abonnement couvrant 80 % des besoins IA du quotidien, sans multiplier les outils spécialisés."
+    },
+    {
+      "id": "claude",
+      "nom": "Claude",
+      "categorie": "Rédaction",
+      "prix": "Freemium — à partir de 17$/mois",
+      "description_courte": "L'IA qui avale des documents entiers et écrit dans votre ton. La référence pour les textes longs et le code.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/claude",
+      "score_avis": 4.8,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nLà où beaucoup d'assistants perdent le fil au bout de quelques pages, Claude tient la distance : on lui dépose un rapport de cent pages, un contrat ou une base de code entière et il répond en s'appuyant sur l'ensemble. Le rendu écrit est le plus naturel du marché — moins de tournures automatiques, moins de listes à puces imposées — ce qui réduit fortement le temps de réécriture.\n\n## Points forts\n- Très grande fenêtre de contexte : analyse de documents longs sans découpage manuel\n- La meilleure qualité d'écriture en français, avec un ton qui se plie aux consignes\n- Excellent en programmation et en revue de code, y compris sur des projets complets\n- Les Projets rassemblent documents et consignes réutilisables d'une session à l'autre\n\n## Points faibles\n- Génération d'images absente : il faut un outil complémentaire pour le visuel\n- Quotas d'usage plus stricts que la concurrence sur les formules d'entrée\n- Moins d'intégrations tierces grand public que ChatGPT\n\n## Idéal pour\nLes métiers où le texte est le livrable : consultants, juristes, rédacteurs, développeurs — tous ceux qui travaillent sur des documents longs plutôt que sur des messages courts."
+    },
+    {
+      "id": "perplexity",
+      "nom": "Perplexity",
+      "categorie": "Recherche",
+      "prix": "Freemium — à partir de 20$/mois",
+      "description_courte": "Le moteur de recherche qui répond en citant ses sources. Remplace une heure d'onglets ouverts par une réponse sourcée.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/perplexity",
+      "score_avis": 4.5,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nPerplexity fait une seule chose et la fait mieux que tout le monde : chercher sur le web et rendre une synthèse avec les liens en regard de chaque affirmation. Pour une veille concurrentielle, une étude de marché rapide ou la vérification d'un chiffre, c'est le seul outil de cette liste dont la réponse est directement vérifiable, ligne par ligne.\n\n## Points forts\n- Sources citées et cliquables sur chaque phrase : la vérification prend quelques secondes\n- Informations à jour, contrairement aux modèles limités à leur date d'entraînement\n- Les Espaces regroupent une recherche longue et ses documents de référence\n- Version gratuite déjà très utilisable au quotidien\n\n## Points faibles\n- Faible pour la création : ce n'est ni un rédacteur ni un outil de brainstorming\n- La qualité dépend entièrement de ce que le web publie sur le sujet\n- Sur les sujets de niche, les sources retenues méritent un coup d'œil critique\n\n## Idéal pour\nLes profils marketing, commerciaux et analystes qui passent leurs journées à chercher, recouper et sourcer de l'information avant de décider."
+    },
+    {
+      "id": "midjourney",
+      "nom": "Midjourney",
+      "categorie": "Design",
+      "prix": "À partir de 10$/mois",
+      "description_courte": "Le générateur d'images le plus esthétique du marché. Des visuels de marque sans banque d'images ni photographe.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/midjourney",
+      "score_avis": 4.6,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nÀ consigne égale, Midjourney sort l'image la plus travaillée : lumière, matière, composition. C'est l'outil qui permet à une petite structure d'avoir une direction artistique cohérente sans budget photo. Les fonctions de référence de style et de personnage règlent le vrai problème des visuels générés — la cohérence d'une image à l'autre.\n\n## Points forts\n- Qualité esthétique et rendu photographique au-dessus de la concurrence\n- Références de style et de personnage pour tenir une identité visuelle sur une série\n- Extension du cadre, retouche par zone et variations à partir d'une image existante\n- Communauté immense : les consignes efficaces circulent librement\n\n## Points faibles\n- Aucune formule gratuite : l'essai coûte un mois d'abonnement\n- Le texte incrusté dans l'image reste hasardeux — logos et slogans demandent une reprise\n- Prise en main plus abrupte que les outils grand public, malgré l'interface web\n\n## Idéal pour\nLes marques, créateurs de contenu et agences qui ont besoin d'un flux régulier de visuels originaux et reconnaissables, pas d'une image dépannage de temps en temps."
+    },
+    {
+      "id": "canva-magic-studio",
+      "nom": "Canva Magic Studio",
+      "categorie": "Design",
+      "prix": "Freemium — à partir de 12$/mois",
+      "description_courte": "L'IA greffée sur l'outil de design que tout le monde sait déjà utiliser. Du visuel prêt à publier en trois clics.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/canva",
+      "score_avis": 4.4,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nCanva n'a pas cherché à battre les spécialistes sur la qualité brute : il a posé l'IA là où le travail se fait réellement, dans un éditeur que des millions de personnes maîtrisent. Détourage en un clic, redimensionnement automatique d'un format vers douze autres, génération de texte et d'image dans le document : le gain se mesure en publications sorties par semaine, pas en beauté d'un pixel.\n\n## Points forts\n- Aucune courbe d'apprentissage pour qui connaît déjà Canva\n- Magic Resize : un visuel décliné en tous les formats réseaux d'un coup\n- Détourage, effacement d'objet et retouche de qualité professionnelle sans Photoshop\n- Kit de marque : couleurs, polices et logos imposés à toutes les générations\n\n## Points faibles\n- Images générées moins abouties que chez les spécialistes\n- Les modèles très utilisés donnent des visuels que l'on reconnaît\n- Les fonctions IA les plus utiles sont réservées à la formule payante, avec un compteur mensuel\n\n## Idéal pour\nLes équipes marketing sans graphiste dédié et les indépendants qui publient beaucoup, souvent, sur plusieurs réseaux à la fois."
+    },
+    {
+      "id": "runway",
+      "nom": "Runway",
+      "categorie": "Création Vidéo",
+      "prix": "Freemium — à partir de 15$/mois",
+      "description_courte": "Le studio vidéo génératif : une image ou une phrase devient un plan filmé, avec de vrais contrôles de caméra.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/runway",
+      "score_avis": 4.3,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nRunway est l'outil qui a fait passer la vidéo générative du gadget à l'usage professionnel. Au-delà de la génération, c'est une boîte à outils complète : détourage vidéo sans fond vert, suppression d'objet image par image, extension de plan, contrôle des mouvements de caméra. Pour une publicité courte ou un habillage de format vertical, il remplace une journée de tournage.\n\n## Points forts\n- Contrôle réel du mouvement de caméra et de la direction du plan\n- Génération à partir d'une image de référence : la cohérence visuelle est tenable\n- Outils de post-production intégrés (détourage, effacement, extension)\n- Formule gratuite suffisante pour juger avant de payer\n\n## Points faibles\n- Les plans dépassent rarement quelques secondes : un montage reste nécessaire\n- Les mains, les visages et le texte restent des points faibles connus\n- Le système de crédits part vite dès que l'on itère sérieusement\n\n## Idéal pour\nLes créateurs de formats courts, les agences et les équipes publicitaires qui ont besoin de plans d'illustration impossibles ou trop chers à tourner."
+    },
+    {
+      "id": "synthesia",
+      "nom": "Synthesia",
+      "categorie": "Création Vidéo",
+      "prix": "À partir de 29$/mois",
+      "description_courte": "Une vidéo avec présentateur à partir d'un simple texte, en 140 langues. Sans caméra, sans studio, sans reprise de tournage.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/synthesia",
+      "score_avis": 4.2,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nSynthesia règle un problème très concret : produire et surtout mettre à jour des vidéos parlées. Un script collé, un avatar choisi, et la vidéo sort en quelques minutes. Le vrai bénéfice arrive au deuxième tour : corriger une phrase d'un module de formation ne demande plus de reconvoquer une équipe, on modifie le texte et on régénère.\n\n## Points forts\n- Plus de 140 langues avec synchronisation labiale correcte : une vidéo, tous les marchés\n- Mise à jour d'une vidéo existante en modifiant le script, sans retournage\n- Avatar personnel entraîné à partir d'un enregistrement de quelques minutes\n- Modèles orientés formation interne, support client et présentation produit\n\n## Points faibles\n- L'avatar reste identifiable comme synthétique : à éviter pour une prise de parole incarnée\n- Le plus cher de cette sélection, sans formule gratuite véritable\n- Gestuelle et expressivité limitées : convient au discours informatif, pas à l'émotion\n\n## Idéal pour\nLes services formation, RH et support qui produisent des vidéos explicatives en volume et doivent les tenir à jour dans plusieurs langues."
+    },
+    {
+      "id": "elevenlabs",
+      "nom": "ElevenLabs",
+      "categorie": "Audio & Voix",
+      "prix": "Freemium — à partir de 5$/mois",
+      "description_courte": "Les voix de synthèse les plus crédibles, y compris en français. Voix off, doublage et clonage de sa propre voix.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/elevenlabs",
+      "score_avis": 4.7,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nC'est l'outil de cette liste dont le résultat trompe le plus souvent l'oreille. Le français est traité avec la même finesse que l'anglais — intonation, liaisons, respirations — là où la plupart des synthèses vocales trahissent immédiatement l'accent robotique. Le doublage automatique conserve la voix d'origine dans la langue cible, ce qui ouvre un catalogue entier à l'international pour le prix d'un abonnement.\n\n## Points forts\n- Qualité de voix française nettement au-dessus du marché\n- Clonage de voix à partir de quelques minutes d'enregistrement propre\n- Doublage automatique conservant le timbre de l'orateur d'origine\n- Formule gratuite réellement utilisable pour tester sur un projet\n\n## Points faibles\n- Le clonage de voix pose des questions de consentement et de droit à l'image sonore\n- Sur un texte très long, le débit peut manquer de variation sans découpage manuel\n- Le compteur de caractères descend vite en production régulière\n\n## Idéal pour\nLes créateurs de podcasts et de formats courts, les éditeurs de formation et toute équipe qui doit sonoriser du contenu sans studio ni comédien."
+    },
+    {
+      "id": "descript",
+      "nom": "Descript",
+      "categorie": "Création Vidéo",
+      "prix": "Freemium — à partir de 19$/mois",
+      "description_courte": "Le montage vidéo par le texte : on supprime une phrase dans la transcription, elle disparaît de la vidéo.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/descript",
+      "score_avis": 4.5,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nDescript renverse la logique du montage : la vidéo est transcrite, et l'on monte en corrigeant le texte comme dans un traitement de texte. Retirer les hésitations et les silences d'une heure d'entretien devient l'affaire d'une case à cocher. Pour quiconque publie des interviews, des webinaires ou des podcasts vidéo, c'est le rapport temps gagné sur prix payé le plus favorable de la sélection.\n\n## Points forts\n- Montage par le texte : accessible à qui n'a jamais ouvert un logiciel de montage\n- Suppression automatique des « euh », des blancs et des répétitions\n- Studio Sound : une prise de son moyenne devient exploitable\n- Découpage automatique en extraits courts pour les réseaux verticaux\n\n## Points faibles\n- Moins fin qu'un montage classique dès que l'habillage devient créatif\n- La transcription française reste bonne mais demande une relecture sur le vocabulaire métier\n- L'application devient lourde sur les projets de plusieurs heures\n\n## Idéal pour\nLes podcasteurs, formateurs et équipes de communication interne qui produisent de la parole enregistrée en volume et n'ont pas de monteur."
+    },
+    {
+      "id": "notion-ai",
+      "nom": "Notion AI",
+      "categorie": "Productivité",
+      "prix": "À partir de 10$/mois",
+      "description_courte": "L'IA qui cherche et rédige à l'intérieur des documents de l'équipe. Répond à partir de vos données, pas du web.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/notion",
+      "score_avis": 4.3,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nL'intérêt de Notion AI n'est pas la qualité brute de sa rédaction, mais l'endroit où il travaille : dans la base de connaissances de l'équipe. « Résume les comptes rendus client du trimestre » ou « qui a décidé ça, et quand » deviennent des questions auxquelles on répond en dix secondes. Pour une équipe déjà installée sur Notion, c'est l'ajout le plus rentable de cette liste.\n\n## Points forts\n- Recherche transverse sur l'espace de travail, avec le lien vers la page d'origine\n- Rédaction et résumé directement dans les pages existantes, sans copier-coller\n- Remplissage automatique de propriétés de base de données (résumé, catégorie, priorité)\n- Connecteurs vers les outils voisins pour élargir la recherche\n\n## Points faibles\n- Sans valeur si l'équipe ne travaille pas déjà dans Notion\n- Facturé par utilisateur : l'addition monte vite sur une équipe entière\n- Qualité rédactionnelle en retrait par rapport aux assistants spécialisés\n\n## Idéal pour\nLes équipes de cinq à cinquante personnes dont la documentation, les comptes rendus et les projets vivent déjà dans Notion."
+    },
+    {
+      "id": "zapier-agents",
+      "nom": "Zapier Agents",
+      "categorie": "Productivité",
+      "prix": "Freemium — à partir de 30 $/mois",
+      "description_courte": "Des agents qui agissent dans les huit mille outils déjà connectés à Zapier : lire, décider, écrire, prévenir.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/zapier-agents",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nUn assistant qui rédige a peu de valeur ; un assistant qui agit dans les outils de l'entreprise en a beaucoup. Zapier Agents s'appuie sur le plus large catalogue de connexions du marché pour exécuter des tâches réelles : qualifier un formulaire entrant, créer la fiche dans le logiciel commercial, prévenir la bonne personne, rédiger la réponse. C'est de l'automatisation qui sait décider, là où les scénarios classiques suivaient une règle rigide.\n\n## Points forts\n- Le catalogue de connexions le plus large, sans développement\n- L'agent décide selon le contenu, là où un scénario classique suivait une règle fixe\n- Se construit en langage courant, sans compétence technique\n- Historique d'exécution consultable, indispensable pour corriger un comportement\n\n## Points faibles\n- Les coûts grimpent vite avec le nombre de tâches exécutées\n- Un agent mal cadré agit dans de vrais systèmes : le bac à sable est indispensable\n- Le diagnostic d'un enchaînement raté reste laborieux\n\n## Idéal pour\nLes petites structures sans équipe technique, dont les processus reposent sur des copier-coller entre cinq outils différents.",
+      "date_ajout": "2026-08-27"
+    }
+  ]
+}

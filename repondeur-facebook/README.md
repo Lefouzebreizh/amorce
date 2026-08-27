@@ -118,6 +118,9 @@ protection, pas un confort.
 
 - Un **jeton de Page**, pas un jeton utilisateur : ce dernier expire en deux
   heures. Permissions `pages_read_engagement` et `pages_manage_engagement`.
+  L'obtenir demande un parcours à part — révoquer, réautoriser, étendre le
+  jeton, en tirer celui de la Page : il est écrit pas à pas dans
+  [`OBTENIR-LE-JETON.md`](OBTENIR-LE-JETON.md).
 - L'adresse interrogée est `graph.facebook.com`, avec un numéro de version.
   `facebook.com` sert des pages HTML : un appel qui vise cette adresse ne
   renvoie jamais de JSON, et l'erreur ressemble à s'y méprendre à un problème

@@ -1,0 +1,65 @@
+{
+  "niche": {
+    "id": "btp",
+    "nom": "IA BTP",
+    "emoji": "🏗️",
+    "domaine": "https://ia-btp.fr",
+    "metier": "conducteurs de travaux et entreprises du bâtiment",
+    "h1_accent": "L'IA du chantier",
+    "h1_suite": "qui tient les délais",
+    "slogan": "Métré, chiffrage, suivi d'avancement, réserves : les outils qui repèrent le dérapage avant qu'il coûte un mois.",
+    "meta_titre": "IA BTP — les outils IA du bâtiment et des travaux publics",
+    "meta_description": "Métré automatisé, chiffrage, suivi de chantier, réserves : les outils IA testés en entreprise du bâtiment. Prix, avis détaillés et limites réelles.",
+    "theme": {
+      "primaire": "#eab308",
+      "secondaire": "#facc15"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur."
+  },
+  "outils": [
+    {
+      "id": "togal-ai",
+      "nom": "Togal.AI",
+      "categorie": "Métré & chiffrage",
+      "prix": "Sur devis — à partir d'environ 200 $/mois",
+      "description_courte": "Le métré automatique sur plan PDF : surfaces, linéaires et comptages sortis en minutes au lieu d'une journée de relevé.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/togal-ai",
+      "score_avis": 4.4,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nLe métré est le poste où l'on perd le plus de temps et où une erreur coûte le plus cher. Togal.AI lit un plan PDF, reconnaît les pièces, les cloisons et les ouvertures, puis sort les quantités par lot. Sur un dossier de consultation classique, le relevé passe d'une journée à moins d'une heure de contrôle — et le contrôle reste indispensable, c'est le bon usage de l'outil.\n\n## Points forts\n- Reconnaissance des pièces et des cloisons sans calibrage manuel préalable\n- Export tableur directement exploitable dans un logiciel de chiffrage\n- Comparaison automatique entre deux indices de plan : ce qui a changé est surligné\n- Permet de répondre à plus de consultations à effectif constant\n\n## Points faibles\n- Les plans scannés de travers ou manuscrits font chuter la fiabilité\n- Rien ne dispense de vérifier : l'outil produit des quantités, pas un engagement\n- Tarification pensée pour des structures qui chiffrent en volume\n\n## Idéal pour\nLes entreprises générales et les économistes de la construction qui refusent des consultations faute de temps de métré disponible."
+    },
+    {
+      "id": "buildots",
+      "nom": "Buildots",
+      "categorie": "Suivi de chantier",
+      "prix": "Sur devis",
+      "description_courte": "Une caméra sur le casque, une visite hebdomadaire, et l'avancement réel de chaque lot comparé au planning.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/buildots",
+      "score_avis": 4.5,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nBuildots répond à la seule question qui compte en réunion de chantier : où en est-on vraiment. Une caméra 360 portée pendant la visite, un rapprochement automatique avec la maquette, et l'on obtient le pourcentage d'avancement par pièce et par lot — sans déclaratif d'entreprise. Les retards apparaissent deux à trois semaines plus tôt que dans un suivi classique, ce qui laisse encore le temps d'agir.\n\n## Points forts\n- Avancement mesuré, pas déclaré : les réunions changent de nature\n- Détection précoce des dérives de planning, lot par lot\n- Historique visuel complet du chantier, précieux en cas de litige\n- Aucun matériel lourd : la captation se fait pendant une visite normale\n\n## Points faibles\n- Exige une maquette numérique correctement structurée en amont\n- Réservé aux opérations d'une certaine taille : hors budget pour un chantier de maison\n- L'arrivée de l'outil crée une résistance côté sous-traitants, à accompagner\n\n## Idéal pour\nLes maîtres d'ouvrage et entreprises générales sur des opérations de logements ou de bureaux où un mois de retard se compte en dizaines de milliers d'euros."
+    },
+    {
+      "id": "planradar",
+      "nom": "PlanRadar",
+      "categorie": "Réserves & qualité",
+      "prix": "À partir de 35 €/mois par utilisateur",
+      "description_courte": "Les réserves relevées au téléphone, localisées sur le plan, et le rapport de livraison généré avant de quitter le chantier.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/planradar",
+      "score_avis": 4.4,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nPlanRadar n'est pas né avec l'intelligence artificielle, il l'a greffée là où elle sert : dictée vocale des réserves, classement automatique par lot et par entreprise, rédaction du compte rendu à partir des observations saisies. Le gain se mesure au moment de la réception — le procès-verbal part le soir même, avec photos localisées, au lieu d'attendre deux jours de mise au propre.\n\n## Points forts\n- Réserve dictée sur place, épinglée sur le plan, affectée à la bonne entreprise\n- Rapports et procès-verbaux générés automatiquement, à la charte de l'entreprise\n- Fonctionne hors ligne : un sous-sol sans réseau ne bloque pas le relevé\n- Prise en main réelle en une demi-journée, y compris par des compagnons\n\n## Points faibles\n- Facturé par utilisateur : le coût grimpe vite si l'on équipe tous les intervenants\n- La reconnaissance vocale bute sur le bruit de chantier et le vocabulaire métier\n- Le module de planning reste en retrait des logiciels spécialisés\n\n## Idéal pour\nLes conducteurs de travaux et les bureaux de contrôle qui passent leurs soirées à remettre au propre des relevés de réserves pris sur carnet."
+    },
+    {
+      "id": "doxel",
+      "nom": "Doxel",
+      "categorie": "Suivi de chantier",
+      "prix": "Sur devis",
+      "description_courte": "L'avancement mesuré par balayage laser et vision : ce qui est réellement posé, comparé à ce qui est facturé.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/doxel",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nDoxel compare l'ouvrage réellement construit à la maquette et au planning, à partir de relevés laser et photographiques. La différence avec un suivi visuel classique est le niveau de détail : l'outil sait qu'il manque vingt mètres de gaine dans un plénum. Le résultat sert autant au pilotage qu'à la vérification des situations de travaux présentées par les sous-traitants.\n\n## Points forts\n- Mesure objective de l'avancement, opposable en réunion de chantier\n- Rapprochement direct entre avancement physique et facturation\n- Détection des écarts d'exécution par rapport à la maquette avant qu'ils soient recouverts\n- Historique complet exploitable en fin d'opération\n\n## Points faibles\n- Nécessite une maquette de bonne qualité et des relevés réguliers\n- Coût qui ne se justifie que sur des opérations techniques importantes\n- Le déploiement demande l'adhésion des entreprises, rarement acquise d'emblée\n\n## Idéal pour\nLes maîtres d'ouvrage et entreprises générales sur des projets techniques — hôpitaux, industrie, data centers — où l'écart entre le facturé et le posé coûte cher.",
+      "date_ajout": "2026-08-27"
+    }
+  ]
+}

@@ -27,6 +27,12 @@ surtout quand elle semble superflue — quand le bug paraît simple, quand on es
 pressé, quand la correction saute aux yeux. C'est exactement là qu'on corrige un
 symptôme.
 
+**Un cas qui n'est pas un bug.** Quand la commande n'échoue pas mais *manque* —
+`command not found`, `No module named`, un `playwright install` réclamé — c'est
+l'environnement, pas le code. C'est `/debloquer` qu'il faut : chercher la cause
+d'un défaut dans du code qui n'a jamais pu s'exécuter est le plus coûteux des
+faux départs.
+
 ## Avant tout : les pièges déjà connus
 
 Ce dépôt tient une liste de quatorze pièges dans la section « Pièges connus » de

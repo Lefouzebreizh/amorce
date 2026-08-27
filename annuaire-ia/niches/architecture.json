@@ -1,0 +1,65 @@
+{
+  "niche": {
+    "id": "architecture",
+    "nom": "IA Architecture",
+    "emoji": "📐",
+    "domaine": "https://ia-architecture.fr",
+    "metier": "architectes et maîtres d'œuvre",
+    "h1_accent": "L'IA de l'agence",
+    "h1_suite": "qui gagne le concours",
+    "slogan": "Rendu, esquisse, faisabilité, conception générative : les outils qui donnent dix variantes là où l'on n'avait le temps que d'une.",
+    "meta_titre": "IA Architecture — les outils IA des architectes",
+    "meta_description": "Rendu photoréaliste, esquisse, faisabilité, conception générative : les outils IA testés en agence d’architecture. Prix, avis et limites.",
+    "theme": {
+      "primaire": "#6366f1",
+      "secondaire": "#818cf8"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur."
+  },
+  "outils": [
+    {
+      "id": "veras",
+      "nom": "Veras",
+      "categorie": "Rendu IA",
+      "prix": "À partir de 40 $/mois",
+      "description_courte": "Le rendu photoréaliste tiré directement de la vue Revit ou SketchUp, en respectant la géométrie du projet.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/veras",
+      "score_avis": 4.3,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nLe défaut des générateurs d'images généralistes, en architecture, est qu'ils réinventent le bâtiment. Veras part de la vue active du logiciel de conception et s'appuie sur la géométrie réelle : les volumes, les percements et les proportions du projet sont conservés, seuls les matériaux, la lumière et l'ambiance sont générés. C'est ce qui en fait un outil de production plutôt qu'un producteur d'images d'inspiration.\n\n## Points forts\n- Géométrie du projet respectée : le rendu montre bien le bâtiment dessiné\n- Greffé dans Revit, SketchUp, Rhino et Forma : aucune exportation intermédiaire\n- Dix ambiances proposées en quelques minutes, utiles pour présenter des options\n- Le rendu de nuit et le contre-jour, coûteux en calcul classique, deviennent gratuits\n\n## Points faibles\n- Le détail de la menuiserie et des garde-corps se déforme encore en gros plan\n- La cohérence d'une image à l'autre demande de figer une consigne de style\n- Système de crédits qui part vite dès que l'on itère sérieusement sur une planche\n\n## Idéal pour\nLes agences en phase esquisse et concours, qui doivent présenter des ambiances crédibles sans mobiliser une semaine d'infographiste."
+    },
+    {
+      "id": "testfit",
+      "nom": "TestFit",
+      "categorie": "Faisabilité",
+      "prix": "Sur devis — à partir d'environ 250 $/mois",
+      "description_courte": "L'étude de capacité d'un terrain calculée en direct : implantation, nombre de logements, stationnement et bilan financier.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/testfit",
+      "score_avis": 4.4,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nTestFit répond à la question du promoteur avant celle de l'architecte : combien peut-on faire sur ce terrain, et est-ce que cela tient financièrement. On saisit le parcellaire et les contraintes réglementaires, l'outil génère une implantation optimisée avec les circulations, le stationnement et le bilan de charge foncière. Ce qui prenait deux jours d'étude de capacité se recalcule en direct pendant la réunion.\n\n## Points forts\n- Implantation, typologies et stationnement générés et recalculés instantanément\n- Bilan financier lié au plan : chaque variante montre son effet sur la marge\n- Le paramètre modifié en réunion se voit tout de suite : l'arbitrage se fait à chaud\n- Export vers les logiciels de conception pour poursuivre le projet\n\n## Points faibles\n- Réglementation d'urbanisme à saisir manuellement : rien ne lit le plan local à votre place\n- Optimisation qui produit du rationnel, jamais de l'architecture — c'est l'étape d'après\n- Tarif calibré promotion immobilière, lourd pour une petite agence\n\n## Idéal pour\nLes agences qui travaillent avec des promoteurs et perdent des jours en études de capacité gratuites avant même d'avoir un contrat."
+    },
+    {
+      "id": "finch-3d",
+      "nom": "Finch 3D",
+      "categorie": "Conception générative",
+      "prix": "Sur devis",
+      "description_courte": "Le plan qui se réorganise tout seul quand on bouge un mur : règles, surfaces et circulations recalculées en direct.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/finch-3d",
+      "score_avis": 4.2,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nFinch traite le plan comme un système de règles plutôt que comme un dessin : surfaces cibles, adjacences, largeurs de circulation, apports de lumière. Quand une contrainte change, la distribution se réorganise en respectant les règles posées, et l'outil signale ce qui devient non conforme. C'est l'un des rares outils de conception générative réellement utilisable en phase amont sur du logement.\n\n## Points forts\n- Contrôle en direct de la conformité aux règles posées, à chaque modification\n- Génération de variantes de distribution comparables sur les mêmes critères\n- Retour immédiat sur les surfaces, les ratios et l'efficacité du plan\n- Connexion avec Rhino et Grasshopper pour les agences qui travaillent déjà en paramétrique\n\n## Points faibles\n- Courbe d'apprentissage réelle : penser en règles ne s'improvise pas\n- Le résultat est un plan performant, pas un projet — l'intention reste à apporter\n- Encore jeune : les cas d'usage hors logement et bureau sont peu documentés\n\n## Idéal pour\nLes agences qui travaillent le logement collectif et veulent explorer dix distributions au lieu d'en défendre une, dès la phase de faisabilité."
+    },
+    {
+      "id": "promeai",
+      "nom": "PromeAI",
+      "categorie": "Esquisse",
+      "prix": "Freemium — à partir de 10 $/mois",
+      "description_courte": "Le croquis à main levée transformé en image d'ambiance : la ligne dessinée reste, le reste est habillé.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/promeai",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nPromeAI part du dessin plutôt que du modèle : un croquis, une élévation, un plan masse au trait deviennent une image rendue qui conserve les lignes tracées. C'est l'outil de la phase la plus amont, celle où le projet n'est pas modélisé et où l'on cherche une intention. Le contrôle sur la géométrie est meilleur qu'avec un générateur d'images généraliste, sans exiger de maquette.\n\n## Points forts\n- Fidélité aux lignes du croquis, contrairement aux générateurs généralistes\n- Aucune maquette requise : utilisable dès la première esquisse\n- Nombreux styles de rendu, du croquis aquarellé au photoréaliste\n- Tarif accessible à une petite agence ou à un étudiant\n\n## Points faibles\n- La cohérence entre deux images d'une même série reste difficile à tenir\n- Aucune connexion aux logiciels de conception\n- Interface encombrée de fonctions sans rapport avec l'architecture\n\n## Idéal pour\nLes architectes et maîtres d'œuvre en phase de recherche, qui veulent montrer une intention avant que quoi que ce soit ne soit modélisé.",
+      "date_ajout": "2026-08-27"
+    }
+  ]
+}

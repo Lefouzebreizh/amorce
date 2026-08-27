@@ -21,7 +21,7 @@
 /// se copient et se testent hors de tout widget.
 library;
 
-import '../../../../core/utils/extensions.dart';
+import '../../../../core/utils/iterables.dart';
 
 enum ProductCategory {
   furniture('Mobilier'),

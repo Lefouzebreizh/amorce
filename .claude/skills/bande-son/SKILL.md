@@ -61,6 +61,24 @@ mixage, voix comprise, et le résultat sort plat. En dessous de -1 dBTP de marge
 l'encodage AAC final repousse les crêtes au-delà de 0 et fait craquer un
 fichier qui passait pourtant les mesures avant encodage.
 
+## Une cible n'est pas une attente
+
+Le tableau ci-dessus dit ce que les plateformes **admettent**. Il ne dit pas ce
+que les créateurs **livrent**, et l'écart se paie cher.
+
+Constaté sur un montage réel : la version calée à −14 LUFS, donc conforme, a
+été rejetée huit fois. Le montage que l'auteur avait fait lui-même, du même
+film, mesurait **−7,3 LUFS** — six décibels plus fort, et six de plus sur la
+bande qu'un haut-parleur de téléphone restitue.
+
+Donc : quand quelqu'un juge un mixage mauvais alors qu'il est conforme, **lui
+demander un fichier qu'il trouve réussi et le mesurer**. Comparer sonie,
+dynamique et énergie au-dessus de 400 Hz entre les deux. Un écart chiffré
+tranche en une minute ce que l'itération au jugé ne trouve pas.
+
+La cible reste un plafond à ne pas dépasser sans raison. Elle n'a jamais été
+une consigne de ressemblance.
+
 ## De la phrase aux réglages
 
 Les décibels ci-dessous sont **l'écart entre la musique et la voix**, jamais un
@@ -118,6 +136,44 @@ Détails et cas limites : `references/intentions.md`.
    mesurées — `monter.py` le calcule, mais quiconque mixe à la main doit y
    penser aussi.
 
+## Fabriquer les bruitages
+
+Quand une vidéo n'a aucun son, il ne suffit pas de poser une musique : il manque
+l'environnement et les ponctuations. `scripts/bruitages.py` les **synthétise** —
+rien à télécharger, rien à licencier, et chaque son se règle par ses paramètres.
+
+Le montage vit dans un fichier JSON, pas dans le code : d'un clip à l'autre,
+seuls les instants et les gains changent. Partir de
+`references/plan-exemple.json`, qui commente chaque pose.
+
+| Bruitage | Ce qu'il fait |
+| --- | --- |
+| `boom` | Frappe lourde : claquement, corps saturé, coup de médium |
+| `choc_metal` | Acier frappé — partiels amortis en 0,3 s |
+| `rugissement` | Growl : modulation de fréquence saturée et souffle rauque |
+| `electricite` | Décharge : bruit haché irrégulièrement |
+| `montee` | Tension qui grimpe (ou retombe, avec `descendante`) |
+| `grondement` | Masse grave, intensité sans cadence |
+| `crepitement` | Braises : un train d'impulsions, pas un sifflement |
+| `nappe_sombre` | Le lit, volontairement immobile |
+
+**Les instants viennent de l'image, jamais d'une grille.** Les repérer avec
+`ffmpeg -vf "select='gt(scene,0.3)',showinfo"` pour les coupes, et à l'œil pour
+les gestes. Une montée se pose **avant** la coupe : un mouvement qui commence
+sur l'image arrive déjà en retard.
+
+**Trois erreurs déjà commises, et ce qui les corrige :**
+
+1. **Des partiels inharmoniques qui sonnent une seconde et demie, c'est une
+   cloche** — c'est la durée d'extinction, et elle seule, qui sépare le carillon
+   du choc sur l'acier. Rester sous 0,4 s.
+2. **Une modulation régulière fabrique du ressac.** Du bruit filtré dont
+   l'amplitude suit une sinusoïde, l'oreille l'entend comme une vague : c'est
+   littéralement ce qu'est une vague. Le feu et la pierre sont irréguliers.
+3. **Des bruitages ne sont pas une musique.** Ils ponctuent la parole au lieu de
+   la porter : `--ecart-db 6 --baisse-db 4` plutôt que les 16 et 10 d'un fond
+   musical, sinon l'impact posé sous la voix off devient inaudible.
+
 ## Outillage
 
 ```bash
@@ -128,7 +184,14 @@ python3 $S/sonometre.py voix.wav --parole               # + repérer les passage
 
 python3 $S/monter.py --video clip.mp4 --musique fond.mp3 --voix voix.wav \
         --plateforme tiktok --intention "tutoriel, voix off, calme"
+
+python3 $S/bruitages.py plan.json ambiance.wav      # sonoriser un montage muet
+python3 $S/monter.py --video muet.mp4 --musique ambiance.wav \
+        --ecart-db 6 --baisse-db 4 --voix off.mp3 --voix-debut 0.7
 ```
+
+`--voix-debut` décale la voix off et la plongée de la musique ensemble : une
+narration ne commence jamais sur la première image.
 
 Les deux scripts trouvent ffmpeg seuls : celui du système d'abord, sinon celui
 livré par `imageio-ffmpeg` (même stratégie que `mon-app-audio/core/mixeur.py`).

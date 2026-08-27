@@ -43,6 +43,12 @@ class GalleryPhotoPicker implements PhotoPicker {
       source: ImageSource.gallery,
       maxWidth: 2048,
       imageQuality: 92,
+      // Sans les métadonnées, iOS n'a aucune permission à demander : le
+      // sélecteur du système rend le fichier choisi, et rien d'autre. On n'a
+      // besoin que des pixels — ni de la position GPS, ni de la date de prise
+      // de vue. La clé `NSPhotoLibraryUsageDescription` reste exigée par la
+      // politique de l'App Store, même quand rien n'est demandé.
+      requestFullMetadata: false,
     );
     if (fichier == null) return null;
 

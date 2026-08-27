@@ -1,0 +1,65 @@
+{
+  "niche": {
+    "id": "restauration",
+    "nom": "IA Restauration",
+    "emoji": "🍽️",
+    "domaine": "https://ia-restauration.fr",
+    "metier": "restaurateurs et gérants d'établissement",
+    "h1_accent": "L'IA en salle",
+    "h1_suite": "et derrière le passe",
+    "slogan": "Téléphone, réservations, gaspillage, achats, marketing : les outils qui récupèrent les marges là où elles fuient.",
+    "meta_titre": "IA Restauration — les outils IA des restaurateurs",
+    "meta_description": "Téléphone, réservations, gaspillage, achats, marketing : les outils IA testés en restaurant. Prix, avis détaillés et limites réelles.",
+    "theme": {
+      "primaire": "#ef4444",
+      "secondaire": "#fb7185"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur."
+  },
+  "outils": [
+    {
+      "id": "slang-ai",
+      "nom": "Slang.ai",
+      "categorie": "Téléphone & réservations",
+      "prix": "À partir de 199 $/mois",
+      "description_courte": "Le standard vocal qui décroche à chaque appel pendant le coup de feu : réservations prises, horaires donnés, rien de perdu.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/slang-ai",
+      "score_avis": 4.4,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nUn restaurant plein laisse sonner le téléphone, et chaque appel manqué est une table perdue. Slang.ai répond en langage naturel, prend la réservation dans le logiciel de salle, répond aux questions d'horaires, de parking et d'allergènes, et transfère au personnel ce qui sort du cadre. La voix reste identifiable comme automatique, mais la conversation est fluide et le taux d'appels traités sans intervention dépasse largement la moitié.\n\n## Points forts\n- Aucun appel manqué pendant le service, y compris à vingt heures un samedi\n- Réservation écrite directement dans le logiciel de salle, sans double saisie\n- Réponses paramétrables sur les questions récurrentes, mises à jour en une minute\n- Enregistrement et statistiques des appels : on découvre ce que les clients demandent vraiment\n\n## Points faibles\n- Une partie de la clientèle raccroche dès qu'elle identifie une voix automatique\n- Tarif à l'abonnement mensuel, difficile à amortir pour un petit établissement\n- La prise en charge du français est plus récente et moins rodée que celle de l'anglais\n\n## Idéal pour\nLes établissements qui refusent des couverts faute de décrocher, et ceux dont le personnel de salle passe le service le téléphone à l'oreille."
+    },
+    {
+      "id": "winnow",
+      "nom": "Winnow",
+      "categorie": "Gaspillage alimentaire",
+      "prix": "Sur devis",
+      "description_courte": "Une caméra au-dessus de la poubelle qui reconnaît ce qu'on jette, le pèse et le chiffre en euros perdus.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/winnow",
+      "score_avis": 4.3,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nLa perte matière est le coût invisible de la restauration : personne ne la mesure, donc personne ne la réduit. Winnow installe une balance connectée et une caméra au-dessus de la zone de tri, identifie automatiquement les aliments jetés et convertit le tout en valeur monétaire par service. Les cuisines équipées constatent couramment une baisse de moitié du gaspillage en six mois, uniquement parce que le chiffre est affiché chaque matin.\n\n## Points forts\n- Reconnaissance automatique des aliments : aucune saisie demandée à la brigade\n- Perte convertie en euros, pas en kilos : c'est ce qui déclenche l'action\n- Rapports par service et par plat, qui pointent les portions surdimensionnées\n- Retour sur investissement mesurable et rapide en restauration collective\n\n## Points faibles\n- Matériel à installer en cuisine : ce n'est pas un simple abonnement logiciel\n- Le modèle économique vise la collectivité et l'hôtellerie, pas le bistrot de quartier\n- Sans engagement du chef, l'outil mesure sans que rien ne change\n\n## Idéal pour\nLa restauration collective, l'hôtellerie et les groupes multi-sites où quelques points de perte matière représentent des dizaines de milliers d'euros par an."
+    },
+    {
+      "id": "tastewise",
+      "nom": "Tastewise",
+      "categorie": "Marketing & tendances",
+      "prix": "Sur devis",
+      "description_courte": "Ce que les gens mangent, cherchent et publient en ce moment : la carte de demain décidée sur des données, pas sur une intuition.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/tastewise",
+      "score_avis": 4.1,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nTastewise analyse en continu les cartes de restaurants, les recettes publiées, les réseaux sociaux et les recherches en ligne pour dire quel ingrédient monte, sur quel territoire et auprès de quel public. Pour un groupe qui refait sa carte deux fois par an, c'est la différence entre suivre une tendance à son sommet — donc trop tard — et l'attraper pendant qu'elle grimpe.\n\n## Points forts\n- Tendances mesurées sur des données réelles de consommation et de publication\n- Découpage par zone géographique et par profil de clientèle\n- Idées de plats et d'accroches marketing appuyées sur ce qui circule déjà\n- Veille concurrentielle sur les cartes des établissements voisins\n\n## Points faibles\n- Couverture nettement plus riche sur le marché américain que sur le marché français\n- Tarification pensée pour les marques et les groupes, hors de portée d'un indépendant\n- Une tendance détectée n'est pas une tendance rentable : la marge reste à calculer\n\n## Idéal pour\nLes chaînes, les groupes de restauration et les marques alimentaires qui doivent arbitrer une carte ou un lancement produit sur autre chose qu'une impression."
+    },
+    {
+      "id": "popmenu",
+      "nom": "Popmenu",
+      "categorie": "Marketing & tendances",
+      "prix": "À partir de 150 $/mois",
+      "description_courte": "Le site, la carte interactive et le marketing dans un seul outil, avec les réponses aux avis rédigées automatiquement.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/popmenu",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nPopmenu part d'un constat simple : la carte est la page la plus consultée d'un restaurant, et presque toujours un PDF illisible sur téléphone. L'outil en fait une page interactive, où chaque plat a ses photos et ses avis, et se sert de ces données pour alimenter le marketing — courriels, messages texte, publications, réponses aux avis en ligne rédigées dans le ton de la maison.\n\n## Points forts\n- Carte interactive et référençable, là où un PDF n'apporte aucun trafic\n- Réponses aux avis rédigées automatiquement, ce que personne ne fait sérieusement\n- Courriels et messages texte déclenchés sur le comportement réel des clients\n- Site, carte, réservation et marketing dans un même abonnement\n\n## Points faibles\n- Facturation mensuelle élevée pour un établissement indépendant\n- Fonctionnalités calibrées pour le marché américain\n- Migrer un site existant vers leur plateforme est un engagement de long terme\n\n## Idéal pour\nLes restaurants et petites chaînes dont la présence en ligne se limite à une carte en PDF et à une page sociale mise à jour de loin en loin.",
+      "date_ajout": "2026-08-27"
+    }
+  ]
+}

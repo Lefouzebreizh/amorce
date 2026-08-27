@@ -5,6 +5,7 @@ import {
   type CaptionStyleId,
   type CinemaSettings,
   type Clip,
+  type LookId,
   type Project,
   type SfxId,
   type SoundCue,
@@ -59,6 +60,18 @@ export type CaptionSet = {
   label: string;
   /** Ce que la trame raconte, en une phrase. */
   why: string;
+  /**
+   * Rendu qui va avec la trame.
+   *
+   * Une bande-annonce n'a pas la couleur d'un tutoriel. Le rendu n'étant noté
+   * nulle part, personne ne pense à le régler — et un montage sans parti pris
+   * visuel reste une suite de plans, quelle que soit sa note.
+   *
+   * Il n'est appliqué que si l'utilisateur n'a rien choisi lui-même : `cinema`
+   * est ce que pose le montage express, `naturel` est l'absence de choix. Tout
+   * autre rendu est une décision, et ne se remplace pas.
+   */
+  look?: LookId;
   slots: CaptionSlot[];
 };
 
@@ -79,6 +92,7 @@ export const CAPTION_SETS: CaptionSet[] = [
     id: 'bande-annonce',
     label: 'Bande-annonce',
     why: 'Un titre, une menace, un dévoilement, une question qui appelle la suite.',
+    look: 'blockbuster',
     slots: [
       { text: '[TITRE] — ÉPISODE [02]', style: 'neon', color: '#ffe14d', scale: 1.3, y: 0.22, at: 0, span: 0.17 },
       { text: '[Ce qui menace]', style: 'punch', y: 0.72, at: 0.22, span: 0.2 },
@@ -101,6 +115,7 @@ export const CAPTION_SETS: CaptionSet[] = [
     id: 'histoire',
     label: 'Histoire',
     why: 'Une situation, un basculement, ce qu’on en retire. Le récit se regarde jusqu’au bout.',
+    look: 'argentique',
     slots: [
       { text: 'Le jour où j’ai [tout perdu]', style: 'punch', y: 0.28, at: 0, span: 0.18 },
       { text: '[Ce qui s’est passé]', style: 'karaoke', y: 0.72, at: 0.24, span: 0.2 },
@@ -260,6 +275,20 @@ export function thinCues(cues: SoundCue[], duration: number): SoundCue[] {
   return gardes;
 }
 
+/**
+ * Rendu à appliquer, ou celui déjà en place s'il a été choisi.
+ *
+ * `naturel` est l'absence de parti pris, `cinema` est ce que le montage express
+ * pose sans qu'on le lui demande : ni l'un ni l'autre n'est une décision. Tout
+ * autre rendu en est une, et on n'y touche pas.
+ */
+export function cinemaFor(set: CaptionSet, actuel: CinemaSettings): CinemaSettings {
+  const choisi = actuel.look !== 'naturel' && actuel.look !== 'cinema';
+  if (choisi || !set.look) return actuel;
+
+  return { ...actuel, look: set.look, intensity: Math.max(actuel.intensity, 0.85) };
+}
+
 export type FinishResult = {
   clips: Clip[];
   captions: Caption[];
@@ -307,7 +336,7 @@ export function buildFinish(
     captions,
     cues,
     // Le rendu n'est pas noté : on ne corrige que l'absence de parti pris.
-    cinema: project.cinema.look === 'naturel' ? { ...project.cinema, look: 'cinema' } : project.cinema,
+    cinema: cinemaFor(captionSet(setId), project.cinema),
   };
 }
 

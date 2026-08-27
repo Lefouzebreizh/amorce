@@ -14,9 +14,12 @@ mécanique.
 ## Un dépôt, plusieurs projets sans code commun
 
 Le studio **Amorce** (Next.js) occupe la racine ; chaque autre projet a son
-dossier — `look_and_find/` (Flutter), `kdp/`, `mon-app-audio/`, `patrimoine/`,
-`montage-auto/`, `repondeur-facebook/` (Python). La liste s'allonge : la
-vérifier d'un `ls` plutôt que de se fier à ce paragraphe.
+dossier — `look_and_find/` (Flutter), `agence/` (Next.js, à part), et les
+projets Python `kdp/`, `montage-auto/`, `repondeur-facebook/`,
+`life-organizer/`, `paper-manager/`. Deux chantiers dorment sous
+`archives-backlog/`, code et tests inclus. La liste bouge d'un jour à l'autre :
+la vérifier d'un `ls` plutôt que de se fier à ce paragraphe — c'est vrai de
+celui-ci comme du précédent, qui avait déjà cessé d'être exact.
 
 **Une PR ne touche qu'un projet**, sauf raison explicite. Corriger au passage
 quelque chose dans un autre parce qu'on l'a remarqué élargit le diff, brouille
@@ -54,6 +57,37 @@ PR de ce dépôt se relit sur ses justifications autant que sur son diff.
 Découper par intention : trois intentions distinctes font trois commits, même
 si elles ont été écrites dans la même session.
 
+## Le contrôle qui prend dix secondes
+
+```bash
+python3 .claude/skills/steward/scripts/preflight.py
+```
+
+À lancer **juste avant de pousser**, jamais après. Il ne corrige rien : il rend
+visibles les deux signaux que le diff ne montre pas, et qui ont chacun coûté un
+aller-retour complet.
+
+**Les références aux chemins disparus.** Déplacer un projet laisse derrière lui
+des fichiers qui le citent encore — le hook de démarrage, la carte des projets,
+la grille d'un skill, la découverte des suites de tests. Un déplacement de
+`mon-app-audio/` en a laissé quatre ; trois ont été rattrapés à la lecture, et
+le quatrième a sorti soixante-deux tests de l'intégration continue sans qu'aucune
+ligne rouge n'apparaisse. **Dans ce dépôt, un `git mv` a des conséquences dans
+des fichiers qui ne sont pas dans le diff.**
+
+**Les recoupements avec les autres sessions.** Le script distingue deux choses
+que l'œil confond. Les *carrefours* — `CLAUDE.md`, le hook — sont touchés par
+presque toutes les branches : ils annoncent un conflit à résoudre, pas un
+doublon, et il ne faut pas s'en alarmer. Un fichier **rare** touché par une
+autre branche, en revanche, est le signal qu'on est peut-être en train de
+refaire un travail déjà fait. Une pull request a été fermée sans rien fusionner
+pour l'avoir ignoré : une autre session avait corrigé le même défaut, mieux, six
+minutes plus tôt.
+
+Le relevé signale, il ne tranche pas. Une citation peut être légitime — une
+fiche d'archive doit citer le chemin qu'elle archive. Une branche voisine peut
+faire tout autre chose du même fichier. C'est la lecture qui décide.
+
 ## Ouvrir et fusionner
 
 Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
@@ -65,63 +99,125 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   fusionnée. Ce qui est fusionné gagne — s'y couler coûte toujours moins cher
   que réconcilier deux architectures.
 - **Fusion par commit de fusion**, comme le reste de l'historique.
+- **Après la fusion, la branche repart de `main`.** Une PR fusionnée est finie :
+  elle ne peut plus porter de travail. Le pas suivant recommence par
+  `git fetch origin main && git checkout -B <branche> origin/main`, et donnera
+  une nouvelle PR. Empiler des commits sur l'historique déjà fusionné produit
+  une PR qui semble normale et que GitHub refusera d'ouvrir, ou pire, qui
+  rouvrira du déjà-fusionné.
 - **La description est le compte rendu que l'historique gardera** : pourquoi,
-  ce que la décision coûte, et ce qui n'a pas été vérifié.
+  ce que la décision coûte, et ce qui n'a pas été vérifié. `/verifier` reste le
+  filet à lancer pour de vrai avant de pousser : la CI vient après, et ce qui
+  s'y découvre a déjà coûté un cycle.
+- **Savoir ce qui est réellement gardé.** `tests-python.yml` n'a **aucun filtre
+  de chemin** : il tourne sur toutes les PR et découvre les `*/tests` contenant
+  des `test_*.py` — vérifié sur des exécutions réelles, événement
+  `pull_request`, depuis des branches sans le moindre fichier Flutter. Les
+  autres workflows sont filtrés (`amorce.yml` sur `src/` et les configurations
+  de la racine, `agence.yml` sur `agence/**`, `look-and-find.yml` sur
+  `look_and_find/**`). Une PR qui ne touche qu'à `.claude/` ou à du Markdown n'a
+  donc qu'un contrôle qui ne dit rien de son contenu.
+- **L'ouverture d'une PR ne déclenche aucune CI.** Elle passe par un jeton
+  d'application GitHub, que GitHub refuse comme source de workflow — protection
+  contre les boucles. Une PR ouverte puis laissée telle quelle reste donc sans
+  contrôle, indéfiniment, sans que rien ne le signale : ne pas l'attendre, la
+  déclencher à la main (`workflow_dispatch` sur la branche).
 
-### Aucune PR de ce dépôt ne déclenche l'intégration continue
+  Une *poussée* sur la branche déclenche `pull_request`, elle — mais pas à tous
+  les coups, et c'est ce qui la rend traître. Trois poussées d'une même session
+  sur la même branche : les deux premières n'ont rien déclenché, la troisième
+  oui. Rien ne distinguait la troisième, sinon que le dépôt recevait moins de
+  monde à cette minute-là. Le déclenchement manuel, lui, n'a jamais manqué :
+  c'est la seule voie qui dispense d'aller vérifier qu'elle a marché.
+- **Vérifier le verdict sur l'empreinte exacte qui sera fusionnée.** Un commit
+  poussé après le déclenchement invalide le résultat précédent, et ne relance
+  que les workflows dont le filtre de chemins l'accepte — `tests-python`
+  toujours, les trois autres selon ce qu'il touche. C'est la façon la plus
+  discrète de fusionner du non-vérifié en croyant le contraire.
+- **Regarder si `main` est vert avant d'accuser sa propre branche.** Un chemin
+  de police écrit sous `/mnt/skills/`, qui n'existe que dans une session Claude
+  Code, a laissé `main` rouge cinq exécutions durant — et ce rouge masquait
+  l'état des six autres suites Python. Un échec identique sur `main` n'est pas
+  le sien : le porter s'il existe un correctif, le dire s'il n'y en a pas.
 
-Les quatre workflows déclarent pourtant `on: pull_request`. Malgré cela, le
-dépôt n'a **jamais** produit un seul run sur cet événement — zéro sur toute son
-histoire, vérifié en listant les exécutions filtrées par `event=pull_request`.
-Les runs ne partent qu'au `push` sur `main`, c'est-à-dire **après** la fusion.
+## Le clone superficiel, et pourquoi `--force-with-lease` refuse
 
-Deux conséquences, et la première est la plus coûteuse à découvrir seul :
+Une session distante clone en `--depth 1`. Deux conséquences que rien n'annonce,
+et qui coûtent chacune un quart d'heure à qui les découvre :
 
-- **Attendre que « la CI passe » sur une PR, c'est attendre indéfiniment.**
-  Le filet avant fusion est `/verifier`, lancé pour de vrai, et rien d'autre.
-- **La fusion est le début du contrôle, pas sa fin.** Après avoir fusionné,
-  regarder le run déclenché sur `main` et le mener au vert comme s'il s'agissait
-  encore de la PR — c'est le même travail, il arrive simplement plus tard.
-
-## `main` bouge sous les pieds
-
-Plusieurs sessions fusionnent en parallèle, parfois à quelques minutes
-d'intervalle. Une PR ouverte sur un `main` vieux de vingt minutes peut être
-refusée à la fusion pour conflit — c'est arrivé trois fois d'affilée sur la même
-PR, chaque tentative étant doublée par une fusion concurrente.
-
-La boucle qui en vient à bout :
+**Le refspec ne suit qu'une branche.** `git clone --depth 1` écrit
+`+refs/heads/main:refs/remotes/origin/main` — au singulier. Aucune branche de
+travail n'obtient donc de référence de suivi, et `git push --force-with-lease`
+échoue sur un « stale info » incompréhensible : il compare à une référence
+distante qui n'existe pas localement. Le remède se pose une fois, juste après
+le clone :
 
 ```bash
-git fetch origin main
-git merge origin/main          # résoudre s'il le faut
-/verifier                      # sur le projet touché
-git push
+git config --unset-all remote.origin.fetch
+git config --add remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+git fetch --unshallow      # avant tout rebase : l'historique tronqué n'en a pas
 ```
 
-puis **fusionner immédiatement**. Chaque minute entre la poussée et la fusion
-est une occasion de recommencer.
+**Et `main` bouge sous les pieds.** Ce dépôt reçoit plusieurs sessions en
+parallèle ; il a avancé de deux commits en une heure pendant qu'une branche se
+préparait. Refaire `git fetch origin main` et vérifier l'écart **juste avant**
+d'ouvrir la pull request, pas au moment de créer la branche :
 
-Les conflits tombent presque toujours dans les trois mêmes fichiers, parce que
-tous les projets s'y déclarent :
+```bash
+git rev-list --left-right --count origin/main...origin/<branche>
+```
 
-| Fichier | Ce qui s'y heurte |
-| --- | --- |
-| `CLAUDE.md` | La liste des projets et son compte en toutes lettres — « neuf », « dix »… |
-| `.claude/hooks/session-start.sh` | Le commentaire de tête et la ligne d'accueil finale, que chaque projet allonge |
-| `.claude/skills/verifier/SKILL.md` | La description et l'ordre des séquences |
+Le premier nombre est ce qui manque à la branche. S'il n'est pas nul, rebaser.
 
-**Ils sont additifs, sans exception rencontrée à ce jour** : les deux côtés
-ajoutent un projet, aucun ne contredit l'autre. Garder les deux apports et
-recompter, plutôt que choisir un côté — choisir, c'est effacer le travail d'une
-autre session.
+**Une pull request fusionnée est finie.** Elle ne peut pas porter une suite. Si
+le travail continue, repartir de `main` à jour sous le même nom de branche et
+ouvrir une nouvelle demande — jamais empiler sur un historique déjà fusionné.
 
-## Diagnostiquer un échec d'intégration continue
+## Observer l'intégration continue
 
-Chaque workflow ne surveille que son projet (`look_and_find/**`, `agence/**`,
-les `*/tests` Python…) et lui-même. Un échec de `Look & Find` — le plus
-fréquent, parce que c'est le plus lourd — vient presque toujours de l'une de
-ces causes, dans cet ordre :
+`gh` n'est pas installé dans les sessions distantes, et le jeton GitHub n'est
+pas exposé au shell : `curl` sur l'API ne mènera nulle part. Les exécutions se
+lisent par les outils GitHub (`mcp__github__actions_list`, méthodes
+`list_workflow_runs` puis `list_workflow_jobs`), qui donnent l'état étape par
+étape. Chercher un contournement en ligne de commande est du temps perdu. Une
+branche fusionnée ne se supprime pas non plus d'ici — `git push origin :branche`
+échoue sur `the remote end hung up unexpectedly`. C'est cosmétique, le
+propriétaire la retire d'un bouton sur la page de la PR : ne pas insister, et ne
+pas le présenter comme un défaut du dépôt.
+
+Ne pas sonder en boucle : une exécution dure de quinze secondes à sept minutes
+selon le workflow. Attendre par une commande de fond, puis relire une fois.
+
+Ne pas relancer non plus par réflexe : chaque workflow groupe ses exécutions par
+référence avec `cancel-in-progress`, donc un second déclenchement tue le
+premier. Un run `cancelled` n'est pas un run vert — c'est un run dont on ne sait
+rien, et l'historique du dépôt en compte beaucoup.
+
+Cinq workflows gardent le dépôt, chacun sur son domaine :
+
+| Workflow | Se déclenche sur | Durée |
+| --- | --- | --- |
+| `Amorce` | `src/`, `scripts/`, la configuration de la racine | ~40 s |
+| `Tests Python` | tout — pas de filtre de chemins, volontairement | ~15 s |
+| `Socle Agence` | `agence/**` | ~40 s |
+| `Look & Find` | `look_and_find/**` | ~7 min |
+| `Auto-pilote annuaire IA` | son propre domaine |  |
+
+`Tests Python` découvre les suites au lieu de les énumérer : un projet Python
+qui arrive est gardé sans rien déclarer, et un projet déplacé le reste. C'est
+délibéré — la version qui énumérait a cessé de couvrir deux projets sans qu'une
+ligne rouge n'apparaisse, deux fois de suite.
+
+## Diagnostiquer un échec
+
+Sur les projets Python, la cause la plus fréquente est un test qui importe une
+bibliothèque absente de `.github/requirements-tests.txt` : l'échec est immédiat
+et dit `ModuleNotFoundError`. Compléter ce fichier-là, jamais le workflow — et
+ne pas y recopier la liste du hook de démarrage, bien plus longue et bien plus
+lente, pour des bibliothèques qu'aucune assertion ne traverse.
+
+Sur `Look & Find`, un échec vient presque toujours de l'une de ces causes, dans
+cet ordre de fréquence :
 
 1. **« Du code généré est périmé »** — `dart run build_runner build` puis
    committer les `.g.dart`. Ne jamais retirer ce contrôle pour faire passer le

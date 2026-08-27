@@ -1,0 +1,125 @@
+# Auto-pilote du réseau d'annuaires IA.
+#
+# Un annuaire figé cesse d'être exploré : Google revient sur un site à la
+# fréquence à laquelle il y trouve du neuf. Ce travail programmé publie un
+# outil par niche tous les deux jours, refabrique les sitemaps et pousse
+# directement sur `main` — sans qu'une session soit ouverte.
+#
+# Deux points à ne pas défaire :
+#
+# - **Le jeton par défaut suffit**, à condition de lui accorder l'écriture
+#   (`permissions: contents: write`). Une poussée faite avec ce jeton ne
+#   redéclenche pas les workflows, ce qui évite toute boucle.
+# - **`concurrency` sérialise les exécutions.** Deux exécutions simultanées
+#   pousseraient sur la même branche et la seconde échouerait en rejet.
+# - **Un billet s'ouvre avant la panne sèche.** La réserve est finie : quand
+#   elle s'épuise, l'auto-pilote continue de tourner et ne publie plus rien,
+#   sans qu'aucune ligne rouge n'apparaisse nulle part — le réseau se fige en
+#   silence, ce qui est exactement ce qu'on ne veut pas d'un système autonome.
+#   Deux passages avant la fin, il ouvre donc un billet qui dit quoi écrire.
+name: Auto-pilote annuaire IA
+
+on:
+  schedule:
+    # Tous les deux jours à 08:00 UTC.
+    - cron: '0 8 */2 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: autopilot-annuaire-ia
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: annuaire-ia
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Installer les dépendances du dépôt
+        working-directory: .
+        run: npm ci
+
+      # Rien ne part si les bases sont déjà cassées : cette exécution pousse
+      # sur `main` sans qu'un humain relise le diff.
+      - name: Valider avant de toucher aux bases
+        run: node valider.js
+
+      - name: Publier un outil par niche
+        run: node auto-pilot.js
+
+      - name: Refabriquer les sitemaps
+        run: node generate-sitemap.js
+
+      # Le parcours en navigateur n'est une barrière nulle part ailleurs, et
+      # pour une bonne raison : sur une pull request, une minute d'attente et un
+      # échec qui dépend de la charge de la machine produisent surtout des
+      # relances qu'on ne lit pas. Ici, c'est exactement l'inverse.
+      #
+      # Cette exécution-ci écrit sur `main` sans qu'un humain relise le diff, et
+      # sa poussée ne redéclenche aucun workflow — c'est voulu, sans quoi elle
+      # boucherait. Donc rien, jamais, ne regarde la page publiée. Or
+      # `valider.js` juge la *structure* des données : un nom d'outil de
+      # quarante caractères est une donnée parfaitement valide qui déborde la
+      # grille sur un écran de 390 px, et personne ne le verrait avant une
+      # semaine.
+      #
+      # Il tourne donc AVANT la poussée : un parcours rouge ne publie rien et le
+      # réseau reste dans l'état qui marchait. Ne rien publier est un incident
+      # visible et réversible ; publier onze pages cassées ne l'est pas.
+      # Cinq minutes environ, tous les deux jours.
+      - name: Installer Chromium pour le parcours
+        working-directory: .
+        run: npx playwright install --with-deps chromium
+
+      - name: Parcourir les onze sites avant de publier
+        run: node verifier.mjs
+
+      - name: Committer et pousser
+        run: |
+          set -euo pipefail
+          git config user.name  "Auto-pilote Annuaire IA"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add niches sitemaps
+          if git diff --cached --quiet; then
+            echo "Rien de neuf : les réserves sont épuisées."
+            exit 0
+          fi
+          git commit -m "Publier les outils du jour sur les sites du réseau"
+          # La branche a pu bouger pendant l'exécution : on rejoue par-dessus
+          # plutôt que d'échouer en rejet.
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Prévenir avant la panne sèche
+        if: '!cancelled()'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if node alerte-reserve.js --corps > /tmp/corps-reserve.md; then
+            echo "Réserve suffisante, rien à signaler."
+            exit 0
+          fi
+          titre="Réserve de l'auto-pilote presque vide"
+          existant=$(gh issue list --state open --search "$titre in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existant" ]; then
+            gh issue comment "$existant" --body-file /tmp/corps-reserve.md
+          else
+            gh issue create --title "$titre" --body-file /tmp/corps-reserve.md
+          fi
