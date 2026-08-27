@@ -49,6 +49,17 @@
       "score_avis": 4.3,
       "date_ajout": "2026-08-27",
       "description_longue": "## Notre verdict\nUne photo de pièce vide ne se projette pas : le visiteur ne sait pas si son canapé tient. Virtual Staging AI meuble l'image en respectant la perspective et la lumière, dans le style demandé — scandinave, contemporain, familial. Le coût par photo tombe à quelques centimes là où un home staging physique se chiffre en centaines d'euros, et le délai passe de trois jours à une minute.\n\n## Points forts\n- Perspective et ombres cohérentes, y compris sur des pièces mansardées\n- Plusieurs ambiances proposées sur la même photo, pour tester ce qui convertit\n- Désencombrement automatique : le mobilier existant peut être retiré avant l'ajout\n- Facturé au volume, sans engagement de production minimale\n\n## Points faibles\n- Les reflets dans les miroirs et les vitres restent le point faible visible\n- Mentionner le caractère virtuel de l'ameublement est une obligation d'information\n- Les grandes pièces ouvertes demandent souvent deux ou trois essais\n\n## Idéal pour\nLes mandats sur biens vides ou meublés à contretemps, et toute annonce qui stagne faute d'un visuel de première photo qui donne envie."
+    },
+    {
+      "id": "write-homes",
+      "nom": "Write.homes",
+      "categorie": "Rédaction d'annonces",
+      "prix": "Freemium — à partir de 15 $/mois",
+      "description_courte": "L'annonce rédigée à partir des caractéristiques du bien, déclinée pour chaque portail et chaque réseau social.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/write-homes",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nRédiger trente annonces par mois est une corvée dont la qualité baisse à la troisième. Write.homes prend les caractéristiques saisies et produit un texte structuré, décliné aux formats des portails et des réseaux sociaux, avec les variantes de longueur qu'ils imposent. Le gain n'est pas dans la prose — elle reste sage — mais dans le fait que la trentième annonce vaut la première.\n\n## Points forts\n- Déclinaison automatique aux formats des différents portails\n- Variantes de ton : familial, investisseur, résidence secondaire\n- Textes de visite guidée et de publication sociale générés dans la foulée\n- Formule gratuite suffisante pour juger avant de payer\n\n## Points faibles\n- Style reconnaissable si l'on publie sans retoucher\n- Aucune connaissance des mentions obligatoires françaises : à vérifier soi-même\n- Ne se connecte pas aux logiciels de transaction du marché français\n\n## Idéal pour\nLes agences qui publient beaucoup et dont les annonces se ressemblent toutes parce qu'elles sont écrites à la chaîne en fin de journée.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }
