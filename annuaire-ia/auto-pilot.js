@@ -792,6 +792,136 @@ Visier assemble les données de paie, de temps et de gestion des talents en un m
 ## Idéal pour
 Les directions des ressources humaines multi-sites qui n'ont pas de vision consolidée fiable de leur masse salariale et de leurs départs.`,
     },
+    {
+      id: `flatchr`,
+      nom: `Flatchr`,
+      categorie: `Présélection`,
+      prix: `Sur devis — moins de 200 €/mois pour une PME`,
+      description_courte: `Le tri des candidatures classé par pertinence, hébergé en France, à un tarif qui tient pour une entreprise de vingt personnes.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/flatchr`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Flatchr fait partie des rares outils de recrutement à IA dont le tarif reste compatible avec une PME : autour de deux cents euros par mois pour une entreprise d'une vingtaine de salariés, hébergement en France compris. Son module de correspondance identifie et hiérarchise les candidatures pertinentes, sans jamais trancher — la décision reste aux mains du recruteur et du manager, et c'est la seule position tenable dans un domaine où l'automatisation du refus est juridiquement et humainement risquée.
+
+## Points forts
+- Hébergement en France, argument devenu structurant sur des données de candidats
+- Correspondance qui hiérarchise sans décider : le recruteur garde la main
+- Tarif compatible avec une PME, là où les plateformes internationales décrochent
+- Interface en français, accompagnement local
+
+## Points faibles
+- Aucun tarif public affiché : passage par un devis
+- Moins outillé que les plateformes internationales sur les gros volumes
+- La qualité du tri dépend directement de la qualité des offres publiées
+- Écosystème d'intégrations plus restreint
+
+## Idéal pour
+Les PME et ETI qui recrutent régulièrement sans service dédié, et pour qui l'hébergement des données de candidats en France n'est pas négociable.`,
+    },
+    {
+      id: `taleez`,
+      nom: `Taleez`,
+      categorie: `Présélection`,
+      prix: `Sur devis`,
+      description_courte: `L'outil de recrutement simple et français, pensé pour une équipe qui n'a pas de service RH dédié.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/taleez`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Taleez mise sur la simplicité plutôt que sur la profondeur fonctionnelle, ce qui est exactement ce que cherche une entreprise dont le recrutement est porté par un dirigeant ou un office manager entre deux autres tâches. Les fonctions automatisées servent le tri et la diffusion multi-plateformes, sans imposer d'apprendre un métier. Hébergement en France.
+
+## Points forts
+- Prise en main rapide, sans formation ni paramétrage lourd
+- Diffusion multi-plateformes des offres depuis un seul endroit
+- Hébergement français, interface et support en français
+- Bon rapport fonctions-prix pour une petite structure
+
+## Points faibles
+- Fonctions d'IA plus légères que chez les concurrents qui en ont fait leur axe
+- Aucun tarif public
+- Atteint ses limites sur des recrutements en volume ou très spécialisés
+- Peu d'automatisation au-delà du tri et de la diffusion
+
+## Idéal pour
+Les petites structures où le recrutement est une tâche parmi d'autres, et qui veulent arrêter de gérer les candidatures dans une boîte mail.`,
+    },
+    {
+      id: `beetween`,
+      nom: `Beetween`,
+      categorie: `Sourcing`,
+      prix: `Sur devis`,
+      description_courte: `La lecture automatique des CV poussée plus loin que la moyenne, pour des candidatures qui arrivent dans tous les formats.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/beetween`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Le point fort de Beetween est l'analyse automatique des CV : extraire proprement l'expérience, les compétences et les coordonnées d'un document mal structuré est un problème plus difficile qu'il n'y paraît, et c'est là que la plupart des outils perdent de l'information. Pour une entreprise qui reçoit des candidatures en PDF, en Word et en captures d'écran, c'est le maillon qui détermine la qualité de tout le reste.
+
+## Points forts
+- Analyse automatique des CV parmi les plus abouties du marché français
+- Récupère l'information même sur des documents mal structurés
+- Éditeur français, hébergement local
+- Adapté aux entreprises multi-sites et aux réseaux
+
+## Points faibles
+- Aucun tarif public
+- Positionnement plus outillé, donc plus long à prendre en main que les offres simples
+- Le confort de l'analyse automatique masque parfois des erreurs d'extraction à relire
+- Moins visible que les leaders internationaux
+
+## Idéal pour
+Les entreprises qui reçoivent des candidatures en volume et dans des formats disparates, et qui veulent cesser de ressaisir.`,
+    },
+    {
+      id: `lucca`,
+      nom: `Lucca`,
+      categorie: `Analyse RH`,
+      prix: `Sur devis`,
+      description_courte: `La suite RH française — congés, entretiens, rémunération — avec l'automatisation posée sur les données déjà présentes.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/lucca`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Lucca n'est pas un outil d'IA, c'est une suite RH française dans laquelle l'automatisation s'est installée là où les données étaient déjà : absences, entretiens, rémunération, notes de frais. C'est une différence de nature avec les outils de recrutement — ici, la valeur vient de ce que l'entreprise possède déjà et n'exploite pas. Pour un service RH qui veut cesser de reconstruire les mêmes tableaux chaque trimestre, c'est le bon angle.
+
+## Points forts
+- Modules qui couvrent le quotidien RH, pas seulement le recrutement
+- Automatisation appuyée sur les données déjà saisies dans l'entreprise
+- Éditeur français, conformité au droit du travail local
+- Adoption large, écosystème d'intégrations fourni
+
+## Points faibles
+- Aucun tarif public, facturation par module et par salarié
+- Le coût grimpe avec le nombre de modules activés
+- Ne couvre pas le recrutement en profondeur : à compléter par un outil dédié
+- Projet de déploiement, pas une souscription
+
+## Idéal pour
+Les services RH constitués qui veulent exploiter leurs propres données plutôt qu'acheter une brique d'IA de plus.`,
+    },
+    {
+      id: `smartrecruiters`,
+      nom: `SmartRecruiters`,
+      categorie: `Sourcing`,
+      prix: `Sur devis`,
+      description_courte: `La plateforme de recrutement des grandes organisations, avec les fonctions d'IA les plus abouties du marché.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/smartrecruiters`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+SmartRecruiters figure parmi les plateformes les plus avancées sur l'automatisation du recrutement, et cela se paie de la manière habituelle : un périmètre conçu pour des organisations qui recrutent par centaines, avec la lourdeur qui va avec. Pour une entreprise française de taille moyenne, la vraie question n'est pas la puissance de l'outil mais le rapport entre ce qu'il permet et ce qui sera réellement utilisé.
+
+## Points forts
+- Fonctions d'automatisation parmi les plus abouties du marché
+- Conçu pour le recrutement en volume et multi-pays
+- Écosystème d'intégrations très large
+- Recul d'usage important chez de grands employeurs
+
+## Points faibles
+- Surdimensionné et coûteux sous une certaine taille
+- Hébergement et traitement des données à examiner de près selon les besoins
+- Déploiement long, qui mobilise une équipe projet
+- Interface et accompagnement pensés d'abord pour l'anglais
+
+## Idéal pour
+Les grandes organisations qui recrutent en volume, sur plusieurs pays, et disposent d'une équipe pour porter le déploiement.`,
+    },
   ],
 
   comptabilite: [
@@ -1437,6 +1567,136 @@ Laisser des élèves dialoguer librement avec une intelligence artificielle est 
 ## Idéal pour
 Les établissements qui veulent autoriser un usage encadré plutôt que d'interdire un outil que les élèves utilisent déjà en dehors du cours.`,
     },
+    {
+      id: `nolej`,
+      nom: `Nolej`,
+      categorie: `Supports de cours`,
+      prix: `Palier gratuit, puis abonnement`,
+      description_courte: `Un document, une vidéo ou un cours transformés en activités interactives — quiz, cartes, résumés — en quelques minutes.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/nolej`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+La matière ne manque jamais à un enseignant : ce qui manque, c'est le temps de la transformer en activités. Nolej part d'un support existant — document, vidéo, page — et en tire un ensemble d'activités interactives exportables vers les plateformes d'apprentissage courantes. L'éditeur est européen, ce qui pèse quand les productions concernent des élèves. Le résultat demande une relecture, mais il part d'un brouillon complet plutôt que d'une page blanche.
+
+## Points forts
+- Part d'un support déjà écrit plutôt que d'une consigne à rédiger
+- Exporte vers les plateformes d'apprentissage standard du marché
+- Produit plusieurs types d'activités d'un seul document
+- Palier gratuit permettant d'évaluer sur un vrai cours
+
+## Points faibles
+- Les activités générées demandent une relecture pédagogique systématique
+- La qualité dépend étroitement de celle du document de départ
+- Moins pertinent pour les disciplines très formelles
+- Interface pensée d'abord pour l'anglais
+
+## Idéal pour
+Les enseignants et formateurs qui ont déjà leurs supports et veulent les rendre interactifs sans y consacrer leurs soirées.`,
+    },
+    {
+      id: `kwyk`,
+      nom: `Kwyk`,
+      categorie: `Différenciation`,
+      prix: `Abonnement établissement ou famille`,
+      description_courte: `Les exercices de mathématiques générés et corrigés automatiquement, alignés sur les programmes français.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/kwyk`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Kwyk a une qualité que peu d'outils partagent : il est construit sur les programmes français, pas traduit depuis un système scolaire étranger. Les exercices sont générés avec des valeurs différentes pour chaque élève, corrigés automatiquement, et le professeur voit qui bloque et où. Sur une classe de trente, c'est la différence entre supposer et savoir.
+
+## Points forts
+- Aligné sur les programmes français, du collège au lycée
+- Énoncés générés avec des valeurs différentes par élève
+- Correction automatique et suivi individuel des blocages
+- Utilisé en établissement comme à la maison
+
+## Points faibles
+- Périmètre mathématique : rien pour les autres disciplines
+- Le suivi ne vaut que si les élèves font réellement les exercices
+- La correction automatique ne juge pas le raisonnement écrit
+- Abonnement à la charge de l'établissement ou des familles
+
+## Idéal pour
+Les professeurs de mathématiques qui veulent donner du travail différencié sans multiplier par trente le temps de correction.`,
+    },
+    {
+      id: `eduaide-ai`,
+      nom: `Eduaide.ai`,
+      categorie: `Préparation de cours`,
+      prix: `Palier gratuit, puis abonnement annuel`,
+      description_courte: `Une centaine de types de ressources pédagogiques générées à partir d'un objectif d'apprentissage.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/eduaide-ai`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Eduaide se distingue par l'étendue du catalogue : on ne demande pas « fais-moi un cours », on choisit le type de ressource — questionnement socratique, grille d'évaluation, activité de closure, plan différencié — et l'outil produit ce format-là. Cette contrainte de format est précisément ce qui évite la bouillie générique que produisent les assistants généralistes sur une consigne vague.
+
+## Points forts
+- Catalogue étendu de types de ressources, chacun avec sa forme propre
+- La contrainte de format évite les productions génériques
+- Palier gratuit suffisant pour se faire un avis
+- Outil d'assistance à la rédaction intégré pour retoucher
+
+## Points faibles
+- Conçu pour le système scolaire américain : vocabulaire et niveaux à transposer
+- Rien n'est aligné sur les programmes français
+- Relecture indispensable avant tout usage en classe
+- Interface anglophone
+
+## Idéal pour
+Les enseignants à l'aise en anglais qui cherchent la variété des formats plutôt qu'un alignement sur le programme.`,
+    },
+    {
+      id: `quizizz-ai`,
+      nom: `Quizizz AI`,
+      categorie: `Différenciation`,
+      prix: `Palier gratuit, puis offre établissement`,
+      description_courte: `Les quiz de classe générés depuis un support, avec adaptation du niveau élève par élève.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/quizizz-ai`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Quizizz était déjà installé dans beaucoup de classes avant l'arrivée des fonctions génératives ; celles-ci ont surtout supprimé le travail de saisie, qui était le vrai frein. On importe un support, on obtient un questionnaire, et le niveau s'ajuste selon les réponses de chaque élève. C'est une évolution discrète d'un outil connu, ce qui est souvent préférable à l'adoption d'un outil de plus.
+
+## Points forts
+- Génération du questionnaire depuis un document existant
+- Adaptation du niveau au fil des réponses de chaque élève
+- Outil déjà connu de beaucoup d'élèves : aucune acclimatation
+- Palier gratuit largement utilisable en classe
+
+## Points faibles
+- Les questions générées demandent une relecture, surtout en sciences
+- Le côté ludique convient mal à certains niveaux et certaines disciplines
+- Fonctions avancées réservées aux offres établissement
+- Données d'élèves hébergées hors de France
+
+## Idéal pour
+Les enseignants qui utilisent déjà les quiz en classe et veulent supprimer le temps de saisie, pas changer de méthode.`,
+    },
+    {
+      id: `lalilo`,
+      nom: `Lalilo`,
+      categorie: `Tutorat`,
+      prix: `Abonnement établissement`,
+      description_courte: `L'accompagnement individuel de la lecture au primaire, avec le relevé de ce qui bloque pour chaque élève.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/lalilo`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Au primaire, l'écart entre les élèves sur la lecture se creuse vite, et un professeur seul devant vingt-cinq enfants ne peut pas écouter chacun lire assez souvent. Lalilo prend cette tâche-là : exercices adaptés au niveau réel de chaque élève, et surtout un relevé qui dit au professeur qui bute sur quel son. Née en France, la plateforme s'est étendue depuis à d'autres pays.
+
+## Points forts
+- Adapte le travail au niveau réel de chaque élève, sans intervention
+- Relevé précis des difficultés, exploitable en classe
+- Conçue au départ pour le français et l'école primaire
+- Utilisée en établissement, avec un cadre d'usage établi
+
+## Points faibles
+- Périmètre étroit : lecture et primaire, rien au-delà
+- Ne remplace pas l'écoute directe d'un enfant qui lit
+- Suppose un accès individuel aux écrans en classe
+- Abonnement porté par l'établissement
+
+## Idéal pour
+Les professeurs des écoles qui veulent savoir précisément où en est chaque élève en lecture, plutôt que de le deviner.`,
+    },
   ],
 
   restauration: [
@@ -1564,6 +1824,136 @@ MarketMan lit les factures fournisseurs, met à jour les prix d'achat et recalcu
 
 ## Idéal pour
 Les restaurants et groupes dont le coût matière dérive et qui n'ont aucune fiche technique à jour pour comprendre où part la marge.`,
+    },
+    {
+      id: `malou`,
+      nom: `Malou`,
+      categorie: `Visibilité & avis`,
+      prix: `Sur devis`,
+      description_courte: `La visibilité locale du restaurant tenue sur cinquante plateformes — y compris désormais dans les réponses des IA.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/malou`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Malou a vu venir un basculement que beaucoup de restaurateurs subissent encore : la question « où manger ce soir » ne se pose plus seulement à Google, elle se pose à ChatGPT, à Gemini et aux résumés générés en haut des résultats. La plateforme travaille donc la visibilité locale classique — fiche Google, avis, réseaux, une cinquantaine de plateformes — et la visibilité dans les moteurs génératifs, avec un agent entraîné sur les problématiques du secteur. Française, et pensée pour les groupes multi-sites.
+
+## Points forts
+- Traite la visibilité dans les réponses générées, pas seulement le référencement classique
+- Une cinquantaine de plateformes tenues depuis un seul endroit
+- Gestion des avis intégrée, avec réponses assistées
+- Conçue pour les groupes de plusieurs établissements
+
+## Points faibles
+- Aucun tarif public
+- Pensée pour les groupes : un établissement seul paiera pour des fonctions qu'il n'utilisera pas
+- La visibilité dans les moteurs génératifs reste un terrain mouvant
+- Suppose que quelqu'un s'occupe réellement du sujet dans l'entreprise
+
+## Idéal pour
+Les groupes de trois à cinquante établissements dont la clientèle se décide en ligne, et qui veulent exister aussi dans les réponses des assistants.`,
+    },
+    {
+      id: `innovorder`,
+      nom: `Innovorder`,
+      categorie: `Pilotage`,
+      prix: `Sur devis`,
+      description_courte: `La caisse, la commande en ligne et les bornes réunies, avec l'analyse des ventes qui en découle.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/innovorder`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Innovorder est un éditeur français qui a construit son offre autour du point le plus stratégique du restaurant : l'encaissement et la prise de commande. Les données d'exploitation qui en sortent — ce qui se vend, à quelle heure, avec quoi — valent bien plus que ce qu'un tableur en fera jamais. La valeur n'est donc pas dans une couche d'IA affichée, mais dans le fait de rassembler en un point ce que la plupart des établissements éparpillent entre trois prestataires.
+
+## Points forts
+- Caisse, commande en ligne et bornes dans un même ensemble
+- Analyse des ventes assise sur des données de première main
+- Éditeur français, conformité fiscale et accompagnement local
+- Adapté à la restauration rapide comme à la restauration collective
+
+## Points faibles
+- Aucun tarif public, matériel à prévoir en plus
+- Changer de caisse est le changement le plus risqué d'un restaurant
+- Périmètre large, dont une partie sera inutile selon le format
+- Ce n'est pas un outil d'IA au sens strict : l'automatisation sert l'exploitation
+
+## Idéal pour
+Les établissements qui veulent réunir encaissement et commande en ligne chez un seul prestataire français, et exploiter enfin leurs chiffres.`,
+    },
+    {
+      id: `sunday`,
+      nom: `Sunday`,
+      categorie: `Pilotage`,
+      prix: `Commission sur les paiements`,
+      description_courte: `Le paiement par code à l'écran, qui libère du temps en salle et fait remonter les avis au bon moment.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/sunday`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Sunday attaque un problème que tout restaurateur connaît sans le nommer : le quart d'heure perdu à faire circuler le terminal de paiement au moment où la salle est la plus tendue. Le client règle depuis son téléphone, et l'invitation à laisser un avis arrive dans la foulée — c'est-à-dire au moment où il est encore satisfait, ce qui change tout sur la note moyenne. Le modèle économique en commission évite l'abonnement, mais il faut le calculer sur son propre volume.
+
+## Points forts
+- Supprime la circulation du terminal de paiement au coup de feu
+- Demande d'avis déclenchée au bon moment, sans intervention du personnel
+- Pas d'abonnement : rémunération à la commission
+- Mise en place légère, sans changer de caisse
+
+## Points faibles
+- La commission peut coûter plus cher qu'un abonnement sur gros volume
+- Suppose une clientèle à l'aise avec le paiement mobile
+- Dépend de la qualité du réseau dans la salle
+- Périmètre étroit : c'est un complément, pas un système de gestion
+
+## Idéal pour
+Les établissements à fort passage où le temps de règlement bride la rotation des tables, et ceux qui veulent remonter leur note d'avis sans le demander à voix haute.`,
+    },
+    {
+      id: `koust`,
+      nom: `Koust`,
+      categorie: `Gaspillage alimentaire`,
+      prix: `Sur devis`,
+      description_courte: `Le coût matière suivi fiche par fiche, pour savoir quel plat rapporte vraiment plutôt que de le supposer.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/koust`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+La marge d'un restaurant se joue sur des écarts de quelques centimes par portion, multipliés par des milliers de couverts — et presque personne ne les mesure. Koust, éditeur français, tient les fiches techniques, les coûts matière et les stocks pour dire quel plat rapporte réellement une fois les pertes et les variations de prix intégrées. Ce n'est pas séduisant, c'est ce qui décide de la rentabilité.
+
+## Points forts
+- Coût matière calculé au plat, pertes comprises
+- Suivi des stocks et des inventaires relié aux fiches techniques
+- Éditeur français, adapté aux pratiques et aux fournisseurs locaux
+- Met en évidence les plats qui coûtent plus qu'ils ne rapportent
+
+## Points faibles
+- Aucun tarif public
+- Exige une rigueur de saisie que toutes les cuisines n'ont pas
+- Le bénéfice n'apparaît qu'après plusieurs semaines de données
+- Peu utile sans fiches techniques réellement tenues
+
+## Idéal pour
+Les restaurants dont la carte est large et la marge incertaine, et qui veulent trancher sur des chiffres plutôt qu'à l'intuition.`,
+    },
+    {
+      id: `guestonline`,
+      nom: `Guestonline`,
+      categorie: `Téléphone & réservations`,
+      prix: `Sur devis`,
+      description_courte: `La réservation et le plan de salle tenus par un éditeur français, sans commission par couvert.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/guestonline`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Le sujet de la réservation n'est pas technique, il est économique : la plupart des grandes plateformes se rémunèrent au couvert apporté, ce qui revient à louer sa propre clientèle. Guestonline, éditeur français, propose l'inverse — un outil que le restaurant paie et dont il garde les données clients. Le plan de salle, les rappels automatiques et la limitation des tables non honorées font le reste.
+
+## Points forts
+- Pas de commission par couvert : le fichier client reste au restaurant
+- Plan de salle et gestion des services intégrés
+- Rappels automatiques, qui réduisent les tables non honorées
+- Éditeur français, support dans la langue et le fuseau
+
+## Points faibles
+- Aucun tarif public
+- N'apporte pas de clientèle nouvelle, contrairement aux grandes plateformes
+- Suppose que le restaurant sache déjà remplir sa salle
+- Moins de visibilité que les places de marché de la réservation
+
+## Idéal pour
+Les établissements qui remplissent déjà leur salle et refusent de payer une commission sur des clients qui seraient venus de toute façon.`,
     },
   ],
 
@@ -1951,6 +2341,136 @@ Sur un catalogue où le client ne sait pas quoi choisir — cosmétique, complé
 ## Idéal pour
 Les boutiques de cosmétique, de nutrition ou de matériel technique dont les clients hésitent entre des références qu'ils ne savent pas départager.`,
     },
+    {
+      id: `iadvize`,
+      nom: `iAdvize`,
+      categorie: `Service client`,
+      prix: `Sur devis`,
+      description_courte: `Le conseil en ligne assuré par une IA qui sait passer la main à un humain — et à des clients experts de la marque.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/iadvize`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+iAdvize, éditeur français, a construit sa réputation sur une idée que les robots de conversation ignorent : certaines questions d'achat ne se règlent qu'avec quelqu'un qui connaît vraiment le produit. La plateforme combine donc réponse automatique, prise en charge par un conseiller et mise en relation avec des clients experts. Le passage de relais est le point technique le plus délicat de ce métier, et c'est là qu'elle se juge.
+
+## Points forts
+- Passage de relais entre automatisation et humain traité comme un sujet en soi
+- Mise en relation avec des clients experts, différenciante sur les produits techniques
+- Éditeur français, hébergement et conformité européens
+- Recul important sur les grandes marques de distribution
+
+## Points faibles
+- Aucun tarif public, positionnement grand compte
+- Le modèle du client expert demande une communauté à animer
+- Surdimensionné pour une petite boutique
+- Déploiement qui mobilise des équipes au-delà du service client
+
+## Idéal pour
+Les marques dont les produits demandent un vrai conseil avant achat, et qui veulent automatiser sans faire fuir sur les questions qui comptent.`,
+    },
+    {
+      id: `lengow`,
+      nom: `Lengow`,
+      categorie: `Fiches produits`,
+      prix: `Sur devis`,
+      description_courte: `Le catalogue produit traduit et adapté automatiquement au format de chaque place de marché.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/lengow`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Vendre sur plusieurs places de marché n'échoue presque jamais sur la stratégie, mais sur la mécanique : chaque plateforme exige ses catégories, ses attributs, ses formats d'image. Lengow, éditeur français, automatise cette transformation à partir d'un catalogue unique, avec enrichissement et traduction des fiches. C'est un travail ingrat que personne ne veut faire à la main, et qui décide pourtant de la visibilité de chaque produit.
+
+## Points forts
+- Un catalogue unique décliné automatiquement vers chaque place de marché
+- Enrichissement et traduction des fiches produits
+- Éditeur français, connaissance fine des places de marché européennes
+- Évite la ressaisie, source principale d'erreurs de catalogue
+
+## Points faibles
+- Aucun tarif public, facturation liée au volume
+- Complexité réelle dès que le catalogue est important
+- Ne remplace pas une stratégie de présence : il l'exécute
+- Peu justifié sur une ou deux places de marché seulement
+
+## Idéal pour
+Les boutiques présentes sur plusieurs places de marché, dont le catalogue dépasse ce qu'une personne peut tenir à jour à la main.`,
+    },
+    {
+      id: `algolia`,
+      nom: `Algolia`,
+      categorie: `Personnalisation`,
+      prix: `Palier gratuit, puis facturation à l'usage`,
+      description_courte: `La recherche interne qui comprend l'intention plutôt que les mots exacts — souvent le premier levier de conversion.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/algolia`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Le visiteur qui utilise la recherche interne d'une boutique achète bien plus souvent que les autres — et c'est précisément là que la plupart des sites le perdent, sur une faute de frappe ou un synonyme non prévu. Algolia, société d'origine française, traite la recherche comme un produit à part entière : compréhension de l'intention, tolérance aux fautes, classement adapté au comportement. Le palier gratuit permet de mesurer l'écart avant d'engager quoi que ce soit.
+
+## Points forts
+- Compréhension de l'intention plutôt que correspondance de mots
+- Tolérance aux fautes de frappe, qui coûtent des ventes chaque jour
+- Palier gratuit suffisant pour mesurer le gain sur un vrai catalogue
+- Documentation et intégrations parmi les meilleures du secteur
+
+## Points faibles
+- Facturation à l'usage : la note grimpe avec le trafic
+- Mise en place technique, un développeur est nécessaire
+- Le réglage fin du classement demande du temps et des données
+- Surdimensionné pour un catalogue de quelques dizaines de références
+
+## Idéal pour
+Les boutiques à catalogue large dont une part significative des visiteurs passe par la recherche interne.`,
+    },
+    {
+      id: `nosto`,
+      nom: `Nosto`,
+      categorie: `Personnalisation`,
+      prix: `Sur devis`,
+      description_courte: `Les recommandations et les contenus adaptés au comportement de chaque visiteur, sans développement lourd.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/nosto`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+Nosto occupe le terrain de la personnalisation clé en main : recommandations de produits, contenus adaptés, tests de variantes, le tout sans écrire de code. C'est ce qui explique son adoption chez des marques sans grande équipe technique. Le revers est classique — on gagne en rapidité de mise en œuvre ce qu'on perd en maîtrise fine, et l'effet sur la conversion mérite d'être mesuré plutôt que cru.
+
+## Points forts
+- Personnalisation opérationnelle sans développement
+- Recommandations, contenus et tests dans une même plateforme
+- Intégrations directes avec les principales solutions de boutique
+- Mise en place rapide comparée à un projet interne
+
+## Points faibles
+- Aucun tarif public, positionnement moyen et grand compte
+- Effet sur la conversion à mesurer sérieusement, promesse générique du secteur
+- Peu de maîtrise fine sur la logique de recommandation
+- Un outil de plus qui suit les visiteurs : à cadrer côté données personnelles
+
+## Idéal pour
+Les boutiques établies sans équipe technique dédiée, qui veulent personnaliser sans lancer un chantier.`,
+    },
+    {
+      id: `botmind`,
+      nom: `Botmind`,
+      categorie: `Service client`,
+      prix: `Sur devis`,
+      description_courte: `L'assistant qui traite les demandes répétitives du service client — où est ma commande, comment je retourne — et laisse le reste.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/botmind`,
+      score_avis: 4.0,
+      description_longue: `## Notre verdict
+La majorité des sollicitations d'un service client de boutique en ligne se résume à quelques questions répétées mille fois : où en est la commande, comment retourner, quand suis-je remboursé. Botmind, éditeur français, absorbe ce socle et transmet le reste à un conseiller. Le calcul est simple à faire pour n'importe quelle boutique : compter la part de ces trois questions dans le volume total, et en déduire la valeur.
+
+## Points forts
+- Cible franchement les demandes répétitives, sans promettre de tout traiter
+- Éditeur français, hébergement et support locaux
+- Se branche sur les outils de billetterie de service client existants
+- Mise en place plus légère que les plateformes de conversation généralistes
+
+## Points faibles
+- Aucun tarif public
+- Le gain dépend entièrement de la part de demandes répétitives
+- Suppose une base de connaissances tenue à jour
+- Périmètre plus étroit que les plateformes conversationnelles complètes
+
+## Idéal pour
+Les boutiques dont le service client croule sous les mêmes questions de suivi de commande et de retour.`,
+    },
   ],
 
   architecture: [
@@ -2336,6 +2856,136 @@ Un assistant qui rédige a peu de valeur ; un assistant qui agit dans les outils
 
 ## Idéal pour
 Les petites structures sans équipe technique, dont les processus reposent sur des copier-coller entre cinq outils différents.`,
+    },
+    {
+      id: `mistral-le-chat`,
+      nom: `Mistral Le Chat`,
+      categorie: `Rédaction`,
+      prix: `Gratuit, puis abonnement`,
+      description_courte: `L'assistant conversationnel français, hébergé en Europe, à la hauteur des usages professionnels courants.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/mistral-le-chat`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+Pour un professionnel français, l'argument n'est pas seulement la qualité des réponses — les grands modèles se tiennent — mais le fait de travailler avec un éditeur européen dont les modèles tournent sur des serveurs européens. Sur des documents clients, des contrats ou des données internes, c'est ce qui rend l'usage défendable devant un client ou un délégué à la protection des données. Le français y est traité comme une langue de premier rang, pas comme une traduction.
+
+## Points forts
+- Éditeur français, traitement des données en Europe
+- Le français traité nativement, sans effet de traduction
+- Palier gratuit largement suffisant pour un usage quotidien
+- Modèles disponibles aussi par interface de programmation, pour aller plus loin
+
+## Points faibles
+- Écosystème d'extensions plus restreint que celui des acteurs américains
+- Moins de fonctions périphériques que les assistants les plus établis
+- Documentation d'usage professionnel encore en construction
+- Avance technique qui se joue à quelques mois près sur ce marché
+
+## Idéal pour
+Les indépendants et petites équipes qui manipulent des données clients et veulent une réponse claire à la question « où partent mes documents ».`,
+    },
+    {
+      id: `deepl`,
+      nom: `DeepL`,
+      categorie: `Rédaction`,
+      prix: `Gratuit, puis abonnement mensuel`,
+      description_courte: `La traduction qui ne se remarque pas, et la réécriture d'un texte dans le registre attendu.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/deepl`,
+      score_avis: 4.5,
+      description_longue: `## Notre verdict
+DeepL reste, des années après son apparition, la référence sur un point précis : une traduction qui ne trahit pas son origine automatique. Pour un indépendant qui répond à un client étranger ou traduit une proposition commerciale, c'est la différence entre paraître professionnel et paraître pressé. L'outil de réécriture, moins connu, corrige et ajuste le registre d'un texte français sans le dénaturer. Éditeur allemand, données traitées en Europe.
+
+## Points forts
+- Qualité de traduction encore au-dessus des assistants généralistes
+- Réécriture et ajustement de registre sur un texte existant
+- Éditeur européen, traitement des données en Europe
+- Palier gratuit utilisable au quotidien, extensions bureautiques comprises
+
+## Points faibles
+- Périmètre volontairement étroit : traduire et reformuler, rien d'autre
+- Les documents longs demandent l'abonnement
+- Sur les textes très techniques, la relecture d'un spécialiste reste nécessaire
+- Le palier gratuit limite la taille des documents
+
+## Idéal pour
+Tous ceux qui écrivent à des interlocuteurs étrangers et ne veulent pas que cela se voie.`,
+    },
+    {
+      id: `notebooklm`,
+      nom: `NotebookLM`,
+      categorie: `Recherche`,
+      prix: `Gratuit, offre avancée payante`,
+      description_courte: `L'assistant qui ne répond que sur vos propres documents, avec la source de chaque affirmation.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/notebooklm`,
+      score_avis: 4.3,
+      description_longue: `## Notre verdict
+La différence avec un assistant généraliste tient en une contrainte : NotebookLM ne répond que sur les documents qu'on lui a donnés, et chaque affirmation renvoie au passage dont elle est tirée. C'est exactement ce qu'il faut pour dépouiller un appel d'offres, un rapport ou trois cents pages de comptes rendus sans risquer une réponse inventée. Le passage en revue reste possible parce que la source est toujours à un clic.
+
+## Points forts
+- Répond uniquement sur les documents fournis : pas de réponse inventée hors corpus
+- Chaque affirmation renvoie à sa source exacte
+- Excellent sur les corpus longs et hétérogènes
+- Gratuit dans son usage courant
+
+## Points faibles
+- Sans documents, l'outil ne sert à rien : ce n'est pas un assistant général
+- Les documents déposés partent chez l'éditeur : à cadrer selon leur sensibilité
+- Qualité inégale sur les documents mal océrisés
+- Fonctions avancées réservées à l'offre payante
+
+## Idéal pour
+Ceux qui doivent tirer une réponse fiable d'un gros dossier — appel d'offres, documentation, archives — et ne peuvent pas se permettre une citation fausse.`,
+    },
+    {
+      id: `fireflies-ai`,
+      nom: `Fireflies.ai`,
+      categorie: `Productivité`,
+      prix: `Palier gratuit, puis abonnement par utilisateur`,
+      description_courte: `La réunion transcrite, résumée et découpée en actions, sans que personne n'ait à prendre de notes.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/fireflies-ai`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Le compte rendu de réunion est le travail que tout le monde repousse et que personne ne relit. Fireflies rejoint la visioconférence, transcrit, résume et sort la liste des décisions et des actions. Le gain réel n'est pas le temps de frappe mais la disparition du flou : ce qui a été décidé est écrit, et on cesse de rejouer la même discussion trois semaines plus tard. Prévenir les participants qu'ils sont enregistrés n'est pas une politesse, c'est une obligation.
+
+## Points forts
+- Rejoint automatiquement les réunions des principales plateformes
+- Résumé et liste d'actions, pas seulement une transcription brute
+- Recherche dans l'historique de toutes les réunions passées
+- Palier gratuit suffisant pour évaluer sur quelques réunions
+
+## Points faibles
+- L'information de l'enregistrement à tous les participants est une obligation
+- Précision variable en français, surtout à plusieurs voix
+- Les enregistrements partent chez l'éditeur : à cadrer selon la confidentialité
+- L'abonnement par utilisateur pèse dès que l'équipe grandit
+
+## Idéal pour
+Les équipes qui enchaînent les réunions et perdent les décisions entre deux, à condition d'avoir cadré le sujet de l'enregistrement.`,
+    },
+    {
+      id: `adobe-firefly`,
+      nom: `Adobe Firefly`,
+      categorie: `Design`,
+      prix: `Palier gratuit, inclus dans certains abonnements Creative Cloud`,
+      description_courte: `La génération d'images entraînée sur des contenus sous licence — l'argument décisif pour un usage commercial.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/adobe-firefly`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Sur la génération d'images, la question qui compte pour un professionnel n'est pas la beauté du rendu mais le droit de s'en servir. Firefly est entraîné sur des contenus sous licence et de l'imagerie du domaine public, et Adobe assume cette origine — ce qui change tout quand l'image part sur une plaquette client ou une campagne. Le rendu n'est pas toujours le plus spectaculaire du marché ; il est le plus défendable.
+
+## Points forts
+- Entraîné sur des contenus sous licence, ce qui sécurise l'usage commercial
+- Intégré aux outils Adobe déjà en place dans beaucoup d'ateliers
+- Fonctions d'extension et de remplissage utiles au quotidien, au-delà de la génération
+- Palier gratuit pour évaluer sans abonnement
+
+## Points faibles
+- Rendu parfois en retrait des générateurs les plus avancés
+- Système de crédits qui rend le coût réel difficile à anticiper
+- Pleine valeur uniquement pour ceux déjà équipés Creative Cloud
+- Restrictions de contenu plus strictes que chez les concurrents
+
+## Idéal pour
+Ceux dont les images partent chez un client ou en publicité, et qui ne peuvent pas se permettre une incertitude sur les droits.`,
     },
   ],
 };
