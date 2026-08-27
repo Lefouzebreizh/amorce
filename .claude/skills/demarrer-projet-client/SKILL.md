@@ -28,8 +28,8 @@ second argument est facultatif — `boulangerie-martin` donne « Boulangerie
 Martin » — mais un client dont le nom porte une apostrophe, un accent ou une
 majuscule interne mérite qu'on l'écrive.
 
-Compter **une minute** : la vérification complète tourne par défaut
-(installation, lint, types, 34 tests, build). `--sans-verification` la saute et
+Compter **une minute** : la vérification complète tourne par défaut —
+installation, lint, types, toute la suite de tests du socle, et build. `--sans-verification` la saute et
 rend la main en une fraction de seconde, à réserver au moment où l'on veut
 seulement voir la forme du projet.
 
@@ -71,9 +71,12 @@ l'ordre :
 
 1. **Une base.** Créer le projet Supabase et y appliquer
    `<nom>/supabase/schema.sql`, puis éprouver les politiques avec
-   `<nom>/supabase/verifier-rls.sql`. Voir `/supabase-en-direct` si le serveur
-   Supabase est connecté à la session — sinon l'éditeur SQL du tableau de bord
-   fait le même travail.
+   `<nom>/supabase/verifier-rls.sql` — sur une base jetable, jamais sur celle du
+   client : il écrit dans `auth.users`. Une fois le projet livré, c'est
+   `<nom>/supabase/etat-rls.sql` qui prend le relais : il ne fait que lire les
+   catalogues et dit si la base ressemble encore à ce que le dépôt décrit. Voir
+   `/supabase-en-direct` si le serveur Supabase est connecté à la session —
+   sinon l'éditeur SQL du tableau de bord fait le même travail.
 2. **Les clés.** `cp <nom>/.env.example <nom>/.env.local`, puis les trois
    variables. Rien d'autre n'est à configurer.
 3. **Le domaine du client.** Le schéma livré contient deux tables de
