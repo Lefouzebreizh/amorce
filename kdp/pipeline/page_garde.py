@@ -28,7 +28,7 @@ import charte  # noqa: E402
 from pipeline.bordure import fond_charte  # noqa: E402
 from pipeline.page12 import _triskell  # noqa: E402
 
-POLICES = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
+POLICES = charte.POLICES
 CORPS, ITALIQUE, GRAS = (POLICES / f"Lora-{n}.ttf" for n in ("Regular", "Italic", "Bold"))
 BRUN, BRUN_PALE = (0.36, 0.24, 0.12), (0.45, 0.34, 0.20)
 LIGNE = (0.55, 0.50, 0.44)          # gris moyen : visible à l'impression couleur

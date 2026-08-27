@@ -61,6 +61,24 @@ mixage, voix comprise, et le résultat sort plat. En dessous de -1 dBTP de marge
 l'encodage AAC final repousse les crêtes au-delà de 0 et fait craquer un
 fichier qui passait pourtant les mesures avant encodage.
 
+## Une cible n'est pas une attente
+
+Le tableau ci-dessus dit ce que les plateformes **admettent**. Il ne dit pas ce
+que les créateurs **livrent**, et l'écart se paie cher.
+
+Constaté sur un montage réel : la version calée à −14 LUFS, donc conforme, a
+été rejetée huit fois. Le montage que l'auteur avait fait lui-même, du même
+film, mesurait **−7,3 LUFS** — six décibels plus fort, et six de plus sur la
+bande qu'un haut-parleur de téléphone restitue.
+
+Donc : quand quelqu'un juge un mixage mauvais alors qu'il est conforme, **lui
+demander un fichier qu'il trouve réussi et le mesurer**. Comparer sonie,
+dynamique et énergie au-dessus de 400 Hz entre les deux. Un écart chiffré
+tranche en une minute ce que l'itération au jugé ne trouve pas.
+
+La cible reste un plafond à ne pas dépasser sans raison. Elle n'a jamais été
+une consigne de ressemblance.
+
 ## De la phrase aux réglages
 
 Les décibels ci-dessous sont **l'écart entre la musique et la voix**, jamais un

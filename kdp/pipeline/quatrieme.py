@@ -22,12 +22,16 @@ Les puces ne sont pas touchées : elles sont hors de la zone reprise.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-POLICE = Path("/mnt/skills/examples/canvas-design/canvas-fonts/InstrumentSans-Regular.ttf")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import charte  # noqa: E402
+
+POLICE = charte.POLICES / "InstrumentSans-Regular.ttf"
 
 # Relevés au pixel sur la planche d'origine (1600 x 1600).
 GAUCHE = 600                       # début du texte, après la puce
