@@ -23,6 +23,11 @@ SECTIONS_ATTENDUES = (
     "conversion", "upscale", "abonnements", "echeances", "alertes", "resiliation",
 )
 PERIODICITES = {"mensuel", "trimestriel", "semestriel", "annuel", "hebdomadaire"}
+# Recopiés de `modules/conversion/regles.py` plutôt qu'importés : le noyau ne
+# dépend d'aucun module, sans quoi `organizer verifier` chargerait les six pour
+# lire un JSON. Deux valeurs qui ne bougeront pas valent moins cher que cette
+# dépendance-là.
+OBJECTIFS_DE_CONVERSION = {"espace", "compatibilite"}
 STATUTS_ABONNEMENT = {"actif", "a_reexaminer", "resilie", "suspendu"}
 
 
@@ -164,9 +169,38 @@ def valider(config: dict) -> list[str]:
                 "d'entiers positifs"
             )
 
-    for regle in config.get("conversion", {}).get("regles", []):
+    # Même danger que les deux seuils ci-dessus, et c'est le troisième du
+    # fichier : mal saisis, ces réglages-là ne font pas échouer la commande, ils
+    # la font réussir à côté. Un `seuil_gain_minimal_pct` à 100 ne convertit
+    # plus rien et ressemble à un dossier déjà propre ; un `objectif` mal
+    # orthographié retombe en silence sur « espace », et les photos d'iPhone —
+    # qui grossissent toujours en JPEG — cessent d'être converties sans qu'une
+    # seule ligne rouge n'apparaisse.
+    conversion = config.get("conversion", {})
+    gain_minimal = conversion.get("seuil_gain_minimal_pct", 15)
+    if not isinstance(gain_minimal, (int, float)) or isinstance(gain_minimal, bool) \
+            or not 0 <= gain_minimal < 100:
+        problemes.append(
+            "conversion.seuil_gain_minimal_pct doit être un pourcentage entre 0 et 99. "
+            "À 100, aucune conversion d'espace ne serait jamais retenue"
+        )
+    inflation = conversion.get("inflation_max_pct", 100)
+    if not isinstance(inflation, (int, float)) or isinstance(inflation, bool) or inflation < 0:
+        problemes.append(
+            "conversion.inflation_max_pct doit être un pourcentage positif : "
+            "de combien une conversion de compatibilité a le droit d'alourdir un fichier"
+        )
+
+    for regle in conversion.get("regles", []):
         if not regle.get("de") or not regle.get("vers"):
             problemes.append("conversion.regles : une règle sans « de » ou sans « vers »")
+        objectif = regle.get("objectif")
+        if objectif is not None and objectif not in OBJECTIFS_DE_CONVERSION:
+            problemes.append(
+                f"conversion.regles : objectif « {objectif} » inconnu pour "
+                f"« {', '.join(regle.get('de', []))} » (attendu : "
+                f"{', '.join(sorted(OBJECTIFS_DE_CONVERSION))})"
+            )
 
     for section, cle in (("scan_ocr", "api_vision"), ("upscale", "api")):
         api = config.get(section, {}).get(cle, {})

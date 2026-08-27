@@ -9,10 +9,11 @@ une clé d'API est explicitement renseignée pour l'OCR ou l'agrandissement (deu
 options désactivées par défaut).
 
 > État : squelette d'architecture. `organizer_config.json` est complet et
-> validé ; les six modules sont décrits ci-dessous. Deux sont écrits :
+> validé ; les six modules sont décrits ci-dessous. Trois sont écrits :
 > `nettoyage`, complet — photos floues, quasi-doublons puis vidéos abîmées
-> (`organizer nettoyer`) — et `classement`, qui range documents, photos et
-> vidéos par thème et par date (`organizer ranger`).
+> (`organizer nettoyer`) —, `classement`, qui range documents, photos et
+> vidéos par thème et par date (`organizer ranger`), et `conversion`, qui
+> repasse les HEIC en JPG et les MKV en MP4 (`organizer convertir`).
 
 ## Arborescence
 
@@ -103,6 +104,7 @@ python3 organizer.py verifier
 python3 organizer.py --help
 
 # 2. Les dépendances. `nettoyer` a besoin de Pillow, d'ImageHash et d'OpenCV ;
+#    `convertir` ajoute pillow-heif pour les HEIC, et ffmpeg pour les vidéos ;
 #    les autres modules ajouteront les leurs à mesure qu'ils seront écrits.
 pip install -r requirements.txt
 
@@ -154,6 +156,77 @@ Ce que la commande décide, et pourquoi :
   `securite.verifier_empreinte_apres_deplacement` vaut `true` : la copie est
   relue et comparée à l'original **avant** que celui-ci ne soit retiré. C'est le
   seul ordre qui protège d'une copie tronquée entre deux disques.
+
+## Convertir
+
+```bash
+python3 organizer.py convertir                       # simulation sur dossiers.entree
+python3 organizer.py convertir ~/Images --appliquer  # un dossier précis, pour de vrai
+python3 organizer.py convertir --seulement photos    # une photo prend une seconde…
+python3 organizer.py convertir --seulement videos    # … une vidéo, plusieurs minutes
+```
+
+Ce module repasse les HEIC en JPG et les MKV en MP4. Il a besoin de **Pillow**
+et **pillow-heif** pour les photos, de **ffmpeg et ffprobe** pour les vidéos ;
+ce qui manque est dit avant le premier fichier, pas au millième.
+
+Ce que la commande décide, et pourquoi :
+
+- **Chaque règle dit ce qu'elle achète : de la place, ou un fichier qui
+  s'ouvre.** `conversion.regles[].objectif` vaut `espace` ou `compatibilite`, et
+  c'est la décision qui fait exister ce module. Un HEIC repassé en JPEG
+  **grossit** presque toujours, souvent du simple au double : lui appliquer le
+  seuil de gain de 15 % revenait à ne convertir aucune photo d'iPhone tout en
+  ayant l'air de marcher. Une règle `espace` doit rendre au moins
+  `seuil_gain_minimal_pct` ; une règle `compatibilite` passe quoi qu'il arrive,
+  tant qu'elle n'alourdit pas de plus de `inflation_max_pct`.
+- **Le gain est mesuré, jamais estimé.** Le fichier est encodé à côté, dans un
+  temporaire caché posé sur le même disque ; c'est son poids réel qui décide.
+  Une capture d'écran d'aplats, que le PNG comprime déjà très bien, grossit de
+  79 % en JPEG — elle est refusée, et le compte rendu le dit dans ces termes.
+  Conséquence assumée : **en simulation, rien n'est encodé et aucun gain n'est
+  annoncé.** Réencoder une photothèque entière « pour voir » coûterait des
+  heures de machine pour un chiffre aussitôt jeté.
+- **Un MKV déjà en H.264 est remuxé, pas réencodé.** Ses flux sont recopiés tels
+  quels dans un conteneur MP4 : quelques secondes au lieu de plusieurs minutes,
+  et pas une image retouchée. C'est la deuxième raison pour laquelle la règle
+  vidéo vise la compatibilité — son gain d'espace est nul par construction.
+- **L'original ne part en quarantaine qu'après relecture du fichier produit.**
+  Une conversion est une perte définitive ; la seule chose qui la rend
+  rattrapable est que l'original existe encore. Un encodage interrompu par un
+  disque plein produit un fichier d'apparence normale, plus petit que
+  l'original, que le seuil de gain accueillerait à bras ouverts.
+- **Une entrée abîmée n'est pas convertie.** Mesuré sur un dossier d'essai : une
+  vidéo tronquée se remuxe **sans erreur** — ffmpeg recopie ce qu'il trouve et
+  rend le code 0. Le MP4 produit est aussi mort que son original, mais il a
+  l'air neuf, et l'unique exemplaire d'origine part en quarantaine où la purge
+  l'attend à trente jours. La plainte que ffmpeg écrit malgré son code 0 fait
+  donc renoncer au fichier, avec le renvoi vers `organizer nettoyer`.
+
+Les sept refus, et ce qu'ils protègent :
+
+| Constat | Geste |
+| --- | --- |
+| le fichier est déjà au format visé | gardé |
+| son format réel est déjà celui visé, malgré son extension | gardé — le convertir le recompresserait une seconde fois |
+| il est animé (APNG, GIF) | gardé — la conversion ne garderait que la première image |
+| sa transparence est **utilisée** | gardé — le JPEG l'aplatirait sur du noir |
+| sa transparence n'a pas pu être mesurée | gardé, par prudence |
+| un `.mkv` sans piste vidéo | gardé — c'est un enregistrement sonore |
+| des sous-titres image (PGS, VobSub) | gardé — le MP4 ne sait pas les porter, et les perdre en silence serait pire |
+
+Trois points méritent leur explication :
+
+- **La transparence se mesure sur le canal, pas sur le mode de l'image.** La
+  moitié des captures d'écran sont en RGBA sans qu'un seul pixel ne soit
+  transparent : les refuser sur leur mode écarterait le gros du volume que
+  `si_sans_transparence` est censé protéger.
+- **Les côtés réduits sont ramenés à un nombre pair**, que libx264 exige — et
+  dont l'absence ne se découvre qu'**après** le temps de réencodage.
+- **Un fichier refusé est réessayé à chaque exécution.** Une capture d'écran
+  dont le gain était insuffisant sera réencodée puis refusée à la suivante. Sur
+  des photos c'est une seconde ; sur une vidéo, ce serait à consigner dans
+  `donnees/`. Ce n'est pas fait : personne n'en a encore souffert.
 
 ## Inspecter les vidéos
 
@@ -217,7 +290,7 @@ cp organizer_config.json ~/.config/life-organizer/config.json
 | `classement` | schéma des dossiers, extensions par catégorie, thèmes et leurs mots-clés |
 | `scan_ocr` | moteur, langues, seuil de confiance, modèle de nom, champs extraits |
 | `nettoyage_medias` | seuils de flou, ressemblance des doublons (voir plus bas), intégrité vidéo |
-| `conversion` | règles de format, qualité, gain minimal pour valider un remplacement |
+| `conversion` | règles de format, objectif de chacune, qualité, gain minimal et inflation tolérée |
 | `upscale` | modèle, facteur, taille source maximale, appareil de calcul |
 | `abonnements` | un objet par abonnement : montant, périodicité, préavis, statut |
 | `echeances` | paiements datés et leurs rappels |

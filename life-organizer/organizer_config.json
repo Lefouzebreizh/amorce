@@ -131,23 +131,28 @@
 
   "conversion": {
     "seuil_gain_minimal_pct": 15,
+    "inflation_max_pct": 100,
     "conserver_original_jusqua_verification": true,
     "regles": [
       {
         "de": ["heic", "heif"],
         "vers": "jpg",
+        "objectif": "compatibilite",
         "qualite": 88,
         "conserver_exif": true
       },
       {
         "de": ["png"],
         "vers": "jpg",
+        "objectif": "espace",
         "qualite": 90,
         "si_sans_transparence": true
       },
       {
         "de": ["mkv", "avi", "wmv", "m4v"],
         "vers": "mp4",
+        "objectif": "compatibilite",
+        "remuxer_si_compatible": true,
         "codec_video": "libx264",
         "crf": 21,
         "preset": "slow",
