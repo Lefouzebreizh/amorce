@@ -376,6 +376,21 @@ Un cas à part, qui n'est ni un connecteur ni un manque :
   repartir en chasse dans les réglages : c'est l'outil employé qu'il faut
   changer, pas la configuration.
 
+Un second manque, celui-là comblé :
+
+- **`huggingface.co` est refusé** par la politique de sortie, et avec lui
+  `alphacephei.com` et `openaipublic.azureedge.net`. Aucun poids de
+  `faster-whisper` ne s'y télécharge, ce qui a fait passer `/transcription-media`
+  pour inutilisable en session distante pendant deux sessions. Deux hôtes
+  restent pourtant ouverts, et il suffisait d'y aller : **PyPI en direct** (le
+  mandataire le liste dans `noProxy`, donc toute roue qui embarque un modèle
+  s'installe) et **les objets de release GitHub** (`github.com` redirige vers
+  `release-assets.githubusercontent.com`, qui répond). Les modèles sherpa-onnx
+  y sont publiés, Whisper compris ; `scripts/asr_hors_ligne.py` les y prend.
+  Ni le TLS ni le mandataire ne sont touchés — ce sont des hôtes autorisés.
+  Whisper rend le texte, un zipformer rend en plus un instant par mot, et il
+  n'en existe pas de français : vérifié par requête.
+
 Et une règle de permissions, écrite dans `.claude/settings.json` plutôt que
 réaccordée à chaque session : les outils Supabase qui **lisent** y sont
 autorisés d'office, `execute_sql` et `apply_migration` **non**. Ces deux-là
