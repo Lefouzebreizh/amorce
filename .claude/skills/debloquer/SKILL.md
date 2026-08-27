@@ -121,6 +121,15 @@ dit tel quel dans le compte rendu — **jamais annoncé comme vérifié**.
 Ce dépôt reçoit plusieurs sessions en parallèle. Deux branches y ont construit
 Life-Organizer chacune de son côté, et la seconde a dû être refaite.
 
+Un préalable, à contrôler **avant de promettre de mener la PR de bout en bout** :
+les outils `mcp__github__*` doivent être là. Le connecteur GitHub se coupe par
+conversation, et une session peut très bien tourner sans lui — mesuré ici, dans
+une session où `git push` passait, `gh` était absent et `api.github.com` rendait
+403 sur `/repos` : la branche part, la PR ne s'ouvre pas. Découvrir cela au
+moment de pousser fait perdre le cycle entier. Le repli est de pousser la
+branche et de laisser le propriétaire ouvrir la PR — pas de chercher une
+troisième voie, il n'y en a pas.
+
 Symptôme le plus déroutant : `create_pull_request` rend **« No commits between
 main and <branche> »**. Ça ne veut pas dire que le travail a disparu, mais qu'il
 est **déjà dans `main`** — quelqu'un a fusionné la PR entre-temps.
