@@ -1172,6 +1172,136 @@ Therapixel s'est fait connaître en se classant en tête d'une comparaison inter
 ## Idéal pour
 Les centres de radiologie et structures de gestion du dépistage organisé, confrontés à la raréfaction des lecteurs disponibles.`,
     },
+    {
+      id: `heidi-health`,
+      nom: `Heidi Health`,
+      categorie: `Compte rendu de consultation`,
+      prix: `Gratuit, puis environ 150 $/mois par praticien`,
+      description_courte: `Le compte rendu rédigé pendant que la consultation se déroule, avec un palier gratuit qui suffit pour se faire un avis.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/heidi-health`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Heidi est l'un des rares assistants de consultation qu'on peut essayer sérieusement sans engager un euro : le palier gratuit couvre les consultations et la dictée sans limite de nombre. C'est décisif dans un métier où l'on ne change pas d'outil sur une démonstration commerciale. Le rebrand de février 2026 a fait passer l'abonnement praticien d'environ 99 à 150 $ par mois, et il faut le savoir avant de bâtir une habitude dessus.
+
+## Points forts
+- Palier gratuit réellement utilisable : consultations et dictée sans plafond
+- Modèles de note personnalisables, adaptés à une spécialité précise
+- Interface pensée pour être ouverte pendant l'échange, pas après
+- Essai de quatorze jours sur l'offre payante, sans engagement
+
+## Points faibles
+- Le renvoi automatique vers le dossier patient n'est pas inclus dans l'offre praticien : la note se recopie à la main
+- Les fonctions avancées du palier gratuit sont limitées à dix actions par mois
+- Hausse tarifaire de 50 % en 2026, sur un outil qu'on adopte pour des années
+- Pas d'ancrage français : l'accompagnement et les intégrations visent d'abord le monde anglophone
+
+## Idéal pour
+Le praticien qui veut éprouver un assistant de consultation sur ses vraies journées avant de payer, et qui accepte de recopier la note dans son logiciel métier.`,
+    },
+    {
+      id: `freed-ai`,
+      nom: `Freed`,
+      categorie: `Compte rendu de consultation`,
+      prix: `39 à 119 $/mois par praticien`,
+      description_courte: `L'assistant de consultation au tarif le plus bas du marché, avec des paliers affichés publiquement — ce qui est rare ici.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/freed-ai`,
+      score_avis: 4.2,
+      description_longue: `## Notre verdict
+Freed fait deux choses que ses concurrents évitent : il affiche ses prix, et il commence à 39 $. Dans un secteur où presque tous les tarifs passent par un rendez-vous commercial, c'est en soi un argument — on sait ce qu'on paiera avant d'avoir donné son numéro. Le palier d'entrée plafonne à quarante comptes rendus par mois, ce qui ne tient pas une activité à temps plein : la vraie comparaison se fait sur l'offre à 79 $, sans limite.
+
+## Points forts
+- Tarifs publics et lisibles, trois paliers, sans passage obligé par un commercial
+- Palier à 79 $/mois sans limite de comptes rendus, taillé pour une activité quotidienne
+- Essai de sept jours sans carte bancaire
+- Le palier haut ajoute le renvoi vers le dossier patient et la proposition de codage
+
+## Points faibles
+- Le palier d'entrée à 39 $ plafonne à quarante notes : la plupart des praticiens le dépasseront
+- Le renvoi vers le dossier patient n'arrive qu'à 119 $
+- Outil conçu pour le système de santé américain, codage compris
+- Pas d'hébergement de données de santé en France à ce jour
+
+## Idéal pour
+Le praticien seul qui veut un tarif connu d'avance et sans négociation, et qui documente en anglais ou accepte de relire une note en français produite par un outil anglophone.`,
+    },
+    {
+      id: `suki-ai`,
+      nom: `Suki`,
+      categorie: `Compte rendu de consultation`,
+      prix: `Environ 299 à 399 $/mois par praticien (tarif non public)`,
+      description_courte: `L'assistant vocal qui documente et exécute : la note se dicte, mais les commandes aussi.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/suki-ai`,
+      score_avis: 4.1,
+      description_longue: `## Notre verdict
+Suki ne se contente pas d'écouter la consultation : il obéit à la voix. Chercher un antécédent, préparer une ordonnance, remplir une rubrique du dossier se demandent à haute voix, sans lâcher le patient des yeux. C'est ce qui le sépare des simples rédacteurs de compte rendu — et ce qui justifie un tarif deux à trois fois supérieur. Encore faut-il que le logiciel métier soit de ceux qu'il sait piloter, ce qui reste rare hors des grands éditeurs américains.
+
+## Points forts
+- Commandes vocales au-delà de la dictée : navigation et actions dans le dossier
+- Couverture large en spécialités, y compris chirurgicales
+- Intégration profonde avec les dossiers patients des grands éditeurs
+- Conçu pour l'usage en présence du patient, sans écran interposé
+
+## Points faibles
+- Le plus cher de sa catégorie, et le tarif n'est pas publié : il faut passer par un rendez-vous commercial
+- Les montants qui circulent viennent de revendeurs, pas de l'éditeur : à confirmer au devis
+- Contrat annuel par praticien, peu adapté à un essai individuel
+- L'intérêt s'effondre si le logiciel métier n'est pas intégré : c'est la première question à poser
+
+## Idéal pour
+Les structures déjà équipées d'un dossier patient que Suki sait piloter, et qui cherchent à supprimer l'écran de la consultation plutôt qu'à seulement gagner du temps de frappe.`,
+    },
+    {
+      id: `milvue`,
+      nom: `Milvue`,
+      categorie: `Imagerie médicale`,
+      prix: `Sur devis (structures)`,
+      description_courte: `La radiographie relue en quelques secondes sur sept pathologies osseuses et pulmonaires, dans le flux de travail existant.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/milvue`,
+      score_avis: 4.4,
+      description_longue: `## Notre verdict
+Milvue est française, et cela se voit dans la façon dont elle se pose : pas de station séparée, pas de second écran à consulter, l'analyse arrive dans l'outil de lecture déjà en place. Deux modules déployables indépendamment — l'un pour les urgences, l'autre pour la lecture experte — couvrent sept pathologies osseuses et pulmonaires et les mesures ostéo-articulaires associées. Le réseau coopératif Vidi, plus de mille radiologues, l'a référencée pour ses centres : c'est le genre de choix qui vaut plus qu'une plaquette.
+
+## Points forts
+- Éditeur français, interlocuteur et hébergement dans le même cadre réglementaire que vous
+- S'insère dans les stations de lecture existantes, sans changer les habitudes
+- Deux modules séparables : urgences ou lecture experte, selon le besoin réel
+- Référencée par un réseau coopératif de plus de soixante centres
+
+## Points faibles
+- Périmètre assumé : radiologie conventionnelle, os et poumon, rien au-delà
+- Aucun tarif public, achat de structure : ni essai individuel ni décision rapide
+- L'installation suppose un projet avec l'informatique de l'établissement
+- Un radiologue seul en cabinet n'est pas la cible
+
+## Idéal pour
+Les services d'urgences et les centres de radiologie conventionnelle qui veulent sécuriser la première lecture aux heures creuses, sans remplacer leur chaîne de travail.`,
+    },
+    {
+      id: `synapse-medicine`,
+      nom: `Synapse Medicine`,
+      categorie: `Information médicament`,
+      prix: `Sur devis`,
+      description_courte: `La question médicamenteuse tranchée sur les sources officielles — ANSM, HAS, base publique — et non sur ce qu'un modèle a retenu.`,
+      lien_affiliation: `https://exemple-affiliation.com/go/synapse-medicine`,
+      score_avis: 4.5,
+      description_longue: `## Notre verdict
+Sur le médicament, une réponse plausible est plus dangereuse qu'une absence de réponse. Synapse tranche ce problème par la source : posologies, contre-indications, interactions et effets indésirables sont adossés à l'ANSM, à la HAS et à la base publique du médicament, mis à jour en continu, plutôt qu'à la mémoire d'un modèle. L'éditeur est français, travaille avec des centres hospitalo-universitaires, et son assistant a été déployé sur Santé.fr — trois signes qu'on ne fabrique pas.
+
+## Points forts
+- Réponses adossées à des sources officielles françaises, traçables et datées
+- Éditeur indépendant, sans lien avec un laboratoire
+- Logiciel d'aide à la prescription complet, au-delà de la simple recherche
+- Se connecte à l'écosystème français, notamment aux plateformes de documents de santé
+
+## Points faibles
+- Pas de tarif public : le déploiement se négocie
+- Pensé d'abord pour l'établissement et le cabinet équipé, moins pour l'usage ponctuel
+- Périmètre strictement médicamenteux : ce n'est pas un assistant de consultation
+- La richesse de l'outil demande un temps de prise en main réel
+
+## Idéal pour
+Le prescripteur qui refuse d'arbitrer une interaction sur une réponse non sourcée, et les établissements qui veulent sécuriser la prise en charge médicamenteuse de bout en bout.`,
+    },
   ],
 
   ecomm: [
