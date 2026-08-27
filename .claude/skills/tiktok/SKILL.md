@@ -54,6 +54,27 @@ dans un concept fondé sur l'honnêteté — « les chiffres du jour N », « la
 que j'ai laissée passer » — détruit exactement ce qui fait marcher le format.
 Dans le doute, on laisse le crochet et on le signale.
 
+## Le gabarit qui marche : partir du réel
+
+Quatre temps, dans cet ordre. Il ne s'invente pas — c'est la forme qu'a
+naturellement une histoire vraie racontée à quelqu'un, et c'est pour ça qu'elle
+retient.
+
+1. **L'épreuve.** Ce qui n'allait pas, dit sans amortir. C'est le seul moment
+   où le spectateur décide s'il se reconnaît ; un problème édulcoré ne
+   ressemble à personne.
+2. **Le déclic.** L'instant précis où ça bascule. Un instant, pas une prise de
+   conscience étalée : une phrase entendue, un chiffre vu, un geste.
+3. **L'action.** Ce qui a été fait concrètement, de façon reproductible. C'est
+   la partie utile, celle qu'on vient chercher.
+4. **L'ouverture.** On rend la main : une question, une invitation à raconter
+   la sienne. La communauté se construit là, pas dans les trois temps
+   précédents.
+
+Le piège est de commencer au temps 3 parce que c'est le plus utile. Sans
+l'épreuve avant, personne n'écoute le conseil : il arrive de nulle part et
+ressemble à tous les autres.
+
 ## Écrire un script
 
 Recopier `tiktok/modele-script.md`, le remplir, le déposer dans

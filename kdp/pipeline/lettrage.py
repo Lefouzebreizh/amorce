@@ -30,7 +30,6 @@ personnage qui parle, et aucun chiffre ne le dit : cela ne se voit qu'à l'œil.
 from __future__ import annotations
 
 import io
-import os
 import re
 import sys
 from pathlib import Path
@@ -41,13 +40,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import charte  # noqa: E402
 
-# Le chemin par défaut n'existe qu'à l'intérieur d'une session Claude Code. Les
-# tests de lettrage passaient donc dans la session qui les écrivait et
-# échouaient partout ailleurs — `main` est resté rouge cinq exécutions durant
-# sur six erreurs « cannot open Lora-Regular.ttf ». D'où `KDP_POLICES` : la CI
-# pose la police où elle veut et le dit, sans qu'on ait à versionner un binaire.
-POLICES = Path(os.environ.get("KDP_POLICES",
-                              "/mnt/skills/examples/canvas-design/canvas-fonts"))
+POLICES = charte.POLICES
 CORPS, ITALIQUE = POLICES / "Lora-Regular.ttf", POLICES / "Lora-Italic.ttf"
 
 BRUN = (0.36, 0.24, 0.12)

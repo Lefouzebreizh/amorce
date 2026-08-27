@@ -10,7 +10,9 @@ des spécifications publiées par KDP, l'écart est signalé en commentaire plut
 que corrigé en douce : c'est une décision éditoriale, pas un bug.
 """
 
+import os
 from dataclasses import dataclass
+from pathlib import Path
 
 # --- Géométrie ---------------------------------------------------------------
 
@@ -83,6 +85,17 @@ def gabarit_couverture(nombre_de_pages: int) -> tuple[Gabarit, float]:
     )
     return gabarit, tranche
 
+
+# --- Polices ------------------------------------------------------------------
+
+# Le chemin par défaut n'existe qu'à l'intérieur d'une session Claude Code. Les
+# neuf outils qui lettrent une page le portaient chacun en dur : la chaîne ne
+# tournait donc nulle part ailleurs, et le jour où un test a touché le lettrage,
+# `main` est resté rouge cinq exécutions durant sur « cannot open
+# Lora-Regular.ttf ». `KDP_POLICES` laisse la CI — ou un poste de travail —
+# poser les polices où elle veut et le dire, sans versionner un binaire.
+POLICES = Path(os.environ.get("KDP_POLICES",
+                              "/mnt/skills/examples/canvas-design/canvas-fonts"))
 
 # --- Nommage -----------------------------------------------------------------
 

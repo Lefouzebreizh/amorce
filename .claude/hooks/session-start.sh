@@ -74,8 +74,10 @@ echo "── Chaîne KDP : bibliothèques Python"
 # d'installer hors environnement virtuel. Un venv ici obligerait chaque commande
 # de la chaîne à l'activer d'abord, pour un conteneur qui n'héberge qu'un projet.
 # numpy : `coquilles.py` opère au pixel et `planches.py` mesure les bulles ;
-# ni Pillow ni PyMuPDF ne l'apportent.
-python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF numpy
+# ni Pillow ni PyMuPDF ne l'apportent. segno : `hymne.py` grave un QR code sur
+# la page de l'hymne, et c'est le seul module de la chaîne qui ne s'importait
+# pas ici — un défaut invisible tant qu'aucun test ne le touche.
+python3 -m pip install --quiet --break-system-packages Pillow PyMuPDF numpy segno
 
 echo "── Studio audio : bibliothèques Python"
 # PyTorch et Whisper sont volontairement absents : six gigaoctets à installer à
@@ -209,6 +211,51 @@ if [ -x /opt/pw-browsers/chromium ] && [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "── Amorce : Chromium de vérification signalé à la session"
 fi
 
+# Ce que les autres sessions construisent en ce moment.
+#
+# Ce dépôt reçoit plusieurs sessions en parallèle et rien ne les fait se voir.
+# Deux branches y ont construit Life-Organizer chacune de son côté ; une
+# session a écrit huit cents lignes de socle Supabase pendant qu'une autre
+# livrait `agence/` ; et le jour où ces lignes ont été écrites, six branches
+# ouvertes travaillaient la même friction. Aucun de ces gaspillages ne vient
+# d'une erreur de jugement : ils viennent d'un angle mort que trente secondes
+# de lecture suppriment.
+#
+# Placé dans le hook plutôt que dans une compétence, parce qu'une compétence
+# doit se déclencher pour servir alors que le hook s'exécute toujours — et que
+# l'angle mort est précisément qu'on ne pense pas à regarder.
+#
+# Tolérant à la panne : une session hors ligne doit démarrer quand même.
+echo "── Chantiers ouverts par d'autres sessions"
+if git -C "$racine" fetch --quiet --prune origin \
+     '+refs/heads/claude/*:refs/remotes/origin/claude/*' 2>/dev/null; then
+  courante="$(git -C "$racine" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+  autres="$(git -C "$racine" for-each-ref --sort=-committerdate \
+    --format='%(refname:short)|%(committerdate:relative)|%(contents:subject)' \
+    refs/remotes/origin/claude/ 2>/dev/null \
+    | grep -v "^origin/$courante|" | head -6 || true)"
+  if [ -n "$autres" ]; then
+    echo "$autres" | while IFS='|' read -r branche quand sujet; do
+      printf '   %s (%s)\n      %.72s\n' "${branche#origin/}" "$quand" "$sujet"
+    done
+    echo "   Avant de construire : l'une d'elles fait-elle déjà ce travail ?"
+  else
+    echo "   aucun — le champ est libre"
+  fi
+else
+  echo "   dépôt distant injoignable, liste non consultée"
+fi
+
+# Réseau d'annuaires IA : rien à installer — il emprunte les dépendances
+# d'Amorce (Tailwind pour compiler sa feuille, Playwright pour son parcours) et
+# n'a pas de node_modules à lui. Ce qui se dit ici est ce qu'une session ne peut
+# pas deviner : combien de publications l'auto-pilote tient encore. Quand cette
+# réserve tombe à zéro, rien ne casse — les onze sites cessent simplement de
+# bouger, et Google cesse de revenir.
+if [ -f "$racine/annuaire-ia/alerte-reserve.js" ]; then
+  echo "── Réseau d'annuaires : $(cd "$racine/annuaire-ia" && node alerte-reserve.js 2>&1 | head -1)"
+fi
+
 # Ce que cette session-ci sait faire. Une seconde, et cela évite de découvrir
 # en pleine tâche qu'un hôte est refusé ou qu'un binaire manque — quatre détours
 # en une nuit avant que cette ligne n'existe.
@@ -216,4 +263,4 @@ if [ -f "$racine/.claude/skills/capacites-session/scripts/sonder.py" ]; then
   echo "── Capacités : $(python3 "$racine/.claude/skills/capacites-session/scripts/sonder.py" --court)"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
+echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests — Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"

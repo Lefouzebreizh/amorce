@@ -1,0 +1,82 @@
+/*
+ * Source de la feuille de style du réseau. Compilée en `styles.css` par
+ * `node construire-styles.mjs`, et c'est `styles.css` qui part en ligne.
+ *
+ * Pourquoi compiler plutôt que charger Tailwind depuis un CDN, comme le
+ * faisait la première version : parce qu'un CDN injoignable ne dégradait pas
+ * le site, il le détruisait. Mesuré dans un vrai navigateur — sans le script
+ * distant, aucune utilitaire n'était appliquée : pas de grille, pas de cartes,
+ * une loupe de six cents pixels de haut et des boutons de dix-neuf pixels. Un
+ * réseau d'entreprise qui filtre jsdelivr, une panne de quelques minutes, un
+ * métro sans réseau, et onze sites d'affiliation deviennent illisibles au
+ * moment précis où le visiteur arrive.
+ *
+ * Le fichier compilé fait quelques dizaines de kilo-octets et se sert depuis
+ * le même domaine ; le script du CDN en faisait plus de cent, à télécharger et
+ * exécuter avant le premier pixel, sur le téléphone d'un visiteur pressé.
+ *
+ * `source(none)` puis `@source` explicite : sans cela Tailwind remonte
+ * l'arborescence et analyserait tout le dépôt — dix projets sans rapport.
+ */
+
+@import "tailwindcss" source(none);
+@source "./index.html";
+
+@theme {
+  --color-nuit: #07070f;
+  --color-panneau: #101021;
+  --color-relief: #16162c;
+  --color-bord: #262647;
+  --color-brume: #c9c9e6;
+  --color-sourdine: #8a8ab0;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Les couleurs de niche passent par des variables CSS, jamais par des classes
+   Tailwind fabriquées à la volée : le CDN compile ce qu'il voit dans le DOM,
+   et une classe `from-[#eab308]` construite en JavaScript arriverait parfois
+   après le premier rendu. Une variable, elle, s'applique au moment où on
+   l'écrit. Toutes les surfaces accentuées du site tapent dans ces deux-là. */
+:root {
+  --teinte-1: #8b5cf6;
+  --teinte-2: #3b82f6;
+}
+
+/* Le style vient d'un CDN : sur un réseau filtré ou lent, il peut arriver en
+   retard ou pas du tout. Ces deux règles ne sont pas décoratives, ce sont
+   celles dont l'absence casse la page au lieu de l'enlaidir — sans `hidden`,
+   la modale reste ouverte par-dessus le contenu et le site est inutilisable. */
+.hidden { display: none !important; }
+body { background: #07070f; color: #c9c9e6; font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+
+/* Le halo du fond ne doit jamais intercepter un clic ni allonger la page :
+   calque fixe, derrière tout, sans surface cliquable. */
+.halo { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.halo span { position: absolute; border-radius: 9999px; filter: blur(120px); display: block; }
+.halo-1 { top: -10rem; left: -8rem; height: 36rem; width: 36rem; background: color-mix(in srgb, var(--teinte-1) 28%, transparent); }
+.halo-2 { top: 6rem; right: -10rem; height: 32rem; width: 32rem; background: color-mix(in srgb, var(--teinte-2) 24%, transparent); }
+.halo-3 { bottom: 0; left: 33%; height: 28rem; width: 28rem; background: color-mix(in srgb, var(--teinte-1) 14%, transparent); }
+
+.degrade-texte {
+  background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.bouton-accent {
+  background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
+  color: #fff; transition: filter .15s ease;
+}
+.bouton-accent:hover { filter: brightness(1.15); }
+.pastille-accent { background: var(--teinte-1); }
+.texte-accent { color: var(--teinte-2); }
+.bandeau-accent { background-image: linear-gradient(90deg, color-mix(in srgb, var(--teinte-1) 20%, transparent), color-mix(in srgb, var(--teinte-2) 8%, transparent)); }
+.carte:hover { border-color: color-mix(in srgb, var(--teinte-1) 60%, transparent); }
+.champ:focus { border-color: var(--teinte-1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teinte-1) 35%, transparent); }
+.puce::before { background: var(--teinte-1); }
+.neuf { background: color-mix(in srgb, var(--teinte-1) 18%, transparent); color: var(--teinte-2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-1) 40%, transparent); }
+
+html { scroll-behavior: smooth; }
+body.fige { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
