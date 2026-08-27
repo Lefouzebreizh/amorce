@@ -1,4 +1,4 @@
-# Réseau d'annuaires IA — dix sites, un seul code
+# Réseau d'annuaires IA — onze sites, un seul code
 
 Onze sites de niche à page unique — un annuaire d'outils d'intelligence
 artificielle par métier — qui partagent **le même gabarit et la même
@@ -7,19 +7,26 @@ qu'un réseau de sites d'affiliation ne se fasse pas déclasser pour contenu
 dupliqué : ce qui est commun est technique, ce qui est visible est propre à
 chaque niche.
 
-**Aucun serveur, aucune base de données, aucune étape de compilation.** Un
-dossier déposé sur un hébergement statique, et le site tourne.
+**Aucun serveur, aucune base de données, aucune étape de compilation au
+déploiement.** Un dossier déposé sur un hébergement statique, et le site tourne.
 
 ```
 index.html            le gabarit unique — il se configure sur la niche demandée
+styles.src.css        la source de la feuille ; styles.css est le fichier compilé
 niches/<niche>.json   une base par site : identité, charte, outils, avis
-auto-pilot.js         publie un nouvel outil par niche à chaque exécution
-generate-sitemap.js   fabrique un sitemap et un robots.txt par domaine
-sitemaps/             leur sortie, versionnée parce qu'elle est déterministe
+auto-pilot.js         publie un outil par niche ; contient la réserve rédigée
+valider.js            la seule définition de ce qu'est une base valide
+verifier.mjs          le parcours en vrai navigateur
+construire-styles.mjs compile la feuille
+construire-sites.js   fabrique dist/<niche>/, prêt à déposer sur son domaine
+generate-sitemap.js   sitemaps/sitemap-<niche>.xml et robots-<niche>.txt
+nouvelle-niche.js     dégrossit un douzième site
+alerte-reserve.js     rédige le billet quand la réserve s'épuise
 ```
 
-Le travail programmé qui fait tourner tout cela sans intervention est dans
-`.github/workflows/autopilot.yml`, à la racine du dépôt.
+Deux travaux automatisés à la racine du dépôt :
+`.github/workflows/autopilot.yml` publie et pousse tous les deux jours ;
+`.github/workflows/annuaire-ia.yml` est la barrière de vérification.
 
 ## Les onze sites
 
@@ -38,133 +45,145 @@ Le travail programmé qui fait tourner tout cela sans intervention est dans
 | `generaliste` | Tous métiers — l'annuaire d'origine | boite-a-outils-ia.fr |
 
 Les domaines sont écrits dans chaque base (`niche.domaine`) : c'est de là que
-`generate-sitemap.js` les lit. Les changer là suffit.
+les sitemaps et les sites construits les lisent. Les changer là suffit.
 
 ## Tester en local
 
-Un navigateur refuse de lire un fichier `.json` quand la page est ouverte en
-`file://` : il faut un serveur, même pour un simple essai.
+Un navigateur refuse de lire un `.json` en `file://` : il faut un serveur, même
+pour un simple essai.
 
 ```bash
 cd annuaire-ia
-npm start                     # sert le dossier sur http://localhost:8080
+npm start                     # http://localhost:8080
 ```
 
-Puis, dans le navigateur :
-
 ```
-http://localhost:8080/                      → la niche par défaut (immobilier)
-http://localhost:8080/?niche=btp            → le site BTP
-http://localhost:8080/?niche=sante          → le site santé
+http://localhost:8080/                            → la niche par défaut (immobilier)
+http://localhost:8080/?niche=btp                  → le site BTP
 http://localhost:8080/?niche=btp&outil=togal-ai   → la fiche ouverte, comme depuis Google
 ```
 
-Sans Node, n'importe quel serveur statique fait l'affaire :
+## Les commandes
 
 ```bash
-python3 -m http.server 8080
+npm run valider          # les données : instantané, à lancer tout le temps
+npm run styles           # recompile styles.css — après toute classe ajoutée
+npm run verifier         # ouvre vraiment les pages dans Chromium
+npm run verifier btp     # une seule niche, pour isoler un défaut
+npm run autopilot:essai  # ce que l'auto-pilote publierait, sans rien écrire
+npm run autopilot        # publie un outil par niche
+npm run reserve          # combien de passages avant la panne sèche
+npm run sitemap          # refabrique les onze sitemaps
+npm run sites            # fabrique dist/<niche>/, prêt à déposer
+npm run niche            # dégrossit un douzième site
 ```
 
-## Faire tourner l'auto-pilote
+`valider.js` distingue **erreurs** et **alertes** : une erreur casse un site et
+arrête tout ; une alerte coûte du trafic mais pas le site, elle s'affiche et
+laisse passer. Bloquer une publication sur une longueur de balise reviendrait à
+préférer un site figé à un site imparfait.
 
-```bash
-cd annuaire-ia
-npm run autopilot:essai   # montre ce qui serait publié, sans rien écrire
-npm run autopilot         # publie un outil par niche et écrit les fichiers
-npm run sitemap           # refabrique les onze sitemaps dans sitemaps/
-```
+## L'auto-pilote
 
-L'auto-pilote tient une **réserve de cinq outils par niche**, déjà rédigés,
-dans `auto-pilot.js`. À chaque exécution il en publie un par site, tiré au sort
-parmi ceux qui ne sont pas encore en ligne, daté du jour. Quand la réserve
-s'épuise, il le dit et ne casse rien — c'est le signal qu'il faut la
-réalimenter.
+Il tient une **réserve de cinq outils par niche**, déjà rédigés, dans
+`auto-pilot.js`. À chaque exécution il en publie un par site, tiré au sort
+parmi ceux qui ne sont pas en ligne, daté du jour. Le travail programmé fait
+la même chose tous les deux jours à 08:00 UTC, puis committe et pousse.
 
-Le travail programmé fait la même chose tous les deux jours à 08:00 UTC, puis
-committe et pousse sur `main` tout seul.
+Quand il ne reste que deux passages, il **ouvre un billet** sur le dépôt. C'est
+volontaire : une réserve vide ne casse rien — le script continue de tourner
+sans rien publier, l'intégration continue reste verte, et le réseau se fige en
+silence. C'est le seul point qui demande une main humaine, il ne doit pas être
+découvert trois semaines trop tard.
 
 ## Mettre un site en ligne
 
-1. Remplacer les `lien_affiliation` de la niche par les vrais liens du
-   programme d'affiliation (les adresses `exemple-affiliation.com` sont des
-   remplaçants).
-2. Vérifier le `domaine` de la niche dans son fichier JSON.
-3. Déposer sur le domaine : `index.html`, le dossier `niches/`, et **une seule
-   ligne à changer** — celle qui désigne la niche servie par défaut :
-
 ```bash
-sed -i 's/content="immobilier"/content="btp"/' index.html
+npm run styles && npm run sites
 ```
 
-4. Renommer `sitemaps/sitemap-btp.xml` en `sitemap.xml` et
-   `sitemaps/robots-btp.txt` en `robots.txt`, à la racine du domaine.
-5. Déclarer `https://mon-domaine.fr/sitemap.xml` dans Google Search Console :
-   c'est ce qui déclenche l'exploration en heures plutôt qu'en semaines.
+`dist/<niche>/` contient tout : un `index.html` dont la tête est **déjà
+remplie** (titre, description, balises sociales, canonique, couleurs), la
+feuille, la base de cette seule niche, `sitemap.xml` et `robots.txt`. Déposer
+le contenu à la racine du domaine, puis déclarer le sitemap dans Google Search
+Console — c'est ce qui déclenche l'exploration en heures plutôt qu'en semaines.
 
-Le dossier `niches/` peut être déployé en entier sur chaque domaine sans
-inconvénient : rien n'y mène, et la niche servie est celle de la balise.
+Il reste à remplacer les `lien_affiliation` par les vrais liens du programme
+d'affiliation : tant qu'ils sont en `exemple-affiliation.com`, `npm run valider`
+le rappelle à chaque exécution et le réseau ne rapporte rien.
 
 ## Ajouter un outil, une niche
 
-Un outil, c'est une entrée dans le tableau `outils` de la base — ni le HTML ni
-le JavaScript ne connaissent la liste, et les boutons de filtre sont construits
-à partir des catégories présentes dans le fichier.
+Un outil, c'est une entrée dans le tableau `outils` de la base — ni le gabarit
+ni les scripts ne connaissent la liste, et les boutons de filtre se construisent
+sur les catégories présentes.
 
 | Champ | Rôle |
 | --- | --- |
 | `id` | Identifiant en minuscules sans accent. Il sert d'adresse : `?niche=x&outil=<id>`. Ne plus le changer une fois indexé. |
 | `nom`, `categorie`, `prix` | Affichés sur la carte. Le prix est du texte libre. |
 | `description_courte` | Une à deux phrases sur la carte. C'est ce que lit un visiteur qui survole. |
-| `description_longue` | Le mini-article. `## Titre` fait une section, `- ` une puce, le reste un paragraphe. |
+| `description_longue` | Le mini-article, en quatre sections : verdict, points forts, points faibles, idéal pour. `## Titre` fait une section, `- ` une puce. |
 | `lien_affiliation` | Cible du bouton principal, ouverte en `rel="sponsored noopener"`. |
 | `score_avis` | Note sur 5, décimale acceptée. Alimente les étoiles et les données structurées. |
-| `date_ajout` | Date au format `AAAA-MM-JJ`. Elle pilote le badge « Nouveau », la date d'entête et le `lastmod` du sitemap. |
+| `date_ajout` | `AAAA-MM-JJ`. Pilote le badge « Nouveau », la date d'entête et le `lastmod` du sitemap. |
 
-Une niche, c'est un fichier de plus dans `niches/`, avec son bloc `niche`
-(identité, domaine, accroches, balises, deux couleurs) et ses outils. Rien
-d'autre à déclarer : ni dans le gabarit, ni dans les scripts. Pour que
-l'auto-pilote l'alimente, lui ajouter une entrée dans `BACKLOG`.
+Une niche se dégrossit d'une commande :
+
+```bash
+node nouvelle-niche.js transport "IA Transport" 🚚 https://ia-transport.fr \
+  --metier "transporteurs et logisticiens"
+```
+
+Le script pose le bloc `niche`, choisit une teinte encore libre, refuse un
+domaine déjà pris, et écrit une base valide mais vide — signalée « en
+chantier » tant que personne ne l'a remplie. Reste le travail éditorial, et
+l'entrée correspondante dans `BACKLOG`.
 
 ## Décisions à connaître avant de modifier
 
+- **Aucune dépendance externe au chargement, hors polices.** La feuille est
+  compilée et servie depuis le même domaine. La première version chargeait
+  Tailwind depuis un CDN : mesuré dans un vrai navigateur, sans le script
+  distant **aucune utilitaire n'était appliquée** — pas de grille, pas de
+  cartes, des boutons de dix-neuf pixels. Un réseau qui filtre le CDN rendait
+  les onze sites illisibles. Les polices restent distantes parce que leur
+  absence fait retomber sur la pile système : ça enlaidit, ça ne casse rien.
 - **Les couleurs de niche passent par deux variables CSS**, jamais par des
-  classes Tailwind fabriquées en JavaScript. Le CDN compile ce qu'il voit dans
-  le DOM, et une classe construite à la volée arrive parfois après le premier
-  rendu ; une variable s'applique au moment où on l'écrit.
-- **Toutes les adresses portent `?niche=<id>`**, y compris l'accueil d'un
-  domaine qui sert déjà cette niche. C'est la forme qu'écrit la balise
-  canonique et celle que contient le sitemap : deux formes concurrentes pour la
-  même page, ce sont deux pages en double aux yeux de Google.
+  classes fabriquées en JavaScript : une classe construite à la volée n'est pas
+  dans la feuille compilée, donc elle n'existe pas.
+- **Toute adresse porte `?niche=<id>`**, canonique et sitemap compris : deux
+  formes concurrentes pour la même page, ce sont deux pages en double aux yeux
+  de Google.
 - **Les fiches s'adressent en `?outil=<id>`, jamais en `#id`.** Un fragment
-  n'est pas une URL distincte pour un moteur de recherche : le sitemap n'aurait
-  qu'une adresse par site à proposer, et les recherches par nom d'outil —
-  l'essentiel du trafic qualifié d'un annuaire — n'atteindraient jamais rien.
+  n'est pas une URL distincte pour un moteur de recherche.
 - **La description longue est du texte, convertie en nœuds DOM.** Jamais
-  d'`innerHTML` : chaque fiche de la base — et donc chaque outil publié
-  automatiquement — deviendrait une porte d'entrée pour du script injecté.
-- **Un `?niche=` inconnu retombe sur la niche du domaine.** Le panneau d'erreur
-  est réservé au cas où c'est cette base-là qui manque ; un visiteur avec un
-  lien mal recopié voit le site, pas un message technique.
+  d'`innerHTML` : chaque fiche deviendrait une porte d'entrée pour du script
+  injecté.
 - **`lastmod` est la vraie date d'ajout, jamais celle du jour.** Un sitemap qui
-  déclare tout modifié à chaque passage perd sa crédibilité auprès du moteur,
-  qui cesse alors de s'y fier pour prioriser son exploration.
-- **La réserve de l'auto-pilote est écrite à la main, dans le script.** Un
-  contenu publié sans relecture doit avoir été écrit une fois par un humain :
-  la réserve est le point où cette relecture a eu lieu.
-- **Deux règles de style sont écrites en dur dans la page** (`.hidden` et le
-  fond du `body`). Le reste vient du CDN Tailwind ; ces deux-là sont celles dont
-  l'absence casse la page au lieu de l'enlaidir.
-- **Les prix vieillissent vite.** La mention de transparence du pied de page le
-  dit au visiteur ; c'est aussi une obligation d'information sur les liens
-  affiliés.
+  déclare tout modifié à chaque passage cesse d'être cru par le moteur.
+- **La réserve est écrite à la main.** Le travail programmé pousse sans
+  relecture : la réserve est le point où cette relecture a eu lieu.
+- **Un `?niche=` inconnu retombe sur la niche du domaine**, pas sur un panneau
+  technique.
 
-## Ce que cette architecture ne fait pas
+## Vérifier
 
-- **Le titre et la description de la page sont posés par JavaScript.** Les
-  moteurs qui exécutent le JavaScript les voient, les autres lisent le gabarit
-  brut. Sans serveur ni compilation, c'est le compromis assumé ; si le
-  référencement devait plafonner pour cette raison, l'étape suivante est de
-  pré-écrire un `index.html` par domaine plutôt que d'ajouter un serveur.
-- **Rien ne vérifie qu'un lien d'affiliation est encore valide.** L'auto-pilote
-  publie ce que contient la réserve ; c'est à la relecture humaine de cette
-  réserve que la vérification appartient.
+Les données se valident hors navigateur (`npm run valider`) : champs, dates,
+identifiants en double, domaines en double, couleurs, longueurs de balises.
+
+Tout le reste — la charte qui suit la niche, la modale, l'adresse profonde, le
+repli, les cibles tactiles — ne se voit qu'en exécutant la page, d'où
+`npm run verifier`, qui pilote un vrai Chromium. **Ses attentes sont tirées des
+données, jamais écrites en dur** : la première version affirmait « trois
+cartes », l'auto-pilote en a publié une quatrième et le parcours est passé au
+rouge sans qu'aucun défaut n'existe. Un filet qui se déchire à chaque
+publication finit désactivé.
+
+Et une limite à connaître : **vérifier le comportement n'est pas vérifier le
+rendu**. Vingt-sept contrôles sont passés au vert sur une page sans la moindre
+mise en page. Quand un changement touche à l'apparence, prendre une capture et
+la regarder.
+
+Chromium est déjà installé dans les sessions distantes ; ne pas lancer
+`playwright install`. `AMORCE_CHROMIUM` permet d'en désigner un autre.
