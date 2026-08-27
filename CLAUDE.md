@@ -60,9 +60,20 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   chantiers en sommeil : `mon-app-audio/` et `patrimoine/`, tests verts, mis de
   côté et non abandonnés.
 
-Build vert obligatoire avant toute poussée. R2 / D1 / Workers ne sont utilisés
-nulle part aujourd'hui : les écrire ici comme acquis serait faux. À poser comme
-cap si un projet les adopte.
+Build vert obligatoire avant toute poussée.
+
+**Cap — pas encore un état.** Aucun projet n'utilise Cloudflare aujourd'hui,
+mais c'est la direction quand du stockage devient nécessaire : **R2** pour les
+fichiers lourds, **D1** pour une base légère, **Workers** pour ce qui doit
+tourner près de l'utilisateur. Le premier projet qui doit héberger des binaires
+y va, plutôt que d'inventer autre chose — c'est ce qui donne son issue à
+l'invariant « aucun binaire versionné » : les PDF de KDP, les rushes de
+`montage-auto`, les exports d'`agence` n'ont pas leur place dans Git, et il leur
+faut bien un ailleurs.
+
+**Amorce en est exclue, définitivement.** Sa promesse fondatrice est qu'aucun
+fichier ne quitte l'appareil : lui adjoindre un stockage distant ne serait pas
+une évolution mais un reniement.
 
 ## 5. SENSIBLE, ET JAMAIS À L'ARRÊT
 
