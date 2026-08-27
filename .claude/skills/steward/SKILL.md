@@ -57,6 +57,37 @@ PR de ce dépôt se relit sur ses justifications autant que sur son diff.
 Découper par intention : trois intentions distinctes font trois commits, même
 si elles ont été écrites dans la même session.
 
+## Le contrôle qui prend dix secondes
+
+```bash
+python3 .claude/skills/steward/scripts/preflight.py
+```
+
+À lancer **juste avant de pousser**, jamais après. Il ne corrige rien : il rend
+visibles les deux signaux que le diff ne montre pas, et qui ont chacun coûté un
+aller-retour complet.
+
+**Les références aux chemins disparus.** Déplacer un projet laisse derrière lui
+des fichiers qui le citent encore — le hook de démarrage, la carte des projets,
+la grille d'un skill, la découverte des suites de tests. Un déplacement de
+`mon-app-audio/` en a laissé quatre ; trois ont été rattrapés à la lecture, et
+le quatrième a sorti soixante-deux tests de l'intégration continue sans qu'aucune
+ligne rouge n'apparaisse. **Dans ce dépôt, un `git mv` a des conséquences dans
+des fichiers qui ne sont pas dans le diff.**
+
+**Les recoupements avec les autres sessions.** Le script distingue deux choses
+que l'œil confond. Les *carrefours* — `CLAUDE.md`, le hook — sont touchés par
+presque toutes les branches : ils annoncent un conflit à résoudre, pas un
+doublon, et il ne faut pas s'en alarmer. Un fichier **rare** touché par une
+autre branche, en revanche, est le signal qu'on est peut-être en train de
+refaire un travail déjà fait. Une pull request a été fermée sans rien fusionner
+pour l'avoir ignoré : une autre session avait corrigé le même défaut, mieux, six
+minutes plus tôt.
+
+Le relevé signale, il ne tranche pas. Une citation peut être légitime — une
+fiche d'archive doit citer le chemin qu'elle archive. Une branche voisine peut
+faire tout autre chose du même fichier. C'est la lecture qui décide.
+
 ## Ouvrir et fusionner
 
 Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans

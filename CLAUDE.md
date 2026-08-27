@@ -253,6 +253,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/stack-agence-supabase` | Où partir pour un projet client — le socle `agence/`, déjà écrit — et les deux règles qu'il ne fait pas respecter seul. Amaigrie : ce que son `README` dit déjà en a été retiré. Hors Amorce. |
 | `/dependance-indisponible` | Livrer quand la clé, le GPU, le logiciel ou le réseau manquent : l'échelle de repli, les quatre choses qui transforment une absence visible en défaut invisible, et ce qu'on écrit en rendant le travail. |
 | `/api-tierce-verifiee` | Lire la surface réelle d'une bibliothèque avant d'écrire contre elle, et provoquer l'erreur pour connaître sa vraie classe — ce qui a attrapé un `except` qui n'attrapait rien. |
+| `/relais` | Clore un fil devenu lourd sans rien perdre : l'état se rassemble depuis le dépôt, jamais de mémoire. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
