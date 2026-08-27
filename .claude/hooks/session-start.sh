@@ -32,15 +32,24 @@ readonly FLUTTER_VERSION='3.47.1'
 readonly FLUTTER_SHA256='a1d8166c0309267cb7dc99f1424eecf08b86946ad3b50723c6f59945964aea45'
 readonly FLUTTER_HOME="$HOME/flutter"
 
+# La ligne d'accueil se compose ici, un élément par projet, au lieu de vivre
+# dans une seule chaîne de sept cents caractères en fin de fichier. Cette
+# chaîne était un conflit garanti : tout projet ajouté devait la modifier, donc
+# deux branches ouvertes en même temps se marchaient dessus à coup sûr. Chaque
+# bloc déclare désormais sa commande chez lui, et git fusionne tout seul.
+commandes=()
+
 echo "── Amorce : dépendances npm"
 cd "$racine"
 npm install --no-audit --no-fund --silent
+commandes+=("Amorce : npm run typecheck|lint|test")
 
 echo "── Socle Agence : dépendances npm"
 # Projet Next.js indépendant, avec son propre `package.json` : les dépendances
 # de la racine ne lui servent à rien, et les siennes ne doivent pas remonter.
 cd "$racine/agence"
 npm install --no-audit --no-fund --silent
+commandes+=("Socle Agence : (dans agence/) npm run lint|typecheck|test|build")
 
 echo "── Look & Find : SDK Flutter $FLUTTER_VERSION"
 if [ -x "$FLUTTER_HOME/bin/flutter" ]; then
@@ -49,6 +58,7 @@ else
   archive="flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
   tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
+commandes+=("Look & Find : flutter analyze|test")
 
   # `storage.googleapis.com` et non `dl.google.com` : ce dernier est refusé par
   # le mandataire réseau des sessions distantes.
@@ -69,6 +79,7 @@ echo "── Look & Find : dépendances Dart"
 cd "$racine/look_and_find"
 flutter pub get
 
+commandes+=("KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests")
 echo "── Chaîne KDP : bibliothèques Python"
 # `--break-system-packages` : l'image est une Debian récente, où pip refuse
 # d'installer hors environnement virtuel. Un venv ici obligerait chaque commande
@@ -84,12 +95,15 @@ echo "── Studio audio : bibliothèques Python"
 # `pip install -r archives-backlog/mon-app-audio/requirements.txt`.
 python3 -m pip install --quiet --break-system-packages \
   streamlit pydub imageio-ffmpeg edge-tts requests
+commandes+=("Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests")
 
 echo "── Répondeur Facebook : bibliothèques Python"
 # `requests` est déjà là pour le studio audio ; ces deux-là ne le sont pas, et
 # sans elles les tests du répondeur ne se lancent même pas.
 python3 -m pip install --quiet --break-system-packages anthropic python-dotenv
+commandes+=("Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests")
 
+commandes+=("Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests")
 echo "── Assistant d'allocation : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
 
@@ -100,6 +114,7 @@ echo "── Chaîne de montage : bibliothèques Python"
 # cloner, avec ses propres dépendances. La voix off, elle, ne demande que ces
 # deux paquets-là et fonctionne dès le démarrage de la session.
 python3 -m pip install --quiet --break-system-packages elevenlabs tqdm
+commandes+=("Chaîne de montage : python3 -m unittest discover -s montage-auto/tests")
 
 echo "── Extraction multiformat : bibliothèques Python"
 # Ce que `/extraction-multiformat` et `/transcription-media` ne peuvent pas
@@ -118,12 +133,14 @@ echo "── Life-Organizer : bibliothèques Python"
 # s'installe à part ; `outils_externes.py` désactive proprement l'OCR sans lui.
 python3 -m pip install --quiet --break-system-packages \
   Pillow python-dateutil pypdf ImageHash opencv-python-headless imageio-ffmpeg
+commandes+=("Life-Organizer : python3 -m unittest discover -s life-organizer/tests")
 
 echo "── Radar crypto : bibliothèques Python"
 # Trois paquets légers. `requests` est déjà installé plus haut, mais le répéter
 # coûte une seconde et évite qu'un changement là-haut casse le radar en silence.
 python3 -m pip install --quiet --break-system-packages \
   requests PyYAML python-dotenv
+commandes+=("Radar crypto : cd pepites && python3 -m unittest discover -s tests")
 
 # `imageio-ffmpeg`, installé plus haut pour le studio audio, embarque un ffmpeg
 # statique complet — mais sous un nom que rien ne trouve. Le lier suffit à
@@ -198,4 +215,9 @@ if [ -x /opt/pw-browsers/chromium ] && [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "── Amorce : Chromium de vérification signalé à la session"
 fi
 
-echo "── Prêt. Amorce : npm run typecheck|lint|test — Socle Agence : (dans agence/) npm run lint|typecheck|test|build — Look & Find : flutter analyze|test — KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests — Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests — Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests — Chaîne de montage : python3 -m unittest discover -s montage-auto/tests — Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests — Life-Organizer : python3 -m unittest discover -s life-organizer/tests — Radar crypto : cd pepites && python3 -m unittest discover -s tests"
+accueil=""
+for commande in "${commandes[@]}"; do
+  [ -n "$accueil" ] && accueil+=" — "
+  accueil+="$commande"
+done
+echo "── Prêt. $accueil"
