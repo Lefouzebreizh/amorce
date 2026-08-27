@@ -49,6 +49,17 @@
       "score_avis": 4.1,
       "date_ajout": "2026-08-27",
       "description_longue": "## Notre verdict\nTastewise analyse en continu les cartes de restaurants, les recettes publiées, les réseaux sociaux et les recherches en ligne pour dire quel ingrédient monte, sur quel territoire et auprès de quel public. Pour un groupe qui refait sa carte deux fois par an, c'est la différence entre suivre une tendance à son sommet — donc trop tard — et l'attraper pendant qu'elle grimpe.\n\n## Points forts\n- Tendances mesurées sur des données réelles de consommation et de publication\n- Découpage par zone géographique et par profil de clientèle\n- Idées de plats et d'accroches marketing appuyées sur ce qui circule déjà\n- Veille concurrentielle sur les cartes des établissements voisins\n\n## Points faibles\n- Couverture nettement plus riche sur le marché américain que sur le marché français\n- Tarification pensée pour les marques et les groupes, hors de portée d'un indépendant\n- Une tendance détectée n'est pas une tendance rentable : la marge reste à calculer\n\n## Idéal pour\nLes chaînes, les groupes de restauration et les marques alimentaires qui doivent arbitrer une carte ou un lancement produit sur autre chose qu'une impression."
+    },
+    {
+      "id": "popmenu",
+      "nom": "Popmenu",
+      "categorie": "Marketing & tendances",
+      "prix": "À partir de 150 $/mois",
+      "description_courte": "Le site, la carte interactive et le marketing dans un seul outil, avec les réponses aux avis rédigées automatiquement.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/popmenu",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nPopmenu part d'un constat simple : la carte est la page la plus consultée d'un restaurant, et presque toujours un PDF illisible sur téléphone. L'outil en fait une page interactive, où chaque plat a ses photos et ses avis, et se sert de ces données pour alimenter le marketing — courriels, messages texte, publications, réponses aux avis en ligne rédigées dans le ton de la maison.\n\n## Points forts\n- Carte interactive et référençable, là où un PDF n'apporte aucun trafic\n- Réponses aux avis rédigées automatiquement, ce que personne ne fait sérieusement\n- Courriels et messages texte déclenchés sur le comportement réel des clients\n- Site, carte, réservation et marketing dans un même abonnement\n\n## Points faibles\n- Facturation mensuelle élevée pour un établissement indépendant\n- Fonctionnalités calibrées pour le marché américain\n- Migrer un site existant vers leur plateforme est un engagement de long terme\n\n## Idéal pour\nLes restaurants et petites chaînes dont la présence en ligne se limite à une carte en PDF et à une page sociale mise à jour de loin en loin.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

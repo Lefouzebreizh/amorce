@@ -49,6 +49,17 @@
       "score_avis": 4.2,
       "date_ajout": "2026-08-27",
       "description_longue": "## Notre verdict\nVic.ai vise plus haut que la lecture de facture : il apprend les règles d'imputation d'une entreprise à partir de son historique et traite en autonomie la majorité du flux fournisseurs, en n'envoyant à un humain que ce qui sort de l'ordinaire. Sur un volume de plusieurs milliers de factures par mois, le taux de traitement sans intervention dépasse souvent les deux tiers — c'est là que l'économie devient visible au bilan.\n\n## Points forts\n- Apprentissage des règles d'imputation propres à l'entreprise, sans paramétrage lourd\n- Détection des doublons et des écarts de prix par rapport aux commandes\n- Circuit de validation intégré, avec relances des approbateurs\n- Piste d'audit complète sur chaque décision automatique\n\n## Points faibles\n- Il faut un historique conséquent avant que l'autonomie devienne réelle\n- Pensé pour les directions financières, pas pour un cabinet à petits dossiers\n- Le paramétrage initial mobilise une ressource interne pendant plusieurs semaines\n\n## Idéal pour\nLes directions financières et les cabinets qui externalisent la comptabilité fournisseurs de grands comptes, avec des volumes qui ne se traitent plus à la main."
+    },
+    {
+      "id": "klippa",
+      "nom": "Klippa",
+      "categorie": "Notes de frais",
+      "prix": "À partir de 6 €/mois par utilisateur",
+      "description_courte": "Les notes de frais photographiées, lues, contrôlées et rapprochées de la politique interne avant même d'arriver au comptable.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/klippa",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nKlippa lit un ticket ou une facture en quelques secondes, extrait le montant, la taxe, le fournisseur, et applique les règles de la politique de frais : plafond dépassé, dépense non éligible, doublon avec une note déjà passée. Le contrôle se fait donc à la saisie et non trois semaines plus tard, ce qui supprime l'essentiel des allers-retours entre le salarié et la comptabilité.\n\n## Points forts\n- Reconnaissance fiable sur les tickets froissés et les factures étrangères\n- Contrôle des règles internes appliqué au moment du dépôt\n- Détection des doublons et des fraudes simples sur les justificatifs\n- Tarif par utilisateur accessible aux structures moyennes\n\n## Points faibles\n- La configuration fine des règles demande un vrai temps de paramétrage\n- Périmètre limité aux frais : ce n'est pas un outil comptable complet\n- Le rapprochement avec les cartes bancaires d'entreprise reste perfectible\n\n## Idéal pour\nLes entreprises de cinquante à cinq cents salariés dont les notes de frais reviennent en boucle faute d'être contrôlées à la source.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

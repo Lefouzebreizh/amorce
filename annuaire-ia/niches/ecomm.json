@@ -49,6 +49,17 @@
       "score_avis": 4.5,
       "date_ajout": "2026-08-27",
       "description_longue": "## Notre verdict\nKlaviyo reste la référence de la relance en commerce en ligne, et ses fonctions prédictives sont ce qui le distingue d'un simple outil d'envoi : date de prochaine commande estimée, valeur vie client prévue, risque de perte du client. Ces prévisions alimentent des segments qui déclenchent le bon message au bon moment — la relance de panier abandonné n'étant que le plus connu de la dizaine de scénarios rentables.\n\n## Points forts\n- Segments prédictifs calculés sur le comportement d'achat, sans travail de données\n- Bibliothèque de scénarios éprouvés, activables en une après-midi\n- Attribution du chiffre d'affaires par scénario : on sait ce qui rapporte\n- Courriel et message texte pilotés depuis la même logique de segmentation\n\n## Points faibles\n- Le tarif suit la taille de la base : il grimpe fort passé quelques dizaines de milliers de contacts\n- Puissance qui se paie en complexité : la prise en main réelle prend des semaines\n- Les prévisions demandent un historique conséquent pour valoir quelque chose\n\n## Idéal pour\nLes boutiques passé le premier palier de chiffre d'affaires, dont la base de clients existe déjà et n'est pas exploitée au-delà de la newsletter mensuelle."
+    },
+    {
+      "id": "octane-ai",
+      "nom": "Octane AI",
+      "categorie": "Personnalisation",
+      "prix": "À partir de 50 $/mois",
+      "description_courte": "Le questionnaire qui recommande le bon produit et collecte, au passage, les données clients qui alimenteront les relances.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/octane-ai",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nSur un catalogue où le client ne sait pas quoi choisir — cosmétique, complément, matériel technique — le questionnaire de recommandation transforme mieux que n'importe quelle page catégorie. Octane AI construit ces parcours sans développement, en tire une recommandation argumentée, et enregistre les réponses comme autant de critères de segmentation pour les relances suivantes.\n\n## Points forts\n- Taux de transformation nettement supérieur à une navigation par catégorie\n- Réponses conservées comme données de segmentation exploitables ensuite\n- Construction du parcours sans développement, en quelques heures\n- Se branche sur les outils de relance courants\n\n## Points faibles\n- Sans catalogue à choix complexe, l'outil n'apporte rien\n- Un questionnaire trop long fait chuter le taux d'achèvement\n- Il faut du trafic pour que le gain mesuré soit significatif\n\n## Idéal pour\nLes boutiques de cosmétique, de nutrition ou de matériel technique dont les clients hésitent entre des références qu'ils ne savent pas départager.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }
