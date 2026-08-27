@@ -70,10 +70,16 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   ce que la PR touche : voir la table de la section suivante.
 - **L'ouverture d'une PR ne déclenche aucune CI.** Elle passe par un jeton
   d'application GitHub, que GitHub refuse comme source de workflow — protection
-  contre les boucles. Une *poussée* sur la branche, elle, déclenche bien
-  l'événement `pull_request`. Une PR ouverte puis laissée telle quelle reste
-  donc sans contrôle, indéfiniment, sans que rien ne le signale : ne pas
-  l'attendre, la déclencher à la main (`workflow_dispatch` sur la branche).
+  contre les boucles. Une PR ouverte puis laissée telle quelle reste donc sans
+  contrôle, indéfiniment, sans que rien ne le signale : ne pas l'attendre, la
+  déclencher à la main (`workflow_dispatch` sur la branche).
+
+  Une *poussée* sur la branche est censée déclencher `pull_request`, elle. Ne
+  pas s'y fier sans regarder : deux poussées depuis cette session — l'une avant
+  l'ouverture de la PR, l'autre après — n'ont rien déclenché du tout, quand des
+  branches voisines recevaient leur exécution dans la même minute. Le
+  déclenchement manuel, lui, marche à tous les coups ; c'est la seule voie qui
+  ne demande pas de vérifier qu'elle a marché.
 - **Vérifier le verdict sur l'empreinte exacte qui sera fusionnée.** Un commit
   poussé après le déclenchement invalide le résultat précédent — et s'il ne
   touche pas les chemins que le workflow surveille, il ne relance rien du tout.
