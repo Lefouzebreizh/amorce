@@ -39,8 +39,8 @@ Par ordre de gain attendu :
 
 | | Planche | Piqué | Agrandissement |
 | --- | --- | --- | --- |
-| 1 | **Ce livre appartient à** | 674 | **×2,54** |
-| 2 | **Le goûter des menhirs** | 683 | ×1,62 |
+| ~~1~~ | ~~Ce livre appartient à~~ | ~~674~~ | ~~×2,54~~ — **ne sert plus, voir ci-dessous** |
+| 1 | **Le goûter des menhirs** | 683 | ×1,62 |
 | 3 | Mon journal de lumière | 721 | ×1,62 |
 | 4 | Le diplôme du Petit Phénix | 729 | ×1,62 |
 | 5 | Dessine ton propre animal | 734 | ×1,62 |
@@ -48,10 +48,25 @@ Par ordre de gain attendu :
 | 7 | Carte de l'île bretonne | 761 | ×1,62 |
 | 8 | **Faire le singe** | 819 | **×2,41** |
 
-Les deux en gras cumulent les deux défauts : peu piquées **et** agrandies
-au-delà de ×2, la limite où la calligraphie décroche. Ce sont les deux seules
-planches du livre dans ce cas, et les deux seules où la régénération apporte un
-gain certain.
+### Correction : « Ce livre appartient à » est déjà réglée
+
+Cette planche **ne figure plus dans le livre**. `kdp/pipeline/page_garde.py` a
+recomposé la page entièrement en vectoriel, et pour exactement cette raison —
+son commentaire de tête le dit : « il aurait fallu l'agrandir deux fois et
+demie […] la page devient la plus nette du volume au lieu d'en être la plus
+molle. »
+
+La mesure ci-dessus porte sur les planches livrées, pas sur les pages du PDF.
+Elle a donc désigné une planche qui n'est plus imprimée. **Mesurer la matière
+première quand c'est le produit fini qui compte est une erreur de cible**, et
+elle a bien failli coûter une régénération pour rien.
+
+### Il n'en reste qu'une
+
+**« Faire le singe »** — piqué 819, agrandie **×2,41**. C'est la seule planche
+du livre qui cumule les deux défauts, et la seule où la régénération apporte un
+gain certain. Les autres sont à ×1,62 ou mieux, sous la limite où
+l'agrandissement abîme.
 
 > **Ce que cette mesure ne voit pas.** Elle porte sur la planche entière, pas
 > sur le texte. Un œil qui trouve une bulle molle a raison contre elle : c'est
@@ -82,11 +97,10 @@ correction qu'elle portait.
 
 ## La recommandation
 
-Ne pas faire les vingt. Faire **deux**, celles qui cumulent mollesse et
-agrandissement au-delà de ×2 :
+Ne pas faire les vingt. Faire **une** :
 
-1. **Ce livre appartient à**
-2. **Faire le singe**
+1. **Faire le singe** — la seule planche encore imprimée qui cumule mollesse et
+   agrandissement au-delà de ×2.
 
 Puis **Le goûter des menhirs** si le jeu des sept différences déçoit sur
 l'épreuve papier — et seulement dans ce cas, car sa régénération oblige à
