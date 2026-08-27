@@ -89,3 +89,9 @@ kits/**/*.mp3
 kits/**/*.flac
 kits/**/*.ogg
 kits/**/*.m4a
+
+# Les sons de la bibliothèque sont des binaires : ils vivent hors de Git,
+# seul leur index mesuré est versionné (invariant « aucun binaire versionné »).
+kits/**/*.wav
+kits/**/*.mp3
+kits/**/*.flac
