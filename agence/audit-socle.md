@@ -68,7 +68,7 @@ du README — au même titre que les trois variables d'environnement.
 
 ---
 
-## 3. Une page privée sur six ne redemande pas la session
+## 3. Une page privée sur six ne redemande pas la session — **corrigé**
 
 **Le fait :** `src/app/(prive)/projets/nouveau/page.tsx` n'appelle ni
 `exigerSession` ni `exigerAdministrateur`, là où les cinq autres pages privées le
@@ -80,12 +80,12 @@ l'action serveur, elle, se garde. Mais c'est le motif que le prochain
 développeur recopiera sur une page qui affichera des données, et il n'y a pas de
 test pour l'en empêcher.
 
-**À faire :** deux lignes — `await exigerSession();` en tête du composant, qui
-devient `async`.
+**Corrigé le 27 août 2026** : `await exigerSession();` en tête du composant, qui
+devient `async`. La page bascule du même coup en rendu à la demande.
 
 ---
 
-## 4. Aucune politique de sécurité du contenu
+## 4. Aucune politique de sécurité du contenu — **corrigé**
 
 **Le fait :** `next.config.ts` pose trois en-têtes (`nosniff`,
 `Referrer-Policy`, `X-Frame-Options`). Il n'y a pas de `Content-Security-Policy`.
@@ -95,9 +95,15 @@ traqueur d'audience ou une police distante — et il le fera — un script injec
 s'exécute sans contrainte, et peut lire le jeton de session dans les requêtes
 sortantes. Tant qu'aucun tiers n'entre, rien ne se passe.
 
-**À faire :** une CSP stricte avec Next.js demande des jetons à usage unique
-posés dans `proxy.ts` : compter une demi-journée, pas une ligne. C'est le
-constat le moins urgent et le plus long — d'où sa place ici.
+**Corrigé le 27 août 2026** : `lib/securite.ts` compose la politique et le
+proxy la pose, jeton compris. Trois pages étaient pré-rendues à la compilation —
+dont **inscription** et **mot de passe oublié** — et un jeton n'existe qu'à la
+requête : elles auraient été servies avec des scripts refusés. Elles passent
+donc en rendu à la demande.
+
+Vérifié dans un vrai Chromium, sur la version de production : zéro refus sur
+cinq pages, React s'hydrate, le formulaire réagit, et **quatorze scripts sur
+quatorze portent le jeton**.
 
 ---
 
@@ -123,8 +129,8 @@ calendrier.
 
 | Option | Contenu | Délai |
 | --- | --- | --- |
-| **Arrêter l'hémorragie** | Constats 1 à 3 — le n°1 est déjà livré, le n°3 tient en deux lignes | ½ journée |
-| **Remise en état** | Les cinq constats, plus des tests sur les neuf actions serveur | 2 à 3 jours |
+| **Arrêter l'hémorragie** | Constats 1 à 3 — **livrés** | fait |
+| **Remise en état** | Reste le n°2 (un réglage Supabase) et le n°5, des tests sur les neuf actions serveur | 1 à 2 jours |
 | **Ne rien faire** | — | Coût attendu : la première base client qui dérive expose les données de tous les comptes, sans que rien ne l'annonce. Le reste peut attendre. |
 
 _Le constat n°1 est le seul qui ne se rattrape pas après coup : les données
