@@ -188,7 +188,7 @@ légende et sa colonne de boutons.
 
 ## Ce qui reste à vérifier
 
-Deux choses, et elles tiennent au même fichier manquant.
+Une seule chose, et elle tient à un fichier manquant.
 
 **L'instant exact où « breach » commence** dans le deuxième passage. Il est
 estimé au débit moyen (≈ 9,0 s dans le montage), pas mesuré. Ce n'est plus un
@@ -206,13 +206,16 @@ indépendants s'accordent sur les mots :
 
 > *« Rift 0-5 is breached. The shadow titan takes flight. »*
 
-| Mot | Instant |
-| --- | --- |
-| `RIFT` | 0,04 s |
-| `ZERO` · `FIVE` | 2,28 · 2,84 s |
-| `IS` · `BREACH'D` | 3,28 · **3,48 s** |
-| `THE` · `SHADOW` · `TITAN` | 4,08 · 4,32 · 4,80 s |
-| `TAKES` · `FLIGHT` | 5,40 · 5,80 s |
+| Passage | Bornes | Texte |
+| --- | --- | --- |
+| 1 | **1,86 → 4,07 s** | *Rift 0-5 is breached.* |
+| 2 | **4,20 → 6,31 s** | *The shadow titan takes flight.* |
+
+Une respiration de 0,13 s les sépare. Les bornes viennent d'un détecteur
+d'activité vocale, pas d'un seuil posé à la main — c'est ce qui les rend
+fiables sous le sound design. **Un premier relevé par jetons donnait
+`RIFT` à 0,04 s : c'était un artefact**, le décodeur transducteur plaçant
+volontiers son premier jeton à l'origine. Recouper avant de croire un instant.
 
 **Ce n'est pas le texte du dépôt** — qui dit *« Zero-Five, breach open »* et
 *« the shadow titan awakens »*. Deux mots sur trois diffèrent aux endroits qui
@@ -223,11 +226,14 @@ vérifiée, et une seule personne peut la trancher.
 **Ce que ça change, et ce que ça ne change pas.** Rien de la pose calculée
 ci-dessus : elle place la prise ElevenLabs sur les images, et cette narration-ci
 n'est pas elle. Mais deux choses méritent d'être sues avant de monter — la
-narration du générateur occupe 0,04 → 5,80 s et devra être **coupée ou baissée**
-sous la voix off, faute de quoi deux textes parleront en même temps ; et si la
-prise ElevenLabs se révélait être cette narration extraite, alors ses trois
-passages écrits plus haut (0,84–2,90 et 3,14–5,44) ne collent pas aux mots
-mesurés, et c'est ce tableau-là qu'il faudrait reprendre.
+narration du générateur occupe 1,86 → 6,31 s et devra être **coupée ou baissée**
+sous la voix off, faute de quoi deux textes parleront en même temps ; et elle
+compte **deux** passages là où la prise ElevenLabs en a trois, ce qui achève de
+montrer que ce sont deux enregistrements différents et non le même relevé deux
+fois. Le nom du fichier le disait déjà : un générateur vidéo ne baptise pas sa
+propre narration d'après un service de synthèse tiers. Les trois passages écrits
+plus haut (0,84–2,90 et 3,14–5,44) décrivent donc bien la prise, et n'ont pas à
+être repris.
 
 **La leçon, plus utile que le résultat.** Une courbe d'énergie ne dit pas s'il y
 a une voix : un choc l'occupe comme une syllabe, et une voix mixée bas s'y
