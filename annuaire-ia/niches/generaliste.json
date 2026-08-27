@@ -8,8 +8,8 @@
     "h1_accent": "La Boîte à Outils IA",
     "h1_suite": "des pros pressés",
     "slogan": "Le comparateur des IA qui font vraiment gagner des heures — testées, notées, classées par métier.",
-    "meta_titre": "Boîte à Outils IA — l’annuaire et le comparateur des meilleurs outils d’intelligence artificielle",
-    "meta_description": "Comparez les outils IA qui font vraiment gagner des heures : rédaction, design, création vidéo, voix off, productivité. Prix, notes, avis détaillés et points faibles assumés.",
+    "meta_titre": "Boîte à Outils IA — le comparateur des meilleurs outils IA",
+    "meta_description": "Rédaction, design, vidéo, voix off, productivité : les outils IA qui font gagner des heures, testés et notés. Prix, avis et points faibles.",
     "theme": {
       "primaire": "#8b5cf6",
       "secondaire": "#3b82f6"
@@ -126,6 +126,17 @@
       "score_avis": 4.3,
       "date_ajout": "2026-08-27",
       "description_longue": "## Notre verdict\nL'intérêt de Notion AI n'est pas la qualité brute de sa rédaction, mais l'endroit où il travaille : dans la base de connaissances de l'équipe. « Résume les comptes rendus client du trimestre » ou « qui a décidé ça, et quand » deviennent des questions auxquelles on répond en dix secondes. Pour une équipe déjà installée sur Notion, c'est l'ajout le plus rentable de cette liste.\n\n## Points forts\n- Recherche transverse sur l'espace de travail, avec le lien vers la page d'origine\n- Rédaction et résumé directement dans les pages existantes, sans copier-coller\n- Remplissage automatique de propriétés de base de données (résumé, catégorie, priorité)\n- Connecteurs vers les outils voisins pour élargir la recherche\n\n## Points faibles\n- Sans valeur si l'équipe ne travaille pas déjà dans Notion\n- Facturé par utilisateur : l'addition monte vite sur une équipe entière\n- Qualité rédactionnelle en retrait par rapport aux assistants spécialisés\n\n## Idéal pour\nLes équipes de cinq à cinquante personnes dont la documentation, les comptes rendus et les projets vivent déjà dans Notion."
+    },
+    {
+      "id": "zapier-agents",
+      "nom": "Zapier Agents",
+      "categorie": "Productivité",
+      "prix": "Freemium — à partir de 30 $/mois",
+      "description_courte": "Des agents qui agissent dans les huit mille outils déjà connectés à Zapier : lire, décider, écrire, prévenir.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/zapier-agents",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nUn assistant qui rédige a peu de valeur ; un assistant qui agit dans les outils de l'entreprise en a beaucoup. Zapier Agents s'appuie sur le plus large catalogue de connexions du marché pour exécuter des tâches réelles : qualifier un formulaire entrant, créer la fiche dans le logiciel commercial, prévenir la bonne personne, rédiger la réponse. C'est de l'automatisation qui sait décider, là où les scénarios classiques suivaient une règle rigide.\n\n## Points forts\n- Le catalogue de connexions le plus large, sans développement\n- L'agent décide selon le contenu, là où un scénario classique suivait une règle fixe\n- Se construit en langage courant, sans compétence technique\n- Historique d'exécution consultable, indispensable pour corriger un comportement\n\n## Points faibles\n- Les coûts grimpent vite avec le nombre de tâches exécutées\n- Un agent mal cadré agit dans de vrais systèmes : le bac à sable est indispensable\n- Le diagnostic d'un enchaînement raté reste laborieux\n\n## Idéal pour\nLes petites structures sans équipe technique, dont les processus reposent sur des copier-coller entre cinq outils différents.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

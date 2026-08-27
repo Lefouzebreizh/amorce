@@ -1,0 +1,176 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Compositeur</title>
+<style>html,body{margin:0;background:#000}canvas{width:270px}</style>
+<canvas id="scene" width="1080" height="1920"></canvas>
+<script type="module">
+/*
+ * Le compositeur.
+ *
+ * Un seul endroit sait à quoi ressemble une image du montage, et
+ * l'enregistrement filme ce que cet endroit dessine. C'est le même principe que
+ * `renderFrame` dans le studio, et il a la même vertu : ce qu'on valide à
+ * l'écran est, par construction, ce qui atterrit dans le fichier.
+ *
+ * Rien n'est écrit en dur ici — tout vient de `plan.json`. Les transitions
+ * viennent de `transitions.js`, compilé depuis `src/lib/transitions.ts` : les
+ * réimplémenter donnerait deux versions, et la seconde dériverait au premier
+ * réglage.
+ */
+import { applyTransition } from './transitions.js';
+
+const L = 1080, H = 1920;
+
+const plan = await (await fetch('plan.json')).json();
+const PLANS = plan.plans;
+const CARTONS = plan.cartons ?? [];
+const SOUSTITRES = (plan.soustitres ?? []).map((b) => ({ y: 0.74, taille: 78, ...b }));
+const DUREE = plan.duree;
+const FPS = plan.fps ?? 30;
+
+/**
+ * Durée d'une transition, en secondes.
+ *
+ * Le studio borne toute transition à 45 % du plus court des deux plans, ce qui
+ * garantit qu'au plus deux couches sont visibles à la fois. On reprend la même
+ * borne : au-delà, trois images se superposent et l'écran devient illisible.
+ */
+const TRANSITION = Math.min(
+  plan.transition ?? 0.3,
+  0.45 * Math.min(...PLANS.map((p) => p.a - p.de)),
+);
+
+const canvas = document.getElementById('scene');
+const ctx = canvas.getContext('2d', { alpha: false });
+
+/** Déplacement et échelle induits par le mouvement de caméra du plan. */
+function camera(mouvement, p) {
+  const e = Math.max(0, Math.min(1, p));
+  switch (mouvement) {
+    case 'zoomIn':   return { dx: 0, dy: 0, k: 1 + 0.14 * e };
+    case 'zoomOut':  return { dx: 0, dy: 0, k: 1.14 - 0.14 * e };
+    // Le sur-cadrage est indispensable au balayage : sans lui, on découvrirait
+    // du vide sur le bord vers lequel on se déplace. Il rogne aussi l'image —
+    // à réserver aux plans qui ont de la marge autour de leur sujet.
+    case 'panLeft':  return { dx: L * (0.045 - 0.09 * e), dy: 0, k: 1.10 };
+    case 'panRight': return { dx: L * (-0.045 + 0.09 * e), dy: 0, k: 1.10 };
+    default:         return { dx: 0, dy: 0, k: 1 };
+  }
+}
+
+/** Trace une image en recouvrant le cadre 9:16, sans jamais la déformer. */
+function couvrir(image, mouvement, p, t) {
+  const iw = image.naturalWidth, ih = image.naturalHeight;
+  if (!iw || !ih) return;
+  const m = camera(mouvement, p);
+  const couverture = Math.max(L / iw, H / ih) * m.k * t.scale;
+  const w = iw * couverture, h = ih * couverture;
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, Math.min(1, t.alpha));
+  ctx.drawImage(image, (L - w) / 2 + m.dx + t.dx, (H - h) / 2 + m.dy + t.dy, w, h);
+  ctx.restore();
+}
+
+/** Fabrique la fonction de dessin d'un plan, mouvement compris. */
+function traceur(p, temps) {
+  const avancement = (temps - p.de) / (p.a - p.de);
+  return (transform) => couvrir(window.__images[p.src], p.mouvement, avancement, transform);
+}
+
+/** Le texte est tracé après tout le reste : la lisibilité prime sur l'esthétique. */
+function tracerTexte(bloc, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = `900 ${bloc.taille}px "Arial Black", Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Une coupe écrite à la main prime sur le retour automatique : « 1 an · 1 /
+  // vidéo par jour » est grammaticalement correct et illisible.
+  const lignes = [];
+  for (const paragraphe of String(bloc.texte).split('\n')) {
+    let courante = '';
+    for (const mot of paragraphe.split(' ')) {
+      const essai = courante ? `${courante} ${mot}` : mot;
+      if (ctx.measureText(essai).width > L * 0.86 && courante) { lignes.push(courante); courante = mot; }
+      else courante = essai;
+    }
+    if (courante) lignes.push(courante);
+  }
+
+  const interligne = bloc.taille * 1.16;
+  const depart = H * bloc.y - ((lignes.length - 1) * interligne) / 2;
+  for (const [i, ligne] of lignes.entries()) {
+    const y = depart + i * interligne;
+    ctx.lineJoin = 'round';
+    // Un liseré épais, parce qu'un texte blanc sur une image claire disparaît
+    // et qu'on ne sait jamais d'avance ce qu'il y aura derrière.
+    ctx.lineWidth = bloc.taille * 0.26;
+    ctx.strokeStyle = 'rgba(0,0,0,0.92)';
+    ctx.strokeText(ligne, L / 2, y);
+    ctx.fillStyle = bloc.couleur ?? '#ffffff';
+    ctx.fillText(ligne, L / 2, y);
+  }
+  ctx.restore();
+}
+
+/** Monte en douceur puis redescend, pour ne pas faire clignoter un carton. */
+function voile(temps, de, a, fondu) {
+  if (temps < de || temps > a) return 0;
+  return Math.min(1, Math.min(temps - de, a - temps) / fondu);
+}
+
+window.dessiner = function (temps) {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, L, H);
+
+  /*
+   * Le plan courant est celui dont on est dans les bornes ; la transition qui
+   * l'amène occupe ses premières fractions de seconde, pendant lesquelles le
+   * précédent est encore à l'écran.
+   *
+   * Ce recouvrement n'est pas un détail. Sans lui, le plan sortant disparaît à
+   * l'instant même où l'entrant commence à zéro : le fondu ne se fait plus
+   * entre deux images mais entre une image et du noir, et chaque raccord
+   * clignote. C'est invisible sur une image fixe, flagrant à la lecture.
+   */
+  let index = PLANS.findIndex((p) => temps >= p.de && temps < p.a);
+  if (index === -1) index = temps < PLANS[0].de ? 0 : PLANS.length - 1;
+  const courant = PLANS[index];
+
+  const avancement = (temps - courant.de) / TRANSITION;
+  const enTransition = index > 0 && avancement < 1;
+
+  applyTransition(
+    courant.transition ?? 'fade',
+    enTransition ? avancement : 1,
+    ctx,
+    enTransition ? traceur(PLANS[index - 1], temps) : null,
+    traceur(courant, temps),
+  );
+
+  for (const bloc of CARTONS) {
+    const alpha = voile(temps, bloc.de, bloc.a, bloc.fondu ?? 0.18);
+    if (alpha > 0) tracerTexte({ y: 0.3, taille: 128, ...bloc }, alpha);
+  }
+
+  for (const bloc of SOUSTITRES) {
+    // Franc, sans fondu : un bloc de sous-titre dure moins d'une seconde, et
+    // une entrée en fondu lui coûterait le tiers de son temps de lecture.
+    if (temps >= bloc.de && temps <= bloc.a) tracerTexte(bloc, 1);
+  }
+};
+
+window.__pret = (async () => {
+  window.__images = {};
+  for (const p of PLANS) {
+    if (window.__images[p.src]) continue;
+    const image = new Image();
+    image.src = p.src;
+    await image.decode();
+    window.__images[p.src] = image;
+  }
+  window.dessiner(0);
+  return { duree: DUREE, fps: FPS, voix: plan.voix ?? null };
+})();
+</script>

@@ -51,6 +51,15 @@ Elles ont toutes coûté un aller-retour. Les relire vaut mieux que les répéte
   Demander les cases seules, puis `greffe.py` les pose dans le cadre du volume.
 - **Un défaut de dessin échappe à tout script.** C'est l'auteur qui a vu le
   regard vide. Mesurer avant de corriger, et avant de contester.
+- **Un chemin sous `/mnt/skills/` n'existe que dans une session Claude Code.**
+  Les polices du lettrage ont été écrites ainsi : les tests passaient dans la
+  session qui les écrivait et rougissaient partout ailleurs, laissant `main`
+  rouge cinq exécutions durant sans que la cause se lise nulle part. Tout
+  chemin hors du dépôt se pose désormais par variable d'environnement
+  (`KDP_POLICES`), avec le chemin de session pour seul défaut — et à **un seul
+  endroit**, `charte.POLICES` : les dix outils qui lettrent une page le
+  portaient chacun en dur, ce qui rendait la chaîne inexécutable ailleurs et
+  demandait dix corrections pour une seule décision.
 
 ## Manière de travailler avec l'auteur
 

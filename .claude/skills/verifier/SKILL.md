@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », ou après un changement qu'on veut valider.
+description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, tests, types et build pour le site hypersensible-bienveillance, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, validation des bases et parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
 ---
 
 # Vérifier ce dépôt
@@ -9,7 +9,37 @@ Des projets indépendants, une séquence chacun. **Ne lance que celle du projet
 touché** : les tests de l'un ne disent rien des autres, et tout lancer multiplie
 l'attente pour rien.
 
-Commence par `git status --short` pour savoir où le changement a atterri.
+## Une commande
+
+```bash
+bash .claude/skills/verifier/scripts/verifier.sh
+```
+
+Elle regarde ce qui a changé depuis `origin/main` — commité ou non —, en déduit
+les projets concernés, lance leurs séquences **toutes en même temps**, et rend un
+verdict par projet avec le détail des seuls échecs. Elle finit par ce que la
+vérification ne couvre pas, calculé sur les projets touchés.
+
+Deux raisons de passer par elle plutôt que de recopier les séquences ci-dessous :
+
+- **Elle ne se trompe pas de périmètre.** Choisir à la main, c'est reprendre à
+  chaque fois trois décisions — où le changement a atterri, quelle séquence lui
+  correspond, dans quel ordre — dont l'erreur la plus probable est aussi la plus
+  coûteuse : oublier une suite. Les suites Python sont **découvertes**, comme
+  dans `.github/workflows/tests-python.yml` : un projet nouveau est gardé sans
+  avoir rien à déclarer.
+- **Elle est trois fois plus rapide.** Mesuré sur la barrière d'Amorce, la plus
+  lancée du dépôt : 25,5 s en série, 7,9 s en parallèle. `tsc`, ESLint et
+  `node --test` ne se lisent pas l'un l'autre ; les mettre à la queue leu leu
+  n'était qu'une habitude.
+
+`--base=<ref>` change le point de comparaison, `--tout` vérifie le dépôt entier
+sans regarder ce qui a changé. Le code de sortie vaut 0 si tout est vert.
+
+Ce qui suit reste la référence : ce que chaque séquence contrôle, dans quel
+ordre et **pourquoi**. À lire quand une étape casse, quand il faut lancer un
+filet que le script ne lance pas de lui-même — `npm run verify`, les politiques
+RLS —, ou quand on ajoute un projet.
 
 ## Look & Find — `look_and_find/`
 
@@ -58,6 +88,75 @@ npm run dev        # dans un autre terminal
 npm run verify
 ```
 
+## Réseau d'annuaires IA — `annuaire-ia/`
+
+```bash
+cd annuaire-ia
+npm run valider          # les bases : erreurs et alertes
+npm run verifier         # le parcours Chromium
+```
+
+Vingt-cinq contrôles dans un vrai Chromium. Le projet n'a ni typecheck ni lint :
+c'est la seule chose qui dise s'il marche, et onze sites tombent ensemble.
+Voir `/reseau-annuaires` pour ce que chacun garde.
+
+## Toutes les suites Python, comme la CI
+
+```bash
+.claude/skills/verifier/scripts/comme-la-ci.sh          # les sept suites
+.claude/skills/verifier/scripts/comme-la-ci.sh kdp      # une seule
+```
+
+**Lancer les suites depuis le dépôt ne prouve rien.** Une session Claude Code a
+des fichiers que la CI n'a pas — `/mnt/skills/…`, des rushes non versionnés,
+ffmpeg posé par le hook — et le hook installe des bibliothèques que
+`.github/requirements-tests.txt` n'installe pas. Des tests verts ici sont donc
+régulièrement rouges là-bas : `main` est resté rouge cinq exécutions durant sur
+une police introuvable, et ce rouge-là masquait l'état des six autres projets.
+
+Le script supprime les trois écarts d'un coup : il copie les seuls fichiers
+suivis par git (contenu du répertoire de travail compris), exécute dans un
+environnement n'ayant que les bibliothèques de la CI, et pose la police du
+lettrage comme le fait le workflow. Premier passage une minute, les suivants une
+vingtaine de secondes.
+
+Il signale aussi, sans faire échouer, les chemins de session écrits en dur —
+la seule chose qu'aucune exécution locale ne peut détecter, puisque le fichier
+est là.
+
+**À lancer avant de pousser un changement Python**, et en premier réflexe quand
+la CI est rouge alors que tout passe en local.
+
+## Hypersensible & Bienveillance — `hypersensible-bienveillance/`
+
+```bash
+cd hypersensible-bienveillance
+npm test          # moteur CNV et lecture de journal — node --test, sans dépendance
+npm run check     # astro check + tsc --noEmit
+npm run build     # le seul à voir ce que tsc laisse passer
+```
+
+Les trois, et depuis le dossier : le projet a son propre `tsconfig.json`, ses
+propres types Cloudflare et son propre `node_modules`, la racine l'ignore
+volontairement. Le workflow `.github/workflows/hypersensible.yml` rejoue
+exactement cette séquence.
+
+**Ce que ces trois commandes ne voient pas**, et c'est l'essentiel du produit :
+le quota des cinq analyses quotidiennes, le radar branché sur D1, et la tournée
+de veille. Rien de tout cela ne tourne sous `astro dev`, qui ne sert que les
+pages — seul wrangler exécute les Pages Functions :
+
+```bash
+npm run db:init                 # base D1 locale, rejouable sans doublon
+npm run build && npm run preview   # site + fonctions sur :8788
+npm run cron                    # puis curl "localhost:8787/__scheduled?cron=0+4+*+*+*"
+```
+
+Le quota s'éprouve en appelant six fois `/api/reforme` sans `src` : cinq 200,
+puis un 429. Avec `{"src":"groupe"}`, il ne se déclenche jamais — c'est la
+promesse faite aux 48 000 membres, et c'est ce qu'il faut revérifier après toute
+retouche de `functions/api/reforme.ts`.
+
 ## Socle Agence — `agence/`
 
 ```bash
@@ -87,9 +186,14 @@ Les politiques RLS, elles, ne se vérifient pas depuis TypeScript. Elles ont
 leur propre contrôle, sur un vrai PostgreSQL :
 
 ```bash
-docker run --rm -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 --name pg postgres:16
-PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres npm run test:rls
+npm run test:rls
 ```
+
+Rien à préparer : sans serveur joignable, le script monte lui-même un
+PostgreSQL éphémère dans un répertoire temporaire et le jette en sortant.
+C'est la seule voie en session distante, où `docker` existe sans démon
+derrière. Pour viser un serveur existant, les variables habituelles de libpq
+suffisent (`PGHOST`, `PGUSER`, `PGPASSWORD`).
 
 Vingt contrôles : ce qu'un utilisateur, un administrateur et un visiteur
 anonyme peuvent lire et écrire. **À relancer dès qu'on touche à

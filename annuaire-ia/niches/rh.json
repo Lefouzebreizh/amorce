@@ -8,8 +8,8 @@
     "h1_accent": "L'IA des RH",
     "h1_suite": "qui recrutent mieux, pas plus vite",
     "slogan": "Sourcing, entretiens, offres d'emploi, expérience collaborateur : les outils qui rendent du temps aux RH sans déshumaniser le process.",
-    "meta_titre": "IA RH — les outils d'intelligence artificielle pour le recrutement et les ressources humaines",
-    "meta_description": "Sourcing automatisé, comptes rendus d'entretien, rédaction d'offres, chatbot candidat : le comparatif des outils IA testés pour les équipes RH. Prix, avis détaillés et risques juridiques signalés.",
+    "meta_titre": "IA RH — les outils IA du recrutement et des ressources humaines",
+    "meta_description": "Sourcing, comptes rendus d’entretien, rédaction d’offres, chatbot candidat : les outils IA testés en équipe RH. Prix, avis et risques signalés.",
     "theme": {
       "primaire": "#3b82f6",
       "secondaire": "#60a5fa"
@@ -49,6 +49,17 @@
       "score_avis": 4.3,
       "date_ajout": "2026-08-27",
       "description_longue": "## Notre verdict\nTextio mesure l'effet réel du vocabulaire d'une offre sur les candidatures reçues, à partir d'un historique massif de recrutements. Un terme trop guerrier, une liste d'exigences interminable, un jargon interne : chaque élément est signalé avec son impact estimé sur le taux et la diversité des candidatures. Le second usage, plus récent, porte sur les retours d'évaluation annuelle, où les formulations vagues frappent statistiquement certains profils davantage.\n\n## Points forts\n- Suggestions appuyées sur des données de candidatures, pas sur une opinion de style\n- Alerte sur les formulations qui restreignent le vivier sans raison métier\n- S'utilise dans le navigateur, directement dans l'outil de publication\n- Le module d'évaluation professionnelle en fait un outil RH, pas seulement de recrutement\n\n## Points faibles\n- Modèle calibré d'abord sur le marché anglophone : le français est moins précis\n- Sans engagement de l'équipe, les suggestions sont ignorées et l'abonnement dort\n- Aucune formule d'entrée : l'accès se négocie au niveau entreprise\n\n## Idéal pour\nLes équipes de marque employeur qui publient beaucoup d'offres et constatent un vivier trop étroit ou trop homogène sans savoir d'où cela vient."
+    },
+    {
+      "id": "seekout",
+      "nom": "SeekOut",
+      "categorie": "Sourcing",
+      "prix": "Sur devis",
+      "description_courte": "Le moteur de recherche de profils qui va chercher ailleurs que dans les bases habituelles, y compris les candidats qui ne cherchent pas.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/seekout",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nSeekOut agrège des centaines de millions de profils venus de sources publiques variées — dépôts de code, publications scientifiques, brevets, réseaux professionnels — et permet de chercher sur des critères que les bases classiques ignorent. Pour un poste technique rare, c'est la différence entre les vingt mêmes profils que tous les cabinets contactent et un vivier réellement neuf.\n\n## Points forts\n- Sources bien au-delà des réseaux professionnels habituels\n- Recherche par compétence démontrée, pas seulement par intitulé de poste\n- Filtres de diversité utiles pour élargir un vivier trop homogène\n- Séquences de contact intégrées, avec suivi des réponses\n\n## Points faibles\n- Couverture nettement plus riche sur les profils américains\n- Tarification annuelle par licence, lourde pour une équipe de deux recruteurs\n- La qualité des données publiques est inégale : des profils obsolètes remontent\n\n## Idéal pour\nLes recruteurs de profils techniques rares — développement, données, recherche — qui ont épuisé les viviers classiques.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

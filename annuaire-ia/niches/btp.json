@@ -8,8 +8,8 @@
     "h1_accent": "L'IA du chantier",
     "h1_suite": "qui tient les délais",
     "slogan": "Métré, chiffrage, suivi d'avancement, réserves : les outils qui repèrent le dérapage avant qu'il coûte un mois.",
-    "meta_titre": "IA BTP — les outils d'intelligence artificielle pour le bâtiment et les travaux publics",
-    "meta_description": "Métré automatisé, chiffrage, suivi de chantier par vision, gestion des réserves : le comparatif des outils IA testés pour les entreprises du BTP. Prix, avis détaillés et limites réelles.",
+    "meta_titre": "IA BTP — les outils IA du bâtiment et des travaux publics",
+    "meta_description": "Métré automatisé, chiffrage, suivi de chantier, réserves : les outils IA testés en entreprise du bâtiment. Prix, avis détaillés et limites réelles.",
     "theme": {
       "primaire": "#eab308",
       "secondaire": "#facc15"
@@ -49,6 +49,17 @@
       "score_avis": 4.4,
       "date_ajout": "2026-08-27",
       "description_longue": "## Notre verdict\nPlanRadar n'est pas né avec l'intelligence artificielle, il l'a greffée là où elle sert : dictée vocale des réserves, classement automatique par lot et par entreprise, rédaction du compte rendu à partir des observations saisies. Le gain se mesure au moment de la réception — le procès-verbal part le soir même, avec photos localisées, au lieu d'attendre deux jours de mise au propre.\n\n## Points forts\n- Réserve dictée sur place, épinglée sur le plan, affectée à la bonne entreprise\n- Rapports et procès-verbaux générés automatiquement, à la charte de l'entreprise\n- Fonctionne hors ligne : un sous-sol sans réseau ne bloque pas le relevé\n- Prise en main réelle en une demi-journée, y compris par des compagnons\n\n## Points faibles\n- Facturé par utilisateur : le coût grimpe vite si l'on équipe tous les intervenants\n- La reconnaissance vocale bute sur le bruit de chantier et le vocabulaire métier\n- Le module de planning reste en retrait des logiciels spécialisés\n\n## Idéal pour\nLes conducteurs de travaux et les bureaux de contrôle qui passent leurs soirées à remettre au propre des relevés de réserves pris sur carnet."
+    },
+    {
+      "id": "doxel",
+      "nom": "Doxel",
+      "categorie": "Suivi de chantier",
+      "prix": "Sur devis",
+      "description_courte": "L'avancement mesuré par balayage laser et vision : ce qui est réellement posé, comparé à ce qui est facturé.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/doxel",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nDoxel compare l'ouvrage réellement construit à la maquette et au planning, à partir de relevés laser et photographiques. La différence avec un suivi visuel classique est le niveau de détail : l'outil sait qu'il manque vingt mètres de gaine dans un plénum. Le résultat sert autant au pilotage qu'à la vérification des situations de travaux présentées par les sous-traitants.\n\n## Points forts\n- Mesure objective de l'avancement, opposable en réunion de chantier\n- Rapprochement direct entre avancement physique et facturation\n- Détection des écarts d'exécution par rapport à la maquette avant qu'ils soient recouverts\n- Historique complet exploitable en fin d'opération\n\n## Points faibles\n- Nécessite une maquette de bonne qualité et des relevés réguliers\n- Coût qui ne se justifie que sur des opérations techniques importantes\n- Le déploiement demande l'adhésion des entreprises, rarement acquise d'emblée\n\n## Idéal pour\nLes maîtres d'ouvrage et entreprises générales sur des projets techniques — hôpitaux, industrie, data centers — où l'écart entre le facturé et le posé coûte cher.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

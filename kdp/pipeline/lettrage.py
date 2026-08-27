@@ -40,7 +40,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import charte  # noqa: E402
 
-POLICES = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
+POLICES = charte.POLICES
 CORPS, ITALIQUE = POLICES / "Lora-Regular.ttf", POLICES / "Lora-Italic.ttf"
 
 BRUN = (0.36, 0.24, 0.12)

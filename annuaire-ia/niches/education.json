@@ -8,8 +8,8 @@
     "h1_accent": "L'IA des profs",
     "h1_suite": "qui récupèrent leurs dimanches",
     "slogan": "Préparation de cours, différenciation, évaluation, supports : les outils qui abattent la préparation sans abîmer la pédagogie.",
-    "meta_titre": "IA Éducation — les outils d'intelligence artificielle pour enseignants et formateurs",
-    "meta_description": "Préparation de séquences, différenciation des supports, quiz, retours sur copies : le comparatif des outils IA testés en classe. Prix, avis détaillés et précautions avec les données des élèves.",
+    "meta_titre": "IA Éducation — les outils IA des enseignants et formateurs",
+    "meta_description": "Préparation de cours, différenciation, quiz, retours sur copies : les outils IA testés en classe. Prix, avis et précautions sur les données.",
     "theme": {
       "primaire": "#84cc16",
       "secondaire": "#a3e635"
@@ -49,6 +49,17 @@
       "score_avis": 4.4,
       "date_ajout": "2026-08-27",
       "description_longue": "## Notre verdict\nLe risque de l'IA en classe est connu : l'élève obtient la réponse et n'apprend rien. Khanmigo a été construit contre ce travers — il refuse de résoudre l'exercice et relance par des questions, à la manière d'un tuteur socratique. Adossé à la bibliothèque d'exercices de la Khan Academy, il donne à l'enseignant un tableau de bord de ce que chaque élève a réellement compris.\n\n## Points forts\n- Refuse par conception de livrer la solution : l'élève reste acteur\n- Adossé à un fonds d'exercices et de vidéos éprouvé depuis quinze ans\n- Tableau de bord enseignant : blocages identifiés élève par élève\n- Tarif dérisoire au regard de ce qu'est un tutorat particulier\n\n## Points faibles\n- Contenus alignés sur les programmes américains, à retraduire en objectifs français\n- Les mathématiques sont excellentes, les autres matières nettement plus légères\n- Suppose que chaque élève dispose d'un compte et d'un écran\n\n## Idéal pour\nLes enseignants de mathématiques et de sciences qui veulent proposer un soutien en autonomie sans que l'IA devienne une machine à copier."
+    },
+    {
+      "id": "gamma",
+      "nom": "Gamma",
+      "categorie": "Supports de cours",
+      "prix": "Freemium — à partir de 10 $/mois",
+      "description_courte": "Le support de présentation mis en forme tout seul : on écrit le plan, la mise en page suit sans qu'on y touche.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/gamma",
+      "score_avis": 4.5,
+      "description_longue": "## Notre verdict\nGamma supprime l'étape qui décourage : la mise en page. On donne un plan, un document ou un thème, et l'outil produit un support structuré, illustré et cohérent, qui reste modifiable bloc par bloc. Le résultat se projette, se partage en ligne ou s'exporte. Pour un enseignant ou un formateur, c'est deux heures de mise en forme récupérées par séquence.\n\n## Points forts\n- Mise en page automatique qui tient debout, sans travail de gabarit\n- Génération à partir d'un document existant : un cours rédigé devient un support\n- Support consultable en ligne, avec un suivi de ce qui a été vu\n- Export vers les formats de présentation habituels\n\n## Points faibles\n- L'esthétique par défaut est reconnaissable d'un support à l'autre\n- Les illustrations générées demandent souvent un remplacement\n- La formule gratuite marque les documents et limite les crédits\n\n## Idéal pour\nLes formateurs et enseignants qui produisent beaucoup de supports et passent plus de temps à les mettre en forme qu'à les écrire.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

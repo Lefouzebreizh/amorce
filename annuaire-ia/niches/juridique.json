@@ -8,8 +8,8 @@
     "h1_accent": "L'IA des juristes",
     "h1_suite": "qui rend ses heures utiles",
     "slogan": "Recherche, analyse de contrats, rédaction, jurisprudence : les outils qui abattent la recherche brute pour laisser place au raisonnement.",
-    "meta_titre": "IA Juridique — les outils d'intelligence artificielle pour avocats et juristes",
-    "meta_description": "Recherche juridique, analyse contractuelle, rédaction assistée, jurisprudence prédictive : le comparatif des outils IA testés en cabinet et en direction juridique. Prix, avis détaillés, limites déontologiques.",
+    "meta_titre": "IA Juridique — les outils IA des avocats et juristes",
+    "meta_description": "Recherche juridique, analyse de contrats, rédaction, jurisprudence : les outils IA testés en cabinet. Prix, avis et limites déontologiques.",
     "theme": {
       "primaire": "#8b5cf6",
       "secondaire": "#a78bfa"
@@ -49,6 +49,17 @@
       "score_avis": 4.3,
       "date_ajout": "2026-08-27",
       "description_longue": "## Notre verdict\nLuminance a été conçu pour la revue documentaire de masse, celle des opérations de rachat et des audits contractuels. L'outil classe les contrats, repère les clauses qui s'écartent du standard, extrait les dates de renouvellement, les plafonds de responsabilité et les clauses de changement de contrôle. Là où une équipe lisait pendant trois semaines, la cartographie sort en une nuit et l'humain se concentre sur les anomalies.\n\n## Points forts\n- Détection des clauses atypiques sans avoir à décrire à l'avance ce que l'on cherche\n- Extraction structurée des échéances et des engagements sur tout un portefeuille\n- Comparaison automatique à un modèle de référence, écart par écart\n- Fonctionne sur des documents mal numérisés, ce qui est la réalité des archives\n\n## Points faibles\n- L'investissement ne se justifie qu'à partir de volumes importants\n- La qualité des résultats dépend d'un paramétrage initial mené avec l'éditeur\n- Rien ne remplace la lecture des contrats structurants du dossier\n\n## Idéal pour\nLes directions juridiques qui ne savent pas ce que contient leur propre portefeuille contractuel, et les cabinets qui mènent des audits d'acquisition."
+    },
+    {
+      "id": "lexis-plus-ai",
+      "nom": "Lexis+ AI",
+      "categorie": "Recherche juridique",
+      "prix": "Sur devis",
+      "description_courte": "La recherche juridique adossée à un fonds éditorial vérifié, avec des réponses rédigées et systématiquement référencées.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/lexis-plus-ai",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nL'argument de Lexis+ AI est celui de la source : les réponses s'appuient sur un fonds éditorial contrôlé, et chaque affirmation renvoie à un document consultable. Sur une matière où une citation inventée peut coûter une sanction disciplinaire, cette contrainte de traçabilité vaut plus que l'élégance de la rédaction. L'outil produit aussi des trames d'argumentaire et des synthèses de dossier.\n\n## Points forts\n- Réponses systématiquement rattachées à une source consultable\n- Fonds éditorial et doctrine intégrés, pas seulement la jurisprudence brute\n- Synthèses de dossier et trames d'argumentation dans le même environnement\n- Éditeur établi, avec les garanties contractuelles qui vont avec\n\n## Points faibles\n- Fonds français moins complet que celui des acteurs spécialisés locaux\n- Abonnement onéreux, indexé sur le nombre d'utilisateurs\n- Interface héritée d'un outil documentaire ancien, moins fluide que les nouveaux venus\n\n## Idéal pour\nLes cabinets déjà abonnés à l'écosystème LexisNexis, qui veulent une recherche augmentée sans changer de fournisseur documentaire.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }
