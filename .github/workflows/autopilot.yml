@@ -1,0 +1,81 @@
+# Auto-pilote de Radar IA — le site publie et s'indexe tout seul.
+#
+# Tous les deux jours, le workflow ajoute une fiche au catalogue, régénère le
+# sitemap, et pousse le résultat sur `main`. Aucune main humaine n'intervient
+# entre la publication et la mise en ligne.
+#
+# Trois choix méritent une justification :
+#
+# * `0 8 */2 * *` se lit « à 08:00 UTC les jours impairs du mois ». C'est la
+#   façon dont cron exprime « tous les deux jours » ; la seule irrégularité est
+#   le passage du 31 au 1er, qui enchaîne deux exécutions consécutives. Une
+#   fiche de plus un mois sur deux ne justifie pas de sortir de cron.
+# * `workflow_dispatch` est indispensable : c'est ce qui permet de déclencher un
+#   cycle à la main pour vérifier la chaîne sans attendre 48 heures.
+# * Le commit n'est fait que si `git diff` voit quelque chose. Quand le vivier
+#   est épuisé, l'auto-pilote ne modifie rien et le workflow se termine en vert
+#   sans commit vide — un historique de commits « aucun changement » rendrait
+#   illisible celui des vraies publications.
+
+name: Auto-pilote Radar IA
+
+on:
+  schedule:
+    - cron: '0 8 */2 * *'
+  workflow_dispatch:
+
+# Le workflow écrit dans le dépôt : sans cette permission, le push est refusé
+# alors que tout le reste a réussi.
+permissions:
+  contents: write
+
+# Deux exécutions simultanées écriraient toutes les deux dans outils.json et la
+# seconde serait rejetée au push. On sérialise.
+concurrency:
+  group: autopilote-radar-ia
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    name: Publier une fiche et réindexer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          # Le push se fait sur la branche principale : on la vise
+          # explicitement plutôt que de dépendre du contexte du déclencheur.
+          ref: main
+          persist-credentials: true
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Publier une nouvelle fiche
+        working-directory: ia-affiliation
+        run: node auto-pilot.js
+
+      - name: Régénérer le sitemap
+        working-directory: ia-affiliation
+        env:
+          # Réglable dans Settings → Secrets and variables → Actions → Variables.
+          # Vide, le script retombe sur son domaine de démonstration.
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: node generate-sitemap.js
+
+      - name: Committer et pousser les changements
+        run: |
+          set -euo pipefail
+          git config user.name "Radar IA Autopilot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ia-affiliation/outils.json ia-affiliation/sitemap.xml
+          if git diff --cached --quiet; then
+            echo "Vivier épuisé ou catalogue inchangé : rien à publier aujourd'hui."
+            exit 0
+          fi
+          NOMBRE=$(node -e "console.log(require('./ia-affiliation/outils.json').length)")
+          git commit -m "Publier une nouvelle fiche outil (catalogue à ${NOMBRE})"
+          git push origin HEAD:main

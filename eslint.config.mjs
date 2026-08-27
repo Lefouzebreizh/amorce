@@ -22,6 +22,13 @@ const eslintConfig = defineConfig([
     // et ses propres alias `@/…` : analysé depuis la racine, chaque import y
     // pointerait vers `src/` d'Amorce. Il se vérifie depuis `agence/`.
     "agence/**",
+    // Le site d'affiliation Radar IA. Ni Next.js, ni React, ni TypeScript :
+    // deux scripts Node en CommonJS et une page HTML autonome, qui n'ont ni
+    // build ni bundler. Analysés par la configuration d'Amorce, leurs
+    // `require()` sont signalés comme interdits alors qu'ils sont la seule
+    // façon d'écrire un script exécutable par `node fichier.js` — ce que le
+    // workflow d'auto-pilotage fait tous les deux jours.
+    "ia-affiliation/**",
   ]),
 ]);
 

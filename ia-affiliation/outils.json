@@ -1,0 +1,52 @@
+[
+  {
+    "id": "chatgpt",
+    "nom": "ChatGPT",
+    "categorie": "Rédaction",
+    "prix": "Freemium — à partir de 20$/mois",
+    "description_courte": "L'assistant qui rédige, résume et corrige en quelques secondes ce qui vous prenait une matinée.",
+    "description_longue": "ChatGPT est devenu le couteau suisse des professionnels qui écrivent : e-mails commerciaux, comptes rendus de réunion, fiches produit, argumentaires, réponses aux clients. On lui dicte le contexte, le ton et le format attendu, il rend un premier jet exploitable en moins d'une minute. Les versions payantes ouvrent l'accès aux modèles les plus récents, à l'analyse de fichiers (PDF, tableurs, images) et à la création d'assistants sur mesure que l'on réutilise chaque semaine sans réécrire ses consignes.\n\n### Points forts\n- Polyvalence rare : rédaction, traduction, analyse de données, code, brainstorming.\n- Compréhension du français impeccable, y compris sur des tournures métier.\n- Assistants personnalisés réutilisables, qui suppriment la moitié du travail de cadrage.\n- Application mobile fluide, utilisable en dictée entre deux rendez-vous.\n\n### Points faibles\n- Invente parfois des chiffres, des dates ou des sources avec un aplomb total : tout élément factuel se vérifie.\n- Le style par défaut est reconnaissable et doit être retravaillé pour un texte signé.\n- La version gratuite est bridée sur les modèles et les volumes aux heures de pointe.\n\n### Idéal pour\n- Le consultant ou le freelance qui produit beaucoup d'écrit et veut diviser par trois son temps de premier jet.\n- Les équipes support qui traitent un volume élevé de réponses répétitives.\n- Quiconque veut un partenaire de réflexion disponible à trois heures du matin.",
+    "lien_affiliation": "https://exemple-affiliation.com/chatgpt",
+    "date_ajout": "2026-08-27"
+  },
+  {
+    "id": "midjourney",
+    "nom": "Midjourney",
+    "categorie": "Design",
+    "prix": "À partir de 10$/mois",
+    "description_courte": "La qualité d'image la plus haute du marché, à partir d'une simple phrase.",
+    "description_longue": "Midjourney reste la référence esthétique de la génération d'images. Là où ses concurrents produisent une illustration correcte, il produit une image qu'on ose mettre en couverture : matières crédibles, lumière travaillée, cohérence des ambiances d'une série à l'autre. Les paramètres de style, les références d'image et les profils personnels permettent de tenir une direction artistique sur des dizaines de visuels, ce qui en fait un vrai outil de production et plus seulement un jouet à prompts.\n\n### Points forts\n- Rendu artistique nettement au-dessus de la moyenne, dès le premier essai.\n- Cohérence de style tenable sur toute une campagne grâce aux profils et aux références.\n- Retouches ciblées : agrandissement du cadre, remplacement d'une zone, variations locales.\n- Communauté immense : les recettes de prompts circulent et s'apprennent vite.\n\n### Points faibles\n- Aucune formule gratuite : l'essai coûte dès le premier jour.\n- Le texte intégré aux images reste approximatif, à éviter pour un visuel qui doit porter un slogan.\n- La prise en main passe par une logique de prompt qui demande quelques heures d'apprentissage.\n\n### Idéal pour\n- Les indépendants du marketing et du contenu qui achetaient jusqu'ici des banques d'images.\n- Les éditeurs, auteurs et créateurs de formations qui ont besoin de visuels originaux en série.\n- Les studios qui produisent des planches d'ambiance avant de lancer une production coûteuse.",
+    "lien_affiliation": "https://exemple-affiliation.com/midjourney",
+    "date_ajout": "2026-08-27"
+  },
+  {
+    "id": "notion-ai",
+    "nom": "Notion AI",
+    "categorie": "Productivité",
+    "prix": "À partir de 10$/mois par utilisateur",
+    "description_courte": "L'IA qui travaille directement dans vos notes, vos projets et votre base de connaissances.",
+    "description_longue": "L'intérêt de Notion AI n'est pas d'être le meilleur modèle du marché, mais d'être branché sur vos documents. Il résume un compte rendu de deux mille mots en cinq puces, extrait les décisions et les responsables d'une réunion, remplit automatiquement une colonne de base de données (catégorie, priorité, résumé) sur des centaines de lignes, et répond aux questions en cherchant dans l'espace de travail plutôt que sur le web. C'est la différence entre un assistant générique et un assistant qui connaît votre entreprise.\n\n### Points forts\n- Recherche transversale dans tout l'espace de travail, avec la source citée.\n- Remplissage automatique de propriétés de base de données : un gain massif sur les tableaux de suivi.\n- Aucune rupture d'outil : tout se passe dans les pages déjà utilisées au quotidien.\n- Facturation simple, adossée à l'abonnement Notion existant.\n\n### Points faibles\n- Sans un espace Notion déjà organisé, l'apport est faible : l'outil ne range pas le désordre à votre place.\n- Moins puissant qu'un assistant généraliste sur les tâches de raisonnement long.\n- Le supplément par utilisateur monte vite sur une équipe de vingt personnes.\n\n### Idéal pour\n- Les équipes dont la documentation, les projets et le CRM vivent déjà dans Notion.\n- Les chefs de projet qui passent leurs vendredis à résumer des réunions.\n- Les solopreneurs qui veulent un second cerveau réellement consultable.",
+    "lien_affiliation": "https://exemple-affiliation.com/notion-ai",
+    "date_ajout": "2026-08-27"
+  },
+  {
+    "id": "elevenlabs",
+    "nom": "ElevenLabs",
+    "categorie": "Audio",
+    "prix": "Freemium — à partir de 5$/mois",
+    "description_courte": "Des voix off si naturelles qu'on ne cherche plus de comédien pour un module de formation.",
+    "description_longue": "ElevenLabs a fait passer la synthèse vocale du robot au comédien. L'intonation suit la ponctuation, les respirations tombent au bon endroit, et le français n'est pas une traduction bâclée de l'anglais mais une vraie voix française. On y clone aussi sa propre voix à partir de quelques minutes d'enregistrement, ce qui permet de produire cinquante modules de formation sans repasser au studio, ou de corriger une phrase ratée sans reprendre toute la séance.\n\n### Points forts\n- Qualité de restitution du français au niveau d'une voix professionnelle.\n- Clonage de voix rapide et bluffant, avec réglage de la stabilité et de l'expressivité.\n- Doublage automatique d'une vidéo dans une trentaine de langues, en gardant le timbre.\n- API propre, facile à brancher dans une chaîne de production automatisée.\n\n### Points faibles\n- Les formules d'entrée épuisent leur quota de caractères très vite dès qu'on produit à la chaîne.\n- Le clonage impose une vraie vigilance juridique : consentement écrit obligatoire pour toute voix qui n'est pas la vôtre.\n- Les émotions fortes (colère, ironie) demandent encore plusieurs essais.\n\n### Idéal pour\n- Les formateurs et les organismes qui produisent des modules e-learning en série.\n- Les créateurs de vidéos courtes qui ne veulent pas s'enregistrer eux-mêmes.\n- Les éditeurs de podcasts et de livres audio cherchant une piste de secours crédible.",
+    "lien_affiliation": "https://exemple-affiliation.com/elevenlabs",
+    "date_ajout": "2026-08-27"
+  },
+  {
+    "id": "runway",
+    "nom": "Runway",
+    "categorie": "Vidéo",
+    "prix": "Freemium — à partir de 15$/mois",
+    "description_courte": "Un plan vidéo cinéma généré à partir d'une image fixe ou de trois lignes de texte.",
+    "description_longue": "Runway est le studio de génération vidéo le plus abouti pour un usage professionnel. À partir d'une phrase ou, mieux, d'une image de départ, il produit des plans de quelques secondes avec des mouvements de caméra dirigés : travelling, panoramique, zoom lent. Autour du générateur, la plateforme empile les outils qui manquent partout ailleurs — détourage automatique, suppression d'objet, extension de cadre, ralenti — ce qui en fait une chaîne de post-production complète plutôt qu'une simple démonstration technique.\n\n### Points forts\n- Contrôle réel du mouvement de caméra, rare chez les concurrents.\n- Boîte à outils de post-production intégrée : détourage, effacement d'objet, changement de format.\n- Génération à partir d'une image de référence, la seule façon de tenir une direction artistique.\n- Rendu rapide, compatible avec un rythme de publication quotidien.\n\n### Points faibles\n- Les plans dépassent rarement une dizaine de secondes : le montage reste indispensable.\n- Les mains, les foules et le texte à l'écran trahissent encore la génération.\n- Le système de crédits se consomme à une vitesse déroutante les premiers jours.\n\n### Idéal pour\n- Les créateurs de formats courts qui ont besoin de plans d'illustration impossibles à tourner.\n- Les agences produisant des concepts publicitaires avant d'engager un tournage.\n- Les monteurs qui veulent boucher un trou dans un rush sans reprendre la caméra.",
+    "lien_affiliation": "https://exemple-affiliation.com/runway",
+    "date_ajout": "2026-08-27"
+  }
+]

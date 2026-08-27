@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radar IA — Les outils d'intelligence artificielle qui font gagner du temps aux pros</title>
+<meta name="description" content="Sélection d'outils d'intelligence artificielle testés pour les professionnels : rédaction, vidéo, design, audio, productivité et automatisation. Avis détaillés, points forts, points faibles et tarifs.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#08080f">
+<link rel="canonical" href="https://radar-ia.example/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Radar IA — Les outils d'IA qui font gagner du temps aux pros">
+<meta property="og:description" content="Avis détaillés sur les meilleurs outils d'intelligence artificielle pour les professionnels. Mis à jour automatiquement.">
+<meta property="og:url" content="https://radar-ia.example/">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // Le CDN peut être bloqué (réseau d'entreprise, coupure) : la page doit alors
+  // s'afficher sans style plutôt que d'échouer sur une variable absente.
+  if (window.tailwind) {
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            ink: '#08080f',
+            slab: '#0e0e1a',
+            panel: '#141426',
+            raised: '#1c1c33',
+            edge: '#2a2a47',
+            mist: '#a5a5c4',
+            accent: '#8b5cf6',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+        },
+      },
+    };
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { background-color: #08080f; }
+  /* Le halo de fond est purement décoratif : posé en `fixed` derrière tout le
+     reste, il ne participe jamais au flux et ne peut donc pas décaler la grille
+     sur un écran étroit. */
+  .halo::before {
+    content: '';
+    position: fixed;
+    inset: -20% -10% auto -10%;
+    height: 60vh;
+    background:
+      radial-gradient(45% 60% at 20% 0%, rgba(139, 92, 246, 0.28), transparent 70%),
+      radial-gradient(40% 55% at 80% 10%, rgba(56, 132, 255, 0.22), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .carte { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+  .carte:hover { transform: translateY(-4px); border-color: #6d4bd8; box-shadow: 0 18px 40px -22px rgba(139, 92, 246, .75); }
+  .modale-fond { backdrop-filter: blur(6px); }
+  .avis h3 { font-weight: 600; color: #e6e6ff; margin-top: 1.25rem; margin-bottom: .5rem; font-size: 1.05rem; }
+  .avis p { color: #c3c3dd; line-height: 1.7; margin-bottom: .75rem; }
+  .avis ul { margin: 0 0 .75rem 0; padding: 0; list-style: none; }
+  .avis li { color: #c3c3dd; line-height: 1.7; padding-left: 1.4rem; position: relative; margin-bottom: .35rem; }
+  .avis li::before { content: '▸'; position: absolute; left: 0; color: #8b5cf6; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .carte { transition: none; }
+    .carte:hover { transform: none; }
+  }
+</style>
+</head>
+<body class="halo bg-ink text-slate-100 font-sans antialiased min-h-[100dvh]">
+
+<div class="relative z-10">
+
+  <!-- ══ En-tête ══ -->
+  <header class="max-w-6xl mx-auto px-5 pt-14 pb-10 sm:pt-20 sm:pb-14 text-center">
+    <span class="inline-flex items-center gap-2 rounded-full border border-edge bg-panel/70 px-4 py-1.5 text-xs sm:text-sm text-mist">
+      <span class="h-2 w-2 rounded-full bg-accent animate-pulse"></span>
+      Catalogue mis à jour automatiquement — <span id="compteur-outils" class="text-slate-200 font-medium">…</span>
+    </span>
+    <h1 class="mt-6 text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.05]">
+      <span class="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-sky-400 bg-clip-text text-transparent">Radar IA</span>
+    </h1>
+    <p class="mt-5 text-lg sm:text-2xl text-slate-300 max-w-3xl mx-auto leading-snug">
+      Arrêtez de tester des outils au hasard. Voici les IA qui vous rendent
+      <span class="text-slate-100 font-semibold">une journée de travail par semaine</span>.
+    </p>
+    <p class="mt-4 text-sm sm:text-base text-mist max-w-2xl mx-auto">
+      Chaque outil est présenté avec son tarif réel, ses points forts, ses limites
+      et le profil de pro pour lequel il vaut vraiment son abonnement.
+    </p>
+  </header>
+
+  <!-- ══ Recherche et filtres ══ -->
+  <section class="max-w-6xl mx-auto px-5" aria-label="Recherche et filtres">
+    <div class="rounded-2xl border border-edge bg-panel/80 p-4 sm:p-5 shadow-2xl shadow-black/40">
+      <label for="recherche" class="sr-only">Rechercher un outil</label>
+      <div class="relative">
+        <svg class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-mist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+        </svg>
+        <input id="recherche" type="search" autocomplete="off"
+          placeholder="Rechercher : vidéo, voix off, rédaction, automatisation…"
+          class="w-full min-h-11 rounded-xl bg-raised border border-edge pl-12 pr-4 py-3 text-base text-slate-100 placeholder:text-mist/70 outline-none focus:border-accent focus:ring-2 focus:ring-accent/40">
+      </div>
+      <div id="filtres" class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filtrer par catégorie"></div>
+    </div>
+  </section>
+
+  <!-- ══ Grille des outils ══ -->
+  <main class="max-w-6xl mx-auto px-5 py-10 sm:py-14">
+    <p id="resultat-compte" class="mb-5 text-sm text-mist" aria-live="polite"></p>
+    <div id="grille" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"></div>
+
+    <div id="vide" class="hidden text-center py-20">
+      <p class="text-2xl font-semibold text-slate-200">Aucun outil ne correspond</p>
+      <p class="mt-2 text-mist">Essayez un autre mot-clé, ou revenez à toutes les catégories.</p>
+      <button type="button" id="reinitialiser"
+        class="mt-6 min-h-11 rounded-xl bg-accent px-6 font-medium text-white hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-accent/60">
+        Tout réafficher
+      </button>
+    </div>
+
+    <div id="erreur" class="hidden mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5 text-amber-200">
+      <p class="font-semibold">Le catalogue n'a pas pu être chargé.</p>
+      <p class="mt-2 text-sm leading-relaxed">
+        Le fichier <code class="rounded bg-black/40 px-1.5 py-0.5">outils.json</code> se lit par requête réseau :
+        ouvrir <code class="rounded bg-black/40 px-1.5 py-0.5">index.html</code> par double-clic
+        (<code class="rounded bg-black/40 px-1.5 py-0.5">file://</code>) le bloque.
+        Lancez un serveur local depuis ce dossier :
+        <code class="mt-2 block rounded bg-black/40 px-2 py-1">npx serve .</code>
+      </p>
+    </div>
+  </main>
+
+  <footer class="border-t border-edge/70 mt-8">
+    <div class="max-w-6xl mx-auto px-5 py-10 text-sm text-mist text-center space-y-2">
+      <p>Certains liens de cette page sont des liens d'affiliation : ils ne changent rien à votre prix et financent les tests.</p>
+      <p>Radar IA — catalogue tenu à jour automatiquement, sans intervention manuelle.</p>
+    </div>
+  </footer>
+</div>
+
+<!-- ══ Modale d'avis détaillé ══ -->
+<div id="modale" class="hidden fixed inset-0 z-50 items-end sm:items-center justify-center p-0 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="modale-titre">
+  <div id="modale-fond" class="modale-fond absolute inset-0 bg-black/70"></div>
+  <div class="relative w-full sm:max-w-3xl max-h-[92dvh] sm:max-h-[85dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-edge bg-slab shadow-2xl">
+    <div class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-edge bg-slab/95 px-5 sm:px-8 py-5">
+      <div>
+        <p id="modale-categorie" class="text-xs uppercase tracking-widest text-accent font-semibold"></p>
+        <h2 id="modale-titre" class="mt-1 text-2xl sm:text-3xl font-bold text-slate-50"></h2>
+        <p id="modale-prix" class="mt-1 text-sm text-mist"></p>
+      </div>
+      <button type="button" id="fermer-modale" aria-label="Fermer l'avis détaillé"
+        class="shrink-0 min-h-11 min-w-11 grid place-items-center rounded-xl border border-edge bg-raised text-mist hover:text-slate-100 hover:border-accent focus:outline-none focus:ring-2 focus:ring-accent/60">
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+      </button>
+    </div>
+    <div id="modale-corps" class="avis px-5 sm:px-8 py-6"></div>
+    <div class="sticky bottom-0 border-t border-edge bg-slab/95 px-5 sm:px-8 py-4"
+         style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
+      <a id="modale-lien" href="#" target="_blank" rel="noopener sponsored"
+        class="flex min-h-12 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-sky-500 px-6 font-semibold text-white hover:from-violet-500 hover:to-sky-400 focus:outline-none focus:ring-2 focus:ring-accent/60">
+        Voir l'outil
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ────────────────────────────────────────────────────────────────────────
+     État. Une seule source de vérité : le catalogue chargé, plus les deux
+     réglages de l'utilisateur. Tout l'affichage se recalcule à partir d'eux,
+     ce qui évite la classe de bogues où la grille et le compteur divergent.
+     ──────────────────────────────────────────────────────────────────────── */
+  var catalogue = [];
+  var categorieActive = 'Toutes';
+  var texteRecherche = '';
+  var dernierDeclencheur = null;
+  var titreInitial = document.title;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var grille = $('grille');
+  var filtres = $('filtres');
+  var vide = $('vide');
+  var erreur = $('erreur');
+  var compte = $('resultat-compte');
+  var modale = $('modale');
+
+  /* ── Chargement du catalogue ───────────────────────────────────────────── */
+  fetch('outils.json?v=' + Date.now())
+    .then(function (r) {
+      if (!r.ok) { throw new Error('HTTP ' + r.status); }
+      return r.json();
+    })
+    .then(function (donnees) {
+      catalogue = Array.isArray(donnees) ? donnees.slice() : [];
+      // Le plus récent en tête : c'est ce qui donne au visiteur la preuve que
+      // le site vit, et c'est aussi ce que l'auto-pilote ajoute chaque cycle.
+      catalogue.sort(function (a, b) {
+        return String(b.date_ajout).localeCompare(String(a.date_ajout));
+      });
+      $('compteur-outils').textContent = catalogue.length + ' outils testés';
+      construireFiltres();
+      afficher();
+      injecterDonneesStructurees();
+      ouvrirDepuisURL();
+    })
+    .catch(function () {
+      erreur.classList.remove('hidden');
+      $('compteur-outils').textContent = 'catalogue indisponible';
+    });
+
+  /* ── Filtres de catégorie, déduits des données ─────────────────────────── */
+  function construireFiltres() {
+    var vues = ['Toutes'];
+    catalogue.forEach(function (o) {
+      if (o.categorie && vues.indexOf(o.categorie) === -1) { vues.push(o.categorie); }
+    });
+    filtres.textContent = '';
+    vues.forEach(function (nom) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = nom;
+      b.dataset.categorie = nom;
+      b.className = classeFiltre(nom === categorieActive);
+      b.setAttribute('aria-pressed', String(nom === categorieActive));
+      b.addEventListener('click', function () {
+        categorieActive = nom;
+        Array.prototype.forEach.call(filtres.children, function (autre) {
+          var actif = autre.dataset.categorie === categorieActive;
+          autre.className = classeFiltre(actif);
+          autre.setAttribute('aria-pressed', String(actif));
+        });
+        afficher();
+      });
+      filtres.appendChild(b);
+    });
+  }
+
+  function classeFiltre(actif) {
+    return 'min-h-11 rounded-xl px-4 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-accent/60 ' +
+      (actif
+        ? 'bg-accent text-white'
+        : 'bg-raised text-mist border border-edge hover:text-slate-100 hover:border-accent/70');
+  }
+
+  /* ── Recherche en temps réel ───────────────────────────────────────────── */
+  $('recherche').addEventListener('input', function (e) {
+    texteRecherche = normaliser(e.target.value);
+    afficher();
+  });
+
+  $('reinitialiser').addEventListener('click', function () {
+    texteRecherche = '';
+    categorieActive = 'Toutes';
+    $('recherche').value = '';
+    construireFiltres();
+    afficher();
+  });
+
+  // Sans repli des accents, « rédaction » ne trouverait pas « redaction » —
+  // et c'est exactement ce qu'on tape sur un clavier de téléphone pressé.
+  function normaliser(v) {
+    return String(v || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  function correspond(outil) {
+    if (categorieActive !== 'Toutes' && outil.categorie !== categorieActive) { return false; }
+    if (!texteRecherche) { return true; }
+    var foin = normaliser([
+      outil.nom, outil.categorie, outil.prix,
+      outil.description_courte, outil.description_longue
+    ].join(' '));
+    return texteRecherche.split(/\s+/).every(function (mot) {
+      return foin.indexOf(mot) !== -1;
+    });
+  }
+
+  /* ── Rendu de la grille ────────────────────────────────────────────────── */
+  function afficher() {
+    var retenus = catalogue.filter(correspond);
+    grille.textContent = '';
+    retenus.forEach(function (outil) { grille.appendChild(carte(outil)); });
+    vide.classList.toggle('hidden', retenus.length !== 0);
+    compte.textContent = retenus.length === 0
+      ? ''
+      : retenus.length + (retenus.length > 1 ? ' outils affichés' : ' outil affiché') +
+        (categorieActive === 'Toutes' ? '' : ' dans « ' + categorieActive + ' »');
+  }
+
+  function carte(outil) {
+    var art = document.createElement('article');
+    art.className = 'carte flex flex-col rounded-2xl border border-edge bg-panel p-5 shadow-xl shadow-black/30';
+
+    var haut = document.createElement('div');
+    haut.className = 'flex items-center justify-between gap-3';
+
+    var cat = document.createElement('span');
+    cat.className = 'rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-violet-300';
+    cat.textContent = outil.categorie || 'Divers';
+    haut.appendChild(cat);
+
+    if (estRecent(outil.date_ajout)) {
+      var neuf = document.createElement('span');
+      neuf.className = 'rounded-full bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300';
+      neuf.textContent = 'Nouveau';
+      haut.appendChild(neuf);
+    }
+    art.appendChild(haut);
+
+    var titre = document.createElement('h2');
+    titre.className = 'mt-4 text-xl font-bold text-slate-50';
+    titre.textContent = outil.nom || 'Sans nom';
+    art.appendChild(titre);
+
+    var prix = document.createElement('p');
+    prix.className = 'mt-1 text-sm font-medium text-emerald-300';
+    prix.textContent = outil.prix || 'Tarif non communiqué';
+    art.appendChild(prix);
+
+    var courte = document.createElement('p');
+    courte.className = 'mt-3 flex-1 text-[0.95rem] leading-relaxed text-mist';
+    courte.textContent = outil.description_courte || '';
+    art.appendChild(courte);
+
+    var actions = document.createElement('div');
+    actions.className = 'mt-5 flex flex-col gap-2';
+
+    var lien = document.createElement('a');
+    lien.href = outil.lien_affiliation || '#';
+    lien.target = '_blank';
+    lien.rel = 'noopener sponsored';
+    lien.className = 'flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-sky-500 px-4 font-semibold text-white hover:from-violet-500 hover:to-sky-400 focus:outline-none focus:ring-2 focus:ring-accent/60';
+    lien.textContent = "Voir l'outil";
+    actions.appendChild(lien);
+
+    var savoir = document.createElement('button');
+    savoir.type = 'button';
+    savoir.className = 'min-h-11 rounded-xl border border-edge bg-raised px-4 text-sm font-medium text-mist hover:text-slate-100 hover:border-accent focus:outline-none focus:ring-2 focus:ring-accent/60';
+    savoir.textContent = 'En savoir plus';
+    savoir.addEventListener('click', function () { ouvrir(outil, savoir); });
+    actions.appendChild(savoir);
+
+    art.appendChild(actions);
+    return art;
+  }
+
+  function estRecent(date) {
+    var t = Date.parse(date);
+    if (isNaN(t)) { return false; }
+    return (Date.now() - t) < 8 * 24 * 60 * 60 * 1000;
+  }
+
+  /* ── Modale : l'avis détaillé sans quitter la page ─────────────────────── */
+  function ouvrir(outil, declencheur) {
+    dernierDeclencheur = declencheur || null;
+    $('modale-categorie').textContent = outil.categorie || '';
+    $('modale-titre').textContent = outil.nom || '';
+    $('modale-prix').textContent = outil.prix || '';
+    $('modale-lien').href = outil.lien_affiliation || '#';
+    rendreAvis($('modale-corps'), outil.description_longue || outil.description_courte || '');
+    modale.classList.remove('hidden');
+    modale.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    $('fermer-modale').focus();
+    marquerURL(outil);
+  }
+
+  function fermer() {
+    modale.classList.add('hidden');
+    modale.classList.remove('flex');
+    document.body.style.overflow = '';
+    document.title = titreInitial;
+    remplacerURL(location.pathname);
+    if (dernierDeclencheur) { dernierDeclencheur.focus(); dernierDeclencheur = null; }
+  }
+
+  $('fermer-modale').addEventListener('click', fermer);
+  $('modale-fond').addEventListener('click', fermer);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !modale.classList.contains('hidden')) { fermer(); }
+  });
+
+  /* L'avis est stocké en texte : titres préfixés « ### », puces préfixées
+     « - ». On construit des nœuds DOM plutôt que d'affecter innerHTML —
+     le catalogue est réécrit par un script automatisé, et un jour où il
+     avalera une description venue d'ailleurs, cette page ne doit pas être
+     le trou par lequel du balisage entre. */
+  function rendreAvis(cible, texte) {
+    cible.textContent = '';
+    var liste = null;
+    String(texte).split('\n').forEach(function (ligne) {
+      var l = ligne.trim();
+      if (!l) { liste = null; return; }
+      if (l.indexOf('### ') === 0) {
+        liste = null;
+        var h = document.createElement('h3');
+        h.textContent = l.slice(4);
+        cible.appendChild(h);
+        return;
+      }
+      if (l.indexOf('- ') === 0) {
+        if (!liste) { liste = document.createElement('ul'); cible.appendChild(liste); }
+        var li = document.createElement('li');
+        li.textContent = l.slice(2);
+        liste.appendChild(li);
+        return;
+      }
+      liste = null;
+      var p = document.createElement('p');
+      p.textContent = l;
+      cible.appendChild(p);
+    });
+  }
+
+  /* Le sitemap annonce une URL « ?outil=… » par fiche. Elles doivent donc
+     répondre autrement que la page d'accueil, sans quoi Google n'y verrait
+     que du contenu dupliqué : à l'ouverture, l'avis correspondant s'affiche
+     et le titre du document devient celui de l'outil. */
+  function ouvrirDepuisURL() {
+    var demande = null;
+    try {
+      demande = new URLSearchParams(location.search).get('outil');
+    } catch (e) {
+      demande = null;
+    }
+    if (!demande) { return; }
+    for (var i = 0; i < catalogue.length; i += 1) {
+      if (catalogue[i].id === demande) { ouvrir(catalogue[i], null); return; }
+    }
+  }
+
+  function marquerURL(outil) {
+    document.title = outil.nom + ' : avis détaillé, tarif et alternatives — Radar IA';
+    remplacerURL(location.pathname + '?outil=' + encodeURIComponent(outil.id));
+  }
+
+  // Un fichier ouvert en `file://` refuse la réécriture d'historique : la
+  // fiche doit rester consultable malgré tout, l'URL n'est qu'un confort.
+  function remplacerURL(cible) {
+    try {
+      history.replaceState(null, '', cible);
+    } catch (e) {
+      /* rien à faire : l'affichage, lui, a déjà eu lieu */
+    }
+  }
+
+  /* ── Données structurées : ce que Google lit pour comprendre la page ───── */
+  function injecterDonneesStructurees() {
+    var donnees = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Outils d’intelligence artificielle pour les professionnels',
+      numberOfItems: catalogue.length,
+      itemListElement: catalogue.map(function (outil, i) {
+        return {
+          '@type': 'ListItem',
+          position: i + 1,
+          item: {
+            '@type': 'SoftwareApplication',
+            name: outil.nom,
+            applicationCategory: outil.categorie,
+            description: outil.description_courte,
+            offers: { '@type': 'Offer', description: outil.prix }
+          }
+        };
+      })
+    };
+    var balise = document.createElement('script');
+    balise.type = 'application/ld+json';
+    balise.textContent = JSON.stringify(donnees);
+    document.head.appendChild(balise);
+  }
+})();
+</script>
+</body>
+</html>
