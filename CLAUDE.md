@@ -251,7 +251,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
 | `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
 | `/stack-agence-supabase` | Réaliser un projet client sur la stack de l'agence (Next.js 16, Supabase, RLS, shadcn) : ordre de travail, SQL durci, cinq règles de sécurité. Hors Amorce. |
-| `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
+| `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, quel workflow couvre quoi et comment le déclencher — aucune vérification ne démarre seule sur une PR ouverte par une session — et ce qu'une session distante ne sait pas faire. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
 | `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
