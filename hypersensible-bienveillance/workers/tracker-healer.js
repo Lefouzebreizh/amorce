@@ -1,7 +1,9 @@
 /**
  * Worker de veille quotidienne — « tracker » et « healer » dans le même passage.
  *
- * Deux métiers, une seule tournée de nuit (04 h 00 UTC, voir `wrangler.toml`) :
+ * Trois métiers, une seule tournée de nuit (04 h 00 UTC, voir
+ * `wrangler.veille.toml`) — parce qu'elle est la seule chose de ce projet qui
+ * se réveille toute seule :
  *
  * 1. **Healer** — chaque lien suivi est appelé et `last_checked` est mis à jour.
  *    Un lien mort sur une page qui prétend renseigner, c'est pire que pas de
@@ -10,6 +12,9 @@
  *
  * 2. **Tracker** — un point de prix est ajouté à `price_history` pour alimenter
  *    la courbe du radar.
+ *
+ * 3. **Ménage** — les compteurs de quota de plus de trente jours sont effacés.
+ *    Rien ne se conserve ici, pas même une empreinte qui ne sert plus.
  *
  * ⚠️ Ce que ce Worker ne fait pas, et il faut le lire avant de croire les
  * courbes : il ne **lit** pas les prix. Un `HEAD` rend un code de statut, pas
@@ -33,6 +38,13 @@ const AMPLITUDE = 0.05;
 
 /** Plancher : aucune de ces applications n'est descendue sous un euro. */
 const PRIX_PLANCHER = 0.99;
+
+/**
+ * Au-delà de ce délai, un compteur de quota ne pèse plus sur aucune décision.
+ * Le quota est journalier : trente jours laissent une marge confortable pour
+ * enquêter sur un abus récent, et rien au-delà ne sert.
+ */
+const RETENTION_QUOTA_JOURS = 30;
 
 /**
  * Appelle un lien et rend son état. Ne lève jamais : un site injoignable est un
@@ -104,6 +116,47 @@ async function alerter(env, pannes) {
   }
 }
 
+/**
+ * Efface les compteurs de quota devenus inutiles.
+ *
+ * Rien à voir avec le radar, et c'est pourtant la tournée de nuit qui s'en
+ * charge : elle est la seule chose de ce projet qui se réveille toute seule.
+ *
+ * La doctrine dit que rien de ce qui est écrit n'est conservé. Une empreinte
+ * salée n'est pas un texte soumis, mais une empreinte qui traîne un an reste
+ * quelque chose de conservé, et le jour où le sel fuiterait, une année
+ * d'adresses se retrouverait derrière trois secondes de calcul. Ce qui n'a
+ * plus d'usage s'en va.
+ *
+ * **La comparaison se fait de date à date**, jamais contre un `datetime`.
+ * `last_request` est écrit par `date('now')` — « 2026-08-27 », sans heure —
+ * et le confronter à `datetime('now', '-30 days')` reviendrait à comparer
+ * « 2026-07-28 » à « 2026-07-28 10 h 52 » : la chaîne courte passe devant, et
+ * la ligne du trentième jour partait un jour trop tôt. C'est le même piège que
+ * la fenêtre du radar, qui avait perdu le premier point de chaque courbe.
+ *
+ * Ne lève jamais : les relevés de la nuit sont déjà en base quand on arrive
+ * ici, et les perdre pour un ménage raté serait un mauvais échange. L'échec
+ * ressort dans le bilan, donc dans le journal du Worker.
+ */
+async function purgerQuotas(env) {
+  try {
+    // `last_request IS NULL` : aucun écrivain actuel ne laisse cette colonne
+    // vide — `/api/reforme` la renseigne toujours. La clause est là pour qu'un
+    // écrivain futur qui l'oublierait ne fabrique pas une ligne que rien ne
+    // pourrait plus effacer : une empreinte immortelle est exactement ce que
+    // cette fonction existe pour empêcher.
+    const { meta } = await env.DB.prepare(
+      "DELETE FROM users WHERE last_request IS NULL OR last_request < date('now', ?1)",
+    )
+      .bind(`-${RETENTION_QUOTA_JOURS} days`)
+      .run();
+    return { supprimes: meta?.changes ?? 0 };
+  } catch (erreur) {
+    return { supprimes: 0, echec: String(erreur?.message ?? erreur) };
+  }
+}
+
 /** La tournée elle-même, isolée pour être appelable depuis `scheduled` et `fetch`. */
 async function tournee(env) {
   const { results: outils } = await env.DB.prepare(
@@ -150,6 +203,11 @@ async function tournee(env) {
   // écrite donnerait un radar où trois outils sont d'hier et sept d'aujourd'hui.
   await env.DB.batch(ecritures);
 
+  // Hors du `batch`, et à dessein : le ménage des quotas ne partage rien avec
+  // les relevés, et l'enfermer dans la même transaction ferait perdre une
+  // nuit de mesures pour une suppression refusée.
+  const quotas = await purgerQuotas(env);
+
   // Archive du jour dans R2. D1 se purge, se restaure de travers, se perd ; un
   // instantané JSON par jour permet de reconstruire l'historique à la main.
   if (env.BUCKET_EMOTIONS) {
@@ -172,6 +230,7 @@ async function tournee(env) {
     verifies: outils.length,
     pannes: pannes.length,
     simule: simuler,
+    quotas,
     alerte,
   };
 }
@@ -193,7 +252,7 @@ export default {
    * Point d'entrée HTTP réservé à l'essai manuel. Il ne lance rien de lui-même :
    * une adresse publique capable de réécrire tous les prix serait une porte
    * ouverte. Pour déclencher la tournée en local :
-   *   wrangler dev --config workers/wrangler.toml --test-scheduled
+   *   wrangler dev --config wrangler.veille.toml --test-scheduled
    *   curl "http://localhost:8787/__scheduled?cron=0+4+*+*+*"
    */
   async fetch() {
@@ -204,4 +263,9 @@ export default {
   },
 };
 
-export { tournee, prixSimule, verifier };
+// `workerd` refuse de charger un module d'entrée dont un export nommé n'est ni
+// une fonction ni un ExportedHandler : sortir `RETENTION_QUOTA_JOURS` d'ici a
+// suffi à faire échouer le démarrage du Worker entier, avec une erreur qui
+// nomme la constante et pas la règle. Les tests unitaires n'en voyaient rien —
+// seul `npm run cron` le montre. N'exporter que des fonctions.
+export { tournee, prixSimule, verifier, purgerQuotas };

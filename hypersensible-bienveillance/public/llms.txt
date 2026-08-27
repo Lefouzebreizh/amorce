@@ -75,7 +75,7 @@ au même endroit. Ne pas le redéplacer.
 
 | Table | Colonnes | Rôle |
 | --- | --- | --- |
-| `users` | `id`, `ip_hash`, `src`, `usage_count`, `last_request`, `created_at` | Compteur de quota du trafic externe. Index unique sur `ip_hash`. Aucun texte soumis. |
+| `users` | `id`, `ip_hash`, `src`, `usage_count`, `last_request`, `created_at` | Compteur de quota du trafic externe. Index unique sur `ip_hash`. Aucun texte soumis. **Purgée à trente jours** par la tournée de nuit. |
 | `tools` | `id`, `name`, `url`, `current_price`, `last_checked` | Les dix applications suivies. Index unique sur `url`. |
 | `price_history` | `id`, `tool_id`, `price`, `checked_at` | Points de courbe. Index sur `(tool_id, checked_at)`. |
 
@@ -151,6 +151,18 @@ répondent alors « indisponible », et c'est normal. Pour les essayer, passer p
   ici : la déclarer dans ce `package.json`, jamais compter sur le voisin.
 - **Un prix n'est relevé que sur un site qui a répondu.** Prolonger la courbe
   d'un site en panne inventerait une mesure.
+- **Le module d'entrée d'un Worker n'exporte que des fonctions.** `workerd`
+  refuse au chargement tout export nommé qui n'est ni une fonction ni un
+  `ExportedHandler` : une simple constante exportée de `tracker-healer.js`
+  pour les besoins d'un test empêchait le Worker entier de démarrer. Les tests
+  unitaires passaient au vert ; seul `npm run cron` l'a montré. Un test a
+  besoin d'une valeur du module : qu'il lise ce que le code en fait, pas la
+  constante elle-même.
+- **Comparer une date à une date.** `last_request` est écrit par `date('now')`,
+  donc sans heure. Confronté à un `datetime('now', '-30 days')`, « 2026-07-28 »
+  passe devant « 2026-07-28 10:52:00 » et la ligne du trentième jour est
+  effacée un jour trop tôt. Même piège que la fenêtre à 91 jours du radar, à
+  l'autre bout du projet.
 
 ## Ce qui reste à faire
 
@@ -158,5 +170,3 @@ répondent alors « indisponible », et c'est normal. Pour les essayer, passer p
    il existe : `SIMULER_PRIX` et `RADAR_SIMULE` passent à « 0 » ensemble, et
    l'avertissement de la page disparaît tout seul.
 2. Le parcours de soutien à 19 €, aujourd'hui annoncé mais pas outillé.
-3. Une purge de `users` : les lignes de plus de trente jours ne servent plus à
-   rien et ne demandent qu'à être supprimées.
