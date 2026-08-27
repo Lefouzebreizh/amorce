@@ -306,6 +306,7 @@ session.
 | Gmail | Les factures, les avis d'échéance et les accusés de résiliation de `paper-manager` arrivent là. |
 | Google Agenda | Les échéances que calcule le module `calendrier` de Life-Organizer doivent atterrir quelque part. |
 | Google Drive | Source de fichiers pour `nettoyer` et `ranger`. |
+| Supabase | Le geste le plus répété du socle `agence/` : `apply_migration` pose `schema.sql`, `execute_sql` rejoue `verifier-rls.sql`. Essayé de bout en bout sur un projet neuf — ce qui passe, ce qui ne passe pas et ce que `get_advisors` se trompe à signaler est écrit dans `/stack-agence-supabase`. |
 
 Ce qui ne sert pas — écrit plutôt que simplement éteint, parce qu'un connecteur
 se rallume tout seul dans la conversation suivante :
@@ -320,7 +321,7 @@ se rallume tout seul dans la conversation suivante :
 - **Vercel** attendra un déploiement réel : `agence/README.md` dit « n'importe
   quel hébergeur Node ou Vercel », et rien n'y est déployé.
 
-Deux manques, de nature différente :
+Un manque, et il ne se comble pas :
 
 - **GitHub n'est pas un connecteur**, et depuis une session distante l'API
   GitHub n'est pas la voie d'ouverture d'une PR. Constaté ici plutôt que
@@ -334,10 +335,15 @@ Deux manques, de nature différente :
   ce clic n'est ni un oubli de configuration ni un droit manquant. Ne pas
   repartir en chasse dans les réglages : ce chemin-là a déjà été parcouru pour
   rien.
-- **Supabase** est le seul ajout qui se défende. `agence/README.md` demande,
-  pour chaque client, de créer le projet, de coller `schema.sql` **à la main**
-  dans l'éditeur SQL, puis de rejouer `verifier-rls.sql`. C'est le geste le plus
-  répété du socle, et le seul dont l'erreur est une faille plutôt qu'un bogue.
+
+Et une règle de permissions, écrite dans `.claude/settings.json` plutôt que
+réaccordée à chaque session : les outils Supabase qui **lisent** y sont
+autorisés d'office, `execute_sql` et `apply_migration` **non**. Ces deux-là
+écrivent dans une vraie base, et sur le geste dont l'erreur est une faille
+plutôt qu'un bogue, une demande de confirmation vaut son aller-retour. La liste
+est écrite sur le nom `Supabase` ; ce connecteur est apparu sous deux noms dans
+une même session, l'autre étant un identifiant opaque, et lequel des deux tient
+d'une session à l'autre reste à mesurer.
 
 ## Les compétences, mesurées plutôt que supposées
 
