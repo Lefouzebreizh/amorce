@@ -13,6 +13,9 @@ n'est pas ce que le client déploie.
 Sortie : des faits datés et localisés, à recouper à la main.
 """
 
+import base64
+import binascii
+import json
 import re
 import subprocess
 import sys
@@ -33,6 +36,7 @@ SECRETS = [
     ("clé Google", re.compile(r"AIza[0-9A-Za-z_-]{30,}")),
     ("jeton Slack", re.compile(r"xox[baprs]-[0-9A-Za-z-]{10,}")),
     ("clé privée", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+    ("CLÉ SECRÈTE SUPABASE", re.compile(r"sb_secret_[A-Za-z0-9_-]{10,}")),
     ("secret affecté en dur", re.compile(
         r"""(?i)(api[_-]?key|secret|password|passwd|token)\s*[:=]\s*["']([^"'\s]{12,})["']""")),
 ]
@@ -57,6 +61,54 @@ def anodin(valeur):
     # Un secret sans le moindre chiffre est presque toujours une phrase, un nom
     # de classe ou un identifiant lisible ; les clés en produisent tous.
     return not any(c.isdigit() for c in valeur)
+
+# Une clé Supabase est un JWT, et les deux que le projet distribue — l'`anon`,
+# publiable par conception, et la `service_role`, qui contourne toute politique
+# d'autorisation — sont indiscernables à l'œil : même préfixe `eyJ`, même
+# longueur, même allure. Seule leur charge utile les sépare, et l'écart entre
+# les deux est celui qui va de « identifiant public du projet » à « accès total
+# à la base, lecture et écriture, sans aucune règle ».
+#
+# Les confondre coûte dans les deux sens, et c'est pour ça que le tri se fait
+# ici plutôt que par un motif de plus : signaler l'`anon` fabrique le faux
+# positif le plus cher du métier, laisser passer la `service_role` laisse
+# tomber le seul constat qui justifie à lui seul le prix de l'audit.
+JWT = re.compile(r"eyJ[A-Za-z0-9_-]{10,}\.(eyJ[A-Za-z0-9_-]{10,})\.[A-Za-z0-9_-]{8,}")
+
+# Les rôles qui n'ont rien à faire dans ce qu'un navigateur reçoit. `anon` en est
+# volontairement absent : c'est le rôle du jeton public, et le signaler serait
+# exactement le faux positif ci-dessus.
+ROLES_A_PRIVILEGES = {"service_role", "supabase_admin", "postgres"}
+
+
+def role_jwt(charge):
+    """Le rôle qu'annonce la charge utile d'un JWT, ou None si elle est illisible.
+
+    Aucune signature n'est vérifiée : on ne cherche pas à valider le jeton, ni à
+    s'en servir, seulement à lire ce qu'il déclare être. C'est du décodage, pas
+    de la cryptographie — et c'est ce qui garde le relevé passif.
+    """
+    rembourrage = "=" * (-len(charge) % 4)
+    try:
+        donnees = json.loads(base64.urlsafe_b64decode(charge + rembourrage))
+    except (ValueError, binascii.Error, UnicodeDecodeError):
+        return None
+    role = donnees.get("role") if isinstance(donnees, dict) else None
+    return role if isinstance(role, str) else None
+
+
+def jeton_a_privileges(ligne):
+    """L'étiquette du constat si la ligne porte un JWT à privilèges, sinon None.
+
+    Rend le rôle dans l'étiquette et jamais le jeton : un rapport part par
+    courrier, souvent relayé, et celui qui recopie la clé qu'il signale est la
+    deuxième fuite.
+    """
+    for m in JWT.finditer(ligne):
+        role = role_jwt(m.group(1))
+        if role in ROLES_A_PRIVILEGES:
+            return f"JETON À PRIVILÈGES (rôle « {role} ») — contourne toute l'autorisation"
+    return None
 
 # Une variable exposée au navigateur qui porte un nom de secret : la fuite la
 # plus fréquente des applications générées, parce que le préfixe a l'air d'un
@@ -153,6 +205,9 @@ def main():
                     continue
                 secrets.append(f"{rel}:{n} — {nom}")
                 break
+            etiquette = jeton_a_privileges(ligne)
+            if etiquette:
+                secrets.append(f"{rel}:{n} — {etiquette}")
             expose = EXPOSE.search(ligne)
             if expose and not PUBLIABLE.search(expose.group(0)):
                 exposes.append(f"{rel}:{n} — {expose.group(0)}")

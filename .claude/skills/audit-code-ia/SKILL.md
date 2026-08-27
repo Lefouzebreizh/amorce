@@ -124,6 +124,18 @@ qu'une clé publiable soit visible, mais **ce qu'elle permet de faire** : c'est
 la question de l'autorisation côté serveur, ci-dessous, et elle se pose sans
 jamais rejouer de requête.
 
+**Mais les deux clés Supabase se ressemblent, et c'est là qu'est l'argent.**
+L'`anon` publiable et la `service_role` sont toutes deux des JWT : même préfixe
+`eyJ`, même longueur, même allure. Seule la charge utile les sépare — et la
+`service_role` contourne *toute* politique d'autorisation au niveau des lignes.
+Une `service_role` partie dans le bundle n'est pas un constat parmi cinq : c'est
+la base entière lisible et modifiable par n'importe quel visiteur, et elle
+justifie à elle seule le prix de l'audit. Le relevé les décode et ne signale que
+la seconde ; il rend le rôle et jamais le jeton, parce qu'un rapport qui recopie
+la clé qu'il signale est la deuxième fuite. La frontière est tenue par
+`scripts/tests/test_scan.py` — elle coûte cher dans les deux sens, et c'est
+exactement le genre de distinction qu'une retouche emporte sans le voir.
+
 ## 2. La lecture, que le script ne remplace pas
 
 Les trois défauts les plus coûteux ne se détectent pas par expression

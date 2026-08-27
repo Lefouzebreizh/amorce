@@ -94,8 +94,15 @@ jobs:
           # `-maxdepth 3` attrape `<projet>/tests` comme
           # `archives-backlog/<projet>/tests`, sans descendre dans les
           # dépendances installées.
-          for tests in $(find . -maxdepth 3 -type d -name tests \
-                              -not -path '*/node_modules/*' | sort); do
+          #
+          # Les scripts des compétences sont plus profonds — `.claude/skills/
+          # <competence>/scripts/tests` — et relever la profondeur générale
+          # ferait entrer les `tests/` des paquets installés sous `.venv`.
+          # D'où une seconde découverte, bornée à l'arbre des compétences.
+          for tests in $( { find . -maxdepth 3 -type d -name tests \
+                                 -not -path '*/node_modules/*'
+                            find .claude/skills -maxdepth 3 -type d -name tests \
+                                 2>/dev/null ; } | sort -u); do
             # Un dossier `tests/` sans fichier `test_*.py` n'est pas une suite
             # Python : le sauter évite qu'un projet d'une autre langue fasse
             # échouer la découverte.
@@ -112,7 +119,7 @@ jobs:
             fi
           done
 
-          # Une découverte vide serait passée pour un succès : sept suites qui
+          # Une découverte vide serait passée pour un succès : huit suites qui
           # disparaissent d'un coup est plus probablement un `cd` de travers
           # qu'un dépôt réellement vidé de ses tests.
           if [ "$trouvees" -eq 0 ]; then
