@@ -63,6 +63,42 @@ de `CLAUDE.md` tranche : **ce qui est fusionné gagne**. Se couler dans la base
 commune coûte moins cher que réconcilier deux architectures. Deux branches ont
 déjà construit Life-Organizer chacune de leur côté ; la seconde a été refaite.
 
+## Quand ça conflicte pour de bon
+
+`etat-branche.sh` diagnostique sans rien modifier ; quand il faut y aller :
+
+```bash
+bash .claude/skills/branche-partagee/scripts/integrer.sh
+```
+
+Il fusionne et **classe** les conflits en deux tas — les listes de la racine,
+additives, et le reste, qui demande un jugement — puis affiche les blocs côte à
+côte pour éviter d'ouvrir chaque fichier. Il ne résout rien, volontairement :
+garder les deux apports est mécanique, mais la phrase qui les introduit ne se
+fusionne pas. Résoudre à l'aveugle publie un « neuf projets » suivi de dix
+éléments, une erreur qui survit des mois parce qu'elle a l'air relue.
+
+Les fichiers qui se télescopent, et ce qu'il faut y regarder :
+
+| Fichier | Le piège |
+| --- | --- |
+| `CLAUDE.md` | Le **compte** en gras se recalcule sur la liste résolue, il ne se fusionne pas |
+| `.gitignore` | Aucun : coller les deux blocs |
+| `.claude/hooks/session-start.sh` | Deux étapes ajoutées au même endroit : garder les deux, l'ordre est libre |
+| `.claude/skills/verifier/SKILL.md` | Son préambule ne compte plus les projets, exprès : ne pas réintroduire un nombre |
+| `.github/requirements-tests.txt` | Ne jamais y recopier la liste du hook — voir l'en-tête du fichier |
+
+## La course qu'on perd en fusionnant
+
+`main` peut bouger **entre** la dernière intégration et l'appel à la fusion.
+GitHub répond alors `405 Pull Request has merge conflicts`. Ce n'est pas une
+panne, et réessayer ne sert à rien : réintégrer, résoudre, pousser, refusionner.
+Trois tours d'affilée sont un déroulement normal ici.
+
+Le raccourci qui économise un tour : intégrer **juste avant d'appeler la
+fusion**, et non juste avant d'ouvrir la PR — l'ouverture, elle, ne coûte rien
+à refaire.
+
 ## Fusionner par lots courts
 
 Le vrai remède n'est pas de mieux résoudre les conflits, c'est d'en avoir moins.
