@@ -254,3 +254,64 @@ off plaquée était la cause du problème, pas son remède.
 qu'on ne cherche pas à refabriquer une chose que le matériau contient déjà.
 « L'outil manque » et « je m'y prends à l'envers » se ressemblent beaucoup vus
 de l'intérieur.
+## Une compétence ne se mesure pas contre un modèle nu, mais contre le dépôt
+
+*Huit agents lancés exprès pour trancher, et le résultat est un résultat nul.*
+
+Deux compétences fraîchement écrites — `api-tierce-verifiee` et
+`dependance-indisponible` — mises à l'épreuve sur quatre tâches, chacune jouée
+deux fois : une fois avec la compétence, une fois sans. Les compétences avaient
+été retirées du dossier pour que les témoins ne les voient pas, et lues par
+chemin explicite du côté « avec ».
+
+Le critère central était vérifiable sans jugement : **les symboles empruntés au
+SDK existent-ils dans le paquet publié ?** Le piège était réel — le SDK Deepgram
+7.x est généré par Fern et n'a plus aucun des noms de la v3 (`DeepgramError`,
+`PrerecordedOptions` : tous absents), donc un code écrit de mémoire plante à
+l'import.
+
+**Les deux côtés ont réussi.** Avec comme sans, les agents ont téléchargé le
+paquet, relevé les vraies classes, découvert que clé invalide et quota
+remontent la même `ApiError` nue, et que les pannes réseau traversent en
+`httpx.RequestError` sans dériver d'`OSError`. Zéro symbole inventé de part et
+d'autre.
+
+Coût mesuré de la compétence, lui, bien réel : **+10 % de jetons, +23 % de
+durée** en moyenne sur les quatre tâches.
+
+L'explication tient en une phrase, et c'est elle qui vaut : **le témoin n'est
+pas un modèle nu, c'est un modèle qui lit `CLAUDE.md`.** Une compétence qui ne
+fait que redire la culture déjà écrite du dépôt ne peut pas se distinguer d'un
+témoin qui l'a lue. Ce qu'elle mesure alors n'est pas « est-ce que ça aide »,
+mais « est-ce que ça aide *en plus de ce qui est déjà là* » — et la réponse est
+souvent non.
+
+**Portée générale :** avant d'écrire une compétence, se demander ce qu'elle dit
+que `CLAUDE.md` ne dit pas. Si la réponse tient en une phrase, cette phrase va
+dans `CLAUDE.md`, pas dans un fichier de plus.
+
+## Un instrument de mesure se vérifie avant son verdict
+
+*Corollaire du précédent, trouvé en se prenant les pieds dedans.*
+
+Le premier passage du correcteur automatique annonçait des écarts nets. Aucun
+n'a survécu à l'inspection :
+
+- « pas de mode de contrôle préalable » — le témoin en avait un, nommé
+  `--verifier` ; l'expression régulière cherchait `--check` ;
+- « pas éprouvé sans la dépendance » — le fichier s'appelait
+  `verifier_erreurs.py` et portait treize provocations d'erreurs ;
+- « symbole inexistant dans le SDK » — c'étaient les exceptions métier que
+  l'agent **définit lui-même**, plus `httpx.RequestError` cherché dans le
+  mauvais paquet, plus `ModuleNotFoundError`, oublié de la liste des primitives ;
+- un dernier `X` fantôme venait d'une chaîne d'affichage, `"utiliser stripe.X"`.
+
+Quatre familles de faux positifs, et le verdict initial était entièrement faux
+— dans le sens flatteur pour l'hypothèse qu'on testait, ce qui est le pire des
+sens.
+
+**Portée générale :** un correcteur écrit par celui qui espère un résultat doit
+être éprouvé sur un cas dont on connaît la réponse avant qu'on croie ce qu'il
+dit. La question à lui poser est la même que pour un test : **quel défaut le
+rendrait rouge ?** Ici, la bonne épreuve était de le passer sur une sortie
+connue pour être correcte, et de vérifier qu'il ne trouve rien.
