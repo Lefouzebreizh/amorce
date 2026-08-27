@@ -9,7 +9,9 @@ auraient six façons de les lire, et un jour l'un d'eux supprimerait pour de bon
 dépend de la configuration. `nettoyer` lui a succédé : photos floues, photos
 quasi-identiques, puis vidéos abîmées, dans cet ordre. Puis `ranger`, qui vient
 après pour une raison : ranger d'abord, c'est classer soigneusement des
-doublons et des photos ratées.
+doublons et des photos ratées. `convertir` se glisse entre les deux, et pour la
+même raison : convertir avant d'avoir nettoyé, c'est réencoder pendant des
+heures des vidéos qu'on allait écarter.
 
 Un module écrit se branche ici en trois lignes : sa `commande.py` pose ses
 arguments et reçoit la configuration déjà chargée. Le point d'entrée ne connaît
@@ -25,6 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from modules.classement import commande as commande_classement  # noqa: E402
+from modules.conversion import commande as commande_conversion  # noqa: E402
 from modules.nettoyage import commande as commande_nettoyage  # noqa: E402
 from noyau.config import charger, valider  # noqa: E402
 
@@ -114,6 +117,12 @@ def commande_nettoyer(options: argparse.Namespace) -> int:
     return commande_nettoyage.executer(options, config) if config else 1
 
 
+def commande_convertir(options: argparse.Namespace) -> int:
+    """HEIC → JPG, MKV → MP4, et le gain mesuré avant tout remplacement."""
+    config = config_valide(options)
+    return commande_conversion.executer(options, config) if config else 1
+
+
 def commande_ranger(options: argparse.Namespace) -> int:
     """Le rangement dans la bibliothèque : catégorie, thème, date."""
     config = config_valide(options)
@@ -145,6 +154,10 @@ def main() -> int:
         if nom == "nettoyer":
             commande_nettoyage.ajouter_arguments(module)
             module.set_defaults(faire=commande_nettoyer)
+            continue
+        if nom == "convertir":
+            commande_conversion.ajouter_arguments(module)
+            module.set_defaults(faire=commande_convertir)
             continue
         if nom == "ranger":
             commande_classement.ajouter_arguments(module)
