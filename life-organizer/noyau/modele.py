@@ -7,7 +7,7 @@ serait un import croisé — et la chaîne deviendrait indémêlable au troisiè
 module.
 
 Reste à écrire : `Document` (fiche + date, émetteur, montant). `Fiche`, `Media`,
-`Doublon` et `Decision` sont posés ici parce que le nettoyage en a besoin.
+`Video`, `Doublon` et `Decision` sont posés ici parce que le nettoyage en a besoin.
 
 Ces types sont **immuables et sans entrée-sortie** : ils traversent les fonctions
 pures de `regles.py`, qui doivent rester vérifiables sans toucher au disque.
@@ -57,6 +57,43 @@ class Media(Fiche):
 
 
 @dataclass(frozen=True)
+class Video(Fiche):
+    """Une vidéo et ce que l'inspection en a tiré.
+
+    Séparée de `Media` et non dérivée d'elle : une vidéo n'a ni empreinte
+    perceptuelle ni variance du laplacien, et lui donner ces champs vides
+    inviterait à la faire passer par le regroupement des doublons, qui la
+    croirait identique à toutes les autres.
+
+    Deux champs portent la même précaution que `Media.nettete` : `lisible` dit
+    si l'outil a su ouvrir le conteneur, `duree_secondes` vaut `None` quand la
+    durée n'a pas été mesurée. Une durée absente n'est pas une durée nulle —
+    beaucoup de MKV et de flux enregistrés n'annoncent aucune durée alors qu'ils
+    se lisent parfaitement, et les compter pour zéro mettrait en quarantaine
+    tout un format.
+    """
+
+    lisible: bool = True
+    # Ce que l'outil a dit quand il a refusé le fichier. Repris tel quel dans le
+    # motif : « illisible » seul n'apprend rien à qui doit décider s'il retrouve
+    # une sauvegarde ou s'il jette.
+    diagnostic: str = ""
+    duree_secondes: float | None = None
+    largeur: int = 0
+    hauteur: int = 0
+    piste_video: bool = True
+    # La ligne d'erreur rendue par le décodage de la fin du fichier, ou `None`
+    # si la fin s'est décodée proprement. C'est le seul symptôme d'un transfert
+    # interrompu : l'en-tête d'un fichier tronqué reste intact et continue
+    # d'annoncer la durée d'origine.
+    erreur_de_fin: str | None = None
+
+    @property
+    def definition(self) -> int:
+        return self.largeur * self.hauteur
+
+
+@dataclass(frozen=True)
 class Doublon:
     """Un groupe de fichiers qui montrent la même chose, et celui qui reste.
 
@@ -76,6 +113,11 @@ class Doublon:
 
 GARDER = "garder"
 ECARTER = "ecarter"
+# Un troisième geste, parce que deux ne suffisaient plus : un .mp4 sans piste
+# vidéo n'est pas abîmé, c'est un enregistrement sonore. Le mettre en
+# quarantaine serait faux, le taire ferait chercher longtemps pourquoi la
+# vidéo ne s'affiche pas.
+SIGNALER = "signaler"
 
 
 @dataclass(frozen=True)
@@ -87,6 +129,8 @@ class Decision:
     quarantaine devient une énigme un mois plus tard.
     """
 
-    media: Media
+    # `Fiche` et non `Media` : la même décision porte une photo ou une vidéo,
+    # et le geste qui la met en quarantaine ne regarde que le chemin.
+    media: Fiche
     geste: str
     motif: str

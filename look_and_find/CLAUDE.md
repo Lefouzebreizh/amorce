@@ -226,6 +226,13 @@ Trois recettes utiles quand on ajoute un test :
   renvoyé qu'un `.glb` est consultable en 3D sur iPhone mais pas posable dans
   la pièce ; l'interface le dit déjà, ne pas le masquer.
 - L'historique est borné à soixante entrées, taillées à l'écriture.
+- **Tout greffon qui touche à une ressource privée exige sa clé dans
+  `ios/Runner/Info.plist`** — appareil photo, photothèque, position,
+  micro. La politique de l'App Store la réclame par la seule présence du
+  greffon, même quand le code ne demande jamais la permission. L'oubli ne se
+  voit ni à l'analyse, ni aux tests, ni sur Android : il se découvre au rejet
+  de la soumission. Ajouter un greffon, c'est lire son README avant de
+  committer.
 - Les surcharges de providers de `demarrage_test.dart` doublent celles de
   `main.dart`, qui n'est pas appelable depuis un test. Ajouter une boîte Hive
   sans les mettre à jour toutes les deux fait échouer le démarrage réel sans

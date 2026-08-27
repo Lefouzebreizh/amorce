@@ -70,6 +70,16 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   déclenchant que sur `look_and_find/**`, une PR qui n'y touche pas n'a aucun
   contrôle automatique : c'est `/verifier` qui tient lieu de filet, et il faut
   l'avoir lancé pour de vrai.
+- **L'ouverture d'une PR ne déclenche aucune CI.** Elle passe par un jeton
+  d'application GitHub, que GitHub refuse comme source de workflow — protection
+  contre les boucles. Une *poussée* sur la branche, elle, déclenche bien
+  l'événement `pull_request`. Une PR ouverte puis laissée telle quelle reste
+  donc sans contrôle, indéfiniment, sans que rien ne le signale : ne pas
+  l'attendre, la déclencher à la main (`workflow_dispatch` sur la branche).
+- **Vérifier le verdict sur l'empreinte exacte qui sera fusionnée.** Un commit
+  poussé après le déclenchement invalide le résultat précédent — et s'il ne
+  touche pas `look_and_find/**`, il ne relance rien du tout. C'est la façon la
+  plus discrète de fusionner du non-vérifié en croyant le contraire.
 
 ## Diagnostiquer un échec d'intégration continue
 
