@@ -5,11 +5,11 @@ strictement personnel : tout reste sur la machine, sauf le seul appel qui a
 besoin de sortir (la lecture d'un document par un modèle de vision, et
 uniquement si elle est activée).
 
-Ce fichier est le plan du projet. Sont écrits et vérifiés : le calendrier,
-les abonnements, la résiliation, le remplissage de formulaires PDF, et — du
-module 1 — la lecture d'un fichier déposé, son nommage et le journal. Reste
-`extraction.py` : reconnaître les champs d'un document, seul endroit qui sorte
-sur le réseau.
+Ce fichier est le plan du projet. **Les quatre modules sont écrits et
+vérifiés** : lecture et classement des documents, calendrier, abonnements,
+résiliation — plus le remplissage de formulaires PDF. La reconnaissance des
+champs se fait par motifs, hors réseau ; le modèle de vision reste le recours
+prévu pour ce qu'ils ne trouvent pas.
 
 ## Les quatre modules
 
@@ -115,6 +115,44 @@ alertée — alerter sur l'échéance, c'est alerter trop tard. La date d'avis
 d'échéance reçue de l'assureur est notée elle aussi : reçue en retard, elle
 rouvre un droit de résiliation.
 
+## Classer ce qui a été déposé
+
+```bash
+python3 paper.py classer                 # simule : montre ce qui irait où
+python3 paper.py classer --appliquer     # range pour de bon
+```
+
+Le parcours entier : lire le fichier, en tirer les champs, calculer son nom,
+l'inscrire au journal. **Rien ne bouge sans `--appliquer`** — un classement
+dont on n'a pas vu la sortie une première fois est un classement qu'on refait à
+la main.
+
+Ce que la lecture sait faire sans réseau, et pourquoi c'est suffisant la plupart
+du temps : une facture française est un document très régulier. « Net à payer »,
+« Référence client », une date en JJ/MM/AAAA sont des motifs, pas de la
+compréhension. Quatre pièges les rendent moins évidents qu'il n'y paraît :
+
+- **Les milliers sont séparés par une espace insécable** : un motif naïf lit
+  « 234,56 » dans « 1 234,56 € » et se trompe d'un facteur mille.
+- **Une date française commence par le jour** : 03/04/2026 est le 3 avril.
+- **Le plus gros nombre de la page n'est pas le total** : on cherche le montant
+  *étiqueté*, et « Net à payer » prime sur « Total TTC », qui peut inclure un
+  acompte déjà versé.
+- **La date du pied de page est celle de l'impression** : la prendre pour
+  l'émission range la facture au mauvais mois.
+
+**Ce qui n'est pas sûr n'est pas rangé.** La confiance se calcule sur la manière
+dont chaque champ a été trouvé — derrière son étiquette, ou ramassé au milieu de
+la page. Sous `extraction.confiance_minimale`, le document reste dans le dépôt
+avec la liste de ce qui lui manque, champ par champ : « il manque la date
+d'émission » se corrige, « à relire » non.
+
+Deux fichiers identiques ne sont rangés qu'une fois, reconnus par l'empreinte de
+leur contenu et non par leur nom — c'est le cas dès qu'on synchronise deux
+dossiers. Le compte rendu distingue « déjà rangé lors d'un passage précédent »
+de « deux copies dans le même dépôt » : la première est une bonne nouvelle, la
+seconde demande de choisir.
+
 ## Le tableau de bord
 
 ```bash
@@ -148,6 +186,18 @@ Ce que le calcul sait, et qui vaut d'être connu :
   de l'utilisateur que l'année reconduite n'était pas grave.
 - **Le statut décidé à la main survit au recalcul.** C'est la seule chose que
   le programme lit dans le fichier plutôt que de la calculer.
+- **La facture attendue qui n'arrive pas** ne se signale que si l'on a **déjà
+  vu** un document de cet émetteur. Sans cette garde, chaque abonnement crierait
+  au premier passage : l'assistant ne saurait pas distinguer une facture
+  manquante d'un coffre qu'on vient d'ouvrir, et c'est le faux signal qui fait
+  ignorer les vrais. Un délai de grâce s'ajoute à la période — une facture
+  mensuelle n'arrive pas le même jour tous les mois.
+- **Ce qu'on peut jeter est groupé par catégorie et par année.** Cinq ans de
+  factures d'énergie font soixante documents : une alerte par document noierait
+  tout le reste, alors qu'« les douze factures de 2020 peuvent être jetées » se
+  traite d'un geste. Le groupe n'expire qu'avec son document le plus récent —
+  mieux vaut garder un an de trop que jeter un justificatif encore utile. Et
+  **rien n'est jamais supprimé** : le programme signale.
 
 ## Les rappels d'agenda
 
@@ -313,7 +363,7 @@ Sections, dans l'ordre du fichier :
 | Champ | À quoi il sert |
 | --- | --- |
 | `id` | Stable, pour retrouver l'alerte d'un passage à l'autre. |
-| `type` | `preavis`, `renouvellement`, `paiement` — calculés. `document_manquant` et `conservation` viendront avec le journal des documents. |
+| `type` | `preavis`, `renouvellement`, `paiement`, `document_manquant`, `conservation` — tous calculés. Les deux derniers demandent le journal des documents. |
 | `source` | `abonnement:<id>` ou `document:<id>` — d'où elle vient. |
 | `echeance` | La date qui compte : celle du préavis, pas celle du contrat. |
 | `declenchement` | À partir de quand elle apparaît dans `paper.py etat`. |
@@ -328,7 +378,7 @@ python3 paper.py agenda [--vers coffre/rappels.ics]        # écrit
 python3 paper.py champs <formulaire.pdf> [--gabarit]       # écrit
 python3 paper.py remplir <plan.json> [--abonnement <id>]   # écrit
 python3 paper.py resilier <id> [--texte] [--motif ...]     # écrit
-python3 paper.py classer --source coffre/entree            # module 1, à venir
+python3 paper.py classer [--source ...] [--appliquer]      # écrit
 ```
 
 ## Vérifier
@@ -350,7 +400,11 @@ une session distante par le hook du dépôt, pour la chaîne pré-presse KDP.
 
 ## Prochaine étape
 
-Le module 1, le seul qui manque : `scan.py`, `extraction.py`, `nommage.py` et
-`journal.py`. C'est aussi le seul qui sort sur le réseau, et celui qui débloque
-les deux types d'alerte encore inertes — la facture attendue qui n'arrive pas,
-et le document qu'on peut jeter.
+Le chemin par modèle de vision dans `extraction.py`, pour les documents scannés
+dont les motifs n'ont rien à lire — `scan.py` sait déjà en rendre les pages en
+image. Il demande une clé d'API, absente de l'environnement de développement :
+à écrire avec son échelle de repli, et à ne faire partir que si la clé existe.
+
+Ensuite seulement, l'interface : le tableau de bord tient dans un terminal, et
+`mon-app-audio/` montre qu'un Streamlit se pose en une soirée quand le calcul
+est déjà écrit et vérifié.

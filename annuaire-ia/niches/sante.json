@@ -60,6 +60,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nTherapixel s'est fait connaître en se classant en tête d'une comparaison internationale sur la lecture de mammographies. L'outil assiste la seconde lecture du dépistage organisé, poste où la double lecture humaine est obligatoire et où la démographie médicale rend cette obligation difficile à tenir. Le radiologue garde évidemment la décision : l'outil trie et signale.\n\n## Points forts\n- Performances établies sur des jeux de données de comparaison publics\n- Répond à une tension réelle de démographie médicale sur le dépistage organisé\n- Marquage médical européen et éditeur français\n- S'intègre aux stations de lecture existantes\n\n## Points faibles\n- Périmètre volontairement étroit : la mammographie et rien d'autre\n- Cadre du dépistage organisé strictement encadré, l'usage se négocie institutionnellement\n- Achat de structure, sans version d'essai possible\n\n## Idéal pour\nLes centres de radiologie et structures de gestion du dépistage organisé, confrontés à la raréfaction des lecteurs disponibles.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "lifen",
+      "nom": "Lifen",
+      "categorie": "Courriers médicaux",
+      "prix": "Sur devis",
+      "description_courte": "Le courrier médical envoyé au bon confrère par le bon canal, sans secrétariat qui cherche une adresse ni fax qui bloque.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/lifen",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nLifen s'attaque à une plaie administrative française : le compte rendu qui n'arrive pas au médecin traitant. L'outil identifie automatiquement le destinataire dans l'annuaire santé, choisit le canal disponible — messagerie sécurisée, dossier partagé, courrier papier en dernier recours — et trace l'envoi. Ce n'est pas spectaculaire, c'est simplement le poste où un secrétariat perd le plus de temps.\n\n## Points forts\n- Identification automatique du destinataire dans l'annuaire national\n- Choix du canal d'envoi géré tout seul, papier compris si nécessaire\n- Traçabilité complète des envois, opposable en cas de litige\n- Intégration aux logiciels hospitaliers français\n\n## Points faibles\n- Utile surtout dans le contexte réglementaire français\n- Déploiement à mener avec la direction des systèmes d'information\n- L'annuaire national comporte des données obsolètes qui ressortent\n\n## Idéal pour\nLes établissements et cabinets de groupe dont les secrétariats passent leurs journées à chercher des adresses de confrères et à relancer des envois.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

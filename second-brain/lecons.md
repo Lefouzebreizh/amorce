@@ -134,3 +134,52 @@ parcours en navigateur, vert à la validation des données.
 request — parce qu'on le relancerait sans le lire — devient exactement le bon
 contrôle là où personne ne relit rien. Et il se pose **avant** la publication,
 pas après : ne rien publier est un incident visible et réversible.
+
+---
+
+## Une durée mesurée en session n'est pas la durée en CI
+
+*Coût : un chiffre faux d'un facteur vingt, écrit dans trois fichiers.*
+
+Le parcours en navigateur du réseau d'annuaires : **315 s** mesurées ici, **16 s**
+sur un runner GitHub. J'avais écrit les 315 s dans un commentaire de workflow,
+dans un message de commit et dans une compétence — en argument de coût, c'est-à-
+dire précisément là où le chiffre sert à décider.
+
+La cause n'est pas la puissance de la machine. Le mandataire de cette session
+bloque le CDN des polices : chaque `waitUntil: 'networkidle'` attend l'expiration
+de requêtes qui n'aboutiront jamais. La lenteur mesurait le mandataire, pas le
+parcours.
+
+**Portée générale :** dès qu'une mesure porte sur du temps et que le code touche
+au réseau, elle décrit cet environnement-ci, pas celui qui compte. Ou bien on la
+refait là où le code tournera, ou bien on l'écrit avec la condition qui la rend
+vraie. Un chiffre nu, dans un argument de coût, se retourne contre la décision
+qu'il a servi à prendre.
+
+---
+
+## Un contrôle dont les deux côtés viennent de la même source ne peut pas échouer
+
+*Trouvé une fois par hasard, cherché ensuite exprès.*
+
+`filtres <= cartes` : le nombre de fiches après recherche comparé au nombre
+avant. La grille entière satisfait la condition, donc une recherche qui ne
+filtre plus rien passait au vert — et le commentaire au-dessus annonçait
+pourtant « strictement moins ». Le contrôle existait, s'affichait vert, et ne
+pouvait rien attraper.
+
+La lentille qui le trouve, et qu'il suffit de passer sur n'importe quel
+parcours : **pour chaque assertion, quel défaut la rendrait rouge ?** Si la
+réponse est « aucun », ou si les deux côtés de la comparaison sortent du même
+endroit cassé, le contrôle est décoratif.
+
+Passée sur les trois parcours d'Amorce, elle n'a rien rendu — et c'est un
+résultat, pas un échec : `apresVignettes === avantVignettes` tiendrait dans le
+cas zéro-contre-zéro, mais un `waitForFunction(>= 4)` en amont rend ce cas
+impossible ; `score > 0` devient `NaN > 0`, donc faux, si l'étiquette disparaît.
+Deux filets qu'on peut cesser de soupçonner.
+
+**Portée générale :** un contrôle vert dit deux choses très différentes — « j'ai
+regardé et c'est bon » ou « je n'ai rien regardé ». Rien ne les distingue dans
+un rapport de tests, et seul un défaut fabriqué exprès les sépare.

@@ -60,6 +60,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nDoxel compare l'ouvrage réellement construit à la maquette et au planning, à partir de relevés laser et photographiques. La différence avec un suivi visuel classique est le niveau de détail : l'outil sait qu'il manque vingt mètres de gaine dans un plénum. Le résultat sert autant au pilotage qu'à la vérification des situations de travaux présentées par les sous-traitants.\n\n## Points forts\n- Mesure objective de l'avancement, opposable en réunion de chantier\n- Rapprochement direct entre avancement physique et facturation\n- Détection des écarts d'exécution par rapport à la maquette avant qu'ils soient recouverts\n- Historique complet exploitable en fin d'opération\n\n## Points faibles\n- Nécessite une maquette de bonne qualité et des relevés réguliers\n- Coût qui ne se justifie que sur des opérations techniques importantes\n- Le déploiement demande l'adhésion des entreprises, rarement acquise d'emblée\n\n## Idéal pour\nLes maîtres d'ouvrage et entreprises générales sur des projets techniques — hôpitaux, industrie, data centers — où l'écart entre le facturé et le posé coûte cher.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "alice-technologies",
+      "nom": "ALICE Technologies",
+      "categorie": "Planning",
+      "prix": "Sur devis",
+      "description_courte": "Des milliers de scénarios de phasage générés à partir de la maquette : la meilleure séquence de travaux, pas la première trouvée.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/alice-technologies",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nALICE part de la maquette numérique et des moyens disponibles pour générer des milliers de séquences de construction possibles, puis les classe par durée et par coût. Un planificateur explore trois ou quatre variantes dans sa carrière sur un projet donné ; la machine en essaie dix mille en une nuit, et trouve régulièrement des phasages qui gagnent dix à quinze pour cent de délai.\n\n## Points forts\n- Exploration exhaustive du phasage, hors de portée d'un planificateur humain\n- Arbitrage explicite entre durée, moyens mobilisés et coût\n- Réponse rapide à un aléa : le replanning se recalcule au lieu de se refaire\n- Gains de délai mesurés et documentés sur des opérations réelles\n\n## Points faibles\n- Sans maquette numérique correctement renseignée, l'outil ne sert à rien\n- Investissement en paramétrage initial de plusieurs semaines\n- Les contraintes de site réelles doivent être décrites finement, sinon la solution est théorique\n\n## Idéal pour\nLes grands travaux et les opérations répétitives — logements, hôpitaux, data centers — où le phasage est le principal levier sur la marge.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

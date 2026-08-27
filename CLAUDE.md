@@ -171,6 +171,20 @@ pistage sans consentement, binaire versionné.
 
 ## 9. AU DÉMARRAGE
 
+**Lire ce fichier avant le premier geste, à chaque nouveau fil.** Il est joint au
+contexte tout seul — mais joint n'est pas lu, et une session qui enchaîne sur le
+résumé de la précédente hérite de son état sans hériter de ses règles. C'est
+ainsi qu'on redemande une fusion déjà autorisée une fois pour toutes, ou qu'on
+pose un projet sans le déclarer aux six endroits.
+
+**Et tout résumé de reprise s'ouvre sur le but à terme**, avant l'état et avant
+le prochain pas : une ligne qui dit ce que cette discussion cherche à obtenir au
+bout du compte, pas ce qu'elle fait ce matin. « Où on en est » et « le prochain
+pas » se périment en une journée ; le but, non — et c'est lui, et lui seul, qui
+permet de juger si le prochain pas proposé est le bon. Un fil qui a perdu son
+but avance vite dans une direction que personne n'a choisie. Gabarit dans
+`/relais`.
+
 Le hook `.claude/hooks/session-start.sh` installe tout seul. Pas de compétence
 `auto-update-godmode` : quatre s'en partagent le travail — `/etat-du-depot`,
 `/capacites-session`, `/coherence-depot`, `/jauge`.
@@ -282,7 +296,11 @@ premier message** et le dire aussitôt — découvrir à la poussée qu'on ne po
 pas fusionner coûte un cycle entier, mesuré sur la PR #94.
 
 Supabase : lecture d'office, `execute_sql` et `apply_migration`
-non. Adobe, Gmail, Agenda et Drive servent le média, les factures, les échéances
+non — et la liste est écrite **deux fois**, sous le nom `Supabase` et sous
+l'identifiant opaque `f3258232-…`. Ce n'est pas de la prudence : le serveur
+s'est déconnecté sous un nom et revenu sous l'autre en pleine session, deux fois
+le même jour. Une règle écrite sur une seule forme ne couvre alors rien, et rien
+ne le signale — la demande d'autorisation revient, et on croit à un oubli. Adobe, Gmail, Agenda et Drive servent le média, les factures, les échéances
 et les fichiers.
 
 ---

@@ -43,10 +43,20 @@ Trois décisions sur les alertes elles-mêmes :
    euros qui vide le compte. Une alerte qui revient tous les mois est du bruit,
    et du bruit dans un outil fait pour supprimer la charge mentale.
 
-Ce que ce module ne calcule pas encore, faute du journal des documents : les
-alertes `document_manquant` (une facture mensuelle qui cesse d'arriver) et
-`conservation` (un document qu'on peut jeter). Elles viendront avec
-`journal.py`.
+Les deux alertes qui dépendent du journal des documents, et leurs règles :
+
+- **`document_manquant`** ne se déclenche que si l'on a **déjà vu** au moins un
+  document de cet émetteur. Sans cette garde, chaque abonnement crierait au
+  premier passage : l'assistant ne sait pas si la facture manque ou si le coffre
+  vient d'être ouvert. Et un délai de grâce s'ajoute à la période attendue —
+  une facture mensuelle n'arrive pas le même jour tous les mois, et alerter au
+  trente-deuxième jour, c'est crier au loup chaque mois.
+- **`conservation`** groupe par catégorie et par année. Cinq ans de factures
+  d'énergie font soixante documents : une alerte par document noierait tout le
+  reste, alors qu'« les douze factures d'énergie de 2020 peuvent être jetées »
+  se traite d'un geste. Le groupe n'expire qu'avec son document **le plus
+  récent**, pour ne jamais proposer de jeter trop tôt. Et le programme ne
+  supprime jamais rien : il signale.
 """
 
 from __future__ import annotations
@@ -56,8 +66,9 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from core.config import Configuration
+from core.journal import Journal
 from core.modele import (
-    Abonnement, Alerte, StatutAbonnement, StatutAlerte, TypeAlerte,
+    Abonnement, Alerte, Document, StatutAbonnement, StatutAlerte, TypeAlerte, ajouter_mois,
 )
 
 # Sept jours : le temps de virer de quoi couvrir, pas plus tôt — une alerte
@@ -67,6 +78,22 @@ JOURS_AVANT_PRELEVEMENT = 7
 # Un contrat en cours de résiliation est encore prélevé : il compte au budget.
 # Il n'a plus de préavis à surveiller : il ne compte plus aux alertes.
 AU_BUDGET = (StatutAbonnement.ACTIF, StatutAbonnement.EN_RESILIATION)
+
+# Ce qu'un rythme annoncé vaut en jours, et le délai de grâce qui va avec. Une
+# facture mensuelle n'arrive pas le même jour tous les mois : sans ce délai,
+# l'alerte tomberait presque chaque mois, et on apprendrait à ne plus la lire.
+RYTHMES = {
+    "mensuel": (31, 15, "chaque mois"), "mensuelle": (31, 15, "chaque mois"),
+    "trimestriel": (92, 20, "chaque trimestre"), "trimestrielle": (92, 20, "chaque trimestre"),
+    "semestriel": (183, 25, "chaque semestre"), "semestrielle": (183, 25, "chaque semestre"),
+    "annuel": (366, 30, "chaque année"), "annuelle": (366, 30, "chaque année"),
+}
+
+# Les préfixes de source que ce module possède : ce qu'il ne recalcule plus, il
+# a le droit de le retirer. Le reste — une alerte née d'un document isolé — ne
+# lui appartient pas et survit.
+POSSEDES_SANS_JOURNAL = ("abonnement:",)
+POSSEDES_AVEC_JOURNAL = ("abonnement:", "conservation:")
 
 
 def euros(montant: Decimal) -> str:
@@ -111,7 +138,8 @@ class Tableau:
         return dict(sorted(cumul.items(), key=lambda paire: paire[1], reverse=True))
 
 
-def tableau(configuration: Configuration, le: date | None = None) -> Tableau:
+def tableau(configuration: Configuration, le: date | None = None,
+            journal: Journal | None = None) -> Tableau:
     """L'état des contrats au jour dit. Les contrats résiliés restent hors du total."""
     le = le or date.today()
     lignes = [
@@ -120,7 +148,7 @@ def tableau(configuration: Configuration, le: date | None = None) -> Tableau:
         if abonnement.statut in AU_BUDGET
     ]
     lignes.sort(key=lambda ligne: (ligne.preavis or date.max, -ligne.mensuel))
-    return Tableau(le=le, lignes=lignes, alertes=alertes(configuration, le))
+    return Tableau(le=le, lignes=lignes, alertes=alertes(configuration, le, journal))
 
 
 def _ligne(abonnement: Abonnement, le: date, avance_defaut: int) -> Ligne:
@@ -137,13 +165,21 @@ def _ligne(abonnement: Abonnement, le: date, avance_defaut: int) -> Ligne:
     )
 
 
-def alertes(configuration: Configuration, le: date | None = None) -> list[Alerte]:
-    """Les alertes du jour : celles qui se calculent, fondues avec celles du fichier."""
+def alertes(configuration: Configuration, le: date | None = None,
+            journal: Journal | None = None) -> list[Alerte]:
+    """Les alertes du jour : celles qui se calculent, fondues avec celles du fichier.
+
+    Sans journal, deux types restent muets — on ne peut pas dire qu'un document
+    manque quand on ne sait pas lesquels sont arrivés. Ils ne sont alors ni
+    calculés ni retirés : les taire vaut mieux que de les nier.
+    """
     le = le or date.today()
-    return fusionner(configuration.alertes, _calculer(configuration, le), le)
+    possedes = POSSEDES_AVEC_JOURNAL if journal is not None else POSSEDES_SANS_JOURNAL
+    return fusionner(configuration.alertes, _calculer(configuration, le, journal), le, possedes)
 
 
-def fusionner(existantes: list[Alerte], calculees: list[Alerte], le: date) -> list[Alerte]:
+def fusionner(existantes: list[Alerte], calculees: list[Alerte], le: date,
+              possedes: tuple[str, ...] = POSSEDES_SANS_JOURNAL) -> list[Alerte]:
     """Le calcul reprend le statut déjà décidé, et n'efface que ce qui n'a plus lieu d'être."""
     connues = {alerte.id: alerte for alerte in existantes}
     retenues: list[Alerte] = []
@@ -160,19 +196,104 @@ def fusionner(existantes: list[Alerte], calculees: list[Alerte], le: date) -> li
         # date est passée — c'est alors une échéance ratée, et elle doit rester
         # sous les yeux. Ce qui ne vient pas d'un contrat n'est pas à ce module.
         depassee = alerte.echeance < le
-        if alerte.source.startswith("abonnement:") and not depassee:
+        if alerte.source.startswith(possedes) and not depassee:
             continue
         retenues.append(alerte)
     return sorted(retenues, key=lambda alerte: (alerte.echeance, alerte.id))
 
 
-def _calculer(configuration: Configuration, le: date) -> list[Alerte]:
+def _calculer(configuration: Configuration, le: date,
+              journal: Journal | None = None) -> list[Alerte]:
     avance = configuration.rappels.alerte_avant_defaut_jours
     calculees: list[Alerte] = []
     for abonnement in configuration.abonnements:
-        for alerte in (_alerte_echeance(abonnement, le, avance), _alerte_paiement(abonnement, le)):
+        for alerte in (_alerte_echeance(abonnement, le, avance),
+                       _alerte_paiement(abonnement, le),
+                       _alerte_document_manquant(abonnement, le, journal)):
             if alerte is not None:
                 calculees.append(alerte)
+    if journal is not None:
+        calculees += _alertes_conservation(configuration, le, journal)
+    return calculees
+
+
+def _alerte_document_manquant(abonnement: Abonnement, le: date,
+                              journal: Journal | None) -> Alerte | None:
+    """La facture attendue qui n'est pas arrivée.
+
+    Ne se déclenche que si l'on a déjà vu passer un document de cet émetteur :
+    sans cette garde, chaque abonnement crierait au premier passage, l'assistant
+    ne sachant pas distinguer une facture manquante d'un coffre qu'on vient
+    d'ouvrir. C'est le genre de faux signal qui fait ignorer les vrais.
+    """
+    if journal is None or abonnement.statut not in AU_BUDGET or not abonnement.documents_attendus:
+        return None
+    rythme = RYTHMES.get(abonnement.documents_attendus.lower())
+    if rythme is None:
+        return None
+    periode, grace, cadence = rythme
+
+    connus = journal.derniers_de(abonnement.emetteur)
+    if not connus or connus[0].date_emission is None:
+        return None
+    dernier = connus[0].date_emission
+    attendu = dernier + timedelta(days=periode)
+    if le < attendu + timedelta(days=grace):
+        return None
+
+    return Alerte(
+        id=_identifiant(abonnement, TypeAlerte.DOCUMENT_MANQUANT, attendu),
+        type=TypeAlerte.DOCUMENT_MANQUANT,
+        source=f"abonnement:{abonnement.id}",
+        echeance=attendu,
+        declenchement=attendu + timedelta(days=grace),
+        montant=abonnement.montant,
+        action=(
+            f"Aucun document de {abonnement.emetteur or abonnement.libelle} depuis le "
+            f"{dernier:%d/%m/%Y}, alors qu'il en arrive normalement un {cadence}. "
+            "Vérifier la boîte mail ou l'espace client — une facture qui cesse "
+            "d'arriver annonce souvent un changement de tarif."
+        ),
+    )
+
+
+def _alertes_conservation(configuration: Configuration, le: date,
+                          journal: Journal) -> list[Alerte]:
+    """Ce qu'on a le droit de jeter, groupé par catégorie et par année.
+
+    Groupé, parce que cinq ans de factures d'énergie font soixante documents et
+    qu'une alerte par document noierait tout le reste. Le groupe n'expire qu'avec
+    son document le plus récent : mieux vaut garder un an de trop que jeter un
+    justificatif encore utile. Et rien n'est supprimé — le programme signale.
+    """
+    groupes: dict[tuple[str, int], list[Document]] = {}
+    for document in journal:
+        if document.date_emission is None:
+            continue
+        groupes.setdefault((document.categorie, document.date_emission.year), []).append(document)
+
+    calculees: list[Alerte] = []
+    for (categorie, annee), documents in sorted(groupes.items()):
+        reglage = configuration.classement.categories.get(categorie)
+        if reglage is None or reglage.conservation_annees is None:
+            continue  # à garder à vie : un bulletin de paie, un acte notarié
+        plus_recent = max(d.date_emission for d in documents if d.date_emission)
+        expire = ajouter_mois(plus_recent, 12 * reglage.conservation_annees)
+        if le < expire:
+            continue
+        calculees.append(Alerte(
+            id=f"conservation-{categorie}-{annee}",
+            type=TypeAlerte.CONSERVATION,
+            source=f"conservation:{categorie}-{annee}",
+            echeance=expire,
+            declenchement=expire,
+            montant=None,
+            action=(
+                f"{len(documents)} document(s) « {reglage.libelle} » de {annee} ont passé "
+                f"leur durée de conservation de {reglage.conservation_annees} an(s) : "
+                "ils peuvent être jetés. Rien n'a été supprimé."
+            ),
+        ))
     return calculees
 
 

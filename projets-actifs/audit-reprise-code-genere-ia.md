@@ -40,7 +40,7 @@ raccourcit le cycle de vente d'un ordre de grandeur.
 
 | Étape | Livrable | Délai |
 | --- | --- | --- |
-| **1 — L'audit non sollicité** | Trouver 3 personnes qui disent publiquement que leur application générée par IA est cassée (communautés Lovable / Bolt / v0, Indie Hackers, forums no-code FR). En auditer **une** gratuitement : 1 page, 5 constats classés **par ce qui cassera en premier en production**, avec le correctif du n°1 déjà écrit. Envoyer sans rien demander. | **< 48 h** |
+| **1 — L'audit non sollicité** | Trouver 3 applications **déployées, avec des clients payants**, construites par IA (communautés Lovable / Bolt / v0, Indie Hackers, forums no-code FR, pages de tarifs). En auditer **une** gratuitement depuis sa **surface publique** — `scan_surface.py <url>`, aucun dépôt requis : 1 page, 5 constats classés **par ce qui cassera en premier en production**, avec le correctif du n°1 déjà écrit. Envoyer sans rien demander. | **< 48 h** |
 | **2 — Le premier audit payé** | Répéter jusqu'à un audit facturé 500 € à prix fixe. Le prix fixe est le cœur de l'offre : il règle le problème du périmètre inconnu, qui est la vraie raison pour laquelle personne ne veut de ce travail. | 2 à 6 semaines |
 | **3 — La remise en état** | Transformer un audit en chantier facturé (3–10 k€ selon l'ampleur). Constituer au passage la grille d'audit réutilisable — c'est elle, et non le code livré, qui devient l'actif. | Après le 2ᵉ audit payé |
 
@@ -154,6 +154,22 @@ sert publiquement, à quiconque ouvre son URL :
 C'est **la même surface pour tout le monde**, sans dépôt, et elle supprime
 l'anticorrélation : n'importe quelle application avec des clients payants
 devient auditable.
+
+**Appliqué.** L'étape 1 ci-dessus est réécrite, la compétence `audit-code-ia`
+porte la méthode et sa frontière, et `scripts/scan_surface.py` fait le relevé :
+GET seulement, sur l'URL donnée puis sur les seuls fichiers que la page dit
+elle-même au navigateur d'aller chercher. Il relève les secrets partis dans le
+bundle, la configuration des services qui portent les données, les protections
+absentes des en-têtes, et les **cartes de sources** laissées en production —
+celles-ci rendent tout le code d'origine lisible et rouvrent l'audit complet
+sans dépôt. Les valeurs sensibles sont recopiées tronquées : un rapport part
+par courrier, et un rapport qui reproduit la clé qu'il signale est la deuxième
+fuite.
+
+**Ce qui ne tourne pas depuis une session distante.** La politique réseau de
+l'environnement refuse tout hôte non listé — vérifié : `example.com` rend 000.
+Le relevé de surface se lance donc depuis ta machine, pas d'ici. Ce n'est pas
+une gêne : le goulot était déjà l'acquisition, et elle est humaine.
 
 **La limite, à tenir strictement :** lire ce que l'application *sert
 spontanément* est passif et légitime. Forger une requête pour voir si une règle

@@ -60,6 +60,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nL'argument de Lexis+ AI est celui de la source : les réponses s'appuient sur un fonds éditorial contrôlé, et chaque affirmation renvoie à un document consultable. Sur une matière où une citation inventée peut coûter une sanction disciplinaire, cette contrainte de traçabilité vaut plus que l'élégance de la rédaction. L'outil produit aussi des trames d'argumentaire et des synthèses de dossier.\n\n## Points forts\n- Réponses systématiquement rattachées à une source consultable\n- Fonds éditorial et doctrine intégrés, pas seulement la jurisprudence brute\n- Synthèses de dossier et trames d'argumentation dans le même environnement\n- Éditeur établi, avec les garanties contractuelles qui vont avec\n\n## Points faibles\n- Fonds français moins complet que celui des acteurs spécialisés locaux\n- Abonnement onéreux, indexé sur le nombre d'utilisateurs\n- Interface héritée d'un outil documentaire ancien, moins fluide que les nouveaux venus\n\n## Idéal pour\nLes cabinets déjà abonnés à l'écosystème LexisNexis, qui veulent une recherche augmentée sans changer de fournisseur documentaire.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "juro",
+      "nom": "Juro",
+      "categorie": "Gestion contractuelle",
+      "prix": "Sur devis",
+      "description_courte": "Le contrat de bout en bout : rédaction, négociation, signature et échéances suivies, sans repasser par la pièce jointe.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/juro",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nJuro remplace le cycle de vie contractuel par pièces jointes — dix versions d'un même document dans autant de boîtes mail — par un espace unique où le contrat se rédige, se négocie, se signe et se surveille. La partie intelligente résume les écarts entre versions, extrait les engagements et alerte sur les échéances de renouvellement, celles que tout le monde découvre trop tard.\n\n## Points forts\n- Un seul document vivant, du modèle à la signature\n- Résumé automatique des modifications proposées par la partie adverse\n- Alertes sur les échéances et les reconductions tacites\n- Modèles en libre service pour les équipes opérationnelles, sous contrôle juridique\n\n## Points faibles\n- Adapté aux contrats répétitifs, moins aux opérations sur mesure\n- Bascule des contrats existants longue et rarement complète\n- Suppose que les équipes commerciales acceptent de quitter le traitement de texte\n\n## Idéal pour\nLes directions juridiques de croissance dont le volume de contrats standards explose et qui deviennent le point de blocage de l'entreprise.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }
