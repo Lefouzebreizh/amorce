@@ -47,4 +47,5 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/trier-les-rushes` | Inventorier d'un coup un lot de médias déposé en vrac — quinze, trente, cinquante fichiers — au lieu de les ouvrir un par un. Relève les doublons par… |
 | `/typographie-francaise` | Règles de typographie française pour du texte destiné à l'impression ou au lettrage — espaces insécables, guillemets, apostrophes, points de… |
 | `/verifier` | Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et… |
+| `/video-du-jour` | Fabriquer un fichier vidéo publiable à partir d'un script TikTok, d'une prise de voix et d'images — analyse et découpe de la voix, recadrage 9:16 sur… |
 | `/voir-le-son` | Regarder un média au lieu de le mesurer — spectrogramme, courbe de sonie et planche de vignettes rendus en images que Claude peut réellement lire. À… |
