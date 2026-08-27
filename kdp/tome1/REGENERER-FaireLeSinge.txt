@@ -58,3 +58,11 @@ pixels or more. Do not upscale a smaller image: generate large.
   · la phrase du parchemin
 
 Rien de tout cela ne doit apparaître dans l'image générée.
+
+Le lettrage se pose ensuite avec :
+
+  python3 kdp/pipeline/lettrage.py --planche <la nouvelle planche> \
+      --dossier kdp/tome1/DOSSIER.md --page 4 --vers page04.pdf
+
+Ajouter --reperes pour dessiner d'abord les boîtes à vide et vérifier
+qu'aucune bulle ne couvre le personnage qui parle.
