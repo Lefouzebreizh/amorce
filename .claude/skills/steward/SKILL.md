@@ -134,6 +134,39 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   l'état des six autres suites Python. Un échec identique sur `main` n'est pas
   le sien : le porter s'il existe un correctif, le dire s'il n'y en a pas.
 
+## Le clone superficiel, et pourquoi `--force-with-lease` refuse
+
+Une session distante clone en `--depth 1`. Deux conséquences que rien n'annonce,
+et qui coûtent chacune un quart d'heure à qui les découvre :
+
+**Le refspec ne suit qu'une branche.** `git clone --depth 1` écrit
+`+refs/heads/main:refs/remotes/origin/main` — au singulier. Aucune branche de
+travail n'obtient donc de référence de suivi, et `git push --force-with-lease`
+échoue sur un « stale info » incompréhensible : il compare à une référence
+distante qui n'existe pas localement. Le remède se pose une fois, juste après
+le clone :
+
+```bash
+git config --unset-all remote.origin.fetch
+git config --add remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+git fetch --unshallow      # avant tout rebase : l'historique tronqué n'en a pas
+```
+
+**Et `main` bouge sous les pieds.** Ce dépôt reçoit plusieurs sessions en
+parallèle ; il a avancé de deux commits en une heure pendant qu'une branche se
+préparait. Refaire `git fetch origin main` et vérifier l'écart **juste avant**
+d'ouvrir la pull request, pas au moment de créer la branche :
+
+```bash
+git rev-list --left-right --count origin/main...origin/<branche>
+```
+
+Le premier nombre est ce qui manque à la branche. S'il n'est pas nul, rebaser.
+
+**Une pull request fusionnée est finie.** Elle ne peut pas porter une suite. Si
+le travail continue, repartir de `main` à jour sous le même nom de branche et
+ouvrir une nouvelle demande — jamais empiler sur un historique déjà fusionné.
+
 ## Observer l'intégration continue
 
 `gh` n'est pas installé dans les sessions distantes, et le jeton GitHub n'est
