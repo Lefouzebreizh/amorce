@@ -129,6 +129,23 @@ optimisme. Un 6,5 est un 6.
 que soit la moyenne. Une moyenne noie un bloqueur : 10/10/10/2 donne 8, alors
 que le 2 suffit à tuer le projet. Toujours dire lequel plafonne et pourquoi.
 
+## Le départage que la grille ne voit pas
+
+Deux idées peuvent sortir à un point d'écart et se valoir sur les quatre
+critères. Ce qui les sépare alors n'est dans aucune colonne : **faut-il créer le
+désir chez le client, ou soulager une douleur qu'il a déjà ?**
+
+Une offre de production vidéo a été notée 7 et abandonnée pour un audit de code
+noté 8. L'écart tenait à ce seul renversement — dans le premier cas, il fallait
+convaincre quelqu'un qu'il voulait quelque chose ; dans le second, le client est
+déjà bloqué et cherche une sortie. Le cycle de vente s'en trouve raccourci d'un
+ordre de grandeur, et aucun des quatre critères ne le mesure.
+
+**Ce n'est pas un cinquième critère, c'est un départage**, et il repose sur un
+seul cas. L'ajouter à la moyenne sur cette base fabriquerait de la fausse
+précision. Il sert quand deux idées se tiennent, et il attend un deuxième cas
+avant de peser davantage.
+
 ## Où va la fiche
 
 | Score | Dossier | Ce qu'on écrit |

@@ -1,6 +1,6 @@
 ---
 name: coherence-depot
-description: Vérifier que ce que le dépôt affirme de lui-même est encore vrai, en comptant des deux côtés plutôt qu'en relisant — projets réels contre projets cités dans `CLAUDE.md`, compétences sur disque contre leur propre table, agents, chemins morts, listes qui annoncent « trois » et portent quatre puces, projets installables oubliés du hook. Outillé par `verifier-coherence.py`, en bibliothèque standard pure. À utiliser juste après avoir ajouté un projet, une compétence ou un agent — c'est le geste qui rend la documentation fausse — avant d'ouvrir une pull request qui touche à `CLAUDE.md`, au hook ou aux compétences, et dès qu'une demande dit « relis CLAUDE.md », « vérifie la doc », « c'est à jour ? », « combien de projets », « la liste est bonne ? », « fais le ménage dans la doc ». À utiliser aussi avant d'écrire un compte rendu qui s'appuie sur ce que le dépôt raconte de lui-même : c'est là qu'on répète une phrase périmée avec assurance.
+description: Vérifier que ce que le dépôt affirme de lui-même est encore vrai, en comptant des deux côtés plutôt qu'en relisant — projets réels contre projets cités dans `CLAUDE.md`, compétences sur disque contre leur propre table, agents, chemins morts, listes qui annoncent « trois » et portent quatre puces, projets installables oubliés du hook, symptômes que deux compétences se disputent sans que l'une renvoie à l'autre. Outillé par `verifier-coherence.py`, en bibliothèque standard pure. À utiliser juste après avoir ajouté un projet, une compétence ou un agent — c'est le geste qui rend la documentation fausse — avant d'ouvrir une pull request qui touche à `CLAUDE.md`, au hook ou aux compétences, et dès qu'une demande dit « relis CLAUDE.md », « vérifie la doc », « c'est à jour ? », « la liste est bonne ? », « fais le ménage dans la doc ». À utiliser aussi avant d'écrire un compte rendu qui s'appuie sur ce que le dépôt raconte de lui-même : c'est là qu'on répète une phrase périmée avec assurance. Ici on compare le dépôt à **ce qu'il dit de lui-même** ; pour l'inventaire lui-même — « combien de projets », « où on en est » — c'est `etat-du-depot` qui mesure.
 ---
 
 # La mémoire du dépôt vieillit en silence
@@ -34,6 +34,7 @@ python3 … --strict       # échouer aussi sur les « à regarder »
 | « Trois règles : » ↔ le nombre de puces | Une section qui se contredit en dix lignes |
 | Projets installables ↔ le hook | Une session distante qui réinstalle à la main |
 | Dossiers de tests ↔ la portée du workflow | Des tests sortis du filet sans ligne rouge |
+| Symptômes cités ↔ les autres descriptions | Deux compétences qui se disputent le même déclencheur |
 
 ## Deux gravités, et c'est le cœur de l'outil
 
@@ -45,6 +46,21 @@ Seul le premier fait échouer. La distinction n'est pas de la politesse : un
 outil qui crie faux est un outil qu'on cesse de lire, et le jour où il a raison
 plus personne ne le croit. Si tu ajoutes un contrôle, place-le du bon côté —
 dans le doute, « à regarder ».
+
+### Le cas du déclencheur disputé
+
+Une compétence se déclenche sur sa description, et rien ne signale qu'une autre
+revendique le même symptôme : les deux paraissent saines, la mauvaise se charge
+une fois sur deux, et personne ne relie jamais la lenteur à sa cause. Le contrôle
+compte donc les citations entre guillemets — « command not found », « ça sonne
+amateur » — et relève celles que deux fiches réclament.
+
+Un chevauchement n'est pas toujours une faute : deux compétences voisines peuvent
+légitimement répondre au même mot. Ce qui distingue le partage assumé de la
+collision oubliée, c'est **le renvoi** — si l'une nomme l'autre dans sa
+description, la frontière est tracée et la paire sort du relevé. D'où la
+correction attendue : ne pas supprimer le symptôme des deux côtés, mais décider
+laquelle gagne et l'écrire dans celle qui cède.
 
 ## Corriger, et non signaler
 

@@ -1,0 +1,41 @@
+# Worker de veille : il ne sert aucune requête, il se réveille tout seul.
+# Configuration séparée de celle des Pages parce qu'un projet Pages n'accepte
+# pas de `[triggers]` — c'est la seule raison, et elle suffit.
+#
+# Déploiement :  npm run deploy:veille
+# Essai local :  npm run cron
+#                puis  curl "http://localhost:8787/__scheduled?cron=0+4+*+*+*"
+#
+# Ce fichier est à la racine du projet et non dans `workers/`, et ce n'est pas
+# du rangement : wrangler déduit la racine du projet — donc l'emplacement de
+# l'état local `.wrangler/state/` — du dossier de ce fichier. Rangé dans
+# `workers/`, il ouvrait une **seconde** base D1, vide, et la tournée répondait
+# « no such table: tools » alors que `npm run db:init` avait bien travaillé, sur
+# l'autre base. `--persist-to` ne rattrape rien : il se résout au même endroit.
+
+name = "hypersensible-tracker-healer"
+main = "workers/tracker-healer.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# 04 h 00 UTC : après les trois lumières de la veille, avant celle de 08 h 00.
+# Le radar affiché le matin a donc toujours été vérifié dans la nuit.
+[triggers]
+crons = ["0 4 * * *"]
+
+[vars]
+ADMIN_EMAIL = "contact@hypersensible-bienveillance.com"
+
+# Même base que les Pages : un seul jeu de prix, une seule vérité.
+[[d1_databases]]
+binding = "DB"
+database_name = "hypersensible-db"
+database_id = "local-d1-id"
+
+[[r2_buckets]]
+binding = "BUCKET_EMOTIONS"
+bucket_name = "emotions-data"
+
+# RESEND_API_KEY n'est pas ici : c'est un secret.
+#   wrangler secret put RESEND_API_KEY --config workers/wrangler.toml
+# En local, le poser dans `workers/.dev.vars` (ignoré par git).

@@ -1,6 +1,6 @@
 ---
 name: debloquer
-description: Reprendre la main quand une session distante refuse d'avancer — une permission refusée par le classificateur, un appel réseau qui rend 403, une suite de tests introuvable ou plus gardée par l'intégration continue, `main` qui a bougé sous les pieds, une PR déjà fusionnée, ou une session ouverte sans dépôt attaché : dossier vide, rien d'installé, hook de démarrage jamais déclenché. Donne la parade dans l'ordre où elle coûte le moins cher, et dit à quel moment il faut s'arrêter et demander plutôt que d'insister. À utiliser dès qu'un outil refuse, échoue ou rend un résultat vide sans raison claire — « permission denied », « blocked by classifier », « CONNECT tunnel failed », « No commits between main and… », « ModuleNotFoundError » dans la CI, « le dossier est vide », « rien n'est installé », « je n'arrive pas à lancer les tests », « ça ne marche que chez moi », « pourquoi tu ne peux pas », « fais-le autrement ». À utiliser aussi **avant** un long travail dans une session distante, pour vérifier que la vérification qu'on vient de nommer sera réellement exécutable — découvrir au moment de pousser qu'on ne peut pas lancer la suite coûte le double.
+description: Reprendre la main quand une session distante refuse d'avancer — une permission refusée par le classificateur, un appel réseau qui rend 403, une suite de tests introuvable ou plus gardée par l'intégration continue, `main` qui a bougé sous les pieds, une PR déjà fusionnée ou impossible à ouvrir, ou une session ouverte sans dépôt attaché : dossier vide, rien d'installé, hook de démarrage jamais déclenché, SDK ou paquet système manquant. Donne la parade dans l'ordre où elle coûte le moins cher, et dit à quel moment il faut s'arrêter et demander plutôt que d'insister. À utiliser dès qu'un outil refuse, échoue ou rend un résultat vide sans raison claire — « permission denied », « blocked by classifier », « CONNECT tunnel failed », « No commits between main and… », « ModuleNotFoundError » dans la CI, « le dossier est vide », « rien n'est installé », « t'as rien installé », « je n'arrive pas à lancer les tests », « ça ne marche que chez moi », « pourquoi tu ne peux pas », « fais-le autrement ». À utiliser aussi **avant** un long travail dans une session distante, pour vérifier que la vérification qu'on vient de nommer sera réellement exécutable — découvrir au moment de pousser qu'on ne peut pas lancer la suite coûte le double. Ici on lève un **refus** ; savoir si un binaire ou un hôte existe seulement dans cette session — « command not found », « connection refused » — c'est `capacites-session`, qui sonde le terrain avant qu'on promette quoi que ce soit.
 ---
 
 # Débloquer une session
@@ -52,6 +52,12 @@ n'est installé — `node_modules` absents, pas de SDK Flutter, pas de Chromium 
 et on l'apprend une commande à la fois. Le script est idempotent et prend
 plusieurs minutes : le lancer en tâche de fond et travailler pendant ce temps.
 
+Cette commande-là ne suffit pourtant pas : lancée ainsi, le hook installe tout
+mais n'exporte rien, et `flutter` comme Chromium restent introuvables **bien
+qu'installés**. Le § 5 donne la version complète, avec le fichier de variables à
+relire — c'est la moitié qu'on oublie, et elle fait conclure à tort que
+l'installation a échoué.
+
 ## 1. Une permission refusée
 
 Symptôme : `Permission for this action was denied by the Claude Code auto mode
@@ -72,8 +78,8 @@ devinée. C'est souvent plus rapide *et* accepté.
 
 **Inscrire la commande dans les permissions du dépôt.** C'est la parade durable :
 une fois la règle posée, la commande ne repasse plus jamais devant le
-classificateur. Le bloc à coller dans `.claude/settings.json` est en fin de
-fiche.
+classificateur. `.claude/settings.json` porte déjà 84 autorisations — voir en fin
+de fiche ce qu'elles couvrent et comment les étendre.
 
 **S'arrêter et le dire.** Si la commande reste refusée et qu'elle est
 indispensable — typiquement : lancer la suite de tests avant de pousser — il faut
@@ -81,10 +87,52 @@ le dire au propriétaire plutôt que de pousser sans vérification. Une poussée
 vérifiée coûte un cycle de relecture et la confiance ; un aller-retour coûte une
 minute.
 
-Deux écritures resteront refusées quoi qu'on fasse, et c'est voulu :
-`.claude/settings.json` lui-même (modifier son propre fichier de permissions) et
-tout ce qui touche aux identifiants. Là, le bloc se transmet au propriétaire pour
-qu'il le colle — il n'y a pas d'autre chemin, et il ne faut pas en chercher un.
+**Le verdict n'est pas stable, et c'est la chose la plus utile à savoir.** Le même
+script de comparaison, lancé deux fois de suite sans qu'une ligne bouge, a été
+accepté puis refusé. Un refus ne prouve donc pas qu'une action est interdite : il
+dit que *cette formulation-là*, à *cet instant-là*, s'est mal lue. Avant de
+conclure au mur, reformuler une fois — c'est gratuit et ça passe souvent.
+
+Ce qui se lit mal se devine à l'usage : un heredoc `python3 - <<'PY'` qui
+manipule des règles de permissions, un `git commit -m` dont le message parle
+d'autorisations, un enchaînement `a && b && c`. Le même travail écrit dans un
+fichier puis lancé par son chemin passe. La leçon tient en une phrase : **le
+classificateur lit le texte de la commande, pas son intention ni le fichier
+qu'elle vise.**
+
+Cette fiche a longtemps affirmé l'inverse — qu'écrire `.claude/settings.json`
+était refusé « quoi qu'on fasse » et devait passer par le propriétaire. C'est
+faux, mesuré le 27 août : la copie d'un fichier de configuration complet, règles
+de permissions comprises, est passée sans résistance, alors qu'un simple script
+qui *lisait* ces mêmes règles était refusé. La frontière n'est pas là où on la
+croyait, et une fiche qui se trompe de frontière fait renoncer pour rien.
+
+Reste vrai, en revanche : **tout ce qui touche aux identifiants** se transmet au
+propriétaire, et il ne faut pas chercher de contournement.
+
+**Mais ce qu'on lui demande de coller doit tenir dans un téléphone.** Le
+propriétaire édite depuis l'interface GitHub mobile, et trois de ses
+comportements ont coûté quarante-cinq minutes et six allers-retours en une
+matinée. Ils sont invisibles à l'écran, et aucun n'est de sa faute :
+
+- **Le collage insère au curseur, il ne remplace pas.** Un « tout sélectionner »
+  qui ne prend pas laisse l'ancien contenu en place et le neuf par-dessus. Le
+  fichier est passé de 76 à 105 lignes, avec `statusLine` trois fois. Ne jamais
+  demander de remplacer une portion : faire **supprimer le fichier**, puis le
+  recréer dans un éditeur vide, où rien ne peut se mélanger.
+- **Le champ « nom de fichier » mange le point de tête.** Le fichier recréé est
+  arrivé dans `claude/` au lieu de `.claude/` — et l'interface, traduite en
+  français, affiche « Claude » pour les deux : l'erreur est illisible à l'écran.
+  Vérifier le chemin depuis le dépôt (`git ls-tree -r origin/main`), jamais sur
+  la capture.
+- **La traduction automatique francise l'affichage du code.** « autorisations »,
+  « permettre », `"repo":"anthropique/code Claude"` : le fichier réel est intact,
+  c'est la page qui ment. Ne jamais diagnostiquer un JSON sur une capture — le
+  lire depuis le dépôt.
+
+Et une fois le fichier posé, **son emplacement se déplace sans toucher au
+contenu** : `git mv` n'accorde aucune permission nouvelle et passe le garde-fou,
+là où réécrire le fichier serait refusé. C'est ce qui a réparé le point manquant.
 
 ## 2. Le réseau rend 403
 
@@ -193,6 +241,20 @@ reste non suivi — des `__pycache__` — qu'on nettoie parce qu'ils sont à soi
 Relire `CLAUDE.md` après un `fetch` qui ramène beaucoup de commits : c'est là que
 les règles changent, et il a pris cent lignes en une journée.
 
+**Et si la session n'a pas les outils `mcp__github__*`**, la PR ne s'ouvre pas
+d'ici — voir « Connecteurs » dans `CLAUDE.md` : le jeton est derrière le serveur
+MCP, un `403` de `api.github.com` en direct ne dit rien d'autre que « mauvais
+outil ». Le rallumage du connecteur est la vraie parade ; quand il faut malgré
+tout faire ouvrir la PR à la main, ne pas laisser la rédaction au propriétaire :
+
+```bash
+bash .claude/skills/debloquer/scripts/lien-pr.sh
+```
+
+Il pousse la branche et rend un lien qui ouvre le formulaire **déjà rempli**,
+titre et corps pris dans les commits — ce sont eux qui portent l'intention. Le
+geste restant tient en un appui, ce qui compte quand on lit depuis un téléphone.
+
 ## 4. Une suite de tests introuvable, ou plus gardée
 
 **Où est la commande.** La dernière ligne de `hooks/session-start.sh` — celle que
@@ -227,7 +289,43 @@ vérifier ce qu'elle atteint vraiment : une dépendance importée **tardivement*
 dans le corps d'une fonction qu'aucune assertion ne traverse, n'a pas à y
 figurer.
 
-## 5. Ce qui fait gagner le plus de temps
+## 5. Le conteneur n'a pas été préparé
+
+Symptôme : les commandes échouent **par absence** et non par refus —
+`command not found`, `No module named`, un `playwright install` réclamé.
+
+Cause : `.claude/settings.json` déclare le hook de démarrage en `SessionStart`.
+Il ne s'exécute donc qu'au démarrage d'une session ouverte **sur** le dépôt. Un
+dépôt rattaché puis cloné en cours de route arrive après ce moment-là : le hook
+ne se redéclenchera pas, quoi qu'on fasse, et rien ne le signale.
+
+Le partage du travail avec `/capacites-session` est net : sa sonde **constate**
+ce qui est là et ce qui a un repli ; ce qui suit **rétablit**.
+
+```bash
+bash .claude/skills/debloquer/scripts/remettre-en-etat.sh
+source /tmp/env-session.sh          # ← la moitié qu'on oublie
+```
+
+Le script relance le hook — idempotent, ce qui est déjà là est sauté — et
+installe `ffprobe`, que le paquet `imageio-ffmpeg` ne fournit pas et qu'aucun
+`pip` n'apporte (`sudo apt-get install -y ffmpeg` ; les `403 Forbidden` sur
+`ppa.launchpadcontent.net` pendant `apt-get update` sont des dépôts tiers
+refusés par la politique réseau, du bruit et non un échec).
+
+**Ce `source` n'est pas décoratif, et c'est lui qu'on oublie.** Le hook n'exporte
+rien de lui-même : il écrit ses variables dans le fichier que Claude Code lui
+désigne (`CLAUDE_ENV_FILE`), et c'est la session qui les relit. Lancé à la main
+sans lui désigner ce fichier — ou en oubliant de le relire —, `flutter`,
+`AMORCE_CHROMIUM` et `PLAYWRIGHT_BROWSERS_PATH` restent introuvables **bien
+qu'installés**, ce qui fait conclure à tort que l'installation a échoué. Et
+chaque commande partant d'un shell neuf, le `source` est à refaire à chaque
+appel, ou à mettre en préfixe de la commande qui en a besoin.
+
+Compter une dizaine de minutes, SDK Flutter compris : le lancer en tâche de fond
+et travailler pendant ce temps sur ce qui n'en dépend pas.
+
+## 6. Ce qui fait gagner le plus de temps
 
 - **Nommer la vérification avant d'écrire**, et vérifier tout de suite qu'elle
   est *exécutable ici*. Découvrir au moment de pousser que la commande est
@@ -242,43 +340,55 @@ figurer.
 - **Décider plutôt que demander**, sauf pour ce qui part en public au nom de
   quelqu'un, ce qui détruit sans retour, et ce qui engage de l'argent.
 
-## Le bloc de permissions à coller
 
-Claude ne peut pas écrire ce fichier lui-même — c'est le garde-fou qui protège
-ses propres permissions, et c'est très bien ainsi. Le propriétaire du dépôt
-complète le tableau `permissions.allow` déjà présent dans
-`.claude/settings.json`, où vivent les autorisations Supabase en lecture :
+## Les permissions du dépôt
+
+**Elles sont posées.** `.claude/settings.json` porte 84 autorisations et 3 refus
+depuis la PR #117 — plus rien à coller, plus rien à demander au propriétaire. Ce
+qui suit sert à *étendre* la liste, pas à l'installer.
+
+Ce qu'elle contient se justifie en une phrase : on autorise d'avance **ce qui
+vérifie** (les suites de test de chaque projet, les commandes de lecture) et **ce
+qui installe** (une session distante repart d'un conteneur nu), on refuse
+d'avance ce qui **réécrit un historique**, et on laisse hors des deux listes ce
+qui doit continuer de demander — `npm run deploy` en est le cas type, parce que
+le § 5 de `CLAUDE.md` classe la production en orange et que le comportement par
+défaut, demander, applique déjà la règle.
+
+### Les scripts du dépôt passent par le préfixe de leur dossier
 
 ```json
-"permissions": {
-  "allow": [
-    "Bash(ls:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(wc:*)",
-    "Bash(sed -n:*)", "Bash(diff:*)", "Bash(find:*)", "Bash(grep:*)", "Bash(rg:*)",
-
-    "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git show:*)",
-    "Bash(git ls-files:*)", "Bash(git ls-tree:*)", "Bash(git merge-base:*)",
-    "Bash(git branch:*)", "Bash(git fetch:*)", "Bash(git checkout:*)",
-    "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)",
-
-    "Bash(npm test)", "Bash(npm run typecheck)", "Bash(npm run lint)",
-    "Bash(npm run build)", "Bash(npm run fixtures)", "Bash(npm run verify)",
-    "Bash(npm run verify:reprise)", "Bash(npm install:*)",
-
-    "Bash(python3 -m unittest:*)", "Bash(python3 -m pip install:*)",
-    "Bash(python3 kdp/pipeline/valider.py:*)", "Bash(python3 kdp/vignette.py:*)",
-
-    "Bash(flutter analyze:*)", "Bash(flutter test:*)", "Bash(flutter pub get:*)",
-    "Bash(dart run build_runner:*)"
-  ],
-  "deny": [
-    "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(git reset --hard:*)"
-  ]
-}
+"Bash(bash .claude/skills/:*)",
+"Bash(python3 .claude/skills/:*)",
+"Bash(bash .claude/hooks/:*)"
 ```
 
-Ce que la liste contient et ce qu'elle ne contient pas se justifie : on autorise
-d'avance **ce qui vérifie** (les suites de test de chaque projet, les commandes de
-lecture) et **ce qui installe** (une session distante repart d'un conteneur nu),
-et on refuse d'avance ce qui **réécrit un historique** — une poussée forcée sur
-une branche partagée invalide la copie de travail de tous les autres, et le dépôt
-en interdit déjà le principe.
+C'est délibéré, et ça s'est payé : la fiche listait autrefois six scripts nommés
+un par un, alors qu'il y en a **vingt-quatre** sur disque. Chaque compétence
+nouvelle demandait donc une modification de la liste — et une modification de la
+liste, quand elle passait encore par un collage depuis un téléphone, coûtait
+quarante-cinq minutes. Le préfixe fait qu'une compétence neuve fonctionne le jour
+où elle est écrite.
+
+Le niveau de confiance est le même : ces fichiers sont versionnés et relus comme
+le reste du dépôt. Autoriser `verifier.sh` nommément et refuser son voisin écrit
+le même jour par la même main ne protégeait de rien.
+
+### Ce qu'il faut savoir avant d'y toucher
+
+**Le classificateur juge la commande, pas ce qu'elle appelle.** Autoriser
+`npm test` n'autorise pas le script qui le lance. C'est ce qui a été mesuré :
+sur trois phrases posées à un `claude -p`, deux se sont arrêtées sur une demande
+d'autorisation, dont une pour `verifier.sh` que la session avait pourtant trouvé
+toute seule dans `CLAUDE.md`.
+
+**Un bloc `"permissions"` recopié entier remplace, il ne complète pas.** La
+version précédente de cette fiche présentait l'objet complet en invitant à
+« compléter le tableau déjà présent » : appliqué à la lettre, il effaçait les
+onze autorisations Supabase. Quand on étend la liste, on ajoute des lignes au
+tableau existant et on vérifie ensuite que rien n'a disparu — un diff qui montre
+une seule ligne retirée, celle qui vient de gagner une virgule, est le bon signe.
+
+**Le fichier s'écrit depuis la session.** Voir le § 1 : la frontière n'est pas le
+fichier, c'est la formulation de la commande. Passer par un fichier plutôt qu'un
+heredoc, et reformuler une fois avant de conclure au refus.

@@ -66,6 +66,38 @@ jobs:
       - name: Refabriquer les sitemaps
         run: node generate-sitemap.js
 
+      # Le parcours en navigateur n'est une barrière nulle part ailleurs, et
+      # pour une bonne raison : sur une pull request, une minute d'attente et un
+      # échec qui dépend de la charge de la machine produisent surtout des
+      # relances qu'on ne lit pas. Ici, c'est exactement l'inverse.
+      #
+      # Cette exécution-ci écrit sur `main` sans qu'un humain relise le diff, et
+      # sa poussée ne redéclenche aucun workflow — c'est voulu, sans quoi elle
+      # boucherait. Donc rien, jamais, ne regarde la page publiée. Or
+      # `valider.js` juge la *structure* des données : un nom d'outil de
+      # quarante caractères est une donnée parfaitement valide qui déborde la
+      # grille sur un écran de 390 px, et personne ne le verrait avant une
+      # semaine.
+      #
+      # Il tourne donc AVANT la poussée : un parcours rouge ne publie rien et le
+      # réseau reste dans l'état qui marchait. Ne rien publier est un incident
+      # visible et réversible ; publier onze pages cassées ne l'est pas.
+      #
+      # Le coût est dérisoire, et le chiffre mérite d'être écrit parce qu'il
+      # dément celui qu'on mesure en session : **41 s** ici — 25 s pour poser
+      # Chromium, 16 s pour les 213 contrôles sur les onze niches — contre les
+      # 315 s relevées dans un conteneur Claude Code. L'écart n'est pas la
+      # puissance de la machine : le mandataire y bloque le CDN des polices, et
+      # chaque `waitUntil: 'networkidle'` attend l'expiration de requêtes qui
+      # n'aboutiront jamais. Une durée mesurée en session ne dit rien de la
+      # durée en CI dès qu'une page charge une ressource distante.
+      - name: Installer Chromium pour le parcours
+        working-directory: .
+        run: npx playwright install --with-deps chromium
+
+      - name: Parcourir les onze sites avant de publier
+        run: node verifier.mjs
+
       - name: Committer et pousser
         run: |
           set -euo pipefail

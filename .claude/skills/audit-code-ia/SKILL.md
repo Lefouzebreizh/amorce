@@ -15,9 +15,41 @@ cassera en premier en production**, et le correctif du premier déjà écrit.
 
 ## Avant de commencer
 
-Ne lire que du code auquel on a été invité : un dépôt public, ou un accès donné
-par son propriétaire. Un audit non sollicité se fait sur du public, et se dit
-comme tel dans le rapport.
+Ne lire que ce à quoi on a été invité — et cette règle n'a jamais dit « un
+dépôt Git ».
+
+**Exiger un dépôt public rend la prospection impossible**, et c'est une
+découverte de terrain, pas une supposition. Trois conditions sont demandées à
+la même personne : son application est cassée, elle a des clients payants, son
+dépôt est public. **Les deux dernières sont anticorrélées** — un dépôt laissé
+ouvert par quelqu'un qui encaisse de l'argent est presque toujours tenu par
+quelqu'un qui sait ce qu'il fait. Les applications cassées *avec* des clients
+payants ont des dépôts fermés.
+
+Or **toute application déployée sert publiquement**, à quiconque ouvre son URL :
+son bundle JavaScript, donc tout secret parti côté navigateur ; sa configuration
+cliente — projet Supabase ou Firebase, clés publiables ; ses en-têtes de
+réponse — CORS, cookies, politique de sécurité. C'est la même surface pour tout
+le monde, elle ne demande aucun dépôt, et elle fait disparaître
+l'anticorrélation : n'importe quelle application avec des clients payants
+devient auditable.
+
+### La limite, et elle ne se négocie pas
+
+**Lire ce que l'application sert spontanément est passif et légitime. Forger une
+requête pour voir si une règle d'autorisation cède ne l'est pas** — c'est un
+test d'intrusion, et il demande un accord écrit préalable.
+
+La frontière est simple : un audit non sollicité s'arrête à ce que le navigateur
+reçoit **sans qu'on le pousse**. Ouvrir la page, lire le bundle qu'elle charge,
+regarder les en-têtes qu'elle renvoie : oui. Rejouer une requête en changeant un
+identifiant pour voir si la base répond : non, jamais, quelle que soit
+l'évidence du défaut.
+
+Le rapport doit **dire où il s'est arrêté**. Ce n'est pas une précaution
+juridique décorative : c'est aussi ce qui donne au client une raison concrète de
+payer la suite — « voici ce que j'ai vu depuis la porte ; ce qu'il y a derrière
+demande votre autorisation ».
 
 ## 1. Le relevé mécanique
 
@@ -32,6 +64,26 @@ verrouillage des dépendances, fichiers démesurés, marqueurs d'inachèvement.
 Il est volontairement étroit. **Un faux positif dans un rapport d'audit coûte
 la crédibilité de tout le reste** — le client vérifie toujours le premier
 constat, et s'il est faux il ne lit pas le deuxième.
+
+### Sans dépôt : la surface servie
+
+Quand il n'y a pas de dépôt à cloner, l'application elle-même fournit la
+matière :
+
+| Où regarder | Ce qu'on y trouve |
+| --- | --- |
+| Le bundle JavaScript servi | Clés parties côté navigateur, points d'entrée d'API, noms de tables |
+| La configuration cliente | Projet Supabase / Firebase, clés publiables, région |
+| Les en-têtes de réponse | CORS trop ouvert, cookies sans `Secure` ni `HttpOnly`, absence de CSP |
+| Les pages servies | Formulaires qui postent en clair, chemins d'administration devinables |
+
+**Une clé publiable n'est pas une fuite.** Les clés `anon` de Supabase et les
+configurations Firebase sont exposées au navigateur par conception ; les
+signaler comme des secrets est le faux positif le plus fréquent, et le plus
+coûteux — il discrédite les quatre constats suivants. Ce qui compte n'est pas
+qu'une clé publiable soit visible, mais **ce qu'elle permet de faire** : c'est
+la question de l'autorisation côté serveur, ci-dessous, et elle se pose sans
+jamais rejouer de requête.
 
 ## 2. La lecture, que le script ne remplace pas
 

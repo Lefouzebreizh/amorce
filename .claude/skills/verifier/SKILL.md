@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, validation des bases et parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
+description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, tests, types et build pour le site hypersensible-bienveillance, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, validation des bases et parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
 ---
 
 # Vérifier ce dépôt
@@ -9,7 +9,37 @@ Des projets indépendants, une séquence chacun. **Ne lance que celle du projet
 touché** : les tests de l'un ne disent rien des autres, et tout lancer multiplie
 l'attente pour rien.
 
-Commence par `git status --short` pour savoir où le changement a atterri.
+## Une commande
+
+```bash
+bash .claude/skills/verifier/scripts/verifier.sh
+```
+
+Elle regarde ce qui a changé depuis `origin/main` — commité ou non —, en déduit
+les projets concernés, lance leurs séquences **toutes en même temps**, et rend un
+verdict par projet avec le détail des seuls échecs. Elle finit par ce que la
+vérification ne couvre pas, calculé sur les projets touchés.
+
+Deux raisons de passer par elle plutôt que de recopier les séquences ci-dessous :
+
+- **Elle ne se trompe pas de périmètre.** Choisir à la main, c'est reprendre à
+  chaque fois trois décisions — où le changement a atterri, quelle séquence lui
+  correspond, dans quel ordre — dont l'erreur la plus probable est aussi la plus
+  coûteuse : oublier une suite. Les suites Python sont **découvertes**, comme
+  dans `.github/workflows/tests-python.yml` : un projet nouveau est gardé sans
+  avoir rien à déclarer.
+- **Elle est trois fois plus rapide.** Mesuré sur la barrière d'Amorce, la plus
+  lancée du dépôt : 25,5 s en série, 7,9 s en parallèle. `tsc`, ESLint et
+  `node --test` ne se lisent pas l'un l'autre ; les mettre à la queue leu leu
+  n'était qu'une habitude.
+
+`--base=<ref>` change le point de comparaison, `--tout` vérifie le dépôt entier
+sans regarder ce qui a changé. Le code de sortie vaut 0 si tout est vert.
+
+Ce qui suit reste la référence : ce que chaque séquence contrôle, dans quel
+ordre et **pourquoi**. À lire quand une étape casse, quand il faut lancer un
+filet que le script ne lance pas de lui-même — `npm run verify`, les politiques
+RLS —, ou quand on ajoute un projet.
 
 ## Look & Find — `look_and_find/`
 
@@ -96,6 +126,36 @@ est là.
 
 **À lancer avant de pousser un changement Python**, et en premier réflexe quand
 la CI est rouge alors que tout passe en local.
+
+## Hypersensible & Bienveillance — `hypersensible-bienveillance/`
+
+```bash
+cd hypersensible-bienveillance
+npm test          # moteur CNV et lecture de journal — node --test, sans dépendance
+npm run check     # astro check + tsc --noEmit
+npm run build     # le seul à voir ce que tsc laisse passer
+```
+
+Les trois, et depuis le dossier : le projet a son propre `tsconfig.json`, ses
+propres types Cloudflare et son propre `node_modules`, la racine l'ignore
+volontairement. Le workflow `.github/workflows/hypersensible.yml` rejoue
+exactement cette séquence.
+
+**Ce que ces trois commandes ne voient pas**, et c'est l'essentiel du produit :
+le quota des cinq analyses quotidiennes, le radar branché sur D1, et la tournée
+de veille. Rien de tout cela ne tourne sous `astro dev`, qui ne sert que les
+pages — seul wrangler exécute les Pages Functions :
+
+```bash
+npm run db:init                 # base D1 locale, rejouable sans doublon
+npm run build && npm run preview   # site + fonctions sur :8788
+npm run cron                    # puis curl "localhost:8787/__scheduled?cron=0+4+*+*+*"
+```
+
+Le quota s'éprouve en appelant six fois `/api/reforme` sans `src` : cinq 200,
+puis un 429. Avec `{"src":"groupe"}`, il ne se déclenche jamais — c'est la
+promesse faite aux 48 000 membres, et c'est ce qu'il faut revérifier après toute
+retouche de `functions/api/reforme.ts`.
 
 ## Socle Agence — `agence/`
 

@@ -9,6 +9,8 @@ library;
 
 import 'package:dio/dio.dart';
 
+import '../constants/app_config.dart';
+
 sealed class AppException implements Exception {
   const AppException(this.message);
 
@@ -43,6 +45,7 @@ sealed class AppException implements Exception {
     return switch (status) {
       400 => const InvalidRequestException(),
       401 || 403 => const AuthException(),
+      404 => const ModelUnavailableException(),
       429 => const QuotaException(),
       >= 500 => const ServerException(),
       _ => UnknownException('Réponse inattendue du serveur ($status)'),
@@ -78,6 +81,25 @@ final class AuthException extends AppException {
   const AuthException()
     : super('Clé d\'API refusée. Vérifiez GEMINI_API_KEY.');
 
+  @override
+  bool get isRetryable => false;
+}
+
+/// Le chemin est bon, le modèle n'existe plus.
+///
+/// Google arrête ses modèles à date annoncée, et l'API répond alors 404 sur une
+/// requête par ailleurs correcte. Confondu avec une panne, ce cas coûte une
+/// soirée : tous les scans échouent en même temps, sur tous les appareils, sans
+/// qu'une ligne du dépôt ait bougé. Le message nomme donc le modèle et l'endroit
+/// où le changer — le correctif tient en une constante.
+final class ModelUnavailableException extends AppException {
+  const ModelUnavailableException()
+    : super(
+        'Le modèle ${AppConfig.geminiModel} n\'est plus servi par Google. '
+        'L\'application doit être mise à jour (AppConfig.geminiModel).',
+      );
+
+  /// Réessayer ne peut que répéter le même 404.
   @override
   bool get isRetryable => false;
 }

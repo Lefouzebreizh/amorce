@@ -92,3 +92,97 @@ six mois de site vitrine ne donnent pas.
 3. **Combien d'heures par semaine réellement disponibles ?** Une reprise en
    état supporte mal l'interruption : cinq chantiers tournent déjà dans ce
    dépôt.
+
+---
+
+## Journal — première tentative d'étape 1 (27 août 2026)
+
+Tentative de produire l'audit non sollicité. **Aucun rapport envoyé** : aucune
+cible ne passait les filtres. Ce que la tentative a appris tient en un piège
+que la fiche ne mentionnait pas, et il est structurel.
+
+### Le cinquième piège : les deux filtres se contredisent
+
+L'étape 1 exige simultanément trois choses d'une même personne :
+
+1. son application est cassée,
+2. elle a des clients payants,
+3. son dépôt est **public** — la règle d'audit interdit de lire du code privé
+   sans invitation.
+
+Les conditions 2 et 3 sont **anticorrélées**. Un dépôt Lovable laissé public par
+quelqu'un qui encaisse de l'argent est, presque par définition, tenu par
+quelqu'un qui sait ce qu'il fait — sinon il l'aurait fermé, ou quelqu'un le lui
+aurait fait fermer. Les applications cassées **avec** des clients payants ont
+des dépôts privés. Le public auditable et le solvable en douleur ne se
+recouvrent presque pas.
+
+### La preuve, sur un cas mené jusqu'au bout
+
+`coachingfederation-ch/www.coachingfederation.ch` — site d'une fédération de
+coachs, construit sous Lovable, dépôt public, adhésions et billetterie
+d'événements payants. Sur le papier : la cible parfaite.
+
+Relevé mécanique puis vérification à la main de chaque constat :
+
+| Constat brut du script | Après vérification |
+| --- | --- |
+| 11 « secrets en clair » | **Faux positifs.** 9 sont des jetons de design (`token: "--background"`), 2 sont les en-têtes PEM d'une fonction de parsing — la vraie clé vient de `process.env`. |
+| `.env` et `.env.development` versionnés | **Sans gravité.** Ne contiennent que des clés *publiables* Supabase, exposées au navigateur par conception. |
+| Coûts non bornés (beaucoup d'IA) | **Déjà traité.** Un `src/lib/rate-limit.server.ts` dédié, appliqué sur la route de chat. |
+| Impossible à redéployer | **Non.** 164 migrations SQL versionnées. Seul manque réel : pas de fichier de verrouillage des dépendances. |
+| 1 fichier de test / 603 fichiers source | **Réel.** |
+
+Rapport qu'on aurait pu écrire : « il vous manque un lockfile et des tests ».
+Personne ne paie 500 € pour ça. **Envoyer cet audit aurait coûté la
+crédibilité que l'étape 1 est censée construire.**
+
+Le tri manuel a donc fonctionné exactement comme prévu — il a servi à ne *pas*
+envoyer. C'est la première validation réelle de la discipline « un faux positif
+coûte tout le reste ».
+
+### Le correctif à apporter à l'étape 1
+
+**Cesser d'exiger un dépôt.** La règle est « ne lire que ce à quoi on a été
+invité » — elle n'a jamais dit « un dépôt Git ». Or toute application déployée
+sert publiquement, à quiconque ouvre son URL :
+
+- son bundle JavaScript — donc tout secret parti côté navigateur ;
+- sa configuration cliente — projet Supabase / Firebase, clés publiables ;
+- ses en-têtes de réponse — CORS, cookies, politique de sécurité.
+
+C'est **la même surface pour tout le monde**, sans dépôt, et elle supprime
+l'anticorrélation : n'importe quelle application avec des clients payants
+devient auditable.
+
+**La limite, à tenir strictement :** lire ce que l'application *sert
+spontanément* est passif et légitime. Forger une requête pour voir si une règle
+d'autorisation cède ne l'est pas, sans accord écrit. Un audit non sollicité
+s'arrête à ce que le navigateur reçoit sans qu'on le pousse — et le rapport
+doit dire où il s'est arrêté, ce qui est aussi ce qui donne au client une raison
+de payer la suite.
+
+### Canaux de découverte — état constaté
+
+Depuis une session Claude Code, la prospection est étroite :
+
+| Canal | État |
+| --- | --- |
+| Reddit, Hacker News, HN Algolia | Bloqués par la politique réseau de l'environnement |
+| API de recherche GitHub | Restreinte aux dépôts de la session |
+| Recherche web GitHub | 429, une heure d'attente |
+| Recherche web générale | Ne remonte que du contenu SEO, jamais des individus |
+| Pages `github.com/topics/*`, clone de dépôts publics | Fonctionnent |
+
+**Conséquence :** l'étape 1 se fait mieux à la main, depuis un navigateur, dans
+les communautés où la cible écrit — pas depuis une session automatisée. Le
+goulot reste l'acquisition, et il est humain.
+
+### Concurrence apparue
+
+Des scanners de sécurité pour applications « vibe-codées » existent déjà
+(Talon, supashield, VibeGuard). Ils vendent l'automatique. **L'offre reste
+distincte** : ce qui se vend ici n'est pas le relevé — le cas ci-dessus montre
+qu'un relevé automatique aurait produit onze faux positifs — mais le tri, le
+classement, et le correctif écrit. À surveiller quand même : si l'un d'eux
+ajoute un service humain, il arrive avec le flux d'acquisition déjà constitué.
