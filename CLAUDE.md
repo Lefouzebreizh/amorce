@@ -130,7 +130,7 @@ la tête de lecture se retrouve au-delà de la fin.
 ## Rythme de travail
 
 Le propriétaire du dépôt travaille depuis un téléphone, souvent par messages
-courts. Deux règles en découlent, et elles priment sur la prudence par défaut :
+courts. Trois règles en découlent, et elles priment sur la prudence par défaut :
 
 - **Décider plutôt que demander.** Devant deux options techniques défendables,
   prendre la meilleure, l'appliquer, et **dire laquelle et pourquoi** en une
@@ -141,7 +141,6 @@ courts. Deux règles en découlent, et elles priment sur la prudence par défaut
   faire passer au vert et la fusionner sans attendre qu'on le demande. Les
   branches de ce dépôt touchent presque toutes au hook de démarrage et à ce
   fichier : chaque jour d'attente ajoute un conflit à résoudre.
-
 - **Passer le relais avant que le fil ne pèse.** Une conversation longue est
   relue en entier à chaque message, captures d'écran comprises : elle finit par
   coûter plus cher que le travail qu'elle porte. Dès qu'un fil change de sujet
@@ -149,7 +148,7 @@ courts. Deux règles en découlent, et elles priment sur la prudence par défaut
   la précédente, et donner son nom. La mémoire du projet est dans ce fichier et
   dans les compétences, pas dans la discussion — on ne perd rien.
 
-Ce qui reste à demander, et qu'aucune de ces deux règles ne couvre : ce qui
+Ce qui reste à demander, et qu'aucune de ces trois règles ne couvre : ce qui
 part **en public au nom de quelqu'un** (un commentaire publié, un message à la
 communauté), ce qui **détruit** sans retour, et ce qui **engage de l'argent**.
 Là, l'aller-retour vaut son prix.
@@ -211,8 +210,8 @@ ici, l'application Flutter Look & Find dans `look_and_find/` (qui a son propre
 montage automatisée dans `montage-auto/`, le
 répondeur de commentaires Facebook dans `repondeur-facebook/`, l'assistant de
 rangement Life-Organizer dans `life-organizer/`, l'assistant administratif
-Paper-Manager dans `paper-manager/` et le socle de production livré aux clients
-dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
+Paper-Manager dans `paper-manager/`, l'annuaire d'outils IA dans `annuaire-ia/`
+et le socle de production livré aux clients dans `agence/` (qui ont chacun leur propre `README.md`) — plus un volet sans
 code, `tiktok/`, où se travaillent les concepts et les scripts avant tout
 montage. Deux chantiers sont **en sommeil** sous `archives-backlog/` : le studio
 audio Streamlit (`mon-app-audio/`) et l'assistant d'allocation d'actifs
@@ -231,7 +230,7 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 
 | Élément | Ce qu'il fait |
 | --- | --- |
-| `hooks/session-start.sh` | Installe les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé et les bibliothèques Python de `kdp/`, de `montage-auto/`, de `tiktok/` et des deux chantiers en sommeil sous `archives-backlog/` au démarrage d'une session distante. Sans lui, chaque session recommence une heure d'installation. |
+| `hooks/session-start.sh` | Installe, au démarrage d'une session distante : les `node_modules` d'Amorce et d'`agence/`, le SDK Flutter épinglé, les bibliothèques Python de `kdp/`, `montage-auto/`, `repondeur-facebook/`, `life-organizer/`, `tiktok/`, de l'extraction multiformat et des deux chantiers en sommeil sous `archives-backlog/`, plus le Chromium du parcours de vérification. Le script fait foi — cette liste-ci a déjà pris trois projets de retard. Sans lui, chaque session recommence une heure d'installation. |
 | `hooks/ligne-etat.sh` | Affiche en permanence la consommation de l'abonnement — fenêtre de cinq heures et fenêtre de sept jours. Les deux, parce que la seconde décide de la fin de semaine et qu'on ne la voit pas venir en ne regardant que la première. |
 | `/jauge` | Ce qu'il reste avant d'être bloqué, et ce que ça autorise à lancer maintenant. Relit le dépôt de `hooks/ligne-etat.sh`, seul endroit où Claude Code transmet ces chiffres. |
 | `/verifier` | La séquence de vérification du projet touché, et ce qu'elle ne couvre pas. |
@@ -251,11 +250,12 @@ l'ESLint et du `tsconfig.json` de la racine. Son intégration continue vit dans
 | `/module-life-organizer` | L'ordre d'écriture d'un module Life-Organizer et les quatre pièges du domaine. Amaigrie après banc d'essai : ce que le `README` du projet dit déjà en a été retiré. |
 | `/bande-son` | Monter la bande-son d'une vidéo et la sortir à la loudness de la plateforme visée. Outillé par `sonometre.py` et `monter.py`. |
 | `/cadrage-brief-client` | Transformer le brief d'un client en périmètre écrit : questionnaire, lecture des réponses, schéma, lots, estimation. S'arrête avant le code. |
-| `/stack-agence-supabase` | Réaliser un projet client sur la stack de l'agence (Next.js 16, Supabase, RLS, shadcn) : ordre de travail, SQL durci, cinq règles de sécurité. Hors Amorce. |
+| `/stack-agence-supabase` | Où partir pour un projet client — le socle `agence/`, déjà écrit — et les deux règles qu'il ne fait pas respecter seul. Amaigrie : ce que son `README` dit déjà en a été retiré. Hors Amorce. |
 | `/steward` | Conventions pour mener une PR : style des commits, barrière de vérification, diagnostic des échecs d'intégration continue. |
 | `/debogage-systematique` | La cause avant le correctif : quelle commande reproduit vraiment le défaut selon le projet, et les pièges déjà consignés à relire d'abord. |
 | `/extraction-multiformat` | Lire un fichier non textuel — image et EXIF, EPUB, archive, binaire inconnu — en sondant d'abord ses octets de tête, parce que l'extension ment. |
 | `/transcription-media` | Ouvrir une vidéo ou un audio : fiche technique, piste sonore, images clés, transcription locale de la parole. |
+| `/voir-le-son` | Dessiner un média pour pouvoir le juger : spectrogramme, courbe de sonie, planche de vignettes. Né d'un montage mesuré conforme et pourtant muet sur téléphone — une moyenne dit qu'un son est fort, jamais qu'il est bon. |
 | Agent `revue-invariants` | Relit un diff contre les invariants **écrits** — pas les bugs génériques. |
 | Agent `verificateur` | Lance la vérification et ne rend qu'un verdict, sans déverser la sortie des tests. |
 
@@ -286,10 +286,105 @@ Trois règles qui découlent de la cohabitation :
   couvrir une assertion de plus. Quand un nouveau test importe une bibliothèque
   absente, la CI le dit en clair et c'est ce fichier-là qu'on complète.
 - **Un nouveau projet Python est gardé sans rien déclarer.**
-  `.github/workflows/tests-python.yml` découvre les `*/tests` contenant des
-  `test_*.py` au lieu de les énumérer. Sa première version en listait cinq et
-  deux projets sont passés au travers le jour même : dans ce dépôt, une liste
-  écrite à la main est fausse le lendemain, et fausse en silence.
+  `.github/workflows/tests-python.yml` découvre les dossiers `tests` contenant
+  des `test_*.py`, jusqu'au troisième niveau, au lieu de les énumérer. Sa
+  première version en listait cinq et deux projets sont passés au travers le
+  jour même ; la deuxième ne regardait que `*/tests` et a cessé de couvrir les
+  deux chantiers le jour où ils sont passés sous `archives-backlog/`. Les deux
+  fois, la couverture a baissé sans qu'une ligne rouge n'apparaisse : dans ce
+  dépôt, ce qui énumère est faux le lendemain, et faux en silence.
+
+## Connecteurs
+
+Les connecteurs ne se déclarent pas dans le dépôt : ils vivent dans le compte
+claude.ai et se coupent **par conversation**. Ce qui suit est donc un tri, pas
+une configuration — mais un tri qui, faute d'être écrit, se refait à chaque
+session.
+
+| Connecteur | Ce qu'il sert |
+| --- | --- |
+| Adobe | `media_enhance_speech` pour une voix off, `video_metadata` et `video_render_frame` pour la fiche technique d'un rush, les outils de police pour les couvertures KDP, `image_vectorize`. Le plus sous-employé de tous. |
+| Gmail | Les factures, les avis d'échéance et les accusés de résiliation de `paper-manager` arrivent là. |
+| Google Agenda | Les échéances que calcule le module `calendrier` de Life-Organizer doivent atterrir quelque part. |
+| Google Drive | Source de fichiers pour `nettoyer` et `ranger`. |
+| Supabase | Le geste le plus répété du socle `agence/` : `apply_migration` pose `schema.sql`, `execute_sql` rejoue `verifier-rls.sql`. Essayé de bout en bout sur un projet neuf — ce qui passe, ce qui ne passe pas et ce que `get_advisors` se trompe à signaler est écrit dans `/stack-agence-supabase`. |
+
+Ce qui ne sert pas — écrit plutôt que simplement éteint, parce qu'un connecteur
+se rallume tout seul dans la conversation suivante :
+
+- **Canva** recoupe Adobe sur presque tout et n'apporte rien qu'il n'ait. Deux
+  outils pour le même geste, c'est un choix à refaire à chaque fois.
+- **Indeed** n'a de rapport avec aucun des projets.
+- **Notion** et **Airtable** feraient un second endroit où vit la mémoire du
+  projet. Elle est dans ce fichier, dans `INDEX.md`, dans `inbox/` et dans les
+  compétences ; en ouvrir un deuxième, c'est garantir que dans trois mois
+  personne ne saura plus lequel fait foi.
+- **Vercel** attendra un déploiement réel : `agence/README.md` dit « n'importe
+  quel hébergeur Node ou Vercel », et rien n'y est déployé.
+
+Un cas à part, qui n'est ni un connecteur ni un manque :
+
+- **GitHub passe par un serveur MCP**, et c'est par lui qu'une session distante
+  ouvre ses PR : les outils `mcp__github__*` (`create_pull_request`,
+  `merge_pull_request`, la lecture des contrôles d'intégration continue).
+  Mesuré, pas supposé — la PR #69 a été ouverte, suivie et fusionnée sans jamais
+  toucher l'interface de la session.
+
+  Ce qui ne marche pas, et qui figurait ici comme un verrou général alors que
+  ce n'en est pas un : appeler `api.github.com` **en direct**, au `curl` ou par
+  la commande `gh`. `POST /repos/…/pulls` répond alors `403 GitHub access is not
+  enabled for this session`, quand bien même l'application GitHub de Claude est
+  installée sur le compte avec l'écriture sur les demandes d'extraction, et que
+  `git push` passe. Le jeton n'est pas dans l'environnement, il est derrière le
+  serveur MCP. Ne pas conclure de ce 403 que la voie est fermée, et ne pas
+  repartir en chasse dans les réglages : c'est l'outil employé qu'il faut
+  changer, pas la configuration.
+
+Et une règle de permissions, écrite dans `.claude/settings.json` plutôt que
+réaccordée à chaque session : les outils Supabase qui **lisent** y sont
+autorisés d'office, `execute_sql` et `apply_migration` **non**. Ces deux-là
+écrivent dans une vraie base, et sur le geste dont l'erreur est une faille
+plutôt qu'un bogue, une demande de confirmation vaut son aller-retour. La liste
+est écrite sur le nom `Supabase` ; ce connecteur est apparu sous deux noms dans
+une même session, l'autre étant un identifiant opaque, et lequel des deux tient
+d'une session à l'autre reste à mesurer.
+
+## Les compétences, mesurées plutôt que supposées
+
+Les compétences de `.claude/skills/` ne se marchent pas dessus : mesuré sur
+leurs descriptions, le recoupement le plus fort est de 0,14, et les paires qui
+se croisent négocient déjà leur frontière par écrit — `/extraction-multiformat`
+renvoie explicitement à `/transcription-media` pour la parole, `/tiktok` renvoie
+à `/charte-editoriale` pour le ton. Il n'y a rien à dédoublonner entre elles.
+
+Restait un soupçon : les compétences **générales** que Claude apporte ont des
+descriptions volontairement larges — la générale `pdf` annonce couvrir le
+remplissage de formulaires, ce que `/formulaire-pdf` fait ici avec l'outillage
+de `paper-manager`. Sur le papier, les deux répondent à « remplis ce Cerfa ».
+
+**Essayé, et le soupçon est faux.** Deux phrases posées à un `claude -p` lancé
+dans ce dépôt, avec la vraie liste de compétences :
+
+| Ce qu'on tape | Ce qui se déclenche |
+| --- | --- |
+| « j'ai le cerfa 15646*01 […] tu peux me le remplir ? » | `/formulaire-pdf` |
+| « regarde rush-03.mp4 […] dis-moi ce qui se dit dedans » | `/transcription-media` |
+
+Celle du dépôt gagne dans les deux cas, sans qu'on ait rien à écrire. Une
+description précise et ancrée sur des projets nommés l'emporte sur une
+description large : c'est ce que fait déjà chaque description d'ici, et c'est la
+raison de ne pas les raccourcir.
+
+Cela ne rend pas la règle inutile, cela la remet à sa place — un départage pour
+le jour où ce ne sera pas évident, pas la réparation d'un défaut constaté :
+**sur un formulaire administratif, un média local ou un texte destiné à son
+public, c'est celle du dépôt qui prime.** La générale connaît le format, celle
+du dépôt connaît le projet.
+
+Et une mise en garde qui vaut plus que la règle : **cette page-là se mesure, elle
+ne se relit pas.** Le soupçon ci-dessus était solide à la lecture des deux
+descriptions, et faux à l'essai. Deux minutes de `claude -p` ont tranché ce
+qu'un après-midi de raisonnement aurait mal tranché.
 
 ## Vérifier
 

@@ -14,11 +14,18 @@
  * Cette redirection est un confort de navigation, **pas** un contrôle d'accès :
  * la barrière est la RLS de PostgreSQL, doublée de `exigerSession()` dans
  * chaque action.
+ *
+ * Ce passage porte aussi la politique de sécurité du contenu, qui ne peut pas
+ * vivre dans `next.config.ts` : elle contient un jeton différent à chaque
+ * requête. Le jeton est posé sur les en-têtes de la **requête**, d'où Next.js
+ * le relit pour signer ses propres scripts, et sur ceux de la réponse, où le
+ * navigateur le lit.
  */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 import { lireConfigSupabase } from '@/lib/env';
+import { politiqueDeSecurite } from '@/lib/securite';
 import { PAGE_NOUVEAU_MOT_DE_PASSE } from '@/lib/navigation';
 import type { Database } from '@/lib/types';
 
@@ -40,8 +47,27 @@ const PAGES_AUTH = ['/connexion', '/inscription', '/mot-de-passe-oublie'];
 
 export async function actualiserSession(requete: NextRequest): Promise<NextResponse> {
   const { url, cleAnonyme } = lireConfigSupabase();
+  const { entete: csp, jeton } = politiqueDeSecurite(
+    url,
+    process.env.NODE_ENV === 'development',
+  );
 
-  let reponse = NextResponse.next({ request: requete });
+  /*
+   * L'instantané des en-têtes se reprend à chaque appel plutôt qu'une fois pour
+   * toutes : `requete.cookies.set` écrit dans l'en-tête `cookie`, et une copie
+   * prise avant le rafraîchissement du jeton renverrait l'ancienne session au
+   * rendu qui suit.
+   */
+  const suivant = () => {
+    const enTetes = new Headers(requete.headers);
+    enTetes.set('content-security-policy', csp);
+    enTetes.set('x-nonce', jeton);
+    const sortie = NextResponse.next({ request: { headers: enTetes } });
+    sortie.headers.set('content-security-policy', csp);
+    return sortie;
+  };
+
+  let reponse = suivant();
 
   const supabase = createServerClient<Database>(url, cleAnonyme, {
     cookies: {
@@ -55,7 +81,7 @@ export async function actualiserSession(requete: NextRequest): Promise<NextRespo
         for (const { name, value } of cookiesAPoser) {
           requete.cookies.set(name, value);
         }
-        reponse = NextResponse.next({ request: requete });
+        reponse = suivant();
         for (const { name, value, options } of cookiesAPoser) {
           reponse.cookies.set(name, value, options);
         }
@@ -110,6 +136,11 @@ function rediriger(cible: URL, porteuse: NextResponse): NextResponse {
 
   for (const cookie of porteuse.cookies.getAll()) {
     redirection.cookies.set(cookie);
+  }
+
+  const csp = porteuse.headers.get('content-security-policy');
+  if (csp) {
+    redirection.headers.set('content-security-policy', csp);
   }
 
   return redirection;
