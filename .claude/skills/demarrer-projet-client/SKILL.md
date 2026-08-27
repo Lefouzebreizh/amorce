@@ -79,6 +79,11 @@ l'ordre :
    sinon l'éditeur SQL du tableau de bord fait le même travail.
 2. **Les clés.** `cp <nom>/.env.example <nom>/.env.local`, puis les trois
    variables. Rien d'autre n'est à configurer.
+
+   Avant de montrer quoi que ce soit, `<nom>/supabase/demo.sql` remplit les
+   écrans : dix projets rattachés à votre propre compte, parce que la RLS ne
+   montre un projet qu'à son propriétaire. Un tableau de bord à zéro ne se juge
+   pas, et c'est pourtant ce que voit le client au premier rendez-vous.
 3. **Le domaine du client.** Le schéma livré contient deux tables de
    démonstration (`profiles`, `projects`). Les remplacer est le vrai travail :
    `/cadrage-brief-client` pour le périmètre écrit, `/stack-agence-supabase`

@@ -90,6 +90,26 @@ Deux conséquences visibles à l'usage :
 - **`/administration` renvoie un 404 à qui n'est pas administrateur**, et non un
   refus : un refus confirmerait que la page existe et inviterait à insister.
 
+## Montrer l'application à un client
+
+Le socle démarre vide, et un tableau de bord à zéro ne se juge pas. Une fois
+votre compte créé par le formulaire d'inscription :
+
+```sql
+set demo.compte = 'vous@exemple.fr';
+\i supabase/demo.sql
+```
+
+Dix projets répartis sur les trois statuts, avec des montants et des dates
+plausibles. Les données sont rattachées à **votre** compte, et pas à des
+utilisateurs fictifs : la RLS ne montre un projet qu'à son propriétaire, donc
+de faux comptes ne rempliraient l'écran de personne — et il faudrait leur
+inventer un mot de passe, qui finirait versionné ici.
+
+Le script refuse de s'exécuter sur une base qui porte d'autres comptes que le
+vôtre : c'est le signe le plus simple qu'on n'est pas sur une base de
+démonstration. Tout se retire d'une ligne, donnée en fin de fichier.
+
 ## Nommer un administrateur
 
 Le rôle ne se change pas depuis l'application — c'est tout l'objet des
@@ -111,6 +131,7 @@ Modifier la fiche d'un client se fait avec lui, pas à sa place.
 ```
 supabase/schema.sql      tables, RLS, privilèges de colonnes, triggers
 supabase/verifier-rls.sql  contrôle des politiques, sur une base jetable (CI)
+supabase/demo.sql        dix projets de démonstration, pour un écran qui se juge
 supabase/etat-rls.sql    contrôle de dérive, en lecture seule, sur la base d'un client
 src/proxy.ts             rafraîchissement de session (ex-middleware, renommé en Next.js 16)
 src/app/                 routes — (auth) public, (prive) sous session, auth/confirmer
