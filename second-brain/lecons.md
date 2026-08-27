@@ -186,6 +186,77 @@ un rapport de tests, et seul un défaut fabriqué exprès les sépare.
 
 ---
 
+## Un niveau conforme et une dynamique nulle s'entendent comme du silence
+
+*Coût : une nuit entière, et huit versions rejetées pour « pas de son ».*
+
+Un montage mesuré à −8,4 LUFS — plus fort que la référence de l'auteur, donc
+au-dessus de tout soupçon — s'entendait comme s'il n'y avait rien. La mesure
+qui le disait n'était pas la sonie mais la **plage de dynamique : LRA 2,1 LU**.
+L'ouverture, les voix et le rugissement final sortaient au même niveau à un
+décibel près. Sans écart, l'oreille cesse de distinguer et n'entend plus qu'une
+bouillie constante ; le niveau moyen, lui, reste parfait.
+
+La cause tenait à un lit sonore posé **en continu** sous tous les plans. Le
+retirer, et ne le laisser revenir que par touches courtes, a rendu LRA 6,8.
+
+Deuxième piège, et il s'est refermé aussitôt : en comblant un creux de sept
+décibels dans le bloc de foule, LRA est retombé de 6,8 à 3,5. **On avait
+rebouché le trou en supprimant la dynamique qui le rendait nécessaire.** Un
+creux doit rester un creux ; il doit seulement cesser d'être un silence.
+
+**Portée générale :** dès que quelqu'un dit « on n'entend rien » et que la sonie
+est conforme, lire LRA avant tout le reste. En dessous de 3 LU il n'y a plus de
+film, quel que soit le niveau. Et un limiteur ne rend pas plus fort : au-delà de
+deux décibels de gain, il reprend en dynamique ce qu'il donne en niveau —
+mesuré ici, +2 dB n'achetaient que 0,6 LUFS et coûtaient 0,8 LU.
+
+---
+
+## Transcrire les pistes règle en une minute ce que le calage ne règle jamais
+
+*Coût : plusieurs sessions à recaler une voix qui n'aurait pas dû être là.*
+
+« Il y a un mélange », « c'est mal synchronisé », « ce ne sont pas les bonnes
+paroles » : trois remarques traitées comme des problèmes de calage, sans succès.
+
+Transcrites côte à côte, la voix off générée et le son natif du plan disaient
+**mot pour mot la même phrase** — « Warning! Sector 99 is collapsing. The cyber
+hydra titan awakens ». Ce n'était pas un défaut de synchronisation, c'était un
+doublon. Aucune quantité de recalage ne l'aurait résolu.
+
+La même transcription a révélé qu'un plan mis à zéro « pour cause de double
+voix » portait en réalité une réplique **différente**, jamais entendue, qui
+manquait au film.
+
+**Portée générale :** devant un défaut de son qui porte de la parole, comparer
+les **textes** avant les formes d'onde. Une transcription coûte une minute et
+tranche entre un problème de calage et un problème de contenu — deux choses
+qu'aucune mesure de signal ne distingue.
+
+---
+
+## La capacité déclarée impossible l'était dans le mauvais cadrage
+
+*Coût : trois sessions à répéter « synchronisation labiale impossible ».*
+
+`torch` absent, `huggingface.co` et `api.sync.so` refusés : aucun modèle de
+re-synchronisation labiale ne tourne ici. Le constat était exact, et la
+conclusion fausse — parce que la question posée était « comment caler une voix
+sur des lèvres » alors qu'elle aurait dû être « pourquoi cette voix n'est-elle
+pas celle du plan ».
+
+Les rushes générés **parlent déjà**, avec leur propre son. Un plan monté avec sa
+piste native est synchrone par construction : il n'y a rien à recaler. La voix
+off plaquée était la cause du problème, pas son remède.
+
+**Portée générale :** avant de déclarer une capacité indisponible, vérifier
+qu'on ne cherche pas à refabriquer une chose que le matériau contient déjà.
+« L'outil manque » et « je m'y prends à l'envers » se ressemblent beaucoup vus
+de l'intérieur.
+
+---
+
 ## Une suite verte en session ne dit rien de la CI
 
 `pepites` et `kdp` sont tombés le même jour sur le même défaut, à six minutes

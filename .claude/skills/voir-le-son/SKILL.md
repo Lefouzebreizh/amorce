@@ -105,3 +105,12 @@ médiocre.
 Quand tout est propre à l'image et que l'utilisateur dit encore que ça ne va
 pas, c'est du jugement, pas de la mesure : lui rendre la main plutôt que de
 livrer une septième version.
+
+## Si l'image ne montre rien d'anormal, lire LRA
+
+Le spectrogramme attrape les trous, les déséquilibres et les saturations. Il
+n'attrape pas la platitude : un mixage sans dynamique dessine une bande bien
+remplie et parfaitement régulière, ce qui se lit comme un bon signal alors que
+c'est le défaut. Quand tout paraît propre et que l'auteur dit « on n'entend
+rien », la mesure qui tranche est la plage de dynamique — table des seuils et
+correctifs dans `/bande-son`, section « LRA ».
