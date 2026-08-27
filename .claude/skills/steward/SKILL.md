@@ -140,6 +140,44 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   l'état des six autres suites Python. Un échec identique sur `main` n'est pas
   le sien : le porter s'il existe un correctif, le dire s'il n'y en a pas.
 
+## Supprimer la branche fusionnée : pas d'ici
+
+`git push origin --delete <branche>` est **refusé par le classificateur du mode
+auto**, et le refus ne vient ni de git ni de GitHub. Trois sessions l'ont
+redécouvert, et la deuxième a conclu qu'il manquait une règle
+`Bash(git push:*)` dans `.claude/settings.json` : cette règle **y est déjà**,
+et elle ne change rien. Mesuré le 27 août, refus avant *et* après le chargement
+des réglages du dépôt — un `grep` dont la ligne de commande contenait seulement
+la chaîne a été refusé lui aussi. Le classificateur lit le texte de la commande,
+pas la liste d'autorisation : aucune règle écrite dans le dépôt ne le lèvera.
+
+La suppression se fait donc **à la main, sur la page des branches de GitHub**.
+Ne pas repartir en chasse dans les réglages : ce chemin a été parcouru trois
+fois pour rien.
+
+**Et avant de supprimer, mesurer la redondance sur le contenu, jamais sur
+l'ascendance.** Ce dépôt fusionne par commit de fusion sur une branche que
+`main` a ensuite dépassée : le sommet d'une branche fusionnée n'est donc **pas**
+un ancêtre de `main`, et `git branch --merged` ne la liste pas. Les deux
+branches Supabase encore ouvertes ce jour-là en sont l'exemple — non-ancêtres,
+absentes de `--merged`, et pourtant redondantes. Un `git diff` à deux points ne
+dit rien non plus : il rendait 907 et 947 lignes d'écart, qui étaient l'avance
+de `main`, pas le contenu des branches.
+
+Ce qui tranche, c'est de vérifier que **chaque ligne ajoutée par la branche se
+retrouve dans `main`** :
+
+```bash
+git diff origin/main...origin/<branche> -- <fichiers> | grep '^+' | grep -v '^+++'
+```
+
+puis chercher ces lignes dans la version `main` des mêmes fichiers. Un reste
+non nul ne condamne pas la branche : sur les deux branches Supabase, 8 lignes
+sur 20 manquaient — le paragraphe avait été **réécrit** en fusionnant, et la
+version de `main` disait davantage (« deux fois le même jour »). C'est là que
+le jugement reprend la main. Mais il le reprend sur un écart mesuré et court,
+pas sur une relecture de deux fichiers entiers.
+
 ## Le clone superficiel, et pourquoi `--force-with-lease` refuse
 
 Une session distante clone en `--depth 1`. Deux conséquences que rien n'annonce,

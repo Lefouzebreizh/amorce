@@ -334,7 +334,9 @@ non — et la liste est écrite **deux fois**, sous le nom `Supabase` et sous
 l'identifiant opaque `f3258232-…`. Ce n'est pas de la prudence : le serveur
 s'est déconnecté sous un nom et revenu sous l'autre en pleine session, deux fois
 le même jour. Une règle écrite sur une seule forme ne couvre alors rien, et rien
-ne le signale — la demande d'autorisation revient, et on croit à un oubli. Adobe, Gmail, Agenda et Drive servent le média, les factures, les échéances
+ne le signale — la demande d'autorisation revient, et on croit à un oubli.
+
+Adobe, Gmail, Agenda et Drive servent le média, les factures, les échéances
 et les fichiers.
 
 ---
