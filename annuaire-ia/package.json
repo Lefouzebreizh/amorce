@@ -1,0 +1,11 @@
+{
+  "name": "annuaire-ia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Annuaire et comparateur d'outils IA — page unique, sans serveur ni base de données.",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve . --listen 8080",
+    "sitemap": "node generate-sitemap.js"
+  }
+}

@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boîte à Outils IA — L'annuaire et le comparateur des meilleurs outils d'intelligence artificielle</title>
+<meta name="description" content="Comparez les 10 outils IA qui font vraiment gagner des heures : rédaction, design, création vidéo, voix off, productivité. Prix, notes, avis détaillés et points faibles assumés.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://exemple.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Boîte à Outils IA">
+<meta property="og:title" content="Boîte à Outils IA — le comparateur des outils IA qui font gagner des heures">
+<meta property="og:description" content="10 outils IA testés, notés et classés par métier : rédaction, design, vidéo, voix, productivité.">
+<meta property="og:url" content="https://exemple.com/">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-nuit: #07070f;
+    --color-panneau: #101021;
+    --color-relief: #16162c;
+    --color-bord: #262647;
+    --color-brume: #c9c9e6;
+    --color-sourdine: #8a8ab0;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+</style>
+<style>
+  /* Le halo du fond ne doit jamais intercepter un clic ni allonger la page :
+     il est posé en calque fixe, derrière tout, sans surface cliquable. */
+  /* Le style vient d'un CDN : sur un réseau filtré ou lent, il peut arriver en
+     retard ou pas du tout. Ces deux règles ne sont pas décoratives, ce sont
+     celles dont l'absence casse la page au lieu de l'enlaidir — sans `hidden`,
+     la modale reste ouverte par-dessus le contenu et le site est inutilisable. */
+  .hidden { display: none !important; }
+  body { background: #07070f; color: #c9c9e6; font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+
+  .halo { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+  html { scroll-behavior: smooth; }
+  body.fige { overflow: hidden; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  }
+</style>
+</head>
+<body class="bg-nuit text-brume font-sans antialiased min-h-dvh">
+
+<div class="halo" aria-hidden="true">
+  <div class="absolute -top-40 -left-32 h-[36rem] w-[36rem] rounded-full bg-violet-600/25 blur-[120px]"></div>
+  <div class="absolute top-24 right-[-10rem] h-[32rem] w-[32rem] rounded-full bg-blue-600/20 blur-[120px]"></div>
+  <div class="absolute bottom-0 left-1/3 h-[28rem] w-[28rem] rounded-full bg-fuchsia-700/10 blur-[130px]"></div>
+</div>
+
+<header class="mx-auto max-w-6xl px-5 pt-14 pb-8 text-center sm:pt-20">
+  <p class="inline-flex items-center gap-2 rounded-full bg-relief/80 px-4 py-1.5 text-xs font-medium tracking-wide text-sourdine ring-1 ring-bord">
+    <span class="h-1.5 w-1.5 rounded-full bg-violet-400"></span>
+    Mise à jour <span id="date-maj">2026</span> · <span id="compteur-entete">10</span> outils testés
+  </p>
+  <h1 class="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl">
+    La <span class="bg-gradient-to-r from-violet-400 via-indigo-400 to-blue-400 bg-clip-text text-transparent">Boîte à Outils IA</span><br class="hidden sm:block">
+    des pros pressés
+  </h1>
+  <p id="slogan" class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-sourdine sm:text-lg">
+    Le comparateur des IA qui font vraiment gagner des heures — testées, notées, classées par métier.
+  </p>
+</header>
+
+<main class="mx-auto max-w-6xl px-5 pb-24">
+
+  <section class="sticky top-0 z-30 -mx-5 mb-8 border-b border-bord/60 bg-nuit/80 px-5 py-4 backdrop-blur-xl">
+    <label for="recherche" class="sr-only">Rechercher un outil IA</label>
+    <div class="relative">
+      <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-sourdine" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+      </svg>
+      <input id="recherche" type="search" autocomplete="off"
+        placeholder="Rechercher : vidéo, voix off, rédaction, gratuit…"
+        class="min-h-12 w-full rounded-2xl border border-bord bg-panneau/90 py-3 pl-12 pr-4 text-base text-white placeholder:text-sourdine/70 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40">
+    </div>
+    <div id="filtres" class="mt-3 flex flex-wrap gap-2" role="group" aria-label="Filtrer par catégorie"></div>
+  </section>
+
+  <p id="compteur" class="mb-5 text-sm text-sourdine" role="status" aria-live="polite"></p>
+
+  <div id="grille" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"></div>
+
+  <div id="vide" class="hidden rounded-3xl border border-bord bg-panneau/60 px-6 py-16 text-center">
+    <p class="text-lg font-semibold text-white">Aucun outil ne correspond</p>
+    <p class="mx-auto mt-2 max-w-md text-sm text-sourdine">Essayez un mot plus court — « vidéo », « voix », « gratuit » — ou remettez le filtre sur « Tous ».</p>
+    <button type="button" data-action="reinitialiser" class="mt-6 min-h-11 rounded-xl bg-violet-600 px-5 font-semibold text-white transition hover:bg-violet-500">Réinitialiser la recherche</button>
+  </div>
+
+  <div id="erreur" class="hidden rounded-3xl border border-red-500/40 bg-red-950/30 px-6 py-10 text-center">
+    <p class="text-lg font-semibold text-white">Impossible de charger <code>outils.json</code></p>
+    <p class="mx-auto mt-2 max-w-lg text-sm text-sourdine">
+      Un navigateur refuse de lire un fichier local en <code>file://</code>. Lancez un serveur depuis ce dossier :
+    </p>
+    <code class="mt-4 inline-block rounded-lg bg-nuit px-4 py-2 text-sm text-violet-300">npx serve .</code>
+  </div>
+
+  <footer class="mt-20 border-t border-bord/60 pt-8 text-center text-xs leading-relaxed text-sourdine">
+    <p id="transparence" class="mx-auto max-w-2xl"></p>
+    <p class="mt-4">© <span id="annee"></span> Boîte à Outils IA — comparateur indépendant d'outils d'intelligence artificielle.</p>
+  </footer>
+</main>
+
+<div id="modale" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="modale-titre">
+  <div data-action="fermer" class="absolute inset-0 bg-nuit/80 backdrop-blur-sm"></div>
+  <div class="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-6">
+    <article class="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-bord bg-panneau shadow-2xl sm:rounded-3xl">
+      <header class="flex items-start gap-4 border-b border-bord/70 bg-gradient-to-r from-violet-600/20 to-blue-600/10 px-6 py-5">
+        <div class="min-w-0 flex-1">
+          <p id="modale-categorie" class="text-xs font-semibold uppercase tracking-wider text-violet-300"></p>
+          <h2 id="modale-titre" class="mt-1 truncate text-2xl font-bold text-white"></h2>
+          <div id="modale-meta" class="mt-2 flex flex-wrap items-center gap-3 text-sm text-sourdine"></div>
+        </div>
+        <button type="button" data-action="fermer" aria-label="Fermer"
+          class="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sourdine transition hover:bg-relief hover:text-white">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+      </header>
+      <div id="modale-corps" class="flex-1 overflow-y-auto px-6 py-6"></div>
+      <footer class="border-t border-bord/70 bg-relief/40 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <a id="modale-lien" href="#" target="_blank" rel="sponsored noopener"
+          class="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 font-semibold text-white transition hover:from-violet-500 hover:to-blue-500">
+          Voir l'outil <span class="text-xs font-normal opacity-80">(lien affilié)</span>
+        </a>
+      </footer>
+    </article>
+  </div>
+</div>
+
+<script type="application/ld+json" id="donnees-structurees">{}</script>
+
+<script>
+(() => {
+  'use strict';
+
+  /* Toutes les données viennent d'`outils.json` : le HTML ne contient aucune
+     fiche en dur, pour qu'ajouter un outil ne demande jamais de toucher au
+     gabarit. Le lien profond s'écrit `?outil=id` et non `#id` : un fragment
+     n'est pas une URL distincte pour un moteur de recherche, et le sitemap
+     n'aurait alors qu'une seule adresse à proposer. */
+
+  const etat = { outils: [], categorie: 'Tous', recherche: '', ouvert: null, dernierFocus: null };
+
+  const $ = (sel) => document.querySelector(sel);
+  const grille = $('#grille');
+  const filtres = $('#filtres');
+  const champ = $('#recherche');
+  const modale = $('#modale');
+
+  const CATEGORIES_COULEURS = {
+    'Rédaction': 'bg-violet-500/15 text-violet-300 ring-violet-500/30',
+    'Recherche': 'bg-sky-500/15 text-sky-300 ring-sky-500/30',
+    'Design': 'bg-fuchsia-500/15 text-fuchsia-300 ring-fuchsia-500/30',
+    'Création Vidéo': 'bg-indigo-500/15 text-indigo-300 ring-indigo-500/30',
+    'Audio & Voix': 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30',
+    'Productivité': 'bg-amber-500/15 text-amber-300 ring-amber-500/30',
+  };
+  const classeCategorie = (c) => CATEGORIES_COULEURS[c] || 'bg-slate-500/15 text-slate-300 ring-slate-500/30';
+
+  /* --- Étoiles ---------------------------------------------------------- */
+  function etoiles(score) {
+    const enveloppe = document.createElement('span');
+    enveloppe.className = 'relative inline-block align-middle leading-none';
+    enveloppe.setAttribute('aria-hidden', 'true');
+    const fond = document.createElement('span');
+    fond.className = 'text-bord';
+    fond.textContent = '★★★★★';
+    const plein = document.createElement('span');
+    plein.className = 'absolute inset-0 overflow-hidden whitespace-nowrap text-amber-400';
+    plein.style.width = `${(Math.max(0, Math.min(5, score)) / 5) * 100}%`;
+    plein.textContent = '★★★★★';
+    enveloppe.append(fond, plein);
+    return enveloppe;
+  }
+
+  /* --- Mini-article ----------------------------------------------------- */
+  /* La description longue est du texte, jamais du HTML : elle est convertie en
+     nœuds DOM. Un `innerHTML` ferait de chaque fiche de la base une porte
+     d'entrée pour du script injecté. */
+  function articleVersDom(texte) {
+    const frag = document.createDocumentFragment();
+    let liste = null;
+    for (const ligne of texte.split('\n')) {
+      const l = ligne.trim();
+      if (!l) { liste = null; continue; }
+      if (l.startsWith('## ')) {
+        liste = null;
+        const h = document.createElement('h3');
+        h.className = 'mt-6 mb-2 text-sm font-bold uppercase tracking-wider text-violet-300 first:mt-0';
+        h.textContent = l.slice(3);
+        frag.append(h);
+      } else if (l.startsWith('- ')) {
+        if (!liste) {
+          liste = document.createElement('ul');
+          liste.className = 'my-2 space-y-2';
+          frag.append(liste);
+        }
+        const li = document.createElement('li');
+        li.className = 'relative pl-5 text-sm leading-relaxed text-brume before:absolute before:left-0 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-violet-400';
+        li.textContent = l.slice(2);
+        liste.append(li);
+      } else {
+        liste = null;
+        const p = document.createElement('p');
+        p.className = 'my-2 text-sm leading-relaxed text-brume';
+        p.textContent = l;
+        frag.append(p);
+      }
+    }
+    return frag;
+  }
+
+  /* --- Cartes ----------------------------------------------------------- */
+  function carte(outil) {
+    const article = document.createElement('article');
+    article.className = 'group flex flex-col rounded-2xl border border-bord bg-panneau/70 p-5 transition hover:-translate-y-1 hover:border-violet-500/60 hover:bg-panneau';
+
+    const haut = document.createElement('div');
+    haut.className = 'flex items-start justify-between gap-3';
+
+    const badge = document.createElement('span');
+    badge.className = `rounded-full px-3 py-1 text-xs font-semibold ring-1 ${classeCategorie(outil.categorie)}`;
+    badge.textContent = outil.categorie;
+
+    const note = document.createElement('span');
+    note.className = 'flex shrink-0 items-center gap-1.5 text-sm font-semibold text-white';
+    note.append(etoiles(outil.score_avis));
+    const chiffre = document.createElement('span');
+    chiffre.textContent = outil.score_avis.toFixed(1);
+    note.append(chiffre);
+    note.setAttribute('aria-label', `Note ${outil.score_avis} sur 5`);
+
+    haut.append(badge, note);
+
+    const titre = document.createElement('h2');
+    titre.className = 'mt-4 text-xl font-bold text-white';
+    titre.textContent = outil.nom;
+
+    const prix = document.createElement('p');
+    prix.className = 'mt-1 text-sm font-medium text-emerald-300';
+    prix.textContent = outil.prix;
+
+    const courte = document.createElement('p');
+    courte.className = 'mt-3 flex-1 text-sm leading-relaxed text-sourdine';
+    courte.textContent = outil.description_courte;
+
+    const actions = document.createElement('div');
+    actions.className = 'mt-5 flex flex-col gap-2';
+
+    const lien = document.createElement('a');
+    lien.href = outil.lien_affiliation;
+    lien.target = '_blank';
+    lien.rel = 'sponsored noopener';
+    lien.className = 'flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-4 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500';
+    lien.textContent = 'Voir l’outil';
+    const mention = document.createElement('span');
+    mention.className = 'ml-1.5 text-[11px] font-normal opacity-80';
+    mention.textContent = '(lien affilié)';
+    lien.append(mention);
+
+    const savoir = document.createElement('button');
+    savoir.type = 'button';
+    savoir.dataset.outil = outil.id;
+    savoir.className = 'min-h-11 w-full rounded-xl border border-bord bg-relief/60 px-4 text-sm font-semibold text-sourdine transition hover:border-violet-500/60 hover:text-white';
+    savoir.textContent = 'En savoir plus';
+
+    actions.append(lien, savoir);
+    article.append(haut, titre, prix, courte, actions);
+    return article;
+  }
+
+  /* --- Filtrage --------------------------------------------------------- */
+  const sansAccent = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  function filtrer() {
+    const q = sansAccent(etat.recherche.trim());
+    return etat.outils.filter((o) => {
+      if (etat.categorie !== 'Tous' && o.categorie !== etat.categorie) return false;
+      if (!q) return true;
+      return sansAccent([o.nom, o.categorie, o.prix, o.description_courte, o.description_longue].join(' ')).includes(q);
+    });
+  }
+
+  function afficher() {
+    const resultats = filtrer();
+    grille.replaceChildren(...resultats.map(carte));
+    $('#vide').classList.toggle('hidden', resultats.length > 0);
+    $('#compteur').textContent = resultats.length === etat.outils.length
+      ? `${resultats.length} outils comparés`
+      : `${resultats.length} outil${resultats.length > 1 ? 's' : ''} sur ${etat.outils.length}`;
+  }
+
+  function construireFiltres() {
+    const categories = ['Tous', ...new Set(etat.outils.map((o) => o.categorie))];
+    filtres.replaceChildren(...categories.map((c) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.categorie = c;
+      b.textContent = c;
+      filtres.append(b);
+      return b;
+    }));
+    peindreFiltres();
+  }
+
+  function peindreFiltres() {
+    for (const b of filtres.children) {
+      const actif = b.dataset.categorie === etat.categorie;
+      b.className = actif
+        ? 'min-h-11 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-4 text-sm font-semibold text-white'
+        : 'min-h-11 rounded-xl border border-bord bg-panneau/70 px-4 text-sm font-medium text-sourdine transition hover:border-violet-500/50 hover:text-white';
+      b.setAttribute('aria-pressed', String(actif));
+    }
+  }
+
+  /* --- Modale ----------------------------------------------------------- */
+  function ouvrir(id, pousserHistorique = true) {
+    const outil = etat.outils.find((o) => o.id === id);
+    if (!outil) return;
+    etat.ouvert = outil;
+    etat.dernierFocus = document.activeElement;
+
+    $('#modale-categorie').textContent = outil.categorie;
+    $('#modale-titre').textContent = outil.nom;
+
+    const meta = $('#modale-meta');
+    const note = document.createElement('span');
+    note.className = 'flex items-center gap-1.5 font-semibold text-white';
+    note.append(etoiles(outil.score_avis));
+    const chiffre = document.createElement('span');
+    chiffre.textContent = `${outil.score_avis.toFixed(1)}/5`;
+    note.append(chiffre);
+    const prix = document.createElement('span');
+    prix.className = 'font-medium text-emerald-300';
+    prix.textContent = outil.prix;
+    meta.replaceChildren(note, prix);
+
+    $('#modale-corps').replaceChildren(articleVersDom(outil.description_longue));
+    $('#modale-lien').href = outil.lien_affiliation;
+
+    modale.classList.remove('hidden');
+    document.body.classList.add('fige');
+    $('#modale-lien').focus();
+
+    /* Le titre et la description suivent l'outil ouvert : c'est ce que lit un
+       moteur de recherche qui arrive directement sur `?outil=id`. */
+    document.title = `${outil.nom} — avis, prix et alternatives | Boîte à Outils IA`;
+    metaDescription(outil.description_courte);
+    canonique(`?outil=${outil.id}`);
+    if (pousserHistorique) history.pushState({ outil: outil.id }, '', `?outil=${outil.id}`);
+  }
+
+  function fermer(pousserHistorique = true) {
+    if (!etat.ouvert) return;
+    etat.ouvert = null;
+    modale.classList.add('hidden');
+    document.body.classList.remove('fige');
+    document.title = TITRE_ORIGINE;
+    metaDescription(DESCRIPTION_ORIGINE);
+    canonique('');
+    if (pousserHistorique) history.pushState({}, '', location.pathname);
+    if (etat.dernierFocus) etat.dernierFocus.focus();
+  }
+
+  const TITRE_ORIGINE = document.title;
+  const DESCRIPTION_ORIGINE = document.querySelector('meta[name="description"]').content;
+  const metaDescription = (t) => { document.querySelector('meta[name="description"]').content = t; };
+  const canonique = (suffixe) => {
+    const balise = document.querySelector('link[rel="canonical"]');
+    balise.href = new URL(suffixe || './', balise.href).href;
+  };
+
+  /* --- Données structurées ---------------------------------------------- */
+  /* Une seule liste, chaque outil décrit comme application logicielle avec sa
+     note : c'est ce qui permet aux étoiles d'apparaître dans les résultats de
+     recherche, et c'est la seule source de trafic gratuite d'un annuaire. */
+  function baliserSchema() {
+    document.getElementById('donnees-structurees').textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: TITRE_ORIGINE,
+      numberOfItems: etat.outils.length,
+      itemListElement: etat.outils.map((o, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        item: {
+          '@type': 'SoftwareApplication',
+          name: o.nom,
+          applicationCategory: o.categorie,
+          description: o.description_courte,
+          offers: { '@type': 'Offer', description: o.prix },
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: o.score_avis,
+            bestRating: 5,
+            ratingCount: 1,
+          },
+        },
+      })),
+    });
+  }
+
+  /* --- Événements ------------------------------------------------------- */
+  champ.addEventListener('input', (e) => { etat.recherche = e.target.value; afficher(); });
+
+  filtres.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-categorie]');
+    if (!b) return;
+    etat.categorie = b.dataset.categorie;
+    peindreFiltres();
+    afficher();
+  });
+
+  grille.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-outil]');
+    if (b) ouvrir(b.dataset.outil);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-action="fermer"]')) fermer();
+    if (e.target.closest('[data-action="reinitialiser"]')) {
+      etat.recherche = '';
+      etat.categorie = 'Tous';
+      champ.value = '';
+      peindreFiltres();
+      afficher();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && etat.ouvert) fermer();
+    if (e.key === '/' && document.activeElement !== champ && !etat.ouvert) { e.preventDefault(); champ.focus(); }
+  });
+
+  window.addEventListener('popstate', () => {
+    const id = new URLSearchParams(location.search).get('outil');
+    if (id) ouvrir(id, false); else fermer(false);
+  });
+
+  /* --- Démarrage -------------------------------------------------------- */
+  async function demarrer() {
+    let donnees;
+    try {
+      const reponse = await fetch('outils.json', { cache: 'no-cache' });
+      if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
+      donnees = await reponse.json();
+    } catch (erreur) {
+      console.error(erreur);
+      $('#erreur').classList.remove('hidden');
+      $('#compteur').textContent = '';
+      return;
+    }
+
+    etat.outils = donnees.outils;
+    $('#slogan').textContent = donnees.site.slogan;
+    $('#transparence').textContent = donnees.site.note_transparence;
+    $('#compteur-entete').textContent = etat.outils.length;
+    $('#annee').textContent = new Date().getFullYear();
+    $('#date-maj').textContent = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+    construireFiltres();
+    afficher();
+    baliserSchema();
+
+    const id = new URLSearchParams(location.search).get('outil');
+    if (id) ouvrir(id, false);
+  }
+
+  demarrer();
+})();
+</script>
+</body>
+</html>
