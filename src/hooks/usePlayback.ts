@@ -6,6 +6,7 @@ import { boxContains, type CaptionBox, type FontSet } from '@/lib/captions';
 import { GradePipeline } from '@/lib/grade';
 import { guessTier, PanicDetector, QualityGovernor, QUALITY_TIERS, tierById } from '@/lib/quality';
 import { ClipVideoPool, preloadCaptionFonts, renderFrame, syncPlayback } from '@/lib/renderer';
+import type { Project } from '@/lib/types';
 import { useStudio } from '@/lib/store';
 import { layoutClips } from '@/lib/timeline';
 import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
@@ -107,6 +108,11 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
   const gradeRef = useRef<GradePipeline | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
   const frameRef = useRef(0);
+
+  /* Ce qui permet à la boucle de savoir qu'elle n'a rien à redessiner. */
+  const signatureRef = useRef('');
+  const projetRef = useRef<Project | null>(null);
+  const dernierChangementRef = useRef(0);
   const captionBoxesRef = useRef(new Map<string, CaptionBox>());
 
   if (poolRef.current === null) poolRef.current = new ClipVideoPool();
@@ -170,6 +176,48 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
       const { project, playing } = store;
       const placed = layoutClips(project.clips);
       const duration = placed.length === 0 ? 0 : placed[placed.length - 1].end;
+
+      /*
+       * À l'arrêt, quand rien n'a changé, on ne redessine pas.
+       *
+       * La boucle composait une image complète soixante fois par seconde même
+       * lorsque rien ne bougeait — c'était assumé, pour que le filet de sécurité
+       * de la qualité veille en permanence. Mesuré sur un processeur quatre fois
+       * plus lent qu'ici, ce qui est l'ordre de grandeur d'un téléphone :
+       * **442 ms par image à l'arrêt**, soit deux images par seconde et tout le
+       * budget processeur brûlé à redessiner une image identique. L'interface
+       * paraissait alors figée partout à la fois — jusqu'à la frise, qu'on
+       * croyait ne pas suivre alors qu'elle suivait deux fois par seconde.
+       *
+       * La signature ne compare que des valeurs déjà en main : le projet est
+       * remplacé à chaque modification, donc son identité suffit ; `currentTime`
+       * se lit sans forcer de mise en page, contrairement à toute mesure de
+       * géométrie. Elle capte donc aussi la fin d'un repositionnement, qui
+       * arrive après coup et doit être redessinée.
+       *
+       * Le délai de grâce couvre ce qui n'apparaît dans aucune de ces valeurs :
+       * une police qui finit de charger, une vignette décodée, une première
+       * image encore absente. Une seconde après le dernier changement, on
+       * s'endort.
+       */
+      let horloge = 0;
+      for (const item of placed) {
+        const v = pool.getVideo(item.clip.id);
+        if (v) horloge += v.currentTime;
+      }
+      const signature = `${store.playhead.toFixed(3)}|${playing}|${tier.id}|${tier.scale}|`
+        + `${ctx.canvas.width}x${ctx.canvas.height}|${horloge.toFixed(3)}`;
+      const change = signature !== signatureRef.current || project !== projetRef.current;
+      if (change) {
+        signatureRef.current = signature;
+        projetRef.current = project;
+        dernierChangementRef.current = now;
+      }
+      const REPOS_MS = 1000;
+      if (!playing && !exporting && !change && now - dernierChangementRef.current > REPOS_MS) {
+        raf = requestAnimationFrame(loop);
+        return;
+      }
 
       let time = store.playhead;
       if (playing && duration > 0) {
