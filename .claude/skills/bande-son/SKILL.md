@@ -394,6 +394,18 @@ Détails et cas limites : `references/intentions.md`.
    mesurées — `monter.py` le calcule, mais quiconque mixe à la main doit y
    penser aussi.
 
+### Ce que coûte la passe unique de `loudnorm` (point 2), en chiffres
+
+Le point 2 est écrit depuis longtemps, et il a quand même été ignoré — par une
+session qui a préféré six lignes de `ffmpeg` à la main plutôt que `monter.py`.
+Le chiffre manquait, le voici : sur une bande-annonce, un impact sortant à **−1,4 dB**
+dans le mixage brut ressortait à **−24 dB** après une passe unique de
+`loudnorm`, c'est-à-dire au niveau du lit qu'il devait dominer. Quatre versions
+ont été retouchées avant qu'on regarde la dernière ligne de la commande.
+
+Rendue linéaire — mesure, gain unique, limiteur — la même bande-annonce fait
+ressortir ses quatre frappes **16 à 17 dB au-dessus du lit**.
+
 ## Fabriquer les bruitages
 
 Quand une vidéo n'a aucun son, il ne suffit pas de poser une musique : il manque

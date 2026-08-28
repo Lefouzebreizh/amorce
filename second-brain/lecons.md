@@ -662,3 +662,36 @@ fois**, et le lit audible est porté par un son qui traverse le filtre, jamais p
 un drone. Un drone perd quinze décibels à lui seul ; sa place est huit décibels
 sous le reste, où il se ressent sur une enceinte sans rien coûter sur un
 téléphone. Appliqué, l'écart est tombé de 11,0 à 5,7 dB.
+
+## Contourner l'outil du dépôt réintroduit le bug qu'il évitait
+
+Une bande-annonce a été montée à coups de `ffmpeg` écrits à la main, avec
+`loudnorm=I=-14:TP=-1:LRA=11` en fin de chaîne. Résultat mesuré : un impact qui
+sortait à −1,4 dB dans le mixage brut ressortait à −24 dB après, soit au niveau
+exact du lit qu'il était censé dominer. Quatre versions du montage ont été
+retouchées — appoints de gain, choix des sons, creusement du lit — avant qu'on
+regarde la dernière ligne de la commande.
+
+`loudnorm` en une passe n'est pas un normaliseur : il travaille au fil de l'eau,
+remonte les creux et écrase les crêtes pour tenir la cible en continu. C'est un
+compresseur, et il détruit précisément le contraste qu'un montage construit.
+
+**Le dépôt le savait.** `bande-son/SKILL.md` l'écrit noir sur blanc — « en une
+passe, il compresse » — et `monter.py` s'ouvre sur « Deux passes, toujours ».
+La connaissance était écrite, datée, à sa place. Elle a été contournée parce
+qu'écrire six lignes de `ffmpeg` paraissait plus direct que de lire l'outil.
+
+La règle qui en sort ne parle pas de son : **avant d'écrire à la main ce qu'un
+script du dépôt fait déjà, lire ce script.** Ce qu'il contient d'utile n'est
+presque jamais la fonctionnalité — c'est la liste des pièges que quelqu'un a
+déjà payés. Les trois heures perdues ici sont le prix d'une lecture de trente
+secondes.
+
+La parade, quand on doit vraiment normaliser à la main : mesurer la sonie
+(`loudnorm ... print_format=json`), appliquer **un gain unique**, puis limiter.
+
+```bash
+ffmpeg -hide_banner -nostats -i entree.wav \
+       -af loudnorm=I=-14:TP=-1:print_format=json -f null -   # lire input_i
+ffmpeg -y -i entree.wav -af "volume=<cible - input_i>dB,alimiter=limit=0.8913" sortie.mp3
+```
