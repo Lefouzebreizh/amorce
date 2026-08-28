@@ -127,6 +127,13 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   formulaire en cinq étapes, un dossier de commande écrit et envoyé par
   courriel. Le prix est **recalculé côté serveur**, jamais lu depuis le
   navigateur, et le formulaire partage sa validation avec la route d'API.
+- **iptv/** — tableau de bord de gestion et de lecture IPTV / VOD. TypeScript,
+  **zéro dépendance d'exécution** dans le cœur : ingestion M3U et Xtream,
+  normalisation, classification en direct / films / séries. Une liste M3U ne se
+  charge jamais en mémoire — 50 à 400 Mo, l'analyseur les rend au fil de l'eau —
+  et rien ne remonte au-dessus de l'ingestion sans être un `Element`. Aucune
+  source de contenu ni identifiant n'est versionné. Se vérifie depuis son
+  dossier.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
   sont dans son `public/llms.txt`, pas ici.
