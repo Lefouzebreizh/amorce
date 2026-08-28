@@ -23,6 +23,10 @@ on:
 
 jobs:
   verifier:
+    # Nommé, sinon le contrôle s'affiche « verifier » — comme celui du réseau
+    # d'annuaires, dont le job porte le même identifiant. Sur une PR rouge, deux
+    # contrôles homonymes obligent à ouvrir les deux pour savoir lequel a cassé.
+    name: TITAN Builder
     runs-on: ubuntu-latest
     defaults:
       run:
