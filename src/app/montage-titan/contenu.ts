@@ -10,22 +10,22 @@
  */
 
 /** Adresses des médias. Vide = la page montre un emplacement, pas une erreur. */
-export const MEDIA = {
+export const MEDIA: { portrait: string; demo: string; demoAffiche: string } = {
   /** Portrait « Titan ». Vide → le portrait dessiné en SVG prend le relais. */
   portrait: '',
   /** La démo AZEROTH, 21,5 s, format 1080 × 1920. */
   demo: '',
   /** Image d'attente de la démo, affichée avant le premier octet de vidéo. */
   demoAffiche: '',
-} as const;
+};
 
 /** Les liens de paiement et de contact. `#` tant qu'ils ne sont pas créés. */
-export const LIENS = {
+export const LIENS: { paiementSolo: string; paiementTrio: string; whatsapp: string } = {
   paiementSolo: '#',
   paiementTrio: '#',
   /** Format attendu : https://wa.me/33XXXXXXXXX */
   whatsapp: '#',
-} as const;
+};
 
 export type Comparatif = {
   readonly cle: string;
@@ -117,6 +117,36 @@ export const PRIX_UNITAIRE = FORMULES[0].prix;
 export function economie(formule: Formule): number {
   return formule.videos * PRIX_UNITAIRE - formule.prix;
 }
+
+/**
+ * Où mène un bouton d'achat, et ce qu'il dit.
+ *
+ * La règle du dépôt vaut ici comme pour la page artisan : **ce qui n'est pas
+ * réglé disparaît au lieu d'afficher une valeur inventée**. Un bouton qui
+ * pointe sur `#` est pire qu'un bouton absent — quelqu'un a décidé d'acheter,
+ * a appuyé, et il ne s'est rien passé. C'est le seul défaut de cette page qui
+ * coûte un client déjà convaincu.
+ *
+ * D'où l'ordre : le lien de paiement s'il existe, sinon WhatsApp — où une
+ * commande se prend vraiment, message prérempli à l'appui — sinon rien du tout.
+ * La page vend donc dès ce soir, avant même que Stripe existe.
+ */
+export function lienDAchat(formule: Formule): { href: string; libelle: string } | null {
+  if (formule.lien && formule.lien !== '#') {
+    return { href: formule.lien, libelle: 'Commander — 24 h' };
+  }
+  if (LIENS.whatsapp && LIENS.whatsapp !== '#') {
+    const message = `Bonjour Erwann, je veux la formule « ${formule.nom} » à ${formule.prix} €.`;
+    return {
+      href: `${LIENS.whatsapp}?text=${encodeURIComponent(message)}`,
+      libelle: 'Commander sur WhatsApp',
+    };
+  }
+  return null;
+}
+
+/** Vrai quand WhatsApp est renseigné : sinon on n'affiche pas le lien. */
+export const WHATSAPP_PRET = LIENS.whatsapp !== '' && LIENS.whatsapp !== '#';
 
 /** Les trois étapes, dans l’ordre où elles se vivent. */
 export const ETAPES = [
