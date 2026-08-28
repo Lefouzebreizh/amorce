@@ -90,7 +90,7 @@
     {
       "son": "nappe_sombre",
       "instant": 1.55,
-      "gain": -5,
+      "gain": 4,
       "largeur": 18,
       "parametres": {
         "duree": 5.2,
@@ -102,12 +102,12 @@
     {
       "son": "souffle_caverne",
       "instant": 1.6,
-      "gain": 0
+      "gain": 9
     },
     {
       "son": "grondement_braises",
       "instant": 1.6,
-      "gain": -3,
+      "gain": 6,
       "_note": "tient les blancs entre les phrases"
     },
     {
@@ -300,5 +300,11 @@
       "y": 1140,
       "taille": 118
     }
-  ]
+  ],
+  "esquive": {
+    "gain": -9,
+    "depuis": 1.6,
+    "jusqu_a": 6.55,
+    "_note": "pilotée par la voix du druide, pas par des fenêtres écrites"
+  }
 }
