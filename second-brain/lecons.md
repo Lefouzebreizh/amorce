@@ -1584,3 +1584,37 @@ qui n'est pas exposé flatte.** Le levier était d'abord mesuré sur le recul du
 portefeuille, dont l'essentiel dort en liquide — 10x paraissait survivre à un
 marché qui s'effondrait de 37 %. Le levier porte sur la position. Vérifier que
 le dénominateur d'un ratio est bien la chose qui risque quelque chose.
+
+---
+
+## L'ordre alphabétique des tests décidait si la suite passait
+
+`nexuscrypto/tests/` était vert dans son dossier et rouge depuis la racine du
+dépôt — seize modules d'un coup, dont aucun n'avait été touché. Le message
+disait « No module named **`src.core`** », pas « No module named `src` », et
+c'est toute l'explication.
+
+Depuis la racine, `import src` trouve le `src/` d'Amorce. C'est du TypeScript,
+il n'y a pas un seul `.py` dedans — mais Python en fait un **paquet-espace-de-
+noms implicite** sans lever la moindre erreur. `src` se fige alors dans
+`sys.modules`, et `src.core` n'existe pas dessous.
+
+La suite s'en protégeait par une ligne dans `aides.py`, qui insère le dossier
+du projet en tête de `sys.path`. Elle ne fonctionne que si `aides` est importé
+**avant** le premier `from src...` — ce qui tenait par l'ordre alphabétique :
+`test_config` importe `aides`, et venait en premier. Un fichier neuf nommé
+`test_bouclier.py` est passé devant, a importé `src` directement, et a
+condamné les seize suivants. La correction du chemin arrivait après coup, sur
+un `sys.modules` déjà décidé.
+
+**Ce qu'il faut en retenir, et qui dépasse ce dépôt :** un dossier sans aucun
+fichier Python est quand même un paquet importable, et il gagne s'il est plus
+haut dans `sys.path`. Un projet imbriqué dont le paquet racine porte un nom
+banal — `src`, `lib`, `core`, `app` — est exposé dès qu'un dossier voisin
+porte le même nom. Le correctif est d'insérer le chemin **dans chaque module
+de test qui importe le paquet**, jamais dans un seul fichier partagé dont
+l'ordre d'import n'est pas garanti.
+
+Et le geste qui l'attrape : `verifier.sh`, qui rejoue la découverte depuis la
+racine comme le fait l'intégration continue. Lancer la suite depuis le dossier
+du projet ne l'aurait jamais montré.

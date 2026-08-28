@@ -53,6 +53,12 @@ class LigneAllocation:
     role: str = "croissance"
     vente_sur_signal: bool = True
     plateforme: str | None = None
+    # Chaîne et contrat, pour les jetons qu'on peut désigner sur une chaîne.
+    # Absents sur un actif établi acheté sur une plateforme centralisée : LINK
+    # n'a pas de contrat à auditer dans ce contexte, et exiger une adresse pour
+    # lui ferait refuser un achat parfaitement légitime.
+    chaine: str | None = None
+    adresse: str | None = None
 
     @property
     def fraction(self) -> float:
@@ -127,12 +133,32 @@ class ConfigPepites:
 
 
 @dataclass(frozen=True, slots=True)
+class ConfigBouclier:
+    """Ce qui interdit d'acheter une pépite, quelle que soit sa note.
+
+    `acheter_si_inconnu` est le seul réglage qui mérite d'être discuté : à
+    `false`, un service muet bloque l'achat. L'asymétrie le justifie — une
+    occasion manquée coûte un gain, un jeton dont on ne peut pas sortir coûte
+    la ligne entière.
+    """
+
+    actif: bool = True
+    acheter_si_inconnu: bool = False
+    taxe_achat_max_pct: float = 10.0
+    taxe_vente_max_pct: float = 10.0
+    lp_verrouillee_min_pct: float = 50.0
+    top10_detenteurs_max_pct: float = 50.0
+    delai_s: float = 8.0
+
+
+@dataclass(frozen=True, slots=True)
 class ConfigStrategie:
     poids: dict[str, float]
     redistribuer_poids_absents: bool
     technique: ConfigTechnique
     dca: ConfigDCA
     pepites: ConfigPepites
+    bouclier: ConfigBouclier
 
 
 @dataclass(frozen=True, slots=True)
@@ -421,6 +447,7 @@ def charger(
         )
 
     pepites = _depuis(ConfigPepites, _section(brut_strat, "pepites"))
+    bouclier = _depuis(ConfigBouclier, _section(brut_strat, "bouclier"))
 
     strategie = ConfigStrategie(
         poids=poids or {"technique": 0.5, "sentiment": 0.2, "onchain": 0.3},
@@ -428,6 +455,7 @@ def charger(
         technique=technique,
         dca=dca,
         pepites=pepites,
+        bouclier=bouclier,
     )
 
     # -- Risque --------------------------------------------------------------

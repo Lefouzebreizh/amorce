@@ -172,6 +172,32 @@ exécution partielle au-delà de 10 % de la profondeur visible. Un simulateur qu
 exécute au prix affiché produit une courbe qui sert ensuite à régler des seuils,
 et ces seuils sont alors réglés sur une fiction.
 
+### Le bouclier est un veto, pas une note
+
+Le scanner repère une anomalie de volume ; il ne sait pas si le jeton est
+revendable. Un contrat piégé ne vaut pas « moins », il vaut zéro : la note
+mesure une opportunité, le bouclier mesure la possibilité d'en sortir. Les
+mélanger laisserait une note élevée compenser un contrat piégé, ce qui est
+exactement le montage qu'on veut arrêter.
+
+Trois avis, demandés en parallèle et sans clé d'API : **GoPlus** lit le
+contrat, **honeypot.is** simule un achat puis une revente (Ethereum, BNB Chain
+et Base seulement), **RugCheck** couvre Solana. Le veto passe **avant** le
+dimensionnement — un jeton dont on ne peut pas sortir ne consomme même pas un
+calcul de taille.
+
+**Le silence n'est pas un quitus.** Aucune source qui répond donne `INCONNU`, et
+`INCONNU` bloque par défaut. C'est l'inverse du réflexe habituel, et l'asymétrie
+le justifie : une occasion manquée coûte un gain, un jeton dont on ne peut pas
+sortir coûte la ligne entière. `acheter_si_inconnu` permet d'en décider
+autrement, en le sachant.
+
+**Pas d'adresse, pas de bouclier — et non « pas d'adresse, donc refus ».** Les
+lignes du socle n'ont pas de contrat à auditer : exiger une adresse pour
+LINK/USDT lui aurait interdit tout achat, à chaque passe, en accusant les
+sources de sécurité. Une ligne d'allocation peut désormais porter `chaine` et
+`adresse` ; c'est leur présence qui déclenche le veto.
+
 ### Les filtres gratuits avant les filtres qui coûtent
 
 Le scanner de pépites applique volume, âge et capitalisation — gratuits — avant

@@ -191,6 +191,31 @@ strategie:
     score_minimum: 65
     candidats_max: 5
 
+  # ------------------------------------------------------------------------
+  # Bouclier anti-rugpull — un veto, pas une note.
+  #
+  # Le scanner repère une anomalie de volume ; il ne sait pas si le jeton est
+  # revendable. GoPlus lit le contrat, honeypot.is simule un achat puis une
+  # revente (Ethereum, BNB Chain, Base seulement), RugCheck couvre Solana. Les
+  # trois répondent sans clé d'API : un garde-fou qui dépend d'un abonnement
+  # est un garde-fou qu'on finira par désactiver.
+  #
+  # `acheter_si_inconnu: false` est le réglage qui mérite d'être discuté. Un
+  # service muet bloque l'achat, ce qui coûte des occasions. L'asymétrie le
+  # justifie : une occasion manquée coûte un gain, un jeton dont on ne peut pas
+  # sortir coûte la ligne entière.
+  # ------------------------------------------------------------------------
+  bouclier:
+    actif: true
+    acheter_si_inconnu: false
+    taxe_achat_max_pct: 10
+    taxe_vente_max_pct: 10
+    lp_verrouillee_min_pct: 50
+    top10_detenteurs_max_pct: 50
+    # Plafond global des trois appels, lancés en parallèle. Une pépite se
+    # décide en secondes ; au-delà, le bouclier tranche sur ce qu'il a.
+    delai_s: 8
+
 # --------------------------------------------------------------------------
 # Risque
 # --------------------------------------------------------------------------
