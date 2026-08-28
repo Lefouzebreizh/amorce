@@ -20,6 +20,8 @@
 // `masquerIdentifiants`, appliqué à tout message d'erreur : sans lui, le
 // premier flux serveur venu conserve les identifiants du fournisseur en clair.
 
+import { entier, texte } from '../domaine/valeurs.ts'
+
 export interface IdentifiantsXtream {
   /** `http://hote:port`, avec ou sans schéma, avec ou sans chemin superflu. */
   readonly serveur: string
@@ -71,14 +73,16 @@ const DELAI_DEFAUT = 15_000
  * traîner `/c/` fait répondre 404 à chaque appel.
  */
 export function normaliserServeur(brut: string): string {
-  const texte = brut.trim()
-  if (texte === '') throw new ErreurXtream('Adresse de serveur vide')
-  const avecSchema = /^https?:\/\//i.test(texte) ? texte : `http://${texte}`
+  // Nommée `saisie` et non `texte` : `texte` est désormais la fonction de
+  // lecture tolérante importée plus haut, et l'ombrer se relit très mal.
+  const saisie = brut.trim()
+  if (saisie === '') throw new ErreurXtream('Adresse de serveur vide')
+  const avecSchema = /^https?:\/\//i.test(saisie) ? saisie : `http://${saisie}`
   let adresse: URL
   try {
     adresse = new URL(avecSchema)
   } catch {
-    throw new ErreurXtream(`Adresse de serveur illisible : ${texte}`)
+    throw new ErreurXtream(`Adresse de serveur illisible : ${saisie}`)
   }
   const chemin = adresse.pathname
     .replace(/\/(player_api\.php|panel_api\.php|get\.php|xmltv\.php|c)\/?$/i, '')
@@ -95,22 +99,6 @@ export function masquerIdentifiants(url: string, motDePasse: string): string {
     }
   }
   return masque
-}
-
-/** Lecture tolérante : le panneau rend des nombres en chaînes, et l'inverse. */
-export function texte(valeur: unknown): string | undefined {
-  if (typeof valeur === 'string') return valeur.trim() === '' ? undefined : valeur
-  if (typeof valeur === 'number' && Number.isFinite(valeur)) return String(valeur)
-  return undefined
-}
-
-export function entier(valeur: unknown): number | undefined {
-  if (typeof valeur === 'number') return Number.isFinite(valeur) ? Math.trunc(valeur) : undefined
-  if (typeof valeur === 'string') {
-    const n = Number.parseInt(valeur.trim(), 10)
-    return Number.isNaN(n) ? undefined : n
-  }
-  return undefined
 }
 
 export interface ClientXtream {

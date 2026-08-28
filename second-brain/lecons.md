@@ -1683,3 +1683,30 @@ l'ordre d'import n'est pas garanti.
 Et le geste qui l'attrape : `verifier.sh`, qui rejoue la découverte depuis la
 racine comme le fait l'intégration continue. Lancer la suite depuis le dossier
 du projet ne l'aurait jamais montré.
+## Un défaut de complexité passe tous les tests, parce qu'il n'est pas un défaut
+
+Une suite verte dit qu'un programme rend le bon résultat. Elle ne dit rien de ce
+qu'il lui en coûte — et sur six entrées de fixture, le mauvais algorithme rend
+exactement le même résultat que le bon, aussi vite.
+
+Mesuré en écrivant l'index de recherche du cache IPTV. La table plein texte
+portait une colonne `element_id UNINDEXED`, plus lisible que le `rowid` :
+
+| entrées | temps d'import |
+| --- | --- |
+| 6 (les tests) | quelques millisecondes |
+| 120 000 (une vraie liste) | **plus de dix minutes, sans finir** |
+
+`UNINDEXED`, dans FTS5, veut dire « stockée, pas indexée » : chaque mise à jour
+d'une ligne la retrouvait par un balayage complet de l'index. Quadratique. Lié
+par le `rowid` — la clé native de FTS5 —, le même import prend **6,6 s**.
+
+Le piège n'est pas SQLite, il est plus large : **le comportement était juste,
+seul le coût était faux**, et rien dans une assertion ne regarde le coût. Les
+mêmes formes se rencontrent partout — un `Array.indexOf` dans une boucle, une
+requête par ligne au lieu d'une jointure, un `Set` reconstruit à chaque tour.
+
+La parade tient en un geste, et il ne s'automatise pas : **une fois, avant de
+livrer, faire tourner le programme sur un volume réaliste et regarder la
+montre.** Fabriquer la donnée est l'affaire de vingt lignes de script ; elle ne
+se versionne pas, et cette mesure-là attrape ce qu'aucune suite ne verra.

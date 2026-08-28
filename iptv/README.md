@@ -11,10 +11,16 @@ s'en sert, et n'en sort pas — `.env` et les listes locales sont ignorés par G
 
 ## Où en est le projet
 
-Le **cœur d'ingestion** est écrit et vérifié : lecture d'une liste M3U en flux,
-client Xtream, et la normalisation qui ramène les deux au même modèle. Le
-serveur, l'interface et le lecteur ne sont pas commencés — la structure les
-attend et les décisions qui les concernent sont écrites plus bas.
+Le **cœur d'ingestion** et le **cache** sont écrits et vérifiés : lecture d'une
+liste M3U en flux, client Xtream, normalisation, puis écriture en base avec
+recherche plein texte, filtres, favoris et reprise de lecture. L'interface et le
+lecteur ne sont pas commencés — la structure les attend et les décisions qui les
+concernent sont écrites plus bas.
+
+**Mesuré sur une liste de 120 000 entrées** (15 Mo, fabriquée pour l'occasion,
+jamais versionnée) : import en **6,6 s**, 135 Mo de mémoire de crête, base de
+47 Mo. Toutes les requêtes que l'interface fera répondent **sous 30 ms** —
+recherche 13 ms, grille filtrée 16 ms, épisodes d'une série 29 ms.
 
 ```
 iptv/
@@ -27,6 +33,11 @@ iptv/
 │   ├── ingestion/
 │   │   ├── m3u.ts          analyseur M3U étendu, au fil de l'eau
 │   │   └── xtream.ts       client Xtream Codes, tolérant aux panneaux
+│   ├── cache/
+│   │   ├── schema.ts       les tables, et les décisions qu'elles portent
+│   │   ├── depot.ts        tout le SQL, et rien que là
+│   │   └── importer.ts     source → normalisation → base, en flux
+│   ├── cli.ts              de quoi regarder ce que ça fait, avant l'écran
 │   └── normalisation/
 │       ├── titre.ts        nettoyage du titre, année, étiquettes
 │       ├── etiquettes.ts   langue et définition à partir des étiquettes
@@ -40,12 +51,25 @@ Ce que la suite ajoutera, aux mêmes endroits :
 
 ```
 src/
-├── cache/         ← SQLite (node:sqlite), écriture par paquets, index de recherche
 ├── epg/           ← lecture XMLTV en flux, association par tvg-id
-├── sous-titres/   ← pistes du flux, puis repli sur une API externe
-└── lecture/       ← reprise de position, saut d'épisode
-app/               ← Next.js 16 : routes d'API et interface
+└── sous-titres/   ← pistes du flux, puis repli sur une API externe
+app/               ← Next.js 16 : routes d'API et interface, lecteur hls.js
 ```
+
+## S'en servir tout de suite
+
+```bash
+npm run iptv -- importer ma-liste.m3u     # un fichier, ou une URL
+npm run iptv -- resume                     # ce que le cache contient
+npm run iptv -- chercher kaamelott
+npm run iptv -- groupes
+npm run iptv -- series
+```
+
+La base atterrit dans `donnees/iptv.db`, ignoré par Git. La ligne de commande
+n'est pas un confort : tant qu'il n'y a pas d'écran, c'est le seul moyen de
+**regarder** ce que le cœur fait d'une vraie liste plutôt que de le déduire
+d'une suite de tests verte. Elle a déjà servi à cela — voir plus bas.
 
 ## Vérifier
 
@@ -95,9 +119,38 @@ identifiants du fournisseur en clair. Deux tests le vérifient.
 faisait ressortir `multi` pour un fichier qui n'a qu'une piste, et un
 spectateur filtrant sur `vf` tombait sur du sous-titré.
 
+**Le mot de passe n'entre jamais en base.** L'adresse d'une source est
+enregistrée sous sa forme masquée ; un réimport reçoit l'adresse réelle en
+argument, depuis `.env`. La base peut donc être copiée, sauvegardée ou envoyée
+en pièce jointe sans livrer l'abonnement de personne.
+
+**Favoris et positions de lecture ne référencent pas le catalogue.** Un
+fournisseur retire un film une semaine puis le remet ; avec une clé étrangère en
+cascade, le réimport effacerait le favori au premier retrait. Ce que
+l'utilisateur a marqué lui appartient et survit au catalogue — quitte à
+désigner, un temps, une entrée absente. Un test le vérifie sur le cycle complet.
+
+**Un import partiel ne purge pas.** Charger les épisodes d'une seule série
+— ce que fait l'application à l'ouverture d'une fiche — retirerait sinon les
+40 000 autres entrées de la même source, qui n'ont simplement pas été revues.
+L'application se viderait sur un clic, sans la moindre erreur.
+
 **Le chemin de l'URL prime sur tout le reste pour classer.** `/series/`,
 `/movie/` et `/live/` sont la route du serveur, pas une convention de nommage :
 ils ne mentent pas, là où un groupe nommé à la main se trompe régulièrement.
+
+## Ce que les tests ne pouvaient pas voir
+
+La première version de l'index de recherche portait une colonne
+`element_id UNINDEXED`, plus lisible à l'écriture. Les 56 tests passaient, sur
+six entrées. Sur 120 000, l'import **ne finissait pas en dix minutes** :
+`UNINDEXED` veut dire « stockée, pas indexée », donc chaque mise à jour
+retrouvait sa ligne par un balayage complet — quadratique. Lié par le `rowid`,
+qui est la clé native de FTS5, le même import prend 6,6 s.
+
+Aucune assertion n'aurait attrapé cela : le comportement était juste, seul le
+coût était faux. **Un ordre de grandeur ne se teste pas, il se mesure**, une
+fois, sur du volume.
 
 ## Xtream Codes : ce qu'on ne peut pas vérifier ici
 
