@@ -1399,3 +1399,49 @@ souvent le mauvais. **Le binaire système d'abord**, partout et sans exception :
 `monter_episode.ffmpeg()` ; tout script qui trace du texte doit passer par la
 même résolution, y compris les scripts de vérification — le mien s'est fait
 prendre par sa propre règle.
+
+## Un bruitage « cinéma » peut être du silence sur un téléphone
+
+Seize bruitages arrivent d'un coup, tous étiquetés cinéma : nappes sombres,
+subs massifs, énergie ésotérique. Relevé bande par bande avant de câbler quoi
+que ce soit, **la moitié avait toute son énergie sous 400 Hz** — la colonne
+« part du grave » affichait −0,0 dB par rapport au total.
+
+Un d'eux mesurait **−61,3 dB entendus**. Ce n'est pas un impact discret, c'est
+du silence, et aucun gain n'y change rien : on pousse plus fort ce que
+l'appareil ne restitue pas, et on mange la marge des sons qui, eux, passent.
+
+L'excitation harmonique les récupère, et le gain est sans commune mesure avec
+ce qu'un réglage de volume donnerait :
+
+| fichier | nu | excité | gagné |
+| --- | --- | --- | --- |
+| sub massif 1 | −61,3 dB | −28,7 | **+32,6** |
+| sub massif 2 | −46,8 | −34,1 | +12,7 |
+| nappe sombre | −27,4 | −20,6 | +6,7 |
+| énergie druide | −20,5 | −17,3 | +3,2 |
+| froissement | −20,3 | −20,5 | **−0,2** |
+
+La dernière ligne vaut les autres : sur un son qui vit **déjà** dans le médium,
+l'excitation ne rend rien. Elle se réserve au grave, et elle se mesure au lieu
+de se supposer — comme la mise en garde « ça grésille sur un enregistrement
+réel », qui vaut pour un signal déjà riche en harmoniques et pas pour une nappe
+purement grave : rugosité relevée ici, +0,002 à +0,016. Rien.
+
+Plusieurs de ces fichiers décodaient par ailleurs **au-dessus du plein
+échelle** (jusqu'à 1,42). Les sommer tels quels écrête avant même le limiteur.
+
+## `-shortest` tronque la vidéo quand c'est l'audio qui est plus court
+
+Remuxer une image intacte avec un nouveau mixage et poser `-shortest` par
+réflexe : la vidéo est ressortie **plus courte de 0,2 s**. L'AAC rend un flux
+qui ne tombe pas au même endroit que l'image — 21,696 s contre 21,749 — et
+`-shortest` a coupé sur le plus court des deux.
+
+Deux dixièmes, soit la dernière ligne du carton de fin. Rien dans les mesures
+de son ne pouvait le dire ; c'est le contrôle de durée par flux qui l'attrape,
+et c'est pour cela qu'il fait partie des trois relevés avant envoi.
+
+**Un mixage se cale sur la durée du flux VIDÉO**, pas sur celle de l'audio
+décodé ni sur celle du conteneur. On complète l'audio par du silence, jamais on
+ne raccourcit l'image.
