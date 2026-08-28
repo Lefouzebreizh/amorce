@@ -328,6 +328,22 @@ function layerDrawer(
   const source = pool.get(layer.placed.clip.id);
   if (!source) return null;
 
+  /*
+   * Présent dans le vivier ne veut pas dire prêt à être tracé.
+   *
+   * Un élément vidéo existe dès qu'on lui donne une source, bien avant d'avoir
+   * décodé quoi que ce soit. `drawCover` sortait déjà sur des dimensions nulles
+   * — mais trop tard : le tracé était réputé fait, et l'étalonnage repartait sur
+   * un cadre noir, qu'il virait au marron par sa teinte chaude.
+   *
+   * `readyState` doit valoir au moins `HAVE_CURRENT_DATA` : une vidéo peut
+   * connaître ses dimensions dès les métadonnées, plusieurs centaines de
+   * millisecondes avant d'avoir une image à donner.
+   */
+  const { width, height } = sourceSize(source);
+  if (!width || !height) return null;
+  if (source instanceof HTMLVideoElement && source.readyState < 2) return null;
+
   const progress = layer.placed.duration > 0 ? layer.localTime / layer.placed.duration : 0;
   const motion = motionTransform(layer.placed.clip, progress, layer.localTime);
 
@@ -416,20 +432,46 @@ export function renderFrame(
   const look = getLook(project.cinema.look);
   const filter = options.grade ? options.grade.baseFilter(look, project.cinema.intensity) : 'none';
 
+  let dessine = false;
   if (slice) {
     const drawTo = layerDrawer(ctx, slice.to, pool, filter);
     const drawFrom = slice.from ? layerDrawer(ctx, slice.from, pool, filter) : null;
     if (drawTo) {
       applyTransition(slice.to.placed.clip.transition, slice.progress, ctx, drawFrom, drawTo);
+      dessine = true;
     }
   }
 
-  options.grade?.apply(ctx, look, {
-    intensity: project.cinema.intensity,
-    frame: options.frame ?? 0,
-    bars: project.cinema.bars,
-    bloom: options.bloom ?? true,
-  });
+  /*
+   * Rien n'a pu être dessiné : on s'arrête au fond noir, ici aussi.
+   *
+   * Le cas de la frise vide était déjà traité plus haut, pour la même raison.
+   * Celui-ci ne l'était pas : le plan existe, mais son élément vidéo n'est pas
+   * encore dans le vivier — le navigateur ne garde qu'une poignée de décodeurs,
+   * et un montage long en déborde. `drawTo` est alors nul, rien n'est tracé,
+   * et l'étalonnage s'appliquait quand même à un cadre noir.
+   *
+   * Le résultat n'était pas noir mais **marron** : la teinte chaude des hautes
+   * lumières monte le rouge et le vert sur du noir. Vu sur un montage de 37 s,
+   * un aplat marron uni occupait l'aperçu pendant près de deux secondes — et
+   * un aplat coloré se lit comme un plan voulu, alors qu'un fond noir se lit
+   * comme une image qui arrive.
+   *
+   * Seul l'étalonnage est retenu. Les sous-titres, eux, continuent d'être
+   * tracés : ils ne dépendent pas de la vidéo, ils portent le propos, et les
+   * priver d'affichage parce qu'une image tarde reviendrait à effacer la seule
+   * chose encore lisible. Leur table de positions doit d'ailleurs être vidée
+   * puis remplie à chaque image, faute de quoi le doigt viserait des cadres qui
+   * n'existent plus.
+   */
+  if (dessine) {
+    options.grade?.apply(ctx, look, {
+      intensity: project.cinema.intensity,
+      frame: options.frame ?? 0,
+      bars: project.cinema.bars,
+      bloom: options.bloom ?? true,
+    });
+  }
 
   options.captionBoxes?.clear();
   for (const caption of captionsAt(project.captions, time)) {
