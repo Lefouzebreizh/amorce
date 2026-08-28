@@ -121,6 +121,14 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   mode papier est le défaut, le mode réel demande deux gestes. `profils.py`
   rejoue six marchés fabriqués et compare la stratégie à un DCA aveugle : un
   réglage se juge sur son effet, pas sur son intention.
+  **Le levier se mesure, il ne s'exécute pas** : `rejeu --leviers 1,2,3,5,10`
+  compte les liquidations qu'un compte à levier aurait subies, et le courtier
+  ne connaît toujours pas le mot. Une option de levier posée dans le chemin
+  d'ordre serait utilisée avant d'avoir été mesurée.
+  **Aucune vérification de contrat** — ni GoPlus, ni honeypot.is, ni RugCheck :
+  `src/strategy/pepites.py` repère une anomalie de volume et ne sait pas si le
+  jeton est revendable. Son en-tête le dit, et le bouclier qui manque existe
+  déjà, dans `pepites/`.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
