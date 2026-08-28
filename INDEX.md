@@ -19,7 +19,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 | --- | --- | --- | --- | --- |
 | Producteur de formats courts IA | **En pause** | 7/10 | [fiche](archives-backlog/producteur-formats-courts-ia.md) | Reprendre si un prospect demande spontanément |
 | Audit & reprise de code généré par IA | **Faisable** | 8/10 | [fiche](projets-actifs/audit-reprise-code-genere-ia.md) | 1 audit gratuit d'une page, envoyé non sollicité (< 48 h) |
-| Amorce Atelier — chaîne complète du rush au film | **Décidé** | — | [fiche](projets-actifs/amorce-atelier.md) | Brancher voix, étalonnage, parallaxe et calques sur `monter_episode.py`, qui existe déjà |
+| Amorce Atelier — chaîne complète du rush au film | **Décidé** | — | [fiche](projets-actifs/amorce-atelier.md) | Brancher `voix.py` sur la recette — étalonnage et calques sont faits |
 | Studio audio (Streamlit) | **En pause** | — | [fiche](archives-backlog/studio-audio.md) | Reprendre si Amorce bute sur la voix off |
 | Assistant d'allocation d'actifs | **En pause** | — | [fiche](archives-backlog/assistant-patrimoine.md) | Reprendre au premier besoin réel de rééquilibrage |
 
