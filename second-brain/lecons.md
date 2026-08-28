@@ -735,3 +735,28 @@ done
 
 Et pour l'image, une planche de vignettes horodatées. Les deux ensemble disent
 où est le plan ; sa durée ne dit rien.
+
+## Une esquive se pilote par le signal, jamais par des fenêtres écrites à la main
+
+Entre les répliques d'un conteur, un mixage tombait à −50 dB — un blanc qui
+casse l'immersion plus sûrement qu'un mauvais son. Monter le lit comblait le
+blanc **et** couvrait la voix ; le baisser rendait la voix et rouvrait le blanc.
+Les deux exigences sont incompatibles à gain constant.
+
+La parade est l'esquive du mixage de cinéma : le lit joue fort et s'efface le
+temps de la parole. Une première version la pilotait par des **fenêtres de
+phrases**, relevées proprement et posées à la main. Mesurée au dixième de
+seconde, elle a rendu le défaut **pire** : 19 tranches sous −40 dB contre 18
+sans esquive du tout, minimum à −49,8 au lieu de −47,1.
+
+La cause tient en une phrase : **les trous les plus profonds ne sont pas entre
+les phrases mais entre les mots**, donc à l'intérieur des fenêtres. Le lit
+s'effaçait précisément là où il devait remplir.
+
+Pilotée par l'enveloppe de la voix elle-même — relevée dans sa bande, 300 à
+3500 Hz, avec une attaque plus rapide que le retour — l'esquive tombe à **2
+tranches** sous −40 et remonte le minimum à −40,0 dB.
+
+La règle déborde le son : **une automation qui suit une intention écrite se
+trompe partout où la mesure et l'intention divergent.** Brancher le détecteur
+sur le signal réel coûte dix lignes et supprime la classe entière d'erreurs.

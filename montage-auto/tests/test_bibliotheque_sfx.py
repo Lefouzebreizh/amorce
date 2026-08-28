@@ -296,3 +296,49 @@ class CoucheProfessionnelle(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Esquive(unittest.TestCase):
+    """L'esquive du lit sous la voix, et le piège qu'elle a coûté."""
+
+    def setUp(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        import monter_episode
+        self.montage = monter_episode
+
+    def test_une_fenetre_creuse_bien_le_lit(self):
+        gain = self.montage.enveloppe_esquive(
+            [{"debut": 1.0, "fin": 2.0, "gain": -12}], self.montage.TAUX * 3)
+        milieu = gain[int(1.5 * self.montage.TAUX)]
+        self.assertAlmostEqual(milieu, 10 ** (-12 / 20), places=3)
+
+    def test_hors_fenetre_le_lit_reste_entier(self):
+        gain = self.montage.enveloppe_esquive(
+            [{"debut": 1.0, "fin": 2.0, "gain": -12}], self.montage.TAUX * 3)
+        self.assertAlmostEqual(gain[0], 1.0, places=6)
+        self.assertAlmostEqual(gain[-1], 1.0, places=6)
+
+    def test_deux_fenetres_qui_se_chevauchent_creusent_le_plus_profond(self):
+        """Elles ne s'additionnent pas : la plus creuse gagne."""
+        gain = self.montage.enveloppe_esquive(
+            [{"debut": 1.0, "fin": 2.0, "gain": -6},
+             {"debut": 1.5, "fin": 2.5, "gain": -14}], self.montage.TAUX * 3)
+        self.assertAlmostEqual(gain[int(1.7 * self.montage.TAUX)],
+                               10 ** (-14 / 20), places=3)
+
+    def test_l_attaque_est_plus_rapide_que_le_retour(self):
+        """Un lit qui remonte trop vite entre deux mots s'entend respirer."""
+        taux = self.montage.TAUX
+        gain = self.montage.enveloppe_esquive(
+            [{"debut": 1.0, "fin": 2.0, "gain": -12}], taux * 4)
+        avant = gain[int(0.95 * taux)]      # dans la rampe d'attaque
+        apres = gain[int(2.15 * taux)]      # dans la rampe de retour
+        self.assertLess(avant, 1.0)
+        self.assertLess(apres, 1.0)
+        # à distance égale du bord, le retour a moins progressé que l'attaque
+        self.assertLess(apres, avant)
+
+    def test_une_fenetre_hors_du_montage_ne_casse_rien(self):
+        gain = self.montage.enveloppe_esquive(
+            [{"debut": 90.0, "fin": 95.0, "gain": -9}], self.montage.TAUX)
+        self.assertTrue((gain == 1.0).all())

@@ -26,6 +26,11 @@ Ce sont ces cinq lignes que le script encode, pour qu'on ne les repaie plus :
    `phrases()` relève les groupes de parole d'un plan ; leurs durées suffisent
    à reconnaître quelle réplique va où.
 
+6. **Le lit s'efface sous la voix, il ne se baisse pas.** Un blanc entre deux
+   répliques casse l'immersion ; un lit assez fort pour le combler couvre la
+   voix. Les deux exigences sont incompatibles à gain constant et compatibles
+   dès qu'il varie — c'est le champ `esquive`.
+
     python3 montage-auto/monter_episode.py episode.json sortie.mp4
     python3 montage-auto/monter_episode.py --sonder plan.mp4
     python3 montage-auto/monter_episode.py --phrases plan.mp4
@@ -205,8 +210,117 @@ def largeur(nom: str, donnee) -> int:
     return 0                                    # grave et ponctuations : au centre
 
 
+def enveloppe_esquive(fenetres: list, total: int,
+                      attaque_s: float = 0.08, retour_s: float = 0.28) -> numpy.ndarray:
+    """Le gain du lit dans le temps : plein partout, creusé pendant qu'on parle.
+
+    C'est l'esquive du mixage de cinéma, et elle résout un problème qu'aucun
+    réglage de niveau ne résout. Mesuré sur un épisode : entre les phrases du
+    conteur, le mixage tombait à −50 dB — un blanc qui casse l'immersion plus
+    sûrement qu'un mauvais son. Monter le lit comblait le blanc **et** couvrait
+    la voix ; le baisser rendait la voix et rouvrait le blanc. Les deux
+    exigences sont incompatibles à gain constant, et compatibles dès que le gain
+    varie : le lit joue fort, et s'efface le temps de chaque réplique.
+
+    Les deux constantes ne sont pas décoratives. L'attaque doit être **plus
+    rapide** que le retour — quatre-vingts millisecondes contre deux cent
+    quatre-vingts — parce qu'un lit qui redescend trop vite après un mot
+    s'entend comme une respiration, et qu'un lit qui s'efface trop lentement
+    laisse passer la première syllabe par-dessus. Ce sont les temps d'un
+    compresseur de voix, et pour la même raison.
+    """
+    gain = numpy.ones(total)
+    for fenetre in fenetres:
+        debut = int(float(fenetre["debut"]) * TAUX)
+        fin = int(float(fenetre["fin"]) * TAUX)
+        creux = 10.0 ** (float(fenetre.get("gain", -5)) / 20.0)
+        montee = max(1, int(attaque_s * TAUX))
+        descente = max(1, int(retour_s * TAUX))
+
+        forme = numpy.ones(total)
+        a, b = max(0, debut - montee), min(total, fin + descente)
+        if a >= b:
+            continue
+        forme[max(0, debut):min(total, fin)] = creux
+        if debut - montee >= 0:
+            forme[debut - montee:debut] = numpy.linspace(1.0, creux, montee)
+        if fin + descente <= total:
+            forme[fin:fin + descente] = numpy.linspace(creux, 1.0, descente)
+        # Plusieurs esquives se **multiplient** plutôt que de s'écraser : deux
+        # répliques qui se chevauchent doivent creuser davantage, pas autant.
+        gain = numpy.minimum(gain, forme)
+    return gain
+
+
+def esquive_suivie(piste_voix: Path, total: int, creux_db: float = -9.0,
+                   depuis: float = 0.0, jusqu_a: float | None = None,
+                   attaque_s: float = 0.05, retour_s: float = 0.22) -> numpy.ndarray:
+    """L'esquive pilotée par la voix, syllabe par syllabe.
+
+    Une première version creusait le lit sur des **fenêtres de phrases**, calées
+    sur ce que `--phrases` avait relevé. Mesuré au dixième de seconde, le
+    résultat était l'inverse du but : les trous les plus profonds ne sont pas
+    entre les phrases mais **entre les mots**, donc à l'intérieur des fenêtres —
+    le lit s'y effaçait précisément là où il fallait qu'il remplisse. Dix-neuf
+    tranches sous −40 dB, jusqu'à −49,8.
+
+    Un mixeur ne trace pas ces fenêtres à la main : il branche la voix sur
+    l'entrée de détection d'un compresseur, et le lit suit. C'est ce que fait
+    cette fonction. L'enveloppe est relevée **dans la bande de la voix**
+    (300–3500 Hz) et non sur le signal entier, sans quoi un impact grave
+    déclencherait l'esquive aussi sûrement qu'une syllabe.
+
+    L'attaque est plus rapide que le retour, comme sur tout compresseur de voix :
+    trop lente, la première syllabe passe par-dessus le lit ; trop rapide au
+    retour, le lit remonte entre deux mots et s'entend respirer.
+    """
+    temporaire = piste_voix.parent / "_detection.wav"
+    subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(piste_voix), "-ac", "1",
+                    "-ar", "16000", "-af", "highpass=f=300,lowpass=f=3500",
+                    str(temporaire)], check=True)
+    with wave.open(str(temporaire), "rb") as source:
+        detection = numpy.frombuffer(source.readframes(source.getnframes()),
+                                     dtype=numpy.int16).astype(float) / 32768.0
+    temporaire.unlink(missing_ok=True)
+    if detection.size == 0:
+        return numpy.ones(total)
+
+    # Enveloppe efficace sur cinq millisecondes, puis lissage asymétrique.
+    taux, bloc = 16000, 80
+    blocs = numpy.array([numpy.sqrt(numpy.mean(detection[i:i + bloc] ** 2))
+                         for i in range(0, len(detection) - bloc, bloc)])
+    if blocs.size == 0:
+        return numpy.ones(total)
+    db = 20 * numpy.log10(numpy.maximum(blocs, 1e-6))
+
+    # Le seuil se déduit du signal : au-dessus du quantile, on parle.
+    seuil = numpy.percentile(db, 62)
+    voulu = numpy.where(db > seuil, 10.0 ** (creux_db / 20.0), 1.0)
+
+    pas_s = bloc / taux
+    monte = numpy.exp(-pas_s / max(attaque_s, 1e-4))
+    descend = numpy.exp(-pas_s / max(retour_s, 1e-4))
+    lisse = numpy.ones_like(voulu)
+    courant = 1.0
+    for i, cible in enumerate(voulu):
+        coefficient = monte if cible < courant else descend
+        courant = cible + (courant - cible) * coefficient
+        lisse[i] = courant
+
+    # Ramené au taux du montage, puis borné à la fenêtre demandée.
+    instants = numpy.arange(len(lisse)) * pas_s
+    gain = numpy.interp(numpy.arange(total) / TAUX, instants, lisse,
+                        left=1.0, right=1.0)
+    fin = total / TAUX if jusqu_a is None else float(jusqu_a)
+    horloge = numpy.arange(total) / TAUX
+    dehors = (horloge < float(depuis)) | (horloge > fin)
+    gain[dehors] = 1.0
+    return gain
+
+
 def couche_effets(poses: list, bibliotheque: Path, total_s: float,
-                  reverberation_s: float = 2.2) -> numpy.ndarray:
+                  reverberation_s: float = 2.2,
+                  esquive: list | None = None) -> numpy.ndarray:
     """Fabrique la couche cinématique, en stéréo, et lui donne sa pièce.
 
     La réverbération n'est pas un ornement : c'est elle qui fait entendre un
@@ -256,6 +370,20 @@ def couche_effets(poses: list, bibliotheque: Path, total_s: float,
     if reverberation_s:
         gauche = bruitages.reverberation(gauche, reverberation_s, melange=0.22, graine=91)
         droite = bruitages.reverberation(droite, reverberation_s, melange=0.22, graine=92)
+
+    if esquive:
+        # L'esquive s'applique **après** la réverbération : la queue d'un
+        # impact posé avant une réplique doit s'effacer avec le reste, sinon
+        # elle traverse la phrase qu'on cherchait à dégager.
+        if isinstance(esquive, dict):
+            forme = esquive_suivie(
+                Path(esquive["voix"]), len(gauche),
+                creux_db=float(esquive.get("gain", -9)),
+                depuis=float(esquive.get("depuis", 0.0)),
+                jusqu_a=esquive.get("jusqu_a"))
+        else:
+            forme = enveloppe_esquive(esquive, len(gauche))
+        gauche, droite = gauche * forme, droite * forme
 
     fin = int(0.6 * TAUX)
     for piste in (gauche, droite):
@@ -360,9 +488,15 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
                     "-c:a", "pcm_s16le", str(base)], check=True)
 
     effets = atelier / "_effets.wav"
+    reglage = episode.get("esquive")
+    if isinstance(reglage, dict):
+        # La détection se fait sur le montage lui-même : c'est lui qui porte la
+        # voix, et lui seul sait où elle tombe une fois les plans assemblés.
+        reglage = dict(reglage, voix=str(base))
     piste = couche_effets(episode.get("effets", []),
                           Path(episode.get("bibliotheque", "sfx_library")).expanduser(),
-                          total, float(episode.get("reverberation_s", 2.2)))
+                          total, float(episode.get("reverberation_s", 2.2)),
+                          reglage)
     with wave.open(str(effets), "wb") as f:
         f.setnchannels(2)
         f.setsampwidth(2)
