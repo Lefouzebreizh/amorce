@@ -364,10 +364,14 @@ def segment_morph(plan_a: dict, plan_b: dict, reglage: dict, sortie: Path) -> fl
     cx = f"({bx}+({LARGEUR / 2:.0f}-{bx})*pow(on/{images},0.55))"
     cy = f"({by}+({HAUTEUR / 2:.0f}-{by})*pow(on/{images},0.55))"
 
+    # Même parade que pour la poussée d'un plan : `zoompan` en pixels entiers
+    # saccade, on le rend au double et on réduit. Un raccord qui saccade est
+    # pire qu'une coupe franche — il attire l'oeil sur ce qu'il devait cacher.
+    grand = f":s={LARGEUR * 2}x{HAUTEUR * 2}:fps={cadence},scale={LARGEUR}:{HAUTEUR}:flags=bicubic"
     a = (f"{CADRE.format(cadence=cadence)},zoompan=z='{za}':d=1:x='{ax}*({za})-{LARGEUR / 2:.0f}'"
-         f":y='{ay}*({za})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps={cadence}")
+         f":y='{ay}*({za})-{HAUTEUR / 2:.0f}'{grand}")
     b = (f"{CADRE.format(cadence=cadence)},zoompan=z='{zb}':d=1:x='{cx}*({zb})-{LARGEUR / 2:.0f}'"
-         f":y='{cy}*({zb})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps={cadence}")
+         f":y='{cy}*({zb})-{HAUTEUR / 2:.0f}'{grand}")
     lisse = f"(3*pow(T/{duree:.3f},2)-2*pow(T/{duree:.3f},3))"
 
     depart_a = float(plan_a["depart"]) + float(plan_a["duree"]) - duree
@@ -562,13 +566,41 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         # s'allonge silencieusement.
         force = float(plan["zoom"])
         images = max(1, int(duree * CADENCE))
+        # Rendu au double, puis réduit.
+        #
+        # `zoompan` calcule ses décalages en **pixels entiers**. Une poussée
+        # lente n'avance donc pas d'un continu mais par sauts d'un pixel, et le
+        # plan saccade — d'autant plus visiblement que le mouvement de l'image
+        # est rapide. Le défaut ne se voit pas sur un plan fixe, ce qui le rend
+        # facile à imputer au rush ou à la cadence.
+        #
+        # En travaillant à 2160×3840 et en réduisant ensuite, chaque saut
+        # d'un pixel devient un demi-pixel à l'arrivée : le rééchantillonnage
+        # l'étale au lieu de le montrer. Coût : quatre fois les pixels sur ce
+        # seul filtre, quelques secondes par plan.
         filtre += (f",zoompan=z='1+{force}*pow(on/{images},2.2)':d=1"
                    f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-                   f":s={LARGEUR}x{HAUTEUR}:fps={cadence},format=yuv420p")
+                   f":s={LARGEUR * 2}x{HAUTEUR * 2}:fps={cadence}"
+                   f",scale={LARGEUR}:{HAUTEUR}:flags=bicubic,format=yuv420p")
     if plan.get("tremblements"):
         filtre += "," + filtre_tremblement(plan["tremblements"], duree)
     if plan.get("flashs"):
         filtre += "," + filtre_flash(plan["flashs"])
+    if plan.get("interpolation") and not plan.get("vitesse"):
+        # Interpoler **sans** changer la vitesse.
+        #
+        # Un rush généré porte souvent des images dupliquées : mesuré sur un
+        # plan annoncé à 30 i/s, le mouvement réel tombait à 20 — une image sur
+        # deux figée. Rien ne le signale, le fichier est conforme, et le défaut
+        # est cuit dedans : le ré-encoder à n'importe quelle cadence le
+        # conserve. `minterpolate` fabrique les images manquantes à partir du
+        # mouvement estimé, et c'est le seul moyen de le retirer.
+        #
+        # Il coûte cher — environ deux minutes pour trois secondes — d'où
+        # l'option plutôt que le défaut. On ne la pose que sur les plans dont
+        # on a mesuré la duplication.
+        filtre += (f",minterpolate=fps={cadence}:mi_mode=mci:mc_mode=aobmc"
+                   f":me_mode=bidir:vsbmc=1")
     if plan.get("vitesse"):
         # En dernier : ce qui precede peut avoir reecrit les horodatages. Et il
         # faut **recadencer apres**, sinon le flux garde la cadence d'avant et

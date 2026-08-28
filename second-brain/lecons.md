@@ -1318,3 +1318,33 @@ Le contrôle qui l'aurait vu tient en une ligne :
 ffprobe -v error -show_entries stream=codec_type,duration -of csv=p=0 film.mp4
 # video et audio doivent afficher la même durée
 ```
+
+## La cadence annoncée d'un rush n'est pas celle de son mouvement
+
+Un plan généré annonce 30 images par seconde et n'en bouge réellement que 20 :
+une image sur deux y est figée d'origine, avec juste assez de bruit d'encodage
+pour n'être pas un doublon exact. Rien ne le signale — le fichier est conforme,
+`ffprobe` répond 30, et le défaut ne se voit qu'en mouvement rapide.
+
+**La mesure tient en dix lignes** et vaut avant tout montage : décoder en gris
+réduit, calculer l'écart moyen entre images consécutives, compter celles qui
+tombent sous 20 % de cet écart. Relevé sur un même rush : 20 i/s réels sur un
+plan de visage, 24 sur un vortex, 27 sur une créature.
+
+**Et le piège coûte cher : conformer le film à la cadence *annoncée* double la
+saccade.** Du 20 i/s rendu à 30 donne une image doublée sur deux ; rendu à 24,
+une sur cinq. Mesuré sur le même plan :
+
+| cadence du film | images figées | irrégularité |
+| --- | --- | --- |
+| 30 i/s | 22 % | 68 % |
+| **24 i/s** | **13 %** | **51 %** |
+
+Le réflexe — « la source est à 30, rendons à 30 » — est donc exactement le
+mauvais. **On aligne sur le mouvement réel, pas sur l'étiquette.**
+
+Ce qui ne marche pas, et qui a été essayé : `minterpolate` vise une cadence et
+ne détecte pas les images figées — sans effet mesurable à 30 comme à 60.
+`mpdecimate` ne les attrape pas davantage, les doublons n'étant pas exacts,
+même à seuil desserré quatre fois. La seule correction réelle est en amont :
+régénérer le plan à la cadence qu'il prétend avoir.

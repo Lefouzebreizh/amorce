@@ -49,6 +49,14 @@ aux normes de diffusion — −14 LUFS — est systématiquement trop faible là
 format court est regardé, et rien dans les mesures habituelles ne le signale.
 `/master-telephone` avant toute publication.
 
+**Avant chaque changement, relire ce fichier.** Pas au début du fil seulement :
+**avant chaque changement**. Une session qui enchaîne les retouches dérive sans
+s'en apercevoir — elle garde l'état de la précédente et perd ses règles, et
+c'est ainsi qu'on redemande une fusion déjà autorisée, qu'on livre sans écrire
+la leçon, ou qu'on refait un outil qui vient d'arriver. Le fichier bouge
+plusieurs fois par jour, poussé par les autres sessions : ce qu'on y a lu il y
+a une heure peut être faux.
+
 ## 3. MÉMOIRE
 
 La mémoire vit dans ce fichier, dans `.claude/skills/`, dans `INDEX.md` et dans
