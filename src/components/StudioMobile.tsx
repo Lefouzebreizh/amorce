@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { analyzeProject } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
@@ -41,6 +41,18 @@ export function StudioMobile({
   onStep: (step: StepId | null) => void;
 }) {
   const clipCount = useStudio((s) => s.project.clips.length);
+
+  /*
+   * L'aperçu agrandi. Dans le bloc collé, l'image mesure 80 × 142 px sur un
+   * Redmi — 16 % de la hauteur d'écran là où le bloc en réserve 38 %, parce que
+   * la barre de lecture et la frise prennent plus de place que l'image. Agrandi,
+   * elle passe à près de la largeur entière.
+   *
+   * On garde une bande du contenu visible dessous plutôt que d'occuper tout
+   * l'écran : c'est elle qui dit que la page continue, et qui évite l'impression
+   * d'être enfermé dans une vue sans sortie.
+   */
+  const [agrandi, setAgrandi] = useState(false);
 
   /*
    * Le guide ne change plus d'onglet : il fait défiler jusqu'à l'étape. Le
@@ -106,9 +118,18 @@ export function StudioMobile({
           replié : un aperçu de zéro pixel garde ses marges et son ombre.
         */}
         {clipCount > 0 && (
-          <section className="sticky top-0 z-20 flex h-[38dvh] flex-col gap-1.5 bg-ink p-2 pb-1.5 shadow-[0_10px_18px_-10px_rgba(0,0,0,0.95)]">
-            <Preview engine={engine} />
-            <Timeline engine={engine} compact />
+          <section
+            className={`sticky top-0 z-20 flex flex-col gap-1.5 bg-ink p-2 pb-1.5 shadow-[0_10px_18px_-10px_rgba(0,0,0,0.95)] ${
+              agrandi ? 'h-[80dvh]' : 'h-[38dvh]'
+            }`}
+          >
+            <Preview engine={engine} agrandi={agrandi} onAgrandir={() => setAgrandi((v) => !v)} />
+            {/*
+              La frise s'efface pendant l'agrandissement : ses 98 px repris,
+              c'est autant que l'image gagne, et on n'agrandit pas pour
+              découper — on agrandit pour regarder.
+            */}
+            {!agrandi && <Timeline engine={engine} compact />}
           </section>
         )}
 
@@ -127,7 +148,9 @@ export function StudioMobile({
               // Pas d'en-tête ici : chaque panneau porte déjà son titre
               // numéroté. En ajouter un le faisait paraître deux fois, et une
               // répétition se lit comme un bug avant de se lire comme un plan.
-              className={clipCount > 0 ? 'scroll-mt-[40dvh]' : 'scroll-mt-2'}
+              className={
+                clipCount === 0 ? 'scroll-mt-2' : agrandi ? 'scroll-mt-[82dvh]' : 'scroll-mt-[40dvh]'
+              }
             >
               <StepPanel step={item.id} engine={engine} onStep={onStep} />
             </section>
