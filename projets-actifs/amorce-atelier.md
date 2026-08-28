@@ -28,19 +28,20 @@ en morceaux, hors de toute interface.
 | Maillon | Où | État |
 | --- | --- | --- |
 | Voix off française | `.claude/skills/bande-son/scripts/voix.py` | tourne, sherpa-onnx, 25× le temps réel |
-| Synchronisation labiale | `montage-auto/auto_lipsync.py` | tourne, Wav2Lip sur processeur, sonde de visages |
+| Synchronisation labiale | `montage-auto/auto_lipsync.py` | **cousu** — champ `lipsync`, fenêtre découpée avant, échec sans casse |
 | Transcription | `.claude/skills/transcription-media/scripts/asr_hors_ligne.py` | tourne, Whisper hors Hugging Face |
 | Bruitages de synthèse | `kits/sfx/`, `src/lib/sfx.ts` | 10 générateurs, index mesuré |
 | Musique | `.claude/skills/bande-son/scripts/musique.py`, `kits/music/` | 5 ambiances + nappe de bande-annonce |
 | Cri de créature | `kits/sfx/generer-creature.py` | tourne |
 | Calques et LUT | `visual_library/` | 10 assets, catalogue, fiche HTML |
-| Animation d'image fixe | `kits/video/animer-image.py` | parallaxe, 4,1 → 9,8 de mouvement |
+| Animation d'image fixe | `kits/video/animer-image.py` | **cousu** — détection sur l'extension, 2,2 → 9,3 et 12,6 |
 | Étalonnage | `.claude/skills/etalonner/scripts/etalonner.py` | tourne |
 | Mesure du son | `.claude/skills/voir-le-son/`, `sonometre.py` | tourne |
 | Montage et rendu | HyperFrames CLI | tourne |
 
-**Ce qui manque n'est donc pas la matière, c'est la couture.** Neuf outils
-existent, aucun ne se parle, et chacun se lance à la main avec ses arguments.
+**Ce qui manquait n'était pas la matière, c'était la couture** — et elle est
+faite. Les dix outils se lancent maintenant depuis une seule recette JSON,
+`montage-auto/monter_episode.py`, au lieu de dix lignes de commande à la main.
 
 ## Ce qui manque vraiment
 
@@ -119,19 +120,35 @@ Quatre pièges y ont été payés, tous silencieux, tous consignés dans le fich
 - `-stream_loop -1 -i` ajoute **trois** éléments et non deux : en déduire
   l'indice d'entrée décalait d'un cran par calque bouclé.
 
+## Ce que la couture a appris
+
+Les trois derniers maillons — la voix, la parallaxe, la synchronisation labiale —
+ont chacun coûté la même leçon, et elle vaut d'être écrite une fois :
+**un outil cher se raccorde par son cache et par son échec, pas par son appel.**
+
+- **Le cache décide du coût réel.** Une parallaxe coûte trente secondes, une
+  synchronisation plusieurs minutes ; un montage d'essai se relance dix fois. Le
+  cache porte la source, la fenêtre et les réglages, et vit dans `atelier/cache`
+  — jamais sous `_*`, que le nettoyage de fin de passe efface. Le premier jet
+  l'y avait mis, et repayait chaque rendu.
+- **L'échec décide de la fiabilité.** Un film de douze plans ne meurt pas parce
+  qu'un visage manque sur l'un d'eux : on prévient par écrit, on rend le plan
+  intact, le reste se monte. La synchronisation tourne pour cela dans un
+  processus séparé — une inférence tuée par manque de mémoire (code −9)
+  emporterait le montage avec elle.
+- **La détection vaut mieux que la déclaration.** Une image fixe est reconnue à
+  son extension, sans champ à remplir : personne ne pense à déclarer qu'une
+  image est une image, et l'oubli produisait exactement le plan figé qu'on
+  cherchait à supprimer.
+
 ## Prochain pas
 
-**`voix.py` dans la recette.** Une réplique française décrite dans le JSON,
-fabriquée à la volée et posée sur la ligne de temps. C'est le maillon qui rend
-l'épisode 02 possible sans qu'aucune voix soit enregistrée.
+La chaîne est complète et se lance d'une commande. Ce qui manque n'est plus un
+outil, c'est **une interface** : la recette JSON reste écrite à la main, et
+c'est elle qui sépare aujourd'hui l'Atelier d'un produit.
 
-Restent ensuite, dans l'ordre du coût : **`animer-image.py`** pour remplacer le
-`zoom` sur les images fixes — la parallaxe, pas l'agrandissement — puis
-**`auto_lipsync.py`**, seul à se compter en minutes de processeur, et qui exige
-une sonde des visages avant tout calcul.
-
-Zéro fonctionnalité neuve tant que ces cinq-là ne sont pas dans la recette. La
-valeur est dans le fait qu'ils se parlent, pas dans le nombre d'outils.
+Zéro fonctionnalité neuve avant elle. La valeur est dans le fait que les outils
+se parlent, pas dans le nombre d'outils.
 
 **Et le réflexe qui a manqué six fois dans la session TITANS :** avant de
 construire, lire la liste des branches ouvertes que le hook de démarrage
