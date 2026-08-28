@@ -1,0 +1,142 @@
+{
+  "_lisez_moi": "TITANS — Épisode 01. Se lance depuis le dossier de l'épisode, où « media/ » contient les rushes : python3 <depot>/montage-auto/monter_episode.py <depot>/montage-auto/episodes/titans-ep01.json renders/ep01.mp4",
+  "_sources": "Les rushes ne sont pas versionnés (invariant 8). Chemins relatifs au dossier d'exécution.",
+  "_courbe": "Les « cible_db » viennent du rendu du 27/08 11 h 05, seul montage validé à l'oreille, puis corrigées par « cible − mesure » une fois la couche d'effets posée : celle-ci remplit les creux et écrase le relief si on ne la compte pas. Un plan muet — une image fixe — reçoit une piste de silence et non un gain : sa part de la courbe s'écrit dans le gain de ses effets.",
+  "_effets": "Les deux plans d'images fixes n'apportent aucun son : sans cette couche, le film se tait pendant 3,6 s. Ce sont des éclairs sur une ville — la foudre est le son juste, pas un bouche-trou.\n« effets_db » est bas à dessein. À +3, la couche fournissait l'essentiel du niveau de chaque plan : une cible relevée de 1,5 dB ne déplaçait le mixage que de 0,3, et la courbe dramatique était écrite puis aussitôt recouverte. Les effets ponctuent, les plans portent.",
+  "bibliotheque": "kits/sfx",
+  "effets_db": -5,
+  "largeur_stereo": 2.0,
+  "reverberation_s": 2.2,
+  "plans": [
+    {
+      "nom": "oeil_titre",
+      "source": "media/01_oeil.mp4",
+      "depart": 0.0,
+      "duree": 1.8,
+      "cible_db": -21.8
+    },
+    {
+      "nom": "druide_terre",
+      "source": "media/02_druide_portrait.mp4",
+      "depart": 0.3,
+      "duree": 2.8,
+      "cible_db": -15.3
+    },
+    {
+      "nom": "terre_fissure",
+      "source": "media/09_druide_foudre.mp4",
+      "depart": 0.2,
+      "duree": 4.0,
+      "cible_db": -14.5
+    },
+    {
+      "nom": "foule_visages",
+      "source": "media/foule_visages.jpg",
+      "duree": 1.8,
+      "cible_db": -19.9
+    },
+    {
+      "nom": "foule_ville",
+      "source": "media/foule_ville.png",
+      "duree": 1.8,
+      "cible_db": -19.8
+    },
+    {
+      "nom": "dragon_lave",
+      "source": "media/dragon.mp4",
+      "depart": 0.3,
+      "duree": 5.87,
+      "cible_db": -18.6
+    },
+    {
+      "nom": "gueule_dragon",
+      "source": "media/07_rugissement.mp4",
+      "depart": 12.0,
+      "duree": 1.93,
+      "cible_db": -13.4
+    }
+  ],
+  "effets": [
+    {
+      "son": "energie-scifi",
+      "instant": 0.1,
+      "gain": -2
+    },
+    {
+      "son": "runes-rotatives",
+      "instant": 1.9,
+      "gain": -1
+    },
+    {
+      "son": "magie-du-sorcier",
+      "instant": 3.1,
+      "gain": -3
+    },
+    {
+      "son": "faille-dimensionnelle",
+      "instant": 4.7,
+      "gain": 0
+    },
+    {
+      "son": "eclair-craquant",
+      "instant": 6.2,
+      "gain": -1
+    },
+    {
+      "son": "foudre",
+      "instant": 8.65,
+      "gain": 5.9
+    },
+    {
+      "son": "eclair-craquant",
+      "instant": 9.6,
+      "gain": 3.9
+    },
+    {
+      "son": "foudre",
+      "instant": 10.5,
+      "gain": 4.9
+    },
+    {
+      "son": "eclair-craquant",
+      "instant": 11.4,
+      "gain": 2.9
+    },
+    {
+      "son": "pas-du-titan",
+      "instant": 12.4,
+      "gain": 0
+    },
+    {
+      "son": "pas-du-titan",
+      "instant": 14.1,
+      "gain": -2
+    },
+    {
+      "son": "pas-du-titan",
+      "instant": 16.0,
+      "gain": -1
+    },
+    {
+      "son": "rugissement-dragon",
+      "instant": 17.9,
+      "gain": 1
+    }
+  ],
+  "titres": [
+    {
+      "texte": "TITANS",
+      "debut": 0.25,
+      "fin": 1.75,
+      "taille": 118,
+      "y": 620
+    },
+    {
+      "texte": "ÉPISODE 01",
+      "debut": 0.55,
+      "fin": 1.75,
+      "taille": 46,
+      "y": 770
+    }
+  ]
+}
