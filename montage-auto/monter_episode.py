@@ -491,13 +491,27 @@ def bouche_synchronisee(source: Path, depart: float, duree: float,
     resultat = subprocess.run(appel, capture_output=True, text=True)
 
     if not cible.is_file():
-        motif = resultat.stderr.strip().splitlines()
-        raison = motif[-1] if motif else f"code {resultat.returncode}"
+        print(f"   synchronisation abandonnée sur {source.name} :", file=sys.stderr)
         if resultat.returncode == -9:
-            raison = ("tué par manque de mémoire — réduire la fenêtre "
-                      "ou passer --resize-factor 2")
-        print(f"   synchronisation abandonnée sur {source.name} : {raison}",
-              file=sys.stderr)
+            print("   tuée par manque de mémoire — réduire la fenêtre du plan.",
+                  file=sys.stderr)
+        else:
+            # La sonde écrit plusieurs lignes, et le diagnostic n'est **pas** la
+            # dernière : elle finit par une commande ffmpeg de découpe. Ne
+            # relayer que celle-là affichait la solution en cachant le problème.
+            lignes = [l.strip() for l in resultat.stderr.strip().splitlines()
+                      if "visage" in l or "Fenêtre" in l or "image " in l]
+            for ligne in lignes or [f"code {resultat.returncode}"]:
+                print(f"   {ligne}", file=sys.stderr)
+            # La sonde raisonne dans la fenêtre extraite, qui commence à zéro ;
+            # la recette, elle, compte depuis le début du rush. Traduire évite
+            # l'addition à la main — et l'erreur d'un plan sur deux qu'elle
+            # produit quand le plan a déjà un `depart`.
+            fenetre = re.search(r"la plus longue : ([\d.]+) s → ([\d.]+) s", resultat.stderr)
+            if fenetre:
+                a, b = float(fenetre.group(1)), float(fenetre.group(2))
+                print(f'   dans la recette : "depart": {depart + a:.2f}, '
+                      f'"duree": {b - a:.2f}', file=sys.stderr)
         print("   le plan est monté tel quel.", file=sys.stderr)
         return source, depart
     return cible, 0.0
