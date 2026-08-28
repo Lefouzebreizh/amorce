@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Gestion et lecture de listes IPTV / VOD — cœur d'ingestion et de normalisation",
   "scripts": {
-    "test": "node --experimental-strip-types --test \"tests/*.test.ts\"",
-    "check": "tsc --noEmit"
+    "test": "node --experimental-strip-types --experimental-sqlite --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
+    "check": "tsc --noEmit",
+    "iptv": "node --experimental-strip-types --experimental-sqlite --disable-warning=ExperimentalWarning src/cli.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
