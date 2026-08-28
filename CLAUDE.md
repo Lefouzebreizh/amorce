@@ -192,6 +192,27 @@ seconde sur un spectrogramme que personne n'avait tiré. Pour un média,
 `/voir-le-son` avant de livrer ; pour un lot, `/trier-les-rushes` avant de
 choisir.
 
+**Et pour un média : on revérifie le fichier qu'on envoie, pas celui d'avant.**
+La règle a été payée quatre fois dans la même soirée. Un carton de fin portait
+un titre fantôme figé derrière son texte — visible sur n'importe quelle image
+tirée du fichier, invisible dans toutes les mesures. Un cri de dragon est parti
+trois décibels sous un plan de transition, alors que chaque correction prise
+séparément était juste. À chaque fois la mesure disait vert et le fichier était
+faux, parce que ce qui avait été mesuré n'était pas ce qui partait.
+
+Trois gestes avant d'envoyer, sur le **fichier final** et sur lui seul :
+
+1. **Une planche d'images sur toute la durée**, la dernière seconde comprise.
+   C'est là que se logent les textes qui traînent et les cartons hérités.
+2. **Le niveau entendu section par section**, filtré au-dessus de 400 Hz. Le
+   climax doit être le plus fort — s'il ne l'est pas, c'est le défaut, quelle
+   que soit la sonie globale.
+3. **La durée et le raccord** : l'audio et la vidéo se terminent-ils ensemble,
+   et le son traverse-t-il chaque coupe ?
+
+Une correction ne s'annonce jamais sur la foi du réglage changé. Elle s'annonce
+sur le fichier relu.
+
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
 

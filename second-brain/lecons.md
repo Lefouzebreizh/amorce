@@ -1309,3 +1309,175 @@ l'écran pendant qu'on lit : 38,2 de luminance, et 1,7 s au lieu de 2,4.
 Ce qui vaut d'être retenu déborde le montage : **une bonne idée mal exécutée se
 reprend, elle ne se rejette pas.** Mesurer ce qui cloche dans l'exécution coûte
 moins cher que de réinventer l'idée.
+
+## « Ça sature » ne veut pas dire que ça écrête
+
+Un rugissement décrit comme saturé, « un bruit de turbine ». Premier réflexe :
+chercher l'écrêtage. Mesuré seconde par seconde — **zéro échantillon au-dessus
+de 0,985**, facteur de crête entre 11 et 12 dB sur toute la durée. Rien ne
+clippait.
+
+Deuxième suspect, l'excitation harmonique : c'est un redresseur suivi d'une
+saturation douce, donc de la distorsion par construction. Mesuré aussi — elle
+**réduit** le contenu 3-12 kHz au lieu de l'augmenter, et n'ajoute aucun peigne.
+Innocente.
+
+Le défaut était ailleurs, et il se lit d'un coup en profil de bandes : au
+moment du cri, **toutes** les bandes de 60 Hz à 4 kHz étaient pleines à
++9/+12 dB. Onze sources simultanées, plus 2,6 s de réverbération sur chacune.
+C'est du **masquage**, et l'oreille le rapporte comme une saturation parce
+qu'elle n'a plus rien à quoi se raccrocher.
+
+Il ne se corrige pas au niveau — le monter l'aggrave. Il se corrige en
+**enlevant** : une couche de cri au lieu de deux, le crépitement supprimé, le
+lit descendu de 5 dB, la réverbération de 2,6 à 1,8 s. Relief spectral du cri
+9,5 → 11,5 dB, et la boue sous 125 Hz de 10,4 à 2,4 dB.
+
+```bash
+# le bon relevé n'est pas volumedetect mais le profil par octaves :
+# des bandes toutes egales = de la boue, quel que soit le niveau
+```
+
+## Un carton fabriqué depuis la dernière image hérite du texte de cette image
+
+Le carton d'annonce de l'épisode suivant est fabriqué à partir de la dernière
+image du film — c'est ce qui lui évite le fond noir. Mais cette image portait
+encore un titre incrusté, et il s'est retrouvé **figé derrière** les trois
+lignes du carton : quatre textes empilés, illisibles.
+
+Rien dans le code ne pouvait le signaler : les deux traitements sont corrects
+séparément. C'est leur composition qui produit le défaut, et elle ne se voit
+qu'à l'écran.
+
+**Un titre doit s'éteindre avant la dernière image** dès lors qu'on reprend
+cette image ailleurs. Ici 0,6 s de marge. Vaut pour toute vignette, toute
+miniature, tout carton tiré d'une frame du montage.
+
+## Ce qui ouvre une vidéo se regarde, il ne se traverse pas
+
+L'affiche d'ouverture durait 0,6 s — calibrée pour « dire vite ce qu'on
+regarde ». Retour à l'écoute : « on ne voit pas le titre, on ne voit même pas
+la beauté de cette image ». Passée à 1,5 s, elle fait son travail.
+
+Le chiffre de départ venait d'une bonne règle appliquée trop loin : sur un
+format court, chaque dixième compte. Mais une image qu'on ne peut pas lire ne
+coûte pas 0,6 s, elle les **gaspille** — c'est le pire des deux mondes.
+
+## `set -o pipefail` inverse `commande | grep -q`
+
+Un script de vérification annonçait un ffmpeg dépourvu de `drawtext`, de
+`libass`, de `libx264` et de `aac` — sur une machine où les quatre étaient
+présents et servaient depuis des heures.
+
+`grep -q` sort au **premier** résultat trouvé et ferme le tuyau. La commande
+en amont, qui écrit encore, meurt alors en SIGPIPE — statut 141. Avec
+`pipefail`, c'est ce 141 que le pipeline rend. **Trouver se lit comme
+échouer**, et l'inversion est totale et silencieuse.
+
+La parade tient en une ligne : relever la sortie **une fois** dans une
+variable, grepper la variable ensuite.
+
+```bash
+LISTE=$("$FF" -hide_banner -filters 2>/dev/null || true)
+printf '%s' "$LISTE" | grep -q " drawtext "
+```
+
+Vaut pour tout `grep -q`, `head`, `sed -n '1p'` — tout ce qui sort tôt — placé
+en aval d'une commande bavarde, dans un script en `pipefail`.
+
+## Un ffmpeg qui encode parfaitement peut ne rien savoir écrire
+
+`pip install imageio-ffmpeg` pose un binaire ffmpeg complet côté codecs et
+**dépourvu de `libfreetype` et `libass`**. Il lit, il encode, il filtre — et
+`drawtext` y est simplement introuvable. Pas d'avertissement, pas de repli :
+le filtre n'existe pas, la commande échoue sur une erreur de syntaxe qui ne
+nomme pas la cause.
+
+Quand deux ffmpeg cohabitent, `command -v` rend celui du `PATH`, qui est
+souvent le mauvais. **Le binaire système d'abord**, partout et sans exception :
+`/usr/bin/ffmpeg` s'il existe, `command -v` ensuite. C'est déjà ce que fait
+`monter_episode.ffmpeg()` ; tout script qui trace du texte doit passer par la
+même résolution, y compris les scripts de vérification — le mien s'est fait
+prendre par sa propre règle.
+
+## Un bruitage « cinéma » peut être du silence sur un téléphone
+
+Seize bruitages arrivent d'un coup, tous étiquetés cinéma : nappes sombres,
+subs massifs, énergie ésotérique. Relevé bande par bande avant de câbler quoi
+que ce soit, **la moitié avait toute son énergie sous 400 Hz** — la colonne
+« part du grave » affichait −0,0 dB par rapport au total.
+
+Un d'eux mesurait **−61,3 dB entendus**. Ce n'est pas un impact discret, c'est
+du silence, et aucun gain n'y change rien : on pousse plus fort ce que
+l'appareil ne restitue pas, et on mange la marge des sons qui, eux, passent.
+
+L'excitation harmonique les récupère, et le gain est sans commune mesure avec
+ce qu'un réglage de volume donnerait :
+
+| fichier | nu | excité | gagné |
+| --- | --- | --- | --- |
+| sub massif 1 | −61,3 dB | −28,7 | **+32,6** |
+| sub massif 2 | −46,8 | −34,1 | +12,7 |
+| nappe sombre | −27,4 | −20,6 | +6,7 |
+| énergie druide | −20,5 | −17,3 | +3,2 |
+| froissement | −20,3 | −20,5 | **−0,2** |
+
+La dernière ligne vaut les autres : sur un son qui vit **déjà** dans le médium,
+l'excitation ne rend rien. Elle se réserve au grave, et elle se mesure au lieu
+de se supposer — comme la mise en garde « ça grésille sur un enregistrement
+réel », qui vaut pour un signal déjà riche en harmoniques et pas pour une nappe
+purement grave : rugosité relevée ici, +0,002 à +0,016. Rien.
+
+Plusieurs de ces fichiers décodaient par ailleurs **au-dessus du plein
+échelle** (jusqu'à 1,42). Les sommer tels quels écrête avant même le limiteur.
+
+## `-shortest` tronque la vidéo quand c'est l'audio qui est plus court
+
+Remuxer une image intacte avec un nouveau mixage et poser `-shortest` par
+réflexe : la vidéo est ressortie **plus courte de 0,2 s**. L'AAC rend un flux
+qui ne tombe pas au même endroit que l'image — 21,696 s contre 21,749 — et
+`-shortest` a coupé sur le plus court des deux.
+
+Deux dixièmes, soit la dernière ligne du carton de fin. Rien dans les mesures
+de son ne pouvait le dire ; c'est le contrôle de durée par flux qui l'attrape,
+et c'est pour cela qu'il fait partie des trois relevés avant envoi.
+
+**Un mixage se cale sur la durée du flux VIDÉO**, pas sur celle de l'audio
+décodé ni sur celle du conteneur. On complète l'audio par du silence, jamais on
+ne raccourcit l'image.
+
+## Un contrôle vert ne dit pas qu'un fichier est regardable
+
+L'export d'Amorce enregistre le canvas **en temps réel** : le fichier ne reçoit
+que les images réellement composées pendant la lecture. Composer une image en
+1080 × 1920 coûte environ 213 ms sur une machine de bureau — donc le fichier
+livré reçoit cinq images par seconde au lieu de trente.
+
+**Le défaut a vécu toute la vie du projet sans que rien ne le voie.** Quatre
+contrôles portaient pourtant sur l'export, et tous restaient verts : la durée
+était bonne, la définition était bonne, l'image n'était pas noire, le son était
+là. Aucun ne comptait les images.
+
+Mesuré à la découverte : **35 images pour 7,5 secondes** sur la machine de
+vérification, **9** sur un processeur bridé quatre fois. Un diaporama.
+
+Trois choses en découlent :
+
+- **Vérifier ce qui définit le média, pas seulement ce qui l'identifie.** Durée,
+  taille et présence de son décrivent un conteneur ; la cadence, le niveau et le
+  relief décrivent ce qu'on regarde. Un fichier peut être parfaitement conforme
+  et illisible.
+- **Chercher d'abord si le défaut est ancien.** Deux commandes — reprendre le
+  commit d'avant, refaire la mesure — évitent de corriger ce qu'on n'a pas
+  cassé. Ici : 27 images avant les optimisations, 35 après.
+- **Une suite rouge en permanence apprend à ignorer la suite.** Quand le
+  correctif dépasse la session, on affiche la mesure à chaque passage plutôt que
+  de laisser un contrôle échouer sans fin. Le jour où le correctif arrive, la
+  ligne redevient un contrôle.
+
+Ce qu'il faudrait pour le corriger, et pourquoi ce n'est pas une demi-journée :
+un encodage **hors ligne**, donc décoder les rushes avec `VideoDecoder` au lieu
+de les lire dans un élément `<video>` — ce qui suppose un démultiplexeur, aucune
+API du navigateur ne le faisant. Piloter les `<video>` image par image n'est pas
+une issue : mesuré à **265 ms par déplacement séquentiel**, soit 2,6 minutes
+pour un film de vingt secondes.
