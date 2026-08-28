@@ -81,6 +81,7 @@ while IFS= read -r f; do
     agence/*)        inscrire agence ;;
     look_and_find/*) inscrire flutter ;;
     hypersensible-bienveillance/*) inscrire hypersensible ;;
+    titan-builder/*) inscrire titan ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
                      inscrire amorce ;;
   esac
@@ -165,6 +166,19 @@ lancer_hypersensible() {
   return $e
 }
 
+lancer_titan() {
+  local d="titan-builder"; local j="$journal/titan"; local e=0
+  # Lint et typecheck ne se lisent pas l'un l'autre : ils partent ensemble.
+  ( cd "$d" || exit 1; etape "$j.lint"      "lint"      npm run lint ) & local a=$!
+  ( cd "$d" || exit 1; etape "$j.typecheck" "typecheck" npm run typecheck ) & local b=$!
+  ( cd "$d" || exit 1; etape "$j.test"      "tests"     npm test ) & local c=$!
+  wait $a || e=1; wait $b || e=1; wait $c || e=1
+  # Le build ferme la marche, seul à voir ce que `tsc` laisse passer.
+  ( cd "$d" || exit 1; etape "$j.build" "build" npm run build || exit 1 ) || e=1
+  cat "$j".{lint,typecheck,test,build} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_flutter() {
   local j="$journal/flutter"; local e=0
   if ! command -v flutter >/dev/null 2>&1; then
@@ -194,6 +208,7 @@ for p in $projets; do
     agence)  lancer_agence  & pid_de[agence]=$! ;;
     flutter) lancer_flutter & pid_de[flutter]=$! ;;
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
+    titan)   lancer_titan & pid_de[titan]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
   esac
 done
@@ -212,6 +227,7 @@ nom_lisible() {
     agence)  echo "Socle Agence" ;;
     flutter) echo "Look & Find" ;;
     hypersensible) echo "Hypersensible & Bienveillance" ;;
+    titan)   echo "TITAN Builder" ;;
     py:*)    echo "${1#py:}" ;;
   esac
 }

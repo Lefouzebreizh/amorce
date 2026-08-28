@@ -49,6 +49,7 @@ commandes=(
   "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
   "Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
   "Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
+  "TITAN Builder : (dans titan-builder/) npm run lint|typecheck|test|build"
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
 )
 
@@ -61,6 +62,14 @@ echo "── Socle Agence : dépendances npm"
 # de la racine ne lui servent à rien, et les siennes ne doivent pas remonter.
 cd "$racine/agence"
 npm install --no-audit --no-fund --silent
+
+echo "── TITAN Builder : dépendances npm"
+# Projet Next.js indépendant. Le `cd` n'est pas une précaution de style : lancé
+# depuis la racine, npm remonte et installe ses paquets dans ceux du studio
+# Amorce, où la CI de TITAN ne les trouvera pas.
+cd "$racine/titan-builder"
+npm install --no-audit --no-fund --silent
+cd "$racine"
 
 echo "── Hypersensible & Bienveillance : dépendances npm"
 # Projet Astro + Cloudflare indépendant. Le `.npmrc` du dossier existe pour la

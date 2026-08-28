@@ -88,6 +88,23 @@ npm run dev        # dans un autre terminal
 npm run verify
 ```
 
+## TITAN Builder — `titan-builder/`
+
+```bash
+cd titan-builder
+npm run lint && npm run typecheck && npm test && npm run build
+```
+
+Les trois premières partent ensemble dans `verifier.sh`, le build ferme la
+marche. Ce qu'elles **ne voient pas** : le parcours du configurateur. Un
+sous-composant défini dans un rendu fait sauter le curseur à chaque frappe sans
+qu'aucun test unitaire ne bronche — il faut conduire les cinq étapes dans un
+vrai navigateur pour l'attraper.
+
+Et `next dev` refuse de servir `/_next/` à `127.0.0.1`, qu'il tient pour une
+origine tierce : la page se charge, son code non, les champs se remplissent et
+React ne les voit pas. **Piloter par `http://localhost:3000`.**
+
 ## Réseau d'annuaires IA — `annuaire-ia/`
 
 ```bash

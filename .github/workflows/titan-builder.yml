@@ -1,0 +1,60 @@
+# Barrière de TITAN Builder.
+#
+# Le projet est un Next.js indépendant, niché dans un dépôt qui en porte
+# d'autres. C'est exactement le cas où une vérification verte en session ment :
+# TypeScript et npm remontent l'arborescence, un paquet oublié dans le
+# `package.json` du projet se trouve donc chez le voisin d'au-dessus. Le runner,
+# lui, n'installe que ce dossier — et la même commande rougit.
+#
+# D'où `npm ci` **dans** `titan-builder`, et rien d'autre installé à la racine.
+
+name: TITAN Builder
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'titan-builder/**'
+      - '.github/workflows/titan-builder.yml'
+  pull_request:
+    paths:
+      - 'titan-builder/**'
+      - '.github/workflows/titan-builder.yml'
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: titan-builder
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: titan-builder/package-lock.json
+
+      - name: Installer les dépendances du projet
+        run: npm ci
+
+      # Les trois premières sont séparées pour que le résumé dise laquelle a
+      # cassé, et `!cancelled()` les laisse toutes parler : un lint rouge
+      # n'empêche pas de savoir si les tests le sont aussi.
+      - name: Lint
+        run: npm run lint
+
+      - name: Typage
+        if: '!cancelled()'
+        run: npm run typecheck
+
+      - name: Tests
+        if: '!cancelled()'
+        run: npm test
+
+      # Le build ferme la marche : seul à voir ce que `tsc` laisse passer.
+      - name: Build
+        if: '!cancelled()'
+        run: npm run build

@@ -60,6 +60,11 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
+- **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
+  client configure lui-même le site vitrine qu'il achète : quatre modèles, un
+  formulaire en cinq étapes, un dossier de commande écrit et envoyé par
+  courriel. Le prix est **recalculé côté serveur**, jamais lu depuis le
+  navigateur, et le formulaire partage sa validation avec la route d'API.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
   sont dans son `public/llms.txt`, pas ici.
