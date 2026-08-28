@@ -1,0 +1,283 @@
+{
+  "_lisez_moi": [
+    "MORVAETH — l'episode violet. Remplacer les chemins de « source ».",
+    "",
+    "  AFFICHE   0,00 -  0,50",
+    "  MONTEE    0,50 -  8,30   le sorcier, les cercles, le vortex",
+    "  MORVAETH  8,30 - 12,30   la creature, RALENTIE DE MOITIE",
+    "",
+    "La creature ne dure que 2 s en source. Ralentie a 0,5x avec interpolation,",
+    "elle en occupe 4 : deux fois et demie plus longtemps, et surtout plus lourde.",
+    "Une masse pareille ne doit pas bouger vite.",
+    "",
+    "Teinte 263°, violet. La LUT teal_orange est ECARTEE : elle le tirerait vers",
+    "le cyan. Les couleurs de texte viennent de sa teinte.",
+    "",
+    "Une voix off est mixee apres coup (voir la commande dans le README) : rien",
+    "n'est dit dans le plan, donc des sous-titres sans voix seraient un mensonge",
+    "a l'ecran."
+  ],
+  "bibliotheque": "sfx_library",
+  "effets_db": 9,
+  "largeur_stereo": 2.6,
+  "reverberation_s": 2.8,
+  "finition": {
+    "_note": "pas de LUT : la teal_orange tirerait le violet vers le cyan.",
+    "etalonnage": {
+      "force": 0.5,
+      "grain": 0
+    },
+    "calques": [
+      {
+        "fichier": "visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4",
+        "fusion": "screen",
+        "opacite": 0.09
+      }
+    ]
+  },
+  "plans": [
+    {
+      "nom": "affiche",
+      "source": "rushes/affiche_aznaroth.mp4",
+      "depart": 0.0,
+      "duree": 0.5,
+      "cible_db": -24.0
+    },
+    {
+      "nom": "montee",
+      "source": "rushes/Cosmic_Druid_Sorcerer_Titan_Awakening.mp4",
+      "depart": 0.3,
+      "duree": 7.8,
+      "cible_db": -18.0,
+      "zoom": 0.12
+    },
+    {
+      "nom": "morvaeth",
+      "source": "rushes/Cosmic_Druid_Sorcerer_Titan_Awakening.mp4",
+      "depart": 8.1,
+      "duree": 4.0,
+      "cible_db": -11.0,
+      "zoom": 0.22,
+      "vitesse": 0.5,
+      "interpolation": true,
+      "tremblements": [
+        {
+          "debut": 0.3,
+          "duree": 0.35,
+          "force": 0.085
+        },
+        {
+          "debut": 2.2,
+          "duree": 0.3,
+          "force": 0.07
+        }
+      ],
+      "_note": "2 s de source lues a mi-vitesse : la creature pese"
+    }
+  ],
+  "effets": [
+    {
+      "son": "braam",
+      "instant": 0.0,
+      "gain": 8,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.2,
+        "fondamentale": 48.0,
+        "graine": 140
+      }
+    },
+    {
+      "son": "eclat",
+      "instant": 0.0,
+      "gain": 10,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.9,
+        "graine": 142,
+        "densite": 200.0
+      }
+    },
+    {
+      "son": "whoosh_rapide",
+      "instant": 0.35,
+      "gain": 6,
+      "distance": "moyen"
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 0.5,
+      "gain": -3,
+      "largeur": 16,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 5.2,
+        "fondamentale": 46.0,
+        "graine": 88
+      }
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 0.5,
+      "gain": -5,
+      "distance": "lointain"
+    },
+    {
+      "son": "carillon",
+      "instant": 2.9,
+      "gain": 3,
+      "largeur": 14,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.6,
+        "fondamentale": 740.0,
+        "graine": 150
+      }
+    },
+    {
+      "son": "carillon",
+      "instant": 3.55,
+      "gain": 4,
+      "largeur": 14,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.6,
+        "fondamentale": 990.0,
+        "graine": 151
+      }
+    },
+    {
+      "son": "montee_sans_fin",
+      "instant": 2.6,
+      "gain": 2,
+      "largeur": 18,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 5.4,
+        "graine": 77,
+        "cycle": 3.6
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 5.05,
+      "gain": 6,
+      "distance": "moyen"
+    },
+    {
+      "son": "aspiration",
+      "instant": 5.2,
+      "gain": 7,
+      "largeur": 22,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 2.6,
+        "graine": 44,
+        "tours_final": 34.0
+      }
+    },
+    {
+      "son": "chute_sous_grave",
+      "instant": 8.05,
+      "gain": 5,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.8,
+        "graine": 45,
+        "depart_hz": 150.0
+      }
+    },
+    {
+      "son": "braam_massif",
+      "instant": 8.3,
+      "gain": 12,
+      "distance": "proche"
+    },
+    {
+      "son": "grondement_terre",
+      "instant": 8.3,
+      "gain": 7,
+      "distance": "lointain"
+    },
+    {
+      "son": "crepitement",
+      "instant": 8.35,
+      "gain": -1,
+      "largeur": 22,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 3.9,
+        "densite": 90.0,
+        "graine": 775
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 9.1,
+      "gain": 9,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.3,
+        "graine": 79,
+        "poids_tonnes": 1.6
+      }
+    },
+    {
+      "son": "braam_double",
+      "instant": 10.3,
+      "gain": 10,
+      "distance": "proche"
+    },
+    {
+      "son": "cri_titan",
+      "instant": 10.55,
+      "gain": 15,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.7,
+        "fondamentale": 44.0,
+        "graine": 31,
+        "dechirure": 1.3
+      },
+      "_note": "le rugissement, le plus fort du film"
+    }
+  ],
+  "sous_titres": [
+    {
+      "texte": "RIFT ZERO FIVE",
+      "debut": 1.3,
+      "fin": 2.55,
+      "secousse": 8.0,
+      "couleur": "#c9a8ff",
+      "halo": "#6b20e5"
+    },
+    {
+      "texte": "BREACH OPEN",
+      "debut": 2.95,
+      "fin": 4.15,
+      "secousse": 8.0,
+      "couleur": "#c9a8ff",
+      "halo": "#6b20e5"
+    },
+    {
+      "texte": "THE SHADOW TITAN AWAKENS",
+      "debut": 4.28,
+      "fin": 5.9,
+      "secousse": 8.0,
+      "couleur": "#c9a8ff",
+      "halo": "#6b20e5"
+    }
+  ],
+  "titres": [
+    {
+      "texte": "MORVAETH",
+      "debut": 10.4,
+      "fin": 12.2,
+      "y": 300,
+      "taille": 104,
+      "secousse": 10.0,
+      "couleur": "#e0ccff",
+      "halo": "#6b20e5"
+    }
+  ]
+}
