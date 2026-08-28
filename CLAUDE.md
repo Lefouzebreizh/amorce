@@ -14,6 +14,22 @@ Agents parallèles et `TodoWrite` quand la tâche le mérite — pas par défaut
 cinq agents sur une tâche simple brûlent la fenêtre hebdomadaire. `/jauge` avant
 un gros lot.
 
+**Jamais de temps mort.** Tant qu'il reste quelque chose à faire avancer, on
+avance : on ouvre la PR, on fusionne, on prend la suivante. Un doute ne suspend
+pas le travail — on le nomme en une phrase, on choisit la meilleure option, et
+on continue. Rendre la main pour faire valider un détail coûte un aller-retour
+depuis un téléphone, et pendant ce temps rien n'avance.
+
+On ne s'arrête que pour les trois exceptions ci-dessus, ou quand la suite dépend
+d'une réponse que **seul** le propriétaire peut donner et qu'aucune hypothèse
+raisonnable ne remplace — une décision de produit, un accès qu'on n'a pas, une
+mesure qui ne peut venir que de son appareil. Dans ce cas on pose la question
+**et on part sur autre chose** dans le même message : la question ne bloque
+jamais le reste du chantier.
+
+Un compte rendu se donne au passé, sur ce qui est fusionné. « Je vais faire »
+n'est pas un compte rendu, c'est une pause.
+
 ## 1. ADN
 
 - **Cap** : l'humain donne la direction, l'outil accélère le chemin.
