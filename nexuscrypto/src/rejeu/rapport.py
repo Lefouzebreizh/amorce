@@ -24,6 +24,14 @@ from .rejeu import Resultat
 
 
 def _pourcent(valeur: float | None) -> str:
+    """`None` s'affiche « — », jamais « +0,0 % ».
+
+    Un zéro tiré d'une absence de mesure est la plus rassurante des
+    conclusions, et c'est exactement le défaut consigné dans
+    `second-brain/lecons.md` : « si l'ensemble mesuré était vide, que dirait mon
+    rapport ? »
+    """
+
     return "—" if valeur is None else f"{valeur:+.1%}"
 
 
@@ -118,10 +126,17 @@ def ligne_protection(resultat: Resultat) -> dict[str, str]:
     """Ce que la stratégie fait subir, pas ce qu'elle rapporte."""
 
     ratio = resultat.rendement_par_douleur
+    expose = resultat.drawdown_expose
+    sous_eau = resultat.temps_sous_eau
     return {
         "PnL": _pourcent(resultat.pnl_relatif),
-        "recul max": f"{resultat.drawdown_max:.1%}",
-        "temps sous l'eau": f"{resultat.temps_sous_eau:.0%}",
+        # Deux reculs, et ils ne disent pas la même chose : celui du
+        # portefeuille est ce que vit le compte, celui de l'exposé est ce que
+        # le marché fait subir. Seul le second se compare entre deux stratégies
+        # qui n'engagent pas le même capital.
+        "recul compte": f"{resultat.drawdown_max:.1%}",
+        "recul exposé": "—" if expose is None else f"{expose:.1%}",
+        "temps sous l'eau": "—" if sous_eau is None else f"{sous_eau:.0%}",
         "pire mois": _pourcent(resultat.pire_mois),
         "gain/douleur": "—" if ratio is None else f"{ratio:.2f}",
         "engagé": f"{resultat.capital_engage:,.0f} $",
@@ -155,7 +170,12 @@ def verdict_protection(comparaisons: list[tuple[str, Resultat, Resultat]]) -> st
             mieux += 1
         else:
             pire += 1
-        if abs(dynamique.temps_sous_eau - temoin.temps_sous_eau) < 0.03:
+        sous_eau_d, sous_eau_t = dynamique.temps_sous_eau, temoin.temps_sous_eau
+        if (
+            sous_eau_d is not None
+            and sous_eau_t is not None
+            and abs(sous_eau_d - sous_eau_t) < 0.03
+        ):
             egal_sous_eau += 1
 
     total = mieux + pire
@@ -166,9 +186,9 @@ def verdict_protection(comparaisons: list[tuple[str, Resultat, Resultat]]) -> st
     if pire == total:
         phrases.append(
             f"⚠ La protection **ne paie pas son prix** : le témoin rend plus par "
-            f"unité de recul sur {pire}/{total} fenêtre(s). Le recul de la "
-            "stratégie est bien plus faible, mais elle engage moins de capital — "
-            "et une stratégie qui n'investit rien a un recul nul."
+            f"unité de recul **exposé** sur {pire}/{total} fenêtre(s). Le recul "
+            "du compte flatte la stratégie parce qu'une grande part y dort en "
+            "liquide — et du liquide ne recule pas."
         )
     elif mieux == total:
         phrases.append(

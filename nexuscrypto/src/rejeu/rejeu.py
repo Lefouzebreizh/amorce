@@ -73,6 +73,10 @@ class Resultat:
     portefeuille: Portefeuille
     executions: list[Execution] = field(default_factory=list)
     courbe: list[tuple[datetime, float]] = field(default_factory=list)
+    # La valeur de ce qui est **réellement exposé au marché**, liquidités
+    # exclues. Sans elle, tout recul mesuré ici flatte : le portefeuille de la
+    # stratégie dort en grande partie en liquide, et du liquide ne recule pas.
+    courbe_exposee: list[tuple[datetime, float]] = field(default_factory=list)
     declenchements: list[cc.Declenchement] = field(default_factory=list)
     temporisations: int = 0
 
@@ -132,16 +136,20 @@ class Resultat:
     # ----------------------------------------------------------------------
 
     @property
-    def temps_sous_eau(self) -> float:
+    def temps_sous_eau(self) -> float | None:
         """Fraction du temps passée sous un sommet précédent.
 
         Le recul maximum dit à quel point ça a fait mal une fois ; celui-ci dit
         combien de temps ça a duré. Ce sont deux douleurs différentes, et c'est
         la seconde qui fait abandonner une stratégie.
+
+        Rend `None` sur une courbe vide, et pas `0.0` : sur rien du tout, zéro
+        se lirait « jamais sous l'eau », c'est-à-dire la meilleure nouvelle
+        possible tirée d'une absence de mesure.
         """
 
         if not self.courbe:
-            return 0.0
+            return None
         sommet = self.courbe[0][1]
         sous_eau = 0
         for _, valeur in self.courbe:
@@ -152,11 +160,15 @@ class Resultat:
         return sous_eau / len(self.courbe)
 
     @property
-    def pire_mois(self) -> float:
+    def pire_mois(self) -> float | None:
         """La pire variation d'un mois calendaire à l'autre.
 
         Calendaire et non glissant : c'est le relevé qu'on regarde, et c'est
         celui qui décide si on coupe tout un dimanche soir.
+
+        Rend `None` en deçà de deux mois, et pas `0.0` : « aucun mauvais mois »
+        est la plus rassurante des conclusions, et la tirer du vide est le
+        défaut consigné dans `second-brain/lecons.md`.
         """
 
         par_mois: dict[tuple[int, int], list[float]] = {}
@@ -164,7 +176,7 @@ class Resultat:
             par_mois.setdefault((instant.year, instant.month), []).append(valeur)
         mois = sorted(par_mois)
         if len(mois) < 2:
-            return 0.0
+            return None
         pire = 0.0
         for cle in mois:
             valeurs = par_mois[cle]
@@ -184,13 +196,48 @@ class Resultat:
         rien risqué n'est pas une performance infinie.
         """
 
-        if self.drawdown_max <= 0.0:
+        # Rapporté au recul **exposé** : le seul dénominateur qui soit
+        # réellement la chose qui risque quelque chose.
+        recul = self.drawdown_expose
+        if not recul:
             return None
-        return self.pnl_relatif / self.drawdown_max
+        return self.pnl_relatif / recul
+
+    @property
+    def drawdown_expose(self) -> float | None:
+        """Le pire recul de **ce qui est exposé au marché**, liquidités exclues.
+
+        C'est le seul recul qui décrive ce que le marché fait subir. Le recul du
+        portefeuille entier mélange deux choses — la baisse des positions, et le
+        fait qu'une grande part dorme en liquide — et flatte donc toute
+        stratégie qui investit peu. Le piège est consigné dans
+        `second-brain/lecons.md` : « une mesure qui inclut ce qui n'est pas
+        exposé flatte ». Il avait déjà coûté un aller-retour sur la mesure du
+        levier ; il était encore ici, dans la mesure de la protection.
+
+        `None` quand rien n'a jamais été exposé : n'avoir rien risqué n'est pas
+        un recul de zéro, c'est une absence de mesure.
+        """
+
+        exposees = [v for _, v in self.courbe_exposee if v > 0]
+        if not exposees:
+            return None
+        pire = 0.0
+        sommet = exposees[0]
+        for valeur in exposees:
+            sommet = max(sommet, valeur)
+            if sommet > 0:
+                pire = max(pire, (sommet - valeur) / sommet)
+        return pire
 
     @property
     def drawdown_max(self) -> float:
-        """Le pire recul depuis un sommet de la courbe de valeur."""
+        """Le pire recul du portefeuille entier, liquidités comprises.
+
+        Conservé parce que c'est ce que vit le propriétaire du compte — mais il
+        ne se compare **pas** entre deux stratégies qui n'engagent pas le même
+        capital. Pour cela, `drawdown_expose`.
+        """
 
         pire = 0.0
         sommet = self.capital_initial
@@ -267,6 +314,7 @@ def rejouer(
         prix_courant = {serie.symbole: bougies[i].cloture}
         valeur = portefeuille.valeur_totale(prix_courant)
         resultat.courbe.append((instant, valeur))
+        resultat.courbe_exposee.append((instant, valeur - portefeuille.liquidites_usd))
 
         if not plat:
             declenchement = disjoncteur.observer(
@@ -303,8 +351,10 @@ def rejouer(
         )
 
     dernier = bougies[-1]
-    resultat.courbe.append(
-        (dernier.horodatage, portefeuille.valeur_totale({serie.symbole: dernier.cloture}))
+    finale = portefeuille.valeur_totale({serie.symbole: dernier.cloture})
+    resultat.courbe.append((dernier.horodatage, finale))
+    resultat.courbe_exposee.append(
+        (dernier.horodatage, finale - portefeuille.liquidites_usd)
     )
     resultat.portefeuille = portefeuille
     return resultat

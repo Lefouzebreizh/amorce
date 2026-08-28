@@ -186,7 +186,9 @@ class TestMesures(unittest.TestCase):
         resultat = Resultat(nom="x", symbole="X/USDT", capital_initial=100.0,
                             portefeuille=None)  # type: ignore[arg-type]
         resultat.courbe = [(DEBUT, 100.0), (DEBUT, 150.0), (DEBUT, 90.0), (DEBUT, 120.0)]
+        resultat.courbe_exposee = list(resultat.courbe)
         self.assertAlmostEqual(resultat.drawdown_max, 0.4)
+        self.assertAlmostEqual(resultat.drawdown_expose, 0.4)
 
 
 class TestProtection(unittest.TestCase):
@@ -196,6 +198,9 @@ class TestProtection(unittest.TestCase):
         r = Resultat(nom="x", symbole="X/USDT", capital_initial=capital,
                      portefeuille=None)  # type: ignore[arg-type]
         r.courbe = [(DEBUT + timedelta(days=i), v) for i, v in enumerate(valeurs)]
+        # Tout est exposé dans ces fabrications : c'est le cas le plus sévère
+        # pour la stratégie, donc celui qui ne peut pas flatter.
+        r.courbe_exposee = list(r.courbe)
         return r
 
     def test_temps_sous_eau(self):
@@ -239,12 +244,46 @@ class TestProtection(unittest.TestCase):
         # Et pourtant la grosse rend bien plus par unité de douleur.
         self.assertGreater(grosse.rendement_par_douleur, petite.rendement_par_douleur)
 
+    def test_le_liquide_ne_doit_pas_amortir_le_recul(self):
+        """Le défaut publié puis corrigé : mesuré sur le compte, un
+        portefeuille à moitié liquide recule deux fois moins ; mesuré sur ce
+        qui est exposé, il recule autant. Le premier chiffre flatte toute
+        stratégie qui investit peu."""
+
+        r = Resultat(nom="x", symbole="X/USDT", capital_initial=200.0,
+                     portefeuille=None)  # type: ignore[arg-type]
+        # 100 $ dorment en liquide ; la position passe de 100 à 50.
+        r.courbe = [(DEBUT, 200.0), (DEBUT, 150.0)]
+        r.courbe_exposee = [(DEBUT, 100.0), (DEBUT, 50.0)]
+        self.assertAlmostEqual(r.drawdown_max, 0.25)
+        self.assertAlmostEqual(r.drawdown_expose, 0.50)
+
+    def test_sans_rien_d_expose_le_recul_est_indefini(self):
+        """N'avoir rien risqué n'est pas un recul de zéro : c'est une absence
+        de mesure, et zéro se lirait comme la meilleure protection possible."""
+
+        r = Resultat(nom="x", symbole="X/USDT", capital_initial=100.0,
+                     portefeuille=None)  # type: ignore[arg-type]
+        r.courbe = [(DEBUT, 100.0), (DEBUT, 100.0)]
+        r.courbe_exposee = [(DEBUT, 0.0), (DEBUT, 0.0)]
+        self.assertIsNone(r.drawdown_expose)
+        self.assertIsNone(r.rendement_par_douleur)
+
+    def test_une_courbe_vide_ne_dit_pas_jamais_sous_l_eau(self):
+        vide = Resultat(nom="x", symbole="X/USDT", capital_initial=100.0,
+                        portefeuille=None)  # type: ignore[arg-type]
+        self.assertIsNone(vide.temps_sous_eau)
+        self.assertIsNone(vide.pire_mois)
+
     def test_le_verdict_de_protection_sait_dire_non(self):
         faible = self._resultat_courbe([100.0, 105.0, 98.0, 103.0])
         fort = self._resultat_courbe([100.0, 160.0, 130.0, 190.0])
         texte = mise_en_forme.verdict_protection([("réel", faible, fort)])
         self.assertIn("ne paie pas son prix", texte)
-        self.assertIn("n'investit rien a un recul nul", texte)
+        # Le verdict doit nommer le **recul exposé**, pas celui du compte :
+        # c'est le seul dénominateur qui soit la chose qui risque quelque chose.
+        self.assertIn("exposé", texte)
+        self.assertIn("du liquide ne recule pas", texte)
 
     def test_le_verdict_signale_un_temps_sous_l_eau_identique(self):
         """Réduire l'amplitude de la douleur sans réduire sa durée n'est pas
@@ -493,8 +532,10 @@ class TestVerdict(unittest.TestCase):
 
         dyn = self._resultat(achats=True, prix=80.0)
         dyn.courbe = [(DEBUT, 1000.0), (DEBUT, 1100.0)]
+        dyn.courbe_exposee = list(dyn.courbe)
         tem = self._resultat(achats=True, prix=100.0)
         tem.courbe = [(DEBUT, 1000.0), (DEBUT, 1400.0)]
+        tem.courbe_exposee = list(tem.courbe)
         texte = mise_en_forme.verdict([("2022", dyn, tem)])
         self.assertIn("gagne moins", texte)
         self.assertIn("acheter moins cher en achetant moins", texte)

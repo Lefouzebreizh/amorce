@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 310 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 313 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **310 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **313 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -260,7 +260,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 310 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 313 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -510,8 +510,9 @@ fenêtres, un seul actif, seize ans d'un marché historiquement haussier.
 **Cette section a d'abord porté une consolation, et elle était fausse.** Elle
 disait qu'une stratégie qui protège le capital a une valeur que le PnL brut ne
 mesure pas, en s'appuyant sur un recul maximum systématiquement plus faible que
-celui du témoin. C'était vrai et sans portée : la protection a été mesurée
-depuis, elle ne paie pas son prix, et le § 11 le montre. La phrase est
+celui du témoin. C'était vrai et sans portée, et pire : la protection a été mesurée
+depuis, et elle n'existe pas — le recul apparent venait des liquidités non
+investies, comme le montre le § 11. La phrase est
 remplacée plutôt que nuancée — une consolation non mesurée dans un dépôt qui
 mesure est pire qu'un silence.
 
@@ -543,62 +544,71 @@ le défaut livré. Il n'est pas meilleur partout : il perd 10 points sur
 
 ---
 
-## 11. Et la protection ne paie pas son prix
+## 11. La protection n'existe pas — et je l'avais publiée à l'envers
 
-La section 10 laisse une porte ouverte : la stratégie perd en rendement, mais
-peut-être protège-t-elle. C'est mesurable, donc c'est mesuré.
+Cette section a d'abord annoncé que la stratégie protégeait le capital sans que
+cette protection paie son prix. **C'était faux, et exactement à l'envers.** La
+correction est plus instructive que le résultat, alors elle vient d'abord.
 
-```bash
-python3 main.py rejeu --coinmetrics btc.csv --symbole BTC/USD \
-        --depuis 2020-01-01 --jusqu-a 2021-12-31
-```
+### Le défaut : mesurer le recul d'un compte à moitié liquide
 
-**Le piège de cette famille de mesures est énorme, et il faut le poser d'abord :
-une stratégie qui n'investit rien a un recul nul.** Comparer des reculs bruts
-entre deux stratégies qui n'engagent pas le même capital ne mesure que la
-différence de capital. La seule colonne qui se compare honnêtement est donc le
-**gain par unité de recul**.
+Le recul était calculé sur la **valeur totale du portefeuille**, liquidités
+comprises. Or la stratégie laisse dormir l'essentiel de son capital en liquide,
+et du liquide ne recule pas. Le chiffre mesurait donc surtout la proportion de
+liquide, et il flattait mécaniquement toute stratégie qui investit peu.
 
-| fenêtre | | PnL | recul max | temps sous l'eau | pire mois | **gain/douleur** |
-| --- | --- | --- | --- | --- | --- | --- |
-| 2017 | stratégie | +104,4 % | 37,6 % | 77 % | −17,4 % | 2,78 |
-| | témoin | +466,0 % | 49,2 % | 76 % | −25,3 % | **9,47** |
-| 2018 | stratégie | +35,8 % | 8,4 % | 90 % | −1,5 % | 4,25 |
-| | témoin | +111,4 % | 20,9 % | 89 % | −13,2 % | **5,34** |
-| 2020-21 | stratégie | +42,7 % | 30,9 % | 86 % | −20,0 % | 1,38 |
-| | témoin | +124,5 % | 51,2 % | 86 % | −33,8 % | **2,43** |
-| 2022 | stratégie | +17,2 % | 8,4 % | 90 % | −4,2 % | 2,05 |
-| | témoin | +39,4 % | 15,9 % | 90 % | −5,1 % | **2,48** |
-| 2023-25 | stratégie | +1,5 % | 19,7 % | 91 % | −10,3 % | 0,07 |
-| | témoin | +37,4 % | 31,8 % | 90 % | −17,4 % | **1,18** |
+Le piège était déjà consigné dans `second-brain/lecons.md` sous le nom
+« **une mesure qui inclut ce qui n'est pas exposé flatte** », après avoir coûté
+un aller-retour sur la mesure du levier. Il était encore ici, à quelques heures
+d'intervalle, dans une section qui prétendait justement débusquer ce genre de
+biais. Le harnais mesure désormais les deux : le recul du **compte**, qui est
+ce que vit le propriétaire, et le recul de l'**exposé**, seul comparable entre
+deux stratégies qui n'engagent pas le même capital.
 
-**La protection est réelle.** Le recul maximum de la stratégie est deux fois
-plus faible sur trois des cinq fenêtres, et son pire mois est toujours plus
-doux — sur 2018, −1,5 % contre −13,2 %.
+### Ce que dit la mesure correcte
 
-**Et elle ne paie pas son prix.** Rapporté au gain, le DCA aveugle rend plus par
-unité de recul sur les **cinq** fenêtres. La protection est achetée, elle n'est
-pas offerte : elle coûte plus de rendement qu'elle n'épargne de douleur.
+| fenêtre | | recul du compte | **recul exposé** | gain/douleur |
+| --- | --- | --- | --- | --- |
+| 2017 | stratégie | 37,6 % | **73,8 %** | 1,41 |
+| | témoin | 49,2 % | 49,3 % | **9,45** |
+| 2018 | stratégie | 8,4 % | **81,2 %** | 0,44 |
+| | témoin | 20,9 % | 36,4 % | **3,06** |
+| 2020-21 | stratégie | 30,9 % | **46,7 %** | 0,91 |
+| | témoin | 51,2 % | 48,0 % | **2,59** |
+| 2022 | stratégie | 8,4 % | **85,1 %** | 0,20 |
+| | témoin | 15,9 % | 21,3 % | **1,86** |
+| 2023-25 | stratégie | 19,7 % | **88,9 %** | 0,02 |
+| | témoin | 31,8 % | 32,1 % | **1,17** |
 
-**Le temps passé sous l'eau, lui, ne bouge pas du tout.** 77 % contre 76 %,
-90 % contre 89 %, 86 % contre 86 %. La stratégie réduit l'**amplitude** de la
-douleur, jamais sa **durée** — or c'est la durée qui fait abandonner une
-stratégie un dimanche soir. La consolation qu'on aurait pu se donner ne tient
-pas non plus.
+Lue sur le compte, la stratégie recule deux fois moins que le témoin sur les
+cinq fenêtres. Lue sur ce qui est réellement exposé au marché, **elle recule
+bien plus fort sur quatre d'entre elles** — 81 % contre 36 % en 2018, 85 %
+contre 21 % en 2022.
+
+**La stratégie ne protège rien. Elle immobilise.** Ce qu'elle met en marché
+souffre davantage qu'un achat aveugle, et le seul amortisseur est le capital
+qu'elle n'a pas investi — ce que n'importe qui obtient en laissant de l'argent
+sur son compte courant, sans moteur de décision.
+
+L'explication tient à sa nature contrarienne : elle concentre ses achats dans
+les creux, donc ses positions naissent au milieu des chutes et en encaissent
+toute la fin. Le DCA aveugle étale ses entrées, et ses lots les plus anciens
+amortissent les suivants.
+
+### Le temps sous l'eau ne bouge toujours pas
+
+77 % contre 76 %, 90 % contre 89 %, 86 % contre 86 %. La stratégie ne réduit ni
+l'amplitude réelle de la douleur, ni sa durée.
 
 ### Où cela laisse le projet
 
-Sur les deux axes mesurés — rendement, et protection normalisée — **cette
-stratégie est dominée par un DCA aveugle sur les cinq fenêtres testées.** Ce
-n'est pas un défaut de réglage qu'une pondération corrigerait : les trois
-corrections déjà apportées (plancher de discipline, note relative à la tendance,
-redistribution des poids absents) ont réduit l'écart sans jamais le renverser.
+Sur les trois axes mesurés — rendement, protection normalisée, protection
+réelle de ce qui est exposé — **cette stratégie est dominée par un DCA aveugle
+sur les cinq fenêtres testées.** Aucune des quatre corrections apportées ne
+renverse ce constat.
 
-Ce que le harnais ne peut pas trancher : le comportement sur un actif qui **ne**
-monte pas structurellement, un portefeuille à cinq lignes plutôt qu'une, ou une
-période de plus de trois ans sans que le plafond d'exposition ne fausse tout.
-Les trois sont hors de portée d'ici — le premier faute de données on-chain
-équivalentes sur SOL, ETH et HYPE, les deux autres faute de rejeu
-multi-actifs. **C'est le prochain vrai chantier, et tant qu'il n'est pas fait,
-la seule affirmation honnête sur ce moteur est celle-ci : sur Bitcoin, il n'a
-pas encore justifié sa complexité.**
+Ce que le harnais ne peut pas encore trancher : un portefeuille à cinq lignes
+plutôt qu'une, et un actif qui ne monte pas structurellement. C'est le chantier
+suivant. **Tant qu'il n'est pas fait, la seule affirmation honnête sur ce
+moteur reste : sur Bitcoin, il n'a pas justifié sa complexité — et sa
+protection apparente était un artefact de mesure.**
