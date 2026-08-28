@@ -35,14 +35,6 @@
             </samplecharacteristics></video></media>
             <pathurl>file:///home/user/amorce/visual_library/05_Matte_and_Bars/vignette_strong.png</pathurl>
           </clip>
-          <clip>
-            <name>vignette_soft.png</name>
-            <media><video><samplecharacteristics>
-              <width>3840</width>
-              <height>2160</height>
-            </samplecharacteristics></video></media>
-            <pathurl>file:///home/user/amorce/visual_library/05_Matte_and_Bars/vignette_soft.png</pathurl>
-          </clip>
         </children>
       </bin>
       <bin>

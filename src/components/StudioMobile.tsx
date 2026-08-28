@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { analyzeProject } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
@@ -12,16 +12,23 @@ import { STEPS, type StepId } from '@/lib/steps';
 import { ScoreBadge, UndoControls } from './ui';
 
 /**
- * Disposition téléphone.
+ * Disposition téléphone : une seule page qui défile.
  *
- * Rien n'est superposé : le panneau d'étape prend sa place dans le flux et
- * l'aperçu se réduit d'autant. Un panneau flottant par-dessus l'image
- * masquerait précisément ce qu'on est en train de régler, et il faudrait le
- * refermer à chaque vérification.
+ * Les sept étapes vivaient derrière une barre d'onglets. Le raisonnement était
+ * défendable — un panneau à la fois, toute la hauteur pour lui — mais il avait
+ * deux coûts mesurés. La barre occupait 628 px dans un écran de 393, donc
+ * Cinéma, Analyser et Exporter tenaient hors champ derrière un défilement
+ * latéral que personne ne découvre. Et surtout, elle demandait de **choisir**
+ * une étape avant de voir ce qu'elle contient, alors qu'on ne sait pas encore
+ * ce qu'on cherche.
  *
- * L'aperçu reste donc visible en permanence, plus petit quand un panneau est
- * ouvert. C'est le compromis qu'impose un écran de téléphone : on ne peut pas
- * avoir à la fois une grande image et un panneau de réglages confortable.
+ * Tout est donc à la suite, dans l'ordre du travail. On descend, on voit ce
+ * qui existe, on s'arrête où c'est utile. C'est le geste que le pouce fait
+ * déjà partout ailleurs, et il ne se rate pas.
+ *
+ * L'aperçu reste **collé en haut** : on règle une image, il faut la voir
+ * pendant qu'on la règle. Sans cela, chaque réglage demanderait de remonter,
+ * et c'est exactement ce qu'un panneau flottant faisait payer.
  */
 export function StudioMobile({
   engine,
@@ -34,19 +41,22 @@ export function StudioMobile({
   onStep: (step: StepId | null) => void;
 }) {
   const clipCount = useStudio((s) => s.project.clips.length);
-  const open = step !== null;
 
   /*
-   * Panneau ouvert, la hauteur devient la ressource rare, et il faut trancher :
-   * sur un écran de 640 px déjà amputé par la barre du navigateur, un aperçu
-   * utile, un panneau et une timeline ne tiennent pas ensemble.
-   *
-   * La timeline n'est donc conservée que pour l'étape de montage, la seule où
-   * désigner un plan n'a pas d'équivalent ailleurs — sous-titres et bruitages
-   * sont déjà listés dans leur propre panneau. Refermer le panneau, d'un seul
-   * appui sur l'onglet actif, rend l'écran entier à l'aperçu.
+   * Le guide ne change plus d'onglet : il fait défiler jusqu'à l'étape. Le
+   * parent continue de poser `step`, et c'est ce changement qu'on suit — ainsi
+   * « Aller à l'import » amène vraiment à l'import, au lieu de ne rien faire
+   * visiblement sur une page où tout est déjà là.
    */
-  const showTimeline = clipCount > 0 && (!open || step === 'montage');
+  useEffect(() => {
+    if (!step) return;
+    document.getElementById(ancre(step))?.scrollIntoView({
+      // `smooth` seulement si l'utilisateur ne l'a pas refusé : un défilement
+      // animé non désiré est exactement ce que `prefers-reduced-motion` vise.
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }, [step]);
 
   return (
     // `100dvh` et non `100vh` : sur mobile, la barre d'adresse se replie en
@@ -54,59 +64,54 @@ export function StudioMobile({
     <div className="flex h-[100dvh] flex-col overflow-hidden">
       <MobileHeader />
 
-      <section className="flex min-h-[9rem] flex-1 flex-col gap-2 overflow-hidden p-2">
-        <Preview engine={engine} />
-        {showTimeline && (
-          <div className="shrink-0">
-            <Timeline engine={engine} compact={open} />
-          </div>
-        )}
-      </section>
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        {/*
+          Collé en haut, et non simplement premier dans le flux : c'est ce qui
+          permet de régler un plan en le regardant. `bg-ink` est obligatoire —
+          un fond transparent laisserait défiler les panneaux **sous** l'image.
+        */}
+        {/*
+          Hauteur **fixe**, pas maximale. `Preview` s'étire sur la hauteur qu'on
+          lui donne ; sans valeur définie, un canvas 9:16 dans 393 px de large
+          en réclame près de sept cents et mange tout l'écran. Le premier essai
+          posait `max-h-[42dvh]`, qui ne contraint rien tant que rien ne fixe la
+          hauteur — l'aperçu prenait toute la page.
 
-      {open && (
-        <section
-          /*
-           * Volontairement sans `shrink-0` : sur un écran court, le panneau doit
-           * pouvoir céder de la hauteur à l'aperçu, dont la place minimale est
-           * garantie plus haut. Le figer produirait exactement le débordement
-           * qu'on cherche à éviter.
-           */
-          className="h-[38dvh] max-h-[24rem] min-h-[9rem] space-y-3 overflow-y-auto overscroll-contain border-t border-edge bg-slab px-3 pt-3 pb-5"
-          aria-label={STEPS.find((s) => s.id === step)?.label}
-        >
-          <div className="flex items-center justify-between px-0.5">
-            <span className="font-display text-[17px] tracking-tight text-mist">
-              {STEPS.find((s) => s.id === step)?.label}
-            </span>
-            <button
-              type="button"
-              onClick={() => onStep(null)}
-              className="-mr-1 min-h-11 rounded-lg px-3 text-[13px] text-muted hover:text-mist"
-            >
-              Fermer ✕
-            </button>
-          </div>
-
-          {/* La consigne ouvre le panneau : c'est panneau ouvert qu'on cherche
-              quoi faire, et l'en réserver à l'écran d'accueil la rendrait
-              absente au moment où elle sert le plus. */}
-          <NextStep onStep={onStep} />
-
-          <StepPanel step={step} engine={engine} onStep={onStep} />
+          `z-20` et non `z-10` : la barre de lecture vit dans le même bloc, et
+          les panneaux passaient dessous en défilant.
+        */}
+        <section className="sticky top-0 z-20 flex h-[38dvh] flex-col gap-1.5 bg-ink p-2 pb-1.5 shadow-[0_10px_18px_-10px_rgba(0,0,0,0.95)]">
+          <Preview engine={engine} />
+          {clipCount > 0 && <Timeline engine={engine} compact />}
         </section>
-      )}
 
-      {/* Panneau fermé, la consigne prend sa place au-dessus de la barre
-          d'étapes : elle reste visible quoi qu'il arrive. */}
-      {!open && (
-        <div className="shrink-0 px-2 pb-2">
+        <div className="space-y-3 px-2 pt-2 pb-8">
           <NextStep onStep={onStep} />
-        </div>
-      )}
 
-      <TabBar step={step} onStep={onStep} />
+          {STEPS.map((item) => (
+            <section
+              key={item.id}
+              id={ancre(item.id)}
+              aria-label={item.label}
+              // `scroll-mt` compense la hauteur de l'aperçu collé : sans lui,
+              // un saut vers une étape la place derrière l'image.
+              // Pas d'en-tête ici : chaque panneau porte déjà son titre
+              // numéroté. En ajouter un le faisait paraître deux fois, et une
+              // répétition se lit comme un bug avant de se lire comme un plan.
+              className="scroll-mt-[40dvh]"
+            >
+              <StepPanel step={item.id} engine={engine} onStep={onStep} />
+            </section>
+          ))}
+        </div>
+      </div>
     </div>
   );
+}
+
+/** L'ancre d'une étape, pour que le guide puisse y faire défiler la page. */
+export function ancre(id: StepId) {
+  return `etape-${id}`;
 }
 
 function MobileHeader() {
@@ -128,42 +133,5 @@ function MobileHeader() {
         {analysis.shotCount > 0 && <ScoreBadge score={analysis.score} compact />}
       </div>
     </header>
-  );
-}
-
-/**
- * Barre d'onglets.
- *
- * Elle défile horizontalement plutôt que de comprimer sept étapes dans la
- * largeur d'un téléphone : des cibles trop étroites se manquent au doigt, et
- * une étape qu'on rate est une étape qu'on n'utilise pas.
- */
-function TabBar({ step, onStep }: { step: StepId | null; onStep: (step: StepId | null) => void }) {
-  return (
-    <nav
-      className="flex shrink-0 gap-1 overflow-x-auto border-t border-edge bg-ink px-2 py-1.5"
-      style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
-      aria-label="Étapes du montage"
-    >
-      {STEPS.map((item) => {
-        const active = item.id === step;
-        return (
-          <button
-            key={item.id}
-            type="button"
-            aria-current={active ? 'step' : undefined}
-            // Un second appui sur l'étape ouverte referme le panneau et rend
-            // toute la hauteur à l'aperçu.
-            onClick={() => onStep(active ? null : item.id)}
-            className={`min-h-12 min-w-[5.25rem] shrink-0 rounded-xl px-2 py-1.5 text-center transition-colors ${
-              active ? 'bg-raised text-mist ring-1 ring-accent/60' : 'text-muted hover:bg-slab'
-            }`}
-          >
-            <span className="block text-[11px] leading-none opacity-60">{item.index}</span>
-            <span className="mt-1 block text-[12.5px] leading-tight font-semibold">{item.label}</span>
-          </button>
-        );
-      })}
-    </nav>
   );
 }

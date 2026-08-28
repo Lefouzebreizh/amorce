@@ -846,13 +846,19 @@ for (const id of ['#seuil', '#categorie', '#recherche'])
 # Démonstration
 # ─────────────────────────────────────────────────────────────────────────────
 
-def fabriquer_demo(assets: dict[str, Path], sortie: Path) -> bool:
-    """Dix secondes qui empilent la recette « layer blockbuster ».
+def fabriquer_demo(assets: dict[str, Path], sortie: Path, source: Path | None = None) -> bool:
+    """Dix secondes qui empilent la recette « layer blockbuster », en vertical.
 
-    Aucune prise de vue réelle n'étant joignable, le fond est fabriqué : un
-    dégradé animé sert de B-Roll. Ce n'est pas un cache-misère — c'est ce qui
-    permet de vérifier que l'empilement fonctionne sans dépendre d'un
-    téléchargement.
+    **En 1080 × 1920, pas en 1920 × 1080.** Une démonstration horizontale ne
+    démontre rien pour quelqu'un qui monte pour un téléphone : les calques ne
+    se posent pas pareil, le vignettage ne mange pas les mêmes bords, et les
+    barres de format n'ont aucun sens. Une bibliothèque destinée au format
+    vertical se présente en vertical.
+
+    Un vrai plan est utilisé s'il en existe un — passé en argument. Le dégradé
+    fabriqué ne reste qu'un repli : il prouve que l'empilement fonctionne, mais
+    il ne montre pas ce que la recette **fait**, et une démonstration qui ne
+    montre rien n'est pas une démonstration.
     """
     manquants = [n for n in ("film_grain_4k.mp4", "light_leak_orange.png",
                              "vignette_soft.png", "LUT_teal_orange.cube") if n not in assets]
@@ -860,9 +866,19 @@ def fabriquer_demo(assets: dict[str, Path], sortie: Path) -> bool:
         print(f"   Démo impossible, il manque : {', '.join(manquants)}", file=sys.stderr)
         return False
 
-    l, h, duree = 1920, 1080, 10.0
+    l, h, duree = 1080, 1920, 10.0
     fond = sortie.parent / "_fond_demo.mp4"
     n = int(duree * CADENCE)
+
+    if source and source.is_file():
+        # Le plan réel est recadré en vertical et bouclé si besoin : mieux vaut
+        # une seconde répétée qu'un fond noir en fin de démonstration.
+        subprocess.run(
+            [ffmpeg(), "-v", "error", "-y", "-stream_loop", "-1", "-i", str(source),
+             "-t", str(duree), "-an",
+             "-vf", f"scale={l}:{h}:force_original_aspect_ratio=increase,crop={l}:{h}",
+             "-c:v", "libx264", "-crf", "18", "-preset", "fast",
+             "-pix_fmt", "yuv420p", str(fond)], check=False)
 
     def suite():
         y, x = numpy.mgrid[0:h, 0:l].astype(numpy.float32)
@@ -876,7 +892,8 @@ def fabriquer_demo(assets: dict[str, Path], sortie: Path) -> bool:
             a[:, :, 2] = 46 + lueur * 42
             yield numpy.clip(a, 0, 255).astype(numpy.uint8)
 
-    _encoder(fond, suite(), l, h, CADENCE)
+    if not fond.is_file():
+        _encoder(fond, suite(), l, h, CADENCE)
 
     # L'ordre des filtres reprend exactement celui de la recette : étalonnage,
     # fuite, grain, vignettage. Le grain en dernier des images, sinon les
@@ -921,6 +938,8 @@ def main() -> int:
     a.add_argument("--dry-run", action="store_true", help="annonce sans rien écrire")
     a.add_argument("--only-cc0", action="store_true", help="écarte les sources non CC0")
     a.add_argument("--make-demo", action="store_true", help="assemble une séquence de 10 s")
+    a.add_argument("--demo-source", type=Path, default=None,
+                   help="plan réel à utiliser pour la démonstration")
     v = a.parse_args()
 
     try:
@@ -1065,7 +1084,7 @@ def main() -> int:
     if v.make_demo:
         print("\n── Démonstration")
         sortie = RACINE / "previews" / "demo_layer_blockbuster.mp4"
-        if fabriquer_demo(par_nom, sortie):
+        if fabriquer_demo(par_nom, sortie, v.demo_source):
             print(f"   {sortie.relative_to(DEPOT)}")
 
     print(f"\nFiche : {(RACINE / 'visual_library.html').relative_to(DEPOT)}")
