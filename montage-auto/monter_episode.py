@@ -986,9 +986,31 @@ def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
     debut, fin = float(entree["debut"]), float(entree["fin"])
     y = entree.get("y", y_defaut)
     montee = f"if(lt(t-{debut},0.12),(t-{debut})/0.12,1)"
+
+    # L'apparition « pop » : la taille depasse sa cible puis y revient, comme un
+    # ressort. Une entree qui grandit sans depasser s'entend comme un fondu et
+    # ne retient pas l'oeil ; c'est le **depassement** qui accroche, et il doit
+    # etre court — au-dela de deux dixiemes il devient comique.
+    #
+    # `fontsize` accepte une expression, `borderw` non : le contour reste donc
+    # fixe et l'epaisseur apparente varie avec la taille. C'est sans importance
+    # ici, la variation durant moins d'un cinquieme de seconde.
+    u = f"max(0,t-{debut})"
+    ressort = f"min(1.14,1-exp(-15*{u})*cos(19*{u}))"
+    taille_animee = f"{taille}*{ressort}"
+
+    # La secousse : quelques images de tremblement lateral a l'arrivee, puis
+    # plus rien. Deux frequences sans rapport entier, comme pour la camera —
+    # une seule sinusoide se lirait comme une vibration mecanique.
+    if entree.get("secousse"):
+        force = float(entree["secousse"])
+        tremble = (f"+{force:.1f}*exp(-9*{u})"
+                   f"*(sin(2*PI*27*{u})+0.6*sin(2*PI*11*{u}))")
+    else:
+        tremble = ""
     quand = f"between(t,{debut},{fin})"
-    commun = (f"fontfile={police()}:text='{contenu}':fontsize={taille}:"
-              f"x=(w-text_w)/2:y={y}:enable='{quand}'")
+    commun = (f"fontfile={police()}:text='{contenu}':fontsize='{taille_animee}':"
+              f"x='(w-text_w)/2{tremble}':y={y}:enable='{quand}'")
     return [
         f"drawtext={commun}:fontcolor={entree.get('halo', HALO)}@0.55:"
         f"borderw={int(taille * 0.22)}:bordercolor=black@0.55:"

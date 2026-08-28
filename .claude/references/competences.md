@@ -48,6 +48,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/retouche-planche` | Corriger au pixel une illustration dont le texte ou le dessin est incrusté — coquille dans une bulle, mot en trop, regard raté, élément à effacer ou… |
 | `/roussy-zephy` | Charte du recueil illustré « Roussy & Zéphy » — personnages, palette hexadécimale, mécanique des histoires en quatre temps, titres de référence,… |
 | `/sortir-les-fichiers` | Mettre à l'abri ce qu'une session distante contient et que le dépôt Git ne porte pas — planches, rushes, PDF de dépôt, exports, captures — avant que… |
+| `/sous-titres-qui-accrochent` | >- Animer les textes d'une vidéo verticale pour qu'ils retiennent — apparition en ressort, secousse sur l'impact, couleur prise dans l'image, halo… |
 | `/stack-agence-supabase` | Réaliser une application client sur la stack standardisée de l'agence — Next.js 16 (App Router, React 19), TypeScript strict, Tailwind + shadcn/ui,… |
 | `/steward` | Conventions de ce dépôt pour mener une pull request jusqu'à la fusion — style des commits, barrière de vérification avant toute poussée, et… |
 | `/supabase-en-direct` | Piloter un projet Supabase depuis la session, quand le serveur MCP Supabase est connecté — appliquer le schéma en migration, éprouver les politiques… |
