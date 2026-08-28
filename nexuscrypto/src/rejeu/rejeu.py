@@ -116,6 +116,78 @@ class Resultat:
     def capital_engage(self) -> float:
         return sum(e.montant_usd + e.frais_usd for e in self.achats)
 
+    # ----------------------------------------------------------------------
+    # Ce que la stratégie protège
+    #
+    # Elle perd contre un DCA aveugle sur le rendement, sur les cinq fenêtres
+    # de BTC réel mesurées. Si sa valeur est ailleurs — dormir pendant un
+    # krach — elle doit se mesurer sur ce terrain-là, sinon on continue de
+    # l'optimiser contre un étalon qu'elle ne peut pas battre.
+    #
+    # **Et le piège de cette famille est énorme : une stratégie qui n'investit
+    # rien a un recul nul.** Comparer des reculs bruts entre deux stratégies
+    # qui n'engagent pas le même capital ne mesure que la différence de
+    # capital. D'où `rendement_par_douleur`, qui est le seul chiffre de cette
+    # section à pouvoir se comparer directement.
+    # ----------------------------------------------------------------------
+
+    @property
+    def temps_sous_eau(self) -> float:
+        """Fraction du temps passée sous un sommet précédent.
+
+        Le recul maximum dit à quel point ça a fait mal une fois ; celui-ci dit
+        combien de temps ça a duré. Ce sont deux douleurs différentes, et c'est
+        la seconde qui fait abandonner une stratégie.
+        """
+
+        if not self.courbe:
+            return 0.0
+        sommet = self.courbe[0][1]
+        sous_eau = 0
+        for _, valeur in self.courbe:
+            if valeur >= sommet:
+                sommet = valeur
+            else:
+                sous_eau += 1
+        return sous_eau / len(self.courbe)
+
+    @property
+    def pire_mois(self) -> float:
+        """La pire variation d'un mois calendaire à l'autre.
+
+        Calendaire et non glissant : c'est le relevé qu'on regarde, et c'est
+        celui qui décide si on coupe tout un dimanche soir.
+        """
+
+        par_mois: dict[tuple[int, int], list[float]] = {}
+        for instant, valeur in self.courbe:
+            par_mois.setdefault((instant.year, instant.month), []).append(valeur)
+        mois = sorted(par_mois)
+        if len(mois) < 2:
+            return 0.0
+        pire = 0.0
+        for cle in mois:
+            valeurs = par_mois[cle]
+            depart, fin = valeurs[0], valeurs[-1]
+            if depart > 0:
+                pire = min(pire, fin / depart - 1.0)
+        return pire
+
+    @property
+    def rendement_par_douleur(self) -> float | None:
+        """Le gain rapporté au pire recul — un ratio de Calmar simplifié.
+
+        **C'est le seul chiffre de cette section qui se compare honnêtement.**
+        Deux stratégies qui n'engagent pas le même capital ont des reculs
+        incomparables ; rapporter le gain à la douleur remet les deux sur la
+        même échelle. Un recul nul rend `None` plutôt qu'un infini : n'avoir
+        rien risqué n'est pas une performance infinie.
+        """
+
+        if self.drawdown_max <= 0.0:
+            return None
+        return self.pnl_relatif / self.drawdown_max
+
     @property
     def drawdown_max(self) -> float:
         """Le pire recul depuis un sommet de la courbe de valeur."""

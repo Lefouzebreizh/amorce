@@ -285,6 +285,13 @@ def _rejeu(config, arguments) -> int:
         print(mise_en_forme.tableau([(f"{arguments.symbole} {debut}→{fin}", ligne)]))
         print()
         print(mise_en_forme.verdict([("données réelles", dynamique, temoin)]))
+        # La stratégie perd en rendement : reste à savoir ce qu'elle protège,
+        # et si cette protection paie son prix.
+        comparaison = [("réel", dynamique, temoin)]
+        print()
+        print(mise_en_forme.tableau_protection(comparaison))
+        print()
+        print(mise_en_forme.verdict_protection(comparaison))
         print(
             "\n⚠ Sur une fenêtre longue et un seul actif, le plafond d'exposition "
             "gèle la stratégie dès que la position s'apprécie : le résultat mesure "

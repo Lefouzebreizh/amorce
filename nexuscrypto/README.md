@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 303 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 310 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **303 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **310 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -260,7 +260,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 303 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 310 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -505,11 +505,18 @@ discipline, la note relative à la tendance — ne renverse ce constat : elles
 réduisent l'écart, elles ne le comblent pas.
 
 Ce que cela ne dit pas : que la modulation soit inutile en général. Cinq
-fenêtres, un seul actif, seize ans d'un marché historiquement haussier. Une
-stratégie qui protège le capital en baisse a une valeur que le PnL brut ne
-mesure pas — le recul maximum de la stratégie est systématiquement plus faible
-que celui du témoin. Mais **quiconque lit ce dépôt en pensant y trouver un
-moteur qui bat le marché doit lire ce tableau d'abord.**
+fenêtres, un seul actif, seize ans d'un marché historiquement haussier.
+
+**Cette section a d'abord porté une consolation, et elle était fausse.** Elle
+disait qu'une stratégie qui protège le capital a une valeur que le PnL brut ne
+mesure pas, en s'appuyant sur un recul maximum systématiquement plus faible que
+celui du témoin. C'était vrai et sans portée : la protection a été mesurée
+depuis, elle ne paie pas son prix, et le § 11 le montre. La phrase est
+remplacée plutôt que nuancée — une consolation non mesurée dans un dépôt qui
+mesure est pire qu'un silence.
+
+**Quiconque lit ce dépôt en pensant y trouver un moteur qui bat le marché doit
+lire ce tableau d'abord.**
 
 ### La note relative à la tendance, et ce qu'elle corrige
 
@@ -533,3 +540,65 @@ Meilleur sur la moyenne **et** sur le pire cas — c'est ce qui décide, et c'es
 le défaut livré. Il n'est pas meilleur partout : il perd 10 points sur
 2023-2025. Le changer sans rejouer le harnais sur données réelles, c'est régler
 à l'aveugle.
+
+---
+
+## 11. Et la protection ne paie pas son prix
+
+La section 10 laisse une porte ouverte : la stratégie perd en rendement, mais
+peut-être protège-t-elle. C'est mesurable, donc c'est mesuré.
+
+```bash
+python3 main.py rejeu --coinmetrics btc.csv --symbole BTC/USD \
+        --depuis 2020-01-01 --jusqu-a 2021-12-31
+```
+
+**Le piège de cette famille de mesures est énorme, et il faut le poser d'abord :
+une stratégie qui n'investit rien a un recul nul.** Comparer des reculs bruts
+entre deux stratégies qui n'engagent pas le même capital ne mesure que la
+différence de capital. La seule colonne qui se compare honnêtement est donc le
+**gain par unité de recul**.
+
+| fenêtre | | PnL | recul max | temps sous l'eau | pire mois | **gain/douleur** |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2017 | stratégie | +104,4 % | 37,6 % | 77 % | −17,4 % | 2,78 |
+| | témoin | +466,0 % | 49,2 % | 76 % | −25,3 % | **9,47** |
+| 2018 | stratégie | +35,8 % | 8,4 % | 90 % | −1,5 % | 4,25 |
+| | témoin | +111,4 % | 20,9 % | 89 % | −13,2 % | **5,34** |
+| 2020-21 | stratégie | +42,7 % | 30,9 % | 86 % | −20,0 % | 1,38 |
+| | témoin | +124,5 % | 51,2 % | 86 % | −33,8 % | **2,43** |
+| 2022 | stratégie | +17,2 % | 8,4 % | 90 % | −4,2 % | 2,05 |
+| | témoin | +39,4 % | 15,9 % | 90 % | −5,1 % | **2,48** |
+| 2023-25 | stratégie | +1,5 % | 19,7 % | 91 % | −10,3 % | 0,07 |
+| | témoin | +37,4 % | 31,8 % | 90 % | −17,4 % | **1,18** |
+
+**La protection est réelle.** Le recul maximum de la stratégie est deux fois
+plus faible sur trois des cinq fenêtres, et son pire mois est toujours plus
+doux — sur 2018, −1,5 % contre −13,2 %.
+
+**Et elle ne paie pas son prix.** Rapporté au gain, le DCA aveugle rend plus par
+unité de recul sur les **cinq** fenêtres. La protection est achetée, elle n'est
+pas offerte : elle coûte plus de rendement qu'elle n'épargne de douleur.
+
+**Le temps passé sous l'eau, lui, ne bouge pas du tout.** 77 % contre 76 %,
+90 % contre 89 %, 86 % contre 86 %. La stratégie réduit l'**amplitude** de la
+douleur, jamais sa **durée** — or c'est la durée qui fait abandonner une
+stratégie un dimanche soir. La consolation qu'on aurait pu se donner ne tient
+pas non plus.
+
+### Où cela laisse le projet
+
+Sur les deux axes mesurés — rendement, et protection normalisée — **cette
+stratégie est dominée par un DCA aveugle sur les cinq fenêtres testées.** Ce
+n'est pas un défaut de réglage qu'une pondération corrigerait : les trois
+corrections déjà apportées (plancher de discipline, note relative à la tendance,
+redistribution des poids absents) ont réduit l'écart sans jamais le renverser.
+
+Ce que le harnais ne peut pas trancher : le comportement sur un actif qui **ne**
+monte pas structurellement, un portefeuille à cinq lignes plutôt qu'une, ou une
+période de plus de trois ans sans que le plafond d'exposition ne fausse tout.
+Les trois sont hors de portée d'ici — le premier faute de données on-chain
+équivalentes sur SOL, ETH et HYPE, les deux autres faute de rejeu
+multi-actifs. **C'est le prochain vrai chantier, et tant qu'il n'est pas fait,
+la seule affirmation honnête sur ce moteur est celle-ci : sur Bitcoin, il n'a
+pas encore justifié sa complexité.**
