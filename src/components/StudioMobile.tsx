@@ -80,10 +80,19 @@ export function StudioMobile({
           `z-20` et non `z-10` : la barre de lecture vit dans le même bloc, et
           les panneaux passaient dessous en défilant.
         */}
-        <section className="sticky top-0 z-20 flex h-[38dvh] flex-col gap-1.5 bg-ink p-2 pb-1.5 shadow-[0_10px_18px_-10px_rgba(0,0,0,0.95)]">
-          <Preview engine={engine} />
-          {clipCount > 0 && <Timeline engine={engine} compact />}
-        </section>
+        {/*
+          Et seulement s'il y a quelque chose à montrer. À vide, ce bloc
+          réservait 38 % de la hauteur à un rectangle noir portant « importe
+          tes vidéos » — le premier écran d'un téléphone était donc à moitié
+          occupé par l'absence de contenu. Rendu conditionnel plutôt que
+          replié : un aperçu de zéro pixel garde ses marges et son ombre.
+        */}
+        {clipCount > 0 && (
+          <section className="sticky top-0 z-20 flex h-[38dvh] flex-col gap-1.5 bg-ink p-2 pb-1.5 shadow-[0_10px_18px_-10px_rgba(0,0,0,0.95)]">
+            <Preview engine={engine} />
+            <Timeline engine={engine} compact />
+          </section>
+        )}
 
         <div className="space-y-3 px-2 pt-2 pb-8">
           <NextStep onStep={onStep} />
@@ -94,11 +103,13 @@ export function StudioMobile({
               id={ancre(item.id)}
               aria-label={item.label}
               // `scroll-mt` compense la hauteur de l'aperçu collé : sans lui,
-              // un saut vers une étape la place derrière l'image.
+              // un saut vers une étape la place derrière l'image. Il la suit
+              // donc : quand l'aperçu n'est pas rendu, la même marge laisserait
+              // 40 % d'écran vide au-dessus du panneau qu'on vient d'atteindre.
               // Pas d'en-tête ici : chaque panneau porte déjà son titre
               // numéroté. En ajouter un le faisait paraître deux fois, et une
               // répétition se lit comme un bug avant de se lire comme un plan.
-              className="scroll-mt-[40dvh]"
+              className={clipCount > 0 ? 'scroll-mt-[40dvh]' : 'scroll-mt-2'}
             >
               <StepPanel step={item.id} engine={engine} onStep={onStep} />
             </section>
