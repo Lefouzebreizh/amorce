@@ -1,0 +1,11 @@
+/node_modules
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# Le dépôt ignore tout `.env*` à sa racine ; le gabarit, lui, se versionne —
+# c'est la seule liste des variables à renseigner avant la mise en ligne.
+!.env.example

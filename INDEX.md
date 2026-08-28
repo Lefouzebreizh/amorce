@@ -25,7 +25,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge dix chantiers actifs sans code commun, plus deux en sommeil.
+Ce dépôt héberge onze chantiers actifs sans code commun, plus deux en sommeil.
 Une idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir
 un front de plus. La liste vieillit vite — recompter avant de noter.
 
@@ -35,6 +35,7 @@ un front de plus. La liste vieillit vite — recompter avant de noter.
 | **Look & Find** (`look_and_find/`) | Application mobile de scan / recherche. | Flutter, Riverpod 3 | actif |
 | **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures et validation de niches. | Python | actif |
 | **Socle Agence** (`agence/`) | Socle de production livré aux clients. | Next.js 16, Supabase | actif |
+| **Artisan Express** (`artisan-express/`) | Page de vente du site vitrine artisan à 299 €. | Next.js 16, Tailwind v4 | actif |
 | **Paper-Manager** (`paper-manager/`) | Assistant administratif : scan, échéances, résiliations. | Python | actif |
 | **Life-Organizer** (`life-organizer/`) | Rangement de fichiers personnels. | Python | actif |
 | **Répondeur Facebook** (`repondeur-facebook/`) | Réponses aux commentaires via l'API Graph. | Python | actif |
