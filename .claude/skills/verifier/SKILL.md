@@ -328,6 +328,8 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 cd nexuscrypto
 python3 -m unittest discover -s tests    # 321 tests, aucun ne touche au réseau
 python3 -m unittest discover -s tests    # 321 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 320 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 320 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 profils.py                       # l'effet des réglages sur six marchés connus
 ```
