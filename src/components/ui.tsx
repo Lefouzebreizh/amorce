@@ -271,7 +271,7 @@ export function Choice<T extends string>({
             onClick={() => onChange(option.value)}
             className={`min-h-11 rounded-xl px-3 py-2.5 text-left text-[13px] transition-colors ${
               active
-                ? 'bg-raised text-mist ring-1 ring-accent/60'
+                ? 'bg-raised text-mist ring-1 ring-select/60'
                 : 'bg-slab text-muted hover:bg-raised hover:text-mist'
             }`}
           >
@@ -302,12 +302,19 @@ export function Hint({ children, tone = 'neutral' }: { children: ReactNode; tone
  * s'afficher de la même couleur partout, sans quoi le repère visuel ne veut
  * plus rien dire. Le seuil accepte aussi bien une note sur 100 qu'un rapport
  * de 0 à 1.
+ *
+ * Quatre crans, pris dans l'échelle `gauge` et non dans l'accent. Une note est
+ * un **constat**, pas une action : la dire avec la couleur des boutons faisait
+ * chercher où cliquer sur un chiffre. Et la clarté de l'échelle croît d'un
+ * cran à l'autre, ce qui la rend lisible même pour qui ne distingue pas le
+ * rouge du vert — sur une jauge, la teinte seule ne suffit jamais.
  */
 export function scoreColor(score: number): string {
   const ratio = score > 1 ? score / 100 : score;
-  if (ratio >= 0.75) return 'var(--color-accent)';
-  if (ratio >= 0.45) return 'var(--color-warn)';
-  return 'var(--color-danger)';
+  if (ratio >= 0.9) return 'var(--color-gauge-peak)';
+  if (ratio >= 0.7) return 'var(--color-gauge-high)';
+  if (ratio >= 0.45) return 'var(--color-gauge-mid)';
+  return 'var(--color-gauge-low)';
 }
 
 /**

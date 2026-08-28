@@ -42,7 +42,7 @@ export function StudioDesktop({
                 aria-current={active ? 'step' : undefined}
                 onClick={() => onStep(item.id)}
                 className={`rounded-xl px-3 py-2.5 text-left transition-colors ${
-                  active ? 'bg-raised ring-1 ring-accent/60' : 'hover:bg-slab'
+                  active ? 'bg-raised ring-1 ring-select/60' : 'hover:bg-slab'
                 }`}
               >
                 <span className={`text-[13px] font-semibold ${active ? 'text-mist' : 'text-muted'}`}>
