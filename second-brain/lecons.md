@@ -867,3 +867,47 @@ Un fragment qui grossit doit aussi **perdre de la lumière et de la netteté**,
 sinon il devient une découpe de papier blanc : il arrive sur l'objectif, donc il
 sort de la zone de netteté et quitte l'éclairage de la scène. Le rouge résiste
 mieux que le bleu, ce qui le fait virer à la braise plutôt qu'au gris.
+
+## Un composant défini pendant le rendu perd le curseur, et le lint le sait
+
+Écrire une petite fonction à l'intérieur d'un composant pour éviter de répéter
+trois lignes de JSX paraît propre. `eslint-config-next` la refuse — la règle
+`react-hooks/static-components`, six erreurs d'un coup sur un formulaire — et
+elle a raison bien au-delà du style.
+
+La fonction est **redéfinie à chaque rendu**, donc React voit un type de
+composant différent à chaque fois. Il ne compare pas le contenu : il démonte le
+sous-arbre et le remonte. Sur un champ de saisie, cela veut dire que le curseur
+saute à chaque frappe — un défaut qu'aucun test unitaire ne voit et qu'on met
+une heure à relier à sa cause.
+
+La parade tient en une ligne : le sortir au niveau du module et lui passer ce
+dont il a besoin en propriétés. Vaut pour tout projet React du dépôt.
+
+## Le sifflement d'un son se mesure, il ne se discute pas
+
+Un lit de vortex a été refusé d'un mot — « son horrible, vire l'aigu ». Le
+désaccord aurait pu tourner en aller-retours ; deux nombres l'ont tranché.
+
+Le **centre de gravité du spectre** dit où vit le son, et la **part d'énergie
+au-dessus de 4 kHz** dit combien il siffle. Avant : 3157 Hz et 7,9 %. Après
+remplacement de la montée en hauteur par un rumble à 40 Hz, un vent sourd et
+des cailloux : 2225 Hz et 2,1 %.
+
+La cause était une intention mal placée. `aspiration` avait été écrite autour
+d'une montée de deux octaves et demie, parce que c'est le déplacement en
+hauteur qui fabrique la sensation de vitesse — juste en soi, et exactement ce
+qui produit un sifflement. **Un effet peut être correctement conçu et
+inutilisable** : ce qui manquait n'était pas la justesse du procédé mais la
+question de savoir si l'on voulait entendre de la vitesse ou de la masse.
+
+```bash
+# où vit le son, et combien il siffle
+python3 -c "
+import numpy,wave,sys
+x=numpy.frombuffer(wave.open(sys.argv[1]).readframes(-1),dtype=numpy.int16).astype(float)
+sp=numpy.abs(numpy.fft.rfft(x*numpy.hanning(len(x))))**2
+fr=numpy.fft.rfftfreq(len(x),1/48000)
+print(f'centre {(sp**.5*fr).sum()/(sp**.5).sum():.0f} Hz · '
+      f'au-dessus de 4 kHz {100*sp[fr>4000].sum()/sp.sum():.1f} %')" son.wav
+```

@@ -67,7 +67,11 @@ CADRE = (f"scale={LARGEUR}:{HAUTEUR}:force_original_aspect_ratio=increase,"
 # La bande du bas est mangée par la légende et les boutons de la plateforme.
 # Sur 1920 de haut, on ne descend pas un texte sous 1300.
 Y_SOUS_TITRE = 1180
-POLICE = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+# Montserrat n'est pas installée et reste hors de portée derrière ce mandataire
+# (dépôt d'origine, API GitHub et PyPI rendent 403 ou 404). Liberation Sans Bold
+# est la plus neutre des trois grasses présentes, et la plus proche d'une
+# géométrique. Remplacer ce chemin suffit le jour où la police arrive.
+POLICE = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
 
 
 def ffmpeg() -> str:
@@ -249,6 +253,85 @@ def filtre_flash(flashs: list) -> str:
         termes.append(f"{force:.3f}*between(t,{debut:.3f},{debut + etendue:.3f})"
                       f"*exp(-5.5*(t-{debut:.3f})/{etendue:.3f})")
     return f"eq=brightness='{'+'.join(termes)}':eval=frame"
+
+
+def stabiliser(entree: Path, sortie: Path) -> None:
+    """Deux passes de `vidstab` : on relève d'abord, on corrige ensuite.
+
+    `deshake` travaille en une passe et ne voit que l'image précédente ; sur un
+    visage en gros plan il confond le tremblement de la caméra avec le
+    mouvement du sujet et fabrique une dérive. `vidstab` relève d'abord toute
+    la trajectoire, puis la lisse : c'est la seule méthode qui tienne quand le
+    sujet occupe tout le cadre.
+
+    Le recadrage est laissé à `black` puis rattrapé par un zoom de 4 % : sans
+    lui, les bords découvrent du vide à chaque correction.
+    """
+    releve = sortie.parent / "_trajectoire.trf"
+    subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(entree),
+                    "-vf", f"vidstabdetect=shakiness=6:accuracy=12:result={releve}",
+                    "-f", "null", "-"], check=True)
+    subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(entree), "-vf",
+                    f"vidstabtransform=input={releve}:smoothing=24:zoom=4"
+                    f":optzoom=0:crop=black,unsharp=5:5:0.6",
+                    "-c:a", "copy", "-c:v", "libx264", "-preset", "medium",
+                    "-crf", "19", str(sortie)], check=True)
+    releve.unlink(missing_ok=True)
+
+
+def segment_morph(plan_a: dict, plan_b: dict, reglage: dict, sortie: Path) -> float:
+    """Enchaîne deux plans par raccord d'échelle, sans aucune coupe.
+
+    Le principe tient en un rapport, pas en une déformation de maillage : il
+    faut que **les deux objets ronds occupent le même disque à l'écran** au
+    moment du fondu. Le premier plan plonge dans le sien, le second recule
+    depuis le sien, et si les rayons apparents coïncident l'oeil ne voit pas
+    deux images mais une seule qui se transforme.
+
+    Mesuré sur ce montage : pupille de 295 px de rayon, planète de 320. Le zoom
+    d'entrée valant 2,9, celui de sortie doit valoir 2,9 × 295 / 320 pour que
+    les disques se superposent. À un pour cent près, le raccord se voit.
+
+    Deux détails sans lesquels ça ne prend pas. Le fondu suit une **courbe en
+    S** — linéaire, on voit les deux images à parts égales au milieu et
+    l'illusion tombe. Et l'entrée est plus rapide que la sortie : on plonge
+    vite, on recule lentement, comme un regard qui se perd puis revient.
+    """
+    duree = float(reglage["duree"])
+    images = max(1, int(duree * 30))
+    ax, ay = reglage["point_a"]
+    bx, by = reglage["point_b"]
+    zoom_a = float(reglage.get("zoom", 2.9))
+    zoom_b = zoom_a * float(reglage["rayon_a"]) / float(reglage["rayon_b"])
+
+    za = f"1+{zoom_a - 1:.4f}*pow(on/{images},1.8)"
+    zb = f"{zoom_b:.4f}+(1-{zoom_b:.4f})*pow(on/{images},0.55)"
+    cx = f"({bx}+({LARGEUR / 2:.0f}-{bx})*pow(on/{images},0.55))"
+    cy = f"({by}+({HAUTEUR / 2:.0f}-{by})*pow(on/{images},0.55))"
+
+    a = (f"{CADRE},zoompan=z='{za}':d=1:x='{ax}*({za})-{LARGEUR / 2:.0f}'"
+         f":y='{ay}*({za})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps=30")
+    b = (f"{CADRE},zoompan=z='{zb}':d=1:x='{cx}*({zb})-{LARGEUR / 2:.0f}'"
+         f":y='{cy}*({zb})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps=30")
+    lisse = f"(3*pow(T/{duree:.3f},2)-2*pow(T/{duree:.3f},3))"
+
+    depart_a = float(plan_a["depart"]) + float(plan_a["duree"]) - duree
+    graphe = (f"[0:v]{a}[va];[1:v]{b}[vb];"
+              f"[va][vb]blend=all_expr='A*(1-{lisse})+B*{lisse}'[v];"
+              # Les deux sons se croisent sur la même courbe : une coupe nette
+              # trahirait le raccord que l'image vient de cacher.
+              f"[0:a]atrim=0:{duree},asetpts=PTS-STARTPTS,"
+              f"afade=t=out:st=0:d={duree}:curve=qsin[aa];"
+              f"[1:a]atrim=0:{duree},asetpts=PTS-STARTPTS,"
+              f"afade=t=in:st=0:d={duree}:curve=qsin[ab];"
+              f"[aa][ab]amix=inputs=2:duration=first:normalize=0[a]")
+    subprocess.run([ffmpeg(), "-y", "-v", "error",
+                    "-ss", str(depart_a), "-t", str(duree), "-i", str(Path(plan_a["source"]).expanduser()),
+                    "-ss", str(plan_b["depart"]), "-t", str(duree), "-i", str(Path(plan_b["source"]).expanduser()),
+                    "-filter_complex", graphe, "-map", "[v]", "-map", "[a]",
+                    "-t", str(duree), "-c:v", "libx264", "-preset", "medium", "-crf", "19",
+                    "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2", str(sortie)], check=True)
+    return duree
 
 
 def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
@@ -600,7 +683,7 @@ def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
 
 
 def normaliser(source: Path, sortie: Path, cible_lufs: float = -14.0,
-               vrai_pic_db: float = -1.0) -> float:
+               vrai_pic_db: float = -1.0, debit_son: str = "320k") -> float:
     """Sonie cible **sans toucher à la dynamique**.
 
     `loudnorm` en une passe travaille au fil de l'eau : il remonte les creux et
@@ -625,7 +708,10 @@ def normaliser(source: Path, sortie: Path, cible_lufs: float = -14.0,
     subprocess.run(
         [ffmpeg(), "-y", "-v", "error", "-i", str(source), "-af",
          f"volume={gain:.2f}dB,alimiter=limit={limite:.4f}:level=disabled",
-         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
+         # 320 kbps et 48 kHz : la plateforme réencode, et lui donner de la
+         # marge évite que son encodage parte d'une source déjà dégradée.
+         "-c:v", "copy", "-c:a", "aac", "-b:a", debit_son, "-ar", "48000",
+         "-movflags", "+faststart",
          str(sortie)], check=True)
     return round(gain, 2)
 
@@ -767,12 +853,39 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
 
     gains, instant, reperes = [], 0.0, {}
     morceaux = []
-    for rang, plan in enumerate(episode["plans"]):
+    plans = episode["plans"]
+    for rang, plan in enumerate(plans):
+        nom = plan.get("nom", Path(plan["source"]).stem)
+        reperes[nom] = round(instant, 2)
+
+        # Un morph mange la fin du plan sortant ET le début du plan entrant :
+        # les deux images cohabitent pendant sa durée. Le plan est donc rendu
+        # raccourci, le morph rendu à part, et le suivant démarre plus tard.
+        morph = plan.get("morph")
+        recul = float(morph["duree"]) if morph else 0.0
+        precedent = plans[rang - 1].get("morph") if rang else None
+        avance = float(precedent["duree"]) if precedent else 0.0
+
+        propre = dict(plan)
+        propre["depart"] = float(plan["depart"]) + avance
+        propre["duree"] = float(plan["duree"]) - avance - recul
+        if propre["duree"] <= 0.05:
+            raise SystemExit(f"« {nom} » : il ne reste rien après les morphs voisins.")
+
         fichier = atelier / f"_plan{rang:02d}.mkv"
-        gains.append((plan.get("nom", Path(plan["source"]).stem), couper(plan, fichier)))
-        reperes[plan.get("nom", str(rang))] = round(instant, 2)
-        instant += float(plan["duree"])
+        gains.append((nom, couper(propre, fichier)))
+        if plan.get("stabiliser"):
+            ferme = atelier / f"_stab{rang:02d}.mkv"
+            stabiliser(fichier, ferme)
+            fichier = ferme
         morceaux.append(fichier)
+        instant += propre["duree"]
+
+        if morph:
+            passage = atelier / f"_morph{rang:02d}.mkv"
+            segment_morph(plan, plans[rang + 1], morph, passage)
+            morceaux.append(passage)
+            instant += recul
     total = instant
 
     (atelier / "_liste.txt").write_text(
@@ -819,7 +932,8 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
     mixe = atelier / "_mixe.mkv"
     subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(base), "-i", str(effets),
                     "-filter_complex", chaine, "-map", "0:v", "-map", "[a]",
-                    "-vf", dessin, "-c:v", "libx264", "-preset", "slow", "-crf", "18",
+                    "-vf", f"{dessin},fps={int(episode.get('cadence', 30))}",
+                    "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", str(mixe)], check=True)
 
     if episode.get("silences"):

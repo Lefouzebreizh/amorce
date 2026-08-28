@@ -40,6 +40,7 @@ readonly FLUTTER_HOME="$HOME/flutter"
 commandes=(
   "Amorce : npm run typecheck|lint|test"
   "Socle Agence : (dans agence/) npm run lint|typecheck|test|build"
+  "Artisan Express : (dans artisan-express/) npm run lint|typecheck|test|build"
   "Hypersensible : (dans hypersensible-bienveillance/) npm test, npm run check, npm run build"
   "Look & Find : flutter analyze|test"
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
@@ -63,13 +64,18 @@ echo "── Socle Agence : dépendances npm"
 cd "$racine/agence"
 npm install --no-audit --no-fund --silent
 
+echo "── Artisan Express : dépendances npm"
+# Page de vente Next.js indépendante, avec son propre `package.json` : lancée
+# sans `cd`, npm remonte à la racine et installe dans l'arbre d'Amorce.
+cd "$racine/artisan-express"
+npm install --no-audit --no-fund --silent
+
 echo "── TITAN Builder : dépendances npm"
-# Projet Next.js indépendant. Le `cd` n'est pas une précaution de style : lancé
-# depuis la racine, npm remonte et installe ses paquets dans ceux du studio
-# Amorce, où la CI de TITAN ne les trouvera pas.
+# Même raison, et une conséquence de plus : la CI de TITAN n'installe que son
+# dossier, donc un paquet emprunté au voisin d'au-dessus passe en session et
+# rougit sur le runner.
 cd "$racine/titan-builder"
 npm install --no-audit --no-fund --silent
-cd "$racine"
 
 echo "── Hypersensible & Bienveillance : dépendances npm"
 # Projet Astro + Cloudflare indépendant. Le `.npmrc` du dossier existe pour la

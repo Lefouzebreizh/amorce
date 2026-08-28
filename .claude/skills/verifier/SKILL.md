@@ -220,6 +220,31 @@ politique trop large ne se remarque qu'en production.
 Sans PostgreSQL sous la main, le même fichier (`supabase/verifier-rls.sql`) se
 colle dans l'éditeur SQL d'un projet Supabase : il annule tout ce qu'il crée.
 
+## Artisan Express — `artisan-express/`
+
+```bash
+cd artisan-express
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+Les quatre, et depuis `artisan-express/` : le projet a son `tsconfig.json` et
+son ESLint, la racine l'ignore. Le workflow
+`.github/workflows/artisan-express.yml` rejoue la même séquence.
+
+Aucune variable n'est requise pour compiler : ce qui manque disparaît de la
+page au lieu d'être inventé. C'est aussi ce que le `build` vérifie sans le
+dire — la page tient debout sans téléphone, sans WhatsApp et sans lien Stripe.
+
+Ce que la séquence ne couvre pas : **l'envoi réel du courriel**. Il demande une
+clé Resend, qu'aucune session n'a. `npm test` éprouve la fabrication de la
+requête et la lecture de la réponse, en simulant `fetch` ; le premier envoi
+véritable se regarde en ligne, et se corrige dans `construireCorpsResend`
+(`src/lib/courriel.ts`) — c'est le seul endroit qui connaisse la forme attendue
+par le prestataire.
+
 ## Chaîne KDP — `kdp/`
 
 Une seule partie de la chaîne est testable hors fichiers : le validateur de

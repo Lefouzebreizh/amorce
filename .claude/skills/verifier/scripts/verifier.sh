@@ -79,6 +79,7 @@ while IFS= read -r f; do
   [ -z "$f" ] && continue
   case "$f" in
     agence/*)        inscrire agence ;;
+    artisan-express/*) inscrire artisan ;;
     look_and_find/*) inscrire flutter ;;
     hypersensible-bienveillance/*) inscrire hypersensible ;;
     titan-builder/*) inscrire titan ;;
@@ -151,6 +152,25 @@ lancer_agence() {
   return $e
 }
 
+lancer_artisan() {
+  local d="artisan-express"; local j="$journal/artisan"; local e=0
+  # Les trois premières ne se lisent pas l'une l'autre : elles partent ensemble.
+  ( cd "$d" || exit 1
+    etape "$j.lint"      "lint"      npm run lint || exit 1 ) & local a=$!
+  ( cd "$d" || exit 1
+    etape "$j.typecheck" "typecheck" npm run typecheck || exit 1 ) & local b=$!
+  ( cd "$d" || exit 1
+    etape "$j.test"      "tests"     npm test || exit 1 ) & local c=$!
+  wait $a || e=1; wait $b || e=1; wait $c || e=1
+  # Le build ferme la marche, seul : il attrape ce que `tsc` laisse passer dans
+  # une application App Router — une directive 'use client' oubliée, un
+  # composant serveur qui reçoit une fonction en propriété.
+  ( cd "$d" || exit 1
+    etape "$j.build" "build" npm run build || exit 1 ) || e=1
+  cat "$j".{lint,typecheck,test,build} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_hypersensible() {
   local d="hypersensible-bienveillance"; local j="$journal/hypersensible"; local e=0
   ( cd "$d" || exit 1
@@ -206,6 +226,7 @@ for p in $projets; do
   case "$p" in
     amorce)  lancer_amorce  & pid_de[amorce]=$! ;;
     agence)  lancer_agence  & pid_de[agence]=$! ;;
+    artisan) lancer_artisan & pid_de[artisan]=$! ;;
     flutter) lancer_flutter & pid_de[flutter]=$! ;;
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     titan)   lancer_titan & pid_de[titan]=$! ;;
@@ -225,6 +246,7 @@ nom_lisible() {
   case "$1" in
     amorce)  echo "Amorce (studio)" ;;
     agence)  echo "Socle Agence" ;;
+    artisan) echo "Artisan Express (page de vente)" ;;
     flutter) echo "Look & Find" ;;
     hypersensible) echo "Hypersensible & Bienveillance" ;;
     titan)   echo "TITAN Builder" ;;
@@ -265,6 +287,11 @@ esac
 case " $projets " in
   *" agence "*)
     echo "  • les politiques RLS : npm run test:rls, sur un vrai PostgreSQL" ;;
+esac
+case " $projets " in
+  *" artisan "*)
+    echo "  • l'envoi réel du formulaire : il demande une clé Resend, que rien"
+    echo "    ici ne détient — le premier envoi se regarde en ligne" ;;
 esac
 case " $projets " in
   *" flutter "*)
