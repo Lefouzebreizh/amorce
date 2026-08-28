@@ -314,7 +314,7 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 251 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 274 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 profils.py                       # l'effet des réglages sur six marchés connus
 ```
@@ -324,6 +324,19 @@ une pondération, à un multiplicateur DCA ou à une note : les tests diraient
 qu'ils passent sans dire que le prix moyen d'achat du profil « chute puis
 reprise » est repassé au-dessus de celui du témoin. C'est la même règle que
 pour le radar `pepites/`, et elle a été payée là-bas.
+
+Et pour un changement de **stratégie**, les six marchés fabriqués ne suffisent
+pas : ils sont symétriques par construction et flattent. Le rejeu sur BTC réel
+les contredit — la stratégie y perd contre un DCA aveugle en marché haussier.
+
+```bash
+curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv
+python3 main.py rejeu --coinmetrics btc.csv --symbole BTC/USD \
+        --depuis 2020-01-01 --jusqu-a 2021-12-31
+```
+
+Fenêtres de deux à trois ans seulement : au-delà, sur un seul actif, le plafond
+d'exposition gèle la stratégie et le résultat mesure le plafond.
 
 `main.py verifier` en plus **si et seulement si** le changement touche à
 `config/config.yaml` ou à `src/core/config.py` : les tests diraient qu'ils

@@ -82,6 +82,13 @@ def _arguments() -> argparse.ArgumentParser:
     )
     rejeu.add_argument("--sortie", default=None, help="écrire un rapport Markdown")
     rejeu.add_argument(
+        "--coinmetrics",
+        help="CSV du jeu communautaire CoinMetrics — seize ans de BTC réel, "
+             "prix et flux de plateformes mesurés",
+    )
+    rejeu.add_argument("--depuis", default=None, help="borne basse, AAAA-MM-JJ")
+    rejeu.add_argument("--jusqu-a", default=None, help="borne haute, AAAA-MM-JJ")
+    rejeu.add_argument(
         "--leviers", default=None,
         help="compter les liquidations qu'auraient subies ces leviers, ex. « 1,2,3,5,10 ». "
              "Mesure seulement : aucun ordre n'est jamais passé à levier.",
@@ -254,6 +261,37 @@ def _rejeu(config, arguments) -> int:
             return 2
         if not leviers:
             leviers = mesure_levier.LEVIERS_PAR_DEFAUT
+
+    if getattr(arguments, "coinmetrics", None):
+        from src.rejeu.donnees import lire_coinmetrics
+
+        try:
+            reelle = lire_coinmetrics(
+                arguments.coinmetrics, symbole=arguments.symbole,
+                depuis=arguments.depuis, jusqu_a=arguments.jusqu_a,
+            )
+        except DonneesIllisibles as erreur:
+            print(f"❌ {erreur}", file=sys.stderr)
+            return 2
+        dynamique = rejouer(config, reelle.serie, onchain=reelle.onchain,
+                            nom="DCA dynamique")
+        temoin = rejouer(config, reelle.serie, onchain=reelle.onchain,
+                         nom="DCA plat (témoin)", plat=True)
+        debut = reelle.serie.bougies[0].horodatage.date()
+        fin = reelle.serie.bougies[-1].horodatage.date()
+        ligne = mise_en_forme.ligne_comparaison(
+            dynamique, temoin, reelle.prix_moyen_marche
+        )
+        print(mise_en_forme.tableau([(f"{arguments.symbole} {debut}→{fin}", ligne)]))
+        print()
+        print(mise_en_forme.verdict([("données réelles", dynamique, temoin)]))
+        print(
+            "\n⚠ Sur une fenêtre longue et un seul actif, le plafond d'exposition "
+            "gèle la stratégie dès que la position s'apprécie : le résultat mesure "
+            "alors le plafond, pas la stratégie. Préférer des fenêtres de deux à "
+            "trois ans avec `--depuis` et `--jusqu-a`."
+        )
+        return 0
 
     if arguments.profils or not arguments.csv:
         lignes, details, comparaisons, series = [], [], [], []

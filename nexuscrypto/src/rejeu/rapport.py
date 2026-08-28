@@ -142,6 +142,16 @@ def verdict(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
         else:
             pire += 1
 
+    # Un prix moyen flatteur obtenu en achetant peu n'est pas une performance,
+    # c'est une abstention partielle. Mesuré sur BTC 2022-2023 : la modulation
+    # paie 7,2 % moins cher que le témoin et gagne **deux fois moins** (+20 %
+    # contre +39 %), parce qu'elle engage 1 400 $ de moins. Sans cette ligne, le
+    # verdict annonçait la victoire sur le seul prix.
+    perdants = [
+        nom for nom, dyn, tem in comparaisons
+        if dyn.achats and tem.achats and dyn.pnl_relatif < tem.pnl_relatif - 0.02
+    ]
+
     total = len(comparaisons)
     phrases = []
     if abstentions:
@@ -150,6 +160,12 @@ def verdict(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
             f"scénario(s) — {', '.join(abstentions)} — alors que le témoin y "
             "investit. Pour un DCA, une abstention totale est le pire résultat "
             "possible : ce n'est pas de la prudence, c'est une panne de discipline."
+        )
+    if perdants:
+        phrases.append(
+            f"⚠ Elle **gagne moins** que le témoin sur {len(perdants)}/{total} "
+            f"scénario(s) — {', '.join(perdants)} — malgré un meilleur prix d'achat : "
+            "acheter moins cher en achetant moins n'est pas une performance."
         )
     if mieux and not pire:
         phrases.append(
