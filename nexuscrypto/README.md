@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 320 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 321 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **320 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **321 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -260,7 +260,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 320 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 321 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -683,3 +683,50 @@ sans mesure : desserrer les stops échangerait ce retard contre un recul plus
 profond, et c'est précisément l'arbitrage que le harnais sait maintenant
 chiffrer. **C'est le prochain réglage à balayer**, comme l'ont été le plancher
 de discipline et la note relative.
+
+---
+
+## 13. Desserrer les stops — l'arbitrage qui n'existait presque pas
+
+Le § 12 laissait un réglage à balayer : les stops liquidaient ETH et LINK
+dix-neuf fois en quatre ans, et l'hypothèse était que les desserrer échangerait
+du rendement contre du recul. **La mesure dit que cet échange n'a presque pas
+lieu.**
+
+Balayé sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de recul
+exposé :
+
+| stop (× ATR) | 2018-2021 | 2022-2026 | tout | moyenne |
+| --- | --- | --- | --- | --- |
+| 2,5 *(ancien)* | 4,96 | 2,27 | 7,28 | 4,84 |
+| **4** | 8,05 | 2,25 | 7,93 | **6,08** |
+| 6 | 8,23 | 2,21 | 7,95 | 6,13 |
+
+Sur 2018-2021, passer de 2,5 à 4 fait bondir le rendement de **+305 % à
++498 %** pour **un demi-point** de recul exposé en plus — 61,4 % contre 61,9 %.
+Le stop à 2,5 ATR détruisait de la valeur sans acheter de protection.
+
+**4 plutôt que 6** : l'essentiel du gain est dans le premier pas, le second
+n'ajoute que 0,05 et coûte du recul sur la fenêtre longue (81,6 % contre
+81,3 %). Même règle que le plancher de discipline — on retient la plus petite
+valeur qui capte l'effet.
+
+**Et couper les stops complètement est pire que 4** : +434 % contre +498 % sur
+2018-2021, avec un recul plus profond. Ils servent — mais pas serrés à ce
+point-là.
+
+### Ce que ce réglage dégrade, et pourquoi on le garde quand même
+
+Les six marchés fabriqués passent de un à **deux** scénarios où la stratégie
+gagne moins que le témoin. C'est une dégradation réelle, et elle est acceptée :
+ces scénarios sont symétriques par construction et le § 9 a montré qu'ils
+flattent. **Quand le fabriqué et le réel se contredisent, c'est le réel qui
+décide** — sinon le harnais sert à confirmer des scénarios qu'on a écrits
+soi-même.
+
+### Où en est l'écart avec un DCA aveugle
+
+Sur 2018-2021, le gain par unité de recul passe de 4,96 à 8,05, contre 11,04
+pour le témoin. **Les trois quarts de l'écart mesuré au § 11 venaient donc de
+réglages, pas de la stratégie elle-même.** Le quart restant tient toujours au
+même fait : elle engage moins de capital.

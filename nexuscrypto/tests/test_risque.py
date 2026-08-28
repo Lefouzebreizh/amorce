@@ -146,8 +146,20 @@ class TestStops(unittest.TestCase):
 
     def test_stop_a_un_multiple_d_atr(self):
         self.assertAlmostEqual(
-            stops.stop_initial(100.0, 4.0, self.config), 100.0 - 4.0 * 2.5
+            stops.stop_initial(100.0, 4.0, self.config),
+            100.0 - 4.0 * self.config.atr_multiple_stop,
         )
+
+    def test_le_multiple_livre_est_celui_qui_a_ete_mesure(self):
+        """4 × ATR, mesuré sur trois fenêtres de BTC + ETH + LINK réels.
+
+        À 2,5, les stops liquidaient ETH et LINK dix-neuf fois en quatre ans et
+        le portefeuille finissait concentré sur le seul actif interdit de
+        vente. Le changer sans rejouer le harnais multi-actifs sur données
+        réelles, c'est régler à l'aveugle.
+        """
+
+        self.assertAlmostEqual(self.config.atr_multiple_stop, 4.0)
 
     def test_sans_atr_pas_de_stop(self):
         """On préfère ne pas en poser qu'en poser un arbitraire : le
@@ -157,7 +169,10 @@ class TestStops(unittest.TestCase):
         self.assertIsNone(stops.stop_initial(100.0, None, self.config))
 
     def test_le_stop_declenche(self):
-        niveaux = stops.evaluer(position(prix_moyen=100.0), 85.0, 4.0, self.config)
+        # Le prix d'épreuve se déduit du réglage : le coder en dur l'attachait
+        # au multiplicateur du jour, et le test cassait au premier balayage.
+        seuil = stops.stop_initial(100.0, 4.0, self.config)
+        niveaux = stops.evaluer(position(prix_moyen=100.0), seuil - 1.0, 4.0, self.config)
         self.assertIs(niveaux.declencheur, stops.Declencheur.STOP)
         self.assertIn("stop touché", niveaux.raison)
 

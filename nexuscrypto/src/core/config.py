@@ -179,7 +179,7 @@ class ConfigRisque:
     risque_par_position: float = 0.01
     exposition_max_par_actif: float = 0.55
     atr_periode: int = 14
-    atr_multiple_stop: float = 2.5
+    atr_multiple_stop: float = 4.0
     trailing_activation: float = 0.20
     trailing_distance: float = 0.12
     coupe_circuit: ConfigCoupeCircuit = field(default_factory=ConfigCoupeCircuit)
