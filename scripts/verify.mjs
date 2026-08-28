@@ -950,6 +950,77 @@ if (profile.mobile) {
   await remonterEnTete(page);
 }
 
+// ------------------------------------- 4quater. L'échelle de la frise
+if (profile.mobile) {
+  /*
+   * Combien de secondes tiennent à l'écran.
+   *
+   * L'échelle était figée à 64 pixels par seconde : sur un téléphone, six
+   * secondes. Un montage de trente-sept secondes tenait donc sur sept écrans,
+   * et rien dans les tests ne le disait — on ne mesurait que le défilement,
+   * jamais ce qu'on voit d'un coup.
+   *
+   * Le pincement est vérifié dans les deux sens. Un geste à deux doigts ne se
+   * teste pas au clic, et un geste que rien ne surveille finit par casser sans
+   * que personne le remarque avant un enregistrement d'écran.
+   */
+  const secondesVues = async () => {
+    const g = await page.evaluate(() => {
+      const c = document.querySelector('[aria-label="Timeline du montage"]');
+      return c ? { vue: c.clientWidth, total: c.scrollWidth } : null;
+    });
+    if (!g || g.total <= 0) return null;
+    return (EXPECTED_DURATION * g.vue) / g.total;
+  };
+
+  const ouverture = await secondesVues();
+  if (ouverture === null) {
+    console.log('  —    | Échelle de frise non mesurée (frise absente)');
+  } else {
+    check(
+      'La frise montre le montage entier à l’ouverture',
+      ouverture >= EXPECTED_DURATION * 0.8,
+      `${ouverture.toFixed(1)} s visibles sur ${EXPECTED_DURATION} s`,
+    );
+
+    const cadre = await page.locator('[aria-label="Timeline du montage"]').boundingBox();
+    const y = cadre.y + cadre.height / 2;
+    const doigts = await page.context().newCDPSession(page);
+    const envoyer = (type, pts) =>
+      doigts.send('Input.dispatchTouchEvent', { type, touchPoints: pts });
+
+    let g = cadre.x + cadre.width * 0.35;
+    let d = cadre.x + cadre.width * 0.65;
+    await envoyer('touchStart', [{ x: g, y, id: 1 }, { x: d, y, id: 2 }]);
+    await page.waitForTimeout(120);
+    for (let k = 1; k <= 6; k += 1) {
+      await envoyer('touchMove', [{ x: g - k * 12, y, id: 1 }, { x: d + k * 12, y, id: 2 }]);
+      await page.waitForTimeout(80);
+    }
+    await envoyer('touchEnd', []);
+    await page.waitForTimeout(400);
+
+    const serre = await secondesVues();
+    check(
+      'Écarter deux doigts rapproche la frise',
+      serre !== null && serre < ouverture * 0.85,
+      `${ouverture.toFixed(1)} s → ${serre?.toFixed(1)} s visibles`,
+    );
+
+    await page.locator('[aria-label="Voir plus large"]').click();
+    await page.locator('[aria-label="Voir plus large"]').click();
+    await page.waitForTimeout(400);
+    const large = await secondesVues();
+    check(
+      'Le bouton « voir plus large » recule',
+      large !== null && serre !== null && large > serre,
+      `${serre?.toFixed(1)} s → ${large?.toFixed(1)} s visibles`,
+    );
+  }
+
+  await remonterEnTete(page);
+}
+
 // ------------------------------------- 4bis. Manipulation directe du texte
 if (profile.mobile) {
   /*
