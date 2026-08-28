@@ -193,6 +193,63 @@ def graphe_flou_radial(cadre: str, force: float, duree: float) -> str:
             f"[net][flou]blend=all_expr='A*(1-{montee})+B*{montee}'[sortie]")
 
 
+def filtre_tremblement(secousses: list, duree: float) -> str:
+    """Une caméra qui encaisse : l'image se déplace, elle ne s'agrandit pas.
+
+    Le geste est un **recadrage** qui bouge. On réserve une marge tout autour,
+    puis on promène la fenêtre dedans — c'est ce que fait une caméra tenue à la
+    main quand le sol bouge, et c'est pourquoi un simple zoom qui pulse n'y
+    ressemble pas : le zoom rapproche, le tremblement décale.
+
+    Deux fréquences se superposent, l'une rapide et l'autre lente, sans rapport
+    entier entre elles. Une seule sinusoïde donnerait une vibration mécanique ;
+    leur somme ne se répète jamais tout à fait, et c'est l'irrégularité que
+    l'oreille interne lit comme un choc réel.
+
+    L'amplitude retombe en exponentielle : un séisme ne s'arrête pas net.
+    """
+    marge = max(float(sec.get("force", 0.05)) for sec in secousses)
+    marge = min(0.12, marge * 1.25)                # de quoi bouger sans bord noir
+
+    dx, dy = [], []
+    for sec in secousses:
+        debut = float(sec.get("debut", 0.0))
+        etendue = float(sec.get("duree", 0.3))
+        force = float(sec.get("force", 0.05)) / max(marge, 1e-6)
+        # `between` borne la secousse, l'exponentielle l'éteint.
+        forme = (f"between(t,{debut:.3f},{debut + etendue:.3f})"
+                 f"*exp(-3.2*(t-{debut:.3f})/{etendue:.3f})")
+        dx.append(f"{force:.3f}*{forme}*(sin(2*PI*23.7*t)+0.55*sin(2*PI*8.3*t))/1.55")
+        dy.append(f"{force:.3f}*{forme}*(cos(2*PI*19.1*t)+0.55*cos(2*PI*6.7*t))/1.55")
+
+    largeur_utile = f"iw*{1 - 2 * marge:.4f}"
+    hauteur_utile = f"ih*{1 - 2 * marge:.4f}"
+    x = f"iw*{marge:.4f}+iw*{marge:.4f}*({'+'.join(dx)})"
+    y = f"ih*{marge:.4f}+ih*{marge:.4f}*({'+'.join(dy)})"
+    # `crop` reevalue deja x et y a chaque image ; lui passer « eval » leve
+    # « Option not found » sur les versions qui ne portent pas cette option.
+    return (f"crop=w={largeur_utile}:h={hauteur_utile}:x='{x}':y='{y}',"
+            f"scale={LARGEUR}:{HAUTEUR}")
+
+
+def filtre_flash(flashs: list) -> str:
+    """Un éclat blanc, monté en une image et éteint en quelques dixièmes.
+
+    `eq` accepte des expressions quand on lui demande de les réévaluer à chaque
+    image ; c'est la seule voie qui ne coûte rien, `geq` calculant pixel par
+    pixel. La montée est instantanée et la retombée exponentielle : l'inverse
+    donnerait une lumière qui s'allume, pas un éclair.
+    """
+    termes = []
+    for flash in flashs:
+        debut = float(flash.get("debut", 0.0))
+        etendue = float(flash.get("duree", 0.2))
+        force = float(flash.get("force", 0.55))
+        termes.append(f"{force:.3f}*between(t,{debut:.3f},{debut + etendue:.3f})"
+                      f"*exp(-5.5*(t-{debut:.3f})/{etendue:.3f})")
+    return f"eq=brightness='{'+'.join(termes)}':eval=frame"
+
+
 def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     """Découpe un plan au format, et l'amène à **sa** cible entendue.
 
@@ -205,6 +262,10 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     mesure = entendu(source, depart, duree)
 
     filtre = CADRE
+    if plan.get("vitesse"):
+        # `setpts` **après** tout ce qui régénère les horodatages, jamais avant :
+        # `zoompan` les réécrit et annulerait le changement de vitesse.
+        pass
     if plan.get("zoom"):
         # Une poussée d'échelle qui **accélère** : linéaire, elle s'entend comme
         # un travelling ; exponentielle, comme une chute. `zoompan` régénère les
@@ -215,6 +276,16 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         filtre += (f",zoompan=z='1+{force}*pow(on/{images},2.2)':d=1"
                    f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                    f":s={LARGEUR}x{HAUTEUR}:fps=30,format=yuv420p")
+    if plan.get("tremblements"):
+        filtre += "," + filtre_tremblement(plan["tremblements"], duree)
+    if plan.get("flashs"):
+        filtre += "," + filtre_flash(plan["flashs"])
+    if plan.get("vitesse"):
+        # En dernier : ce qui precede peut avoir reecrit les horodatages. Et il
+        # faut **recadencer apres**, sinon le flux garde la cadence d'avant et
+        # le multiplexeur refuse des horodatages qui n'avancent plus.
+        filtre += f",setpts=PTS/{float(plan['vitesse']):.4f},fps=30"
+
     muet = mesure is None or mesure < -100
     gain = 0.0 if muet else max(-plafond_db, min(plafond_db,
                                                  float(plan["cible_db"]) - mesure))
@@ -577,6 +648,23 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
                     "-filter_complex", chaine, "-map", "0:v", "-map", "[a]",
                     "-vf", dessin, "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", str(mixe)], check=True)
+
+    if episode.get("silences"):
+        # Un blanc voulu, juste avant la chute. Il ne se fabrique pas en
+        # coupant la piste — la coupure claque — mais par une descente de
+        # quelques centièmes de chaque côté.
+        creux = []
+        for trou in episode["silences"]:
+            d, fin_t = float(trou["debut"]), float(trou["fin"])
+            creux.append(f"if(between(t,{d:.3f},{fin_t:.3f}),0,"
+                         f"if(between(t,{d - 0.04:.3f},{d:.3f}),(({d:.3f}-t)/0.04),"
+                         f"if(between(t,{fin_t:.3f},{fin_t + 0.06:.3f}),"
+                         f"((t-{fin_t:.3f})/0.06),1)))")
+        avec_trous = atelier / "_troue.mkv"
+        subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(mixe), "-af",
+                        f"volume='{'*'.join(creux)}':eval=frame",
+                        "-c:v", "copy", "-c:a", "pcm_s16le", str(avec_trous)], check=True)
+        mixe = avec_trous
 
     gain = normaliser(mixe, sortie)
     for reste in atelier.glob("_*"):
