@@ -39,6 +39,7 @@ import sonde                                      # noqa: E402
 from core.reglages import ReglagesInvalides, charger  # noqa: E402
 from core.reseau import ReseauIndisponible            # noqa: E402
 from core.stockage import BASE_PAR_DEFAUT, Memoire    # noqa: E402
+from core.verrou import ScanDejaEnCours, Verrou       # noqa: E402
 
 
 def _journaliser(bavard: bool) -> None:
@@ -51,7 +52,10 @@ def _journaliser(bavard: bool) -> None:
 
 def commande_scan(arguments) -> int:
     reglages = charger()
-    with Memoire(arguments.base) as memoire:
+    # Le verrou entoure le tour entier, pas la seule écriture : ce qu'il
+    # protège d'abord est la cadence des appels, qui se compte par processus.
+    with Verrou(Path(arguments.base).with_suffix(".verrou")), \
+            Memoire(arguments.base) as memoire:
         resultat = pipeline.scanner(reglages, memoire)
         chemin = rapport.ecrire(rapport.composer(resultat, reglages), arguments.rapport)
 
@@ -116,6 +120,9 @@ def principal(argv: list[str] | None = None) -> int:
     except ReglagesInvalides as erreur:
         print(f"Configuration inutilisable : {erreur}", file=sys.stderr)
         return 2
+    except ScanDejaEnCours as erreur:
+        print(f"Scan sauté : {erreur}", file=sys.stderr)
+        return 5
     except ReseauIndisponible as erreur:
         # Mieux vaut ce message qu'un rapport vide, qui se lirait comme un
         # marché calme.
