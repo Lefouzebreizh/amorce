@@ -1,0 +1,62 @@
+# NexusCrypto — dépendances d'exécution.
+#
+# Quatre lignes, et c'est délibéré : la stratégie, le scoring, la gestion du
+# risque et la simulation d'exécution tournent en **bibliothèque standard
+# pure**. Toute la suite de tests — 218 assertions — s'exécute avec `aiohttp`,
+# `ccxt`, `pandas` et `numpy` volontairement bloqués à l'import. Ce n'est pas
+# une coquetterie : c'est ce qui permet de rejouer six mois de données sur
+# n'importe quelle machine, et de garder la logique de décision vérifiable là
+# où rien n'est installé.
+
+# Toutes les sources passent par un unique client asynchrone. `aiohttp` est
+# importé à la construction du client, jamais au chargement d'un module : le
+# paquet entier s'importe sans lui.
+aiohttp>=3.9
+
+# Les seuils, les pondérations et l'allocation cible vivent dans `config.yaml`
+# plutôt que dans le code : régler un moteur de décision, c'est bouger des
+# nombres vingt fois de suite, et chaque réglage doit se relire sans ouvrir un
+# module.
+PyYAML>=6.0
+
+# Clés d'API et jetons viennent d'un `.env` non versionné. Le chargeur sait lire
+# un `.env` sans cette bibliothèque — exprès, pour qu'une installation cassée
+# reste diagnosticable — mais `python-dotenv` gère les cas tordus (guillemets
+# multilignes, export) que notre lecture minimale ignore.
+python-dotenv>=1.0
+
+# Une bibliothèque pour cent trente plateformes, avec des symboles et des
+# formats de bougie normalisés. Trois SDK officiels, ce sont trois hiérarchies
+# d'exceptions à rattraper et une table de correspondance de symboles à tenir à
+# jour — la première chose à se désynchroniser dans ce genre de système.
+# Importée à la construction du courtier et de la source de marché seulement.
+ccxt>=4.2
+
+
+# --------------------------------------------------------------------------
+# Ce qui n'est PAS ici, et pourquoi
+# --------------------------------------------------------------------------
+#
+# `pandas` / `numpy` — mesurés sur la charge réelle du système : cinq actifs,
+#   trois cents bougies, une passe par heure. Le calcul complet des indicateurs
+#   prend 1,4 ms en Python pur ; le seul `import pandas` en coûte 380 à chaque
+#   démarrage, pour 90 Mo installés. Ils gagneraient sur cent mille bougies ; on
+#   en a trois cents. Voir le bloc d'en-tête de `src/strategy/indicateurs.py`.
+#
+# `python-telegram-bot` / une bibliothèque Discord — ce qu'on en ferait tient
+#   en une requête POST par message. Les deux apportent une boucle
+#   d'événements, un gestionnaire de mises à jour et une vingtaine de
+#   dépendances transitives pour un bot qui n'écoute personne : il annonce.
+#
+# `feedparser` — deux formats de flux, RSS 2.0 et Atom, dont les quatre balises
+#   utiles sont connues. `xml.etree` de la bibliothèque standard suffit, et le
+#   cas tordu (un flux qui rend du HTML d'erreur) est traité explicitement.
+#
+# `hyperliquid-python-sdk` — son point d'entrée `/info` est un POST JSON. Le
+#   passer par le client HTTP commun le rend testable comme les autres sources,
+#   avec des réponses rejouées, et évite une seconde couche de gestion
+#   d'erreurs réseau.
+#
+# `ta-lib` / `pandas-ta` — la première demande une compilation C, la seconde
+#   traîne pandas. Six indicateurs sont nécessaires ici, tous écrits et tous
+#   testés contre des valeurs connues.

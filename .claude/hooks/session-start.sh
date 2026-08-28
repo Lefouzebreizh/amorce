@@ -52,6 +52,7 @@ commandes=(
   "Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
   "TITAN Builder : (dans titan-builder/) npm run lint|typecheck|test|build"
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
+  "NexusCrypto : cd nexuscrypto && python3 -m unittest discover -s tests"
 )
 
 echo "── Amorce : dépendances npm"
@@ -161,6 +162,13 @@ echo "── Radar crypto : bibliothèques Python"
 # coûte une seconde et évite qu'un changement là-haut casse le radar en silence.
 python3 -m pip install --quiet --break-system-packages \
   requests PyYAML python-dotenv
+
+echo "── NexusCrypto : bibliothèques Python"
+# `aiohttp` et `ccxt` ne sont nécessaires qu'à l'*exécution* : le cœur du moteur
+# et sa suite de tests tournent sans eux, et `.github/requirements-tests.txt` ne
+# les liste donc pas. Ici on prépare une session où l'on lance le programme.
+python3 -m pip install --quiet --break-system-packages \
+  aiohttp PyYAML python-dotenv ccxt
 
 echo "── Life-Organizer : bibliothèques Python"
 # Real-ESRGAN et PyTorch sont volontairement absents : plusieurs gigaoctets pour
