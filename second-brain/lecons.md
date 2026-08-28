@@ -567,3 +567,50 @@ chiffre, la mesure est le premier suspect, pas la description. Et quand un
 réglage améliore la théorie sans améliorer le résultat, vérifier son ordre de
 grandeur avant d'en chercher un autre : ici, l'effet était juste et l'amplitude
 cent fois trop faible.
+
+---
+
+## Sonder le détecteur de visage avant de lancer une synchronisation labiale
+
+*Coût : 4 min 51 de calcul pour un message d'erreur en fin de course.*
+
+Wav2Lip s'est arrêté sur « Face not detected! Ensure the video contains a face
+in all the frames » après avoir tourné cinq minutes sur processeur. Le plan
+choisi était un très gros plan dont le crâne sortait du cadre : `s3fd` n'y
+trouve aucune boîte complète, et il ne le dit qu'après avoir parcouru toutes
+les images.
+
+Sondés un par un, les cinq plans de druide du montage ont donné :
+
+| plan | boîte détectée |
+| --- | --- |
+| `02_druide_portrait` | **359 × 438 px** |
+| `09_druide_foudre` | 102 × 163 px |
+| `03_alerte` | 25 × 34 px, puis rien |
+| `hd_druide_terre` | 12 × 16 px |
+
+Une seule est un visage ; les autres sont des faux positifs de quelques
+dizaines de pixels que le modèle accepte sans broncher jusqu'à ce qu'il n'en
+trouve plus du tout. La sonde coûte **deux secondes par image**, contre cinq
+minutes pour l'échec.
+
+```python
+import sys, cv2, numpy
+sys.path.insert(0, "montage-auto/Wav2Lip")
+import face_detection
+d = face_detection.FaceAlignment(face_detection.LandmarksType._2D,
+                                 flip_input=False, device="cpu")
+boite = d.get_detections_for_batch(numpy.array([cv2.imread("image.png")]))[0]
+# Rejeter en dessous de ~120 px de large : en dessous, c'est un faux positif.
+```
+
+**Portée générale :** un traitement long qui vérifie son environnement au
+démarrage ne vérifie pas pour autant ses **données**. Avant tout calcul qui se
+compte en minutes, exécuter sa première étape sur trois échantillons — c'est la
+même règle que « ne pas promettre un résultat qui dépend du réseau avant
+d'avoir sondé », appliquée à l'entrée plutôt qu'à l'outil.
+
+**Et le corollaire de cadrage :** un gros plan trop serré n'est pas un beau plan
+pour un modèle de visage, c'est un plan sans visage. Le plan utilisable est
+celui où la tête entière tient dans l'image, hood compris — pas le plus
+spectaculaire.
