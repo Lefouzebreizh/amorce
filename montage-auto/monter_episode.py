@@ -156,6 +156,43 @@ def phrases(media: Path, pause_s: float = 0.18) -> list[tuple[float, float]]:
 
 # ── montage ───────────────────────────────────────────────────────────────────
 
+# Le nombre de copies moyennées pour le flou radial. Sept suffisent : en
+# dessous, les copies se comptent une à une et l'image se dédouble au lieu de
+# filer ; au-dessus, le rendu s'allonge sans que l'œil y gagne.
+COPIES_FLOU = 7
+
+
+def graphe_flou_radial(cadre: str, force: float, duree: float) -> str:
+    """Un flou de zoom, qui laisse le centre net et étire les bords.
+
+    `ffmpeg` n'a pas de flou radial, et l'écrire image par image en Python
+    coûterait des minutes par plan. Il s'obtient pourtant sans rien quitter :
+    on superpose plusieurs copies de l'image à des **échelles croissantes**,
+    recadrées au centre, et on les moyenne. Deux propriétés en découlent, et ce
+    sont exactement celles d'une aspiration : le déplacement d'un point vaut
+    zéro au centre et croît avec sa distance, donc le puits reste net pendant
+    que le reste file vers l'extérieur.
+
+    La force monte en puissance 2,2 sur la durée du plan plutôt que
+    linéairement — au départ l'image est lisible, à l'arrivée on ne voit plus
+    que la vitesse. C'est la même courbe que la poussée d'échelle, pour la même
+    raison : une accélération constante s'entend et se voit comme une machine,
+    une accélération croissante comme une chute.
+    """
+    copies = "".join(f"[v{k}]" for k in range(COPIES_FLOU))
+    etages = ";".join(
+        f"[v{k}]scale=iw*{1.0 + force * k / (COPIES_FLOU - 1):.4f}:"
+        f"ih*{1.0 + force * k / (COPIES_FLOU - 1):.4f},crop={LARGEUR}:{HAUTEUR}[b{k}]"
+        for k in range(COPIES_FLOU))
+    entrees = "".join(f"[b{k}]" for k in range(COPIES_FLOU))
+    poids = " ".join("1" for _ in range(COPIES_FLOU))
+    montee = f"min(1,pow(T/{duree:.3f},2.2))"
+    return (f"[0:v]{cadre},split={COPIES_FLOU + 1}[net]{copies};"
+            f"{etages};"
+            f"{entrees}mix=inputs={COPIES_FLOU}:weights='{poids}'[flou];"
+            f"[net][flou]blend=all_expr='A*(1-{montee})+B*{montee}'[sortie]")
+
+
 def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     """Découpe un plan au format, et l'amène à **sa** cible entendue.
 
@@ -178,15 +215,29 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         filtre += (f",zoompan=z='1+{force}*pow(on/{images},2.2)':d=1"
                    f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
                    f":s={LARGEUR}x{HAUTEUR}:fps=30,format=yuv420p")
+    muet = mesure is None or mesure < -100
+    gain = 0.0 if muet else max(-plafond_db, min(plafond_db,
+                                                 float(plan["cible_db"]) - mesure))
+    image = graphe_flou_radial(filtre, float(plan["flou_radial"]), duree) \
+        if plan.get("flou_radial") else None
+
     commande = [ffmpeg(), "-y", "-v", "error", "-ss", str(depart), "-t", str(duree),
-                "-i", str(source), "-vf", filtre]
-    if mesure is None or mesure < -100:
-        gain = 0.0
-        commande += ["-f", "lavfi", "-t", str(duree),
-                     "-i", "anullsrc=r=48000:cl=stereo", "-map", "0:v", "-map", "1:a"]
+                "-i", str(source)]
+    if muet:
+        commande += ["-f", "lavfi", "-t", str(duree), "-i", "anullsrc=r=48000:cl=stereo"]
+
+    if image is None:
+        commande += ["-vf", filtre, "-map", "0:v"]
+        commande += ["-map", "1:a"] if muet else ["-af", f"volume={gain}dB", "-map", "0:a"]
     else:
-        gain = max(-plafond_db, min(plafond_db, float(plan["cible_db"]) - mesure))
-        commande += ["-af", f"volume={gain}dB", "-map", "0:v", "-map", "0:a"]
+        # `-af` est **ignoré** dès qu'un `-filter_complex` est présent : le gain
+        # du plan disparaissait en silence, et le seul plan flouté sortait au
+        # niveau brut, dominant tout le montage. Le son passe donc par le même
+        # graphe que l'image.
+        source_son = "[1:a]" if muet else "[0:a]"
+        commande += ["-filter_complex",
+                     f"{image};{source_son}volume={gain}dB[audio]",
+                     "-map", "[sortie]", "-map", "[audio]"]
     commande += ["-t", str(duree), "-c:v", "libx264", "-preset", "medium", "-crf", "19",
                  "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2", str(sortie)]
     subprocess.run(commande, check=True, capture_output=True)

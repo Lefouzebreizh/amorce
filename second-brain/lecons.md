@@ -760,3 +760,42 @@ tranches** sous −40 et remonte le minimum à −40,0 dB.
 La règle déborde le son : **une automation qui suit une intention écrite se
 trompe partout où la mesure et l'intention divergent.** Brancher le détecteur
 sur le signal réel coûte dix lignes et supprime la classe entière d'erreurs.
+
+## `-af` est ignoré en silence dès qu'un `-filter_complex` est présent
+
+Un plan de montage a reçu un flou radial, donc un `-filter_complex`. Son gain
+sonore, resté en `-af`, a cessé d'être appliqué — sans erreur, sans
+avertissement. Ce plan est sorti au niveau brut, a dominé le mixage, et la
+normalisation a tiré les cinq autres sept décibels plus bas. Le symptôme
+observé n'était donc pas « le vortex est fort » mais « tout le reste est
+devenu faible », ce qui envoie chercher au mauvais endroit.
+
+La règle de `ffmpeg` est simple une fois connue : **`-vf` et `-af` sont des
+raccourcis vers le graphe simple, et le graphe complexe les remplace tous les
+deux.** Dès qu'on passe à `-filter_complex` pour l'image, le son doit y entrer
+aussi.
+
+```bash
+-filter_complex "[0:v]...[sortie];[0:a]volume=3dB[audio]" -map "[sortie]" -map "[audio]"
+```
+
+Même famille que le `-v error` qui faisait taire `volumedetect` : un réglage
+qui disparaît sans rien dire coûte plus cher qu'une panne, parce qu'on cherche
+la cause là où le symptôme se voit.
+
+## Un flou radial se compose, il ne se calcule pas image par image
+
+`ffmpeg` n'a pas de flou radial et l'écrire en Python coûterait des minutes par
+plan. Il s'obtient pourtant en une passe : **superposer sept copies de l'image
+à des échelles croissantes, recadrées au centre, et les moyenner** (`split`,
+`scale`, `crop`, `mix`). Le déplacement d'un point vaut alors zéro au centre et
+croît avec sa distance — c'est exactement une aspiration, sans qu'on ait eu à
+la modéliser.
+
+Sept copies : en dessous elles se comptent une à une et l'image se dédouble ;
+au-dessus le rendu s'allonge sans que l'œil y gagne.
+
+Le principe déborde le cas : **avant d'écrire une boucle sur les pixels,
+chercher quelle composition d'opérations existantes produit le même champ de
+déplacement.** Ici, une propriété géométrique du recadrage centré remplaçait
+tout un calcul.
