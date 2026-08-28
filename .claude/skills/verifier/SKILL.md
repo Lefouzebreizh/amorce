@@ -288,6 +288,43 @@ contre DexScreener ni GoPlus en conditions réelles ; tout est validé sur des
 réponses rejouées. Un changement dans `pepites/sources/` se signale comme non
 vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 
+## NexusCrypto — `nexuscrypto/`
+
+```bash
+cd nexuscrypto
+python3 -m unittest discover -s tests    # 218 tests, aucun ne touche au réseau
+python3 main.py verifier                 # la configuration livrée est-elle valide
+```
+
+`main.py verifier` en plus **si et seulement si** le changement touche à
+`config/config.yaml` ou à `src/core/config.py` : les tests diraient qu'ils
+passent sans dire qu'une allocation ne somme plus à 100 %, et c'est un défaut
+qui n'apparaît qu'au démarrage.
+
+La suite entière tourne avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
+l'import — c'est une propriété du projet, pas un accident. Pour la revérifier
+après avoir ajouté une dépendance :
+
+```bash
+cd nexuscrypto && python3 - <<'FIN'
+import sys, unittest
+class Bloqueur:
+    INTERDITS = {"aiohttp", "ccxt", "pandas", "numpy"}
+    def find_module(self, nom, chemin=None):
+        return self if nom.split(".")[0] in self.INTERDITS else None
+    def load_module(self, nom):
+        raise ImportError(f"{nom} volontairement absent")
+sys.meta_path.insert(0, Bloqueur()); sys.path.insert(0, "tests")
+unittest.TextTestRunner().run(unittest.TestLoader().discover("tests"))
+FIN
+```
+
+**Ce que rien de tout cela ne dit** : si une API a changé de forme. Aucune source
+n'a tourné en conditions réelles ; tout est validé sur des réponses rejouées. Un
+changement dans `nexuscrypto/src/data_engine/` se signale comme **non vérifié**
+tant qu'un vrai `python3 main.py analyser` n'a pas tourné. Le mode réel,
+`CourtierCCXT`, n'a jamais passé d'ordre.
+
 ## Paper-Manager — `paper-manager/`
 
 ```bash

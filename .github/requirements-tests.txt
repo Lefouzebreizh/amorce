@@ -16,6 +16,6 @@ numpy          # chaîne pré-presse : mesure des planches
 Pillow         # chaîne pré-presse : ouverture des images
 pymupdf        # assistant administratif : lecture des PDF
 pydantic       # assistant administratif : forme de ce que rend le modèle de vision
-PyYAML         # radar crypto : seuils et table des chaînes en YAML
+PyYAML         # radar crypto et NexusCrypto : seuils et allocation en YAML
 opencv-python-headless  # chaîne KDP : piqué des planches, gradient de Sobel
 scipy          # chaîne de montage : les filtres de la palette de bruitages, importée au chargement du module

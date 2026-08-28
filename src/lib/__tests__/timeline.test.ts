@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { layoutClips, sliceAt, totalDuration, effectiveTransition } from '../timeline.ts';
+import { layoutClips, sliceAt, totalDuration, effectiveTransition, withoutSilences } from '../timeline.ts';
 import { DEFAULT_CLIP, type Clip, type TransitionKind } from '../types.ts';
 
 function makeClip(seconds: number, transition: TransitionKind = 'cut', td = 0): Clip {
@@ -88,4 +88,74 @@ test('au-delà de la fin, on fige sur la dernière image', () => {
   const slice = sliceAt(placed, 99)!;
   assert.equal(slice.to.placed.index, 0);
   assert.ok(slice.to.sourceTime <= 3 && slice.to.sourceTime > 2.99);
+});
+
+// ------------------------------------------------ Découpe des blancs
+
+function clipEntre(entree: number, sortie: number): Clip {
+  return { ...DEFAULT_CLIP, id: 'source', assetId: 'a', inPoint: entree, outPoint: sortie };
+}
+
+let compteur = 0;
+const donneUnId = () => `neuf-${++compteur}`;
+
+test('les blancs du début et de la fin partent sans créer de raccord', () => {
+  // Un rush de 10 s dont on ne parle qu'entre 2 et 8 : un seul morceau reste,
+  // donc un seul plan — surtout pas une liste d'un élément avec un raccord.
+  const pieces = withoutSilences(clipEntre(0, 10), [{ start: 2, end: 8 }], donneUnId);
+  assert.equal(pieces.length, 1);
+  assert.equal(pieces[0].inPoint, 2);
+  assert.equal(pieces[0].outPoint, 8);
+  assert.equal(pieces[0].id, 'source', 'le plan garde son identité');
+});
+
+test('un blanc au milieu coupe le plan en deux', () => {
+  const pieces = withoutSilences(
+    clipEntre(0, 10),
+    [{ start: 0, end: 3 }, { start: 6, end: 10 }],
+    donneUnId,
+  );
+  assert.equal(pieces.length, 2);
+  assert.deepEqual(pieces.map((p) => [p.inPoint, p.outPoint]), [[0, 3], [6, 10]]);
+});
+
+test('seul le premier morceau garde la transition entrante', () => {
+  const source = { ...clipEntre(0, 10), transition: 'fade' as TransitionKind, transitionDuration: 0.5 };
+  const pieces = withoutSilences(source, [{ start: 0, end: 3 }, { start: 6, end: 10 }], donneUnId);
+  assert.equal(pieces[0].transition, 'fade');
+  assert.equal(pieces[0].transitionDuration, 0.5);
+  assert.equal(pieces[1].transition, 'cut', 'un fondu à chaque blanc rendrait la mollesse qu’on retire');
+  assert.equal(pieces[1].transitionDuration, 0);
+});
+
+test('les passages hors des bornes du plan sont ignorés', () => {
+  // Les segments portent sur le fichier entier ; le plan n'en montre que 4→8.
+  const pieces = withoutSilences(
+    clipEntre(4, 8),
+    [{ start: 0, end: 2 }, { start: 5, end: 6.5 }, { start: 20, end: 25 }],
+    donneUnId,
+  );
+  assert.equal(pieces.length, 1);
+  assert.deepEqual([pieces[0].inPoint, pieces[0].outPoint], [5, 6.5]);
+});
+
+test('un plan sans le moindre blanc n’est pas touché', () => {
+  const source = clipEntre(0, 5);
+  assert.equal(withoutSilences(source, [{ start: 0, end: 5 }], donneUnId)[0], source);
+});
+
+test('un plan entièrement muet n’est pas vidé', () => {
+  // Rendre une liste vide effacerait le plan : mieux vaut ne rien faire et le
+  // dire, l'utilisateur décidera lui-même de le supprimer.
+  const source = clipEntre(0, 5);
+  assert.deepEqual(withoutSilences(source, [], donneUnId), [source]);
+});
+
+test('les miettes plus courtes que le minimum ne font pas de plan', () => {
+  const pieces = withoutSilences(
+    clipEntre(0, 10),
+    [{ start: 0, end: 3 }, { start: 4, end: 4.05 }, { start: 6, end: 10 }],
+    donneUnId,
+  );
+  assert.equal(pieces.length, 2, 'le morceau de 50 ms est écarté');
 });

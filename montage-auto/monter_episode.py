@@ -968,6 +968,50 @@ def _profondeur(sec: numpy.ndarray, bancs: dict, duree: float, graine: int) -> n
     return sortie
 
 
+def _enveloppe(son: numpy.ndarray, forme: dict) -> numpy.ndarray:
+    """Donne une attaque à un bruitage qui n'en a pas.
+
+    `cri_titan` a été relevé plat : -25 dB pendant deux secondes et demie,
+    sans onset et sans crête. Mesuré ainsi, ce n'est pas un cri — c'est un
+    bourdon. Et un bourdon ne s'entend pas dans un mixage, quel que soit son
+    gain : ce que l'oreille repère, c'est le **changement**, pas le niveau.
+    Monter un son plat le rend plus fort sans le rendre plus present ; il
+    faut lui rendre sa forme.
+
+    Quatre reglages, tous en secondes sauf l'accent :
+
+    - `attaque`  : montee du silence au plein. Sous 0,03 s on entend un clic.
+    - `accent_s` / `accent_db` : les premieres dixiemes plus fortes que la
+      suite. C'est ce couple-la qui fait le cri : une bete qui hurle donne
+      tout au debut, puis tient. Sans lui l'attaque seule ne s'entend pas.
+    - `chute`    : extinction sur la fin, comptee depuis la queue.
+    """
+    n = len(son)
+    t = numpy.arange(n) / TAUX
+    duree = n / TAUX
+    g = numpy.ones(n)
+
+    attaque = float(forme.get("attaque", 0.05))
+    if attaque > 0:
+        g *= numpy.clip(t / attaque, 0.0, 1.0)
+
+    accent_s = float(forme.get("accent_s", 0.0))
+    accent_db = float(forme.get("accent_db", 0.0))
+    if accent_s > 0 and accent_db:
+        # L'accent retombe en exponentielle et non en droite : une decroissance
+        # lineaire s'entend comme une baisse de volume, l'exponentielle comme
+        # la fin naturelle d'un coup de gosier.
+        g *= 1.0 + (10.0 ** (accent_db / 20.0) - 1.0) * numpy.exp(-t / accent_s)
+
+    chute = float(forme.get("chute", 0.0))
+    if chute > 0:
+        g *= numpy.clip((duree - t) / chute, 0.0, 1.0)
+
+    if son.ndim > 1:
+        g = g[:, None]
+    return son * g
+
+
 def couche_effets(poses: list, bibliotheque: Path, total_s: float,
                   reverberation_s: float = 2.2,
                   esquive: list | None = None) -> numpy.ndarray:
@@ -1006,8 +1050,30 @@ def couche_effets(poses: list, bibliotheque: Path, total_s: float,
                     f"« {nom} » se fabrique à la volée et réclame "
                     f"« parametres » : il manque {', '.join(manquants)}.")
             son = bruitages.BRUITAGES[nom](**donnes)
+            # « telephone » fabrique les harmoniques du grave. Mesure sur
+            # `cri_titan` : 74 % de son energie vit SOUS 400 Hz, c'est-a-dire
+            # sous ce qu'un haut-parleur de telephone restitue — le rugissement
+            # le plus fort du montage y perd 6,9 dB avant meme d'etre mixe.
+            # L'excitation le remonte a -2,9 dB, soit quatre decibels gagnes
+            # sans toucher au gain. Monter le gain n'aurait rien donne : on
+            # aurait pousse plus fort ce que l'appareil ne joue pas.
+            #
+            # Reserve aux sons de SYNTHESE. Sur un enregistrement reel la meme
+            # chaine gresille — c'est ecrit dans `porter_sur_telephone`, et
+            # c'est pourquoi la cle ne vaut que dans cette branche-ci.
+            if pose.get("telephone"):
+                son = bruitages.porter_sur_telephone(
+                    son, poids=float(pose["telephone"]))
             crete = float(numpy.max(numpy.abs(son)))
             son = son / crete * 0.89 if crete else son
+            # L'enveloppe vient APRES la normalisation, et l'ordre n'est pas
+            # indifferent : posee avant, son accent devient la nouvelle crete,
+            # que la normalisation ramene aussitot a 0,89 — le corps du son
+            # descend alors de tout l'accent et l'attaque ne bouge pas. Mesure
+            # sur le cri du dragon : 7,5 dB d'accent demandes, 1,6 dB de
+            # CREUX obtenu a l'instant meme du cri. L'effet exactement inverse.
+            if pose.get("enveloppe"):
+                son = _enveloppe(son, pose["enveloppe"])
             base = -6.0
         else:
             raise SystemExit(f"Son inconnu : « {nom} »")
@@ -1105,7 +1171,25 @@ def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
     # ici, la variation durant moins d'un cinquieme de seconde.
     u = f"max(0,t-{debut})"
     ressort = f"min(1.14,1-exp(-15*{u})*cos(19*{u}))"
-    taille_animee = f"{taille}*{ressort}"
+
+    # La pulsation : une fois le ressort retombe, le texte respire. Elle ne
+    # remplace pas l'arrivee, elle lui succede — d'ou la rampe `(u-0.30)/0.25`,
+    # qui vaut zero pendant le depassement et un ensuite. Sans elle les deux
+    # animations se superposent et le mot part en gelatine.
+    #
+    # 2,2 Hz, soit 132 pulsations par minute : au-dessus le texte vibre, en
+    # dessous il agonise. Trois centiemes et demi d'amplitude suffisent sur la
+    # TAILLE, parce que l'essentiel de l'effet vient du HALO qui bat avec elle
+    # — l'oeil lit une lueur qui enfle bien avant de lire un corps qui grossit.
+    hz = float(entree.get("pulsation", 2.2))
+    if hz:
+        onde = f"sin(2*PI*{hz:.2f}*{u})"
+        installee = f"min(1,max(0,({u}-0.30)/0.25))"
+        battement = f"*(1+0.05*{onde}*{installee})"
+        lueur = f"(0.5+0.5*{onde}*{installee})"
+    else:
+        battement, lueur = "", "0.5"
+    taille_animee = f"{taille}*{ressort}{battement}"
 
     # La secousse : quelques images de tremblement lateral a l'arrivee, puis
     # plus rien. Deux frequences sans rapport entier, comme pour la camera —
@@ -1119,13 +1203,28 @@ def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
     quand = f"between(t,{debut},{fin})"
     commun = (f"fontfile={police()}:text='{contenu}':fontsize='{taille_animee}':"
               f"x='(w-text_w)/2{tremble}':y={y}:enable='{quand}'")
+    # Trois passes et non deux. La plus large ne se lit pas comme un contour
+    # mais comme une LUEUR : a 46 % de la taille, le contour deborde tellement
+    # qu'il fusionne les lettres entre elles, et c'est precisement ce qu'on
+    # cherche — un halo diffus derriere le mot plutot qu'une seconde copie.
+    # Elle doit deborder du halo NOIR de la passe suivante (0,30 fois la
+    # taille), sans quoi ce dernier la recouvre entierement et la lueur ne se
+    # voit plus : mesure sur un titre de 118 px, un plafond de 40 px ne
+    # laissait paraitre que 5 px de bleu autour de 35 px de noir. Le rapport
+    # 0,62 garde une vingtaine de pixels visibles a toutes les tailles.
+    large = min(64, int(taille * 0.62))
     return [
+        f"drawtext={commun}:fontcolor={entree.get('lueur', entree.get('halo', HALO))}@1.0:"
+        f"borderw={large}:bordercolor={entree.get('lueur', entree.get('halo', HALO))}@0.5:"
+        f"alpha='{montee}*(0.24+0.46*{lueur})'",
         # Le halo passe de 0,55 a 0,90 d'opacite et de 22 a 30 % d'epaisseur :
         # a l'ancien reglage il ne se voyait pas, et un halo invisible ne
         # detache rien — il ne fait que coûter une passe de rendu.
+        # Son opacite bat desormais avec la taille : c'est cette respiration-la
+        # qu'on voit, la variation de corps etant trop fine pour se remarquer.
         f"drawtext={commun}:fontcolor={entree.get('halo', HALO)}@0.90:"
         f"borderw={int(taille * 0.30)}:bordercolor=black@0.55:"
-        f"alpha='{montee}*0.90'",
+        f"alpha='{montee}*(0.66+0.28*{lueur})'",
         f"drawtext={commun}:fontcolor={entree.get('couleur', TEINTE)}:"
         f"borderw={5 if taille < 100 else 8}:bordercolor=black@0.9:"
         f"alpha='{montee}'",

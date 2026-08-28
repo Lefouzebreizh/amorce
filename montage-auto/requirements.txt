@@ -1,20 +1,16 @@
-# Synthèse vocale ElevenLabs. Tire httpx derrière lui, d'où le rangement des
-# coupures réseau sous OSError dans `elevenlabs_voice.py`.
-elevenlabs>=2.0
+# Chaîne de montage — dépendances Python.
+#
+# Volontairement courte. Tout ce qui touche à l'image et au son passe par
+# ffmpeg en sous-processus : une bibliothèque de plus, c'est une version de
+# plus à faire correspondre, et aucune ne fait mieux que ffmpeg ce que ffmpeg
+# fait déjà.
+#
+# Ce qui N'EST PAS ici, et pourquoi :
+#   · moviepy      — réencode à chaque opération, et perd la cadence posée
+#   · opencv       — 60 Mo pour lire des images qu'on ne lit pas
+#   · pydub        — enveloppe ffmpeg, sans l'accès aux graphes de filtres
+#
+# ffmpeg lui-même n'est pas un paquet Python : voir installer.sh.
 
-# Barres de progression : téléchargement des poids, et relais de la progression
-# émise par Wav2Lip.
-tqdm>=4.66
-
-# PyTorch sert ici à une seule chose : dire s'il y a un GPU CUDA avant de lancer
-# une heure de calcul. C'est Wav2Lip qui s'en sert vraiment, et Wav2Lip a son
-# propre requirements.txt (opencv, librosa, numpy…) qu'il faut installer dans son
-# dossier après l'avoir cloné :
-#     git clone https://github.com/Rudrabha/Wav2Lip montage-auto/Wav2Lip
-#     pip install -r montage-auto/Wav2Lip/requirements.txt
-# Deux gigaoctets au bas mot : qui ne fait que de la voix off peut s'en passer,
-# `elevenlabs_voice.py` n'y touche pas.
-torch>=2.0
-
-# `prepare_my_edit.py` n'a aucune dépendance à installer : le module de script
-# de DaVinci Resolve est livré avec le logiciel, et se trouve tout seul.
+numpy>=1.24
+soundfile>=0.12
