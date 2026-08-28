@@ -799,3 +799,29 @@ Le principe déborde le cas : **avant d'écrire une boucle sur les pixels,
 chercher quelle composition d'opérations existantes produit le même champ de
 déplacement.** Ici, une propriété géométrique du recadrage centré remplaçait
 tout un calcul.
+
+## Un effet de caméra se compose de filtres existants, pas d'une boucle
+
+Trois gestes de mise en scène qu'on croit devoir calculer image par image se
+posent en une expression `ffmpeg`, et le principe est le même dans les trois cas :
+**chercher quelle opération existante produit le champ voulu.**
+
+- **Le tremblement** est un recadrage qui bouge, jamais un zoom qui pulse. On
+  réserve une marge, on promène la fenêtre dedans — `crop` avec des expressions
+  sur `x` et `y`. Deux fréquences sans rapport entier se superposent : une
+  sinusoïde seule donne une vibration mécanique, leur somme ne se répète jamais
+  et se lit comme un choc.
+- **Le flash** est `eq=brightness` avec `eval=frame`, montée instantanée et
+  retombée exponentielle. L'inverse donne une lumière qui s'allume.
+- **Le flou radial** est la moyenne de sept copies à échelles croissantes,
+  recadrées au centre.
+
+Deux pièges de version, chacun payé une fois :
+
+`crop` **n'a pas d'option `eval`** — ses expressions `x` et `y` sont déjà
+réévaluées à chaque image, et la lui passer lève « Option not found ». `eq`,
+elle, l'exige.
+
+`setpts` doit être **suivi** d'un `fps`, jamais précédé : un flux recadencé
+avant compression garde l'ancienne cadence, et le multiplexeur refuse des
+horodatages qui n'avancent plus (« non monotonically increasing dts »).
