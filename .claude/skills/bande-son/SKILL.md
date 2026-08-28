@@ -113,6 +113,52 @@ que soit le modèle.
 d'ampleur, mais traîne. `upmc` reste utile pour un autre grain de voix, pas pour
 plus de vie.
 
+## La palette : seize bruitages, tous fabriqués
+
+| son | ce qu'il fait | pour |
+| --- | --- | --- |
+| `souffle` | une bande qui se déplace, pas un bruit en fondu | **la coupe** — sans lui chaque transition est un trou |
+| `eclat` | un corps grave puis des éclats qui se raréfient | quelque chose qui vole en morceaux |
+| `carillon` | partiels inharmoniques, longue traîne | une rune, un signe, un éveil |
+| `pulsation` | deux coups par battement, le second plus grave | la tension, **sous** autre chose |
+| `souffle_tournant` | rotation qui **accélère** | un vortex, une aspiration |
+| `respiration` | enveloppe asymétrique, montée vite / retombée lente | le souffle d'une créature |
+| `boom` `choc_metal` `grondement` `crepitement` | | impacts et lits |
+| `montee` `electricite` `rugissement` `nappe_sombre` | | tension, décharge, fond |
+| `braam` | six cuivres désaccordés, chute d'un demi-ton à la fin | **la signature du film-catastrophe** |
+| `chute_sous_grave` | une hauteur qui tombe de 130 à 28 Hz | ce qui suit un impact |
+
+Trois de ces six-là tiennent à une seule ligne, et c'est elle qui les distingue
+d'un effet générique :
+
+- **Le souffle est une bande qui bouge**, pas un volume qui monte. L'oreille lit
+  le déplacement comme un objet qui passe ; sans lui on n'entend qu'un chuintement.
+- **La rotation du vortex accélère.** À vitesse constante on entend un
+  hélicoptère ; en accélérant, une aspiration.
+- **Les éclats se raréfient** en retombant. À densité constante on entend une
+  averse, pas un objet qui explose.
+
+`pulsation` s'emploie **sous** autre chose. Seule, elle devient une horloge, et
+l'urgence fabriquée est précisément ce qu'on ne fait pas ici.
+
+## Ce que `porter_sur_telephone` ne sait pas faire
+
+Il transforme un grave **synthétique** en son audible : mesuré, +30,7 dB sur le
+grondement, +19,2 sur la pulsation.
+
+**Sur un enregistrement réel, il grésille.** Essayé sur une explosion générée,
+dense et entièrement sous 150 Hz : l'énergie du médium est passée de 1,4 % à
+29,6 %, et l'auteur a rejeté le résultat à la première écoute. La cause est dans
+la méthode — le redressement d'un signal complexe fabrique des produits
+d'intermodulation, là où sur une sinusoïde il fabrique des harmoniques propres.
+
+Sur un son enregistré, s'en tenir donc à une **cloche d'égalisation vers
+190 Hz** et à une queue de réverbération. Ça rend moins, et ça ne salit rien.
+
+Et accepter la limite : un son entièrement sous 150 Hz ne sera **jamais** rendu
+par un haut-parleur de téléphone. Le choix n'est pas entre sourd et audible,
+mais entre sourd et sale.
+
 ## Un bruitage grave doit être porté sur le téléphone
 
 Le défaut ne s'entendait pas au casque, et c'est ce qui le rendait durable.
@@ -368,6 +414,31 @@ seuls les instants et les gains changent. Partir de
 | `grondement` | Masse grave, intensité sans cadence |
 | `crepitement` | Braises : un train d'impulsions, pas un sifflement |
 | `nappe_sombre` | Le lit, volontairement immobile |
+| `braam` | Masse de cuivres : désaccord fixe en hertz, attaque de 65 ms, glissée finale d'un demi-ton |
+| `chute_sous_grave` | Descente exponentielle sous le seuil — on n'entend que ses harmoniques |
+
+## Un seul élément possède le grave à la fois
+
+Mesuré en construisant `sfx_library` : quatorze bruitages **individuellement
+conformes** — chacun sous les 10 dB de perte — empilés dans une bande-annonce de
+vingt secondes ont donné **11,0 dB de perte**. Deux drones, un grondement, une
+chute sub et un boom au même instant : les graves ne se masquent pas, ils
+s'additionnent, et la somme repasse sous le seuil du haut-parleur.
+
+Trois versions ont été nécessaires, et l'écart entre elles dit toute la règle :
+
+| version | ce qui change | perte |
+| --- | --- | --- |
+| 1 | tout empilé, au gain conseillé | 11,0 dB |
+| 2 | un seul événement grave à la fois | 9,0 dB |
+| 3 | **le lit audible porté par un son qui passe le filtre**, le drone huit décibels dessous | **5,7 dB** |
+
+C'est la troisième qui donne la méthode. Un drone perd 15,7 dB à lui seul : il ne
+peut pas *porter* un lit sonore, c'est une couche qu'on **ressent** sur une
+enceinte et qui ne doit rien coûter sur un téléphone. Le lit audible se confie à
+un `grondement_braises` ou un `souffle_caverne`, qui perdent 1,3 et 0,3 dB.
+
+Vérifier avec `/voir-le-son` **le mixage**, jamais les éléments : chacun passait.
 
 **Les instants viennent de l'image, jamais d'une grille.** Les repérer avec
 `ffmpeg -vf "select='gt(scene,0.3)',showinfo"` pour les coupes, et à l'œil pour

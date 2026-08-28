@@ -614,3 +614,51 @@ d'avoir sondé », appliquée à l'entrée plutôt qu'à l'outil.
 pour un modèle de visage, c'est un plan sans visage. Le plan utilisable est
 celui où la tête entière tient dans l'image, hood compris — pas le plus
 spectaculaire.
+
+## Un plan s'égalise sur ce qu'on entend, pas sur ce qu'on mesure
+
+Quatre jours de montages rejetés tenaient à une seule confusion. Le niveau moyen
+d'un plan et le niveau que rend un haut-parleur de téléphone ne se suivent pas :
+mesuré sur six plans d'un même épisode, l'écart entre plans valait **5,1 dB en
+bande entière** — un ensemble qui paraît équilibré — et **15,4 dB une fois passé
+le filtre à 400 Hz**. Le monteur réglait la première colonne ; le spectateur
+écoutait la seconde, où l'œil et le vortex passaient quinze décibels sous la voix.
+
+Le remède ne touche pas au timbre : on donne à chaque plan le gain qui aligne son
+**niveau filtré**, pas son niveau entier. L'écart est tombé de 15,4 à 4,0 dB.
+C'est la seule correction acceptable sur un enregistrement — l'excitation
+harmonique, elle, y grésille (`/bande-son`).
+
+```bash
+ffmpeg -hide_banner -nostats -ss <debut> -t <duree> -i <plan> \
+       -af highpass=f=400,volumedetect -f null -
+```
+
+## `-v error` fait taire l'instrument de mesure
+
+`volumedetect` écrit son résultat en niveau *info*. Lancé avec `-v error` par
+réflexe d'économie, il ne rend rien — et le script qui l'appelle conclut « muet »
+pour la totalité du lot, sans erreur, sans avertissement. Deux mesures ont été
+perdues ainsi le même jour, la seconde alors que la première venait d'être
+diagnostiquée.
+
+C'est la même famille de défaut que le doseur déjà consigné plus haut : un outil
+de mesure qui échoue **en silence** rend un verdict faux plus dangereux qu'une
+panne. Avant de croire une mesure uniforme sur un lot hétérogène, vérifier que
+l'instrument parle encore.
+
+## Des sons conformes un par un font un mixage inaudible
+
+Quatorze bruitages, chacun mesuré sous les 10 dB de perte sur un haut-parleur de
+téléphone, montés ensemble en bande-annonce : **11,0 dB de perte**. Les graves ne
+se masquent pas les uns les autres, ils s'additionnent — deux drones, un
+grondement et un boom au même instant repassent sous le seuil de l'appareil.
+
+Vérifier les éléments ne dit donc rien du résultat, et c'est le piège : chaque
+mesure était verte. Seule la mesure **du mixage** l'a vu.
+
+La sortie tient en une phrase de métier : **un seul élément possède le grave à la
+fois**, et le lit audible est porté par un son qui traverse le filtre, jamais par
+un drone. Un drone perd quinze décibels à lui seul ; sa place est huit décibels
+sous le reste, où il se ressent sur une enceinte sans rien coûter sur un
+téléphone. Appliqué, l'écart est tombé de 11,0 à 5,7 dB.
