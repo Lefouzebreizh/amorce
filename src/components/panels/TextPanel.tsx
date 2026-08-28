@@ -118,7 +118,7 @@ export function TextPanel() {
                     onClick={() => select({ kind: 'caption', id: caption.id })}
                     className={`w-full rounded-xl border px-3 py-2 text-left transition-colors ${
                       selected?.id === caption.id
-                        ? 'bg-raised ring-1 ring-accent/60'
+                        ? 'bg-raised ring-1 ring-select/60'
                         : 'bg-slab hover:bg-raised'
                     }`}
                   >
@@ -167,7 +167,7 @@ export function TextPanel() {
                     aria-pressed={active}
                     onClick={() => updateCaption(selected.id, { color: option.value })}
                     className={`h-9 w-9 rounded-full border-2 transition-transform ${
-                      active ? 'scale-110 border-accent' : 'border-edge'
+                      active ? 'scale-110 border-select' : 'border-edge'
                     }`}
                     style={{ backgroundColor: option.value }}
                   />
@@ -194,7 +194,7 @@ export function TextPanel() {
                       aria-pressed={active}
                       onClick={() => updateCaption(selected.id, { highlightColor: option.value })}
                       className={`h-9 w-9 rounded-full border-2 transition-transform ${
-                        active ? 'scale-110 border-accent' : 'border-edge'
+                        active ? 'scale-110 border-select' : 'border-edge'
                       }`}
                       style={{ backgroundColor: option.value }}
                     />

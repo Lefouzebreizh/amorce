@@ -40,7 +40,7 @@ export function CinemaPanel() {
                 type="button"
                 onClick={() => setCinema({ look: look.id })}
                 className={`overflow-hidden rounded-xl border text-left transition-colors ${
-                  active ? 'border-accent ring-1 ring-accent' : 'border-edge hover:border-muted'
+                  active ? 'border-select ring-1 ring-select' : 'border-edge hover:border-muted'
                 }`}
               >
                 <div className="relative h-16 bg-slab">

@@ -136,7 +136,7 @@ export function Timeline({
                 }}
                 title={`${asset?.name ?? 'Plan'} — ${item.duration.toFixed(1)} s`}
                 className={`absolute top-0 ${compact ? 'h-12' : 'h-16'} cursor-grab overflow-hidden rounded-lg border bg-cover bg-center transition-colors active:cursor-grabbing ${
-                  active ? 'border-accent ring-1 ring-accent' : 'border-edge hover:border-muted'
+                  active ? 'border-select ring-1 ring-select' : 'border-edge hover:border-muted'
                 }`}
                 style={{
                   left: item.start * PX_PER_SEC,
@@ -180,7 +180,7 @@ export function Timeline({
                 title={`${caption.text} — style ${CAPTION_STYLES[caption.style].label}`}
                 className={`absolute top-0 h-9 overflow-hidden rounded-md border px-2 text-left text-[11px] leading-9 whitespace-nowrap transition-colors ${
                   active
-                    ? 'border-accent bg-accent/20 text-mist'
+                    ? 'border-select bg-select/20 text-mist'
                     : 'border-edge bg-slab text-muted hover:border-muted hover:text-mist'
                 }`}
                 style={{
@@ -212,7 +212,7 @@ export function Timeline({
                 title={`${descriptor?.label ?? cue.sfx} à ${cue.time.toFixed(2)} s`}
                 className={`absolute top-0 h-9 rounded-md border px-2 text-[11px] leading-9 whitespace-nowrap transition-colors ${
                   active
-                    ? 'border-accent bg-accent/20 text-mist'
+                    ? 'border-select bg-select/20 text-mist'
                     : 'border-edge bg-slab text-muted hover:border-muted hover:text-mist'
                 }`}
                 style={{ left: cue.time * PX_PER_SEC }}

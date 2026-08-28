@@ -532,7 +532,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
                     type="button"
                     onClick={() => select({ kind: 'cue', id: cue.id })}
                     className={`flex min-h-11 w-full items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors ${
-                      selected?.id === cue.id ? 'bg-raised ring-1 ring-accent/60' : 'bg-slab hover:bg-raised'
+                      selected?.id === cue.id ? 'bg-raised ring-1 ring-select/60' : 'bg-slab hover:bg-raised'
                     }`}
                   >
                     <span className="text-xs font-semibold text-mist">

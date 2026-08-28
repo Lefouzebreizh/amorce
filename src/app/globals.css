@@ -57,6 +57,34 @@
   --color-warn: #ffb340;
   --color-danger: #ff5c8a;
 
+  /*
+   * Ce qui est **choisi**, et rien d'autre.
+   *
+   * La sélection empruntait l'accent. Elle en faisait alors une couleur de
+   * décor autant que d'action, et un accent employé pour deux choses n'en
+   * désigne plus aucune — c'est la règle la plus facile à casser sans s'en
+   * apercevoir. Un violet clair sépare les deux sans ajouter de famille : il
+   * appartient déjà à celle des surfaces, en beaucoup plus clair.
+   */
+  --color-select: #9d7bff;
+
+  /*
+   * L'échelle des jauges de qualité.
+   *
+   * Quatre crans, et une contrainte qui a décidé de leurs valeurs : la clarté
+   * **croît d'un cran à l'autre**, de 1,33 à 1,82 fois. Une échelle qui ne
+   * varierait que par la teinte — un ambre et un vert de même clarté — ne se
+   * lirait pas du tout pour qui ne distingue pas le rouge du vert, et une
+   * jauge illisible est pire qu'une jauge absente puisqu'elle rassure.
+   *
+   * Elles ne parlent jamais la langue de l'accent : une note n'est pas une
+   * action, et la confondre avec un bouton ferait cliquer sur un constat.
+   */
+  --color-gauge-low: #e8688c;
+  --color-gauge-mid: #e8a33f;
+  --color-gauge-high: #4fe0b0;
+  --color-gauge-peak: #a8f0ff;
+
   --font-display: var(--font-display-src), system-ui, sans-serif;
   --font-body: var(--font-body-src), system-ui, sans-serif;
 }
