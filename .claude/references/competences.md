@@ -8,7 +8,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | --- | --- |
 | `/api-tierce-verifiee` | Écrire du code contre une bibliothèque ou une API qu'on ne connaît pas de première main — SDK, service en ligne, module livré avec un logiciel — en… |
 | `/audit-code-ia` | Auditer une application générée par IA qui ne tient plus en production — depuis son dépôt quand il y en a un, sinon depuis la surface publique de… |
-| `/bande-son` | Fabriquer la bande-son d'une vidéo — musique, voix off, bruitages — et la sortir au bon niveau pour la plateforme visée, à partir d'une simple phrase… |
+| `/bande-son` | Fabriquer la bande-son d'une vidéo — voix off **synthétisée sur la machine**, musique, bruitages — et la sortir au bon niveau pour la plateforme… |
 | `/branche-partagee` | Travailler sur une branche pendant que d'autres sessions font avancer `main` — savoir en une commande de combien on a pris du retard, quels commits… |
 | `/cadrage-brief-client` | Transformer le brief d'un client en cahier des charges exploitable — questionnaire en cinq points (objectif, utilisateurs, fonctionnalités, données,… |
 | `/capacites-session` | Savoir ce que cette session-ci peut réellement faire — binaires présents, bibliothèques installées, hôtes que le mandataire laisse joindre, modèles… |
@@ -20,6 +20,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/demarrer-projet-client` | Fabriquer un nouveau projet client de l'agence à partir du socle `agence/` — copie, renommage, branchements à la racine, intégration continue, en une… |
 | `/dependance-indisponible` | Livrer quand ce dont le code a besoin n'est pas là — clé d'API absente, GPU manquant, logiciel propriétaire non installé, réseau filtré, poids de… |
 | `/deposer-sur-kdp` | Accompagner le dépôt d'un livre papier sur Amazon KDP une fois les fichiers prêts — l'ordre réel des trois onglets, les réglages d'impression qui ne… |
+| `/epreuve-du-pouce` | Éprouver une interface comme un pouce la rencontre — conduire l'application qui tourne sur le terrain de référence (Redmi Note 12 Plus, 393 × 873) et… |
 | `/etalonner` | Faire tenir ensemble les plans d'un montage, puis poser un rendu filmique — détection des coupes, mesure de la luminance et de la dominante de chaque… |
 | `/etat-du-depot` | Répondre « qu'y a-t-il dans ce dépôt et où en est-ce » par une mesure plutôt que par une liste écrite à la main — les chantiers **découverts**… |
 | `/extraction-multiformat` | >- Ouvrir un fichier non textuel pour répondre à une question dessus, en écrivant et exécutant un script Python local plutôt qu'en déclarant le… |
