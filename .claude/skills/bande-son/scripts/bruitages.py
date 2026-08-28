@@ -587,6 +587,138 @@ def chute_sous_grave(duree: float, graine: int, depart_hz: float = 130.0) -> num
     return porter_sur_telephone((son + grain) * forme * 0.62, poids=1.0)
 
 
+def cri_titan(duree: float, fondamentale: float, graine: int,
+              dechirure: float = 1.0) -> numpy.ndarray:
+    """Le cri d'un monstre de cent mètres, par la méthode qui l'a inventé.
+
+    Le rugissement le plus célèbre du cinéma n'est pas un animal : c'est une
+    **corde de contrebasse frottée avec un gant de résine**, ralentie. Le procédé
+    importe plus que l'anecdote, parce qu'il explique le timbre. Un archet ne
+    glisse pas sur une corde, il **accroche et décroche** des centaines de fois
+    par seconde — chaque décrochage relâche la corde d'un coup. La forme d'onde
+    obtenue n'est pas une sinusoïde mais une dent de scie **dont la période
+    tremble**, et c'est ce tremblement qu'on entend comme un déchirement plutôt
+    que comme une note.
+
+    `rugissement` fabrique son grain par modulation de fréquence, ce qui donne un
+    growl électronique convaincant mais lisse. Ici la rugosité vient de
+    l'irrégularité de la période elle-même : deux mécanismes différents, deux
+    familles de son. Le premier convient à une créature mécanique, le second à
+    une masse organique.
+
+    Trois choses le rendent énorme plutôt que simplement grave :
+
+    1. **Les résonances de corps.** Une caisse de contrebasse chante à quelques
+       fréquences fixes, indépendantes de la note jouée. Ce sont elles qui
+       disent la taille de l'objet, et elles sont placées ici entre 180 Hz et
+       1,8 kHz — au-dessus du plancher du haut-parleur de téléphone, sans quoi
+       la taille ne s'entendrait que sur une enceinte.
+
+    2. **L'attaque lente.** Un archet met deux à trois dixièmes de seconde à
+       mettre la corde en régime. Une attaque immédiate rendrait le cri petit :
+       c'est le temps de mise en route qui fait la masse.
+
+    3. **La courbe de hauteur.** Le cri monte en s'ouvrant puis retombe. Plat,
+       il devient une sirène.
+
+    `dechirure` dose l'irrégularité : 0 rend une dent de scie propre — un cuivre
+    synthétique —, 1 le frottement, au-delà de 1,5 le son se disloque.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / TAUX
+    generateur = numpy.random.default_rng(graine)
+
+    # La hauteur : montée sur le premier tiers, plateau, chute finale.
+    montee = numpy.clip(t / (duree * 0.28), 0, 1)
+    chute = numpy.clip((t - duree * 0.62) / (duree * 0.38), 0, 1)
+    hauteur = fondamentale * (1 + 0.22 * montee - 0.30 * chute ** 1.6)
+    # Un vibrato lent et irrégulier : régulier, il sonnerait chanté.
+    hauteur *= 1 + 0.035 * _irregulier(n, 6.5, graine + 1)
+
+    # L'accroche-décroche. La période tremble ; la dent de scie qui en sort est
+    # le cœur du timbre, et `dechirure` en règle l'ampleur.
+    tremblement = 1 + dechirure * 0.16 * _irregulier(n, 90.0, graine + 2)
+    phase = numpy.cumsum(hauteur * tremblement) / TAUX
+    dent = 2.0 * (phase - numpy.floor(phase)) - 1.0
+    # Le relâchement n'est pas instantané : un lissage court arrondit l'angle,
+    # sans quoi le son siffle au lieu de déchirer.
+    dent = _bas(dent, 6500.0)
+
+    # Les résonances de corps, fixes, qui disent la taille.
+    corps = numpy.zeros(n)
+    for centre, poids, largeur in ((180.0, 1.00, 0.35), (420.0, 0.72, 0.30),
+                                   (900.0, 0.48, 0.28), (1800.0, 0.30, 0.26)):
+        corps += poids * _bande(dent, centre * (1 - largeur), centre * (1 + largeur))
+    corps /= 2.5
+
+    # Le souffle de la gorge suit l'ouverture, et disparaît quand le cri retombe.
+    ouverture = 0.35 + 0.65 * numpy.clip(montee - chute, 0, 1)
+    gorge = _bande(generateur.normal(0, 1, n), 500, 4200)
+    gorge *= ouverture * _irregulier(n, 22, graine + 3) * 0.5
+
+    # L'attaque d'archet : deux dixièmes de seconde pour mettre en régime.
+    attaque = numpy.clip(t / min(0.24, duree * 0.3), 0, 1) ** 1.4
+    extinction = numpy.exp(-1.7 * numpy.clip(t - duree * 0.70, 0, None) / (duree * 0.30))
+    forme = attaque * extinction
+
+    melange = numpy.tanh(2.2 * (0.70 * corps + 0.30 * gorge)) * forme
+    return porter_sur_telephone(melange * 1.3, poids=0.85)
+
+
+def aspiration(duree: float, graine: int, tours_final: float = 26.0) -> numpy.ndarray:
+    """Être aspiré : une rotation qui accélère **et** une hauteur qui monte.
+
+    `souffle_tournant` fait déjà tourner du bruit de plus en plus vite, et cela
+    suffit à dire « vortex ». Cela ne dit pas « on y tombe » — parce qu'il
+    manque le seul indice que l'oreille utilise vraiment pour juger d'une
+    vitesse : **le déplacement en hauteur**. Un objet qui se rapproche monte en
+    fréquence, et c'est cette montée, non la rotation, qui fabrique la sensation
+    de traversée.
+
+    Trois couches, et aucune n'est décorative :
+
+    - **la rotation**, dont la vitesse suit une exponentielle : linéaire, elle
+      s'entend comme un moteur qu'on pousse ; exponentielle, comme une chute ;
+    - **la hauteur**, qui grimpe de deux octaves et demie sur la durée, avec le
+      creux caractéristique du passage au plus près ;
+    - **le grain**, du bruit dont la bande se resserre à mesure que la vitesse
+      monte — ce qui donne l'impression que le tunnel se referme.
+
+    La sortie n'est pas excitée : tout y vit déjà au-dessus du plancher du
+    haut-parleur, et l'exciter n'ajouterait que de la dureté.
+    """
+    n = secondes(duree)
+    t = numpy.linspace(0, 1, n, endpoint=False)
+    generateur = numpy.random.default_rng(graine)
+
+    # La rotation accélère : trois tours au départ, `tours_final` à l'arrivée.
+    vitesse = 3.0 * (tours_final / 3.0) ** t
+    tour = numpy.sin(2 * numpy.pi * numpy.cumsum(vitesse) / TAUX)
+
+    # La hauteur : deux octaves et demie, avec le creux du passage au plus près.
+    passage = numpy.clip((t - 0.86) / 0.14, 0, 1)
+    hauteur = 260.0 * (5.6 ** t) * (1 - 0.34 * passage)
+    phase = 2 * numpy.pi * numpy.cumsum(hauteur) / TAUX
+    corps = (numpy.sin(phase) + 0.42 * numpy.sin(2 * phase)
+             + 0.24 * numpy.sin(3 * phase)) / 1.66
+
+    # Le grain : la bande se resserre, le tunnel se referme.
+    souffle = generateur.normal(0, 1, n)
+    tranches = numpy.array_split(numpy.arange(n), 48)
+    grain = numpy.zeros(n)
+    for tranche in tranches:
+        avance = t[tranche[0]]
+        bas = 300 + 2600 * avance
+        grain[tranche] = _bande(souffle[tranche], bas, min(17000, bas * (5.5 - 3.4 * avance)))
+
+    # La rotation module les deux autres : c'est elle qui fait tourner l'objet
+    # autour de l'auditeur plutôt que de simplement l'accompagner.
+    modulation = 0.45 + 0.55 * (0.5 + 0.5 * tour)
+    forme = numpy.clip(t / 0.10, 0, 1) * numpy.exp(1.4 * t) / numpy.exp(1.4)
+    melange = (0.44 * corps + 0.56 * grain) * modulation * forme
+    return melange / max(float(numpy.max(numpy.abs(melange))), 1e-9) * 0.86
+
+
 BRUITAGES = {
     "boom": boom,
     "souffle": souffle,
@@ -604,6 +736,8 @@ BRUITAGES = {
     "nappe_sombre": nappe_sombre,
     "braam": braam,
     "chute_sous_grave": chute_sous_grave,
+    "cri_titan": cri_titan,
+    "aspiration": aspiration,
 }
 
 # Le lit sonore par défaut. La distinction n'est pas cosmétique : la

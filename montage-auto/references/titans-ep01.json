@@ -1,0 +1,304 @@
+{
+  "_lisez_moi": [
+    "TITANS EP01 — l'épisode qui a servi à écrire monter_episode.py.",
+    "Les chemins de « source » sont ceux d'une machine ; les remplacer.",
+    "",
+    "Les « cible_db » ne sont pas des réglages mais LA COURBE DRAMATIQUE :",
+    "elles montent de -31 sur l'ouverture à -15 sur le rugissement final.",
+    "Les égaliser toutes rendrait le montage plat — la faute qui a coûté",
+    "trois versions.",
+    "",
+    "Les « sous_titres » sont calés sur la parole relevée par --phrases :",
+    "trois groupes à 2,04 / 3,45 / 4,80 s, de 0,65 / 0,68 / 1,33 s.",
+    "",
+    "Le vortex dure 2,8 s et non 1,4 : une traversée demande le temps de",
+    "la sentir. Son « zoom » accélère en puissance 2,2, et `aspiration`",
+    "monte de deux octaces et demie par-dessus — c'est le déplacement en",
+    "hauteur, pas la rotation, qui fabrique la vitesse."
+  ],
+  "bibliotheque": "sfx_library",
+  "effets_db": 5,
+  "largeur_stereo": 2.3,
+  "reverberation_s": 2.2,
+  "plans": [
+    {
+      "nom": "oeil",
+      "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
+      "depart": 0.6,
+      "duree": 1.6,
+      "cible_db": -31.0,
+      "zoom": 0.1
+    },
+    {
+      "nom": "druide",
+      "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
+      "depart": 0.2,
+      "duree": 4.95,
+      "cible_db": -26.0,
+      "_note": "gardé ENTIER : il parle de 0,23 à 5,17 et les lèvres sont calquées dessus"
+    },
+    {
+      "nom": "eclairs",
+      "source": "rushes/PLAN3_eclairs_SON_1s5.mp4",
+      "depart": 0.0,
+      "duree": 1.5,
+      "cible_db": -20.0
+    },
+    {
+      "nom": "runes",
+      "source": "rushes/Holographic_Sci_Fi_Symbol_Rotation2.mp4",
+      "depart": 1.2,
+      "duree": 1.4,
+      "cible_db": -29.0,
+      "_note": "plan muet : tout ce qu'on y entend vient de la couche d'effets"
+    },
+    {
+      "nom": "vortex",
+      "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
+      "depart": 0.6,
+      "duree": 2.8,
+      "cible_db": -22.0,
+      "zoom": 0.55,
+      "_note": "aspiration : la poussée accélère, la hauteur monte, on tombe dedans"
+    },
+    {
+      "nom": "dragon",
+      "source": "rushes/Duration_seconds_Cinemat.mp4",
+      "depart": 4.2,
+      "duree": 5.8,
+      "cible_db": -13.0,
+      "_note": "éclair à 6,5 s dans la source, rugissement de 7,5 à 10 — couper avant les perdait",
+      "zoom": 0.14
+    }
+  ],
+  "effets": [
+    {
+      "son": "grondement_braises",
+      "instant": 0.0,
+      "gain": -10
+    },
+    {
+      "son": "braam_court",
+      "instant": 0.0,
+      "gain": -4
+    },
+    {
+      "son": "whoosh_rapide",
+      "instant": 1.35,
+      "gain": -2
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 1.55,
+      "gain": -5,
+      "largeur": 18,
+      "parametres": {
+        "duree": 5.2,
+        "fondamentale": 58.0,
+        "graine": 88
+      },
+      "_note": "la tension sous la parole, ressentie plus qu'entendue"
+    },
+    {
+      "son": "souffle_caverne",
+      "instant": 1.6,
+      "gain": 0
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 1.6,
+      "gain": -3,
+      "_note": "tient les blancs entre les phrases"
+    },
+    {
+      "son": "riser_court",
+      "instant": 5.2,
+      "gain": 2
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 6.35,
+      "gain": 4
+    },
+    {
+      "son": "impact_debris",
+      "instant": 6.55,
+      "gain": 7
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 6.55,
+      "gain": -3
+    },
+    {
+      "son": "eclat",
+      "instant": 6.62,
+      "gain": 3,
+      "parametres": {
+        "duree": 1.4,
+        "graine": 771,
+        "densite": 150.0
+      }
+    },
+    {
+      "son": "whoosh_rapide",
+      "instant": 7.9,
+      "gain": 2
+    },
+    {
+      "son": "transition_eclair",
+      "instant": 8.05,
+      "gain": 8
+    },
+    {
+      "son": "riser_moyen",
+      "instant": 8.05,
+      "gain": 1
+    },
+    {
+      "son": "whoosh_tournant",
+      "instant": 8.45,
+      "gain": 5
+    },
+    {
+      "son": "aspiration",
+      "instant": 9.4,
+      "gain": 9,
+      "parametres": {
+        "duree": 2.9,
+        "graine": 44,
+        "tours_final": 34.0
+      },
+      "largeur": 22
+    },
+    {
+      "son": "souffle_tournant",
+      "instant": 9.45,
+      "gain": -2,
+      "largeur": 20,
+      "parametres": {
+        "duree": 2.9,
+        "graine": 46
+      }
+    },
+    {
+      "son": "chute_sous_grave",
+      "instant": 11.6,
+      "gain": 2,
+      "parametres": {
+        "duree": 1.6,
+        "graine": 45,
+        "depart_hz": 150.0
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 12.1,
+      "gain": 6
+    },
+    {
+      "son": "braam_massif",
+      "instant": 12.25,
+      "gain": 9
+    },
+    {
+      "son": "grondement_terre",
+      "instant": 12.25,
+      "gain": 5
+    },
+    {
+      "son": "crepitement",
+      "instant": 12.3,
+      "gain": -1,
+      "parametres": {
+        "duree": 5.6,
+        "densite": 80.0,
+        "graine": 775
+      },
+      "largeur": 22
+    },
+    {
+      "son": "riser_court",
+      "instant": 13.5,
+      "gain": 4
+    },
+    {
+      "son": "braam_double",
+      "instant": 14.55,
+      "gain": 10
+    },
+    {
+      "son": "eclat",
+      "instant": 14.62,
+      "gain": 6,
+      "parametres": {
+        "duree": 1.6,
+        "graine": 773,
+        "densite": 170.0
+      }
+    },
+    {
+      "son": "whoosh_tournant",
+      "instant": 15.4,
+      "gain": -4
+    },
+    {
+      "son": "cri_titan",
+      "instant": 15.45,
+      "gain": 12,
+      "parametres": {
+        "duree": 2.6,
+        "fondamentale": 54.0,
+        "graine": 31,
+        "dechirure": 1.15
+      }
+    }
+  ],
+  "sous_titres": [
+    {
+      "texte": "RIFT ZERO FIVE",
+      "debut": 1.94,
+      "fin": 3.05
+    },
+    {
+      "texte": "BREACH OPEN",
+      "debut": 3.35,
+      "fin": 4.5
+    },
+    {
+      "texte": "THE SHADOW TITAN AWAKENS",
+      "debut": 4.7,
+      "fin": 6.45
+    }
+  ],
+  "titres": [
+    {
+      "texte": "THE SHADOW TITAN:",
+      "debut": 0.15,
+      "fin": 1.55,
+      "y": 250,
+      "taille": 58
+    },
+    {
+      "texte": "AZEROTH",
+      "debut": 0.28,
+      "fin": 1.55,
+      "y": 330,
+      "taille": 96
+    },
+    {
+      "texte": "THE SHADOW TITAN:",
+      "debut": 15.3,
+      "fin": 17.85,
+      "y": 1040,
+      "taille": 66
+    },
+    {
+      "texte": "AZEROTH",
+      "debut": 15.3,
+      "fin": 17.85,
+      "y": 1140,
+      "taille": 118
+    }
+  ]
+}

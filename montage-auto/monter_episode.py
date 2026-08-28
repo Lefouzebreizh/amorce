@@ -1,0 +1,462 @@
+#!/usr/bin/env python3
+"""Monte un épisode à partir d'une liste de plans et d'une intention, pas d'un script.
+
+Cinq versions d'un même épisode ont été montées à la main avant d'écrire ce
+fichier, et chacune a été rejetée pour une raison qui se résume en une ligne.
+Ce sont ces cinq lignes que le script encode, pour qu'on ne les repaie plus :
+
+1. **Un plan se coupe sur sa courbe, pas sur sa durée.** Un plan de dragon de
+   dix secondes coupé « au début pour faire court » avait pris son creux exact
+   (−31,6 dB) et laissé dehors l'éclair et le rugissement. `--sonder` relève le
+   niveau seconde par seconde avant qu'on choisisse.
+
+2. **Égaliser tous les plans supprime le relief avec le défaut.** L'égalisation
+   n'est qu'un point de départ ; ce qui fait un montage est une **courbe de
+   cibles écrite**, qui monte vers le dénouement. Le champ `cible_db` de chaque
+   plan est cette courbe.
+
+3. **On ne normalise jamais avec `loudnorm` en une passe** : c'est un
+   compresseur, il aplatit exactement le relief qu'on vient de construire.
+   Mesure, gain unique, limiteur.
+
+4. **Un seul élément possède le grave à la fois**, et rien de lourd sous une
+   voix — c'est elle qui porte la synchronisation labiale.
+
+5. **Les sous-titres se calent sur la parole mesurée**, pas sur une grille.
+   `phrases()` relève les groupes de parole d'un plan ; leurs durées suffisent
+   à reconnaître quelle réplique va où.
+
+    python3 montage-auto/monter_episode.py episode.json sortie.mp4
+    python3 montage-auto/monter_episode.py --sonder plan.mp4
+    python3 montage-auto/monter_episode.py --phrases plan.mp4
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+import wave
+from pathlib import Path
+
+import numpy
+
+RACINE = Path(__file__).resolve().parent
+sys.path.insert(0, str(RACINE))
+sys.path.insert(0, str(RACINE.parent / ".claude" / "skills" / "bande-son" / "scripts"))
+
+import bruitages                                                   # noqa: E402
+import sfx_pro                                                     # noqa: E402
+
+TAUX = 48000
+MOYEN = re.compile(r"mean_volume:\s*(-?[\d.]+)")
+
+# 1080 × 1920 : le seul format qui remplit un téléphone tenu droit.
+LARGEUR, HAUTEUR = 1080, 1920
+CADRE = (f"scale={LARGEUR}:{HAUTEUR}:force_original_aspect_ratio=increase,"
+         f"crop={LARGEUR}:{HAUTEUR},setsar=1,fps=30,format=yuv420p")
+
+# La bande du bas est mangée par la légende et les boutons de la plateforme.
+# Sur 1920 de haut, on ne descend pas un texte sous 1300.
+Y_SOUS_TITRE = 1180
+POLICE = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+
+def ffmpeg() -> str:
+    """Le ffmpeg du système d'abord : celui d'`imageio` n'a pas `drawtext`."""
+    import shutil
+    if Path("/usr/bin/ffmpeg").is_file():
+        return "/usr/bin/ffmpeg"
+    trouve = shutil.which("ffmpeg")
+    if trouve is None:
+        raise SystemExit("ffmpeg est introuvable.")
+    return trouve
+
+
+# ── mesure ────────────────────────────────────────────────────────────────────
+
+def entendu(media: Path, depart: float = 0.0, duree: float | None = None) -> float | None:
+    """Niveau moyen **au-dessus de 400 Hz** : ce qu'un téléphone restituera.
+
+    `volumedetect` écrit son résultat en niveau *info* ; le lancer avec
+    `-v error` par réflexe d'économie le fait taire, et l'appelant conclut
+    « muet » sans la moindre erreur.
+    """
+    commande = [ffmpeg(), "-hide_banner", "-nostats", "-ss", str(depart)]
+    if duree is not None:
+        commande += ["-t", str(duree)]
+    commande += ["-i", str(media), "-af", "highpass=f=400,volumedetect", "-f", "null", "-"]
+    rendu = subprocess.run(commande, capture_output=True, text=True)
+    trouve = MOYEN.search(rendu.stderr)
+    return float(trouve.group(1)) if trouve else None
+
+
+def sonder(media: Path, pas: float = 1.0) -> list[tuple[float, float]]:
+    """Le niveau entendu, tranche par tranche. À lire **avant** de choisir une coupe."""
+    duree = float(subprocess.run(
+        [ffmpeg().replace("ffmpeg", "ffprobe"), "-v", "error",
+         "-show_entries", "format=duration", "-of", "csv=p=0", str(media)],
+        capture_output=True, text=True).stdout.strip() or 0)
+    releve = []
+    instant = 0.0
+    while instant < duree - 0.05:
+        valeur = entendu(media, instant, min(pas, duree - instant))
+        if valeur is not None:
+            releve.append((instant, valeur))
+        instant += pas
+    return releve
+
+
+def phrases(media: Path, pause_s: float = 0.18) -> list[tuple[float, float]]:
+    """Les groupes de parole d'un plan, par l'énergie du signal.
+
+    Sert à caler des sous-titres sur ce qui est réellement dit. Leurs **durées**
+    suffisent en général à reconnaître quelle réplique va où : « breach open »
+    et « the shadow titan awakens » ne durent pas la même chose.
+    """
+    temporaire = media.parent / f"_{media.stem}_voix.wav"
+    subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(media), "-ac", "1",
+                    "-ar", "16000", "-af", "highpass=f=180,lowpass=f=3800",
+                    str(temporaire)], check=True)
+    with wave.open(str(temporaire), "rb") as source:
+        signal = numpy.frombuffer(source.readframes(source.getnframes()),
+                                  dtype=numpy.int16).astype(float) / 32768.0
+    temporaire.unlink(missing_ok=True)
+
+    taux, fenetre, pas = 16000, 400, 160
+    energie = numpy.array([numpy.sqrt(numpy.mean(signal[i:i + fenetre] ** 2))
+                           for i in range(0, max(0, len(signal) - fenetre), pas)])
+    if energie.size == 0:
+        return []
+    db = 20 * numpy.log10(numpy.maximum(energie, 1e-6))
+    parle = db > numpy.percentile(db, 55)
+
+    creux = int(pause_s / (pas / taux))
+    groupes, debut = [], None
+    for i, actif in enumerate(parle):
+        instant = i * pas / taux
+        if actif and debut is None:
+            debut = instant
+        elif not actif and debut is not None:
+            if not parle[i:i + creux].any():
+                if instant - debut > 0.25:
+                    groupes.append((round(debut, 2), round(instant, 2)))
+                debut = None
+    if debut is not None:
+        groupes.append((round(debut, 2), round(len(parle) * pas / taux, 2)))
+    return groupes
+
+
+# ── montage ───────────────────────────────────────────────────────────────────
+
+def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
+    """Découpe un plan au format, et l'amène à **sa** cible entendue.
+
+    La cible vient du plan, pas d'une constante : c'est elle qui fait la courbe
+    dramatique. Un plan muet reçoit une piste de silence plutôt qu'un gain, qui
+    ne remonterait rien.
+    """
+    source = Path(plan["source"]).expanduser()
+    depart, duree = float(plan["depart"]), float(plan["duree"])
+    mesure = entendu(source, depart, duree)
+
+    filtre = CADRE
+    if plan.get("zoom"):
+        # Une poussée d'échelle qui **accélère** : linéaire, elle s'entend comme
+        # un travelling ; exponentielle, comme une chute. `zoompan` régénère les
+        # horodatages, d'où le `-t` explicite qui suit — sans lui le plan
+        # s'allonge silencieusement.
+        force = float(plan["zoom"])
+        images = max(1, int(duree * 30))
+        filtre += (f",zoompan=z='1+{force}*pow(on/{images},2.2)':d=1"
+                   f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                   f":s={LARGEUR}x{HAUTEUR}:fps=30,format=yuv420p")
+    commande = [ffmpeg(), "-y", "-v", "error", "-ss", str(depart), "-t", str(duree),
+                "-i", str(source), "-vf", filtre]
+    if mesure is None or mesure < -100:
+        gain = 0.0
+        commande += ["-f", "lavfi", "-t", str(duree),
+                     "-i", "anullsrc=r=48000:cl=stereo", "-map", "0:v", "-map", "1:a"]
+    else:
+        gain = max(-plafond_db, min(plafond_db, float(plan["cible_db"]) - mesure))
+        commande += ["-af", f"volume={gain}dB", "-map", "0:v", "-map", "0:a"]
+    commande += ["-t", str(duree), "-c:v", "libx264", "-preset", "medium", "-crf", "19",
+                 "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2", str(sortie)]
+    subprocess.run(commande, check=True, capture_output=True)
+    return round(gain, 1)
+
+
+# Un son élargi l'est en décalant les deux oreilles de quelques millisecondes.
+# **Réservé aux souffles et aux montées**, qui sont du bruit à bande large : un
+# grave traité ainsi se creuse au repli mono du haut-parleur de téléphone, et
+# c'est justement là qu'on regarde.
+LARGEUR_PAR_DEFAUT = {"whoosh": 12, "riser": 9, "transition": 15, "souffle": 16,
+                      "eclat": 14, "crepitement": 20}
+
+
+def largeur(nom: str, donnee) -> int:
+    if donnee is not None:
+        return int(donnee)
+    for motif, valeur in LARGEUR_PAR_DEFAUT.items():
+        if nom.startswith(motif):
+            return valeur
+    return 0                                    # grave et ponctuations : au centre
+
+
+def couche_effets(poses: list, bibliotheque: Path, total_s: float,
+                  reverberation_s: float = 2.2) -> numpy.ndarray:
+    """Fabrique la couche cinématique, en stéréo, et lui donne sa pièce.
+
+    La réverbération n'est pas un ornement : c'est elle qui fait entendre un
+    volume autour des sons, donc la différence entre « être devant » et « être
+    dedans ».
+    """
+    catalogue = {s["nom"]: s for s in
+                 json.loads((bibliotheque / "audio_catalog.json").read_text())["sons"]}
+    total = int(total_s * TAUX)
+    gauche, droite = numpy.zeros(total), numpy.zeros(total)
+
+    for pose in poses:
+        nom = pose["son"]
+        if nom in catalogue:
+            son, _ = sfx_pro.lire_wav(bibliotheque / catalogue[nom]["chemin"])
+            base = catalogue[nom]["gain_conseille_db"]
+        elif nom in bruitages.BRUITAGES:
+            # Un bruitage absent de la bibliothèque se fabrique à la volée — mais
+            # il réclame alors ses paramètres, là où un son de la bibliothèque
+            # est déjà rendu. Sans ce message, l'oubli remonte en `TypeError`
+            # brute qui ne dit ni quel son ni quel paramètre.
+            import inspect
+            attendus = [p.name for p in
+                        inspect.signature(bruitages.BRUITAGES[nom]).parameters.values()
+                        if p.default is inspect.Parameter.empty]
+            donnes = pose.get("parametres", {})
+            manquants = [p for p in attendus if p not in donnes]
+            if manquants:
+                raise SystemExit(
+                    f"« {nom} » se fabrique à la volée et réclame "
+                    f"« parametres » : il manque {', '.join(manquants)}.")
+            son = bruitages.BRUITAGES[nom](**donnes)
+            crete = float(numpy.max(numpy.abs(son)))
+            son = son / crete * 0.89 if crete else son
+            base = -6.0
+        else:
+            raise SystemExit(f"Son inconnu : « {nom} »")
+
+        son = son * 10.0 ** ((base + float(pose.get("gain", 0))) / 20.0)
+        decalage = int(largeur(nom, pose.get("largeur")) * TAUX / 1000)
+        for piste, retard in ((gauche, 0), (droite, decalage)):
+            debut = int(float(pose["instant"]) * TAUX) + retard
+            longueur = min(len(son), total - debut)
+            if longueur > 0:
+                piste[debut:debut + longueur] += son[:longueur]
+
+    if reverberation_s:
+        gauche = bruitages.reverberation(gauche, reverberation_s, melange=0.22, graine=91)
+        droite = bruitages.reverberation(droite, reverberation_s, melange=0.22, graine=92)
+
+    fin = int(0.6 * TAUX)
+    for piste in (gauche, droite):
+        piste[-fin:] *= numpy.linspace(1, 0, fin)
+    crete = max(float(numpy.max(numpy.abs(gauche))), float(numpy.max(numpy.abs(droite))))
+    if crete:
+        gauche, droite = gauche / crete * 0.85, droite / crete * 0.85
+
+    entrelace = numpy.empty(total * 2)
+    entrelace[0::2], entrelace[1::2] = gauche, droite
+    return entrelace
+
+
+# La série vit entre 178° et 198° de teinte — un turquoise cyan, mesuré sur les
+# six plans. Un sous-titre blanc y est un corps étranger ; teinté, il appartient
+# à l'image. La valeur est claire à dessein : une couleur saturée serait jolie
+# et illisible.
+TEINTE = "#b4f2ff"
+HALO = "#1fd8e6"
+
+
+def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
+    """Un sous-titre en deux passes : un halo derrière, le texte net devant.
+
+    Le halo est le même texte, dans la couleur vive du plan, avec un contour
+    épais et sans opacité pleine. Il détache le sous-titre d'un fond chargé sans
+    la boîte noire qui fait « ajouté après coup ».
+
+    L'apparition dure douze centièmes. Plus court, le texte clignote ; plus
+    long, il traîne derrière la coupe.
+    """
+    contenu = str(entree["texte"]).replace("\\", r"\\").replace("'", r"\'")
+    contenu = contenu.replace(":", r"\:").replace("%", r"\%")
+    taille = int(entree.get("taille", 62))
+    debut, fin = float(entree["debut"]), float(entree["fin"])
+    y = entree.get("y", y_defaut)
+    montee = f"if(lt(t-{debut},0.12),(t-{debut})/0.12,1)"
+    quand = f"between(t,{debut},{fin})"
+    commun = (f"fontfile={POLICE}:text='{contenu}':fontsize={taille}:"
+              f"x=(w-text_w)/2:y={y}:enable='{quand}'")
+    return [
+        f"drawtext={commun}:fontcolor={entree.get('halo', HALO)}@0.55:"
+        f"borderw={int(taille * 0.22)}:bordercolor=black@0.55:"
+        f"alpha='{montee}*0.55'",
+        f"drawtext={commun}:fontcolor={entree.get('couleur', TEINTE)}:"
+        f"borderw={5 if taille < 100 else 8}:bordercolor=black@0.9:"
+        f"alpha='{montee}'",
+    ]
+
+
+def normaliser(source: Path, sortie: Path, cible_lufs: float = -14.0,
+               vrai_pic_db: float = -1.0) -> float:
+    """Sonie cible **sans toucher à la dynamique**.
+
+    `loudnorm` en une passe travaille au fil de l'eau : il remonte les creux et
+    écrase les crêtes. Mesuré sur un montage, un impact sortant à −1,4 dB dans
+    le mixage brut ressortait à −24 dB, c'est-à-dire au niveau du lit qu'il
+    devait dominer. On mesure, on applique **un seul gain**, on limite.
+    """
+    mesure = subprocess.run(
+        [ffmpeg(), "-hide_banner", "-nostats", "-i", str(source), "-af",
+         f"loudnorm=I={cible_lufs}:TP={vrai_pic_db}:print_format=json",
+         "-f", "null", "-"], capture_output=True, text=True)
+    gain = 0.0
+    depart = mesure.stderr.rfind("{")
+    if depart != -1:
+        try:
+            valeur = float(json.loads(mesure.stderr[depart:])["input_i"])
+            if valeur > -70:
+                gain = cible_lufs - valeur
+        except (ValueError, KeyError):
+            gain = 0.0
+    limite = 10.0 ** (vrai_pic_db / 20.0)
+    subprocess.run(
+        [ffmpeg(), "-y", "-v", "error", "-i", str(source), "-af",
+         f"volume={gain:.2f}dB,alimiter=limit={limite:.4f}:level=disabled",
+         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
+         str(sortie)], check=True)
+    return round(gain, 2)
+
+
+def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
+    atelier.mkdir(parents=True, exist_ok=True)
+    for ancien in atelier.glob("_plan*.mkv"):
+        ancien.unlink()
+
+    gains, instant, reperes = [], 0.0, {}
+    morceaux = []
+    for rang, plan in enumerate(episode["plans"]):
+        fichier = atelier / f"_plan{rang:02d}.mkv"
+        gains.append((plan.get("nom", Path(plan["source"]).stem), couper(plan, fichier)))
+        reperes[plan.get("nom", str(rang))] = round(instant, 2)
+        instant += float(plan["duree"])
+        morceaux.append(fichier)
+    total = instant
+
+    (atelier / "_liste.txt").write_text(
+        "".join(f"file '{p.name}'\n" for p in morceaux), encoding="utf-8")
+    base = atelier / "_base.mkv"
+    subprocess.run([ffmpeg(), "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                    "-i", str(atelier / "_liste.txt"), "-c:v", "copy",
+                    "-c:a", "pcm_s16le", str(base)], check=True)
+
+    effets = atelier / "_effets.wav"
+    piste = couche_effets(episode.get("effets", []),
+                          Path(episode.get("bibliotheque", "sfx_library")).expanduser(),
+                          total, float(episode.get("reverberation_s", 2.2)))
+    with wave.open(str(effets), "wb") as f:
+        f.setnchannels(2)
+        f.setsampwidth(2)
+        f.setframerate(TAUX)
+        f.writeframes(numpy.int16(numpy.clip(piste, -1, 1) * 32767).tobytes())
+
+    couches = []
+    for entree in episode.get("sous_titres", []):
+        couches += texte_ffmpeg(entree, Y_SOUS_TITRE)
+    for entree in episode.get("titres", []):
+        couches += texte_ffmpeg(entree, 1040)
+    dessin = ",".join(couches) or "null"
+
+    # 45 Hz : sous ce seuil ni téléphone ni casque grand public ne rend rien ;
+    # ce qu'on y laisse ne s'entend pas et mange la marge du limiteur.
+    # La présence à 2,5 et 6 kHz vise la bande où un petit haut-parleur est le
+    # plus efficace — la mesure large bande ne la voit presque pas, l'oreille si.
+    chaine = (f"[1:a]aformat=channel_layouts=stereo,"
+              f"volume={episode.get('effets_db', 3)}dB,"
+              f"stereotools=slev={episode.get('largeur_stereo', 2.0)}[s];"
+              "[0:a]aformat=channel_layouts=stereo[v];"
+              "[v][s]amix=inputs=2:duration=first:normalize=0,"
+              "highpass=f=45:poles=2,"
+              "equalizer=f=2500:t=q:w=1.2:g=4,equalizer=f=6000:t=q:w=1.4:g=3[a]")
+    mixe = atelier / "_mixe.mkv"
+    subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(base), "-i", str(effets),
+                    "-filter_complex", chaine, "-map", "0:v", "-map", "[a]",
+                    "-vf", dessin, "-c:v", "libx264", "-preset", "slow", "-crf", "18",
+                    "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", str(mixe)], check=True)
+
+    gain = normaliser(mixe, sortie)
+    for reste in atelier.glob("_*"):
+        reste.unlink(missing_ok=True)
+
+    releve = [(nom, entendu(sortie, reperes[nom], float(p["duree"])))
+              for nom, p in zip((n for n, _ in gains), episode["plans"])]
+    mesures = [v for _, v in releve if v is not None]
+    return {"duree_s": round(total, 2), "gain_sonie_db": gain,
+            "gains_plans": gains, "niveaux": releve,
+            "relief_db": round(max(mesures) - min(mesures), 1) if mesures else 0.0}
+
+
+def main() -> int:
+    analyseur = argparse.ArgumentParser(
+        description="Monte un épisode vertical à partir d'un plan JSON.")
+    analyseur.add_argument("episode", nargs="?", help="le montage (voir --exemple)")
+    analyseur.add_argument("sortie", nargs="?", help="le MP4 à écrire")
+    analyseur.add_argument("--sonder", metavar="PLAN",
+                           help="relève le niveau entendu seconde par seconde")
+    analyseur.add_argument("--phrases", metavar="PLAN",
+                           help="relève les groupes de parole d'un plan")
+    analyseur.add_argument("--atelier", default=None,
+                           help="dossier de travail (défaut : à côté de la sortie)")
+    options = analyseur.parse_args()
+
+    if options.sonder:
+        media = Path(options.sonder).expanduser()
+        print(f"\n  {media.name} — niveau entendu, seconde par seconde\n")
+        for instant, valeur in sonder(media):
+            print(f"    {instant:>5.1f}s  {valeur:>7.1f} dB  "
+                  f"{'█' * max(1, int((valeur + 45) / 1.2))}")
+        print("\n  Couper là où le plan donne, pas là où il commence.")
+        return 0
+
+    if options.phrases:
+        media = Path(options.phrases).expanduser()
+        groupes = phrases(media)
+        print(f"\n  {media.name} — {len(groupes)} groupe(s) de parole\n")
+        for debut, fin in groupes:
+            print(f"    {debut:>5.2f} → {fin:>5.2f}   ({fin - debut:.2f}s)")
+        print("\n  Les durées disent quelle réplique va où.")
+        return 0
+
+    if not options.episode or not options.sortie:
+        analyseur.error("il faut un épisode et une sortie, ou --sonder / --phrases")
+
+    episode = json.loads(Path(options.episode).expanduser().read_text(encoding="utf-8"))
+    sortie = Path(options.sortie).expanduser()
+    sortie.parent.mkdir(parents=True, exist_ok=True)
+    atelier = Path(options.atelier).expanduser() if options.atelier \
+        else sortie.parent / "_atelier"
+
+    bilan = monter(episode, sortie, atelier)
+    print(f"\n  {sortie}  —  {bilan['duree_s']}s  (sonie {bilan['gain_sonie_db']:+} dB)\n")
+    for nom, valeur in bilan["niveaux"]:
+        if valeur is None:
+            continue
+        print(f"    {nom[:22]:<24}{valeur:>7.1f} dB  "
+              f"{'█' * max(1, int((valeur + 38) / 0.5))}")
+    print(f"\n  relief : {bilan['relief_db']} dB")
+    if bilan["relief_db"] < 8:
+        print("  ⚠ sous 8 dB, un montage s'entend plat : creuser les cibles.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
