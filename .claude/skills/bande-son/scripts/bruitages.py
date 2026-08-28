@@ -317,8 +317,180 @@ def poser(piste, son, instant, gain):
         piste[debut:fin] += son[:fin - debut] * gain
 
 
+def souffle(duree: float, graine: int, montant: bool = True) -> numpy.ndarray:
+    """Un passage d'air — le son qui accompagne une coupe ou un mouvement.
+
+    C'est le manque le plus criant d'une palette de format court : sans lui,
+    chaque coupe est un trou. Ce n'est pas un bruit blanc en fondu, mais une
+    **bande qui se déplace** — l'oreille lit ce déplacement comme un objet qui
+    passe, et c'est lui qui fait la transition, pas le volume.
+
+    `montant` décide du sens : vers l'aigu pour entrer dans un plan, vers le
+    grave pour en sortir. Les deux ensemble sur une même coupe la surchargent.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / TAUX
+    generateur = numpy.random.default_rng(graine)
+    base = generateur.normal(0, 1, n)
+
+    # La bande balaie deux octaves et demie. Un balayage plus large sonne comme
+    # un effet ; plus étroit, on n'entend qu'un souffle sourd.
+    progression = t / max(duree, 1e-6)
+    if not montant:
+        progression = 1.0 - progression
+    piste = numpy.zeros(n)
+    # Trois tranches successives plutôt qu'un filtre variable : scipy ne sait pas
+    # faire varier un butterworth dans le temps, et le découpage s'entend moins
+    # qu'un filtre recalculé à chaque échantillon ne coûte.
+    for part in range(6):
+        d, fin = int(n * part / 6), int(n * (part + 1) / 6)
+        centre = 320.0 * (2.0 ** (2.5 * progression[(d + fin) // 2]))
+        piste[d:fin] = _bande(base, centre * 0.62, centre * 1.7)[d:fin]
+
+    # Une enveloppe en cloche : le passage culmine au milieu, pas à la fin.
+    cloche = numpy.exp(-((progression - 0.55) ** 2) / 0.055)
+    return piste * cloche * 1.5
+
+
+def eclat(duree: float, graine: int, densite: float = 90.0) -> numpy.ndarray:
+    """Quelque chose qui vole en morceaux : un corps grave, puis des éclats.
+
+    Deux couches, et l'ordre compte. Le corps grave donne la masse de ce qui
+    casse ; les éclats brillants donnent le nombre de morceaux. L'un sans
+    l'autre donne soit un coup sourd, soit une pluie de verre sans poids.
+
+    Les éclats se raréfient au fil du temps — c'est ce qui distingue un objet
+    qui explose d'une averse. `densite` compte les éclats par seconde au départ.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / TAUX
+    generateur = numpy.random.default_rng(graine)
+
+    corps = numpy.sin(2 * numpy.pi * numpy.cumsum(78 * numpy.exp(-5.5 * t)) / TAUX)
+    corps *= numpy.exp(-7.0 * t / duree)
+
+    eclats = numpy.zeros(n)
+    instant = 0.0
+    while instant < duree:
+        # L'intervalle s'allonge : la pluie de morceaux s'espace en retombant.
+        instant += generateur.exponential(1.0 / max(densite * (1 - instant / duree) ** 2, 4.0))
+        d = int(instant * TAUX)
+        if d >= n:
+            break
+        longueur = min(int(0.05 * TAUX), n - d)
+        grain = generateur.normal(0, 1, longueur)
+        grain *= numpy.exp(-numpy.linspace(0, 6, longueur))
+        eclats[d:d + longueur] += grain * generateur.uniform(0.25, 1.0)
+    eclats = _bande(eclats, 1800, 12000)
+
+    return (corps * 0.62 + eclats * 0.85) * 1.2
+
+
+def carillon(duree: float, fondamentale: float, graine: int) -> numpy.ndarray:
+    """Un cristal qui sonne — pour un signe qui apparaît, une rune, un éveil.
+
+    Les partiels ne sont pas harmoniques : ce sont les rapports d'une plaque
+    frappée, et c'est ce qui sépare une cloche d'un orgue. Ils s'éteignent
+    d'autant plus vite qu'ils sont aigus, comme dans un vrai corps résonnant.
+
+    À la différence de `choc_metal`, la traîne est longue : ici on veut que ça
+    reste dans l'air, pas que ça frappe.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / TAUX
+    generateur = numpy.random.default_rng(graine)
+    piste = numpy.zeros(n)
+    for rang, rapport in enumerate((1.0, 2.76, 5.40, 8.93, 13.34)):
+        f = fondamentale * rapport
+        if f > TAUX / 2.2:
+            break
+        phase = generateur.uniform(0, 2 * numpy.pi)
+        # Les aigus meurent avant les graves : c'est la signature d'un métal.
+        piste += (numpy.sin(2 * numpy.pi * f * t + phase)
+                  * numpy.exp(-t * (1.1 + rang * 0.85))
+                  / (1 + rang * 0.9))
+    # Un souffle d'attaque très court donne le coup de mailloche.
+    attaque = _haut(generateur.normal(0, 1, n), 3000) * numpy.exp(-90 * t)
+    return (piste + attaque * 0.20) * 1.3
+
+
+def pulsation(duree: float, graine: int, battements: float = 52.0) -> numpy.ndarray:
+    """Un pouls sourd, sous une montée de tension.
+
+    Deux coups par battement, le second plus faible et plus grave : c'est ce
+    décalage qui le fait entendre comme un cœur plutôt qu'un métronome. La
+    hauteur descend légèrement à chaque coup, ce qui donne la sensation d'un
+    corps mou et non d'une percussion.
+
+    À employer sous autre chose. Seul, il devient une horloge, et l'urgence
+    fabriquée est précisément ce qu'on ne fait pas ici.
+    """
+    n = secondes(duree)
+    generateur = numpy.random.default_rng(graine)
+    piste = numpy.zeros(n)
+    intervalle = 60.0 / max(battements, 1.0)
+    instant = 0.02
+    while instant < duree:
+        for retard, gain, hauteur in ((0.0, 1.0, 62.0), (0.17, 0.62, 48.0)):
+            d = int((instant + retard) * TAUX)
+            if d >= n:
+                continue
+            longueur = min(int(0.30 * TAUX), n - d)
+            u = numpy.arange(longueur) / TAUX
+            coup = numpy.sin(2 * numpy.pi * numpy.cumsum(hauteur * numpy.exp(-9 * u)) / TAUX)
+            piste[d:d + longueur] += coup * numpy.exp(-13 * u) * gain
+        instant += intervalle * generateur.uniform(0.97, 1.03)
+    # Mesuré sans cette ligne : -64,6 dB une fois filtré comme le fait un
+    # téléphone, contre -27 en absolu. Un pouls en sinus pur n'existe tout
+    # simplement pas sur l'appareil où le format court est regardé.
+    return porter_sur_telephone(piste, poids=0.9) * 1.15
+
+
+def souffle_tournant(duree: float, graine: int) -> numpy.ndarray:
+    """Un vortex : de l'air qui tourne, et qui accélère.
+
+    La rotation vient d'une modulation d'amplitude dont la vitesse **augmente**
+    — à vitesse constante, l'oreille entend un hélicoptère ; en accélérant, elle
+    entend une aspiration. C'est la seule différence entre les deux, et elle
+    tient dans une ligne.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / TAUX
+    generateur = numpy.random.default_rng(graine)
+    air = _bande(generateur.normal(0, 1, n), 180, 5200)
+    # La vitesse de rotation passe de 3 à 14 tours par seconde.
+    vitesse = 3.0 + 11.0 * (t / max(duree, 1e-6)) ** 1.6
+    rotation = 0.55 + 0.45 * numpy.sin(2 * numpy.pi * numpy.cumsum(vitesse) / TAUX)
+    montee_gain = (t / max(duree, 1e-6)) ** 0.7
+    return air * rotation * (0.35 + 0.65 * montee_gain) * 1.4
+
+
+def respiration(duree: float, graine: int, inspire: bool = False) -> numpy.ndarray:
+    """Un souffle de créature — l'expiration d'une gueule, la reprise d'air.
+
+    Du bruit filtré sur la bande d'un conduit, avec une enveloppe asymétrique :
+    une expiration monte vite et retombe lentement, une inspiration fait
+    l'inverse. Inverser cette asymétrie suffit à changer ce qu'on croit
+    entendre, sans toucher au timbre.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / max(duree * TAUX, 1e-6)
+    generateur = numpy.random.default_rng(graine)
+    air = _bande(generateur.normal(0, 1, n), 240, 3400)
+    # Un peu de grave donne le volume d'une grande cage thoracique.
+    corps = _bande(generateur.normal(0, 1, n), 70, 220) * 0.5
+    forme = t ** 0.35 * numpy.exp(-2.6 * t) if not inspire else (1 - t) ** 0.35 * numpy.exp(-2.6 * (1 - t))
+    return (air + corps) * forme * 1.6
+
+
 BRUITAGES = {
     "boom": boom,
+    "souffle": souffle,
+    "eclat": eclat,
+    "carillon": carillon,
+    "pulsation": pulsation,
+    "souffle_tournant": souffle_tournant,
+    "respiration": respiration,
     "choc_metal": choc_metal,
     "grondement": grondement,
     "crepitement": crepitement,
@@ -336,7 +508,8 @@ BRUITAGES = {
 # même crépitement est un lit de braises quand il dure huit secondes sous un
 # champ de lave, et une volée de débris quand il suit un impact — le second veut
 # la réverbération, le premier la refuse.
-COUCHE_AMBIANCE = ("nappe_sombre", "grondement", "crepitement")
+COUCHE_AMBIANCE = ("nappe_sombre", "grondement", "crepitement",
+                   "souffle_tournant", "respiration", "pulsation")
 
 
 def fabriquer(plan: dict) -> numpy.ndarray:
