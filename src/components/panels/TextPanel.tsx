@@ -150,7 +150,7 @@ export function TextPanel() {
               value={selected.text}
               rows={2}
               onChange={(event) => updateCaption(selected.id, { text: event.target.value })}
-              className="w-full resize-none rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
+              className="w-full resize-none min-h-11 rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
             />
           </Field>
 
