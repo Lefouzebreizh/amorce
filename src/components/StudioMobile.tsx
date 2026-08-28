@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { analyzeProject } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
@@ -48,8 +48,26 @@ export function StudioMobile({
    * « Aller à l'import » amène vraiment à l'import, au lieu de ne rien faire
    * visiblement sur une page où tout est déjà là.
    */
+  /*
+   * Et il ne se déclenche pas au montage. L'étape ouverte a déjà une valeur au
+   * premier rendu, si bien que l'effet faisait défiler la page de 183 px avant
+   * toute action — assez pour couper la carte « à faire maintenant », qui
+   * passait à −110 px. C'est-à-dire que l'écran d'arrivée cachait précisément
+   * la seule chose qui répond à « je ne sais pas quoi faire ».
+   *
+   * Un défilement se justifie quand l'utilisateur demande à aller quelque part.
+   * Arriver n'est pas le demander.
+   *
+   * On compare donc l'étape à la précédente, plutôt que de compter les rendus :
+   * en développement, React monte deux fois, et un garde-fou « premier rendu »
+   * se laisse traverser à la seconde passe — la page défilait toujours, et rien
+   * ne le signalait puisque le code avait l'air juste.
+   */
+  const etapePrecedente = useRef(step);
   useEffect(() => {
-    if (!step) return;
+    const change = etapePrecedente.current !== step;
+    etapePrecedente.current = step;
+    if (!change || !step) return;
     document.getElementById(ancre(step))?.scrollIntoView({
       // `smooth` seulement si l'utilisateur ne l'a pas refusé : un défilement
       // animé non désiré est exactement ce que `prefers-reduced-motion` vise.
