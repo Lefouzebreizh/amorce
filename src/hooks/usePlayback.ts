@@ -159,9 +159,46 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
       const pinned = choice === 'auto' ? null : tierById(choice);
       if (pinned && pinned.id !== governor.current().id) governor.set(pinned);
 
+      // Copie, jamais l'objet du gouverneur : il vient de `QUALITY_TIERS`, et
+      // le muter changerait la constante pour toute la session.
       const tier = exporting
         ? { ...tierById('full'), scale: exportingRef.current! }
-        : governor.current();
+        : { ...governor.current() };
+
+      /*
+       * On ne compose jamais plus de pixels que l'écran n'en montre.
+       *
+       * L'invariant tient : la composition reste en 1080 × 1920, et la qualité
+       * d'aperçu n'agit que par une transformation d'échelle. Mais l'échelle
+       * était choisie sur une échelle fixe de quatre paliers, sans regarder la
+       * taille à laquelle l'aperçu s'affiche réellement.
+       *
+       * Or dans le bloc collé d'un téléphone, l'image mesure 80 px de large.
+       * On composait 756 px pour en montrer 80 : neuf fois trop, et neuf fois
+       * payé. Mesuré, le coût suit la surface — 1080 px coûtent 901 ms par
+       * image sur un processeur quatre fois plus lent, 367 px en coûtent 161.
+       *
+       * Le plancher garde une marge : un aperçu agrandi d'un doigt ne doit pas
+       * attendre une recomposition, et un canvas redimensionné est vidé — d'où
+       * le cache de `resolveContext`, qu'on ne veut pas invalider au pixel près.
+       * L'échelle est donc arrondie par crans de 0,05.
+       *
+       * Un export n'y passe jamais : la définition de sortie prime, c'est le
+       * fichier livré et il ne se rejoue pas.
+       *
+       * Un palier **choisi à la main** n'y passe pas non plus. Le dépôt garantit
+       * qu'il écrase la surveillance, et rogner en silence un choix explicite
+       * est précisément ce qu'on ne fait pas ici : quelqu'un qui demande la
+       * qualité maximale la demande, y compris pour juger une image avant de
+       * l'agrandir. La borne ne s'applique donc qu'en automatique — c'est-à-dire
+       * dans le cas par défaut, celui de tout le monde.
+       */
+      const affiche = canvasRef.current?.getBoundingClientRect().width ?? 0;
+      if (!exporting && !pinned && affiche > 0) {
+        const besoin = (affiche * Math.min(3, window.devicePixelRatio || 1)) / OUTPUT_WIDTH;
+        const cran = Math.max(0.15, Math.ceil(besoin / 0.05) * 0.05);
+        if (cran < tier.scale) tier.scale = cran;
+      }
 
       // Le canvas est retrouvé à chaque image plutôt que capturé au démarrage :
       // la boucle devient insensible à l'ordre de montage des composants et
