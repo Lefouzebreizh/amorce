@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 313 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 320 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **313 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **320 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -260,7 +260,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 313 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 320 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -612,3 +612,74 @@ plutôt qu'une, et un actif qui ne monte pas structurellement. C'est le chantier
 suivant. **Tant qu'il n'est pas fait, la seule affirmation honnête sur ce
 moteur reste : sur Bitcoin, il n'a pas justifié sa complexité — et sa
 protection apparente était un artefact de mesure.**
+
+---
+
+## 12. Le rejeu multi-actifs, et ce qu'il corrige
+
+```bash
+for a in btc eth link; do
+  curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/$a.csv
+done
+python3 main.py rejeu --depuis 2018-01-01 --jusqu-a 2021-12-31 \
+  --multi BTC/USDT=btc.csv ETH/USDT=eth.csv LINK/USDT=link.csv
+```
+
+Plusieurs lignes **partageant une trésorerie**, servies dans l'ordre de leur
+dérive — le plus sous-pondéré d'abord — exactement comme l'orchestrateur en
+direct. Ce n'est pas la somme de rejeus indépendants : ce que l'un prend,
+l'autre ne l'a pas.
+
+Les dates sont l'**union** des séries, jamais leur intersection : LINK commence
+en 2017 et ETH en 2015, prendre l'intersection jetterait cinq ans de Bitcoin
+pour aligner le plus jeune.
+
+### Ce que le mono-actif exagérait
+
+| fenêtre | | PnL | recul exposé | gain/douleur | engagé |
+| --- | --- | --- | --- | --- | --- |
+| 2018-2021 | stratégie | +305,0 % | **61,4 %** | 4,96 | 8 203 $ |
+| | témoin | **+684,7 %** | 62,0 % | **11,04** | 9 986 $ |
+| 2022-2026 | stratégie | +111,4 % | **49,1 %** | 2,27 | 7 945 $ |
+| | témoin | **+182,0 %** | 50,3 % | **3,62** | 9 986 $ |
+
+**Le recul exposé redevient équivalent à celui du témoin** — 61,4 % contre
+62,0 %, 49,1 % contre 50,3 %. Le § 11 mesurait 81 % contre 36 % sur un seul
+actif : cet écart n'était pas la stratégie, c'était l'absence de
+diversification. Une ligne unique concentre toutes ses entrées contrariennes au
+même endroit du même cycle ; trois lignes les étalent.
+
+**Et le plafond d'exposition cesse de tout geler.** Sur un seul actif, les 55 %
+par ligne étaient atteints définitivement dès que la position s'appréciait, et
+le rejeu long ne mesurait plus que le plafond (§ 9). À trois lignes, la
+contrainte redevient ce qu'elle est : une limite de concentration.
+
+**Le verdict sur le rendement, lui, ne bouge pas** : +305 % contre +685 %,
++111 % contre +182 %. Le DCA aveugle gagne toujours, et toujours parce que la
+stratégie engage moins de capital.
+
+### Ce que le multi-actifs révèle, et qui n'était pas visible
+
+Le détail des ordres, sur 2018-2021 :
+
+| ligne | achats | ventes | tenue à la fin |
+| --- | --- | --- | --- |
+| BTC/USDT — socle, jamais vendu sur signal | 39 | **0** | oui |
+| ETH/USDT | 45 | 13 | **soldée** |
+| LINK/USDT | 17 | 6 | **soldée** |
+
+**La stratégie ne garde que la ligne qu'elle n'a pas le droit de vendre.** Ses
+stops et sa prise de bénéfice suiveuse liquident méthodiquement ETH et LINK,
+puis les rachètent, puis les reliquident — dix-neuf sorties en quatre ans — et
+le portefeuille finit concentré à 100 % sur le socle.
+
+C'est une explication directe d'une partie du retard : la capitalisation d'ETH
+et de LINK est coupée à chaque stop, alors que le témoin, qui ne vend jamais,
+la garde entière. Le seul actif que la stratégie laisse composer est celui que
+sa configuration lui **interdit** de vendre.
+
+Il n'y a pas de correction évidente à cela, et surtout pas une qu'on poserait
+sans mesure : desserrer les stops échangerait ce retard contre un recul plus
+profond, et c'est précisément l'arbitrage que le harnais sait maintenant
+chiffrer. **C'est le prochain réglage à balayer**, comme l'ont été le plancher
+de discipline et la note relative.

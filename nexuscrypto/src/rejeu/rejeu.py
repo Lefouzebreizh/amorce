@@ -28,7 +28,7 @@ optimiste et il l'est en silence.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..core.config import Config, LigneAllocation
 from ..core.modeles import (
@@ -467,3 +467,199 @@ def rejouer_scenario(config: Config, scenario: Scenario) -> tuple[Resultat, Resu
         nom="DCA plat (témoin)", plat=True,
     )
     return dynamique, temoin
+
+
+# --------------------------------------------------------------------------
+# Rejeu multi-actifs
+# --------------------------------------------------------------------------
+
+
+def config_portefeuille_reel(config: Config, symboles: list[str]) -> Config:
+    """Restreint l'allocation aux actifs dont on a les données, et renormalise.
+
+    Sans renormalisation, retirer une ligne laisse un portefeuille qui somme à
+    moins de 100 % : la trésorerie non réclamée ne serait jamais investie, et le
+    rejeu mesurerait un capital immobilisé plutôt qu'une stratégie.
+    """
+
+    presentes = {
+        symbole: ligne
+        for symbole, ligne in config.portefeuille.allocation.items()
+        if symbole in symboles
+    }
+    if not presentes:
+        raise ValueError(f"Aucun des symboles {symboles} n'est dans l'allocation.")
+    total = sum(l.poids for l in presentes.values())
+    renormalisees = {
+        symbole: replace(ligne, poids=ligne.poids * 100.0 / total)
+        for symbole, ligne in presentes.items()
+    }
+    return replace(
+        config,
+        portefeuille=replace(
+            config.portefeuille,
+            allocation=renormalisees,
+            reserve_decouverte_poids=0.0,
+        ),
+    )
+
+
+def rejouer_multi(config: Config, series: dict, *, nom: str = "dynamique",
+                  plat: bool = False) -> Resultat:
+    """Rejoue la stratégie sur **plusieurs actifs partageant une trésorerie**.
+
+    C'est la seule configuration qui ressemble à ce que le moteur fera en
+    direct, et elle tranche deux questions que le rejeu mono-actif ne pouvait
+    pas trancher.
+
+    **Le plafond d'exposition cesse de tout geler.** Sur un seul actif, les
+    55 % par ligne sont atteints définitivement dès que la position s'apprécie,
+    et un rejeu long ne mesure alors que le plafond. À plusieurs lignes, chacune
+    a sa place et la contrainte redevient ce qu'elle est : une limite de
+    concentration.
+
+    **La trésorerie est disputée.** Les actifs sont servis dans l'ordre de leur
+    dérive — le plus sous-pondéré d'abord — exactement comme l'orchestrateur en
+    direct. C'est ce qui fait qu'un rejeu multi-actifs n'est pas la somme de
+    rejeus indépendants : ce que l'un prend, l'autre ne l'a pas.
+
+    Les dates sont l'**union** des séries, pas leur intersection : SOL commence
+    en 2020, prendre l'intersection jetterait dix ans de Bitcoin pour aligner
+    tout le monde. Un actif absent d'une date est simplement absent ce jour-là.
+    """
+
+    from ..risk_management import portefeuille as pf_module
+
+    symboles = list(series)
+    config = config_portefeuille_reel(config, symboles)
+    profondeur = config.general.profondeur_bougies
+
+    moteur = Moteur(config)
+    courtier = CourtierPapier(config.execution)
+    portefeuille = Portefeuille(
+        liquidites_usd=config.portefeuille.capital_initial_usd,
+        devise=config.general.devise,
+    )
+    resultat = Resultat(
+        nom=nom, symbole=" + ".join(symboles),
+        capital_initial=config.portefeuille.capital_initial_usd,
+        portefeuille=portefeuille,
+    )
+
+    par_actif = {
+        symbole: {b.horodatage.date().isoformat(): i
+                  for i, b in enumerate(reelle.serie.bougies)}
+        for symbole, reelle in series.items()
+    }
+    jours = sorted(set().union(*(set(index) for index in par_actif.values())))
+    if len(jours) < 2:
+        return resultat
+
+    def _instant(jour: str) -> datetime:
+        return datetime.fromisoformat(jour).replace(tzinfo=timezone.utc)
+
+    disjoncteur = cc.depuis_config(
+        config.risque.coupe_circuit,
+        config.portefeuille.capital_initial_usd,
+        _instant(jours[0]),
+    )
+
+    for numero, jour in enumerate(jours[:-1]):
+        instant = _instant(jour)
+        demain = jours[numero + 1]
+
+        prix_courant = {
+            symbole: series[symbole].serie.bougies[par_actif[symbole][jour]].cloture
+            for symbole in symboles
+            if jour in par_actif[symbole]
+        }
+        if not prix_courant:
+            continue
+
+        valeur = portefeuille.valeur_totale(prix_courant)
+        resultat.courbe.append((instant, valeur))
+        resultat.courbe_exposee.append((instant, valeur - portefeuille.liquidites_usd))
+
+        if not plat:
+            declenchement = disjoncteur.observer(
+                maintenant=instant, valeur_portefeuille=valeur
+            )
+            if declenchement is not None:
+                resultat.declenchements.append(declenchement)
+
+        # L'ordre de service : le plus sous-pondéré d'abord. C'est lui qui
+        # décide qui est servi quand la trésorerie ne suffit pas pour tous.
+        ordre = [
+            d.actif
+            for d in pf_module.derives(portefeuille, prix_courant, config.portefeuille)
+            if d.actif in prix_courant
+        ]
+
+        for symbole in ordre:
+            reelle = series[symbole]
+            i = par_actif[symbole][jour]
+            j = par_actif[symbole].get(demain)
+            if j is None or i == 0:
+                continue
+            prix_execution = reelle.serie.bougies[j].ouverture
+            if prix_execution <= 0:
+                continue
+
+            if plat:
+                portefeuille = _achat_plat_multi(
+                    config, courtier, portefeuille, symbole, prix_execution,
+                    instant, moteur, resultat,
+                )
+                continue
+
+            fenetre = reelle.serie.bougies[max(0, i + 1 - profondeur) : i + 1]
+            analyse = moteur.analyser(
+                Contexte(
+                    actif=symbole,
+                    releve_le=instant,
+                    serie=SerieOHLCV(symbole, reelle.serie.intervalle, fenetre),
+                    onchain=reelle.onchain.get(jour),
+                ),
+                portefeuille,
+                instant,
+            )
+            if analyse.decision.action is Action.TEMPORISER:
+                resultat.temporisations += 1
+            portefeuille = _appliquer(
+                config, courtier, disjoncteur, portefeuille, analyse,
+                prix_execution, instant, moteur, resultat,
+            )
+
+    dernier = jours[-1]
+    prix_final = {
+        symbole: series[symbole].serie.bougies[par_actif[symbole][dernier]].cloture
+        for symbole in symboles
+        if dernier in par_actif[symbole]
+    }
+    finale = portefeuille.valeur_totale(prix_final)
+    resultat.courbe.append((_instant(dernier), finale))
+    resultat.courbe_exposee.append((_instant(dernier), finale - portefeuille.liquidites_usd))
+    resultat.portefeuille = portefeuille
+    return resultat
+
+
+def _achat_plat_multi(config, courtier, portefeuille, symbole, prix, instant,
+                      moteur, resultat):
+    """Le témoin multi-actifs : l'enveloppe répartie selon les poids cibles, à
+    chaque échéance, sans rien regarder."""
+
+    from ..strategy import dca
+
+    if not dca.echeance_atteinte(
+        config.portefeuille.cadence_dca, moteur.dernier_dca.get(symbole), instant
+    ):
+        return portefeuille
+    montant = config.portefeuille.enveloppe_dca_usd * config.portefeuille.poids_de(symbole)
+    if montant < config.strategie.dca.montant_minimum_usd:
+        return portefeuille
+    if montant > portefeuille.liquidites_usd:
+        return portefeuille
+    return _passer(
+        courtier, portefeuille, symbole, Sens.ACHAT, montant / prix, prix,
+        "DCA plat", instant, moteur, resultat, config,
+    )
