@@ -41,6 +41,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 import wave
@@ -369,6 +370,48 @@ def esquive_suivie(piste_voix: Path, total: int, creux_db: float = -9.0,
     return gain
 
 
+
+def lire_catalogue(bibliotheque: Path) -> dict:
+    """Relit l'index des sons, quel que soit le nom qu'il porte ici.
+
+    Deux noms ont coexisté pour une seule chose : `audio_catalog.json` dans une
+    bibliothèque autonome, et `second-brain/sound_index.json` dans le dépôt, où
+    les sons vivent sous `kits/sfx/`. Le premier montage complet a échoué là,
+    sur un `FileNotFoundError` qui ne disait pas que les deux moitiés de la
+    chaîne s'étaient donné des noms différents.
+
+    On lit donc les deux, et on normalise vers la forme attendue ici. Le champ
+    `gain_conseille_db` est déduit de la mesure quand il manque : l'index du
+    dépôt relève ce que le son rend **au-dessus de 400 Hz**, ce qu'un téléphone
+    restitue, et viser −16 dB sur cette bande donne un bruitage présent sans
+    qu'il domine.
+    """
+    autonome = bibliotheque / "audio_catalog.json"
+    if autonome.is_file():
+        return {s["nom"]: s for s in json.loads(autonome.read_text())["sons"]}
+
+    racine = Path(__file__).resolve().parent.parent
+    index = racine / "second-brain" / "sound_index.json"
+    if not index.is_file():
+        raise SystemExit(
+            f"Aucun index de sons. Cherché :\n  {autonome}\n  {index}\n"
+            "Lancer `python3 kits/sfx/indexer.py` pour en fabriquer un.")
+
+    catalogue = {}
+    for son in json.loads(index.read_text(encoding="utf-8"))["sons"]:
+        if not son.get("utilisable", True):
+            continue
+        mesure = son.get("telephone_db")
+        catalogue[son["id"]] = {
+            "nom": son["id"],
+            # Les chemins de cet index partent de la racine du dépôt, ceux de la
+            # bibliothèque autonome de la bibliothèque : on rend absolu ici,
+            # plutôt que de faire deviner à l'appelant lequel il tient.
+            "chemin": str(racine / son["chemin"]),
+            "gain_conseille_db": round(-16.0 - mesure, 1) if mesure is not None else 0.0,
+        }
+    return catalogue
+
 def couche_effets(poses: list, bibliotheque: Path, total_s: float,
                   reverberation_s: float = 2.2,
                   esquive: list | None = None) -> numpy.ndarray:
@@ -378,15 +421,15 @@ def couche_effets(poses: list, bibliotheque: Path, total_s: float,
     volume autour des sons, donc la différence entre « être devant » et « être
     dedans ».
     """
-    catalogue = {s["nom"]: s for s in
-                 json.loads((bibliotheque / "audio_catalog.json").read_text())["sons"]}
+    catalogue = lire_catalogue(bibliotheque)
     total = int(total_s * TAUX)
     gauche, droite = numpy.zeros(total), numpy.zeros(total)
 
     for pose in poses:
         nom = pose["son"]
         if nom in catalogue:
-            son, _ = sfx_pro.lire_wav(bibliotheque / catalogue[nom]["chemin"])
+            son, _ = sfx_pro.lire_wav(Path(catalogue[nom]["chemin"]) if Path(catalogue[nom]["chemin"]).is_absolute()
+                                      else bibliotheque / catalogue[nom]["chemin"])
             base = catalogue[nom]["gain_conseille_db"]
         elif nom in bruitages.BRUITAGES:
             # Un bruitage absent de la bibliothèque se fabrique à la volée — mais
@@ -516,6 +559,136 @@ def normaliser(source: Path, sortie: Path, cible_lufs: float = -14.0,
     return round(gain, 2)
 
 
+
+# ── finition ──────────────────────────────────────────────────────────────────
+
+def finition(source: Path, sortie: Path, reglages: dict, atelier: Path) -> dict:
+    """Accorde les plans entre eux, puis pose un rendu. Jamais l'inverse.
+
+    L'ordre n'est pas une préférence. Un rendu posé avant l'accord **amplifie**
+    les écarts au lieu de les masquer : chaque plan reçoit la même courbe, et
+    deux plans qui divergeaient d'un tiers de diaphragme en divergent d'autant
+    plus une fois contrastés. Accorder d'abord, colorer ensuite.
+
+    Trois raisons de faire ça ici plutôt qu'à la main après coup :
+
+    - `etalonner.py` **copie le son sans le réencoder**. Le mixage qu'on vient
+      de construire, avec sa courbe de cibles et sa normalisation, traverse la
+      finition intact — le refaire passer par un encodeur audio annulerait le
+      travail du fichier entier.
+    - Les calques ont un ordre, et il se retient mal : LUT, fuite, grain,
+      vignettage. Le **grain se pose en dernier des images** — tout filtre qui
+      le suit le lisse, et il ne reste qu'un flou.
+    - Un calque se pose en fusion, jamais en opacité seule. `screen` pour ce qui
+      ajoute de la lumière (grain, fuite, poussière), `multiply` pour ce qui en
+      retire (vignettage). Une fuite de lumière en fondu simple grise l'image.
+
+    Chaque étape est facultative : une recette sans `finition` sort le fichier
+    du mixage tel quel.
+    """
+    if not reglages:
+        return {"finition": "aucune"}
+
+    racine = Path(__file__).resolve().parent.parent
+    courant = source
+    rapport: dict = {}
+
+    accord = reglages.get("etalonnage")
+    if accord:
+        outil = racine / ".claude" / "skills" / "etalonner" / "scripts" / "etalonner.py"
+        if outil.is_file():
+            accorde = atelier / "_accorde.mp4"
+            options = accord if isinstance(accord, dict) else {}
+            commande = [sys.executable, str(outil), str(courant), "-o", str(accorde),
+                        "--grain", str(options.get("grain", 0)),
+                        "--force", str(options.get("force", 0.75))]
+            # Sans rendu par défaut : le rendu vient des calques et de la LUT
+            # ci-dessous, et le poser deux fois double contraste et grain.
+            if not options.get("rendu"):
+                commande.append("--sans-rendu")
+            resultat = subprocess.run(commande, capture_output=True, text=True)
+            if accorde.is_file():
+                courant = accorde
+                ecart = [l for l in resultat.stdout.splitlines() if "écart moyen après" in l]
+                rapport["etalonnage"] = ecart[-1].strip() if ecart else "fait"
+            else:
+                rapport["etalonnage"] = "échec — plan gardé tel quel"
+        else:
+            rapport["etalonnage"] = "outil absent"
+
+    calques = reglages.get("calques", [])
+    lut = reglages.get("lut")
+    if calques or lut:
+        entrees = ["-i", str(courant)]
+        # L'indice d'entrée se compte, il ne se déduit pas de la longueur de la
+        # liste : « -stream_loop -1 -i fichier » y ajoute trois éléments et non
+        # deux, et le calcul décalait alors d'un cran par calque bouclé.
+        rang_entree = 0
+        graphe = []
+        courante = "[0:v]"
+        if lut:
+            chemin = (racine / lut) if not Path(lut).is_absolute() else Path(lut)
+            graphe.append(f"{courante}lut3d='{chemin}'[etalonne]")
+            courante = "[etalonne]"
+        for rang, calque in enumerate(calques, start=1):
+            chemin = racine / calque["fichier"]
+            if not chemin.is_file():
+                rapport.setdefault("calques_absents", []).append(calque["fichier"])
+                continue
+            # Une vidéo de calque se boucle : elle est plus courte que le film,
+            # et sans boucle la seconde moitié n'en reçoit rien.
+            # Une vidéo se rejoue en boucle, une image fixe se **tient** :
+            # sans `-loop 1`, un PNG ne dure qu'une image, et le `shortest=1`
+            # du mélange termine alors tout le film avec elle. Le premier essai
+            # a rendu un fichier d'une seule image — sans la moindre erreur de
+            # ffmpeg, qui a fait exactement ce qu'on lui demandait.
+            if chemin.suffix == ".mp4":
+                entrees += ["-stream_loop", "-1", "-i", str(chemin)]
+            else:
+                entrees += ["-loop", "1", "-i", str(chemin)]
+            rang_entree += 1
+            fusion = calque.get("fusion", "screen")
+            opacite = float(calque.get("opacite", 0.15))
+            marque, suivante = f"[c{rang}]", f"[m{rang}]"
+            if chemin.suffix == ".mp4":
+                # Un calque vidéo est une carte de luminance opaque — grain,
+                # poussière, fumée. Il se mélange, et `all_opacity` est le
+                # réglage prévu pour ça.
+                graphe.append(f"[{rang_entree}:v]scale=1080:1920,format=gbrp{marque}")
+                graphe.append(f"{courante}{marque}"
+                              f"blend=all_mode={fusion}:all_opacity={opacite}"
+                              f":shortest=1{suivante}")
+            else:
+                # Un calque image porte sa forme dans **l'alpha**, et son RVB
+                # est souvent noir — c'est le cas du vignettage. `blend` ignore
+                # l'alpha et mélange le RVB : multiplier par du noir a rendu un
+                # film entièrement noir, sans erreur. Ces calques-là se posent
+                # en `overlay`, qui respecte la transparence.
+                graphe.append(f"[{rang_entree}:v]scale=1080:1920,format=rgba,"
+                              f"colorchannelmixer=aa={opacite}{marque}")
+                graphe.append(f"{courante}{marque}overlay=0:0:shortest=1{suivante}")
+            courante = suivante
+        if graphe:
+            graphe[-1] = graphe[-1].replace(courante, "[final]") if courante != "[0:v]" else graphe[-1]
+            chaine = ";".join(graphe)
+            subprocess.run([ffmpeg(), "-y", "-v", "error", *entrees,
+                            "-filter_complex", chaine, "-map", "[final]",
+                            "-map", "0:a", "-c:v", "libx264", "-preset", "slow",
+                            "-crf", "18", "-pix_fmt", "yuv420p",
+                            # Le son est recopié tel quel : c'est le mixage
+                            # normalisé, il n'a rien à gagner à repasser par un
+                            # encodeur et tout à y perdre.
+                            "-c:a", "copy", "-movflags", "+faststart",
+                            str(sortie)], check=True)
+            rapport["calques"] = len(calques)
+            rapport["lut"] = bool(lut)
+            return rapport
+
+    if courant != sortie:
+        shutil.copy(courant, sortie)
+    return rapport
+
+
 def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
     atelier.mkdir(parents=True, exist_ok=True)
     for ancien in atelier.glob("_plan*.mkv"):
@@ -578,7 +751,14 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
                     "-vf", dessin, "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", str(mixe)], check=True)
 
-    gain = normaliser(mixe, sortie)
+    reglages = episode.get("finition")
+    if reglages:
+        brut = atelier / "_normalise.mp4"
+        gain = normaliser(mixe, brut)
+        rapport_finition = finition(brut, sortie, reglages, atelier)
+    else:
+        gain = normaliser(mixe, sortie)
+        rapport_finition = {"finition": "aucune"}
     for reste in atelier.glob("_*"):
         reste.unlink(missing_ok=True)
 
@@ -587,7 +767,8 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
     mesures = [v for _, v in releve if v is not None]
     return {"duree_s": round(total, 2), "gain_sonie_db": gain,
             "gains_plans": gains, "niveaux": releve,
-            "relief_db": round(max(mesures) - min(mesures), 1) if mesures else 0.0}
+            "relief_db": round(max(mesures) - min(mesures), 1) if mesures else 0.0,
+            **rapport_finition}
 
 
 def main() -> int:
