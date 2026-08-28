@@ -1648,65 +1648,57 @@ remplit le cadre, **toute** la zone sûre est du visage. Le choix se fait alors
 entre ce qu'on accepte de couvrir. Ici 12,5 % — le texte passe sur les runes du
 front, les yeux et la bouche restent libres. Mesuré, puis **regardé**.
 
----
+## Une image parfaitement immobile se lit comme un blocage
 
----
+Un carton de fin rapporté comme « ça lag ». Relevé image par image :
+**aucune image perdue**, intervalles réguliers à 41,7 ms, cadence exacte.
 
-## L'ordre alphabétique des tests décidait si la suite passait
+Le débit, lui, tombait à **0,09 Mb/s** sur les 1,7 dernières secondes. Ce n'est
+pas un défaut de lecture, c'est un constat : plus rien ne changeait d'une image
+à l'autre. Un carton dont l'animation de texte est finie et dont le fond est une
+photo fixe **est** un arrêt sur image, et le spectateur ne le lit pas comme un
+choix de réalisation.
 
-`nexuscrypto/tests/` était vert dans son dossier et rouge depuis la racine du
-dépôt — seize modules d'un coup, dont aucun n'avait été touché. Le message
-disait « No module named **`src.core`** », pas « No module named `src` », et
-c'est toute l'explication.
+Une poussée lente de 8 % suffit : 0,09 → **2,2 Mb/s**, et le carton redevient de
+la vidéo.
 
-Depuis la racine, `import src` trouve le `src/` d'Amorce. C'est du TypeScript,
-il n'y a pas un seul `.py` dedans — mais Python en fait un **paquet-espace-de-
-noms implicite** sans lever la moindre erreur. `src` se fige alors dans
-`sys.modules`, et `src.core` n'existe pas dessous.
+**Le débit par seconde est la mesure qui dit si une image bouge.** Elle attrape
+aussi le contraire — un pic qui fait ramer un téléphone.
 
-La suite s'en protégeait par une ligne dans `aides.py`, qui insère le dossier
-du projet en tête de `sys.path`. Elle ne fonctionne que si `aides` est importé
-**avant** le premier `from src...` — ce qui tenait par l'ordre alphabétique :
-`test_config` importe `aides`, et venait en premier. Un fichier neuf nommé
-`test_bouclier.py` est passé devant, a importé `src` directement, et a
-condamné les seize suivants. La correction du chemin arrivait après coup, sur
-un `sys.modules` déjà décidé.
+```bash
+ffprobe -v error -select_streams v -show_entries packet=pts_time,size \
+        -of csv=p=0 film.mp4   # puis sommer par seconde
+```
 
-**Ce qu'il faut en retenir, et qui dépasse ce dépôt :** un dossier sans aucun
-fichier Python est quand même un paquet importable, et il gagne s'il est plus
-haut dans `sys.path`. Un projet imbriqué dont le paquet racine porte un nom
-banal — `src`, `lib`, `core`, `app` — est exposé dès qu'un dossier voisin
-porte le même nom. Le correctif est d'insérer le chemin **dans chaque module
-de test qui importe le paquet**, jamais dans un seul fichier partagé dont
-l'ordre d'import n'est pas garanti.
+## `zoompan` compte ses images par image d'ENTRÉE
 
-Et le geste qui l'attrape : `verifier.sh`, qui rejoue la découverte depuis la
-racine comme le fait l'intégration continue. Lancer la suite depuis le dossier
-du projet ne l'aurait jamais montré.
-## Un défaut de complexité passe tous les tests, parce qu'il n'est pas un défaut
+Le même `zoompan=…:d=70` posé sur une image bouclée a rendu un fichier de
+**230 secondes** au lieu de 2,9. `d` n'est pas la durée de l'effet : c'est le
+nombre d'images de sortie produites **pour chaque image d'entrée**. Sur un
+`-loop 1` qui en fournit déjà soixante-dix, les deux se multiplient.
 
-Une suite verte dit qu'un programme rend le bon résultat. Elle ne dit rien de ce
-qu'il lui en coûte — et sur six entrées de fixture, le mauvais algorithme rend
-exactement le même résultat que le bon, aussi vite.
+Sur une source déjà cadencée, `d=1` — une image dedans, une image dehors — et
+l'animation se pilote par `on`, le numéro d'image de sortie.
 
-Mesuré en écrivant l'index de recherche du cache IPTV. La table plein texte
-portait une colonne `element_id UNINDEXED`, plus lisible que le `rowid` :
+## Un son congestionné n'est pas un son saturé
 
-| entrées | temps d'import |
-| --- | --- |
-| 6 (les tests) | quelques millisecondes |
-| 120 000 (une vraie liste) | **plus de dix minutes, sans finir** |
+Un rugissement décrit comme saturé. Relevé : crête à −1,7 dBFS, **zéro
+échantillon au-dessus de 0,95**, facteur de crête 8,8 dB. Rien n'écrête.
 
-`UNINDEXED`, dans FTS5, veut dire « stockée, pas indexée » : chaque mise à jour
-d'une ligne la retrouvait par un balayage complet de l'index. Quadratique. Lié
-par le `rowid` — la clé native de FTS5 —, le même import prend **6,6 s**.
+Son profil disait le défaut : **400-900 Hz à −5,7 dB quand 2-5 kHz était à
+−13**. Toute la masse dans le bas-médium, aucune dent. C'est ce déséquilibre
+qu'on entend comme de la saturation, et le monter ne fait qu'aggraver
+l'encombrement.
 
-Le piège n'est pas SQLite, il est plus large : **le comportement était juste,
-seul le coût était faux**, et rien dans une assertion ne regarde le coût. Les
-mêmes formes se rencontrent partout — un `Array.indexOf` dans une boucle, une
-requête par ligne au lieu d'une jointure, un `Set` reconstruit à chaque tour.
+Creusé à 320 Hz (−4 dB), relevé à 1,9 et 3,6 kHz (+5 et +3,5) : 2-5 kHz remonte
+de **3,5 dB**, 900-2000 de 3, sans toucher au gain ni à la crête. L'agressivité
+d'un cri vit là — et c'est aussi la bande où un haut-parleur de téléphone entend
+le mieux.
 
-La parade tient en un geste, et il ne s'automatise pas : **une fois, avant de
-livrer, faire tourner le programme sur un volume réaliste et regarder la
-montre.** Fabriquer la donnée est l'affaire de vingt lignes de script ; elle ne
-se versionne pas, et cette mesure-là attrape ce qu'aucune suite ne verra.
+## Un sous-titre se cale sur la bouche, pas sur le son
+
+0,15 s d'avance sur la parole mesurée paraissait juste, et l'auteur trouvait
+encore que « ça arrive trop tard ». La bouche s'**ouvre** avant que le son
+sorte, et c'est sur l'image que l'œil cale la synchronisation.
+
+0,30 s d'avance. Un sous-titre qui arrive avec le son arrive après l'image.
