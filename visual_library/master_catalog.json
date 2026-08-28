@@ -1,8 +1,8 @@
 {
   "visuels": {
-    "total": 10,
+    "total": 9,
     "au_dessus_du_seuil": 5,
-    "corriges": 4,
+    "corriges": 1,
     "seuils": {
       "luma_mini": 40.0,
       "note_mini": 50.0,
@@ -20,8 +20,8 @@
         "luma": 74.1,
         "contraste": 28.4,
         "visibilite_telephone": 51.1,
-        "corrige_pour_telephone": true,
-        "empreinte": "a1a15e5c53e35d1c",
+        "corrige_pour_telephone": false,
+        "empreinte": "a1a15e5e52e35d1c",
         "versions": {
           "webp": "visual_library/app_optimized/light_leak_orange.webp"
         }
@@ -54,8 +54,8 @@
         "luma": 64.3,
         "contraste": 38.6,
         "visibilite_telephone": 55.3,
-        "corrige_pour_telephone": true,
-        "empreinte": "f0e01ffe011f0f07",
+        "corrige_pour_telephone": false,
+        "empreinte": "f0e01ffe031f0707",
         "versions": {
           "webp": "visual_library/app_optimized/light_leak_magenta.webp"
         }
@@ -68,30 +68,13 @@
         "fps": null,
         "origine": "synthèse",
         "licence": "CC0 — fabriqué par code, aucun droit tiers",
-        "luma": 34.8,
+        "luma": 63.6,
         "contraste": 0.0,
-        "visibilite_telephone": 13.6,
+        "visibilite_telephone": 24.8,
         "corrige_pour_telephone": true,
         "empreinte": "8000000000000000",
         "versions": {
           "webp": "visual_library/app_optimized/vignette_strong.webp"
-        }
-      },
-      {
-        "nom": "vignette_soft.png",
-        "categorie": "matte",
-        "chemin": "visual_library/05_Matte_and_Bars/vignette_soft.png",
-        "resolution": "3840x2160",
-        "fps": null,
-        "origine": "synthèse",
-        "licence": "CC0 — fabriqué par code, aucun droit tiers",
-        "luma": 20.4,
-        "contraste": 0.0,
-        "visibilite_telephone": 8.0,
-        "corrige_pour_telephone": true,
-        "empreinte": "0000000000000000",
-        "versions": {
-          "webp": "visual_library/app_optimized/vignette_soft.webp"
         }
       },
       {

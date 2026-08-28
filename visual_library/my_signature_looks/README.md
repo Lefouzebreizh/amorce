@@ -9,6 +9,5 @@ Classées par la note mesurée après simulation d'un écran de six pouces assom
 5. `light_leak_orange.png` — 51/100 — `visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_orange.png`
 6. `film_grain_4k.mp4` — 43/100 — `visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4`
 7. `glitch_transition_01.mp4` — 41/100 — `visual_library/03_Transitions/glitch_transition_01.mp4`
-8. `vignette_strong.png` — 14/100 — `visual_library/05_Matte_and_Bars/vignette_strong.png`
-9. `vignette_soft.png` — 8/100 — `visual_library/05_Matte_and_Bars/vignette_soft.png`
-10. `dust_particles_4k.mp4` — 5/100 — `visual_library/01_Overlays_and_FX/Dust/dust_particles_4k.mp4`
+8. `vignette_strong.png` — 25/100 — `visual_library/05_Matte_and_Bars/vignette_strong.png`
+9. `dust_particles_4k.mp4` — 5/100 — `visual_library/01_Overlays_and_FX/Dust/dust_particles_4k.mp4`
