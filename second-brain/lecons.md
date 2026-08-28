@@ -902,3 +902,30 @@ et le tuer par ce PID. À défaut, isoler le `pkill` dans son propre appel, où 
 n'emporte que lui-même.
 
 Vaut pour `pkill`, `killall -r` et tout ce qui filtre sur la ligne de commande.
+
+## Un parcours navigateur ne survit pas seul à un changement de coque
+
+Le studio téléphone est passé à une page unique qui défile ; sa barre d'étapes
+et son tiroir ont disparu. Le parcours Chromium cliquait encore l'un et
+l'autre, et tombait après quatre mesures sur quarante.
+
+Le défaut a survécu à la fusion pour une raison qui vaut d'être écrite : **le
+contrôle qui l'aurait vu ne tourne que sur les pull requests.** La fusion sur
+`main` n'exécute que les vérifications rapides, donc la branche qui a changé la
+coque a été fusionnée verte, et c'est la branche *suivante* — sans rapport avec
+le studio — qui a hérité du rouge. Toutes les branches ouvertes le portaient en
+même temps.
+
+Deux règles en sortent :
+
+- **Changer une coque, c'est changer ce qui la conduit.** Un test de bout en
+  bout tient par des sélecteurs qu'aucun compilateur ne relit ; ils ne cassent
+  qu'à l'exécution, et seulement dans le profil concerné.
+- **Un rouge qui apparaît sur une branche qui n'a pas touché au sujet vient
+  presque toujours de la base.** Le réflexe utile n'est pas de relire son
+  propre diff mais de demander : ce contrôle a-t-il seulement tourné sur `main`
+  depuis la fusion qui a changé les lieux ?
+
+La parade coûte peu : nommer le geste plutôt que le sélecteur. `allerAEtape`
+clique la barre sur ordinateur et fait défiler jusqu'à l'ancre sur téléphone ;
+le jour où la coque change encore, un seul endroit ment.
