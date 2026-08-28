@@ -1,0 +1,159 @@
+{
+  "_lisez_moi": [
+    "CYBER HYDRA TITAN — l'oeil greffe devant, ~20 s, 1080x1920.",
+    "",
+    "  OEIL         0,0 - 1,9    l'accroche",
+    "  ~morph~      0,7          la pupille DEVIENT la planete que le mage tient",
+    "  MAGE         2,6 - 8,6    le plan d'origine, ses titres graves",
+    "  VORTEX       8,6 - 12,3   son baisse : c'est un passage, pas un climax",
+    "  ~morph~      0,6          le coeur blanc DEVIENT la spire du titan",
+    "  TITAN       12,9 - 20,0   le plus fort du film",
+    "",
+    "Le plan d'origine est COUPE en trois au meme instant de sa propre image :",
+    "une coupe posee sur l'image identique ne se voit pas, et c'est le seul",
+    "moyen de donner au vortex et au titan des niveaux differents — un plan",
+    "unique n'a qu'un seul niveau.",
+    "",
+    "Raccord vortex→titan, mesure sur les deux images a 11,35 s et 11,85 s :",
+    "  coeur blanc  centre (544, 970)  rayon 140",
+    "  spire titan  centre (554, 930)  rayon 140",
+    "Memes rayons : les deux disques se superposent sans correction d'echelle.",
+    "",
+    "AUCUN titre ajoute — le plan porte deja les siens. Pas de LUT non plus :",
+    "il est deja etalonne en magenta et cyan."
+  ],
+  "effets_db": 6,
+  "largeur_stereo": 1.6,
+  "reverberation_s": 1.4,
+  "finition": {
+    "etalonnage": {
+      "force": 0.35,
+      "grain": 0
+    }
+  },
+  "plans": [
+    {
+      "nom": "oeil",
+      "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
+      "depart": 0.9,
+      "duree": 2.6,
+      "cible_db": -24.0,
+      "zoom": 0.06,
+      "morph": {
+        "duree": 0.7,
+        "point_a": [
+          552,
+          868
+        ],
+        "rayon_a": 165,
+        "point_b": [
+          538,
+          1438
+        ],
+        "rayon_b": 263,
+        "zoom": 2.9
+      }
+    },
+    {
+      "nom": "mage",
+      "source": "rushes/CyberHydra.mp4",
+      "depart": 0.3,
+      "duree": 6.7,
+      "cible_db": -18.0
+    },
+    {
+      "nom": "vortex",
+      "source": "rushes/CyberHydra.mp4",
+      "depart": 7.0,
+      "duree": 4.35,
+      "cible_db": -27.0,
+      "morph": {
+        "duree": 0.6,
+        "point_a": [
+          544,
+          970
+        ],
+        "rayon_a": 140,
+        "point_b": [
+          554,
+          930
+        ],
+        "rayon_b": 140,
+        "zoom": 2.4
+      }
+    },
+    {
+      "nom": "titan",
+      "source": "rushes/CyberHydra.mp4",
+      "depart": 11.85,
+      "duree": 7.65,
+      "cible_db": -10.0
+    }
+  ],
+  "titres": [],
+  "effets": [
+    {
+      "son": "braam",
+      "instant": 0.0,
+      "gain": 0,
+      "parametres": {
+        "duree": 1.8,
+        "fondamentale": 48.0,
+        "graine": 11
+      }
+    },
+    {
+      "son": "electricite",
+      "instant": 0.05,
+      "gain": -8,
+      "parametres": {
+        "duree": 0.9,
+        "graine": 91
+      }
+    },
+    {
+      "son": "souffle",
+      "instant": 1.85,
+      "gain": 2,
+      "parametres": {
+        "duree": 0.9,
+        "graine": 21
+      }
+    },
+    {
+      "son": "souffle",
+      "instant": 12.05,
+      "gain": 8,
+      "parametres": {
+        "duree": 1.0,
+        "graine": 24
+      }
+    },
+    {
+      "son": "braam",
+      "instant": 12.35,
+      "gain": 11,
+      "parametres": {
+        "duree": 2.0,
+        "fondamentale": 40.0,
+        "graine": 14
+      }
+    },
+    {
+      "son": "grondement",
+      "instant": 12.4,
+      "gain": 6,
+      "parametres": {
+        "duree": 5.0,
+        "graine": 56
+      }
+    }
+  ],
+  "silences": [
+    {
+      "debut": 12.05,
+      "fin": 12.33,
+      "_note": "le vide juste avant le titan : c'est lui qui le rend enorme"
+    }
+  ]
+}
