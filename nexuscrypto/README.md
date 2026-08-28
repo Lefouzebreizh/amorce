@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 321 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 323 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **321 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **323 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -160,10 +160,17 @@ montant non dépensé reste en trésorerie et gonfle les achats futurs. D'où
 `TEMPORISER` distinct d'`ATTENDRE` — un report se raconte dans le
 récapitulatif, une absence non.
 
-### La taille se décide sur la distance au stop, jamais sur la conviction
+### La taille se décide sur la distance au stop — en théorie
 
 `capital × risque / (prix − stop)`. Un actif volatil a un stop plus loin, donc
 une position plus petite, automatiquement, sans table par actif à tenir à jour.
+
+**Sauf qu'à l'enveloppe actuelle, ce plafond ne mord jamais.** Mesuré sur 158
+dimensionnements d'un rejeu multi-actifs : c'est l'enveloppe DCA qui décide
+62 % du temps, l'exposition par actif 38 %, et le risque par position **jamais**
+— voir le § 14. Le mécanisme est écrit, il est juste, et il est aujourd'hui
+inerte. Le dire évite de croire que le dimensionnement suit le risque quand il
+suit le calendrier.
 
 ### La simulation est réaliste ou elle ne sert à rien
 
@@ -260,7 +267,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 321 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 323 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -730,3 +737,72 @@ Sur 2018-2021, le gain par unité de recul passe de 4,96 à 8,05, contre 11,04
 pour le témoin. **Les trois quarts de l'écart mesuré au § 11 venaient donc de
 réglages, pas de la stratégie elle-même.** Le quart restant tient toujours au
 même fait : elle engage moins de capital.
+
+---
+
+## 14. Le dimensionnement — un réglage inerte, un plafond qui coûtait cher
+
+Dernier balayage du chemin de risque, et il rend deux résultats de nature
+différente.
+
+### Quel plafond décide vraiment
+
+Sur 158 dimensionnements d'un rejeu multi-actifs 2018-2021 :
+
+| plafond | part des décisions |
+| --- | --- |
+| enveloppe DCA | **62 %** |
+| exposition par actif | **38 %** |
+| risque par position | **0 %** |
+
+**`risque_par_position` est inerte.** Le faire varier de 1 % à 8 % ne change pas
+un seul ordre — les trois fenêtres rendent des chiffres identiques à la
+décimale près.
+
+La raison est arithmétique : avec un stop à 4 ATR, la distance au stop vaut
+environ 15 % du prix, donc ce plafond autorise ~6,7 % du capital, quand
+l'enveloppe DCA d'une ligne en demande dix fois moins. Il mordrait avec une
+enveloppe bien plus grosse ou des stops bien plus serrés. Il est conservé pour
+ce cas — **pas parce qu'il agit aujourd'hui.**
+
+C'est le genre de réglage qui rassure dans un fichier de configuration sans
+rien faire, et le § 4 le présentait comme le mécanisme central du
+dimensionnement. La phrase est corrigée.
+
+### Le plafond d'exposition, lui, coûtait cher
+
+| exposition | 2018-2021 | 2022-2026 | tout | moyenne | recul (tout) |
+| --- | --- | --- | --- | --- | --- |
+| 55 % *(ancien)* | 8,05 | 2,25 | 7,93 | 6,08 | 81,3 % |
+| **75 %** | 9,71 | 2,36 | 10,00 | **7,36** | 80,3 % |
+| 85 % | 10,13 | 2,36 | 10,51 | 7,67 | 80,1 % |
+| 95 % | 10,13 | 2,36 | 10,51 | 7,67 | 80,1 % |
+
+**Desserrer améliore le rendement et le recul en même temps.** L'arbitrage
+attendu n'existe pas : un plafond serré force la trésorerie à dormir au lieu de
+se répartir sur les autres lignes, et du capital qui dort ne protège de rien —
+il retire seulement du rendement.
+
+**75 % plutôt que 85 %** : les deux dernières lignes du tableau sont
+identiques, donc au-delà de 85 % le plafond ne mord **plus jamais** et cesse
+d'être un garde-fou. Les 0,31 de gain supplémentaire s'achèteraient en
+supprimant la seule limite de concentration du portefeuille. À 75 %, elle tient
+encore.
+
+### Où en est l'écart, après quatre réglages mesurés
+
+Sur 2018-2021, le gain par unité de recul exposé :
+
+| | gain/douleur |
+| --- | --- |
+| avant tout réglage mesuré | 4,96 |
+| après le stop à 4 ATR | 8,05 |
+| **après l'exposition à 75 %** | **9,71** |
+| DCA aveugle (témoin) | 11,04 |
+
+**Il restait 6,08 points d'écart au § 11 ; il en reste 1,33.** Presque tout ce
+qu'on prenait pour une faiblesse de la stratégie était un réglage jamais
+mesuré. Ce qui subsiste tient toujours au même fait, et il est structurel : elle
+engage moins de capital que le témoin — 9 676 $ contre 9 986 $ — parce qu'elle
+temporise, et une temporisation coûte toujours quelque chose sur un actif qui
+monte à long terme.

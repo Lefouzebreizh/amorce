@@ -237,9 +237,39 @@ strategie:
 # --------------------------------------------------------------------------
 risque:
   # Fraction du capital total risquée sur une entrée, avant tout levier.
+  #
+  # **Mesuré inerte à l'enveloppe actuelle**, et il faut le savoir avant de
+  # croire que le dimensionnement suit le risque. Sur 158 dimensionnements d'un
+  # rejeu multi-actifs, le plafond qui mord est l'enveloppe DCA (62 %) ou
+  # l'exposition par actif (38 %) — celui-ci **jamais**. Le faire varier de 1 %
+  # à 8 % ne change pas un seul ordre.
+  #
+  # La raison est arithmétique : avec un stop à 4 ATR, la distance au stop vaut
+  # ~15 % du prix, donc ce plafond autorise ~6,7 % du capital, quand
+  # l'enveloppe DCA d'une ligne en demande dix fois moins. Il mordrait avec une
+  # enveloppe bien plus grosse ou des stops bien plus serrés — il est conservé
+  # pour ce cas, pas parce qu'il agit aujourd'hui.
   risque_par_position: 0.01
   # Plafond de la valeur d'une ligne, tous renforcements compris.
-  exposition_max_par_actif: 0.55
+  #
+  # Mesuré sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de
+  # recul exposé :
+  #
+  #   exposition   2018-21   2022-26   tout   moyenne   recul (tout)
+  #      55 %        8,05      2,25    7,93     6,08       81,3 %
+  #      75 %        9,71      2,36   10,00     7,36       80,3 %   ← retenu
+  #      85 %       10,13      2,36   10,51     7,67       80,1 %
+  #      95 %       10,13      2,36   10,51     7,67       80,1 %
+  #
+  # Desserrer améliore le rendement **et** le recul en même temps : l'arbitrage
+  # attendu n'existe pas ici, parce qu'un plafond serré force la trésorerie à
+  # dormir au lieu de se répartir sur les autres lignes.
+  #
+  # 75 % plutôt que 85 % : au-delà de 85 % le plafond ne mord plus jamais — les
+  # deux dernières lignes du tableau sont identiques — et il cesse donc d'être
+  # un garde-fou. Les 0,31 de gain supplémentaire s'achèteraient en supprimant
+  # la seule limite de concentration du portefeuille. À 75 %, elle tient encore.
+  exposition_max_par_actif: 0.75
   # Stop-loss dynamique : multiple de l'ATR sous le prix d'entrée.
   atr_periode: 14
   # Mesuré sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de
