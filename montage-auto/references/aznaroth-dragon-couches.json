@@ -1,0 +1,26 @@
+{
+  "_lisez_moi": [
+    "Les trois bruitages reels, poses sur les instants du RUSH — pas sur une",
+    "grille. Le rush du dragon porte sa propre construction ; on la renforce.",
+    "",
+    "  11,89  l'arrivee        16,01  l'eclair",
+    "  12,82  le silence       17,14  LE RUGISSEMENT",
+    "  14,14  la montee        17,82  les debris"
+  ],
+  "micro_silences": [
+    {"instant": 12.818, "avance": 0.30, "tenue": 1.313, "retour": 0.28, "gain_db": -9},
+    {"instant": 15.256, "avance": 0.22, "tenue": 0.625, "retour": 0.22, "gain_db": -4},
+    {"instant": 16.981, "avance": 0.15, "tenue": 0.14, "retour": 0.20, "gain_db": -8}
+  ],
+  "couches": [
+    {"fichier": "sfx_neufs/freesound_communitywooshingvortex56129.mp3",
+     "debut": 10.20, "fin": 11.90, "gain_db": -4,
+     "_note": "le vortex. 2-6 kHz a -7,0 dB : il vit deja la ou le telephone entend, aucune excitation a lui donner. Il deborde de 0,14 s sur le dragon pour que la coupe soit traversee."},
+    {"fichier": "sfx_neufs/dragonstudiomonstergrowl376892.mp3",
+     "debut": 13.95, "fin": 15.30, "gain_db": -7, "excitation": 1.5,
+     "_note": "le grognement, juste avant la montee du rush a 14,14. Toute son energie vit sous 400 Hz (-0,4 dB) : nu il n'existe pas sur un telephone, excite il passe."},
+    {"fichier": "sfx_neufs/dragonstudioepicdragonroar364481.mp3",
+     "debut": 17.10, "gain_db": -1, "suit_la_voix": false,
+     "_note": "LE cri. Mesure a -12,2 dB entendus contre -25 pour celui que je fabriquais : treize decibels d'ecart sur l'appareil ou la video est regardee. Aucune excitation — il porte deja son medium. Cale sur le rugissement du rush a 17,135, qu'il double au lieu de le preceder."}
+  ]
+}

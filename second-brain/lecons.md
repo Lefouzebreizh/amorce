@@ -1584,3 +1584,66 @@ qui n'est pas exposé flatte.** Le levier était d'abord mesuré sur le recul du
 portefeuille, dont l'essentiel dort en liquide — 10x paraissait survivre à un
 marché qui s'effondrait de 37 %. Le levier porte sur la position. Vérifier que
 le dénominateur d'un ratio est bien la chose qui risque quelque chose.
+
+## `atempo` troue un son dense — les « coupures » d'un ralenti viennent de là
+
+Un rugissement décrit trois fois comme « coupé au milieu ». Deux causes avaient
+déjà été trouvées et corrigées — un limiteur qui pompait, des accents mal
+calés — et le défaut restait.
+
+La troisième était dans le **ralenti**. `atempo` étire par recouvrement-addition :
+sur un signal dense et bruité, les recouvrements se décalent en phase et
+creusent des trous périodiques. Mesuré sur le cri ralenti à 0,8 :
+
+| | tremblement de l'enveloppe | tranches sous −9 dB |
+| --- | --- | --- |
+| le rush nu | 2,4 | 0 / 139 |
+| `atempo=0.8` | 3,7 | 4 / 64 |
+| `rubberband=tempo=0.8:smoothing=on` | **2,5** | 1 / 174 |
+
+`rubberband` rend l'étirement transparent. Il n'est pas toujours compilé dans
+ffmpeg — d'où le repli — mais quand il est là, il n'y a aucune raison de s'en
+passer.
+
+**Un défaut qui survit à deux corrections justes a une troisième cause.**
+Chercher la suivante plutôt que réajuster les deux premières.
+
+## Un bruitage acheté peut valoir treize décibels de bruitage fabriqué
+
+Le cri de dragon synthétisé ici mesurait **−25 dB entendus** au-dessus de
+400 Hz. Un vrai rugissement, envoyé par le propriétaire : **−12,2 dB**, avec sa
+forme déjà construite — attaque, tenue, chute — et 2 kHz de contenu là où le
+téléphone entend.
+
+Treize décibels d'écart sur l'appareil où la vidéo sera regardée. Aucun réglage
+ne rattrape ça, et toute l'ingéniosité mise dans la synthèse ne pesait rien
+contre un fichier de trois secondes.
+
+**La synthèse sert à ce qui n'existe pas et à ce qui doit être exact** — un
+Shepard, un impact calé à l'image près, une nappe d'une durée donnée. Pour un
+cri, un pas, une roche : chercher le vrai d'abord.
+
+## Un silence ponctué reste un silence ; un silence rempli n'en est plus un
+
+Le rush ménageait 1,3 s de calme avant la montée. Fallait-il y mettre les pas
+demandés ? Oui — parce que **deux impacts isolés ne remplissent pas un
+silence, ils le rendent audible.** Ce qui le détruit, c'est un lit continu.
+
+Mesuré après : la scène passe de 6 dB de dynamique à **23,3**, avec les pas
+posés dans le calme et rien qui dure entre eux.
+
+## Un texte se place où le sujet n'est pas, et ça se mesure
+
+Un sous-titre posé à une hauteur fixe finit toujours par tomber sur ce qu'il
+ne faut pas cacher : à 42 % de la hauteur il couvrait **la bouche du druide**
+pendant qu'il parle, et se retrouvait **dans la gueule du dragon** sur le
+carton. Deux fois l'endroit exact que l'œil regarde.
+
+`montage-auto/placer_texte.py` relève l'agitation de chaque bande horizontale
+— écart-type des luminances plus une part de la luminance moyenne — et rend la
+plus calme **à l'intérieur de la zone sûre** (12–45 %, non négociable).
+
+Le relevé ne suffit pas, et c'est la partie qui compte : sur un visage qui
+remplit le cadre, **toute** la zone sûre est du visage. Le choix se fait alors
+entre ce qu'on accepte de couvrir. Ici 12,5 % — le texte passe sur les runes du
+front, les yeux et la bouche restent libres. Mesuré, puis **regardé**.
