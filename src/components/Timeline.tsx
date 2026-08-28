@@ -284,9 +284,18 @@ function Playhead({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement | n
     const container = scrollRef.current;
     if (!container) return;
 
+    const vue = container.clientWidth;
+    // Une largeur nulle arrive pendant une passe de mise en page : la marge
+    // deviendrait plus grande que la vue et la condition ci-dessous se
+    // déclencherait toujours, ou jamais, selon le signe.
+    if (vue <= 0) return;
+
     const left = container.scrollLeft;
-    const right = left + container.clientWidth;
-    if (x < left + FOLLOW_MARGIN || x > right - FOLLOW_MARGIN) {
+    const right = left + vue;
+    // La marge ne peut pas dépasser le tiers de la vue : sur une frise étroite,
+    // les 72 px fixes se chevauchaient et la fenêtre utile devenait vide.
+    const marge = Math.min(FOLLOW_MARGIN, vue / 3);
+    if (x < left + marge || x > right - marge) {
       /*
        * Recentrage **immédiat**, pas animé.
        *
@@ -300,7 +309,12 @@ function Playhead({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement | n
        * Une animation n'a de toute façon rien à apporter ici : ce qui bouge est
        * la lecture, et elle bouge déjà.
        */
-      container.scrollTo({ left: Math.max(0, x - container.clientWidth / 2), behavior: 'auto' });
+      // Affectation directe plutôt que `scrollTo`. En `smooth`, un nouveau
+      // défilement partait à chaque image sans laisser le précédent finir, et
+      // chacun annulait le suivant ; même en `auto`, `scrollTo` reste soumis à
+      // un `scroll-behavior` hérité que le style peut poser ailleurs. Une
+      // affectation ne s'anime jamais et ne s'annule pas.
+      container.scrollLeft = Math.max(0, x - vue / 2);
     }
   }, [x, scrollRef]);
 
