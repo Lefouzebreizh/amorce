@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+.env
+.env.local
+# Le `.gitignore` de la racine ignore `.env*`, ce qui emporte l'exemple avec le
+# vrai fichier. Or c'est lui qui documente le déploiement : sans lui, personne
+# ne sait quelles variables poser sur Vercel.
+!.env.example
+
+# Les dossiers de commande contiennent les coordonnées et les photos d'un
+# client réel. Ils ne sont jamais versionnés : une fois dans l'historique de
+# Git, une donnée personnelle n'en sort plus.
+/commandes
