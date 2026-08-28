@@ -242,7 +242,24 @@ risque:
   exposition_max_par_actif: 0.55
   # Stop-loss dynamique : multiple de l'ATR sous le prix d'entrée.
   atr_periode: 14
-  atr_multiple_stop: 2.5
+  # Mesuré sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de
+  # recul exposé :
+  #
+  #   stop    2018-21   2022-26   tout    moyenne
+  #    2,5      4,96      2,27     7,28     4,84
+  #    4        8,05      2,25     7,93     6,08   ← retenu
+  #    6        8,23      2,21     7,95     6,13
+  #
+  # À 2,5, les stops liquidaient ETH et LINK dix-neuf fois en quatre ans et le
+  # portefeuille finissait concentré sur le seul actif qu'il est interdit de
+  # vendre. Desserrer à 4 fait passer le rendement de +305 % à +498 % sur
+  # 2018-2021 pour **un demi-point** de recul exposé en plus : l'arbitrage
+  # supposé entre rendement et protection n'existait presque pas à ce réglage.
+  #
+  # 4 plutôt que 6 : l'essentiel du gain est dans le pas de 2,5 à 4, le reste
+  # n'ajoute rien (+0,05) et coûte du recul sur la fenêtre longue. Et couper
+  # les stops complètement est **pire** que 4 — ils servent, mais pas si serrés.
+  atr_multiple_stop: 4.0
   # Prise de bénéfice suiveuse : déclenchée au-delà de ce gain, puis elle suit
   # le plus haut atteint à cette distance.
   trailing_activation: 0.20
