@@ -719,6 +719,51 @@ def aspiration(duree: float, graine: int, tours_final: float = 26.0) -> numpy.nd
     return melange / max(float(numpy.max(numpy.abs(melange))), 1e-9) * 0.86
 
 
+def chute_pierres(duree: float, graine: int, densite: float = 14.0) -> numpy.ndarray:
+    """Des cailloux qui tombent : des corps qui rebondissent, pas un crépitement.
+
+    `crepitement` fabrique des braises — un train d'impulsions très brèves, sans
+    hauteur. Une pierre a un **corps** : elle sonne à une fréquence qui dépend
+    de sa taille, elle rebondit deux ou trois fois de plus en plus vite, et son
+    timbre est mat parce que la roche amortit tout ce qui est aigu.
+
+    Les trois s'écrivent directement : une hauteur tirée par pierre, des
+    rebonds dont l'intervalle se contracte, et un passe-bas serré. Sans les
+    rebonds, on entend de la grêle ; sans la hauteur, du bruit blanc haché.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / TAUX
+    generateur = numpy.random.default_rng(graine)
+    piste = numpy.zeros(n)
+
+    for _ in range(int(duree * densite)):
+        depart = generateur.uniform(0, duree * 0.94)
+        # Une petite pierre sonne haut, une grosse bas.
+        hauteur = generateur.uniform(90, 420)
+        vigueur = generateur.uniform(0.35, 1.0)
+        intervalle = generateur.uniform(0.11, 0.26)
+
+        for rebond in range(generateur.integers(2, 5)):
+            instant = depart + intervalle * (1 - 0.55 ** (rebond + 1)) / 0.45
+            debut = int(instant * TAUX)
+            if debut >= n:
+                break
+            longueur = min(int(0.10 * TAUX), n - debut)
+            if longueur < 32:
+                break
+            u = numpy.arange(longueur) / TAUX
+            # Le corps, plus le grain du choc. Les deux s'éteignent vite.
+            corps = numpy.sin(2 * numpy.pi * hauteur * (1 + 0.4 * numpy.exp(-90 * u)) * u)
+            grain = generateur.normal(0, 1, longueur) * numpy.exp(-260 * u)
+            enveloppe = numpy.exp(-38 * u) * vigueur * (0.62 ** rebond)
+            piste[debut:debut + longueur] += (0.6 * corps + 0.4 * grain) * enveloppe
+
+    # La roche amortit l'aigu : sans ce filtre, ce sont des billes de verre.
+    piste = _bas(piste, 3200.0)
+    crete = float(numpy.max(numpy.abs(piste)))
+    return piste / crete * 0.82 if crete > 0 else piste
+
+
 BRUITAGES = {
     "boom": boom,
     "souffle": souffle,
@@ -738,6 +783,7 @@ BRUITAGES = {
     "chute_sous_grave": chute_sous_grave,
     "cri_titan": cri_titan,
     "aspiration": aspiration,
+    "chute_pierres": chute_pierres,
 }
 
 # Le lit sonore par défaut. La distinction n'est pas cosmétique : la

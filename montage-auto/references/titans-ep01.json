@@ -1,371 +1,264 @@
 {
   "_lisez_moi": [
-    "AZEROTH V2 — découpage au cahier des charges.",
-    "Remplacer les chemins de « source ».",
+    "AZEROTHA — correctifs. Remplacer les chemins de « source ».",
     "",
-    "Repères absolus du montage :",
-    "Repères absolus du montage :",
-    "  OEIL      0,00 -  2,30   titre AZEROTH tenu 2,30 s, zoom x1,05",
-    "  MAGE      2,30 -  7,25   ses trois répliques, plan gardé entier",
-    "  BREACH    7,25 -  8,50   fissure 20 % plus vite, flash, tremblement 3 %",
-    "  SIGIL     8,50 - 10,00   raccourci de 0,5 s",
-    "  VORTEX   10,00 - 14,00   plongée, flou d'aspiration, sub au maximum",
-    "  DRAGON   14,00 - 21,50   éclair à 18,00, rugissement à 18,95",
-    "Les « cible_db » sont la courbe dramatique : -31 sur l'ouverture,",
-    "-13 sur le rugissement. Les égaliser rendrait le montage plat."
+    "  OEIL     0,00 -  1,40   puis MORPH 1,40 - 2,90 vers le mage",
+    "  MAGE     2,90 -  4,40   la Terre normale",
+    "  BREACH   4,40 -  5,70   la Terre fissurée orange",
+    "  SIGIL    5,70 -  7,00   la triquetra",
+    "  VORTEX   7,00 - 11,00   rumble 40 Hz, vent sourd, cailloux — aucun sifflement",
+    "  DRAGON  11,00 - 18,50   rugissement vers 16,50",
+    "",
+    "Le morph tient à un rapport : pupille 295 px de rayon, planète 320.",
+    "Le zoom de sortie vaut celui d'entrée x 295/320, sinon le raccord se voit."
   ],
   "bibliotheque": "sfx_library",
-  "effets_db": 5,
-  "largeur_stereo": 2.3,
+  "effets_db": 4,
+  "largeur_stereo": 2.1,
   "reverberation_s": 2.4,
+  "cadence": 24,
   "plans": [
     {
       "nom": "oeil",
       "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
       "depart": 0.35,
-      "duree": 2.3,
-      "cible_db": -31.0,
-      "zoom": 0.05
+      "duree": 2.9,
+      "cible_db": -30.0,
+      "zoom": 0.06,
+      "morph": {
+        "duree": 1.5,
+        "point_a": [
+          512,
+          819
+        ],
+        "rayon_a": 295,
+        "point_b": [
+          540,
+          1292
+        ],
+        "rayon_b": 320,
+        "zoom": 2.9
+      }
     },
     {
       "nom": "mage",
       "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
       "depart": 0.2,
-      "duree": 4.95,
+      "duree": 3.0,
       "cible_db": -26.0,
-      "_note": "gardé ENTIER : il parle de 0,23 à 5,17 en source et les lèvres sont calquées dessus. Le raccourcir coûte ses deux dernières répliques."
+      "stabiliser": true,
+      "_note": "le morph lui prend ses 1,5 premières secondes"
     },
     {
       "nom": "breach",
       "source": "rushes/PLAN3_eclairs_SON_1s5.mp4",
-      "depart": 0.0,
-      "duree": 1.25,
-      "cible_db": -19.0,
-      "vitesse": 1.2,
-      "flashs": [
-        {
-          "debut": 0.12,
-          "duree": 0.2,
-          "force": 0.6
-        }
-      ],
-      "tremblements": [
-        {
-          "debut": 0.1,
-          "duree": 0.45,
-          "force": 0.03
-        }
-      ],
-      "_note": "1,5 s de source à 1,2x rendent 1,25 s"
+      "depart": 0.1,
+      "duree": 1.3,
+      "cible_db": -20.0
     },
     {
       "nom": "sigil",
       "source": "rushes/Holographic_Sci_Fi_Symbol_Rotation2.mp4",
       "depart": 1.3,
-      "duree": 1.5,
-      "cible_db": -28.0,
-      "_note": "plan muet : tout vient de la couche d'effets"
+      "duree": 1.3,
+      "cible_db": -27.0
     },
     {
       "nom": "vortex",
       "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
       "depart": 0.55,
       "duree": 4.0,
-      "cible_db": -22.0,
-      "zoom": 0.68,
-      "flou_radial": 0.125
+      "cible_db": -24.0,
+      "zoom": 0.6,
+      "flou_radial": 0.115
     },
     {
       "nom": "dragon",
       "source": "rushes/Duration_seconds_Cinemat.mp4",
       "depart": 2.5,
       "duree": 7.5,
-      "cible_db": -13.0,
-      "zoom": 0.2,
+      "cible_db": -14.0,
+      "zoom": 0.18,
       "tremblements": [
         {
           "debut": 4.0,
           "duree": 0.3,
-          "force": 0.08
+          "force": 0.07
         }
-      ],
-      "flashs": [
-        {
-          "debut": 4.0,
-          "duree": 0.18,
-          "force": 0.35
-        }
-      ],
-      "_note": "éclair à 6,50 en source, rugissement de 7,50 à 10 — tremblement sur l'éclair"
+      ]
     }
   ],
   "effets": [
     {
-      "son": "chute_sous_grave",
-      "instant": 0.0,
-      "gain": 2,
-      "parametres": {
-        "duree": 2.4,
-        "graine": 51,
-        "depart_hz": 40.0
-      },
-      "_note": "le sub de l'ouverture"
-    },
-    {
       "son": "grondement_braises",
       "instant": 0.0,
-      "gain": -8
-    },
-    {
-      "son": "braam_court",
-      "instant": 0.05,
-      "gain": -2
-    },
-    {
-      "son": "whoosh_rapide",
-      "instant": 2.05,
-      "gain": 0
-    },
-    {
-      "son": "souffle_caverne",
-      "instant": 2.3,
-      "gain": -1
-    },
-    {
-      "son": "grondement_braises",
-      "instant": 2.3,
-      "gain": -2
+      "gain": -9
     },
     {
       "son": "nappe_sombre",
-      "instant": 2.25,
-      "gain": -4,
-      "largeur": 18,
+      "instant": 0.0,
+      "gain": -6,
+      "largeur": 16,
       "parametres": {
-        "duree": 5.2,
-        "fondamentale": 58.0,
+        "duree": 3.2,
+        "fondamentale": 44.0,
         "graine": 88
       }
     },
     {
-      "son": "pulsation",
-      "instant": 2.35,
-      "gain": -6,
-      "largeur": 12,
-      "parametres": {
-        "duree": 5.2,
-        "graine": 89,
-        "battements": 86.0
-      },
-      "_note": "les runes battent"
-    },
-    {
-      "son": "braam_court",
-      "instant": 3.1,
-      "gain": 4,
-      "_note": "le braam demandé à 03:10"
-    },
-    {
-      "son": "whoosh_lourd",
-      "instant": 7.05,
-      "gain": 5
-    },
-    {
-      "son": "impact_debris",
-      "instant": 7.25,
-      "gain": 8
-    },
-    {
-      "son": "eclat",
-      "instant": 7.3,
-      "gain": 5,
-      "parametres": {
-        "duree": 1.3,
-        "graine": 771,
-        "densite": 170.0
-      }
+      "son": "souffle_caverne",
+      "instant": 2.9,
+      "gain": -3
     },
     {
       "son": "grondement_braises",
-      "instant": 7.25,
-      "gain": -2
-    },
-    {
-      "son": "whoosh_rapide",
-      "instant": 8.35,
-      "gain": 4,
-      "_note": "le whoosh commence sur le sigil"
-    },
-    {
-      "son": "transition_eclair",
-      "instant": 8.5,
-      "gain": 9
-    },
-    {
-      "son": "whoosh_tournant",
-      "instant": 8.8,
-      "gain": 6
-    },
-    {
-      "son": "riser_moyen",
-      "instant": 8.5,
-      "gain": 3
-    },
-    {
-      "son": "aspiration",
-      "instant": 9.9,
-      "gain": 9,
-      "largeur": 22,
-      "parametres": {
-        "duree": 4.1,
-        "graine": 44,
-        "tours_final": 38.0
-      }
-    },
-    {
-      "son": "souffle_tournant",
-      "instant": 10.0,
-      "gain": 0,
-      "largeur": 20,
-      "parametres": {
-        "duree": 4.0,
-        "graine": 46
-      }
-    },
-    {
-      "son": "chute_sous_grave",
-      "instant": 12.7,
-      "gain": 4,
-      "parametres": {
-        "duree": 1.8,
-        "graine": 45,
-        "depart_hz": 165.0
-      },
-      "_note": "sub au maximum"
+      "instant": 2.9,
+      "gain": -4
     },
     {
       "son": "whoosh_lourd",
-      "instant": 13.8,
-      "gain": 7
+      "instant": 4.2,
+      "gain": 3
     },
     {
-      "son": "braam_massif",
-      "instant": 14.0,
-      "gain": 8,
-      "_note": "le braam grave du dragon"
+      "son": "impact_debris",
+      "instant": 4.4,
+      "gain": 6
     },
     {
-      "son": "grondement_terre",
-      "instant": 14.0,
-      "gain": 4
+      "son": "grondement_braises",
+      "instant": 4.4,
+      "gain": -3
     },
     {
-      "son": "crepitement",
-      "instant": 14.05,
-      "gain": -2,
-      "largeur": 22,
+      "son": "transition_eclair",
+      "instant": 5.7,
+      "gain": 6
+    },
+    {
+      "son": "whoosh_tournant",
+      "instant": 5.6,
+      "gain": 2
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 6.6,
+      "gain": -1,
+      "largeur": 14,
       "parametres": {
-        "duree": 7.2,
-        "densite": 90.0,
-        "graine": 775
+        "duree": 5.0,
+        "fondamentale": 40.0,
+        "graine": 61
       },
-      "_note": "la poussière"
+      "_note": "le rumble 40 Hz"
     },
     {
-      "son": "riser_court",
-      "instant": 16.95,
+      "son": "respiration",
+      "instant": 6.7,
+      "gain": -4,
+      "largeur": 20,
+      "parametres": {
+        "duree": 4.6,
+        "graine": 62
+      },
+      "_note": "le vent sourd"
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 6.9,
+      "gain": -2,
+      "largeur": 18,
+      "parametres": {
+        "duree": 4.4,
+        "graine": 63,
+        "densite": 17.0
+      },
+      "_note": "les cailloux"
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 10.8,
       "gain": 5
     },
     {
-      "son": "braam_double",
-      "instant": 18.0,
-      "gain": 9
+      "son": "braam_massif",
+      "instant": 11.0,
+      "gain": 7
     },
     {
-      "son": "eclat",
-      "instant": 18.05,
-      "gain": 6,
+      "son": "grondement_terre",
+      "instant": 11.0,
+      "gain": 3
+    },
+    {
+      "son": "crepitement",
+      "instant": 11.05,
+      "gain": -3,
+      "largeur": 22,
       "parametres": {
-        "duree": 1.7,
-        "graine": 773,
-        "densite": 180.0
+        "duree": 7.2,
+        "densite": 85.0,
+        "graine": 775
       }
     },
     {
+      "son": "riser_court",
+      "instant": 13.95,
+      "gain": 4
+    },
+    {
+      "son": "braam_double",
+      "instant": 15.0,
+      "gain": 8
+    },
+    {
       "son": "cri_titan",
-      "instant": 18.95,
-      "gain": 11,
+      "instant": 15.95,
+      "gain": 10,
       "parametres": {
         "duree": 2.6,
         "fondamentale": 52.0,
         "graine": 31,
         "dechirure": 1.2
       }
-    },
-    {
-      "son": "whoosh_tournant",
-      "instant": 18.9,
-      "gain": -3
     }
   ],
   "esquive": {
-    "gain": -9,
-    "depuis": 2.3,
-    "jusqu_a": 7.25,
-    "_note": "pilotée par la voix du mage"
+    "gain": -8,
+    "depuis": 2.9,
+    "jusqu_a": 4.4
   },
-  "silences": [
-    {
-      "debut": 21.05,
-      "fin": 21.35,
-      "_note": "le blanc avant la chute"
-    }
-  ],
   "sous_titres": [
     {
       "texte": "RIFT ZERO FIVE",
-      "debut": 2.64,
-      "fin": 3.75
+      "debut": 3.0,
+      "fin": 4.0
     },
     {
       "texte": "BREACH OPEN",
-      "debut": 4.05,
-      "fin": 5.2
+      "debut": 4.5,
+      "fin": 5.5
     },
     {
       "texte": "THE SHADOW TITAN AWAKENS",
-      "debut": 5.4,
-      "fin": 7.15
+      "debut": 5.8,
+      "fin": 7.0
     }
   ],
   "titres": [
     {
-      "texte": "THE SHADOW TITAN:",
-      "debut": 0.12,
-      "fin": 2.25,
-      "y": 250,
-      "taille": 58
+      "texte": "THE SHADOW TITAN: AZEROTHA",
+      "debut": 0.0,
+      "fin": 2.0,
+      "y": 1180,
+      "taille": 54
     },
     {
-      "texte": "AZEROTH",
-      "debut": 0.2,
-      "fin": 2.25,
-      "y": 330,
-      "taille": 96
-    },
-    {
-      "texte": "THE SHADOW TITAN:",
-      "debut": 19.7,
-      "fin": 21.0,
-      "y": 1040,
-      "taille": 66
-    },
-    {
-      "texte": "AZEROTH",
-      "debut": 19.7,
-      "fin": 21.0,
-      "y": 1140,
-      "taille": 118
+      "texte": "THE SHADOW TITAN: AZEROTHA",
+      "debut": 16.5,
+      "fin": 18.0,
+      "y": 1180,
+      "taille": 54
     }
   ]
 }
