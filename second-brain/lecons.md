@@ -883,3 +883,22 @@ une heure à relier à sa cause.
 
 La parade tient en une ligne : le sortir au niveau du module et lui passer ce
 dont il a besoin en propriétés. Vaut pour tout projet React du dépôt.
+
+## `pkill -f` tue le shell qui l'exécute
+
+Deux vérifications ont été interrompues d'affilée sur un code 144 sans qu'aucun
+test n'ait échoué. La cause n'est pas dans le dépôt : `pkill -f "next start"`
+compare le motif à la **ligne de commande entière** de chaque processus — et la
+ligne de commande du shell qui exécute cette commande contient, elle aussi, la
+chaîne « next start ». Le shell se tue donc lui-même avant d'atteindre la
+commande suivante, et tout ce qui suivait sur la même ligne disparaît.
+
+Le symptôme est trompeur parce qu'il ressemble à un échec de la commande
+suivante : on relit les tests, pas la ligne qui les précède.
+
+Deux parades, dans l'ordre : viser le port plutôt que le nom
+(`fuser -k 3114/tcp`), ou lancer le serveur en tâche de fond en gardant son PID
+et le tuer par ce PID. À défaut, isoler le `pkill` dans son propre appel, où il
+n'emporte que lui-même.
+
+Vaut pour `pkill`, `killall -r` et tout ce qui filtre sur la ligne de commande.
