@@ -136,6 +136,22 @@ strategie:
     ema_moyenne: 50
     ema_longue: 200
     volume_periode: 20
+    # Noter l'écart à l'EMA longue par rapport à sa **propre distribution**
+    # plutôt que sur des seuils absolus.
+    #
+    # Mesuré sur cinq fenêtres de BTC réel (2016→2025), gain moyen sur le prix
+    # d'achat contre un DCA aveugle :
+    #
+    #            absolu    relatif
+    #   moyenne   −3,4 %    +1,7 %
+    #   pire cas −27,4 %   −10,2 %   ← 2020-2021, la grande hausse
+    #
+    # Le mode relatif est meilleur sur la moyenne **et** sur le pire cas : en
+    # tendance, le prix vit durablement au-delà de +30 % de son EMA 200, et les
+    # seuils absolus collent alors la note à zéro toute la période. Il n'est pas
+    # meilleur partout — il perd 10 points sur 2023-2025 — mais il supprime le
+    # cas catastrophique, et c'est ce qui décide.
+    ecart_ema_relatif: true
   dca:
     # Multiplicateurs appliqués à l'enveloppe, par zone de valorisation.
     # « avidite_extreme » à 0 est la temporisation demandée : on n'achète pas

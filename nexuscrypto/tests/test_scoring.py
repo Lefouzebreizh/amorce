@@ -43,6 +43,46 @@ class TestNoteTechnique(unittest.TestCase):
             self.assertTrue(0.0 <= note <= 100.0, (pente, note))
 
 
+class TestModeRelatif(unittest.TestCase):
+    """Le mode retenu par la mesure sur BTC réel."""
+
+    def setUp(self):
+        self.config = config().strategie
+
+    def test_le_mode_relatif_est_le_defaut_livre(self):
+        """Il est meilleur sur la moyenne et sur le pire cas — voir le
+        commentaire de `config.yaml`. Le changer sans rejouer le harnais sur
+        données réelles, c'est régler à l'aveugle."""
+
+        self.assertTrue(self.config.technique.ecart_ema_relatif)
+
+    def test_une_tendance_haussiere_n_est_plus_notee_a_zero(self):
+        """Le défaut structurel mesuré : en absolu, la note technique restait
+        collée entre 17 et 32 pendant toute une hausse."""
+
+        from dataclasses import replace as _replace
+
+        ctx = contexte(nombre=400, pente=0.5)
+        lecture = lire(ctx.serie)
+        absolu = _replace(
+            self.config,
+            technique=_replace(self.config.technique, ecart_ema_relatif=False),
+        )
+        note_absolue, _ = scoring.note_technique(lecture, absolu)
+        note_relative, _ = scoring.note_technique(lecture, self.config)
+        self.assertGreater(note_relative, note_absolue)
+
+    def test_sans_cote_relative_on_retombe_sur_l_absolu(self):
+        """Une série plate ne donne pas de cote : le mode relatif ne doit pas
+        faire disparaître la composante, il doit revenir à l'ancienne."""
+
+        ctx = contexte(nombre=400)
+        lecture = lire(ctx.serie)
+        self.assertIsNone(lecture.cote_z_ecart_ema)
+        note, _ = scoring.note_technique(lecture, self.config)
+        self.assertIsNotNone(note)
+
+
 class TestNoteSentiment(unittest.TestCase):
     def test_peur_extreme_note_haut(self):
         note, raisons = scoring.note_sentiment(SignalSentiment(fear_greed=10))

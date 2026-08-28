@@ -133,6 +133,9 @@ def atr(bougies: Sequence[Bougie], periode: int = 14) -> list[float | None]:
 # En deçà, le profil décrit le bruit et non le marché.
 MINIMUM_PROFIL = 20
 
+# En deçà, la distribution des écarts à l'EMA décrit le bruit et non le régime.
+MINIMUM_REGIME = 60
+
 
 @dataclass(frozen=True, slots=True)
 class ProfilVolume:
@@ -217,6 +220,40 @@ def profil_volume(bougies: Sequence[Bougie], tranches: int = 24) -> ProfilVolume
     )
 
 
+def cote_z_ecart_ema(clotures: Sequence[float], ema_serie: Sequence[float | None]) -> float | None:
+    """De combien d'écarts-types le prix s'éloigne de son EMA **par rapport à
+    son propre habituel**.
+
+    C'est la réponse au défaut mesuré sur seize ans de BTC réel : noter l'écart
+    à l'EMA sur des seuils absolus — au-dessus de +30 %, note nulle — colle la
+    note à zéro pendant toute une tendance haussière, parce que dans ce régime
+    le prix vit durablement 40 % au-dessus de sa moyenne longue. La stratégie
+    lisait une surchauffe permanente là où il n'y avait qu'une tendance.
+
+    Rapporté à sa propre distribution, un écart de 40 % dans un marché qui vit
+    habituellement à 40 % vaut zéro écart-type, donc une note neutre — et seul
+    un écart **inhabituel pour ce régime** fait bouger la note. C'est la même
+    idée que `cote_z_volume` : ce qui compte n'est pas la valeur, c'est
+    l'anomalie.
+    """
+
+    ecarts = [
+        (prix - ema) / ema
+        for prix, ema in zip(clotures, ema_serie)
+        if ema is not None and ema > 0
+    ]
+    # En deçà, l'écart-type décrit le bruit et non le régime ; la note
+    # sauterait d'une bougie à l'autre.
+    if len(ecarts) < MINIMUM_REGIME:
+        return None
+    moyenne_ecart = sum(ecarts) / len(ecarts)
+    variance = sum((e - moyenne_ecart) ** 2 for e in ecarts) / len(ecarts)
+    ecart_type = variance ** 0.5
+    if ecart_type <= 0:
+        return None
+    return (ecarts[-1] - moyenne_ecart) / ecart_type
+
+
 def cote_z_volume(volumes: Sequence[float], periode: int = 20) -> float | None:
     """De combien d'écarts-types le dernier volume dépasse sa moyenne récente.
 
@@ -266,6 +303,8 @@ class Lecture:
     ema_longue: float | None
     atr: float | None
     cote_z_volume: float | None
+    # Écart à l'EMA longue, rapporté à sa propre distribution sur la fenêtre.
+    cote_z_ecart_ema: float | None
     profil: ProfilVolume | None
     variation_1: float | None
     variation_6: float | None
@@ -301,14 +340,16 @@ def lire(serie: SerieOHLCV, *, rsi_periode: int = 14, courte: int = 21,
 
     clotures = serie.clotures
     volumes = serie.volumes
+    serie_ema_longue = ema(clotures, longue)
     return Lecture(
         prix=serie.dernier_prix,
         rsi=rsi(clotures, rsi_periode)[-1],
         ema_courte=ema(clotures, courte)[-1],
         ema_moyenne=ema(clotures, moyenne)[-1],
-        ema_longue=ema(clotures, longue)[-1],
+        ema_longue=serie_ema_longue[-1],
         atr=atr(serie.bougies, atr_periode)[-1],
         cote_z_volume=cote_z_volume(volumes, volume_periode),
+        cote_z_ecart_ema=cote_z_ecart_ema(clotures, serie_ema_longue),
         profil=profil_volume(serie.bougies),
         variation_1=variation(clotures, 1),
         variation_6=variation(clotures, 6),
