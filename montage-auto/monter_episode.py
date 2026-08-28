@@ -801,6 +801,9 @@ def couche_voix(entrees: list, total_s: float, atelier: Path) -> tuple[numpy.nda
     """
     total = int(total_s * TAUX)
     gauche, droite = numpy.zeros(total), numpy.zeros(total)
+    # Un banc par distance et par oreille : chacun recevra sa propre queue.
+    bancs = {"gauche": {n: numpy.zeros(total) for n in DISTANCES},
+             "droite": {n: numpy.zeros(total) for n in DISTANCES}}
     fenetres = []
     if not entrees:
         return numpy.zeros(total * 2), fenetres
@@ -883,6 +886,46 @@ def couche_voix(entrees: list, total_s: float, atelier: Path) -> tuple[numpy.nda
     return entrelace, fenetres
 
 
+# Trois distances, et pas une de plus. Un mixage qui passe **une seule**
+# réverbération sur tout aplatit la scène : ce qui est près et ce qui est loin
+# reçoivent la même queue, et l'oreille ne peut plus les ranger. C'est la
+# différence entre un son qui vient de quelque part et un son qui vient de
+# partout — donc entre une scène et une bande.
+#
+# Trois suffisent parce que l'oreille ne distingue pas mieux : elle range en
+# « sur moi », « devant moi », « au loin ». Découper plus fin coûte des passes
+# de calcul sans rien ajouter.
+# Les valeurs sont ecartees franchement. Un premier jeu — 0,06 / 0,22 / 0,46 —
+# a rendu deux bandes-son identiques a 99,7 % : la plupart des sons tombant au
+# milieu, ils ne changeaient pas, et les deux extremes etaient trop proches
+# pour s'entendre. Une profondeur qui ne se mesure pas n'existe pas.
+#
+# 0,02 laisse un son intact, 0,80 le noie presque entierement. C'est cet ecart
+# qui fait qu'une chose est SUR vous et l'autre AU LOIN.
+DISTANCES = {"proche": 0.02, "moyen": 0.24, "lointain": 0.80}
+
+
+def _profondeur(sec: numpy.ndarray, bancs: dict, duree: float, graine: int) -> numpy.ndarray:
+    """Réverbère chaque banc selon sa distance, puis les somme.
+
+    Le son sec traverse aussi : ce qui est proche garde son attaque intacte,
+    et c'est l'attaque qui dit la proximité bien avant le niveau.
+    """
+    sortie = numpy.zeros_like(sec)
+    for rang, (nom, melange) in enumerate(DISTANCES.items()):
+        banc = bancs.get(nom)
+        if banc is None or not banc.any():
+            continue
+        # Une queue plus longue pour ce qui est loin : la distance s'entend
+        # autant dans la durée de la traîne que dans son niveau.
+        # La queue s'allonge avec la distance : une piece lointaine resonne
+        # plus longtemps, et c'est autant la duree que le niveau qui la situe.
+        etendue = duree * (0.40 + 1.60 * melange / DISTANCES["lointain"])
+        sortie += bruitages.reverberation(banc, etendue, melange=melange,
+                                          graine=graine + rang)
+    return sortie
+
+
 def couche_effets(poses: list, bibliotheque: Path, total_s: float,
                   reverberation_s: float = 2.2,
                   esquive: list | None = None) -> numpy.ndarray:
@@ -895,6 +938,9 @@ def couche_effets(poses: list, bibliotheque: Path, total_s: float,
     catalogue = lire_catalogue(bibliotheque)
     total = int(total_s * TAUX)
     gauche, droite = numpy.zeros(total), numpy.zeros(total)
+    # Un banc par distance et par oreille : chacun recevra sa propre queue.
+    bancs = {"gauche": {n: numpy.zeros(total) for n in DISTANCES},
+             "droite": {n: numpy.zeros(total) for n in DISTANCES}}
 
     for pose in poses:
         nom = pose["son"]
@@ -926,15 +972,22 @@ def couche_effets(poses: list, bibliotheque: Path, total_s: float,
 
         son = son * 10.0 ** ((base + float(pose.get("gain", 0))) / 20.0)
         decalage = int(largeur(nom, pose.get("largeur")) * TAUX / 1000)
-        for piste, retard in ((gauche, 0), (droite, decalage)):
+        # « distance » range le son dans son banc. Sans elle, il tombe au milieu :
+        # c'est le comportement d'avant, et il reste juste pour la plupart.
+        rang = pose.get("distance", "moyen")
+        if rang not in DISTANCES:
+            raise SystemExit(f"« {nom} » : distance inconnue « {rang} » "
+                             f"({', '.join(DISTANCES)})")
+        for cote, piste, retard in (("gauche", gauche, 0), ("droite", droite, decalage)):
             debut = int(float(pose["instant"]) * TAUX) + retard
             longueur = min(len(son), total - debut)
             if longueur > 0:
                 piste[debut:debut + longueur] += son[:longueur]
+                bancs[cote][rang][debut:debut + longueur] += son[:longueur]
 
     if reverberation_s:
-        gauche = bruitages.reverberation(gauche, reverberation_s, melange=0.22, graine=91)
-        droite = bruitages.reverberation(droite, reverberation_s, melange=0.22, graine=92)
+        gauche = _profondeur(gauche, bancs["gauche"], reverberation_s, 91)
+        droite = _profondeur(droite, bancs["droite"], reverberation_s, 92)
 
     if esquive:
         # L'esquive s'applique **après** la réverbération : la queue d'un
