@@ -1,16 +1,17 @@
 {
   "_lisez_moi": [
-    "AZEROTHA — correctifs. Remplacer les chemins de « source ».",
+    "AZNAROTH — V3. Remplacer les chemins de « source ».",
     "",
-    "  OEIL     0,00 -  1,40   puis MORPH 1,40 - 2,90 vers le mage",
-    "  MAGE     2,90 -  4,40   la Terre normale",
-    "  BREACH   4,40 -  5,70   la Terre fissurée orange",
-    "  SIGIL    5,70 -  7,00   la triquetra",
-    "  VORTEX   7,00 - 11,00   rumble 40 Hz, vent sourd, cailloux — aucun sifflement",
-    "  DRAGON  11,00 - 18,50   rugissement vers 16,50",
+    "  OEIL       0,00 -  2,00   puis MORPH 2,00 - 3,50",
+    "  MAGE       3,50 -  4,20",
+    "  IMPLOSION  4,20 -  6,00   fissures, compression en lumière cyan, dispersion",
+    "  SIGIL      6,00 -  7,00",
+    "  VORTEX     7,00 -  8,90   1,9 s seulement, accéléré x2",
+    "  DRAGON     8,90 - 18,50",
     "",
-    "Le morph tient à un rapport : pupille 295 px de rayon, planète 320.",
-    "Le zoom de sortie vaut celui d'entrée x 295/320, sinon le raccord se voit."
+    "L'implosion est un plan pré-calculé par montage-auto/eclat_terre.py :",
+    "  implosion_titan(source, sortie, instant=1.10, centre=(540,1292),",
+    "                  rayon=320, pulses=1.0, implose=0.4, souffle=0.4)"
   ],
   "bibliotheque": "sfx_library",
   "effets_db": 4,
@@ -22,7 +23,7 @@
       "nom": "oeil",
       "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
       "depart": 0.35,
-      "duree": 2.9,
+      "duree": 3.5,
       "cible_db": -30.0,
       "zoom": 0.06,
       "morph": {
@@ -44,44 +45,45 @@
       "nom": "mage",
       "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
       "depart": 0.2,
-      "duree": 3.0,
-      "cible_db": -26.0,
-      "stabiliser": true,
-      "_note": "le morph lui prend ses 1,5 premières secondes"
+      "duree": 2.2,
+      "cible_db": -24.0,
+      "stabiliser": true
     },
     {
-      "nom": "breach",
-      "source": "rushes/PLAN3_eclairs_SON_1s5.mp4",
-      "depart": 0.1,
-      "duree": 1.3,
-      "cible_db": -20.0
+      "nom": "implosion",
+      "source": "rushes/implosion.mp4",
+      "depart": 0.0,
+      "duree": 1.8,
+      "cible_db": -19.0
     },
     {
       "nom": "sigil",
       "source": "rushes/Holographic_Sci_Fi_Symbol_Rotation2.mp4",
       "depart": 1.3,
-      "duree": 1.3,
+      "duree": 1.0,
       "cible_db": -27.0
     },
     {
       "nom": "vortex",
       "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
-      "depart": 0.55,
-      "duree": 4.0,
+      "depart": 0.6,
+      "duree": 1.9,
       "cible_db": -24.0,
-      "zoom": 0.6,
-      "flou_radial": 0.115
+      "vitesse": 2.0,
+      "zoom": 0.75,
+      "flou_radial": 0.13,
+      "_note": "1,9 s a l'ecran, donc 3,8 s de source lues a vitesse double"
     },
     {
       "nom": "dragon",
       "source": "rushes/Duration_seconds_Cinemat.mp4",
-      "depart": 2.5,
-      "duree": 7.5,
+      "depart": 0.4,
+      "duree": 9.6,
       "cible_db": -14.0,
-      "zoom": 0.18,
+      "zoom": 0.16,
       "tremblements": [
         {
-          "debut": 4.0,
+          "debut": 6.1,
           "duree": 0.3,
           "force": 0.07
         }
@@ -92,118 +94,138 @@
     {
       "son": "grondement_braises",
       "instant": 0.0,
-      "gain": -9
+      "gain": -11,
+      "_note": "souffle sourd -18 dB"
     },
     {
       "son": "nappe_sombre",
       "instant": 0.0,
-      "gain": -6,
+      "gain": -8,
       "largeur": 16,
       "parametres": {
-        "duree": 3.2,
+        "duree": 3.6,
         "fondamentale": 44.0,
         "graine": 88
       }
     },
     {
       "son": "souffle_caverne",
-      "instant": 2.9,
+      "instant": 3.5,
       "gain": -3
     },
     {
       "son": "grondement_braises",
-      "instant": 2.9,
+      "instant": 3.5,
+      "gain": -5
+    },
+    {
+      "son": "riser_court",
+      "instant": 4.6,
+      "gain": -2
+    },
+    {
+      "son": "chute_sous_grave",
+      "instant": 5.15,
+      "gain": 4,
+      "parametres": {
+        "duree": 1.5,
+        "graine": 45,
+        "depart_hz": 120.0
+      },
+      "_note": "la compression"
+    },
+    {
+      "son": "braam_massif",
+      "instant": 5.55,
+      "gain": 5,
+      "_note": "le whoompf, grave et ouvert"
+    },
+    {
+      "son": "eclat",
+      "instant": 5.62,
+      "gain": 1,
+      "parametres": {
+        "duree": 1.5,
+        "graine": 771,
+        "densite": 150.0
+      }
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 5.6,
       "gain": -4
     },
     {
-      "son": "whoosh_lourd",
-      "instant": 4.2,
-      "gain": 3
-    },
-    {
-      "son": "impact_debris",
-      "instant": 4.4,
-      "gain": 6
-    },
-    {
-      "son": "grondement_braises",
-      "instant": 4.4,
-      "gain": -3
-    },
-    {
       "son": "transition_eclair",
-      "instant": 5.7,
-      "gain": 6
+      "instant": 6.0,
+      "gain": 5
     },
     {
       "son": "whoosh_tournant",
-      "instant": 5.6,
-      "gain": 2
+      "instant": 5.9,
+      "gain": 1
     },
     {
       "son": "nappe_sombre",
-      "instant": 6.6,
-      "gain": -1,
+      "instant": 6.85,
+      "gain": -2,
       "largeur": 14,
       "parametres": {
-        "duree": 5.0,
+        "duree": 2.4,
         "fondamentale": 40.0,
         "graine": 61
-      },
-      "_note": "le rumble 40 Hz"
+      }
     },
     {
       "son": "respiration",
-      "instant": 6.7,
-      "gain": -4,
+      "instant": 6.9,
+      "gain": -8,
       "largeur": 20,
       "parametres": {
-        "duree": 4.6,
+        "duree": 2.2,
         "graine": 62
-      },
-      "_note": "le vent sourd"
+      }
     },
     {
       "son": "chute_pierres",
-      "instant": 6.9,
-      "gain": -2,
+      "instant": 7.0,
+      "gain": 0,
       "largeur": 18,
       "parametres": {
-        "duree": 4.4,
+        "duree": 2.0,
         "graine": 63,
-        "densite": 17.0
-      },
-      "_note": "les cailloux"
+        "densite": 22.0
+      }
     },
     {
       "son": "whoosh_lourd",
-      "instant": 10.8,
+      "instant": 8.7,
       "gain": 5
     },
     {
       "son": "braam_massif",
-      "instant": 11.0,
+      "instant": 8.9,
       "gain": 7
     },
     {
       "son": "grondement_terre",
-      "instant": 11.0,
+      "instant": 8.9,
       "gain": 3
     },
     {
       "son": "crepitement",
-      "instant": 11.05,
+      "instant": 8.95,
       "gain": -3,
       "largeur": 22,
       "parametres": {
-        "duree": 7.2,
+        "duree": 9.2,
         "densite": 85.0,
         "graine": 775
       }
     },
     {
       "son": "riser_court",
-      "instant": 13.95,
+      "instant": 13.9,
       "gain": 4
     },
     {
@@ -213,7 +235,7 @@
     },
     {
       "son": "cri_titan",
-      "instant": 15.95,
+      "instant": 15.9,
       "gain": 10,
       "parametres": {
         "duree": 2.6,
@@ -225,40 +247,40 @@
   ],
   "esquive": {
     "gain": -8,
-    "depuis": 2.9,
-    "jusqu_a": 4.4
+    "depuis": 3.5,
+    "jusqu_a": 4.2
   },
   "sous_titres": [
     {
       "texte": "RIFT ZERO FIVE",
       "debut": 3.0,
-      "fin": 4.0
+      "fin": 3.8
     },
     {
       "texte": "BREACH OPEN",
-      "debut": 4.5,
-      "fin": 5.5
+      "debut": 4.2,
+      "fin": 5.0
     },
     {
       "texte": "THE SHADOW TITAN AWAKENS",
-      "debut": 5.8,
-      "fin": 7.0
+      "debut": 6.0,
+      "fin": 6.8
     }
   ],
   "titres": [
     {
-      "texte": "THE SHADOW TITAN: AZEROTHA",
-      "debut": 0.0,
+      "texte": "THE SHADOW TITAN: AZNAROTH",
+      "debut": 0.1,
       "fin": 2.0,
-      "y": 1180,
-      "taille": 54
+      "y": 300,
+      "taille": 52
     },
     {
-      "texte": "THE SHADOW TITAN: AZEROTHA",
-      "debut": 16.5,
+      "texte": "THE SHADOW TITAN: AZNAROTH",
+      "debut": 17.0,
       "fin": 18.0,
-      "y": 1180,
-      "taille": 54
+      "y": 300,
+      "taille": 52
     }
   ]
 }
