@@ -1702,3 +1702,48 @@ encore que « ça arrive trop tard ». La bouche s'**ouvre** avant que le son
 sorte, et c'est sur l'image que l'œil cale la synchronisation.
 
 0,30 s d'avance. Un sous-titre qui arrive avec le son arrive après l'image.
+
+## Une fusion résolue « à nous » peut annuler un correctif qu'on vient d'annoncer
+
+Un défaut corrigé, mesuré, livré, documenté — et de retour deux heures plus
+tard. Relevé : `git merge origin/main` avait produit un conflit sur le moteur,
+résolu par `--ours` sur un fichier que `main` avait **aussi** touché. Le
+correctif y est passé à la trappe, silencieusement, et le montage suivant est
+reparti avec l'ancien comportement.
+
+Pire : **le correctif n'existait qu'à un seul des deux endroits** qui en avaient
+besoin. Le second appel, dans la branche `filter_complex`, n'avait jamais été
+corrigé — il attendait le premier plan flouté pour se manifester.
+
+Deux gestes, et ils tiennent en une ligne chacun :
+
+```bash
+git diff origin/main -- fichier.py | grep '^-'   # ce que la fusion RETIRE
+grep -n "le_symptome" fichier.py                 # combien d'endroits, pas un
+```
+
+**Après toute fusion, revérifier que le correctif qu'on a annoncé est encore
+là.** Un `--ours` ne dit pas ce qu'il jette.
+
+## Le spectrogramme distingue les causes que le comptage confond
+
+« Ça saccade et il y a une coupure en plein milieu. » Compté : trois tranches
+sous le seuil sur cent soixante-quatorze. Rien de concluant — et la correction
+tentée sur ce chiffre l'a fait passer à vingt-trois, parce que le lit qu'on
+effaçait **remplissait** les creux naturels du cri.
+
+Dessiné, le défaut se lit en une seconde : **une raie verticale pleine bande à
+17,90 s**. Franche, sur tout le spectre. Une coupure, pas une modulation.
+
+C'était le raccord film/carton : une couche sonore posée **avant** l'assemblage
+est tranchée à la jointure. Elle se pose sur l'image finie.
+
+| ce qu'on voit | ce que c'est |
+| --- | --- |
+| raie verticale pleine bande | une vraie coupure |
+| tremblement régulier de l'enveloppe | un étirement temporel |
+| creux large et arrondi | une automation |
+| bandes toutes pleines à la fois | du masquage |
+
+**Un compteur de trous ne sépare pas ces quatre-là.** Un vrai rugissement a des
+creux naturels ; les supprimer l'abîme.

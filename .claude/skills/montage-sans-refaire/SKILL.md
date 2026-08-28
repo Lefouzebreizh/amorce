@@ -133,6 +133,19 @@ dans cet ordre :
 5. **Deux flux AAC concaténés en copie.** Les délais d'amorçage diffèrent :
    mesuré, un vrai pic à +9 dBTP sur un mixage qui ne dépassait pas −0,8. La
    vidéo se concatène en copie, l'audio se réassemble en PCM.
+6. **Une couche posée avant l'assemblage est tranchée au raccord.** Un
+   rugissement de 3,45 s posé à 16,08 s sur un film qui s'arrête à 17,96 perd
+   sa fin — et le spectrogramme le montre comme une **raie verticale pleine
+   bande**, franche, sans ambiguïté possible avec une modulation. Les couches
+   se posent sur l'image **finie**, carton compris : `montage → carton →
+   couches → master`.
+
+**Le spectrogramme distingue les cinq.** Une raie verticale pleine bande est
+une coupure ; un tremblement régulier de l'enveloppe est un étirement ; un
+creux large est une automation. Compter les « trous sous un seuil » ne les
+sépare pas — un vrai rugissement a des creux naturels, et les supprimer
+l'abîme davantage (mesuré : 3 trous devenus 23 en effaçant le lit qui les
+remplissait).
 
 ---
 
