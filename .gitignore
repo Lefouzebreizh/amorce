@@ -43,6 +43,11 @@ next-env.d.ts
 # Rushes de test et captures produits par les scripts de vérification
 .fixtures/
 
+# Bibliotheque d'effets sonores : entierement regeneree par
+# montage-auto/download_blockbuster_sfx.py, et l'invariant du depot interdit
+# tout binaire versionne. Seul le script fait foi.
+sfx_library/
+
 # Plan de travail pré-presse KDP (rushes, PDF, épreuves)
 .travail/
 

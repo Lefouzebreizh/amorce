@@ -483,6 +483,103 @@ def respiration(duree: float, graine: int, inspire: bool = False) -> numpy.ndarr
     return (air + corps) * forme * 1.6
 
 
+def braam(duree: float, fondamentale: float, graine: int) -> numpy.ndarray:
+    """Le cor de brume du film-catastrophe : une masse de cuivres désaccordés.
+
+    Trois choses, et trois seulement, séparent un braam d'un simple accord grave
+    tenu — chacune a été ajoutée après avoir manqué à l'écoute.
+
+    1. **Le désaccord fait le nombre.** Une voix unique s'entend comme un
+       synthétiseur ; six voix écartées de quelques hertz s'entendent comme une
+       section. Les écarts sont fixes en hertz et non proportionnels, pour la
+       raison déjà consignée dans `nappe_sombre` : un désaccord proportionnel
+       produit dans le grave un battement si lent qu'il redevient du ressac.
+
+    2. **L'attaque n'est pas un clic.** Un cuivre met une soixantaine de
+       millisecondes à s'établir. Coupé plus court, le son cesse d'être un
+       instrument pour devenir une porte qui claque.
+
+    3. **La chute de hauteur à la fin** est la signature du genre. Un demi-ton
+       sur le dernier tiers suffit : au-delà l'oreille entend une bande qui
+       ralentit, en deçà elle n'entend rien.
+
+    Comme tout ce qui vit sous 400 Hz ici, la sortie passe par
+    `porter_sur_telephone` — sans quoi le plus massif des bruitages est celui
+    qu'on entend le moins sur l'appareil où la vidéo sera regardée.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / TAUX
+    generateur = numpy.random.default_rng(graine)
+
+    # Le dernier tiers descend d'un demi-ton (2^(-1/12)).
+    depart = numpy.clip((t / duree - 0.66) / 0.34, 0, 1)
+    glissee = 2.0 ** (-depart / 12.0)
+
+    son = numpy.zeros(n)
+    for ecart_hz in (-2.7, -1.1, 0.0, 0.8, 2.2, 3.6):
+        phase = 2 * numpy.pi * numpy.cumsum((fondamentale + ecart_hz) * glissee) / TAUX
+        # Un cuivre est riche et impair-dominant : le rang 3 pèse plus que le 2.
+        son += (numpy.sin(phase)
+                + 0.55 * numpy.sin(2 * phase)
+                + 0.70 * numpy.sin(3 * phase)
+                + 0.34 * numpy.sin(4 * phase)
+                + 0.22 * numpy.sin(5 * phase)
+                + 0.14 * numpy.sin(7 * phase))
+    son /= 6.0
+
+    # Le grain d'embouchure, sans quoi la masse sonne électronique — et il pèse
+    # plus qu'il n'y paraît. À 0,09 le braam mesurait 11,2 dB de perte sur un
+    # haut-parleur de téléphone et réclamait au montage un gain que le plafond
+    # de sécurité refusait : toute son énergie vivait sous 400 Hz. Le grain est
+    # la seule couche qui y échappe, et c'est par lui que l'instrument existe
+    # sur l'appareil où la vidéo sera regardée.
+    souffle_air = _bande(generateur.normal(0, 1, n), 700, 5200)
+    # L'embouchure crache à l'attaque puis se calme : un grain constant s'entend
+    # comme un souffle de bande posé sur l'accord.
+    crachement = 0.14 + 0.22 * numpy.exp(-9.0 * t / duree)
+    son = son + souffle_air * crachement
+
+    # La saturation resserre les rangs entre eux — c'est elle qui soude les six
+    # voix en un seul instrument plutôt qu'un empilement.
+    son = numpy.tanh(1.9 * son)
+
+    attaque = secondes(min(0.065, duree * 0.2))
+    forme = numpy.ones(n)
+    forme[:attaque] = numpy.linspace(0, 1, attaque) ** 0.6
+    tenue = numpy.exp(-1.15 * t / duree)
+    chute = secondes(min(0.30, duree * 0.25))
+    forme[-chute:] *= numpy.linspace(1, 0, chute) ** 1.5
+
+    return porter_sur_telephone(son * forme * tenue * 0.55, poids=0.75)
+
+
+def chute_sous_grave(duree: float, graine: int, depart_hz: float = 130.0) -> numpy.ndarray:
+    """La chute qui suit un impact : une hauteur qui tombe sous le seuil.
+
+    Le geste inverse de `montee`. Il tient à une exponentielle décroissante et à
+    rien d'autre : une descente linéaire s'entend comme un ralenti mécanique,
+    une descente exponentielle comme une masse qui tombe.
+
+    Le fondamental finit vers 28 Hz, sous ce qu'un téléphone **et** la plupart
+    des enceintes restituent. C'est voulu, et c'est pourquoi la sortie est
+    excitée plus fort que le reste de la palette : ce qu'on entendra du son,
+    ce sont ses harmoniques, jamais lui.
+    """
+    n = secondes(duree)
+    t = numpy.linspace(0, 1, n, endpoint=False)
+    generateur = numpy.random.default_rng(graine)
+
+    frequence = depart_hz * numpy.exp(-numpy.log(depart_hz / 28.0) * t)
+    phase = 2 * numpy.pi * numpy.cumsum(frequence) / TAUX
+    son = numpy.sin(phase) + 0.28 * numpy.sin(2 * phase)
+
+    # Un frottement discret qui suit la descente : sans lui, la chute est un
+    # sinus nu, et un sinus nu ne raconte pas une masse.
+    grain = _bas(generateur.normal(0, 1, n), 220) * 0.16
+    forme = numpy.exp(-2.6 * t)
+    return porter_sur_telephone((son + grain) * forme * 0.62, poids=1.0)
+
+
 BRUITAGES = {
     "boom": boom,
     "souffle": souffle,
@@ -498,6 +595,8 @@ BRUITAGES = {
     "electricite": electricite,
     "rugissement": rugissement,
     "nappe_sombre": nappe_sombre,
+    "braam": braam,
+    "chute_sous_grave": chute_sous_grave,
 }
 
 # Le lit sonore par défaut. La distinction n'est pas cosmétique : la
@@ -509,7 +608,7 @@ BRUITAGES = {
 # champ de lave, et une volée de débris quand il suit un impact — le second veut
 # la réverbération, le premier la refuse.
 COUCHE_AMBIANCE = ("nappe_sombre", "grondement", "crepitement",
-                   "souffle_tournant", "respiration", "pulsation")
+                   "souffle_tournant", "respiration", "pulsation", "braam")
 
 
 def fabriquer(plan: dict) -> numpy.ndarray:
