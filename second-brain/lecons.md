@@ -938,3 +938,29 @@ gagne donc une entrée, et c'est la plus large :
 La règle générale : **avant de déclarer une ressource inaccessible, essayer de
 la cloner.** Un fichier dans un dépôt public s'obtient presque toujours, et le
 protocole git passe là où HTTP est filtré.
+
+## Une liste d'exclusions tenue à la main dérive, et casse le voisin
+
+Le `tsconfig.json` de la racine type-vérifie `**/*.ts`, et écarte les projets
+nichés par une liste écrite à la main. Deux projets ajoutés depuis n'y
+figuraient pas. Leur alias `@/` résolvait donc vers le `src/` de la racine, et
+la construction d'Amorce échouait sur seize erreurs venues d'un projet qui
+n'est pas le sien.
+
+Le défaut a traversé deux vérifications sans être vu, pour une raison qui vaut
+d'être notée : **la PR qui l'a introduit a été fusionnée pendant que le
+déploiement était bloqué par un quota.** Le seul contrôle capable de l'attraper
+n'a jamais tourné, et son échec — « rate limited » — ressemblait à un incident
+sans rapport. Fusionner sur un contrôle qui n'a pas tourné revient à fusionner
+sans contrôle.
+
+La liste se déduit du disque au lieu de se maintenir :
+
+```bash
+ls -d */tsconfig.json | cut -d/ -f1   # tout projet qui a son propre tsconfig
+                                      # doit figurer dans « exclude »
+```
+
+Règle générale : **une liste qui doit rester synchronisée avec le disque se
+calcule, ou se vérifie.** Écrite à la main, elle est fausse dès le projet
+suivant — et c'est le voisin qui paie.
