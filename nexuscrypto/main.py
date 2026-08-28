@@ -154,8 +154,36 @@ async def _pepites(config, requete: str) -> int:
         candidats = [c for c in (candidat_depuis_paire(p) for p in paires) if c]
         retenues, rejets = scanner(candidats, config.strategie.pepites, maintenant())
         print(f"{len(candidats)} paire(s) examinée(s), {len(retenues)} retenue(s).\n")
+
+        # Le bouclier passe sur les retenues seulement : trois appels par jeton,
+        # sur trois cents candidats ce serait neuf cents requêtes pour rien. Le
+        # scanner ramène déjà la liste à quelques unités, et c'est l'ordre des
+        # filtres que tout ce projet respecte — le gratuit avant le payé.
+        verdicts = {}
+        if config.strategie.bouclier.actif:
+            from src.data_engine import securite as sources
+            from src.strategy import bouclier as veto
+            for pepite in retenues:
+                candidat = pepite.candidat
+                constats = await sources.constats(
+                    client, candidat.chaine, candidat.adresse,
+                    delai_s=config.strategie.bouclier.delai_s,
+                )
+                verdicts[candidat.symbole] = veto.juger(
+                    constats, config.strategie.bouclier,
+                    est_evm=sources.est_evm(candidat.chaine),
+                )
+
         for pepite in retenues:
-            print(messages.pepite_detectee(pepite), "\n")
+            print(messages.pepite_detectee(pepite))
+            verdict = verdicts.get(pepite.candidat.symbole)
+            if verdict is not None:
+                autorise, motif = veto.achat_autorise(verdict, config.strategie.bouclier)
+                # Le verdict est affiché même quand il autorise : savoir qu'un
+                # jeton a *passé* le bouclier vaut autant que savoir qu'il l'a
+                # heurté, et une ligne absente se lirait comme un contrôle sauté.
+                print(f"  {'✅' if autorise else '⛔'} {motif}")
+            print()
         if not retenues:
             # Le journal des rejets est ce qui permet de régler les seuils :
             # un scanner qui rend une liste vide sans dire pourquoi se règle à

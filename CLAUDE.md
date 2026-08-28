@@ -141,10 +141,12 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   compte les liquidations qu'un compte à levier aurait subies, et le courtier
   ne connaît toujours pas le mot. Une option de levier posée dans le chemin
   d'ordre serait utilisée avant d'avoir été mesurée.
-  **Aucune vérification de contrat** — ni GoPlus, ni honeypot.is, ni RugCheck :
-  `src/strategy/pepites.py` repère une anomalie de volume et ne sait pas si le
-  jeton est revendable. Son en-tête le dit, et le bouclier qui manque existe
-  déjà, dans `pepites/`.
+  **Le bouclier anti-rugpull est un veto, pas une note**, et il passe avant le
+  dimensionnement : GoPlus, honeypot.is et RugCheck en parallèle, sans clé
+  d'API. Le silence n'est pas un quitus — aucune source qui répond bloque
+  l'achat. Mais **pas d'adresse, pas de bouclier** : les lignes du socle n'ont
+  pas de contrat à auditer, et exiger une adresse pour LINK/USDT lui interdisait
+  tout achat à chaque passe.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
