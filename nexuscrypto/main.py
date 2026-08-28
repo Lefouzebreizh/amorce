@@ -86,6 +86,11 @@ def _arguments() -> argparse.ArgumentParser:
         help="CSV du jeu communautaire CoinMetrics — seize ans de BTC réel, "
              "prix et flux de plateformes mesurés",
     )
+    rejeu.add_argument(
+        "--multi", nargs="+", metavar="SYMBOLE=CSV",
+        help="rejeu multi-actifs : plusieurs lignes partageant une trésorerie, "
+             "p. ex. --multi BTC/USDT=btc.csv ETH/USDT=eth.csv",
+    )
     rejeu.add_argument("--depuis", default=None, help="borne basse, AAAA-MM-JJ")
     rejeu.add_argument("--jusqu-a", default=None, help="borne haute, AAAA-MM-JJ")
     rejeu.add_argument(
@@ -261,6 +266,38 @@ def _rejeu(config, arguments) -> int:
             return 2
         if not leviers:
             leviers = mesure_levier.LEVIERS_PAR_DEFAUT
+
+    if getattr(arguments, "multi", None):
+        from src.rejeu.donnees import lire_coinmetrics
+        from src.rejeu.rejeu import rejouer_multi
+
+        series = {}
+        for paire in arguments.multi:
+            if "=" not in paire:
+                print(f"❌ `{paire}` : attendu SYMBOLE=CSV.", file=sys.stderr)
+                return 2
+            symbole, chemin = paire.split("=", 1)
+            try:
+                series[symbole] = lire_coinmetrics(
+                    chemin, symbole=symbole,
+                    depuis=arguments.depuis, jusqu_a=arguments.jusqu_a,
+                )
+            except DonneesIllisibles as erreur:
+                print(f"❌ {erreur}", file=sys.stderr)
+                return 2
+        dynamique = rejouer_multi(config, series, nom="DCA dynamique")
+        temoin = rejouer_multi(config, series, nom="DCA plat (témoin)", plat=True)
+        comparaison = [(" + ".join(series), dynamique, temoin)]
+        print(mise_en_forme.tableau_protection(comparaison))
+        print()
+        print(mise_en_forme.verdict_protection(comparaison))
+        # Une ligne sans on-chain n'a pas un on-chain neutre : elle n'en a pas,
+        # et le scoring redistribue. Le dire évite de croire le contraire.
+        muets = [s for s, r in series.items() if not r.onchain]
+        if muets:
+            print(f"\n⚠ Sans données on-chain : {', '.join(muets)} — "
+                  "le scoring y redistribue le poids de la famille absente.")
+        return 0
 
     if getattr(arguments, "coinmetrics", None):
         from src.rejeu.donnees import lire_coinmetrics

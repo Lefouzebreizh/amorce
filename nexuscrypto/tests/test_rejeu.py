@@ -21,7 +21,10 @@ from src.rejeu import rapport as mise_en_forme
 from src.rejeu.donnees import (
     DonneesIllisibles, lire_coinmetrics, lire_csv, lire_fear_greed, scenarios,
 )
-from src.rejeu.rejeu import Resultat, config_mono_actif, rejouer, rejouer_scenario
+from src.rejeu.rejeu import (
+    Resultat, config_mono_actif, config_portefeuille_reel, rejouer,
+    rejouer_multi, rejouer_scenario,
+)
 
 DEBUT = datetime(2025, 1, 1, tzinfo=timezone.utc)
 
@@ -497,6 +500,97 @@ class TestCoinMetrics(unittest.TestCase):
             reelle = lire_coinmetrics(self._fichier(Path(dossier)))
             resultat = rejouer(config(), reelle.serie, onchain=reelle.onchain)
             self.assertEqual(resultat.executions, [])  # trois bougies : rien d'exploitable
+
+
+class TestMultiActifs(unittest.TestCase):
+    """Le rejeu à plusieurs lignes partageant une trésorerie.
+
+    C'est la seule configuration qui ressemble au direct, et elle tranche ce que
+    le mono-actif ne pouvait pas : le plafond d'exposition y redevient une
+    limite de concentration au lieu de tout geler.
+    """
+
+    def _serie_reelle(self, symbole: str, prix: list[float]):
+        from src.rejeu.donnees import SerieReelle
+
+        return SerieReelle(serie=serie(prix, symbole=symbole), onchain={})
+
+    def test_l_allocation_est_renormalisee_a_cent(self):
+        """Retirer une ligne sans renormaliser laisserait un portefeuille qui
+        somme à moins de 100 % : la trésorerie non réclamée ne serait jamais
+        investie, et le rejeu mesurerait un capital immobilisé."""
+
+        restreinte = config_portefeuille_reel(config(), ["BTC/USDT", "ETH/USDT"])
+        poids = [l.poids for l in restreinte.portefeuille.allocation.values()]
+        self.assertAlmostEqual(sum(poids), 100.0)
+        self.assertEqual(len(poids), 2)
+
+    def test_un_symbole_hors_allocation_leve(self):
+        with self.assertRaises(ValueError):
+            config_portefeuille_reel(config(), ["DOGE/USDT"])
+
+    def test_les_dates_sont_l_union_pas_l_intersection(self):
+        """Prendre l'intersection jetterait l'historique de l'actif le plus
+        ancien pour aligner le plus jeune."""
+
+        longue = self._serie_reelle("BTC/USDT", descente(n=300))
+        courte = self._serie_reelle("ETH/USDT", descente(n=60))
+        ensemble = rejouer_multi(config(), {"BTC/USDT": longue, "ETH/USDT": courte})
+        seule = rejouer_multi(config(), {"ETH/USDT": courte})
+        # La couverture est celle de la série la plus longue, pas celle de la
+        # plus courte : l'intersection jetterait l'historique de la première.
+        self.assertGreater(len(ensemble.courbe), len(seule.courbe))
+        avec_longue = rejouer_multi(config(), {"BTC/USDT": longue})
+        self.assertEqual(len(ensemble.courbe), len(avec_longue.courbe))
+
+    def test_la_tresorerie_est_partagee(self):
+        """Ce que l'un prend, l'autre ne l'a pas : un rejeu multi-actifs n'est
+        pas la somme de rejeus indépendants."""
+
+        series = {
+            "BTC/USDT": self._serie_reelle("BTC/USDT", descente()),
+            "ETH/USDT": self._serie_reelle("ETH/USDT", descente()),
+        }
+        multi = rejouer_multi(config(), series)
+        engage = multi.capital_engage
+        self.assertLessEqual(
+            engage, config().portefeuille.capital_initial_usd + 1.0
+        )
+
+    def test_le_temoin_multi_repartit_selon_les_poids(self):
+        series = {
+            "BTC/USDT": self._serie_reelle("BTC/USDT", descente()),
+            "ETH/USDT": self._serie_reelle("ETH/USDT", descente()),
+        }
+        temoin = rejouer_multi(config(), series, plat=True)
+        self.assertTrue(temoin.executions)
+        self.assertTrue(all(e.ordre.motif == "DCA plat" for e in temoin.executions))
+        # BTC pèse cinq fois ETH dans l'allocation livrée : il reçoit plus.
+        from src.core.modeles import Sens
+
+        par_actif: dict[str, float] = {}
+        for e in temoin.executions:
+            if e.ordre.sens is Sens.ACHAT:
+                par_actif[e.ordre.actif] = par_actif.get(e.ordre.actif, 0.0) + e.montant_usd
+        self.assertGreater(par_actif["BTC/USDT"], par_actif["ETH/USDT"])
+
+    def test_le_socle_n_est_jamais_vendu_sur_signal(self):
+        """BTC porte `vente_sur_signal: false`. Sur une descente qui déclenche
+        les stops des autres lignes, il doit rester."""
+
+        series = {
+            "BTC/USDT": self._serie_reelle("BTC/USDT", descente(n=400, depart=300, pente=-0.6)),
+            "ETH/USDT": self._serie_reelle("ETH/USDT", descente(n=400, depart=300, pente=-0.6)),
+        }
+        from src.core.modeles import Sens
+
+        resultat = rejouer_multi(config(), series)
+        vendus = {e.ordre.actif for e in resultat.executions if e.ordre.sens is Sens.VENTE}
+        self.assertNotIn("BTC/USDT", vendus)
+
+    def test_une_serie_trop_courte_ne_leve_pas(self):
+        court = self._serie_reelle("BTC/USDT", [100.0])
+        self.assertEqual(rejouer_multi(config(), {"BTC/USDT": court}).executions, [])
 
 
 class TestVerdict(unittest.TestCase):

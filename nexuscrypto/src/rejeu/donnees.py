@@ -155,6 +155,11 @@ class SerieReelle:
 
     serie: SerieOHLCV
     onchain: dict[str, MetriqueOnchain]
+    # La colonne de prix réellement employée. Le jeu CoinMetrics n'a pas la même
+    # richesse selon l'actif : BTC et ETH ont `PriceUSD` et les métriques
+    # on-chain, les autres n'ont qu'un taux de référence et rien d'autre. Le
+    # dire évite de croire qu'un actif sans on-chain a un on-chain neutre.
+    colonne_prix: str = "PriceUSD"
 
     @property
     def prix_moyen_marche(self) -> float:
@@ -214,12 +219,20 @@ def lire_coinmetrics(
 
     with chemin.open(encoding="utf-8", newline="") as f:
         lecteur = csv.DictReader(f)
-        if not lecteur.fieldnames or "PriceUSD" not in lecteur.fieldnames:
+        colonnes = lecteur.fieldnames or []
+        # `PriceUSD` d'abord, `ReferenceRateUSD` en repli : les actifs les moins
+        # couverts du jeu n'ont que le second. Refuser ces fichiers priverait le
+        # rejeu multi-actifs de SOL et de la moitié des lignes du portefeuille.
+        colonne_prix = next(
+            (c for c in ("PriceUSD", "ReferenceRateUSD") if c in colonnes), None
+        )
+        if colonne_prix is None:
             raise DonneesIllisibles(
-                f"{chemin} : colonne PriceUSD absente — ce n'est pas un export CoinMetrics."
+                f"{chemin} : ni PriceUSD ni ReferenceRateUSD — "
+                "ce n'est pas un export CoinMetrics."
             )
         for ligne in lecteur:
-            prix = _flottant(ligne, "PriceUSD")
+            prix = _flottant(ligne, colonne_prix)
             if prix is None or prix <= 0:
                 continue  # les premières années n'ont pas de prix
             jour = (ligne.get("time") or "")[:10]
@@ -267,6 +280,7 @@ def lire_coinmetrics(
     return SerieReelle(
         serie=SerieOHLCV(symbole=symbole, intervalle="1d", bougies=tuple(bougies)),
         onchain=onchain,
+        colonne_prix=colonne_prix,
     )
 
 
