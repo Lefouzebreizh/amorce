@@ -1,0 +1,67 @@
+# Vérification du tableau de bord IPTV / VOD.
+#
+# Le projet vit à côté d'Amorce avec ses propres `package.json`, `tsconfig.json`
+# et `node_modules` : la racine l'ignore, et rien ne le vérifierait sans ce
+# workflow.
+#
+# Deux étapes seulement, et pas de `build` : le cœur est une bibliothèque sans
+# interface. Le jour où les routes Next.js arriveront, c'est ici qu'il faudra
+# l'ajouter — un `tsc` ne voit pas ce qu'un build d'App Router attrape.
+#
+# Elles sont séparées pour que le résumé dise laquelle a cassé, et `!cancelled()`
+# les laisse toutes deux parler : un test rouge n'empêche pas de savoir si le
+# typage l'est aussi.
+
+name: IPTV / VOD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'iptv/**'
+      - '.github/workflows/iptv.yml'
+  pull_request:
+    paths:
+      - 'iptv/**'
+      - '.github/workflows/iptv.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: iptv-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: iptv
+
+jobs:
+  verifier:
+    name: Tests, types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 au minimum : les tests s'exécutent sur les sources TypeScript
+      # sans compilation préalable (`--experimental-strip-types`).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          # Le dépôt contient plusieurs verrous ; sans ce chemin, le cache
+          # serait calculé sur celui d'Amorce et ne servirait jamais.
+          cache-dependency-path: iptv/package-lock.json
+
+      # `npm ci` et non `npm install` : il installe exactement le verrou et
+      # échoue s'il diverge de `package.json`, au lieu de le réécrire en silence.
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Tests
+        if: ${{ !cancelled() }}
+        run: npm test
+
+      - name: Types
+        if: ${{ !cancelled() }}
+        run: npm run check

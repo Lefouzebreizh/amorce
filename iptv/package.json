@@ -1,0 +1,15 @@
+{
+  "name": "iptv",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Gestion et lecture de listes IPTV / VOD — cœur d'ingestion et de normalisation",
+  "scripts": {
+    "test": "node --experimental-strip-types --test \"tests/*.test.ts\"",
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.8.3"
+  }
+}
