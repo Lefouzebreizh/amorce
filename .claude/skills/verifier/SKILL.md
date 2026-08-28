@@ -292,9 +292,16 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 218 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 243 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
+python3 profils.py                       # l'effet des réglages sur six marchés connus
 ```
+
+`profils.py` en plus **si et seulement si** le changement touche à un seuil, à
+une pondération, à un multiplicateur DCA ou à une note : les tests diraient
+qu'ils passent sans dire que le prix moyen d'achat du profil « chute puis
+reprise » est repassé au-dessus de celui du témoin. C'est la même règle que
+pour le radar `pepites/`, et elle a été payée là-bas.
 
 `main.py verifier` en plus **si et seulement si** le changement touche à
 `config/config.yaml` ou à `src/core/config.py` : les tests diraient qu'ils
