@@ -99,6 +99,23 @@ def entendu(media: Path, depart: float = 0.0, duree: float | None = None) -> flo
     return float(trouve.group(1)) if trouve else None
 
 
+
+def crete_db(media: Path) -> float | None:
+    """Crête réelle, en dB. C'est elle qui borne tout gain propre.
+
+    Séparée de `entendu` parce qu'elles répondent à deux questions : l'une dit
+    ce qu'on entendra, l'autre ce qu'on peut encore ajouter avant d'écrêter.
+    Les confondre fait viser une cible que le limiteur reprendra.
+    """
+    rendu = subprocess.run(
+        [ffmpeg(), "-hide_banner", "-nostats", "-i", str(media),
+         "-af", "volumedetect", "-f", "null", "-"], capture_output=True, text=True)
+    for ligne in rendu.stderr.splitlines():
+        if "max_volume" in ligne:
+            return float(ligne.split(":")[-1].replace("dB", "").strip())
+    return None
+
+
 def sonder(media: Path, pas: float = 1.0) -> list[tuple[float, float]]:
     """Le niveau entendu, tranche par tranche. À lire **avant** de choisir une coupe."""
     duree = float(subprocess.run(
@@ -483,6 +500,106 @@ def lire_catalogue(bibliotheque: Path) -> dict:
         }
     return catalogue
 
+
+def couche_voix(entrees: list, total_s: float, atelier: Path) -> tuple[numpy.ndarray, list]:
+    """Fabrique les répliques sur la machine et les pose sur la ligne de temps.
+
+    **Piste séparée, pas dans la couche d'effets.** C'est la voix qui fait
+    plonger les effets ; l'y mêler la ferait s'esquiver elle-même. Elle échappe
+    aussi à la normalisation de crête de cette couche, qui l'écraserait contre
+    les impacts.
+
+    **Et comme on la fabrique, on sait où elle parle.** L'esquive n'a plus à
+    détecter des rafales dans le montage : les fenêtres sortent d'ici, exactes.
+    Une détection reste nécessaire pour une voix déjà présente dans un rush ;
+    elle devient inutile pour une voix qu'on vient d'écrire.
+
+    Rend la piste entrelacée et la liste des fenêtres [début, fin] parlées.
+    """
+    total = int(total_s * TAUX)
+    gauche, droite = numpy.zeros(total), numpy.zeros(total)
+    fenetres = []
+    if not entrees:
+        return numpy.zeros(total * 2), fenetres
+
+    outil = (Path(__file__).resolve().parent.parent / ".claude" / "skills"
+             / "bande-son" / "scripts" / "voix.py")
+    if not outil.is_file():
+        print(f"   voix.py introuvable ({outil}) — répliques ignorées.", file=sys.stderr)
+        return numpy.zeros(total * 2), fenetres
+
+    for rang, entree in enumerate(entrees):
+        brut = atelier / f"_voix{rang:02d}.wav"
+        rendu = atelier / f"_voix{rang:02d}_48k.wav"
+        resultat = subprocess.run(
+            [sys.executable, str(outil), "--texte", entree["texte"],
+             "--sortie", str(brut),
+             "--voix", entree.get("timbre", "upmc"),
+             "--vitesse", str(entree.get("vitesse", 0.95))],
+            capture_output=True, text=True)
+        if not brut.is_file():
+            print(f"   réplique {rang} non fabriquée : "
+                  f"{resultat.stderr.strip()[-160:]}", file=sys.stderr)
+            continue
+
+        # `voix.py` rend du 22 050 Hz mono ; tout le reste du montage travaille
+        # en 48 kHz stéréo. Convertir ici plutôt qu'au mixage évite un
+        # rééchantillonnage à la volée dont personne ne verrait le réglage.
+        # La synthèse rend du −24,9 LUFS avec dix décibels de marge inutilisée.
+        # Une voix qui mène un mixage se tient vers −16 : on vise donc une
+        # **cible mesurée**, comme les plans, plutôt qu'un gain à deviner. Le
+        # limiteur ne travaille que sur la crête — une voix compressée perd
+        # ses consonnes, et ce sont elles qui la rendent intelligible.
+        # −16 rend une voix à −15,9 LUFS, mesuré. C'est **un peu sous** un
+        # master à −14 : une voix qui doit mener se règle plus haut, par
+        # `cible_db`. Le défaut vise la voix qui accompagne, pas celle qui porte.
+        cible = float(entree.get("cible_db", -16.0))
+        mesure = entendu(brut)
+        gain = 0.0 if mesure is None else cible - mesure
+        # Le gain se borne à la **marge réelle**, jamais à la cible seule. La
+        # synthèse rend une crête vers −10 dB : viser −16 au-dessus de 400 Hz
+        # réclamait +12, le limiteur reprenait le dépassement, et la voix
+        # sortait au même niveau qu'avant — écrasée en prime. Mesuré : la cible
+        # ne bougeait pas d'un décibel entre deux rendus.
+        crete = crete_db(brut)
+        marge = 18.0 if crete is None else max(0.0, -0.5 - crete)
+        gain = max(-12.0, min(marge, gain))
+        subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(brut),
+                        "-ar", str(TAUX), "-ac", "2",
+                        "-af", f"volume={gain:.1f}dB,alimiter=limit=0.95",
+                        str(rendu)], check=True)
+        son, _ = sfx_pro.lire_wav(rendu)
+        mono = son if son.ndim == 1 else son.mean(axis=1)
+
+        debut = int(float(entree["instant"]) * TAUX)
+        n = min(len(mono), total - debut)
+        if n <= 0:
+            continue
+        gauche[debut:debut + n] += mono[:n]
+        droite[debut:debut + n] += mono[:n]
+        # La forme attendue par `enveloppe_esquive` : des `debut`/`fin` nommés,
+        # pas des paires. Une liste de paires y lève un TypeError qui désigne
+        # l'enveloppe alors que la faute est ici.
+        fenetres.append({"debut": round(debut / TAUX, 3),
+                         "fin": round((debut + n) / TAUX, 3)})
+
+    # Deux répliques qui se recouvrent sont inintelligibles, et rien ne le
+    # signale : le mixage les additionne sans broncher. La durée d'une phrase
+    # de synthèse ne se devine pas non plus — « Le secteur quatre-vingt-dix-neuf
+    # s'effondre » tient 4,6 s à vitesse 0,95, là où on en attendait deux.
+    for premiere, seconde in zip(fenetres, fenetres[1:]):
+        if seconde["debut"] < premiere["fin"]:
+            print(f"   Répliques qui se recouvrent de "
+                  f"{premiere['fin'] - seconde['debut']:.2f} s "
+                  f"(la première finit à {premiere['fin']:.2f} s, "
+                  f"la suivante entre à {seconde['debut']:.2f} s). "
+                  f"Deux voix ensemble ne s'entendent pas.", file=sys.stderr)
+
+    entrelace = numpy.empty(total * 2)
+    entrelace[0::2], entrelace[1::2] = gauche, droite
+    return entrelace, fenetres
+
+
 def couche_effets(poses: list, bibliotheque: Path, total_s: float,
                   reverberation_s: float = 2.2,
                   esquive: list | None = None) -> numpy.ndarray:
@@ -782,8 +899,20 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
                     "-i", str(atelier / "_liste.txt"), "-c:v", "copy",
                     "-c:a", "pcm_s16le", str(base)], check=True)
 
+    voix_piste, fenetres_voix = couche_voix(episode.get("voix", []), total, atelier)
+    voix = atelier / "_voix.wav"
+    with wave.open(str(voix), "wb") as f:
+        f.setnchannels(2)
+        f.setsampwidth(2)
+        f.setframerate(TAUX)
+        f.writeframes(numpy.int16(numpy.clip(voix_piste, -1, 1) * 32767).tobytes())
+
     effets = atelier / "_effets.wav"
     reglage = episode.get("esquive")
+    # Une voix écrite dans la recette pilote l'esquive d'elle-même : ses
+    # fenêtres sont exactes, là où une détection sur le montage devine.
+    if reglage is None and fenetres_voix:
+        reglage = fenetres_voix
     if isinstance(reglage, dict):
         # La détection se fait sur le montage lui-même : c'est lui qui porte la
         # voix, et lui seul sait où elle tombe une fois les plans assemblés.
@@ -809,15 +938,21 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
     # ce qu'on y laisse ne s'entend pas et mange la marge du limiteur.
     # La présence à 2,5 et 6 kHz vise la bande où un petit haut-parleur est le
     # plus efficace — la mesure large bande ne la voit presque pas, l'oreille si.
-    chaine = (f"[1:a]aformat=channel_layouts=stereo,"
+    # La voix entre en troisième, à son niveau propre : elle ne passe ni par
+    # l'élargissement stéréo — une parole élargie perd son centre — ni par la
+    # normalisation de la couche d'effets.
+    chaine = (f"[2:a]aformat=channel_layouts=stereo,"
+              f"volume={episode.get('voix_db', 0)}dB[x];"
+              f"[1:a]aformat=channel_layouts=stereo,"
               f"volume={episode.get('effets_db', 3)}dB,"
               f"stereotools=slev={episode.get('largeur_stereo', 2.0)}[s];"
               "[0:a]aformat=channel_layouts=stereo[v];"
-              "[v][s]amix=inputs=2:duration=first:normalize=0,"
+              "[v][s][x]amix=inputs=3:duration=first:normalize=0,"
               "highpass=f=45:poles=2,"
               "equalizer=f=2500:t=q:w=1.2:g=4,equalizer=f=6000:t=q:w=1.4:g=3[a]")
     mixe = atelier / "_mixe.mkv"
     subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(base), "-i", str(effets),
+                    "-i", str(voix),
                     "-filter_complex", chaine, "-map", "0:v", "-map", "[a]",
                     "-vf", dessin, "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", str(mixe)], check=True)
