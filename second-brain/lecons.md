@@ -1009,3 +1009,46 @@ ls -d */tsconfig.json | cut -d/ -f1   # tout projet qui a son propre tsconfig
 Règle générale : **une liste qui doit rester synchronisée avec le disque se
 calcule, ou se vérifie.** Écrite à la main, elle est fausse dès le projet
 suivant — et c'est le voisin qui paie.
+
+## Une cadence se pose une fois, à l'entrée ; la reconvertir fait sauter l'image
+
+Un montage rendu à 30 images par seconde puis exporté à 24 jette une image sur
+cinq. Sur un plan fixe, cela ne se voit pas ; sur un travelling ou un zoom, le
+mouvement saccade toutes les deux images. Mesuré par la différence entre images
+consécutives : **quinze sauts en sept dixièmes de seconde** sur un seul plan.
+
+Deux causes s'y ajoutaient, et la seconde est la pire : un `setpts=PTS/2` pour
+doubler la vitesse **jette lui aussi une image sur deux**, et les deux
+décimations se composent. La sensation de vitesse ne valait pas ce prix — elle
+se fabrique par le zoom et le flou, qui ne coûtent aucune image.
+
+La règle : **poser la cadence à l'entrée de la chaîne, et n'y plus toucher.**
+Toute reconversion en aval est une décimation.
+
+```bash
+# le saut se mesure : un pic d'écart entre deux images consécutives
+ffmpeg -v error -i film.mp4 -vf scale=96:171,format=gray -f image2 /tmp/f%04d.png
+# puis comparer chaque image à la suivante — les pics isolés sont les coupes,
+# les pics tous les deux cadres sont une décimation
+```
+
+## Un découpage se cale sur la parole, jamais l'inverse
+
+Un plan de conteur a été réduit à 0,70 seconde par un morph qui lui avait pris
+sa première réplique. Ce qui restait tombait **entre deux phrases** : le
+montage ne contenait donc aucune parole, alors que rien dans les niveaux ne le
+signalait — le plan mesurait −22,9 dB comme les autres.
+
+Le défaut ne vient pas d'un mauvais réglage mais d'un mauvais ordre : les
+instants avaient été écrits d'abord, la parole rangée dedans ensuite. Il faut
+l'inverse. On relève les groupes de parole, **on en déduit les bornes du plan**,
+et le morph se pose sur un silence — jamais sur une réplique, qu'il ferait
+prononcer pendant un fondu.
+
+Le contrôle qui l'aurait vu tient en une ligne, et il est différent du niveau
+global :
+
+```bash
+ffmpeg -hide_banner -nostats -ss <debut> -t <duree> -i film.mp4 \
+       -af highpass=f=300,lowpass=f=3500,volumedetect -f null -
+```

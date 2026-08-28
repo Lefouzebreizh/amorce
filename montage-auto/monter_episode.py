@@ -62,8 +62,14 @@ MOYEN = re.compile(r"mean_volume:\s*(-?[\d.]+)")
 
 # 1080 × 1920 : le seul format qui remplit un téléphone tenu droit.
 LARGEUR, HAUTEUR = 1080, 1920
+# La cadence est posée **une fois**, à l'entrée de chaque plan, et jamais
+# reconvertie ensuite. Rendre à 30 puis exporter à 24 jette une image sur cinq :
+# le mouvement saccade toutes les deux images, et sur un travelling ou un zoom
+# cela se voit immédiatement. Mesuré sur un vortex : quinze sauts en sept
+# dixièmes de seconde.
+CADENCE = 24
 CADRE = (f"scale={LARGEUR}:{HAUTEUR}:force_original_aspect_ratio=increase,"
-         f"crop={LARGEUR}:{HAUTEUR},setsar=1,fps=30,format=yuv420p")
+         f"crop={LARGEUR}:{HAUTEUR},setsar=1,fps={{cadence}},format=yuv420p")
 
 # La bande du bas est mangée par la légende et les boutons de la plateforme.
 # Sur 1920 de haut, on ne descend pas un texte sous 1300.
@@ -329,7 +335,8 @@ def segment_morph(plan_a: dict, plan_b: dict, reglage: dict, sortie: Path) -> fl
     vite, on recule lentement, comme un regard qui se perd puis revient.
     """
     duree = float(reglage["duree"])
-    images = max(1, int(duree * 30))
+    cadence = CADENCE
+    images = max(1, int(duree * cadence))
     ax, ay = reglage["point_a"]
     bx, by = reglage["point_b"]
     zoom_a = float(reglage.get("zoom", 2.9))
@@ -340,10 +347,10 @@ def segment_morph(plan_a: dict, plan_b: dict, reglage: dict, sortie: Path) -> fl
     cx = f"({bx}+({LARGEUR / 2:.0f}-{bx})*pow(on/{images},0.55))"
     cy = f"({by}+({HAUTEUR / 2:.0f}-{by})*pow(on/{images},0.55))"
 
-    a = (f"{CADRE},zoompan=z='{za}':d=1:x='{ax}*({za})-{LARGEUR / 2:.0f}'"
-         f":y='{ay}*({za})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps=30")
-    b = (f"{CADRE},zoompan=z='{zb}':d=1:x='{cx}*({zb})-{LARGEUR / 2:.0f}'"
-         f":y='{cy}*({zb})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps=30")
+    a = (f"{CADRE.format(cadence=cadence)},zoompan=z='{za}':d=1:x='{ax}*({za})-{LARGEUR / 2:.0f}'"
+         f":y='{ay}*({za})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps={cadence}")
+    b = (f"{CADRE.format(cadence=cadence)},zoompan=z='{zb}':d=1:x='{cx}*({zb})-{LARGEUR / 2:.0f}'"
+         f":y='{cy}*({zb})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps={cadence}")
     lisse = f"(3*pow(T/{duree:.3f},2)-2*pow(T/{duree:.3f},3))"
 
     depart_a = float(plan_a["depart"]) + float(plan_a["duree"]) - duree
@@ -376,7 +383,8 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     depart, duree = float(plan["depart"]), float(plan["duree"])
     mesure = entendu(source, depart, duree)
 
-    filtre = CADRE
+    cadence = int(plan.get("cadence", CADENCE))
+    filtre = CADRE.format(cadence=cadence)
     if plan.get("vitesse"):
         # `setpts` **après** tout ce qui régénère les horodatages, jamais avant :
         # `zoompan` les réécrit et annulerait le changement de vitesse.
@@ -387,10 +395,10 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         # horodatages, d'où le `-t` explicite qui suit — sans lui le plan
         # s'allonge silencieusement.
         force = float(plan["zoom"])
-        images = max(1, int(duree * 30))
+        images = max(1, int(duree * CADENCE))
         filtre += (f",zoompan=z='1+{force}*pow(on/{images},2.2)':d=1"
                    f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-                   f":s={LARGEUR}x{HAUTEUR}:fps=30,format=yuv420p")
+                   f":s={LARGEUR}x{HAUTEUR}:fps={cadence},format=yuv420p")
     if plan.get("tremblements"):
         filtre += "," + filtre_tremblement(plan["tremblements"], duree)
     if plan.get("flashs"):
@@ -399,7 +407,7 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         # En dernier : ce qui precede peut avoir reecrit les horodatages. Et il
         # faut **recadencer apres**, sinon le flux garde la cadence d'avant et
         # le multiplexeur refuse des horodatages qui n'avancent plus.
-        filtre += f",setpts=PTS/{float(plan['vitesse']):.4f},fps=30"
+        filtre += f",setpts=PTS/{float(plan['vitesse']):.4f},fps={cadence}"
 
     muet = mesure is None or mesure < -100
     gain = 0.0 if muet else max(-plafond_db, min(plafond_db,
@@ -963,7 +971,7 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
     mixe = atelier / "_mixe.mkv"
     subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(base), "-i", str(effets),
                     "-filter_complex", chaine, "-map", "0:v", "-map", "[a]",
-                    "-vf", f"{dessin},fps={int(episode.get('cadence', 30))}",
+                    "-vf", dessin,
                     "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", str(mixe)], check=True)
 
