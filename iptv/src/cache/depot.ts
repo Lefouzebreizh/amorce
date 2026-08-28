@@ -158,6 +158,10 @@ export interface Depot {
   ): Promise<ResumeImport>
   enregistrerFiches(sourceId: number, fiches: Iterable<FicheSerie>): number
   fiches(filtres?: Filtres): FicheSerie[]
+  /** Un élément par son identifiant — ce que le lecteur et le mandataire demandent. */
+  element(id: string): Element | undefined
+  reglage(cle: string): string | undefined
+  poserReglage(cle: string, valeur: string): void
   compter(filtres?: Filtres): number
   lister(filtres?: Filtres): Element[]
   chercher(saisie: string, filtres?: Filtres): Element[]
@@ -429,6 +433,29 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
           langue: (texte(ligne['langue']) ?? 'inconnue') as Langue,
         }
       })
+    },
+
+    element(id): Element | undefined {
+      const ligne = base.prepare(`SELECT ${COLONNES} FROM element WHERE id = ?`).get(id) as
+        | Ligne
+        | undefined
+      return ligne === undefined ? undefined : versElement(ligne)
+    },
+
+    reglage(cle): string | undefined {
+      const ligne = base.prepare('SELECT valeur FROM reglage WHERE cle = ?').get(cle) as
+        | Ligne
+        | undefined
+      return texte(ligne?.['valeur'])
+    },
+
+    poserReglage(cle, valeur): void {
+      base
+        .prepare(
+          `INSERT INTO reglage (cle, valeur) VALUES (?, ?)
+           ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur`,
+        )
+        .run(cle, valeur)
     },
 
     compter(filtres = {}): number {

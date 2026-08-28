@@ -11,11 +11,12 @@ s'en sert, et n'en sort pas — `.env` et les listes locales sont ignorés par G
 
 ## Où en est le projet
 
-Le **cœur d'ingestion** et le **cache** sont écrits et vérifiés : lecture d'une
-liste M3U en flux, client Xtream, normalisation, puis écriture en base avec
-recherche plein texte, filtres, favoris et reprise de lecture. L'interface et le
-lecteur ne sont pas commencés — la structure les attend et les décisions qui les
-concernent sont écrites plus bas.
+Le **cœur d'ingestion**, le **cache** et l'**interface** sont écrits et
+vérifiés : lecture d'une liste M3U en flux, client Xtream, normalisation,
+écriture en base avec recherche plein texte, puis une application Next.js 16
+avec grilles filtrables, fiches de séries, recherche, favoris, reprise de
+lecture et lecteur HLS. Restent le guide des programmes (XMLTV) et les
+sous-titres externes.
 
 **Mesuré sur une liste de 120 000 entrées** (15 Mo, fabriquée pour l'occasion,
 jamais versionnée) : import en **6,6 s**, 135 Mo de mémoire de crête, base de
@@ -37,13 +38,20 @@ iptv/
 │   │   ├── schema.ts       les tables, et les décisions qu'elles portent
 │   │   ├── depot.ts        tout le SQL, et rien que là
 │   │   └── importer.ts     source → normalisation → base, en flux
-│   ├── cli.ts              de quoi regarder ce que ça fait, avant l'écran
+│   ├── serveur/
+│   │   ├── depot-partage.ts une seule ouverture de la base pour l'application
+│   │   └── flux.ts         le mandataire, et pourquoi ses adresses sont signées
+│   ├── app/                ← Next.js 16 : les écrans et les routes d'API
+│   ├── composants/         ← lecteur HLS, grille, filtres, navigation
+│   ├── cli.ts              de quoi regarder ce que ça fait sans navigateur
 │   └── normalisation/
 │       ├── titre.ts        nettoyage du titre, année, étiquettes
 │       ├── etiquettes.ts   langue et définition à partir des étiquettes
 │       ├── episode.ts      saison et épisode, cinq écritures reconnues
 │       ├── genre.ts        direct / film / série
 │       └── normaliser.ts   le seul endroit qui fabrique un Element
+├── scripts/
+│   └── verifier-interface.mjs  Chromium réel, flux HLS réel
 └── tests/                ← une suite par module, sans réseau
 ```
 
@@ -53,14 +61,19 @@ Ce que la suite ajoutera, aux mêmes endroits :
 src/
 ├── epg/           ← lecture XMLTV en flux, association par tvg-id
 └── sous-titres/   ← pistes du flux, puis repli sur une API externe
-app/               ← Next.js 16 : routes d'API et interface, lecteur hls.js
 ```
 
 ## S'en servir tout de suite
 
 ```bash
 npm run iptv -- importer ma-liste.m3u     # un fichier, ou une URL
-npm run iptv -- resume                     # ce que le cache contient
+npm run dev                                # puis http://localhost:3000
+```
+
+Les autres commandes, quand on veut voir sans ouvrir de navigateur :
+
+```bash
+npm run iptv -- resume      # ce que le cache contient
 npm run iptv -- chercher kaamelott
 npm run iptv -- groupes
 npm run iptv -- series
@@ -76,9 +89,19 @@ d'une suite de tests verte. Elle a déjà servi à cela — voir plus bas.
 ```bash
 cd iptv
 npm ci
-npm test     # 43 tests, sans réseau ni navigateur
-npm run check
+npm test          # 56 tests, sans réseau ni navigateur
+npm run check     # typage
+npm run build     # ce que tsc ne voit pas d'une application App Router
+npm run verify    # Chromium réel, flux HLS fabriqué par ffmpeg
 ```
+
+`npm run verify` n'est **pas** dans l'intégration continue, et c'est délibéré :
+Playwright vit dans les dépendances de la racine du dépôt, que la CI d'IPTV
+n'installe pas. Il se lance à la main avant de livrer un changement d'interface,
+et il monte tout ce qu'il faut — un flux HLS fabriqué par ffmpeg, un serveur
+d'origine **sans en-tête CORS** (c'est ce qui rend le mandataire nécessaire, et
+donc vérifiable), un catalogue jetable, l'application au format du terrain de
+référence.
 
 Aucune dépendance d'exécution : le cœur tourne en bibliothèque standard. Les
 tests lisent le TypeScript directement (`--experimental-strip-types`), d'où
@@ -135,6 +158,24 @@ désigner, un temps, une entrée absente. Un test le vérifie sur le cycle compl
 40 000 autres entrées de la même source, qui n'ont simplement pas été revues.
 L'application se viderait sur un clic, sans la moindre erreur.
 
+**Le mandataire de flux n'accepte pas d'URL arbitraire.** Un relais qui prend
+une adresse en paramètre est un *proxy ouvert* : n'importe qui s'en sert pour
+atteindre, depuis cette machine, le réseau local ou les métadonnées d'un
+hébergeur. Deux entrées seulement : un identifiant du catalogue, ou une adresse
+**signée** — et seules les réécritures de manifeste en produisent. La
+vérification tente une signature falsifiée et attend un 403.
+
+**Le manifeste est réécrit, pas seulement relayé.** Relayer le manifeste sans
+toucher à son contenu ne sert à rien : le lecteur irait ensuite chercher les
+segments en direct chez le fournisseur, et buterait sur le même refus CORS. Les
+trois formes d'adresse d'un HLS sont réécrites, `URI="…"` compris — c'est là que
+vivent les pistes audio séparées, donc la version française.
+
+**Tout l'arbre est rendu à la demande.** Next pré-rend par défaut ce qu'il peut
+au build ; ici cela n'a aucun sens, la base n'existe pas encore à ce
+moment-là — le build échouait d'ailleurs franchement, ce qui vaut mieux qu'une
+page figée sur l'état d'un soir.
+
 **Le chemin de l'URL prime sur tout le reste pour classer.** `/series/`,
 `/movie/` et `/live/` sont la route du serveur, pas une convention de nommage :
 ils ne mentent pas, là où un groupe nommé à la main se trompe régulièrement.
@@ -151,6 +192,26 @@ qui est la clé native de FTS5, le même import prend 6,6 s.
 Aucune assertion n'aurait attrapé cela : le comportement était juste, seul le
 coût était faux. **Un ordre de grandeur ne se teste pas, il se mesure**, une
 fois, sur du volume.
+
+Et deux défauts d'interface que seul `npm run verify` a vus : le champ de
+recherche débordait de l'écran à 393 px — le `min-width: auto` d'un élément
+flex, que rien ne signale —, et la lecture ne démarrait pas parce que `play()`
+était appelé avant que hls.js ait rattaché la source.
+
+## Ce qui ne se vérifie pas dans ce conteneur
+
+**Le décodage vidéo.** Mesuré : le Chromium livré avec Playwright est compilé
+sans les codecs propriétaires. `MediaSource.isTypeSupported('video/mp4;
+codecs="avc1.42E01E"')` rend `false`, et l'AAC aussi ; seul VP9 passe. Aucun
+flux IPTV n'étant en VP9, l'image ne s'affichera jamais ici, quoi que fasse le
+code.
+
+Ce qui est prouvé malgré cela, et ce n'est pas rien : le manifeste est réécrit,
+les cinq segments repassent par le mandataire, un segment de 953 Ko arrive avec
+le bon type, une signature falsifiée est refusée, et **le lecteur annonce la
+durée exacte du média** — 20 s — ce qu'il ne peut savoir qu'en ayant lu le
+manifeste entier au travers du relais. Il ne reste que l'image, et elle se
+regarde dans un vrai Chrome.
 
 ## Xtream Codes : ce qu'on ne peut pas vérifier ici
 

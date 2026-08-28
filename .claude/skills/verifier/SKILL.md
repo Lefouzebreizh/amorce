@@ -109,14 +109,23 @@ React ne les voit pas. **Piloter par `http://localhost:3000`.**
 
 ```bash
 cd iptv
-npm test && npm run check
+npm test && npm run check && npm run build
+npm run verify          # à part : Chromium réel, flux HLS réel
 ```
 
-Les deux partent ensemble dans `verifier.sh`. Ni lint ni build : le projet n'a
-pas encore d'interface, et annoncer une étape qui n'existe pas rendrait le
-verdict faux.
+Les deux premières partent ensemble dans `verifier.sh`, le build ferme la
+marche — seul à voir ce que `tsc` laisse passer d'une application App Router.
 
-Ce qu'elles **ne voient pas** : le dialogue avec un vrai panneau Xtream et une
+`npm run verify` est **hors** de la barrière et hors de l'intégration continue :
+Playwright vit dans les dépendances de la racine, que la CI d'IPTV n'installe
+pas. Il monte un flux HLS fabriqué par ffmpeg, un serveur d'origine sans en-tête
+CORS — c'est ce qui rend le mandataire vérifiable —, importe un catalogue
+jetable et conduit l'application à 393 px. À lancer avant de livrer un
+changement d'interface : il a déjà attrapé un débordement horizontal et une
+lecture qui ne démarrait pas, deux défauts que ni les tests ni le build ne
+voient.
+
+Ce qu'aucune des deux ne voit : le dialogue avec un vrai panneau Xtream et une
 vraie liste. Les tests injectent `fetch` et ne touchent pas au réseau — c'est ce
 qui les rend rejouables partout, et c'est aussi leur limite. Xtream Codes n'a
 pas de spécification publiée : le premier branchement sur un abonnement réel est
@@ -138,6 +147,11 @@ npm run iptv -- resume
 Les repères actuels, sur 120 000 entrées : import 6,6 s, 135 Mo de crête,
 requêtes sous 30 ms. Un écart d'un ordre de grandeur est un défaut, pas une
 machine lente.
+
+Et une limite du conteneur, mesurée, qui évite de chercher un bug qui n'existe
+pas : **le Chromium de Playwright n'a ni H.264 ni AAC**. Aucune vidéo IPTV ne
+s'affichera ici, quel que soit le code. `npm run verify` le dit et vérifie tout
+le reste du chemin, jusqu'à la durée du média annoncée par le lecteur.
 
 ## Réseau d'annuaires IA — `annuaire-ia/`
 

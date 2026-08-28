@@ -202,12 +202,15 @@ lancer_titan() {
 
 lancer_iptv() {
   local d="iptv"; local j="$journal/iptv"; local e=0
-  # Deux étapes, et pas de build : le projet est une bibliothèque sans interface.
-  # Elles ne se lisent pas l'une l'autre, donc elles partent ensemble.
+  # Les deux premières ne se lisent pas l'une l'autre : elles partent ensemble.
   ( cd "$d" || exit 1; etape "$j.test"  "tests" npm test ) & local a=$!
   ( cd "$d" || exit 1; etape "$j.check" "types" npm run check ) & local b=$!
   wait $a || e=1; wait $b || e=1
-  cat "$j".{test,check} > "$j" 2>/dev/null
+  # Le build ferme la marche, seul : il est le seul à voir ce que `tsc` laisse
+  # passer dans une application App Router — un composant serveur qui importe du
+  # client, une page qu'on pré-rendrait alors qu'elle lit la base.
+  ( cd "$d" || exit 1; etape "$j.build" "build" npm run build ) || e=1
+  cat "$j".{test,check,build} > "$j" 2>/dev/null
   return $e
 }
 
@@ -322,7 +325,9 @@ case " $projets " in
   *" iptv "*)
     echo "  • le dialogue avec un vrai panneau Xtream et une vraie liste : les"
     echo "    tests injectent fetch et ne touchent pas au réseau, et Xtream"
-    echo "    Codes n'a aucune spécification publiée à leur opposer" ;;
+    echo "    Codes n'a aucune spécification publiée à leur opposer"
+    echo "  • l'interface, le lecteur et le mandataire de flux : npm run verify"
+    echo "    (dans iptv/, Chromium réel et flux HLS fabriqué par ffmpeg)" ;;
 esac
 case " $projets " in
   *" py:kdp "*)

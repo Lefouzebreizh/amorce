@@ -1702,3 +1702,38 @@ encore que « ça arrive trop tard ». La bouche s'**ouvre** avant que le son
 sorte, et c'est sur l'image que l'œil cale la synchronisation.
 
 0,30 s d'avance. Un sous-titre qui arrive avec le son arrive après l'image.
+La parade tient en un geste, et il ne s'automatise pas : **une fois, avant de
+livrer, faire tourner le programme sur un volume réaliste et regarder la
+montre.** Fabriquer la donnée est l'affaire de vingt lignes de script ; elle ne
+se versionne pas, et cette mesure-là attrape ce qu'aucune suite ne verra.
+
+## Le Chromium de Playwright ne lit aucune vidéo réelle
+
+Cherché une heure pourquoi une lecture HLS parfaitement branchée n'affichait
+rien. Ce n'était pas le code : **le Chromium livré avec Playwright est compilé
+sans les codecs propriétaires.** Mesuré dans le conteneur, sur le binaire de
+`/opt/pw-browsers/chromium` :
+
+| codec | `MediaSource.isTypeSupported` |
+| --- | --- |
+| H.264 (`avc1.42E01E`) | **false** |
+| AAC (`mp4a.40.2`) | **false** |
+| VP9 (`vp9`) | true |
+
+`video.canPlayType('video/mp4; …')` rend la chaîne vide, et `canPlayType` pour
+HLS natif aussi. Or tout flux IPTV, toute caméra et tout export ffmpeg par
+défaut sont en H.264/AAC : **l'image ne s'affichera jamais dans ce navigateur**,
+quoi que fasse le code. Chrome, lui, les a — c'est la différence entre le
+Chromium libre et le Chrome distribué.
+
+**La parade n'est pas de renoncer à vérifier, c'est de déplacer l'assertion.**
+Sans décodeur, on peut encore prouver tout le chemin : que le manifeste est
+servi et réécrit, qu'un segment arrive avec son type et son poids, qu'une
+adresse non signée est refusée, et surtout que **le lecteur annonce la durée du
+média** — 20,0 s pour un flux de 20 s. Il ne peut la connaître qu'en ayant lu le
+manifeste entier. Seule l'image reste non vérifiée, et on le dit.
+
+**Piège voisin, même page :** `page.goto(url, { waitUntil: 'networkidle' })`
+expire toujours sur une page qui lit un flux. Un lecteur fait du réseau en
+continu, par définition — c'est son métier. Trente secondes perdues à chaque
+essai, sur une page parfaitement saine. `domcontentloaded` sur ces pages-là.
