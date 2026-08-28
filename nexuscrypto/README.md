@@ -338,6 +338,27 @@ maximal 10x » sur zéro position, une conclusion rassurante tirée du vide. Et 
 dessous de dix positions, le tableau décrit la période rejouée bien plus que le
 réglage : l'avertissement est écrit sous le tableau.
 
+**Mesuré sur seize ans de BTC réel**, par fenêtres de deux ans — 55 à 70
+positions chacune, bien au-delà du seuil de dix sous lequel le tableau refuse
+de conclure :
+
+| fenêtre | marché | 2x | 3x | 5x | 10x |
+|---|---|---|---|---|---|
+| 2017–2018 | bulle puis krach | 7 % | 17 % | 33 % | **60 %** |
+| 2020–2021 | haussier, +124 % | 2 % | 25 % | 33 % | **56 %** |
+| 2022–2023 | baissier puis reprise | 0 % | 0 % | 0 % | **44 %** |
+
+Part des positions liquidées. **À x10, entre 44 et 60 % des positions sont
+liquidées dans les trois fenêtres** — y compris celle où le marché monte de
+124 %, et y compris la plus calme des trois. Ce n'est pas un mauvais moment mal
+choisi, c'est la volatilité ordinaire de l'actif contre une marge de 9,5 %.
+
+Deux lectures s'imposent. **Un marché haussier ne protège pas** : 2020-2021 a
+liquidé plus qu'il n'a épargné, parce que le levier se joue sur les creux du
+parcours et non sur le point d'arrivée. Et **le seul levier qui traverse les
+trois fenêtres sans une liquidation est l'absence de levier** : même 2x tombe
+sur deux fenêtres sur trois.
+
 Le nombre rendu est un **plancher**, jamais une estimation : ni le financement
 d'un perpétuel, ni le prix de marque de la plateforme, ni l'illiquidité réelle
 ne sont comptés, et les trois poussent dans le même sens.

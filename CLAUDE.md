@@ -538,5 +538,7 @@ et les fichiers.
 
 *Les compétences se déclenchent seules ; table générée dans
 `.claude/references/competences.md`. L'agent `revue-invariants` relit un diff
-contre les invariants écrits, l'agent `verificateur` rend un verdict sans
-déverser la sortie des tests. `/etat-du-depot` pour l'inventaire du jour.*
+contre les invariants écrits ; l'agent `garde-du-bot` fait de même pour
+NexusCrypto, contre les six règles qui protègent l'argent ;
+l'agent `verificateur` rend un verdict sans déverser la sortie des tests.
+`/etat-du-depot` pour l'inventaire du jour.*
