@@ -339,6 +339,37 @@ def controler_declencheurs_partages(releve: Releve) -> None:
         )
 
 
+def controler_projets_typescript(releve: Releve) -> None:
+    """
+    Tout projet TypeScript autonome doit être écarté du `tsconfig` de la racine.
+
+    Un projet qui porte son propre `tsconfig.json` porte ses propres alias
+    `@/…`. Compilé depuis la racine, chacun de ses imports pointe alors vers le
+    `src/` d'Amorce : des dizaines de `TS2307` dans un projet auquel personne
+    n'a touché, et le typecheck rouge sur **toutes** les branches ouvertes.
+
+    Le piège s'est refermé trois fois en une journée — `agence`,
+    `artisan-express`, `titan-builder` — parce que rien ne le signale au moment
+    où on ajoute le projet, et que le rouge tombe plus tard, sur la branche de
+    quelqu'un d'autre. C'est exactement ce que ce contrôle-ci existe pour
+    attraper : ajouter un projet est le geste qui rend la configuration fausse.
+    """
+    racine = json.loads(re.sub(r"//.*", "", (RACINE / "tsconfig.json").read_text(encoding="utf-8")))
+    ecartes = set(racine.get("exclude", []))
+
+    for dossier in sorted(RACINE.iterdir()):
+        if not dossier.is_dir() or dossier.name in PAS_DES_PROJETS or dossier.name.startswith("."):
+            continue
+        if not (dossier / "tsconfig.json").exists():
+            continue
+        releve.faux_si(
+            dossier.name not in ecartes,
+            f"{dossier.name}/ a son propre tsconfig.json mais n'est pas écarté de "
+            f"celui de la racine : le typecheck d'Amorce compilera ses sources "
+            f"contre les mauvais alias.",
+        )
+
+
 def main(argv: list[str]) -> int:
     claude_md = (RACINE / "CLAUDE.md").read_text(encoding="utf-8")
     releve = Releve()
@@ -350,6 +381,7 @@ def main(argv: list[str]) -> int:
     controler_listes_numerotees(claude_md, releve)
     controler_hook(releve)
     controler_tests_python(releve)
+    controler_projets_typescript(releve)
     controler_declencheurs_partages(releve)
 
     for message in releve.faux:
