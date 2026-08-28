@@ -1,0 +1,83 @@
+# Vérification de la page de vente `artisan-express/`.
+#
+# Le projet vit à côté d'Amorce, avec ses propres `package.json`, `tsconfig.json`
+# et ESLint : la racine l'ignore volontairement, et rien ne le vérifierait donc
+# sans ce workflow.
+#
+# Les quatre commandes sont celles qu'on lance à la main avant de livrer, dans
+# le même ordre. Le `build` ferme la marche parce qu'il est le seul à voir ce
+# que `tsc` laisse passer dans une application App Router : une directive
+# `'use client'` manquante, un composant serveur qui reçoit une fonction en
+# propriété.
+#
+# Un seul travail pour les quatre, et non quatre en parallèle : chacun
+# repaierait l'installation des dépendances, plus longue que l'ensemble des
+# vérifications.
+#
+# Aucune variable d'environnement n'est posée ici, et c'est une vérification en
+# soi : la page doit compiler et s'afficher entière sans clé, sans téléphone et
+# sans lien de paiement. Ce qui manque disparaît de l'écran au lieu d'être
+# inventé.
+
+name: Artisan Express
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'artisan-express/**'
+      - '.github/workflows/artisan-express.yml'
+  pull_request:
+    paths:
+      - 'artisan-express/**'
+      - '.github/workflows/artisan-express.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: artisan-express-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+defaults:
+  run:
+    working-directory: artisan-express
+
+jobs:
+  verifier:
+    name: Lint, types, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 au minimum : les tests s'exécutent sur les sources TypeScript
+      # sans compilation préalable (`--experimental-strip-types`), et le
+      # résolveur d'alias repose sur `module.registerHooks`.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          # Le dépôt contient plusieurs verrous ; sans ce chemin, le cache
+          # serait calculé sur celui d'Amorce et ne servirait jamais.
+          cache-dependency-path: artisan-express/package-lock.json
+
+      # `npm ci` et non `npm install` : il installe exactement le verrou et
+      # échoue s'il diverge de `package.json`, au lieu de le réécrire en
+      # silence.
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

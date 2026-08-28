@@ -867,3 +867,19 @@ Un fragment qui grossit doit aussi **perdre de la lumière et de la netteté**,
 sinon il devient une découpe de papier blanc : il arrive sur l'objectif, donc il
 sort de la zone de netteté et quitte l'éclairage de la scène. Le rouge résiste
 mieux que le bleu, ce qui le fait virer à la braise plutôt qu'au gris.
+
+## Un composant défini pendant le rendu perd le curseur, et le lint le sait
+
+Écrire une petite fonction à l'intérieur d'un composant pour éviter de répéter
+trois lignes de JSX paraît propre. `eslint-config-next` la refuse — la règle
+`react-hooks/static-components`, six erreurs d'un coup sur un formulaire — et
+elle a raison bien au-delà du style.
+
+La fonction est **redéfinie à chaque rendu**, donc React voit un type de
+composant différent à chaque fois. Il ne compare pas le contenu : il démonte le
+sous-arbre et le remonte. Sur un champ de saisie, cela veut dire que le curseur
+saute à chaque frappe — un défaut qu'aucun test unitaire ne voit et qu'on met
+une heure à relier à sa cause.
+
+La parade tient en une ligne : le sortir au niveau du module et lui passer ce
+dont il a besoin en propriétés. Vaut pour tout projet React du dépôt.
