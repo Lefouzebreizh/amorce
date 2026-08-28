@@ -150,6 +150,44 @@ lentement. Le script le dit avant de commencer, pas après.
 
 ## 3. `prepare_my_edit.py` — le dérushage
 
+### La recette, un soir de fatigue
+
+Trois gestes, dans cet ordre. Ne pas en sauter.
+
+1. **Ouvrir DaVinci Resolve** et y ouvrir n'importe quel projet, même vide.
+   Le script parle au logiciel en cours d'exécution ; fermé, il n'y a personne
+   au bout du fil.
+2. **Autoriser le pilotage** une seule fois, si ce n'est pas déjà fait :
+   `Preferences → System → General → External scripting using = Local`.
+3. **Sonder d'abord**, depuis le dossier qui contient les rushes :
+
+   ```bash
+   python3 prepare_my_edit.py --check
+   ```
+
+   Ce mode ne crée rien. Il liste les rushes trouvés, lit leur cadence, et
+   **confronte à votre Resolve les seize appels que ce script emploie**. S'il
+   en manque un, il le nomme — cette liste-là vaut mieux qu'une trace d'erreur
+   au milieu d'un import.
+
+Puis seulement, quand tout répond :
+
+```bash
+python3 prepare_my_edit.py
+```
+
+### Pourquoi le sondage existe
+
+Ce fichier a été écrit contre la documentation de Resolve, **pas contre le
+module lui-même** : celui-ci n'est pas installable ailleurs qu'avec le logiciel,
+et aucune machine de développement n'en dispose ici. Les seize appels sont donc
+des hypothèses jusqu'à ce qu'une machine qui a Resolve les confronte au réel.
+
+Autant que cette confrontation ait lieu à froid, en une commande, plutôt qu'au
+milieu d'un traitement — un appel manquant découvert après la création du projet
+laisse un projet à moitié fait.
+
+
 **DaVinci Resolve doit être ouvert**, et le scripting externe autorisé
 (`Preferences → System → General → External scripting using = Local`).
 
