@@ -17,12 +17,23 @@
     "Le plan du mage reste ENTIER (il parle de 0,23 a 5,17 en source, levres",
     "calquees dessus). Les « cible_db » sont la courbe dramatique.",
     "",
-    "Le nom du lore est AZNAROTH — jamais Azeroth, marque tierce."
+    "Le nom du lore est AZNAROTH — jamais Azeroth, marque tierce.",
+    "",
+    "Chaque effet porte une « distance » : proche, moyen ou lointain. Une seule",
+    "reverberation posee sur tout aplatit la scene — ce qui est pres et ce qui",
+    "est loin recoivent la meme queue, et l'oreille ne peut plus les ranger.",
+    "Le cri et les impacts sont PROCHES (attaque intacte), l'environnement et le",
+    "vortex sont LOINTAINS (noyes, queue longue).",
+    "",
+    "« effets_db » a 9 et non 3 : a 3, la couche cinema passait 99,7 %",
+    "inchangee quoi qu'on lui fasse — le son propre des plans dominait tout,",
+    "et aucun travail de reverberation ou de largeur ne s'entendait. Une",
+    "couche trop faible rend son traitement invisible."
   ],
   "bibliotheque": "sfx_library",
-  "effets_db": 3,
-  "largeur_stereo": 2.0,
-  "reverberation_s": 2.2,
+  "effets_db": 9,
+  "largeur_stereo": 2.6,
+  "reverberation_s": 2.6,
   "plans": [
     {
       "nom": "affiche",
@@ -96,7 +107,8 @@
         "fondamentale": 52.0,
         "graine": 140
       },
-      "_note": "la masse — ressentie, pas entendue sur un telephone"
+      "_note": "la masse — ressentie, pas entendue sur un telephone",
+      "distance": "proche"
     },
     {
       "son": "eclat",
@@ -107,13 +119,15 @@
         "graine": 142,
         "densite": 200.0
       },
-      "_note": "l'aigu qui porte l'impact sur un petit haut-parleur"
+      "_note": "l'aigu qui porte l'impact sur un petit haut-parleur",
+      "distance": "proche"
     },
     {
       "son": "transition_eclair",
       "instant": 0.0,
       "gain": 8,
-      "_note": "le crepitement electrique, entierement au-dessus de 400 Hz"
+      "_note": "le crepitement electrique, entierement au-dessus de 400 Hz",
+      "distance": "proche"
     },
     {
       "son": "nappe_sombre",
@@ -124,38 +138,45 @@
         "duree": 1.5,
         "fondamentale": 44.0,
         "graine": 141
-      }
+      },
+      "distance": "lointain"
     },
     {
       "son": "whoosh_rapide",
       "instant": 0.42,
       "gain": 6,
-      "_note": "le passage vers l'oeil"
+      "_note": "le passage vers l'oeil",
+      "distance": "moyen"
     },
     {
       "son": "braam_court",
       "instant": 0.6,
-      "gain": 1
+      "gain": 1,
+      "distance": "moyen"
     },
     {
       "son": "grondement_braises",
       "instant": 0.6,
-      "gain": -4
+      "gain": -4,
+      "distance": "lointain"
     },
     {
       "son": "souffle_caverne",
       "instant": 1.8,
-      "gain": -5
+      "gain": -5,
+      "distance": "lointain"
     },
     {
       "son": "grondement_braises",
       "instant": 1.8,
-      "gain": -3
+      "gain": -3,
+      "distance": "lointain"
     },
     {
       "son": "whoosh_rapide",
       "instant": 1.95,
-      "gain": 1
+      "gain": 1,
+      "distance": "moyen"
     },
     {
       "son": "nappe_sombre",
@@ -166,47 +187,56 @@
         "duree": 5.2,
         "fondamentale": 58.0,
         "graine": 88
-      }
+      },
+      "distance": "lointain"
     },
     {
       "son": "riser_court",
       "instant": 5.4,
-      "gain": -3
+      "gain": -3,
+      "distance": "moyen"
     },
     {
       "son": "whoosh_lourd",
       "instant": 6.55,
-      "gain": 1
+      "gain": 1,
+      "distance": "moyen"
     },
     {
       "son": "impact_debris",
       "instant": 6.75,
-      "gain": 3
+      "gain": 3,
+      "distance": "proche"
     },
     {
       "son": "grondement_braises",
       "instant": 6.75,
-      "gain": -4
+      "gain": -4,
+      "distance": "lointain"
     },
     {
       "son": "transition_eclair",
       "instant": 7.95,
-      "gain": 16
+      "gain": 16,
+      "distance": "proche"
     },
     {
       "son": "riser_moyen",
       "instant": 7.95,
-      "gain": 11
+      "gain": 11,
+      "distance": "moyen"
     },
     {
       "son": "whoosh_rapide",
       "instant": 8.1,
-      "gain": 12
+      "gain": 12,
+      "distance": "moyen"
     },
     {
       "son": "whoosh_tournant",
       "instant": 8.35,
-      "gain": 13
+      "gain": 13,
+      "distance": "moyen"
     },
     {
       "son": "aspiration",
@@ -217,7 +247,8 @@
         "duree": 2.9,
         "graine": 44,
         "tours_final": 34.0
-      }
+      },
+      "distance": "lointain"
     },
     {
       "son": "souffle_tournant",
@@ -227,7 +258,8 @@
       "parametres": {
         "duree": 2.9,
         "graine": 46
-      }
+      },
+      "distance": "lointain"
     },
     {
       "son": "chute_sous_grave",
@@ -237,22 +269,26 @@
         "duree": 1.6,
         "graine": 45,
         "depart_hz": 150.0
-      }
+      },
+      "distance": "moyen"
     },
     {
       "son": "whoosh_lourd",
       "instant": 12.0,
-      "gain": 6
+      "gain": 6,
+      "distance": "moyen"
     },
     {
       "son": "braam_massif",
       "instant": 12.15,
-      "gain": 14
+      "gain": 14,
+      "distance": "proche"
     },
     {
       "son": "grondement_terre",
       "instant": 12.15,
-      "gain": 10
+      "gain": 10,
+      "distance": "lointain"
     },
     {
       "son": "crepitement",
@@ -263,17 +299,20 @@
         "duree": 5.6,
         "densite": 80.0,
         "graine": 775
-      }
+      },
+      "distance": "lointain"
     },
     {
       "son": "riser_court",
       "instant": 13.4,
-      "gain": 4
+      "gain": 4,
+      "distance": "moyen"
     },
     {
       "son": "braam_double",
       "instant": 14.45,
-      "gain": 15
+      "gain": 15,
+      "distance": "proche"
     },
     {
       "son": "eclat",
@@ -283,12 +322,14 @@
         "duree": 1.6,
         "graine": 773,
         "densite": 170.0
-      }
+      },
+      "distance": "proche"
     },
     {
       "son": "whoosh_tournant",
       "instant": 15.3,
-      "gain": -4
+      "gain": -4,
+      "distance": "moyen"
     },
     {
       "son": "cri_titan",
@@ -299,7 +340,8 @@
         "fondamentale": 54.0,
         "graine": 31,
         "dechirure": 1.15
-      }
+      },
+      "distance": "proche"
     }
   ],
   "esquive": {
