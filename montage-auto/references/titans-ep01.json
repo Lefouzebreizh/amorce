@@ -28,7 +28,13 @@
     "« effets_db » a 9 et non 3 : a 3, la couche cinema passait 99,7 %",
     "inchangee quoi qu'on lui fasse — le son propre des plans dominait tout,",
     "et aucun travail de reverberation ou de largeur ne s'entendait. Une",
-    "couche trop faible rend son traitement invisible."
+    "couche trop faible rend son traitement invisible.",
+    "",
+    "Le lit du dragon est baisse de 5 dB pendant que le cri monte de 3 : un",
+    "rugissement est fort parce que le reste se tait, pas parce qu'on le pousse.",
+    "Le pousser l'envoie dans le limiteur, qui l'ecrase et fait pomper tout le",
+    "mixage — mesure : le gain du master variait de +1,0 a +6,1 dB selon",
+    "l'instant, et cette variation s'entend comme une coupure."
   ],
   "bibliotheque": "sfx_library",
   "effets_db": 9,
@@ -86,7 +92,7 @@
       "source": "rushes/Duration_seconds_Cinemat.mp4",
       "depart": 4.2,
       "duree": 5.8,
-      "cible_db": -12.0,
+      "cible_db": -14.0,
       "zoom": 0.14,
       "tremblements": [
         {
@@ -287,13 +293,13 @@
     {
       "son": "grondement_terre",
       "instant": 12.15,
-      "gain": 10,
+      "gain": 5,
       "distance": "lointain"
     },
     {
       "son": "crepitement",
       "instant": 12.2,
-      "gain": -1,
+      "gain": -6,
       "largeur": 22,
       "parametres": {
         "duree": 5.6,
@@ -311,7 +317,7 @@
     {
       "son": "braam_double",
       "instant": 14.45,
-      "gain": 15,
+      "gain": 18,
       "distance": "proche"
     },
     {
@@ -334,7 +340,7 @@
     {
       "son": "cri_titan",
       "instant": 15.35,
-      "gain": 17,
+      "gain": 20,
       "parametres": {
         "duree": 2.6,
         "fondamentale": 54.0,

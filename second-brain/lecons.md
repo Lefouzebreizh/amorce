@@ -1269,3 +1269,43 @@ Le contrôle qui l'aurait vu tient en une ligne :
 ffprobe -v error -show_entries stream=codec_type,duration -of csv=p=0 film.mp4
 # video et audio doivent afficher la même durée
 ```
+
+## Un limiteur qui varie son gain s'entend comme une coupure
+
+Un rugissement paraissait « coupé » au moment précis où il éclatait. Aucun trou
+dans l'enveloppe, aucune discontinuité : le son était continu. Le défaut était
+ailleurs.
+
+Comparé avant et après le master, le gain appliqué **variait de +1,0 à +6,1 dB
+selon l'instant**. Ce n'est pas un gain, c'est un limiteur qui pompe : poussé de
+cinq décibels, il rend au signal fort ce qu'il retire au signal faible, et cette
+respiration s'entend comme un décrochage à chaque crête.
+
+La correction n'est pas de baisser le limiteur mais de **ne pas l'atteindre** :
+le gain du master passe de +5 à +2 dB, et le rugissement gagne ses décibels
+dans le **mixage** — en baissant le lit de 5 dB autour de lui plutôt qu'en le
+poussant. La dynamique du cri remonte de 5,8 à 8,0 dB pour 8,6 avant master.
+
+**Un son n'est pas fort parce qu'on le monte, il est fort parce que le reste se
+tait.** Le monter l'envoie dans le limiteur, qui le rend plus petit.
+
+```bash
+# le pompage se mesure : comparer l'enveloppe avant et apres le master,
+# et regarder l'ECART entre les gains appliques, pas leur moyenne
+```
+
+## Un carton de fin sur du noir dit que c'est fini
+
+Une vidéo concurrente terminait sur un carton « le prochain épisode arrive »
+posé sur fond noir : **26,2 de luminance** quand le film tournait à 69,8. Deux
+secondes et demie de trou visuel, à l'endroit exact où un spectateur décide de
+rester ou de partir.
+
+L'idée était bonne — annoncer la suite transforme une vidéo en feuilleton — et
+c'est son exécution qui la perdait. Posé sur la **dernière image du film**,
+assombrie de moitié et non éteinte, le même carton garde le personnage à
+l'écran pendant qu'on lit : 38,2 de luminance, et 1,7 s au lieu de 2,4.
+
+Ce qui vaut d'être retenu déborde le montage : **une bonne idée mal exécutée se
+reprend, elle ne se rejette pas.** Mesurer ce qui cloche dans l'exécution coûte
+moins cher que de réinventer l'idée.
