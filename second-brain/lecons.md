@@ -1445,3 +1445,68 @@ et c'est pour cela qu'il fait partie des trois relevés avant envoi.
 **Un mixage se cale sur la durée du flux VIDÉO**, pas sur celle de l'audio
 décodé ni sur celle du conteneur. On complète l'audio par du silence, jamais on
 ne raccourcit l'image.
+
+## Un rush porte souvent déjà sa bande son — la doubler la détruit
+
+Une scène de dragon décrite comme « horrible, ça sature complètement, on
+n'entend que les éclairs ». Trois versions de rééquilibrage n'y avaient rien
+changé, parce que le défaut n'était pas dans les niveaux.
+
+Le spectrogramme l'a montré d'un coup : **six secondes de courbe plate**, −11 à
+−14 dB sans un seul événement, sous un voile large bande qui ne s'arrêtait
+jamais. Ce voile est ce qu'on entend comme une saturation.
+
+Puis le geste qui a tout renversé : **dessiner le rush seul**. Il portait une
+construction complète — arrivée, silence, montée, creux, éclair, rugissement —
+et **19,6 dB de dynamique**. Un travail de sound design déjà fait.
+
+Relevé instant par instant, mes accents tombaient tous à côté :
+
+| ce que fait le rush | où j'avais posé mon accent |
+| --- | --- |
+| l'arrivée | juste |
+| le silence de 1,05 s | comblé par des nappes continues |
+| son éclair | 1,05 s trop tôt |
+| **son rugissement** | mon cri 1,2 s AVANT |
+
+Deux demi-scènes qui se masquaient au lieu d'une. Recalés sur ses instants —
+et surtout **rien** dans ses silences — la scène rend 19,0 dB de dynamique
+contre 19,6 au rush seul.
+
+**Avant d'ajouter du son sur un plan, dessiner le son qu'il a déjà.** S'il en a
+un, on ne le double pas : on le renforce sur ses propres instants, et on se
+tait dans ses silences. Un silence dans un rush est une décision, pas un trou.
+
+## Avec `vitesse`, `duree` compte en secondes source
+
+Un plan à `vitesse: 1.8` et `duree: 2.8` ne rend pas 2,8 s : il consomme 2,8 s
+de source et en rend **1,56**. À `0.8`, la même `duree` en rend 9,06 — ou moins
+si la source s'épuise avant.
+
+Conséquence mesurée : tous les accents du plan suivant posés 1,24 s trop tard,
+c'est-à-dire chacun dans le creux de l'événement qu'il devait souligner. Et
+rien ne le signale : le montage se rend, la vérification passe, le fichier est
+faux.
+
+**On calcule la frise, on n'en suppose rien** — surtout dès qu'un plan change de
+vitesse, et surtout quand la source risque de s'épuiser.
+
+## Un carton de fin trop fort n'a l'air fort nulle part
+
+Le carton d'annonce sortait à −17 dB moyen. Écouté seul : correct. Mesuré sur
+le film entier : il relevait le plancher au point de faire tomber la plage de
+dynamique de **21,4 à 9,8 LU**.
+
+Un carton n'a pas de niveau propre. Il en a un **par rapport au climax** — une
+dizaine de décibels dessous. Le juger sur lui-même, c'est juger une virgule
+sans la phrase.
+
+## Un son de carton se calcule dans le repère du carton
+
+Six sons posés aux instants absolus du film ressortaient à −45 dB : ils
+tombaient hors de la tranche découpée ensuite. La durée annoncée du montage,
+celle du flux vidéo et celle du flux audio diffèrent de quelques centièmes, et
+cet écart suffit.
+
+**Ce qui est monté à part se calcule à partir de zéro.** Un repère local ne peut
+pas se décaler.

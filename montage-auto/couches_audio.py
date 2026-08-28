@@ -191,15 +191,26 @@ def remixer(video: Path, plan: dict, sortie: Path) -> dict:
     # MULTIPLIE. Deux creux qui se cumulent en décibels sur un même instant
     # font un trou, pas un effet — et un trou, on l'entend comme une panne.
     for creux in plan.get("micro_silences", []):
-        a = int((float(creux["instant"]) - float(creux.get("avance", 0.15))) * TAUX)
-        b = int(float(creux["instant"]) * TAUX)
-        c = int((float(creux["instant"]) + float(creux.get("retour", 0.30))) * TAUX)
-        a, b, c = max(0, a), max(0, min(b, longueur)), max(0, min(c, longueur))
+        # « tenue » tient le creux ouvert : sans elle on ne pose qu'un V, ce qui
+        # suffit pour un trou d'air avant un impact et pas pour rendre à une
+        # scène le SILENCE qu'elle avait. Le rush du dragon ménageait 1,05 s
+        # à -17,7 dB ; l'étirement à 0,8 par recouvrement l'avait comblé de
+        # 11 dB, et aucun réglage de bruitage ne pouvait le rendre — c'est une
+        # courbe d'automation qu'il fallait, pas un gain.
+        instant = float(creux["instant"])
+        tenue = float(creux.get("tenue", 0.0))
+        a = int((instant - float(creux.get("avance", 0.15))) * TAUX)
+        b = int(instant * TAUX)
+        c = int((instant + tenue) * TAUX)
+        d = int((instant + tenue + float(creux.get("retour", 0.30))) * TAUX)
+        a, b, c, d = (max(0, min(x, longueur)) for x in (a, b, c, d))
         niveau = 10.0 ** (float(creux["gain_db"]) / 20.0)
         if b > a:
             esquive[a:b] *= numpy.linspace(1.0, niveau, b - a)
         if c > b:
-            esquive[b:c] *= numpy.linspace(niveau, 1.0, c - b)
+            esquive[b:c] *= niveau
+        if d > c:
+            esquive[c:d] *= numpy.linspace(niveau, 1.0, d - c)
 
     ensemble *= esquive[:, None]
     for couche in plan.get("couches", []):

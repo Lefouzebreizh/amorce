@@ -39,7 +39,7 @@
   "bibliotheque": "sfx_library",
   "effets_db": 9,
   "largeur_stereo": 2.6,
-  "reverberation_s": 1.8,
+  "reverberation_s": 1.4,
   "plans": [
     {
       "nom": "affiche",
@@ -92,7 +92,7 @@
       "source": "rushes/Duration_seconds_Cinemat.mp4",
       "depart": 4.2,
       "duree": 5.8,
-      "cible_db": -16.0,
+      "cible_db": -9.0,
       "zoom": 0.14,
       "tremblements": [
         {
@@ -286,107 +286,86 @@
     },
     {
       "son": "braam_massif",
-      "instant": 13.05,
-      "gain": 13,
-      "distance": "proche"
-    },
-    {
-      "son": "grondement_terre",
-      "instant": 13.05,
-      "gain": -2,
-      "distance": "lointain"
-    },
-    {
-      "son": "riser_court",
-      "instant": 14.3,
-      "gain": 6,
-      "distance": "moyen"
+      "instant": 13.15,
+      "gain": 10,
+      "distance": "proche",
+      "_note": "l'arrivee, sur l'attaque du rush a 13,15"
     },
     {
       "son": "cri_titan",
-      "instant": 14.45,
-      "gain": 1,
+      "instant": 14.8,
+      "gain": 5,
       "distance": "moyen",
-      "telephone": 1.6,
+      "telephone": 1.5,
       "parametres": {
-        "duree": 1.4,
+        "duree": 1.1,
         "fondamentale": 108.0,
         "graine": 12,
         "dechirure": 0.55
       },
-      "_note": "le grognement AVANT le cri : meme gorge une octave plus haut, donc audible sur un telephone sans excitation forcee. Il annonce la bete ; le cri la libere.",
       "enveloppe": {
-        "attaque": 0.12,
-        "accent_s": 0.25,
-        "accent_db": 4.0,
-        "chute": 0.5
+        "attaque": 0.15,
+        "accent_s": 0.3,
+        "accent_db": 3.0,
+        "chute": 0.4
+      },
+      "_note": "le grognement, juste avant la montee du rush a 14,95. Il l'annonce, il ne la couvre pas"
+    },
+    {
+      "son": "riser_court",
+      "instant": 16.2,
+      "gain": 4,
+      "distance": "moyen",
+      "_note": "la tension, dans le creux du rush, pour amener son eclair"
+    },
+    {
+      "son": "electricite",
+      "instant": 16.45,
+      "gain": 13,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.8,
+        "graine": 77
+      },
+      "_note": "l'eclair, SUR celui du rush. Duree ramenee de 1,3 a 0,8 s : ce qui traine apres l'eclair remplit le creux qui precede le cri"
+    },
+    {
+      "son": "eclat",
+      "instant": 16.47,
+      "gain": 5,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.5,
+        "graine": 773,
+        "densite": 170.0
       }
     },
     {
       "son": "braam_double",
-      "instant": 15.35,
-      "gain": 5,
-      "distance": "proche"
-    },
-    {
-      "son": "electricite",
-      "instant": 15.4,
-      "gain": 14,
-      "distance": "proche",
-      "parametres": {
-        "duree": 1.3,
-        "graine": 77
-      },
-      "_note": "l'eclair. Seul son du montage dont l'energie vit en 2-6 kHz, la ou un haut-parleur de telephone est le plus sensible et ou rien d'autre ne joue — il passe donc sans se battre."
-    },
-    {
-      "son": "eclat",
-      "instant": 15.42,
+      "instant": 17.32,
       "gain": 6,
-      "parametres": {
-        "duree": 0.55,
-        "graine": 773,
-        "densite": 170.0
-      },
-      "distance": "proche"
+      "distance": "proche",
+      "_note": "la masse sous l'attaque du rugissement"
     },
     {
       "son": "cri_titan",
-      "instant": 16.25,
-      "gain": 24,
+      "instant": 17.38,
+      "gain": 21,
+      "distance": "proche",
+      "telephone": 1.1,
       "parametres": {
-        "duree": 3.3,
+        "duree": 1.5,
         "fondamentale": 54.0,
         "graine": 31,
         "dechirure": 1.15
       },
-      "distance": "proche",
-      "telephone": 0.9,
       "enveloppe": {
-        "attaque": 0.045,
-        "accent_s": 0.42,
-        "accent_db": 7.5,
-        "chute": 0.3
+        "attaque": 0.04,
+        "accent_s": 0.35,
+        "accent_db": 6.0,
+        "chute": 0.35
       },
-      "_note": "le cri. Releve plat — -25 dB pendant 2,4 s sans onset — il a fallu lui rendre une forme : 7,5 dB d'accent sur les quatre premiers dixiemes. Ce que l'oreille repere est le changement, pas le niveau ; un bourdon fort reste un bourdon."
-    },
-    {
-      "son": "rugissement",
-      "instant": 18.2,
-      "gain": 9,
-      "distance": "moyen",
-      "telephone": 1.5,
-      "parametres": {
-        "duree": 2.4,
-        "graine": 53
-      },
-      "enveloppe": {
-        "attaque": 0.3,
-        "accent_s": 0.0,
-        "accent_db": 0.0,
-        "chute": 0.7
-      },
-      "_note": "le pont. `cri_titan` porte une decroissance dans son dernier quart que l'enveloppe ne peut pas defaire — le contenu n'y est plus. Sans ce souffle qui prend le relais, le son tombe a -42 dB pile sur la coupe vers le carton, et c'est ce trou qu'on entend comme « le son s'arrete trop tot »."
+      "_note": "le cri, DOUBLANT celui du rush au lieu de le precede. Duree 1,5 s et non 3,3 : le rush tient la longueur, mon cri ne fait que lui donner du corps"
     }
   ],
   "esquive": {
