@@ -1,13 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { entier, texte } from '../src/domaine/valeurs.ts'
 import {
   creerClientXtream,
-  entier,
   ErreurXtream,
   masquerIdentifiants,
   normaliserServeur,
-  texte,
 } from '../src/ingestion/xtream.ts'
 
 const IDS = { serveur: 'http://exemple.tv:8080', utilisateur: 'jean', motDePasse: 's3cr3t' }

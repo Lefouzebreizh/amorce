@@ -157,7 +157,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   **zéro dépendance d'exécution** dans le cœur : ingestion M3U et Xtream,
   normalisation, classification en direct / films / séries. Une liste M3U ne se
   charge jamais en mémoire — 50 à 400 Mo, l'analyseur les rend au fil de l'eau —
-  et rien ne remonte au-dessus de l'ingestion sans être un `Element`. Aucune
+  et rien ne remonte au-dessus de l'ingestion sans être un `Element`. Le cache
+  est un SQLite livré avec Node (`node:sqlite`), recherche plein texte comprise :
+  120 000 entrées importées en 6,6 s, toute requête sous 30 ms. **Aucun mot de
+  passe n'entre en base** — l'adresse d'une source y est masquée — et aucune
   source de contenu ni identifiant n'est versionné. Se vérifie depuis son
   dossier.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
