@@ -646,3 +646,19 @@ C'est la même famille de défaut que le doseur déjà consigné plus haut : un 
 de mesure qui échoue **en silence** rend un verdict faux plus dangereux qu'une
 panne. Avant de croire une mesure uniforme sur un lot hétérogène, vérifier que
 l'instrument parle encore.
+
+## Des sons conformes un par un font un mixage inaudible
+
+Quatorze bruitages, chacun mesuré sous les 10 dB de perte sur un haut-parleur de
+téléphone, montés ensemble en bande-annonce : **11,0 dB de perte**. Les graves ne
+se masquent pas les uns les autres, ils s'additionnent — deux drones, un
+grondement et un boom au même instant repassent sous le seuil de l'appareil.
+
+Vérifier les éléments ne dit donc rien du résultat, et c'est le piège : chaque
+mesure était verte. Seule la mesure **du mixage** l'a vu.
+
+La sortie tient en une phrase de métier : **un seul élément possède le grave à la
+fois**, et le lit audible est porté par un son qui traverse le filtre, jamais par
+un drone. Un drone perd quinze décibels à lui seul ; sa place est huit décibels
+sous le reste, où il se ressent sur une enceinte sans rien coûter sur un
+téléphone. Appliqué, l'écart est tombé de 11,0 à 5,7 dB.
