@@ -313,6 +313,37 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
     else play();
   }, [play, pause]);
 
+  /*
+   * Quitter l'application arrête la lecture.
+   *
+   * Sans cela, le son continuait dans le dos de l'utilisateur : on passe à une
+   * autre application, on verrouille l'écran, et le montage joue toujours. Sur
+   * un téléphone, c'est une bande-son qui démarre seule par-dessus ce qu'on
+   * fait — et une batterie qui se vide pour rien.
+   *
+   * `visibilitychange` couvre le changement d'application et le verrouillage ;
+   * `pagehide` couvre la fermeture de l'onglet et la mise en cache arrière, que
+   * le premier ne signale pas toujours sur iOS. On met en pause plutôt que de
+   * remettre à zéro : on revient là où l'on était, et rien n'est perdu.
+   *
+   * Pas de reprise automatique au retour. Un son qui repart tout seul quand on
+   * rouvre une application est exactement ce qu'on cherche à supprimer ici.
+   */
+  useEffect(() => {
+    const arreter = () => {
+      if (useStudio.getState().playing) pause();
+    };
+    const surVisibilite = () => {
+      if (document.visibilityState === 'hidden') arreter();
+    };
+    document.addEventListener('visibilitychange', surVisibilite);
+    window.addEventListener('pagehide', arreter);
+    return () => {
+      document.removeEventListener('visibilitychange', surVisibilite);
+      window.removeEventListener('pagehide', arreter);
+    };
+  }, [pause]);
+
   const seek = useCallback((time: number) => {
     const store = useStudio.getState();
     store.setPlayhead(time);
