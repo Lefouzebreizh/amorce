@@ -430,6 +430,79 @@ def image_animee(source: Path, duree: float, reglages: dict, atelier: Path) -> P
     return cible
 
 
+def bouche_synchronisee(source: Path, depart: float, duree: float,
+                        reglages: dict, atelier: Path) -> tuple[Path, float]:
+    """Fait dire une réplique au visage d'un plan, et met le rendu en cache.
+
+    C'est le seul maillon de la chaîne qui se compte en **minutes** de
+    processeur : Wav2Lip sur processeur met plusieurs minutes pour quelques
+    secondes de plan. Trois décisions en découlent, et chacune a été payée.
+
+    **La fenêtre est découpée avant, pas après.** Wav2Lip cherche un visage sur
+    l'image entière ; le recadrage en 1080 × 1920 ampute les bords, et un visage
+    décentré disparaît du cadre avant d'être vu. On extrait donc exactement la
+    fenêtre du plan, sans reformater, et le recadrage vient ensuite.
+
+    **Un échec ne tue pas le montage.** Un film de douze plans ne doit pas
+    mourir parce qu'un visage manque sur l'un d'eux : on prévient, on rend le
+    plan intact, et le reste se monte. C'est aussi pourquoi l'outil tourne dans
+    un processus séparé — une inférence tuée par manque de mémoire (code −9)
+    emporterait le montage avec elle si elle tournait ici.
+
+    **Le cache porte la fenêtre et la voix.** Un remontage d'essai ne repaie pas
+    ce qui n'a pas changé.
+    """
+    voix = Path(str(reglages.get("voix", ""))).expanduser()
+    if not voix.is_file():
+        print(f"   réplique introuvable pour {source.name} : {voix}", file=sys.stderr)
+        return source, depart
+
+    cache = atelier / "cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    marque = f"{source.stem}_{depart:.2f}_{duree:.2f}_{voix.stem}"
+    cible = cache / f"bouche_{marque}.mp4"
+    if cible.is_file():
+        return cible, 0.0
+
+    outil = Path(__file__).resolve().parent / "auto_lipsync.py"
+    if not outil.is_file():
+        print(f"   auto_lipsync.py introuvable — {source.name} gardera sa bouche.",
+              file=sys.stderr)
+        return source, depart
+
+    # La fenêtre seule, aux dimensions d'origine. `-ss` avant `-i` cherche vite,
+    # et le réencodage garantit que la première image est bien celle qu'on veut :
+    # une copie de flux repartirait de l'image-clé précédente, et la réplique
+    # serait décalée de tout ce qui les sépare.
+    fenetre = cache / f"fenetre_{marque}.mp4"
+    subprocess.run([ffmpeg(), "-y", "-v", "error", "-ss", f"{depart:.3f}",
+                    "-i", str(source), "-t", f"{duree:.3f}",
+                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "16",
+                    "-c:a", "aac", str(fenetre)], check=True)
+
+    print(f"── Synchronisation labiale sur {source.name} "
+          f"({duree:.1f} s — plusieurs minutes)")
+    appel = [sys.executable, str(outil), "--video", str(fenetre),
+             "--audio", str(voix), "--output", str(cible)]
+    if reglages.get("pads"):
+        appel += ["--pads"] + [str(v) for v in reglages["pads"]]
+    if reglages.get("nosmooth"):
+        appel.append("--nosmooth")
+    resultat = subprocess.run(appel, capture_output=True, text=True)
+
+    if not cible.is_file():
+        motif = resultat.stderr.strip().splitlines()
+        raison = motif[-1] if motif else f"code {resultat.returncode}"
+        if resultat.returncode == -9:
+            raison = ("tué par manque de mémoire — réduire la fenêtre "
+                      "ou passer --resize-factor 2")
+        print(f"   synchronisation abandonnée sur {source.name} : {raison}",
+              file=sys.stderr)
+        print("   le plan est monté tel quel.", file=sys.stderr)
+        return source, depart
+    return cible, 0.0
+
+
 def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     """Découpe un plan au format, et l'amène à **sa** cible entendue.
 
@@ -456,6 +529,9 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     if source.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".bmp"}:
         source = image_animee(source, duree, plan.get("parallaxe", {}), sortie.parent)
         depart = 0.0
+    elif plan.get("lipsync"):
+        source, depart = bouche_synchronisee(
+            source, depart, duree, plan["lipsync"], sortie.parent)
 
     mesure = entendu(source, depart, duree)
 
