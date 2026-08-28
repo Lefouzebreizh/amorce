@@ -825,3 +825,45 @@ elle, l'exige.
 `setpts` doit être **suivi** d'un `fps`, jamais précédé : un flux recadencé
 avant compression garde l'ancienne cadence, et le multiplexeur refuse des
 horodatages qui n'avancent plus (« non monotonically increasing dts »).
+
+## Un morph se calcule sur les tailles, pas sur les formes
+
+Enchaîner deux plans sans coupe visible — une pupille qui devient une planète —
+ne demande ni déformation de maillage ni outil dédié. Il faut que **les deux
+objets occupent le même disque à l'écran au moment du fondu**, et le reste
+suit : l'oeil plonge dans sa pupille, le plan suivant recule depuis sa planète,
+et un fondu de quatre dixièmes fait le raccord.
+
+Le seul calcul est un rapport. Mesuré sur ce dépôt : pupille de 295 px de rayon,
+planète de 333. Le zoom d'entrée valant 2,9, celui de sortie doit valoir
+2,9 × 295 / 333 = 2,57 pour que les disques coïncident. À un pour cent près, le
+raccord se voit.
+
+Deux détails sans lesquels ça ne prend pas : le fondu suit une **courbe en S**
+(linéaire, on voit les deux images à parts égales au milieu et l'illusion
+tombe), et l'entrée est plus rapide que la sortie — on plonge vite, on recule
+lentement.
+
+## Une explosion se découpe dans l'image, elle ne se pose pas dessus
+
+Trente fragments générés par une bibliothèque et composités par-dessus se voient
+au premier coup d'oeil : leur texture n'a ni l'éclairage ni la palette du plan.
+Découper le disque réel en cellules de Voronoï et animer **ses propres pixels**
+coûte quarante lignes et supprime le problème.
+
+Trois réglages font la crédibilité, et aucun n'est le nombre de morceaux :
+
+- **La vitesse hors-plan.** Une explosion qui ne s'étale que dans le plan de
+  l'image se lit comme une fleur qui s'ouvre. Ce qui fait « ça vient sur moi »,
+  c'est le grossissement.
+- **La dispersion.** Une explosion isotrope est une animation ; il faut des
+  morceaux lents qui retombent et des éclats qui filent.
+- **Ce qui reste au milieu.** Peindre du noir y creuse un trou découpé dans
+  l'image. Une masse qui cède **rayonne** pendant qu'elle se disperse : un coeur
+  chaud qui se contracte, et un rayon d'extinction assez petit pour laisser les
+  mains qui tenaient l'objet — les effacer casse la lecture.
+
+Un fragment qui grossit doit aussi **perdre de la lumière et de la netteté**,
+sinon il devient une découpe de papier blanc : il arrive sur l'objectif, donc il
+sort de la zone de netteté et quitte l'éclairage de la scène. Le rouge résiste
+mieux que le bleu, ce qui le fait virer à la braise plutôt qu'au gris.
