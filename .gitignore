@@ -119,11 +119,14 @@ visual_library/**/*.jpg
 visual_library/**/*.webp
 visual_library/**/*.mp4
 
+<<<<<<< HEAD
+=======
 # NexusCrypto : journal tournant du moteur de trading. Se refabrique tout seul,
 # et peut contenir des montants et des identifiants d'ordre — rien de tout cela
 # n'a sa place dans l'historique.
 /nexuscrypto/logs/
 
+>>>>>>> origin/main
 # Les rushes d'un montage. Les trois recettes de `montage-auto/references/`
 # les nomment toutes en relatif — « rushes/…​ » — donc ce dossier apparaît chez
 # quiconque rend un épisode. Sans cette ligne, un `git add -A` y verse des
