@@ -65,6 +65,13 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
+- **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
+  asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
+  bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
+  `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend vérifiable
+  ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un chemin :
+  coupe-circuit, dimensionnement, courtier, portefeuille — sans raccourci. Le
+  mode papier est le défaut, le mode réel demande deux gestes.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
