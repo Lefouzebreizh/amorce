@@ -6,6 +6,7 @@ import { boxContains, type CaptionBox, type FontSet } from '@/lib/captions';
 import { GradePipeline } from '@/lib/grade';
 import { guessTier, PanicDetector, QualityGovernor, QUALITY_TIERS, tierById } from '@/lib/quality';
 import { ClipVideoPool, preloadCaptionFonts, renderFrame, syncPlayback } from '@/lib/renderer';
+import type { Project } from '@/lib/types';
 import { useStudio } from '@/lib/store';
 import { layoutClips } from '@/lib/timeline';
 import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
@@ -107,6 +108,11 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
   const gradeRef = useRef<GradePipeline | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
   const frameRef = useRef(0);
+
+  /* Ce qui permet à la boucle de savoir qu'elle n'a rien à redessiner. */
+  const signatureRef = useRef('');
+  const projetRef = useRef<Project | null>(null);
+  const dernierChangementRef = useRef(0);
   const captionBoxesRef = useRef(new Map<string, CaptionBox>());
 
   if (poolRef.current === null) poolRef.current = new ClipVideoPool();
@@ -153,9 +159,46 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
       const pinned = choice === 'auto' ? null : tierById(choice);
       if (pinned && pinned.id !== governor.current().id) governor.set(pinned);
 
+      // Copie, jamais l'objet du gouverneur : il vient de `QUALITY_TIERS`, et
+      // le muter changerait la constante pour toute la session.
       const tier = exporting
         ? { ...tierById('full'), scale: exportingRef.current! }
-        : governor.current();
+        : { ...governor.current() };
+
+      /*
+       * On ne compose jamais plus de pixels que l'écran n'en montre.
+       *
+       * L'invariant tient : la composition reste en 1080 × 1920, et la qualité
+       * d'aperçu n'agit que par une transformation d'échelle. Mais l'échelle
+       * était choisie sur une échelle fixe de quatre paliers, sans regarder la
+       * taille à laquelle l'aperçu s'affiche réellement.
+       *
+       * Or dans le bloc collé d'un téléphone, l'image mesure 80 px de large.
+       * On composait 756 px pour en montrer 80 : neuf fois trop, et neuf fois
+       * payé. Mesuré, le coût suit la surface — 1080 px coûtent 901 ms par
+       * image sur un processeur quatre fois plus lent, 367 px en coûtent 161.
+       *
+       * Le plancher garde une marge : un aperçu agrandi d'un doigt ne doit pas
+       * attendre une recomposition, et un canvas redimensionné est vidé — d'où
+       * le cache de `resolveContext`, qu'on ne veut pas invalider au pixel près.
+       * L'échelle est donc arrondie par crans de 0,05.
+       *
+       * Un export n'y passe jamais : la définition de sortie prime, c'est le
+       * fichier livré et il ne se rejoue pas.
+       *
+       * Un palier **choisi à la main** n'y passe pas non plus. Le dépôt garantit
+       * qu'il écrase la surveillance, et rogner en silence un choix explicite
+       * est précisément ce qu'on ne fait pas ici : quelqu'un qui demande la
+       * qualité maximale la demande, y compris pour juger une image avant de
+       * l'agrandir. La borne ne s'applique donc qu'en automatique — c'est-à-dire
+       * dans le cas par défaut, celui de tout le monde.
+       */
+      const affiche = canvasRef.current?.getBoundingClientRect().width ?? 0;
+      if (!exporting && !pinned && affiche > 0) {
+        const besoin = (affiche * Math.min(3, window.devicePixelRatio || 1)) / OUTPUT_WIDTH;
+        const cran = Math.max(0.15, Math.ceil(besoin / 0.05) * 0.05);
+        if (cran < tier.scale) tier.scale = cran;
+      }
 
       // Le canvas est retrouvé à chaque image plutôt que capturé au démarrage :
       // la boucle devient insensible à l'ordre de montage des composants et
@@ -170,6 +213,48 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
       const { project, playing } = store;
       const placed = layoutClips(project.clips);
       const duration = placed.length === 0 ? 0 : placed[placed.length - 1].end;
+
+      /*
+       * À l'arrêt, quand rien n'a changé, on ne redessine pas.
+       *
+       * La boucle composait une image complète soixante fois par seconde même
+       * lorsque rien ne bougeait — c'était assumé, pour que le filet de sécurité
+       * de la qualité veille en permanence. Mesuré sur un processeur quatre fois
+       * plus lent qu'ici, ce qui est l'ordre de grandeur d'un téléphone :
+       * **442 ms par image à l'arrêt**, soit deux images par seconde et tout le
+       * budget processeur brûlé à redessiner une image identique. L'interface
+       * paraissait alors figée partout à la fois — jusqu'à la frise, qu'on
+       * croyait ne pas suivre alors qu'elle suivait deux fois par seconde.
+       *
+       * La signature ne compare que des valeurs déjà en main : le projet est
+       * remplacé à chaque modification, donc son identité suffit ; `currentTime`
+       * se lit sans forcer de mise en page, contrairement à toute mesure de
+       * géométrie. Elle capte donc aussi la fin d'un repositionnement, qui
+       * arrive après coup et doit être redessinée.
+       *
+       * Le délai de grâce couvre ce qui n'apparaît dans aucune de ces valeurs :
+       * une police qui finit de charger, une vignette décodée, une première
+       * image encore absente. Une seconde après le dernier changement, on
+       * s'endort.
+       */
+      let horloge = 0;
+      for (const item of placed) {
+        const v = pool.getVideo(item.clip.id);
+        if (v) horloge += v.currentTime;
+      }
+      const signature = `${store.playhead.toFixed(3)}|${playing}|${tier.id}|${tier.scale}|`
+        + `${ctx.canvas.width}x${ctx.canvas.height}|${horloge.toFixed(3)}`;
+      const change = signature !== signatureRef.current || project !== projetRef.current;
+      if (change) {
+        signatureRef.current = signature;
+        projetRef.current = project;
+        dernierChangementRef.current = now;
+      }
+      const REPOS_MS = 1000;
+      if (!playing && !exporting && !change && now - dernierChangementRef.current > REPOS_MS) {
+        raf = requestAnimationFrame(loop);
+        return;
+      }
 
       let time = store.playhead;
       if (playing && duration > 0) {
@@ -312,6 +397,37 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
     if (useStudio.getState().playing) pause();
     else play();
   }, [play, pause]);
+
+  /*
+   * Quitter l'application arrête la lecture.
+   *
+   * Sans cela, le son continuait dans le dos de l'utilisateur : on passe à une
+   * autre application, on verrouille l'écran, et le montage joue toujours. Sur
+   * un téléphone, c'est une bande-son qui démarre seule par-dessus ce qu'on
+   * fait — et une batterie qui se vide pour rien.
+   *
+   * `visibilitychange` couvre le changement d'application et le verrouillage ;
+   * `pagehide` couvre la fermeture de l'onglet et la mise en cache arrière, que
+   * le premier ne signale pas toujours sur iOS. On met en pause plutôt que de
+   * remettre à zéro : on revient là où l'on était, et rien n'est perdu.
+   *
+   * Pas de reprise automatique au retour. Un son qui repart tout seul quand on
+   * rouvre une application est exactement ce qu'on cherche à supprimer ici.
+   */
+  useEffect(() => {
+    const arreter = () => {
+      if (useStudio.getState().playing) pause();
+    };
+    const surVisibilite = () => {
+      if (document.visibilityState === 'hidden') arreter();
+    };
+    document.addEventListener('visibilitychange', surVisibilite);
+    window.addEventListener('pagehide', arreter);
+    return () => {
+      document.removeEventListener('visibilitychange', surVisibilite);
+      window.removeEventListener('pagehide', arreter);
+    };
+  }, [pause]);
 
   const seek = useCallback((time: number) => {
     const store = useStudio.getState();

@@ -86,6 +86,15 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
+- **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
+  asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
+  bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
+  `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend vérifiable
+  ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un chemin :
+  coupe-circuit, dimensionnement, courtier, portefeuille — sans raccourci. Le
+  mode papier est le défaut, le mode réel demande deux gestes. `profils.py`
+  rejoue six marchés fabriqués et compare la stratégie à un DCA aveugle : un
+  réglage se juge sur son effet, pas sur son intention.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
@@ -205,6 +214,27 @@ chacun mesuré conforme, chacun rejeté à l'écoute. Le défaut se voyait en un
 seconde sur un spectrogramme que personne n'avait tiré. Pour un média,
 `/voir-le-son` avant de livrer ; pour un lot, `/trier-les-rushes` avant de
 choisir.
+
+**Et pour un média : on revérifie le fichier qu'on envoie, pas celui d'avant.**
+La règle a été payée quatre fois dans la même soirée. Un carton de fin portait
+un titre fantôme figé derrière son texte — visible sur n'importe quelle image
+tirée du fichier, invisible dans toutes les mesures. Un cri de dragon est parti
+trois décibels sous un plan de transition, alors que chaque correction prise
+séparément était juste. À chaque fois la mesure disait vert et le fichier était
+faux, parce que ce qui avait été mesuré n'était pas ce qui partait.
+
+Trois gestes avant d'envoyer, sur le **fichier final** et sur lui seul :
+
+1. **Une planche d'images sur toute la durée**, la dernière seconde comprise.
+   C'est là que se logent les textes qui traînent et les cartons hérités.
+2. **Le niveau entendu section par section**, filtré au-dessus de 400 Hz. Le
+   climax doit être le plus fort — s'il ne l'est pas, c'est le défaut, quelle
+   que soit la sonie globale.
+3. **La durée et le raccord** : l'audio et la vidéo se terminent-ils ensemble,
+   et le son traverse-t-il chaque coupe ?
+
+Une correction ne s'annonce jamais sur la foi du réglage changé. Elle s'annonce
+sur le fichier relu.
 
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
@@ -375,8 +405,20 @@ plutôt que de sonder les contrôles en boucle jusqu'au vert. La surveillance
 manuelle a deux défauts que la fusion automatique n'a pas : elle brûle du
 contexte à chaque sondage, et elle meurt avec la session — une PR verte reste
 alors ouverte à attendre quelqu'un. Armée, GitHub fusionne seul dès que les
-contrôles passent, téléphone éteint. On sonde encore quand l'outil refuse
-d'armer, et seulement là.
+contrôles passent, téléphone éteint.
+
+**Sauf qu'ici l'outil refuse toujours**, et c'est mesuré : `enable_pr_auto_merge`
+rend « Auto-merge is not enabled for this repository ». Le réglage est coupé
+dans *Settings → General → Pull Requests → Allow auto-merge*, et tant qu'il
+l'est, le paragraphe ci-dessus décrit un geste qui échoue à chaque PR. Une
+session qui l'ignore essaie, se fait refuser, et croit à une erreur de sa part.
+
+Donc, tant que la case n'est pas cochée : on arme quand même — l'appel coûte une
+seconde et dira le jour où le réglage change — puis **on sonde jusqu'au vert et
+on fusionne à la main**. C'est le chemin normal de ce dépôt, pas un repli.
+Cocher la case est un geste de trente secondes qui rendrait le paragraphe
+précédent vrai ; c'est au propriétaire de le faire, personne d'autre n'a la
+main dessus.
 
 Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
 plusieurs sessions en parallèle, et une branche qui attend collectionne les

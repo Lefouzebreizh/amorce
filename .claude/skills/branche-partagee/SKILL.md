@@ -85,6 +85,7 @@ Les fichiers qui se télescopent, et ce qu'il faut y regarder :
 | `CLAUDE.md` | Le **compte** en gras se recalcule sur la liste résolue, il ne se fusionne pas |
 | `.gitignore` | Aucun : coller les deux blocs |
 | `.claude/hooks/session-start.sh` | Deux étapes ajoutées au même endroit : garder les deux, l'ordre est libre |
+| `second-brain/lecons.md` | Aucun : deux leçons ajoutées à la fin, garder les deux. `preflight.py` le compte parmi les carrefours, la table l'oubliait |
 | `.claude/skills/verifier/SKILL.md` | Son préambule ne compte plus les projets, exprès : ne pas réintroduire un nombre |
 | `.github/requirements-tests.txt` | Ne jamais y recopier la liste du hook — voir l'en-tête du fichier |
 

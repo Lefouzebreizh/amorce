@@ -231,16 +231,29 @@ export class GradePipeline {
     if (!bloomCtx) return;
 
     bloomCtx.clearRect(0, 0, this.bloomCanvas.width, this.bloomCanvas.height);
-    // Le contraste extrême isole les hautes lumières : seules elles doivent
-    // diffuser, sinon toute l'image se voile et perd son contraste.
-    bloomCtx.filter = 'brightness(1.25) contrast(2.6)';
+    /*
+     * Le contraste extrême isole les hautes lumières : seules elles doivent
+     * diffuser, sinon toute l'image se voile et perd son contraste.
+     *
+     * Le flou est enchaîné **ici**, sur le petit canvas, et non au moment de
+     * réagrandir. Il était posé sur la destination, en pleine définition : on
+     * calculait donc un quart de la surface pour l'isolement des lumières, puis
+     * on floutait seize fois cette surface. Le rayon suit la réduction — quatre
+     * fois plus petit sur une image quatre fois plus petite donne le même halo
+     * une fois réagrandie —, si bien que le flou coûte seize fois moins de
+     * surface pour un rayon quatre fois moindre.
+     *
+     * Un halo est par nature une image sans détail : rien de ce qu'on perd à le
+     * calculer en petit ne se voit après agrandissement.
+     */
+    const rayon = (14 + amount * 26) / 4;
+    bloomCtx.filter = `brightness(1.25) contrast(2.6) blur(${rayon.toFixed(1)}px)`;
     bloomCtx.drawImage(ctx.canvas, 0, 0, this.bloomCanvas.width, this.bloomCanvas.height);
     bloomCtx.filter = 'none';
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = amount * 0.55;
-    ctx.filter = `blur(${Math.round(14 + amount * 26)}px)`;
     ctx.drawImage(this.bloomCanvas, 0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
     ctx.restore();
   }

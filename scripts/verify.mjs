@@ -165,6 +165,29 @@ function mesurerSilence(fichier) {
   return { muettes, total };
 }
 
+/**
+ * Combien d'images le fichier exporté contient réellement.
+ *
+ * `ffprobe` les compte une à une : le champ `avg_frame_rate` d'un WebM produit
+ * par MediaRecorder ne veut rien dire, l'encodeur y inscrit une cadence
+ * nominale que le contenu ne tient pas.
+ */
+function mesurerCadence(fichier) {
+  try {
+    const sortie = execFileSync('ffprobe', [
+      '-v', 'error', '-count_frames', '-select_streams', 'v',
+      '-show_entries', 'stream=nb_read_frames', '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1', fichier,
+    ], { encoding: 'utf8' }).trim().split('\n');
+    const images = Number(sortie[0]);
+    const duree = Number(sortie[1]);
+    if (!Number.isFinite(images) || !Number.isFinite(duree) || duree <= 0) return null;
+    return { images, duree, parSeconde: images / duree };
+  } catch {
+    return null;
+  }
+}
+
 const browser = await chromium.launch({
   executablePath: process.env.AMORCE_CHROMIUM || undefined,
   args: ['--autoplay-policy=no-user-gesture-required'],
@@ -849,6 +872,84 @@ if (profile.mobile) {
   await remonterEnTete(page);
 }
 
+// ------------------------------------- 4ter. La frise suit la tête de lecture
+if (profile.mobile) {
+  /*
+   * Sur un écran de téléphone, la frise ne montre que six secondes à la fois.
+   * Passé ce point, la tête de lecture sort du cadre — et l'on ne sait plus où
+   * l'on est dans son propre montage : impossible de tomber sur le plan qui
+   * porte un texte pour le modifier.
+   *
+   * Ce contrôle a été écrit après un rapport terrain que rien n'attrapait :
+   * les tests unitaires ne voient ni le défilement, ni la mise en page, et le
+   * défaut n'apparaît qu'au-delà d'un montage d'une dizaine de secondes.
+   *
+   * On vérifie les deux chemins séparément — ils sont distincts dans le code —
+   * et à l'arrêt d'abord : c'est celui qui ne suivait pas du tout.
+   */
+  const cadre = async () =>
+    page.evaluate(() => {
+      const c = document.querySelector('[aria-label="Timeline du montage"]');
+      if (!c) return null;
+      const t = c.querySelector('.bg-accent.w-px');
+      const x = t ? parseFloat(t.style.left) : null;
+      return {
+        deborde: c.scrollWidth > c.clientWidth + 8,
+        vue: x !== null && x >= c.scrollLeft - 2 && x <= c.scrollLeft + c.clientWidth + 2,
+      };
+    });
+
+  const depart = await cadre();
+  if (depart?.deborde) {
+    const duree = Number(
+      await page.locator('input[aria-label="Position dans le montage"]').getAttribute('max'),
+    );
+    const poser = (t) =>
+      page.evaluate((v) => {
+        const i = document.querySelector('input[aria-label="Position dans le montage"]');
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(i, String(v));
+        i.dispatchEvent(new Event('input', { bubbles: true }));
+      }, t);
+
+    let perdue = 0;
+    const positions = [0.08, 0.92, 0.45, 0.99, 0.02, 0.7].map((f) => duree * f);
+    for (const t of positions) {
+      await poser(t);
+      await page.waitForTimeout(450);
+      const e = await cadre();
+      if (!e?.vue) perdue += 1;
+    }
+    check(
+      'La frise suit le curseur déplacé à l’arrêt',
+      perdue === 0,
+      `${positions.length - perdue}/${positions.length} positions gardent la tête de lecture en vue`,
+    );
+
+    await poser(0);
+    await page.waitForTimeout(400);
+    await page.locator('[aria-label="Commandes de lecture"] button').first().click();
+    let perdueEnLecture = 0;
+    const releves = 8;
+    for (let i = 0; i < releves; i += 1) {
+      await page.waitForTimeout(500);
+      const e = await cadre();
+      if (!e?.vue) perdueEnLecture += 1;
+    }
+    await page.locator('[aria-label="Commandes de lecture"] button').first().click();
+    await page.waitForTimeout(300);
+    check(
+      'La frise suit la tête de lecture pendant la lecture',
+      perdueEnLecture === 0,
+      `${releves - perdueEnLecture}/${releves} relevés gardent la tête de lecture en vue`,
+    );
+  } else {
+    // Un montage qui tient entièrement dans la largeur ne peut rien démontrer.
+    check('La frise suit le curseur déplacé à l’arrêt', true, 'frise plus courte que l’écran');
+  }
+
+  await remonterEnTete(page);
+}
+
 // ------------------------------------- 4bis. Manipulation directe du texte
 if (profile.mobile) {
   /*
@@ -1100,6 +1201,44 @@ if (exportPath) {
    * Le contrôle demande ffmpeg, qui n'est pas garanti sur toutes les machines :
    * son absence est dite, jamais silencieuse.
    */
+  const cadence = mesurerCadence(exportPath);
+  if (cadence === null) {
+    console.log('  —    | Cadence non mesurée (ffprobe absent)');
+  } else {
+    /*
+     * La cadence de l'export, que rien ne vérifiait.
+     *
+     * L'enregistrement se fait en filmant le canvas en temps réel : le fichier
+     * ne reçoit donc que les images réellement composées pendant la lecture. Si
+     * composer une image coûte plus que 1/30 de seconde, le fichier livré perd
+     * silencieusement des images — et tous les contrôles voisins restent verts,
+     * puisque la durée est bonne, la définition est bonne, l'image n'est pas
+     * noire et le son est là.
+     *
+     * Mesuré à la découverte : **35 images pour 7,5 secondes** sur la machine
+     * de vérification, 9 sur un processeur bridé quatre fois. Le fichier était
+     * un diaporama, et personne ne pouvait le savoir depuis les tests.
+     *
+     * Mesure affichée, et non contrôle rouge. Le défaut est réel et connu, mais
+     * le corriger demande un encodage hors ligne — décoder les rushes avec
+     * `VideoDecoder` plutôt que de les lire dans un élément `<video>`, ce qui
+     * suppose un démultiplexeur. Une suite qui reste rouge en permanence
+     * apprend à ignorer la suite ; un nombre affiché à chaque passage, non. Le
+     * jour où l'encodage hors ligne arrive, cette ligne devient un contrôle.
+     *
+     * Piloter les éléments `<video>` image par image ne serait pas une issue :
+     * mesuré à 265 ms par déplacement séquentiel, soit 2,6 minutes pour un film
+     * de vingt secondes.
+     */
+    const attendue = 30;
+    const perdues = Math.round(100 - (cadence.parSeconde * 100) / attendue);
+    console.log(
+      `  ${cadence.parSeconde >= attendue / 3 ? 'OK  ' : '⚠   '} | `
+      + `Cadence de l’export : ${cadence.images} images pour ${cadence.duree.toFixed(1)} s, `
+      + `soit ${cadence.parSeconde.toFixed(1)} par seconde — ${perdues} % des images perdues`,
+    );
+  }
+
   const silence = mesurerSilence(exportPath);
   if (silence === null) {
     console.log('  —    | Silence non mesuré (ffmpeg absent)');

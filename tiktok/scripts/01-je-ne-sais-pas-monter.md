@@ -2,7 +2,7 @@
 
 **Concept** : B4 — Avant / après, au jour zéro (l'épisode qui ouvre le feuilleton)
 **Dispositif** : voix off sur images — **aucun rush, aucune timeline nécessaire**
-**Durée visée** : 24 s
+**Durée visée** : 19 s *(recalculée sur le débit mesuré ; voir « Le déroulé »)*
 **Ce que le spectateur emporte** : quelqu'un qui finit ce qu'il commence bute sur une seule chose, et il publie quand même.
 
 C'est le seul script du dossier qui se tourne **avant** de savoir monter. Il ne
@@ -40,12 +40,16 @@ sans le son : un mot prononcé qui manque à l'écran est un mot perdu.
 | 0:18 | Retour sur une illustration | « Celle-là, c'est la première. Elle est moche, et je la publie quand même. » | — | fond bas |
 
 **Ces temps sont calculés sur ton débit, pas sur la moyenne du dossier.** La
-règle générale compte 2,5 mots par seconde ; ta première prise en a donné
-**3,2**, mesurés sur les passages parlés. Les 64 mots du script font donc
-environ 20 s de parole, plus 4 s de silences — d'où les 24 s visées, et non les
-26 s que la règle générale annoncerait. Rechronométrer sur la vraie prise
-plutôt que de faire confiance à ce tableau : c'est un point de départ, pas un
-verdict.
+règle générale compte 2,5 mots par seconde. Ce script a d'abord annoncé 3,2
+pour ta prise ; **la vidéo publiée en donne 4,25**, relevés au détecteur
+d'activité vocale sur les quatre phrases gardées (35 mots en 8,23 s de parole).
+
+Les 64 mots du script font donc environ **15 s de parole**, plus les silences —
+soit **19 s visées**, et non les 24 s que 3,2 laissait attendre. Les temps du
+tableau ci-dessus sont posés sur l'ancien chiffre et courent donc trop long
+d'un bon quart. Ils restent un point de départ, pas un verdict : les trois
+phrases du milieu n'ont jamais été dites, et leur durée réelle ne se saura
+qu'à la prise.
 
 **« Sept jours » et non « jamais ».** Un chiffre se vérifie, un absolu se
 périme : « le montage, jamais » a cessé d'être vrai le jour où tu as ouvert le
@@ -95,11 +99,46 @@ as commencé quoi récemment ?
 
 **C'est la version courte qui est sortie, et ce n'est pas toi qui l'as montée.**
 
-Elle dure 10,87 s et ne porte que quatre phrases — l'accroche, l'engagement,
-« elle est moche et je la publie quand même », et le rendez-vous. Elle a été
-taillée dans la première prise de voix : les quatre phrases restées vraies ont
-été gardées, les deux que les sept derniers jours avaient rendues fausses ont
-été coupées. Ni les quatre ans, ni la BD, ni les sept jours n'y sont donc.
+Elle dure 10,93 s et ne porte que quatre phrases — l'accroche, l'engagement,
+« elle est moche et je la publie quand même », et le rendez-vous.
+
+**Elle a été taillée dans la première prise de voix, enregistrée sur le script
+d'avant `c5a2f98`** — celui qui comptait six phrases. Quatre ont été gardées.
+Les deux coupées sont précisément celles que ce commit a corrigées parce
+qu'elles étaient fausses : « Ça fait deux ans que j'écris et que je dessine »
+et « Le montage, jamais ». Elles ne figurent nulle part ailleurs dans ce
+fichier, d'où la peine de les nommer ici.
+
+Les trois phrases vraies qui les remplacent — les quatre ans, la BD, les sept
+jours — **n'ont jamais été enregistrées** : elles ont été écrites après la
+prise. La version complète n'est donc pas un remontage de rushes existants,
+c'est une **reprise de voix**. La confusion coûte cher : elle laisserait croire
+qu'un fichier contenant ces trois phrases dort quelque part.
+
+### Le relevé du fichier publié
+
+Mesuré sur la vidéo elle-même, et non déduit : **10,93 s**, 1080 × 1920,
+30 i/s. Les bornes viennent d'un détecteur d'activité vocale.
+
+| Phrase | Bornes | Mots | Débit |
+| --- | --- | --- | --- |
+| « Je ne sais pas monter une vidéo. » | 0,07 → 1,51 s | 7 | 4,86 mots/s |
+| « Alors je me donne un an. Une vidéo par jour. » | 2,47 → 4,81 s | 10 | 4,27 |
+| « Celle-là, c'est la première… quand même. » | 5,32 → 8,62 s | 13 | 4,26 |
+| « Rendez-vous demain pour la deuxième. » | 9,32 → 10,72 s | 5 | 3,57 |
+
+8,23 s de parole, 2,70 s de silences, **4,25 mots/s** en moyenne.
+
+**La seconde de silence pleine a survécu : 0,96 s** entre l'accroche et
+l'engagement. C'était le seul vrai risque du montage automatique — « L'accroche »
+désigne ce silence comme la seule chose qui tienne les trois premières
+secondes, et la machine ne le savait pas. Elle l'a gardé.
+
+**Et ce silence prouve autre chose au passage.** S'il avait été accéléré pour
+tenir dans le format, il aurait rétréci d'autant ; à 0,96 s pour une seconde
+demandée, l'audio n'a pas été étiré. Les 4,25 mots/s sont donc ton vrai débit,
+pas un artefact de montage — et c'est ce chiffre qu'il faut reporter partout,
+pas le 3,2 qui figurait ici.
 
 Le montage est l'œuvre de la machine : recadrage des six images, transitions,
 sous-titres calés, export vérifié. Le choix a été fait en connaissance de
@@ -130,6 +169,12 @@ il faut un montage à montrer.
 
 ## Après publication
 
-- **Publié le** : [ ]
+- **Publié le** : [ ] — *la version courte est sortie le jour 1, c'est écrit
+  plus haut ; seule la date manque, et une date ne s'invente pas.*
 - **Vues / rétention** : [ ]
 - **Ce que j'en retiens** : [ ]
+
+Tant que le premier crochet est ouvert, ce script compte pour **non fini** au
+sens du `README` — alors qu'il a produit une vidéo. C'est la seule
+contradiction que ce fichier porte encore, et elle se lève en écrivant une
+date.

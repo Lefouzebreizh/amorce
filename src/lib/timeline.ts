@@ -149,6 +149,68 @@ export function chopped(clip: Clip, target: number, makeId: () => string): Clip[
   }));
 }
 
+/**
+ * Le même plan, débarrassé de ses blancs.
+ *
+ * Le premier défaut d'un rush tourné au téléphone n'est pas le cadrage, c'est le
+ * temps mort : on lance l'enregistrement, on cherche ses mots, on termine sa
+ * phrase, on cherche le bouton. Trois secondes de rien au début et deux à la
+ * fin, sur chaque plan, et le film perd son rythme sans qu'aucun réglage ne soit
+ * en cause.
+ *
+ * Les passages parlés viennent de `speechSegments`, qui sait déjà les relever —
+ * plancher de bruit adaptatif, recollage des respirations, marge de sécurité. Ce
+ * qui reste à faire tient en trois décisions.
+ *
+ * **On garde, on ne retire pas.** Raisonner en « morceaux à supprimer »
+ * obligerait à traiter à part le cas du plan qui commence ou finit dans le
+ * silence ; en partant des passages conservés, ces deux cas n'existent plus.
+ *
+ * **Les bornes du plan priment sur celles de l'analyse.** Les segments portent
+ * sur le fichier entier, le plan n'en montre qu'une tranche : tout passage est
+ * ramené dans `[inPoint, outPoint]`, et ceux qui tombent dehors disparaissent.
+ *
+ * **Un seul morceau restant n'est pas un découpage.** On rend alors un plan
+ * unique aux nouvelles bornes, plutôt qu'une liste d'un élément : c'est le cas
+ * le plus fréquent — un rush avec du blanc au début et à la fin, et rien au
+ * milieu — et il ne doit pas produire de raccord.
+ *
+ * Rend le plan inchangé quand il n'y a rien à retirer, pour que l'appelant
+ * puisse comparer les identités et savoir s'il s'est passé quelque chose.
+ */
+export function withoutSilences(
+  clip: Clip,
+  segments: { start: number; end: number }[],
+  makeId: () => string,
+  minKeep = 0.15,
+): Clip[] {
+  const gardes = segments
+    .map((s) => ({
+      start: Math.max(s.start, clip.inPoint),
+      end: Math.min(s.end, clip.outPoint),
+    }))
+    .filter((s) => s.end - s.start >= minKeep);
+
+  if (gardes.length === 0) return [clip];
+
+  const couvert = gardes.reduce((somme, s) => somme + (s.end - s.start), 0);
+  // Rien de significatif à gagner : on ne touche pas au montage pour cinquante
+  // millisecondes, qui ne s'entendent pas et coûtent un raccord.
+  if (couvert >= clip.outPoint - clip.inPoint - 0.05) return [clip];
+
+  return gardes.map((s, rang) => ({
+    ...clip,
+    id: rang === 0 ? clip.id : makeId(),
+    inPoint: s.start,
+    outPoint: s.end,
+    // Seul le premier morceau hérite de la transition entrante : les suivants
+    // sont des raccords internes, et un fondu à chaque blanc retiré rendrait
+    // exactement la mollesse qu'on cherche à supprimer.
+    transition: rang === 0 ? clip.transition : ('cut' as const),
+    transitionDuration: rang === 0 ? clip.transitionDuration : 0,
+  }));
+}
+
 /** Une couche vidéo à dessiner pour une image donnée. */
 export type ActiveLayer = {
   placed: PlacedClip;

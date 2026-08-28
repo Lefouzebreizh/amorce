@@ -6,7 +6,7 @@ import { uid } from './id.ts';
 import { applyFinish, soundsOnCuts, tensionFills, thinCues } from './autoFinish.ts';
 import type { SharedFile } from './share.ts';
 import { captionsFromVoice } from './voice.ts';
-import { chopped, emptyProject, layoutClips, totalDuration } from './timeline.ts';
+import { chopped, emptyProject, layoutClips, totalDuration, withoutSilences } from './timeline.ts';
 import type { QualityTier } from './quality.ts';
 import {
   DEFAULT_CLIP,
@@ -135,6 +135,7 @@ type StudioState = {
   duplicateClip: (id: string) => void;
   /** Découpe un plan en morceaux d'environ `target` secondes. */
   chopClip: (id: string, target?: number) => void;
+  cutSilences: (id: string, segments: { start: number; end: number }[]) => void;
   /** Pose un bruitage sur chaque raccord qui n'en a pas encore. */
   addSoundsOnCuts: () => void;
   /** Écarte les bruitages en trop, pour rendre du silence entre les impacts. */
@@ -371,6 +372,38 @@ export const useStudio = create<StudioState>((set, get) => {
    * couper une dizaine de fois de suite. Les morceaux s'enchaînent en coupe
    * franche, la cadence la plus nerveuse.
    */
+  /**
+   * Retire les blancs d'un plan, à partir des passages parlés relevés ailleurs.
+   *
+   * L'analyse est asynchrone — il faut décoder l'audio — et le magasin ne l'est
+   * pas : c'est l'appelant qui relève les passages, et cette action ne fait que
+   * poser le résultat. Séparer les deux garde l'action instantanée, donc
+   * annulable comme n'importe quelle autre modification.
+   */
+  cutSilences: (id, segments) =>
+    mutate('coupe des blancs', (state) => {
+      const index = state.project.clips.findIndex((c) => c.id === id);
+      if (index === -1) return state;
+
+      const pieces = withoutSilences(state.project.clips[index], segments, () => uid('clip'));
+      // Rendre le plan inchangé signifie qu'il n'y avait rien à retirer : on
+      // n'écrit alors pas d'entrée dans l'historique pour rien.
+      if (pieces.length === 1 && pieces[0] === state.project.clips[index]) return state;
+
+      /*
+       * La sélection reste sur le plan.
+       *
+       * Le premier morceau garde l'identité du plan d'origine, donc le panneau
+       * de réglage reste ouvert et le compte rendu — « blancs retirés » —
+       * s'affiche. En vidant la sélection, on repliait le panneau au moment
+       * exact où il avait quelque chose à dire : on appuyait, l'écran se vidait,
+       * et rien n'indiquait que quoi que ce soit s'était produit.
+       */
+      const clips = [...state.project.clips];
+      clips.splice(index, 1, ...pieces);
+      return reclamp({ ...state, project: { ...state.project, clips } });
+    }),
+
   chopClip: (id, target = 2) =>
     mutate('decoupage', (state) => {
       const index = state.project.clips.findIndex((c) => c.id === id);

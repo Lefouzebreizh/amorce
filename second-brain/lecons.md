@@ -1348,3 +1348,243 @@ ne détecte pas les images figées — sans effet mesurable à 30 comme à 60.
 `mpdecimate` ne les attrape pas davantage, les doublons n'étant pas exacts,
 même à seuil desserré quatre fois. La seule correction réelle est en amont :
 régénérer le plan à la cadence qu'il prétend avoir.
+## Un limiteur qui varie son gain s'entend comme une coupure
+
+Un rugissement paraissait « coupé » au moment précis où il éclatait. Aucun trou
+dans l'enveloppe, aucune discontinuité : le son était continu. Le défaut était
+ailleurs.
+
+Comparé avant et après le master, le gain appliqué **variait de +1,0 à +6,1 dB
+selon l'instant**. Ce n'est pas un gain, c'est un limiteur qui pompe : poussé de
+cinq décibels, il rend au signal fort ce qu'il retire au signal faible, et cette
+respiration s'entend comme un décrochage à chaque crête.
+
+La correction n'est pas de baisser le limiteur mais de **ne pas l'atteindre** :
+le gain du master passe de +5 à +2 dB, et le rugissement gagne ses décibels
+dans le **mixage** — en baissant le lit de 5 dB autour de lui plutôt qu'en le
+poussant. La dynamique du cri remonte de 5,8 à 8,0 dB pour 8,6 avant master.
+
+**Un son n'est pas fort parce qu'on le monte, il est fort parce que le reste se
+tait.** Le monter l'envoie dans le limiteur, qui le rend plus petit.
+
+```bash
+# le pompage se mesure : comparer l'enveloppe avant et apres le master,
+# et regarder l'ECART entre les gains appliques, pas leur moyenne
+```
+
+## Un carton de fin sur du noir dit que c'est fini
+
+Une vidéo concurrente terminait sur un carton « le prochain épisode arrive »
+posé sur fond noir : **26,2 de luminance** quand le film tournait à 69,8. Deux
+secondes et demie de trou visuel, à l'endroit exact où un spectateur décide de
+rester ou de partir.
+
+L'idée était bonne — annoncer la suite transforme une vidéo en feuilleton — et
+c'est son exécution qui la perdait. Posé sur la **dernière image du film**,
+assombrie de moitié et non éteinte, le même carton garde le personnage à
+l'écran pendant qu'on lit : 38,2 de luminance, et 1,7 s au lieu de 2,4.
+
+Ce qui vaut d'être retenu déborde le montage : **une bonne idée mal exécutée se
+reprend, elle ne se rejette pas.** Mesurer ce qui cloche dans l'exécution coûte
+moins cher que de réinventer l'idée.
+
+## « Ça sature » ne veut pas dire que ça écrête
+
+Un rugissement décrit comme saturé, « un bruit de turbine ». Premier réflexe :
+chercher l'écrêtage. Mesuré seconde par seconde — **zéro échantillon au-dessus
+de 0,985**, facteur de crête entre 11 et 12 dB sur toute la durée. Rien ne
+clippait.
+
+Deuxième suspect, l'excitation harmonique : c'est un redresseur suivi d'une
+saturation douce, donc de la distorsion par construction. Mesuré aussi — elle
+**réduit** le contenu 3-12 kHz au lieu de l'augmenter, et n'ajoute aucun peigne.
+Innocente.
+
+Le défaut était ailleurs, et il se lit d'un coup en profil de bandes : au
+moment du cri, **toutes** les bandes de 60 Hz à 4 kHz étaient pleines à
++9/+12 dB. Onze sources simultanées, plus 2,6 s de réverbération sur chacune.
+C'est du **masquage**, et l'oreille le rapporte comme une saturation parce
+qu'elle n'a plus rien à quoi se raccrocher.
+
+Il ne se corrige pas au niveau — le monter l'aggrave. Il se corrige en
+**enlevant** : une couche de cri au lieu de deux, le crépitement supprimé, le
+lit descendu de 5 dB, la réverbération de 2,6 à 1,8 s. Relief spectral du cri
+9,5 → 11,5 dB, et la boue sous 125 Hz de 10,4 à 2,4 dB.
+
+```bash
+# le bon relevé n'est pas volumedetect mais le profil par octaves :
+# des bandes toutes egales = de la boue, quel que soit le niveau
+```
+
+## Un carton fabriqué depuis la dernière image hérite du texte de cette image
+
+Le carton d'annonce de l'épisode suivant est fabriqué à partir de la dernière
+image du film — c'est ce qui lui évite le fond noir. Mais cette image portait
+encore un titre incrusté, et il s'est retrouvé **figé derrière** les trois
+lignes du carton : quatre textes empilés, illisibles.
+
+Rien dans le code ne pouvait le signaler : les deux traitements sont corrects
+séparément. C'est leur composition qui produit le défaut, et elle ne se voit
+qu'à l'écran.
+
+**Un titre doit s'éteindre avant la dernière image** dès lors qu'on reprend
+cette image ailleurs. Ici 0,6 s de marge. Vaut pour toute vignette, toute
+miniature, tout carton tiré d'une frame du montage.
+
+## Ce qui ouvre une vidéo se regarde, il ne se traverse pas
+
+L'affiche d'ouverture durait 0,6 s — calibrée pour « dire vite ce qu'on
+regarde ». Retour à l'écoute : « on ne voit pas le titre, on ne voit même pas
+la beauté de cette image ». Passée à 1,5 s, elle fait son travail.
+
+Le chiffre de départ venait d'une bonne règle appliquée trop loin : sur un
+format court, chaque dixième compte. Mais une image qu'on ne peut pas lire ne
+coûte pas 0,6 s, elle les **gaspille** — c'est le pire des deux mondes.
+
+## `set -o pipefail` inverse `commande | grep -q`
+
+Un script de vérification annonçait un ffmpeg dépourvu de `drawtext`, de
+`libass`, de `libx264` et de `aac` — sur une machine où les quatre étaient
+présents et servaient depuis des heures.
+
+`grep -q` sort au **premier** résultat trouvé et ferme le tuyau. La commande
+en amont, qui écrit encore, meurt alors en SIGPIPE — statut 141. Avec
+`pipefail`, c'est ce 141 que le pipeline rend. **Trouver se lit comme
+échouer**, et l'inversion est totale et silencieuse.
+
+La parade tient en une ligne : relever la sortie **une fois** dans une
+variable, grepper la variable ensuite.
+
+```bash
+LISTE=$("$FF" -hide_banner -filters 2>/dev/null || true)
+printf '%s' "$LISTE" | grep -q " drawtext "
+```
+
+Vaut pour tout `grep -q`, `head`, `sed -n '1p'` — tout ce qui sort tôt — placé
+en aval d'une commande bavarde, dans un script en `pipefail`.
+
+## Un ffmpeg qui encode parfaitement peut ne rien savoir écrire
+
+`pip install imageio-ffmpeg` pose un binaire ffmpeg complet côté codecs et
+**dépourvu de `libfreetype` et `libass`**. Il lit, il encode, il filtre — et
+`drawtext` y est simplement introuvable. Pas d'avertissement, pas de repli :
+le filtre n'existe pas, la commande échoue sur une erreur de syntaxe qui ne
+nomme pas la cause.
+
+Quand deux ffmpeg cohabitent, `command -v` rend celui du `PATH`, qui est
+souvent le mauvais. **Le binaire système d'abord**, partout et sans exception :
+`/usr/bin/ffmpeg` s'il existe, `command -v` ensuite. C'est déjà ce que fait
+`monter_episode.ffmpeg()` ; tout script qui trace du texte doit passer par la
+même résolution, y compris les scripts de vérification — le mien s'est fait
+prendre par sa propre règle.
+
+## Un bruitage « cinéma » peut être du silence sur un téléphone
+
+Seize bruitages arrivent d'un coup, tous étiquetés cinéma : nappes sombres,
+subs massifs, énergie ésotérique. Relevé bande par bande avant de câbler quoi
+que ce soit, **la moitié avait toute son énergie sous 400 Hz** — la colonne
+« part du grave » affichait −0,0 dB par rapport au total.
+
+Un d'eux mesurait **−61,3 dB entendus**. Ce n'est pas un impact discret, c'est
+du silence, et aucun gain n'y change rien : on pousse plus fort ce que
+l'appareil ne restitue pas, et on mange la marge des sons qui, eux, passent.
+
+L'excitation harmonique les récupère, et le gain est sans commune mesure avec
+ce qu'un réglage de volume donnerait :
+
+| fichier | nu | excité | gagné |
+| --- | --- | --- | --- |
+| sub massif 1 | −61,3 dB | −28,7 | **+32,6** |
+| sub massif 2 | −46,8 | −34,1 | +12,7 |
+| nappe sombre | −27,4 | −20,6 | +6,7 |
+| énergie druide | −20,5 | −17,3 | +3,2 |
+| froissement | −20,3 | −20,5 | **−0,2** |
+
+La dernière ligne vaut les autres : sur un son qui vit **déjà** dans le médium,
+l'excitation ne rend rien. Elle se réserve au grave, et elle se mesure au lieu
+de se supposer — comme la mise en garde « ça grésille sur un enregistrement
+réel », qui vaut pour un signal déjà riche en harmoniques et pas pour une nappe
+purement grave : rugosité relevée ici, +0,002 à +0,016. Rien.
+
+Plusieurs de ces fichiers décodaient par ailleurs **au-dessus du plein
+échelle** (jusqu'à 1,42). Les sommer tels quels écrête avant même le limiteur.
+
+## `-shortest` tronque la vidéo quand c'est l'audio qui est plus court
+
+Remuxer une image intacte avec un nouveau mixage et poser `-shortest` par
+réflexe : la vidéo est ressortie **plus courte de 0,2 s**. L'AAC rend un flux
+qui ne tombe pas au même endroit que l'image — 21,696 s contre 21,749 — et
+`-shortest` a coupé sur le plus court des deux.
+
+Deux dixièmes, soit la dernière ligne du carton de fin. Rien dans les mesures
+de son ne pouvait le dire ; c'est le contrôle de durée par flux qui l'attrape,
+et c'est pour cela qu'il fait partie des trois relevés avant envoi.
+
+**Un mixage se cale sur la durée du flux VIDÉO**, pas sur celle de l'audio
+décodé ni sur celle du conteneur. On complète l'audio par du silence, jamais on
+ne raccourcit l'image.
+
+## Un rush porte souvent déjà sa bande son — la doubler la détruit
+
+Une scène de dragon décrite comme « horrible, ça sature complètement, on
+n'entend que les éclairs ». Trois versions de rééquilibrage n'y avaient rien
+changé, parce que le défaut n'était pas dans les niveaux.
+
+Le spectrogramme l'a montré d'un coup : **six secondes de courbe plate**, −11 à
+−14 dB sans un seul événement, sous un voile large bande qui ne s'arrêtait
+jamais. Ce voile est ce qu'on entend comme une saturation.
+
+Puis le geste qui a tout renversé : **dessiner le rush seul**. Il portait une
+construction complète — arrivée, silence, montée, creux, éclair, rugissement —
+et **19,6 dB de dynamique**. Un travail de sound design déjà fait.
+
+Relevé instant par instant, mes accents tombaient tous à côté :
+
+| ce que fait le rush | où j'avais posé mon accent |
+| --- | --- |
+| l'arrivée | juste |
+| le silence de 1,05 s | comblé par des nappes continues |
+| son éclair | 1,05 s trop tôt |
+| **son rugissement** | mon cri 1,2 s AVANT |
+
+Deux demi-scènes qui se masquaient au lieu d'une. Recalés sur ses instants —
+et surtout **rien** dans ses silences — la scène rend 19,0 dB de dynamique
+contre 19,6 au rush seul.
+
+**Avant d'ajouter du son sur un plan, dessiner le son qu'il a déjà.** S'il en a
+un, on ne le double pas : on le renforce sur ses propres instants, et on se
+tait dans ses silences. Un silence dans un rush est une décision, pas un trou.
+
+## Avec `vitesse`, `duree` compte en secondes source
+
+Un plan à `vitesse: 1.8` et `duree: 2.8` ne rend pas 2,8 s : il consomme 2,8 s
+de source et en rend **1,56**. À `0.8`, la même `duree` en rend 9,06 — ou moins
+si la source s'épuise avant.
+
+Conséquence mesurée : tous les accents du plan suivant posés 1,24 s trop tard,
+c'est-à-dire chacun dans le creux de l'événement qu'il devait souligner. Et
+rien ne le signale : le montage se rend, la vérification passe, le fichier est
+faux.
+
+**On calcule la frise, on n'en suppose rien** — surtout dès qu'un plan change de
+vitesse, et surtout quand la source risque de s'épuiser.
+
+## Un carton de fin trop fort n'a l'air fort nulle part
+
+Le carton d'annonce sortait à −17 dB moyen. Écouté seul : correct. Mesuré sur
+le film entier : il relevait le plancher au point de faire tomber la plage de
+dynamique de **21,4 à 9,8 LU**.
+
+Un carton n'a pas de niveau propre. Il en a un **par rapport au climax** — une
+dizaine de décibels dessous. Le juger sur lui-même, c'est juger une virgule
+sans la phrase.
+
+## Un son de carton se calcule dans le repère du carton
+
+Six sons posés aux instants absolus du film ressortaient à −45 dB : ils
+tombaient hors de la tranche découpée ensuite. La durée annoncée du montage,
+celle du flux vidéo et celle du flux audio diffèrent de quelques centièmes, et
+cet écart suffit.
+
+**Ce qui est monté à part se calcule à partir de zéro.** Un repère local ne peut
+pas se décaler.
