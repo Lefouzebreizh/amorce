@@ -36,6 +36,27 @@ restriction et assombrissement MIUI coupé. Toute jauge se fait en **deux barres
 horizontales**, jamais en cercle ni en bibliothèque — code et raison dans
 `/tailwind-mobile-ux`.
 
+**Une vidéo verticale n'est jamais vue en plein cadre.** L'habillage de la
+plateforme en mange les bords, et ce n'est pas le même sur les trois : relevé
+sur le terrain de référence, TikTok prend 9 % en haut et tout à partir de 72 %,
+Instagram ferme dès **63 %**, Facebook occupe la gauche entre 14 et 22 %. C'est
+leur **intersection** qui décide, jamais la plus permissive — une même vidéo
+part sur les trois. Un texte vit donc entre **12 et 45 %** de la hauteur, soit
+230 à 865 sur 1920. Détail et cas mesurés dans `/sous-titres-qui-accrochent`.
+
+**Le son se sort pour un téléphone, pas pour un cinéma.** Un mixage conforme
+aux normes de diffusion — −14 LUFS — est systématiquement trop faible là où le
+format court est regardé, et rien dans les mesures habituelles ne le signale.
+`/master-telephone` avant toute publication.
+
+**Avant chaque changement, relire ce fichier.** Pas au début du fil seulement :
+**avant chaque changement**. Une session qui enchaîne les retouches dérive sans
+s'en apercevoir — elle garde l'état de la précédente et perd ses règles, et
+c'est ainsi qu'on redemande une fusion déjà autorisée, qu'on livre sans écrire
+la leçon, ou qu'on refait un outil qui vient d'arriver. Le fichier bouge
+plusieurs fois par jour, poussé par les autres sessions : ce qu'on y a lu il y
+a une heure peut être faux.
+
 ## 3. MÉMOIRE
 
 La mémoire vit dans ce fichier, dans `.claude/skills/`, dans `INDEX.md` et dans
@@ -65,6 +86,15 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
+- **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
+  asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
+  bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
+  `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend vérifiable
+  ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un chemin :
+  coupe-circuit, dimensionnement, courtier, portefeuille — sans raccourci. Le
+  mode papier est le défaut, le mode réel demande deux gestes. `profils.py`
+  rejoue six marchés fabriqués et compare la stratégie à un DCA aveugle : un
+  réglage se juge sur son effet, pas sur son intention.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
@@ -375,8 +405,20 @@ plutôt que de sonder les contrôles en boucle jusqu'au vert. La surveillance
 manuelle a deux défauts que la fusion automatique n'a pas : elle brûle du
 contexte à chaque sondage, et elle meurt avec la session — une PR verte reste
 alors ouverte à attendre quelqu'un. Armée, GitHub fusionne seul dès que les
-contrôles passent, téléphone éteint. On sonde encore quand l'outil refuse
-d'armer, et seulement là.
+contrôles passent, téléphone éteint.
+
+**Sauf qu'ici l'outil refuse toujours**, et c'est mesuré : `enable_pr_auto_merge`
+rend « Auto-merge is not enabled for this repository ». Le réglage est coupé
+dans *Settings → General → Pull Requests → Allow auto-merge*, et tant qu'il
+l'est, le paragraphe ci-dessus décrit un geste qui échoue à chaque PR. Une
+session qui l'ignore essaie, se fait refuser, et croit à une erreur de sa part.
+
+Donc, tant que la case n'est pas cochée : on arme quand même — l'appel coûte une
+seconde et dira le jour où le réglage change — puis **on sonde jusqu'au vert et
+on fusionne à la main**. C'est le chemin normal de ce dépôt, pas un repli.
+Cocher la case est un geste de trente secondes qui rendrait le paragraphe
+précédent vrai ; c'est au propriétaire de le faire, personne d'autre n'a la
+main dessus.
 
 Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
 plusieurs sessions en parallèle, et une branche qui attend collectionne les

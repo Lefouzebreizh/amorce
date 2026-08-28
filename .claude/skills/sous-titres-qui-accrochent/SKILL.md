@@ -120,6 +120,33 @@ Le haut de cadre est le meilleur emplacement pour un titre : il reste visible
 quel que soit l'habillage, et il n'entre pas en concurrence avec le sujet, qui
 occupe presque toujours le centre.
 
+### Les trois habillages, relevés sur le terrain de référence
+
+Mesuré sur des captures d'écran réelles — Redmi Note 12 Plus, TikTok, Instagram
+Reels et Facebook Reels — et non déduit des chartes des plateformes, qui ne
+disent rien de la barre système ni des bulles de profil.
+
+| | haut occupé | bas occupé | colonne droite |
+| --- | --- | --- | --- |
+| TikTok | 9 % | à partir de 72 % | 49 → 81 % |
+| Instagram | 9,5 % | à partir de 63 % | 65 → 89 % |
+| Facebook | 12 % | à partir de 84 % | — (boutons à gauche, 14 → 22 %) |
+
+**L'intersection décide, pas la plateforme la plus permissive.** Une même vidéo
+part sur les trois, et c'est Instagram qui ferme le bas : sa légende occupe déjà
+62 % de la hauteur. La limite basse commune est donc **1210 sur 1920**, et non
+1300 — la valeur écrite plus haut passait sur TikTok et se faisait manger sur
+Reels.
+
+**La bande vraiment sûre pour un titre est 230 → 865**, soit 12 à 45 % de la
+hauteur. Au-delà de 45 % on entre dans la colonne de droite de TikTok ; en deçà
+de 12 % on passe sous la barre système de Facebook.
+
+Un exemple qui vaut mieux qu'une règle : un titre gravé à **62 %** — « The
+Root-Gorilla Titan Awakens » — était mangé à gauche par les bulles de profil de
+TikTok **et** sortait du cadre à droite. Il était pourtant au-dessus des 70 %
+que cette page interdisait.
+
 ## Les instants se relèvent, ils ne s'écrivent pas
 
 Un sous-titre calé sur une grille tombe à côté de ce qui est dit. Relever les
