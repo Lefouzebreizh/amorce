@@ -92,7 +92,9 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend vérifiable
   ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un chemin :
   coupe-circuit, dimensionnement, courtier, portefeuille — sans raccourci. Le
-  mode papier est le défaut, le mode réel demande deux gestes.
+  mode papier est le défaut, le mode réel demande deux gestes. `profils.py`
+  rejoue six marchés fabriqués et compare la stratégie à un DCA aveugle : un
+  réglage se juge sur son effet, pas sur son intention.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un

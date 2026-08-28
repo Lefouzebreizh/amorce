@@ -53,12 +53,17 @@ nexuscrypto/
 │   ├── notifications/
 │   │   ├── canaux.py         # ✅ console, Telegram, Discord — en HTTP nu
 │   │   └── messages.py       # ✅ mise en forme, testée sans réseau
+│   ├── rejeu/
+│   │   ├── donnees.py        # ✅ CSV de bougies + six marchés fabriqués
+│   │   ├── rejeu.py          # ✅ la boucle, sans regard vers l'avenir
+│   │   └── rapport.py        # ✅ mesures, tableau, verdict
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
+├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 218 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 243 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **218 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **243 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -73,6 +78,7 @@ pip install -r requirements.txt
 cp .env.example .env            # facultatif : la simulation n'a besoin d'aucune clé
 
 python3 main.py verifier        # valide la configuration et sort
+python3 main.py rejeu           # rejoue la stratégie sur six marchés fabriqués
 python3 main.py analyser        # décide et affiche, sans exécuter — à faire en premier
 python3 main.py simulation --une-passe
 python3 main.py simulation      # boucle en mode papier
@@ -183,9 +189,8 @@ C'est la section à lire avant d'y mettre un dollar.
   Binance ne serait vu par aucun test. Un changement dans `src/data_engine/` se
   signale comme **non vérifié** tant qu'un vrai `python3 main.py analyser` n'a
   pas tourné.
-- **Aucun backtest.** Le moteur est conçu pour être rejouable — il ne touche ni
-  au réseau ni au portefeuille — mais le harnais de rejeu sur archives n'est pas
-  écrit. Les réglages livrés sont raisonnés, pas optimisés.
+- **Les réglages sont raisonnés, pas optimisés.** Le harnais de rejeu existe
+  (§ 8) et mesure leur effet, mais aucune recherche de réglage n'a été menée.
 - **Le scanner de pépites ne vérifie pas les contrats.** Ni la revente possible,
   ni le verrouillage de liquidité, ni l'émission ouverte. Une pépite détectée
   est un **candidat à examiner**, jamais un achat — c'est écrit dans l'alerte
@@ -229,7 +234,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 218 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 243 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -237,3 +242,76 @@ python3 main.py analyser                 # la seule commande qui touche vraiment
 `analyser` en plus **si et seulement si** le changement touche à
 `src/data_engine/` : les tests diraient que tout passe sans dire qu'une API a
 changé de forme.
+
+---
+
+## 8. Rejeu — mesurer un réglage au lieu de le raisonner
+
+```bash
+python3 main.py rejeu                        # les six marchés fabriqués
+python3 profils.py --detail                  # les mêmes, avec le détail
+python3 main.py rejeu --csv btc-4h.csv --symbole BTC/USDT --fear-greed fng.csv
+```
+
+**Le rejeu réutilise le moteur de décision tel quel.** Il ne réimplémente rien :
+ce qui est mesuré est exactement ce qui tournera en direct, sinon on réglerait
+un moteur pour en faire tourner un autre.
+
+**Chaque rejeu tourne deux fois** — la stratégie, et un **témoin** qui achète
+l'enveloppe pleine à chaque échéance sans rien regarder. Un résultat seul ne se
+juge pas : « +28 % » ne dit rien si le marché montait de 40 %. La colonne qui
+compte est *vs témoin* : le prix moyen payé, comparé à celui d'un DCA aveugle.
+
+### Ce qui garantit que le rejeu ne triche pas
+
+C'est le seul défaut d'un backtest qui ne se voit pas — il rend une courbe
+magnifique et un compte vide. Trois propriétés le tiennent, chacune gardée par
+un test :
+
+- **le contexte de la bougie *i* ne contient que les bougies 0 à *i*** ;
+- **la décision prise à la clôture de *i* s'exécute à l'ouverture de *i+1***.
+  La clôture de *i* n'est connue qu'à l'instant où elle a lieu ; exécuter à ce
+  prix reviendrait à passer un ordre dans le passé. La dernière bougie n'est
+  donc jamais exécutable ;
+- **la fenêtre est celle du direct** (`profondeur_bougies`), pas l'historique
+  entier. Une EMA 200 calculée sur 600 bougies n'a pas la même valeur que sur
+  300, et le direct n'en verra jamais 600.
+
+Le test `test_une_bougie_future_ne_change_rien_au_passe` remplace la dernière
+clôture par un pic absurde et exige que **pas une seule** décision antérieure
+ne bouge.
+
+### Ce que le rejeu ne simule pas
+
+Il n'existe pas de carnet d'ordres historique. Le courtier papier retombe donc
+sur son glissement forfaitaire au lieu de parcourir un carnet. Sur Bitcoin
+l'écart est négligeable ; **sur une pépite peu liquide, le rejeu est optimiste,
+et il l'est en silence.**
+
+### Ce que le rejeu a déjà trouvé, et qui n'est pas corrigé
+
+**La stratégie n'achète rien du tout dans une hausse continue.** Mesuré sur le
+scénario « hausse continue » (×3 sur la période) : **zéro ordre, 398 échéances
+reportées**, pendant que le témoin gagne +8,1 %.
+
+La cause est structurelle, pas accidentelle. La note technique est
+*contrarienne* : en tendance haussière le prix reste durablement au-dessus de
+l'EMA 200 et le RSI en haut de sa plage, donc la note stagne entre 17 et 32 —
+loin du plancher d'achat de 45. Le report n'est alors plus une temporisation,
+c'est une abstention qui dure toute la période.
+
+Pour un DCA, dont la promesse entière est de **continuer d'acheter**, c'est le
+pire résultat possible : ce n'est pas de la prudence, c'est une panne de
+discipline. Le verdict de `profils.py` le dit en toutes lettres et compte
+l'abstention comme un échec, jamais comme un match nul.
+
+**Ce n'est pas corrigé, délibérément.** Trancher entre « on n'achète pas ce
+qu'on juge cher » et « on achète toujours un plancher, quoi qu'il arrive » est
+une décision d'investissement, pas un correctif technique. Les deux pistes,
+pour quand la question sera tranchée :
+
+- un **plancher d'enveloppe** — le DCA passe toujours au moins *x* % du montant
+  prévu, même sous le seuil de score ;
+- un **score relatif à la tendance** — mesurer le prix contre sa propre moyenne
+  récente plutôt que contre l'EMA 200, pour qu'une hausse régulière cesse
+  d'être lue comme une surchauffe permanente.

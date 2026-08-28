@@ -70,6 +70,18 @@ def _arguments() -> argparse.ArgumentParser:
     pepites = commandes.add_parser("pepites", help="scanner d'opportunités")
     pepites.add_argument("--requete", default="solana", help="requête DexScreener")
 
+    rejeu = commandes.add_parser(
+        "rejeu", help="rejouer la stratégie sur des données passées"
+    )
+    rejeu.add_argument("--csv", help="fichier OHLCV (horodatage,o,h,b,c,volume)")
+    rejeu.add_argument("--symbole", default="BTC/USDT", help="symbole du fichier CSV")
+    rejeu.add_argument("--fear-greed", default=None, help="CSV date,indice (facultatif)")
+    rejeu.add_argument(
+        "--profils", action="store_true",
+        help="rejouer les six marchés fabriqués au lieu d'un CSV",
+    )
+    rejeu.add_argument("--sortie", default=None, help="écrire un rapport Markdown")
+
     return analyseur
 
 
@@ -151,6 +163,61 @@ async def _pepites(config, requete: str) -> int:
     return 0
 
 
+def _rejeu(config, arguments) -> int:
+    """Rejeu sur données passées. **Aucun réseau** : c'est ce qui permet de
+    régler la stratégie sur une machine hors ligne, et de le faire vite."""
+
+    from src.rejeu import rapport as mise_en_forme
+    from src.rejeu.donnees import DonneesIllisibles, lire_csv, lire_fear_greed, scenarios
+    from src.rejeu.rejeu import rejouer, rejouer_scenario
+
+    if arguments.profils or not arguments.csv:
+        lignes, details, comparaisons = [], [], []
+        for scenario in scenarios():
+            dynamique, temoin = rejouer_scenario(config, scenario)
+            lignes.append((
+                scenario.nom,
+                mise_en_forme.ligne_comparaison(
+                    dynamique, temoin, scenario.prix_moyen_marche
+                ),
+            ))
+            details.append(mise_en_forme.rapport_scenario(scenario, dynamique, temoin))
+            comparaisons.append((scenario.nom, dynamique, temoin))
+        print(mise_en_forme.tableau(lignes))
+        print()
+        print(mise_en_forme.verdict(comparaisons))
+        if not arguments.csv:
+            print("\n(marchés fabriqués — `--csv` pour rejouer des données réelles)")
+        contenu = "\n\n".join(details)
+    else:
+        try:
+            serie = lire_csv(arguments.csv, symbole=arguments.symbole)
+            indices = lire_fear_greed(arguments.fear_greed) if arguments.fear_greed else {}
+        except DonneesIllisibles as erreur:
+            print(f"❌ {erreur}", file=sys.stderr)
+            return 2
+        dynamique = rejouer(config, serie, fear_greed=indices, nom="DCA dynamique")
+        temoin = rejouer(config, serie, fear_greed=indices,
+                         nom="DCA plat (témoin)", plat=True)
+        moyen_marche = sum(serie.clotures) / len(serie.clotures)
+        ligne = mise_en_forme.ligne_comparaison(dynamique, temoin, moyen_marche)
+        print(mise_en_forme.tableau([(arguments.symbole, ligne)]))
+        print()
+        if not indices:
+            # Sans historique d'indice, la famille sentiment est absente et le
+            # scoring redistribue son poids. Le résultat reste lisible, mais il
+            # ne mesure alors que le technique — le dire évite de conclure trop.
+            print("⚠ sans `--fear-greed`, la famille sentiment est absente : "
+                  "seul le technique est mesuré.")
+        contenu = ""
+    if arguments.sortie:
+        from pathlib import Path as _Path
+
+        _Path(arguments.sortie).write_text(contenu + "\n", encoding="utf-8")
+        print(f"Rapport écrit : {arguments.sortie}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = _arguments().parse_args(argv)
     mode = Mode.REEL if arguments.commande == "production" else Mode.SIMULATION
@@ -198,6 +265,8 @@ def main(argv: list[str] | None = None) -> int:
             print("\nArrêt demandé.")
             return 0
 
+    if arguments.commande == "rejeu":
+        return _rejeu(config, arguments)
     if arguments.commande == "pepites":
         return _executer(_pepites(config, arguments.requete))
     if arguments.commande == "analyser":
