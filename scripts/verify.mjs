@@ -63,6 +63,62 @@ const PROFILES = [
   },
 ];
 
+/**
+ * Aller à une étape, quelle que soit la coque.
+ *
+ * L'ordinateur garde une barre d'étapes à cliquer ; le téléphone est passé à
+ * une page unique qui défile, où les sept panneaux sont **déjà** dans le
+ * document et portent chacun une ancre. Le parcours cliquait la barre sur les
+ * deux profils : sur téléphone il attendait trente secondes un bouton qui
+ * n'existe plus, et tombait avant d'avoir rien mesuré.
+ *
+ * Les intitulés sont ceux de `src/lib/steps.ts`, les ancres celles que pose
+ * `ancre()` dans `StudioMobile.tsx`. Une étape inconnue lève ici plutôt que de
+ * laisser le parcours dériver sur un défilement silencieux.
+ */
+const ANCRE_ETAPE = {
+  Importer: 'import',
+  Monter: 'montage',
+  Accroche: 'texte',
+  Son: 'son',
+  Cinéma: 'cinema',
+  Analyser: 'analyse',
+  Exporter: 'export',
+};
+
+/**
+ * Remonter en tête de la page téléphone.
+ *
+ * Le parcours cliquait « Fermer » à trois endroits pour rendre l'écran à
+ * l'aperçu. Le tiroir a disparu avec le passage à une page unique qui défile :
+ * l'aperçu y est collé en haut, et le geste équivalent est de remonter.
+ */
+async function remonterEnTete(page) {
+  await page.evaluate(() => {
+    const defilant = document.querySelector('.overflow-y-auto');
+    if (defilant) defilant.scrollTo({ top: 0, behavior: 'auto' });
+    window.scrollTo(0, 0);
+  });
+  await page.waitForTimeout(400);
+}
+
+async function allerAEtape(page, profile, label) {
+  if (!profile.mobile) {
+    await page.click(`nav[aria-label="Étapes du montage"] button:has-text("${label}")`);
+    return;
+  }
+
+  const id = ANCRE_ETAPE[label];
+  if (!id) throw new Error(`Étape inconnue du parcours : ${label}`);
+
+  const section = page.locator(`#etape-${id}`);
+  await section.waitFor({ state: 'attached' });
+  await section.scrollIntoViewIfNeeded();
+  // Le défilement peut être animé ; on laisse la page se poser avant de mesurer
+  // ce qui s'y trouve, sinon le panneau est encore sous l'aperçu collé.
+  await page.waitForTimeout(400);
+}
+
 const results = [];
 let profileLabel = '';
 const check = (name, ok, detail = '') => {
@@ -249,7 +305,14 @@ if (profile.mobile) {
     view: window.innerWidth,
   }));
   check('Aucun débordement horizontal', overflow.scroll <= overflow.view + 1, `${overflow.scroll} px pour ${overflow.view} px de large`);
-  check('La barre d’étapes est présente', await page.locator('nav[aria-label="Étapes du montage"]').isVisible());
+  /*
+   * Le téléphone n'a plus de barre d'étapes : il porte les sept panneaux sur
+   * une seule page qui défile. Ce qu'on contrôle ici, c'est donc qu'ils y
+   * soient tous — une page qui en perdrait un rendrait une partie du studio
+   * simplement inatteignable au doigt, sans qu'aucun autre test le voie.
+   */
+  const ancres = await page.locator('[id^="etape-"]').count();
+  check('Les sept étapes sont sur la page', ancres === 7, `${ancres} panneaux sur 7`);
 }
 
 // --------------------------------------------------------------- 1. Import
@@ -338,7 +401,7 @@ await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
     return Number(label?.match(/(\d+)\s+sur\s+100/)?.[1]);
   };
 
-  await page.click('nav[aria-label="Étapes du montage"] button:has-text("Analyser")');
+  await allerAEtape(page, profile, 'Analyser');
   await page.waitForTimeout(500);
   const avant = await lireNote();
 
@@ -400,11 +463,12 @@ if (profile.mobile) {
   await page.screenshot({ path: join(SHOTS, `02c-panneau-ouvert-${profile.id}.png`) });
 }
 
-// Sur téléphone, le panneau occupe la moitié basse : on le referme pour rendre
-// sa hauteur à l'aperçu avant de juger l'image.
+// Sur téléphone, il n'y a plus de panneau à refermer : la coque est une page
+// unique qui défile, et l'aperçu y est collé en haut. On remonte donc en tête
+// pour le juger en pleine hauteur, là où l'ancien parcours cliquait « Fermer »
+// — un bouton de tiroir disparu avec le tiroir.
 if (profile.mobile) {
-  await page.click('text=Fermer');
-  await page.waitForTimeout(500);
+  await remonterEnTete(page);
   await page.screenshot({ path: join(SHOTS, `02b-apercu-${profile.id}.png`) });
 }
 
@@ -511,9 +575,8 @@ if (profile.mobile) {
     `valeur inchangée à ${avantBalayage.toFixed(2)}`,
   );
 
-  // Refermer pour rendre l'écran à l'aperçu avant la suite des mesures.
-  await page.click('text=Fermer');
-  await page.waitForTimeout(400);
+  // Rendre l'écran à l'aperçu avant la suite des mesures.
+  await remonterEnTete(page);
 }
 
 /** Mesure la luminosité, le détail et le niveau sonore de l'instant courant. */
@@ -619,7 +682,7 @@ const chroma = () =>
     return spread / count;
   });
 
-await page.click('nav[aria-label="Étapes du montage"] button:has-text("Cinéma")');
+await allerAEtape(page, profile, 'Cinéma');
 // La mesure se fait à pleine intensité : au dosage par défaut, une part de la
 // couleur subsiste volontairement et le contrôle n'aurait rien prouvé.
 await page.locator('input[aria-label="Intensité du rendu"]').fill('1');
@@ -744,7 +807,7 @@ if (profile.mobile) {
   // La timeline n'est conservée que pour l'étape de montage quand un panneau
   // occupe la moitié basse : il faut donc y passer avant de pouvoir désigner un
   // plan.
-  await page.click('nav[aria-label="Étapes du montage"] button:has-text("Monter")');
+  await allerAEtape(page, profile, 'Monter');
   await page.waitForTimeout(700);
   await page.locator('[aria-label="Timeline du montage"] div[title]').first().click();
   await page.waitForTimeout(800);
@@ -783,8 +846,7 @@ if (profile.mobile) {
     check('Un plan peut être rétabli à toute sa longueur', false, 'bouton absent');
   }
 
-  await page.click('text=Fermer');
-  await page.waitForTimeout(400);
+  await remonterEnTete(page);
 }
 
 // ------------------------------------- 4bis. Manipulation directe du texte
@@ -849,7 +911,7 @@ if (profile.mobile) {
 }
 
 // ------------------------------------------------------- 5. Table de mixage
-await page.click('nav[aria-label="Étapes du montage"] button:has-text("Son")');
+await allerAEtape(page, profile, 'Son');
 await page.waitForTimeout(600);
 
 // Chaque source doit avoir son propre réglage : c'est ce qui permet de faire
@@ -871,7 +933,7 @@ await clipsFader.fill('0.75');
 await page.waitForTimeout(300);
 
 // ---------------------------------------------------------------- 6. Export
-await page.click('nav[aria-label="Étapes du montage"] button:has-text("Exporter")');
+await allerAEtape(page, profile, 'Exporter');
 await page.waitForTimeout(400);
 
 if (profile.mobile) {

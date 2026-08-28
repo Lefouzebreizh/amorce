@@ -884,6 +884,51 @@ une heure à relier à sa cause.
 La parade tient en une ligne : le sortir au niveau du module et lui passer ce
 dont il a besoin en propriétés. Vaut pour tout projet React du dépôt.
 
+## `pkill -f` tue le shell qui l'exécute
+
+Deux vérifications ont été interrompues d'affilée sur un code 144 sans qu'aucun
+test n'ait échoué. La cause n'est pas dans le dépôt : `pkill -f "next start"`
+compare le motif à la **ligne de commande entière** de chaque processus — et la
+ligne de commande du shell qui exécute cette commande contient, elle aussi, la
+chaîne « next start ». Le shell se tue donc lui-même avant d'atteindre la
+commande suivante, et tout ce qui suivait sur la même ligne disparaît.
+
+Le symptôme est trompeur parce qu'il ressemble à un échec de la commande
+suivante : on relit les tests, pas la ligne qui les précède.
+
+Deux parades, dans l'ordre : viser le port plutôt que le nom
+(`fuser -k 3114/tcp`), ou lancer le serveur en tâche de fond en gardant son PID
+et le tuer par ce PID. À défaut, isoler le `pkill` dans son propre appel, où il
+n'emporte que lui-même.
+
+Vaut pour `pkill`, `killall -r` et tout ce qui filtre sur la ligne de commande.
+
+## Un parcours navigateur ne survit pas seul à un changement de coque
+
+Le studio téléphone est passé à une page unique qui défile ; sa barre d'étapes
+et son tiroir ont disparu. Le parcours Chromium cliquait encore l'un et
+l'autre, et tombait après quatre mesures sur quarante.
+
+Le défaut a survécu à la fusion pour une raison qui vaut d'être écrite : **le
+contrôle qui l'aurait vu ne tourne que sur les pull requests.** La fusion sur
+`main` n'exécute que les vérifications rapides, donc la branche qui a changé la
+coque a été fusionnée verte, et c'est la branche *suivante* — sans rapport avec
+le studio — qui a hérité du rouge. Toutes les branches ouvertes le portaient en
+même temps.
+
+Deux règles en sortent :
+
+- **Changer une coque, c'est changer ce qui la conduit.** Un test de bout en
+  bout tient par des sélecteurs qu'aucun compilateur ne relit ; ils ne cassent
+  qu'à l'exécution, et seulement dans le profil concerné.
+- **Un rouge qui apparaît sur une branche qui n'a pas touché au sujet vient
+  presque toujours de la base.** Le réflexe utile n'est pas de relire son
+  propre diff mais de demander : ce contrôle a-t-il seulement tourné sur `main`
+  depuis la fusion qui a changé les lieux ?
+
+La parade coûte peu : nommer le geste plutôt que le sélecteur. `allerAEtape`
+clique la barre sur ordinateur et fait défiler jusqu'à l'ancre sur téléphone ;
+le jour où la coque change encore, un seul endroit ment.
 ## Le sifflement d'un son se mesure, il ne se discute pas
 
 Un lit de vortex a été refusé d'un mot — « son horrible, vire l'aigu ». Le
