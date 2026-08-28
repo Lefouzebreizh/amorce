@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from ..core.modeles import Bougie, SerieOHLCV
+from ..core.modeles import Bougie, MetriqueOnchain, SerieOHLCV
 
 COLONNES = ("horodatage", "ouverture", "haut", "bas", "cloture", "volume")
 
@@ -142,6 +142,132 @@ def lire_fear_greed(chemin: Path | str) -> dict[str, int]:
     if not valeurs:
         raise DonneesIllisibles(f"{chemin} ne contient aucun indice lisible.")
     return valeurs
+
+
+# --------------------------------------------------------------------------
+# Données réelles : le jeu communautaire CoinMetrics
+# --------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class SerieReelle:
+    """Une série de marché réelle, et ce qu'on sait d'elle en on-chain."""
+
+    serie: SerieOHLCV
+    onchain: dict[str, MetriqueOnchain]
+
+    @property
+    def prix_moyen_marche(self) -> float:
+        clotures = self.serie.clotures
+        return sum(clotures) / len(clotures)
+
+
+def _flottant(ligne: dict[str, str], colonne: str) -> float | None:
+    brut = (ligne.get(colonne) or "").strip()
+    if not brut:
+        return None
+    try:
+        return float(brut)
+    except ValueError:
+        return None
+
+
+def lire_coinmetrics(
+    chemin: Path | str,
+    *,
+    symbole: str = "BTC/USD",
+    depuis: str | None = None,
+    jusqu_a: str | None = None,
+) -> SerieReelle:
+    """Lit le jeu communautaire CoinMetrics (`csv/btc.csv` de leur dépôt GitHub).
+
+    **Pourquoi cette source et pas une API de plateforme.** Aucun hôte de marché
+    n'est joignable depuis une session distante — voir la section anti-blocage de
+    `CLAUDE.md` — alors que `raw.githubusercontent.com` répond. CoinMetrics y
+    publie seize ans de données quotidiennes, prix **et** métriques on-chain,
+    sous licence ouverte. C'est la seule façon connue de mesurer cette stratégie
+    sur un marché réel depuis ici.
+
+    **Et cette source apporte ce qu'aucune API gratuite ne donne** : le flux net
+    des réserves de plateformes, en dollars, jour par jour. `IngestionOnchain`
+    doit l'approximer par la variation de TVL faute de mieux ; ici il est mesuré.
+    Le rejeu peut donc éprouver la convention de signe du scoring contre la
+    réalité, au lieu de la vérifier contre sa propre approximation.
+
+    **Ce que la source n'a pas, et qu'il faut savoir avant de lire un résultat :
+    ni haut, ni bas, ni ouverture.** Seulement une clôture quotidienne. Les
+    bougies sont donc plates — `o = h = b = c` — ce qui a deux conséquences
+    mesurables : l'ATR devient une volatilité de clôture à clôture, donc plus
+    petite que la vraie, donc des stops **plus serrés** que ceux qu'on obtiendra
+    en direct ; et le profil de volume perd sa dispersion intra-journalière.
+    Un rejeu sur cette source est donc pessimiste sur les stops, pas optimiste —
+    c'est le bon sens de l'erreur, mais ce n'est pas zéro.
+    """
+
+    chemin = Path(chemin)
+    if not chemin.exists():
+        raise DonneesIllisibles(f"Fichier introuvable : {chemin}")
+
+    bougies: list[Bougie] = []
+    onchain: dict[str, MetriqueOnchain] = {}
+    precedente: float | None = None
+
+    with chemin.open(encoding="utf-8", newline="") as f:
+        lecteur = csv.DictReader(f)
+        if not lecteur.fieldnames or "PriceUSD" not in lecteur.fieldnames:
+            raise DonneesIllisibles(
+                f"{chemin} : colonne PriceUSD absente — ce n'est pas un export CoinMetrics."
+            )
+        for ligne in lecteur:
+            prix = _flottant(ligne, "PriceUSD")
+            if prix is None or prix <= 0:
+                continue  # les premières années n'ont pas de prix
+            jour = (ligne.get("time") or "")[:10]
+            if depuis and jour < depuis:
+                continue
+            if jusqu_a and jour > jusqu_a:
+                continue
+
+            horodatage = datetime.fromisoformat(jour).replace(tzinfo=timezone.utc)
+            bougies.append(
+                Bougie(
+                    horodatage=horodatage,
+                    ouverture=precedente if precedente is not None else prix,
+                    haut=max(prix, precedente or prix),
+                    bas=min(prix, precedente or prix),
+                    cloture=prix,
+                    volume=_flottant(ligne, "volume_reported_spot_usd_1d") or 0.0,
+                )
+            )
+            precedente = prix
+
+            entrees = _flottant(ligne, "FlowInExUSD")
+            sorties = _flottant(ligne, "FlowOutExUSD")
+            reserves = _flottant(ligne, "SplyExUSD")
+            if entrees is not None or sorties is not None:
+                # Net **signé comme le reste du système** : positif = les jetons
+                # arrivent sur les plateformes, donc pression vendeuse. C'est la
+                # convention documentée dans `MetriqueOnchain`, et c'est ici
+                # qu'elle se confronte pour la première fois à des flux mesurés
+                # plutôt qu'approximés.
+                net = (entrees or 0.0) - (sorties or 0.0)
+                onchain[jour] = MetriqueOnchain(
+                    actif=symbole,
+                    # Les réserves détenues sur les plateformes servent de
+                    # dénominateur : rapporter un flux à la TVL d'un protocole
+                    # DeFi n'aurait aucun sens pour Bitcoin.
+                    tvl_usd=reserves,
+                    flux_reserves_exchanges_usd=net,
+                    volume_dex_24h_usd=_flottant(ligne, "volume_reported_spot_usd_1d"),
+                    source="coinmetrics (flux de plateformes mesuré)",
+                )
+
+    if not bougies:
+        raise DonneesIllisibles(f"{chemin} : aucune ligne avec un prix dans la fenêtre demandée.")
+    return SerieReelle(
+        serie=SerieOHLCV(symbole=symbole, intervalle="1d", bougies=tuple(bougies)),
+        onchain=onchain,
+    )
 
 
 # --------------------------------------------------------------------------

@@ -32,7 +32,8 @@ from datetime import datetime
 
 from ..core.config import Config, LigneAllocation
 from ..core.modeles import (
-    Action, Contexte, Execution, Portefeuille, SerieOHLCV, SignalSentiment, Sens,
+    Action, Contexte, Execution, MetriqueOnchain, Portefeuille, SerieOHLCV,
+    SignalSentiment, Sens,
 )
 from ..execution.courtier import CourtierPapier, OrdreRefuse
 from ..risk_management import coupe_circuit as cc
@@ -72,6 +73,10 @@ class Resultat:
     portefeuille: Portefeuille
     executions: list[Execution] = field(default_factory=list)
     courbe: list[tuple[datetime, float]] = field(default_factory=list)
+    # La valeur de ce qui est **réellement exposé au marché**, liquidités
+    # exclues. Sans elle, tout recul mesuré ici flatte : le portefeuille de la
+    # stratégie dort en grande partie en liquide, et du liquide ne recule pas.
+    courbe_exposee: list[tuple[datetime, float]] = field(default_factory=list)
     declenchements: list[cc.Declenchement] = field(default_factory=list)
     temporisations: int = 0
 
@@ -115,9 +120,124 @@ class Resultat:
     def capital_engage(self) -> float:
         return sum(e.montant_usd + e.frais_usd for e in self.achats)
 
+    # ----------------------------------------------------------------------
+    # Ce que la stratégie protège
+    #
+    # Elle perd contre un DCA aveugle sur le rendement, sur les cinq fenêtres
+    # de BTC réel mesurées. Si sa valeur est ailleurs — dormir pendant un
+    # krach — elle doit se mesurer sur ce terrain-là, sinon on continue de
+    # l'optimiser contre un étalon qu'elle ne peut pas battre.
+    #
+    # **Et le piège de cette famille est énorme : une stratégie qui n'investit
+    # rien a un recul nul.** Comparer des reculs bruts entre deux stratégies
+    # qui n'engagent pas le même capital ne mesure que la différence de
+    # capital. D'où `rendement_par_douleur`, qui est le seul chiffre de cette
+    # section à pouvoir se comparer directement.
+    # ----------------------------------------------------------------------
+
+    @property
+    def temps_sous_eau(self) -> float | None:
+        """Fraction du temps passée sous un sommet précédent.
+
+        Le recul maximum dit à quel point ça a fait mal une fois ; celui-ci dit
+        combien de temps ça a duré. Ce sont deux douleurs différentes, et c'est
+        la seconde qui fait abandonner une stratégie.
+
+        Rend `None` sur une courbe vide, et pas `0.0` : sur rien du tout, zéro
+        se lirait « jamais sous l'eau », c'est-à-dire la meilleure nouvelle
+        possible tirée d'une absence de mesure.
+        """
+
+        if not self.courbe:
+            return None
+        sommet = self.courbe[0][1]
+        sous_eau = 0
+        for _, valeur in self.courbe:
+            if valeur >= sommet:
+                sommet = valeur
+            else:
+                sous_eau += 1
+        return sous_eau / len(self.courbe)
+
+    @property
+    def pire_mois(self) -> float | None:
+        """La pire variation d'un mois calendaire à l'autre.
+
+        Calendaire et non glissant : c'est le relevé qu'on regarde, et c'est
+        celui qui décide si on coupe tout un dimanche soir.
+
+        Rend `None` en deçà de deux mois, et pas `0.0` : « aucun mauvais mois »
+        est la plus rassurante des conclusions, et la tirer du vide est le
+        défaut consigné dans `second-brain/lecons.md`.
+        """
+
+        par_mois: dict[tuple[int, int], list[float]] = {}
+        for instant, valeur in self.courbe:
+            par_mois.setdefault((instant.year, instant.month), []).append(valeur)
+        mois = sorted(par_mois)
+        if len(mois) < 2:
+            return None
+        pire = 0.0
+        for cle in mois:
+            valeurs = par_mois[cle]
+            depart, fin = valeurs[0], valeurs[-1]
+            if depart > 0:
+                pire = min(pire, fin / depart - 1.0)
+        return pire
+
+    @property
+    def rendement_par_douleur(self) -> float | None:
+        """Le gain rapporté au pire recul — un ratio de Calmar simplifié.
+
+        **C'est le seul chiffre de cette section qui se compare honnêtement.**
+        Deux stratégies qui n'engagent pas le même capital ont des reculs
+        incomparables ; rapporter le gain à la douleur remet les deux sur la
+        même échelle. Un recul nul rend `None` plutôt qu'un infini : n'avoir
+        rien risqué n'est pas une performance infinie.
+        """
+
+        # Rapporté au recul **exposé** : le seul dénominateur qui soit
+        # réellement la chose qui risque quelque chose.
+        recul = self.drawdown_expose
+        if not recul:
+            return None
+        return self.pnl_relatif / recul
+
+    @property
+    def drawdown_expose(self) -> float | None:
+        """Le pire recul de **ce qui est exposé au marché**, liquidités exclues.
+
+        C'est le seul recul qui décrive ce que le marché fait subir. Le recul du
+        portefeuille entier mélange deux choses — la baisse des positions, et le
+        fait qu'une grande part dorme en liquide — et flatte donc toute
+        stratégie qui investit peu. Le piège est consigné dans
+        `second-brain/lecons.md` : « une mesure qui inclut ce qui n'est pas
+        exposé flatte ». Il avait déjà coûté un aller-retour sur la mesure du
+        levier ; il était encore ici, dans la mesure de la protection.
+
+        `None` quand rien n'a jamais été exposé : n'avoir rien risqué n'est pas
+        un recul de zéro, c'est une absence de mesure.
+        """
+
+        exposees = [v for _, v in self.courbe_exposee if v > 0]
+        if not exposees:
+            return None
+        pire = 0.0
+        sommet = exposees[0]
+        for valeur in exposees:
+            sommet = max(sommet, valeur)
+            if sommet > 0:
+                pire = max(pire, (sommet - valeur) / sommet)
+        return pire
+
     @property
     def drawdown_max(self) -> float:
-        """Le pire recul depuis un sommet de la courbe de valeur."""
+        """Le pire recul du portefeuille entier, liquidités comprises.
+
+        Conservé parce que c'est ce que vit le propriétaire du compte — mais il
+        ne se compare **pas** entre deux stratégies qui n'engagent pas le même
+        capital. Pour cela, `drawdown_expose`.
+        """
 
         pire = 0.0
         sommet = self.capital_initial
@@ -133,6 +253,7 @@ def rejouer(
     serie: SerieOHLCV,
     *,
     fear_greed: dict[str, int] | None = None,
+    onchain: dict[str, MetriqueOnchain] | None = None,
     nom: str = "dynamique",
     plat: bool = False,
 ) -> Resultat:
@@ -146,6 +267,7 @@ def rejouer(
 
     config = config_mono_actif(config, serie.symbole)
     fear_greed = fear_greed or {}
+    onchain = onchain or {}
     profondeur = config.general.profondeur_bougies
 
     moteur = Moteur(config)
@@ -173,6 +295,7 @@ def rejouer(
 
     for i in range(depart, len(bougies) - 1):
         instant = bougies[i].horodatage
+        jour = instant.date().isoformat()
         # La fenêtre du direct, pas l'historique entier.
         fenetre = bougies[max(0, i + 1 - profondeur) : i + 1]
         contexte = Contexte(
@@ -180,15 +303,18 @@ def rejouer(
             releve_le=instant,
             serie=SerieOHLCV(serie.symbole, serie.intervalle, fenetre),
             sentiment=(
-                SignalSentiment(fear_greed=fear_greed[instant.date().isoformat()])
-                if instant.date().isoformat() in fear_greed
-                else None
+                SignalSentiment(fear_greed=fear_greed[jour]) if jour in fear_greed else None
             ),
+            # Les métriques du jour, quand la source en a. Les autres jours, le
+            # scoring redistribue le poids de la famille absente — c'est le
+            # comportement du direct, pas une facilité du rejeu.
+            onchain=onchain.get(jour),
         )
 
         prix_courant = {serie.symbole: bougies[i].cloture}
         valeur = portefeuille.valeur_totale(prix_courant)
         resultat.courbe.append((instant, valeur))
+        resultat.courbe_exposee.append((instant, valeur - portefeuille.liquidites_usd))
 
         if not plat:
             declenchement = disjoncteur.observer(
@@ -225,8 +351,10 @@ def rejouer(
         )
 
     dernier = bougies[-1]
-    resultat.courbe.append(
-        (dernier.horodatage, portefeuille.valeur_totale({serie.symbole: dernier.cloture}))
+    finale = portefeuille.valeur_totale({serie.symbole: dernier.cloture})
+    resultat.courbe.append((dernier.horodatage, finale))
+    resultat.courbe_exposee.append(
+        (dernier.horodatage, finale - portefeuille.liquidites_usd)
     )
     resultat.portefeuille = portefeuille
     return resultat

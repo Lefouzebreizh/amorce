@@ -24,6 +24,14 @@ from .rejeu import Resultat
 
 
 def _pourcent(valeur: float | None) -> str:
+    """`None` s'affiche « — », jamais « +0,0 % ».
+
+    Un zéro tiré d'une absence de mesure est la plus rassurante des
+    conclusions, et c'est exactement le défaut consigné dans
+    `second-brain/lecons.md` : « si l'ensemble mesuré était vide, que dirait mon
+    rapport ? »
+    """
+
     return "—" if valeur is None else f"{valeur:+.1%}"
 
 
@@ -114,6 +122,92 @@ def rapport_scenario(scenario: Scenario, dynamique: Resultat, temoin: Resultat) 
     return "\n".join(lignes)
 
 
+def ligne_protection(resultat: Resultat) -> dict[str, str]:
+    """Ce que la stratégie fait subir, pas ce qu'elle rapporte."""
+
+    ratio = resultat.rendement_par_douleur
+    expose = resultat.drawdown_expose
+    sous_eau = resultat.temps_sous_eau
+    return {
+        "PnL": _pourcent(resultat.pnl_relatif),
+        # Deux reculs, et ils ne disent pas la même chose : celui du
+        # portefeuille est ce que vit le compte, celui de l'exposé est ce que
+        # le marché fait subir. Seul le second se compare entre deux stratégies
+        # qui n'engagent pas le même capital.
+        "recul compte": f"{resultat.drawdown_max:.1%}",
+        "recul exposé": "—" if expose is None else f"{expose:.1%}",
+        "temps sous l'eau": "—" if sous_eau is None else f"{sous_eau:.0%}",
+        "pire mois": _pourcent(resultat.pire_mois),
+        "gain/douleur": "—" if ratio is None else f"{ratio:.2f}",
+        "engagé": f"{resultat.capital_engage:,.0f} $",
+    }
+
+
+def tableau_protection(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
+    """La protection, mise face au témoin.
+
+    **Un recul brut ne se compare pas entre deux stratégies qui n'engagent pas
+    le même capital** : celle qui investit moins a mécaniquement moins mal. La
+    colonne qui tranche est donc `gain/douleur`, et elle seule.
+    """
+
+    lignes: list[tuple[str, dict[str, str]]] = []
+    for nom, dynamique, temoin in comparaisons:
+        lignes.append((f"{nom} — stratégie", ligne_protection(dynamique)))
+        lignes.append((f"{nom} — témoin", ligne_protection(temoin)))
+    return tableau(lignes)
+
+
+def verdict_protection(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
+    """Dit si la protection paie son prix, et sait répondre non."""
+
+    mieux, pire, egal_sous_eau = 0, 0, 0
+    for _, dynamique, temoin in comparaisons:
+        rd, rt = dynamique.rendement_par_douleur, temoin.rendement_par_douleur
+        if rd is None or rt is None:
+            continue
+        if rd > rt:
+            mieux += 1
+        else:
+            pire += 1
+        sous_eau_d, sous_eau_t = dynamique.temps_sous_eau, temoin.temps_sous_eau
+        if (
+            sous_eau_d is not None
+            and sous_eau_t is not None
+            and abs(sous_eau_d - sous_eau_t) < 0.03
+        ):
+            egal_sous_eau += 1
+
+    total = mieux + pire
+    if not total:
+        return "Aucune fenêtre exploitable."
+
+    phrases = []
+    if pire == total:
+        phrases.append(
+            f"⚠ La protection **ne paie pas son prix** : le témoin rend plus par "
+            f"unité de recul **exposé** sur {pire}/{total} fenêtre(s). Le recul "
+            "du compte flatte la stratégie parce qu'une grande part y dort en "
+            "liquide — et du liquide ne recule pas."
+        )
+    elif mieux == total:
+        phrases.append(
+            f"La protection paie : meilleur rendement par unité de recul sur "
+            f"{mieux}/{total} fenêtre(s)."
+        )
+    else:
+        phrases.append(
+            f"Rendement par unité de recul : la stratégie l'emporte sur {mieux} "
+            f"fenêtre(s), le témoin sur {pire}."
+        )
+    if egal_sous_eau == total:
+        phrases.append(
+            f"Et le temps passé sous l'eau est le **même** sur {egal_sous_eau}/"
+            f"{total} fenêtre(s) : elle réduit l'amplitude de la douleur, pas sa durée."
+        )
+    return "\n".join(phrases)
+
+
 def verdict(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
     """La phrase qu'on lit en premier, et qui peut dire non.
 
@@ -142,6 +236,16 @@ def verdict(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
         else:
             pire += 1
 
+    # Un prix moyen flatteur obtenu en achetant peu n'est pas une performance,
+    # c'est une abstention partielle. Mesuré sur BTC 2022-2023 : la modulation
+    # paie 7,2 % moins cher que le témoin et gagne **deux fois moins** (+20 %
+    # contre +39 %), parce qu'elle engage 1 400 $ de moins. Sans cette ligne, le
+    # verdict annonçait la victoire sur le seul prix.
+    perdants = [
+        nom for nom, dyn, tem in comparaisons
+        if dyn.achats and tem.achats and dyn.pnl_relatif < tem.pnl_relatif - 0.02
+    ]
+
     total = len(comparaisons)
     phrases = []
     if abstentions:
@@ -150,6 +254,12 @@ def verdict(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
             f"scénario(s) — {', '.join(abstentions)} — alors que le témoin y "
             "investit. Pour un DCA, une abstention totale est le pire résultat "
             "possible : ce n'est pas de la prudence, c'est une panne de discipline."
+        )
+    if perdants:
+        phrases.append(
+            f"⚠ Elle **gagne moins** que le témoin sur {len(perdants)}/{total} "
+            f"scénario(s) — {', '.join(perdants)} — malgré un meilleur prix d'achat : "
+            "acheter moins cher en achetant moins n'est pas une performance."
         )
     if mieux and not pire:
         phrases.append(

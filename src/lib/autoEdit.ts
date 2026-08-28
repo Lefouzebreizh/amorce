@@ -1,5 +1,5 @@
 import { uid } from './id.ts';
-import { totalDuration } from './timeline.ts';
+import { MOUVEMENTS_ALTERNES, totalDuration } from './timeline.ts';
 import {
   DEFAULT_CLIP,
   type Caption,
@@ -74,9 +74,9 @@ function cutFromAsset(asset: MediaAsset, index: number, keepWhole: boolean): Cli
     // rien dire, et ferait perdre les précieuses premières images.
     transition: index === 0 ? 'cut' : TRANSITION_CYCLE[(index - 1) % TRANSITION_CYCLE.length],
     transitionDuration: 0.3,
-    // Une ouverture qui avance vaut mieux qu'un plan fixe ; on alterne ensuite
-    // pour que le mouvement reste une ponctuation et non un tic.
-    motion: index === 0 ? 'zoomIn' : index % 3 === 1 ? 'none' : index % 3 === 2 ? 'zoomOut' : 'panRight',
+    // Une ouverture qui avance vaut mieux qu'un plan fixe, et aucun plan ne
+    // reste immobile ensuite : voir `MOUVEMENTS_ALTERNES`.
+    motion: index === 0 ? 'zoomIn' : MOUVEMENTS_ALTERNES[index % MOUVEMENTS_ALTERNES.length],
   };
 }
 

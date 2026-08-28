@@ -123,9 +123,21 @@ pas de spécification publiée : le premier branchement sur un abonnement réel 
 le seul moment où l'on saura si un champ manque. Commencer par
 `verifierCompte()`, qui dit en un appel si les identifiants passent.
 
-Et pour éprouver l'analyseur sur du volume, lui donner une vraie liste plutôt
-qu'une courte : c'est la tenue en mémoire qui se mesure, pas le nombre
-d'entrées.
+Et elles ne voient pas non plus le **coût**. C'est mesuré, pas supposé : un
+index de recherche mal lié rendait le bon résultat sur les six entrées des
+tests, et ne finissait pas un import de 120 000 en dix minutes. Avant de livrer
+un changement qui touche à l'ingestion ou au cache, fabriquer une grande liste
+et regarder la montre :
+
+```bash
+cd iptv
+npm run iptv -- importer grande-liste.m3u   # doit rester sous ~10 s
+npm run iptv -- resume
+```
+
+Les repères actuels, sur 120 000 entrées : import 6,6 s, 135 Mo de crête,
+requêtes sous 30 ms. Un écart d'un ordre de grandeur est un défaut, pas une
+machine lente.
 
 ## Réseau d'annuaires IA — `annuaire-ia/`
 
@@ -314,7 +326,7 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 251 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 313 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 profils.py                       # l'effet des réglages sur six marchés connus
 ```
@@ -324,6 +336,19 @@ une pondération, à un multiplicateur DCA ou à une note : les tests diraient
 qu'ils passent sans dire que le prix moyen d'achat du profil « chute puis
 reprise » est repassé au-dessus de celui du témoin. C'est la même règle que
 pour le radar `pepites/`, et elle a été payée là-bas.
+
+Et pour un changement de **stratégie**, les six marchés fabriqués ne suffisent
+pas : ils sont symétriques par construction et flattent. Le rejeu sur BTC réel
+les contredit — la stratégie y perd contre un DCA aveugle en marché haussier.
+
+```bash
+curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv
+python3 main.py rejeu --coinmetrics btc.csv --symbole BTC/USD \
+        --depuis 2020-01-01 --jusqu-a 2021-12-31
+```
+
+Fenêtres de deux à trois ans seulement : au-delà, sur un seul actif, le plafond
+d'exposition gèle la stratégie et le résultat mesure le plafond.
 
 `main.py verifier` en plus **si et seulement si** le changement touche à
 `config/config.yaml` ou à `src/core/config.py` : les tests diraient qu'ils

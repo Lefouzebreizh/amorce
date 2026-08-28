@@ -141,10 +141,12 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   compte les liquidations qu'un compte à levier aurait subies, et le courtier
   ne connaît toujours pas le mot. Une option de levier posée dans le chemin
   d'ordre serait utilisée avant d'avoir été mesurée.
-  **Aucune vérification de contrat** — ni GoPlus, ni honeypot.is, ni RugCheck :
-  `src/strategy/pepites.py` repère une anomalie de volume et ne sait pas si le
-  jeton est revendable. Son en-tête le dit, et le bouclier qui manque existe
-  déjà, dans `pepites/`.
+  **Le bouclier anti-rugpull est un veto, pas une note**, et il passe avant le
+  dimensionnement : GoPlus, honeypot.is et RugCheck en parallèle, sans clé
+  d'API. Le silence n'est pas un quitus — aucune source qui répond bloque
+  l'achat. Mais **pas d'adresse, pas de bouclier** : les lignes du socle n'ont
+  pas de contrat à auditer, et exiger une adresse pour LINK/USDT lui interdisait
+  tout achat à chaque passe.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
@@ -155,7 +157,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   **zéro dépendance d'exécution** dans le cœur : ingestion M3U et Xtream,
   normalisation, classification en direct / films / séries. Une liste M3U ne se
   charge jamais en mémoire — 50 à 400 Mo, l'analyseur les rend au fil de l'eau —
-  et rien ne remonte au-dessus de l'ingestion sans être un `Element`. Aucune
+  et rien ne remonte au-dessus de l'ingestion sans être un `Element`. Le cache
+  est un SQLite livré avec Node (`node:sqlite`), recherche plein texte comprise :
+  120 000 entrées importées en 6,6 s, toute requête sous 30 ms. **Aucun mot de
+  passe n'entre en base** — l'adresse d'une source y est masquée — et aucune
   source de contenu ni identifiant n'est versionné. Se vérifie depuis son
   dossier.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
@@ -551,5 +556,7 @@ et les fichiers.
 
 *Les compétences se déclenchent seules ; table générée dans
 `.claude/references/competences.md`. L'agent `revue-invariants` relit un diff
-contre les invariants écrits, l'agent `verificateur` rend un verdict sans
-déverser la sortie des tests. `/etat-du-depot` pour l'inventaire du jour.*
+contre les invariants écrits ; l'agent `garde-du-bot` fait de même pour
+NexusCrypto, contre les six règles qui protègent l'argent ;
+l'agent `verificateur` rend un verdict sans déverser la sortie des tests.
+`/etat-du-depot` pour l'inventaire du jour.*
