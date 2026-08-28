@@ -318,7 +318,7 @@ même jeton finit en sourdine — et c'est ce jour-là qu'il a raison.
 ## 5. Où en est le projet
 
 **Les cinq skills tournent**, du premier appel DexScreener au message Telegram.
-141 tests, dont un qui traverse tout le tuyau sur client factice : deux scans à
+148 tests, dont un qui traverse tout le tuyau sur client factice : deux scans à
 quinze minutes d'écart, confirmation, bouclier, alerte, puis silence.
 
 Ce qui reste **fragile ou incomplet**, dit franchement :
@@ -352,7 +352,7 @@ python3 main.py scan                       # un tour complet → pepites_radar.m
 python3 main.py scan --bavard              # avec le détail des appels
 python3 main.py purger --garder 30         # efface les vieux relevés
 
-python3 -m unittest discover -s tests      # 141 tests, sans réseau
+python3 -m unittest discover -s tests      # 148 tests, sans réseau
 python3 profils.py                         # l'effet des réglages sur six profils connus
 ```
 
@@ -409,3 +409,32 @@ est un bon rythme :
 ```cron
 */15 * * * * cd /chemin/vers/pepites && /usr/bin/python3 main.py scan >> scan.log 2>&1
 ```
+
+**Un seul scan tourne à la fois**, et le radar s'en charge : un verrou de
+fichier est pris pour la durée du tour, et un second passage lancé pendant le
+premier est refusé au lieu de doubler la cadence. Ce n'était pas théorique —
+`Debit` compte par processus, donc deux tours simultanés valent deux fois le
+débit annoncé contre GoPlus et RugCheck, et les 429 qui s'ensuivent frappent
+les deux. La base y gagne aussi : SQLite s'en tient à cinq secondes d'attente
+avant de lever « database is locked ».
+
+Le refus est bruyant — code de sortie 5, et une ligne qui dit depuis combien de
+temps l'autre tourne :
+
+```
+Scan sauté : un scan tourne déjà depuis 8 min. Si cette ligne revient à chaque
+passage, l'intervalle est trop court pour la largeur configurée.
+```
+
+C'est délibéré. Un tour sauté en silence laisserait un radar qui se chevauche
+en permanence — donc qui ne tourne jamais vraiment — ressembler à un radar en
+bonne santé. Si la ligne revient à chaque passage, il faut espacer la minuterie
+ou réduire `jetons_en_vitrine_max` et `jetons_suivis_max`.
+
+Le verrou est un `flock`, pas un fichier témoin : après un `kill -9` ou une
+coupure de courant, le noyau relâche tout seul. Personne n'a de fichier à
+effacer à la main le matin où le radar s'est tu.
+
+Ce qui **n'est pas** en cause, et qu'on croit toujours : la confirmation. Un
+relevé écrit à la seconde ne peut pas confirmer un candidat, `ecart_min_minutes`
+le refuse quelle que soit son origine.

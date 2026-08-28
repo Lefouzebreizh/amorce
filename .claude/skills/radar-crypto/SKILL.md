@@ -111,6 +111,14 @@ du côté de l'analyseur, et se tromper de piste coûte la session. Code de sort
 porte le raisonnement, `tests/test_sonde.py` les deux frontières — crier à
 raison, et surtout ne pas crier à tort.
 
+**Un tour tient un verrou de fichier** (`core/verrou.py`), pris pour toute la
+durée du scan et relâché par le noyau même après un `kill -9`. Ce qu'il protège
+en premier n'est pas la base mais la **cadence** : `Debit` compte par processus,
+donc deux tours simultanés valent deux fois le débit annoncé contre GoPlus et
+RugCheck, et les 429 frappent les deux. Un second passage est refusé, bruyamment
+— code 5 et une ligne qui dit depuis combien de temps l'autre tourne. Tout ce
+qui s'ajoute autour du scan doit rester **dans** ce verrou.
+
 ## Les pièges, déjà payés une fois chacun
 
 - **Le radar ne route que deux familles de chaînes.** `est_evm` est dérivé de
