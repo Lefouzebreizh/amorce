@@ -695,3 +695,43 @@ ffmpeg -hide_banner -nostats -i entree.wav \
        -af loudnorm=I=-14:TP=-1:print_format=json -f null -   # lire input_i
 ffmpeg -y -i entree.wav -af "volume=<cible - input_i>dB,alimiter=limit=0.8913" sortie.mp3
 ```
+
+## Égaliser tous les plans supprime le relief avec le défaut
+
+Six plans d'un montage s'étalaient sur seize décibels de niveau entendu : l'un
+d'eux, muet, passait seize sous les autres. Corrigé en donnant à chacun la même
+cible, l'écart est tombé à 3,5 dB — et le montage a été rejeté d'un mot :
+« le son dans l'ensemble est trop plat ».
+
+Les deux constats sont justes et ne se contredisent pas. Un écart **subi** est
+un défaut ; un écart **voulu** est le montage lui-même. L'égalisation ne doit
+donc servir que de point de départ, sur lequel on pose ensuite une courbe
+dramatique explicite — une cible par plan, écrite, qui monte vers le dénouement.
+
+Appliqué au même montage, avec des cibles allant de −31 dB sur l'ouverture à
+−17 dB sur le rugissement final : **15,9 dB de relief**, obtenus exprès, chaque
+plan restant à sa place.
+
+La règle générale déborde le son : *mesurer un écart ne dit pas s'il faut le
+réduire.* Il faut d'abord savoir si quelqu'un l'a voulu.
+
+## Un point de coupe se choisit sur la courbe du plan, pas sur sa durée
+
+Un plan de dragon de dix secondes a été coupé de 2,0 à 5,5 s — « le début, pour
+faire court ». Mesuré après coup, seconde par seconde : le son du plan **montait
+jusqu'à la fin** (−16,5 dB à 9 s) et la tranche retenue était son creux exact
+(−31,6 dB à 5 s). L'image disait la même chose : l'éclair tombait à 6,5 s et le
+rugissement face caméra occupait les trois dernières secondes. Tout l'intérêt du
+plan était après la coupe.
+
+Trente secondes de mesure l'auraient dit avant le montage :
+
+```bash
+for i in $(seq 0 9); do
+  ffmpeg -hide_banner -nostats -ss $i -t 1 -i plan.mp4 \
+         -af highpass=f=400,volumedetect -f null - 2>&1 | grep mean_volume
+done
+```
+
+Et pour l'image, une planche de vignettes horodatées. Les deux ensemble disent
+où est le plan ; sa durée ne dit rien.
