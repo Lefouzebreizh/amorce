@@ -11,6 +11,7 @@ tiktok/
   README.md          la méthode — ce fichier
   concepts.md        les huit formats répétables, et lequel choisir
   modele-script.md   le gabarit vierge à recopier
+  mesures.md         ce que chaque vidéo publiée a donné
   scripts/           les scripts écrits, prêts à tourner
   carnet.py          fabrique le PDF qu'on emporte en tournage
 ```
@@ -132,6 +133,20 @@ et le 05 revient dire ce que tout ça a donné.
   où ».** La charte éditoriale en tient la liste ; elle vaut ici mot pour mot.
 - **Rien sur ta vie privée qu'on écrirait à ta place.** Le défi se raconte, pas
   l'intime.
+
+## Quand publier, et comment le savoir
+
+**Dès que la vidéo est prête.** C'est la seule règle qui tienne sur 365 jours :
+un créneau parfait se rate, « dès que c'est prêt » ne se rate jamais.
+
+Les fenêtres qui circulent — « samedi 17 h – 21 h » — décrivent le compte moyen,
+agrégé sur des milliers de comptes d'un autre pays et d'un autre sujet. Elles ne
+sont pas fausses ; elles ne parlent pas de cette chaîne-ci.
+
+`mesures.md` porte ce qui en parlera : une ligne par vidéo, remplie le jour
+même, avec les seuils de la niche et la règle qui évite d'en tirer n'importe
+quoi — **une vidéo ne prouve rien sur un créneau**, il en faut une dizaine avant
+qu'un écart cesse d'être du bruit.
 
 ## Ce que ce dossier ne sait pas
 
