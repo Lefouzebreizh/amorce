@@ -265,23 +265,44 @@ function TimeRuler({ duration }: { duration: number }) {
  */
 function Playhead({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement | null> }) {
   const playhead = useStudio((s) => s.playhead);
-  const playing = useStudio((s) => s.playing);
   const x = playhead * PX_PER_SEC;
 
-  // Sur un écran étroit, la tête de lecture sort du cadre au bout de quelques
-  // secondes. On fait suivre le défilement, mais uniquement pendant la lecture :
-  // le faire aussi à l'arrêt volerait le geste de quelqu'un qui explore son
-  // montage à la main.
+  /*
+   * Sur un écran étroit, la tête de lecture sort du cadre au bout de quelques
+   * secondes. Le défilement la suit — en lecture **comme à l'arrêt**.
+   *
+   * Il ne suivait d'abord qu'en lecture, au motif qu'à l'arrêt cela volerait le
+   * geste de quelqu'un qui explore sa frise à la main. Le motif ne tient pas :
+   * un doigt qui fait glisser la frise ne déplace pas la tête de lecture, et
+   * cet effet ne part donc jamais pour lui. Ce qu'il interdisait, c'était
+   * l'autre geste — déplacer le curseur de lecture — après lequel la frise
+   * restait où elle était, tête de lecture hors champ. On ne pouvait alors plus
+   * choisir une image précise ni voir quel texte lui correspond, ce qui est
+   * pourtant tout l'objet du curseur.
+   */
   useEffect(() => {
     const container = scrollRef.current;
-    if (!container || !playing) return;
+    if (!container) return;
 
     const left = container.scrollLeft;
     const right = left + container.clientWidth;
     if (x < left + FOLLOW_MARGIN || x > right - FOLLOW_MARGIN) {
-      container.scrollTo({ left: Math.max(0, x - container.clientWidth / 2), behavior: 'smooth' });
+      /*
+       * Recentrage **immédiat**, pas animé.
+       *
+       * En `smooth`, un nouveau défilement partait à chaque image sans laisser
+       * le précédent finir : chacun annulait le suivant, et sur un téléphone la
+       * frise se recentrait une fois puis se figeait — mesuré sur un montage de
+       * 19,6 s où elle affichait encore 0-5 s pendant que la lecture passait
+       * 11,2 s. La tête de lecture était alors hors champ, et l'on ne pouvait
+       * plus savoir où l'on était dans son propre montage.
+       *
+       * Une animation n'a de toute façon rien à apporter ici : ce qui bouge est
+       * la lecture, et elle bouge déjà.
+       */
+      container.scrollTo({ left: Math.max(0, x - container.clientWidth / 2), behavior: 'auto' });
     }
-  }, [x, playing, scrollRef]);
+  }, [x, scrollRef]);
 
   return (
     <>

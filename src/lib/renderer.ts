@@ -191,6 +191,22 @@ function charger(asset: MediaAsset): HTMLImageElement {
 /** Écart de synchronisation au-delà duquel on repositionne la lecture. */
 const DRIFT_TOLERANCE = 0.25;
 
+/*
+ * À l'arrêt, la tolérance tombe à une image.
+ *
+ * Le quart de seconde ci-dessus se justifie **en lecture** : la vidéo avance
+ * d'elle-même, et repositionner pour une broutille ferait sauter l'image à
+ * chaque correction. À l'arrêt il n'y a aucune dérive à tolérer — rien
+ * n'avance — et ces 0,25 s deviennent six images à 24 i/s pendant lesquelles
+ * la jauge bouge sans que l'image change.
+ *
+ * C'est ce qui empêchait de choisir une image précise : on déplaçait la tête de
+ * lecture pour tomber sur le plan qui porte un texte, l'aperçu ne suivait pas,
+ * et le montage paraissait ne pas répondre. Une image de marge suffit à éviter
+ * le repositionnement permanent quand la vidéo se cale à un cheveu près.
+ */
+const DRIFT_TOLERANCE_ARRET = 0.05;
+
 /** Avance à laquelle un clip est préchargé avant d'entrer à l'écran. */
 const PREROLL = 0.6;
 
@@ -228,7 +244,8 @@ export function syncPlayback(
     if (!Number.isFinite(video.duration) || video.readyState === 0) continue;
 
     const bounded = Math.max(0, Math.min(target, video.duration - 0.05));
-    if (Math.abs(video.currentTime - bounded) > DRIFT_TOLERANCE) {
+    const tolerance = playing ? DRIFT_TOLERANCE : DRIFT_TOLERANCE_ARRET;
+    if (Math.abs(video.currentTime - bounded) > tolerance) {
       video.currentTime = bounded;
     }
 
