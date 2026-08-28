@@ -1078,3 +1078,42 @@ Le corollaire vaut au montage : **les pas se relèvent dans le son du plan**, pa
 détection de pics sous 200 Hz, jamais placés au jugé. Sur un plan de dragon,
 la mesure a donné 8,40 · 9,90 · 11,46 — un rythme irrégulier qu'aucune grille
 n'aurait trouvé, et c'est justement son irrégularité qui le rend vivant.
+## Un outil cher se raccorde par son cache et par son échec
+
+Dix outils tournaient dans le dépôt sans se parler ; les coudre à une seule
+recette a coûté trois fois la même leçon, et l'appel n'en était jamais la partie
+difficile.
+
+**Le cache décide du coût réel.** Une parallaxe coûte trente secondes, une
+synchronisation labiale plusieurs minutes, et un montage d'essai se relance dix
+fois. Le premier jet écrivait son cache à côté des fichiers de travail, que la
+fin de passe efface par `_*` : chaque rendu se repayait entier, et rien ne le
+signalait puisque le résultat était juste. Un cache doit vivre **hors du
+balayage**, et sa clé doit porter tout ce qui change le rendu — la source, la
+fenêtre, les réglages.
+
+**L'échec décide de la fiabilité.** Un film de douze plans ne doit pas mourir
+parce qu'un visage manque sur l'un d'eux. On prévient par écrit, on rend le plan
+intact, le reste se monte. Corollaire : un outil qui peut se faire tuer par le
+système — une inférence sur processeur qui sort en code −9 faute de mémoire —
+tourne dans un **processus séparé**, sinon il emporte l'appelant avec lui.
+
+**La détection vaut mieux que la déclaration.** Une image fixe se reconnaît à
+son extension. Le champ `"parallaxe": true` semblait plus explicite ; personne
+ne pense à déclarer qu'une image est une image, et l'oubli produisait exactement
+le plan figé qu'on cherchait à supprimer.
+
+## Un chiffre qu'on nettoie est un défaut qu'on cache
+
+Le relief d'un montage affichait 23,4 dB, gonflé par deux plans très bas. Le
+correctif évident — les écarter du calcul — a été écrit, testé, et il était
+faux : la mesure porte sur le **film fini** dans la fenêtre du plan, pas sur le
+son que ce plan apportait. Un plan à −47 dB ne dit donc pas « ce rush est muet »
+mais « il ne se passe rien ici » — c'est un trou, exactement celui qu'une nuit
+entière avait servi à combler ailleurs. Une image fixe en fabrique un sans le
+vouloir : elle n'apporte aucun son, et si la recette n'y pose ni bruitage ni
+voix, le film se tait.
+
+Le filtre rendait un chiffre plus flatteur en masquant le seul défaut qu'il
+aurait dû signaler. **Avant d'écarter une valeur aberrante, vérifier ce qu'elle
+mesure vraiment** : quand la mesure est juste, l'aberration est dans le film.
