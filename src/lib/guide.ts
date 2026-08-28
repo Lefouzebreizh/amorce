@@ -79,6 +79,31 @@ export function nextStep(project: Project, analysis: Analysis = analyzeProject(p
     };
   }
 
+  /*
+   * Un rush unique et long passe **avant** l'accroche, alors que la découpe
+   * vient après elle dans le cas général. Ce n'est pas une exception de
+   * confort : une accroche écrite sur un plan de vingt secondes sans coupe
+   * devra être replacée dès qu'on le découpera, et le découpage change à ce
+   * point la vidéo qu'il rend le travail précédent caduc.
+   *
+   * Mesuré : après l'import d'une seule vidéo de 19,5 s, le bouton de découpe
+   * n'était atteignable qu'en passant à l'étape 2 puis en touchant le plan sur
+   * la timeline — deux gestes de plus, sur un téléphone, pour l'action qui
+   * apporte le plus.
+   */
+  const single = project.clips.length === 1 ? clipDuration(project.clips[0]) : 0;
+  if (single > LONG_SHOT * 2) {
+    const pieces = Math.floor(single / 2);
+    return {
+      title: `Un seul plan de ${single.toFixed(1)} s`,
+      why: 'Une vidéo sans coupe se regarde comme un plan fixe, quel que soit son contenu. '
+        + 'Découpe d\u2019abord : l\u2019accroche et les bruitages se poseront sur les raccords.',
+      actionLabel: `Découper en ${pieces} plans de 2 s`,
+      action: { kind: 'chopLongest' },
+      done: false,
+    };
+  }
+
   const hasHook = project.captions.some((c) => c.start <= 1.2 && c.end > c.start && c.text.trim().length > 0);
   if (!hasHook) {
     return {

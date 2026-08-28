@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bibliothèque visuelle</title>
+<style>
+  :root { --fond:#0d1117; --carte:#161b22; --bord:#272e38; --texte:#e6edf3;
+          --gris:#8b949e; --accent:#48d2ff; --alerte:#ff7b72; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--fond); color:var(--texte); font:18px/1.55 system-ui,sans-serif;
+         padding:20px; -webkit-text-size-adjust:100%; }
+  h1 { font-size:26px; margin-bottom:4px; }
+  .sous { color:var(--gris); margin-bottom:20px; }
+  .reglages { display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+              background:var(--carte); border:1px solid var(--bord);
+              border-radius:12px; padding:14px; margin-bottom:20px; }
+  /* Cibles de 44 px au moins : cette page se consulte sur un téléphone,
+     souvent d'une main, en cherchant un fichier au milieu d'un montage. */
+  select, input[type=search] { min-height:44px; font-size:18px; padding:0 12px;
+    background:#0d1117; color:var(--texte); border:1px solid var(--bord); border-radius:9px; }
+  input[type=range] { min-height:44px; flex:1 1 220px; }
+  .grille { display:grid; gap:16px;
+            grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+  .carte { background:var(--carte); border:1px solid var(--bord); border-radius:12px;
+           overflow:hidden; display:flex; flex-direction:column; }
+  .carte img, .carte video { width:100%; aspect-ratio:16/9; object-fit:cover;
+                             background:#000; display:block; }
+  .corps { padding:12px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .nom { font-weight:600; word-break:break-word; }
+  .meta { color:var(--gris); font-size:15px; }
+  .note { font-weight:700; }
+  .bon { color:var(--accent); } .faible { color:var(--alerte); }
+  /* Deux barres horizontales, jamais un cercle : c'est la règle d'affichage
+     du dépôt, et elle se lit à la même vitesse sur un petit écran. */
+  .jauge { height:9px; background:#0d1117; border-radius:5px; overflow:hidden; }
+  .jauge > i { display:block; height:100%; background:var(--accent); }
+  button { min-height:44px; font-size:17px; border:1px solid var(--bord);
+           background:#21262d; color:var(--texte); border-radius:9px; cursor:pointer; }
+  button:active { background:#30363d; }
+  .vide { color:var(--gris); padding:40px 0; text-align:center; }
+</style></head><body>
+<h1>Bibliothèque visuelle</h1>
+<p class="sous" id="resume">Chargement…</p>
+<div class="reglages">
+  <input type="search" id="recherche" placeholder="chercher un nom…">
+  <select id="categorie"><option value="">toutes catégories</option></select>
+  <label for="seuil">visibilité ≥ <b id="valeur">0</b></label>
+  <input type="range" id="seuil" min="0" max="100" value="0">
+</div>
+<div class="grille" id="grille"></div>
+<p class="vide" id="vide" hidden>Rien à ce seuil.</p>
+<script>
+const $ = s => document.querySelector(s);
+let assets = [];
+
+fetch('master_catalog.json').then(r => r.json()).then(d => {
+  assets = d.visuels.assets;
+  const a = d.audio || {};
+  $('#resume').textContent =
+    `${d.visuels.total} visuels · ${d.visuels.au_dessus_du_seuil} au-dessus du seuil · `
+    + `${d.visuels.corriges} corrigés pour téléphone`
+    + (a.total ? ` — et ${a.total} sons dans ${a.source}` : '');
+  const cats = [...new Set(assets.map(x => x.categorie))].sort();
+  for (const c of cats) {
+    const o = document.createElement('option'); o.value = o.textContent = c;
+    $('#categorie').append(o);
+  }
+  dessiner();
+}).catch(e => { $('#resume').textContent = 'master_catalog.json introuvable : ' + e; });
+
+function dessiner() {
+  const seuil = +$('#seuil').value, cat = $('#categorie').value;
+  const q = $('#recherche').value.trim().toLowerCase();
+  $('#valeur').textContent = seuil;
+  const vus = assets.filter(a => a.visibilite_telephone >= seuil
+    && (!cat || a.categorie === cat) && (!q || a.nom.toLowerCase().includes(q)));
+  const g = $('#grille'); g.textContent = '';
+  $('#vide').hidden = vus.length > 0;
+  for (const a of vus) {
+    const c = document.createElement('div'); c.className = 'carte';
+    const media = a.chemin.endsWith('.mp4');
+    // La vidéo ne se lance qu'au survol ou au toucher : douze lectures
+    // simultanées bloquent un téléphone, et l'autoplay est proscrit ici.
+    if (media) {
+      const v = document.createElement('video');
+      v.src = a.versions?.['720p'] ? '../' + a.versions['720p'] : '../' + a.chemin;
+      v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'none';
+      c.append(v);
+      const jouer = () => v.play().catch(() => {});
+      c.addEventListener('mouseenter', jouer);
+      c.addEventListener('touchstart', jouer, { passive: true });
+      c.addEventListener('mouseleave', () => { v.pause(); v.currentTime = 0; });
+    } else {
+      const i = document.createElement('img');
+      i.loading = 'lazy';
+      i.src = '../visual_library/previews/' + a.nom.replace(/\.[^.]+$/, '') + '.jpg';
+      c.append(i);
+    }
+    const corps = document.createElement('div'); corps.className = 'corps';
+    const nom = document.createElement('div'); nom.className = 'nom'; nom.textContent = a.nom;
+    const meta = document.createElement('div'); meta.className = 'meta';
+    meta.textContent = `${a.categorie} · ${a.resolution}` + (a.fps ? ` · ${a.fps} i/s` : '');
+    const note = document.createElement('div'); note.className = 'meta';
+    const fort = a.visibilite_telephone >= 50;
+    note.innerHTML = `visibilité téléphone <span class="note ${fort ? 'bon' : 'faible'}">`
+      + `${a.visibilite_telephone}</span>${a.corrige_pour_telephone ? ' · corrigé' : ''}`;
+    const jauge = document.createElement('div'); jauge.className = 'jauge';
+    const barre = document.createElement('i');
+    barre.style.width = Math.min(100, a.visibilite_telephone) + '%';
+    if (!fort) barre.style.background = 'var(--alerte)';
+    jauge.append(barre);
+    const b = document.createElement('button');
+    b.textContent = 'copier le chemin';
+    b.onclick = async () => {
+      try { await navigator.clipboard.writeText(a.chemin); b.textContent = 'copié'; }
+      catch { b.textContent = a.chemin; }
+      setTimeout(() => (b.textContent = 'copier le chemin'), 1600);
+    };
+    corps.append(nom, meta, note, jauge, b); c.append(corps); g.append(c);
+  }
+}
+for (const id of ['#seuil', '#categorie', '#recherche'])
+  $(id).addEventListener('input', dessiner);
+</script></body></html>

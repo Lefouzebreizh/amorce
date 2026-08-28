@@ -307,7 +307,7 @@ def fumee(chemin: Path, duree: float = 4.0, largeur=L4K // 2, hauteur=H4K // 2) 
             for j, champ in enumerate(champs):
                 decalage = int(u * petit_h * (1.4 + j * 0.5))
                 a += numpy.roll(champ, -decalage, axis=0) / (j + 1)
-            a = (a - a.min()) / (a.ptp() + 1e-6)
+            a = (a - a.min()) / (numpy.ptp(a) + 1e-6)
             image = Image.fromarray((a * 255).astype(numpy.uint8)).resize(
                 (largeur, hauteur), Image.BICUBIC).filter(ImageFilter.GaussianBlur(9))
             g = numpy.asarray(image)

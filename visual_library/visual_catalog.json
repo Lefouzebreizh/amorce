@@ -1,0 +1,178 @@
+{
+  "total": 10,
+  "au_dessus_du_seuil": 5,
+  "corriges": 4,
+  "seuils": {
+    "luma_mini": 40.0,
+    "note_mini": 50.0,
+    "baisse_ecran": 0.8
+  },
+  "assets": [
+    {
+      "nom": "light_leak_orange.png",
+      "categorie": "overlay",
+      "chemin": "visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_orange.png",
+      "resolution": "3840x2160",
+      "fps": null,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 74.1,
+      "contraste": 28.4,
+      "visibilite_telephone": 51.1,
+      "corrige_pour_telephone": true,
+      "empreinte": "a1a15e5c53e35d1c",
+      "versions": {
+        "webp": "visual_library/app_optimized/light_leak_orange.webp"
+      }
+    },
+    {
+      "nom": "light_leak_blue.png",
+      "categorie": "overlay",
+      "chemin": "visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_blue.png",
+      "resolution": "3840x2160",
+      "fps": null,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 59.5,
+      "contraste": 37.3,
+      "visibilite_telephone": 52.4,
+      "corrige_pour_telephone": false,
+      "empreinte": "b794697e00ff4069",
+      "versions": {
+        "webp": "visual_library/app_optimized/light_leak_blue.webp"
+      }
+    },
+    {
+      "nom": "light_leak_magenta.png",
+      "categorie": "overlay",
+      "chemin": "visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_magenta.png",
+      "resolution": "3840x2160",
+      "fps": null,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 64.3,
+      "contraste": 38.6,
+      "visibilite_telephone": 55.3,
+      "corrige_pour_telephone": true,
+      "empreinte": "f0e01ffe011f0f07",
+      "versions": {
+        "webp": "visual_library/app_optimized/light_leak_magenta.webp"
+      }
+    },
+    {
+      "nom": "vignette_strong.png",
+      "categorie": "matte",
+      "chemin": "visual_library/05_Matte_and_Bars/vignette_strong.png",
+      "resolution": "3840x2160",
+      "fps": null,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 34.8,
+      "contraste": 0.0,
+      "visibilite_telephone": 13.6,
+      "corrige_pour_telephone": true,
+      "empreinte": "8000000000000000",
+      "versions": {
+        "webp": "visual_library/app_optimized/vignette_strong.webp"
+      }
+    },
+    {
+      "nom": "vignette_soft.png",
+      "categorie": "matte",
+      "chemin": "visual_library/05_Matte_and_Bars/vignette_soft.png",
+      "resolution": "3840x2160",
+      "fps": null,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 20.4,
+      "contraste": 0.0,
+      "visibilite_telephone": 8.0,
+      "corrige_pour_telephone": true,
+      "empreinte": "0000000000000000",
+      "versions": {
+        "webp": "visual_library/app_optimized/vignette_soft.webp"
+      }
+    },
+    {
+      "nom": "LUT_teal_orange.cube",
+      "categorie": "lut",
+      "chemin": "visual_library/02_LUTs_and_Grading/LUT_teal_orange.cube",
+      "resolution": "33x33",
+      "fps": null,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 0.0,
+      "contraste": 0.0,
+      "visibilite_telephone": 100.0,
+      "corrige_pour_telephone": false,
+      "empreinte": "",
+      "versions": {}
+    },
+    {
+      "nom": "LUT_bw_film.cube",
+      "categorie": "lut",
+      "chemin": "visual_library/02_LUTs_and_Grading/LUT_bw_film.cube",
+      "resolution": "33x33",
+      "fps": null,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 0.0,
+      "contraste": 0.0,
+      "visibilite_telephone": 100.0,
+      "corrige_pour_telephone": false,
+      "empreinte": "",
+      "versions": {}
+    },
+    {
+      "nom": "glitch_transition_01.mp4",
+      "categorie": "transition",
+      "chemin": "visual_library/03_Transitions/glitch_transition_01.mp4",
+      "resolution": "1920x1080",
+      "fps": 24.0,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 103.1,
+      "contraste": 0.8,
+      "visibilite_telephone": 40.9,
+      "corrige_pour_telephone": false,
+      "empreinte": "8000800080008000",
+      "versions": {
+        "720p": "visual_library/app_optimized/glitch_transition_01_720p.mp4"
+      }
+    },
+    {
+      "nom": "dust_particles_4k.mp4",
+      "categorie": "overlay",
+      "chemin": "visual_library/01_Overlays_and_FX/Dust/dust_particles_4k.mp4",
+      "resolution": "3840x2160",
+      "fps": 24.0,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 6.1,
+      "contraste": 3.2,
+      "visibilite_telephone": 4.9,
+      "corrige_pour_telephone": false,
+      "empreinte": "f86f23800da8a37f",
+      "versions": {
+        "720p": "visual_library/app_optimized/dust_particles_4k_720p.mp4"
+      }
+    },
+    {
+      "nom": "film_grain_4k.mp4",
+      "categorie": "overlay",
+      "chemin": "visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4",
+      "resolution": "3840x2160",
+      "fps": 24.0,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 106.5,
+      "contraste": 1.7,
+      "visibilite_telephone": 42.9,
+      "corrige_pour_telephone": false,
+      "empreinte": "be25d92ac17b63a0",
+      "versions": {
+        "720p": "visual_library/app_optimized/film_grain_4k_720p.mp4"
+      }
+    }
+  ]
+}
