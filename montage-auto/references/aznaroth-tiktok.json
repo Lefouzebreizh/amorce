@@ -1,54 +1,24 @@
 {
   "_lisez_moi": [
-    "TITANS EP01 — AZNAROTH, montage viral.",
+    "AZNAROTH EP01 — version TikTok bouclee.",
     "",
-    "  AFFICHE    0.00 -  0.60",
-    "  OEIL       0.60 -  1.80",
-    "  MAGE       1.80 -  6.75",
-    "  ECLAIRS    6.75 -  8.25",
-    "  SIGIL      8.25 -  9.35",
-    "  VORTEX     9.35 - 12.15",
-    "  DRAGON    12.15 - 17.95",
+    "Derivee de titans-ep01.json, trois differences et elles se justifient :",
     "",
-    "L'affiche ne dure que 0,6 s. Elle porte la marque, mais un plan fixe en",
-    "ouverture est ce qui fait scroller : les trois premiers dixiemes decident,",
-    "et c'est le mouvement qui arrete un pouce, pas une image.",
+    "1. L'AFFICHE SAUTE. Elle ouvrait le film pour dire en une seconde ce qu'on",
+    "   regarde — utile sur une video qu'on lance, nuisible sur une BOUCLE : a",
+    "   chaque tour le spectateur repasse par un carton fixe, et c'est la qu'il",
+    "   part. Une boucle s'ouvre sur du mouvement.",
+    "2. LE CARTON DE FIN SAUTE aussi, pour la meme raison, et le noir final avec.",
+    "3. LA QUEUE SE FOND DANS LA TETE sur 0,5 s. C'est ce fondu, et lui seul, qui",
+    "   fait qu'on ne voit pas le raccord au deuxieme tour.",
     "",
-    "Le plan du mage reste ENTIER (il parle de 0,23 a 5,17 en source, levres",
-    "calquees dessus). Les « cible_db » sont la courbe dramatique.",
-    "",
-    "Le nom du lore est AZNAROTH — jamais Azeroth, marque tierce.",
-    "",
-    "Chaque effet porte une « distance » : proche, moyen ou lointain. Une seule",
-    "reverberation posee sur tout aplatit la scene — ce qui est pres et ce qui",
-    "est loin recoivent la meme queue, et l'oreille ne peut plus les ranger.",
-    "Le cri et les impacts sont PROCHES (attaque intacte), l'environnement et le",
-    "vortex sont LOINTAINS (noyes, queue longue).",
-    "",
-    "« effets_db » a 9 et non 3 : a 3, la couche cinema passait 99,7 %",
-    "inchangee quoi qu'on lui fasse — le son propre des plans dominait tout,",
-    "et aucun travail de reverberation ou de largeur ne s'entendait. Une",
-    "couche trop faible rend son traitement invisible.",
-    "",
-    "Le lit du dragon est baisse de 5 dB pendant que le cri monte de 3 : un",
-    "rugissement est fort parce que le reste se tait, pas parce qu'on le pousse.",
-    "Le pousser l'envoie dans le limiteur, qui l'ecrase et fait pomper tout le",
-    "mixage — mesure : le gain du master variait de +1,0 a +6,1 dB selon",
-    "l'instant, et cette variation s'entend comme une coupure."
+    "Le reste — mixage, enveloppes, hierarchie du cri — est celui de l'episode."
   ],
   "bibliotheque": "sfx_library",
   "effets_db": 9,
   "largeur_stereo": 2.6,
-  "reverberation_s": 1.8,
+  "reverberation_s": 2.6,
   "plans": [
-    {
-      "nom": "affiche",
-      "source": "rushes/affiche_aznaroth.mp4",
-      "depart": 0.0,
-      "duree": 1.5,
-      "cible_db": -26.0,
-      "_note": "l'affiche ouvre le film : sur un format court, dire en une seconde ce qu'on regarde retient plus qu'un plan mysterieux"
-    },
     {
       "nom": "oeil",
       "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
@@ -92,101 +62,56 @@
       "source": "rushes/Duration_seconds_Cinemat.mp4",
       "depart": 4.2,
       "duree": 5.8,
-      "cible_db": -21.0,
-      "zoom": 0.14,
+      "cible_db": -13.0,
+      "zoom": 0.22,
       "tremblements": [
         {
-          "debut": 2.3,
+          "debut": 1.7,
           "duree": 0.3,
           "force": 0.08
+        },
+        {
+          "debut": 3.2,
+          "duree": 0.55,
+          "force": 0.16
         }
       ]
     }
   ],
   "effets": [
     {
-      "son": "braam",
-      "instant": 0.0,
-      "gain": 8,
-      "parametres": {
-        "duree": 1.2,
-        "fondamentale": 52.0,
-        "graine": 140
-      },
-      "_note": "la masse — ressentie, pas entendue sur un telephone",
-      "distance": "proche"
-    },
-    {
-      "son": "eclat",
-      "instant": 0.0,
-      "gain": 10,
-      "parametres": {
-        "duree": 0.9,
-        "graine": 142,
-        "densite": 200.0
-      },
-      "_note": "l'aigu qui porte l'impact sur un petit haut-parleur",
-      "distance": "proche"
-    },
-    {
-      "son": "transition_eclair",
-      "instant": 0.0,
-      "gain": 8,
-      "_note": "le crepitement electrique, entierement au-dessus de 400 Hz",
-      "distance": "proche"
-    },
-    {
-      "son": "nappe_sombre",
-      "instant": 0.0,
-      "gain": -6,
-      "largeur": 14,
-      "parametres": {
-        "duree": 1.5,
-        "fondamentale": 44.0,
-        "graine": 141
-      },
-      "distance": "lointain"
-    },
-    {
-      "son": "whoosh_rapide",
-      "instant": 0.42,
-      "gain": 6,
-      "_note": "le passage vers l'oeil",
-      "distance": "moyen"
-    },
-    {
       "son": "braam_court",
-      "instant": 1.5,
+      "instant": 0.0,
       "gain": 1,
       "distance": "moyen"
     },
     {
       "son": "grondement_braises",
-      "instant": 1.5,
+      "instant": 0.0,
       "gain": -4,
       "distance": "lointain"
     },
     {
       "son": "souffle_caverne",
-      "instant": 2.7,
+      "instant": 1.2,
       "gain": -5,
       "distance": "lointain"
     },
     {
       "son": "grondement_braises",
-      "instant": 2.7,
+      "instant": 1.2,
       "gain": -3,
       "distance": "lointain"
     },
     {
       "son": "whoosh_rapide",
-      "instant": 2.85,
+      "instant": 1.35,
       "gain": 1,
       "distance": "moyen"
     },
     {
       "son": "nappe_sombre",
-      "instant": 3.05,
+      "instant": 1.55,
       "gain": -5,
       "largeur": 18,
       "parametres": {
@@ -198,68 +123,68 @@
     },
     {
       "son": "riser_court",
-      "instant": 6.3,
+      "instant": 4.8,
       "gain": -3,
       "distance": "moyen"
     },
     {
       "son": "whoosh_lourd",
-      "instant": 7.45,
+      "instant": 5.95,
       "gain": 1,
       "distance": "moyen"
     },
     {
       "son": "impact_debris",
-      "instant": 7.65,
+      "instant": 6.15,
       "gain": 3,
       "distance": "proche"
     },
     {
       "son": "grondement_braises",
-      "instant": 7.65,
+      "instant": 6.15,
       "gain": -4,
       "distance": "lointain"
     },
     {
       "son": "transition_eclair",
-      "instant": 8.85,
+      "instant": 7.35,
       "gain": 16,
       "distance": "proche"
     },
     {
       "son": "riser_moyen",
-      "instant": 8.85,
+      "instant": 7.35,
       "gain": 11,
       "distance": "moyen"
     },
     {
       "son": "whoosh_rapide",
-      "instant": 9.0,
+      "instant": 7.5,
       "gain": 12,
       "distance": "moyen"
     },
     {
       "son": "whoosh_tournant",
-      "instant": 9.25,
+      "instant": 7.75,
       "gain": 13,
       "distance": "moyen"
     },
     {
       "son": "aspiration",
-      "instant": 10.2,
-      "gain": 0,
+      "instant": 8.7,
+      "gain": 9,
       "largeur": 22,
       "parametres": {
         "duree": 2.9,
         "graine": 44,
-        "tours_final": 19.0
+        "tours_final": 34.0
       },
       "distance": "lointain"
     },
     {
       "son": "souffle_tournant",
-      "instant": 10.25,
-      "gain": -10,
+      "instant": 8.75,
+      "gain": 0,
       "largeur": 20,
       "parametres": {
         "duree": 2.9,
@@ -269,8 +194,8 @@
     },
     {
       "son": "chute_sous_grave",
-      "instant": 12.4,
-      "gain": -3,
+      "instant": 10.9,
+      "gain": 2,
       "parametres": {
         "duree": 1.6,
         "graine": 45,
@@ -280,31 +205,43 @@
     },
     {
       "son": "whoosh_lourd",
-      "instant": 12.9,
+      "instant": 11.4,
       "gain": 6,
       "distance": "moyen"
     },
     {
       "son": "braam_massif",
-      "instant": 13.05,
+      "instant": 11.55,
       "gain": 11,
       "distance": "proche"
     },
     {
       "son": "grondement_terre",
-      "instant": 13.05,
-      "gain": -5,
+      "instant": 11.55,
+      "gain": 2,
+      "distance": "lointain"
+    },
+    {
+      "son": "crepitement",
+      "instant": 11.6,
+      "gain": -9,
+      "largeur": 22,
+      "parametres": {
+        "duree": 2.6,
+        "densite": 80.0,
+        "graine": 775
+      },
       "distance": "lointain"
     },
     {
       "son": "riser_court",
-      "instant": 14.3,
+      "instant": 12.8,
       "gain": 6,
       "distance": "moyen"
     },
     {
       "son": "cri_titan",
-      "instant": 14.45,
+      "instant": 12.95,
       "gain": 1,
       "distance": "moyen",
       "telephone": 1.6,
@@ -324,13 +261,13 @@
     },
     {
       "son": "braam_double",
-      "instant": 15.35,
-      "gain": 1,
+      "instant": 13.85,
+      "gain": 6,
       "distance": "proche"
     },
     {
       "son": "electricite",
-      "instant": 15.4,
+      "instant": 13.9,
       "gain": 12,
       "distance": "proche",
       "parametres": {
@@ -341,7 +278,7 @@
     },
     {
       "son": "eclat",
-      "instant": 15.42,
+      "instant": 13.92,
       "gain": 6,
       "parametres": {
         "duree": 0.55,
@@ -352,7 +289,7 @@
     },
     {
       "son": "cri_titan",
-      "instant": 16.25,
+      "instant": 14.75,
       "gain": 22,
       "parametres": {
         "duree": 3.3,
@@ -361,7 +298,7 @@
         "dechirure": 1.15
       },
       "distance": "proche",
-      "telephone": 0.9,
+      "telephone": 1.4,
       "enveloppe": {
         "attaque": 0.045,
         "accent_s": 0.42,
@@ -371,8 +308,28 @@
       "_note": "le cri. Releve plat — -25 dB pendant 2,4 s sans onset — il a fallu lui rendre une forme : 7,5 dB d'accent sur les quatre premiers dixiemes. Ce que l'oreille repere est le changement, pas le niveau ; un bourdon fort reste un bourdon."
     },
     {
+      "son": "cri_titan",
+      "instant": 14.78,
+      "gain": 18,
+      "distance": "proche",
+      "telephone": 1.2,
+      "parametres": {
+        "duree": 3.25,
+        "fondamentale": 81.0,
+        "graine": 77,
+        "dechirure": 0.95
+      },
+      "enveloppe": {
+        "attaque": 0.05,
+        "accent_s": 0.42,
+        "accent_db": 7.5,
+        "chute": 0.3
+      },
+      "_note": "la quinte du cri, sur une autre graine. Elle ne s'entend pas seule : elle bouche les decrochages de la friction du cri principal."
+    },
+    {
       "son": "rugissement",
-      "instant": 18.2,
+      "instant": 16.7,
       "gain": 9,
       "distance": "moyen",
       "telephone": 1.5,
@@ -391,45 +348,39 @@
   ],
   "esquive": {
     "gain": -9,
-    "depuis": 2.7,
-    "jusqu_a": 7.65
+    "depuis": 1.2000000000000002,
+    "jusqu_a": 6.15
   },
   "sous_titres": [
     {
-      "texte": "RIFT ZERO FIVE",
-      "debut": 3.04,
-      "fin": 4.15,
-      "secousse": 8.0
-    },
-    {
-      "texte": "BREACH OPEN",
-      "debut": 4.45,
-      "fin": 5.6,
-      "secousse": 8.0
+      "texte": "RIFT 05: BREACH DETECTED",
+      "debut": 1.54,
+      "fin": 3.4,
+      "secousse": 8.0,
+      "couleur": "#00E5FF",
+      "halo": "#0090ff",
+      "taille": 56
     },
     {
       "texte": "THE SHADOW TITAN AWAKENS",
-      "debut": 5.8,
-      "fin": 7.55,
-      "secousse": 8.0
+      "debut": 3.7,
+      "fin": 6.05,
+      "secousse": 8.0,
+      "couleur": "#00E5FF",
+      "halo": "#0090ff",
+      "taille": 56
     }
   ],
   "titres": [
     {
-      "texte": "THE SHADOW TITAN:",
-      "debut": 16.1,
-      "fin": 18.25,
-      "y": 1040,
-      "taille": 66,
-      "secousse": 8.0
-    },
-    {
       "texte": "AZNAROTH",
-      "debut": 16.1,
-      "fin": 18.25,
-      "y": 1140,
-      "taille": 118,
-      "secousse": 8.0
+      "debut": 14.6,
+      "fin": 17.3,
+      "y": 1090,
+      "taille": 124,
+      "secousse": 9.0,
+      "couleur": "#00E5FF",
+      "halo": "#0090ff"
     }
   ],
   "finition": {
