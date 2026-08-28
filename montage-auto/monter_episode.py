@@ -559,6 +559,17 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         # `setpts` **après** tout ce qui régénère les horodatages, jamais avant :
         # `zoompan` les réécrit et annulerait le changement de vitesse.
         pass
+    if plan.get("rotation"):
+        # Une rotation lente et continue, en radians par seconde. `rotate`
+        # tourne autour du centre et remplit les coins ; on agrandit donc de
+        # racine de deux AVANT, sinon les angles noirs apparaissent des que
+        # l'image n'est plus droite — et sur un plan carre de runes, ce sont
+        # justement les coins qu'on regarde.
+        vitesse_rad = float(plan["rotation"])
+        filtre += (f",scale=iw*1.42:ih*1.42,"
+                   f"rotate='{vitesse_rad:.4f}*t':c=black@0,"
+                   f"crop=1080:1920")
+
     if plan.get("zoom"):
         # Une poussée d'échelle qui **accélère** : linéaire, elle s'entend comme
         # un travelling ; exponentielle, comme une chute. `zoompan` régénère les

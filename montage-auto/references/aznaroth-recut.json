@@ -77,8 +77,18 @@
       "nom": "sigil",
       "source": "rushes/Holographic_Sci_Fi_Symbol_Rotation2.mp4",
       "depart": 1.2,
-      "duree": 0.6,
-      "cible_db": -29.0
+      "duree": 0.85,
+      "cible_db": -29.0,
+      "rotation": 0.55,
+      "zoom": 0.3,
+      "flashs": [
+        {
+          "debut": 0.0,
+          "duree": 0.12,
+          "force": 0.35
+        }
+      ],
+      "_note": "les runes tournent au lieu d'etre plaquees. 0,85 s et non 0,6 : sous huit dixiemes une rotation ne se lit pas, elle se devine."
     },
     {
       "nom": "vortex",
@@ -309,7 +319,7 @@
     },
     {
       "son": "braam_massif",
-      "instant": 10.581,
+      "instant": 10.831,
       "gain": 10,
       "distance": "proche",
       "_note": "l'arrivee, sur l'attaque du rush — TAILLEE a 1,35 s. Le fichier en fait 3,4 : sa queue comblait de 11 dB le silence que le rush menage juste apres, et ce silence est la moitie de l'effet.",
@@ -331,7 +341,7 @@
     },
     {
       "son": "chute_pierres",
-      "instant": 12.631,
+      "instant": 12.881,
       "gain": 1,
       "distance": "lointain",
       "parametres": {
@@ -362,13 +372,13 @@
     },
     {
       "son": "riser_court",
-      "instant": 14.156,
+      "instant": 14.406,
       "gain": 4,
       "distance": "moyen"
     },
     {
       "son": "electricite",
-      "instant": 14.706,
+      "instant": 14.956,
       "gain": 13,
       "distance": "proche",
       "parametres": {
@@ -379,7 +389,7 @@
     },
     {
       "son": "eclat",
-      "instant": 14.726,
+      "instant": 14.976,
       "gain": 5,
       "distance": "proche",
       "parametres": {
@@ -390,7 +400,7 @@
     },
     {
       "son": "braam_double",
-      "instant": 15.771,
+      "instant": 16.021,
       "gain": 6,
       "distance": "proche",
       "enveloppe": {

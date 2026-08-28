@@ -110,7 +110,10 @@ def caler(recette: dict) -> tuple[dict, dict, list]:
     base = table["mage"] - float(mage.get("depart", 0.0))
     groupes = [(0.64, 1.29), (2.05, 2.73), (3.40, 4.73)]
     textes = ["RIFT ZERO FIVE", "BREACH OPEN", "THE SHADOW TITAN AWAKENS"]
-    sous_titres = [(txt, round(base + a - 0.15, 3), round(base + b - 0.10, 3))
+    # 0,30 s d'avance et non 0,15 : la BOUCHE s'ouvre avant que le son sorte,
+    # et c'est sur la bouche que l'oeil cale la synchronisation, pas sur
+    # l'oreille. Un sous-titre qui arrive avec le son arrive apres l'image.
+    sous_titres = [(txt, round(base + a - 0.30, 3), round(base + b - 0.10, 3))
                    for txt, (a, b) in zip(textes, groupes)]
     return recette, automation, sous_titres
 
