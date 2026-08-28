@@ -92,8 +92,23 @@ texte, une vive pour le halo :
 python3 scripts/teinte.py plan.mp4        # rend la teinte et deux couleurs
 ```
 
-Sur une série mesurée à 178–198° de teinte, le blanc a été remplacé par
-`#b4f2ff` avec un halo `#1fd8e6`, et les textes ont cessé de paraître collés.
+Sur une série mesurée à 178–198° de teinte, le blanc a cédé la place à
+`#3fd4ff` avec un halo `#0090ff`.
+
+**La couleur choisie n'est pas la couleur qui arrive.** Un premier essai à
+`#b4f2ff` mesurait **12 % de saturation à l'écran** — le contour noir et la
+compression délavent — et sous 20 % l'oeil lit simplement « blanc ». Il faut
+donc choisir nettement plus saturé que ce qu'on veut voir, et **le vérifier sur
+le rendu** :
+
+```bash
+ffmpeg -v error -ss <instant> -i film.mp4 -frames:v 1 image.png
+# puis mesurer la saturation des pixels du texte, pas celle de la constante
+```
+
+Le halo suit la même logique : à 0,55 d'opacité et 22 % d'épaisseur il ne se
+voyait pas, et un halo invisible ne détache rien — il coûte une passe de rendu
+pour rien. À 0,90 et 30 %, il fait son travail.
 
 ## Où les poser
 
