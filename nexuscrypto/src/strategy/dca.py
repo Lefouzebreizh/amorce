@@ -107,6 +107,62 @@ def multiplicateur(
     return borner(facteur, config.multiplicateur_min, config.multiplicateur_max), raisons
 
 
+def _replier(
+    motif: str,
+    *,
+    enveloppe_usd: float,
+    poids_actif: float,
+    facteur: float,
+    zone: Zone,
+    config: ConfigDCA,
+    raisons: list[str],
+) -> Enveloppe:
+    """Ce qu'on fait quand la valorisation dit non.
+
+    Deux comportements, et le réglage `plancher_enveloppe` choisit lequel.
+
+    À **zéro**, on temporise : rien n'est acheté et la trésorerie non dépensée
+    gonfle les achats futurs. C'était le seul comportement de la première
+    version, et le harnais de rejeu a montré ce qu'il coûte — sur une hausse
+    continue, la note technique étant contrarienne, elle stagne sous le plancher
+    d'achat pendant toute la période : **zéro ordre en 398 échéances**, pendant
+    qu'un DCA aveugle gagnait 8 %. Ce n'est plus une temporisation, c'est une
+    abstention, et pour un DCA — dont la promesse entière est de continuer
+    d'acheter — c'est le pire résultat possible.
+
+    Au-dessus de zéro, on achète cette fraction de l'enveloppe nominale. Le
+    montant ne dépend **pas** du multiplicateur de zone : le plancher existe
+    précisément pour les cas où ce multiplicateur vaut zéro, l'y rapporter le
+    ramènerait à zéro. C'est un plancher, pas une réduction.
+    """
+
+    nominal = enveloppe_usd * poids_actif
+    montant = nominal * config.plancher_enveloppe
+
+    if config.plancher_enveloppe <= 0.0 or montant < config.montant_minimum_usd:
+        raison = f"{motif} : montant reporté, trésorerie conservée"
+        if config.plancher_enveloppe > 0.0:
+            raison = (
+                f"{motif} : le plancher de {config.plancher_enveloppe:.0%} vaudrait "
+                f"{montant:.2f} $, sous le minimum de {config.montant_minimum_usd:g} $"
+            )
+        return Enveloppe(
+            action=Action.TEMPORISER, montant_usd=0.0, multiplicateur=facteur,
+            zone=zone, raisons=tuple(raisons + [raison]),
+        )
+
+    return Enveloppe(
+        action=Action.ACHETER, montant_usd=montant,
+        multiplicateur=config.plancher_enveloppe, zone=zone,
+        raisons=tuple(
+            raisons + [
+                f"{motif} : plancher de discipline à {config.plancher_enveloppe:.0%} "
+                "de l'enveloppe — un DCA ne cesse jamais complètement d'acheter"
+            ]
+        ),
+    )
+
+
 def planifier(
     *,
     enveloppe_usd: float,
@@ -129,20 +185,18 @@ def planifier(
         )
 
     if score.total < config.score_minimum_achat:
-        return Enveloppe(
-            action=Action.TEMPORISER, montant_usd=0.0, multiplicateur=facteur, zone=zone,
-            raisons=tuple(
-                raisons + [
-                    f"indice {score.total:.0f} sous le plancher d'achat "
-                    f"{config.score_minimum_achat:.0f} : montant reporté"
-                ]
-            ),
+        return _replier(
+            f"indice {score.total:.0f} sous le plancher d'achat "
+            f"{config.score_minimum_achat:.0f}",
+            enveloppe_usd=enveloppe_usd, poids_actif=poids_actif, facteur=facteur,
+            zone=zone, config=config, raisons=raisons,
         )
 
     if facteur <= 0.0:
-        return Enveloppe(
-            action=Action.TEMPORISER, montant_usd=0.0, multiplicateur=0.0, zone=zone,
-            raisons=tuple(raisons + ["multiplicateur nul : achat reporté, trésorerie conservée"]),
+        return _replier(
+            "multiplicateur nul",
+            enveloppe_usd=enveloppe_usd, poids_actif=poids_actif, facteur=0.0,
+            zone=zone, config=config, raisons=raisons,
         )
 
     if montant < config.montant_minimum_usd:

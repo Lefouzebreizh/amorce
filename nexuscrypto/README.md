@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 243 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 251 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **243 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **251 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -234,7 +234,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 243 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 251 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -288,7 +288,7 @@ sur son glissement forfaitaire au lieu de parcourir un carnet. Sur Bitcoin
 l'écart est négligeable ; **sur une pépite peu liquide, le rejeu est optimiste,
 et il l'est en silence.**
 
-### Ce que le rejeu a déjà trouvé, et qui n'est pas corrigé
+### Ce que le rejeu a trouvé, et comment il l'a corrigé
 
 **La stratégie n'achète rien du tout dans une hausse continue.** Mesuré sur le
 scénario « hausse continue » (×3 sur la période) : **zéro ordre, 398 échéances
@@ -305,13 +305,28 @@ pire résultat possible : ce n'est pas de la prudence, c'est une panne de
 discipline. Le verdict de `profils.py` le dit en toutes lettres et compte
 l'abstention comme un échec, jamais comme un match nul.
 
-**Ce n'est pas corrigé, délibérément.** Trancher entre « on n'achète pas ce
-qu'on juge cher » et « on achète toujours un plancher, quoi qu'il arrive » est
-une décision d'investissement, pas un correctif technique. Les deux pistes,
-pour quand la question sera tranchée :
+**Corrigé par un plancher de discipline**, dont la valeur est *mesurée* et non
+choisie. Quand la valorisation dit non — score sous le seuil, ou multiplicateur
+de zone à zéro — le DCA achète malgré tout `plancher_enveloppe` × l'enveloppe
+nominale. Le balayage sur les six marchés :
 
-- un **plancher d'enveloppe** — le DCA passe toujours au moins *x* % du montant
-  prévu, même sous le seuil de score ;
-- un **score relatif à la tendance** — mesurer le prix contre sa propre moyenne
-  récente plutôt que contre l'EMA 200, pour qu'une hausse régulière cesse
-  d'être lue comme une surchauffe permanente.
+| plancher | abstentions | gain moyen vs DCA aveugle |
+| --- | --- | --- |
+| 0 % | **1/6** | +13,9 % |
+| **15 %** | **0/6** | **+13,0 %** |
+| 25 % | 0/6 | +12,2 % |
+| 40 % | 0/6 | +11,1 % |
+
+15 % est la plus petite valeur qui supprime l'abstention, et elle coûte 0,9
+point de performance relative. Le montant du plancher **ne dépend pas** du
+multiplicateur de zone : l'y rapporter le ramènerait à zéro en avidité extrême,
+c'est-à-dire exactement là où on en a besoin. C'est un plancher, pas une
+réduction.
+
+`test_la_configuration_livree_achete_sur_les_six_marches` verrouille la
+correction : si un réglage futur ramène une abstention totale, il échoue là et
+non trois mois plus tard sur un relevé.
+
+La piste non retenue, si le sujet revient : un **score relatif à la tendance** —
+mesurer le prix contre sa propre moyenne récente plutôt que contre l'EMA 200,
+pour qu'une hausse régulière cesse d'être lue comme une surchauffe permanente.

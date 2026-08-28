@@ -1170,55 +1170,6 @@ posée sur `subprocess.run`, alors que la résolution du binaire se fait **avant
 pour construire la commande. Doubler l'exécution ne suffit pas ; il faut doubler
 la résolution.
 
-## Un morph mange du temps : la ligne de temps se relève, elle ne se déduit pas
-
-Quatre plans de 2,2 + 2,8 + 3,2 + 5,2 s ne font pas 13,4 s de film mais **11,3**.
-Chaque raccord sans coupe consomme la fin du plan sortant *et* le début de
-l'entrant : trois morphs de 0,7 s ont retiré deux secondes.
-
-Ce n'est pas une curiosité d'arithmétique, c'est ce qui décide où tombent les
-titres et les bruitages. Calés sur les durées additionnées, le cri du titan et
-la carte de fin tombaient **hors du film** — rendus, payés, jamais vus. Rien ne
-le signale : le montage sort sans erreur, simplement amputé de sa fin.
-
-**Rendre une première fois, relever les bornes réelles sur le rendu, puis caler
-le son et les textes.** Dans l'autre sens on écrit à l'aveugle.
-
-## Le relief d'un montage vient des bruitages, pas des niveaux de plan
-
-Un montage à 4,8 dB d'écart s'entend plat. Le réflexe — creuser les `cible_db`
-de chaque plan — a été essayé et **mesuré sans effet** : cibles abaissées de six
-décibels, relief inchangé. La couche d'effets écrase les plans.
-
-Ce qui déplace le chiffre est ailleurs : **étager les gains des bruitages**.
-Chuchoter à l'ouverture pour que le climax existe. Le même montage, effets
-étagés de −6 dB à l'accroche à +5 dB au climax : **10,3 dB de relief**, sans
-qu'aucun plan ait bougé.
-
-La règle générale, et elle est contre-intuitive : dans un montage sonorisé,
-l'ouverture doit être **plus silencieuse qu'on ne le croit**. Un braam à pleine
-puissance sur la première image ne fait pas un début fort — il supprime le
-climax, faute d'écart.
-
-## Une apostrophe dans un titre casse ffmpeg, et le message ment
-
-`text='IL S\'EST RÉVEILLÉ'` fait échouer le rendu sur **« No such filter:
-'0.25' »** — un nombre qui n'apparaît nulle part dans le texte, et qui sort de
-l'expression `alpha` écrite cent caractères plus loin.
-
-La cause : ffmpeg n'interprète **aucune séquence d'échappement à l'intérieur**
-d'un argument entre apostrophes simples. Le `\` y est un caractère ordinaire,
-la quote referme le champ, et la suite est relue comme des options de filtre.
-La seule forme qui marche ferme, insère et rouvre : `'\''`.
-
-Deux enseignements qui dépassent ce bug :
-
-- **Un message d'erreur qui nomme une valeur absente du contenu fautif désigne
-  presque toujours une frontière de citation mal fermée.** Chercher le texte
-  cité, pas le nombre affiché.
-- **Le test de non-régression porte sur la chaîne produite, jamais sur un appel
-  à ffmpeg.** Le runner n'a pas le binaire ; un test qui l'exige est vert en
-  session et rouge chez tout le monde.
 ## Un livrable conforme peut être le défaut
 
 Une vidéo sortait à −14 LUFS avec 12 LU de dynamique : les cibles de diffusion,
@@ -1495,71 +1446,70 @@ et c'est pour cela qu'il fait partie des trois relevés avant envoi.
 décodé ni sur celle du conteneur. On complète l'audio par du silence, jamais on
 ne raccourcit l'image.
 
-## Un contrôle vert ne dit pas qu'un fichier est regardable
+## Un rush porte souvent déjà sa bande son — la doubler la détruit
 
-L'export d'Amorce enregistre le canvas **en temps réel** : le fichier ne reçoit
-que les images réellement composées pendant la lecture. Composer une image en
-1080 × 1920 coûte environ 213 ms sur une machine de bureau — donc le fichier
-livré reçoit cinq images par seconde au lieu de trente.
+Une scène de dragon décrite comme « horrible, ça sature complètement, on
+n'entend que les éclairs ». Trois versions de rééquilibrage n'y avaient rien
+changé, parce que le défaut n'était pas dans les niveaux.
 
-**Le défaut a vécu toute la vie du projet sans que rien ne le voie.** Quatre
-contrôles portaient pourtant sur l'export, et tous restaient verts : la durée
-était bonne, la définition était bonne, l'image n'était pas noire, le son était
-là. Aucun ne comptait les images.
+Le spectrogramme l'a montré d'un coup : **six secondes de courbe plate**, −11 à
+−14 dB sans un seul événement, sous un voile large bande qui ne s'arrêtait
+jamais. Ce voile est ce qu'on entend comme une saturation.
 
-Mesuré à la découverte : **35 images pour 7,5 secondes** sur la machine de
-vérification, **9** sur un processeur bridé quatre fois. Un diaporama.
+Puis le geste qui a tout renversé : **dessiner le rush seul**. Il portait une
+construction complète — arrivée, silence, montée, creux, éclair, rugissement —
+et **19,6 dB de dynamique**. Un travail de sound design déjà fait.
 
-Trois choses en découlent :
+Relevé instant par instant, mes accents tombaient tous à côté :
 
-- **Vérifier ce qui définit le média, pas seulement ce qui l'identifie.** Durée,
-  taille et présence de son décrivent un conteneur ; la cadence, le niveau et le
-  relief décrivent ce qu'on regarde. Un fichier peut être parfaitement conforme
-  et illisible.
-- **Chercher d'abord si le défaut est ancien.** Deux commandes — reprendre le
-  commit d'avant, refaire la mesure — évitent de corriger ce qu'on n'a pas
-  cassé. Ici : 27 images avant les optimisations, 35 après.
-- **Une suite rouge en permanence apprend à ignorer la suite.** Quand le
-  correctif dépasse la session, on affiche la mesure à chaque passage plutôt que
-  de laisser un contrôle échouer sans fin. Le jour où le correctif arrive, la
-  ligne redevient un contrôle.
+| ce que fait le rush | où j'avais posé mon accent |
+| --- | --- |
+| l'arrivée | juste |
+| le silence de 1,05 s | comblé par des nappes continues |
+| son éclair | 1,05 s trop tôt |
+| **son rugissement** | mon cri 1,2 s AVANT |
 
-Ce qu'il faudrait pour le corriger, et pourquoi ce n'est pas une demi-journée :
-un encodage **hors ligne**, donc décoder les rushes avec `VideoDecoder` au lieu
-de les lire dans un élément `<video>` — ce qui suppose un démultiplexeur, aucune
-API du navigateur ne le faisant. Piloter les `<video>` image par image n'est pas
-une issue : mesuré à **265 ms par déplacement séquentiel**, soit 2,6 minutes
-pour un film de vingt secondes.
+Deux demi-scènes qui se masquaient au lieu d'une. Recalés sur ses instants —
+et surtout **rien** dans ses silences — la scène rend 19,0 dB de dynamique
+contre 19,6 au rush seul.
 
-## La cadence annoncée d'un rush n'est pas celle de son mouvement
+**Avant d'ajouter du son sur un plan, dessiner le son qu'il a déjà.** S'il en a
+un, on ne le double pas : on le renforce sur ses propres instants, et on se
+tait dans ses silences. Un silence dans un rush est une décision, pas un trou.
 
-Un plan généré annonce 30 images par seconde et n'en bouge réellement que 20 :
-une image sur deux y est figée d'origine, avec juste assez de bruit d'encodage
-pour n'être pas un doublon exact. Rien ne le signale — le fichier est conforme,
-`ffprobe` répond 30, et le défaut ne se voit qu'en mouvement rapide.
+## Avec `vitesse`, `duree` compte en secondes source
 
-**La mesure tient en dix lignes** et vaut avant tout montage : décoder en gris
-réduit, calculer l'écart moyen entre images consécutives, compter celles qui
-tombent sous 20 % de cet écart. Relevé sur un même rush : 20 i/s réels sur un
-plan de visage, 24 sur un vortex, 27 sur une créature.
+Un plan à `vitesse: 1.8` et `duree: 2.8` ne rend pas 2,8 s : il consomme 2,8 s
+de source et en rend **1,56**. À `0.8`, la même `duree` en rend 9,06 — ou moins
+si la source s'épuise avant.
 
-**Et le piège coûte cher : conformer le film à la cadence *annoncée* double la
-saccade.** Du 20 i/s rendu à 30 donne une image doublée sur deux ; rendu à 24,
-une sur cinq. Mesuré sur le même plan :
+Conséquence mesurée : tous les accents du plan suivant posés 1,24 s trop tard,
+c'est-à-dire chacun dans le creux de l'événement qu'il devait souligner. Et
+rien ne le signale : le montage se rend, la vérification passe, le fichier est
+faux.
 
-| cadence du film | images figées | irrégularité |
-| --- | --- | --- |
-| 30 i/s | 22 % | 68 % |
-| **24 i/s** | **13 %** | **51 %** |
+**On calcule la frise, on n'en suppose rien** — surtout dès qu'un plan change de
+vitesse, et surtout quand la source risque de s'épuiser.
 
-Le réflexe — « la source est à 30, rendons à 30 » — est donc exactement le
-mauvais. **On aligne sur le mouvement réel, pas sur l'étiquette.**
+## Un carton de fin trop fort n'a l'air fort nulle part
 
-Ce qui ne marche pas, et qui a été essayé : `minterpolate` vise une cadence et
-ne détecte pas les images figées — sans effet mesurable à 30 comme à 60.
-`mpdecimate` ne les attrape pas davantage, les doublons n'étant pas exacts,
-même à seuil desserré quatre fois. La seule correction réelle est en amont :
-régénérer le plan à la cadence qu'il prétend avoir.
+Le carton d'annonce sortait à −17 dB moyen. Écouté seul : correct. Mesuré sur
+le film entier : il relevait le plancher au point de faire tomber la plage de
+dynamique de **21,4 à 9,8 LU**.
+
+Un carton n'a pas de niveau propre. Il en a un **par rapport au climax** — une
+dizaine de décibels dessous. Le juger sur lui-même, c'est juger une virgule
+sans la phrase.
+
+## Un son de carton se calcule dans le repère du carton
+
+Six sons posés aux instants absolus du film ressortaient à −45 dB : ils
+tombaient hors de la tranche découpée ensuite. La durée annoncée du montage,
+celle du flux vidéo et celle du flux audio diffèrent de quelques centièmes, et
+cet écart suffit.
+
+**Ce qui est monté à part se calcule à partir de zéro.** Un repère local ne peut
+pas se décaler.
 
 ## Un analyseur paresseux et un analyseur gourmand passent les mêmes tests
 

@@ -152,7 +152,14 @@ echo "── Chaîne de montage : bibliothèques Python"
 # s'il y a un GPU avant de lancer Wav2Lip — et Wav2Lip lui-même est un dépôt à
 # cloner, avec ses propres dépendances. La voix off, elle, ne demande que ces
 # deux paquets-là et fonctionne dès le démarrage de la session.
-python3 -m pip install --quiet --break-system-packages elevenlabs tqdm
+#
+# `scipy` est le troisième, et son absence ici rendait la barrière menteuse :
+# `bruitages.py` l'importe au chargement du module, donc trois suites de
+# `montage-auto` tombent sur un `ModuleNotFoundError` dans toute session
+# distante — alors que la CI, elle, est verte, `.github/requirements-tests.txt`
+# le listant depuis toujours. Un rouge local sur un projet qu'on n'a pas touché
+# coûte le temps de comprendre qu'il ne vient pas de soi.
+python3 -m pip install --quiet --break-system-packages elevenlabs tqdm scipy
 
 echo "── Extraction multiformat : bibliothèques Python"
 # Ce que `/extraction-multiformat` et `/transcription-media` ne peuvent pas

@@ -986,6 +986,12 @@ def _enveloppe(son: numpy.ndarray, forme: dict) -> numpy.ndarray:
       tout au debut, puis tient. Sans lui l'attaque seule ne s'entend pas.
     - `chute`    : extinction sur la fin, comptee depuis la queue.
     """
+    # « coupe » taille le son avant tout le reste : les temps qui suivent
+    # (chute notamment) se comptent alors sur la longueur voulue et non sur
+    # celle du fichier d'origine.
+    if forme.get("coupe"):
+        n = min(len(son), int(float(forme["coupe"]) * TAUX))
+        son = son[:n]
     n = len(son)
     t = numpy.arange(n) / TAUX
     duree = n / TAUX

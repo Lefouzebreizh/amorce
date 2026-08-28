@@ -149,15 +149,25 @@ def _hms(t: float) -> str:
 
 def ecrire_ass(repliques: list[Replique], sortie: Path,
                largeur: int = 1080, hauteur: int = 1920,
-               police: str = "Montserrat ExtraBold", taille: int = 64,
+               police: str = "Anton", taille: int = 64,
                vive: str = "#00E5FF", eteinte: str = "#FFFFFF",
-               marge_basse: int = 300, contour: int = 6) -> Path:
+               marge: int = 300, en_haut: bool = False,
+               contour: int = 6, lueur: float = 3.0) -> Path:
     """Écrit un ASS où le mot en cours s'allume en cyan.
 
     Deux styles et non un : le mot courant en `Vif`, les autres en `Dormant`.
     Chaque mot devient une ligne `Dialogue` de sa propre durée, positionnée par
-    `\\an2` et la marge basse — pas de `\\pos` absolu, sinon le texte sort du
+    l'alignement et la marge — pas de `\\pos` absolu, sinon le texte sort du
     cadre dès qu'on change de définition.
+
+    `en_haut` bascule sur `\\an8`, et `marge` se compte alors depuis le HAUT :
+    c'est ce qui permet de viser une hauteur en pourcentage de l'image, là où
+    les plateformes posent leurs propres bandeaux en bas.
+
+    `lueur` est un `\\blur` posé sur le contour. C'est la seule façon d'obtenir
+    en ASS ce que `drawtext` fait par une passe supplémentaire : un contour net
+    détache le texte du fond, un contour flou l'ILLUMINE — et c'est le second
+    effet qu'on cherche sur un fond sombre et chargé.
     """
     sortie = Path(sortie)
     entete = [
@@ -175,12 +185,24 @@ def ecrire_ass(repliques: list[Replique], sortie: Path,
         "Alignment, MarginL, MarginR, MarginV, Encoding",
         f"Style: Vif,{police},{taille},{ass_couleur(vive)},{ass_couleur(vive)},"
         f"{ass_couleur('#000000')},{ass_couleur('#000000', 128)},"
-        f"-1,0,0,0,100,100,1,0,1,{contour},2,2,60,60,{marge_basse},1",
+        f"-1,0,0,0,100,100,1,0,1,{contour},2,{8 if en_haut else 2},60,60,{marge},1",
+        # La LUEUR est une troisieme ligne, dessinee derriere les deux autres :
+        # un contour epais, de la couleur vive, flou et a demi transparent.
+        # `\\blur` pose sur le texte lui-meme ne fait que le rendre mou — il
+        # floute le remplissage autant que le contour. Une auréole se fabrique
+        # en dessinant DEUX FOIS : une copie large et floue dessous, le texte
+        # net dessus. C'est exactement ce que fait la triple passe `drawtext`
+        # du moteur, transposee au format ASS.
+        f"Style: Lueur,{police},{taille},{ass_couleur(vive, 255)},"
+        f"{ass_couleur(vive, 255)},{ass_couleur(vive, 40)},"
+        f"{ass_couleur(vive, 255)},"
+        f"-1,0,0,0,100,100,1,0,1,{max(6, contour * 3)},0,"
+        f"{8 if en_haut else 2},60,60,{marge},1",
         f"Style: Dormant,{police},{taille},{ass_couleur(eteinte, 60)},"
         f"{ass_couleur(eteinte, 60)},{ass_couleur('#000000')},"
         f"{ass_couleur('#000000', 160)},"
-        f"-1,0,0,0,100,100,1,0,1,{max(2, contour - 2)},2,2,60,60,"
-        f"{marge_basse},1",
+        f"-1,0,0,0,100,100,1,0,1,{max(2, contour - 2)},2,"
+        f"{8 if en_haut else 2},60,60,{marge},1",
         "",
         "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, "
@@ -201,12 +223,17 @@ def ecrire_ass(repliques: list[Replique], sortie: Path,
                 mot = mot.replace("{", "(").replace("}", ")")
                 if j == i:
                     morceaux.append(
-                        r"{\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}"
-                        + mot)
+                        f"{{\\rVif\\fscx112\\fscy112"
+                        f"\\t(0,90,\\fscx100\\fscy100)}}" + mot)
                 else:
                     morceaux.append(r"{\rDormant}" + mot)
+            phrase_nue = " ".join(m.replace("{", "(").replace("}", ")")
+                                  for m in phrase)
             lignes.append(
-                f"Dialogue: 0,{_hms(debut)},{_hms(fin)},Vif,,0,0,0,,"
+                f"Dialogue: 0,{_hms(debut)},{_hms(fin)},Lueur,,0,0,0,,"
+                f"{{\\blur{lueur * 3:.1f}}}{phrase_nue}")
+            lignes.append(
+                f"Dialogue: 1,{_hms(debut)},{_hms(fin)},Vif,,0,0,0,,"
                 + " ".join(morceaux))
     sortie.write_text("\n".join(entete + lignes) + "\n", encoding="utf-8")
     return sortie
