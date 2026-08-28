@@ -105,6 +105,28 @@ Et `next dev` refuse de servir `/_next/` à `127.0.0.1`, qu'il tient pour une
 origine tierce : la page se charge, son code non, les champs se remplissent et
 React ne les voit pas. **Piloter par `http://localhost:3000`.**
 
+## IPTV / VOD — `iptv/`
+
+```bash
+cd iptv
+npm test && npm run check
+```
+
+Les deux partent ensemble dans `verifier.sh`. Ni lint ni build : le projet n'a
+pas encore d'interface, et annoncer une étape qui n'existe pas rendrait le
+verdict faux.
+
+Ce qu'elles **ne voient pas** : le dialogue avec un vrai panneau Xtream et une
+vraie liste. Les tests injectent `fetch` et ne touchent pas au réseau — c'est ce
+qui les rend rejouables partout, et c'est aussi leur limite. Xtream Codes n'a
+pas de spécification publiée : le premier branchement sur un abonnement réel est
+le seul moment où l'on saura si un champ manque. Commencer par
+`verifierCompte()`, qui dit en un appel si les identifiants passent.
+
+Et pour éprouver l'analyseur sur du volume, lui donner une vraie liste plutôt
+qu'une courte : c'est la tenue en mémoire qui se mesure, pas le nombre
+d'entrées.
+
 ## Réseau d'annuaires IA — `annuaire-ia/`
 
 ```bash
@@ -292,7 +314,7 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 243 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 251 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 profils.py                       # l'effet des réglages sur six marchés connus
 ```

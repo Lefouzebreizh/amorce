@@ -83,6 +83,7 @@ while IFS= read -r f; do
     look_and_find/*) inscrire flutter ;;
     hypersensible-bienveillance/*) inscrire hypersensible ;;
     titan-builder/*) inscrire titan ;;
+    iptv/*)          inscrire iptv ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
                      inscrire amorce ;;
   esac
@@ -199,6 +200,17 @@ lancer_titan() {
   return $e
 }
 
+lancer_iptv() {
+  local d="iptv"; local j="$journal/iptv"; local e=0
+  # Deux étapes, et pas de build : le projet est une bibliothèque sans interface.
+  # Elles ne se lisent pas l'une l'autre, donc elles partent ensemble.
+  ( cd "$d" || exit 1; etape "$j.test"  "tests" npm test ) & local a=$!
+  ( cd "$d" || exit 1; etape "$j.check" "types" npm run check ) & local b=$!
+  wait $a || e=1; wait $b || e=1
+  cat "$j".{test,check} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_flutter() {
   local j="$journal/flutter"; local e=0
   if ! command -v flutter >/dev/null 2>&1; then
@@ -230,6 +242,7 @@ for p in $projets; do
     flutter) lancer_flutter & pid_de[flutter]=$! ;;
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     titan)   lancer_titan & pid_de[titan]=$! ;;
+    iptv)    lancer_iptv  & pid_de[iptv]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
   esac
 done
@@ -250,6 +263,7 @@ nom_lisible() {
     flutter) echo "Look & Find" ;;
     hypersensible) echo "Hypersensible & Bienveillance" ;;
     titan)   echo "TITAN Builder" ;;
+    iptv)    echo "IPTV / VOD" ;;
     py:*)    echo "${1#py:}" ;;
   esac
 }
@@ -303,6 +317,12 @@ case " $projets " in
     echo "  • le quota des cinq analyses, le radar et la tournée de veille :"
     echo "    npm run db:init, npm run preview, npm run cron — rien de tout cela"
     echo "    ne tourne sous astro dev, seul wrangler sert les Pages Functions" ;;
+esac
+case " $projets " in
+  *" iptv "*)
+    echo "  • le dialogue avec un vrai panneau Xtream et une vraie liste : les"
+    echo "    tests injectent fetch et ne touchent pas au réseau, et Xtream"
+    echo "    Codes n'a aucune spécification publiée à leur opposer" ;;
 esac
 case " $projets " in
   *" py:kdp "*)

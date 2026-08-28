@@ -1,0 +1,30 @@
+{
+  // `erasableSyntaxOnly` est le réglage qui tient tout le projet : il interdit
+  // la syntaxe TypeScript que Node ne sait pas retirer seul — `enum`,
+  // `namespace`, les propriétés déclarées dans les paramètres du constructeur.
+  // Sans lui, `npm test` casserait des mois plus tard, sur un fichier écrit
+  // entre-temps, avec un message qui ne désigne pas la cause.
+  //
+  // Pas de `lib: DOM` : les types de `fetch`, `Response` et `ReadableStream`
+  // viennent de `@types/node`, et déclarer les deux fait entrer en collision
+  // deux définitions du même nom.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
+}

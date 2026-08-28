@@ -81,6 +81,11 @@ def _arguments() -> argparse.ArgumentParser:
         help="rejouer les six marchés fabriqués au lieu d'un CSV",
     )
     rejeu.add_argument("--sortie", default=None, help="écrire un rapport Markdown")
+    rejeu.add_argument(
+        "--leviers", default=None,
+        help="compter les liquidations qu'auraient subies ces leviers, ex. « 1,2,3,5,10 ». "
+             "Mesure seulement : aucun ordre n'est jamais passé à levier.",
+    )
 
     return analyseur
 
@@ -163,16 +168,67 @@ async def _pepites(config, requete: str) -> int:
     return 0
 
 
+def _synthese_levier(mesure, leviers, series) -> str:
+    """Un scénario par ligne, et le levier maximal qu'il aurait laissé passer.
+
+    Le tableau détaillé n'a de sens que sur une série réelle. Sur six marchés
+    fabriqués, ce qu'on veut lire est le **pire** d'entre eux : un levier ne se
+    choisit pas sur le marché qui l'arrange, il se choisit sur celui qui le tue.
+    """
+
+    lignes = ["### Levier — six marchés fabriqués", "",
+              "| marché | levier maximal sans liquidation | pire excursion d'une position |",
+              "|---|---|---|"]
+    maximums = []
+    for nom, resultat, serie in series:
+        verdicts = mesure.analyser(resultat, serie, leviers)
+        if mesure.sans_matiere(verdicts):
+            lignes.append(f"| {nom} | *aucune position — rien mesuré* | — |")
+            continue
+        maximum = mesure.levier_maximal(verdicts)
+        maximums.append(maximum if maximum is not None else 0.0)
+        lots = mesure.positions(resultat, serie)
+        pire = max((p.excursion for p in lots), default=0.0)
+        libelle = f"{maximum:g}x" if maximum else "aucun"
+        lignes.append(f"| {nom} | {libelle} | −{pire * 100:.1f} % |")
+
+    lignes.append("")
+    if not maximums:
+        lignes.append("**Aucun marché n'a ouvert de position — ce tableau ne dit rien du levier.**")
+        return "\n".join(lignes)
+    pire = min(maximums)
+    if pire <= 1.0:
+        lignes.append("**Le pire de ces marchés ne laisse passer aucun levier.** "
+                      "Un levier réglé sur la moyenne des six serait liquidé par le septième.")
+    else:
+        lignes.append(f"**Le pire de ces marchés plafonne à {pire:g}x.** "
+                      "C'est ce nombre-là qui compte, pas la moyenne : on ne choisit pas "
+                      "le marché dans lequel on se trouvera.")
+    return "\n".join(lignes)
+
+
 def _rejeu(config, arguments) -> int:
     """Rejeu sur données passées. **Aucun réseau** : c'est ce qui permet de
     régler la stratégie sur une machine hors ligne, et de le faire vite."""
 
+    from src.rejeu import levier as mesure_levier
     from src.rejeu import rapport as mise_en_forme
     from src.rejeu.donnees import DonneesIllisibles, lire_csv, lire_fear_greed, scenarios
     from src.rejeu.rejeu import rejouer, rejouer_scenario
 
+    leviers = None
+    if arguments.leviers:
+        try:
+            leviers = tuple(sorted(float(x) for x in arguments.leviers.split(",") if x.strip()))
+        except ValueError:
+            print("❌ --leviers attend des nombres séparés par des virgules, ex. 1,2,3,5,10",
+                  file=sys.stderr)
+            return 2
+        if not leviers:
+            leviers = mesure_levier.LEVIERS_PAR_DEFAUT
+
     if arguments.profils or not arguments.csv:
-        lignes, details, comparaisons = [], [], []
+        lignes, details, comparaisons, series = [], [], [], []
         for scenario in scenarios():
             dynamique, temoin = rejouer_scenario(config, scenario)
             lignes.append((
@@ -183,9 +239,13 @@ def _rejeu(config, arguments) -> int:
             ))
             details.append(mise_en_forme.rapport_scenario(scenario, dynamique, temoin))
             comparaisons.append((scenario.nom, dynamique, temoin))
+            series.append((scenario.nom, dynamique, scenario.serie))
         print(mise_en_forme.tableau(lignes))
         print()
         print(mise_en_forme.verdict(comparaisons))
+        if leviers:
+            print()
+            print(_synthese_levier(mesure_levier, leviers, series))
         if not arguments.csv:
             print("\n(marchés fabriqués — `--csv` pour rejouer des données réelles)")
         contenu = "\n\n".join(details)
@@ -203,6 +263,12 @@ def _rejeu(config, arguments) -> int:
         ligne = mise_en_forme.ligne_comparaison(dynamique, temoin, moyen_marche)
         print(mise_en_forme.tableau([(arguments.symbole, ligne)]))
         print()
+        if leviers:
+            print()
+            print(mesure_levier.tableau(
+                mesure_levier.analyser(dynamique, serie, leviers), arguments.symbole
+            ))
+            print()
         if not indices:
             # Sans historique d'indice, la famille sentiment est absente et le
             # scoring redistribue son poids. Le résultat reste lisible, mais il

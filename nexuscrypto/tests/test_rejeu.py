@@ -216,6 +216,33 @@ class TestScenarios(unittest.TestCase):
         self.assertTrue(temoin.executions)
 
 
+class TestAucuneAbstention(unittest.TestCase):
+    """Le garde-fou de la découverte du harnais.
+
+    Sans plancher de discipline, la configuration livrée produisait **zéro
+    ordre sur 398 échéances** dans une hausse continue. Ce test verrouille la
+    correction : si un réglage futur ramène une abstention totale sur l'un des
+    six marchés, il échoue ici et non trois mois plus tard sur un relevé.
+    """
+
+    def test_la_configuration_livree_achete_sur_les_six_marches(self):
+        muets = []
+        for scenario in scenarios():
+            dynamique, temoin = rejouer_scenario(config(), scenario)
+            if not dynamique.achats and temoin.achats:
+                muets.append(scenario.nom)
+        self.assertEqual(
+            muets, [],
+            "abstention totale — un DCA ne cesse jamais complètement d'acheter",
+        )
+
+    def test_le_plancher_livre_est_celui_qui_a_ete_mesure(self):
+        """15 % est la plus petite valeur qui supprime l'abstention. La changer
+        sans rejouer `profils.py`, c'est régler à l'aveugle."""
+
+        self.assertAlmostEqual(config().strategie.dca.plancher_enveloppe, 0.15)
+
+
 class TestLectureCSV(unittest.TestCase):
     def _ecrire(self, dossier: Path, lignes: list[list], entete: bool = True) -> Path:
         chemin = dossier / "donnees.csv"

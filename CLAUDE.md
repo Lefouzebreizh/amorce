@@ -14,6 +14,22 @@ Agents parallèles et `TodoWrite` quand la tâche le mérite — pas par défaut
 cinq agents sur une tâche simple brûlent la fenêtre hebdomadaire. `/jauge` avant
 un gros lot.
 
+**Jamais de temps mort.** Tant qu'il reste quelque chose à faire avancer, on
+avance : on ouvre la PR, on fusionne, on prend la suivante. Un doute ne suspend
+pas le travail — on le nomme en une phrase, on choisit la meilleure option, et
+on continue. Rendre la main pour faire valider un détail coûte un aller-retour
+depuis un téléphone, et pendant ce temps rien n'avance.
+
+On ne s'arrête que pour les trois exceptions ci-dessus, ou quand la suite dépend
+d'une réponse que **seul** le propriétaire peut donner et qu'aucune hypothèse
+raisonnable ne remplace — une décision de produit, un accès qu'on n'a pas, une
+mesure qui ne peut venir que de son appareil. Dans ce cas on pose la question
+**et on part sur autre chose** dans le même message : la question ne bloque
+jamais le reste du chantier.
+
+Un compte rendu se donne au passé, sur ce qui est fusionné. « Je vais faire »
+n'est pas un compte rendu, c'est une pause.
+
 ## 1. ADN
 
 - **Cap** : l'humain donne la direction, l'outil accélère le chemin.
@@ -66,6 +82,32 @@ et ce qui se recopie tel quel dans `kits/`. Le jour même : le lendemain on se
 souvient du correctif et plus de la cause, et c'est la cause qui vaut. Fil qui
 s'alourdit → `/relais`.
 
+**Et le moment est fixé : on écrit avant de s'arrêter, pas quand on y pense.**
+Ce fichier disait où la mémoire vit et jamais quand elle s'écrit — alors elle
+s'écrivait quand le fil était calme, c'est-à-dire rarement, et jamais après une
+séance dense, qui est précisément celle qui avait le plus à dire.
+
+La règle vaut pour **toutes les discussions**, sans exception : dès qu'une
+séance s'arrête — travail livré, sujet changé, fil qui se ferme — ce qu'elle a
+appris est écrit **avant** le dernier message. Trois choses, et trois
+seulement :
+
+1. **Ce qu'on a mesuré** et que personne n'avait mesuré : un hôte refusé, un
+   seuil qui change un résultat, une commande qui rend autre chose que prévu.
+   Le nombre, pas l'impression.
+2. **Ce qui a coûté un aller-retour** : le piège, avec sa cause. Pas « attention
+   à X », mais pourquoi X se comporte ainsi.
+3. **Ce qui rend une phrase de ce dépôt fausse.** C'est le plus important et le
+   plus oublié : une règle périmée est pire qu'une règle absente, parce qu'on la
+   suit.
+
+Ce qui ne s'écrit pas : le récit de la séance, ce que le dépôt dit déjà, et une
+leçon qu'on n'a pas mesurée. Un fichier qui grossit de tout ce qui s'est passé
+cesse d'être lu, et la mémoire meurt de son propre poids.
+
+Le résumé de reprise ne compte pas : il est lu une fois. **Le dépôt transporte
+la mémoire, le résumé ne transporte que l'état.**
+
 ## 4. STACK
 
 Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
@@ -95,12 +137,27 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   mode papier est le défaut, le mode réel demande deux gestes. `profils.py`
   rejoue six marchés fabriqués et compare la stratégie à un DCA aveugle : un
   réglage se juge sur son effet, pas sur son intention.
+  **Le levier se mesure, il ne s'exécute pas** : `rejeu --leviers 1,2,3,5,10`
+  compte les liquidations qu'un compte à levier aurait subies, et le courtier
+  ne connaît toujours pas le mot. Une option de levier posée dans le chemin
+  d'ordre serait utilisée avant d'avoir été mesurée.
+  **Aucune vérification de contrat** — ni GoPlus, ni honeypot.is, ni RugCheck :
+  `src/strategy/pepites.py` repère une anomalie de volume et ne sait pas si le
+  jeton est revendable. Son en-tête le dit, et le bouclier qui manque existe
+  déjà, dans `pepites/`.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
   formulaire en cinq étapes, un dossier de commande écrit et envoyé par
   courriel. Le prix est **recalculé côté serveur**, jamais lu depuis le
   navigateur, et le formulaire partage sa validation avec la route d'API.
+- **iptv/** — tableau de bord de gestion et de lecture IPTV / VOD. TypeScript,
+  **zéro dépendance d'exécution** dans le cœur : ingestion M3U et Xtream,
+  normalisation, classification en direct / films / séries. Une liste M3U ne se
+  charge jamais en mémoire — 50 à 400 Mo, l'analyseur les rend au fil de l'eau —
+  et rien ne remonte au-dessus de l'ingestion sans être un `Element`. Aucune
+  source de contenu ni identifiant n'est versionné. Se vérifie depuis son
+  dossier.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
   sont dans son `public/llms.txt`, pas ici.
@@ -201,6 +258,33 @@ embarquant un modèle s'installe) et **les objets de release GitHub**
 (`release-assets.githubusercontent.com` répond), où sont publiés les modèles
 sherpa-onnx, Whisper compris. Ni TLS ni mandataire touchés. Un zipformer rend en
 plus un instant par mot — il n'en existe pas de français, vérifié par requête.
+
+**Aucune donnée de marché ne s'atteint depuis une session distante.** Mesuré le
+28/08/2026 : les neuf hôtes dont NexusCrypto et le radar ont besoin rendent tous
+`000` — le mandataire refuse le tunnel, il n'y a même pas de réponse HTTP à
+lire. `api.binance.com`, `api.bybit.com`, `api.kraken.com`, `api.coingecko.com`,
+`api.hyperliquid.xyz`, `api.alternative.me`, `www.reddit.com`, `api.llama.fi`,
+`api.dexscreener.com`. Ouverts en revanche : `raw.githubusercontent.com`, et
+`pypi.org` avec `files.pythonhosted.org` en direct, listés dans le `noProxy`.
+
+Deux symptômes pour la même cause, et c'est ce qui trompe : `curl` rend `000`
+là où `aiohttp` rend « 403, requête refusée ». Une session qui voit le 403 croit
+à une clé manquante et part chercher un compte d'API. Il n'y en a pas besoin :
+l'hôte est simplement hors d'atteinte.
+
+**La parade est celle de la voix off et des poids Wav2Lip, une troisième fois :
+GitHub répond.** Des bougies réelles au format CCXT — `[horodatage_ms, o, h, b,
+c, volume]`, exactement ce que lit `nexuscrypto/src/rejeu/donnees.py` — se
+téléchargent en une commande, vérifiée le jour même, un mégaoctet :
+
+```bash
+curl -sSO https://raw.githubusercontent.com/freqtrade/freqtrade/develop/tests/testdata/UNITTEST_BTC-1m.json
+```
+
+Ce qui reste impossible : l'ingestion **en direct**, le sentiment, l'on-chain et
+la macro. Une stratégie se règle donc hors ligne sur des données téléchargées,
+et son branchement aux sources ne se vérifie que sur une machine sans mandataire
+filtrant.
 
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.

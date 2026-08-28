@@ -51,6 +51,7 @@ commandes=(
   "Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
   "Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
   "TITAN Builder : (dans titan-builder/) npm run lint|typecheck|test|build"
+  "IPTV / VOD : (dans iptv/) npm test, npm run check"
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
   "NexusCrypto : cd nexuscrypto && python3 -m unittest discover -s tests"
 )
@@ -76,6 +77,13 @@ echo "── TITAN Builder : dépendances npm"
 # dossier, donc un paquet emprunté au voisin d'au-dessus passe en session et
 # rougit sur le runner.
 cd "$racine/titan-builder"
+npm install --no-audit --no-fund --silent
+
+echo "── IPTV / VOD : dépendances npm"
+# Le cœur n'a aucune dépendance d'exécution ; ces trois paquets-là sont ceux du
+# typage et du lancement des tests. Lancé sans `cd`, npm remonte à la racine et
+# les installe dans l'arbre d'Amorce, où la CI d'IPTV ne les trouvera pas.
+cd "$racine/iptv"
 npm install --no-audit --no-fund --silent
 
 echo "── Hypersensible & Bienveillance : dépendances npm"
@@ -144,7 +152,14 @@ echo "── Chaîne de montage : bibliothèques Python"
 # s'il y a un GPU avant de lancer Wav2Lip — et Wav2Lip lui-même est un dépôt à
 # cloner, avec ses propres dépendances. La voix off, elle, ne demande que ces
 # deux paquets-là et fonctionne dès le démarrage de la session.
-python3 -m pip install --quiet --break-system-packages elevenlabs tqdm
+#
+# `scipy` est le troisième, et son absence ici rendait la barrière menteuse :
+# `bruitages.py` l'importe au chargement du module, donc trois suites de
+# `montage-auto` tombent sur un `ModuleNotFoundError` dans toute session
+# distante — alors que la CI, elle, est verte, `.github/requirements-tests.txt`
+# le listant depuis toujours. Un rouge local sur un projet qu'on n'a pas touché
+# coûte le temps de comprendre qu'il ne vient pas de soi.
+python3 -m pip install --quiet --break-system-packages elevenlabs tqdm scipy
 
 echo "── Extraction multiformat : bibliothèques Python"
 # Ce que `/extraction-multiformat` et `/transcription-media` ne peuvent pas
