@@ -315,7 +315,7 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
                 <Button variant="ghost" onClick={() => appendClip(asset.id)} title="Ajouter à la timeline">
                   +
                 </Button>
-                <Button variant="subtle" onClick={() => removeAsset(asset.id)} title="Retirer de la bibliothèque">
+                <Button variant="ghost" onClick={() => removeAsset(asset.id)} title="Retirer de la bibliothèque">
                   ✕
                 </Button>
               </li>

@@ -87,6 +87,20 @@ export function Button({
   const styles: Record<string, string> = {
     primary: 'bg-accent text-ink font-semibold hover:bg-accent/85 active:bg-accent/75',
     ghost: 'bg-raised text-mist hover:bg-edge active:bg-edge/70',
+    /*
+     * `subtle` veut dire **indisponible**, pas « discret ».
+     *
+     * Son seul indice visuel est un fond au survol — et un téléphone ne
+     * survole pas : au repos, un bouton `subtle` est du texte gris,
+     * indistinguable de la légende qui le précède. C'est exactement ce qu'on
+     * veut pour Annuler et Rétablir quand il n'y a rien à annuler, et c'est le
+     * seul emploi juste.
+     *
+     * Quatre boutons bien vivants l'ont porté — « Modifier ce texte »,
+     * « Aller à l'Accroche », « Écouter », « Retirer » — et passaient tous
+     * pour morts. Ils fonctionnaient ; personne ne pouvait le savoir. Pour une
+     * action disponible mais secondaire, c'est `ghost` qu'il faut.
+     */
     subtle: 'text-muted hover:text-mist hover:bg-raised/60',
     danger: 'text-danger hover:bg-danger/10 active:bg-danger/15',
   };
