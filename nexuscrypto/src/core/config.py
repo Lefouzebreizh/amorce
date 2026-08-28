@@ -109,6 +109,10 @@ class ConfigDCA:
     multiplicateur_max: float = 2.5
     score_minimum_achat: float = 45.0
     montant_minimum_usd: float = 20.0
+    # Fraction de l'enveloppe achetée malgré tout quand la valorisation dit
+    # non. Zéro rétablit l'abstention totale de la première version — mesurée
+    # comme un défaut, voir le bloc d'en-tête de `_replier` dans `dca.py`.
+    plancher_enveloppe: float = 0.15
 
 
 @dataclass(frozen=True, slots=True)
@@ -394,6 +398,11 @@ def charger(
     )
     if dca.multiplicateur_min > dca.multiplicateur_max:
         defauts.append("DCA : le multiplicateur minimum dépasse le maximum.")
+    if not 0.0 <= dca.plancher_enveloppe <= 1.0:
+        defauts.append(
+            f"DCA : plancher_enveloppe à {dca.plancher_enveloppe:g} — c'est une "
+            "fraction de l'enveloppe, entre 0 et 1."
+        )
     if dca.influence_score >= 1 / 3:
         # Démonstration dans le bloc d'en-tête de `strategy/dca.py` : au-delà
         # d'un tiers, un bon score en zone neutre achète plus qu'un mauvais

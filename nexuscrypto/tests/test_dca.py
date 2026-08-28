@@ -8,6 +8,7 @@ qui se raconte, pas une panne silencieuse.
 """
 
 import unittest
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from aides import config, contexte
@@ -101,7 +102,11 @@ class TestPlanifier(unittest.TestCase):
 
     def _planifier(self, **remplacements):
         arguments = dict(
-            enveloppe_usd=200.0, poids_actif=0.5, zone=Zone.NEUTRE,
+            # 400 × 0,5 = 200 $ de nominal : le plancher de 15 % vaut 30 $,
+            # au-dessus du minimum de 20 $. Avec 200 $ de nominal il vaudrait
+            # 15 $ et toutes les branches de plancher retomberaient sur la
+            # temporisation — le test passerait en ne mesurant rien.
+            enveloppe_usd=400.0, poids_actif=0.5, zone=Zone.NEUTRE,
             lecture=self.lecture, score=score(70), config=self.config, echeance=True,
         )
         arguments.update(remplacements)
@@ -117,18 +122,68 @@ class TestPlanifier(unittest.TestCase):
         self.assertIs(enveloppe.action, Action.ATTENDRE)
         self.assertEqual(enveloppe.montant_usd, 0.0)
 
-    def test_score_sous_le_plancher_temporise(self):
+    def test_un_score_faible_reduit_l_achat_sans_l_annuler(self):
+        """La correction du plancher change ce test, et c'est le but.
+
+        Avant, un indice sous le seuil annulait l'achat. Le rejeu a montré que
+        sur une tendance haussière la note reste durablement sous le seuil et
+        que l'annulation dure alors toute la période. Un score faible **réduit**
+        désormais l'achat au plancher de discipline au lieu de le supprimer.
+        """
+
+        faible = self._planifier(score=score(10))
+        bon = self._planifier(score=score(70))
+        self.assertIs(faible.action, Action.ACHETER)
+        self.assertLess(faible.montant_usd, bon.montant_usd)
+
+    def test_avidite_extreme_n_achete_plus_que_le_plancher(self):
+        """Le comportement d'origine était de ne rien acheter du tout en avidité
+        extrême. Le harnais de rejeu a montré ce qu'il coûte — zéro ordre sur
+        398 échéances dans une hausse continue — et la stratégie y achète
+        désormais le plancher de discipline, pas l'enveloppe pleine."""
+
+        enveloppe = self._planifier(zone=Zone.AVIDITE_EXTREME, score=score(90))
+        pleine = self._planifier(zone=Zone.NEUTRE, score=score(90))
+        self.assertIs(enveloppe.action, Action.ACHETER)
+        self.assertLess(enveloppe.montant_usd, pleine.montant_usd)
+        self.assertTrue(any("plancher de discipline" in r for r in enveloppe.raisons))
+
+    def test_le_plancher_achete_quand_le_score_dit_non(self):
+        """Un DCA ne cesse jamais complètement d'acheter : c'est sa définition."""
+
         enveloppe = self._planifier(score=score(10))
+        self.assertIs(enveloppe.action, Action.ACHETER)
+        self.assertGreater(enveloppe.montant_usd, 0.0)
+        self.assertTrue(any("plancher de discipline" in r for r in enveloppe.raisons))
+
+    def test_le_plancher_achete_meme_en_avidite_extreme(self):
+        """Le multiplicateur de zone y vaut zéro : c'est précisément le cas
+        pour lequel le plancher existe."""
+
+        enveloppe = self._planifier(zone=Zone.AVIDITE_EXTREME, score=score(90))
+        self.assertIs(enveloppe.action, Action.ACHETER)
+        self.assertGreater(enveloppe.montant_usd, 0.0)
+
+    def test_le_plancher_ne_depend_pas_du_multiplicateur_de_zone(self):
+        """L'y rapporter le ramènerait à zéro en avidité extrême, c'est-à-dire
+        exactement là où on en a besoin. C'est un plancher, pas une réduction."""
+
+        avidite = self._planifier(zone=Zone.AVIDITE_EXTREME, score=score(90))
+        peur = self._planifier(zone=Zone.PEUR_EXTREME, score=score(10))
+        self.assertAlmostEqual(avidite.montant_usd, peur.montant_usd)
+
+    def test_un_plancher_nul_retablit_l_abstention(self):
+        """Le comportement d'origine reste atteignable par la configuration."""
+
+        sans = replace(self.config, plancher_enveloppe=0.0)
+        enveloppe = self._planifier(score=score(10), config=sans)
         self.assertIs(enveloppe.action, Action.TEMPORISER)
         self.assertEqual(enveloppe.montant_usd, 0.0)
 
-    def test_avidite_extreme_temporise_et_le_dit(self):
-        """Zéro est une décision, pas une panne : elle doit se raconter dans le
-        récapitulatif."""
-
-        enveloppe = self._planifier(zone=Zone.AVIDITE_EXTREME, score=score(90))
+    def test_un_plancher_sous_le_minimum_temporise_et_le_dit(self):
+        enveloppe = self._planifier(score=score(10), enveloppe_usd=30.0, poids_actif=0.1)
         self.assertIs(enveloppe.action, Action.TEMPORISER)
-        self.assertTrue(any("reporté" in r for r in enveloppe.raisons))
+        self.assertTrue(any("plancher" in r and "minimum" in r for r in enveloppe.raisons))
 
     def test_montant_trop_petit_temporise(self):
         """Un achat de trois dollars coûte plus en frais qu'il n'apporte."""
