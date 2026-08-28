@@ -88,6 +88,23 @@ npm run dev        # dans un autre terminal
 npm run verify
 ```
 
+## TITAN Builder — `titan-builder/`
+
+```bash
+cd titan-builder
+npm run lint && npm run typecheck && npm test && npm run build
+```
+
+Les trois premières partent ensemble dans `verifier.sh`, le build ferme la
+marche. Ce qu'elles **ne voient pas** : le parcours du configurateur. Un
+sous-composant défini dans un rendu fait sauter le curseur à chaque frappe sans
+qu'aucun test unitaire ne bronche — il faut conduire les cinq étapes dans un
+vrai navigateur pour l'attraper.
+
+Et `next dev` refuse de servir `/_next/` à `127.0.0.1`, qu'il tient pour une
+origine tierce : la page se charge, son code non, les champs se remplissent et
+React ne les voit pas. **Piloter par `http://localhost:3000`.**
+
 ## Réseau d'annuaires IA — `annuaire-ia/`
 
 ```bash
@@ -202,6 +219,31 @@ politique trop large ne se remarque qu'en production.
 
 Sans PostgreSQL sous la main, le même fichier (`supabase/verifier-rls.sql`) se
 colle dans l'éditeur SQL d'un projet Supabase : il annule tout ce qu'il crée.
+
+## Artisan Express — `artisan-express/`
+
+```bash
+cd artisan-express
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+Les quatre, et depuis `artisan-express/` : le projet a son `tsconfig.json` et
+son ESLint, la racine l'ignore. Le workflow
+`.github/workflows/artisan-express.yml` rejoue la même séquence.
+
+Aucune variable n'est requise pour compiler : ce qui manque disparaît de la
+page au lieu d'être inventé. C'est aussi ce que le `build` vérifie sans le
+dire — la page tient debout sans téléphone, sans WhatsApp et sans lien Stripe.
+
+Ce que la séquence ne couvre pas : **l'envoi réel du courriel**. Il demande une
+clé Resend, qu'aucune session n'a. `npm test` éprouve la fabrication de la
+requête et la lecture de la réponse, en simulant `fetch` ; le premier envoi
+véritable se regarde en ligne, et se corrige dans `construireCorpsResend`
+(`src/lib/courriel.ts`) — c'est le seul endroit qui connaisse la forme attendue
+par le prestataire.
 
 ## Chaîne KDP — `kdp/`
 

@@ -85,6 +85,23 @@
   --color-gauge-high: #4fe0b0;
   --color-gauge-peak: #a8f0ff;
 
+  /*
+   * Les trois couleurs de la page de vente `/montage-titan`, et d'elle seule.
+   *
+   * Elles ne servent jamais au studio : une page commerciale crie, un atelier
+   * de montage se tait. Elles passent malgré tout par le thème parce que c'est
+   * la parade au piège n° 5 du terrain — une couleur écrite en dur dans un
+   * composant est exactement celle que le thème sombre automatique de Chrome
+   * Android se croit autorisé à recolorer.
+   *
+   * Contrastes mesurés sur `--color-titan-night` : 11,3:1 pour le cyan, 5,8:1
+   * pour la braise. Les deux passent en texte courant ; sur un bouton plein,
+   * c'est le texte qui repasse en sombre, jamais l'inverse.
+   */
+  --color-titan-neon: #00d4ff;
+  --color-titan-ember: #ff4500;
+  --color-titan-night: #05070d;
+
   --font-display: var(--font-display-src), system-ui, sans-serif;
   --font-body: var(--font-body-src), system-ui, sans-serif;
 }

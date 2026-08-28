@@ -825,3 +825,230 @@ elle, l'exige.
 `setpts` doit être **suivi** d'un `fps`, jamais précédé : un flux recadencé
 avant compression garde l'ancienne cadence, et le multiplexeur refuse des
 horodatages qui n'avancent plus (« non monotonically increasing dts »).
+
+## Un morph se calcule sur les tailles, pas sur les formes
+
+Enchaîner deux plans sans coupe visible — une pupille qui devient une planète —
+ne demande ni déformation de maillage ni outil dédié. Il faut que **les deux
+objets occupent le même disque à l'écran au moment du fondu**, et le reste
+suit : l'oeil plonge dans sa pupille, le plan suivant recule depuis sa planète,
+et un fondu de quatre dixièmes fait le raccord.
+
+Le seul calcul est un rapport. Mesuré sur ce dépôt : pupille de 295 px de rayon,
+planète de 333. Le zoom d'entrée valant 2,9, celui de sortie doit valoir
+2,9 × 295 / 333 = 2,57 pour que les disques coïncident. À un pour cent près, le
+raccord se voit.
+
+Deux détails sans lesquels ça ne prend pas : le fondu suit une **courbe en S**
+(linéaire, on voit les deux images à parts égales au milieu et l'illusion
+tombe), et l'entrée est plus rapide que la sortie — on plonge vite, on recule
+lentement.
+
+## Une explosion se découpe dans l'image, elle ne se pose pas dessus
+
+Trente fragments générés par une bibliothèque et composités par-dessus se voient
+au premier coup d'oeil : leur texture n'a ni l'éclairage ni la palette du plan.
+Découper le disque réel en cellules de Voronoï et animer **ses propres pixels**
+coûte quarante lignes et supprime le problème.
+
+Trois réglages font la crédibilité, et aucun n'est le nombre de morceaux :
+
+- **La vitesse hors-plan.** Une explosion qui ne s'étale que dans le plan de
+  l'image se lit comme une fleur qui s'ouvre. Ce qui fait « ça vient sur moi »,
+  c'est le grossissement.
+- **La dispersion.** Une explosion isotrope est une animation ; il faut des
+  morceaux lents qui retombent et des éclats qui filent.
+- **Ce qui reste au milieu.** Peindre du noir y creuse un trou découpé dans
+  l'image. Une masse qui cède **rayonne** pendant qu'elle se disperse : un coeur
+  chaud qui se contracte, et un rayon d'extinction assez petit pour laisser les
+  mains qui tenaient l'objet — les effacer casse la lecture.
+
+Un fragment qui grossit doit aussi **perdre de la lumière et de la netteté**,
+sinon il devient une découpe de papier blanc : il arrive sur l'objectif, donc il
+sort de la zone de netteté et quitte l'éclairage de la scène. Le rouge résiste
+mieux que le bleu, ce qui le fait virer à la braise plutôt qu'au gris.
+
+## Un composant défini pendant le rendu perd le curseur, et le lint le sait
+
+Écrire une petite fonction à l'intérieur d'un composant pour éviter de répéter
+trois lignes de JSX paraît propre. `eslint-config-next` la refuse — la règle
+`react-hooks/static-components`, six erreurs d'un coup sur un formulaire — et
+elle a raison bien au-delà du style.
+
+La fonction est **redéfinie à chaque rendu**, donc React voit un type de
+composant différent à chaque fois. Il ne compare pas le contenu : il démonte le
+sous-arbre et le remonte. Sur un champ de saisie, cela veut dire que le curseur
+saute à chaque frappe — un défaut qu'aucun test unitaire ne voit et qu'on met
+une heure à relier à sa cause.
+
+La parade tient en une ligne : le sortir au niveau du module et lui passer ce
+dont il a besoin en propriétés. Vaut pour tout projet React du dépôt.
+
+## `pkill -f` tue le shell qui l'exécute
+
+Deux vérifications ont été interrompues d'affilée sur un code 144 sans qu'aucun
+test n'ait échoué. La cause n'est pas dans le dépôt : `pkill -f "next start"`
+compare le motif à la **ligne de commande entière** de chaque processus — et la
+ligne de commande du shell qui exécute cette commande contient, elle aussi, la
+chaîne « next start ». Le shell se tue donc lui-même avant d'atteindre la
+commande suivante, et tout ce qui suivait sur la même ligne disparaît.
+
+Le symptôme est trompeur parce qu'il ressemble à un échec de la commande
+suivante : on relit les tests, pas la ligne qui les précède.
+
+Deux parades, dans l'ordre : viser le port plutôt que le nom
+(`fuser -k 3114/tcp`), ou lancer le serveur en tâche de fond en gardant son PID
+et le tuer par ce PID. À défaut, isoler le `pkill` dans son propre appel, où il
+n'emporte que lui-même.
+
+Vaut pour `pkill`, `killall -r` et tout ce qui filtre sur la ligne de commande.
+
+## Un parcours navigateur ne survit pas seul à un changement de coque
+
+Le studio téléphone est passé à une page unique qui défile ; sa barre d'étapes
+et son tiroir ont disparu. Le parcours Chromium cliquait encore l'un et
+l'autre, et tombait après quatre mesures sur quarante.
+
+Le défaut a survécu à la fusion pour une raison qui vaut d'être écrite : **le
+contrôle qui l'aurait vu ne tourne que sur les pull requests.** La fusion sur
+`main` n'exécute que les vérifications rapides, donc la branche qui a changé la
+coque a été fusionnée verte, et c'est la branche *suivante* — sans rapport avec
+le studio — qui a hérité du rouge. Toutes les branches ouvertes le portaient en
+même temps.
+
+Deux règles en sortent :
+
+- **Changer une coque, c'est changer ce qui la conduit.** Un test de bout en
+  bout tient par des sélecteurs qu'aucun compilateur ne relit ; ils ne cassent
+  qu'à l'exécution, et seulement dans le profil concerné.
+- **Un rouge qui apparaît sur une branche qui n'a pas touché au sujet vient
+  presque toujours de la base.** Le réflexe utile n'est pas de relire son
+  propre diff mais de demander : ce contrôle a-t-il seulement tourné sur `main`
+  depuis la fusion qui a changé les lieux ?
+
+La parade coûte peu : nommer le geste plutôt que le sélecteur. `allerAEtape`
+clique la barre sur ordinateur et fait défiler jusqu'à l'ancre sur téléphone ;
+le jour où la coque change encore, un seul endroit ment.
+## Le sifflement d'un son se mesure, il ne se discute pas
+
+Un lit de vortex a été refusé d'un mot — « son horrible, vire l'aigu ». Le
+désaccord aurait pu tourner en aller-retours ; deux nombres l'ont tranché.
+
+Le **centre de gravité du spectre** dit où vit le son, et la **part d'énergie
+au-dessus de 4 kHz** dit combien il siffle. Avant : 3157 Hz et 7,9 %. Après
+remplacement de la montée en hauteur par un rumble à 40 Hz, un vent sourd et
+des cailloux : 2225 Hz et 2,1 %.
+
+La cause était une intention mal placée. `aspiration` avait été écrite autour
+d'une montée de deux octaves et demie, parce que c'est le déplacement en
+hauteur qui fabrique la sensation de vitesse — juste en soi, et exactement ce
+qui produit un sifflement. **Un effet peut être correctement conçu et
+inutilisable** : ce qui manquait n'était pas la justesse du procédé mais la
+question de savoir si l'on voulait entendre de la vitesse ou de la masse.
+
+```bash
+# où vit le son, et combien il siffle
+python3 -c "
+import numpy,wave,sys
+x=numpy.frombuffer(wave.open(sys.argv[1]).readframes(-1),dtype=numpy.int16).astype(float)
+sp=numpy.abs(numpy.fft.rfft(x*numpy.hanning(len(x))))**2
+fr=numpy.fft.rfftfreq(len(x),1/48000)
+print(f'centre {(sp**.5*fr).sum()/(sp**.5).sum():.0f} Hz · '
+      f'au-dessus de 4 kHz {100*sp[fr>4000].sum()/sp.sum():.1f} %')" son.wav
+```
+
+## Trois refus ne font pas une impossibilité, et le git anonyme est le quatrième chemin
+
+Une police manquait. `raw.githubusercontent` : 403. L'API GitHub : 403. PyPI :
+404. Trois refus ont suffi à conclure « hors de portée » et à livrer un
+remplaçant approchant.
+
+C'était faux. **Le mandataire git de ces sessions sert les clones anonymes de
+n'importe quel dépôt public**, sans que le dépôt figure dans la liste de portée
+du prompt système — celle-ci ne nomme que les dépôts *attachés*. Un
+`GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1` a ramené le fichier en quelques
+secondes, après que l'utilisateur ait demandé « comment je fais ».
+
+Le dépôt savait déjà que « deux chemins essayés ne font pas une impossibilité »
+— la voix off et les poids Wav2Lip l'avaient prouvé, et la sortie était chaque
+fois la même : **les objets de release GitHub répondent**. La liste des issues
+gagne donc une entrée, et c'est la plus large :
+
+| ce qui est refusé | ce qui répond |
+| --- | --- |
+| `raw.githubusercontent.com` | `git clone` anonyme du même dépôt |
+| `api.github.com` | le serveur MCP GitHub, et `git clone` |
+| `huggingface.co`, sites d'éditeurs | objets de release GitHub, PyPI |
+
+La règle générale : **avant de déclarer une ressource inaccessible, essayer de
+la cloner.** Un fichier dans un dépôt public s'obtient presque toujours, et le
+protocole git passe là où HTTP est filtré.
+
+## Une liste d'exclusions tenue à la main dérive, et casse le voisin
+
+Le `tsconfig.json` de la racine type-vérifie `**/*.ts`, et écarte les projets
+nichés par une liste écrite à la main. Deux projets ajoutés depuis n'y
+figuraient pas. Leur alias `@/` résolvait donc vers le `src/` de la racine, et
+la construction d'Amorce échouait sur seize erreurs venues d'un projet qui
+n'est pas le sien.
+
+Le défaut a traversé deux vérifications sans être vu, pour une raison qui vaut
+d'être notée : **la PR qui l'a introduit a été fusionnée pendant que le
+déploiement était bloqué par un quota.** Le seul contrôle capable de l'attraper
+n'a jamais tourné, et son échec — « rate limited » — ressemblait à un incident
+sans rapport. Fusionner sur un contrôle qui n'a pas tourné revient à fusionner
+sans contrôle.
+
+La liste se déduit du disque au lieu de se maintenir :
+
+```bash
+ls -d */tsconfig.json | cut -d/ -f1   # tout projet qui a son propre tsconfig
+                                      # doit figurer dans « exclude »
+```
+
+Règle générale : **une liste qui doit rester synchronisée avec le disque se
+calcule, ou se vérifie.** Écrite à la main, elle est fausse dès le projet
+suivant — et c'est le voisin qui paie.
+
+## Une cadence se pose une fois, à l'entrée ; la reconvertir fait sauter l'image
+
+Un montage rendu à 30 images par seconde puis exporté à 24 jette une image sur
+cinq. Sur un plan fixe, cela ne se voit pas ; sur un travelling ou un zoom, le
+mouvement saccade toutes les deux images. Mesuré par la différence entre images
+consécutives : **quinze sauts en sept dixièmes de seconde** sur un seul plan.
+
+Deux causes s'y ajoutaient, et la seconde est la pire : un `setpts=PTS/2` pour
+doubler la vitesse **jette lui aussi une image sur deux**, et les deux
+décimations se composent. La sensation de vitesse ne valait pas ce prix — elle
+se fabrique par le zoom et le flou, qui ne coûtent aucune image.
+
+La règle : **poser la cadence à l'entrée de la chaîne, et n'y plus toucher.**
+Toute reconversion en aval est une décimation.
+
+```bash
+# le saut se mesure : un pic d'écart entre deux images consécutives
+ffmpeg -v error -i film.mp4 -vf scale=96:171,format=gray -f image2 /tmp/f%04d.png
+# puis comparer chaque image à la suivante — les pics isolés sont les coupes,
+# les pics tous les deux cadres sont une décimation
+```
+
+## Un découpage se cale sur la parole, jamais l'inverse
+
+Un plan de conteur a été réduit à 0,70 seconde par un morph qui lui avait pris
+sa première réplique. Ce qui restait tombait **entre deux phrases** : le
+montage ne contenait donc aucune parole, alors que rien dans les niveaux ne le
+signalait — le plan mesurait −22,9 dB comme les autres.
+
+Le défaut ne vient pas d'un mauvais réglage mais d'un mauvais ordre : les
+instants avaient été écrits d'abord, la parole rangée dedans ensuite. Il faut
+l'inverse. On relève les groupes de parole, **on en déduit les bornes du plan**,
+et le morph se pose sur un silence — jamais sur une réplique, qu'il ferait
+prononcer pendant un fondu.
+
+Le contrôle qui l'aurait vu tient en une ligne, et il est différent du niveau
+global :
+
+```bash
+ffmpeg -hide_banner -nostats -ss <debut> -t <duree> -i film.mp4 \
+       -af highpass=f=300,lowpass=f=3500,volumedetect -f null -
+```

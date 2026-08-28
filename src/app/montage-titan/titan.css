@@ -1,0 +1,101 @@
+/*
+ * Le décor de la page de vente, et rien d'autre.
+ *
+ * Il vit à part de `globals.css` parce qu'il ne concerne pas le studio : une
+ * page commerciale a besoin de halos et de grain, l'atelier de montage n'en
+ * veut surtout pas derrière les images qu'on y juge. Seules les trois couleurs
+ * de la page sont déclarées dans le thème — c'est là que Chrome Android va les
+ * chercher avant de se croire autorisé à recolorer la page.
+ */
+
+.titan {
+  /* Empêche l'assombrissement automatique de MIUI : la page se déclare. */
+  color-scheme: dark;
+  background-color: var(--color-titan-night);
+}
+
+/*
+ * Grain de pellicule.
+ *
+ * Une turbulence SVG en fond, pas une image : elle pèse trois cents octets,
+ * ne part jamais en requête réseau et ne se compresse pas en bouillie. Posée à
+ * 4 % — au-delà, elle mange les dégradés au lieu de les tenir.
+ */
+.titan-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/*
+ * Les halos du fond.
+ *
+ * Deux sources fixes, cyan en haut et braise en bas : le regard descend du
+ * froid vers le chaud, ce qui est exactement le trajet de l'offre — le constat
+ * puis le bouton. Ils sont en `fixed` pour ne pas se répéter à chaque section.
+ */
+.titan-halos {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60rem 40rem at 50% -10%, color-mix(in srgb, var(--color-titan-neon) 16%, transparent), transparent 70%),
+    radial-gradient(45rem 35rem at 85% 105%, color-mix(in srgb, var(--color-titan-ember) 14%, transparent), transparent 70%);
+}
+
+/* Filet lumineux d'une carte : un dégradé posé en bordure, pas un trait plat. */
+.titan-filet {
+  background-image: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--color-titan-neon) 55%, transparent),
+    color-mix(in srgb, var(--color-titan-neon) 8%, transparent) 45%,
+    color-mix(in srgb, var(--color-titan-ember) 40%, transparent)
+  );
+}
+
+/*
+ * L'apparition au défilement.
+ *
+ * L'état de départ est décalé et transparent ; la classe `.est-vu`, posée par
+ * l'observateur, le remet en place. `globals.css` neutralise déjà toutes les
+ * transitions sous `prefers-reduced-motion`, mais l'opacité de départ y
+ * survivrait et laisserait la page blanche : elle est donc annulée ici aussi.
+ */
+.titan-apparait {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition:
+    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.titan-apparait.est-vu {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titan-apparait {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* La pulsation des yeux du Titan. Coupée avec le reste sous mouvement réduit. */
+@keyframes titan-pupille {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.titan-pupille {
+  animation: titan-pupille 2.6s ease-in-out infinite;
+}

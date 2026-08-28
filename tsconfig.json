@@ -41,6 +41,8 @@
   "exclude": [
     "node_modules",
     "agence",
-    "hypersensible-bienveillance"
+    "artisan-express",
+    "hypersensible-bienveillance",
+    "titan-builder"
   ]
 }

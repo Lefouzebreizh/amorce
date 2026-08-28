@@ -53,6 +53,12 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   strict. Tout tourne dans le navigateur : ni serveur, ni base, ni route API.
 - **agence/** — Next.js 16, Supabase (PostgreSQL + RLS), Server Actions, shadcn.
   Se vérifie depuis son dossier, jamais depuis la racine.
+- **artisan-express/** — page de vente du site vitrine artisan à 299 €. Next.js
+  16, Tailwind v4, aucune dépendance ajoutée : ni SDK de courriel, ni
+  bibliothèque d'icônes. Le formulaire poste sur `/api/devis`, qui envoie un
+  courriel et n'enregistre rien. Ce qui n'est pas réglé — téléphone, WhatsApp,
+  lien Stripe — **disparaît de la page** au lieu d'afficher une valeur
+  inventée. Se vérifie depuis son dossier.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
@@ -60,6 +66,11 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
+- **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
+  client configure lui-même le site vitrine qu'il achète : quatre modèles, un
+  formulaire en cinq étapes, un dossier de commande écrit et envoyé par
+  courriel. Le prix est **recalculé côté serveur**, jamais lu depuis le
+  navigateur, et le formulaire partage sa validation avec la route d'API.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
   sont dans son `public/llms.txt`, pas ici.

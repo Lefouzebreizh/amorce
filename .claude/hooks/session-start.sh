@@ -40,6 +40,7 @@ readonly FLUTTER_HOME="$HOME/flutter"
 commandes=(
   "Amorce : npm run typecheck|lint|test"
   "Socle Agence : (dans agence/) npm run lint|typecheck|test|build"
+  "Artisan Express : (dans artisan-express/) npm run lint|typecheck|test|build"
   "Hypersensible : (dans hypersensible-bienveillance/) npm test, npm run check, npm run build"
   "Look & Find : flutter analyze|test"
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
@@ -49,6 +50,7 @@ commandes=(
   "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
   "Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
   "Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
+  "TITAN Builder : (dans titan-builder/) npm run lint|typecheck|test|build"
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
 )
 
@@ -60,6 +62,19 @@ echo "── Socle Agence : dépendances npm"
 # Projet Next.js indépendant, avec son propre `package.json` : les dépendances
 # de la racine ne lui servent à rien, et les siennes ne doivent pas remonter.
 cd "$racine/agence"
+npm install --no-audit --no-fund --silent
+
+echo "── Artisan Express : dépendances npm"
+# Page de vente Next.js indépendante, avec son propre `package.json` : lancée
+# sans `cd`, npm remonte à la racine et installe dans l'arbre d'Amorce.
+cd "$racine/artisan-express"
+npm install --no-audit --no-fund --silent
+
+echo "── TITAN Builder : dépendances npm"
+# Même raison, et une conséquence de plus : la CI de TITAN n'installe que son
+# dossier, donc un paquet emprunté au voisin d'au-dessus passe en session et
+# rougit sur le runner.
+cd "$racine/titan-builder"
 npm install --no-audit --no-fund --silent
 
 echo "── Hypersensible & Bienveillance : dépendances npm"
