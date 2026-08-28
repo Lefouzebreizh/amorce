@@ -251,6 +251,7 @@ changé de forme.
 python3 main.py rejeu                        # les six marchés fabriqués
 python3 profils.py --detail                  # les mêmes, avec le détail
 python3 main.py rejeu --csv btc-4h.csv --symbole BTC/USDT --fear-greed fng.csv
+python3 main.py rejeu --csv btc-4h.csv --leviers 1,2,3,5,10   # compte les liquidations
 ```
 
 **Le rejeu réutilise le moteur de décision tel quel.** Il ne réimplémente rien :
@@ -280,6 +281,40 @@ un test :
 Le test `test_une_bougie_future_ne_change_rien_au_passe` remplace la dernière
 clôture par un pic absurde et exige que **pas une seule** décision antérieure
 ne bouge.
+
+### Le levier se mesure, il ne s'exécute pas
+
+`--leviers 1,2,3,5,10` répond à une question et une seule : **à quel moment un
+compte à levier aurait-il été liquidé ?** Le module `src/rejeu/levier.py` lit un
+rejeu déjà fait ; il n'entre nulle part dans le chemin d'ordre, et le courtier
+ne connaît toujours pas le mot « levier ». C'est délibéré — une option de levier
+posée dans le courtier serait utilisée avant d'avoir été mesurée.
+
+Une position ouverte au prix `P` à levier `L` est liquidée quand le prix touche
+`P × (1 − 1/L + maintenance)`. On mesure donc, pour **chaque achat**, la pire
+excursion défavorable de sa détention, sur les **plus bas** des bougies : une
+mèche liquide aussi sûrement qu'une clôture et ne laisse aucune trace dans une
+courbe bâtie sur les clôtures. Les ventes soldent les achats en premier entré,
+premier sorti.
+
+**Le levier porte sur la position, jamais sur le portefeuille**, et c'est la
+correction qui a sauvé ce module d'être inutile. Mesuré d'abord sur le recul du
+portefeuille, il déclarait 10x survivant sur « effondrement sans reprise », un
+marché où l'actif perd 37 %. L'explication tient en une ligne : le bot garde
+l'essentiel du capital en liquide, donc le portefeuille recule peu quand l'actif
+plonge. Personne ne met du levier sur du cash dormant, et cette mesure-là
+flattait le levier d'un facteur dix. Après correction, les six marchés fabriqués
+plafonnent à **5x**.
+
+**Deux refus de conclure, et ils comptent autant que le tableau.** Un rejeu sans
+position ouverte ne dit *rien* du levier — la version naïve annonçait « levier
+maximal 10x » sur zéro position, une conclusion rassurante tirée du vide. Et en
+dessous de dix positions, le tableau décrit la période rejouée bien plus que le
+réglage : l'avertissement est écrit sous le tableau.
+
+Le nombre rendu est un **plancher**, jamais une estimation : ni le financement
+d'un perpétuel, ni le prix de marque de la plateforme, ni l'illiquidité réelle
+ne sont comptés, et les trois poussent dans le même sens.
 
 ### Ce que le rejeu ne simule pas
 

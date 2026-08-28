@@ -1548,3 +1548,39 @@ le texte, puis le tableau — avant la première entrée utilisable.
 La même épreuve vaut partout où l'on annonce un traitement en flux : lecture de
 journaux, de CSV, de XMLTV, de rushes. **Ce n'est pas le contenu rendu qu'il faut
 vérifier, c'est ce que la source a eu le temps de produire.**
+
+---
+
+## Un rapport bâti sur zéro mesure rend le verdict le plus rassurant
+
+Deux fois en deux jours, dans deux projets qui ne se connaissent pas, le même
+défaut a failli être livré — et les deux fois il produisait la même chose : un
+tableau qui annonce que tout va bien, précisément parce qu'il n'a rien regardé.
+
+Le radar `pepites/` : une coupure réseau interrompait la sonde au cinquième
+point d'entrée, et les quatre suivants **disparaissaient du tableau**. Un point
+absent se lit comme un point sain.
+
+Le bot `nexuscrypto/` : la mesure du levier comptait les positions liquidées.
+Sur un rejeu qui n'avait ouvert aucune position — série trop courte pour les
+indicateurs, la stratégie s'abstient —, zéro position liquidée sur zéro
+position donnait « levier maximal 10x ». Le chiffre le plus dangereux du
+tableau, sorti du vide, présenté comme un feu vert.
+
+**La forme commune :** une conclusion se calcule par un dénombrement, le
+dénombrement s'applique à un ensemble vide, et le neutre mathématique de
+l'opération est exactement la bonne nouvelle. `aucun échec sur zéro épreuve`
+vaut `tout va bien`. `max()` sur les survivants d'une liste vide vaut
+`le plus haut`. Rien ne lève, rien ne s'affiche en rouge.
+
+**Le geste, et il tient en une question à se poser avant d'écrire la
+conclusion :** *si l'ensemble mesuré était vide, que dirait mon rapport ?* Si
+la réponse est rassurante, il manque une branche. « Rien mesuré » n'est pas un
+cas particulier à traiter par politesse : c'est un troisième verdict, à côté de
+« ça passe » et « ça casse », et il doit être aussi visible que les deux autres.
+
+Un corollaire du même ordre, trouvé dans la foulée : **une mesure qui inclut ce
+qui n'est pas exposé flatte.** Le levier était d'abord mesuré sur le recul du
+portefeuille, dont l'essentiel dort en liquide — 10x paraissait survivre à un
+marché qui s'effondrait de 37 %. Le levier porte sur la position. Vérifier que
+le dénominateur d'un ratio est bien la chose qui risque quelque chose.
