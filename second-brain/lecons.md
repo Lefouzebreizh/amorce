@@ -1219,3 +1219,66 @@ Deux enseignements qui dépassent ce bug :
 - **Le test de non-régression porte sur la chaîne produite, jamais sur un appel
   à ffmpeg.** Le runner n'a pas le binaire ; un test qui l'exige est vert en
   session et rouge chez tout le monde.
+## Un livrable conforme peut être le défaut
+
+Une vidéo sortait à −14 LUFS avec 12 LU de dynamique : les cibles de diffusion,
+respectées au dixième. Elle a été refusée plusieurs jours de suite pour « on
+n'entend pas assez », et chaque fois la mesure disait qu'elle était bonne.
+
+La norme venait de la télévision, où l'on écoute assis devant des enceintes.
+L'appareil réel était un téléphone tenu à bout de bras. **La moitié basse de la
+dynamique n'y existe pas**, et le vrai pic à −5,7 dBTP disait que cinq décibels
+de marge n'avaient jamais servi.
+
+Ce n'est pas un mauvais réglage : c'est un **bon réglage pour un autre
+contexte**. Et c'est le cas le plus difficile à voir, parce que toutes les
+vérifications passent — elles vérifient la conformité à la norme, jamais que la
+norme est la bonne.
+
+La question à poser avant de mesurer quoi que ce soit : **cette cible vient
+d'où, et l'appareil qu'elle suppose est-il celui de l'utilisateur ?** Ici, non,
+et personne ne pouvait le voir dans un chiffre. C'est l'auteur qui l'a dit, en
+une phrase, après plusieurs jours.
+
+## Entre deux mesures d'un même effet, prendre la moins flatteuse
+
+Le gain d'un traitement sonore mesurait **+8,9 dB** sur le plan le plus fort et
+**+5,2 dB** sur le film entier. Les deux étaient exacts ; le premier avait été
+annoncé avant vérification.
+
+Aucune des deux mesures n'est fausse, elles ne répondent pas à la même
+question — et c'est précisément ce qui rend le choix tentant. Prendre la
+seconde n'est pas de la modestie : c'est elle qui décrit ce que la personne
+entendra, l'autre ne décrivant qu'un instant.
+
+## Une famille de couleur par épisode, jamais dans le même film
+
+Deux plans mesurés à **192°** et **263°** de teinte — turquoise et violet — ne
+se montent pas ensemble. Soixante-et-onze degrés d'écart, et le spectateur
+lit deux extraits collés, pas un film. Aucun étalonnage ne rattrape ça sans
+détruire l'un des deux.
+
+La sortie n'est pas de choisir : c'est d'en faire **deux épisodes**. Une
+famille de couleur par épisode donne au feuilleton une identité par numéro,
+et chaque plan garde la sienne.
+
+Le corollaire pratique : une LUT se choisit **contre la teinte du plan**, pas
+par habitude. Une `teal_orange` posée sur du violet le tire vers le cyan et
+efface précisément ce qui le distinguait. Sur un épisode violet, on garde
+l'accord des plans et le grain, et on écarte la LUT.
+
+```bash
+python3 .claude/skills/sous-titres-qui-accrochent/scripts/teinte.py plan1.mp4 plan2.mp4
+# rend la teinte de chacun, et dit « une seule famille » ou « plusieurs »
+```
+
+## Un plan continu ne se découpe pas pour faire du rythme
+
+Un plan de dix secondes portait toute une histoire — le personnage, le
+phénomène, la créature — en un seul mouvement. Le découper en morceaux et les
+recoller dans l'ordre revient à le rejouer, en ayant détruit sa continuité :
+ce qu'il avait de plus rare, et ce qu'aucun montage ne fabrique.
+
+Le rythme se met alors **dessus** et non dedans : poussée d'échelle, secousse
+sur l'impact, textes qui arrivent, son qui monte. Le film garde une seule
+coupe, et personne ne la cherche.

@@ -1,0 +1,269 @@
+{
+  "_lisez_moi": [
+    "AZNAROTH — version courte, 9 s. Le pari du taux de completion.",
+    "",
+    "  AFFICHE  0,00 - 0,50",
+    "  MAGE     0,50 - 2,30   sa troisieme replique + la Terre qui se fissure",
+    "  ECLAIRS  2,30 - 3,50",
+    "  VORTEX   3,50 - 5,10",
+    "  DRAGON   5,10 - 9,00   rugissement vers 7,60",
+    "",
+    "L'oeil et le sigil sont sacrifies : ils installent, ils ne frappent pas.",
+    "Sur neuf secondes, tout ce qui installe est du temps pris a ce qui frappe.",
+    "",
+    "Le nom du lore est AZNAROTH."
+  ],
+  "bibliotheque": "sfx_library",
+  "effets_db": 9,
+  "largeur_stereo": 2.6,
+  "reverberation_s": 2.6,
+  "finition": {
+    "etalonnage": {
+      "force": 0.6,
+      "grain": 0
+    },
+    "lut": "visual_library/02_LUTs_and_Grading/LUT_teal_orange.cube",
+    "calques": [
+      {
+        "fichier": "visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4",
+        "fusion": "screen",
+        "opacite": 0.09
+      }
+    ]
+  },
+  "plans": [
+    {
+      "nom": "affiche",
+      "source": "rushes/affiche_aznaroth.mp4",
+      "depart": 0.0,
+      "duree": 0.5,
+      "cible_db": -24.0
+    },
+    {
+      "nom": "mage",
+      "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
+      "depart": 3.2,
+      "duree": 1.8,
+      "cible_db": -22.0,
+      "zoom": 0.06,
+      "stabiliser": true,
+      "_note": "sa troisieme replique, et la Terre deja fissuree"
+    },
+    {
+      "nom": "eclairs",
+      "source": "rushes/PLAN3_eclairs_SON_1s5.mp4",
+      "depart": 0.1,
+      "duree": 1.2,
+      "cible_db": -18.0
+    },
+    {
+      "nom": "vortex",
+      "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
+      "depart": 0.8,
+      "duree": 1.6,
+      "cible_db": -21.0,
+      "zoom": 0.7,
+      "flou_radial": 0.13
+    },
+    {
+      "nom": "dragon",
+      "source": "rushes/Duration_seconds_Cinemat.mp4",
+      "depart": 5.0,
+      "duree": 3.9,
+      "cible_db": -12.0,
+      "zoom": 0.18,
+      "tremblements": [
+        {
+          "debut": 1.5,
+          "duree": 0.3,
+          "force": 0.08
+        }
+      ]
+    }
+  ],
+  "effets": [
+    {
+      "son": "braam",
+      "instant": 0.0,
+      "gain": 8,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.2,
+        "fondamentale": 52.0,
+        "graine": 140
+      }
+    },
+    {
+      "son": "eclat",
+      "instant": 0.0,
+      "gain": 10,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.9,
+        "graine": 142,
+        "densite": 200.0
+      }
+    },
+    {
+      "son": "transition_eclair",
+      "instant": 0.0,
+      "gain": 8,
+      "distance": "proche"
+    },
+    {
+      "son": "whoosh_rapide",
+      "instant": 0.35,
+      "gain": 6,
+      "distance": "moyen"
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 0.5,
+      "gain": -2,
+      "distance": "lointain"
+    },
+    {
+      "son": "montee_sans_fin",
+      "instant": 0.6,
+      "gain": 2,
+      "largeur": 16,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 4.6,
+        "graine": 77,
+        "cycle": 3.2
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 2.15,
+      "gain": 5,
+      "distance": "moyen"
+    },
+    {
+      "son": "impact_debris",
+      "instant": 2.3,
+      "gain": 8,
+      "distance": "proche"
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 2.3,
+      "gain": -2,
+      "distance": "lointain"
+    },
+    {
+      "son": "whoosh_tournant",
+      "instant": 3.4,
+      "gain": 3,
+      "largeur": 20,
+      "distance": "lointain"
+    },
+    {
+      "son": "aspiration",
+      "instant": 3.45,
+      "gain": 7,
+      "largeur": 22,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 1.7,
+        "graine": 44,
+        "tours_final": 36.0
+      }
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 3.55,
+      "gain": 0,
+      "largeur": 18,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 1.5,
+        "graine": 63,
+        "densite": 24.0
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 4.95,
+      "gain": 6,
+      "distance": "moyen"
+    },
+    {
+      "son": "braam_massif",
+      "instant": 5.1,
+      "gain": 9,
+      "distance": "proche"
+    },
+    {
+      "son": "grondement_terre",
+      "instant": 5.1,
+      "gain": 5,
+      "distance": "lointain"
+    },
+    {
+      "son": "crepitement",
+      "instant": 5.15,
+      "gain": -2,
+      "largeur": 22,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 3.9,
+        "densite": 85.0,
+        "graine": 775
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 6.6,
+      "gain": 8,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.2,
+        "graine": 79,
+        "poids_tonnes": 1.4
+      }
+    },
+    {
+      "son": "braam_double",
+      "instant": 7.35,
+      "gain": 9,
+      "distance": "proche"
+    },
+    {
+      "son": "cri_titan",
+      "instant": 7.6,
+      "gain": 13,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.4,
+        "fondamentale": 50.0,
+        "graine": 31,
+        "dechirure": 1.25
+      }
+    }
+  ],
+  "esquive": {
+    "gain": -8,
+    "depuis": 0.5,
+    "jusqu_a": 2.3
+  },
+  "sous_titres": [
+    {
+      "texte": "THE SHADOW TITAN AWAKENS",
+      "debut": 0.7,
+      "fin": 2.25,
+      "secousse": 8.0
+    }
+  ],
+  "titres": [
+    {
+      "texte": "AZNAROTH",
+      "debut": 7.7,
+      "fin": 8.9,
+      "y": 300,
+      "taille": 92,
+      "secousse": 9.0
+    }
+  ]
+}

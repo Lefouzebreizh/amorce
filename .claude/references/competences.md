@@ -31,6 +31,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/jauge` | Dire où en est la consommation de l'abonnement Claude — la fenêtre de cinq heures et celle de sept jours — et ce qu'elle permet encore de faire… |
 | `/kdp-niche-validator` | Valider un mot-clé KDP avant d'écrire le livre — dit si une niche vend assez (BSR), si la place est prenable (nombre d'avis) et si la marge existe… |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture de livre reste lisible réduite à la taille d'une vignette de boutique (150 px de large) — fabrique la vignette et mesure… |
+| `/master-telephone` | >- Sortir une vidéo au niveau d'un téléphone et non d'un cinéma — gagner cinq décibels réellement entendus sans écraser la dynamique, en remplissant… |
 | `/module-life-organizer` | Dans quel ordre écrire un module de l'assistant de rangement Life-Organizer, et les quatre pièges du domaine qui coûtent chacun une reprise complète… |
 | `/naviguer-le-depot` | Trouver vite le bon fichier dans ce dépôt à onze projets sans noyer le contexte — quel projet répond à quelle demande, quels dossiers ne jamais… |
 | `/nouveau-projet` | Ajouter un projet à ce dépôt multi-projets sans rien oublier — les six endroits où il doit se déclarer pour être installé, vérifié, gardé par… |
