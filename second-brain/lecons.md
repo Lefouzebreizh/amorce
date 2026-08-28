@@ -1282,3 +1282,39 @@ ce qu'il avait de plus rare, et ce qu'aucun montage ne fabrique.
 Le rythme se met alors **dessus** et non dedans : poussée d'échelle, secousse
 sur l'impact, textes qui arrivent, son qui monte. Le film garde une seule
 coupe, et personne ne la cherche.
+
+## Une couleur choisie n'est pas la couleur qui arrive
+
+Un sous-titre écrit `#b4f2ff` — un cyan clair, franc sur le papier — mesurait
+**12 % de saturation à l'écran**. Le contour noir et la compression délavent, et
+sous 20 % l'oeil lit simplement « blanc ». L'auteur a dit « il n'y a aucune
+couleur », et il avait raison contre la constante.
+
+Il faut donc choisir **nettement plus saturé que ce qu'on veut voir**, et le
+vérifier sur le rendu, jamais sur la valeur écrite.
+
+Et la mesure elle-même se choisit. Un premier relevé prenait les pixels les
+plus **clairs** de la bande — c'est-à-dire les bords anti-aliasés, presque
+blancs — et concluait que rien n'avait changé alors que le texte était devenu
+franchement cyan. Relevé sur les pixels les plus **saturés**, le vrai chiffre
+apparaît : de 2 521 à **13 693 pixels colorés**, cinq fois et demie plus.
+
+Quand une correction évidente à l'oeil ne se voit pas dans la mesure, suspecter
+la mesure avant la correction.
+
+## `setpts` ralentit l'image et laisse le son derrière
+
+Un plan de 2 s lu à mi-vitesse rend **4 s d'image pour 2 s d'audio**, et le
+reste sort en silence absolu. Mesuré sur un montage : une seconde et demie à
+−180 dB en fin de film, que rien ne signalait — ni erreur, ni avertissement, ni
+durée de fichier suspecte, puisque le conteneur affiche la durée de la vidéo.
+
+`atempo` remet les deux d'accord, et se pose sur le son **en même temps** que
+`setpts` sur l'image. Le piège vaut pour tout ralenti et tout accéléré.
+
+Le contrôle qui l'aurait vu tient en une ligne :
+
+```bash
+ffprobe -v error -show_entries stream=codec_type,duration -of csv=p=0 film.mp4
+# video et audio doivent afficher la même durée
+```
