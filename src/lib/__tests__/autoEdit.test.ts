@@ -103,3 +103,25 @@ test('une image fixe reçoit un mouvement de caméra', () => {
     'au moins un plan bouge',
   );
 });
+
+test('le montage express ne pose jamais de plan fixe', () => {
+  /*
+   * Un plan sur trois était immobile. Sur des rushes qui se ressemblent — même
+   * personnage, même palette — un plan fixe entre deux autres ne se lit pas
+   * comme une coupe mais comme un arrêt : mesuré sur un film livré, des plans
+   * de 2,1 s donnaient des suites de 4,6 et 7,5 secondes sans qu'aucun raccord
+   * ne se voie.
+   */
+  const assets = Array.from({ length: 8 }, (_, i) => asset(`a${i}`, 4));
+  const { clips } = buildAutoEdit(assets);
+  assert.ok(clips.length >= 6, `${clips.length} plans`);
+  assert.ok(clips.every((c) => c.motion !== 'none'), clips.map((c) => c.motion).join(', '));
+});
+
+test('deux plans qui se suivent ne portent pas le même mouvement', () => {
+  const assets = Array.from({ length: 8 }, (_, i) => asset(`b${i}`, 4));
+  const { clips } = buildAutoEdit(assets);
+  for (let i = 1; i < clips.length; i += 1) {
+    assert.notEqual(clips[i].motion, clips[i - 1].motion, `plans ${i - 1} et ${i}`);
+  }
+});
