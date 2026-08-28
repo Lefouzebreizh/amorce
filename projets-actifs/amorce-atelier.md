@@ -81,10 +81,36 @@ une impossibilité.** La voix off, les poids Wav2Lip et la transcription ont tou
 été déclarés hors de portée avant qu'un troisième chemin réponde — et les trois
 fois, c'étaient les objets de release GitHub.
 
+## La couture est commencée — par une autre session
+
+**Ne pas la réécrire.** `montage-auto/monter_episode.py` existe déjà, piloté par
+une recette JSON (`montage-auto/references/titans-ep01.json`). Il encode cinq
+échecs de montage à la main, et ce sont exactement ceux de la session TITANS :
+
+- un plan se coupe **sur sa courbe**, pas sur sa durée — `--sonder` relève le
+  niveau seconde par seconde avant qu'on choisisse ;
+- égaliser tous les plans supprime le relief avec le défaut : ce qui fait un
+  montage est une **courbe de cibles écrite**, pas une égalisation ;
+- jamais de `loudnorm` en une passe — c'est un compresseur, il aplatit
+  précisément le relief qu'on vient de construire ;
+- **un seul élément possède le grave à la fois**, et rien de lourd sous une
+  voix, qui porte la synchronisation labiale ;
+- les sous-titres se calent sur la **parole mesurée**, pas sur une grille.
+
+Il couvre donc le montage, le mixage et les sous-titres depuis une recette.
+
 ## Prochain pas
 
-**Écrire la couture avant d'ajouter le moindre outil.** Un fichier de recette
-qui décrit un épisode — rushes, texte des répliques, ambiance, format — et un
-programme qui appelle les neuf outils existants dans l'ordre. Zéro
-fonctionnalité neuve au premier jet : la valeur est dans le fait qu'ils se
-parlent enfin.
+**Brancher les outils qui restent dehors sur cette recette**, dans l'ordre du
+moins cher au plus cher : `voix.py` pour les répliques, `etalonner.py` pour
+l'accord des plans, `animer-image.py` pour les images fixes, `visual_library/`
+pour les calques, `auto_lipsync.py` en dernier — c'est le seul qui se compte en
+minutes de processeur.
+
+Zéro fonctionnalité neuve tant que ces cinq-là ne sont pas dans la recette. La
+valeur est dans le fait qu'ils se parlent, pas dans le nombre d'outils.
+
+**Et le réflexe qui a manqué six fois dans la session TITANS :** avant de
+construire, lire la liste des branches ouvertes que le hook de démarrage
+affiche. Elle pose la question — « l'une d'elles fait-elle déjà ce travail ? » —
+et cette fiche a bien failli répondre non à tort.
