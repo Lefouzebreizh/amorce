@@ -1,0 +1,264 @@
+{
+  "_lisez_moi": [
+    "AZNAROTH — episode violet. Remplacer les chemins de « source ».",
+    "",
+    "  AFFICHE  0,00 -  0,50",
+    "  LE PLAN  0,50 - 10,10   un seul mouvement continu :",
+    "     ~1,0  le sorcier et son orbe",
+    "     ~3,0  les cercles runiques se referment",
+    "     ~5,3  le vortex s'ouvre",
+    "     ~7,8  le titan emerge",
+    "",
+    "Teinte mesuree : 263° (violet) contre 192° pour la serie turquoise —",
+    "71° d'ecart, deux familles. Ce plan ne se melange pas aux autres, il fait",
+    "son propre episode. Les couleurs de texte viennent de SA teinte, et la LUT",
+    "teal_orange est ECARTEE : elle le tirerait vers le cyan.",
+    "",
+    "Une seule coupe dans tout le film. C'est voulu : la continuite du plan est",
+    "ce qu'il a de plus rare."
+  ],
+  "bibliotheque": "sfx_library",
+  "effets_db": 9,
+  "largeur_stereo": 2.6,
+  "reverberation_s": 2.8,
+  "finition": {
+    "_note": "pas de LUT : la teal_orange tirerait le violet vers le cyan.",
+    "etalonnage": {
+      "force": 0.5,
+      "grain": 0
+    },
+    "calques": [
+      {
+        "fichier": "visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4",
+        "fusion": "screen",
+        "opacite": 0.09
+      }
+    ]
+  },
+  "plans": [
+    {
+      "nom": "affiche",
+      "source": "rushes/affiche_aznaroth.mp4",
+      "depart": 0.0,
+      "duree": 0.5,
+      "cible_db": -24.0
+    },
+    {
+      "nom": "revelation",
+      "source": "rushes/Cosmic_Druid_Sorcerer_Titan_Awakening.mp4",
+      "depart": 0.3,
+      "duree": 9.6,
+      "cible_db": -16.0,
+      "zoom": 0.14,
+      "tremblements": [
+        {
+          "debut": 7.3,
+          "duree": 0.32,
+          "force": 0.075
+        }
+      ],
+      "_note": "le plan entier, non decoupe"
+    }
+  ],
+  "effets": [
+    {
+      "son": "braam",
+      "instant": 0.0,
+      "gain": 8,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.2,
+        "fondamentale": 48.0,
+        "graine": 140
+      }
+    },
+    {
+      "son": "eclat",
+      "instant": 0.0,
+      "gain": 10,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.9,
+        "graine": 142,
+        "densite": 200.0
+      }
+    },
+    {
+      "son": "whoosh_rapide",
+      "instant": 0.35,
+      "gain": 6,
+      "distance": "moyen"
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 0.5,
+      "gain": -1,
+      "largeur": 16,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 5.0,
+        "fondamentale": 46.0,
+        "graine": 88
+      }
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 0.5,
+      "gain": -3,
+      "distance": "lointain"
+    },
+    {
+      "son": "carillon",
+      "instant": 2.9,
+      "gain": 4,
+      "largeur": 14,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.6,
+        "fondamentale": 740.0,
+        "graine": 150
+      },
+      "_note": "les cercles runiques qui se referment"
+    },
+    {
+      "son": "carillon",
+      "instant": 3.55,
+      "gain": 5,
+      "largeur": 14,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.6,
+        "fondamentale": 990.0,
+        "graine": 151
+      }
+    },
+    {
+      "son": "montee_sans_fin",
+      "instant": 2.6,
+      "gain": 3,
+      "largeur": 18,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 4.4,
+        "graine": 77,
+        "cycle": 3.4
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 5.05,
+      "gain": 6,
+      "distance": "moyen"
+    },
+    {
+      "son": "aspiration",
+      "instant": 5.2,
+      "gain": 8,
+      "largeur": 22,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 2.4,
+        "graine": 44,
+        "tours_final": 34.0
+      }
+    },
+    {
+      "son": "souffle_tournant",
+      "instant": 5.3,
+      "gain": 0,
+      "largeur": 20,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 2.3,
+        "graine": 46
+      }
+    },
+    {
+      "son": "chute_sous_grave",
+      "instant": 7.1,
+      "gain": 4,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.6,
+        "graine": 45,
+        "depart_hz": 150.0
+      }
+    },
+    {
+      "son": "braam_massif",
+      "instant": 7.3,
+      "gain": 10,
+      "distance": "proche"
+    },
+    {
+      "son": "grondement_terre",
+      "instant": 7.3,
+      "gain": 5,
+      "distance": "lointain"
+    },
+    {
+      "son": "crepitement",
+      "instant": 7.35,
+      "gain": -2,
+      "largeur": 22,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 2.7,
+        "densite": 85.0,
+        "graine": 775
+      }
+    },
+    {
+      "son": "cri_titan",
+      "instant": 8.35,
+      "gain": 13,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.6,
+        "fondamentale": 46.0,
+        "graine": 31,
+        "dechirure": 1.3
+      }
+    }
+  ],
+  "sous_titres": [
+    {
+      "texte": "RIFT ZERO FIVE",
+      "debut": 1.1,
+      "fin": 2.5,
+      "secousse": 8.0,
+      "couleur": "#c9a8ff",
+      "halo": "#6b20e5"
+    },
+    {
+      "texte": "BREACH OPEN",
+      "debut": 5.25,
+      "fin": 6.6,
+      "secousse": 8.0,
+      "couleur": "#c9a8ff",
+      "halo": "#6b20e5"
+    }
+  ],
+  "titres": [
+    {
+      "texte": "THE SHADOW TITAN:",
+      "debut": 8.2,
+      "fin": 10.0,
+      "y": 250,
+      "taille": 56,
+      "secousse": 6.0,
+      "couleur": "#c9a8ff",
+      "halo": "#6b20e5"
+    },
+    {
+      "texte": "AZNAROTH",
+      "debut": 8.35,
+      "fin": 10.0,
+      "y": 330,
+      "taille": 100,
+      "secousse": 9.0,
+      "couleur": "#e0ccff",
+      "halo": "#6b20e5"
+    }
+  ]
+}
