@@ -1309,3 +1309,56 @@ l'écran pendant qu'on lit : 38,2 de luminance, et 1,7 s au lieu de 2,4.
 Ce qui vaut d'être retenu déborde le montage : **une bonne idée mal exécutée se
 reprend, elle ne se rejette pas.** Mesurer ce qui cloche dans l'exécution coûte
 moins cher que de réinventer l'idée.
+
+## « Ça sature » ne veut pas dire que ça écrête
+
+Un rugissement décrit comme saturé, « un bruit de turbine ». Premier réflexe :
+chercher l'écrêtage. Mesuré seconde par seconde — **zéro échantillon au-dessus
+de 0,985**, facteur de crête entre 11 et 12 dB sur toute la durée. Rien ne
+clippait.
+
+Deuxième suspect, l'excitation harmonique : c'est un redresseur suivi d'une
+saturation douce, donc de la distorsion par construction. Mesuré aussi — elle
+**réduit** le contenu 3-12 kHz au lieu de l'augmenter, et n'ajoute aucun peigne.
+Innocente.
+
+Le défaut était ailleurs, et il se lit d'un coup en profil de bandes : au
+moment du cri, **toutes** les bandes de 60 Hz à 4 kHz étaient pleines à
++9/+12 dB. Onze sources simultanées, plus 2,6 s de réverbération sur chacune.
+C'est du **masquage**, et l'oreille le rapporte comme une saturation parce
+qu'elle n'a plus rien à quoi se raccrocher.
+
+Il ne se corrige pas au niveau — le monter l'aggrave. Il se corrige en
+**enlevant** : une couche de cri au lieu de deux, le crépitement supprimé, le
+lit descendu de 5 dB, la réverbération de 2,6 à 1,8 s. Relief spectral du cri
+9,5 → 11,5 dB, et la boue sous 125 Hz de 10,4 à 2,4 dB.
+
+```bash
+# le bon relevé n'est pas volumedetect mais le profil par octaves :
+# des bandes toutes egales = de la boue, quel que soit le niveau
+```
+
+## Un carton fabriqué depuis la dernière image hérite du texte de cette image
+
+Le carton d'annonce de l'épisode suivant est fabriqué à partir de la dernière
+image du film — c'est ce qui lui évite le fond noir. Mais cette image portait
+encore un titre incrusté, et il s'est retrouvé **figé derrière** les trois
+lignes du carton : quatre textes empilés, illisibles.
+
+Rien dans le code ne pouvait le signaler : les deux traitements sont corrects
+séparément. C'est leur composition qui produit le défaut, et elle ne se voit
+qu'à l'écran.
+
+**Un titre doit s'éteindre avant la dernière image** dès lors qu'on reprend
+cette image ailleurs. Ici 0,6 s de marge. Vaut pour toute vignette, toute
+miniature, tout carton tiré d'une frame du montage.
+
+## Ce qui ouvre une vidéo se regarde, il ne se traverse pas
+
+L'affiche d'ouverture durait 0,6 s — calibrée pour « dire vite ce qu'on
+regarde ». Retour à l'écoute : « on ne voit pas le titre, on ne voit même pas
+la beauté de cette image ». Passée à 1,5 s, elle fait son travail.
+
+Le chiffre de départ venait d'une bonne règle appliquée trop loin : sur un
+format court, chaque dixième compte. Mais une image qu'on ne peut pas lire ne
+coûte pas 0,6 s, elle les **gaspille** — c'est le pire des deux mondes.
