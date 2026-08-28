@@ -72,6 +72,67 @@ export function Timeline({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const touch = useIsTouch();
 
+  /*
+   * Réordonner un plan au doigt.
+   *
+   * Le glisser-déposer HTML5 ne répond pas au tactile : sur téléphone, la seule
+   * façon de déplacer un plan était de le sélectionner puis d'appuyer sur des
+   * flèches dans un panneau, plusieurs écrans plus bas. Sur la frise elle-même,
+   * un plan ne bougeait pas — c'est ce qui sépare un jouet d'un studio.
+   *
+   * **Appui long pour saisir, pas glissé direct.** La frise défile
+   * horizontalement au doigt : un glissé qui déplacerait un plan volerait le
+   * geste du défilement, et un montage un peu long deviendrait impossible à
+   * parcourir. Après trois cent cinquante millisecondes sans bouger, en
+   * revanche, l'intention n'est plus ambiguë — c'est le geste que le pouce
+   * connaît déjà partout ailleurs.
+   *
+   * Le mouvement pendant l'attente annule la saisie : quelqu'un qui fait
+   * défiler ne doit jamais se retrouver à déplacer un plan sans l'avoir voulu.
+   */
+  const saisie = useRef<{
+    pointeur: number;
+    depart: number;
+    x: number;
+    y: number;
+    minuterie: number;
+  } | null>(null);
+  const [saisi, setSaisi] = useState<number | null>(null);
+  const [survole, setSurvole] = useState<number | null>(null);
+
+  /*
+   * Une fois le plan saisi, le défilement du navigateur doit se taire.
+   *
+   * `touch-action` est consulté au début du geste, donc le changer maintenant
+   * ne suffit pas. Seul un écouteur non passif qui refuse l'événement arrête un
+   * défilement en cours — et React pose les siens en passif.
+   */
+  useEffect(() => {
+    if (saisi === null) return;
+    const refuser = (e: TouchEvent) => e.preventDefault();
+    document.addEventListener('touchmove', refuser, { passive: false });
+    return () => document.removeEventListener('touchmove', refuser);
+  }, [saisi]);
+
+  const relacher = () => {
+    if (saisie.current) window.clearTimeout(saisie.current.minuterie);
+    saisie.current = null;
+    setSaisi(null);
+    setSurvole(null);
+  };
+
+  /** Sur quel plan le doigt se trouve, d'après sa position dans la piste. */
+  const plansSous = (clientX: number): number | null => {
+    const bornes = trackRef.current?.getBoundingClientRect();
+    if (!bornes) return null;
+    const t = (clientX - bornes.left) / PX_PER_SEC;
+    const trouve = placed.findIndex((item) => t >= item.start && t < item.end);
+    if (trouve !== -1) return trouve;
+    // Au-delà du dernier plan, on vise la fin : c'est le geste « mets-le à la
+    // fin », qui n'aurait sinon aucune cible.
+    return t >= (placed[placed.length - 1]?.end ?? 0) ? placed.length - 1 : null;
+  };
+
   const placed = layoutClips(clips);
   const width = Math.max(320, duration * PX_PER_SEC + RIGHT_GUTTER);
 
@@ -119,9 +180,8 @@ export function Timeline({
             return (
               <div
                 key={item.clip.id}
-                // Le glisser-déposer HTML5 ne répond pas au tactile : sur
-                // téléphone, le réordonnancement passe par les boutons du
-                // panneau de réglage du plan.
+                // À la souris, le glisser-déposer natif reste le meilleur
+                // geste : il porte son propre curseur et son propre retour.
                 draggable={!touch}
                 onDragStart={() => setDragIndex(item.index)}
                 onDragOver={(event) => event.preventDefault()}
@@ -130,18 +190,78 @@ export function Timeline({
                   if (dragIndex !== null && dragIndex !== item.index) moveClip(dragIndex, item.index);
                   setDragIndex(null);
                 }}
+                onPointerDown={(event) => {
+                  if (event.pointerType === 'mouse') return;
+                  const cible = event.currentTarget;
+                  saisie.current = {
+                    pointeur: event.pointerId,
+                    depart: item.index,
+                    x: event.clientX,
+                    y: event.clientY,
+                    minuterie: window.setTimeout(() => {
+                      setSaisi(item.index);
+                      setSurvole(item.index);
+                      // La capture garde les événements sur ce bloc même quand
+                      // le doigt le quitte : sans elle, déplacer un plan
+                      // au-delà de son voisin coupe le geste au premier bord.
+                      try {
+                        cible.setPointerCapture(event.pointerId);
+                      } catch {
+                        // Un pointeur déjà relâché : rien à capturer.
+                      }
+                      // Une courte vibration dit que le plan est en main. Sans
+                      // elle, on ne sait pas si l'appui a été assez long.
+                      navigator.vibrate?.(12);
+                    }, 350),
+                  };
+                }}
+                onPointerMove={(event) => {
+                  const s = saisie.current;
+                  if (!s || s.pointeur !== event.pointerId) return;
+                  if (saisi === null) {
+                    // Encore en attente : tout mouvement franc est un
+                    // défilement, pas une saisie.
+                    const bouge = Math.hypot(event.clientX - s.x, event.clientY - s.y);
+                    if (bouge > 10) relacher();
+                    return;
+                  }
+                  const dessous = plansSous(event.clientX);
+                  if (dessous !== null && dessous !== survole) setSurvole(dessous);
+                }}
+                onPointerUp={(event) => {
+                  const s = saisie.current;
+                  const arrivee = survole;
+                  const depart = s?.depart ?? null;
+                  const enMain = saisi !== null;
+                  relacher();
+                  if (enMain && depart !== null && arrivee !== null && arrivee !== depart) {
+                    moveClip(depart, arrivee);
+                    event.stopPropagation();
+                  }
+                }}
+                onPointerCancel={relacher}
                 onClick={(event) => {
                   event.stopPropagation();
                   select({ kind: 'clip', id: item.clip.id });
                 }}
                 title={`${asset?.name ?? 'Plan'} — ${item.duration.toFixed(1)} s`}
                 className={`absolute top-0 ${compact ? 'h-12' : 'h-16'} cursor-grab overflow-hidden rounded-lg border bg-cover bg-center transition-colors active:cursor-grabbing ${
-                  active ? 'border-select ring-1 ring-select' : 'border-edge hover:border-muted'
+                  saisi === item.index
+                    ? 'z-20 border-select opacity-90 shadow-[0_10px_24px_-6px_rgba(0,0,0,0.9)] ring-2 ring-select'
+                    : survole === item.index && saisi !== null
+                      ? 'border-select ring-1 ring-select/60'
+                      : active
+                        ? 'border-select ring-1 ring-select'
+                        : 'border-edge hover:border-muted'
                 }`}
                 style={{
                   left: item.start * PX_PER_SEC,
                   width: blockWidth,
                   backgroundImage: asset?.thumbnail ? `url(${asset.thumbnail})` : undefined,
+                  // Le plan saisi se soulève : sans ce déplacement, rien ne
+                  // distingue « en main » de « sélectionné », et l'on relâche
+                  // sans savoir si le geste avait pris.
+                  transform: saisi === item.index ? 'translateY(-6px) scale(1.04)' : undefined,
                 }}
               >
                 <div className="flex h-full flex-col justify-between overflow-hidden bg-gradient-to-t from-black/85 via-black/30 to-black/50 p-1.5">
