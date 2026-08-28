@@ -28,7 +28,7 @@ en morceaux, hors de toute interface.
 | Maillon | Où | État |
 | --- | --- | --- |
 | Voix off française | `.claude/skills/bande-son/scripts/voix.py` | tourne, sherpa-onnx, 25× le temps réel |
-| Synchronisation labiale | `montage-auto/auto_lipsync.py` | **cousu** — champ `lipsync`, fenêtre découpée avant, échec sans casse |
+| Synchronisation labiale | `montage-auto/auto_lipsync.py` | **cousu et prouvé** — 2,0 s rendues, la bouche articule |
 | Transcription | `.claude/skills/transcription-media/scripts/asr_hors_ligne.py` | tourne, Whisper hors Hugging Face |
 | Bruitages de synthèse | `kits/sfx/`, `src/lib/sfx.ts` | 10 générateurs, index mesuré |
 | Musique | `.claude/skills/bande-son/scripts/musique.py`, `kits/music/` | 5 ambiances + nappe de bande-annonce |
@@ -140,6 +140,29 @@ ont chacun coûté la même leçon, et elle vaut d'être écrite une fois :
   son extension, sans champ à remplir : personne ne pense à déclarer qu'une
   image est une image, et l'oubli produisait exactement le plan figé qu'on
   cherchait à supprimer.
+
+## Ce que la synchronisation labiale a coûté, en vrai
+
+Trois enseignements du premier passage de bout en bout, sur un plan de druide de
+deux secondes et demie.
+
+**La sonde a payé son écriture au premier essai.** Elle a trouvé **11 images sur
+60 sans visage exploitable**, la première étant l'image 0. Sans elle, Wav2Lip
+aurait parcouru les soixante images pour annoncer « Face not detected » — mesuré
+ailleurs à 4 min 51. Et le visage était pourtant grand, centré, de face : ce qui
+gêne `s3fd` ici est une **moustache épaisse** qui noie la bouche, pas un cadrage
+difficile. Un plan qu'on croit facile n'est pas un plan sondé.
+
+**La fenêtre que la sonde propose est directement utilisable.** Elle annonçait
+0,50 s → 2,50 s ; recopiée dans la recette en `"depart": 0.80, "duree": 2.00`,
+elle a rendu du premier coup. C'est ce qui a justifié de traduire ses
+coordonnées : la sonde compte depuis la fenêtre extraite, la recette depuis le
+rush.
+
+**La bouche est plus molle que le reste du visage**, et c'est structurel : le
+générateur reconstruit un carré autour des lèvres et le recolle. Sur ce plan la
+barbe le masque bien ; sur un visage glabre en gros plan, il se verrait. À
+juger sur le téléphone, jamais sur l'écran d'un ordinateur.
 
 ## Prochain pas
 

@@ -1117,3 +1117,28 @@ voix, le film se tait.
 Le filtre rendait un chiffre plus flatteur en masquant le seul défaut qu'il
 aurait dû signaler. **Avant d'écarter une valeur aberrante, vérifier ce qu'elle
 mesure vraiment** : quand la mesure est juste, l'aberration est dans le film.
+
+## Une sonde de données vaut mieux qu'une vérification d'environnement
+
+Un outil lourd vérifie volontiers ce dont il a besoin — le binaire, le modèle,
+la carte graphique — et jamais **ce qu'on lui donne**. C'est pourtant par là que
+l'échec arrive, et il arrive tard : Wav2Lip parcourt les soixante images d'un
+plan avant d'annoncer qu'il n'y a pas de visage, mesuré à 4 min 51 sur
+processeur.
+
+Sonder les données d'abord coûte quelques secondes et change la nature du
+message. Sur un plan de druide de deux secondes et demie, la sonde a rendu
+« 11 images sur 60 sans visage exploitable, la première est l'image 0, fenêtre
+exploitable 0,50 s → 2,50 s ». Le visage était grand, centré, de face : ce qui
+gênait le détecteur était une **moustache épaisse**, pas un cadrage difficile.
+Un plan qu'on croit facile n'est pas un plan sondé.
+
+Deux corollaires, payés le même soir :
+
+- **Une sonde doit rendre la sortie de secours, pas seulement le constat.** La
+  fenêtre exploitable qu'elle nomme se recopie telle quelle et rend du premier
+  coup. Un diagnostic sans issue oblige à chercher à la main ce que la machine
+  vient de calculer.
+- **Traduire ses coordonnées dans celles de l'appelant.** La sonde compte depuis
+  ce qu'elle a reçu, la recette depuis le début du rush. L'addition manquée
+  décale d'un `depart` entier et se lit comme un défaut de l'outil.
