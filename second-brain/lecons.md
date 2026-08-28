@@ -614,3 +614,35 @@ d'avoir sondé », appliquée à l'entrée plutôt qu'à l'outil.
 pour un modèle de visage, c'est un plan sans visage. Le plan utilisable est
 celui où la tête entière tient dans l'image, hood compris — pas le plus
 spectaculaire.
+
+## Un plan s'égalise sur ce qu'on entend, pas sur ce qu'on mesure
+
+Quatre jours de montages rejetés tenaient à une seule confusion. Le niveau moyen
+d'un plan et le niveau que rend un haut-parleur de téléphone ne se suivent pas :
+mesuré sur six plans d'un même épisode, l'écart entre plans valait **5,1 dB en
+bande entière** — un ensemble qui paraît équilibré — et **15,4 dB une fois passé
+le filtre à 400 Hz**. Le monteur réglait la première colonne ; le spectateur
+écoutait la seconde, où l'œil et le vortex passaient quinze décibels sous la voix.
+
+Le remède ne touche pas au timbre : on donne à chaque plan le gain qui aligne son
+**niveau filtré**, pas son niveau entier. L'écart est tombé de 15,4 à 4,0 dB.
+C'est la seule correction acceptable sur un enregistrement — l'excitation
+harmonique, elle, y grésille (`/bande-son`).
+
+```bash
+ffmpeg -hide_banner -nostats -ss <debut> -t <duree> -i <plan> \
+       -af highpass=f=400,volumedetect -f null -
+```
+
+## `-v error` fait taire l'instrument de mesure
+
+`volumedetect` écrit son résultat en niveau *info*. Lancé avec `-v error` par
+réflexe d'économie, il ne rend rien — et le script qui l'appelle conclut « muet »
+pour la totalité du lot, sans erreur, sans avertissement. Deux mesures ont été
+perdues ainsi le même jour, la seconde alors que la première venait d'être
+diagnostiquée.
+
+C'est la même famille de défaut que le doseur déjà consigné plus haut : un outil
+de mesure qui échoue **en silence** rend un verdict faux plus dangereux qu'une
+panne. Avant de croire une mesure uniforme sur un lot hétérogène, vérifier que
+l'instrument parle encore.
