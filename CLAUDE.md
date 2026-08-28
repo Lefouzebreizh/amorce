@@ -185,6 +185,43 @@ résumé de la précédente hérite de son état sans hériter de ses règles. C
 ainsi qu'on redemande une fusion déjà autorisée une fois pour toutes, ou qu'on
 pose un projet sans le déclarer aux six endroits.
 
+**Un « bonjour » se répond par un point et une sortie, jamais par « on fait
+quoi ? ».** Le propriétaire ouvre souvent un fil sans consigne, parfois fatigué,
+parfois après trois jours de blocage. Lui renvoyer la question lui fait porter
+un travail de diagnostic qu'il vient précisément chercher. La réponse tient en
+trois blocs et se mesure avant de s'écrire :
+
+1. **Où en est le travail** — mesuré par `/etat-du-depot`, jamais de mémoire.
+   Ce que la dernière session a livré, ce qui est fusionné, ce qui pend.
+2. **Ce qui bloque, nommément.** Un blocage qui dure ne se dit pas « c'est
+   compliqué » : il se nomme. Une clé absente, un hôte refusé, un fichier de
+   0,07 Mo, un outil jamais déployé.
+3. **Le contournement, tout de suite.** Pas « il faudrait », mais la commande
+   ou le geste. C'est le bloc qui compte : trois jours perdus l'ont été faute
+   d'une phrase que personne n'avait écrite.
+
+**Trois jours de blocage sont un défaut de méthode, pas de chance.** La méthode
+qui les évite est courte, et elle est écrite dans les compétences plutôt qu'ici :
+`/capacites-session` sonde ce que la machine sait faire **avant** qu'on promette
+quoi que ce soit ; `/debloquer` donne la parade dans l'ordre où elle coûte le
+moins cher ; `/dependance-indisponible` rappelle qu'une absence déplace la
+frontière du vérifiable sans la supprimer.
+
+Trois règles en découlent, et chacune a déjà été payée :
+
+- **Deux chemins essayés ne font pas une impossibilité.** La voix off a été
+  déclarée hors de portée pendant des semaines — pas de clé, un hôte refusé —
+  jusqu'à ce qu'un troisième chemin réponde. Les poids Wav2Lip aussi. Les deux
+  fois, la sortie était la même : **les objets de release GitHub répondent**
+  quand Hugging Face et les sites d'éditeurs sont refusés. C'est le premier
+  endroit où chercher, pas le dernier.
+- **Un blocage qui dure plus d'une journée se traite en le nommant par écrit.**
+  Dans `second-brain/lecons.md` s'il traverse les projets, dans la compétence
+  concernée sinon. Un blocage écrit se résout ; un blocage raconté se répète.
+- **Quand rien ne débloque, livrer la version dégradée qui marche** et dire
+  précisément ce qu'elle n'a pas. Une vidéo publiée qui n'est pas belle vaut
+  mieux que quatre jours à attendre celle qui le serait.
+
 **Nommer la session au premier message.** Un fil s'appelle `Rôle — Sujet` et
 se renomme avec `set_session_title` dès que ces deux-là sont connus : le rôle
 tel que le premier prompt le pose (« Act en tant que Solo-Founder, Lead

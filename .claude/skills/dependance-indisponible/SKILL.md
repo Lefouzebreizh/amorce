@@ -56,6 +56,13 @@ Ils partagent une propriété : ils transforment un manque **visible** en défau
   fichier attendu, sa taille, son emplacement ; laisser une variable
   d'environnement à qui a un miroir. Les poids des modèles de recherche se
   déplacent tous les six mois.
+
+  **Mais chercher d'abord sur les objets de release GitHub.** Deux capacités ont
+  été déclarées hors de portée dans ce dépôt — la synthèse vocale, puis les
+  poids Wav2Lip — et les deux fois la sortie était là. Hugging Face, les sites
+  d'éditeurs et les CDN de banques de sons sont refusés par le mandataire ;
+  `release-assets.githubusercontent.com` répond. Un dépôt qui republie les
+  poids en release suffit, et il en existe presque toujours un.
 - **Faire passer une absence pour un succès.** Découverte qui ne trouve rien,
   liste vide, flux de zéro octet : traités comme des réussites, ils produisent
   un vert qui ne garde rien. Ils doivent échouer bruyamment.

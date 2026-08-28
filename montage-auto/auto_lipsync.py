@@ -65,6 +65,15 @@ CHECKPOINTS_ACCEPTES = ("wav2lip_gan.pth", "wav2lip.pth")
 # Détecteur de visage S3FD. Wav2Lip le charge par un chemin relatif, en dur,
 # depuis son propre arbre : c'est la seule raison pour laquelle il ne peut pas
 # rester dans `models/` avec l'autre.
+# Miroir des poids, sur un objet de release GitHub. Ce fichier disait d'abord
+# qu'aucune adresse ne serait codée en dur, les liens d'origine (iiit.ac.in)
+# étant morts et les miroirs mouvants. La règle valait pour les sites
+# d'éditeurs ; elle ne vaut pas ici. Les releases GitHub sont le seul type
+# d'hôte que le mandataire des sessions distantes laisse passer, et celui-ci
+# sert bien les vrais fichiers : 416 Mo pour le générateur, 86 Mo pour le
+# détecteur — les tailles publiées par les auteurs. Vérifié avant d'être écrit.
+MIROIR = "https://github.com/justinjohn0306/Wav2Lip/releases/download/models"
+
 NOM_S3FD = "s3fd.pth"
 CHEMIN_S3FD_DANS_WAV2LIP = Path("face_detection") / "detection" / "sfd" / NOM_S3FD
 
@@ -229,7 +238,7 @@ def download_models(depot_wav2lip: Path | None = None) -> bool:
         None,
     )
     if checkpoint is None:
-        url = os.getenv("WAV2LIP_CHECKPOINT_URL")
+        url = os.getenv("WAV2LIP_CHECKPOINT_URL") or f"{MIROIR}/wav2lip_gan.pth"
         if url and _telecharger(url, DOSSIER_MODELES / CHECKPOINTS_ACCEPTES[0]):
             checkpoint = DOSSIER_MODELES / CHECKPOINTS_ACCEPTES[0]
         else:
@@ -260,9 +269,8 @@ def download_models(depot_wav2lip: Path | None = None) -> bool:
     else:
         copie_locale = DOSSIER_MODELES / NOM_S3FD
         if not copie_locale.is_file():
-            url = os.getenv("S3FD_URL")
-            if url:
-                _telecharger(url, copie_locale)
+            url = os.getenv("S3FD_URL") or f"{MIROIR}/s3fd.pth"
+            _telecharger(url, copie_locale)
 
         if copie_locale.is_file():
             # On copie plutôt qu'on ne crée un lien : Windows refuse les liens
