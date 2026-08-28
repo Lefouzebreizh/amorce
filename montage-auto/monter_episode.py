@@ -980,7 +980,16 @@ def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
     L'apparition dure douze centièmes. Plus court, le texte clignote ; plus
     long, il traîne derrière la coupe.
     """
-    contenu = str(entree["texte"]).replace("\\", r"\\").replace("'", r"\'")
+    # L'apostrophe se ferme, s'insère, se rouvre : `'\''`.
+    #
+    # `\'` ne marche pas, et l'échec est trompeur. ffmpeg n'interprète aucune
+    # séquence d'échappement **à l'intérieur** d'un argument entre apostrophes
+    # simples : le `\` y est un caractère comme un autre, la quote referme le
+    # champ, et tout ce qui suit est relu comme des options de filtre. Le
+    # message qu'on obtient ne parle donc jamais du texte — il annonce
+    # « No such filter: '0.25' », en nommant un morceau de l'expression `alpha`
+    # écrite bien plus loin. Reproduit et corrigé sur « IL S'EST RÉVEILLÉ ».
+    contenu = str(entree["texte"]).replace("\\", r"\\").replace("'", r"'\''")
     contenu = contenu.replace(":", r"\:").replace("%", r"\%")
     taille = int(entree.get("taille", 62))
     debut, fin = float(entree["debut"]), float(entree["fin"])
