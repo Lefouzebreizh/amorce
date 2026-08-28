@@ -600,15 +600,25 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
 
     if image is None:
         commande += ["-vf", filtre, "-map", "0:v"]
-        commande += ["-map", "1:a"] if muet else ["-af", f"volume={gain}dB", "-map", "0:a"]
+        # `setpts` ralentit l'IMAGE et laisse le son a sa vitesse : un plan
+        # de 2 s lu a mi-vitesse rend 4 s d'image pour 2 s d'audio, et le
+        # reste sort en silence absolu. Mesure : 1,5 seconde a -180 dB en fin
+        # de film, que rien ne signalait. `atempo` remet les deux d'accord.
+        son = f"volume={gain}dB"
+        if plan.get("vitesse"):
+            son = f"atempo={float(plan['vitesse']):.4f},{son}"
+        commande += ["-map", "1:a"] if muet else ["-af", son, "-map", "0:a"]
     else:
         # `-af` est **ignoré** dès qu'un `-filter_complex` est présent : le gain
         # du plan disparaissait en silence, et le seul plan flouté sortait au
         # niveau brut, dominant tout le montage. Le son passe donc par le même
         # graphe que l'image.
         source_son = "[1:a]" if muet else "[0:a]"
+        chaine_son = f"volume={gain}dB"
+        if plan.get("vitesse") and not muet:
+            chaine_son = f"atempo={float(plan['vitesse']):.4f},{chaine_son}"
         commande += ["-filter_complex",
-                     f"{image};{source_son}volume={gain}dB[audio]",
+                     f"{image};{source_son}{chaine_son}[audio]",
                      "-map", "[sortie]", "-map", "[audio]"]
     commande += ["-t", str(duree), "-c:v", "libx264", "-preset", "medium", "-crf", "19",
                  "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2", str(sortie)]
@@ -1019,8 +1029,12 @@ def couche_effets(poses: list, bibliotheque: Path, total_s: float,
 # six plans. Un sous-titre blanc y est un corps étranger ; teinté, il appartient
 # à l'image. La valeur est claire à dessein : une couleur saturée serait jolie
 # et illisible.
-TEINTE = "#b4f2ff"
-HALO = "#1fd8e6"
+# Mesuré sur un rendu réel : `#b4f2ff` arrivait à **12 % de saturation** à
+# l'écran — le contour noir et la compression délavent encore la couleur —
+# et sous 20 % l'oeil lit simplement « blanc ». Une couleur choisie sur le
+# papier n'est pas la couleur qui arrive.
+TEINTE = "#3fd4ff"
+HALO = "#0090ff"
 
 
 def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
@@ -1065,9 +1079,12 @@ def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
     commun = (f"fontfile={police()}:text='{contenu}':fontsize='{taille_animee}':"
               f"x='(w-text_w)/2{tremble}':y={y}:enable='{quand}'")
     return [
-        f"drawtext={commun}:fontcolor={entree.get('halo', HALO)}@0.55:"
-        f"borderw={int(taille * 0.22)}:bordercolor=black@0.55:"
-        f"alpha='{montee}*0.55'",
+        # Le halo passe de 0,55 a 0,90 d'opacite et de 22 a 30 % d'epaisseur :
+        # a l'ancien reglage il ne se voyait pas, et un halo invisible ne
+        # detache rien — il ne fait que coûter une passe de rendu.
+        f"drawtext={commun}:fontcolor={entree.get('halo', HALO)}@0.90:"
+        f"borderw={int(taille * 0.30)}:bordercolor=black@0.55:"
+        f"alpha='{montee}*0.90'",
         f"drawtext={commun}:fontcolor={entree.get('couleur', TEINTE)}:"
         f"borderw={5 if taille < 100 else 8}:bordercolor=black@0.9:"
         f"alpha='{montee}'",

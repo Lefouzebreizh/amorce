@@ -1,21 +1,20 @@
 {
   "_lisez_moi": [
-    "MORVAETH — l'episode violet. Remplacer les chemins de « source ».",
+    "MORVAETH — episode violet. Remplacer les chemins de « source ».",
     "",
-    "  AFFICHE   0,00 -  0,50",
-    "  MONTEE    0,50 -  8,30   le sorcier, les cercles, le vortex",
-    "  MORVAETH  8,30 - 12,30   la creature, RALENTIE DE MOITIE",
+    "  OEIL      0,00 -  0,60   pivote de 63 degres vers le violet",
+    "  MONTEE    0,60 -  8,40   le sorcier, les cercles, le vortex",
+    "  MORVAETH  8,40 - 12,40   la creature, RALENTIE DE MOITIE",
     "",
     "La creature ne dure que 2 s en source. Ralentie a 0,5x avec interpolation,",
-    "elle en occupe 4 : deux fois et demie plus longtemps, et surtout plus lourde.",
-    "Une masse pareille ne doit pas bouger vite.",
+    "elle en occupe 4 : plus longtemps, et surtout plus lourde.",
     "",
-    "Teinte 263°, violet. La LUT teal_orange est ECARTEE : elle le tirerait vers",
-    "le cyan. Les couleurs de texte viennent de sa teinte.",
+    "Teinte 259°. La LUT teal_orange est ECARTEE : elle tirerait vers le cyan.",
+    "L'oeil d'ouverture etait a 196° et jurait ; pivote, il tombe a 255° et la",
+    "mesure dit « une seule famille ».",
     "",
-    "Une voix off est mixee apres coup (voir la commande dans le README) : rien",
-    "n'est dit dans le plan, donc des sous-titres sans voix seraient un mensonge",
-    "a l'ecran."
+    "Les repliques parlent de la creature de la fin — celles du premier episode",
+    "n'avaient rien a faire ici."
   ],
   "bibliotheque": "sfx_library",
   "effets_db": 9,
@@ -37,11 +36,12 @@
   },
   "plans": [
     {
-      "nom": "affiche",
-      "source": "rushes/affiche_aznaroth.mp4",
+      "nom": "oeil",
+      "source": "rushes/oeil_violet.mp4",
       "depart": 0.0,
-      "duree": 0.5,
-      "cible_db": -24.0
+      "duree": 0.6,
+      "cible_db": -26.0,
+      "_note": "l'oeil pivote de 63 degres vers le violet : a 196° il jurait avec le plan principal a 259°, et l'ouverture est l'endroit ou il ne faut pas"
     },
     {
       "nom": "montee",
@@ -244,28 +244,28 @@
   ],
   "sous_titres": [
     {
-      "texte": "RIFT ZERO FIVE",
-      "debut": 1.3,
-      "fin": 2.55,
+      "texte": "RIFT ZERO SIX",
+      "debut": 1.35,
+      "fin": 2.6,
       "secousse": 8.0,
-      "couleur": "#c9a8ff",
-      "halo": "#6b20e5"
+      "couleur": "#d0c0ff",
+      "halo": "#5220e5"
     },
     {
-      "texte": "BREACH OPEN",
-      "debut": 2.95,
-      "fin": 4.15,
+      "texte": "SOMETHING ANSWERED",
+      "debut": 3.05,
+      "fin": 4.35,
       "secousse": 8.0,
-      "couleur": "#c9a8ff",
-      "halo": "#6b20e5"
+      "couleur": "#d0c0ff",
+      "halo": "#5220e5"
     },
     {
-      "texte": "THE SHADOW TITAN AWAKENS",
-      "debut": 4.28,
-      "fin": 5.9,
-      "secousse": 8.0,
-      "couleur": "#c9a8ff",
-      "halo": "#6b20e5"
+      "texte": "MORVAETH RISES",
+      "debut": 4.8,
+      "fin": 6.3,
+      "secousse": 9.0,
+      "couleur": "#e1bdff",
+      "halo": "#8b20e5"
     }
   ],
   "titres": [
@@ -276,8 +276,8 @@
       "y": 300,
       "taille": 104,
       "secousse": 10.0,
-      "couleur": "#e0ccff",
-      "halo": "#6b20e5"
+      "couleur": "#e1bdff",
+      "halo": "#8b20e5"
     }
   ]
 }
