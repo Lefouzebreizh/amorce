@@ -24,7 +24,7 @@ export const LIENS: { paiementSolo: string; paiementTrio: string; whatsapp: stri
   paiementSolo: '#',
   paiementTrio: '#',
   /** Format attendu : https://wa.me/33XXXXXXXXX */
-  whatsapp: '#',
+  whatsapp: 'https://wa.me/33621381115',
 };
 
 export type Comparatif = {

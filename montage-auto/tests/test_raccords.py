@@ -111,6 +111,14 @@ class MessageQuiSertAQuelqueChose(unittest.TestCase):
 
         origine = monter_episode.subprocess.run
         monter_episode.subprocess.run = doublure
+        # `ffmpeg()` lève **avant** que la doublure serve : il est appelé pour
+        # construire la commande, pas pour l'exécuter. Doubler `subprocess.run`
+        # seul laissait donc le test dépendre du binaire — vert ici, où le hook
+        # de session l'installe, et rouge sur un runner qui ne l'a pas. Ce test
+        # mesure une traduction de coordonnées ; il n'a aucune raison d'exiger
+        # ffmpeg, et le nom résolu est justement ce que la doublure vérifie.
+        origine_ffmpeg = monter_episode.ffmpeg
+        monter_episode.ffmpeg = lambda: "/usr/bin/ffmpeg"
         journal = io.StringIO()
         try:
             with contextlib.redirect_stderr(journal):
@@ -118,6 +126,7 @@ class MessageQuiSertAQuelqueChose(unittest.TestCase):
                     self.source, 0.30, 2.50, {"voix": str(self.voix)}, self.dossier)
         finally:
             monter_episode.subprocess.run = origine
+            monter_episode.ffmpeg = origine_ffmpeg
 
         texte = journal.getvalue()
         self.assertIn('"depart": 0.80', texte)

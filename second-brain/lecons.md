@@ -1142,3 +1142,30 @@ Deux corollaires, payés le même soir :
 - **Traduire ses coordonnées dans celles de l'appelant.** La sonde compte depuis
   ce qu'elle a reçu, la recette depuis le début du rush. L'addition manquée
   décale d'un `depart` entier et se lit comme un défaut de l'outil.
+
+## Un rejeu de la CI ne voit pas ce que la session a installé
+
+`comme-la-ci.sh` existe pour attraper les tests verts en session et rouges sur
+un runner. Il a laissé passer exactement ça, et la raison mérite d'être écrite :
+**il rejoue la CI dans la session**, avec un environnement Python vierge — mais
+avec les *binaires système* que le hook de démarrage a installés.
+
+Le test tombé appelait `ffmpeg()`. Le hook installe ffmpeg ; le runner ne l'a
+pas. Le rejeu était donc vert, la CI rouge, et le rouge est apparu sur `main`
+puis sur toutes les branches ouvertes en même temps.
+
+Deux choses en découlent, et la seconde est la plus utile :
+
+- **Un environnement vierge n'est pas une machine vierge.** Isoler les paquets
+  Python ne dit rien des exécutables. Tout test qui invoque un binaire externe
+  — ffmpeg, ffprobe, un moteur de rendu — est suspect tant qu'on ne l'a pas
+  éprouvé avec ce binaire absent.
+- **L'épreuve tient en trois lignes et ne demande aucun conteneur** : remplacer
+  la fonction qui résout le binaire par une fonction qui lève, puis relancer le
+  seul test concerné. Si le test passe, il ne dépendait pas du binaire ; s'il
+  tombe, on vient de reproduire le runner sans quitter la session.
+
+Le correctif d'un tel test est presque toujours le même : la doublure était
+posée sur `subprocess.run`, alors que la résolution du binaire se fait **avant**,
+pour construire la commande. Doubler l'exécution ne suffit pas ; il faut doubler
+la résolution.
