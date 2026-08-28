@@ -114,6 +114,80 @@ def rapport_scenario(scenario: Scenario, dynamique: Resultat, temoin: Resultat) 
     return "\n".join(lignes)
 
 
+def ligne_protection(resultat: Resultat) -> dict[str, str]:
+    """Ce que la stratégie fait subir, pas ce qu'elle rapporte."""
+
+    ratio = resultat.rendement_par_douleur
+    return {
+        "PnL": _pourcent(resultat.pnl_relatif),
+        "recul max": f"{resultat.drawdown_max:.1%}",
+        "temps sous l'eau": f"{resultat.temps_sous_eau:.0%}",
+        "pire mois": _pourcent(resultat.pire_mois),
+        "gain/douleur": "—" if ratio is None else f"{ratio:.2f}",
+        "engagé": f"{resultat.capital_engage:,.0f} $",
+    }
+
+
+def tableau_protection(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
+    """La protection, mise face au témoin.
+
+    **Un recul brut ne se compare pas entre deux stratégies qui n'engagent pas
+    le même capital** : celle qui investit moins a mécaniquement moins mal. La
+    colonne qui tranche est donc `gain/douleur`, et elle seule.
+    """
+
+    lignes: list[tuple[str, dict[str, str]]] = []
+    for nom, dynamique, temoin in comparaisons:
+        lignes.append((f"{nom} — stratégie", ligne_protection(dynamique)))
+        lignes.append((f"{nom} — témoin", ligne_protection(temoin)))
+    return tableau(lignes)
+
+
+def verdict_protection(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
+    """Dit si la protection paie son prix, et sait répondre non."""
+
+    mieux, pire, egal_sous_eau = 0, 0, 0
+    for _, dynamique, temoin in comparaisons:
+        rd, rt = dynamique.rendement_par_douleur, temoin.rendement_par_douleur
+        if rd is None or rt is None:
+            continue
+        if rd > rt:
+            mieux += 1
+        else:
+            pire += 1
+        if abs(dynamique.temps_sous_eau - temoin.temps_sous_eau) < 0.03:
+            egal_sous_eau += 1
+
+    total = mieux + pire
+    if not total:
+        return "Aucune fenêtre exploitable."
+
+    phrases = []
+    if pire == total:
+        phrases.append(
+            f"⚠ La protection **ne paie pas son prix** : le témoin rend plus par "
+            f"unité de recul sur {pire}/{total} fenêtre(s). Le recul de la "
+            "stratégie est bien plus faible, mais elle engage moins de capital — "
+            "et une stratégie qui n'investit rien a un recul nul."
+        )
+    elif mieux == total:
+        phrases.append(
+            f"La protection paie : meilleur rendement par unité de recul sur "
+            f"{mieux}/{total} fenêtre(s)."
+        )
+    else:
+        phrases.append(
+            f"Rendement par unité de recul : la stratégie l'emporte sur {mieux} "
+            f"fenêtre(s), le témoin sur {pire}."
+        )
+    if egal_sous_eau == total:
+        phrases.append(
+            f"Et le temps passé sous l'eau est le **même** sur {egal_sous_eau}/"
+            f"{total} fenêtre(s) : elle réduit l'amplitude de la douleur, pas sa durée."
+        )
+    return "\n".join(phrases)
+
+
 def verdict(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
     """La phrase qu'on lit en premier, et qui peut dire non.
 

@@ -189,6 +189,73 @@ class TestMesures(unittest.TestCase):
         self.assertAlmostEqual(resultat.drawdown_max, 0.4)
 
 
+class TestProtection(unittest.TestCase):
+    """Ce que la stratégie fait subir, et le piège de cette famille."""
+
+    def _resultat_courbe(self, valeurs: list[float], *, capital: float = 100.0) -> Resultat:
+        r = Resultat(nom="x", symbole="X/USDT", capital_initial=capital,
+                     portefeuille=None)  # type: ignore[arg-type]
+        r.courbe = [(DEBUT + timedelta(days=i), v) for i, v in enumerate(valeurs)]
+        return r
+
+    def test_temps_sous_eau(self):
+        """Le recul max dit à quel point ça a fait mal ; celui-ci dit combien
+        de temps ça a duré, et c'est la durée qui fait abandonner."""
+
+        r = self._resultat_courbe([100.0, 120.0, 90.0, 95.0, 130.0])
+        # Deux points sur cinq sont sous le sommet précédent.
+        self.assertAlmostEqual(r.temps_sous_eau, 0.4)
+
+    def test_une_courbe_qui_ne_recule_jamais(self):
+        self.assertEqual(self._resultat_courbe([100.0, 110.0, 120.0]).temps_sous_eau, 0.0)
+
+    def test_pire_mois_calendaire(self):
+        r = Resultat(nom="x", symbole="X/USDT", capital_initial=100.0,
+                     portefeuille=None)  # type: ignore[arg-type]
+        r.courbe = [
+            (datetime(2025, 1, 1, tzinfo=timezone.utc), 100.0),
+            (datetime(2025, 1, 31, tzinfo=timezone.utc), 110.0),
+            (datetime(2025, 2, 1, tzinfo=timezone.utc), 110.0),
+            (datetime(2025, 2, 28, tzinfo=timezone.utc), 88.0),
+        ]
+        self.assertAlmostEqual(r.pire_mois, -0.2)
+
+    def test_un_recul_nul_ne_donne_pas_un_ratio_infini(self):
+        """N'avoir rien risqué n'est pas une performance infinie — et c'est
+        exactement ce qu'une stratégie qui n'investit rien produirait."""
+
+        r = self._resultat_courbe([100.0, 110.0, 120.0])
+        self.assertEqual(r.drawdown_max, 0.0)
+        self.assertIsNone(r.rendement_par_douleur)
+
+    def test_le_ratio_remet_deux_capitaux_differents_sur_la_meme_echelle(self):
+        """Un recul brut ne se compare pas entre deux stratégies qui n'engagent
+        pas le même capital : celle qui investit moins a mécaniquement moins
+        mal, sans être meilleure."""
+
+        petite = self._resultat_courbe([100.0, 105.0, 102.0, 110.0])   # +10 %, recul 2,7 %
+        grosse = self._resultat_courbe([100.0, 150.0, 120.0, 200.0])   # +100 %, recul 20 %
+        self.assertLess(petite.drawdown_max, grosse.drawdown_max)
+        # Et pourtant la grosse rend bien plus par unité de douleur.
+        self.assertGreater(grosse.rendement_par_douleur, petite.rendement_par_douleur)
+
+    def test_le_verdict_de_protection_sait_dire_non(self):
+        faible = self._resultat_courbe([100.0, 105.0, 98.0, 103.0])
+        fort = self._resultat_courbe([100.0, 160.0, 130.0, 190.0])
+        texte = mise_en_forme.verdict_protection([("réel", faible, fort)])
+        self.assertIn("ne paie pas son prix", texte)
+        self.assertIn("n'investit rien a un recul nul", texte)
+
+    def test_le_verdict_signale_un_temps_sous_l_eau_identique(self):
+        """Réduire l'amplitude de la douleur sans réduire sa durée n'est pas
+        la protection qu'on croit avoir achetée."""
+
+        a = self._resultat_courbe([100.0, 120.0, 90.0, 95.0, 130.0])
+        b = self._resultat_courbe([100.0, 140.0, 80.0, 90.0, 180.0])
+        texte = mise_en_forme.verdict_protection([("réel", a, b)])
+        self.assertIn("pas sa durée", texte)
+
+
 class TestScenarios(unittest.TestCase):
     def test_deterministes(self):
         """Un profil qui bouge d'un lancement à l'autre ne mesure rien : on
