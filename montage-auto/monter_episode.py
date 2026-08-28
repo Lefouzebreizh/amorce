@@ -389,6 +389,47 @@ def segment_morph(plan_a: dict, plan_b: dict, reglage: dict, sortie: Path) -> fl
     return duree
 
 
+
+def image_animee(source: Path, duree: float, reglages: dict, atelier: Path) -> Path:
+    """Rend une image fixe en plan animé par parallaxe, et le met en cache.
+
+    Le rendu coûte une trentaine de secondes ; refaire le même à chaque montage
+    d'essai le paierait à chaque fois. Le nom du cache porte la source, la durée
+    et les réglages : un changement de l'un d'eux refait le plan, un simple
+    remontage le réutilise.
+    """
+    marque = f"{source.stem}_{duree:.2f}_{reglages.get('tremble', 4)}_" \
+             f"{reglages.get('force_eclat', 0.55)}_{reglages.get('graine', 7)}"
+    # Dans un sous-dossier, et sans tiret bas : la fin du montage efface tout
+    # `_*` de l'atelier, ce qui emporterait le cache qu'on vient d'écrire et
+    # rendrait chaque rendu aussi cher que le premier.
+    cache = atelier / "cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    cible = cache / f"parallaxe_{marque}.mp4"
+    if cible.is_file():
+        return cible
+
+    outil = Path(__file__).resolve().parent.parent / "kits" / "video" / "animer-image.py"
+    if not outil.is_file():
+        print(f"   animer-image.py introuvable — {source.name} restera fixe.", file=sys.stderr)
+        return source
+
+    resultat = subprocess.run(
+        [sys.executable, str(outil), str(source), str(cible),
+         "--duree", f"{duree:.2f}",
+         "--largeur", str(LARGEUR), "--hauteur", str(HAUTEUR),
+         "--images", str(CADENCE),
+         "--tremble", str(reglages.get("tremble", 4)),
+         "--force-eclat", str(reglages.get("force_eclat", 0.55)),
+         "--graine", str(reglages.get("graine", 7))],
+        capture_output=True, text=True)
+    if not cible.is_file():
+        print(f"   parallaxe échouée sur {source.name} : "
+              f"{resultat.stderr.strip()[-200:]}", file=sys.stderr)
+        return source
+    return cible
+
+
 def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     """Découpe un plan au format, et l'amène à **sa** cible entendue.
 
@@ -397,7 +438,25 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     ne remonterait rien.
     """
     source = Path(plan["source"]).expanduser()
-    depart, duree = float(plan["depart"]), float(plan["duree"])
+    depart, duree = float(plan.get("depart", 0.0)), float(plan["duree"])
+
+    # Une image fixe passe d'abord par la parallaxe, jamais par le zoom.
+    #
+    # Un zoom, même lent et même en diagonale, se lit toujours comme une
+    # photographie qu'on agrandit — mesuré : 4,1 d'écart moyen entre images
+    # consécutives, contre 10,5 pour le rush le plus calme d'un montage. Ce qui
+    # manque n'est pas la vitesse mais la **parallaxe** : dans un vrai plan, ce
+    # qui est proche se déplace plus vite que ce qui est loin, et c'est cet
+    # écart que l'œil lit comme une caméra. Deux couches tirées de la même
+    # image, à vitesses opposées : 4,1 → 9,8.
+    #
+    # La détection se fait sur l'extension plutôt que sur un champ à remplir :
+    # personne ne pense à déclarer qu'une image est une image, et l'oubli
+    # produit exactement le plan figé qu'on cherche à supprimer.
+    if source.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".bmp"}:
+        source = image_animee(source, duree, plan.get("parallaxe", {}), sortie.parent)
+        depart = 0.0
+
     mesure = entendu(source, depart, duree)
 
     cadence = int(plan.get("cadence", CADENCE))
@@ -1023,7 +1082,7 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
         avance = float(precedent["duree"]) if precedent else 0.0
 
         propre = dict(plan)
-        propre["depart"] = float(plan["depart"]) + avance
+        propre["depart"] = float(plan.get("depart", 0.0)) + avance
         propre["duree"] = float(plan["duree"]) - avance - recul
         if propre["duree"] <= 0.05:
             raise SystemExit(f"« {nom} » : il ne reste rien après les morphs voisins.")
@@ -1141,9 +1200,26 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
     releve = [(nom, entendu(sortie, reperes[nom], float(p["duree"])))
               for nom, p in zip((n for n, _ in gains), episode["plans"])]
     mesures = [v for _, v in releve if v is not None]
+
+    # `entendu` mesure le **film fini** sur la fenêtre de chaque plan, pas le
+    # son que ce plan apportait. Un plan très bas ne dit donc pas « ce rush est
+    # muet » mais « il ne se passe rien ici » — et c'est un trou, pas une
+    # mesure à écarter. Une image fixe en fabrique un sans le vouloir : elle
+    # n'apporte aucun son, et si la recette n'y pose ni bruitage ni voix, le
+    # film se tait.
+    #
+    # Un premier correctif filtrait ces valeurs pour « nettoyer » le relief. Il
+    # rendait un chiffre plus flatteur en masquant exactement le défaut qu'on
+    # avait passé une nuit à corriger ailleurs.
+    creux = []
+    if mesures:
+        moyen = sum(mesures) / len(mesures)
+        creux = [(nom, v) for nom, v in releve
+                 if v is not None and moyen - v > 15.0]
     return {"duree_s": round(total, 2), "gain_sonie_db": gain,
             "gains_plans": gains, "niveaux": releve,
             "relief_db": round(max(mesures) - min(mesures), 1) if mesures else 0.0,
+            "creux": creux,
             **rapport_finition}
 
 
@@ -1197,6 +1273,9 @@ def main() -> int:
     print(f"\n  relief : {bilan['relief_db']} dB")
     if bilan["relief_db"] < 8:
         print("  ⚠ sous 8 dB, un montage s'entend plat : creuser les cibles.")
+    for nom, valeur in bilan.get("creux", []):
+        print(f"  ⚠ {nom} tombe à {valeur:.1f} dB — rien ne s'y entend. "
+              f"Une image fixe n'apporte aucun son : lui poser un bruitage.")
     return 0
 
 
