@@ -99,13 +99,36 @@ une recette JSON (`montage-auto/references/titans-ep01.json`). Il encode cinq
 
 Il couvre donc le montage, le mixage et les sous-titres depuis une recette.
 
+## Ce qui est branché
+
+Le bloc `finition` de la recette **accorde** les plans entre eux puis **pose un
+rendu** — LUT et calques de `visual_library/`. Jamais l'inverse : un rendu posé
+avant l'accord amplifie les écarts au lieu de les masquer. Le son traverse sans
+être réencodé.
+
+Quatre pièges y ont été payés, tous silencieux, tous consignés dans le fichier :
+
+- **deux noms pour une seule chose** — `audio_catalog.json` d'un côté,
+  `second-brain/sound_index.json` de l'autre. C'était exactement la couture
+  manquante, et le premier montage complet a échoué dessus ;
+- **un PNG ne dure qu'une image sans `-loop 1`**, et le `shortest=1` du mélange
+  termine alors tout le film avec lui — 240 paquets attendus, 1 obtenu, sans le
+  moindre message ;
+- **`blend` ignore la couche alpha** : un vignettage dont le RVB est noir
+  éteignait l'image entière. Les calques à transparence se posent en `overlay` ;
+- `-stream_loop -1 -i` ajoute **trois** éléments et non deux : en déduire
+  l'indice d'entrée décalait d'un cran par calque bouclé.
+
 ## Prochain pas
 
-**Brancher les outils qui restent dehors sur cette recette**, dans l'ordre du
-moins cher au plus cher : `voix.py` pour les répliques, `etalonner.py` pour
-l'accord des plans, `animer-image.py` pour les images fixes, `visual_library/`
-pour les calques, `auto_lipsync.py` en dernier — c'est le seul qui se compte en
-minutes de processeur.
+**`voix.py` dans la recette.** Une réplique française décrite dans le JSON,
+fabriquée à la volée et posée sur la ligne de temps. C'est le maillon qui rend
+l'épisode 02 possible sans qu'aucune voix soit enregistrée.
+
+Restent ensuite, dans l'ordre du coût : **`animer-image.py`** pour remplacer le
+`zoom` sur les images fixes — la parallaxe, pas l'agrandissement — puis
+**`auto_lipsync.py`**, seul à se compter en minutes de processeur, et qui exige
+une sonde des visages avant tout calcul.
 
 Zéro fonctionnalité neuve tant que ces cinq-là ne sont pas dans la recette. La
 valeur est dans le fait qu'ils se parlent, pas dans le nombre d'outils.
