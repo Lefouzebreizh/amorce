@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmeml version="5">
+  <bin>
+    <name>Visual Library</name>
+    <children>
+      <clip>
+        <name>light_leak_orange.png</name>
+        <pathurl>file:///home/user/amorce/visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_orange.png</pathurl>
+        <comment>overlay · visibilité téléphone 51/100</comment>
+      </clip>
+      <clip>
+        <name>light_leak_blue.png</name>
+        <pathurl>file:///home/user/amorce/visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_blue.png</pathurl>
+        <comment>overlay · visibilité téléphone 52/100</comment>
+      </clip>
+      <clip>
+        <name>light_leak_magenta.png</name>
+        <pathurl>file:///home/user/amorce/visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_magenta.png</pathurl>
+        <comment>overlay · visibilité téléphone 55/100</comment>
+      </clip>
+      <clip>
+        <name>vignette_strong.png</name>
+        <pathurl>file:///home/user/amorce/visual_library/05_Matte_and_Bars/vignette_strong.png</pathurl>
+        <comment>matte · visibilité téléphone 14/100</comment>
+      </clip>
+      <clip>
+        <name>vignette_soft.png</name>
+        <pathurl>file:///home/user/amorce/visual_library/05_Matte_and_Bars/vignette_soft.png</pathurl>
+        <comment>matte · visibilité téléphone 8/100</comment>
+      </clip>
+      <clip>
+        <name>LUT_teal_orange.cube</name>
+        <pathurl>file:///home/user/amorce/visual_library/02_LUTs_and_Grading/LUT_teal_orange.cube</pathurl>
+        <comment>lut · visibilité téléphone 100/100</comment>
+      </clip>
+      <clip>
+        <name>LUT_bw_film.cube</name>
+        <pathurl>file:///home/user/amorce/visual_library/02_LUTs_and_Grading/LUT_bw_film.cube</pathurl>
+        <comment>lut · visibilité téléphone 100/100</comment>
+      </clip>
+      <clip>
+        <name>glitch_transition_01.mp4</name>
+        <pathurl>file:///home/user/amorce/visual_library/03_Transitions/glitch_transition_01.mp4</pathurl>
+        <comment>transition · visibilité téléphone 41/100</comment>
+      </clip>
+      <clip>
+        <name>dust_particles_4k.mp4</name>
+        <pathurl>file:///home/user/amorce/visual_library/01_Overlays_and_FX/Dust/dust_particles_4k.mp4</pathurl>
+        <comment>overlay · visibilité téléphone 5/100</comment>
+      </clip>
+      <clip>
+        <name>film_grain_4k.mp4</name>
+        <pathurl>file:///home/user/amorce/visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4</pathurl>
+        <comment>overlay · visibilité téléphone 43/100</comment>
+      </clip>
+    </children>
+  </bin>
+</xmeml>
