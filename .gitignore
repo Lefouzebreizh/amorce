@@ -100,3 +100,11 @@ kits/**/*.flac
 # vignettes. Se refabriquent d'une commande, et le dépôt ne versionne aucun
 # binaire.
 /regard/
+
+# La bibliothèque visuelle est fabriquée par son script : ce sont des binaires,
+# et l'invariant n°8 les tient hors de Git. Seuls le script, les catalogues,
+# les recettes et la fiche sont versionnés — ils suffisent à tout refaire.
+visual_library/**/*.png
+visual_library/**/*.jpg
+visual_library/**/*.webp
+visual_library/**/*.mp4
