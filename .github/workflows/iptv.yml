@@ -4,9 +4,14 @@
 # et `node_modules` : la racine l'ignore, et rien ne le vérifierait sans ce
 # workflow.
 #
-# Deux étapes seulement, et pas de `build` : le cœur est une bibliothèque sans
-# interface. Le jour où les routes Next.js arriveront, c'est ici qu'il faudra
-# l'ajouter — un `tsc` ne voit pas ce qu'un build d'App Router attrape.
+# Le `build` ferme la marche parce qu'il est le seul à voir ce que `tsc` laisse
+# passer dans une application App Router : un composant serveur qui importe du
+# code client, ou une page qu'on pré-rendrait alors qu'elle lit la base.
+#
+# Ce que ce workflow ne lance pas : `npm run verify`, qui conduit un vrai
+# Chromium sur un flux HLS. Playwright vit dans les dépendances de la racine du
+# dépôt, que cette CI n'installe pas — et le Chromium d'un runner n'a pas les
+# codecs propriétaires. Il se lance à la main.
 #
 # Elles sont séparées pour que le résumé dise laquelle a cassé, et `!cancelled()`
 # les laisse toutes deux parler : un test rouge n'empêche pas de savoir si le
@@ -36,7 +41,7 @@ defaults:
 
 jobs:
   verifier:
-    name: Tests, types
+    name: Tests, types, build
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -65,3 +70,7 @@ jobs:
       - name: Types
         if: ${{ !cancelled() }}
         run: npm run check
+
+      - name: Build
+        if: ${{ !cancelled() }}
+        run: npm run build

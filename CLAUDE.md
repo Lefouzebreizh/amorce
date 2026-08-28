@@ -159,10 +159,13 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   charge jamais en mémoire — 50 à 400 Mo, l'analyseur les rend au fil de l'eau —
   et rien ne remonte au-dessus de l'ingestion sans être un `Element`. Le cache
   est un SQLite livré avec Node (`node:sqlite`), recherche plein texte comprise :
-  120 000 entrées importées en 6,6 s, toute requête sous 30 ms. **Aucun mot de
-  passe n'entre en base** — l'adresse d'une source y est masquée — et aucune
-  source de contenu ni identifiant n'est versionné. Se vérifie depuis son
-  dossier.
+  120 000 entrées importées en 6,6 s, toute requête sous 30 ms. L'interface est
+  en Next.js 16, tout l'arbre rendu à la demande, et le lecteur HLS passe par un
+  **mandataire à adresses signées** : un relais qui accepterait une URL
+  arbitraire serait un proxy ouvert. **Aucun mot de passe n'entre en base** —
+  l'adresse d'une source y est masquée — et aucune source de contenu ni
+  identifiant n'est versionné. Se vérifie depuis son dossier ; `npm run verify`
+  conduit un vrai Chromium sur un flux HLS fabriqué par ffmpeg.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
   sont dans son `public/llms.txt`, pas ici.
