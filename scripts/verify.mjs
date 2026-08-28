@@ -849,6 +849,84 @@ if (profile.mobile) {
   await remonterEnTete(page);
 }
 
+// ------------------------------------- 4ter. La frise suit la tête de lecture
+if (profile.mobile) {
+  /*
+   * Sur un écran de téléphone, la frise ne montre que six secondes à la fois.
+   * Passé ce point, la tête de lecture sort du cadre — et l'on ne sait plus où
+   * l'on est dans son propre montage : impossible de tomber sur le plan qui
+   * porte un texte pour le modifier.
+   *
+   * Ce contrôle a été écrit après un rapport terrain que rien n'attrapait :
+   * les tests unitaires ne voient ni le défilement, ni la mise en page, et le
+   * défaut n'apparaît qu'au-delà d'un montage d'une dizaine de secondes.
+   *
+   * On vérifie les deux chemins séparément — ils sont distincts dans le code —
+   * et à l'arrêt d'abord : c'est celui qui ne suivait pas du tout.
+   */
+  const cadre = async () =>
+    page.evaluate(() => {
+      const c = document.querySelector('[aria-label="Timeline du montage"]');
+      if (!c) return null;
+      const t = c.querySelector('.bg-accent.w-px');
+      const x = t ? parseFloat(t.style.left) : null;
+      return {
+        deborde: c.scrollWidth > c.clientWidth + 8,
+        vue: x !== null && x >= c.scrollLeft - 2 && x <= c.scrollLeft + c.clientWidth + 2,
+      };
+    });
+
+  const depart = await cadre();
+  if (depart?.deborde) {
+    const duree = Number(
+      await page.locator('input[aria-label="Position dans le montage"]').getAttribute('max'),
+    );
+    const poser = (t) =>
+      page.evaluate((v) => {
+        const i = document.querySelector('input[aria-label="Position dans le montage"]');
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(i, String(v));
+        i.dispatchEvent(new Event('input', { bubbles: true }));
+      }, t);
+
+    let perdue = 0;
+    const positions = [0.08, 0.92, 0.45, 0.99, 0.02, 0.7].map((f) => duree * f);
+    for (const t of positions) {
+      await poser(t);
+      await page.waitForTimeout(450);
+      const e = await cadre();
+      if (!e?.vue) perdue += 1;
+    }
+    check(
+      'La frise suit le curseur déplacé à l’arrêt',
+      perdue === 0,
+      `${positions.length - perdue}/${positions.length} positions gardent la tête de lecture en vue`,
+    );
+
+    await poser(0);
+    await page.waitForTimeout(400);
+    await page.locator('[aria-label="Commandes de lecture"] button').first().click();
+    let perdueEnLecture = 0;
+    const releves = 8;
+    for (let i = 0; i < releves; i += 1) {
+      await page.waitForTimeout(500);
+      const e = await cadre();
+      if (!e?.vue) perdueEnLecture += 1;
+    }
+    await page.locator('[aria-label="Commandes de lecture"] button').first().click();
+    await page.waitForTimeout(300);
+    check(
+      'La frise suit la tête de lecture pendant la lecture',
+      perdueEnLecture === 0,
+      `${releves - perdueEnLecture}/${releves} relevés gardent la tête de lecture en vue`,
+    );
+  } else {
+    // Un montage qui tient entièrement dans la largeur ne peut rien démontrer.
+    check('La frise suit le curseur déplacé à l’arrêt', true, 'frise plus courte que l’écran');
+  }
+
+  await remonterEnTete(page);
+}
+
 // ------------------------------------- 4bis. Manipulation directe du texte
 if (profile.mobile) {
   /*
