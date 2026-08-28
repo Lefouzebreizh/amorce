@@ -503,7 +503,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
                 <p className="text-xs font-semibold text-mist">{sfx.label}</p>
                 <p className="text-[11px] text-muted">{sfx.description}</p>
               </div>
-              <Button variant="subtle" onClick={() => void audition(sfx.id)} title="Écouter">
+              <Button variant="ghost" onClick={() => void audition(sfx.id)} title="Écouter">
                 ♪
               </Button>
               <Button variant="ghost" onClick={() => addCue(sfx.id)} title="Poser à la position de lecture">
@@ -592,7 +592,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
           <>
             <div className="mb-3 flex items-center justify-between gap-2 rounded-xl bg-slab px-3 py-2">
               <p className="min-w-0 flex-1 truncate text-xs font-semibold text-mist">{music.name}</p>
-              <Button variant="subtle" onClick={() => setMusic(null)} title="Retirer la musique">
+              <Button variant="ghost" onClick={() => setMusic(null)} title="Retirer la musique">
                 ✕
               </Button>
             </div>

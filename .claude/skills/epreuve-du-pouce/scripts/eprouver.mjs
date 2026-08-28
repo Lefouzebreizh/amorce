@@ -130,6 +130,40 @@ async function releverLaPage(page) {
       });
     }
 
+    /*
+     * Les boutons qui n'ont l'air de rien.
+     *
+     * Un bouton actif, sans fond, sans bordure, écrit dans la couleur du texte
+     * secondaire, est indistinguable de la légende qui le précède. Sur un
+     * écran de bureau le survol le révèle ; **un téléphone ne survole pas**, et
+     * il reste gris pour toujours.
+     *
+     * Quatre boutons du studio ont porté ce costume — « Modifier ce texte »,
+     * « Aller à l'Accroche », « Écouter », « Retirer ». Ils fonctionnaient tous ;
+     * on les a rapportés cassés, parce que rien ne les désignait comme
+     * pressables. Un bouton grisé n'enseigne rien : il fait douter que
+     * l'application marche.
+     *
+     * On ne relève que le cas net — actif, fond transparent jusqu'à l'ancêtre,
+     * aucune bordure, couleur plus terne que le texte courant — pour ne pas
+     * signaler les boutons d'icône qui se tiennent par leur bordure ou par leur
+     * place dans une barre.
+     */
+    const eteints = [];
+    const tonCourant = getComputedStyle(document.body).color;
+    for (const el of document.querySelectorAll('button,[role=button]')) {
+      if (!visible(el) || el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
+      const s = getComputedStyle(el);
+      const sansFond = s.backgroundColor === 'rgba(0, 0, 0, 0)' || s.backgroundColor === 'transparent';
+      const sansBordure = parseFloat(s.borderTopWidth) === 0 && parseFloat(s.borderLeftWidth) === 0;
+      const sansOmbre = s.boxShadow === 'none';
+      const texte = (el.innerText || '').trim();
+      if (!texte) continue;                       // une icône seule se lit autrement
+      if (sansFond && sansBordure && sansOmbre && s.color !== tonCourant) {
+        eteints.push({ nom: texte.slice(0, 40), couleur: s.color });
+      }
+    }
+
     // La zone du pouce : le tiers haut est hors de portée à une main.
     const hautDeCadre = [];
     for (const el of document.querySelectorAll('button,[role=button]')) {
@@ -143,7 +177,7 @@ async function releverLaPage(page) {
       }
     }
 
-    return { debordements, petites, contrastes, hautDeCadre };
+    return { debordements, petites, contrastes, hautDeCadre, eteints };
   }, CIBLE_MINI);
 }
 
@@ -239,6 +273,8 @@ async function main() {
     (p) => `« ${p.nom} » ${p.l} × ${p.h}`);
   fautes += dire(`Tout texte tient ${CONTRASTE_MINI}:1`, combats,
     (c) => `« ${c.texte} » ${c.rapport.toFixed(2)}:1 (${c.taille} px)`);
+  fautes += dire('Tout bouton actif a l’air pressable', releve.eteints,
+    (b) => `« ${b.nom} » sans fond ni bordure, en ${b.couleur}`);
 
   if (gestes.length) {
     const perdues = gestes.filter((g) => g.gestes === null || g.gestes > 1);
