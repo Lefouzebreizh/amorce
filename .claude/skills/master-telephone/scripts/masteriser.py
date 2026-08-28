@@ -27,9 +27,14 @@ def sonie(media: Path) -> tuple[float, float, float]:
          "loudnorm=I=-14:TP=-1:print_format=json", "-f", "null", "-"],
         capture_output=True, text=True)
     depart = rendu.stderr.rfind("{")
-    if depart == -1:
+    fin = rendu.stderr.rfind("}")
+    if depart == -1 or fin < depart:
         return 0.0, 0.0, 0.0
-    releve = json.loads(rendu.stderr[depart:])
+    # Il faut couper à l'accolade fermante, pas seulement partir de l'ouvrante :
+    # certaines compilations de ffmpeg impriment encore des lignes après le
+    # relevé, et json.loads échoue alors sur « Extra data » — une panne qui
+    # ressemble à un fichier illisible alors que la mesure, elle, a réussi.
+    releve = json.loads(rendu.stderr[depart:fin + 1])
     return (float(releve["input_i"]), float(releve["input_lra"]),
             float(releve["input_tp"]))
 
