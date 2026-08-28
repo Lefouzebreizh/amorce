@@ -113,6 +113,50 @@ que soit le modèle.
 d'ampleur, mais traîne. `upmc` reste utile pour un autre grain de voix, pas pour
 plus de vie.
 
+## La palette : quatorze bruitages, tous fabriqués
+
+| son | ce qu'il fait | pour |
+| --- | --- | --- |
+| `souffle` | une bande qui se déplace, pas un bruit en fondu | **la coupe** — sans lui chaque transition est un trou |
+| `eclat` | un corps grave puis des éclats qui se raréfient | quelque chose qui vole en morceaux |
+| `carillon` | partiels inharmoniques, longue traîne | une rune, un signe, un éveil |
+| `pulsation` | deux coups par battement, le second plus grave | la tension, **sous** autre chose |
+| `souffle_tournant` | rotation qui **accélère** | un vortex, une aspiration |
+| `respiration` | enveloppe asymétrique, montée vite / retombée lente | le souffle d'une créature |
+| `boom` `choc_metal` `grondement` `crepitement` | | impacts et lits |
+| `montee` `electricite` `rugissement` `nappe_sombre` | | tension, décharge, fond |
+
+Trois de ces six-là tiennent à une seule ligne, et c'est elle qui les distingue
+d'un effet générique :
+
+- **Le souffle est une bande qui bouge**, pas un volume qui monte. L'oreille lit
+  le déplacement comme un objet qui passe ; sans lui on n'entend qu'un chuintement.
+- **La rotation du vortex accélère.** À vitesse constante on entend un
+  hélicoptère ; en accélérant, une aspiration.
+- **Les éclats se raréfient** en retombant. À densité constante on entend une
+  averse, pas un objet qui explose.
+
+`pulsation` s'emploie **sous** autre chose. Seule, elle devient une horloge, et
+l'urgence fabriquée est précisément ce qu'on ne fait pas ici.
+
+## Ce que `porter_sur_telephone` ne sait pas faire
+
+Il transforme un grave **synthétique** en son audible : mesuré, +30,7 dB sur le
+grondement, +19,2 sur la pulsation.
+
+**Sur un enregistrement réel, il grésille.** Essayé sur une explosion générée,
+dense et entièrement sous 150 Hz : l'énergie du médium est passée de 1,4 % à
+29,6 %, et l'auteur a rejeté le résultat à la première écoute. La cause est dans
+la méthode — le redressement d'un signal complexe fabrique des produits
+d'intermodulation, là où sur une sinusoïde il fabrique des harmoniques propres.
+
+Sur un son enregistré, s'en tenir donc à une **cloche d'égalisation vers
+190 Hz** et à une queue de réverbération. Ça rend moins, et ça ne salit rien.
+
+Et accepter la limite : un son entièrement sous 150 Hz ne sera **jamais** rendu
+par un haut-parleur de téléphone. Le choix n'est pas entre sourd et audible,
+mais entre sourd et sale.
+
 ## Un bruitage grave doit être porté sur le téléphone
 
 Le défaut ne s'entendait pas au casque, et c'est ce qui le rendait durable.
