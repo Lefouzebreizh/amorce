@@ -13,7 +13,9 @@
     "  — le plan du mage reste ENTIER (il parle de 0,23 a 5,17 en source, et les",
     "    levres sont calquees dessus) ;",
     "  — les « cible_db » sont la courbe dramatique, pas des reglages. Les",
-    "    egaliser rend le montage plat."
+    "    egaliser rend le montage plat.",
+    "",
+    "Le nom du lore est AZNAROTH — jamais Azeroth, qui est une marque tierce."
   ],
   "bibliotheque": "sfx_library",
   "effets_db": 3,
@@ -276,7 +278,7 @@
       "taille": 58
     },
     {
-      "texte": "AZEROTH",
+      "texte": "AZNAROTH",
       "debut": 0.28,
       "fin": 1.55,
       "y": 330,
@@ -290,7 +292,7 @@
       "taille": 66
     },
     {
-      "texte": "AZEROTH",
+      "texte": "AZNAROTH",
       "debut": 15.3,
       "fin": 17.85,
       "y": 1140,
