@@ -1169,3 +1169,35 @@ Le correctif d'un tel test est presque toujours le même : la doublure était
 posée sur `subprocess.run`, alors que la résolution du binaire se fait **avant**,
 pour construire la commande. Doubler l'exécution ne suffit pas ; il faut doubler
 la résolution.
+
+## Un livrable conforme peut être le défaut
+
+Une vidéo sortait à −14 LUFS avec 12 LU de dynamique : les cibles de diffusion,
+respectées au dixième. Elle a été refusée plusieurs jours de suite pour « on
+n'entend pas assez », et chaque fois la mesure disait qu'elle était bonne.
+
+La norme venait de la télévision, où l'on écoute assis devant des enceintes.
+L'appareil réel était un téléphone tenu à bout de bras. **La moitié basse de la
+dynamique n'y existe pas**, et le vrai pic à −5,7 dBTP disait que cinq décibels
+de marge n'avaient jamais servi.
+
+Ce n'est pas un mauvais réglage : c'est un **bon réglage pour un autre
+contexte**. Et c'est le cas le plus difficile à voir, parce que toutes les
+vérifications passent — elles vérifient la conformité à la norme, jamais que la
+norme est la bonne.
+
+La question à poser avant de mesurer quoi que ce soit : **cette cible vient
+d'où, et l'appareil qu'elle suppose est-il celui de l'utilisateur ?** Ici, non,
+et personne ne pouvait le voir dans un chiffre. C'est l'auteur qui l'a dit, en
+une phrase, après plusieurs jours.
+
+## Entre deux mesures d'un même effet, prendre la moins flatteuse
+
+Le gain d'un traitement sonore mesurait **+8,9 dB** sur le plan le plus fort et
+**+5,2 dB** sur le film entier. Les deux étaient exacts ; le premier avait été
+annoncé avant vérification.
+
+Aucune des deux mesures n'est fausse, elles ne répondent pas à la même
+question — et c'est précisément ce qui rend le choix tentant. Prendre la
+seconde n'est pas de la modestie : c'est elle qui décrit ce que la personne
+entendra, l'autre ne décrivant qu'un instant.
