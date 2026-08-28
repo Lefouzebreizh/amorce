@@ -291,6 +291,17 @@ def _rejeu(config, arguments) -> int:
             "alors le plafond, pas la stratégie. Préférer des fenêtres de deux à "
             "trois ans avec `--depuis` et `--jusqu-a`."
         )
+        # C'est ici que le levier prend enfin du poids : les six marchés
+        # fabriqués sont symétriques par construction, et seize ans de BTC réel
+        # portent les krachs qui liquident. Sans cette branche, `--leviers`
+        # était accepté puis **ignoré sans un mot** sur le seul jeu de données
+        # qui valait la peine d'être mesuré.
+        if leviers:
+            print()
+            print(mesure_levier.tableau(
+                mesure_levier.analyser(dynamique, reelle.serie, leviers),
+                f"{arguments.symbole} {debut}→{fin}",
+            ))
         return 0
 
     if arguments.profils or not arguments.csv:
