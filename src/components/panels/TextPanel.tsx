@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { CAPTION_STYLES } from '@/lib/captions';
 import { HOOK_WINDOW } from '@/lib/analysis';
 import { hooksByFamily } from '@/lib/hooks';
@@ -25,6 +26,38 @@ export function TextPanel() {
   const duration = useStudio((s) => s.duration());
 
   const selected = selection?.kind === 'caption' ? captions.find((c) => c.id === selection.id) : undefined;
+
+  /*
+   * L'éditeur vient à l'utilisateur, il ne l'attend pas.
+   *
+   * Sélectionner un texte — par « Modifier ce texte » ou en le touchant dans
+   * l'aperçu — faisait apparaître ce panneau **à 1 138 px**, soit 265 px sous
+   * le bas d'un écran de téléphone. Rien ne bougeait à l'écran : on appuyait,
+   * il ne se passait rien de visible, et le bouton était donc réputé cassé
+   * alors qu'il faisait exactement son travail.
+   *
+   * `scroll-mt` compense l'aperçu collé, sans quoi le titre du panneau se
+   * range derrière l'image.
+   */
+  const editeur = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!selected) return;
+    // Après le rendu suivant, et non tout de suite : sélectionner un texte
+    // change aussi l'étape ouverte, et le parent défile alors vers le haut de
+    // l'étape. Les effets d'un enfant passent avant ceux de son parent — le
+    // nôtre partait donc en premier et se faisait écraser. Une image plus tard,
+    // c'est lui qui a le dernier mot.
+    const t = requestAnimationFrame(() => {
+      editeur.current?.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+    return () => cancelAnimationFrame(t);
+    // Sur l'identifiant seul : rouvrir le même texte ne doit pas ramener la
+    // page en haut à chaque frappe dans le champ.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.id]);
   const hook = [...captions].sort((a, b) => a.start - b.start).find((c) => c.start <= 1.2);
 
   return (
@@ -37,9 +70,14 @@ export function TextPanel() {
           <div className="rounded-xl border border-accent/40 bg-accent/5 px-3 py-2.5">
             <p className="text-xs font-semibold text-accent">Accroche en place</p>
             <p className="mt-1 text-sm text-mist">« {hook.text} »</p>
+            {/*
+              `ghost` et non `subtle` : ce dernier n'a pour tout indice qu'un
+              fond au survol, et un téléphone ne survole pas — le bouton
+              s'affichait en gris permanent, indistinguable du texte au-dessus.
+            */}
             <Button
-              variant="subtle"
-              className="mt-1 px-0"
+              variant="ghost"
+              className="mt-2 w-full"
               onClick={() => select({ kind: 'caption', id: hook.id })}
             >
               Modifier ce texte
@@ -137,6 +175,7 @@ export function TextPanel() {
       </Panel>
 
       {selected && (
+        <div ref={editeur} className="scroll-mt-[40dvh]">
         <Panel
           title="Texte sélectionné"
           action={
@@ -287,6 +326,7 @@ export function TextPanel() {
             />
           </Field>
         </Panel>
+        </div>
       )}
     </div>
   );

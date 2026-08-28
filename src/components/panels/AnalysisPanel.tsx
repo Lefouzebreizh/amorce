@@ -244,9 +244,21 @@ export function AnalysisPanel({
                         </p>
                       </>
                     ) : (
+                      /*
+                        `ghost` et non `subtle`, pleine largeur et non collé à
+                        gauche. `subtle` n'a pour tout indice qu'un fond au
+                        survol — et un téléphone ne survole pas : le bouton s'y
+                        affichait en gris, indistinguable du texte d'aide qui le
+                        précède. Il fonctionnait, personne ne pouvait le savoir.
+
+                        Même position et même largeur que le bouton de
+                        correction automatique qui le remplace dans l'autre
+                        branche : les deux issues d'un même défaut doivent se
+                        présenter au même endroit.
+                      */
                       <Button
-                        variant="subtle"
-                        className="mt-1 px-0 text-[11px]"
+                        variant="ghost"
+                        className="mt-2 w-full text-[11px]"
                         onClick={() => onStep(target)}
                       >
                         Aller à « {STEP_LABEL[target]} » →
