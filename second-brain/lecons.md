@@ -1560,3 +1560,41 @@ ne détecte pas les images figées — sans effet mesurable à 30 comme à 60.
 `mpdecimate` ne les attrape pas davantage, les doublons n'étant pas exacts,
 même à seuil desserré quatre fois. La seule correction réelle est en amont :
 régénérer le plan à la cadence qu'il prétend avoir.
+
+## Un analyseur paresseux et un analyseur gourmand passent les mêmes tests
+
+Écrire un lecteur de gros fichier « au fil de l'eau » — générateur, flux, lecture
+par morceaux — et le vérifier sur un extrait de dix lignes ne prouve rien. Les
+deux versions rendent exactement les mêmes entrées, dans le même ordre, en un
+temps identique. Celle qui charge tout en mémoire passe au vert, et le défaut
+n'apparaît que sur la machine de quelqu'un d'autre, avec un vrai fichier, sous
+la forme d'un processus tué sans message.
+
+**Le seul test qui les sépare donne une source infinie et s'arrête au milieu.**
+
+```ts
+let produits = 0
+async function* interminable() {
+  for (;;) { produits += 1; yield `ligne ${produits}\n` }
+}
+const vus = []
+for await (const entree of analyser(interminable())) {
+  vus.push(entree)
+  if (vus.length === 3) break
+}
+assert.ok(produits < 20)   // gourmand : ne se termine jamais
+```
+
+Une version gourmande ne rend pas la main — le test ne casse pas, il **pend**,
+d'où le délai explicite qui le transforme en échec lisible. La version paresseuse
+finit en quelques millisecondes, et l'assertion sur le compteur dit en plus
+combien elle a lu d'avance.
+
+Mesuré sur l'analyseur de listes IPTV, où l'écart est de trois ordres de
+grandeur : une liste de fournisseur courante pèse de 50 à 400 Mo, et
+`await reponse.text()` puis `.split('\n')` en demande deux à trois fois autant —
+le texte, puis le tableau — avant la première entrée utilisable.
+
+La même épreuve vaut partout où l'on annonce un traitement en flux : lecture de
+journaux, de CSV, de XMLTV, de rushes. **Ce n'est pas le contenu rendu qu'il faut
+vérifier, c'est ce que la source a eu le temps de produire.**
