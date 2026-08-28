@@ -35,6 +35,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/naviguer-le-depot` | Trouver vite le bon fichier dans ce dépôt à onze projets sans noyer le contexte — quel projet répond à quelle demande, quels dossiers ne jamais… |
 | `/nouveau-projet` | Ajouter un projet à ce dépôt multi-projets sans rien oublier — les six endroits où il doit se déclarer pour être installé, vérifié, gardé par… |
 | `/nouvelle-competence` | Écrire une compétence pour ce dépôt sans en fabriquer un doublon ni un doublon d'intention — vérifier d'abord ce qui existe **y compris sur `main`**,… |
+| `/page-qui-vend` | Rendre une page de vente capable d'encaisser, en la mesurant plutôt qu'en la regardant — bouton d'achat mort, prix qui arrive après le bouton,… |
 | `/paper-manager` | Recette pour développer l'assistant administratif Paper-Manager (`paper-manager/`) — où poser chaque fichier, la frontière entre ce que l'humain… |
 | `/prepresse-kdp` | Règles de préparation d'un livre illustré pour l'impression à la demande KDP — résolution, fond perdu, zone de sécurité, calcul de tranche, compte de… |
 | `/radar-crypto` | Où poser chaque fichier du radar crypto `pepites/`, l'ordre des cinq skills qu'on ne réarrange pas, les six invariants qui empêchent l'outil de… |

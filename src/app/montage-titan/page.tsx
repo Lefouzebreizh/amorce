@@ -4,11 +4,13 @@ import { Apparition, BarreAchat, Comparatifs, TeteTitan, VideoDemo } from './com
 import {
   AUDIENCE,
   economie,
+  lienDAchat,
   EMPLACEMENTS_TEMOIGNAGES,
   ETAPES,
   FORMULES,
   LIENS,
   TEMOIGNAGES,
+  WHATSAPP_PRET,
 } from './contenu';
 import './titan.css';
 
@@ -31,6 +33,7 @@ function TitreSection({ oeil, titre, sous }: { oeil: string; titre: string; sous
 
 export default function PageMontageTitan() {
   const vedette = FORMULES.find((formule) => formule.vedette) ?? FORMULES[0];
+  const achatVedette = lienDAchat(vedette);
 
   return (
     <main className="titan titan-grain relative min-h-[100dvh] overflow-hidden text-mist">
@@ -69,6 +72,37 @@ export default function PageMontageTitan() {
                 </h1>
               </Apparition>
 
+              {/*
+                * Le bouton monte sous le titre, avant la démo.
+                *
+                * Mesuré : posé après le sous-titre, il tombait à 886 px sur le
+                * terrain de référence — treize pixels sous le pli, donc jamais vu
+                * par qui n'a pas encore décidé de faire défiler. Une page de
+                * vente dont le premier écran ne porte aucune action n'en demande
+                * aucune ; elle informe.
+                *
+                * Et il ne s'affiche que s'il mène quelque part : un bouton qui
+                * pointe sur « # » perd un client déjà convaincu, ce qui est le
+                * seul défaut de cette page qui coûte de l'argent comptant.
+                */}
+              <Apparition delai={200}>
+                {achatVedette ? (
+                  <a
+                    href={achatVedette.href}
+                    className="mt-7 flex min-h-14 w-full max-w-sm items-center justify-center rounded-2xl bg-titan-ember px-7 text-xl font-black whitespace-nowrap text-titan-night"
+                  >
+                    {achatVedette.libelle}
+                  </a>
+                ) : (
+                  <p className="mt-7 max-w-sm rounded-2xl border border-dashed border-edge bg-slab/60 px-5 py-4 text-lg text-muted">
+                    La commande ouvre dès que le paiement est branché. Rien à cliquer d’ici là :
+                    un bouton qui ne mène nulle part vaut moins que pas de bouton.
+                  </p>
+                )}
+                <p className="mt-3 text-lg text-muted">
+                  Pas satisfait&nbsp;= remboursé. Sans discussion, sans formulaire.
+                </p>
+              </Apparition>
             </div>
 
             <Apparition delai={200} className="mx-auto w-full max-w-[300px] lg:col-start-2 lg:row-span-2 lg:row-start-1">
@@ -93,23 +127,12 @@ export default function PageMontageTitan() {
               </Apparition>
 
               <Apparition delai={240}>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <a
-                    href={vedette.lien}
-                    className="flex min-h-14 items-center justify-center rounded-2xl bg-titan-ember px-7 text-xl font-black whitespace-nowrap text-titan-night"
-                  >
-                    Commander — 24 h
-                  </a>
-                  <a
-                    href="#comment"
-                    className="flex min-h-14 items-center justify-center rounded-2xl border border-edge bg-panel px-7 text-xl font-semibold whitespace-nowrap text-mist"
-                  >
-                    Comment ça marche
-                  </a>
-                </div>
-                <p className="mt-4 text-lg text-muted">
-                  Pas satisfait&nbsp;= remboursé. Sans discussion, sans formulaire.
-                </p>
+                <a
+                  href="#comment"
+                  className="mt-6 flex min-h-14 w-full max-w-sm items-center justify-center rounded-2xl border border-edge bg-panel px-7 text-xl font-semibold whitespace-nowrap text-mist"
+                >
+                  Comment ça marche
+                </a>
               </Apparition>
             </div>
 
@@ -145,6 +168,7 @@ export default function PageMontageTitan() {
           <div className="grid gap-6 md:grid-cols-2">
             {FORMULES.map((formule, index) => {
               const gain = economie(formule);
+              const achat = lienDAchat(formule);
               return (
                 <Apparition key={formule.cle} delai={index * 90}>
                   <article
@@ -183,16 +207,22 @@ export default function PageMontageTitan() {
                         ))}
                       </ul>
 
-                      <a
-                        href={formule.lien}
-                        className={`mt-7 flex min-h-14 items-center justify-center rounded-2xl px-6 text-xl font-black whitespace-nowrap ${
-                          formule.vedette
-                            ? 'bg-titan-ember text-titan-night'
-                            : 'bg-titan-neon text-titan-night'
-                        }`}
-                      >
-                        Commander — 24 h
-                      </a>
+                      {achat ? (
+                        <a
+                          href={achat.href}
+                          className={`mt-7 flex min-h-14 items-center justify-center rounded-2xl px-6 text-xl font-black whitespace-nowrap ${
+                            formule.vedette
+                              ? 'bg-titan-ember text-titan-night'
+                              : 'bg-titan-neon text-titan-night'
+                          }`}
+                        >
+                          {achat.libelle}
+                        </a>
+                      ) : (
+                        <p className="mt-7 rounded-2xl border border-dashed border-edge px-5 py-4 text-lg text-muted">
+                          Commande bientôt ouverte.
+                        </p>
+                      )}
                     </div>
                   </article>
                 </Apparition>
@@ -232,14 +262,16 @@ export default function PageMontageTitan() {
             ))}
           </ol>
 
-          <Apparition delai={280}>
-            <a
-              href={LIENS.whatsapp}
-              className="mt-6 flex min-h-14 w-full items-center justify-center rounded-2xl border border-titan-neon/50 bg-panel px-6 text-lg font-semibold text-titan-neon"
-            >
-              Une question avant de payer ? Écris-moi sur WhatsApp
-            </a>
-          </Apparition>
+          {WHATSAPP_PRET ? (
+            <Apparition delai={280}>
+              <a
+                href={LIENS.whatsapp}
+                className="mt-6 flex min-h-14 w-full items-center justify-center rounded-2xl border border-titan-neon/50 bg-panel px-6 text-lg font-semibold text-titan-neon"
+              >
+                Une question avant de payer ? Écris-moi sur WhatsApp
+              </a>
+            </Apparition>
+          ) : null}
         </section>
 
         {/* ---------------------------------------------------------------- */}
@@ -327,12 +359,14 @@ export default function PageMontageTitan() {
                   Tu as déjà la vidéo. Elle est dans ton téléphone, elle tremble, tu l’as jamais
                   publiée. C’est exactement celle-là qu’il me faut.
                 </p>
-                <a
-                  href={vedette.lien}
-                  className="mx-auto mt-8 flex min-h-14 w-full max-w-sm items-center justify-center rounded-2xl bg-titan-ember px-6 text-xl font-black text-titan-night"
-                >
-                  Commander — 24 h
-                </a>
+                {achatVedette ? (
+                  <a
+                    href={achatVedette.href}
+                    className="mx-auto mt-8 flex min-h-14 w-full max-w-sm items-center justify-center rounded-2xl bg-titan-ember px-6 text-xl font-black text-titan-night"
+                  >
+                    {achatVedette.libelle}
+                  </a>
+                ) : null}
                 <p className="mt-4 text-lg text-muted">
                   À partir de {FORMULES[0].prix} €. Pas satisfait&nbsp;= remboursé.
                 </p>
@@ -346,7 +380,7 @@ export default function PageMontageTitan() {
         </footer>
       </div>
 
-      <BarreAchat lien={vedette.lien} libelle="Commander — 24 h" />
+      {achatVedette ? <BarreAchat lien={achatVedette.href} libelle={achatVedette.libelle} /> : null}
     </main>
   );
 }
