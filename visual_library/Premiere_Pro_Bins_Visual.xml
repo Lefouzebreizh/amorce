@@ -73,6 +73,14 @@
             <pathurl>file:///home/user/amorce/visual_library/01_Overlays_and_FX/Dust/dust_particles_4k.mp4</pathurl>
           </clip>
           <clip>
+            <name>smoke_drift_2k.mp4</name>
+            <media><video><samplecharacteristics>
+              <width>1920</width>
+              <height>1080</height>
+            </samplecharacteristics></video></media>
+            <pathurl>file:///home/user/amorce/visual_library/01_Overlays_and_FX/Smoke/smoke_drift_2k.mp4</pathurl>
+          </clip>
+          <clip>
             <name>film_grain_4k.mp4</name>
             <media><video><samplecharacteristics>
               <width>3840</width>

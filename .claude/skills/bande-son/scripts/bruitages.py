@@ -764,6 +764,97 @@ def chute_pierres(duree: float, graine: int, densite: float = 14.0) -> numpy.nda
     return piste / crete * 0.82 if crete > 0 else piste
 
 
+def montee_sans_fin(duree: float, graine: int, octaves: int = 7,
+                    cycle: float = 4.0) -> numpy.ndarray:
+    """Le ton de Shepard : une hauteur qui monte sans jamais arriver.
+
+    L'illusion tient a une seule idee, et elle est geometrique. On empile des
+    sinusoides espacees **d'une octave exacte**, toutes montant a la meme
+    vitesse. Chacune finit par sortir par le haut — mais comme une nouvelle
+    entre par le bas au meme instant et que l'ensemble se repete a l'octave,
+    l'oreille ne peut designer aucune voix en particulier. Elle entend donc une
+    montee continue, indefiniment.
+
+    Ce qui fait tout, c'est l'**enveloppe de volume en cloche** posee sur le
+    spectre : une voix est inaudible quand elle entre en bas, atteint son
+    maximum au milieu du registre, et redevient inaudible en sortant en haut.
+    Sans elle, on entend les voix apparaitre et disparaitre, et l'illusion
+    tombe immediatement — c'est le seul point ou une premiere version echoue.
+
+    `octaves` fixe la hauteur de l'empilement, `cycle` la duree d'une montee
+    complete d'une octave. Quatre secondes est lent et pesant ; sous deux, cela
+    devient une sirene.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / TAUX
+    piste = numpy.zeros(n)
+
+    base = 28.0                       # la voix la plus grave au depart
+    for voix in range(octaves):
+        # Chaque voix part une octave au-dessus de la precedente et monte de la
+        # meme quantite : leur ecart reste donc exactement d'une octave.
+        avance = (t / cycle + voix / octaves) % 1.0
+        hauteur = base * 2.0 ** (avance * octaves)
+        phase = 2 * numpy.pi * numpy.cumsum(hauteur) / TAUX
+        # La cloche, en position **logarithmique** : c'est l'oreille qui juge,
+        # et elle entend les octaves, pas les hertz.
+        cloche = numpy.exp(-0.5 * ((avance - 0.5) / 0.22) ** 2)
+        piste += numpy.sin(phase) * cloche
+
+    piste /= octaves
+    # Un souffle qui se resserre accompagne la montee sans la designer.
+    generateur = numpy.random.default_rng(graine)
+    tranches = numpy.array_split(numpy.arange(n), 40)
+    grain = numpy.zeros(n)
+    souffle = generateur.normal(0, 1, n)
+    for tranche in tranches:
+        avance = t[tranche[0]] / max(duree, 1e-6)
+        grain[tranche] = _bande(souffle[tranche], 400 + 2200 * avance,
+                                min(17000, 2600 + 9000 * avance))
+    # La tension monte aussi en volume : une montee a niveau constant s'entend
+    # comme un bourdon, pas comme une menace qui approche.
+    forme = numpy.clip(t / 0.25, 0, 1) * (0.35 + 0.65 * (t / max(duree, 1e-6)) ** 1.4)
+    melange = (0.68 * piste + 0.32 * grain) * forme
+    return porter_sur_telephone(melange * 1.2, poids=0.5)
+
+
+def pas_mecanique(duree: float, graine: int, poids_tonnes: float = 1.0) -> numpy.ndarray:
+    """Un pas de machine lourde : trois choses qui arrivent presque ensemble.
+
+    Un pas n'est pas un impact. Il en contient trois, decales de quelques
+    dizaines de millisecondes, et c'est ce decalage qui donne la masse :
+
+    1. **le contact** — un claquement metallique aigu, le pied qui touche ;
+    2. **la charge** — le grave qui suit quand le poids s'y transfere, un
+       vingtieme de seconde plus tard ;
+    3. **le sol** — une traine de gravats et de poussiere.
+
+    Les trois au meme instant donnent une detonation ; etales, ils donnent un
+    pas. `poids_tonnes` etire l'ecart et abaisse la charge : plus la bete est
+    lourde, plus le grave arrive tard et bas.
+    """
+    n = secondes(duree)
+    t = numpy.arange(n) / TAUX
+    generateur = numpy.random.default_rng(graine)
+
+    contact = _haut(generateur.normal(0, 1, n), 1500) * numpy.exp(-55 * t)
+
+    retard = int(0.045 * poids_tonnes * TAUX)
+    charge = numpy.zeros(n)
+    reste = n - retard
+    if reste > 0:
+        u = numpy.arange(reste) / TAUX
+        hauteur = (46.0 / poids_tonnes) * (1.9 * numpy.exp(-11 * u) + 0.6)
+        corps = numpy.tanh(2.8 * numpy.sin(2 * numpy.pi * numpy.cumsum(hauteur) / TAUX))
+        charge[retard:] = corps * numpy.exp(-5.5 * u)
+
+    sol = _bas(generateur.normal(0, 1, n), 900) * _irregulier(n, 40, graine + 3)
+    sol *= numpy.exp(-7.0 * t) * 0.5
+
+    melange = 0.26 * contact + 0.56 * charge + 0.18 * sol
+    return porter_sur_telephone(melange * 1.3, poids=1.0)
+
+
 BRUITAGES = {
     "boom": boom,
     "souffle": souffle,
@@ -784,6 +875,8 @@ BRUITAGES = {
     "cri_titan": cri_titan,
     "aspiration": aspiration,
     "chute_pierres": chute_pierres,
+    "montee_sans_fin": montee_sans_fin,
+    "pas_mecanique": pas_mecanique,
 }
 
 # Le lit sonore par défaut. La distinction n'est pas cosmétique : la

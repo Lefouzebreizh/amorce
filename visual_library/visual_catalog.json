@@ -1,7 +1,7 @@
 {
-  "total": 9,
-  "au_dessus_du_seuil": 5,
-  "corriges": 1,
+  "total": 10,
+  "au_dessus_du_seuil": 4,
+  "corriges": 4,
   "seuils": {
     "luma_mini": 40.0,
     "note_mini": 50.0,
@@ -16,11 +16,11 @@
       "fps": null,
       "origine": "synthèse",
       "licence": "CC0 — fabriqué par code, aucun droit tiers",
-      "luma": 74.1,
-      "contraste": 28.4,
-      "visibilite_telephone": 51.1,
-      "corrige_pour_telephone": false,
-      "empreinte": "a1a15e5e52e35d1c",
+      "luma": 59.2,
+      "contraste": 27.9,
+      "visibilite_telephone": 44.9,
+      "corrige_pour_telephone": true,
+      "empreinte": "a1a35e5c53e3193c",
       "versions": {
         "webp": "visual_library/app_optimized/light_leak_orange.webp"
       }
@@ -36,7 +36,7 @@
       "luma": 59.5,
       "contraste": 37.3,
       "visibilite_telephone": 52.4,
-      "corrige_pour_telephone": false,
+      "corrige_pour_telephone": true,
       "empreinte": "b794697e00ff4069",
       "versions": {
         "webp": "visual_library/app_optimized/light_leak_blue.webp"
@@ -50,11 +50,11 @@
       "fps": null,
       "origine": "synthèse",
       "licence": "CC0 — fabriqué par code, aucun droit tiers",
-      "luma": 64.3,
-      "contraste": 38.6,
-      "visibilite_telephone": 55.3,
-      "corrige_pour_telephone": false,
-      "empreinte": "f0e01ffe031f0707",
+      "luma": 49.8,
+      "contraste": 38.5,
+      "visibilite_telephone": 49.5,
+      "corrige_pour_telephone": true,
+      "empreinte": "f0e01ffe030f0f07",
       "versions": {
         "webp": "visual_library/app_optimized/light_leak_magenta.webp"
       }
@@ -67,11 +67,11 @@
       "fps": null,
       "origine": "synthèse",
       "licence": "CC0 — fabriqué par code, aucun droit tiers",
-      "luma": 63.6,
+      "luma": 20.4,
       "contraste": 0.0,
-      "visibilite_telephone": 24.8,
+      "visibilite_telephone": 8.0,
       "corrige_pour_telephone": true,
-      "empreinte": "8000000000000000",
+      "empreinte": "0000000000000000",
       "versions": {
         "webp": "visual_library/app_optimized/vignette_strong.webp"
       }
@@ -138,6 +138,23 @@
       "empreinte": "f86f23800da8a37f",
       "versions": {
         "720p": "visual_library/app_optimized/dust_particles_4k_720p.mp4"
+      }
+    },
+    {
+      "nom": "smoke_drift_2k.mp4",
+      "categorie": "overlay",
+      "chemin": "visual_library/01_Overlays_and_FX/Smoke/smoke_drift_2k.mp4",
+      "resolution": "1920x1080",
+      "fps": 24.0,
+      "origine": "synthèse",
+      "licence": "CC0 — fabriqué par code, aucun droit tiers",
+      "luma": 108.5,
+      "contraste": 17.8,
+      "visibilite_telephone": 56.3,
+      "corrige_pour_telephone": false,
+      "empreinte": "9adc2471e9734732",
+      "versions": {
+        "720p": "visual_library/app_optimized/smoke_drift_2k_720p.mp4"
       }
     },
     {

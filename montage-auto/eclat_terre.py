@@ -261,6 +261,170 @@ def rendre(source: Path, sortie: Path, instant: float, centre: tuple, rayon: int
     return len(fragments)
 
 
+
+CYAN = (0, 212, 255)
+
+
+def implosion_titan(source: Path, sortie: Path, instant: float, centre: tuple,
+                    rayon: int, pulses: float = 1.0, implose: float = 0.4,
+                    souffle: float = 0.4, morceaux: int = 34, graine: int = 9,
+                    cadence: int = 24) -> float:
+    """La Terre bat, se comprime en lumière, puis se disperse. Pas un pétard.
+
+    Une explosion qui part d'emblée vers l'extérieur est une détonation ; elle
+    dit « ça casse ». Une masse qui **se contracte d'abord** dit tout autre
+    chose : que quelque chose la prend, et que ce qui suit n'est pas un dégât
+    mais une naissance. Le geste tient en trois temps et l'ordre est tout :
+
+    1. **Les pulsations.** Les fissures s'éclairent de l'intérieur au rythme
+       d'un cœur — attaque brève, retombée lente. Une modulation symétrique
+       s'entendrait comme un clignotant.
+    2. **L'implosion.** Les fragments convergent *vers* le centre en
+       rapetissant, et une lumière cyan y grandit à mesure. C'est la seule
+       phase qui demande de l'attention : les morceaux doivent arriver
+       **ensemble**, sinon on lit une aspiration, pas une compression.
+    3. **La dispersion.** La bille de lumière rend ce qu'elle a pris, mais vers
+       la caméra. La vitesse hors-plan fait tout le travail ; sur les côtés
+       seulement, ce serait une fleur qui s'ouvre.
+
+    La sortie enchaîne directement sur un vortex : c'est pourquoi la lumière
+    reste au centre après le souffle plutôt que de s'éteindre.
+    """
+    image = image_a(source, instant)
+    fragments = decouper(image, centre, rayon, morceaux, graine)
+    lancer(fragments, centre, graine, vitesse=700.0, vers_camera=1.25)
+    lot = etincelles(centre, 240, graine)
+    cx, cy = centre
+
+    duree = pulses + implose + souffle
+    total = int(duree * cadence)
+    chaud = numpy.asarray(image).astype(numpy.float32)
+
+    with tempfile.TemporaryDirectory() as dossier:
+        atelier = Path(dossier)
+        for n in range(total):
+            t = n / cadence
+
+            if t < pulses:
+                # ── les fissures battent ────────────────────────────────────
+                phase = (t / pulses) * 3.0
+                battement = math.exp(-5.5 * (phase % 1.0)) * (0.35 + 0.65 * phase / 3.0)
+                toile = Image.fromarray(
+                    numpy.clip(chaud * _voile_chaud(chaud.shape, centre, rayon,
+                                                    battement), 0, 255)
+                    .astype(numpy.uint8), "RGB").convert("RGBA")
+                bille = 0.0
+                avance = 0.0
+            elif t < pulses + implose:
+                # ── la compression ──────────────────────────────────────────
+                u = (t - pulses) / implose
+                toile = fond_eteint(image, centre, rayon, u * 0.55).convert("RGBA")
+                bille = u ** 1.15
+                avance = -u                     # négatif : on rentre
+            else:
+                # ── la dispersion ───────────────────────────────────────────
+                u = (t - pulses - implose) / souffle
+                toile = fond_eteint(image, centre, rayon, 0.55 + u * 0.45).convert("RGBA")
+                bille = max(0.0, 1.0 - u * 1.4)
+                avance = u * souffle
+
+            for f in fragments:
+                if avance < 0:
+                    # Vers le centre, en rapetissant. Tous arrivent ensemble :
+                    # un décalage se lirait comme une aspiration.
+                    u = -avance
+                    x = f["x"] + (cx - f["x"]) * u ** 1.7
+                    y = f["y"] + (cy - f["y"]) * u ** 1.7
+                    # Le rapetissement suit la course : plus vite, les
+                    # fragments disparaissent avant d'etre arrives et on ne
+                    # voit rien converger.
+                    echelle = max(0.05, 1.0 - 0.72 * u ** 1.7)
+                    tour = f["rot"] * 0.35 * u
+                elif avance == 0:
+                    x, y, echelle, tour = f["x"], f["y"], 1.0, 0.0
+                else:
+                    tf = avance
+                    echelle = max(0.05, 0.15 + f["vz"] * tf * 2.2)
+                    x = cx + f["vx"] * tf
+                    y = cy + f["vy"] * tf + 0.5 * 900 * tf * tf
+                    tour = f["rot"] * tf
+
+                if echelle < 0.06:
+                    continue
+                tuile = f["image"]
+                large, haute = max(2, int(tuile.width * echelle)), max(2, int(tuile.height * echelle))
+                if large > 2600 or haute > 2600:
+                    continue
+                tuile = tuile.resize((large, haute), Image.BILINEAR)
+                if echelle > 1.25:
+                    exces = min(2.4, echelle - 1.25)
+                    tuile = tuile.filter(ImageFilter.GaussianBlur(exces * 2.2))
+                if tour:
+                    tuile = tuile.rotate(tour, resample=Image.BILINEAR, expand=True)
+                toile.alpha_composite(tuile, (int(x - tuile.width / 2),
+                                              int(y - tuile.height / 2)))
+
+            if bille > 0.01:
+                toile = Image.alpha_composite(
+                    toile, _bille_lumiere(toile.size, centre, rayon, bille))
+
+            if avance > 0:
+                dessin = ImageDraw.Draw(toile, "RGBA")
+                for e in lot:
+                    if avance > e["vie"]:
+                        continue
+                    x = cx + e["vx"] * avance
+                    y = cy + e["vy"] * avance + 0.5 * 700 * avance * avance
+                    a = int(255 * (1 - avance / e["vie"]) ** 1.5)
+                    r = e["taille"] * (1 - 0.35 * avance / e["vie"])
+                    dessin.ellipse([x - r, y - r, x + r, y + r], fill=(*e["teinte"], a))
+
+            toile.convert("RGB").save(atelier / f"f{n:04d}.png")
+
+        subprocess.run([ffmpeg(), "-y", "-v", "error", "-framerate", str(cadence),
+                        "-i", str(atelier / "f%04d.png"), "-c:v", "libx264",
+                        "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p",
+                        str(sortie)], check=True)
+    return duree
+
+
+def _voile_chaud(forme, centre, rayon, force):
+    """Éclaire les fissures depuis l'intérieur, sans toucher au reste."""
+    h, w = forme[:2]
+    cx, cy = centre
+    yy, xx = numpy.mgrid[0:h, 0:w]
+    d = numpy.hypot(xx - cx, yy - cy) / rayon
+    dans = numpy.clip(1.0 - d, 0, 1) ** 0.8
+    gain = 1.0 + force * 1.5 * dans
+    voile = numpy.stack([gain, gain * (1 - 0.30 * force * dans),
+                         gain * (1 - 0.55 * force * dans)], axis=2)
+    return voile.astype(numpy.float32)
+
+
+def _bille_lumiere(taille, centre, rayon, force):
+    """La bille cyan : un cœur blanc, un halo #00D4FF, et rien de dur."""
+    w, h = taille
+    cx, cy = centre
+    # Assez grosse pour etre une lumiere et non un point : a 0,35 du rayon
+    # elle se lisait comme un trou paillete au milieu de l'image. Elle se
+    # resserre en se chargeant, et c'est ce resserrement qui dit la compression.
+    r = int(rayon * (0.72 + 0.85 * (1 - force)))
+    cote = max(8, r * 4)
+    yy, xx = numpy.mgrid[0:cote, 0:cote]
+    d = numpy.hypot(xx - cote / 2, yy - cote / 2) / max(cote / 2, 1)
+    coeur = numpy.clip(1 - d * 1.9, 0, 1) ** 1.1
+    halo = numpy.clip(1 - d, 0, 1) ** 1.8
+    a = numpy.clip((coeur * 255 + halo * 240) * min(1.0, force * 1.35), 0, 255)
+    vignette = numpy.zeros((cote, cote, 4), dtype=numpy.uint8)
+    for i, (c, k) in enumerate(zip(CYAN, (1, 1, 1))):
+        vignette[..., i] = numpy.clip(c * halo * k + 255 * coeur, 0, 255)
+    vignette[..., 3] = a
+    couche = Image.new("RGBA", taille, (0, 0, 0, 0))
+    couche.alpha_composite(Image.fromarray(vignette, "RGBA"),
+                           (int(cx - cote / 2), int(cy - cote / 2)))
+    return couche
+
+
 def main() -> int:
     a = argparse.ArgumentParser(description="Fait voler un disque en éclats.")
     a.add_argument("source")

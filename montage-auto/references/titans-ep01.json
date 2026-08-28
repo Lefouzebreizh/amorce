@@ -1,264 +1,322 @@
 {
   "_lisez_moi": [
-    "AZEROTHA — correctifs. Remplacer les chemins de « source ».",
+    "TITANS EP01 — la structure retenue. Remplacer les chemins de « source ».",
     "",
-    "  OEIL     0,00 -  1,40   puis MORPH 1,40 - 2,90 vers le mage",
-    "  MAGE     2,90 -  4,40   la Terre normale",
-    "  BREACH   4,40 -  5,70   la Terre fissurée orange",
-    "  SIGIL    5,70 -  7,00   la triquetra",
-    "  VORTEX   7,00 - 11,00   rumble 40 Hz, vent sourd, cailloux — aucun sifflement",
-    "  DRAGON  11,00 - 18,50   rugissement vers 16,50",
+    "  OEIL      0,00 -  1,60",
+    "  MAGE      1,60 -  6,55   ses trois repliques, plan garde ENTIER",
+    "  ECLAIRS   6,55 -  8,05",
+    "  SIGIL     8,05 -  9,45",
+    "  VORTEX    9,45 - 12,25",
+    "  DRAGON   12,25 - 18,05   rugissement vers 16,00",
     "",
-    "Le morph tient à un rapport : pupille 295 px de rayon, planète 320.",
-    "Le zoom de sortie vaut celui d'entrée x 295/320, sinon le raccord se voit."
+    "Deux choses ne se touchent pas sans casser le film :",
+    "  — le plan du mage reste ENTIER (il parle de 0,23 a 5,17 en source, et les",
+    "    levres sont calquees dessus) ;",
+    "  — les « cible_db » sont la courbe dramatique, pas des reglages. Les",
+    "    egaliser rend le montage plat."
   ],
   "bibliotheque": "sfx_library",
-  "effets_db": 4,
-  "largeur_stereo": 2.1,
-  "reverberation_s": 2.4,
-  "cadence": 24,
+  "effets_db": 3,
+  "largeur_stereo": 2.0,
+  "reverberation_s": 2.2,
   "plans": [
     {
       "nom": "oeil",
       "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
-      "depart": 0.35,
-      "duree": 2.9,
-      "cible_db": -30.0,
-      "zoom": 0.06,
-      "morph": {
-        "duree": 1.5,
-        "point_a": [
-          512,
-          819
-        ],
-        "rayon_a": 295,
-        "point_b": [
-          540,
-          1292
-        ],
-        "rayon_b": 320,
-        "zoom": 2.9
-      }
+      "depart": 0.6,
+      "duree": 1.6,
+      "cible_db": -31.0,
+      "zoom": 0.1
     },
     {
       "nom": "mage",
       "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
       "depart": 0.2,
-      "duree": 3.0,
-      "cible_db": -26.0,
-      "stabiliser": true,
-      "_note": "le morph lui prend ses 1,5 premières secondes"
+      "duree": 4.95,
+      "cible_db": -26.0
     },
     {
-      "nom": "breach",
+      "nom": "eclairs",
       "source": "rushes/PLAN3_eclairs_SON_1s5.mp4",
-      "depart": 0.1,
-      "duree": 1.3,
+      "depart": 0.0,
+      "duree": 1.5,
       "cible_db": -20.0
     },
     {
       "nom": "sigil",
       "source": "rushes/Holographic_Sci_Fi_Symbol_Rotation2.mp4",
-      "depart": 1.3,
-      "duree": 1.3,
-      "cible_db": -27.0
+      "depart": 1.2,
+      "duree": 1.4,
+      "cible_db": -29.0
     },
     {
       "nom": "vortex",
       "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
-      "depart": 0.55,
-      "duree": 4.0,
-      "cible_db": -24.0,
-      "zoom": 0.6,
+      "depart": 0.6,
+      "duree": 2.8,
+      "cible_db": -23.0,
+      "zoom": 0.55,
       "flou_radial": 0.115
     },
     {
       "nom": "dragon",
       "source": "rushes/Duration_seconds_Cinemat.mp4",
-      "depart": 2.5,
-      "duree": 7.5,
-      "cible_db": -14.0,
-      "zoom": 0.18,
+      "depart": 4.2,
+      "duree": 5.8,
+      "cible_db": -15.0,
+      "zoom": 0.14,
       "tremblements": [
         {
-          "debut": 4.0,
+          "debut": 2.3,
           "duree": 0.3,
-          "force": 0.07
+          "force": 0.08
         }
       ]
     }
   ],
   "effets": [
     {
+      "son": "braam_court",
+      "instant": 0.0,
+      "gain": 1
+    },
+    {
       "son": "grondement_braises",
       "instant": 0.0,
-      "gain": -9
+      "gain": -4
+    },
+    {
+      "son": "whoosh_rapide",
+      "instant": 1.35,
+      "gain": 1
+    },
+    {
+      "son": "souffle_caverne",
+      "instant": 1.6,
+      "gain": -5
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 1.6,
+      "gain": -3
     },
     {
       "son": "nappe_sombre",
-      "instant": 0.0,
-      "gain": -6,
-      "largeur": 16,
+      "instant": 1.55,
+      "gain": -5,
+      "largeur": 18,
       "parametres": {
-        "duree": 3.2,
-        "fondamentale": 44.0,
+        "duree": 5.2,
+        "fondamentale": 58.0,
         "graine": 88
       }
     },
     {
-      "son": "souffle_caverne",
-      "instant": 2.9,
+      "son": "riser_court",
+      "instant": 5.2,
       "gain": -3
     },
     {
-      "son": "grondement_braises",
-      "instant": 2.9,
-      "gain": -4
-    },
-    {
       "son": "whoosh_lourd",
-      "instant": 4.2,
-      "gain": 3
+      "instant": 6.35,
+      "gain": 1
     },
     {
       "son": "impact_debris",
-      "instant": 4.4,
-      "gain": 6
-    },
-    {
-      "son": "grondement_braises",
-      "instant": 4.4,
-      "gain": -3
-    },
-    {
-      "son": "transition_eclair",
-      "instant": 5.7,
-      "gain": 6
-    },
-    {
-      "son": "whoosh_tournant",
-      "instant": 5.6,
-      "gain": 2
-    },
-    {
-      "son": "nappe_sombre",
-      "instant": 6.6,
-      "gain": -1,
-      "largeur": 14,
-      "parametres": {
-        "duree": 5.0,
-        "fondamentale": 40.0,
-        "graine": 61
-      },
-      "_note": "le rumble 40 Hz"
-    },
-    {
-      "son": "respiration",
-      "instant": 6.7,
-      "gain": -4,
-      "largeur": 20,
-      "parametres": {
-        "duree": 4.6,
-        "graine": 62
-      },
-      "_note": "le vent sourd"
-    },
-    {
-      "son": "chute_pierres",
-      "instant": 6.9,
-      "gain": -2,
-      "largeur": 18,
-      "parametres": {
-        "duree": 4.4,
-        "graine": 63,
-        "densite": 17.0
-      },
-      "_note": "les cailloux"
-    },
-    {
-      "son": "whoosh_lourd",
-      "instant": 10.8,
-      "gain": 5
-    },
-    {
-      "son": "braam_massif",
-      "instant": 11.0,
-      "gain": 7
-    },
-    {
-      "son": "grondement_terre",
-      "instant": 11.0,
+      "instant": 6.55,
       "gain": 3
     },
     {
-      "son": "crepitement",
-      "instant": 11.05,
-      "gain": -3,
+      "son": "grondement_braises",
+      "instant": 6.55,
+      "gain": -4
+    },
+    {
+      "son": "whoosh_rapide",
+      "instant": 7.9,
+      "gain": 12
+    },
+    {
+      "son": "transition_eclair",
+      "instant": 8.05,
+      "gain": 16
+    },
+    {
+      "son": "whoosh_tournant",
+      "instant": 8.45,
+      "gain": 13
+    },
+    {
+      "son": "riser_moyen",
+      "instant": 8.05,
+      "gain": 11
+    },
+    {
+      "son": "aspiration",
+      "instant": 9.4,
+      "gain": 9,
       "largeur": 22,
       "parametres": {
-        "duree": 7.2,
-        "densite": 85.0,
+        "duree": 2.9,
+        "graine": 44,
+        "tours_final": 34.0
+      }
+    },
+    {
+      "son": "souffle_tournant",
+      "instant": 9.45,
+      "gain": 0,
+      "largeur": 20,
+      "parametres": {
+        "duree": 2.9,
+        "graine": 46
+      }
+    },
+    {
+      "son": "chute_sous_grave",
+      "instant": 11.6,
+      "gain": 2,
+      "parametres": {
+        "duree": 1.6,
+        "graine": 45,
+        "depart_hz": 150.0
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 12.1,
+      "gain": 6
+    },
+    {
+      "son": "braam_massif",
+      "instant": 12.25,
+      "gain": 9
+    },
+    {
+      "son": "grondement_terre",
+      "instant": 12.25,
+      "gain": 5
+    },
+    {
+      "son": "crepitement",
+      "instant": 12.3,
+      "gain": -1,
+      "largeur": 22,
+      "parametres": {
+        "duree": 5.6,
+        "densite": 80.0,
         "graine": 775
       }
     },
     {
       "son": "riser_court",
-      "instant": 13.95,
+      "instant": 13.5,
       "gain": 4
     },
     {
       "son": "braam_double",
-      "instant": 15.0,
-      "gain": 8
+      "instant": 14.55,
+      "gain": 10
+    },
+    {
+      "son": "eclat",
+      "instant": 14.62,
+      "gain": 6,
+      "parametres": {
+        "duree": 1.6,
+        "graine": 773,
+        "densite": 170.0
+      }
     },
     {
       "son": "cri_titan",
-      "instant": 15.95,
-      "gain": 10,
+      "instant": 15.45,
+      "gain": 12,
       "parametres": {
         "duree": 2.6,
-        "fondamentale": 52.0,
+        "fondamentale": 54.0,
         "graine": 31,
-        "dechirure": 1.2
+        "dechirure": 1.15
       }
+    },
+    {
+      "son": "whoosh_tournant",
+      "instant": 15.4,
+      "gain": -4
     }
   ],
   "esquive": {
-    "gain": -8,
-    "depuis": 2.9,
-    "jusqu_a": 4.4
+    "gain": -9,
+    "depuis": 1.6,
+    "jusqu_a": 6.55
   },
   "sous_titres": [
     {
       "texte": "RIFT ZERO FIVE",
-      "debut": 3.0,
-      "fin": 4.0
+      "debut": 1.94,
+      "fin": 3.05
     },
     {
       "texte": "BREACH OPEN",
-      "debut": 4.5,
-      "fin": 5.5
+      "debut": 3.35,
+      "fin": 4.5
     },
     {
       "texte": "THE SHADOW TITAN AWAKENS",
-      "debut": 5.8,
-      "fin": 7.0
+      "debut": 4.7,
+      "fin": 6.45
     }
   ],
   "titres": [
     {
-      "texte": "THE SHADOW TITAN: AZEROTHA",
-      "debut": 0.0,
-      "fin": 2.0,
-      "y": 1180,
-      "taille": 54
+      "texte": "THE SHADOW TITAN:",
+      "debut": 0.15,
+      "fin": 1.55,
+      "y": 250,
+      "taille": 58
     },
     {
-      "texte": "THE SHADOW TITAN: AZEROTHA",
-      "debut": 16.5,
-      "fin": 18.0,
-      "y": 1180,
-      "taille": 54
+      "texte": "AZEROTH",
+      "debut": 0.28,
+      "fin": 1.55,
+      "y": 330,
+      "taille": 96
+    },
+    {
+      "texte": "THE SHADOW TITAN:",
+      "debut": 15.3,
+      "fin": 17.85,
+      "y": 1040,
+      "taille": 66
+    },
+    {
+      "texte": "AZEROTH",
+      "debut": 15.3,
+      "fin": 17.85,
+      "y": 1140,
+      "taille": 118
     }
-  ]
+  ],
+  "finition": {
+    "_note": "LUT_teal_orange plutot qu'une chaine de courbes ecrite a la main : mesuree, elle REMONTE la luminance de 3 % (71,6 -> 73,4) quand ma chaine la faisait perdre 15 %. Un rendu cinema n'a pas besoin d'assombrir, et sur un Redmi regarde dehors il ne le peut pas.",
+    "etalonnage": {
+      "force": 0.6,
+      "grain": 0
+    },
+    "lut": "visual_library/02_LUTs_and_Grading/LUT_teal_orange.cube",
+    "calques": [
+      {
+        "fichier": "visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4",
+        "fusion": "screen",
+        "opacite": 0.1,
+        "_note": "le grain en dernier : tout filtre qui le suit le lisse"
+      },
+      {
+        "fichier": "visual_library/05_Matte_and_Bars/vignette_soft.png",
+        "fusion": "multiply",
+        "opacite": 0.45,
+        "_note": "la douce, pas la forte : a pleine opacite le vignettage eteint le titre"
+      }
+    ]
+  }
 }

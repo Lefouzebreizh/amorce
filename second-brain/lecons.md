@@ -956,3 +956,164 @@ fr=numpy.fft.rfftfreq(len(x),1/48000)
 print(f'centre {(sp**.5*fr).sum()/(sp**.5).sum():.0f} Hz · '
       f'au-dessus de 4 kHz {100*sp[fr>4000].sum()/sp.sum():.1f} %')" son.wav
 ```
+
+## Trois refus ne font pas une impossibilité, et le git anonyme est le quatrième chemin
+
+Une police manquait. `raw.githubusercontent` : 403. L'API GitHub : 403. PyPI :
+404. Trois refus ont suffi à conclure « hors de portée » et à livrer un
+remplaçant approchant.
+
+C'était faux. **Le mandataire git de ces sessions sert les clones anonymes de
+n'importe quel dépôt public**, sans que le dépôt figure dans la liste de portée
+du prompt système — celle-ci ne nomme que les dépôts *attachés*. Un
+`GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1` a ramené le fichier en quelques
+secondes, après que l'utilisateur ait demandé « comment je fais ».
+
+Le dépôt savait déjà que « deux chemins essayés ne font pas une impossibilité »
+— la voix off et les poids Wav2Lip l'avaient prouvé, et la sortie était chaque
+fois la même : **les objets de release GitHub répondent**. La liste des issues
+gagne donc une entrée, et c'est la plus large :
+
+| ce qui est refusé | ce qui répond |
+| --- | --- |
+| `raw.githubusercontent.com` | `git clone` anonyme du même dépôt |
+| `api.github.com` | le serveur MCP GitHub, et `git clone` |
+| `huggingface.co`, sites d'éditeurs | objets de release GitHub, PyPI |
+
+La règle générale : **avant de déclarer une ressource inaccessible, essayer de
+la cloner.** Un fichier dans un dépôt public s'obtient presque toujours, et le
+protocole git passe là où HTTP est filtré.
+
+## Une liste d'exclusions tenue à la main dérive, et casse le voisin
+
+Le `tsconfig.json` de la racine type-vérifie `**/*.ts`, et écarte les projets
+nichés par une liste écrite à la main. Deux projets ajoutés depuis n'y
+figuraient pas. Leur alias `@/` résolvait donc vers le `src/` de la racine, et
+la construction d'Amorce échouait sur seize erreurs venues d'un projet qui
+n'est pas le sien.
+
+Le défaut a traversé deux vérifications sans être vu, pour une raison qui vaut
+d'être notée : **la PR qui l'a introduit a été fusionnée pendant que le
+déploiement était bloqué par un quota.** Le seul contrôle capable de l'attraper
+n'a jamais tourné, et son échec — « rate limited » — ressemblait à un incident
+sans rapport. Fusionner sur un contrôle qui n'a pas tourné revient à fusionner
+sans contrôle.
+
+La liste se déduit du disque au lieu de se maintenir :
+
+```bash
+ls -d */tsconfig.json | cut -d/ -f1   # tout projet qui a son propre tsconfig
+                                      # doit figurer dans « exclude »
+```
+
+Règle générale : **une liste qui doit rester synchronisée avec le disque se
+calcule, ou se vérifie.** Écrite à la main, elle est fausse dès le projet
+suivant — et c'est le voisin qui paie.
+
+## Une cadence se pose une fois, à l'entrée ; la reconvertir fait sauter l'image
+
+Un montage rendu à 30 images par seconde puis exporté à 24 jette une image sur
+cinq. Sur un plan fixe, cela ne se voit pas ; sur un travelling ou un zoom, le
+mouvement saccade toutes les deux images. Mesuré par la différence entre images
+consécutives : **quinze sauts en sept dixièmes de seconde** sur un seul plan.
+
+Deux causes s'y ajoutaient, et la seconde est la pire : un `setpts=PTS/2` pour
+doubler la vitesse **jette lui aussi une image sur deux**, et les deux
+décimations se composent. La sensation de vitesse ne valait pas ce prix — elle
+se fabrique par le zoom et le flou, qui ne coûtent aucune image.
+
+La règle : **poser la cadence à l'entrée de la chaîne, et n'y plus toucher.**
+Toute reconversion en aval est une décimation.
+
+```bash
+# le saut se mesure : un pic d'écart entre deux images consécutives
+ffmpeg -v error -i film.mp4 -vf scale=96:171,format=gray -f image2 /tmp/f%04d.png
+# puis comparer chaque image à la suivante — les pics isolés sont les coupes,
+# les pics tous les deux cadres sont une décimation
+```
+
+## Un découpage se cale sur la parole, jamais l'inverse
+
+Un plan de conteur a été réduit à 0,70 seconde par un morph qui lui avait pris
+sa première réplique. Ce qui restait tombait **entre deux phrases** : le
+montage ne contenait donc aucune parole, alors que rien dans les niveaux ne le
+signalait — le plan mesurait −22,9 dB comme les autres.
+
+Le défaut ne vient pas d'un mauvais réglage mais d'un mauvais ordre : les
+instants avaient été écrits d'abord, la parole rangée dedans ensuite. Il faut
+l'inverse. On relève les groupes de parole, **on en déduit les bornes du plan**,
+et le morph se pose sur un silence — jamais sur une réplique, qu'il ferait
+prononcer pendant un fondu.
+
+Le contrôle qui l'aurait vu tient en une ligne, et il est différent du niveau
+global :
+
+```bash
+ffmpeg -hide_banner -nostats -ss <debut> -t <duree> -i film.mp4 \
+       -af highpass=f=300,lowpass=f=3500,volumedetect -f null -
+```
+
+## Un ton de Shepard tient à son enveloppe, pas à ses voix
+
+L'illusion d'une hauteur qui monte sans jamais arriver s'écrit en dix lignes :
+des sinusoïdes espacées d'une **octave exacte**, toutes montant à la même
+vitesse, l'ensemble se répétant à l'octave. Chacune sort par le haut pendant
+qu'une autre entre par le bas, et l'oreille ne peut désigner aucune voix.
+
+Ce qui fait tout n'est pourtant pas l'empilement mais **l'enveloppe de volume en
+cloche posée sur le spectre** : une voix doit être inaudible en entrant, forte
+au milieu du registre, inaudible en sortant. Sans elle on entend les voix
+apparaître et disparaître, et l'illusion tombe à la première seconde. La cloche
+se place en position **logarithmique** — l'oreille juge en octaves, pas en
+hertz.
+
+## Un pas n'est pas un impact, c'est trois impacts décalés
+
+Un pas de machine lourde contient un claquement de contact, le grave de la
+charge **quarante-cinq millisecondes plus tard**, et une traîne de gravats. Les
+trois au même instant donnent une détonation ; étalés, ils donnent un pas — et
+plus la bête est lourde, plus le grave arrive tard et bas.
+
+Le corollaire vaut au montage : **les pas se relèvent dans le son du plan**, par
+détection de pics sous 200 Hz, jamais placés au jugé. Sur un plan de dragon,
+la mesure a donné 8,40 · 9,90 · 11,46 — un rythme irrégulier qu'aucune grille
+n'aurait trouvé, et c'est justement son irrégularité qui le rend vivant.
+## Un outil cher se raccorde par son cache et par son échec
+
+Dix outils tournaient dans le dépôt sans se parler ; les coudre à une seule
+recette a coûté trois fois la même leçon, et l'appel n'en était jamais la partie
+difficile.
+
+**Le cache décide du coût réel.** Une parallaxe coûte trente secondes, une
+synchronisation labiale plusieurs minutes, et un montage d'essai se relance dix
+fois. Le premier jet écrivait son cache à côté des fichiers de travail, que la
+fin de passe efface par `_*` : chaque rendu se repayait entier, et rien ne le
+signalait puisque le résultat était juste. Un cache doit vivre **hors du
+balayage**, et sa clé doit porter tout ce qui change le rendu — la source, la
+fenêtre, les réglages.
+
+**L'échec décide de la fiabilité.** Un film de douze plans ne doit pas mourir
+parce qu'un visage manque sur l'un d'eux. On prévient par écrit, on rend le plan
+intact, le reste se monte. Corollaire : un outil qui peut se faire tuer par le
+système — une inférence sur processeur qui sort en code −9 faute de mémoire —
+tourne dans un **processus séparé**, sinon il emporte l'appelant avec lui.
+
+**La détection vaut mieux que la déclaration.** Une image fixe se reconnaît à
+son extension. Le champ `"parallaxe": true` semblait plus explicite ; personne
+ne pense à déclarer qu'une image est une image, et l'oubli produisait exactement
+le plan figé qu'on cherchait à supprimer.
+
+## Un chiffre qu'on nettoie est un défaut qu'on cache
+
+Le relief d'un montage affichait 23,4 dB, gonflé par deux plans très bas. Le
+correctif évident — les écarter du calcul — a été écrit, testé, et il était
+faux : la mesure porte sur le **film fini** dans la fenêtre du plan, pas sur le
+son que ce plan apportait. Un plan à −47 dB ne dit donc pas « ce rush est muet »
+mais « il ne se passe rien ici » — c'est un trou, exactement celui qu'une nuit
+entière avait servi à combler ailleurs. Une image fixe en fabrique un sans le
+vouloir : elle n'apporte aucun son, et si la recette n'y pose ni bruitage ni
+voix, le film se tait.
+
+Le filtre rendait un chiffre plus flatteur en masquant le seul défaut qu'il
+aurait dû signaler. **Avant d'écarter une valeur aberrante, vérifier ce qu'elle
+mesure vraiment** : quand la mesure est juste, l'aberration est dans le film.

@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -61,17 +62,53 @@ MOYEN = re.compile(r"mean_volume:\s*(-?[\d.]+)")
 
 # 1080 × 1920 : le seul format qui remplit un téléphone tenu droit.
 LARGEUR, HAUTEUR = 1080, 1920
+# La cadence est posée **une fois**, à l'entrée de chaque plan, et jamais
+# reconvertie ensuite. Rendre à 30 puis exporter à 24 jette une image sur cinq :
+# le mouvement saccade toutes les deux images, et sur un travelling ou un zoom
+# cela se voit immédiatement. Mesuré sur un vortex : quinze sauts en sept
+# dixièmes de seconde.
+CADENCE = 24
 CADRE = (f"scale={LARGEUR}:{HAUTEUR}:force_original_aspect_ratio=increase,"
-         f"crop={LARGEUR}:{HAUTEUR},setsar=1,fps=30,format=yuv420p")
+         f"crop={LARGEUR}:{HAUTEUR},setsar=1,fps={{cadence}},format=yuv420p")
 
 # La bande du bas est mangée par la légende et les boutons de la plateforme.
 # Sur 1920 de haut, on ne descend pas un texte sous 1300.
-Y_SOUS_TITRE = 1180
-# Montserrat n'est pas installée et reste hors de portée derrière ce mandataire
-# (dépôt d'origine, API GitHub et PyPI rendent 403 ou 404). Liberation Sans Bold
-# est la plus neutre des trois grasses présentes, et la plus proche d'une
-# géométrique. Remplacer ce chemin suffit le jour où la police arrive.
-POLICE = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+# Centre haut : la bande basse est mangée par la légende et les boutons de la
+# plateforme, et un texte posé là passe aussi derrière le pouce qui fait défiler.
+Y_SOUS_TITRE = 300
+# Montserrat n'est pas installée sur la machine, et trois chemins pour l'obtenir
+# rendent 403 ou 404 : le dépôt d'origine par `raw.githubusercontent`, l'API
+# GitHub, et PyPI. Ces trois refus avaient fait conclure à l'impossibilité — à
+# tort. **Le mandataire git de ces sessions sert les clones anonymes de dépôts
+# publics**, et un `git clone --depth 1` la ramène en quelques secondes.
+#
+# Le fichier vit dans `.fixtures/`, jamais dans Git : c'est un binaire, et
+# l'invariant du dépôt les interdit. `police()` le récupère à la demande.
+POLICE_DISTANTE = "https://github.com/JulietaUla/montserrat"
+POLICE_CHEMIN = RACINE.parent / ".fixtures" / "polices" / "Montserrat-ExtraBold.ttf"
+POLICE_SECOURS = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+
+
+def police() -> str:
+    """Rend Montserrat Bold, en la récupérant au besoin.
+
+    Sans réseau, on retombe sur Liberation Sans Bold — la plus neutre des
+    grasses installées — plutôt que d'échouer : une police approchante vaut
+    mieux qu'un montage qui ne sort pas.
+    """
+    if POLICE_CHEMIN.is_file():
+        return str(POLICE_CHEMIN)
+    depot = Path("/tmp") / "_montserrat"
+    try:
+        if not (depot / "fonts" / "ttf" / "Montserrat-ExtraBold.ttf").is_file():
+            subprocess.run(["git", "clone", "--depth", "1", POLICE_DISTANTE, str(depot)],
+                           check=True, capture_output=True,
+                           env={**os.environ, "GIT_LFS_SKIP_SMUDGE": "1"})
+        POLICE_CHEMIN.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(depot / "fonts" / "ttf" / "Montserrat-ExtraBold.ttf", POLICE_CHEMIN)
+        return str(POLICE_CHEMIN)
+    except Exception:
+        return POLICE_SECOURS
 
 
 def ffmpeg() -> str:
@@ -101,6 +138,23 @@ def entendu(media: Path, depart: float = 0.0, duree: float | None = None) -> flo
     rendu = subprocess.run(commande, capture_output=True, text=True)
     trouve = MOYEN.search(rendu.stderr)
     return float(trouve.group(1)) if trouve else None
+
+
+
+def crete_db(media: Path) -> float | None:
+    """Crête réelle, en dB. C'est elle qui borne tout gain propre.
+
+    Séparée de `entendu` parce qu'elles répondent à deux questions : l'une dit
+    ce qu'on entendra, l'autre ce qu'on peut encore ajouter avant d'écrêter.
+    Les confondre fait viser une cible que le limiteur reprendra.
+    """
+    rendu = subprocess.run(
+        [ffmpeg(), "-hide_banner", "-nostats", "-i", str(media),
+         "-af", "volumedetect", "-f", "null", "-"], capture_output=True, text=True)
+    for ligne in rendu.stderr.splitlines():
+        if "max_volume" in ligne:
+            return float(ligne.split(":")[-1].replace("dB", "").strip())
+    return None
 
 
 def sonder(media: Path, pas: float = 1.0) -> list[tuple[float, float]]:
@@ -298,7 +352,8 @@ def segment_morph(plan_a: dict, plan_b: dict, reglage: dict, sortie: Path) -> fl
     vite, on recule lentement, comme un regard qui se perd puis revient.
     """
     duree = float(reglage["duree"])
-    images = max(1, int(duree * 30))
+    cadence = CADENCE
+    images = max(1, int(duree * cadence))
     ax, ay = reglage["point_a"]
     bx, by = reglage["point_b"]
     zoom_a = float(reglage.get("zoom", 2.9))
@@ -309,10 +364,10 @@ def segment_morph(plan_a: dict, plan_b: dict, reglage: dict, sortie: Path) -> fl
     cx = f"({bx}+({LARGEUR / 2:.0f}-{bx})*pow(on/{images},0.55))"
     cy = f"({by}+({HAUTEUR / 2:.0f}-{by})*pow(on/{images},0.55))"
 
-    a = (f"{CADRE},zoompan=z='{za}':d=1:x='{ax}*({za})-{LARGEUR / 2:.0f}'"
-         f":y='{ay}*({za})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps=30")
-    b = (f"{CADRE},zoompan=z='{zb}':d=1:x='{cx}*({zb})-{LARGEUR / 2:.0f}'"
-         f":y='{cy}*({zb})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps=30")
+    a = (f"{CADRE.format(cadence=cadence)},zoompan=z='{za}':d=1:x='{ax}*({za})-{LARGEUR / 2:.0f}'"
+         f":y='{ay}*({za})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps={cadence}")
+    b = (f"{CADRE.format(cadence=cadence)},zoompan=z='{zb}':d=1:x='{cx}*({zb})-{LARGEUR / 2:.0f}'"
+         f":y='{cy}*({zb})-{HAUTEUR / 2:.0f}':s={LARGEUR}x{HAUTEUR}:fps={cadence}")
     lisse = f"(3*pow(T/{duree:.3f},2)-2*pow(T/{duree:.3f},3))"
 
     depart_a = float(plan_a["depart"]) + float(plan_a["duree"]) - duree
@@ -334,6 +389,120 @@ def segment_morph(plan_a: dict, plan_b: dict, reglage: dict, sortie: Path) -> fl
     return duree
 
 
+
+def image_animee(source: Path, duree: float, reglages: dict, atelier: Path) -> Path:
+    """Rend une image fixe en plan animé par parallaxe, et le met en cache.
+
+    Le rendu coûte une trentaine de secondes ; refaire le même à chaque montage
+    d'essai le paierait à chaque fois. Le nom du cache porte la source, la durée
+    et les réglages : un changement de l'un d'eux refait le plan, un simple
+    remontage le réutilise.
+    """
+    marque = f"{source.stem}_{duree:.2f}_{reglages.get('tremble', 4)}_" \
+             f"{reglages.get('force_eclat', 0.55)}_{reglages.get('graine', 7)}"
+    # Dans un sous-dossier, et sans tiret bas : la fin du montage efface tout
+    # `_*` de l'atelier, ce qui emporterait le cache qu'on vient d'écrire et
+    # rendrait chaque rendu aussi cher que le premier.
+    cache = atelier / "cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    cible = cache / f"parallaxe_{marque}.mp4"
+    if cible.is_file():
+        return cible
+
+    outil = Path(__file__).resolve().parent.parent / "kits" / "video" / "animer-image.py"
+    if not outil.is_file():
+        print(f"   animer-image.py introuvable — {source.name} restera fixe.", file=sys.stderr)
+        return source
+
+    resultat = subprocess.run(
+        [sys.executable, str(outil), str(source), str(cible),
+         "--duree", f"{duree:.2f}",
+         "--largeur", str(LARGEUR), "--hauteur", str(HAUTEUR),
+         "--images", str(CADENCE),
+         "--tremble", str(reglages.get("tremble", 4)),
+         "--force-eclat", str(reglages.get("force_eclat", 0.55)),
+         "--graine", str(reglages.get("graine", 7))],
+        capture_output=True, text=True)
+    if not cible.is_file():
+        print(f"   parallaxe échouée sur {source.name} : "
+              f"{resultat.stderr.strip()[-200:]}", file=sys.stderr)
+        return source
+    return cible
+
+
+def bouche_synchronisee(source: Path, depart: float, duree: float,
+                        reglages: dict, atelier: Path) -> tuple[Path, float]:
+    """Fait dire une réplique au visage d'un plan, et met le rendu en cache.
+
+    C'est le seul maillon de la chaîne qui se compte en **minutes** de
+    processeur : Wav2Lip sur processeur met plusieurs minutes pour quelques
+    secondes de plan. Trois décisions en découlent, et chacune a été payée.
+
+    **La fenêtre est découpée avant, pas après.** Wav2Lip cherche un visage sur
+    l'image entière ; le recadrage en 1080 × 1920 ampute les bords, et un visage
+    décentré disparaît du cadre avant d'être vu. On extrait donc exactement la
+    fenêtre du plan, sans reformater, et le recadrage vient ensuite.
+
+    **Un échec ne tue pas le montage.** Un film de douze plans ne doit pas
+    mourir parce qu'un visage manque sur l'un d'eux : on prévient, on rend le
+    plan intact, et le reste se monte. C'est aussi pourquoi l'outil tourne dans
+    un processus séparé — une inférence tuée par manque de mémoire (code −9)
+    emporterait le montage avec elle si elle tournait ici.
+
+    **Le cache porte la fenêtre et la voix.** Un remontage d'essai ne repaie pas
+    ce qui n'a pas changé.
+    """
+    voix = Path(str(reglages.get("voix", ""))).expanduser()
+    if not voix.is_file():
+        print(f"   réplique introuvable pour {source.name} : {voix}", file=sys.stderr)
+        return source, depart
+
+    cache = atelier / "cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    marque = f"{source.stem}_{depart:.2f}_{duree:.2f}_{voix.stem}"
+    cible = cache / f"bouche_{marque}.mp4"
+    if cible.is_file():
+        return cible, 0.0
+
+    outil = Path(__file__).resolve().parent / "auto_lipsync.py"
+    if not outil.is_file():
+        print(f"   auto_lipsync.py introuvable — {source.name} gardera sa bouche.",
+              file=sys.stderr)
+        return source, depart
+
+    # La fenêtre seule, aux dimensions d'origine. `-ss` avant `-i` cherche vite,
+    # et le réencodage garantit que la première image est bien celle qu'on veut :
+    # une copie de flux repartirait de l'image-clé précédente, et la réplique
+    # serait décalée de tout ce qui les sépare.
+    fenetre = cache / f"fenetre_{marque}.mp4"
+    subprocess.run([ffmpeg(), "-y", "-v", "error", "-ss", f"{depart:.3f}",
+                    "-i", str(source), "-t", f"{duree:.3f}",
+                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "16",
+                    "-c:a", "aac", str(fenetre)], check=True)
+
+    print(f"── Synchronisation labiale sur {source.name} "
+          f"({duree:.1f} s — plusieurs minutes)")
+    appel = [sys.executable, str(outil), "--video", str(fenetre),
+             "--audio", str(voix), "--output", str(cible)]
+    if reglages.get("pads"):
+        appel += ["--pads"] + [str(v) for v in reglages["pads"]]
+    if reglages.get("nosmooth"):
+        appel.append("--nosmooth")
+    resultat = subprocess.run(appel, capture_output=True, text=True)
+
+    if not cible.is_file():
+        motif = resultat.stderr.strip().splitlines()
+        raison = motif[-1] if motif else f"code {resultat.returncode}"
+        if resultat.returncode == -9:
+            raison = ("tué par manque de mémoire — réduire la fenêtre "
+                      "ou passer --resize-factor 2")
+        print(f"   synchronisation abandonnée sur {source.name} : {raison}",
+              file=sys.stderr)
+        print("   le plan est monté tel quel.", file=sys.stderr)
+        return source, depart
+    return cible, 0.0
+
+
 def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     """Découpe un plan au format, et l'amène à **sa** cible entendue.
 
@@ -342,10 +511,32 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
     ne remonterait rien.
     """
     source = Path(plan["source"]).expanduser()
-    depart, duree = float(plan["depart"]), float(plan["duree"])
+    depart, duree = float(plan.get("depart", 0.0)), float(plan["duree"])
+
+    # Une image fixe passe d'abord par la parallaxe, jamais par le zoom.
+    #
+    # Un zoom, même lent et même en diagonale, se lit toujours comme une
+    # photographie qu'on agrandit — mesuré : 4,1 d'écart moyen entre images
+    # consécutives, contre 10,5 pour le rush le plus calme d'un montage. Ce qui
+    # manque n'est pas la vitesse mais la **parallaxe** : dans un vrai plan, ce
+    # qui est proche se déplace plus vite que ce qui est loin, et c'est cet
+    # écart que l'œil lit comme une caméra. Deux couches tirées de la même
+    # image, à vitesses opposées : 4,1 → 9,8.
+    #
+    # La détection se fait sur l'extension plutôt que sur un champ à remplir :
+    # personne ne pense à déclarer qu'une image est une image, et l'oubli
+    # produit exactement le plan figé qu'on cherche à supprimer.
+    if source.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".bmp"}:
+        source = image_animee(source, duree, plan.get("parallaxe", {}), sortie.parent)
+        depart = 0.0
+    elif plan.get("lipsync"):
+        source, depart = bouche_synchronisee(
+            source, depart, duree, plan["lipsync"], sortie.parent)
+
     mesure = entendu(source, depart, duree)
 
-    filtre = CADRE
+    cadence = int(plan.get("cadence", CADENCE))
+    filtre = CADRE.format(cadence=cadence)
     if plan.get("vitesse"):
         # `setpts` **après** tout ce qui régénère les horodatages, jamais avant :
         # `zoompan` les réécrit et annulerait le changement de vitesse.
@@ -356,10 +547,10 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         # horodatages, d'où le `-t` explicite qui suit — sans lui le plan
         # s'allonge silencieusement.
         force = float(plan["zoom"])
-        images = max(1, int(duree * 30))
+        images = max(1, int(duree * CADENCE))
         filtre += (f",zoompan=z='1+{force}*pow(on/{images},2.2)':d=1"
                    f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-                   f":s={LARGEUR}x{HAUTEUR}:fps=30,format=yuv420p")
+                   f":s={LARGEUR}x{HAUTEUR}:fps={cadence},format=yuv420p")
     if plan.get("tremblements"):
         filtre += "," + filtre_tremblement(plan["tremblements"], duree)
     if plan.get("flashs"):
@@ -368,7 +559,19 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         # En dernier : ce qui precede peut avoir reecrit les horodatages. Et il
         # faut **recadencer apres**, sinon le flux garde la cadence d'avant et
         # le multiplexeur refuse des horodatages qui n'avancent plus.
-        filtre += f",setpts=PTS/{float(plan['vitesse']):.4f},fps=30"
+        vitesse = float(plan["vitesse"])
+        if plan.get("interpolation"):
+            # Un `setpts` seul **jette** des images : a 200 % il n'en garde
+            # qu'une sur deux, et le plan saute toutes les deux cadres. Mesure
+            # sur un vortex : quinze sauts en sept dixiemes de seconde.
+            # `minterpolate` fabrique les images manquantes a partir du
+            # mouvement estime. Il coute cher — deux minutes pour trois
+            # secondes — d'ou l'option plutot que le defaut.
+            filtre += (f",setpts=PTS/{vitesse:.4f},"
+                       f"minterpolate=fps={cadence}:mi_mode=mci:mc_mode=aobmc"
+                       f":me_mode=bidir:vsbmc=1")
+        else:
+            filtre += f",setpts=PTS/{vitesse:.4f},fps={cadence}"
 
     muet = mesure is None or mesure < -100
     gain = 0.0 if muet else max(-plafond_db, min(plafond_db,
@@ -566,6 +769,106 @@ def lire_catalogue(bibliotheque: Path) -> dict:
         }
     return catalogue
 
+
+def couche_voix(entrees: list, total_s: float, atelier: Path) -> tuple[numpy.ndarray, list]:
+    """Fabrique les répliques sur la machine et les pose sur la ligne de temps.
+
+    **Piste séparée, pas dans la couche d'effets.** C'est la voix qui fait
+    plonger les effets ; l'y mêler la ferait s'esquiver elle-même. Elle échappe
+    aussi à la normalisation de crête de cette couche, qui l'écraserait contre
+    les impacts.
+
+    **Et comme on la fabrique, on sait où elle parle.** L'esquive n'a plus à
+    détecter des rafales dans le montage : les fenêtres sortent d'ici, exactes.
+    Une détection reste nécessaire pour une voix déjà présente dans un rush ;
+    elle devient inutile pour une voix qu'on vient d'écrire.
+
+    Rend la piste entrelacée et la liste des fenêtres [début, fin] parlées.
+    """
+    total = int(total_s * TAUX)
+    gauche, droite = numpy.zeros(total), numpy.zeros(total)
+    fenetres = []
+    if not entrees:
+        return numpy.zeros(total * 2), fenetres
+
+    outil = (Path(__file__).resolve().parent.parent / ".claude" / "skills"
+             / "bande-son" / "scripts" / "voix.py")
+    if not outil.is_file():
+        print(f"   voix.py introuvable ({outil}) — répliques ignorées.", file=sys.stderr)
+        return numpy.zeros(total * 2), fenetres
+
+    for rang, entree in enumerate(entrees):
+        brut = atelier / f"_voix{rang:02d}.wav"
+        rendu = atelier / f"_voix{rang:02d}_48k.wav"
+        resultat = subprocess.run(
+            [sys.executable, str(outil), "--texte", entree["texte"],
+             "--sortie", str(brut),
+             "--voix", entree.get("timbre", "upmc"),
+             "--vitesse", str(entree.get("vitesse", 0.95))],
+            capture_output=True, text=True)
+        if not brut.is_file():
+            print(f"   réplique {rang} non fabriquée : "
+                  f"{resultat.stderr.strip()[-160:]}", file=sys.stderr)
+            continue
+
+        # `voix.py` rend du 22 050 Hz mono ; tout le reste du montage travaille
+        # en 48 kHz stéréo. Convertir ici plutôt qu'au mixage évite un
+        # rééchantillonnage à la volée dont personne ne verrait le réglage.
+        # La synthèse rend du −24,9 LUFS avec dix décibels de marge inutilisée.
+        # Une voix qui mène un mixage se tient vers −16 : on vise donc une
+        # **cible mesurée**, comme les plans, plutôt qu'un gain à deviner. Le
+        # limiteur ne travaille que sur la crête — une voix compressée perd
+        # ses consonnes, et ce sont elles qui la rendent intelligible.
+        # −16 rend une voix à −15,9 LUFS, mesuré. C'est **un peu sous** un
+        # master à −14 : une voix qui doit mener se règle plus haut, par
+        # `cible_db`. Le défaut vise la voix qui accompagne, pas celle qui porte.
+        cible = float(entree.get("cible_db", -16.0))
+        mesure = entendu(brut)
+        gain = 0.0 if mesure is None else cible - mesure
+        # Le gain se borne à la **marge réelle**, jamais à la cible seule. La
+        # synthèse rend une crête vers −10 dB : viser −16 au-dessus de 400 Hz
+        # réclamait +12, le limiteur reprenait le dépassement, et la voix
+        # sortait au même niveau qu'avant — écrasée en prime. Mesuré : la cible
+        # ne bougeait pas d'un décibel entre deux rendus.
+        crete = crete_db(brut)
+        marge = 18.0 if crete is None else max(0.0, -0.5 - crete)
+        gain = max(-12.0, min(marge, gain))
+        subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(brut),
+                        "-ar", str(TAUX), "-ac", "2",
+                        "-af", f"volume={gain:.1f}dB,alimiter=limit=0.95",
+                        str(rendu)], check=True)
+        son, _ = sfx_pro.lire_wav(rendu)
+        mono = son if son.ndim == 1 else son.mean(axis=1)
+
+        debut = int(float(entree["instant"]) * TAUX)
+        n = min(len(mono), total - debut)
+        if n <= 0:
+            continue
+        gauche[debut:debut + n] += mono[:n]
+        droite[debut:debut + n] += mono[:n]
+        # La forme attendue par `enveloppe_esquive` : des `debut`/`fin` nommés,
+        # pas des paires. Une liste de paires y lève un TypeError qui désigne
+        # l'enveloppe alors que la faute est ici.
+        fenetres.append({"debut": round(debut / TAUX, 3),
+                         "fin": round((debut + n) / TAUX, 3)})
+
+    # Deux répliques qui se recouvrent sont inintelligibles, et rien ne le
+    # signale : le mixage les additionne sans broncher. La durée d'une phrase
+    # de synthèse ne se devine pas non plus — « Le secteur quatre-vingt-dix-neuf
+    # s'effondre » tient 4,6 s à vitesse 0,95, là où on en attendait deux.
+    for premiere, seconde in zip(fenetres, fenetres[1:]):
+        if seconde["debut"] < premiere["fin"]:
+            print(f"   Répliques qui se recouvrent de "
+                  f"{premiere['fin'] - seconde['debut']:.2f} s "
+                  f"(la première finit à {premiere['fin']:.2f} s, "
+                  f"la suivante entre à {seconde['debut']:.2f} s). "
+                  f"Deux voix ensemble ne s'entendent pas.", file=sys.stderr)
+
+    entrelace = numpy.empty(total * 2)
+    entrelace[0::2], entrelace[1::2] = gauche, droite
+    return entrelace, fenetres
+
+
 def couche_effets(poses: list, bibliotheque: Path, total_s: float,
                   reverberation_s: float = 2.2,
                   esquive: list | None = None) -> numpy.ndarray:
@@ -670,7 +973,7 @@ def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
     y = entree.get("y", y_defaut)
     montee = f"if(lt(t-{debut},0.12),(t-{debut})/0.12,1)"
     quand = f"between(t,{debut},{fin})"
-    commun = (f"fontfile={POLICE}:text='{contenu}':fontsize={taille}:"
+    commun = (f"fontfile={police()}:text='{contenu}':fontsize={taille}:"
               f"x=(w-text_w)/2:y={y}:enable='{quand}'")
     return [
         f"drawtext={commun}:fontcolor={entree.get('halo', HALO)}@0.55:"
@@ -867,7 +1170,7 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
         avance = float(precedent["duree"]) if precedent else 0.0
 
         propre = dict(plan)
-        propre["depart"] = float(plan["depart"]) + avance
+        propre["depart"] = float(plan.get("depart", 0.0)) + avance
         propre["duree"] = float(plan["duree"]) - avance - recul
         if propre["duree"] <= 0.05:
             raise SystemExit(f"« {nom} » : il ne reste rien après les morphs voisins.")
@@ -895,8 +1198,20 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
                     "-i", str(atelier / "_liste.txt"), "-c:v", "copy",
                     "-c:a", "pcm_s16le", str(base)], check=True)
 
+    voix_piste, fenetres_voix = couche_voix(episode.get("voix", []), total, atelier)
+    voix = atelier / "_voix.wav"
+    with wave.open(str(voix), "wb") as f:
+        f.setnchannels(2)
+        f.setsampwidth(2)
+        f.setframerate(TAUX)
+        f.writeframes(numpy.int16(numpy.clip(voix_piste, -1, 1) * 32767).tobytes())
+
     effets = atelier / "_effets.wav"
     reglage = episode.get("esquive")
+    # Une voix écrite dans la recette pilote l'esquive d'elle-même : ses
+    # fenêtres sont exactes, là où une détection sur le montage devine.
+    if reglage is None and fenetres_voix:
+        reglage = fenetres_voix
     if isinstance(reglage, dict):
         # La détection se fait sur le montage lui-même : c'est lui qui porte la
         # voix, et lui seul sait où elle tombe une fois les plans assemblés.
@@ -922,17 +1237,23 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
     # ce qu'on y laisse ne s'entend pas et mange la marge du limiteur.
     # La présence à 2,5 et 6 kHz vise la bande où un petit haut-parleur est le
     # plus efficace — la mesure large bande ne la voit presque pas, l'oreille si.
-    chaine = (f"[1:a]aformat=channel_layouts=stereo,"
+    # La voix entre en troisième, à son niveau propre : elle ne passe ni par
+    # l'élargissement stéréo — une parole élargie perd son centre — ni par la
+    # normalisation de la couche d'effets.
+    chaine = (f"[2:a]aformat=channel_layouts=stereo,"
+              f"volume={episode.get('voix_db', 0)}dB[x];"
+              f"[1:a]aformat=channel_layouts=stereo,"
               f"volume={episode.get('effets_db', 3)}dB,"
               f"stereotools=slev={episode.get('largeur_stereo', 2.0)}[s];"
               "[0:a]aformat=channel_layouts=stereo[v];"
-              "[v][s]amix=inputs=2:duration=first:normalize=0,"
+              "[v][s][x]amix=inputs=3:duration=first:normalize=0,"
               "highpass=f=45:poles=2,"
               "equalizer=f=2500:t=q:w=1.2:g=4,equalizer=f=6000:t=q:w=1.4:g=3[a]")
     mixe = atelier / "_mixe.mkv"
     subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(base), "-i", str(effets),
+                    "-i", str(voix),
                     "-filter_complex", chaine, "-map", "0:v", "-map", "[a]",
-                    "-vf", f"{dessin},fps={int(episode.get('cadence', 30))}",
+                    "-vf", dessin,
                     "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", str(mixe)], check=True)
 
@@ -967,9 +1288,26 @@ def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
     releve = [(nom, entendu(sortie, reperes[nom], float(p["duree"])))
               for nom, p in zip((n for n, _ in gains), episode["plans"])]
     mesures = [v for _, v in releve if v is not None]
+
+    # `entendu` mesure le **film fini** sur la fenêtre de chaque plan, pas le
+    # son que ce plan apportait. Un plan très bas ne dit donc pas « ce rush est
+    # muet » mais « il ne se passe rien ici » — et c'est un trou, pas une
+    # mesure à écarter. Une image fixe en fabrique un sans le vouloir : elle
+    # n'apporte aucun son, et si la recette n'y pose ni bruitage ni voix, le
+    # film se tait.
+    #
+    # Un premier correctif filtrait ces valeurs pour « nettoyer » le relief. Il
+    # rendait un chiffre plus flatteur en masquant exactement le défaut qu'on
+    # avait passé une nuit à corriger ailleurs.
+    creux = []
+    if mesures:
+        moyen = sum(mesures) / len(mesures)
+        creux = [(nom, v) for nom, v in releve
+                 if v is not None and moyen - v > 15.0]
     return {"duree_s": round(total, 2), "gain_sonie_db": gain,
             "gains_plans": gains, "niveaux": releve,
             "relief_db": round(max(mesures) - min(mesures), 1) if mesures else 0.0,
+            "creux": creux,
             **rapport_finition}
 
 
@@ -1023,6 +1361,9 @@ def main() -> int:
     print(f"\n  relief : {bilan['relief_db']} dB")
     if bilan["relief_db"] < 8:
         print("  ⚠ sous 8 dB, un montage s'entend plat : creuser les cibles.")
+    for nom, valeur in bilan.get("creux", []):
+        print(f"  ⚠ {nom} tombe à {valeur:.1f} dB — rien ne s'y entend. "
+              f"Une image fixe n'apporte aucun son : lui poser un bruitage.")
     return 0
 
 
