@@ -483,7 +483,19 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         # En dernier : ce qui precede peut avoir reecrit les horodatages. Et il
         # faut **recadencer apres**, sinon le flux garde la cadence d'avant et
         # le multiplexeur refuse des horodatages qui n'avancent plus.
-        filtre += f",setpts=PTS/{float(plan['vitesse']):.4f},fps={cadence}"
+        vitesse = float(plan["vitesse"])
+        if plan.get("interpolation"):
+            # Un `setpts` seul **jette** des images : a 200 % il n'en garde
+            # qu'une sur deux, et le plan saute toutes les deux cadres. Mesure
+            # sur un vortex : quinze sauts en sept dixiemes de seconde.
+            # `minterpolate` fabrique les images manquantes a partir du
+            # mouvement estime. Il coute cher — deux minutes pour trois
+            # secondes — d'ou l'option plutot que le defaut.
+            filtre += (f",setpts=PTS/{vitesse:.4f},"
+                       f"minterpolate=fps={cadence}:mi_mode=mci:mc_mode=aobmc"
+                       f":me_mode=bidir:vsbmc=1")
+        else:
+            filtre += f",setpts=PTS/{vitesse:.4f},fps={cadence}"
 
     muet = mesure is None or mesure < -100
     gain = 0.0 if muet else max(-plafond_db, min(plafond_db,

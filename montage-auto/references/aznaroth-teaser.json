@@ -1,0 +1,276 @@
+{
+  "_lisez_moi": [
+    "AZNAROTH — teaser 15 s. Remplacer les chemins de « source ».",
+    "",
+    "  HOOK      0,00 -  2,00   la Terre se fissure, les eclairs jaillissent",
+    "  OEIL      2,00 -  3,50",
+    "  MAGE      3,50 -  5,00   le visage entier qui libere l'energie",
+    "  VORTEX    5,00 -  8,00   200 % AVEC interpolation de mouvement",
+    "  TITAN     8,00 - 12,00   secousses sur les pas releves : 8,40 · 9,90 · 11,46",
+    "  CLIMAX   12,00 - 13,50   coupe NETTE au pic du faisceau",
+    "  AFFICHE  13,50 - 15,00   carte pre-rendue, flare et fondu au noir",
+    "",
+    "Le vortex porte « interpolation » : sans elle, un setpts a 200 % jette une",
+    "image sur deux et le plan saute toutes les deux cadres. Elle coute deux",
+    "minutes de rendu pour ce seul plan.",
+    "",
+    "Les pas du titan ne sont pas places au juge : ils sont releves dans le grave",
+    "du plan lui-meme, par detection de pics sous 200 Hz."
+  ],
+  "bibliotheque": "sfx_library",
+  "effets_db": 4,
+  "largeur_stereo": 2.1,
+  "reverberation_s": 2.2,
+  "finition": {
+    "_note": "LUT_teal_orange plutot qu'une chaine de courbes ecrite a la main : mesuree, elle REMONTE la luminance de 3 % quand ma chaine la faisait perdre 15 %. Un rendu cinema n'a pas besoin d'assombrir, et sur un telephone regarde dehors il ne le peut pas.",
+    "etalonnage": {
+      "force": 0.6,
+      "grain": 0
+    },
+    "lut": "visual_library/02_LUTs_and_Grading/LUT_teal_orange.cube",
+    "calques": [
+      {
+        "fichier": "visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4",
+        "fusion": "screen",
+        "opacite": 0.09,
+        "_note": "grain argentique 9 % — en dernier, tout filtre qui le suit le lisse"
+      }
+    ]
+  },
+  "plans": [
+    {
+      "nom": "hook",
+      "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
+      "depart": 3.2,
+      "duree": 2.0,
+      "cible_db": -22.0,
+      "zoom": 0.05
+    },
+    {
+      "nom": "oeil",
+      "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
+      "depart": 0.6,
+      "duree": 1.5,
+      "cible_db": -27.0,
+      "zoom": 0.08
+    },
+    {
+      "nom": "mage",
+      "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
+      "depart": 0.2,
+      "duree": 1.5,
+      "cible_db": -24.0,
+      "stabiliser": true
+    },
+    {
+      "nom": "vortex",
+      "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
+      "depart": 0.4,
+      "duree": 3.0,
+      "cible_db": -26.0,
+      "vitesse": 1.593,
+      "interpolation": true,
+      "zoom": 0.55,
+      "flou_radial": 0.115
+    },
+    {
+      "nom": "titan",
+      "source": "rushes/Duration_seconds_Cinemat.mp4",
+      "depart": 1.0,
+      "duree": 4.0,
+      "cible_db": -19.0,
+      "zoom": 0.12,
+      "tremblements": [
+        {
+          "debut": 0.4,
+          "duree": 0.28,
+          "force": 0.055
+        },
+        {
+          "debut": 1.9,
+          "duree": 0.28,
+          "force": 0.065
+        },
+        {
+          "debut": 3.46,
+          "duree": 0.3,
+          "force": 0.08
+        }
+      ]
+    },
+    {
+      "nom": "climax",
+      "source": "rushes/Duration_seconds_Cinemat.mp4",
+      "depart": 7.5,
+      "duree": 1.5,
+      "cible_db": -14.0,
+      "zoom": 0.1
+    },
+    {
+      "nom": "affiche",
+      "source": "rushes/carte_finale.mp4",
+      "depart": 0.0,
+      "duree": 1.5,
+      "cible_db": -30.0
+    }
+  ],
+  "effets": [
+    {
+      "son": "braam_massif",
+      "instant": 0.0,
+      "gain": 8,
+      "_note": "le sub-boom d'ouverture"
+    },
+    {
+      "son": "electricite",
+      "instant": 0.02,
+      "gain": 2,
+      "parametres": {
+        "duree": 1.2,
+        "graine": 91
+      },
+      "_note": "le crepitement violent"
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 0.0,
+      "gain": -6
+    },
+    {
+      "son": "montee_sans_fin",
+      "instant": 2.0,
+      "gain": 3,
+      "largeur": 16,
+      "parametres": {
+        "duree": 6.0,
+        "graine": 77,
+        "cycle": 4.0
+      },
+      "_note": "le ton de Shepard, 2,00 a 8,00"
+    },
+    {
+      "son": "souffle_tournant",
+      "instant": 5.0,
+      "gain": -2,
+      "largeur": 20,
+      "parametres": {
+        "duree": 3.0,
+        "graine": 46
+      }
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 5.1,
+      "gain": -5,
+      "largeur": 18,
+      "parametres": {
+        "duree": 2.8,
+        "graine": 63,
+        "densite": 18.0
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 7.8,
+      "gain": 5
+    },
+    {
+      "son": "grondement_terre",
+      "instant": 8.0,
+      "gain": 3
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 8.4,
+      "gain": 6,
+      "parametres": {
+        "duree": 1.1,
+        "graine": 78,
+        "poids_tonnes": 1.3
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 9.9,
+      "gain": 7,
+      "parametres": {
+        "duree": 1.2,
+        "graine": 79,
+        "poids_tonnes": 1.4
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 11.46,
+      "gain": 9,
+      "parametres": {
+        "duree": 1.3,
+        "graine": 80,
+        "poids_tonnes": 1.5
+      }
+    },
+    {
+      "son": "crepitement",
+      "instant": 8.05,
+      "gain": -4,
+      "largeur": 22,
+      "parametres": {
+        "duree": 4.0,
+        "densite": 80.0,
+        "graine": 775
+      }
+    },
+    {
+      "son": "braam_double",
+      "instant": 11.9,
+      "gain": 8
+    },
+    {
+      "son": "cri_titan",
+      "instant": 12.05,
+      "gain": 13,
+      "parametres": {
+        "duree": 1.45,
+        "fondamentale": 50.0,
+        "graine": 31,
+        "dechirure": 1.25
+      },
+      "_note": "coupe NETTE a 13,50 : sa duree s'arrete pile"
+    },
+    {
+      "son": "eclat",
+      "instant": 12.1,
+      "gain": 4,
+      "parametres": {
+        "duree": 1.4,
+        "graine": 773,
+        "densite": 180.0
+      }
+    },
+    {
+      "son": "braam_court",
+      "instant": 13.8,
+      "gain": 7,
+      "_note": "l'impact sourd de l'affiche"
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 13.8,
+      "gain": -3,
+      "largeur": 14,
+      "parametres": {
+        "duree": 1.2,
+        "fondamentale": 44.0,
+        "graine": 88
+      }
+    }
+  ],
+  "silences": [
+    {
+      "debut": 13.5,
+      "fin": 13.8,
+      "_note": "les trois dixiemes de silence demandes"
+    }
+  ],
+  "titres": []
+}

@@ -1052,3 +1052,29 @@ global :
 ffmpeg -hide_banner -nostats -ss <debut> -t <duree> -i film.mp4 \
        -af highpass=f=300,lowpass=f=3500,volumedetect -f null -
 ```
+
+## Un ton de Shepard tient à son enveloppe, pas à ses voix
+
+L'illusion d'une hauteur qui monte sans jamais arriver s'écrit en dix lignes :
+des sinusoïdes espacées d'une **octave exacte**, toutes montant à la même
+vitesse, l'ensemble se répétant à l'octave. Chacune sort par le haut pendant
+qu'une autre entre par le bas, et l'oreille ne peut désigner aucune voix.
+
+Ce qui fait tout n'est pourtant pas l'empilement mais **l'enveloppe de volume en
+cloche posée sur le spectre** : une voix doit être inaudible en entrant, forte
+au milieu du registre, inaudible en sortant. Sans elle on entend les voix
+apparaître et disparaître, et l'illusion tombe à la première seconde. La cloche
+se place en position **logarithmique** — l'oreille juge en octaves, pas en
+hertz.
+
+## Un pas n'est pas un impact, c'est trois impacts décalés
+
+Un pas de machine lourde contient un claquement de contact, le grave de la
+charge **quarante-cinq millisecondes plus tard**, et une traîne de gravats. Les
+trois au même instant donnent une détonation ; étalés, ils donnent un pas — et
+plus la bête est lourde, plus le grave arrive tard et bas.
+
+Le corollaire vaut au montage : **les pas se relèvent dans le son du plan**, par
+détection de pics sous 200 Hz, jamais placés au jugé. Sur un plan de dragon,
+la mesure a donné 8,40 · 9,90 · 11,46 — un rythme irrégulier qu'aucune grille
+n'aurait trouvé, et c'est justement son irrégularité qui le rend vivant.
