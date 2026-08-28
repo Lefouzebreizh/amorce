@@ -18,7 +18,9 @@ from aides import config
 
 from src.core.modeles import Bougie, SerieOHLCV
 from src.rejeu import rapport as mise_en_forme
-from src.rejeu.donnees import DonneesIllisibles, lire_csv, lire_fear_greed, scenarios
+from src.rejeu.donnees import (
+    DonneesIllisibles, lire_coinmetrics, lire_csv, lire_fear_greed, scenarios,
+)
 from src.rejeu.rejeu import Resultat, config_mono_actif, rejouer, rejouer_scenario
 
 DEBUT = datetime(2025, 1, 1, tzinfo=timezone.utc)
@@ -300,6 +302,97 @@ class TestLectureCSV(unittest.TestCase):
             self.assertEqual(indices["2025-01-02"], 55)
 
 
+COINMETRICS = (
+    "time,PriceUSD,FlowInExUSD,FlowOutExUSD,SplyExUSD,volume_reported_spot_usd_1d\n"
+    "2010-07-17 00:00:00,,,,,\n"                       # avant le premier prix
+    "2013-01-01 00:00:00,13.5,1000,2500,50000,900\n"
+    "2013-01-02 00:00:00,14.2,3000,1000,51000,1100\n"
+    "2013-01-03 00:00:00,13.9,,,52000,1200\n"          # flux absents ce jour-là
+)
+
+
+class TestCoinMetrics(unittest.TestCase):
+    """Le seul jeu de données de marché réel atteignable depuis une session
+    distante — voir la section anti-blocage de `CLAUDE.md`."""
+
+    def _fichier(self, dossier: Path, contenu: str = COINMETRICS) -> Path:
+        chemin = dossier / "btc.csv"
+        chemin.write_text(contenu, encoding="utf-8")
+        return chemin
+
+    def test_les_lignes_sans_prix_sont_ecartees(self):
+        """Les premières années du jeu n'ont pas de prix. Les garder
+        fabriquerait des bougies à zéro, que `Bougie` refuse."""
+
+        with TemporaryDirectory() as dossier:
+            reelle = lire_coinmetrics(self._fichier(Path(dossier)))
+            self.assertEqual(len(reelle.serie), 3)
+            self.assertEqual(reelle.serie.bougies[0].horodatage.date().isoformat(), "2013-01-01")
+
+    def test_le_signe_du_flux_suit_la_convention_du_systeme(self):
+        """Positif = les jetons arrivent sur les plateformes = pression
+        vendeuse. C'est la première fois que cette convention se confronte à
+        des flux mesurés plutôt qu'approximés par la TVL."""
+
+        with TemporaryDirectory() as dossier:
+            reelle = lire_coinmetrics(self._fichier(Path(dossier)))
+            # Jour 1 : 1000 entrent, 2500 sortent → sortie nette, donc négatif.
+            self.assertAlmostEqual(
+                reelle.onchain["2013-01-01"].flux_reserves_exchanges_usd, -1500.0
+            )
+            # Jour 2 : 3000 entrent, 1000 sortent → entrée nette, donc positif.
+            self.assertAlmostEqual(
+                reelle.onchain["2013-01-02"].flux_reserves_exchanges_usd, +2000.0
+            )
+
+    def test_les_reserves_servent_de_denominateur(self):
+        """Rapporter un flux à la TVL d'un protocole DeFi n'aurait aucun sens
+        pour Bitcoin : c'est le montant détenu sur les plateformes qui donne
+        l'échelle."""
+
+        with TemporaryDirectory() as dossier:
+            reelle = lire_coinmetrics(self._fichier(Path(dossier)))
+            self.assertAlmostEqual(reelle.onchain["2013-01-01"].tvl_usd, 50000.0)
+
+    def test_un_jour_sans_flux_n_a_pas_de_metrique(self):
+        """Et le scoring redistribue alors le poids de la famille absente,
+        exactement comme en direct."""
+
+        with TemporaryDirectory() as dossier:
+            reelle = lire_coinmetrics(self._fichier(Path(dossier)))
+            self.assertNotIn("2013-01-03", reelle.onchain)
+
+    def test_les_bornes_de_fenetre(self):
+        with TemporaryDirectory() as dossier:
+            chemin = self._fichier(Path(dossier))
+            self.assertEqual(len(lire_coinmetrics(chemin, depuis="2013-01-02").serie), 2)
+            self.assertEqual(len(lire_coinmetrics(chemin, jusqu_a="2013-01-01").serie), 1)
+            with self.assertRaises(DonneesIllisibles):
+                lire_coinmetrics(chemin, depuis="2030-01-01")
+
+    def test_un_csv_qui_n_est_pas_du_coinmetrics_est_refuse(self):
+        with TemporaryDirectory() as dossier:
+            chemin = self._fichier(Path(dossier), "a,b\n1,2\n")
+            with self.assertRaises(DonneesIllisibles) as capture:
+                lire_coinmetrics(chemin)
+            self.assertIn("PriceUSD", str(capture.exception))
+
+    def test_l_ouverture_reprend_la_cloture_de_la_veille(self):
+        """La source n'a ni haut, ni bas, ni ouverture. Chaîner les clôtures
+        est la seule reconstruction qui ne fabrique pas de prix."""
+
+        with TemporaryDirectory() as dossier:
+            reelle = lire_coinmetrics(self._fichier(Path(dossier)))
+            self.assertAlmostEqual(reelle.serie.bougies[1].ouverture, 13.5)
+            self.assertAlmostEqual(reelle.serie.bougies[1].cloture, 14.2)
+
+    def test_le_rejeu_consomme_l_onchain_du_jour(self):
+        with TemporaryDirectory() as dossier:
+            reelle = lire_coinmetrics(self._fichier(Path(dossier)))
+            resultat = rejouer(config(), reelle.serie, onchain=reelle.onchain)
+            self.assertEqual(resultat.executions, [])  # trois bougies : rien d'exploitable
+
+
 class TestVerdict(unittest.TestCase):
     def _resultat(self, *, achats: bool, prix: float) -> Resultat:
         from src.core.modeles import Execution, Ordre, Sens, TypeOrdre
@@ -326,6 +419,18 @@ class TestVerdict(unittest.TestCase):
         ])
         self.assertIn("n'achète **rien**", texte)
         self.assertIn("panne de discipline", texte)
+
+    def test_le_verdict_signale_un_meilleur_prix_qui_gagne_moins(self):
+        """Mesuré sur BTC 2022-2023 : prix 7,2 % meilleur, PnL deux fois plus
+        faible, parce qu'elle engage moins. Le verdict annonçait la victoire."""
+
+        dyn = self._resultat(achats=True, prix=80.0)
+        dyn.courbe = [(DEBUT, 1000.0), (DEBUT, 1100.0)]
+        tem = self._resultat(achats=True, prix=100.0)
+        tem.courbe = [(DEBUT, 1000.0), (DEBUT, 1400.0)]
+        texte = mise_en_forme.verdict([("2022", dyn, tem)])
+        self.assertIn("gagne moins", texte)
+        self.assertIn("acheter moins cher en achetant moins", texte)
 
     def test_le_verdict_sait_dire_que_c_est_moins_bon(self):
         texte = mise_en_forme.verdict([

@@ -32,7 +32,8 @@ from datetime import datetime
 
 from ..core.config import Config, LigneAllocation
 from ..core.modeles import (
-    Action, Contexte, Execution, Portefeuille, SerieOHLCV, SignalSentiment, Sens,
+    Action, Contexte, Execution, MetriqueOnchain, Portefeuille, SerieOHLCV,
+    SignalSentiment, Sens,
 )
 from ..execution.courtier import CourtierPapier, OrdreRefuse
 from ..risk_management import coupe_circuit as cc
@@ -133,6 +134,7 @@ def rejouer(
     serie: SerieOHLCV,
     *,
     fear_greed: dict[str, int] | None = None,
+    onchain: dict[str, MetriqueOnchain] | None = None,
     nom: str = "dynamique",
     plat: bool = False,
 ) -> Resultat:
@@ -146,6 +148,7 @@ def rejouer(
 
     config = config_mono_actif(config, serie.symbole)
     fear_greed = fear_greed or {}
+    onchain = onchain or {}
     profondeur = config.general.profondeur_bougies
 
     moteur = Moteur(config)
@@ -173,6 +176,7 @@ def rejouer(
 
     for i in range(depart, len(bougies) - 1):
         instant = bougies[i].horodatage
+        jour = instant.date().isoformat()
         # La fenêtre du direct, pas l'historique entier.
         fenetre = bougies[max(0, i + 1 - profondeur) : i + 1]
         contexte = Contexte(
@@ -180,10 +184,12 @@ def rejouer(
             releve_le=instant,
             serie=SerieOHLCV(serie.symbole, serie.intervalle, fenetre),
             sentiment=(
-                SignalSentiment(fear_greed=fear_greed[instant.date().isoformat()])
-                if instant.date().isoformat() in fear_greed
-                else None
+                SignalSentiment(fear_greed=fear_greed[jour]) if jour in fear_greed else None
             ),
+            # Les métriques du jour, quand la source en a. Les autres jours, le
+            # scoring redistribue le poids de la famille absente — c'est le
+            # comportement du direct, pas une facilité du rejeu.
+            onchain=onchain.get(jour),
         )
 
         prix_courant = {serie.symbole: bougies[i].cloture}

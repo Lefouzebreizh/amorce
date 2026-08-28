@@ -54,16 +54,16 @@ nexuscrypto/
 │   │   ├── canaux.py         # ✅ console, Telegram, Discord — en HTTP nu
 │   │   └── messages.py       # ✅ mise en forme, testée sans réseau
 │   ├── rejeu/
-│   │   ├── donnees.py        # ✅ CSV de bougies + six marchés fabriqués
+│   │   ├── donnees.py        # ✅ CSV, CoinMetrics réel, six marchés fabriqués
 │   │   ├── rejeu.py          # ✅ la boucle, sans regard vers l'avenir
 │   │   └── rapport.py        # ✅ mesures, tableau, verdict
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 251 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 274 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **251 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **274 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -234,7 +234,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 251 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 274 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -365,3 +365,69 @@ non trois mois plus tard sur un relevé.
 La piste non retenue, si le sujet revient : un **score relatif à la tendance** —
 mesurer le prix contre sa propre moyenne récente plutôt que contre l'EMA 200,
 pour qu'une hausse régulière cesse d'être lue comme une surchauffe permanente.
+
+---
+
+## 9. Ce que seize ans de BTC réel disent de la stratégie
+
+Les six marchés fabriqués (§ 8) sont symétriques par construction, et ils
+flattaient : ils annonçaient un gain moyen de +13 % sur le prix d'achat contre
+un DCA aveugle. **Le marché réel est bien plus dur.**
+
+```bash
+curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv
+python3 main.py rejeu --coinmetrics btc.csv --symbole BTC/USD \
+        --depuis 2020-01-01 --jusqu-a 2021-12-31
+```
+
+Le jeu communautaire CoinMetrics porte **5 789 jours de BTC, de 2010 à 2026** —
+et surtout le **flux net des réserves de plateformes en dollars**, mesuré jour
+par jour. C'est la métrique qu'`IngestionOnchain` doit approximer par la
+variation de TVL faute de source gratuite ; ici elle est réelle, et la
+convention de signe du scoring s'y confronte pour la première fois.
+
+C'est la seule source de marché atteignable depuis une session distante : tous
+les hôtes de plateformes sont refusés par le mandataire, `raw.githubusercontent.com`
+répond. Voir la section anti-blocage de `CLAUDE.md`.
+
+### Le résultat, et il n'est pas flatteur
+
+| fenêtre | marché | prix moyen | vs marché | vs témoin | PnL stratégie | PnL témoin |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2017, la bulle | +1 769 % | 1 843 $ | −43,8 % | **−5,5 %** | — | — |
+| 2018, l'hiver | −19 % | 4 760 $ | −30,6 % | **+6,2 %** | — | — |
+| 2020-2021, la hausse | +546 % | 26 005 $ | −11,1 % | **−19,1 %** | **+34,9 %** | **+124,5 %** |
+| 2022, la chute | −36 % | 19 769 $ | −27,6 % | **+7,2 %** | **+20,0 %** | **+39,4 %** |
+
+**La stratégie bat un DCA aveugle quand le marché baisse, et perd quand il
+monte** — lourdement : sur 2020-2021 elle rend +34,9 % là où l'achat aveugle
+rend +124,5 %. C'est cohérent avec le défaut structurel du § 8 : une note
+technique contrarienne lit une tendance haussière comme une surchauffe
+permanente. Le plancher de discipline empêche l'abstention totale, il ne rend
+pas la stratégie bonne en marché haussier.
+
+**Et « acheter moins cher » ne suffit pas à gagner.** Sur 2022 la stratégie
+paie 7,2 % moins cher que le témoin et gagne pourtant deux fois moins, parce
+qu'elle engage 1 400 $ de moins. Le verdict le signale désormais explicitement :
+un bon prix obtenu en achetant peu est une abstention partielle, pas une
+performance.
+
+### Le piège du rejeu long sur un seul actif
+
+Sur 2013-2026, la stratégie affiche 702 000 $ pour 1 073 $ engagés. **Ce chiffre
+ne mesure rien.** Elle a acheté 9 BTC à 119 $ de moyenne en 2013 puis s'est
+arrêtée pour toujours : le plafond d'exposition par actif — 55 % du portefeuille
+— gèle tout achat dès que la position s'apprécie, et sur un rejeu mono-actif ce
+plafond est atteint définitivement. Le résultat mesure le plafond, pas la
+stratégie.
+
+La commande affiche cet avertissement d'elle-même. **Les fenêtres de deux à
+trois ans sont les seules lisibles** tant que le rejeu ne porte qu'un actif.
+
+### Ce que ce rejeu ne dit toujours pas
+
+La source n'a **ni haut, ni bas, ni ouverture** : seulement une clôture
+quotidienne. Les bougies sont donc plates, l'ATR devient une volatilité de
+clôture à clôture — plus petite que la vraie — et les stops sont **plus serrés**
+que ceux qu'on obtiendra en direct. L'erreur va dans le sens pessimiste, ce qui
+est le bon sens, mais elle n'est pas nulle.
