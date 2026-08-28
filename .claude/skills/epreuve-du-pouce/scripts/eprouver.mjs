@@ -147,8 +147,14 @@ async function releverLaPage(page) {
   }, CIBLE_MINI);
 }
 
-/** Combien de touchers séparent l'écran d'arrivée de chaque action nommée. */
-async function distanceEnGestes(page, actions, profondeur = 3) {
+/**
+ * Combien de touchers séparent l'écran d'arrivée de chaque action nommée.
+ *
+ * On s'arrête à un geste. Au-delà, la règle est déjà tranchée — une action à
+ * deux touchers est perdue — et explorer plus loin multiplierait le temps de
+ * parcours pour affiner un chiffre dont on ne fait rien.
+ */
+async function distanceEnGestes(page, actions) {
   const resultats = [];
   for (const cherchee of actions) {
     let trouvee = null;

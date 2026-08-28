@@ -373,7 +373,7 @@ function VoicePanel({ engine }: { engine: PlaybackEngine }) {
                           rows={3}
                           placeholder="Alerte : le secteur 09 s'effondre…"
                           onChange={(event) => updateVoice(voice.id, { script: event.target.value })}
-                          className="w-full resize-none rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
+                          className="w-full resize-none min-h-11 rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
                         />
                       </Field>
 

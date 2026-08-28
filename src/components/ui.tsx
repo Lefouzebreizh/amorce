@@ -97,8 +97,17 @@ export function Button({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      // 44 px de haut : la cible minimale qu'un doigt atteint sans viser.
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3.5 text-[13.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${styles[variant]} ${className}`}
+      /*
+       * 44 px **dans les deux sens** : la cible minimale qu'un doigt atteint
+       * sans viser. La hauteur était fixée, la largeur non — elle ne venait
+       * que du remplissage et du contenu, si bien qu'un bouton d'icône sortait
+       * à 37 px de large. Mesurés d'un coup sur le studio : trente-et-un
+       * boutons dans ce cas, tous ceux qui ne portent qu'un signe.
+       *
+       * `min-w-11` ne coûte rien aux boutons de texte, déjà plus larges — un
+       * seul jeton posé ici règle les trente-et-un.
+       */
+      className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-3.5 text-[13.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${styles[variant]} ${className}`}
     >
       {children}
     </button>
