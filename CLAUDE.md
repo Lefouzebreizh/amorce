@@ -36,6 +36,27 @@ restriction et assombrissement MIUI coupé. Toute jauge se fait en **deux barres
 horizontales**, jamais en cercle ni en bibliothèque — code et raison dans
 `/tailwind-mobile-ux`.
 
+**Une vidéo verticale n'est jamais vue en plein cadre.** L'habillage de la
+plateforme en mange les bords, et ce n'est pas le même sur les trois : relevé
+sur le terrain de référence, TikTok prend 9 % en haut et tout à partir de 72 %,
+Instagram ferme dès **63 %**, Facebook occupe la gauche entre 14 et 22 %. C'est
+leur **intersection** qui décide, jamais la plus permissive — une même vidéo
+part sur les trois. Un texte vit donc entre **12 et 45 %** de la hauteur, soit
+230 à 865 sur 1920. Détail et cas mesurés dans `/sous-titres-qui-accrochent`.
+
+**Le son se sort pour un téléphone, pas pour un cinéma.** Un mixage conforme
+aux normes de diffusion — −14 LUFS — est systématiquement trop faible là où le
+format court est regardé, et rien dans les mesures habituelles ne le signale.
+`/master-telephone` avant toute publication.
+
+**Avant chaque changement, relire ce fichier.** Pas au début du fil seulement :
+**avant chaque changement**. Une session qui enchaîne les retouches dérive sans
+s'en apercevoir — elle garde l'état de la précédente et perd ses règles, et
+c'est ainsi qu'on redemande une fusion déjà autorisée, qu'on livre sans écrire
+la leçon, ou qu'on refait un outil qui vient d'arriver. Le fichier bouge
+plusieurs fois par jour, poussé par les autres sessions : ce qu'on y a lu il y
+a une heure peut être faux.
+
 ## 3. MÉMOIRE
 
 La mémoire vit dans ce fichier, dans `.claude/skills/`, dans `INDEX.md` et dans

@@ -1,0 +1,367 @@
+{
+  "_lisez_moi": [
+    "CYBER HYDRA TITAN — l'oeil en accroche, ~16,7 s, 1080x1920.",
+    "",
+    "  OEIL    0,0 - 1,1   court expres : on accroche et on part",
+    "  ~morph~ 0,6         la pupille DEVIENT la planete du druide",
+    "  MAGE    1,7 - 7,7   le plan d'origine, ses titres graves",
+    "  VORTEX  7,7 - 9,65  baisse : c'est un passage",
+    "  ~morph~ 0,6         le coeur blanc DEVIENT la spire du titan",
+    "  TITAN   10,25 - 13,6",
+    "  GUEULE  13,6 - 16,7  coupe sur le mouvement, puis le cri",
+    "",
+    "LE SON DU TITAN. Le plan d'origine n'a qu'une seule piste : musique et",
+    "effets melanges, inseparables. On ne peut donc pas retirer la musique —",
+    "on l'enterre. Les deux plans du titan descendent a -34 dB, et les vrais",
+    "sons sont poses par-dessus : grondement continu, crepitement des arcs,",
+    "choc metallique, rugissement, cri. C'est le seul chemin possible, et il",
+    "donne un titan plus present que ne l'aurait fait un simple gain.",
+    "",
+    "LE TITRE est a l'oeil, des la premiere image, et non au druide : c'est la",
+    "que se joue la retention. Pose a y=400 — jamais sous 1300, ou la legende",
+    "et les boutons de la plateforme le mangent. Teinte relevee sur l'image :",
+    "196 degres, le turquoise de la chaine lui va sans retouche.",
+    "",
+    "Le titre est sur DEUX lignes : « CYBER HYDRA TITAN » d'un seul tenant",
+    "fait 970 px a 92 px de corps, et le ressort le pousse a 1106 dans un",
+    "cadre de 1080 — il sortait des deux cotes.",
+    "",
+    "",
+    "Ni `crepitement` ni `electricite` dans le titan : ils etaient les seuls",
+    "sons aigus du melange, couvraient tout, et s'entendaient comme de la",
+    "distorsion. Le corps vient du grondement continu et du souffle.",
+    "",
+    "",
+    "CADENCE 24, et c'est MESURE. Le rush porte des images figees d'origine :",
+    "mouvement reel ~20 i/s sur le druide, ~24 sur le vortex. Rendu a 30, une",
+    "image sur deux est doublee (22 % figees, irregularite 68 %) ; rendu a 24,",
+    "une sur cinq (13 %, irregularite 51 %). Passer a 30 AGGRAVE le defaut.",
+    "`minterpolate` ne le repare pas : il vise une cadence et ne detecte pas",
+    "les images figees — essaye a 30 et a 60, sans effet mesurable.",
+    "La vraie correction est en amont : regenerer ces plans a 30 i/s reels.",
+    "",
+    "CADENCE 24, et c'est MESURE. Le rush porte des images figees d'origine :",
+    "mouvement reel ~20 i/s sur le druide, ~24 sur le vortex. Rendu a 30, une",
+    "image sur deux est doublee — 22 % d'images figees, irregularite 68 % ;",
+    "rendu a 24, une sur cinq — 13 % et 51 %. Passer a 30 AGGRAVE le defaut.",
+    "`minterpolate` ne le repare pas : il vise une cadence et ne detecte pas",
+    "les images figees. Essaye a 30 et a 60, sans effet mesurable, et",
+    "`mpdecimate` ne mord pas non plus — les doublons ne sont pas exacts.",
+    "La vraie correction est en amont : regenerer ces plans a 30 i/s reels.",
+    "",
+    "Le titre s'arrete a 1,50 s, avant l'arrivee du druide : ce plan porte deja",
+    "ses propres textes graves, et deux titres superposes se disputent l'oeil."
+  ],
+  "effets_db": 5,
+  "largeur_stereo": 1.8,
+  "reverberation_s": 1.6,
+  "finition": {
+    "etalonnage": {
+      "force": 0.35,
+      "grain": 0
+    }
+  },
+  "plans": [
+    {
+      "nom": "oeil",
+      "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
+      "depart": 1.2,
+      "duree": 1.7,
+      "cible_db": -30.0,
+      "zoom": 0.09,
+      "morph": {
+        "duree": 0.6,
+        "point_a": [
+          552,
+          868
+        ],
+        "rayon_a": 165,
+        "point_b": [
+          538,
+          1438
+        ],
+        "rayon_b": 263,
+        "zoom": 2.9
+      }
+    },
+    {
+      "nom": "mage",
+      "source": "rushes/CyberHydra.mp4",
+      "depart": 0.95,
+      "duree": 6.05,
+      "cible_db": -23.0
+    },
+    {
+      "nom": "vortex",
+      "source": "rushes/CyberHydra.mp4",
+      "depart": 8.8,
+      "duree": 2.55,
+      "cible_db": -30.0,
+      "morph": {
+        "duree": 0.6,
+        "point_a": [
+          544,
+          970
+        ],
+        "rayon_a": 140,
+        "point_b": [
+          554,
+          930
+        ],
+        "rayon_b": 140,
+        "zoom": 2.4
+      }
+    },
+    {
+      "nom": "titan",
+      "source": "rushes/CyberHydra.mp4",
+      "depart": 11.85,
+      "duree": 3.35,
+      "cible_db": -34.0,
+      "zoom": 0.1
+    },
+    {
+      "nom": "gueule",
+      "source": "rushes/CyberHydra.mp4",
+      "depart": 16.4,
+      "duree": 3.1,
+      "cible_db": -34.0,
+      "zoom": 0.16,
+      "tremblements": [
+        {
+          "debut": 0.55,
+          "duree": 0.28,
+          "force": 0.075
+        },
+        {
+          "debut": 1.55,
+          "duree": 0.3,
+          "force": 0.095
+        }
+      ]
+    }
+  ],
+  "titres": [
+    {
+      "texte": "THE CYBER HYDRA",
+      "debut": 0.08,
+      "fin": 1.5,
+      "y": 330,
+      "taille": 84,
+      "secousse": true
+    },
+    {
+      "texte": "TITAN",
+      "debut": 0.22,
+      "fin": 1.5,
+      "y": 445,
+      "taille": 132,
+      "secousse": true
+    }
+  ],
+  "effets": [
+    {
+      "son": "braam",
+      "instant": 0.0,
+      "gain": -2,
+      "parametres": {
+        "duree": 1.3,
+        "fondamentale": 46.0,
+        "graine": 11
+      }
+    },
+    {
+      "son": "souffle",
+      "instant": 1.0,
+      "gain": 1,
+      "parametres": {
+        "duree": 0.9,
+        "graine": 21
+      }
+    },
+    {
+      "son": "souffle_tournant",
+      "instant": 7.15,
+      "gain": -2,
+      "largeur": 20,
+      "parametres": {
+        "duree": 2.4,
+        "graine": 46
+      }
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 7.4,
+      "gain": -5,
+      "largeur": 18,
+      "parametres": {
+        "duree": 2.0,
+        "graine": 63
+      }
+    },
+    {
+      "son": "grondement",
+      "instant": 7.2,
+      "gain": -7,
+      "parametres": {
+        "duree": 2.6,
+        "graine": 57
+      }
+    },
+    {
+      "son": "souffle",
+      "instant": 8.8,
+      "gain": 7,
+      "parametres": {
+        "duree": 0.9,
+        "graine": 24
+      }
+    },
+    {
+      "son": "braam",
+      "instant": 9.62,
+      "gain": 10,
+      "parametres": {
+        "duree": 2.2,
+        "fondamentale": 38.0,
+        "graine": 14
+      }
+    },
+    {
+      "son": "grondement",
+      "instant": 9.7,
+      "gain": 9,
+      "parametres": {
+        "duree": 5.6,
+        "graine": 56
+      }
+    },
+    {
+      "son": "souffle",
+      "instant": 9.8,
+      "gain": 3,
+      "largeur": 22,
+      "parametres": {
+        "duree": 5.2,
+        "graine": 25
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 10.35,
+      "gain": 9,
+      "parametres": {
+        "duree": 1.1,
+        "graine": 78
+      }
+    },
+    {
+      "son": "rugissement",
+      "instant": 10.95,
+      "gain": 11,
+      "parametres": {
+        "duree": 1.8,
+        "graine": 42
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 11.3,
+      "gain": 10,
+      "parametres": {
+        "duree": 1.2,
+        "graine": 79
+      }
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 11.85,
+      "gain": 5,
+      "largeur": 18,
+      "parametres": {
+        "duree": 1.4,
+        "graine": 64
+      }
+    },
+    {
+      "son": "choc_metal",
+      "instant": 12.15,
+      "gain": 8,
+      "parametres": {
+        "duree": 0.9,
+        "fondamentale": 88.0,
+        "graine": 27
+      }
+    },
+    {
+      "son": "braam",
+      "instant": 12.43,
+      "gain": 11,
+      "parametres": {
+        "duree": 1.8,
+        "fondamentale": 36.0,
+        "graine": 15
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 12.6,
+      "gain": 11,
+      "parametres": {
+        "duree": 1.3,
+        "graine": 80
+      }
+    },
+    {
+      "son": "grondement",
+      "instant": 12.5,
+      "gain": 8,
+      "parametres": {
+        "duree": 3.0,
+        "graine": 58
+      }
+    },
+    {
+      "son": "rugissement",
+      "instant": 13.25,
+      "gain": 12,
+      "parametres": {
+        "duree": 1.6,
+        "graine": 43
+      }
+    },
+    {
+      "son": "cri_titan",
+      "instant": 14.15,
+      "gain": 13,
+      "parametres": {
+        "duree": 1.4,
+        "fondamentale": 46.0,
+        "graine": 31
+      }
+    },
+    {
+      "son": "boom",
+      "instant": 14.85,
+      "gain": 9,
+      "parametres": {
+        "duree": 1.1,
+        "hauteur": 42.0,
+        "graine": 29
+      }
+    }
+  ],
+  "silences": [
+    {
+      "debut": 8.8,
+      "fin": 9.05,
+      "_note": "le vide avant le titan"
+    },
+    {
+      "debut": 12.18,
+      "fin": 12.4,
+      "_note": "le vide avant la gueule"
+    }
+  ],
+  "cadence": 24
+}

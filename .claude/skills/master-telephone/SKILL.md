@@ -115,3 +115,38 @@ est au maximum de ce qui passe.
 **Juger au casque.** Un casque restitue le grave et lisse tout. Le seul verdict
 qui vaut se rend sur le haut-parleur de l'appareil visé — et à défaut, sur la
 mesure au-dessus de 400 Hz.
+
+## Trois pièges du réglage par défaut, chacun mesuré
+
+Les valeurs par défaut — gain 5, présence 3,5 — conviennent à un montage qui
+laisse de la marge. Sur un film aux bruitages denses, les trois se referment.
+
+**Le vrai pic dépasse zéro alors que le limiteur est à −1.** Le limiteur borne
+le pic **d'échantillon** ; le vrai pic, qui compte l'inter-échantillon et la
+surcharge de l'encodage AAC, sort au-dessus. Mesuré : `alimiter=limit=0.891`
+(−1 dBFS) a rendu **+0,4 dBTP**, donc écrêtable sur certains appareils.
+
+Baisser le limiteur ne règle rien et coûte cher — mesuré sur le même film :
+
+| limiteur | vrai pic | dynamique |
+| --- | --- | --- |
+| −1,0 dBFS | +0,9 dBTP | 6,4 LU |
+| −2,0 dBFS | −0,7 dBTP | **5,6 LU** |
+| −1,0 dBFS, présence 2,0 et gain 4 | −0,7 dBTP | **7,5 LU** |
+
+Le limiteur abaissé travaille davantage et mange la dynamique que cette page
+existe pour protéger. **C'est la présence qu'il faut réduire, pas le seuil.**
+
+**Le limiteur grésille quand on empile les bruitages.** Un titan porté par des
+effets à +13 et +15 dB collait les crêtes au plafond en continu à partir de la
+dixième seconde : zéro échantillon écrêté au sens strict, et pourtant un
+grésillement franc à l'écoute. Le compteur d'écrêtage ne le voit pas — c'est la
+**crête par seconde** qu'il faut lire. Au-dessus de −0,3 dBFS pendant plusieurs
+secondes d'affilée, le limiteur est en train de sculpter le son.
+
+**Baisser tout uniformément aplatit le film.** Le réflexe pour rendre de la
+marge — retirer cinq décibels partout — a fait passer la dynamique de 6,0 à
+**2,4 LU** : propre, fort, et mort. L'immersion n'est pas le volume, c'est
+l'écart. **Rouvrir par le bas**, jamais par le haut : faire chuchoter
+l'ouverture rend le climax énorme sans toucher au plafond. Même film,
+ouverture creusée de six décibels : **6,2 LU**, zéro écrêtage, +4,2 dB entendus.

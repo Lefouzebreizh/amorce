@@ -1170,6 +1170,55 @@ posée sur `subprocess.run`, alors que la résolution du binaire se fait **avant
 pour construire la commande. Doubler l'exécution ne suffit pas ; il faut doubler
 la résolution.
 
+## Un morph mange du temps : la ligne de temps se relève, elle ne se déduit pas
+
+Quatre plans de 2,2 + 2,8 + 3,2 + 5,2 s ne font pas 13,4 s de film mais **11,3**.
+Chaque raccord sans coupe consomme la fin du plan sortant *et* le début de
+l'entrant : trois morphs de 0,7 s ont retiré deux secondes.
+
+Ce n'est pas une curiosité d'arithmétique, c'est ce qui décide où tombent les
+titres et les bruitages. Calés sur les durées additionnées, le cri du titan et
+la carte de fin tombaient **hors du film** — rendus, payés, jamais vus. Rien ne
+le signale : le montage sort sans erreur, simplement amputé de sa fin.
+
+**Rendre une première fois, relever les bornes réelles sur le rendu, puis caler
+le son et les textes.** Dans l'autre sens on écrit à l'aveugle.
+
+## Le relief d'un montage vient des bruitages, pas des niveaux de plan
+
+Un montage à 4,8 dB d'écart s'entend plat. Le réflexe — creuser les `cible_db`
+de chaque plan — a été essayé et **mesuré sans effet** : cibles abaissées de six
+décibels, relief inchangé. La couche d'effets écrase les plans.
+
+Ce qui déplace le chiffre est ailleurs : **étager les gains des bruitages**.
+Chuchoter à l'ouverture pour que le climax existe. Le même montage, effets
+étagés de −6 dB à l'accroche à +5 dB au climax : **10,3 dB de relief**, sans
+qu'aucun plan ait bougé.
+
+La règle générale, et elle est contre-intuitive : dans un montage sonorisé,
+l'ouverture doit être **plus silencieuse qu'on ne le croit**. Un braam à pleine
+puissance sur la première image ne fait pas un début fort — il supprime le
+climax, faute d'écart.
+
+## Une apostrophe dans un titre casse ffmpeg, et le message ment
+
+`text='IL S\'EST RÉVEILLÉ'` fait échouer le rendu sur **« No such filter:
+'0.25' »** — un nombre qui n'apparaît nulle part dans le texte, et qui sort de
+l'expression `alpha` écrite cent caractères plus loin.
+
+La cause : ffmpeg n'interprète **aucune séquence d'échappement à l'intérieur**
+d'un argument entre apostrophes simples. Le `\` y est un caractère ordinaire,
+la quote referme le champ, et la suite est relue comme des options de filtre.
+La seule forme qui marche ferme, insère et rouvre : `'\''`.
+
+Deux enseignements qui dépassent ce bug :
+
+- **Un message d'erreur qui nomme une valeur absente du contenu fautif désigne
+  presque toujours une frontière de citation mal fermée.** Chercher le texte
+  cité, pas le nombre affiché.
+- **Le test de non-régression porte sur la chaîne produite, jamais sur un appel
+  à ffmpeg.** Le runner n'a pas le binaire ; un test qui l'exige est vert en
+  session et rouge chez tout le monde.
 ## Un livrable conforme peut être le défaut
 
 Une vidéo sortait à −14 LUFS avec 12 LU de dynamique : les cibles de diffusion,
@@ -1481,3 +1530,33 @@ de les lire dans un élément `<video>` — ce qui suppose un démultiplexeur, a
 API du navigateur ne le faisant. Piloter les `<video>` image par image n'est pas
 une issue : mesuré à **265 ms par déplacement séquentiel**, soit 2,6 minutes
 pour un film de vingt secondes.
+
+## La cadence annoncée d'un rush n'est pas celle de son mouvement
+
+Un plan généré annonce 30 images par seconde et n'en bouge réellement que 20 :
+une image sur deux y est figée d'origine, avec juste assez de bruit d'encodage
+pour n'être pas un doublon exact. Rien ne le signale — le fichier est conforme,
+`ffprobe` répond 30, et le défaut ne se voit qu'en mouvement rapide.
+
+**La mesure tient en dix lignes** et vaut avant tout montage : décoder en gris
+réduit, calculer l'écart moyen entre images consécutives, compter celles qui
+tombent sous 20 % de cet écart. Relevé sur un même rush : 20 i/s réels sur un
+plan de visage, 24 sur un vortex, 27 sur une créature.
+
+**Et le piège coûte cher : conformer le film à la cadence *annoncée* double la
+saccade.** Du 20 i/s rendu à 30 donne une image doublée sur deux ; rendu à 24,
+une sur cinq. Mesuré sur le même plan :
+
+| cadence du film | images figées | irrégularité |
+| --- | --- | --- |
+| 30 i/s | 22 % | 68 % |
+| **24 i/s** | **13 %** | **51 %** |
+
+Le réflexe — « la source est à 30, rendons à 30 » — est donc exactement le
+mauvais. **On aligne sur le mouvement réel, pas sur l'étiquette.**
+
+Ce qui ne marche pas, et qui a été essayé : `minterpolate` vise une cadence et
+ne détecte pas les images figées — sans effet mesurable à 30 comme à 60.
+`mpdecimate` ne les attrape pas davantage, les doublons n'étant pas exacts,
+même à seuil desserré quatre fois. La seule correction réelle est en amont :
+régénérer le plan à la cadence qu'il prétend avoir.
