@@ -320,6 +320,21 @@ Trois gestes avant d'envoyer, sur le **fichier final** et sur lui seul :
 Une correction ne s'annonce jamais sur la foi du réglage changé. Elle s'annonce
 sur le fichier relu.
 
+**Et pour un montage, la liste passe avant de rendre, pas après une plainte :
+`/montage-sans-refaire`.** Vingt-cinq versions d'un même épisode de vingt
+secondes ont été livrées et rejetées en une nuit, et presque aucune pour une
+raison nouvelle — les mêmes familles de défaut revenaient deux ou trois fois,
+faute d'être écrites. Elles le sont : le rush qui porte déjà sa bande son et
+qu'on recouvre, la frise qu'on écrit à la main quand une `vitesse` la rend
+fausse, le grave qui n'existe pas sur l'appareil, le masquage qu'on prend pour
+de la saturation, les cinq façons de fabriquer une coupure, le climax qui n'est
+pas le plan le plus fort, le texte posé sur la bouche qui parle.
+
+Leur point commun tient en une phrase, et c'est elle qu'il faut retenir : **une
+mesure disait vert et le fichier était faux** — mesurée au mauvais endroit, sur
+le mauvais fichier, ou sur ce qui n'était pas le défaut. La parade n'est jamais
+de mesurer plus, c'est de mesurer ailleurs et de regarder.
+
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
 
