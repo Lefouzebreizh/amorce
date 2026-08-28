@@ -165,6 +165,29 @@ function mesurerSilence(fichier) {
   return { muettes, total };
 }
 
+/**
+ * Combien d'images le fichier exporté contient réellement.
+ *
+ * `ffprobe` les compte une à une : le champ `avg_frame_rate` d'un WebM produit
+ * par MediaRecorder ne veut rien dire, l'encodeur y inscrit une cadence
+ * nominale que le contenu ne tient pas.
+ */
+function mesurerCadence(fichier) {
+  try {
+    const sortie = execFileSync('ffprobe', [
+      '-v', 'error', '-count_frames', '-select_streams', 'v',
+      '-show_entries', 'stream=nb_read_frames', '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1', fichier,
+    ], { encoding: 'utf8' }).trim().split('\n');
+    const images = Number(sortie[0]);
+    const duree = Number(sortie[1]);
+    if (!Number.isFinite(images) || !Number.isFinite(duree) || duree <= 0) return null;
+    return { images, duree, parSeconde: images / duree };
+  } catch {
+    return null;
+  }
+}
+
 const browser = await chromium.launch({
   executablePath: process.env.AMORCE_CHROMIUM || undefined,
   args: ['--autoplay-policy=no-user-gesture-required'],
@@ -1178,6 +1201,44 @@ if (exportPath) {
    * Le contrôle demande ffmpeg, qui n'est pas garanti sur toutes les machines :
    * son absence est dite, jamais silencieuse.
    */
+  const cadence = mesurerCadence(exportPath);
+  if (cadence === null) {
+    console.log('  —    | Cadence non mesurée (ffprobe absent)');
+  } else {
+    /*
+     * La cadence de l'export, que rien ne vérifiait.
+     *
+     * L'enregistrement se fait en filmant le canvas en temps réel : le fichier
+     * ne reçoit donc que les images réellement composées pendant la lecture. Si
+     * composer une image coûte plus que 1/30 de seconde, le fichier livré perd
+     * silencieusement des images — et tous les contrôles voisins restent verts,
+     * puisque la durée est bonne, la définition est bonne, l'image n'est pas
+     * noire et le son est là.
+     *
+     * Mesuré à la découverte : **35 images pour 7,5 secondes** sur la machine
+     * de vérification, 9 sur un processeur bridé quatre fois. Le fichier était
+     * un diaporama, et personne ne pouvait le savoir depuis les tests.
+     *
+     * Mesure affichée, et non contrôle rouge. Le défaut est réel et connu, mais
+     * le corriger demande un encodage hors ligne — décoder les rushes avec
+     * `VideoDecoder` plutôt que de les lire dans un élément `<video>`, ce qui
+     * suppose un démultiplexeur. Une suite qui reste rouge en permanence
+     * apprend à ignorer la suite ; un nombre affiché à chaque passage, non. Le
+     * jour où l'encodage hors ligne arrive, cette ligne devient un contrôle.
+     *
+     * Piloter les éléments `<video>` image par image ne serait pas une issue :
+     * mesuré à 265 ms par déplacement séquentiel, soit 2,6 minutes pour un film
+     * de vingt secondes.
+     */
+    const attendue = 30;
+    const perdues = Math.round(100 - (cadence.parSeconde * 100) / attendue);
+    console.log(
+      `  ${cadence.parSeconde >= attendue / 3 ? 'OK  ' : '⚠   '} | `
+      + `Cadence de l’export : ${cadence.images} images pour ${cadence.duree.toFixed(1)} s, `
+      + `soit ${cadence.parSeconde.toFixed(1)} par seconde — ${perdues} % des images perdues`,
+    );
+  }
+
   const silence = mesurerSilence(exportPath);
   if (silence === null) {
     console.log('  —    | Silence non mesuré (ffmpeg absent)');
