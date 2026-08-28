@@ -113,3 +113,10 @@ visual_library/**/*.png
 visual_library/**/*.jpg
 visual_library/**/*.webp
 visual_library/**/*.mp4
+
+# Les rushes d'un montage. Les trois recettes de `montage-auto/references/`
+# les nomment toutes en relatif — « rushes/…​ » — donc ce dossier apparaît chez
+# quiconque rend un épisode. Sans cette ligne, un `git add -A` y verse des
+# dizaines de mégaoctets de vidéo, et l'invariant « aucun binaire versionné »
+# tombe sans que personne l'ait décidé.
+/rushes/
