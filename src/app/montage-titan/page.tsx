@@ -36,7 +36,7 @@ export default function PageMontageTitan() {
     <main className="titan titan-grain relative min-h-[100dvh] overflow-hidden text-mist">
       <div className="titan-halos" aria-hidden />
 
-      <div className="relative z-10 mx-auto w-full max-w-5xl px-5 pb-40">
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-40">
         {/* ---------------------------------------------------------------- */}
         {/* Le premier écran : la tête, la promesse, la preuve, le bouton.    */}
         {/* ---------------------------------------------------------------- */}
@@ -62,9 +62,9 @@ export default function PageMontageTitan() {
               </Apparition>
 
               <Apparition delai={80}>
-                <h1 className="mt-7 font-display text-4xl leading-[1.05] text-mist sm:text-6xl">
-                  Ta vidéo de cabine moche{' '}
-                  <span className="text-titan-neon">→ époustouflante</span> en 24 h.
+                <h1 className="mt-7 font-display text-4xl leading-[1.05] text-mist sm:text-5xl lg:text-6xl">
+                  Ta vidéo de cabine moche
+                  <span className="text-titan-neon">{'\u00a0→ '}époustouflante</span> en 24 h.
                   <span className="mt-2 block text-titan-ember">49 €</span>
                 </h1>
               </Apparition>
@@ -96,13 +96,13 @@ export default function PageMontageTitan() {
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <a
                     href={vedette.lien}
-                    className="flex min-h-14 items-center justify-center rounded-2xl bg-titan-ember px-7 text-xl font-black text-titan-night"
+                    className="flex min-h-14 items-center justify-center rounded-2xl bg-titan-ember px-7 text-xl font-black whitespace-nowrap text-titan-night"
                   >
                     Commander — 24 h
                   </a>
                   <a
                     href="#comment"
-                    className="flex min-h-14 items-center justify-center rounded-2xl border border-edge bg-panel px-7 text-xl font-semibold text-mist"
+                    className="flex min-h-14 items-center justify-center rounded-2xl border border-edge bg-panel px-7 text-xl font-semibold whitespace-nowrap text-mist"
                   >
                     Comment ça marche
                   </a>
@@ -154,10 +154,12 @@ export default function PageMontageTitan() {
                   >
                     <div className="flex h-full flex-col rounded-3xl bg-slab p-6">
                       {formule.vedette ? (
-                        <span className="mb-4 w-fit rounded-full bg-titan-ember px-4 py-1 text-lg font-black tracking-wider text-titan-night uppercase">
+                        <span className="mb-4 flex h-9 w-fit items-center rounded-full bg-titan-ember px-4 text-lg font-black tracking-wider text-titan-night uppercase">
                           Le meilleur choix
                         </span>
-                      ) : null}
+                      ) : (
+                        <span aria-hidden className="mb-4 hidden h-9 md:block" />
+                      )}
 
                       <h3 className="font-display text-2xl text-mist">{formule.nom}</h3>
 
@@ -183,7 +185,7 @@ export default function PageMontageTitan() {
 
                       <a
                         href={formule.lien}
-                        className={`mt-7 flex min-h-14 items-center justify-center rounded-2xl px-6 text-xl font-black ${
+                        className={`mt-7 flex min-h-14 items-center justify-center rounded-2xl px-6 text-xl font-black whitespace-nowrap ${
                           formule.vedette
                             ? 'bg-titan-ember text-titan-night'
                             : 'bg-titan-neon text-titan-night'

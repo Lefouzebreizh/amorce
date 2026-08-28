@@ -356,7 +356,7 @@ export function BarreAchat({ lien, libelle }: { lien: string; libelle: string })
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-50 border-t border-edge bg-titan-night/95 px-4 pt-3 backdrop-blur transition-transform duration-300 ${
+      className={`fixed inset-x-0 bottom-0 z-50 border-t border-edge lg:hidden bg-titan-night/95 px-4 pt-3 backdrop-blur transition-transform duration-300 ${
         visible ? 'translate-y-0' : 'translate-y-full'
       }`}
       style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
