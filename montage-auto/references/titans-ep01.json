@@ -59,7 +59,8 @@
       "duree": 2.8,
       "cible_db": -22.0,
       "zoom": 0.55,
-      "_note": "aspiration : la poussée accélère, la hauteur monte, on tombe dedans"
+      "_note": "aspiration : la poussée accélère, la hauteur monte, les bords filent",
+      "flou_radial": 0.115
     },
     {
       "nom": "dragon",
