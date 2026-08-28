@@ -403,8 +403,20 @@ plutôt que de sonder les contrôles en boucle jusqu'au vert. La surveillance
 manuelle a deux défauts que la fusion automatique n'a pas : elle brûle du
 contexte à chaque sondage, et elle meurt avec la session — une PR verte reste
 alors ouverte à attendre quelqu'un. Armée, GitHub fusionne seul dès que les
-contrôles passent, téléphone éteint. On sonde encore quand l'outil refuse
-d'armer, et seulement là.
+contrôles passent, téléphone éteint.
+
+**Sauf qu'ici l'outil refuse toujours**, et c'est mesuré : `enable_pr_auto_merge`
+rend « Auto-merge is not enabled for this repository ». Le réglage est coupé
+dans *Settings → General → Pull Requests → Allow auto-merge*, et tant qu'il
+l'est, le paragraphe ci-dessus décrit un geste qui échoue à chaque PR. Une
+session qui l'ignore essaie, se fait refuser, et croit à une erreur de sa part.
+
+Donc, tant que la case n'est pas cochée : on arme quand même — l'appel coûte une
+seconde et dira le jour où le réglage change — puis **on sonde jusqu'au vert et
+on fusionne à la main**. C'est le chemin normal de ce dépôt, pas un repli.
+Cocher la case est un geste de trente secondes qui rendrait le paragraphe
+précédent vrai ; c'est au propriétaire de le faire, personne d'autre n'a la
+main dessus.
 
 Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
 plusieurs sessions en parallèle, et une branche qui attend collectionne les
