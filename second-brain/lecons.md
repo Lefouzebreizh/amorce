@@ -1445,3 +1445,39 @@ et c'est pour cela qu'il fait partie des trois relevés avant envoi.
 **Un mixage se cale sur la durée du flux VIDÉO**, pas sur celle de l'audio
 décodé ni sur celle du conteneur. On complète l'audio par du silence, jamais on
 ne raccourcit l'image.
+
+## Un contrôle vert ne dit pas qu'un fichier est regardable
+
+L'export d'Amorce enregistre le canvas **en temps réel** : le fichier ne reçoit
+que les images réellement composées pendant la lecture. Composer une image en
+1080 × 1920 coûte environ 213 ms sur une machine de bureau — donc le fichier
+livré reçoit cinq images par seconde au lieu de trente.
+
+**Le défaut a vécu toute la vie du projet sans que rien ne le voie.** Quatre
+contrôles portaient pourtant sur l'export, et tous restaient verts : la durée
+était bonne, la définition était bonne, l'image n'était pas noire, le son était
+là. Aucun ne comptait les images.
+
+Mesuré à la découverte : **35 images pour 7,5 secondes** sur la machine de
+vérification, **9** sur un processeur bridé quatre fois. Un diaporama.
+
+Trois choses en découlent :
+
+- **Vérifier ce qui définit le média, pas seulement ce qui l'identifie.** Durée,
+  taille et présence de son décrivent un conteneur ; la cadence, le niveau et le
+  relief décrivent ce qu'on regarde. Un fichier peut être parfaitement conforme
+  et illisible.
+- **Chercher d'abord si le défaut est ancien.** Deux commandes — reprendre le
+  commit d'avant, refaire la mesure — évitent de corriger ce qu'on n'a pas
+  cassé. Ici : 27 images avant les optimisations, 35 après.
+- **Une suite rouge en permanence apprend à ignorer la suite.** Quand le
+  correctif dépasse la session, on affiche la mesure à chaque passage plutôt que
+  de laisser un contrôle échouer sans fin. Le jour où le correctif arrive, la
+  ligne redevient un contrôle.
+
+Ce qu'il faudrait pour le corriger, et pourquoi ce n'est pas une demi-journée :
+un encodage **hors ligne**, donc décoder les rushes avec `VideoDecoder` au lieu
+de les lire dans un élément `<video>` — ce qui suppose un démultiplexeur, aucune
+API du navigateur ne le faisant. Piloter les `<video>` image par image n'est pas
+une issue : mesuré à **265 ms par déplacement séquentiel**, soit 2,6 minutes
+pour un film de vingt secondes.
