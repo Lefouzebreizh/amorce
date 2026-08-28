@@ -106,6 +106,79 @@ export function debitVideo(largeur: number, hauteur: number, images: number): nu
   return Math.max(2_000_000, Math.round(largeur * hauteur * images * BITS_PAR_PIXEL));
 }
 
+/**
+ * Relit le fichier produit et compte ses cadres vides.
+ *
+ * Un export peut être parfaitement conforme et à moitié vide : la durée est
+ * bonne, la définition est bonne, le son est là, et l'image ne montre rien.
+ * C'est arrivé — dix-sept cadres vides sur vingt-sept dans un film livré, le
+ * plan n'étant pas encore décodé au moment où l'enregistrement passait dessus.
+ * L'utilisateur l'a découvert en le regardant, après l'avoir exporté et envoyé.
+ *
+ * Un cadre vide n'est pas un cadre noir : l'étalonnage peut l'avoir teinté. Ce
+ * qui le distingue est l'absence de **relief** — l'écart-type des luminances
+ * d'une image qui contient quelque chose ne descend pas sous une dizaine.
+ *
+ * On échantillonne huit instants, pas plus : le but est de dire « ce fichier
+ * est vide » avant que quelqu'un ne le publie, pas de noter sa qualité. Un
+ * échec de relecture ne bloque rien — mieux vaut livrer sans avoir pu vérifier
+ * que refuser un fichier peut-être bon.
+ */
+export async function relireLExport(blob: Blob): Promise<{ vides: number; total: number } | null> {
+  if (typeof document === 'undefined') return null;
+
+  const url = URL.createObjectURL(blob);
+  const video = document.createElement('video');
+  video.muted = true;
+  video.preload = 'auto';
+  video.src = url;
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      video.onloadeddata = () => resolve();
+      video.onerror = () => reject(new Error('illisible'));
+      setTimeout(() => reject(new Error('trop long')), 15_000);
+    });
+    if (!Number.isFinite(video.duration) || video.duration <= 0) return null;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 114;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+
+    const total = 8;
+    let vides = 0;
+    for (let k = 0; k < total; k += 1) {
+      // Ni la toute première image ni la dernière : l'une peut précéder le
+      // premier plan, l'autre suivre la dernière, et toutes deux sont noires
+      // à dessein.
+      video.currentTime = video.duration * ((k + 0.5) / total);
+      await new Promise<void>((resolve) => {
+        video.onseeked = () => resolve();
+        setTimeout(resolve, 2_000);
+      });
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      let somme = 0;
+      const n = data.length / 4;
+      for (let i = 0; i < data.length; i += 4) somme += (data[i] + data[i + 1] + data[i + 2]) / 3;
+      const moyenne = somme / n;
+      let ecart = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        ecart += ((data[i] + data[i + 1] + data[i + 2]) / 3 - moyenne) ** 2;
+      }
+      if (Math.sqrt(ecart / n) < 8) vides += 1;
+    }
+    return { vides, total };
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 /** Marge laissée après la dernière image pour qu'elle soit bien enregistrée. */
 const TAIL_MS = 400;
 

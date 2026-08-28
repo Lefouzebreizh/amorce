@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 313 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 321 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **313 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **321 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -260,7 +260,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 313 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 321 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -612,3 +612,121 @@ plutôt qu'une, et un actif qui ne monte pas structurellement. C'est le chantier
 suivant. **Tant qu'il n'est pas fait, la seule affirmation honnête sur ce
 moteur reste : sur Bitcoin, il n'a pas justifié sa complexité — et sa
 protection apparente était un artefact de mesure.**
+
+---
+
+## 12. Le rejeu multi-actifs, et ce qu'il corrige
+
+```bash
+for a in btc eth link; do
+  curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/$a.csv
+done
+python3 main.py rejeu --depuis 2018-01-01 --jusqu-a 2021-12-31 \
+  --multi BTC/USDT=btc.csv ETH/USDT=eth.csv LINK/USDT=link.csv
+```
+
+Plusieurs lignes **partageant une trésorerie**, servies dans l'ordre de leur
+dérive — le plus sous-pondéré d'abord — exactement comme l'orchestrateur en
+direct. Ce n'est pas la somme de rejeus indépendants : ce que l'un prend,
+l'autre ne l'a pas.
+
+Les dates sont l'**union** des séries, jamais leur intersection : LINK commence
+en 2017 et ETH en 2015, prendre l'intersection jetterait cinq ans de Bitcoin
+pour aligner le plus jeune.
+
+### Ce que le mono-actif exagérait
+
+| fenêtre | | PnL | recul exposé | gain/douleur | engagé |
+| --- | --- | --- | --- | --- | --- |
+| 2018-2021 | stratégie | +305,0 % | **61,4 %** | 4,96 | 8 203 $ |
+| | témoin | **+684,7 %** | 62,0 % | **11,04** | 9 986 $ |
+| 2022-2026 | stratégie | +111,4 % | **49,1 %** | 2,27 | 7 945 $ |
+| | témoin | **+182,0 %** | 50,3 % | **3,62** | 9 986 $ |
+
+**Le recul exposé redevient équivalent à celui du témoin** — 61,4 % contre
+62,0 %, 49,1 % contre 50,3 %. Le § 11 mesurait 81 % contre 36 % sur un seul
+actif : cet écart n'était pas la stratégie, c'était l'absence de
+diversification. Une ligne unique concentre toutes ses entrées contrariennes au
+même endroit du même cycle ; trois lignes les étalent.
+
+**Et le plafond d'exposition cesse de tout geler.** Sur un seul actif, les 55 %
+par ligne étaient atteints définitivement dès que la position s'appréciait, et
+le rejeu long ne mesurait plus que le plafond (§ 9). À trois lignes, la
+contrainte redevient ce qu'elle est : une limite de concentration.
+
+**Le verdict sur le rendement, lui, ne bouge pas** : +305 % contre +685 %,
++111 % contre +182 %. Le DCA aveugle gagne toujours, et toujours parce que la
+stratégie engage moins de capital.
+
+### Ce que le multi-actifs révèle, et qui n'était pas visible
+
+Le détail des ordres, sur 2018-2021 :
+
+| ligne | achats | ventes | tenue à la fin |
+| --- | --- | --- | --- |
+| BTC/USDT — socle, jamais vendu sur signal | 39 | **0** | oui |
+| ETH/USDT | 45 | 13 | **soldée** |
+| LINK/USDT | 17 | 6 | **soldée** |
+
+**La stratégie ne garde que la ligne qu'elle n'a pas le droit de vendre.** Ses
+stops et sa prise de bénéfice suiveuse liquident méthodiquement ETH et LINK,
+puis les rachètent, puis les reliquident — dix-neuf sorties en quatre ans — et
+le portefeuille finit concentré à 100 % sur le socle.
+
+C'est une explication directe d'une partie du retard : la capitalisation d'ETH
+et de LINK est coupée à chaque stop, alors que le témoin, qui ne vend jamais,
+la garde entière. Le seul actif que la stratégie laisse composer est celui que
+sa configuration lui **interdit** de vendre.
+
+Il n'y a pas de correction évidente à cela, et surtout pas une qu'on poserait
+sans mesure : desserrer les stops échangerait ce retard contre un recul plus
+profond, et c'est précisément l'arbitrage que le harnais sait maintenant
+chiffrer. **C'est le prochain réglage à balayer**, comme l'ont été le plancher
+de discipline et la note relative.
+
+---
+
+## 13. Desserrer les stops — l'arbitrage qui n'existait presque pas
+
+Le § 12 laissait un réglage à balayer : les stops liquidaient ETH et LINK
+dix-neuf fois en quatre ans, et l'hypothèse était que les desserrer échangerait
+du rendement contre du recul. **La mesure dit que cet échange n'a presque pas
+lieu.**
+
+Balayé sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de recul
+exposé :
+
+| stop (× ATR) | 2018-2021 | 2022-2026 | tout | moyenne |
+| --- | --- | --- | --- | --- |
+| 2,5 *(ancien)* | 4,96 | 2,27 | 7,28 | 4,84 |
+| **4** | 8,05 | 2,25 | 7,93 | **6,08** |
+| 6 | 8,23 | 2,21 | 7,95 | 6,13 |
+
+Sur 2018-2021, passer de 2,5 à 4 fait bondir le rendement de **+305 % à
++498 %** pour **un demi-point** de recul exposé en plus — 61,4 % contre 61,9 %.
+Le stop à 2,5 ATR détruisait de la valeur sans acheter de protection.
+
+**4 plutôt que 6** : l'essentiel du gain est dans le premier pas, le second
+n'ajoute que 0,05 et coûte du recul sur la fenêtre longue (81,6 % contre
+81,3 %). Même règle que le plancher de discipline — on retient la plus petite
+valeur qui capte l'effet.
+
+**Et couper les stops complètement est pire que 4** : +434 % contre +498 % sur
+2018-2021, avec un recul plus profond. Ils servent — mais pas serrés à ce
+point-là.
+
+### Ce que ce réglage dégrade, et pourquoi on le garde quand même
+
+Les six marchés fabriqués passent de un à **deux** scénarios où la stratégie
+gagne moins que le témoin. C'est une dégradation réelle, et elle est acceptée :
+ces scénarios sont symétriques par construction et le § 9 a montré qu'ils
+flattent. **Quand le fabriqué et le réel se contredisent, c'est le réel qui
+décide** — sinon le harnais sert à confirmer des scénarios qu'on a écrits
+soi-même.
+
+### Où en est l'écart avec un DCA aveugle
+
+Sur 2018-2021, le gain par unité de recul passe de 4,96 à 8,05, contre 11,04
+pour le témoin. **Les trois quarts de l'écart mesuré au § 11 venaient donc de
+réglages, pas de la stratégie elle-même.** Le quart restant tient toujours au
+même fait : elle engage moins de capital.

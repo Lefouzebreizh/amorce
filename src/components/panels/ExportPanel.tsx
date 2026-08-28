@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { downloadBlob, pickFormat, recordMontage, safeFilename } from '@/lib/export';
+import { downloadBlob, pickFormat, recordMontage, relireLExport, safeFilename } from '@/lib/export';
 import { formatTime } from '@/lib/media';
 import { useStudio } from '@/lib/store';
 import { EXPORT_PRESETS, exportPreset, OUTPUT_FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
@@ -65,7 +65,31 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
 
       const filename = safeFilename(project.name, result.format.extension);
       downloadBlob(result.blob, filename);
-      setDone(`${filename} — ${(result.blob.size / 1024 / 1024).toFixed(1)} Mo`);
+
+      /*
+       * Le fichier est relu avant d'annoncer que tout va bien.
+       *
+       * Un export peut être parfaitement conforme et à moitié vide : durée
+       * bonne, définition bonne, son présent, et l'image ne montre rien. Sans
+       * cette relecture, on ne l'apprend qu'en regardant le fichier — donc
+       * après l'avoir exporté, parfois après l'avoir publié.
+       *
+       * Le téléchargement part **avant** la relecture : elle prend deux ou
+       * trois secondes, et un fichier peut-être bon vaut mieux qu'une attente
+       * de plus. Ce qui suit ne fait qu'informer.
+       */
+      const relu = audioOnly ? null : await relireLExport(result.blob);
+      const poids = `${(result.blob.size / 1024 / 1024).toFixed(1)} Mo`;
+      if (relu && relu.vides > relu.total / 4) {
+        setError(
+          `${filename} est sorti mais ${relu.vides} images sur ${relu.total} sont vides. `
+          + 'Ton appareil n’a pas eu le temps de décoder les plans pendant l’enregistrement : '
+          + 'passe en 720 × 1280 et relance.',
+        );
+        setDone(null);
+      } else {
+        setDone(`${filename} — ${poids}`);
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'L’export a échoué.');
     } finally {

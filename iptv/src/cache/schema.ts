@@ -128,4 +128,13 @@ CREATE TABLE IF NOT EXISTS lecture (
 );
 
 CREATE INDEX IF NOT EXISTS lecture_recente ON lecture (vu_le DESC);
+
+-- Les réglages de l'installation. Une seule entrée pour l'instant : le secret
+-- qui signe les adresses passées au mandataire de flux. Il doit survivre à un
+-- redémarrage — un secret tiré à chaque démarrage ferait échouer toute lecture
+-- en cours — et n'a rien à faire dans le dépôt Git.
+CREATE TABLE IF NOT EXISTS reglage (
+  cle    TEXT PRIMARY KEY,
+  valeur TEXT NOT NULL
+);
 `
