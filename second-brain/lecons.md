@@ -1362,3 +1362,40 @@ la beauté de cette image ». Passée à 1,5 s, elle fait son travail.
 Le chiffre de départ venait d'une bonne règle appliquée trop loin : sur un
 format court, chaque dixième compte. Mais une image qu'on ne peut pas lire ne
 coûte pas 0,6 s, elle les **gaspille** — c'est le pire des deux mondes.
+
+## `set -o pipefail` inverse `commande | grep -q`
+
+Un script de vérification annonçait un ffmpeg dépourvu de `drawtext`, de
+`libass`, de `libx264` et de `aac` — sur une machine où les quatre étaient
+présents et servaient depuis des heures.
+
+`grep -q` sort au **premier** résultat trouvé et ferme le tuyau. La commande
+en amont, qui écrit encore, meurt alors en SIGPIPE — statut 141. Avec
+`pipefail`, c'est ce 141 que le pipeline rend. **Trouver se lit comme
+échouer**, et l'inversion est totale et silencieuse.
+
+La parade tient en une ligne : relever la sortie **une fois** dans une
+variable, grepper la variable ensuite.
+
+```bash
+LISTE=$("$FF" -hide_banner -filters 2>/dev/null || true)
+printf '%s' "$LISTE" | grep -q " drawtext "
+```
+
+Vaut pour tout `grep -q`, `head`, `sed -n '1p'` — tout ce qui sort tôt — placé
+en aval d'une commande bavarde, dans un script en `pipefail`.
+
+## Un ffmpeg qui encode parfaitement peut ne rien savoir écrire
+
+`pip install imageio-ffmpeg` pose un binaire ffmpeg complet côté codecs et
+**dépourvu de `libfreetype` et `libass`**. Il lit, il encode, il filtre — et
+`drawtext` y est simplement introuvable. Pas d'avertissement, pas de repli :
+le filtre n'existe pas, la commande échoue sur une erreur de syntaxe qui ne
+nomme pas la cause.
+
+Quand deux ffmpeg cohabitent, `command -v` rend celui du `PATH`, qui est
+souvent le mauvais. **Le binaire système d'abord**, partout et sans exception :
+`/usr/bin/ffmpeg` s'il existe, `command -v` ensuite. C'est déjà ce que fait
+`monter_episode.ffmpeg()` ; tout script qui trace du texte doit passer par la
+même résolution, y compris les scripts de vérification — le mien s'est fait
+prendre par sa propre règle.
