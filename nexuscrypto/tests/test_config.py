@@ -80,6 +80,13 @@ class TestRefus(unittest.TestCase):
             self._charger(mutation)
         self.assertTrue(any("influence_score" in d for d in capture.exception.defauts))
 
+    def test_plancher_hors_bornes(self):
+        def mutation(contenu):
+            contenu["strategie"]["dca"]["plancher_enveloppe"] = 1.8
+        with self.assertRaises(ConfigurationInvalide) as capture:
+            self._charger(mutation)
+        self.assertTrue(any("plancher_enveloppe" in d for d in capture.exception.defauts))
+
     def test_ema_non_croissantes(self):
         def mutation(contenu):
             contenu["strategie"]["technique"]["ema_longue"] = 10

@@ -157,8 +157,28 @@ strategie:
     influence_score: 0.3
     multiplicateur_min: 0.0
     multiplicateur_max: 2.5
-    # En dessous de ce score, on ne passe aucun achat, quelle que soit la zone.
+    # En dessous de ce score, on n'achète plus que le plancher ci-dessous.
     score_minimum_achat: 45
+    # Le plancher de discipline : la fraction de l'enveloppe achetée malgré
+    # tout quand la valorisation dit non — score sous le seuil, ou
+    # multiplicateur de zone à zéro.
+    #
+    # Sa valeur est **mesurée**, pas choisie. Sans lui (plancher à 0), le rejeu
+    # du scénario « hausse continue » rend zéro ordre sur 398 échéances : la
+    # note technique étant contrarienne, elle stagne sous le seuil pendant
+    # toute une tendance haussière, et la temporisation devient une abstention
+    # d'un an. Le balayage complet, sur les six marchés :
+    #
+    #   plancher   abstentions   gain moyen vs DCA aveugle
+    #      0 %         1/6              +13,9 %
+    #     15 %         0/6              +13,0 %   ← retenu
+    #     25 %         0/6              +12,2 %
+    #     40 %         0/6              +11,1 %
+    #
+    # 15 % est la plus petite valeur qui supprime l'abstention, et elle coûte
+    # 0,9 point de performance relative. Rejouer `python3 profils.py` après
+    # tout changement de seuil : c'est ce tableau qui décide, pas l'intention.
+    plancher_enveloppe: 0.15
     # Un achat sous ce montant coûte plus en frais qu'il n'apporte.
     montant_minimum_usd: 20
   pepites:
