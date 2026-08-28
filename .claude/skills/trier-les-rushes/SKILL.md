@@ -88,3 +88,39 @@ personnage — pour ça, il faut regarder la planche. Il ne transcrit pas la
 parole ; il dit seulement où elle se trouve. Et il ne remplace pas
 `/voir-le-son`, qui dessine **un** fichier en détail quand celui-ci pose
 problème : ici on balaye, là on ausculte.
+
+## La cadence réelle, avant de choisir celle du montage
+
+```bash
+python3 montage-auto/cadence_reelle.py rushes/*.mp4
+```
+
+Un plan généré annonce souvent trente images par seconde et n'en bouge que
+vingt : une image sur deux y est figée d'origine, avec juste assez de bruit
+d'encodage pour n'être pas un doublon exact. **Rien ne le signale** — le
+fichier est conforme, `ffprobe` répond 30, et le défaut ne se voit qu'en
+mouvement rapide, une fois le montage fini.
+
+Relevé sur six rushes d'une même série : deux annonçaient 30 i/s et n'en
+bougeaient que 24, avec 19 et 22 % d'images figées ; les quatre autres, à 24
+annoncés, tenaient leurs 23,4.
+
+**Le piège est qu'on corrige ensuite dans le mauvais sens.** Conformer le film
+à la cadence *annoncée* double la saccade — du 20 i/s rendu à 30 donne une
+image doublée sur deux, rendu à 24 une sur cinq :
+
+| cadence du film | images figées | irrégularité |
+| --- | --- | --- |
+| 30 i/s | 22 % | 68 % |
+| **24 i/s** | **13 %** | **51 %** |
+
+Le script conseille donc la cadence du **plan le plus pauvre** : un film se
+rend à une seule cadence, et la choisir au-dessus du mouvement le plus pauvre
+revient à doubler ses images.
+
+Il rend 1 quand un rush dépasse 10 % d'images figées — c'est une barrière, pas
+un avis. Au-delà, **la saccade est dans la source et aucun montage ne la
+retire** : il faut régénérer le plan. Deux impasses ont été essayées et
+mesurées, inutile de les reparcourir — `minterpolate` vise une cadence et ne
+détecte pas les images figées, sans effet à 30 comme à 60 ; `mpdecimate` ne les
+attrape pas davantage, même à seuil desserré quatre fois.
