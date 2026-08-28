@@ -82,9 +82,29 @@ export type RecordParams = {
   audioOnly?: boolean;
 };
 
-/** Débit vidéo. Généreux : le grain et les dégradés sont coûteux à encoder. */
-const VIDEO_BITRATE = 12_000_000;
+/**
+ * Débit vidéo, en bits par pixel et par image.
+ *
+ * Il valait 12 Mb/s, en dur, quelle que soit la définition demandée — donc
+ * autant pour un export en 720 que pour un 1080, alors qu'il y a deux fois
+ * moins de pixels à décrire. Sur un téléphone qui encode réellement à trente
+ * images par seconde, une vidéo de trente secondes pesait quarante-cinq
+ * mégaoctets : trop lourde à envoyer sur un réseau mobile, et rejetée par
+ * l'application photo comme un fichier anormal.
+ *
+ * 0,10 bit par pixel et par image donne environ 6 Mb/s en 1080 × 1920 à trente
+ * images par seconde. C'est au-dessus de ce que TikTok, Reels et Shorts
+ * réencodent de toute façon — ils ramènent tout autour de 4 Mb/s — et cela
+ * laisse la marge que le grain et les dégradés réclament. Doubler ce chiffre
+ * double le poids sans qu'aucune plateforme en garde la différence.
+ */
+const BITS_PAR_PIXEL = 0.1;
 const AUDIO_BITRATE = 192_000;
+
+/** Débit vidéo pour une définition donnée, jamais sous un plancher lisible. */
+export function debitVideo(largeur: number, hauteur: number, images: number): number {
+  return Math.max(2_000_000, Math.round(largeur * hauteur * images * BITS_PAR_PIXEL));
+}
 
 /** Marge laissée après la dernière image pour qu'elle soit bien enregistrée. */
 const TAIL_MS = 400;
@@ -110,7 +130,15 @@ export async function recordMontage(params: RecordParams): Promise<ExportResult>
 
   const recorder = new MediaRecorder(stream, {
     mimeType: format.mimeType,
-    ...(audioOnly ? {} : { videoBitsPerSecond: VIDEO_BITRATE }),
+    ...(audioOnly
+      ? {}
+      : {
+          videoBitsPerSecond: debitVideo(
+            params.canvas.width,
+            params.canvas.height,
+            OUTPUT_FPS,
+          ),
+        }),
     audioBitsPerSecond: AUDIO_BITRATE,
   });
 
