@@ -185,7 +185,14 @@ def planche(fiches, sortie, largeur=6):
         i, f = i_f
         lancer([FFMPEG, "-v", "error", "-ss", f"{f['duree'] * 0.4:.2f}",
                 "-i", f["chemin"], "-frames:v", "1",
-                "-vf", "scale=200:-2", "-y", str(dossier / f"{i:03d}.png")])
+                # Toutes les vignettes à la même taille, sinon `tile` n'en garde
+                # qu'une : il exige des entrées identiques, et un lot réel
+                # mélange les formats — ici du 480x854, du 1456x2544 et même un
+                # 854x480 en paysage. Le cadre est vertical parce que le format
+                # court l'est ; ce qui ne remplit pas est complété, pas déformé.
+                "-vf", ("scale=200:356:force_original_aspect_ratio=decrease,"
+                        "pad=200:356:(ow-iw)/2:(oh-ih)/2:color=#0d1117"),
+                "-y", str(dossier / f"{i:03d}.png")])
 
     with ThreadPoolExecutor(max_workers=8) as pool:
         list(pool.map(tirer, enumerate(videos)))
