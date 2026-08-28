@@ -50,6 +50,7 @@ commandes=(
   "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
   "Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
   "Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
+  "TITAN Builder : (dans titan-builder/) npm run lint|typecheck|test|build"
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
 )
 
@@ -67,6 +68,13 @@ echo "── Artisan Express : dépendances npm"
 # Page de vente Next.js indépendante, avec son propre `package.json` : lancée
 # sans `cd`, npm remonte à la racine et installe dans l'arbre d'Amorce.
 cd "$racine/artisan-express"
+npm install --no-audit --no-fund --silent
+
+echo "── TITAN Builder : dépendances npm"
+# Même raison, et une conséquence de plus : la CI de TITAN n'installe que son
+# dossier, donc un paquet emprunté au voisin d'au-dessus passe en session et
+# rougit sur le runner.
+cd "$racine/titan-builder"
 npm install --no-audit --no-fund --silent
 
 echo "── Hypersensible & Bienveillance : dépendances npm"
