@@ -70,6 +70,65 @@ class EchecQuiNeTuePas(unittest.TestCase):
         self.assertEqual(rendu, image)
 
 
+class MessageQuiSertAQuelqueChose(unittest.TestCase):
+    """Un échec de sonde doit rendre la fenêtre **en coordonnées de recette**."""
+
+    def setUp(self):
+        self.dossier = Path(tempfile.mkdtemp())
+        self.source = self.dossier / "plan.mp4"
+        self.source.write_bytes(b"x")
+        self.voix = self.dossier / "replique.wav"
+        self.voix.write_bytes(b"son")
+
+    def tearDown(self):
+        shutil.rmtree(self.dossier, ignore_errors=True)
+
+    def test_la_fenetre_est_traduite_pour_la_recette(self):
+        """La sonde compte depuis la fenêtre extraite, la recette depuis le rush.
+
+        Le plan commence à 0,30 s et la sonde annonce 0,50 s → 2,50 s dans ce
+        qu'elle a reçu : la recette doit donc lire 0,80 s. Relayer le 0,50 tel
+        quel ferait recouper au mauvais endroit, et l'erreur passerait pour un
+        défaut de la synchronisation.
+        """
+        import subprocess as vrai
+        import monter_episode
+
+        class Fausse:
+            returncode = 1
+            stderr = ("   11 image(s) sans visage exploitable sur 60.\n"
+                      "   La première est l'image 0 (~0.00 s).\n"
+                      "   Fenêtre exploitable la plus longue : 0.50 s → 2.50 s (2.00 s).\n")
+
+        appels = []
+
+        def doublure(commande, **arguments):
+            appels.append(commande)
+            # Le premier appel découpe la fenêtre : il doit réussir.
+            if commande and commande[0].endswith("ffmpeg"):
+                return vrai.CompletedProcess(commande, 0, "", "")
+            return Fausse()
+
+        origine = monter_episode.subprocess.run
+        monter_episode.subprocess.run = doublure
+        journal = io.StringIO()
+        try:
+            with contextlib.redirect_stderr(journal):
+                rendu, depart = monter_episode.bouche_synchronisee(
+                    self.source, 0.30, 2.50, {"voix": str(self.voix)}, self.dossier)
+        finally:
+            monter_episode.subprocess.run = origine
+
+        texte = journal.getvalue()
+        self.assertIn('"depart": 0.80', texte)
+        self.assertIn('"duree": 2.00', texte)
+        # Le diagnostic, et pas seulement la solution.
+        self.assertIn("sans visage exploitable", texte)
+        # Et le film continue.
+        self.assertEqual(rendu, self.source)
+        self.assertEqual(depart, 0.30)
+
+
 class CacheQuiSurvit(unittest.TestCase):
     """Le cache n'est pas sous `_*`, que la fin du montage efface."""
 
