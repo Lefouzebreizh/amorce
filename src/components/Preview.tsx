@@ -106,7 +106,14 @@ export function Preview({ engine }: { engine: PlaybackEngine }) {
         )}
       </div>
 
-      <Transport engine={engine} playing={playing} />
+      {/*
+        Rien à lire, pas de commandes. Les quatre contrôles étaient bien
+        désactivés, mais les afficher quand même occupait le quart de la
+        hauteur utile pour montrer ce qu'on ne peut pas faire — au moment
+        précis où l'on ne sait pas encore quoi faire. Un bouton grisé
+        n'enseigne rien ; il fait douter que l'application fonctionne.
+      */}
+      {clipCount > 0 && <Transport engine={engine} playing={playing} />}
     </div>
   );
 }
