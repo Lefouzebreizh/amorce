@@ -188,15 +188,29 @@ RECETTES = [
 # d'interface atteignait −1,5 dB. Posés au même gain par un monteur, seul le
 # clic s'entendait. La crête ne dit rien de ce qu'on entend.
 REFERENCE_ENTENDUE = {
-    "01_Impacts_and_Booms": -14.0,
+    # Trois décibels au-dessus du reste : une ponctuation qui sonne au niveau du
+    # lit n'est plus une ponctuation.
+    "01_Impacts_and_Booms": -11.0,
     "02_Risers_and_Tension": -17.0,
     "03_Whooshes_and_Transitions": -18.0,
     "04_Drones_and_Ambiances": -24.0,
     "05_UI_and_App_Buttons": -20.0,
 }
 
-# Au-delà, on ne remonte plus un son : on remonte son souffle.
-GAIN_MAXIMAL_DB = 12.0
+# Le plafond existe parce qu'au-delà, sur un **enregistrement**, on ne remonte
+# plus un son mais son souffle de bande. Fixé d'abord à 12 dB par emprunt à
+# cette règle-là, il bridait huit impacts sur douze : `impact_lourd_long`
+# réclamait +20,7 dB pour rejoindre ses voisins et s'arrêtait à +12 — huit
+# décibels sous eux, et c'est très exactement pourquoi il ne perçait pas.
+#
+# Or ces sons sont **calculés**, pas enregistrés : il n'y a aucun souffle de
+# bande à remonter, seulement du signal voulu jusqu'au dernier échantillon. La
+# règle avait été transposée sans qu'on vérifie qu'elle s'appliquait ici.
+#
+# Le plafond n'est pas supprimé pour autant : il reste la garde qui empêche un
+# son quasi muet — un lit à −60 dB, un fichier abîmé — de se voir prescrire un
+# gain absurde.
+GAIN_MAXIMAL_DB = 21.0
 
 
 def gain_conseille(categorie: str, niveau_telephone_db: float) -> float:
@@ -578,16 +592,32 @@ def assembler_demo(catalogue: list, racine: Path) -> Path | None:
     perd moitié moins.
     """
     par_nom = {s["nom"]: s for s in catalogue}
-    plan = [("grondement_braises", 0.0, 1), ("souffle_caverne", 0.0, -2),
-            ("drone_sombre", 0.0, -8), ("riser_long", 1.0, 1),
-            ("whoosh_rapide", 6.6, 2), ("braam_massif", 7.0, 2),
-            ("whoosh_tournant", 10.6, 1), ("riser_moyen", 10.8, -1),
-            ("grondement_braises", 10.5, 1), ("souffle_caverne", 12.0, -2),
-            ("impact_debris", 13.8, 2), ("whoosh_lourd", 16.3, 2),
-            ("braam_double", 17.0, 2), ("riser_long", 19.0, 0),
-            ("souffle_caverne", 20.0, -2), ("grondement_braises", 20.5, 1),
-            ("whoosh_moyen", 24.6, 2), ("impact_metal_brise", 25.0, 2),
-            ("braam_massif", 25.2, 1)]
+    # Les appoints ne sont pas des retouches de goût : ils encodent la
+    # hiérarchie d'une bande-annonce. **Un riser doit être avalé par l'impact
+    # qu'il annonce**, jamais le dominer. Une version antérieure laissait
+    # `riser_long` culminer à −0,3 dB de crête, soit le point le plus fort du
+    # mixage : la normalisation divisait alors tout le reste par lui, et les
+    # impacts sortaient plus bas que le lit. Les risers sont donc creusés, les
+    # ponctuations relevées. Le lit avait un temps été creusé de cinq décibels
+    # de plus ; c'était traiter un symptôme, car ce qui l'égalisait aux impacts
+    # n'était pas son niveau mais la compression de `loudnorm` en une passe.
+    # Une fois la normalisation rendue linéaire, le creusement n'avait plus de
+    # raison d'être et fut retiré.
+    plan = [("grondement_braises", 0.0, 0), ("souffle_caverne", 0.0, -3),
+            ("drone_sombre", 0.0, -8), ("riser_long", 1.0, -5),
+            ("whoosh_rapide", 6.6, 0), ("braam_massif", 7.0, 3),
+            ("whoosh_tournant", 10.6, -1), ("riser_moyen", 10.8, -6),
+            ("grondement_braises", 10.5, 0), ("souffle_caverne", 12.0, -3),
+            ("impact_debris", 13.8, 3), ("whoosh_lourd", 16.3, 0),
+            ("braam_double", 17.0, 3), ("riser_long", 19.0, -5),
+            ("souffle_caverne", 20.0, -3), ("grondement_braises", 20.5, 0),
+            ("whoosh_moyen", 24.6, 0),
+            # `impact_metal_brise` occupait ce créneau et n'y dépassait pas le
+            # lit : sa traîne de deux secondes étale son énergie au lieu de la
+            # concentrer. Un final demande la frappe qui atterrit, pas la plus
+            # riche.
+            ("impact_puis_chute", 25.0, 4),
+            ("braam_massif", 25.2, 3)]
     manquants = [n for n, _, _ in plan if n not in par_nom]
     if manquants:
         return None
@@ -613,11 +643,47 @@ def assembler_demo(catalogue: list, racine: Path) -> Path | None:
     if ffmpeg is None:
         brut.replace(racine / "DEMO_trailer_30s.wav")
         return racine / "DEMO_trailer_30s.wav"
-    subprocess.run([ffmpeg, "-y", "-v", "error", "-i", str(brut),
-                    "-af", "loudnorm=I=-14:TP=-1:LRA=11",
-                    "-c:a", "libmp3lame", "-b:a", "192k", str(sortie)], check=True)
+    normaliser(brut, sortie, ffmpeg)
     brut.unlink(missing_ok=True)
     return sortie
+
+
+def normaliser(source: Path, sortie: Path, ffmpeg: str, cible_lufs: float = -14.0,
+               vrai_pic_db: float = -1.0) -> None:
+    """Amène un mixage à sa sonie cible **sans toucher à sa dynamique**.
+
+    `loudnorm` en une passe n'est pas un normaliseur : c'est un compresseur.
+    Il remonte les passages calmes et écrase les forts pour tenir la cible en
+    continu, et détruit donc précisément le contraste qu'un montage de
+    bande-annonce cherche à construire. Mesuré : un impact qui sortait à
+    −1,4 dB dans le mixage brut ressortait à −24 dB après, c'est-à-dire au
+    niveau du lit qu'il était censé dominer.
+
+    La parade est la seule qui convienne à un mixage déjà équilibré : mesurer
+    la sonie, appliquer **un gain unique** à tout le fichier, puis limiter les
+    crêtes qui dépassent. Le rapport entre les frappes et le lit reste
+    exactement celui du montage.
+    """
+    mesure = subprocess.run(
+        [ffmpeg, "-hide_banner", "-nostats", "-i", str(source),
+         "-af", f"loudnorm=I={cible_lufs}:TP={vrai_pic_db}:print_format=json",
+         "-f", "null", "-"], capture_output=True, text=True)
+    depart = mesure.stderr.rfind("{")
+    gain_db = 0.0
+    if depart != -1:
+        try:
+            releve = json.loads(mesure.stderr[depart:])
+            mesuree = float(releve["input_i"])
+            if mesuree > -70:
+                gain_db = cible_lufs - mesuree
+        except (ValueError, KeyError):
+            gain_db = 0.0
+
+    limite = 10.0 ** (vrai_pic_db / 20.0)
+    subprocess.run(
+        [ffmpeg, "-y", "-v", "error", "-i", str(source),
+         "-af", f"volume={gain_db:.2f}dB,alimiter=limit={limite:.4f}:level=disabled",
+         "-c:a", "libmp3lame", "-b:a", "192k", str(sortie)], check=True)
 
 
 def main() -> int:
