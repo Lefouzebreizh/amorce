@@ -71,6 +71,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nVisier assemble les données de paie, de temps et de gestion des talents en un modèle unique, puis répond à des questions posées en langage courant : quel service perd le plus de monde, à quel moment de l'ancienneté les départs se produisent, où subsiste un écart salarial injustifié. C'est ce qui remplace le tableur trimestriel que personne ne lit par un tableau de bord que la direction ouvre.\n\n## Points forts\n- Question posée en français, réponse immédiate : plus d'aller-retour avec le contrôle de gestion\n- Indicateurs sociaux calculés de façon homogène entre filiales et pays\n- Détection des écarts de rémunération, obligation qui devient une routine\n- Prévision des départs, avec les facteurs associés\n\n## Points faibles\n- La consolidation initiale des sources est le vrai chantier, et il est long\n- Réservé aux entreprises de taille conséquente\n- Les prévisions de départ demandent un cadre d'usage clair pour ne pas devenir un outil de surveillance\n\n## Idéal pour\nLes directions des ressources humaines multi-sites qui n'ont pas de vision consolidée fiable de leur masse salariale et de leurs départs.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "breezy-hr",
+      "nom": "Breezy HR",
+      "categorie": "Présélection",
+      "prix": "Freemium — à partir de 189 $/mois",
+      "description_courte": "Le recrutement en tableau visuel, avec entretiens vidéo différés et questionnaires de présélection inclus.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/breezy-hr",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nBreezy présente le recrutement comme un tableau que l’on fait glisser, ce qui suffit à faire adopter l’outil par des managers qui n’ouvriront jamais un logiciel RH. Les questionnaires éliminatoires et l’entretien vidéo différé sont inclus dès les formules basses, là où d’autres les facturent en supplément. La formule gratuite couvre un poste ouvert en permanence.\n\n## Points forts\n- Formule gratuite permanente pour un poste ouvert : idéal pour juger\n- Tableau visuel adopté sans formation par les managers opérationnels\n- Questionnaires de présélection et entretien vidéo différé inclus\n- Rédaction d’offres et résumés de candidature assistés\n\n## Points faibles\n- Le tarif grimpe fortement dès qu’on ouvre plusieurs postes\n- Moins puissant que les grandes plateformes sur le sourcing actif\n- Interface uniquement en anglais\n\n## Idéal pour\nLes PME et startups qui ouvrent deux ou trois postes à la fois et veulent impliquer les managers dans le tri.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

@@ -482,3 +482,88 @@ créature au-dessus de tout — puis en calculant le gain de chaque piste par
 écrite d'avance, pas par retouches successives. Trois itérations au jugé
 avaient produit trois défauts différents ; une table et une soustraction ont
 donné le bon résultat du premier coup.
+
+---
+
+## Descendre le registre pour « faire épique » sort du spectre du téléphone
+
+*Coût : un rendu, et douze décibels.*
+
+Une nappe de bande-annonce écrite avec une fondamentale à 55 Hz — deux octaves
+sous la référence habituelle, « parce que c'est une bande-annonce » — perdait
+**12,2 dB** une fois filtrée comme le fait un haut-parleur de téléphone. La
+cause était arithmétique : la nappe posée une octave et demie au-dessus de la
+basse tombait à 155 Hz, et tout le registre utile vivait sous le plancher.
+
+Fondamentale remontée à 110 Hz, triade portée deux octaves plus haut, une
+octave discrète encore au-dessus : **0,9 dB de perte**, dans la fourchette
+mesurée de l'outil du dépôt.
+
+**Portée générale :** le poids d'un son se fabrique par les **harmoniques du
+grave**, jamais en descendant le registre. Descendre déplace l'énergie hors de
+ce que l'appareil restitue, et le résultat est plus faible en paraissant plus
+grave à la conception.
+
+---
+
+## Chercher ce qu'une session voisine a déjà résolu avant de le refaire
+
+*Gain : une heure, et un résultat quatre fois meilleur que le mien.*
+
+Après six itérations ratées sur le son d'un montage, le hook de démarrage
+signalait une branche parallèle nommée « Fabriquer la musique de fond, dernier
+trou de la chaîne son ». Elle contenait `porter_sur_telephone`, une fonction
+mesurée à 0,6–1,2 dB de perte, là où ma propre saturation en perdait 3,4 — et
+la raison qui m'avait échappé : **les deux couches se partagent le niveau, elles
+ne s'y ajoutent pas**, et il faut un redressement avant la saturation pour
+obtenir les harmoniques paires.
+
+Le hook posait déjà la question — « Avant de construire : l'une d'elles fait-elle
+déjà ce travail ? » — et je l'avais lue six fois sans y répondre.
+
+**Portée générale :** dans un dépôt à plusieurs sessions, la liste des branches
+ouvertes n'est pas un ornement de démarrage : c'est la première recherche à
+faire quand on bute. Lire un titre de branche coûte une seconde ; refaire son
+travail coûte la nuit. Et ce qu'on récupère porte les mesures de l'autre, pas
+seulement son code.
+
+---
+
+## Ce qui fait bouger une image fixe, c'est la parallaxe, pas le zoom
+
+*Coût : quatre tentatives ratées, dont trois abandonnées faute de méthode.*
+
+Un plan tiré d'une image fixe et animé au zoom — même lent, même en diagonale —
+se lit toujours comme une photographie qu'on agrandit. Trois corrections
+successives (zoom plus rapide, scintillement, braises) ont toutes échoué, et
+l'auteur répétait « l'image n'est toujours pas animée » sans qu'aucune mesure
+ne lui donne raison.
+
+**Le premier progrès a été de changer de mesure.** `scene_score` compte les
+changements de plan, pas le mouvement : un zoom rigide change des pixels sans
+produire de mouvement apparent, et il notait donc « bon ». L'écart moyen entre
+images consécutives, lui, dit ce que l'œil voit :
+
+| | mouvement |
+| --- | --- |
+| plan animé au zoom | 4,1 |
+| rush le plus calme du montage | 10,5 |
+| rush le plus vif | 22,8 |
+
+**Le remède est la parallaxe.** Dans un vrai plan, ce qui est proche se déplace
+plus vite que ce qui est loin, et c'est cet **écart** — pas le déplacement —
+que l'œil lit comme une caméra. Deux couches tirées de la même image, masques
+verticaux à bords fondus, vitesses opposées : 4,1 → 8,2 hors montage, et 9,8
+une fois le mouvement du montage ajouté par-dessus.
+
+Trois choses mesurées qui n'ont rien apporté, et qu'il ne faut pas refaire : le
+scintillement des éclairs (+0,08), le tremblement d'air (+0,01), et un premier
+réglage de parallaxe à 34 pixels sur deux secondes — soit trois dixièmes de
+pixel par image, **sous le pas de l'échantillonnage**, donc rendu à 2,45, pire
+que le zoom qu'il remplaçait.
+
+**Portée générale :** quand un défaut décrit par un humain ne se voit dans aucun
+chiffre, la mesure est le premier suspect, pas la description. Et quand un
+réglage améliore la théorie sans améliorer le résultat, vérifier son ordre de
+grandeur avant d'en chercher un autre : ici, l'effet était juste et l'amplitude
+cent fois trop faible.

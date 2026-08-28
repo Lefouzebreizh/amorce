@@ -71,6 +71,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nShopify Magic n'est pas le plus puissant des outils de rédaction, il est simplement inclus et déjà branché sur le catalogue. Description de produit à partir de quelques caractéristiques, objet de courriel, réponse au support, texte de page d'accueil : tout se rédige sans quitter l'administration de la boutique et sans ajouter une ligne d'abonnement. Pour un catalogue de trois cents références à écrire, cela suffit largement.\n\n## Points forts\n- Inclus dans l'abonnement : aucun arbitrage budgétaire à faire\n- Branché sur le catalogue, donc sur les vraies caractéristiques des produits\n- Couvre fiches produits, courriels et support dans le même endroit\n- Aucune configuration : la fonction est là où l'on travaille déjà\n\n## Points faibles\n- Textes plus plats que ceux des outils de rédaction spécialisés\n- Réservé aux boutiques hébergées chez Shopify\n- Le français est correct mais générique, à retoucher sur les produits à forte marge\n\n## Idéal pour\nLes boutiques Shopify avec un gros catalogue à décrire et aucun budget pour un abonnement de rédaction supplémentaire.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "zipchat-ai",
+      "nom": "Zipchat AI",
+      "categorie": "Service client",
+      "prix": "À partir de 49 $/mois",
+      "description_courte": "L’agent qui vend au lieu de simplement répondre : il conseille un produit, gère l’objection et pousse au panier.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/zipchat-ai",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nLa plupart des assistants de boutique répondent aux questions de livraison. Zipchat est construit pour vendre : il connaît le catalogue, recommande une référence, traite l’objection sur le prix ou la taille, et propose l’ajout au panier. Le chiffre d’affaires attribué aux conversations est affiché, ce qui rend l’arbitrage simple.\n\n## Points forts\n- Conçu pour la vente, pas seulement pour le support\n- Chiffre d’affaires attribué aux conversations, mesurable\n- Se nourrit du catalogue automatiquement, sans base de connaissances à écrire\n- Répond dans plusieurs langues, y compris en français\n\n## Points faibles\n- Un agent trop insistant dégrade l’expérience : le ton se règle avec soin\n- Facturé au volume de conversations, imprévisible en période de soldes\n- Sans catalogue riche, il n’a rien à recommander\n\n## Idéal pour\nLes boutiques dont le trafic est correct mais qui transforment mal, faute de conseil au moment de l’hésitation.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

@@ -71,6 +71,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nRestb.ai regarde les photos d'une annonce et en tire des données exploitables : type de pièce, état d'entretien, présence d'une cuisine équipée, d'une cheminée, d'une piscine. Pour un portefeuille de plusieurs milliers de biens, c'est le seul moyen de qualifier des annonces sans qu'un humain ouvre chaque dossier — et de repérer celles dont les photos ne suivent pas la charte de l'agence.\n\n## Points forts\n- Détection des pièces et des équipements sans intervention humaine\n- Contrôle automatique de la qualité et de la conformité des photos publiées\n- Enrichissement des annonces existantes, ce qui améliore leur classement sur les portails\n- Interface de programmation propre, greffable sur un logiciel de transaction\n\n## Points faibles\n- Outil de développeur : il faut une équipe technique pour en tirer quelque chose\n- Aucun intérêt pour une agence à quelques dizaines de mandats\n- La détection d'état reste grossière sur les biens à rénover\n\n## Idéal pour\nLes réseaux, les portails et les éditeurs de logiciels immobiliers qui traitent des volumes de photos qu'aucune équipe ne peut relire.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "hektor",
+      "nom": "Hektor",
+      "categorie": "CRM & pilotage",
+      "prix": "Environ 70 à 150 €/mois selon les modules",
+      "description_courte": "Le logiciel d'agence le plus répandu de France, avec l'IA posée dans le flux de travail plutôt que dans un onglet séparé.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/hektor",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nSur ce métier, l'IA utile n'est pas arrivée par des outils à part : elle est entrée dans le logiciel où l'agent passe déjà ses journées. Hektor, édité par La Boîte Immo, revendique huit mille cinq cents agences et quinze ans d'existence — c'est la position d'où l'on peut se permettre d'automatiser sans que personne n'ait à changer d'habitude. Les fonctions génératives servent d'abord la rédaction et le suivi des contacts, là où le temps se perd vraiment.\n\n## Points forts\n- Parc installé considérable : formation, entraide et intégrations abondantes\n- IA intégrée au flux de travail existant, sans outil supplémentaire à ouvrir\n- Tarification modulaire, on ne paie que les briques utilisées\n- Éditeur français, au fait des obligations d'affichage et de mandat\n\n## Points faibles\n- Le prix grimpe vite à mesure que les modules s'ajoutent\n- Modularité qui rend la comparaison difficile avec des offres tout compris\n- Un parc ancien s'accompagne d'un héritage d'interface\n- Changer de CRM immobilier reste un déménagement, pas une bascule\n\n## Idéal pour\nLes agences qui veulent de l'IA sans projet ni nouvel outil, directement là où leurs mandats et leurs contacts sont déjà rangés.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

@@ -71,6 +71,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nTenzo agrège la caisse, le planning, les stocks et les avis en ligne dans un même tableau de bord, et surtout envoie une alerte quand un indicateur décroche — coût matière qui grimpe, ticket moyen qui baisse, note d'avis qui chute sur un établissement. C'est le passage du reporting hebdomadaire que personne ne lit au signal qui arrive au moment où l'on peut encore agir.\n\n## Points forts\n- Connecte les logiciels de caisse et de planning déjà en place\n- Alertes envoyées sur téléphone, plutôt qu'un rapport à aller consulter\n- Comparaison entre établissements d'un même groupe, sur des bases homogènes\n- Prévision de ventes correcte pour un outil de pilotage généraliste\n\n## Points faibles\n- Sans données de caisse propres, les indicateurs mentent\n- Facturé par établissement : le coût grimpe vite sur un réseau\n- Moins fin que les outils spécialisés sur le planning et la matière\n\n## Idéal pour\nLes gérants de plusieurs établissements qui découvrent les mauvais chiffres en fin de mois, quand il n'y a plus rien à corriger.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "jolt",
+      "nom": "Jolt",
+      "categorie": "Pilotage",
+      "prix": "À partir d’environ 100 $/mois par établissement",
+      "description_courte": "Les listes de contrôle d’ouverture et de fermeture, les températures et les tâches, prouvées et horodatées.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/jolt",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nJolt remplace le classeur d’hygiène et les listes affichées en cuisine par des contrôles horodatés avec photo. En cas de contrôle sanitaire, la traçabilité est immédiate ; au quotidien, le gérant sait ce qui a été fait sans être sur place. Les étiquettes de date de péremption imprimées à la demande suppriment une non-conformité classique.\n\n## Points forts\n- Traçabilité horodatée et photographiée, opposable en contrôle\n- Le gérant voit à distance ce qui a été fait, et par qui\n- Étiquetage des dates de péremption imprimé à la demande\n- Adopté facilement par les équipes, y compris saisonnières\n\n## Points faibles\n- Matériel à prévoir : tablette et imprimante d’étiquettes\n- Le paramétrage des listes demande une vraie mise à plat des procédures\n- Pensé pour la réglementation américaine, à adapter aux obligations françaises\n\n## Idéal pour\nLes groupes multi-sites et les établissements à fort renouvellement d’équipe, où les procédures ne tiennent que si elles sont vérifiables.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

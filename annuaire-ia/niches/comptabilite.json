@@ -71,6 +71,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nLa clôture d'un dossier bloque toujours au même endroit : les opérations non identifiées, dont seul le client connaît la nature. Booke détecte les écritures incohérentes, formule la question dans un portail simple et relance jusqu'à obtenir la réponse. Le collaborateur cesse d'être l'huissier de son propre dossier et reprend la main quand les réponses sont là.\n\n## Points forts\n- Détection des incohérences et des doublons avant la révision proprement dite\n- Relance automatique du client, avec un portail qu'il sait utiliser\n- Se greffe sur les principaux logiciels de tenue du marché\n- Tarif au dossier, lisible pour un cabinet\n\n## Points faibles\n- Couverture limitée aux logiciels anglo-saxons dominants\n- Ne remplace ni la révision ni le jugement professionnel\n- Les clients qui ne répondaient pas au téléphone ne répondent pas davantage au portail\n\n## Idéal pour\nLes cabinets dont les clôtures traînent faute de réponses clients, et qui relancent encore par courriels manuels en fin de trimestre.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "fyle",
+      "nom": "Fyle",
+      "categorie": "Notes de frais",
+      "prix": "À partir de 8 $/mois par utilisateur",
+      "description_courte": "Le justificatif envoyé par message texte ou courriel, sans application à installer ni salarié à former.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/fyle",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nL’échec de la plupart des outils de notes de frais est humain : les salariés n’installent pas l’application. Fyle contourne le problème — on transfère le courriel du reçu, ou on envoie une photo par message texte, et la note se crée. L’alerte en temps réel sur la carte bancaire réclame le justificatif dans la minute qui suit l’achat.\n\n## Points forts\n- Aucune application à installer : courriel ou message texte suffisent\n- Alerte en temps réel sur la carte, le justificatif est réclamé dans la minute\n- Règles de politique interne vérifiées à la saisie, pas à la validation\n- S’intègre aux principaux logiciels comptables\n\n## Points faibles\n- Tarif par utilisateur qui grimpe avec l’effectif\n- Fonctions de reporting en retrait des grands acteurs\n- Documentation et support en anglais\n\n## Idéal pour\nLes entreprises dont les salariés ne rendent jamais leurs justificatifs et où l’application dédiée a déjà échoué.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }

@@ -71,6 +71,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nALICE part de la maquette numérique et des moyens disponibles pour générer des milliers de séquences de construction possibles, puis les classe par durée et par coût. Un planificateur explore trois ou quatre variantes dans sa carrière sur un projet donné ; la machine en essaie dix mille en une nuit, et trouve régulièrement des phasages qui gagnent dix à quinze pour cent de délai.\n\n## Points forts\n- Exploration exhaustive du phasage, hors de portée d'un planificateur humain\n- Arbitrage explicite entre durée, moyens mobilisés et coût\n- Réponse rapide à un aléa : le replanning se recalcule au lieu de se refaire\n- Gains de délai mesurés et documentés sur des opérations réelles\n\n## Points faibles\n- Sans maquette numérique correctement renseignée, l'outil ne sert à rien\n- Investissement en paramétrage initial de plusieurs semaines\n- Les contraintes de site réelles doivent être décrites finement, sinon la solution est théorique\n\n## Idéal pour\nLes grands travaux et les opérations répétitives — logements, hôpitaux, data centers — où le phasage est le principal levier sur la marge.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "kreo",
+      "nom": "Kreo",
+      "categorie": "Métré & chiffrage",
+      "prix": "Freemium — à partir de 60 £/mois",
+      "description_courte": "Le métré sur plan 2D et la bibliothèque de prix dans le même outil : du plan au devis sans ressaisie.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/kreo",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nKreo couvre la chaîne complète du chiffrage : reconnaissance des éléments sur le plan PDF, quantités, puis application d'une bibliothèque de prix pour sortir le devis. C'est moins spécialisé que les outils de métré pur, mais le fait de ne pas exporter vers un tableur intermédiaire supprime la source d'erreur la plus banale du chiffrage — la ressaisie.\n\n## Points forts\n- Du plan au devis dans un seul outil, sans transfert de fichier\n- Bibliothèque de prix modifiable, propre à l'entreprise\n- Version gratuite réellement utilisable pour juger sur un dossier\n- Interface plus simple d'accès que les logiciels d'économie de la construction historiques\n\n## Points faibles\n- Reconnaissance moins fiable que les outils dédiés au seul métré\n- Bibliothèques de prix calibrées sur le marché britannique\n- La gestion multi-utilisateurs reste sommaire\n\n## Idéal pour\nLes petites et moyennes entreprises du bâtiment qui chiffrent encore au tableur et perdent des heures entre le métré et le devis.",
+      "date_ajout": "2026-08-27"
     }
   ]
 }
