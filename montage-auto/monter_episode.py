@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -66,12 +67,42 @@ CADRE = (f"scale={LARGEUR}:{HAUTEUR}:force_original_aspect_ratio=increase,"
 
 # La bande du bas est mangée par la légende et les boutons de la plateforme.
 # Sur 1920 de haut, on ne descend pas un texte sous 1300.
-Y_SOUS_TITRE = 1180
-# Montserrat n'est pas installée et reste hors de portée derrière ce mandataire
-# (dépôt d'origine, API GitHub et PyPI rendent 403 ou 404). Liberation Sans Bold
-# est la plus neutre des trois grasses présentes, et la plus proche d'une
-# géométrique. Remplacer ce chemin suffit le jour où la police arrive.
-POLICE = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+# Centre haut : la bande basse est mangée par la légende et les boutons de la
+# plateforme, et un texte posé là passe aussi derrière le pouce qui fait défiler.
+Y_SOUS_TITRE = 300
+# Montserrat n'est pas installée sur la machine, et trois chemins pour l'obtenir
+# rendent 403 ou 404 : le dépôt d'origine par `raw.githubusercontent`, l'API
+# GitHub, et PyPI. Ces trois refus avaient fait conclure à l'impossibilité — à
+# tort. **Le mandataire git de ces sessions sert les clones anonymes de dépôts
+# publics**, et un `git clone --depth 1` la ramène en quelques secondes.
+#
+# Le fichier vit dans `.fixtures/`, jamais dans Git : c'est un binaire, et
+# l'invariant du dépôt les interdit. `police()` le récupère à la demande.
+POLICE_DISTANTE = "https://github.com/JulietaUla/montserrat"
+POLICE_CHEMIN = RACINE.parent / ".fixtures" / "polices" / "Montserrat-ExtraBold.ttf"
+POLICE_SECOURS = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+
+
+def police() -> str:
+    """Rend Montserrat Bold, en la récupérant au besoin.
+
+    Sans réseau, on retombe sur Liberation Sans Bold — la plus neutre des
+    grasses installées — plutôt que d'échouer : une police approchante vaut
+    mieux qu'un montage qui ne sort pas.
+    """
+    if POLICE_CHEMIN.is_file():
+        return str(POLICE_CHEMIN)
+    depot = Path("/tmp") / "_montserrat"
+    try:
+        if not (depot / "fonts" / "ttf" / "Montserrat-ExtraBold.ttf").is_file():
+            subprocess.run(["git", "clone", "--depth", "1", POLICE_DISTANTE, str(depot)],
+                           check=True, capture_output=True,
+                           env={**os.environ, "GIT_LFS_SKIP_SMUDGE": "1"})
+        POLICE_CHEMIN.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(depot / "fonts" / "ttf" / "Montserrat-ExtraBold.ttf", POLICE_CHEMIN)
+        return str(POLICE_CHEMIN)
+    except Exception:
+        return POLICE_SECOURS
 
 
 def ffmpeg() -> str:
@@ -670,7 +701,7 @@ def texte_ffmpeg(entree: dict, y_defaut: int) -> list[str]:
     y = entree.get("y", y_defaut)
     montee = f"if(lt(t-{debut},0.12),(t-{debut})/0.12,1)"
     quand = f"between(t,{debut},{fin})"
-    commun = (f"fontfile={POLICE}:text='{contenu}':fontsize={taille}:"
+    commun = (f"fontfile={police()}:text='{contenu}':fontsize={taille}:"
               f"x=(w-text_w)/2:y={y}:enable='{quand}'")
     return [
         f"drawtext={commun}:fontcolor={entree.get('halo', HALO)}@0.55:"
