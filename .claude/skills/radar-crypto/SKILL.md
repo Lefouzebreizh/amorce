@@ -100,6 +100,17 @@ Ce qu'aucun test ne dit : **si l'API a changé de forme**. Rien n'a encore tourn
 contre les services réels. Un changement qui touche à `sources/` se signale comme
 non vérifié en conditions réelles tant qu'un vrai `main.py scan` n'a pas tourné.
 
+**C'est `main.py sonde` qui le dit, et c'est la première commande à lancer**
+depuis un poste qui a du réseau — avant le premier scan, et après toute
+modification de `sources/`. Elle interroge chaque point d'entrée une fois et
+rend deux nombres, **reçus** et **lus** : des éléments qui arrivent sans qu'un
+seul ne se traduise, c'est un format qui a bougé. Le distinguer d'un silence
+n'est pas cosmétique — « muet » envoie chercher du côté du réseau, « dérive »
+du côté de l'analyseur, et se tromper de piste coûte la session. Code de sortie
+4 sur l'un ou l'autre, de quoi la planifier sans lire le tableau ; `sonde.py`
+porte le raisonnement, `tests/test_sonde.py` les deux frontières — crier à
+raison, et surtout ne pas crier à tort.
+
 ## Les pièges, déjà payés une fois chacun
 
 - **Le radar ne route que deux familles de chaînes.** `est_evm` est dérivé de

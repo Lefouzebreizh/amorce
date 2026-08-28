@@ -318,7 +318,7 @@ même jeton finit en sourdine — et c'est ce jour-là qu'il a raison.
 ## 5. Où en est le projet
 
 **Les cinq skills tournent**, du premier appel DexScreener au message Telegram.
-121 tests, dont un qui traverse tout le tuyau sur client factice : deux scans à
+141 tests, dont un qui traverse tout le tuyau sur client factice : deux scans à
 quinze minutes d'écart, confirmation, bouclier, alerte, puis silence.
 
 Ce qui reste **fragile ou incomplet**, dit franchement :
@@ -337,7 +337,9 @@ Ce qui reste **fragile ou incomplet**, dit franchement :
 - **Rien n'a encore tourné contre l'API réelle** : l'environnement de
   développement bloque les sorties réseau. Tout est validé sur des réponses
   rejouées, dans leur forme documentée. Le premier `scan` en conditions réelles
-  reste à faire.
+  reste à faire — et c'est pour ce moment précis qu'existe `main.py sonde`,
+  décrite plus bas : elle dit en une vingtaine d'appels si les formats
+  documentés sont encore ceux que les services rendent.
 
 ## 6. Commandes
 
@@ -345,13 +347,47 @@ Ce qui reste **fragile ou incomplet**, dit franchement :
 pip install -r requirements.txt
 cp .env.example .env                       # jeton Telegram, clés facultatives
 
+python3 main.py sonde                      # les sources se lisent-elles encore ?
 python3 main.py scan                       # un tour complet → pepites_radar.md
 python3 main.py scan --bavard              # avec le détail des appels
 python3 main.py purger --garder 30         # efface les vieux relevés
 
-python3 -m unittest discover -s tests      # 121 tests, sans réseau
+python3 -m unittest discover -s tests      # 141 tests, sans réseau
 python3 profils.py                         # l'effet des réglages sur six profils connus
 ```
+
+### La sonde, à lancer avant le premier scan
+
+**Un scan qui ne trouve rien ne dit pas pourquoi.** Trois situations très
+différentes rendent le même rapport vide : le marché est calme, un service ne
+répond plus, ou un service répond et nous ne savons plus lire ce qu'il rend. La
+première est une bonne nouvelle ; la troisième est la pire, parce que tout a
+l'air de fonctionner — les appels partent, les réponses arrivent, aucun
+compteur d'erreur ne bouge — et le radar est aveugle.
+
+`main.py sonde` interroge chaque point d'entrée une fois et rend deux nombres :
+**reçus** et **lus**. Des éléments reçus dont aucun ne se traduit, c'est un
+format qui a bougé, et c'est le seul cas où elle crie :
+
+```
+dexscreener · recherche    dérive     30 reçus / 0 lu · 30 paires rendues, toutes chaînes confondues
+goplus · EVM               ok         1 reçu / 1 lu · sujet : Ethereum
+telegram                   sans clé   le radar notera sans jamais prévenir
+
+DÉRIVE DE FORMAT — dexscreener · recherche répond sans que nous sachions les
+lire. Un scan rendrait un rapport vide qui se lirait comme un marché calme.
+```
+
+Elle n'écrit rien, ne note rien, n'alerte pas, et sort en code 4 si une source
+est muette ou dérivée — de quoi la mettre dans une tâche planifiée sans lire le
+tableau. Une source qu'une coupure a empêché d'atteindre est déclarée « non
+sondé » plutôt qu'omise : un point absent du tableau se lirait comme un point
+sain, ce qui est le mensonge exact que cette commande combat.
+
+Les sujets de sondage sont les **jetons de cotation de `config/chaines.yaml`**,
+jamais des adresses écrites dans la sonde : ce sont les jetons les plus
+permanents de chaque chaîne, et une adresse en dur vieillirait sans que
+personne ne la relise, faisant de la sonde une source de fausses alertes.
 
 `profils.py` est l'instrument de réglage : il fait passer six profils de marché
 de côté — celui qu'on cherche et les cinq façons de se tromper — par les vrais

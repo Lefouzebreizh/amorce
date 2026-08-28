@@ -56,6 +56,14 @@ endroits où l'on peut se tromper. Lire l'entonnoir en tête d'abord.
 Le réflexe à avoir : **un rapport vide n'est presque jamais un problème de
 notation**. C'est la découverte ou la persistance, dans cet ordre.
 
+**Et avant même ce tableau, sur un rapport entièrement vide : `main.py sonde`.**
+Aucun réglage ne rattrape une source qui ne répond plus, ou qui répond dans une
+forme que nous ne savons plus lire — et ce second cas ne se voit nulle part
+ailleurs : les appels partent, les réponses arrivent, aucun compteur d'erreur ne
+bouge, et le rapport se lit comme un marché calme. La sonde rend « reçus » et
+« lus » par point d'entrée ; tant qu'elle n'est pas verte, tourner un seuil ne
+fait que déplacer un zéro.
+
 ## La grammaire d'un trapèze
 
 ```yaml

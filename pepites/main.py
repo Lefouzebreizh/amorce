@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Point d'entrée du radar.
 
+    python3 main.py sonde             # les sources répondent-elles, et se lisent-elles ?
     python3 main.py scan              # un tour complet, écrit pepites_radar.md
     python3 main.py scan --bavard     # avec le détail des appels
     python3 main.py purger            # efface les vieux relevés
@@ -8,6 +9,11 @@
 Un scan seul ne confirme rien : la persistance demande deux relevés espacés de
 dix minutes. Le premier tour remplit la mémoire, les suivants s'en servent. En
 usage réel, c'est une tâche planifiée toutes les quinze minutes.
+
+**Commencer par `sonde`, et surtout la première fois.** Un scan qui ne trouve
+rien ne dit pas pourquoi : marché calme, service muet et format qui a bougé
+rendent le même rapport vide. La sonde tranche entre les trois en une vingtaine
+d'appels, sans rien écrire ni alerter.
 """
 
 from __future__ import annotations
@@ -29,6 +35,7 @@ except ImportError:      # l'outil marche sans, il n'alerte simplement pas
 
 import pipeline                                   # noqa: E402
 import rapport                                    # noqa: E402
+import sonde                                      # noqa: E402
 from core.reglages import ReglagesInvalides, charger  # noqa: E402
 from core.reseau import ReseauIndisponible            # noqa: E402
 from core.stockage import BASE_PAR_DEFAUT, Memoire    # noqa: E402
@@ -65,6 +72,15 @@ def commande_scan(arguments) -> int:
     return 0
 
 
+def commande_sonde(arguments) -> int:
+    """Code de sortie 4 sur une source muette ou dérivée : une tâche planifiée
+    doit pouvoir s'en apercevoir sans lire le tableau."""
+    reglages = charger()
+    constats = sonde.sonder(reglages)
+    print(sonde.resumer(constats))
+    return 4 if any(c.grave for c in constats) else 0
+
+
 def commande_purger(arguments) -> int:
     with Memoire(arguments.base) as memoire:
         efface = memoire.purger(arguments.garder)
@@ -81,6 +97,10 @@ def principal(argv: list[str] | None = None) -> int:
     scan = sous.add_parser("scan", help="un tour complet du radar")
     scan.add_argument("--rapport", default=rapport.RAPPORT_PAR_DEFAUT)
     scan.set_defaults(fonction=commande_scan)
+
+    sous.add_parser(
+        "sonde", help="les sources répondent-elles, et se lisent-elles ?"
+    ).set_defaults(fonction=commande_sonde)
 
     purge = sous.add_parser("purger", help="efface les vieux relevés")
     purge.add_argument("--garder", type=float, default=30.0, help="en jours")
