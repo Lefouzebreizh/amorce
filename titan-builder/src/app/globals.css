@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+/*
+ * Le thème, en jetons plutôt qu'en valeurs semées dans les composants.
+ *
+ * Sombre par défaut et non par bascule : la page se regarde sur un téléphone,
+ * souvent le soir, souvent d'une main. Il n'y a pas de mode clair — en ajouter
+ * un doublerait chaque décision de contraste pour un public qui ne le demande
+ * pas.
+ */
+@theme {
+  --color-fond: #05050b;
+  --color-fond-doux: #0b0b16;
+  --color-verre: #12121f;
+  --color-bord: #262640;
+  --color-sourdine: #9a9ac0;
+  --color-neon: #7c3aed;
+  --color-neon-clair: #a78bfa;
+  --color-cyan: #22d3ee;
+  --color-succes: #34d399;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/*
+ * `100dvh` et non `100vh` : sur Chrome Android la barre d'adresse se rétracte
+ * au défilement, et `100vh` réserve la hauteur d'avant la rétractation — le bas
+ * de la page reste alors sous le pouce, inatteignable.
+ */
+html { color-scheme: dark; }
+
+body {
+  background-color: var(--color-fond);
+  color: #ecebff;
+  min-height: 100dvh;
+  /* Le halo est posé sur le fond du document plutôt que dans un élément :
+     un élément décoratif en position fixe intercepte les touchers sur
+     certains navigateurs mobiles, même transparent. */
+  background-image:
+    radial-gradient(60% 45% at 15% 0%, rgba(124, 58, 237, 0.30), transparent 70%),
+    radial-gradient(50% 40% at 90% 5%, rgba(34, 211, 238, 0.18), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* Les surfaces de verre : une seule définition, reprise partout. */
+.verre {
+  background: color-mix(in srgb, var(--color-verre) 82%, transparent);
+  border: 1px solid var(--color-bord);
+  backdrop-filter: blur(10px);
+}
+
+/* La lueur au survol. Bornée à `box-shadow` et `border-color` : animer une
+   transformation sur une carte pleine d'images fait sauter le défilement sur
+   un téléphone d'entrée de gamme. */
+.lueur { transition: box-shadow .22s ease, border-color .22s ease, background-color .22s ease; }
+.lueur:hover, .lueur:focus-visible {
+  border-color: var(--color-neon-clair);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, .35), 0 18px 50px -24px rgba(124, 58, 237, .85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lueur { transition: none; }
+  * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* La cible tactile minimale du dépôt, appliquée à tout ce qui se touche. */
+button, a[href], input, select, textarea, label[data-cible] { min-height: 44px; }
