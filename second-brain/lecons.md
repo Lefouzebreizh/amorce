@@ -1510,8 +1510,6 @@ cet écart suffit.
 
 **Ce qui est monté à part se calcule à partir de zéro.** Un repère local ne peut
 pas se décaler.
-<<<<<<< HEAD
-=======
 
 ## Un analyseur paresseux et un analyseur gourmand passent les mêmes tests
 
@@ -1586,7 +1584,6 @@ qui n'est pas exposé flatte.** Le levier était d'abord mesuré sur le recul du
 portefeuille, dont l'essentiel dort en liquide — 10x paraissait survivre à un
 marché qui s'effondrait de 37 %. Le levier porte sur la position. Vérifier que
 le dénominateur d'un ratio est bien la chose qui risque quelque chose.
->>>>>>> origin/main
 
 ## `atempo` troue un son dense — les « coupures » d'un ralenti viennent de là
 
