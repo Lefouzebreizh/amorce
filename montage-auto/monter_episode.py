@@ -1248,6 +1248,20 @@ def finition(source: Path, sortie: Path, reglages: dict, atelier: Path) -> dict:
 
 
 def monter(episode: dict, sortie: Path, atelier: Path) -> dict:
+    # La cadence de l'épisode, avant tout le reste.
+    #
+    # Rendre à 24 un rush tourné à 30 jette une image sur cinq. Sur un plan
+    # lent le défaut ne se voit pas ; sur un mouvement rapide — un vortex, une
+    # chute — il saute visiblement, et rien dans le montage ne le signale : le
+    # rendu sort sans erreur, avec toutes ses images, simplement irrégulières.
+    #
+    # Le réglage est au niveau de l'épisode et non du plan, parce que le morph
+    # et l'assemblage final travaillent sur une seule cadence : deux plans de
+    # cadences différentes ne se concatènent pas proprement. On aligne donc sur
+    # la cadence de la source dominante, relevée avec `ffprobe`.
+    global CADENCE
+    CADENCE = int(episode.get("cadence", 24))
+
     atelier.mkdir(parents=True, exist_ok=True)
     for ancien in atelier.glob("_plan*.mkv"):
         ancien.unlink()

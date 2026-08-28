@@ -24,9 +24,12 @@
     "",
     "Le titre est sur DEUX lignes : « CYBER HYDRA TITAN » d'un seul tenant",
     "fait 970 px a 92 px de corps, et le ressort le pousse a 1106 dans un",
-    "cadre de 1080 — il sortait des deux cotes."
+    "cadre de 1080 — il sortait des deux cotes.",
+    "",
+    "CADENCE 30 : le rush dominant est a 30 i/s. Rendu a 24, une image sur",
+    "cinq etait jetee — invisible sur le druide, visible sur le vortex."
   ],
-  "effets_db": 8,
+  "effets_db": 5,
   "largeur_stereo": 1.8,
   "reverberation_s": 1.6,
   "finition": {
@@ -41,7 +44,7 @@
       "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
       "depart": 1.2,
       "duree": 1.7,
-      "cible_db": -24.0,
+      "cible_db": -30.0,
       "zoom": 0.09,
       "morph": {
         "duree": 0.6,
@@ -63,14 +66,14 @@
       "source": "rushes/CyberHydra.mp4",
       "depart": 0.3,
       "duree": 6.7,
-      "cible_db": -18.0
+      "cible_db": -23.0
     },
     {
       "nom": "vortex",
       "source": "rushes/CyberHydra.mp4",
       "depart": 8.8,
       "duree": 2.55,
-      "cible_db": -27.0,
+      "cible_db": -30.0,
       "morph": {
         "duree": 0.6,
         "point_a": [
@@ -137,7 +140,7 @@
     {
       "son": "braam",
       "instant": 0.0,
-      "gain": 4,
+      "gain": -7,
       "parametres": {
         "duree": 1.4,
         "fondamentale": 46.0,
@@ -147,7 +150,7 @@
     {
       "son": "electricite",
       "instant": 0.04,
-      "gain": -2,
+      "gain": -13,
       "parametres": {
         "duree": 0.8,
         "graine": 91
@@ -156,7 +159,7 @@
     {
       "son": "souffle",
       "instant": 1.05,
-      "gain": 4,
+      "gain": -7,
       "parametres": {
         "duree": 0.8,
         "graine": 21
@@ -165,7 +168,7 @@
     {
       "son": "souffle",
       "instant": 9.35,
-      "gain": 9,
+      "gain": -2,
       "parametres": {
         "duree": 0.9,
         "graine": 24
@@ -174,7 +177,7 @@
     {
       "son": "braam",
       "instant": 10.2,
-      "gain": 13,
+      "gain": 8,
       "parametres": {
         "duree": 2.2,
         "fondamentale": 38.0,
@@ -184,7 +187,7 @@
     {
       "son": "grondement",
       "instant": 10.3,
-      "gain": 9,
+      "gain": 4,
       "parametres": {
         "duree": 6.2,
         "graine": 56
@@ -193,7 +196,7 @@
     {
       "son": "crepitement",
       "instant": 10.4,
-      "gain": 7,
+      "gain": 2,
       "largeur": 22,
       "parametres": {
         "duree": 3.2,
@@ -204,7 +207,7 @@
     {
       "son": "choc_metal",
       "instant": 11.3,
-      "gain": 9,
+      "gain": 4,
       "parametres": {
         "duree": 1.0,
         "fondamentale": 92.0,
@@ -214,7 +217,7 @@
     {
       "son": "rugissement",
       "instant": 12.05,
-      "gain": 12,
+      "gain": 7,
       "parametres": {
         "duree": 1.5,
         "graine": 42
@@ -223,7 +226,7 @@
     {
       "son": "braam",
       "instant": 13.58,
-      "gain": 14,
+      "gain": 9,
       "parametres": {
         "duree": 1.8,
         "fondamentale": 36.0,
@@ -233,7 +236,7 @@
     {
       "son": "electricite",
       "instant": 13.7,
-      "gain": 9,
+      "gain": 4,
       "parametres": {
         "duree": 1.2,
         "graine": 93
@@ -242,7 +245,7 @@
     {
       "son": "cri_titan",
       "instant": 14.6,
-      "gain": 15,
+      "gain": 10,
       "parametres": {
         "duree": 1.6,
         "fondamentale": 46.0,
@@ -252,7 +255,7 @@
     {
       "son": "eclat",
       "instant": 14.7,
-      "gain": 9,
+      "gain": 4,
       "parametres": {
         "duree": 1.4,
         "graine": 774
@@ -261,7 +264,7 @@
     {
       "son": "boom",
       "instant": 15.95,
-      "gain": 11,
+      "gain": 6,
       "parametres": {
         "duree": 1.2,
         "hauteur": 44.0,
@@ -280,5 +283,6 @@
       "fin": 13.55,
       "_note": "le vide avant la gueule"
     }
-  ]
+  ],
+  "cadence": 30
 }
