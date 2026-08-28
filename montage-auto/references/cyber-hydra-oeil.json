@@ -1,30 +1,34 @@
 {
   "_lisez_moi": [
-    "CYBER HYDRA TITAN — l'oeil greffe devant, ~20 s, 1080x1920.",
+    "CYBER HYDRA TITAN — l'oeil en accroche, ~16,7 s, 1080x1920.",
     "",
-    "  OEIL         0,0 - 1,9    l'accroche",
-    "  ~morph~      0,7          la pupille DEVIENT la planete que le mage tient",
-    "  MAGE         2,6 - 8,6    le plan d'origine, ses titres graves",
-    "  VORTEX       8,6 - 12,3   son baisse : c'est un passage, pas un climax",
-    "  ~morph~      0,6          le coeur blanc DEVIENT la spire du titan",
-    "  TITAN       12,9 - 20,0   le plus fort du film",
+    "  OEIL    0,0 - 1,1   court expres : on accroche et on part",
+    "  ~morph~ 0,6         la pupille DEVIENT la planete du druide",
+    "  MAGE    1,7 - 7,7   le plan d'origine, ses titres graves",
+    "  VORTEX  7,7 - 9,65  baisse : c'est un passage",
+    "  ~morph~ 0,6         le coeur blanc DEVIENT la spire du titan",
+    "  TITAN   10,25 - 13,6",
+    "  GUEULE  13,6 - 16,7  coupe sur le mouvement, puis le cri",
     "",
-    "Le plan d'origine est COUPE en trois au meme instant de sa propre image :",
-    "une coupe posee sur l'image identique ne se voit pas, et c'est le seul",
-    "moyen de donner au vortex et au titan des niveaux differents — un plan",
-    "unique n'a qu'un seul niveau.",
+    "LE SON DU TITAN. Le plan d'origine n'a qu'une seule piste : musique et",
+    "effets melanges, inseparables. On ne peut donc pas retirer la musique —",
+    "on l'enterre. Les deux plans du titan descendent a -34 dB, et les vrais",
+    "sons sont poses par-dessus : grondement continu, crepitement des arcs,",
+    "choc metallique, rugissement, cri. C'est le seul chemin possible, et il",
+    "donne un titan plus present que ne l'aurait fait un simple gain.",
     "",
-    "Raccord vortex→titan, mesure sur les deux images a 11,35 s et 11,85 s :",
-    "  coeur blanc  centre (544, 970)  rayon 140",
-    "  spire titan  centre (554, 930)  rayon 140",
-    "Memes rayons : les deux disques se superposent sans correction d'echelle.",
+    "LE TITRE est a l'oeil, des la premiere image, et non au druide : c'est la",
+    "que se joue la retention. Pose a y=400 — jamais sous 1300, ou la legende",
+    "et les boutons de la plateforme le mangent. Teinte relevee sur l'image :",
+    "196 degres, le turquoise de la chaine lui va sans retouche.",
     "",
-    "AUCUN titre ajoute — le plan porte deja les siens. Pas de LUT non plus :",
-    "il est deja etalonne en magenta et cyan."
+    "Le titre est sur DEUX lignes : « CYBER HYDRA TITAN » d'un seul tenant",
+    "fait 970 px a 92 px de corps, et le ressort le pousse a 1106 dans un",
+    "cadre de 1080 — il sortait des deux cotes."
   ],
-  "effets_db": 6,
-  "largeur_stereo": 1.6,
-  "reverberation_s": 1.4,
+  "effets_db": 8,
+  "largeur_stereo": 1.8,
+  "reverberation_s": 1.6,
   "finition": {
     "etalonnage": {
       "force": 0.35,
@@ -35,12 +39,12 @@
     {
       "nom": "oeil",
       "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
-      "depart": 0.9,
-      "duree": 2.6,
+      "depart": 1.2,
+      "duree": 1.7,
       "cible_db": -24.0,
-      "zoom": 0.06,
+      "zoom": 0.09,
       "morph": {
-        "duree": 0.7,
+        "duree": 0.6,
         "point_a": [
           552,
           868
@@ -64,8 +68,8 @@
     {
       "nom": "vortex",
       "source": "rushes/CyberHydra.mp4",
-      "depart": 7.0,
-      "duree": 4.35,
+      "depart": 8.8,
+      "duree": 2.55,
       "cible_db": -27.0,
       "morph": {
         "duree": 0.6,
@@ -86,74 +90,195 @@
       "nom": "titan",
       "source": "rushes/CyberHydra.mp4",
       "depart": 11.85,
-      "duree": 7.65,
-      "cible_db": -10.0
+      "duree": 3.35,
+      "cible_db": -34.0,
+      "zoom": 0.1
+    },
+    {
+      "nom": "gueule",
+      "source": "rushes/CyberHydra.mp4",
+      "depart": 16.4,
+      "duree": 3.1,
+      "cible_db": -34.0,
+      "zoom": 0.16,
+      "tremblements": [
+        {
+          "debut": 0.55,
+          "duree": 0.28,
+          "force": 0.075
+        },
+        {
+          "debut": 1.55,
+          "duree": 0.3,
+          "force": 0.095
+        }
+      ]
     }
   ],
-  "titres": [],
+  "titres": [
+    {
+      "texte": "CYBER HYDRA",
+      "debut": 0.08,
+      "fin": 1.72,
+      "y": 330,
+      "taille": 96,
+      "secousse": true
+    },
+    {
+      "texte": "TITAN",
+      "debut": 0.22,
+      "fin": 1.72,
+      "y": 455,
+      "taille": 132,
+      "secousse": true
+    }
+  ],
   "effets": [
     {
       "son": "braam",
       "instant": 0.0,
-      "gain": 0,
+      "gain": 4,
       "parametres": {
-        "duree": 1.8,
-        "fondamentale": 48.0,
+        "duree": 1.4,
+        "fondamentale": 46.0,
         "graine": 11
       }
     },
     {
       "son": "electricite",
-      "instant": 0.05,
-      "gain": -8,
+      "instant": 0.04,
+      "gain": -2,
       "parametres": {
-        "duree": 0.9,
+        "duree": 0.8,
         "graine": 91
       }
     },
     {
       "son": "souffle",
-      "instant": 1.85,
-      "gain": 2,
+      "instant": 1.05,
+      "gain": 4,
       "parametres": {
-        "duree": 0.9,
+        "duree": 0.8,
         "graine": 21
       }
     },
     {
       "son": "souffle",
-      "instant": 12.05,
-      "gain": 8,
+      "instant": 9.35,
+      "gain": 9,
       "parametres": {
-        "duree": 1.0,
+        "duree": 0.9,
         "graine": 24
       }
     },
     {
       "son": "braam",
-      "instant": 12.35,
-      "gain": 11,
+      "instant": 10.2,
+      "gain": 13,
       "parametres": {
-        "duree": 2.0,
-        "fondamentale": 40.0,
+        "duree": 2.2,
+        "fondamentale": 38.0,
         "graine": 14
       }
     },
     {
       "son": "grondement",
-      "instant": 12.4,
-      "gain": 6,
+      "instant": 10.3,
+      "gain": 9,
       "parametres": {
-        "duree": 5.0,
+        "duree": 6.2,
         "graine": 56
+      }
+    },
+    {
+      "son": "crepitement",
+      "instant": 10.4,
+      "gain": 7,
+      "largeur": 22,
+      "parametres": {
+        "duree": 3.2,
+        "densite": 110.0,
+        "graine": 771
+      }
+    },
+    {
+      "son": "choc_metal",
+      "instant": 11.3,
+      "gain": 9,
+      "parametres": {
+        "duree": 1.0,
+        "fondamentale": 92.0,
+        "graine": 27
+      }
+    },
+    {
+      "son": "rugissement",
+      "instant": 12.05,
+      "gain": 12,
+      "parametres": {
+        "duree": 1.5,
+        "graine": 42
+      }
+    },
+    {
+      "son": "braam",
+      "instant": 13.58,
+      "gain": 14,
+      "parametres": {
+        "duree": 1.8,
+        "fondamentale": 36.0,
+        "graine": 15
+      }
+    },
+    {
+      "son": "electricite",
+      "instant": 13.7,
+      "gain": 9,
+      "parametres": {
+        "duree": 1.2,
+        "graine": 93
+      }
+    },
+    {
+      "son": "cri_titan",
+      "instant": 14.6,
+      "gain": 15,
+      "parametres": {
+        "duree": 1.6,
+        "fondamentale": 46.0,
+        "graine": 31
+      }
+    },
+    {
+      "son": "eclat",
+      "instant": 14.7,
+      "gain": 9,
+      "parametres": {
+        "duree": 1.4,
+        "graine": 774
+      }
+    },
+    {
+      "son": "boom",
+      "instant": 15.95,
+      "gain": 11,
+      "parametres": {
+        "duree": 1.2,
+        "hauteur": 44.0,
+        "graine": 29
       }
     }
   ],
   "silences": [
     {
-      "debut": 12.05,
-      "fin": 12.33,
-      "_note": "le vide juste avant le titan : c'est lui qui le rend enorme"
+      "debut": 9.35,
+      "fin": 9.62,
+      "_note": "le vide avant le titan"
+    },
+    {
+      "debut": 13.3,
+      "fin": 13.55,
+      "_note": "le vide avant la gueule"
     }
   ]
 }
