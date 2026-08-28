@@ -102,6 +102,9 @@ class ConfigTechnique:
     ema_moyenne: int = 50
     ema_longue: int = 200
     volume_periode: int = 20
+    # Noter l'écart à l'EMA longue par rapport à sa **propre distribution**
+    # plutôt que sur des seuils absolus. Voir `cote_z_ecart_ema`.
+    ecart_ema_relatif: bool = True
 
 
 @dataclass(frozen=True, slots=True)

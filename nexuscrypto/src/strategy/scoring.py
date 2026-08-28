@@ -43,9 +43,27 @@ def note_technique(lecture: Lecture, config: ConfigStrategie) -> tuple[float | N
         elif lecture.rsi >= technique.rsi_surachat:
             raisons.append(f"RSI en surachat ({lecture.rsi:.0f})")
 
-    # Position par rapport aux moyennes mobiles. Sous l'EMA longue, on est dans
-    # la zone d'accumulation historique ; loin au-dessus, on paie la tendance.
-    if lecture.ema_longue is not None and lecture.ema_longue > 0:
+    # Position par rapport aux moyennes mobiles, de deux façons au choix.
+    #
+    # **En absolu** — le défaut historique — sous l'EMA longue on est dans la
+    # zone d'accumulation, loin au-dessus on paie la tendance. Simple, et faux
+    # en tendance : mesuré sur seize ans de BTC réel, le prix vit durablement
+    # au-delà de +30 % dans un marché haussier, la note reste collée à zéro
+    # toute la période, et la stratégie perd contre un DCA aveugle.
+    #
+    # **En relatif** — l'écart rapporté à sa propre distribution sur la fenêtre.
+    # Un écart de 40 % dans un marché qui vit habituellement à 40 % vaut zéro
+    # écart-type, donc une note neutre ; seul l'inhabituel **pour ce régime**
+    # fait bouger la note.
+    if technique.ecart_ema_relatif and lecture.cote_z_ecart_ema is not None:
+        cote = lecture.cote_z_ecart_ema
+        # −2 écarts-types → 100, +2 → 0.
+        composantes.append(borner(50.0 - cote * 25.0, 0.0, 100.0))
+        if cote <= -1.5:
+            raisons.append(f"prix à {cote:.1f} écart-type de son habituel — bas pour ce régime")
+        elif cote >= 1.5:
+            raisons.append(f"prix à {cote:+.1f} écarts-types de son habituel — étiré")
+    elif lecture.ema_longue is not None and lecture.ema_longue > 0:
         ecart = (lecture.prix - lecture.ema_longue) / lecture.ema_longue
         # -30 % → 100, +30 % → 0.
         composantes.append(borner(50.0 - ecart * 166.7, 0.0, 100.0))

@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 274 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 303 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **274 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **303 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -260,7 +260,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 274 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 303 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -457,3 +457,58 @@ quotidienne. Les bougies sont donc plates, l'ATR devient une volatilité de
 clôture à clôture — plus petite que la vraie — et les stops sont **plus serrés**
 que ceux qu'on obtiendra en direct. L'erreur va dans le sens pessimiste, ce qui
 est le bon sens, mais elle n'est pas nulle.
+
+---
+
+## 10. Le résultat qu'il faut lire avant tous les autres
+
+Sur cinq fenêtres de BTC réel, de 2016 à 2025 : **un DCA aveugle bat cette
+stratégie en gain sur les cinq. 0/5.**
+
+| fenêtre | stratégie | DCA aveugle |
+| --- | --- | --- |
+| 2017, la bulle | +104,4 % | **+466,0 %** |
+| 2018, l'hiver | +35,8 % | **+111,4 %** |
+| 2020-2021, la hausse | +42,7 % | **+124,5 %** |
+| 2022, la chute | +17,2 % | **+39,4 %** |
+| 2023-2025, la reprise | +1,5 % | **+37,4 %** |
+
+La stratégie achète souvent à meilleur prix — c'est ce que mesure la colonne
+*vs témoin* — mais elle **engage moins de capital**, et sur un actif qui monte
+à long terme ce compromis perd. Acheter 20 % moins cher la moitié du temps ne
+rattrape pas d'avoir investi 40 % de moins.
+
+**C'est le résultat le plus important de ce projet, et il n'est pas
+encourageant.** Aucune des corrections apportées jusqu'ici — le plancher de
+discipline, la note relative à la tendance — ne renverse ce constat : elles
+réduisent l'écart, elles ne le comblent pas.
+
+Ce que cela ne dit pas : que la modulation soit inutile en général. Cinq
+fenêtres, un seul actif, seize ans d'un marché historiquement haussier. Une
+stratégie qui protège le capital en baisse a une valeur que le PnL brut ne
+mesure pas — le recul maximum de la stratégie est systématiquement plus faible
+que celui du témoin. Mais **quiconque lit ce dépôt en pensant y trouver un
+moteur qui bat le marché doit lire ce tableau d'abord.**
+
+### La note relative à la tendance, et ce qu'elle corrige
+
+Le § 9 montrait la stratégie perdant 27,4 % contre le témoin sur la grande
+hausse de 2020-2021. La cause : la note technique jugeait l'écart à l'EMA 200
+sur des **seuils absolus** — au-delà de +30 %, note nulle — alors qu'en tendance
+le prix vit durablement au-delà de ce seuil. La note restait collée à zéro
+pendant deux ans.
+
+`ecart_ema_relatif` rapporte cet écart à sa **propre distribution** sur la
+fenêtre : un écart de 40 % dans un marché qui vit habituellement à 40 % vaut
+zéro écart-type, donc une note neutre. Seul l'inhabituel *pour ce régime* bouge
+la note.
+
+| | absolu | relatif |
+| --- | --- | --- |
+| gain moyen sur le prix | −3,4 % | **+1,7 %** |
+| pire cas | **−27,4 %** | **−10,2 %** |
+
+Meilleur sur la moyenne **et** sur le pire cas — c'est ce qui décide, et c'est
+le défaut livré. Il n'est pas meilleur partout : il perd 10 points sur
+2023-2025. Le changer sans rejouer le harnais sur données réelles, c'est régler
+à l'aveugle.
