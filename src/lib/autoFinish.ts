@@ -86,6 +86,17 @@ export type CaptionSet = {
  * Les positions sont des fractions de la durée : la même trame doit tomber juste
  * sur treize secondes comme sur trente. Seule l'ouverture est épinglée à zéro,
  * la notation exigeant un texte dans la toute première demi-seconde.
+ *
+ * **Les trames ne s'inventent pas.** Les quatre dernières viennent des formats
+ * que la ligne éditoriale a déjà retenus (`/tiktok`) : le gabarit en quatre
+ * temps — épreuve, déclic, action, ouverture — qui est la forme d'une histoire
+ * vraie racontée à quelqu'un, et les trois formats nommés qui reposent sur
+ * l'honnêteté du chiffre. En ajouter vingt de génériques serait pire que trois :
+ * plus de choix, aucun qui soit celui de la chaîne.
+ *
+ * Les crochets marquent ce que **personne ne peut écrire à sa place** — ses
+ * chiffres, ses délais, ses décisions. Les remplir d'une valeur plausible
+ * détruit exactement ce qui fait marcher ces formats-là.
  */
 export const CAPTION_SETS: CaptionSet[] = [
   {
@@ -121,6 +132,52 @@ export const CAPTION_SETS: CaptionSet[] = [
       { text: '[Ce qui s’est passé]', style: 'karaoke', y: 0.72, at: 0.24, span: 0.2 },
       { text: '[Le moment où tout bascule]', style: 'punch', color: '#ffe14d', y: 0.3, at: 0.5, span: 0.18 },
       { text: '[Ce que j’en ai tiré]', style: 'minimal', y: 0.7, at: 0.82, span: 0.18 },
+    ],
+  },
+  {
+    id: 'epreuve-declic',
+    label: 'Épreuve → déclic',
+    why: 'Le gabarit qui retient : ce qui n’allait pas, l’instant où ça bascule, ce qu’on a fait, puis on rend la main.',
+    slots: [
+      { text: 'Pendant [trois semaines], [ce qui n’allait pas]', style: 'punch', y: 0.28, at: 0, span: 0.2 },
+      { text: 'Puis [ce que j’ai vu / entendu]', style: 'karaoke', color: '#ffe14d', y: 0.72, at: 0.26, span: 0.2 },
+      { text: '[Ce que j’ai fait, concrètement]', style: 'karaoke', y: 0.72, at: 0.52, span: 0.22 },
+      { text: 'Et toi, [ta version] ?', style: 'minimal', y: 0.68, at: 0.82, span: 0.18 },
+    ],
+  },
+  {
+    id: 'resultat-dabord',
+    label: 'Le résultat d’abord',
+    why: 'Le résultat d’abord, la méthode ensuite. On ne regarde une méthode que si on a vu ce qu’elle donne.',
+    look: 'cinema',
+    slots: [
+      { text: '[Ce que ça donne maintenant]', style: 'punch', color: '#ffe14d', scale: 1.2, y: 0.24, at: 0, span: 0.18 },
+      { text: 'Il y a [deux mois] : [l’état d’avant]', style: 'minimal', y: 0.72, at: 0.24, span: 0.18 },
+      { text: '[Ce qui a changé]', style: 'karaoke', y: 0.72, at: 0.48, span: 0.22 },
+      { text: '[L’outil / le geste] — c’est tout', style: 'punch', y: 0.3, at: 0.82, span: 0.18 },
+    ],
+  },
+  {
+    id: 'chiffres-du-jour',
+    label: 'Les chiffres du jour',
+    why: 'Le format qui ne marche que s’il est vrai : ses vrais nombres, sans arrondir vers le haut.',
+    slots: [
+      { text: 'Jour [N] : [le chiffre]', style: 'punch', color: '#ffe14d', scale: 1.25, y: 0.26, at: 0, span: 0.2 },
+      { text: '[Ce qui a marché]', style: 'karaoke', y: 0.72, at: 0.26, span: 0.22 },
+      { text: '[Ce qui n’a rien donné]', style: 'karaoke', color: '#ff5c68', y: 0.72, at: 0.54, span: 0.2 },
+      { text: 'Demain : [la prochaine tentative]', style: 'minimal', y: 0.68, at: 0.82, span: 0.18 },
+    ],
+  },
+  {
+    id: 'erreur-corrigee',
+    label: 'L’erreur que j’ai laissée passer',
+    why: 'On apprend plus d’un échec raconté que d’un conseil. Le prix payé se dit avant le remède.',
+    look: 'argentique',
+    slots: [
+      { text: 'J’ai perdu [combien de temps] sur [quoi]', style: 'punch', y: 0.28, at: 0, span: 0.2 },
+      { text: 'La cause : [ce que je croyais]', style: 'karaoke', y: 0.72, at: 0.26, span: 0.22 },
+      { text: 'En vrai : [ce qui se passait]', style: 'karaoke', color: '#ffe14d', y: 0.72, at: 0.54, span: 0.2 },
+      { text: '[Ce que je fais maintenant]', style: 'punch', y: 0.3, at: 0.82, span: 0.18 },
     ],
   },
 ];

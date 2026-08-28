@@ -180,12 +180,20 @@ test('la trame impose son rendu, sauf si un choix a été fait', () => {
   assert.equal(cinemaFor(set, { look: 'noir', intensity: 0.4, bars: 0 }).intensity, 0.4);
 });
 
-test('les trois trames sont utilisables et distinctes', () => {
+test('les trames sont utilisables, distinctes, et laissent leurs crochets', () => {
   assert.equal(new Set(CAPTION_SETS.map((s) => s.id)).size, CAPTION_SETS.length);
   for (const set of CAPTION_SETS) {
     assert.ok(set.slots.length >= 3, `${set.id} n’a pas assez de textes`);
     assert.equal(set.slots[0].at, 0, `${set.id} ne commence pas à la première image`);
     assert.equal(captionSet(set.id).id, set.id);
+    // Chaque trame doit garder au moins un crochet : c'est la marque de ce que
+    // l'utilisateur seul peut écrire, et une trame entièrement pré-remplie
+    // ferait publier les mots de quelqu'un d'autre.
+    assert.ok(set.slots.some((slot) => slot.text.includes('[')),
+      `${set.id} ne laisse aucun crochet à remplir`);
+    // La dernière rend la main : sans elle, la trame s'arrête sur un constat.
+    assert.ok(set.slots[set.slots.length - 1].at > 0.6,
+      `${set.id} n’a pas de texte de fin`);
   }
   // Un identifiant inconnu retombe sur la première trame plutôt que d'échouer.
   assert.equal(captionSet('inconnue').id, CAPTION_SETS[0].id);
