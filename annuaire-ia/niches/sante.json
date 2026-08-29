@@ -82,6 +82,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nGlass ne prétend pas diagnostiquer : il propose un différentiel structuré à partir d’un résumé clinique, et un plan d’exploration cohérent. L’intérêt est le filet — la pathologie rare à laquelle on n’avait pas pensé apparaît dans la liste. C’est un second avis instantané, et l’outil ne cesse de rappeler que la décision reste au clinicien.\n\n## Points forts\n- Différentiel structuré, hiérarchisé, avec les arguments pour et contre\n- Plan d’examens proposé, cohérent avec les hypothèses\n- Rappelle explicitement que la décision reste médicale\n- Formule gratuite pour juger sur des cas réels\n\n## Points faibles\n- Aucune valeur diagnostique : c’est une aide à la réflexion, rien de plus\n- Recommandations calées sur les référentiels américains\n- Aucune donnée patient ne doit y être saisie en clair\n\n## Idéal pour\nLes urgentistes et généralistes qui veulent un second regard structuré sur un tableau clinique atypique.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "freed",
+      "nom": "Freed",
+      "categorie": "Compte rendu de consultation",
+      "prix": "À partir de 99 $/mois",
+      "description_courte": "L’assistant de documentation pensé pour le praticien seul : on lance, on parle, la note est prête à la fin.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/freed",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nFreed a été conçu par et pour des cliniciens en exercice, ce qui se voit à la simplicité : un bouton, aucune configuration, et une note qui apprend le style du praticien au fil des corrections. Pas de projet, pas d’intégration à négocier — c’est un abonnement individuel qu’on prend le matin et qu’on utilise l’après-midi.\n\n## Points forts\n- Aucune configuration : utilisable dès la première consultation\n- Apprend le style de rédaction du praticien à partir des corrections\n- Abonnement individuel en libre-service, résiliable à tout moment\n- Essai gratuit sur plusieurs consultations avant tout engagement\n\n## Points faibles\n- Aucune intégration au dossier patient : la note se copie à la main\n- Optimisé pour l’anglais américain, le français reste secondaire\n- Le cadre réglementaire européen sur les données de santé demande une vérification préalable\n\n## Idéal pour\nLe praticien seul, sans service informatique, qui veut arrêter de finir ses journées par une heure de rédaction.",
+      "date_ajout": "2026-08-29"
     }
   ]
 }

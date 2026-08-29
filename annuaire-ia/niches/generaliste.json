@@ -166,6 +166,17 @@
       "score_avis": 4.4,
       "description_longue": "## Notre verdict\nLa force de Gemini n'est pas d'être le meilleur rédacteur, c'est d'être là où le travail se fait déjà : dans la boîte mail, dans le document partagé, dans le tableur. Résumer un fil de discussion de trente messages, rédiger une réponse en s'appuyant sur les pièces jointes, remplir une colonne de tableur à partir d'une consigne — autant de gestes que l'on ne fait pas si l'outil est dans un autre onglet.\n\n## Points forts\n- Intégré à la messagerie, aux documents et au tableur de l'espace de travail\n- Traite le texte, l'image, l'audio et la vidéo dans le même échange\n- Très grande fenêtre de contexte, y compris sur les formules payantes d'entrée\n- Recherche web intégrée, avec des réponses à jour\n\n## Points faibles\n- Les intégrations les plus utiles supposent un abonnement professionnel complet\n- Ton par défaut plus scolaire que les concurrents sur les textes longs\n- Les fonctions évoluent vite, ce qui déroute les utilisateurs occasionnels\n\n## Idéal pour\nLes entreprises déjà installées dans l'espace de travail Google, qui veulent un usage quotidien sans changer d'outil ni de réflexe.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "heygen",
+      "nom": "HeyGen",
+      "categorie": "Création Vidéo",
+      "prix": "Freemium — à partir de 29 $/mois",
+      "description_courte": "La vidéo présentée par un avatar, et surtout le doublage qui traduit une vidéo existante en gardant la voix et les lèvres synchronisées.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/heygen",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nHeyGen est le plus convaincant des générateurs de vidéo à avatar, mais sa fonction décisive est ailleurs : le doublage d'une vidéo existante dans une autre langue, en conservant le timbre de l'orateur et en resynchronisant les lèvres. Une vidéo tournée une fois devient une vidéo dans huit langues, ce qui change l'économie de la formation et du support en entreprise internationale.\n\n## Points forts\n- Doublage multilingue avec conservation de la voix et synchronisation labiale\n- Avatar personnel entraîné à partir de quelques minutes d'enregistrement\n- Rendu nettement au-dessus de la moyenne des générateurs d'avatars\n- Formule gratuite pour juger du résultat avant de payer\n\n## Points faibles\n- L'avatar reste identifiable comme synthétique sur les formats longs\n- Le clonage de voix et d'apparence exige un consentement explicite et écrit\n- Le système de crédits part vite dès que l'on produit sérieusement\n\n## Idéal pour\nLes équipes de formation et de communication interne qui doivent servir plusieurs langues sans retourner ni refaire doubler chaque vidéo.",
+      "date_ajout": "2026-08-29"
     }
   ]
 }

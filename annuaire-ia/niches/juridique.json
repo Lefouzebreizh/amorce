@@ -82,6 +82,17 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nRobin s’est fait connaître sur la revue contractuelle de masse en entreprise, mais sa formule d’entrée est achetable en ligne et vise le contrat isolé : on dépose un accord reçu, l’outil explique chaque clause en langage clair, signale ce qui s’écarte du marché et propose une reformulation à renvoyer. C’est un second regard à quatre-vingt-dix euros plutôt qu’à quatre cents.\n\n## Points forts\n- Explication clause par clause en langage clair, utile face à un client non juriste\n- Signale les stipulations qui s’écartent des usages du marché\n- Reformulation proposée, prête à être envoyée en contre-proposition\n- Formule d’entrée en libre-service, sans engagement annuel\n\n## Points faibles\n- Entraîné d’abord sur le droit anglais : prudence sur les contrats français\n- Le dépôt d’un contrat confidentiel chez un tiers demande une vérification préalable\n- Aucune valeur de conseil : c’est une aide à la lecture\n\n## Idéal pour\nLes juristes d’entreprise et avocats qui reçoivent des contrats rédigés par la partie adverse et n’ont pas le temps de tout éplucher.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "ordalie",
+      "nom": "Ordalie",
+      "categorie": "Assistant juridique",
+      "prix": "Gratuit (10 requêtes/semaine), puis à partir de 46 € HT/mois",
+      "description_courte": "L'IA juridique entraînée sur le droit français, hébergée en France, au tarif d'un avocat seul et non d'un cabinet d'affaires.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/ordalie",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nLa plupart des IA juridiques sérieuses se vendent au cabinet, par contrat annuel, à des montants qui excluent d'emblée l'avocat installé seul. Ordalie prend le problème par l'autre bout : un palier gratuit permanent, un abonnement à deux chiffres, aucun engagement long. Les modèles sont entraînés sur le droit français et l'hébergement est en France sous certification ISO 27001 — deux points qui, en 2026, ne sont plus des arguments commerciaux mais des conditions d'exercice. Partenariat officiel avec le Barreau de Paris depuis 2024.\n\n## Points forts\n- Palier gratuit permanent : dix requêtes par semaine, de quoi se faire un avis réel\n- Modèles entraînés spécifiquement sur le droit français, pas traduits de l'anglais\n- Hébergement en France, certification ISO 27001\n- Extraction, océrisation, analyse de jurisprudence et génération de clauses dans un seul outil\n- Essai complet de quatorze jours, sans engagement\n\n## Points faibles\n- Aucune intégration native avec les logiciels de gestion de cabinet : le va-et-vient reste manuel\n- Ni facturation ni agenda automatisés — ce n'est pas un outil de gestion\n- Les tarifs annoncés varient selon les sources : à confirmer au moment de souscrire\n- L'analyse prédictive est annoncée pour 2026, elle n'est pas encore là\n\n## Idéal pour\nL'avocat seul, le jeune confrère qui s'installe et les cabinets de deux ou trois personnes, qui veulent une IA juridique française sans engager le budget d'un grand cabinet.",
+      "date_ajout": "2026-08-29"
     }
   ]
 }

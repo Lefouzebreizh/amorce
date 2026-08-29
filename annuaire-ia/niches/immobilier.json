@@ -82,6 +82,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nSur ce métier, l'IA utile n'est pas arrivée par des outils à part : elle est entrée dans le logiciel où l'agent passe déjà ses journées. Hektor, édité par La Boîte Immo, revendique huit mille cinq cents agences et quinze ans d'existence — c'est la position d'où l'on peut se permettre d'automatiser sans que personne n'ait à changer d'habitude. Les fonctions génératives servent d'abord la rédaction et le suivi des contacts, là où le temps se perd vraiment.\n\n## Points forts\n- Parc installé considérable : formation, entraide et intégrations abondantes\n- IA intégrée au flux de travail existant, sans outil supplémentaire à ouvrir\n- Tarification modulaire, on ne paie que les briques utilisées\n- Éditeur français, au fait des obligations d'affichage et de mandat\n\n## Points faibles\n- Le prix grimpe vite à mesure que les modules s'ajoutent\n- Modularité qui rend la comparaison difficile avec des offres tout compris\n- Un parc ancien s'accompagne d'un héritage d'interface\n- Changer de CRM immobilier reste un déménagement, pas une bascule\n\n## Idéal pour\nLes agences qui veulent de l'IA sans projet ni nouvel outil, directement là où leurs mandats et leurs contacts sont déjà rangés.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "epique-ai",
+      "nom": "Epique AI",
+      "categorie": "Marketing & prospection",
+      "prix": "Freemium — à partir de 20 $/mois",
+      "description_courte": "La boîte à outils marketing du négociateur : annonce, publication réseaux, biographie, courriel de prospection, le tout en quelques clics.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/epique-ai",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nEpique regroupe une quinzaine de générateurs pensés pour un seul métier : texte d'annonce à partir des caractéristiques du bien, publication pour les réseaux sociaux, courriel de prospection sur un secteur, biographie professionnelle, visuel de vitrine. Rien qu'un assistant généraliste ne saurait faire, mais chaque outil pose déjà les bonnes questions, ce qui fait la différence entre un usage régulier et un abonnement oublié.\n\n## Points forts\n- Trames spécifiques au métier : aucune consigne à rédiger soi-même\n- Génération d'images de biens et de visuels de vitrine incluse\n- Tarif accessible à un négociateur indépendant\n- Prise en main immédiate, sans formation\n\n## Points faibles\n- Textes calibrés sur le marché américain, à retravailler pour la France\n- La qualité varie beaucoup d'un générateur à l'autre\n- Rien n'empêche deux agences voisines de publier le même texte\n\n## Idéal pour\nLe négociateur indépendant ou la petite agence sans service marketing, qui publie ses annonces et ses réseaux sociaux entre deux visites.",
+      "date_ajout": "2026-08-29"
     }
   ]
 }

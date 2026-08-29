@@ -82,6 +82,17 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nKreo couvre la chaîne complète du chiffrage : reconnaissance des éléments sur le plan PDF, quantités, puis application d'une bibliothèque de prix pour sortir le devis. C'est moins spécialisé que les outils de métré pur, mais le fait de ne pas exporter vers un tableur intermédiaire supprime la source d'erreur la plus banale du chiffrage — la ressaisie.\n\n## Points forts\n- Du plan au devis dans un seul outil, sans transfert de fichier\n- Bibliothèque de prix modifiable, propre à l'entreprise\n- Version gratuite réellement utilisable pour juger sur un dossier\n- Interface plus simple d'accès que les logiciels d'économie de la construction historiques\n\n## Points faibles\n- Reconnaissance moins fiable que les outils dédiés au seul métré\n- Bibliothèques de prix calibrées sur le marché britannique\n- La gestion multi-utilisateurs reste sommaire\n\n## Idéal pour\nLes petites et moyennes entreprises du bâtiment qui chiffrent encore au tableur et perdent des heures entre le métré et le devis.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "houzz-pro",
+      "nom": "Houzz Pro",
+      "categorie": "Gestion d’entreprise",
+      "prix": "À partir de 85 $/mois",
+      "description_courte": "La vitrine, les devis et le suivi de chantier réunis, avec la visualisation 3D pour faire signer le client.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/houzz-pro",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nHouzz Pro tire son intérêt d'un endroit inattendu : il apporte des contacts en même temps que l'outil de gestion. Pour un artisan ou un maître d'œuvre, la vitrine, le devis chiffré, la visualisation 3D de la pièce rénovée et le suivi de chantier tiennent dans un seul abonnement, et la 3D est ce qui fait signer un client hésitant.\n\n## Points forts\n- Apporte du contact entrant, ce qu'aucun autre outil de gestion ne fait\n- Visualisation 3D de la rénovation intégrée au devis\n- Devis, factures et suivi de chantier dans le même endroit\n- Tarif accessible à un artisan seul ou à une petite équipe\n\n## Points faibles\n- L'apport de contacts est très inégal hors des grandes villes américaines\n- Moins profond que les outils spécialisés sur chaque fonction\n- Le catalogue produits est inutilisable depuis la France\n\n## Idéal pour\nLes artisans, décorateurs et maîtres d'œuvre qui cherchent autant des chantiers qu'un outil pour les gérer.",
+      "date_ajout": "2026-08-29"
     }
   ]
 }
