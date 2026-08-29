@@ -252,8 +252,23 @@ export interface Depot {
   oublierEtats(): number
   /** Retient ce qu'un test de flux a trouvé. */
   marquerEtat(elementId: string, etat: 'ok' | 'mort'): void
-  /** Les éléments à tester, les jamais testés d'abord. */
-  aTester(limite?: number): Element[]
+  /**
+   * Les éléments à tester, les jamais testés d'abord.
+   *
+   * `jamaisTestes` ne rend que ceux qu'aucun test n'a encore touchés. C'est ce
+   * qu'il faut pour avancer par lots : un flux resté **indécis** — un 403 qui
+   * ne dit rien de sa santé — n'est pas marqué, et reviendrait donc dans chaque
+   * lot indéfiniment. Il porte en revanche l'heure de son essai.
+   */
+  aTester(limite?: number, options?: { jamaisTestes?: boolean }): Element[]
+  /**
+   * Retient qu'une entrée a été éprouvée **sans être condamnée**.
+   *
+   * L'horodatage seul, jamais d'état : le flux n'a pas été vu refuser pour de
+   * bon, il reste donc visible. Mais il a été essayé, et l'oublier ferait
+   * tourner en rond tout balayage qui avance par lots.
+   */
+  marquerTeste(elementId: string): void
   compterParEtat(): { vivants: number; morts: number; inconnus: number }
   importerProgrammes(
     programmes: AsyncIterable<Programme>,
@@ -931,14 +946,21 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
         .run(etat, new Date().toISOString(), elementId)
     },
 
-    aTester(limite = 5000): Element[] {
+    aTester(limite = 5000, options = {}): Element[] {
+      const filtre = options.jamaisTestes === true ? ' WHERE teste_le IS NULL' : ''
       const lignes = base
         .prepare(
-          `SELECT ${COLONNES} FROM element
+          `SELECT ${COLONNES} FROM element${filtre}
            ORDER BY teste_le IS NOT NULL, teste_le LIMIT ?`,
         )
         .all(limite) as Ligne[]
       return lignes.map(versElement)
+    },
+
+    marquerTeste(elementId): void {
+      base
+        .prepare('UPDATE element SET teste_le = ? WHERE id = ?')
+        .run(new Date().toISOString(), elementId)
     },
 
     compterParEtat(): { vivants: number; morts: number; inconnus: number } {

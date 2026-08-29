@@ -1,0 +1,11 @@
+import { chromium } from 'playwright'
+const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const ctx = await nav.newContext({ viewport: { width: 393, height: 873 }, locale: 'fr-FR' })
+const page = await ctx.newPage()
+await page.goto('http://127.0.0.1:3214/', { waitUntil: 'domcontentloaded' })
+await page.waitForLoadState('load')
+await page.click('text=Éprouver')
+await page.waitForSelector('text=/vivants,/', { timeout: 180000 })
+await page.waitForTimeout(1500)
+await page.screenshot({ path: `${process.argv[2]}/vu-apres.png` })
+await nav.close()
