@@ -116,6 +116,17 @@ def verifier(nom: str) -> bool:
     return True
 
 
+def _onnx(modele: Path) -> Path:
+    """Le seul .onnx du dossier — la qualité fait partie du nom du fichier."""
+    trouves = sorted(modele.glob("*.onnx"))
+    if not trouves:
+        raise FileNotFoundError(
+            f"Aucun modèle .onnx dans {modele}. Le téléchargement a probablement "
+            f"été interrompu : supprimer ce dossier et relancer."
+        )
+    return trouves[0]
+
+
 def dire(texte: str, sortie: Path, nom: str = "siwis", vitesse: float = 1.0) -> Path | None:
     """Synthétise `texte` et écrit un WAV. Rend le chemin, ou None en l'expliquant."""
     if not texte.strip():
@@ -139,7 +150,7 @@ def dire(texte: str, sortie: Path, nom: str = "siwis", vitesse: float = 1.0) -> 
                 # Le fichier ne se déduit pas du nom de la voix : la qualité fait
                 # partie du nom, et une voix « low » ne s'appelle pas « medium ».
                 # On prend le seul .onnx du dossier, ce qui vaut pour toutes.
-                model=str(next(modele.glob("*.onnx"))),
+                model=str(_onnx(modele)),
                 tokens=str(modele / "tokens.txt"),
                 data_dir=str(modele / "espeak-ng-data"),
             ),
