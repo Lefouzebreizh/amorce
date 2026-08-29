@@ -80,8 +80,17 @@ Next affiche alors deux adresses. **C'est la seconde qui compte** :
 
 ```
 - Local:        http://localhost:3000        ← seulement sur cette machine
-- Network:      http://192.168.1.20:3000     ← depuis le téléphone, la tablette,
+- Network:      http://…:3000                ← depuis le téléphone, la tablette,
                                                la télévision
+```
+
+**Cette adresse est propre à votre machine et à votre box.** Aucune valeur
+écrite ici ne peut être la bonne — recopier un exemple mène sur une page
+d'erreur, et c'est arrivé. Si le message de Next a défilé, une commande la
+redonne :
+
+```bash
+npm run iptv -- adresse
 ```
 
 Le serveur écoute volontairement sur toutes les interfaces (`--hostname

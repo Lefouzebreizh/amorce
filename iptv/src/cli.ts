@@ -9,6 +9,7 @@ import { createReadStream } from 'node:fs'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 
+import { networkInterfaces } from 'node:os'
 import { createGunzip } from 'node:zlib'
 
 import { ouvrirDepot, type Depot } from './cache/depot.ts'
@@ -21,6 +22,7 @@ const AIDE = `Usage : iptv <commande> [options]
   importer <fichier|url>   Analyse une liste M3U et remplit le cache
   epg <fichier|url>        Charge un guide XMLTV (.xml ou .xml.gz)
   grille [chaine]          Ce qui passe en ce moment
+  adresse                  L'adresse à taper sur le téléphone et la télévision
   resume                   Ce que le cache contient
   chercher <mots...>       Recherche plein texte
   groupes                  Les groupes, du plus fourni au moins fourni
@@ -156,6 +158,44 @@ async function principal(argv: readonly string[]): Promise<number> {
         if (vues === 0) {
           console.log('  Aucun programme. Le guide est-il chargé (« epg ») et les tvg-id')
           console.log('  de la liste correspondent-ils à ceux du guide ?')
+        }
+        return 0
+      }
+
+      case 'adresse': {
+        /*
+         * La question qui bloque tout le monde au premier lancement, et à
+         * laquelle aucune documentation ne peut répondre : « quelle adresse je
+         * tape sur mon téléphone ? » Elle dépend de la box, elle change quand
+         * on rebranche, et un exemple écrit dans un README est pris pour la
+         * vraie réponse — c'est arrivé.
+         */
+        const port = lireOption(reste, 'port') ?? '3000'
+        const adresses: string[] = []
+        for (const [nom, cartes] of Object.entries(networkInterfaces())) {
+          for (const carte of cartes ?? []) {
+            // `internal` écarte la boucle locale ; la famille se compare en
+            // texte *et* en nombre, Node ayant changé d'avis entre deux
+            // versions majeures (« IPv4 » puis 4).
+            const v4 = carte.family === 'IPv4' || (carte.family as unknown as number) === 4
+            if (!v4 || carte.internal) continue
+            adresses.push(`  http://${carte.address}:${port}   (via ${nom})`)
+          }
+        }
+
+        if (adresses.length === 0) {
+          console.log('Cette machine n’a aucune adresse réseau : elle n’est branchée')
+          console.log('ni en Wi-Fi ni en Ethernet. Le téléphone ne pourra pas la joindre.')
+          return 1
+        }
+
+        console.log('À taper dans le navigateur du téléphone, sur le même Wi-Fi :')
+        console.log()
+        for (const adresse of adresses) console.log(adresse)
+        console.log()
+        console.log('Il faut que « npm run dev » tourne ici, dans une autre fenêtre.')
+        if (adresses.length > 1) {
+          console.log('Plusieurs adresses : essayez la première, puis les suivantes.')
         }
         return 0
       }
