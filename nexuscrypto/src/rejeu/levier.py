@@ -24,19 +24,28 @@ l'entrée et la sortie, rapporté au prix d'entrée. Les ventes sont appariées 
 achats en premier entré, premier sorti ; un achat jamais revendu est tenu
 jusqu'au bout de la série.
 
-**Trois raisons font que ce compte est un plancher, pas une estimation** — le
-vrai nombre de liquidations est plus élevé, jamais plus bas :
+**Le financement est compté, et il change tout.** Un perpétuel facture toutes
+les huit heures, sur le **notionnel** — donc `levier × marge`. Le levier
+multiplie le coût une seconde fois, ce qui rend l'effet bien plus brutal qu'il
+n'en a l'air : à 0,01 % par période, trois mois de détention coûtent 2,7 % du
+notionnel, soit 27 % de la marge à x10. Mesuré sur BTC, il double environ le
+nombre de liquidations, et à x10 il en vide certaines **sans qu'un prix ait
+reculé d'un centime**. C'est le seul poste qu'aucun réglage de stop n'atténue :
+il se combat en raccourcissant la détention, ou en baissant le levier.
 
-1. **Le financement n'est pas compté.** Un perpétuel facture toutes les huit
-   heures ; sur une position tenue des semaines, cela ronge la marge sans
-   qu'aucun prix ne bouge.
-2. **Le prix de liquidation d'une plateforme est un prix de marque**, moyenné
+**Deux raisons font que ce compte reste un plancher** — le vrai nombre de
+liquidations est plus élevé, jamais plus bas :
+
+1. **Le prix de liquidation d'une plateforme est un prix de marque**, moyenné
    entre places, et non le dernier prix échangé. Il diverge exactement pendant
    les secousses, c'est-à-dire au moment qui décide.
-3. **Le rejeu lui-même est déjà optimiste** sur les actifs peu liquides, et son
+2. **Le rejeu lui-même est déjà optimiste** sur les actifs peu liquides, et son
    propre en-tête le dit : sans carnet d'ordres historique, le courtier papier
    retombe sur un glissement forfaitaire. Sur une pépite, l'écart réel est plus
    grand, et il l'est en silence.
+
+Le taux retenu par défaut est le taux **neutre**. En marché haussier il monte,
+souvent au double ou au triple, et toujours contre l'acheteur.
 
 **L'excursion se mesure sur les plus bas, jamais sur les clôtures.** Une mèche
 liquide un compte aussi sûrement qu'une clôture, et elle ne laisse aucune trace
@@ -59,6 +68,15 @@ MAINTENANCE_PAR_DEFAUT = 0.005
 
 LEVIERS_PAR_DEFAUT = (1.0, 2.0, 3.0, 5.0, 10.0)
 
+# Financement d'un perpétuel, par période de huit heures. 0,01 % est le taux
+# neutre des grandes plateformes — celui qu'on paie quand le marché ne penche
+# ni d'un côté ni de l'autre. En marché haussier il monte, souvent au double ou
+# au triple, et toujours contre l'acheteur : retenir le taux neutre est donc le
+# choix prudent au sens où il **sous-estime** le coût, comme tout le reste de
+# ce module.
+FINANCEMENT_PAR_DEFAUT = 0.0001
+HEURES_PAR_PERIODE = 8.0
+
 # En dessous de ce nombre de positions, « aucune liquidation » ne veut rien dire
 # statistiquement : deux positions sur une semaine calme survivent à n'importe
 # quel levier, et c'est le marché qu'on mesure, pas le réglage. Le seuil est un
@@ -66,16 +84,45 @@ LEVIERS_PAR_DEFAUT = (1.0, 2.0, 3.0, 5.0, 10.0)
 POSITIONS_POUR_CONCLURE = 10
 
 
-def seuil_liquidation(levier: float, maintenance: float = MAINTENANCE_PAR_DEFAUT) -> float:
+def part_de_marge_financee(levier: float, heures: float,
+                           taux: float = FINANCEMENT_PAR_DEFAUT) -> float:
+    """La fraction de la marge qu'un perpétuel prélève sur cette détention.
+
+    Le financement se paie sur le **notionnel**, pas sur la marge — et le
+    notionnel vaut `levier × marge`. Le coût rapporté à la marge est donc
+    multiplié par le levier une seconde fois, ce qui rend l'effet bien plus
+    brutal qu'il n'en a l'air : à 0,01 % par huit heures, une position tenue
+    trois mois coûte 2,7 % du notionnel, soit **27 % de la marge à x10**.
+
+    Au-delà de 1, la position est liquidée par le seul financement, sans qu'un
+    prix ait bougé. Ce n'est pas un cas d'école : à x10 et taux neutre, cela
+    arrive vers onze mois de détention — et un DCA garde ses lignes des mois.
+    """
+
+    if levier <= 1.0 or heures <= 0:
+        return 0.0
+    periodes = heures / HEURES_PAR_PERIODE
+    return levier * taux * periodes
+
+
+def seuil_liquidation(levier: float, maintenance: float = MAINTENANCE_PAR_DEFAUT,
+                      *, heures: float = 0.0,
+                      financement: float = 0.0) -> float:
     """Le recul, en fraction, qui épuise la marge.
 
     Rend `1.0` à levier 1 : sans levier on ne se fait pas liquider, on perd —
     ce qui n'est pas la même chose et ne doit pas se compter pareil.
+
+    Avec `financement`, la marge disponible n'est plus entière au moment où le
+    prix bouge : elle vaut `1 − part financée`, et le seuil se resserre
+    d'autant. Une part supérieure à 1 rend `0.0` — tout recul, aussi petit
+    soit-il, liquide alors une position déjà vidée par ses frais.
     """
 
     if levier <= 1.0:
         return 1.0
-    return max(0.0, 1.0 / levier - maintenance)
+    part = part_de_marge_financee(levier, heures, financement) if financement else 0.0
+    return max(0.0, (1.0 - part) / levier - maintenance)
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,6 +134,7 @@ class Position:
     montant_usd: float
     plus_bas: float                    # le plus bas touché pendant la détention
     fermee_le: datetime | None         # None : jamais revendue
+    duree_heures: float = 0.0          # détention réelle, pour le financement
 
     @property
     def excursion(self) -> float:
@@ -102,11 +150,16 @@ class Verdict:
     """Le sort d'un levier sur l'ensemble des positions d'un rejeu."""
 
     levier: float
-    seuil: float
+    seuil: float                       # seuil médian, le financement variant par position
     positions: int
     liquidees: int
     montant_liquide: float             # capital perdu dans les liquidations
     premiere: datetime | None
+    # Positions que le financement seul aurait vidées, sans qu'un prix bouge.
+    # Comptées à part parce qu'aucun réglage de stop ne les évite : c'est la
+    # durée de détention qu'il faut changer, ou le levier.
+    tuees_par_le_financement: int = 0
+    financement_median_pct: float = 0.0    # part de marge, en pourcentage
 
     @property
     def part_liquidee(self) -> float:
@@ -133,10 +186,20 @@ def positions(resultat, serie: SerieOHLCV) -> list[Position]:
     ouvertes: list[dict] = []
     closes: list[Position] = []
 
+    # Une position jamais revendue est tenue jusqu'à la dernière bougie : c'est
+    # cette date-là qui borne sa détention, et donc son financement.
+    fin_serie = bougies[-1].horodatage if bougies else None
+
     def plus_bas_entre(debut: datetime, fin: datetime | None) -> float:
         fenetre = [b.bas for b in bougies
                    if b.horodatage >= debut and (fin is None or b.horodatage <= fin)]
         return min(fenetre) if fenetre else float("inf")
+
+    def heures(debut: datetime, fin: datetime | None) -> float:
+        borne = fin or fin_serie
+        if borne is None:
+            return 0.0
+        return max(0.0, (borne - debut).total_seconds() / 3600.0)
 
     for execution in mouvements:
         if execution.ordre.sens is Sens.ACHAT:
@@ -160,6 +223,7 @@ def positions(resultat, serie: SerieOHLCV) -> list[Position]:
                 montant_usd=plus_ancienne["montant"] * part,
                 plus_bas=plus_bas_entre(plus_ancienne["le"], execution.horodatage),
                 fermee_le=execution.horodatage,
+                duree_heures=heures(plus_ancienne["le"], execution.horodatage),
             ))
             plus_ancienne["quantite"] -= pris
             plus_ancienne["montant"] -= plus_ancienne["montant"] * part
@@ -175,6 +239,7 @@ def positions(resultat, serie: SerieOHLCV) -> list[Position]:
             montant_usd=restante["montant"],
             plus_bas=plus_bas_entre(restante["le"], None),
             fermee_le=None,
+            duree_heures=heures(restante["le"], None),
         ))
 
     closes.sort(key=lambda p: p.ouverte_le)
@@ -186,22 +251,47 @@ def analyser(
     serie: SerieOHLCV,
     leviers: tuple[float, ...] = LEVIERS_PAR_DEFAUT,
     maintenance: float = MAINTENANCE_PAR_DEFAUT,
+    financement: float = FINANCEMENT_PAR_DEFAUT,
 ) -> list[Verdict]:
-    """Le sort de chaque levier, du plus prudent au plus agressif."""
+    """Le sort de chaque levier, du plus prudent au plus agressif.
+
+    Le seuil se calcule **par position** et non une fois pour toutes : deux
+    positions au même levier n'ont pas la même marge disponible si l'une est
+    tenue trois jours et l'autre huit mois. Passer `financement=0.0` rend le
+    calcul d'avant, utile pour isoler ce que les frais coûtent à eux seuls.
+    """
 
     lignes = positions(resultat, serie)
     verdicts: list[Verdict] = []
 
     for levier in sorted(leviers):
-        seuil = seuil_liquidation(levier, maintenance)
-        touchees = [p for p in lignes if p.excursion >= seuil]
+        touchees, par_frais, parts = [], 0, []
+        for position in lignes:
+            part = part_de_marge_financee(levier, position.duree_heures, financement)
+            parts.append(part)
+            seuil = seuil_liquidation(
+                levier, maintenance,
+                heures=position.duree_heures, financement=financement,
+            )
+            if part >= 1.0:
+                # La marge est épuisée par les seuls frais : la position est
+                # perdue même si le prix n'a jamais reculé d'un centime.
+                par_frais += 1
+                touchees.append(position)
+            elif position.excursion >= seuil:
+                touchees.append(position)
+
+        parts.sort()
+        median = parts[len(parts) // 2] if parts else 0.0
         verdicts.append(Verdict(
             levier=levier,
-            seuil=seuil,
+            seuil=seuil_liquidation(levier, maintenance),
             positions=len(lignes),
             liquidees=len(touchees),
             montant_liquide=sum(p.montant_usd for p in touchees),
             premiere=min((p.ouverte_le for p in touchees), default=None),
+            tuees_par_le_financement=par_frais,
+            financement_median_pct=median * 100,
         ))
     return verdicts
 
@@ -241,17 +331,21 @@ def tableau(verdicts: list[Verdict], titre: str = "") -> str:
     """Le tableau à lire. Une ligne par levier, et la conclusion en dessous."""
 
     lignes = [f"### Levier — {titre}" if titre else "### Levier", ""]
-    lignes.append("| levier | liquidé si l'actif recule de | positions liquidées | capital perdu | première |")
-    lignes.append("|---|---|---|---|---|")
+    lignes.append("| levier | recul qui liquide | financement médian | positions liquidées | "
+                  "dont par les frais seuls | capital perdu | première |")
+    lignes.append("|---|---|---|---|---|---|---|")
 
     for v in verdicts:
         if v.levier <= 1.0:
-            lignes.append(f"| {v.levier:g}x | — | aucune (pas de liquidation sans levier) | — | — |")
+            lignes.append(f"| {v.levier:g}x | — | — | aucune (pas de liquidation sans levier) "
+                          f"| — | — | — |")
             continue
         date = v.premiere.strftime("%Y-%m-%d") if v.premiere else "—"
         part = f"{v.liquidees}/{v.positions} ({v.part_liquidee * 100:.0f} %)"
+        frais = f"**{v.tuees_par_le_financement}**" if v.tuees_par_le_financement else "0"
         lignes.append(
-            f"| {v.levier:g}x | {v.seuil * 100:.1f} % | {part} | "
+            f"| {v.levier:g}x | {v.seuil * 100:.1f} % | {v.financement_median_pct:.0f} % "
+            f"de la marge | {part} | {frais} | "
             f"{v.montant_liquide:,.0f} $ | {date} |".replace(",", " ")
         )
 
@@ -273,9 +367,18 @@ def tableau(verdicts: list[Verdict], titre: str = "") -> str:
                       "tout multiple perd au moins une position entière.")
     else:
         lignes.append(f"**Levier maximal sans une seule liquidation : {maximum:g}x.** "
-                      "C'est un plancher, pas une recommandation : ni le financement, ni le "
-                      "prix de marque, ni l'illiquidité réelle ne sont comptés, et les trois "
-                      "poussent dans le même sens.")
+                      "Le financement est compté ; restent le prix de marque de la plateforme "
+                      "et l'illiquidité réelle, qui poussent tous deux dans le même sens.")
+
+    par_frais = [v for v in verdicts if v.tuees_par_le_financement]
+    if par_frais:
+        pire = max(par_frais, key=lambda v: v.tuees_par_le_financement)
+        lignes.append("")
+        lignes.append(
+            f"⚠ **À {pire.levier:g}x, {pire.tuees_par_le_financement} position(s) sont vidées par "
+            "le seul financement**, sans qu'un prix ait reculé. Aucun réglage de stop n'y change "
+            "rien : c'est la durée de détention qu'il faut raccourcir, ou le levier."
+        )
 
     tenues = verdicts[0].positions
     if tenues < POSITIONS_POUR_CONCLURE:

@@ -20,7 +20,7 @@ import unittest
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from src.core.modeles import Bougie, SerieOHLCV, Sens
+from src.core.modeles import Bougie, SerieOHLCV, Sens  # noqa: F401
 from src.rejeu import levier as niveau
 
 DEBUT = datetime(2026, 1, 1, tzinfo=timezone.utc)
@@ -163,6 +163,81 @@ class TestDefautsTrouvesEnRegardant(unittest.TestCase):
             resultat, serie([100.0] * (niveau.POSITIONS_POUR_CONCLURE + 1)), (10.0,)
         )
         self.assertNotIn("trop peu pour conclure", niveau.tableau(verdicts))
+
+
+class TestFinancement(unittest.TestCase):
+    """Le coût qu'aucun prix ne signale.
+
+    Le financement se paie sur le **notionnel**, donc le levier le multiplie une
+    seconde fois. C'est ce qui rend son effet plus brutal qu'il n'en a l'air, et
+    ce qui manquait pour que ce module rende une estimation plutôt qu'un
+    plancher.
+    """
+
+    def test_le_cout_est_proportionnel_au_levier_et_a_la_duree(self):
+        # 0,01 % par 8 h, trois mois, x10 → 27 % de la marge. Le chiffre est
+        # vérifiable à la main, et c'est pour ça qu'il est écrit ici.
+        self.assertAlmostEqual(niveau.part_de_marge_financee(10.0, 2160), 0.27, places=3)
+        self.assertAlmostEqual(niveau.part_de_marge_financee(5.0, 2160), 0.135, places=3)
+        self.assertAlmostEqual(niveau.part_de_marge_financee(10.0, 720), 0.09, places=3)
+
+    def test_sans_levier_il_n_y_a_pas_de_financement(self):
+        self.assertEqual(niveau.part_de_marge_financee(1.0, 100_000), 0.0)
+
+    def test_le_financement_resserre_le_seuil(self):
+        nu = niveau.seuil_liquidation(10.0)
+        charge = niveau.seuil_liquidation(
+            10.0, heures=2160, financement=niveau.FINANCEMENT_PAR_DEFAUT
+        )
+        self.assertLess(charge, nu)
+
+    def test_une_marge_entierement_financee_liquide_sans_mouvement_de_prix(self):
+        # Le cas qui n'est pas d'école : à x10 et taux neutre, il arrive vers
+        # onze mois — et un DCA garde ses lignes des mois.
+        self.assertGreaterEqual(niveau.part_de_marge_financee(10.0, 8760), 1.0)
+        self.assertEqual(
+            niveau.seuil_liquidation(10.0, heures=8760,
+                                     financement=niveau.FINANCEMENT_PAR_DEFAUT),
+            0.0,
+        )
+
+    def test_une_position_tenue_longtemps_tombe_sans_que_le_prix_recule(self):
+        # Prix strictement plat sur toute la détention : sans financement rien
+        # ne se passe, avec financement la position est perdue.
+        heures = 9000
+        bougies = [100.0] * 40
+        resultat = ResultatFactice(100_000.0, [achat(100.0, 1.0, 0)], [])
+        serie_longue = SerieOHLCV(
+            symbole="TEST/USDT", intervalle="1h",
+            bougies=tuple(
+                Bougie(horodatage=DEBUT + timedelta(hours=i * heures / len(bougies)),
+                       ouverture=p, haut=p, bas=p, cloture=p, volume=1.0)
+                for i, p in enumerate(bougies)
+            ),
+        )
+        sans = niveau.analyser(resultat, serie_longue, (10.0,), financement=0.0)
+        avec = niveau.analyser(resultat, serie_longue, (10.0,))
+        self.assertEqual(sans[0].liquidees, 0)
+        self.assertEqual(avec[0].liquidees, 1)
+        self.assertEqual(avec[0].tuees_par_le_financement, 1)
+
+    def test_le_tableau_nomme_les_positions_tuees_par_les_frais(self):
+        resultat = ResultatFactice(100_000.0, [achat(100.0, 1.0, 0)], [])
+        longue = SerieOHLCV(
+            symbole="T/U", intervalle="1h",
+            bougies=tuple(
+                Bougie(horodatage=DEBUT + timedelta(hours=i * 500),
+                       ouverture=100.0, haut=100.0, bas=100.0, cloture=100.0, volume=1.0)
+                for i in range(30)
+            ),
+        )
+        texte = niveau.tableau(niveau.analyser(resultat, longue, (10.0,)))
+        self.assertIn("par le seul financement", texte)
+
+    def test_le_financement_se_desactive_pour_isoler_son_effet(self):
+        resultat = ResultatFactice(10_000.0, [achat(100.0, 1.0, 0)], [])
+        s = serie([100.0, 95.0])
+        self.assertEqual(niveau.analyser(resultat, s, (10.0,), financement=0.0)[0].liquidees, 0)
 
 
 class TestVerdict(unittest.TestCase):
