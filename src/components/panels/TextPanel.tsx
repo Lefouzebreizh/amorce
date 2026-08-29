@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { CAPTION_STYLES } from '@/lib/captions';
-import { HOOK_WINDOW } from '@/lib/analysis';
+import { HOOK_WINDOW, captionCoverage } from '@/lib/analysis';
 import { hooksByFamily } from '@/lib/hooks';
 import { useStudio } from '@/lib/store';
 import { CAPTION_COLORS, CAPTION_SCALES, type CaptionStyleId } from '@/lib/types';
@@ -24,6 +24,26 @@ export function TextPanel() {
   const removeCaption = useStudio((s) => s.removeCaption);
   const playhead = useStudio((s) => s.playhead);
   const duration = useStudio((s) => s.duration());
+  const clips = useStudio((s) => s.project.clips);
+  const assets = useStudio((s) => s.project.assets);
+
+  /*
+   * Le chemin rapide n'est pas dans ce panneau, et rien ne le disait.
+   *
+   * Couvrir 70 % d'un montage de trente secondes demande une vingtaine de
+   * sous-titres. Posés un par un par « + Ajouter », c'est une vingtaine de
+   * fois : ajouter, écrire, régler le début, régler la fin. L'outil qui le
+   * fait en une passe — écrire son texte une fois, l'application le cale sur
+   * la voix — vit dans l'étape Monter, sur le plan sélectionné.
+   *
+   * Or c'est ici que le guide envoie quand la couverture est faible. Quelqu'un
+   * qui le suit tombe donc sur la méthode lente sans jamais apprendre que
+   * l'autre existe. Le raccourci est donc nommé là où le besoin se manifeste,
+   * et seulement quand il peut servir : il faut du son dans un plan pour
+   * qu'une voix se cale dessus.
+   */
+  const aDeLaVoix = clips.some((clip) => assets.find((a) => a.id === clip.assetId)?.hasAudio);
+  const couverture = captionCoverage(captions, duration);
 
   const selected = selection?.kind === 'caption' ? captions.find((c) => c.id === selection.id) : undefined;
 
@@ -141,6 +161,17 @@ export function TextPanel() {
           </Button>
         }
       >
+        {aDeLaVoix && couverture < 0.5 && (
+          <div className="mb-3">
+            <Hint>
+            Tu parles dans tes rushes ? Plus rapide qu’un par un : va dans <strong>Monter</strong>,
+            choisis un plan, ouvre <strong>« Sous-titrer ce que je dis »</strong>, écris ton texte
+            d’un bloc et touche <strong>« Caler sur ma voix »</strong>. L’application découpe et
+              place les sous-titres elle-même.
+            </Hint>
+          </div>
+        )}
+
         {captions.length === 0 ? (
           <p className="text-xs text-muted">
             Aucun sous-titre. Le bouton « Ajouter » en pose un à la position de lecture actuelle.
