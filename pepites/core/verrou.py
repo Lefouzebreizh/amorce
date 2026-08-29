@@ -29,6 +29,12 @@ anti-faux-signal de sa substance. `confirmer` s'y oppose déjà : un écart
 inférieur à `ecart_min_minutes` est refusé, quelle que soit son origine. Le
 noter ici évite qu'on aille le re-vérifier dans six mois.
 
+**Le chemin Windows n'a pas été éprouvé par une session.** Il est écrit contre
+la surface documentée de `msvcrt.locking`, mais aucun test du dépôt ne peut
+l'exécuter — la CI et les sessions tournent sous Linux. Il se vérifie en deux
+minutes sur un poste Windows, et la marche à suivre est dans `pepites/README.md`.
+Tant que ce n'est pas fait, la protection y est **probable, pas démontrée**.
+
 **Le refus est bruyant, et c'est délibéré.** Un tour sauté en silence
 laisserait un radar qui se chevauche en permanence — donc qui ne tourne
 jamais vraiment — ressembler à un radar en bonne santé. C'est exactement le
@@ -46,13 +52,55 @@ from pathlib import Path
 
 JOURNAL = logging.getLogger("pepites.verrou")
 
-# `fcntl` n'existe pas sous Windows. Le radar y tournerait sans garde plutôt
-# que de refuser de démarrer : sur un poste de travail on lance un scan à la
-# main, c'est en tâche planifiée que le chevauchement guette.
+# Deux systèmes, deux appels, aucune bibliothèque tierce : `fcntl.flock` sur
+# POSIX, `msvcrt.locking` sur Windows. Le second manquait, et son absence ne se
+# voyait pas — le module se contentait d'annoncer « verrouillage indisponible »
+# et laissait passer. C'est précisément sur Windows que le radar tourne en
+# tâche planifiée, donc précisément là que le chevauchement guette.
 try:
     import fcntl
-except ImportError:                     # pragma: no cover — non-POSIX
+except ImportError:                     # Windows
     fcntl = None
+
+try:
+    import msvcrt
+except ImportError:                     # POSIX
+    msvcrt = None
+
+# Sous Windows, `msvcrt.locking` verrouille une plage d'octets à partir de la
+# position courante, et non le fichier entier. On verrouille donc **un octet
+# très loin dans le fichier**, là où le contenu n'ira jamais : sans cela, la
+# troncature et l'écriture du PID entreraient en conflit avec la plage
+# verrouillée. Un verrou posé au-delà de la fin du fichier est permis et le
+# reste après troncature — c'est la technique habituelle.
+OCTET_TEMOIN = 1 << 30
+
+
+def _verrouillage_possible() -> bool:
+    return fcntl is not None or msvcrt is not None
+
+
+def _prendre(descripteur: int) -> None:
+    """Pose le verrou, ou lève `OSError` si un autre processus le tient."""
+    if fcntl is not None:
+        fcntl.flock(descripteur, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return
+    os.lseek(descripteur, OCTET_TEMOIN, os.SEEK_SET)
+    msvcrt.locking(descripteur, msvcrt.LK_NBLCK, 1)
+    os.lseek(descripteur, 0, os.SEEK_SET)
+
+
+def _relacher(descripteur: int) -> None:
+    """Relâche explicitement. Le noyau le ferait à la fermeture, sur les deux
+    systèmes — on le fait quand même, pour que la sortie soit lisible."""
+    try:
+        if fcntl is not None:
+            fcntl.flock(descripteur, fcntl.LOCK_UN)
+            return
+        os.lseek(descripteur, OCTET_TEMOIN, os.SEEK_SET)
+        msvcrt.locking(descripteur, msvcrt.LK_UNLCK, 1)
+    except OSError:                     # déjà relâché, ou fichier disparu
+        pass
 
 
 class ScanDejaEnCours(RuntimeError):
@@ -84,7 +132,7 @@ class Verrou:
         self._descripteur = None
 
     def __enter__(self) -> "Verrou":
-        if fcntl is None:
+        if not _verrouillage_possible():
             JOURNAL.warning(
                 "verrouillage indisponible sur cette plateforme : "
                 "deux scans simultanés ne seront pas empêchés"
@@ -96,7 +144,7 @@ class Verrou:
         # avant même de savoir si on obtient le verrou.
         self._descripteur = os.open(self.chemin, os.O_RDWR | os.O_CREAT, 0o644)
         try:
-            fcntl.flock(self._descripteur, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            _prendre(self._descripteur)
         except OSError:
             age = self._age()
             os.close(self._descripteur)
@@ -108,6 +156,7 @@ class Verrou:
             ) from None
 
         os.truncate(self._descripteur, 0)
+        os.lseek(self._descripteur, 0, os.SEEK_SET)
         os.write(self._descripteur, f"{os.getpid()} {time.time():.0f}\n".encode())
         os.fsync(self._descripteur)
         return self
@@ -115,8 +164,7 @@ class Verrou:
     def __exit__(self, *_) -> None:
         if self._descripteur is None:
             return
-        if fcntl is not None:
-            fcntl.flock(self._descripteur, fcntl.LOCK_UN)
+        _relacher(self._descripteur)
         os.close(self._descripteur)
         self._descripteur = None
 

@@ -31,6 +31,31 @@ with Verrou({chemin!r}):
 """
 
 
+class TestPlateforme(unittest.TestCase):
+    """Ce qui se vérifie sans savoir sur quel système on tourne.
+
+    Le chemin Windows lui-même ne s'éprouve pas ici : la CI et les sessions
+    sont sous Linux, `msvcrt` n'y existe pas. Ces tests gardent donc la
+    **sélection** du chemin, pas son exécution — et le dire vaut mieux que
+    laisser croire à une couverture qu'on n'a pas.
+    """
+
+    def test_un_des_deux_verrouillages_est_disponible(self):
+        # Sur POSIX comme sur Windows, l'un des deux modules répond. Un « non »
+        # ici signifierait un système exotique, et le radar tournerait sans
+        # garde — d'où l'avertissement bruyant à cet endroit précis.
+        import core.verrou as v
+        self.assertTrue(v.fcntl is not None or v.msvcrt is not None)
+        self.assertTrue(v._verrouillage_possible())
+
+    def test_l_octet_temoin_est_hors_de_portee_du_contenu(self):
+        # Sous Windows on verrouille un octet très loin dans le fichier, là où
+        # le PID et l'horodatage n'iront jamais. Trop près, la troncature
+        # entrerait en conflit avec la plage verrouillée.
+        import core.verrou as v
+        self.assertGreater(v.OCTET_TEMOIN, 1_000_000)
+
+
 class TestVerrou(unittest.TestCase):
     def setUp(self):
         self.dossier = tempfile.TemporaryDirectory()
