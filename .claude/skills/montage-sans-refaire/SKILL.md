@@ -140,10 +140,25 @@ dans cet ordre :
    se posent sur l'image **finie**, carton compris : `montage → carton →
    couches → master`.
 
-**Le spectrogramme distingue les cinq.** Une raie verticale pleine bande est
+7. **Deux versions du même son jouent ensemble.** Le rush portait son propre
+   rugissement, étiré par le ralenti ; le vrai était posé par-dessus à sa
+   vitesse naturelle. Superposés, ils ne s'additionnent pas — ils **battent**,
+   et ce battement s'entend comme une saturation ET comme une coupure au
+   milieu. Sur le spectrogramme : des **stries verticales irrégulières** entre
+   2 et 10 kHz, là où un cri unique dessine une nappe dense.
+
+   C'est la cause qui résiste le plus longtemps, parce que **rien n'est
+   défectueux** : le fichier source mesure −0,4 dBFS sans un écrêtage, le
+   fichier livré n'a aucune discontinuité au niveau de l'échantillon, aucun
+   palier plat, un vrai pic à −1,4 dBTP. Chaque pièce est juste ; c'est leur
+   somme qui ne l'est pas. Le lit recule de 8 dB pendant le cri seul — pas
+   au-delà, sinon on perd les débris qui font le monde autour.
+
+**Le spectrogramme distingue les six.** Une raie verticale pleine bande est
 une coupure ; un tremblement régulier de l'enveloppe est un étirement ; un
-creux large est une automation. Compter les « trous sous un seuil » ne les
-sépare pas — un vrai rugissement a des creux naturels, et les supprimer
+creux large est une automation ; des stries verticales irrégulières dans le
+haut du spectre sont deux sons superposés. Compter les « trous sous un seuil »
+ne les sépare pas — un vrai rugissement a des creux naturels, et les supprimer
 l'abîme davantage (mesuré : 3 trous devenus 23 en effaçant le lit qui les
 remplissait).
 
