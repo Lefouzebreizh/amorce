@@ -200,7 +200,33 @@ ressortis à −45 dB.
 
 ---
 
-## 9. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
+## 9. Un ralenti sans interpolation duplique une image sur cinq
+
+`vitesse: 0.8` sans `interpolation` : ffmpeg tient la cadence en **dupliquant**.
+Mesuré sur le plan du dragon — **29 images figées sur 144**, soit une sur cinq à
+intervalle régulier, contre **zéro** sur un plan à vitesse normale.
+
+C'est ce que l'œil lit comme un saccadement, et c'est le rapport 1/5 qu'on
+attend arithmétiquement d'un ralenti à 0,8.
+
+```python
+# compter les images figees : deux images consecutives quasi identiques
+d = [abs(im[i+1] - im[i]).mean() for i in range(len(im)-1)]
+figees = sum(1 for x in d if x < 0.30)
+```
+
+`interpolation: true` fabrique les images manquantes : **1 sur 144**. C'est
+lent — cinq minutes pour sept secondes — et c'est le prix d'un ralenti qui
+coule.
+
+**Et l'oreille suit l'œil.** La même scène était rapportée comme « ça sature »
+alors que le son ne portait **aucun échantillon écrêté** et un facteur de crête
+de 13,1 dB. Quand une image saccade, tout le plan paraît mauvais. Avant de
+chercher un défaut de son sur un plan ralenti, compter ses images figées.
+
+---
+
+## 10. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
 
 - **Une affiche d'ouverture** : le temps de lire son titre, pas plus. 0,6 s
   gaspille les 0,6 s ; 1,6 s perd le spectateur ; **1,1 s** pour huit lettres.
@@ -210,7 +236,7 @@ ressortis à −45 dB.
 
 ---
 
-## 10. Les trois relevés obligatoires, sur le fichier qui part
+## 11. Les trois relevés obligatoires, sur le fichier qui part
 
 Écrits dans `CLAUDE.md` § 8, rappelés ici parce que c'est le moment de les
 faire, et **sur le fichier final**, pas sur celui d'avant :

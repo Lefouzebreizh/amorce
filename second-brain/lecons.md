@@ -1856,3 +1856,26 @@ manifeste entier. Seule l'image reste non vérifiée, et on le dit.
 expire toujours sur une page qui lit un flux. Un lecteur fait du réseau en
 continu, par définition — c'est son métier. Trente secondes perdues à chaque
 essai, sur une page parfaitement saine. `domcontentloaded` sur ces pages-là.
+
+## Un ralenti sans interpolation duplique une image sur cinq
+
+Une scène rapportée comme « ça sature et ça lague ». Le son ne portait **aucun
+échantillon écrêté** et un facteur de crête de 13,1 dB — rien à corriger de ce
+côté.
+
+L'image, elle : **29 images figées sur 144**. Une sur cinq, à intervalle
+régulier, contre **zéro** sur un plan à vitesse normale. C'est exactement le
+rapport qu'un ralenti à 0,8 produit quand ffmpeg tient la cadence en
+**dupliquant** au lieu d'interpoler.
+
+`minterpolate` fabrique les images manquantes : **1 sur 144**. Cinq minutes de
+rendu pour sept secondes de plan, et c'est le prix.
+
+**L'oreille suit l'œil**, et c'est la partie qui compte. Une image qui saccade
+fait juger tout le plan mauvais, son compris. Avant de chercher un défaut de son
+sur un plan ralenti, compter ses images figées :
+
+```python
+d = [abs(im[i+1] - im[i]).mean() for i in range(len(im)-1)]
+figees = sum(1 for x in d if x < 0.30)   # deux images consecutives identiques
+```
