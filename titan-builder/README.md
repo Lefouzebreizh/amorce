@@ -7,6 +7,52 @@ prix recalculé — et je livre en 48 h.
 Ce que ça remplace : quatre allers-retours par téléphone pour réclamer un logo,
 une couleur et une liste de services.
 
+## Livrer le site
+
+`titan-builder` recueillait tout puis s'arrêtait sur un `commande.json` : le
+site se construisait ensuite à la main, et vendre trois sites dans la semaine
+voulait dire les écrire trois fois.
+
+```bash
+npm run generer dossiers/maconnerie-le-goff-2026-08-29
+```
+
+Le dossier **devient** le site : un `index.html` autonome atterrit à côté des
+photos. On le dépose tel quel sur n'importe quel hébergement, on le zippe, ou
+on l'ouvre depuis le disque pour le montrer au client avant publication.
+
+Une page HTML et rien d'autre — pas de cadre applicatif. Le site d'un artisan
+tient sur une page : y mettre Next.js ajouterait une compilation, un hébergeur
+qui exécute du Node, et un redéploiement pour changer un numéro de téléphone.
+
+Toute la fabrication est dans `src/lib/site.ts`, **pur** : il rend une chaîne,
+il ne touche ni au disque ni au réseau. Seul le script écrit.
+
+## Mettre le site du client en ligne
+
+Le générateur produit un dossier autonome : **une page HTML, les photos, et
+rien d'autre.** Aucun JavaScript, aucune police distante, aucun chemin absolu —
+vérifié par deux tests et regardé dans un vrai navigateur, servi depuis un
+sous-dossier comme le ferait un hébergement gratuit.
+
+C'est ce qui le rend publiable partout, **sans compte à créer et sans quota** :
+
+| Où | Comment | Ce que ça coûte |
+| --- | --- | --- |
+| **GitHub Pages** | un dépôt par client, *Settings → Pages*, branche `main` | rien |
+| **Netlify Drop** | glisser le dossier sur `app.netlify.com/drop` | rien, sans même un compte |
+| **Cloudflare Pages** | *Upload assets*, glisser le dossier | rien |
+| Un hébergement à soi | déposer le dossier par FTP | ce qu'il coûte déjà |
+
+**Ne pas déployer les sites clients là où l'on déploie les siens.** Un compte
+Vercel gratuit plafonne à cent déploiements par jour, et ce dépôt les consomme
+tout seul : un client dont le site attend un quota est un client qui doute.
+
+**Ce que le dossier permet aussi, et qui vaut le détour :** `index.html`
+s'ouvre depuis le disque, sans serveur. On montre le site au client sur son
+téléphone avant de publier quoi que ce soit — et c'est souvent là que se décide
+la vente, pas dans le devis.
+
 ## Lancer
 
 ```bash

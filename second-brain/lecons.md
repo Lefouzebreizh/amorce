@@ -2092,6 +2092,7 @@ règle générale : **une fonctionnalité n'est livrée que lorsqu'un chemin y m
 depuis l'extérieur** — une commande, un bouton, une route. Le reste est du code
 qui compile.
 
+<<<<<<< HEAD
 ## Un défaut entendu à deux endroits éloignés vient de ce qui les traverse
 
 « Ça sature au dragon, et un peu derrière le druide aussi. » Deux plans séparés
@@ -2117,3 +2118,182 @@ suspect**, puis comparer. Comparer avant/après master mêle l'égaliseur au
 limiteur — un égaliseur donne aussi un gain différent selon le contenu, et
 c'est ce qui m'avait fait lire 9,1 dB de « pompage » là où le limiteur n'en
 faisait que 3,4.
+=======
+## Fusionner souvent a un plafond, et il est invisible
+
+La règle de ce dépôt est d'ouvrir la PR et de la fusionner dès qu'un lot tient
+debout — c'est ce qui évite les conflits quand plusieurs sessions travaillent en
+parallèle. Elle est juste, et elle a un coût que personne n'avait compté.
+
+**Chaque fusion sur `main` déclenche un déploiement.** Le plan gratuit de Vercel
+en autorise cent par jour. Mesuré le 29/08 : **154 fusions en vingt-quatre
+heures**, donc cinquante-quatre déploiements refusés.
+
+Le message arrive dans un commentaire de PR, jamais dans la conversation :
+
+```
+Resource is limited - try again in 24 hours
+(more than 100, code: "api-deployments-free-per-day")
+```
+
+Et voilà ce que ça coûte, mesuré : le propriétaire a testé pendant deux heures
+une version vieille de plusieurs heures. Il rapportait des défauts déjà corrigés,
+et chaque « recharge de force » ne servait à rien puisque le serveur ne servait
+pas la nouvelle version. Deux heures de travail des deux côtés, sur un défaut
+qui n'existait plus.
+
+Trois choses à en tirer :
+
+- **Un correctif fusionné n'est pas un correctif livré.** Tant que le
+  déploiement n'a pas abouti, dire « c'est corrigé, recharge » est faux — et
+  fait douter la personne de son propre téléphone.
+- **Compter les fusions du jour avant d'en promettre l'effet.**
+  `git log --oneline --since="24 hours ago" origin/main | wc -l` répond en une
+  seconde, et c'est le seul chiffre qui dit si ce qu'on vient de fusionner
+  arrivera quelque part.
+- **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
+  déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
+  c'est le bon geste ce jour-là seulement.
+## Un drapeau ajouté « par précaution » est une panne à retardement
+
+`node:sqlite` a demandé `--experimental-sqlite` sur les premières versions de
+Node 22. J'ai donc posé le drapeau dans tous les scripts npm, sans le mesurer.
+
+Vérifié après coup, sur Node 22.22 : **le module s'importe et fonctionne sans
+aucun drapeau** — il émet seulement un avertissement. Le drapeau n'apportait
+rien. Et il apportait un risque : Node **refuse de démarrer** sur une option
+qu'il ne connaît pas (« bad option »), donc le jour où la version suivante
+retire le drapeau devenu inutile, l'application ne démarre plus, sur un message
+qui ne parle ni de SQLite ni de version. Sur une machine qu'on ne contrôle pas
+— celle de quelqu'un qui vient d'installer la dernière LTS — c'est une panne
+sans piste.
+
+Le même projet en portait un **second**, `--experimental-strip-types`, et la
+mesure a rendu le même verdict : `process.features.typescript` vaut déjà
+`"strip"` sans lui dès Node 22.22, et le retrait des types est le défaut à
+partir de 23.6. Deux drapeaux posés par prudence, deux fois inutiles, deux
+pannes futures évitées de justesse.
+
+**La règle : un drapeau expérimental se mesure avant d'être posé**, et se
+remesure quand on change de version.
+
+```bash
+node -e "require('node:sqlite')"        # ça passe ? le drapeau est inutile
+node --le-drapeau -e ""                 # code 0 ? il est encore accepté
+```
+
+Ce qui remplace un drapeau posé au hasard : `engines` dans `package.json`, qui
+dit la version minimale réellement éprouvée et fait avertir npm au lieu
+d'échouer dix commandes plus loin.
+
+## `git stash pop && git commit` enterre un conflit au lieu de s'arrêter
+
+Une reprise de branche courante — `stash push`, `checkout -B`, `stash pop`,
+`add -A`, `commit` — enchaînée par `&&`. Le `pop` a laissé deux fichiers en
+conflit, et il **rend malgré tout un code de sortie 0**. Le `&&` a donc passé la
+main, `git add -A` a ajouté les marqueurs `<<<<<<<` comme du contenu ordinaire,
+et le commit est parti avec eux. Poussé.
+
+Rien ne l'a signalé : ni le `&&`, ni `git status` après coup (l'arbre est propre,
+les marqueurs sont *commités*), ni la barrière de vérification — elle avait
+tourné **avant** la reprise, sur un arbre alors sain. Le seul indice tenait dans
+une phrase noyée dans la sortie : « The stash entry is kept in case you need it
+again », qui veut dire « ça s'est mal passé ».
+
+**La parade tient en une ligne, entre le `pop` et le `commit` :**
+
+```bash
+git diff --name-only --diff-filter=U   # non vide = conflit à résoudre
+```
+
+Et deux règles qui en découlent :
+
+- **Ne jamais chaîner `stash pop` avec `add -A` par `&&`.** Le code de sortie ne
+  dit pas ce qu'on croit ; c'est la liste des fichiers en conflit qui le dit.
+- **Relancer la vérification APRÈS la reprise de branche**, pas avant. Une
+  barrière verte sur l'arbre d'avant ne prouve rien sur celui qu'on pousse.
+
+## Le HTML préconstruit de Next n'est pas une page servable
+
+Un quota d'hébergeur épuisé, une page de vente à mettre en ligne le soir même,
+et une idée qui paraît évidente : `next build` écrit déjà
+`.next/server/app/index.html`, il suffirait de le servir en statique.
+
+**Il s'affiche parfaitement et il est mort.** Mesuré dans Chromium, servi depuis
+un sous-dossier comme le ferait GitHub Pages :
+
+| | |
+| --- | --- |
+| ressources en échec | aucune |
+| erreurs JavaScript | aucune |
+| scripts chargés | 7 |
+| charge RSC `__next_f` | présente |
+| **React attaché au formulaire** | **non** |
+
+Tout est vert sauf la seule chose qui compte. Le fichier est un artefact
+interne du rendu serveur, pas ce que Next envoie au navigateur : l'hydratation
+de l'App Router passe par le flux que le serveur compose à la requête, et le
+recopier tel quel donne une page qui ressemble à l'originale et n'exécute rien.
+Un formulaire y devient un décor.
+
+**Ce qui trompe, c'est qu'aucune alarme ne se déclenche.** Pas de 404, pas
+d'erreur en console, le style est là, le texte est là. On ne s'en aperçoit
+qu'en cliquant — ou en vérifiant que React s'est attaché :
+
+```js
+Object.keys(document.querySelector('form')).some(k => k.startsWith('__react'))
+```
+
+**Les deux vraies sorties**, quand un hébergeur est indisponible : `output:
+'export'` dans la configuration, qui exige de retirer les routes d'API — donc
+un vrai choix de conception, pas une astuce — ou **changer d'hébergeur**.
+Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
+ses routes serveur. C'était la réponse depuis le début, et une heure est passée
+à contourner un quota au lieu de changer de mur.
+
+## Le quota de déploiement est une ressource commune, et les sessions la vident
+
+Un compte d'hébergeur gratuit plafonne les déploiements par **jour et par
+compte** — cent chez Vercel. Ce dépôt reçoit plusieurs sessions en parallèle et
+fusionne **95 pull requests dans la journée**, mesuré le 28/08/2026 : chacune
+déclenche un déploiement d'aperçu, et le compteur est vidé par du travail qui
+n'a rien à voir avec celui qui en a besoin.
+
+**Le symptôme arrive au pire moment et ne ressemble pas à sa cause.** Ici :
+« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec
+les vingt PR de montage vidéo qui l'ont consommé, et le projet qu'on cherchait
+à mettre en ligne — une page de vente, la seule chose qui pouvait rentrer de
+l'argent — reste bloqué vingt-quatre heures.
+
+Trois choses à en retenir :
+
+- **Un aperçu réussi ne prouve pas que le compteur est libre.** Un aperçu sur
+  un projet existant peut passer à l'instant même où la création d'un nouveau
+  projet est refusée. Conclure de l'un à l'autre a coûté un aller-retour, et un
+  essai raté au propriétaire.
+- **Chaque projet supplémentaire double la consommation.** Deux projets
+  branchés sur le même dépôt, ce sont deux déploiements par PR.
+- **On coupe les aperçus des projets qui n'en ont pas besoin.** Une application
+  qui tourne dans le navigateur n'a aucune raison d'être déployée à chaque PR.
+
+Et la sortie, quand le mur est là : **changer de mur.** Netlify et Cloudflare
+Pages construisent un Next.js complet, gratuitement, avec ses routes serveur, et
+sans toucher au quota de l'autre. Une heure est passée à contourner le plafond
+avant d'y penser.
+
+## `cd sous-dossier && …` saute silencieusement quand on y est déjà
+
+Deux éditions perdues dans la même séance, sans un message d'erreur utile.
+
+Le shell d'une session garde son répertoire d'un appel à l'autre. Une commande
+qui commence par `cd nexuscrypto && python3 - <<'PY'` échoue donc au `cd` quand
+on est **déjà** dans `nexuscrypto` — et le `&&` avale tout le reste. Le script
+ne tourne pas, rien ne le dit, et la vérification qui suit passe au vert sur du
+code inchangé.
+
+C'est la conjonction qui trompe : l'erreur affichée est `cd: no such file or
+directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière.
+
+**La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
+de supposer où l'on est.
+>>>>>>> origin/main
