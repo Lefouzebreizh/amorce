@@ -1882,34 +1882,64 @@ figees = sum(1 for x in d if x < 0.30)   # deux images consecutives identiques
 
 ## Un serveur de test orphelin fait mesurer la version d'avant
 
-Une vérification d'interface rendait quatre défauts d'un coup, dont un sans
-rapport avec le changement : une page entière sans feuille de style. Le code
-était juste. **Le serveur qui répondait n'était pas celui qu'on venait de
-lancer.**
+**Deux sessions ont trouvé ce défaut la même nuit, dans deux projets sans
+rapport** — le parcours Chromium d'IPTV et le contrôle visuel de la page de
+vente. Même cause, mêmes parades, symptômes opposés : c'est ce qui en fait la
+leçon la mieux établie du fichier.
 
-La cause tient en une phrase : `spawn('npm', ['run', 'start'])` engendre un
-`next start` **petit-fils**, et tuer le `npm` laisse l'enfant vivant, orphelin,
-avec le port. L'exécution suivante n'arrive pas à écouter, ne le dit pas, et
-Playwright interroge le serveur d'il y a un quart d'heure — donc le code d'il y
-a un quart d'heure. Relevé : `ps` montrait un `next-server` de ppid 1, âgé de
-15 minutes, quand le script venait de démarrer.
+**Symptôme A** — une vérification d'interface rend quatre défauts d'un coup,
+dont une page entière sans feuille de style. Le code est juste.
+**Symptôme B** — un contrôle passe au **vert** sur une page cassée exprès pour
+l'éprouver.
 
-Trois gestes, et les trois comptent :
+Dans les deux cas, **le serveur qui répond n'est pas celui qu'on vient de
+lancer**, et il sert le code d'avant.
 
-1. **Lancer en groupe détaché, tuer le groupe** : `spawn(…, { detached: true })`
-   puis `process.kill(-pid, 'SIGTERM')`. Tuer le pid seul ne descend pas.
+### La cause
+
+`npm` engendre un petit-fils. `spawn('npm', ['run', 'start'])` comme
+`npm exec next start` donnent la même chaîne : `npm` → `sh -c` → `next-server`.
+Tuer le `npm` laisse l'enfant vivant, réattaché à init, avec le port.
+
+Relevés des deux côtés : un `next-server` de ppid 1 âgé de quinze minutes quand
+le script vient de démarrer ; et trois `next-server` orphelins sur des ports
+qu'on croyait fermés.
+
+**Et rien ne le signale.** L'exécution suivante n'arrive pas à écouter, son
+message part dans un journal que personne ne lit, `curl` répond 200 tout de
+suite — donc l'attente du serveur **réussit**, et le contrôle interroge la
+version d'il y a un quart d'heure en affichant l'adresse qu'on lui a demandée.
+
+### Les trois gestes, et les trois comptent
+
+1. **Lancer en groupe détaché, tuer le groupe.** En Node,
+   `spawn(…, { detached: true })` puis `process.kill(-pid, 'SIGTERM')`. En
+   shell, `setsid …  & serveur=$!` puis `kill -- "-$serveur"`. Tuer le pid seul
+   ne descend pas.
 2. **Refuser de démarrer si le port répond déjà.** Une requête HTTP de 250 ms
    avant de lancer, et un message qui dit quoi faire. Sans ce garde-fou, le
    défaut est invisible : tout paraît fonctionner.
 3. **Ne pas détecter par `ss`** : le binaire n'existe pas dans ce conteneur, et
-   `ss -ltnp` y rend une sortie vide sans erreur — donc « port libre » alors
-   qu'il ne l'est pas. La sonde portable est la requête HTTP ; pour retrouver le
-   coupable, `ps -eo pid,args`.
+   `ss -ltnp` y rend une sortie vide **sans erreur** — donc « port libre »
+   alors qu'il ne l'est pas. La sonde portable est la requête HTTP ; pour
+   retrouver le coupable, `ps -eo pid,ppid,pgid,args`.
 
 **Piège voisin, même script :** une capture d'écran prise après
 `waitUntil: 'domcontentloaded'` montre la page **sans style** — cet événement
 n'attend pas la feuille. On croit à une régression de CSS. `waitForLoadState('load')`
 avant de photographier.
+
+**La leçon de méthode est la plus importante : un contrôle neuf ne vaut rien
+tant qu'on ne l'a pas vu échouer.** Celui-ci est passé vert deux fois de suite
+et j'allais le livrer. Rien dans sa sortie ne clochait — la bonne adresse, une
+durée plausible, un verdict net. Ce qui l'a démasqué est un geste, pas une
+lecture : **casser la page exprès et exiger le rouge.** Une durée suspecte avait
+mis la puce à l'oreille, mais elle ne prouvait rien — après correction, la même
+mesure prend le même temps.
+
+C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
+donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
+qu'il accepte.
 
 ## Deux versions du même son ne s'additionnent pas, elles battent
 
@@ -2405,13 +2435,30 @@ texte.split(/\n\s*\n/).map((p) => p.trim().replace(/\s*\n\s*/g, ' ')).filter((p)
 n'éprouve que des valeurs d'une ligne ne peut pas voir ce défaut-là, quel que
 soit leur nombre.
 
-## Une page de démonstration doit se dire telle sur la page
+## Une démonstration se dit telle sur la page, et se marque `noindex`
 
 Un faux numéro et un nom inventé protègent le dépôt du faux témoignage. Ils ne
-protègent pas le prospect qui reçoit le lien : rien, à l'écran, ne distinguait
-la démonstration d'un vrai client. La mention doit être **dans le contenu de la
-page**, pas seulement dans la documentation qui l'accompagne — celle-là, le
-prospect ne la lit jamais.
+protègent ni le prospect qui reçoit le lien, ni le confrère qui la croisera dans
+un moteur. Deux marques sont nécessaires, et elles ne servent pas la même
+personne :
+
+- **La mention dans le contenu de la page**, pas dans la documentation qui
+  l'accompagne — celle-là, le prospect ne la lit jamais. Sans elle, rien à
+  l'écran ne distingue la démonstration d'un vrai client.
+- **`noindex, nofollow`**, parce qu'indexée, l'entreprise fictive apparaît dans
+  les résultats comme un vrai établissement — et le jour où un client réel
+  s'appelle presque pareil, c'est lui qu'elle concurrence avec sa propre fiche.
+
+**Le drapeau appartient au générateur, pas à la copie du fichier.** Retirer la
+ligne à la main après coup marche une fois et se perd à la régénération
+suivante — et personne ne relit une page d'exemple. Un `--demonstration` qui
+traverse l'outil sort avec le fichier, à chaque fois.
+
+**Le piège symétrique, payé le même soir :** générer la démonstration *avec* le
+domaine de production lui donnait un `canonical` vers la racine du site. Elle
+aurait déclaré à Google **être** la page de vente. Une démonstration ne prend ni
+adresse canonique, ni image de partage, ni fiche d'établissement complète : elle
+n'est l'adresse de rien.
 
 ## Une couleur choisie par l'utilisateur ne peut pas décider seule de la lisibilité
 
@@ -2677,57 +2724,6 @@ depuis le disque, ce qui achève de tromper.
 
 **La parade est un fichier à plat** — `public/exemple.html` → `/exemple.html` —
 qui donne en prime une adresse courte, dictable au téléphone.
-
-## Une page de démonstration se marque `noindex`, et le drapeau va dans l'outil
-
-Une démonstration porte un nom d'entreprise qui n'existe pas et un numéro qui ne
-sonne nulle part. Indexée, elle apparaît dans les résultats comme un vrai
-établissement — et le jour où un client réel s'appelle presque pareil, c'est lui
-qu'elle concurrence avec sa propre fiche.
-
-Le point qui compte, et qui vaut au-delà de ce cas : **le drapeau appartient au
-générateur, pas à la copie du fichier.** Retirer la ligne à la main après coup
-marche une fois et se perd à la régénération suivante — et personne ne relit une
-page d'exemple. `--demonstration` traverse l'outil et sort avec le fichier.
-
-## Un serveur oublié rend vert un contrôle qui mesure le build d'avant
-
-Le contrôle visuel de la page de vente est passé au vert sur une page que
-j'avais **cassée exprès** pour l'éprouver. Il ne mesurait pas la page courante :
-il mesurait un serveur laissé par l'exécution précédente, qui servait encore le
-build d'avant.
-
-Deux causes, et la première explique la seconde :
-
-- **`kill` sur le PID de `npm` ne tue pas le serveur.** La chaîne réelle est
-  `npm exec next start` → `sh -c next start` → `next-server` : on tue
-  l'enveloppe, le petit-fils est réattaché à init et continue de servir. Vérifié
-  à `ps -eo pid,ppid,pgid,args` — trois `next-server` orphelins de ports que je
-  croyais fermés.
-- **Le port occupé ne provoque aucune erreur visible.** `next start` sort en 1
-  et son message part dans un journal que personne ne lit ; `curl` répond 200
-  immédiatement, l'attente du serveur réussit, et le contrôle mesure la page de
-  quelqu'un d'autre en affichant l'adresse qu'on lui a demandée.
-
-Les deux parades, et il faut les deux :
-
-```sh
-setsid npm exec next start -- -p "$port" & serveur=$!   # un groupe à soi
-kill -- "-$serveur"                                      # l'arbre entier
-curl -sf "http://127.0.0.1:$port/" && { echo occupé; exit 1; }   # avant de démarrer
-```
-
-**La leçon de méthode est la plus importante : un contrôle neuf ne vaut rien
-tant qu'on ne l'a pas vu échouer.** Celui-ci est passé vert deux fois de suite
-et j'allais le livrer. Rien dans sa sortie ne clochait — la bonne adresse, une
-durée plausible, un verdict net. Ce qui l'a démasqué est un geste, pas une
-lecture : **casser la page exprès et exiger le rouge.** Une durée suspecte avait
-mis la puce à l'oreille, mais elle ne prouvait rien — après correction, la même
-mesure prend le même temps.
-
-C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
-donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
-qu'il accepte.
 
 ## Un vérificateur qui déduit les projets des fichiers changés ne se voit pas
 lui-même
