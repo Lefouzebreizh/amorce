@@ -603,6 +603,27 @@ des décisions, et c'est ce que ce dépôt a de plus précieux. Une modification
 touche qu'un projet, sauf configuration racine. Français partout — commentaires,
 erreurs, tests, commits ; identifiants de code en anglais.
 
+### Piocher plutôt que tout charger — sur le code
+
+S'applique au **code** : Amorce, `agence/`, les projets Python et Flutter. Pas
+aux médias, aux plans de montage ni aux textes, où la section 0 fait foi.
+
+**Cartographier avant de toucher.** Avant de modifier une fonction existante,
+chercher son nom dans le projet : elle sert peut-être ailleurs. Une fonction
+remplacée sans ce relevé casse en silence un appelant qu'on n'avait pas vu.
+
+**Piocher, pas tout charger.** Devant une tâche, annoncer les trois à cinq
+fichiers dont on a besoin et pourquoi, puis les ouvrir. Charger un projet entier
+brûle la fenêtre et noie la décision.
+
+**S'arrêter devant un doublon.** Si un composant qui ressemble existe déjà, ne
+pas écrire son remplaçant : dire lequel on a trouvé, et demander lequel fait foi.
+
+**Ceci ne renverse pas la section 0.** L'autonomie reste la règle, et rien ici
+ne se demande avant de lire un fichier — ce serait payer en lenteur ce qu'on
+gagne en prudence. Ce qui s'ajoute est plus étroit : **regarder avant d'écrire**,
+et nommer ce qu'on a trouvé plutôt que de le supposer.
+
 ### Git
 
 Une branche `claude/…` par sujet, messages à l'infinitif décrivant l'intention.
