@@ -240,6 +240,53 @@ class TestFinancement(unittest.TestCase):
         self.assertEqual(niveau.analyser(resultat, s, (10.0,), financement=0.0)[0].liquidees, 0)
 
 
+class TestMechesAbsentes(unittest.TestCase):
+    """Le piège que ce module s'était tendu à lui-même.
+
+    Toute sa méthode repose sur les plus bas. Une source qui ne publie qu'une
+    clôture quotidienne n'en a pas à donner : le plus bas est alors fabriqué à
+    partir de deux clôtures successives, le calcul tourne, ne lève rien, et
+    mesure les clôtures en croyant mesurer les mèches.
+    """
+
+    def _serie(self, corps_seulement: bool) -> SerieOHLCV:
+        bougies = []
+        for i in range(20):
+            ouverture, cloture = 100.0, 98.0
+            haut = max(ouverture, cloture) if corps_seulement else 103.0
+            bas = min(ouverture, cloture) if corps_seulement else 90.0
+            bougies.append(Bougie(horodatage=DEBUT + timedelta(hours=i), ouverture=ouverture,
+                                  haut=haut, bas=bas, cloture=cloture, volume=1.0))
+        return SerieOHLCV(symbole="T/U", intervalle="1h", bougies=tuple(bougies))
+
+    def test_une_serie_batie_sur_les_clotures_est_reconnue(self):
+        self.assertTrue(niveau.meches_absentes(self._serie(True)))
+
+    def test_une_vraie_serie_de_marche_ne_l_est_pas(self):
+        self.assertFalse(niveau.meches_absentes(self._serie(False)))
+
+    def test_une_serie_vide_ne_declenche_pas_l_avertissement(self):
+        # Sans bougie, on ne sait rien — et « on ne sait rien » ne doit pas se
+        # dire « pas de mèches », qui est une affirmation.
+        self.assertFalse(niveau.meches_absentes(
+            SerieOHLCV(symbole="T/U", intervalle="1h", bougies=())
+        ))
+
+    def test_le_verdict_porte_le_drapeau_sans_qu_on_ait_a_le_passer(self):
+        # Sur le verdict et non en paramètre du tableau : un appelant qui
+        # oublie de transmettre l'avertissement est le défaut qu'on corrige.
+        resultat = ResultatFactice(10_000.0, [achat(100.0, 1.0, 0)], [])
+        verdicts = niveau.analyser(resultat, self._serie(True), (10.0,))
+        self.assertTrue(verdicts[0].sans_meches)
+        self.assertIn("pas d'information intra-bougie", niveau.tableau(verdicts))
+
+    def test_une_vraie_serie_ne_porte_pas_l_avertissement(self):
+        resultat = ResultatFactice(10_000.0, [achat(100.0, 1.0, 0)], [])
+        verdicts = niveau.analyser(resultat, self._serie(False), (10.0,))
+        self.assertFalse(verdicts[0].sans_meches)
+        self.assertNotIn("intra-bougie", niveau.tableau(verdicts))
+
+
 class TestVerdict(unittest.TestCase):
     def test_un_levier_plus_grand_liquide_au_moins_autant(self):
         # Monotonie : c'est la propriété qui rend le tableau lisible de haut en

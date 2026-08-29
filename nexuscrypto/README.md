@@ -373,6 +373,15 @@ parcours et non sur le point d'arrivée. Et **le seul levier qui traverse les
 trois fenêtres sans une liquidation est l'absence de levier** : même 2x tombe
 sur deux fenêtres sur trois.
 
+**Et sur cette source-là, les chiffres sous-comptent une seconde fois.**
+CoinMetrics ne publie qu'une clôture par jour : le module de rejeu fabrique
+alors `bas = min(clôture du jour, clôture de la veille)`, un plus bas de
+clôture à clôture. Or toute la méthode du levier repose sur les plus bas — une
+mèche liquide un compte aussi sûrement qu'une clôture. Sans information
+intra-journalière, elle mesure les clôtures en croyant mesurer les mèches. Le
+tableau détecte désormais ce cas et le dit sous ses propres résultats, plutôt
+que de laisser croire à une analyse qui n'a pas eu lieu.
+
 Le nombre rendu est un **plancher**, jamais une estimation : ni le financement
 d'un perpétuel, ni le prix de marque de la plateforme, ni l'illiquidité réelle
 ne sont comptés, et les trois poussent dans le même sens.
