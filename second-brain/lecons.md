@@ -3013,6 +3013,40 @@ Le coût de l'oubli n'est pas le conflit — Git l'aurait signalé. C'est le
 contraire : une branche qui **se fusionne proprement** en effaçant le travail
 fusionné entre-temps, sans qu'aucune vérification ne s'en aperçoive.
 
+## Un temps de calcul très inférieur au temps écoulé n'est pas de la lenteur
+
+Un outil de mesure vidéo a mis **six minutes quarante** à ne rien rendre. Le
+premier réflexe a été de l'accélérer : réduire l'image avant de l'analyser,
+supprimer une passe de décodage. Rien n'y a changé.
+
+La mesure qui a tranché tient dans la sortie de `time` :
+
+```
+real  6m40.003s
+user  0m9.273s
+```
+
+**Neuf secondes de calcul pour six minutes quarante d'attente.** Un programme
+lent consomme du temps processeur ; celui-là n'en consommait pas. Il
+attendait — et un programme qui attend attend quelque chose de nommable.
+
+C'était `ffmpeg` : sans `-y`, il demande « le fichier existe, écraser ? » et
+reste sur cette question. La première exécution passe, puisque le fichier
+n'existe pas encore ; toutes les suivantes se bloquent. Rien ne le signale
+quand la sortie est capturée plutôt qu'affichée.
+
+Deux choses à en retenir, et la seconde vaut plus que la première.
+
+**Tout appel à `ffmpeg` qui écrit un fichier porte `-y`**, et `-nostdin` avec,
+qui ferme la même porte par un autre chemin. Six outils de ce dépôt l'appellent.
+
+**Et le rapport `user`/`real` est le premier diagnostic d'un programme qui
+traîne**, avant toute optimisation. Proche de 1, c'est du calcul, et on
+optimise. Proche de 0, c'est une attente, et optimiser ne peut rien y faire —
+on cherche alors ce qui est attendu : une question posée sur l'entrée standard,
+un tuyau que personne ne vide, un verrou, une résolution de nom. Une heure a
+été dépensée à rendre plus rapide quelque chose qui ne calculait pas.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
@@ -3278,6 +3312,88 @@ barre sur le tronqué — « 100 % » sur une fenêtre à 99,9, soit le chiffre 
 fait croire qu'on est bloqué. Le défaut avait survécu à toutes les lectures du
 fichier seul. Quand deux versions doivent afficher la même chose, les croiser
 sur vingt valeurs coûte une minute et trouve ce qu'une relecture ne trouve pas.
+## Un contrôle qui vit dans l'outil qu'on lance exprès ne protège personne
+
+Le contrôle DNS de l'adresse canonique existait déjà — dans
+`regler-domaines.mjs --etat`, c'est-à-dire dans la commande qu'on lance
+**quand on a déjà pensé au problème**. Le chemin que tout le monde emprunte,
+`npm run sites` puis dépôt, ne le traversait pas. Un défaut connu, un correctif
+écrit, une leçon rédigée : et la mise en ligne restait exactement aussi
+dangereuse qu'avant.
+
+**Un garde-fou se place sur le chemin par défaut, pas sur le chemin vertueux.**
+La question à poser n'est pas « le contrôle existe-t-il ? » mais « que se
+passe-t-il pour quelqu'un qui ne le lance pas ? ». Ici la réponse était : onze
+sites en ligne, parfaitement affichés, tous les contrôles verts.
+
+**Et un garde-fou a besoin d'un témoin, sinon il accuse à tort.** Sans
+résolveur, *toutes* les adresses échouent — les bonnes comprises. Conclure « le
+domaine n'existe pas » y serait faux onze fois sur onze. On interroge donc
+d'abord un témoin qui existe par construction (`example.com`, réservé par la
+RFC 2606, mesuré résolvant le 29/08/2026) : s'il est muet, on avertit et on
+laisse passer. Un filet qui se ferme sur une panne d'outillage se fait
+désactiver dans la semaine.
+
+**Corollaire sur l'échappement :** `npm run sites --sans-dns` ne transmet pas le
+drapeau — npm le garde pour lui, et le script refuse quand même (mesuré). Il
+faut `npm run sites -- --sans-dns`. L'oubli rate du bon côté, mais il faut
+l'écrire, sinon on croit l'échappement cassé.
+
+## Un connecteur qui arrive en cours de route se lit avant qu'on espère
+
+Adobe for Creativity s'est connecté le 29/08/2026, avec une trentaine d'outils
+`image_*`, Firefly et Express. De quoi croire le verrou de l'illustration KDP
+levé. **Sa propre documentation dit le contraire** : « Most generative AI
+capabilities (image generation, generative fill, text-to-image, AI object
+removal) are **not available** in this environment ». Seul `image_generative_expand`
+(agrandissement de cadre) subsiste, et il part d'une image existante.
+
+Ce que le connecteur fait vraiment : retoucher, recadrer, détourer, vectoriser,
+mettre en page. Ce qu'il ne fait pas : la première image. Le chemin de l'image
+reste donc fermé — c'est le **quatrième** mesuré, après la diffusion locale, les
+cinq hôtes à `000` et la parade des releases GitHub.
+
+**Ce que ça change pour la prochaine session :** un connecteur riche n'est pas
+une capacité, et sa liste d'outils ment par omission. Cinq minutes de lecture de
+sa doc valent mieux qu'une heure d'essais qui finiront sur la même phrase.
+
+## Pousser et ouvrir une PR ne passent pas par le même tuyau
+
+Mesuré le 29/08/2026 sur une session distante : `git push` réussit — le proxy
+git sert le dépôt — mais **l'API GitHub rend 403** (« GitHub access is not
+enabled for this session »), et `gh` n'est pas installé. La branche part, la PR
+ne s'ouvre pas depuis la session.
+
+Ce n'est pas une panne à contourner : le `remote:` de la poussée donne
+l'adresse `.../pull/new/<branche>` toute prête. On la transmet, on ne cherche
+pas un troisième chemin. **Et on ne conclut pas « le dépôt est inaccessible »
+d'un 403 sur l'API** : la lecture par `git` marchait, seule la couche compte
+GitHub manquait.
+
+## Un compteur qui compte du travail déjà tranché fait repousser la tâche
+
+Le réseau d'annuaires affichait « 73 liens d'affiliation à poser ». Le vrai
+nombre est **42** : 24 outils se vendent « sur devis » — cycle commercial long,
+aucun programme d'affiliation derrière — et 7 ont un éditeur qui ne rémunère pas
+l'apport ou un programme fermé aux nouveaux candidats. Ces 31 cas étaient
+**déjà tranchés par la recherche**, écrits noir sur blanc dans `AFFILIATION.md`,
+et comptés malgré tout comme du retard.
+
+L'écart n'est pas cosmétique : il décide qu'on s'y met ou pas. Une corvée
+annoncée à 73 formulaires se repousse ; à 42 elle tient dans une soirée. Le
+compteur ne mentait sur aucun chiffre pris isolément — il additionnait
+simplement deux choses qui ne se ressemblent pas.
+
+**Où mettre le fait, et non où il est commode de l'écrire.** Le marqueur
+`sans_programme` vit dans la fiche de l'outil, pas dans le script qui compte :
+un script qui embarquerait la liste la verrait dériver dès la première fiche
+ajoutée par l'auto-pilote, et c'est le script qu'on croirait. Le *pourquoi* de
+chaque cas reste dans le document de recherche — la donnée porte le fait, la
+prose porte la raison.
+
+**Et le marqueur se lève tout seul** quand un vrai lien arrive : un programme
+rouvre, ou la recherche s'était trompée. Une note qui dit « ça ne paie pas » à
+côté d'une adresse qui paie est le genre de contradiction qu'on ne relit jamais.
 
 ## « Un bruit de fond sur toute la vidéo » n'est pas du bruit, c'est du contenu
 

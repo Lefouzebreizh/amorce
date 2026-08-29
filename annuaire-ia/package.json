@@ -14,6 +14,7 @@
     "reserve": "node auto-pilot.js --etat-reserve",
     "sitemap": "node generate-sitemap.js",
     "sites": "node construire-sites.js",
-    "niche": "node nouvelle-niche.js"
+    "niche": "node nouvelle-niche.js",
+    "affiliations": "node regler-affiliations.mjs"
   }
 }
