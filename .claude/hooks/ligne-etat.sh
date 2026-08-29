@@ -43,7 +43,10 @@ jauge() {
   [[ -z $pourcent ]] && return
   reprise=$(lire ".rate_limits.${fenetre}.resets_at")
   local texte
-  texte=$(printf '%s %s %.0f %%' "$nom" "$(barre "$pourcent")" "$pourcent")
+  # Tronqué, jamais arrondi : `%.0f` affichait « 50 % » à côté d'une barre
+  # calculée pour 49, et « 100 % » sur une fenêtre à 99,9. Le chiffre et la
+  # barre doivent sortir du même nombre, sinon ils se contredisent à l'écran.
+  texte=$(printf '%s %s %d %%' "$nom" "$(barre "$pourcent")" "${pourcent%.*}")
   # L'heure de reprise n'intéresse que si la jauge est déjà bien entamée.
   if [[ -n $reprise ]] && (( ${pourcent%.*} >= 50 )); then
     texte+=" ↻$(date -d "@$reprise" '+%Hh%M' 2>/dev/null || echo '')"

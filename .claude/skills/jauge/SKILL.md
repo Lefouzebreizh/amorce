@@ -28,6 +28,29 @@ S'il annonce qu'aucun relevé n'est disponible, le dire et renvoyer à `/usage`.
 C'est le cas normal au tout début d'une session : la ligne d'état n'a pas
 encore tourné.
 
+## Deux lignes d'état, une par système
+
+`ligne-etat.sh` demande `jq` et `date -d` : sur un Windows nu, aucun des deux
+n'existe, et la barre reste vide **sans message**. Son jumeau `ligne-etat.ps1`
+n'attend que PowerShell, présent depuis Windows 7. Les deux affichent la même
+ligne — vingt valeurs croisées, zéro écart — et déposent leur relevé chacun au
+seul endroit que son système connaît : `TMPDIR` avec l'UID au nom sur Unix,
+`%TEMP%` sur Windows. `lire-jauge.py` regarde les deux, sans quoi il annonce
+« aucun relevé » sur le système qu'il ne connaît pas, jauge affichée à l'écran.
+
+Installation sous Windows, depuis le dépôt :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\.claude\hooks\installer-jauge.ps1
+```
+
+Il copie la jauge dans `~/.claude` — la viser dans le clone la ferait taire le
+jour où le dossier bouge — fusionne `settings.json` après sauvegarde datée, et
+**montre un essai** : une installation dont on ne vérifie rien se découvre au
+prochain démarrage, sur une barre vide qui ne dit pas laquelle des trois étapes
+a manqué. `-ExecutionPolicy Bypass` est enregistré dans la commande, parce que
+le refus par défaut de Windows d'exécuter un `.ps1` est lui aussi silencieux.
+
 ## Ce qu'il faut en dire
 
 Le script rend des chiffres bruts. Le travail consiste à les traduire en
