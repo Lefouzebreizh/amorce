@@ -256,6 +256,19 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   l'achat. Mais **pas d'adresse, pas de bouclier** : les lignes du socle n'ont
   pas de contrat à auditer, et exiger une adresse pour LINK/USDT lui interdisait
   tout achat à chaque passe.
+- **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
+  sa promesse. Deux routes, une table de deux colonnes utiles, **zéro
+  dépendance** : la plateforme fournit `Request`, `Response` et `crypto.subtle`.
+  Il sait deux choses — cette clé est-elle authentique, ce paiement tient-il
+  toujours — et **aucun média ne l'atteint jamais**.
+  **Pas de comptes** : Amorce se vend une fois, 49 €, et une clé suffit. Le
+  serveur ne sait donc pas qui vous êtes, seulement qu'une clé a été payée. La
+  clé porte sa propre preuve — `AMO-<référence>-<sceau>`, le sceau étant un
+  HMAC de la référence — si bien que la base ne répond qu'aux deux questions que
+  le calcul ne tranche pas : ce paiement a-t-il eu lieu, a-t-il été remboursé.
+  Tout ce qui décide vit dans `src/index.ts`, qui ne connaît que l'interface
+  `Base` : la suite entière, **signature Stripe comprise**, s'éprouve sans D1,
+  sans wrangler et sans réseau. Se vérifie depuis son dossier.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
