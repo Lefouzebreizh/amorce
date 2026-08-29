@@ -2989,6 +2989,30 @@ appelle sa fonction ; on ne la recalcule pas de tête.** Une mesure refaite à l
 main mesure autre chose, et la ressemblance des deux chiffres est précisément
 ce qui empêche de s'en apercevoir.
 
+## `origin/main` est une référence locale, et elle ment sans le dire
+
+`git checkout -B ma-branche origin/main` ne va pas chercher l'état du serveur :
+il lit une référence **locale**, celle du dernier `fetch`. Dans un dépôt à une
+seule session, la nuance ne se voit jamais. Ici elle coûte un parcours complet.
+
+Mesuré : une branche créée ainsi est repartie d'un `main` vieux de deux fusions,
+dont une d'une autre session. Rien ne l'a signalé — ni la création, ni les
+tests, ni la vérification, qui sont tous passés au vert sur cette base périmée.
+
+**Le seul symptôme était un compte qui baissait** : `npm test` rendait 205 là où
+la fusion précédente en avait laissé 206. Un total qui monte ne prouve rien, un
+total qui **descend** sans qu'on ait retiré de test dit qu'on ne travaille pas
+sur ce qu'on croit. C'est le signe à connaître, parce qu'aucun outil ne le crie.
+
+La parade tient en un mot ajouté : `git fetch origin main` **avant** chaque
+`checkout -B`, jamais une fois en début de session. Une session longue traverse
+plusieurs fusions des autres, et la référence qu'elle a lue au réveil est fausse
+une heure plus tard.
+
+Le coût de l'oubli n'est pas le conflit — Git l'aurait signalé. C'est le
+contraire : une branche qui **se fusionne proprement** en effaçant le travail
+fusionné entre-temps, sans qu'aucune vérification ne s'en aperçoive.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
