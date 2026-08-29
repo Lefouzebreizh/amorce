@@ -381,6 +381,13 @@ async function principal() {
       )
       await page.screenshot({ path: join(ESSAI, 'ecran-lecture.png') })
 
+      console.log('── Sous-titres externes, sans clé')
+      // La dégradation compte autant que la fonctionnalité : sans clé, on doit
+      // obtenir une phrase qui dit quoi faire, pas une erreur ni un silence.
+      await page.click('text=Chercher des sous-titres')
+      await page.waitForSelector('text=OPENSUBTITLES_API_KEY', { timeout: 5000 })
+      verifier(true, 'sans clé, l’interface dit laquelle poser au lieu d’échouer')
+
       // Ce qui n'est PAS vérifié ici, et il faut le dire : le décodage.
       // Mesuré sur ce conteneur — le Chromium de Playwright est compilé sans
       // les codecs propriétaires : `canPlayType('video/mp4; codecs="avc1…"')`

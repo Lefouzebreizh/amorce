@@ -15,9 +15,9 @@ Le **cœur d'ingestion**, le **cache** et l'**interface** sont écrits et
 vérifiés : lecture d'une liste M3U en flux, client Xtream, normalisation,
 écriture en base avec recherche plein texte, une application Next.js 16 avec
 grilles filtrables, fiches de séries, recherche, favoris, reprise de lecture et
-lecteur HLS, et le **guide des programmes** en XMLTV — ce qui passe en ce
-moment, ce qui suit, et une barre d'avancement. Restent les sous-titres
-externes, qui demandent une clé d'API qu'on n'a pas.
+lecteur HLS, le **guide des programmes** en XMLTV, et la **recherche de
+sous-titres externes** — écrite, testée, et en sommeil tant qu'aucune clé
+d'API n'est posée.
 
 **Mesuré sur une liste de 120 000 entrées** (15 Mo, fabriquée pour l'occasion,
 jamais versionnée) : import en **6,6 s**, 135 Mo de mémoire de crête, base de
@@ -37,6 +37,9 @@ iptv/
 │   │   └── xtream.ts       client Xtream Codes, tolérant aux panneaux
 │   ├── epg/
 │   │   └── xmltv.ts        guide des programmes, au fil de l'eau lui aussi
+│   ├── sous-titres/
+│   │   ├── conversion.ts   encodage réel, puis SRT vers WebVTT
+│   │   └── fournisseurs.ts l'interface, et OpenSubtitles derrière
 │   ├── cache/
 │   │   ├── schema.ts       les tables, et les décisions qu'elles portent
 │   │   ├── depot.ts        tout le SQL, et rien que là
@@ -59,11 +62,6 @@ iptv/
 ```
 
 Ce que la suite ajoutera, aux mêmes endroits :
-
-```
-src/
-└── sous-titres/   ← pistes du flux, puis repli sur une API externe
-```
 
 ## S'en servir tout de suite
 
@@ -197,6 +195,25 @@ le CDATA avant de retirer les balises fait ressortir « Les » pour
 `<![CDATA[Les <Bronzés>]]>`. C'est exactement ce que le CDATA existe pour
 protéger : on met son contenu de côté, on nettoie autour, on le remet.
 
+**Une recherche de sous-titres ne part jamais toute seule.** Elle se déclenche
+sur un geste. Une requête automatique dirait à un service tiers ce que la
+personne regarde, à chaque lecture — un sous-titre ne vaut pas cela. Et ce qui
+part est un titre, une année, une saison, un épisode : jamais l'adresse du flux,
+qui porte les identifiants du fournisseur en clair. Un test le vérifie sur
+l'URL réellement appelée.
+
+**Un `.srt` francophone sur deux n'est pas en UTF-8.** Il vient d'un outil
+Windows, en windows-1252, et décodé sans se poser la question « L'été » devient
+« L'Ã©tÃ© » — un défaut qui ne se voit que sur les accents, donc rarement sur la
+première ligne. L'ordre d'essai n'est pas indifférent : l'UTF-8 strict **lève**
+sur une séquence invalide, ce qui en fait un test fiable ; windows-1252 accepte
+n'importe quel octet et ne se plaint jamais.
+
+**Aucun navigateur ne lit le SRT.** L'élément `<track>` ne connaît que le
+WebVTT, et les deux se ressemblent assez pour qu'on croie qu'un renommage
+suffit : il manque l'en-tête, et les millisecondes s'y écrivent avec un point.
+Sans ces deux détails, la piste se charge sans erreur et n'affiche rien.
+
 **Le chemin de l'URL prime sur tout le reste pour classer.** `/series/`,
 `/movie/` et `/live/` sont la route du serveur, pas une convention de nommage :
 ils ne mentent pas, là où un groupe nommé à la main se trompe régulièrement.
@@ -272,8 +289,15 @@ jour sur Cloudflare D1, qui est le cap posé pour ce dépôt.
 est incontournable — aucun navigateur de bureau ne lit HLS nativement, et c'est
 elle qui donne le changement de piste audio en cours de lecture.
 
-**Ce qui demande une clé qu'on n'a pas** : les affiches et synopsis TMDB, les
-sous-titres OpenSubtitles ou SubDL. Ces trois-là s'écrivent derrière une
-interface avec un repli neutre — pas d'affiche, pas de sous-titre externe, le
-reste fonctionne — pour que l'absence de clé ne bloque ni le développement ni
-la vérification.
+**Ce qui demande une clé qu'on n'a pas** : les affiches et synopsis TMDB, et
+les services de sous-titres. Le second est **écrit** : sans clé, la liste des
+pistes externes est vide et l'interface dit laquelle poser — aucun écran ne
+casse, et la vérification d'interface contrôle cette phrase-là. Le premier
+branchement avec une vraie clé reste le seul moment où l'on saura si un champ
+de l'API a bougé.
+
+SubDL n'est volontairement pas implémenté : son API rend une **archive ZIP**,
+ce qui demande un décompresseur, et rien ne permet d'éprouver la forme réelle
+de ses réponses sans clé. L'interface `Fournisseur` est là pour l'ajouter le
+jour où c'est vérifiable — écrire ce code à l'aveugle donnerait une
+implémentation qui compile et ne marche pas.
