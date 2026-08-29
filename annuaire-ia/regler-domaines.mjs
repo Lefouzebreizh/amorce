@@ -26,9 +26,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { promises as dns } from 'node:dns';
-
-const lookup = (hote) => dns.lookup(hote);
+import { resout } from './sonde-dns.mjs';
 
 const racine = path.dirname(fileURLToPath(import.meta.url));
 const dossierNiches = path.join(racine, 'niches');
@@ -69,28 +67,10 @@ function normaliser(brut) {
 
 /*
  * L'état ne se contente plus de recopier les adresses déclarées : il demande au
- * DNS si elles existent.
- *
- * Mesuré le 29/08/2026 : les onze niches annonçaient `ma-panoplie-ia.com`, qui
- * **ne résout pas**. Rien ne le disait — l'état affichait onze belles adresses,
- * les sitemaps les reprenaient, et le gabarit en faisait des balises canoniques.
- * Déployer dans cet état aurait mis onze sites en ligne déclarant tous que leur
- * version de référence se trouve à une adresse que personne ne sert : le pire
- * signal qu'on puisse envoyer à un moteur.
- *
- * La sonde est un `lookup` et pas une requête HTTP, et c'est délibéré : derrière
- * un mandataire filtrant, tout rend `000` — un domaine bloqué comme un domaine
- * inexistant. Le DNS, lui, sépare les deux, vérifié sur un témoin
- * (`api.binance.com` résout et reste injoignable).
+ * DNS si elles existent. La sonde et ce qu'elle mesure vivent dans
+ * `sonde-dns.mjs` — `construire-sites.js` s'en sert aussi, et deux copies de
+ * la même sonde, c'est une des deux qui devient fausse.
  */
-async function resout(hote) {
-  try {
-    await lookup(hote);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 async function etat() {
   console.log('── Adresses publiques du réseau\n');
@@ -115,7 +95,9 @@ async function etat() {
     console.log(
       `\n⚠ ${morts.join(', ')} ne résout pas. Les balises canoniques, les sitemaps et` +
         '\n  les `og:url` désignent donc une adresse que personne ne sert.' +
-        '\n  Cloudflare Pages en donne une gratuite : `--base https://annuaire-ia.pages.dev`.' +
+        '\n  Cloudflare Pages en donne une gratuite : `--base https://<projet>.pages.dev`,' +
+        '\n  où `<projet>` est le nom donné au projet Pages — il se lit sur le tableau' +
+        '\n  de bord après le premier dépôt, il ne se devine pas d’ici.' +
         '\n  Le domaine acheté se branchera plus tard, par la même commande.',
     );
   }

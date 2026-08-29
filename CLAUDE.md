@@ -313,15 +313,19 @@ troisième qui répond.
 le jour où les clés arrivent : une compétence qui ne peut pas tourner est un
 mensonge dans la liste.
 
-**Et pour l'image, les trois chemins sont fermés, mesuré le 29/08/2026.** Ce
+**Et pour l'image, les quatre chemins sont fermés, mesuré le 29/08/2026.** Ce
 n'est pas qu'une clé manque : `torch` et `diffusers` sont absents, donc aucune
 diffusion locale ; et `fal.run`, `api.openai.com`, `api.stability.ai`,
 `image.pollinations.ai`, `huggingface.co` rendent tous `000`. La parade des
 releases GitHub, qui a débloqué la voix off et les poids Wav2Lip, ne s'applique
 pas — un modèle d'image pèse des gigaoctets et demande le `torch` qui n'est pas
-là. **Une session ne peut donc pas fabriquer une illustration**, et c'est ce qui
-bloque le tome 1 de KDP : il lui manque une planche et une couverture, et rien
-d'autre.
+là. **Et le connecteur Adobe n'y change rien** : sa documentation dit en clair
+que la génération d'image y est indisponible, seul l'agrandissement de cadre
+(`image_generative_expand`) subsiste et il part d'une image existante. Adobe
+retouche, recadre, détoure, vectorise et met en page — il ne fait pas la
+première image. **Une session ne peut donc pas fabriquer une illustration**, et
+c'est ce qui bloque le tome 1 de KDP : il lui manque une planche et une
+couverture, et rien d'autre.
 
 **La transcription, elle, marche** — et ce blocage-ci a coûté deux sessions
 avant d'être levé. `huggingface.co` est refusé par le mandataire, comme

@@ -222,7 +222,7 @@ les traiter dans le désordre fait perdre le bénéfice des deux premières.
 | # | Verrou | Mesuré | Ce que ça coûte |
 | --- | --- | --- | --- |
 | 1 | **Rien n'est déposé** | billet [#181](https://github.com/Lefouzebreizh/amorce/issues/181), ouvert depuis le 27/08 | dix minutes, gratuit — deux secrets GitHub et un projet Cloudflare Pages |
-| 2 | **Le domaine ne résout pas** | `ma-panoplie-ia.com` → aucune résolution DNS, le 29/08 | rien, si l'on prend l'adresse gratuite de Pages |
+| 2 | **Le domaine ne résout pas** | `ma-panoplie-ia.com` → aucune résolution DNS, le 29/08 | rien, si l'on prend l'adresse gratuite de Pages — et `npm run sites` refuse de construire tant que c'est le cas |
 | 3 | **73 liens sur 73 sont des exemples** | `npm run valider` | une soirée de formulaires, `AFFILIATION.md` |
 
 **Et un piège entre le 1 et le 2 :** déposer sans régler l'adresse mettrait onze
@@ -230,16 +230,31 @@ sites en ligne déclarant tous une balise canonique vers un domaine que personne
 ne sert. C'est le pire signal qu'on puisse envoyer à un moteur, et il est
 invisible — le site s'affiche parfaitement.
 
-L'ordre juste, donc :
+**Ce piège est désormais fermé** : `npm run sites` demande au DNS si l'adresse
+canonique existe et **refuse de construire** si elle ne résout pas. Il n'y a
+plus d'ordre à retenir — se tromper d'ordre s'arrête tout seul, avec la
+commande à lancer dans le message.
+
+L'ordre juste reste celui-ci :
 
 ```bash
-node regler-domaines.mjs --base https://annuaire-ia.pages.dev   # avant le dépôt
-npm run sites                                                    # reconstruire
+node regler-domaines.mjs --base https://<projet>.pages.dev   # avant le dépôt
+npm run sites                                                 # reconstruire
 # puis les secrets Cloudflare, et le workflow « Annuaire IA — mise en ligne »
 ```
 
-Le domaine acheté se branche plus tard, par la même commande, sans rien casser.
-`node regler-domaines.mjs --etat` interroge maintenant le DNS et le dit.
+`<projet>` est le nom donné au projet Cloudflare Pages : l'adresse gratuite en
+découle, elle ne se devine pas à l'avance. Se lit sur le tableau de bord après
+le premier dépôt — et tant que le projet n'existe pas, `<projet>.pages.dev` ne
+résout pas non plus (mesuré le 29/08 sur `annuaire-ia.pages.dev`).
+
+Un domaine acheté dont le DNS n'a pas fini de se propager est le seul cas
+légitime de blocage à tort : `npm run sites -- --sans-dns` passe outre. **Les
+deux tirets seuls ne sont pas décoratifs** — sans eux npm garde le drapeau pour
+lui, le script ne le voit pas et refuse quand même (mesuré). L'échappement rate
+donc du bon côté : jamais de mise en ligne accidentelle. Le domaine
+se branche par la même commande que ci-dessus, sans rien casser.
+`node regler-domaines.mjs --etat` interroge le DNS et le dit.
 ## Ce que le réseau rapporte aujourd'hui : rien
 
 Mesuré : **73 liens sur 73**, sur les onze sites publiés, pointent encore vers
