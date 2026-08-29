@@ -14,14 +14,14 @@ un stockage minuscule, aucune dépendance à Amorce.
 Rend l'abonnement de la personne identifiée par le témoin de session.
 
 ```json
-{ "statut": "libre", "finLe": 1767225600000 }
+{ "statut": "libre" }
 ```
 
 - `statut` vaut `libre` ou `pro`. Toute autre valeur est traitée comme
   inconnue par le client, donc comme l'offre libre.
-- `finLe` est facultatif, en millisecondes. Il sert à **l'affichage**, jamais à
-  décider : une date lue côté client se modifie, et c'est au serveur de dire si
-  l'abonnement court encore.
+- **Un statut, et rien d'autre.** Amorce se vend une fois : pas de date de fin,
+  pas de renouvellement, rien à faire expirer. Tout champ supplémentaire est
+  ignoré par le client, jamais recopié.
 - Sans session valide : `{"statut":"libre"}` avec un code 200. Pas de 401 — le
   studio n'a pas à savoir qu'on ne le connaît pas, il a à savoir quoi proposer.
 
@@ -30,11 +30,15 @@ Un serveur lent ne doit jamais suspendre un montage.
 
 ### Le webhook Stripe
 
-Reçoit `checkout.session.completed`, `customer.subscription.updated` et
-`customer.subscription.deleted`, et met à jour le statut.
+**Un seul événement compte : `checkout.session.completed`.** Il fait passer le
+compte en `pro`, définitivement.
+
+Pas d'événements d'abonnement — il n'y a pas d'abonnement. Le seul retour en
+arrière est `charge.refunded` (ou `charge.dispute.created`), qui remet le compte
+en `libre` : un remboursement rend la licence, c'est la contrepartie honnête.
 
 **La signature Stripe se vérifie, sans exception.** Une route de webhook non
-vérifiée accorde un abonnement à quiconque connaît son adresse.
+vérifiée accorde la licence à quiconque connaît son adresse.
 
 ## Ce que le serveur ne doit jamais recevoir
 
@@ -56,11 +60,28 @@ signature et la définition.
 Le serveur n'a donc **aucun événement d'usage à recevoir**. C'est ce qui le
 rend minuscule.
 
+## Le prix
+
+**49 €, une fois, définitivement.** Pas d'abonnement, et ce n'est pas un choix
+de confort : la page de vente d'`artisan-express` attaque frontalement le
+prélèvement mensuel — « 299 € une fois. Rien le mois suivant. » Vendre Amorce
+autrement contredirait ce que ce dépôt dit déjà à son public.
+
+Le chiffre vient de `montage-titan`, qui vend **un** montage 49 €. L'argument
+tient en une phrase : *un montage fait pour toi coûte 49 € ; Amorce coûte 49 €
+et tu en fais autant que tu veux.*
+
+Et la licence perpétuelle n'est pas une dette : le studio tourne entièrement
+dans le navigateur, donc un client ne coûte **rien** après l'achat — ni
+stockage, ni calcul, ni bande passante. Seule la vérification de licence tourne,
+et elle est gratuite à cette échelle. C'est l'architecture qui rend l'offre
+possible, pas de la générosité.
+
 ## Le stockage
 
-Une table, trois colonnes utiles : identifiant de la personne, identifiant
-client Stripe, fin d'abonnement. Rien d'autre n'est nécessaire pour répondre à
-`/etat`.
+Une table, deux colonnes utiles : identifiant de la personne, et le fait qu'elle
+a payé. L'identifiant client Stripe s'y ajoute pour retrouver un paiement, rien
+de plus. Aucune date : il n'y en a pas.
 
 ## L'ordre dans lequel ça s'allume
 
@@ -68,7 +89,7 @@ client Stripe, fin d'abonnement. Rien d'autre n'est nécessaire pour répondre �
 2. `NEXT_PUBLIC_LICENCE_URL` est renseignée. **La signature apparaît alors
    d'elle-même** sur l'offre libre : le studio ne l'affiche pas tant qu'il
    n'existe pas d'endroit où payer.
-3. Le webhook Stripe est branché, et un paiement fait passer un compte en
-   `pro`. La signature disparaît pour lui.
+3. Le webhook Stripe est branché, et un paiement de 49 € fait passer un compte
+   en `pro`. La signature disparaît pour lui, définitivement.
 
 Chaque étape se vérifie seule, et aucune n'exige la suivante.
