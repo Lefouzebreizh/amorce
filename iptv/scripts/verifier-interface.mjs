@@ -84,6 +84,14 @@ async function fabriquerFlux() {
 function serveurOrigine() {
   const serveur = createServer((requete, reponse) => {
     const chemin = new URL(requete.url ?? '/', 'http://x').pathname
+    // Une chaîne géobloquée, telle qu'un vrai fournisseur la refuse : un 403
+    // sur le manifeste lui-même. C'est le cas relevé sur une installation
+    // réelle, et celui que le lecteur confondait avec un trou réseau.
+    if (chemin.includes('/refuse/')) {
+      reponse.writeHead(403)
+      reponse.end('interdit')
+      return
+    }
     if (chemin.endsWith('.m3u8')) {
       reponse.writeHead(200, { 'content-type': 'application/vnd.apple.mpegurl' })
       reponse.end(readFileSync(join(FLUX, 'essai.m3u8')))
@@ -119,6 +127,8 @@ const LISTE = [
   `http://127.0.0.1:${PORT_ORIGINE}/series/u/p/12.m3u8`,
   '#EXTINF:-1 group-title="SERIES VOSTFR",[VOSTFR] Breaking Bad S01E01',
   `http://127.0.0.1:${PORT_ORIGINE}/series/u/p/21.m3u8`,
+  '#EXTINF:-1 group-title="FR | TNT",FR | Chaîne Géobloquée',
+  `http://127.0.0.1:${PORT_ORIGINE}/live/refuse/99.m3u8`,
 ].join('\n')
 
 /**
@@ -187,8 +197,15 @@ async function importer() {
 
   const film = cache.lister({ genre: 'film' })[0]
   const chaine = cache.lister({ genre: 'direct' }).find((element) => element.tvgId === 'tf1.fr')
+  const refusee = cache.lister({ genre: 'direct' }).find((element) => element.url.includes('/refuse/'))
   cache.fermer()
-  return { ...resume, idFilm: film?.id, idChaine: chaine?.id, programmes: guide.ecrits }
+  return {
+    ...resume,
+    idFilm: film?.id,
+    idChaine: chaine?.id,
+    idRefusee: refusee?.id,
+    programmes: guide.ecrits,
+  }
 }
 
 async function attendrePret(url, secondes = 60) {
@@ -445,6 +462,23 @@ async function principal() {
       verifier(true, 'sans panneau, l’absence est expliquée plutôt que muette')
     }
 
+    if (resume.idRefusee !== undefined) {
+      console.log('── Un flux refusé le dit, au lieu de tourner indéfiniment')
+      // Relevé sur une vraie installation : le mandataire renvoyait le 403 du
+      // fournisseur en 404 ms, et l'écran affichait « Connexion au flux… » sans
+      // fin. La cause était un `startLoad()` sans condition ni plafond sur
+      // toute erreur réseau — un flux géobloqué se redemandait pour toujours.
+      await page.goto(
+        `http://127.0.0.1:${PORT_APP}/lecture/${encodeURIComponent(resume.idRefusee)}`,
+        { waitUntil: 'domcontentloaded' },
+      )
+      await page.waitForLoadState('load')
+      await page.waitForSelector('text=/refusé ce flux \\(403\\)/', { timeout: 15000 })
+      verifier(true, 'le refus du fournisseur est nommé, avec son code')
+      const tourne = (await page.locator('text=Connexion au flux').count()) > 0
+      verifier(!tourne, 'et l’indicateur de chargement a cédé la place')
+    }
+
     {
       console.log('── Entretien : le cul-de-sac du catalogue tout masqué')
       // Défaut trouvé en regardant l'écran, pas par un test : après un balayage
@@ -483,9 +517,13 @@ async function principal() {
       verifier(retour, 'et le bouton qui répare reste à l’écran')
 
       await page.click('text=Tout remettre en jeu')
-      await page.waitForSelector('text=/remises en jeu/', { timeout: 30000 })
-      const titre = await page.locator('h1').first().innerText()
-      verifier(titre.includes('Bonsoir'), 'un clic ramène le catalogue entier')
+      // On attend le titre, pas le message : `router.refresh()` redemande le
+      // rendu serveur sans l'attendre, donc le message arrive avant lui. Lire
+      // le titre à cet instant rend l'ancien, et le contrôle devient instable —
+      // il passait tant que la page était courte, et a cédé à la neuvième
+      // entrée du décor.
+      await page.waitForSelector('h1:has-text("Bonsoir")', { timeout: 30000 })
+      verifier(true, 'un clic ramène le catalogue entier')
 
       // Le serveur d'origine reste éteint : ce contrôle est le dernier à en
       // avoir besoin, et le rallumer donnerait un décor différent de celui
