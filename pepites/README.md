@@ -350,8 +350,17 @@ Ce qui reste **fragile ou incomplet**, dit franchement :
   clé** : les premiers acheteurs EVM sont désactivés, et le radar notera sans
   jamais prévenir tant que le jeton du bot n'est pas posé.
 
-  Ce qui reste à faire : le premier `scan` complet, puis le second dix minutes
-  plus tard — la persistance en demande deux.
+  **Le premier scan réel a suivi**, même jour : `887 paires → 232 jetons →
+  11 candidats en 27 secondes`, pour 101 appels HTTP et 60 jetons en vitrine.
+  Aucune pépite retenue, ce qui est le comportement attendu — la persistance
+  exige deux relevés espacés de dix minutes, et le premier tour ne fait que
+  remplir la mémoire. L'entonnoir tient donc ses promesses de bout en bout : le
+  calcul gratuit ramène 887 paires à 11 candidats **avant** le premier appel de
+  sécurité, et c'est ce qui fait tenir l'outil dans les quotas gratuits.
+
+  Sous Windows, le verrou de tour se dégrade en avertissement — `fcntl` n'y
+  existe pas — et l'annonce lui-même. Comportement voulu et vérifié sur le
+  terrain, sur un système qu'aucun test du dépôt ne couvre.
 
 ## 6. Commandes
 
