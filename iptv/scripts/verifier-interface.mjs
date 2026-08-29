@@ -443,6 +443,53 @@ async function principal() {
       await page.click('text=Chercher la bande-annonce')
       await page.waitForSelector('text=Une liste M3U n’en fournit aucune', { timeout: 5000 })
       verifier(true, 'sans panneau, l’absence est expliquée plutôt que muette')
+    }
+
+    {
+      console.log('── Entretien : le cul-de-sac du catalogue tout masqué')
+      // Défaut trouvé en regardant l'écran, pas par un test : après un balayage
+      // qui condamne tout, l'accueil basculait sur « le catalogue est vide,
+      // importez une liste » — donc il accusait la mauvaise cause ET faisait
+      // disparaître le bloc d'entretien, seul chemin de retour. On enferme.
+      const entretien = `http://127.0.0.1:${PORT_APP}/api/entretien`
+      const poster = async (tache) => {
+        const reponse = await fetch(entretien, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ tache, lot: 500 }),
+        })
+        return reponse.json()
+      }
+
+      // Tout condamner **pour de vrai** : on éteint le serveur d'origine avant
+      // le balayage. Sans cela la moitié des flux répondent encore et l'écran
+      // « tout masqué » ne se produit jamais — c'est ce qu'a montré le premier
+      // passage, et c'est exactement le genre de décor trop favorable qui rend
+      // un contrôle vert sans rien prouver.
+      await new Promise((resoudre) => origine.close(resoudre))
+      let restants = Infinity
+      for (let tour = 0; tour < 20 && restants > 0; tour += 1) {
+        const lot = await poster('tester')
+        if ((lot.faits ?? 0) === 0) break
+        restants = lot.restants ?? 0
+      }
+      verifier(restants === 0, 'le balayage par lots se termine')
+
+      await page.goto(`http://127.0.0.1:${PORT_APP}/`, { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('load')
+      const masque = (await page.locator('text=Tout est masqué').count()) > 0
+      const retour = (await page.locator('text=Tout remettre en jeu').count()) > 0
+      verifier(masque, 'tout masqué se dit, au lieu de « le catalogue est vide »')
+      verifier(retour, 'et le bouton qui répare reste à l’écran')
+
+      await page.click('text=Tout remettre en jeu')
+      await page.waitForSelector('text=/remises en jeu/', { timeout: 30000 })
+      const titre = await page.locator('h1').first().innerText()
+      verifier(titre.includes('Bonsoir'), 'un clic ramène le catalogue entier')
+
+      // Le serveur d'origine reste éteint : ce contrôle est le dernier à en
+      // avoir besoin, et le rallumer donnerait un décor différent de celui
+      // qu'ont vu les contrôles précédents.
       // Ce qui n'est PAS vérifié ici, et il faut le dire : le décodage.
       // Mesuré sur ce conteneur — le Chromium de Playwright est compilé sans
       // les codecs propriétaires : `canPlayType('video/mp4; codecs="avc1…"')`

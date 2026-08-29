@@ -3422,3 +3422,27 @@ La leçon générale dépasse Git : **une commande de « restauration » est une
 commande d'écrasement vue de l'autre côté.** `checkout --`, `restore`, `reset
 --hard`, `Expand-Archive -Force` : toutes rendent un état propre en détruisant
 ce qui n'était pas enregistré, et aucune ne demande confirmation.
+
+## Un décor trop favorable rend un contrôle vert sans rien prouver
+
+Un contrôle d'interface venait d'être écrit pour un cas précis : après un
+balayage qui condamne tout, l'écran doit dire « tout est masqué » et garder le
+bouton qui répare. Il est passé au rouge du premier coup — mais pas pour la
+raison attendue. Dans son décor, le serveur de flux **tournait encore** : la
+moitié des entrées répondaient, donc le catalogue n'était jamais entièrement
+masqué, donc l'état à éprouver ne se produisait pas.
+
+Le réflexe est de conclure que le contrôle est trop exigeant et de l'assouplir.
+C'est l'erreur : un contrôle qui s'adapte au décor ne mesure plus rien. Ce qu'il
+fallait, c'est **fabriquer l'état hostile** — ici, éteindre le serveur d'origine
+avant le balayage, en une ligne.
+
+La règle : **un cas limite ne s'éprouve que dans un décor qui le rend
+possible.** Panne réseau, quota atteint, base vide, catalogue entier condamné —
+aucun de ces états n'arrive tout seul dans un environnement de test, qui est par
+construction le plus favorable qui soit. Les provoquer coûte une ligne ; les
+attendre coûte un utilisateur.
+
+Corollaire pratique : quand un contrôle neuf passe au vert **du premier coup**,
+il faut le faire échouer exprès une fois avant de lui faire confiance. Celui-ci
+avait justement échoué — et c'est ce qui a révélé que son décor était faux.
