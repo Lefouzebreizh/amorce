@@ -12,6 +12,18 @@ import {
 /** Rien de tout cela ne se met en cache : ce sont des flux, souvent en direct. */
 export const dynamic = 'force-dynamic'
 
+/**
+ * Le délai avant d'abandonner la connexion amont, en millisecondes.
+ *
+ * Réglable pour les tests, qui n'ont pas huit secondes à perdre pour prouver
+ * qu'une origine muette finit par rendre un 504 plutôt qu'un blocage.
+ */
+function delaiAmontMs(): number {
+  const brut = process.env['IPTV_DELAI_AMONT_MS']
+  const valeur = brut === undefined ? Number.NaN : Number(brut)
+  return Number.isFinite(valeur) && valeur > 0 ? valeur : 8000
+}
+
 interface Cible {
   readonly url: string
   readonly entetes: Record<string, string>
@@ -52,12 +64,27 @@ export async function GET(requete: Request): Promise<Response> {
   const plage = requete.headers.get('range')
   if (plage !== null) entetes.set('range', plage)
 
+  // Un panneau saturé accepte souvent la connexion sans jamais répondre : sans
+  // borne, `fetch` attend le délai par défaut du moteur — plusieurs minutes —
+  // pendant que le lecteur affiche « Connexion au flux… » sans un mot. Le même
+  // délai que `testerElement` (huit secondes) rend un 504 rapide, que le
+  // lecteur sait déjà retenter puis abandonner proprement.
+  const arret = new AbortController()
+  const minuterie = setTimeout(() => {
+    arret.abort()
+  }, delaiAmontMs())
+
   let amont: Response
   try {
-    amont = await fetch(cible.url, { headers: entetes, redirect: 'follow' })
-  } catch {
+    amont = await fetch(cible.url, { headers: entetes, redirect: 'follow', signal: arret.signal })
+  } catch (cause) {
     // Le message d'origine porte l'URL, donc les identifiants du fournisseur.
-    return new Response('Flux injoignable', { status: 502 })
+    const delai = cause instanceof Error && cause.name === 'AbortError'
+    return new Response(delai ? 'Le fournisseur ne répond pas' : 'Flux injoignable', {
+      status: delai ? 504 : 502,
+    })
+  } finally {
+    clearTimeout(minuterie)
   }
 
   if (!amont.ok && amont.status !== 206) {

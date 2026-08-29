@@ -3696,3 +3696,59 @@ La question à se poser en vidant un répertoire de travail n'est donc pas
 « qu'est-ce qui est lourd » mais **« qu'est-ce qui est du texte et n'a jamais
 été committé »**. Le lourd se renvoie ; le texte se versionne, et lui seul
 survit à tout le monde.
+
+## IPTV : un mandataire sans délai amont transforme un flux mort en blocage muet
+
+Mesuré le 29/08/2026 sur `src/app/api/flux/route.ts`. Le lecteur affichait
+« Connexion au flux… » sans jamais bouger sur une chaîne réellement morte
+(« Ciné+ Classic »), alors que le correctif de retries bornés côté `Lecteur.tsx`
+venait d'être fusionné. La cause n'était pas côté client : `fetch(cible.url,
+…)` vers l'amont ne portait **aucun** `AbortController`. Un panneau saturé qui
+accepte la connexion TCP et ne répond jamais fait attendre `fetch` son délai
+par défaut — plusieurs minutes chez Node/undici — avant que hls.js voie même
+une erreur. Le compte à trois tentatives ajouté au client ne sert à rien si
+chaque tentative individuelle peut durer plusieurs minutes côté serveur.
+
+**La parade est le même délai que `testerElement`** (8 s), posé sur le
+`fetch` amont du mandataire, avec un 504 propre à l'expiration — pas un délai
+nouveau à inventer, celui qui existe déjà pour éprouver un flux est la bonne
+mesure pour le relayer. Le test qui le prouve (`tests/flux-route.test.ts`)
+ne peut pas se permettre d'attendre 8 s à chaque exécution : le délai est lu
+depuis `IPTV_DELAI_AMONT_MS`, réglable à quelques millisecondes en test, avec
+8000 en défaut de production — la même astuce que d'autres réglages de ce
+projet lisent déjà depuis `process.env`.
+
+**Et la leçon plus large, qui dépasse ce fichier :** un correctif posé côté
+client (bornes de retry, message d'erreur) ne protège de rien si l'étage
+serveur qu'il traverse peut, lui, rester indéfiniment silencieux. Chercher le
+symptôme « ça tourne sans jamais s'arrêter » uniquement dans la dernière
+couche qu'on vient de toucher a fait rater ce point une fois ; le bon réflexe
+est de suivre la requête jusqu'à son dernier `fetch` sans délai, quelle que
+soit la couche qui l'a écrit.
+
+## Une base IPTV importée une fois ne s'auto-répare jamais, même avec un classement corrigé
+
+Mesuré le 29/08/2026 en reproduisant la vraie liste de l'utilisateur
+(`iptv-org/iptv`, branche `gh-pages`, `countries/fr.m3u`, 215 entrées). Un
+réimport frais avec le code actuel classe tout correctement dès l'entrée : le
+genre se déduit d'abord de l'URL (`/live/`, `/movie/`, `/series/`, ou une
+extension `.m3u8`), le `group-title` n'intervenant qu'en dernier recours. Mais
+« Ranger les chaînes » (`rangerCatalogue`/`reclasser`) ne relit **que ce qui
+est déjà en base** — jamais la source en direct. Une URL enregistrée il y a
+plusieurs jours, sur une liste communautaire qui fait tourner ses hôtes en
+continu, peut avoir perdu la forme qui la faisait reconnaître comme un direct
+(elle ne se termine plus par `.m3u8`, ne contient plus `/live/`) : la règle de
+repli sur le `group-title` (« Movies », « Cinema ») la reclasse alors en film
+à chaque passage de « Ranger », indéfiniment, parce que l'information qui la
+sauverait n'a jamais été stockée. Aucune quantité de reclassement ne corrige
+une URL fausse — seul un réimport (`npm run iptv -- importer <adresse>`, qui
+purge par défaut ce qui a disparu de la source) la remplace par la bonne.
+
+**Le signal qui aurait dû alerter plus tôt :** un lot d'« Éprouver » revenu à
+33/33 « indécis » (ambigu — 401/403/429/5xx) sans un seul « mort » ni un seul
+« vivant ». Ce n'est pas un défaut du testeur — un DNS mort ou une connexion
+refusée classent déjà en « mort », donc 33 codes ambigus veut dire 33 vraies
+réponses HTTP reçues, cohérent avec des hôtes qui existent mais throttlent —
+mais c'est un signe indirect que la base n'a plus été rafraîchie depuis un
+moment : un catalogue entretenu régulièrement mélange rarement autant de
+fournisseurs saturés d'un coup.
