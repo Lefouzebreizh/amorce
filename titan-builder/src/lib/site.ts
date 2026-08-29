@@ -38,6 +38,9 @@ import { MODELES, OPTIONS, modeleParId, type Commande, type IdentifiantOption } 
  * commande contenant `<script>` produirait un site qui l'exécute — chez le
  * client, sous son nom de domaine.
  */
+/** L'encre sombre de la page, et le seul candidat foncé pour un texte. */
+export const ENCRE = '#16202b';
+
 export function echapper(texte: string): string {
   return texte
     .replace(/&/g, '&amp;')
@@ -53,6 +56,72 @@ export function lienTelephonique(brut: string): string {
   if (chiffres.startsWith('+')) return chiffres;
   if (chiffres.startsWith('0')) return `+33${chiffres.slice(1)}`;
   return chiffres;
+}
+
+/* ── La lisibilité, calculée et non supposée ──────────────────────────────── */
+
+/*
+ * Le client choisit sa couleur, et la page écrivait du blanc dessus quel que
+ * soit son choix. Un artisan qui dit « jaune » recevait donc un titre à 1,4:1 —
+ * illisible sur un chantier, en plein soleil, sur un téléphone à moitié
+ * assombri. Ce n'est pas un détail d'esthétique : c'est la page qui ne se lit
+ * pas là où elle est lue.
+ *
+ * Rien ici ne refuse ni ne remplace la couleur du client. On change **ce qu'on
+ * écrit dessus**, et on assombrit la teinte pour le seul usage où elle sert de
+ * texte. Sa couleur reste la sienne partout où elle est un fond.
+ */
+
+function canaux(hex: string): [number, number, number] {
+  return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number];
+}
+
+function versHex(rvb: readonly number[]): string {
+  return `#${rvb.map((c) => Math.round(Math.min(1, Math.max(0, c)) * 255).toString(16).padStart(2, '0')).join('')}`;
+}
+
+/** La luminance relative WCAG. */
+function luminance(hex: string): number {
+  const [r, v, b] = canaux(hex).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * v + 0.0722 * b;
+}
+
+/** Le rapport de contraste WCAG entre deux couleurs, de 1 à 21. */
+export function contraste(a: string, b: string): number {
+  const [clair, sombre] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (clair + 0.05) / (sombre + 0.05);
+}
+
+/**
+ * Ce qu'on écrit sur la couleur du client : blanc, ou l'encre sombre.
+ *
+ * On prend le meilleur des deux plutôt que d'imposer le blanc. Sur un bleu
+ * profond c'est le blanc qui gagne, sur un jaune c'est l'encre — et dans les
+ * deux cas le titre se lit.
+ */
+export function encreSurAccent(accent: string): string {
+  return contraste(accent, ENCRE) > contraste(accent, '#ffffff') ? ENCRE : '#ffffff';
+}
+
+/**
+ * La couleur du client, assombrie ou éclaircie juste assez pour servir de
+ * texte sur le fond de la page.
+ *
+ * Le bouton secondaire écrit l'accent sur du papier : un jaune y disparaît. On
+ * la déplace par pas de 4 % vers le noir (ou vers le blanc en thème sombre)
+ * jusqu'à franchir 4,5:1, et on s'arrête là — un pas de plus dénaturerait la
+ * teinte sans rien gagner. Trente pas suffisent à atteindre le noir ou le
+ * blanc purs, qui contrastent toujours : la boucle se termine toujours.
+ */
+export function accentLisible(accent: string, fond: string): string {
+  const vers = luminance(fond) > 0.5 ? 0 : 1;
+  let couleur = accent;
+
+  for (let pas = 0; pas < 30 && contraste(couleur, fond) < 4.5; pas += 1) {
+    couleur = versHex(canaux(couleur).map((c) => c + (vers - c) * 0.04));
+  }
+
+  return couleur;
 }
 
 /**
@@ -171,6 +240,16 @@ ${images}
     );
   }
 
+  /*
+   * L'entête écrit sur la couleur du client. On prend d'abord la meilleure des
+   * deux encres ; si même la meilleure reste sous 4,5:1 — ce qui arrive sur les
+   * teintes moyennes, un gris-vert ou un orange terne — on approfondit le fond
+   * juste assez. La teinte se déplace alors un peu, et c'est un choix assumé :
+   * un titre illisible sur un chantier coûte la visite, pas une nuance exacte.
+   */
+  const encreEntete = encreSurAccent(couleur);
+  const fondEntete = accentLisible(couleur, encreEntete);
+
   const accroche = commande.slogan.trim() !== ''
     ? echapper(commande.slogan.trim())
     : `${modele ? echapper(modele.pourQui) : 'Artisan'} — ${ville}`;
@@ -185,17 +264,23 @@ ${images}
 <style>
   /* Une seule couleur d'accent, celle du client. Tout le reste est neutre :
      c'est ce qui fait qu'on ne cherche jamais où appuyer. */
-  :root { --accent: ${couleur}; --encre: #16202b; --papier: #ffffff; --gris: #5b6b7a; }
+  :root {
+    --accent: ${fondEntete}; --encre-entete: ${encreEntete};
+    /* La même teinte, poussée jusqu'à se lire comme texte sur le papier. Le
+       fond, lui, garde la couleur choisie : c'est là qu'elle se voit. */
+    --accent-texte: ${accentLisible(couleur, '#ffffff')};
+    --encre: ${ENCRE}; --papier: #ffffff; --gris: #5b6b7a;
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--papier); color: var(--encre);
     font: 18px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   header {
-    background: var(--accent); color: #fff; padding: 2.5rem 1.25rem;
+    background: var(--accent); color: var(--encre-entete); padding: 2.5rem 1.25rem;
   }
   header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.2; }
-  header p { margin: 0; font-size: 1.15rem; opacity: .95; }
+  header p { margin: 0; font-size: 1.15rem; }
   main { max-width: 40rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
   .bloc { padding: 2rem 0; border-bottom: 1px solid #e4e9ee; }
   .bloc:last-of-type { border-bottom: 0; }
@@ -211,12 +296,18 @@ ${images}
   .action {
     flex: 1 1 12rem; min-height: 56px; display: flex; align-items: center;
     justify-content: center; border-radius: .75rem; text-decoration: none;
-    font-weight: 700; border: 2px solid var(--accent); color: var(--accent);
+    font-weight: 700; border: 2px solid var(--accent-texte); color: var(--accent-texte);
   }
-  .action.principale { background: var(--accent); color: #fff; }
-  footer { padding: 2rem 1.25rem; color: var(--gris); text-align: center; font-size: .95rem; }
+  .action.principale { background: var(--accent); color: var(--encre-entete); border-color: var(--accent); }
+  /* 1 rem, pas .95 : le plancher du dépôt est 18 px, et le pied de page porte
+     le numéro de téléphone — c'est la ligne la moins bien vue et la plus utile. */
+  footer { padding: 2rem 1.25rem; color: var(--gris); text-align: center; }
   @media (prefers-color-scheme: dark) {
-    :root { --encre: #eef3f7; --papier: #10171e; --gris: #93a3b1; }
+    :root {
+      --encre: #eef3f7; --papier: #10171e; --gris: #93a3b1;
+      /* Sur fond sombre, la même teinte doit s'éclaircir au lieu de foncer. */
+      --accent-texte: ${accentLisible(couleur, '#10171e')};
+    }
     .bloc { border-bottom-color: #24313d; }
   }
 </style>
