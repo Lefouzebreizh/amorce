@@ -2,8 +2,9 @@
 
 import { useId, useState } from 'react';
 import { BOUTON_PRINCIPAL, SECTION, TITRE_SECTION } from '@/components/ui';
-import { aUnTelephone, aUnWhatsapp, contact } from '@/lib/config';
-import { CHAMP_PIEGE, analyserDemande, type ChampDemande } from '@/lib/demande';
+import { aUnCourrielDirect, aUnTelephone, aUnWhatsapp, contact } from '@/lib/config';
+import { CHAMP_PIEGE, analyserDemande, type ChampDemande, type Demande } from '@/lib/demande';
+import { lienMailtoDemande } from '@/lib/courriel';
 
 /*
  * Le formulaire, et le seul morceau interactif de la page.
@@ -20,8 +21,14 @@ type Etat =
   | { nom: 'envoi' }
   | { nom: 'recu' }
   | { nom: 'invalide'; erreurs: Partial<Record<ChampDemande, string>> }
-  /** La route répond, mais l'envoi de courriel n'est pas configuré ou a échoué. */
-  | { nom: 'panne' };
+  /*
+   * La route répond, mais l'envoi de courriel n'est pas configuré ou a échoué.
+   *
+   * La demande est conservée : c'est elle qui permet de proposer le repli par
+   * messagerie sans redemander à l'artisan de tout retaper. Un formulaire qui
+   * échoue et vide ses champs perd le client, pas seulement l'envoi.
+   */
+  | { nom: 'panne'; demande: Demande | null };
 
 const METIERS = [
   'Maçon',
@@ -72,6 +79,12 @@ export function FormulaireDevis() {
       return;
     }
 
+    /*
+     * Un envoi piégé est accepté sans rien dire côté serveur — il n'a donc pas
+     * de demande exploitable, et le repli par messagerie ne lui est pas offert.
+     */
+    const demande = analyse.statut === 'valide' ? analyse.demande : null;
+
     setEtat({ nom: 'envoi' });
 
     try {
@@ -81,9 +94,9 @@ export function FormulaireDevis() {
         body: JSON.stringify(donnees),
       });
 
-      setEtat(reponse.ok ? { nom: 'recu' } : { nom: 'panne' });
+      setEtat(reponse.ok ? { nom: 'recu' } : { nom: 'panne', demande });
     } catch {
-      setEtat({ nom: 'panne' });
+      setEtat({ nom: 'panne', demande });
     }
   }
 
@@ -213,7 +226,27 @@ export function FormulaireDevis() {
           </button>
         </div>
 
-        {etat.nom === 'panne' ? (
+        {etat.nom === 'panne' && aUnCourrielDirect && etat.demande !== null ? (
+          /*
+           * Le repli qui ne demande aucun compte : la demande part par la
+           * messagerie de l'artisan, déjà écrite. Il reste un bouton à presser
+           * chez lui — mais il reste surtout un chemin, là où la page n'en
+           * offrait plus aucun tant que rien n'était réglé.
+           */
+          <div role="alert" className="rounded-xl bg-bleu-pale p-4 sm:col-span-2">
+            <p className="text-lg leading-relaxed text-encre">
+              L’envoi automatique ne marche pas — c’est de mon côté, pas du tien. Ton message est
+              prêt : appuie, il part de ta messagerie.
+            </p>
+            <a
+              className={`${BOUTON_PRINCIPAL} mt-4 inline-flex`}
+              href={lienMailtoDemande(etat.demande, contact.courrielDirect)}
+            >
+              Envoyer depuis ma messagerie
+            </a>
+          </div>
+        ) : null}
+        {etat.nom === 'panne' && !(aUnCourrielDirect && etat.demande !== null) ? (
           <p role="alert" className="rounded-xl bg-bleu-pale p-4 text-lg leading-relaxed text-encre sm:col-span-2">
             Le formulaire ne part pas — c’est de mon côté, pas du tien.{' '}
             {aUnTelephone ? (

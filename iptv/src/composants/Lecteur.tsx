@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+import {
+  adresseAbsolue,
+  moyensDiffusion,
+  obstacleDiffusion,
+  type MoyensDiffusion,
+} from '../lecture/diffusion.ts'
+
 interface Piste {
   readonly index: number
   readonly nom: string
@@ -53,6 +60,13 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
   const [externes, setExternes] = useState<PisteExterne[] | undefined>(undefined)
   const [motSousTitres, setMotSousTitres] = useState<string | undefined>(undefined)
   const [cherche, setCherche] = useState(false)
+  // 'local' : la page décode. 'distant' : un appareil du salon s'en charge, et
+  // la page ne fait plus que piloter.
+  const [mode, setMode] = useState<'local' | 'distant'>('local')
+  const [moyens, setMoyens] = useState<MoyensDiffusion>({ distant: false, airplay: false })
+  const [appareils, setAppareils] = useState(false)
+  const [motDiffusion, setMotDiffusion] = useState<string | undefined>(undefined)
+  const detruireLecture = useRef<(() => void) | undefined>(undefined)
   const commande = useRef<{ audio: (i: number) => void; sousTitre: (i: number) => void }>({
     audio: () => {},
     sousTitre: () => {},
@@ -67,6 +81,12 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
     const natif = element.canPlayType('application/vnd.apple.mpegurl') !== ''
 
     const preparer = async (): Promise<void> => {
+      // En diffusion, la source doit être une **adresse**, pas un flux assemblé
+      // dans la page : c'est l'appareil du salon qui va la chercher.
+      if (mode === 'distant') {
+        element.src = adresseAbsolue(src, window.location.href)
+        return
+      }
       if (natif) {
         element.src = src
         return
@@ -117,14 +137,44 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
         },
       }
       detruire = () => hls.destroy()
+      detruireLecture.current = detruire
     }
 
     void preparer()
     return () => {
       annule = true
       detruire?.()
+      detruireLecture.current = undefined
     }
-  }, [src, direct])
+  }, [src, direct, mode])
+
+  // Ce que le navigateur sait faire, et s'il voit un appareil.
+  useEffect(() => {
+    const element = video.current
+    if (element === null) return
+    const disponibles = moyensDiffusion(element)
+    setMoyens(disponibles)
+    if (!disponibles.distant) {
+      // AirPlay ne dit pas s'il voit un appareil : le sélecteur s'en charge.
+      setAppareils(disponibles.airplay)
+      return
+    }
+
+    let annuler: (() => void) | undefined
+    element.remote
+      .watchAvailability((present) => setAppareils(present))
+      .then((identifiant) => {
+        annuler = () => void element.remote.cancelWatchAvailability(identifiant)
+      })
+      .catch(() => setAppareils(false))
+
+    const fini = (): void => setMode('local')
+    element.remote.addEventListener('disconnect', fini)
+    return () => {
+      annuler?.()
+      element.remote.removeEventListener('disconnect', fini)
+    }
+  }, [])
 
   // Reprise de lecture : posée une fois les métadonnées connues, sinon la durée
   // vaut NaN et l'affectation est ignorée sans erreur.
@@ -237,6 +287,38 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
     element.append(balise)
   }
 
+  /*
+   * Diffuser, dans l'ordre où les gestes doivent se faire.
+   *
+   * Détruire hls.js **avant** de poser la source directe : laisser les deux en
+   * place fait que la bibliothèque reprend la main sur l'élément et écrase
+   * l'adresse qu'on vient d'y mettre — la diffusion démarre alors sur rien, et
+   * l'appareil affiche un écran noir sans erreur.
+   */
+  const diffuser = async (): Promise<void> => {
+    const element = video.current
+    if (element === null) return
+
+    const obstacle = obstacleDiffusion(window.location.href, moyens)
+    if (obstacle !== undefined) {
+      setMotDiffusion(obstacle)
+      return
+    }
+
+    detruireLecture.current?.()
+    detruireLecture.current = undefined
+    element.src = adresseAbsolue(src, window.location.href)
+    setMode('distant')
+
+    try {
+      if (moyens.distant) await element.remote.prompt()
+      else (element as unknown as { webkitShowPlaybackTargetPicker: () => void }).webkitShowPlaybackTargetPicker()
+    } catch {
+      // Refus ou fermeture du sélecteur : on revient à la lecture locale.
+      setMode('local')
+    }
+  }
+
   return (
     <div>
       <video
@@ -251,6 +333,30 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
         <p role="alert" className="mt-3 rounded-lg bg-red-500/15 p-3 text-red-200">
           {erreur}
         </p>
+      )}
+
+      {(appareils || motDiffusion !== undefined) && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => void diffuser()}
+            aria-pressed={mode === 'distant'}
+            className={`rounded-lg border px-4 py-2 ${
+              mode === 'distant' ? 'border-accent bg-accent-sombre' : 'border-bord hover:border-accent'
+            }`}
+          >
+            <span aria-hidden>▢</span>{' '}
+            {mode === 'distant' ? 'Diffusion en cours — changer d’appareil' : 'Diffuser sur la télévision'}
+          </button>
+          {motDiffusion !== undefined && (
+            <p className="mt-2 text-sm text-doux">{motDiffusion}</p>
+          )}
+          {mode === 'distant' && (
+            <p className="mt-2 text-sm text-doux">
+              L’appareil lit le flux lui-même ; ce téléphone peut se verrouiller.
+            </p>
+          )}
+        </div>
       )}
 
       <div className="mt-4">
