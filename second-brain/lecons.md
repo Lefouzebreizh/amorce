@@ -2355,3 +2355,44 @@ entière.** Les teintes qui échouent ne sont ni les vives ni les sombres, ce so
 les **moyennes** — un gris-vert, un orange terne — où *aucune* des deux encres
 n'atteint 4,5:1. Un test sur trois couleurs bien choisies passe et ne prouve
 rien ; vingt-neuf teintes par pas de 15° coûtent 4 ms.
+
+## `</script>` traverse JSON, et l'échappement HTML ne le rattrape pas
+
+Un bloc `<script type="application/ld+json">` a une règle d'échappement à lui,
+et c'est la seule du genre dans une page : l'analyseur HTML cherche la suite
+`</script` **avant** de passer la main à JSON. Une valeur qui la contient
+referme le bloc, et tout ce qui suit devient du HTML exécutable — sur le domaine
+du client, pas sur le sien.
+
+Les deux réflexes échouent, chacun pour sa raison :
+
+- **`JSON.stringify` seul ne protège pas** : il n'a aucune raison d'échapper un
+  chevron, qui est un caractère parfaitement légal dans une chaîne JSON.
+- **L'échappement HTML est pire que rien** : `&lt;` survit tel quel à
+  `JSON.parse`, et la donnée structurée porte alors des entités à la place du
+  texte. On a réparé la faille et cassé la fiche.
+
+La parade tient en une substitution, après la sérialisation :
+
+```js
+JSON.stringify(valeur).replace(/</g, '\\u003c')
+```
+
+`\u003c` reste un chevron pour JSON et n'est plus une balise pour HTML.
+
+**Et la leçon plus large : un échappement se choisit selon qui lit, pas selon où
+l'on écrit.** Ici deux analyseurs lisent la même chaîne l'un après l'autre, et
+c'est la seule forme qui satisfait les deux.
+
+## Aucun hôte de référence des formats web n'est joignable depuis une session
+
+Mesuré le 29/08/2026 : `schema.org`, `validator.schema.org`, `ogp.me` et
+`developers.facebook.com` rendent tous `000` — même refus de tunnel que les
+hôtes de données de marché. Une forme de données structurées ou de balises de
+partage s'écrit donc **de mémoire**, et cela déplace la vérification sans la
+supprimer : elle se fait au premier site publié, dans le *Rich Results Test* de
+Google et le *Sharing Debugger* de Facebook, depuis un navigateur ordinaire.
+
+Ce qui se vérifie hors ligne, en revanche, et qui attrape les vraies fautes :
+que le bloc **parse** dans un vrai navigateur, et qu'aucune valeur ne puisse le
+refermer.

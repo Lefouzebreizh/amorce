@@ -229,3 +229,64 @@ test('aucune couleur de client ne produit un entête illisible', () => {
     assert.ok(contraste(texte, '#ffffff') >= 4.5, `bouton à ${contraste(texte, '#ffffff').toFixed(2)}:1 pour ${teinte}`);
   }
 });
+
+test('un nom d’entreprise ne peut pas refermer le bloc de données structurées', () => {
+  /*
+   * Le piège propre au JSON-LD : dans un `<script>`, l'analyseur HTML cherche
+   * `</script` avant que JSON n'existe. Sans échappement du chevron, un nom
+   * piégé refermerait le bloc et la suite deviendrait du HTML exécutable, sur
+   * le domaine du client.
+   *
+   * Et l'échappement HTML habituel serait faux ici : `&lt;` survivrait tel quel
+   * à `JSON.parse`, et la fiche porterait des entités au lieu du nom.
+   */
+  const html = genererSite(commande({ entreprise: 'Toitures </script><img src=x onerror=alert(1)>' }));
+  const bloc = /<script type="application\/ld\+json">\n([\s\S]*?)\n<\/script>/.exec(html);
+
+  assert.ok(bloc, 'aucun bloc de données structurées');
+  assert.equal(bloc[1].includes('</script'), false, 'le bloc peut être refermé');
+  assert.equal(JSON.parse(bloc[1]).name, 'Toitures </script><img src=x onerror=alert(1)>');
+});
+
+test('la fiche d’établissement porte le métier, le téléphone et la zone', () => {
+  const html = genererSite(commande({
+    entreprise: 'Couverture Tanguy', ville: 'Auray', telephone: '02 97 00 11 22',
+    services: 'Toiture ardoise\nZinguerie', presentation: 'Je travaille seul.',
+  }));
+  const bloc = /<script type="application\/ld\+json">\n([\s\S]*?)\n<\/script>/.exec(html);
+  assert.ok(bloc, 'aucun bloc de données structurées');
+  const fiche = JSON.parse(bloc[1]);
+
+  assert.equal(fiche['@type'], 'LocalBusiness');
+  assert.equal(fiche.telephone, '+33297001122');
+  assert.equal(fiche.address.addressLocality, 'Auray');
+  assert.equal(fiche.hasOfferCatalog.itemListElement.length, 2);
+  assert.equal(fiche.hasOfferCatalog.itemListElement[0].itemOffered.name, 'Toiture ardoise');
+});
+
+test('sans domaine, rien n’est inventé', () => {
+  /*
+   * Une adresse absolue supposée ferait afficher un rectangle vide à chaque
+   * partage — un lien qui paraît cassé, ce qui est pire qu'aucune image.
+   */
+  const html = genererSite(commande(), [{ fichier: 'chantier.jpg' }]);
+
+  assert.equal(html.includes('og:image'), false);
+  assert.equal(html.includes('rel="canonical"'), false);
+  assert.equal(html.includes('og:url'), false);
+  assert.match(html, /og:title/);
+  const bloc = /ld\+json">\n([\s\S]*?)\n<\/script>/.exec(html);
+  assert.ok(bloc, 'aucun bloc de données structurées');
+  assert.equal(JSON.parse(bloc[1]).url, undefined);
+});
+
+test('le domaine est nettoyé, et un domaine faux est ignoré', () => {
+  const avec = genererSite(commande(), [{ fichier: 'chantier.jpg' }], {
+    domaine: 'HTTPS://Couverture-Tanguy.FR/',
+  });
+  assert.match(avec, /<link rel="canonical" href="https:\/\/couverture-tanguy\.fr\/">/);
+  assert.match(avec, /og:image" content="https:\/\/couverture-tanguy\.fr\/chantier\.jpg"/);
+
+  // « localhost » n'a pas de point : accepté, il produirait un lien mort.
+  assert.equal(genererSite(commande(), [], { domaine: 'localhost' }).includes('canonical'), false);
+});
