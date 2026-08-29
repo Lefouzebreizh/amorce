@@ -78,6 +78,27 @@ export const Y_PAR_DEFAUT = 0.38;
  */
 export const HAUTEURS_LIBRES = [Y_PAR_DEFAUT, 0.3, 0.22, 0.14] as const;
 
+/**
+ * Les textes qui portent encore un crochet à remplir.
+ *
+ * Les gabarits d'`autoFinish` posent volontairement des trous — `[Ce qui
+ * menace]`, `QUEL [ROYAUME] TOMBE ENSUITE ?` — parce qu'écrire les phrases à
+ * la place de quelqu'un serait lui mettre des mots dans la bouche. C'est un
+ * bon principe, et il avait une conséquence que personne n'avait vue : **rien
+ * n'empêchait d'exporter les trous eux-mêmes.**
+ *
+ * Constaté sur un montage livré : quatre textes sur quatre étaient des
+ * gabarits non remplis, gravés dans le fichier et prêts à publier. Aucune
+ * mesure ne le disait — la couverture texte était même bonne, puisqu'il y
+ * avait du texte.
+ *
+ * Le crochet est cherché n'importe où dans la phrase : `QUEL [ROYAUME] TOMBE
+ * ENSUITE ?` est à moitié rempli, donc pas rempli.
+ */
+export function crochetsARemplir(captions: Caption[]): Caption[] {
+  return captions.filter((c) => /\[[^\]]+\]/.test(c.text));
+}
+
 /** Ramène une hauteur dans la bande que les trois plateformes laissent libre. */
 export function dansLaBandeSure(y: number): number {
   return Math.min(BANDE_SURE.bas, Math.max(BANDE_SURE.haut, y));
