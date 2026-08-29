@@ -3102,3 +3102,37 @@ qui est **visible à l'écran** — faire défiler ne cumule donc pas les connex
 — et le nombre est écrit dans l'interface elle-même, à côté du réglage, pas
 seulement dans le code. Quelqu'un qui voit « 4 chaînes à la fois » ne cherche
 pas pourquoi la cinquième reste noire.
+
+## Une PR fusionnée en squash laisse la branche rejouer la même histoire
+
+Mesuré deux fois dans la même heure, et la seconde aurait dû être évitée.
+
+Une pull request fusionnée en **squash** met tout son contenu sur `main` en
+**un** commit. La branche, elle, garde ses commits d'origine. Le contenu est
+identique des deux côtés, mais l'histoire ne l'est plus — et Git compare des
+histoires. Continuer à travailler sur cette branche fabrique donc un conflit
+sur **chaque fichier que la PR avait touché**, y compris ceux qu'on ne touche
+plus, et le conflit grossit à chaque commit de plus.
+
+Le symptôme trompe : `git merge origin/main` annonce des conflits dans des
+fichiers qu'on n'a pas modifiés depuis la fusion, avec des deux côtés le même
+texte. On les résout à la main, on croit avoir fini, et le suivant revient.
+
+La parade n'est pas de résoudre, c'est de **reposer la branche** :
+
+```bash
+git checkout -B <branche> origin/main
+git cherry-pick <commits postérieurs à la fusion>
+git push --force-with-lease
+```
+
+Deux conditions, et elles comptent : la branche est la nôtre — jamais celle de
+quelqu'un d'autre —, et on ne reporte que ce qui n'est pas déjà sur `main`.
+`git log --oneline <dernier commit fusionné>..HEAD` donne exactement cette
+liste.
+
+**Et on revérifie après le report, pas avant.** Un `cherry-pick` sur une base
+qui a bougé produit un arbre que personne n'a jamais compilé : les tests
+étaient verts sur l'ancienne base, ils ne disent rien de la nouvelle. C'est le
+seul moment où « la vérification est déjà passée » est faux tout en paraissant
+vrai.
