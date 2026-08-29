@@ -2127,6 +2127,58 @@ Trois choses à en tirer :
 - **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
   déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
   c'est le bon geste ce jour-là seulement.
+## Un drapeau ajouté « par précaution » est une panne à retardement
+
+`node:sqlite` a demandé `--experimental-sqlite` sur les premières versions de
+Node 22. J'ai donc posé le drapeau dans tous les scripts npm, sans le mesurer.
+
+Vérifié après coup, sur Node 22.22 : **le module s'importe et fonctionne sans
+aucun drapeau** — il émet seulement un avertissement. Le drapeau n'apportait
+rien. Et il apportait un risque : Node **refuse de démarrer** sur une option
+qu'il ne connaît pas (« bad option »), donc le jour où la version suivante
+retire le drapeau devenu inutile, l'application ne démarre plus, sur un message
+qui ne parle ni de SQLite ni de version. Sur une machine qu'on ne contrôle pas
+— celle de quelqu'un qui vient d'installer la dernière LTS — c'est une panne
+sans piste.
+
+**La règle : un drapeau expérimental se mesure avant d'être posé**, et se
+remesure quand on change de version.
+
+```bash
+node -e "require('node:sqlite')"        # ça passe ? le drapeau est inutile
+node --le-drapeau -e ""                 # code 0 ? il est encore accepté
+```
+
+Ce qui remplace un drapeau posé au hasard : `engines` dans `package.json`, qui
+dit la version minimale réellement éprouvée et fait avertir npm au lieu
+d'échouer dix commandes plus loin.
+
+## `git stash pop && git commit` enterre un conflit au lieu de s'arrêter
+
+Une reprise de branche courante — `stash push`, `checkout -B`, `stash pop`,
+`add -A`, `commit` — enchaînée par `&&`. Le `pop` a laissé deux fichiers en
+conflit, et il **rend malgré tout un code de sortie 0**. Le `&&` a donc passé la
+main, `git add -A` a ajouté les marqueurs `<<<<<<<` comme du contenu ordinaire,
+et le commit est parti avec eux. Poussé.
+
+Rien ne l'a signalé : ni le `&&`, ni `git status` après coup (l'arbre est propre,
+les marqueurs sont *commités*), ni la barrière de vérification — elle avait
+tourné **avant** la reprise, sur un arbre alors sain. Le seul indice tenait dans
+une phrase noyée dans la sortie : « The stash entry is kept in case you need it
+again », qui veut dire « ça s'est mal passé ».
+
+**La parade tient en une ligne, entre le `pop` et le `commit` :**
+
+```bash
+git diff --name-only --diff-filter=U   # non vide = conflit à résoudre
+```
+
+Et deux règles qui en découlent :
+
+- **Ne jamais chaîner `stash pop` avec `add -A` par `&&`.** Le code de sortie ne
+  dit pas ce qu'on croit ; c'est la liste des fichiers en conflit qui le dit.
+- **Relancer la vérification APRÈS la reprise de branche**, pas avant. Une
+  barrière verte sur l'arbre d'avant ne prouve rien sur celui qu'on pousse.
 
 ## Le HTML préconstruit de Next n'est pas une page servable
 
