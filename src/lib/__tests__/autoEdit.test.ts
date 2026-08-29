@@ -125,3 +125,35 @@ test('deux plans qui se suivent ne portent pas le même mouvement', () => {
     assert.notEqual(clips[i].motion, clips[i - 1].motion, `plans ${i - 1} et ${i}`);
   }
 });
+
+test('le montage vise sa durée au lieu de la subir', () => {
+  /*
+   * La longueur d'un plan était fixe : plus on importait de rushes, plus le
+   * film s'allongeait. Mesuré avant : douze rushes donnaient 21,9 s, vingt
+   * 36,3 et trente 54,3 — au-delà des quarante-cinq secondes où le guide
+   * réclame ensuite de raccourcir, une fois par plan.
+   */
+  for (const n of [12, 20, 30, 50]) {
+    const { clips } = buildAutoEdit(Array.from({ length: n }, (_, i) => asset(`d${i}`, 4)));
+    const duree = totalDuration(clips);
+    assert.ok(duree <= 35, `${n} rushes donnent ${duree.toFixed(1)} s`);
+    assert.equal(clips.length, n, 'aucun rush n’est écarté en silence');
+  }
+});
+
+test('peu de rushes gardent des plans de deux secondes', () => {
+  // La borne ne doit pas raccourcir ce qui n'a pas besoin de l'être.
+  const { clips } = buildAutoEdit(Array.from({ length: 4 }, (_, i) => asset(`e${i}`, 4)));
+  const plan = clips[1];
+  assert.ok(plan.outPoint - plan.inPoint > 2, `${(plan.outPoint - plan.inPoint).toFixed(2)} s`);
+});
+
+test('un plan ne descend jamais sous le seuil de lisibilité', () => {
+  // Cent rushes ne doivent pas produire des plans de deux dixièmes.
+  const { clips } = buildAutoEdit(Array.from({ length: 100 }, (_, i) => asset(`f${i}`, 4)));
+  // Un millième de tolérance : les bornes se calculent en flottant, et
+  // 0,32 + 0,9 − 0,32 ne rend pas exactement 0,9.
+  for (const c of clips) {
+    assert.ok(c.outPoint - c.inPoint >= 0.899, `plan de ${(c.outPoint - c.inPoint).toFixed(4)} s`);
+  }
+});
