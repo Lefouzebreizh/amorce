@@ -30,10 +30,24 @@ test('une réponse illisible vaut l’offre libre', () => {
   }
 });
 
-test('une réponse valide est lue, la date comprise', () => {
+test('une réponse valide se réduit à son statut', () => {
   assert.deepEqual(lireReponse({ statut: 'pro' }), { statut: 'pro' });
-  assert.deepEqual(lireReponse({ statut: 'pro', finLe: 1e12 }), { statut: 'pro', finLe: 1e12 });
-  // Une date qui n'en est pas ne doit pas voyager jusqu'à l'affichage.
-  assert.deepEqual(lireReponse({ statut: 'pro', finLe: 'demain' }), { statut: 'pro' });
-  assert.deepEqual(lireReponse({ statut: 'pro', finLe: Number.NaN }), { statut: 'pro' });
+  assert.deepEqual(lireReponse({ statut: 'libre' }), { statut: 'libre' });
+});
+
+test('rien d’autre que le statut ne traverse', () => {
+  /*
+   * Amorce se vend une fois : il n'y a ni date de fin, ni renouvellement. Un
+   * champ supplémentaire dans la réponse est donc ignoré, jamais recopié.
+   *
+   * Ce n'est pas de la rigueur pour la forme : ce qui vient du réseau ne doit
+   * traverser que par des champs nommés ici. Une recopie en bloc ferait entrer
+   * dans le studio ce que le serveur voudrait, y compris ce que personne n'a
+   * prévu.
+   */
+  assert.deepEqual(lireReponse({ statut: 'pro', finLe: 1e12 }), { statut: 'pro' });
+  assert.deepEqual(
+    lireReponse({ statut: 'pro', bonus: true, remise: 'X', __proto__: { sale: 1 } }),
+    { statut: 'pro' },
+  );
 });
