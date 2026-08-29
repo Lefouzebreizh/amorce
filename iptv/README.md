@@ -63,6 +63,62 @@ iptv/
 
 Ce que la suite ajoutera, aux mêmes endroits :
 
+## Pas à pas, en partant de rien
+
+Écrit après un échec réel : la première tentative s'est arrêtée à l'étape 6,
+faute de savoir quelle adresse taper. Chaque étape dit **ce qu'on doit voir**,
+parce qu'une commande qui ne dit rien ne prouve rien.
+
+**Sur l'ordinateur** — pas sur le téléphone.
+
+**0.** Installer [Node.js](https://nodejs.org) en version **22 LTS** (c'est
+celle qui est éprouvée ici et en intégration continue) et
+[Git](https://git-scm.com), puis redémarrer la machine. Vérifier :
+`node --version` doit répondre `v22.…`.
+
+**1.** Ouvrir un terminal — `powershell` sous Windows, `terminal` sous macOS.
+
+**2.** Récupérer le projet :
+
+```bash
+git clone https://github.com/Lefouzebreizh/amorce.git
+cd amorce/iptv
+npm ci
+```
+
+**3.** Charger un catalogue, au choix :
+
+```bash
+npm run iptv -- importer <lien M3U>
+npm run iptv -- xtream <serveur> <utilisateur> <mot de passe>
+```
+
+→ doit répondre `Importé : N entrées en X s`. Zéro entrée sur un lien valide
+veut souvent dire un abonnement expiré : `xtream` le dit avant d'importer.
+
+**4.** Démarrer, et **laisser la fenêtre ouverte** :
+
+```bash
+npm run dev
+```
+
+**5.** Dans une **seconde** fenêtre, demander l'adresse :
+
+```bash
+cd amorce/iptv
+npm run iptv -- adresse
+```
+
+**6.** Taper cette adresse dans le navigateur du téléphone, sur le même
+réseau, `:3000` compris.
+
+| Symptôme | Cause |
+| --- | --- |
+| Page de recherche au lieu du site | Mauvaise adresse — refaire l'étape 5 |
+| « Impossible d'accéder au site » | L'étape 4 est fermée, ou les deux appareils ne sont pas sur le même réseau |
+| Le site s'ouvre, vide | L'étape 3 n'a pas été faite |
+| « commande introuvable » | Node ou Git absent, ou machine non redémarrée |
+
 ## Y accéder : sur quelle machine, et depuis quoi
 
 **Cette application n'est hébergée nulle part, et c'est voulu.** Elle lit vos
