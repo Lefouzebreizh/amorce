@@ -13,7 +13,7 @@ const HEURE = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-dig
  * que c'est bientôt fini », qui est la question qu'on se pose en zappant. Une
  * heure de début seule oblige à la soustraire mentalement.
  */
-function EnCours({ antenne }: { antenne: Antenne }) {
+export function EnCours({ antenne }: { antenne: Antenne }) {
   const actuel = antenne.actuel
   if (actuel === undefined) return null
 

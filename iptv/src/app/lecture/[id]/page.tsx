@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { BandeAnnonce } from '../../../composants/BandeAnnonce.tsx'
 import { BoutonFavori } from '../../../composants/BoutonFavori.tsx'
 import { Etiquette } from '../../../composants/Carte.tsx'
 import { Lecteur } from '../../../composants/Lecteur.tsx'
@@ -108,6 +109,10 @@ export default async function Lecture({ params }: { params: Promise<{ id: string
 
       <div className="mt-4 flex flex-wrap gap-3">
         <BoutonFavori id={element.id} initial={estFavori} />
+
+        {/* Seulement pour un film : une chaîne n'a pas de bande-annonce, et un
+            épisode se regarde après le précédent, pas après une réclame. */}
+        {element.genre === 'film' && <BandeAnnonce id={element.id} />}
         {suivant !== undefined && (
           <Link
             href={`/lecture/${encodeURIComponent(suivant.id)}`}

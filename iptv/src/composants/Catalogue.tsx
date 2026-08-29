@@ -3,8 +3,10 @@ import Link from 'next/link'
 import type { Genre, Langue } from '../domaine/types.ts'
 import { antennesDe } from '../serveur/antennes.ts'
 import { depot } from '../serveur/depot-partage.ts'
+import { adresseLecture } from '../serveur/flux.ts'
 import { Dossier, Planche } from './Affiche.tsx'
 import { Grille } from './Carte.tsx'
+import { Mosaique } from './Mosaique.tsx'
 import { Vide } from './Vide.tsx'
 
 const LANGUES: readonly { valeur: Langue; libelle: string }[] = [
@@ -219,7 +221,24 @@ export function Catalogue({
         parThemes ? (
           <Planche elements={elements} />
         ) : (
-          <Grille elements={elements} antennes={antennesDe(cache, elements)} />
+          // Le direct se regarde, il ne se lit pas : la mosaïque montre ce qui
+          // passe. L'adresse de lecture est calculée ici, côté serveur — elle
+          // porte la signature, qui n'a rien à faire dans le navigateur.
+          // `antennesDe` fait **une** requête pour toute la page : l'appeler
+          // dans le map en ferait une par vignette, soit soixante allers-retours
+          // là où il en faut un.
+          <Mosaique
+            chaines={((antennes) =>
+              elements.map((element) => ({
+              id: element.id,
+              titre: element.titre,
+              logo: element.logo,
+              canal: element.canal,
+              src: adresseLecture(element),
+                antenne:
+                  element.tvgId === undefined ? undefined : antennes.get(element.tvgId),
+              })))(antennesDe(cache, elements))}
+          />
         )
       )}
 
