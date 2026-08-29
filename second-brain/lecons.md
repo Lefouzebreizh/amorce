@@ -2631,3 +2631,45 @@ Le remède ne coûte rien : un mot sur l'image, allumé jusqu'au premier instant
 réellement joué. Et l'événement qui l'éteint doit être `playing`, pas un
 événement de réseau — `canplay` se déclenche avant que quoi que ce soit soit
 visible, et l'indicateur disparaîtrait sur un écran encore noir.
+
+## Tester un flux, c'est distinguer trois états, jamais deux
+
+Une liste publique de 215 chaînes en contient couramment la moitié de morte, et
+c'est ce qui donne l'impression que l'application ne marche pas. Le réflexe est
+d'écrire un vérificateur qui range en deux tas : vivant, mort. C'est ce tri-là
+qui est faux, et la mesure du jour le montre sans appel.
+
+Depuis une session distante, **les neuf hôtes de flux essayés rendent tous 403**
+— le mandataire refuse, pas le serveur. Un vérificateur à deux états aurait
+condamné le catalogue entier en trente secondes, et l'utilisateur aurait rouvert
+une application vide. Le même 403 sort d'un abonnement IPTV momentanément saturé
+(« max connections reached »), avec 401, 429 et 503 : autant de codes qui ne
+disent **rien** du flux.
+
+D'où la règle : on ne masque que ce qu'on a **vu refuser pour de bon** — 404,
+DNS mort, délai dépassé, contenu qui n'est pas un média. Tout refus ambigu
+laisse l'entrée visible. Se tromper dans ce sens coûte un clic ; se tromper dans
+l'autre efface de l'écran ce qui marchait.
+
+Deux pièges de méthode viennent avec :
+
+- **Un code 200 ne prouve pas qu'un flux existe.** Un portail expiré rend une
+  page HTML avec 200, et un manifeste peut être une carcasse : `#EXTM3U` suivi
+  de rien. Il faut lire les premiers octets — au plus quelques kilo-octets, puis
+  couper le corps, sinon on télécharge un direct qui ne finit jamais.
+- **Le parallélisme se borne par hôte, pas globalement.** Un abonnement limite
+  les connexions simultanées, souvent à une ou deux. Vingt tests de front sur le
+  même serveur fabriquent eux-mêmes les refus qu'ils vont interpréter.
+
+## Une colonne ajoutée n'apparaît jamais chez qui a déjà des données
+
+`CREATE TABLE IF NOT EXISTS` ne touche pas une table présente. Tant qu'un projet
+ne tourne que sur la machine qui l'écrit, on efface la base et on n'y pense
+plus. Le jour où quelqu'un d'autre l'a installé, la même ligne de schéma laisse
+sa base sans la colonne, et la première requête qui la cite fait échouer
+**l'ouverture de l'application** — pas la fonction ajoutée, l'application.
+
+La parade tient en huit lignes : une liste d'ajouts, `PRAGMA table_info` pour
+savoir ce qui manque, `ALTER TABLE` pour le reste, rejoué à chaque ouverture.
+Ce qui compte est le moment où on l'écrit : à la première colonne ajoutée après
+la première installation ailleurs, pas quand un utilisateur signale l'erreur.

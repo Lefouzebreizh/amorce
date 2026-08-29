@@ -16,6 +16,23 @@
 // argument, depuis `.env` ; la base, elle, peut être copiée, sauvegardée ou
 // envoyée en pièce jointe sans livrer l'abonnement de personne.
 
+/**
+ * Les ajouts de colonnes, appliqués à une base qui existe déjà.
+ *
+ * `CREATE TABLE IF NOT EXISTS` ne touche pas une table présente : une colonne
+ * ajoutée au schéma n'apparaît donc **jamais** chez qui a déjà importé quelque
+ * chose. Depuis que cette application tourne ailleurs que sur la machine qui
+ * l'écrit, ce n'est plus une hypothèse — c'est le cas courant.
+ *
+ * Chaque entrée est rejouée à chaque ouverture et doit donc être sans effet la
+ * seconde fois ; `PRAGMA table_info` dit ce qui manque, plutôt que d'attendre
+ * l'erreur d'un ALTER en double.
+ */
+export const COLONNES_AJOUTEES: readonly { table: string; colonne: string; sql: string }[] = [
+  { table: 'element', colonne: 'etat', sql: 'ALTER TABLE element ADD COLUMN etat TEXT' },
+  { table: 'element', colonne: 'teste_le', sql: 'ALTER TABLE element ADD COLUMN teste_le TEXT' },
+]
+
 export const SCHEMA = `
 PRAGMA journal_mode = WAL;
 PRAGMA synchronous = NORMAL;
@@ -55,6 +72,12 @@ CREATE TABLE IF NOT EXISTS element (
   etiquettes      TEXT NOT NULL,     -- JSON
   options_lecture TEXT NOT NULL,     -- JSON
   ref_externe     TEXT,
+  -- État du flux, tel que « npm run iptv -- tester » l'a trouvé : NULL tant
+  -- qu'on n'a rien mesuré, « ok » ou « mort » ensuite. Les listes publiques
+  -- contiennent une forte proportion de flux abandonnés ou géobloqués, et rien
+  -- ne les distingue à l'œil d'un flux valide.
+  etat            TEXT,
+  teste_le        TEXT,
   -- Horodatage du dernier import qui a vu cette entrée. C'est lui qui permet de
   -- retirer, après coup, ce que le fournisseur ne sert plus : on ne vide pas la
   -- table avant d'importer, sans quoi une coupure réseau en cours de route
