@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { OFFRES, autorise, bornes, exportsRestants } from '../limites.ts';
+import { OFFRES, autorise, bornes } from '../limites.ts';
 import { ETAT_INITIAL, type Etat } from '../types.ts';
 
 const libre: Etat = { statut: 'libre' };
@@ -17,26 +17,32 @@ test('serveur éteint, le studio garde l’offre libre', () => {
    * l'interface aurait retiré ce qu'elle venait d'accorder.
    */
   assert.deepEqual(bornes(ETAT_INITIAL), OFFRES.libre);
-  assert.equal(exportsRestants(ETAT_INITIAL, 0), OFFRES.libre.exportsParJour);
 });
 
-test('l’offre libre monte, règle et exporte', () => {
-  // Rien n'est mutilé : ce que l'abonnement retire est la signature et le
-  // compteur, jamais une fonction du studio. Un export reste possible sans
-  // payer, sinon l'outil ne sert à rien tant qu'on n'a pas sorti la carte.
-  assert.ok(exportsRestants(libre, 0) > 0, 'l’offre libre n’exporte pas');
+test('l’offre libre exporte, autant qu’elle veut', () => {
+  /*
+   * Rien n'est mutilé, et rien n'est compté. Un plafond d'exports ne
+   * s'appliquerait nulle part : le montage tourne dans le navigateur, un
+   * compteur local s'efface en trois secondes, et le porter côté serveur
+   * reviendrait à pister ce que la personne fabrique — ce que ce dépôt
+   * s'interdit.
+   *
+   * Ce test garde donc une absence, ce qui est inhabituel mais volontaire :
+   * il échouera le jour où quelqu'un réintroduira une borne de quantité, et
+   * l'obligera à relire pourquoi il n'y en a pas.
+   */
+  for (const offre of Object.values(OFFRES)) {
+    for (const valeur of Object.values(offre)) {
+      assert.equal(typeof valeur, 'boolean', 'une borne de quantité est réapparue dans l’offre');
+    }
+  }
 });
 
-test('l’abonnement retire la signature et le compteur', () => {
+test('l’abonnement retire la signature et ouvre la pleine définition', () => {
   assert.equal(autorise(pro, 'sansSignature'), true);
+  assert.equal(autorise(pro, 'pleineDefinition'), true);
   assert.equal(autorise(libre, 'sansSignature'), false);
-  assert.equal(exportsRestants(pro, 999), Number.POSITIVE_INFINITY);
-});
-
-test('le compteur ne descend jamais sous zéro', () => {
-  // Un compte tenu ailleurs peut dépasser — horloge changée, onglets
-  // multiples. Un reste négatif s'afficherait tel quel dans l'interface.
-  assert.equal(exportsRestants(libre, 99), 0);
+  assert.equal(autorise(libre, 'pleineDefinition'), false);
 });
 
 test('chaque capacité annoncée existe dans les deux offres', () => {
@@ -47,7 +53,7 @@ test('chaque capacité annoncée existe dans les deux offres', () => {
    * chemin qui décide de ce qu'un client a payé.
    */
   for (const offre of Object.values(OFFRES)) {
-    for (const clef of ['sansSignature', 'exportsParJour', 'pleineDefinition'] as const) {
+    for (const clef of ['sansSignature', 'pleineDefinition'] as const) {
       assert.ok(clef in offre, `${clef} manque à une offre`);
     }
   }

@@ -9,35 +9,46 @@ import { type Etat, type Statut } from './types.ts';
  * déjà.
  *
  * Le principe qui a présidé au découpage : **rien n'est mutilé.** On peut
- * monter, régler, écouter et exporter sans payer. Ce que l'abonnement retire,
- * c'est la signature sur l'image et le compteur — pas une fonction du studio.
- * Le public visé est celui que l'urgence fabriquée blesse le plus, et un
- * studio qui retiendrait une fonctionnalité en otage serait exactement le
- * procédé qu'on s'interdit.
+ * monter, régler, écouter et exporter autant qu'on veut sans payer. Ce que
+ * l'abonnement retire vit dans l'image produite — la signature, la définition —
+ * pas dans le studio. Le public visé est celui que l'urgence fabriquée blesse
+ * le plus, et un studio qui retiendrait une fonctionnalité en otage serait
+ * exactement le procédé qu'on s'interdit.
  */
 export type Capacite =
   /** Une signature discrète sur l'image exportée. */
   | 'sansSignature'
-  /** Le nombre d'exports par jour. */
-  | 'exportsParJour'
   /** L'export en pleine définition, 1080 × 1920. */
   | 'pleineDefinition';
 
-type Bornes = {
-  sansSignature: boolean;
-  exportsParJour: number;
-  pleineDefinition: boolean;
-};
+type Bornes = Record<Capacite, boolean>;
 
+/*
+ * Pas de plafond d'exports par jour, et la raison n'est pas commerciale.
+ *
+ * Un tel plafond ne s'applique nulle part. Le montage et l'export tournent
+ * entièrement dans le navigateur : un compteur gardé sur l'appareil s'efface
+ * en trois secondes, et le porter côté serveur reviendrait à lui envoyer ce
+ * que la personne fabrique et quand — c'est-à-dire du pistage, que ce dépôt
+ * s'interdit sans détour.
+ *
+ * Resterait une limite qui ne gêne que ceux qui ne savent pas la contourner.
+ * C'est la définition d'une fausse contrainte : elle ne protège rien et elle
+ * punit les honnêtes.
+ *
+ * Ce que l'offre borne se limite donc à ce qui vit **dans l'image produite** —
+ * la signature et la définition. Cela se voit dans le fichier, cela ne demande
+ * de savoir sur personne, et cela reste vrai le jour où quelqu'un ouvre les
+ * outils de développement : au pire il retire lui-même une signature, il ne
+ * ment à personne d'autre.
+ */
 export const OFFRES: Record<Exclude<Statut, 'inconnu'>, Bornes> = {
   libre: {
     sansSignature: false,
-    exportsParJour: 3,
     pleineDefinition: false,
   },
   pro: {
     sansSignature: true,
-    exportsParJour: Number.POSITIVE_INFINITY,
     pleineDefinition: true,
   },
 };
@@ -59,18 +70,13 @@ export function bornes(etat: Etat): Bornes {
   return OFFRES[etat.statut === 'pro' ? 'pro' : 'libre'];
 }
 
-/** Vrai si la capacité demandée est ouverte dans cet état. */
-export function autorise(etat: Etat, capacite: 'sansSignature' | 'pleineDefinition'): boolean {
-  return bornes(etat)[capacite];
-}
-
 /**
- * Combien d'exports restent aujourd'hui.
+ * Vrai si la capacité demandée est ouverte dans cet état.
  *
- * Le compte est fourni par l'appelant plutôt que lu ici : ce module ne garde
- * aucun état et ne touche à aucun stockage. C'est ce qui lui permet d'être
- * testé sans navigateur, et de rester une décision plutôt qu'une mémoire.
+ * Ce module ne garde aucun état et ne touche à aucun stockage : tout ce dont
+ * il a besoin lui est passé. C'est ce qui le rend testable sans navigateur, et
+ * ce qui en fait une décision plutôt qu'une mémoire.
  */
-export function exportsRestants(etat: Etat, dejaFaitsAujourdhui: number): number {
-  return Math.max(0, bornes(etat).exportsParJour - dejaFaitsAujourdhui);
+export function autorise(etat: Etat, capacite: Capacite): boolean {
+  return bornes(etat)[capacite];
 }
