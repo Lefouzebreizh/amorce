@@ -2549,6 +2549,34 @@ une erreur du serveur qu'on arrêtait. La parade est de tuer par port ou par PID
 (`lsof -ti:3210 | xargs -r kill`), ou simplement de servir sur un autre port —
 un processus de développement oublié ne coûte rien dans une session éphémère.
 
+## Ajouter en fin de `lecons.md` conflitte avec toutes les autres sessions
+
+Mesuré le 29/08/2026 : **trois conflits sur ce fichier en vingt minutes**, sur
+une seule branche, chacun résolu à la main. Aucun ne portait sur le contenu —
+les leçons ne se contredisaient pas, elles s'ajoutaient.
+
+La cause n'est pas le fichier, c'est le **geste**. Ce dépôt reçoit plusieurs
+sessions en parallèle, chacune écrit sa leçon avant de clore, et chacune
+l'ajoute à la fin. Git voit alors deux insertions au même endroit et ne peut
+pas trancher — il ne sait pas qu'elles n'ont rien à voir l'une avec l'autre.
+Fusionner tôt n'y change rien : la branche suivante retombe dessus quatre
+minutes plus tard.
+
+**La parade tient en un choix de position : insérer avant la dernière section,
+pas après.** Le bloc modifié cesse alors de toucher la fin du fichier, l'ajout
+concurrent d'une autre session tombe dans un autre hunk, et la fusion passe
+toute seule. Éprouvé le soir même : le conflit a cessé au premier essai.
+
+Mieux encore quand la leçon complète un sujet déjà présent — un plafond de
+déploiement, un piège de fusion : **l'écrire dans la section existante**, au
+milieu du fichier. Deux bénéfices pour un geste : plus aucun conflit possible,
+et pas de seconde version d'un sujet qui divergera de la première.
+
+Ce qui vaut au-delà de ce fichier : **dans un dépôt à plusieurs sessions, tout
+fichier où l'on ajoute par la fin est un point de collision** — un journal, un
+INDEX, une liste de courses. La position d'écriture est une décision de
+concurrence, pas une question de style.
+
 ## Une absence qui fait disparaître un bouton et une absence qui perd un client
 ne se traitent pas pareil
 
