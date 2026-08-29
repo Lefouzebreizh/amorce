@@ -252,7 +252,7 @@ export function ficheEtablissement(
 export function genererSite(
   commande: Commande,
   photos: readonly Photo[] = [],
-  options: { domaine?: string } = {},
+  options: { domaine?: string; demonstration?: boolean } = {},
 ): string {
   const modele = modeleParId(commande.modele);
   const couleur = couleurRetenue(commande);
@@ -330,6 +330,13 @@ ${images}
   const encreEntete = encreSurAccent(couleur);
   const fondEntete = accentLisible(couleur, encreEntete);
 
+  /*
+   * Une démonstration porte un nom d'entreprise qui n'existe pas. Indexée, elle
+   * apparaîtrait dans les résultats comme un vrai artisan, avec un numéro qui
+   * ne sonne nulle part — et le jour où un client réel s'appelle presque pareil,
+   * c'est lui qu'elle concurrence. `noindex` n'est donc pas une précaution de
+   * confort : c'est ce qui distingue un exemple d'un mensonge en ligne.
+   */
   const domaine = domaineRetenu(options.domaine);
   /*
    * La première photo sert d'aperçu au partage. Elle n'est nommée qu'avec le
@@ -352,7 +359,8 @@ ${images}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${entreprise} — ${ville}</title>
 <meta name="description" content="${accroche}">
-<meta property="og:type" content="website">
+${options.demonstration !== true ? '' : `<meta name="robots" content="noindex, nofollow">
+`}<meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:site_name" content="${entreprise}">
 <meta property="og:title" content="${entreprise} — ${ville}">

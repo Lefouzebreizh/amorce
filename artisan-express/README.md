@@ -124,3 +124,28 @@ Ce que le contrôle **ne** compte pas : tout ce qui est `aria-hidden`. Les
 maquettes de téléphone dessinées en HTML imitent une capture d'écran, 9 px et
 gris pâles compris. Les mesurer donnait quarante défauts dont trente ne
 devaient rien à personne, et un contrôle qui crie pour du décor cesse d'être lu.
+
+## L’exemple qu’un prospect demande
+
+« Montre-moi un exemple » est sa première question, et sans lien la conversation
+s'arrête là. `public/exemple.html` est servi à **`/exemple.html`**, et la page de
+vente y renvoie sous l'avant/après.
+
+```bash
+npm run exemple      # régénère depuis titan-builder/demo, puis recopie
+```
+
+Ce n'est pas une maquette : c'est la sortie du **même générateur** que celui
+d'un client payant. Le refaire à la main dériverait ; la commande le refait en
+une seconde.
+
+**La page sort en `noindex`.** L'entreprise n'existe pas et son numéro ne sonne
+nulle part : indexée, elle se présenterait dans les résultats comme un vrai
+artisan, et concurrencerait un jour un client réel au nom voisin. C'est ce qui
+distingue un exemple d'un mensonge en ligne, et le générateur porte le drapeau
+(`--demonstration`) plutôt que la copie.
+
+**Adresse en `.html`, et pas un dossier.** Next sert `public/` tel quel et **ne
+résout aucun index de dossier** : `/exemple/` rend un 308 puis un 404, seul
+`/exemple/index.html` répondait. Un fichier à plat donne une adresse courte qui
+se dicte au téléphone.
