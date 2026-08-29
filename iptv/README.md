@@ -86,7 +86,14 @@ cd amorce/iptv
 npm ci
 ```
 
-**3.** Charger un catalogue, au choix :
+**3.** Voir l'application tourner **sans abonnement**, avec des flux de test
+publics — c'est la première chose à faire, avant de chercher son lien :
+
+```bash
+npm run iptv -- demo
+```
+
+Puis charger son vrai catalogue, au choix :
 
 ```bash
 npm run iptv -- importer <lien M3U>
