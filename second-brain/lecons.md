@@ -2141,6 +2141,12 @@ qui ne parle ni de SQLite ni de version. Sur une machine qu'on ne contrôle pas
 — celle de quelqu'un qui vient d'installer la dernière LTS — c'est une panne
 sans piste.
 
+Le même projet en portait un **second**, `--experimental-strip-types`, et la
+mesure a rendu le même verdict : `process.features.typescript` vaut déjà
+`"strip"` sans lui dès Node 22.22, et le retrait des types est le défaut à
+partir de 23.6. Deux drapeaux posés par prudence, deux fois inutiles, deux
+pannes futures évitées de justesse.
+
 **La règle : un drapeau expérimental se mesure avant d'être posé**, et se
 remesure quand on change de version.
 
