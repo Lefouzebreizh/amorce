@@ -2153,6 +2153,13 @@ Trois choses à en tirer :
 - **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
   déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
   c'est le bon geste ce jour-là seulement.
+
+**Sur la portée et la durée du plafond**, deux sessions ont mesuré chacune une
+moitié le même soir : voir « Le plafond de déploiement est par projet, et sa
+fenêtre glisse » plus bas. En un mot : un second projet branché sur le même
+dépôt déploie encore quand le premier est bouché, et un refus ne dure pas
+vingt-quatre heures.
+
 ## Un drapeau ajouté « par précaution » est une panne à retardement
 
 `node:sqlite` a demandé `--experimental-sqlite` sur les premières versions de
@@ -2250,10 +2257,18 @@ Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
 ses routes serveur. C'était la réponse depuis le début, et une heure est passée
 à contourner un quota au lieu de changer de mur.
 
-## Le refus de déploiement est une fenêtre glissante, pas un blocage de 24 h
+## Le plafond de déploiement est par projet, et sa fenêtre glisse
 
-**Cette leçon a été écrite faux deux fois de suite dans la même heure, et les
-deux versions sont instructives.** Le relevé complet, le 29/08/2026 :
+Deux sessions ont travaillé cette question le même soir, chacune avec la moitié
+des données, et chacune a publié une conclusion fausse avant que les deux
+relevés soient mis côte à côte. C'est le seul endroit du fichier où l'on voit
+comment une leçon se construit.
+
+**Relevé A** — deux projets branchés sur le même dépôt, à la même minute :
+`amorce` reçoit « Resource is limited » pendant qu'`amorce-51up` affiche
+« Building ». Un compteur unique refuserait les deux.
+
+**Relevé B** — le même projet, à trois moments :
 
 | Heure | Projet | Résultat |
 | --- | --- | --- |
@@ -2262,37 +2277,29 @@ deux versions sont instructives.** Le relevé complet, le 29/08/2026 :
 | 01:59 | `amorce` | refusé |
 | 02:05 | `amorce-51up` | refusé |
 
-**Première version, fausse** : « par jour et par compte ». Le déploiement réussi
-de 01:55 la contredit — un compteur épuisé pour la journée ne laisse rien
-passer.
+**Ensemble, ils donnent les deux moitiés d'une seule règle**, et chacun seul
+menait à une erreur :
 
-**Deuxième version, fausse aussi, et écrite six minutes avant d'être démentie** :
-« par projet ». Elle expliquait 01:55 en donnant à chaque projet son propre
-budget. Mais `amorce-51up` a été refusé à 02:05 après avoir réussi à 01:55 : il
-n'a pas pu consommer cent déploiements en dix minutes.
+- **Le compteur est tenu par projet.** C'est le relevé A qui tranche, et lui
+  seul : le message parle de `api-deployments-free-per-day`, ce qui se lit comme
+  une limite de compte, et c'est ce que ce fichier a affirmé longtemps.
+- **La fenêtre glisse, elle ne se remet pas à zéro le lendemain.** C'est le
+  relevé B : `amorce-51up`, refusé à 01:27, passe à 01:55, et se refait refuser
+  à 02:05. Les déploiements anciens sortent du décompte, une place se libère, le
+  suivant la prend, et la fenêtre se remplit aussitôt.
 
-**Ce qui reste, et qui tient debout :** le refus n'est pas un blocage jusqu'au
-lendemain. Une réussite s'est glissée entre deux refus, à vingt-huit minutes du
-premier. C'est le comportement d'une **fenêtre glissante** — les déploiements
-anciens sortent du décompte, une place se libère, le suivant passe, et la
-fenêtre se remplit aussitôt.
+**Deux issues, et aucune n'est d'attendre :** un second projet branché sur le
+même dépôt déploie encore quand le premier est bouché — trente secondes à créer.
+Et un refus se retente une demi-heure plus tard, pas le lendemain, quoi qu'en
+dise le message.
 
-**Ce qu'on ne sait toujours pas**, et qu'il faut se retenir d'écrire : si le
-compteur est tenu par compte ou par projet. Les données ne permettent pas de
-trancher, le message d'erreur ne le dit pas, et la documentation de l'éditeur est
-hors d'atteinte derrière le mandataire.
-
-La leçon de méthode compte autant que le fait : **un seul point de mesure qui
-contredit une règle suffit à la casser, jamais à en fonder une autre.** La
-première correction a été écrite sur un unique déploiement réussi, publiée avec
-assurance, et démentie par le point suivant. Il fallait dire « la règle écrite
-est fausse » et s'arrêter là.
-
-**Les conseils qui ne dépendent d'aucune de ces hypothèses**, et qui sont donc
-les seuls à suivre : réduire le volume — chaque PR déclenche un déploiement par
-projet branché, et une session qui enchaîne les PR consomme la réserve de la
-page qui doit rentrer de l'argent — ou changer d'hébergeur. Et ne pas attendre
-vingt-quatre heures : réessayer une demi-heure plus tard suffit parfois.
+**La leçon de méthode, payée deux fois dans l'heure :** un point de mesure qui
+contredit une règle suffit à la casser, jamais à en fonder une autre. La
+première correction a conclu « par projet » sur un unique succès et a été
+démentie six minutes plus tard ; la seconde, corrigeant la première, a conclu
+« on ne peut pas savoir » alors que le relevé d'une autre session le disait
+déjà. **Avant de reconstruire une règle, il faut chercher ce que les autres ont
+mesuré** — dans ce fichier, pas dans sa propre session.
 
 ## Les aperçus coûtent, et les sessions les vident
 
@@ -2707,6 +2714,107 @@ qui contenait aussi tout le code de l'outillage.
 n'établit pas qu'un script fait ce qu'il annonce ; elle attrape le `fi` manquant
 qui casse tout. Ce qu'il faut, c'est l'écrire — « syntaxe seule » jusque dans le
 nom affiché — pour que personne n'y lise davantage.
+
+## Le nom d'un groupe décrit le contenu, pas la nature de ce qu'on reçoit
+
+Une liste IPTV publique range ses chaînes par thème, et l'une de ces catégories
+s'appelle « Movies ». Le classement de l'application, qui faisait confiance au
+nom du groupe, rangeait donc toutes les chaînes de cinéma dans l'onglet
+**Films** — où l'on cliquait sur « un film » pour tomber sur une chaîne en
+direct. Trouvé en trente secondes par la première personne à s'en servir, et
+par aucun test.
+
+**La nature de ce qu'on reçoit est lisible dans l'adresse, pas dans le
+libellé** : un manifeste HLS (`.m3u8`) est un flux qui coule, un `.mkv` ou un
+`.mp4` est une œuvre qu'on ouvre. Le groupe, lui, ne dit que le thème — et une
+chaîne qui *diffuse* des films n'est pas un film.
+
+La règle générale vaut au-delà de l'IPTV : **quand une donnée écrite à la main
+et une donnée structurelle se contredisent, c'est la structurelle qui décide.**
+Le libellé est saisi par un humain pressé ; le format, lui, est imposé par le
+protocole.
+
+## Interdire l'autoplay par principe est aussi un défaut
+
+La règle « pas de démarrage automatique » protège d'une vidéo qui s'ouvre en
+pleine figure sur une page qu'on parcourt. Appliquée à un **lecteur de
+télévision en direct**, elle devient absurde : le clic qui a ouvert la chaîne
+*est* le geste, et demander un second clic pour regarder la télé est une gêne
+que personne n'accepte.
+
+La correction s'est faite en deux fois, et la première était encore à
+moitié fausse : le direct démarrait seul, les films attendaient toujours « pour
+laisser lire le résumé ». Retour d'usage immédiat : « dès qu'on clique sur une
+icône, il faut que ça se lance ». **Cliquer sur une vignette est déjà la
+demande de regarder** — le résumé reste lisible sous l'image pendant que ça
+joue.
+
+La leçon derrière la leçon : une règle de protection écrite pour un contexte
+(une vidéo qui s'ouvre sur une page qu'on parcourt) devient une gêne dans un
+autre (un lecteur qu'on a ouvert exprès). **Ce n'est pas la règle qu'il faut
+défendre, c'est l'intention qu'elle servait.**
+
+Et le refus du navigateur se dit à l'écran : bloquer une vidéo sonore lancée
+sans interaction suffisante est un comportement normal de Chrome, silencieux,
+qui se confond avec une panne du flux.
+
+## Un flux qui met huit secondes à s'établir passe pour une panne
+
+Premier mot revenu de l'usage réel, avant tout autre : « ça reste figé ». Le
+flux n'était pas figé — il se connectait. Une chaîne IPTV met deux à dix
+secondes à s'établir : résolution du manifeste, premier segment, mise en
+tampon. Pendant ce temps l'image est noire et rien ne bouge.
+
+**Un écran noir silencieux et un écran noir en panne sont indiscernables**, et
+l'utilisateur tranche toujours dans le même sens : c'est cassé. Il ferme,
+essaie une autre chaîne, conclut que rien ne marche.
+
+Le remède ne coûte rien : un mot sur l'image, allumé jusqu'au premier instant
+réellement joué. Et l'événement qui l'éteint doit être `playing`, pas un
+événement de réseau — `canplay` se déclenche avant que quoi que ce soit soit
+visible, et l'indicateur disparaîtrait sur un écran encore noir.
+
+## Tester un flux, c'est distinguer trois états, jamais deux
+
+Une liste publique de 215 chaînes en contient couramment la moitié de morte, et
+c'est ce qui donne l'impression que l'application ne marche pas. Le réflexe est
+d'écrire un vérificateur qui range en deux tas : vivant, mort. C'est ce tri-là
+qui est faux, et la mesure du jour le montre sans appel.
+
+Depuis une session distante, **les neuf hôtes de flux essayés rendent tous 403**
+— le mandataire refuse, pas le serveur. Un vérificateur à deux états aurait
+condamné le catalogue entier en trente secondes, et l'utilisateur aurait rouvert
+une application vide. Le même 403 sort d'un abonnement IPTV momentanément saturé
+(« max connections reached »), avec 401, 429 et 503 : autant de codes qui ne
+disent **rien** du flux.
+
+D'où la règle : on ne masque que ce qu'on a **vu refuser pour de bon** — 404,
+DNS mort, délai dépassé, contenu qui n'est pas un média. Tout refus ambigu
+laisse l'entrée visible. Se tromper dans ce sens coûte un clic ; se tromper dans
+l'autre efface de l'écran ce qui marchait.
+
+Deux pièges de méthode viennent avec :
+
+- **Un code 200 ne prouve pas qu'un flux existe.** Un portail expiré rend une
+  page HTML avec 200, et un manifeste peut être une carcasse : `#EXTM3U` suivi
+  de rien. Il faut lire les premiers octets — au plus quelques kilo-octets, puis
+  couper le corps, sinon on télécharge un direct qui ne finit jamais.
+- **Le parallélisme se borne par hôte, pas globalement.** Un abonnement limite
+  les connexions simultanées, souvent à une ou deux. Vingt tests de front sur le
+  même serveur fabriquent eux-mêmes les refus qu'ils vont interpréter.
+
+## Une colonne ajoutée n'apparaît jamais chez qui a déjà des données
+
+`CREATE TABLE IF NOT EXISTS` ne touche pas une table présente. Tant qu'un projet
+ne tourne que sur la machine qui l'écrit, on efface la base et on n'y pense
+plus. Le jour où quelqu'un d'autre l'a installé, la même ligne de schéma laisse
+sa base sans la colonne, et la première requête qui la cite fait échouer
+**l'ouverture de l'application** — pas la fonction ajoutée, l'application.
+
+La parade tient en huit lignes : une liste d'ajouts, `PRAGMA table_info` pour
+savoir ce qui manque, `ALTER TABLE` pour le reste, rejoué à chaque ouverture.
+Ce qui compte est le moment où on l'écrit : à la première colonne ajoutée après
+la première installation ailleurs, pas quand un utilisateur signale l'erreur.
 
 ## Une couverture annoncée et absente est pire que pas de couverture
 

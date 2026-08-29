@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
+import { BANDE_SURE, Y_PAR_DEFAUT, dansLaBandeSure, boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
 import { CAPTION_COLORS, CAPTION_SCALES, type CaptionStyleId } from '../types.ts';
 
 test('la détection sous le doigt inclut les bords du rectangle', () => {
@@ -99,4 +99,24 @@ test('la pulsation part de la taille au repos et ne dépend que du temps de mont
   assert.equal(pulseScale(0.3), pulseScale(0.3));
   // Un aller-retour complet ramène à la taille de départ.
   assert.ok(Math.abs(pulseScale(0.7) - 1) < 1e-9);
+});
+
+// ------------------------------------------------ Zones sûres des plateformes
+
+test('la bande sûre correspond à ce qui a été mesuré sur les trois plateformes', () => {
+  /*
+   * Ce test n'éprouve pas un calcul : il empêche qu'on déplace en passant des
+   * valeurs relevées sur des captures réelles. Instagram ferme le bas dès 63 %,
+   * TikTok occupe sa colonne de droite à partir de 72 %, Facebook passe sa
+   * barre système sous 12 %. C'est l'intersection qui décide.
+   */
+  assert.equal(BANDE_SURE.haut, 0.12);
+  assert.equal(BANDE_SURE.bas, 0.45);
+  assert.ok(Y_PAR_DEFAUT > BANDE_SURE.haut && Y_PAR_DEFAUT < BANDE_SURE.bas);
+});
+
+test('une hauteur hors bande est ramenée dedans', () => {
+  assert.equal(dansLaBandeSure(0.72), 0.45, '72 % tombe dans la colonne de TikTok');
+  assert.equal(dansLaBandeSure(0.02), 0.12, '2 % passe sous la barre de Facebook');
+  assert.equal(dansLaBandeSure(0.3), 0.3, 'une hauteur déjà sûre ne bouge pas');
 });

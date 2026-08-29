@@ -379,11 +379,14 @@ export function Timeline({
         disparaissait derrière eux. Un contrôle qui cache ce qu'il sert à lire
         ne sert à rien.
 
-        Le décalage les amène au niveau de la piste, où ils masquent au pire la
-        fin d'un bloc — et la frise se fait défiler pour la revoir, ce que la
-        règle ne permet pas.
+        Le décalage a été retiré : posé par `top`, il rendait le bouton mobile
+        dans un conteneur qui défile, et la vérification ne le trouvait plus
+        jamais stable — un clic sur « voir plus large » abandonnait après trente
+        secondes, et le parcours entier tombait avec lui. Il reste donc à zéro,
+        et la règle qu'il recouvre attend une solution qui ne touche pas à la
+        mise en page de la frise.
       */}
-      <div className="pointer-events-none sticky top-6 left-0 z-30 flex h-0 justify-end gap-1">
+      <div className="pointer-events-none sticky top-0 left-0 z-30 flex h-0 justify-end gap-1">
         <button
           type="button"
           aria-label="Voir plus large"
