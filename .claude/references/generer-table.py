@@ -21,7 +21,13 @@ lignes = ["# Les compétences du dépôt", "",
 for dossier in sorted(p for p in SKILLS.iterdir() if (p / "SKILL.md").is_file()):
     texte = (dossier / "SKILL.md").read_text(encoding="utf-8", errors="replace")
     trouve = re.search(r"^description:\s*(.+?)(?:\n[a-z_]+:|\n---)", texte, re.S | re.M)
-    resume = " ".join(trouve.group(1).split())[:150] if trouve else ""
+    brut = trouve.group(1) if trouve else ""
+    # Le marqueur de bloc replié de YAML n'est pas du texte.
+    # Une description écrite sur plusieurs lignes commence par `>-` ou `|`, et
+    # ce marqueur se retrouvait tel quel en tête de sept lignes du tableau —
+    # là où le lecteur attend la première phrase de la compétence.
+    brut = re.sub(r"^\s*[>|][-+]?\s*", "", brut)
+    resume = " ".join(brut.split())[:150]
     if len(resume) == 150:
         resume = resume.rsplit(" ", 1)[0] + "…"
     lignes.append(f"| `/{dossier.name}` | {resume} |")
