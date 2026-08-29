@@ -2154,17 +2154,12 @@ Trois choses à en tirer :
   déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
   c'est le bon geste ce jour-là seulement.
 
-**Et le plafond est par projet, pas par compte.** Mesuré dans la même minute :
-le projet `amorce` recevait « Resource is limited » pendant que le projet
-`amorce-51up`, branché sur le même dépôt mais sur un autre dossier, affichait
-« Building ». Le message parle pourtant de `api-deployments-free-per-day`, ce
-qui se lit comme une limite de compte — et c'est ce que j'avais écrit ici avant
-de le vérifier.
+**Sur la portée et la durée du plafond**, deux sessions ont mesuré chacune une
+moitié le même soir : voir « Le plafond de déploiement est par projet, et sa
+fenêtre glisse » plus bas. En un mot : un second projet branché sur le même
+dépôt déploie encore quand le premier est bouché, et un refus ne dure pas
+vingt-quatre heures.
 
-La conséquence est une issue, pas seulement une correction : quand un projet est
-bloqué pour la journée, **un second projet Vercel branché sur le même dépôt
-déploie encore**. C'est trente secondes à créer, et cela rend la version du jour
-visible tout de suite au lieu d'attendre vingt-quatre heures.
 ## Un drapeau ajouté « par précaution » est une panne à retardement
 
 `node:sqlite` a demandé `--experimental-sqlite` sur les premières versions de
@@ -2262,10 +2257,18 @@ Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
 ses routes serveur. C'était la réponse depuis le début, et une heure est passée
 à contourner un quota au lieu de changer de mur.
 
-## Le refus de déploiement est une fenêtre glissante, pas un blocage de 24 h
+## Le plafond de déploiement est par projet, et sa fenêtre glisse
 
-**Cette leçon a été écrite faux deux fois de suite dans la même heure, et les
-deux versions sont instructives.** Le relevé complet, le 29/08/2026 :
+Deux sessions ont travaillé cette question le même soir, chacune avec la moitié
+des données, et chacune a publié une conclusion fausse avant que les deux
+relevés soient mis côte à côte. C'est le seul endroit du fichier où l'on voit
+comment une leçon se construit.
+
+**Relevé A** — deux projets branchés sur le même dépôt, à la même minute :
+`amorce` reçoit « Resource is limited » pendant qu'`amorce-51up` affiche
+« Building ». Un compteur unique refuserait les deux.
+
+**Relevé B** — le même projet, à trois moments :
 
 | Heure | Projet | Résultat |
 | --- | --- | --- |
@@ -2274,37 +2277,29 @@ deux versions sont instructives.** Le relevé complet, le 29/08/2026 :
 | 01:59 | `amorce` | refusé |
 | 02:05 | `amorce-51up` | refusé |
 
-**Première version, fausse** : « par jour et par compte ». Le déploiement réussi
-de 01:55 la contredit — un compteur épuisé pour la journée ne laisse rien
-passer.
+**Ensemble, ils donnent les deux moitiés d'une seule règle**, et chacun seul
+menait à une erreur :
 
-**Deuxième version, fausse aussi, et écrite six minutes avant d'être démentie** :
-« par projet ». Elle expliquait 01:55 en donnant à chaque projet son propre
-budget. Mais `amorce-51up` a été refusé à 02:05 après avoir réussi à 01:55 : il
-n'a pas pu consommer cent déploiements en dix minutes.
+- **Le compteur est tenu par projet.** C'est le relevé A qui tranche, et lui
+  seul : le message parle de `api-deployments-free-per-day`, ce qui se lit comme
+  une limite de compte, et c'est ce que ce fichier a affirmé longtemps.
+- **La fenêtre glisse, elle ne se remet pas à zéro le lendemain.** C'est le
+  relevé B : `amorce-51up`, refusé à 01:27, passe à 01:55, et se refait refuser
+  à 02:05. Les déploiements anciens sortent du décompte, une place se libère, le
+  suivant la prend, et la fenêtre se remplit aussitôt.
 
-**Ce qui reste, et qui tient debout :** le refus n'est pas un blocage jusqu'au
-lendemain. Une réussite s'est glissée entre deux refus, à vingt-huit minutes du
-premier. C'est le comportement d'une **fenêtre glissante** — les déploiements
-anciens sortent du décompte, une place se libère, le suivant passe, et la
-fenêtre se remplit aussitôt.
+**Deux issues, et aucune n'est d'attendre :** un second projet branché sur le
+même dépôt déploie encore quand le premier est bouché — trente secondes à créer.
+Et un refus se retente une demi-heure plus tard, pas le lendemain, quoi qu'en
+dise le message.
 
-**Ce qu'on ne sait toujours pas**, et qu'il faut se retenir d'écrire : si le
-compteur est tenu par compte ou par projet. Les données ne permettent pas de
-trancher, le message d'erreur ne le dit pas, et la documentation de l'éditeur est
-hors d'atteinte derrière le mandataire.
-
-La leçon de méthode compte autant que le fait : **un seul point de mesure qui
-contredit une règle suffit à la casser, jamais à en fonder une autre.** La
-première correction a été écrite sur un unique déploiement réussi, publiée avec
-assurance, et démentie par le point suivant. Il fallait dire « la règle écrite
-est fausse » et s'arrêter là.
-
-**Les conseils qui ne dépendent d'aucune de ces hypothèses**, et qui sont donc
-les seuls à suivre : réduire le volume — chaque PR déclenche un déploiement par
-projet branché, et une session qui enchaîne les PR consomme la réserve de la
-page qui doit rentrer de l'argent — ou changer d'hébergeur. Et ne pas attendre
-vingt-quatre heures : réessayer une demi-heure plus tard suffit parfois.
+**La leçon de méthode, payée deux fois dans l'heure :** un point de mesure qui
+contredit une règle suffit à la casser, jamais à en fonder une autre. La
+première correction a conclu « par projet » sur un unique succès et a été
+démentie six minutes plus tard ; la seconde, corrigeant la première, a conclu
+« on ne peut pas savoir » alors que le relevé d'une autre session le disait
+déjà. **Avant de reconstruire une règle, il faut chercher ce que les autres ont
+mesuré** — dans ce fichier, pas dans sa propre session.
 
 ## Les aperçus coûtent, et les sessions les vident
 
@@ -2894,3 +2889,26 @@ racine y trouverait n'a de sens pour personne.
 **Et l'exclusion se vérifie sur les chemins, pas sur les noms.** Un rejeu local
 de la CI déposait une copie des mêmes projets sous `.verif-ci/copie/` : exclus à
 leur vrai chemin, ils revenaient par celui-là.
+
+## Une couverture annoncée et absente est pire que pas de couverture
+
+La fiche de la compétence `verifier` promettait « validation des bases et
+parcours Chromium pour le réseau d'annuaires IA ». Le script ne lançait **rien**
+pour ce projet : aucune case dans sa sélection. Onze sites sans compilateur, sans
+typage et sans test unitaire, dont la seule vérification existante n'était
+appelée par personne.
+
+Le défaut n'est pas l'oubli, c'est le **sens de la lecture**. Une session qui
+touche `annuaire-ia`, lit la fiche, lance la vérification et voit vert en conclut
+que son changement est couvert. Sans la promesse, elle serait allée chercher la
+commande du projet. La phrase fausse a donc coûté davantage que le silence.
+
+**Le contrôle qui l'attrape se fait dans les deux sens, et personne ne fait le
+second :** ce que la documentation annonce doit exister dans le code, et — c'est
+celui qu'on oublie — ce que le code fait doit être annoncé. Ici la fiche citait
+un projet absent du script **et** taisait trois projets présents (Artisan
+Express, TITAN Builder, IPTV). Deux dérives opposées dans la même phrase.
+
+La description d'une compétence n'est pas de la prose : c'est **elle** qui
+décide du déclenchement. Une description périmée ne se contente pas de mentir,
+elle empêche la compétence de se proposer là où elle sert.
