@@ -122,6 +122,72 @@ etape() {  # etape <fichier-journal> <intitulé> <commande...>
   fi
 }
 
+# Comme `etape`, mais le code 3 vaut « non effectué » plutôt qu'« échoué ».
+# C'est ce que rend `regarder.mjs` quand aucun Chromium n'est installé : bloquer
+# une poussée pour ça punirait le code d'un manque de la machine, et le compter
+# vert serait pire — une mesure qui n'a rien mesuré.
+etape_regard() {  # etape_regard <fichier-journal> <intitulé> <commande...>
+  local j="$1" nom="$2"; shift 2
+  local t0=$SECONDS
+  "$@" >"$j.brut" 2>&1
+  local code=$?
+  case $code in
+    0) echo "    ✓ $nom ($((SECONDS - t0)) s)" >> "$j"; return 0 ;;
+    3) echo "    ⊘ $nom — non effectué, pas de Chromium" >> "$j"; return 0 ;;
+    *) echo "    ✗ $nom ($((SECONDS - t0)) s)" >> "$j"
+       { echo "── $nom"; tail -30 "$j.brut"; } > "$j.echec"; return 1 ;;
+  esac
+}
+
+# Regarder une application qui a besoin d'un serveur : on la sert sur un port à
+# elle, on mesure, on arrête tout l'arbre.
+#
+# Deux pièges, tous deux payés ici, et tous deux rendaient le contrôle **vert
+# sur une page cassée** — le pire des états, parce qu'il rassure :
+#
+# 1. `kill` sur le PID de `npm` ne tue rien. La chaîne réelle est
+#    `npm exec next start` -> `sh -c next start` -> `next-server`, et le
+#    petit-fils est réattaché à init : il continue de servir. D'où `setsid`,
+#    qui met l'arbre dans son propre groupe, et `kill -- -PGID` qui le prend
+#    entier.
+# 2. Un serveur laissé derrière occupe le port, et le contrôle suivant mesure
+#    **le build précédent** sans que rien ne le dise. On refuse donc de
+#    commencer si le port répond déjà : mesurer un serveur qu'on n'a pas
+#    démarré, c'est mesurer on ne sait quoi.
+#
+# Et jamais `pkill -f` : le motif est comparé à la ligne de commande complète,
+# celle du shell appelant la contient, et il se tue lui-même — deux commandes
+# ont disparu comme ça, sans un mot.
+regarder_servi() {  # regarder_servi <dossier> <port>
+  local d="$1" port="$2"
+
+  if curl -sf -o /dev/null --max-time 2 "http://127.0.0.1:$port/"; then
+    echo "le port $port répond déjà — un serveur oublié fausserait la mesure"
+    return 1
+  fi
+
+  ( cd "$d" || exit 1
+    setsid npm exec next start -- -p "$port" >/dev/null 2>&1 &
+    serveur=$!
+    pret=1
+    for _ in $(seq 1 40); do
+      curl -sf -o /dev/null "http://127.0.0.1:$port/" && { pret=0; break; }
+      kill -0 "$serveur" 2>/dev/null || break
+      sleep 1
+    done
+
+    if [ $pret -ne 0 ]; then
+      kill -- "-$serveur" 2>/dev/null
+      echo "le serveur n'a pas répondu sur le port $port"
+      exit 1
+    fi
+
+    npm run regarder --silent "http://127.0.0.1:$port/"
+    code=$?
+    kill -- "-$serveur" 2>/dev/null
+    exit $code )
+}
+
 lancer_amorce() {
   local j="$journal/amorce"; local e=0
   # Les trois sont indépendantes : elles partent ensemble, chacune dans son
@@ -168,7 +234,11 @@ lancer_artisan() {
   # composant serveur qui reçoit une fonction en propriété.
   ( cd "$d" || exit 1
     etape "$j.build" "build" npm run build || exit 1 ) || e=1
-  cat "$j".{lint,typecheck,test,build} > "$j" 2>/dev/null
+  # Le regard vient après le build : il mesure la page telle qu'elle sera
+  # servie — contraste, taille de texte, cibles, débordement — et c'est le seul
+  # contrôle que `tsc` et les tests ne peuvent pas faire.
+  etape_regard "$j.regard" "regard 393 × 873" regarder_servi "$d" 3931 || e=1
+  cat "$j".{lint,typecheck,test,build,regard} > "$j" 2>/dev/null
   return $e
 }
 
@@ -196,7 +266,12 @@ lancer_titan() {
   wait $a || e=1; wait $b || e=1; wait $c || e=1
   # Le build ferme la marche, seul à voir ce que `tsc` laisse passer.
   ( cd "$d" || exit 1; etape "$j.build" "build" npm run build || exit 1 ) || e=1
-  cat "$j".{lint,typecheck,test,build} > "$j" 2>/dev/null
+  # La démonstration est régénérée puis regardée : c'est la sortie réelle du
+  # générateur, et un changement de feuille de style s'y voit là et nulle part
+  # ailleurs.
+  ( cd "$d" || exit 1
+    etape_regard "$j.regard" "regard 393 × 873" sh -c 'npm run demo --silent >/dev/null && npm run regarder --silent demo' ) || e=1
+  cat "$j".{lint,typecheck,test,build,regard} > "$j" 2>/dev/null
   return $e
 }
 

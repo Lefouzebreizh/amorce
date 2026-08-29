@@ -2643,3 +2643,42 @@ Le point qui compte, et qui vaut au-delà de ce cas : **le drapeau appartient au
 générateur, pas à la copie du fichier.** Retirer la ligne à la main après coup
 marche une fois et se perd à la régénération suivante — et personne ne relit une
 page d'exemple. `--demonstration` traverse l'outil et sort avec le fichier.
+
+## Un serveur oublié rend vert un contrôle qui mesure le build d'avant
+
+Le contrôle visuel de la page de vente est passé au vert sur une page que
+j'avais **cassée exprès** pour l'éprouver. Il ne mesurait pas la page courante :
+il mesurait un serveur laissé par l'exécution précédente, qui servait encore le
+build d'avant.
+
+Deux causes, et la première explique la seconde :
+
+- **`kill` sur le PID de `npm` ne tue pas le serveur.** La chaîne réelle est
+  `npm exec next start` → `sh -c next start` → `next-server` : on tue
+  l'enveloppe, le petit-fils est réattaché à init et continue de servir. Vérifié
+  à `ps -eo pid,ppid,pgid,args` — trois `next-server` orphelins de ports que je
+  croyais fermés.
+- **Le port occupé ne provoque aucune erreur visible.** `next start` sort en 1
+  et son message part dans un journal que personne ne lit ; `curl` répond 200
+  immédiatement, l'attente du serveur réussit, et le contrôle mesure la page de
+  quelqu'un d'autre en affichant l'adresse qu'on lui a demandée.
+
+Les deux parades, et il faut les deux :
+
+```sh
+setsid npm exec next start -- -p "$port" & serveur=$!   # un groupe à soi
+kill -- "-$serveur"                                      # l'arbre entier
+curl -sf "http://127.0.0.1:$port/" && { echo occupé; exit 1; }   # avant de démarrer
+```
+
+**La leçon de méthode est la plus importante : un contrôle neuf ne vaut rien
+tant qu'on ne l'a pas vu échouer.** Celui-ci est passé vert deux fois de suite
+et j'allais le livrer. Rien dans sa sortie ne clochait — la bonne adresse, une
+durée plausible, un verdict net. Ce qui l'a démasqué est un geste, pas une
+lecture : **casser la page exprès et exiger le rouge.** Une durée suspecte avait
+mis la puce à l'oreille, mais elle ne prouvait rien — après correction, la même
+mesure prend le même temps.
+
+C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
+donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
+qu'il accepte.
