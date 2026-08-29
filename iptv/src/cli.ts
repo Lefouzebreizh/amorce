@@ -16,11 +16,13 @@ import { ouvrirDepot, type Depot } from './cache/depot.ts'
 import { importerEpg, importerM3U, importerXtream } from './cache/importer.ts'
 import { creerClientXtream, ErreurXtream } from './ingestion/xtream.ts'
 import { chargerEnv, identifiantsXtream } from './serveur/reglages.ts'
+import { guideDemo, LISTE_DEMO } from './demo.ts'
 import type { SourceTexte } from './flux/lignes.ts'
 import { masquerIdentifiants } from './ingestion/xtream.ts'
 
 const AIDE = `Usage : iptv <commande> [options]
 
+  demo                     Remplit le cache avec des chaînes de test publiques
   importer <fichier|url>   Analyse une liste M3U et remplit le cache
   xtream [serveur user mdp] Importe depuis un panneau Xtream (ou depuis .env)
   epg <fichier|url>        Charge un guide XMLTV (.xml ou .xml.gz)
@@ -109,6 +111,26 @@ async function principal(argv: readonly string[]): Promise<number> {
 
   try {
     switch (commande) {
+      case 'demo': {
+        /*
+         * La première question n'est pas « comment je branche mon
+         * fournisseur », c'est « est-ce que ça marche ». Sans réponse à
+         * celle-là, un écran vide se confond avec une panne.
+         */
+        const resume = await importerM3U(depot, LISTE_DEMO, {
+          adresse: 'demonstration',
+        })
+        const guide = await importerEpg(depot, guideDemo())
+        console.log(`Démonstration prête : ${resume.ecrits} entrées, ${guide.ecrits} programmes.`)
+        console.log()
+        console.log('Ensuite, dans cette fenêtre :        npm run dev')
+        console.log('Et dans une seconde fenêtre :        npm run iptv -- adresse')
+        console.log()
+        console.log('Ces chaînes sont des flux de test publics, pas un abonnement.')
+        console.log('Pour brancher le vôtre : npm run iptv -- importer <votre lien>')
+        return 0
+      }
+
       case 'importer': {
         const adresse = reste.find((arg) => !arg.startsWith('--'))
         if (adresse === undefined) {
