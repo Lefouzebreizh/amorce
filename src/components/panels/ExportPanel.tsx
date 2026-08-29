@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { downloadBlob, pickFormat, recordMontage, relireLExport, safeFilename } from '@/lib/export';
+import { debitVideo, downloadBlob, pickFormat, recordMontage, relireLExport, safeFilename } from '@/lib/export';
 import { formatTime } from '@/lib/media';
 import { useStudio } from '@/lib/store';
 import { EXPORT_PRESETS, exportPreset, OUTPUT_FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
@@ -35,6 +35,22 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
 
   const format = pickFormat(audioOnly);
   const busy = progress !== null;
+
+  /*
+   * Le poids annoncé avant l'export, pas après.
+   *
+   * On ne découvrait la taille du fichier qu'une fois produit — et un fichier
+   * de trente mégaoctets ne s'envoie pas depuis un téléphone en réseau mobile.
+   * C'est là que meurent des montages : on les exporte, on n'arrive pas à les
+   * envoyer, on renonce. L'estimation permet de choisir la définition en
+   * connaissance de cause, avant d'attendre la durée du film.
+   *
+   * Elle est approchée par construction : l'encodeur dépense moins sur une
+   * image calme que sur un plan chargé, et le débit demandé n'est qu'une cible.
+   * D'où « environ », qui n'est pas une précaution de style mais l'énoncé exact
+   * de ce que le chiffre vaut.
+   */
+  const poidsEstime = ((debitVideo(width, height, OUTPUT_FPS) + 192_000) * duration) / 8 / 1024 / 1024;
 
   const run = async () => {
     const canvas = engine.getCanvas();
@@ -138,7 +154,13 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
             options={EXPORT_PRESETS.map((item) => ({
               value: item.id,
               label: item.label,
-              description: item.description,
+              description: `${item.description} · environ ${(
+                ((debitVideo(
+                  Math.round(OUTPUT_WIDTH * item.scale),
+                  Math.round(OUTPUT_HEIGHT * item.scale),
+                  OUTPUT_FPS,
+                ) + 192_000) * duration) / 8 / 1024 / 1024
+              ).toFixed(1)} Mo`,
             }))}
           />
         </Field>
@@ -158,7 +180,9 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
             ? `Enregistrement… ${Math.round((progress ?? 0) * 100)} %`
             : audioOnly
               ? '⬇ Exporter la bande-son'
-              : '⬇ Exporter la vidéo'}
+              // Le poids sur le bouton, pas dans une note à côté : c'est au
+              // moment d'appuyer qu'il change une décision.
+              : `⬇ Exporter la vidéo · ~${poidsEstime.toFixed(1)} Mo`}
         </Button>
 
         {busy && (
