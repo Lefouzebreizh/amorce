@@ -31,9 +31,21 @@ concurrent ne peut pas recopier.
 - qu'il n'y a ni bandeau de cookies, ni pop-up, ni compte à créer ;
 - que la page charge en une seconde sur un chantier en 4G.
 
-## Pas de photos ici
+## Pas de photos, mais des cadres
 
-Le dépôt ne versionne aucun binaire. La démonstration sort donc sans galerie —
-ce qui est honnête : elle montre la structure, et les photos du client
-rempliront la sienne. Pour une démonstration avec images, déposer deux photos
-dans ce dossier avant de lancer `generer` ; elles ne seront pas commitées.
+Le dépôt ne versionne aucun binaire : la démonstration sort donc sans photo de
+chantier. Mais un artisan décide **sur des photos**, et une galerie absente ne
+lui montre pas où les siennes viendront — c'est pourtant ce qu'il achète.
+
+`--demonstration` dessine donc trois cadres à sa place, en SVG embarqué dans la
+page. Des cadres, pas des photos : **rien n'est fabriqué qui puisse passer pour
+un vrai chantier**, parce qu'une image de synthèse présentée comme une
+réalisation serait exactement le faux témoignage que ce dépôt s'interdit. Ils
+portent leur couleur d'accent et disent « Votre photo 1 ».
+
+Embarqués plutôt que déposés à côté : la page reste **un seul fichier**, qui
+s'ouvre depuis le disque comme depuis un hébergement.
+
+Pour une démonstration avec de vraies images, déposer deux photos dans ce
+dossier avant de lancer `generer` — elles remplacent les cadres et ne sont pas
+commitées.

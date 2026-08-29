@@ -21,6 +21,40 @@ import process from 'node:process';
 
 const EXTENSIONS_IMAGE = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
 
+/*
+ * Les cadres d'une démonstration sans photo.
+ *
+ * Un artisan décide sur des photos de chantier : une démonstration qui n'a pas
+ * de galerie du tout ne montre pas *où* les siennes iront, et c'est justement
+ * ce qu'il achète. On dessine donc des cadres — pas des photos.
+ *
+ * Rien n'est fabriqué qui puisse passer pour un vrai chantier : le dépôt
+ * interdit le faux témoignage, et une image de synthèse présentée comme une
+ * réalisation en serait un. Ces cadres disent ce qu'ils sont.
+ *
+ * En SVG embarqué plutôt qu'en fichiers : la page reste **un seul fichier**
+ * autonome, qui s'ouvre depuis le disque comme depuis un hébergement.
+ */
+function cadresDeDemonstration(accent) {
+  const legendes = ['Avant / après', 'Une finition', 'Le chantier fini'];
+
+  return legendes.map((legende, rang) => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+<rect width="400" height="300" fill="#eef1f4"/>
+<rect x="8" y="8" width="384" height="284" rx="14" fill="none" stroke="${accent}" stroke-width="3" stroke-dasharray="12 9"/>
+<circle cx="200" cy="126" r="34" fill="none" stroke="${accent}" stroke-width="6"/>
+<rect x="150" y="86" width="100" height="12" rx="6" fill="${accent}"/>
+<text x="200" y="205" text-anchor="middle" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#16202b">Votre photo ${rang + 1}</text>
+<text x="200" y="238" text-anchor="middle" font-family="system-ui, sans-serif" font-size="19" fill="#5b6b7a">${legende}</text>
+</svg>`;
+
+    return {
+      fichier: `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`,
+      legende: `Emplacement d\u2019une photo de chantier — ${legende}`,
+    };
+  });
+}
+
 async function principal() {
   const arguments_ = process.argv.slice(2);
   const dossier = arguments_.find((a) => !a.startsWith('--'));
@@ -77,22 +111,26 @@ async function principal() {
     .sort()
     .map((fichier) => ({ fichier }));
 
-  const { genererSite } = await import('../src/lib/site.ts');
-  const html = genererSite(
-    {
-      couleur: '', slogan: '', presentation: '', services: '', options: [],
-      ...commande,
-    },
-    photos,
-    { domaine, demonstration },
-  );
+  const { genererSite, couleurRetenue } = await import('../src/lib/site.ts');
+  const complete = {
+    couleur: '', slogan: '', presentation: '', services: '', options: [],
+    ...commande,
+  };
+
+  // Une démonstration sans photo montre des cadres : sans eux, le prospect ne
+  // voit pas l'endroit où les siennes viendront.
+  const aMontrer = demonstration && photos.length === 0
+    ? cadresDeDemonstration(couleurRetenue(complete))
+    : photos;
+
+  const html = genererSite(complete, aMontrer, { domaine, demonstration });
 
   const sortie = path.join(dossier, 'index.html');
   await writeFile(sortie, html, 'utf8');
 
   console.log(`✅ ${sortie}`);
   console.log(`   ${commande.entreprise} — ${commande.ville}`);
-  console.log(`   ${photos.length} photo(s), ${(html.length / 1024).toFixed(1)} Ko`);
+  console.log(`   ${aMontrer.length} image(s)${photos.length === 0 && aMontrer.length > 0 ? ' (cadres de démonstration)' : ''}, ${(html.length / 1024).toFixed(1)} Ko`);
   if (demonstration) console.log('   démonstration : sortie en noindex');
   console.log(domaine === undefined
     ? '   ⚠ sans --domaine : pas d’adresse canonique ni d’image de partage'
