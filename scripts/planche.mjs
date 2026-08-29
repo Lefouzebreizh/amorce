@@ -37,13 +37,25 @@ const SORTIE = join(ROOT, '.fixtures', 'captures');
  * sur la planche, un plan répété, un plan manquant ou un ordre inversé se
  * voient sans compter. Une teinte différente par plan rend les fondus lisibles
  * — c'est là que se logent les défauts de raccord.
+ *
+ * Les teintes restent à mi-hauteur, entre 40 et 160 par canal, et ce n'est pas
+ * cosmétique. La première version tirait au hasard sur toute l'échelle : le
+ * sixième plan sortait à 245 de luminance, quasiment blanc, et la planche
+ * donnait l'impression que l'étalonnage écrasait la fin du film. Mesuré,
+ * l'export rendait 224 au même instant — l'application avait **assombri** un
+ * rush déjà au plafond.
+ *
+ * Une matière de test qui touche les extrêmes fabrique de faux défauts, et un
+ * faux défaut coûte plus cher qu'un vrai : on corrige ce qui n'est pas cassé.
+ * Entre ces bornes, un plan blanc ou noir sur la planche vient forcément du
+ * studio.
  */
 function fabriquerRushes() {
   if (existsSync(LOT) && readdirSync(LOT).length >= NB) return;
   mkdirSync(LOT, { recursive: true });
   console.log(`fabrication de ${NB} rushes…`);
   for (let i = 1; i <= NB; i += 1) {
-    const couleur = `0x${[(i * 29) % 200 + 55, (i * 61) % 200 + 55, (i * 97) % 200 + 55]
+    const couleur = `0x${[(i * 29) % 120 + 40, (i * 61) % 120 + 40, (i * 97) % 120 + 40]
       .map((v) => v.toString(16).padStart(2, '0')).join('')}`;
     execFileSync('ffmpeg', [
       '-v', 'error', '-y',
