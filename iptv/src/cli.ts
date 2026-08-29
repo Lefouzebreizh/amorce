@@ -13,13 +13,16 @@ import { networkInterfaces } from 'node:os'
 import { createGunzip } from 'node:zlib'
 
 import { ouvrirDepot, type Depot } from './cache/depot.ts'
-import { importerEpg, importerM3U } from './cache/importer.ts'
+import { importerEpg, importerM3U, importerXtream } from './cache/importer.ts'
+import { creerClientXtream, ErreurXtream } from './ingestion/xtream.ts'
+import { chargerEnv, identifiantsXtream } from './serveur/reglages.ts'
 import type { SourceTexte } from './flux/lignes.ts'
 import { masquerIdentifiants } from './ingestion/xtream.ts'
 
 const AIDE = `Usage : iptv <commande> [options]
 
   importer <fichier|url>   Analyse une liste M3U et remplit le cache
+  xtream [serveur user mdp] Importe depuis un panneau Xtream (ou depuis .env)
   epg <fichier|url>        Charge un guide XMLTV (.xml ou .xml.gz)
   grille [chaine]          Ce qui passe en ce moment
   adresse                  L'adresse à taper sur le téléphone et la télévision
@@ -91,6 +94,8 @@ function afficherElements(depot: Depot, elements: ReturnType<Depot['lister']>): 
 }
 
 async function principal(argv: readonly string[]): Promise<number> {
+  // Next lit `.env` tout seul ; la ligne de commande, non.
+  chargerEnv()
   const [commande, ...reste] = argv
   if (commande === undefined || commande === '--help' || commande === '-h') {
     console.log(AIDE)
@@ -116,6 +121,71 @@ async function principal(argv: readonly string[]): Promise<number> {
           `Importé : ${resume.ecrits} entrées en ${(resume.dureeMs / 1000).toFixed(1)} s` +
             (resume.retires > 0 ? `, ${resume.retires} retirées` : ''),
         )
+        return 0
+      }
+
+      case 'xtream': {
+        const positionnels = reste.filter((arg) => !arg.startsWith('--'))
+        const identifiants =
+          positionnels.length >= 3 && positionnels[0] !== undefined
+            ? {
+                serveur: positionnels[0],
+                utilisateur: positionnels[1] ?? '',
+                motDePasse: positionnels[2] ?? '',
+              }
+            : identifiantsXtream()
+
+        if (identifiants === undefined) {
+          console.error('Il manque les identifiants du panneau. Deux façons :')
+          console.error('  npm run iptv -- xtream http://hote:8080 utilisateur motdepasse')
+          console.error('  ou IPTV_XTREAM_SERVEUR / _UTILISATEUR / _MOT_DE_PASSE dans .env')
+          return 2
+        }
+
+        let client
+        try {
+          client = creerClientXtream(identifiants)
+        } catch (cause) {
+          console.error(cause instanceof ErreurXtream ? cause.message : String(cause))
+          return 2
+        }
+
+        // Le compte avant le catalogue : un abonnement expiré rend des listes
+        // vides et non une erreur, et l'import « réussirait » avec zéro entrée.
+        // Autant le dire tout de suite, avec l'échéance et le nombre de flux
+        // simultanés — les deux choses qu'on cherche quand quelque chose cloche.
+        let compte
+        try {
+          compte = await client.verifierCompte()
+        } catch (cause) {
+          console.error(cause instanceof ErreurXtream ? cause.message : String(cause))
+          return 1
+        }
+
+        console.log(`Compte : ${compte.actif ? 'actif' : 'INACTIF'}${compte.statut === undefined ? '' : ` (${compte.statut})`}`)
+        if (compte.expiration !== undefined) {
+          const jours = Math.round((compte.expiration.getTime() - Date.now()) / 86_400_000)
+          console.log(
+            `  échéance : ${compte.expiration.toLocaleDateString('fr-FR')} (${jours} jour${Math.abs(jours) > 1 ? 's' : ''})`,
+          )
+        }
+        if (compte.connexionsMax !== undefined) {
+          console.log(`  flux simultanés : ${compte.connexionsActives ?? 0} sur ${compte.connexionsMax}`)
+        }
+        if (!compte.actif) {
+          console.error('Abonnement inactif : le panneau rendrait des listes vides.')
+          return 1
+        }
+
+        const resume = await importerXtream(depot, client, {
+          utilisateur: identifiants.utilisateur,
+        })
+        console.log(
+          `Importé : ${resume.ecrits} entrées et ${resume.fiches} séries` +
+            ` en ${(resume.dureeMs / 1000).toFixed(1)} s` +
+            (resume.retires > 0 ? `, ${resume.retires} retirées` : ''),
+        )
+        console.log('Les épisodes d’une série se chargent à l’ouverture de sa fiche.')
         return 0
       }
 
