@@ -14,6 +14,13 @@
 const TELEPHONE = process.env.NEXT_PUBLIC_TELEPHONE ?? '';
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP ?? '';
 const STRIPE = process.env.NEXT_PUBLIC_LIEN_STRIPE ?? '';
+/*
+ * L'adresse vers laquelle le formulaire bascule quand l'envoi serveur n'est pas
+ * réglé. C'est la seule variable qui ne demande **aucun compte à créer** — une
+ * adresse qu'on possède déjà suffit — et c'est elle qui permet à une page
+ * déployée sans rien d'autre d'encaisser tout de même une demande.
+ */
+const COURRIEL_DIRECT = process.env.NEXT_PUBLIC_DEVIS_MAILTO ?? '';
 
 /** `06 12 34 56 78` → `+33612345678`, tel quel si le format est déjà international. */
 function lienTelephonique(brut: string): string {
@@ -34,8 +41,11 @@ export const contact = {
         )}`,
   /** Sans lien de paiement, le bouton d'offre renvoie au formulaire. */
   stripeLien: STRIPE,
+  /** Adresse de repli du formulaire, sans compte d'envoi à créer. */
+  courrielDirect: COURRIEL_DIRECT,
 } as const;
 
 export const aUnTelephone = contact.telephoneLien !== '';
 export const aUnWhatsapp = contact.whatsappLien !== '';
 export const aUnStripe = contact.stripeLien !== '';
+export const aUnCourrielDirect = contact.courrielDirect !== '';
