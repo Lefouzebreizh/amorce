@@ -375,6 +375,29 @@ là où `aiohttp` rend « 403, requête refusée ». Une session qui voit le 403
 à une clé manquante et part chercher un compte d'API. Il n'y en a pas besoin :
 l'hôte est simplement hors d'atteinte.
 
+**Aucune plateforme sociale n'est joignable, et un greffon installé ici le
+niera.** Mesuré le 29/08/2026, treize hôtes sondés d'un coup : Reddit — page et
+API —, X, YouTube, TikTok, Instagram, Hacker News et son index Algolia,
+Polymarket, arXiv et Techmeme rendent tous `000`. **Seul `api.github.com`
+répond.** Douze sur treize.
+
+Le piège n'est pas le mur, c'est ce qu'un outil en dit. Le greffon
+`last30days` s'installe sans erreur, s'active, et son hook de démarrage annonce
+à **chaque nouvelle session** : « Reddit, Hacker News, and Polymarket work out
+of the box ». La phrase vient de son README, pas de ce terrain. Une session qui
+la lit au réveil promet une veille qu'elle ne peut pas faire.
+
+D'où la règle : **un greffon déclare ce qu'il sait faire, jamais ce que cette
+machine lui laisse faire.** Ce qui va chercher le monde extérieur — veille,
+recherche sociale, lecture de vidéos — s'installe sur la machine du
+propriétaire, qui a du vrai réseau ; ce qui vit dans le dépôt reste ici. Le cas
+détaillé, avec les API payantes qui n'y changent rien, est dans
+`/video-de-reference`.
+
+Deuxième raison, indépendante de la première : un greffon installé ici atterrit
+dans `/root/.claude/`, à l'intérieur d'un conteneur repris après inactivité. Il
+disparaît. **Seul le dépôt persiste.**
+
 **`youtu.be` et `youtube.com` sont refusés eux aussi** — `EGRESS_BLOCKED`,
 mesuré le 29/08. Cela compte parce qu'un lien vidéo arrive souvent seul, sans
 un mot : le réflexe est d'aller le lire, et il est perdu d'avance. Deux raisons
