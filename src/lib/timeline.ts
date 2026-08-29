@@ -158,6 +158,9 @@ export function placeOnCuts(starts: number[], count: number, from = 0): number[]
  * de 4,6 et 7,5 secondes sans qu'aucun raccord ne se voie. C'est le « plan
  * fixe » que le guide dénonce par ailleurs, posé par le montage lui-même.
  */
+/** Combien de morceaux une découpe peut produire au plus. Voir `chopped`. */
+export const MORCEAUX_MAX = 12;
+
 export const MOUVEMENTS_ALTERNES: ClipMotion[] = [
   'zoomIn',
   'panLeft',
@@ -170,7 +173,21 @@ export const MOUVEMENTS_ALTERNES: ClipMotion[] = [
 export function chopped(clip: Clip, target: number, makeId: () => string): Clip[] {
   const sourceSpan = clip.outPoint - clip.inPoint;
   const shown = sourceSpan / Math.max(0.1, clip.speed);
-  const pieces = Math.floor(shown / Math.max(0.5, target));
+  /*
+   * Le nombre de morceaux est borné.
+   *
+   * Une prise de cinquante-six secondes donnait vingt-huit plans de deux
+   * secondes : la même image coupée vingt-huit fois, avec autant de bruitages
+   * posés sur des raccords qui ne se voient pas. Douze morceaux couvrent déjà
+   * un format court entier ; au-delà, ce qu'il faut n'est pas plus de coupes
+   * mais moins de rush.
+   *
+   * Les morceaux s'allongent alors au lieu de se multiplier : douze morceaux
+   * d'une prise de cinquante-six secondes font quatre secondes sept chacun.
+   * C'est long pour un plan, et c'est le signe qu'il fallait raccourcir avant —
+   * ce que le guide dit désormais en premier.
+   */
+  const pieces = Math.min(MORCEAUX_MAX, Math.floor(shown / Math.max(0.5, target)));
   if (pieces < 2) return [clip];
 
   const step = sourceSpan / pieces;

@@ -63,6 +63,62 @@ iptv/
 
 Ce que la suite ajoutera, aux mêmes endroits :
 
+## Pas à pas, en partant de rien
+
+Écrit après un échec réel : la première tentative s'est arrêtée à l'étape 6,
+faute de savoir quelle adresse taper. Chaque étape dit **ce qu'on doit voir**,
+parce qu'une commande qui ne dit rien ne prouve rien.
+
+**Sur l'ordinateur** — pas sur le téléphone.
+
+**0.** Installer [Node.js](https://nodejs.org) en version **22 LTS** (c'est
+celle qui est éprouvée ici et en intégration continue) et
+[Git](https://git-scm.com), puis redémarrer la machine. Vérifier :
+`node --version` doit répondre `v22.…`.
+
+**1.** Ouvrir un terminal — `powershell` sous Windows, `terminal` sous macOS.
+
+**2.** Récupérer le projet :
+
+```bash
+git clone https://github.com/Lefouzebreizh/amorce.git
+cd amorce/iptv
+npm ci
+```
+
+**3.** Charger un catalogue, au choix :
+
+```bash
+npm run iptv -- importer <lien M3U>
+npm run iptv -- xtream <serveur> <utilisateur> <mot de passe>
+```
+
+→ doit répondre `Importé : N entrées en X s`. Zéro entrée sur un lien valide
+veut souvent dire un abonnement expiré : `xtream` le dit avant d'importer.
+
+**4.** Démarrer, et **laisser la fenêtre ouverte** :
+
+```bash
+npm run dev
+```
+
+**5.** Dans une **seconde** fenêtre, demander l'adresse :
+
+```bash
+cd amorce/iptv
+npm run iptv -- adresse
+```
+
+**6.** Taper cette adresse dans le navigateur du téléphone, sur le même
+réseau, `:3000` compris.
+
+| Symptôme | Cause |
+| --- | --- |
+| Page de recherche au lieu du site | Mauvaise adresse — refaire l'étape 5 |
+| « Impossible d'accéder au site » | L'étape 4 est fermée, ou les deux appareils ne sont pas sur le même réseau |
+| Le site s'ouvre, vide | L'étape 3 n'a pas été faite |
+| « commande introuvable » | Node ou Git absent, ou machine non redémarrée |
+
 ## Y accéder : sur quelle machine, et depuis quoi
 
 **Cette application n'est hébergée nulle part, et c'est voulu.** Elle lit vos
@@ -80,8 +136,17 @@ Next affiche alors deux adresses. **C'est la seconde qui compte** :
 
 ```
 - Local:        http://localhost:3000        ← seulement sur cette machine
-- Network:      http://192.168.1.20:3000     ← depuis le téléphone, la tablette,
+- Network:      http://…:3000                ← depuis le téléphone, la tablette,
                                                la télévision
+```
+
+**Cette adresse est propre à votre machine et à votre box.** Aucune valeur
+écrite ici ne peut être la bonne — recopier un exemple mène sur une page
+d'erreur, et c'est arrivé. Si le message de Next a défilé, une commande la
+redonne :
+
+```bash
+npm run iptv -- adresse
 ```
 
 Le serveur écoute volontairement sur toutes les interfaces (`--hostname
@@ -93,9 +158,14 @@ bon compromis, sur un wifi partagé ce n'en est pas un.
 ## S'en servir tout de suite
 
 ```bash
-npm run iptv -- importer ma-liste.m3u     # un fichier, ou une URL
+# Un lien M3U…
+npm run iptv -- importer ma-liste.m3u
+
+# …ou un panneau Xtream, si votre fournisseur donne serveur + identifiants
+npm run iptv -- xtream http://hote:8080 utilisateur motdepasse
+
 npm run iptv -- epg guide.xml.gz          # le guide, .gz accepté
-npm run dev                                # puis http://localhost:3000
+npm run dev                                # puis l'adresse réseau affichée
 ```
 
 Les autres commandes, quand on veut voir sans ouvrir de navigateur :
@@ -225,6 +295,24 @@ vivent les pistes audio séparées, donc la version française.
 au build ; ici cela n'a aucun sens, la base n'existe pas encore à ce
 moment-là — le build échouait d'ailleurs franchement, ce qui vaut mieux qu'une
 page figée sur l'état d'un soir.
+
+**Les épisodes d'une série Xtream se chargent à l'ouverture de sa fiche, pas à
+l'import.** Les obtenir demande un appel `get_series_info` **par série** : sur
+un panneau qui en sert deux mille et accepte quelques dizaines de requêtes par
+minute, l'import complet prendrait une heure — pour des épisodes dont on n'en
+regardera jamais que quelques-uns. Le prix est visible et assumé : la première
+ouverture d'une série attend un aller-retour, les suivantes lisent le cache.
+
+**Une série déclarée s'affiche avant d'avoir ses épisodes**, et l'écran dit
+« épisodes à charger » plutôt que « 0 épisode ». Si le panneau est injoignable,
+la fiche s'affiche quand même avec son résumé et explique l'absence — une page
+vide laisserait croire à un catalogue amputé.
+
+**Les identifiants vivent dans `.env`, jamais en base.** L'application les y lit
+au besoin ; le cache ne garde que l'adresse masquée d'une source. Une base
+copiée ou sauvegardée ne livre donc l'abonnement de personne. Next lit `.env`
+tout seul ; la ligne de commande le fait explicitement, sans dépendance et sans
+jamais écraser une variable déjà posée dans l'environnement.
 
 **Le guide se lit au fil de l'eau, avec un analyseur écrit à la main.** Un
 XMLTV français couvre deux semaines sur trois cents chaînes : 50 à 200 Mo,

@@ -2064,3 +2064,30 @@ saut d'image.
 effets sonores comptent en temps de FRISE. **Deux repères dans la même recette,
 et rien ne le signale.** Ils sont désormais dérivés des mêmes instants de rush
 que le reste, par `caler_dragon.py`.
+
+## Du code testé et injoignable passe pour du code livré
+
+Trois fonctions du projet IPTV — l'import d'un panneau Xtream, le chargement
+des épisodes d'une série, la lecture des fiches en base — étaient écrites,
+commentées, couvertes par des tests verts. **Et appelées par personne.** Aucune
+commande, aucun écran, aucune route n'y menait : la moitié des sources que
+l'application prétend accepter était inatteignable.
+
+Rien ne le signalait, et c'est le point. Une suite verte prouve qu'une fonction
+fait ce qu'elle dit ; elle ne prouve jamais que quelqu'un l'appelle — le test
+est justement l'appelant qui masque l'absence des autres. Un compte rendu
+honnête sur le code peut donc décrire une fonctionnalité qui n'existe pas pour
+l'utilisateur.
+
+**Le contrôle tient en une commande, et il est brutal :**
+
+```bash
+grep -rn "maFonction" src/ | grep -v "le fichier qui la définit\|tests/"
+```
+
+Zéro résultat : ce n'est pas livré, quoi qu'en disent les tests.
+
+À passer sur chaque fonction exportée d'un lot avant de l'annoncer fini. La
+règle générale : **une fonctionnalité n'est livrée que lorsqu'un chemin y mène
+depuis l'extérieur** — une commande, un bouton, une route. Le reste est du code
+qui compile.

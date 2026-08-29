@@ -9,18 +9,23 @@ import { createReadStream } from 'node:fs'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 
+import { networkInterfaces } from 'node:os'
 import { createGunzip } from 'node:zlib'
 
 import { ouvrirDepot, type Depot } from './cache/depot.ts'
-import { importerEpg, importerM3U } from './cache/importer.ts'
+import { importerEpg, importerM3U, importerXtream } from './cache/importer.ts'
+import { creerClientXtream, ErreurXtream } from './ingestion/xtream.ts'
+import { chargerEnv, identifiantsXtream } from './serveur/reglages.ts'
 import type { SourceTexte } from './flux/lignes.ts'
 import { masquerIdentifiants } from './ingestion/xtream.ts'
 
 const AIDE = `Usage : iptv <commande> [options]
 
   importer <fichier|url>   Analyse une liste M3U et remplit le cache
+  xtream [serveur user mdp] Importe depuis un panneau Xtream (ou depuis .env)
   epg <fichier|url>        Charge un guide XMLTV (.xml ou .xml.gz)
   grille [chaine]          Ce qui passe en ce moment
+  adresse                  L'adresse à taper sur le téléphone et la télévision
   resume                   Ce que le cache contient
   chercher <mots...>       Recherche plein texte
   groupes                  Les groupes, du plus fourni au moins fourni
@@ -89,6 +94,8 @@ function afficherElements(depot: Depot, elements: ReturnType<Depot['lister']>): 
 }
 
 async function principal(argv: readonly string[]): Promise<number> {
+  // Next lit `.env` tout seul ; la ligne de commande, non.
+  chargerEnv()
   const [commande, ...reste] = argv
   if (commande === undefined || commande === '--help' || commande === '-h') {
     console.log(AIDE)
@@ -114,6 +121,71 @@ async function principal(argv: readonly string[]): Promise<number> {
           `Importé : ${resume.ecrits} entrées en ${(resume.dureeMs / 1000).toFixed(1)} s` +
             (resume.retires > 0 ? `, ${resume.retires} retirées` : ''),
         )
+        return 0
+      }
+
+      case 'xtream': {
+        const positionnels = reste.filter((arg) => !arg.startsWith('--'))
+        const identifiants =
+          positionnels.length >= 3 && positionnels[0] !== undefined
+            ? {
+                serveur: positionnels[0],
+                utilisateur: positionnels[1] ?? '',
+                motDePasse: positionnels[2] ?? '',
+              }
+            : identifiantsXtream()
+
+        if (identifiants === undefined) {
+          console.error('Il manque les identifiants du panneau. Deux façons :')
+          console.error('  npm run iptv -- xtream http://hote:8080 utilisateur motdepasse')
+          console.error('  ou IPTV_XTREAM_SERVEUR / _UTILISATEUR / _MOT_DE_PASSE dans .env')
+          return 2
+        }
+
+        let client
+        try {
+          client = creerClientXtream(identifiants)
+        } catch (cause) {
+          console.error(cause instanceof ErreurXtream ? cause.message : String(cause))
+          return 2
+        }
+
+        // Le compte avant le catalogue : un abonnement expiré rend des listes
+        // vides et non une erreur, et l'import « réussirait » avec zéro entrée.
+        // Autant le dire tout de suite, avec l'échéance et le nombre de flux
+        // simultanés — les deux choses qu'on cherche quand quelque chose cloche.
+        let compte
+        try {
+          compte = await client.verifierCompte()
+        } catch (cause) {
+          console.error(cause instanceof ErreurXtream ? cause.message : String(cause))
+          return 1
+        }
+
+        console.log(`Compte : ${compte.actif ? 'actif' : 'INACTIF'}${compte.statut === undefined ? '' : ` (${compte.statut})`}`)
+        if (compte.expiration !== undefined) {
+          const jours = Math.round((compte.expiration.getTime() - Date.now()) / 86_400_000)
+          console.log(
+            `  échéance : ${compte.expiration.toLocaleDateString('fr-FR')} (${jours} jour${Math.abs(jours) > 1 ? 's' : ''})`,
+          )
+        }
+        if (compte.connexionsMax !== undefined) {
+          console.log(`  flux simultanés : ${compte.connexionsActives ?? 0} sur ${compte.connexionsMax}`)
+        }
+        if (!compte.actif) {
+          console.error('Abonnement inactif : le panneau rendrait des listes vides.')
+          return 1
+        }
+
+        const resume = await importerXtream(depot, client, {
+          utilisateur: identifiants.utilisateur,
+        })
+        console.log(
+          `Importé : ${resume.ecrits} entrées et ${resume.fiches} séries` +
+            ` en ${(resume.dureeMs / 1000).toFixed(1)} s` +
+            (resume.retires > 0 ? `, ${resume.retires} retirées` : ''),
+        )
+        console.log('Les épisodes d’une série se chargent à l’ouverture de sa fiche.')
         return 0
       }
 
@@ -156,6 +228,44 @@ async function principal(argv: readonly string[]): Promise<number> {
         if (vues === 0) {
           console.log('  Aucun programme. Le guide est-il chargé (« epg ») et les tvg-id')
           console.log('  de la liste correspondent-ils à ceux du guide ?')
+        }
+        return 0
+      }
+
+      case 'adresse': {
+        /*
+         * La question qui bloque tout le monde au premier lancement, et à
+         * laquelle aucune documentation ne peut répondre : « quelle adresse je
+         * tape sur mon téléphone ? » Elle dépend de la box, elle change quand
+         * on rebranche, et un exemple écrit dans un README est pris pour la
+         * vraie réponse — c'est arrivé.
+         */
+        const port = lireOption(reste, 'port') ?? '3000'
+        const adresses: string[] = []
+        for (const [nom, cartes] of Object.entries(networkInterfaces())) {
+          for (const carte of cartes ?? []) {
+            // `internal` écarte la boucle locale ; la famille se compare en
+            // texte *et* en nombre, Node ayant changé d'avis entre deux
+            // versions majeures (« IPv4 » puis 4).
+            const v4 = carte.family === 'IPv4' || (carte.family as unknown as number) === 4
+            if (!v4 || carte.internal) continue
+            adresses.push(`  http://${carte.address}:${port}   (via ${nom})`)
+          }
+        }
+
+        if (adresses.length === 0) {
+          console.log('Cette machine n’a aucune adresse réseau : elle n’est branchée')
+          console.log('ni en Wi-Fi ni en Ethernet. Le téléphone ne pourra pas la joindre.')
+          return 1
+        }
+
+        console.log('À taper dans le navigateur du téléphone, sur le même Wi-Fi :')
+        console.log()
+        for (const adresse of adresses) console.log(adresse)
+        console.log()
+        console.log('Il faut que « npm run dev » tourne ici, dans une autre fenêtre.')
+        if (adresses.length > 1) {
+          console.log('Plusieurs adresses : essayez la première, puis les suivantes.')
         }
         return 0
       }
