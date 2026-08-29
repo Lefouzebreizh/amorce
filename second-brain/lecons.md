@@ -3609,3 +3609,33 @@ d'un plafond et d'une condition de sortie**, sinon elle ne rend pas un système
 robuste, elle rend une panne invisible. Et le symptôme est toujours le même —
 un indicateur de chargement qui ne s'éteint jamais, là où une phrase honnête
 tenait en une ligne.
+
+## Une session distante ne peut pas installer un plugin tiers, et ça ne sert à rien
+
+Mesuré le 29/08/2026 en tentant d'installer `last30days@last30days-skill`.
+Quatre portes, quatre refus — et elles se ferment chacune pour une raison
+différente, ce qui donne l'illusion qu'une cinquième pourrait s'ouvrir :
+
+| chemin | réponse |
+| --- | --- |
+| `claude plugin marketplace add <owner>/<repo>` | clone refusé : « could not read Username for github.com » |
+| `add_repo` | « cross-tier adds are not supported » — la session a déjà des dépôts d'un autre propriétaire |
+| `codeload.github.com`, `api.github.com`, `github.com` | **403**, le mandataire refuse le tunnel |
+| `raw.githubusercontent.com`, branches `main` / `master` / `HEAD` | **404** |
+
+**Le 404 de `raw` en face du 403 de `github.com` est le piège.** `raw` est un
+hôte autorisé : il répond vraiment, et son 404 se lit comme « ce fichier
+n'existe pas », donc on essaie d'autres branches, d'autres chemins. Or GitHub
+rend 404 à un visiteur non authentifié sur un dépôt **privé**. Un 404 sur `raw`
+pour un dépôt qu'on sait exister veut dire « pas le droit », pas « pas là ».
+
+`claude plugin marketplace add` accepte un **chemin local**, ce qui laisse
+croire à un contournement : télécharger ailleurs, poser le dossier, installer.
+Il n'en est pas un ici — c'est justement le téléchargement qui est fermé.
+
+**Et le vrai motif d'arrêter tient en une phrase, indépendante de tout ça :**
+une compétence fraîchement installée n'apparaît qu'au **prochain démarrage de
+session**. Une session distante ne peut pas redémarrer en gardant sa
+conversation. Donc même une installation réussie ne rendrait pas la commande
+appelable dans le fil qui vient de l'installer. Le plugin s'installe sur la
+**machine du propriétaire**, et c'est là qu'il sert.
