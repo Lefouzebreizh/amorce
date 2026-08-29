@@ -180,7 +180,27 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Les épisodes d'une série Xtream se chargent à l'ouverture de sa fiche : un
   appel par série, deux mille séries, quelques dizaines de requêtes par minute. **Aucun mot de passe n'entre en base** —
   l'adresse d'une source y est masquée — et aucune source de contenu ni
-  identifiant n'est versionné. Se vérifie depuis son dossier ; `npm run verify`
+  identifiant n'est versionné.
+  **Les chaînes se rangent dans l'ordre de la télécommande**, et la table est
+  celle du **6 juin 2025** : C8 et NRJ 12 ont cessé d'émettre, Canal+ a quitté
+  la TNT, France 4 est au 4, LCP au 8, Gulli au 12, l'info de 13 à 16. Une table
+  écrite de mémoire décrit la TNT d'avant — pire qu'aucune table, l'ordre paraît
+  juste. Au-delà de 50, ce n'est plus un numéro mais un **rang** par familles :
+  sport, cinéma, musique, reste ; les confondre afficherait « 2000 » à côté de
+  Canal+.
+  **Quatre flux au plus jouent en même temps** dans la mosaïque, et le plafond
+  qui mord n'est pas celui du navigateur : un abonnement IPTV limite les
+  connexions simultanées, souvent à une ou deux, et le refus prend l'apparence
+  de flux morts. Même raison pour le testeur de flux, qui ne sollicite qu'un
+  test à la fois par hôte — et qui ne condamne que ce qu'il a **vu refuser pour
+  de bon** : un 403 ou un 429 laisse l'entrée visible, sans quoi un abonnement
+  saturé effacerait le catalogue.
+  **Un index qui cite une colonne migrée se crée après les migrations**, jamais
+  dans le schéma : celui-ci s'exécute d'abord, sur une table que
+  `CREATE TABLE IF NOT EXISTS` n'a pas touchée, et l'ouverture de l'application
+  tombe sur « no such column ». Le défaut n'existe que sur une base qui a vécu,
+  donc jamais dans les tests, qui partent tous d'une base neuve.
+  Se vérifie depuis son dossier ; `npm run verify`
   conduit un vrai Chromium sur un flux HLS fabriqué par ffmpeg.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
