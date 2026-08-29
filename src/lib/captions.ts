@@ -65,6 +65,19 @@ export const BANDE_SURE = { haut: 0.12, bas: 0.45 } as const;
 /** Hauteur par défaut d'un sous-titre, au milieu de la bande sûre. */
 export const Y_PAR_DEFAUT = 0.38;
 
+/*
+ * Les paliers où poser des sous-titres qui coexistent.
+ *
+ * Deux textes affichés en même temps à la même hauteur se recouvrent : il faut
+ * donc plusieurs hauteurs, et toutes doivent rester dans la bande. Le pas de
+ * 0,08 est celui que la recherche de place utilise pour juger deux textes
+ * distincts — des paliers plus serrés ne seraient jamais retenus.
+ *
+ * Quatre paliers, du plus naturel au plus haut : la bande ne fait que 0,33 de
+ * hauteur, et un cinquième tomberait à moins de 0,08 du premier.
+ */
+export const HAUTEURS_LIBRES = [Y_PAR_DEFAUT, 0.3, 0.22, 0.14] as const;
+
 /** Ramène une hauteur dans la bande que les trois plateformes laissent libre. */
 export function dansLaBandeSure(y: number): number {
   return Math.min(BANDE_SURE.bas, Math.max(BANDE_SURE.haut, y));
