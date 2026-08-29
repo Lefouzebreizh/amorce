@@ -5,9 +5,19 @@ export function PiedDePage() {
     <footer className="border-t border-bordure bg-bleu-pale">
       <div className="mx-auto w-full max-w-5xl px-5 py-10">
         <p className="text-lg font-bold text-encre">Site vitrine artisan express</p>
+        {/*
+          Ce paragraphe répétait mot pour mot la présentation du Hero — « artisan
+          du code, ex-routier » — et re-vendait les 48 h que le titre annonce
+          déjà. Sur une page unique, le lecteur croise les deux dans le même
+          défilement : ça se lit comme un bégaiement, et le propriétaire l'a
+          signalé en ces termes.
+
+          La place est rendue à ce que la charte demande en fin de page : une
+          invitation, jamais un rappel commercial.
+        */}
         <p className="mt-2 max-w-2xl leading-relaxed text-ardoise">
-          Artisan du code, ex-routier. Je fais des sites d’une page pour ceux qui travaillent
-          dehors, et je les livre en 48 h.
+          Une question avant de te décider ? Écris-moi — même juste pour savoir si ça vaut le coup
+          pour ton métier.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-lg">

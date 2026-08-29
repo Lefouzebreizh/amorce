@@ -150,6 +150,49 @@ n'a eu lieu, et rien ne le signale.
 
 ## Au cadrage et au texte
 
+### Un rush porte des sous-titres gravés dans l'image
+
+**Symptôme** — Un titre traverse le visage du sujet, ou se pose sur la gueule
+d'une créature. Il ne vient d'aucun calque du montage, et aucun réglage ne le
+déplace.
+
+**Cause** — Les générateurs vidéo incrustent le texte du prompt dans les
+pixels. Ce n'est pas une piste de sous-titres : c'est de l'image.
+
+**Ce qui ne marche pas, et il faut cesser de l'essayer.** Trois voies ont été
+épuisées sur un même plan avant d'être écartées :
+
+- **`delogo`** interpole depuis le bord de sa boîte. Sur un logo de coin il est
+  parfait ; sur des lettres de 100 px de haut et pleine largeur, la boîte est
+  trop grande pour que l'interpolation ait de quoi travailler — le texte reste
+  lisible en fantôme et un filage vertical apparaît.
+- **Le flou local** moyenne une bande souvent sombre : le résultat est une
+  bande quasi noire, donc exactement la dalle qu'on cherchait à éviter.
+- **Le rapiéçage** — recopier la même bande prise à un instant sans texte —
+  échoue pour une raison qu'aucun raisonnement ne donne à l'avance : **ces
+  rushes portent une suite de sous-titres**, pas un seul. Mesuré sur un plan de
+  7,5 s : « RIFT ZERO FIVE », puis « BREACH OPEN », puis un titre. La bande
+  n'est jamais propre, à aucune image.
+
+**Solution — deux, selon ce que le texte recouvre.**
+
+**Quand il est sur le sujet** : le recouvrir d'une plaque au noyau
+**parfaitement opaque**, et y écrire autre chose plutôt que rien. Une plaque
+vide se lit comme une panne ; une plaque qui porte une phrase se lit comme un
+carton. Lui donner la même forme partout dans le film : répétée, elle devient
+un système ; isolée, elle reste une rustine.
+
+**Quand le plan bouge** : l'incrustation, elle, ne bouge pas. Un travelling
+avant la promène sur le cadre — poitrail, puis mâchoire. Il suffit alors de
+**terminer le plan avant qu'elle n'arrive au mauvais endroit**, en fondu image
+et son. C'est la correction la moins chère et la seule qui ne laisse aucune
+trace.
+
+**La contrainte qui décide entre les deux** : chercher à quel moment le texte
+apparaît. S'il naît en même temps que le geste que le plan raconte — des yeux
+qui s'embrasent, une explosion — couper avant supprime le paiement du plan, et
+il faut recouvrir. Sinon, couper.
+
 ### Le sujet est coupé, ou absent
 
 **Symptôme** — Il ne reste qu'un fond, une croupe, un museau tranché au bord.

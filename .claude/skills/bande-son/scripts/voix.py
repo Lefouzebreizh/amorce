@@ -54,6 +54,11 @@ BASE = "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models"
 VOIX = {
     "siwis": "vits-piper-fr_FR-siwis-medium",
     "upmc": "vits-piper-fr_FR-upmc-medium",
+    # Deux voix masculines, vérifiées présentes dans la même release. Elles
+    # manquaient, et leur absence a fait conclure une fois qu'aucune voix
+    # grave n'était fabriquable ici — alors que seule la liste était courte.
+    "tom": "vits-piper-fr_FR-tom-medium",
+    "gilles": "vits-piper-fr_FR-gilles-low",
 }
 
 
@@ -131,7 +136,10 @@ def dire(texte: str, sortie: Path, nom: str = "siwis", vitesse: float = 1.0) -> 
     config = sherpa_onnx.OfflineTtsConfig(
         model=sherpa_onnx.OfflineTtsModelConfig(
             vits=sherpa_onnx.OfflineTtsVitsModelConfig(
-                model=str(modele / f"fr_FR-{nom}-medium.onnx"),
+                # Le fichier ne se déduit pas du nom de la voix : la qualité fait
+                # partie du nom, et une voix « low » ne s'appelle pas « medium ».
+                # On prend le seul .onnx du dossier, ce qui vaut pour toutes.
+                model=str(next(modele.glob("*.onnx"))),
                 tokens=str(modele / "tokens.txt"),
                 data_dir=str(modele / "espeak-ng-data"),
             ),
