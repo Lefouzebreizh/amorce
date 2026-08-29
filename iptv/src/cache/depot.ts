@@ -23,7 +23,7 @@ import {
   type Programme,
 } from '../domaine/types.ts'
 import { ordreTheme } from '../normalisation/theme.ts'
-import { COLONNES_AJOUTEES, SCHEMA } from './schema.ts'
+import { COLONNES_AJOUTEES, INDEX, SCHEMA } from './schema.ts'
 
 /**
  * L'ordre d'affichage par défaut est francophone, et il est **dérivé** de
@@ -273,6 +273,10 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
     const colonnes = base.prepare(`PRAGMA table_info(${ajout.table})`).all() as Ligne[]
     if (!colonnes.some((ligne) => texte(ligne['name']) === ajout.colonne)) base.exec(ajout.sql)
   }
+
+  // Et les index seulement maintenant : certains citent les colonnes ci-dessus,
+  // qui n'existent pas encore quand le schéma s'exécute.
+  base.exec(INDEX)
 
   const conditions = (
     filtres: Filtres,
