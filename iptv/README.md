@@ -13,10 +13,11 @@ s'en sert, et n'en sort pas — `.env` et les listes locales sont ignorés par G
 
 Le **cœur d'ingestion**, le **cache** et l'**interface** sont écrits et
 vérifiés : lecture d'une liste M3U en flux, client Xtream, normalisation,
-écriture en base avec recherche plein texte, puis une application Next.js 16
-avec grilles filtrables, fiches de séries, recherche, favoris, reprise de
-lecture et lecteur HLS. Restent le guide des programmes (XMLTV) et les
-sous-titres externes.
+écriture en base avec recherche plein texte, une application Next.js 16 avec
+grilles filtrables, fiches de séries, recherche, favoris, reprise de lecture et
+lecteur HLS, et le **guide des programmes** en XMLTV — ce qui passe en ce
+moment, ce qui suit, et une barre d'avancement. Restent les sous-titres
+externes, qui demandent une clé d'API qu'on n'a pas.
 
 **Mesuré sur une liste de 120 000 entrées** (15 Mo, fabriquée pour l'occasion,
 jamais versionnée) : import en **6,6 s**, 135 Mo de mémoire de crête, base de
@@ -34,6 +35,8 @@ iptv/
 │   ├── ingestion/
 │   │   ├── m3u.ts          analyseur M3U étendu, au fil de l'eau
 │   │   └── xtream.ts       client Xtream Codes, tolérant aux panneaux
+│   ├── epg/
+│   │   └── xmltv.ts        guide des programmes, au fil de l'eau lui aussi
 │   ├── cache/
 │   │   ├── schema.ts       les tables, et les décisions qu'elles portent
 │   │   ├── depot.ts        tout le SQL, et rien que là
@@ -59,7 +62,6 @@ Ce que la suite ajoutera, aux mêmes endroits :
 
 ```
 src/
-├── epg/           ← lecture XMLTV en flux, association par tvg-id
 └── sous-titres/   ← pistes du flux, puis repli sur une API externe
 ```
 
@@ -67,6 +69,7 @@ src/
 
 ```bash
 npm run iptv -- importer ma-liste.m3u     # un fichier, ou une URL
+npm run iptv -- epg guide.xml.gz          # le guide, .gz accepté
 npm run dev                                # puis http://localhost:3000
 ```
 
@@ -77,6 +80,7 @@ npm run iptv -- resume      # ce que le cache contient
 npm run iptv -- chercher kaamelott
 npm run iptv -- groupes
 npm run iptv -- series
+npm run iptv -- grille      # ce qui passe en ce moment
 ```
 
 La base atterrit dans `donnees/iptv.db`, ignoré par Git. La ligne de commande
@@ -176,6 +180,23 @@ au build ; ici cela n'a aucun sens, la base n'existe pas encore à ce
 moment-là — le build échouait d'ailleurs franchement, ce qui vaut mieux qu'une
 page figée sur l'état d'un soir.
 
+**Le guide se lit au fil de l'eau, avec un analyseur écrit à la main.** Un
+XMLTV français couvre deux semaines sur trois cents chaînes : 50 à 200 Mo,
+plusieurs millions de nœuds. Toute bibliothèque XML en construit l'arbre —
+c'est son métier — et l'arbre ne tient pas. Or on ne lit ce fichier qu'une
+fois, du début à la fin, pour le verser en base.
+
+**Un instant XMLTV sans décalage horaire n'est pas de l'UTC.** Le format rend
+le décalage facultatif ; un guide qui l'omet est en heure locale de son
+générateur. Le lire comme de l'UTC décale toute la grille de deux heures en
+été, et personne ne le voit avant de se demander pourquoi « en ce moment »
+montre le film d'après.
+
+**Dans un CDATA, une entité n'en est pas une, et une balise non plus.** Déballer
+le CDATA avant de retirer les balises fait ressortir « Les » pour
+`<![CDATA[Les <Bronzés>]]>`. C'est exactement ce que le CDATA existe pour
+protéger : on met son contenu de côté, on nettoie autour, on le remet.
+
 **Le chemin de l'URL prime sur tout le reste pour classer.** `/series/`,
 `/movie/` et `/live/` sont la route du serveur, pas une convention de nommage :
 ils ne mentent pas, là où un groupe nommé à la main se trompe régulièrement.
@@ -193,10 +214,12 @@ Aucune assertion n'aurait attrapé cela : le comportement était juste, seul le
 coût était faux. **Un ordre de grandeur ne se teste pas, il se mesure**, une
 fois, sur du volume.
 
-Et deux défauts d'interface que seul `npm run verify` a vus : le champ de
+Et trois défauts d'interface que seul `npm run verify` a vus : le champ de
 recherche débordait de l'écran à 393 px — le `min-width: auto` d'un élément
-flex, que rien ne signale —, et la lecture ne démarrait pas parce que `play()`
-était appelé avant que hls.js ait rattaché la source.
+flex, que rien ne signale —, la lecture ne démarrait pas parce que `play()`
+était appelé avant que hls.js ait rattaché la source, et une capture prise sur
+`domcontentloaded` montrait une page sans aucun style, la feuille n'étant pas
+encore appliquée.
 
 ## Ce qui ne se vérifie pas dans ce conteneur
 

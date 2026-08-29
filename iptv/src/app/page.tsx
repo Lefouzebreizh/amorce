@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { Carte, Grille } from '../composants/Carte.tsx'
 import { Section, Vide } from '../composants/Vide.tsx'
+import { antennesDe } from '../serveur/antennes.ts'
 import { depot } from '../serveur/depot-partage.ts'
 
 /*
@@ -59,7 +60,7 @@ export default function Accueil() {
       )}
 
       <Section titre="En direct" lien={{ href: '/direct', libelle: 'Tout voir' }}>
-        <Grille elements={chaines} />
+        <Grille elements={chaines} antennes={antennesDe(cache, chaines)} />
       </Section>
 
       <p className="text-sm text-doux">

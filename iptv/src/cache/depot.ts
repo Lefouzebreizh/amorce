@@ -20,6 +20,7 @@ import {
   type FicheSerie,
   type Genre,
   type Langue,
+  type Programme,
 } from '../domaine/types.ts'
 import { SCHEMA } from './schema.ts'
 
@@ -83,6 +84,18 @@ export interface OptionsImport {
   readonly purger?: boolean
 }
 
+export interface ResumeProgrammes {
+  readonly ecrits: number
+  readonly purges: number
+  readonly dureeMs: number
+}
+
+/** Ce qui passe sur une chaîne à un instant donné, et ce qui suit. */
+export interface Antenne {
+  readonly actuel: Programme | undefined
+  readonly suivant: Programme | undefined
+}
+
 export interface Reprise {
   readonly element: Element
   readonly position: number
@@ -130,6 +143,28 @@ function versElement(ligne: Ligne): Element {
   }
 }
 
+const COLONNES_PROGRAMME = 'chaine, debut, fin, titre, sous_titre, resume, categories, icone'
+
+function versProgramme(ligne: Ligne): Programme {
+  let categories: string[] = []
+  try {
+    const brut: unknown = JSON.parse(String(ligne['categories'] ?? '[]'))
+    if (Array.isArray(brut)) categories = brut.filter((c): c is string => typeof c === 'string')
+  } catch {
+    categories = []
+  }
+  return {
+    chaine: texte(ligne['chaine']) ?? '',
+    debut: texte(ligne['debut']) ?? '',
+    fin: texte(ligne['fin']),
+    titre: texte(ligne['titre']) ?? '',
+    sousTitre: texte(ligne['sous_titre']),
+    resume: texte(ligne['resume']),
+    categories,
+    icone: texte(ligne['icone']),
+  }
+}
+
 /**
  * Prépare une requête pour FTS5.
  *
@@ -172,6 +207,13 @@ export interface Depot {
   favoris(): Element[]
   enregistrerPosition(elementId: string, position: number, duree?: number): void
   reprises(limite?: number): Reprise[]
+  importerProgrammes(
+    programmes: AsyncIterable<Programme>,
+    options?: { paquet?: number; purgerAvant?: string },
+  ): Promise<ResumeProgrammes>
+  /** Ce qui passe sur chaque chaîne demandée, en une seule requête. */
+  maintenant(chaines: readonly string[], instant?: string): Map<string, Antenne>
+  grille(chaine: string, debut: string, fin: string): Programme[]
 }
 
 export function ouvrirDepot(chemin = ':memory:'): Depot {
@@ -583,6 +625,124 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
              vu_le = excluded.vu_le`,
         )
         .run(elementId, position, ouNul(duree), termine, new Date().toISOString())
+    },
+
+    async importerProgrammes(programmes, options = {}): Promise<ResumeProgrammes> {
+      const paquet = options.paquet ?? 1000
+      const debut = Date.now()
+
+      const ecrire = base.prepare(
+        `INSERT INTO programme (chaine, debut, fin, titre, sous_titre, resume, categories, icone)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT (chaine, debut) DO UPDATE SET
+           fin = excluded.fin, titre = excluded.titre,
+           sous_titre = excluded.sous_titre, resume = excluded.resume,
+           categories = excluded.categories, icone = excluded.icone`,
+      )
+
+      let ecrits = 0
+      let ouvert = false
+      const ouvrir = () => {
+        if (!ouvert) {
+          base.exec('BEGIN')
+          ouvert = true
+        }
+      }
+      const refermer = () => {
+        if (ouvert) {
+          base.exec('COMMIT')
+          ouvert = false
+        }
+      }
+
+      try {
+        for await (const programme of programmes) {
+          ouvrir()
+          ecrire.run(
+            programme.chaine,
+            programme.debut,
+            ouNul(programme.fin),
+            programme.titre,
+            ouNul(programme.sousTitre),
+            ouNul(programme.resume),
+            JSON.stringify(programme.categories),
+            ouNul(programme.icone),
+          )
+          ecrits += 1
+          if (ecrits % paquet === 0) refermer()
+        }
+        refermer()
+      } catch (cause) {
+        if (ouvert) {
+          base.exec('ROLLBACK')
+          ouvert = false
+        }
+        throw cause
+      }
+
+      // Le passé se purge, sinon la base grossit d'un guide par jour sans que
+      // rien ne s'affiche jamais. La veille est gardée : une émission commencée
+      // hier soir se termine ce matin.
+      const limite =
+        options.purgerAvant ?? new Date(Date.now() - 36 * 3600 * 1000).toISOString()
+      const purges = base
+        .prepare('DELETE FROM programme WHERE COALESCE(fin, debut) < ?')
+        .run(limite).changes
+
+      return { ecrits, purges: Number(purges), dureeMs: Date.now() - debut }
+    },
+
+    maintenant(chaines, instant = new Date().toISOString()): Map<string, Antenne> {
+      const resultat = new Map<string, Antenne>()
+      if (chaines.length === 0) return resultat
+      const trous = chaines.map(() => '?').join(', ')
+
+      const actuels = base
+        .prepare(
+          `SELECT ${COLONNES_PROGRAMME} FROM programme
+           WHERE chaine IN (${trous}) AND debut <= ? AND (fin IS NULL OR fin > ?)`,
+        )
+        .all(...chaines, instant, instant) as Ligne[]
+
+      // Le suivant, en une requête plutôt qu'une par chaîne : sur une grille de
+      // deux cents chaînes, la seconde forme fait deux cents allers-retours.
+      const suivants = base
+        .prepare(
+          `SELECT ${COLONNES_PROGRAMME} FROM programme p
+           JOIN (
+             SELECT chaine AS c, MIN(debut) AS d FROM programme
+             WHERE chaine IN (${trous}) AND debut > ? GROUP BY chaine
+           ) m ON m.c = p.chaine AND m.d = p.debut`,
+        )
+        .all(...chaines, instant) as Ligne[]
+
+      for (const chaine of chaines) resultat.set(chaine, { actuel: undefined, suivant: undefined })
+      for (const ligne of actuels) {
+        const programme = versProgramme(ligne)
+        resultat.set(programme.chaine, {
+          ...(resultat.get(programme.chaine) ?? { actuel: undefined, suivant: undefined }),
+          actuel: programme,
+        })
+      }
+      for (const ligne of suivants) {
+        const programme = versProgramme(ligne)
+        resultat.set(programme.chaine, {
+          ...(resultat.get(programme.chaine) ?? { actuel: undefined, suivant: undefined }),
+          suivant: programme,
+        })
+      }
+      return resultat
+    },
+
+    grille(chaine, debut, fin): Programme[] {
+      const lignes = base
+        .prepare(
+          `SELECT ${COLONNES_PROGRAMME} FROM programme
+           WHERE chaine = ? AND debut < ? AND COALESCE(fin, debut) > ?
+           ORDER BY debut`,
+        )
+        .all(chaine, fin, debut) as Ligne[]
+      return lignes.map(versProgramme)
     },
 
     reprises(limite = 20): Reprise[] {

@@ -9,14 +9,18 @@ import { createReadStream } from 'node:fs'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 
+import { createGunzip } from 'node:zlib'
+
 import { ouvrirDepot, type Depot } from './cache/depot.ts'
-import { importerM3U } from './cache/importer.ts'
+import { importerEpg, importerM3U } from './cache/importer.ts'
 import type { SourceTexte } from './flux/lignes.ts'
 import { masquerIdentifiants } from './ingestion/xtream.ts'
 
 const AIDE = `Usage : iptv <commande> [options]
 
   importer <fichier|url>   Analyse une liste M3U et remplit le cache
+  epg <fichier|url>        Charge un guide XMLTV (.xml ou .xml.gz)
+  grille [chaine]          Ce qui passe en ce moment
   resume                   Ce que le cache contient
   chercher <mots...>       Recherche plein texte
   groupes                  Les groupes, du plus fourni au moins fourni
@@ -33,7 +37,17 @@ function lireOption(args: readonly string[], nom: string): string | undefined {
   return trouve === undefined ? undefined : trouve.slice(prefixe.length)
 }
 
+/**
+ * Ouvre un fichier ou une adresse, en décompressant au besoin.
+ *
+ * Les guides XMLTV sont presque toujours servis en `.gz` — c'est un fichier de
+ * 200 Mo qui en pèse 15 compressé. Sans ce détour, l'analyseur reçoit des
+ * octets binaires et ne trouve aucune balise, sans erreur : il rend simplement
+ * zéro programme, ce qui est le plus long à comprendre.
+ */
 async function ouvrirSource(chemin: string): Promise<SourceTexte> {
+  const compresse = /\.gz($|\?)/i.test(chemin)
+
   if (/^https?:\/\//i.test(chemin)) {
     const reponse = await fetch(chemin)
     if (!reponse.ok) {
@@ -42,9 +56,16 @@ async function ouvrirSource(chemin: string): Promise<SourceTexte> {
       )
     }
     if (reponse.body === null) throw new Error('Réponse sans corps')
-    return reponse.body
+    const encodage = reponse.headers.get('content-encoding') ?? ''
+    // `fetch` défait lui-même un `content-encoding: gzip` ; il ne défait pas un
+    // fichier qui *est* un .gz. Les deux se ressemblent et ne se traitent pas
+    // pareil.
+    if (!compresse || /gzip/i.test(encodage)) return reponse.body
+    return reponse.body.pipeThrough(new DecompressionStream('gzip'))
   }
-  return createReadStream(chemin)
+
+  const fichier = createReadStream(chemin)
+  return compresse ? fichier.pipe(createGunzip()) : fichier
 }
 
 function afficherElements(depot: Depot, elements: ReturnType<Depot['lister']>): void {
@@ -93,6 +114,49 @@ async function principal(argv: readonly string[]): Promise<number> {
           `Importé : ${resume.ecrits} entrées en ${(resume.dureeMs / 1000).toFixed(1)} s` +
             (resume.retires > 0 ? `, ${resume.retires} retirées` : ''),
         )
+        return 0
+      }
+
+      case 'epg': {
+        const adresse = reste.find((arg) => !arg.startsWith('--'))
+        if (adresse === undefined) {
+          console.error('Il manque le fichier ou l’adresse du guide.')
+          return 2
+        }
+        const resume = await importerEpg(depot, await ouvrirSource(adresse))
+        console.log(
+          `Guide : ${resume.ecrits} programmes sur ${resume.chaines} chaînes déclarées` +
+            ` en ${(resume.dureeMs / 1000).toFixed(1)} s` +
+            (resume.purges > 0 ? `, ${resume.purges} périmés retirés` : ''),
+        )
+        if (resume.ignores > 0) console.log(`  ${resume.ignores} entrées incomprises`)
+        return 0
+      }
+
+      case 'grille': {
+        const voulue = reste.find((arg) => !arg.startsWith('--'))
+        const chaines = depot
+          .lister({ genre: 'direct', limite: 500 })
+          .filter((element) => element.tvgId !== undefined)
+          .filter((element) => voulue === undefined || element.titre.toLowerCase().includes(voulue.toLowerCase()))
+        const identifiants = [...new Set(chaines.map((element) => element.tvgId ?? ''))]
+        const antennes = depot.maintenant(identifiants)
+        let vues = 0
+        for (const chaine of chaines) {
+          const antenne = antennes.get(chaine.tvgId ?? '')
+          if (antenne?.actuel === undefined) continue
+          const heure = new Date(antenne.actuel.debut).toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+          console.log(`  ${heure}  ${chaine.titre.padEnd(22).slice(0, 22)}  ${antenne.actuel.titre}`)
+          vues += 1
+          if (vues >= limite) break
+        }
+        if (vues === 0) {
+          console.log('  Aucun programme. Le guide est-il chargé (« epg ») et les tvg-id')
+          console.log('  de la liste correspondent-ils à ceux du guide ?')
+        }
         return 0
       }
 

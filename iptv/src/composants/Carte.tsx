@@ -1,6 +1,45 @@
 import Link from 'next/link'
 
+import type { Antenne } from '../cache/depot.ts'
 import type { Element } from '../domaine/types.ts'
+
+const HEURE = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+/**
+ * Ce qui passe en ce moment, sous le nom de la chaîne.
+ *
+ * La barre de progression est le seul élément vraiment utile de tout le guide :
+ * elle répond en un coup d'œil à « est-ce que ça vient de commencer ou est-ce
+ * que c'est bientôt fini », qui est la question qu'on se pose en zappant. Une
+ * heure de début seule oblige à la soustraire mentalement.
+ */
+function EnCours({ antenne }: { antenne: Antenne }) {
+  const actuel = antenne.actuel
+  if (actuel === undefined) return null
+
+  const debut = Date.parse(actuel.debut)
+  const fin = actuel.fin === undefined ? Number.NaN : Date.parse(actuel.fin)
+  const avancee =
+    Number.isFinite(fin) && fin > debut
+      ? Math.min(100, Math.max(0, ((Date.now() - debut) / (fin - debut)) * 100))
+      : undefined
+
+  return (
+    <span className="mt-1 block">
+      <span className="block truncate text-sm text-texte">{actuel.titre}</span>
+      {avancee !== undefined && (
+        <span className="mt-1 block h-1 w-full overflow-hidden rounded bg-bord">
+          <span className="block h-full bg-accent" style={{ width: `${avancee.toFixed(0)}%` }} />
+        </span>
+      )}
+      {antenne.suivant !== undefined && (
+        <span className="block truncate text-xs text-doux">
+          Puis {HEURE.format(new Date(antenne.suivant.debut))} · {antenne.suivant.titre}
+        </span>
+      )}
+    </span>
+  )
+}
 
 const COULEUR_LANGUE: Record<string, string> = {
   vf: 'bg-emerald-500/15 text-emerald-300',
@@ -30,7 +69,15 @@ export function Etiquette({ texte, ton }: { texte: string; ton?: string }) {
  * kilooctets ; l'optimiser ne rapporterait rien et casserait la moitié des
  * vignettes.
  */
-export function Carte({ element, sousTitre }: { element: Element; sousTitre?: string }) {
+export function Carte({
+  element,
+  sousTitre,
+  antenne,
+}: {
+  element: Element
+  sousTitre?: string
+  antenne?: Antenne | undefined
+}) {
   const detail =
     sousTitre ??
     (element.saison !== undefined || element.episode !== undefined
@@ -56,6 +103,7 @@ export function Carte({ element, sousTitre }: { element: Element; sousTitre?: st
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{element.titre}</span>
         {detail !== '' && <span className="block truncate text-sm text-doux">{detail}</span>}
+        {antenne !== undefined && <EnCours antenne={antenne} />}
         <span className="mt-1 flex flex-wrap gap-1">
           {element.langue !== 'inconnue' && (
             <Etiquette texte={element.langue} ton={COULEUR_LANGUE[element.langue]} />
@@ -68,12 +116,21 @@ export function Carte({ element, sousTitre }: { element: Element; sousTitre?: st
   )
 }
 
-export function Grille({ elements }: { elements: readonly Element[] }) {
+export function Grille({
+  elements,
+  antennes,
+}: {
+  elements: readonly Element[]
+  antennes?: ReadonlyMap<string, Antenne> | undefined
+}) {
   return (
     <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
       {elements.map((element) => (
         <li key={element.id}>
-          <Carte element={element} />
+          <Carte
+            element={element}
+            antenne={element.tvgId === undefined ? undefined : antennes?.get(element.tvgId)}
+          />
         </li>
       ))}
     </ul>

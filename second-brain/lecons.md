@@ -1856,3 +1856,34 @@ manifeste entier. Seule l'image reste non vérifiée, et on le dit.
 expire toujours sur une page qui lit un flux. Un lecteur fait du réseau en
 continu, par définition — c'est son métier. Trente secondes perdues à chaque
 essai, sur une page parfaitement saine. `domcontentloaded` sur ces pages-là.
+
+## Un serveur de test orphelin fait mesurer la version d'avant
+
+Une vérification d'interface rendait quatre défauts d'un coup, dont un sans
+rapport avec le changement : une page entière sans feuille de style. Le code
+était juste. **Le serveur qui répondait n'était pas celui qu'on venait de
+lancer.**
+
+La cause tient en une phrase : `spawn('npm', ['run', 'start'])` engendre un
+`next start` **petit-fils**, et tuer le `npm` laisse l'enfant vivant, orphelin,
+avec le port. L'exécution suivante n'arrive pas à écouter, ne le dit pas, et
+Playwright interroge le serveur d'il y a un quart d'heure — donc le code d'il y
+a un quart d'heure. Relevé : `ps` montrait un `next-server` de ppid 1, âgé de
+15 minutes, quand le script venait de démarrer.
+
+Trois gestes, et les trois comptent :
+
+1. **Lancer en groupe détaché, tuer le groupe** : `spawn(…, { detached: true })`
+   puis `process.kill(-pid, 'SIGTERM')`. Tuer le pid seul ne descend pas.
+2. **Refuser de démarrer si le port répond déjà.** Une requête HTTP de 250 ms
+   avant de lancer, et un message qui dit quoi faire. Sans ce garde-fou, le
+   défaut est invisible : tout paraît fonctionner.
+3. **Ne pas détecter par `ss`** : le binaire n'existe pas dans ce conteneur, et
+   `ss -ltnp` y rend une sortie vide sans erreur — donc « port libre » alors
+   qu'il ne l'est pas. La sonde portable est la requête HTTP ; pour retrouver le
+   coupable, `ps -eo pid,args`.
+
+**Piège voisin, même script :** une capture d'écran prise après
+`waitUntil: 'domcontentloaded'` montre la page **sans style** — cet événement
+n'attend pas la feuille. On croit à une régression de CSS. `waitForLoadState('load')`
+avant de photographier.
