@@ -1478,6 +1478,20 @@ souvent le mauvais. **Le binaire système d'abord**, partout et sans exception :
 même résolution, y compris les scripts de vérification — le mien s'est fait
 prendre par sa propre règle.
 
+**Et ce n'est pas qu'`imageio-ffmpeg` : le binaire statique de johnvansickle
+ment sur sa propre configuration.** Mesuré le 29/08/2026 dans une session
+distante, où il occupe `/usr/local/bin/ffmpeg` et passe donc devant
+`/usr/bin/ffmpeg` (6.1.1, complet). Sa ligne `configuration:` annonce
+`--enable-libfreetype` **et** `--enable-libass` ; `ffmpeg -filters` en rend 494,
+dont `drawbox` et `drawgrid`, et **pas `drawtext`**. Lire la configuration pour
+décider ne sert donc à rien — seule la liste des filtres dit la vérité.
+
+Ce que ça coûte quand personne ne l'a écrit : `npm run planche`, l'outil
+qu'Amorce impose avant de livrer un montage, ne démarrait pas du tout ici. Il
+s'arrêtait sur « No such filter: 'drawtext' » — un message qui nomme le filtre,
+jamais le binaire — au milieu d'une trace `execFileSync` de trente lignes de
+`Buffer`.
+
 ## Un bruitage « cinéma » peut être du silence sur un téléphone
 
 Seize bruitages arrivent d'un coup, tous étiquetés cinéma : nappes sombres,
