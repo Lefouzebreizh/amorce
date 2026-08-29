@@ -18,6 +18,8 @@ import { creerClientXtream, ErreurXtream } from './ingestion/xtream.ts'
 import { chargerEnv, identifiantsXtream } from './serveur/reglages.ts'
 import { guideDemo, LISTE_DEMO } from './demo.ts'
 import { testerFlux } from './lecture/tester.ts'
+import { numeroDeCanal, rangDeChaine } from './normalisation/canal.ts'
+import { detecterTheme } from './normalisation/theme.ts'
 import type { SourceTexte } from './flux/lignes.ts'
 import { masquerIdentifiants } from './ingestion/xtream.ts'
 
@@ -35,6 +37,7 @@ const AIDE = `Usage : iptv <commande> [options]
   series                   Les séries et leur nombre d'épisodes
   tester [--genre=…]       Éprouve les flux et masque ceux qui ne répondent plus
   ranimer                  Remet à l'essai tout ce qui avait été marqué mort
+  ranger                   Repose l'ordre des chaînes et les thèmes des films
 
 Options :
   --base=<chemin>          Fichier de cache (défaut : donnees/iptv.db)
@@ -369,6 +372,32 @@ async function principal(argv: readonly string[]): Promise<number> {
           `\n${String(bilan.ok)} vivants, ${String(bilan.mort)} hors service (masqués), ` +
             `${String(bilan.inconnu)} indécis (laissés visibles).`,
         )
+        return 0
+      }
+
+      case 'ranger': {
+        // Le classement se fait à l'import — mais une base remplie par une
+        // version qui l'ignorait n'en a aucun, et un réimport complet coûte
+        // plusieurs minutes pour une donnée qui se déduit de ce qu'on a déjà.
+        const numerotees = depot.renumeroter(
+          (titre) => ({ canal: numeroDeCanal(titre), rang: rangDeChaine(titre) }),
+          (groupe) => detecterTheme(groupe),
+        )
+        const chaines = depot.compter({ genre: 'direct', inclureMorts: true })
+        console.log(
+          `${String(numerotees)} chaînes numérotées sur ${String(chaines)} ` +
+            `(les autres suivent par familles : sport, cinéma, musique, puis le reste).`,
+        )
+        for (const genre of ['film', 'serie'] as const) {
+          const dossiers = depot.themes({ genre, inclureMorts: true })
+          if (dossiers.length === 0) continue
+          const nommes = dossiers.filter((dossier) => dossier.nom !== '').length
+          const autres = dossiers.find((dossier) => dossier.nom === '')?.compte ?? 0
+          console.log(
+            `${genre === 'film' ? 'Films' : 'Séries'} : ${String(nommes)} thèmes` +
+              (autres === 0 ? '' : `, ${String(autres)} sans thème reconnu (dossier « Autres »)`),
+          )
+        }
         return 0
       }
 

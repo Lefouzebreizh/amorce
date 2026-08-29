@@ -430,7 +430,19 @@ async function principal() {
       await page.click('text=Chercher des sous-titres')
       await page.waitForSelector('text=OPENSUBTITLES_API_KEY', { timeout: 5000 })
       verifier(true, 'sans clé, l’interface dit laquelle poser au lieu d’échouer')
+    }
 
+    if (resume.idFilm !== undefined) {
+      console.log('── Bande-annonce, sans panneau Xtream')
+      // Même exigence que pour les sous-titres : sans abonnement, on doit
+      // obtenir une phrase qui explique, pas un bouton qui ne fait rien.
+      await page.goto(`http://127.0.0.1:${PORT_APP}/lecture/${encodeURIComponent(resume.idFilm)}`, {
+        waitUntil: 'domcontentloaded',
+      })
+      await page.waitForLoadState('load')
+      await page.click('text=Chercher la bande-annonce')
+      await page.waitForSelector('text=Une liste M3U n’en fournit aucune', { timeout: 5000 })
+      verifier(true, 'sans panneau, l’absence est expliquée plutôt que muette')
       // Ce qui n'est PAS vérifié ici, et il faut le dire : le décodage.
       // Mesuré sur ce conteneur — le Chromium de Playwright est compilé sans
       // les codecs propriétaires : `canPlayType('video/mp4; codecs="avc1…"')`

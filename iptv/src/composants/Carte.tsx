@@ -13,7 +13,7 @@ const HEURE = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-dig
  * que c'est bientôt fini », qui est la question qu'on se pose en zappant. Une
  * heure de début seule oblige à la soustraire mentalement.
  */
-function EnCours({ antenne }: { antenne: Antenne }) {
+export function EnCours({ antenne }: { antenne: Antenne }) {
   const actuel = antenne.actuel
   if (actuel === undefined) return null
 
@@ -99,6 +99,14 @@ export function Carte({
           <img src={element.logo} alt="" className="h-full w-full object-contain" loading="lazy" />
         )}
       </span>
+
+      {/* Le numéro à gauche du nom, comme sur une télécommande : c'est lui
+          qu'on lit pour savoir qu'on est au bon endroit, avant même le titre. */}
+      {element.canal !== undefined && (
+        <span className="w-7 shrink-0 text-right font-mono text-sm tabular-nums text-doux">
+          {element.canal}
+        </span>
+      )}
 
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{element.titre}</span>

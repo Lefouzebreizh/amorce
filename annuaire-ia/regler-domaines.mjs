@@ -26,6 +26,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { promises as dns } from 'node:dns';
+
+const lookup = (hote) => dns.lookup(hote);
 
 const racine = path.dirname(fileURLToPath(import.meta.url));
 const dossierNiches = path.join(racine, 'niches');
@@ -64,11 +67,59 @@ function normaliser(brut) {
   return url.href;
 }
 
-function etat() {
-  console.log('── Adresses publiques du réseau\n');
-  for (const { base } of bases()) {
-    console.log('  ' + base.niche.id.padEnd(14) + base.niche.domaine);
+/*
+ * L'état ne se contente plus de recopier les adresses déclarées : il demande au
+ * DNS si elles existent.
+ *
+ * Mesuré le 29/08/2026 : les onze niches annonçaient `ma-panoplie-ia.com`, qui
+ * **ne résout pas**. Rien ne le disait — l'état affichait onze belles adresses,
+ * les sitemaps les reprenaient, et le gabarit en faisait des balises canoniques.
+ * Déployer dans cet état aurait mis onze sites en ligne déclarant tous que leur
+ * version de référence se trouve à une adresse que personne ne sert : le pire
+ * signal qu'on puisse envoyer à un moteur.
+ *
+ * La sonde est un `lookup` et pas une requête HTTP, et c'est délibéré : derrière
+ * un mandataire filtrant, tout rend `000` — un domaine bloqué comme un domaine
+ * inexistant. Le DNS, lui, sépare les deux, vérifié sur un témoin
+ * (`api.binance.com` résout et reste injoignable).
+ */
+async function resout(hote) {
+  try {
+    await lookup(hote);
+    return true;
+  } catch {
+    return false;
   }
+}
+
+async function etat() {
+  console.log('── Adresses publiques du réseau\n');
+
+  const hotes = new Map();
+  const lignes = [];
+  for (const { base } of bases()) {
+    const domaine = base.niche.domaine ?? '';
+    let hote = '';
+    try { hote = new URL(domaine).hostname; } catch { hote = ''; }
+    if (hote && !hotes.has(hote)) hotes.set(hote, await resout(hote));
+    lignes.push({ id: base.niche.id, domaine, hote });
+  }
+
+  for (const { id, domaine, hote } of lignes) {
+    const marque = hote === '' ? ' ⚠ adresse illisible' : hotes.get(hote) ? '' : ' ⚠ ne résout pas';
+    console.log('  ' + id.padEnd(14) + domaine + marque);
+  }
+
+  const morts = [...hotes.entries()].filter(([, ok]) => !ok).map(([h]) => h);
+  if (morts.length > 0) {
+    console.log(
+      `\n⚠ ${morts.join(', ')} ne résout pas. Les balises canoniques, les sitemaps et` +
+        '\n  les `og:url` désignent donc une adresse que personne ne sert.' +
+        '\n  Cloudflare Pages en donne une gratuite : `--base https://annuaire-ia.pages.dev`.' +
+        '\n  Le domaine acheté se branchera plus tard, par la même commande.',
+    );
+  }
+
   console.log('\nRègle-les avec --base <adresse> (tout le réseau) ou <niche> <adresse> (un seul).');
 }
 
@@ -82,8 +133,8 @@ function rafraichirSitemaps() {
   console.log('· Sitemaps et robots.txt refabriqués sur les nouvelles adresses.');
 }
 
-function main() {
-  if (args.length === 0 || args.includes('--etat')) { etat(); return; }
+async function main() {
+  if (args.length === 0 || args.includes('--etat')) { return etat(); }
 
   const socle = drapeau('--base');
   let touchees = 0;
@@ -120,8 +171,14 @@ function main() {
   console.log('· Reste à reconstruire les sites : npm run sites');
 }
 
+/*
+ * `await` et non un simple appel : `--etat` interroge le DNS, donc rend une
+ * promesse. Sans l'attendre, un refus de résolution partirait en rejet non
+ * capturé — le `catch` ci-dessous ne verrait rien, et le script sortirait en 0
+ * après avoir échoué.
+ */
 try {
-  main();
+  await main();
 } catch (erreur) {
   console.error('✗ ' + erreur.message);
   process.exit(1);

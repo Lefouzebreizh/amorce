@@ -42,6 +42,23 @@ export interface Element {
   readonly logo: string | undefined
   /** Identifiant EPG (`tvg-id`), le seul lien avec le flux XMLTV. */
   readonly tvgId: string | undefined
+  /**
+   * Le numéro **affiché** à côté d'une chaîne : la TNT et les grandes
+   * thématiques, de 1 à 50. `undefined` au-delà — plus personne ne connaît de
+   * numéro par cœur passé la cinquantaine, et en inventer un tromperait.
+   */
+  readonly canal: number | undefined
+  /**
+   * Le rang de **tri**, qui continue là où les numéros s'arrêtent : sport,
+   * cinéma, musique, puis le reste. Jamais affiché.
+   */
+  readonly rang: number | undefined
+  /**
+   * Le thème d'un film ou d'une série — policier, thriller, fantastique… —
+   * déduit du groupe du fournisseur, qui n'a aucun vocabulaire commun.
+   * `undefined` se range dans « Autres » plutôt que d'être classé de force.
+   */
+  readonly theme: string | undefined
   readonly annee: number | undefined
   /** Renseignés seulement pour un épisode ; `serie` sert à regrouper. */
   readonly serie: string | undefined
