@@ -16,7 +16,8 @@ export function Offre() {
       <div className="mt-8 overflow-hidden rounded-2xl border-2 border-bleu">
         <div className="bg-bleu px-6 py-7 text-white sm:px-8">
           <p className="text-5xl font-bold tracking-tight sm:text-6xl">299&nbsp;€</p>
-          <p className="mt-2 text-lg text-white/85">
+          {/* Blanc plein, pas 85 % : l’opacité rendait 2,58:1 sur le bleu. */}
+          <p className="mt-2 text-lg text-white">
             Une fois. Pas d’abonnement, rien à résilier, pas de reconduction.
           </p>
         </div>

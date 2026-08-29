@@ -33,7 +33,7 @@ export function AvantApres() {
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {/* Avant */}
           <div className="flex flex-col rounded-2xl border border-bordure bg-white p-6">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-ardoise">
+            <p className="text-base font-bold uppercase tracking-[0.16em] text-ardoise">
               Aujourd’hui — ta fiche dans un annuaire
             </p>
 
@@ -75,7 +75,7 @@ export function AvantApres() {
 
           {/* Après */}
           <div className="flex flex-col rounded-2xl border-2 border-bleu bg-white p-6">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-bleu">
+            <p className="text-base font-bold uppercase tracking-[0.16em] text-bleu">
               Jeudi — ton site à toi
             </p>
 
@@ -118,6 +118,27 @@ export function AvantApres() {
             </ul>
           </div>
         </div>
+
+        {/*
+          * La maquette ci-dessus est un dessin ; celui-ci est le vrai livrable.
+          * « Montre-moi un exemple » est la première question d'un prospect, et
+          * sans lien la conversation s'arrête là. La page pointée est générée
+          * par le même outil que celui d'un client, et sort en `noindex` :
+          * l'entreprise n'existe pas, elle ne doit pas apparaître dans les
+          * résultats comme un vrai artisan.
+          */}
+        <p className="mt-8 text-center text-lg leading-relaxed text-ardoise">
+          <a
+            className="inline-flex min-h-14 items-center justify-center rounded-xl border-2 border-bleu bg-white px-6 text-lg font-semibold text-bleu"
+            href="/exemple.html"
+          >
+            Voir un site fini, en vrai
+          </a>
+          <span className="mt-3 block">
+            Une page de démonstration — l’entreprise n’existe pas, le numéro ne sonne pas. C’est
+            exactement ce que tu reçois, avec tes textes et tes photos.
+          </span>
+        </p>
       </div>
     </section>
   );

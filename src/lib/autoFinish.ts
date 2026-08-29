@@ -1,3 +1,4 @@
+import { Y_PAR_DEFAUT } from './captions.ts';
 import { SFX_PER_10S, type Analysis } from './analysis.ts';
 import { chopped, layoutClips, totalDuration } from './timeline.ts';
 import {
@@ -106,8 +107,8 @@ export const CAPTION_SETS: CaptionSet[] = [
     look: 'blockbuster',
     slots: [
       { text: '[TITRE] — ÉPISODE [02]', style: 'neon', color: '#ffe14d', scale: 1.3, y: 0.22, at: 0, span: 0.17 },
-      { text: '[Ce qui menace]', style: 'punch', y: 0.72, at: 0.22, span: 0.2 },
-      { text: '[Ce qui se réveille]', style: 'karaoke', color: '#ffe14d', y: 0.72, at: 0.48, span: 0.19 },
+      { text: '[Ce qui menace]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.22, span: 0.2 },
+      { text: '[Ce qui se réveille]', style: 'karaoke', color: '#ffe14d', y: Y_PAR_DEFAUT, at: 0.48, span: 0.19 },
       { text: 'QUEL [ROYAUME] TOMBE ENSUITE ?', style: 'punch', color: '#ff5c68', scale: 1.3, y: 0.3, at: 0.83, span: 0.17 },
     ],
   },
@@ -117,8 +118,8 @@ export const CAPTION_SETS: CaptionSet[] = [
     why: 'Une promesse chiffrée, les étapes annoncées, ce qu’il faut retenir.',
     slots: [
       { text: '[3] erreurs qui tuent tes vues', style: 'punch', color: '#ffe14d', y: 0.28, at: 0, span: 0.17 },
-      { text: '[La première]', style: 'karaoke', y: 0.72, at: 0.22, span: 0.2 },
-      { text: '[La deuxième]', style: 'karaoke', y: 0.72, at: 0.48, span: 0.19 },
+      { text: '[La première]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.22, span: 0.2 },
+      { text: '[La deuxième]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.48, span: 0.19 },
       { text: '[Fais ça à la place]', style: 'punch', color: '#22e37a', y: 0.3, at: 0.83, span: 0.17 },
     ],
   },
@@ -129,7 +130,7 @@ export const CAPTION_SETS: CaptionSet[] = [
     look: 'argentique',
     slots: [
       { text: 'Le jour où j’ai [tout perdu]', style: 'punch', y: 0.28, at: 0, span: 0.18 },
-      { text: '[Ce qui s’est passé]', style: 'karaoke', y: 0.72, at: 0.24, span: 0.2 },
+      { text: '[Ce qui s’est passé]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.24, span: 0.2 },
       { text: '[Le moment où tout bascule]', style: 'punch', color: '#ffe14d', y: 0.3, at: 0.5, span: 0.18 },
       { text: '[Ce que j’en ai tiré]', style: 'minimal', y: 0.7, at: 0.82, span: 0.18 },
     ],
@@ -140,8 +141,8 @@ export const CAPTION_SETS: CaptionSet[] = [
     why: 'Le gabarit qui retient : ce qui n’allait pas, l’instant où ça bascule, ce qu’on a fait, puis on rend la main.',
     slots: [
       { text: 'Pendant [trois semaines], [ce qui n’allait pas]', style: 'punch', y: 0.28, at: 0, span: 0.2 },
-      { text: 'Puis [ce que j’ai vu / entendu]', style: 'karaoke', color: '#ffe14d', y: 0.72, at: 0.26, span: 0.2 },
-      { text: '[Ce que j’ai fait, concrètement]', style: 'karaoke', y: 0.72, at: 0.52, span: 0.22 },
+      { text: 'Puis [ce que j’ai vu / entendu]', style: 'karaoke', color: '#ffe14d', y: Y_PAR_DEFAUT, at: 0.26, span: 0.2 },
+      { text: '[Ce que j’ai fait, concrètement]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.52, span: 0.22 },
       { text: 'Et toi, [ta version] ?', style: 'minimal', y: 0.68, at: 0.82, span: 0.18 },
     ],
   },
@@ -152,8 +153,8 @@ export const CAPTION_SETS: CaptionSet[] = [
     look: 'cinema',
     slots: [
       { text: '[Ce que ça donne maintenant]', style: 'punch', color: '#ffe14d', scale: 1.2, y: 0.24, at: 0, span: 0.18 },
-      { text: 'Il y a [deux mois] : [l’état d’avant]', style: 'minimal', y: 0.72, at: 0.24, span: 0.18 },
-      { text: '[Ce qui a changé]', style: 'karaoke', y: 0.72, at: 0.48, span: 0.22 },
+      { text: 'Il y a [deux mois] : [l’état d’avant]', style: 'minimal', y: Y_PAR_DEFAUT, at: 0.24, span: 0.18 },
+      { text: '[Ce qui a changé]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.48, span: 0.22 },
       { text: '[L’outil / le geste] — c’est tout', style: 'punch', y: 0.3, at: 0.82, span: 0.18 },
     ],
   },
@@ -163,8 +164,8 @@ export const CAPTION_SETS: CaptionSet[] = [
     why: 'Le format qui ne marche que s’il est vrai : ses vrais nombres, sans arrondir vers le haut.',
     slots: [
       { text: 'Jour [N] : [le chiffre]', style: 'punch', color: '#ffe14d', scale: 1.25, y: 0.26, at: 0, span: 0.2 },
-      { text: '[Ce qui a marché]', style: 'karaoke', y: 0.72, at: 0.26, span: 0.22 },
-      { text: '[Ce qui n’a rien donné]', style: 'karaoke', color: '#ff5c68', y: 0.72, at: 0.54, span: 0.2 },
+      { text: '[Ce qui a marché]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.26, span: 0.22 },
+      { text: '[Ce qui n’a rien donné]', style: 'karaoke', color: '#ff5c68', y: Y_PAR_DEFAUT, at: 0.54, span: 0.2 },
       { text: 'Demain : [la prochaine tentative]', style: 'minimal', y: 0.68, at: 0.82, span: 0.18 },
     ],
   },
@@ -175,8 +176,8 @@ export const CAPTION_SETS: CaptionSet[] = [
     look: 'argentique',
     slots: [
       { text: 'J’ai perdu [combien de temps] sur [quoi]', style: 'punch', y: 0.28, at: 0, span: 0.2 },
-      { text: 'La cause : [ce que je croyais]', style: 'karaoke', y: 0.72, at: 0.26, span: 0.22 },
-      { text: 'En vrai : [ce qui se passait]', style: 'karaoke', color: '#ffe14d', y: 0.72, at: 0.54, span: 0.2 },
+      { text: 'La cause : [ce que je croyais]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.26, span: 0.22 },
+      { text: 'En vrai : [ce qui se passait]', style: 'karaoke', color: '#ffe14d', y: Y_PAR_DEFAUT, at: 0.54, span: 0.2 },
       { text: '[Ce que je fais maintenant]', style: 'punch', y: 0.3, at: 0.82, span: 0.18 },
     ],
   },

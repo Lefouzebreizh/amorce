@@ -70,6 +70,39 @@ complète se régénère en 277 ms** — parce que c'est elle qui décide de la
 frontière : le travail n'est pas dans la modification, il est dans la
 conversation.
 
+## Se faire trouver
+
+Un site qu'on montre et un site qui ramène du monde ne diffèrent pas par leur
+apparence. Chaque page emporte une **fiche d'établissement** au format que
+Google lit — nom, téléphone, ville, zone, catalogue de prestations — plus les
+balises de partage qui décident de ce qu'affiche Facebook quand l'artisan colle
+son lien.
+
+```bash
+npm run generer demo --domaine=couverture-tanguy.fr
+```
+
+**Le domaine n'est pas dans la commande**, parce que le client ne l'a pas quand
+il commande : il est choisi au moment de publier. Sans lui la page reste
+complète et perd seulement son adresse canonique et son image de partage —
+plutôt que de les inventer. Une adresse absolue supposée ferait afficher un
+rectangle vide à chaque partage, et un lien qui paraît cassé est pire qu'aucune
+image.
+
+**Un piège d'échappement propre à ce bloc, qui ne ressemble à aucun autre.**
+Dans un `<script>`, l'analyseur HTML cherche `</script` avant que JSON n'existe :
+un nom d'entreprise contenant cette suite refermerait le bloc, et le reste
+deviendrait du HTML exécutable sur le domaine du client. L'échappement HTML
+habituel serait faux ici — `&lt;` survivrait à `JSON.parse` et la fiche
+porterait des entités au lieu du nom. C'est le chevron **échappé en JSON**,
+`\u003c`, qui répond aux deux. Un test le couvre avec une charge réelle.
+
+**Ce qui n'a pas pu être vérifié ici**, et qui se vérifie en trente secondes une
+fois le site en ligne : `schema.org`, `validator.schema.org`, `ogp.me` et
+`developers.facebook.com` rendent tous `000` derrière le mandataire de cette
+machine. La forme est écrite de mémoire. Au premier site publié, passer l'URL
+dans le *Rich Results Test* de Google et le *Sharing Debugger* de Facebook.
+
 ## Regarder avant d'envoyer
 
 ```bash

@@ -2153,6 +2153,18 @@ Trois choses à en tirer :
 - **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
   déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
   c'est le bon geste ce jour-là seulement.
+
+**Et le plafond est par projet, pas par compte.** Mesuré dans la même minute :
+le projet `amorce` recevait « Resource is limited » pendant que le projet
+`amorce-51up`, branché sur le même dépôt mais sur un autre dossier, affichait
+« Building ». Le message parle pourtant de `api-deployments-free-per-day`, ce
+qui se lit comme une limite de compte — et c'est ce que j'avais écrit ici avant
+de le vérifier.
+
+La conséquence est une issue, pas seulement une correction : quand un projet est
+bloqué pour la journée, **un second projet Vercel branché sur le même dépôt
+déploie encore**. C'est trente secondes à créer, et cela rend la version du jour
+visible tout de suite au lieu d'attendre vingt-quatre heures.
 ## Un drapeau ajouté « par précaution » est une panne à retardement
 
 `node:sqlite` a demandé `--experimental-sqlite` sur les premières versions de
@@ -2250,19 +2262,62 @@ Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
 ses routes serveur. C'était la réponse depuis le début, et une heure est passée
 à contourner un quota au lieu de changer de mur.
 
-## Le quota de déploiement est une ressource commune, et les sessions la vident
+## Le refus de déploiement est une fenêtre glissante, pas un blocage de 24 h
 
-Un compte d'hébergeur gratuit plafonne les déploiements par **jour et par
-compte** — cent chez Vercel. Ce dépôt reçoit plusieurs sessions en parallèle et
+**Cette leçon a été écrite faux deux fois de suite dans la même heure, et les
+deux versions sont instructives.** Le relevé complet, le 29/08/2026 :
+
+| Heure | Projet | Résultat |
+| --- | --- | --- |
+| 01:27 | `amorce` **et** `amorce-51up` | refusés, « more than 100 » |
+| 01:55 | `amorce-51up` | **Ready** |
+| 01:59 | `amorce` | refusé |
+| 02:05 | `amorce-51up` | refusé |
+
+**Première version, fausse** : « par jour et par compte ». Le déploiement réussi
+de 01:55 la contredit — un compteur épuisé pour la journée ne laisse rien
+passer.
+
+**Deuxième version, fausse aussi, et écrite six minutes avant d'être démentie** :
+« par projet ». Elle expliquait 01:55 en donnant à chaque projet son propre
+budget. Mais `amorce-51up` a été refusé à 02:05 après avoir réussi à 01:55 : il
+n'a pas pu consommer cent déploiements en dix minutes.
+
+**Ce qui reste, et qui tient debout :** le refus n'est pas un blocage jusqu'au
+lendemain. Une réussite s'est glissée entre deux refus, à vingt-huit minutes du
+premier. C'est le comportement d'une **fenêtre glissante** — les déploiements
+anciens sortent du décompte, une place se libère, le suivant passe, et la
+fenêtre se remplit aussitôt.
+
+**Ce qu'on ne sait toujours pas**, et qu'il faut se retenir d'écrire : si le
+compteur est tenu par compte ou par projet. Les données ne permettent pas de
+trancher, le message d'erreur ne le dit pas, et la documentation de l'éditeur est
+hors d'atteinte derrière le mandataire.
+
+La leçon de méthode compte autant que le fait : **un seul point de mesure qui
+contredit une règle suffit à la casser, jamais à en fonder une autre.** La
+première correction a été écrite sur un unique déploiement réussi, publiée avec
+assurance, et démentie par le point suivant. Il fallait dire « la règle écrite
+est fausse » et s'arrêter là.
+
+**Les conseils qui ne dépendent d'aucune de ces hypothèses**, et qui sont donc
+les seuls à suivre : réduire le volume — chaque PR déclenche un déploiement par
+projet branché, et une session qui enchaîne les PR consomme la réserve de la
+page qui doit rentrer de l'argent — ou changer d'hébergeur. Et ne pas attendre
+vingt-quatre heures : réessayer une demi-heure plus tard suffit parfois.
+
+## Les aperçus coûtent, et les sessions les vident
+
+Ce dépôt reçoit plusieurs sessions en parallèle et
 fusionne **95 pull requests dans la journée**, mesuré le 28/08/2026 : chacune
 déclenche un déploiement d'aperçu, et le compteur est vidé par du travail qui
 n'a rien à voir avec celui qui en a besoin.
 
 **Le symptôme arrive au pire moment et ne ressemble pas à sa cause.** Ici :
-« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec
-les vingt PR de montage vidéo qui l'ont consommé, et le projet qu'on cherchait
-à mettre en ligne — une page de vente, la seule chose qui pouvait rentrer de
-l'argent — reste bloqué vingt-quatre heures.
+« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec les
+vingt PR de montage vidéo qui l'ont consommé. Et le message ment sur la durée : il
+annonce vingt-quatre heures là où un déploiement est passé vingt-huit minutes
+plus tard.
 
 Trois choses à en retenir :
 
@@ -2427,3 +2482,380 @@ viennent de sources différentes :
 
 Dix-sept décibels et demi d'écart. La même logique vaut pour tout événement
 lourd : chercher ce qui claque, pas seulement ce qui pèse.
+
+## `</script>` traverse JSON, et l'échappement HTML ne le rattrape pas
+
+Un bloc `<script type="application/ld+json">` a une règle d'échappement à lui,
+et c'est la seule du genre dans une page : l'analyseur HTML cherche la suite
+`</script` **avant** de passer la main à JSON. Une valeur qui la contient
+referme le bloc, et tout ce qui suit devient du HTML exécutable — sur le domaine
+du client, pas sur le sien.
+
+Les deux réflexes échouent, chacun pour sa raison :
+
+- **`JSON.stringify` seul ne protège pas** : il n'a aucune raison d'échapper un
+  chevron, qui est un caractère parfaitement légal dans une chaîne JSON.
+- **L'échappement HTML est pire que rien** : `&lt;` survit tel quel à
+  `JSON.parse`, et la donnée structurée porte alors des entités à la place du
+  texte. On a réparé la faille et cassé la fiche.
+
+La parade tient en une substitution, après la sérialisation :
+
+```js
+JSON.stringify(valeur).replace(/</g, '\\u003c')
+```
+
+`\u003c` reste un chevron pour JSON et n'est plus une balise pour HTML.
+
+**Et la leçon plus large : un échappement se choisit selon qui lit, pas selon où
+l'on écrit.** Ici deux analyseurs lisent la même chaîne l'un après l'autre, et
+c'est la seule forme qui satisfait les deux.
+
+## Aucun hôte de référence des formats web n'est joignable depuis une session
+
+Mesuré le 29/08/2026 : `schema.org`, `validator.schema.org`, `ogp.me` et
+`developers.facebook.com` rendent tous `000` — même refus de tunnel que les
+hôtes de données de marché. Une forme de données structurées ou de balises de
+partage s'écrit donc **de mémoire**, et cela déplace la vérification sans la
+supprimer : elle se fait au premier site publié, dans le *Rich Results Test* de
+Google et le *Sharing Debugger* de Facebook, depuis un navigateur ordinaire.
+
+Ce qui se vérifie hors ligne, en revanche, et qui attrape les vraies fautes :
+que le bloc **parse** dans un vrai navigateur, et qu'aucune valeur ne puisse le
+refermer.
+
+## Un contrôle qui cherche dans tout le fichier ne garde aucune de ses sections
+
+`verifier-coherence.py` contrôlait qu'un projet installable apparaisse « dans le
+hook de démarrage » — en cherchant son nom dans le texte entier du script. Le
+hook fait pourtant deux choses distinctes : il **installe** les dépendances, et
+il **affiche** la commande de vérification de chaque projet.
+
+`paper-manager` avait la première et pas la seconde. Le contrôle était vert :
+le bloc d'installation suffisait à rendre le nom présent quelque part. Ses 259
+tests passaient, la CI les découvrait, `verifier.sh` aussi — rien n'était cassé,
+le projet était juste **invisible** dans la liste que lit la session suivante
+pour savoir comment éprouver ce qu'elle touche. Un défaut qui ne rougit nulle
+part et qu'on ne cherche pas, puisqu'on ignore la suite qui manque.
+
+La parade tient en une ligne de code : borner la recherche à la section
+concernée plutôt qu'au fichier.
+
+```python
+bloc = re.search(r"^commandes=\((.*?)^\)", texte, re.S | re.M)
+annonce = bloc.group(1).lower()   # et non texte.lower()
+```
+
+La règle générale, elle, dépasse ce script : **quand un fichier a plusieurs
+sections qui remplissent des rôles différents, un contrôle qui grep le tout
+n'en garde aucune.** Il passe dès que le nom apparaît une fois, ce qui est
+précisément la situation où l'oubli est le plus probable — on a rempli une
+section, pas l'autre. Le symptôme trompe : le contrôle est vert *et* il a
+raison de l'être sur la question qu'il pose ; c'est la question qui est trop
+large.
+
+Corollaire mesuré le même jour : une table de contrôles qui s'écrit à la main
+à côté du code se périme au premier ajout. Celle de `/coherence-depot` avait
+neuf lignes pour dix contrôles — le dixième, ajouté quelques jours plus tôt,
+n'y était jamais entré. Un outil qui existe pour détecter les listes fausses en
+portait une.
+
+## Une racine à 18 px rend `text-sm` illégal, et rien ne le signale
+
+Mesuré sur la page de vente : six textes à **15,75 px** sous un plancher écrit
+de 18 px. La cause n'est pas une inattention, c'est une arithmétique que
+personne ne refait — les échelles de Tailwind sont **relatives** à la racine, et
+un dépôt qui relève sa racine à 18 px pour respecter son filtre déplace toute
+l'échelle avec elle :
+
+| Classe | À racine 16 px | À racine 18 px |
+| --- | --- | --- |
+| `text-xs` | 12 px | 13,5 px |
+| `text-sm` | 14 px | **15,75 px** |
+| `text-base` | 16 px | 18 px |
+| `text-lg` | 18 px | 20,25 px |
+
+Le piège est que `text-sm` **paraît** conforme : on a relevé la racine, donc on
+se croit couvert partout. En vérité seul `text-base` atteint le plancher, et
+`text-sm` reste sous la barre dans un projet qui croit l'avoir franchie.
+
+**Deux voisins de la même famille, mesurés le même soir :**
+
+- **Une opacité divise le contraste sans se voir.** `text-white/85` sur un bleu
+  soutenu donne **2,58:1** là où le blanc plein donne 8,13:1. Aucune relecture à
+  l'œil ne rattrape ça ; seule une mesure le dit.
+- **La couleur de survol était plus lisible que celle du repos** — 4,65:1 contre
+  3,60:1. La page se lisait donc mieux le doigt posé dessus qu'au repos, et
+  personne ne survole un bouton sur un téléphone. La correction a consisté à
+  adopter la teinte que le projet avait déjà choisie.
+
+## Un contrôle qui crie pour du décor cesse d'être lu
+
+Le même contrôle a rendu **quarante** défauts au premier passage, dont trente
+portaient sur des maquettes de téléphone dessinées en HTML — du 9 px et des gris
+pâles qui imitent une capture d'écran. Noyés dedans, les onze vrais défauts
+n'auraient pas été traités.
+
+Le critère qui les sépare n'est pas cosmétique et n'a pas eu à être inventé :
+**`aria-hidden="true"`**. Un texte retiré aux lecteurs d'écran n'est pas du
+contenu ; un texte qui est du contenu ne doit pas leur être retiré. La même
+marque répond aux deux questions, et le contrôle qui l'utilise vérifie du même
+coup que la page est correctement balisée.
+
+## `pkill -f` tue le shell qui l'exécute
+
+Deux commandes perdues à la suite, chacune sortie en code 144 sans un mot
+d'explication. `pkill -f "next start -p 321"` compare le motif à la ligne de
+commande **complète** de chaque processus — or celle du shell appelant contient
+le motif, puisqu'il est en train de la lancer. Le shell se tue lui-même, et tout
+ce qui suivait le `;` ou le `&&` disparaît.
+
+Ce qui trompe : la commande visée **est** bien tuée, et le code 144 ressemble à
+une erreur du serveur qu'on arrêtait. La parade est de tuer par port ou par PID
+(`lsof -ti:3210 | xargs -r kill`), ou simplement de servir sur un autre port —
+un processus de développement oublié ne coûte rien dans une session éphémère.
+
+## Ajouter en fin de `lecons.md` conflitte avec toutes les autres sessions
+
+Mesuré le 29/08/2026 : **trois conflits sur ce fichier en vingt minutes**, sur
+une seule branche, chacun résolu à la main. Aucun ne portait sur le contenu —
+les leçons ne se contredisaient pas, elles s'ajoutaient.
+
+La cause n'est pas le fichier, c'est le **geste**. Ce dépôt reçoit plusieurs
+sessions en parallèle, chacune écrit sa leçon avant de clore, et chacune
+l'ajoute à la fin. Git voit alors deux insertions au même endroit et ne peut
+pas trancher — il ne sait pas qu'elles n'ont rien à voir l'une avec l'autre.
+Fusionner tôt n'y change rien : la branche suivante retombe dessus quatre
+minutes plus tard.
+
+**La parade tient en un choix de position : insérer avant la dernière section,
+pas après.** Le bloc modifié cesse alors de toucher la fin du fichier, l'ajout
+concurrent d'une autre session tombe dans un autre hunk, et la fusion passe
+toute seule. Éprouvé le soir même : le conflit a cessé au premier essai.
+
+Mieux encore quand la leçon complète un sujet déjà présent — un plafond de
+déploiement, un piège de fusion : **l'écrire dans la section existante**, au
+milieu du fichier. Deux bénéfices pour un geste : plus aucun conflit possible,
+et pas de seconde version d'un sujet qui divergera de la première.
+
+Ce qui vaut au-delà de ce fichier : **dans un dépôt à plusieurs sessions, tout
+fichier où l'on ajoute par la fin est un point de collision** — un journal, un
+INDEX, une liste de courses. La position d'écriture est une décision de
+concurrence, pas une question de style.
+
+## Une absence qui fait disparaître un bouton et une absence qui perd un client
+ne se traitent pas pareil
+
+La règle du dépôt est bonne et vérifiée : *ce qui n'est pas réglé disparaît de la
+page au lieu d'afficher une valeur inventée.* Un numéro de téléphone faux coûte
+plus cher qu'un bouton absent.
+
+Mais elle a été appliquée à une variable où elle produit le contraire de ce
+qu'elle protège. Sur la page de vente, l'adresse de repli du formulaire n'avait
+pas de valeur par défaut « par cohérence » — et sur un premier déploiement, sans
+clé d'envoi ni numéro, le formulaire répondait *« réessaie dans quelques
+minutes »* à quelqu'un qui venait de taper son nom, son métier et son téléphone.
+
+**Le partage est là, et il se pose avant d'écrire le `?? ''` :**
+
+- L'absence retire une **possibilité en plus** — un bouton d'appel, un lien de
+  paiement. La faire disparaître est juste : rien n'est perdu.
+- L'absence casse le **seul chemin restant**. Alors une valeur par défaut vaut
+  mieux qu'un vide, même imparfaite, parce que le vide ne signale rien : la
+  page a l'air de marcher.
+
+Le test qui l'attrape est celui qu'on n'écrit jamais, parce qu'il n'a l'air de
+rien tester : **le comportement quand aucune variable n'est réglée.** C'est
+pourtant l'état exact de tout premier déploiement.
+
+## `public/` de Next ne résout pas l'index d'un dossier
+
+Mesuré : avec `public/exemple/index.html`, l'adresse `/exemple` rend **404** et
+`/exemple/` un **308** qui ne mène nulle part. Seul `/exemple/index.html`
+répond. Le serveur de fichiers statiques de Next fait une correspondance exacte
+de chemin, là où un Apache ou un Nginx par défaut chercheraient un `index.html`.
+
+Le piège tient à l'habitude : on dépose un dossier de site comme on le
+déposerait sur n'importe quel hébergement, et l'adresse qu'on donne au client
+est celle qui ne marche pas. Elle marche en local si l'on ouvre le fichier
+depuis le disque, ce qui achève de tromper.
+
+**La parade est un fichier à plat** — `public/exemple.html` → `/exemple.html` —
+qui donne en prime une adresse courte, dictable au téléphone.
+
+## Une page de démonstration se marque `noindex`, et le drapeau va dans l'outil
+
+Une démonstration porte un nom d'entreprise qui n'existe pas et un numéro qui ne
+sonne nulle part. Indexée, elle apparaît dans les résultats comme un vrai
+établissement — et le jour où un client réel s'appelle presque pareil, c'est lui
+qu'elle concurrence avec sa propre fiche.
+
+Le point qui compte, et qui vaut au-delà de ce cas : **le drapeau appartient au
+générateur, pas à la copie du fichier.** Retirer la ligne à la main après coup
+marche une fois et se perd à la régénération suivante — et personne ne relit une
+page d'exemple. `--demonstration` traverse l'outil et sort avec le fichier.
+
+## Un serveur oublié rend vert un contrôle qui mesure le build d'avant
+
+Le contrôle visuel de la page de vente est passé au vert sur une page que
+j'avais **cassée exprès** pour l'éprouver. Il ne mesurait pas la page courante :
+il mesurait un serveur laissé par l'exécution précédente, qui servait encore le
+build d'avant.
+
+Deux causes, et la première explique la seconde :
+
+- **`kill` sur le PID de `npm` ne tue pas le serveur.** La chaîne réelle est
+  `npm exec next start` → `sh -c next start` → `next-server` : on tue
+  l'enveloppe, le petit-fils est réattaché à init et continue de servir. Vérifié
+  à `ps -eo pid,ppid,pgid,args` — trois `next-server` orphelins de ports que je
+  croyais fermés.
+- **Le port occupé ne provoque aucune erreur visible.** `next start` sort en 1
+  et son message part dans un journal que personne ne lit ; `curl` répond 200
+  immédiatement, l'attente du serveur réussit, et le contrôle mesure la page de
+  quelqu'un d'autre en affichant l'adresse qu'on lui a demandée.
+
+Les deux parades, et il faut les deux :
+
+```sh
+setsid npm exec next start -- -p "$port" & serveur=$!   # un groupe à soi
+kill -- "-$serveur"                                      # l'arbre entier
+curl -sf "http://127.0.0.1:$port/" && { echo occupé; exit 1; }   # avant de démarrer
+```
+
+**La leçon de méthode est la plus importante : un contrôle neuf ne vaut rien
+tant qu'on ne l'a pas vu échouer.** Celui-ci est passé vert deux fois de suite
+et j'allais le livrer. Rien dans sa sortie ne clochait — la bonne adresse, une
+durée plausible, un verdict net. Ce qui l'a démasqué est un geste, pas une
+lecture : **casser la page exprès et exiger le rouge.** Une durée suspecte avait
+mis la puce à l'oreille, mais elle ne prouvait rien — après correction, la même
+mesure prend le même temps.
+
+C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
+donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
+qu'il accepte.
+
+## Un vérificateur qui déduit les projets des fichiers changés ne se voit pas
+lui-même
+
+Ce dépôt lance sa vérification sur les seuls projets touchés, déduits du chemin
+des fichiers modifiés. Le mécanisme est bon et fait gagner des minutes à chaque
+passe. Il a un angle mort exact : **les fichiers qui n'appartiennent à aucun
+projet ne déclenchent rien**, et l'outillage en fait partie.
+
+Mesuré : un changement de `verifier.sh` lui-même se voyait répondre *« rien
+d'exécutable n'a changé — documentation, outillage ou configuration »*, par le
+vérificateur, qui rangeait donc son propre code parmi ce qui ne s'exécute pas.
+Un hook cassé se découvrait au démarrage de la session suivante, chez quelqu'un
+d'autre.
+
+**La règle générale :** dans une sélection par appartenance, il faut lister ce
+qui n'appartient à rien et décider explicitement de son sort. Le défaut n'est
+pas dans une case manquante, il est dans la catégorie fourre-tout qui absorbe
+silencieusement ce qu'on n'a pas classé — ici « documentation ou configuration »,
+qui contenait aussi tout le code de l'outillage.
+
+**Et un pas partiel assumé vaut mieux qu'un trou.** Une vérification de syntaxe
+n'établit pas qu'un script fait ce qu'il annonce ; elle attrape le `fi` manquant
+qui casse tout. Ce qu'il faut, c'est l'écrire — « syntaxe seule » jusque dans le
+nom affiché — pour que personne n'y lise davantage.
+
+## Le nom d'un groupe décrit le contenu, pas la nature de ce qu'on reçoit
+
+Une liste IPTV publique range ses chaînes par thème, et l'une de ces catégories
+s'appelle « Movies ». Le classement de l'application, qui faisait confiance au
+nom du groupe, rangeait donc toutes les chaînes de cinéma dans l'onglet
+**Films** — où l'on cliquait sur « un film » pour tomber sur une chaîne en
+direct. Trouvé en trente secondes par la première personne à s'en servir, et
+par aucun test.
+
+**La nature de ce qu'on reçoit est lisible dans l'adresse, pas dans le
+libellé** : un manifeste HLS (`.m3u8`) est un flux qui coule, un `.mkv` ou un
+`.mp4` est une œuvre qu'on ouvre. Le groupe, lui, ne dit que le thème — et une
+chaîne qui *diffuse* des films n'est pas un film.
+
+La règle générale vaut au-delà de l'IPTV : **quand une donnée écrite à la main
+et une donnée structurelle se contredisent, c'est la structurelle qui décide.**
+Le libellé est saisi par un humain pressé ; le format, lui, est imposé par le
+protocole.
+
+## Interdire l'autoplay par principe est aussi un défaut
+
+La règle « pas de démarrage automatique » protège d'une vidéo qui s'ouvre en
+pleine figure sur une page qu'on parcourt. Appliquée à un **lecteur de
+télévision en direct**, elle devient absurde : le clic qui a ouvert la chaîne
+*est* le geste, et demander un second clic pour regarder la télé est une gêne
+que personne n'accepte.
+
+La correction s'est faite en deux fois, et la première était encore à
+moitié fausse : le direct démarrait seul, les films attendaient toujours « pour
+laisser lire le résumé ». Retour d'usage immédiat : « dès qu'on clique sur une
+icône, il faut que ça se lance ». **Cliquer sur une vignette est déjà la
+demande de regarder** — le résumé reste lisible sous l'image pendant que ça
+joue.
+
+La leçon derrière la leçon : une règle de protection écrite pour un contexte
+(une vidéo qui s'ouvre sur une page qu'on parcourt) devient une gêne dans un
+autre (un lecteur qu'on a ouvert exprès). **Ce n'est pas la règle qu'il faut
+défendre, c'est l'intention qu'elle servait.**
+
+Et le refus du navigateur se dit à l'écran : bloquer une vidéo sonore lancée
+sans interaction suffisante est un comportement normal de Chrome, silencieux,
+qui se confond avec une panne du flux.
+
+## Un flux qui met huit secondes à s'établir passe pour une panne
+
+Premier mot revenu de l'usage réel, avant tout autre : « ça reste figé ». Le
+flux n'était pas figé — il se connectait. Une chaîne IPTV met deux à dix
+secondes à s'établir : résolution du manifeste, premier segment, mise en
+tampon. Pendant ce temps l'image est noire et rien ne bouge.
+
+**Un écran noir silencieux et un écran noir en panne sont indiscernables**, et
+l'utilisateur tranche toujours dans le même sens : c'est cassé. Il ferme,
+essaie une autre chaîne, conclut que rien ne marche.
+
+Le remède ne coûte rien : un mot sur l'image, allumé jusqu'au premier instant
+réellement joué. Et l'événement qui l'éteint doit être `playing`, pas un
+événement de réseau — `canplay` se déclenche avant que quoi que ce soit soit
+visible, et l'indicateur disparaîtrait sur un écran encore noir.
+
+## Tester un flux, c'est distinguer trois états, jamais deux
+
+Une liste publique de 215 chaînes en contient couramment la moitié de morte, et
+c'est ce qui donne l'impression que l'application ne marche pas. Le réflexe est
+d'écrire un vérificateur qui range en deux tas : vivant, mort. C'est ce tri-là
+qui est faux, et la mesure du jour le montre sans appel.
+
+Depuis une session distante, **les neuf hôtes de flux essayés rendent tous 403**
+— le mandataire refuse, pas le serveur. Un vérificateur à deux états aurait
+condamné le catalogue entier en trente secondes, et l'utilisateur aurait rouvert
+une application vide. Le même 403 sort d'un abonnement IPTV momentanément saturé
+(« max connections reached »), avec 401, 429 et 503 : autant de codes qui ne
+disent **rien** du flux.
+
+D'où la règle : on ne masque que ce qu'on a **vu refuser pour de bon** — 404,
+DNS mort, délai dépassé, contenu qui n'est pas un média. Tout refus ambigu
+laisse l'entrée visible. Se tromper dans ce sens coûte un clic ; se tromper dans
+l'autre efface de l'écran ce qui marchait.
+
+Deux pièges de méthode viennent avec :
+
+- **Un code 200 ne prouve pas qu'un flux existe.** Un portail expiré rend une
+  page HTML avec 200, et un manifeste peut être une carcasse : `#EXTM3U` suivi
+  de rien. Il faut lire les premiers octets — au plus quelques kilo-octets, puis
+  couper le corps, sinon on télécharge un direct qui ne finit jamais.
+- **Le parallélisme se borne par hôte, pas globalement.** Un abonnement limite
+  les connexions simultanées, souvent à une ou deux. Vingt tests de front sur le
+  même serveur fabriquent eux-mêmes les refus qu'ils vont interpréter.
+
+## Une colonne ajoutée n'apparaît jamais chez qui a déjà des données
+
+`CREATE TABLE IF NOT EXISTS` ne touche pas une table présente. Tant qu'un projet
+ne tourne que sur la machine qui l'écrit, on efface la base et on n'y pense
+plus. Le jour où quelqu'un d'autre l'a installé, la même ligne de schéma laisse
+sa base sans la colonne, et la première requête qui la cite fait échouer
+**l'ouverture de l'application** — pas la fonction ajoutée, l'application.
+
+La parade tient en huit lignes : une liste d'ajouts, `PRAGMA table_info` pour
+savoir ce qui manque, `ALTER TABLE` pour le reste, rejoué à chaque ouverture.
+Ce qui compte est le moment où on l'écrit : à la première colonne ajoutée après
+la première installation ailleurs, pas quand un utilisateur signale l'erreur.

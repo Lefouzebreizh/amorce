@@ -22,7 +22,7 @@ import {
   type Langue,
   type Programme,
 } from '../domaine/types.ts'
-import { SCHEMA } from './schema.ts'
+import { COLONNES_AJOUTEES, SCHEMA } from './schema.ts'
 
 /**
  * L'ordre d'affichage par défaut est francophone, et il est **dérivé** de
@@ -60,6 +60,12 @@ export interface Filtres {
   readonly serie?: string
   readonly limite?: number
   readonly decalage?: number
+  /**
+   * Montrer aussi les flux mesurés hors service. Faux par défaut : une liste
+   * publique en contient la moitié, et les afficher revient à faire cliquer sur
+   * des portes fermées.
+   */
+  readonly inclureMorts?: boolean
 }
 
 export interface ResumeImport {
@@ -209,6 +215,15 @@ export interface Depot {
   favoris(): Element[]
   enregistrerPosition(elementId: string, position: number, duree?: number): void
   reprises(limite?: number): Reprise[]
+  /** L'état mesuré d'une entrée, ou `undefined` si elle n'a jamais été testée. */
+  etat(elementId: string): 'ok' | 'mort' | undefined
+  /** Rend tout le monde visible et à retester. */
+  oublierEtats(): number
+  /** Retient ce qu'un test de flux a trouvé. */
+  marquerEtat(elementId: string, etat: 'ok' | 'mort'): void
+  /** Les éléments à tester, les jamais testés d'abord. */
+  aTester(limite?: number): Element[]
+  compterParEtat(): { vivants: number; morts: number; inconnus: number }
   importerProgrammes(
     programmes: AsyncIterable<Programme>,
     options?: { paquet?: number; purgerAvant?: string },
@@ -221,6 +236,12 @@ export interface Depot {
 export function ouvrirDepot(chemin = ':memory:'): Depot {
   const base = new DatabaseSync(chemin)
   base.exec(SCHEMA)
+
+  // Les colonnes ajoutées après coup, pour les bases déjà remplies.
+  for (const ajout of COLONNES_AJOUTEES) {
+    const colonnes = base.prepare(`PRAGMA table_info(${ajout.table})`).all() as Ligne[]
+    if (!colonnes.some((ligne) => texte(ligne['name']) === ajout.colonne)) base.exec(ajout.sql)
+  }
 
   const conditions = (
     filtres: Filtres,
@@ -247,6 +268,9 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
       morceaux.push('serie = ?')
       valeurs.push(filtres.serie)
     }
+    // `etat IS NULL` compte comme vivant : ce qui n'a pas été mesuré n'est pas
+    // condamné. Sans cela, une base jamais testée s'afficherait vide.
+    if (filtres.inclureMorts !== true) morceaux.push("(etat IS NULL OR etat <> 'mort')")
     return { sql: morceaux.length === 0 ? '' : ` WHERE ${morceaux.join(' AND ')}`, valeurs }
   }
 
@@ -775,6 +799,52 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
         )
         .all(chaine, fin, debut) as Ligne[]
       return lignes.map(versProgramme)
+    },
+
+    etat(elementId): 'ok' | 'mort' | undefined {
+      const ligne = base.prepare('SELECT etat FROM element WHERE id = ?').get(elementId) as
+        | Ligne
+        | undefined
+      const valeur = texte(ligne?.['etat'])
+      return valeur === 'ok' || valeur === 'mort' ? valeur : undefined
+    },
+
+    oublierEtats(): number {
+      const avant = base.prepare('SELECT COUNT(*) AS n FROM element WHERE etat IS NOT NULL').get() as
+        | Ligne
+        | undefined
+      base.exec('UPDATE element SET etat = NULL, teste_le = NULL')
+      return entier(avant?.['n']) ?? 0
+    },
+
+    marquerEtat(elementId, etat): void {
+      base
+        .prepare('UPDATE element SET etat = ?, teste_le = ? WHERE id = ?')
+        .run(etat, new Date().toISOString(), elementId)
+    },
+
+    aTester(limite = 5000): Element[] {
+      const lignes = base
+        .prepare(
+          `SELECT ${COLONNES} FROM element
+           ORDER BY teste_le IS NOT NULL, teste_le LIMIT ?`,
+        )
+        .all(limite) as Ligne[]
+      return lignes.map(versElement)
+    },
+
+    compterParEtat(): { vivants: number; morts: number; inconnus: number } {
+      const compte = (condition: string): number => {
+        const ligne = base.prepare(`SELECT COUNT(*) AS n FROM element WHERE ${condition}`).get() as
+          | Ligne
+          | undefined
+        return entier(ligne?.['n']) ?? 0
+      }
+      return {
+        vivants: compte("etat = 'ok'"),
+        morts: compte("etat = 'mort'"),
+        inconnus: compte('etat IS NULL'),
+      }
     },
 
     reprises(limite = 20): Reprise[] {

@@ -6,8 +6,12 @@
  * de repli plus petite, un mot trop long qui pousse la page de côté. Ce script
  * mesure la page telle qu'elle s'affiche, sur le terrain de référence.
  *
- *   npm run regarder demo
- *   npm run regarder dossiers/maconnerie-le-goff-2026-08-29
+ *   npm run regarder demo                    # un dossier livrable
+ *   npm run regarder http://localhost:3000    # une page servie
+ *
+ * Il vit ici et non dans un projet parce que la règle est celle du dépôt, pas
+ * celle d'un produit : le site d'un artisan et la page qui le vend se lisent
+ * sur le même téléphone, et deux copies de ce fichier auraient divergé.
  */
 
 import { chromium } from 'playwright';
@@ -27,16 +31,33 @@ if (!dossier) {
   process.exit(1);
 }
 
-const page = resolve(process.cwd(), dossier, 'index.html');
+/* Une adresse se regarde telle quelle ; un dossier livrable par son index. */
+const servie = /^https?:\/\//.test(dossier);
+const page = servie ? dossier : `file://${resolve(process.cwd(), dossier, 'index.html')}`;
 
-if (!existsSync(page)) {
-  console.error(`Pas de page à regarder : ${page}\nLancer d’abord « npm run generer ${dossier} ».`);
+if (!servie && !existsSync(resolve(process.cwd(), dossier, 'index.html'))) {
+  console.error(`Pas de page à regarder dans ${dossier}\nLancer d’abord « npm run generer ${dossier} ».`);
   process.exit(1);
 }
 
-const navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM ?? undefined });
+/*
+ * Sans navigateur, ce contrôle ne se contente pas d'échouer : il **sort en 3**.
+ *
+ * Rendre 0 aurait été pire que tout — une vérification verte qui n'a rien
+ * mesuré est exactement le défaut contre lequel ce dépôt se protège. Rendre 1
+ * aurait bloqué toute poussée sur une machine sans Chromium, pour une raison
+ * qui n'a rien à voir avec le code. Le 3 dit « non effectué », et la
+ * vérification l'affiche comme tel au lieu de le compter vert.
+ */
+let navigateur;
+try {
+  navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM ?? undefined });
+} catch (erreur) {
+  console.error(`⊘ contrôle non effectué — pas de Chromium : ${erreur.message.split('\n')[0]}`);
+  process.exit(3);
+}
 const onglet = await navigateur.newPage({ viewport: ECRAN, deviceScaleFactor: 2 });
-await onglet.goto(`file://${page}`);
+await onglet.goto(page);
 
 const releve = await onglet.evaluate(({ CORPS_MINIMUM, CIBLE_MINIMUM, CONTRASTE_MINIMUM }) => {
   const lum = (couleur) => {
@@ -64,9 +85,22 @@ const releve = await onglet.evaluate(({ CORPS_MINIMUM, CIBLE_MINIMUM, CONTRASTE_
     return 'rgb(255, 255, 255)';
   };
 
+  /*
+   * Ce qui est `aria-hidden` est du décor : une maquette de téléphone dessinée
+   * en HTML, dont les 9 px et les gris pâles imitent une capture d'écran. Le
+   * mesurer rendait quarante défauts dont trente ne devaient rien à personne —
+   * et un contrôle qui crie pour du décor finit par n'être plus lu.
+   *
+   * Le critère n'est pas cosmétique : un texte retiré aux lecteurs d'écran
+   * n'est pas du contenu, et un texte qui est du contenu ne doit pas leur être
+   * retiré. La même marque décide des deux.
+   */
+  const decor = (element) => element.closest('[aria-hidden="true"]') !== null;
+
   const defauts = [];
 
   for (const element of document.querySelectorAll('body *')) {
+    if (decor(element)) continue;
     const texte = [...element.childNodes]
       .filter((n) => n.nodeType === 3 && n.textContent.trim() !== '')
       .map((n) => n.textContent.trim())
@@ -91,7 +125,8 @@ const releve = await onglet.evaluate(({ CORPS_MINIMUM, CIBLE_MINIMUM, CONTRASTE_
     }
   }
 
-  for (const lien of document.querySelectorAll('a')) {
+  for (const lien of document.querySelectorAll('a, button')) {
+    if (decor(lien)) continue;
     const { width, height } = lien.getBoundingClientRect();
     if (height < CIBLE_MINIMUM || width < CIBLE_MINIMUM) {
       defauts.push(`cible ${Math.round(width)} × ${Math.round(height)} px (min ${CIBLE_MINIMUM}) — « ${lien.textContent.trim().slice(0, 30)} »`);

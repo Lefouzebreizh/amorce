@@ -113,7 +113,9 @@ la mémoire, le résumé ne transporte que l'état.**
 Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 
 - **Amorce** (racine) — Next.js **16.3.2**, React 19, Tailwind v4, TypeScript
-  strict. Tout tourne dans le navigateur : ni serveur, ni base, ni route API.
+  strict. **Le moteur de montage tourne entièrement dans le navigateur** : ni
+  serveur, ni base, ni route API. Seul le module de licence fait exception, et
+  il ne touche à aucun média — voir plus bas.
 - **agence/** — Next.js 16, Supabase (PostgreSQL + RLS), Server Actions, shadcn.
   Se vérifie depuis son dossier, jamais depuis la racine.
 - **artisan-express/** — page de vente du site vitrine artisan à 299 €. Next.js
@@ -128,6 +130,12 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
+  **`main.py sonde` avant le premier scan**, et après toute retouche de
+  `sources/` : trois situations rendent le même rapport vide — marché calme,
+  service muet, ou service qui répond dans une forme qu'on ne sait plus lire.
+  La sonde rend « reçus » et « lus » par point d'entrée et ne crie que sur
+  l'écart. Un scan tient un **verrou de fichier** le temps du tour : deux tours
+  simultanés valent deux fois le débit annoncé, et les 429 frappent les deux.
 - **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
   asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
   bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
@@ -194,6 +202,26 @@ faut bien un ailleurs.
 **Amorce en est exclue, définitivement.** Sa promesse fondatrice est qu'aucun
 fichier ne quitte l'appareil : lui adjoindre un stockage distant ne serait pas
 une évolution mais un reniement.
+
+**Une seule exception, et elle est bornée : le serveur de licence.** Faire payer
+Amorce demande de savoir qui a payé, et cela ne peut pas se vérifier dans le
+navigateur — une clé posée côté client est lue par le premier qui ouvre les
+outils de développement. Le propriétaire l'a validée explicitement, et voici sa
+frontière :
+
+- Le serveur ne connaît **que** l'identité et l'état de l'abonnement :
+  authentification, et vérification Stripe. Rien d'autre.
+- **Aucun média n'y transite jamais** — ni rush, ni export, ni son, ni
+  sous-titre, ni le nom d'un fichier. Un octet de contenu qui atteint le réseau
+  est un défaut, pas un compromis.
+- Le module vit **isolé et découplé** du moteur de montage : ce dernier ne
+  l'importe pas, et le studio doit rester utilisable si le serveur est éteint.
+
+La règle qui rend l'exception vérifiable au lieu de l'élargir : **le moteur de
+montage ne connaît pas le réseau.** Une dépendance du moteur vers le module de
+licence est le premier pas qui la casse, et c'est celui qu'on ne franchit pas ;
+la licence pilote ce que l'interface propose, jamais ce que le moteur fait d'un
+fichier.
 
 ## 5. SENSIBLE, ET JAMAIS À L'ARRÊT
 
@@ -297,10 +325,41 @@ téléchargent en une commande, vérifiée le jour même, un mégaoctet :
 curl -sSO https://raw.githubusercontent.com/freqtrade/freqtrade/develop/tests/testdata/UNITTEST_BTC-1m.json
 ```
 
+**Et seize ans de BTC réel s'y téléchargent aussi**, prix *et* métriques
+on-chain, sous licence ouverte — c'est le jeu communautaire CoinMetrics, que lit
+`nexuscrypto rejeu --coinmetrics`. Il apporte ce qu'aucune API gratuite ne
+donne : le flux net des réserves de plateformes, en dollars, jour par jour.
+
+```bash
+curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv
+```
+
+**Mais il ne publie qu'une clôture par jour, et c'est le piège.** Ni haut, ni
+bas, ni ouverture : le chargeur fabrique `bas = min(clôture du jour, clôture de
+la veille)`. Tout ce qui se mesure sur les **mèches** — liquidations, stops
+touchés, pire recul, ATR — est donc sous-estimé, sans qu'aucun calcul ne lève
+quoi que ce soit. Le module de levier détecte désormais ce cas et l'écrit sous
+ses propres résultats ; toute autre mesure qui repose sur un plus bas doit faire
+de même, ou dire qu'elle mesure des clôtures.
+
 Ce qui reste impossible : l'ingestion **en direct**, le sentiment, l'on-chain et
 la macro. Une stratégie se règle donc hors ligne sur des données téléchargées,
 et son branchement aux sources ne se vérifie que sur une machine sans mandataire
 filtrant.
+
+**Une session distante ne peut pas en joindre une autre.** Mesuré deux fois le
+29/08 : `ListAgents` ne rend aucun pair joignable et `SendMessage` refuse, alors
+que `list_sessions` montre les autres sessions du compte en train de tourner,
+dans le même environnement et sur le même dépôt. Le piège est là — leur fiche
+porte `cross_session_inbound: available`, ce qui dit qu'**elles** acceptent de
+recevoir, jamais qu'on sait router jusqu'à elles. Une session qui lit ce champ
+croit le canal ouvert et écrit un message qui ne partira pas.
+
+Le lien entre sessions est donc le **dépôt**, et lui seul : ce fichier, les
+compétences, les agents, `second-brain/`. Une découverte qu'une autre session
+doit connaître s'écrit et se fusionne — elle ne s'envoie pas. C'est aussi ce qui
+rend la fusion rapide utile au-delà des conflits : tant qu'un lot n'est pas sur
+`main`, il n'existe pour personne d'autre.
 
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.

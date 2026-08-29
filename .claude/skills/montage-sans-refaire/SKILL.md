@@ -252,6 +252,7 @@ Trois causes possibles, dans cet ordre :
 ---
 
 ## 9. Le climax doit être le plan le plus fort, et ça se vérifie
+## 8. Le climax doit être le plan le plus fort, et ça se vérifie
 
 ```bash
 # par section, au-dessus de 400 Hz — si le climax n'est pas en tete,
@@ -269,6 +270,7 @@ dizaine de décibels sous le climax.
 ---
 
 ## 10. Un texte se place où le sujet n'est pas
+## 9. Un texte se place où le sujet n'est pas
 
 ```bash
 python3 montage-auto/placer_texte.py film.mp4 3.0 4.4 5.8
@@ -287,6 +289,7 @@ le texte sur le front, yeux et bouche libres.
 ---
 
 ## 11. Ce qu'on tire d'une image du film hérite de cette image
+## 10. Ce qu'on tire d'une image du film hérite de cette image
 
 Un carton fabriqué depuis la dernière image portait le **titre encore
 incrusté**, figé derrière ses trois lignes : quatre textes empilés. Les deux
@@ -303,6 +306,7 @@ ressortis à −45 dB.
 ---
 
 ## 12. Un ralenti sans interpolation duplique une image sur cinq
+## 11. Un ralenti sans interpolation duplique une image sur cinq
 
 `vitesse: 0.8` sans `interpolation` : ffmpeg tient la cadence en **dupliquant**.
 Mesuré sur le plan du dragon — **29 images figées sur 144**, soit une sur cinq à
@@ -329,6 +333,7 @@ chercher un défaut de son sur un plan ralenti, compter ses images figées.
 ---
 
 ## 13. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
+## 12. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
 
 - **Une affiche d'ouverture** : le temps de lire son titre, pas plus. 0,6 s
   gaspille les 0,6 s ; 1,6 s perd le spectateur ; **1,1 s** pour huit lettres.
@@ -339,6 +344,7 @@ chercher un défaut de son sur un plan ralenti, compter ses images figées.
 ---
 
 ## 14. Les trois relevés obligatoires, sur le fichier qui part
+## 13. Les trois relevés obligatoires, sur le fichier qui part
 
 Écrits dans `CLAUDE.md` § 8, rappelés ici parce que c'est le moment de les
 faire, et **sur le fichier final**, pas sur celui d'avant :

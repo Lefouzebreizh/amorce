@@ -26,6 +26,24 @@ import {
 /** Durée visée pour un plan. Au-delà de 3 s sans évènement, l'attention lâche. */
 const TARGET_SHOT = 2.1;
 
+/**
+ * Durée visée pour le montage entier.
+ *
+ * La longueur d'un plan était fixe : deux secondes un, quel que soit le nombre
+ * de rushes. Plus on importait, plus le film s'allongeait — mesuré, douze
+ * rushes donnaient 21,9 s, vingt en donnaient 36,3 et trente 54,3. Au-delà de
+ * quarante-cinq secondes le guide réclame ensuite de raccourcir, une fois par
+ * plan : le montage express fabriquait donc lui-même le travail qu'il annonçait
+ * éviter.
+ *
+ * Vingt-deux secondes est la cible : assez pour installer une idée, sous les
+ * trente-cinq où la part de spectateurs qui vont au bout décroche. La longueur
+ * du plan s'y adapte au lieu de la subir — avec beaucoup de rushes, les plans
+ * raccourcissent, ce qui donne au passage le montage nerveux que le format
+ * court demande.
+ */
+const DUREE_VISEE = 22;
+
 /** En dessous, un plan n'a pas le temps d'être lu. */
 const MIN_SHOT = 0.9;
 
@@ -51,7 +69,12 @@ export const PLACEHOLDER_HOOK = 'Attends la fin 👀';
  * le tronquer couperait la voix en plein milieu, et rien à l'écran ne dirait
  * qu'il manque six secondes de parole.
  */
-function cutFromAsset(asset: MediaAsset, index: number, keepWhole: boolean): Clip | null {
+function cutFromAsset(
+  asset: MediaAsset,
+  index: number,
+  keepWhole: boolean,
+  visee = TARGET_SHOT,
+): Clip | null {
   if (asset.duration <= 0.2) return null;
 
   // On entre après le tout début : les premières images d'un rendu IA sont
@@ -60,7 +83,7 @@ function cutFromAsset(asset: MediaAsset, index: number, keepWhole: boolean): Cli
   // premiers mots.
   const lead = keepWhole ? 0 : Math.min(asset.duration * 0.08, 0.4);
   const available = asset.duration - lead;
-  const length = keepWhole ? available : Math.max(MIN_SHOT, Math.min(TARGET_SHOT, available));
+  const length = keepWhole ? available : Math.max(MIN_SHOT, Math.min(visee, available));
 
   if (length < 0.3) return null;
 
@@ -100,8 +123,20 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
    */
   const keepWhole = assets.length === 1 && assets[0].kind !== 'image';
 
+  /*
+   * La longueur d'un plan suit le nombre de rushes, bornée des deux côtés.
+   *
+   * En deçà de `MIN_SHOT` un plan n'a pas le temps d'être lu ; au-delà de
+   * `TARGET_SHOT` l'attention lâche. Entre les deux, on vise la durée du film
+   * plutôt que celle du plan.
+   */
+  const utilisables = Math.max(1, assets.filter((a) => a.duration > 0.2).length);
+  const visee = keepWhole
+    ? TARGET_SHOT
+    : Math.max(MIN_SHOT, Math.min(TARGET_SHOT, DUREE_VISEE / utilisables));
+
   const clips = assets
-    .map((asset, index) => cutFromAsset(asset, index, keepWhole))
+    .map((asset, index) => cutFromAsset(asset, index, keepWhole, visee))
     .filter((clip): clip is Clip => clip !== null)
     // Le premier plan retenu doit porter les réglages d'ouverture, même si des
     // rushes trop courts ont été écartés en amont.
@@ -122,6 +157,34 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
     },
   ];
 
+  /*
+   * Les bruitages ponctuent, ils ne tapissent pas.
+   *
+   * Un souffle était posé sur **chaque** raccord, plus une aspiration juste
+   * avant : deux par coupe. L'analyse de ce même dépôt tient pourtant qu'un bon
+   * montage porte 1,2 à 6 bruitages pour dix secondes — et le montage express
+   * en posait 10,8 avec six rushes, 32,8 avec trente. Cinq fois le maximum
+   * qu'il se donne à lui-même : soixante souffles en dix-huit secondes, et une
+   * note pénalisée par sa propre mesure.
+   *
+   * On vise donc le milieu de la bande, quatre pour dix secondes, et on garde
+   * un raccord sur `pasBruitage`. Les autres coupes restent nues — c'est ce qui
+   * rend audibles celles qui sonnent.
+   */
+  /*
+   * On compte les **raccords sonorisés**, pas le pas.
+   *
+   * Raisonner en pas retombe à un dès que les plans sont peu nombreux, et
+   * l'aspiration qui accompagne chaque souffle double alors le total : mesuré,
+   * douze rushes rendaient encore 12,8 bruitages pour dix secondes. Deux
+   * raccords sonorisés pour dix secondes, portant au plus deux sons chacun,
+   * donnent les quatre visés — au milieu de la bande que l'analyse juge bonne.
+   */
+  const RACCORDS_SONORISES_PAR_10S = 2;
+  const raccords = Math.max(1, clips.length - 1);
+  const voulus = Math.max(1, Math.round((duration / 10) * RACCORDS_SONORISES_PAR_10S));
+  const pasBruitage = Math.max(1, Math.round(raccords / voulus));
+
   const cues: SoundCue[] = [];
   let cursor = 0;
 
@@ -136,13 +199,21 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
       cursor -= clip.transitionDuration;
       const at = Math.max(0, cursor);
 
-      // Un souffle sur chaque raccord : c'est ce qui transforme une succession
-      // de plans en un rythme perçu.
-      cues.push({ id: uid('sfx'), sfx: RACCORD_CYCLE[(index - 1) % RACCORD_CYCLE.length], time: at, gain: 0.85 });
+      // Un raccord sur `pasBruitage` reçoit un souffle : c'est ce qui
+      // transforme une succession de plans en rythme perçu. Les autres restent
+      // nus, et c'est ce qui rend audibles ceux qui sonnent.
+      if ((index - 1) % pasBruitage === 0) {
+        cues.push({ id: uid('sfx'), sfx: RACCORD_CYCLE[(index - 1) % RACCORD_CYCLE.length], time: at, gain: 0.85 });
 
-      // Une aspiration juste avant le raccord fait anticiper la coupe.
-      if (at > 0.5) {
-        cues.push({ id: uid('sfx'), sfx: 'reverse', time: Math.max(0, at - 0.55), gain: 0.55 });
+        /*
+         * L'aspiration ne se pose que si le plan précédent est assez long pour
+         * la porter. Sur des plans courts, une anticipation de 0,55 s tombe
+         * avant la coupe **précédente** : elle n'annonce plus rien, elle brouille
+         * ce qui vient de sonner.
+         */
+        if (at > 1.2) {
+          cues.push({ id: uid('sfx'), sfx: 'reverse', time: at - 0.55, gain: 0.55 });
+        }
       }
     }
 

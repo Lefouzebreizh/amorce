@@ -119,6 +119,12 @@ test('le chemin de l’URL prime sur le nom du groupe', () => {
   assert.equal(detecterGenre({ url: 'http://x/movie/u/p/9.mkv', groupe: 'SERIES' }), 'film')
   assert.equal(detecterGenre({ url: 'http://x/live/u/p/9.m3u8', groupe: 'VOD' }), 'direct')
   assert.equal(detecterGenre({ url: 'http://x/9.mkv', groupe: 'FILMS' }), 'film')
+  // Une chaîne rangée dans une catégorie « Movies » reste une chaîne : le
+  // manifeste HLS dit ce qu'on reçoit, le groupe dit seulement ce qu'on y voit.
+  assert.equal(detecterGenre({ url: 'http://x/canal.m3u8', groupe: 'Movies' }), 'direct')
+  assert.equal(detecterGenre({ url: 'http://x/cine.m3u8', groupe: 'FILMS VF' }), 'direct')
+  // Mais un vrai fichier dans un groupe « Films » reste un film.
+  assert.equal(detecterGenre({ url: 'http://x/film.mp4', groupe: 'Movies' }), 'film')
   assert.equal(detecterGenre({ url: 'http://x/9.mkv' }), 'film')
   assert.equal(detecterGenre({ url: 'http://x/9', episode: true }), 'serie')
   assert.equal(detecterGenre({ url: 'http://x/9' }), 'direct')

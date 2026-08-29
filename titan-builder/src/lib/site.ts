@@ -173,7 +173,87 @@ export type Photo = { readonly fichier: string; readonly legende?: string };
  * absolu ferait un site qui marche chez celui qui l'a fabriqué et nulle part
  * ailleurs.
  */
-export function genererSite(commande: Commande, photos: readonly Photo[] = []): string {
+/* ── Se faire trouver ─────────────────────────────────────────────────────── */
+
+/**
+ * Un domaine nettoyé, ou `undefined`.
+ *
+ * Il n'est pas dans la commande : le client ne l'a pas quand il commande, il
+ * est choisi au moment de publier. Il arrive donc à la génération, et **rien
+ * n'est inventé sans lui** — un `og:image` pointant vers un domaine supposé
+ * afficherait une image morte dans chaque partage.
+ */
+export function domaineRetenu(brut: string | undefined): string | undefined {
+  const propre = (brut ?? '').trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+  return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(propre)
+    ? propre.toLowerCase()
+    : undefined;
+}
+
+/*
+ * Le piège du JSON-LD, et il ne ressemble à aucun autre échappement de ce
+ * fichier : à l'intérieur d'un `<script>`, l'analyseur HTML cherche la chaîne
+ * `</script` **avant** de passer la main à JSON. Un nom d'entreprise contenant
+ * cette suite fermerait le bloc et le reste deviendrait du HTML exécutable.
+ *
+ * `echapper()` ne peut pas servir ici : il produirait `&lt;`, que JSON.parse
+ * lirait littéralement — la fiche porterait alors des entités HTML au lieu du
+ * nom. La bonne parade est l'échappement **JSON** du chevron, `<`, qui
+ * reste un chevron pour JSON et n'est plus une balise pour HTML.
+ */
+function jsonPourScript(valeur: unknown): string {
+  return JSON.stringify(valeur, null, 2).replace(/</g, '\\u003c');
+}
+
+/**
+ * La fiche d'établissement local, au format que Google lit.
+ *
+ * C'est ce qui distingue un site qu'on montre d'un site qui ramène du monde :
+ * sans elle, un moteur voit une page ; avec elle, il voit un artisan, son
+ * métier, son téléphone et sa zone. Ni compte à créer, ni service tiers.
+ */
+export function ficheEtablissement(
+  commande: Commande,
+  domaine: string | undefined,
+): string {
+  const services = servicesListes(commande);
+  const presentation = paragraphes(commande.presentation);
+
+  const fiche: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: commande.entreprise.trim(),
+    telephone: lienTelephonique(commande.telephone),
+    address: { '@type': 'PostalAddress', addressLocality: commande.ville.trim(), addressCountry: 'FR' },
+    areaServed: commande.ville.trim(),
+  };
+
+  /*
+   * Chaque champ n'apparaît que s'il a une valeur. Une fiche portant une
+   * description vide ou un catalogue sans offre est moins bien lue qu'une
+   * fiche courte, et surtout elle affirme quelque chose de faux.
+   */
+  if (presentation.length > 0) fiche.description = presentation.join(' ');
+  if (domaine !== undefined) fiche.url = `https://${domaine}/`;
+  if (services.length > 0) {
+    fiche.hasOfferCatalog = {
+      '@type': 'OfferCatalog',
+      name: `Prestations — ${commande.entreprise.trim()}`,
+      itemListElement: services.map((service) => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name: service },
+      })),
+    };
+  }
+
+  return jsonPourScript(fiche);
+}
+
+export function genererSite(
+  commande: Commande,
+  photos: readonly Photo[] = [],
+  options: { domaine?: string; demonstration?: boolean } = {},
+): string {
   const modele = modeleParId(commande.modele);
   const couleur = couleurRetenue(commande);
   const entreprise = echapper(commande.entreprise);
@@ -250,6 +330,24 @@ ${images}
   const encreEntete = encreSurAccent(couleur);
   const fondEntete = accentLisible(couleur, encreEntete);
 
+  /*
+   * Une démonstration porte un nom d'entreprise qui n'existe pas. Indexée, elle
+   * apparaîtrait dans les résultats comme un vrai artisan, avec un numéro qui
+   * ne sonne nulle part — et le jour où un client réel s'appelle presque pareil,
+   * c'est lui qu'elle concurrence. `noindex` n'est donc pas une précaution de
+   * confort : c'est ce qui distingue un exemple d'un mensonge en ligne.
+   */
+  const domaine = domaineRetenu(options.domaine);
+  /*
+   * La première photo sert d'aperçu au partage. Elle n'est nommée qu'avec le
+   * domaine : les réseaux sociaux exigent une adresse absolue, et une adresse
+   * relative les fait afficher un rectangle vide — pire qu'aucune image, parce
+   * que le lien paraît cassé.
+   */
+  const apercu = domaine !== undefined && photos.length > 0
+    ? `https://${domaine}/${encodeURIComponent(photos[0].fichier)}`
+    : undefined;
+
   const accroche = commande.slogan.trim() !== ''
     ? echapper(commande.slogan.trim())
     : `${modele ? echapper(modele.pourQui) : 'Artisan'} — ${ville}`;
@@ -261,6 +359,19 @@ ${images}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${entreprise} — ${ville}</title>
 <meta name="description" content="${accroche}">
+${options.demonstration !== true ? '' : `<meta name="robots" content="noindex, nofollow">
+`}<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="${entreprise}">
+<meta property="og:title" content="${entreprise} — ${ville}">
+<meta property="og:description" content="${accroche}">
+<meta name="twitter:card" content="${apercu === undefined ? 'summary' : 'summary_large_image'}">${domaine === undefined ? '' : `
+<link rel="canonical" href="https://${domaine}/">
+<meta property="og:url" content="https://${domaine}/">`}${apercu === undefined ? '' : `
+<meta property="og:image" content="${echapper(apercu)}">`}
+<script type="application/ld+json">
+${ficheEtablissement(commande, domaine)}
+</script>
 <style>
   /* Une seule couleur d'accent, celle du client. Tout le reste est neutre :
      c'est ce qui fait qu'on ne cherche jamais où appuyer. */

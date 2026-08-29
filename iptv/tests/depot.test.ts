@@ -234,3 +234,66 @@ test('une position réenregistrée remplace la précédente', async () => {
     depot.fermer()
   }
 })
+
+test('un flux marqué mort disparaît des listes, sans être effacé', async () => {
+  const depot = await depotRempli()
+  const avant = depot.compter({ genre: 'direct' })
+  const [chaine] = depot.lister({ genre: 'direct' })
+  assert.ok(chaine !== undefined)
+
+  depot.marquerEtat(chaine.id, 'mort')
+  assert.equal(depot.compter({ genre: 'direct' }), avant - 1)
+  assert.equal(depot.compter({ genre: 'direct', inclureMorts: true }), avant)
+  assert.equal(depot.etat(chaine.id), 'mort')
+
+  // La recherche suit la même règle : trouver ce qu'on vient de masquer serait
+  // rendre par une porte ce qu'on a fermé par l'autre.
+  assert.ok(!depot.chercher(chaine.titre).some((element) => element.id === chaine.id))
+
+  depot.marquerEtat(chaine.id, 'ok')
+  assert.equal(depot.compter({ genre: 'direct' }), avant)
+})
+
+test('ce qui n’a jamais été testé reste visible', async () => {
+  const depot = await depotRempli()
+  assert.ok(depot.compter() > 0)
+  assert.equal(depot.compterParEtat().inconnus, depot.compter())
+  assert.equal(depot.aTester().length, depot.compter())
+})
+
+test('« ranimer » remet en jeu tout ce qui avait été condamné', async () => {
+  const depot = await depotRempli()
+  for (const element of depot.lister({ limite: 3 })) depot.marquerEtat(element.id, 'mort')
+  assert.equal(depot.oublierEtats(), 3)
+  assert.equal(depot.compterParEtat().morts, 0)
+})
+
+test('une base créée avant la colonne d’état s’ouvre et se complète', async () => {
+  // Le cas réel : une base remplie par une version précédente. « CREATE TABLE IF
+  // NOT EXISTS » ne la touche pas, donc sans migration toute requête citant
+  // « etat » échouerait — et l'application refuserait de démarrer.
+  const { mkdtempSync, rmSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const { join } = await import('node:path')
+  const dossier = mkdtempSync(join(tmpdir(), 'iptv-'))
+  const chemin = join(dossier, 'ancienne.db')
+
+  try {
+    const ancien = ouvrirDepot(chemin)
+    await importerM3U(ancien, LISTE, { adresse: 'http://exemple.tv/get.php' })
+    const total = ancien.compter()
+    ancien.base.exec('ALTER TABLE element DROP COLUMN etat')
+    ancien.base.exec('ALTER TABLE element DROP COLUMN teste_le')
+    ancien.fermer()
+
+    const rouvert = ouvrirDepot(chemin)
+    assert.equal(rouvert.compter(), total)
+    const [premier] = rouvert.lister({ limite: 1 })
+    assert.ok(premier !== undefined)
+    rouvert.marquerEtat(premier.id, 'mort')
+    assert.equal(rouvert.compter(), total - 1)
+    rouvert.fermer()
+  } finally {
+    rmSync(dossier, { recursive: true, force: true })
+  }
+})

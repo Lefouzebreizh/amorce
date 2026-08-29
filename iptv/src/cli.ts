@@ -17,6 +17,7 @@ import { importerEpg, importerM3U, importerXtream } from './cache/importer.ts'
 import { creerClientXtream, ErreurXtream } from './ingestion/xtream.ts'
 import { chargerEnv, identifiantsXtream } from './serveur/reglages.ts'
 import { guideDemo, LISTE_DEMO } from './demo.ts'
+import { testerFlux } from './lecture/tester.ts'
 import type { SourceTexte } from './flux/lignes.ts'
 import { masquerIdentifiants } from './ingestion/xtream.ts'
 
@@ -32,10 +33,17 @@ const AIDE = `Usage : iptv <commande> [options]
   chercher <mots...>       Recherche plein texte
   groupes                  Les groupes, du plus fourni au moins fourni
   series                   Les séries et leur nombre d'épisodes
+  tester [--genre=…]       Éprouve les flux et masque ceux qui ne répondent plus
+  ranimer                  Remet à l'essai tout ce qui avait été marqué mort
 
 Options :
   --base=<chemin>          Fichier de cache (défaut : donnees/iptv.db)
   --limite=<n>             Nombre de résultats (défaut : 20)
+  --genre=<direct|film|serie>  Restreint « tester » à un genre
+  --parallele=<n>          Tests menés de front, tous hôtes confondus (défaut : 12)
+  --par-hote=<n>           Tests de front sur un même hôte (défaut : 1)
+  --delai=<s>              Secondes avant d'abandonner un flux (défaut : 8)
+  --tout                   Retester même ce qui l'a déjà été
 `
 
 function lireOption(args: readonly string[], nom: string): string | undefined {
@@ -297,6 +305,13 @@ async function principal(argv: readonly string[]): Promise<number> {
         for (const genre of ['direct', 'film', 'serie'] as const) {
           console.log(`  ${genre.padEnd(7)} ${depot.compter({ genre })}`)
         }
+        const etats = depot.compterParEtat()
+        if (etats.vivants + etats.morts > 0) {
+          console.log(
+            `État des flux : ${String(etats.vivants)} testés vivants, ` +
+              `${String(etats.morts)} hors service (masqués), ${String(etats.inconnus)} jamais testés`,
+          )
+        }
         console.log('Par langue :')
         for (const langue of ['vf', 'multi', 'vostfr', 'vo', 'inconnue'] as const) {
           const n = depot.compter({ langue })
@@ -315,6 +330,51 @@ async function principal(argv: readonly string[]): Promise<number> {
         for (const groupe of depot.groupes().slice(0, limite)) {
           console.log(`  ${String(groupe.compte).padStart(6)}  ${groupe.nom}`)
         }
+        return 0
+      }
+
+      case 'tester': {
+        const genre = lireOption(reste, 'genre') as 'direct' | 'film' | 'serie' | undefined
+        const tout = reste.includes('--tout')
+        // Ce qui a déjà été mesuré n'est pas repassé au crible par défaut : une
+        // liste de 120 000 entrées y passerait la nuit, et l'utile est de
+        // dégrossir ce qu'on n'a jamais vu.
+        const candidats = tout
+          ? depot.lister({ genre, inclureMorts: true, limite: 100000 })
+          : depot.aTester(100000).filter(
+              (element) =>
+                (genre === undefined || element.genre === genre) &&
+                depot.etat(element.id) === undefined,
+            )
+
+        if (candidats.length === 0) {
+          console.log('Rien à tester : tout a déjà été éprouvé (« --tout » pour recommencer).')
+          return 0
+        }
+
+        console.log(`Test de ${String(candidats.length)} flux…`)
+        const { bilan } = await testerFlux(candidats, {
+          delaiMs: (Number(lireOption(reste, 'delai') ?? 8) || 8) * 1000,
+          parallele: Number(lireOption(reste, 'parallele') ?? 12) || 12,
+          parHote: Number(lireOption(reste, 'par-hote') ?? 1) || 1,
+          surResultat: (resultat, faits, total) => {
+            if (resultat.etat !== 'inconnu') depot.marquerEtat(resultat.element.id, resultat.etat)
+            const marque = resultat.etat === 'ok' ? '✓' : resultat.etat === 'mort' ? '✗' : '?'
+            const compteur = `${String(faits).padStart(String(total).length)}/${String(total)}`
+            console.log(`  ${compteur} ${marque} ${resultat.element.titre} — ${resultat.raison}`)
+          },
+        })
+
+        console.log(
+          `\n${String(bilan.ok)} vivants, ${String(bilan.mort)} hors service (masqués), ` +
+            `${String(bilan.inconnu)} indécis (laissés visibles).`,
+        )
+        return 0
+      }
+
+      case 'ranimer': {
+        const remis = depot.oublierEtats()
+        console.log(`${String(remis)} entrées remises en jeu. « tester » pour les réessayer.`)
         return 0
       }
 

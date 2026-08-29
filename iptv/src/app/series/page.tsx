@@ -61,10 +61,17 @@ export default function Series() {
       </header>
 
       {series.length === 0 ? (
-        <p className="rounded-carte border border-bord bg-surface p-6 text-doux">
-          Aucune série reconnue dans ce catalogue. Les numéros d’épisode se lisent sous les formes
-          S01E02, 1x02 ou « Saison 1 Épisode 2 ».
-        </p>
+        <div className="rounded-carte border border-bord bg-surface p-6">
+          <p className="font-medium">Aucune série dans ce catalogue.</p>
+          <p className="mt-2 text-doux">
+            C’est normal si votre liste ne contient que des chaînes en direct — beaucoup n’ont
+            ni films ni séries. Rien n’est cassé&nbsp;: il n’y a simplement rien à ranger ici.
+          </p>
+          <p className="mt-2 text-sm text-doux">
+            Une série est reconnue à son numéro d’épisode dans le titre, sous l’une de ces
+            formes&nbsp;: <code>S01E02</code>, <code>1x02</code>, ou « Saison 1 Épisode 2 ».
+          </p>
+        </div>
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {series.map((serie) => (

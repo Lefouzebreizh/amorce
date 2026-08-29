@@ -22,10 +22,25 @@ import process from 'node:process';
 const EXTENSIONS_IMAGE = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
 
 async function principal() {
-  const dossier = process.argv[2];
+  const arguments_ = process.argv.slice(2);
+  const dossier = arguments_.find((a) => !a.startsWith('--'));
+
+  /*
+   * Le domaine n'est pas dans la commande : le client ne l'a pas au moment de
+   * commander, il est choisi au moment de publier. Sans lui la page reste
+   * complète — elle perd seulement son adresse canonique et son image de
+   * partage, plutôt que de les inventer.
+   */
+  const domaine = arguments_.find((a) => a.startsWith('--domaine='))?.slice('--domaine='.length);
+
+  /*
+   * `--demonstration` marque une page d'exemple : elle sort avec `noindex`,
+   * parce qu'une entreprise fictive indexée se présente comme un vrai artisan.
+   */
+  const demonstration = arguments_.includes('--demonstration');
 
   if (dossier === undefined) {
-    console.error('usage : node scripts/generer.mjs <dossier de commande>');
+    console.error('usage : node scripts/generer.mjs <dossier de commande> [--domaine=exemple.fr]');
     process.exit(2);
   }
 
@@ -69,6 +84,7 @@ async function principal() {
       ...commande,
     },
     photos,
+    { domaine, demonstration },
   );
 
   const sortie = path.join(dossier, 'index.html');
@@ -77,6 +93,10 @@ async function principal() {
   console.log(`✅ ${sortie}`);
   console.log(`   ${commande.entreprise} — ${commande.ville}`);
   console.log(`   ${photos.length} photo(s), ${(html.length / 1024).toFixed(1)} Ko`);
+  if (demonstration) console.log('   démonstration : sortie en noindex');
+  console.log(domaine === undefined
+    ? '   ⚠ sans --domaine : pas d’adresse canonique ni d’image de partage'
+    : `   fiche d’établissement et partage réglés sur ${domaine}`);
   console.log('');
   console.log('   Le dossier est le site : dépose-le tel quel, ou ouvre');
   console.log('   index.html pour le montrer au client avant de le publier.');

@@ -175,6 +175,38 @@ npm run iptv -- epg guide.xml.gz          # le guide, .gz accepté
 npm run dev                                # puis l'adresse réseau affichée
 ```
 
+### Faire le ménage dans les flux morts
+
+Une liste publique en contient couramment la moitié : serveur éteint, chaîne
+géobloquée, adresse changée depuis deux ans. Rien ne les distingue à l'œil — même
+titre propre, même logo. On clique, on attend, on tombe sur une erreur, et c'est
+l'application qu'on croit en panne.
+
+```bash
+npm run iptv -- tester
+```
+
+Chaque flux est ouvert pour de vrai : un manifeste doit commencer par `#EXTM3U`
+**et** annoncer au moins une piste, un film doit rendre un octet de vidéo et non
+une page HTML. Ce qui ne répond pas disparaît de l'interface — sans être effacé
+de la base, `npm run iptv -- ranimer` les remet tous en jeu.
+
+Ce qui est **refusé sans raison claire** — un 403, un 429, un « max connections
+reached » — reste affiché. Un abonnement momentanément saturé rend les mêmes
+codes qu'un flux mort, et masquer sur ce seul indice retirerait de l'écran des
+chaînes qui marchent.
+
+Un même serveur n'est sollicité que par un test à la fois : un abonnement IPTV
+limite les connexions simultanées, souvent à une ou deux, et vingt tests de front
+feraient passer pour morts des flux parfaitement vivants. Le parallélisme se fait
+donc entre hôtes différents — ce qui est exactement le cas d'une liste publique.
+
+```bash
+npm run iptv -- tester --genre=direct   # seulement les chaînes
+npm run iptv -- tester --tout           # y compris ce qui a déjà été testé
+npm run iptv -- tester --par-hote=3     # si le fournisseur le tolère
+```
+
 Les autres commandes, quand on veut voir sans ouvrir de navigateur :
 
 ```bash
