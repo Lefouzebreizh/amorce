@@ -2484,3 +2484,28 @@ Ce qui trompe : la commande visée **est** bien tuée, et le code 144 ressemble 
 une erreur du serveur qu'on arrêtait. La parade est de tuer par port ou par PID
 (`lsof -ti:3210 | xargs -r kill`), ou simplement de servir sur un autre port —
 un processus de développement oublié ne coûte rien dans une session éphémère.
+
+## Une absence qui fait disparaître un bouton et une absence qui perd un client
+ne se traitent pas pareil
+
+La règle du dépôt est bonne et vérifiée : *ce qui n'est pas réglé disparaît de la
+page au lieu d'afficher une valeur inventée.* Un numéro de téléphone faux coûte
+plus cher qu'un bouton absent.
+
+Mais elle a été appliquée à une variable où elle produit le contraire de ce
+qu'elle protège. Sur la page de vente, l'adresse de repli du formulaire n'avait
+pas de valeur par défaut « par cohérence » — et sur un premier déploiement, sans
+clé d'envoi ni numéro, le formulaire répondait *« réessaie dans quelques
+minutes »* à quelqu'un qui venait de taper son nom, son métier et son téléphone.
+
+**Le partage est là, et il se pose avant d'écrire le `?? ''` :**
+
+- L'absence retire une **possibilité en plus** — un bouton d'appel, un lien de
+  paiement. La faire disparaître est juste : rien n'est perdu.
+- L'absence casse le **seul chemin restant**. Alors une valeur par défaut vaut
+  mieux qu'un vide, même imparfaite, parce que le vide ne signale rien : la
+  page a l'air de marcher.
+
+Le test qui l'attrape est celui qu'on n'écrit jamais, parce qu'il n'a l'air de
+rien tester : **le comportement quand aucune variable n'est réglée.** C'est
+pourtant l'état exact de tout premier déploiement.

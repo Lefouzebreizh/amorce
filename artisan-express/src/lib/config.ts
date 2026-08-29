@@ -19,8 +19,27 @@ const STRIPE = process.env.NEXT_PUBLIC_LIEN_STRIPE ?? '';
  * réglé. C'est la seule variable qui ne demande **aucun compte à créer** — une
  * adresse qu'on possède déjà suffit — et c'est elle qui permet à une page
  * déployée sans rien d'autre d'encaisser tout de même une demande.
+ *
+ * Et elle a une valeur par défaut, contrairement à toutes les autres, parce que
+ * son absence ne faisait pas disparaître un bouton : elle laissait la page dire
+ * « réessaie dans quelques minutes » à quelqu'un qui venait de taper son nom,
+ * son métier et son numéro. Une page déployée sans rien était donc une page qui
+ * **perdait ses prospects en silence** — le contraire exact de ce pour quoi
+ * elle existe.
+ *
+ * Ce que ça coûte : l'adresse est dans le paquet envoyé au navigateur, donc
+ * lisible par un ramasseur d'adresses. C'est un compromis assumé — un
+ * indésirable de plus contre une demande perdue — et il se défait en réglant
+ * `NEXT_PUBLIC_DEVIS_MAILTO` sur une adresse dédiée.
  */
-const COURRIEL_DIRECT = process.env.NEXT_PUBLIC_DEVIS_MAILTO ?? '';
+const COURRIEL_DU_VENDEUR = 'erwannchevallier@gmail.com';
+/*
+ * L'adresse vers laquelle le formulaire bascule quand l'envoi serveur n'est pas
+ * réglé. C'est la seule variable qui ne demande **aucun compte à créer** — une
+ * adresse qu'on possède déjà suffit — et c'est elle qui permet à une page
+ * déployée sans rien d'autre d'encaisser tout de même une demande.
+ */
+const COURRIEL_DIRECT = process.env.NEXT_PUBLIC_DEVIS_MAILTO ?? COURRIEL_DU_VENDEUR;
 
 /** `06 12 34 56 78` → `+33612345678`, tel quel si le format est déjà international. */
 function lienTelephonique(brut: string): string {
