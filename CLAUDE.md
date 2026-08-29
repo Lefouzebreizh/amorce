@@ -10,6 +10,13 @@ Trois exceptions, et elles seules : ce qui part **en public au nom d'Erwann**
 (48 000 membres, une réponse publiée ne se retire pas), ce qui **détruit sans
 retour**, ce qui **engage de l'argent**.
 
+**L'autonomie porte sur l'action, jamais sur l'écrasement.** Zéro permission ne
+veut pas dire écrire à l'aveugle : ce qu'on remplace, on regarde d'abord qui en
+dépend ; ce qu'on écrit, on vérifie d'abord que ça n'existe pas déjà. Les deux
+gestes tiennent en un `grep` et sont détaillés en section 10. Ils ne deviennent
+jamais une question : on cartographie, on tranche, on avance — la découverte
+remplace la supposition, pas l'action.
+
 Agents parallèles et `TodoWrite` quand la tâche le mérite — pas par défaut :
 cinq agents sur une tâche simple brûlent la fenêtre hebdomadaire. `/jauge` avant
 un gros lot.
@@ -29,6 +36,24 @@ jamais le reste du chantier.
 
 Un compte rendu se donne au passé, sur ce qui est fusionné. « Je vais faire »
 n'est pas un compte rendu, c'est une pause.
+
+**Ce régime a été remis en question et reconduit, le 29/08/2026.** Un gabarit
+« Lead Architect » proposait de le remplacer par un mode où l'agent liste les
+fichiers dont il a besoin et attend l'accord avant de les lire, puis s'arrête au
+moindre doute. Le propriétaire a tranché pour l'autonomie, et la raison mérite
+d'être écrite parce qu'elle se reperd : le pilotage se fait **depuis un
+téléphone**, souvent la nuit. Un menu à valider avant chaque lecture ne rend pas
+le travail plus sûr, il le suspend jusqu'au réveil. Quatorze lots ont été livrés
+et fusionnés la nuit précédente sans un seul aller-retour.
+
+Ce qui protège vraiment de l'écrasement n'est pas la permission, c'est la
+**vérification** : chirurgical, `grep` avant de remplacer, build vert, parcours
+complet, PR relue avant fusion. Un garde-fou qui coûte une seconde à la machine
+vaut mieux qu'un garde-fou qui coûte une heure à l'humain.
+
+Une proposition de remplacer cette section se discute donc, mais ne s'applique
+pas d'office : elle arrive presque toujours d'un gabarit générique qui ne sait
+rien de ce terrain.
 
 ## 1. ADN
 
@@ -602,6 +627,39 @@ le code voisin ni ses commentaires — les blocs de tête portent la justificati
 des décisions, et c'est ce que ce dépôt a de plus précieux. Une modification ne
 touche qu'un projet, sauf configuration racine. Français partout — commentaires,
 erreurs, tests, commits ; identifiants de code en anglais.
+
+**Et avant de toucher : `grep`, pas la mémoire.** Une fonction se remplace après
+avoir vu qui l'appelle, jamais avant. Le geste tient en une commande et coûte
+deux secondes :
+
+```bash
+grep -rn "nomDeLaFonction" src/ scripts/ --include=*.ts --include=*.tsx --include=*.mjs
+```
+
+Ce n'est pas de la prudence de principe, c'est la leçon de trois défauts payés
+ici. `MIN_SHOT` désignait deux grandeurs différentes selon qui lisait. Une borne
+recopiée à la main à côté d'une constante mesurée laissait passer exactement les
+valeurs qu'elle devait interdire. Une entrée de liste retirée « par cohérence »
+avec sa voisine a fait tomber le parcours entier, parce que les deux cas
+n'avaient pas la même issue.
+
+Le point commun des trois : le code semblait se suffire à lui-même, et il
+dépendait d'ailleurs. **Ce qui coûte n'est pas la modification, c'est ce qu'on
+n'a pas regardé avant.**
+
+**Et son symétrique, qui coûte autant : chercher avant d'écrire.** Les trois
+défauts ci-dessus viennent d'une modification à l'aveugle ; celui-ci vient d'un
+ajout à l'aveugle, et il se voit moins parce qu'il ne casse rien — il dédouble.
+Le `grep` porte alors sur ce que la chose **fait**, jamais sur le nom qu'on
+comptait lui donner : deux réponses au même besoin ne se ressemblent presque
+jamais par leur nom.
+
+Mesuré le 29/08/2026, sur ce paragraphe même. Une session partait graver ici une
+règle de cartographie avant remplacement, sans savoir qu'une autre venait de l'y
+écrire quelques heures plus tôt — le bloc `grep` ci-dessus. Dans un dépôt à
+plusieurs sessions parallèles, `main` a bougé depuis la dernière lecture : c'est
+le cas normal, pas l'exception, et `git fetch` avant d'écrire coûte moins qu'un
+doublon fusionné.
 
 ### Git
 

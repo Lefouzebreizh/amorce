@@ -3395,6 +3395,151 @@ prose porte la raison.
 rouvre, ou la recherche s'était trompée. Une note qui dit « ça ne paie pas » à
 côté d'une adresse qui paie est le genre de contradiction qu'on ne relit jamais.
 
+## `git checkout <branche> -- fichier` écrase le disque sans rien dire
+
+Mesuré hier soir, coût : un aller-retour et une réécriture.
+
+Le geste paraît anodin — « je récupère ce fichier depuis l'autre branche » — et
+c'est exactement ce qu'il fait : il **remplace** la copie de travail par celle
+de la branche nommée. Si une modification non committée l'attendait, elle
+disparaît. Aucune erreur, aucun conflit, aucun message : `git status` redevient
+propre, ce qui donne même l'impression que tout va bien.
+
+Le cas réel : une modification venait d'être écrite et vérifiée dans la copie de
+travail ; un `git checkout -B` sur une branche neuve l'a emportée avec lui,
+puis un `git checkout <branche> -- fichier` censé « récupérer » ce fichier a
+restauré la version **committée** — donc celle d'avant la modification. Le
+correctif venait d'être effacé par la commande censée le sauver.
+
+Deux parades, et la première suffit :
+
+- **Committer avant de changer de branche**, même un commit qu'on récrira.
+  Ce qui est committé se retrouve ; ce qui ne l'est pas n'existe pour personne.
+- Quand il faut vraiment reprendre un fichier d'ailleurs, regarder avant :
+  `git diff <branche> -- fichier` dit ce que la commande va écraser.
+
+La leçon générale dépasse Git : **une commande de « restauration » est une
+commande d'écrasement vue de l'autre côté.** `checkout --`, `restore`, `reset
+--hard`, `Expand-Archive -Force` : toutes rendent un état propre en détruisant
+ce qui n'était pas enregistré, et aucune ne demande confirmation.
+## « Un bruit de fond sur toute la vidéo » n'est pas du bruit, c'est du contenu
+
+Un montage conforme — −14,3 LUFS, −1,6 dBTP — rejeté pour « bruit de fond
+horrible sur toute la vidéo ». Aucune mesure de conformité ne le voyait, et
+**trois diagnostics successifs se sont trompés** avant le bon.
+
+Le relevé qui tranche n'est ni la sonie ni la plage, c'est **le plancher et le
+compte de silences** : plancher à −33,5 dB et **zéro tranche sous −40 dB sur
+194**. La couche d'effets seule, sans aucun rush, rendait déjà −33,6 dB et 1
+tranche sur 336. Trente-six effets en seize secondes ne laissaient pas un trou.
+
+**Ce n'est pas du bruit au sens technique, et c'est ce qui égare.** `afftdn` à
+nr = 6, 12 et 20 rend exactement le même plancher — trois forces, un seul
+chiffre, le signe qu'un paramètre n'agit pas. Il a raison : un débruiteur ne
+retire pas une nappe, c'est du signal. L'oreille, elle, ne distingue pas un
+souffle d'une nappe qui ne s'arrête jamais.
+
+**Les trois fausses pistes, chacune écartée par une mesure :**
+
+1. *Le master.* Sur une paire valide, il ne monte le plancher que de 2,4 dB.
+   La première comparaison l'accusait — elle opposait deux films différents, un
+   intermédiaire ayant été écrasé par un rejeu.
+2. *Les souffles.* Les trois sources de souffle dominaient pourtant la bande
+   coupable en mesure isolée. Les baisser de 7 à 13 dB : **0,2 dB** sur le
+   fichier. Un effet mesuré seul ne dit pas ce qu'il pèse dans un mixage.
+3. *Les rushes.* Ils portent bien leur bruit — celui du dragon rend −21,3 dB
+   après sa mise à niveau — mais ils n'expliquent que la seconde moitié. Sur le
+   plan d'affiche, qui n'a **aucune piste audio**, le plancher était à −34,4.
+
+**Et la correction qui semblait marcher a été rejetée à l'écoute — c'est le
+cœur de la leçon.** −7 dB sur les nappes, souffles, aspirations et grondements
+donnait plancher −41,8 dB et douze silences : tout ce qu'on mesurait allait
+mieux. Verdict de l'auteur : « on n'entend quasiment plus le druide, plus le
+dragon, quasiment rien ». La mesure qui manquait tenait en une colonne — l'écart
+entre le plan le plus faible et le climax, plan par plan :
+
+| plan | avant | après | écart |
+| --- | --- | --- | --- |
+| œil | −33,3 | −40,7 | **−7,4** |
+| druide | −27,4 | −30,0 | −2,6 |
+| dragon | −15,2 | −15,8 | −0,7 |
+
+L'écart druide → dragon est passé de 12,2 à **14,2 dB**. Réglé pour le dragon,
+le druide est quatorze décibels dessous : inaudible sur un téléphone.
+
+**Parce qu'un lit fait DEUX choses à la fois**, et qu'on n'en voit qu'une. Il
+comble les silences — le défaut — **et il porte le niveau de son plan** —
+l'essentiel. Le baisser corrige le premier et détruit le second, et aucune
+mesure globale ne le montre : la sonie, le plancher et le compte de silences
+s'améliorent tous les trois. Retirer un lit oblige donc à **rendre son niveau
+au plan par autre chose** — des événements — sinon la moitié du film s'efface.
+C'est un travail de conception, pas un réglage de gain : `/sound-design-de-scene`.
+
+**Le contrôle qui l'aurait arrêté :** relever le niveau ENTENDU (>400 Hz)
+**par plan**, avant et après, et refuser toute correction qui creuse l'écart
+entre le plan le plus faible et le climax. Un global qui s'améliore pendant
+qu'un plan s'effondre est le cas normal, pas le cas rare. Baisser « tout ce qui dure plus
+d'une seconde » paraît équivalent et ne l'est pas — un braam tient 1,5 s et un
+cri de titan 1,6, exactement comme une nappe. Ce tri-là a coûté 12 dB au coup
+d'ouverture, et l'ouverture est tombée à −51 dB : muette sur un fil.
+
+**Et l'expansion vers le bas, qui semble l'outil évident, aggrave.** Ajoutée
+au-dessus de la correction à la source : plancher −50 dB, LRA 22,5, ouverture à
+−47,3. Elle creuse ce qui est calme, or une ouverture calme est un **choix**,
+pas un défaut. Corriger à la source suffit ; corriger deux fois détruit.
+
+Le contrôle à faire avant de livrer tient donc en un chiffre : **combien de
+tranches sous −40 dB ?** Zéro, c'est un tapis, quelle que soit la sonie.
+
+
+## Un décor trop favorable rend un contrôle vert sans rien prouver
+
+Un contrôle d'interface venait d'être écrit pour un cas précis : après un
+balayage qui condamne tout, l'écran doit dire « tout est masqué » et garder le
+bouton qui répare. Il est passé au rouge du premier coup — mais pas pour la
+raison attendue. Dans son décor, le serveur de flux **tournait encore** : la
+moitié des entrées répondaient, donc le catalogue n'était jamais entièrement
+masqué, donc l'état à éprouver ne se produisait pas.
+
+Le réflexe est de conclure que le contrôle est trop exigeant et de l'assouplir.
+C'est l'erreur : un contrôle qui s'adapte au décor ne mesure plus rien. Ce qu'il
+fallait, c'est **fabriquer l'état hostile** — ici, éteindre le serveur d'origine
+avant le balayage, en une ligne.
+
+La règle : **un cas limite ne s'éprouve que dans un décor qui le rend
+possible.** Panne réseau, quota atteint, base vide, catalogue entier condamné —
+aucun de ces états n'arrive tout seul dans un environnement de test, qui est par
+construction le plus favorable qui soit. Les provoquer coûte une ligne ; les
+attendre coûte un utilisateur.
+
+Corollaire pratique : quand un contrôle neuf passe au vert **du premier coup**,
+il faut le faire échouer exprès une fois avant de lui faire confiance. Celui-ci
+avait justement échoué — et c'est ce qui a révélé que son décor était faux.
+
+## Une donnée calculée à l'écriture ne bénéficie jamais d'un correctif
+
+Le classement direct / film / série d'une entrée IPTV se calcule **à l'import**
+et s'écrit en base. Une règle de classement fausse produit donc un catalogue
+faux — et le correctif livré ensuite ne le répare pas : il n'agit qu'au prochain
+import, que personne ne refait, parce qu'il coûte plusieurs minutes et demande
+de retrouver l'adresse de sa source.
+
+Le cas réel : des **chaînes** de cinéma — Ciné+, Canal+ Cinémas, les chaînes
+Pluto — rangées dans l'onglet Films parce que leur groupe s'appelle « Cinema ».
+La règle a été corrigée, la correction fusionnée, et l'écran de l'utilisateur
+n'a pas bougé d'un pixel. Il a fallu qu'il renvoie une capture pour qu'on
+comprenne que le correctif n'atteignait pas les données.
+
+La règle générale : **tout champ dérivé écrit en base a besoin d'un chemin de
+recalcul, et ce chemin fait partie du correctif**, pas d'un lot suivant. Sans
+lui, on livre une correction qui ne corrige personne — la pire des situations,
+parce que tout le monde la croit appliquée. Le recalcul est presque toujours
+trivial : les données brutes sont encore là, il suffit de rejouer la fonction.
+
+Le signal à guetter, quand un utilisateur signale un défaut déjà corrigé :
+**demander si son état vient d'avant le correctif** — base, cache, fichier
+généré, index. Ce n'est presque jamais le code qui a régressé, c'est la donnée
+qui n'a jamais été rejouée.
 ## La démonstration qu'on envoie au prospect n'était mesurée par personne
 
 `artisan-express/public/exemple.html` est la page qu'un artisan ouvre **sur son

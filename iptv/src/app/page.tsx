@@ -1,7 +1,9 @@
 import Link from 'next/link'
 
 import { Carte, Grille } from '../composants/Carte.tsx'
+import { Entretien } from '../composants/Entretien.tsx'
 import { Section, Vide } from '../composants/Vide.tsx'
+import { choisirCandidats } from '../entretien/taches.ts'
 import { antennesDe } from '../serveur/antennes.ts'
 import { depot } from '../serveur/depot-partage.ts'
 
@@ -15,6 +17,40 @@ import { depot } from '../serveur/depot-partage.ts'
 export default function Accueil() {
   const cache = depot()
   const total = cache.compter()
+  const totalReel = cache.compter({ inclureMorts: true })
+  const entretien = {
+    total: totalReel,
+    ...cache.compterParEtat(),
+    aTester: choisirCandidats(cache).length,
+  }
+
+  // Deux vides, et les confondre enferme.
+  //
+  // Rien du tout : on dit quoi importer. Mais **tout masqué** est un état
+  // différent — le catalogue existe, un balayage l'a simplement jugé mort d'un
+  // bout à l'autre, ce qui arrive quand le réseau était coupé ou l'abonnement
+  // saturé pendant le test. Renvoyer alors « importez une liste » accuse la
+  // mauvaise cause, et surtout fait disparaître le bloc d'entretien avec le
+  // bouton qui répare : plus aucun chemin de retour depuis l'interface.
+  // Trouvé en regardant l'écran après un balayage, pas par un test.
+  if (total === 0 && totalReel > 0) {
+    return (
+      <>
+        <header className="mb-4">
+          <h1 className="text-2xl font-bold">Tout est masqué</h1>
+          <p className="text-doux">
+            Les {totalReel.toLocaleString('fr-FR')} entrées du catalogue ont été jugées hors
+            service. Rien n’est effacé — un seul bouton les remet en jeu.
+          </p>
+        </header>
+        <Entretien initial={entretien} />
+        <p className="text-sm text-doux">
+          Un balayage qui condamne tout signale presque toujours un problème de votre côté :
+          réseau coupé, ou abonnement à court de connexions au moment du test.
+        </p>
+      </>
+    )
+  }
 
   if (total === 0) return <Vide quoi="le catalogue est vide" />
 
@@ -31,6 +67,11 @@ export default function Accueil() {
           {cache.compter({ genre: 'film' })} films, {cache.compter({ genre: 'serie' })} épisodes.
         </p>
       </header>
+
+      {/* L'entretien avant les contenus : c'est ce qu'on vient faire quand on
+          ouvre l'accueil sans intention de regarder, et le chercher ailleurs
+          serait le rendre introuvable. */}
+      <Entretien initial={entretien} />
 
       {reprises.length > 0 && (
         <Section titre="Reprendre">

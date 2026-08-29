@@ -17,9 +17,13 @@ import { importerEpg, importerM3U, importerXtream } from './cache/importer.ts'
 import { creerClientXtream, ErreurXtream } from './ingestion/xtream.ts'
 import { chargerEnv, identifiantsXtream } from './serveur/reglages.ts'
 import { guideDemo, LISTE_DEMO } from './demo.ts'
-import { testerFlux } from './lecture/tester.ts'
-import { numeroDeCanal, rangDeChaine } from './normalisation/canal.ts'
-import { detecterTheme } from './normalisation/theme.ts'
+import type { Genre } from './domaine/types.ts'
+import {
+  choisirCandidats,
+  ranimerFlux,
+  rangerCatalogue,
+  testerCatalogue,
+} from './entretien/taches.ts'
 import type { SourceTexte } from './flux/lignes.ts'
 import { masquerIdentifiants } from './ingestion/xtream.ts'
 
@@ -337,18 +341,12 @@ async function principal(argv: readonly string[]): Promise<number> {
       }
 
       case 'tester': {
-        const genre = lireOption(reste, 'genre') as 'direct' | 'film' | 'serie' | undefined
-        const tout = reste.includes('--tout')
-        // Ce qui a déjà été mesuré n'est pas repassé au crible par défaut : une
-        // liste de 120 000 entrées y passerait la nuit, et l'utile est de
-        // dégrossir ce qu'on n'a jamais vu.
-        const candidats = tout
-          ? depot.lister({ genre, inclureMorts: true, limite: 100000 })
-          : depot.aTester(100000).filter(
-              (element) =>
-                (genre === undefined || element.genre === genre) &&
-                depot.etat(element.id) === undefined,
-            )
+        // La décision — qui tester, quoi marquer — vit dans `entretien/taches.ts`,
+        // partagée avec l'interface. Ici il ne reste que l'affichage.
+        const candidats = choisirCandidats(depot, {
+          genre: lireOption(reste, 'genre') as Genre | undefined,
+          tout: reste.includes('--tout'),
+        })
 
         if (candidats.length === 0) {
           console.log('Rien à tester : tout a déjà été éprouvé (« --tout » pour recommencer).')
@@ -356,12 +354,11 @@ async function principal(argv: readonly string[]): Promise<number> {
         }
 
         console.log(`Test de ${String(candidats.length)} flux…`)
-        const { bilan } = await testerFlux(candidats, {
+        const bilan = await testerCatalogue(depot, candidats, {
           delaiMs: (Number(lireOption(reste, 'delai') ?? 8) || 8) * 1000,
           parallele: Number(lireOption(reste, 'parallele') ?? 12) || 12,
           parHote: Number(lireOption(reste, 'par-hote') ?? 1) || 1,
           surResultat: (resultat, faits, total) => {
-            if (resultat.etat !== 'inconnu') depot.marquerEtat(resultat.element.id, resultat.etat)
             const marque = resultat.etat === 'ok' ? '✓' : resultat.etat === 'mort' ? '✗' : '?'
             const compteur = `${String(faits).padStart(String(total).length)}/${String(total)}`
             console.log(`  ${compteur} ${marque} ${resultat.element.titre} — ${resultat.raison}`)
@@ -376,33 +373,30 @@ async function principal(argv: readonly string[]): Promise<number> {
       }
 
       case 'ranger': {
-        // Le classement se fait à l'import — mais une base remplie par une
-        // version qui l'ignorait n'en a aucun, et un réimport complet coûte
-        // plusieurs minutes pour une donnée qui se déduit de ce qu'on a déjà.
-        const numerotees = depot.renumeroter(
-          (titre) => ({ canal: numeroDeCanal(titre), rang: rangDeChaine(titre) }),
-          (groupe) => detecterTheme(groupe),
-        )
-        const chaines = depot.compter({ genre: 'direct', inclureMorts: true })
+        const bilan = rangerCatalogue(depot)
+        if (bilan.reclasses > 0) {
+          console.log(
+            `${String(bilan.reclasses)} entrées changent de genre — classées par une règle ` +
+              `depuis corrigée, et figées jusqu'ici.`,
+          )
+        }
         console.log(
-          `${String(numerotees)} chaînes numérotées sur ${String(chaines)} ` +
+          `${String(bilan.numerotees)} chaînes numérotées sur ${String(bilan.chaines)} ` +
             `(les autres suivent par familles : sport, cinéma, musique, puis le reste).`,
         )
-        for (const genre of ['film', 'serie'] as const) {
-          const dossiers = depot.themes({ genre, inclureMorts: true })
-          if (dossiers.length === 0) continue
-          const nommes = dossiers.filter((dossier) => dossier.nom !== '').length
-          const autres = dossiers.find((dossier) => dossier.nom === '')?.compte ?? 0
+        for (const dossier of bilan.dossiers) {
           console.log(
-            `${genre === 'film' ? 'Films' : 'Séries'} : ${String(nommes)} thèmes` +
-              (autres === 0 ? '' : `, ${String(autres)} sans thème reconnu (dossier « Autres »)`),
+            `${dossier.genre === 'film' ? 'Films' : 'Séries'} : ${String(dossier.nommes)} thèmes` +
+              (dossier.autres === 0
+                ? ''
+                : `, ${String(dossier.autres)} sans thème reconnu (dossier « Autres »)`),
           )
         }
         return 0
       }
 
       case 'ranimer': {
-        const remis = depot.oublierEtats()
+        const remis = ranimerFlux(depot)
         console.log(`${String(remis)} entrées remises en jeu. « tester » pour les réessayer.`)
         return 0
       }
