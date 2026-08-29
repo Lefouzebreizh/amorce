@@ -3422,3 +3422,46 @@ La leçon générale dépasse Git : **une commande de « restauration » est une
 commande d'écrasement vue de l'autre côté.** `checkout --`, `restore`, `reset
 --hard`, `Expand-Archive -Force` : toutes rendent un état propre en détruisant
 ce qui n'était pas enregistré, et aucune ne demande confirmation.
+## « Un bruit de fond sur toute la vidéo » n'est pas du bruit, c'est du contenu
+
+Un montage conforme — −14,3 LUFS, −1,6 dBTP — rejeté pour « bruit de fond
+horrible sur toute la vidéo ». Aucune mesure de conformité ne le voyait, et
+**trois diagnostics successifs se sont trompés** avant le bon.
+
+Le relevé qui tranche n'est ni la sonie ni la plage, c'est **le plancher et le
+compte de silences** : plancher à −33,5 dB et **zéro tranche sous −40 dB sur
+194**. La couche d'effets seule, sans aucun rush, rendait déjà −33,6 dB et 1
+tranche sur 336. Trente-six effets en seize secondes ne laissaient pas un trou.
+
+**Ce n'est pas du bruit au sens technique, et c'est ce qui égare.** `afftdn` à
+nr = 6, 12 et 20 rend exactement le même plancher — trois forces, un seul
+chiffre, le signe qu'un paramètre n'agit pas. Il a raison : un débruiteur ne
+retire pas une nappe, c'est du signal. L'oreille, elle, ne distingue pas un
+souffle d'une nappe qui ne s'arrête jamais.
+
+**Les trois fausses pistes, chacune écartée par une mesure :**
+
+1. *Le master.* Sur une paire valide, il ne monte le plancher que de 2,4 dB.
+   La première comparaison l'accusait — elle opposait deux films différents, un
+   intermédiaire ayant été écrasé par un rejeu.
+2. *Les souffles.* Les trois sources de souffle dominaient pourtant la bande
+   coupable en mesure isolée. Les baisser de 7 à 13 dB : **0,2 dB** sur le
+   fichier. Un effet mesuré seul ne dit pas ce qu'il pèse dans un mixage.
+3. *Les rushes.* Ils portent bien leur bruit — celui du dragon rend −21,3 dB
+   après sa mise à niveau — mais ils n'expliquent que la seconde moitié. Sur le
+   plan d'affiche, qui n'a **aucune piste audio**, le plancher était à −34,4.
+
+**Ce qui marche : baisser les lits à la source, et par TYPE, jamais par durée.**
+−7 dB sur les nappes, souffles, aspirations et grondements : plancher −41,8 dB,
+douze silences, ouverture et climax intacts. Baisser « tout ce qui dure plus
+d'une seconde » paraît équivalent et ne l'est pas — un braam tient 1,5 s et un
+cri de titan 1,6, exactement comme une nappe. Ce tri-là a coûté 12 dB au coup
+d'ouverture, et l'ouverture est tombée à −51 dB : muette sur un fil.
+
+**Et l'expansion vers le bas, qui semble l'outil évident, aggrave.** Ajoutée
+au-dessus de la correction à la source : plancher −50 dB, LRA 22,5, ouverture à
+−47,3. Elle creuse ce qui est calme, or une ouverture calme est un **choix**,
+pas un défaut. Corriger à la source suffit ; corriger deux fois détruit.
+
+Le contrôle à faire avant de livrer tient donc en un chiffre : **combien de
+tranches sous −40 dB ?** Zéro, c'est un tapis, quelle que soit la sonie.
