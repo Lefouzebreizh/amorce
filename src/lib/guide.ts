@@ -1,6 +1,6 @@
 import { analyzeProject, type Analysis } from './analysis.ts';
 import type { StepId } from './steps.ts';
-import { clipDuration } from './timeline.ts';
+import { clipDuration, MORCEAUX_MAX } from './timeline.ts';
 import type { Project } from './types.ts';
 
 /**
@@ -91,14 +91,39 @@ export function nextStep(project: Project, analysis: Analysis = analyzeProject(p
    * la timeline — deux gestes de plus, sur un téléphone, pour l'action qui
    * apporte le plus.
    */
+  /*
+   * Trop long **avant** de proposer la découpe.
+   *
+   * La règle des quarante-cinq secondes existait déjà, mais elle venait après.
+   * Un rush de cinquante-six secondes recevait donc d'abord « découper en
+   * vingt-huit plans de 2 s » — et vingt-huit morceaux de la même prise ne font
+   * pas un montage, ils font la même prise coupée vingt-huit fois. Rapporté
+   * ainsi : « il m'a mis la vidéo en cinquante secondes, il a ajouté des plans
+   * partout, il a tout découpé ».
+   *
+   * L'ordre juste est l'inverse : on raccourcit, puis on découpe ce qui reste.
+   * Découper d'abord multiplie le travail de raccourcissement par vingt-huit.
+   */
   const single = project.clips.length === 1 ? clipDuration(project.clips[0]) : 0;
+  if (single > TOO_LONG) {
+    return {
+      title: `Ton rush fait ${single.toFixed(0)} s`,
+      why: 'Trop long pour un format court, et le découper d’abord donnerait des dizaines de '
+        + 'morceaux d’une même prise. Garde le meilleur passage — vingt secondes suffisent — '
+        + 'puis on découpera.',
+      actionLabel: 'Raccourcir le plan',
+      action: { kind: 'goto', step: 'montage' },
+      done: false,
+    };
+  }
+
   if (single > LONG_SHOT * 2) {
-    const pieces = Math.floor(single / 2);
+    const pieces = Math.min(MORCEAUX_MAX, Math.floor(single / 2));
     return {
       title: `Un seul plan de ${single.toFixed(1)} s`,
       why: 'Une vidéo sans coupe se regarde comme un plan fixe, quel que soit son contenu. '
         + 'Découpe d\u2019abord : l\u2019accroche et les bruitages se poseront sur les raccords.',
-      actionLabel: `Découper en ${pieces} plans de 2 s`,
+      actionLabel: `Découper en ${pieces} plans`,
       action: { kind: 'chopLongest' },
       done: false,
     };
