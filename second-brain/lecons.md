@@ -1961,3 +1961,33 @@ Deux compléments mesurés dans ce conteneur : `TextDecoder('windows-1252')`
 fonctionne (l'ICU complet est présent, `Intl.DisplayNames` le confirme), et une
 marque d'ordre des octets survit au décodage — elle se retire à la main, sans
 quoi elle reste collée au premier mot affiché.
+
+## Un appareil de salon ne reçoit pas l'image, il va la chercher
+
+Le modèle mental le plus coûteux, quand on branche un Chromecast : croire que
+le téléphone lui envoie la vidéo. Il lui envoie une **adresse**, et l'appareil
+télécharge le flux lui-même, directement. Trois conséquences, et chacune casse
+la diffusion sans message d'erreur — écran noir, retour au menu.
+
+1. **`localhost` désigne celui qui le prononce.** Une adresse
+   `http://localhost:3000` donnée à un Chromecast désigne le Chromecast. Il
+   faut l'adresse de la machine sur le réseau local — et le plus simple est de
+   la déduire de l'adresse **de la page** : si le téléphone est arrivé par
+   `http://192.168.1.20:3000`, la télévision doit utiliser la même. Rien à
+   configurer côté serveur, ce qui serait faux dès qu'une machine a deux cartes
+   réseau.
+2. **Ce qu'un navigateur fabrique n'a pas d'adresse.** Une vidéo assemblée par
+   Media Source Extensions — hls.js, dash.js — n'existe que dans l'onglet.
+   Diffuser oblige à repasser sur la source directe, et à **détruire la
+   bibliothèque avant** de poser l'URL : laissée en place, elle reprend la main
+   sur l'élément et écrase ce qu'on vient d'écrire.
+3. **Un serveur de développement n'écoute que sur `localhost` par défaut.**
+   Ni le téléphone ni la télévision ne voient rien tant qu'on n'a pas dit
+   `--hostname 0.0.0.0`. Et il faut le dire : à partir de là, tout le wifi peut
+   ouvrir l'application.
+
+**Piège de détail, mesuré :** `new URL('http://[::1]:3000/').hostname` rend
+`"[::1]"`, **avec les crochets**. Une liste d'adresses locales écrite avec
+`'::1'` laisse donc passer l'adresse locale la plus courante des serveurs de
+développement, et le contrôle « est-ce joignable de l'extérieur » répond oui à
+tort.
