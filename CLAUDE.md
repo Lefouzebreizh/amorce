@@ -501,6 +501,15 @@ voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
 
+**Et `npm run planche [nombre de rushes]` pour regarder au lieu de mesurer.**
+Elle fabrique ses rushes numérotés, conduit le studio, exporte, et rend une
+planche de quarante images sur toute la durée, dernière seconde comprise. Elle
+n'affirme rien : c'est l'œil qui décide. Le nombre de rushes compte — le montage
+express se comporte autrement à six, vingt-huit et cinquante, et les quatre de
+`npm run fixtures` n'éprouvent jamais ce qui se passe au-delà. Premier passage :
+une seule phrase de texte sur trente-et-une secondes, que six mesures vertes ne
+disaient pas.
+
 ### Invariants d'Amorce — les casser casse l'application
 
 1. **Un seul chemin de rendu.** `renderFrame` est le seul à savoir à quoi
