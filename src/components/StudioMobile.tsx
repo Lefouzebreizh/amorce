@@ -43,16 +43,61 @@ export function StudioMobile({
   const clipCount = useStudio((s) => s.project.clips.length);
 
   /*
-   * L'aperçu agrandi. Dans le bloc collé, l'image mesure 80 × 142 px sur un
-   * Redmi — 16 % de la hauteur d'écran là où le bloc en réserve 38 %, parce que
-   * la barre de lecture et la frise prennent plus de place que l'image. Agrandi,
-   * elle passe à près de la largeur entière.
+   * L'aperçu prend la largeur, et c'est l'état par défaut.
    *
-   * On garde une bande du contenu visible dessous plutôt que d'occuper tout
-   * l'écran : c'est elle qui dit que la page continue, et qui évite l'impression
-   * d'être enfermé dans une vue sans sortie.
+   * Mesuré sur le terrain de référence, un Redmi de 393 × 873 : le bloc à
+   * 38 dvh laissait une image de **80 × 142 px**, soit **20 % de la largeur**.
+   * La barre de lecture et la frise prenaient plus de place que la vidéo — dans
+   * une application de montage, l'objet principal occupait un cinquième de
+   * l'écran.
+   *
+   * Quatre hauteurs ont été mesurées avant de trancher :
+   *
+   * | bloc | frise | image | largeur |
+   * | --- | --- | --- | --- |
+   * | 38 dvh | oui | 80 × 142 | 20 % |
+   * | 80 dvh | non | 344 × 612 | 88 % |
+   * | 92 dvh | non | 377 × 717 | 96 % |
+   * | 92 dvh | **oui** | **345 × 613** | **88 %** |
+   *
+   * La dernière l'emporte : 88 % de la largeur **sans perdre la frise**. Les
+   * huit points restants coûtaient la timeline entière, ce qui n'est pas un
+   * échange.
+   *
+   * Le mode réduit demeure, à un doigt : c'est lui qui rend les panneaux
+   * visibles quand on règle plutôt qu'on regarde. Ce qui a changé, c'est
+   * lequel des deux est le défaut — on ouvre un studio pour voir son film.
    */
-  const [agrandi, setAgrandi] = useState(false);
+  const [agrandi, setAgrandi] = useState(true);
+
+  /*
+   * Toucher un texte réduit l'aperçu, de lui-même.
+   *
+   * Grand, l'aperçu n'est pas épinglé : dès qu'on sélectionne un sous-titre, le
+   * panneau de réglage s'ouvre plus bas, la page y descend — et l'image sort de
+   * l'écran. On se retrouve à régler la hauteur d'un texte qu'on ne voit plus.
+   * Le parcours complet l'a montré avant qu'un doigt ne le rencontre : le
+   * glissement partait d'un point hors du cadre et ne déplaçait rien.
+   *
+   * Le studio bascule donc tout seul au moment où l'on passe de **regarder** à
+   * **régler**. C'est le seul instant où la règle « grand pour regarder, petit
+   * pour travailler » se décide sans qu'on ait à la formuler.
+   *
+   * Il ne rouvre pas en grand tout seul : quelqu'un qui a réduit pour travailler
+   * n'a pas envie que l'écran bouge sous ses doigts à chaque désélection.
+   */
+  const selectionCourante = useStudio((s) => s.selection);
+  const selectionPrecedente = useRef(selectionCourante);
+  useEffect(() => {
+    const avant = selectionPrecedente.current;
+    selectionPrecedente.current = selectionCourante;
+    // Comparer à l'état précédent, et non à `null` : sous StrictMode l'effet
+    // s'exécute deux fois au montage, et une garde « premier rendu » ne tient
+    // pas — le dépôt l'a déjà payé une fois.
+    if (selectionCourante?.kind === 'caption' && avant?.id !== selectionCourante.id) {
+      setAgrandi(false);
+    }
+  }, [selectionCourante]);
 
   /*
    * Le guide ne change plus d'onglet : il fait défiler jusqu'à l'étape. Le
@@ -119,17 +164,33 @@ export function StudioMobile({
         */}
         {clipCount > 0 && (
           <section
-            className={`sticky top-0 z-20 flex flex-col gap-1.5 bg-ink p-2 pb-1.5 shadow-[0_10px_18px_-10px_rgba(0,0,0,0.95)] ${
-              agrandi ? 'h-[80dvh]' : 'h-[38dvh]'
+            /*
+             * Épinglé seulement en mode réduit, et c'est une découverte du
+             * parcours complet : à 92 dvh, un bloc collé occupe 803 px des 873
+             * de l'écran et **recouvre les panneaux**. Playwright n'arrivait
+             * plus à cliquer dessous — « intercepts pointer events » — et un
+             * doigt n'y arrive pas davantage.
+             *
+             * Grand, l'aperçu se laisse donc dépasser : on descend, il s'en va,
+             * les réglages ont tout l'écran. Réduit, il suit — c'est là qu'on
+             * règle et qu'on veut voir l'effet.
+             *
+             * Grand pour regarder, petit pour travailler, et un doigt entre les
+             * deux.
+             */
+            className={`z-20 flex flex-col gap-1.5 bg-ink p-2 pb-1.5 shadow-[0_10px_18px_-10px_rgba(0,0,0,0.95)] ${
+              agrandi ? 'h-[92dvh]' : 'sticky top-0 h-[38dvh]'
             }`}
           >
             <Preview engine={engine} agrandi={agrandi} onAgrandir={() => setAgrandi((v) => !v)} />
             {/*
-              La frise s'efface pendant l'agrandissement : ses 98 px repris,
-              c'est autant que l'image gagne, et on n'agrandit pas pour
-              découper — on agrandit pour regarder.
+              La frise reste, dans les deux modes.
+              Elle s'effaçait pendant l'agrandissement pour rendre ses 98 px à
+              l'image. Mesuré, l'échange est mauvais : sans elle l'image passe
+              de 88 % à 96 % de la largeur — huit points — et l'on perd le seul
+              endroit où l'on choisit un plan.
             */}
-            {!agrandi && <Timeline engine={engine} compact />}
+            <Timeline engine={engine} compact />
           </section>
         )}
 
