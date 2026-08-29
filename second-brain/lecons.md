@@ -3032,3 +3032,28 @@ de ce qu'il vaut la peine de construire, et non l'inverse.
 **Et un blocage administratif se traite comme un blocage technique** : on le
 nomme par écrit, avec son délai. « Une à trois semaines » change l'ordre des
 tâches ; « il faudrait s'inscrire » ne change rien et se répète.
+
+## Un défaut qui vaut tout le projet ne doit pas compter pour une alerte
+
+Mesuré sur le réseau d'annuaires : **73 liens d'affiliation sur 73** pointaient
+encore vers l'adresse de démonstration. Onze sites publiés, référencés, tenus à
+jour par un auto-pilote, 213 contrôles au vert — et **pas un centime possible**.
+
+Ce n'était caché nulle part, et c'est bien le problème : chaque lien produisait
+une alerte, soixante-treize parmi **234**, sous un verdict final
+« 0 erreur(s), 234 alerte(s) » qui se lit comme « tout va bien, quelques
+broutilles ». Le fait le plus important du projet avait exactement le même poids
+qu'une description un peu courte.
+
+**Ce qui trompe est la mise à plat.** Un relevé qui range tout dans la même liste
+suppose que toutes les lignes se valent. Elles ne se valent jamais : il y en a
+presque toujours une qui décide si l'ensemble sert à quelque chose, et elle
+mérite sa propre ligne dans le bilan — pas un rang dans un décompte.
+
+**Le test qui le débusque :** lire le verdict d'un outil et se demander *« si
+tout ce qu'il liste était vrai, est-ce que le projet remplirait sa raison
+d'être ? »* Ici la réponse était non, et le verdict disait vert.
+
+Et le chiffre affiché doit être **ce qu'il y a à corriger**, pas le nombre
+d'occurrences : compter aussi les entrées en réserve donnait 231 au lieu de 73,
+et décourageait pour un travail qui n'est pas encore à faire.

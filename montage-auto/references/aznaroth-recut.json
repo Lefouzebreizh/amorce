@@ -215,8 +215,19 @@
     {
       "son": "souffle_caverne",
       "instant": 3.1,
+<<<<<<< HEAD
       "gain": 0,
       "distance": "lointain"
+=======
+<<<<<<< HEAD
+      "gain": 0,
+      "distance": "lointain"
+=======
+      "gain": 4,
+      "distance": "lointain",
+      "telephone": 1.3
+>>>>>>> origin/main
+>>>>>>> origin/main
     },
     {
       "son": "nappe_sombre",
