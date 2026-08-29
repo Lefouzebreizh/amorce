@@ -125,3 +125,35 @@ test('la page est un document complet et déclare le français', () => {
 test('echapper couvre les cinq caractères', () => {
   assert.equal(echapper(`&<>"'`), '&amp;&lt;&gt;&quot;&#39;');
 });
+
+test('le site tient sans réseau et sans racine de domaine', () => {
+  /*
+   * La page livrée est déposée sous un sous-dossier — `/nom-du-client/` sur
+   * GitHub Pages — et souvent ouverte hors ligne pour être montrée. Une seule
+   * référence absolue ou distante suffirait à la vider de son style ou de ses
+   * images, sans le moindre message pour dire pourquoi.
+   */
+  const html = genererSite(
+    commande({ options: ['appel', 'whatsapp'], presentation: 'Je suis maçon.' }),
+    [{ fichier: '01-a.jpg' }],
+  );
+
+  const references = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1]);
+  const externes = references.filter(
+    (r) => r.startsWith('/') || r.startsWith('http://') || r.startsWith('//'),
+  );
+
+  assert.deepEqual(externes, []);
+  // Les seuls liens sortants admis sont ceux que le visiteur déclenche.
+  const distants = references.filter((r) => r.startsWith('https://'));
+  assert.ok(distants.every((r) => r.startsWith('https://wa.me/')));
+});
+
+test('aucune police ni feuille de style distante', () => {
+  // Une police Google sur le site d'un artisan, c'est une page qui s'affiche
+  // en Times le jour où le réseau du chantier est mauvais.
+  const html = genererSite(commande());
+
+  assert.equal(html.includes('fonts.googleapis'), false);
+  assert.equal(html.includes('<link rel="stylesheet"'), false);
+});
