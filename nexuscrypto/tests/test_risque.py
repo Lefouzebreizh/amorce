@@ -135,6 +135,28 @@ class TestSizing(unittest.TestCase):
         self.assertAlmostEqual(dimension.montant_usd, 150.0)
         self.assertEqual(dimension.plafond_actif, "plafond du jeton découvert")
 
+    def test_le_plafond_d_exposition_livre_est_celui_qui_a_ete_mesure(self):
+        """75 %, mesuré sur trois fenêtres réelles. Au-delà de 85 % le plafond
+        ne mord plus jamais et cesse d'être un garde-fou ; en dessous, il force
+        la trésorerie à dormir au lieu de se répartir."""
+
+        self.assertAlmostEqual(self.config.risque.exposition_max_par_actif, 0.75)
+
+    def test_le_risque_par_position_ne_mord_pas_a_l_enveloppe_actuelle(self):
+        """Réglage mesuré **inerte**, et c'est ce qu'il faut savoir avant de
+        croire que le dimensionnement suit le risque.
+
+        Avec un stop à 4 ATR — distance d'environ 15 % du prix — ce plafond
+        autorise ~6,7 % du capital, quand l'enveloppe DCA d'une ligne en demande
+        dix fois moins. C'est donc toujours l'enveloppe qui décide. Le test le
+        fige : s'il se met à mordre, c'est qu'un autre réglage a bougé, et le
+        commentaire de `config.yaml` devient faux.
+        """
+
+        dimension = self._dimensionner(montant_souhaite_usd=150.0, prix=100.0, stop=85.0)
+        self.assertNotEqual(dimension.plafond_actif, "risque par position")
+        self.assertAlmostEqual(dimension.montant_usd, 150.0)
+
     def test_prix_nul_leve(self):
         with self.assertRaises(ValueError):
             self._dimensionner(prix=0.0)
