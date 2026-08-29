@@ -100,6 +100,14 @@ export function Carte({
         )}
       </span>
 
+      {/* Le numéro à gauche du nom, comme sur une télécommande : c'est lui
+          qu'on lit pour savoir qu'on est au bon endroit, avant même le titre. */}
+      {element.canal !== undefined && (
+        <span className="w-7 shrink-0 text-right font-mono text-sm tabular-nums text-doux">
+          {element.canal}
+        </span>
+      )}
+
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{element.titre}</span>
         {detail !== '' && <span className="block truncate text-sm text-doux">{detail}</span>}

@@ -31,6 +31,9 @@
 export const COLONNES_AJOUTEES: readonly { table: string; colonne: string; sql: string }[] = [
   { table: 'element', colonne: 'etat', sql: 'ALTER TABLE element ADD COLUMN etat TEXT' },
   { table: 'element', colonne: 'teste_le', sql: 'ALTER TABLE element ADD COLUMN teste_le TEXT' },
+  { table: 'element', colonne: 'canal', sql: 'ALTER TABLE element ADD COLUMN canal INTEGER' },
+  { table: 'element', colonne: 'rang', sql: 'ALTER TABLE element ADD COLUMN rang INTEGER' },
+  { table: 'element', colonne: 'theme', sql: 'ALTER TABLE element ADD COLUMN theme TEXT' },
 ]
 
 export const SCHEMA = `
@@ -65,6 +68,15 @@ CREATE TABLE IF NOT EXISTS element (
   groupe          TEXT,
   logo            TEXT,
   tvg_id          TEXT,
+  -- Le numéro affiché (1 à 50) et le rang qui trie. Deux colonnes et non une :
+  -- le rang continue par familles — sport, cinéma, musique — là où les numéros
+  -- s'arrêtent, et afficher « 2000 » à côté de Canal+ ne voudrait rien dire.
+  canal           INTEGER,
+  rang            INTEGER,
+  -- Le thème d'un film ou d'une série, ramené à un vocabulaire fermé : les
+  -- groupes du fournisseur en donneraient quatre-vingts, dont quatre fois
+  -- « action » écrit différemment. NULL se range dans « Autres ».
+  theme           TEXT,
   annee           INTEGER,
   serie           TEXT,
   saison          INTEGER,
@@ -86,6 +98,8 @@ CREATE TABLE IF NOT EXISTS element (
 );
 
 CREATE INDEX IF NOT EXISTS element_par_genre  ON element (source_id, genre);
+CREATE INDEX IF NOT EXISTS element_par_rang   ON element (genre, rang);
+CREATE INDEX IF NOT EXISTS element_par_theme  ON element (genre, theme);
 CREATE INDEX IF NOT EXISTS element_par_groupe ON element (source_id, groupe);
 CREATE INDEX IF NOT EXISTS element_par_serie  ON element (serie, saison, episode);
 CREATE INDEX IF NOT EXISTS element_par_tvg    ON element (tvg_id);

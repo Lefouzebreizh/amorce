@@ -1,6 +1,9 @@
 import Link from 'next/link'
 
+import { AfficheLien, Dossier } from '../../composants/Affiche.tsx'
+import { SEUIL_DOSSIERS } from '../../composants/Catalogue.tsx'
 import { Vide } from '../../composants/Vide.tsx'
+import { detecterTheme, ordreTheme } from '../../normalisation/theme.ts'
 import { depot } from '../../serveur/depot-partage.ts'
 
 /*
@@ -16,7 +19,12 @@ import { depot } from '../../serveur/depot-partage.ts'
  * série déclarée mais dont les épisodes ne sont pas encore chargés s'affiche
  * quand même — elle se remplira à l'ouverture.
  */
-export default function Series() {
+export default async function Series({
+  searchParams,
+}: {
+  searchParams: Promise<{ theme?: string }>
+}) {
+  const { theme: themeOuvert } = await searchParams
   const cache = depot()
   if (cache.compter() === 0 && cache.fiches({ limite: 1 }).length === 0) {
     return <Vide quoi="les séries" />
@@ -27,7 +35,14 @@ export default function Series() {
 
   const parTitre = new Map<
     string,
-    { titre: string; episodes: number; saisons: number; resume?: string | undefined; logo?: string | undefined }
+    {
+      titre: string
+      episodes: number
+      saisons: number
+      theme: string
+      resume?: string | undefined
+      logo?: string | undefined
+    }
   >()
 
   for (const serie of derivees) {
@@ -35,6 +50,8 @@ export default function Series() {
       titre: serie.serie,
       episodes: serie.episodes,
       saisons: serie.saisons,
+      theme: serie.theme ?? '',
+      logo: serie.logo,
     })
   }
   for (const fiche of declarees) {
@@ -44,19 +61,73 @@ export default function Series() {
       titre: fiche.titre,
       episodes: existant?.episodes ?? 0,
       saisons: existant?.saisons ?? 0,
+      // Une fiche déclarée porte ses propres genres ; ils valent mieux que le
+      // thème déduit du groupe de ses épisodes, qui n'existe pas toujours.
+      theme: detecterTheme(fiche.groupe, fiche.genres) ?? existant?.theme ?? '',
       resume: fiche.resume,
-      logo: fiche.logo,
+      logo: fiche.logo ?? existant?.logo,
     })
   }
 
-  const series = [...parTitre.values()].sort((a, b) =>
+  const toutes = [...parTitre.values()].sort((a, b) =>
     a.titre.localeCompare(b.titre, 'fr', { sensitivity: 'base' }),
   )
+
+  // Les dossiers d'abord, comme pour les films : on choisit un thème, puis une
+  // série. Une liste de deux mille titres à plat ne se parcourt pas — mais une
+  // liste de trois se parcourt très bien, et les dossiers n'y coûteraient qu'un
+  // clic de plus. Même seuil que le catalogue, même raison.
+  if (themeOuvert === undefined && toutes.length > SEUIL_DOSSIERS) {
+    const compte = new Map<string, number>()
+    const apercus = new Map<string, string[]>()
+    for (const serie of toutes) {
+      compte.set(serie.theme, (compte.get(serie.theme) ?? 0) + 1)
+      const images = apercus.get(serie.theme) ?? []
+      if (images.length < 3 && serie.logo !== undefined) images.push(serie.logo)
+      apercus.set(serie.theme, images)
+    }
+    const dossiers = [...compte.entries()].sort(
+      ([a], [b]) => ordreTheme(a) - ordreTheme(b) || a.localeCompare(b, 'fr'),
+    )
+
+    return (
+      <>
+        <header className="mb-4">
+          <h1 className="text-2xl font-bold">Séries</h1>
+          <p className="text-doux">
+            {toutes.length.toLocaleString('fr-FR')} séries, {dossiers.length} thèmes
+          </p>
+        </header>
+        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {dossiers.map(([nom, total]) => (
+            <li key={nom || 'autres'}>
+              <Dossier
+                href={`/series?theme=${encodeURIComponent(nom)}`}
+                nom={nom === '' ? 'Autres' : nom}
+                compte={total}
+                apercus={apercus.get(nom) ?? []}
+              />
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+
+  const series =
+    themeOuvert === undefined ? toutes : toutes.filter((serie) => serie.theme === themeOuvert)
 
   return (
     <>
       <header className="mb-4">
-        <h1 className="text-2xl font-bold">Séries</h1>
+        {themeOuvert !== undefined && (
+          <Link href="/series" className="text-sm text-doux">
+            ‹ Tous les thèmes
+          </Link>
+        )}
+        <h1 className="text-2xl font-bold">
+          {themeOuvert === undefined ? 'Séries' : themeOuvert === '' ? 'Autres' : themeOuvert}
+        </h1>
         <p className="text-doux">{series.length.toLocaleString('fr-FR')} séries</p>
       </header>
 
@@ -73,34 +144,19 @@ export default function Series() {
           </p>
         </div>
       ) : (
-        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
           {series.map((serie) => (
             <li key={serie.titre}>
-              <Link
+              <AfficheLien
                 href={`/series/${encodeURIComponent(serie.titre)}`}
-                className="flex gap-3 rounded-carte border border-bord bg-surface p-4
-                           hover:border-accent hover:bg-surface-haute"
-              >
-                {serie.logo !== undefined && (
-                  <img
-                    src={serie.logo}
-                    alt=""
-                    loading="lazy"
-                    className="h-16 w-12 shrink-0 rounded object-cover"
-                  />
-                )}
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{serie.titre}</span>
-                  <span className="block text-sm text-doux">
-                    {serie.episodes === 0
-                      ? 'Épisodes à charger'
-                      : `${serie.saisons} saison${serie.saisons > 1 ? 's' : ''} · ${serie.episodes} épisode${serie.episodes > 1 ? 's' : ''}`}
-                  </span>
-                  {serie.resume !== undefined && (
-                    <span className="mt-1 line-clamp-2 block text-xs text-doux">{serie.resume}</span>
-                  )}
-                </span>
-              </Link>
+                titre={serie.titre}
+                logo={serie.logo}
+                sousTitre={
+                  serie.episodes === 0
+                    ? 'Épisodes à charger'
+                    : `${serie.saisons} saison${serie.saisons > 1 ? 's' : ''} · ${serie.episodes} ép.`
+                }
+              />
             </li>
           ))}
         </ul>
