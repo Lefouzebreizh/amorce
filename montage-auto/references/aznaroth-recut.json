@@ -132,7 +132,9 @@
           "force": 0.45,
           "_note": "le souffle. 0,45 et non 0,85 : a pleine force le cadre vire au blanc complet, et un blanc plein de deux images sur un telephone la nuit est un stroboscope. Le public de ce compte est precisement celui que ca blesse. La lueur se voit tout aussi bien a 0,45, ou l'image reste lisible."
         }
-      ]
+      ],
+      "interpolation": true,
+      "_note": "le dragon, ralenti a 0,8. INTERPOLATION obligatoire : sans elle ffmpeg tient la cadence en DUPLIQUANT une image sur cinq — mesure, 29 images figees sur 144 contre 0 sur un plan a vitesse normale. Une image sur cinq figee a intervalle regulier, c'est ce que l'oeil lit comme un saccadement. `minterpolate` fabrique les images manquantes a partir du mouvement estime ; c'est lent, et c'est le prix d'un ralenti qui coule."
     }
   ],
   "effets": [
