@@ -2890,6 +2890,44 @@ racine y trouverait n'a de sens pour personne.
 de la CI déposait une copie des mêmes projets sous `.verif-ci/copie/` : exclus à
 leur vrai chemin, ils revenaient par celui-là.
 
+## Trois corrections échouées sur un même défaut disent qu'on ne l'a pas mesuré
+
+Un contrôle de zoom recouvrait la règle d'une frise. Trois corrections ont été
+tentées, toutes sur la **position** : un décalage vertical, une rangée dans le
+flux, un rognage du conteneur. Chacune a cassé autre chose — la première a fait
+tomber le parcours entier de vérification pendant trente secondes.
+
+La quatrième fois, la mesure a été faite avant la correction : pour chaque
+étiquette de la règle, demander au navigateur qui reçoit le doigt à cet endroit.
+
+| état | étiquettes masquées |
+| --- | --- |
+| au repos | **aucune** |
+| après un zoom | une sur huit |
+| pendant le défilement | une, et **laquelle change à chaque fois** |
+
+Deux choses que trois tentatives n'avaient pas vues. Le défaut n'existe
+**qu'après un zoom** — au repos la gouttière valait déjà exactement les deux
+boutons. Et il est **mobile**, ce qui explique pourquoi il paraissait
+insaisissable et pourquoi chaque correction semblait marcher une fois sur deux.
+
+Surtout, la mesure a montré qu'aucune position ne pouvait marcher : 44 px de
+bouton — le minimum qu'un pouce attrape — plus 16 px de règle ne tiennent pas
+dans 98 px de frise. **Le problème n'était pas où les mettre, mais qu'ils soient
+là tout le temps.** La sortie était temporelle, pas géométrique : ils s'effacent
+au repos et reviennent au toucher.
+
+Ce qui se généralise : **trois corrections qui échouent sur un même défaut ne
+disent pas que le défaut est difficile, elles disent qu'on corrige une cause
+qu'on n'a pas mesurée.** La règle des trois essais du dépôt est bonne, mais son
+troisième essai doit être une mesure, pas une variante — sinon les trois essais
+se dépensent tous du même côté du problème.
+
+Un corollaire sur la formulation du contrôle qui empêche la régression : il
+porte sur **ce qu'on veut** (« la règle reste lisible »), jamais sur le moyen
+(« les boutons sont ailleurs »). Écrit sur le moyen, il aurait invité une
+quatrième tentative de mise en page — celle qui ne peut pas aboutir.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
