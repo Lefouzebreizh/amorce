@@ -2092,6 +2092,32 @@ règle générale : **une fonctionnalité n'est livrée que lorsqu'un chemin y m
 depuis l'extérieur** — une commande, un bouton, une route. Le reste est du code
 qui compile.
 
+## Un défaut entendu à deux endroits éloignés vient de ce qui les traverse
+
+« Ça sature au dragon, et un peu derrière le druide aussi. » Deux plans séparés
+par huit secondes et par tout leur contenu. Leur seul point commun : le
+**master**.
+
+Mesuré en rendant deux fois la même chaîne, une fois **avec** le limiteur et une
+fois sans, puis en comparant tranche par tranche : le limiteur écrasait
+**44 tranches sur 389** de plus d'un décibel — et ses coups les plus forts
+tombaient à **6,05 s** et **15,45–16,00 s**. Exactement les deux endroits
+rapportés.
+
+La cause : **+4,5 dB de grave à 85 Hz**. Sur un téléphone il ne s'entend pas —
+il ne fait qu'y manger la marge, et c'est le limiteur qui rend la facture, sur
+tout le reste du mixage. Ramené à +1,5 : **8 tranches**, et le niveau entendu
+au-dessus de 400 Hz **gagne** 0,4 dB.
+
+**Quand deux endroits sans rapport présentent le même défaut, arrêter de
+regarder les endroits et regarder ce qui les traverse.**
+
+Et la mesure qui tranche : **rendre deux fois, avec et sans le maillon
+suspect**, puis comparer. Comparer avant/après master mêle l'égaliseur au
+limiteur — un égaliseur donne aussi un gain différent selon le contenu, et
+c'est ce qui m'avait fait lire 9,1 dB de « pompage » là où le limiteur n'en
+faisait que 3,4.
+
 ## Fusionner souvent a un plafond, et il est invisible
 
 La règle de ce dépôt est d'ouvrir la PR et de la fusionner dès qu'un lot tient
@@ -2140,6 +2166,12 @@ retire le drapeau devenu inutile, l'application ne démarre plus, sur un message
 qui ne parle ni de SQLite ni de version. Sur une machine qu'on ne contrôle pas
 — celle de quelqu'un qui vient d'installer la dernière LTS — c'est une panne
 sans piste.
+
+Le même projet en portait un **second**, `--experimental-strip-types`, et la
+mesure a rendu le même verdict : `process.features.typescript` vaut déjà
+`"strip"` sans lui dès Node 22.22, et le retrait des types est le défaut à
+partir de 23.6. Deux drapeaux posés par prudence, deux fois inutiles, deux
+pannes futures évitées de justesse.
 
 **La règle : un drapeau expérimental se mesure avant d'être posé**, et se
 remesure quand on change de version.
@@ -2217,3 +2249,49 @@ un vrai choix de conception, pas une astuce — ou **changer d'hébergeur**.
 Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
 ses routes serveur. C'était la réponse depuis le début, et une heure est passée
 à contourner un quota au lieu de changer de mur.
+
+## Le quota de déploiement est une ressource commune, et les sessions la vident
+
+Un compte d'hébergeur gratuit plafonne les déploiements par **jour et par
+compte** — cent chez Vercel. Ce dépôt reçoit plusieurs sessions en parallèle et
+fusionne **95 pull requests dans la journée**, mesuré le 28/08/2026 : chacune
+déclenche un déploiement d'aperçu, et le compteur est vidé par du travail qui
+n'a rien à voir avec celui qui en a besoin.
+
+**Le symptôme arrive au pire moment et ne ressemble pas à sa cause.** Ici :
+« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec
+les vingt PR de montage vidéo qui l'ont consommé, et le projet qu'on cherchait
+à mettre en ligne — une page de vente, la seule chose qui pouvait rentrer de
+l'argent — reste bloqué vingt-quatre heures.
+
+Trois choses à en retenir :
+
+- **Un aperçu réussi ne prouve pas que le compteur est libre.** Un aperçu sur
+  un projet existant peut passer à l'instant même où la création d'un nouveau
+  projet est refusée. Conclure de l'un à l'autre a coûté un aller-retour, et un
+  essai raté au propriétaire.
+- **Chaque projet supplémentaire double la consommation.** Deux projets
+  branchés sur le même dépôt, ce sont deux déploiements par PR.
+- **On coupe les aperçus des projets qui n'en ont pas besoin.** Une application
+  qui tourne dans le navigateur n'a aucune raison d'être déployée à chaque PR.
+
+Et la sortie, quand le mur est là : **changer de mur.** Netlify et Cloudflare
+Pages construisent un Next.js complet, gratuitement, avec ses routes serveur, et
+sans toucher au quota de l'autre. Une heure est passée à contourner le plafond
+avant d'y penser.
+
+## `cd sous-dossier && …` saute silencieusement quand on y est déjà
+
+Deux éditions perdues dans la même séance, sans un message d'erreur utile.
+
+Le shell d'une session garde son répertoire d'un appel à l'autre. Une commande
+qui commence par `cd nexuscrypto && python3 - <<'PY'` échoue donc au `cd` quand
+on est **déjà** dans `nexuscrypto` — et le `&&` avale tout le reste. Le script
+ne tourne pas, rien ne le dit, et la vérification qui suit passe au vert sur du
+code inchangé.
+
+C'est la conjonction qui trompe : l'erreur affichée est `cd: no such file or
+directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière.
+
+**La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
+de supposer où l'on est.

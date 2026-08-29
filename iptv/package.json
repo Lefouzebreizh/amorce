@@ -8,10 +8,10 @@
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
-    "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
+    "test": "node --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
     "check": "tsc --noEmit",
-    "verify": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/verifier-interface.mjs",
-    "iptv": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/cli.ts"
+    "verify": "node --disable-warning=ExperimentalWarning scripts/verifier-interface.mjs",
+    "iptv": "node --disable-warning=ExperimentalWarning src/cli.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
