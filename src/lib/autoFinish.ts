@@ -1,6 +1,6 @@
 import { Y_PAR_DEFAUT } from './captions.ts';
 import { SFX_PER_10S, type Analysis } from './analysis.ts';
-import { chopped, layoutClips, totalDuration } from './timeline.ts';
+import { alterneLesRushes, chopped, layoutClips, totalDuration } from './timeline.ts';
 import {
   type Caption,
   type CaptionStyleId,
@@ -369,12 +369,14 @@ export function buildFinish(
 ): FinishResult {
   // Les plans qui s'étirent d'abord : ils changent la durée sur laquelle tout
   // le reste se répartit.
-  const clips = project.clips
-    .flatMap((clip) => {
+  const clips = alterneLesRushes(
+    project.clips.flatMap((clip) => {
       const shown = (clip.outPoint - clip.inPoint) / Math.max(0.1, clip.speed);
       return shown > LONG_SHOT ? chopped(clip, CHOP_TARGET, makeId) : [clip];
-    })
-    // Une ouverture qui avance vaut mieux qu'un plan fixe, et la notation le sait.
+    }),
+  )
+    // L'ouverture se décide **après** la répartition : c'est le plan qui se
+    // retrouve en tête qui doit avancer, pas celui qui y était avant.
     .map((clip, index) => (index === 0 && clip.motion === 'none' ? { ...clip, motion: 'zoomIn' as const } : clip));
 
   const duration = totalDuration(clips);

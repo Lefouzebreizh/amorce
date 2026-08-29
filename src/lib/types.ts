@@ -52,6 +52,12 @@ export type MediaAsset = {
   height: number;
   /** Vignette en data URL, affichée dans la bibliothèque et la timeline. */
   thumbnail: string;
+  /**
+   * Empreinte visuelle du rush, pour repérer deux plans qui montrent la même
+   * chose. Absente des projets enregistrés avant cette mesure : ce qui la lit
+   * doit traiter son absence comme « on ne sait pas », jamais comme « pareil ».
+   */
+  empreinte?: string;
   /** Le média porte-t-il une piste sonore exploitable. */
   hasAudio: boolean;
 };

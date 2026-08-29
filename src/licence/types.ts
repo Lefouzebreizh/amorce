@@ -12,24 +12,28 @@
  * **l'interface propose**, jamais de ce que le moteur fait d'un fichier.
  */
 
-/** Ce qu'on sait de l'abonnement de la personne devant l'écran. */
+/** Ce qu'on sait de la licence de la personne devant l'écran. */
 export type Statut =
   /** Rien n'a encore été demandé, ou le serveur n'a pas répondu. */
   | 'inconnu'
-  /** Pas d'abonnement : tout le studio, avec les bornes de l'offre libre. */
+  /** Pas de licence : tout le studio, avec les bornes de l'offre libre. */
   | 'libre'
-  /** Abonnement actif. */
+  /** Licence acquise. */
   | 'pro';
 
+/*
+ * Un statut, et rien d'autre.
+ *
+ * Amorce se vend **une fois**, 49 €, définitivement. Il n'y a donc ni date de
+ * fin, ni renouvellement, ni période d'essai à faire expirer — et le type le
+ * dit, plutôt que de porter un champ que rien ne remplirait jamais.
+ *
+ * Le seul retour en arrière possible est un remboursement, et c'est un
+ * changement de statut, pas une date : le serveur rend `libre`, et le studio
+ * l'apprend au prochain démarrage.
+ */
 export type Etat = {
   statut: Statut;
-  /**
-   * Date de fin d'abonnement, en millisecondes. Absente hors abonnement.
-   *
-   * Elle sert à l'affichage, jamais à décider : une date lue côté client se
-   * modifie, et c'est au serveur de dire si l'abonnement court encore.
-   */
-  finLe?: number;
 };
 
 /**

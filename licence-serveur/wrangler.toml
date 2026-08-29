@@ -1,0 +1,20 @@
+name = "amorce-licence"
+main = "src/worker.ts"
+compatibility_date = "2026-08-01"
+
+# Les origines autorisées à interroger /etat. Une liste, jamais « * » :
+# sinon n'importe quel site peut interroger le serveur avec la clé d'un autre.
+[vars]
+ORIGINES = "https://amorce.vercel.app"
+
+[[d1_databases]]
+binding = "BASE"
+database_name = "amorce-licence"
+database_id = "à-remplir-après-wrangler-d1-create"
+
+# SECRET_WEBHOOK et SECRET_CLES ne sont pas ici : ce sont des secrets.
+#   wrangler secret put SECRET_WEBHOOK   (celui que Stripe affiche pour le webhook)
+#   wrangler secret put SECRET_CLES      (une chaîne longue, tirée au hasard)
+#
+# Changer SECRET_CLES invalide toutes les licences déjà émises : il scelle les
+# clés, et une clé scellée par un autre secret ne se vérifie plus.

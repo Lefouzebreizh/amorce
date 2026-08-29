@@ -3077,6 +3077,72 @@ essai limité dans le temps, un nombre de sièges. Ce qui se vérifie dans
 l'artefact tient ; ce qui exige de suivre l'usage demande une infrastructure,
 une politique de données, et une conversation qu'on n'avait pas prévue.
 
+## Le prix décide de l'architecture, pas l'inverse
+
+Le module de licence d'Amorce a été construit avant que le prix soit fixé, sur
+l'hypothèse par défaut d'un abonnement mensuel. Il fallait donc des comptes,
+des mots de passe, des courriels de confirmation, des sessions, trois
+événements Stripe, une date d'expiration, et une lecture en base à chaque
+vérification.
+
+Le prix est tombé : **49 € une fois**. Voici ce que cette seule phrase a
+supprimé, en une heure :
+
+| ce qu'il fallait | ce qu'il reste |
+| --- | --- |
+| comptes, mots de passe, courriels | **une clé à coller** |
+| sessions, témoins, CORS avec identifiants | un en-tête `Authorization` |
+| 3 événements Stripe | **1** |
+| une date de fin | rien — il n'y a pas de fin |
+| une lecture en base pour authentifier | **aucune** : la clé porte son sceau |
+
+Rien de cela n'a été « optimisé ». Tout a disparu parce que la question à
+laquelle le système devait répondre avait changé : *« cet abonnement court-il
+encore ? »* demande un calendrier et une identité ; *« cette clé a-t-elle été
+payée ? »* ne demande qu'un HMAC.
+
+**Une décision de prix prise tard se paie en code écrit pour rien.** Prise tôt,
+elle en retire — et c'est l'inverse de l'intuition, qui range le prix parmi les
+détails qu'on verra à la fin.
+
+Le corollaire pratique : quand un produit attend son prix, **la seule chose à
+construire est ce qui vaut pour tous les prix**. Ici c'était la frontière —
+le moteur ne connaît pas le réseau — gardée par un test. Elle a survécu
+intacte aux deux modèles, quand tout le reste a été réécrit.
+
+## Un système de mesure est aveugle à ce qu'il n'a pas été construit pour voir
+
+Un montage a été rejeté d'un mot : « fouilli ». Toutes les mesures étaient au
+vert — cadence 1,11 s par plan dans la bande récompensée, durée sous le
+plafond, bruitages dans la fourchette, note 83 sur 100, couverture texte
+correcte.
+
+Le défaut se voyait en une seconde sur une planche d'images : **sept des neuf
+plans montraient le même cadrage**, et quatre textes sur quatre étaient des
+gabarits non remplis — `[CE QUI MENACE]`, `QUEL [ROYAUME] TOMBE ENSUITE ?`.
+
+Aucune mesure ne pouvait le dire, et ce n'est pas un oubli : elles comptent des
+**secondes** et des **coupes**. Aucune ne regarde ce qu'il y a *dans* l'image ni
+ce que le texte *raconte*. Pire, la couverture texte était bonne **parce que**
+les gabarits sont du texte — la mesure confirmait le défaut au lieu de le
+signaler.
+
+**C'est la forme d'aveuglement la plus coûteuse : celle qu'on ne peut pas voir
+depuis l'intérieur du système de mesure.** Ajouter des contrôles du même genre
+n'y change rien ; il faut mesurer une autre grandeur, ou regarder.
+
+Deux gestes en découlent, et ils se répètent dans ce dépôt :
+
+**Le garde-fou se pose sur le geste irréversible**, pas dans un tableau de
+bord. Ici juste avant l'export — c'est là que le fichier part, et personne ne
+consulte une note à ce moment-là.
+
+**Un seuil se lit, il ne se choisit pas.** Celui de la ressemblance vient des
+neuf plans du montage rejeté, comparés deux à deux : de 2 à 11 à l'intérieur du
+groupe qui se répète, de 15 à 26 avec les plans réellement différents. Le trou
+entre 11 et 15 était franc, et le seuil s'y est posé. Un chiffre rond choisi de
+tête aurait été à défendre à chaque doute ; celui-ci se relit.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
@@ -3696,3 +3762,177 @@ La question à se poser en vidant un répertoire de travail n'est donc pas
 « qu'est-ce qui est lourd » mais **« qu'est-ce qui est du texte et n'a jamais
 été committé »**. Le lourd se renvoie ; le texte se versionne, et lui seul
 survit à tout le monde.
+
+## IPTV : un mandataire sans délai amont transforme un flux mort en blocage muet
+
+Mesuré le 29/08/2026 sur `src/app/api/flux/route.ts`. Le lecteur affichait
+« Connexion au flux… » sans jamais bouger sur une chaîne réellement morte
+(« Ciné+ Classic »), alors que le correctif de retries bornés côté `Lecteur.tsx`
+venait d'être fusionné. La cause n'était pas côté client : `fetch(cible.url,
+…)` vers l'amont ne portait **aucun** `AbortController`. Un panneau saturé qui
+accepte la connexion TCP et ne répond jamais fait attendre `fetch` son délai
+par défaut — plusieurs minutes chez Node/undici — avant que hls.js voie même
+une erreur. Le compte à trois tentatives ajouté au client ne sert à rien si
+chaque tentative individuelle peut durer plusieurs minutes côté serveur.
+
+**La parade est le même délai que `testerElement`** (8 s), posé sur le
+`fetch` amont du mandataire, avec un 504 propre à l'expiration — pas un délai
+nouveau à inventer, celui qui existe déjà pour éprouver un flux est la bonne
+mesure pour le relayer. Le test qui le prouve (`tests/flux-route.test.ts`)
+ne peut pas se permettre d'attendre 8 s à chaque exécution : le délai est lu
+depuis `IPTV_DELAI_AMONT_MS`, réglable à quelques millisecondes en test, avec
+8000 en défaut de production — la même astuce que d'autres réglages de ce
+projet lisent déjà depuis `process.env`.
+
+**Et la leçon plus large, qui dépasse ce fichier :** un correctif posé côté
+client (bornes de retry, message d'erreur) ne protège de rien si l'étage
+serveur qu'il traverse peut, lui, rester indéfiniment silencieux. Chercher le
+symptôme « ça tourne sans jamais s'arrêter » uniquement dans la dernière
+couche qu'on vient de toucher a fait rater ce point une fois ; le bon réflexe
+est de suivre la requête jusqu'à son dernier `fetch` sans délai, quelle que
+soit la couche qui l'a écrit.
+
+## Une base IPTV importée une fois ne s'auto-répare jamais, même avec un classement corrigé
+
+Mesuré le 29/08/2026 en reproduisant la vraie liste de l'utilisateur
+(`iptv-org/iptv`, branche `gh-pages`, `countries/fr.m3u`, 215 entrées). Un
+réimport frais avec le code actuel classe tout correctement dès l'entrée : le
+genre se déduit d'abord de l'URL (`/live/`, `/movie/`, `/series/`, ou une
+extension `.m3u8`), le `group-title` n'intervenant qu'en dernier recours. Mais
+« Ranger les chaînes » (`rangerCatalogue`/`reclasser`) ne relit **que ce qui
+est déjà en base** — jamais la source en direct. Une URL enregistrée il y a
+plusieurs jours, sur une liste communautaire qui fait tourner ses hôtes en
+continu, peut avoir perdu la forme qui la faisait reconnaître comme un direct
+(elle ne se termine plus par `.m3u8`, ne contient plus `/live/`) : la règle de
+repli sur le `group-title` (« Movies », « Cinema ») la reclasse alors en film
+à chaque passage de « Ranger », indéfiniment, parce que l'information qui la
+sauverait n'a jamais été stockée. Aucune quantité de reclassement ne corrige
+une URL fausse — seul un réimport (`npm run iptv -- importer <adresse>`, qui
+purge par défaut ce qui a disparu de la source) la remplace par la bonne.
+
+**Le signal qui aurait dû alerter plus tôt :** un lot d'« Éprouver » revenu à
+33/33 « indécis » (ambigu — 401/403/429/5xx) sans un seul « mort » ni un seul
+« vivant ». Ce n'est pas un défaut du testeur — un DNS mort ou une connexion
+refusée classent déjà en « mort », donc 33 codes ambigus veut dire 33 vraies
+réponses HTTP reçues, cohérent avec des hôtes qui existent mais throttlent —
+mais c'est un signe indirect que la base n'a plus été rafraîchie depuis un
+moment : un catalogue entretenu régulièrement mélange rarement autant de
+fournisseurs saturés d'un coup.
+
+## `base / chemin_absolu` ignore silencieusement `base`, et `.exists()` peut lever
+
+Mesuré le 29/08/2026 : la CI de la PR #414 échouait sur « Ce que le dépôt dit
+de lui-même », sans rapport avec le diff. Cause réelle : la PR #416, fusionnée
+entre-temps sur `main`, a ajouté à `CLAUDE.md` une phrase citant `` `/root/.claude/` ``
+en exemple de chemin absolu dans un conteneur. `controler_chemins_cites`
+(`.claude/skills/coherence-depot/scripts/verifier-coherence.py`) teste chaque
+chemin cité en le joignant à plusieurs racines (`base / propre`) — mais en
+Python, `Path("/quoi/que/ce/soit") / "/absolu"` **ignore la base** et rend
+`/absolu` tel quel, dès que le second segment est lui-même absolu. Le script
+tentait donc réellement `Path("/root/.claude").exists()`, un dossier hors de
+portée de l'utilisateur non privilégié du runner CI — et `Path.exists()` ne
+capture pas `PermissionError`, seulement l'absence du fichier : l'exception
+remonte et casse le script.
+
+**Deux leçons, une par couche.** La couche Python, générale : joindre un
+fragment qui pourrait être absolu à une base suppose que la jointure reste
+relative — ce n'est vrai que si on l'a vérifié, jamais par défaut. La couche
+CI, plus large : un contrôle qui lit `CLAUDE.md` peut casser sur **le contenu**
+d'une fusion de `main` sans que le diff de la PR y soit pour rien — la bonne
+question face à un échec inattendu n'est pas « qu'ai-je changé » mais « ce
+contrôle échouerait-il aussi sur `main` seul, seule sa dernière modification
+en cause ». Reproduit en `sudo -u nobody`, avant et après le correctif, sur le
+`CLAUDE.md` réel de `main` — pas sur une hypothèse.
+## Un conflit n'est pas la preuve qu'il reste du travail à fusionner
+
+Une PR annonçait « 1 fichier en conflit » sur `second-brain/lecons.md`, deux
+contrôles Vercel au rouge, et le bouton « Resolve conflicts » qui appelle le
+clic. Tout disait : il y a du travail. Il n'y en avait aucun. Le correctif
+qu'elle portait était **déjà sur `main`**, arrivé par une PR précédente ; la
+branche avait été rouverte une seconde fois sur le même travail.
+
+La mesure qui tranche tient en une commande, et elle est à faire **avant** de
+toucher au conflit :
+
+```bash
+git diff origin/main HEAD    # vide = la branche n'apporte rien, on ferme
+```
+
+Ici : zéro ligne de différence. Le rebase avait d'ailleurs absorbé le commit
+tout seul — un commit qui disparaît sans erreur pendant un rebase est le même
+signal, lu autrement.
+
+**Pourquoi le piège coûte cher :** le conflit portait sur sept leçons écrites
+par d'autres sessions pendant que la branche dormait. Les réconcilier à la main
+dans l'éditeur web — sur un téléphone — aurait pris vingt minutes pour un
+résultat identique à `main`, octet pour octet. Le travail paraît réel parce que
+le conflit est réel ; c'est son utilité qui est nulle.
+
+**Et `git branch -d` dit la vérité quand on l'écoute.** Il a refusé la
+suppression avec « *not deleting branch … that is not yet merged to
+`refs/remotes/origin/<branche>`, even though it is merged to HEAD* ». Traduit :
+le contenu est dans `main`, mais la branche distante porte encore le commit dont
+la PR dépend. `-D` l'aurait supprimée sans broncher, et emporté la seule copie
+locale de ce commit pendant que la PR était ouverte. Le refus de `-d` est une
+information, pas un obstacle à contourner.
+
+## `npm run verify` (iptv) sert un build déjà compilé — un correctif de page invisible sans reconstruire
+
+Mesuré le 29/08/2026 en corrigeant un plafond de 500 fiches dans
+`src/app/series/page.tsx`. Le correctif changé, `npm run check` vert,
+`npm run verify` relancé — et le contrôle ajouté pour le prouver échouait
+quand même, avec le compte **exact** que l'ancien code aurait rendu. La base
+elle-même était bonne (vérifiée en direct hors navigateur : 552 fiches
+fusionnées, pas 500) — c'est l'écran qui mentait.
+
+**La cause : `verifier-interface.mjs` démarre l'application par `next start`,
+jamais par `next dev`.** `next start` sert le dossier `.next` déjà compilé ;
+un fichier source édité après le dernier `npm run build` n'existe pour lui
+nulle part. `npm run check` (tsc seul) ne recompile rien pour l'exécution, et
+rien dans `verify` ne rappelle qu'un build est dû — le script suppose qu'il
+est déjà là, ce qui est vrai dans `verifier.sh` (qui enchaîne `build` avant
+tout, pour `lancer_iptv`) mais faux dès qu'on relance `verify` seul après une
+retouche.
+
+**La règle : `npm run build` avant tout `npm run verify` qui suit un
+changement de code, sans exception** — même quand `check` est vert, même
+quand la mesure directe en base est juste. Un `verify` vert sur un build
+périmé ne prouve rien du tout ; il a fallu redescendre au niveau de la base
+pour comprendre que le code était correct et l'écran, obsolète.
+
+## Le doublon ne se trouve pas en cherchant le nom qu'on allait donner
+
+Une session a écrit un serveur de licence complet — clés, table, webhook
+Stripe, dix-huit tests — pendant qu'une autre venait de fusionner le même
+produit sous **`licence-serveur/`**. Le doublon s'appelait `serveur-licence/`.
+Les deux mots, inversés.
+
+Ce qui a manqué n'est pas un `grep` : c'est le **bon** `grep`. Lire
+`src/licence/` (le client) et n'y trouver aucun serveur a suffi à conclure
+qu'il n'existait pas. La recherche portait sur l'endroit où la chose *aurait dû*
+être, jamais sur ce qu'elle *fait* — `grep -ril "stripe\|webhook\|licence"` à la
+racine la trouvait en une seconde.
+
+**Le signal a été donné, et il a été lu trop tard.** `tsconfig.json` avait
+changé sous les doigts, avec `"licence-serveur"` ajouté à ses exclusions. Il
+était pris pour une faute de frappe du nom qu'on s'apprêtait à créer, alors
+qu'il annonçait le projet déjà fusionné. **Un fichier de configuration qui bouge
+tout seul nomme ce qui vient d'arriver** ; c'est un inventaire, pas du bruit.
+
+**Ce que ça coûte au-delà du travail jeté :** le propriétaire a tranché
+« Supabase ou Cloudflare » sur une question dont la prémisse était fausse — le
+dépôt avait choisi Cloudflare quelques heures plus tôt. Faire arbitrer une
+décision déjà prise use la seule ressource qu'un menu est censé économiser.
+
+**Et le doublon était moins bon.** Trois écarts mesurés à la comparaison : la
+clé de l'existant porte sa preuve par HMAC — le serveur n'a rien à lire pour
+l'authentifier, quand le doublon exigeait une lecture en base à chaque
+démarrage ; zéro dépendance contre deux ; comparaison en temps constant, absente
+du doublon. La règle « un doublon arrête le geste » ne protège pas seulement du
+travail perdu : **celui qui arrive après écrit moins bien, parce qu'il n'a pas
+la journée de réflexion qui a précédé.**
+
+La seule chose qui valait d'être gardée était un manque, pas du code : aucune
+route ne remettait la clé à l'acheteur. Écrite chez eux, avec leurs primitives,
+elle tient en soixante lignes — et n'a pas besoin de la colonne en clair que le
+doublon avait prévue, puisque leur clé se recalcule.

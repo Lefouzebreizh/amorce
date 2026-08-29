@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BANDE_SURE, HAUTEURS_LIBRES, Y_PAR_DEFAUT, dansLaBandeSure, boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
-import { CAPTION_COLORS, CAPTION_SCALES, type CaptionStyleId } from '../types.ts';
+import { crochetsARemplir, BANDE_SURE, HAUTEURS_LIBRES, Y_PAR_DEFAUT, dansLaBandeSure, boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
+import { CAPTION_COLORS, CAPTION_SCALES, type Caption, type CaptionStyleId } from '../types.ts';
 
 test('la détection sous le doigt inclut les bords du rectangle', () => {
   const box = { x: 100, y: 200, width: 300, height: 80 };
@@ -144,4 +144,33 @@ test('tous les paliers de sous-titre tiennent dans la bande sûre', () => {
       `paliers ${HAUTEURS_LIBRES[i - 1]} et ${HAUTEURS_LIBRES[i]} trop proches`,
     );
   }
+});
+
+test('un gabarit non rempli est repéré avant l’export', () => {
+  /*
+   * Constaté sur un montage livré : quatre textes sur quatre étaient des
+   * gabarits, gravés dans le fichier et prêts à publier. Aucune mesure ne le
+   * disait — la couverture texte était même bonne, puisqu'il y avait du texte.
+   *
+   * Le crochet se cherche n'importe où dans la phrase : une accroche à moitié
+   * remplie n'est pas remplie.
+   */
+  const texte = (t: string): Caption => ({
+    id: t, text: t, start: 0, end: 1, style: 'punch', y: 0.3,
+  });
+
+  const trous = [
+    '[TITRE] — ÉPISODE [02]',
+    '[Ce qui menace]',
+    'QUEL [ROYAUME] TOMBE ENSUITE ?',
+  ].map(texte);
+  assert.equal(crochetsARemplir(trous).length, 3);
+
+  const remplis = [
+    'AZNAROTH — ÉPISODE 02',
+    'Le royaume de glace tombe',
+    'Et toi, tu tiendrais combien ?',
+    '',
+  ].map(texte);
+  assert.deepEqual(crochetsARemplir(remplis), [], 'un texte écrit est pris pour un gabarit');
 });

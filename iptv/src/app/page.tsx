@@ -22,6 +22,7 @@ export default function Accueil() {
     total: totalReel,
     ...cache.compterParEtat(),
     aTester: choisirCandidats(cache).length,
+    dernierImport: cache.dernierImport(),
   }
 
   // Deux vides, et les confondre enferme.

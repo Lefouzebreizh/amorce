@@ -6,6 +6,12 @@
 
 Autonomie totale, zéro permission. Tu construis, tu vérifies, tu montres. 80 % action.
 
+**Cette autonomie vaut pour ce qui naît** : un fichier neuf, une compétence
+neuve, un projet neuf. Dès qu'un geste **touche à de l'existant**, le §0 bis
+prend le relais et impose de cartographier avant d'écrire. Les deux ne se
+contredisent pas : on garde la vitesse là où rien ne peut être écrasé, et le
+frein là où quelque chose peut l'être.
+
 Trois exceptions, et elles seules : ce qui part **en public au nom d'Erwann**
 (48 000 membres, une réponse publiée ne se retire pas), ce qui **détruit sans
 retour**, ce qui **engage de l'argent**.
@@ -54,6 +60,73 @@ vaut mieux qu'un garde-fou qui coûte une heure à l'humain.
 Une proposition de remplacer cette section se discute donc, mais ne s'applique
 pas d'office : elle arrive presque toujours d'un gabarit générique qui ne sait
 rien de ce terrain.
+
+**Et le même gabarit est revenu le jour même — amendé, pas reconduit à
+l'identique.** Le propriétaire n'en a pris que la moitié qui résiste à
+l'objection ci-dessus : la lecture reste libre, donc rien n'attend le réveil
+pour être compris ; ce qui attend son accord, c'est l'**écriture sur de
+l'existant**. Le régime d'autonomie du §0 tient donc pour tout ce qui naît, et
+le §0 bis s'applique à ce qui se modifie. La phrase « ce qui protège n'est pas
+la permission, c'est la vérification » reste vraie et n'est pas remplacée : le
+§0 bis l'outille au lieu de la contredire.
+
+## 0 bis. TOUCHER À DE L'EXISTANT
+
+Le §0 fait avancer vite. Cette section-ci empêche cette vitesse de détruire ce
+qui marche déjà. Elle ne s'applique qu'aux gestes qui **modifient ou remplacent**
+du code, un document ou une compétence qui existe. Créer du neuf reste sous §0.
+
+**Numéroté « 0 bis » et non « 1 » à dessein :** d'autres fichiers renvoient aux
+sections par leur numéro — `paper-manager/README.md` cite `CLAUDE.md §2`.
+Renuméroter aurait cassé ces renvois en silence. Ce fichier est lu par une
+douzaine de compétences et par un hook : il se modifie comme du code partagé.
+
+### 1. Cartographier avant d'écrire
+
+Avant de modifier un fichier, savoir qui en dépend. `grep` sur le nom de la
+fonction, du champ, de la commande — pas seulement sur le fichier. Une fonction
+n'est jamais remplacée sans avoir vérifié où elle est appelée.
+
+Ce que ça coûte : trente secondes. Ce que ça évite : une signature changée dans
+un module que trois autres importent, et trois pannes qu'aucun test ne couvre.
+
+### 2. Chirurgical, jamais par écrasement
+
+On modifie le moins possible et on conserve l'existant. Réécrire un fichier en
+entier pour changer trois lignes détruit les commentaires qui portaient la
+raison des choix — et dans ce dépôt, la raison vaut plus que le code.
+
+Un fichier qu'on n'a pas lu ne se réécrit pas. Un fichier qu'on a lu se modifie
+par touches nommées.
+
+### 3. Le menu avant l'écriture
+
+Lire et cartographier est libre : c'est ce qui rend les deux règles ci-dessus
+possibles, et le §6 encadre déjà le coût de lecture.
+
+**Écrire ne l'est pas.** Avant la première écriture d'un lot qui touche à de
+l'existant, annoncer en trois à cinq lignes : quels fichiers, quel geste sur
+chacun, ce qui reste intact. Puis attendre le feu vert.
+
+Ce menu n'est pas une politesse, c'est le dernier moment où une erreur de
+compréhension coûte une phrase au lieu d'un correctif.
+
+### 4. Un doublon arrête le geste
+
+Si un composant qui ressemble à ce qu'on s'apprête à écrire existe déjà, on
+s'arrête et on propose : étendre l'existant, le remplacer, ou coexister. On ne
+tranche pas seul, et surtout on n'écrit pas un second composant en espérant que
+personne ne remarque le premier.
+
+C'est la règle la plus rentable des quatre : deux outils qui font la même chose
+se déclenchent l'un à la place de l'autre, et le moins bon gagne une fois sur
+deux.
+
+### Ce que cette section ne suspend pas
+
+Les trois exceptions du §0 restent les trois exceptions. Et une question posée
+au titre du §0 bis **ne bloque pas le reste du chantier** : on demande, et on
+part sur ce qui ne dépend pas de la réponse, dans le même message.
 
 ## 1. ADN
 
@@ -183,6 +256,19 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   l'achat. Mais **pas d'adresse, pas de bouclier** : les lignes du socle n'ont
   pas de contrat à auditer, et exiger une adresse pour LINK/USDT lui interdisait
   tout achat à chaque passe.
+- **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
+  sa promesse. Deux routes, une table de deux colonnes utiles, **zéro
+  dépendance** : la plateforme fournit `Request`, `Response` et `crypto.subtle`.
+  Il sait deux choses — cette clé est-elle authentique, ce paiement tient-il
+  toujours — et **aucun média ne l'atteint jamais**.
+  **Pas de comptes** : Amorce se vend une fois, 49 €, et une clé suffit. Le
+  serveur ne sait donc pas qui vous êtes, seulement qu'une clé a été payée. La
+  clé porte sa propre preuve — `AMO-<référence>-<sceau>`, le sceau étant un
+  HMAC de la référence — si bien que la base ne répond qu'aux deux questions que
+  le calcul ne tranche pas : ce paiement a-t-il eu lieu, a-t-il été remboursé.
+  Tout ce qui décide vit dans `src/index.ts`, qui ne connaît que l'interface
+  `Base` : la suite entière, **signature Stripe comprise**, s'éprouve sans D1,
+  sans wrangler et sans réseau. Se vérifie depuis son dossier.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
@@ -310,6 +396,13 @@ préparation, pas de chance. `/jauge` avant un gros lot.
   en même temps, et pour ce qui est long : on lance en tâche de fond, on
   travaille sur ce qui n'en dépend pas, on ne réinterroge pas toutes les
   trente secondes.
+- **Annoncer ce qu'on va ouvrir, avant de l'ouvrir.** Trois à cinq fichiers
+  nommés en une ligne — « je pioche dans X, Y, Z » — puis on lit et on
+  continue. Ce n'est **pas** une demande de permission, et ça ne suspend rien :
+  c'est un budget dit à voix haute. Une session qui doit écrire la liste
+  choisit ; une session qui ouvre au fil de l'eau parcourt. Le propriétaire
+  peut couper d'un mot au message suivant, mais le travail n'attend pas sa
+  réponse — le paragraphe « jamais de temps mort » du §0 prime.
 - **Livrer tôt.** Un résultat qui tourne vaut mieux que le bon résultat annoncé
   au quinzième message.
 - **Trois essais par bug**, puis on livre la version dégradée qui marche et on
@@ -374,6 +467,29 @@ Deux symptômes pour la même cause, et c'est ce qui trompe : `curl` rend `000`
 là où `aiohttp` rend « 403, requête refusée ». Une session qui voit le 403 croit
 à une clé manquante et part chercher un compte d'API. Il n'y en a pas besoin :
 l'hôte est simplement hors d'atteinte.
+
+**Aucune plateforme sociale n'est joignable, et un greffon installé ici le
+niera.** Mesuré le 29/08/2026, treize hôtes sondés d'un coup : Reddit — page et
+API —, X, YouTube, TikTok, Instagram, Hacker News et son index Algolia,
+Polymarket, arXiv et Techmeme rendent tous `000`. **Seul `api.github.com`
+répond.** Douze sur treize.
+
+Le piège n'est pas le mur, c'est ce qu'un outil en dit. Le greffon
+`last30days` s'installe sans erreur, s'active, et son hook de démarrage annonce
+à **chaque nouvelle session** : « Reddit, Hacker News, and Polymarket work out
+of the box ». La phrase vient de son README, pas de ce terrain. Une session qui
+la lit au réveil promet une veille qu'elle ne peut pas faire.
+
+D'où la règle : **un greffon déclare ce qu'il sait faire, jamais ce que cette
+machine lui laisse faire.** Ce qui va chercher le monde extérieur — veille,
+recherche sociale, lecture de vidéos — s'installe sur la machine du
+propriétaire, qui a du vrai réseau ; ce qui vit dans le dépôt reste ici. Le cas
+détaillé, avec les API payantes qui n'y changent rien, est dans
+`/video-de-reference`.
+
+Deuxième raison, indépendante de la première : un greffon installé ici atterrit
+dans `/root/.claude/`, à l'intérieur d'un conteneur repris après inactivité. Il
+disparaît. **Seul le dépôt persiste.**
 
 **`youtu.be` et `youtube.com` sont refusés eux aussi** — `EGRESS_BLOCKED`,
 mesuré le 29/08. Cela compte parce qu'un lien vidéo arrive souvent seul, sans
@@ -622,7 +738,10 @@ disaient pas.
 
 ### Modifier ce dépôt
 
-Chirurgical : chaque ligne changée se rattache à la demande. Ne pas « améliorer »
+Chirurgical : chaque ligne changée se rattache à la demande. **Avant de
+remplacer une fonction, chercher qui l'appelle** — `grep` sur son nom, dans tout
+le dépôt. Un remplacement qui compile n'est pas un remplacement sans appelant,
+et c'est le second qui casse à distance. Ne pas « améliorer »
 le code voisin ni ses commentaires — les blocs de tête portent la justification
 des décisions, et c'est ce que ce dépôt a de plus précieux. Une modification ne
 touche qu'un projet, sauf configuration racine. Français partout — commentaires,

@@ -211,6 +211,16 @@ export interface Depot {
   element(id: string): Element | undefined
   reglage(cle: string): string | undefined
   poserReglage(cle: string, valeur: string): void
+  /**
+   * L'import le plus récent, toutes sources confondues, ou `undefined` si le
+   * catalogue est vide.
+   *
+   * Le classement (`reclasser`) ne relit que ce qui est déjà en base : sur une
+   * liste communautaire dont les hôtes tournent en continu, une base jamais
+   * réimportée accumule des URL périmées qu'aucun reclassement ne corrige. Le
+   * seul remède visible depuis l'interface est de savoir *que* c'est vieux.
+   */
+  dernierImport(): string | undefined
   compter(filtres?: Filtres): number
   lister(filtres?: Filtres): Element[]
   chercher(saisie: string, filtres?: Filtres): Element[]
@@ -605,6 +615,13 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
            ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur`,
         )
         .run(cle, valeur)
+    },
+
+    dernierImport(): string | undefined {
+      const ligne = base.prepare('SELECT MAX(importe_le) AS dernier FROM source').get() as
+        | Ligne
+        | undefined
+      return texte(ligne?.['dernier'])
     },
 
     ficheParTitre(titre): FicheSerie | undefined {

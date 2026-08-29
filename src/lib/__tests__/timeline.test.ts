@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { chopped, layoutClips, sliceAt, totalDuration, effectiveTransition, withoutSilences } from '../timeline.ts';
+import { alterneLesRushes, chopped, layoutClips, sliceAt, totalDuration, effectiveTransition, withoutSilences } from '../timeline.ts';
 import { DEFAULT_CLIP, type Clip, type TransitionKind } from '../types.ts';
 
 function makeClip(seconds: number, transition: TransitionKind = 'cut', td = 0): Clip {
@@ -199,4 +199,52 @@ test('une prise courte se découpe toujours normalement', () => {
   // La borne ne doit pas changer le cas courant : 10 s visées à 2 s font 5.
   const pieces = chopped({ ...DEFAULT_CLIP, id: 'court', assetId: 'a', outPoint: 10 }, 2, donneUnId);
   assert.equal(pieces.length, 5);
+});
+
+test('deux morceaux du même rush ne se suivent pas', () => {
+  /*
+   * Constaté sur un montage rejeté : neuf rushes, dix-huit morceaux, et trente
+   * vignettes sur quarante montraient la même image. Découper un rush en huit
+   * et alterner les mouvements ne fabrique pas de la variété — ça fabrique de
+   * la répétition avec du mouvement dessus.
+   */
+  const morceau = (assetId: string, n: number): Clip => ({
+    ...DEFAULT_CLIP, id: `${assetId}-${n}`, assetId, inPoint: n, outPoint: n + 1,
+  });
+  const entree = [
+    ...Array.from({ length: 8 }, (_, i) => morceau('a', i)),
+    ...Array.from({ length: 3 }, (_, i) => morceau('b', i)),
+    morceau('c', 0),
+  ];
+
+  const sortie = alterneLesRushes(entree);
+  assert.equal(sortie.length, entree.length, 'un morceau a été perdu');
+
+  // Le rush « a » est majoritaire : on ne peut pas éviter qu'il se répète, mais
+  // les deux autres doivent être étalés, pas empilés à la fin.
+  const positions = sortie.map((c) => c.assetId);
+  const dernierB = positions.lastIndexOf('b');
+  assert.ok(dernierB > 3, `le rush b finit en bloc au début : ${positions.join('')}`);
+
+  // L'ordre à l'intérieur d'un rush est conservé : une action ne se joue pas à
+  // l'envers.
+  const ordreA = sortie.filter((c) => c.assetId === 'a').map((c) => c.inPoint);
+  assert.deepEqual(ordreA, [0, 1, 2, 3, 4, 5, 6, 7], 'les morceaux de « a » ont été mélangés');
+});
+
+test('avec assez de rushes, aucune répétition ne subsiste', () => {
+  const morceau = (assetId: string, n: number): Clip => ({
+    ...DEFAULT_CLIP, id: `${assetId}-${n}`, assetId, inPoint: n, outPoint: n + 1,
+  });
+  // Neuf rushes coupés en deux : le cas d'Erwann, dix-huit morceaux.
+  const entree = 'abcdefghi'.split('').flatMap((a) => [morceau(a, 0), morceau(a, 1)]);
+
+  const sortie = alterneLesRushes(entree);
+  for (let i = 1; i < sortie.length; i += 1) {
+    assert.notEqual(
+      sortie[i].assetId,
+      sortie[i - 1].assetId,
+      `deux morceaux de « ${sortie[i].assetId} » se suivent en position ${i}`,
+    );
+  }
 });

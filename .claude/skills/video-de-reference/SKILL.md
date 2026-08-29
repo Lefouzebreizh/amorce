@@ -40,6 +40,23 @@ Un connecteur YouTube n'y changerait rien non plus, et pour une raison
 différente : un connecteur rend du **texte**. Un titre, une description, une
 transcription. Le style d'un montage ne passe pas par une transcription.
 
+**Une API payante de données sociales n'y change rien non plus**, et c'est le
+troisième réflexe après le miroir et le connecteur. Mesuré le 29/08/2026 :
+`scrapecreators.com` et `api.scrapecreators.com` rendent `000` eux aussi — même
+mandataire, même refus de tunnel, avant toute question de clé. La question
+mérite d'être tranchée ici parce qu'elle revient et que la réponse est
+contre-intuitive : ScrapeCreators publie treize compétences Claude Code sous
+licence MIT (`ScrapeCreators/social-media-research-skills`) et un CLI npm
+(`@scrapecreators/cli`) qui couvrent exactement ce qui manque — posts
+surperformants, transcriptions, commentaires, démontage de profil. Les installer
+dans ce dépôt fabriquerait des compétences incapables de tourner, ce que
+`CLAUDE.md` interdit en propres termes.
+
+Elles tournent, en revanche, **sur la machine du propriétaire**, qui a du vrai
+réseau — même partage que le radar `pepites/`. Le branchement se décide donc
+là-bas, sur les cent crédits offerts, avant d'engager l'abonnement ; et ce qui
+reviendrait ici serait un **fichier de résultats**, jamais un appel.
+
 **Ce qui marche, en revanche : le fichier lui-même.** Un `.mp4` déposé dans la
 conversation arrive entier. C'est le seul chemin, et il faut le demander en une
 phrase plutôt que de faire semblant d'avoir vu la vidéo :

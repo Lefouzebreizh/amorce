@@ -6,6 +6,17 @@ import { Vide } from '../../composants/Vide.tsx'
 import { detecterTheme, ordreTheme } from '../../normalisation/theme.ts'
 import { depot } from '../../serveur/depot-partage.ts'
 
+/**
+ * Le plafond des fiches déclarées à lire, pas un vrai compte de séries.
+ *
+ * `500` suffisait aux panneaux d'essai ; un vrai catalogue Xtream en déclare
+ * couramment plusieurs milliers. Sans ce relèvement, les trois quarts d'un
+ * catalogue de 4 000 séries restaient invisibles, sans qu'aucune pagination
+ * ne le signale — l'écran affichait juste « 499 séries » comme si c'était le
+ * compte réel.
+ */
+const TOUTES_LES_FICHES = 20000
+
 /*
  * Deux notions de « série » cohabitent, et ce n'est pas un défaut de
  * conception : c'est le domaine.
@@ -31,7 +42,7 @@ export default async function Series({
   }
 
   const derivees = cache.series()
-  const declarees = cache.fiches({ limite: 500 })
+  const declarees = cache.fiches({ limite: TOUTES_LES_FICHES })
 
   const parTitre = new Map<
     string,

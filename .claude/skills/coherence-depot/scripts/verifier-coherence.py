@@ -276,7 +276,13 @@ def controler_chemins_cites(claude_md: str, releve: Releve) -> None:
     bases = [RACINE, RACINE / "src", RACINE / ".claude", RACINE / "archives-backlog"]
     manquants = []
     for chemin in sorted(set(re.findall(r"`([\w./-]+/[\w./-]*)`", claude_md))):
-        if chemin.startswith(("http", "@", "~")) or " " in chemin:
+        if chemin.startswith(("http", "@", "~", "/")) or " " in chemin:
+            # Un chemin absolu (`/api/devis`, `/root/.claude/`) ne désigne
+            # jamais un fichier du dépôt : joint à une base, pathlib
+            # l'ignorerait et rendrait le chemin absolu tel quel — au
+            # mieux une vérification qui ne vérifie rien, au pire un
+            # `PermissionError` sur un dossier hors de portée du CI, comme
+            # `/root/.claude` alors inaccessible à l'utilisateur du runner.
             continue
         if "*" in chemin or chemin.startswith("."):
             continue
@@ -409,6 +415,45 @@ def controler_projets_typescript(releve: Releve) -> None:
         )
 
 
+def controler_projets_dans_la_barriere(releve: Releve) -> None:
+    """
+    Tout projet qui sait se tester doit être routé dans `verifier.sh`.
+
+    La barrière **énumère** les projets JavaScript et TypeScript à la main ;
+    seules les suites Python sont découvertes. Un projet neuf y manque donc par
+    défaut, et ses tests ne s'exécutent jamais — ce qui est pire qu'un projet
+    sans tests, parce qu'on croit le contraire.
+
+    Mesuré sur `licence-serveur/` : neuf contrôles écrits, zéro exécuté, et
+    rien pour le dire. Le projet qui garde l'argent était le seul que la
+    barrière ne regardait pas.
+
+    Ce contrôle-ci a une raison d'être particulière : les autres comparent le
+    dépôt à **ce qu'il dit de lui-même**, et la barrière ne dit rien d'elle —
+    aucune déclaration ne la contredit, donc rien ne la surveillait.
+    """
+    barriere = (RACINE / ".claude" / "skills" / "verifier" / "scripts" / "verifier.sh").read_text(
+        encoding="utf-8"
+    )
+    for dossier in sorted(RACINE.iterdir()):
+        if not dossier.is_dir() or dossier.name in PAS_DES_PROJETS or dossier.name.startswith("."):
+            continue
+        manifeste = dossier / "package.json"
+        if not manifeste.exists():
+            continue
+        try:
+            scripts = json.loads(manifeste.read_text(encoding="utf-8")).get("scripts", {})
+        except json.JSONDecodeError:
+            continue
+        if "test" not in scripts:
+            continue
+        releve.faux_si(
+            f"{dossier.name}/*)" not in barriere,
+            f"{dossier.name}/ sait se tester mais n'est pas routé dans verifier.sh : "
+            f"ses tests ne tourneront jamais, et rien ne le dira.",
+        )
+
+
 def main(argv: list[str]) -> int:
     claude_md = (RACINE / "CLAUDE.md").read_text(encoding="utf-8")
     releve = Releve()
@@ -423,6 +468,7 @@ def main(argv: list[str]) -> int:
     controler_annonce_verifications(releve)
     controler_projets_typescript(releve)
     controler_declencheurs_partages(releve)
+    controler_projets_dans_la_barriere(releve)
 
     for message in releve.faux:
         print(f"  ✗  {message}")
