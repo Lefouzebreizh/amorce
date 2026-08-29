@@ -2250,19 +2250,47 @@ Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
 ses routes serveur. C'était la réponse depuis le début, et une heure est passée
 à contourner un quota au lieu de changer de mur.
 
-## Le quota de déploiement est une ressource commune, et les sessions la vident
+## Le quota de déploiement se compte par projet, pas par compte
 
-Un compte d'hébergeur gratuit plafonne les déploiements par **jour et par
-compte** — cent chez Vercel. Ce dépôt reçoit plusieurs sessions en parallèle et
+**Correction d'une phrase de ce fichier, mesurée le 29/08/2026.** Il était écrit
+ici que le plafond était « par jour et par compte ». Les horodatages disent
+autre chose :
+
+| Heure | Projet | Résultat |
+| --- | --- | --- |
+| 01:27 | `amorce` **et** `amorce-51up` | refusés, « more than 100 » |
+| 01:55 | `amorce-51up` | **Ready** |
+| 01:59 | `amorce` | refusé, « more than 100 » |
+
+Un seul compteur partagé ne peut pas produire ça : `amorce-51up` a déployé
+pendant qu'`amorce` était refusé, à quatre minutes d'intervalle, et `amorce` ne
+pouvait pas consommer cent déploiements dans ces quatre minutes. Quel qu'en soit
+le mécanisme exact — le message d'erreur ne le dit pas et la documentation de
+l'éditeur est hors d'atteinte derrière le mandataire — **les deux projets ne
+tombent pas ensemble.**
+
+La conséquence est pratique et elle inverse un conseil : quand le projet
+principal d'un dépôt est bouché par le travail des autres sessions, **le projet
+qui porte la page de vente peut déployer quand même.** Attendre vingt-quatre
+heures était inutile ; il suffisait de regarder l'autre projet.
+
+Ce qui reste vrai, en revanche, et ce qui suit ci-dessous : les aperçus coûtent,
+chaque projet branché sur le dépôt ajoute un déploiement par PR, et couper les
+aperçus de ce qui n'en a pas besoin reste le bon geste.
+
+## Les aperçus coûtent, et les sessions les vident
+
+Ce dépôt reçoit plusieurs sessions en parallèle et
 fusionne **95 pull requests dans la journée**, mesuré le 28/08/2026 : chacune
 déclenche un déploiement d'aperçu, et le compteur est vidé par du travail qui
 n'a rien à voir avec celui qui en a besoin.
 
 **Le symptôme arrive au pire moment et ne ressemble pas à sa cause.** Ici :
-« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec
-les vingt PR de montage vidéo qui l'ont consommé, et le projet qu'on cherchait
-à mettre en ligne — une page de vente, la seule chose qui pouvait rentrer de
-l'argent — reste bloqué vingt-quatre heures.
+« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec les
+vingt PR de montage vidéo qui l'ont consommé. Et le message ment sur la portée
+autant que sur la durée : il parle du compte, il ne vaut que pour le projet, et
+il dit vingt-quatre heures là où le déploiement suivant est passé une demi-heure
+plus tard.
 
 Trois choses à en retenir :
 
