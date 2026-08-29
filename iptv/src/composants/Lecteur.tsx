@@ -132,13 +132,45 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
       hls.on(Hls.Events.MANIFEST_PARSED, relever)
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, relever)
       hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, relever)
+      let reprises = 0
       hls.on(Hls.Events.ERROR, (_evenement, donnees) => {
         if (!donnees.fatal) return
-        // Une erreur fatale n'est pas toujours définitive : hls.js sait
-        // repartir d'un trou réseau ou d'une erreur de démuxage. On ne rend la
-        // main à l'utilisateur qu'au troisième cas, celui dont on ne revient pas.
-        if (donnees.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad()
-        else if (donnees.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError()
+
+        // Un refus n'est pas un trou réseau, et les confondre coûte cher.
+        //
+        // Relevé sur une vraie installation : le mandataire renvoyait le 403 du
+        // fournisseur en 404 ms, et l'écran affichait « Connexion au flux… »
+        // indéfiniment. La cause était ici — toute erreur réseau déclenchait un
+        // `startLoad()`, sans condition ni plafond. Un flux géobloqué se
+        // redemandait donc en boucle, pour toujours, derrière un message qui
+        // promettait que ça allait venir.
+        //
+        // Un code 4xx est définitif : le fournisseur a répondu, et il a dit non.
+        // Réessayer ne changera rien, et sur un abonnement à connexions limitées
+        // cela consomme le peu qu'on a.
+        const code = donnees.response?.code
+        if (code !== undefined && code >= 400 && code < 500) {
+          setErreur(
+            code === 404 || code === 410
+              ? `Ce flux n’existe plus chez le fournisseur (${String(code)}).`
+              : `Le fournisseur a refusé ce flux (${String(code)}) — chaîne géobloquée, ` +
+                `retirée, ou réservée à un abonnement.`,
+          )
+          hls.stopLoad()
+          return
+        }
+
+        if (donnees.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          // Un vrai trou réseau se répare souvent tout seul — mais trois fois
+          // suffisent à le savoir. Au-delà, insister n'est plus de la
+          // robustesse, c'est un écran qui ment.
+          reprises += 1
+          if (reprises <= 3) hls.startLoad()
+          else {
+            setErreur('Le flux ne répond pas, après trois tentatives.')
+            hls.stopLoad()
+          }
+        } else if (donnees.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError()
         else setErreur('Le flux ne répond pas. Le fournisseur l’a peut-être retiré.')
       })
 

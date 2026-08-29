@@ -3578,3 +3578,34 @@ identifiants entre accents graves. Écrire ça dans un commentaire situé **à
 l'intérieur d'un littéral de gabarit** — le générateur de site en est fait — le
 termine et casse la compilation. Le message de `tsc` désigne la ligne du
 commentaire, pas le gabarit.
+
+## Réessayer sans plafond transforme un refus en écran qui ment
+
+Relevé sur une installation réelle, dans le journal du serveur :
+
+```
+GET /lecture/ch_53ac66da…      200 in 2.2s
+GET /api/flux?e=ch_53ac66da…   403 in 404ms
+```
+
+Le refus était connu en **404 millisecondes**, et l'écran affichait « Connexion
+au flux… » indéfiniment. La cause tenait en une ligne : toute erreur réseau
+déclenchait un `startLoad()`, sans condition ni plafond. Un flux géobloqué se
+redemandait donc en boucle, pour toujours, derrière un message qui promettait
+que ça allait venir.
+
+**Un refus n'est pas un trou réseau**, et les confondre coûte trois fois :
+l'utilisateur attend ce qui ne viendra pas, le fournisseur est sollicité sans
+fin, et sur un abonnement à connexions limitées cette boucle consomme le peu
+qu'on a — au point de faire échouer les autres chaînes.
+
+La distinction est dans la réponse, et elle est gratuite : un **4xx** veut dire
+que le serveur a répondu et qu'il a dit non. Réessayer ne changera rien. Un
+délai dépassé, une coupure, un 5xx peuvent se réparer — mais **trois tentatives
+suffisent à le savoir** ; au-delà, insister n'est plus de la robustesse.
+
+La leçon générale, qui dépasse la vidéo : **toute reprise automatique a besoin
+d'un plafond et d'une condition de sortie**, sinon elle ne rend pas un système
+robuste, elle rend une panne invisible. Et le symptôme est toujours le même —
+un indicateur de chargement qui ne s'éteint jamais, là où une phrase honnête
+tenait en une ligne.
