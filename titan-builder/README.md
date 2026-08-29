@@ -47,6 +47,14 @@ Le script s'arrête après le dossier et la page. Les photos se déposent dedans
 ensuite, et `npm run generer` les reprend : séparer les deux évite d'attendre un
 transfert de photos pendant que le client est encore en ligne.
 
+## Après la livraison
+
+`APRES-LA-LIVRAISON.md` : ce qui est compris dans les 299 €, ce qui ne l'est
+pas, et comment le dire. Le fichier part d'une mesure — **une modification
+complète se régénère en 277 ms** — parce que c'est elle qui décide de la
+frontière : le travail n'est pas dans la modification, il est dans la
+conversation.
+
 ## Mettre le site du client en ligne
 
 Le générateur produit un dossier autonome : **une page HTML, les photos, et
