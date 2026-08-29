@@ -4,7 +4,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { applyAutoEdit, PLANS_MAX } from '@/lib/autoEdit';
+import { PLANS_MAX } from '@/lib/autoEdit';
 import { formatTime, loadAsset, loadSampleCue, loadVoiceCue } from '@/lib/media';
 import { isVisuel, toFile } from '@/lib/share';
 import { useStudio } from '@/lib/store';
@@ -129,6 +129,10 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
   const addAssets = useStudio((s) => s.addAssets);
   const removeAsset = useStudio((s) => s.removeAsset);
   const appendClip = useStudio((s) => s.appendClip);
+  const captions = useStudio((s) => s.project.captions);
+  const cues = useStudio((s) => s.project.cues);
+  const montageExpress = useStudio((s) => s.montageExpress);
+  const ajouterAuMontage = useStudio((s) => s.ajouterAuMontage);
 
   /**
    * Avancement de l'import, ou null au repos.
@@ -175,11 +179,15 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
     setBusy(null);
   };
 
-  const autoEdit = () => {
-    const state = useStudio.getState();
-    const next = applyAutoEdit(state.project);
-    useStudio.setState({ project: next, selection: null, playhead: 0, playing: false });
-  };
+  /*
+   * Rushes importés qui ne sont dans aucun plan.
+   *
+   * C'est ce qu'on vient chercher en revenant sur cette étape : une vidéo de
+   * plus. Sans ce compte, la seule façon de l'inclure était le montage express,
+   * qui efface tout le reste.
+   */
+  const absents = assets.filter((asset) => !clips.some((clip) => clip.assetId === asset.id));
+  const monte = clips.length > 0;
 
   return (
     <div className="space-y-3">
@@ -247,12 +255,29 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
         <Hint tone="warn">{storageError}</Hint>
       )}
 
-      {assets.length > 0 && (
+      {/*
+        Deux visages pour un même bloc, et c'est tout l'enjeu de cette étape.
+
+        Tant qu'aucun montage n'existe, le montage express est bien la première
+        chose à faire : il reste l'action principale, pleine largeur.
+
+        Dès qu'un montage existe, il devient le geste le plus destructeur du
+        studio — il remplace plans, textes et bruitages d'un coup. Or on revient
+        ici pour une seule raison : ajouter un rush. Laisser l'express en bouton
+        principal, libellé « Monter automatiquement (5 rushes) », c'était offrir
+        exactement le bouton qu'on croit devoir presser pour inclure le nouveau
+        venu — et perdre tout le travail des étapes 3, 4 et 5.
+
+        L'ajout prend donc la place principale, l'express passe en retrait, et
+        son avertissement passe **avant** lui avec les comptes réels : une ligne
+        grise sous un bouton se lit après l'avoir pressé.
+      */}
+      {assets.length > 0 && !monte && (
         <Panel
           title="Montage express"
           subtitle="Assemble tout automatiquement : plans courts, transitions, bruitages, rendu cinéma."
         >
-          <Button variant="primary" className="w-full" onClick={autoEdit}>
+          <Button variant="primary" className="w-full" onClick={montageExpress}>
             ⚡ Monter automatiquement (
             {assets.length > PLANS_MAX
               ? `${PLANS_MAX} des ${assets.length} rushes`
@@ -260,8 +285,7 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
             )
           </Button>
           <p className="mt-2 text-xs leading-relaxed text-muted">
-            Point de départ, pas résultat final : chaque plan reste modifiable ensuite. Attention, cela
-            remplace le montage en cours.
+            Point de départ, pas résultat final : chaque plan reste modifiable ensuite.
           </p>
           {/*
             Le bouton dit combien il prend, et cette phrase dit pourquoi.
@@ -276,6 +300,39 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
               montage dépasse 35 s et on décroche avant la fin.
             </p>
           )}
+        </Panel>
+      )}
+
+      {monte && (
+        <Panel
+          title="Ajouter à ton montage"
+          subtitle={`${clips.length} plan${clips.length > 1 ? 's' : ''} déjà en place.`}
+        >
+          {absents.length > 0 ? (
+            <Button
+              variant="primary"
+              className="w-full"
+              onClick={() => ajouterAuMontage(absents.map((asset) => asset.id))}
+            >
+              ➕ Ajouter à la fin ({absents.length} rush{absents.length > 1 ? 'es' : ''})
+            </Button>
+          ) : (
+            <p className="text-xs leading-relaxed text-muted">
+              Tous tes rushes sont déjà dans le montage. Dépose-en un autre ci-dessus pour
+              l’ajouter.
+            </p>
+          )}
+
+          <Hint tone="warn">
+            <b>Tout refaire effacerait ton travail.</b> Le montage express repart des rushes : il
+            remplacerait tes {clips.length} plan{clips.length > 1 ? 's' : ''}
+            {captions.length > 0 && `, tes ${captions.length} texte${captions.length > 1 ? 's' : ''}`}
+            {cues.length > 0 && ` et tes ${cues.length} bruitage${cues.length > 1 ? 's' : ''}`}. Tu
+            pourras l’annuler, mais autant le savoir avant.
+          </Hint>
+          <Button variant="ghost" className="mt-2 w-full" onClick={montageExpress}>
+            ⚡ Tout refaire depuis les rushes
+          </Button>
         </Panel>
       )}
 

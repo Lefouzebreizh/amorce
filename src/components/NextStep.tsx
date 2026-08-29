@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import { analyzeProject } from '@/lib/analysis';
-import { applyAutoEdit } from '@/lib/autoEdit';
 import { nextStep, type GuideAction } from '@/lib/guide';
 import type { StepId } from '@/lib/steps';
 import { clipDuration } from '@/lib/timeline';
@@ -22,6 +21,7 @@ export function NextStep({ onStep }: { onStep: (step: StepId) => void }) {
   const duplicateClip = useStudio((s) => s.duplicateClip);
   const chopClip = useStudio((s) => s.chopClip);
   const addSoundsOnCuts = useStudio((s) => s.addSoundsOnCuts);
+  const montageExpress = useStudio((s) => s.montageExpress);
 
   const guide = useMemo(() => nextStep(project, analyzeProject(project)), [project]);
 
@@ -37,7 +37,8 @@ export function NextStep({ onStep }: { onStep: (step: StepId) => void }) {
         onStep(action.step);
         break;
       case 'autoEdit':
-        useStudio.setState({ project: applyAutoEdit(project), selection: null, playhead: 0, playing: false });
+        // Par le store, pour que le montage express s'annule comme le reste.
+        montageExpress();
         break;
       case 'duplicateLongest':
         if (longestId) duplicateClip(longestId);
