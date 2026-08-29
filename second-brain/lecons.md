@@ -2430,6 +2430,42 @@ Ce qui se vérifie hors ligne, en revanche, et qui attrape les vraies fautes :
 que le bloc **parse** dans un vrai navigateur, et qu'aucune valeur ne puisse le
 refermer.
 
+## Un contrôle qui cherche dans tout le fichier ne garde aucune de ses sections
+
+`verifier-coherence.py` contrôlait qu'un projet installable apparaisse « dans le
+hook de démarrage » — en cherchant son nom dans le texte entier du script. Le
+hook fait pourtant deux choses distinctes : il **installe** les dépendances, et
+il **affiche** la commande de vérification de chaque projet.
+
+`paper-manager` avait la première et pas la seconde. Le contrôle était vert :
+le bloc d'installation suffisait à rendre le nom présent quelque part. Ses 259
+tests passaient, la CI les découvrait, `verifier.sh` aussi — rien n'était cassé,
+le projet était juste **invisible** dans la liste que lit la session suivante
+pour savoir comment éprouver ce qu'elle touche. Un défaut qui ne rougit nulle
+part et qu'on ne cherche pas, puisqu'on ignore la suite qui manque.
+
+La parade tient en une ligne de code : borner la recherche à la section
+concernée plutôt qu'au fichier.
+
+```python
+bloc = re.search(r"^commandes=\((.*?)^\)", texte, re.S | re.M)
+annonce = bloc.group(1).lower()   # et non texte.lower()
+```
+
+La règle générale, elle, dépasse ce script : **quand un fichier a plusieurs
+sections qui remplissent des rôles différents, un contrôle qui grep le tout
+n'en garde aucune.** Il passe dès que le nom apparaît une fois, ce qui est
+précisément la situation où l'oubli est le plus probable — on a rempli une
+section, pas l'autre. Le symptôme trompe : le contrôle est vert *et* il a
+raison de l'être sur la question qu'il pose ; c'est la question qui est trop
+large.
+
+Corollaire mesuré le même jour : une table de contrôles qui s'écrit à la main
+à côté du code se périme au premier ajout. Celle de `/coherence-depot` avait
+neuf lignes pour dix contrôles — le dixième, ajouté quelques jours plus tôt,
+n'y était jamais entré. Un outil qui existe pour détecter les listes fausses en
+portait une.
+
 ## Une racine à 18 px rend `text-sm` illégal, et rien ne le signale
 
 Mesuré sur la page de vente : six textes à **15,75 px** sous un plancher écrit

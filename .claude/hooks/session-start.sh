@@ -49,6 +49,7 @@ commandes=(
   "Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
   "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
   "Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
+  "Paper-Manager : python3 -m unittest discover -s paper-manager/tests"
   "Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
   "TITAN Builder : (dans titan-builder/) npm run lint|typecheck|test|build"
   "IPTV / VOD : (dans iptv/) npm test, npm run check"
