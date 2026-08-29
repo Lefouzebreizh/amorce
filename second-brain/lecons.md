@@ -1882,34 +1882,64 @@ figees = sum(1 for x in d if x < 0.30)   # deux images consecutives identiques
 
 ## Un serveur de test orphelin fait mesurer la version d'avant
 
-Une vérification d'interface rendait quatre défauts d'un coup, dont un sans
-rapport avec le changement : une page entière sans feuille de style. Le code
-était juste. **Le serveur qui répondait n'était pas celui qu'on venait de
-lancer.**
+**Deux sessions ont trouvé ce défaut la même nuit, dans deux projets sans
+rapport** — le parcours Chromium d'IPTV et le contrôle visuel de la page de
+vente. Même cause, mêmes parades, symptômes opposés : c'est ce qui en fait la
+leçon la mieux établie du fichier.
 
-La cause tient en une phrase : `spawn('npm', ['run', 'start'])` engendre un
-`next start` **petit-fils**, et tuer le `npm` laisse l'enfant vivant, orphelin,
-avec le port. L'exécution suivante n'arrive pas à écouter, ne le dit pas, et
-Playwright interroge le serveur d'il y a un quart d'heure — donc le code d'il y
-a un quart d'heure. Relevé : `ps` montrait un `next-server` de ppid 1, âgé de
-15 minutes, quand le script venait de démarrer.
+**Symptôme A** — une vérification d'interface rend quatre défauts d'un coup,
+dont une page entière sans feuille de style. Le code est juste.
+**Symptôme B** — un contrôle passe au **vert** sur une page cassée exprès pour
+l'éprouver.
 
-Trois gestes, et les trois comptent :
+Dans les deux cas, **le serveur qui répond n'est pas celui qu'on vient de
+lancer**, et il sert le code d'avant.
 
-1. **Lancer en groupe détaché, tuer le groupe** : `spawn(…, { detached: true })`
-   puis `process.kill(-pid, 'SIGTERM')`. Tuer le pid seul ne descend pas.
+### La cause
+
+`npm` engendre un petit-fils. `spawn('npm', ['run', 'start'])` comme
+`npm exec next start` donnent la même chaîne : `npm` → `sh -c` → `next-server`.
+Tuer le `npm` laisse l'enfant vivant, réattaché à init, avec le port.
+
+Relevés des deux côtés : un `next-server` de ppid 1 âgé de quinze minutes quand
+le script vient de démarrer ; et trois `next-server` orphelins sur des ports
+qu'on croyait fermés.
+
+**Et rien ne le signale.** L'exécution suivante n'arrive pas à écouter, son
+message part dans un journal que personne ne lit, `curl` répond 200 tout de
+suite — donc l'attente du serveur **réussit**, et le contrôle interroge la
+version d'il y a un quart d'heure en affichant l'adresse qu'on lui a demandée.
+
+### Les trois gestes, et les trois comptent
+
+1. **Lancer en groupe détaché, tuer le groupe.** En Node,
+   `spawn(…, { detached: true })` puis `process.kill(-pid, 'SIGTERM')`. En
+   shell, `setsid …  & serveur=$!` puis `kill -- "-$serveur"`. Tuer le pid seul
+   ne descend pas.
 2. **Refuser de démarrer si le port répond déjà.** Une requête HTTP de 250 ms
    avant de lancer, et un message qui dit quoi faire. Sans ce garde-fou, le
    défaut est invisible : tout paraît fonctionner.
 3. **Ne pas détecter par `ss`** : le binaire n'existe pas dans ce conteneur, et
-   `ss -ltnp` y rend une sortie vide sans erreur — donc « port libre » alors
-   qu'il ne l'est pas. La sonde portable est la requête HTTP ; pour retrouver le
-   coupable, `ps -eo pid,args`.
+   `ss -ltnp` y rend une sortie vide **sans erreur** — donc « port libre »
+   alors qu'il ne l'est pas. La sonde portable est la requête HTTP ; pour
+   retrouver le coupable, `ps -eo pid,ppid,pgid,args`.
 
 **Piège voisin, même script :** une capture d'écran prise après
 `waitUntil: 'domcontentloaded'` montre la page **sans style** — cet événement
 n'attend pas la feuille. On croit à une régression de CSS. `waitForLoadState('load')`
 avant de photographier.
+
+**La leçon de méthode est la plus importante : un contrôle neuf ne vaut rien
+tant qu'on ne l'a pas vu échouer.** Celui-ci est passé vert deux fois de suite
+et j'allais le livrer. Rien dans sa sortie ne clochait — la bonne adresse, une
+durée plausible, un verdict net. Ce qui l'a démasqué est un geste, pas une
+lecture : **casser la page exprès et exiger le rouge.** Une durée suspecte avait
+mis la puce à l'oreille, mais elle ne prouvait rien — après correction, la même
+mesure prend le même temps.
+
+C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
+donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
+qu'il accepte.
 
 ## Deux versions du même son ne s'additionnent pas, elles battent
 
@@ -2154,17 +2184,12 @@ Trois choses à en tirer :
   déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
   c'est le bon geste ce jour-là seulement.
 
-**Et le plafond est par projet, pas par compte.** Mesuré dans la même minute :
-le projet `amorce` recevait « Resource is limited » pendant que le projet
-`amorce-51up`, branché sur le même dépôt mais sur un autre dossier, affichait
-« Building ». Le message parle pourtant de `api-deployments-free-per-day`, ce
-qui se lit comme une limite de compte — et c'est ce que j'avais écrit ici avant
-de le vérifier.
+**Sur la portée et la durée du plafond**, deux sessions ont mesuré chacune une
+moitié le même soir : voir « Le plafond de déploiement est par projet, et sa
+fenêtre glisse » plus bas. En un mot : un second projet branché sur le même
+dépôt déploie encore quand le premier est bouché, et un refus ne dure pas
+vingt-quatre heures.
 
-La conséquence est une issue, pas seulement une correction : quand un projet est
-bloqué pour la journée, **un second projet Vercel branché sur le même dépôt
-déploie encore**. C'est trente secondes à créer, et cela rend la version du jour
-visible tout de suite au lieu d'attendre vingt-quatre heures.
 ## Un drapeau ajouté « par précaution » est une panne à retardement
 
 `node:sqlite` a demandé `--experimental-sqlite` sur les premières versions de
@@ -2262,10 +2287,18 @@ Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
 ses routes serveur. C'était la réponse depuis le début, et une heure est passée
 à contourner un quota au lieu de changer de mur.
 
-## Le refus de déploiement est une fenêtre glissante, pas un blocage de 24 h
+## Le plafond de déploiement est par projet, et sa fenêtre glisse
 
-**Cette leçon a été écrite faux deux fois de suite dans la même heure, et les
-deux versions sont instructives.** Le relevé complet, le 29/08/2026 :
+Deux sessions ont travaillé cette question le même soir, chacune avec la moitié
+des données, et chacune a publié une conclusion fausse avant que les deux
+relevés soient mis côte à côte. C'est le seul endroit du fichier où l'on voit
+comment une leçon se construit.
+
+**Relevé A** — deux projets branchés sur le même dépôt, à la même minute :
+`amorce` reçoit « Resource is limited » pendant qu'`amorce-51up` affiche
+« Building ». Un compteur unique refuserait les deux.
+
+**Relevé B** — le même projet, à trois moments :
 
 | Heure | Projet | Résultat |
 | --- | --- | --- |
@@ -2274,37 +2307,29 @@ deux versions sont instructives.** Le relevé complet, le 29/08/2026 :
 | 01:59 | `amorce` | refusé |
 | 02:05 | `amorce-51up` | refusé |
 
-**Première version, fausse** : « par jour et par compte ». Le déploiement réussi
-de 01:55 la contredit — un compteur épuisé pour la journée ne laisse rien
-passer.
+**Ensemble, ils donnent les deux moitiés d'une seule règle**, et chacun seul
+menait à une erreur :
 
-**Deuxième version, fausse aussi, et écrite six minutes avant d'être démentie** :
-« par projet ». Elle expliquait 01:55 en donnant à chaque projet son propre
-budget. Mais `amorce-51up` a été refusé à 02:05 après avoir réussi à 01:55 : il
-n'a pas pu consommer cent déploiements en dix minutes.
+- **Le compteur est tenu par projet.** C'est le relevé A qui tranche, et lui
+  seul : le message parle de `api-deployments-free-per-day`, ce qui se lit comme
+  une limite de compte, et c'est ce que ce fichier a affirmé longtemps.
+- **La fenêtre glisse, elle ne se remet pas à zéro le lendemain.** C'est le
+  relevé B : `amorce-51up`, refusé à 01:27, passe à 01:55, et se refait refuser
+  à 02:05. Les déploiements anciens sortent du décompte, une place se libère, le
+  suivant la prend, et la fenêtre se remplit aussitôt.
 
-**Ce qui reste, et qui tient debout :** le refus n'est pas un blocage jusqu'au
-lendemain. Une réussite s'est glissée entre deux refus, à vingt-huit minutes du
-premier. C'est le comportement d'une **fenêtre glissante** — les déploiements
-anciens sortent du décompte, une place se libère, le suivant passe, et la
-fenêtre se remplit aussitôt.
+**Deux issues, et aucune n'est d'attendre :** un second projet branché sur le
+même dépôt déploie encore quand le premier est bouché — trente secondes à créer.
+Et un refus se retente une demi-heure plus tard, pas le lendemain, quoi qu'en
+dise le message.
 
-**Ce qu'on ne sait toujours pas**, et qu'il faut se retenir d'écrire : si le
-compteur est tenu par compte ou par projet. Les données ne permettent pas de
-trancher, le message d'erreur ne le dit pas, et la documentation de l'éditeur est
-hors d'atteinte derrière le mandataire.
-
-La leçon de méthode compte autant que le fait : **un seul point de mesure qui
-contredit une règle suffit à la casser, jamais à en fonder une autre.** La
-première correction a été écrite sur un unique déploiement réussi, publiée avec
-assurance, et démentie par le point suivant. Il fallait dire « la règle écrite
-est fausse » et s'arrêter là.
-
-**Les conseils qui ne dépendent d'aucune de ces hypothèses**, et qui sont donc
-les seuls à suivre : réduire le volume — chaque PR déclenche un déploiement par
-projet branché, et une session qui enchaîne les PR consomme la réserve de la
-page qui doit rentrer de l'argent — ou changer d'hébergeur. Et ne pas attendre
-vingt-quatre heures : réessayer une demi-heure plus tard suffit parfois.
+**La leçon de méthode, payée deux fois dans l'heure :** un point de mesure qui
+contredit une règle suffit à la casser, jamais à en fonder une autre. La
+première correction a conclu « par projet » sur un unique succès et a été
+démentie six minutes plus tard ; la seconde, corrigeant la première, a conclu
+« on ne peut pas savoir » alors que le relevé d'une autre session le disait
+déjà. **Avant de reconstruire une règle, il faut chercher ce que les autres ont
+mesuré** — dans ce fichier, pas dans sa propre session.
 
 ## Les aperçus coûtent, et les sessions les vident
 
@@ -2410,13 +2435,30 @@ texte.split(/\n\s*\n/).map((p) => p.trim().replace(/\s*\n\s*/g, ' ')).filter((p)
 n'éprouve que des valeurs d'une ligne ne peut pas voir ce défaut-là, quel que
 soit leur nombre.
 
-## Une page de démonstration doit se dire telle sur la page
+## Une démonstration se dit telle sur la page, et se marque `noindex`
 
 Un faux numéro et un nom inventé protègent le dépôt du faux témoignage. Ils ne
-protègent pas le prospect qui reçoit le lien : rien, à l'écran, ne distinguait
-la démonstration d'un vrai client. La mention doit être **dans le contenu de la
-page**, pas seulement dans la documentation qui l'accompagne — celle-là, le
-prospect ne la lit jamais.
+protègent ni le prospect qui reçoit le lien, ni le confrère qui la croisera dans
+un moteur. Deux marques sont nécessaires, et elles ne servent pas la même
+personne :
+
+- **La mention dans le contenu de la page**, pas dans la documentation qui
+  l'accompagne — celle-là, le prospect ne la lit jamais. Sans elle, rien à
+  l'écran ne distingue la démonstration d'un vrai client.
+- **`noindex, nofollow`**, parce qu'indexée, l'entreprise fictive apparaît dans
+  les résultats comme un vrai établissement — et le jour où un client réel
+  s'appelle presque pareil, c'est lui qu'elle concurrence avec sa propre fiche.
+
+**Le drapeau appartient au générateur, pas à la copie du fichier.** Retirer la
+ligne à la main après coup marche une fois et se perd à la régénération
+suivante — et personne ne relit une page d'exemple. Un `--demonstration` qui
+traverse l'outil sort avec le fichier, à chaque fois.
+
+**Le piège symétrique, payé le même soir :** générer la démonstration *avec* le
+domaine de production lui donnait un `canonical` vers la racine du site. Elle
+aurait déclaré à Google **être** la page de vente. Une démonstration ne prend ni
+adresse canonique, ni image de partage, ni fiche d'établissement complète : elle
+n'est l'adresse de rien.
 
 ## Une couleur choisie par l'utilisateur ne peut pas décider seule de la lisibilité
 
@@ -2683,57 +2725,6 @@ depuis le disque, ce qui achève de tromper.
 **La parade est un fichier à plat** — `public/exemple.html` → `/exemple.html` —
 qui donne en prime une adresse courte, dictable au téléphone.
 
-## Une page de démonstration se marque `noindex`, et le drapeau va dans l'outil
-
-Une démonstration porte un nom d'entreprise qui n'existe pas et un numéro qui ne
-sonne nulle part. Indexée, elle apparaît dans les résultats comme un vrai
-établissement — et le jour où un client réel s'appelle presque pareil, c'est lui
-qu'elle concurrence avec sa propre fiche.
-
-Le point qui compte, et qui vaut au-delà de ce cas : **le drapeau appartient au
-générateur, pas à la copie du fichier.** Retirer la ligne à la main après coup
-marche une fois et se perd à la régénération suivante — et personne ne relit une
-page d'exemple. `--demonstration` traverse l'outil et sort avec le fichier.
-
-## Un serveur oublié rend vert un contrôle qui mesure le build d'avant
-
-Le contrôle visuel de la page de vente est passé au vert sur une page que
-j'avais **cassée exprès** pour l'éprouver. Il ne mesurait pas la page courante :
-il mesurait un serveur laissé par l'exécution précédente, qui servait encore le
-build d'avant.
-
-Deux causes, et la première explique la seconde :
-
-- **`kill` sur le PID de `npm` ne tue pas le serveur.** La chaîne réelle est
-  `npm exec next start` → `sh -c next start` → `next-server` : on tue
-  l'enveloppe, le petit-fils est réattaché à init et continue de servir. Vérifié
-  à `ps -eo pid,ppid,pgid,args` — trois `next-server` orphelins de ports que je
-  croyais fermés.
-- **Le port occupé ne provoque aucune erreur visible.** `next start` sort en 1
-  et son message part dans un journal que personne ne lit ; `curl` répond 200
-  immédiatement, l'attente du serveur réussit, et le contrôle mesure la page de
-  quelqu'un d'autre en affichant l'adresse qu'on lui a demandée.
-
-Les deux parades, et il faut les deux :
-
-```sh
-setsid npm exec next start -- -p "$port" & serveur=$!   # un groupe à soi
-kill -- "-$serveur"                                      # l'arbre entier
-curl -sf "http://127.0.0.1:$port/" && { echo occupé; exit 1; }   # avant de démarrer
-```
-
-**La leçon de méthode est la plus importante : un contrôle neuf ne vaut rien
-tant qu'on ne l'a pas vu échouer.** Celui-ci est passé vert deux fois de suite
-et j'allais le livrer. Rien dans sa sortie ne clochait — la bonne adresse, une
-durée plausible, un verdict net. Ce qui l'a démasqué est un geste, pas une
-lecture : **casser la page exprès et exiger le rouge.** Une durée suspecte avait
-mis la puce à l'oreille, mais elle ne prouvait rien — après correction, la même
-mesure prend le même temps.
-
-C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
-donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
-qu'il accepte.
-
 ## Un vérificateur qui déduit les projets des fichiers changés ne se voit pas
 lui-même
 
@@ -2894,3 +2885,150 @@ note**. Elle est faite pour les impacts brefs.
 
 Ici elle n'était pas la cause du ronflement — mais elle était bien posée sur
 quatre lits tenus, et elle n'avait rien à y faire.
+
+## Un motif d'exclusion est ancré à la racine, et un voisin le contourne
+
+`main` est passé au rouge sans qu'aucune ligne de code soit en cause :
+
+```
+ESLint: ENOENT: no such file or directory, open
+'artisan-express/.next/static/…/_buildManifest.js'
+```
+
+Deux causes se sont additionnées, et aucune des deux ne se voit en lisant le
+code :
+
+- **`".next/**"` ne couvre que `./.next/`.** Un motif relatif est ancré là où
+  la configuration est lue. Les dossiers de build des projets voisins —
+  `artisan-express/.next/`, `titan-builder/.next/` — n'étaient donc exclus par
+  rien, et le lint de la racine entrait dedans.
+- **La vérification lance les projets en parallèle, dans le même arbre.** Le
+  lint d'un projet lisait un manifeste que le build d'un autre était en train de
+  remplacer. Le fichier existait avant la lecture et après ; il manquait
+  pendant.
+
+D'où un défaut qui n'apparaît **que** sous parallélisme, seulement quand le
+voisin vient d'être construit, et jamais deux fois au même endroit. Relancer le
+donne vert une fois sur deux, ce qui pousse à le classer « flaky » — alors que
+la cause est nette et la réparation définitive.
+
+**La règle : un projet autonome dans un dépôt à plusieurs projets s'exclut
+entièrement de l'outillage des autres**, pas seulement son dossier de build.
+Chacun a sa configuration, ses alias et sa vérification propre ; ce que la
+racine y trouverait n'a de sens pour personne.
+
+**Et l'exclusion se vérifie sur les chemins, pas sur les noms.** Un rejeu local
+de la CI déposait une copie des mêmes projets sous `.verif-ci/copie/` : exclus à
+leur vrai chemin, ils revenaient par celui-là.
+
+## Trois corrections échouées sur un même défaut disent qu'on ne l'a pas mesuré
+
+Un contrôle de zoom recouvrait la règle d'une frise. Trois corrections ont été
+tentées, toutes sur la **position** : un décalage vertical, une rangée dans le
+flux, un rognage du conteneur. Chacune a cassé autre chose — la première a fait
+tomber le parcours entier de vérification pendant trente secondes.
+
+La quatrième fois, la mesure a été faite avant la correction : pour chaque
+étiquette de la règle, demander au navigateur qui reçoit le doigt à cet endroit.
+
+| état | étiquettes masquées |
+| --- | --- |
+| au repos | **aucune** |
+| après un zoom | une sur huit |
+| pendant le défilement | une, et **laquelle change à chaque fois** |
+
+Deux choses que trois tentatives n'avaient pas vues. Le défaut n'existe
+**qu'après un zoom** — au repos la gouttière valait déjà exactement les deux
+boutons. Et il est **mobile**, ce qui explique pourquoi il paraissait
+insaisissable et pourquoi chaque correction semblait marcher une fois sur deux.
+
+Surtout, la mesure a montré qu'aucune position ne pouvait marcher : 44 px de
+bouton — le minimum qu'un pouce attrape — plus 16 px de règle ne tiennent pas
+dans 98 px de frise. **Le problème n'était pas où les mettre, mais qu'ils soient
+là tout le temps.** La sortie était temporelle, pas géométrique : ils s'effacent
+au repos et reviennent au toucher.
+
+Ce qui se généralise : **trois corrections qui échouent sur un même défaut ne
+disent pas que le défaut est difficile, elles disent qu'on corrige une cause
+qu'on n'a pas mesurée.** La règle des trois essais du dépôt est bonne, mais son
+troisième essai doit être une mesure, pas une variante — sinon les trois essais
+se dépensent tous du même côté du problème.
+
+Un corollaire sur la formulation du contrôle qui empêche la régression : il
+porte sur **ce qu'on veut** (« la règle reste lisible »), jamais sur le moyen
+(« les boutons sont ailleurs »). Écrit sur le moyen, il aurait invité une
+quatrième tentative de mise en page — celle qui ne peut pas aboutir.
+
+## Deux grandeurs qui portent le même nom finissent par n'en faire qu'une
+
+Dans un montage, « la durée d'un plan » désigne deux choses : la longueur
+**coupée** dans le rush, et la longueur **vue** à l'écran. Une transition
+recouvre la fin d'un plan et le début du suivant — mesuré, 0,29 s par raccord —
+et l'écart entre les deux est exactement cela.
+
+Le plancher de longueur portait sur la coupe. Résultat : le montage automatique
+livrait **0,61 s vues** par plan là où le module d'analyse du même dépôt en
+récompense 1,1 à 2,8. L'application produisait donc un film que sa propre note
+pénalisait, et son propre guide répondait « tes plans s'enchaînent trop vite
+pour être lus ».
+
+Personne ne l'avait vu parce que le code disait `MIN_SHOT` et que le lecteur
+comprenait « durée d'un plan » — le bon mot pour l'une comme pour l'autre. La
+parade est un nom par grandeur, et le nom porte laquelle : `MIN_SHOT_VU` d'un
+côté, `MIN_SHOT` de l'autre, avec la conversion écrite entre les deux.
+
+**Et la même confusion m'a fait mesurer faux en cherchant à la corriger.** Pour
+juger le montage j'ai additionné la longueur des plans, au lieu d'appeler la
+fonction que le produit utilise pour connaître sa durée. La somme naïve
+annonçait 55 s là où le film en faisait 30 — j'allais écarter dix-neuf rushes
+pour résoudre un problème qui n'existait pas, tout en laissant passer le vrai,
+deux fois plus grave que je ne le croyais.
+
+Ce qui se généralise : **quand un produit sait déjà calculer une grandeur, on
+appelle sa fonction ; on ne la recalcule pas de tête.** Une mesure refaite à la
+main mesure autre chose, et la ressemblance des deux chiffres est précisément
+ce qui empêche de s'en apercevoir.
+
+## Une couverture annoncée et absente est pire que pas de couverture
+
+La fiche de la compétence `verifier` promettait « validation des bases et
+parcours Chromium pour le réseau d'annuaires IA ». Le script ne lançait **rien**
+pour ce projet : aucune case dans sa sélection. Onze sites sans compilateur, sans
+typage et sans test unitaire, dont la seule vérification existante n'était
+appelée par personne.
+
+Le défaut n'est pas l'oubli, c'est le **sens de la lecture**. Une session qui
+touche `annuaire-ia`, lit la fiche, lance la vérification et voit vert en conclut
+que son changement est couvert. Sans la promesse, elle serait allée chercher la
+commande du projet. La phrase fausse a donc coûté davantage que le silence.
+
+**Le contrôle qui l'attrape se fait dans les deux sens, et personne ne fait le
+second :** ce que la documentation annonce doit exister dans le code, et — c'est
+celui qu'on oublie — ce que le code fait doit être annoncé. Ici la fiche citait
+un projet absent du script **et** taisait trois projets présents (Artisan
+Express, TITAN Builder, IPTV). Deux dérives opposées dans la même phrase.
+
+La description d'une compétence n'est pas de la prose : c'est **elle** qui
+décide du déclenchement. Une description périmée ne se contente pas de mentir,
+elle empêche la compétence de se proposer là où elle sert.
+
+## Une chaîne de vente s'arrête à l'encaissement, et c'est le maillon qu'on
+n'écrit pas
+
+Tout a été construit cette nuit — trouver le client, l'aborder, lui montrer,
+générer, livrer, répondre après. Le maillon manquant n'était aucun de ceux-là :
+**il n'y avait aucun moyen d'être payé.** Une facture française exige un SIRET,
+et sans numéro l'ensemble de la chaîne ne mène à rien d'encaissable.
+
+Le motif se reconnaît : on construit ce qu'on sait construire — du code, des
+pages, des scripts — et l'étape administrative reste hors du dépôt parce qu'elle
+n'est pas technique. Elle est pourtant la seule condition **bloquante** de tout
+le reste, et la seule à demander des semaines de délai.
+
+**La règle : dans une chaîne qui doit rapporter de l'argent, remonter depuis
+l'encaissement, pas depuis la production.** Ce qu'il faut pour être payé décide
+de ce qu'il vaut la peine de construire, et non l'inverse.
+
+**Et un blocage administratif se traite comme un blocage technique** : on le
+nomme par écrit, avec son délai. « Une à trois semaines » change l'ordre des
+tâches ; « il faudrait s'inscrire » ne change rien et se répète.
