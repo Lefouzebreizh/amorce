@@ -239,3 +239,55 @@ test('poser un bruitage par coupe dégrade le son d’un montage déjà ponctué
     'sans cette baisse, le bouton conditionné n’aurait plus de raison d’être',
   );
 });
+
+/*
+ * Ce que « Poser les réglages » change vraiment, et ce qu'il laisse.
+ *
+ * Le panneau d'analyse annonçait « rien de ce que tu as déjà fait n'est
+ * remplacé ». C'est vrai des textes et des bruitages, et faux des plans :
+ * `alterneLesRushes` réordonne le montage pour que deux morceaux d'un même
+ * rush ne se suivent pas. Quelqu'un qui a passé l'étape 2 à ranger ses plans
+ * les retrouve rebattus, sans qu'on le lui ait dit.
+ *
+ * Le comportement est bon — c'est lui qui évite les trente vignettes
+ * identiques sur quarante. C'est la phrase qui était fausse, et ces deux tests
+ * l'ancrent : le jour où le comportement change, l'un des deux tombe et la
+ * formulation se rediscute.
+ */
+test('poser les réglages garde tous les textes et bruitages existants', () => {
+  const project: Project = {
+    ...bare([2, 2, 2, 2]),
+    captions: [
+      { id: 'mien', text: 'Mon texte à moi', start: 0.5, end: 2, style: 'punch', y: 0.3 },
+    ],
+    cues: [{ id: 'mien-son', sfx: 'boom', time: 1, gain: 1 }],
+  };
+
+  const apres = run(project);
+
+  assert.ok(
+    apres.captions.some((c) => c.id === 'mien' && c.text === 'Mon texte à moi'),
+    'le texte écrit à la main devrait survivre tel quel',
+  );
+  assert.ok(apres.cues.some((c) => c.id === 'mien-son'), 'le bruitage posé à la main devrait survivre');
+});
+
+test('poser les réglages peut réordonner les plans de plusieurs rushes', () => {
+  const project: Project = {
+    ...emptyProject(),
+    assets: [asset('a'), asset('b')],
+    // Deux morceaux de « a » qui se suivent : exactement ce que l'alternance
+    // est là pour défaire.
+    clips: [
+      { ...DEFAULT_CLIP, id: 'a1', assetId: 'a', outPoint: 2, transition: 'cut', transitionDuration: 0 },
+      { ...DEFAULT_CLIP, id: 'a2', assetId: 'a', outPoint: 2, transition: 'cut', transitionDuration: 0 },
+      { ...DEFAULT_CLIP, id: 'b1', assetId: 'b', outPoint: 2, transition: 'cut', transitionDuration: 0 },
+    ],
+  };
+
+  const rushes = run(project).clips.map((c) => c.assetId);
+
+  assert.equal(rushes.length, 3, 'aucun plan ne devrait disparaître');
+  assert.notDeepEqual(rushes, ['a', 'a', 'b'], 'l’ordre d’origine ne devrait pas être conservé tel quel');
+  assert.notEqual(rushes[0], rushes[1], 'deux morceaux du même rush ne devraient plus se suivre');
+});
