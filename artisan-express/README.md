@@ -125,6 +125,30 @@ maquettes de téléphone dessinées en HTML imitent une capture d'écran, 9 px e
 gris pâles compris. Les mesurer donnait quarante défauts dont trente ne
 devaient rien à personne, et un contrôle qui crie pour du décor cesse d'être lu.
 
+## Ce qui se passe sur une page nue
+
+Une page déployée **sans aucune variable** doit rester capable d'encaisser une
+demande. C'était faux : sans `RESEND_API_KEY` la route rend 503 — honnêtement,
+sans faux accusé de réception — mais sans `NEXT_PUBLIC_DEVIS_MAILTO` non plus,
+le formulaire n'avait plus rien à proposer et affichait « réessaie dans quelques
+minutes » à quelqu'un qui venait de taper son nom, son métier et son numéro.
+
+`NEXT_PUBLIC_DEVIS_MAILTO` a donc une **valeur par défaut**, seule variable de
+ce fichier à en avoir une : sans elle, l'absence ne faisait pas disparaître un
+bouton, elle perdait des prospects en silence.
+
+Ce que ça coûte : l'adresse part dans le paquet du navigateur, lisible par un
+ramasseur d'adresses. Un indésirable de plus contre une demande perdue — et le
+compromis se défait en réglant la variable sur une adresse dédiée.
+
+| Variable | Sans elle |
+| --- | --- |
+| `RESEND_API_KEY` + `DEVIS_DESTINATAIRE` | La route rend 503, le formulaire bascule sur la messagerie de l'artisan. |
+| `NEXT_PUBLIC_DEVIS_MAILTO` | Le repli vise l'adresse par défaut du vendeur. |
+| `NEXT_PUBLIC_TELEPHONE` | Le bouton d'appel disparaît. |
+| `NEXT_PUBLIC_WHATSAPP` | Le bouton WhatsApp disparaît. |
+| `NEXT_PUBLIC_LIEN_STRIPE` | Le bouton d'offre renvoie au formulaire. |
+
 ## L’exemple qu’un prospect demande
 
 « Montre-moi un exemple » est sa première question, et sans lien la conversation

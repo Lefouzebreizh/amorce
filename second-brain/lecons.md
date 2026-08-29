@@ -2250,19 +2250,47 @@ Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
 ses routes serveur. C'était la réponse depuis le début, et une heure est passée
 à contourner un quota au lieu de changer de mur.
 
-## Le quota de déploiement est une ressource commune, et les sessions la vident
+## Le quota de déploiement se compte par projet, pas par compte
 
-Un compte d'hébergeur gratuit plafonne les déploiements par **jour et par
-compte** — cent chez Vercel. Ce dépôt reçoit plusieurs sessions en parallèle et
+**Correction d'une phrase de ce fichier, mesurée le 29/08/2026.** Il était écrit
+ici que le plafond était « par jour et par compte ». Les horodatages disent
+autre chose :
+
+| Heure | Projet | Résultat |
+| --- | --- | --- |
+| 01:27 | `amorce` **et** `amorce-51up` | refusés, « more than 100 » |
+| 01:55 | `amorce-51up` | **Ready** |
+| 01:59 | `amorce` | refusé, « more than 100 » |
+
+Un seul compteur partagé ne peut pas produire ça : `amorce-51up` a déployé
+pendant qu'`amorce` était refusé, à quatre minutes d'intervalle, et `amorce` ne
+pouvait pas consommer cent déploiements dans ces quatre minutes. Quel qu'en soit
+le mécanisme exact — le message d'erreur ne le dit pas et la documentation de
+l'éditeur est hors d'atteinte derrière le mandataire — **les deux projets ne
+tombent pas ensemble.**
+
+La conséquence est pratique et elle inverse un conseil : quand le projet
+principal d'un dépôt est bouché par le travail des autres sessions, **le projet
+qui porte la page de vente peut déployer quand même.** Attendre vingt-quatre
+heures était inutile ; il suffisait de regarder l'autre projet.
+
+Ce qui reste vrai, en revanche, et ce qui suit ci-dessous : les aperçus coûtent,
+chaque projet branché sur le dépôt ajoute un déploiement par PR, et couper les
+aperçus de ce qui n'en a pas besoin reste le bon geste.
+
+## Les aperçus coûtent, et les sessions les vident
+
+Ce dépôt reçoit plusieurs sessions en parallèle et
 fusionne **95 pull requests dans la journée**, mesuré le 28/08/2026 : chacune
 déclenche un déploiement d'aperçu, et le compteur est vidé par du travail qui
 n'a rien à voir avec celui qui en a besoin.
 
 **Le symptôme arrive au pire moment et ne ressemble pas à sa cause.** Ici :
-« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec
-les vingt PR de montage vidéo qui l'ont consommé, et le projet qu'on cherchait
-à mettre en ligne — une page de vente, la seule chose qui pouvait rentrer de
-l'argent — reste bloqué vingt-quatre heures.
+« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec les
+vingt PR de montage vidéo qui l'ont consommé. Et le message ment sur la portée
+autant que sur la durée : il parle du compte, il ne vaut que pour le projet, et
+il dit vingt-quatre heures là où le déploiement suivant est passé une demi-heure
+plus tard.
 
 Trois choses à en retenir :
 
@@ -2430,6 +2458,42 @@ Ce qui se vérifie hors ligne, en revanche, et qui attrape les vraies fautes :
 que le bloc **parse** dans un vrai navigateur, et qu'aucune valeur ne puisse le
 refermer.
 
+## Un contrôle qui cherche dans tout le fichier ne garde aucune de ses sections
+
+`verifier-coherence.py` contrôlait qu'un projet installable apparaisse « dans le
+hook de démarrage » — en cherchant son nom dans le texte entier du script. Le
+hook fait pourtant deux choses distinctes : il **installe** les dépendances, et
+il **affiche** la commande de vérification de chaque projet.
+
+`paper-manager` avait la première et pas la seconde. Le contrôle était vert :
+le bloc d'installation suffisait à rendre le nom présent quelque part. Ses 259
+tests passaient, la CI les découvrait, `verifier.sh` aussi — rien n'était cassé,
+le projet était juste **invisible** dans la liste que lit la session suivante
+pour savoir comment éprouver ce qu'elle touche. Un défaut qui ne rougit nulle
+part et qu'on ne cherche pas, puisqu'on ignore la suite qui manque.
+
+La parade tient en une ligne de code : borner la recherche à la section
+concernée plutôt qu'au fichier.
+
+```python
+bloc = re.search(r"^commandes=\((.*?)^\)", texte, re.S | re.M)
+annonce = bloc.group(1).lower()   # et non texte.lower()
+```
+
+La règle générale, elle, dépasse ce script : **quand un fichier a plusieurs
+sections qui remplissent des rôles différents, un contrôle qui grep le tout
+n'en garde aucune.** Il passe dès que le nom apparaît une fois, ce qui est
+précisément la situation où l'oubli est le plus probable — on a rempli une
+section, pas l'autre. Le symptôme trompe : le contrôle est vert *et* il a
+raison de l'être sur la question qu'il pose ; c'est la question qui est trop
+large.
+
+Corollaire mesuré le même jour : une table de contrôles qui s'écrit à la main
+à côté du code se périme au premier ajout. Celle de `/coherence-depot` avait
+neuf lignes pour dix contrôles — le dixième, ajouté quelques jours plus tôt,
+n'y était jamais entré. Un outil qui existe pour détecter les listes fausses en
+portait une.
+
 ## Une racine à 18 px rend `text-sm` illégal, et rien ne le signale
 
 Mesuré sur la page de vente : six textes à **15,75 px** sous un plancher écrit
@@ -2484,6 +2548,31 @@ Ce qui trompe : la commande visée **est** bien tuée, et le code 144 ressemble 
 une erreur du serveur qu'on arrêtait. La parade est de tuer par port ou par PID
 (`lsof -ti:3210 | xargs -r kill`), ou simplement de servir sur un autre port —
 un processus de développement oublié ne coûte rien dans une session éphémère.
+
+## Une absence qui fait disparaître un bouton et une absence qui perd un client
+ne se traitent pas pareil
+
+La règle du dépôt est bonne et vérifiée : *ce qui n'est pas réglé disparaît de la
+page au lieu d'afficher une valeur inventée.* Un numéro de téléphone faux coûte
+plus cher qu'un bouton absent.
+
+Mais elle a été appliquée à une variable où elle produit le contraire de ce
+qu'elle protège. Sur la page de vente, l'adresse de repli du formulaire n'avait
+pas de valeur par défaut « par cohérence » — et sur un premier déploiement, sans
+clé d'envoi ni numéro, le formulaire répondait *« réessaie dans quelques
+minutes »* à quelqu'un qui venait de taper son nom, son métier et son téléphone.
+
+**Le partage est là, et il se pose avant d'écrire le `?? ''` :**
+
+- L'absence retire une **possibilité en plus** — un bouton d'appel, un lien de
+  paiement. La faire disparaître est juste : rien n'est perdu.
+- L'absence casse le **seul chemin restant**. Alors une valeur par défaut vaut
+  mieux qu'un vide, même imparfaite, parce que le vide ne signale rien : la
+  page a l'air de marcher.
+
+Le test qui l'attrape est celui qu'on n'écrit jamais, parce qu'il n'a l'air de
+rien tester : **le comportement quand aucune variable n'est réglée.** C'est
+pourtant l'état exact de tout premier déploiement.
 
 ## `public/` de Next ne résout pas l'index d'un dossier
 

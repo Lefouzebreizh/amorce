@@ -225,6 +225,45 @@ def controler_tests_python(releve: Releve) -> None:
         )
 
 
+def controler_annonce_verifications(releve: Releve) -> None:
+    """Un projet dont on installe les dépendances mais qu'on n'annonce pas.
+
+    Le hook fait deux choses : il installe, et il affiche la commande de
+    vérification de chaque projet — c'est cette liste-là que la session
+    suivante lit pour savoir comment éprouver ce qu'elle touche. Les deux se
+    perdent de vue : `paper-manager` avait son bloc d'installation et ses 259
+    tests, et n'apparaissait dans aucune ligne de la liste. Le contrôle voisin
+    ne l'a pas vu parce qu'il cherche le nom dans *tout* le fichier, où le bloc
+    d'installation suffit à le rendre présent.
+
+    Un projet absent de la liste n'est pas cassé — il est invisible, ce qui est
+    plus long à découvrir : on ne cherche pas la suite qu'on ignore.
+    """
+    hook = RACINE / ".claude" / "hooks" / "session-start.sh"
+    if not hook.is_file():
+        return
+    texte = hook.read_text(encoding="utf-8")
+    bloc = re.search(r"^commandes=\((.*?)^\)", texte, re.S | re.M)
+    if not bloc:
+        return
+    annonce = bloc.group(1).lower()
+
+    for dossier in sorted(RACINE.rglob("tests")):
+        if not dossier.is_dir() or "node_modules" in dossier.parts:
+            continue
+        if any(part.startswith(".") for part in dossier.parts):
+            continue
+        if not any(dossier.glob("test_*.py")):
+            continue
+        projet = dossier.parent.relative_to(RACINE).as_posix()
+        court = projet.split("/")[-1]
+        releve.regarder_si(
+            court.lower() not in annonce and projet.lower() not in annonce,
+            f"« {projet} » a une suite de tests mais aucune ligne dans la liste "
+            "des vérifications du hook : la session suivante ne saura pas la lancer.",
+        )
+
+
 def controler_chemins_cites(claude_md: str, releve: Releve) -> None:
     """Les chemins entre accents graves qui ne désignent plus rien.
 
@@ -381,6 +420,7 @@ def main(argv: list[str]) -> int:
     controler_listes_numerotees(claude_md, releve)
     controler_hook(releve)
     controler_tests_python(releve)
+    controler_annonce_verifications(releve)
     controler_projets_typescript(releve)
     controler_declencheurs_partages(releve)
 
