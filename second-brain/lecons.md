@@ -3013,6 +3013,40 @@ Le coût de l'oubli n'est pas le conflit — Git l'aurait signalé. C'est le
 contraire : une branche qui **se fusionne proprement** en effaçant le travail
 fusionné entre-temps, sans qu'aucune vérification ne s'en aperçoive.
 
+## Un temps de calcul très inférieur au temps écoulé n'est pas de la lenteur
+
+Un outil de mesure vidéo a mis **six minutes quarante** à ne rien rendre. Le
+premier réflexe a été de l'accélérer : réduire l'image avant de l'analyser,
+supprimer une passe de décodage. Rien n'y a changé.
+
+La mesure qui a tranché tient dans la sortie de `time` :
+
+```
+real  6m40.003s
+user  0m9.273s
+```
+
+**Neuf secondes de calcul pour six minutes quarante d'attente.** Un programme
+lent consomme du temps processeur ; celui-là n'en consommait pas. Il
+attendait — et un programme qui attend attend quelque chose de nommable.
+
+C'était `ffmpeg` : sans `-y`, il demande « le fichier existe, écraser ? » et
+reste sur cette question. La première exécution passe, puisque le fichier
+n'existe pas encore ; toutes les suivantes se bloquent. Rien ne le signale
+quand la sortie est capturée plutôt qu'affichée.
+
+Deux choses à en retenir, et la seconde vaut plus que la première.
+
+**Tout appel à `ffmpeg` qui écrit un fichier porte `-y`**, et `-nostdin` avec,
+qui ferme la même porte par un autre chemin. Six outils de ce dépôt l'appellent.
+
+**Et le rapport `user`/`real` est le premier diagnostic d'un programme qui
+traîne**, avant toute optimisation. Proche de 1, c'est du calcul, et on
+optimise. Proche de 0, c'est une attente, et optimiser ne peut rien y faire —
+on cherche alors ce qui est attendu : une question posée sur l'entrée standard,
+un tuyau que personne ne vide, un verrou, une résolution de nom. Une heure a
+été dépensée à rendre plus rapide quelque chose qui ne calculait pas.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
