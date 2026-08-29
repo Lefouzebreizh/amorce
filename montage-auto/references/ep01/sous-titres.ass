@@ -1,0 +1,33 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Vif,Anton,84,&H00FFE500,&H00FFE500,&H00000000,&H80000000,-1,0,0,0,100,100,1,0,1,6,2,8,60,60,240,1
+Style: Lueur,Anton,84,&HFFFFE500,&HFFFFE500,&H28FFE500,&HFFFFE500,-1,0,0,0,100,100,1,0,1,18,0,8,60,60,240,1
+Style: Dormant,Anton,84,&H3CFFFFFF,&H3CFFFFFF,&H00000000,&HA0000000,-1,0,0,0,100,100,1,0,1,4,2,8,60,60,240,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:02.44,0:00:02.72,Lueur,,0,0,0,,{\blur12.0}RIFT ZERO FIVE
+Dialogue: 1,0:00:02.44,0:00:02.72,Vif,,0,0,0,,{\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}RIFT {\rDormant}ZERO {\rDormant}FIVE
+Dialogue: 0,0:00:02.72,0:00:03.01,Lueur,,0,0,0,,{\blur12.0}RIFT ZERO FIVE
+Dialogue: 1,0:00:02.72,0:00:03.01,Vif,,0,0,0,,{\rDormant}RIFT {\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}ZERO {\rDormant}FIVE
+Dialogue: 0,0:00:03.01,0:00:03.29,Lueur,,0,0,0,,{\blur12.0}RIFT ZERO FIVE
+Dialogue: 1,0:00:03.01,0:00:03.29,Vif,,0,0,0,,{\rDormant}RIFT {\rDormant}ZERO {\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}FIVE
+Dialogue: 0,0:00:03.85,0:00:04.36,Lueur,,0,0,0,,{\blur12.0}BREACH OPEN
+Dialogue: 1,0:00:03.85,0:00:04.36,Vif,,0,0,0,,{\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}BREACH {\rDormant}OPEN
+Dialogue: 0,0:00:04.36,0:00:04.73,Lueur,,0,0,0,,{\blur12.0}BREACH OPEN
+Dialogue: 1,0:00:04.36,0:00:04.73,Vif,,0,0,0,,{\rDormant}BREACH {\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}OPEN
+Dialogue: 0,0:00:05.20,0:00:05.44,Lueur,,0,0,0,,{\blur12.0}THE SHADOW TITAN AWAKENS
+Dialogue: 1,0:00:05.20,0:00:05.44,Vif,,0,0,0,,{\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}THE {\rDormant}SHADOW {\rDormant}TITAN {\rDormant}AWAKENS
+Dialogue: 0,0:00:05.44,0:00:05.87,Lueur,,0,0,0,,{\blur12.0}THE SHADOW TITAN AWAKENS
+Dialogue: 1,0:00:05.44,0:00:05.87,Vif,,0,0,0,,{\rDormant}THE {\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}SHADOW {\rDormant}TITAN {\rDormant}AWAKENS
+Dialogue: 0,0:00:05.87,0:00:06.24,Lueur,,0,0,0,,{\blur12.0}THE SHADOW TITAN AWAKENS
+Dialogue: 1,0:00:05.87,0:00:06.24,Vif,,0,0,0,,{\rDormant}THE {\rDormant}SHADOW {\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}TITAN {\rDormant}AWAKENS
+Dialogue: 0,0:00:06.24,0:00:06.73,Lueur,,0,0,0,,{\blur12.0}THE SHADOW TITAN AWAKENS
+Dialogue: 1,0:00:06.24,0:00:06.73,Vif,,0,0,0,,{\rDormant}THE {\rDormant}SHADOW {\rDormant}TITAN {\rVif\fscx112\fscy112\t(0,90,\fscx100\fscy100)}AWAKENS
