@@ -326,6 +326,14 @@ là où `aiohttp` rend « 403, requête refusée ». Une session qui voit le 403
 à une clé manquante et part chercher un compte d'API. Il n'y en a pas besoin :
 l'hôte est simplement hors d'atteinte.
 
+**`youtu.be` et `youtube.com` sont refusés eux aussi** — `EGRESS_BLOCKED`,
+mesuré le 29/08. Cela compte parce qu'un lien vidéo arrive souvent seul, sans
+un mot : le réflexe est d'aller le lire, et il est perdu d'avance. Deux raisons
+plutôt qu'une, d'ailleurs — même joignable, une page YouTube ne donne qu'un
+titre, et **regarder une vidéo n'est de toute façon pas possible**. La seule
+réponse utile est donc de demander en une phrase ce qu'il faut en retenir, et
+de continuer autre chose en attendant.
+
 **La parade est celle de la voix off et des poids Wav2Lip, une troisième fois :
 GitHub répond.** Des bougies réelles au format CCXT — `[horodatage_ms, o, h, b,
 c, volume]`, exactement ce que lit `nexuscrypto/src/rejeu/donnees.py` — se
