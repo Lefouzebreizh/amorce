@@ -170,6 +170,50 @@ export const MOUVEMENTS_ALTERNES: ClipMotion[] = [
   'shake',
 ];
 
+/**
+ * Répartit les plans pour que deux morceaux du même rush ne se suivent pas.
+ *
+ * Découper un rush en huit et alterner les mouvements ne fabrique pas de la
+ * variété : ça fabrique de la répétition avec du mouvement dessus. Constaté sur
+ * un montage rejeté — neuf rushes, dix-huit morceaux, et **trente vignettes sur
+ * quarante montraient la même image**. La cadence était bonne, la note aussi,
+ * et le film ne racontait rien parce qu'il n'avançait pas.
+ *
+ * L'algorithme prend à chaque tour le rush dont il reste le plus de morceaux,
+ * en évitant celui qu'on vient de poser. C'est ce qui étale un rush très long
+ * sur tout le film au lieu de le laisser en bloc — et quand il ne reste qu'un
+ * seul rush, on le pose quand même : mieux vaut deux morceaux qui se suivent
+ * qu'un film amputé.
+ *
+ * L'ordre relatif à l'intérieur d'un rush est conservé : les morceaux d'une
+ * même prise gardent leur chronologie, sans quoi une action se jouerait à
+ * l'envers.
+ */
+export function alterneLesRushes(clips: Clip[]): Clip[] {
+  const parRush = new Map<string, Clip[]>();
+  for (const clip of clips) {
+    const file = parRush.get(clip.assetId);
+    if (file) file.push(clip);
+    else parRush.set(clip.assetId, [clip]);
+  }
+
+  const sortie: Clip[] = [];
+  let precedent = '';
+  while (sortie.length < clips.length) {
+    const candidats = [...parRush.entries()].filter(([, f]) => f.length > 0);
+    if (candidats.length === 0) break;
+    const autres = candidats.filter(([id]) => id !== precedent);
+    // Le plus fourni d'abord : c'est ce qui empêche un rush long de finir en
+    // bloc à la fin, faute d'avoir été étalé.
+    const choix = (autres.length > 0 ? autres : candidats).reduce((a, b) =>
+      b[1].length > a[1].length ? b : a,
+    );
+    sortie.push(choix[1].shift() as Clip);
+    precedent = choix[0];
+  }
+  return sortie;
+}
+
 export function chopped(clip: Clip, target: number, makeId: () => string): Clip[] {
   const sourceSpan = clip.outPoint - clip.inPoint;
   const shown = sourceSpan / Math.max(0.1, clip.speed);
