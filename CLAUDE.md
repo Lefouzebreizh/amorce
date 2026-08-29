@@ -383,6 +383,13 @@ préparation, pas de chance. `/jauge` avant un gros lot.
   en même temps, et pour ce qui est long : on lance en tâche de fond, on
   travaille sur ce qui n'en dépend pas, on ne réinterroge pas toutes les
   trente secondes.
+- **Annoncer ce qu'on va ouvrir, avant de l'ouvrir.** Trois à cinq fichiers
+  nommés en une ligne — « je pioche dans X, Y, Z » — puis on lit et on
+  continue. Ce n'est **pas** une demande de permission, et ça ne suspend rien :
+  c'est un budget dit à voix haute. Une session qui doit écrire la liste
+  choisit ; une session qui ouvre au fil de l'eau parcourt. Le propriétaire
+  peut couper d'un mot au message suivant, mais le travail n'attend pas sa
+  réponse — le paragraphe « jamais de temps mort » du §0 prime.
 - **Livrer tôt.** Un résultat qui tourne vaut mieux que le bon résultat annoncé
   au quinzième message.
 - **Trois essais par bug**, puis on livre la version dégradée qui marche et on
@@ -718,7 +725,10 @@ disaient pas.
 
 ### Modifier ce dépôt
 
-Chirurgical : chaque ligne changée se rattache à la demande. Ne pas « améliorer »
+Chirurgical : chaque ligne changée se rattache à la demande. **Avant de
+remplacer une fonction, chercher qui l'appelle** — `grep` sur son nom, dans tout
+le dépôt. Un remplacement qui compile n'est pas un remplacement sans appelant,
+et c'est le second qui casse à distance. Ne pas « améliorer »
 le code voisin ni ses commentaires — les blocs de tête portent la justification
 des décisions, et c'est ce que ce dépôt a de plus précieux. Une modification ne
 touche qu'un projet, sauf configuration racine. Français partout — commentaires,

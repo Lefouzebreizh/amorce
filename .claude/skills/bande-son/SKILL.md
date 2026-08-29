@@ -218,6 +218,17 @@ asetrate=48000*0.891,aresample=48000,atempo=1.1223   # deux demi-tons plus bas
 equalizer=f=190:width_type=o:width=1.1:g=3.5         # le corps
 equalizer=f=3000:width_type=o:width=1.2:g=3          # les consonnes, pour le téléphone
 acompressor=threshold=-18dB:ratio=3.5:attack=6:release=160
+```
+
+**Et surtout pas d'écho court sur une voix.** Un `aecho` à 60 ms a été posé ici
+pour « donner un espace » ; le montage est revenu avec « ça fait des doubles,
+des doubles audios, c'est horrible ». C'est exact et c'est de la physique : sous
+environ 80 ms l'oreille ne sépare plus la réflexion de la source, et au-delà de
+30 ms elle ne la fusionne plus non plus — la voix s'entend **prononcée deux
+fois**. Une réverbération de voix off commence à 400 ms de pré-délai et se
+mesure en queue, pas en répétition. Dans le doute, aucune : une voix sèche ne
+choque personne, une voix dédoublée fait rejeter le fichier entier.
+
 aecho=0.85:0.9:60:0.18                                # un espace, pas une salle
 ```
 
