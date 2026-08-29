@@ -189,43 +189,79 @@ pas bougé de plus de 0,3 dB.
 Le `poids` se règle par bruitage — un impact bref supporte plus d'harmoniques
 qu'une nappe tenue, qui devient agressive avant d'être plus audible.
 
-## Une voix off n'améliore pas un film déjà dense — mesuré
+## Une voix off se choisit à la fondamentale, pas à l'oreille de qui la pose
 
-Ajouter une narration à une bande-annonce de 15 s qui portait déjà son sound
-design a **coûté** sur toutes les mesures qui comptent. Trois mixages essayés,
-et le meilleur des trois perdait encore :
+Une narration a été jugée « n'importe quoi » à la première écoute sur une
+bande-annonce de créature. La cause n'était pas l'idée d'une voix off : c'était
+**`siwis`, à 214 Hz**, posée sur un film qui appelait un narrateur grave. Aucune
+mesure de mixage ne l'avait signalé — sonie, dynamique et crête étaient toutes
+défendables.
+
+La mesure qui l'aurait dit en une seconde est la **fondamentale médiane**, et
+elle se calcule par autocorrélation sur les trames voisées :
+
+| voix | fondamentale | ampleur | pour |
+| --- | --- | --- | --- |
+| `siwis` | 214 Hz | 8,9 demi-tons | témoignage, tutoriel, voix claire |
+| `upmc` | ~210 Hz | — | même registre, autre grain |
+| `tom` | 128 Hz | 4,2 | masculine, mais plate — elle récite |
+| `gilles` | **110 Hz** | 6,9 | **bande-annonce, créature, menace** |
+
+Sous 6 demi-tons d'ampleur l'oreille entend « récité » : c'est ce qui écarte
+`tom` malgré sa hauteur. `gilles` est le seul compromis grave **et** mélodique.
+
+**Le traitement qui fait le narrateur de cinéma**, appliqué après la synthèse et
+mesuré à 88 Hz en sortie :
+
+```
+asetrate=48000*0.891,aresample=48000,atempo=1.1223   # deux demi-tons plus bas
+equalizer=f=190:width_type=o:width=1.1:g=3.5         # le corps
+equalizer=f=3000:width_type=o:width=1.2:g=3          # les consonnes, pour le téléphone
+acompressor=threshold=-18dB:ratio=3.5:attack=6:release=160
+aecho=0.85:0.9:60:0.18                                # un espace, pas une salle
+```
+
+Le `asetrate` descend la hauteur **et** les formants : c'est ce second effet qui
+donne le volume du corps, et c'est pour ça qu'un simple changement de hauteur ne
+suffit pas. La cloche à 190 Hz remplace `porter_sur_telephone`, qui grésille sur
+une voix réelle.
+
+## Ce que la narration coûte, et comment le tenir
+
+Trois mixages sur le même film, mesurés en sortie :
 
 | | sans voix | narration continue | deux phrases |
 | --- | --- | --- | --- |
-| sonie (LUFS) | −10,0 | −9,6 | −10,9 |
-| **dynamique (LU)** | **4,9** | 1,3 | 3,5 |
-| vrai pic (dBTP) | −0,4 | 0,0 | 0,0 |
-| avance du climax | **+2,3 dB** | — | **+0,3 dB** |
+| **dynamique (LU)** | 4,9 | **1,3** | 3,4 |
+| vrai pic (dBTP) | −0,4 | 0,0 | −0,5 |
+| avance du cri sur la voix | — | 0,3 dB | **4,6 dB** |
 
-La cause est celle déjà écrite plus haut, sous un autre visage : **la voix
-bouche les creux**. Ce sont eux qui font exister le cri — un climax ne s'entend
-pas parce qu'il est fort, mais parce que ce qui le précède ne l'était pas. Une
-narration qui court d'un bout à l'autre supprime la comparaison, et le limiteur
-finit le travail en ramenant tout au même niveau.
+**Une narration qui court d'un bout à l'autre bouche les creux**, et ce sont eux
+qui font exister un climax : il ne s'entend pas parce qu'il est fort, mais parce
+que ce qui le précède ne l'était pas. Deux phrases sur quinze secondes ont rendu
+2,1 LU sur les 3,6 perdus.
 
-Réduire la narration à deux phrases a rendu 2,2 LU sur les 3,6 perdus, sans
-jamais revenir au niveau du film muet.
+**Le niveau de la voix se règle entre deux échecs symétriques**, et l'écart
+utile est étroit — mesuré ici à deux décibels près :
 
-**La règle qui s'en déduit, et elle est contre-intuitive :** sur un format court
-qui possède déjà des impacts, des graves et un climax, **la voix off se justifie
-par ce qu'elle dit, jamais par ce qu'elle apporte au mixage**. Si le texte
-n'ajoute pas une information que l'image ne donne pas, le film est meilleur
-muet — et la mesure le dit avant l'écoute.
+- trop bas (+10 dB) : la voix tombe au niveau du film, on l'entend sans
+  l'écouter ;
+- trop haut (+14,5 dB) : l'étagement est juste mais le limiteur du master
+  écrase la dynamique à 2,5 LU, sous le seuil où l'oreille ne distingue plus
+  rien.
 
-Le contrôle qui tranche en une commande, sur le fichier final :
+Le réglage retenu — +12,5 dB, master à 3,5 dB au lieu de 5 — pose la voix 2 à
+3 dB devant le film et laisse le cri 5 dB devant la voix.
+
+Le contrôle qui tranche, sur le fichier final :
 
 ```bash
 ffmpeg -hide_banner -ss <climax> -t 1 -i film.mp4 \
   -af "highpass=f=400,ebur128=framelog=quiet" -f null - 2>&1 | grep -A2 Integrated
 ```
 
-Comparé à la même mesure sur une section calme, l'écart doit rester franc. Sous
-un décibel d'avance, le climax n'existe plus, quelle que soit la sonie.
+Comparé à une section parlée, le climax doit garder plusieurs décibels d'avance.
+Sous un décibel, il n'existe plus, quelle que soit la sonie.
 
 ## La voix off se fabrique ici, sans clé
 
