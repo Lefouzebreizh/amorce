@@ -437,6 +437,35 @@ a les bonnes permissions, si le ton ressemble à celui de l'auteur, et si le
 modèle met de côté les bons commentaires. Cela se regarde **en simulation**
 (sans `--publier`), sur de vrais commentaires.
 
+## Le regard — `scripts/regarder.mjs`
+
+Un vrai Chromium à **393 × 873**, le terrain de référence du dépôt, qui refuse
+ce qui ne se lit pas : contraste sous le seuil WCAG, texte sous 18 px, cible
+sous 44 px, page qui déborde à droite. Il tourne à la fin des séquences
+**Artisan Express** et **TITAN Builder**, et se lance à la main sur un dossier
+livrable ou une adresse :
+
+```bash
+npm run regarder demo                     # depuis titan-builder
+npm run regarder http://localhost:3000    # depuis artisan-express, serveur lancé
+```
+
+Ce qu'il **ne** compte pas : tout ce qui est `aria-hidden`. Une maquette de
+téléphone dessinée en HTML n'est pas du texte à lire, et la mesurer noyait les
+vrais défauts sous trois fois plus de faux.
+
+Sans Chromium, il sort en **3** et la vérification affiche `⊘ non effectué`.
+Ni vert ni rouge : une mesure qui n'a rien mesuré ne doit jamais rassurer, et
+une machine sans navigateur ne doit pas bloquer une poussée.
+
+**Le piège qui l'a rendu inutile pendant une heure**, et qu'il faut connaître
+avant de servir quoi que ce soit dans un contrôle : `kill` sur le PID de `npm`
+ne tue pas le serveur. La chaîne est `npm exec next start` → `sh -c next start`
+→ `next-server`, et le petit-fils survit, réattaché à init. Il garde le port, et
+le contrôle suivant mesure **le build d'avant** en affichant un vert parfait.
+D'où `setsid` plus `kill -- -PGID`, et un refus net de démarrer si le port
+répond déjà.
+
 ## Ce que la vérification ne dit pas
 
 - **Le build Android et iOS.** Le SDK Android n'est pas installable dans ce

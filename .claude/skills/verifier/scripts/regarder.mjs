@@ -40,7 +40,22 @@ if (!servie && !existsSync(resolve(process.cwd(), dossier, 'index.html'))) {
   process.exit(1);
 }
 
-const navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM ?? undefined });
+/*
+ * Sans navigateur, ce contrôle ne se contente pas d'échouer : il **sort en 3**.
+ *
+ * Rendre 0 aurait été pire que tout — une vérification verte qui n'a rien
+ * mesuré est exactement le défaut contre lequel ce dépôt se protège. Rendre 1
+ * aurait bloqué toute poussée sur une machine sans Chromium, pour une raison
+ * qui n'a rien à voir avec le code. Le 3 dit « non effectué », et la
+ * vérification l'affiche comme tel au lieu de le compter vert.
+ */
+let navigateur;
+try {
+  navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM ?? undefined });
+} catch (erreur) {
+  console.error(`⊘ contrôle non effectué — pas de Chromium : ${erreur.message.split('\n')[0]}`);
+  process.exit(3);
+}
 const onglet = await navigateur.newPage({ viewport: ECRAN, deviceScaleFactor: 2 });
 await onglet.goto(page);
 
