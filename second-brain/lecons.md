@@ -2851,6 +2851,41 @@ savoir ce qui manque, `ALTER TABLE` pour le reste, rejoué à chaque ouverture.
 Ce qui compte est le moment où on l'écrit : à la première colonne ajoutée après
 la première installation ailleurs, pas quand un utilisateur signale l'erreur.
 
+## Le bas-médium s'accumule, et le mixage le concentre
+
+Un « bourdonnement en fond tout le long ». Premier réflexe : chercher ce qu'on
+vient d'ajouter. Retiré — la raie était **identique avant et après**. Ce n'était
+donc pas une régression.
+
+La mesure qui tranche est la **largeur** de la raie, pas sa hauteur :
+
+| | pic | hauteur sur le fond | largeur |
+| --- | --- | --- | --- |
+| le rush du dragon | 143 Hz | +20,2 dB | 194 Hz |
+| le rush du druide | 151 Hz | +17,0 dB | 189 Hz |
+| **le montage** | 151 Hz | **+23,9 dB** | **52 Hz** |
+
+Chaque source a sa bosse de bas-médium, large. Le mixage les **empile au même
+endroit** et en fait une bosse étroite — et une bosse étroite et tenue, c'est ce
+que l'oreille appelle un ronflement. Une raie fine (moins de 8 Hz) serait un
+vrai bourdon ; à 52 Hz c'est de l'accumulation.
+
+Une cloche **large** à 150 Hz au master la disperse : +24,0 → **+19,3 dB**,
+largeur 52 → 94 Hz, et le niveau entendu au-dessus de 400 Hz **ne bouge pas d'un
+dixième**. Un téléphone n'entend rien là : il n'y a rien à perdre.
+
+**Mesurer la largeur avant de chasser une source.** Un bourdon a une source ;
+une accumulation n'en a pas, et la chercher fait perdre des heures.
+
+## L'excitation harmonique sur un lit tenu fabrique une note
+
+Corollaire déjà écrit dans `/bande-son` et redécouvert en le violant : elle crée
+les partiels 2f, 3f, 4f d'un son continu, et **des partiels continus sont une
+note**. Elle est faite pour les impacts brefs.
+
+Ici elle n'était pas la cause du ronflement — mais elle était bien posée sur
+quatre lits tenus, et elle n'avait rien à y faire.
+
 ## Un motif d'exclusion est ancré à la racine, et un voisin le contourne
 
 `main` est passé au rouge sans qu'aucune ligne de code soit en cause :
