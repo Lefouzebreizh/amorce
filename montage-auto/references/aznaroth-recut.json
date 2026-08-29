@@ -105,7 +105,7 @@
       "source": "rushes/Duration_seconds_Cinemat.mp4",
       "depart": 4.2,
       "duree": 5.8,
-      "cible_db": -14.0,
+      "cible_db": -13.5,
       "zoom": 0.18,
       "tremblements": [
         {
@@ -263,13 +263,13 @@
     {
       "son": "riser_court",
       "instant": 6.6,
-      "gain": -2,
+      "gain": -7,
       "distance": "moyen"
     },
     {
       "son": "electricite",
       "instant": 6.94,
-      "gain": 19,
+      "gain": 14,
       "distance": "proche",
       "parametres": {
         "duree": 0.9,
@@ -280,7 +280,7 @@
     {
       "son": "eclat",
       "instant": 6.96,
-      "gain": 11,
+      "gain": 6,
       "distance": "proche",
       "parametres": {
         "duree": 0.6,
@@ -291,13 +291,13 @@
     {
       "son": "whoosh_lourd",
       "instant": 7.52,
-      "gain": 3,
+      "gain": -2,
       "distance": "moyen"
     },
     {
       "son": "chute_sous_grave",
       "instant": 7.7,
-      "gain": 6,
+      "gain": 1,
       "distance": "proche",
       "telephone": 1.6,
       "parametres": {
@@ -310,13 +310,13 @@
     {
       "son": "impact_debris",
       "instant": 7.72,
-      "gain": 6,
+      "gain": 1,
       "distance": "proche"
     },
     {
       "son": "chute_pierres",
       "instant": 7.85,
-      "gain": 2,
+      "gain": -3,
       "distance": "moyen",
       "parametres": {
         "duree": 1.3,
@@ -326,19 +326,19 @@
     {
       "son": "transition_eclair",
       "instant": 9.05,
-      "gain": 12,
+      "gain": 7,
       "distance": "proche"
     },
     {
       "son": "whoosh_rapide",
       "instant": 9.12,
-      "gain": 8,
+      "gain": 3,
       "distance": "moyen"
     },
     {
       "son": "aspiration",
       "instant": 9.7,
-      "gain": 6,
+      "gain": 1,
       "distance": "lointain",
       "parametres": {
         "duree": 2.8,
@@ -353,7 +353,7 @@
     {
       "son": "souffle_tournant",
       "instant": 9.7,
-      "gain": -5,
+      "gain": -10,
       "distance": "lointain",
       "parametres": {
         "duree": 2.8,

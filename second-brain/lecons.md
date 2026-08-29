@@ -3058,6 +3058,38 @@ Et le chiffre affiché doit être **ce qu'il y a à corriger**, pas le nombre
 d'occurrences : compter aussi les entrées en réserve donnait 231 au lieu de 73,
 et décourageait pour un travail qui n'est pas encore à faire.
 
+## On ne demande jamais un gain positif à un rush dont la crête frôle le plafond
+
+Une saturation rapportée cinq fois, cherchée cinq fois **après** le master — et
+introuvable, parce qu'elle naissait avant.
+
+La mesure jamais faite : **combien le moteur amplifie chaque rush** pour
+atteindre sa cible.
+
+| plan | son mesuré | cible | gain |
+| --- | --- | --- | --- |
+| **dragon** | −13,4 dB | −9,0 | **+4,4 dB** |
+| **sigil** | −91,0 dB | −29,0 | **+62 dB** |
+
+Le rush du dragon a une **crête à 0,973** — un quart de décibel sous le plein
+échelle. Lui demander +4,4 dB, c'est demander une crête à **1,61** : il sature
+dans le plan lui-même, avant tout mixage et avant tout limiteur. Aucune mesure
+faite sur le fichier livré ne peut le montrer, puisque le master a déjà tout
+ramené sous le plafond.
+
+Et le sigil, muet à −91 dB, se voyait demander d'amplifier son plancher de bruit
+de soixante-deux décibels.
+
+**Une cible de niveau n'est pas un souhait, c'est un gain.** Avant de la poser,
+mesurer la source : `cible − mesuré` doit rester négatif dès que la crête
+dépasse 0,9. Descendre tout le film et laisser le master remonter donne le même
+relief sans un décibel d'écrêtage.
+
+Corollaire payé dans la foulée : baisser les rushes sans baisser les accents
+laisse les plans de passage rattraper le climax — dragon −19,4 contre vortex
+−19,8, quatre dixièmes là où il en faut sept. **Ce qui descend descend
+ensemble.**
+
 ## Une donnée qu'on croit connaître est celle qu'il faut vérifier
 
 Ranger des chaînes de télévision dans « l'ordre normal » paraît être la tâche
