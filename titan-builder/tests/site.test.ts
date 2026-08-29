@@ -1,7 +1,8 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import {
-  couleurRetenue, echapper, genererSite, lienTelephonique, servicesListes,
+  accentLisible, contraste, couleurRetenue, echapper, encreSurAccent, genererSite,
+  lienTelephonique, servicesListes,
 } from '@/lib/site';
 import type { Commande } from '@/lib/commande';
 
@@ -156,4 +157,75 @@ test('aucune police ni feuille de style distante', () => {
 
   assert.equal(html.includes('fonts.googleapis'), false);
   assert.equal(html.includes('<link rel="stylesheet"'), false);
+});
+
+test('la présentation garde ses paragraphes, et le simple retour ne coupe pas', () => {
+  /*
+   * Le texte vient d'un `<textarea>` : l'artisan y aère son propos. Tout rendre
+   * dans un seul `<p>` collait ses paragraphes bout à bout, et un simple retour
+   * à la ligne au milieu d'une phrase ne doit pas, lui, fabriquer un paragraphe.
+   */
+  const html = genererSite(
+    commande({ presentation: 'Premier paragraphe.\n\nSecond.\nMême phrase.' }),
+  );
+
+  assert.match(html, /<p>Premier paragraphe\.<\/p>/);
+  assert.match(html, /<p>Second\. Même phrase\.<\/p>/);
+});
+
+test('le contraste se calcule comme WCAG le définit', () => {
+  // Les deux bornes de l'échelle, qui valident l'implémentation d'un coup.
+  assert.equal(Math.round(contraste('#000000', '#ffffff')), 21);
+  assert.equal(contraste('#777777', '#777777'), 1);
+});
+
+test('on écrit sur la couleur du client ce qui s’y lit, pas toujours du blanc', () => {
+  /*
+   * Le défaut réparé ici : un artisan qui demande du jaune recevait un titre
+   * blanc sur jaune, à 1,4:1 — invisible sur un chantier en plein soleil.
+   */
+  assert.equal(encreSurAccent('#ffd400'), '#16202b');
+  assert.equal(encreSurAccent('#004aad'), '#ffffff');
+});
+
+test('la couleur du client devient lisible en texte sans changer de teinte', () => {
+  const lisible = accentLisible('#ffd400', '#ffffff');
+
+  assert.ok(contraste(lisible, '#ffffff') >= 4.5, `${lisible} reste illisible sur blanc`);
+  // Toujours un jaune : le rouge et le vert dominent encore le bleu.
+  const [r, v, b] = [1, 3, 5].map((i) => parseInt(lisible.slice(i, i + 2), 16));
+  assert.ok(r > b && v > b, `${lisible} n’est plus une déclinaison du jaune`);
+});
+
+test('une couleur déjà lisible n’est pas touchée', () => {
+  // Sans cette garantie, la fonction dénaturerait tous les choix corrects.
+  assert.equal(accentLisible('#004aad', '#ffffff'), '#004aad');
+});
+
+test('aucune couleur de client ne produit un entête illisible', () => {
+  /*
+   * Le tour complet de la roue, par pas de 15°, plus les gris : c'est la seule
+   * façon de savoir que le seuil tient partout et pas seulement sur l'exemple
+   * qui a servi à l'écrire. Les teintes moyennes sont celles qui échouaient.
+   */
+  const teintes = [
+    ...Array.from({ length: 24 }, (_, i) => {
+      const [r, v, b] = [0, 8, 16].map((d) => Math.round(
+        127 + 127 * Math.cos(((i * 15 + d * 15) * Math.PI) / 180),
+      ));
+      return `#${[r, v, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+    }),
+    '#808080', '#ffffff', '#000000', '#7f9a6d', '#c8783c',
+  ];
+
+  for (const teinte of teintes) {
+    const html = genererSite(commande({ couleur: teinte }));
+    const fond = /--accent: (#[0-9a-f]{6})/.exec(html)?.[1];
+    const encre = /--encre-entete: (#[0-9a-f]{6})/.exec(html)?.[1];
+    const texte = /--accent-texte: (#[0-9a-f]{6})/.exec(html)?.[1];
+
+    assert.ok(fond && encre && texte, `jetons absents pour ${teinte}`);
+    assert.ok(contraste(fond, encre) >= 4.5, `entête à ${contraste(fond, encre).toFixed(2)}:1 pour ${teinte}`);
+    assert.ok(contraste(texte, '#ffffff') >= 4.5, `bouton à ${contraste(texte, '#ffffff').toFixed(2)}:1 pour ${teinte}`);
+  }
 });

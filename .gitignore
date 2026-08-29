@@ -143,3 +143,16 @@ visual_library/**/*.mp4
 /iptv/*.m3u
 /iptv/*.m3u8
 /iptv/*.xml
+
+# TITAN Builder : la démonstration se refabrique d'une commande à partir de son
+# `commande.json`, et les photos qu'on y dépose sont des binaires — l'invariant
+# du dépôt les tient dehors. Seule la commande est versionnée.
+/titan-builder/demo/index.html
+/titan-builder/demo/*.jpg
+/titan-builder/demo/*.jpeg
+/titan-builder/demo/*.png
+/titan-builder/demo/*.webp
+
+# Les dossiers de commande des vrais clients ne sortent jamais d'ici : ils
+# portent un nom, un téléphone et des photos de chantier.
+/titan-builder/dossiers/

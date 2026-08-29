@@ -28,6 +28,68 @@ qui exécute du Node, et un redéploiement pour changer un numéro de téléphon
 Toute la fabrication est dans `src/lib/site.ts`, **pur** : il rend une chaîne,
 il ne touche ni au disque ni au réseau. Seul le script écrit.
 
+## La démonstration à montrer
+
+« Montre-moi un exemple » est la première question de tout prospect, et sans
+réponse la conversation s'arrête là.
+
+```bash
+npm run demo      # puis déposer le dossier sur app.netlify.com/drop
+```
+
+Une entreprise assumée comme fictive, avec un numéro de réservation qui ne
+sonne nulle part : **le dépôt interdit le faux témoignage**, et un artisan qui
+découvre que l'exemple se fait passer pour un vrai client ne rappelle pas. Le
+jour où le premier client est livré, on montre le sien — c'est le seul argument
+qu'un concurrent ne peut pas recopier. Détail dans `demo/LISEZ-MOI.md`.
+
+## Quand un client dit oui ailleurs que sur la plateforme
+
+Le formulaire en ligne suppose que le client vient s'y configurer. Dans la vraie
+vente, il dit oui sur Messenger et donne ses informations en trois messages :
+c'est le vendeur qui les a sous les yeux.
+
+```bash
+npm run nouveau-client            # neuf questions, puis le dossier et la page
+```
+
+Les questions sont exactement les champs du formulaire, et la validation est
+exactement celle de la route d'API — `reproches()`, partagée. Une seconde règle
+écrite pour le terminal aurait dérivé de celle du web sans que rien ne le
+signale, et fabriqué des dossiers qu'un autre chemin refuse.
+
+Le script s'arrête après le dossier et la page. Les photos se déposent dedans
+ensuite, et `npm run generer` les reprend : séparer les deux évite d'attendre un
+transfert de photos pendant que le client est encore en ligne.
+
+## Après la livraison
+
+`APRES-LA-LIVRAISON.md` : ce qui est compris dans les 299 €, ce qui ne l'est
+pas, et comment le dire. Le fichier part d'une mesure — **une modification
+complète se régénère en 277 ms** — parce que c'est elle qui décide de la
+frontière : le travail n'est pas dans la modification, il est dans la
+conversation.
+
+## Regarder avant d'envoyer
+
+```bash
+npm run regarder demo      # ou n'importe quel dossier livrable
+```
+
+Un vrai Chromium ouvre la page à **393 × 873** — le terrain de référence du
+dépôt — et refuse ce qui ne se lit pas : contraste sous 4,5:1, texte sous 18 px,
+cible sous 44 px, page qui déborde sur la droite. Il a trouvé son premier défaut
+à sa première exécution : le pied de page, qui porte le numéro de téléphone,
+sortait à 15,2 px.
+
+**Le contraste, lui, ne dépend plus de la chance.** La couleur venait du client
+et la page écrivait du blanc dessus quoi qu'il arrive : un artisan qui demandait
+du jaune recevait un titre à **1,43:1**, invisible sur un chantier en plein
+soleil. Le générateur choisit maintenant l'encre qui se lit sur *sa* couleur —
+11,50:1 sur ce même jaune — et n'approfondit le fond que si aucune des deux
+encres n'y suffit. Sa couleur reste la sienne partout où elle est un fond ; un
+test balaie la roue entière par pas de 15°.
+
 ## Mettre le site du client en ligne
 
 Le générateur produit un dossier autonome : **une page HTML, les photos, et

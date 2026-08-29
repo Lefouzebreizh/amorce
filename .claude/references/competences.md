@@ -33,6 +33,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture de livre reste lisible réduite à la taille d'une vignette de boutique (150 px de large) — fabrique la vignette et mesure… |
 | `/master-telephone` | >- Sortir une vidéo au niveau d'un téléphone et non d'un cinéma — gagner cinq décibels réellement entendus sans écraser la dynamique, en remplissant… |
 | `/module-life-organizer` | Dans quel ordre écrire un module de l'assistant de rangement Life-Organizer, et les quatre pièges du domaine qui coûtent chacun une reprise complète… |
+| `/montage-sans-refaire` | La liste de contrôle d'un montage vertical, écrite après vingt-cinq versions d'un même épisode livrées et rejetées en une nuit. Chaque ligne est un… |
 | `/naviguer-le-depot` | Trouver vite le bon fichier dans ce dépôt à onze projets sans noyer le contexte — quel projet répond à quelle demande, quels dossiers ne jamais… |
 | `/nouveau-projet` | Ajouter un projet à ce dépôt multi-projets sans rien oublier — les six endroits où il doit se déclarer pour être installé, vérifié, gardé par… |
 | `/nouvelle-competence` | Écrire une compétence pour ce dépôt sans en fabriquer un doublon ni un doublon d'intention — vérifier d'abord ce qui existe **y compris sur `main`**,… |
@@ -48,6 +49,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/resilier-un-contrat` | Résilier un abonnement, une assurance ou un contrat à reconduction tacite avec `paper-manager` — savoir jusqu'à quand c'est encore possible sans… |
 | `/retouche-planche` | Corriger au pixel une illustration dont le texte ou le dessin est incrusté — coquille dans une bulle, mot en trop, regard raté, élément à effacer ou… |
 | `/roussy-zephy` | Charte du recueil illustré « Roussy & Zéphy » — personnages, palette hexadécimale, mécanique des histoires en quatre temps, titres de référence,… |
+| `/sonotheque` | Constituer et tenir la bibliothèque de bruitages du dépôt — dragons et créatures, impacts, whooshes, magie, foules, ambiances — puis choisir dans le… |
 | `/sortir-les-fichiers` | Mettre à l'abri ce qu'une session distante contient et que le dépôt Git ne porte pas — planches, rushes, PDF de dépôt, exports, captures — avant que… |
 | `/sous-titres-qui-accrochent` | >- Animer les textes d'une vidéo verticale pour qu'ils retiennent — apparition en ressort, secousse sur l'impact, couleur prise dans l'image, halo… |
 | `/stack-agence-supabase` | Réaliser une application client sur la stack standardisée de l'agence — Next.js 16 (App Router, React 19), TypeScript strict, Tailwind + shadcn/ui,… |
