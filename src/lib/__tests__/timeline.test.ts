@@ -180,3 +180,23 @@ test('aucun morceau ne reste immobile', () => {
   const pieces = chopped({ ...DEFAULT_CLIP, id: 'y', assetId: 'a', outPoint: 10 }, 2, donneUnId);
   assert.ok(pieces.every((p) => p.motion !== 'none'), 'un plan fixe ne montre aucune coupe');
 });
+
+test('une découpe ne produit jamais des dizaines de morceaux', () => {
+  /*
+   * Une prise de cinquante-six secondes donnait vingt-huit plans de deux
+   * secondes : la même image coupée vingt-huit fois, avec autant de bruitages
+   * posés sur des raccords qui ne se voient pas. Rapporté depuis le téléphone :
+   * « il a ajouté des plans partout, il a tout découpé ».
+   */
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'long', assetId: 'a', outPoint: 56 }, 2, donneUnId);
+  assert.ok(pieces.length <= 12, `${pieces.length} morceaux`);
+  // Ils s'allongent au lieu de se multiplier, et couvrent toujours la prise.
+  const couvert = pieces.reduce((s, p) => s + (p.outPoint - p.inPoint), 0);
+  assert.ok(Math.abs(couvert - 56) < 0.01, `${couvert.toFixed(2)} s couvertes`);
+});
+
+test('une prise courte se découpe toujours normalement', () => {
+  // La borne ne doit pas changer le cas courant : 10 s visées à 2 s font 5.
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'court', assetId: 'a', outPoint: 10 }, 2, donneUnId);
+  assert.equal(pieces.length, 5);
+});

@@ -168,7 +168,9 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   arbitraire serait un proxy ouvert. Le guide XMLTV se lit au fil de l'eau lui
   aussi, et un instant sans décalage horaire y est de l'heure locale, jamais de
   l'UTC. La recherche de sous-titres externes part **sur un geste**, jamais à
-  l'ouverture d'une vidéo, et n'envoie qu'un titre — jamais l'adresse du flux. **Aucun mot de passe n'entre en base** —
+  l'ouverture d'une vidéo, et n'envoie qu'un titre — jamais l'adresse du flux.
+  Les épisodes d'une série Xtream se chargent à l'ouverture de sa fiche : un
+  appel par série, deux mille séries, quelques dizaines de requêtes par minute. **Aucun mot de passe n'entre en base** —
   l'adresse d'une source y est masquée — et aucune source de contenu ni
   identifiant n'est versionné. Se vérifie depuis son dossier ; `npm run verify`
   conduit un vrai Chromium sur un flux HLS fabriqué par ffmpeg.

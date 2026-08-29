@@ -162,6 +162,29 @@ async function importer() {
   })
   const { importerEpg } = await import(`${RACINE}/src/cache/importer.ts`)
   const guide = await importerEpg(cache, guideXmltv())
+  // Une série « déclarée » sans ses épisodes, comme en sert un panneau Xtream.
+  // Aucun panneau n'est joignable ici : c'est précisément ce qu'on veut voir —
+  // la fiche s'affiche quand même, et l'application dit pourquoi elle est vide.
+  const sourceXtream = cache.declarerSource({
+    genre: 'xtream',
+    adresse: 'http://127.0.0.1:9/panneau',
+    utilisateur: 'jean',
+  })
+  cache.enregistrerFiches(sourceXtream, [
+    {
+      id: 'se_essai',
+      refExterne: '42',
+      titre: 'Engrenages',
+      titreBrut: 'Engrenages',
+      annee: 2005,
+      logo: undefined,
+      resume: 'Une brigade criminelle parisienne.',
+      genres: ['Policier'],
+      groupe: 'SERIES FR',
+      langue: 'vf',
+    },
+  ])
+
   const film = cache.lister({ genre: 'film' })[0]
   const chaine = cache.lister({ genre: 'direct' }).find((element) => element.tvgId === 'tf1.fr')
   cache.fermer()
@@ -301,6 +324,26 @@ async function principal() {
       )
       await page.screenshot({ path: join(ESSAI, 'ecran-direct.png') })
     }
+
+    console.log('── Séries déclarées, épisodes absents')
+    await page.goto(`http://127.0.0.1:${PORT_APP}/series`, { waitUntil: 'networkidle' })
+    verifier(
+      (await page.locator('text=Engrenages').count()) > 0,
+      'une série déclarée s’affiche avant d’avoir ses épisodes',
+    )
+    verifier(
+      (await page.locator('text=Épisodes à charger').count()) > 0,
+      'et son état est dit plutôt que montré comme « 0 épisode »',
+    )
+    await page.goto(`http://127.0.0.1:${PORT_APP}/series/Engrenages`, { waitUntil: 'networkidle' })
+    verifier(
+      (await page.locator('text=Une brigade criminelle parisienne.').count()) > 0,
+      'sa fiche montre le résumé du panneau',
+    )
+    verifier(
+      (await page.locator('text=n’ont pas pu être chargés').count()) > 0,
+      'et explique l’absence au lieu d’afficher une page vide',
+    )
 
     console.log('── Cibles tactiles')
     await page.goto(`http://127.0.0.1:${PORT_APP}/direct`, { waitUntil: 'networkidle' })

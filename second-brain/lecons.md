@@ -2022,3 +2022,276 @@ la diffusion sans message d'erreur — écran noir, retour au menu.
 `'::1'` laisse donc passer l'adresse locale la plus courante des serveurs de
 développement, et le contrôle « est-ce joignable de l'extérieur » répond oui à
 tort.
+
+## Un outil qui régénère un fichier partagé en supprime ce qu'il n'a pas calculé
+
+Trois mesures de suite sans le moindre effet : changer un gain de +2 à +6 puis
++8 rendait des chiffres **identiques au chiffre près**. C'est le signe qu'on ne
+mesure pas ce qu'on croit.
+
+La cause : un script de recalage régénérait le fichier d'automation avec
+`"couches": []`. Ce fichier portait aussi les bruitages posés à la main —
+effacés en silence à chaque appel. Je mesurais des versions muettes de leurs
+couches en croyant régler des niveaux.
+
+**Un chiffre rigoureusement identique après un changement de réglage n'est pas
+un résultat, c'est un symptôme.** Le premier réflexe est de vérifier que le
+changement a bien atteint le fichier mesuré.
+
+Et la règle qui l'évite : **un outil qui régénère un fichier partagé rend ce
+qu'il n'a pas calculé.** Ici les couches sont relues avant écriture et
+réinjectées.
+
+## Une coupe vers une image d'une autre nature se lit comme un saut
+
+Toutes les transitions d'un montage sont des coupes franches, et personne ne
+les remarque — sauf la dernière, vers un carton de fin : image figée, floutée,
+assombrie. Mesuré, c'était **l'écart entre deux images le plus fort du film,
+110** quand la médiane du plan tournait autour de 8.
+
+Un fondu de 0,25 s : **13,1**. Ce n'est pas la coupe qui gêne, c'est le
+changement de **nature** de l'image — entre deux plans filmés une coupe passe,
+vers un carton elle saute.
+
+## Ce qui est écrit en temps source dérive quand la vitesse change
+
+Un flash et une secousse posés à 5,375 s sur un plan ralenti à 0,8 tombaient
+juste. Le ralenti retiré, ils sont tombés **1,08 s après** l'événement qu'ils
+soulignaient — c'est-à-dire tout à la fin du plan, où un flash se lit comme un
+saut d'image.
+
+`flashs` et `tremblements` comptent en temps SOURCE, comme `depart` ; les
+effets sonores comptent en temps de FRISE. **Deux repères dans la même recette,
+et rien ne le signale.** Ils sont désormais dérivés des mêmes instants de rush
+que le reste, par `caler_dragon.py`.
+
+## Du code testé et injoignable passe pour du code livré
+
+Trois fonctions du projet IPTV — l'import d'un panneau Xtream, le chargement
+des épisodes d'une série, la lecture des fiches en base — étaient écrites,
+commentées, couvertes par des tests verts. **Et appelées par personne.** Aucune
+commande, aucun écran, aucune route n'y menait : la moitié des sources que
+l'application prétend accepter était inatteignable.
+
+Rien ne le signalait, et c'est le point. Une suite verte prouve qu'une fonction
+fait ce qu'elle dit ; elle ne prouve jamais que quelqu'un l'appelle — le test
+est justement l'appelant qui masque l'absence des autres. Un compte rendu
+honnête sur le code peut donc décrire une fonctionnalité qui n'existe pas pour
+l'utilisateur.
+
+**Le contrôle tient en une commande, et il est brutal :**
+
+```bash
+grep -rn "maFonction" src/ | grep -v "le fichier qui la définit\|tests/"
+```
+
+Zéro résultat : ce n'est pas livré, quoi qu'en disent les tests.
+
+À passer sur chaque fonction exportée d'un lot avant de l'annoncer fini. La
+règle générale : **une fonctionnalité n'est livrée que lorsqu'un chemin y mène
+depuis l'extérieur** — une commande, un bouton, une route. Le reste est du code
+qui compile.
+
+## Un défaut entendu à deux endroits éloignés vient de ce qui les traverse
+
+« Ça sature au dragon, et un peu derrière le druide aussi. » Deux plans séparés
+par huit secondes et par tout leur contenu. Leur seul point commun : le
+**master**.
+
+Mesuré en rendant deux fois la même chaîne, une fois **avec** le limiteur et une
+fois sans, puis en comparant tranche par tranche : le limiteur écrasait
+**44 tranches sur 389** de plus d'un décibel — et ses coups les plus forts
+tombaient à **6,05 s** et **15,45–16,00 s**. Exactement les deux endroits
+rapportés.
+
+La cause : **+4,5 dB de grave à 85 Hz**. Sur un téléphone il ne s'entend pas —
+il ne fait qu'y manger la marge, et c'est le limiteur qui rend la facture, sur
+tout le reste du mixage. Ramené à +1,5 : **8 tranches**, et le niveau entendu
+au-dessus de 400 Hz **gagne** 0,4 dB.
+
+**Quand deux endroits sans rapport présentent le même défaut, arrêter de
+regarder les endroits et regarder ce qui les traverse.**
+
+Et la mesure qui tranche : **rendre deux fois, avec et sans le maillon
+suspect**, puis comparer. Comparer avant/après master mêle l'égaliseur au
+limiteur — un égaliseur donne aussi un gain différent selon le contenu, et
+c'est ce qui m'avait fait lire 9,1 dB de « pompage » là où le limiteur n'en
+faisait que 3,4.
+
+## Fusionner souvent a un plafond, et il est invisible
+
+La règle de ce dépôt est d'ouvrir la PR et de la fusionner dès qu'un lot tient
+debout — c'est ce qui évite les conflits quand plusieurs sessions travaillent en
+parallèle. Elle est juste, et elle a un coût que personne n'avait compté.
+
+**Chaque fusion sur `main` déclenche un déploiement.** Le plan gratuit de Vercel
+en autorise cent par jour. Mesuré le 29/08 : **154 fusions en vingt-quatre
+heures**, donc cinquante-quatre déploiements refusés.
+
+Le message arrive dans un commentaire de PR, jamais dans la conversation :
+
+```
+Resource is limited - try again in 24 hours
+(more than 100, code: "api-deployments-free-per-day")
+```
+
+Et voilà ce que ça coûte, mesuré : le propriétaire a testé pendant deux heures
+une version vieille de plusieurs heures. Il rapportait des défauts déjà corrigés,
+et chaque « recharge de force » ne servait à rien puisque le serveur ne servait
+pas la nouvelle version. Deux heures de travail des deux côtés, sur un défaut
+qui n'existait plus.
+
+Trois choses à en tirer :
+
+- **Un correctif fusionné n'est pas un correctif livré.** Tant que le
+  déploiement n'a pas abouti, dire « c'est corrigé, recharge » est faux — et
+  fait douter la personne de son propre téléphone.
+- **Compter les fusions du jour avant d'en promettre l'effet.**
+  `git log --oneline --since="24 hours ago" origin/main | wc -l` répond en une
+  seconde, et c'est le seul chiffre qui dit si ce qu'on vient de fusionner
+  arrivera quelque part.
+- **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
+  déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
+  c'est le bon geste ce jour-là seulement.
+## Un drapeau ajouté « par précaution » est une panne à retardement
+
+`node:sqlite` a demandé `--experimental-sqlite` sur les premières versions de
+Node 22. J'ai donc posé le drapeau dans tous les scripts npm, sans le mesurer.
+
+Vérifié après coup, sur Node 22.22 : **le module s'importe et fonctionne sans
+aucun drapeau** — il émet seulement un avertissement. Le drapeau n'apportait
+rien. Et il apportait un risque : Node **refuse de démarrer** sur une option
+qu'il ne connaît pas (« bad option »), donc le jour où la version suivante
+retire le drapeau devenu inutile, l'application ne démarre plus, sur un message
+qui ne parle ni de SQLite ni de version. Sur une machine qu'on ne contrôle pas
+— celle de quelqu'un qui vient d'installer la dernière LTS — c'est une panne
+sans piste.
+
+Le même projet en portait un **second**, `--experimental-strip-types`, et la
+mesure a rendu le même verdict : `process.features.typescript` vaut déjà
+`"strip"` sans lui dès Node 22.22, et le retrait des types est le défaut à
+partir de 23.6. Deux drapeaux posés par prudence, deux fois inutiles, deux
+pannes futures évitées de justesse.
+
+**La règle : un drapeau expérimental se mesure avant d'être posé**, et se
+remesure quand on change de version.
+
+```bash
+node -e "require('node:sqlite')"        # ça passe ? le drapeau est inutile
+node --le-drapeau -e ""                 # code 0 ? il est encore accepté
+```
+
+Ce qui remplace un drapeau posé au hasard : `engines` dans `package.json`, qui
+dit la version minimale réellement éprouvée et fait avertir npm au lieu
+d'échouer dix commandes plus loin.
+
+## `git stash pop && git commit` enterre un conflit au lieu de s'arrêter
+
+Une reprise de branche courante — `stash push`, `checkout -B`, `stash pop`,
+`add -A`, `commit` — enchaînée par `&&`. Le `pop` a laissé deux fichiers en
+conflit, et il **rend malgré tout un code de sortie 0**. Le `&&` a donc passé la
+main, `git add -A` a ajouté les marqueurs `<<<<<<<` comme du contenu ordinaire,
+et le commit est parti avec eux. Poussé.
+
+Rien ne l'a signalé : ni le `&&`, ni `git status` après coup (l'arbre est propre,
+les marqueurs sont *commités*), ni la barrière de vérification — elle avait
+tourné **avant** la reprise, sur un arbre alors sain. Le seul indice tenait dans
+une phrase noyée dans la sortie : « The stash entry is kept in case you need it
+again », qui veut dire « ça s'est mal passé ».
+
+**La parade tient en une ligne, entre le `pop` et le `commit` :**
+
+```bash
+git diff --name-only --diff-filter=U   # non vide = conflit à résoudre
+```
+
+Et deux règles qui en découlent :
+
+- **Ne jamais chaîner `stash pop` avec `add -A` par `&&`.** Le code de sortie ne
+  dit pas ce qu'on croit ; c'est la liste des fichiers en conflit qui le dit.
+- **Relancer la vérification APRÈS la reprise de branche**, pas avant. Une
+  barrière verte sur l'arbre d'avant ne prouve rien sur celui qu'on pousse.
+
+## Le HTML préconstruit de Next n'est pas une page servable
+
+Un quota d'hébergeur épuisé, une page de vente à mettre en ligne le soir même,
+et une idée qui paraît évidente : `next build` écrit déjà
+`.next/server/app/index.html`, il suffirait de le servir en statique.
+
+**Il s'affiche parfaitement et il est mort.** Mesuré dans Chromium, servi depuis
+un sous-dossier comme le ferait GitHub Pages :
+
+| | |
+| --- | --- |
+| ressources en échec | aucune |
+| erreurs JavaScript | aucune |
+| scripts chargés | 7 |
+| charge RSC `__next_f` | présente |
+| **React attaché au formulaire** | **non** |
+
+Tout est vert sauf la seule chose qui compte. Le fichier est un artefact
+interne du rendu serveur, pas ce que Next envoie au navigateur : l'hydratation
+de l'App Router passe par le flux que le serveur compose à la requête, et le
+recopier tel quel donne une page qui ressemble à l'originale et n'exécute rien.
+Un formulaire y devient un décor.
+
+**Ce qui trompe, c'est qu'aucune alarme ne se déclenche.** Pas de 404, pas
+d'erreur en console, le style est là, le texte est là. On ne s'en aperçoit
+qu'en cliquant — ou en vérifiant que React s'est attaché :
+
+```js
+Object.keys(document.querySelector('form')).some(k => k.startsWith('__react'))
+```
+
+**Les deux vraies sorties**, quand un hébergeur est indisponible : `output:
+'export'` dans la configuration, qui exige de retirer les routes d'API — donc
+un vrai choix de conception, pas une astuce — ou **changer d'hébergeur**.
+Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
+ses routes serveur. C'était la réponse depuis le début, et une heure est passée
+à contourner un quota au lieu de changer de mur.
+
+## Le quota de déploiement est une ressource commune, et les sessions la vident
+
+Un compte d'hébergeur gratuit plafonne les déploiements par **jour et par
+compte** — cent chez Vercel. Ce dépôt reçoit plusieurs sessions en parallèle et
+fusionne **95 pull requests dans la journée**, mesuré le 28/08/2026 : chacune
+déclenche un déploiement d'aperçu, et le compteur est vidé par du travail qui
+n'a rien à voir avec celui qui en a besoin.
+
+**Le symptôme arrive au pire moment et ne ressemble pas à sa cause.** Ici :
+« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec
+les vingt PR de montage vidéo qui l'ont consommé, et le projet qu'on cherchait
+à mettre en ligne — une page de vente, la seule chose qui pouvait rentrer de
+l'argent — reste bloqué vingt-quatre heures.
+
+Trois choses à en retenir :
+
+- **Un aperçu réussi ne prouve pas que le compteur est libre.** Un aperçu sur
+  un projet existant peut passer à l'instant même où la création d'un nouveau
+  projet est refusée. Conclure de l'un à l'autre a coûté un aller-retour, et un
+  essai raté au propriétaire.
+- **Chaque projet supplémentaire double la consommation.** Deux projets
+  branchés sur le même dépôt, ce sont deux déploiements par PR.
+- **On coupe les aperçus des projets qui n'en ont pas besoin.** Une application
+  qui tourne dans le navigateur n'a aucune raison d'être déployée à chaque PR.
+
+Et la sortie, quand le mur est là : **changer de mur.** Netlify et Cloudflare
+Pages construisent un Next.js complet, gratuitement, avec ses routes serveur, et
+sans toucher au quota de l'autre. Une heure est passée à contourner le plafond
+avant d'y penser.
+
+## `cd sous-dossier && …` saute silencieusement quand on y est déjà
+
+Deux éditions perdues dans la même séance, sans un message d'erreur utile.
+
+Le shell d'une session garde son répertoire d'un appel à l'autre. Une commande
+qui commence par `cd nexuscrypto && python3 - <<'PY'` échoue donc au `cd` quand
+on est **déjà** dans `nexuscrypto` — et le `&&` avale tout le reste. Le script
+ne tourne pas, rien ne le dit, et la vérification qui suit passe au vert sur du
+code inchangé.
+
+C'est la conjonction qui trompe : l'erreur affichée est `cd: no such file or
+directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière.
+
+**La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
+de supposer où l'on est.

@@ -5,13 +5,13 @@
   "type": "module",
   "description": "Gestion et lecture de listes IPTV / VOD — cœur d'ingestion et de normalisation",
   "scripts": {
-    "dev": "NODE_OPTIONS=--experimental-sqlite next dev --hostname 0.0.0.0",
-    "build": "NODE_OPTIONS=--experimental-sqlite next build",
-    "start": "NODE_OPTIONS=--experimental-sqlite next start --hostname 0.0.0.0",
-    "test": "node --experimental-strip-types --experimental-sqlite --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "test": "node --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
     "check": "tsc --noEmit",
-    "iptv": "node --experimental-strip-types --experimental-sqlite --disable-warning=ExperimentalWarning src/cli.ts",
-    "verify": "node --experimental-strip-types --experimental-sqlite --disable-warning=ExperimentalWarning scripts/verifier-interface.mjs"
+    "verify": "node --disable-warning=ExperimentalWarning scripts/verifier-interface.mjs",
+    "iptv": "node --disable-warning=ExperimentalWarning src/cli.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
@@ -26,5 +26,8 @@
     "next": "^16.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
+  },
+  "engines": {
+    "node": ">=22.22"
   }
 }
