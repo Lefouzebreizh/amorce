@@ -374,6 +374,12 @@ async function principal(argv: readonly string[]): Promise<number> {
 
       case 'ranger': {
         const bilan = rangerCatalogue(depot)
+        if (bilan.reclasses > 0) {
+          console.log(
+            `${String(bilan.reclasses)} entrées changent de genre — classées par une règle ` +
+              `depuis corrigée, et figées jusqu'ici.`,
+          )
+        }
         console.log(
           `${String(bilan.numerotees)} chaînes numérotées sur ${String(bilan.chaines)} ` +
             `(les autres suivent par familles : sport, cinéma, musique, puis le reste).`,

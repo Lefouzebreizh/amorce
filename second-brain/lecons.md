@@ -3515,3 +3515,28 @@ attendre coûte un utilisateur.
 Corollaire pratique : quand un contrôle neuf passe au vert **du premier coup**,
 il faut le faire échouer exprès une fois avant de lui faire confiance. Celui-ci
 avait justement échoué — et c'est ce qui a révélé que son décor était faux.
+
+## Une donnée calculée à l'écriture ne bénéficie jamais d'un correctif
+
+Le classement direct / film / série d'une entrée IPTV se calcule **à l'import**
+et s'écrit en base. Une règle de classement fausse produit donc un catalogue
+faux — et le correctif livré ensuite ne le répare pas : il n'agit qu'au prochain
+import, que personne ne refait, parce qu'il coûte plusieurs minutes et demande
+de retrouver l'adresse de sa source.
+
+Le cas réel : des **chaînes** de cinéma — Ciné+, Canal+ Cinémas, les chaînes
+Pluto — rangées dans l'onglet Films parce que leur groupe s'appelle « Cinema ».
+La règle a été corrigée, la correction fusionnée, et l'écran de l'utilisateur
+n'a pas bougé d'un pixel. Il a fallu qu'il renvoie une capture pour qu'on
+comprenne que le correctif n'atteignait pas les données.
+
+La règle générale : **tout champ dérivé écrit en base a besoin d'un chemin de
+recalcul, et ce chemin fait partie du correctif**, pas d'un lot suivant. Sans
+lui, on livre une correction qui ne corrige personne — la pire des situations,
+parce que tout le monde la croit appliquée. Le recalcul est presque toujours
+trivial : les données brutes sont encore là, il suffit de rejouer la fonction.
+
+Le signal à guetter, quand un utilisateur signale un défaut déjà corrigé :
+**demander si son état vient d'avant le correctif** — base, cache, fichier
+généré, index. Ce n'est presque jamais le code qui a régressé, c'est la donnée
+qui n'a jamais été rejouée.

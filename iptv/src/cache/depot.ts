@@ -242,10 +242,30 @@ export interface Depot {
    * qui l'ignorait n'en a aucun, et un réimport complet coûte plusieurs minutes
    * pour une donnée qui se déduit du titre. Rend le nombre de chaînes numérotées.
    */
-  renumeroter(
-    rangs: (titre: string) => { canal?: number | undefined; rang: number },
-    themes?: (groupe: string | undefined) => string | undefined,
-  ): number
+  /**
+   * Reclasse tout le catalogue à partir de ce qu'on en sait déjà.
+   *
+   * **Le genre en fait partie, et c'est le point.** Il est calculé à l'import,
+   * donc figé : une base remplie par une version dont la règle était fausse
+   * garde ce classement pour toujours, et un correctif livré ensuite ne la
+   * touche jamais. C'est ce qui laissait des chaînes de cinéma — Ciné+, Canal+
+   * Cinémas, les chaînes Pluto — rangées dans l'onglet Films.
+   *
+   * Le rappel reçoit ce que la base contient et rend le classement complet.
+   * Rend le nombre de chaînes qui ont reçu un vrai numéro.
+   */
+  reclasser(
+    recalcul: (element: {
+      titre: string
+      url: string
+      groupe: string | undefined
+    }) => {
+      genre: Genre
+      canal?: number | undefined
+      rang?: number | undefined
+      theme?: string | undefined
+    },
+  ): { numerotees: number; reclasses: number }
   /** L'état mesuré d'une entrée, ou `undefined` si elle n'a jamais été testée. */
   etat(elementId: string): 'ok' | 'mort' | undefined
   /** Rend tout le monde visible et à retester. */
@@ -877,37 +897,41 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
       return lignes.map(versProgramme)
     },
 
-    renumeroter(rangs, themes): number {
-      const chaines = base
-        .prepare("SELECT id, titre FROM element WHERE genre = 'direct'")
+    reclasser(recalcul): { numerotees: number; reclasses: number } {
+      const lignes = base
+        .prepare('SELECT id, titre, url, groupe, genre FROM element')
         .all() as Ligne[]
-      const oeuvres =
-        themes === undefined
-          ? []
-          : (base
-              .prepare("SELECT id, groupe FROM element WHERE genre IN ('film', 'serie')")
-              .all() as Ligne[])
-
-      const poserRang = base.prepare('UPDATE element SET canal = ?, rang = ? WHERE id = ?')
-      const poserTheme = base.prepare('UPDATE element SET theme = ? WHERE id = ?')
+      const poser = base.prepare(
+        'UPDATE element SET genre = ?, canal = ?, rang = ?, theme = ? WHERE id = ?',
+      )
       let numerotees = 0
+      let reclasses = 0
 
       base.exec('BEGIN')
       try {
-        for (const ligne of chaines) {
-          const { canal, rang } = rangs(texte(ligne['titre']) ?? '')
-          poserRang.run(canal ?? null, rang, texte(ligne['id']) ?? '')
-          if (canal !== undefined) numerotees += 1
-        }
-        for (const ligne of oeuvres) {
-          poserTheme.run(themes?.(texte(ligne['groupe'])) ?? null, texte(ligne['id']) ?? '')
+        for (const ligne of lignes) {
+          const avant = texte(ligne['genre'])
+          const decision = recalcul({
+            titre: texte(ligne['titre']) ?? '',
+            url: texte(ligne['url']) ?? '',
+            groupe: texte(ligne['groupe']),
+          })
+          poser.run(
+            decision.genre,
+            decision.canal ?? null,
+            decision.rang ?? null,
+            decision.theme ?? null,
+            texte(ligne['id']) ?? '',
+          )
+          if (decision.canal !== undefined) numerotees += 1
+          if (avant !== decision.genre) reclasses += 1
         }
         base.exec('COMMIT')
       } catch (cause) {
         base.exec('ROLLBACK')
         throw cause
       }
-      return numerotees
+      return { numerotees, reclasses }
     },
 
     themes(filtres = {}): { nom: string; compte: number }[] {
