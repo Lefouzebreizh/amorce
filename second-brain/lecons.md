@@ -2153,6 +2153,18 @@ Trois choses à en tirer :
 - **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
   déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
   c'est le bon geste ce jour-là seulement.
+
+**Et le plafond est par projet, pas par compte.** Mesuré dans la même minute :
+le projet `amorce` recevait « Resource is limited » pendant que le projet
+`amorce-51up`, branché sur le même dépôt mais sur un autre dossier, affichait
+« Building ». Le message parle pourtant de `api-deployments-free-per-day`, ce
+qui se lit comme une limite de compte — et c'est ce que j'avais écrit ici avant
+de le vérifier.
+
+La conséquence est une issue, pas seulement une correction : quand un projet est
+bloqué pour la journée, **un second projet Vercel branché sur le même dépôt
+déploie encore**. C'est trente secondes à créer, et cela rend la version du jour
+visible tout de suite au lieu d'attendre vingt-quatre heures.
 ## Un drapeau ajouté « par précaution » est une panne à retardement
 
 `node:sqlite` a demandé `--experimental-sqlite` sur les premières versions de
