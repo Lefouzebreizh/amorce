@@ -192,12 +192,31 @@ un navigateur refusant de démarrer une vidéo sonore sans geste.
 L'aperçu se coupe d'un bouton, et le réglage est retenu. Il est éteint par
 défaut si le système demande à réduire les animations.
 
+### L'entretien, sans terminal
+
+Trois gestes reviennent : ranger les chaînes, éprouver les flux, remettre en jeu
+ce qui a été masqué. Ils sont **en haut de l'accueil**, en boutons — c'est le
+chemin normal, et les commandes plus bas n'en sont que l'équivalent pour qui a
+déjà un terminal ouvert.
+
+L'éprouve avance par lots de vingt-cinq avec une barre : deux cents flux prennent
+plusieurs minutes, et un bouton qui reste enfoncé tout ce temps est
+indiscernable d'un bouton cassé.
+
+**Ce que ces boutons ne feront jamais : recevoir vos identifiants.** Le serveur
+écoute sur tout le réseau local et n'a pas de mot de passe ; un formulaire qui
+les accepterait serait un cadeau à quiconque est connecté chez vous. Une source
+se branche au terminal, et nulle part ailleurs.
+
 ### Faire le ménage dans les flux morts
 
 Une liste publique en contient couramment la moitié : serveur éteint, chaîne
 géobloquée, adresse changée depuis deux ans. Rien ne les distingue à l'œil — même
 titre propre, même logo. On clique, on attend, on tombe sur une erreur, et c'est
 l'application qu'on croit en panne.
+
+Le bouton **« Éprouver N flux »** de l'accueil fait le travail. En ligne de
+commande, c'est :
 
 ```bash
 npm run iptv -- tester
@@ -206,7 +225,12 @@ npm run iptv -- tester
 Chaque flux est ouvert pour de vrai : un manifeste doit commencer par `#EXTM3U`
 **et** annoncer au moins une piste, un film doit rendre un octet de vidéo et non
 une page HTML. Ce qui ne répond pas disparaît de l'interface — sans être effacé
-de la base, `npm run iptv -- ranimer` les remet tous en jeu.
+de la base : le bouton **« Tout remettre en jeu »**, ou `npm run iptv -- ranimer`,
+les récupère tous.
+
+Et si un balayage condamne **tout** — réseau coupé, abonnement à court de
+connexions pendant le test —, l'accueil le dit et garde le bouton qui répare,
+plutôt que d'annoncer un catalogue vide et de vous laisser sans issue.
 
 Ce qui est **refusé sans raison claire** — un 403, un 429, un « max connections
 reached » — reste affiché. Un abonnement momentanément saturé rend les mêmes
