@@ -2127,3 +2127,41 @@ Trois choses à en tirer :
 - **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
   déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
   c'est le bon geste ce jour-là seulement.
+
+## Le HTML préconstruit de Next n'est pas une page servable
+
+Un quota d'hébergeur épuisé, une page de vente à mettre en ligne le soir même,
+et une idée qui paraît évidente : `next build` écrit déjà
+`.next/server/app/index.html`, il suffirait de le servir en statique.
+
+**Il s'affiche parfaitement et il est mort.** Mesuré dans Chromium, servi depuis
+un sous-dossier comme le ferait GitHub Pages :
+
+| | |
+| --- | --- |
+| ressources en échec | aucune |
+| erreurs JavaScript | aucune |
+| scripts chargés | 7 |
+| charge RSC `__next_f` | présente |
+| **React attaché au formulaire** | **non** |
+
+Tout est vert sauf la seule chose qui compte. Le fichier est un artefact
+interne du rendu serveur, pas ce que Next envoie au navigateur : l'hydratation
+de l'App Router passe par le flux que le serveur compose à la requête, et le
+recopier tel quel donne une page qui ressemble à l'originale et n'exécute rien.
+Un formulaire y devient un décor.
+
+**Ce qui trompe, c'est qu'aucune alarme ne se déclenche.** Pas de 404, pas
+d'erreur en console, le style est là, le texte est là. On ne s'en aperçoit
+qu'en cliquant — ou en vérifiant que React s'est attaché :
+
+```js
+Object.keys(document.querySelector('form')).some(k => k.startsWith('__react'))
+```
+
+**Les deux vraies sorties**, quand un hébergeur est indisponible : `output:
+'export'` dans la configuration, qui exige de retirer les routes d'API — donc
+un vrai choix de conception, pas une astuce — ou **changer d'hébergeur**.
+Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
+ses routes serveur. C'était la réponse depuis le début, et une heure est passée
+à contourner un quota au lieu de changer de mur.
