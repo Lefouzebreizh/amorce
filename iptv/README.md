@@ -175,6 +175,23 @@ npm run iptv -- epg guide.xml.gz          # le guide, .gz accepté
 npm run dev                                # puis l'adresse réseau affichée
 ```
 
+### Voir ce qui passe sans cliquer
+
+L'écran du direct montre les chaînes en vidéo, pas seulement en liste. **Quatre
+à la fois**, et ce plafond n'est pas un choix de confort : un abonnement IPTV
+limite les connexions simultanées, souvent à une ou deux. Vingt vignettes qui
+jouent, c'est vingt connexions ouvertes, et le serveur refuse tout — y compris
+la chaîne qu'on regardait. S'y ajoutent les six à huit décodeurs vidéo qu'un
+navigateur accorde, et les 3 à 6 Mb/s que coûte chaque chaîne HD.
+
+Seules les vignettes **visibles à l'écran** consomment un créneau, et le
+libèrent en sortant du champ : faire défiler ne cumule pas les connexions. Le
+son reste coupé — c'est d'ailleurs ce qui rend la lecture automatique possible,
+un navigateur refusant de démarrer une vidéo sonore sans geste.
+
+L'aperçu se coupe d'un bouton, et le réglage est retenu. Il est éteint par
+défaut si le système demande à réduire les animations.
+
 ### Faire le ménage dans les flux morts
 
 Une liste publique en contient couramment la moitié : serveur éteint, chaîne
@@ -202,6 +219,7 @@ feraient passer pour morts des flux parfaitement vivants. Le parallélisme se fa
 donc entre hôtes différents — ce qui est exactement le cas d'une liste publique.
 
 ```bash
+npm run iptv -- ranger                  # l'ordre des chaînes et les thèmes
 npm run iptv -- tester --genre=direct   # seulement les chaînes
 npm run iptv -- tester --tout           # y compris ce qui a déjà été testé
 npm run iptv -- tester --par-hote=3     # si le fournisseur le tolère

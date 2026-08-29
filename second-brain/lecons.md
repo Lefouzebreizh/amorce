@@ -3058,6 +3058,85 @@ Et le chiffre affiché doit être **ce qu'il y a à corriger**, pas le nombre
 d'occurrences : compter aussi les entrées en réserve donnait 231 au lieu de 73,
 et décourageait pour un travail qui n'est pas encore à faire.
 
+## Une donnée qu'on croit connaître est celle qu'il faut vérifier
+
+Ranger des chaînes de télévision dans « l'ordre normal » paraît être la tâche
+la plus simple du monde : tout le monde sait que TF1 est au 1 et M6 au 6. C'est
+justement ce qui rend le piège invisible.
+
+**La numérotation française a changé le 6 juin 2025.** C8 et NRJ 12 ont cessé
+d'émettre le 28 février 2025, Canal+ a quitté la TNT, et l'Arcom a renuméroté :
+France 4 remonte au 4, LCP prend le 8, Gulli le 12, et les quatre chaînes
+d'information forment un bloc de 13 à 16. Une table écrite de mémoire aurait
+donc décrit la TNT d'avant — et **une table fausse est pire qu'aucune table** :
+l'ordre paraît juste, personne ne le remet en cause, et chaque chaîne est au
+mauvais endroit.
+
+La règle qui en sort n'est pas « vérifier les faits », que tout le monde
+répète. C'est plus précis : **le réflexe de vérification se déclenche sur ce
+qu'on ignore, jamais sur ce qu'on croit savoir.** On va chercher la
+documentation d'une API inconnue ; on n'irait pas chercher le numéro de TF1. Le
+signal à surveiller est donc l'inverse de l'incertitude — c'est l'aisance.
+
+Détail de méthode, mesuré ici : le mandataire de cette session refuse
+`arcom.fr`, `wikipedia.org` et les sites d'actualité, mais **la recherche web
+répond**. Trois requêtes ciblées ont reconstitué la table entière quand aucune
+page ne pouvait être ouverte.
+
+## Un plafond invisible se documente là où il se subit
+
+Faire jouer vingt vignettes vidéo en même temps échoue pour trois raisons
+empilées, et une seule se voit :
+
+1. **L'abonnement IPTV limite les connexions simultanées**, souvent à une ou
+   deux. C'est le plafond qui casse le plus vite, et le seul qui ne dit pas son
+   nom : il se manifeste par des flux « morts » qui ne le sont pas, et par la
+   chaîne qu'on regardait qui s'arrête.
+2. **Un navigateur n'accorde que six à huit décodeurs vidéo.** Au-delà, les
+   vignettes en trop restent noires, sans erreur.
+3. **La bande passante** : 3 à 6 Mb/s par chaîne HD.
+
+Le premier a l'air d'un détail de fournisseur et c'est le plus contraignant.
+D'où deux décisions qu'aucun test n'aurait imposées : le plafond porte sur ce
+qui est **visible à l'écran** — faire défiler ne cumule donc pas les connexions
+— et le nombre est écrit dans l'interface elle-même, à côté du réglage, pas
+seulement dans le code. Quelqu'un qui voit « 4 chaînes à la fois » ne cherche
+pas pourquoi la cinquième reste noire.
+
+## Une PR fusionnée en squash laisse la branche rejouer la même histoire
+
+Mesuré deux fois dans la même heure, et la seconde aurait dû être évitée.
+
+Une pull request fusionnée en **squash** met tout son contenu sur `main` en
+**un** commit. La branche, elle, garde ses commits d'origine. Le contenu est
+identique des deux côtés, mais l'histoire ne l'est plus — et Git compare des
+histoires. Continuer à travailler sur cette branche fabrique donc un conflit
+sur **chaque fichier que la PR avait touché**, y compris ceux qu'on ne touche
+plus, et le conflit grossit à chaque commit de plus.
+
+Le symptôme trompe : `git merge origin/main` annonce des conflits dans des
+fichiers qu'on n'a pas modifiés depuis la fusion, avec des deux côtés le même
+texte. On les résout à la main, on croit avoir fini, et le suivant revient.
+
+La parade n'est pas de résoudre, c'est de **reposer la branche** :
+
+```bash
+git checkout -B <branche> origin/main
+git cherry-pick <commits postérieurs à la fusion>
+git push --force-with-lease
+```
+
+Deux conditions, et elles comptent : la branche est la nôtre — jamais celle de
+quelqu'un d'autre —, et on ne reporte que ce qui n'est pas déjà sur `main`.
+`git log --oneline <dernier commit fusionné>..HEAD` donne exactement cette
+liste.
+
+**Et on revérifie après le report, pas avant.** Un `cherry-pick` sur une base
+qui a bougé produit un arbre que personne n'a jamais compilé : les tests
+étaient verts sur l'ancienne base, ils ne disent rien de la nouvelle. C'est le
+seul moment où « la vérification est déjà passée » est faux tout en paraissant
+vrai.
+
 ## Une adresse canonique se vérifie au DNS, pas à l'œil
 
 Onze sites annonçaient `ma-panoplie-ia.com` dans leurs balises canoniques, leurs
