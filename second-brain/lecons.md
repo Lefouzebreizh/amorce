@@ -2295,3 +2295,41 @@ directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière
 
 **La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
 de supposer où l'on est.
+
+## Le nom d'un groupe décrit le contenu, pas la nature de ce qu'on reçoit
+
+Une liste IPTV publique range ses chaînes par thème, et l'une de ces catégories
+s'appelle « Movies ». Le classement de l'application, qui faisait confiance au
+nom du groupe, rangeait donc toutes les chaînes de cinéma dans l'onglet
+**Films** — où l'on cliquait sur « un film » pour tomber sur une chaîne en
+direct. Trouvé en trente secondes par la première personne à s'en servir, et
+par aucun test.
+
+**La nature de ce qu'on reçoit est lisible dans l'adresse, pas dans le
+libellé** : un manifeste HLS (`.m3u8`) est un flux qui coule, un `.mkv` ou un
+`.mp4` est une œuvre qu'on ouvre. Le groupe, lui, ne dit que le thème — et une
+chaîne qui *diffuse* des films n'est pas un film.
+
+La règle générale vaut au-delà de l'IPTV : **quand une donnée écrite à la main
+et une donnée structurelle se contredisent, c'est la structurelle qui décide.**
+Le libellé est saisi par un humain pressé ; le format, lui, est imposé par le
+protocole.
+
+## Interdire l'autoplay par principe est aussi un défaut
+
+La règle « pas de démarrage automatique » protège d'une vidéo qui s'ouvre en
+pleine figure sur une page qu'on parcourt. Appliquée à un **lecteur de
+télévision en direct**, elle devient absurde : le clic qui a ouvert la chaîne
+*est* le geste, et demander un second clic pour regarder la télé est une gêne
+que personne n'accepte.
+
+La bonne formulation n'est pas « jamais » mais **« jamais sans intention »** :
+
+| contenu | démarrage | pourquoi |
+| --- | --- | --- |
+| direct | automatique | le clic sur la chaîne est l'intention |
+| film, épisode | sur geste | on lit d'abord le résumé, on reprend où on en était |
+
+Et le refus du navigateur se dit à l'écran : bloquer une vidéo sonore lancée
+sans interaction suffisante est un comportement normal de Chrome, silencieux,
+qui se confond avec une panne du flux.

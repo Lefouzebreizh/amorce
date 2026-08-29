@@ -28,16 +28,19 @@ export const LISTE_DEMO = [
   'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
   '#EXTINF:-1 tvg-id="demo.bipbop" group-title="FR | DÉMO",FR | Bip-Bop Apple HD',
   'https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8',
+  // Les films et les épisodes sont des **fichiers**, les chaînes des flux :
+  // c'est ce qui les distingue dans la vraie vie, et la démonstration doit le
+  // montrer plutôt que de faire passer un manifeste pour une œuvre.
   '#EXTINF:-1 group-title="FILMS VF",Big Buck Bunny (2008) VF 1080p',
-  'https://test-streams.mux.dev/pts_shift/master.m3u8',
+  'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
   '#EXTINF:-1 group-title="FILMS MULTI",Sintel (2010) MULTI 720p',
-  'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
+  'https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
   '#EXTINF:-1 group-title="SERIES VF",Démonstration S01E01',
-  'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+  'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
   '#EXTINF:-1 group-title="SERIES VF",Démonstration S01E02',
-  'https://test-streams.mux.dev/pts_shift/master.m3u8',
+  'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
   '#EXTINF:-1 group-title="SERIES VOSTFR",[VOSTFR] Démonstration S02E01',
-  'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
+  'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
 ].join('\n')
 
 /**

@@ -40,10 +40,19 @@ function nommer(piste: { name?: string; lang?: string }, rang: number): string {
 /*
  * Le lecteur.
  *
- * **Pas d'autoplay** : la lecture démarre sur un geste, jamais toute seule.
- * C'est une règle du dépôt, et elle évite aussi le refus silencieux des
- * navigateurs, qui bloquent une vidéo sonore lancée sans interaction — la page
- * paraît alors cassée sans qu'aucune erreur ne s'affiche.
+ * **Le direct démarre seul, le reste attend un geste.** La première version
+ * n'ouvrait jamais la lecture toute seule, par principe. C'était un mauvais
+ * raisonnement, et l'usage l'a montré tout de suite : sur une chaîne en direct,
+ * **le clic qui a ouvert la page EST le geste**. Demander un second clic pour
+ * regarder la télévision n'a aucun sens.
+ *
+ * Un film ou un épisode, en revanche, se reprend là où on l'avait laissé : le
+ * démarrer d'office volerait à celui qui vient d'ouvrir la fiche le temps de
+ * lire le résumé.
+ *
+ * Le navigateur peut refuser, et c'est prévu : il bloque une vidéo sonore
+ * lancée sans interaction suffisante avec le site. Le refus est alors dit à
+ * l'écran plutôt que de laisser croire à une panne.
  *
  * **hls.js seulement s'il le faut** : Safari lit HLS nativement et le fait
  * mieux (décodage matériel, économie de batterie). Ailleurs, aucun navigateur
@@ -60,6 +69,7 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
   const [externes, setExternes] = useState<PisteExterne[] | undefined>(undefined)
   const [motSousTitres, setMotSousTitres] = useState<string | undefined>(undefined)
   const [cherche, setCherche] = useState(false)
+  const [refusAutomatique, setRefusAutomatique] = useState(false)
   // 'local' : la page décode. 'distant' : un appareil du salon s'en charge, et
   // la page ne fait plus que piloter.
   const [mode, setMode] = useState<'local' | 'distant'>('local')
@@ -175,6 +185,26 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
       element.remote.removeEventListener('disconnect', fini)
     }
   }, [])
+
+  // Le direct se lance dès qu'il y a de quoi jouer.
+  useEffect(() => {
+    const element = video.current
+    if (element === null || !direct || mode === 'distant') return
+
+    const lancer = (): void => {
+      void element.play().catch((cause: unknown) => {
+        // `NotAllowedError` est le refus d'autoplay du navigateur — pas une
+        // panne du flux. Les autres erreurs sont déjà traitées par hls.js.
+        if (cause instanceof DOMException && cause.name === 'NotAllowedError') {
+          setRefusAutomatique(true)
+        }
+      })
+    }
+
+    if (element.readyState >= 2) lancer()
+    element.addEventListener('canplay', lancer, { once: true })
+    return () => element.removeEventListener('canplay', lancer)
+  }, [direct, src, mode])
 
   // Reprise de lecture : posée une fois les métadonnées connues, sinon la durée
   // vaut NaN et l'affectation est ignorée sans erreur.
@@ -328,6 +358,13 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
         preload="metadata"
         className="aspect-video w-full rounded-carte bg-black"
       />
+
+      {refusAutomatique && (
+        <p className="mt-3 rounded-lg bg-accent-sombre p-3 text-sm">
+          Votre navigateur a refusé de démarrer la vidéo tout seul. Appuyez sur lecture —
+          il l’acceptera ensuite sur ce site.
+        </p>
+      )}
 
       {erreur !== undefined && (
         <p role="alert" className="mt-3 rounded-lg bg-red-500/15 p-3 text-red-200">
