@@ -191,12 +191,23 @@ export function Timeline({
    * Une fois le plan saisi, le défilement du navigateur doit se taire.
    *
    * `touch-action` est consulté au début du geste, donc le changer maintenant
-   * ne suffit pas. Seul un écouteur non passif qui refuse l'événement arrête un
-   * défilement en cours — et React pose les siens en passif.
+   * ne suffit pas. Seul un écouteur non passif peut refuser l'événement — et
+   * React pose les siens en passif.
+   *
+   * Mais il ne refuse que ce qui est encore refusable, d'où le `cancelable`.
+   * Un défilement DÉJÀ lancé ne s'interrompt pas : le navigateur marque alors
+   * l'événement non annulable, ignore l'appel, et écrit dans la console
+   * « Ignored attempt to cancel a touchmove event with cancelable=false ».
+   * C'est un avertissement, pas une panne — mais le parcours de vérification
+   * compte toute écriture d'erreur, et celle-ci le faisait échouer sur le
+   * téléphone, à 87 sur 88. Le garde ne change aucun comportement : là où
+   * l'appel servait, il a lieu ; là où il ne servait pas, on cesse de demander.
    */
   useEffect(() => {
     if (saisi === null) return;
-    const refuser = (e: TouchEvent) => e.preventDefault();
+    const refuser = (e: TouchEvent) => {
+      if (e.cancelable) e.preventDefault();
+    };
     document.addEventListener('touchmove', refuser, { passive: false });
     return () => document.removeEventListener('touchmove', refuser);
   }, [saisi]);

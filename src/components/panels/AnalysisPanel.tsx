@@ -57,9 +57,21 @@ function RecommendedPanel() {
   const chosen = CAPTION_SETS.find((set) => set.id === setId) ?? CAPTION_SETS[0];
 
   return (
+    /*
+     * La phrase disait « rien de ce que tu as déjà fait n'est remplacé ».
+     * Vrai des textes et des bruitages, faux des plans : `applyFinish` les
+     * passe dans `alterneLesRushes`, qui réordonne le montage pour que deux
+     * morceaux d'un même rush ne se suivent pas. Quelqu'un qui vient de
+     * ranger ses plans à l'étape 2 les retrouve rebattus.
+     *
+     * Le comportement est bon — c'est lui qui évite les trente vignettes
+     * identiques sur quarante. C'est la promesse qui était fausse, et une
+     * promesse fausse coûte plus cher qu'un avertissement : on découvre le
+     * changement après coup, sur le fichier, sans savoir d'où il vient.
+     */
     <Panel
       title="Poser les réglages recommandés"
-      subtitle="Tout ce que la note récompense, d’un seul geste. Rien de ce que tu as déjà fait n’est remplacé."
+      subtitle="Tout ce que la note récompense, d’un seul geste. Tes textes et tes bruitages sont gardés ; l’ordre des plans, lui, peut changer."
     >
       <Field label="Trame de textes" help={chosen.why}>
         <Choice
@@ -93,8 +105,9 @@ function RecommendedPanel() {
           </Hint>
         ) : (
           <Hint>
-            Découpe les plans de plus de 3,5 s, pose un bruitage sur chaque coupe et sur chaque creux
-            d’attention, et met en place la trame de textes. Annulable d’un seul geste.
+            Découpe les plans de plus de 3,5 s, redistribue les morceaux pour que deux bouts du même
+            rush ne se suivent pas, pose un bruitage sur chaque coupe et sur chaque creux d’attention,
+            et met en place la trame de textes. Annulable d’un seul geste.
           </Hint>
         )}
       </div>

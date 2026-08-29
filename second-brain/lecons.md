@@ -1478,6 +1478,20 @@ souvent le mauvais. **Le binaire système d'abord**, partout et sans exception :
 même résolution, y compris les scripts de vérification — le mien s'est fait
 prendre par sa propre règle.
 
+**Et ce n'est pas qu'`imageio-ffmpeg` : le binaire statique de johnvansickle
+ment sur sa propre configuration.** Mesuré le 29/08/2026 dans une session
+distante, où il occupe `/usr/local/bin/ffmpeg` et passe donc devant
+`/usr/bin/ffmpeg` (6.1.1, complet). Sa ligne `configuration:` annonce
+`--enable-libfreetype` **et** `--enable-libass` ; `ffmpeg -filters` en rend 494,
+dont `drawbox` et `drawgrid`, et **pas `drawtext`**. Lire la configuration pour
+décider ne sert donc à rien — seule la liste des filtres dit la vérité.
+
+Ce que ça coûte quand personne ne l'a écrit : `npm run planche`, l'outil
+qu'Amorce impose avant de livrer un montage, ne démarrait pas du tout ici. Il
+s'arrêtait sur « No such filter: 'drawtext' » — un message qui nomme le filtre,
+jamais le binaire — au milieu d'une trace `execFileSync` de trente lignes de
+`Buffer`.
+
 ## Un bruitage « cinéma » peut être du silence sur un téléphone
 
 Seize bruitages arrivent d'un coup, tous étiquetés cinéma : nappes sombres,
@@ -3973,3 +3987,49 @@ rapporté. Après correction : un seul événement, à 3,4 fois le fond.
 film à l'image près et s'y aligner. Un raccord « à peu près au bon endroit »
 n'est pas approximatif, il est **faux** — il ajoute une coupe au lieu d'en
 remplacer une.
+
+---
+
+## Mesurer la paire réellement tracée, pas celle qui est dans la configuration
+
+**Mesuré le 29/08/2026, sur les sous-titres d'Amorce.** Le jeu de textes
+« Bande-annonce » pose une couleur jaune `#ffe14d`, et le style karaoké pose un
+surlignage vert `#22e37a`. Lus côte à côte dans la configuration, les deux
+donnent **1,31 : 1** de contraste — là où il en faut 4,5. Un défaut apparemment
+flagrant, et un correctif prêt à partir.
+
+Le rendu ne trace jamais cette paire. Sur le mot allumé, il remplace la couleur
+du texte par `color2`, presque noire : la paire réelle est **11,0 : 1**. Sur les
+mots éteints, le jaune est posé sur un contour noir : **16,1 : 1**. Les deux
+sont excellents, et « réparer » aurait dégradé un rendu soigné.
+
+**La règle :** deux valeurs voisines dans un fichier de configuration ne sont
+pas une paire tant qu'on n'a pas lu le code qui les dessine. Le `grep` avant de
+remplacer vaut aussi pour ce qu'on croit avoir mesuré — ici il tenait en une
+lecture de trente lignes du traceur.
+
+C'est la version « couleur » d'un piège déjà écrit ici sous une autre forme :
+une mesure disait rouge et le fichier était juste.
+
+## Une critique de vidéo écrite par une autre IA se vérifie avant d'être suivie
+
+**Mesuré le 29/08/2026.** Un rapport détaillé, plan par plan, horodaté à la
+seconde, accompagnait un export rejeté. Sept accusations. Trois étaient fausses,
+et chacune envoyait travailler ailleurs :
+
+- « entrelacé, scanlines » → `field_order=progressive` sur les deux fichiers ;
+- « audio coupé à deux mots » → le son court sur les 17 s, avec un seul trou
+  d'une seconde ;
+- « rouge cramé à 200 % » → l'inverse, 2,2 % de rouge saturé dans la source
+  contre 0,6 % dans l'export.
+
+Le vrai défaut n'était dans aucune des sept lignes : **222 images pour 17,5 s,
+soit 12,7 par seconde au lieu de 30**, avec un écart montant à 517 ms. Ce que
+l'auteur du rapport avait pris pour un tremblement d'encodage était une absence
+d'images.
+
+**La règle :** un rapport de ce genre décrit une impression, avec l'aplomb d'une
+mesure. Trois commandes le départagent avant d'écrire la moindre ligne —
+`ffprobe` sur les entêtes, les écarts de `pts_time`, un niveau seconde par
+seconde. Suivre le rapport sans les passer, c'est corriger des défauts qui
+n'existent pas pendant que le vrai reste en place.
