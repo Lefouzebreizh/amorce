@@ -96,13 +96,20 @@ le réseau : c'est ce qui permet d'attraper une réponse malformée sans attendr
 qu'elle arrive un mardi soir. Voir `ClientFactice` dans `tests/test_pipeline.py`,
 qui rejoue DexScreener et GoPlus de bout en bout.
 
-Ce qu'aucun test ne dit : **si l'API a changé de forme**. Rien n'a encore tourné
-contre les services réels. Un changement qui touche à `sources/` se signale comme
-non vérifié en conditions réelles tant qu'un vrai `main.py scan` n'a pas tourné.
+Ce qu'aucun test ne dit : **si l'API a changé de forme**. La sonde a tourné
+contre les vraies API le 29/08/2026 et rendu « Toutes les sources répondent et
+se lisent » — DexScreener à **30 reçus / 30 lus** sur ses trois points d'entrée,
+GoPlus sur ses deux, honeypot.is et RugCheck présents. Les formats documentés
+sont donc bien ceux que les services rendent, et le code écrit sur réponses
+rejouées tient en conditions réelles.
 
-**C'est `main.py sonde` qui le dit, et c'est la première commande à lancer**
-depuis un poste qui a du réseau — avant le premier scan, et après toute
-modification de `sources/`. Elle interroge chaque point d'entrée une fois et
+Cela ne dispense de rien pour la suite : un changement qui touche à `sources/`
+se signale comme non vérifié tant que `main.py sonde` n'a pas retourné vert
+**après** ce changement. Un format peut bouger n'importe quel mardi.
+
+**`main.py sonde` est donc la première commande à lancer** depuis un poste qui
+a du réseau — avant le premier scan, et après toute modification de `sources/`.
+Elle interroge chaque point d'entrée une fois et
 rend deux nombres, **reçus** et **lus** : des éléments qui arrivent sans qu'un
 seul ne se traduise, c'est un format qui a bougé. Le distinguer d'un silence
 n'est pas cosmétique — « muet » envoie chercher du côté du réseau, « dérive »
