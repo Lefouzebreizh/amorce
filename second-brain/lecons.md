@@ -1962,6 +1962,37 @@ fonctionne (l'ICU complet est présent, `Intl.DisplayNames` le confirme), et une
 marque d'ordre des octets survit au décodage — elle se retire à la main, sans
 quoi elle reste collée au premier mot affiché.
 
+## Quand cinq causes sont tombées, c'est l'effet qui est en trop
+
+Le même symptôme — « ça coupe et ça sature » sur un plan — rapporté **cinq
+fois**. Cinq causes distinctes trouvées, mesurées, corrigées, chacune réelle :
+un limiteur qui pompait, un trou d'air qui mordait sur l'attaque, une couche
+tranchée au raccord, un ralenti qui dupliquait une image sur cinq, deux
+rugissements qui battaient. Et le symptôme revenait.
+
+Elles avaient une **cause commune** : le ralenti à 0,8. Il obligeait à étirer
+l'audio — tout étirement laisse une trace ; à interpoler l'image — sans quoi
+une image sur cinq est dupliquée ; et il décalait le cri du rush contre celui
+posé par-dessus, d'où le battement.
+
+Retiré, les trois disparaissent d'un coup, et les deux cris tombent exactement
+l'un sur l'autre au lieu de se battre.
+
+**Un effet qui coûte cinq allers-retours ne vaut pas ce qu'il apporte.** La
+règle des trois essais de ce dépôt vaut pour un bug ; elle vaut aussi pour un
+parti pris de réalisation. Au troisième symptôme qui revient sur le même plan,
+la question n'est plus « quel réglage » mais « qu'est-ce que j'enlève ».
+
+## Une correction étroite fabrique son propre défaut
+
+Un rugissement congestionné dans le bas-médium, corrigé par +5 dB à 1,9 kHz
+avec un Q serré. La congestion partait — et une résonance arrivait : tremblement
+de l'enveloppe **4,1** contre **3,7** avec une simple cloche large à 2,4 kHz,
+qui fait le même travail.
+
+Sur un signal dense et bruité, une correction étroite s'entend comme une note.
+**Corriger large, ou ne pas corriger.**
+
 ## Un appareil de salon ne reçoit pas l'image, il va la chercher
 
 Le modèle mental le plus coûteux, quand on branche un Chromecast : croire que

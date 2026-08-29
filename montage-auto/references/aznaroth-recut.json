@@ -104,7 +104,7 @@
       "nom": "dragon",
       "source": "rushes/Duration_seconds_Cinemat.mp4",
       "depart": 4.2,
-      "duree": 7.25,
+      "duree": 5.8,
       "cible_db": -9.0,
       "zoom": 0.18,
       "tremblements": [
@@ -119,7 +119,6 @@
           "force": 0.17
         }
       ],
-      "vitesse": 0.8,
       "flashs": [
         {
           "debut": 4.25,
@@ -133,8 +132,7 @@
           "_note": "le souffle. 0,45 et non 0,85 : a pleine force le cadre vire au blanc complet, et un blanc plein de deux images sur un telephone la nuit est un stroboscope. Le public de ce compte est precisement celui que ca blesse. La lueur se voit tout aussi bien a 0,45, ou l'image reste lisible."
         }
       ],
-      "interpolation": true,
-      "_note": "le dragon, ralenti a 0,8. INTERPOLATION obligatoire : sans elle ffmpeg tient la cadence en DUPLIQUANT une image sur cinq — mesure, 29 images figees sur 144 contre 0 sur un plan a vitesse normale. Une image sur cinq figee a intervalle regulier, c'est ce que l'oeil lit comme un saccadement. `minterpolate` fabrique les images manquantes a partir du mouvement estime ; c'est lent, et c'est le prix d'un ralenti qui coule."
+      "_note": "le dragon, a SA vitesse. Le ralenti a 0,8 a ete retire apres cinq allers-retours sur le meme symptome — « ca coupe et ca sature » — dont il etait la cause commune :\n  · l'audio devait etre etire, et tout etirement laisse une trace ;\n  · l'image devait etre interpolee, faute de quoi une image sur cinq etait dupliquee ;\n  · le cri du rush, decale par l'etirement, battait contre le vrai cri pose par-dessus.\nA vitesse naturelle les trois disparaissent d'un coup, et les deux cris tombent exactement l'un sur l'autre au lieu de se battre."
     }
   ],
   "effets": [
@@ -321,7 +319,7 @@
     },
     {
       "son": "braam_massif",
-      "instant": 10.831,
+      "instant": 10.806,
       "gain": 10,
       "distance": "proche",
       "_note": "l'arrivee, sur l'attaque du rush — TAILLEE a 1,35 s. Le fichier en fait 3,4 : sa queue comblait de 11 dB le silence que le rush menage juste apres, et ce silence est la moitie de l'effet.",
@@ -343,7 +341,7 @@
     },
     {
       "son": "chute_pierres",
-      "instant": 12.881,
+      "instant": 12.406,
       "gain": 1,
       "distance": "lointain",
       "parametres": {
@@ -374,13 +372,13 @@
     },
     {
       "son": "riser_court",
-      "instant": 14.406,
+      "instant": 13.556,
       "gain": 4,
       "distance": "moyen"
     },
     {
       "son": "electricite",
-      "instant": 14.956,
+      "instant": 14.106,
       "gain": 13,
       "distance": "proche",
       "parametres": {
@@ -391,7 +389,7 @@
     },
     {
       "son": "eclat",
-      "instant": 14.976,
+      "instant": 14.126,
       "gain": 5,
       "distance": "proche",
       "parametres": {
@@ -402,7 +400,7 @@
     },
     {
       "son": "braam_double",
-      "instant": 16.021,
+      "instant": 14.946,
       "gain": 6,
       "distance": "proche",
       "enveloppe": {
