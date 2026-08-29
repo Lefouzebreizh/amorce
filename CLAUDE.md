@@ -113,7 +113,9 @@ la mémoire, le résumé ne transporte que l'état.**
 Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 
 - **Amorce** (racine) — Next.js **16.3.2**, React 19, Tailwind v4, TypeScript
-  strict. Tout tourne dans le navigateur : ni serveur, ni base, ni route API.
+  strict. **Le moteur de montage tourne entièrement dans le navigateur** : ni
+  serveur, ni base, ni route API. Seul le module de licence fait exception, et
+  il ne touche à aucun média — voir plus bas.
 - **agence/** — Next.js 16, Supabase (PostgreSQL + RLS), Server Actions, shadcn.
   Se vérifie depuis son dossier, jamais depuis la racine.
 - **artisan-express/** — page de vente du site vitrine artisan à 299 €. Next.js
@@ -200,6 +202,26 @@ faut bien un ailleurs.
 **Amorce en est exclue, définitivement.** Sa promesse fondatrice est qu'aucun
 fichier ne quitte l'appareil : lui adjoindre un stockage distant ne serait pas
 une évolution mais un reniement.
+
+**Une seule exception, et elle est bornée : le serveur de licence.** Faire payer
+Amorce demande de savoir qui a payé, et cela ne peut pas se vérifier dans le
+navigateur — une clé posée côté client est lue par le premier qui ouvre les
+outils de développement. Le propriétaire l'a validée explicitement, et voici sa
+frontière :
+
+- Le serveur ne connaît **que** l'identité et l'état de l'abonnement :
+  authentification, et vérification Stripe. Rien d'autre.
+- **Aucun média n'y transite jamais** — ni rush, ni export, ni son, ni
+  sous-titre, ni le nom d'un fichier. Un octet de contenu qui atteint le réseau
+  est un défaut, pas un compromis.
+- Le module vit **isolé et découplé** du moteur de montage : ce dernier ne
+  l'importe pas, et le studio doit rester utilisable si le serveur est éteint.
+
+La règle qui rend l'exception vérifiable au lieu de l'élargir : **le moteur de
+montage ne connaît pas le réseau.** Une dépendance du moteur vers le module de
+licence est le premier pas qui la casse, et c'est celui qu'on ne franchit pas ;
+la licence pilote ce que l'interface propose, jamais ce que le moteur fait d'un
+fichier.
 
 ## 5. SENSIBLE, ET JAMAIS À L'ARRÊT
 
