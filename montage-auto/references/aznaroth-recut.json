@@ -109,27 +109,26 @@
       "zoom": 0.18,
       "tremblements": [
         {
-          "debut": 0.13,
+          "debut": 0.1,
           "duree": 0.35,
           "force": 0.1
         },
         {
-          "debut": 5.38,
+          "debut": 4.3,
           "duree": 0.6,
           "force": 0.17
         }
       ],
       "flashs": [
         {
-          "debut": 4.25,
+          "debut": 3.4,
           "duree": 0.14,
           "force": 0.5
         },
         {
-          "debut": 5.375,
+          "debut": 4.3,
           "duree": 0.083,
-          "force": 0.45,
-          "_note": "le souffle. 0,45 et non 0,85 : a pleine force le cadre vire au blanc complet, et un blanc plein de deux images sur un telephone la nuit est un stroboscope. Le public de ce compte est precisement celui que ca blesse. La lueur se voit tout aussi bien a 0,45, ou l'image reste lisible."
+          "force": 0.45
         }
       ],
       "_note": "le dragon, a SA vitesse. Le ralenti a 0,8 a ete retire apres cinq allers-retours sur le meme symptome — « ca coupe et ca sature » — dont il etait la cause commune :\n  · l'audio devait etre etire, et tout etirement laisse une trace ;\n  · l'image devait etre interpolee, faute de quoi une image sur cinq etait dupliquee ;\n  · le cri du rush, decale par l'etirement, battait contre le vrai cri pose par-dessus.\nA vitesse naturelle les trois disparaissent d'un coup, et les deux cris tombent exactement l'un sur l'autre au lieu de se battre."

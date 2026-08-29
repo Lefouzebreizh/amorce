@@ -6,52 +6,25 @@
   ],
   "micro_silences": [
     {
-<<<<<<< HEAD
       "instant": 11.556,
       "avance": 0.3,
       "tenue": 1.05,
-=======
-      "instant": 11.768,
-      "avance": 0.3,
-      "tenue": 1.313,
->>>>>>> origin/main
       "retour": 0.28,
       "gain_db": -9
     },
     {
-<<<<<<< HEAD
       "instant": 13.506,
       "avance": 0.22,
       "tenue": 0.5,
-=======
-      "instant": 14.206,
-      "avance": 0.22,
-      "tenue": 0.625,
->>>>>>> origin/main
       "retour": 0.22,
       "gain_db": -4
     },
     {
-<<<<<<< HEAD
       "instant": 14.686,
-=======
-      "instant": 15.761,
->>>>>>> origin/main
       "avance": 0.16,
       "tenue": 0.1,
       "retour": 0.16,
       "gain_db": -9
-<<<<<<< HEAD
-=======
-    },
-    {
-      "instant": 16.101,
-      "avance": 0.12,
-      "tenue": 1.6,
-      "retour": 0.55,
-      "gain_db": -8,
-      "_note": "deux betes qui hurlent en meme temps. Le rush porte son propre cri, etire a 0,8 ; le vrai est pose par-dessus a sa vitesse naturelle. Superposes, ils ne s'additionnent pas — ils battent, et ce battement s'entend comme une saturation et comme une coupure au milieu. Le lit recule de 8 dB pendant le cri seulement : les debris qui suivent restent, c'est eux qui font le monde autour."
->>>>>>> origin/main
     }
   ],
   "couches": [
@@ -63,30 +36,18 @@
     },
     {
       "fichier": "sfx_neufs/dragonstudiomonstergrowl376892.mp3",
-<<<<<<< HEAD
       "debut": 12.366,
       "fin": 13.456,
-=======
-      "debut": 12.841,
-      "fin": 14.156,
->>>>>>> origin/main
       "gain_db": -7,
       "excitation": 1.5
     },
     {
       "fichier": "sfx_neufs/dragonstudioepicdragonroar364481.mp3",
-<<<<<<< HEAD
       "debut": 15.006,
       "gain_db": 2,
       "suit_la_voix": false,
       "filtre": "highpass=f=85:poles=2,equalizer=f=320:t=q:w=1.4:g=-3,equalizer=f=2400:t=q:w=0.5:g=2.5",
-      "_note": "le vrai cri, cale exactement sur celui du rush maintenant que le plan tourne a sa vitesse. Egalisation DOUCE et LARGE : un relevement etroit de +5 dB a 1,9 kHz, pose pour desencombrer, fabriquait sa propre resonance — tremblement de l'enveloppe 4,1 contre 3,7 avec une cloche large a 2,4 kHz. Corriger un desequilibre etroitement en cree un autre."
-=======
-      "debut": 16.081,
-      "gain_db": 2,
-      "suit_la_voix": false,
-      "filtre": "highpass=f=85:poles=2,equalizer=f=320:t=q:w=1.1:g=-4,equalizer=f=1900:t=q:w=0.9:g=5,equalizer=f=3600:t=q:w=1.2:g=3.5"
->>>>>>> origin/main
+      "_note": "le vrai cri. Mesure : seul il saute de 203 Hz de timbre, le cri du rush seul de 218 — mais le rush SEUL DANS LE MIXAGE saute de 1094 Hz, et les deux ensemble de 485. La couche ne brouille pas le cri du rush, elle le STABILISE en comblant ses variations."
     }
   ]
 }

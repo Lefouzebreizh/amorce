@@ -50,7 +50,7 @@ def instants(recette: dict) -> dict[str, float]:
     return {nom: round(debut + t / vitesse, 3) for nom, t in RUSH.items()}
 
 
-def caler(recette: dict) -> tuple[dict, dict, list]:
+def caler(recette: dict, couches: list | None = None) -> tuple[dict, dict, list]:
     """Rend la recette recalée, le plan d'automation et les sous-titres."""
     t = instants(recette)
     table = frise(recette)
@@ -78,6 +78,21 @@ def caler(recette: dict) -> tuple[dict, dict, list]:
             effet["instant"] = place[nom]
     recette["effets"].sort(key=lambda e: e["instant"])
 
+    # Les flashs et les secousses du plan dragon se calent eux aussi sur les
+    # instants du rush — et ils comptent en temps SOURCE, donc sans la division
+    # par la vitesse. C'est ce qui les a fait deriver quand le ralenti a ete
+    # retire : un flash ecrit pour un plan a 0,8 tombait 1,08 s APRES le cri,
+    # c'est-a-dire tout a la fin du plan, ou il se lit comme un saut d'image.
+    dragon = next(p for p in recette["plans"] if p["nom"] == "dragon")
+    dragon["flashs"] = [
+        {"debut": RUSH["eclair"], "duree": 0.14, "force": 0.50},
+        {"debut": RUSH["cri"], "duree": 0.083, "force": 0.45},
+    ]
+    dragon["tremblements"] = [
+        {"debut": RUSH["arrivee"], "duree": 0.35, "force": 0.10},
+        {"debut": RUSH["cri"], "duree": 0.60, "force": 0.17},
+    ]
+
     # L'automation. Le trou d'air avant le cri se termine 0,06 s AVANT lui,
     # jamais dessus : mesuré à −29,6 dB, il mordait sur les dix centièmes
     # d'attaque du rugissement et l'aplatissait en une montée molle. Un trou
@@ -99,7 +114,12 @@ def caler(recette: dict) -> tuple[dict, dict, list]:
             {"instant": round(trou_fin - 0.26, 3), "avance": 0.16,
              "tenue": 0.10, "retour": 0.16, "gain_db": -9},
         ],
-        "couches": [],
+        # Les couches sonores déjà posées sont CONSERVÉES. Les écraser par une
+        # liste vide a coûté trois mesures fausses de suite : le fichier
+        # d'automation est régénéré à chaque recalage, et il porte aussi les
+        # bruitages ajoutés à la main. Un outil qui régénère un fichier partagé
+        # doit rendre ce qu'il n'a pas calculé, sinon il le supprime en silence.
+        "couches": list(couches or []),
     }
 
     # Les sous-titres : groupes de parole relevés dans le rush du mage
@@ -132,7 +152,13 @@ def principal(argv=None) -> int:
     a.add_argument("--srt", type=Path, required=True)
     o = a.parse_args(argv)
     recette = json.loads(o.recette.read_text())
-    recette, automation, sous_titres = caler(recette)
+    anciennes = []
+    if o.automation.is_file():
+        try:
+            anciennes = json.loads(o.automation.read_text()).get("couches", [])
+        except json.JSONDecodeError:
+            pass
+    recette, automation, sous_titres = caler(recette, anciennes)
     o.recette.write_text(json.dumps(recette, ensure_ascii=False, indent=2) + "\n")
     o.automation.write_text(json.dumps(automation, ensure_ascii=False, indent=2) + "\n")
     o.srt.write_text("".join(
