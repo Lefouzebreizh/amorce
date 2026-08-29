@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildAutoEdit } from '../autoEdit.ts';
+import { buildAutoEdit, PLANS_MAX } from '../autoEdit.ts';
 import { totalDuration } from '../timeline.ts';
 import { IMAGE_DURATION, type MediaAsset } from '../types.ts';
 
@@ -137,7 +137,14 @@ test('le montage vise sa durée au lieu de la subir', () => {
     const { clips } = buildAutoEdit(Array.from({ length: n }, (_, i) => asset(`d${i}`, 4)));
     const duree = totalDuration(clips);
     assert.ok(duree <= 35, `${n} rushes donnent ${duree.toFixed(1)} s`);
-    assert.equal(clips.length, n, 'aucun rush n’est écarté en silence');
+    /*
+     * Un rush peut désormais rester de côté, mais jamais en silence : au-delà
+     * de `PLANS_MAX`, tenir 35 s et des plans lisibles devient impossible
+     * ensemble, et c'est le film qui gagne. Le bouton d'import annonce le
+     * nombre qu'il prend et dit pourquoi — c'est ce qui distingue un choix
+     * d'un rush perdu.
+     */
+    assert.equal(clips.length, Math.min(n, PLANS_MAX), `${n} rushes`);
   }
 });
 
@@ -155,6 +162,26 @@ test('un plan ne descend jamais sous le seuil de lisibilité', () => {
   // 0,32 + 0,9 − 0,32 ne rend pas exactement 0,9.
   for (const c of clips) {
     assert.ok(c.outPoint - c.inPoint >= 0.899, `plan de ${(c.outPoint - c.inPoint).toFixed(4)} s`);
+  }
+});
+
+test('un plan reste lisible à l’écran, transitions déduites', () => {
+  /*
+   * La longueur de coupe n'est pas la longueur vue : une transition recouvre
+   * la fin d'un plan et le début du suivant, et 0,29 s disparaissent à chaque
+   * raccord. Le plancher portait sur la coupe, si bien que le montage express
+   * livrait 0,61 s à l'écran là où `analysis.ts` en demande 1,1 — sa propre
+   * note du rythme s'en trouvait pénalisée, et le guide répondait « tes plans
+   * s'enchaînent trop vite pour être lus ».
+   *
+   * Mesuré avant : vingt rushes donnaient 0,81 s vues, vingt-huit et au-delà
+   * 0,61 s. C'est donc la durée vue qu'on contrôle, jamais celle de la coupe.
+   */
+  for (const n of [6, 12, 20, 28, 50]) {
+    const { clips } = buildAutoEdit(Array.from({ length: n }, (_, i) => asset(`i${i}`, 6)));
+    const vue = totalDuration(clips) / clips.length;
+    assert.ok(vue >= 1.1, `${n} rushes : ${vue.toFixed(2)} s vues par plan`);
+    assert.ok(vue <= 2.8, `${n} rushes : ${vue.toFixed(2)} s vues par plan, l’attention lâche`);
   }
 });
 

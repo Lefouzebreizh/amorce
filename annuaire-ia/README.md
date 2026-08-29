@@ -240,7 +240,6 @@ npm run sites                                                    # reconstruire
 
 Le domaine acheté se branche plus tard, par la même commande, sans rien casser.
 `node regler-domaines.mjs --etat` interroge maintenant le DNS et le dit.
-
 ## Ce que le réseau rapporte aujourd'hui : rien
 
 Mesuré : **73 liens sur 73**, sur les onze sites publiés, pointent encore vers

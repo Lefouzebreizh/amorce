@@ -4,7 +4,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { applyAutoEdit } from '@/lib/autoEdit';
+import { applyAutoEdit, PLANS_MAX } from '@/lib/autoEdit';
 import { formatTime, loadAsset, loadSampleCue, loadVoiceCue } from '@/lib/media';
 import { isVisuel, toFile } from '@/lib/share';
 import { useStudio } from '@/lib/store';
@@ -253,12 +253,29 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
           subtitle="Assemble tout automatiquement : plans courts, transitions, bruitages, rendu cinéma."
         >
           <Button variant="primary" className="w-full" onClick={autoEdit}>
-            ⚡ Monter automatiquement ({assets.length} rush{assets.length > 1 ? 'es' : ''})
+            ⚡ Monter automatiquement (
+            {assets.length > PLANS_MAX
+              ? `${PLANS_MAX} des ${assets.length} rushes`
+              : `${assets.length} rush${assets.length > 1 ? 'es' : ''}`}
+            )
           </Button>
           <p className="mt-2 text-xs leading-relaxed text-muted">
             Point de départ, pas résultat final : chaque plan reste modifiable ensuite. Attention, cela
             remplace le montage en cours.
           </p>
+          {/*
+            Le bouton dit combien il prend, et cette phrase dit pourquoi.
+            Un montage qui écarterait des rushes sans le dire passerait pour un
+            bogue — et un montage qui les prendrait tous dépasserait les
+            trente-cinq secondes au-delà desquelles l'analyse elle-même
+            pénalise le film.
+          */}
+          {assets.length > PLANS_MAX && (
+            <p className="mt-1 text-xs leading-relaxed text-muted">
+              Les {assets.length - PLANS_MAX} autres restent dans ta bibliothèque : au-delà, le
+              montage dépasse 35 s et on décroche avant la fin.
+            </p>
+          )}
         </Panel>
       )}
 

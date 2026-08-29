@@ -1882,34 +1882,64 @@ figees = sum(1 for x in d if x < 0.30)   # deux images consecutives identiques
 
 ## Un serveur de test orphelin fait mesurer la version d'avant
 
-Une vérification d'interface rendait quatre défauts d'un coup, dont un sans
-rapport avec le changement : une page entière sans feuille de style. Le code
-était juste. **Le serveur qui répondait n'était pas celui qu'on venait de
-lancer.**
+**Deux sessions ont trouvé ce défaut la même nuit, dans deux projets sans
+rapport** — le parcours Chromium d'IPTV et le contrôle visuel de la page de
+vente. Même cause, mêmes parades, symptômes opposés : c'est ce qui en fait la
+leçon la mieux établie du fichier.
 
-La cause tient en une phrase : `spawn('npm', ['run', 'start'])` engendre un
-`next start` **petit-fils**, et tuer le `npm` laisse l'enfant vivant, orphelin,
-avec le port. L'exécution suivante n'arrive pas à écouter, ne le dit pas, et
-Playwright interroge le serveur d'il y a un quart d'heure — donc le code d'il y
-a un quart d'heure. Relevé : `ps` montrait un `next-server` de ppid 1, âgé de
-15 minutes, quand le script venait de démarrer.
+**Symptôme A** — une vérification d'interface rend quatre défauts d'un coup,
+dont une page entière sans feuille de style. Le code est juste.
+**Symptôme B** — un contrôle passe au **vert** sur une page cassée exprès pour
+l'éprouver.
 
-Trois gestes, et les trois comptent :
+Dans les deux cas, **le serveur qui répond n'est pas celui qu'on vient de
+lancer**, et il sert le code d'avant.
 
-1. **Lancer en groupe détaché, tuer le groupe** : `spawn(…, { detached: true })`
-   puis `process.kill(-pid, 'SIGTERM')`. Tuer le pid seul ne descend pas.
+### La cause
+
+`npm` engendre un petit-fils. `spawn('npm', ['run', 'start'])` comme
+`npm exec next start` donnent la même chaîne : `npm` → `sh -c` → `next-server`.
+Tuer le `npm` laisse l'enfant vivant, réattaché à init, avec le port.
+
+Relevés des deux côtés : un `next-server` de ppid 1 âgé de quinze minutes quand
+le script vient de démarrer ; et trois `next-server` orphelins sur des ports
+qu'on croyait fermés.
+
+**Et rien ne le signale.** L'exécution suivante n'arrive pas à écouter, son
+message part dans un journal que personne ne lit, `curl` répond 200 tout de
+suite — donc l'attente du serveur **réussit**, et le contrôle interroge la
+version d'il y a un quart d'heure en affichant l'adresse qu'on lui a demandée.
+
+### Les trois gestes, et les trois comptent
+
+1. **Lancer en groupe détaché, tuer le groupe.** En Node,
+   `spawn(…, { detached: true })` puis `process.kill(-pid, 'SIGTERM')`. En
+   shell, `setsid …  & serveur=$!` puis `kill -- "-$serveur"`. Tuer le pid seul
+   ne descend pas.
 2. **Refuser de démarrer si le port répond déjà.** Une requête HTTP de 250 ms
    avant de lancer, et un message qui dit quoi faire. Sans ce garde-fou, le
    défaut est invisible : tout paraît fonctionner.
 3. **Ne pas détecter par `ss`** : le binaire n'existe pas dans ce conteneur, et
-   `ss -ltnp` y rend une sortie vide sans erreur — donc « port libre » alors
-   qu'il ne l'est pas. La sonde portable est la requête HTTP ; pour retrouver le
-   coupable, `ps -eo pid,args`.
+   `ss -ltnp` y rend une sortie vide **sans erreur** — donc « port libre »
+   alors qu'il ne l'est pas. La sonde portable est la requête HTTP ; pour
+   retrouver le coupable, `ps -eo pid,ppid,pgid,args`.
 
 **Piège voisin, même script :** une capture d'écran prise après
 `waitUntil: 'domcontentloaded'` montre la page **sans style** — cet événement
 n'attend pas la feuille. On croit à une régression de CSS. `waitForLoadState('load')`
 avant de photographier.
+
+**La leçon de méthode est la plus importante : un contrôle neuf ne vaut rien
+tant qu'on ne l'a pas vu échouer.** Celui-ci est passé vert deux fois de suite
+et j'allais le livrer. Rien dans sa sortie ne clochait — la bonne adresse, une
+durée plausible, un verdict net. Ce qui l'a démasqué est un geste, pas une
+lecture : **casser la page exprès et exiger le rouge.** Une durée suspecte avait
+mis la puce à l'oreille, mais elle ne prouvait rien — après correction, la même
+mesure prend le même temps.
+
+C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
+donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
+qu'il accepte.
 
 ## Deux versions du même son ne s'additionnent pas, elles battent
 
@@ -2405,13 +2435,30 @@ texte.split(/\n\s*\n/).map((p) => p.trim().replace(/\s*\n\s*/g, ' ')).filter((p)
 n'éprouve que des valeurs d'une ligne ne peut pas voir ce défaut-là, quel que
 soit leur nombre.
 
-## Une page de démonstration doit se dire telle sur la page
+## Une démonstration se dit telle sur la page, et se marque `noindex`
 
 Un faux numéro et un nom inventé protègent le dépôt du faux témoignage. Ils ne
-protègent pas le prospect qui reçoit le lien : rien, à l'écran, ne distinguait
-la démonstration d'un vrai client. La mention doit être **dans le contenu de la
-page**, pas seulement dans la documentation qui l'accompagne — celle-là, le
-prospect ne la lit jamais.
+protègent ni le prospect qui reçoit le lien, ni le confrère qui la croisera dans
+un moteur. Deux marques sont nécessaires, et elles ne servent pas la même
+personne :
+
+- **La mention dans le contenu de la page**, pas dans la documentation qui
+  l'accompagne — celle-là, le prospect ne la lit jamais. Sans elle, rien à
+  l'écran ne distingue la démonstration d'un vrai client.
+- **`noindex, nofollow`**, parce qu'indexée, l'entreprise fictive apparaît dans
+  les résultats comme un vrai établissement — et le jour où un client réel
+  s'appelle presque pareil, c'est lui qu'elle concurrence avec sa propre fiche.
+
+**Le drapeau appartient au générateur, pas à la copie du fichier.** Retirer la
+ligne à la main après coup marche une fois et se perd à la régénération
+suivante — et personne ne relit une page d'exemple. Un `--demonstration` qui
+traverse l'outil sort avec le fichier, à chaque fois.
+
+**Le piège symétrique, payé le même soir :** générer la démonstration *avec* le
+domaine de production lui donnait un `canonical` vers la racine du site. Elle
+aurait déclaré à Google **être** la page de vente. Une démonstration ne prend ni
+adresse canonique, ni image de partage, ni fiche d'établissement complète : elle
+n'est l'adresse de rien.
 
 ## Une couleur choisie par l'utilisateur ne peut pas décider seule de la lisibilité
 
@@ -2678,57 +2725,6 @@ depuis le disque, ce qui achève de tromper.
 **La parade est un fichier à plat** — `public/exemple.html` → `/exemple.html` —
 qui donne en prime une adresse courte, dictable au téléphone.
 
-## Une page de démonstration se marque `noindex`, et le drapeau va dans l'outil
-
-Une démonstration porte un nom d'entreprise qui n'existe pas et un numéro qui ne
-sonne nulle part. Indexée, elle apparaît dans les résultats comme un vrai
-établissement — et le jour où un client réel s'appelle presque pareil, c'est lui
-qu'elle concurrence avec sa propre fiche.
-
-Le point qui compte, et qui vaut au-delà de ce cas : **le drapeau appartient au
-générateur, pas à la copie du fichier.** Retirer la ligne à la main après coup
-marche une fois et se perd à la régénération suivante — et personne ne relit une
-page d'exemple. `--demonstration` traverse l'outil et sort avec le fichier.
-
-## Un serveur oublié rend vert un contrôle qui mesure le build d'avant
-
-Le contrôle visuel de la page de vente est passé au vert sur une page que
-j'avais **cassée exprès** pour l'éprouver. Il ne mesurait pas la page courante :
-il mesurait un serveur laissé par l'exécution précédente, qui servait encore le
-build d'avant.
-
-Deux causes, et la première explique la seconde :
-
-- **`kill` sur le PID de `npm` ne tue pas le serveur.** La chaîne réelle est
-  `npm exec next start` → `sh -c next start` → `next-server` : on tue
-  l'enveloppe, le petit-fils est réattaché à init et continue de servir. Vérifié
-  à `ps -eo pid,ppid,pgid,args` — trois `next-server` orphelins de ports que je
-  croyais fermés.
-- **Le port occupé ne provoque aucune erreur visible.** `next start` sort en 1
-  et son message part dans un journal que personne ne lit ; `curl` répond 200
-  immédiatement, l'attente du serveur réussit, et le contrôle mesure la page de
-  quelqu'un d'autre en affichant l'adresse qu'on lui a demandée.
-
-Les deux parades, et il faut les deux :
-
-```sh
-setsid npm exec next start -- -p "$port" & serveur=$!   # un groupe à soi
-kill -- "-$serveur"                                      # l'arbre entier
-curl -sf "http://127.0.0.1:$port/" && { echo occupé; exit 1; }   # avant de démarrer
-```
-
-**La leçon de méthode est la plus importante : un contrôle neuf ne vaut rien
-tant qu'on ne l'a pas vu échouer.** Celui-ci est passé vert deux fois de suite
-et j'allais le livrer. Rien dans sa sortie ne clochait — la bonne adresse, une
-durée plausible, un verdict net. Ce qui l'a démasqué est un geste, pas une
-lecture : **casser la page exprès et exiger le rouge.** Une durée suspecte avait
-mis la puce à l'oreille, mais elle ne prouvait rien — après correction, la même
-mesure prend le même temps.
-
-C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
-donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
-qu'il accepte.
-
 ## Un vérificateur qui déduit les projets des fichiers changés ne se voit pas
 lui-même
 
@@ -2855,6 +2851,41 @@ savoir ce qui manque, `ALTER TABLE` pour le reste, rejoué à chaque ouverture.
 Ce qui compte est le moment où on l'écrit : à la première colonne ajoutée après
 la première installation ailleurs, pas quand un utilisateur signale l'erreur.
 
+## Le bas-médium s'accumule, et le mixage le concentre
+
+Un « bourdonnement en fond tout le long ». Premier réflexe : chercher ce qu'on
+vient d'ajouter. Retiré — la raie était **identique avant et après**. Ce n'était
+donc pas une régression.
+
+La mesure qui tranche est la **largeur** de la raie, pas sa hauteur :
+
+| | pic | hauteur sur le fond | largeur |
+| --- | --- | --- | --- |
+| le rush du dragon | 143 Hz | +20,2 dB | 194 Hz |
+| le rush du druide | 151 Hz | +17,0 dB | 189 Hz |
+| **le montage** | 151 Hz | **+23,9 dB** | **52 Hz** |
+
+Chaque source a sa bosse de bas-médium, large. Le mixage les **empile au même
+endroit** et en fait une bosse étroite — et une bosse étroite et tenue, c'est ce
+que l'oreille appelle un ronflement. Une raie fine (moins de 8 Hz) serait un
+vrai bourdon ; à 52 Hz c'est de l'accumulation.
+
+Une cloche **large** à 150 Hz au master la disperse : +24,0 → **+19,3 dB**,
+largeur 52 → 94 Hz, et le niveau entendu au-dessus de 400 Hz **ne bouge pas d'un
+dixième**. Un téléphone n'entend rien là : il n'y a rien à perdre.
+
+**Mesurer la largeur avant de chasser une source.** Un bourdon a une source ;
+une accumulation n'en a pas, et la chercher fait perdre des heures.
+
+## L'excitation harmonique sur un lit tenu fabrique une note
+
+Corollaire déjà écrit dans `/bande-son` et redécouvert en le violant : elle crée
+les partiels 2f, 3f, 4f d'un son continu, et **des partiels continus sont une
+note**. Elle est faite pour les impacts brefs.
+
+Ici elle n'était pas la cause du ronflement — mais elle était bien posée sur
+quatre lits tenus, et elle n'avait rien à y faire.
+
 ## Un motif d'exclusion est ancré à la racine, et un voisin le contourne
 
 `main` est passé au rouge sans qu'aucune ligne de code soit en cause :
@@ -2927,6 +2958,36 @@ Un corollaire sur la formulation du contrôle qui empêche la régression : il
 porte sur **ce qu'on veut** (« la règle reste lisible »), jamais sur le moyen
 (« les boutons sont ailleurs »). Écrit sur le moyen, il aurait invité une
 quatrième tentative de mise en page — celle qui ne peut pas aboutir.
+
+## Deux grandeurs qui portent le même nom finissent par n'en faire qu'une
+
+Dans un montage, « la durée d'un plan » désigne deux choses : la longueur
+**coupée** dans le rush, et la longueur **vue** à l'écran. Une transition
+recouvre la fin d'un plan et le début du suivant — mesuré, 0,29 s par raccord —
+et l'écart entre les deux est exactement cela.
+
+Le plancher de longueur portait sur la coupe. Résultat : le montage automatique
+livrait **0,61 s vues** par plan là où le module d'analyse du même dépôt en
+récompense 1,1 à 2,8. L'application produisait donc un film que sa propre note
+pénalisait, et son propre guide répondait « tes plans s'enchaînent trop vite
+pour être lus ».
+
+Personne ne l'avait vu parce que le code disait `MIN_SHOT` et que le lecteur
+comprenait « durée d'un plan » — le bon mot pour l'une comme pour l'autre. La
+parade est un nom par grandeur, et le nom porte laquelle : `MIN_SHOT_VU` d'un
+côté, `MIN_SHOT` de l'autre, avec la conversion écrite entre les deux.
+
+**Et la même confusion m'a fait mesurer faux en cherchant à la corriger.** Pour
+juger le montage j'ai additionné la longueur des plans, au lieu d'appeler la
+fonction que le produit utilise pour connaître sa durée. La somme naïve
+annonçait 55 s là où le film en faisait 30 — j'allais écarter dix-neuf rushes
+pour résoudre un problème qui n'existait pas, tout en laissant passer le vrai,
+deux fois plus grave que je ne le croyais.
+
+Ce qui se généralise : **quand un produit sait déjà calculer une grandeur, on
+appelle sa fonction ; on ne la recalcule pas de tête.** Une mesure refaite à la
+main mesure autre chose, et la ressemblance des deux chiffres est précisément
+ce qui empêche de s'en apercevoir.
 
 ## Une couverture annoncée et absente est pire que pas de couverture
 

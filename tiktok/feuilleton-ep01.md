@@ -85,8 +85,8 @@ d'image du fichier sont à 7,125 s et 10,42 s ; tout le reste est du mouvement.
 | 15,04 s | fin |
 
 **Ce que ça a démenti.** Les instants qui figuraient ici venaient du plan sonore
-`.claude/skills/bande-son/references/plan-exemple.json`, dont l'en-tête affirme
-qu'ils sortent « des coupes réelles du montage ». Le fichier dit autre chose, et
+`.claude/skills/bande-son/references/plan-exemple.json`, dont l'en-tête
+affirmait alors qu'ils sortaient « des coupes réelles du montage ». Le fichier dit autre chose, et
 sur le seul chiffre dont tout dépendait il dit autre chose de trois secondes :
 
 | Ce qui était écrit | Ce qui est mesuré | Écart |
@@ -104,10 +104,16 @@ seconde qui est retenue, et **pas par élimination** : replacée sur les instant
 mesurés, la voix retombe sur les images qui la disent, ce que l'ancien calage ne
 faisait pas. Un chiffre faux ne produit pas cet alignement-là par accident.
 
-Reste une conséquence à traiter ailleurs : `plan-exemple.json` continue
-d'affirmer que ses instants viennent d'un montage réel. Il enseigne la bonne
-méthode avec les mauvais nombres, et c'est à son dossier de le corriger, pas à
-celui-ci.
+**Cette conséquence-là est traitée.** L'en-tête de `plan-exemple.json` dit
+maintenant que ses instants n'ont pas été relevés sur un fichier, qu'ils
+s'écartent du clip réel de près de trois secondes, et qu'il ne faut jamais les
+recopier dans un vrai montage. Il enseigne toujours la méthode ; il ne se
+réclame plus d'une mesure qu'il n'a pas.
+
+Ce qui reste vrai en revanche, et qui vaut au-delà de ce fichier : **des
+instants se relèvent sur le média qui part, jamais sur un document qui les
+raconte.** C'est ce paragraphe-ci qui a coûté la découverte, et il n'a servi
+qu'une fois qu'on a rouvert la génération image par image.
 
 ## Où la voix se pose
 

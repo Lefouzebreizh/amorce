@@ -42,7 +42,7 @@
       "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
       "depart": 0.3,
       "duree": 1.2,
-      "cible_db": -30.0,
+      "cible_db": -35.0,
       "zoom": 0.16
     },
     {
@@ -50,14 +50,14 @@
       "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
       "depart": 0.2,
       "duree": 4.6,
-      "cible_db": -26.0
+      "cible_db": -31.0
     },
     {
       "nom": "eclairs",
       "source": "rushes/PLAN3_eclairs_SON_1s5.mp4",
       "depart": 0.0,
       "duree": 1.4,
-      "cible_db": -19.0,
+      "cible_db": -24.0,
       "tremblements": [
         {
           "debut": 0.05,
@@ -78,7 +78,7 @@
       "source": "rushes/Holographic_Sci_Fi_Symbol_Rotation2.mp4",
       "depart": 1.2,
       "duree": 0.85,
-      "cible_db": -29.0,
+      "cible_db": -60.0,
       "rotation": 0.55,
       "zoom": 0.3,
       "flashs": [
@@ -88,14 +88,14 @@
           "force": 0.35
         }
       ],
-      "_note": "les runes tournent au lieu d'etre plaquees. 0,85 s et non 0,6 : sous huit dixiemes une rotation ne se lit pas, elle se devine."
+      "_note": "les runes. Leur piste mesure -91 dB : c'est du silence. Une cible a -29 lui demandait +62 dB de gain, c'est-a-dire d'amplifier son plancher de bruit. -60 la laisse muette ; le son du plan vient des effets."
     },
     {
       "nom": "vortex",
       "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
       "depart": 0.6,
       "duree": 2.8,
-      "cible_db": -24.0,
+      "cible_db": -29.0,
       "zoom": 0.55,
       "flou_radial": 0.13,
       "vitesse": 1.8
@@ -105,7 +105,7 @@
       "source": "rushes/Duration_seconds_Cinemat.mp4",
       "depart": 4.2,
       "duree": 5.8,
-      "cible_db": -9.0,
+      "cible_db": -14.0,
       "zoom": 0.18,
       "tremblements": [
         {
@@ -126,7 +126,7 @@
           "force": 0.28
         }
       ],
-      "_note": "le dragon, a SA vitesse. Le ralenti a 0,8 a ete retire apres cinq allers-retours sur le meme symptome — « ca coupe et ca sature » — dont il etait la cause commune :\n  · l'audio devait etre etire, et tout etirement laisse une trace ;\n  · l'image devait etre interpolee, faute de quoi une image sur cinq etait dupliquee ;\n  · le cri du rush, decale par l'etirement, battait contre le vrai cri pose par-dessus.\nA vitesse naturelle les trois disparaissent d'un coup, et les deux cris tombent exactement l'un sur l'autre au lieu de se battre."
+      "_note": "le dragon. cible -14 et non -9 : le rush mesure -13,4 dB avec une CRETE a 0,973, a un quart de decibel du plein echelle. Lui demander -9 revient a +4,4 dB de gain, donc une crete a 1,61 — il sature avant meme d'atteindre le limiteur. On ne demande jamais un gain POSITIF a un rush dont la crete frole le plafond ; on descend le reste et le master remonte l'ensemble."
     }
   ],
   "effets": [
@@ -147,7 +147,6 @@
       "instant": 0.0,
       "gain": -2,
       "distance": "lointain",
-      "telephone": 1.3,
       "parametres": {
         "duree": 1.9,
         "fondamentale": 44.0,
@@ -171,7 +170,6 @@
       "instant": 0.05,
       "gain": 4,
       "distance": "moyen",
-      "telephone": 1.5,
       "_note": "le lit de l'affiche, et il est en MEDIUM : le braam et la nappe qui l'accompagnent vivent sous 400 Hz, donc dans le silence sur un telephone. Mesure sans lui : -43 dB pendant toute la premiere seconde."
     },
     {
@@ -217,9 +215,8 @@
     {
       "son": "souffle_caverne",
       "instant": 3.1,
-      "gain": 4,
-      "distance": "lointain",
-      "telephone": 1.3
+      "gain": 0,
+      "distance": "lointain"
     },
     {
       "son": "nappe_sombre",
@@ -230,8 +227,14 @@
         "duree": 4.8,
         "fondamentale": 58.0,
         "graine": 88
-      },
-      "telephone": 1.2
+      }
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 4.55,
+      "gain": 1,
+      "distance": "lointain",
+      "_note": "le blanc entre la deuxieme et la troisieme replique. Un silence detecte a 4,8 s : le lit du mage etait grave, donc absent sur un telephone. `grondement_braises` perd 1,3 dB la ou une nappe en perd quinze — c'est lui qui porte un lit audible, jamais un drone."
     },
     {
       "son": "grondement_braises",
