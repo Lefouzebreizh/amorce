@@ -3395,6 +3395,33 @@ prose porte la raison.
 rouvre, ou la recherche s'était trompée. Une note qui dit « ça ne paie pas » à
 côté d'une adresse qui paie est le genre de contradiction qu'on ne relit jamais.
 
+## `git checkout <branche> -- fichier` écrase le disque sans rien dire
+
+Mesuré hier soir, coût : un aller-retour et une réécriture.
+
+Le geste paraît anodin — « je récupère ce fichier depuis l'autre branche » — et
+c'est exactement ce qu'il fait : il **remplace** la copie de travail par celle
+de la branche nommée. Si une modification non committée l'attendait, elle
+disparaît. Aucune erreur, aucun conflit, aucun message : `git status` redevient
+propre, ce qui donne même l'impression que tout va bien.
+
+Le cas réel : une modification venait d'être écrite et vérifiée dans la copie de
+travail ; un `git checkout -B` sur une branche neuve l'a emportée avec lui,
+puis un `git checkout <branche> -- fichier` censé « récupérer » ce fichier a
+restauré la version **committée** — donc celle d'avant la modification. Le
+correctif venait d'être effacé par la commande censée le sauver.
+
+Deux parades, et la première suffit :
+
+- **Committer avant de changer de branche**, même un commit qu'on récrira.
+  Ce qui est committé se retrouve ; ce qui ne l'est pas n'existe pour personne.
+- Quand il faut vraiment reprendre un fichier d'ailleurs, regarder avant :
+  `git diff <branche> -- fichier` dit ce que la commande va écraser.
+
+La leçon générale dépasse Git : **une commande de « restauration » est une
+commande d'écrasement vue de l'autre côté.** `checkout --`, `restore`, `reset
+--hard`, `Expand-Archive -Force` : toutes rendent un état propre en détruisant
+ce qui n'était pas enregistré, et aucune ne demande confirmation.
 ## « Un bruit de fond sur toute la vidéo » n'est pas du bruit, c'est du contenu
 
 Un montage conforme — −14,3 LUFS, −1,6 dBTP — rejeté pour « bruit de fond
