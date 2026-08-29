@@ -9,7 +9,7 @@
 export const BOUTON_BASE =
   'inline-flex min-h-14 items-center justify-center gap-2 rounded-xl px-6 text-center text-lg font-semibold transition-colors';
 
-export const BOUTON_PRINCIPAL = `${BOUTON_BASE} bg-chantier text-white hover:bg-[#c44f00]`;
+export const BOUTON_PRINCIPAL = `${BOUTON_BASE} bg-chantier text-white hover:bg-[#a33f00]`;
 
 export const BOUTON_SECONDAIRE = `${BOUTON_BASE} bg-bleu text-white hover:bg-bleu-sombre`;
 

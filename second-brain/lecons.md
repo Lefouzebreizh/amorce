@@ -2250,19 +2250,47 @@ Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
 ses routes serveur. C'était la réponse depuis le début, et une heure est passée
 à contourner un quota au lieu de changer de mur.
 
-## Le quota de déploiement est une ressource commune, et les sessions la vident
+## Le quota de déploiement se compte par projet, pas par compte
 
-Un compte d'hébergeur gratuit plafonne les déploiements par **jour et par
-compte** — cent chez Vercel. Ce dépôt reçoit plusieurs sessions en parallèle et
+**Correction d'une phrase de ce fichier, mesurée le 29/08/2026.** Il était écrit
+ici que le plafond était « par jour et par compte ». Les horodatages disent
+autre chose :
+
+| Heure | Projet | Résultat |
+| --- | --- | --- |
+| 01:27 | `amorce` **et** `amorce-51up` | refusés, « more than 100 » |
+| 01:55 | `amorce-51up` | **Ready** |
+| 01:59 | `amorce` | refusé, « more than 100 » |
+
+Un seul compteur partagé ne peut pas produire ça : `amorce-51up` a déployé
+pendant qu'`amorce` était refusé, à quatre minutes d'intervalle, et `amorce` ne
+pouvait pas consommer cent déploiements dans ces quatre minutes. Quel qu'en soit
+le mécanisme exact — le message d'erreur ne le dit pas et la documentation de
+l'éditeur est hors d'atteinte derrière le mandataire — **les deux projets ne
+tombent pas ensemble.**
+
+La conséquence est pratique et elle inverse un conseil : quand le projet
+principal d'un dépôt est bouché par le travail des autres sessions, **le projet
+qui porte la page de vente peut déployer quand même.** Attendre vingt-quatre
+heures était inutile ; il suffisait de regarder l'autre projet.
+
+Ce qui reste vrai, en revanche, et ce qui suit ci-dessous : les aperçus coûtent,
+chaque projet branché sur le dépôt ajoute un déploiement par PR, et couper les
+aperçus de ce qui n'en a pas besoin reste le bon geste.
+
+## Les aperçus coûtent, et les sessions les vident
+
+Ce dépôt reçoit plusieurs sessions en parallèle et
 fusionne **95 pull requests dans la journée**, mesuré le 28/08/2026 : chacune
 déclenche un déploiement d'aperçu, et le compteur est vidé par du travail qui
 n'a rien à voir avec celui qui en a besoin.
 
 **Le symptôme arrive au pire moment et ne ressemble pas à sa cause.** Ici :
-« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec
-les vingt PR de montage vidéo qui l'ont consommé, et le projet qu'on cherchait
-à mettre en ligne — une page de vente, la seule chose qui pouvait rentrer de
-l'argent — reste bloqué vingt-quatre heures.
+« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec les
+vingt PR de montage vidéo qui l'ont consommé. Et le message ment sur la portée
+autant que sur la durée : il parle du compte, il ne vaut que pour le projet, et
+il dit vingt-quatre heures là où le déploiement suivant est passé une demi-heure
+plus tard.
 
 Trois choses à en retenir :
 
@@ -2296,6 +2324,255 @@ directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière
 **La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
 de supposer où l'on est.
 
+## Une secousse de caméra sur un plan qui bouge déjà se lit comme une panne
+
+« Ça saccade au moment du cri du dragon. » Le son y était irréprochable —
+aucune discontinuité, aucun écrêtage, enveloppe lisse.
+
+C'était l'**image** : une secousse de caméra posée sur le rugissement faisait
+passer le mouvement entre deux images consécutives de **16 à 40** pendant
+0,35 s. Retirée, le maximum retombe à 23 — le mouvement propre du plan.
+
+**Une secousse sert un plan immobile.** Sur une bête qui hurle et bouge déjà
+violemment, elle ne renforce rien : elle brouille, et le brouillage se lit
+comme un défaut de lecture.
+
+## Un événement de l'image sans son ne se remarque pas, il se ressent
+
+Des éclairs sortent des yeux du personnage principal, et **aucun bruitage ne
+les accompagnait** — le premier arrivait 1,2 s plus tard. Personne ne dit « il
+manque un son à 5,42 s » ; on dit « on n'entend pas les éclairs », et seulement
+après avoir vu la vidéo cinq fois.
+
+Ça se trouve en relevant les événements **de l'image** :
+
+```python
+clairs = [(x > 200).sum() for x in images]   # pixels tres clairs
+# une apparition = un facteur 2 ou plus d'une image a la suivante
+```
+
+Mesuré : 713 → 2864 pixels en trois images, puis 16 782 sur une seule. Deux
+événements majeurs du film, zéro son.
+
+**Faire la liste des événements de l'image, puis pointer le son qui répond à
+chacun.** Le montage se construit dans ce sens-là, jamais l'inverse.
+
+## Un `<textarea>` rendu en un seul `<p>` perd tout ce que l'auteur a aéré
+
+Mesuré sur le générateur de TITAN Builder : une présentation d'artisan écrite
+en deux paragraphes sortait en un pavé de six lignes sur un téléphone. Le
+défaut n'était visible ni dans les tests — tous leurs textes tenaient sur une
+ligne — ni dans une mesure : le HTML était valide, l'échappement correct, la
+chaîne complète. Il ne s'est vu qu'à l'écran.
+
+La cause est que HTML ignore les retours à la ligne. Un champ multiligne
+recueilli par un formulaire les contient forcément, et les rendre bruts revient
+à supprimer la mise en forme que la personne a prise la peine de faire.
+
+**Le découpage juste distingue les deux retours**, et c'est là que se logent
+les implémentations trop rapides : une ligne vide sépare deux paragraphes, un
+simple retour au milieu d'une phrase n'en sépare aucun — il devient une espace.
+Découper sur `\n` seul fabrique un paragraphe par ligne et casse les phrases
+que l'auteur a juste fait tenir dans la largeur de son écran.
+
+```ts
+texte.split(/\n\s*\n/).map((p) => p.trim().replace(/\s*\n\s*/g, ' ')).filter((p) => p !== '')
+```
+
+**Et la leçon plus générale : un texte libre se regarde rendu.** Un test qui
+n'éprouve que des valeurs d'une ligne ne peut pas voir ce défaut-là, quel que
+soit leur nombre.
+
+## Une page de démonstration doit se dire telle sur la page
+
+Un faux numéro et un nom inventé protègent le dépôt du faux témoignage. Ils ne
+protègent pas le prospect qui reçoit le lien : rien, à l'écran, ne distinguait
+la démonstration d'un vrai client. La mention doit être **dans le contenu de la
+page**, pas seulement dans la documentation qui l'accompagne — celle-là, le
+prospect ne la lit jamais.
+
+## Une couleur choisie par l'utilisateur ne peut pas décider seule de la lisibilité
+
+Mesuré sur le générateur de TITAN Builder : `#ffd400` avec du blanc dessus donne
+**1,43:1**. Le seuil lisible est 4,5:1, et la page se lit sur un chantier, au
+soleil, sur un téléphone à moitié assombri par le système.
+
+Le piège n'est pas la couleur, c'est la **paire fixe** : dès qu'un produit
+laisse choisir un fond et code le texte en dur, il existe un choix qui rend la
+page illisible, et personne ne le voit tant que personne ne fait ce choix-là.
+
+La sortie tient en deux gestes, et le second compte autant que le premier :
+
+1. **Choisir l'encre par le calcul**, blanc ou sombre selon laquelle contraste
+   le plus avec la couleur reçue. Sur un bleu profond c'est le blanc, sur un
+   jaune c'est l'encre sombre.
+2. **Ne pas réutiliser un fond comme couleur de texte.** La même teinte qui
+   porte un titre en fond disparaît quand elle devient le texte d'un bouton sur
+   du papier blanc. Il en faut une variante déplacée vers le noir — ou vers le
+   blanc en thème sombre, ce qu'on oublie une fois sur deux.
+
+**Et ce qu'aucun exemple ne prouve : le seuil doit être éprouvé sur la roue
+entière.** Les teintes qui échouent ne sont ni les vives ni les sombres, ce sont
+les **moyennes** — un gris-vert, un orange terne — où *aucune* des deux encres
+n'atteint 4,5:1. Un test sur trois couleurs bien choisies passe et ne prouve
+rien ; vingt-neuf teintes par pas de 15° coûtent 4 ms.
+
+## `</script>` traverse JSON, et l'échappement HTML ne le rattrape pas
+
+Un bloc `<script type="application/ld+json">` a une règle d'échappement à lui,
+et c'est la seule du genre dans une page : l'analyseur HTML cherche la suite
+`</script` **avant** de passer la main à JSON. Une valeur qui la contient
+referme le bloc, et tout ce qui suit devient du HTML exécutable — sur le domaine
+du client, pas sur le sien.
+
+Les deux réflexes échouent, chacun pour sa raison :
+
+- **`JSON.stringify` seul ne protège pas** : il n'a aucune raison d'échapper un
+  chevron, qui est un caractère parfaitement légal dans une chaîne JSON.
+- **L'échappement HTML est pire que rien** : `&lt;` survit tel quel à
+  `JSON.parse`, et la donnée structurée porte alors des entités à la place du
+  texte. On a réparé la faille et cassé la fiche.
+
+La parade tient en une substitution, après la sérialisation :
+
+```js
+JSON.stringify(valeur).replace(/</g, '\\u003c')
+```
+
+`\u003c` reste un chevron pour JSON et n'est plus une balise pour HTML.
+
+**Et la leçon plus large : un échappement se choisit selon qui lit, pas selon où
+l'on écrit.** Ici deux analyseurs lisent la même chaîne l'un après l'autre, et
+c'est la seule forme qui satisfait les deux.
+
+## Aucun hôte de référence des formats web n'est joignable depuis une session
+
+Mesuré le 29/08/2026 : `schema.org`, `validator.schema.org`, `ogp.me` et
+`developers.facebook.com` rendent tous `000` — même refus de tunnel que les
+hôtes de données de marché. Une forme de données structurées ou de balises de
+partage s'écrit donc **de mémoire**, et cela déplace la vérification sans la
+supprimer : elle se fait au premier site publié, dans le *Rich Results Test* de
+Google et le *Sharing Debugger* de Facebook, depuis un navigateur ordinaire.
+
+Ce qui se vérifie hors ligne, en revanche, et qui attrape les vraies fautes :
+que le bloc **parse** dans un vrai navigateur, et qu'aucune valeur ne puisse le
+refermer.
+
+## Un contrôle qui cherche dans tout le fichier ne garde aucune de ses sections
+
+`verifier-coherence.py` contrôlait qu'un projet installable apparaisse « dans le
+hook de démarrage » — en cherchant son nom dans le texte entier du script. Le
+hook fait pourtant deux choses distinctes : il **installe** les dépendances, et
+il **affiche** la commande de vérification de chaque projet.
+
+`paper-manager` avait la première et pas la seconde. Le contrôle était vert :
+le bloc d'installation suffisait à rendre le nom présent quelque part. Ses 259
+tests passaient, la CI les découvrait, `verifier.sh` aussi — rien n'était cassé,
+le projet était juste **invisible** dans la liste que lit la session suivante
+pour savoir comment éprouver ce qu'elle touche. Un défaut qui ne rougit nulle
+part et qu'on ne cherche pas, puisqu'on ignore la suite qui manque.
+
+La parade tient en une ligne de code : borner la recherche à la section
+concernée plutôt qu'au fichier.
+
+```python
+bloc = re.search(r"^commandes=\((.*?)^\)", texte, re.S | re.M)
+annonce = bloc.group(1).lower()   # et non texte.lower()
+```
+
+La règle générale, elle, dépasse ce script : **quand un fichier a plusieurs
+sections qui remplissent des rôles différents, un contrôle qui grep le tout
+n'en garde aucune.** Il passe dès que le nom apparaît une fois, ce qui est
+précisément la situation où l'oubli est le plus probable — on a rempli une
+section, pas l'autre. Le symptôme trompe : le contrôle est vert *et* il a
+raison de l'être sur la question qu'il pose ; c'est la question qui est trop
+large.
+
+Corollaire mesuré le même jour : une table de contrôles qui s'écrit à la main
+à côté du code se périme au premier ajout. Celle de `/coherence-depot` avait
+neuf lignes pour dix contrôles — le dixième, ajouté quelques jours plus tôt,
+n'y était jamais entré. Un outil qui existe pour détecter les listes fausses en
+portait une.
+
+## Une racine à 18 px rend `text-sm` illégal, et rien ne le signale
+
+Mesuré sur la page de vente : six textes à **15,75 px** sous un plancher écrit
+de 18 px. La cause n'est pas une inattention, c'est une arithmétique que
+personne ne refait — les échelles de Tailwind sont **relatives** à la racine, et
+un dépôt qui relève sa racine à 18 px pour respecter son filtre déplace toute
+l'échelle avec elle :
+
+| Classe | À racine 16 px | À racine 18 px |
+| --- | --- | --- |
+| `text-xs` | 12 px | 13,5 px |
+| `text-sm` | 14 px | **15,75 px** |
+| `text-base` | 16 px | 18 px |
+| `text-lg` | 18 px | 20,25 px |
+
+Le piège est que `text-sm` **paraît** conforme : on a relevé la racine, donc on
+se croit couvert partout. En vérité seul `text-base` atteint le plancher, et
+`text-sm` reste sous la barre dans un projet qui croit l'avoir franchie.
+
+**Deux voisins de la même famille, mesurés le même soir :**
+
+- **Une opacité divise le contraste sans se voir.** `text-white/85` sur un bleu
+  soutenu donne **2,58:1** là où le blanc plein donne 8,13:1. Aucune relecture à
+  l'œil ne rattrape ça ; seule une mesure le dit.
+- **La couleur de survol était plus lisible que celle du repos** — 4,65:1 contre
+  3,60:1. La page se lisait donc mieux le doigt posé dessus qu'au repos, et
+  personne ne survole un bouton sur un téléphone. La correction a consisté à
+  adopter la teinte que le projet avait déjà choisie.
+
+## Un contrôle qui crie pour du décor cesse d'être lu
+
+Le même contrôle a rendu **quarante** défauts au premier passage, dont trente
+portaient sur des maquettes de téléphone dessinées en HTML — du 9 px et des gris
+pâles qui imitent une capture d'écran. Noyés dedans, les onze vrais défauts
+n'auraient pas été traités.
+
+Le critère qui les sépare n'est pas cosmétique et n'a pas eu à être inventé :
+**`aria-hidden="true"`**. Un texte retiré aux lecteurs d'écran n'est pas du
+contenu ; un texte qui est du contenu ne doit pas leur être retiré. La même
+marque répond aux deux questions, et le contrôle qui l'utilise vérifie du même
+coup que la page est correctement balisée.
+
+## `pkill -f` tue le shell qui l'exécute
+
+Deux commandes perdues à la suite, chacune sortie en code 144 sans un mot
+d'explication. `pkill -f "next start -p 321"` compare le motif à la ligne de
+commande **complète** de chaque processus — or celle du shell appelant contient
+le motif, puisqu'il est en train de la lancer. Le shell se tue lui-même, et tout
+ce qui suivait le `;` ou le `&&` disparaît.
+
+Ce qui trompe : la commande visée **est** bien tuée, et le code 144 ressemble à
+une erreur du serveur qu'on arrêtait. La parade est de tuer par port ou par PID
+(`lsof -ti:3210 | xargs -r kill`), ou simplement de servir sur un autre port —
+un processus de développement oublié ne coûte rien dans une session éphémère.
+
+## Une absence qui fait disparaître un bouton et une absence qui perd un client
+ne se traitent pas pareil
+
+La règle du dépôt est bonne et vérifiée : *ce qui n'est pas réglé disparaît de la
+page au lieu d'afficher une valeur inventée.* Un numéro de téléphone faux coûte
+plus cher qu'un bouton absent.
+
+Mais elle a été appliquée à une variable où elle produit le contraire de ce
+qu'elle protège. Sur la page de vente, l'adresse de repli du formulaire n'avait
+pas de valeur par défaut « par cohérence » — et sur un premier déploiement, sans
+clé d'envoi ni numéro, le formulaire répondait *« réessaie dans quelques
+minutes »* à quelqu'un qui venait de taper son nom, son métier et son téléphone.
+
+**Le partage est là, et il se pose avant d'écrire le `?? ''` :**
+
+- L'absence retire une **possibilité en plus** — un bouton d'appel, un lien de
+  paiement. La faire disparaître est juste : rien n'est perdu.
+- L'absence casse le **seul chemin restant**. Alors une valeur par défaut vaut
+  mieux qu'un vide, même imparfaite, parce que le vide ne signale rien : la
+  page a l'air de marcher.
+
+Le test qui l'attrape est celui qu'on n'écrit jamais, parce qu'il n'a l'air de
+rien tester : **le comportement quand aucune variable n'est réglée.** C'est
+pourtant l'état exact de tout premier déploiement.
 ## Le nom d'un groupe décrit le contenu, pas la nature de ce qu'on reçoit
 
 Une liste IPTV publique range ses chaînes par thème, et l'une de ces catégories

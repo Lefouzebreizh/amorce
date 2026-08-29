@@ -175,7 +175,50 @@ remplissait).
 
 ---
 
-## 6. Le climax doit être le plan le plus fort, et ça se vérifie
+## 6. « Ça saccade » peut n'avoir aucun rapport avec le son
+
+Une secousse de caméra posée sur un rugissement faisait passer le mouvement
+image de **16 à 40** pendant 0,35 s. C'est cela, et rien d'autre, qui était
+rapporté comme « ça saccade au moment du cri » — le son y était irréprochable.
+
+```python
+# le mouvement image, entre deux images consecutives
+mv = [abs(im[i] - im[i-1]).mean() for i in range(1, len(im))]
+```
+
+**Une secousse sert un plan immobile.** Sur une bête qui hurle et bouge déjà
+violemment, elle ne renforce rien : elle brouille son mouvement propre, et le
+brouillage se lit comme un défaut de lecture.
+
+Corollaire du point 9 : avant de chercher un défaut de son sur un plan
+mouvementé, mesurer son mouvement.
+
+---
+
+## 7. Ce qui se voit sans s'entendre
+
+Des éclairs sortent des yeux d'un personnage — et **aucun son** ne les
+accompagne. Le premier bruitage arrivait 1,2 s plus tard.
+
+Ça ne se trouve pas à l'oreille, ça se trouve en **relevant les événements de
+l'image** et en vérifiant qu'un son leur répond :
+
+```python
+# les evenements lumineux : compter les pixels tres clairs image par image
+clairs = [(x > 200).sum() for x in images]
+# une apparition = un facteur 2 ou plus d'une image a la suivante
+```
+
+Mesuré ici : 713 → 2864 pixels en trois images à 5,42 s, et 16 782 sur une
+seule image à 6,96. Deux événements majeurs, zéro son.
+
+**Faire la liste des événements de l'image, puis pointer le son qui répond à
+chacun.** Celui qui n'en a pas est un trou que personne ne signale, parce qu'on
+ne remarque pas l'absence — on la ressent.
+
+---
+
+## 8. Le climax doit être le plan le plus fort, et ça se vérifie
 
 ```bash
 # par section, au-dessus de 400 Hz — si le climax n'est pas en tete,
@@ -192,7 +235,7 @@ dizaine de décibels sous le climax.
 
 ---
 
-## 7. Un texte se place où le sujet n'est pas
+## 9. Un texte se place où le sujet n'est pas
 
 ```bash
 python3 montage-auto/placer_texte.py film.mp4 3.0 4.4 5.8
@@ -210,7 +253,7 @@ le texte sur le front, yeux et bouche libres.
 
 ---
 
-## 8. Ce qu'on tire d'une image du film hérite de cette image
+## 10. Ce qu'on tire d'une image du film hérite de cette image
 
 Un carton fabriqué depuis la dernière image portait le **titre encore
 incrusté**, figé derrière ses trois lignes : quatre textes empilés. Les deux
@@ -226,7 +269,7 @@ ressortis à −45 dB.
 
 ---
 
-## 9. Un ralenti sans interpolation duplique une image sur cinq
+## 11. Un ralenti sans interpolation duplique une image sur cinq
 
 `vitesse: 0.8` sans `interpolation` : ffmpeg tient la cadence en **dupliquant**.
 Mesuré sur le plan du dragon — **29 images figées sur 144**, soit une sur cinq à
@@ -252,7 +295,7 @@ chercher un défaut de son sur un plan ralenti, compter ses images figées.
 
 ---
 
-## 10. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
+## 12. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
 
 - **Une affiche d'ouverture** : le temps de lire son titre, pas plus. 0,6 s
   gaspille les 0,6 s ; 1,6 s perd le spectateur ; **1,1 s** pour huit lettres.
@@ -262,7 +305,7 @@ chercher un défaut de son sur un plan ralenti, compter ses images figées.
 
 ---
 
-## 11. Les trois relevés obligatoires, sur le fichier qui part
+## 13. Les trois relevés obligatoires, sur le fichier qui part
 
 Écrits dans `CLAUDE.md` § 8, rappelés ici parce que c'est le moment de les
 faire, et **sur le fichier final**, pas sur celui d'avant :

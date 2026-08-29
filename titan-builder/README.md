@@ -28,6 +28,21 @@ qui exécute du Node, et un redéploiement pour changer un numéro de téléphon
 Toute la fabrication est dans `src/lib/site.ts`, **pur** : il rend une chaîne,
 il ne touche ni au disque ni au réseau. Seul le script écrit.
 
+## La démonstration à montrer
+
+« Montre-moi un exemple » est la première question de tout prospect, et sans
+réponse la conversation s'arrête là.
+
+```bash
+npm run demo      # puis déposer le dossier sur app.netlify.com/drop
+```
+
+Une entreprise assumée comme fictive, avec un numéro de réservation qui ne
+sonne nulle part : **le dépôt interdit le faux témoignage**, et un artisan qui
+découvre que l'exemple se fait passer pour un vrai client ne rappelle pas. Le
+jour où le premier client est livré, on montre le sien — c'est le seul argument
+qu'un concurrent ne peut pas recopier. Détail dans `demo/LISEZ-MOI.md`.
+
 ## Quand un client dit oui ailleurs que sur la plateforme
 
 Le formulaire en ligne suppose que le client vient s'y configurer. Dans la vraie
@@ -54,6 +69,59 @@ pas, et comment le dire. Le fichier part d'une mesure — **une modification
 complète se régénère en 277 ms** — parce que c'est elle qui décide de la
 frontière : le travail n'est pas dans la modification, il est dans la
 conversation.
+
+## Se faire trouver
+
+Un site qu'on montre et un site qui ramène du monde ne diffèrent pas par leur
+apparence. Chaque page emporte une **fiche d'établissement** au format que
+Google lit — nom, téléphone, ville, zone, catalogue de prestations — plus les
+balises de partage qui décident de ce qu'affiche Facebook quand l'artisan colle
+son lien.
+
+```bash
+npm run generer demo --domaine=couverture-tanguy.fr
+```
+
+**Le domaine n'est pas dans la commande**, parce que le client ne l'a pas quand
+il commande : il est choisi au moment de publier. Sans lui la page reste
+complète et perd seulement son adresse canonique et son image de partage —
+plutôt que de les inventer. Une adresse absolue supposée ferait afficher un
+rectangle vide à chaque partage, et un lien qui paraît cassé est pire qu'aucune
+image.
+
+**Un piège d'échappement propre à ce bloc, qui ne ressemble à aucun autre.**
+Dans un `<script>`, l'analyseur HTML cherche `</script` avant que JSON n'existe :
+un nom d'entreprise contenant cette suite refermerait le bloc, et le reste
+deviendrait du HTML exécutable sur le domaine du client. L'échappement HTML
+habituel serait faux ici — `&lt;` survivrait à `JSON.parse` et la fiche
+porterait des entités au lieu du nom. C'est le chevron **échappé en JSON**,
+`\u003c`, qui répond aux deux. Un test le couvre avec une charge réelle.
+
+**Ce qui n'a pas pu être vérifié ici**, et qui se vérifie en trente secondes une
+fois le site en ligne : `schema.org`, `validator.schema.org`, `ogp.me` et
+`developers.facebook.com` rendent tous `000` derrière le mandataire de cette
+machine. La forme est écrite de mémoire. Au premier site publié, passer l'URL
+dans le *Rich Results Test* de Google et le *Sharing Debugger* de Facebook.
+
+## Regarder avant d'envoyer
+
+```bash
+npm run regarder demo      # ou n'importe quel dossier livrable
+```
+
+Un vrai Chromium ouvre la page à **393 × 873** — le terrain de référence du
+dépôt — et refuse ce qui ne se lit pas : contraste sous 4,5:1, texte sous 18 px,
+cible sous 44 px, page qui déborde sur la droite. Il a trouvé son premier défaut
+à sa première exécution : le pied de page, qui porte le numéro de téléphone,
+sortait à 15,2 px.
+
+**Le contraste, lui, ne dépend plus de la chance.** La couleur venait du client
+et la page écrivait du blanc dessus quoi qu'il arrive : un artisan qui demandait
+du jaune recevait un titre à **1,43:1**, invisible sur un chantier en plein
+soleil. Le générateur choisit maintenant l'encre qui se lit sur *sa* couleur —
+11,50:1 sur ce même jaune — et n'approfondit le fond que si aucune des deux
+encres n'y suffit. Sa couleur reste la sienne partout où elle est un fond ; un
+test balaie la roue entière par pas de 15°.
 
 ## Mettre le site du client en ligne
 
