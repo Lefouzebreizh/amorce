@@ -1911,6 +1911,33 @@ Trois gestes, et les trois comptent :
 n'attend pas la feuille. On croit à une régression de CSS. `waitForLoadState('load')`
 avant de photographier.
 
+## Deux versions du même son ne s'additionnent pas, elles battent
+
+Une scène rapportée quatre fois comme « ça sature et le cri coupe au milieu ».
+Quatre causes trouvées, corrigées, mesurées — et le symptôme revenait.
+
+La cinquième a résisté parce que **rien n'était défectueux** :
+
+| | mesure |
+| --- | --- |
+| le fichier source du cri | crête −0,4 dBFS, **zéro** écrêtage, enveloppe intacte |
+| le fichier livré, au cri | **zéro** discontinuité entre deux échantillons |
+| paliers plats à haut niveau | **zéro** |
+| vrai pic inter-échantillon | −1,43 dBTP |
+
+Chaque pièce était juste. C'est leur **somme** qui ne l'était pas : le rush
+portait son propre rugissement, étiré par le ralenti à 0,8, et le vrai était
+posé par-dessus à sa vitesse naturelle. Deux bêtes qui hurlent en même temps,
+décalées — un battement, que l'oreille rapporte comme une saturation et comme
+une coupure.
+
+Sur le spectrogramme, la signature est nette : **des stries verticales
+irrégulières entre 2 et 10 kHz**, là où un cri unique dessine une nappe dense.
+
+**Quand chaque pièce mesure juste et que l'ensemble sonne faux, chercher ce qui
+joue en double.** Et descendre à l'échantillon avant de conclure — c'est le seul
+niveau où une vraie coupure laisse une trace qu'aucun autre défaut ne laisse.
+
 ## Un fichier texte « cassé » est presque toujours un fichier bien encodé, mal lu
 
 Un `.srt` francophone sur deux vient d'un outil Windows et n'est pas en UTF-8 :
