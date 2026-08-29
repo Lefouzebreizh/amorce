@@ -344,14 +344,21 @@ de conclure :
 
 | fenêtre | marché | 2x | 3x | 5x | 10x |
 |---|---|---|---|---|---|
-| 2017–2018 | bulle puis krach | 7 % | 17 % | 33 % | **60 %** |
-| 2020–2021 | haussier, +124 % | 2 % | 25 % | 33 % | **56 %** |
-| 2022–2023 | baissier puis reprise | 0 % | 0 % | 0 % | **44 %** |
+| 2017–2018 | bulle puis krach | 28 % | 48 % | 62 % | **100 %** |
+| 2020–2021 | haussier, +124 % | 25 % | 36 % | 57 % | **100 %** |
+| 2022–2023 | baissier puis reprise | 0 % | 0 % | 23 % | **85 %** |
 
-Part des positions liquidées. **À x10, entre 44 et 60 % des positions sont
-liquidées dans les trois fenêtres** — y compris celle où le marché monte de
-124 %, et y compris la plus calme des trois. Ce n'est pas un mauvais moment mal
-choisi, c'est la volatilité ordinaire de l'actif contre une marge de 9,5 %.
+Part des positions liquidées, **financement compté**. À x10, de 85 à 100 % — et
+dans deux fenêtres sur trois, **la totalité des positions**. Ce n'est pas un
+mauvais moment mal choisi : c'est la volatilité ordinaire de l'actif contre une
+marge de 9,5 %, plus des frais qui la rongent pendant qu'on attend.
+
+Le financement double environ les dégâts. Sur 2020-2021 il fait passer 2x de
+2 % à 25 %, et à x10 il **vide 28 positions sur 44 sans qu'un prix ait reculé
+d'un centime** — la marge est mangée par les frais avant que le marché ait fait
+quoi que ce soit. Aucun réglage de stop n'y change rien : cela se combat en
+raccourcissant la détention, ou en baissant le levier. Or un DCA garde ses
+lignes des mois, par construction.
 
 Deux lectures s'imposent. **Un marché haussier ne protège pas** : 2020-2021 a
 liquidé plus qu'il n'a épargné, parce que le levier se joue sur les creux du

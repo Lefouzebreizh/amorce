@@ -140,7 +140,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   **Le levier se mesure, il ne s'exécute pas** : `rejeu --leviers 1,2,3,5,10`
   compte les liquidations qu'un compte à levier aurait subies, et le courtier
   ne connaît toujours pas le mot. Une option de levier posée dans le chemin
-  d'ordre serait utilisée avant d'avoir été mesurée.
+  d'ordre serait utilisée avant d'avoir été mesurée. Sur seize ans de BTC réel,
+  **x10 liquide 85 à 100 % des positions** sur les trois fenêtres éprouvées,
+  financement compris — lequel double les dégâts et en vide certaines sans
+  qu'un prix ait reculé.
   **Le bouclier anti-rugpull est un veto, pas une note**, et il passe avant le
   dimensionnement : GoPlus, honeypot.is et RugCheck en parallèle, sans clé
   d'API. Le silence n'est pas un quitus — aucune source qui répond bloque
