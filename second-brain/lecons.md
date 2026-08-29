@@ -3136,3 +3136,27 @@ qui a bougé produit un arbre que personne n'a jamais compilé : les tests
 étaient verts sur l'ancienne base, ils ne disent rien de la nouvelle. C'est le
 seul moment où « la vérification est déjà passée » est faux tout en paraissant
 vrai.
+
+## Une adresse canonique se vérifie au DNS, pas à l'œil
+
+Onze sites annonçaient `ma-panoplie-ia.com` dans leurs balises canoniques, leurs
+`og:url` et leurs sitemaps. **Ce domaine ne résout pas** — mesuré le 29/08/2026.
+L'outil qui affichait ces adresses les recopiait simplement depuis la
+configuration : onze belles lignes, aucune vérification.
+
+Le défaut est de la pire famille : **invisible et coûteux**. Le site s'affiche
+parfaitement, tous les contrôles passent, et il déclare à chaque moteur que sa
+version de référence se trouve à une adresse que personne ne sert.
+
+**La sonde est un `dns.lookup`, jamais une requête HTTP.** Derrière un mandataire
+filtrant, tout rend `000` — un domaine bloqué comme un domaine inexistant, et on
+ne peut rien conclure. Le DNS sépare les deux, ce qui se vérifie sur un témoin :
+`api.binance.com` **résout** et reste injoignable, `raw.githubusercontent.com`
+résout et répond, un domaine inventé ne résout pas. Sans ce témoin, l'inférence
+ne vaut rien.
+
+**Et l'ordre des gestes vaut la mesure :** mettre en ligne *avant* de régler
+l'adresse publie le défaut au lieu de le corriger. Un hébergement gratuit donne
+une adresse réelle tout de suite ; le domaine acheté se branche après, par la
+même commande. Attendre le domaine pour déployer, c'est garder hors ligne ce qui
+pourrait déjà travailler.
