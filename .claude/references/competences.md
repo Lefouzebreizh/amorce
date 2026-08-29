@@ -49,6 +49,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/resilier-un-contrat` | Résilier un abonnement, une assurance ou un contrat à reconduction tacite avec `paper-manager` — savoir jusqu'à quand c'est encore possible sans… |
 | `/retouche-planche` | Corriger au pixel une illustration dont le texte ou le dessin est incrusté — coquille dans une bulle, mot en trop, regard raté, élément à effacer ou… |
 | `/roussy-zephy` | Charte du recueil illustré « Roussy & Zéphy » — personnages, palette hexadécimale, mécanique des histoires en quatre temps, titres de référence,… |
+| `/sonotheque` | Constituer et tenir la bibliothèque de bruitages du dépôt — dragons et créatures, impacts, whooshes, magie, foules, ambiances — puis choisir dans le… |
 | `/sortir-les-fichiers` | Mettre à l'abri ce qu'une session distante contient et que le dépôt Git ne porte pas — planches, rushes, PDF de dépôt, exports, captures — avant que… |
 | `/sous-titres-qui-accrochent` | >- Animer les textes d'une vidéo verticale pour qu'ils retiennent — apparition en ressort, secousse sur l'impact, couleur prise dans l'image, halo… |
 | `/stack-agence-supabase` | Réaliser une application client sur la stack standardisée de l'agence — Next.js 16 (App Router, React 19), TypeScript strict, Tailwind + shadcn/ui,… |
