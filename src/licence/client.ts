@@ -6,7 +6,7 @@ import { ETAT_INITIAL, type Etat, type Statut } from './types.ts';
  *
  * Ce qu'il envoie : rien. Pas un nom de fichier, pas une durée, pas un compte
  * d'exports. Une requête sans corps, avec le témoin de session, et c'est tout.
- * Ce qu'il reçoit : un statut et une date. C'est la frontière écrite dans
+ * Ce qu'il reçoit : un statut. C'est la frontière écrite dans
  * `CLAUDE.md` §4, et elle est étroite exprès.
  *
  * Il ne lève jamais. Un serveur éteint, une coupure, une réponse illisible :
@@ -33,12 +33,14 @@ export function lireReponse(donnees: unknown): Etat {
   const brut = donnees as Record<string, unknown>;
   const statut = brut.statut;
   if (typeof statut !== 'string' || !STATUTS_CONNUS.includes(statut as Statut)) return ETAT_INITIAL;
-  const finLe = typeof brut.finLe === 'number' && Number.isFinite(brut.finLe) ? brut.finLe : undefined;
-  return finLe === undefined ? { statut: statut as Statut } : { statut: statut as Statut, finLe };
+  // Un champ de plus dans la réponse est ignoré, jamais recopié : ce que le
+  // studio lit est ce dont il a besoin, et rien qui vienne du réseau ne
+  // traverse sans avoir été nommé ici.
+  return { statut: statut as Statut };
 }
 
 /**
- * Demande au serveur qui est là et jusqu'à quand.
+ * Demande au serveur si cette personne a sa licence.
  *
  * `chercher` est injectable pour que le chemin entier — y compris ses replis —
  * s'éprouve sans réseau ni navigateur. Ce n'est pas une facilité de test :
