@@ -2092,7 +2092,6 @@ règle générale : **une fonctionnalité n'est livrée que lorsqu'un chemin y m
 depuis l'extérieur** — une commande, un bouton, une route. Le reste est du code
 qui compile.
 
-<<<<<<< HEAD
 ## Un défaut entendu à deux endroits éloignés vient de ce qui les traverse
 
 « Ça sature au dragon, et un peu derrière le druide aussi. » Deux plans séparés
@@ -2118,7 +2117,7 @@ suspect**, puis comparer. Comparer avant/après master mêle l'égaliseur au
 limiteur — un égaliseur donne aussi un gain différent selon le contenu, et
 c'est ce qui m'avait fait lire 9,1 dB de « pompage » là où le limiteur n'en
 faisait que 3,4.
-=======
+
 ## Fusionner souvent a un plafond, et il est invisible
 
 La règle de ce dépôt est d'ouvrir la PR et de la fusionner dès qu'un lot tient
@@ -2296,4 +2295,3 @@ directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière
 
 **La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
 de supposer où l'on est.
->>>>>>> origin/main
