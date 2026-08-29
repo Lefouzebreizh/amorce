@@ -150,6 +150,32 @@ n'a eu lieu, et rien ne le signale.
 
 ## Au cadrage et au texte
 
+### Le rush est annoncé en paysage et se décode en portrait
+
+**Symptôme** — `ffprobe` dit 1920 × 1088. Un `crop=1920:904` sur ce fichier
+échoue avec « Invalid too big or non positive size », ce qui est absurde
+puisqu'on demande moins que la taille annoncée. Et le fond flouté qu'on avait
+prévu pour combler un format paysage ne se voit nulle part.
+
+**Cause** — Le flux porte une matrice d'affichage : `displaymatrix: rotation of
+-90.00 degrees`. `ffmpeg` la respecte et **rend l'image tournée** : le filtre
+reçoit 1088 × 1920, portrait. La ligne `Stream #0:0` décrit le flux avant
+rotation ; les filtres travaillent après.
+
+**Conséquence qui coûte le plus** — toutes les coordonnées relevées à l'œil sur
+une vignette sont alors fausses d'un facteur et d'une transposition. Une bande
+de texte située à 60 % de la hauteur se cherche pendant trois essais au mauvais
+endroit.
+
+**Solution** — ne jamais déduire la taille de travail de la ligne `Stream` :
+sortir une image et lire ses dimensions réelles.
+
+```bash
+ffmpeg -y -ss 4 -i rush.mp4 -frames:v 1 /tmp/cru.png
+python3 -c "import struct;d=open('/tmp/cru.png','rb').read();print(struct.unpack('>II',d[16:24]))"
+ffmpeg -i rush.mp4 2>&1 | grep -i displaymatrix   # confirme la rotation
+```
+
 ### Un rush porte des sous-titres gravés dans l'image
 
 **Symptôme** — Un titre traverse le visage du sujet, ou se pose sur la gueule
