@@ -15,7 +15,13 @@
   --color-bleu: #004aad;
   --color-bleu-sombre: #00306f;
   --color-bleu-pale: #eef4fc;
-  --color-chantier: #e35d00;
+  /*
+   * Mesuré : #e35d00 sous du blanc rend 3,60:1 — sous le seuil, et le bouton
+   * qui porte toute la page en est fait. Approfondi jusqu'à 4,65:1, ce qui
+   * était déjà la teinte du survol : la page était donc plus lisible au doigt
+   * posé qu'au repos.
+   */
+  --color-chantier: #c74e00;
   --color-encre: #101f2e;
   --color-ardoise: #4a5b6d;
   --color-bordure: #d7e1ee;

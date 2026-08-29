@@ -2465,3 +2465,58 @@ Corollaire mesuré le même jour : une table de contrôles qui s'écrit à la ma
 neuf lignes pour dix contrôles — le dixième, ajouté quelques jours plus tôt,
 n'y était jamais entré. Un outil qui existe pour détecter les listes fausses en
 portait une.
+
+## Une racine à 18 px rend `text-sm` illégal, et rien ne le signale
+
+Mesuré sur la page de vente : six textes à **15,75 px** sous un plancher écrit
+de 18 px. La cause n'est pas une inattention, c'est une arithmétique que
+personne ne refait — les échelles de Tailwind sont **relatives** à la racine, et
+un dépôt qui relève sa racine à 18 px pour respecter son filtre déplace toute
+l'échelle avec elle :
+
+| Classe | À racine 16 px | À racine 18 px |
+| --- | --- | --- |
+| `text-xs` | 12 px | 13,5 px |
+| `text-sm` | 14 px | **15,75 px** |
+| `text-base` | 16 px | 18 px |
+| `text-lg` | 18 px | 20,25 px |
+
+Le piège est que `text-sm` **paraît** conforme : on a relevé la racine, donc on
+se croit couvert partout. En vérité seul `text-base` atteint le plancher, et
+`text-sm` reste sous la barre dans un projet qui croit l'avoir franchie.
+
+**Deux voisins de la même famille, mesurés le même soir :**
+
+- **Une opacité divise le contraste sans se voir.** `text-white/85` sur un bleu
+  soutenu donne **2,58:1** là où le blanc plein donne 8,13:1. Aucune relecture à
+  l'œil ne rattrape ça ; seule une mesure le dit.
+- **La couleur de survol était plus lisible que celle du repos** — 4,65:1 contre
+  3,60:1. La page se lisait donc mieux le doigt posé dessus qu'au repos, et
+  personne ne survole un bouton sur un téléphone. La correction a consisté à
+  adopter la teinte que le projet avait déjà choisie.
+
+## Un contrôle qui crie pour du décor cesse d'être lu
+
+Le même contrôle a rendu **quarante** défauts au premier passage, dont trente
+portaient sur des maquettes de téléphone dessinées en HTML — du 9 px et des gris
+pâles qui imitent une capture d'écran. Noyés dedans, les onze vrais défauts
+n'auraient pas été traités.
+
+Le critère qui les sépare n'est pas cosmétique et n'a pas eu à être inventé :
+**`aria-hidden="true"`**. Un texte retiré aux lecteurs d'écran n'est pas du
+contenu ; un texte qui est du contenu ne doit pas leur être retiré. La même
+marque répond aux deux questions, et le contrôle qui l'utilise vérifie du même
+coup que la page est correctement balisée.
+
+## `pkill -f` tue le shell qui l'exécute
+
+Deux commandes perdues à la suite, chacune sortie en code 144 sans un mot
+d'explication. `pkill -f "next start -p 321"` compare le motif à la ligne de
+commande **complète** de chaque processus — or celle du shell appelant contient
+le motif, puisqu'il est en train de la lancer. Le shell se tue lui-même, et tout
+ce qui suivait le `;` ou le `&&` disparaît.
+
+Ce qui trompe : la commande visée **est** bien tuée, et le code 144 ressemble à
+une erreur du serveur qu'on arrêtait. La parade est de tuer par port ou par PID
+(`lsof -ti:3210 | xargs -r kill`), ou simplement de servir sur un autre port —
+un processus de développement oublié ne coûte rien dans une session éphémère.
