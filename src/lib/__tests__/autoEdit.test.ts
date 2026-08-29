@@ -157,3 +157,28 @@ test('un plan ne descend jamais sous le seuil de lisibilité', () => {
     assert.ok(c.outPoint - c.inPoint >= 0.899, `plan de ${(c.outPoint - c.inPoint).toFixed(4)} s`);
   }
 });
+
+test('les bruitages ponctuent au lieu de tapisser', () => {
+  /*
+   * L'analyse de ce dépôt tient qu'un bon montage porte 1,2 à 6 bruitages pour
+   * dix secondes. Le montage express en posait 10,8 avec six rushes et 32,8
+   * avec trente — cinq fois le maximum qu'il se donne à lui-même, et une note
+   * pénalisée par sa propre mesure.
+   */
+  for (const n of [6, 12, 20, 50]) {
+    const { clips, cues } = buildAutoEdit(Array.from({ length: n }, (_, i) => asset(`g${i}`, 4)));
+    const duree = totalDuration(clips);
+    const par10 = (cues.length * 10) / duree;
+    assert.ok(par10 <= 6, `${n} rushes : ${par10.toFixed(1)} bruitages pour 10 s`);
+    assert.ok(par10 >= 1.2, `${n} rushes : ${par10.toFixed(1)} bruitages pour 10 s, trop peu`);
+  }
+});
+
+test('l’ouverture et la fin sont toujours sonorisées', () => {
+  // Ce sont les deux instants qui décident : l'un fait lever les yeux, l'autre
+  // appelle la boucle suivante. L'espacement ne doit jamais les emporter.
+  const { clips, cues } = buildAutoEdit(Array.from({ length: 20 }, (_, i) => asset(`h${i}`, 4)));
+  const duree = totalDuration(clips);
+  assert.ok(cues.some((c) => c.time < 0.2), 'aucun impact sur la première image');
+  assert.ok(cues.some((c) => c.time > duree - 1), 'aucune note à la fin');
+});

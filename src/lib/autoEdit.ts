@@ -157,6 +157,34 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
     },
   ];
 
+  /*
+   * Les bruitages ponctuent, ils ne tapissent pas.
+   *
+   * Un souffle était posé sur **chaque** raccord, plus une aspiration juste
+   * avant : deux par coupe. L'analyse de ce même dépôt tient pourtant qu'un bon
+   * montage porte 1,2 à 6 bruitages pour dix secondes — et le montage express
+   * en posait 10,8 avec six rushes, 32,8 avec trente. Cinq fois le maximum
+   * qu'il se donne à lui-même : soixante souffles en dix-huit secondes, et une
+   * note pénalisée par sa propre mesure.
+   *
+   * On vise donc le milieu de la bande, quatre pour dix secondes, et on garde
+   * un raccord sur `pasBruitage`. Les autres coupes restent nues — c'est ce qui
+   * rend audibles celles qui sonnent.
+   */
+  /*
+   * On compte les **raccords sonorisés**, pas le pas.
+   *
+   * Raisonner en pas retombe à un dès que les plans sont peu nombreux, et
+   * l'aspiration qui accompagne chaque souffle double alors le total : mesuré,
+   * douze rushes rendaient encore 12,8 bruitages pour dix secondes. Deux
+   * raccords sonorisés pour dix secondes, portant au plus deux sons chacun,
+   * donnent les quatre visés — au milieu de la bande que l'analyse juge bonne.
+   */
+  const RACCORDS_SONORISES_PAR_10S = 2;
+  const raccords = Math.max(1, clips.length - 1);
+  const voulus = Math.max(1, Math.round((duration / 10) * RACCORDS_SONORISES_PAR_10S));
+  const pasBruitage = Math.max(1, Math.round(raccords / voulus));
+
   const cues: SoundCue[] = [];
   let cursor = 0;
 
@@ -171,13 +199,21 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
       cursor -= clip.transitionDuration;
       const at = Math.max(0, cursor);
 
-      // Un souffle sur chaque raccord : c'est ce qui transforme une succession
-      // de plans en un rythme perçu.
-      cues.push({ id: uid('sfx'), sfx: RACCORD_CYCLE[(index - 1) % RACCORD_CYCLE.length], time: at, gain: 0.85 });
+      // Un raccord sur `pasBruitage` reçoit un souffle : c'est ce qui
+      // transforme une succession de plans en rythme perçu. Les autres restent
+      // nus, et c'est ce qui rend audibles ceux qui sonnent.
+      if ((index - 1) % pasBruitage === 0) {
+        cues.push({ id: uid('sfx'), sfx: RACCORD_CYCLE[(index - 1) % RACCORD_CYCLE.length], time: at, gain: 0.85 });
 
-      // Une aspiration juste avant le raccord fait anticiper la coupe.
-      if (at > 0.5) {
-        cues.push({ id: uid('sfx'), sfx: 'reverse', time: Math.max(0, at - 0.55), gain: 0.55 });
+        /*
+         * L'aspiration ne se pose que si le plan précédent est assez long pour
+         * la porter. Sur des plans courts, une anticipation de 0,55 s tombe
+         * avant la coupe **précédente** : elle n'annonce plus rien, elle brouille
+         * ce qui vient de sonner.
+         */
+        if (at > 1.2) {
+          cues.push({ id: uid('sfx'), sfx: 'reverse', time: at - 0.55, gain: 0.55 });
+        }
       }
     }
 
