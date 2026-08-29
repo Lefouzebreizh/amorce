@@ -2049,3 +2049,39 @@ Zéro résultat : ce n'est pas livré, quoi qu'en disent les tests.
 règle générale : **une fonctionnalité n'est livrée que lorsqu'un chemin y mène
 depuis l'extérieur** — une commande, un bouton, une route. Le reste est du code
 qui compile.
+
+## Fusionner souvent a un plafond, et il est invisible
+
+La règle de ce dépôt est d'ouvrir la PR et de la fusionner dès qu'un lot tient
+debout — c'est ce qui évite les conflits quand plusieurs sessions travaillent en
+parallèle. Elle est juste, et elle a un coût que personne n'avait compté.
+
+**Chaque fusion sur `main` déclenche un déploiement.** Le plan gratuit de Vercel
+en autorise cent par jour. Mesuré le 29/08 : **154 fusions en vingt-quatre
+heures**, donc cinquante-quatre déploiements refusés.
+
+Le message arrive dans un commentaire de PR, jamais dans la conversation :
+
+```
+Resource is limited - try again in 24 hours
+(more than 100, code: "api-deployments-free-per-day")
+```
+
+Et voilà ce que ça coûte, mesuré : le propriétaire a testé pendant deux heures
+une version vieille de plusieurs heures. Il rapportait des défauts déjà corrigés,
+et chaque « recharge de force » ne servait à rien puisque le serveur ne servait
+pas la nouvelle version. Deux heures de travail des deux côtés, sur un défaut
+qui n'existait plus.
+
+Trois choses à en tirer :
+
+- **Un correctif fusionné n'est pas un correctif livré.** Tant que le
+  déploiement n'a pas abouti, dire « c'est corrigé, recharge » est faux — et
+  fait douter la personne de son propre téléphone.
+- **Compter les fusions du jour avant d'en promettre l'effet.**
+  `git log --oneline --since="24 hours ago" origin/main | wc -l` répond en une
+  seconde, et c'est le seul chiffre qui dit si ce qu'on vient de fusionner
+  arrivera quelque part.
+- **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
+  déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
+  c'est le bon geste ce jour-là seulement.
