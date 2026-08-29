@@ -2950,3 +2950,24 @@ Express, TITAN Builder, IPTV). Deux dérives opposées dans la même phrase.
 La description d'une compétence n'est pas de la prose : c'est **elle** qui
 décide du déclenchement. Une description périmée ne se contente pas de mentir,
 elle empêche la compétence de se proposer là où elle sert.
+
+## Une chaîne de vente s'arrête à l'encaissement, et c'est le maillon qu'on
+n'écrit pas
+
+Tout a été construit cette nuit — trouver le client, l'aborder, lui montrer,
+générer, livrer, répondre après. Le maillon manquant n'était aucun de ceux-là :
+**il n'y avait aucun moyen d'être payé.** Une facture française exige un SIRET,
+et sans numéro l'ensemble de la chaîne ne mène à rien d'encaissable.
+
+Le motif se reconnaît : on construit ce qu'on sait construire — du code, des
+pages, des scripts — et l'étape administrative reste hors du dépôt parce qu'elle
+n'est pas technique. Elle est pourtant la seule condition **bloquante** de tout
+le reste, et la seule à demander des semaines de délai.
+
+**La règle : dans une chaîne qui doit rapporter de l'argent, remonter depuis
+l'encaissement, pas depuis la production.** Ce qu'il faut pour être payé décide
+de ce qu'il vaut la peine de construire, et non l'inverse.
+
+**Et un blocage administratif se traite comme un blocage technique** : on le
+nomme par écrit, avec son délai. « Une à trois semaines » change l'ordre des
+tâches ; « il faudrait s'inscrire » ne change rien et se répète.

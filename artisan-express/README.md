@@ -54,6 +54,17 @@ démarrage — et la règle qui les empêche d'être du spam :
 **chacun porte une phrase que seul le vendeur peut écrire, ce qu'il a vraiment
 vu sur la page de l'artisan.** Sans elle, c'est un publipostage et ça se sent.
 
+## Facturer
+
+`FACTURER.md` : le modèle de facture, les mentions obligatoires et ce que
+chacune évite. Il commence par ce qui bloque tout le reste — **une facture
+porte un SIRET**, et sans numéro il n'y a pas d'encaissement possible.
+
+Deux choses y sont marquées comme non vérifiées, faute d'accès : la liste exacte
+des mentions et l'effet d'une activité déclarée sur des allocations en cours.
+`service-public.fr` rend `000` depuis ce conteneur. Elles se vérifient une seule
+fois, avant la première facture.
+
 ## Déployer sur Vercel
 
 Projet Next.js standard, dossier racine `artisan-express`. Les six variables
