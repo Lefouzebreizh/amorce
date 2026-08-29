@@ -63,6 +63,33 @@ iptv/
 
 Ce que la suite ajoutera, aux mêmes endroits :
 
+## Y accéder : sur quelle machine, et depuis quoi
+
+**Cette application n'est hébergée nulle part, et c'est voulu.** Elle lit vos
+identifiants d'abonnement et votre historique de lecture ; les mettre sur un
+serveur en ligne serait la seule vraie mauvaise idée du projet. Elle tourne donc
+sur une machine à vous — un ordinateur, ou un petit serveur allumé le soir.
+
+```bash
+cd iptv && npm ci
+npm run iptv -- importer ma-liste.m3u
+npm run dev
+```
+
+Next affiche alors deux adresses. **C'est la seconde qui compte** :
+
+```
+- Local:        http://localhost:3000        ← seulement sur cette machine
+- Network:      http://192.168.1.20:3000     ← depuis le téléphone, la tablette,
+                                               la télévision
+```
+
+Le serveur écoute volontairement sur toutes les interfaces (`--hostname
+0.0.0.0`), sans quoi rien d'autre que la machine elle-même ne verrait
+l'application. **Conséquence à connaître : n'importe qui sur votre wifi peut
+l'ouvrir.** Il n'y a pas de mot de passe — pour un réseau domestique c'est le
+bon compromis, sur un wifi partagé ce n'en est pas un.
+
 ## S'en servir tout de suite
 
 ```bash
@@ -159,6 +186,27 @@ désigner, un temps, une entrée absente. Un test le vérifie sur le cycle compl
 — ce que fait l'application à l'ouverture d'une fiche — retirerait sinon les
 40 000 autres entrées de la même source, qui n'ont simplement pas été revues.
 L'application se viderait sur un clic, sans la moindre erreur.
+
+**Une télévision ne reçoit pas l'image, elle va la chercher.** C'est ce qui
+explique toute la forme du bouton « Diffuser ». Trois conséquences, et chacune
+casse la diffusion si on l'ignore :
+
+- **L'adresse envoyée doit être absolue et joignable depuis le salon.** Elle est
+  calculée depuis l'adresse de la page — si le téléphone est arrivé par
+  `http://192.168.1.20:3000`, c'est exactement ce que la télévision utilisera.
+  Rien à configurer côté serveur, ce qui serait faux dès qu'une machine a deux
+  cartes réseau. Ouvrir l'application par `localhost` empêche la diffusion, et
+  l'interface le dit au lieu de laisser un écran noir : pour un Chromecast,
+  « localhost » désigne le Chromecast.
+- **Ce que le navigateur fabrique ne se diffuse pas.** hls.js assemble la vidéo
+  dans la page ; ce flux-là n'a pas d'adresse. Diffuser détruit donc la
+  bibliothèque **avant** de poser la source directe — l'ordre compte, sinon elle
+  reprend la main et écrase l'adresse qu'on vient d'écrire. Un Chromecast lit le
+  HLS nativement, il n'a besoin de rien d'autre.
+- **Le bouton n'apparaît que si un appareil est visible.** `RemotePlayback`
+  réclame un contexte sécurisé et n'est pas exposée partout ; plutôt que de
+  deviner la règle, on interroge l'objet, on écoute la disponibilité, et on
+  explique quand il manque quelque chose.
 
 **Le mandataire de flux n'accepte pas d'URL arbitraire.** Un relais qui prend
 une adresse en paramètre est un *proxy ouvert* : n'importe qui s'en sert pour

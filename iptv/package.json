@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Gestion et lecture de listes IPTV / VOD — cœur d'ingestion et de normalisation",
   "scripts": {
-    "dev": "NODE_OPTIONS=--experimental-sqlite next dev",
+    "dev": "NODE_OPTIONS=--experimental-sqlite next dev --hostname 0.0.0.0",
     "build": "NODE_OPTIONS=--experimental-sqlite next build",
-    "start": "NODE_OPTIONS=--experimental-sqlite next start",
+    "start": "NODE_OPTIONS=--experimental-sqlite next start --hostname 0.0.0.0",
     "test": "node --experimental-strip-types --experimental-sqlite --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
     "check": "tsc --noEmit",
     "iptv": "node --experimental-strip-types --experimental-sqlite --disable-warning=ExperimentalWarning src/cli.ts",
