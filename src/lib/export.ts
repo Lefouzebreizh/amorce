@@ -92,18 +92,32 @@ export type RecordParams = {
  * mégaoctets : trop lourde à envoyer sur un réseau mobile, et rejetée par
  * l'application photo comme un fichier anormal.
  *
- * 0,10 bit par pixel et par image donne environ 6 Mb/s en 1080 × 1920 à trente
- * images par seconde. C'est au-dessus de ce que TikTok, Reels et Shorts
- * réencodent de toute façon — ils ramènent tout autour de 4 Mb/s — et cela
- * laisse la marge que le grain et les dégradés réclament. Doubler ce chiffre
- * double le poids sans qu'aucune plateforme en garde la différence.
+ * 0,075 bit par pixel et par image donne environ 4,7 Mb/s en 1080 × 1920 à
+ * trente images par seconde — soit douze mégaoctets pour vingt secondes. C'est
+ * le débit autour duquel TikTok, Reels et Shorts réencodent de toute façon :
+ * au-dessus, on paie du poids que personne ne garde.
+ *
+ * Le poids n'est pas qu'une question de plateforme. Un fichier de trente
+ * mégaoctets ne s'envoie pas depuis un téléphone en réseau mobile : il est
+ * refusé par la plupart des messageries, et il fait renoncer avant même
+ * d'arriver à la publication.
  */
-const BITS_PAR_PIXEL = 0.1;
+const BITS_PAR_PIXEL = 0.075;
 const AUDIO_BITRATE = 192_000;
 
-/** Débit vidéo pour une définition donnée, jamais sous un plancher lisible. */
+/**
+ * Débit vidéo pour une définition donnée, jamais sous un plancher lisible.
+ *
+ * Le plancher valait 2 Mb/s. Il écrasait les petites définitions : en 540 × 960
+ * le calcul demande 1,2 Mb/s, le plancher le remontait à 2, et le préréglage
+ * de partage ne pesait plus que deux dixièmes de mégaoctet de moins que le 720.
+ * Un choix qui ne change rien n'est pas un choix.
+ *
+ * 1 Mb/s suffit à tenir une définition réduite sans blocs visibles ; en dessous,
+ * les aplats se cassent en carrés dès qu'une image bouge.
+ */
 export function debitVideo(largeur: number, hauteur: number, images: number): number {
-  return Math.max(2_000_000, Math.round(largeur * hauteur * images * BITS_PAR_PIXEL));
+  return Math.max(1_000_000, Math.round(largeur * hauteur * images * BITS_PAR_PIXEL));
 }
 
 /**
