@@ -3369,3 +3369,28 @@ l'adresse `.../pull/new/<branche>` toute prête. On la transmet, on ne cherche
 pas un troisième chemin. **Et on ne conclut pas « le dépôt est inaccessible »
 d'un 403 sur l'API** : la lecture par `git` marchait, seule la couche compte
 GitHub manquait.
+
+## Un compteur qui compte du travail déjà tranché fait repousser la tâche
+
+Le réseau d'annuaires affichait « 73 liens d'affiliation à poser ». Le vrai
+nombre est **42** : 24 outils se vendent « sur devis » — cycle commercial long,
+aucun programme d'affiliation derrière — et 7 ont un éditeur qui ne rémunère pas
+l'apport ou un programme fermé aux nouveaux candidats. Ces 31 cas étaient
+**déjà tranchés par la recherche**, écrits noir sur blanc dans `AFFILIATION.md`,
+et comptés malgré tout comme du retard.
+
+L'écart n'est pas cosmétique : il décide qu'on s'y met ou pas. Une corvée
+annoncée à 73 formulaires se repousse ; à 42 elle tient dans une soirée. Le
+compteur ne mentait sur aucun chiffre pris isolément — il additionnait
+simplement deux choses qui ne se ressemblent pas.
+
+**Où mettre le fait, et non où il est commode de l'écrire.** Le marqueur
+`sans_programme` vit dans la fiche de l'outil, pas dans le script qui compte :
+un script qui embarquerait la liste la verrait dériver dès la première fiche
+ajoutée par l'auto-pilote, et c'est le script qu'on croirait. Le *pourquoi* de
+chaque cas reste dans le document de recherche — la donnée porte le fait, la
+prose porte la raison.
+
+**Et le marqueur se lève tout seul** quand un vrai lien arrive : un programme
+rouvre, ou la recherche s'était trompée. Une note qui dit « ça ne paie pas » à
+côté d'une adresse qui paie est le genre de contradiction qu'on ne relit jamais.

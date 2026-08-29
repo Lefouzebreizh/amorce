@@ -12,10 +12,34 @@ date et ce qui reste à confirmer au moment de l'inscription.
 ## Comment s'en servir
 
 1. Ouvrir les comptes de la partie **À ouvrir en premier**, dans l'ordre.
-2. Pour chaque outil obtenu, remplacer `lien_affiliation` dans
-   `niches/<niche>.json` — ou me donner les liens, je le fais.
-3. `npm run valider` compte les liens de démonstration restants : c'est la seule
-   mesure d'avancement qui compte ici.
+2. Noter les liens obtenus au fil de l'eau, un par ligne : `identifiant adresse`.
+   L'identifiant est celui que donne `npm run affiliations`, mais le nom de
+   l'outil marche aussi — « Togal.AI » retrouve `togal-ai`.
+3. Tout poser d'un coup : `npm run affiliations -- --depuis mes-liens.txt`.
+   Une seule ligne fautive et **rien** n'est écrit : un lot à moitié posé se
+   répare à la main, ce qu'on voulait justement éviter.
+4. `npm run affiliations` puis `npm run valider` disent où on en est.
+
+Le script refuse trois choses, et chacune correspond à une façon réelle de
+perdre l'argent sans que rien ne le signale : une adresse qui n'est pas en
+`https`, l'adresse de démonstration recopiée par mégarde, et un hôte qui **ne
+résout pas** — la carte s'affiche, le visiteur clique, il tombe sur une erreur.
+
+## Combien reste-t-il vraiment : 42, pas 73
+
+Le compte brut décourage sans informer, et c'est ce qui fait repousser la
+soirée. Sur les 73 liens de démonstration :
+
+| | Combien | Ce que ça veut dire |
+| --- | --- | --- |
+| **À inscrire** | **42** | le vrai travail |
+| « Sur devis » | 24 | vente par cycle commercial long, aucun programme derrière |
+| Sans programme | 7 | tranché ci-dessous, marqué `sans_programme` dans les données |
+
+Les deux dernières lignes ne sont pas du retard : elles sont **réglées**. Le
+marqueur `sans_programme` vit à côté de l'outil qu'il concerne et non dans un
+script, pour que l'auto-pilote ne le fasse pas dériver ; poser un vrai lien sur
+un outil marqué lève le marqueur tout seul, au cas où un programme rouvrirait.
 
 **Trois comptes de place de marché couvrent une bonne partie du lot** :
 [Awin](https://www.awin.com/), [PartnerStack](https://partnerstack.com/) et

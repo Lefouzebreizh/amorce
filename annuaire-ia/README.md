@@ -223,7 +223,7 @@ les traiter dans le désordre fait perdre le bénéfice des deux premières.
 | --- | --- | --- | --- |
 | 1 | **Rien n'est déposé** | billet [#181](https://github.com/Lefouzebreizh/amorce/issues/181), ouvert depuis le 27/08 | dix minutes, gratuit — deux secrets GitHub et un projet Cloudflare Pages |
 | 2 | **Le domaine ne résout pas** | `ma-panoplie-ia.com` → aucune résolution DNS, le 29/08 | rien, si l'on prend l'adresse gratuite de Pages — et `npm run sites` refuse de construire tant que c'est le cas |
-| 3 | **73 liens sur 73 sont des exemples** | `npm run valider` | une soirée de formulaires, `AFFILIATION.md` |
+| 3 | **73 liens sur 73 sont des exemples**, dont **42 valent une inscription** — les 31 autres sont tranchés | `npm run affiliations` | une soirée de formulaires, `AFFILIATION.md`, puis `npm run affiliations -- --depuis` |
 
 **Et un piège entre le 1 et le 2 :** déposer sans régler l'adresse mettrait onze
 sites en ligne déclarant tous une balise canonique vers un domaine que personne
@@ -266,6 +266,13 @@ sous un verdict « 0 erreur(s) » qui se lit comme « tout va bien ». `npm run
 valider` le dit maintenant en clair, à la fin, et sépare ce qui est en ligne
 (73) de ce qui attend en réserve (158) — confondre les deux triple le chiffre et
 décourage pour un travail qui n'est pas encore à faire.
+
+**Le même tri vaut à l'intérieur des 73**, et `npm run affiliations` le fait :
+24 outils se vendent « sur devis » — aucun programme derrière — et 7 ont un
+éditeur qui ne rémunère pas l'apport ou un programme fermé. Il reste **42
+inscriptions**, pas 73. Un compteur qui présente du travail déjà tranché comme
+du retard fait paraître la soirée deux fois plus longue qu'elle n'est, et c'est
+exactement ce qui la fait repousser.
 
 **Ce qui débloque, et personne d'autre ne peut le faire :** ouvrir les comptes
 d'affiliation. `AFFILIATION.md` les a déjà cherchés et classés par ce qui paie le
