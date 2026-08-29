@@ -372,7 +372,18 @@ export function Timeline({
         Les boutons restent collés au bord, hors du flux de la piste, et portent
         la même échelle que le pincement.
       */}
-      <div className="pointer-events-none sticky top-0 left-0 z-30 flex h-0 justify-end gap-1">
+      {/*
+        Décalés sous la règle, jamais dessus.
+        Posés à hauteur nulle en tête du conteneur, ils recouvraient les
+        graduations : sur un montage de cinquante-six secondes, le « 50s »
+        disparaissait derrière eux. Un contrôle qui cache ce qu'il sert à lire
+        ne sert à rien.
+
+        Le décalage les amène au niveau de la piste, où ils masquent au pire la
+        fin d'un bloc — et la frise se fait défiler pour la revoir, ce que la
+        règle ne permet pas.
+      */}
+      <div className="pointer-events-none sticky top-6 left-0 z-30 flex h-0 justify-end gap-1">
         <button
           type="button"
           aria-label="Voir plus large"
