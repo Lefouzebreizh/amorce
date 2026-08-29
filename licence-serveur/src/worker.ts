@@ -48,7 +48,11 @@ function base(d1: D1): Base {
   };
 }
 
-export default {
+/*
+ * Nommé plutôt qu'anonyme : Cloudflare attend l'export par défaut, mais un
+ * objet sans nom n'apparaît sous aucune étiquette dans une trace d'erreur.
+ */
+const worker = {
   fetch(requete: Request, env: Environnement): Promise<Response> {
     return traiter(requete, {
       base: base(env.BASE),
@@ -58,3 +62,5 @@ export default {
     });
   },
 };
+
+export default worker;
