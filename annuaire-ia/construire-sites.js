@@ -21,6 +21,7 @@
  * Usage :
  *   node construire-sites.js          les onze domaines
  *   node construire-sites.js btp      un seul, pour vérifier
+ *   node construire-sites.js --sans-dns   domaine acheté, DNS pas encore propagé
  */
 
 import fs from 'node:fs';
@@ -28,6 +29,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lireBases, validerBase, creerReleve, rendreCompte } from './valider.js';
 import { entreesDeNiche, sitemap, robots } from './generate-sitemap.js';
+import { auditerAdresses } from './sonde-dns.mjs';
 
 const racine = path.dirname(fileURLToPath(import.meta.url));
 const dossierSortie = path.join(racine, 'dist');
@@ -80,8 +82,9 @@ function remplir(gabarit, { niche, domaine }) {
   return sortie;
 }
 
-function main() {
-  const demandees = process.argv.slice(2).filter((a) => !a.startsWith('-'));
+async function main() {
+  const args = process.argv.slice(2);
+  const demandees = args.filter((a) => !a.startsWith('-'));
   const gabarit = fs.readFileSync(path.join(racine, 'index.html'), 'utf8');
   const feuille = path.join(racine, 'styles.css');
   if (!fs.existsSync(feuille)) {
@@ -98,6 +101,41 @@ function main() {
   for (const { fichier, base } of bases) validerBase(base, fichier, releve);
   if (releve.erreurs.length) {
     rendreCompte(releve, { titre: 'Construction interrompue' });
+    process.exit(1);
+  }
+
+  /*
+   * Dernière barrière avant la mise en ligne, et la seule qui attrape ce
+   * défaut-là : `valider.js` vérifie que `niche.domaine` est une URL https
+   * unique — il ne peut pas savoir si quelqu'un sert cette adresse.
+   *
+   * Le 29/08/2026 les onze niches annonçaient `ma-panoplie-ia.com`, qui ne
+   * résout pas. Construire et déposer dans cet état mettait onze sites en
+   * ligne, parfaitement affichés, déclarant tous une version de référence
+   * introuvable. `regler-domaines.mjs --etat` le disait déjà — encore
+   * fallait-il le lancer. Ici, on ne peut plus l'oublier : c'est le chemin
+   * que tout le monde emprunte.
+   */
+  const audit = await auditerAdresses(bases.map(({ base }) => base.niche.domaine));
+  if (!audit.disponible) {
+    console.warn(
+      '⚠ Pas de résolveur DNS joignable : les adresses canoniques n’ont pas pu être vérifiées.\n' +
+      '  On construit quand même — un témoin muet n’accuse personne.'
+    );
+  } else if (audit.morts.length && !args.includes('--sans-dns')) {
+    console.error(
+      `✗ Construction interrompue — ${audit.morts.join(', ')} ne résout pas.\n\n` +
+      '  Les balises canoniques, les `og:url` et les sitemaps désigneraient une\n' +
+      '  adresse que personne ne sert. Les sites s’afficheraient pourtant très\n' +
+      '  bien, et tous les autres contrôles passeraient : c’est exactement ce qui\n' +
+      '  rend ce défaut cher.\n\n' +
+      '  Régler l’adresse d’abord, reconstruire ensuite :\n' +
+      '    node regler-domaines.mjs --base https://<projet>.pages.dev\n' +
+      '    npm run sites\n\n' +
+      '  Cloudflare Pages donne cette adresse gratuitement, et `<projet>` est le\n' +
+      '  nom que porte le projet Pages — pas un nom deviné ici.\n\n' +
+      '  Domaine acheté dont le DNS n’a pas fini de se propager : --sans-dns.'
+    );
     process.exit(1);
   }
 
@@ -130,7 +168,7 @@ function main() {
 }
 
 try {
-  main();
+  await main();
 } catch (erreur) {
   console.error(erreur.message);
   process.exit(1);

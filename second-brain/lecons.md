@@ -3312,3 +3312,60 @@ barre sur le tronqué — « 100 % » sur une fenêtre à 99,9, soit le chiffre 
 fait croire qu'on est bloqué. Le défaut avait survécu à toutes les lectures du
 fichier seul. Quand deux versions doivent afficher la même chose, les croiser
 sur vingt valeurs coûte une minute et trouve ce qu'une relecture ne trouve pas.
+## Un contrôle qui vit dans l'outil qu'on lance exprès ne protège personne
+
+Le contrôle DNS de l'adresse canonique existait déjà — dans
+`regler-domaines.mjs --etat`, c'est-à-dire dans la commande qu'on lance
+**quand on a déjà pensé au problème**. Le chemin que tout le monde emprunte,
+`npm run sites` puis dépôt, ne le traversait pas. Un défaut connu, un correctif
+écrit, une leçon rédigée : et la mise en ligne restait exactement aussi
+dangereuse qu'avant.
+
+**Un garde-fou se place sur le chemin par défaut, pas sur le chemin vertueux.**
+La question à poser n'est pas « le contrôle existe-t-il ? » mais « que se
+passe-t-il pour quelqu'un qui ne le lance pas ? ». Ici la réponse était : onze
+sites en ligne, parfaitement affichés, tous les contrôles verts.
+
+**Et un garde-fou a besoin d'un témoin, sinon il accuse à tort.** Sans
+résolveur, *toutes* les adresses échouent — les bonnes comprises. Conclure « le
+domaine n'existe pas » y serait faux onze fois sur onze. On interroge donc
+d'abord un témoin qui existe par construction (`example.com`, réservé par la
+RFC 2606, mesuré résolvant le 29/08/2026) : s'il est muet, on avertit et on
+laisse passer. Un filet qui se ferme sur une panne d'outillage se fait
+désactiver dans la semaine.
+
+**Corollaire sur l'échappement :** `npm run sites --sans-dns` ne transmet pas le
+drapeau — npm le garde pour lui, et le script refuse quand même (mesuré). Il
+faut `npm run sites -- --sans-dns`. L'oubli rate du bon côté, mais il faut
+l'écrire, sinon on croit l'échappement cassé.
+
+## Un connecteur qui arrive en cours de route se lit avant qu'on espère
+
+Adobe for Creativity s'est connecté le 29/08/2026, avec une trentaine d'outils
+`image_*`, Firefly et Express. De quoi croire le verrou de l'illustration KDP
+levé. **Sa propre documentation dit le contraire** : « Most generative AI
+capabilities (image generation, generative fill, text-to-image, AI object
+removal) are **not available** in this environment ». Seul `image_generative_expand`
+(agrandissement de cadre) subsiste, et il part d'une image existante.
+
+Ce que le connecteur fait vraiment : retoucher, recadrer, détourer, vectoriser,
+mettre en page. Ce qu'il ne fait pas : la première image. Le chemin de l'image
+reste donc fermé — c'est le **quatrième** mesuré, après la diffusion locale, les
+cinq hôtes à `000` et la parade des releases GitHub.
+
+**Ce que ça change pour la prochaine session :** un connecteur riche n'est pas
+une capacité, et sa liste d'outils ment par omission. Cinq minutes de lecture de
+sa doc valent mieux qu'une heure d'essais qui finiront sur la même phrase.
+
+## Pousser et ouvrir une PR ne passent pas par le même tuyau
+
+Mesuré le 29/08/2026 sur une session distante : `git push` réussit — le proxy
+git sert le dépôt — mais **l'API GitHub rend 403** (« GitHub access is not
+enabled for this session »), et `gh` n'est pas installé. La branche part, la PR
+ne s'ouvre pas depuis la session.
+
+Ce n'est pas une panne à contourner : le `remote:` de la poussée donne
+l'adresse `.../pull/new/<branche>` toute prête. On la transmet, on ne cherche
+pas un troisième chemin. **Et on ne conclut pas « le dépôt est inaccessible »
+d'un 403 sur l'API** : la lecture par `git` marchait, seule la couche compte
+GitHub manquait.
