@@ -28,6 +28,14 @@ qui exécute du Node, et un redéploiement pour changer un numéro de téléphon
 Toute la fabrication est dans `src/lib/site.ts`, **pur** : il rend une chaîne,
 il ne touche ni au disque ni au réseau. Seul le script écrit.
 
+## Après la livraison
+
+`APRES-LA-LIVRAISON.md` : ce qui est compris dans les 299 €, ce qui ne l'est
+pas, et comment le dire. Le fichier part d'une mesure — **une modification
+complète se régénère en 277 ms** — parce que c'est elle qui décide de la
+frontière : le travail n'est pas dans la modification, il est dans la
+conversation.
+
 ## Mettre le site du client en ligne
 
 Le générateur produit un dossier autonome : **une page HTML, les photos, et
