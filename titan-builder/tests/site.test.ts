@@ -157,3 +157,17 @@ test('aucune police ni feuille de style distante', () => {
   assert.equal(html.includes('fonts.googleapis'), false);
   assert.equal(html.includes('<link rel="stylesheet"'), false);
 });
+
+test('la présentation garde ses paragraphes, et le simple retour ne coupe pas', () => {
+  /*
+   * Le texte vient d'un `<textarea>` : l'artisan y aère son propos. Tout rendre
+   * dans un seul `<p>` collait ses paragraphes bout à bout, et un simple retour
+   * à la ligne au milieu d'une phrase ne doit pas, lui, fabriquer un paragraphe.
+   */
+  const html = genererSite(
+    commande({ presentation: 'Premier paragraphe.\n\nSecond.\nMême phrase.' }),
+  );
+
+  assert.match(html, /<p>Premier paragraphe\.<\/p>/);
+  assert.match(html, /<p>Second\. Même phrase\.<\/p>/);
+});

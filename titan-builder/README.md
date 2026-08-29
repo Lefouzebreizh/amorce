@@ -28,6 +28,21 @@ qui exécute du Node, et un redéploiement pour changer un numéro de téléphon
 Toute la fabrication est dans `src/lib/site.ts`, **pur** : il rend une chaîne,
 il ne touche ni au disque ni au réseau. Seul le script écrit.
 
+## La démonstration à montrer
+
+« Montre-moi un exemple » est la première question de tout prospect, et sans
+réponse la conversation s'arrête là.
+
+```bash
+npm run demo      # puis déposer le dossier sur app.netlify.com/drop
+```
+
+Une entreprise assumée comme fictive, avec un numéro de réservation qui ne
+sonne nulle part : **le dépôt interdit le faux témoignage**, et un artisan qui
+découvre que l'exemple se fait passer pour un vrai client ne rappelle pas. Le
+jour où le premier client est livré, on montre le sien — c'est le seul argument
+qu'un concurrent ne peut pas recopier. Détail dans `demo/LISEZ-MOI.md`.
+
 ## Quand un client dit oui ailleurs que sur la plateforme
 
 Le formulaire en ligne suppose que le client vient s'y configurer. Dans la vraie
