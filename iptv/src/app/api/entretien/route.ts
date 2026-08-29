@@ -50,6 +50,7 @@ export function GET(): Response {
     total: cache.compter({ inclureMorts: true }),
     ...etats,
     aTester: choisirCandidats(cache).length,
+    dernierImport: cache.dernierImport(),
   })
 }
 
