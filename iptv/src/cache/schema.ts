@@ -31,6 +31,9 @@
 export const COLONNES_AJOUTEES: readonly { table: string; colonne: string; sql: string }[] = [
   { table: 'element', colonne: 'etat', sql: 'ALTER TABLE element ADD COLUMN etat TEXT' },
   { table: 'element', colonne: 'teste_le', sql: 'ALTER TABLE element ADD COLUMN teste_le TEXT' },
+  { table: 'element', colonne: 'canal', sql: 'ALTER TABLE element ADD COLUMN canal INTEGER' },
+  { table: 'element', colonne: 'rang', sql: 'ALTER TABLE element ADD COLUMN rang INTEGER' },
+  { table: 'element', colonne: 'theme', sql: 'ALTER TABLE element ADD COLUMN theme TEXT' },
 ]
 
 export const SCHEMA = `
@@ -65,6 +68,15 @@ CREATE TABLE IF NOT EXISTS element (
   groupe          TEXT,
   logo            TEXT,
   tvg_id          TEXT,
+  -- Le numéro affiché (1 à 50) et le rang qui trie. Deux colonnes et non une :
+  -- le rang continue par familles — sport, cinéma, musique — là où les numéros
+  -- s'arrêtent, et afficher « 2000 » à côté de Canal+ ne voudrait rien dire.
+  canal           INTEGER,
+  rang            INTEGER,
+  -- Le thème d'un film ou d'une série, ramené à un vocabulaire fermé : les
+  -- groupes du fournisseur en donneraient quatre-vingts, dont quatre fois
+  -- « action » écrit différemment. NULL se range dans « Autres ».
+  theme           TEXT,
   annee           INTEGER,
   serie           TEXT,
   saison          INTEGER,
@@ -84,11 +96,6 @@ CREATE TABLE IF NOT EXISTS element (
   -- laisserait l'utilisateur devant une application vide.
   vu_le           TEXT NOT NULL
 );
-
-CREATE INDEX IF NOT EXISTS element_par_genre  ON element (source_id, genre);
-CREATE INDEX IF NOT EXISTS element_par_groupe ON element (source_id, groupe);
-CREATE INDEX IF NOT EXISTS element_par_serie  ON element (serie, saison, episode);
-CREATE INDEX IF NOT EXISTS element_par_tvg    ON element (tvg_id);
 
 -- Les séries **déclarées**, celles qu'un panneau Xtream sert comme objets.
 --
@@ -110,8 +117,6 @@ CREATE TABLE IF NOT EXISTS serie (
   langue      TEXT NOT NULL,
   vu_le       TEXT NOT NULL
 );
-
-CREATE INDEX IF NOT EXISTS serie_par_titre ON serie (titre COLLATE NOCASE);
 
 -- Recherche plein texte, liée à « element » par le rowid et rien d'autre.
 --
@@ -150,8 +155,6 @@ CREATE TABLE IF NOT EXISTS lecture (
   vu_le      TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS lecture_recente ON lecture (vu_le DESC);
-
 -- Le guide des programmes.
 --
 -- La clé primaire est (chaine, debut) : un guide se réimporte tous les jours et
@@ -173,8 +176,6 @@ CREATE TABLE IF NOT EXISTS programme (
   PRIMARY KEY (chaine, debut)
 );
 
-CREATE INDEX IF NOT EXISTS programme_par_instant ON programme (chaine, debut);
-
 -- Les réglages de l'installation. Une seule entrée pour l'instant : le secret
 -- qui signe les adresses passées au mandataire de flux. Il doit survivre à un
 -- redémarrage — un secret tiré à chaque démarrage ferait échouer toute lecture
@@ -183,4 +184,29 @@ CREATE TABLE IF NOT EXISTS reglage (
   cle    TEXT PRIMARY KEY,
   valeur TEXT NOT NULL
 );
+`
+
+/**
+ * Les index, créés **après** les colonnes ajoutées — et c'est tout l'enjeu.
+ *
+ * Un index qui cite une colonne de `COLONNES_AJOUTEES` ne peut pas vivre dans
+ * le schéma : celui-ci s'exécute en premier, donc sur une table qui existe déjà
+ * et à laquelle « CREATE TABLE IF NOT EXISTS » n'a rien ajouté. L'index échoue
+ * alors sur « no such column », et c'est **l'ouverture de l'application** qui
+ * tombe, pas la fonction ajoutée.
+ *
+ * Remonté par un utilisateur sur une base réelle, après que la migration des
+ * colonnes elle-même eut été écrite et testée : la migration marchait, l'ordre
+ * était faux. Les tenir séparés rend l'erreur impossible pour les suivants.
+ */
+export const INDEX = `
+CREATE INDEX IF NOT EXISTS element_par_genre  ON element (source_id, genre);
+CREATE INDEX IF NOT EXISTS element_par_rang   ON element (genre, rang);
+CREATE INDEX IF NOT EXISTS element_par_theme  ON element (genre, theme);
+CREATE INDEX IF NOT EXISTS element_par_groupe ON element (source_id, groupe);
+CREATE INDEX IF NOT EXISTS element_par_serie  ON element (serie, saison, episode);
+CREATE INDEX IF NOT EXISTS element_par_tvg    ON element (tvg_id);
+CREATE INDEX IF NOT EXISTS serie_par_titre ON serie (titre COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS lecture_recente ON lecture (vu_le DESC);
+CREATE INDEX IF NOT EXISTS programme_par_instant ON programme (chaine, debut);
 `

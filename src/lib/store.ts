@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { analyzeProject } from './analysis.ts';
+import { HAUTEURS_LIBRES, Y_PAR_DEFAUT } from './captions.ts';
 import { uid } from './id.ts';
 import { applyFinish, soundsOnCuts, tensionFills, thinCues } from './autoFinish.ts';
 import type { SharedFile } from './share.ts';
@@ -606,10 +607,21 @@ export const useStudio = create<StudioState>((set, get) => {
         .filter((c) => c.start < end && c.end > start)
         .map((c) => c.y);
 
-      // On descend par paliers jusqu'à trouver une hauteur libre, sans jamais
-      // sortir de la zone lisible.
-      const candidates = [0.5, 0.32, 0.66, 0.2, 0.78];
-      const free = candidates.find((y) => occupied.every((taken) => Math.abs(taken - y) > 0.08));
+      /*
+       * On monte par paliers jusqu'à trouver une hauteur libre, sans jamais
+       * sortir de la bande que les trois plateformes laissent visible.
+       *
+       * Les paliers étaient `[0.5, 0.32, 0.66, 0.2, 0.78]` : trois d'entre eux,
+       * dont celui par défaut, posaient le texte sous l'habillage — 66 % et
+       * 78 % sont dans la colonne de boutons de TikTok, 50 % franchit déjà la
+       * marge que la fermeture d'Instagram à 63 % impose une fois la hauteur du
+       * texte comptée.
+       *
+       * Le déplacement des sous-titres dans la bande sûre avait touché la voix
+       * off et les gabarits, et manqué ce chemin-ci — qui est précisément celui
+       * que le guide recommande, et donc le plus emprunté.
+       */
+      const free = HAUTEURS_LIBRES.find((y) => occupied.every((taken) => Math.abs(taken - y) > 0.08));
 
       const caption: Caption = {
         id: uid('cap'),
@@ -617,7 +629,9 @@ export const useStudio = create<StudioState>((set, get) => {
         start,
         end,
         style,
-        y: free ?? 0.5,
+        // Toutes les hauteurs prises : mieux vaut un texte superposé dans la
+        // bande qu'un texte seul sous l'habillage d'une plateforme.
+        y: free ?? Y_PAR_DEFAUT,
       };
       return {
         project: { ...state.project, captions: [...state.project.captions, caption] },

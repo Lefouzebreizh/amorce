@@ -20,6 +20,22 @@
 
 set -uo pipefail
 
+# ── Aucun marqueur de conflit ne part ─────────────────────────────────────────
+# Deux fois dans la meme nuit, `git add -A` a avale des marqueurs `<<<<<<<`
+# apres une resolution automatique qui avait echoue en silence, et ils sont
+# partis sur `main` — une fois dans les lecons, une fois dans une recette JSON
+# qui est devenue illisible. Aucun test ne les attrape : ce ne sont que des
+# lignes de texte, et un JSON casse ne casse que le montage, pas la suite.
+marqueurs=$(grep -rln '^<<<<<<< \|^>>>>>>> ' \
+  --include='*.json' --include='*.py' --include='*.md' --include='*.sh' \
+  --include='*.ts' --include='*.tsx' --include='*.dart' . 2>/dev/null \
+  | grep -v node_modules || true)
+if [ -n "$marqueurs" ]; then
+  echo "  ✗ marqueurs de conflit non resolus :"
+  echo "$marqueurs" | sed 's/^/      /'
+  exit 1
+fi
+
 racine="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 cd "$racine" || exit 1
 

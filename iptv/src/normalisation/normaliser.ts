@@ -13,6 +13,8 @@ import type { BrutXtream, ClientXtream } from '../ingestion/xtream.ts'
 import { entier, texte } from '../domaine/valeurs.ts'
 import { detecterEpisode } from './episode.ts'
 import { detecterLangue, detecterQualite } from './etiquettes.ts'
+import { numeroDeCanal, rangDeChaine } from './canal.ts'
+import { detecterTheme } from './theme.ts'
 import { detecterGenre } from './genre.ts'
 import { analyserTitre } from './titre.ts'
 
@@ -76,6 +78,13 @@ export function normaliserEntreeM3U(entree: EntreeM3U): Element {
     groupe,
     logo: attributs['tvg-logo'],
     tvgId: attributs['tvg-id'],
+    // Seules les chaînes portent un rang : un film n'a pas de canal, et lui en
+    // donner un le ferait passer devant les autres sans raison.
+    canal: genre === 'direct' ? numeroDeCanal(analyse.titre) : undefined,
+    rang: genre === 'direct' ? rangDeChaine(analyse.titre, attributs) : undefined,
+    // Et le pendant pour ce qui se regarde plutôt que se zappe : une chaîne n'a
+    // pas de thème, elle a un numéro.
+    theme: genre === 'direct' ? undefined : detecterTheme(groupe),
     annee: analyse.annee,
     serie: episode?.serie,
     saison: episode?.saison,
@@ -119,6 +128,11 @@ export function normaliserDirectXtream(
     groupe,
     logo: texte(brut['stream_icon']),
     tvgId: texte(brut['epg_channel_id']),
+    canal: numeroDeCanal(analyse.titre),
+    // Un panneau Xtream numérote ses chaînes dans `num` : son ordre à lui ne
+    // vaut pas celui de la TNT, mais il vaut mieux que rien pour le reste.
+    rang: rangDeChaine(analyse.titre, { num: texte(brut['num']) ?? '' }),
+    theme: undefined,
     annee: analyse.annee,
     serie: undefined,
     saison: undefined,
@@ -156,6 +170,9 @@ export function normaliserFilmXtream(
     groupe,
     logo: texte(brut['stream_icon']) ?? texte(brut['cover']),
     tvgId: undefined,
+    canal: undefined,
+    rang: undefined,
+    theme: detecterTheme(groupe, [texte(brut['genre']) ?? '']),
     annee: analyse.annee ?? anneeDepuis(brut),
     serie: undefined,
     saison: undefined,
@@ -256,6 +273,11 @@ export function normaliserEpisodeXtream(
     groupe: fiche.groupe,
     logo: texte(infos['movie_image']) ?? fiche.logo,
     tvgId: undefined,
+    canal: undefined,
+    rang: undefined,
+    // L'épisode hérite du thème de sa série : le panneau ne le déclare qu'une
+    // fois, sur la fiche, jamais sur chaque épisode.
+    theme: detecterTheme(fiche.groupe, fiche.genres),
     annee: fiche.annee,
     serie: fiche.titre,
     saison: saison ?? entier(brut['season']),

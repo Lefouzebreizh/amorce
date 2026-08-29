@@ -17,7 +17,13 @@ import { importerEpg, importerM3U, importerXtream } from './cache/importer.ts'
 import { creerClientXtream, ErreurXtream } from './ingestion/xtream.ts'
 import { chargerEnv, identifiantsXtream } from './serveur/reglages.ts'
 import { guideDemo, LISTE_DEMO } from './demo.ts'
-import { testerFlux } from './lecture/tester.ts'
+import type { Genre } from './domaine/types.ts'
+import {
+  choisirCandidats,
+  ranimerFlux,
+  rangerCatalogue,
+  testerCatalogue,
+} from './entretien/taches.ts'
 import type { SourceTexte } from './flux/lignes.ts'
 import { masquerIdentifiants } from './ingestion/xtream.ts'
 
@@ -35,6 +41,7 @@ const AIDE = `Usage : iptv <commande> [options]
   series                   Les séries et leur nombre d'épisodes
   tester [--genre=…]       Éprouve les flux et masque ceux qui ne répondent plus
   ranimer                  Remet à l'essai tout ce qui avait été marqué mort
+  ranger                   Repose l'ordre des chaînes et les thèmes des films
 
 Options :
   --base=<chemin>          Fichier de cache (défaut : donnees/iptv.db)
@@ -334,18 +341,12 @@ async function principal(argv: readonly string[]): Promise<number> {
       }
 
       case 'tester': {
-        const genre = lireOption(reste, 'genre') as 'direct' | 'film' | 'serie' | undefined
-        const tout = reste.includes('--tout')
-        // Ce qui a déjà été mesuré n'est pas repassé au crible par défaut : une
-        // liste de 120 000 entrées y passerait la nuit, et l'utile est de
-        // dégrossir ce qu'on n'a jamais vu.
-        const candidats = tout
-          ? depot.lister({ genre, inclureMorts: true, limite: 100000 })
-          : depot.aTester(100000).filter(
-              (element) =>
-                (genre === undefined || element.genre === genre) &&
-                depot.etat(element.id) === undefined,
-            )
+        // La décision — qui tester, quoi marquer — vit dans `entretien/taches.ts`,
+        // partagée avec l'interface. Ici il ne reste que l'affichage.
+        const candidats = choisirCandidats(depot, {
+          genre: lireOption(reste, 'genre') as Genre | undefined,
+          tout: reste.includes('--tout'),
+        })
 
         if (candidats.length === 0) {
           console.log('Rien à tester : tout a déjà été éprouvé (« --tout » pour recommencer).')
@@ -353,12 +354,11 @@ async function principal(argv: readonly string[]): Promise<number> {
         }
 
         console.log(`Test de ${String(candidats.length)} flux…`)
-        const { bilan } = await testerFlux(candidats, {
+        const bilan = await testerCatalogue(depot, candidats, {
           delaiMs: (Number(lireOption(reste, 'delai') ?? 8) || 8) * 1000,
           parallele: Number(lireOption(reste, 'parallele') ?? 12) || 12,
           parHote: Number(lireOption(reste, 'par-hote') ?? 1) || 1,
           surResultat: (resultat, faits, total) => {
-            if (resultat.etat !== 'inconnu') depot.marquerEtat(resultat.element.id, resultat.etat)
             const marque = resultat.etat === 'ok' ? '✓' : resultat.etat === 'mort' ? '✗' : '?'
             const compteur = `${String(faits).padStart(String(total).length)}/${String(total)}`
             console.log(`  ${compteur} ${marque} ${resultat.element.titre} — ${resultat.raison}`)
@@ -372,8 +372,31 @@ async function principal(argv: readonly string[]): Promise<number> {
         return 0
       }
 
+      case 'ranger': {
+        const bilan = rangerCatalogue(depot)
+        if (bilan.reclasses > 0) {
+          console.log(
+            `${String(bilan.reclasses)} entrées changent de genre — classées par une règle ` +
+              `depuis corrigée, et figées jusqu'ici.`,
+          )
+        }
+        console.log(
+          `${String(bilan.numerotees)} chaînes numérotées sur ${String(bilan.chaines)} ` +
+            `(les autres suivent par familles : sport, cinéma, musique, puis le reste).`,
+        )
+        for (const dossier of bilan.dossiers) {
+          console.log(
+            `${dossier.genre === 'film' ? 'Films' : 'Séries'} : ${String(dossier.nommes)} thèmes` +
+              (dossier.autres === 0
+                ? ''
+                : `, ${String(dossier.autres)} sans thème reconnu (dossier « Autres »)`),
+          )
+        }
+        return 0
+      }
+
       case 'ranimer': {
-        const remis = depot.oublierEtats()
+        const remis = ranimerFlux(depot)
         console.log(`${String(remis)} entrées remises en jeu. « tester » pour les réessayer.`)
         return 0
       }

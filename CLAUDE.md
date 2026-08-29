@@ -10,6 +10,13 @@ Trois exceptions, et elles seules : ce qui part **en public au nom d'Erwann**
 (48 000 membres, une réponse publiée ne se retire pas), ce qui **détruit sans
 retour**, ce qui **engage de l'argent**.
 
+**L'autonomie porte sur l'action, jamais sur l'écrasement.** Zéro permission ne
+veut pas dire écrire à l'aveugle : ce qu'on remplace, on regarde d'abord qui en
+dépend ; ce qu'on écrit, on vérifie d'abord que ça n'existe pas déjà. Les deux
+gestes tiennent en un `grep` et sont détaillés en section 10. Ils ne deviennent
+jamais une question : on cartographie, on tranche, on avance — la découverte
+remplace la supposition, pas l'action.
+
 Agents parallèles et `TodoWrite` quand la tâche le mérite — pas par défaut :
 cinq agents sur une tâche simple brûlent la fenêtre hebdomadaire. `/jauge` avant
 un gros lot.
@@ -29,6 +36,24 @@ jamais le reste du chantier.
 
 Un compte rendu se donne au passé, sur ce qui est fusionné. « Je vais faire »
 n'est pas un compte rendu, c'est une pause.
+
+**Ce régime a été remis en question et reconduit, le 29/08/2026.** Un gabarit
+« Lead Architect » proposait de le remplacer par un mode où l'agent liste les
+fichiers dont il a besoin et attend l'accord avant de les lire, puis s'arrête au
+moindre doute. Le propriétaire a tranché pour l'autonomie, et la raison mérite
+d'être écrite parce qu'elle se reperd : le pilotage se fait **depuis un
+téléphone**, souvent la nuit. Un menu à valider avant chaque lecture ne rend pas
+le travail plus sûr, il le suspend jusqu'au réveil. Quatorze lots ont été livrés
+et fusionnés la nuit précédente sans un seul aller-retour.
+
+Ce qui protège vraiment de l'écrasement n'est pas la permission, c'est la
+**vérification** : chirurgical, `grep` avant de remplacer, build vert, parcours
+complet, PR relue avant fusion. Un garde-fou qui coûte une seconde à la machine
+vaut mieux qu'un garde-fou qui coûte une heure à l'humain.
+
+Une proposition de remplacer cette section se discute donc, mais ne s'applique
+pas d'office : elle arrive presque toujours d'un gabarit générique qui ne sait
+rien de ce terrain.
 
 ## 1. ADN
 
@@ -180,7 +205,27 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Les épisodes d'une série Xtream se chargent à l'ouverture de sa fiche : un
   appel par série, deux mille séries, quelques dizaines de requêtes par minute. **Aucun mot de passe n'entre en base** —
   l'adresse d'une source y est masquée — et aucune source de contenu ni
-  identifiant n'est versionné. Se vérifie depuis son dossier ; `npm run verify`
+  identifiant n'est versionné.
+  **Les chaînes se rangent dans l'ordre de la télécommande**, et la table est
+  celle du **6 juin 2025** : C8 et NRJ 12 ont cessé d'émettre, Canal+ a quitté
+  la TNT, France 4 est au 4, LCP au 8, Gulli au 12, l'info de 13 à 16. Une table
+  écrite de mémoire décrit la TNT d'avant — pire qu'aucune table, l'ordre paraît
+  juste. Au-delà de 50, ce n'est plus un numéro mais un **rang** par familles :
+  sport, cinéma, musique, reste ; les confondre afficherait « 2000 » à côté de
+  Canal+.
+  **Quatre flux au plus jouent en même temps** dans la mosaïque, et le plafond
+  qui mord n'est pas celui du navigateur : un abonnement IPTV limite les
+  connexions simultanées, souvent à une ou deux, et le refus prend l'apparence
+  de flux morts. Même raison pour le testeur de flux, qui ne sollicite qu'un
+  test à la fois par hôte — et qui ne condamne que ce qu'il a **vu refuser pour
+  de bon** : un 403 ou un 429 laisse l'entrée visible, sans quoi un abonnement
+  saturé effacerait le catalogue.
+  **Un index qui cite une colonne migrée se crée après les migrations**, jamais
+  dans le schéma : celui-ci s'exécute d'abord, sur une table que
+  `CREATE TABLE IF NOT EXISTS` n'a pas touchée, et l'ouverture de l'application
+  tombe sur « no such column ». Le défaut n'existe que sur une base qui a vécu,
+  donc jamais dans les tests, qui partent tous d'une base neuve.
+  Se vérifie depuis son dossier ; `npm run verify`
   conduit un vrai Chromium sur un flux HLS fabriqué par ffmpeg.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
@@ -300,6 +345,20 @@ troisième qui répond.
 le jour où les clés arrivent : une compétence qui ne peut pas tourner est un
 mensonge dans la liste.
 
+**Et pour l'image, les quatre chemins sont fermés, mesuré le 29/08/2026.** Ce
+n'est pas qu'une clé manque : `torch` et `diffusers` sont absents, donc aucune
+diffusion locale ; et `fal.run`, `api.openai.com`, `api.stability.ai`,
+`image.pollinations.ai`, `huggingface.co` rendent tous `000`. La parade des
+releases GitHub, qui a débloqué la voix off et les poids Wav2Lip, ne s'applique
+pas — un modèle d'image pèse des gigaoctets et demande le `torch` qui n'est pas
+là. **Et le connecteur Adobe n'y change rien** : sa documentation dit en clair
+que la génération d'image y est indisponible, seul l'agrandissement de cadre
+(`image_generative_expand`) subsiste et il part d'une image existante. Adobe
+retouche, recadre, détoure, vectorise et met en page — il ne fait pas la
+première image. **Une session ne peut donc pas fabriquer une illustration**, et
+c'est ce qui bloque le tome 1 de KDP : il lui manque une planche et une
+couverture, et rien d'autre.
+
 **La transcription, elle, marche** — et ce blocage-ci a coûté deux sessions
 avant d'être levé. `huggingface.co` est refusé par le mandataire, comme
 `alphacephei.com` et `openaipublic.azureedge.net` : aucun poids de
@@ -322,6 +381,37 @@ Deux symptômes pour la même cause, et c'est ce qui trompe : `curl` rend `000`
 là où `aiohttp` rend « 403, requête refusée ». Une session qui voit le 403 croit
 à une clé manquante et part chercher un compte d'API. Il n'y en a pas besoin :
 l'hôte est simplement hors d'atteinte.
+
+**Aucune plateforme sociale n'est joignable, et un greffon installé ici le
+niera.** Mesuré le 29/08/2026, treize hôtes sondés d'un coup : Reddit — page et
+API —, X, YouTube, TikTok, Instagram, Hacker News et son index Algolia,
+Polymarket, arXiv et Techmeme rendent tous `000`. **Seul `api.github.com`
+répond.** Douze sur treize.
+
+Le piège n'est pas le mur, c'est ce qu'un outil en dit. Le greffon
+`last30days` s'installe sans erreur, s'active, et son hook de démarrage annonce
+à **chaque nouvelle session** : « Reddit, Hacker News, and Polymarket work out
+of the box ». La phrase vient de son README, pas de ce terrain. Une session qui
+la lit au réveil promet une veille qu'elle ne peut pas faire.
+
+D'où la règle : **un greffon déclare ce qu'il sait faire, jamais ce que cette
+machine lui laisse faire.** Ce qui va chercher le monde extérieur — veille,
+recherche sociale, lecture de vidéos — s'installe sur la machine du
+propriétaire, qui a du vrai réseau ; ce qui vit dans le dépôt reste ici. Le cas
+détaillé, avec les API payantes qui n'y changent rien, est dans
+`/video-de-reference`.
+
+Deuxième raison, indépendante de la première : un greffon installé ici atterrit
+dans `/root/.claude/`, à l'intérieur d'un conteneur repris après inactivité. Il
+disparaît. **Seul le dépôt persiste.**
+
+**`youtu.be` et `youtube.com` sont refusés eux aussi** — `EGRESS_BLOCKED`,
+mesuré le 29/08. Cela compte parce qu'un lien vidéo arrive souvent seul, sans
+un mot : le réflexe est d'aller le lire, et il est perdu d'avance. Deux raisons
+plutôt qu'une, d'ailleurs — même joignable, une page YouTube ne donne qu'un
+titre, et **regarder une vidéo n'est de toute façon pas possible**. La seule
+réponse utile est donc de demander en une phrase ce qu'il faut en retenir, et
+de continuer autre chose en attendant.
 
 **La parade est celle de la voix off et des poids Wav2Lip, une troisième fois :
 GitHub répond.** Des bougies réelles au format CCXT — `[horodatage_ms, o, h, b,
@@ -508,6 +598,15 @@ voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
 
+**Et `npm run planche [nombre de rushes]` pour regarder au lieu de mesurer.**
+Elle fabrique ses rushes numérotés, conduit le studio, exporte, et rend une
+planche de quarante images sur toute la durée, dernière seconde comprise. Elle
+n'affirme rien : c'est l'œil qui décide. Le nombre de rushes compte — le montage
+express se comporte autrement à six, vingt-huit et cinquante, et les quatre de
+`npm run fixtures` n'éprouvent jamais ce qui se passe au-delà. Premier passage :
+une seule phrase de texte sur trente-et-une secondes, que six mesures vertes ne
+disaient pas.
+
 ### Invariants d'Amorce — les casser casse l'application
 
 1. **Un seul chemin de rendu.** `renderFrame` est le seul à savoir à quoi
@@ -561,6 +660,39 @@ le code voisin ni ses commentaires — les blocs de tête portent la justificati
 des décisions, et c'est ce que ce dépôt a de plus précieux. Une modification ne
 touche qu'un projet, sauf configuration racine. Français partout — commentaires,
 erreurs, tests, commits ; identifiants de code en anglais.
+
+**Et avant de toucher : `grep`, pas la mémoire.** Une fonction se remplace après
+avoir vu qui l'appelle, jamais avant. Le geste tient en une commande et coûte
+deux secondes :
+
+```bash
+grep -rn "nomDeLaFonction" src/ scripts/ --include=*.ts --include=*.tsx --include=*.mjs
+```
+
+Ce n'est pas de la prudence de principe, c'est la leçon de trois défauts payés
+ici. `MIN_SHOT` désignait deux grandeurs différentes selon qui lisait. Une borne
+recopiée à la main à côté d'une constante mesurée laissait passer exactement les
+valeurs qu'elle devait interdire. Une entrée de liste retirée « par cohérence »
+avec sa voisine a fait tomber le parcours entier, parce que les deux cas
+n'avaient pas la même issue.
+
+Le point commun des trois : le code semblait se suffire à lui-même, et il
+dépendait d'ailleurs. **Ce qui coûte n'est pas la modification, c'est ce qu'on
+n'a pas regardé avant.**
+
+**Et son symétrique, qui coûte autant : chercher avant d'écrire.** Les trois
+défauts ci-dessus viennent d'une modification à l'aveugle ; celui-ci vient d'un
+ajout à l'aveugle, et il se voit moins parce qu'il ne casse rien — il dédouble.
+Le `grep` porte alors sur ce que la chose **fait**, jamais sur le nom qu'on
+comptait lui donner : deux réponses au même besoin ne se ressemblent presque
+jamais par leur nom.
+
+Mesuré le 29/08/2026, sur ce paragraphe même. Une session partait graver ici une
+règle de cartographie avant remplacement, sans savoir qu'une autre venait de l'y
+écrire quelques heures plus tôt — le bloc `grep` ci-dessus. Dans un dépôt à
+plusieurs sessions parallèles, `main` a bougé depuis la dernière lecture : c'est
+le cas normal, pas l'exception, et `git fetch` avant d'écrire coûte moins qu'un
+doublon fusionné.
 
 ### Git
 

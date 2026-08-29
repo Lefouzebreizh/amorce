@@ -22,7 +22,8 @@ import {
   type Langue,
   type Programme,
 } from '../domaine/types.ts'
-import { COLONNES_AJOUTEES, SCHEMA } from './schema.ts'
+import { ordreTheme } from '../normalisation/theme.ts'
+import { COLONNES_AJOUTEES, INDEX, SCHEMA } from './schema.ts'
 
 /**
  * L'ordre d'affichage par défaut est francophone, et il est **dérivé** de
@@ -37,7 +38,7 @@ const ORDRE_LANGUE = `CASE langue ${(
   .join(' ')} ELSE 9 END`
 
 const COLONNES = `id, source_id, source, genre, titre, titre_brut, url, langue, qualite, groupe,
-  logo, tvg_id, annee, serie, saison, episode, etiquettes, options_lecture, ref_externe`
+  logo, tvg_id, canal, rang, theme, annee, serie, saison, episode, etiquettes, options_lecture, ref_externe`
 
 /** Les colonnes préfixées, pour les requêtes qui joignent une autre table. */
 const COLONNES_PREFIXEES = COLONNES.split(',')
@@ -58,6 +59,8 @@ export interface Filtres {
   readonly langue?: Langue
   readonly groupe?: string
   readonly serie?: string
+  /** Le thème exact, ou la chaîne vide pour ce qui n'en a pas — « Autres ». */
+  readonly theme?: string
   readonly limite?: number
   readonly decalage?: number
   /**
@@ -138,6 +141,9 @@ function versElement(ligne: Ligne): Element {
     qualite: (texte(ligne['qualite']) ?? 'inconnue') as Element['qualite'],
     groupe: texte(ligne['groupe']),
     logo: texte(ligne['logo']),
+    canal: entier(ligne['canal']),
+    rang: entier(ligne['rang']),
+    theme: texte(ligne['theme']),
     tvgId: texte(ligne['tvg_id']),
     annee: entier(ligne['annee']),
     serie: texte(ligne['serie']),
@@ -209,20 +215,80 @@ export interface Depot {
   lister(filtres?: Filtres): Element[]
   chercher(saisie: string, filtres?: Filtres): Element[]
   groupes(filtres?: Filtres): { nom: string; compte: number }[]
-  series(filtres?: Filtres): { serie: string; episodes: number; saisons: number }[]
+  series(filtres?: Filtres): {
+    serie: string
+    episodes: number
+    saisons: number
+    theme: string | undefined
+    logo: string | undefined
+  }[]
+  /**
+   * Les thèmes d'un genre et leur effectif, dans l'ordre d'affichage.
+   *
+   * `nom` vide désigne « Autres » : ce qu'aucun motif n'a reconnu. Il est rendu
+   * comme les autres, parce qu'un dossier qu'on ne voit pas est un catalogue
+   * amputé — et il est toujours en dernier.
+   */
+  themes(filtres?: Filtres): { nom: string; compte: number }[]
   episodes(serie: string): Element[]
   basculerFavori(elementId: string): boolean
   favoris(): Element[]
   enregistrerPosition(elementId: string, position: number, duree?: number): void
   reprises(limite?: number): Reprise[]
+  /**
+   * Repose les numéros de canal d'une base déjà remplie.
+   *
+   * Le numéro se calcule à l'import — mais une base importée par une version
+   * qui l'ignorait n'en a aucun, et un réimport complet coûte plusieurs minutes
+   * pour une donnée qui se déduit du titre. Rend le nombre de chaînes numérotées.
+   */
+  /**
+   * Reclasse tout le catalogue à partir de ce qu'on en sait déjà.
+   *
+   * **Le genre en fait partie, et c'est le point.** Il est calculé à l'import,
+   * donc figé : une base remplie par une version dont la règle était fausse
+   * garde ce classement pour toujours, et un correctif livré ensuite ne la
+   * touche jamais. C'est ce qui laissait des chaînes de cinéma — Ciné+, Canal+
+   * Cinémas, les chaînes Pluto — rangées dans l'onglet Films.
+   *
+   * Le rappel reçoit ce que la base contient et rend le classement complet.
+   * Rend le nombre de chaînes qui ont reçu un vrai numéro.
+   */
+  reclasser(
+    recalcul: (element: {
+      titre: string
+      url: string
+      groupe: string | undefined
+    }) => {
+      genre: Genre
+      canal?: number | undefined
+      rang?: number | undefined
+      theme?: string | undefined
+    },
+  ): { numerotees: number; reclasses: number }
   /** L'état mesuré d'une entrée, ou `undefined` si elle n'a jamais été testée. */
   etat(elementId: string): 'ok' | 'mort' | undefined
   /** Rend tout le monde visible et à retester. */
   oublierEtats(): number
   /** Retient ce qu'un test de flux a trouvé. */
   marquerEtat(elementId: string, etat: 'ok' | 'mort'): void
-  /** Les éléments à tester, les jamais testés d'abord. */
-  aTester(limite?: number): Element[]
+  /**
+   * Les éléments à tester, les jamais testés d'abord.
+   *
+   * `jamaisTestes` ne rend que ceux qu'aucun test n'a encore touchés. C'est ce
+   * qu'il faut pour avancer par lots : un flux resté **indécis** — un 403 qui
+   * ne dit rien de sa santé — n'est pas marqué, et reviendrait donc dans chaque
+   * lot indéfiniment. Il porte en revanche l'heure de son essai.
+   */
+  aTester(limite?: number, options?: { jamaisTestes?: boolean }): Element[]
+  /**
+   * Retient qu'une entrée a été éprouvée **sans être condamnée**.
+   *
+   * L'horodatage seul, jamais d'état : le flux n'a pas été vu refuser pour de
+   * bon, il reste donc visible. Mais il a été essayé, et l'oublier ferait
+   * tourner en rond tout balayage qui avance par lots.
+   */
+  marquerTeste(elementId: string): void
   compterParEtat(): { vivants: number; morts: number; inconnus: number }
   importerProgrammes(
     programmes: AsyncIterable<Programme>,
@@ -242,6 +308,10 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
     const colonnes = base.prepare(`PRAGMA table_info(${ajout.table})`).all() as Ligne[]
     if (!colonnes.some((ligne) => texte(ligne['name']) === ajout.colonne)) base.exec(ajout.sql)
   }
+
+  // Et les index seulement maintenant : certains citent les colonnes ci-dessus,
+  // qui n'existent pas encore quand le schéma s'exécute.
+  base.exec(INDEX)
 
   const conditions = (
     filtres: Filtres,
@@ -267,6 +337,13 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
     if (filtres.serie !== undefined) {
       morceaux.push('serie = ?')
       valeurs.push(filtres.serie)
+    }
+    // La chaîne vide désigne « Autres » : ce qu'aucun motif n'a reconnu. Sans
+    // ce cas, le dossier existerait à l'écran et ne s'ouvrirait sur rien.
+    if (filtres.theme === '') morceaux.push('theme IS NULL')
+    else if (filtres.theme !== undefined) {
+      morceaux.push('theme = ?')
+      valeurs.push(filtres.theme)
     }
     // `etat IS NULL` compte comme vivant : ce qui n'a pas été mesuré n'est pas
     // condamné. Sans cela, une base jamais testée s'afficherait vide.
@@ -313,12 +390,13 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
 
       const ecrire = base.prepare(
         `INSERT INTO element (${COLONNES}, vu_le)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT (id) DO UPDATE SET
            source_id = excluded.source_id, source = excluded.source, genre = excluded.genre,
            titre = excluded.titre, titre_brut = excluded.titre_brut,
            url = excluded.url, langue = excluded.langue, qualite = excluded.qualite,
            groupe = excluded.groupe, logo = excluded.logo, tvg_id = excluded.tvg_id,
+           canal = excluded.canal, rang = excluded.rang, theme = excluded.theme,
            annee = excluded.annee, serie = excluded.serie, saison = excluded.saison,
            episode = excluded.episode, etiquettes = excluded.etiquettes,
            options_lecture = excluded.options_lecture, ref_externe = excluded.ref_externe,
@@ -362,6 +440,9 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
             ouNul(element.groupe),
             ouNul(element.logo),
             ouNul(element.tvgId),
+            ouNul(element.canal),
+            ouNul(element.rang),
+            ouNul(element.theme),
             ouNul(element.annee),
             ouNul(element.serie),
             ouNul(element.saison),
@@ -569,8 +650,11 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
       const fin = bornes(filtres)
       const lignes = base
         .prepare(
+          // Le rang d'abord : c'est l'ordre qu'on a dans la tête pour les
+          // chaînes, et il est sans effet ailleurs — un film n'en a jamais.
           `SELECT ${COLONNES} FROM element${ou.sql}
-           ORDER BY ${ORDRE_LANGUE}, saison, episode, titre COLLATE NOCASE${fin.sql}`,
+           ORDER BY rang IS NULL, rang, ${ORDRE_LANGUE}, saison, episode,
+             titre COLLATE NOCASE${fin.sql}`,
         )
         .all(...ou.valeurs, ...fin.valeurs) as Ligne[]
       return lignes.map(versElement)
@@ -611,11 +695,21 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
       }))
     },
 
-    series(filtres = {}): { serie: string; episodes: number; saisons: number }[] {
+    series(filtres = {}): {
+      serie: string
+      episodes: number
+      saisons: number
+      theme: string | undefined
+      logo: string | undefined
+    }[] {
       const ou = conditions({ ...filtres, genre: 'serie' })
       const lignes = base
         .prepare(
-          `SELECT serie, COUNT(*) AS episodes, COUNT(DISTINCT saison) AS saisons
+          // MAX plutôt qu'un vote : les épisodes d'une série partagent leur
+          // groupe, donc leur thème. MAX rend le seul qui existe, et évite un
+          // second passage pour départager des valeurs identiques.
+          `SELECT serie, COUNT(*) AS episodes, COUNT(DISTINCT saison) AS saisons,
+                  MAX(theme) AS theme, MAX(logo) AS logo
            FROM element${ou.sql} AND serie IS NOT NULL
            GROUP BY serie ORDER BY serie COLLATE NOCASE`,
         )
@@ -624,6 +718,8 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
         serie: texte(ligne['serie']) ?? '',
         episodes: entier(ligne['episodes']) ?? 0,
         saisons: entier(ligne['saisons']) ?? 0,
+        theme: texte(ligne['theme']),
+        logo: texte(ligne['logo']),
       }))
     },
 
@@ -801,6 +897,57 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
       return lignes.map(versProgramme)
     },
 
+    reclasser(recalcul): { numerotees: number; reclasses: number } {
+      const lignes = base
+        .prepare('SELECT id, titre, url, groupe, genre FROM element')
+        .all() as Ligne[]
+      const poser = base.prepare(
+        'UPDATE element SET genre = ?, canal = ?, rang = ?, theme = ? WHERE id = ?',
+      )
+      let numerotees = 0
+      let reclasses = 0
+
+      base.exec('BEGIN')
+      try {
+        for (const ligne of lignes) {
+          const avant = texte(ligne['genre'])
+          const decision = recalcul({
+            titre: texte(ligne['titre']) ?? '',
+            url: texte(ligne['url']) ?? '',
+            groupe: texte(ligne['groupe']),
+          })
+          poser.run(
+            decision.genre,
+            decision.canal ?? null,
+            decision.rang ?? null,
+            decision.theme ?? null,
+            texte(ligne['id']) ?? '',
+          )
+          if (decision.canal !== undefined) numerotees += 1
+          if (avant !== decision.genre) reclasses += 1
+        }
+        base.exec('COMMIT')
+      } catch (cause) {
+        base.exec('ROLLBACK')
+        throw cause
+      }
+      return { numerotees, reclasses }
+    },
+
+    themes(filtres = {}): { nom: string; compte: number }[] {
+      const ou = conditions({ ...filtres, theme: undefined })
+      const lignes = base
+        .prepare(
+          `SELECT COALESCE(theme, '') AS nom, COUNT(*) AS compte
+           FROM element${ou.sql}
+           GROUP BY nom`,
+        )
+        .all(...ou.valeurs) as Ligne[]
+      return lignes
+        .map((ligne) => ({ nom: texte(ligne['nom']) ?? '', compte: entier(ligne['compte']) ?? 0 }))
+        .sort((a, b) => ordreTheme(a.nom) - ordreTheme(b.nom) || a.nom.localeCompare(b.nom, 'fr'))
+    },
+
     etat(elementId): 'ok' | 'mort' | undefined {
       const ligne = base.prepare('SELECT etat FROM element WHERE id = ?').get(elementId) as
         | Ligne
@@ -823,14 +970,21 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
         .run(etat, new Date().toISOString(), elementId)
     },
 
-    aTester(limite = 5000): Element[] {
+    aTester(limite = 5000, options = {}): Element[] {
+      const filtre = options.jamaisTestes === true ? ' WHERE teste_le IS NULL' : ''
       const lignes = base
         .prepare(
-          `SELECT ${COLONNES} FROM element
+          `SELECT ${COLONNES} FROM element${filtre}
            ORDER BY teste_le IS NOT NULL, teste_le LIMIT ?`,
         )
         .all(limite) as Ligne[]
       return lignes.map(versElement)
+    },
+
+    marquerTeste(elementId): void {
+      base
+        .prepare('UPDATE element SET teste_le = ? WHERE id = ?')
+        .run(new Date().toISOString(), elementId)
     },
 
     compterParEtat(): { vivants: number; morts: number; inconnus: number } {

@@ -229,6 +229,9 @@ fois**. Une réverbération de voix off commence à 400 ms de pré-délai et se
 mesure en queue, pas en répétition. Dans le doute, aucune : une voix sèche ne
 choque personne, une voix dédoublée fait rejeter le fichier entier.
 
+aecho=0.85:0.9:60:0.18                                # un espace, pas une salle
+```
+
 Le `asetrate` descend la hauteur **et** les formants : c'est ce second effet qui
 donne le volume du corps, et c'est pour ça qu'un simple changement de hauteur ne
 suffit pas. La cloche à 190 Hz remplace `porter_sur_telephone`, qui grésille sur

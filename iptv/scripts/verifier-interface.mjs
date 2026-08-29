@@ -84,6 +84,14 @@ async function fabriquerFlux() {
 function serveurOrigine() {
   const serveur = createServer((requete, reponse) => {
     const chemin = new URL(requete.url ?? '/', 'http://x').pathname
+    // Une chaîne géobloquée, telle qu'un vrai fournisseur la refuse : un 403
+    // sur le manifeste lui-même. C'est le cas relevé sur une installation
+    // réelle, et celui que le lecteur confondait avec un trou réseau.
+    if (chemin.includes('/refuse/')) {
+      reponse.writeHead(403)
+      reponse.end('interdit')
+      return
+    }
     if (chemin.endsWith('.m3u8')) {
       reponse.writeHead(200, { 'content-type': 'application/vnd.apple.mpegurl' })
       reponse.end(readFileSync(join(FLUX, 'essai.m3u8')))
@@ -119,6 +127,8 @@ const LISTE = [
   `http://127.0.0.1:${PORT_ORIGINE}/series/u/p/12.m3u8`,
   '#EXTINF:-1 group-title="SERIES VOSTFR",[VOSTFR] Breaking Bad S01E01',
   `http://127.0.0.1:${PORT_ORIGINE}/series/u/p/21.m3u8`,
+  '#EXTINF:-1 group-title="FR | TNT",FR | Chaîne Géobloquée',
+  `http://127.0.0.1:${PORT_ORIGINE}/live/refuse/99.m3u8`,
 ].join('\n')
 
 /**
@@ -187,8 +197,15 @@ async function importer() {
 
   const film = cache.lister({ genre: 'film' })[0]
   const chaine = cache.lister({ genre: 'direct' }).find((element) => element.tvgId === 'tf1.fr')
+  const refusee = cache.lister({ genre: 'direct' }).find((element) => element.url.includes('/refuse/'))
   cache.fermer()
-  return { ...resume, idFilm: film?.id, idChaine: chaine?.id, programmes: guide.ecrits }
+  return {
+    ...resume,
+    idFilm: film?.id,
+    idChaine: chaine?.id,
+    idRefusee: refusee?.id,
+    programmes: guide.ecrits,
+  }
 }
 
 async function attendrePret(url, secondes = 60) {
@@ -430,7 +447,87 @@ async function principal() {
       await page.click('text=Chercher des sous-titres')
       await page.waitForSelector('text=OPENSUBTITLES_API_KEY', { timeout: 5000 })
       verifier(true, 'sans clé, l’interface dit laquelle poser au lieu d’échouer')
+    }
 
+    if (resume.idFilm !== undefined) {
+      console.log('── Bande-annonce, sans panneau Xtream')
+      // Même exigence que pour les sous-titres : sans abonnement, on doit
+      // obtenir une phrase qui explique, pas un bouton qui ne fait rien.
+      await page.goto(`http://127.0.0.1:${PORT_APP}/lecture/${encodeURIComponent(resume.idFilm)}`, {
+        waitUntil: 'domcontentloaded',
+      })
+      await page.waitForLoadState('load')
+      await page.click('text=Chercher la bande-annonce')
+      await page.waitForSelector('text=Une liste M3U n’en fournit aucune', { timeout: 5000 })
+      verifier(true, 'sans panneau, l’absence est expliquée plutôt que muette')
+    }
+
+    if (resume.idRefusee !== undefined) {
+      console.log('── Un flux refusé le dit, au lieu de tourner indéfiniment')
+      // Relevé sur une vraie installation : le mandataire renvoyait le 403 du
+      // fournisseur en 404 ms, et l'écran affichait « Connexion au flux… » sans
+      // fin. La cause était un `startLoad()` sans condition ni plafond sur
+      // toute erreur réseau — un flux géobloqué se redemandait pour toujours.
+      await page.goto(
+        `http://127.0.0.1:${PORT_APP}/lecture/${encodeURIComponent(resume.idRefusee)}`,
+        { waitUntil: 'domcontentloaded' },
+      )
+      await page.waitForLoadState('load')
+      await page.waitForSelector('text=/refusé ce flux \\(403\\)/', { timeout: 15000 })
+      verifier(true, 'le refus du fournisseur est nommé, avec son code')
+      const tourne = (await page.locator('text=Connexion au flux').count()) > 0
+      verifier(!tourne, 'et l’indicateur de chargement a cédé la place')
+    }
+
+    {
+      console.log('── Entretien : le cul-de-sac du catalogue tout masqué')
+      // Défaut trouvé en regardant l'écran, pas par un test : après un balayage
+      // qui condamne tout, l'accueil basculait sur « le catalogue est vide,
+      // importez une liste » — donc il accusait la mauvaise cause ET faisait
+      // disparaître le bloc d'entretien, seul chemin de retour. On enferme.
+      const entretien = `http://127.0.0.1:${PORT_APP}/api/entretien`
+      const poster = async (tache) => {
+        const reponse = await fetch(entretien, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ tache, lot: 500 }),
+        })
+        return reponse.json()
+      }
+
+      // Tout condamner **pour de vrai** : on éteint le serveur d'origine avant
+      // le balayage. Sans cela la moitié des flux répondent encore et l'écran
+      // « tout masqué » ne se produit jamais — c'est ce qu'a montré le premier
+      // passage, et c'est exactement le genre de décor trop favorable qui rend
+      // un contrôle vert sans rien prouver.
+      await new Promise((resoudre) => origine.close(resoudre))
+      let restants = Infinity
+      for (let tour = 0; tour < 20 && restants > 0; tour += 1) {
+        const lot = await poster('tester')
+        if ((lot.faits ?? 0) === 0) break
+        restants = lot.restants ?? 0
+      }
+      verifier(restants === 0, 'le balayage par lots se termine')
+
+      await page.goto(`http://127.0.0.1:${PORT_APP}/`, { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('load')
+      const masque = (await page.locator('text=Tout est masqué').count()) > 0
+      const retour = (await page.locator('text=Tout remettre en jeu').count()) > 0
+      verifier(masque, 'tout masqué se dit, au lieu de « le catalogue est vide »')
+      verifier(retour, 'et le bouton qui répare reste à l’écran')
+
+      await page.click('text=Tout remettre en jeu')
+      // On attend le titre, pas le message : `router.refresh()` redemande le
+      // rendu serveur sans l'attendre, donc le message arrive avant lui. Lire
+      // le titre à cet instant rend l'ancien, et le contrôle devient instable —
+      // il passait tant que la page était courte, et a cédé à la neuvième
+      // entrée du décor.
+      await page.waitForSelector('h1:has-text("Bonsoir")', { timeout: 30000 })
+      verifier(true, 'un clic ramène le catalogue entier')
+
+      // Le serveur d'origine reste éteint : ce contrôle est le dernier à en
+      // avoir besoin, et le rallumer donnerait un décor différent de celui
+      // qu'ont vu les contrôles précédents.
       // Ce qui n'est PAS vérifié ici, et il faut le dire : le décodage.
       // Mesuré sur ce conteneur — le Chromium de Playwright est compilé sans
       // les codecs propriétaires : `canPlayType('video/mp4; codecs="avc1…"')`

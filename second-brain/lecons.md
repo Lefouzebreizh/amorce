@@ -2989,6 +2989,94 @@ appelle sa fonction ; on ne la recalcule pas de tête.** Une mesure refaite à l
 main mesure autre chose, et la ressemblance des deux chiffres est précisément
 ce qui empêche de s'en apercevoir.
 
+## `origin/main` est une référence locale, et elle ment sans le dire
+
+`git checkout -B ma-branche origin/main` ne va pas chercher l'état du serveur :
+il lit une référence **locale**, celle du dernier `fetch`. Dans un dépôt à une
+seule session, la nuance ne se voit jamais. Ici elle coûte un parcours complet.
+
+Mesuré : une branche créée ainsi est repartie d'un `main` vieux de deux fusions,
+dont une d'une autre session. Rien ne l'a signalé — ni la création, ni les
+tests, ni la vérification, qui sont tous passés au vert sur cette base périmée.
+
+**Le seul symptôme était un compte qui baissait** : `npm test` rendait 205 là où
+la fusion précédente en avait laissé 206. Un total qui monte ne prouve rien, un
+total qui **descend** sans qu'on ait retiré de test dit qu'on ne travaille pas
+sur ce qu'on croit. C'est le signe à connaître, parce qu'aucun outil ne le crie.
+
+La parade tient en un mot ajouté : `git fetch origin main` **avant** chaque
+`checkout -B`, jamais une fois en début de session. Une session longue traverse
+plusieurs fusions des autres, et la référence qu'elle a lue au réveil est fausse
+une heure plus tard.
+
+Le coût de l'oubli n'est pas le conflit — Git l'aurait signalé. C'est le
+contraire : une branche qui **se fusionne proprement** en effaçant le travail
+fusionné entre-temps, sans qu'aucune vérification ne s'en aperçoive.
+
+## Un temps de calcul très inférieur au temps écoulé n'est pas de la lenteur
+
+Un outil de mesure vidéo a mis **six minutes quarante** à ne rien rendre. Le
+premier réflexe a été de l'accélérer : réduire l'image avant de l'analyser,
+supprimer une passe de décodage. Rien n'y a changé.
+
+La mesure qui a tranché tient dans la sortie de `time` :
+
+```
+real  6m40.003s
+user  0m9.273s
+```
+
+**Neuf secondes de calcul pour six minutes quarante d'attente.** Un programme
+lent consomme du temps processeur ; celui-là n'en consommait pas. Il
+attendait — et un programme qui attend attend quelque chose de nommable.
+
+C'était `ffmpeg` : sans `-y`, il demande « le fichier existe, écraser ? » et
+reste sur cette question. La première exécution passe, puisque le fichier
+n'existe pas encore ; toutes les suivantes se bloquent. Rien ne le signale
+quand la sortie est capturée plutôt qu'affichée.
+
+Deux choses à en retenir, et la seconde vaut plus que la première.
+
+**Tout appel à `ffmpeg` qui écrit un fichier porte `-y`**, et `-nostdin` avec,
+qui ferme la même porte par un autre chemin. Six outils de ce dépôt l'appellent.
+
+**Et le rapport `user`/`real` est le premier diagnostic d'un programme qui
+traîne**, avant toute optimisation. Proche de 1, c'est du calcul, et on
+optimise. Proche de 0, c'est une attente, et optimiser ne peut rien y faire —
+on cherche alors ce qui est attendu : une question posée sur l'entrée standard,
+un tuyau que personne ne vide, un verrou, une résolution de nom. Une heure a
+été dépensée à rendre plus rapide quelque chose qui ne calculait pas.
+
+## Une borne se choisit d'après l'endroit où elle serait tenue
+
+En découpant une offre gratuite et une offre payante, la première borne écrite
+fut « trois exports par jour ». Elle a tenu vingt minutes — le temps d'arriver
+à la question suivante : **où se compte ce chiffre ?**
+
+Deux réponses, et aucune ne marche. Sur l'appareil, un compteur s'efface en
+trois secondes. Sur le serveur, il faut lui envoyer ce que la personne fabrique
+et quand, c'est-à-dire du pistage — que ce dépôt s'interdit sans détour.
+
+Il ne restait donc qu'une limite **qui ne gêne que ceux qui ne savent pas la
+contourner**. C'est la définition d'une fausse contrainte : elle ne protège
+rien et elle punit les honnêtes.
+
+La borne retenue à la place vit **dans l'objet produit** — une signature sur
+l'image, une définition de sortie. Elle se voit dans le fichier, ne demande de
+savoir sur personne, et reste vraie le jour où quelqu'un ouvre les outils de
+développement : au pire il la retire lui-même, il ne ment à personne d'autre.
+
+**La question à poser avant d'écrire une borne dans une offre : où serait-elle
+tenue, et qu'est-ce que la tenir obligerait à savoir ?** Une borne qu'on ne
+peut tenir qu'en observant les gens n'est pas une borne, c'est une raison de
+les observer — et l'ordre des deux compte, parce qu'on croit toujours choisir
+la première.
+
+Le corollaire vaut pour tout ce qui est déclaratif : un plafond de quantité, un
+essai limité dans le temps, un nombre de sièges. Ce qui se vérifie dans
+l'artefact tient ; ce qui exige de suivre l'usage demande une infrastructure,
+une politique de données, et une conversation qu'on n'avait pas prévue.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
@@ -3057,3 +3145,554 @@ d'être ? »* Ici la réponse était non, et le verdict disait vert.
 Et le chiffre affiché doit être **ce qu'il y a à corriger**, pas le nombre
 d'occurrences : compter aussi les entrées en réserve donnait 231 au lieu de 73,
 et décourageait pour un travail qui n'est pas encore à faire.
+
+## On ne demande jamais un gain positif à un rush dont la crête frôle le plafond
+
+Une saturation rapportée cinq fois, cherchée cinq fois **après** le master — et
+introuvable, parce qu'elle naissait avant.
+
+La mesure jamais faite : **combien le moteur amplifie chaque rush** pour
+atteindre sa cible.
+
+| plan | son mesuré | cible | gain |
+| --- | --- | --- | --- |
+| **dragon** | −13,4 dB | −9,0 | **+4,4 dB** |
+| **sigil** | −91,0 dB | −29,0 | **+62 dB** |
+
+Le rush du dragon a une **crête à 0,973** — un quart de décibel sous le plein
+échelle. Lui demander +4,4 dB, c'est demander une crête à **1,61** : il sature
+dans le plan lui-même, avant tout mixage et avant tout limiteur. Aucune mesure
+faite sur le fichier livré ne peut le montrer, puisque le master a déjà tout
+ramené sous le plafond.
+
+Et le sigil, muet à −91 dB, se voyait demander d'amplifier son plancher de bruit
+de soixante-deux décibels.
+
+**Une cible de niveau n'est pas un souhait, c'est un gain.** Avant de la poser,
+mesurer la source : `cible − mesuré` doit rester négatif dès que la crête
+dépasse 0,9. Descendre tout le film et laisser le master remonter donne le même
+relief sans un décibel d'écrêtage.
+
+Corollaire payé dans la foulée : baisser les rushes sans baisser les accents
+laisse les plans de passage rattraper le climax — dragon −19,4 contre vortex
+−19,8, quatre dixièmes là où il en faut sept. **Ce qui descend descend
+ensemble.**
+
+## Une donnée qu'on croit connaître est celle qu'il faut vérifier
+
+Ranger des chaînes de télévision dans « l'ordre normal » paraît être la tâche
+la plus simple du monde : tout le monde sait que TF1 est au 1 et M6 au 6. C'est
+justement ce qui rend le piège invisible.
+
+**La numérotation française a changé le 6 juin 2025.** C8 et NRJ 12 ont cessé
+d'émettre le 28 février 2025, Canal+ a quitté la TNT, et l'Arcom a renuméroté :
+France 4 remonte au 4, LCP prend le 8, Gulli le 12, et les quatre chaînes
+d'information forment un bloc de 13 à 16. Une table écrite de mémoire aurait
+donc décrit la TNT d'avant — et **une table fausse est pire qu'aucune table** :
+l'ordre paraît juste, personne ne le remet en cause, et chaque chaîne est au
+mauvais endroit.
+
+La règle qui en sort n'est pas « vérifier les faits », que tout le monde
+répète. C'est plus précis : **le réflexe de vérification se déclenche sur ce
+qu'on ignore, jamais sur ce qu'on croit savoir.** On va chercher la
+documentation d'une API inconnue ; on n'irait pas chercher le numéro de TF1. Le
+signal à surveiller est donc l'inverse de l'incertitude — c'est l'aisance.
+
+Détail de méthode, mesuré ici : le mandataire de cette session refuse
+`arcom.fr`, `wikipedia.org` et les sites d'actualité, mais **la recherche web
+répond**. Trois requêtes ciblées ont reconstitué la table entière quand aucune
+page ne pouvait être ouverte.
+
+## Un plafond invisible se documente là où il se subit
+
+Faire jouer vingt vignettes vidéo en même temps échoue pour trois raisons
+empilées, et une seule se voit :
+
+1. **L'abonnement IPTV limite les connexions simultanées**, souvent à une ou
+   deux. C'est le plafond qui casse le plus vite, et le seul qui ne dit pas son
+   nom : il se manifeste par des flux « morts » qui ne le sont pas, et par la
+   chaîne qu'on regardait qui s'arrête.
+2. **Un navigateur n'accorde que six à huit décodeurs vidéo.** Au-delà, les
+   vignettes en trop restent noires, sans erreur.
+3. **La bande passante** : 3 à 6 Mb/s par chaîne HD.
+
+Le premier a l'air d'un détail de fournisseur et c'est le plus contraignant.
+D'où deux décisions qu'aucun test n'aurait imposées : le plafond porte sur ce
+qui est **visible à l'écran** — faire défiler ne cumule donc pas les connexions
+— et le nombre est écrit dans l'interface elle-même, à côté du réglage, pas
+seulement dans le code. Quelqu'un qui voit « 4 chaînes à la fois » ne cherche
+pas pourquoi la cinquième reste noire.
+
+## Une PR fusionnée en squash laisse la branche rejouer la même histoire
+
+Mesuré deux fois dans la même heure, et la seconde aurait dû être évitée.
+
+Une pull request fusionnée en **squash** met tout son contenu sur `main` en
+**un** commit. La branche, elle, garde ses commits d'origine. Le contenu est
+identique des deux côtés, mais l'histoire ne l'est plus — et Git compare des
+histoires. Continuer à travailler sur cette branche fabrique donc un conflit
+sur **chaque fichier que la PR avait touché**, y compris ceux qu'on ne touche
+plus, et le conflit grossit à chaque commit de plus.
+
+Le symptôme trompe : `git merge origin/main` annonce des conflits dans des
+fichiers qu'on n'a pas modifiés depuis la fusion, avec des deux côtés le même
+texte. On les résout à la main, on croit avoir fini, et le suivant revient.
+
+La parade n'est pas de résoudre, c'est de **reposer la branche** :
+
+```bash
+git checkout -B <branche> origin/main
+git cherry-pick <commits postérieurs à la fusion>
+git push --force-with-lease
+```
+
+Deux conditions, et elles comptent : la branche est la nôtre — jamais celle de
+quelqu'un d'autre —, et on ne reporte que ce qui n'est pas déjà sur `main`.
+`git log --oneline <dernier commit fusionné>..HEAD` donne exactement cette
+liste.
+
+**Et on revérifie après le report, pas avant.** Un `cherry-pick` sur une base
+qui a bougé produit un arbre que personne n'a jamais compilé : les tests
+étaient verts sur l'ancienne base, ils ne disent rien de la nouvelle. C'est le
+seul moment où « la vérification est déjà passée » est faux tout en paraissant
+vrai.
+
+## Une adresse canonique se vérifie au DNS, pas à l'œil
+
+Onze sites annonçaient `ma-panoplie-ia.com` dans leurs balises canoniques, leurs
+`og:url` et leurs sitemaps. **Ce domaine ne résout pas** — mesuré le 29/08/2026.
+L'outil qui affichait ces adresses les recopiait simplement depuis la
+configuration : onze belles lignes, aucune vérification.
+
+Le défaut est de la pire famille : **invisible et coûteux**. Le site s'affiche
+parfaitement, tous les contrôles passent, et il déclare à chaque moteur que sa
+version de référence se trouve à une adresse que personne ne sert.
+
+**La sonde est un `dns.lookup`, jamais une requête HTTP.** Derrière un mandataire
+filtrant, tout rend `000` — un domaine bloqué comme un domaine inexistant, et on
+ne peut rien conclure. Le DNS sépare les deux, ce qui se vérifie sur un témoin :
+`api.binance.com` **résout** et reste injoignable, `raw.githubusercontent.com`
+résout et répond, un domaine inventé ne résout pas. Sans ce témoin, l'inférence
+ne vaut rien.
+
+**Et l'ordre des gestes vaut la mesure :** mettre en ligne *avant* de régler
+l'adresse publie le défaut au lieu de le corriger. Un hébergement gratuit donne
+une adresse réelle tout de suite ; le domaine acheté se branche après, par la
+même commande. Attendre le domaine pour déployer, c'est garder hors ligne ce qui
+pourrait déjà travailler.
+
+## Une migration juste peut échouer sur son ordre d'exécution
+
+Le correctif de la veille était bon et il ne servait à rien : la migration
+ajoutait bien les colonnes manquantes à une base existante, mais **le schéma
+s'exécutait avant elle**, et il contenait les index qui citent ces colonnes.
+
+```
+base.exec(SCHEMA)        ← CREATE INDEX … ON element (genre, rang)  💥
+migrer les colonnes      ← ALTER TABLE element ADD COLUMN rang
+```
+
+`CREATE TABLE IF NOT EXISTS` ne touche pas une table présente : la colonne
+n'existe donc pas encore quand l'index la réclame. SQLite rend « no such
+column: rang », et ce n'est pas la fonction ajoutée qui tombe — c'est
+**l'ouverture de l'application**, sur un écran d'erreur, avant tout affichage.
+
+Trois choses à en retenir, et la troisième est la vraie :
+
+1. Un index qui cite une colonne migrée se crée **après** les migrations. Le
+   plus simple est de sortir tous les `CREATE INDEX` du schéma et de les
+   exécuter en dernier : l'ordre devient impossible à se tromper.
+2. Le test de migration existait et passait. Il ne couvrait que les deux
+   premières colonnes ajoutées, écrites avant qu'aucun index ne les cite. Une
+   colonne ajoutée plus tard, avec son index, sortait du cas testé sans que
+   rien ne le signale. **Un test de migration doit rejouer la base la plus
+   ancienne qu'on prétende encore ouvrir, pas celle d'il y a une version.**
+3. Et le plus important : la vérification était verte des deux côtés. Les tests
+   partent tous d'une base **neuve**, où le schéma crée la table et ses index
+   d'un coup — l'ordre n'y a aucun effet. Le défaut n'existe que sur une base
+   qui a vécu, et il n'existe donc que chez les autres.
+
+C'est le même piège que « la mesure disait vert et le fichier était faux »,
+transposé aux données : ce n'est pas la mesure qu'il fallait renforcer, c'est
+l'état de départ qu'il fallait vieillir.
+
+## Un script livré à Windows échoue en silence, trois fois plutôt qu'une
+
+Le dépôt savait déjà qu'un `.srt` venu de Windows arrive en windows-1252. Le
+sens inverse — **écrire** un fichier que Windows va lire — a ses propres
+pièges, et ils ont ceci de commun qu'aucun ne produit de message d'erreur.
+
+1. **Windows PowerShell 5.1 lit un fichier sans BOM en Latin-1.** Un `.ps1`
+   enregistré en UTF-8 nu voit ses caractères non-ASCII sortir en charabia —
+   les blocs `▓ ░` d'une jauge, les accents d'un message. Le script tourne, il
+   ne lève rien, il affiche faux. Écrire les `.ps1` en **UTF-8 avec BOM**.
+2. **Windows refuse par défaut d'exécuter un `.ps1`**, et ce refus ne remonte
+   pas partout : dans une barre d'état, il rend une ligne vide. Mettre
+   `-ExecutionPolicy Bypass` dans la commande enregistrée, pas dans la
+   documentation.
+3. **Un outil Unix supposé présent n'y est pas.** `jq`, `date -d`, `id -u` :
+   une ligne d'état bash existait ici depuis des mois et n'avait jamais pu
+   tourner sur la machine du propriétaire. Ce qu'on peut supposer sur un
+   Windows nu, c'est PowerShell, et rien d'autre.
+
+**Et le portage vaut contre-épreuve.** Réécrire un script dans un second
+langage force à relire son calcul, et c'est ce qui a relevé le défaut de
+l'original : il affichait le pourcentage arrondi (`%.0f`) mais remplissait sa
+barre sur le tronqué — « 100 % » sur une fenêtre à 99,9, soit le chiffre qui
+fait croire qu'on est bloqué. Le défaut avait survécu à toutes les lectures du
+fichier seul. Quand deux versions doivent afficher la même chose, les croiser
+sur vingt valeurs coûte une minute et trouve ce qu'une relecture ne trouve pas.
+## Un contrôle qui vit dans l'outil qu'on lance exprès ne protège personne
+
+Le contrôle DNS de l'adresse canonique existait déjà — dans
+`regler-domaines.mjs --etat`, c'est-à-dire dans la commande qu'on lance
+**quand on a déjà pensé au problème**. Le chemin que tout le monde emprunte,
+`npm run sites` puis dépôt, ne le traversait pas. Un défaut connu, un correctif
+écrit, une leçon rédigée : et la mise en ligne restait exactement aussi
+dangereuse qu'avant.
+
+**Un garde-fou se place sur le chemin par défaut, pas sur le chemin vertueux.**
+La question à poser n'est pas « le contrôle existe-t-il ? » mais « que se
+passe-t-il pour quelqu'un qui ne le lance pas ? ». Ici la réponse était : onze
+sites en ligne, parfaitement affichés, tous les contrôles verts.
+
+**Et un garde-fou a besoin d'un témoin, sinon il accuse à tort.** Sans
+résolveur, *toutes* les adresses échouent — les bonnes comprises. Conclure « le
+domaine n'existe pas » y serait faux onze fois sur onze. On interroge donc
+d'abord un témoin qui existe par construction (`example.com`, réservé par la
+RFC 2606, mesuré résolvant le 29/08/2026) : s'il est muet, on avertit et on
+laisse passer. Un filet qui se ferme sur une panne d'outillage se fait
+désactiver dans la semaine.
+
+**Corollaire sur l'échappement :** `npm run sites --sans-dns` ne transmet pas le
+drapeau — npm le garde pour lui, et le script refuse quand même (mesuré). Il
+faut `npm run sites -- --sans-dns`. L'oubli rate du bon côté, mais il faut
+l'écrire, sinon on croit l'échappement cassé.
+
+## Un connecteur qui arrive en cours de route se lit avant qu'on espère
+
+Adobe for Creativity s'est connecté le 29/08/2026, avec une trentaine d'outils
+`image_*`, Firefly et Express. De quoi croire le verrou de l'illustration KDP
+levé. **Sa propre documentation dit le contraire** : « Most generative AI
+capabilities (image generation, generative fill, text-to-image, AI object
+removal) are **not available** in this environment ». Seul `image_generative_expand`
+(agrandissement de cadre) subsiste, et il part d'une image existante.
+
+Ce que le connecteur fait vraiment : retoucher, recadrer, détourer, vectoriser,
+mettre en page. Ce qu'il ne fait pas : la première image. Le chemin de l'image
+reste donc fermé — c'est le **quatrième** mesuré, après la diffusion locale, les
+cinq hôtes à `000` et la parade des releases GitHub.
+
+**Ce que ça change pour la prochaine session :** un connecteur riche n'est pas
+une capacité, et sa liste d'outils ment par omission. Cinq minutes de lecture de
+sa doc valent mieux qu'une heure d'essais qui finiront sur la même phrase.
+
+## Pousser et ouvrir une PR ne passent pas par le même tuyau
+
+Mesuré le 29/08/2026 sur une session distante : `git push` réussit — le proxy
+git sert le dépôt — mais **l'API GitHub rend 403** (« GitHub access is not
+enabled for this session »), et `gh` n'est pas installé. La branche part, la PR
+ne s'ouvre pas depuis la session.
+
+Ce n'est pas une panne à contourner : le `remote:` de la poussée donne
+l'adresse `.../pull/new/<branche>` toute prête. On la transmet, on ne cherche
+pas un troisième chemin. **Et on ne conclut pas « le dépôt est inaccessible »
+d'un 403 sur l'API** : la lecture par `git` marchait, seule la couche compte
+GitHub manquait.
+
+## Un compteur qui compte du travail déjà tranché fait repousser la tâche
+
+Le réseau d'annuaires affichait « 73 liens d'affiliation à poser ». Le vrai
+nombre est **42** : 24 outils se vendent « sur devis » — cycle commercial long,
+aucun programme d'affiliation derrière — et 7 ont un éditeur qui ne rémunère pas
+l'apport ou un programme fermé aux nouveaux candidats. Ces 31 cas étaient
+**déjà tranchés par la recherche**, écrits noir sur blanc dans `AFFILIATION.md`,
+et comptés malgré tout comme du retard.
+
+L'écart n'est pas cosmétique : il décide qu'on s'y met ou pas. Une corvée
+annoncée à 73 formulaires se repousse ; à 42 elle tient dans une soirée. Le
+compteur ne mentait sur aucun chiffre pris isolément — il additionnait
+simplement deux choses qui ne se ressemblent pas.
+
+**Où mettre le fait, et non où il est commode de l'écrire.** Le marqueur
+`sans_programme` vit dans la fiche de l'outil, pas dans le script qui compte :
+un script qui embarquerait la liste la verrait dériver dès la première fiche
+ajoutée par l'auto-pilote, et c'est le script qu'on croirait. Le *pourquoi* de
+chaque cas reste dans le document de recherche — la donnée porte le fait, la
+prose porte la raison.
+
+**Et le marqueur se lève tout seul** quand un vrai lien arrive : un programme
+rouvre, ou la recherche s'était trompée. Une note qui dit « ça ne paie pas » à
+côté d'une adresse qui paie est le genre de contradiction qu'on ne relit jamais.
+
+## `git checkout <branche> -- fichier` écrase le disque sans rien dire
+
+Mesuré hier soir, coût : un aller-retour et une réécriture.
+
+Le geste paraît anodin — « je récupère ce fichier depuis l'autre branche » — et
+c'est exactement ce qu'il fait : il **remplace** la copie de travail par celle
+de la branche nommée. Si une modification non committée l'attendait, elle
+disparaît. Aucune erreur, aucun conflit, aucun message : `git status` redevient
+propre, ce qui donne même l'impression que tout va bien.
+
+Le cas réel : une modification venait d'être écrite et vérifiée dans la copie de
+travail ; un `git checkout -B` sur une branche neuve l'a emportée avec lui,
+puis un `git checkout <branche> -- fichier` censé « récupérer » ce fichier a
+restauré la version **committée** — donc celle d'avant la modification. Le
+correctif venait d'être effacé par la commande censée le sauver.
+
+Deux parades, et la première suffit :
+
+- **Committer avant de changer de branche**, même un commit qu'on récrira.
+  Ce qui est committé se retrouve ; ce qui ne l'est pas n'existe pour personne.
+- Quand il faut vraiment reprendre un fichier d'ailleurs, regarder avant :
+  `git diff <branche> -- fichier` dit ce que la commande va écraser.
+
+La leçon générale dépasse Git : **une commande de « restauration » est une
+commande d'écrasement vue de l'autre côté.** `checkout --`, `restore`, `reset
+--hard`, `Expand-Archive -Force` : toutes rendent un état propre en détruisant
+ce qui n'était pas enregistré, et aucune ne demande confirmation.
+## « Un bruit de fond sur toute la vidéo » n'est pas du bruit, c'est du contenu
+
+Un montage conforme — −14,3 LUFS, −1,6 dBTP — rejeté pour « bruit de fond
+horrible sur toute la vidéo ». Aucune mesure de conformité ne le voyait, et
+**trois diagnostics successifs se sont trompés** avant le bon.
+
+Le relevé qui tranche n'est ni la sonie ni la plage, c'est **le plancher et le
+compte de silences** : plancher à −33,5 dB et **zéro tranche sous −40 dB sur
+194**. La couche d'effets seule, sans aucun rush, rendait déjà −33,6 dB et 1
+tranche sur 336. Trente-six effets en seize secondes ne laissaient pas un trou.
+
+**Ce n'est pas du bruit au sens technique, et c'est ce qui égare.** `afftdn` à
+nr = 6, 12 et 20 rend exactement le même plancher — trois forces, un seul
+chiffre, le signe qu'un paramètre n'agit pas. Il a raison : un débruiteur ne
+retire pas une nappe, c'est du signal. L'oreille, elle, ne distingue pas un
+souffle d'une nappe qui ne s'arrête jamais.
+
+**Les trois fausses pistes, chacune écartée par une mesure :**
+
+1. *Le master.* Sur une paire valide, il ne monte le plancher que de 2,4 dB.
+   La première comparaison l'accusait — elle opposait deux films différents, un
+   intermédiaire ayant été écrasé par un rejeu.
+2. *Les souffles.* Les trois sources de souffle dominaient pourtant la bande
+   coupable en mesure isolée. Les baisser de 7 à 13 dB : **0,2 dB** sur le
+   fichier. Un effet mesuré seul ne dit pas ce qu'il pèse dans un mixage.
+3. *Les rushes.* Ils portent bien leur bruit — celui du dragon rend −21,3 dB
+   après sa mise à niveau — mais ils n'expliquent que la seconde moitié. Sur le
+   plan d'affiche, qui n'a **aucune piste audio**, le plancher était à −34,4.
+
+**Et la correction qui semblait marcher a été rejetée à l'écoute — c'est le
+cœur de la leçon.** −7 dB sur les nappes, souffles, aspirations et grondements
+donnait plancher −41,8 dB et douze silences : tout ce qu'on mesurait allait
+mieux. Verdict de l'auteur : « on n'entend quasiment plus le druide, plus le
+dragon, quasiment rien ». La mesure qui manquait tenait en une colonne — l'écart
+entre le plan le plus faible et le climax, plan par plan :
+
+| plan | avant | après | écart |
+| --- | --- | --- | --- |
+| œil | −33,3 | −40,7 | **−7,4** |
+| druide | −27,4 | −30,0 | −2,6 |
+| dragon | −15,2 | −15,8 | −0,7 |
+
+L'écart druide → dragon est passé de 12,2 à **14,2 dB**. Réglé pour le dragon,
+le druide est quatorze décibels dessous : inaudible sur un téléphone.
+
+**Parce qu'un lit fait DEUX choses à la fois**, et qu'on n'en voit qu'une. Il
+comble les silences — le défaut — **et il porte le niveau de son plan** —
+l'essentiel. Le baisser corrige le premier et détruit le second, et aucune
+mesure globale ne le montre : la sonie, le plancher et le compte de silences
+s'améliorent tous les trois. Retirer un lit oblige donc à **rendre son niveau
+au plan par autre chose** — des événements — sinon la moitié du film s'efface.
+C'est un travail de conception, pas un réglage de gain : `/sound-design-de-scene`.
+
+**Le contrôle qui l'aurait arrêté :** relever le niveau ENTENDU (>400 Hz)
+**par plan**, avant et après, et refuser toute correction qui creuse l'écart
+entre le plan le plus faible et le climax. Un global qui s'améliore pendant
+qu'un plan s'effondre est le cas normal, pas le cas rare. Baisser « tout ce qui dure plus
+d'une seconde » paraît équivalent et ne l'est pas — un braam tient 1,5 s et un
+cri de titan 1,6, exactement comme une nappe. Ce tri-là a coûté 12 dB au coup
+d'ouverture, et l'ouverture est tombée à −51 dB : muette sur un fil.
+
+**Et l'expansion vers le bas, qui semble l'outil évident, aggrave.** Ajoutée
+au-dessus de la correction à la source : plancher −50 dB, LRA 22,5, ouverture à
+−47,3. Elle creuse ce qui est calme, or une ouverture calme est un **choix**,
+pas un défaut. Corriger à la source suffit ; corriger deux fois détruit.
+
+Le contrôle à faire avant de livrer tient donc en un chiffre : **combien de
+tranches sous −40 dB ?** Zéro, c'est un tapis, quelle que soit la sonie.
+
+
+## Un décor trop favorable rend un contrôle vert sans rien prouver
+
+Un contrôle d'interface venait d'être écrit pour un cas précis : après un
+balayage qui condamne tout, l'écran doit dire « tout est masqué » et garder le
+bouton qui répare. Il est passé au rouge du premier coup — mais pas pour la
+raison attendue. Dans son décor, le serveur de flux **tournait encore** : la
+moitié des entrées répondaient, donc le catalogue n'était jamais entièrement
+masqué, donc l'état à éprouver ne se produisait pas.
+
+Le réflexe est de conclure que le contrôle est trop exigeant et de l'assouplir.
+C'est l'erreur : un contrôle qui s'adapte au décor ne mesure plus rien. Ce qu'il
+fallait, c'est **fabriquer l'état hostile** — ici, éteindre le serveur d'origine
+avant le balayage, en une ligne.
+
+La règle : **un cas limite ne s'éprouve que dans un décor qui le rend
+possible.** Panne réseau, quota atteint, base vide, catalogue entier condamné —
+aucun de ces états n'arrive tout seul dans un environnement de test, qui est par
+construction le plus favorable qui soit. Les provoquer coûte une ligne ; les
+attendre coûte un utilisateur.
+
+Corollaire pratique : quand un contrôle neuf passe au vert **du premier coup**,
+il faut le faire échouer exprès une fois avant de lui faire confiance. Celui-ci
+avait justement échoué — et c'est ce qui a révélé que son décor était faux.
+
+## Une donnée calculée à l'écriture ne bénéficie jamais d'un correctif
+
+Le classement direct / film / série d'une entrée IPTV se calcule **à l'import**
+et s'écrit en base. Une règle de classement fausse produit donc un catalogue
+faux — et le correctif livré ensuite ne le répare pas : il n'agit qu'au prochain
+import, que personne ne refait, parce qu'il coûte plusieurs minutes et demande
+de retrouver l'adresse de sa source.
+
+Le cas réel : des **chaînes** de cinéma — Ciné+, Canal+ Cinémas, les chaînes
+Pluto — rangées dans l'onglet Films parce que leur groupe s'appelle « Cinema ».
+La règle a été corrigée, la correction fusionnée, et l'écran de l'utilisateur
+n'a pas bougé d'un pixel. Il a fallu qu'il renvoie une capture pour qu'on
+comprenne que le correctif n'atteignait pas les données.
+
+La règle générale : **tout champ dérivé écrit en base a besoin d'un chemin de
+recalcul, et ce chemin fait partie du correctif**, pas d'un lot suivant. Sans
+lui, on livre une correction qui ne corrige personne — la pire des situations,
+parce que tout le monde la croit appliquée. Le recalcul est presque toujours
+trivial : les données brutes sont encore là, il suffit de rejouer la fonction.
+
+Le signal à guetter, quand un utilisateur signale un défaut déjà corrigé :
+**demander si son état vient d'avant le correctif** — base, cache, fichier
+généré, index. Ce n'est presque jamais le code qui a régressé, c'est la donnée
+qui n'a jamais été rejouée.
+## La démonstration qu'on envoie au prospect n'était mesurée par personne
+
+`artisan-express/public/exemple.html` est la page qu'un artisan ouvre **sur son
+téléphone** au moment exact où il répond « montrez-moi ». C'est aussi le produit
+lui-même : elle sort de `titan-builder`, donc chaque site livré à 299 € lui
+ressemble. Aucune commande ne la mesurait — ni `epreuve-du-pouce`, ni
+`page-qui-vend`. Elle est référencée par la prose et par le script qui la
+fabrique, par rien qui la vérifie.
+
+Ce qu'un premier passage a trouvé : **2,2 écrans** entre le bas de page et la
+première action possible. Le visiteur fait défiler les photos de chantier,
+lit « et les communes autour » — l'instant où il décide qu'on couvre sa
+commune — et n'a plus rien à toucher. Le numéro était bien là, en pied de page,
+à 18 px, **et n'était pas cliquable**. Quelqu'un l'avait rendu lisible sans le
+rendre actionnable, avec un commentaire disant que c'était « la ligne la moins
+bien vue et la plus utile ».
+
+Un `tel:` et 44 px de haut ramènent la distance à **0,62 écran**, sans rien
+ajouter à la page. L'épreuve du pouce reste verte, contrastes mesurés à 5,99:1
+en clair et 4,51:1 en sombre.
+
+**Ce qui se généralise :** une page qu'on envoie à quelqu'un est une page en
+production. Celle-ci ne passait aucune barrière parce qu'elle n'est ni une route
+de l'application, ni un composant — juste un fichier dans `public/`. Un artefact
+généré échappe aux vérifications par défaut, et c'est précisément lui qui part
+chez le client.
+
+**Et un outil de mesure ne vaut que sur le genre de page pour lequel il est
+écrit.** `page-qui-vend` a rendu « le prix est dit après le bouton » en rouge sur
+le site d'un couvreur, qui n'affiche pas de tarifs et n'a rien à corriger.
+Corriger pour faire verdir aurait inventé un prix sur la page d'un client. Le
+faux positif est écrit dans la compétence, à l'endroit où on la lit.
+
+**Piège de frappe, payé une fois :** dans ce dépôt les commentaires citent les
+identifiants entre accents graves. Écrire ça dans un commentaire situé **à
+l'intérieur d'un littéral de gabarit** — le générateur de site en est fait — le
+termine et casse la compilation. Le message de `tsc` désigne la ligne du
+commentaire, pas le gabarit.
+
+## Réessayer sans plafond transforme un refus en écran qui ment
+
+Relevé sur une installation réelle, dans le journal du serveur :
+
+```
+GET /lecture/ch_53ac66da…      200 in 2.2s
+GET /api/flux?e=ch_53ac66da…   403 in 404ms
+```
+
+Le refus était connu en **404 millisecondes**, et l'écran affichait « Connexion
+au flux… » indéfiniment. La cause tenait en une ligne : toute erreur réseau
+déclenchait un `startLoad()`, sans condition ni plafond. Un flux géobloqué se
+redemandait donc en boucle, pour toujours, derrière un message qui promettait
+que ça allait venir.
+
+**Un refus n'est pas un trou réseau**, et les confondre coûte trois fois :
+l'utilisateur attend ce qui ne viendra pas, le fournisseur est sollicité sans
+fin, et sur un abonnement à connexions limitées cette boucle consomme le peu
+qu'on a — au point de faire échouer les autres chaînes.
+
+La distinction est dans la réponse, et elle est gratuite : un **4xx** veut dire
+que le serveur a répondu et qu'il a dit non. Réessayer ne changera rien. Un
+délai dépassé, une coupure, un 5xx peuvent se réparer — mais **trois tentatives
+suffisent à le savoir** ; au-delà, insister n'est plus de la robustesse.
+
+La leçon générale, qui dépasse la vidéo : **toute reprise automatique a besoin
+d'un plafond et d'une condition de sortie**, sinon elle ne rend pas un système
+robuste, elle rend une panne invisible. Et le symptôme est toujours le même —
+un indicateur de chargement qui ne s'éteint jamais, là où une phrase honnête
+tenait en une ligne.
+
+## Une session distante ne peut pas installer un plugin tiers, et ça ne sert à rien
+
+Mesuré le 29/08/2026 en tentant d'installer `last30days@last30days-skill`.
+Quatre portes, quatre refus — et elles se ferment chacune pour une raison
+différente, ce qui donne l'illusion qu'une cinquième pourrait s'ouvrir :
+
+| chemin | réponse |
+| --- | --- |
+| `claude plugin marketplace add <owner>/<repo>` | clone refusé : « could not read Username for github.com » |
+| `add_repo` | « cross-tier adds are not supported » — la session a déjà des dépôts d'un autre propriétaire |
+| `codeload.github.com`, `api.github.com`, `github.com` | **403**, le mandataire refuse le tunnel |
+| `raw.githubusercontent.com`, branches `main` / `master` / `HEAD` | **404** |
+
+**Le 404 de `raw` en face du 403 de `github.com` est le piège.** `raw` est un
+hôte autorisé : il répond vraiment, et son 404 se lit comme « ce fichier
+n'existe pas », donc on essaie d'autres branches, d'autres chemins. Or GitHub
+rend 404 à un visiteur non authentifié sur un dépôt **privé**. Un 404 sur `raw`
+pour un dépôt qu'on sait exister veut dire « pas le droit », pas « pas là ».
+
+`claude plugin marketplace add` accepte un **chemin local**, ce qui laisse
+croire à un contournement : télécharger ailleurs, poser le dossier, installer.
+Il n'en est pas un ici — c'est justement le téléchargement qui est fermé.
+
+**Et le vrai motif d'arrêter tient en une phrase, indépendante de tout ça :**
+une compétence fraîchement installée n'apparaît qu'au **prochain démarrage de
+session**. Une session distante ne peut pas redémarrer en gardant sa
+conversation. Donc même une installation réussie ne rendrait pas la commande
+appelable dans le fil qui vient de l'installer. Le plugin s'installe sur la
+**machine du propriétaire**, et c'est là qu'il sert.
+
+## Un fichier rendu au propriétaire plafonne à 30 Mio, et ce qu'il faut sauver n'est pas ce qu'on croit
+
+Mesuré le 29/08/2026 en vidant `/tmp` avant reprise du conteneur. Une archive
+de 53,4 Mio est refusée : « exceeds the 30 MiB upload limit ». La parade est
+d'envoyer **fichier par fichier** plutôt qu'une archive — sept rushes de 2,6 à
+15 Mo passent tous, leur zip ne passait pas. Grouper est donc le réflexe qui
+échoue, et il échoue **après** le temps de compression.
+
+**Et le tri compte plus que l'envoi.** Sur 86 Mo présumés à sauver :
+
+- **54 Mo de rushes** — irremplaçables, aucun remontage sans eux.
+- **22 Mo de bruitages** dont **18 de fichiers intermédiaires** (`_o.wav`,
+  `_t.wav`, `_w.wav`) qui se refabriquent : 3,5 Mo réellement à sauver.
+- **29 Mo de sonothèque** — une bibliothèque avec ses licences, la moins
+  urgente, la plus lourde.
+
+**Le vrai oubli était ailleurs, et il ne pesait rien : trois fichiers de
+TEXTE.** `st.ass`, `carte.ass` et `plan_auto.json` — les sous-titres, le carton
+et l'automation — vivaient dans `/tmp` depuis une nuit. L'invariant « aucun
+binaire versionné » ne les concernait pas une seconde ; personne n'avait
+regardé. Six kilo-octets qui portaient tout le calage d'un épisode.
+
+La question à se poser en vidant un répertoire de travail n'est donc pas
+« qu'est-ce qui est lourd » mais **« qu'est-ce qui est du texte et n'a jamais
+été committé »**. Le lourd se renvoie ; le texte se versionne, et lui seul
+survit à tout le monde.

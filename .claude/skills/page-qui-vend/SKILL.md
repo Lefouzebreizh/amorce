@@ -3,6 +3,18 @@ name: page-qui-vend
 description: Rendre une page de vente capable d'encaisser, en la mesurant plutôt qu'en la regardant — bouton d'achat mort, prix qui arrive après le bouton, premier écran sans action, poids qui tue la page sur une aire d'autoroute, et les quatre procédés que ce dépôt s'interdit. Outillé par `mesurer.mjs`, qui conduit un vrai Chromium sur le terrain de référence et rend six contrôles bloquants et six observations chiffrées. À utiliser dès qu'on touche à une page qui demande de l'argent ou une inscription — `/montage-titan` dans Amorce, `artisan-express/`, `titan-builder/` — et dès qu'une demande dit « rends la page exceptionnelle », « ça ne convertit pas », « personne n'achète », « personne ne clique », « refais ma landing », « ma page de vente », « améliore l'offre », « le bouton sert à rien », « ça fait pas sérieux », « pourquoi ils partent ». À utiliser aussi **avant de mettre une page de vente en ligne**, même quand elle paraît finie : les six défauts que ce script trouve passent tous les tests, se voient sur aucune capture, et coûtent des clients déjà convaincus. Ici on mesure si la page **vend** ; pour savoir si elle **s'utilise** — débordement, cibles de 44 px, contrastes, distance en gestes — c'est `epreuve-du-pouce`, et les deux se lancent l'une après l'autre.
 ---
 
+# Ce script suppose une page qui affiche un prix
+
+**Le contrôle « le prix est dit avant le premier bouton » n'a de sens que là.**
+Mesuré le 29/08/2026 sur `artisan-express/public/exemple.html` — le site de
+démonstration d'un couvreur : le script rend ce point en rouge alors qu'un
+artisan n'affiche jamais ses tarifs, et qu'il n'a rien à corriger. Les cinq
+autres contrôles bloquants, eux, valent pour toute page qui demande une action.
+
+Sur une page sans prix, lire ce point comme une observation et non comme un
+défaut. Le corriger reviendrait à inventer un tarif sur le site d'un client —
+exactement ce que ce dépôt s'interdit.
+
 # Une page peut être irréprochable et ne rien rapporter
 
 C'est le cas qui a fait naître cette compétence. La page `/montage-titan` avait

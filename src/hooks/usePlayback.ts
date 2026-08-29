@@ -92,7 +92,20 @@ function resolveContext(
 
 type ContextCache = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; scale: number };
 
-export function usePlayback(fonts: FontSet): PlaybackEngine {
+/**
+ * @param marque Texte à graver en bas de l'image, ou rien.
+ *   Le moteur reçoit un texte et jamais un état d'abonnement : qui décide de
+ *   la marque est l'affaire de l'interface, qui la lui passe. C'est ce qui
+ *   garde le moteur ignorant du réseau et de la licence.
+ *
+ *   Elle ne s'appelle pas `signature`, et ce n'est pas un détail : une variable
+ *   locale de cette fonction porte déjà ce nom — l'empreinte qui décide si une
+ *   image mérite d'être retracée. Nommer les deux pareil aurait passé cette
+ *   empreinte au moteur, qui l'aurait gravée sur chaque image :
+ *   `12.500|true|fluide|0.5|540x960|37.200`. Les deux sont des chaînes, donc
+ *   ni le compilateur ni les tests n'auraient bronché.
+ */
+export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<ContextCache | null>(null);
   const governorRef = useRef<QualityGovernor | null>(null);
@@ -111,6 +124,18 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
 
   /* Ce qui permet à la boucle de savoir qu'elle n'a rien à redessiner. */
   const signatureRef = useRef('');
+  /*
+   * La marque vit dans une référence, pas dans les dépendances de la boucle.
+   *
+   * L'y mettre reconstruirait la boucle d'animation à chaque changement
+   * d'abonnement — pour une valeur que le tracé relit à chaque image de toute
+   * façon. C'est l'idiome du fichier : ce que la boucle lit sans en dépendre
+   * passe par une référence.
+   */
+  const marqueRef = useRef(marque);
+  useEffect(() => {
+    marqueRef.current = marque;
+  }, [marque]);
   const projetRef = useRef<Project | null>(null);
   const dernierChangementRef = useRef(0);
   const captionBoxesRef = useRef(new Map<string, CaptionBox>());
@@ -323,6 +348,7 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
         scale: tier.scale,
         bloom: tier.bloom,
         captionBoxes: captionBoxesRef.current,
+        signature: marqueRef.current,
       });
 
       const work = performance.now() - now;

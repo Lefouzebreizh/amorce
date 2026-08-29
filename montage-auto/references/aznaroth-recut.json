@@ -42,7 +42,7 @@
       "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
       "depart": 0.3,
       "duree": 1.2,
-      "cible_db": -30.0,
+      "cible_db": -35.0,
       "zoom": 0.16
     },
     {
@@ -50,14 +50,14 @@
       "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
       "depart": 0.2,
       "duree": 4.6,
-      "cible_db": -26.0
+      "cible_db": -31.0
     },
     {
       "nom": "eclairs",
       "source": "rushes/PLAN3_eclairs_SON_1s5.mp4",
       "depart": 0.0,
       "duree": 1.4,
-      "cible_db": -19.0,
+      "cible_db": -24.0,
       "tremblements": [
         {
           "debut": 0.05,
@@ -78,7 +78,7 @@
       "source": "rushes/Holographic_Sci_Fi_Symbol_Rotation2.mp4",
       "depart": 1.2,
       "duree": 0.85,
-      "cible_db": -29.0,
+      "cible_db": -60.0,
       "rotation": 0.55,
       "zoom": 0.3,
       "flashs": [
@@ -88,14 +88,14 @@
           "force": 0.35
         }
       ],
-      "_note": "les runes tournent au lieu d'etre plaquees. 0,85 s et non 0,6 : sous huit dixiemes une rotation ne se lit pas, elle se devine."
+      "_note": "les runes. Leur piste mesure -91 dB : c'est du silence. Une cible a -29 lui demandait +62 dB de gain, c'est-a-dire d'amplifier son plancher de bruit. -60 la laisse muette ; le son du plan vient des effets."
     },
     {
       "nom": "vortex",
       "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
       "depart": 0.6,
       "duree": 2.8,
-      "cible_db": -24.0,
+      "cible_db": -29.0,
       "zoom": 0.55,
       "flou_radial": 0.13,
       "vitesse": 1.8
@@ -105,7 +105,7 @@
       "source": "rushes/Duration_seconds_Cinemat.mp4",
       "depart": 4.2,
       "duree": 5.8,
-      "cible_db": -9.0,
+      "cible_db": -13.5,
       "zoom": 0.18,
       "tremblements": [
         {
@@ -126,7 +126,7 @@
           "force": 0.28
         }
       ],
-      "_note": "le dragon, a SA vitesse. Le ralenti a 0,8 a ete retire apres cinq allers-retours sur le meme symptome — « ca coupe et ca sature » — dont il etait la cause commune :\n  · l'audio devait etre etire, et tout etirement laisse une trace ;\n  · l'image devait etre interpolee, faute de quoi une image sur cinq etait dupliquee ;\n  · le cri du rush, decale par l'etirement, battait contre le vrai cri pose par-dessus.\nA vitesse naturelle les trois disparaissent d'un coup, et les deux cris tombent exactement l'un sur l'autre au lieu de se battre."
+      "_note": "le dragon. cible -14 et non -9 : le rush mesure -13,4 dB avec une CRETE a 0,973, a un quart de decibel du plein echelle. Lui demander -9 revient a +4,4 dB de gain, donc une crete a 1,61 — il sature avant meme d'atteindre le limiteur. On ne demande jamais un gain POSITIF a un rush dont la crete frole le plafond ; on descend le reste et le master remonte l'ensemble."
     }
   ],
   "effets": [
@@ -215,14 +215,8 @@
     {
       "son": "souffle_caverne",
       "instant": 3.1,
-<<<<<<< HEAD
       "gain": 0,
       "distance": "lointain"
-=======
-      "gain": 4,
-      "distance": "lointain",
-      "telephone": 1.3
->>>>>>> origin/main
     },
     {
       "son": "nappe_sombre",
@@ -269,13 +263,13 @@
     {
       "son": "riser_court",
       "instant": 6.6,
-      "gain": -2,
+      "gain": -7,
       "distance": "moyen"
     },
     {
       "son": "electricite",
       "instant": 6.94,
-      "gain": 19,
+      "gain": 14,
       "distance": "proche",
       "parametres": {
         "duree": 0.9,
@@ -286,7 +280,7 @@
     {
       "son": "eclat",
       "instant": 6.96,
-      "gain": 11,
+      "gain": 6,
       "distance": "proche",
       "parametres": {
         "duree": 0.6,
@@ -297,13 +291,13 @@
     {
       "son": "whoosh_lourd",
       "instant": 7.52,
-      "gain": 3,
+      "gain": -2,
       "distance": "moyen"
     },
     {
       "son": "chute_sous_grave",
       "instant": 7.7,
-      "gain": 6,
+      "gain": 1,
       "distance": "proche",
       "telephone": 1.6,
       "parametres": {
@@ -316,13 +310,13 @@
     {
       "son": "impact_debris",
       "instant": 7.72,
-      "gain": 6,
+      "gain": 1,
       "distance": "proche"
     },
     {
       "son": "chute_pierres",
       "instant": 7.85,
-      "gain": 2,
+      "gain": -3,
       "distance": "moyen",
       "parametres": {
         "duree": 1.3,
@@ -332,19 +326,19 @@
     {
       "son": "transition_eclair",
       "instant": 9.05,
-      "gain": 12,
+      "gain": 7,
       "distance": "proche"
     },
     {
       "son": "whoosh_rapide",
       "instant": 9.12,
-      "gain": 8,
+      "gain": 3,
       "distance": "moyen"
     },
     {
       "son": "aspiration",
       "instant": 9.7,
-      "gain": 6,
+      "gain": 1,
       "distance": "lointain",
       "parametres": {
         "duree": 2.8,
@@ -359,7 +353,7 @@
     {
       "son": "souffle_tournant",
       "instant": 9.7,
-      "gain": -5,
+      "gain": -10,
       "distance": "lointain",
       "parametres": {
         "duree": 2.8,

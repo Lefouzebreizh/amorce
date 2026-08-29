@@ -334,12 +334,33 @@ Ce qui reste **fragile ou incomplet**, dit franchement :
 - **Sur Arbitrum, Avalanche, Polygon et Optimism, il n'y a pas de simulateur
   d'achat/revente** comparable à honeypot.is : on n'y dispose que de l'analyse
   statique. Le rapport nomme les sources, à chacun d'en tirer les conséquences.
-- **Rien n'a encore tourné contre l'API réelle** : l'environnement de
-  développement bloque les sorties réseau. Tout est validé sur des réponses
-  rejouées, dans leur forme documentée. Le premier `scan` en conditions réelles
-  reste à faire — et c'est pour ce moment précis qu'existe `main.py sonde`,
-  décrite plus bas : elle dit en une vingtaine d'appels si les formats
-  documentés sont encore ceux que les services rendent.
+- **La sonde a tourné contre les vraies API le 29/08/2026, et tout tient.**
+  Verdict : « Toutes les sources répondent et se lisent. » DexScreener rend
+  **30 paires reçues, 30 lues** sur ses trois points d'entrée — recherche,
+  vitrine, pools d'un jeton — donc aucun champ n'a bougé depuis que l'analyseur
+  a été écrit. GoPlus répond sur ses deux points d'entrée, EVM et Solana ;
+  honeypot.is et RugCheck répondent aussi. Le code entier avait été écrit sur
+  des réponses **rejouées**, sans qu'aucun appel réel n'ait jamais été passé :
+  c'était le risque numéro un du projet, et il est levé.
+
+  Deux réserves, attendues et sans gravité. Le **RPC public Solana** rend `429`
+  (« Too many requests ») : il est saturé en permanence, c'est écrit depuis le
+  premier jour, et cela ne coûte que le traqueur de portefeuilles sur Solana —
+  une clé Helius gratuite le règle. Et **Etherscan comme Telegram sont sans
+  clé** : les premiers acheteurs EVM sont désactivés, et le radar notera sans
+  jamais prévenir tant que le jeton du bot n'est pas posé.
+
+  **Le premier scan réel a suivi**, même jour : `887 paires → 232 jetons →
+  11 candidats en 27 secondes`, pour 101 appels HTTP et 60 jetons en vitrine.
+  Aucune pépite retenue, ce qui est le comportement attendu — la persistance
+  exige deux relevés espacés de dix minutes, et le premier tour ne fait que
+  remplir la mémoire. L'entonnoir tient donc ses promesses de bout en bout : le
+  calcul gratuit ramène 887 paires à 11 candidats **avant** le premier appel de
+  sécurité, et c'est ce qui fait tenir l'outil dans les quotas gratuits.
+
+  Sous Windows, le verrou de tour se dégrade en avertissement — `fcntl` n'y
+  existe pas — et l'annonce lui-même. Comportement voulu et vérifié sur le
+  terrain, sur un système qu'aucun test du dépôt ne couvre.
 
 ## 6. Commandes
 
@@ -431,9 +452,26 @@ en permanence — donc qui ne tourne jamais vraiment — ressembler à un radar 
 bonne santé. Si la ligne revient à chaque passage, il faut espacer la minuterie
 ou réduire `jetons_en_vitrine_max` et `jetons_suivis_max`.
 
-Le verrou est un `flock`, pas un fichier témoin : après un `kill -9` ou une
-coupure de courant, le noyau relâche tout seul. Personne n'a de fichier à
-effacer à la main le matin où le radar s'est tu.
+Le verrou est un verrou du noyau, pas un fichier témoin : après un `kill -9` ou
+une coupure de courant, il est relâché tout seul. Personne n'a de fichier à
+effacer à la main le matin où le radar s'est tu. Deux appels selon le système,
+aucune bibliothèque tierce — `fcntl.flock` sur POSIX, `msvcrt.locking` sur
+Windows.
+
+**Le chemin Windows reste à démontrer.** Il est écrit contre la surface
+documentée de `msvcrt`, mais aucun test du dépôt ne peut l'exécuter : la CI
+tourne sous Linux. La vérification prend deux minutes sur un poste Windows —
+ouvrir **deux** fenêtres PowerShell dans `pepites`, lancer `python main.py scan`
+dans la première, puis la même commande dans la seconde pendant que la première
+tourne. La seconde doit refuser :
+
+```
+Scan sauté : un scan tourne déjà depuis 12 s.
+```
+
+Si elle démarre au lieu de refuser, le verrou Windows ne fonctionne pas et il
+faut le dire ici. Tant que l'épreuve n'a pas été faite, la protection y est
+**probable, pas démontrée**.
 
 Ce qui **n'est pas** en cause, et qu'on croit toujours : la confirmation. Un
 relevé écrit à la seconde ne peut pas confirmer un candidat, `ecart_min_minutes`

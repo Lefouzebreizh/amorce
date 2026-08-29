@@ -32,6 +32,36 @@ type PlacedNodes = Map<
   { element: HTMLAudioElement; source: MediaElementAudioSourceNode; gain: GainNode; url: string }
 >;
 
+/**
+ * La courbe d'un écrêteur doux, pour un `WaveShaperNode`.
+ *
+ * Droite jusqu'à `COUDE`, puis refermée en tangente hyperbolique vers
+ * `PLAFOND`. Le choix du coude est ce qui compte : sous −3 dBFS le signal
+ * traverse sans être touché, si bien que la couleur du mixage ne change pas —
+ * seules les pointes qui allaient distordre sont arrondies.
+ *
+ * Un `WaveShaper` borne son domaine à [−1, 1] : une crête au-delà reçoit la
+ * valeur du bout de courbe, ce qui tient le plafond même sur un dépassement
+ * franc. C'est exactement le cas qu'on cherche à couvrir.
+ */
+const COUDE = 0.7;
+const PLAFOND = 0.89; // −1 dBFS
+
+function courbeDePlafond(points = 1024): Float32Array<ArrayBuffer> {
+  // Le type porte son tampon : `WaveShaperNode.curve` refuse un
+  // `Float32Array<ArrayBufferLike>`, qui pourrait être partagé entre fils.
+  const courbe = new Float32Array(new ArrayBuffer(points * 4));
+  for (let i = 0; i < points; i += 1) {
+    const x = (i * 2) / (points - 1) - 1;
+    const amplitude = Math.abs(x);
+    const y = amplitude <= COUDE
+      ? amplitude
+      : COUDE + (PLAFOND - COUDE) * Math.tanh((amplitude - COUDE) / (PLAFOND - COUDE));
+    courbe[i] = Math.sign(x) * y;
+  }
+  return courbe;
+}
+
 export class AudioEngine {
   readonly context: AudioContext;
   private readonly master: GainNode;
@@ -45,6 +75,7 @@ export class AudioEngine {
   private readonly clipsDuck: GainNode;
   private readonly musicDuck: GainNode;
   private readonly limiter: DynamicsCompressorNode;
+  private readonly plafond: WaveShaperNode;
   private readonly recordDestination: MediaStreamAudioDestinationNode;
 
   private clipNodes = new Map<string, { source: MediaElementAudioSourceNode; gain: GainNode }>();
@@ -89,6 +120,27 @@ export class AudioEngine {
     this.limiter.ratio.value = 12;
     this.limiter.attack.value = 0.003;
     this.limiter.release.value = 0.12;
+
+    /*
+     * Un plafond après le limiteur, parce qu'un limiteur n'en est pas un.
+     *
+     * `DynamicsCompressorNode` n'a aucune anticipation : une crête sèche est
+     * déjà passée quand il commence à réagir. Mesuré sur deux exports réels,
+     * le vrai pic sortait à **+0,5 et +0,3 dBFS** — au-dessus de zéro, donc en
+     * distorsion, alors que le seuil est à −6 dB. Resserrer l'attaque à une
+     * milliseconde ne rend que 0,2 dBFS : ce n'est pas un réglage à corriger,
+     * c'est un outil qui ne sait pas faire ce qu'on lui demande.
+     *
+     * La courbe laisse tout passer intact sous −3 dBFS et ne se referme que
+     * sur les crêtes, pour tenir −1 dBFS quoi qu'il arrive. Une saturation
+     * douce sur les seules pointes est ce que fait un limiteur de mastering ;
+     * l'alternative — baisser le niveau général — coûterait sur chaque
+     * seconde ce qu'on ne paie ici que sur quelques millisecondes, et le
+     * format court se joue précisément sur ce niveau.
+     */
+    this.plafond = this.context.createWaveShaper();
+    this.plafond.curve = courbeDePlafond();
+    this.plafond.oversample = '4x';
 
     /*
      * Les bruitages ont leur propre bus, plus fort que le reste.
@@ -150,8 +202,9 @@ export class AudioEngine {
 
     // La chaîne part vers les enceintes ET vers la sortie d'enregistrement :
     // pendant un export, l'utilisateur entend ce qui est en train d'être gravé.
-    this.limiter.connect(this.context.destination);
-    this.limiter.connect(this.recordDestination);
+    this.limiter.connect(this.plafond);
+    this.plafond.connect(this.context.destination);
+    this.plafond.connect(this.recordDestination);
   }
 
   /** Piste sonore à confier au `MediaRecorder` pendant l'export. */

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BANDE_SURE, Y_PAR_DEFAUT, dansLaBandeSure, boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
+import { BANDE_SURE, HAUTEURS_LIBRES, Y_PAR_DEFAUT, dansLaBandeSure, boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
 import { CAPTION_COLORS, CAPTION_SCALES, type CaptionStyleId } from '../types.ts';
 
 test('la détection sous le doigt inclut les bords du rectangle', () => {
@@ -119,4 +119,29 @@ test('une hauteur hors bande est ramenée dedans', () => {
   assert.equal(dansLaBandeSure(0.72), 0.45, '72 % tombe dans la colonne de TikTok');
   assert.equal(dansLaBandeSure(0.02), 0.12, '2 % passe sous la barre de Facebook');
   assert.equal(dansLaBandeSure(0.3), 0.3, 'une hauteur déjà sûre ne bouge pas');
+});
+
+test('tous les paliers de sous-titre tiennent dans la bande sûre', () => {
+  /*
+   * Le chemin le plus emprunté est « + Ajouter » — c'est celui que le guide
+   * recommande quand la couverture texte est faible. Ses paliers étaient
+   * `[0.5, 0.32, 0.66, 0.2, 0.78]` : trois d'entre eux, dont celui par défaut,
+   * posaient le texte sous l'habillage des plateformes.
+   *
+   * Le déplacement des sous-titres dans la bande avait touché la voix off et
+   * les gabarits, et manqué celui-ci. Ce test le tient.
+   */
+  for (const y of HAUTEURS_LIBRES) {
+    assert.ok(y >= BANDE_SURE.haut, `palier à ${y} : sous la barre système de Facebook`);
+    assert.ok(y <= BANDE_SURE.bas, `palier à ${y} : dans la colonne de TikTok`);
+  }
+  assert.equal(HAUTEURS_LIBRES[0], Y_PAR_DEFAUT, 'le premier palier est la hauteur par défaut');
+  // Deux paliers plus proches que 0,08 ne seraient jamais retenus tous les
+  // deux : la recherche de place les considérerait comme le même.
+  for (let i = 1; i < HAUTEURS_LIBRES.length; i += 1) {
+    assert.ok(
+      Math.abs(HAUTEURS_LIBRES[i] - HAUTEURS_LIBRES[i - 1]) >= 0.079,
+      `paliers ${HAUTEURS_LIBRES[i - 1]} et ${HAUTEURS_LIBRES[i]} trop proches`,
+    );
+  }
 });
