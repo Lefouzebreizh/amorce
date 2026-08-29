@@ -2859,3 +2859,38 @@ La parade tient en huit lignes : une liste d'ajouts, `PRAGMA table_info` pour
 savoir ce qui manque, `ALTER TABLE` pour le reste, rejoué à chaque ouverture.
 Ce qui compte est le moment où on l'écrit : à la première colonne ajoutée après
 la première installation ailleurs, pas quand un utilisateur signale l'erreur.
+
+## Un motif d'exclusion est ancré à la racine, et un voisin le contourne
+
+`main` est passé au rouge sans qu'aucune ligne de code soit en cause :
+
+```
+ESLint: ENOENT: no such file or directory, open
+'artisan-express/.next/static/…/_buildManifest.js'
+```
+
+Deux causes se sont additionnées, et aucune des deux ne se voit en lisant le
+code :
+
+- **`".next/**"` ne couvre que `./.next/`.** Un motif relatif est ancré là où
+  la configuration est lue. Les dossiers de build des projets voisins —
+  `artisan-express/.next/`, `titan-builder/.next/` — n'étaient donc exclus par
+  rien, et le lint de la racine entrait dedans.
+- **La vérification lance les projets en parallèle, dans le même arbre.** Le
+  lint d'un projet lisait un manifeste que le build d'un autre était en train de
+  remplacer. Le fichier existait avant la lecture et après ; il manquait
+  pendant.
+
+D'où un défaut qui n'apparaît **que** sous parallélisme, seulement quand le
+voisin vient d'être construit, et jamais deux fois au même endroit. Relancer le
+donne vert une fois sur deux, ce qui pousse à le classer « flaky » — alors que
+la cause est nette et la réparation définitive.
+
+**La règle : un projet autonome dans un dépôt à plusieurs projets s'exclut
+entièrement de l'outillage des autres**, pas seulement son dossier de build.
+Chacun a sa configuration, ses alias et sa vérification propre ; ce que la
+racine y trouverait n'a de sens pour personne.
+
+**Et l'exclusion se vérifie sur les chemins, pas sur les noms.** Un rejeu local
+de la CI déposait une copie des mêmes projets sous `.verif-ci/copie/` : exclus à
+leur vrai chemin, ils revenaient par celui-là.
