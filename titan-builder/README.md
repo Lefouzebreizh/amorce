@@ -70,6 +70,26 @@ complète se régénère en 277 ms** — parce que c'est elle qui décide de la
 frontière : le travail n'est pas dans la modification, il est dans la
 conversation.
 
+## Regarder avant d'envoyer
+
+```bash
+npm run regarder demo      # ou n'importe quel dossier livrable
+```
+
+Un vrai Chromium ouvre la page à **393 × 873** — le terrain de référence du
+dépôt — et refuse ce qui ne se lit pas : contraste sous 4,5:1, texte sous 18 px,
+cible sous 44 px, page qui déborde sur la droite. Il a trouvé son premier défaut
+à sa première exécution : le pied de page, qui porte le numéro de téléphone,
+sortait à 15,2 px.
+
+**Le contraste, lui, ne dépend plus de la chance.** La couleur venait du client
+et la page écrivait du blanc dessus quoi qu'il arrive : un artisan qui demandait
+du jaune recevait un titre à **1,43:1**, invisible sur un chantier en plein
+soleil. Le générateur choisit maintenant l'encre qui se lit sur *sa* couleur —
+11,50:1 sur ce même jaune — et n'approfondit le fond que si aucune des deux
+encres n'y suffit. Sa couleur reste la sienne partout où elle est un fond ; un
+test balaie la roue entière par pas de 15°.
+
 ## Mettre le site du client en ligne
 
 Le générateur produit un dossier autonome : **une page HTML, les photos, et

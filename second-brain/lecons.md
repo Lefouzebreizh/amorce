@@ -2296,6 +2296,39 @@ directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière
 **La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
 de supposer où l'on est.
 
+## Une secousse de caméra sur un plan qui bouge déjà se lit comme une panne
+
+« Ça saccade au moment du cri du dragon. » Le son y était irréprochable —
+aucune discontinuité, aucun écrêtage, enveloppe lisse.
+
+C'était l'**image** : une secousse de caméra posée sur le rugissement faisait
+passer le mouvement entre deux images consécutives de **16 à 40** pendant
+0,35 s. Retirée, le maximum retombe à 23 — le mouvement propre du plan.
+
+**Une secousse sert un plan immobile.** Sur une bête qui hurle et bouge déjà
+violemment, elle ne renforce rien : elle brouille, et le brouillage se lit
+comme un défaut de lecture.
+
+## Un événement de l'image sans son ne se remarque pas, il se ressent
+
+Des éclairs sortent des yeux du personnage principal, et **aucun bruitage ne
+les accompagnait** — le premier arrivait 1,2 s plus tard. Personne ne dit « il
+manque un son à 5,42 s » ; on dit « on n'entend pas les éclairs », et seulement
+après avoir vu la vidéo cinq fois.
+
+Ça se trouve en relevant les événements **de l'image** :
+
+```python
+clairs = [(x > 200).sum() for x in images]   # pixels tres clairs
+# une apparition = un facteur 2 ou plus d'une image a la suivante
+```
+
+Mesuré : 713 → 2864 pixels en trois images, puis 16 782 sur une seule. Deux
+événements majeurs du film, zéro son.
+
+**Faire la liste des événements de l'image, puis pointer le son qui répond à
+chacun.** Le montage se construit dans ce sens-là, jamais l'inverse.
+
 ## Un `<textarea>` rendu en un seul `<p>` perd tout ce que l'auteur a aéré
 
 Mesuré sur le générateur de TITAN Builder : une présentation d'artisan écrite
@@ -2329,6 +2362,32 @@ protègent pas le prospect qui reçoit le lien : rien, à l'écran, ne distingua
 la démonstration d'un vrai client. La mention doit être **dans le contenu de la
 page**, pas seulement dans la documentation qui l'accompagne — celle-là, le
 prospect ne la lit jamais.
+
+## Une couleur choisie par l'utilisateur ne peut pas décider seule de la lisibilité
+
+Mesuré sur le générateur de TITAN Builder : `#ffd400` avec du blanc dessus donne
+**1,43:1**. Le seuil lisible est 4,5:1, et la page se lit sur un chantier, au
+soleil, sur un téléphone à moitié assombri par le système.
+
+Le piège n'est pas la couleur, c'est la **paire fixe** : dès qu'un produit
+laisse choisir un fond et code le texte en dur, il existe un choix qui rend la
+page illisible, et personne ne le voit tant que personne ne fait ce choix-là.
+
+La sortie tient en deux gestes, et le second compte autant que le premier :
+
+1. **Choisir l'encre par le calcul**, blanc ou sombre selon laquelle contraste
+   le plus avec la couleur reçue. Sur un bleu profond c'est le blanc, sur un
+   jaune c'est l'encre sombre.
+2. **Ne pas réutiliser un fond comme couleur de texte.** La même teinte qui
+   porte un titre en fond disparaît quand elle devient le texte d'un bouton sur
+   du papier blanc. Il en faut une variante déplacée vers le noir — ou vers le
+   blanc en thème sombre, ce qu'on oublie une fois sur deux.
+
+**Et ce qu'aucun exemple ne prouve : le seuil doit être éprouvé sur la roue
+entière.** Les teintes qui échouent ne sont ni les vives ni les sombres, ce sont
+les **moyennes** — un gris-vert, un orange terne — où *aucune* des deux encres
+n'atteint 4,5:1. Un test sur trois couleurs bien choisies passe et ne prouve
+rien ; vingt-neuf teintes par pas de 15° coûtent 4 ms.
 
 ## Un contrôle qui cherche dans tout le fichier ne garde aucune de ses sections
 
