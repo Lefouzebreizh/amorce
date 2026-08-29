@@ -51,6 +51,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/roussy-zephy` | Charte du recueil illustré « Roussy & Zéphy » — personnages, palette hexadécimale, mécanique des histoires en quatre temps, titres de référence,… |
 | `/sonotheque` | Constituer et tenir la bibliothèque de bruitages du dépôt — dragons et créatures, impacts, whooshes, magie, foules, ambiances — puis choisir dans le… |
 | `/sortir-les-fichiers` | Mettre à l'abri ce qu'une session distante contient et que le dépôt Git ne porte pas — planches, rushes, PDF de dépôt, exports, captures — avant que… |
+| `/sound-design-de-scene` | Concevoir le son d'une scène à partir de son IMAGE — relever ses événements, donner à chacun le sien, mesurer le contraste de chacun contre son fond,… |
 | `/sous-titres-qui-accrochent` | >- Animer les textes d'une vidéo verticale pour qu'ils retiennent — apparition en ressort, secousse sur l'impact, couleur prise dans l'image, halo… |
 | `/stack-agence-supabase` | Réaliser une application client sur la stack standardisée de l'agence — Next.js 16 (App Router, React 19), TypeScript strict, Tailwind + shadcn/ui,… |
 | `/steward` | Conventions de ce dépôt pour mener une pull request jusqu'à la fusion — style des commits, barrière de vérification avant toute poussée, et… |
@@ -61,6 +62,6 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/trier-les-rushes` | Inventorier d'un coup un lot de médias déposé en vrac — quinze, trente, cinquante fichiers — au lieu de les ouvrir un par un. Relève les doublons par… |
 | `/typographie-francaise` | Règles de typographie française pour du texte destiné à l'impression ou au lettrage — espaces insécables, guillemets, apostrophes, points de… |
 | `/usine-a-themes` | Fabriquer ou retoucher la palette d'Amorce — les jetons `@theme` de Tailwind v4 dans `src/app/globals.css`, ce que chaque famille de couleurs… |
-| `/verifier` | Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, tests, types… |
+| `/verifier` | Lance la vérification des seuls projets touchés, tous en parallèle, et rend un verdict par projet — Amorce, le socle Agence, la page de vente Artisan… |
 | `/video-du-jour` | Fabriquer un fichier vidéo publiable à partir d'un script TikTok, d'une prise de voix et d'images — analyse et découpe de la voix, recadrage 9:16 sur… |
 | `/voir-le-son` | Regarder un média au lieu de le mesurer — spectrogramme, courbe de sonie et planche de vignettes rendus en images que Claude peut réellement lire. À… |

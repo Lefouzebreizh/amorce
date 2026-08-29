@@ -2989,6 +2989,30 @@ appelle sa fonction ; on ne la recalcule pas de tête.** Une mesure refaite à l
 main mesure autre chose, et la ressemblance des deux chiffres est précisément
 ce qui empêche de s'en apercevoir.
 
+## `origin/main` est une référence locale, et elle ment sans le dire
+
+`git checkout -B ma-branche origin/main` ne va pas chercher l'état du serveur :
+il lit une référence **locale**, celle du dernier `fetch`. Dans un dépôt à une
+seule session, la nuance ne se voit jamais. Ici elle coûte un parcours complet.
+
+Mesuré : une branche créée ainsi est repartie d'un `main` vieux de deux fusions,
+dont une d'une autre session. Rien ne l'a signalé — ni la création, ni les
+tests, ni la vérification, qui sont tous passés au vert sur cette base périmée.
+
+**Le seul symptôme était un compte qui baissait** : `npm test` rendait 205 là où
+la fusion précédente en avait laissé 206. Un total qui monte ne prouve rien, un
+total qui **descend** sans qu'on ait retiré de test dit qu'on ne travaille pas
+sur ce qu'on croit. C'est le signe à connaître, parce qu'aucun outil ne le crie.
+
+La parade tient en un mot ajouté : `git fetch origin main` **avant** chaque
+`checkout -B`, jamais une fois en début de session. Une session longue traverse
+plusieurs fusions des autres, et la référence qu'elle a lue au réveil est fausse
+une heure plus tard.
+
+Le coût de l'oubli n'est pas le conflit — Git l'aurait signalé. C'est le
+contraire : une branche qui **se fusionne proprement** en effaçant le travail
+fusionné entre-temps, sans qu'aucune vérification ne s'en aperçoive.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
@@ -3057,6 +3081,38 @@ d'être ? »* Ici la réponse était non, et le verdict disait vert.
 Et le chiffre affiché doit être **ce qu'il y a à corriger**, pas le nombre
 d'occurrences : compter aussi les entrées en réserve donnait 231 au lieu de 73,
 et décourageait pour un travail qui n'est pas encore à faire.
+
+## On ne demande jamais un gain positif à un rush dont la crête frôle le plafond
+
+Une saturation rapportée cinq fois, cherchée cinq fois **après** le master — et
+introuvable, parce qu'elle naissait avant.
+
+La mesure jamais faite : **combien le moteur amplifie chaque rush** pour
+atteindre sa cible.
+
+| plan | son mesuré | cible | gain |
+| --- | --- | --- | --- |
+| **dragon** | −13,4 dB | −9,0 | **+4,4 dB** |
+| **sigil** | −91,0 dB | −29,0 | **+62 dB** |
+
+Le rush du dragon a une **crête à 0,973** — un quart de décibel sous le plein
+échelle. Lui demander +4,4 dB, c'est demander une crête à **1,61** : il sature
+dans le plan lui-même, avant tout mixage et avant tout limiteur. Aucune mesure
+faite sur le fichier livré ne peut le montrer, puisque le master a déjà tout
+ramené sous le plafond.
+
+Et le sigil, muet à −91 dB, se voyait demander d'amplifier son plancher de bruit
+de soixante-deux décibels.
+
+**Une cible de niveau n'est pas un souhait, c'est un gain.** Avant de la poser,
+mesurer la source : `cible − mesuré` doit rester négatif dès que la crête
+dépasse 0,9. Descendre tout le film et laisser le master remonter donne le même
+relief sans un décibel d'écrêtage.
+
+Corollaire payé dans la foulée : baisser les rushes sans baisser les accents
+laisse les plans de passage rattraper le climax — dragon −19,4 contre vortex
+−19,8, quatre dixièmes là où il en faut sept. **Ce qui descend descend
+ensemble.**
 
 ## Une donnée qu'on croit connaître est celle qu'il faut vérifier
 
@@ -3136,6 +3192,30 @@ qui a bougé produit un arbre que personne n'a jamais compilé : les tests
 étaient verts sur l'ancienne base, ils ne disent rien de la nouvelle. C'est le
 seul moment où « la vérification est déjà passée » est faux tout en paraissant
 vrai.
+
+## Une adresse canonique se vérifie au DNS, pas à l'œil
+
+Onze sites annonçaient `ma-panoplie-ia.com` dans leurs balises canoniques, leurs
+`og:url` et leurs sitemaps. **Ce domaine ne résout pas** — mesuré le 29/08/2026.
+L'outil qui affichait ces adresses les recopiait simplement depuis la
+configuration : onze belles lignes, aucune vérification.
+
+Le défaut est de la pire famille : **invisible et coûteux**. Le site s'affiche
+parfaitement, tous les contrôles passent, et il déclare à chaque moteur que sa
+version de référence se trouve à une adresse que personne ne sert.
+
+**La sonde est un `dns.lookup`, jamais une requête HTTP.** Derrière un mandataire
+filtrant, tout rend `000` — un domaine bloqué comme un domaine inexistant, et on
+ne peut rien conclure. Le DNS sépare les deux, ce qui se vérifie sur un témoin :
+`api.binance.com` **résout** et reste injoignable, `raw.githubusercontent.com`
+résout et répond, un domaine inventé ne résout pas. Sans ce témoin, l'inférence
+ne vaut rien.
+
+**Et l'ordre des gestes vaut la mesure :** mettre en ligne *avant* de régler
+l'adresse publie le défaut au lieu de le corriger. Un hébergement gratuit donne
+une adresse réelle tout de suite ; le domaine acheté se branche après, par la
+même commande. Attendre le domaine pour déployer, c'est garder hors ligne ce qui
+pourrait déjà travailler.
 
 ## Une migration juste peut échouer sur son ordre d'exécution
 

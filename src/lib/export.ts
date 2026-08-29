@@ -25,6 +25,30 @@ const CANDIDATES: ExportFormat[] = [
   // MP4 en premier : c'est le seul format que toutes les plateformes acceptent
   // sans reconversion. Les navigateurs récents savent l'enregistrer directement.
   { mimeType: 'video/mp4;codecs=avc1.42E01E,mp4a.40.2', extension: 'mp4', label: 'MP4 (H.264)' },
+  /*
+   * `video/mp4` sans précision de codec reste, alors que son équivalent audio
+   * est écarté plus bas. L'asymétrie est délibérée et elle a été mesurée.
+   *
+   * Ce que fait cette ligne : là où le H.264 manque, le navigateur accepte
+   * quand même ce type et y place du VP9 avec de l'Opus. `ffprobe` sur un
+   * export réel : `codec_name=vp9`, `codec_name=opus`, conteneur `.mp4`. Une
+   * extension qui promet du H.264 avec un contenu qui n'en est pas.
+   *
+   * La retirer paraît donc évident — c'est exactement le raisonnement du
+   * commentaire audio. Éprouvé : le parcours complet passe de 91 à 87, et les
+   * trois contrôles perdus disent pourquoi. `MediaRecorder` **n'écrit aucune
+   * durée dans un WebM** : `ffprobe` rend `duration=N/A`, un `<video>` rend
+   * `Infinity`, et de là tout s'effondre — dimensions à 0 × 0, image noire.
+   * Le `.mp4` mal nommé, lui, porte ses 31,4 s.
+   *
+   * Le repli WebM est donc pire que le défaut qu'il corrige : un fichier dont
+   * personne ne connaît la durée ne s'ouvre nulle part, quand un VP9 en `.mp4`
+   * se lit et se reconvertit. Sur un vrai téléphone la question ne se pose pas
+   * — le H.264 de la ligne précédente gagne.
+   *
+   * La vraie sortie demande d'écrire la durée dans l'en-tête, donc un
+   * multiplexeur à nous : c'est le chantier WebCodecs, pas une ligne de liste.
+   */
   { mimeType: 'video/mp4', extension: 'mp4', label: 'MP4' },
   { mimeType: 'video/webm;codecs=vp9,opus', extension: 'webm', label: 'WebM (VP9)' },
   { mimeType: 'video/webm;codecs=vp8,opus', extension: 'webm', label: 'WebM (VP8)' },

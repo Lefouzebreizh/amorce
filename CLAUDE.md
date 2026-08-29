@@ -293,6 +293,16 @@ troisième qui répond.
 le jour où les clés arrivent : une compétence qui ne peut pas tourner est un
 mensonge dans la liste.
 
+**Et pour l'image, les trois chemins sont fermés, mesuré le 29/08/2026.** Ce
+n'est pas qu'une clé manque : `torch` et `diffusers` sont absents, donc aucune
+diffusion locale ; et `fal.run`, `api.openai.com`, `api.stability.ai`,
+`image.pollinations.ai`, `huggingface.co` rendent tous `000`. La parade des
+releases GitHub, qui a débloqué la voix off et les poids Wav2Lip, ne s'applique
+pas — un modèle d'image pèse des gigaoctets et demande le `torch` qui n'est pas
+là. **Une session ne peut donc pas fabriquer une illustration**, et c'est ce qui
+bloque le tome 1 de KDP : il lui manque une planche et une couverture, et rien
+d'autre.
+
 **La transcription, elle, marche** — et ce blocage-ci a coûté deux sessions
 avant d'être levé. `huggingface.co` est refusé par le mandataire, comme
 `alphacephei.com` et `openaipublic.azureedge.net` : aucun poids de
@@ -315,6 +325,14 @@ Deux symptômes pour la même cause, et c'est ce qui trompe : `curl` rend `000`
 là où `aiohttp` rend « 403, requête refusée ». Une session qui voit le 403 croit
 à une clé manquante et part chercher un compte d'API. Il n'y en a pas besoin :
 l'hôte est simplement hors d'atteinte.
+
+**`youtu.be` et `youtube.com` sont refusés eux aussi** — `EGRESS_BLOCKED`,
+mesuré le 29/08. Cela compte parce qu'un lien vidéo arrive souvent seul, sans
+un mot : le réflexe est d'aller le lire, et il est perdu d'avance. Deux raisons
+plutôt qu'une, d'ailleurs — même joignable, une page YouTube ne donne qu'un
+titre, et **regarder une vidéo n'est de toute façon pas possible**. La seule
+réponse utile est donc de demander en une phrase ce qu'il faut en retenir, et
+de continuer autre chose en attendant.
 
 **La parade est celle de la voix off et des poids Wav2Lip, une troisième fois :
 GitHub répond.** Des bougies réelles au format CCXT — `[horodatage_ms, o, h, b,
@@ -500,6 +518,15 @@ puis `npm run verify` : parcours complet dans un vrai Chromium, plus
 voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
+
+**Et `npm run planche [nombre de rushes]` pour regarder au lieu de mesurer.**
+Elle fabrique ses rushes numérotés, conduit le studio, exporte, et rend une
+planche de quarante images sur toute la durée, dernière seconde comprise. Elle
+n'affirme rien : c'est l'œil qui décide. Le nombre de rushes compte — le montage
+express se comporte autrement à six, vingt-huit et cinquante, et les quatre de
+`npm run fixtures` n'éprouvent jamais ce qui se passe au-delà. Premier passage :
+une seule phrase de texte sur trente-et-une secondes, que six mesures vertes ne
+disaient pas.
 
 ### Invariants d'Amorce — les casser casse l'application
 

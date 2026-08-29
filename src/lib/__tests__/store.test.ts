@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
+import { BANDE_SURE } from '../captions.ts';
 import { useStudio } from '../store.ts';
 import { emptyProject } from '../timeline.ts';
 import { DEFAULT_MIX, MIN_CLIP_DURATION, type MediaAsset } from '../types.ts';
@@ -237,7 +238,17 @@ test('des sous-titres qui ne se croisent pas retrouvent la hauteur par défaut',
   assert.equal(first.y, second.y);
 });
 
-test('les hauteurs proposées restent dans la zone lisible', () => {
+test('les hauteurs proposées restent dans la bande des trois plateformes', () => {
+  /*
+   * Les bornes de ce test étaient 0,15 et 0,85 — une « zone lisible » écrite
+   * avant que la bande sûre soit relevée sur des captures réelles. Elles
+   * laissaient donc passer 0,66 et 0,78, c'est-à-dire la colonne de boutons de
+   * TikTok, et c'est bien ce que `addCaption` proposait.
+   *
+   * Le seul juge est `BANDE_SURE` : 12 % à 45 %, l'intersection des trois
+   * habillages. Une borne écrite à la main à côté d'une constante mesurée est
+   * une règle périmée qui protège de rien.
+   */
   const store = useStudio.getState();
   store.addAssets([asset('a', 20)]);
   store.appendClip('a');
@@ -246,7 +257,10 @@ test('les hauteurs proposées restent dans la zone lisible', () => {
   for (let i = 0; i < 6; i++) useStudio.getState().addCaption();
 
   for (const caption of useStudio.getState().project.captions) {
-    assert.ok(caption.y >= 0.15 && caption.y <= 0.85, `hauteur hors zone lisible : ${caption.y}`);
+    assert.ok(
+      caption.y >= BANDE_SURE.haut && caption.y <= BANDE_SURE.bas,
+      `hauteur hors de la bande sûre : ${caption.y}`,
+    );
   }
 });
 

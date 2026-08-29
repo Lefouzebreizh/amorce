@@ -213,6 +213,33 @@ la regarder.
 Chromium est déjà installé dans les sessions distantes ; ne pas lancer
 `playwright install`. `AMORCE_CHROMIUM` permet d'en désigner un autre.
 
+## Trois verrous, et l'ordre compte
+
+Le réseau est construit, contrôlé et tenu à jour. **Rien de tout cela n'est en
+ligne ni ne rapporte**, pour trois raisons indépendantes qui se cumulent — et
+les traiter dans le désordre fait perdre le bénéfice des deux premières.
+
+| # | Verrou | Mesuré | Ce que ça coûte |
+| --- | --- | --- | --- |
+| 1 | **Rien n'est déposé** | billet [#181](https://github.com/Lefouzebreizh/amorce/issues/181), ouvert depuis le 27/08 | dix minutes, gratuit — deux secrets GitHub et un projet Cloudflare Pages |
+| 2 | **Le domaine ne résout pas** | `ma-panoplie-ia.com` → aucune résolution DNS, le 29/08 | rien, si l'on prend l'adresse gratuite de Pages |
+| 3 | **73 liens sur 73 sont des exemples** | `npm run valider` | une soirée de formulaires, `AFFILIATION.md` |
+
+**Et un piège entre le 1 et le 2 :** déposer sans régler l'adresse mettrait onze
+sites en ligne déclarant tous une balise canonique vers un domaine que personne
+ne sert. C'est le pire signal qu'on puisse envoyer à un moteur, et il est
+invisible — le site s'affiche parfaitement.
+
+L'ordre juste, donc :
+
+```bash
+node regler-domaines.mjs --base https://annuaire-ia.pages.dev   # avant le dépôt
+npm run sites                                                    # reconstruire
+# puis les secrets Cloudflare, et le workflow « Annuaire IA — mise en ligne »
+```
+
+Le domaine acheté se branche plus tard, par la même commande, sans rien casser.
+`node regler-domaines.mjs --etat` interroge maintenant le DNS et le dit.
 ## Ce que le réseau rapporte aujourd'hui : rien
 
 Mesuré : **73 liens sur 73**, sur les onze sites publiés, pointent encore vers
