@@ -112,11 +112,6 @@
           "debut": 0.1,
           "duree": 0.35,
           "force": 0.1
-        },
-        {
-          "debut": 4.3,
-          "duree": 0.6,
-          "force": 0.17
         }
       ],
       "flashs": [
@@ -127,8 +122,8 @@
         },
         {
           "debut": 4.3,
-          "duree": 0.083,
-          "force": 0.45
+          "duree": 0.06,
+          "force": 0.28
         }
       ],
       "_note": "le dragon, a SA vitesse. Le ralenti a 0,8 a ete retire apres cinq allers-retours sur le meme symptome — « ca coupe et ca sature » — dont il etait la cause commune :\n  · l'audio devait etre etire, et tout etirement laisse une trace ;\n  · l'image devait etre interpolee, faute de quoi une image sur cinq etait dupliquee ;\n  · le cri du rush, decale par l'etirement, battait contre le vrai cri pose par-dessus.\nA vitesse naturelle les trois disparaissent d'un coup, et les deux cris tombent exactement l'un sur l'autre au lieu de se battre."
@@ -239,10 +234,49 @@
       "telephone": 1.2
     },
     {
+      "son": "electricite",
+      "instant": 5.42,
+      "gain": 21,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.1,
+        "graine": 88
+      },
+      "_note": "les eclairs qui sortent des yeux du druide, cales a l'image : les pixels tres clairs quadruplent entre 5,42 et 5,50 s. Rien ne les sonorisait — le premier son arrivait 1,2 s plus tard."
+    },
+    {
+      "son": "transition_eclair",
+      "instant": 5.44,
+      "gain": 15,
+      "distance": "proche"
+    },
+    {
       "son": "riser_court",
       "instant": 6.6,
       "gain": -2,
       "distance": "moyen"
+    },
+    {
+      "son": "electricite",
+      "instant": 6.94,
+      "gain": 19,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.9,
+        "graine": 91
+      },
+      "_note": "le second eclair, celui qui fend la Terre : 16 782 pixels tres clairs sur une seule image, la plus forte poussee du film."
+    },
+    {
+      "son": "eclat",
+      "instant": 6.96,
+      "gain": 11,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.6,
+        "graine": 92,
+        "densite": 180.0
+      }
     },
     {
       "son": "whoosh_lourd",

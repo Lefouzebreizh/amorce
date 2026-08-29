@@ -88,10 +88,15 @@ def caler(recette: dict, couches: list | None = None) -> tuple[dict, dict, list]
         {"debut": RUSH["eclair"], "duree": 0.14, "force": 0.50},
         {"debut": RUSH["cri"], "duree": 0.083, "force": 0.45},
     ]
+    # PAS de secousse sur le cri. Mesure : le mouvement image y passait de 16
+    # a 40 pendant 0,35 s, et c'est cela — pas le son — qu'on lit comme une
+    # saccade. Une secousse de camera sert un plan immobile ; sur une bete qui
+    # hurle et bouge deja violemment, elle ne fait que brouiller son mouvement.
     dragon["tremblements"] = [
         {"debut": RUSH["arrivee"], "duree": 0.35, "force": 0.10},
-        {"debut": RUSH["cri"], "duree": 0.60, "force": 0.17},
     ]
+    dragon["flashs"][1]["duree"] = 0.06
+    dragon["flashs"][1]["force"] = 0.28
 
     # L'automation. Le trou d'air avant le cri se termine 0,06 s AVANT lui,
     # jamais dessus : mesuré à −29,6 dB, il mordait sur les dix centièmes
