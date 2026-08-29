@@ -3899,3 +3899,40 @@ changement de code, sans exception** — même quand `check` est vert, même
 quand la mesure directe en base est juste. Un `verify` vert sur un build
 périmé ne prouve rien du tout ; il a fallu redescendre au niveau de la base
 pour comprendre que le code était correct et l'écran, obsolète.
+
+## Le doublon ne se trouve pas en cherchant le nom qu'on allait donner
+
+Une session a écrit un serveur de licence complet — clés, table, webhook
+Stripe, dix-huit tests — pendant qu'une autre venait de fusionner le même
+produit sous **`licence-serveur/`**. Le doublon s'appelait `serveur-licence/`.
+Les deux mots, inversés.
+
+Ce qui a manqué n'est pas un `grep` : c'est le **bon** `grep`. Lire
+`src/licence/` (le client) et n'y trouver aucun serveur a suffi à conclure
+qu'il n'existait pas. La recherche portait sur l'endroit où la chose *aurait dû*
+être, jamais sur ce qu'elle *fait* — `grep -ril "stripe\|webhook\|licence"` à la
+racine la trouvait en une seconde.
+
+**Le signal a été donné, et il a été lu trop tard.** `tsconfig.json` avait
+changé sous les doigts, avec `"licence-serveur"` ajouté à ses exclusions. Il
+était pris pour une faute de frappe du nom qu'on s'apprêtait à créer, alors
+qu'il annonçait le projet déjà fusionné. **Un fichier de configuration qui bouge
+tout seul nomme ce qui vient d'arriver** ; c'est un inventaire, pas du bruit.
+
+**Ce que ça coûte au-delà du travail jeté :** le propriétaire a tranché
+« Supabase ou Cloudflare » sur une question dont la prémisse était fausse — le
+dépôt avait choisi Cloudflare quelques heures plus tôt. Faire arbitrer une
+décision déjà prise use la seule ressource qu'un menu est censé économiser.
+
+**Et le doublon était moins bon.** Trois écarts mesurés à la comparaison : la
+clé de l'existant porte sa preuve par HMAC — le serveur n'a rien à lire pour
+l'authentifier, quand le doublon exigeait une lecture en base à chaque
+démarrage ; zéro dépendance contre deux ; comparaison en temps constant, absente
+du doublon. La règle « un doublon arrête le geste » ne protège pas seulement du
+travail perdu : **celui qui arrive après écrit moins bien, parce qu'il n'a pas
+la journée de réflexion qui a précédé.**
+
+La seule chose qui valait d'être gardée était un manque, pas du code : aucune
+route ne remettait la clé à l'acheteur. Écrite chez eux, avec leurs primitives,
+elle tient en soixante lignes — et n'a pas besoin de la colonne en clair que le
+doublon avait prévue, puisque leur clé se recalcule.
