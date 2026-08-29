@@ -28,6 +28,58 @@ qui exécute du Node, et un redéploiement pour changer un numéro de téléphon
 Toute la fabrication est dans `src/lib/site.ts`, **pur** : il rend une chaîne,
 il ne touche ni au disque ni au réseau. Seul le script écrit.
 
+## Quand un client dit oui ailleurs que sur la plateforme
+
+Le formulaire en ligne suppose que le client vient s'y configurer. Dans la vraie
+vente, il dit oui sur Messenger et donne ses informations en trois messages :
+c'est le vendeur qui les a sous les yeux.
+
+```bash
+npm run nouveau-client            # neuf questions, puis le dossier et la page
+```
+
+Les questions sont exactement les champs du formulaire, et la validation est
+exactement celle de la route d'API — `reproches()`, partagée. Une seconde règle
+écrite pour le terminal aurait dérivé de celle du web sans que rien ne le
+signale, et fabriqué des dossiers qu'un autre chemin refuse.
+
+Le script s'arrête après le dossier et la page. Les photos se déposent dedans
+ensuite, et `npm run generer` les reprend : séparer les deux évite d'attendre un
+transfert de photos pendant que le client est encore en ligne.
+
+## Après la livraison
+
+`APRES-LA-LIVRAISON.md` : ce qui est compris dans les 299 €, ce qui ne l'est
+pas, et comment le dire. Le fichier part d'une mesure — **une modification
+complète se régénère en 277 ms** — parce que c'est elle qui décide de la
+frontière : le travail n'est pas dans la modification, il est dans la
+conversation.
+
+## Mettre le site du client en ligne
+
+Le générateur produit un dossier autonome : **une page HTML, les photos, et
+rien d'autre.** Aucun JavaScript, aucune police distante, aucun chemin absolu —
+vérifié par deux tests et regardé dans un vrai navigateur, servi depuis un
+sous-dossier comme le ferait un hébergement gratuit.
+
+C'est ce qui le rend publiable partout, **sans compte à créer et sans quota** :
+
+| Où | Comment | Ce que ça coûte |
+| --- | --- | --- |
+| **GitHub Pages** | un dépôt par client, *Settings → Pages*, branche `main` | rien |
+| **Netlify Drop** | glisser le dossier sur `app.netlify.com/drop` | rien, sans même un compte |
+| **Cloudflare Pages** | *Upload assets*, glisser le dossier | rien |
+| Un hébergement à soi | déposer le dossier par FTP | ce qu'il coûte déjà |
+
+**Ne pas déployer les sites clients là où l'on déploie les siens.** Un compte
+Vercel gratuit plafonne à cent déploiements par jour, et ce dépôt les consomme
+tout seul : un client dont le site attend un quota est un client qui doute.
+
+**Ce que le dossier permet aussi, et qui vaut le détour :** `index.html`
+s'ouvre depuis le disque, sans serveur. On montre le site au client sur son
+téléphone avant de publier quoi que ce soit — et c'est souvent là que se décide
+la vente, pas dans le devis.
+
 ## Lancer
 
 ```bash
