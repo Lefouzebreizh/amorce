@@ -3451,9 +3451,34 @@ souffle d'une nappe qui ne s'arrête jamais.
    après sa mise à niveau — mais ils n'expliquent que la seconde moitié. Sur le
    plan d'affiche, qui n'a **aucune piste audio**, le plancher était à −34,4.
 
-**Ce qui marche : baisser les lits à la source, et par TYPE, jamais par durée.**
-−7 dB sur les nappes, souffles, aspirations et grondements : plancher −41,8 dB,
-douze silences, ouverture et climax intacts. Baisser « tout ce qui dure plus
+**Et la correction qui semblait marcher a été rejetée à l'écoute — c'est le
+cœur de la leçon.** −7 dB sur les nappes, souffles, aspirations et grondements
+donnait plancher −41,8 dB et douze silences : tout ce qu'on mesurait allait
+mieux. Verdict de l'auteur : « on n'entend quasiment plus le druide, plus le
+dragon, quasiment rien ». La mesure qui manquait tenait en une colonne — l'écart
+entre le plan le plus faible et le climax, plan par plan :
+
+| plan | avant | après | écart |
+| --- | --- | --- | --- |
+| œil | −33,3 | −40,7 | **−7,4** |
+| druide | −27,4 | −30,0 | −2,6 |
+| dragon | −15,2 | −15,8 | −0,7 |
+
+L'écart druide → dragon est passé de 12,2 à **14,2 dB**. Réglé pour le dragon,
+le druide est quatorze décibels dessous : inaudible sur un téléphone.
+
+**Parce qu'un lit fait DEUX choses à la fois**, et qu'on n'en voit qu'une. Il
+comble les silences — le défaut — **et il porte le niveau de son plan** —
+l'essentiel. Le baisser corrige le premier et détruit le second, et aucune
+mesure globale ne le montre : la sonie, le plancher et le compte de silences
+s'améliorent tous les trois. Retirer un lit oblige donc à **rendre son niveau
+au plan par autre chose** — des événements — sinon la moitié du film s'efface.
+C'est un travail de conception, pas un réglage de gain : `/sound-design-de-scene`.
+
+**Le contrôle qui l'aurait arrêté :** relever le niveau ENTENDU (>400 Hz)
+**par plan**, avant et après, et refuser toute correction qui creuse l'écart
+entre le plan le plus faible et le climax. Un global qui s'améliore pendant
+qu'un plan s'effondre est le cas normal, pas le cas rare. Baisser « tout ce qui dure plus
 d'une seconde » paraît équivalent et ne l'est pas — un braam tient 1,5 s et un
 cri de titan 1,6, exactement comme une nappe. Ce tri-là a coûté 12 dB au coup
 d'ouverture, et l'ouverture est tombée à −51 dB : muette sur un fil.
