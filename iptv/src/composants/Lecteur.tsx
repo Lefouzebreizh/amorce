@@ -7,6 +7,13 @@ interface Piste {
   readonly nom: string
 }
 
+interface PisteExterne {
+  readonly id: string
+  readonly fournisseur: string
+  readonly langue: string
+  readonly nom: string
+}
+
 interface Props {
   readonly id: string
   readonly src: string
@@ -43,6 +50,9 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
   const [audioActive, setAudioActive] = useState(-1)
   const [sousTitreActif, setSousTitreActif] = useState(-1)
   const [erreur, setErreur] = useState<string | undefined>(undefined)
+  const [externes, setExternes] = useState<PisteExterne[] | undefined>(undefined)
+  const [motSousTitres, setMotSousTitres] = useState<string | undefined>(undefined)
+  const [cherche, setCherche] = useState(false)
   const commande = useRef<{ audio: (i: number) => void; sousTitre: (i: number) => void }>({
     audio: () => {},
     sousTitre: () => {},
@@ -169,6 +179,64 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
     }
   }, [id, direct])
 
+  /*
+   * La recherche externe part sur un geste, jamais à l'ouverture.
+   *
+   * Une requête automatique dirait à un service tiers ce que la personne
+   * regarde, à chaque lecture. Un sous-titre ne vaut pas cela — et dans le cas
+   * courant, la vidéo à la demande porte déjà les siens.
+   */
+  const chercherSousTitres = async (): Promise<void> => {
+    setCherche(true)
+    try {
+      const reponse = await fetch(`/api/sous-titres?e=${encodeURIComponent(id)}`)
+      const donnees = (await reponse.json()) as {
+        disponible?: boolean
+        raison?: string
+        pistes?: PisteExterne[]
+      }
+      setExternes(donnees.pistes ?? [])
+      setMotSousTitres(
+        donnees.disponible === false
+          ? donnees.raison
+          : (donnees.pistes ?? []).length === 0
+            ? 'Aucun sous-titre trouvé pour ce titre.'
+            : undefined,
+      )
+    } catch {
+      setMotSousTitres('La recherche de sous-titres n’a pas abouti.')
+      setExternes([])
+    } finally {
+      setCherche(false)
+    }
+  }
+
+  /**
+   * Ajoute une piste au lecteur.
+   *
+   * `<track>` posé dans le DOM ne s'affiche pas tout seul : il faut passer son
+   * `mode` à « showing » **après** que le navigateur l'a enregistré, d'où le
+   * passage par `video.textTracks` plutôt que par un attribut. Les autres
+   * pistes sont éteintes au passage, sans quoi deux jeux de sous-titres se
+   * superposent au bas de l'image.
+   */
+  const poserPiste = (piste: PisteExterne): void => {
+    const element = video.current
+    if (element === null) return
+
+    const balise = document.createElement('track')
+    balise.kind = 'subtitles'
+    balise.label = `${piste.nom} (${piste.langue.toUpperCase()})`
+    balise.srclang = piste.langue
+    balise.src = `/api/sous-titres?piste=${encodeURIComponent(piste.id)}`
+    balise.addEventListener('load', () => {
+      for (const suivie of Array.from(element.textTracks)) {
+        suivie.mode = suivie.label === balise.label ? 'showing' : 'disabled'
+      }
+    })
+    element.append(balise)
+  }
+
   return (
     <div>
       <video
@@ -184,6 +252,33 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
           {erreur}
         </p>
       )}
+
+      <div className="mt-4">
+        {externes === undefined ? (
+          <button
+            type="button"
+            onClick={() => void chercherSousTitres()}
+            disabled={cherche}
+            className="rounded-lg border border-bord px-4 py-2 text-sm text-doux hover:text-texte"
+          >
+            {cherche ? 'Recherche…' : 'Chercher des sous-titres'}
+          </button>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {externes.map((piste) => (
+              <button
+                key={`${piste.fournisseur}-${piste.id}`}
+                type="button"
+                onClick={() => poserPiste(piste)}
+                className="rounded-lg border border-bord px-3 py-2 text-sm hover:border-accent"
+              >
+                {piste.langue.toUpperCase()} · {piste.nom.slice(0, 40)}
+              </button>
+            ))}
+          </div>
+        )}
+        {motSousTitres !== undefined && <p className="mt-2 text-sm text-doux">{motSousTitres}</p>}
+      </div>
 
       {(pistesAudio.length > 1 || pistesSousTitres.length > 0) && (
         <div className="mt-4 flex flex-wrap gap-4">

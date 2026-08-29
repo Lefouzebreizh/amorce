@@ -1937,3 +1937,27 @@ irrégulières entre 2 et 10 kHz**, là où un cri unique dessine une nappe dens
 **Quand chaque pièce mesure juste et que l'ensemble sonne faux, chercher ce qui
 joue en double.** Et descendre à l'échantillon avant de conclure — c'est le seul
 niveau où une vraie coupure laisse une trace qu'aucun autre défaut ne laisse.
+
+## Un fichier texte « cassé » est presque toujours un fichier bien encodé, mal lu
+
+Un `.srt` francophone sur deux vient d'un outil Windows et n'est pas en UTF-8 :
+il est en windows-1252, un octet par caractère. Lu comme de l'UTF-8, « L'été »
+devient « L'Ã©tÃ© » — ou « L'�t� » selon le décodeur. Le même piège vaut pour
+un CSV exporté d'Excel, un `.txt` reçu par courriel, un `.ass` de sous-titres.
+
+**La détection tient en cinq lignes, et l'ordre d'essai fait tout :**
+
+```js
+try { return new TextDecoder('utf-8', { fatal: true }).decode(octets) }
+catch { return new TextDecoder('windows-1252').decode(octets) }
+```
+
+L'UTF-8 en mode `fatal` **lève** sur une séquence invalide : c'est un test, pas
+une supposition. L'inverse ne marcherait jamais — windows-1252 accepte
+n'importe quelle suite d'octets et ne se plaint pas, donc il « réussirait »
+aussi sur un fichier UTF-8, en le massacrant.
+
+Deux compléments mesurés dans ce conteneur : `TextDecoder('windows-1252')`
+fonctionne (l'ICU complet est présent, `Intl.DisplayNames` le confirme), et une
+marque d'ordre des octets survit au décodage — elle se retire à la main, sans
+quoi elle reste collée au premier mot affiché.
