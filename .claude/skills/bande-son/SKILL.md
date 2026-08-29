@@ -189,6 +189,44 @@ pas bougé de plus de 0,3 dB.
 Le `poids` se règle par bruitage — un impact bref supporte plus d'harmoniques
 qu'une nappe tenue, qui devient agressive avant d'être plus audible.
 
+## Une voix off n'améliore pas un film déjà dense — mesuré
+
+Ajouter une narration à une bande-annonce de 15 s qui portait déjà son sound
+design a **coûté** sur toutes les mesures qui comptent. Trois mixages essayés,
+et le meilleur des trois perdait encore :
+
+| | sans voix | narration continue | deux phrases |
+| --- | --- | --- | --- |
+| sonie (LUFS) | −10,0 | −9,6 | −10,9 |
+| **dynamique (LU)** | **4,9** | 1,3 | 3,5 |
+| vrai pic (dBTP) | −0,4 | 0,0 | 0,0 |
+| avance du climax | **+2,3 dB** | — | **+0,3 dB** |
+
+La cause est celle déjà écrite plus haut, sous un autre visage : **la voix
+bouche les creux**. Ce sont eux qui font exister le cri — un climax ne s'entend
+pas parce qu'il est fort, mais parce que ce qui le précède ne l'était pas. Une
+narration qui court d'un bout à l'autre supprime la comparaison, et le limiteur
+finit le travail en ramenant tout au même niveau.
+
+Réduire la narration à deux phrases a rendu 2,2 LU sur les 3,6 perdus, sans
+jamais revenir au niveau du film muet.
+
+**La règle qui s'en déduit, et elle est contre-intuitive :** sur un format court
+qui possède déjà des impacts, des graves et un climax, **la voix off se justifie
+par ce qu'elle dit, jamais par ce qu'elle apporte au mixage**. Si le texte
+n'ajoute pas une information que l'image ne donne pas, le film est meilleur
+muet — et la mesure le dit avant l'écoute.
+
+Le contrôle qui tranche en une commande, sur le fichier final :
+
+```bash
+ffmpeg -hide_banner -ss <climax> -t 1 -i film.mp4 \
+  -af "highpass=f=400,ebur128=framelog=quiet" -f null - 2>&1 | grep -A2 Integrated
+```
+
+Comparé à la même mesure sur une section calme, l'écart doit rester franc. Sous
+un décibel d'avance, le climax n'existe plus, quelle que soit la sonie.
+
 ## La voix off se fabrique ici, sans clé
 
 Le dépôt a longtemps tenu la synthèse vocale pour hors de portée : pas de clé
