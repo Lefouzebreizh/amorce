@@ -10,6 +10,13 @@ Trois exceptions, et elles seules : ce qui part **en public au nom d'Erwann**
 (48 000 membres, une réponse publiée ne se retire pas), ce qui **détruit sans
 retour**, ce qui **engage de l'argent**.
 
+**L'autonomie porte sur l'action, jamais sur l'écrasement.** Zéro permission ne
+veut pas dire écrire à l'aveugle : ce qu'on remplace, on regarde d'abord qui en
+dépend ; ce qu'on écrit, on vérifie d'abord que ça n'existe pas déjà. Les deux
+gestes tiennent en un `grep` et sont détaillés en section 10. Ils ne deviennent
+jamais une question : on cartographie, on tranche, on avance — la découverte
+remplace la supposition, pas l'action.
+
 Agents parallèles et `TodoWrite` quand la tâche le mérite — pas par défaut :
 cinq agents sur une tâche simple brûlent la fenêtre hebdomadaire. `/jauge` avant
 un gros lot.
@@ -621,6 +628,20 @@ n'avaient pas la même issue.
 Le point commun des trois : le code semblait se suffire à lui-même, et il
 dépendait d'ailleurs. **Ce qui coûte n'est pas la modification, c'est ce qu'on
 n'a pas regardé avant.**
+
+**Et son symétrique, qui coûte autant : chercher avant d'écrire.** Les trois
+défauts ci-dessus viennent d'une modification à l'aveugle ; celui-ci vient d'un
+ajout à l'aveugle, et il se voit moins parce qu'il ne casse rien — il dédouble.
+Le `grep` porte alors sur ce que la chose **fait**, jamais sur le nom qu'on
+comptait lui donner : deux réponses au même besoin ne se ressemblent presque
+jamais par leur nom.
+
+Mesuré le 29/08/2026, sur ce paragraphe même. Une session partait graver ici une
+règle de cartographie avant remplacement, sans savoir qu'une autre venait de l'y
+écrire quelques heures plus tôt — le bloc `grep` ci-dessus. Dans un dépôt à
+plusieurs sessions parallèles, `main` a bougé depuis la dernière lecture : c'est
+le cas normal, pas l'exception, et `git fetch` avant d'écrire coûte moins qu'un
+doublon fusionné.
 
 ### Git
 
