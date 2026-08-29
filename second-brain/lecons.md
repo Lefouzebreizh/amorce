@@ -3136,3 +3136,38 @@ qui a bougé produit un arbre que personne n'a jamais compilé : les tests
 étaient verts sur l'ancienne base, ils ne disent rien de la nouvelle. C'est le
 seul moment où « la vérification est déjà passée » est faux tout en paraissant
 vrai.
+
+## Une migration juste peut échouer sur son ordre d'exécution
+
+Le correctif de la veille était bon et il ne servait à rien : la migration
+ajoutait bien les colonnes manquantes à une base existante, mais **le schéma
+s'exécutait avant elle**, et il contenait les index qui citent ces colonnes.
+
+```
+base.exec(SCHEMA)        ← CREATE INDEX … ON element (genre, rang)  💥
+migrer les colonnes      ← ALTER TABLE element ADD COLUMN rang
+```
+
+`CREATE TABLE IF NOT EXISTS` ne touche pas une table présente : la colonne
+n'existe donc pas encore quand l'index la réclame. SQLite rend « no such
+column: rang », et ce n'est pas la fonction ajoutée qui tombe — c'est
+**l'ouverture de l'application**, sur un écran d'erreur, avant tout affichage.
+
+Trois choses à en retenir, et la troisième est la vraie :
+
+1. Un index qui cite une colonne migrée se crée **après** les migrations. Le
+   plus simple est de sortir tous les `CREATE INDEX` du schéma et de les
+   exécuter en dernier : l'ordre devient impossible à se tromper.
+2. Le test de migration existait et passait. Il ne couvrait que les deux
+   premières colonnes ajoutées, écrites avant qu'aucun index ne les cite. Une
+   colonne ajoutée plus tard, avec son index, sortait du cas testé sans que
+   rien ne le signale. **Un test de migration doit rejouer la base la plus
+   ancienne qu'on prétende encore ouvrir, pas celle d'il y a une version.**
+3. Et le plus important : la vérification était verte des deux côtés. Les tests
+   partent tous d'une base **neuve**, où le schéma crée la table et ses index
+   d'un coup — l'ordre n'y a aucun effet. Le défaut n'existe que sur une base
+   qui a vécu, et il n'existe donc que chez les autres.
+
+C'est le même piège que « la mesure disait vert et le fichier était faux »,
+transposé aux données : ce n'est pas la mesure qu'il fallait renforcer, c'est
+l'état de départ qu'il fallait vieillir.

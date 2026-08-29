@@ -297,3 +297,40 @@ test('une base créée avant la colonne d’état s’ouvre et se complète', as
     rmSync(dossier, { recursive: true, force: true })
   }
 })
+
+test('une base d’avant les colonnes de rangement s’ouvre encore', async () => {
+  // Le cas réel, remonté par un utilisateur : « no such column: rang » au
+  // démarrage de l'application, sur une base importée par une version
+  // précédente. Les index qui citent une colonne ajoutée ne peuvent pas vivre
+  // dans le schéma — il s'exécute AVANT les migrations, donc sur une table qui
+  // n'a pas encore la colonne, et « CREATE TABLE IF NOT EXISTS » ne la crée pas.
+  const { mkdtempSync, rmSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const { join } = await import('node:path')
+  const dossier = mkdtempSync(join(tmpdir(), 'iptv-'))
+  const chemin = join(dossier, 'avant.db')
+
+  try {
+    const ancien = ouvrirDepot(chemin)
+    await importerM3U(ancien, LISTE, { adresse: 'http://exemple.tv/get.php' })
+    const total = ancien.compter()
+    // On ramène la base à ce qu'elle était : sans les colonnes de rangement,
+    // et sans les index qui les citent.
+    for (const index of ['element_par_rang', 'element_par_theme']) {
+      ancien.base.exec(`DROP INDEX IF EXISTS ${index}`)
+    }
+    for (const colonne of ['canal', 'rang', 'theme', 'etat', 'teste_le']) {
+      ancien.base.exec(`ALTER TABLE element DROP COLUMN ${colonne}`)
+    }
+    ancien.fermer()
+
+    const rouvert = ouvrirDepot(chemin)
+    assert.equal(rouvert.compter(), total, 'la base s’ouvre et garde son contenu')
+    // Et les colonnes sont bien revenues, index compris : une requête qui trie
+    // par rang doit passer.
+    assert.equal(rouvert.lister({ genre: 'direct' }).length, rouvert.compter({ genre: 'direct' }))
+    rouvert.fermer()
+  } finally {
+    rmSync(dossier, { recursive: true, force: true })
+  }
+})
