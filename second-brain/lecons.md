@@ -2023,6 +2023,48 @@ la diffusion sans message d'erreur — écran noir, retour au menu.
 développement, et le contrôle « est-ce joignable de l'extérieur » répond oui à
 tort.
 
+## Un outil qui régénère un fichier partagé en supprime ce qu'il n'a pas calculé
+
+Trois mesures de suite sans le moindre effet : changer un gain de +2 à +6 puis
++8 rendait des chiffres **identiques au chiffre près**. C'est le signe qu'on ne
+mesure pas ce qu'on croit.
+
+La cause : un script de recalage régénérait le fichier d'automation avec
+`"couches": []`. Ce fichier portait aussi les bruitages posés à la main —
+effacés en silence à chaque appel. Je mesurais des versions muettes de leurs
+couches en croyant régler des niveaux.
+
+**Un chiffre rigoureusement identique après un changement de réglage n'est pas
+un résultat, c'est un symptôme.** Le premier réflexe est de vérifier que le
+changement a bien atteint le fichier mesuré.
+
+Et la règle qui l'évite : **un outil qui régénère un fichier partagé rend ce
+qu'il n'a pas calculé.** Ici les couches sont relues avant écriture et
+réinjectées.
+
+## Une coupe vers une image d'une autre nature se lit comme un saut
+
+Toutes les transitions d'un montage sont des coupes franches, et personne ne
+les remarque — sauf la dernière, vers un carton de fin : image figée, floutée,
+assombrie. Mesuré, c'était **l'écart entre deux images le plus fort du film,
+110** quand la médiane du plan tournait autour de 8.
+
+Un fondu de 0,25 s : **13,1**. Ce n'est pas la coupe qui gêne, c'est le
+changement de **nature** de l'image — entre deux plans filmés une coupe passe,
+vers un carton elle saute.
+
+## Ce qui est écrit en temps source dérive quand la vitesse change
+
+Un flash et une secousse posés à 5,375 s sur un plan ralenti à 0,8 tombaient
+juste. Le ralenti retiré, ils sont tombés **1,08 s après** l'événement qu'ils
+soulignaient — c'est-à-dire tout à la fin du plan, où un flash se lit comme un
+saut d'image.
+
+`flashs` et `tremblements` comptent en temps SOURCE, comme `depart` ; les
+effets sonores comptent en temps de FRISE. **Deux repères dans la même recette,
+et rien ne le signale.** Ils sont désormais dérivés des mêmes instants de rush
+que le reste, par `caler_dragon.py`.
+
 ## Du code testé et injoignable passe pour du code livré
 
 Trois fonctions du projet IPTV — l'import d'un panneau Xtream, le chargement
@@ -2049,6 +2091,42 @@ Zéro résultat : ce n'est pas livré, quoi qu'en disent les tests.
 règle générale : **une fonctionnalité n'est livrée que lorsqu'un chemin y mène
 depuis l'extérieur** — une commande, un bouton, une route. Le reste est du code
 qui compile.
+
+## Fusionner souvent a un plafond, et il est invisible
+
+La règle de ce dépôt est d'ouvrir la PR et de la fusionner dès qu'un lot tient
+debout — c'est ce qui évite les conflits quand plusieurs sessions travaillent en
+parallèle. Elle est juste, et elle a un coût que personne n'avait compté.
+
+**Chaque fusion sur `main` déclenche un déploiement.** Le plan gratuit de Vercel
+en autorise cent par jour. Mesuré le 29/08 : **154 fusions en vingt-quatre
+heures**, donc cinquante-quatre déploiements refusés.
+
+Le message arrive dans un commentaire de PR, jamais dans la conversation :
+
+```
+Resource is limited - try again in 24 hours
+(more than 100, code: "api-deployments-free-per-day")
+```
+
+Et voilà ce que ça coûte, mesuré : le propriétaire a testé pendant deux heures
+une version vieille de plusieurs heures. Il rapportait des défauts déjà corrigés,
+et chaque « recharge de force » ne servait à rien puisque le serveur ne servait
+pas la nouvelle version. Deux heures de travail des deux côtés, sur un défaut
+qui n'existait plus.
+
+Trois choses à en tirer :
+
+- **Un correctif fusionné n'est pas un correctif livré.** Tant que le
+  déploiement n'a pas abouti, dire « c'est corrigé, recharge » est faux — et
+  fait douter la personne de son propre téléphone.
+- **Compter les fusions du jour avant d'en promettre l'effet.**
+  `git log --oneline --since="24 hours ago" origin/main | wc -l` répond en une
+  seconde, et c'est le seul chiffre qui dit si ce qu'on vient de fusionner
+  arrivera quelque part.
+- **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
+  déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
+  c'est le bon geste ce jour-là seulement.
 
 ## Le HTML préconstruit de Next n'est pas une page servable
 

@@ -7,6 +7,27 @@ prix recalculé — et je livre en 48 h.
 Ce que ça remplace : quatre allers-retours par téléphone pour réclamer un logo,
 une couleur et une liste de services.
 
+## Livrer le site
+
+`titan-builder` recueillait tout puis s'arrêtait sur un `commande.json` : le
+site se construisait ensuite à la main, et vendre trois sites dans la semaine
+voulait dire les écrire trois fois.
+
+```bash
+npm run generer dossiers/maconnerie-le-goff-2026-08-29
+```
+
+Le dossier **devient** le site : un `index.html` autonome atterrit à côté des
+photos. On le dépose tel quel sur n'importe quel hébergement, on le zippe, ou
+on l'ouvre depuis le disque pour le montrer au client avant publication.
+
+Une page HTML et rien d'autre — pas de cadre applicatif. Le site d'un artisan
+tient sur une page : y mettre Next.js ajouterait une compilation, un hébergeur
+qui exécute du Node, et un redéploiement pour changer un numéro de téléphone.
+
+Toute la fabrication est dans `src/lib/site.ts`, **pur** : il rend une chaîne,
+il ne touche ni au disque ni au réseau. Seul le script écrit.
+
 ## Lancer
 
 ```bash
