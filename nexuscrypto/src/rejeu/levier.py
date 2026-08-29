@@ -84,6 +84,37 @@ HEURES_PAR_PERIODE = 8.0
 POSITIONS_POUR_CONCLURE = 10
 
 
+def meches_absentes(serie: SerieOHLCV, tolerance: float = 0.98) -> bool:
+    """Vrai quand la série ne porte aucune information intra-bougie.
+
+    **Le piège que ce module s'était tendu à lui-même.** Toute sa méthode
+    repose sur les plus bas — « une mèche liquide un compte aussi sûrement
+    qu'une clôture ». Mais une source qui ne publie qu'une clôture quotidienne
+    n'a pas de plus bas à donner : `lire_coinmetrics` fabrique alors
+    `bas = min(clôture du jour, clôture de la veille)`, un plus bas de clôture
+    à clôture. Le calcul tourne, ne lève rien, et mesure les clôtures en
+    croyant mesurer les mèches.
+
+    La détection est mécanique : sans information intra-bougie, aucune bougie
+    ne dépasse son propre corps — `haut = max(ouverture, clôture)` et
+    `bas = min(ouverture, clôture)`. Une vraie série de marché a des mèches sur
+    la quasi-totalité de ses bougies ; la tolérance absorbe les rares séances
+    qui n'en ont pas.
+
+    Conséquence à dire au lecteur, jamais à taire : le vrai plus bas d'une
+    journée est sous celui-là, donc les liquidations sont **sous-comptées**.
+    """
+
+    bougies = serie.bougies
+    if not bougies:
+        return False
+    sans = sum(
+        1 for b in bougies
+        if b.haut <= max(b.ouverture, b.cloture) and b.bas >= min(b.ouverture, b.cloture)
+    )
+    return sans / len(bougies) >= tolerance
+
+
 def part_de_marge_financee(levier: float, heures: float,
                            taux: float = FINANCEMENT_PAR_DEFAUT) -> float:
     """La fraction de la marge qu'un perpétuel prélève sur cette détention.
@@ -160,6 +191,9 @@ class Verdict:
     # durée de détention qu'il faut changer, ou le levier.
     tuees_par_le_financement: int = 0
     financement_median_pct: float = 0.0    # part de marge, en pourcentage
+    # Porté par le verdict, et non passé au tableau : un appelant qui oublie de
+    # transmettre l'avertissement est exactement le défaut qu'on corrige ici.
+    sans_meches: bool = False
 
     @property
     def part_liquidee(self) -> float:
@@ -262,6 +296,7 @@ def analyser(
     """
 
     lignes = positions(resultat, serie)
+    plates = meches_absentes(serie)
     verdicts: list[Verdict] = []
 
     for levier in sorted(leviers):
@@ -292,6 +327,7 @@ def analyser(
             premiere=min((p.ouverte_le for p in touchees), default=None),
             tuees_par_le_financement=par_frais,
             financement_median_pct=median * 100,
+            sans_meches=plates,
         ))
     return verdicts
 
@@ -369,6 +405,16 @@ def tableau(verdicts: list[Verdict], titre: str = "") -> str:
         lignes.append(f"**Levier maximal sans une seule liquidation : {maximum:g}x.** "
                       "Le financement est compté ; restent le prix de marque de la plateforme "
                       "et l'illiquidité réelle, qui poussent tous deux dans le même sens.")
+
+    if verdicts and verdicts[0].sans_meches:
+        lignes.append("")
+        lignes.append(
+            "⚠ **Cette série n'a pas d'information intra-bougie** : ses plus bas sont "
+            "dérivés des clôtures, pas mesurés. Une source qui ne publie qu'un cours de "
+            "clôture par jour ne peut pas dire jusqu'où le prix est descendu dans la "
+            "journée — or c'est là que se jouent les liquidations. **Les chiffres "
+            "ci-dessus sous-comptent**, et d'autant plus que le levier est élevé."
+        )
 
     par_frais = [v for v in verdicts if v.tuees_par_le_financement]
     if par_frais:
