@@ -603,6 +603,25 @@ des décisions, et c'est ce que ce dépôt a de plus précieux. Une modification
 touche qu'un projet, sauf configuration racine. Français partout — commentaires,
 erreurs, tests, commits ; identifiants de code en anglais.
 
+**Et avant de toucher : `grep`, pas la mémoire.** Une fonction se remplace après
+avoir vu qui l'appelle, jamais avant. Le geste tient en une commande et coûte
+deux secondes :
+
+```bash
+grep -rn "nomDeLaFonction" src/ scripts/ --include=*.ts --include=*.tsx --include=*.mjs
+```
+
+Ce n'est pas de la prudence de principe, c'est la leçon de trois défauts payés
+ici. `MIN_SHOT` désignait deux grandeurs différentes selon qui lisait. Une borne
+recopiée à la main à côté d'une constante mesurée laissait passer exactement les
+valeurs qu'elle devait interdire. Une entrée de liste retirée « par cohérence »
+avec sa voisine a fait tomber le parcours entier, parce que les deux cas
+n'avaient pas la même issue.
+
+Le point commun des trois : le code semblait se suffire à lui-même, et il
+dépendait d'ailleurs. **Ce qui coûte n'est pas la modification, c'est ce qu'on
+n'a pas regardé avant.**
+
 ### Git
 
 Une branche `claude/…` par sujet, messages à l'infinitif décrivant l'intention.
