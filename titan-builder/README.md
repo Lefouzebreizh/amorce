@@ -28,6 +28,25 @@ qui exécute du Node, et un redéploiement pour changer un numéro de téléphon
 Toute la fabrication est dans `src/lib/site.ts`, **pur** : il rend une chaîne,
 il ne touche ni au disque ni au réseau. Seul le script écrit.
 
+## Quand un client dit oui ailleurs que sur la plateforme
+
+Le formulaire en ligne suppose que le client vient s'y configurer. Dans la vraie
+vente, il dit oui sur Messenger et donne ses informations en trois messages :
+c'est le vendeur qui les a sous les yeux.
+
+```bash
+npm run nouveau-client            # neuf questions, puis le dossier et la page
+```
+
+Les questions sont exactement les champs du formulaire, et la validation est
+exactement celle de la route d'API — `reproches()`, partagée. Une seconde règle
+écrite pour le terminal aurait dérivé de celle du web sans que rien ne le
+signale, et fabriqué des dossiers qu'un autre chemin refuse.
+
+Le script s'arrête après le dossier et la page. Les photos se déposent dedans
+ensuite, et `npm run generer` les reprend : séparer les deux évite d'attendre un
+transfert de photos pendant que le client est encore en ligne.
+
 ## Mettre le site du client en ligne
 
 Le générateur produit un dossier autonome : **une page HTML, les photos, et
