@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import type { Genre, Langue } from '../domaine/types.ts'
+import { antennesDe } from '../serveur/antennes.ts'
 import { depot } from '../serveur/depot-partage.ts'
 import { Grille } from './Carte.tsx'
 import { Vide } from './Vide.tsx'
@@ -123,7 +124,7 @@ export function Catalogue({
           Aucun résultat avec ces filtres.
         </p>
       ) : (
-        <Grille elements={elements} />
+        <Grille elements={elements} antennes={antennesDe(cache, elements)} />
       )}
 
       {pages > 1 && (

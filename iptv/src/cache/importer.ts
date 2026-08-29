@@ -18,7 +18,9 @@ import {
   normaliserFilmXtream,
   type Categories,
 } from '../normalisation/normaliser.ts'
-import type { Depot, ResumeImport } from './depot.ts'
+import { analyserXmltv } from '../epg/xmltv.ts'
+import type { Programme } from '../domaine/types.ts'
+import type { Depot, ResumeImport, ResumeProgrammes } from './depot.ts'
 
 export interface OptionsImportM3U {
   /** L'adresse d'origine. Elle est masquée avant d'entrer en base. */
@@ -158,4 +160,45 @@ export async function importerEpisodes(
   }
 
   return depot.importer(sourceId, episodes(), { purger: false })
+}
+
+
+export interface ResumeImportEpg extends ResumeProgrammes {
+  readonly chaines: number
+  readonly ignores: number
+}
+
+/**
+ * Verse un guide XMLTV dans le cache.
+ *
+ * Les `<channel>` du fichier ne sont **pas** enregistrés, et c'est délibéré :
+ * le catalogue connaît déjà ses chaînes, avec leurs vrais noms et leurs logos,
+ * et le guide n'apporte qu'un doublon souvent moins bon. Seul son identifiant
+ * compte, et il est déjà porté par `Element.tvgId`. On les compte pour dire
+ * combien le fichier en déclare — c'est utile quand aucun programme ne
+ * s'affiche : si le guide annonce 300 chaînes et qu'aucune n'est dans la liste,
+ * les identifiants ne se correspondent pas, et c'est là qu'il faut chercher.
+ */
+export async function importerEpg(
+  depot: Depot,
+  source: SourceTexte,
+  options: { paquet?: number; purgerAvant?: string } = {},
+): Promise<ResumeImportEpg> {
+  let chaines = 0
+  let ignores = 0
+
+  const analyse = analyserXmltv(source)
+
+  async function* programmes(): AsyncGenerator<Programme> {
+    let pas = await analyse.next()
+    while (pas.done !== true) {
+      if (pas.value.type === 'chaine') chaines += 1
+      else yield pas.value.programme
+      pas = await analyse.next()
+    }
+    ignores = pas.value.ignores
+  }
+
+  const resume = await depot.importerProgrammes(programmes(), options)
+  return { ...resume, chaines, ignores }
 }
