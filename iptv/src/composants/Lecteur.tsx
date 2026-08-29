@@ -40,10 +40,25 @@ function nommer(piste: { name?: string; lang?: string }, rang: number): string {
 /*
  * Le lecteur.
  *
- * **Pas d'autoplay** : la lecture démarre sur un geste, jamais toute seule.
- * C'est une règle du dépôt, et elle évite aussi le refus silencieux des
- * navigateurs, qui bloquent une vidéo sonore lancée sans interaction — la page
- * paraît alors cassée sans qu'aucune erreur ne s'affiche.
+ * **Tout démarre seul, quel que soit le contenu.** Deux versions ont été
+ * nécessaires pour arriver là. La première n'ouvrait jamais la lecture, par
+ * principe. La deuxième l'ouvrait pour le direct seulement, en gardant
+ * l'attente pour les films — au motif qu'on veut lire le résumé d'abord.
+ *
+ * C'était un raisonnement, pas un usage. **Cliquer sur une vignette est déjà la
+ * demande de regarder** : ajouter un second clic sur le triangle est une gêne à
+ * chaque ouverture, et le résumé reste lisible sous l'image pendant que ça
+ * joue. Un film reprend en plus là où il s'était arrêté, position posée avant
+ * le démarrage.
+ *
+ * **Et le chargement se voit.** Un flux met deux à dix secondes à s'établir ;
+ * pendant ce temps l'image est noire et rien ne bouge. Sans indicateur, cela ne
+ * se distingue pas d'une panne — c'est le premier mot qui est revenu de
+ * l'usage réel : « ça reste figé ».
+ *
+ * Le navigateur peut refuser le démarrage, et c'est prévu : il bloque une vidéo
+ * sonore lancée sans interaction suffisante avec le site. Le refus est dit à
+ * l'écran plutôt que de laisser croire à une panne.
  *
  * **hls.js seulement s'il le faut** : Safari lit HLS nativement et le fait
  * mieux (décodage matériel, économie de batterie). Ailleurs, aucun navigateur
@@ -60,6 +75,8 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
   const [externes, setExternes] = useState<PisteExterne[] | undefined>(undefined)
   const [motSousTitres, setMotSousTitres] = useState<string | undefined>(undefined)
   const [cherche, setCherche] = useState(false)
+  const [refusAutomatique, setRefusAutomatique] = useState(false)
+  const [charge, setCharge] = useState(true)
   // 'local' : la page décode. 'distant' : un appareil du salon s'en charge, et
   // la page ne fait plus que piloter.
   const [mode, setMode] = useState<'local' | 'distant'>('local')
@@ -176,18 +193,53 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
     }
   }, [])
 
-  // Reprise de lecture : posée une fois les métadonnées connues, sinon la durée
-  // vaut NaN et l'affectation est ignorée sans erreur.
+  /*
+   * La reprise **puis** le démarrage, dans cet ordre et jamais l'inverse.
+   *
+   * Poser `currentTime` après avoir lancé la lecture provoque un saut visible
+   * et une seconde mise en tampon : on regarde le début pendant une seconde,
+   * puis l'image bondit. Et la position ne peut se poser qu'une fois les
+   * métadonnées connues — avant, la durée vaut NaN et l'affectation est
+   * ignorée sans la moindre erreur.
+   */
   useEffect(() => {
     const element = video.current
-    if (element === null || direct || positionDepart <= 0) return
-    const poser = (): void => {
-      element.currentTime = positionDepart
-      element.removeEventListener('loadedmetadata', poser)
+    if (element === null || mode === 'distant') return
+
+    const demarrer = (): void => {
+      if (!direct && positionDepart > 0 && Number.isFinite(element.duration)) {
+        element.currentTime = positionDepart
+      }
+      void element.play().catch((cause: unknown) => {
+        // `NotAllowedError` est le refus d'autoplay du navigateur — pas une
+        // panne du flux. Les autres erreurs sont déjà traitées par hls.js.
+        if (cause instanceof DOMException && cause.name === 'NotAllowedError') {
+          setRefusAutomatique(true)
+          setCharge(false)
+        }
+      })
     }
-    element.addEventListener('loadedmetadata', poser)
-    return () => element.removeEventListener('loadedmetadata', poser)
-  }, [positionDepart, direct])
+
+    if (element.readyState >= 1) demarrer()
+    element.addEventListener('loadedmetadata', demarrer, { once: true })
+    return () => element.removeEventListener('loadedmetadata', demarrer)
+  }, [direct, src, mode, positionDepart])
+
+  // L'indicateur de chargement s'éteint sur la première image jouée, pas sur
+  // un événement de réseau : c'est le moment où l'utilisateur voit quelque
+  // chose, et c'est le seul qui compte pour lui.
+  useEffect(() => {
+    const element = video.current
+    if (element === null) return
+    const enMarche = (): void => setCharge(false)
+    const enAttente = (): void => setCharge(true)
+    element.addEventListener('playing', enMarche)
+    element.addEventListener('waiting', enAttente)
+    return () => {
+      element.removeEventListener('playing', enMarche)
+      element.removeEventListener('waiting', enAttente)
+    }
+  }, [src])
 
   // La position se retient toutes les dix secondes, et une dernière fois au
   // départ de la page. `sendBeacon` est le seul envoi qui survive à la
@@ -321,13 +373,29 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
 
   return (
     <div>
-      <video
-        ref={video}
-        controls
-        playsInline
-        preload="metadata"
-        className="aspect-video w-full rounded-carte bg-black"
-      />
+      <div className="relative">
+        <video
+          ref={video}
+          controls
+          playsInline
+          preload="metadata"
+          className="aspect-video w-full rounded-carte bg-black"
+        />
+        {charge && erreur === undefined && (
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span className="rounded-lg bg-black/70 px-4 py-2 text-sm">
+              Connexion au flux…
+            </span>
+          </span>
+        )}
+      </div>
+
+      {refusAutomatique && (
+        <p className="mt-3 rounded-lg bg-accent-sombre p-3 text-sm">
+          Votre navigateur a refusé de démarrer la vidéo tout seul. Appuyez sur lecture —
+          il l’acceptera ensuite sur ce site.
+        </p>
+      )}
 
       {erreur !== undefined && (
         <p role="alert" className="mt-3 rounded-lg bg-red-500/15 p-3 text-red-200">

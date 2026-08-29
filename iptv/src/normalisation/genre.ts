@@ -18,6 +18,8 @@
 import type { Genre } from '../domaine/types.ts'
 
 const FICHIER_VIDEO = /\.(mkv|mp4|avi|mov|webm|flv|mpe?g|wmv)(?:\?|$)/i
+/** Un manifeste HLS : un flux qui coule, pas un fichier qu'on télécharge. */
+const MANIFESTE = /\.m3u8?(?:\?|$)/i
 const GROUPE_SERIE = /s[ée]ries?|s[ée]ason|saison|tv[ -]?shows?|animes?/i
 const GROUPE_FILM = /films?|movies?|cin[ée]ma|vod|documentaires?/i
 
@@ -34,6 +36,20 @@ export function detecterGenre({ url, groupe, episode = false }: IndicesGenre): G
   if (/\/live\//i.test(url)) return 'direct'
 
   if (episode) return 'serie'
+
+  /*
+   * Le conteneur passe avant le nom du groupe, et cette ligne a été écrite
+   * après un défaut réel : une liste publique range ses chaînes par thème, et
+   * l'une de ces catégories s'appelle « Movies ». Toutes les chaînes de cinéma
+   * se retrouvaient donc dans l'onglet Films — où l'on cliquait sur « un film »
+   * pour tomber sur une chaîne en direct.
+   *
+   * Une chaîne qui **diffuse** des films n'est pas un film. Et la différence
+   * est lisible dans l'adresse : un manifeste HLS est un flux continu, un
+   * fichier `.mkv` ou `.mp4` est une œuvre. Le nom du groupe, lui, décrit le
+   * contenu — pas la nature de ce qu'on reçoit.
+   */
+  if (MANIFESTE.test(url)) return 'direct'
 
   if (groupe !== undefined && groupe !== '') {
     if (GROUPE_SERIE.test(groupe)) return 'serie'
