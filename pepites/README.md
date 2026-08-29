@@ -334,12 +334,24 @@ Ce qui reste **fragile ou incomplet**, dit franchement :
 - **Sur Arbitrum, Avalanche, Polygon et Optimism, il n'y a pas de simulateur
   d'achat/revente** comparable à honeypot.is : on n'y dispose que de l'analyse
   statique. Le rapport nomme les sources, à chacun d'en tirer les conséquences.
-- **Rien n'a encore tourné contre l'API réelle** : l'environnement de
-  développement bloque les sorties réseau. Tout est validé sur des réponses
-  rejouées, dans leur forme documentée. Le premier `scan` en conditions réelles
-  reste à faire — et c'est pour ce moment précis qu'existe `main.py sonde`,
-  décrite plus bas : elle dit en une vingtaine d'appels si les formats
-  documentés sont encore ceux que les services rendent.
+- **La sonde a tourné contre les vraies API le 29/08/2026, et tout tient.**
+  Verdict : « Toutes les sources répondent et se lisent. » DexScreener rend
+  **30 paires reçues, 30 lues** sur ses trois points d'entrée — recherche,
+  vitrine, pools d'un jeton — donc aucun champ n'a bougé depuis que l'analyseur
+  a été écrit. GoPlus répond sur ses deux points d'entrée, EVM et Solana ;
+  honeypot.is et RugCheck répondent aussi. Le code entier avait été écrit sur
+  des réponses **rejouées**, sans qu'aucun appel réel n'ait jamais été passé :
+  c'était le risque numéro un du projet, et il est levé.
+
+  Deux réserves, attendues et sans gravité. Le **RPC public Solana** rend `429`
+  (« Too many requests ») : il est saturé en permanence, c'est écrit depuis le
+  premier jour, et cela ne coûte que le traqueur de portefeuilles sur Solana —
+  une clé Helius gratuite le règle. Et **Etherscan comme Telegram sont sans
+  clé** : les premiers acheteurs EVM sont désactivés, et le radar notera sans
+  jamais prévenir tant que le jeton du bot n'est pas posé.
+
+  Ce qui reste à faire : le premier `scan` complet, puis le second dix minutes
+  plus tard — la persistance en demande deux.
 
 ## 6. Commandes
 
