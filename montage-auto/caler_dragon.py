@@ -110,9 +110,14 @@ def caler(recette: dict, couches: list | None = None) -> tuple[dict, dict, list]
             "s'arrete 0,06 s AVANT le cri, jamais dessus.",
         ],
         "micro_silences": [
-            {"instant": t["silence"], "avance": 0.30,
-             "tenue": round(t["fin_silence"] - t["silence"], 3),
-             "retour": 0.28, "gain_db": -9},
+            # PAS de creux sur le silence du rush. Il en ménage déjà 17 dB tout
+            # seul, et le creuser davantage **avalait les pas** posés dedans :
+            # mesuré, le second pas ressortait de +0,6 dB sur ce qui le précède
+            # et la roche de −0,7 — c'est-à-dire sous son propre fond. Un
+            # silence qu'on approfondit ne rend pas ce qui s'y passe plus
+            # audible, il le supprime avec le reste.
+            {"instant": round(t["fin_silence"] - 0.20, 3), "avance": 0.24,
+             "tenue": 0.18, "retour": 0.26, "gain_db": -6},
             {"instant": t["creux"], "avance": 0.22,
              "tenue": round(t["fin_creux"] - t["creux"], 3),
              "retour": 0.22, "gain_db": -4},

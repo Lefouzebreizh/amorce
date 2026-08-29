@@ -218,6 +218,40 @@ ne remarque pas l'absence — on la ressent.
 
 ---
 
+## 8. Chaque événement a besoin de son contraste, et ça se chiffre
+
+Le climax en tête ne suffit pas : « on n'entend pas les pas » se dit d'un son
+qui est là, au bon instant, au bon niveau — et **au même niveau que ce qui
+l'entoure**. Un événement qui ne dépasse pas son fond n'existe pas.
+
+```python
+# pour chaque evenement : son niveau, contre la moyenne des 0,45 s qui precedent
+contraste = max(env[t : t+0.20]) - env[t-0.45 : t-0.05].mean()
+```
+
+| contraste | ce que ça donne |
+| --- | --- |
+| **négatif** | l'événement est **sous** son fond : inaudible, quel que soit son gain |
+| 0 à 3 dB | on le devine |
+| **5 à 10 dB** | il ponctue — la cible |
+| > 15 dB | il agresse |
+
+Relevé sur une scène rapportée comme « tout sature, on n'entend rien » : deux
+pas à **−1,2 et −2,2 dB** — sous leur propre fond. Corrigés, +3,5 et +6,3.
+
+Trois causes possibles, dans cet ordre :
+
+1. **Un accent précédent dure trop.** Une queue de braam tenait 1,4 s et
+   couvrait les deux pas posés derrière. `enveloppe.coupe` la taille.
+2. **L'esquive avale ce qu'on a mis dans le creux.** Un effet de recette la
+   subit comme le reste du lit. Le sortir en **couche** avec
+   `suit_la_voix: false` le fait passer après : c'est la seule façon de poser
+   un son *dans* un creux sans qu'il soit creusé avec.
+3. **Le son n'existe pas au-dessus de 400 Hz.** Voir le point 3.
+
+---
+
+## 9. Le climax doit être le plan le plus fort, et ça se vérifie
 ## 8. Le climax doit être le plan le plus fort, et ça se vérifie
 
 ```bash
@@ -235,6 +269,7 @@ dizaine de décibels sous le climax.
 
 ---
 
+## 10. Un texte se place où le sujet n'est pas
 ## 9. Un texte se place où le sujet n'est pas
 
 ```bash
@@ -253,6 +288,7 @@ le texte sur le front, yeux et bouche libres.
 
 ---
 
+## 11. Ce qu'on tire d'une image du film hérite de cette image
 ## 10. Ce qu'on tire d'une image du film hérite de cette image
 
 Un carton fabriqué depuis la dernière image portait le **titre encore
@@ -269,6 +305,7 @@ ressortis à −45 dB.
 
 ---
 
+## 12. Un ralenti sans interpolation duplique une image sur cinq
 ## 11. Un ralenti sans interpolation duplique une image sur cinq
 
 `vitesse: 0.8` sans `interpolation` : ffmpeg tient la cadence en **dupliquant**.
@@ -295,6 +332,7 @@ chercher un défaut de son sur un plan ralenti, compter ses images figées.
 
 ---
 
+## 13. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
 ## 12. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
 
 - **Une affiche d'ouverture** : le temps de lire son titre, pas plus. 0,6 s
@@ -305,6 +343,7 @@ chercher un défaut de son sur un plan ralenti, compter ses images figées.
 
 ---
 
+## 14. Les trois relevés obligatoires, sur le fichier qui part
 ## 13. Les trois relevés obligatoires, sur le fichier qui part
 
 Écrits dans `CLAUDE.md` § 8, rappelés ici parce que c'est le moment de les
