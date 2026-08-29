@@ -452,9 +452,26 @@ en permanence — donc qui ne tourne jamais vraiment — ressembler à un radar 
 bonne santé. Si la ligne revient à chaque passage, il faut espacer la minuterie
 ou réduire `jetons_en_vitrine_max` et `jetons_suivis_max`.
 
-Le verrou est un `flock`, pas un fichier témoin : après un `kill -9` ou une
-coupure de courant, le noyau relâche tout seul. Personne n'a de fichier à
-effacer à la main le matin où le radar s'est tu.
+Le verrou est un verrou du noyau, pas un fichier témoin : après un `kill -9` ou
+une coupure de courant, il est relâché tout seul. Personne n'a de fichier à
+effacer à la main le matin où le radar s'est tu. Deux appels selon le système,
+aucune bibliothèque tierce — `fcntl.flock` sur POSIX, `msvcrt.locking` sur
+Windows.
+
+**Le chemin Windows reste à démontrer.** Il est écrit contre la surface
+documentée de `msvcrt`, mais aucun test du dépôt ne peut l'exécuter : la CI
+tourne sous Linux. La vérification prend deux minutes sur un poste Windows —
+ouvrir **deux** fenêtres PowerShell dans `pepites`, lancer `python main.py scan`
+dans la première, puis la même commande dans la seconde pendant que la première
+tourne. La seconde doit refuser :
+
+```
+Scan sauté : un scan tourne déjà depuis 12 s.
+```
+
+Si elle démarre au lieu de refuser, le verrou Windows ne fonctionne pas et il
+faut le dire ici. Tant que l'épreuve n'a pas été faite, la protection y est
+**probable, pas démontrée**.
 
 Ce qui **n'est pas** en cause, et qu'on croit toujours : la confirmation. Un
 relevé écrit à la seconde ne peut pas confirmer un candidat, `ecart_min_minutes`
