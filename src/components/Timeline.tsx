@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useIsTouch } from '@/hooks/useMediaQuery';
 import { CAPTION_STYLES } from '@/lib/captions';
 import { formatTime } from '@/lib/media';
@@ -46,6 +46,8 @@ const ECHELLE_MAX = 120;
  * intitulé serait tronqué par le défilement horizontal.
  */
 const RIGHT_GUTTER = 96;
+/** Délai avant que les boutons de zoom s'effacent, une fois la frise relâchée. */
+const DELAI_EFFACEMENT = 2600;
 
 /** Hauteur réservée en haut pour l'étiquette de la tête de lecture. */
 const LABEL_ROW = 14;
@@ -113,6 +115,49 @@ export function Timeline({
   const ecartInitial = useRef<{ ecart: number; echelle: number; instant: number } | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const touch = useIsTouch();
+
+  /*
+   * Les boutons de zoom s'effacent quand on ne s'en sert pas.
+   *
+   * Ce n'est pas un effet : c'est de la place. Un bouton mesure 44 px — le
+   * minimum qu'un pouce attrape — et la règle 16 px, quand la frise entière
+   * n'en fait que 98 sur téléphone. Les deux ne tiennent pas l'un à côté de
+   * l'autre : mesuré, dès le premier zoom une graduation sur huit passe sous
+   * les boutons, et laquelle change à chaque défilement.
+   *
+   * Trois mises en page ont été essayées pour les loger ailleurs, chacune a
+   * cassé autre chose. La sortie n'est pas géométrique : les contrôles se
+   * montrent quand on touche la frise, comme ceux d'un lecteur vidéo, et
+   * rendent la règle intacte dès qu'on la lit. Au repos, plus rien n'est
+   * masqué.
+   *
+   * À la souris on ne les efface pas : l'écran est large, rien ne se recouvre,
+   * et un contrôle qui disparaît sous un curseur qui le cherche est une gêne
+   * sans contrepartie.
+   */
+  const [controles, setControles] = useState(true);
+  const effacement = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revelerControles = useCallback(() => {
+    if (!touch) return;
+    setControles(true);
+    if (effacement.current) clearTimeout(effacement.current);
+    effacement.current = setTimeout(() => setControles(false), DELAI_EFFACEMENT);
+  }, [touch]);
+  /*
+   * Au premier affichage ils sont là, puis s'effacent seuls : c'est ce qui les
+   * fait découvrir sans qu'on ait à les chercher.
+   *
+   * L'effet arme le minuteur au lieu d'appeler `revelerControles` : celui-ci
+   * écrit dans l'état, et un `setState` synchrone dans un effet déclenche un
+   * second rendu pour rien. L'état de départ est déjà « visible ».
+   */
+  useEffect(() => {
+    if (!touch) return undefined;
+    effacement.current = setTimeout(() => setControles(false), DELAI_EFFACEMENT);
+    return () => {
+      if (effacement.current) clearTimeout(effacement.current);
+    };
+  }, [touch]);
 
   /*
    * Réordonner un plan au doigt.
@@ -312,6 +357,7 @@ export function Timeline({
       className={`relative overflow-x-auto overscroll-x-contain rounded-2xl bg-panel [touch-action:pan-x] ${compact ? 'p-2' : 'p-3'}`}
       onPointerDown={(event) => {
         if (event.pointerType === 'mouse') return;
+        revelerControles();
         pincement.current.set(event.pointerId, { x: event.clientX });
       }}
       onPointerMove={(event) => {
@@ -373,25 +419,38 @@ export function Timeline({
         la même échelle que le pincement.
       */}
       {/*
-        Décalés sous la règle, jamais dessus.
-        Posés à hauteur nulle en tête du conteneur, ils recouvraient les
-        graduations : sur un montage de cinquante-six secondes, le « 50s »
-        disparaissait derrière eux. Un contrôle qui cache ce qu'il sert à lire
-        ne sert à rien.
+        Ils restent en tête du conteneur, et c'est le temps qui les déplace.
 
-        Le décalage a été retiré : posé par `top`, il rendait le bouton mobile
-        dans un conteneur qui défile, et la vérification ne le trouvait plus
-        jamais stable — un clic sur « voir plus large » abandonnait après trente
-        secondes, et le parcours entier tombait avec lui. Il reste donc à zéro,
-        et la règle qu'il recouvre attend une solution qui ne touche pas à la
-        mise en page de la frise.
+        Trois mises en page ont été essayées pour les sortir de la règle : un
+        décalage par `top` rendait le bouton mobile dans un conteneur qui
+        défile, et la vérification ne le trouvait plus jamais stable — un clic
+        sur « voir plus large » abandonnait après trente secondes, et le
+        parcours entier tombait avec lui. Une rangée dans le flux débordait sur
+        un curseur voisin, et `overflow-hidden` rognait l'aperçu.
+
+        Aucune n'aboutissait parce que le problème n'était pas la position : 44
+        px de bouton et 16 px de règle ne tiennent pas dans 98 px de frise. Ils
+        s'effacent donc au repos, et la règle redevient entière.
+
+        Effacés, ils restent cliquables. C'est délibéré : les rendre inertes
+        renverrait l'appui à la piste en dessous, qui déplace la lecture — on
+        viserait le zoom et le film sauterait. Ils gardent donc leur cible, et
+        seule leur peinture disparaît. C'est bien l'occultation visuelle qui
+        gênait : le pointeur, lui, était déjà pris avant ce changement.
       */}
-      <div className="pointer-events-none sticky top-0 left-0 z-30 flex h-0 justify-end gap-1">
+      <div
+        className={`pointer-events-none sticky top-0 left-0 z-30 flex h-0 justify-end gap-1 transition-opacity duration-300 motion-reduce:transition-none ${
+          controles ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
         <button
           type="button"
           aria-label="Voir plus large"
           className="pointer-events-auto grid h-11 w-11 place-items-center rounded-xl bg-ink/75 text-[15px] text-mist backdrop-blur-sm"
-          onClick={() => setEchelle((v) => Math.max(ECHELLE_MIN, v / 1.6))}
+          onClick={() => {
+            revelerControles();
+            setEchelle((v) => Math.max(ECHELLE_MIN, v / 1.6));
+          }}
         >
           −
         </button>
@@ -399,7 +458,10 @@ export function Timeline({
           type="button"
           aria-label="Voir de plus près"
           className="pointer-events-auto grid h-11 w-11 place-items-center rounded-xl bg-ink/75 text-[15px] text-mist backdrop-blur-sm"
-          onClick={() => setEchelle((v) => Math.min(ECHELLE_MAX, v * 1.6))}
+          onClick={() => {
+            revelerControles();
+            setEchelle((v) => Math.min(ECHELLE_MAX, v * 1.6));
+          }}
         >
           +
         </button>

@@ -1059,6 +1059,40 @@ if (profile.mobile) {
       large !== null && serre !== null && large > serre,
       `${serre?.toFixed(1)} s → ${large?.toFixed(1)} s visibles`,
     );
+
+    /*
+     * Aucune graduation cachée une fois la frise relâchée.
+     *
+     * 44 px de bouton et 16 px de règle ne tiennent pas dans les 98 px de la
+     * frise : mesuré, dès le premier zoom une graduation sur huit passait sous
+     * les boutons, et laquelle changeait à chaque défilement. Ils s'effacent
+     * désormais au repos, et c'est cela qu'on contrôle — leur peinture, pas
+     * leur position : trois mises en page ont échoué à les loger ailleurs, une
+     * quatrième serait tentée si ce test disait « boutons déplacés » au lieu de
+     * « règle lisible ».
+     */
+    await page.waitForTimeout(3200);
+    const masquees = await page.evaluate(() => {
+      const frise = document.querySelector('[aria-label="Timeline du montage"]');
+      if (!frise) return ['frise absente'];
+      return [...frise.querySelectorAll('span')]
+        .filter((n) => /^\d+s$|^\d+m\d\d$/.test(n.textContent || ''))
+        .filter((n) => {
+          const b = n.getBoundingClientRect();
+          const sous = document.elementFromPoint(
+            b.left + Math.min(6, b.width / 2),
+            b.top + b.height / 2,
+          );
+          const bouton = sous?.closest('button');
+          return bouton && Number(getComputedStyle(bouton.parentElement).opacity) > 0.05;
+        })
+        .map((n) => n.textContent);
+    });
+    check(
+      'Au repos, aucune graduation ne passe sous les boutons',
+      masquees.length === 0,
+      masquees.length ? `cachées : ${masquees.join(', ')}` : 'règle entière',
+    );
   }
 
   await remonterEnTete(page);
