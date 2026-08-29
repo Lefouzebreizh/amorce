@@ -28,6 +28,23 @@ interface Etat {
   readonly morts: number
   readonly inconnus: number
   readonly aTester: number
+  /** ISO 8601, ou `undefined` si rien n'a jamais été importé. */
+  readonly dernierImport?: string | undefined
+}
+
+/**
+ * « il y a 3 jours », jamais une date brute.
+ *
+ * Pourquoi ce chiffre existe : « Ranger » ne relit que ce qui est déjà en
+ * base, jamais une source en direct. Sur une liste communautaire dont les
+ * hôtes tournent en continu, une base jamais réimportée accumule des URL
+ * périmées qu'aucun rangement ne corrige — et rien à l'écran ne le disait.
+ */
+function depuisImport(iso: string): string {
+  const jours = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
+  if (jours <= 0) return "aujourd'hui"
+  if (jours === 1) return 'hier'
+  return `il y a ${String(jours)} jours`
 }
 
 interface Avancement {
@@ -145,6 +162,19 @@ export function Entretien({ initial }: { initial: Etat }) {
         {etat.total.toLocaleString('fr-FR')} entrées — {etat.vivants} vérifiées vivantes,{' '}
         {etat.morts} masquées, {etat.aTester} jamais éprouvées.
       </p>
+
+      {etat.dernierImport !== undefined && (() => {
+        const jours = Math.floor((Date.now() - new Date(etat.dernierImport).getTime()) / 86_400_000)
+        const perime = jours >= 7
+        return (
+          <p className={`mt-1 text-sm ${perime ? 'font-semibold text-accent' : 'text-doux'}`}>
+            Dernier import : {depuisImport(etat.dernierImport)}.
+            {perime &&
+              ' Une liste publique change ses adresses en continu — un réimport (au terminal) ' +
+                'répare ce que « Ranger » ne peut pas.'}
+          </p>
+        )
+      })()}
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button

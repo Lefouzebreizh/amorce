@@ -334,3 +334,21 @@ test('une base d’avant les colonnes de rangement s’ouvre encore', async () =
     rmSync(dossier, { recursive: true, force: true })
   }
 })
+
+test('le dernier import se lit, ou dit franchement qu’il n’y en a pas', async () => {
+  const vide = ouvrirDepot(':memory:')
+  try {
+    assert.equal(vide.dernierImport(), undefined, 'rien d’importé, rien à dater')
+  } finally {
+    vide.fermer()
+  }
+
+  const depot = await depotRempli()
+  try {
+    const date = depot.dernierImport()
+    assert.ok(date !== undefined, 'un import laisse une trace datée')
+    assert.ok(!Number.isNaN(new Date(date).getTime()), 'la date se relit')
+  } finally {
+    depot.fermer()
+  }
+})
