@@ -2388,3 +2388,42 @@ entière.** Les teintes qui échouent ne sont ni les vives ni les sombres, ce so
 les **moyennes** — un gris-vert, un orange terne — où *aucune* des deux encres
 n'atteint 4,5:1. Un test sur trois couleurs bien choisies passe et ne prouve
 rien ; vingt-neuf teintes par pas de 15° coûtent 4 ms.
+
+## Un événement se juge sur son contraste, pas sur son gain
+
+« On n'entend pas les pas. » Ils étaient là, au bon instant, au bon gain — et
+mesurés à **−1,2 et −2,2 dB** contre les 0,45 s qui les précèdent. Sous leur
+propre fond : inaudibles quelle que soit leur amplitude.
+
+```python
+contraste = max(env[t : t+0.20]) - env[t-0.45 : t-0.05].mean()
+```
+
+Trois causes, dans cet ordre de fréquence :
+
+1. **Un accent précédent dure trop** — une queue de braam tenait 1,4 s et
+   couvrait ce qui suivait.
+2. **L'esquive avale ce qu'on a posé dans le creux.** Un effet de recette la
+   subit comme le lit ; seul un son posé en **couche** (`suit_la_voix: false`)
+   s'ajoute après elle. C'est la seule façon de mettre un son *dans* un silence
+   sans qu'il soit creusé avec.
+3. **Le son n'existe pas au-dessus de 400 Hz.**
+
+Viser 5 à 10 dB. Négatif = absent ; au-delà de 15 = agressif.
+
+## Un pas de créature est deux sons, pas un
+
+`pas_mecanique` synthétisé mesure **−0,1 dB sous 400 Hz** : toute son énergie y
+vit, et l'excitation harmonique n'y rend que **0,1 dB** — parce qu'un grave
+presque harmonique saturé recrée le même peigne.
+
+Un pas de créature blindée est **le poids plus le contact**, et les deux
+viennent de sources différentes :
+
+| couche | rôle | mesuré |
+| --- | --- | --- |
+| `pas_mecanique` | le poids, qu'on ressent | −37 dB entendus |
+| `eclat` court | le contact, qu'on entend | **−19,5 dB**, 2-6 kHz à −4,3 |
+
+Dix-sept décibels et demi d'écart. La même logique vaut pour tout événement
+lourd : chercher ce qui claque, pas seulement ce qui pèse.
