@@ -81,6 +81,26 @@ export interface FicheSerie {
   readonly langue: Langue
 }
 
+/**
+ * Une case du guide des programmes.
+ *
+ * `chaine` porte l'identifiant XMLTV, celui-là même que `Element.tvgId` : c'est
+ * le seul lien entre une chaîne et son guide, et il vient du fournisseur. Une
+ * liste dont les `tvg-id` sont vides n'aura donc jamais de guide, quoi qu'on
+ * fasse — mieux vaut le dire que le chercher.
+ */
+export interface Programme {
+  readonly chaine: string
+  /** Instants en ISO 8601 UTC : c'est sous cette forme qu'ils sont comparés. */
+  readonly debut: string
+  readonly fin: string | undefined
+  readonly titre: string
+  readonly sousTitre: string | undefined
+  readonly resume: string | undefined
+  readonly categories: readonly string[]
+  readonly icone: string | undefined
+}
+
 /** Ordre de préférence francophone : c'est le tri par défaut de l'application. */
 export function prioriteFrancophone(langue: Langue): number {
   switch (langue) {

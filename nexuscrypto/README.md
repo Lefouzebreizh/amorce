@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 321 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 332 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **321 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **332 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -160,10 +160,17 @@ montant non dépensé reste en trésorerie et gonfle les achats futurs. D'où
 `TEMPORISER` distinct d'`ATTENDRE` — un report se raconte dans le
 récapitulatif, une absence non.
 
-### La taille se décide sur la distance au stop, jamais sur la conviction
+### La taille se décide sur la distance au stop — en théorie
 
 `capital × risque / (prix − stop)`. Un actif volatil a un stop plus loin, donc
 une position plus petite, automatiquement, sans table par actif à tenir à jour.
+
+**Sauf qu'à l'enveloppe actuelle, ce plafond ne mord jamais.** Mesuré sur 158
+dimensionnements d'un rejeu multi-actifs : c'est l'enveloppe DCA qui décide
+62 % du temps, l'exposition par actif 38 %, et le risque par position **jamais**
+— voir le § 14. Le mécanisme est écrit, il est juste, et il est aujourd'hui
+inerte. Le dire évite de croire que le dimensionnement suit le risque quand il
+suit le calendrier.
 
 ### La simulation est réaliste ou elle ne sert à rien
 
@@ -260,7 +267,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 321 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -344,20 +351,36 @@ de conclure :
 
 | fenêtre | marché | 2x | 3x | 5x | 10x |
 |---|---|---|---|---|---|
-| 2017–2018 | bulle puis krach | 7 % | 17 % | 33 % | **60 %** |
-| 2020–2021 | haussier, +124 % | 2 % | 25 % | 33 % | **56 %** |
-| 2022–2023 | baissier puis reprise | 0 % | 0 % | 0 % | **44 %** |
+| 2017–2018 | bulle puis krach | 28 % | 48 % | 62 % | **100 %** |
+| 2020–2021 | haussier, +124 % | 25 % | 36 % | 57 % | **100 %** |
+| 2022–2023 | baissier puis reprise | 0 % | 0 % | 23 % | **85 %** |
 
-Part des positions liquidées. **À x10, entre 44 et 60 % des positions sont
-liquidées dans les trois fenêtres** — y compris celle où le marché monte de
-124 %, et y compris la plus calme des trois. Ce n'est pas un mauvais moment mal
-choisi, c'est la volatilité ordinaire de l'actif contre une marge de 9,5 %.
+Part des positions liquidées, **financement compté**. À x10, de 85 à 100 % — et
+dans deux fenêtres sur trois, **la totalité des positions**. Ce n'est pas un
+mauvais moment mal choisi : c'est la volatilité ordinaire de l'actif contre une
+marge de 9,5 %, plus des frais qui la rongent pendant qu'on attend.
+
+Le financement double environ les dégâts. Sur 2020-2021 il fait passer 2x de
+2 % à 25 %, et à x10 il **vide 28 positions sur 44 sans qu'un prix ait reculé
+d'un centime** — la marge est mangée par les frais avant que le marché ait fait
+quoi que ce soit. Aucun réglage de stop n'y change rien : cela se combat en
+raccourcissant la détention, ou en baissant le levier. Or un DCA garde ses
+lignes des mois, par construction.
 
 Deux lectures s'imposent. **Un marché haussier ne protège pas** : 2020-2021 a
 liquidé plus qu'il n'a épargné, parce que le levier se joue sur les creux du
 parcours et non sur le point d'arrivée. Et **le seul levier qui traverse les
 trois fenêtres sans une liquidation est l'absence de levier** : même 2x tombe
 sur deux fenêtres sur trois.
+
+**Et sur cette source-là, les chiffres sous-comptent une seconde fois.**
+CoinMetrics ne publie qu'une clôture par jour : le module de rejeu fabrique
+alors `bas = min(clôture du jour, clôture de la veille)`, un plus bas de
+clôture à clôture. Or toute la méthode du levier repose sur les plus bas — une
+mèche liquide un compte aussi sûrement qu'une clôture. Sans information
+intra-journalière, elle mesure les clôtures en croyant mesurer les mèches. Le
+tableau détecte désormais ce cas et le dit sous ses propres résultats, plutôt
+que de laisser croire à une analyse qui n'a pas eu lieu.
 
 Le nombre rendu est un **plancher**, jamais une estimation : ni le financement
 d'un perpétuel, ni le prix de marque de la plateforme, ni l'illiquidité réelle
@@ -730,3 +753,131 @@ Sur 2018-2021, le gain par unité de recul passe de 4,96 à 8,05, contre 11,04
 pour le témoin. **Les trois quarts de l'écart mesuré au § 11 venaient donc de
 réglages, pas de la stratégie elle-même.** Le quart restant tient toujours au
 même fait : elle engage moins de capital.
+
+---
+
+## 14. Le dimensionnement — un réglage inerte, un plafond qui coûtait cher
+
+Dernier balayage du chemin de risque, et il rend deux résultats de nature
+différente.
+
+### Quel plafond décide vraiment
+
+Sur 158 dimensionnements d'un rejeu multi-actifs 2018-2021 :
+
+| plafond | part des décisions |
+| --- | --- |
+| enveloppe DCA | **62 %** |
+| exposition par actif | **38 %** |
+| risque par position | **0 %** |
+
+**`risque_par_position` est inerte.** Le faire varier de 1 % à 8 % ne change pas
+un seul ordre — les trois fenêtres rendent des chiffres identiques à la
+décimale près.
+
+La raison est arithmétique : avec un stop à 4 ATR, la distance au stop vaut
+environ 15 % du prix, donc ce plafond autorise ~6,7 % du capital, quand
+l'enveloppe DCA d'une ligne en demande dix fois moins. Il mordrait avec une
+enveloppe bien plus grosse ou des stops bien plus serrés. Il est conservé pour
+ce cas — **pas parce qu'il agit aujourd'hui.**
+
+C'est le genre de réglage qui rassure dans un fichier de configuration sans
+rien faire, et le § 4 le présentait comme le mécanisme central du
+dimensionnement. La phrase est corrigée.
+
+### Le plafond d'exposition, lui, coûtait cher
+
+| exposition | 2018-2021 | 2022-2026 | tout | moyenne | recul (tout) |
+| --- | --- | --- | --- | --- | --- |
+| 55 % *(ancien)* | 8,05 | 2,25 | 7,93 | 6,08 | 81,3 % |
+| **75 %** | 9,71 | 2,36 | 10,00 | **7,36** | 80,3 % |
+| 85 % | 10,13 | 2,36 | 10,51 | 7,67 | 80,1 % |
+| 95 % | 10,13 | 2,36 | 10,51 | 7,67 | 80,1 % |
+
+**Desserrer améliore le rendement et le recul en même temps.** L'arbitrage
+attendu n'existe pas : un plafond serré force la trésorerie à dormir au lieu de
+se répartir sur les autres lignes, et du capital qui dort ne protège de rien —
+il retire seulement du rendement.
+
+**75 % plutôt que 85 %** : les deux dernières lignes du tableau sont
+identiques, donc au-delà de 85 % le plafond ne mord **plus jamais** et cesse
+d'être un garde-fou. Les 0,31 de gain supplémentaire s'achèteraient en
+supprimant la seule limite de concentration du portefeuille. À 75 %, elle tient
+encore.
+
+### Où en est l'écart, après quatre réglages mesurés
+
+Sur 2018-2021, le gain par unité de recul exposé :
+
+| | gain/douleur |
+| --- | --- |
+| avant tout réglage mesuré | 4,96 |
+| après le stop à 4 ATR | 8,05 |
+| **après l'exposition à 75 %** | **9,71** |
+| DCA aveugle (témoin) | 11,04 |
+
+**Il restait 6,08 points d'écart au § 11 ; il en reste 1,33.** Presque tout ce
+qu'on prenait pour une faiblesse de la stratégie était un réglage jamais
+mesuré. Ce qui subsiste tient toujours au même fait, et il est structurel : elle
+engage moins de capital que le témoin — 9 676 $ contre 9 986 $ — parce qu'elle
+temporise, et une temporisation coûte toujours quelque chose sur un actif qui
+monte à long terme.
+
+---
+
+## 15. Les pondérations du score — le balayage qui ne change rien
+
+Dernier bloc de réglages posés au jugé. **Il ne bouge pas, et c'est le
+résultat.**
+
+| technique / sentiment / on-chain | 2018-2021 | 2022-2026 | tout | moyenne |
+| --- | --- | --- | --- | --- |
+| **0,5 / 0,2 / 0,3** *(livré)* | 9,71 | 2,36 | 10,00 | **7,36** |
+| 0,7 / 0,2 / 0,1 | 9,94 | 2,44 | 10,28 | 7,55 |
+| 0,8 / 0,2 / 0,0 | 9,98 | 2,46 | 10,32 | 7,58 |
+| 0,3 / 0,2 / 0,5 | 9,78 | 2,28 | 10,10 | 7,39 |
+| 0,0 / 0,2 / 0,8 | 9,71 | 2,02 | 10,01 | 7,25 |
+
+**Quatre pour cent séparent le meilleur du pire.** À comparer aux balayages
+précédents : le stop a fait bouger le gain par unité de recul de 63 %,
+l'exposition de 21 %. Les pondérations sont un réglage de **second ordre**, et
+c'est la première chose que ce tableau apprend.
+
+### Pourquoi le « meilleur » réglage n'est pas retenu
+
+L'optimum apparent dit *supprimer l'on-chain* — et il ne sera pas suivi, pour
+trois raisons qui tiennent ensemble :
+
+- **0,22 point d'écart, c'est du bruit** à cette échelle. Changer un réglage
+  là-dessus, c'est ajuster le moteur à trois fenêtres particulières.
+- **Les données on-chain ne couvrent que deux des trois actifs.** LINK n'en a
+  pas. Conclure « l'on-chain ne sert à rien » depuis un jeu qui l'ignore sur un
+  tiers du portefeuille serait une conclusion sur les données, pas sur la
+  stratégie.
+- **Supprimer une famille entière est irréversible en pratique** : plus rien ne
+  la rappelle, et le jour où une meilleure source arrive, personne ne sait
+  qu'elle manquait.
+
+### Et le poids du sentiment n'est pas mesurable d'ici
+
+C'est un défaut de ma propre mesure, trouvé en la vérifiant. Deux
+configurations au même rapport technique:on-chain, l'une avec un poids
+sentiment de 0,2, l'autre à zéro, rendent des résultats **identiques à la
+quatrième décimale** : +586,5951 %, 120 ordres, 9,7138 des deux côtés.
+
+La raison est que le rejeu ne disposait d'aucun historique de peur — la famille
+est donc absente à chaque bougie et son poids intégralement redistribué.
+Balayer ce poids ne mesurait rien.
+
+`rejouer_multi` accepte désormais un `fear_greed`, et **un test fige les deux
+faits** : sans indice, le poids est inerte ; avec un indice, il agit. Le
+réglage deviendra mesurable le jour où une source sera joignable — aucun hôte
+qui en publie ne l'est depuis une session distante.
+
+### Ce que ce balayage laisse
+
+Rien à changer, et deux choses à savoir : les pondérations comptent dix fois
+moins que les plafonds de risque, et l'une des trois n'a jamais été mesurée du
+tout. **Un balayage qui conclut « ne touchez à rien » a autant de valeur qu'un
+qui change un chiffre** — il empêche le prochain de refaire le travail, et
+surtout de croire qu'un gain de 0,22 point justifie de supprimer une source.

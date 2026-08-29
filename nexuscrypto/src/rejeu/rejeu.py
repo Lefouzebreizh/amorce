@@ -504,8 +504,8 @@ def config_portefeuille_reel(config: Config, symboles: list[str]) -> Config:
     )
 
 
-def rejouer_multi(config: Config, series: dict, *, nom: str = "dynamique",
-                  plat: bool = False) -> Resultat:
+def rejouer_multi(config: Config, series: dict, *, fear_greed: dict[str, int] | None = None,
+                  nom: str = "dynamique", plat: bool = False) -> Resultat:
     """Rejoue la stratégie sur **plusieurs actifs partageant une trésorerie**.
 
     C'est la seule configuration qui ressemble à ce que le moteur fera en
@@ -532,6 +532,12 @@ def rejouer_multi(config: Config, series: dict, *, nom: str = "dynamique",
 
     symboles = list(series)
     config = config_portefeuille_reel(config, symboles)
+    # L'indice de peur est **commun à tout le marché**, pas propre à un actif :
+    # un seul historique sert les trois lignes. Sans lui, la famille sentiment
+    # est absente à chaque bougie et son poids est redistribué — c'est le
+    # comportement du direct quand alternative.me ne répond pas, mais cela rend
+    # aussi le poids `sentiment` **inerte** et impossible à régler d'ici.
+    fear_greed = fear_greed or {}
     profondeur = config.general.profondeur_bougies
 
     moteur = Moteur(config)
@@ -619,6 +625,11 @@ def rejouer_multi(config: Config, series: dict, *, nom: str = "dynamique",
                     releve_le=instant,
                     serie=SerieOHLCV(symbole, reelle.serie.intervalle, fenetre),
                     onchain=reelle.onchain.get(jour),
+                    sentiment=(
+                        SignalSentiment(fear_greed=fear_greed[jour])
+                        if jour in fear_greed
+                        else None
+                    ),
                 ),
                 portefeuille,
                 instant,

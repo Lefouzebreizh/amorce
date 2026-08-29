@@ -25,8 +25,20 @@ test('le débit reste dans ce que les plateformes acceptent', () => {
 });
 
 test('un plancher garde une petite définition lisible', () => {
-  // 360 × 640 à 24 images donnerait 0,55 Mb/s : illisible, blocs partout.
-  assert.equal(debitVideo(360, 640, 24), 2_000_000);
+  // 360 × 640 à 24 images donnerait 0,41 Mb/s : les aplats se cassent en carrés.
+  assert.equal(debitVideo(360, 640, 24), 1_000_000);
+});
+
+test('le préréglage de partage pèse vraiment moins que le 720', () => {
+  /*
+   * Un plancher trop haut rendait ce choix inutile : 540 × 960 demande
+   * 1,2 Mb/s, un plancher à 2 le remontait au niveau du 720, et les deux
+   * préréglages pesaient pareil. Un choix qui ne change rien n'est pas un
+   * choix.
+   */
+  const partage = debitVideo(540, 960, 30);
+  const leger = debitVideo(720, 1280, 30);
+  assert.ok(partage < leger * 0.7, `${partage} contre ${leger}`);
 });
 
 test('trente images par seconde coûtent plus que vingt-quatre', () => {

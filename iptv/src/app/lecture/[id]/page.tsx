@@ -4,10 +4,14 @@ import { notFound } from 'next/navigation'
 import { BoutonFavori } from '../../../composants/BoutonFavori.tsx'
 import { Etiquette } from '../../../composants/Carte.tsx'
 import { Lecteur } from '../../../composants/Lecteur.tsx'
+import { antennesDe } from '../../../serveur/antennes.ts'
 import { depot } from '../../../serveur/depot-partage.ts'
 import { adresseLecture } from '../../../serveur/flux.ts'
 
 export const dynamic = 'force-dynamic'
+
+const HEURE = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
+const horaire = (instant: string): string => HEURE.format(new Date(instant))
 
 export default async function Lecture({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -15,6 +19,7 @@ export default async function Lecture({ params }: { params: Promise<{ id: string
   const element = cache.element(decodeURIComponent(id))
   if (element === undefined) notFound()
 
+  const antenne = antennesDe(cache, [element]).get(element.tvgId ?? '')
   const reprise = cache.reprises(200).find((entree) => entree.element.id === element.id)
   const estFavori = cache.favoris().some((favori) => favori.id === element.id)
 
@@ -72,6 +77,34 @@ export default async function Lecture({ params }: { params: Promise<{ id: string
           {element.groupe !== undefined && <Etiquette texte={element.groupe} />}
         </div>
       </header>
+
+      {antenne?.actuel !== undefined && (
+        <section className="mt-4 rounded-carte border border-bord bg-surface p-4">
+          <p className="text-sm text-doux">
+            En ce moment · {horaire(antenne.actuel.debut)}
+            {antenne.actuel.fin !== undefined && ` – ${horaire(antenne.actuel.fin)}`}
+          </p>
+          <h2 className="text-lg font-semibold">{antenne.actuel.titre}</h2>
+          {antenne.actuel.sousTitre !== undefined && (
+            <p className="text-doux">{antenne.actuel.sousTitre}</p>
+          )}
+          {antenne.actuel.resume !== undefined && (
+            <p className="mt-2 text-sm">{antenne.actuel.resume}</p>
+          )}
+          {antenne.actuel.categories.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {antenne.actuel.categories.map((categorie) => (
+                <Etiquette key={categorie} texte={categorie} />
+              ))}
+            </div>
+          )}
+          {antenne.suivant !== undefined && (
+            <p className="mt-3 text-sm text-doux">
+              À suivre · {horaire(antenne.suivant.debut)} — {antenne.suivant.titre}
+            </p>
+          )}
+        </section>
+      )}
 
       <div className="mt-4 flex flex-wrap gap-3">
         <BoutonFavori id={element.id} initial={estFavori} />

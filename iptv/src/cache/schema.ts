@@ -129,6 +129,29 @@ CREATE TABLE IF NOT EXISTS lecture (
 
 CREATE INDEX IF NOT EXISTS lecture_recente ON lecture (vu_le DESC);
 
+-- Le guide des programmes.
+--
+-- La clé primaire est (chaine, debut) : un guide se réimporte tous les jours et
+-- recouvre en partie le précédent. Sans elle, chaque réimport doublerait la
+-- grille, et « en ce moment » rendrait deux émissions pour le même instant.
+--
+-- Les instants sont en ISO 8601 UTC, sous forme de texte. C'est ce que SQLite
+-- compare le mieux — l'ordre lexicographique d'un ISO est l'ordre
+-- chronologique — et cela évite de choisir un fuseau à l'écriture.
+CREATE TABLE IF NOT EXISTS programme (
+  chaine     TEXT NOT NULL,
+  debut      TEXT NOT NULL,
+  fin        TEXT,
+  titre      TEXT NOT NULL,
+  sous_titre TEXT,
+  resume     TEXT,
+  categories TEXT NOT NULL,     -- JSON
+  icone      TEXT,
+  PRIMARY KEY (chaine, debut)
+);
+
+CREATE INDEX IF NOT EXISTS programme_par_instant ON programme (chaine, debut);
+
 -- Les réglages de l'installation. Une seule entrée pour l'instant : le secret
 -- qui signe les adresses passées au mandataire de flux. Il doit survivre à un
 -- redémarrage — un secret tiré à chaque démarrage ferait échouer toute lecture

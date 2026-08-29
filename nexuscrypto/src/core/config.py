@@ -177,7 +177,7 @@ class ConfigCoupeCircuit:
 @dataclass(frozen=True, slots=True)
 class ConfigRisque:
     risque_par_position: float = 0.01
-    exposition_max_par_actif: float = 0.55
+    exposition_max_par_actif: float = 0.75
     atr_periode: int = 14
     atr_multiple_stop: float = 4.0
     trailing_activation: float = 0.20

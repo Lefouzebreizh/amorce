@@ -121,6 +121,35 @@ const LISTE = [
   `http://127.0.0.1:${PORT_ORIGINE}/series/u/p/21.m3u8`,
 ].join('\n')
 
+/**
+ * Un guide de test calé sur l'instant présent.
+ *
+ * Les horaires sont calculés au lancement plutôt qu'écrits en dur : une grille
+ * figée serait « en ce moment » le jour où on l'écrit et jamais plus, et la
+ * vérification passerait au vert en ne vérifiant rien.
+ */
+function guideXmltv() {
+  const format = (date) =>
+    date.toISOString().replace(/[-:T]/g, '').slice(0, 14) + ' +0000'
+  const maintenant = Date.now()
+  const avant = new Date(maintenant - 30 * 60 * 1000)
+  const milieu = new Date(maintenant + 30 * 60 * 1000)
+  const apres = new Date(maintenant + 90 * 60 * 1000)
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<tv>
+  <channel id="tf1.fr"><display-name>TF1</display-name></channel>
+  <programme start="${format(avant)}" stop="${format(milieu)}" channel="tf1.fr">
+    <title>Le Journal de 20h</title>
+    <desc>L&apos;actualité du jour &amp; le sport.</desc>
+    <category>Information</category>
+  </programme>
+  <programme start="${format(milieu)}" stop="${format(apres)}" channel="tf1.fr">
+    <title><![CDATA[Film : Les Bronzés]]></title>
+  </programme>
+</tv>`
+}
+
 async function importer() {
   rmSync(BASE, { force: true })
   rmSync(`${BASE}-wal`, { force: true })
@@ -131,9 +160,12 @@ async function importer() {
   const resume = await importerM3U(cache, LISTE, {
     adresse: `http://127.0.0.1:${PORT_ORIGINE}/get.php?username=jean&password=s3cr3t`,
   })
+  const { importerEpg } = await import(`${RACINE}/src/cache/importer.ts`)
+  const guide = await importerEpg(cache, guideXmltv())
   const film = cache.lister({ genre: 'film' })[0]
+  const chaine = cache.lister({ genre: 'direct' }).find((element) => element.tvgId === 'tf1.fr')
   cache.fermer()
-  return { ...resume, idFilm: film?.id }
+  return { ...resume, idFilm: film?.id, idChaine: chaine?.id, programmes: guide.ecrits }
 }
 
 async function attendrePret(url, secondes = 60) {
@@ -158,20 +190,39 @@ async function principal() {
 
   console.log('── Import du catalogue')
   const resume = await importer()
-  console.log(`  ${resume.ecrits} entrées`)
+  console.log(`  ${resume.ecrits} entrées, ${resume.programmes} programmes`)
 
   console.log('── Application')
+  // Le port doit être libre, et le vérifier n'est pas de la prudence de trop :
+  // un serveur resté d'une exécution précédente répondrait à la place du nôtre,
+  // avec un code plus ancien. On mesurerait alors une version qui n'existe plus,
+  // et les défauts trouvés seraient imaginaires — une heure perdue, mesurée.
+  if (await attendrePret(`http://127.0.0.1:${PORT_APP}/`, 0.25)) {
+    origine.close()
+    throw new Error(
+      `Le port ${PORT_APP} répond déjà. Un serveur d'une exécution précédente y est resté :` +
+        ` l'arrêter avant de relancer.`,
+    )
+  }
+
+  // `detached` puis un signal au **groupe** : `npm run start` engendre un
+  // `next start` fils, et tuer le npm laisse l'enfant vivant avec le port.
   const app = spawn('npm', ['run', 'start', '--', '--port', String(PORT_APP)], {
     cwd: RACINE,
     env: { ...process.env, IPTV_BASE: BASE, NODE_ENV: 'production' },
     stdio: 'pipe',
+    detached: true,
   })
   let journalApp = ''
   app.stdout.on('data', (bloc) => (journalApp += bloc))
   app.stderr.on('data', (bloc) => (journalApp += bloc))
 
   const arreter = () => {
-    app.kill('SIGTERM')
+    try {
+      if (app.pid !== undefined) process.kill(-app.pid, 'SIGTERM')
+    } catch {
+      app.kill('SIGTERM')
+    }
     origine.close()
   }
 
@@ -222,6 +273,34 @@ async function principal() {
       (await page.locator('text=Le Fabuleux Destin').count()) > 0,
       'la recherche « fabul » trouve Le Fabuleux Destin',
     )
+
+    console.log('── Le guide des programmes')
+    await page.goto(`http://127.0.0.1:${PORT_APP}/direct`, { waitUntil: 'networkidle' })
+    verifier(
+      (await page.locator('text=Le Journal de 20h').count()) > 0,
+      'la grille du direct montre ce qui passe en ce moment',
+    )
+    verifier(
+      (await page.locator('text=Film : Les Bronzés').count()) > 0,
+      'et ce qui suit, titre en CDATA compris',
+    )
+    const barre = await page.evaluate(() => {
+      const trait = document.querySelector('span[style*="width"]')
+      return trait === null ? -1 : Number.parseFloat(trait.getAttribute('style')?.match(/[\d.]+/)?.[0] ?? '-1')
+    })
+    verifier(barre > 5 && barre < 95, `la barre d'avancement est cohérente (${barre} %)`)
+
+    if (resume.idChaine !== undefined) {
+      await page.goto(`http://127.0.0.1:${PORT_APP}/lecture/${encodeURIComponent(resume.idChaine)}`, {
+        waitUntil: 'domcontentloaded',
+      })
+      await page.waitForLoadState('load')
+      verifier(
+        (await page.locator("text=L'actualité du jour & le sport.").count()) > 0,
+        'la page de lecture affiche le résumé du programme',
+      )
+      await page.screenshot({ path: join(ESSAI, 'ecran-direct.png') })
+    }
 
     console.log('── Cibles tactiles')
     await page.goto(`http://127.0.0.1:${PORT_APP}/direct`, { waitUntil: 'networkidle' })
@@ -274,6 +353,9 @@ async function principal() {
       await page.goto(`${app}/lecture/${encodeURIComponent(resume.idFilm)}`, {
         waitUntil: 'domcontentloaded',
       })
+      // `domcontentloaded` n'attend pas la feuille de style : une capture prise
+      // là rend une page sans aucun style, et fait croire à une régression.
+      await page.waitForLoadState('load')
       await page.waitForSelector('video')
       await page.evaluate(() => {
         const video = document.querySelector('video')
