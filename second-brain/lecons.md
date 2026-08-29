@@ -2022,3 +2022,45 @@ la diffusion sans message d'erreur — écran noir, retour au menu.
 `'::1'` laisse donc passer l'adresse locale la plus courante des serveurs de
 développement, et le contrôle « est-ce joignable de l'extérieur » répond oui à
 tort.
+
+## Un outil qui régénère un fichier partagé en supprime ce qu'il n'a pas calculé
+
+Trois mesures de suite sans le moindre effet : changer un gain de +2 à +6 puis
++8 rendait des chiffres **identiques au chiffre près**. C'est le signe qu'on ne
+mesure pas ce qu'on croit.
+
+La cause : un script de recalage régénérait le fichier d'automation avec
+`"couches": []`. Ce fichier portait aussi les bruitages posés à la main —
+effacés en silence à chaque appel. Je mesurais des versions muettes de leurs
+couches en croyant régler des niveaux.
+
+**Un chiffre rigoureusement identique après un changement de réglage n'est pas
+un résultat, c'est un symptôme.** Le premier réflexe est de vérifier que le
+changement a bien atteint le fichier mesuré.
+
+Et la règle qui l'évite : **un outil qui régénère un fichier partagé rend ce
+qu'il n'a pas calculé.** Ici les couches sont relues avant écriture et
+réinjectées.
+
+## Une coupe vers une image d'une autre nature se lit comme un saut
+
+Toutes les transitions d'un montage sont des coupes franches, et personne ne
+les remarque — sauf la dernière, vers un carton de fin : image figée, floutée,
+assombrie. Mesuré, c'était **l'écart entre deux images le plus fort du film,
+110** quand la médiane du plan tournait autour de 8.
+
+Un fondu de 0,25 s : **13,1**. Ce n'est pas la coupe qui gêne, c'est le
+changement de **nature** de l'image — entre deux plans filmés une coupe passe,
+vers un carton elle saute.
+
+## Ce qui est écrit en temps source dérive quand la vitesse change
+
+Un flash et une secousse posés à 5,375 s sur un plan ralenti à 0,8 tombaient
+juste. Le ralenti retiré, ils sont tombés **1,08 s après** l'événement qu'ils
+soulignaient — c'est-à-dire tout à la fin du plan, où un flash se lit comme un
+saut d'image.
+
+`flashs` et `tremblements` comptent en temps SOURCE, comme `depart` ; les
+effets sonores comptent en temps de FRISE. **Deux repères dans la même recette,
+et rien ne le signale.** Ils sont désormais dérivés des mêmes instants de rush
+que le reste, par `caler_dragon.py`.
