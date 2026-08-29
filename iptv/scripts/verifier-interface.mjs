@@ -193,6 +193,23 @@ async function importer() {
       groupe: 'SERIES FR',
       langue: 'vf',
     },
+    // Un vrai panneau Xtream en déclare couramment plusieurs milliers : la
+    // page Séries lisait `cache.fiches({ limite: 500 })`, un plafond qui
+    // amputait silencieusement les trois quarts d'un catalogue de 4 000
+    // séries. Ce lot-ci, à lui seul, dépasse ce plafond — dans un thème
+    // différent d'Engrenages, pour ne pas noyer la vérification de sa fiche.
+    ...Array.from({ length: 549 }, (_, i) => ({
+      id: `se_lot_${String(i).padStart(4, '0')}`,
+      refExterne: `lot${String(i)}`,
+      titre: `Série de lot ${String(i).padStart(4, '0')}`,
+      titreBrut: `Série de lot ${String(i).padStart(4, '0')}`,
+      annee: 2020,
+      logo: undefined,
+      resume: undefined,
+      genres: ['Action'],
+      groupe: 'SERIES ACTION',
+      langue: 'vf',
+    })),
   ])
 
   const film = cache.lister({ genre: 'film' })[0]
@@ -343,7 +360,16 @@ async function principal() {
     }
 
     console.log('── Séries déclarées, épisodes absents')
+    // 550 fiches déclarées, plus Kaamelott et Breaking Bad déduites du M3U
+    // de tête : 552 en tout. Au-delà du seuil de regroupement par thème, la
+    // page racine montre des dossiers — c'est là, dans son propre en-tête,
+    // que le plafond de lecture (corrigé à 20 000) se vérifie.
     await page.goto(`http://127.0.0.1:${PORT_APP}/series`, { waitUntil: 'networkidle' })
+    verifier(
+      (await page.locator('text=552 séries').count()) > 0,
+      'les 552 séries du catalogue sont toutes comptées, aucune n’est amputée par un plafond',
+    )
+    await page.goto(`http://127.0.0.1:${PORT_APP}/series?theme=Policier`, { waitUntil: 'networkidle' })
     verifier(
       (await page.locator('text=Engrenages').count()) > 0,
       'une série déclarée s’affiche avant d’avoir ses épisodes',

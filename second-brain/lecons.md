@@ -3875,3 +3875,27 @@ le contenu est dans `main`, mais la branche distante porte encore le commit dont
 la PR dépend. `-D` l'aurait supprimée sans broncher, et emporté la seule copie
 locale de ce commit pendant que la PR était ouverte. Le refus de `-d` est une
 information, pas un obstacle à contourner.
+
+## `npm run verify` (iptv) sert un build déjà compilé — un correctif de page invisible sans reconstruire
+
+Mesuré le 29/08/2026 en corrigeant un plafond de 500 fiches dans
+`src/app/series/page.tsx`. Le correctif changé, `npm run check` vert,
+`npm run verify` relancé — et le contrôle ajouté pour le prouver échouait
+quand même, avec le compte **exact** que l'ancien code aurait rendu. La base
+elle-même était bonne (vérifiée en direct hors navigateur : 552 fiches
+fusionnées, pas 500) — c'est l'écran qui mentait.
+
+**La cause : `verifier-interface.mjs` démarre l'application par `next start`,
+jamais par `next dev`.** `next start` sert le dossier `.next` déjà compilé ;
+un fichier source édité après le dernier `npm run build` n'existe pour lui
+nulle part. `npm run check` (tsc seul) ne recompile rien pour l'exécution, et
+rien dans `verify` ne rappelle qu'un build est dû — le script suppose qu'il
+est déjà là, ce qui est vrai dans `verifier.sh` (qui enchaîne `build` avant
+tout, pour `lancer_iptv`) mais faux dès qu'on relance `verify` seul après une
+retouche.
+
+**La règle : `npm run build` avant tout `npm run verify` qui suit un
+changement de code, sans exception** — même quand `check` est vert, même
+quand la mesure directe en base est juste. Un `verify` vert sur un build
+périmé ne prouve rien du tout ; il a fallu redescendre au niveau de la base
+pour comprendre que le code était correct et l'écran, obsolète.
