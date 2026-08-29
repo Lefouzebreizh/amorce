@@ -124,6 +124,18 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
 
   /* Ce qui permet à la boucle de savoir qu'elle n'a rien à redessiner. */
   const signatureRef = useRef('');
+  /*
+   * La marque vit dans une référence, pas dans les dépendances de la boucle.
+   *
+   * L'y mettre reconstruirait la boucle d'animation à chaque changement
+   * d'abonnement — pour une valeur que le tracé relit à chaque image de toute
+   * façon. C'est l'idiome du fichier : ce que la boucle lit sans en dépendre
+   * passe par une référence.
+   */
+  const marqueRef = useRef(marque);
+  useEffect(() => {
+    marqueRef.current = marque;
+  }, [marque]);
   const projetRef = useRef<Project | null>(null);
   const dernierChangementRef = useRef(0);
   const captionBoxesRef = useRef(new Map<string, CaptionBox>());
@@ -336,7 +348,7 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
         scale: tier.scale,
         bloom: tier.bloom,
         captionBoxes: captionBoxesRef.current,
-        signature: marque,
+        signature: marqueRef.current,
       });
 
       const work = performance.now() - now;
