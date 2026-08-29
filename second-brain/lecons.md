@@ -3936,3 +3936,40 @@ La seule chose qui valait d'être gardée était un manque, pas du code : aucune
 route ne remettait la clé à l'acheteur. Écrite chez eux, avec leurs primitives,
 elle tient en soixante lignes — et n'a pas besoin de la colonne en clair que le
 doublon avait prévue, puisque leur clé se recalcule.
+
+## Remplacer un plan se coupe SUR la coupe du film, pas à côté
+
+Mesuré le 29/08/2026 en échangeant le dragon d'un épisode. Retour : « une mini
+coupure d'image quand le dragon apparaît ». Le raccord était posé à 12,292 s,
+la coupe du film elle-même tombait à **12,200 s** : quatre-vingt-douze
+millisecondes d'écart, soit **deux images**.
+
+Ces deux images-là contenaient l'ANCIEN plan. Le montage enchaînait donc
+vortex → ancien dragon (2 images) → nouveau dragon. Deux coupes au lieu d'une,
+sur deux versions du même plan qui ne diffèrent que par leur éclairage. L'œil ne
+lit pas « deux plans » : il lit un **saut**.
+
+**Et la détection de coupes de ffmpeg ne voyait rien.** `select='gt(scene,X)'`
+rend une liste vide sur ce film à 0,3 — comme à 0,15, 0,08 et 0,04. Il y avait
+pourtant une coupe franche. Conclure « ce film n'a que des fondus » sur ce
+silence-là était faux, et c'est cette conclusion qui a fait poser le raccord au
+jugé.
+
+Ce qui marche, en une dizaine de lignes : l'écart moyen entre images
+consécutives, comparé **au fond local** et non à un seuil absolu.
+
+```python
+mv = np.abs(np.diff(images, axis=0)).mean(axis=(1, 2))
+fond = np.median(mv)                      # le mouvement propre du plan
+coupes = [t for t, v in zip(temps, mv) if v > 1.6 * fond]
+```
+
+Le seuil relatif est ce qui compte. Sur ce raccord, la vraie coupe sortait à
+**2,9 fois le fond** et le saut parasite à **2,2 fois** — un seuil absolu à 35
+attrapait la première et manquait le second, c'est-à-dire exactement le défaut
+rapporté. Après correction : un seul événement, à 3,4 fois le fond.
+
+**La règle qui s'en déduit :** avant de substituer un plan, relever la coupe du
+film à l'image près et s'y aligner. Un raccord « à peu près au bon endroit »
+n'est pas approximatif, il est **faux** — il ajoute une coupe au lieu d'en
+remplacer une.
