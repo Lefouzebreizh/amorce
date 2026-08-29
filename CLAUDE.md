@@ -30,6 +30,24 @@ jamais le reste du chantier.
 Un compte rendu se donne au passé, sur ce qui est fusionné. « Je vais faire »
 n'est pas un compte rendu, c'est une pause.
 
+**Ce régime a été remis en question et reconduit, le 29/08/2026.** Un gabarit
+« Lead Architect » proposait de le remplacer par un mode où l'agent liste les
+fichiers dont il a besoin et attend l'accord avant de les lire, puis s'arrête au
+moindre doute. Le propriétaire a tranché pour l'autonomie, et la raison mérite
+d'être écrite parce qu'elle se reperd : le pilotage se fait **depuis un
+téléphone**, souvent la nuit. Un menu à valider avant chaque lecture ne rend pas
+le travail plus sûr, il le suspend jusqu'au réveil. Quatorze lots ont été livrés
+et fusionnés la nuit précédente sans un seul aller-retour.
+
+Ce qui protège vraiment de l'écrasement n'est pas la permission, c'est la
+**vérification** : chirurgical, `grep` avant de remplacer, build vert, parcours
+complet, PR relue avant fusion. Un garde-fou qui coûte une seconde à la machine
+vaut mieux qu'un garde-fou qui coûte une heure à l'humain.
+
+Une proposition de remplacer cette section se discute donc, mais ne s'applique
+pas d'office : elle arrive presque toujours d'un gabarit générique qui ne sait
+rien de ce terrain.
+
 ## 1. ADN
 
 - **Cap** : l'humain donne la direction, l'outil accélère le chemin.
