@@ -214,9 +214,32 @@ export function Catalogue({
       )}
 
       {elements.length === 0 ? (
-        <p className="rounded-carte border border-bord bg-surface p-6 text-doux">
-          Aucun résultat avec ces filtres.
-        </p>
+        // Deux absences très différentes, et les confondre envoie chercher un
+        // réglage là où il n'y a rien à régler. « Aucun résultat avec ces
+        // filtres » suppose des filtres ; sur un catalogue qui ne contient que
+        // des chaînes, l'onglet Films est vide sans qu'aucun filtre soit posé,
+        // et la phrase fait croire à une erreur de manipulation.
+        cache.compter({ genre }) === 0 ? (
+          <div className="rounded-carte border border-bord bg-surface p-6">
+            <p className="font-medium">
+              Aucun{genre === 'serie' ? 'e série' : ' film'} dans ce catalogue.
+            </p>
+            <p className="mt-2 text-doux">
+              C’est normal si votre liste ne contient que des chaînes en direct — beaucoup
+              n’ont ni films ni séries. Rien n’est cassé&nbsp;: il n’y a simplement rien à
+              ranger ici.
+            </p>
+            <p className="mt-2 text-sm text-doux">
+              Les catalogues de films et de séries viennent d’un abonnement, chargé par{' '}
+              <code className="rounded bg-fond px-1">npm run iptv -- xtream …</code> ou par une
+              liste M3U qui en contient.
+            </p>
+          </div>
+        ) : (
+          <p className="rounded-carte border border-bord bg-surface p-6 text-doux">
+            Aucun résultat avec ces filtres.
+          </p>
+        )
       ) : (
         parThemes ? (
           <Planche elements={elements} />
