@@ -3669,3 +3669,30 @@ session**. Une session distante ne peut pas redémarrer en gardant sa
 conversation. Donc même une installation réussie ne rendrait pas la commande
 appelable dans le fil qui vient de l'installer. Le plugin s'installe sur la
 **machine du propriétaire**, et c'est là qu'il sert.
+
+## Un fichier rendu au propriétaire plafonne à 30 Mio, et ce qu'il faut sauver n'est pas ce qu'on croit
+
+Mesuré le 29/08/2026 en vidant `/tmp` avant reprise du conteneur. Une archive
+de 53,4 Mio est refusée : « exceeds the 30 MiB upload limit ». La parade est
+d'envoyer **fichier par fichier** plutôt qu'une archive — sept rushes de 2,6 à
+15 Mo passent tous, leur zip ne passait pas. Grouper est donc le réflexe qui
+échoue, et il échoue **après** le temps de compression.
+
+**Et le tri compte plus que l'envoi.** Sur 86 Mo présumés à sauver :
+
+- **54 Mo de rushes** — irremplaçables, aucun remontage sans eux.
+- **22 Mo de bruitages** dont **18 de fichiers intermédiaires** (`_o.wav`,
+  `_t.wav`, `_w.wav`) qui se refabriquent : 3,5 Mo réellement à sauver.
+- **29 Mo de sonothèque** — une bibliothèque avec ses licences, la moins
+  urgente, la plus lourde.
+
+**Le vrai oubli était ailleurs, et il ne pesait rien : trois fichiers de
+TEXTE.** `st.ass`, `carte.ass` et `plan_auto.json` — les sous-titres, le carton
+et l'automation — vivaient dans `/tmp` depuis une nuit. L'invariant « aucun
+binaire versionné » ne les concernait pas une seconde ; personne n'avait
+regardé. Six kilo-octets qui portaient tout le calage d'un épisode.
+
+La question à se poser en vidant un répertoire de travail n'est donc pas
+« qu'est-ce qui est lourd » mais **« qu'est-ce qui est du texte et n'a jamais
+été committé »**. Le lourd se renvoie ; le texte se versionne, et lui seul
+survit à tout le monde.
