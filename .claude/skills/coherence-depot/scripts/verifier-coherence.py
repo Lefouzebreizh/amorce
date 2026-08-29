@@ -276,7 +276,13 @@ def controler_chemins_cites(claude_md: str, releve: Releve) -> None:
     bases = [RACINE, RACINE / "src", RACINE / ".claude", RACINE / "archives-backlog"]
     manquants = []
     for chemin in sorted(set(re.findall(r"`([\w./-]+/[\w./-]*)`", claude_md))):
-        if chemin.startswith(("http", "@", "~")) or " " in chemin:
+        if chemin.startswith(("http", "@", "~", "/")) or " " in chemin:
+            # Un chemin absolu (`/api/devis`, `/root/.claude/`) ne désigne
+            # jamais un fichier du dépôt : joint à une base, pathlib
+            # l'ignorerait et rendrait le chemin absolu tel quel — au
+            # mieux une vérification qui ne vérifie rien, au pire un
+            # `PermissionError` sur un dossier hors de portée du CI, comme
+            # `/root/.claude` alors inaccessible à l'utilisateur du runner.
             continue
         if "*" in chemin or chemin.startswith("."):
             continue
