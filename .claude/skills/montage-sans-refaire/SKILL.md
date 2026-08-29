@@ -154,6 +154,17 @@ dans cet ordre :
    somme qui ne l'est pas. Le lit recule de 8 dB pendant le cri seul — pas
    au-delà, sinon on perd les débris qui font le monde autour.
 
+**Et quand cinq causes sont tombées et que le symptôme revient, c'est
+l'effet qui est en trop, pas le réglage qui est faux.** Le ralenti de ce plan
+en produisait trois à lui seul : l'audio devait être étiré, l'image
+interpolée, et le cri du rush s'y décalait contre celui posé par-dessus. Retiré,
+les trois disparaissent d'un coup. **Un effet qui coûte cinq allers-retours ne
+vaut pas ce qu'il apporte** — et le plan reste beau à sa vitesse.
+
+Corollaire : **une correction étroite fabrique son propre défaut.** Le +5 dB à
+1,9 kHz posé pour désencombrer un cri lui ajoutait une résonance ; une cloche
+large à 2,4 kHz fait le même travail sans elle (tremblement 4,1 → 3,7).
+
 **Le spectrogramme distingue les six.** Une raie verticale pleine bande est
 une coupure ; un tremblement régulier de l'enveloppe est un étirement ; un
 creux large est une automation ; des stries verticales irrégulières dans le
