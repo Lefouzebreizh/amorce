@@ -2295,3 +2295,37 @@ directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière
 
 **La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
 de supposer où l'on est.
+
+## Un `<textarea>` rendu en un seul `<p>` perd tout ce que l'auteur a aéré
+
+Mesuré sur le générateur de TITAN Builder : une présentation d'artisan écrite
+en deux paragraphes sortait en un pavé de six lignes sur un téléphone. Le
+défaut n'était visible ni dans les tests — tous leurs textes tenaient sur une
+ligne — ni dans une mesure : le HTML était valide, l'échappement correct, la
+chaîne complète. Il ne s'est vu qu'à l'écran.
+
+La cause est que HTML ignore les retours à la ligne. Un champ multiligne
+recueilli par un formulaire les contient forcément, et les rendre bruts revient
+à supprimer la mise en forme que la personne a prise la peine de faire.
+
+**Le découpage juste distingue les deux retours**, et c'est là que se logent
+les implémentations trop rapides : une ligne vide sépare deux paragraphes, un
+simple retour au milieu d'une phrase n'en sépare aucun — il devient une espace.
+Découper sur `\n` seul fabrique un paragraphe par ligne et casse les phrases
+que l'auteur a juste fait tenir dans la largeur de son écran.
+
+```ts
+texte.split(/\n\s*\n/).map((p) => p.trim().replace(/\s*\n\s*/g, ' ')).filter((p) => p !== '')
+```
+
+**Et la leçon plus générale : un texte libre se regarde rendu.** Un test qui
+n'éprouve que des valeurs d'une ligne ne peut pas voir ce défaut-là, quel que
+soit leur nombre.
+
+## Une page de démonstration doit se dire telle sur la page
+
+Un faux numéro et un nom inventé protègent le dépôt du faux témoignage. Ils ne
+protègent pas le prospect qui reçoit le lien : rien, à l'écran, ne distinguait
+la démonstration d'un vrai client. La mention doit être **dans le contenu de la
+page**, pas seulement dans la documentation qui l'accompagne — celle-là, le
+prospect ne la lit jamais.

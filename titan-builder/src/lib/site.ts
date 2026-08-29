@@ -68,6 +68,20 @@ export function couleurRetenue(commande: Commande): string {
   return modeleParId(commande.modele)?.teintes[0] ?? '#004AAD';
 }
 
+/**
+ * La présentation, un paragraphe par ligne vide, vides écartés.
+ *
+ * Le texte arrive d'un `<textarea>` : l'artisan y saute des lignes, et les
+ * rendre dans un seul `<p>` collait ses paragraphes bout à bout — un pavé que
+ * personne ne lit sur un téléphone, alors qu'il avait pris la peine d'aérer.
+ */
+export function paragraphes(texte: string): string[] {
+  return texte
+    .split(/\n\s*\n/)
+    .map((p) => p.trim().replace(/\s*\n\s*/g, ' '))
+    .filter((p) => p !== '');
+}
+
 /** Les services, une ligne par service, vides écartés. */
 export function servicesListes(commande: Commande): string[] {
   return commande.services
@@ -103,7 +117,9 @@ export function genererSite(commande: Commande, photos: readonly Photo[] = []): 
   if (commande.presentation.trim() !== '') {
     blocs.push(`  <section class="bloc">
     <h2>Qui je suis</h2>
-    <p>${echapper(commande.presentation.trim())}</p>
+${paragraphes(commande.presentation)
+      .map((p) => `    <p>${echapper(p)}</p>`)
+      .join('\n')}
   </section>`);
   }
 

@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --import ./tests/resolveur-alias.mjs --test \"tests/**/*.test.ts\"",
     "generer": "node --experimental-strip-types scripts/generer.mjs",
-    "nouveau-client": "node --experimental-strip-types scripts/nouveau-client.mjs"
+    "nouveau-client": "node --experimental-strip-types scripts/nouveau-client.mjs",
+    "demo": "npm run generer demo"
   },
   "dependencies": {
     "next": "16.3.3",
