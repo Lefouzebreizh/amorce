@@ -299,3 +299,16 @@ test('une démonstration ne s’indexe pas', () => {
   assert.match(genererSite(commande(), [], { demonstration: true }), /name="robots" content="noindex, nofollow"/);
   assert.equal(genererSite(commande()).includes('name="robots"'), false);
 });
+
+test('une image peut être embarquée, et la page reste un seul fichier', () => {
+  /*
+   * La démonstration n'a pas de photo de chantier — le dépôt ne versionne aucun
+   * binaire — mais un artisan décide sur des photos, et une galerie absente ne
+   * montre pas où les siennes iront. Les cadres sont donc des SVG embarqués :
+   * la page garde sa propriété d'être **un seul fichier** qui s'ouvre depuis le
+   * disque comme depuis un hébergement.
+   */
+  const html = genererSite(commande(), [{ fichier: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=', legende: 'Emplacement' }]);
+
+  assert.match(html, /<img src="data:image\/svg\+xml;base64,PHN2Zz48L3N2Zz4=" alt="Emplacement"/);
+});
