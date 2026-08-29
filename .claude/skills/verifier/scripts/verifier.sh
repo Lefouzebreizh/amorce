@@ -86,6 +86,11 @@ while IFS= read -r f; do
     iptv/*)          inscrire iptv ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
                      inscrire amorce ;;
+    # L'outillage du dépôt — hooks et scripts de compétences — n'appartenait à
+    # aucun projet, donc à personne : un changement du vérificateur lui-même se
+    # voyait répondre « rien d'exécutable n'a changé », par le vérificateur.
+    .claude/*.sh|.claude/*.mjs|.claude/*.js|.claude/*.py)
+                     inscrire outillage ;;
   esac
   # Un fichier appartient à la suite Python dont le dossier le contient.
   while IFS= read -r p; do
@@ -94,7 +99,7 @@ while IFS= read -r f; do
 done <<< "$fichiers"
 
 if [ -z "$projets" ]; then
-  echo "Rien d'exécutable n'a changé — documentation, outillage ou configuration."
+  echo "Rien d'exécutable n'a changé — documentation ou configuration."
   echo "Fichiers touchés :"
   echo "$fichiers" | sed 's/^/  /'
   exit 0
@@ -305,6 +310,47 @@ lancer_flutter() {
   return $e
 }
 
+# L'outillage : la syntaxe des scripts changés, et rien d'autre.
+#
+# Ce pas est **volontairement partiel**, et c'est écrit ici pour que personne ne
+# le prenne pour davantage : il attrape la faute qui casse tout — un `fi`
+# manquant, une accolade en trop — et il ne dit rien du comportement. Un
+# vérificateur peut passer `bash -n` et mesurer la mauvaise chose ; seul le
+# geste de le casser exprès l'établit.
+#
+# Le partiel vaut mieux que le rien qui existait avant : un script de hook cassé
+# ne se découvrait qu'au démarrage de la session suivante, chez quelqu'un
+# d'autre.
+lancer_outillage() {
+  local j="$journal/outillage"; local e=0
+  # Les journaux de pas vivent dans un sous-dossier, et on les recolle par une
+  # liste explicite. Un `cat "$j".*` ramassait aussi les `.brut` et les `.echec`
+  # que `etape` dépose à côté : la sortie d'erreur se retrouvait au milieu du
+  # verdict, avant même la section qui doit la porter.
+  local d="$journal/outillage.d"; mkdir -p "$d"
+  local etapes=(); local n=0
+
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    local verif=()
+    case "$f" in
+      .claude/*.sh)  verif=(bash -n "$f") ;;
+      .claude/*.mjs|.claude/*.js) verif=(node --check "$f") ;;
+      .claude/*.py)  verif=(python3 -m py_compile "$f") ;;
+      *) continue ;;
+    esac
+    etape "$d/$n" "syntaxe $f" "${verif[@]}" || e=1
+    etapes+=("$d/$n"); n=$((n + 1))
+  done <<< "$fichiers"
+
+  [ ${#etapes[@]} -gt 0 ] && cat "${etapes[@]}" > "$j" 2>/dev/null
+  # Les détails d'échec sont relus par un `*.echec` à la racine du journal.
+  for fichier in "$d"/*.echec; do
+    [ -f "$fichier" ] && cp "$fichier" "$journal/outillage-$(basename "$fichier")"
+  done
+  return $e
+}
+
 lancer_python() {  # lancer_python <dossier-projet>
   local p="$1"; local j="$journal/py-${p//\//_}"
   etape "$j" "tests" python3 -m unittest discover -s "$p/tests" -q
@@ -321,6 +367,7 @@ for p in $projets; do
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     titan)   lancer_titan & pid_de[titan]=$! ;;
     iptv)    lancer_iptv  & pid_de[iptv]=$! ;;
+    outillage) lancer_outillage & pid_de[outillage]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
   esac
 done
@@ -342,6 +389,7 @@ nom_lisible() {
     hypersensible) echo "Hypersensible & Bienveillance" ;;
     titan)   echo "TITAN Builder" ;;
     iptv)    echo "IPTV / VOD" ;;
+    outillage) echo "Outillage du dépôt (syntaxe seule)" ;;
     py:*)    echo "${1#py:}" ;;
   esac
 }

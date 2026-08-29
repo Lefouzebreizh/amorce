@@ -437,6 +437,21 @@ a les bonnes permissions, si le ton ressemble à celui de l'auteur, et si le
 modèle met de côté les bons commentaires. Cela se regarde **en simulation**
 (sans `--publier`), sur de vrais commentaires.
 
+## L'outillage du dépôt — hooks et scripts de compétences
+
+Un changement dans `.claude/` n'appartenait à aucun projet, donc à personne : le
+vérificateur répondait « rien d'exécutable n'a changé » à un changement **du
+vérificateur lui-même**. Un hook cassé ne se découvrait qu'au démarrage de la
+session suivante, chez quelqu'un d'autre.
+
+Tout script changé sous `.claude/` passe désormais sa syntaxe — `bash -n`,
+`node --check`, `python3 -m py_compile` selon l'extension.
+
+**Ce pas est volontairement partiel, et il faut le savoir :** il attrape la
+faute qui casse tout — un `fi` manquant, une accolade en trop — et ne dit rien
+du comportement. La preuve qu'un script fait ce qu'il annonce reste le geste de
+le casser exprès et d'exiger le rouge.
+
 ## Le regard — `scripts/regarder.mjs`
 
 Un vrai Chromium à **393 × 873**, le terrain de référence du dépôt, qui refuse

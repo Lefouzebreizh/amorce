@@ -2682,3 +2682,28 @@ mesure prend le même temps.
 C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
 donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
 qu'il accepte.
+
+## Un vérificateur qui déduit les projets des fichiers changés ne se voit pas
+lui-même
+
+Ce dépôt lance sa vérification sur les seuls projets touchés, déduits du chemin
+des fichiers modifiés. Le mécanisme est bon et fait gagner des minutes à chaque
+passe. Il a un angle mort exact : **les fichiers qui n'appartiennent à aucun
+projet ne déclenchent rien**, et l'outillage en fait partie.
+
+Mesuré : un changement de `verifier.sh` lui-même se voyait répondre *« rien
+d'exécutable n'a changé — documentation, outillage ou configuration »*, par le
+vérificateur, qui rangeait donc son propre code parmi ce qui ne s'exécute pas.
+Un hook cassé se découvrait au démarrage de la session suivante, chez quelqu'un
+d'autre.
+
+**La règle générale :** dans une sélection par appartenance, il faut lister ce
+qui n'appartient à rien et décider explicitement de son sort. Le défaut n'est
+pas dans une case manquante, il est dans la catégorie fourre-tout qui absorbe
+silencieusement ce qu'on n'a pas classé — ici « documentation ou configuration »,
+qui contenait aussi tout le code de l'outillage.
+
+**Et un pas partiel assumé vaut mieux qu'un trou.** Une vérification de syntaxe
+n'établit pas qu'un script fait ce qu'il annonce ; elle attrape le `fi` manquant
+qui casse tout. Ce qu'il faut, c'est l'écrire — « syntaxe seule » jusque dans le
+nom affiché — pour que personne n'y lise davantage.
