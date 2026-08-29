@@ -4,6 +4,7 @@ import {
   construireCorpsResend,
   construireCourriel,
   envoyerDemande,
+  lienMailtoDemande,
   lireReglages,
   type Reglages,
 } from '@/lib/courriel';
@@ -122,5 +123,52 @@ describe('lireReglages', () => {
       destinataire: undefined,
       expediteur: undefined,
     });
+  });
+});
+
+describe('lienMailtoDemande', () => {
+  /*
+   * Le repli qui permet de vendre sans compte d'envoi. Ce qui est vérifié ici
+   * n'est pas la forme du lien mais le fait qu'il porte **la demande entière** :
+   * un mailto qui perdrait le téléphone de l'artisan ferait perdre le client
+   * plus sûrement qu'un formulaire en panne.
+   */
+  const demande: Demande = {
+    nom: 'Jean Dupont',
+    metier: 'Couvreur',
+    ville: 'Rennes',
+    telephone: '06 12 34 56 78',
+    courriel: 'jean@example.com',
+    message: 'Je veux mon site.',
+  };
+
+  it('porte la destination, le sujet et le corps', () => {
+    const lien = lienMailtoDemande(demande, 'devis@example.com');
+
+    assert.ok(lien.startsWith('mailto:devis@example.com?'));
+    const parametres = new URLSearchParams(lien.slice(lien.indexOf('?') + 1));
+    assert.equal(parametres.get('subject'), construireCourriel(demande).sujet);
+    assert.equal(parametres.get('body'), construireCourriel(demande).texte);
+  });
+
+  it('garde chaque champ de la demande dans le corps', () => {
+    const lien = lienMailtoDemande(demande, 'devis@example.com');
+    const corps = new URLSearchParams(lien.slice(lien.indexOf('?') + 1)).get('body') ?? '';
+
+    for (const valeur of ['Couvreur', 'Rennes', '06 12 34 56 78', 'jean@example.com']) {
+      assert.ok(corps.includes(valeur), `absent du corps : ${valeur}`);
+    }
+  });
+
+  it("n'encode jamais un espace en plus", () => {
+    /*
+     * `URLSearchParams` encode l'espace en « + », que plusieurs clients de
+     * messagerie affichent littéralement dans le corps du message. Le lien
+     * arriverait lisible dans un client et truffé de « + » dans un autre.
+     */
+    const lien = lienMailtoDemande(demande, 'devis@example.com');
+
+    assert.equal(lien.includes('+'), false);
+    assert.ok(lien.includes('%20'));
   });
 });

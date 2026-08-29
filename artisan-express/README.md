@@ -26,12 +26,20 @@ npm run lint && npm run typecheck && npm test && npm run build
 
 | Variable | Sans elle |
 | --- | --- |
-| `RESEND_API_KEY` | Le formulaire répond « c'est de mon côté » et renvoie vers le téléphone. |
+| `NEXT_PUBLIC_DEVIS_MAILTO` | **La seule qui ne demande aucun compte.** Sans elle, un formulaire en panne n'a plus que le téléphone — absent lui aussi tant qu'aucun numéro n'est réglé. Avec elle, la demande part de la messagerie de l'artisan, déjà écrite. |
+| `RESEND_API_KEY` | Le formulaire répond « c'est de mon côté » et bascule sur le repli ci-dessus, ou sur le téléphone. |
 | `DEVIS_DESTINATAIRE` | Idem : sans boîte, rien n'est envoyé. |
 | `DEVIS_EXPEDITEUR` | Le courriel part du domaine partagé de Resend. Marche, mais tombe plus souvent en indésirable. |
 | `NEXT_PUBLIC_TELEPHONE` | Les boutons d'appel disparaissent. |
 | `NEXT_PUBLIC_WHATSAPP` | Le bouton WhatsApp disparaît. |
 | `NEXT_PUBLIC_LIEN_STRIPE` | Le bouton d'achat renvoie au formulaire au lieu du paiement. |
+
+**Le minimum pour encaisser une demande, c'est une adresse.** Une page déployée
+sans rien réglé était une page morte : le formulaire s'excusait, et les boutons
+de repli — téléphone, WhatsApp — disparaissaient faute de valeurs. Avec la seule
+`NEXT_PUBLIC_DEVIS_MAILTO`, il reste toujours un chemin pour joindre le vendeur,
+sans créer le moindre compte. Resend et Stripe restent meilleurs ; ils ne sont
+plus la condition d'une première vente.
 
 **Rien n'est jamais inventé pour combler un trou.** Un numéro de téléphone
 faux sur une page de vente coûte plus cher qu'un bouton en moins : ce qui n'est
