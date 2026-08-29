@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 323 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 332 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **323 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **332 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -267,7 +267,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 323 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -813,3 +813,62 @@ mesuré. Ce qui subsiste tient toujours au même fait, et il est structurel : el
 engage moins de capital que le témoin — 9 676 $ contre 9 986 $ — parce qu'elle
 temporise, et une temporisation coûte toujours quelque chose sur un actif qui
 monte à long terme.
+
+---
+
+## 15. Les pondérations du score — le balayage qui ne change rien
+
+Dernier bloc de réglages posés au jugé. **Il ne bouge pas, et c'est le
+résultat.**
+
+| technique / sentiment / on-chain | 2018-2021 | 2022-2026 | tout | moyenne |
+| --- | --- | --- | --- | --- |
+| **0,5 / 0,2 / 0,3** *(livré)* | 9,71 | 2,36 | 10,00 | **7,36** |
+| 0,7 / 0,2 / 0,1 | 9,94 | 2,44 | 10,28 | 7,55 |
+| 0,8 / 0,2 / 0,0 | 9,98 | 2,46 | 10,32 | 7,58 |
+| 0,3 / 0,2 / 0,5 | 9,78 | 2,28 | 10,10 | 7,39 |
+| 0,0 / 0,2 / 0,8 | 9,71 | 2,02 | 10,01 | 7,25 |
+
+**Quatre pour cent séparent le meilleur du pire.** À comparer aux balayages
+précédents : le stop a fait bouger le gain par unité de recul de 63 %,
+l'exposition de 21 %. Les pondérations sont un réglage de **second ordre**, et
+c'est la première chose que ce tableau apprend.
+
+### Pourquoi le « meilleur » réglage n'est pas retenu
+
+L'optimum apparent dit *supprimer l'on-chain* — et il ne sera pas suivi, pour
+trois raisons qui tiennent ensemble :
+
+- **0,22 point d'écart, c'est du bruit** à cette échelle. Changer un réglage
+  là-dessus, c'est ajuster le moteur à trois fenêtres particulières.
+- **Les données on-chain ne couvrent que deux des trois actifs.** LINK n'en a
+  pas. Conclure « l'on-chain ne sert à rien » depuis un jeu qui l'ignore sur un
+  tiers du portefeuille serait une conclusion sur les données, pas sur la
+  stratégie.
+- **Supprimer une famille entière est irréversible en pratique** : plus rien ne
+  la rappelle, et le jour où une meilleure source arrive, personne ne sait
+  qu'elle manquait.
+
+### Et le poids du sentiment n'est pas mesurable d'ici
+
+C'est un défaut de ma propre mesure, trouvé en la vérifiant. Deux
+configurations au même rapport technique:on-chain, l'une avec un poids
+sentiment de 0,2, l'autre à zéro, rendent des résultats **identiques à la
+quatrième décimale** : +586,5951 %, 120 ordres, 9,7138 des deux côtés.
+
+La raison est que le rejeu ne disposait d'aucun historique de peur — la famille
+est donc absente à chaque bougie et son poids intégralement redistribué.
+Balayer ce poids ne mesurait rien.
+
+`rejouer_multi` accepte désormais un `fear_greed`, et **un test fige les deux
+faits** : sans indice, le poids est inerte ; avec un indice, il agit. Le
+réglage deviendra mesurable le jour où une source sera joignable — aucun hôte
+qui en publie ne l'est depuis une session distante.
+
+### Ce que ce balayage laisse
+
+Rien à changer, et deux choses à savoir : les pondérations comptent dix fois
+moins que les plafonds de risque, et l'une des trois n'a jamais été mesurée du
+tout. **Un balayage qui conclut « ne touchez à rien » a autant de valeur qu'un
+qui change un chiffre** — il empêche le prochain de refaire le travail, et
+surtout de croire qu'un gain de 0,22 point justifie de supprimer une source.

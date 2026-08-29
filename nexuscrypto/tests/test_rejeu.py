@@ -588,6 +588,51 @@ class TestMultiActifs(unittest.TestCase):
         vendus = {e.ordre.actif for e in resultat.executions if e.ordre.sens is Sens.VENTE}
         self.assertNotIn("BTC/USDT", vendus)
 
+    def test_sans_indice_de_peur_le_poids_du_sentiment_est_inerte(self):
+        """Mesuré, et c'est ce qui invalide tout balayage de ce poids depuis ici.
+
+        Deux configurations au même rapport technique:on-chain, l'une avec un
+        poids sentiment de 0,2, l'autre à zéro : la redistribution rend les
+        résultats **rigoureusement identiques**. Balayer ce poids sans fournir
+        d'historique de peur ne mesure donc rien — et aucun hôte qui en publie
+        n'est joignable depuis une session distante.
+        """
+
+        from dataclasses import replace as _replace
+
+        series = {
+            "BTC/USDT": self._serie_reelle("BTC/USDT", descente()),
+            "ETH/USDT": self._serie_reelle("ETH/USDT", descente()),
+        }
+        base = config()
+        avec = _replace(base, strategie=_replace(
+            base.strategie, poids={"technique": 0.5, "sentiment": 0.2, "onchain": 0.3}))
+        sans = _replace(base, strategie=_replace(
+            base.strategie, poids={"technique": 0.625, "sentiment": 0.0, "onchain": 0.375}))
+        self.assertAlmostEqual(
+            rejouer_multi(avec, series).pnl_relatif,
+            rejouer_multi(sans, series).pnl_relatif,
+            places=9,
+        )
+
+    def test_un_indice_de_peur_fourni_change_les_decisions(self):
+        """Et dès qu'on en fournit un, le poids cesse d'être inerte : c'est ce
+        qui rend le réglage mesurable le jour où une source sera joignable."""
+
+        from datetime import timedelta as _td
+
+        series = {"BTC/USDT": self._serie_reelle("BTC/USDT", descente())}
+        jours = {
+            (DEBUT + _td(hours=4 * i)).date().isoformat(): 10
+            for i in range(400)
+        }
+        sans = rejouer_multi(config(), series)
+        avec = rejouer_multi(config(), series, fear_greed=jours)
+        # C'est le **montant** que la zone de valorisation change, pas le
+        # nombre d'ordres : la peur extrême multiplie l'enveloppe, elle ne
+        # crée pas d'échéance supplémentaire.
+        self.assertGreater(avec.capital_engage, sans.capital_engage * 1.05)
+
     def test_une_serie_trop_courte_ne_leve_pas(self):
         court = self._serie_reelle("BTC/USDT", [100.0])
         self.assertEqual(rejouer_multi(config(), {"BTC/USDT": court}).executions, [])
