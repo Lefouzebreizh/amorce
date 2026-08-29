@@ -434,3 +434,60 @@ test('un sous-titre ajouté au milieu garde ses deux secondes', () => {
   assert.equal(caption.start, 2);
   assert.equal(caption.end, 4);
 });
+
+/*
+ * Le montage express et l'ajout, les deux gestes de l'étape d'import.
+ *
+ * Ils sont testés ensemble parce que c'est leur cohabitation qui posait
+ * problème : le premier remplace tout, le second n'existait pas, et le seul
+ * chemin pour faire entrer un rush de plus dans un montage passait donc par
+ * l'effacement du travail des étapes suivantes.
+ */
+test('le montage express s’annule', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5), asset('b', 5)]);
+  store.appendClip('a');
+  const avant = useStudio.getState().project.clips;
+  assert.equal(avant.length, 1);
+
+  useStudio.getState().montageExpress();
+  assert.ok(useStudio.getState().project.clips.length > 1, 'l’express devrait monter les deux rushes');
+
+  // C'est le point du lot : jusqu'ici l'express écrivait l'état directement,
+  // donc l'annulation remontait à un état antérieur sans rien dire.
+  useStudio.getState().undo();
+  assert.deepEqual(useStudio.getState().project.clips, avant, 'l’annulation devrait rendre le montage d’avant');
+});
+
+test('ajouter un rush ne touche ni aux textes ni aux bruitages', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5), asset('b', 5)]);
+  store.appendClip('a');
+  useStudio.getState().addCaption();
+  useStudio.getState().addCue('boom', 1);
+
+  const captions = useStudio.getState().project.captions;
+  const cues = useStudio.getState().project.cues;
+  assert.equal(captions.length, 1);
+  assert.equal(cues.length, 1);
+
+  useStudio.getState().ajouterAuMontage(['b']);
+
+  const apres = useStudio.getState().project;
+  assert.equal(apres.clips.length, 2, 'le rush devrait rejoindre la fin du montage');
+  assert.equal(apres.clips[1].assetId, 'b');
+  assert.deepEqual(apres.captions, captions, 'les textes devraient survivre');
+  assert.deepEqual(apres.cues, cues, 'les bruitages devraient survivre');
+});
+
+test('ajouter un lot ne fait qu’une seule annulation', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5), asset('b', 5), asset('c', 5)]);
+  store.appendClip('a');
+
+  useStudio.getState().ajouterAuMontage(['b', 'c']);
+  assert.equal(useStudio.getState().project.clips.length, 3);
+
+  useStudio.getState().undo();
+  assert.equal(useStudio.getState().project.clips.length, 1, 'les deux ajouts devraient se défaire d’un coup');
+});
