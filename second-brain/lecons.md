@@ -2439,6 +2439,45 @@ les **moyennes** — un gris-vert, un orange terne — où *aucune* des deux enc
 n'atteint 4,5:1. Un test sur trois couleurs bien choisies passe et ne prouve
 rien ; vingt-neuf teintes par pas de 15° coûtent 4 ms.
 
+## Un événement se juge sur son contraste, pas sur son gain
+
+« On n'entend pas les pas. » Ils étaient là, au bon instant, au bon gain — et
+mesurés à **−1,2 et −2,2 dB** contre les 0,45 s qui les précèdent. Sous leur
+propre fond : inaudibles quelle que soit leur amplitude.
+
+```python
+contraste = max(env[t : t+0.20]) - env[t-0.45 : t-0.05].mean()
+```
+
+Trois causes, dans cet ordre de fréquence :
+
+1. **Un accent précédent dure trop** — une queue de braam tenait 1,4 s et
+   couvrait ce qui suivait.
+2. **L'esquive avale ce qu'on a posé dans le creux.** Un effet de recette la
+   subit comme le lit ; seul un son posé en **couche** (`suit_la_voix: false`)
+   s'ajoute après elle. C'est la seule façon de mettre un son *dans* un silence
+   sans qu'il soit creusé avec.
+3. **Le son n'existe pas au-dessus de 400 Hz.**
+
+Viser 5 à 10 dB. Négatif = absent ; au-delà de 15 = agressif.
+
+## Un pas de créature est deux sons, pas un
+
+`pas_mecanique` synthétisé mesure **−0,1 dB sous 400 Hz** : toute son énergie y
+vit, et l'excitation harmonique n'y rend que **0,1 dB** — parce qu'un grave
+presque harmonique saturé recrée le même peigne.
+
+Un pas de créature blindée est **le poids plus le contact**, et les deux
+viennent de sources différentes :
+
+| couche | rôle | mesuré |
+| --- | --- | --- |
+| `pas_mecanique` | le poids, qu'on ressent | −37 dB entendus |
+| `eclat` court | le contact, qu'on entend | **−19,5 dB**, 2-6 kHz à −4,3 |
+
+Dix-sept décibels et demi d'écart. La même logique vaut pour tout événement
+lourd : chercher ce qui claque, pas seulement ce qui pèse.
+
 ## `</script>` traverse JSON, et l'échappement HTML ne le rattrape pas
 
 Un bloc `<script type="application/ld+json">` a une règle d'échappement à lui,
@@ -2815,6 +2854,41 @@ La parade tient en huit lignes : une liste d'ajouts, `PRAGMA table_info` pour
 savoir ce qui manque, `ALTER TABLE` pour le reste, rejoué à chaque ouverture.
 Ce qui compte est le moment où on l'écrit : à la première colonne ajoutée après
 la première installation ailleurs, pas quand un utilisateur signale l'erreur.
+
+## Un motif d'exclusion est ancré à la racine, et un voisin le contourne
+
+`main` est passé au rouge sans qu'aucune ligne de code soit en cause :
+
+```
+ESLint: ENOENT: no such file or directory, open
+'artisan-express/.next/static/…/_buildManifest.js'
+```
+
+Deux causes se sont additionnées, et aucune des deux ne se voit en lisant le
+code :
+
+- **`".next/**"` ne couvre que `./.next/`.** Un motif relatif est ancré là où
+  la configuration est lue. Les dossiers de build des projets voisins —
+  `artisan-express/.next/`, `titan-builder/.next/` — n'étaient donc exclus par
+  rien, et le lint de la racine entrait dedans.
+- **La vérification lance les projets en parallèle, dans le même arbre.** Le
+  lint d'un projet lisait un manifeste que le build d'un autre était en train de
+  remplacer. Le fichier existait avant la lecture et après ; il manquait
+  pendant.
+
+D'où un défaut qui n'apparaît **que** sous parallélisme, seulement quand le
+voisin vient d'être construit, et jamais deux fois au même endroit. Relancer le
+donne vert une fois sur deux, ce qui pousse à le classer « flaky » — alors que
+la cause est nette et la réparation définitive.
+
+**La règle : un projet autonome dans un dépôt à plusieurs projets s'exclut
+entièrement de l'outillage des autres**, pas seulement son dossier de build.
+Chacun a sa configuration, ses alias et sa vérification propre ; ce que la
+racine y trouverait n'a de sens pour personne.
+
+**Et l'exclusion se vérifie sur les chemins, pas sur les noms.** Un rejeu local
+de la CI déposait une copie des mêmes projets sous `.verif-ci/copie/` : exclus à
+leur vrai chemin, ils revenaient par celui-là.
 
 ## Une couverture annoncée et absente est pire que pas de couverture
 

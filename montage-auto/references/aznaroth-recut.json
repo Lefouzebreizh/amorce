@@ -217,14 +217,14 @@
     {
       "son": "souffle_caverne",
       "instant": 3.1,
-      "gain": -1,
+      "gain": 4,
       "distance": "lointain",
       "telephone": 1.3
     },
     {
       "son": "nappe_sombre",
       "instant": 3.1,
-      "gain": -3,
+      "gain": -6,
       "distance": "lointain",
       "parametres": {
         "duree": 4.8,
@@ -232,6 +232,13 @@
         "graine": 88
       },
       "telephone": 1.2
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 4.55,
+      "gain": 1,
+      "distance": "lointain",
+      "_note": "le blanc entre la deuxieme et la troisieme replique. Un silence detecte a 4,8 s : le lit du mage etait grave, donc absent sur un telephone. `grondement_braises` perd 1,3 dB la ou une nappe en perd quinze — c'est lui qui porte un lit audible, jamais un drone."
     },
     {
       "son": "electricite",
@@ -355,11 +362,11 @@
       "instant": 10.806,
       "gain": 10,
       "distance": "proche",
-      "_note": "l'arrivee, sur l'attaque du rush — TAILLEE a 1,35 s. Le fichier en fait 3,4 : sa queue comblait de 11 dB le silence que le rush menage juste apres, et ce silence est la moitie de l'effet.",
+      "_note": "l'arrivee, TAILLEE a 0,75 s. Sa queue tenait jusqu'a 12,2 s et couvrait les deux pas poses derriere : mesure, le premier pas ressortait de -1,2 dB sur ce qui le precede, c'est-a-dire sous son propre fond. Un accent qui dure plus que son plan masque tout ce qui vient apres lui.",
       "enveloppe": {
-        "coupe": 1.35,
+        "coupe": 0.75,
         "attaque": 0.005,
-        "chute": 0.55
+        "chute": 0.35
       }
     },
     {
@@ -368,14 +375,14 @@
       "gain": 5,
       "distance": "moyen",
       "enveloppe": {
-        "coupe": 0.9,
-        "chute": 0.35
+        "coupe": 0.45,
+        "chute": 0.2
       }
     },
     {
       "son": "chute_pierres",
       "instant": 12.406,
-      "gain": 1,
+      "gain": 6,
       "distance": "lointain",
       "parametres": {
         "duree": 1.6,
@@ -412,7 +419,7 @@
     {
       "son": "electricite",
       "instant": 14.106,
-      "gain": 13,
+      "gain": 17,
       "distance": "proche",
       "parametres": {
         "duree": 0.8,
@@ -423,7 +430,7 @@
     {
       "son": "eclat",
       "instant": 14.126,
-      "gain": 5,
+      "gain": 10,
       "distance": "proche",
       "parametres": {
         "duree": 0.5,
@@ -440,6 +447,17 @@
         "coupe": 1.9,
         "chute": 0.6
       }
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 15.756,
+      "gain": 5,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.6,
+        "graine": 63
+      },
+      "_note": "les debris apres le cri : c'est eux qui font exister le monde autour"
     },
     {
       "son": "cri_titan",
