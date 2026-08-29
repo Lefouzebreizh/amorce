@@ -2250,33 +2250,49 @@ Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
 ses routes serveur. C'était la réponse depuis le début, et une heure est passée
 à contourner un quota au lieu de changer de mur.
 
-## Le quota de déploiement se compte par projet, pas par compte
+## Le refus de déploiement est une fenêtre glissante, pas un blocage de 24 h
 
-**Correction d'une phrase de ce fichier, mesurée le 29/08/2026.** Il était écrit
-ici que le plafond était « par jour et par compte ». Les horodatages disent
-autre chose :
+**Cette leçon a été écrite faux deux fois de suite dans la même heure, et les
+deux versions sont instructives.** Le relevé complet, le 29/08/2026 :
 
 | Heure | Projet | Résultat |
 | --- | --- | --- |
 | 01:27 | `amorce` **et** `amorce-51up` | refusés, « more than 100 » |
 | 01:55 | `amorce-51up` | **Ready** |
-| 01:59 | `amorce` | refusé, « more than 100 » |
+| 01:59 | `amorce` | refusé |
+| 02:05 | `amorce-51up` | refusé |
 
-Un seul compteur partagé ne peut pas produire ça : `amorce-51up` a déployé
-pendant qu'`amorce` était refusé, à quatre minutes d'intervalle, et `amorce` ne
-pouvait pas consommer cent déploiements dans ces quatre minutes. Quel qu'en soit
-le mécanisme exact — le message d'erreur ne le dit pas et la documentation de
-l'éditeur est hors d'atteinte derrière le mandataire — **les deux projets ne
-tombent pas ensemble.**
+**Première version, fausse** : « par jour et par compte ». Le déploiement réussi
+de 01:55 la contredit — un compteur épuisé pour la journée ne laisse rien
+passer.
 
-La conséquence est pratique et elle inverse un conseil : quand le projet
-principal d'un dépôt est bouché par le travail des autres sessions, **le projet
-qui porte la page de vente peut déployer quand même.** Attendre vingt-quatre
-heures était inutile ; il suffisait de regarder l'autre projet.
+**Deuxième version, fausse aussi, et écrite six minutes avant d'être démentie** :
+« par projet ». Elle expliquait 01:55 en donnant à chaque projet son propre
+budget. Mais `amorce-51up` a été refusé à 02:05 après avoir réussi à 01:55 : il
+n'a pas pu consommer cent déploiements en dix minutes.
 
-Ce qui reste vrai, en revanche, et ce qui suit ci-dessous : les aperçus coûtent,
-chaque projet branché sur le dépôt ajoute un déploiement par PR, et couper les
-aperçus de ce qui n'en a pas besoin reste le bon geste.
+**Ce qui reste, et qui tient debout :** le refus n'est pas un blocage jusqu'au
+lendemain. Une réussite s'est glissée entre deux refus, à vingt-huit minutes du
+premier. C'est le comportement d'une **fenêtre glissante** — les déploiements
+anciens sortent du décompte, une place se libère, le suivant passe, et la
+fenêtre se remplit aussitôt.
+
+**Ce qu'on ne sait toujours pas**, et qu'il faut se retenir d'écrire : si le
+compteur est tenu par compte ou par projet. Les données ne permettent pas de
+trancher, le message d'erreur ne le dit pas, et la documentation de l'éditeur est
+hors d'atteinte derrière le mandataire.
+
+La leçon de méthode compte autant que le fait : **un seul point de mesure qui
+contredit une règle suffit à la casser, jamais à en fonder une autre.** La
+première correction a été écrite sur un unique déploiement réussi, publiée avec
+assurance, et démentie par le point suivant. Il fallait dire « la règle écrite
+est fausse » et s'arrêter là.
+
+**Les conseils qui ne dépendent d'aucune de ces hypothèses**, et qui sont donc
+les seuls à suivre : réduire le volume — chaque PR déclenche un déploiement par
+projet branché, et une session qui enchaîne les PR consomme la réserve de la
+page qui doit rentrer de l'argent — ou changer d'hébergeur. Et ne pas attendre
+vingt-quatre heures : réessayer une demi-heure plus tard suffit parfois.
 
 ## Les aperçus coûtent, et les sessions les vident
 
@@ -2287,9 +2303,8 @@ n'a rien à voir avec celui qui en a besoin.
 
 **Le symptôme arrive au pire moment et ne ressemble pas à sa cause.** Ici :
 « Resource is limited - try again in 24 hours ». Aucun rapport apparent avec les
-vingt PR de montage vidéo qui l'ont consommé. Et le message ment sur la portée
-autant que sur la durée : il parle du compte, il ne vaut que pour le projet, et
-il dit vingt-quatre heures là où le déploiement suivant est passé une demi-heure
+vingt PR de montage vidéo qui l'ont consommé. Et le message ment sur la durée : il
+annonce vingt-quatre heures là où un déploiement est passé vingt-huit minutes
 plus tard.
 
 Trois choses à en retenir :
