@@ -2924,6 +2924,36 @@ porte sur **ce qu'on veut** (« la règle reste lisible »), jamais sur le moyen
 (« les boutons sont ailleurs »). Écrit sur le moyen, il aurait invité une
 quatrième tentative de mise en page — celle qui ne peut pas aboutir.
 
+## Deux grandeurs qui portent le même nom finissent par n'en faire qu'une
+
+Dans un montage, « la durée d'un plan » désigne deux choses : la longueur
+**coupée** dans le rush, et la longueur **vue** à l'écran. Une transition
+recouvre la fin d'un plan et le début du suivant — mesuré, 0,29 s par raccord —
+et l'écart entre les deux est exactement cela.
+
+Le plancher de longueur portait sur la coupe. Résultat : le montage automatique
+livrait **0,61 s vues** par plan là où le module d'analyse du même dépôt en
+récompense 1,1 à 2,8. L'application produisait donc un film que sa propre note
+pénalisait, et son propre guide répondait « tes plans s'enchaînent trop vite
+pour être lus ».
+
+Personne ne l'avait vu parce que le code disait `MIN_SHOT` et que le lecteur
+comprenait « durée d'un plan » — le bon mot pour l'une comme pour l'autre. La
+parade est un nom par grandeur, et le nom porte laquelle : `MIN_SHOT_VU` d'un
+côté, `MIN_SHOT` de l'autre, avec la conversion écrite entre les deux.
+
+**Et la même confusion m'a fait mesurer faux en cherchant à la corriger.** Pour
+juger le montage j'ai additionné la longueur des plans, au lieu d'appeler la
+fonction que le produit utilise pour connaître sa durée. La somme naïve
+annonçait 55 s là où le film en faisait 30 — j'allais écarter dix-neuf rushes
+pour résoudre un problème qui n'existait pas, tout en laissant passer le vrai,
+deux fois plus grave que je ne le croyais.
+
+Ce qui se généralise : **quand un produit sait déjà calculer une grandeur, on
+appelle sa fonction ; on ne la recalcule pas de tête.** Une mesure refaite à la
+main mesure autre chose, et la ressemblance des deux chiffres est précisément
+ce qui empêche de s'en apercevoir.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
