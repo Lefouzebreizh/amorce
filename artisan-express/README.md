@@ -148,3 +148,28 @@ compromis se défait en réglant la variable sur une adresse dédiée.
 | `NEXT_PUBLIC_TELEPHONE` | Le bouton d'appel disparaît. |
 | `NEXT_PUBLIC_WHATSAPP` | Le bouton WhatsApp disparaît. |
 | `NEXT_PUBLIC_LIEN_STRIPE` | Le bouton d'offre renvoie au formulaire. |
+
+## L’exemple qu’un prospect demande
+
+« Montre-moi un exemple » est sa première question, et sans lien la conversation
+s'arrête là. `public/exemple.html` est servi à **`/exemple.html`**, et la page de
+vente y renvoie sous l'avant/après.
+
+```bash
+npm run exemple      # régénère depuis titan-builder/demo, puis recopie
+```
+
+Ce n'est pas une maquette : c'est la sortie du **même générateur** que celui
+d'un client payant. Le refaire à la main dériverait ; la commande le refait en
+une seconde.
+
+**La page sort en `noindex`.** L'entreprise n'existe pas et son numéro ne sonne
+nulle part : indexée, elle se présenterait dans les résultats comme un vrai
+artisan, et concurrencerait un jour un client réel au nom voisin. C'est ce qui
+distingue un exemple d'un mensonge en ligne, et le générateur porte le drapeau
+(`--demonstration`) plutôt que la copie.
+
+**Adresse en `.html`, et pas un dossier.** Next sert `public/` tel quel et **ne
+résout aucun index de dossier** : `/exemple/` rend un 308 puis un 404, seul
+`/exemple/index.html` répondait. Un fichier à plat donne une adresse courte qui
+se dicte au téléphone.

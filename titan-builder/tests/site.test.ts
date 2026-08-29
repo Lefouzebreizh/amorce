@@ -290,3 +290,12 @@ test('le domaine est nettoyé, et un domaine faux est ignoré', () => {
   // « localhost » n'a pas de point : accepté, il produirait un lien mort.
   assert.equal(genererSite(commande(), [], { domaine: 'localhost' }).includes('canonical'), false);
 });
+
+test('une démonstration ne s’indexe pas', () => {
+  /*
+   * Elle porte un nom d'entreprise qui n'existe pas et un numéro qui ne sonne
+   * nulle part. Indexée, elle se présenterait comme un vrai artisan.
+   */
+  assert.match(genererSite(commande(), [], { demonstration: true }), /name="robots" content="noindex, nofollow"/);
+  assert.equal(genererSite(commande()).includes('name="robots"'), false);
+});

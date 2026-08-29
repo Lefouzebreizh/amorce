@@ -2601,3 +2601,30 @@ minutes »* à quelqu'un qui venait de taper son nom, son métier et son télép
 Le test qui l'attrape est celui qu'on n'écrit jamais, parce qu'il n'a l'air de
 rien tester : **le comportement quand aucune variable n'est réglée.** C'est
 pourtant l'état exact de tout premier déploiement.
+
+## `public/` de Next ne résout pas l'index d'un dossier
+
+Mesuré : avec `public/exemple/index.html`, l'adresse `/exemple` rend **404** et
+`/exemple/` un **308** qui ne mène nulle part. Seul `/exemple/index.html`
+répond. Le serveur de fichiers statiques de Next fait une correspondance exacte
+de chemin, là où un Apache ou un Nginx par défaut chercheraient un `index.html`.
+
+Le piège tient à l'habitude : on dépose un dossier de site comme on le
+déposerait sur n'importe quel hébergement, et l'adresse qu'on donne au client
+est celle qui ne marche pas. Elle marche en local si l'on ouvre le fichier
+depuis le disque, ce qui achève de tromper.
+
+**La parade est un fichier à plat** — `public/exemple.html` → `/exemple.html` —
+qui donne en prime une adresse courte, dictable au téléphone.
+
+## Une page de démonstration se marque `noindex`, et le drapeau va dans l'outil
+
+Une démonstration porte un nom d'entreprise qui n'existe pas et un numéro qui ne
+sonne nulle part. Indexée, elle apparaît dans les résultats comme un vrai
+établissement — et le jour où un client réel s'appelle presque pareil, c'est lui
+qu'elle concurrence avec sa propre fiche.
+
+Le point qui compte, et qui vaut au-delà de ce cas : **le drapeau appartient au
+générateur, pas à la copie du fichier.** Retirer la ligne à la main après coup
+marche une fois et se perd à la régénération suivante — et personne ne relit une
+page d'exemple. `--demonstration` traverse l'outil et sort avec le fichier.
