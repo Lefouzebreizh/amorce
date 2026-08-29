@@ -7,7 +7,7 @@ export function Hero() {
     <header className="border-b border-bordure bg-white">
       <div className="mx-auto grid w-full max-w-5xl gap-10 px-5 pb-14 pt-10 sm:pt-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:gap-14 md:pb-20">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-bleu">
+          <p className="text-base font-bold uppercase tracking-[0.18em] text-bleu">
             Maçon, couvreur, électricien
           </p>
 
@@ -50,7 +50,7 @@ export function Hero() {
             ].map(([chiffre, quoi]) => (
               <div key={chiffre}>
                 <dt className="text-2xl font-bold text-bleu">{chiffre}</dt>
-                <dd className="mt-1 text-sm leading-snug text-ardoise">{quoi}</dd>
+                <dd className="mt-1 text-base leading-snug text-ardoise">{quoi}</dd>
               </div>
             ))}
           </dl>

@@ -33,7 +33,7 @@ export function AvantApres() {
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {/* Avant */}
           <div className="flex flex-col rounded-2xl border border-bordure bg-white p-6">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-ardoise">
+            <p className="text-base font-bold uppercase tracking-[0.16em] text-ardoise">
               Aujourd’hui — ta fiche dans un annuaire
             </p>
 
@@ -75,7 +75,7 @@ export function AvantApres() {
 
           {/* Après */}
           <div className="flex flex-col rounded-2xl border-2 border-bleu bg-white p-6">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-bleu">
+            <p className="text-base font-bold uppercase tracking-[0.16em] text-bleu">
               Jeudi — ton site à toi
             </p>
 
