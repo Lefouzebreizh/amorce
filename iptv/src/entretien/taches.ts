@@ -18,6 +18,8 @@ import type { Depot } from '../cache/depot.ts'
 import type { Element, Genre } from '../domaine/types.ts'
 import { testerFlux, type OptionsTest } from '../lecture/tester.ts'
 import { numeroDeCanal, rangDeChaine } from '../normalisation/canal.ts'
+import { detecterEpisode } from '../normalisation/episode.ts'
+import { detecterGenre } from '../normalisation/genre.ts'
 import { detecterTheme } from '../normalisation/theme.ts'
 
 /** Le plafond d'un balayage complet : au-delà, ce n'est plus un catalogue. */
@@ -83,21 +85,37 @@ export async function testerCatalogue(
 export interface BilanRangement {
   readonly numerotees: number
   readonly chaines: number
+  /** Entrées dont le **genre** a changé : le classement d'un import ancien. */
+  readonly reclasses: number
   readonly dossiers: readonly { genre: 'film' | 'serie'; nommes: number; autres: number }[]
 }
 
 /**
- * Repose l'ordre des chaînes et les thèmes des films et séries.
+ * Reclasse le catalogue entier : genre, ordre des chaînes, thèmes.
  *
- * Le classement se fait à l'import — mais une base remplie par une version qui
- * l'ignorait n'en a aucun, et un réimport complet coûte plusieurs minutes pour
- * une donnée qui se déduit de ce qu'on a déjà.
+ * Tout se calcule à l'import — donc tout reste figé sur la règle qui avait
+ * cours ce jour-là, et un correctif livré ensuite ne touche jamais une base
+ * déjà remplie. Le cas réel qui a imposé cette fonction : des **chaînes** de
+ * cinéma — Ciné+, Canal+ Cinémas, les chaînes Pluto — rangées dans l'onglet
+ * Films par une règle depuis corrigée, et qui y seraient restées pour toujours.
+ *
+ * Rejouer la classification coûte quelques secondes, là où un réimport complet
+ * coûte plusieurs minutes et demande de retrouver l'adresse de sa source.
  */
 export function rangerCatalogue(depot: Depot): BilanRangement {
-  const numerotees = depot.renumeroter(
-    (titre) => ({ canal: numeroDeCanal(titre), rang: rangDeChaine(titre) }),
-    (groupe) => detecterTheme(groupe),
-  )
+  const { numerotees, reclasses } = depot.reclasser(({ titre, url, groupe }) => {
+    const genre = detecterGenre({
+      url,
+      groupe,
+      episode: detecterEpisode(titre) !== undefined,
+    })
+    // Chacun ne porte que ce qui le concerne : une chaîne a un numéro, une
+    // œuvre a un thème. Poser les deux partout reviendrait à afficher un rang
+    // de famille à côté d'un film.
+    return genre === 'direct'
+      ? { genre, canal: numeroDeCanal(titre), rang: rangDeChaine(titre) }
+      : { genre, theme: detecterTheme(groupe) }
+  })
 
   const dossiers = (['film', 'serie'] as const)
     .map((genre) => {
@@ -112,6 +130,7 @@ export function rangerCatalogue(depot: Depot): BilanRangement {
 
   return {
     numerotees,
+    reclasses,
     chaines: depot.compter({ genre: 'direct', inclureMorts: true }),
     dossiers,
   }

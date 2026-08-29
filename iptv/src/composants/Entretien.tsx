@@ -75,8 +75,13 @@ export function Entretien({ initial }: { initial: Etat }) {
     try {
       const bilan = await appeler('ranger')
       await relire()
+      const reclasses = bilan['reclasses'] ?? 0
       setMessage(
-        `${String(bilan['numerotees'])} chaînes numérotées sur ${String(bilan['chaines'])}. ` +
+        (reclasses > 0
+          ? `${String(reclasses)} entrées ont changé de genre — elles étaient classées par une ` +
+            `règle depuis corrigée. `
+          : '') +
+          `${String(bilan['numerotees'])} chaînes numérotées sur ${String(bilan['chaines'])}. ` +
           `Les autres suivent par familles : sport, cinéma, musique, puis le reste.`,
       )
     } finally {
