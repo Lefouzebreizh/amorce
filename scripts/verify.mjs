@@ -1211,6 +1211,20 @@ try {
   check('Un fichier est téléchargé', false, String(error).slice(0, 120));
 }
 
+/*
+ * L'avertissement de cadence se relève **ici**, pas plus bas avec la mesure.
+ *
+ * Sur ordinateur, un second export — la bande-son seule — suit immédiatement,
+ * et il remet l'état du panneau à zéro : c'est le comportement voulu, un
+ * nouvel export ne doit pas afficher le verdict du précédent. Le contrôle
+ * placé après la mesure ffprobe passait donc sur mobile et tombait sur
+ * ordinateur, pour une raison qui n'avait rien à voir avec le défaut.
+ */
+const cadenceAnnoncee = await page.locator('text=/images par seconde au lieu de/').count();
+// Un cliché pris ici, et non au lancement : le précédent montrait la barre de
+// progression à 66 %, donc jamais le verdict.
+await page.screenshot({ path: join(SHOTS, `05b-verdict-${profile.id}.png`), fullPage: true });
+
 if (!profile.mobile) {
   // La bande-son seule : le mixage est déjà fait dans le graphe audio, seule la
   // piste vidéo n'est pas jointe au flux enregistré.
@@ -1385,6 +1399,26 @@ if (exportPath) {
       + `Cadence de l’export : ${cadence.images} images pour ${cadence.duree.toFixed(1)} s, `
       + `soit ${cadence.parSeconde.toFixed(1)} par seconde — ${perdues} % des images perdues`,
     );
+
+    /*
+     * Faute de pouvoir tenir la cadence, l'application doit au moins la dire.
+     *
+     * C'est le seul contrôle rouge que ce défaut permet aujourd'hui, et il vaut
+     * d'être tenu : un utilisateur a livré un export à 12,7 images par seconde,
+     * l'a décrit comme un tremblement, et est allé chercher la cause du côté de
+     * l'entrelacement — le fichier était pourtant `progressive`. Rien dans
+     * l'application ne lui disait que des images manquaient.
+     *
+     * La machine de vérification est sans carte graphique et n'atteint jamais
+     * le seuil : l'avertissement doit donc être là à chaque passage.
+     */
+    if (cadence.parSeconde < 20) {
+      check(
+        'Un export saccadé est annoncé à l’utilisateur',
+        cadenceAnnoncee > 0,
+        cadenceAnnoncee > 0 ? 'le panneau nomme la cadence obtenue' : 'aucun avertissement affiché',
+      );
+    }
   }
 
   const creux = mesurerImagesVides(exportPath);
