@@ -297,6 +297,23 @@ téléchargent en une commande, vérifiée le jour même, un mégaoctet :
 curl -sSO https://raw.githubusercontent.com/freqtrade/freqtrade/develop/tests/testdata/UNITTEST_BTC-1m.json
 ```
 
+**Et seize ans de BTC réel s'y téléchargent aussi**, prix *et* métriques
+on-chain, sous licence ouverte — c'est le jeu communautaire CoinMetrics, que lit
+`nexuscrypto rejeu --coinmetrics`. Il apporte ce qu'aucune API gratuite ne
+donne : le flux net des réserves de plateformes, en dollars, jour par jour.
+
+```bash
+curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv
+```
+
+**Mais il ne publie qu'une clôture par jour, et c'est le piège.** Ni haut, ni
+bas, ni ouverture : le chargeur fabrique `bas = min(clôture du jour, clôture de
+la veille)`. Tout ce qui se mesure sur les **mèches** — liquidations, stops
+touchés, pire recul, ATR — est donc sous-estimé, sans qu'aucun calcul ne lève
+quoi que ce soit. Le module de levier détecte désormais ce cas et l'écrit sous
+ses propres résultats ; toute autre mesure qui repose sur un plus bas doit faire
+de même, ou dire qu'elle mesure des clôtures.
+
 Ce qui reste impossible : l'ingestion **en direct**, le sentiment, l'on-chain et
 la macro. Une stratégie se règle donc hors ligne sur des données téléchargées,
 et son branchement aux sources ne se vérifie que sur une machine sans mandataire
