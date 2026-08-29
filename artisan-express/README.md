@@ -48,8 +48,9 @@ pas réglé disparaît de l'écran.
 ## Aller chercher les clients
 
 La page ne se vend pas toute seule : personne n'y arrive par hasard.
-`PROSPECTION.md` contient les quatre messages — premier contact, relance,
-objection sur le prix, démarrage — et la règle qui les empêche d'être du spam :
+`PROSPECTION.md` contient les cinq messages — premier contact, relance, la
+réponse à « montrez-moi » qui envoie l'exemple, l'objection sur le prix, le
+démarrage — et la règle qui les empêche d'être du spam :
 **chacun porte une phrase que seul le vendeur peut écrire, ce qu'il a vraiment
 vu sur la page de l'artisan.** Sans elle, c'est un publipostage et ça se sent.
 

@@ -87,7 +87,41 @@ Dire « je n'insisterai pas » et le tenir vaut mieux qu'un troisième message.
 
 ---
 
-## 3. Quand il répond « c'est trop cher »
+## 3. Quand il demande à voir
+
+C'est la question la plus fréquente, et la meilleure : il est intéressé. Elle
+arrive sous vingt formes — « ça ressemble à quoi ? », « vous avez des
+exemples ? », « c'est quoi exactement pour 299 € ? ».
+
+> Tenez, un exemple complet : ⟦adresse de ta démonstration⟧
+>
+> C'est une entreprise inventée — je le dis sur la page, je ne vais pas vous
+> faire croire à un vrai client alors que vous seriez le premier. Mais c'est
+> exactement ce que vous recevez : votre nom, vos services, votre zone, vos
+> photos, et le bouton d'appel en haut.
+>
+> Ouvrez-le sur votre téléphone, c'est là qu'il sera lu.
+
+**Où trouver cette adresse :** ta page de vente sert la démonstration à
+`/exemple.html`. Si ta page est à `https://truc.vercel.app`, le lien est
+`https://truc.vercel.app/exemple.html`. **Ouvre-le une fois toi-même avant de
+l'envoyer** — un lien mort dans le message qui suit un « oui, montrez-moi »
+coûte la vente, et c'est le pire moment pour le découvrir.
+
+**Pourquoi le lien n'est pas dans le premier message.** Un lien dans un message
+non sollicité fait deux choses, toutes deux mauvaises : il fait tomber le
+message plus souvent dans les demandes filtrées de Messenger, et il ressemble à
+ce que font les robots. Envoyé **en réponse à sa question**, il ne coûte rien et
+arrive au moment où il veut le voir.
+
+**Et « je le dis sur la page » n'est pas une précaution de langage.** La
+démonstration porte elle-même la mention qu'elle est fictive. Un artisan qui
+découvrirait tout seul que l'exemple est inventé ne rappellerait pas — le dire
+avant lui transforme le seul point faible en preuve d'honnêteté.
+
+---
+
+## 4. Quand il répond « c'est trop cher »
 
 Ne jamais baisser le prix. Un prix qui bouge au premier doute dit que le
 premier prix était faux.
@@ -107,7 +141,7 @@ sincèrement — sinon c'est une pression déguisée, et ça s'entend.
 
 ---
 
-## 4. Quand il dit oui
+## 5. Quand il dit oui
 
 C'est le moment où on perd des clients par flottement. Réponds dans l'heure,
 et demande **tout d'un coup**.
