@@ -4,10 +4,14 @@ import { ETAT_INITIAL, type Etat, type Statut } from './types.ts';
 /**
  * Le seul endroit d'Amorce qui parle au réseau.
  *
- * Ce qu'il envoie : rien. Pas un nom de fichier, pas une durée, pas un compte
- * d'exports. Une requête sans corps, avec le témoin de session, et c'est tout.
- * Ce qu'il reçoit : un statut. C'est la frontière écrite dans
- * `CLAUDE.md` §4, et elle est étroite exprès.
+ * Ce qu'il envoie : une clé de licence, et rien d'autre. Pas un nom de fichier,
+ * pas une durée, pas un compte d'exports — une requête sans corps. Ce qu'il
+ * reçoit : un statut. C'est la frontière écrite dans `CLAUDE.md` §4, et elle
+ * est étroite exprès.
+ *
+ * La clé lui est passée plutôt que lue ici : ce fichier ne touche à aucun
+ * stockage, exactement comme le reste du module. `cle.ts` s'en charge, et c'est
+ * le seul qui garde quelque chose.
  *
  * Il ne lève jamais. Un serveur éteint, une coupure, une réponse illisible :
  * dans tous les cas on retombe sur l'état initial, donc sur l'offre libre, et
@@ -48,17 +52,21 @@ export function lireReponse(donnees: unknown): Etat {
  * une panne ne se commande pas.
  */
 export async function demanderEtat(
+  cle: string,
   chercher: typeof fetch = fetch,
   delaiMs = DELAI_MS,
 ): Promise<Etat> {
-  if (!serveurConfigure()) return ETAT_INITIAL;
+  // Sans serveur, ou sans clé, il n'y a personne à interroger et rien à
+  // demander. Une requête partirait pour se faire refuser, et l'offre libre
+  // est déjà la réponse.
+  if (!serveurConfigure() || cle.trim() === '') return ETAT_INITIAL;
 
   const arret = new AbortController();
   const minuterie = setTimeout(() => arret.abort(), delaiMs);
   try {
     const reponse = await chercher(`${ADRESSE_SERVEUR}/etat`, {
       method: 'GET',
-      credentials: 'include',
+      headers: { Authorization: `Bearer ${cle.trim()}` },
       signal: arret.signal,
     });
     if (!reponse.ok) return ETAT_INITIAL;
