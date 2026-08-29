@@ -212,3 +212,21 @@ la regarder.
 
 Chromium est déjà installé dans les sessions distantes ; ne pas lancer
 `playwright install`. `AMORCE_CHROMIUM` permet d'en désigner un autre.
+
+## Ce que le réseau rapporte aujourd'hui : rien
+
+Mesuré : **73 liens sur 73**, sur les onze sites publiés, pointent encore vers
+`exemple-affiliation.com`. Le réseau se met à jour tout seul, se référence, tient
+213 contrôles au vert — et ne peut pas encaisser un centime.
+
+Ce n'était écrit nulle part. Chaque lien produisait **une** alerte parmi 234,
+sous un verdict « 0 erreur(s) » qui se lit comme « tout va bien ». `npm run
+valider` le dit maintenant en clair, à la fin, et sépare ce qui est en ligne
+(73) de ce qui attend en réserve (158) — confondre les deux triple le chiffre et
+décourage pour un travail qui n'est pas encore à faire.
+
+**Ce qui débloque, et personne d'autre ne peut le faire :** ouvrir les comptes
+d'affiliation. `AFFILIATION.md` les a déjà cherchés et classés par ce qui paie le
+plus vite ; trois places de marché — Awin, PartnerStack, Impact — couvrent une
+bonne partie du lot en une seule inscription. C'est une soirée de formulaires,
+et c'est la seule chose qui sépare ce réseau de son premier euro.
