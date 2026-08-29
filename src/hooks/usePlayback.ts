@@ -196,7 +196,18 @@ export function usePlayback(fonts: FontSet): PlaybackEngine {
       const affiche = canvasRef.current?.getBoundingClientRect().width ?? 0;
       if (!exporting && !pinned && affiche > 0) {
         const besoin = (affiche * Math.min(3, window.devicePixelRatio || 1)) / OUTPUT_WIDTH;
-        const cran = Math.max(0.15, Math.ceil(besoin / 0.05) * 0.05);
+        /*
+         * Le plancher vaut le palier « Fluide », 0,34 — soit 367 px composés.
+         *
+         * Il était à 0,15. Sur un écran large où l'aperçu est petit, la borne
+         * descendait alors sous ce que le palier le plus bas compose déjà, et
+         * l'image devenait molle dès qu'on l'agrandissait d'un doigt : le temps
+         * qu'un nouveau calcul arrive, on regardait une composition de 162 px
+         * étirée sur toute la largeur. Mesuré à 324 px après avoir ajouté une
+         * ligne de boutons sous la frise, ce qui suffisait à faire tomber
+         * l'aperçu sous le palier.
+         */
+        const cran = Math.max(0.34, Math.ceil(besoin / 0.05) * 0.05);
         if (cran < tier.scale) tier.scale = cran;
       }
 
