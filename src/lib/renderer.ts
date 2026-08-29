@@ -188,6 +188,39 @@ function charger(asset: MediaAsset): HTMLImageElement {
   return image;
 }
 
+/**
+ * Vignettes, pour tenir l'écran pendant qu'une vidéo se cale.
+ *
+ * Déplacer la tête de lecture demande un repositionnement, et un
+ * repositionnement coûte deux à trois cents millisecondes sur un téléphone.
+ * Pendant ce temps l'aperçu n'a rien à montrer : on y voyait d'abord un aplat
+ * marron, puis — une fois l'étalonnage retenu — un fond noir. Les deux disent
+ * la même chose à l'utilisateur, « ça ne marche pas », alors qu'il cherche
+ * simplement une image.
+ *
+ * Or chaque rush porte déjà sa vignette, décodée à l'import. La poser en
+ * attendant montre **le bon plan**, à la bonne échelle, tout de suite : ce
+ * n'est pas l'image exacte de l'instant visé, mais c'est le plan qu'on
+ * cherche, et cela suffit pour viser.
+ *
+ * Le cache est un module et non un champ du vivier : une vignette pèse
+ * quelques kilo-octets, elle survit à la fenêtre de chargement des vidéos, et
+ * la recharger à chaque éviction annulerait tout le bénéfice.
+ */
+const vignettes = new Map<string, HTMLImageElement>();
+
+function vignette(asset: MediaAsset | undefined): HTMLImageElement | null {
+  if (!asset?.thumbnail) return null;
+  const connue = vignettes.get(asset.id);
+  if (connue) return connue.naturalWidth > 0 ? connue : null;
+
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = asset.thumbnail;
+  vignettes.set(asset.id, image);
+  return image.naturalWidth > 0 ? image : null;
+}
+
 /** Écart de synchronisation au-delà duquel on repositionne la lecture. */
 const DRIFT_TOLERANCE = 0.25;
 
@@ -324,8 +357,9 @@ function layerDrawer(
   layer: ActiveLayer,
   pool: ClipVideoPool,
   filter: string,
+  asset?: MediaAsset,
 ): LayerDrawer | null {
-  const source = pool.get(layer.placed.clip.id);
+  const source = pool.get(layer.placed.clip.id) ?? vignette(asset);
   if (!source) return null;
 
   /*
@@ -340,9 +374,16 @@ function layerDrawer(
    * connaître ses dimensions dès les métadonnées, plusieurs centaines de
    * millisecondes avant d'avoir une image à donner.
    */
+  let dessinable: ClipSource = source;
   const { width, height } = sourceSize(source);
-  if (!width || !height) return null;
-  if (source instanceof HTMLVideoElement && source.readyState < 2) return null;
+  const prete = width > 0 && height > 0
+    && !(source instanceof HTMLVideoElement && source.readyState < 2);
+  if (!prete) {
+    // La vidéo n'a rien à donner : la vignette du rush tient l'écran.
+    const secours = vignette(asset);
+    if (!secours) return null;
+    dessinable = secours;
+  }
 
   const progress = layer.placed.duration > 0 ? layer.localTime / layer.placed.duration : 0;
   const motion = motionTransform(layer.placed.clip, progress, layer.localTime);
@@ -350,7 +391,7 @@ function layerDrawer(
   return (transform: LayerTransform) => {
     drawCover(
       ctx,
-      source,
+      dessinable,
       {
         alpha: transform.alpha,
         dx: transform.dx + motion.dx,
@@ -434,8 +475,11 @@ export function renderFrame(
 
   let dessine = false;
   if (slice) {
-    const drawTo = layerDrawer(ctx, slice.to, pool, filter);
-    const drawFrom = slice.from ? layerDrawer(ctx, slice.from, pool, filter) : null;
+    const asset = (id: string) => project.assets.find((a) => a.id === id);
+    const drawTo = layerDrawer(ctx, slice.to, pool, filter, asset(slice.to.placed.clip.assetId));
+    const drawFrom = slice.from
+      ? layerDrawer(ctx, slice.from, pool, filter, asset(slice.from.placed.clip.assetId))
+      : null;
     if (drawTo) {
       applyTransition(slice.to.placed.clip.transition, slice.progress, ctx, drawFrom, drawTo);
       dessine = true;

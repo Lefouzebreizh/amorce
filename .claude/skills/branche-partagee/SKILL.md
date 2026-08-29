@@ -89,6 +89,47 @@ Les fichiers qui se télescopent, et ce qu'il faut y regarder :
 | `.claude/skills/verifier/SKILL.md` | Son préambule ne compte plus les projets, exprès : ne pas réintroduire un nombre |
 | `.github/requirements-tests.txt` | Ne jamais y recopier la liste du hook — voir l'en-tête du fichier |
 
+## « Cette branche a-t-elle encore du travail ? » — le seul test qui réponde
+
+La question se pose à chaque inventaire de branches, et **les trois façons
+évidentes d'y répondre sont fausses**. Mesuré le 28/08/2026 sur les 78 branches
+`claude/*` du distant : deux estimations successives, deux chiffres faux
+annoncés avec assurance, avant d'y arriver.
+
+| Ce qu'on essaie | Ce que ça mesure vraiment |
+| --- | --- |
+| `git log main..BRANCHE` | Des commits, pas du contenu. Une branche **fusionnée en squash** garde tous les siens : elle affiche « 4 commits d'avance » alors qu'elle n'apporte rien |
+| `git diff main...BRANCHE` | Part de la **base de fusion**, donc affiche encore le travail d'une branche déjà livrée. C'est le piège le plus coûteux : le diff est plein, et il est vide de sens |
+| `git diff main..BRANCHE` | Mélange l'avance et le **retard** : une branche de 500 commits en arrière annonce 500 fichiers « différents » |
+| `git cherry` | Compare des empreintes de patch, qu'un squash change toutes |
+
+Le seul test exact est celui-ci : **la fusion changerait-elle l'arbre de
+`main` ?**
+
+```bash
+git merge-tree --write-tree origin/main origin/claude/BRANCHE | head -1
+# ce SHA d'arbre égale `git rev-parse origin/main^{tree}` → la branche n'apporte rien
+```
+
+En conflit, `merge-tree` ne rend pas d'arbre : il faut alors fusionner
+réellement dans un worktree jetable, résoudre, puis comparer.
+
+```bash
+git worktree add -q --detach /tmp/essai origin/claude/BRANCHE
+cd /tmp/essai && git merge origin/main --no-edit   # résoudre, puis :
+git diff --name-only origin/main HEAD              # vide → rien à livrer
+```
+
+**Et c'est le cas le plus fréquent, pas le cas rare.** Sur les neuf branches en
+conflit ce jour-là, **les neuf** rendaient un arbre identique à `main` une fois
+résolues. Leur « conflit » n'était pas du travail en attente : c'était une
+**ancienne version** d'un code que `main` avait depuis corrigé. Fusionner leur
+côté aurait réintroduit les défauts corrigés.
+
+D'où la règle : une branche en conflit n'est pas une branche à sauver tant
+qu'on n'a pas mesuré ce qu'elle apporte. Sur 78 branches, 68 étaient des
+références mortes et aucune ne portait de travail perdu.
+
 ## Ce qui a déjà été déminé
 
 Deux aimants à conflits ont été retirés — inutile de les recréer :

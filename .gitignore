@@ -133,3 +133,16 @@ visual_library/**/*.mp4
 # dizaines de mégaoctets de vidéo, et l'invariant « aucun binaire versionné »
 # tombe sans que personne l'ait décidé.
 /rushes/
+
+# IPTV : rien de ce qui identifie un abonnement ne rentre ici. Les listes et
+# les caches se refabriquent d'un import, les identifiants ne se retirent pas
+# de l'historique une fois poussés.
+/iptv/node_modules/
+/iptv/.next/
+/iptv/.essai/
+/iptv/donnees/
+/iptv/*.db
+/iptv/*.db-journal
+/iptv/*.m3u
+/iptv/*.m3u8
+/iptv/*.xml

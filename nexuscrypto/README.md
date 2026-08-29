@@ -54,16 +54,16 @@ nexuscrypto/
 │   │   ├── canaux.py         # ✅ console, Telegram, Discord — en HTTP nu
 │   │   └── messages.py       # ✅ mise en forme, testée sans réseau
 │   ├── rejeu/
-│   │   ├── donnees.py        # ✅ CSV de bougies + six marchés fabriqués
+│   │   ├── donnees.py        # ✅ CSV, CoinMetrics réel, six marchés fabriqués
 │   │   ├── rejeu.py          # ✅ la boucle, sans regard vers l'avenir
 │   │   └── rapport.py        # ✅ mesures, tableau, verdict
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 251 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 332 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **251 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **332 tests, moins de deux secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -160,10 +160,17 @@ montant non dépensé reste en trésorerie et gonfle les achats futurs. D'où
 `TEMPORISER` distinct d'`ATTENDRE` — un report se raconte dans le
 récapitulatif, une absence non.
 
-### La taille se décide sur la distance au stop, jamais sur la conviction
+### La taille se décide sur la distance au stop — en théorie
 
 `capital × risque / (prix − stop)`. Un actif volatil a un stop plus loin, donc
 une position plus petite, automatiquement, sans table par actif à tenir à jour.
+
+**Sauf qu'à l'enveloppe actuelle, ce plafond ne mord jamais.** Mesuré sur 158
+dimensionnements d'un rejeu multi-actifs : c'est l'enveloppe DCA qui décide
+62 % du temps, l'exposition par actif 38 %, et le risque par position **jamais**
+— voir le § 14. Le mécanisme est écrit, il est juste, et il est aujourd'hui
+inerte. Le dire évite de croire que le dimensionnement suit le risque quand il
+suit le calendrier.
 
 ### La simulation est réaliste ou elle ne sert à rien
 
@@ -171,6 +178,32 @@ Frais d'un compte sans remise, glissement calculé **en parcourant le carnet**, 
 exécution partielle au-delà de 10 % de la profondeur visible. Un simulateur qui
 exécute au prix affiché produit une courbe qui sert ensuite à régler des seuils,
 et ces seuils sont alors réglés sur une fiction.
+
+### Le bouclier est un veto, pas une note
+
+Le scanner repère une anomalie de volume ; il ne sait pas si le jeton est
+revendable. Un contrat piégé ne vaut pas « moins », il vaut zéro : la note
+mesure une opportunité, le bouclier mesure la possibilité d'en sortir. Les
+mélanger laisserait une note élevée compenser un contrat piégé, ce qui est
+exactement le montage qu'on veut arrêter.
+
+Trois avis, demandés en parallèle et sans clé d'API : **GoPlus** lit le
+contrat, **honeypot.is** simule un achat puis une revente (Ethereum, BNB Chain
+et Base seulement), **RugCheck** couvre Solana. Le veto passe **avant** le
+dimensionnement — un jeton dont on ne peut pas sortir ne consomme même pas un
+calcul de taille.
+
+**Le silence n'est pas un quitus.** Aucune source qui répond donne `INCONNU`, et
+`INCONNU` bloque par défaut. C'est l'inverse du réflexe habituel, et l'asymétrie
+le justifie : une occasion manquée coûte un gain, un jeton dont on ne peut pas
+sortir coûte la ligne entière. `acheter_si_inconnu` permet d'en décider
+autrement, en le sachant.
+
+**Pas d'adresse, pas de bouclier — et non « pas d'adresse, donc refus ».** Les
+lignes du socle n'ont pas de contrat à auditer : exiger une adresse pour
+LINK/USDT lui aurait interdit tout achat, à chaque passe, en accusant les
+sources de sécurité. Une ligne d'allocation peut désormais porter `chaine` et
+`adresse` ; c'est leur présence qui déclenche le veto.
 
 ### Les filtres gratuits avant les filtres qui coûtent
 
@@ -234,7 +267,7 @@ des relevés rejoués.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 251 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -251,6 +284,7 @@ changé de forme.
 python3 main.py rejeu                        # les six marchés fabriqués
 python3 profils.py --detail                  # les mêmes, avec le détail
 python3 main.py rejeu --csv btc-4h.csv --symbole BTC/USDT --fear-greed fng.csv
+python3 main.py rejeu --csv btc-4h.csv --leviers 1,2,3,5,10   # compte les liquidations
 ```
 
 **Le rejeu réutilise le moteur de décision tel quel.** Il ne réimplémente rien :
@@ -280,6 +314,77 @@ un test :
 Le test `test_une_bougie_future_ne_change_rien_au_passe` remplace la dernière
 clôture par un pic absurde et exige que **pas une seule** décision antérieure
 ne bouge.
+
+### Le levier se mesure, il ne s'exécute pas
+
+`--leviers 1,2,3,5,10` répond à une question et une seule : **à quel moment un
+compte à levier aurait-il été liquidé ?** Le module `src/rejeu/levier.py` lit un
+rejeu déjà fait ; il n'entre nulle part dans le chemin d'ordre, et le courtier
+ne connaît toujours pas le mot « levier ». C'est délibéré — une option de levier
+posée dans le courtier serait utilisée avant d'avoir été mesurée.
+
+Une position ouverte au prix `P` à levier `L` est liquidée quand le prix touche
+`P × (1 − 1/L + maintenance)`. On mesure donc, pour **chaque achat**, la pire
+excursion défavorable de sa détention, sur les **plus bas** des bougies : une
+mèche liquide aussi sûrement qu'une clôture et ne laisse aucune trace dans une
+courbe bâtie sur les clôtures. Les ventes soldent les achats en premier entré,
+premier sorti.
+
+**Le levier porte sur la position, jamais sur le portefeuille**, et c'est la
+correction qui a sauvé ce module d'être inutile. Mesuré d'abord sur le recul du
+portefeuille, il déclarait 10x survivant sur « effondrement sans reprise », un
+marché où l'actif perd 37 %. L'explication tient en une ligne : le bot garde
+l'essentiel du capital en liquide, donc le portefeuille recule peu quand l'actif
+plonge. Personne ne met du levier sur du cash dormant, et cette mesure-là
+flattait le levier d'un facteur dix. Après correction, les six marchés fabriqués
+plafonnent à **5x**.
+
+**Deux refus de conclure, et ils comptent autant que le tableau.** Un rejeu sans
+position ouverte ne dit *rien* du levier — la version naïve annonçait « levier
+maximal 10x » sur zéro position, une conclusion rassurante tirée du vide. Et en
+dessous de dix positions, le tableau décrit la période rejouée bien plus que le
+réglage : l'avertissement est écrit sous le tableau.
+
+**Mesuré sur seize ans de BTC réel**, par fenêtres de deux ans — 55 à 70
+positions chacune, bien au-delà du seuil de dix sous lequel le tableau refuse
+de conclure :
+
+| fenêtre | marché | 2x | 3x | 5x | 10x |
+|---|---|---|---|---|---|
+| 2017–2018 | bulle puis krach | 28 % | 48 % | 62 % | **100 %** |
+| 2020–2021 | haussier, +124 % | 25 % | 36 % | 57 % | **100 %** |
+| 2022–2023 | baissier puis reprise | 0 % | 0 % | 23 % | **85 %** |
+
+Part des positions liquidées, **financement compté**. À x10, de 85 à 100 % — et
+dans deux fenêtres sur trois, **la totalité des positions**. Ce n'est pas un
+mauvais moment mal choisi : c'est la volatilité ordinaire de l'actif contre une
+marge de 9,5 %, plus des frais qui la rongent pendant qu'on attend.
+
+Le financement double environ les dégâts. Sur 2020-2021 il fait passer 2x de
+2 % à 25 %, et à x10 il **vide 28 positions sur 44 sans qu'un prix ait reculé
+d'un centime** — la marge est mangée par les frais avant que le marché ait fait
+quoi que ce soit. Aucun réglage de stop n'y change rien : cela se combat en
+raccourcissant la détention, ou en baissant le levier. Or un DCA garde ses
+lignes des mois, par construction.
+
+Deux lectures s'imposent. **Un marché haussier ne protège pas** : 2020-2021 a
+liquidé plus qu'il n'a épargné, parce que le levier se joue sur les creux du
+parcours et non sur le point d'arrivée. Et **le seul levier qui traverse les
+trois fenêtres sans une liquidation est l'absence de levier** : même 2x tombe
+sur deux fenêtres sur trois.
+
+**Et sur cette source-là, les chiffres sous-comptent une seconde fois.**
+CoinMetrics ne publie qu'une clôture par jour : le module de rejeu fabrique
+alors `bas = min(clôture du jour, clôture de la veille)`, un plus bas de
+clôture à clôture. Or toute la méthode du levier repose sur les plus bas — une
+mèche liquide un compte aussi sûrement qu'une clôture. Sans information
+intra-journalière, elle mesure les clôtures en croyant mesurer les mèches. Le
+tableau détecte désormais ce cas et le dit sous ses propres résultats, plutôt
+que de laisser croire à une analyse qui n'a pas eu lieu.
+
+Le nombre rendu est un **plancher**, jamais une estimation : ni le financement
+d'un perpétuel, ni le prix de marque de la plateforme, ni l'illiquidité réelle
+ne sont comptés, et les trois poussent dans le même sens.
 
 ### Ce que le rejeu ne simule pas
 
@@ -330,3 +435,449 @@ non trois mois plus tard sur un relevé.
 La piste non retenue, si le sujet revient : un **score relatif à la tendance** —
 mesurer le prix contre sa propre moyenne récente plutôt que contre l'EMA 200,
 pour qu'une hausse régulière cesse d'être lue comme une surchauffe permanente.
+
+---
+
+## 9. Ce que seize ans de BTC réel disent de la stratégie
+
+Les six marchés fabriqués (§ 8) sont symétriques par construction, et ils
+flattaient : ils annonçaient un gain moyen de +13 % sur le prix d'achat contre
+un DCA aveugle. **Le marché réel est bien plus dur.**
+
+```bash
+curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv
+python3 main.py rejeu --coinmetrics btc.csv --symbole BTC/USD \
+        --depuis 2020-01-01 --jusqu-a 2021-12-31
+```
+
+Le jeu communautaire CoinMetrics porte **5 789 jours de BTC, de 2010 à 2026** —
+et surtout le **flux net des réserves de plateformes en dollars**, mesuré jour
+par jour. C'est la métrique qu'`IngestionOnchain` doit approximer par la
+variation de TVL faute de source gratuite ; ici elle est réelle, et la
+convention de signe du scoring s'y confronte pour la première fois.
+
+C'est la seule source de marché atteignable depuis une session distante : tous
+les hôtes de plateformes sont refusés par le mandataire, `raw.githubusercontent.com`
+répond. Voir la section anti-blocage de `CLAUDE.md`.
+
+### Le résultat, et il n'est pas flatteur
+
+| fenêtre | marché | prix moyen | vs marché | vs témoin | PnL stratégie | PnL témoin |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2017, la bulle | +1 769 % | 1 843 $ | −43,8 % | **−5,5 %** | — | — |
+| 2018, l'hiver | −19 % | 4 760 $ | −30,6 % | **+6,2 %** | — | — |
+| 2020-2021, la hausse | +546 % | 26 005 $ | −11,1 % | **−19,1 %** | **+34,9 %** | **+124,5 %** |
+| 2022, la chute | −36 % | 19 769 $ | −27,6 % | **+7,2 %** | **+20,0 %** | **+39,4 %** |
+
+**La stratégie bat un DCA aveugle quand le marché baisse, et perd quand il
+monte** — lourdement : sur 2020-2021 elle rend +34,9 % là où l'achat aveugle
+rend +124,5 %. C'est cohérent avec le défaut structurel du § 8 : une note
+technique contrarienne lit une tendance haussière comme une surchauffe
+permanente. Le plancher de discipline empêche l'abstention totale, il ne rend
+pas la stratégie bonne en marché haussier.
+
+**Et « acheter moins cher » ne suffit pas à gagner.** Sur 2022 la stratégie
+paie 7,2 % moins cher que le témoin et gagne pourtant deux fois moins, parce
+qu'elle engage 1 400 $ de moins. Le verdict le signale désormais explicitement :
+un bon prix obtenu en achetant peu est une abstention partielle, pas une
+performance.
+
+### Le piège du rejeu long sur un seul actif
+
+Sur 2013-2026, la stratégie affiche 702 000 $ pour 1 073 $ engagés. **Ce chiffre
+ne mesure rien.** Elle a acheté 9 BTC à 119 $ de moyenne en 2013 puis s'est
+arrêtée pour toujours : le plafond d'exposition par actif — 55 % du portefeuille
+— gèle tout achat dès que la position s'apprécie, et sur un rejeu mono-actif ce
+plafond est atteint définitivement. Le résultat mesure le plafond, pas la
+stratégie.
+
+La commande affiche cet avertissement d'elle-même. **Les fenêtres de deux à
+trois ans sont les seules lisibles** tant que le rejeu ne porte qu'un actif.
+
+### Ce que ce rejeu ne dit toujours pas
+
+La source n'a **ni haut, ni bas, ni ouverture** : seulement une clôture
+quotidienne. Les bougies sont donc plates, l'ATR devient une volatilité de
+clôture à clôture — plus petite que la vraie — et les stops sont **plus serrés**
+que ceux qu'on obtiendra en direct. L'erreur va dans le sens pessimiste, ce qui
+est le bon sens, mais elle n'est pas nulle.
+
+---
+
+## 10. Le résultat qu'il faut lire avant tous les autres
+
+Sur cinq fenêtres de BTC réel, de 2016 à 2025 : **un DCA aveugle bat cette
+stratégie en gain sur les cinq. 0/5.**
+
+| fenêtre | stratégie | DCA aveugle |
+| --- | --- | --- |
+| 2017, la bulle | +104,4 % | **+466,0 %** |
+| 2018, l'hiver | +35,8 % | **+111,4 %** |
+| 2020-2021, la hausse | +42,7 % | **+124,5 %** |
+| 2022, la chute | +17,2 % | **+39,4 %** |
+| 2023-2025, la reprise | +1,5 % | **+37,4 %** |
+
+La stratégie achète souvent à meilleur prix — c'est ce que mesure la colonne
+*vs témoin* — mais elle **engage moins de capital**, et sur un actif qui monte
+à long terme ce compromis perd. Acheter 20 % moins cher la moitié du temps ne
+rattrape pas d'avoir investi 40 % de moins.
+
+**C'est le résultat le plus important de ce projet, et il n'est pas
+encourageant.** Aucune des corrections apportées jusqu'ici — le plancher de
+discipline, la note relative à la tendance — ne renverse ce constat : elles
+réduisent l'écart, elles ne le comblent pas.
+
+Ce que cela ne dit pas : que la modulation soit inutile en général. Cinq
+fenêtres, un seul actif, seize ans d'un marché historiquement haussier.
+
+**Cette section a d'abord porté une consolation, et elle était fausse.** Elle
+disait qu'une stratégie qui protège le capital a une valeur que le PnL brut ne
+mesure pas, en s'appuyant sur un recul maximum systématiquement plus faible que
+celui du témoin. C'était vrai et sans portée, et pire : la protection a été mesurée
+depuis, et elle n'existe pas — le recul apparent venait des liquidités non
+investies, comme le montre le § 11. La phrase est
+remplacée plutôt que nuancée — une consolation non mesurée dans un dépôt qui
+mesure est pire qu'un silence.
+
+**Quiconque lit ce dépôt en pensant y trouver un moteur qui bat le marché doit
+lire ce tableau d'abord.**
+
+### La note relative à la tendance, et ce qu'elle corrige
+
+Le § 9 montrait la stratégie perdant 27,4 % contre le témoin sur la grande
+hausse de 2020-2021. La cause : la note technique jugeait l'écart à l'EMA 200
+sur des **seuils absolus** — au-delà de +30 %, note nulle — alors qu'en tendance
+le prix vit durablement au-delà de ce seuil. La note restait collée à zéro
+pendant deux ans.
+
+`ecart_ema_relatif` rapporte cet écart à sa **propre distribution** sur la
+fenêtre : un écart de 40 % dans un marché qui vit habituellement à 40 % vaut
+zéro écart-type, donc une note neutre. Seul l'inhabituel *pour ce régime* bouge
+la note.
+
+| | absolu | relatif |
+| --- | --- | --- |
+| gain moyen sur le prix | −3,4 % | **+1,7 %** |
+| pire cas | **−27,4 %** | **−10,2 %** |
+
+Meilleur sur la moyenne **et** sur le pire cas — c'est ce qui décide, et c'est
+le défaut livré. Il n'est pas meilleur partout : il perd 10 points sur
+2023-2025. Le changer sans rejouer le harnais sur données réelles, c'est régler
+à l'aveugle.
+
+---
+
+## 11. La protection n'existe pas — et je l'avais publiée à l'envers
+
+Cette section a d'abord annoncé que la stratégie protégeait le capital sans que
+cette protection paie son prix. **C'était faux, et exactement à l'envers.** La
+correction est plus instructive que le résultat, alors elle vient d'abord.
+
+### Le défaut : mesurer le recul d'un compte à moitié liquide
+
+Le recul était calculé sur la **valeur totale du portefeuille**, liquidités
+comprises. Or la stratégie laisse dormir l'essentiel de son capital en liquide,
+et du liquide ne recule pas. Le chiffre mesurait donc surtout la proportion de
+liquide, et il flattait mécaniquement toute stratégie qui investit peu.
+
+Le piège était déjà consigné dans `second-brain/lecons.md` sous le nom
+« **une mesure qui inclut ce qui n'est pas exposé flatte** », après avoir coûté
+un aller-retour sur la mesure du levier. Il était encore ici, à quelques heures
+d'intervalle, dans une section qui prétendait justement débusquer ce genre de
+biais. Le harnais mesure désormais les deux : le recul du **compte**, qui est
+ce que vit le propriétaire, et le recul de l'**exposé**, seul comparable entre
+deux stratégies qui n'engagent pas le même capital.
+
+### Ce que dit la mesure correcte
+
+| fenêtre | | recul du compte | **recul exposé** | gain/douleur |
+| --- | --- | --- | --- | --- |
+| 2017 | stratégie | 37,6 % | **73,8 %** | 1,41 |
+| | témoin | 49,2 % | 49,3 % | **9,45** |
+| 2018 | stratégie | 8,4 % | **81,2 %** | 0,44 |
+| | témoin | 20,9 % | 36,4 % | **3,06** |
+| 2020-21 | stratégie | 30,9 % | **46,7 %** | 0,91 |
+| | témoin | 51,2 % | 48,0 % | **2,59** |
+| 2022 | stratégie | 8,4 % | **85,1 %** | 0,20 |
+| | témoin | 15,9 % | 21,3 % | **1,86** |
+| 2023-25 | stratégie | 19,7 % | **88,9 %** | 0,02 |
+| | témoin | 31,8 % | 32,1 % | **1,17** |
+
+Lue sur le compte, la stratégie recule deux fois moins que le témoin sur les
+cinq fenêtres. Lue sur ce qui est réellement exposé au marché, **elle recule
+bien plus fort sur quatre d'entre elles** — 81 % contre 36 % en 2018, 85 %
+contre 21 % en 2022.
+
+**La stratégie ne protège rien. Elle immobilise.** Ce qu'elle met en marché
+souffre davantage qu'un achat aveugle, et le seul amortisseur est le capital
+qu'elle n'a pas investi — ce que n'importe qui obtient en laissant de l'argent
+sur son compte courant, sans moteur de décision.
+
+L'explication tient à sa nature contrarienne : elle concentre ses achats dans
+les creux, donc ses positions naissent au milieu des chutes et en encaissent
+toute la fin. Le DCA aveugle étale ses entrées, et ses lots les plus anciens
+amortissent les suivants.
+
+### Le temps sous l'eau ne bouge toujours pas
+
+77 % contre 76 %, 90 % contre 89 %, 86 % contre 86 %. La stratégie ne réduit ni
+l'amplitude réelle de la douleur, ni sa durée.
+
+### Où cela laisse le projet
+
+Sur les trois axes mesurés — rendement, protection normalisée, protection
+réelle de ce qui est exposé — **cette stratégie est dominée par un DCA aveugle
+sur les cinq fenêtres testées.** Aucune des quatre corrections apportées ne
+renverse ce constat.
+
+Ce que le harnais ne peut pas encore trancher : un portefeuille à cinq lignes
+plutôt qu'une, et un actif qui ne monte pas structurellement. C'est le chantier
+suivant. **Tant qu'il n'est pas fait, la seule affirmation honnête sur ce
+moteur reste : sur Bitcoin, il n'a pas justifié sa complexité — et sa
+protection apparente était un artefact de mesure.**
+
+---
+
+## 12. Le rejeu multi-actifs, et ce qu'il corrige
+
+```bash
+for a in btc eth link; do
+  curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/$a.csv
+done
+python3 main.py rejeu --depuis 2018-01-01 --jusqu-a 2021-12-31 \
+  --multi BTC/USDT=btc.csv ETH/USDT=eth.csv LINK/USDT=link.csv
+```
+
+Plusieurs lignes **partageant une trésorerie**, servies dans l'ordre de leur
+dérive — le plus sous-pondéré d'abord — exactement comme l'orchestrateur en
+direct. Ce n'est pas la somme de rejeus indépendants : ce que l'un prend,
+l'autre ne l'a pas.
+
+Les dates sont l'**union** des séries, jamais leur intersection : LINK commence
+en 2017 et ETH en 2015, prendre l'intersection jetterait cinq ans de Bitcoin
+pour aligner le plus jeune.
+
+### Ce que le mono-actif exagérait
+
+| fenêtre | | PnL | recul exposé | gain/douleur | engagé |
+| --- | --- | --- | --- | --- | --- |
+| 2018-2021 | stratégie | +305,0 % | **61,4 %** | 4,96 | 8 203 $ |
+| | témoin | **+684,7 %** | 62,0 % | **11,04** | 9 986 $ |
+| 2022-2026 | stratégie | +111,4 % | **49,1 %** | 2,27 | 7 945 $ |
+| | témoin | **+182,0 %** | 50,3 % | **3,62** | 9 986 $ |
+
+**Le recul exposé redevient équivalent à celui du témoin** — 61,4 % contre
+62,0 %, 49,1 % contre 50,3 %. Le § 11 mesurait 81 % contre 36 % sur un seul
+actif : cet écart n'était pas la stratégie, c'était l'absence de
+diversification. Une ligne unique concentre toutes ses entrées contrariennes au
+même endroit du même cycle ; trois lignes les étalent.
+
+**Et le plafond d'exposition cesse de tout geler.** Sur un seul actif, les 55 %
+par ligne étaient atteints définitivement dès que la position s'appréciait, et
+le rejeu long ne mesurait plus que le plafond (§ 9). À trois lignes, la
+contrainte redevient ce qu'elle est : une limite de concentration.
+
+**Le verdict sur le rendement, lui, ne bouge pas** : +305 % contre +685 %,
++111 % contre +182 %. Le DCA aveugle gagne toujours, et toujours parce que la
+stratégie engage moins de capital.
+
+### Ce que le multi-actifs révèle, et qui n'était pas visible
+
+Le détail des ordres, sur 2018-2021 :
+
+| ligne | achats | ventes | tenue à la fin |
+| --- | --- | --- | --- |
+| BTC/USDT — socle, jamais vendu sur signal | 39 | **0** | oui |
+| ETH/USDT | 45 | 13 | **soldée** |
+| LINK/USDT | 17 | 6 | **soldée** |
+
+**La stratégie ne garde que la ligne qu'elle n'a pas le droit de vendre.** Ses
+stops et sa prise de bénéfice suiveuse liquident méthodiquement ETH et LINK,
+puis les rachètent, puis les reliquident — dix-neuf sorties en quatre ans — et
+le portefeuille finit concentré à 100 % sur le socle.
+
+C'est une explication directe d'une partie du retard : la capitalisation d'ETH
+et de LINK est coupée à chaque stop, alors que le témoin, qui ne vend jamais,
+la garde entière. Le seul actif que la stratégie laisse composer est celui que
+sa configuration lui **interdit** de vendre.
+
+Il n'y a pas de correction évidente à cela, et surtout pas une qu'on poserait
+sans mesure : desserrer les stops échangerait ce retard contre un recul plus
+profond, et c'est précisément l'arbitrage que le harnais sait maintenant
+chiffrer. **C'est le prochain réglage à balayer**, comme l'ont été le plancher
+de discipline et la note relative.
+
+---
+
+## 13. Desserrer les stops — l'arbitrage qui n'existait presque pas
+
+Le § 12 laissait un réglage à balayer : les stops liquidaient ETH et LINK
+dix-neuf fois en quatre ans, et l'hypothèse était que les desserrer échangerait
+du rendement contre du recul. **La mesure dit que cet échange n'a presque pas
+lieu.**
+
+Balayé sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de recul
+exposé :
+
+| stop (× ATR) | 2018-2021 | 2022-2026 | tout | moyenne |
+| --- | --- | --- | --- | --- |
+| 2,5 *(ancien)* | 4,96 | 2,27 | 7,28 | 4,84 |
+| **4** | 8,05 | 2,25 | 7,93 | **6,08** |
+| 6 | 8,23 | 2,21 | 7,95 | 6,13 |
+
+Sur 2018-2021, passer de 2,5 à 4 fait bondir le rendement de **+305 % à
++498 %** pour **un demi-point** de recul exposé en plus — 61,4 % contre 61,9 %.
+Le stop à 2,5 ATR détruisait de la valeur sans acheter de protection.
+
+**4 plutôt que 6** : l'essentiel du gain est dans le premier pas, le second
+n'ajoute que 0,05 et coûte du recul sur la fenêtre longue (81,6 % contre
+81,3 %). Même règle que le plancher de discipline — on retient la plus petite
+valeur qui capte l'effet.
+
+**Et couper les stops complètement est pire que 4** : +434 % contre +498 % sur
+2018-2021, avec un recul plus profond. Ils servent — mais pas serrés à ce
+point-là.
+
+### Ce que ce réglage dégrade, et pourquoi on le garde quand même
+
+Les six marchés fabriqués passent de un à **deux** scénarios où la stratégie
+gagne moins que le témoin. C'est une dégradation réelle, et elle est acceptée :
+ces scénarios sont symétriques par construction et le § 9 a montré qu'ils
+flattent. **Quand le fabriqué et le réel se contredisent, c'est le réel qui
+décide** — sinon le harnais sert à confirmer des scénarios qu'on a écrits
+soi-même.
+
+### Où en est l'écart avec un DCA aveugle
+
+Sur 2018-2021, le gain par unité de recul passe de 4,96 à 8,05, contre 11,04
+pour le témoin. **Les trois quarts de l'écart mesuré au § 11 venaient donc de
+réglages, pas de la stratégie elle-même.** Le quart restant tient toujours au
+même fait : elle engage moins de capital.
+
+---
+
+## 14. Le dimensionnement — un réglage inerte, un plafond qui coûtait cher
+
+Dernier balayage du chemin de risque, et il rend deux résultats de nature
+différente.
+
+### Quel plafond décide vraiment
+
+Sur 158 dimensionnements d'un rejeu multi-actifs 2018-2021 :
+
+| plafond | part des décisions |
+| --- | --- |
+| enveloppe DCA | **62 %** |
+| exposition par actif | **38 %** |
+| risque par position | **0 %** |
+
+**`risque_par_position` est inerte.** Le faire varier de 1 % à 8 % ne change pas
+un seul ordre — les trois fenêtres rendent des chiffres identiques à la
+décimale près.
+
+La raison est arithmétique : avec un stop à 4 ATR, la distance au stop vaut
+environ 15 % du prix, donc ce plafond autorise ~6,7 % du capital, quand
+l'enveloppe DCA d'une ligne en demande dix fois moins. Il mordrait avec une
+enveloppe bien plus grosse ou des stops bien plus serrés. Il est conservé pour
+ce cas — **pas parce qu'il agit aujourd'hui.**
+
+C'est le genre de réglage qui rassure dans un fichier de configuration sans
+rien faire, et le § 4 le présentait comme le mécanisme central du
+dimensionnement. La phrase est corrigée.
+
+### Le plafond d'exposition, lui, coûtait cher
+
+| exposition | 2018-2021 | 2022-2026 | tout | moyenne | recul (tout) |
+| --- | --- | --- | --- | --- | --- |
+| 55 % *(ancien)* | 8,05 | 2,25 | 7,93 | 6,08 | 81,3 % |
+| **75 %** | 9,71 | 2,36 | 10,00 | **7,36** | 80,3 % |
+| 85 % | 10,13 | 2,36 | 10,51 | 7,67 | 80,1 % |
+| 95 % | 10,13 | 2,36 | 10,51 | 7,67 | 80,1 % |
+
+**Desserrer améliore le rendement et le recul en même temps.** L'arbitrage
+attendu n'existe pas : un plafond serré force la trésorerie à dormir au lieu de
+se répartir sur les autres lignes, et du capital qui dort ne protège de rien —
+il retire seulement du rendement.
+
+**75 % plutôt que 85 %** : les deux dernières lignes du tableau sont
+identiques, donc au-delà de 85 % le plafond ne mord **plus jamais** et cesse
+d'être un garde-fou. Les 0,31 de gain supplémentaire s'achèteraient en
+supprimant la seule limite de concentration du portefeuille. À 75 %, elle tient
+encore.
+
+### Où en est l'écart, après quatre réglages mesurés
+
+Sur 2018-2021, le gain par unité de recul exposé :
+
+| | gain/douleur |
+| --- | --- |
+| avant tout réglage mesuré | 4,96 |
+| après le stop à 4 ATR | 8,05 |
+| **après l'exposition à 75 %** | **9,71** |
+| DCA aveugle (témoin) | 11,04 |
+
+**Il restait 6,08 points d'écart au § 11 ; il en reste 1,33.** Presque tout ce
+qu'on prenait pour une faiblesse de la stratégie était un réglage jamais
+mesuré. Ce qui subsiste tient toujours au même fait, et il est structurel : elle
+engage moins de capital que le témoin — 9 676 $ contre 9 986 $ — parce qu'elle
+temporise, et une temporisation coûte toujours quelque chose sur un actif qui
+monte à long terme.
+
+---
+
+## 15. Les pondérations du score — le balayage qui ne change rien
+
+Dernier bloc de réglages posés au jugé. **Il ne bouge pas, et c'est le
+résultat.**
+
+| technique / sentiment / on-chain | 2018-2021 | 2022-2026 | tout | moyenne |
+| --- | --- | --- | --- | --- |
+| **0,5 / 0,2 / 0,3** *(livré)* | 9,71 | 2,36 | 10,00 | **7,36** |
+| 0,7 / 0,2 / 0,1 | 9,94 | 2,44 | 10,28 | 7,55 |
+| 0,8 / 0,2 / 0,0 | 9,98 | 2,46 | 10,32 | 7,58 |
+| 0,3 / 0,2 / 0,5 | 9,78 | 2,28 | 10,10 | 7,39 |
+| 0,0 / 0,2 / 0,8 | 9,71 | 2,02 | 10,01 | 7,25 |
+
+**Quatre pour cent séparent le meilleur du pire.** À comparer aux balayages
+précédents : le stop a fait bouger le gain par unité de recul de 63 %,
+l'exposition de 21 %. Les pondérations sont un réglage de **second ordre**, et
+c'est la première chose que ce tableau apprend.
+
+### Pourquoi le « meilleur » réglage n'est pas retenu
+
+L'optimum apparent dit *supprimer l'on-chain* — et il ne sera pas suivi, pour
+trois raisons qui tiennent ensemble :
+
+- **0,22 point d'écart, c'est du bruit** à cette échelle. Changer un réglage
+  là-dessus, c'est ajuster le moteur à trois fenêtres particulières.
+- **Les données on-chain ne couvrent que deux des trois actifs.** LINK n'en a
+  pas. Conclure « l'on-chain ne sert à rien » depuis un jeu qui l'ignore sur un
+  tiers du portefeuille serait une conclusion sur les données, pas sur la
+  stratégie.
+- **Supprimer une famille entière est irréversible en pratique** : plus rien ne
+  la rappelle, et le jour où une meilleure source arrive, personne ne sait
+  qu'elle manquait.
+
+### Et le poids du sentiment n'est pas mesurable d'ici
+
+C'est un défaut de ma propre mesure, trouvé en la vérifiant. Deux
+configurations au même rapport technique:on-chain, l'une avec un poids
+sentiment de 0,2, l'autre à zéro, rendent des résultats **identiques à la
+quatrième décimale** : +586,5951 %, 120 ordres, 9,7138 des deux côtés.
+
+La raison est que le rejeu ne disposait d'aucun historique de peur — la famille
+est donc absente à chaque bougie et son poids intégralement redistribué.
+Balayer ce poids ne mesurait rien.
+
+`rejouer_multi` accepte désormais un `fear_greed`, et **un test fige les deux
+faits** : sans indice, le poids est inerte ; avec un indice, il agit. Le
+réglage deviendra mesurable le jour où une source sera joignable — aucun hôte
+qui en publie ne l'est depuis une session distante.
+
+### Ce que ce balayage laisse
+
+Rien à changer, et deux choses à savoir : les pondérations comptent dix fois
+moins que les plafonds de risque, et l'une des trois n'a jamais été mesurée du
+tout. **Un balayage qui conclut « ne touchez à rien » a autant de valeur qu'un
+qui change un chiffre** — il empêche le prochain de refaire le travail, et
+surtout de croire qu'un gain de 0,22 point justifie de supprimer une source.

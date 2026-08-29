@@ -1588,3 +1588,437 @@ cet écart suffit.
 
 **Ce qui est monté à part se calcule à partir de zéro.** Un repère local ne peut
 pas se décaler.
+
+## Un analyseur paresseux et un analyseur gourmand passent les mêmes tests
+
+Écrire un lecteur de gros fichier « au fil de l'eau » — générateur, flux, lecture
+par morceaux — et le vérifier sur un extrait de dix lignes ne prouve rien. Les
+deux versions rendent exactement les mêmes entrées, dans le même ordre, en un
+temps identique. Celle qui charge tout en mémoire passe au vert, et le défaut
+n'apparaît que sur la machine de quelqu'un d'autre, avec un vrai fichier, sous
+la forme d'un processus tué sans message.
+
+**Le seul test qui les sépare donne une source infinie et s'arrête au milieu.**
+
+```ts
+let produits = 0
+async function* interminable() {
+  for (;;) { produits += 1; yield `ligne ${produits}\n` }
+}
+const vus = []
+for await (const entree of analyser(interminable())) {
+  vus.push(entree)
+  if (vus.length === 3) break
+}
+assert.ok(produits < 20)   // gourmand : ne se termine jamais
+```
+
+Une version gourmande ne rend pas la main — le test ne casse pas, il **pend**,
+d'où le délai explicite qui le transforme en échec lisible. La version paresseuse
+finit en quelques millisecondes, et l'assertion sur le compteur dit en plus
+combien elle a lu d'avance.
+
+Mesuré sur l'analyseur de listes IPTV, où l'écart est de trois ordres de
+grandeur : une liste de fournisseur courante pèse de 50 à 400 Mo, et
+`await reponse.text()` puis `.split('\n')` en demande deux à trois fois autant —
+le texte, puis le tableau — avant la première entrée utilisable.
+
+La même épreuve vaut partout où l'on annonce un traitement en flux : lecture de
+journaux, de CSV, de XMLTV, de rushes. **Ce n'est pas le contenu rendu qu'il faut
+vérifier, c'est ce que la source a eu le temps de produire.**
+
+---
+
+## Un rapport bâti sur zéro mesure rend le verdict le plus rassurant
+
+Deux fois en deux jours, dans deux projets qui ne se connaissent pas, le même
+défaut a failli être livré — et les deux fois il produisait la même chose : un
+tableau qui annonce que tout va bien, précisément parce qu'il n'a rien regardé.
+
+Le radar `pepites/` : une coupure réseau interrompait la sonde au cinquième
+point d'entrée, et les quatre suivants **disparaissaient du tableau**. Un point
+absent se lit comme un point sain.
+
+Le bot `nexuscrypto/` : la mesure du levier comptait les positions liquidées.
+Sur un rejeu qui n'avait ouvert aucune position — série trop courte pour les
+indicateurs, la stratégie s'abstient —, zéro position liquidée sur zéro
+position donnait « levier maximal 10x ». Le chiffre le plus dangereux du
+tableau, sorti du vide, présenté comme un feu vert.
+
+**La forme commune :** une conclusion se calcule par un dénombrement, le
+dénombrement s'applique à un ensemble vide, et le neutre mathématique de
+l'opération est exactement la bonne nouvelle. `aucun échec sur zéro épreuve`
+vaut `tout va bien`. `max()` sur les survivants d'une liste vide vaut
+`le plus haut`. Rien ne lève, rien ne s'affiche en rouge.
+
+**Le geste, et il tient en une question à se poser avant d'écrire la
+conclusion :** *si l'ensemble mesuré était vide, que dirait mon rapport ?* Si
+la réponse est rassurante, il manque une branche. « Rien mesuré » n'est pas un
+cas particulier à traiter par politesse : c'est un troisième verdict, à côté de
+« ça passe » et « ça casse », et il doit être aussi visible que les deux autres.
+
+Un corollaire du même ordre, trouvé dans la foulée : **une mesure qui inclut ce
+qui n'est pas exposé flatte.** Le levier était d'abord mesuré sur le recul du
+portefeuille, dont l'essentiel dort en liquide — 10x paraissait survivre à un
+marché qui s'effondrait de 37 %. Le levier porte sur la position. Vérifier que
+le dénominateur d'un ratio est bien la chose qui risque quelque chose.
+
+## `atempo` troue un son dense — les « coupures » d'un ralenti viennent de là
+
+Un rugissement décrit trois fois comme « coupé au milieu ». Deux causes avaient
+déjà été trouvées et corrigées — un limiteur qui pompait, des accents mal
+calés — et le défaut restait.
+
+La troisième était dans le **ralenti**. `atempo` étire par recouvrement-addition :
+sur un signal dense et bruité, les recouvrements se décalent en phase et
+creusent des trous périodiques. Mesuré sur le cri ralenti à 0,8 :
+
+| | tremblement de l'enveloppe | tranches sous −9 dB |
+| --- | --- | --- |
+| le rush nu | 2,4 | 0 / 139 |
+| `atempo=0.8` | 3,7 | 4 / 64 |
+| `rubberband=tempo=0.8:smoothing=on` | **2,5** | 1 / 174 |
+
+`rubberband` rend l'étirement transparent. Il n'est pas toujours compilé dans
+ffmpeg — d'où le repli — mais quand il est là, il n'y a aucune raison de s'en
+passer.
+
+**Un défaut qui survit à deux corrections justes a une troisième cause.**
+Chercher la suivante plutôt que réajuster les deux premières.
+
+## Un bruitage acheté peut valoir treize décibels de bruitage fabriqué
+
+Le cri de dragon synthétisé ici mesurait **−25 dB entendus** au-dessus de
+400 Hz. Un vrai rugissement, envoyé par le propriétaire : **−12,2 dB**, avec sa
+forme déjà construite — attaque, tenue, chute — et 2 kHz de contenu là où le
+téléphone entend.
+
+Treize décibels d'écart sur l'appareil où la vidéo sera regardée. Aucun réglage
+ne rattrape ça, et toute l'ingéniosité mise dans la synthèse ne pesait rien
+contre un fichier de trois secondes.
+
+**La synthèse sert à ce qui n'existe pas et à ce qui doit être exact** — un
+Shepard, un impact calé à l'image près, une nappe d'une durée donnée. Pour un
+cri, un pas, une roche : chercher le vrai d'abord.
+
+## Un silence ponctué reste un silence ; un silence rempli n'en est plus un
+
+Le rush ménageait 1,3 s de calme avant la montée. Fallait-il y mettre les pas
+demandés ? Oui — parce que **deux impacts isolés ne remplissent pas un
+silence, ils le rendent audible.** Ce qui le détruit, c'est un lit continu.
+
+Mesuré après : la scène passe de 6 dB de dynamique à **23,3**, avec les pas
+posés dans le calme et rien qui dure entre eux.
+
+## Un texte se place où le sujet n'est pas, et ça se mesure
+
+Un sous-titre posé à une hauteur fixe finit toujours par tomber sur ce qu'il
+ne faut pas cacher : à 42 % de la hauteur il couvrait **la bouche du druide**
+pendant qu'il parle, et se retrouvait **dans la gueule du dragon** sur le
+carton. Deux fois l'endroit exact que l'œil regarde.
+
+`montage-auto/placer_texte.py` relève l'agitation de chaque bande horizontale
+— écart-type des luminances plus une part de la luminance moyenne — et rend la
+plus calme **à l'intérieur de la zone sûre** (12–45 %, non négociable).
+
+Le relevé ne suffit pas, et c'est la partie qui compte : sur un visage qui
+remplit le cadre, **toute** la zone sûre est du visage. Le choix se fait alors
+entre ce qu'on accepte de couvrir. Ici 12,5 % — le texte passe sur les runes du
+front, les yeux et la bouche restent libres. Mesuré, puis **regardé**.
+
+## Une image parfaitement immobile se lit comme un blocage
+
+Un carton de fin rapporté comme « ça lag ». Relevé image par image :
+**aucune image perdue**, intervalles réguliers à 41,7 ms, cadence exacte.
+
+Le débit, lui, tombait à **0,09 Mb/s** sur les 1,7 dernières secondes. Ce n'est
+pas un défaut de lecture, c'est un constat : plus rien ne changeait d'une image
+à l'autre. Un carton dont l'animation de texte est finie et dont le fond est une
+photo fixe **est** un arrêt sur image, et le spectateur ne le lit pas comme un
+choix de réalisation.
+
+Une poussée lente de 8 % suffit : 0,09 → **2,2 Mb/s**, et le carton redevient de
+la vidéo.
+
+**Le débit par seconde est la mesure qui dit si une image bouge.** Elle attrape
+aussi le contraire — un pic qui fait ramer un téléphone.
+
+```bash
+ffprobe -v error -select_streams v -show_entries packet=pts_time,size \
+        -of csv=p=0 film.mp4   # puis sommer par seconde
+```
+
+## `zoompan` compte ses images par image d'ENTRÉE
+
+Le même `zoompan=…:d=70` posé sur une image bouclée a rendu un fichier de
+**230 secondes** au lieu de 2,9. `d` n'est pas la durée de l'effet : c'est le
+nombre d'images de sortie produites **pour chaque image d'entrée**. Sur un
+`-loop 1` qui en fournit déjà soixante-dix, les deux se multiplient.
+
+Sur une source déjà cadencée, `d=1` — une image dedans, une image dehors — et
+l'animation se pilote par `on`, le numéro d'image de sortie.
+
+## Un son congestionné n'est pas un son saturé
+
+Un rugissement décrit comme saturé. Relevé : crête à −1,7 dBFS, **zéro
+échantillon au-dessus de 0,95**, facteur de crête 8,8 dB. Rien n'écrête.
+
+Son profil disait le défaut : **400-900 Hz à −5,7 dB quand 2-5 kHz était à
+−13**. Toute la masse dans le bas-médium, aucune dent. C'est ce déséquilibre
+qu'on entend comme de la saturation, et le monter ne fait qu'aggraver
+l'encombrement.
+
+Creusé à 320 Hz (−4 dB), relevé à 1,9 et 3,6 kHz (+5 et +3,5) : 2-5 kHz remonte
+de **3,5 dB**, 900-2000 de 3, sans toucher au gain ni à la crête. L'agressivité
+d'un cri vit là — et c'est aussi la bande où un haut-parleur de téléphone entend
+le mieux.
+
+## Un sous-titre se cale sur la bouche, pas sur le son
+
+0,15 s d'avance sur la parole mesurée paraissait juste, et l'auteur trouvait
+encore que « ça arrive trop tard ». La bouche s'**ouvre** avant que le son
+sorte, et c'est sur l'image que l'œil cale la synchronisation.
+
+0,30 s d'avance. Un sous-titre qui arrive avec le son arrive après l'image.
+
+## Une fusion résolue « à nous » peut annuler un correctif qu'on vient d'annoncer
+
+Un défaut corrigé, mesuré, livré, documenté — et de retour deux heures plus
+tard. Relevé : `git merge origin/main` avait produit un conflit sur le moteur,
+résolu par `--ours` sur un fichier que `main` avait **aussi** touché. Le
+correctif y est passé à la trappe, silencieusement, et le montage suivant est
+reparti avec l'ancien comportement.
+
+Pire : **le correctif n'existait qu'à un seul des deux endroits** qui en avaient
+besoin. Le second appel, dans la branche `filter_complex`, n'avait jamais été
+corrigé — il attendait le premier plan flouté pour se manifester.
+
+Deux gestes, et ils tiennent en une ligne chacun :
+
+```bash
+git diff origin/main -- fichier.py | grep '^-'   # ce que la fusion RETIRE
+grep -n "le_symptome" fichier.py                 # combien d'endroits, pas un
+```
+
+**Après toute fusion, revérifier que le correctif qu'on a annoncé est encore
+là.** Un `--ours` ne dit pas ce qu'il jette.
+
+## Le spectrogramme distingue les causes que le comptage confond
+
+« Ça saccade et il y a une coupure en plein milieu. » Compté : trois tranches
+sous le seuil sur cent soixante-quatorze. Rien de concluant — et la correction
+tentée sur ce chiffre l'a fait passer à vingt-trois, parce que le lit qu'on
+effaçait **remplissait** les creux naturels du cri.
+
+Dessiné, le défaut se lit en une seconde : **une raie verticale pleine bande à
+17,90 s**. Franche, sur tout le spectre. Une coupure, pas une modulation.
+
+C'était le raccord film/carton : une couche sonore posée **avant** l'assemblage
+est tranchée à la jointure. Elle se pose sur l'image finie.
+
+| ce qu'on voit | ce que c'est |
+| --- | --- |
+| raie verticale pleine bande | une vraie coupure |
+| tremblement régulier de l'enveloppe | un étirement temporel |
+| creux large et arrondi | une automation |
+| bandes toutes pleines à la fois | du masquage |
+
+**Un compteur de trous ne sépare pas ces quatre-là.** Un vrai rugissement a des
+creux naturels ; les supprimer l'abîme.
+
+## Le Chromium de Playwright ne lit aucune vidéo réelle
+
+Cherché une heure pourquoi une lecture HLS parfaitement branchée n'affichait
+rien. Ce n'était pas le code : **le Chromium livré avec Playwright est compilé
+sans les codecs propriétaires.** Mesuré dans le conteneur, sur le binaire de
+`/opt/pw-browsers/chromium` :
+
+| codec | `MediaSource.isTypeSupported` |
+| --- | --- |
+| H.264 (`avc1.42E01E`) | **false** |
+| AAC (`mp4a.40.2`) | **false** |
+| VP9 (`vp9`) | true |
+
+`video.canPlayType('video/mp4; …')` rend la chaîne vide, et `canPlayType` pour
+HLS natif aussi. Or tout flux IPTV, toute caméra et tout export ffmpeg par
+défaut sont en H.264/AAC : **l'image ne s'affichera jamais dans ce navigateur**,
+quoi que fasse le code. Chrome, lui, les a — c'est la différence entre le
+Chromium libre et le Chrome distribué.
+
+**La parade n'est pas de renoncer à vérifier, c'est de déplacer l'assertion.**
+Sans décodeur, on peut encore prouver tout le chemin : que le manifeste est
+servi et réécrit, qu'un segment arrive avec son type et son poids, qu'une
+adresse non signée est refusée, et surtout que **le lecteur annonce la durée du
+média** — 20,0 s pour un flux de 20 s. Il ne peut la connaître qu'en ayant lu le
+manifeste entier. Seule l'image reste non vérifiée, et on le dit.
+
+**Piège voisin, même page :** `page.goto(url, { waitUntil: 'networkidle' })`
+expire toujours sur une page qui lit un flux. Un lecteur fait du réseau en
+continu, par définition — c'est son métier. Trente secondes perdues à chaque
+essai, sur une page parfaitement saine. `domcontentloaded` sur ces pages-là.
+
+## Un ralenti sans interpolation duplique une image sur cinq
+
+Une scène rapportée comme « ça sature et ça lague ». Le son ne portait **aucun
+échantillon écrêté** et un facteur de crête de 13,1 dB — rien à corriger de ce
+côté.
+
+L'image, elle : **29 images figées sur 144**. Une sur cinq, à intervalle
+régulier, contre **zéro** sur un plan à vitesse normale. C'est exactement le
+rapport qu'un ralenti à 0,8 produit quand ffmpeg tient la cadence en
+**dupliquant** au lieu d'interpoler.
+
+`minterpolate` fabrique les images manquantes : **1 sur 144**. Cinq minutes de
+rendu pour sept secondes de plan, et c'est le prix.
+
+**L'oreille suit l'œil**, et c'est la partie qui compte. Une image qui saccade
+fait juger tout le plan mauvais, son compris. Avant de chercher un défaut de son
+sur un plan ralenti, compter ses images figées :
+
+```python
+d = [abs(im[i+1] - im[i]).mean() for i in range(len(im)-1)]
+figees = sum(1 for x in d if x < 0.30)   # deux images consecutives identiques
+```
+
+## Un serveur de test orphelin fait mesurer la version d'avant
+
+Une vérification d'interface rendait quatre défauts d'un coup, dont un sans
+rapport avec le changement : une page entière sans feuille de style. Le code
+était juste. **Le serveur qui répondait n'était pas celui qu'on venait de
+lancer.**
+
+La cause tient en une phrase : `spawn('npm', ['run', 'start'])` engendre un
+`next start` **petit-fils**, et tuer le `npm` laisse l'enfant vivant, orphelin,
+avec le port. L'exécution suivante n'arrive pas à écouter, ne le dit pas, et
+Playwright interroge le serveur d'il y a un quart d'heure — donc le code d'il y
+a un quart d'heure. Relevé : `ps` montrait un `next-server` de ppid 1, âgé de
+15 minutes, quand le script venait de démarrer.
+
+Trois gestes, et les trois comptent :
+
+1. **Lancer en groupe détaché, tuer le groupe** : `spawn(…, { detached: true })`
+   puis `process.kill(-pid, 'SIGTERM')`. Tuer le pid seul ne descend pas.
+2. **Refuser de démarrer si le port répond déjà.** Une requête HTTP de 250 ms
+   avant de lancer, et un message qui dit quoi faire. Sans ce garde-fou, le
+   défaut est invisible : tout paraît fonctionner.
+3. **Ne pas détecter par `ss`** : le binaire n'existe pas dans ce conteneur, et
+   `ss -ltnp` y rend une sortie vide sans erreur — donc « port libre » alors
+   qu'il ne l'est pas. La sonde portable est la requête HTTP ; pour retrouver le
+   coupable, `ps -eo pid,args`.
+
+**Piège voisin, même script :** une capture d'écran prise après
+`waitUntil: 'domcontentloaded'` montre la page **sans style** — cet événement
+n'attend pas la feuille. On croit à une régression de CSS. `waitForLoadState('load')`
+avant de photographier.
+
+## Deux versions du même son ne s'additionnent pas, elles battent
+
+Une scène rapportée quatre fois comme « ça sature et le cri coupe au milieu ».
+Quatre causes trouvées, corrigées, mesurées — et le symptôme revenait.
+
+La cinquième a résisté parce que **rien n'était défectueux** :
+
+| | mesure |
+| --- | --- |
+| le fichier source du cri | crête −0,4 dBFS, **zéro** écrêtage, enveloppe intacte |
+| le fichier livré, au cri | **zéro** discontinuité entre deux échantillons |
+| paliers plats à haut niveau | **zéro** |
+| vrai pic inter-échantillon | −1,43 dBTP |
+
+Chaque pièce était juste. C'est leur **somme** qui ne l'était pas : le rush
+portait son propre rugissement, étiré par le ralenti à 0,8, et le vrai était
+posé par-dessus à sa vitesse naturelle. Deux bêtes qui hurlent en même temps,
+décalées — un battement, que l'oreille rapporte comme une saturation et comme
+une coupure.
+
+Sur le spectrogramme, la signature est nette : **des stries verticales
+irrégulières entre 2 et 10 kHz**, là où un cri unique dessine une nappe dense.
+
+**Quand chaque pièce mesure juste et que l'ensemble sonne faux, chercher ce qui
+joue en double.** Et descendre à l'échantillon avant de conclure — c'est le seul
+niveau où une vraie coupure laisse une trace qu'aucun autre défaut ne laisse.
+
+## Un fichier texte « cassé » est presque toujours un fichier bien encodé, mal lu
+
+Un `.srt` francophone sur deux vient d'un outil Windows et n'est pas en UTF-8 :
+il est en windows-1252, un octet par caractère. Lu comme de l'UTF-8, « L'été »
+devient « L'Ã©tÃ© » — ou « L'�t� » selon le décodeur. Le même piège vaut pour
+un CSV exporté d'Excel, un `.txt` reçu par courriel, un `.ass` de sous-titres.
+
+**La détection tient en cinq lignes, et l'ordre d'essai fait tout :**
+
+```js
+try { return new TextDecoder('utf-8', { fatal: true }).decode(octets) }
+catch { return new TextDecoder('windows-1252').decode(octets) }
+```
+
+L'UTF-8 en mode `fatal` **lève** sur une séquence invalide : c'est un test, pas
+une supposition. L'inverse ne marcherait jamais — windows-1252 accepte
+n'importe quelle suite d'octets et ne se plaint pas, donc il « réussirait »
+aussi sur un fichier UTF-8, en le massacrant.
+
+Deux compléments mesurés dans ce conteneur : `TextDecoder('windows-1252')`
+fonctionne (l'ICU complet est présent, `Intl.DisplayNames` le confirme), et une
+marque d'ordre des octets survit au décodage — elle se retire à la main, sans
+quoi elle reste collée au premier mot affiché.
+
+## Quand cinq causes sont tombées, c'est l'effet qui est en trop
+
+Le même symptôme — « ça coupe et ça sature » sur un plan — rapporté **cinq
+fois**. Cinq causes distinctes trouvées, mesurées, corrigées, chacune réelle :
+un limiteur qui pompait, un trou d'air qui mordait sur l'attaque, une couche
+tranchée au raccord, un ralenti qui dupliquait une image sur cinq, deux
+rugissements qui battaient. Et le symptôme revenait.
+
+Elles avaient une **cause commune** : le ralenti à 0,8. Il obligeait à étirer
+l'audio — tout étirement laisse une trace ; à interpoler l'image — sans quoi
+une image sur cinq est dupliquée ; et il décalait le cri du rush contre celui
+posé par-dessus, d'où le battement.
+
+Retiré, les trois disparaissent d'un coup, et les deux cris tombent exactement
+l'un sur l'autre au lieu de se battre.
+
+**Un effet qui coûte cinq allers-retours ne vaut pas ce qu'il apporte.** La
+règle des trois essais de ce dépôt vaut pour un bug ; elle vaut aussi pour un
+parti pris de réalisation. Au troisième symptôme qui revient sur le même plan,
+la question n'est plus « quel réglage » mais « qu'est-ce que j'enlève ».
+
+## Une correction étroite fabrique son propre défaut
+
+Un rugissement congestionné dans le bas-médium, corrigé par +5 dB à 1,9 kHz
+avec un Q serré. La congestion partait — et une résonance arrivait : tremblement
+de l'enveloppe **4,1** contre **3,7** avec une simple cloche large à 2,4 kHz,
+qui fait le même travail.
+
+Sur un signal dense et bruité, une correction étroite s'entend comme une note.
+**Corriger large, ou ne pas corriger.**
+
+## Un appareil de salon ne reçoit pas l'image, il va la chercher
+
+Le modèle mental le plus coûteux, quand on branche un Chromecast : croire que
+le téléphone lui envoie la vidéo. Il lui envoie une **adresse**, et l'appareil
+télécharge le flux lui-même, directement. Trois conséquences, et chacune casse
+la diffusion sans message d'erreur — écran noir, retour au menu.
+
+1. **`localhost` désigne celui qui le prononce.** Une adresse
+   `http://localhost:3000` donnée à un Chromecast désigne le Chromecast. Il
+   faut l'adresse de la machine sur le réseau local — et le plus simple est de
+   la déduire de l'adresse **de la page** : si le téléphone est arrivé par
+   `http://192.168.1.20:3000`, la télévision doit utiliser la même. Rien à
+   configurer côté serveur, ce qui serait faux dès qu'une machine a deux cartes
+   réseau.
+2. **Ce qu'un navigateur fabrique n'a pas d'adresse.** Une vidéo assemblée par
+   Media Source Extensions — hls.js, dash.js — n'existe que dans l'onglet.
+   Diffuser oblige à repasser sur la source directe, et à **détruire la
+   bibliothèque avant** de poser l'URL : laissée en place, elle reprend la main
+   sur l'élément et écrase ce qu'on vient d'écrire.
+3. **Un serveur de développement n'écoute que sur `localhost` par défaut.**
+   Ni le téléphone ni la télévision ne voient rien tant qu'on n'a pas dit
+   `--hostname 0.0.0.0`. Et il faut le dire : à partir de là, tout le wifi peut
+   ouvrir l'application.
+
+**Piège de détail, mesuré :** `new URL('http://[::1]:3000/').hostname` rend
+`"[::1]"`, **avec les crochets**. Une liste d'adresses locales écrite avec
+`'::1'` laisse donc passer l'adresse locale la plus courante des serveurs de
+développement, et le contrôle « est-ce joignable de l'extérieur » répond oui à
+tort.

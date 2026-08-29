@@ -56,6 +56,7 @@ export function ClipPanel() {
   const duplicateClip = useStudio((s) => s.duplicateClip);
   const chopClip = useStudio((s) => s.chopClip);
   const cutSilences = useStudio((s) => s.cutSilences);
+  const captionsFromClip = useStudio((s) => s.captionsFromClip);
   const moveClip = useStudio((s) => s.moveClip);
 
   /*
@@ -66,6 +67,8 @@ export function ClipPanel() {
   const [analyse, setAnalyse] = useState<
     'repos' | 'en cours' | 'fait' | 'rien à retirer' | 'audio illisible'
   >('repos');
+  const [dit, setDit] = useState('');
+  const [calage, setCalage] = useState<'repos' | 'en cours' | 'fait' | 'raté'>('repos');
 
   const clip = selection?.kind === 'clip' ? clips.find((c) => c.id === selection.id) : undefined;
 
@@ -192,6 +195,71 @@ export function ClipPanel() {
               </p>
             )}
           </>
+        )}
+
+        {asset && (
+          <Collapsible label="Sous-titrer ce que je dis">
+            {/*
+              Écrire le texte plutôt que le deviner.
+
+              Le calage d'un texte sur la parole existait déjà, mais seulement
+              pour une voix off importée. Or le cas le plus courant est
+              l'inverse : on se filme en parlant. Il fallait alors écrire chaque
+              sous-titre à la main, un par un, en cherchant ses bornes à la
+              jauge — le travail le plus long d'un montage court.
+
+              L'application ne devine pas les mots : elle mesure **quand** on
+              parle, et cale dessus le texte qu'on lui donne. C'est moins
+              magique qu'une transcription, et c'est exact — une transcription
+              qui se trompe d'un mot coûte plus à corriger qu'à taper.
+            */}
+            <Field
+              label="Ce que tu dis dans ce plan"
+              help="Tape la phrase telle que tu la prononces. Le découpage et le rythme sont mesurés sur ta voix."
+            >
+              <textarea
+                value={dit}
+                rows={3}
+                placeholder="Personne ne t’a expliqué ça…"
+                className="w-full rounded-xl bg-slab p-3 text-[15px] text-mist outline-none"
+                onChange={(event) => {
+                  setDit(event.target.value);
+                  setCalage('repos');
+                }}
+              />
+            </Field>
+            <Button
+              variant="primary"
+              className="mt-2 w-full"
+              disabled={dit.trim() === '' || calage === 'en cours'}
+              onClick={async () => {
+                setCalage('en cours');
+                try {
+                  const contexte = new OfflineAudioContext(1, 1, 44100);
+                  const { segments } = await analyseVoice(contexte, asset.url);
+                  const avant = useStudio.getState().project.captions.length;
+                  captionsFromClip(clip.id, dit, segments);
+                  setCalage(
+                    useStudio.getState().project.captions.length === avant ? 'raté' : 'fait',
+                  );
+                } catch {
+                  setCalage('raté');
+                }
+              }}
+            >
+              {calage === 'en cours' ? '⏳ Analyse de la voix…' : '✎ Caler sur ma voix'}
+            </Button>
+            {calage === 'fait' && (
+              <p className="mt-1.5 text-[11.5px] text-muted">
+                Sous-titres posés. Retouche-les dans « L’accroche ».
+              </p>
+            )}
+            {calage === 'raté' && (
+              <p className="mt-1.5 text-[11.5px] text-muted">
+                Aucune parole mesurée sur ce plan : vérifie qu’il a bien du son.
+              </p>
+            )}
+          </Collapsible>
         )}
 
         {shown > LONG_SHOT && (

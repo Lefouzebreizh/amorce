@@ -559,6 +559,17 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         # `setpts` **après** tout ce qui régénère les horodatages, jamais avant :
         # `zoompan` les réécrit et annulerait le changement de vitesse.
         pass
+    if plan.get("rotation"):
+        # Une rotation lente et continue, en radians par seconde. `rotate`
+        # tourne autour du centre et remplit les coins ; on agrandit donc de
+        # racine de deux AVANT, sinon les angles noirs apparaissent des que
+        # l'image n'est plus droite — et sur un plan carre de runes, ce sont
+        # justement les coins qu'on regarde.
+        vitesse_rad = float(plan["rotation"])
+        filtre += (f",scale=iw*1.42:ih*1.42,"
+                   f"rotate='{vitesse_rad:.4f}*t':c=black@0,"
+                   f"crop=1080:1920")
+
     if plan.get("zoom"):
         # Une poussée d'échelle qui **accélère** : linéaire, elle s'entend comme
         # un travelling ; exponentielle, comme une chute. `zoompan` régénère les
@@ -638,7 +649,7 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         # de film, que rien ne signalait. `atempo` remet les deux d'accord.
         son = f"volume={gain}dB"
         if plan.get("vitesse"):
-            son = f"atempo={float(plan['vitesse']):.4f},{son}"
+            son = f"{_etirement(float(plan['vitesse']))},{son}"
         commande += ["-map", "1:a"] if muet else ["-af", son, "-map", "0:a"]
     else:
         # `-af` est **ignoré** dès qu'un `-filter_complex` est présent : le gain
@@ -648,7 +659,7 @@ def couper(plan: dict, sortie: Path, plafond_db: float = 16.0) -> float:
         source_son = "[1:a]" if muet else "[0:a]"
         chaine_son = f"volume={gain}dB"
         if plan.get("vitesse") and not muet:
-            chaine_son = f"atempo={float(plan['vitesse']):.4f},{chaine_son}"
+            chaine_son = f"{_etirement(float(plan['vitesse']))},{chaine_son}"
         commande += ["-filter_complex",
                      f"{image};{source_son}{chaine_son}[audio]",
                      "-map", "[sortie]", "-map", "[audio]"]
@@ -1016,6 +1027,36 @@ def _enveloppe(son: numpy.ndarray, forme: dict) -> numpy.ndarray:
     if son.ndim > 1:
         g = g[:, None]
     return son * g
+
+
+_FILTRES = None
+
+
+def _filtres_ffmpeg() -> str:
+    """La liste des filtres du ffmpeg employe, relevee une seule fois."""
+    global _FILTRES
+    if _FILTRES is None:
+        _FILTRES = subprocess.run([ffmpeg(), "-hide_banner", "-filters"],
+                                  capture_output=True, text=True).stdout
+    return _FILTRES
+
+
+def _etirement(vitesse: float) -> str:
+    """L'etirement du son qui accompagne un ralenti ou une acceleration.
+
+    `atempo` etire par recouvrement-addition : sur un signal dense et bruite —
+    un rugissement — les recouvrements se decalent en phase et creusent des
+    trous periodiques. Mesure sur le cri du dragon ralenti a 0,8 : tremblement
+    de l'enveloppe 2,4 (le rush nu) → 3,7, et quatre tranches de dix
+    millisecondes sur soixante-quatre sous -9 dB. C'est ce qu'on entend comme
+    « ca saccade » et « une coupure en plein milieu ».
+
+    `rubberband` avec lissage rend 2,5 — l'etirement redevient transparent.
+    Il n'est pas toujours compile dans ffmpeg, d'ou le repli.
+    """
+    if " rubberband " in _filtres_ffmpeg():
+        return f"rubberband=tempo={vitesse:.4f}:pitchq=quality:smoothing=on"
+    return f"atempo={vitesse:.4f}"
 
 
 def couche_effets(poses: list, bibliotheque: Path, total_s: float,

@@ -105,6 +105,54 @@ Et `next dev` refuse de servir `/_next/` à `127.0.0.1`, qu'il tient pour une
 origine tierce : la page se charge, son code non, les champs se remplissent et
 React ne les voit pas. **Piloter par `http://localhost:3000`.**
 
+## IPTV / VOD — `iptv/`
+
+```bash
+cd iptv
+npm test && npm run check && npm run build
+npm run verify          # à part : Chromium réel, flux HLS réel
+```
+
+Les deux premières partent ensemble dans `verifier.sh`, le build ferme la
+marche — seul à voir ce que `tsc` laisse passer d'une application App Router.
+
+`npm run verify` est **hors** de la barrière et hors de l'intégration continue :
+Playwright vit dans les dépendances de la racine, que la CI d'IPTV n'installe
+pas. Il monte un flux HLS fabriqué par ffmpeg, un serveur d'origine sans en-tête
+CORS — c'est ce qui rend le mandataire vérifiable —, importe un catalogue
+jetable et conduit l'application à 393 px. À lancer avant de livrer un
+changement d'interface : il a déjà attrapé un débordement horizontal et une
+lecture qui ne démarrait pas, deux défauts que ni les tests ni le build ne
+voient.
+
+Ce qu'aucune des deux ne voit : le dialogue avec un vrai panneau Xtream et une
+vraie liste. Les tests injectent `fetch` et ne touchent pas au réseau — c'est ce
+qui les rend rejouables partout, et c'est aussi leur limite. Xtream Codes n'a
+pas de spécification publiée : le premier branchement sur un abonnement réel est
+le seul moment où l'on saura si un champ manque. Commencer par
+`verifierCompte()`, qui dit en un appel si les identifiants passent.
+
+Et elles ne voient pas non plus le **coût**. C'est mesuré, pas supposé : un
+index de recherche mal lié rendait le bon résultat sur les six entrées des
+tests, et ne finissait pas un import de 120 000 en dix minutes. Avant de livrer
+un changement qui touche à l'ingestion ou au cache, fabriquer une grande liste
+et regarder la montre :
+
+```bash
+cd iptv
+npm run iptv -- importer grande-liste.m3u   # doit rester sous ~10 s
+npm run iptv -- resume
+```
+
+Les repères actuels, sur 120 000 entrées : import 6,6 s, 135 Mo de crête,
+requêtes sous 30 ms. Un écart d'un ordre de grandeur est un défaut, pas une
+machine lente.
+
+Et une limite du conteneur, mesurée, qui évite de chercher un bug qui n'existe
+pas : **le Chromium de Playwright n'a ni H.264 ni AAC**. Aucune vidéo IPTV ne
+s'affichera ici, quel que soit le code. `npm run verify` le dit et vérifie tout
+le reste du chemin, jusqu'à la durée du média annoncée par le lecteur.
+
 ## Réseau d'annuaires IA — `annuaire-ia/`
 
 ```bash
@@ -292,7 +340,10 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 251 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 profils.py                       # l'effet des réglages sur six marchés connus
 ```
@@ -302,6 +353,19 @@ une pondération, à un multiplicateur DCA ou à une note : les tests diraient
 qu'ils passent sans dire que le prix moyen d'achat du profil « chute puis
 reprise » est repassé au-dessus de celui du témoin. C'est la même règle que
 pour le radar `pepites/`, et elle a été payée là-bas.
+
+Et pour un changement de **stratégie**, les six marchés fabriqués ne suffisent
+pas : ils sont symétriques par construction et flattent. Le rejeu sur BTC réel
+les contredit — la stratégie y perd contre un DCA aveugle en marché haussier.
+
+```bash
+curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv
+python3 main.py rejeu --coinmetrics btc.csv --symbole BTC/USD \
+        --depuis 2020-01-01 --jusqu-a 2021-12-31
+```
+
+Fenêtres de deux à trois ans seulement : au-delà, sur un seul actif, le plafond
+d'exposition gèle la stratégie et le résultat mesure le plafond.
 
 `main.py verifier` en plus **si et seulement si** le changement touche à
 `config/config.yaml` ou à `src/core/config.py` : les tests diraient qu'ils

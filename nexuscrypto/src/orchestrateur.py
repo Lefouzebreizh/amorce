@@ -176,11 +176,16 @@ class Orchestrateur:
             return
 
         ligne = self.config.portefeuille.allocation.get(decision.actif)
-        plafond = (
-            self.config.portefeuille.plafond_par_jeton_usd
-            if ligne and ligne.role == "pepite"
-            else None
-        )
+        est_pepite = bool(ligne and ligne.role == "pepite")
+        plafond = self.config.portefeuille.plafond_par_jeton_usd if est_pepite else None
+
+        # Le bouclier passe **avant** le dimensionnement et avant le courtier :
+        # un jeton dont on ne peut pas sortir ne doit pas même consommer un
+        # calcul de taille. Il ne s'applique qu'aux pépites — les lignes du
+        # socle sont des actifs établis, dont le contrat n'est pas la question.
+        if est_pepite and not await self._bouclier_autorise(decision):
+            return
+
         stop = stops.stop_initial(decision.prix_reference, analyse.lecture.atr, self.config.risque)
 
         resultat = await self.gestionnaire.acheter(
@@ -204,6 +209,49 @@ class Orchestrateur:
         else:
             _journal.info("%s : achat non passé — %s", decision.actif, resultat.motif)
             await self.notificateur.diffuser(messages.signal(decision), categorie="signal")
+
+    async def _bouclier_autorise(self, decision) -> bool:
+        """Le veto de sécurité sur une pépite. Rend faux quand l'achat est refusé.
+
+        **Un refus est annoncé, jamais silencieux.** Une pépite qui disparaît du
+        flux sans un mot se lit comme une pépite que la stratégie n'a pas
+        retenue, et on cherche alors du côté des seuils de notation — au mauvais
+        endroit, pendant des jours.
+        """
+
+        config = self.config.strategie.bouclier
+        if not config.actif:
+            return True
+
+        from .data_engine import securite as sources
+        from .strategy import bouclier
+
+        jeton = self.config.portefeuille.allocation.get(decision.actif)
+        chaine = getattr(jeton, "chaine", None) or "ethereum"
+        adresse = getattr(jeton, "adresse", None)
+        if not adresse:
+            # **Pas d'adresse, pas de bouclier** — et non « pas d'adresse, donc
+            # refus ». La première version refusait tout : les lignes du socle
+            # n'ont pas de contrat, et LINK/USDT se serait vu interdire à chaque
+            # passe au motif qu'aucune source ne répondait. Un jeton nommé à la
+            # main dans l'allocation est un choix délibéré sur un actif établi ;
+            # ce module garde les contrats qu'on peut désigner, pas ceux-là.
+            _journal.debug("%s sans adresse de contrat : bouclier non applicable",
+                           decision.actif)
+            return True
+
+        constats = await sources.constats(
+            self.client, chaine, adresse, delai_s=config.delai_s
+        )
+        verdict = bouclier.juger(constats, config, est_evm=sources.est_evm(chaine))
+
+        autorise, motif = bouclier.achat_autorise(verdict, config)
+        if not autorise:
+            _journal.warning("achat refusé sur %s — %s", decision.actif, motif)
+            await self.notificateur.diffuser(
+                f"\u26d4 {decision.actif} — achat refusé.\n{motif}", categorie="signal",
+            )
+        return autorise
 
     async def _verifier_coupe_circuit(
         self,

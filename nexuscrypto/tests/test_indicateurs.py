@@ -129,6 +129,45 @@ class TestCoteZVolume(unittest.TestCase):
         self.assertGreater(cote, 100.0)
 
 
+class TestCoteZEcartEMA(unittest.TestCase):
+    """L'écart à l'EMA rapporté à sa propre distribution.
+
+    C'est la réponse au défaut mesuré sur seize ans de BTC réel : en tendance,
+    le prix vit durablement au-delà de +30 % de son EMA 200, et une note à
+    seuils absolus reste collée à zéro toute la période.
+    """
+
+    def test_une_tendance_reguliere_n_est_pas_une_surchauffe(self):
+        """L'écart brut d'une hausse régulière dépasse largement le seuil
+        absolu, alors qu'il est parfaitement ordinaire pour ce régime."""
+
+        lecture = ind.lire(serie(nombre=400, pente=0.5))
+        ecart_brut = (lecture.prix - lecture.ema_longue) / lecture.ema_longue
+        self.assertGreater(ecart_brut, 0.15)
+        # En absolu ce serait une note très basse ; en relatif, le prix est en
+        # dessous de son habituel pour ce marché-là.
+        self.assertLess(lecture.cote_z_ecart_ema, 0.0)
+
+    def test_serie_plate_sans_dispersion(self):
+        """Écart-type nul : `None` plutôt qu'une division par zéro, et le
+        scoring redistribue au lieu d'inventer une note."""
+
+        self.assertIsNone(ind.lire(serie(nombre=400)).cote_z_ecart_ema)
+
+    def test_fenetre_trop_courte(self):
+        """En deçà du minimum, la distribution décrit le bruit et la note
+        sauterait d'une bougie à l'autre."""
+
+        self.assertIsNone(
+            ind.cote_z_ecart_ema([100.0] * 10, [99.0] * 10)
+        )
+
+    def test_un_prix_inhabituellement_haut_pour_son_regime(self):
+        clotures = [100.0 + (i % 5) for i in range(200)] + [400.0]
+        ema_serie = [100.0] * 201
+        self.assertGreater(ind.cote_z_ecart_ema(clotures, ema_serie), 3.0)
+
+
 class TestLecture(unittest.TestCase):
     def test_lecture_complete(self):
         lecture = ind.lire(serie(nombre=260, pente=0.1, amplitude=5.0))

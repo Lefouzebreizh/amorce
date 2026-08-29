@@ -81,6 +81,23 @@ def _arguments() -> argparse.ArgumentParser:
         help="rejouer les six marchés fabriqués au lieu d'un CSV",
     )
     rejeu.add_argument("--sortie", default=None, help="écrire un rapport Markdown")
+    rejeu.add_argument(
+        "--coinmetrics",
+        help="CSV du jeu communautaire CoinMetrics — seize ans de BTC réel, "
+             "prix et flux de plateformes mesurés",
+    )
+    rejeu.add_argument(
+        "--multi", nargs="+", metavar="SYMBOLE=CSV",
+        help="rejeu multi-actifs : plusieurs lignes partageant une trésorerie, "
+             "p. ex. --multi BTC/USDT=btc.csv ETH/USDT=eth.csv",
+    )
+    rejeu.add_argument("--depuis", default=None, help="borne basse, AAAA-MM-JJ")
+    rejeu.add_argument("--jusqu-a", default=None, help="borne haute, AAAA-MM-JJ")
+    rejeu.add_argument(
+        "--leviers", default=None,
+        help="compter les liquidations qu'auraient subies ces leviers, ex. « 1,2,3,5,10 ». "
+             "Mesure seulement : aucun ordre n'est jamais passé à levier.",
+    )
 
     return analyseur
 
@@ -149,8 +166,36 @@ async def _pepites(config, requete: str) -> int:
         candidats = [c for c in (candidat_depuis_paire(p) for p in paires) if c]
         retenues, rejets = scanner(candidats, config.strategie.pepites, maintenant())
         print(f"{len(candidats)} paire(s) examinée(s), {len(retenues)} retenue(s).\n")
+
+        # Le bouclier passe sur les retenues seulement : trois appels par jeton,
+        # sur trois cents candidats ce serait neuf cents requêtes pour rien. Le
+        # scanner ramène déjà la liste à quelques unités, et c'est l'ordre des
+        # filtres que tout ce projet respecte — le gratuit avant le payé.
+        verdicts = {}
+        if config.strategie.bouclier.actif:
+            from src.data_engine import securite as sources
+            from src.strategy import bouclier as veto
+            for pepite in retenues:
+                candidat = pepite.candidat
+                constats = await sources.constats(
+                    client, candidat.chaine, candidat.adresse,
+                    delai_s=config.strategie.bouclier.delai_s,
+                )
+                verdicts[candidat.symbole] = veto.juger(
+                    constats, config.strategie.bouclier,
+                    est_evm=sources.est_evm(candidat.chaine),
+                )
+
         for pepite in retenues:
-            print(messages.pepite_detectee(pepite), "\n")
+            print(messages.pepite_detectee(pepite))
+            verdict = verdicts.get(pepite.candidat.symbole)
+            if verdict is not None:
+                autorise, motif = veto.achat_autorise(verdict, config.strategie.bouclier)
+                # Le verdict est affiché même quand il autorise : savoir qu'un
+                # jeton a *passé* le bouclier vaut autant que savoir qu'il l'a
+                # heurté, et une ligne absente se lirait comme un contrôle sauté.
+                print(f"  {'✅' if autorise else '⛔'} {motif}")
+            print()
         if not retenues:
             # Le journal des rejets est ce qui permet de régler les seuils :
             # un scanner qui rend une liste vide sans dire pourquoi se règle à
@@ -163,16 +208,148 @@ async def _pepites(config, requete: str) -> int:
     return 0
 
 
+def _synthese_levier(mesure, leviers, series) -> str:
+    """Un scénario par ligne, et le levier maximal qu'il aurait laissé passer.
+
+    Le tableau détaillé n'a de sens que sur une série réelle. Sur six marchés
+    fabriqués, ce qu'on veut lire est le **pire** d'entre eux : un levier ne se
+    choisit pas sur le marché qui l'arrange, il se choisit sur celui qui le tue.
+    """
+
+    lignes = ["### Levier — six marchés fabriqués", "",
+              "| marché | levier maximal sans liquidation | pire excursion d'une position |",
+              "|---|---|---|"]
+    maximums = []
+    for nom, resultat, serie in series:
+        verdicts = mesure.analyser(resultat, serie, leviers)
+        if mesure.sans_matiere(verdicts):
+            lignes.append(f"| {nom} | *aucune position — rien mesuré* | — |")
+            continue
+        maximum = mesure.levier_maximal(verdicts)
+        maximums.append(maximum if maximum is not None else 0.0)
+        lots = mesure.positions(resultat, serie)
+        pire = max((p.excursion for p in lots), default=0.0)
+        libelle = f"{maximum:g}x" if maximum else "aucun"
+        lignes.append(f"| {nom} | {libelle} | −{pire * 100:.1f} % |")
+
+    lignes.append("")
+    if not maximums:
+        lignes.append("**Aucun marché n'a ouvert de position — ce tableau ne dit rien du levier.**")
+        return "\n".join(lignes)
+    pire = min(maximums)
+    if pire <= 1.0:
+        lignes.append("**Le pire de ces marchés ne laisse passer aucun levier.** "
+                      "Un levier réglé sur la moyenne des six serait liquidé par le septième.")
+    else:
+        lignes.append(f"**Le pire de ces marchés plafonne à {pire:g}x.** "
+                      "C'est ce nombre-là qui compte, pas la moyenne : on ne choisit pas "
+                      "le marché dans lequel on se trouvera.")
+    return "\n".join(lignes)
+
+
 def _rejeu(config, arguments) -> int:
     """Rejeu sur données passées. **Aucun réseau** : c'est ce qui permet de
     régler la stratégie sur une machine hors ligne, et de le faire vite."""
 
+    from src.rejeu import levier as mesure_levier
     from src.rejeu import rapport as mise_en_forme
     from src.rejeu.donnees import DonneesIllisibles, lire_csv, lire_fear_greed, scenarios
     from src.rejeu.rejeu import rejouer, rejouer_scenario
 
+    leviers = None
+    if arguments.leviers:
+        try:
+            leviers = tuple(sorted(float(x) for x in arguments.leviers.split(",") if x.strip()))
+        except ValueError:
+            print("❌ --leviers attend des nombres séparés par des virgules, ex. 1,2,3,5,10",
+                  file=sys.stderr)
+            return 2
+        if not leviers:
+            leviers = mesure_levier.LEVIERS_PAR_DEFAUT
+
+    if getattr(arguments, "multi", None):
+        from src.rejeu.donnees import lire_coinmetrics
+        from src.rejeu.rejeu import rejouer_multi
+
+        series = {}
+        for paire in arguments.multi:
+            if "=" not in paire:
+                print(f"❌ `{paire}` : attendu SYMBOLE=CSV.", file=sys.stderr)
+                return 2
+            symbole, chemin = paire.split("=", 1)
+            try:
+                series[symbole] = lire_coinmetrics(
+                    chemin, symbole=symbole,
+                    depuis=arguments.depuis, jusqu_a=arguments.jusqu_a,
+                )
+            except DonneesIllisibles as erreur:
+                print(f"❌ {erreur}", file=sys.stderr)
+                return 2
+        dynamique = rejouer_multi(config, series, nom="DCA dynamique")
+        temoin = rejouer_multi(config, series, nom="DCA plat (témoin)", plat=True)
+        comparaison = [(" + ".join(series), dynamique, temoin)]
+        print(mise_en_forme.tableau_protection(comparaison))
+        print()
+        print(mise_en_forme.verdict_protection(comparaison))
+        # Une ligne sans on-chain n'a pas un on-chain neutre : elle n'en a pas,
+        # et le scoring redistribue. Le dire évite de croire le contraire.
+        muets = [s for s, r in series.items() if not r.onchain]
+        if muets:
+            print(f"\n⚠ Sans données on-chain : {', '.join(muets)} — "
+                  "le scoring y redistribue le poids de la famille absente.")
+        return 0
+
+    if getattr(arguments, "coinmetrics", None):
+        from src.rejeu.donnees import lire_coinmetrics
+
+        try:
+            reelle = lire_coinmetrics(
+                arguments.coinmetrics, symbole=arguments.symbole,
+                depuis=arguments.depuis, jusqu_a=arguments.jusqu_a,
+            )
+        except DonneesIllisibles as erreur:
+            print(f"❌ {erreur}", file=sys.stderr)
+            return 2
+        dynamique = rejouer(config, reelle.serie, onchain=reelle.onchain,
+                            nom="DCA dynamique")
+        temoin = rejouer(config, reelle.serie, onchain=reelle.onchain,
+                         nom="DCA plat (témoin)", plat=True)
+        debut = reelle.serie.bougies[0].horodatage.date()
+        fin = reelle.serie.bougies[-1].horodatage.date()
+        ligne = mise_en_forme.ligne_comparaison(
+            dynamique, temoin, reelle.prix_moyen_marche
+        )
+        print(mise_en_forme.tableau([(f"{arguments.symbole} {debut}→{fin}", ligne)]))
+        print()
+        print(mise_en_forme.verdict([("données réelles", dynamique, temoin)]))
+        # La stratégie perd en rendement : reste à savoir ce qu'elle protège,
+        # et si cette protection paie son prix.
+        comparaison = [("réel", dynamique, temoin)]
+        print()
+        print(mise_en_forme.tableau_protection(comparaison))
+        print()
+        print(mise_en_forme.verdict_protection(comparaison))
+        print(
+            "\n⚠ Sur une fenêtre longue et un seul actif, le plafond d'exposition "
+            "gèle la stratégie dès que la position s'apprécie : le résultat mesure "
+            "alors le plafond, pas la stratégie. Préférer des fenêtres de deux à "
+            "trois ans avec `--depuis` et `--jusqu-a`."
+        )
+        # C'est ici que le levier prend enfin du poids : les six marchés
+        # fabriqués sont symétriques par construction, et seize ans de BTC réel
+        # portent les krachs qui liquident. Sans cette branche, `--leviers`
+        # était accepté puis **ignoré sans un mot** sur le seul jeu de données
+        # qui valait la peine d'être mesuré.
+        if leviers:
+            print()
+            print(mesure_levier.tableau(
+                mesure_levier.analyser(dynamique, reelle.serie, leviers),
+                f"{arguments.symbole} {debut}→{fin}",
+            ))
+        return 0
+
     if arguments.profils or not arguments.csv:
-        lignes, details, comparaisons = [], [], []
+        lignes, details, comparaisons, series = [], [], [], []
         for scenario in scenarios():
             dynamique, temoin = rejouer_scenario(config, scenario)
             lignes.append((
@@ -183,9 +360,13 @@ def _rejeu(config, arguments) -> int:
             ))
             details.append(mise_en_forme.rapport_scenario(scenario, dynamique, temoin))
             comparaisons.append((scenario.nom, dynamique, temoin))
+            series.append((scenario.nom, dynamique, scenario.serie))
         print(mise_en_forme.tableau(lignes))
         print()
         print(mise_en_forme.verdict(comparaisons))
+        if leviers:
+            print()
+            print(_synthese_levier(mesure_levier, leviers, series))
         if not arguments.csv:
             print("\n(marchés fabriqués — `--csv` pour rejouer des données réelles)")
         contenu = "\n\n".join(details)
@@ -203,6 +384,12 @@ def _rejeu(config, arguments) -> int:
         ligne = mise_en_forme.ligne_comparaison(dynamique, temoin, moyen_marche)
         print(mise_en_forme.tableau([(arguments.symbole, ligne)]))
         print()
+        if leviers:
+            print()
+            print(mesure_levier.tableau(
+                mesure_levier.analyser(dynamique, serie, leviers), arguments.symbole
+            ))
+            print()
         if not indices:
             # Sans historique d'indice, la famille sentiment est absente et le
             # scoring redistribue son poids. Le résultat reste lisible, mais il

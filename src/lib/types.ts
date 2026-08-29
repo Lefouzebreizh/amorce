@@ -244,7 +244,7 @@ export type VoiceCue = {
  * plateformes efface de toute façon en grande partie.
  */
 export type ExportPreset = {
-  id: 'full' | 'light';
+  id: 'full' | 'light' | 'share';
   label: string;
   description: string;
   /** Facteur appliqué à la définition de référence. */
@@ -263,6 +263,21 @@ export const EXPORT_PRESETS: ExportPreset[] = [
     label: '720 × 1280',
     description: 'Deux fois moins de pixels : à choisir si l’export saccade.',
     scale: 2 / 3,
+  },
+  {
+    /*
+     * Pour envoyer, pas pour publier.
+     *
+     * Un fichier de trente mégaoctets ne passe pas dans une messagerie depuis
+     * un téléphone, et c'est là que meurent la plupart des montages : on les
+     * exporte, on n'arrive pas à les envoyer, on abandonne. Quatre fois moins
+     * de pixels tiennent largement pour montrer un montage à quelqu'un ou pour
+     * le garder en brouillon.
+     */
+    id: 'share',
+    label: '540 × 960',
+    description: 'Quatre fois plus léger : pour envoyer un aperçu, pas pour publier.',
+    scale: 1 / 2,
   },
 ];
 

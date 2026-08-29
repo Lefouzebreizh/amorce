@@ -136,6 +136,12 @@ type StudioState = {
   /** Découpe un plan en morceaux d'environ `target` secondes. */
   chopClip: (id: string, target?: number) => void;
   cutSilences: (id: string, segments: { start: number; end: number }[]) => void;
+  /** Cale un texte dicté sur la parole mesurée d'un plan. */
+  captionsFromClip: (
+    id: string,
+    script: string,
+    segments: { start: number; end: number }[],
+  ) => void;
   /** Pose un bruitage sur chaque raccord qui n'en a pas encore. */
   addSoundsOnCuts: () => void;
   /** Écarte les bruitages en trop, pour rendre du silence entre les impacts. */
@@ -402,6 +408,78 @@ export const useStudio = create<StudioState>((set, get) => {
       const clips = [...state.project.clips];
       clips.splice(index, 1, ...pieces);
       return reclamp({ ...state, project: { ...state.project, clips } });
+    }),
+
+  /**
+   * Sous-titre un plan à partir de ce qu'on y dit.
+   *
+   * Le calage d'un texte sur la parole existait déjà, mais seulement pour une
+   * voix off importée. Or le cas le plus courant est l'inverse : on se filme
+   * en parlant, et la parole est **dans le rush**. Il fallait alors écrire
+   * chaque sous-titre à la main, un par un, en cherchant ses bornes à la
+   * jauge — le travail le plus long d'un montage court.
+   *
+   * Trois conversions séparent les segments du rush des sous-titres du
+   * montage, et les oublier produit des textes qui ne s'affichent jamais :
+   *
+   * Les segments sont relevés sur le **fichier entier**, le plan n'en montre
+   * qu'une tranche : on écarte ce qui tombe hors de `[inPoint, outPoint]`.
+   *
+   * Le temps du fichier n'est pas celui du montage : un plan joué deux fois
+   * plus vite montre deux secondes de source par seconde de montage.
+   *
+   * Et le plan commence quelque part sur la ligne de temps : `placed.start`
+   * s'ajoute en dernier.
+   */
+  captionsFromClip: (id, script, segments) =>
+    mutate('sous-titres', (state) => {
+      const place = layoutClips(state.project.clips).find((p) => p.clip.id === id);
+      if (!place || script.trim() === '') return state;
+
+      const { clip } = place;
+      const vitesse = Math.max(0.1, clip.speed);
+      const dansLePlan = segments
+        .map((s) => ({
+          start: Math.max(s.start, clip.inPoint),
+          end: Math.min(s.end, clip.outPoint),
+        }))
+        .filter((s) => s.end > s.start)
+        // Du temps de fichier au temps de montage, origine au début du plan.
+        .map((s) => ({
+          start: (s.start - clip.inPoint) / vitesse,
+          end: (s.end - clip.inPoint) / vitesse,
+        }));
+
+      if (dansLePlan.length === 0) return state;
+
+      const limite = totalDuration(state.project.clips);
+      const produits = captionsFromVoice(script, dansLePlan, () => uid('cap'), {
+        offset: place.start,
+      })
+        .map((caption) => ({
+          ...caption,
+          // Jamais au-delà du plan : un sous-titre qui déborde s'afficherait
+          // sur le plan suivant, dont il ne dit rien.
+          end: Math.min(caption.end, place.end, limite > 0 ? limite : caption.end),
+        }))
+        .filter((caption) => caption.end > caption.start && caption.start < place.end);
+
+      if (produits.length === 0) return state;
+
+      return {
+        ...state,
+        project: {
+          ...state.project,
+          // Ceux du plan sont remplacés, jamais complétés : relancer le calage
+          // après avoir corrigé une faute doublerait tout le texte.
+          captions: [
+            ...state.project.captions.filter(
+              (c) => !(c.start >= place.start - 1e-6 && c.start < place.end && !c.voiceId),
+            ),
+            ...produits,
+          ],
+        },
+      };
     }),
 
   chopClip: (id, target = 2) =>
