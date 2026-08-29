@@ -62,6 +62,14 @@ export type PlaybackEngine = {
   beginExport: (scale?: number) => Promise<void>;
   /** Rend la main à la surveillance de qualité. */
   endExport: () => void;
+  /**
+   * Images composées pendant le dernier export.
+   *
+   * Rapportée à la durée du montage, elle donne la cadence réellement obtenue —
+   * la seule façon de dire à l'utilisateur que son fichier saccade avant qu'il
+   * ne le découvre en le regardant.
+   */
+  exportedFrames: () => number;
 };
 
 /**
@@ -117,6 +125,25 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
    * livré, il ne se rejoue pas.
    */
   const exportingRef = useRef<number | null>(null);
+
+  /*
+   * Images réellement composées pendant l'enregistrement.
+   *
+   * L'export capture le canvas **en temps réel** : le fichier ne reçoit que ce
+   * que la boucle a eu le temps de dessiner. Un appareil qui ne tient pas la
+   * cadence produit donc un fichier saccadé — et rien ne le disait.
+   *
+   * Mesuré sur un export livré par l'utilisateur : 222 images pour 17,5 s, soit
+   * 12,7 par seconde au lieu de 30, avec des écarts de 9 à 517 ms. Il l'a
+   * décrit comme un tremblement, un scintillement, une image qui vibre, et a
+   * cherché du côté de l'entrelacement — les deux fichiers étaient pourtant
+   * `progressive`. Ce n'est pas une image mal encodée, ce sont des images
+   * absentes.
+   *
+   * Compter ici plutôt que relire le fichier après coup : la boucle sait
+   * exactement combien de fois elle a composé, sans décoder quoi que ce soit.
+   */
+  const exportFramesRef = useRef(0);
   const poolRef = useRef<ClipVideoPool | null>(null);
   const gradeRef = useRef<GradePipeline | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
@@ -186,6 +213,8 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
 
       // Copie, jamais l'objet du gouverneur : il vient de `QUALITY_TIERS`, et
       // le muter changerait la constante pour toute la session.
+      if (exporting) exportFramesRef.current += 1;
+
       const tier = exporting
         ? { ...tierById('full'), scale: exportingRef.current! }
         : { ...governor.current() };
@@ -480,6 +509,7 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
 
   const beginExport = useCallback(async (scale = 1) => {
     exportingRef.current = scale;
+    exportFramesRef.current = 0;
     // Deux images d'attente : la première applique la nouvelle taille, la
     // seconde garantit qu'elle a bien été composée avant toute capture.
     await new Promise<void>((resolve) =>
@@ -490,6 +520,9 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
   const endExport = useCallback(() => {
     exportingRef.current = null;
   }, []);
+
+  /** Nombre d'images composées depuis le dernier `beginExport`. */
+  const exportedFrames = useCallback(() => exportFramesRef.current, []);
 
   /** Position du point dans le repère de sortie, ou null hors du canvas. */
   const toOutput = useCallback((clientX: number, clientY: number) => {
@@ -553,7 +586,8 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
       ensureAudio,
       beginExport,
       endExport,
+      exportedFrames,
     }),
-    [setCanvas, getCanvas, play, pause, toggle, seek, captionAt, toRelativeY, resources, ensureAudio, beginExport, endExport],
+    [setCanvas, getCanvas, play, pause, toggle, seek, captionAt, toRelativeY, resources, ensureAudio, beginExport, endExport, exportedFrames],
   );
 }

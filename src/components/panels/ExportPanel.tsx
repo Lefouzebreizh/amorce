@@ -18,6 +18,15 @@ import { Button, Choice, Field, Hint, Panel } from '../ui';
  * vitesse de la vidéo, sans accélération possible. Le dire à l'avance évite que
  * l'utilisateur croie à un blocage et recharge la page en plein export.
  */
+/**
+ * Cadence en deçà de laquelle le mouvement se voit haché.
+ *
+ * Le cinéma tient à 24, et l'œil ne réclame pas les 30 de la sortie. En
+ * dessous de 20, en revanche, un panoramique se décompose en marches — et
+ * l'export mesuré chez l'utilisateur était à 12,7.
+ */
+const CADENCE_MINIMALE = 20;
+
 export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
   const project = useStudio((s) => s.project);
   const duration = useStudio((s) => s.duration());
@@ -56,6 +65,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [cadence, setCadence] = useState<number | null>(null);
   const [audioOnly, setAudioOnly] = useState(false);
 
   const format = pickFormat(audioOnly);
@@ -83,6 +93,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
 
     setError(null);
     setDone(null);
+    setCadence(null);
     setProgress(0);
 
     try {
@@ -103,6 +114,20 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         isPlaying: () => useStudio.getState().playing,
         onProgress: setProgress,
       });
+
+      /*
+       * La cadence obtenue, avant même de relire le fichier.
+       *
+       * L'enregistrement se fait en temps réel : le fichier ne contient que les
+       * images que la boucle a eu le temps de composer. Un appareil qui n'y
+       * arrive pas rend une vidéo qui saccade, et jusqu'ici l'application n'en
+       * disait rien — l'utilisateur le découvrait en regardant son export, puis
+       * cherchait la cause du côté de l'encodage.
+       *
+       * Un export sonore seul ne compose aucune image : la mesure n'a pas de
+       * sens et resterait à zéro.
+       */
+      if (!audioOnly && duration > 0) setCadence(engine.exportedFrames() / duration);
 
       const filename = safeFilename(project.name, result.format.extension);
       downloadBlob(result.blob, filename);
@@ -268,6 +293,23 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
 
         {error && (
           <p className="mt-2 rounded-xl border border-danger/40 bg-danger/5 px-3 py-2 text-xs text-danger">{error}</p>
+        )}
+
+        {/*
+          La cadence est dite après coup, pas prédite avant.
+          Les capacités d'un appareil ne s'interrogent pas depuis une page web,
+          et l'estimation d'avance se tromperait dans les deux sens. Ce qui est
+          sûr, c'est ce que l'enregistrement vient de produire.
+        */}
+        {cadence !== null && cadence < CADENCE_MINIMALE && (
+          <p className="mt-2 rounded-xl border border-warn/40 bg-warn/5 px-3 py-2 text-xs leading-relaxed text-warn">
+            <b>Ta vidéo saccade : {cadence.toFixed(0)} images par seconde au lieu de {OUTPUT_FPS}.</b>{' '}
+            Ton appareil n’a pas suivi la cadence pendant l’enregistrement, et les images manquantes
+            ne sont pas rattrapables — le fichier est bon, c’est le mouvement qui est haché.
+            {presetId === 'full'
+              ? ' Passe en 720 × 1280 juste au-dessus et relance : deux fois moins de pixels à composer.'
+              : ' Ferme tes autres onglets et relance, ou descends d’un cran de définition.'}
+          </p>
         )}
 
         <dl className="mt-3 space-y-1 border-t border-edge pt-3 text-[11px] text-muted">
