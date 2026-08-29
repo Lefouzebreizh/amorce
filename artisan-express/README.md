@@ -45,6 +45,14 @@ plus la condition d'une première vente.
 faux sur une page de vente coûte plus cher qu'un bouton en moins : ce qui n'est
 pas réglé disparaît de l'écran.
 
+## Aller chercher les clients
+
+La page ne se vend pas toute seule : personne n'y arrive par hasard.
+`PROSPECTION.md` contient les quatre messages — premier contact, relance,
+objection sur le prix, démarrage — et la règle qui les empêche d'être du spam :
+**chacun porte une phrase que seul le vendeur peut écrire, ce qu'il a vraiment
+vu sur la page de l'artisan.** Sans elle, c'est un publipostage et ça se sent.
+
 ## Déployer sur Vercel
 
 Projet Next.js standard, dossier racine `artisan-express`. Les six variables
