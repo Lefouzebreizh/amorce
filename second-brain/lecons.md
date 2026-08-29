@@ -3251,3 +3251,30 @@ Trois choses à en retenir, et la troisième est la vraie :
 C'est le même piège que « la mesure disait vert et le fichier était faux »,
 transposé aux données : ce n'est pas la mesure qu'il fallait renforcer, c'est
 l'état de départ qu'il fallait vieillir.
+
+## Un script livré à Windows échoue en silence, trois fois plutôt qu'une
+
+Le dépôt savait déjà qu'un `.srt` venu de Windows arrive en windows-1252. Le
+sens inverse — **écrire** un fichier que Windows va lire — a ses propres
+pièges, et ils ont ceci de commun qu'aucun ne produit de message d'erreur.
+
+1. **Windows PowerShell 5.1 lit un fichier sans BOM en Latin-1.** Un `.ps1`
+   enregistré en UTF-8 nu voit ses caractères non-ASCII sortir en charabia —
+   les blocs `▓ ░` d'une jauge, les accents d'un message. Le script tourne, il
+   ne lève rien, il affiche faux. Écrire les `.ps1` en **UTF-8 avec BOM**.
+2. **Windows refuse par défaut d'exécuter un `.ps1`**, et ce refus ne remonte
+   pas partout : dans une barre d'état, il rend une ligne vide. Mettre
+   `-ExecutionPolicy Bypass` dans la commande enregistrée, pas dans la
+   documentation.
+3. **Un outil Unix supposé présent n'y est pas.** `jq`, `date -d`, `id -u` :
+   une ligne d'état bash existait ici depuis des mois et n'avait jamais pu
+   tourner sur la machine du propriétaire. Ce qu'on peut supposer sur un
+   Windows nu, c'est PowerShell, et rien d'autre.
+
+**Et le portage vaut contre-épreuve.** Réécrire un script dans un second
+langage force à relire son calcul, et c'est ce qui a relevé le défaut de
+l'original : il affichait le pourcentage arrondi (`%.0f`) mais remplissait sa
+barre sur le tronqué — « 100 % » sur une fenêtre à 99,9, soit le chiffre qui
+fait croire qu'on est bloqué. Le défaut avait survécu à toutes les lectures du
+fichier seul. Quand deux versions doivent afficher la même chose, les croiser
+sur vingt valeurs coûte une minute et trouve ce qu'une relecture ne trouve pas.
