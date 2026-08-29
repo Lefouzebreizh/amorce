@@ -3110,6 +3110,39 @@ construire est ce qui vaut pour tous les prix**. Ici c'était la frontière —
 le moteur ne connaît pas le réseau — gardée par un test. Elle a survécu
 intacte aux deux modèles, quand tout le reste a été réécrit.
 
+## Un système de mesure est aveugle à ce qu'il n'a pas été construit pour voir
+
+Un montage a été rejeté d'un mot : « fouilli ». Toutes les mesures étaient au
+vert — cadence 1,11 s par plan dans la bande récompensée, durée sous le
+plafond, bruitages dans la fourchette, note 83 sur 100, couverture texte
+correcte.
+
+Le défaut se voyait en une seconde sur une planche d'images : **sept des neuf
+plans montraient le même cadrage**, et quatre textes sur quatre étaient des
+gabarits non remplis — `[CE QUI MENACE]`, `QUEL [ROYAUME] TOMBE ENSUITE ?`.
+
+Aucune mesure ne pouvait le dire, et ce n'est pas un oubli : elles comptent des
+**secondes** et des **coupes**. Aucune ne regarde ce qu'il y a *dans* l'image ni
+ce que le texte *raconte*. Pire, la couverture texte était bonne **parce que**
+les gabarits sont du texte — la mesure confirmait le défaut au lieu de le
+signaler.
+
+**C'est la forme d'aveuglement la plus coûteuse : celle qu'on ne peut pas voir
+depuis l'intérieur du système de mesure.** Ajouter des contrôles du même genre
+n'y change rien ; il faut mesurer une autre grandeur, ou regarder.
+
+Deux gestes en découlent, et ils se répètent dans ce dépôt :
+
+**Le garde-fou se pose sur le geste irréversible**, pas dans un tableau de
+bord. Ici juste avant l'export — c'est là que le fichier part, et personne ne
+consulte une note à ce moment-là.
+
+**Un seuil se lit, il ne se choisit pas.** Celui de la ressemblance vient des
+neuf plans du montage rejeté, comparés deux à deux : de 2 à 11 à l'intérieur du
+groupe qui se répète, de 15 à 26 avec les plans réellement différents. Le trou
+entre 11 et 15 était franc, et le seuil s'y est posé. Un chiffre rond choisi de
+tête aurait été à défendre à chaque doute ; celui-ci se relit.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
