@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { debitVideo, downloadBlob, pickFormat, recordMontage, relireLExport, safeFilename } from '@/lib/export';
 import { crochetsARemplir } from '@/lib/captions';
+import { groupesSemblables } from '@/lib/ressemblance';
 import { formatTime } from '@/lib/media';
 import { useStudio } from '@/lib/store';
 import { EXPORT_PRESETS, exportPreset, OUTPUT_FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
@@ -28,6 +29,21 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
    */
   const captions = useStudio((s) => s.project.captions);
   const aRemplir = crochetsARemplir(captions);
+
+  /*
+   * Un montage peut avoir la bonne cadence, la bonne durée, la bonne note, et
+   * n'avancer nulle part : il suffit que les rushes montrent la même chose.
+   * Constaté sur un montage rejeté — neuf rushes, dont sept au même cadrage,
+   * et toutes les mesures au vert.
+   *
+   * On ne compte que les rushes réellement montés : un rush resté dans la
+   * bibliothèque ne gêne personne.
+   */
+  const assets = useStudio((s) => s.project.assets);
+  const clips = useStudio((s) => s.project.clips);
+  const montes = new Set(clips.map((c) => c.assetId));
+  const seRessemblent = groupesSemblables(assets.filter((a) => montes.has(a.id)));
+  const plusGrand = seRessemblent[0]?.length ?? 0;
   const renameProject = useStudio((s) => s.renameProject);
   const presetId = useStudio((s) => s.exportPreset);
   const setPreset = useStudio((s) => s.setExportPreset);
@@ -206,6 +222,19 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
             <p className="mt-1.5 text-muted">
               Ils partiront tels quels dans le fichier. Va dans <strong>Textes</strong> pour les
               écrire.
+            </p>
+          </div>
+        )}
+
+        {!audioOnly && plusGrand > 2 && (
+          <div className="mb-2 rounded-xl bg-warn/10 px-3.5 py-3 text-[12.5px] leading-relaxed text-warn">
+            <p className="font-semibold">
+              {plusGrand} de tes {montes.size} plans montrent la même chose.
+            </p>
+            <p className="mt-1.5 text-muted">
+              La cadence et la durée peuvent être bonnes, le film n’avance pas pour autant : on
+              revoit {plusGrand} fois le même cadrage. Un plan large, un gros plan, un objet —
+              c’est ce qui manque, et aucun réglage ne le remplace.
             </p>
           </div>
         )}
