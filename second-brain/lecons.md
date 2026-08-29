@@ -3077,6 +3077,39 @@ essai limité dans le temps, un nombre de sièges. Ce qui se vérifie dans
 l'artefact tient ; ce qui exige de suivre l'usage demande une infrastructure,
 une politique de données, et une conversation qu'on n'avait pas prévue.
 
+## Le prix décide de l'architecture, pas l'inverse
+
+Le module de licence d'Amorce a été construit avant que le prix soit fixé, sur
+l'hypothèse par défaut d'un abonnement mensuel. Il fallait donc des comptes,
+des mots de passe, des courriels de confirmation, des sessions, trois
+événements Stripe, une date d'expiration, et une lecture en base à chaque
+vérification.
+
+Le prix est tombé : **49 € une fois**. Voici ce que cette seule phrase a
+supprimé, en une heure :
+
+| ce qu'il fallait | ce qu'il reste |
+| --- | --- |
+| comptes, mots de passe, courriels | **une clé à coller** |
+| sessions, témoins, CORS avec identifiants | un en-tête `Authorization` |
+| 3 événements Stripe | **1** |
+| une date de fin | rien — il n'y a pas de fin |
+| une lecture en base pour authentifier | **aucune** : la clé porte son sceau |
+
+Rien de cela n'a été « optimisé ». Tout a disparu parce que la question à
+laquelle le système devait répondre avait changé : *« cet abonnement court-il
+encore ? »* demande un calendrier et une identité ; *« cette clé a-t-elle été
+payée ? »* ne demande qu'un HMAC.
+
+**Une décision de prix prise tard se paie en code écrit pour rien.** Prise tôt,
+elle en retire — et c'est l'inverse de l'intuition, qui range le prix parmi les
+détails qu'on verra à la fin.
+
+Le corollaire pratique : quand un produit attend son prix, **la seule chose à
+construire est ce qui vaut pour tous les prix**. Ici c'était la frontière —
+le moteur ne connaît pas le réseau — gardée par un test. Elle a survécu
+intacte aux deux modèles, quand tout le reste a été réécrit.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
