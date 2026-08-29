@@ -3047,6 +3047,36 @@ on cherche alors ce qui est attendu : une question posée sur l'entrée standard
 un tuyau que personne ne vide, un verrou, une résolution de nom. Une heure a
 été dépensée à rendre plus rapide quelque chose qui ne calculait pas.
 
+## Une borne se choisit d'après l'endroit où elle serait tenue
+
+En découpant une offre gratuite et une offre payante, la première borne écrite
+fut « trois exports par jour ». Elle a tenu vingt minutes — le temps d'arriver
+à la question suivante : **où se compte ce chiffre ?**
+
+Deux réponses, et aucune ne marche. Sur l'appareil, un compteur s'efface en
+trois secondes. Sur le serveur, il faut lui envoyer ce que la personne fabrique
+et quand, c'est-à-dire du pistage — que ce dépôt s'interdit sans détour.
+
+Il ne restait donc qu'une limite **qui ne gêne que ceux qui ne savent pas la
+contourner**. C'est la définition d'une fausse contrainte : elle ne protège
+rien et elle punit les honnêtes.
+
+La borne retenue à la place vit **dans l'objet produit** — une signature sur
+l'image, une définition de sortie. Elle se voit dans le fichier, ne demande de
+savoir sur personne, et reste vraie le jour où quelqu'un ouvre les outils de
+développement : au pire il la retire lui-même, il ne ment à personne d'autre.
+
+**La question à poser avant d'écrire une borne dans une offre : où serait-elle
+tenue, et qu'est-ce que la tenir obligerait à savoir ?** Une borne qu'on ne
+peut tenir qu'en observant les gens n'est pas une borne, c'est une raison de
+les observer — et l'ordre des deux compte, parce qu'on croit toujours choisir
+la première.
+
+Le corollaire vaut pour tout ce qui est déclaratif : un plafond de quantité, un
+essai limité dans le temps, un nombre de sièges. Ce qui se vérifie dans
+l'artefact tient ; ce qui exige de suivre l'usage demande une infrastructure,
+une politique de données, et une conversation qu'on n'avait pas prévue.
+
 ## Une couverture annoncée et absente est pire que pas de couverture
 
 La fiche de la compétence `verifier` promettait « validation des bases et
