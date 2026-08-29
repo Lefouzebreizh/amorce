@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { layoutClips, sliceAt, totalDuration, effectiveTransition, withoutSilences } from '../timeline.ts';
+import { chopped, layoutClips, sliceAt, totalDuration, effectiveTransition, withoutSilences } from '../timeline.ts';
 import { DEFAULT_CLIP, type Clip, type TransitionKind } from '../types.ts';
 
 function makeClip(seconds: number, transition: TransitionKind = 'cut', td = 0): Clip {
@@ -158,4 +158,45 @@ test('les miettes plus courtes que le minimum ne font pas de plan', () => {
     donneUnId,
   );
   assert.equal(pieces.length, 2, 'le morceau de 50 ms est écarté');
+});
+
+test('les morceaux d’une découpe changent de cadrage', () => {
+  /*
+   * Découper une prise continue en morceaux contigus ne crée aucune coupe
+   * visible : l'image se poursuit exactement là où elle s'était arrêtée. Sans
+   * changement de cadrage, on obtient des raccords invisibles — et autant de
+   * bruitages qui claquent sur rien.
+   */
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'x', assetId: 'a', outPoint: 12 }, 2, donneUnId);
+  assert.ok(pieces.length >= 5, `${pieces.length} morceaux`);
+  const mouvements = pieces.map((p) => p.motion);
+  assert.equal(new Set(mouvements).size >= 3, true, `mouvements : ${mouvements.join(', ')}`);
+  for (let i = 1; i < mouvements.length; i += 1) {
+    assert.notEqual(mouvements[i], mouvements[i - 1], `deux morceaux de suite en « ${mouvements[i]} »`);
+  }
+});
+
+test('aucun morceau ne reste immobile', () => {
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'y', assetId: 'a', outPoint: 10 }, 2, donneUnId);
+  assert.ok(pieces.every((p) => p.motion !== 'none'), 'un plan fixe ne montre aucune coupe');
+});
+
+test('une découpe ne produit jamais des dizaines de morceaux', () => {
+  /*
+   * Une prise de cinquante-six secondes donnait vingt-huit plans de deux
+   * secondes : la même image coupée vingt-huit fois, avec autant de bruitages
+   * posés sur des raccords qui ne se voient pas. Rapporté depuis le téléphone :
+   * « il a ajouté des plans partout, il a tout découpé ».
+   */
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'long', assetId: 'a', outPoint: 56 }, 2, donneUnId);
+  assert.ok(pieces.length <= 12, `${pieces.length} morceaux`);
+  // Ils s'allongent au lieu de se multiplier, et couvrent toujours la prise.
+  const couvert = pieces.reduce((s, p) => s + (p.outPoint - p.inPoint), 0);
+  assert.ok(Math.abs(couvert - 56) < 0.01, `${couvert.toFixed(2)} s couvertes`);
+});
+
+test('une prise courte se découpe toujours normalement', () => {
+  // La borne ne doit pas changer le cas courant : 10 s visées à 2 s font 5.
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'court', assetId: 'a', outPoint: 10 }, 2, donneUnId);
+  assert.equal(pieces.length, 5);
 });

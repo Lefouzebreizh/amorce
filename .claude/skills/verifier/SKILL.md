@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, tests, types et build pour le site hypersensible-bienveillance, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, validation des bases et parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
+description: Lance la vérification des seuls projets touchés, tous en parallèle, et rend un verdict par projet — Amorce, le socle Agence, la page de vente Artisan Express, TITAN Builder, IPTV / VOD, Hypersensible & Bienveillance, le réseau d'annuaires IA, l'application Flutter Look & Find, l'outillage du dépôt, et toutes les suites Python découvertes comme le fait la CI — Radar crypto, NexusCrypto, KDP, Life-Organizer, Paper-Manager, chaîne de montage, répondeur Facebook. Ferme les séquences web par un regard dans un vrai Chromium à 393 × 873 : contraste, taille de texte, cibles, débordement. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
 ---
 
 # Vérifier ce dépôt
@@ -109,23 +109,49 @@ React ne les voit pas. **Piloter par `http://localhost:3000`.**
 
 ```bash
 cd iptv
-npm test && npm run check
+npm test && npm run check && npm run build
+npm run verify          # à part : Chromium réel, flux HLS réel
 ```
 
-Les deux partent ensemble dans `verifier.sh`. Ni lint ni build : le projet n'a
-pas encore d'interface, et annoncer une étape qui n'existe pas rendrait le
-verdict faux.
+Les deux premières partent ensemble dans `verifier.sh`, le build ferme la
+marche — seul à voir ce que `tsc` laisse passer d'une application App Router.
 
-Ce qu'elles **ne voient pas** : le dialogue avec un vrai panneau Xtream et une
+`npm run verify` est **hors** de la barrière et hors de l'intégration continue :
+Playwright vit dans les dépendances de la racine, que la CI d'IPTV n'installe
+pas. Il monte un flux HLS fabriqué par ffmpeg, un serveur d'origine sans en-tête
+CORS — c'est ce qui rend le mandataire vérifiable —, importe un catalogue
+jetable et conduit l'application à 393 px. À lancer avant de livrer un
+changement d'interface : il a déjà attrapé un débordement horizontal et une
+lecture qui ne démarrait pas, deux défauts que ni les tests ni le build ne
+voient.
+
+Ce qu'aucune des deux ne voit : le dialogue avec un vrai panneau Xtream et une
 vraie liste. Les tests injectent `fetch` et ne touchent pas au réseau — c'est ce
 qui les rend rejouables partout, et c'est aussi leur limite. Xtream Codes n'a
 pas de spécification publiée : le premier branchement sur un abonnement réel est
 le seul moment où l'on saura si un champ manque. Commencer par
 `verifierCompte()`, qui dit en un appel si les identifiants passent.
 
-Et pour éprouver l'analyseur sur du volume, lui donner une vraie liste plutôt
-qu'une courte : c'est la tenue en mémoire qui se mesure, pas le nombre
-d'entrées.
+Et elles ne voient pas non plus le **coût**. C'est mesuré, pas supposé : un
+index de recherche mal lié rendait le bon résultat sur les six entrées des
+tests, et ne finissait pas un import de 120 000 en dix minutes. Avant de livrer
+un changement qui touche à l'ingestion ou au cache, fabriquer une grande liste
+et regarder la montre :
+
+```bash
+cd iptv
+npm run iptv -- importer grande-liste.m3u   # doit rester sous ~10 s
+npm run iptv -- resume
+```
+
+Les repères actuels, sur 120 000 entrées : import 6,6 s, 135 Mo de crête,
+requêtes sous 30 ms. Un écart d'un ordre de grandeur est un défaut, pas une
+machine lente.
+
+Et une limite du conteneur, mesurée, qui évite de chercher un bug qui n'existe
+pas : **le Chromium de Playwright n'a ni H.264 ni AAC**. Aucune vidéo IPTV ne
+s'affichera ici, quel que soit le code. `npm run verify` le dit et vérifie tout
+le reste du chemin, jusqu'à la durée du média annoncée par le lecteur.
 
 ## Réseau d'annuaires IA — `annuaire-ia/`
 
@@ -314,7 +340,10 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 251 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 profils.py                       # l'effet des réglages sur six marchés connus
 ```
@@ -324,6 +353,19 @@ une pondération, à un multiplicateur DCA ou à une note : les tests diraient
 qu'ils passent sans dire que le prix moyen d'achat du profil « chute puis
 reprise » est repassé au-dessus de celui du témoin. C'est la même règle que
 pour le radar `pepites/`, et elle a été payée là-bas.
+
+Et pour un changement de **stratégie**, les six marchés fabriqués ne suffisent
+pas : ils sont symétriques par construction et flattent. Le rejeu sur BTC réel
+les contredit — la stratégie y perd contre un DCA aveugle en marché haussier.
+
+```bash
+curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv
+python3 main.py rejeu --coinmetrics btc.csv --symbole BTC/USD \
+        --depuis 2020-01-01 --jusqu-a 2021-12-31
+```
+
+Fenêtres de deux à trois ans seulement : au-delà, sur un seul actif, le plafond
+d'exposition gèle la stratégie et le résultat mesure le plafond.
 
 `main.py verifier` en plus **si et seulement si** le changement touche à
 `config/config.yaml` ou à `src/core/config.py` : les tests diraient qu'ils
@@ -394,6 +436,50 @@ Ce qu'ils ne disent pas, et qui doit figurer dans le compte rendu : si le jeton
 a les bonnes permissions, si le ton ressemble à celui de l'auteur, et si le
 modèle met de côté les bons commentaires. Cela se regarde **en simulation**
 (sans `--publier`), sur de vrais commentaires.
+
+## L'outillage du dépôt — hooks et scripts de compétences
+
+Un changement dans `.claude/` n'appartenait à aucun projet, donc à personne : le
+vérificateur répondait « rien d'exécutable n'a changé » à un changement **du
+vérificateur lui-même**. Un hook cassé ne se découvrait qu'au démarrage de la
+session suivante, chez quelqu'un d'autre.
+
+Tout script changé sous `.claude/` passe désormais sa syntaxe — `bash -n`,
+`node --check`, `python3 -m py_compile` selon l'extension.
+
+**Ce pas est volontairement partiel, et il faut le savoir :** il attrape la
+faute qui casse tout — un `fi` manquant, une accolade en trop — et ne dit rien
+du comportement. La preuve qu'un script fait ce qu'il annonce reste le geste de
+le casser exprès et d'exiger le rouge.
+
+## Le regard — `scripts/regarder.mjs`
+
+Un vrai Chromium à **393 × 873**, le terrain de référence du dépôt, qui refuse
+ce qui ne se lit pas : contraste sous le seuil WCAG, texte sous 18 px, cible
+sous 44 px, page qui déborde à droite. Il tourne à la fin des séquences
+**Artisan Express** et **TITAN Builder**, et se lance à la main sur un dossier
+livrable ou une adresse :
+
+```bash
+npm run regarder demo                     # depuis titan-builder
+npm run regarder http://localhost:3000    # depuis artisan-express, serveur lancé
+```
+
+Ce qu'il **ne** compte pas : tout ce qui est `aria-hidden`. Une maquette de
+téléphone dessinée en HTML n'est pas du texte à lire, et la mesurer noyait les
+vrais défauts sous trois fois plus de faux.
+
+Sans Chromium, il sort en **3** et la vérification affiche `⊘ non effectué`.
+Ni vert ni rouge : une mesure qui n'a rien mesuré ne doit jamais rassurer, et
+une machine sans navigateur ne doit pas bloquer une poussée.
+
+**Le piège qui l'a rendu inutile pendant une heure**, et qu'il faut connaître
+avant de servir quoi que ce soit dans un contrôle : `kill` sur le PID de `npm`
+ne tue pas le serveur. La chaîne est `npm exec next start` → `sh -c next start`
+→ `next-server`, et le petit-fils survit, réattaché à init. Il garde le port, et
+le contrôle suivant mesure **le build d'avant** en affichant un vert parfait.
+D'où `setsid` plus `kill -- -PGID`, et un refus net de démarrer si le port
+répond déjà.
 
 ## Ce que la vérification ne dit pas
 

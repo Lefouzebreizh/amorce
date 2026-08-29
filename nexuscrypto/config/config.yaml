@@ -136,6 +136,22 @@ strategie:
     ema_moyenne: 50
     ema_longue: 200
     volume_periode: 20
+    # Noter l'écart à l'EMA longue par rapport à sa **propre distribution**
+    # plutôt que sur des seuils absolus.
+    #
+    # Mesuré sur cinq fenêtres de BTC réel (2016→2025), gain moyen sur le prix
+    # d'achat contre un DCA aveugle :
+    #
+    #            absolu    relatif
+    #   moyenne   −3,4 %    +1,7 %
+    #   pire cas −27,4 %   −10,2 %   ← 2020-2021, la grande hausse
+    #
+    # Le mode relatif est meilleur sur la moyenne **et** sur le pire cas : en
+    # tendance, le prix vit durablement au-delà de +30 % de son EMA 200, et les
+    # seuils absolus collent alors la note à zéro toute la période. Il n'est pas
+    # meilleur partout — il perd 10 points sur 2023-2025 — mais il supprime le
+    # cas catastrophique, et c'est ce qui décide.
+    ecart_ema_relatif: true
   dca:
     # Multiplicateurs appliqués à l'enveloppe, par zone de valorisation.
     # « avidite_extreme » à 0 est la temporisation demandée : on n'achète pas
@@ -191,17 +207,89 @@ strategie:
     score_minimum: 65
     candidats_max: 5
 
+  # ------------------------------------------------------------------------
+  # Bouclier anti-rugpull — un veto, pas une note.
+  #
+  # Le scanner repère une anomalie de volume ; il ne sait pas si le jeton est
+  # revendable. GoPlus lit le contrat, honeypot.is simule un achat puis une
+  # revente (Ethereum, BNB Chain, Base seulement), RugCheck couvre Solana. Les
+  # trois répondent sans clé d'API : un garde-fou qui dépend d'un abonnement
+  # est un garde-fou qu'on finira par désactiver.
+  #
+  # `acheter_si_inconnu: false` est le réglage qui mérite d'être discuté. Un
+  # service muet bloque l'achat, ce qui coûte des occasions. L'asymétrie le
+  # justifie : une occasion manquée coûte un gain, un jeton dont on ne peut pas
+  # sortir coûte la ligne entière.
+  # ------------------------------------------------------------------------
+  bouclier:
+    actif: true
+    acheter_si_inconnu: false
+    taxe_achat_max_pct: 10
+    taxe_vente_max_pct: 10
+    lp_verrouillee_min_pct: 50
+    top10_detenteurs_max_pct: 50
+    # Plafond global des trois appels, lancés en parallèle. Une pépite se
+    # décide en secondes ; au-delà, le bouclier tranche sur ce qu'il a.
+    delai_s: 8
+
 # --------------------------------------------------------------------------
 # Risque
 # --------------------------------------------------------------------------
 risque:
   # Fraction du capital total risquée sur une entrée, avant tout levier.
+  #
+  # **Mesuré inerte à l'enveloppe actuelle**, et il faut le savoir avant de
+  # croire que le dimensionnement suit le risque. Sur 158 dimensionnements d'un
+  # rejeu multi-actifs, le plafond qui mord est l'enveloppe DCA (62 %) ou
+  # l'exposition par actif (38 %) — celui-ci **jamais**. Le faire varier de 1 %
+  # à 8 % ne change pas un seul ordre.
+  #
+  # La raison est arithmétique : avec un stop à 4 ATR, la distance au stop vaut
+  # ~15 % du prix, donc ce plafond autorise ~6,7 % du capital, quand
+  # l'enveloppe DCA d'une ligne en demande dix fois moins. Il mordrait avec une
+  # enveloppe bien plus grosse ou des stops bien plus serrés — il est conservé
+  # pour ce cas, pas parce qu'il agit aujourd'hui.
   risque_par_position: 0.01
   # Plafond de la valeur d'une ligne, tous renforcements compris.
-  exposition_max_par_actif: 0.55
+  #
+  # Mesuré sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de
+  # recul exposé :
+  #
+  #   exposition   2018-21   2022-26   tout   moyenne   recul (tout)
+  #      55 %        8,05      2,25    7,93     6,08       81,3 %
+  #      75 %        9,71      2,36   10,00     7,36       80,3 %   ← retenu
+  #      85 %       10,13      2,36   10,51     7,67       80,1 %
+  #      95 %       10,13      2,36   10,51     7,67       80,1 %
+  #
+  # Desserrer améliore le rendement **et** le recul en même temps : l'arbitrage
+  # attendu n'existe pas ici, parce qu'un plafond serré force la trésorerie à
+  # dormir au lieu de se répartir sur les autres lignes.
+  #
+  # 75 % plutôt que 85 % : au-delà de 85 % le plafond ne mord plus jamais — les
+  # deux dernières lignes du tableau sont identiques — et il cesse donc d'être
+  # un garde-fou. Les 0,31 de gain supplémentaire s'achèteraient en supprimant
+  # la seule limite de concentration du portefeuille. À 75 %, elle tient encore.
+  exposition_max_par_actif: 0.75
   # Stop-loss dynamique : multiple de l'ATR sous le prix d'entrée.
   atr_periode: 14
-  atr_multiple_stop: 2.5
+  # Mesuré sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de
+  # recul exposé :
+  #
+  #   stop    2018-21   2022-26   tout    moyenne
+  #    2,5      4,96      2,27     7,28     4,84
+  #    4        8,05      2,25     7,93     6,08   ← retenu
+  #    6        8,23      2,21     7,95     6,13
+  #
+  # À 2,5, les stops liquidaient ETH et LINK dix-neuf fois en quatre ans et le
+  # portefeuille finissait concentré sur le seul actif qu'il est interdit de
+  # vendre. Desserrer à 4 fait passer le rendement de +305 % à +498 % sur
+  # 2018-2021 pour **un demi-point** de recul exposé en plus : l'arbitrage
+  # supposé entre rendement et protection n'existait presque pas à ce réglage.
+  #
+  # 4 plutôt que 6 : l'essentiel du gain est dans le pas de 2,5 à 4, le reste
+  # n'ajoute rien (+0,05) et coûte du recul sur la fenêtre longue. Et couper
+  # les stops complètement est **pire** que 4 — ils servent, mais pas si serrés.
+  atr_multiple_stop: 4.0
   # Prise de bénéfice suiveuse : déclenchée au-delà de ce gain, puis elle suit
   # le plus haut atteint à cette distance.
   trailing_activation: 0.20

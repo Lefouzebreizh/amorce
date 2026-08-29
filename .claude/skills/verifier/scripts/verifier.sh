@@ -84,8 +84,14 @@ while IFS= read -r f; do
     hypersensible-bienveillance/*) inscrire hypersensible ;;
     titan-builder/*) inscrire titan ;;
     iptv/*)          inscrire iptv ;;
+    annuaire-ia/*)   inscrire annuaire ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
                      inscrire amorce ;;
+    # L'outillage du dépôt — hooks et scripts de compétences — n'appartenait à
+    # aucun projet, donc à personne : un changement du vérificateur lui-même se
+    # voyait répondre « rien d'exécutable n'a changé », par le vérificateur.
+    .claude/*.sh|.claude/*.mjs|.claude/*.js|.claude/*.py)
+                     inscrire outillage ;;
   esac
   # Un fichier appartient à la suite Python dont le dossier le contient.
   while IFS= read -r p; do
@@ -94,7 +100,7 @@ while IFS= read -r f; do
 done <<< "$fichiers"
 
 if [ -z "$projets" ]; then
-  echo "Rien d'exécutable n'a changé — documentation, outillage ou configuration."
+  echo "Rien d'exécutable n'a changé — documentation ou configuration."
   echo "Fichiers touchés :"
   echo "$fichiers" | sed 's/^/  /'
   exit 0
@@ -120,6 +126,72 @@ etape() {  # etape <fichier-journal> <intitulé> <commande...>
     { echo "── $nom"; tail -30 "$j.brut"; } > "$j.echec"
     return 1
   fi
+}
+
+# Comme `etape`, mais le code 3 vaut « non effectué » plutôt qu'« échoué ».
+# C'est ce que rend `regarder.mjs` quand aucun Chromium n'est installé : bloquer
+# une poussée pour ça punirait le code d'un manque de la machine, et le compter
+# vert serait pire — une mesure qui n'a rien mesuré.
+etape_regard() {  # etape_regard <fichier-journal> <intitulé> <commande...>
+  local j="$1" nom="$2"; shift 2
+  local t0=$SECONDS
+  "$@" >"$j.brut" 2>&1
+  local code=$?
+  case $code in
+    0) echo "    ✓ $nom ($((SECONDS - t0)) s)" >> "$j"; return 0 ;;
+    3) echo "    ⊘ $nom — non effectué, pas de Chromium" >> "$j"; return 0 ;;
+    *) echo "    ✗ $nom ($((SECONDS - t0)) s)" >> "$j"
+       { echo "── $nom"; tail -30 "$j.brut"; } > "$j.echec"; return 1 ;;
+  esac
+}
+
+# Regarder une application qui a besoin d'un serveur : on la sert sur un port à
+# elle, on mesure, on arrête tout l'arbre.
+#
+# Deux pièges, tous deux payés ici, et tous deux rendaient le contrôle **vert
+# sur une page cassée** — le pire des états, parce qu'il rassure :
+#
+# 1. `kill` sur le PID de `npm` ne tue rien. La chaîne réelle est
+#    `npm exec next start` -> `sh -c next start` -> `next-server`, et le
+#    petit-fils est réattaché à init : il continue de servir. D'où `setsid`,
+#    qui met l'arbre dans son propre groupe, et `kill -- -PGID` qui le prend
+#    entier.
+# 2. Un serveur laissé derrière occupe le port, et le contrôle suivant mesure
+#    **le build précédent** sans que rien ne le dise. On refuse donc de
+#    commencer si le port répond déjà : mesurer un serveur qu'on n'a pas
+#    démarré, c'est mesurer on ne sait quoi.
+#
+# Et jamais `pkill -f` : le motif est comparé à la ligne de commande complète,
+# celle du shell appelant la contient, et il se tue lui-même — deux commandes
+# ont disparu comme ça, sans un mot.
+regarder_servi() {  # regarder_servi <dossier> <port>
+  local d="$1" port="$2"
+
+  if curl -sf -o /dev/null --max-time 2 "http://127.0.0.1:$port/"; then
+    echo "le port $port répond déjà — un serveur oublié fausserait la mesure"
+    return 1
+  fi
+
+  ( cd "$d" || exit 1
+    setsid npm exec next start -- -p "$port" >/dev/null 2>&1 &
+    serveur=$!
+    pret=1
+    for _ in $(seq 1 40); do
+      curl -sf -o /dev/null "http://127.0.0.1:$port/" && { pret=0; break; }
+      kill -0 "$serveur" 2>/dev/null || break
+      sleep 1
+    done
+
+    if [ $pret -ne 0 ]; then
+      kill -- "-$serveur" 2>/dev/null
+      echo "le serveur n'a pas répondu sur le port $port"
+      exit 1
+    fi
+
+    npm run regarder --silent "http://127.0.0.1:$port/"
+    code=$?
+    kill -- "-$serveur" 2>/dev/null
+    exit $code )
 }
 
 lancer_amorce() {
@@ -168,7 +240,11 @@ lancer_artisan() {
   # composant serveur qui reçoit une fonction en propriété.
   ( cd "$d" || exit 1
     etape "$j.build" "build" npm run build || exit 1 ) || e=1
-  cat "$j".{lint,typecheck,test,build} > "$j" 2>/dev/null
+  # Le regard vient après le build : il mesure la page telle qu'elle sera
+  # servie — contraste, taille de texte, cibles, débordement — et c'est le seul
+  # contrôle que `tsc` et les tests ne peuvent pas faire.
+  etape_regard "$j.regard" "regard 393 × 873" regarder_servi "$d" 3931 || e=1
+  cat "$j".{lint,typecheck,test,build,regard} > "$j" 2>/dev/null
   return $e
 }
 
@@ -196,18 +272,26 @@ lancer_titan() {
   wait $a || e=1; wait $b || e=1; wait $c || e=1
   # Le build ferme la marche, seul à voir ce que `tsc` laisse passer.
   ( cd "$d" || exit 1; etape "$j.build" "build" npm run build || exit 1 ) || e=1
-  cat "$j".{lint,typecheck,test,build} > "$j" 2>/dev/null
+  # La démonstration est régénérée puis regardée : c'est la sortie réelle du
+  # générateur, et un changement de feuille de style s'y voit là et nulle part
+  # ailleurs.
+  ( cd "$d" || exit 1
+    etape_regard "$j.regard" "regard 393 × 873" sh -c 'npm run demo --silent >/dev/null && npm run regarder --silent demo' ) || e=1
+  cat "$j".{lint,typecheck,test,build,regard} > "$j" 2>/dev/null
   return $e
 }
 
 lancer_iptv() {
   local d="iptv"; local j="$journal/iptv"; local e=0
-  # Deux étapes, et pas de build : le projet est une bibliothèque sans interface.
-  # Elles ne se lisent pas l'une l'autre, donc elles partent ensemble.
+  # Les deux premières ne se lisent pas l'une l'autre : elles partent ensemble.
   ( cd "$d" || exit 1; etape "$j.test"  "tests" npm test ) & local a=$!
   ( cd "$d" || exit 1; etape "$j.check" "types" npm run check ) & local b=$!
   wait $a || e=1; wait $b || e=1
-  cat "$j".{test,check} > "$j" 2>/dev/null
+  # Le build ferme la marche, seul : il est le seul à voir ce que `tsc` laisse
+  # passer dans une application App Router — un composant serveur qui importe du
+  # client, une page qu'on pré-rendrait alors qu'elle lit la base.
+  ( cd "$d" || exit 1; etape "$j.build" "build" npm run build ) || e=1
+  cat "$j".{test,check,build} > "$j" 2>/dev/null
   return $e
 }
 
@@ -227,6 +311,68 @@ lancer_flutter() {
   return $e
 }
 
+# Le réseau d'annuaires : les données, puis les pages dans un vrai navigateur.
+#
+# Ces onze sites n'ont ni compilateur, ni typage, ni test unitaire possible :
+# tout ce qui compte — la charte qui suit la niche, la modale, l'adresse
+# profonde — ne se voit qu'en exécutant la page. Le parcours prend **environ
+# cinq minutes**, et c'est cher ; mais il est la seule vérification que ce
+# projet possède, et la fiche de cette compétence le promettait déjà sans que
+# rien ne le lance. Une couverture annoncée et absente est pire que pas de
+# couverture : on lit « couvert », on voit vert, on pousse.
+lancer_annuaire() {
+  local d="annuaire-ia"; local j="$journal/annuaire"; local e=0
+  # `valider` d'abord : il est rapide et dit si les données tiennent. Inutile de
+  # promener un navigateur sur onze sites bâtis sur une base fausse.
+  ( cd "$d" || exit 1; etape "$j.valider" "données" npm run valider ) || e=1
+  if [ $e -eq 0 ]; then
+    ( cd "$d" || exit 1; etape "$j.parcours" "parcours Chromium (~5 min)" npm run verifier ) || e=1
+  fi
+  cat "$j".{valider,parcours} > "$j" 2>/dev/null
+  return $e
+}
+
+# L'outillage : la syntaxe des scripts changés, et rien d'autre.
+#
+# Ce pas est **volontairement partiel**, et c'est écrit ici pour que personne ne
+# le prenne pour davantage : il attrape la faute qui casse tout — un `fi`
+# manquant, une accolade en trop — et il ne dit rien du comportement. Un
+# vérificateur peut passer `bash -n` et mesurer la mauvaise chose ; seul le
+# geste de le casser exprès l'établit.
+#
+# Le partiel vaut mieux que le rien qui existait avant : un script de hook cassé
+# ne se découvrait qu'au démarrage de la session suivante, chez quelqu'un
+# d'autre.
+lancer_outillage() {
+  local j="$journal/outillage"; local e=0
+  # Les journaux de pas vivent dans un sous-dossier, et on les recolle par une
+  # liste explicite. Un `cat "$j".*` ramassait aussi les `.brut` et les `.echec`
+  # que `etape` dépose à côté : la sortie d'erreur se retrouvait au milieu du
+  # verdict, avant même la section qui doit la porter.
+  local d="$journal/outillage.d"; mkdir -p "$d"
+  local etapes=(); local n=0
+
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    local verif=()
+    case "$f" in
+      .claude/*.sh)  verif=(bash -n "$f") ;;
+      .claude/*.mjs|.claude/*.js) verif=(node --check "$f") ;;
+      .claude/*.py)  verif=(python3 -m py_compile "$f") ;;
+      *) continue ;;
+    esac
+    etape "$d/$n" "syntaxe $f" "${verif[@]}" || e=1
+    etapes+=("$d/$n"); n=$((n + 1))
+  done <<< "$fichiers"
+
+  [ ${#etapes[@]} -gt 0 ] && cat "${etapes[@]}" > "$j" 2>/dev/null
+  # Les détails d'échec sont relus par un `*.echec` à la racine du journal.
+  for fichier in "$d"/*.echec; do
+    [ -f "$fichier" ] && cp "$fichier" "$journal/outillage-$(basename "$fichier")"
+  done
+  return $e
+}
+
 lancer_python() {  # lancer_python <dossier-projet>
   local p="$1"; local j="$journal/py-${p//\//_}"
   etape "$j" "tests" python3 -m unittest discover -s "$p/tests" -q
@@ -243,6 +389,8 @@ for p in $projets; do
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     titan)   lancer_titan & pid_de[titan]=$! ;;
     iptv)    lancer_iptv  & pid_de[iptv]=$! ;;
+    annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
+    outillage) lancer_outillage & pid_de[outillage]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
   esac
 done
@@ -264,6 +412,8 @@ nom_lisible() {
     hypersensible) echo "Hypersensible & Bienveillance" ;;
     titan)   echo "TITAN Builder" ;;
     iptv)    echo "IPTV / VOD" ;;
+    annuaire) echo "Réseau d'annuaires IA" ;;
+    outillage) echo "Outillage du dépôt (syntaxe seule)" ;;
     py:*)    echo "${1#py:}" ;;
   esac
 }
@@ -322,7 +472,9 @@ case " $projets " in
   *" iptv "*)
     echo "  • le dialogue avec un vrai panneau Xtream et une vraie liste : les"
     echo "    tests injectent fetch et ne touchent pas au réseau, et Xtream"
-    echo "    Codes n'a aucune spécification publiée à leur opposer" ;;
+    echo "    Codes n'a aucune spécification publiée à leur opposer"
+    echo "  • l'interface, le lecteur et le mandataire de flux : npm run verify"
+    echo "    (dans iptv/, Chromium réel et flux HLS fabriqué par ffmpeg)" ;;
 esac
 case " $projets " in
   *" py:kdp "*)

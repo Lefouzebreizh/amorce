@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --import ./tests/resolveur-alias.mjs --test \"tests/**/*.test.ts\""
+    "test": "node --experimental-strip-types --import ./tests/resolveur-alias.mjs --test \"tests/**/*.test.ts\"",
+    "generer": "node --experimental-strip-types scripts/generer.mjs",
+    "nouveau-client": "node --experimental-strip-types scripts/nouveau-client.mjs",
+    "demo": "npm run generer demo",
+    "regarder": "node ../.claude/skills/verifier/scripts/regarder.mjs"
   },
   "dependencies": {
     "next": "16.3.3",

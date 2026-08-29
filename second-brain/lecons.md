@@ -1170,6 +1170,55 @@ posée sur `subprocess.run`, alors que la résolution du binaire se fait **avant
 pour construire la commande. Doubler l'exécution ne suffit pas ; il faut doubler
 la résolution.
 
+## Un morph mange du temps : la ligne de temps se relève, elle ne se déduit pas
+
+Quatre plans de 2,2 + 2,8 + 3,2 + 5,2 s ne font pas 13,4 s de film mais **11,3**.
+Chaque raccord sans coupe consomme la fin du plan sortant *et* le début de
+l'entrant : trois morphs de 0,7 s ont retiré deux secondes.
+
+Ce n'est pas une curiosité d'arithmétique, c'est ce qui décide où tombent les
+titres et les bruitages. Calés sur les durées additionnées, le cri du titan et
+la carte de fin tombaient **hors du film** — rendus, payés, jamais vus. Rien ne
+le signale : le montage sort sans erreur, simplement amputé de sa fin.
+
+**Rendre une première fois, relever les bornes réelles sur le rendu, puis caler
+le son et les textes.** Dans l'autre sens on écrit à l'aveugle.
+
+## Le relief d'un montage vient des bruitages, pas des niveaux de plan
+
+Un montage à 4,8 dB d'écart s'entend plat. Le réflexe — creuser les `cible_db`
+de chaque plan — a été essayé et **mesuré sans effet** : cibles abaissées de six
+décibels, relief inchangé. La couche d'effets écrase les plans.
+
+Ce qui déplace le chiffre est ailleurs : **étager les gains des bruitages**.
+Chuchoter à l'ouverture pour que le climax existe. Le même montage, effets
+étagés de −6 dB à l'accroche à +5 dB au climax : **10,3 dB de relief**, sans
+qu'aucun plan ait bougé.
+
+La règle générale, et elle est contre-intuitive : dans un montage sonorisé,
+l'ouverture doit être **plus silencieuse qu'on ne le croit**. Un braam à pleine
+puissance sur la première image ne fait pas un début fort — il supprime le
+climax, faute d'écart.
+
+## Une apostrophe dans un titre casse ffmpeg, et le message ment
+
+`text='IL S\'EST RÉVEILLÉ'` fait échouer le rendu sur **« No such filter:
+'0.25' »** — un nombre qui n'apparaît nulle part dans le texte, et qui sort de
+l'expression `alpha` écrite cent caractères plus loin.
+
+La cause : ffmpeg n'interprète **aucune séquence d'échappement à l'intérieur**
+d'un argument entre apostrophes simples. Le `\` y est un caractère ordinaire,
+la quote referme le champ, et la suite est relue comme des options de filtre.
+La seule forme qui marche ferme, insère et rouvre : `'\''`.
+
+Deux enseignements qui dépassent ce bug :
+
+- **Un message d'erreur qui nomme une valeur absente du contenu fautif désigne
+  presque toujours une frontière de citation mal fermée.** Chercher le texte
+  cité, pas le nombre affiché.
+- **Le test de non-régression porte sur la chaîne produite, jamais sur un appel
+  à ffmpeg.** Le runner n'a pas le binaire ; un test qui l'exige est vert en
+  session et rouge chez tout le monde.
 ## Un livrable conforme peut être le défaut
 
 Une vidéo sortait à −14 LUFS avec 12 LU de dynamique : les cibles de diffusion,
@@ -1270,6 +1319,35 @@ ffprobe -v error -show_entries stream=codec_type,duration -of csv=p=0 film.mp4
 # video et audio doivent afficher la même durée
 ```
 
+## La cadence annoncée d'un rush n'est pas celle de son mouvement
+
+Un plan généré annonce 30 images par seconde et n'en bouge réellement que 20 :
+une image sur deux y est figée d'origine, avec juste assez de bruit d'encodage
+pour n'être pas un doublon exact. Rien ne le signale — le fichier est conforme,
+`ffprobe` répond 30, et le défaut ne se voit qu'en mouvement rapide.
+
+**La mesure tient en dix lignes** et vaut avant tout montage : décoder en gris
+réduit, calculer l'écart moyen entre images consécutives, compter celles qui
+tombent sous 20 % de cet écart. Relevé sur un même rush : 20 i/s réels sur un
+plan de visage, 24 sur un vortex, 27 sur une créature.
+
+**Et le piège coûte cher : conformer le film à la cadence *annoncée* double la
+saccade.** Du 20 i/s rendu à 30 donne une image doublée sur deux ; rendu à 24,
+une sur cinq. Mesuré sur le même plan :
+
+| cadence du film | images figées | irrégularité |
+| --- | --- | --- |
+| 30 i/s | 22 % | 68 % |
+| **24 i/s** | **13 %** | **51 %** |
+
+Le réflexe — « la source est à 30, rendons à 30 » — est donc exactement le
+mauvais. **On aligne sur le mouvement réel, pas sur l'étiquette.**
+
+Ce qui ne marche pas, et qui a été essayé : `minterpolate` vise une cadence et
+ne détecte pas les images figées — sans effet mesurable à 30 comme à 60.
+`mpdecimate` ne les attrape pas davantage, les doublons n'étant pas exacts,
+même à seuil desserré quatre fois. La seule correction réelle est en amont :
+régénérer le plan à la cadence qu'il prétend avoir.
 ## Un limiteur qui varie son gain s'entend comme une coupure
 
 Un rugissement paraissait « coupé » au moment précis où il éclatait. Aucun trou
@@ -1647,3 +1725,1335 @@ Le relevé ne suffit pas, et c'est la partie qui compte : sur un visage qui
 remplit le cadre, **toute** la zone sûre est du visage. Le choix se fait alors
 entre ce qu'on accepte de couvrir. Ici 12,5 % — le texte passe sur les runes du
 front, les yeux et la bouche restent libres. Mesuré, puis **regardé**.
+
+## Une image parfaitement immobile se lit comme un blocage
+
+Un carton de fin rapporté comme « ça lag ». Relevé image par image :
+**aucune image perdue**, intervalles réguliers à 41,7 ms, cadence exacte.
+
+Le débit, lui, tombait à **0,09 Mb/s** sur les 1,7 dernières secondes. Ce n'est
+pas un défaut de lecture, c'est un constat : plus rien ne changeait d'une image
+à l'autre. Un carton dont l'animation de texte est finie et dont le fond est une
+photo fixe **est** un arrêt sur image, et le spectateur ne le lit pas comme un
+choix de réalisation.
+
+Une poussée lente de 8 % suffit : 0,09 → **2,2 Mb/s**, et le carton redevient de
+la vidéo.
+
+**Le débit par seconde est la mesure qui dit si une image bouge.** Elle attrape
+aussi le contraire — un pic qui fait ramer un téléphone.
+
+```bash
+ffprobe -v error -select_streams v -show_entries packet=pts_time,size \
+        -of csv=p=0 film.mp4   # puis sommer par seconde
+```
+
+## `zoompan` compte ses images par image d'ENTRÉE
+
+Le même `zoompan=…:d=70` posé sur une image bouclée a rendu un fichier de
+**230 secondes** au lieu de 2,9. `d` n'est pas la durée de l'effet : c'est le
+nombre d'images de sortie produites **pour chaque image d'entrée**. Sur un
+`-loop 1` qui en fournit déjà soixante-dix, les deux se multiplient.
+
+Sur une source déjà cadencée, `d=1` — une image dedans, une image dehors — et
+l'animation se pilote par `on`, le numéro d'image de sortie.
+
+## Un son congestionné n'est pas un son saturé
+
+Un rugissement décrit comme saturé. Relevé : crête à −1,7 dBFS, **zéro
+échantillon au-dessus de 0,95**, facteur de crête 8,8 dB. Rien n'écrête.
+
+Son profil disait le défaut : **400-900 Hz à −5,7 dB quand 2-5 kHz était à
+−13**. Toute la masse dans le bas-médium, aucune dent. C'est ce déséquilibre
+qu'on entend comme de la saturation, et le monter ne fait qu'aggraver
+l'encombrement.
+
+Creusé à 320 Hz (−4 dB), relevé à 1,9 et 3,6 kHz (+5 et +3,5) : 2-5 kHz remonte
+de **3,5 dB**, 900-2000 de 3, sans toucher au gain ni à la crête. L'agressivité
+d'un cri vit là — et c'est aussi la bande où un haut-parleur de téléphone entend
+le mieux.
+
+## Un sous-titre se cale sur la bouche, pas sur le son
+
+0,15 s d'avance sur la parole mesurée paraissait juste, et l'auteur trouvait
+encore que « ça arrive trop tard ». La bouche s'**ouvre** avant que le son
+sorte, et c'est sur l'image que l'œil cale la synchronisation.
+
+0,30 s d'avance. Un sous-titre qui arrive avec le son arrive après l'image.
+
+## Une fusion résolue « à nous » peut annuler un correctif qu'on vient d'annoncer
+
+Un défaut corrigé, mesuré, livré, documenté — et de retour deux heures plus
+tard. Relevé : `git merge origin/main` avait produit un conflit sur le moteur,
+résolu par `--ours` sur un fichier que `main` avait **aussi** touché. Le
+correctif y est passé à la trappe, silencieusement, et le montage suivant est
+reparti avec l'ancien comportement.
+
+Pire : **le correctif n'existait qu'à un seul des deux endroits** qui en avaient
+besoin. Le second appel, dans la branche `filter_complex`, n'avait jamais été
+corrigé — il attendait le premier plan flouté pour se manifester.
+
+Deux gestes, et ils tiennent en une ligne chacun :
+
+```bash
+git diff origin/main -- fichier.py | grep '^-'   # ce que la fusion RETIRE
+grep -n "le_symptome" fichier.py                 # combien d'endroits, pas un
+```
+
+**Après toute fusion, revérifier que le correctif qu'on a annoncé est encore
+là.** Un `--ours` ne dit pas ce qu'il jette.
+
+## Le spectrogramme distingue les causes que le comptage confond
+
+« Ça saccade et il y a une coupure en plein milieu. » Compté : trois tranches
+sous le seuil sur cent soixante-quatorze. Rien de concluant — et la correction
+tentée sur ce chiffre l'a fait passer à vingt-trois, parce que le lit qu'on
+effaçait **remplissait** les creux naturels du cri.
+
+Dessiné, le défaut se lit en une seconde : **une raie verticale pleine bande à
+17,90 s**. Franche, sur tout le spectre. Une coupure, pas une modulation.
+
+C'était le raccord film/carton : une couche sonore posée **avant** l'assemblage
+est tranchée à la jointure. Elle se pose sur l'image finie.
+
+| ce qu'on voit | ce que c'est |
+| --- | --- |
+| raie verticale pleine bande | une vraie coupure |
+| tremblement régulier de l'enveloppe | un étirement temporel |
+| creux large et arrondi | une automation |
+| bandes toutes pleines à la fois | du masquage |
+
+**Un compteur de trous ne sépare pas ces quatre-là.** Un vrai rugissement a des
+creux naturels ; les supprimer l'abîme.
+
+## Le Chromium de Playwright ne lit aucune vidéo réelle
+
+Cherché une heure pourquoi une lecture HLS parfaitement branchée n'affichait
+rien. Ce n'était pas le code : **le Chromium livré avec Playwright est compilé
+sans les codecs propriétaires.** Mesuré dans le conteneur, sur le binaire de
+`/opt/pw-browsers/chromium` :
+
+| codec | `MediaSource.isTypeSupported` |
+| --- | --- |
+| H.264 (`avc1.42E01E`) | **false** |
+| AAC (`mp4a.40.2`) | **false** |
+| VP9 (`vp9`) | true |
+
+`video.canPlayType('video/mp4; …')` rend la chaîne vide, et `canPlayType` pour
+HLS natif aussi. Or tout flux IPTV, toute caméra et tout export ffmpeg par
+défaut sont en H.264/AAC : **l'image ne s'affichera jamais dans ce navigateur**,
+quoi que fasse le code. Chrome, lui, les a — c'est la différence entre le
+Chromium libre et le Chrome distribué.
+
+**La parade n'est pas de renoncer à vérifier, c'est de déplacer l'assertion.**
+Sans décodeur, on peut encore prouver tout le chemin : que le manifeste est
+servi et réécrit, qu'un segment arrive avec son type et son poids, qu'une
+adresse non signée est refusée, et surtout que **le lecteur annonce la durée du
+média** — 20,0 s pour un flux de 20 s. Il ne peut la connaître qu'en ayant lu le
+manifeste entier. Seule l'image reste non vérifiée, et on le dit.
+
+**Piège voisin, même page :** `page.goto(url, { waitUntil: 'networkidle' })`
+expire toujours sur une page qui lit un flux. Un lecteur fait du réseau en
+continu, par définition — c'est son métier. Trente secondes perdues à chaque
+essai, sur une page parfaitement saine. `domcontentloaded` sur ces pages-là.
+
+## Un ralenti sans interpolation duplique une image sur cinq
+
+Une scène rapportée comme « ça sature et ça lague ». Le son ne portait **aucun
+échantillon écrêté** et un facteur de crête de 13,1 dB — rien à corriger de ce
+côté.
+
+L'image, elle : **29 images figées sur 144**. Une sur cinq, à intervalle
+régulier, contre **zéro** sur un plan à vitesse normale. C'est exactement le
+rapport qu'un ralenti à 0,8 produit quand ffmpeg tient la cadence en
+**dupliquant** au lieu d'interpoler.
+
+`minterpolate` fabrique les images manquantes : **1 sur 144**. Cinq minutes de
+rendu pour sept secondes de plan, et c'est le prix.
+
+**L'oreille suit l'œil**, et c'est la partie qui compte. Une image qui saccade
+fait juger tout le plan mauvais, son compris. Avant de chercher un défaut de son
+sur un plan ralenti, compter ses images figées :
+
+```python
+d = [abs(im[i+1] - im[i]).mean() for i in range(len(im)-1)]
+figees = sum(1 for x in d if x < 0.30)   # deux images consecutives identiques
+```
+
+## Un serveur de test orphelin fait mesurer la version d'avant
+
+**Deux sessions ont trouvé ce défaut la même nuit, dans deux projets sans
+rapport** — le parcours Chromium d'IPTV et le contrôle visuel de la page de
+vente. Même cause, mêmes parades, symptômes opposés : c'est ce qui en fait la
+leçon la mieux établie du fichier.
+
+**Symptôme A** — une vérification d'interface rend quatre défauts d'un coup,
+dont une page entière sans feuille de style. Le code est juste.
+**Symptôme B** — un contrôle passe au **vert** sur une page cassée exprès pour
+l'éprouver.
+
+Dans les deux cas, **le serveur qui répond n'est pas celui qu'on vient de
+lancer**, et il sert le code d'avant.
+
+### La cause
+
+`npm` engendre un petit-fils. `spawn('npm', ['run', 'start'])` comme
+`npm exec next start` donnent la même chaîne : `npm` → `sh -c` → `next-server`.
+Tuer le `npm` laisse l'enfant vivant, réattaché à init, avec le port.
+
+Relevés des deux côtés : un `next-server` de ppid 1 âgé de quinze minutes quand
+le script vient de démarrer ; et trois `next-server` orphelins sur des ports
+qu'on croyait fermés.
+
+**Et rien ne le signale.** L'exécution suivante n'arrive pas à écouter, son
+message part dans un journal que personne ne lit, `curl` répond 200 tout de
+suite — donc l'attente du serveur **réussit**, et le contrôle interroge la
+version d'il y a un quart d'heure en affichant l'adresse qu'on lui a demandée.
+
+### Les trois gestes, et les trois comptent
+
+1. **Lancer en groupe détaché, tuer le groupe.** En Node,
+   `spawn(…, { detached: true })` puis `process.kill(-pid, 'SIGTERM')`. En
+   shell, `setsid …  & serveur=$!` puis `kill -- "-$serveur"`. Tuer le pid seul
+   ne descend pas.
+2. **Refuser de démarrer si le port répond déjà.** Une requête HTTP de 250 ms
+   avant de lancer, et un message qui dit quoi faire. Sans ce garde-fou, le
+   défaut est invisible : tout paraît fonctionner.
+3. **Ne pas détecter par `ss`** : le binaire n'existe pas dans ce conteneur, et
+   `ss -ltnp` y rend une sortie vide **sans erreur** — donc « port libre »
+   alors qu'il ne l'est pas. La sonde portable est la requête HTTP ; pour
+   retrouver le coupable, `ps -eo pid,ppid,pgid,args`.
+
+**Piège voisin, même script :** une capture d'écran prise après
+`waitUntil: 'domcontentloaded'` montre la page **sans style** — cet événement
+n'attend pas la feuille. On croit à une régression de CSS. `waitForLoadState('load')`
+avant de photographier.
+
+**La leçon de méthode est la plus importante : un contrôle neuf ne vaut rien
+tant qu'on ne l'a pas vu échouer.** Celui-ci est passé vert deux fois de suite
+et j'allais le livrer. Rien dans sa sortie ne clochait — la bonne adresse, une
+durée plausible, un verdict net. Ce qui l'a démasqué est un geste, pas une
+lecture : **casser la page exprès et exiger le rouge.** Une durée suspecte avait
+mis la puce à l'oreille, mais elle ne prouvait rien — après correction, la même
+mesure prend le même temps.
+
+C'est le geste à faire sur tout contrôle neuf, et il coûte deux minutes : lui
+donner ce qu'il doit refuser, vérifier qu'il refuse, remettre en état, vérifier
+qu'il accepte.
+
+## Deux versions du même son ne s'additionnent pas, elles battent
+
+Une scène rapportée quatre fois comme « ça sature et le cri coupe au milieu ».
+Quatre causes trouvées, corrigées, mesurées — et le symptôme revenait.
+
+La cinquième a résisté parce que **rien n'était défectueux** :
+
+| | mesure |
+| --- | --- |
+| le fichier source du cri | crête −0,4 dBFS, **zéro** écrêtage, enveloppe intacte |
+| le fichier livré, au cri | **zéro** discontinuité entre deux échantillons |
+| paliers plats à haut niveau | **zéro** |
+| vrai pic inter-échantillon | −1,43 dBTP |
+
+Chaque pièce était juste. C'est leur **somme** qui ne l'était pas : le rush
+portait son propre rugissement, étiré par le ralenti à 0,8, et le vrai était
+posé par-dessus à sa vitesse naturelle. Deux bêtes qui hurlent en même temps,
+décalées — un battement, que l'oreille rapporte comme une saturation et comme
+une coupure.
+
+Sur le spectrogramme, la signature est nette : **des stries verticales
+irrégulières entre 2 et 10 kHz**, là où un cri unique dessine une nappe dense.
+
+**Quand chaque pièce mesure juste et que l'ensemble sonne faux, chercher ce qui
+joue en double.** Et descendre à l'échantillon avant de conclure — c'est le seul
+niveau où une vraie coupure laisse une trace qu'aucun autre défaut ne laisse.
+
+## Un fichier texte « cassé » est presque toujours un fichier bien encodé, mal lu
+
+Un `.srt` francophone sur deux vient d'un outil Windows et n'est pas en UTF-8 :
+il est en windows-1252, un octet par caractère. Lu comme de l'UTF-8, « L'été »
+devient « L'Ã©tÃ© » — ou « L'�t� » selon le décodeur. Le même piège vaut pour
+un CSV exporté d'Excel, un `.txt` reçu par courriel, un `.ass` de sous-titres.
+
+**La détection tient en cinq lignes, et l'ordre d'essai fait tout :**
+
+```js
+try { return new TextDecoder('utf-8', { fatal: true }).decode(octets) }
+catch { return new TextDecoder('windows-1252').decode(octets) }
+```
+
+L'UTF-8 en mode `fatal` **lève** sur une séquence invalide : c'est un test, pas
+une supposition. L'inverse ne marcherait jamais — windows-1252 accepte
+n'importe quelle suite d'octets et ne se plaint pas, donc il « réussirait »
+aussi sur un fichier UTF-8, en le massacrant.
+
+Deux compléments mesurés dans ce conteneur : `TextDecoder('windows-1252')`
+fonctionne (l'ICU complet est présent, `Intl.DisplayNames` le confirme), et une
+marque d'ordre des octets survit au décodage — elle se retire à la main, sans
+quoi elle reste collée au premier mot affiché.
+
+## Quand cinq causes sont tombées, c'est l'effet qui est en trop
+
+Le même symptôme — « ça coupe et ça sature » sur un plan — rapporté **cinq
+fois**. Cinq causes distinctes trouvées, mesurées, corrigées, chacune réelle :
+un limiteur qui pompait, un trou d'air qui mordait sur l'attaque, une couche
+tranchée au raccord, un ralenti qui dupliquait une image sur cinq, deux
+rugissements qui battaient. Et le symptôme revenait.
+
+Elles avaient une **cause commune** : le ralenti à 0,8. Il obligeait à étirer
+l'audio — tout étirement laisse une trace ; à interpoler l'image — sans quoi
+une image sur cinq est dupliquée ; et il décalait le cri du rush contre celui
+posé par-dessus, d'où le battement.
+
+Retiré, les trois disparaissent d'un coup, et les deux cris tombent exactement
+l'un sur l'autre au lieu de se battre.
+
+**Un effet qui coûte cinq allers-retours ne vaut pas ce qu'il apporte.** La
+règle des trois essais de ce dépôt vaut pour un bug ; elle vaut aussi pour un
+parti pris de réalisation. Au troisième symptôme qui revient sur le même plan,
+la question n'est plus « quel réglage » mais « qu'est-ce que j'enlève ».
+
+## Une correction étroite fabrique son propre défaut
+
+Un rugissement congestionné dans le bas-médium, corrigé par +5 dB à 1,9 kHz
+avec un Q serré. La congestion partait — et une résonance arrivait : tremblement
+de l'enveloppe **4,1** contre **3,7** avec une simple cloche large à 2,4 kHz,
+qui fait le même travail.
+
+Sur un signal dense et bruité, une correction étroite s'entend comme une note.
+**Corriger large, ou ne pas corriger.**
+
+## Un appareil de salon ne reçoit pas l'image, il va la chercher
+
+Le modèle mental le plus coûteux, quand on branche un Chromecast : croire que
+le téléphone lui envoie la vidéo. Il lui envoie une **adresse**, et l'appareil
+télécharge le flux lui-même, directement. Trois conséquences, et chacune casse
+la diffusion sans message d'erreur — écran noir, retour au menu.
+
+1. **`localhost` désigne celui qui le prononce.** Une adresse
+   `http://localhost:3000` donnée à un Chromecast désigne le Chromecast. Il
+   faut l'adresse de la machine sur le réseau local — et le plus simple est de
+   la déduire de l'adresse **de la page** : si le téléphone est arrivé par
+   `http://192.168.1.20:3000`, la télévision doit utiliser la même. Rien à
+   configurer côté serveur, ce qui serait faux dès qu'une machine a deux cartes
+   réseau.
+2. **Ce qu'un navigateur fabrique n'a pas d'adresse.** Une vidéo assemblée par
+   Media Source Extensions — hls.js, dash.js — n'existe que dans l'onglet.
+   Diffuser oblige à repasser sur la source directe, et à **détruire la
+   bibliothèque avant** de poser l'URL : laissée en place, elle reprend la main
+   sur l'élément et écrase ce qu'on vient d'écrire.
+3. **Un serveur de développement n'écoute que sur `localhost` par défaut.**
+   Ni le téléphone ni la télévision ne voient rien tant qu'on n'a pas dit
+   `--hostname 0.0.0.0`. Et il faut le dire : à partir de là, tout le wifi peut
+   ouvrir l'application.
+
+**Piège de détail, mesuré :** `new URL('http://[::1]:3000/').hostname` rend
+`"[::1]"`, **avec les crochets**. Une liste d'adresses locales écrite avec
+`'::1'` laisse donc passer l'adresse locale la plus courante des serveurs de
+développement, et le contrôle « est-ce joignable de l'extérieur » répond oui à
+tort.
+
+## Un outil qui régénère un fichier partagé en supprime ce qu'il n'a pas calculé
+
+Trois mesures de suite sans le moindre effet : changer un gain de +2 à +6 puis
++8 rendait des chiffres **identiques au chiffre près**. C'est le signe qu'on ne
+mesure pas ce qu'on croit.
+
+La cause : un script de recalage régénérait le fichier d'automation avec
+`"couches": []`. Ce fichier portait aussi les bruitages posés à la main —
+effacés en silence à chaque appel. Je mesurais des versions muettes de leurs
+couches en croyant régler des niveaux.
+
+**Un chiffre rigoureusement identique après un changement de réglage n'est pas
+un résultat, c'est un symptôme.** Le premier réflexe est de vérifier que le
+changement a bien atteint le fichier mesuré.
+
+Et la règle qui l'évite : **un outil qui régénère un fichier partagé rend ce
+qu'il n'a pas calculé.** Ici les couches sont relues avant écriture et
+réinjectées.
+
+## Une coupe vers une image d'une autre nature se lit comme un saut
+
+Toutes les transitions d'un montage sont des coupes franches, et personne ne
+les remarque — sauf la dernière, vers un carton de fin : image figée, floutée,
+assombrie. Mesuré, c'était **l'écart entre deux images le plus fort du film,
+110** quand la médiane du plan tournait autour de 8.
+
+Un fondu de 0,25 s : **13,1**. Ce n'est pas la coupe qui gêne, c'est le
+changement de **nature** de l'image — entre deux plans filmés une coupe passe,
+vers un carton elle saute.
+
+## Ce qui est écrit en temps source dérive quand la vitesse change
+
+Un flash et une secousse posés à 5,375 s sur un plan ralenti à 0,8 tombaient
+juste. Le ralenti retiré, ils sont tombés **1,08 s après** l'événement qu'ils
+soulignaient — c'est-à-dire tout à la fin du plan, où un flash se lit comme un
+saut d'image.
+
+`flashs` et `tremblements` comptent en temps SOURCE, comme `depart` ; les
+effets sonores comptent en temps de FRISE. **Deux repères dans la même recette,
+et rien ne le signale.** Ils sont désormais dérivés des mêmes instants de rush
+que le reste, par `caler_dragon.py`.
+
+## Du code testé et injoignable passe pour du code livré
+
+Trois fonctions du projet IPTV — l'import d'un panneau Xtream, le chargement
+des épisodes d'une série, la lecture des fiches en base — étaient écrites,
+commentées, couvertes par des tests verts. **Et appelées par personne.** Aucune
+commande, aucun écran, aucune route n'y menait : la moitié des sources que
+l'application prétend accepter était inatteignable.
+
+Rien ne le signalait, et c'est le point. Une suite verte prouve qu'une fonction
+fait ce qu'elle dit ; elle ne prouve jamais que quelqu'un l'appelle — le test
+est justement l'appelant qui masque l'absence des autres. Un compte rendu
+honnête sur le code peut donc décrire une fonctionnalité qui n'existe pas pour
+l'utilisateur.
+
+**Le contrôle tient en une commande, et il est brutal :**
+
+```bash
+grep -rn "maFonction" src/ | grep -v "le fichier qui la définit\|tests/"
+```
+
+Zéro résultat : ce n'est pas livré, quoi qu'en disent les tests.
+
+À passer sur chaque fonction exportée d'un lot avant de l'annoncer fini. La
+règle générale : **une fonctionnalité n'est livrée que lorsqu'un chemin y mène
+depuis l'extérieur** — une commande, un bouton, une route. Le reste est du code
+qui compile.
+
+## Un défaut entendu à deux endroits éloignés vient de ce qui les traverse
+
+« Ça sature au dragon, et un peu derrière le druide aussi. » Deux plans séparés
+par huit secondes et par tout leur contenu. Leur seul point commun : le
+**master**.
+
+Mesuré en rendant deux fois la même chaîne, une fois **avec** le limiteur et une
+fois sans, puis en comparant tranche par tranche : le limiteur écrasait
+**44 tranches sur 389** de plus d'un décibel — et ses coups les plus forts
+tombaient à **6,05 s** et **15,45–16,00 s**. Exactement les deux endroits
+rapportés.
+
+La cause : **+4,5 dB de grave à 85 Hz**. Sur un téléphone il ne s'entend pas —
+il ne fait qu'y manger la marge, et c'est le limiteur qui rend la facture, sur
+tout le reste du mixage. Ramené à +1,5 : **8 tranches**, et le niveau entendu
+au-dessus de 400 Hz **gagne** 0,4 dB.
+
+**Quand deux endroits sans rapport présentent le même défaut, arrêter de
+regarder les endroits et regarder ce qui les traverse.**
+
+Et la mesure qui tranche : **rendre deux fois, avec et sans le maillon
+suspect**, puis comparer. Comparer avant/après master mêle l'égaliseur au
+limiteur — un égaliseur donne aussi un gain différent selon le contenu, et
+c'est ce qui m'avait fait lire 9,1 dB de « pompage » là où le limiteur n'en
+faisait que 3,4.
+
+## Fusionner souvent a un plafond, et il est invisible
+
+La règle de ce dépôt est d'ouvrir la PR et de la fusionner dès qu'un lot tient
+debout — c'est ce qui évite les conflits quand plusieurs sessions travaillent en
+parallèle. Elle est juste, et elle a un coût que personne n'avait compté.
+
+**Chaque fusion sur `main` déclenche un déploiement.** Le plan gratuit de Vercel
+en autorise cent par jour. Mesuré le 29/08 : **154 fusions en vingt-quatre
+heures**, donc cinquante-quatre déploiements refusés.
+
+Le message arrive dans un commentaire de PR, jamais dans la conversation :
+
+```
+Resource is limited - try again in 24 hours
+(more than 100, code: "api-deployments-free-per-day")
+```
+
+Et voilà ce que ça coûte, mesuré : le propriétaire a testé pendant deux heures
+une version vieille de plusieurs heures. Il rapportait des défauts déjà corrigés,
+et chaque « recharge de force » ne servait à rien puisque le serveur ne servait
+pas la nouvelle version. Deux heures de travail des deux côtés, sur un défaut
+qui n'existait plus.
+
+Trois choses à en tirer :
+
+- **Un correctif fusionné n'est pas un correctif livré.** Tant que le
+  déploiement n'a pas abouti, dire « c'est corrigé, recharge » est faux — et
+  fait douter la personne de son propre téléphone.
+- **Compter les fusions du jour avant d'en promettre l'effet.**
+  `git log --oneline --since="24 hours ago" origin/main | wc -l` répond en une
+  seconde, et c'est le seul chiffre qui dit si ce qu'on vient de fusionner
+  arrivera quelque part.
+- **Au-delà du plafond, grouper.** Plusieurs lots dans une seule PR coûtent un
+  déploiement au lieu de cinq. C'est le contraire de la règle habituelle, et
+  c'est le bon geste ce jour-là seulement.
+
+**Sur la portée et la durée du plafond**, deux sessions ont mesuré chacune une
+moitié le même soir : voir « Le plafond de déploiement est par projet, et sa
+fenêtre glisse » plus bas. En un mot : un second projet branché sur le même
+dépôt déploie encore quand le premier est bouché, et un refus ne dure pas
+vingt-quatre heures.
+
+## Un drapeau ajouté « par précaution » est une panne à retardement
+
+`node:sqlite` a demandé `--experimental-sqlite` sur les premières versions de
+Node 22. J'ai donc posé le drapeau dans tous les scripts npm, sans le mesurer.
+
+Vérifié après coup, sur Node 22.22 : **le module s'importe et fonctionne sans
+aucun drapeau** — il émet seulement un avertissement. Le drapeau n'apportait
+rien. Et il apportait un risque : Node **refuse de démarrer** sur une option
+qu'il ne connaît pas (« bad option »), donc le jour où la version suivante
+retire le drapeau devenu inutile, l'application ne démarre plus, sur un message
+qui ne parle ni de SQLite ni de version. Sur une machine qu'on ne contrôle pas
+— celle de quelqu'un qui vient d'installer la dernière LTS — c'est une panne
+sans piste.
+
+Le même projet en portait un **second**, `--experimental-strip-types`, et la
+mesure a rendu le même verdict : `process.features.typescript` vaut déjà
+`"strip"` sans lui dès Node 22.22, et le retrait des types est le défaut à
+partir de 23.6. Deux drapeaux posés par prudence, deux fois inutiles, deux
+pannes futures évitées de justesse.
+
+**La règle : un drapeau expérimental se mesure avant d'être posé**, et se
+remesure quand on change de version.
+
+```bash
+node -e "require('node:sqlite')"        # ça passe ? le drapeau est inutile
+node --le-drapeau -e ""                 # code 0 ? il est encore accepté
+```
+
+Ce qui remplace un drapeau posé au hasard : `engines` dans `package.json`, qui
+dit la version minimale réellement éprouvée et fait avertir npm au lieu
+d'échouer dix commandes plus loin.
+
+## `git stash pop && git commit` enterre un conflit au lieu de s'arrêter
+
+Une reprise de branche courante — `stash push`, `checkout -B`, `stash pop`,
+`add -A`, `commit` — enchaînée par `&&`. Le `pop` a laissé deux fichiers en
+conflit, et il **rend malgré tout un code de sortie 0**. Le `&&` a donc passé la
+main, `git add -A` a ajouté les marqueurs `<<<<<<<` comme du contenu ordinaire,
+et le commit est parti avec eux. Poussé.
+
+Rien ne l'a signalé : ni le `&&`, ni `git status` après coup (l'arbre est propre,
+les marqueurs sont *commités*), ni la barrière de vérification — elle avait
+tourné **avant** la reprise, sur un arbre alors sain. Le seul indice tenait dans
+une phrase noyée dans la sortie : « The stash entry is kept in case you need it
+again », qui veut dire « ça s'est mal passé ».
+
+**La parade tient en une ligne, entre le `pop` et le `commit` :**
+
+```bash
+git diff --name-only --diff-filter=U   # non vide = conflit à résoudre
+```
+
+Et deux règles qui en découlent :
+
+- **Ne jamais chaîner `stash pop` avec `add -A` par `&&`.** Le code de sortie ne
+  dit pas ce qu'on croit ; c'est la liste des fichiers en conflit qui le dit.
+- **Relancer la vérification APRÈS la reprise de branche**, pas avant. Une
+  barrière verte sur l'arbre d'avant ne prouve rien sur celui qu'on pousse.
+
+## Le HTML préconstruit de Next n'est pas une page servable
+
+Un quota d'hébergeur épuisé, une page de vente à mettre en ligne le soir même,
+et une idée qui paraît évidente : `next build` écrit déjà
+`.next/server/app/index.html`, il suffirait de le servir en statique.
+
+**Il s'affiche parfaitement et il est mort.** Mesuré dans Chromium, servi depuis
+un sous-dossier comme le ferait GitHub Pages :
+
+| | |
+| --- | --- |
+| ressources en échec | aucune |
+| erreurs JavaScript | aucune |
+| scripts chargés | 7 |
+| charge RSC `__next_f` | présente |
+| **React attaché au formulaire** | **non** |
+
+Tout est vert sauf la seule chose qui compte. Le fichier est un artefact
+interne du rendu serveur, pas ce que Next envoie au navigateur : l'hydratation
+de l'App Router passe par le flux que le serveur compose à la requête, et le
+recopier tel quel donne une page qui ressemble à l'originale et n'exécute rien.
+Un formulaire y devient un décor.
+
+**Ce qui trompe, c'est qu'aucune alarme ne se déclenche.** Pas de 404, pas
+d'erreur en console, le style est là, le texte est là. On ne s'en aperçoit
+qu'en cliquant — ou en vérifiant que React s'est attaché :
+
+```js
+Object.keys(document.querySelector('form')).some(k => k.startsWith('__react'))
+```
+
+**Les deux vraies sorties**, quand un hébergeur est indisponible : `output:
+'export'` dans la configuration, qui exige de retirer les routes d'API — donc
+un vrai choix de conception, pas une astuce — ou **changer d'hébergeur**.
+Netlify et Cloudflare Pages construisent un Next.js complet, gratuitement, avec
+ses routes serveur. C'était la réponse depuis le début, et une heure est passée
+à contourner un quota au lieu de changer de mur.
+
+## Le plafond de déploiement est par projet, et sa fenêtre glisse
+
+Deux sessions ont travaillé cette question le même soir, chacune avec la moitié
+des données, et chacune a publié une conclusion fausse avant que les deux
+relevés soient mis côte à côte. C'est le seul endroit du fichier où l'on voit
+comment une leçon se construit.
+
+**Relevé A** — deux projets branchés sur le même dépôt, à la même minute :
+`amorce` reçoit « Resource is limited » pendant qu'`amorce-51up` affiche
+« Building ». Un compteur unique refuserait les deux.
+
+**Relevé B** — le même projet, à trois moments :
+
+| Heure | Projet | Résultat |
+| --- | --- | --- |
+| 01:27 | `amorce` **et** `amorce-51up` | refusés, « more than 100 » |
+| 01:55 | `amorce-51up` | **Ready** |
+| 01:59 | `amorce` | refusé |
+| 02:05 | `amorce-51up` | refusé |
+
+**Ensemble, ils donnent les deux moitiés d'une seule règle**, et chacun seul
+menait à une erreur :
+
+- **Le compteur est tenu par projet.** C'est le relevé A qui tranche, et lui
+  seul : le message parle de `api-deployments-free-per-day`, ce qui se lit comme
+  une limite de compte, et c'est ce que ce fichier a affirmé longtemps.
+- **La fenêtre glisse, elle ne se remet pas à zéro le lendemain.** C'est le
+  relevé B : `amorce-51up`, refusé à 01:27, passe à 01:55, et se refait refuser
+  à 02:05. Les déploiements anciens sortent du décompte, une place se libère, le
+  suivant la prend, et la fenêtre se remplit aussitôt.
+
+**Deux issues, et aucune n'est d'attendre :** un second projet branché sur le
+même dépôt déploie encore quand le premier est bouché — trente secondes à créer.
+Et un refus se retente une demi-heure plus tard, pas le lendemain, quoi qu'en
+dise le message.
+
+**La leçon de méthode, payée deux fois dans l'heure :** un point de mesure qui
+contredit une règle suffit à la casser, jamais à en fonder une autre. La
+première correction a conclu « par projet » sur un unique succès et a été
+démentie six minutes plus tard ; la seconde, corrigeant la première, a conclu
+« on ne peut pas savoir » alors que le relevé d'une autre session le disait
+déjà. **Avant de reconstruire une règle, il faut chercher ce que les autres ont
+mesuré** — dans ce fichier, pas dans sa propre session.
+
+## Les aperçus coûtent, et les sessions les vident
+
+Ce dépôt reçoit plusieurs sessions en parallèle et
+fusionne **95 pull requests dans la journée**, mesuré le 28/08/2026 : chacune
+déclenche un déploiement d'aperçu, et le compteur est vidé par du travail qui
+n'a rien à voir avec celui qui en a besoin.
+
+**Le symptôme arrive au pire moment et ne ressemble pas à sa cause.** Ici :
+« Resource is limited - try again in 24 hours ». Aucun rapport apparent avec les
+vingt PR de montage vidéo qui l'ont consommé. Et le message ment sur la durée : il
+annonce vingt-quatre heures là où un déploiement est passé vingt-huit minutes
+plus tard.
+
+Trois choses à en retenir :
+
+- **Un aperçu réussi ne prouve pas que le compteur est libre.** Un aperçu sur
+  un projet existant peut passer à l'instant même où la création d'un nouveau
+  projet est refusée. Conclure de l'un à l'autre a coûté un aller-retour, et un
+  essai raté au propriétaire.
+- **Chaque projet supplémentaire double la consommation.** Deux projets
+  branchés sur le même dépôt, ce sont deux déploiements par PR.
+- **On coupe les aperçus des projets qui n'en ont pas besoin.** Une application
+  qui tourne dans le navigateur n'a aucune raison d'être déployée à chaque PR.
+
+Et la sortie, quand le mur est là : **changer de mur.** Netlify et Cloudflare
+Pages construisent un Next.js complet, gratuitement, avec ses routes serveur, et
+sans toucher au quota de l'autre. Une heure est passée à contourner le plafond
+avant d'y penser.
+
+## `cd sous-dossier && …` saute silencieusement quand on y est déjà
+
+Deux éditions perdues dans la même séance, sans un message d'erreur utile.
+
+Le shell d'une session garde son répertoire d'un appel à l'autre. Une commande
+qui commence par `cd nexuscrypto && python3 - <<'PY'` échoue donc au `cd` quand
+on est **déjà** dans `nexuscrypto` — et le `&&` avale tout le reste. Le script
+ne tourne pas, rien ne le dit, et la vérification qui suit passe au vert sur du
+code inchangé.
+
+C'est la conjonction qui trompe : l'erreur affichée est `cd: no such file or
+directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière.
+
+**La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
+de supposer où l'on est.
+
+## Une secousse de caméra sur un plan qui bouge déjà se lit comme une panne
+
+« Ça saccade au moment du cri du dragon. » Le son y était irréprochable —
+aucune discontinuité, aucun écrêtage, enveloppe lisse.
+
+C'était l'**image** : une secousse de caméra posée sur le rugissement faisait
+passer le mouvement entre deux images consécutives de **16 à 40** pendant
+0,35 s. Retirée, le maximum retombe à 23 — le mouvement propre du plan.
+
+**Une secousse sert un plan immobile.** Sur une bête qui hurle et bouge déjà
+violemment, elle ne renforce rien : elle brouille, et le brouillage se lit
+comme un défaut de lecture.
+
+## Un événement de l'image sans son ne se remarque pas, il se ressent
+
+Des éclairs sortent des yeux du personnage principal, et **aucun bruitage ne
+les accompagnait** — le premier arrivait 1,2 s plus tard. Personne ne dit « il
+manque un son à 5,42 s » ; on dit « on n'entend pas les éclairs », et seulement
+après avoir vu la vidéo cinq fois.
+
+Ça se trouve en relevant les événements **de l'image** :
+
+```python
+clairs = [(x > 200).sum() for x in images]   # pixels tres clairs
+# une apparition = un facteur 2 ou plus d'une image a la suivante
+```
+
+Mesuré : 713 → 2864 pixels en trois images, puis 16 782 sur une seule. Deux
+événements majeurs du film, zéro son.
+
+**Faire la liste des événements de l'image, puis pointer le son qui répond à
+chacun.** Le montage se construit dans ce sens-là, jamais l'inverse.
+
+## Un `<textarea>` rendu en un seul `<p>` perd tout ce que l'auteur a aéré
+
+Mesuré sur le générateur de TITAN Builder : une présentation d'artisan écrite
+en deux paragraphes sortait en un pavé de six lignes sur un téléphone. Le
+défaut n'était visible ni dans les tests — tous leurs textes tenaient sur une
+ligne — ni dans une mesure : le HTML était valide, l'échappement correct, la
+chaîne complète. Il ne s'est vu qu'à l'écran.
+
+La cause est que HTML ignore les retours à la ligne. Un champ multiligne
+recueilli par un formulaire les contient forcément, et les rendre bruts revient
+à supprimer la mise en forme que la personne a prise la peine de faire.
+
+**Le découpage juste distingue les deux retours**, et c'est là que se logent
+les implémentations trop rapides : une ligne vide sépare deux paragraphes, un
+simple retour au milieu d'une phrase n'en sépare aucun — il devient une espace.
+Découper sur `\n` seul fabrique un paragraphe par ligne et casse les phrases
+que l'auteur a juste fait tenir dans la largeur de son écran.
+
+```ts
+texte.split(/\n\s*\n/).map((p) => p.trim().replace(/\s*\n\s*/g, ' ')).filter((p) => p !== '')
+```
+
+**Et la leçon plus générale : un texte libre se regarde rendu.** Un test qui
+n'éprouve que des valeurs d'une ligne ne peut pas voir ce défaut-là, quel que
+soit leur nombre.
+
+## Une démonstration se dit telle sur la page, et se marque `noindex`
+
+Un faux numéro et un nom inventé protègent le dépôt du faux témoignage. Ils ne
+protègent ni le prospect qui reçoit le lien, ni le confrère qui la croisera dans
+un moteur. Deux marques sont nécessaires, et elles ne servent pas la même
+personne :
+
+- **La mention dans le contenu de la page**, pas dans la documentation qui
+  l'accompagne — celle-là, le prospect ne la lit jamais. Sans elle, rien à
+  l'écran ne distingue la démonstration d'un vrai client.
+- **`noindex, nofollow`**, parce qu'indexée, l'entreprise fictive apparaît dans
+  les résultats comme un vrai établissement — et le jour où un client réel
+  s'appelle presque pareil, c'est lui qu'elle concurrence avec sa propre fiche.
+
+**Le drapeau appartient au générateur, pas à la copie du fichier.** Retirer la
+ligne à la main après coup marche une fois et se perd à la régénération
+suivante — et personne ne relit une page d'exemple. Un `--demonstration` qui
+traverse l'outil sort avec le fichier, à chaque fois.
+
+**Le piège symétrique, payé le même soir :** générer la démonstration *avec* le
+domaine de production lui donnait un `canonical` vers la racine du site. Elle
+aurait déclaré à Google **être** la page de vente. Une démonstration ne prend ni
+adresse canonique, ni image de partage, ni fiche d'établissement complète : elle
+n'est l'adresse de rien.
+
+## Une couleur choisie par l'utilisateur ne peut pas décider seule de la lisibilité
+
+Mesuré sur le générateur de TITAN Builder : `#ffd400` avec du blanc dessus donne
+**1,43:1**. Le seuil lisible est 4,5:1, et la page se lit sur un chantier, au
+soleil, sur un téléphone à moitié assombri par le système.
+
+Le piège n'est pas la couleur, c'est la **paire fixe** : dès qu'un produit
+laisse choisir un fond et code le texte en dur, il existe un choix qui rend la
+page illisible, et personne ne le voit tant que personne ne fait ce choix-là.
+
+La sortie tient en deux gestes, et le second compte autant que le premier :
+
+1. **Choisir l'encre par le calcul**, blanc ou sombre selon laquelle contraste
+   le plus avec la couleur reçue. Sur un bleu profond c'est le blanc, sur un
+   jaune c'est l'encre sombre.
+2. **Ne pas réutiliser un fond comme couleur de texte.** La même teinte qui
+   porte un titre en fond disparaît quand elle devient le texte d'un bouton sur
+   du papier blanc. Il en faut une variante déplacée vers le noir — ou vers le
+   blanc en thème sombre, ce qu'on oublie une fois sur deux.
+
+**Et ce qu'aucun exemple ne prouve : le seuil doit être éprouvé sur la roue
+entière.** Les teintes qui échouent ne sont ni les vives ni les sombres, ce sont
+les **moyennes** — un gris-vert, un orange terne — où *aucune* des deux encres
+n'atteint 4,5:1. Un test sur trois couleurs bien choisies passe et ne prouve
+rien ; vingt-neuf teintes par pas de 15° coûtent 4 ms.
+
+## Un événement se juge sur son contraste, pas sur son gain
+
+« On n'entend pas les pas. » Ils étaient là, au bon instant, au bon gain — et
+mesurés à **−1,2 et −2,2 dB** contre les 0,45 s qui les précèdent. Sous leur
+propre fond : inaudibles quelle que soit leur amplitude.
+
+```python
+contraste = max(env[t : t+0.20]) - env[t-0.45 : t-0.05].mean()
+```
+
+Trois causes, dans cet ordre de fréquence :
+
+1. **Un accent précédent dure trop** — une queue de braam tenait 1,4 s et
+   couvrait ce qui suivait.
+2. **L'esquive avale ce qu'on a posé dans le creux.** Un effet de recette la
+   subit comme le lit ; seul un son posé en **couche** (`suit_la_voix: false`)
+   s'ajoute après elle. C'est la seule façon de mettre un son *dans* un silence
+   sans qu'il soit creusé avec.
+3. **Le son n'existe pas au-dessus de 400 Hz.**
+
+Viser 5 à 10 dB. Négatif = absent ; au-delà de 15 = agressif.
+
+## Un pas de créature est deux sons, pas un
+
+`pas_mecanique` synthétisé mesure **−0,1 dB sous 400 Hz** : toute son énergie y
+vit, et l'excitation harmonique n'y rend que **0,1 dB** — parce qu'un grave
+presque harmonique saturé recrée le même peigne.
+
+Un pas de créature blindée est **le poids plus le contact**, et les deux
+viennent de sources différentes :
+
+| couche | rôle | mesuré |
+| --- | --- | --- |
+| `pas_mecanique` | le poids, qu'on ressent | −37 dB entendus |
+| `eclat` court | le contact, qu'on entend | **−19,5 dB**, 2-6 kHz à −4,3 |
+
+Dix-sept décibels et demi d'écart. La même logique vaut pour tout événement
+lourd : chercher ce qui claque, pas seulement ce qui pèse.
+
+## `</script>` traverse JSON, et l'échappement HTML ne le rattrape pas
+
+Un bloc `<script type="application/ld+json">` a une règle d'échappement à lui,
+et c'est la seule du genre dans une page : l'analyseur HTML cherche la suite
+`</script` **avant** de passer la main à JSON. Une valeur qui la contient
+referme le bloc, et tout ce qui suit devient du HTML exécutable — sur le domaine
+du client, pas sur le sien.
+
+Les deux réflexes échouent, chacun pour sa raison :
+
+- **`JSON.stringify` seul ne protège pas** : il n'a aucune raison d'échapper un
+  chevron, qui est un caractère parfaitement légal dans une chaîne JSON.
+- **L'échappement HTML est pire que rien** : `&lt;` survit tel quel à
+  `JSON.parse`, et la donnée structurée porte alors des entités à la place du
+  texte. On a réparé la faille et cassé la fiche.
+
+La parade tient en une substitution, après la sérialisation :
+
+```js
+JSON.stringify(valeur).replace(/</g, '\\u003c')
+```
+
+`\u003c` reste un chevron pour JSON et n'est plus une balise pour HTML.
+
+**Et la leçon plus large : un échappement se choisit selon qui lit, pas selon où
+l'on écrit.** Ici deux analyseurs lisent la même chaîne l'un après l'autre, et
+c'est la seule forme qui satisfait les deux.
+
+## Aucun hôte de référence des formats web n'est joignable depuis une session
+
+Mesuré le 29/08/2026 : `schema.org`, `validator.schema.org`, `ogp.me` et
+`developers.facebook.com` rendent tous `000` — même refus de tunnel que les
+hôtes de données de marché. Une forme de données structurées ou de balises de
+partage s'écrit donc **de mémoire**, et cela déplace la vérification sans la
+supprimer : elle se fait au premier site publié, dans le *Rich Results Test* de
+Google et le *Sharing Debugger* de Facebook, depuis un navigateur ordinaire.
+
+Ce qui se vérifie hors ligne, en revanche, et qui attrape les vraies fautes :
+que le bloc **parse** dans un vrai navigateur, et qu'aucune valeur ne puisse le
+refermer.
+
+## Un contrôle qui cherche dans tout le fichier ne garde aucune de ses sections
+
+`verifier-coherence.py` contrôlait qu'un projet installable apparaisse « dans le
+hook de démarrage » — en cherchant son nom dans le texte entier du script. Le
+hook fait pourtant deux choses distinctes : il **installe** les dépendances, et
+il **affiche** la commande de vérification de chaque projet.
+
+`paper-manager` avait la première et pas la seconde. Le contrôle était vert :
+le bloc d'installation suffisait à rendre le nom présent quelque part. Ses 259
+tests passaient, la CI les découvrait, `verifier.sh` aussi — rien n'était cassé,
+le projet était juste **invisible** dans la liste que lit la session suivante
+pour savoir comment éprouver ce qu'elle touche. Un défaut qui ne rougit nulle
+part et qu'on ne cherche pas, puisqu'on ignore la suite qui manque.
+
+La parade tient en une ligne de code : borner la recherche à la section
+concernée plutôt qu'au fichier.
+
+```python
+bloc = re.search(r"^commandes=\((.*?)^\)", texte, re.S | re.M)
+annonce = bloc.group(1).lower()   # et non texte.lower()
+```
+
+La règle générale, elle, dépasse ce script : **quand un fichier a plusieurs
+sections qui remplissent des rôles différents, un contrôle qui grep le tout
+n'en garde aucune.** Il passe dès que le nom apparaît une fois, ce qui est
+précisément la situation où l'oubli est le plus probable — on a rempli une
+section, pas l'autre. Le symptôme trompe : le contrôle est vert *et* il a
+raison de l'être sur la question qu'il pose ; c'est la question qui est trop
+large.
+
+Corollaire mesuré le même jour : une table de contrôles qui s'écrit à la main
+à côté du code se périme au premier ajout. Celle de `/coherence-depot` avait
+neuf lignes pour dix contrôles — le dixième, ajouté quelques jours plus tôt,
+n'y était jamais entré. Un outil qui existe pour détecter les listes fausses en
+portait une.
+
+## Une racine à 18 px rend `text-sm` illégal, et rien ne le signale
+
+Mesuré sur la page de vente : six textes à **15,75 px** sous un plancher écrit
+de 18 px. La cause n'est pas une inattention, c'est une arithmétique que
+personne ne refait — les échelles de Tailwind sont **relatives** à la racine, et
+un dépôt qui relève sa racine à 18 px pour respecter son filtre déplace toute
+l'échelle avec elle :
+
+| Classe | À racine 16 px | À racine 18 px |
+| --- | --- | --- |
+| `text-xs` | 12 px | 13,5 px |
+| `text-sm` | 14 px | **15,75 px** |
+| `text-base` | 16 px | 18 px |
+| `text-lg` | 18 px | 20,25 px |
+
+Le piège est que `text-sm` **paraît** conforme : on a relevé la racine, donc on
+se croit couvert partout. En vérité seul `text-base` atteint le plancher, et
+`text-sm` reste sous la barre dans un projet qui croit l'avoir franchie.
+
+**Deux voisins de la même famille, mesurés le même soir :**
+
+- **Une opacité divise le contraste sans se voir.** `text-white/85` sur un bleu
+  soutenu donne **2,58:1** là où le blanc plein donne 8,13:1. Aucune relecture à
+  l'œil ne rattrape ça ; seule une mesure le dit.
+- **La couleur de survol était plus lisible que celle du repos** — 4,65:1 contre
+  3,60:1. La page se lisait donc mieux le doigt posé dessus qu'au repos, et
+  personne ne survole un bouton sur un téléphone. La correction a consisté à
+  adopter la teinte que le projet avait déjà choisie.
+
+## Un contrôle qui crie pour du décor cesse d'être lu
+
+Le même contrôle a rendu **quarante** défauts au premier passage, dont trente
+portaient sur des maquettes de téléphone dessinées en HTML — du 9 px et des gris
+pâles qui imitent une capture d'écran. Noyés dedans, les onze vrais défauts
+n'auraient pas été traités.
+
+Le critère qui les sépare n'est pas cosmétique et n'a pas eu à être inventé :
+**`aria-hidden="true"`**. Un texte retiré aux lecteurs d'écran n'est pas du
+contenu ; un texte qui est du contenu ne doit pas leur être retiré. La même
+marque répond aux deux questions, et le contrôle qui l'utilise vérifie du même
+coup que la page est correctement balisée.
+
+## `pkill -f` tue le shell qui l'exécute
+
+Deux commandes perdues à la suite, chacune sortie en code 144 sans un mot
+d'explication. `pkill -f "next start -p 321"` compare le motif à la ligne de
+commande **complète** de chaque processus — or celle du shell appelant contient
+le motif, puisqu'il est en train de la lancer. Le shell se tue lui-même, et tout
+ce qui suivait le `;` ou le `&&` disparaît.
+
+Ce qui trompe : la commande visée **est** bien tuée, et le code 144 ressemble à
+une erreur du serveur qu'on arrêtait. La parade est de tuer par port ou par PID
+(`lsof -ti:3210 | xargs -r kill`), ou simplement de servir sur un autre port —
+un processus de développement oublié ne coûte rien dans une session éphémère.
+
+## Ajouter en fin de `lecons.md` conflitte avec toutes les autres sessions
+
+Mesuré le 29/08/2026 : **trois conflits sur ce fichier en vingt minutes**, sur
+une seule branche, chacun résolu à la main. Aucun ne portait sur le contenu —
+les leçons ne se contredisaient pas, elles s'ajoutaient.
+
+La cause n'est pas le fichier, c'est le **geste**. Ce dépôt reçoit plusieurs
+sessions en parallèle, chacune écrit sa leçon avant de clore, et chacune
+l'ajoute à la fin. Git voit alors deux insertions au même endroit et ne peut
+pas trancher — il ne sait pas qu'elles n'ont rien à voir l'une avec l'autre.
+Fusionner tôt n'y change rien : la branche suivante retombe dessus quatre
+minutes plus tard.
+
+**La parade tient en un choix de position : insérer avant la dernière section,
+pas après.** Le bloc modifié cesse alors de toucher la fin du fichier, l'ajout
+concurrent d'une autre session tombe dans un autre hunk, et la fusion passe
+toute seule. Éprouvé le soir même : le conflit a cessé au premier essai.
+
+Mieux encore quand la leçon complète un sujet déjà présent — un plafond de
+déploiement, un piège de fusion : **l'écrire dans la section existante**, au
+milieu du fichier. Deux bénéfices pour un geste : plus aucun conflit possible,
+et pas de seconde version d'un sujet qui divergera de la première.
+
+Ce qui vaut au-delà de ce fichier : **dans un dépôt à plusieurs sessions, tout
+fichier où l'on ajoute par la fin est un point de collision** — un journal, un
+INDEX, une liste de courses. La position d'écriture est une décision de
+concurrence, pas une question de style.
+
+## Une absence qui fait disparaître un bouton et une absence qui perd un client
+ne se traitent pas pareil
+
+La règle du dépôt est bonne et vérifiée : *ce qui n'est pas réglé disparaît de la
+page au lieu d'afficher une valeur inventée.* Un numéro de téléphone faux coûte
+plus cher qu'un bouton absent.
+
+Mais elle a été appliquée à une variable où elle produit le contraire de ce
+qu'elle protège. Sur la page de vente, l'adresse de repli du formulaire n'avait
+pas de valeur par défaut « par cohérence » — et sur un premier déploiement, sans
+clé d'envoi ni numéro, le formulaire répondait *« réessaie dans quelques
+minutes »* à quelqu'un qui venait de taper son nom, son métier et son téléphone.
+
+**Le partage est là, et il se pose avant d'écrire le `?? ''` :**
+
+- L'absence retire une **possibilité en plus** — un bouton d'appel, un lien de
+  paiement. La faire disparaître est juste : rien n'est perdu.
+- L'absence casse le **seul chemin restant**. Alors une valeur par défaut vaut
+  mieux qu'un vide, même imparfaite, parce que le vide ne signale rien : la
+  page a l'air de marcher.
+
+Le test qui l'attrape est celui qu'on n'écrit jamais, parce qu'il n'a l'air de
+rien tester : **le comportement quand aucune variable n'est réglée.** C'est
+pourtant l'état exact de tout premier déploiement.
+
+## `public/` de Next ne résout pas l'index d'un dossier
+
+Mesuré : avec `public/exemple/index.html`, l'adresse `/exemple` rend **404** et
+`/exemple/` un **308** qui ne mène nulle part. Seul `/exemple/index.html`
+répond. Le serveur de fichiers statiques de Next fait une correspondance exacte
+de chemin, là où un Apache ou un Nginx par défaut chercheraient un `index.html`.
+
+Le piège tient à l'habitude : on dépose un dossier de site comme on le
+déposerait sur n'importe quel hébergement, et l'adresse qu'on donne au client
+est celle qui ne marche pas. Elle marche en local si l'on ouvre le fichier
+depuis le disque, ce qui achève de tromper.
+
+**La parade est un fichier à plat** — `public/exemple.html` → `/exemple.html` —
+qui donne en prime une adresse courte, dictable au téléphone.
+
+## Un vérificateur qui déduit les projets des fichiers changés ne se voit pas
+lui-même
+
+Ce dépôt lance sa vérification sur les seuls projets touchés, déduits du chemin
+des fichiers modifiés. Le mécanisme est bon et fait gagner des minutes à chaque
+passe. Il a un angle mort exact : **les fichiers qui n'appartiennent à aucun
+projet ne déclenchent rien**, et l'outillage en fait partie.
+
+Mesuré : un changement de `verifier.sh` lui-même se voyait répondre *« rien
+d'exécutable n'a changé — documentation, outillage ou configuration »*, par le
+vérificateur, qui rangeait donc son propre code parmi ce qui ne s'exécute pas.
+Un hook cassé se découvrait au démarrage de la session suivante, chez quelqu'un
+d'autre.
+
+**La règle générale :** dans une sélection par appartenance, il faut lister ce
+qui n'appartient à rien et décider explicitement de son sort. Le défaut n'est
+pas dans une case manquante, il est dans la catégorie fourre-tout qui absorbe
+silencieusement ce qu'on n'a pas classé — ici « documentation ou configuration »,
+qui contenait aussi tout le code de l'outillage.
+
+**Et un pas partiel assumé vaut mieux qu'un trou.** Une vérification de syntaxe
+n'établit pas qu'un script fait ce qu'il annonce ; elle attrape le `fi` manquant
+qui casse tout. Ce qu'il faut, c'est l'écrire — « syntaxe seule » jusque dans le
+nom affiché — pour que personne n'y lise davantage.
+
+## Le nom d'un groupe décrit le contenu, pas la nature de ce qu'on reçoit
+
+Une liste IPTV publique range ses chaînes par thème, et l'une de ces catégories
+s'appelle « Movies ». Le classement de l'application, qui faisait confiance au
+nom du groupe, rangeait donc toutes les chaînes de cinéma dans l'onglet
+**Films** — où l'on cliquait sur « un film » pour tomber sur une chaîne en
+direct. Trouvé en trente secondes par la première personne à s'en servir, et
+par aucun test.
+
+**La nature de ce qu'on reçoit est lisible dans l'adresse, pas dans le
+libellé** : un manifeste HLS (`.m3u8`) est un flux qui coule, un `.mkv` ou un
+`.mp4` est une œuvre qu'on ouvre. Le groupe, lui, ne dit que le thème — et une
+chaîne qui *diffuse* des films n'est pas un film.
+
+La règle générale vaut au-delà de l'IPTV : **quand une donnée écrite à la main
+et une donnée structurelle se contredisent, c'est la structurelle qui décide.**
+Le libellé est saisi par un humain pressé ; le format, lui, est imposé par le
+protocole.
+
+## Interdire l'autoplay par principe est aussi un défaut
+
+La règle « pas de démarrage automatique » protège d'une vidéo qui s'ouvre en
+pleine figure sur une page qu'on parcourt. Appliquée à un **lecteur de
+télévision en direct**, elle devient absurde : le clic qui a ouvert la chaîne
+*est* le geste, et demander un second clic pour regarder la télé est une gêne
+que personne n'accepte.
+
+La correction s'est faite en deux fois, et la première était encore à
+moitié fausse : le direct démarrait seul, les films attendaient toujours « pour
+laisser lire le résumé ». Retour d'usage immédiat : « dès qu'on clique sur une
+icône, il faut que ça se lance ». **Cliquer sur une vignette est déjà la
+demande de regarder** — le résumé reste lisible sous l'image pendant que ça
+joue.
+
+La leçon derrière la leçon : une règle de protection écrite pour un contexte
+(une vidéo qui s'ouvre sur une page qu'on parcourt) devient une gêne dans un
+autre (un lecteur qu'on a ouvert exprès). **Ce n'est pas la règle qu'il faut
+défendre, c'est l'intention qu'elle servait.**
+
+Et le refus du navigateur se dit à l'écran : bloquer une vidéo sonore lancée
+sans interaction suffisante est un comportement normal de Chrome, silencieux,
+qui se confond avec une panne du flux.
+
+## Un flux qui met huit secondes à s'établir passe pour une panne
+
+Premier mot revenu de l'usage réel, avant tout autre : « ça reste figé ». Le
+flux n'était pas figé — il se connectait. Une chaîne IPTV met deux à dix
+secondes à s'établir : résolution du manifeste, premier segment, mise en
+tampon. Pendant ce temps l'image est noire et rien ne bouge.
+
+**Un écran noir silencieux et un écran noir en panne sont indiscernables**, et
+l'utilisateur tranche toujours dans le même sens : c'est cassé. Il ferme,
+essaie une autre chaîne, conclut que rien ne marche.
+
+Le remède ne coûte rien : un mot sur l'image, allumé jusqu'au premier instant
+réellement joué. Et l'événement qui l'éteint doit être `playing`, pas un
+événement de réseau — `canplay` se déclenche avant que quoi que ce soit soit
+visible, et l'indicateur disparaîtrait sur un écran encore noir.
+
+## Tester un flux, c'est distinguer trois états, jamais deux
+
+Une liste publique de 215 chaînes en contient couramment la moitié de morte, et
+c'est ce qui donne l'impression que l'application ne marche pas. Le réflexe est
+d'écrire un vérificateur qui range en deux tas : vivant, mort. C'est ce tri-là
+qui est faux, et la mesure du jour le montre sans appel.
+
+Depuis une session distante, **les neuf hôtes de flux essayés rendent tous 403**
+— le mandataire refuse, pas le serveur. Un vérificateur à deux états aurait
+condamné le catalogue entier en trente secondes, et l'utilisateur aurait rouvert
+une application vide. Le même 403 sort d'un abonnement IPTV momentanément saturé
+(« max connections reached »), avec 401, 429 et 503 : autant de codes qui ne
+disent **rien** du flux.
+
+D'où la règle : on ne masque que ce qu'on a **vu refuser pour de bon** — 404,
+DNS mort, délai dépassé, contenu qui n'est pas un média. Tout refus ambigu
+laisse l'entrée visible. Se tromper dans ce sens coûte un clic ; se tromper dans
+l'autre efface de l'écran ce qui marchait.
+
+Deux pièges de méthode viennent avec :
+
+- **Un code 200 ne prouve pas qu'un flux existe.** Un portail expiré rend une
+  page HTML avec 200, et un manifeste peut être une carcasse : `#EXTM3U` suivi
+  de rien. Il faut lire les premiers octets — au plus quelques kilo-octets, puis
+  couper le corps, sinon on télécharge un direct qui ne finit jamais.
+- **Le parallélisme se borne par hôte, pas globalement.** Un abonnement limite
+  les connexions simultanées, souvent à une ou deux. Vingt tests de front sur le
+  même serveur fabriquent eux-mêmes les refus qu'ils vont interpréter.
+
+## Une colonne ajoutée n'apparaît jamais chez qui a déjà des données
+
+`CREATE TABLE IF NOT EXISTS` ne touche pas une table présente. Tant qu'un projet
+ne tourne que sur la machine qui l'écrit, on efface la base et on n'y pense
+plus. Le jour où quelqu'un d'autre l'a installé, la même ligne de schéma laisse
+sa base sans la colonne, et la première requête qui la cite fait échouer
+**l'ouverture de l'application** — pas la fonction ajoutée, l'application.
+
+La parade tient en huit lignes : une liste d'ajouts, `PRAGMA table_info` pour
+savoir ce qui manque, `ALTER TABLE` pour le reste, rejoué à chaque ouverture.
+Ce qui compte est le moment où on l'écrit : à la première colonne ajoutée après
+la première installation ailleurs, pas quand un utilisateur signale l'erreur.
+
+## Le bas-médium s'accumule, et le mixage le concentre
+
+Un « bourdonnement en fond tout le long ». Premier réflexe : chercher ce qu'on
+vient d'ajouter. Retiré — la raie était **identique avant et après**. Ce n'était
+donc pas une régression.
+
+La mesure qui tranche est la **largeur** de la raie, pas sa hauteur :
+
+| | pic | hauteur sur le fond | largeur |
+| --- | --- | --- | --- |
+| le rush du dragon | 143 Hz | +20,2 dB | 194 Hz |
+| le rush du druide | 151 Hz | +17,0 dB | 189 Hz |
+| **le montage** | 151 Hz | **+23,9 dB** | **52 Hz** |
+
+Chaque source a sa bosse de bas-médium, large. Le mixage les **empile au même
+endroit** et en fait une bosse étroite — et une bosse étroite et tenue, c'est ce
+que l'oreille appelle un ronflement. Une raie fine (moins de 8 Hz) serait un
+vrai bourdon ; à 52 Hz c'est de l'accumulation.
+
+Une cloche **large** à 150 Hz au master la disperse : +24,0 → **+19,3 dB**,
+largeur 52 → 94 Hz, et le niveau entendu au-dessus de 400 Hz **ne bouge pas d'un
+dixième**. Un téléphone n'entend rien là : il n'y a rien à perdre.
+
+**Mesurer la largeur avant de chasser une source.** Un bourdon a une source ;
+une accumulation n'en a pas, et la chercher fait perdre des heures.
+
+## L'excitation harmonique sur un lit tenu fabrique une note
+
+Corollaire déjà écrit dans `/bande-son` et redécouvert en le violant : elle crée
+les partiels 2f, 3f, 4f d'un son continu, et **des partiels continus sont une
+note**. Elle est faite pour les impacts brefs.
+
+Ici elle n'était pas la cause du ronflement — mais elle était bien posée sur
+quatre lits tenus, et elle n'avait rien à y faire.
+
+## Un motif d'exclusion est ancré à la racine, et un voisin le contourne
+
+`main` est passé au rouge sans qu'aucune ligne de code soit en cause :
+
+```
+ESLint: ENOENT: no such file or directory, open
+'artisan-express/.next/static/…/_buildManifest.js'
+```
+
+Deux causes se sont additionnées, et aucune des deux ne se voit en lisant le
+code :
+
+- **`".next/**"` ne couvre que `./.next/`.** Un motif relatif est ancré là où
+  la configuration est lue. Les dossiers de build des projets voisins —
+  `artisan-express/.next/`, `titan-builder/.next/` — n'étaient donc exclus par
+  rien, et le lint de la racine entrait dedans.
+- **La vérification lance les projets en parallèle, dans le même arbre.** Le
+  lint d'un projet lisait un manifeste que le build d'un autre était en train de
+  remplacer. Le fichier existait avant la lecture et après ; il manquait
+  pendant.
+
+D'où un défaut qui n'apparaît **que** sous parallélisme, seulement quand le
+voisin vient d'être construit, et jamais deux fois au même endroit. Relancer le
+donne vert une fois sur deux, ce qui pousse à le classer « flaky » — alors que
+la cause est nette et la réparation définitive.
+
+**La règle : un projet autonome dans un dépôt à plusieurs projets s'exclut
+entièrement de l'outillage des autres**, pas seulement son dossier de build.
+Chacun a sa configuration, ses alias et sa vérification propre ; ce que la
+racine y trouverait n'a de sens pour personne.
+
+**Et l'exclusion se vérifie sur les chemins, pas sur les noms.** Un rejeu local
+de la CI déposait une copie des mêmes projets sous `.verif-ci/copie/` : exclus à
+leur vrai chemin, ils revenaient par celui-là.
+
+## Trois corrections échouées sur un même défaut disent qu'on ne l'a pas mesuré
+
+Un contrôle de zoom recouvrait la règle d'une frise. Trois corrections ont été
+tentées, toutes sur la **position** : un décalage vertical, une rangée dans le
+flux, un rognage du conteneur. Chacune a cassé autre chose — la première a fait
+tomber le parcours entier de vérification pendant trente secondes.
+
+La quatrième fois, la mesure a été faite avant la correction : pour chaque
+étiquette de la règle, demander au navigateur qui reçoit le doigt à cet endroit.
+
+| état | étiquettes masquées |
+| --- | --- |
+| au repos | **aucune** |
+| après un zoom | une sur huit |
+| pendant le défilement | une, et **laquelle change à chaque fois** |
+
+Deux choses que trois tentatives n'avaient pas vues. Le défaut n'existe
+**qu'après un zoom** — au repos la gouttière valait déjà exactement les deux
+boutons. Et il est **mobile**, ce qui explique pourquoi il paraissait
+insaisissable et pourquoi chaque correction semblait marcher une fois sur deux.
+
+Surtout, la mesure a montré qu'aucune position ne pouvait marcher : 44 px de
+bouton — le minimum qu'un pouce attrape — plus 16 px de règle ne tiennent pas
+dans 98 px de frise. **Le problème n'était pas où les mettre, mais qu'ils soient
+là tout le temps.** La sortie était temporelle, pas géométrique : ils s'effacent
+au repos et reviennent au toucher.
+
+Ce qui se généralise : **trois corrections qui échouent sur un même défaut ne
+disent pas que le défaut est difficile, elles disent qu'on corrige une cause
+qu'on n'a pas mesurée.** La règle des trois essais du dépôt est bonne, mais son
+troisième essai doit être une mesure, pas une variante — sinon les trois essais
+se dépensent tous du même côté du problème.
+
+Un corollaire sur la formulation du contrôle qui empêche la régression : il
+porte sur **ce qu'on veut** (« la règle reste lisible »), jamais sur le moyen
+(« les boutons sont ailleurs »). Écrit sur le moyen, il aurait invité une
+quatrième tentative de mise en page — celle qui ne peut pas aboutir.
+
+## Deux grandeurs qui portent le même nom finissent par n'en faire qu'une
+
+Dans un montage, « la durée d'un plan » désigne deux choses : la longueur
+**coupée** dans le rush, et la longueur **vue** à l'écran. Une transition
+recouvre la fin d'un plan et le début du suivant — mesuré, 0,29 s par raccord —
+et l'écart entre les deux est exactement cela.
+
+Le plancher de longueur portait sur la coupe. Résultat : le montage automatique
+livrait **0,61 s vues** par plan là où le module d'analyse du même dépôt en
+récompense 1,1 à 2,8. L'application produisait donc un film que sa propre note
+pénalisait, et son propre guide répondait « tes plans s'enchaînent trop vite
+pour être lus ».
+
+Personne ne l'avait vu parce que le code disait `MIN_SHOT` et que le lecteur
+comprenait « durée d'un plan » — le bon mot pour l'une comme pour l'autre. La
+parade est un nom par grandeur, et le nom porte laquelle : `MIN_SHOT_VU` d'un
+côté, `MIN_SHOT` de l'autre, avec la conversion écrite entre les deux.
+
+**Et la même confusion m'a fait mesurer faux en cherchant à la corriger.** Pour
+juger le montage j'ai additionné la longueur des plans, au lieu d'appeler la
+fonction que le produit utilise pour connaître sa durée. La somme naïve
+annonçait 55 s là où le film en faisait 30 — j'allais écarter dix-neuf rushes
+pour résoudre un problème qui n'existait pas, tout en laissant passer le vrai,
+deux fois plus grave que je ne le croyais.
+
+Ce qui se généralise : **quand un produit sait déjà calculer une grandeur, on
+appelle sa fonction ; on ne la recalcule pas de tête.** Une mesure refaite à la
+main mesure autre chose, et la ressemblance des deux chiffres est précisément
+ce qui empêche de s'en apercevoir.
+
+## Une couverture annoncée et absente est pire que pas de couverture
+
+La fiche de la compétence `verifier` promettait « validation des bases et
+parcours Chromium pour le réseau d'annuaires IA ». Le script ne lançait **rien**
+pour ce projet : aucune case dans sa sélection. Onze sites sans compilateur, sans
+typage et sans test unitaire, dont la seule vérification existante n'était
+appelée par personne.
+
+Le défaut n'est pas l'oubli, c'est le **sens de la lecture**. Une session qui
+touche `annuaire-ia`, lit la fiche, lance la vérification et voit vert en conclut
+que son changement est couvert. Sans la promesse, elle serait allée chercher la
+commande du projet. La phrase fausse a donc coûté davantage que le silence.
+
+**Le contrôle qui l'attrape se fait dans les deux sens, et personne ne fait le
+second :** ce que la documentation annonce doit exister dans le code, et — c'est
+celui qu'on oublie — ce que le code fait doit être annoncé. Ici la fiche citait
+un projet absent du script **et** taisait trois projets présents (Artisan
+Express, TITAN Builder, IPTV). Deux dérives opposées dans la même phrase.
+
+La description d'une compétence n'est pas de la prose : c'est **elle** qui
+décide du déclenchement. Une description périmée ne se contente pas de mentir,
+elle empêche la compétence de se proposer là où elle sert.
+
+## Une chaîne de vente s'arrête à l'encaissement, et c'est le maillon qu'on
+n'écrit pas
+
+Tout a été construit cette nuit — trouver le client, l'aborder, lui montrer,
+générer, livrer, répondre après. Le maillon manquant n'était aucun de ceux-là :
+**il n'y avait aucun moyen d'être payé.** Une facture française exige un SIRET,
+et sans numéro l'ensemble de la chaîne ne mène à rien d'encaissable.
+
+Le motif se reconnaît : on construit ce qu'on sait construire — du code, des
+pages, des scripts — et l'étape administrative reste hors du dépôt parce qu'elle
+n'est pas technique. Elle est pourtant la seule condition **bloquante** de tout
+le reste, et la seule à demander des semaines de délai.
+
+**La règle : dans une chaîne qui doit rapporter de l'argent, remonter depuis
+l'encaissement, pas depuis la production.** Ce qu'il faut pour être payé décide
+de ce qu'il vaut la peine de construire, et non l'inverse.
+
+**Et un blocage administratif se traite comme un blocage technique** : on le
+nomme par écrit, avec son délai. « Une à trois semaines » change l'ordre des
+tâches ; « il faudrait s'inscrire » ne change rien et se répète.
+
+## Un défaut qui vaut tout le projet ne doit pas compter pour une alerte
+
+Mesuré sur le réseau d'annuaires : **73 liens d'affiliation sur 73** pointaient
+encore vers l'adresse de démonstration. Onze sites publiés, référencés, tenus à
+jour par un auto-pilote, 213 contrôles au vert — et **pas un centime possible**.
+
+Ce n'était caché nulle part, et c'est bien le problème : chaque lien produisait
+une alerte, soixante-treize parmi **234**, sous un verdict final
+« 0 erreur(s), 234 alerte(s) » qui se lit comme « tout va bien, quelques
+broutilles ». Le fait le plus important du projet avait exactement le même poids
+qu'une description un peu courte.
+
+**Ce qui trompe est la mise à plat.** Un relevé qui range tout dans la même liste
+suppose que toutes les lignes se valent. Elles ne se valent jamais : il y en a
+presque toujours une qui décide si l'ensemble sert à quelque chose, et elle
+mérite sa propre ligne dans le bilan — pas un rang dans un décompte.
+
+**Le test qui le débusque :** lire le verdict d'un outil et se demander *« si
+tout ce qu'il liste était vrai, est-ce que le projet remplirait sa raison
+d'être ? »* Ici la réponse était non, et le verdict disait vert.
+
+Et le chiffre affiché doit être **ce qu'il y a à corriger**, pas le nombre
+d'occurrences : compter aussi les entrées en réserve donnait 231 au lieu de 73,
+et décourageait pour un travail qui n'est pas encore à faire.

@@ -113,7 +113,9 @@ la mémoire, le résumé ne transporte que l'état.**
 Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 
 - **Amorce** (racine) — Next.js **16.3.2**, React 19, Tailwind v4, TypeScript
-  strict. Tout tourne dans le navigateur : ni serveur, ni base, ni route API.
+  strict. **Le moteur de montage tourne entièrement dans le navigateur** : ni
+  serveur, ni base, ni route API. Seul le module de licence fait exception, et
+  il ne touche à aucun média — voir plus bas.
 - **agence/** — Next.js 16, Supabase (PostgreSQL + RLS), Server Actions, shadcn.
   Se vérifie depuis son dossier, jamais depuis la racine.
 - **artisan-express/** — page de vente du site vitrine artisan à 299 €. Next.js
@@ -128,6 +130,12 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
+  **`main.py sonde` avant le premier scan**, et après toute retouche de
+  `sources/` : trois situations rendent le même rapport vide — marché calme,
+  service muet, ou service qui répond dans une forme qu'on ne sait plus lire.
+  La sonde rend « reçus » et « lus » par point d'entrée et ne crie que sur
+  l'écart. Un scan tient un **verrou de fichier** le temps du tour : deux tours
+  simultanés valent deux fois le débit annoncé, et les 429 frappent les deux.
 - **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
   asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
   bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
@@ -140,11 +148,16 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   **Le levier se mesure, il ne s'exécute pas** : `rejeu --leviers 1,2,3,5,10`
   compte les liquidations qu'un compte à levier aurait subies, et le courtier
   ne connaît toujours pas le mot. Une option de levier posée dans le chemin
-  d'ordre serait utilisée avant d'avoir été mesurée.
-  **Aucune vérification de contrat** — ni GoPlus, ni honeypot.is, ni RugCheck :
-  `src/strategy/pepites.py` repère une anomalie de volume et ne sait pas si le
-  jeton est revendable. Son en-tête le dit, et le bouclier qui manque existe
-  déjà, dans `pepites/`.
+  d'ordre serait utilisée avant d'avoir été mesurée. Sur seize ans de BTC réel,
+  **x10 liquide 85 à 100 % des positions** sur les trois fenêtres éprouvées,
+  financement compris — lequel double les dégâts et en vide certaines sans
+  qu'un prix ait reculé.
+  **Le bouclier anti-rugpull est un veto, pas une note**, et il passe avant le
+  dimensionnement : GoPlus, honeypot.is et RugCheck en parallèle, sans clé
+  d'API. Le silence n'est pas un quitus — aucune source qui répond bloque
+  l'achat. Mais **pas d'adresse, pas de bouclier** : les lignes du socle n'ont
+  pas de contrat à auditer, et exiger une adresse pour LINK/USDT lui interdisait
+  tout achat à chaque passe.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
@@ -155,9 +168,20 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   **zéro dépendance d'exécution** dans le cœur : ingestion M3U et Xtream,
   normalisation, classification en direct / films / séries. Une liste M3U ne se
   charge jamais en mémoire — 50 à 400 Mo, l'analyseur les rend au fil de l'eau —
-  et rien ne remonte au-dessus de l'ingestion sans être un `Element`. Aucune
-  source de contenu ni identifiant n'est versionné. Se vérifie depuis son
-  dossier.
+  et rien ne remonte au-dessus de l'ingestion sans être un `Element`. Le cache
+  est un SQLite livré avec Node (`node:sqlite`), recherche plein texte comprise :
+  120 000 entrées importées en 6,6 s, toute requête sous 30 ms. L'interface est
+  en Next.js 16, tout l'arbre rendu à la demande, et le lecteur HLS passe par un
+  **mandataire à adresses signées** : un relais qui accepterait une URL
+  arbitraire serait un proxy ouvert. Le guide XMLTV se lit au fil de l'eau lui
+  aussi, et un instant sans décalage horaire y est de l'heure locale, jamais de
+  l'UTC. La recherche de sous-titres externes part **sur un geste**, jamais à
+  l'ouverture d'une vidéo, et n'envoie qu'un titre — jamais l'adresse du flux.
+  Les épisodes d'une série Xtream se chargent à l'ouverture de sa fiche : un
+  appel par série, deux mille séries, quelques dizaines de requêtes par minute. **Aucun mot de passe n'entre en base** —
+  l'adresse d'une source y est masquée — et aucune source de contenu ni
+  identifiant n'est versionné. Se vérifie depuis son dossier ; `npm run verify`
+  conduit un vrai Chromium sur un flux HLS fabriqué par ffmpeg.
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
   sont dans son `public/llms.txt`, pas ici.
@@ -178,6 +202,26 @@ faut bien un ailleurs.
 **Amorce en est exclue, définitivement.** Sa promesse fondatrice est qu'aucun
 fichier ne quitte l'appareil : lui adjoindre un stockage distant ne serait pas
 une évolution mais un reniement.
+
+**Une seule exception, et elle est bornée : le serveur de licence.** Faire payer
+Amorce demande de savoir qui a payé, et cela ne peut pas se vérifier dans le
+navigateur — une clé posée côté client est lue par le premier qui ouvre les
+outils de développement. Le propriétaire l'a validée explicitement, et voici sa
+frontière :
+
+- Le serveur ne connaît **que** l'identité et l'état de l'abonnement :
+  authentification, et vérification Stripe. Rien d'autre.
+- **Aucun média n'y transite jamais** — ni rush, ni export, ni son, ni
+  sous-titre, ni le nom d'un fichier. Un octet de contenu qui atteint le réseau
+  est un défaut, pas un compromis.
+- Le module vit **isolé et découplé** du moteur de montage : ce dernier ne
+  l'importe pas, et le studio doit rester utilisable si le serveur est éteint.
+
+La règle qui rend l'exception vérifiable au lieu de l'élargir : **le moteur de
+montage ne connaît pas le réseau.** Une dépendance du moteur vers le module de
+licence est le premier pas qui la casse, et c'est celui qu'on ne franchit pas ;
+la licence pilote ce que l'interface propose, jamais ce que le moteur fait d'un
+fichier.
 
 ## 5. SENSIBLE, ET JAMAIS À L'ARRÊT
 
@@ -281,10 +325,41 @@ téléchargent en une commande, vérifiée le jour même, un mégaoctet :
 curl -sSO https://raw.githubusercontent.com/freqtrade/freqtrade/develop/tests/testdata/UNITTEST_BTC-1m.json
 ```
 
+**Et seize ans de BTC réel s'y téléchargent aussi**, prix *et* métriques
+on-chain, sous licence ouverte — c'est le jeu communautaire CoinMetrics, que lit
+`nexuscrypto rejeu --coinmetrics`. Il apporte ce qu'aucune API gratuite ne
+donne : le flux net des réserves de plateformes, en dollars, jour par jour.
+
+```bash
+curl -sSO https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv
+```
+
+**Mais il ne publie qu'une clôture par jour, et c'est le piège.** Ni haut, ni
+bas, ni ouverture : le chargeur fabrique `bas = min(clôture du jour, clôture de
+la veille)`. Tout ce qui se mesure sur les **mèches** — liquidations, stops
+touchés, pire recul, ATR — est donc sous-estimé, sans qu'aucun calcul ne lève
+quoi que ce soit. Le module de levier détecte désormais ce cas et l'écrit sous
+ses propres résultats ; toute autre mesure qui repose sur un plus bas doit faire
+de même, ou dire qu'elle mesure des clôtures.
+
 Ce qui reste impossible : l'ingestion **en direct**, le sentiment, l'on-chain et
 la macro. Une stratégie se règle donc hors ligne sur des données téléchargées,
 et son branchement aux sources ne se vérifie que sur une machine sans mandataire
 filtrant.
+
+**Une session distante ne peut pas en joindre une autre.** Mesuré deux fois le
+29/08 : `ListAgents` ne rend aucun pair joignable et `SendMessage` refuse, alors
+que `list_sessions` montre les autres sessions du compte en train de tourner,
+dans le même environnement et sur le même dépôt. Le piège est là — leur fiche
+porte `cross_session_inbound: available`, ce qui dit qu'**elles** acceptent de
+recevoir, jamais qu'on sait router jusqu'à elles. Une session qui lit ce champ
+croit le canal ouvert et écrit un message qui ne partira pas.
+
+Le lien entre sessions est donc le **dépôt**, et lui seul : ce fichier, les
+compétences, les agents, `second-brain/`. Une découverte qu'une autre session
+doit connaître s'écrit et se fusionne — elle ne s'envoie pas. C'est aussi ce qui
+rend la fusion rapide utile au-delà des conflits : tant qu'un lot n'est pas sur
+`main`, il n'existe pour personne d'autre.
 
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
@@ -319,6 +394,21 @@ Trois gestes avant d'envoyer, sur le **fichier final** et sur lui seul :
 
 Une correction ne s'annonce jamais sur la foi du réglage changé. Elle s'annonce
 sur le fichier relu.
+
+**Et pour un montage, la liste passe avant de rendre, pas après une plainte :
+`/montage-sans-refaire`.** Vingt-cinq versions d'un même épisode de vingt
+secondes ont été livrées et rejetées en une nuit, et presque aucune pour une
+raison nouvelle — les mêmes familles de défaut revenaient deux ou trois fois,
+faute d'être écrites. Elles le sont : le rush qui porte déjà sa bande son et
+qu'on recouvre, la frise qu'on écrit à la main quand une `vitesse` la rend
+fausse, le grave qui n'existe pas sur l'appareil, le masquage qu'on prend pour
+de la saturation, les cinq façons de fabriquer une coupure, le climax qui n'est
+pas le plan le plus fort, le texte posé sur la bouche qui parle.
+
+Leur point commun tient en une phrase, et c'est elle qu'il faut retenir : **une
+mesure disait vert et le fichier était faux** — mesurée au mauvais endroit, sur
+le mauvais fichier, ou sur ce qui n'était pas le défaut. La parade n'est jamais
+de mesurer plus, c'est de mesurer ailleurs et de regarder.
 
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
@@ -536,5 +626,7 @@ et les fichiers.
 
 *Les compétences se déclenchent seules ; table générée dans
 `.claude/references/competences.md`. L'agent `revue-invariants` relit un diff
-contre les invariants écrits, l'agent `verificateur` rend un verdict sans
-déverser la sortie des tests. `/etat-du-depot` pour l'inventaire du jour.*
+contre les invariants écrits ; l'agent `garde-du-bot` fait de même pour
+NexusCrypto, contre les six règles qui protègent l'argent ;
+l'agent `verificateur` rend un verdict sans déverser la sortie des tests.
+`/etat-du-depot` pour l'inventaire du jour.*

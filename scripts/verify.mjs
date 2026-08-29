@@ -166,6 +166,49 @@ function mesurerSilence(fichier) {
 }
 
 /**
+ * Combien d'images du fichier exporté sont vides.
+ *
+ * Une image vide n'est pas une image noire : c'est un cadre sans relief, que
+ * l'étalonnage peut avoir teinté. Sur un film livré, huit images sur douze
+ * étaient un aplat marron uni — le plan n'était pas encore décodé, rien
+ * n'était tracé, et le post-traitement s'appliquait au vide.
+ *
+ * Aucun des contrôles voisins ne le voyait. « L'image de l'export n'est pas
+ * noire » mesure la luminosité moyenne, qu'un aplat marron passe sans peine.
+ * C'est le **relief** qu'il faut regarder : l'écart-type des luminances d'une
+ * image qui contient quelque chose ne descend pas sous une dizaine.
+ */
+function mesurerImagesVides(fichier) {
+  try {
+    const brut = execFileSync(
+      'ffmpeg',
+      ['-v', 'error', '-i', fichier, '-vf', 'fps=4,scale=48:85,format=gray',
+       '-f', 'rawvideo', '-'],
+      { maxBuffer: 64 * 1024 * 1024 },
+    );
+    const l = 48;
+    const h = 85;
+    const parImage = l * h;
+    const total = Math.floor(brut.length / parImage);
+    if (total === 0) return null;
+
+    let vides = 0;
+    for (let k = 0; k < total; k += 1) {
+      const debut = k * parImage;
+      let somme = 0;
+      for (let i = 0; i < parImage; i += 1) somme += brut[debut + i];
+      const moyenne = somme / parImage;
+      let ecart = 0;
+      for (let i = 0; i < parImage; i += 1) ecart += (brut[debut + i] - moyenne) ** 2;
+      if (Math.sqrt(ecart / parImage) < 8) vides += 1;
+    }
+    return { total, vides };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Combien d'images le fichier exporté contient réellement.
  *
  * `ffprobe` les compte une à une : le champ `avg_frame_rate` d'un WebM produit
@@ -1016,6 +1059,40 @@ if (profile.mobile) {
       large !== null && serre !== null && large > serre,
       `${serre?.toFixed(1)} s → ${large?.toFixed(1)} s visibles`,
     );
+
+    /*
+     * Aucune graduation cachée une fois la frise relâchée.
+     *
+     * 44 px de bouton et 16 px de règle ne tiennent pas dans les 98 px de la
+     * frise : mesuré, dès le premier zoom une graduation sur huit passait sous
+     * les boutons, et laquelle changeait à chaque défilement. Ils s'effacent
+     * désormais au repos, et c'est cela qu'on contrôle — leur peinture, pas
+     * leur position : trois mises en page ont échoué à les loger ailleurs, une
+     * quatrième serait tentée si ce test disait « boutons déplacés » au lieu de
+     * « règle lisible ».
+     */
+    await page.waitForTimeout(3200);
+    const masquees = await page.evaluate(() => {
+      const frise = document.querySelector('[aria-label="Timeline du montage"]');
+      if (!frise) return ['frise absente'];
+      return [...frise.querySelectorAll('span')]
+        .filter((n) => /^\d+s$|^\d+m\d\d$/.test(n.textContent || ''))
+        .filter((n) => {
+          const b = n.getBoundingClientRect();
+          const sous = document.elementFromPoint(
+            b.left + Math.min(6, b.width / 2),
+            b.top + b.height / 2,
+          );
+          const bouton = sous?.closest('button');
+          return bouton && Number(getComputedStyle(bouton.parentElement).opacity) > 0.05;
+        })
+        .map((n) => n.textContent);
+    });
+    check(
+      'Au repos, aucune graduation ne passe sous les boutons',
+      masquees.length === 0,
+      masquees.length ? `cachées : ${masquees.join(', ')}` : 'règle entière',
+    );
   }
 
   await remonterEnTete(page);
@@ -1307,6 +1384,17 @@ if (exportPath) {
       `  ${cadence.parSeconde >= attendue / 3 ? 'OK  ' : '⚠   '} | `
       + `Cadence de l’export : ${cadence.images} images pour ${cadence.duree.toFixed(1)} s, `
       + `soit ${cadence.parSeconde.toFixed(1)} par seconde — ${perdues} % des images perdues`,
+    );
+  }
+
+  const creux = mesurerImagesVides(exportPath);
+  if (creux === null) {
+    console.log('  —    | Images vides non mesurées (ffmpeg absent)');
+  } else {
+    check(
+      'Aucune image de l’export n’est vide',
+      creux.vides === 0,
+      `${creux.vides} cadre(s) sans relief sur ${creux.total}`,
     );
   }
 

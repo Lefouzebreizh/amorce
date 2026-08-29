@@ -1,4 +1,4 @@
-import { DEFAULT_CINEMA, DEFAULT_MIX, type Clip, type Project } from './types.ts';
+import { DEFAULT_CINEMA, DEFAULT_MIX, type Clip, type ClipMotion, type Project } from './types.ts';
 
 /**
  * Calcul des positions sur la timeline.
@@ -132,10 +132,62 @@ export function placeOnCuts(starts: number[], count: number, from = 0): number[]
  * morceau hérite de la transition d'origine ; les suivants s'enchaînent sec,
  * sans quoi le découpage perdrait la nervosité qui le justifie.
  */
+/**
+ * Mouvements alternés, donnés aux plans qui se suivent.
+ *
+ * Découper une prise continue en morceaux contigus ne crée aucune coupe
+ * visible : l'image se poursuit exactement là où elle s'était arrêtée. On
+ * obtenait donc neuf raccords invisibles sur une prise de vingt secondes — et
+ * neuf bruitages qui claquaient sur rien, puisque `addSoundsOnCuts` en pose un
+ * par raccord. Rapporté depuis le téléphone en trois mots : « c'est n'importe
+ * quoi ».
+ *
+ * La cause n'est pas la découpe, qui reste juste : une vidéo sans coupe se
+ * regarde comme un plan fixe. C'est qu'aucun morceau ne se distinguait du
+ * précédent. En changeant le cadrage à chaque morceau, la coupe se voit — et
+ * le bruitage tombe sur quelque chose.
+ *
+ * L'ordre n'est pas quelconque. Deux poussées d'échelle consécutives se lisent
+ * comme un seul mouvement saccadé, donc zoom et glissement alternent ; et le
+ * tremblement n'apparaît qu'une fois sur six, parce qu'il fatigue vite.
+ *
+ * **Aucun plan fixe dans la liste.** Le montage express en posait un sur trois,
+ * et sur des rushes qui se ressemblent — même personnage, même palette — un
+ * plan immobile entre deux autres ne se lit pas comme une coupe mais comme un
+ * arrêt. Mesuré sur un film livré : des plans de 2,1 s qui donnaient des suites
+ * de 4,6 et 7,5 secondes sans qu'aucun raccord ne se voie. C'est le « plan
+ * fixe » que le guide dénonce par ailleurs, posé par le montage lui-même.
+ */
+/** Combien de morceaux une découpe peut produire au plus. Voir `chopped`. */
+export const MORCEAUX_MAX = 12;
+
+export const MOUVEMENTS_ALTERNES: ClipMotion[] = [
+  'zoomIn',
+  'panLeft',
+  'zoomOut',
+  'panRight',
+  'zoomIn',
+  'shake',
+];
+
 export function chopped(clip: Clip, target: number, makeId: () => string): Clip[] {
   const sourceSpan = clip.outPoint - clip.inPoint;
   const shown = sourceSpan / Math.max(0.1, clip.speed);
-  const pieces = Math.floor(shown / Math.max(0.5, target));
+  /*
+   * Le nombre de morceaux est borné.
+   *
+   * Une prise de cinquante-six secondes donnait vingt-huit plans de deux
+   * secondes : la même image coupée vingt-huit fois, avec autant de bruitages
+   * posés sur des raccords qui ne se voient pas. Douze morceaux couvrent déjà
+   * un format court entier ; au-delà, ce qu'il faut n'est pas plus de coupes
+   * mais moins de rush.
+   *
+   * Les morceaux s'allongent alors au lieu de se multiplier : douze morceaux
+   * d'une prise de cinquante-six secondes font quatre secondes sept chacun.
+   * C'est long pour un plan, et c'est le signe qu'il fallait raccourcir avant —
+   * ce que le guide dit désormais en premier.
+   */
+  const pieces = Math.min(MORCEAUX_MAX, Math.floor(shown / Math.max(0.5, target)));
   if (pieces < 2) return [clip];
 
   const step = sourceSpan / pieces;
@@ -146,6 +198,7 @@ export function chopped(clip: Clip, target: number, makeId: () => string): Clip[
     outPoint: clip.inPoint + (piece + 1) * step,
     transition: piece === 0 ? clip.transition : ('cut' as const),
     transitionDuration: piece === 0 ? clip.transitionDuration : 0,
+    motion: MOUVEMENTS_ALTERNES[piece % MOUVEMENTS_ALTERNES.length],
   }));
 }
 

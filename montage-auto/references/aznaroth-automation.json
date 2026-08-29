@@ -1,0 +1,67 @@
+{
+  "_lisez_moi": [
+    "Genere par caler_dragon.py — ne pas editer a la main.",
+    "Les creux suivent les silences que le rush menage ; le dernier",
+    "s'arrete 0,06 s AVANT le cri, jamais dessus."
+  ],
+  "micro_silences": [
+    {
+      "instant": 12.406,
+      "avance": 0.24,
+      "tenue": 0.18,
+      "retour": 0.26,
+      "gain_db": -6
+    },
+    {
+      "instant": 13.506,
+      "avance": 0.22,
+      "tenue": 0.5,
+      "retour": 0.22,
+      "gain_db": -4
+    },
+    {
+      "instant": 14.686,
+      "avance": 0.16,
+      "tenue": 0.1,
+      "retour": 0.16,
+      "gain_db": -9
+    }
+  ],
+  "couches": [
+    {
+      "fichier": "sfx_neufs/freesound_communitywooshingvortex56129.mp3",
+      "debut": 9.15,
+      "fin": 10.846,
+      "gain_db": -4
+    },
+    {
+      "fichier": "sfx_neufs/dragonstudiomonstergrowl376892.mp3",
+      "debut": 12.366,
+      "fin": 13.456,
+      "gain_db": -7,
+      "excitation": 1.5
+    },
+    {
+      "fichier": "sfx_neufs/dragonstudioepicdragonroar364481.mp3",
+      "debut": 15.006,
+      "gain_db": 2,
+      "suit_la_voix": false,
+      "filtre": "highpass=f=85:poles=2,equalizer=f=320:t=q:w=1.4:g=-3,equalizer=f=2400:t=q:w=0.5:g=2.5",
+      "_note": "le vrai cri. Mesure : seul il saute de 203 Hz de timbre, le cri du rush seul de 218 — mais le rush SEUL DANS LE MIXAGE saute de 1094 Hz, et les deux ensemble de 485. La couche ne brouille pas le cri du rush, elle le STABILISE en comblant ses variations."
+    },
+    {
+      "fichier": "pas1.wav",
+      "debut": 11.656,
+      "gain_db": 3,
+      "suit_la_voix": false,
+      "_note": "le pas, en COUCHE et non en effet de recette. Un effet subit l'esquive comme le reste du lit — et l'esquive posee pour creuser le silence du rush avalait justement les pas qu'on y avait mis. Une couche `suit_la_voix: false` s'ajoute APRES, donc elle traverse."
+    },
+    {
+      "fichier": "pas2.wav",
+      "debut": 12.326,
+      "gain_db": 1,
+      "suit_la_voix": false,
+      "_note": "le second pas, plus proche"
+    }
+  ]
+}

@@ -274,6 +274,39 @@ export function rendreCompte(releve, { titre = 'Validation du réseau', exemples
   const bilan = `${titre} — ${releve.erreurs.length} erreur(s), ${releve.alertes.length} alerte(s)`;
   if (releve.erreurs.length) console.error(`\n${bilan}`);
   else console.log(`\n${bilan}`);
+
+  /*
+   * La ligne qui manquait, et c'est la seule qui dise si ce réseau sert à
+   * quelque chose.
+   *
+   * Un lien encore sur l'adresse de démonstration produit **une** alerte parmi
+   * des centaines : soixante-treize d'entre elles se noyaient dans un total de
+   * 234, sous un verdict « 0 erreur » qui se lit comme « tout va bien ». Onze
+   * sites publiés, référencés, tenus à jour par un auto-pilote — et pas un
+   * centime possible, sans que rien ne le dise.
+   *
+   * Le compte est donc remonté au niveau du bilan, en positif : ce qui compte
+   * n'est pas le nombre d'alertes, c'est le nombre de liens qui peuvent
+   * rapporter.
+   */
+  const demonstration = releve.alertes.filter((a) => a.genre === 'lien-demonstration');
+  /*
+   * On sépare ce qui est publié de ce qui attend en réserve : seuls les outils
+   * en ligne peuvent rapporter aujourd'hui, et confondre les deux triple le
+   * chiffre — donc décourage sur un travail qui n'est pas encore à faire.
+   */
+  const enLigne = demonstration.filter((a) => /\.json —/.test(a.texte)).length;
+  const enReserve = demonstration.length - enLigne;
+
+  if (enLigne > 0) {
+    console.log(
+      `\n💤 ${enLigne} lien(s) en ligne encore sur l'adresse de démonstration : ` +
+        'ce réseau ne peut rien rapporter tant qu’ils sont là.' +
+        (enReserve > 0 ? ` (${enReserve} autre(s) attendent en réserve.)` : '') +
+        '\n   Les programmes à ouvrir, classés par ce qui paie le plus vite : AFFILIATION.md',
+    );
+  }
+
   return releve.erreurs.length === 0;
 }
 

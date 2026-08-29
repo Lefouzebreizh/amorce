@@ -42,15 +42,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent
 import bruitages
 
 
-def lire(chemin: Path, taux: int = TAUX) -> numpy.ndarray:
-    """Décode n'importe quel média en stéréo flottant, au taux du montage."""
+def lire(chemin: Path, taux: int = TAUX, filtre: str = "") -> numpy.ndarray:
+    """Décode n'importe quel média en stéréo flottant, au taux du montage.
+
+    `filtre` est une chaîne ffmpeg appliquée **au décodage**, donc avant tout
+    mélange. C'est là qu'un bruitage se sculpte : un rugissement relevé avec sa
+    bosse de bas-médium — 400-900 Hz à −5,7 dB quand 2-5 kHz est à −13 — sonne
+    congestionné, et ce n'est pas de la saturation. On creuse la boue et on
+    relève les dents ; le monter n'aurait fait qu'empirer l'encombrement.
+    """
     chemin = Path(chemin)
     if not chemin.is_file():
         raise SystemExit(f"Introuvable : {chemin}")
     tampon = chemin.with_suffix(".decode.wav")
-    subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(chemin),
-                    "-ac", "2", "-ar", str(taux), "-c:a", "pcm_f32le",
-                    str(tampon)], check=True)
+    subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(chemin)]
+                   + (["-af", filtre] if filtre else [])
+                   + ["-ac", "2", "-ar", str(taux), "-c:a", "pcm_f32le",
+                      str(tampon)], check=True)
     son, _ = soundfile.read(tampon, dtype="float64")
     tampon.unlink(missing_ok=True)
     return numpy.atleast_2d(son) if son.ndim > 1 else numpy.column_stack([son, son])
@@ -122,7 +130,7 @@ def enveloppe_voix(voix: numpy.ndarray, longueur: int, *, creux_db: float,
 
 def poser(lit: numpy.ndarray, couche: dict, longueur: int) -> numpy.ndarray:
     """Fabrique une couche prête à sommer : gain, excitation, place, fondus."""
-    son = lire(Path(couche["fichier"]))
+    son = lire(Path(couche["fichier"]), filtre=couche.get("filtre", ""))
     crete = float(numpy.abs(son).max())
     if crete > 1.0:
         # Plusieurs des fichiers reçus décodaient AU-DESSUS du plein échelle

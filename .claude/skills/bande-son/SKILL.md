@@ -568,3 +568,57 @@ Aucune installation à demander avant d'avoir essayé.
 
 Si la vidéo porte déjà sa voix dans sa propre piste audio, ne pas demander de
 fichier séparé : `--voix-de-la-video` l'extrait.
+
+## Le cri d'une créature
+
+```bash
+python3 montage-auto/cri_dragon.py --ecouter --lieu 1.3   # les cinq caractères
+python3 montage-auto/cri_dragon.py --caractere blesse --lieu 1.6 --sortie cri.wav
+```
+
+Le `rugissement` de la banque sert pour un accent bref. Pour un cri qui porte
+une scène, il échoue, et pour une raison précise : c'est une porteuse modulée
+et saturée, **sans conduit vocal**. Ce qui fait qu'une oreille entend
+« animal » plutôt que « synthétiseur », ce sont les **formants** — les
+résonances d'une gorge, qui se déplacent quand la mâchoire s'ouvre.
+
+`cri_dragon.py` construit un appareil vocal : source glottique asymétrique,
+**sous-harmonique** (une corde vocale poussée vibre une fois sur deux — c'est
+le mécanisme du grognement chez tous les gros animaux, et aucune distorsion
+ajoutée après coup ne l'imite), trois formants mobiles, et saturation sur la
+**source** jamais sur la sortie — un conduit vocal ne distord pas, c'est le
+larynx qui force.
+
+### Ce qui fait le cinéma, et non l'effet sonore
+
+Quatre gestes, appliqués par défaut ; `--sec` les retire pour obtenir le cri nu.
+
+- **Trois octaves empilées.** La basse donne la masse, la médiane le cri,
+  l'aiguë les dents. Décalées de quelques millisecondes, elles cessent d'être
+  un même son additionné trois fois pour devenir une seule bête épaisse.
+- **Une inspiration avant.** Deux dixièmes de seconde d'air. Sans elle le cri
+  commence de nulle part et se lit comme un effet ; avec elle, comme un vivant.
+- **Une queue qui se casse.** Un vrai cri finit en grognement, plus grave et
+  plus court. S'arrêter net est la signature d'un échantillon.
+- **Un lieu.** Le plus payant. Réponse d'espace fabriquée — six réflexions
+  franches pour la taille, puis une traîne où la roche mange l'aigu. `--lieu`
+  va de 0,4 (une salle) à 2,0 (un canyon).
+
+### Ce que la mesure interdit d'oublier
+
+La parade téléphone se repasse **après** l'empilage, et c'est mesuré :
+l'octave grave qui donne la masse dilue les dents du cri. Sans ce second
+passage, `abyssal` restituait **4 %** de son énergie au-dessus de 400 Hz —
+un silence sur l'appareil où la vidéo sera vue. Avec : **45 %**.
+
+Le script rend trois chiffres par cri. « entendu » sous 40 % annonce un cri
+qui n'existera pas sur un téléphone, quel que soit le gain qu'on lui donne.
+Le facteur de crête dit s'il respire : le cinéma vit au-dessus de 15 dB, et
+la scène qui a motivé cet outil était à 9.
+
+### Le piège qui annule tout
+
+**Ne jamais poser ce cri par-dessus un rush qui porte déjà le sien.** Deux
+rugissements décalés ne s'additionnent pas, ils battent — et l'oreille rapporte
+ce battement comme une saturation qu'aucune mesure de niveau ne voit. Relever
+d'abord les événements du rush, et ne poser que ce qui lui manque.
