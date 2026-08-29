@@ -3322,3 +3322,16 @@ cinq hôtes à `000` et la parade des releases GitHub.
 **Ce que ça change pour la prochaine session :** un connecteur riche n'est pas
 une capacité, et sa liste d'outils ment par omission. Cinq minutes de lecture de
 sa doc valent mieux qu'une heure d'essais qui finiront sur la même phrase.
+
+## Pousser et ouvrir une PR ne passent pas par le même tuyau
+
+Mesuré le 29/08/2026 sur une session distante : `git push` réussit — le proxy
+git sert le dépôt — mais **l'API GitHub rend 403** (« GitHub access is not
+enabled for this session »), et `gh` n'est pas installé. La branche part, la PR
+ne s'ouvre pas depuis la session.
+
+Ce n'est pas une panne à contourner : le `remote:` de la poussée donne
+l'adresse `.../pull/new/<branche>` toute prête. On la transmet, on ne cherche
+pas un troisième chemin. **Et on ne conclut pas « le dépôt est inaccessible »
+d'un 403 sur l'API** : la lecture par `git` marchait, seule la couche compte
+GitHub manquait.
