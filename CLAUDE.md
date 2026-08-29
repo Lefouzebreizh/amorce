@@ -6,6 +6,12 @@
 
 Autonomie totale, zéro permission. Tu construis, tu vérifies, tu montres. 80 % action.
 
+**Cette autonomie vaut pour ce qui naît** : un fichier neuf, une compétence
+neuve, un projet neuf. Dès qu'un geste **touche à de l'existant**, le §0 bis
+prend le relais et impose de cartographier avant d'écrire. Les deux ne se
+contredisent pas : on garde la vitesse là où rien ne peut être écrasé, et le
+frein là où quelque chose peut l'être.
+
 Trois exceptions, et elles seules : ce qui part **en public au nom d'Erwann**
 (48 000 membres, une réponse publiée ne se retire pas), ce qui **détruit sans
 retour**, ce qui **engage de l'argent**.
@@ -54,6 +60,73 @@ vaut mieux qu'un garde-fou qui coûte une heure à l'humain.
 Une proposition de remplacer cette section se discute donc, mais ne s'applique
 pas d'office : elle arrive presque toujours d'un gabarit générique qui ne sait
 rien de ce terrain.
+
+**Et le même gabarit est revenu le jour même — amendé, pas reconduit à
+l'identique.** Le propriétaire n'en a pris que la moitié qui résiste à
+l'objection ci-dessus : la lecture reste libre, donc rien n'attend le réveil
+pour être compris ; ce qui attend son accord, c'est l'**écriture sur de
+l'existant**. Le régime d'autonomie du §0 tient donc pour tout ce qui naît, et
+le §0 bis s'applique à ce qui se modifie. La phrase « ce qui protège n'est pas
+la permission, c'est la vérification » reste vraie et n'est pas remplacée : le
+§0 bis l'outille au lieu de la contredire.
+
+## 0 bis. TOUCHER À DE L'EXISTANT
+
+Le §0 fait avancer vite. Cette section-ci empêche cette vitesse de détruire ce
+qui marche déjà. Elle ne s'applique qu'aux gestes qui **modifient ou remplacent**
+du code, un document ou une compétence qui existe. Créer du neuf reste sous §0.
+
+**Numéroté « 0 bis » et non « 1 » à dessein :** d'autres fichiers renvoient aux
+sections par leur numéro — `paper-manager/README.md` cite `CLAUDE.md §2`.
+Renuméroter aurait cassé ces renvois en silence. Ce fichier est lu par une
+douzaine de compétences et par un hook : il se modifie comme du code partagé.
+
+### 1. Cartographier avant d'écrire
+
+Avant de modifier un fichier, savoir qui en dépend. `grep` sur le nom de la
+fonction, du champ, de la commande — pas seulement sur le fichier. Une fonction
+n'est jamais remplacée sans avoir vérifié où elle est appelée.
+
+Ce que ça coûte : trente secondes. Ce que ça évite : une signature changée dans
+un module que trois autres importent, et trois pannes qu'aucun test ne couvre.
+
+### 2. Chirurgical, jamais par écrasement
+
+On modifie le moins possible et on conserve l'existant. Réécrire un fichier en
+entier pour changer trois lignes détruit les commentaires qui portaient la
+raison des choix — et dans ce dépôt, la raison vaut plus que le code.
+
+Un fichier qu'on n'a pas lu ne se réécrit pas. Un fichier qu'on a lu se modifie
+par touches nommées.
+
+### 3. Le menu avant l'écriture
+
+Lire et cartographier est libre : c'est ce qui rend les deux règles ci-dessus
+possibles, et le §6 encadre déjà le coût de lecture.
+
+**Écrire ne l'est pas.** Avant la première écriture d'un lot qui touche à de
+l'existant, annoncer en trois à cinq lignes : quels fichiers, quel geste sur
+chacun, ce qui reste intact. Puis attendre le feu vert.
+
+Ce menu n'est pas une politesse, c'est le dernier moment où une erreur de
+compréhension coûte une phrase au lieu d'un correctif.
+
+### 4. Un doublon arrête le geste
+
+Si un composant qui ressemble à ce qu'on s'apprête à écrire existe déjà, on
+s'arrête et on propose : étendre l'existant, le remplacer, ou coexister. On ne
+tranche pas seul, et surtout on n'écrit pas un second composant en espérant que
+personne ne remarque le premier.
+
+C'est la règle la plus rentable des quatre : deux outils qui font la même chose
+se déclenchent l'un à la place de l'autre, et le moins bon gagne une fois sur
+deux.
+
+### Ce que cette section ne suspend pas
+
+Les trois exceptions du §0 restent les trois exceptions. Et une question posée
+au titre du §0 bis **ne bloque pas le reste du chantier** : on demande, et on
+part sur ce qui ne dépend pas de la réponse, dans le même message.
 
 ## 1. ADN
 
