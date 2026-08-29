@@ -3515,3 +3515,66 @@ attendre coûte un utilisateur.
 Corollaire pratique : quand un contrôle neuf passe au vert **du premier coup**,
 il faut le faire échouer exprès une fois avant de lui faire confiance. Celui-ci
 avait justement échoué — et c'est ce qui a révélé que son décor était faux.
+
+## Une donnée calculée à l'écriture ne bénéficie jamais d'un correctif
+
+Le classement direct / film / série d'une entrée IPTV se calcule **à l'import**
+et s'écrit en base. Une règle de classement fausse produit donc un catalogue
+faux — et le correctif livré ensuite ne le répare pas : il n'agit qu'au prochain
+import, que personne ne refait, parce qu'il coûte plusieurs minutes et demande
+de retrouver l'adresse de sa source.
+
+Le cas réel : des **chaînes** de cinéma — Ciné+, Canal+ Cinémas, les chaînes
+Pluto — rangées dans l'onglet Films parce que leur groupe s'appelle « Cinema ».
+La règle a été corrigée, la correction fusionnée, et l'écran de l'utilisateur
+n'a pas bougé d'un pixel. Il a fallu qu'il renvoie une capture pour qu'on
+comprenne que le correctif n'atteignait pas les données.
+
+La règle générale : **tout champ dérivé écrit en base a besoin d'un chemin de
+recalcul, et ce chemin fait partie du correctif**, pas d'un lot suivant. Sans
+lui, on livre une correction qui ne corrige personne — la pire des situations,
+parce que tout le monde la croit appliquée. Le recalcul est presque toujours
+trivial : les données brutes sont encore là, il suffit de rejouer la fonction.
+
+Le signal à guetter, quand un utilisateur signale un défaut déjà corrigé :
+**demander si son état vient d'avant le correctif** — base, cache, fichier
+généré, index. Ce n'est presque jamais le code qui a régressé, c'est la donnée
+qui n'a jamais été rejouée.
+## La démonstration qu'on envoie au prospect n'était mesurée par personne
+
+`artisan-express/public/exemple.html` est la page qu'un artisan ouvre **sur son
+téléphone** au moment exact où il répond « montrez-moi ». C'est aussi le produit
+lui-même : elle sort de `titan-builder`, donc chaque site livré à 299 € lui
+ressemble. Aucune commande ne la mesurait — ni `epreuve-du-pouce`, ni
+`page-qui-vend`. Elle est référencée par la prose et par le script qui la
+fabrique, par rien qui la vérifie.
+
+Ce qu'un premier passage a trouvé : **2,2 écrans** entre le bas de page et la
+première action possible. Le visiteur fait défiler les photos de chantier,
+lit « et les communes autour » — l'instant où il décide qu'on couvre sa
+commune — et n'a plus rien à toucher. Le numéro était bien là, en pied de page,
+à 18 px, **et n'était pas cliquable**. Quelqu'un l'avait rendu lisible sans le
+rendre actionnable, avec un commentaire disant que c'était « la ligne la moins
+bien vue et la plus utile ».
+
+Un `tel:` et 44 px de haut ramènent la distance à **0,62 écran**, sans rien
+ajouter à la page. L'épreuve du pouce reste verte, contrastes mesurés à 5,99:1
+en clair et 4,51:1 en sombre.
+
+**Ce qui se généralise :** une page qu'on envoie à quelqu'un est une page en
+production. Celle-ci ne passait aucune barrière parce qu'elle n'est ni une route
+de l'application, ni un composant — juste un fichier dans `public/`. Un artefact
+généré échappe aux vérifications par défaut, et c'est précisément lui qui part
+chez le client.
+
+**Et un outil de mesure ne vaut que sur le genre de page pour lequel il est
+écrit.** `page-qui-vend` a rendu « le prix est dit après le bouton » en rouge sur
+le site d'un couvreur, qui n'affiche pas de tarifs et n'a rien à corriger.
+Corriger pour faire verdir aurait inventé un prix sur la page d'un client. Le
+faux positif est écrit dans la compétence, à l'endroit où on la lit.
+
+**Piège de frappe, payé une fois :** dans ce dépôt les commentaires citent les
+identifiants entre accents graves. Écrire ça dans un commentaire situé **à
+l'intérieur d'un littéral de gabarit** — le générateur de site en est fait — le
+termine et casse la compilation. Le message de `tsc` désigne la ligne du
+commentaire, pas le gabarit.

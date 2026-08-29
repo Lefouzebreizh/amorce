@@ -413,6 +413,24 @@ ${ficheEtablissement(commande, domaine)}
   /* 1 rem, pas .95 : le plancher du dépôt est 18 px, et le pied de page porte
      le numéro de téléphone — c'est la ligne la moins bien vue et la plus utile. */
   footer { padding: 2rem 1.25rem; color: var(--gris); text-align: center; }
+  /*
+   * Et cette ligne-là s'appelle. Elle était lisible et pas cliquable : le
+   * visiteur qui vient de faire défiler les photos et de lire « et les communes
+   * autour » — l'instant exact où il décide — devait remonter deux écrans pour
+   * trouver le bouton d'appel. Mesuré : 2,2 écrans dans le pire cas.
+   *
+   * 44 px et non les 56 des boutons du haut : c'est un numéro dans une phrase,
+   * pas une action principale. Le plancher du dépôt est tenu, la mise en page
+   * du pied ne se déforme pas. La couleur est celle qu'accentLisible garantit
+   * au-dessus de 4,5:1 sur les deux fonds — un lien en gris de pied de page ne
+   * se voit pas comme un lien.
+   */
+  footer a {
+    display: flex; align-items: center; justify-content: center;
+    width: fit-content; margin: .25rem auto 0;
+    min-height: 44px; padding: 0 .5rem; color: var(--accent-texte);
+    font-weight: 700; text-decoration: underline; text-underline-offset: .2em;
+  }
   @media (prefers-color-scheme: dark) {
     :root {
       --encre: #eef3f7; --papier: #10171e; --gris: #93a3b1;
@@ -432,7 +450,11 @@ ${ficheEtablissement(commande, domaine)}
 ${actions.length > 0 ? `  <div class="actions">\n${actions.join('\n')}\n  </div>` : ''}
 ${blocs.join('\n')}
 </main>
-<footer>${entreprise} — ${ville}${telephone === '' ? '' : ` — ${echapper(telephone)}`}</footer>
+<footer>${entreprise} — ${ville}${
+  telephone === ''
+    ? ''
+    : `<a href="tel:${echapper(lienTelephonique(telephone))}">${echapper(telephone)}</a>`
+}</footer>
 </body>
 </html>
 `;

@@ -312,3 +312,30 @@ test('une image peut être embarquée, et la page reste un seul fichier', () => 
 
   assert.match(html, /<img src="data:image\/svg\+xml;base64,PHN2Zz48L3N2Zz4=" alt="Emplacement"/);
 });
+
+test('le numéro du pied de page s’appelle', () => {
+  /*
+   * Il était lisible et pas cliquable. Le visiteur qui a fait défiler les
+   * photos et lu « et les communes autour » — l'instant où il décide — devait
+   * remonter deux écrans pour trouver le bouton d'appel : 2,2 écrans mesurés
+   * sur le terrain de référence.
+   *
+   * Le lien sort dès que le numéro est affiché, sans dépendre de l'option
+   * « appel » : le pied de page montrait déjà le numéro dans tous les cas, et
+   * un numéro affiché qu'on ne peut pas toucher est un numéro à recopier à la
+   * main sur un chantier.
+   */
+  const html = genererSite(commande({ options: [], telephone: '02 97 00 11 22' }));
+  const pied = html.slice(html.indexOf('<footer>'));
+
+  assert.ok(pied.includes('href="tel:+33297001122"'));
+  assert.ok(pied.includes('02 97 00 11 22'));
+});
+
+test('sans numéro, le pied de page ne fabrique pas de lien mort', () => {
+  const html = genererSite(commande({ options: [], telephone: '' }));
+  const pied = html.slice(html.indexOf('<footer>'));
+
+  assert.equal(pied.includes('tel:'), false);
+  assert.equal(pied.includes('<a'), false);
+});
