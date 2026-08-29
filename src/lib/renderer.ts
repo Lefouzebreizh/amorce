@@ -423,6 +423,15 @@ export type RenderOptions = {
   /** Halo sur les hautes lumières. Coupé sur les appareils lents. */
   bloom?: boolean;
   /**
+   * Signature de l'offre libre, tracée en bas de l'image. Absente sans elle.
+   *
+   * Le moteur reçoit un texte, jamais un état d'abonnement : il ne connaît pas
+   * le module de licence et ne doit pas le connaître — c'est la frontière que
+   * `src/lib/__tests__/frontiere.test.ts` garde. Qui décide de la signature est
+   * l'affaire de l'interface ; le moteur ne sait que la dessiner.
+   */
+  signature?: string;
+  /**
    * Reçoit la position de chaque sous-titre tracé.
    *
    * Un texte dessiné dans un canvas n'est pas un élément du document : sans
@@ -522,6 +531,43 @@ export function renderFrame(
     const box = drawCaption(ctx, caption, time, fonts);
     if (box) options.captionBoxes?.set(caption.id, box);
   }
+
+  if (options.signature) drawSignature(ctx, options.signature, fonts);
+}
+
+/** Hauteur de la signature, en part de l'image. */
+const SIGNATURE_Y = 0.94;
+/** Marge au bord droit, en pixels de la composition 1080 × 1920. */
+const SIGNATURE_MARGE = 34;
+
+/**
+ * La signature de l'offre libre.
+ *
+ * Elle est tracée **après les sous-titres**, jamais avant : un texte qui porte
+ * le propos ne doit pas passer sous une marque commerciale. Et après
+ * l'étalonnage, comme eux — la grainer la ferait scintiller d'une image à
+ * l'autre, ce qui attire l'œil bien plus que la marque elle-même.
+ *
+ * À 94 % de la hauteur, elle est **sous la bande sûre** des sous-titres
+ * (12–45 %) et sous la zone que l'habillage des plateformes occupe. C'est
+ * délibéré : une signature ne doit gêner ni la lecture ni la composition, et
+ * elle reste entière dans le fichier — c'est là qu'elle compte, puisque c'est
+ * le fichier qu'on republie et qu'on partage.
+ *
+ * Discrète et non dissimulée. Une marque qu'on cacherait à moitié serait un
+ * procédé : soit on l'assume, soit on ne la met pas.
+ */
+function drawSignature(ctx: CanvasRenderingContext2D, texte: string, fonts: FontSet): void {
+  ctx.save();
+  ctx.font = `600 30px ${fonts.body}`;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'alphabetic';
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 2;
+  ctx.fillStyle = 'rgba(255,255,255,0.82)';
+  ctx.fillText(texte, OUTPUT_WIDTH - SIGNATURE_MARGE, OUTPUT_HEIGHT * SIGNATURE_Y);
+  ctx.restore();
 }
 
 /**

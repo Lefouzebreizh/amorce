@@ -5,6 +5,8 @@ import type { FontSet } from '@/lib/captions';
 import { useStudio } from '@/lib/store';
 import { useIsCompact } from '@/hooks/useMediaQuery';
 import { usePlayback } from '@/hooks/usePlayback';
+import { signatureAAfficher } from '@/licence/etat';
+import { ETAT_INITIAL } from '@/licence/types';
 import { usePersistence } from '@/hooks/usePersistence';
 import { useSharedFiles } from '@/hooks/useSharedFiles';
 import { StudioDesktop } from './StudioDesktop';
@@ -41,7 +43,15 @@ function readFonts(): FontSet {
 
 export function Studio() {
   const [fonts] = useState<FontSet>(readFonts);
-  const engine = usePlayback(fonts);
+  /*
+   * La licence décide de ce que l'interface propose, jamais de ce que le
+   * moteur fait d'un fichier. Elle vit donc ici, dans la coque, et le moteur
+   * ne reçoit qu'un texte.
+   *
+   * `ETAT_INITIAL` tant qu'aucun serveur ne répond : l'état inconnu retombe
+   * sur l'offre libre, et le studio reste entier serveur éteint.
+   */
+  const engine = usePlayback(fonts, signatureAAfficher(ETAT_INITIAL));
   const compact = useIsCompact();
   usePersistence();
 
