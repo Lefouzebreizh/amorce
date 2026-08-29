@@ -2600,13 +2600,34 @@ télévision en direct**, elle devient absurde : le clic qui a ouvert la chaîne
 *est* le geste, et demander un second clic pour regarder la télé est une gêne
 que personne n'accepte.
 
-La bonne formulation n'est pas « jamais » mais **« jamais sans intention »** :
+La correction s'est faite en deux fois, et la première était encore à
+moitié fausse : le direct démarrait seul, les films attendaient toujours « pour
+laisser lire le résumé ». Retour d'usage immédiat : « dès qu'on clique sur une
+icône, il faut que ça se lance ». **Cliquer sur une vignette est déjà la
+demande de regarder** — le résumé reste lisible sous l'image pendant que ça
+joue.
 
-| contenu | démarrage | pourquoi |
-| --- | --- | --- |
-| direct | automatique | le clic sur la chaîne est l'intention |
-| film, épisode | sur geste | on lit d'abord le résumé, on reprend où on en était |
+La leçon derrière la leçon : une règle de protection écrite pour un contexte
+(une vidéo qui s'ouvre sur une page qu'on parcourt) devient une gêne dans un
+autre (un lecteur qu'on a ouvert exprès). **Ce n'est pas la règle qu'il faut
+défendre, c'est l'intention qu'elle servait.**
 
 Et le refus du navigateur se dit à l'écran : bloquer une vidéo sonore lancée
 sans interaction suffisante est un comportement normal de Chrome, silencieux,
 qui se confond avec une panne du flux.
+
+## Un flux qui met huit secondes à s'établir passe pour une panne
+
+Premier mot revenu de l'usage réel, avant tout autre : « ça reste figé ». Le
+flux n'était pas figé — il se connectait. Une chaîne IPTV met deux à dix
+secondes à s'établir : résolution du manifeste, premier segment, mise en
+tampon. Pendant ce temps l'image est noire et rien ne bouge.
+
+**Un écran noir silencieux et un écran noir en panne sont indiscernables**, et
+l'utilisateur tranche toujours dans le même sens : c'est cassé. Il ferme,
+essaie une autre chaîne, conclut que rien ne marche.
+
+Le remède ne coûte rien : un mot sur l'image, allumé jusqu'au premier instant
+réellement joué. Et l'événement qui l'éteint doit être `playing`, pas un
+événement de réseau — `canplay` se déclenche avant que quoi que ce soit soit
+visible, et l'indicateur disparaîtrait sur un écran encore noir.
