@@ -33,6 +33,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture de livre reste lisible réduite à la taille d'une vignette de boutique (150 px de large) — fabrique la vignette et mesure… |
 | `/master-telephone` | >- Sortir une vidéo au niveau d'un téléphone et non d'un cinéma — gagner cinq décibels réellement entendus sans écraser la dynamique, en remplissant… |
 | `/module-life-organizer` | Dans quel ordre écrire un module de l'assistant de rangement Life-Organizer, et les quatre pièges du domaine qui coûtent chacun une reprise complète… |
+| `/montage-sans-refaire` | La liste de contrôle d'un montage vertical, écrite après vingt-cinq versions d'un même épisode livrées et rejetées en une nuit. Chaque ligne est un… |
 | `/naviguer-le-depot` | Trouver vite le bon fichier dans ce dépôt à onze projets sans noyer le contexte — quel projet répond à quelle demande, quels dossiers ne jamais… |
 | `/nouveau-projet` | Ajouter un projet à ce dépôt multi-projets sans rien oublier — les six endroits où il doit se déclarer pour être installé, vérifié, gardé par… |
 | `/nouvelle-competence` | Écrire une compétence pour ce dépôt sans en fabriquer un doublon ni un doublon d'intention — vérifier d'abord ce qui existe **y compris sur `main`**,… |
