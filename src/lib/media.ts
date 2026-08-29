@@ -2,6 +2,7 @@
 
 import { uid } from './id';
 import { analyseVoice } from './voice';
+import { COTE, empreinte } from './ressemblance';
 import { IMAGE_DURATION } from './types';
 import type { MediaAsset, MusicTrack, SampleCue, VoiceCue } from './types';
 
@@ -72,7 +73,17 @@ function detectAudio(video: HTMLVideoElement): boolean {
 }
 
 /** Capture une image du média et la renvoie en data URL. */
-function grabThumbnail(source: HTMLVideoElement | HTMLImageElement, maxWidth = 160): string {
+/**
+ * Vignette et empreinte, du même canevas.
+ *
+ * L'empreinte sort du dessin qui existe déjà : aucun décodage de plus, aucune
+ * seconde de plus à l'import. C'est ce qui permet de la calculer sur un
+ * téléphone sans que personne ne s'en aperçoive.
+ */
+function grabThumbnail(source: HTMLVideoElement | HTMLImageElement, maxWidth = 160): {
+  thumbnail: string;
+  empreinte: string;
+} {
   const [sw, sh] =
     source instanceof HTMLVideoElement
       ? [source.videoWidth, source.videoHeight]
@@ -82,9 +93,31 @@ function grabThumbnail(source: HTMLVideoElement | HTMLImageElement, maxWidth = 1
   canvas.width = maxWidth;
   canvas.height = Math.round(maxWidth * ratio);
   const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
+  if (!ctx) return { thumbnail: '', empreinte: '' };
   ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.7);
+
+  // Huit sur huit en gris, tirés du même dessin.
+  let signature = '';
+  try {
+    const petit = document.createElement('canvas');
+    petit.width = COTE;
+    petit.height = COTE;
+    const pctx = petit.getContext('2d');
+    if (pctx) {
+      pctx.drawImage(canvas, 0, 0, COTE, COTE);
+      const pixels = pctx.getImageData(0, 0, COTE, COTE).data;
+      const gris: number[] = [];
+      for (let i = 0; i < pixels.length; i += 4) {
+        gris.push(0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2]);
+      }
+      signature = empreinte(gris);
+    }
+  } catch {
+    // Un canevas teinté par une source d'une autre origine lève à la lecture
+    // des pixels. Le studio continue sans empreinte plutôt que de s'arrêter.
+  }
+
+  return { thumbnail: canvas.toDataURL('image/jpeg', 0.7), empreinte: signature };
 }
 
 /**
@@ -162,7 +195,7 @@ export async function loadVideoAsset(file: File): Promise<MediaAsset> {
       duration: Number.isFinite(video.duration) ? video.duration : 0,
       width: video.videoWidth,
       height: video.videoHeight,
-      thumbnail: grabThumbnail(video),
+      ...grabThumbnail(video),
       hasAudio: detectAudio(video),
     };
   } catch (error) {
@@ -217,7 +250,7 @@ export async function loadImageAsset(file: File): Promise<MediaAsset> {
       duration: IMAGE_DURATION,
       width: image.naturalWidth,
       height: image.naturalHeight,
-      thumbnail: grabThumbnail(image),
+      ...grabThumbnail(image),
       // Une image n'a pas de son. Le dire franchement évite que le graphe
       // audio tente de brancher une source sur un élément qui n'en est pas un.
       hasAudio: false,
