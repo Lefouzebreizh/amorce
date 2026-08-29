@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { debitVideo, downloadBlob, pickFormat, recordMontage, relireLExport, safeFilename } from '@/lib/export';
+import { crochetsARemplir } from '@/lib/captions';
 import { formatTime } from '@/lib/media';
 import { useStudio } from '@/lib/store';
 import { EXPORT_PRESETS, exportPreset, OUTPUT_FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
@@ -19,6 +20,14 @@ import { Button, Choice, Field, Hint, Panel } from '../ui';
 export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
   const project = useStudio((s) => s.project);
   const duration = useStudio((s) => s.duration());
+  /*
+   * Les gabarits laissent des crochets à remplir, et rien n'empêchait de les
+   * exporter. Constaté sur un montage livré : quatre textes sur quatre étaient
+   * des trous, gravés dans le fichier. Aucune mesure ne le disait — la
+   * couverture texte était même bonne, puisqu'il y avait du texte.
+   */
+  const captions = useStudio((s) => s.project.captions);
+  const aRemplir = crochetsARemplir(captions);
   const renameProject = useStudio((s) => s.renameProject);
   const presetId = useStudio((s) => s.exportPreset);
   const setPreset = useStudio((s) => s.setExportPreset);
@@ -175,14 +184,42 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
           />
         </label>
 
+        {/*
+          L'avertissement ne bloque pas, il rend le choix conscient.
+          Bloquer l'export enfermerait quelqu'un qui veut sortir un brouillon ;
+          se taire l'a laissé publier « QUEL [ROYAUME] TOMBE ENSUITE ? ». Le
+          bouton change donc de mot — « quand même » — et la liste dit
+          exactement quoi remplir.
+        */}
+        {!audioOnly && aRemplir.length > 0 && (
+          <div className="mb-2 rounded-xl bg-warn/10 px-3.5 py-3 text-[12.5px] leading-relaxed text-warn">
+            <p className="font-semibold">
+              {aRemplir.length === 1
+                ? 'Un texte porte encore un crochet à remplir.'
+                : `${aRemplir.length} textes portent encore un crochet à remplir.`}
+            </p>
+            <ul className="mt-1.5 space-y-0.5">
+              {aRemplir.slice(0, 4).map((c) => (
+                <li key={c.id} className="truncate">· {c.text}</li>
+              ))}
+            </ul>
+            <p className="mt-1.5 text-muted">
+              Ils partiront tels quels dans le fichier. Va dans <strong>Textes</strong> pour les
+              écrire.
+            </p>
+          </div>
+        )}
+
         <Button variant="primary" className="w-full" onClick={run} disabled={busy || duration <= 0 || !format}>
           {busy
             ? `Enregistrement… ${Math.round((progress ?? 0) * 100)} %`
             : audioOnly
               ? '⬇ Exporter la bande-son'
-              // Le poids sur le bouton, pas dans une note à côté : c'est au
-              // moment d'appuyer qu'il change une décision.
-              : `⬇ Exporter la vidéo · ~${poidsEstime.toFixed(1)} Mo`}
+              : aRemplir.length > 0
+                ? `⬇ Exporter quand même · ~${poidsEstime.toFixed(1)} Mo`
+                // Le poids sur le bouton, pas dans une note à côté : c'est au
+                // moment d'appuyer qu'il change une décision.
+                : `⬇ Exporter la vidéo · ~${poidsEstime.toFixed(1)} Mo`}
         </Button>
 
         {busy && (
