@@ -193,6 +193,8 @@ export interface Depot {
   ): Promise<ResumeImport>
   enregistrerFiches(sourceId: number, fiches: Iterable<FicheSerie>): number
   fiches(filtres?: Filtres): FicheSerie[]
+  /** La fiche d'une série par son titre affiché — ce que l'URL porte. */
+  ficheParTitre(titre: string): FicheSerie | undefined
   /** Un élément par son identifiant — ce que le lecteur et le mandataire demandent. */
   element(id: string): Element | undefined
   reglage(cle: string): string | undefined
@@ -498,6 +500,36 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
            ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur`,
         )
         .run(cle, valeur)
+    },
+
+    ficheParTitre(titre): FicheSerie | undefined {
+      const ligne = base
+        .prepare(
+          `SELECT id, ref_externe, titre, titre_brut, annee, logo, resume, genres,
+                  groupe, langue
+           FROM serie WHERE titre = ? COLLATE NOCASE LIMIT 1`,
+        )
+        .get(titre) as Ligne | undefined
+      if (ligne === undefined) return undefined
+      let genres: string[] = []
+      try {
+        const brut: unknown = JSON.parse(String(ligne['genres'] ?? '[]'))
+        if (Array.isArray(brut)) genres = brut.filter((g): g is string => typeof g === 'string')
+      } catch {
+        genres = []
+      }
+      return {
+        id: texte(ligne['id']) ?? '',
+        refExterne: texte(ligne['ref_externe']),
+        titre: texte(ligne['titre']) ?? '',
+        titreBrut: texte(ligne['titre_brut']) ?? '',
+        annee: entier(ligne['annee']),
+        logo: texte(ligne['logo']),
+        resume: texte(ligne['resume']),
+        genres,
+        groupe: texte(ligne['groupe']),
+        langue: (texte(ligne['langue']) ?? 'inconnue') as Langue,
+      }
     },
 
     compter(filtres = {}): number {

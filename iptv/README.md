@@ -102,9 +102,14 @@ bon compromis, sur un wifi partagé ce n'en est pas un.
 ## S'en servir tout de suite
 
 ```bash
-npm run iptv -- importer ma-liste.m3u     # un fichier, ou une URL
+# Un lien M3U…
+npm run iptv -- importer ma-liste.m3u
+
+# …ou un panneau Xtream, si votre fournisseur donne serveur + identifiants
+npm run iptv -- xtream http://hote:8080 utilisateur motdepasse
+
 npm run iptv -- epg guide.xml.gz          # le guide, .gz accepté
-npm run dev                                # puis http://localhost:3000
+npm run dev                                # puis l'adresse réseau affichée
 ```
 
 Les autres commandes, quand on veut voir sans ouvrir de navigateur :
@@ -234,6 +239,24 @@ vivent les pistes audio séparées, donc la version française.
 au build ; ici cela n'a aucun sens, la base n'existe pas encore à ce
 moment-là — le build échouait d'ailleurs franchement, ce qui vaut mieux qu'une
 page figée sur l'état d'un soir.
+
+**Les épisodes d'une série Xtream se chargent à l'ouverture de sa fiche, pas à
+l'import.** Les obtenir demande un appel `get_series_info` **par série** : sur
+un panneau qui en sert deux mille et accepte quelques dizaines de requêtes par
+minute, l'import complet prendrait une heure — pour des épisodes dont on n'en
+regardera jamais que quelques-uns. Le prix est visible et assumé : la première
+ouverture d'une série attend un aller-retour, les suivantes lisent le cache.
+
+**Une série déclarée s'affiche avant d'avoir ses épisodes**, et l'écran dit
+« épisodes à charger » plutôt que « 0 épisode ». Si le panneau est injoignable,
+la fiche s'affiche quand même avec son résumé et explique l'absence — une page
+vide laisserait croire à un catalogue amputé.
+
+**Les identifiants vivent dans `.env`, jamais en base.** L'application les y lit
+au besoin ; le cache ne garde que l'adresse masquée d'une source. Une base
+copiée ou sauvegardée ne livre donc l'abonnement de personne. Next lit `.env`
+tout seul ; la ligne de commande le fait explicitement, sans dépendance et sans
+jamais écraser une variable déjà posée dans l'environnement.
 
 **Le guide se lit au fil de l'eau, avec un analyseur écrit à la main.** Un
 XMLTV français couvre deux semaines sur trois cents chaînes : 50 à 200 Mo,
