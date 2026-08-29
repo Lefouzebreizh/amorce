@@ -2296,6 +2296,39 @@ directory`, qu'on lit comme un détail, alors qu'elle annule l'édition entière
 **La parade : des chemins absolus dans les scripts d'édition**, et `pwd` avant
 de supposer où l'on est.
 
+## Une secousse de caméra sur un plan qui bouge déjà se lit comme une panne
+
+« Ça saccade au moment du cri du dragon. » Le son y était irréprochable —
+aucune discontinuité, aucun écrêtage, enveloppe lisse.
+
+C'était l'**image** : une secousse de caméra posée sur le rugissement faisait
+passer le mouvement entre deux images consécutives de **16 à 40** pendant
+0,35 s. Retirée, le maximum retombe à 23 — le mouvement propre du plan.
+
+**Une secousse sert un plan immobile.** Sur une bête qui hurle et bouge déjà
+violemment, elle ne renforce rien : elle brouille, et le brouillage se lit
+comme un défaut de lecture.
+
+## Un événement de l'image sans son ne se remarque pas, il se ressent
+
+Des éclairs sortent des yeux du personnage principal, et **aucun bruitage ne
+les accompagnait** — le premier arrivait 1,2 s plus tard. Personne ne dit « il
+manque un son à 5,42 s » ; on dit « on n'entend pas les éclairs », et seulement
+après avoir vu la vidéo cinq fois.
+
+Ça se trouve en relevant les événements **de l'image** :
+
+```python
+clairs = [(x > 200).sum() for x in images]   # pixels tres clairs
+# une apparition = un facteur 2 ou plus d'une image a la suivante
+```
+
+Mesuré : 713 → 2864 pixels en trois images, puis 16 782 sur une seule. Deux
+événements majeurs du film, zéro son.
+
+**Faire la liste des événements de l'image, puis pointer le son qui répond à
+chacun.** Le montage se construit dans ce sens-là, jamais l'inverse.
+
 ## Un `<textarea>` rendu en un seul `<p>` perd tout ce que l'auteur a aéré
 
 Mesuré sur le générateur de TITAN Builder : une présentation d'artisan écrite
