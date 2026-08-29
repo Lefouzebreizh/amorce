@@ -3810,3 +3810,35 @@ question face à un échec inattendu n'est pas « qu'ai-je changé » mais « ce
 contrôle échouerait-il aussi sur `main` seul, seule sa dernière modification
 en cause ». Reproduit en `sudo -u nobody`, avant et après le correctif, sur le
 `CLAUDE.md` réel de `main` — pas sur une hypothèse.
+## Un conflit n'est pas la preuve qu'il reste du travail à fusionner
+
+Une PR annonçait « 1 fichier en conflit » sur `second-brain/lecons.md`, deux
+contrôles Vercel au rouge, et le bouton « Resolve conflicts » qui appelle le
+clic. Tout disait : il y a du travail. Il n'y en avait aucun. Le correctif
+qu'elle portait était **déjà sur `main`**, arrivé par une PR précédente ; la
+branche avait été rouverte une seconde fois sur le même travail.
+
+La mesure qui tranche tient en une commande, et elle est à faire **avant** de
+toucher au conflit :
+
+```bash
+git diff origin/main HEAD    # vide = la branche n'apporte rien, on ferme
+```
+
+Ici : zéro ligne de différence. Le rebase avait d'ailleurs absorbé le commit
+tout seul — un commit qui disparaît sans erreur pendant un rebase est le même
+signal, lu autrement.
+
+**Pourquoi le piège coûte cher :** le conflit portait sur sept leçons écrites
+par d'autres sessions pendant que la branche dormait. Les réconcilier à la main
+dans l'éditeur web — sur un téléphone — aurait pris vingt minutes pour un
+résultat identique à `main`, octet pour octet. Le travail paraît réel parce que
+le conflit est réel ; c'est son utilité qui est nulle.
+
+**Et `git branch -d` dit la vérité quand on l'écoute.** Il a refusé la
+suppression avec « *not deleting branch … that is not yet merged to
+`refs/remotes/origin/<branche>`, even though it is merged to HEAD* ». Traduit :
+le contenu est dans `main`, mais la branche distante porte encore le commit dont
+la PR dépend. `-D` l'aurait supprimée sans broncher, et emporté la seule copie
+locale de ce commit pendant que la PR était ouverte. Le refus de `-d` est une
+information, pas un obstacle à contourner.
