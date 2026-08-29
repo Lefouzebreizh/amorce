@@ -99,3 +99,28 @@ défilement horizontal, aucune cible tactile sous 44 px hors du piège à robots
 - La ligne du domaine dans `Offre.tsx` : elle annonce « une douzaine d'euros
   par an, payés au fournisseur ». C'est le seul chiffre de la page qui n'a pas
   été dicté — à confirmer ou à changer.
+
+## Regarder la page comme elle sera lue
+
+```bash
+npm run build && npx next start -p 3000 &
+npm run regarder http://localhost:3000
+```
+
+Un vrai Chromium à **393 × 873** — le terrain de référence du dépôt — et un
+refus sur ce qui ne se lit pas : contraste sous 4,5:1, texte sous 18 px, cible
+sous 44 px, page qui déborde à droite. Il faut un serveur : la page a une route
+d'API, elle ne s'ouvre pas depuis le disque.
+
+**Onze défauts à sa première exécution, et le pire portait la vente :**
+
+| Ce qui n'allait pas | Mesuré | Pourquoi personne ne l'avait vu |
+| --- | --- | --- |
+| Le bouton principal, blanc sur `#e35d00` | 3,60:1 | La teinte du **survol** était déjà à 4,65:1 : la page se lisait mieux le doigt posé qu'au repos. |
+| « Pas d'abonnement… », `text-white/85` sur bleu | 2,58:1 | Une opacité ne se voit pas — elle divise le contraste en silence. |
+| Six textes en `text-sm` | 15,75 px | La racine est à **18 px** ici, pas à 16 : `text-sm` vaut donc 0,875 × 18. |
+
+Ce que le contrôle **ne** compte pas : tout ce qui est `aria-hidden`. Les
+maquettes de téléphone dessinées en HTML imitent une capture d'écran, 9 px et
+gris pâles compris. Les mesurer donnait quarante défauts dont trente ne
+devaient rien à personne, et un contrôle qui crie pour du décor cesse d'être lu.
