@@ -128,6 +128,12 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
+  **`main.py sonde` avant le premier scan**, et après toute retouche de
+  `sources/` : trois situations rendent le même rapport vide — marché calme,
+  service muet, ou service qui répond dans une forme qu'on ne sait plus lire.
+  La sonde rend « reçus » et « lus » par point d'entrée et ne crie que sur
+  l'écart. Un scan tient un **verrou de fichier** le temps du tour : deux tours
+  simultanés valent deux fois le débit annoncé, et les 429 frappent les deux.
 - **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
   asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
   bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
@@ -318,6 +324,20 @@ Ce qui reste impossible : l'ingestion **en direct**, le sentiment, l'on-chain et
 la macro. Une stratégie se règle donc hors ligne sur des données téléchargées,
 et son branchement aux sources ne se vérifie que sur une machine sans mandataire
 filtrant.
+
+**Une session distante ne peut pas en joindre une autre.** Mesuré deux fois le
+29/08 : `ListAgents` ne rend aucun pair joignable et `SendMessage` refuse, alors
+que `list_sessions` montre les autres sessions du compte en train de tourner,
+dans le même environnement et sur le même dépôt. Le piège est là — leur fiche
+porte `cross_session_inbound: available`, ce qui dit qu'**elles** acceptent de
+recevoir, jamais qu'on sait router jusqu'à elles. Une session qui lit ce champ
+croit le canal ouvert et écrit un message qui ne partira pas.
+
+Le lien entre sessions est donc le **dépôt**, et lui seul : ce fichier, les
+compétences, les agents, `second-brain/`. Une découverte qu'une autre session
+doit connaître s'écrit et se fusionne — elle ne s'envoie pas. C'est aussi ce qui
+rend la fusion rapide utile au-delà des conflits : tant qu'un lot n'est pas sur
+`main`, il n'existe pour personne d'autre.
 
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
