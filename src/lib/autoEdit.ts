@@ -44,8 +44,46 @@ const TARGET_SHOT = 2.1;
  */
 const DUREE_VISEE = 22;
 
-/** En dessous, un plan n'a pas le temps d'être lu. */
-const MIN_SHOT = 0.9;
+/*
+ * Ce qu'un plan doit durer **à l'écran** pour être lu.
+ *
+ * Le chiffre n'est pas choisi ici : c'est le bas de la bande que `analysis.ts`
+ * récompense — `band(averageShot, 1.1, 2.8, …)`. Le montage express produisait
+ * un film que sa propre analyse pénalisait, et le guide lui répondait « tes
+ * plans s'enchaînent trop vite pour être lus ». Une application qui se
+ * contredit d'un module à l'autre donne exactement l'impression de n'importe
+ * quoi qu'on lui a reprochée.
+ */
+const MIN_SHOT_VU = 1.1;
+
+/*
+ * La longueur de **coupe** minimale, qui n'est pas la même chose.
+ *
+ * Une transition recouvre la fin d'un plan et le début du suivant : mesuré,
+ * 0,29 s disparaissent à chaque raccord. Un plancher de coupe à 0,90 s laissait
+ * donc 0,61 s vues — moitié moins que ce que l'analyse demande, et personne ne
+ * le voyait parce que les deux durées portent le même nom dans la tête de qui
+ * lit le code.
+ *
+ * Mesuré sur le montage express : vingt rushes donnaient 0,81 s vues,
+ * vingt-huit et au-delà 0,61 s, quel que soit le nombre de rushes.
+ */
+const MIN_SHOT = 1.4;
+
+/*
+ * Le nombre de plans que l'express se permet.
+ *
+ * Deux bornes de `analysis.ts` se rencontrent ici, et au-delà d'un certain
+ * nombre de rushes elles ne peuvent plus être tenues ensemble : un plan doit
+ * durer au moins `MIN_SHOT_VU`, et un film au-delà de 35 s est pénalisé —
+ * c'est là que la part de spectateurs qui vont au bout décroche.
+ *
+ * On tranche du côté du film : les rushes en trop restent dans la
+ * bibliothèque, disponibles pour la suite. Ce n'est pas une perte
+ * silencieuse — le bouton annonce combien il en prend, et dit pourquoi.
+ */
+const DUREE_MAX = 35;
+export const PLANS_MAX = Math.floor(DUREE_MAX / MIN_SHOT_VU);
 
 /** Transitions alternées, pour éviter la monotonie d'un effet répété. */
 const TRANSITION_CYCLE: TransitionKind[] = ['zoomPunch', 'whipPan', 'fade', 'slideUp', 'flash'];
@@ -130,12 +168,13 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
    * `TARGET_SHOT` l'attention lâche. Entre les deux, on vise la durée du film
    * plutôt que celle du plan.
    */
-  const utilisables = Math.max(1, assets.filter((a) => a.duration > 0.2).length);
+  const retenus = keepWhole ? assets : assets.slice(0, PLANS_MAX);
+  const utilisables = Math.max(1, retenus.filter((a) => a.duration > 0.2).length);
   const visee = keepWhole
     ? TARGET_SHOT
     : Math.max(MIN_SHOT, Math.min(TARGET_SHOT, DUREE_VISEE / utilisables));
 
-  const clips = assets
+  const clips = retenus
     .map((asset, index) => cutFromAsset(asset, index, keepWhole, visee))
     .filter((clip): clip is Clip => clip !== null)
     // Le premier plan retenu doit porter les réglages d'ouverture, même si des
