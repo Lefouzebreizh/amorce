@@ -3,21 +3,40 @@ import { test } from 'node:test';
 import { demanderEtat, lireReponse } from '../client.ts';
 import { ETAT_INITIAL } from '../types.ts';
 
-test('sans serveur configuré, rien n’est demandé', async () => {
-  /*
-   * Le studio ne doit pas émettre une seule requête tant qu'aucune adresse
-   * n'existe. Ce test le prouve en passant un `fetch` qui échouerait s'il
-   * était appelé — une assertion sur le résultat seul ne l'aurait pas montré,
-   * puisque le repli rend la même chose qu'un succès vide.
-   */
+/**
+ * Un `fetch` qui échoue s'il est appelé.
+ *
+ * C'est la seule façon de prouver qu'aucune requête ne part : une assertion
+ * sur le seul résultat ne montrerait rien, puisque le repli rend la même chose
+ * qu'un succès vide.
+ */
+function fetchInterdit(): { chercher: typeof fetch; appele: () => boolean } {
   let appele = false;
   const chercher = (async () => {
     appele = true;
     throw new Error('le réseau ne doit pas être touché');
   }) as unknown as typeof fetch;
+  return { chercher, appele: () => appele };
+}
 
-  assert.deepEqual(await demanderEtat(chercher), ETAT_INITIAL);
-  assert.equal(appele, false, 'une requête est partie sans serveur configuré');
+test('sans serveur configuré, rien n’est demandé', async () => {
+  const { chercher, appele } = fetchInterdit();
+  assert.deepEqual(await demanderEtat('une-cle', chercher), ETAT_INITIAL);
+  assert.equal(appele(), false, 'une requête est partie sans serveur configuré');
+});
+
+test('sans clé, rien n’est demandé non plus', async () => {
+  /*
+   * Une clé absente n'est pas une erreur : c'est quelqu'un qui n'a pas acheté,
+   * et l'offre libre est déjà la réponse. Envoyer la requête quand même
+   * ferait partir un appel pour se faire refuser, et apprendrait au serveur
+   * qu'un studio tourne ici — ce qu'il n'a pas à savoir.
+   */
+  for (const vide of ['', '   ', '\n']) {
+    const { chercher, appele } = fetchInterdit();
+    assert.deepEqual(await demanderEtat(vide, chercher), ETAT_INITIAL);
+    assert.equal(appele(), false, `une requête est partie avec la clé ${JSON.stringify(vide)}`);
+  }
 });
 
 test('une réponse illisible vaut l’offre libre', () => {

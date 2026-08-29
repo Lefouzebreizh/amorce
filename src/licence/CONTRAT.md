@@ -11,7 +11,13 @@ un stockage minuscule, aucune dépendance à Amorce.
 
 ### `GET /etat`
 
-Rend l'abonnement de la personne identifiée par le témoin de session.
+Rend le statut de la clé passée en `Authorization: Bearer <clé>`.
+
+**Pas de comptes.** Amorce se vend une fois : pas de mot de passe à perdre, pas
+de courriel à confirmer, pas de session à renouveler. Un achat rend une clé, on
+la colle dans le studio, et c'est tout. Le serveur ne sait donc pas **qui** vous
+êtes — seulement **qu'une clé a été payée**. Moins de données chez nous, moins à
+protéger, et plus proche de la promesse d'Amorce qu'un système de comptes.
 
 ```json
 { "statut": "libre" }
@@ -22,8 +28,14 @@ Rend l'abonnement de la personne identifiée par le témoin de session.
 - **Un statut, et rien d'autre.** Amorce se vend une fois : pas de date de fin,
   pas de renouvellement, rien à faire expirer. Tout champ supplémentaire est
   ignoré par le client, jamais recopié.
-- Sans session valide : `{"statut":"libre"}` avec un code 200. Pas de 401 — le
-  studio n'a pas à savoir qu'on ne le connaît pas, il a à savoir quoi proposer.
+- Clé absente, inconnue ou remboursée : `{"statut":"libre"}` avec un code 200.
+  Pas de 401 — le studio n'a pas à savoir qu'on ne le connaît pas, il a à savoir
+  quoi proposer.
+- Le client n'appelle même pas quand il n'a pas de clé : la requête partirait
+  pour se faire refuser, et apprendrait au serveur qu'un studio tourne là.
+- La comparaison de clé se fait **à temps constant**. Une comparaison naïve
+  laisse mesurer les premiers caractères justes, et une clé se devine alors
+  caractère par caractère.
 
 Le client abandonne au bout de **4 secondes** et retombe sur l'offre libre.
 Un serveur lent ne doit jamais suspendre un montage.
@@ -79,9 +91,13 @@ possible, pas de la générosité.
 
 ## Le stockage
 
-Une table, deux colonnes utiles : identifiant de la personne, et le fait qu'elle
-a payé. L'identifiant client Stripe s'y ajoute pour retrouver un paiement, rien
-de plus. Aucune date : il n'y en a pas.
+Une table, deux colonnes utiles : **l'empreinte** de la clé et le fait qu'elle a
+été payée. L'identifiant de paiement Stripe s'y ajoute pour retrouver une
+transaction, rien de plus. Aucune date : il n'y en a pas.
+
+L'empreinte et non la clé : une base qui fuite ne doit pas livrer des licences
+utilisables. C'est le même raisonnement que pour un mot de passe, et il coûte
+une ligne.
 
 ## L'ordre dans lequel ça s'allume
 
