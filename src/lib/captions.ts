@@ -37,6 +37,39 @@ type CaptionStyle = {
   pop: boolean;
 };
 
+/**
+ * La bande où un texte survit aux trois plateformes.
+ *
+ * Relevé sur des captures réelles — Redmi Note 12 Plus, TikTok, Instagram Reels
+ * et Facebook Reels — et non déduit des chartes, qui ne disent rien de la barre
+ * système ni des bulles de profil :
+ *
+ * | | haut occupé | bas occupé |
+ * | --- | --- | --- |
+ * | TikTok | 9 % | à partir de 72 % |
+ * | Instagram | 9,5 % | à partir de **63 %** |
+ * | Facebook | 12 % | à partir de 84 % |
+ *
+ * **C'est l'intersection qui décide, jamais la plus permissive** : une même
+ * vidéo part sur les trois, et c'est Instagram qui ferme le bas. La bande sûre
+ * va donc de 12 % à 45 % — au-delà on entre dans la colonne de droite de
+ * TikTok, en deçà on passe sous la barre système de Facebook.
+ *
+ * L'application posait pourtant ses sous-titres à **72 %**, c'est-à-dire dans
+ * la zone que les trois plateformes recouvrent. Un titre gravé à 62 % avait
+ * déjà été mangé à gauche par les bulles de profil **et** sorti du cadre à
+ * droite ; 72 % est pire.
+ */
+export const BANDE_SURE = { haut: 0.12, bas: 0.45 } as const;
+
+/** Hauteur par défaut d'un sous-titre, au milieu de la bande sûre. */
+export const Y_PAR_DEFAUT = 0.38;
+
+/** Ramène une hauteur dans la bande que les trois plateformes laissent libre. */
+export function dansLaBandeSure(y: number): number {
+  return Math.min(BANDE_SURE.bas, Math.max(BANDE_SURE.haut, y));
+}
+
 export const CAPTION_STYLES: Record<CaptionStyleId, CaptionStyle> = {
   punch: {
     id: 'punch',
