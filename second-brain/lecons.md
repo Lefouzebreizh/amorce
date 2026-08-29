@@ -3752,3 +3752,28 @@ réponses HTTP reçues, cohérent avec des hôtes qui existent mais throttlent �
 mais c'est un signe indirect que la base n'a plus été rafraîchie depuis un
 moment : un catalogue entretenu régulièrement mélange rarement autant de
 fournisseurs saturés d'un coup.
+
+## `base / chemin_absolu` ignore silencieusement `base`, et `.exists()` peut lever
+
+Mesuré le 29/08/2026 : la CI de la PR #414 échouait sur « Ce que le dépôt dit
+de lui-même », sans rapport avec le diff. Cause réelle : la PR #416, fusionnée
+entre-temps sur `main`, a ajouté à `CLAUDE.md` une phrase citant `` `/root/.claude/` ``
+en exemple de chemin absolu dans un conteneur. `controler_chemins_cites`
+(`.claude/skills/coherence-depot/scripts/verifier-coherence.py`) teste chaque
+chemin cité en le joignant à plusieurs racines (`base / propre`) — mais en
+Python, `Path("/quoi/que/ce/soit") / "/absolu"` **ignore la base** et rend
+`/absolu` tel quel, dès que le second segment est lui-même absolu. Le script
+tentait donc réellement `Path("/root/.claude").exists()`, un dossier hors de
+portée de l'utilisateur non privilégié du runner CI — et `Path.exists()` ne
+capture pas `PermissionError`, seulement l'absence du fichier : l'exception
+remonte et casse le script.
+
+**Deux leçons, une par couche.** La couche Python, générale : joindre un
+fragment qui pourrait être absolu à une base suppose que la jointure reste
+relative — ce n'est vrai que si on l'a vérifié, jamais par défaut. La couche
+CI, plus large : un contrôle qui lit `CLAUDE.md` peut casser sur **le contenu**
+d'une fusion de `main` sans que le diff de la PR y soit pour rien — la bonne
+question face à un échec inattendu n'est pas « qu'ai-je changé » mais « ce
+contrôle échouerait-il aussi sur `main` seul, seule sa dernière modification
+en cause ». Reproduit en `sudo -u nobody`, avant et après le correctif, sur le
+`CLAUDE.md` réel de `main` — pas sur une hypothèse.
