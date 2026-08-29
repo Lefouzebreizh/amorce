@@ -2092,6 +2092,32 @@ règle générale : **une fonctionnalité n'est livrée que lorsqu'un chemin y m
 depuis l'extérieur** — une commande, un bouton, une route. Le reste est du code
 qui compile.
 
+## Un défaut entendu à deux endroits éloignés vient de ce qui les traverse
+
+« Ça sature au dragon, et un peu derrière le druide aussi. » Deux plans séparés
+par huit secondes et par tout leur contenu. Leur seul point commun : le
+**master**.
+
+Mesuré en rendant deux fois la même chaîne, une fois **avec** le limiteur et une
+fois sans, puis en comparant tranche par tranche : le limiteur écrasait
+**44 tranches sur 389** de plus d'un décibel — et ses coups les plus forts
+tombaient à **6,05 s** et **15,45–16,00 s**. Exactement les deux endroits
+rapportés.
+
+La cause : **+4,5 dB de grave à 85 Hz**. Sur un téléphone il ne s'entend pas —
+il ne fait qu'y manger la marge, et c'est le limiteur qui rend la facture, sur
+tout le reste du mixage. Ramené à +1,5 : **8 tranches**, et le niveau entendu
+au-dessus de 400 Hz **gagne** 0,4 dB.
+
+**Quand deux endroits sans rapport présentent le même défaut, arrêter de
+regarder les endroits et regarder ce qui les traverse.**
+
+Et la mesure qui tranche : **rendre deux fois, avec et sans le maillon
+suspect**, puis comparer. Comparer avant/après master mêle l'égaliseur au
+limiteur — un égaliseur donne aussi un gain différent selon le contenu, et
+c'est ce qui m'avait fait lire 9,1 dB de « pompage » là où le limiteur n'en
+faisait que 3,4.
+
 ## Fusionner souvent a un plafond, et il est invisible
 
 La règle de ce dépôt est d'ouvrir la PR et de la fusionner dès qu'un lot tient
