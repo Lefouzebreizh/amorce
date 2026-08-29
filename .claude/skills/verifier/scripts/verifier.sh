@@ -84,6 +84,7 @@ while IFS= read -r f; do
     hypersensible-bienveillance/*) inscrire hypersensible ;;
     titan-builder/*) inscrire titan ;;
     iptv/*)          inscrire iptv ;;
+    annuaire-ia/*)   inscrire annuaire ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
                      inscrire amorce ;;
     # L'outillage du dépôt — hooks et scripts de compétences — n'appartenait à
@@ -310,6 +311,27 @@ lancer_flutter() {
   return $e
 }
 
+# Le réseau d'annuaires : les données, puis les pages dans un vrai navigateur.
+#
+# Ces onze sites n'ont ni compilateur, ni typage, ni test unitaire possible :
+# tout ce qui compte — la charte qui suit la niche, la modale, l'adresse
+# profonde — ne se voit qu'en exécutant la page. Le parcours prend **environ
+# cinq minutes**, et c'est cher ; mais il est la seule vérification que ce
+# projet possède, et la fiche de cette compétence le promettait déjà sans que
+# rien ne le lance. Une couverture annoncée et absente est pire que pas de
+# couverture : on lit « couvert », on voit vert, on pousse.
+lancer_annuaire() {
+  local d="annuaire-ia"; local j="$journal/annuaire"; local e=0
+  # `valider` d'abord : il est rapide et dit si les données tiennent. Inutile de
+  # promener un navigateur sur onze sites bâtis sur une base fausse.
+  ( cd "$d" || exit 1; etape "$j.valider" "données" npm run valider ) || e=1
+  if [ $e -eq 0 ]; then
+    ( cd "$d" || exit 1; etape "$j.parcours" "parcours Chromium (~5 min)" npm run verifier ) || e=1
+  fi
+  cat "$j".{valider,parcours} > "$j" 2>/dev/null
+  return $e
+}
+
 # L'outillage : la syntaxe des scripts changés, et rien d'autre.
 #
 # Ce pas est **volontairement partiel**, et c'est écrit ici pour que personne ne
@@ -367,6 +389,7 @@ for p in $projets; do
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     titan)   lancer_titan & pid_de[titan]=$! ;;
     iptv)    lancer_iptv  & pid_de[iptv]=$! ;;
+    annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
     outillage) lancer_outillage & pid_de[outillage]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
   esac
@@ -389,6 +412,7 @@ nom_lisible() {
     hypersensible) echo "Hypersensible & Bienveillance" ;;
     titan)   echo "TITAN Builder" ;;
     iptv)    echo "IPTV / VOD" ;;
+    annuaire) echo "Réseau d'annuaires IA" ;;
     outillage) echo "Outillage du dépôt (syntaxe seule)" ;;
     py:*)    echo "${1#py:}" ;;
   esac

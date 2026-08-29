@@ -2707,3 +2707,26 @@ qui contenait aussi tout le code de l'outillage.
 n'établit pas qu'un script fait ce qu'il annonce ; elle attrape le `fi` manquant
 qui casse tout. Ce qu'il faut, c'est l'écrire — « syntaxe seule » jusque dans le
 nom affiché — pour que personne n'y lise davantage.
+
+## Une couverture annoncée et absente est pire que pas de couverture
+
+La fiche de la compétence `verifier` promettait « validation des bases et
+parcours Chromium pour le réseau d'annuaires IA ». Le script ne lançait **rien**
+pour ce projet : aucune case dans sa sélection. Onze sites sans compilateur, sans
+typage et sans test unitaire, dont la seule vérification existante n'était
+appelée par personne.
+
+Le défaut n'est pas l'oubli, c'est le **sens de la lecture**. Une session qui
+touche `annuaire-ia`, lit la fiche, lance la vérification et voit vert en conclut
+que son changement est couvert. Sans la promesse, elle serait allée chercher la
+commande du projet. La phrase fausse a donc coûté davantage que le silence.
+
+**Le contrôle qui l'attrape se fait dans les deux sens, et personne ne fait le
+second :** ce que la documentation annonce doit exister dans le code, et — c'est
+celui qu'on oublie — ce que le code fait doit être annoncé. Ici la fiche citait
+un projet absent du script **et** taisait trois projets présents (Artisan
+Express, TITAN Builder, IPTV). Deux dérives opposées dans la même phrase.
+
+La description d'une compétence n'est pas de la prose : c'est **elle** qui
+décide du déclenchement. Une description périmée ne se contente pas de mentir,
+elle empêche la compétence de se proposer là où elle sert.

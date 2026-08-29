@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Lance la vérification du dépôt — typecheck, lint et tests pour le studio Amorce, lint, typecheck, tests et build pour le socle agence, tests, types et build pour le site hypersensible-bienveillance, analyse et tests pour l'application Flutter Look & Find, tests unitaires pour l'assistant Paper-Manager, validation des bases et parcours Chromium pour le réseau d'annuaires IA, et le rejeu local de l'intégration continue Python, qui attrape les tests verts en session et rouges sur un runner. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
+description: Lance la vérification des seuls projets touchés, tous en parallèle, et rend un verdict par projet — Amorce, le socle Agence, la page de vente Artisan Express, TITAN Builder, IPTV / VOD, Hypersensible & Bienveillance, le réseau d'annuaires IA, l'application Flutter Look & Find, l'outillage du dépôt, et toutes les suites Python découvertes comme le fait la CI — Radar crypto, NexusCrypto, KDP, Life-Organizer, Paper-Manager, chaîne de montage, répondeur Facebook. Ferme les séquences web par un regard dans un vrai Chromium à 393 × 873 : contraste, taille de texte, cibles, débordement. À utiliser avant de committer, quand on demande « est-ce que ça passe », « vérifie », « lance les tests », après un changement qu'on veut valider, et dès que la CI est rouge alors que tout passe en local.
 ---
 
 # Vérifier ce dépôt
