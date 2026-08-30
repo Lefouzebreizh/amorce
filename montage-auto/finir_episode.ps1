@@ -46,8 +46,11 @@ Ff -i $rushAbs -vf "subtitles=filename='st.ass':fontsdir='$pol'" `
    -c:v libx264 -crf 16 -pix_fmt yuv420p -c:a copy _st.mp4
 
 $dv = [double](& ffprobe -v error -select_streams v:0 -show_entries stream=duration -of csv=p=0 _st.mp4)
-# La culture invariante, sinon une machine en français écrit « 17,96 » et
-# ffmpeg lit 17 : la virgule décimale coupe l'argument en deux.
+# La culture invariante, sinon une machine réglée en français écrit « 17,96 »
+# et ffmpeg refuse — « Invalid duration for option t », ou dans un filtre
+# « No such filter: '75' », la virgule y étant le séparateur de filtres.
+# Rien ne passe en silence : le script s'arrête sur un message qui accuse la
+# syntaxe et ne nomme jamais la locale, alors qu'il marche chez qui l'a écrit.
 $ci = [Globalization.CultureInfo]::InvariantCulture
 Ff -ss ($dv - 0.10).ToString($ci) -i _st.mp4 -frames:v 1 _last.png
 Ff -loop 1 -t 2.9 -i _last.png -r 24 `
