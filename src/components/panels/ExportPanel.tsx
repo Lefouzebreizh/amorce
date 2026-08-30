@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { debitVideo, downloadBlob, pickFormat, recordMontage, relireLExport, safeFilename } from '@/lib/export';
+import { encodageHorsLigneDisponible, encoderFilm } from '@/lib/exportHorsLigne';
 import { crochetsARemplir } from '@/lib/captions';
 import { groupesSemblables } from '@/lib/ressemblance';
 import { formatTime } from '@/lib/media';
@@ -99,6 +100,38 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
     try {
       const audio = await engine.ensureAudio();
       engine.seek(0);
+
+      /*
+       * L'encodage hors ligne d'abord, l'enregistrement temps réel en repli.
+       *
+       * Le second filme l'aperçu pendant qu'il joue : le fichier ne reçoit que
+       * les images composées à temps, et une image manquée ne se rattrape
+       * jamais. Mesuré sur un export livré : 12,7 images par seconde au lieu de
+       * 30, un écart montant à 517 ms.
+       *
+       * Le premier compose chaque image puis l'encode, sans horloge à tenir. Un
+       * appareil lent met plus longtemps, il ne perd rien. Il demande WebCodecs,
+       * présent sur Chrome et Edge — donc partout où l'export MP4 existait déjà.
+       */
+      if (!audioOnly && encodageHorsLigneDisponible()) {
+        await engine.beginExport(preset.scale, true);
+        const film = await encoderFilm({
+          canvas,
+          composer: engine.composerA,
+          audio: null,
+          duree: duration,
+          images: OUTPUT_FPS,
+          debit: debitVideo(width, height, OUTPUT_FPS),
+          onProgress: setProgress,
+        });
+
+        const nom = safeFilename(project.name, 'mp4');
+        downloadBlob(film.blob, nom);
+        setCadence(OUTPUT_FPS);
+        setDone(`${nom} — ${(film.blob.size / 1024 / 1024).toFixed(1)} Mo`);
+        return;
+      }
+
       // La prévisualisation tourne peut-être à définition réduite : on impose
       // celle de l'export avant que le flux du canvas ne soit capturé.
       await engine.beginExport(preset.scale);

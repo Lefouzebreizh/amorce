@@ -47,7 +47,13 @@ type PlacedNodes = Map<
 const COUDE = 0.7;
 const PLAFOND = 0.89; // −1 dBFS
 
-function courbeDePlafond(points = 1024): Float32Array<ArrayBuffer> {
+/*
+ * Exportée pour le rendu hors ligne, qui doit poser **la même** courbe.
+ * En recopier une seconde ferait diverger l'export de ce qu'on entend, et
+ * l'écart ne se remarquerait que sur les crêtes — donc jamais dans une mesure
+ * de sonie moyenne.
+ */
+export function courbeDePlafond(points = 1024): Float32Array<ArrayBuffer> {
   // Le type porte son tampon : `WaveShaperNode.curve` refuse un
   // `Float32Array<ArrayBufferLike>`, qui pourrait être partagé entre fils.
   const courbe = new Float32Array(new ArrayBuffer(points * 4));
