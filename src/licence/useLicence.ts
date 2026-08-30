@@ -33,6 +33,17 @@ import { ETAT_INITIAL, type Etat } from './types.ts';
  * utilisable serveur éteint.
  */
 
+/**
+ * Ce qu'on dit quand le serveur n'a pas répondu.
+ *
+ * Surtout pas « clé invalide » : la cause la plus probable après un
+ * déploiement est une adresse de studio absente des origines autorisées du
+ * serveur, et le navigateur bloque alors la réponse sans rien dire. Accuser la
+ * clé enverrait la personne chercher une faute de frappe pendant des heures.
+ */
+const SERVEUR_MUET =
+  'Le serveur de licence n’a pas répondu. Ta clé n’est pas en cause — réessaie dans un instant.';
+
 export type Licence = {
   etat: Etat;
   /** La clé rangée, telle quelle. Vide s'il n'y en a pas. */
@@ -95,10 +106,13 @@ export function useLicence(): Licence {
     let vivant = true;
     // Aucun `setState` synchrone ici : tout passe par le retour de la promesse,
     // ce que la règle autorise et ce qui évite les rendus en cascade.
-    void demanderEtat(cle).then((obtenu) => {
+    void demanderEtat(cle).then(({ etat: obtenu, joignable }) => {
       if (!vivant) return;
       setEtat(obtenu);
       setRepondu(true);
+      // Au démarrage on ne crie pas sur une clé : si le serveur n'a pas
+      // répondu, c'est lui qu'on nomme, jamais la clé de quelqu'un qui a payé.
+      if (!joignable) setErreur(SERVEUR_MUET);
     });
 
     return () => {
@@ -128,18 +142,27 @@ export function useLicence(): Licence {
     // l'échec. `demandee` retient la clé pour que l'effet ne redemande pas.
     demandee.current = propre;
     setRepondu(false);
-    const obtenu = await demanderEtat(propre);
+    const { etat: obtenu, joignable } = await demanderEtat(propre);
     setEtat(obtenu);
     setRepondu(true);
 
-    if (obtenu.statut !== 'pro') {
-      /*
-       * On ne distingue pas « clé fausse » de « serveur muet », et c'est
-       * délibéré : le client ne sait pas laquelle des deux s'est produite, et
-       * inventer la différence enverrait la moitié des gens chercher une faute
-       * de frappe dans une clé parfaitement valable.
-       */
-      setErreur('Cette clé n’a pas été reconnue. Vérifie-la, ou réessaie dans un instant.');
+    /*
+     * On distingue « serveur muet » de « clé refusée », et c'est un
+     * raisonnement corrigé : on avait d'abord écrit que le client ne pouvait
+     * pas faire la différence. Il le peut — une coupure, un délai dépassé ou
+     * un partage entre origines refusé **lèvent**, là où un serveur qui
+     * rejette une clé rend 200 avec `libre`.
+     *
+     * Le cas qui compte est le troisième. Le jour où l'adresse du studio n'est
+     * pas listée dans les réglages du serveur, le navigateur bloque la réponse
+     * et tout le monde retombe sur l'offre libre. Sans cette distinction,
+     * quelqu'un qui vient de payer lit « cette clé n'a pas été reconnue » et
+     * part chercher une faute de frappe qui n'existe pas.
+     */
+    if (!joignable) {
+      setErreur(SERVEUR_MUET);
+    } else if (obtenu.statut !== 'pro') {
+      setErreur('Cette clé n’a pas été reconnue. Vérifie-la caractère par caractère.');
     }
     return obtenu;
   }, []);
