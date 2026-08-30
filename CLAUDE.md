@@ -679,7 +679,10 @@ verdict par projet suivi de ce qu'elle ne couvre pas.
 
 `npm run dev | build | typecheck | lint | test` — Amorce. `npm run fixtures`
 puis `npm run verify` : parcours complet dans un vrai Chromium, plus
-`verify:reprise`, `verify:partage` et `verify:images`. Les tests unitaires ne
+`verify:reprise`, `verify:partage`, `verify:images` et `verify:licence`.
+Ce dernier est **exclusif** — il construit le paquet de production et sert
+l'application lui-même, donc il ne se lance pas pendant qu'un `npm run dev`
+tourne, contrairement aux autres. Les tests unitaires ne
 voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.

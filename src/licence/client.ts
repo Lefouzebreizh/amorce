@@ -44,6 +44,27 @@ export function lireReponse(donnees: unknown): Etat {
 }
 
 /**
+ * Ce que la consultation a appris, transport compris.
+ *
+ * `joignable` dit si le serveur a **répondu**, pas s'il a dit oui. La nuance a
+ * été sous-estimée une première fois, et c'était une erreur de raisonnement :
+ * on avait écrit qu'un client ne pouvait pas distinguer « clé fausse » de
+ * « serveur muet ». Il le peut — un refus de partage entre origines, une
+ * coupure ou un délai dépassé **lèvent**, là où un serveur qui rejette une clé
+ * rend 200 avec `libre`.
+ *
+ * Ce que ça change concrètement : le jour où l'origine du studio n'est pas
+ * listée dans les réglages du serveur, le navigateur bloque la réponse et tout
+ * le monde retombe sur l'offre libre. Sans cette distinction, l'application
+ * annonce « cette clé n'a pas été reconnue » à quelqu'un qui vient de payer, et
+ * l'envoie chercher une faute de frappe dans une clé parfaitement valable.
+ */
+export type Consultation = {
+  etat: Etat;
+  joignable: boolean;
+};
+
+/**
  * Demande au serveur si cette personne a sa licence.
  *
  * `chercher` est injectable pour que le chemin entier — y compris ses replis —
@@ -55,11 +76,13 @@ export async function demanderEtat(
   cle: string,
   chercher: typeof fetch = fetch,
   delaiMs = DELAI_MS,
-): Promise<Etat> {
+): Promise<Consultation> {
   // Sans serveur, ou sans clé, il n'y a personne à interroger et rien à
   // demander. Une requête partirait pour se faire refuser, et l'offre libre
   // est déjà la réponse.
-  if (!serveurConfigure() || cle.trim() === '') return ETAT_INITIAL;
+  // Rien n'a été demandé : le serveur n'est donc ni joignable ni injoignable,
+  // et l'interface n'a aucune panne à signaler.
+  if (!serveurConfigure() || cle.trim() === '') return { etat: ETAT_INITIAL, joignable: true };
 
   const arret = new AbortController();
   const minuterie = setTimeout(() => arret.abort(), delaiMs);
@@ -69,12 +92,16 @@ export async function demanderEtat(
       headers: { Authorization: `Bearer ${cle.trim()}` },
       signal: arret.signal,
     });
-    if (!reponse.ok) return ETAT_INITIAL;
-    return lireReponse(await reponse.json());
+    // Un serveur qui répond en erreur a bel et bien répondu : ce n'est pas une
+    // panne de transport, et le studio n'a pas à parler de réseau.
+    if (!reponse.ok) return { etat: ETAT_INITIAL, joignable: true };
+    return { etat: lireReponse(await reponse.json()), joignable: true };
   } catch {
-    // Coupure, délai dépassé, réponse illisible : le studio garde l'offre
-    // libre et continue. Rien de tout cela ne regarde le montage en cours.
-    return ETAT_INITIAL;
+    // Coupure, délai dépassé, partage entre origines refusé, réponse illisible :
+    // le studio garde l'offre libre et continue. Rien de tout cela ne regarde le
+    // montage en cours — mais on retient que le serveur n'a pas répondu, pour
+    // ne pas accuser la clé de quelqu'un qui vient de payer.
+    return { etat: ETAT_INITIAL, joignable: false };
   } finally {
     clearTimeout(minuterie);
   }

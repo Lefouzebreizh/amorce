@@ -14,7 +14,8 @@
     "planche": "node scripts/planche.mjs",
     "verify:reprise": "node scripts/verify-reprise.mjs",
     "verify:partage": "node scripts/verify-partage.mjs",
-    "verify:images": "node scripts/verify-images.mjs"
+    "verify:images": "node scripts/verify-images.mjs",
+    "verify:licence": "node scripts/verify-licence.mjs"
   },
   "dependencies": {
     "mp4-muxer": "^5.2.2",

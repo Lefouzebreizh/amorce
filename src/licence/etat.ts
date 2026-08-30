@@ -36,3 +36,23 @@ export function signatureAAfficher(etat: Etat): string | undefined {
   if (!serveurConfigure()) return undefined;
   return autorise(etat, 'sansSignature') ? undefined : TEXTE_SIGNATURE;
 }
+
+/**
+ * La pleine définition est-elle proposée ?
+ *
+ * Même règle que la signature, et pour la même raison — les deux sont écrites
+ * côte à côte pour qu'elles ne puissent pas diverger.
+ *
+ * Sans serveur, **aucune limite**. Il n'existe alors nulle part où payer :
+ * retirer le 1080 laisserait la personne devant une option manquante, sans
+ * moyen de l'ouvrir et sans savoir pourquoi. Ce n'est pas une offre, c'est une
+ * impasse — et le public visé est précisément celui que ce genre d'impasse
+ * blesse.
+ *
+ * La restriction se lève donc toute seule le jour où le serveur est configuré,
+ * jamais avant, et personne n'a d'interrupteur à ne pas oublier.
+ */
+export function pleineDefinitionOfferte(etat: Etat): boolean {
+  if (!serveurConfigure()) return true;
+  return autorise(etat, 'pleineDefinition');
+}
