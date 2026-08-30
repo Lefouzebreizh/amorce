@@ -551,6 +551,36 @@ refuse d'avancer : `/debloquer`.
 
 **Done** = vérification verte + **regardé, pas seulement mesuré** + leçon écrite.
 
+### Les quatre règles de méthode, posées par le propriétaire le 29/08/2026
+
+Elles viennent d'une série de livrables annoncés prêts et qui ne l'étaient pas.
+Leur objectif tient en une phrase : **ne plus faire perdre de temps avec un
+« c'est bon » qui n'en est pas un.**
+
+1. **Ne jamais présenter un livrable comme prêt sans l'avoir vérifié soi-même,
+   en entier et en détail** — pas seulement constaté que l'exécution technique
+   s'est terminée sans erreur. Pour une vidéo : **image par image et son en
+   continu**. Pour un autre livrable : le contrôle équivalent, adapté à sa
+   nature. « Le rendu s'est terminé » n'est pas une vérification, c'est
+   l'absence de plantage.
+2. **Ne jamais repartir d'une version antérieure ni d'une base différente de la
+   dernière version validée** — même partiellement, même pour un correctif
+   ciblé. On part toujours de ce qui est demandé dans l'instant. Reprendre une
+   base plus ancienne ramène des défauts déjà corrigés, et c'est invisible dans
+   un diff qui ne montre que le correctif.
+3. **Si un élément déjà validé disparaît ou change par erreur, le corriger
+   soi-même, immédiatement**, pour rester fidèle à la dernière version validée.
+   Sans redemander confirmation : une voix synchronisée ou des sous-titres qui
+   sautent en cours de route ne sont pas une question, ce sont une régression.
+4. **En cas de doute sur la conformité, corriger AVANT de livrer, jamais
+   après.** Le doute est une raison de vérifier, pas une raison de livrer en
+   prévenant.
+
+**Ce que ces règles ne suspendent pas :** le §0 continue de valoir — on n'attend
+pas la permission pour corriger, on corrige. Elles ne rendent pas le travail
+plus lent, elles déplacent la vérification **avant** l'annonce au lieu
+d'**après** le rejet.
+
 Le « regardé » n'est pas décoratif : six montages ont été livrés en une nuit,
 chacun mesuré conforme, chacun rejeté à l'écoute. Le défaut se voyait en une
 seconde sur un spectrogramme que personne n'avait tiré. Pour un média,
