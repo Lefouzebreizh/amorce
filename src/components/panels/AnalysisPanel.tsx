@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { analyzeProject, SFX_PER_10S, type Analysis, type CriterionId } from '@/lib/analysis';
+import { analyzeProject, PLAFOND_BLOQUE, SFX_PER_10S, type Analysis, type CriterionId } from '@/lib/analysis';
 import { CAPTION_SETS } from '@/lib/autoFinish';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
@@ -116,7 +116,7 @@ function RecommendedPanel() {
 }
 
 /**
- * Note de viralité.
+ * Note de montage.
  *
  * La note seule ne sert à rien : ce qui compte, c'est le conseil rattaché et le
  * moyen d'aller voir le problème. Chaque descente de tension est donc cliquable
@@ -209,7 +209,7 @@ export function AnalysisPanel({
     <div className="space-y-3">
       <RecommendedPanel />
 
-      <Panel title="6 · Note de viralité" subtitle="Ce que la structure de ton montage laisse présager.">
+      <Panel title="6 · Note de montage" subtitle="Ce qui fait un montage propre, et ce qui l’en empêche.">
         <ScoreHeader analysis={analysis} />
 
         <div className="mt-4 space-y-3">
@@ -338,7 +338,32 @@ export function AnalysisPanel({
 }
 
 function ScoreHeader({ analysis }: { analysis: Analysis }) {
+  const bloque = analysis.bloquants.length > 0;
   return (
+    <>
+    {/*
+      Ce qui plafonne la note se lit AVANT la note.
+      Un nombre bas sans sa raison se prend pour un verdict ; nommé, il devient
+      une liste de choses à faire. C'est toute la différence entre une note qui
+      juge et une note qui aide — et c'est ce que la précédente ne savait pas
+      faire, puisqu'une somme pondérée noyait chaque défaut dans les autres.
+    */}
+    {bloque && (
+      <div className="mb-2 rounded-xl border border-warn/40 bg-warn/5 px-4 py-3">
+        <p className="text-xs font-semibold text-warn">
+          Ta note est plafonnée à {PLAFOND_BLOQUE} tant que ceci n’est pas réglé
+        </p>
+        <ul className="mt-2 flex flex-col gap-2">
+          {analysis.bloquants.map((bloquant) => (
+            <li key={bloquant.id} className="text-xs leading-relaxed">
+              <span className="font-semibold text-mist">{bloquant.probleme}</span>
+              <br />
+              <span className="text-muted">{bloquant.remede}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
     <div className="flex items-center gap-4 rounded-xl border border-edge bg-slab px-4 py-3">
       <div className="text-center">
         <p className="font-display text-4xl leading-none" style={{ color: scoreColor(analysis.score) }}>
@@ -354,6 +379,7 @@ function ScoreHeader({ analysis }: { analysis: Analysis }) {
         </p>
       </div>
     </div>
+    </>
   );
 }
 

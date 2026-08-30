@@ -345,19 +345,25 @@ export function scoreColor(score: number): string {
  *
  * Portée par les deux dispositions. `role="status"` et le libellé explicite
  * font annoncer la note par un lecteur d'écran, là où un simple nombre à côté
- * du mot « Viralité » ne veut rien dire hors contexte visuel.
+ * du mot ne veut rien dire hors contexte visuel.
+ *
+ * Elle disait « Viralité », et l'utilisateur a eu raison de s'en plaindre :
+ * personne ne peut prédire des vues honnêtement, et une note qui le prétendait
+ * récompensait une vidéo à 6 % de rétention. Elle dit maintenant ce qu'elle
+ * mesure vraiment — la qualité du montage — et se plafonne sur les défauts qui
+ * empêchent un film d'être fini.
  */
 export function ScoreBadge({ score, compact = false }: { score: number; compact?: boolean }) {
   return (
     <div
       role="status"
-      aria-label={`Note de viralité : ${score} sur 100`}
+      aria-label={`Note de montage : ${score} sur 100`}
       className={`flex items-center gap-2 rounded-full bg-raised ${
         compact ? 'px-3 py-1' : 'px-3.5 py-1.5'
       }`}
     >
       <span className="text-[12px] text-muted" aria-hidden="true">
-        Viralité
+        Montage
       </span>
       <span
         className="font-display text-[15px] tabular-nums"
