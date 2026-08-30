@@ -4033,3 +4033,61 @@ mesure. Trois commandes le départagent avant d'écrire la moindre ligne —
 `ffprobe` sur les entêtes, les écarts de `pts_time`, un niveau seconde par
 seconde. Suivre le rapport sans les passer, c'est corriger des défauts qui
 n'existent pas pendant que le vrai reste en place.
+
+---
+
+## Un chiffre écrit dans un commentaire bloque plus longtemps qu'un bug
+
+**Mesuré le 30/08/2026, sur l'export d'Amorce.** Le dépôt portait cette phrase,
+au point exact où l'on aurait cherché la solution :
+
+> Piloter les éléments `<video>` image par image ne serait pas une issue :
+> mesuré à 265 ms par déplacement séquentiel, soit 2,6 minutes pour un film de
+> vingt secondes.
+
+Elle a tenu le correctif à distance pendant des semaines. Le défaut qu'elle
+protégeait était grave et connu — un export livré à **12,7 images par seconde
+au lieu de 30**, décrit par son auteur comme un tremblement.
+
+Remesuré sur la même machine, sans carte graphique : **7,3 ms** par déplacement
+séquentiel, 25,7 ms en comptant la composition en 1080 × 1920. **Trente-cinq
+fois moins.** Vingt secondes de film s'encodent en 15 s, plus vite que le temps
+réel. Le démultiplexeur qu'on croyait indispensable ne l'était pas, et la
+solution tenait en deux fichiers.
+
+**La règle :** un chiffre qui sert à *renoncer* se remesure avant d'être suivi,
+et cela d'autant plus qu'il est écrit avec assurance au bon endroit. Un
+commentaire qui dit « ce serait trop lent » a exactement la forme d'une mesure
+et le poids d'une décision — sans porter ni sa date, ni ses conditions, ni la
+machine sur laquelle elle a été prise.
+
+Le corollaire vaut pour ce qu'on écrit : une mesure consignée pour fermer une
+piste se date et se chiffre, sans quoi elle devient une croyance.
+
+## Ce qu'un test unitaire ne peut pas voir : des pièces justes, aucune branchée
+
+**Mesuré le 30/08/2026, sur le module de licence d'Amorce.** Lire une clé, la
+ranger, interroger le serveur, décider de ce qu'une offre autorise : tout était
+écrit, commenté, testé. Chaque test passait.
+
+Et **rien n'appelait rien**. Le composant racine passait une constante figée ;
+il n'existait nulle part de champ où saisir une clé ; la seule capacité payante
+n'était contrôlée nulle part. Quelqu'un qui payait recevait une clé qu'il ne
+pouvait coller nulle part — sur un produit vendu 49 €.
+
+Aucun test unitaire ne pouvait le voir : ils éprouvent des fonctions, et toutes
+étaient justes. Ce qui manquait n'était dans aucune d'elles, c'était entre
+elles.
+
+**La règle :** un module dont on ne peut nommer l'appelant n'est pas terminé,
+il est écrit. Le `grep` qui compte est celui du **nom de la fonction hors de
+ses propres tests** — deux secondes, et il distingue un module livré d'un
+module rangé.
+
+```bash
+grep -rn "maFonction" src/ --include=*.ts --include=*.tsx | grep -v __tests__
+```
+
+Ce qui l'a rattrapé ici : un parcours de bout en bout dans un vrai navigateur,
+sur le paquet de production, devant un vrai serveur. C'est le seul niveau où
+une pièce non branchée se voit.
