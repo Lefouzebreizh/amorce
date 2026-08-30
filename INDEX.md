@@ -25,7 +25,8 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge douze chantiers actifs sans code commun, plus deux en sommeil.
+Ce dépôt héberge seize chantiers actifs sans code commun, plus deux en sommeil,
+et cinq ressources transverses qui ne sont pas des projets mais servent à tous.
 Une idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir
 un front de plus. La liste vieillit vite — recompter avant de noter.
 
@@ -43,5 +44,28 @@ un front de plus. La liste vieillit vite — recompter avant de noter.
 | **Volet TikTok** (`tiktok/`) | Concepts et scripts, sans code. | — | actif |
 | **Annuaire IA** (`annuaire-ia/`) | Annuaire et comparateur d'outils IA, affiliation. | HTML, Tailwind CDN, JS natif | actif |
 | **IPTV / VOD** (`iptv/`) | Gestion et lecture de listes IPTV : direct, films, séries. | TypeScript, sans dépendance | actif |
+| **Hypersensible & Bienveillance** (`hypersensible-bienveillance/`) | Deux outils gratuits pour hypersensibles, plus un radar des prix. | Astro, Cloudflare Workers, Tailwind | actif |
+| **NexusCrypto** (`nexuscrypto/`) | Moteur d'investissement crypto autonome à DCA dynamique. | Python | actif |
+| **Pépites** (`pepites/`) | Radar multi-chaînes de jetons en phase d'accumulation. | Python | actif |
+| **Titan Builder** (`titan-builder/`) | Plateforme où le client configure son site en cinq étapes. | Web | actif |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
 | _Patrimoine_ (`archives-backlog/patrimoine/`) | Allocation d'actifs. | Python | en sommeil |
+
+## Ressources transverses
+
+Ce ne sont pas des chantiers : rien ne s'y « termine ». Ce sont des réserves
+dans lesquelles les chantiers puisent.
+
+| Dossier | Ce que c'est |
+| --- | --- |
+| `second-brain/` | Les leçons payées une fois et réutilisables partout. Voir [`map.md`](second-brain/map.md) pour la règle de tri. |
+| `kits/` | Ce qui a marché quelque part et se recopie ailleurs sans réfléchir : gabarits, composants, prompts. |
+| `visual_library/` | LUTs, recettes d'étalonnage et catalogues visuels, avec les bins Premiere / DaVinci. |
+| `licence-serveur/` | Serveur de licence d'Amorce : trois routes, zéro dépendance. Rattaché à Amorce, pas autonome. |
+| `scripts/` | Scripts de vérification et de fixtures pour Amorce à la racine. |
+
+## À faire sur le dépôt lui-même
+
+- `inbox/` est vide (seul un `.gitkeep`) — normal si tout a été trié, à surveiller.
+- `site-client.tmp.png` traîne à la racine : fichier temporaire committé par
+  accident, à supprimer et à couvrir par une règle `*.tmp.*` dans `.gitignore`.
