@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { debitVideo, downloadBlob, pickFormat, recordMontage, relireLExport, safeFilename } from '@/lib/export';
 import { crochetsARemplir } from '@/lib/captions';
+import { useLicenceContexte } from '@/licence/contexte';
+import { pleineDefinitionOfferte } from '@/licence/etat';
 import { groupesSemblables } from '@/lib/ressemblance';
 import { formatTime } from '@/lib/media';
 import { useStudio } from '@/lib/store';
@@ -10,6 +12,7 @@ import { EXPORT_PRESETS, exportPreset, OUTPUT_FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH }
 import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { useIsTouch } from '@/hooks/useMediaQuery';
 import { Button, Choice, Field, Hint, Panel } from '../ui';
+import { LicenceBloc } from './LicenceBloc';
 
 /**
  * Export.
@@ -56,9 +59,35 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
   const renameProject = useStudio((s) => s.renameProject);
   const presetId = useStudio((s) => s.exportPreset);
   const setPreset = useStudio((s) => s.setExportPreset);
+  /*
+   * La licence décide de ce qui est **proposé**, jamais de ce que le moteur
+   * fait d'un fichier. Elle n'agit ici que sur la liste des définitions.
+   */
+  const licence = useLicenceContexte();
+  const pleineDefinition = pleineDefinitionOfferte(licence.etat);
   const touch = useIsTouch();
 
-  const preset = exportPreset(presetId);
+  /*
+   * La pleine définition est la capacité payante, et elle n'était appliquée
+   * nulle part : `OFFRES` la déclarait depuis la création du module, aucun
+   * appelant ne la lisait. Une licence reconnue ne changeait donc rien de
+   * visible — et sans rien de visible, personne ne pouvait savoir qu'elle
+   * avait été reconnue.
+   *
+   * On **retire** l'option au lieu de la présenter grisée : une case qu'on ne
+   * peut pas cocher se lit comme une panne, pas comme une offre.
+   */
+  const definitionsOffertes = pleineDefinition
+    ? EXPORT_PRESETS
+    : EXPORT_PRESETS.filter((item) => item.id !== 'full');
+
+  // Un réglage retenu d'une session précédente peut désigner une définition que
+  // l'offre courante ne propose plus : on retombe sur la meilleure offerte.
+  const presetRetenu = definitionsOffertes.some((item) => item.id === presetId)
+    ? presetId
+    : definitionsOffertes[0].id;
+
+  const preset = exportPreset(presetRetenu);
   const width = Math.round(OUTPUT_WIDTH * preset.scale);
   const height = Math.round(OUTPUT_HEIGHT * preset.scale);
 
@@ -66,6 +95,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [cadence, setCadence] = useState<number | null>(null);
+
   const [audioOnly, setAudioOnly] = useState(false);
 
   const format = pickFormat(audioOnly);
@@ -199,9 +229,9 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
           }
         >
           <Choice
-            value={presetId}
+            value={presetRetenu}
             onChange={setPreset}
-            options={EXPORT_PRESETS.map((item) => ({
+            options={definitionsOffertes.map((item) => ({
               value: item.id,
               label: item.label,
               description: `${item.description} · environ ${(
@@ -340,6 +370,14 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         ralentissent les onglets en arrière-plan. Même si l’aperçu tourne en définition réduite pour
         rester fluide, le fichier produit sort toujours dans la définition choisie ci-dessus.
       </Hint>
+
+      {/*
+        Le bloc de licence ferme l'étape, après tout ce qui concerne le fichier.
+        Il ne s'affiche que si un serveur de vérification existe : sans lui il
+        n'y aurait aucun endroit où payer, et proposer un champ enverrait
+        chercher une clé qui ne peut pas exister.
+      */}
+      <LicenceBloc />
     </div>
   );
 }
