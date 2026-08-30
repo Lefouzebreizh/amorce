@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { debitVideo, downloadBlob, pickFormat, recordMontage, relireLExport, safeFilename } from '@/lib/export';
+import { encodageHorsLigneDisponible, encoderFilm } from '@/lib/exportHorsLigne';
+import { rendreMixage } from '@/lib/audioHorsLigne';
 import { crochetsARemplir } from '@/lib/captions';
 import { useLicenceContexte } from '@/licence/contexte';
 import { pleineDefinitionOfferte } from '@/licence/etat';
@@ -98,6 +100,16 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
 
   const [audioOnly, setAudioOnly] = useState(false);
 
+  /*
+   * Vrai quand l'export passera par l'encodage hors ligne.
+   *
+   * Deux textes du panneau en dépendent, et ils étaient faux depuis que le
+   * chemin a changé : l'un promettait de voir l'aperçu défiler, l'autre
+   * annonçait une durée d'export égale à celle du film.
+   */
+  const horsLigne = !audioOnly && encodageHorsLigneDisponible();
+
+
   const format = pickFormat(audioOnly);
   const busy = progress !== null;
 
@@ -129,6 +141,55 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
     try {
       const audio = await engine.ensureAudio();
       engine.seek(0);
+
+      /*
+       * L'encodage hors ligne d'abord, l'enregistrement temps réel en repli.
+       *
+       * Le second filme l'aperçu pendant qu'il joue : le fichier ne reçoit que
+       * les images composées à temps, et une image manquée ne se rattrape
+       * jamais. Mesuré sur un export livré : 12,7 images par seconde au lieu de
+       * 30, un écart montant à 517 ms.
+       *
+       * Le premier compose chaque image puis l'encode, sans horloge à tenir. Un
+       * appareil lent met plus longtemps, il ne perd rien. Il demande WebCodecs,
+       * présent sur Chrome et Edge — donc partout où l'export MP4 existait déjà.
+       */
+      if (!audioOnly && encodageHorsLigneDisponible()) {
+        await engine.beginExport(preset.scale, true);
+
+        /*
+         * Le son est rendu **avant** l'image, et d'un seul tenant.
+         *
+         * Un `OfflineAudioContext` rend le mixage entier aussi vite que la
+         * machine le permet, et rigoureusement à l'identique d'une fois sur
+         * l'autre. C'est ce que l'enregistrement temps réel ne pouvait pas
+         * promettre : il fallait que le son passe pendant que l'image se
+         * composait, et tout retard de l'un décalait l'autre.
+         *
+         * Le rendre en premier a une seconde raison, pratique : s'il devait
+         * échouer, autant le savoir avant d'avoir encodé six cents images.
+         */
+        const mixage = await rendreMixage(project, duration);
+
+        const film = await encoderFilm({
+          canvas,
+          composer: engine.composerA,
+          audio: mixage,
+          duree: duration,
+          images: OUTPUT_FPS,
+          debit: debitVideo(width, height, OUTPUT_FPS),
+          onProgress: setProgress,
+        });
+
+        const nom = safeFilename(project.name, 'mp4');
+        downloadBlob(film.blob, nom);
+        // La cadence n'est plus une mesure mais une garantie : chaque image a
+        // été composée puis encodée, aucune ne peut manquer.
+        setCadence(OUTPUT_FPS);
+        setDone(`${nom} — ${(film.blob.size / 1024 / 1024).toFixed(1)} Mo`);
+        return;
+      }
+
       // La prévisualisation tourne peut-être à définition réduite : on impose
       // celle de l'export avant que le flux du canvas ne soit capturé.
       await engine.beginExport(preset.scale);
@@ -346,7 +407,14 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
           <Row label="Définition">{audioOnly ? 'son seul' : `${width} × ${height}`}</Row>
           <Row label="Durée">{formatTime(duration)}</Row>
           <Row label="Format">{format ? format.label : 'non pris en charge'}</Row>
-          <Row label="Temps d’export">environ {formatTime(duration)}</Row>
+          {/*
+            Hors ligne, la durée d'export ne suit plus celle du film : elle suit
+            la vitesse de l'appareil. Annoncer un chiffre qu'on ne sait pas
+            tenir vaut moins que de dire honnêtement ce dont il dépend.
+          */}
+          <Row label="Temps d’export">
+            {horsLigne ? 'selon ton appareil' : `environ ${formatTime(duration)}`}
+          </Row>
         </dl>
       </Panel>
 
@@ -364,11 +432,18 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         </Hint>
       )}
 
+      {/*
+        Cette aide décrivait l'ancien export, qui filmait l'aperçu en direct.
+        Elle est devenue fausse le jour où l'encodage est passé hors ligne, et
+        une aide fausse coûte plus cher qu'une aide absente : quelqu'un qui ne
+        voit rien défiler croirait l'export bloqué.
+      */}
       <Hint>
-        L’export filme la prévisualisation pendant qu’elle joue : il dure donc aussi longtemps que ta
-        vidéo, et tu l’entends défiler. Ne change pas d’onglet pendant ce temps, certains navigateurs
-        ralentissent les onglets en arrière-plan. Même si l’aperçu tourne en définition réduite pour
-        rester fluide, le fichier produit sort toujours dans la définition choisie ci-dessus.
+        {horsLigne
+          ? 'L’export compose puis encode chaque image l’une après l’autre : rien ne défile à l’écran, c’est normal. Aucune image ne peut manquer, quelle que soit la lenteur de ton appareil — un appareil modeste met simplement plus de temps. Ne change pas d’onglet pendant ce temps, certains navigateurs ralentissent les onglets en arrière-plan.'
+          : 'L’export filme la prévisualisation pendant qu’elle joue : il dure donc aussi longtemps que ta vidéo, et tu l’entends défiler. Ne change pas d’onglet pendant ce temps, certains navigateurs ralentissent les onglets en arrière-plan.'}
+        {' '}Même si l’aperçu tourne en définition réduite pour rester fluide, le fichier produit sort
+        toujours dans la définition choisie ci-dessus.
       </Hint>
 
       {/*

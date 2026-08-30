@@ -18,6 +18,7 @@
     "verify:licence": "node scripts/verify-licence.mjs"
   },
   "dependencies": {
+    "mp4-muxer": "^5.2.2",
     "next": "16.3.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",

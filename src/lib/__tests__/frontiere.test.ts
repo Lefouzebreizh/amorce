@@ -68,6 +68,7 @@ test('le moteur n’importe rien du module de licence', () => {
  * l'est pas.
  */
 const FETCH_AUTORISES: Record<string, string> = {
+  'src/lib/audioHorsLigne.ts': 'relit un lien objet pour décoder le mixage de l’export hors ligne',
   'src/lib/voice.ts': 'relit un lien objet pour décoder la voix hors ligne',
   'src/lib/persistence.ts': 'relit un lien objet pour ranger le fichier dans IndexedDB',
 };
