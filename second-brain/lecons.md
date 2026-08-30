@@ -3414,6 +3414,29 @@ pièges, et ils ont ceci de commun qu'aucun ne produit de message d'erreur.
    une ligne d'état bash existait ici depuis des mois et n'avait jamais pu
    tourner sur la machine du propriétaire. Ce qu'on peut supposer sur un
    Windows nu, c'est PowerShell, et rien d'autre.
+4. **Une machine réglée en français écrit `17,96`, et ffmpeg le refuse — avec
+   trois messages différents qui ne nomment jamais la cause.** PowerShell
+   formate ses décimales selon la culture du système ; le nombre calculé par le
+   script part donc avec une virgule. Mesuré ici, quatre fois :
+
+   | où | ce que ffmpeg rend |
+   | --- | --- |
+   | `-t 17,96` | `Invalid duration for option t: 17,96` |
+   | `-ss 1,5` | `Invalid duration for option ss: 1,5` |
+   | `fade=…:st=2,5:d=0.4` | `No option name near '0.4'` |
+   | `xfade=…:offset=3,75` | `No such filter: '75'` |
+   | `eq=contrast='1,18'` | `Invalid chars ',18' at the end of expression` |
+
+   **Aucune ne passe en silence**, et c'est la bonne nouvelle de cette mesure :
+   dans un filtre, la virgule est le séparateur de filtres, donc `offset=3,75`
+   se lit « offset vaut 3, puis un filtre nommé 75 ». Le fichier n'est jamais
+   faux, il n'est jamais produit.
+
+   Le piège n'est donc pas la sortie, c'est le **diagnostic** : les trois
+   messages accusent la syntaxe, jamais la locale, et le même script marche
+   chez qui l'a écrit. Formater chaque nombre en `InvariantCulture` avant de
+   le passer à ffmpeg — `$n.ToString($ci)` — plutôt que d'espérer le
+   reconnaître à l'erreur.
 
 **Et le portage vaut contre-épreuve.** Réécrire un script dans un second
 langage force à relire son calcul, et c'est ce qui a relevé le défaut de
