@@ -4091,3 +4091,62 @@ grep -rn "maFonction" src/ --include=*.ts --include=*.tsx | grep -v __tests__
 Ce qui l'a rattrapé ici : un parcours de bout en bout dans un vrai navigateur,
 sur le paquet de production, devant un vrai serveur. C'est le seul niveau où
 une pièce non branchée se voit.
+
+---
+
+## Un contrôle qui ne peut pas échouer est pire qu'un contrôle absent
+
+**Mesuré le 30/08/2026, trois fois dans la même session.** À chaque fois un
+contrôle neuf est passé au vert du premier coup, et à chaque fois il ne
+mesurait rien.
+
+1. **Un parcours de licence** vérifiait que la pleine définition n'était pas
+   proposée sans clé. Elle ne l'était pas — parce que le projet était vide et
+   que l'étape d'export n'affiche aucune définition sans montage. Contrôle vert
+   sur un écran qui ne proposait rien du tout.
+2. **Une attente** portait sur le texte « Récupère le fichier », qui se trouve
+   être aussi le sous-titre de l'entrée de la barre latérale. Elle était donc
+   satisfaite sans que le panneau soit ouvert.
+3. **Un comptage** utilisait un sélecteur qui ne correspondait à rien :
+   `0 → 0` satisfaisait un `>=` à tous les coups.
+
+Aucun n'aurait été trouvé par relecture : ils étaient verts, et un vert ne se
+relit pas. Ce qui les a démasqués est chaque fois le même geste — **rendre le
+contrôle capable d'échouer, et vérifier qu'il échoue**.
+
+**La règle :** un contrôle neuf se prouve en le cassant. On change une valeur,
+on retire la fonctionnalité qu'il surveille, on force la condition inverse — et
+s'il reste vert, il ne surveille rien. Trente secondes, et c'est la seule
+différence entre un filet et une décoration.
+
+Le corollaire porte sur la forme : un comparateur `>=` sur des compteurs qui
+peuvent être nuls, une assertion sur l'**absence** d'un texte, une attente sur
+une chaîne qui existe ailleurs dans la page — les trois sont les formes que
+prend un contrôle vide. Préférer un `> 0 && ...`, une assertion sur une
+présence, et un sélecteur propre au composant.
+
+## Une somme pondérée ne sait pas dire « celle-là, non »
+
+**Mesuré le 30/08/2026, sur la note d'Amorce.** Six critères pondérés,
+additionnés : une vidéo carrée à plan strictement fixe — 6 % de rétention
+réelle sur TikTok, décrochage à la première seconde — décrochait **82 sur 100**.
+Trois critères pleins portaient soixante-dix points à eux seuls, et quatre
+textes non remplis coûtaient treize points quand l'accroche en rapportait
+trente.
+
+Le défaut n'était dans aucun critère : chacun mesurait correctement ce qu'il
+mesurait. Il était dans **l'addition**, qui ne connaît pas de cas rédhibitoire.
+
+**La règle :** dès qu'un domaine comporte des défauts qui invalident tout le
+reste — un livrable non fini, une contrainte de format, une donnée manquante —
+il faut un **plafond** à côté de la somme, pas un critère de plus. Un critère se
+noie ; un plafond tient.
+
+Et il se double d'une obligation : le plafond **nomme** ce qu'il bloque, avec le
+geste qui le lève. Un nombre bas sans sa raison se prend pour un verdict ;
+nommé, il devient une liste de choses à faire.
+
+Le piège voisin, rencontré dans la foulée : une seconde voix de l'interface —
+un guide, un assistant — qui continue d'appliquer l'ancienne logique et annonce
+« ça tient la route » pendant que la note dit non. Deux voix qui se contredisent
+valent moins qu'une seule qui refuse, parce qu'on suit celle qui arrange.
