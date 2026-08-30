@@ -679,7 +679,10 @@ verdict par projet suivi de ce qu'elle ne couvre pas.
 
 `npm run dev | build | typecheck | lint | test` — Amorce. `npm run fixtures`
 puis `npm run verify` : parcours complet dans un vrai Chromium, plus
-`verify:reprise`, `verify:partage` et `verify:images`. Les tests unitaires ne
+`verify:reprise`, `verify:partage`, `verify:images` et `verify:licence`.
+Ce dernier est **exclusif** — il construit le paquet de production et sert
+l'application lui-même, donc il ne se lance pas pendant qu'un `npm run dev`
+tourne, contrairement aux autres. Les tests unitaires ne
 voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
@@ -735,6 +738,15 @@ disaient pas.
 - Les deux couches d'un impact **partagent** le niveau, sans quoi le limiteur
   fait pomper tout le mixage.
 - L'export MP4 n'existe que sous Chrome et Edge : ne pas supposer l'extension.
+- **L'export encode hors ligne, image par image**, et ne filme plus l'aperçu.
+  Aucune image ne peut donc manquer, quel que soit l'appareil — c'est ce qui a
+  remplacé un export mesuré à 12,7 images par seconde au lieu de 30. Le chemin
+  temps réel reste en repli pour les navigateurs sans WebCodecs, et c'est le
+  seul cas où la cadence peut encore se perdre.
+- **Un Chromium libre n'a pas les codecs propriétaires.** Sondé : il refuse
+  toutes les chaînes `avc1` à l'encodage comme au décodage, et l'AAC, et ne
+  garde que VP9, AV1 et Opus. Rien qui touche au H.264 ne se départage donc sur
+  la machine de vérification — seulement sur un vrai appareil.
 
 ### Modifier ce dépôt
 

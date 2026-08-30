@@ -431,6 +431,35 @@ est un bon rythme :
 */15 * * * * cd /chemin/vers/pepites && /usr/bin/python3 main.py scan >> scan.log 2>&1
 ```
 
+**Sous Windows, où ce radar tourne réellement**, l'équivalent se déclare une
+fois dans PowerShell. Le détour par `cmd.exe` n'est pas une coquetterie : il
+apporte la redirection vers `scan.log`, qu'une tâche planifiée ne fait pas
+d'elle-même, et sans journal un tour qui échoue toutes les quinze minutes est
+indiscernable d'un marché calme.
+
+```powershell
+$dossier = "$HOME\Downloads\amorce-main\amorce-main\pepites"
+$action  = New-ScheduledTaskAction -Execute "cmd.exe" `
+             -Argument "/c python main.py scan >> scan.log 2>&1" `
+             -WorkingDirectory $dossier
+$rythme  = New-ScheduledTaskTrigger -Once -At (Get-Date) `
+             -RepetitionInterval (New-TimeSpan -Minutes 15) `
+             -RepetitionDuration ([TimeSpan]::MaxValue)
+Register-ScheduledTask -TaskName "Radar pepites" -Action $action -Trigger $rythme
+```
+
+`-RepetitionDuration` compte : sans elle, le déclencheur `-Once` ne se répète
+que pendant vingt-quatre heures, puis s'arrête sans erreur — la tâche reste
+listée, elle ne se déclenche plus, et le radar paraît simplement n'avoir rien
+trouvé depuis la veille.
+
+Ce chemin est écrit contre la surface documentée de `ScheduledTasks` et n'a pas
+été exécuté : aucune session de ce dépôt ne tourne sous Windows. Il se vérifie
+en une minute — `Get-ScheduledTask "Radar pepites"` doit rendre `Ready`, et
+`scan.log` doit grossir au quart d'heure suivant.
+
+Pour l'arrêter : `Unregister-ScheduledTask "Radar pepites"`.
+
 **Un seul scan tourne à la fois**, et le radar s'en charge : un verrou de
 fichier est pris pour la durée du tour, et un second passage lancé pendant le
 premier est refusé au lieu de doubler la cadence. Ce n'était pas théorique —

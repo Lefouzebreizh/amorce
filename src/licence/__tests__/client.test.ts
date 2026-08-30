@@ -21,7 +21,7 @@ function fetchInterdit(): { chercher: typeof fetch; appele: () => boolean } {
 
 test('sans serveur configuré, rien n’est demandé', async () => {
   const { chercher, appele } = fetchInterdit();
-  assert.deepEqual(await demanderEtat('une-cle', chercher), ETAT_INITIAL);
+  assert.deepEqual(await demanderEtat('une-cle', chercher), { etat: ETAT_INITIAL, joignable: true });
   assert.equal(appele(), false, 'une requête est partie sans serveur configuré');
 });
 
@@ -34,7 +34,7 @@ test('sans clé, rien n’est demandé non plus', async () => {
    */
   for (const vide of ['', '   ', '\n']) {
     const { chercher, appele } = fetchInterdit();
-    assert.deepEqual(await demanderEtat(vide, chercher), ETAT_INITIAL);
+    assert.deepEqual(await demanderEtat(vide, chercher), { etat: ETAT_INITIAL, joignable: true });
     assert.equal(appele(), false, `une requête est partie avec la clé ${JSON.stringify(vide)}`);
   }
 });
@@ -70,3 +70,4 @@ test('rien d’autre que le statut ne traverse', () => {
     { statut: 'pro' },
   );
 });
+
