@@ -4150,3 +4150,44 @@ Le piège voisin, rencontré dans la foulée : une seconde voix de l'interface �
 un guide, un assistant — qui continue d'appliquer l'ancienne logique et annonce
 « ça tient la route » pendant que la note dit non. Deux voix qui se contredisent
 valent moins qu'une seule qui refuse, parce qu'on suit celle qui arrange.
+
+## Un bruitage se mesure sur son moment fort, pas en moyenne sur son fichier
+
+Mesuré le 29/08/2026 sur **67 sons de douze bibliothèques professionnelles**
+(BOOM Library : Cinematic Darkness, Elements, Trailers, Strikes, Motion, Metal).
+Le premier verdict — « 11 sons sur 61 portent, la moitié est inaudible sur un
+téléphone » — était **faux**, et il aurait fait jeter des bibliothèques entières.
+
+La cause tient à l'instrument : une moyenne quadratique sur tout le fichier.
+Une prise professionnelle dure 8 à 48 secondes dont l'essentiel est du silence
+avant et après l'événement. La moyenne y mesure donc **la durée du fichier**,
+pas le son.
+
+```python
+n = 9600                                   # 200 ms : la durée d'un ÉVÉNEMENT
+e = [np.sqrt((h[i:i+n]**2).mean())         # h = le signal au-dessus de 400 Hz
+     for i in range(0, len(h)-n, n//2)]
+porte = 20*np.log10(max(e))                # son moment le plus fort
+```
+
+| | moyenne sur le fichier | crête sur 200 ms |
+| --- | --- | --- |
+| sons qui portent (> −22 dB) | **11 / 61** | **59 / 67** |
+
+**L'écart moyen entre les deux est de 11,3 dB**, et il monte à 15 dB sur les
+prises les plus longues. Une caisse claire sortait à −30 dB en moyenne — un
+chiffre qui n'a aucun sens physique pour un instrument dont toute l'énergie est
+dans le médium.
+
+**Ce qui reste vrai après correction**, et qui vaut pour choisir : ce que le nom
+promet n'est pas ce que le téléphone rend. Les huit sons réellement faibles
+s'appellent tous `IMPACT`, `BOOM` ou `LOW` — `IMPACTSynth_Low_Boom` sort à
+−39,1 dB, `Impact_Low_Cavern_Hit` à −26,1. Ils sont excellents dans une salle à
+caisson ; ils n'existent pas sur un haut-parleur de téléphone. Ce qui porte
+s'appelle `SCREAM`, `STINGER`, `RISE`, `WHOOSH`, `SCREECH`.
+
+**Et la leçon de méthode, qui dépasse le son :** un indicateur agrégé sur un
+support de longueur variable mesure la longueur autant que le contenu. Avant de
+classer quoi que ce soit avec une moyenne, vérifier qu'un élément long et un
+élément court y sont comparables — sinon le classement trie par durée en
+prétendant trier par qualité.
