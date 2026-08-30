@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { analyzeProject } from '../analysis.ts';
+import { analyzeProject, PLAFOND_BLOQUE } from '../analysis.ts';
 import {
   CAPTION_SETS,
   applyFinish,
@@ -42,15 +42,46 @@ function bare(shots: number[]): Project {
 const run = (project: Project, setId = 'bande-annonce') =>
   applyFinish(project, analyzeProject(project), setId, counter());
 
-test('la note monte franchement sur un montage nu', () => {
+/*
+ * Poser les réglages améliore le montage, et ne suffit pas à ouvrir la note.
+ *
+ * Cette attente a changé de sens, et c'est le sujet même du plafond. Elle
+ * disait « la note dépasse 75 » ; les gabarits laissent pourtant leurs crochets
+ * à remplir — c'est écrit, testé, et voulu : le studio ne peut pas écrire à la
+ * place de quelqu'un. Une note qui montait à 78 sur un montage dont les quatre
+ * textes affichent encore « [Ce qui menace] » disait donc le contraire de la
+ * vérité, et c'est exactement ce que l'utilisateur avait relevé.
+ *
+ * Ce qu'on vérifie maintenant : les critères progressent réellement, et la note
+ * reste plafonnée tant que les crochets sont là. Les deux comptent — sans le
+ * premier, on aurait un plafond qui masque un bouton devenu inutile.
+ */
+test('poser les réglages fait progresser les critères', () => {
   const project = bare([2.5, 2.5, 2.5, 2.5, 2.5]);
-  const avant = analyzeProject(project).score;
-  const apres = analyzeProject(run(project)).score;
+  const avant = analyzeProject(project);
+  const apres = analyzeProject(run(project));
 
-  // Un montage nu marque déjà sur le rythme et la tension : ce qui compte
-  // n'est pas son niveau de départ mais l'écart que le bouton produit.
-  assert.ok(apres - avant >= 25, `la note ne gagne que ${apres - avant} points (${avant} → ${apres})`);
-  assert.ok(apres >= 75, `la note devrait dépasser 75, elle est à ${apres}`);
+  const somme = (a: typeof avant) =>
+    a.criteria.reduce((total, c) => total + c.score * c.weight, 0);
+
+  assert.ok(
+    somme(apres) - somme(avant) >= 25,
+    `les critères ne gagnent que ${(somme(apres) - somme(avant)).toFixed(0)} points`,
+  );
+  assert.ok(somme(apres) >= 75, `les critères devraient dépasser 75, ils sont à ${somme(apres).toFixed(0)}`);
+});
+
+test('la note reste plafonnée tant que les crochets ne sont pas remplis', () => {
+  const apres = analyzeProject(run(bare([2.5, 2.5, 2.5, 2.5, 2.5])));
+
+  assert.ok(
+    apres.bloquants.some((b) => b.id === 'crochets'),
+    'les crochets du gabarit devraient être signalés comme bloquants',
+  );
+  assert.ok(
+    apres.score <= PLAFOND_BLOQUE,
+    `la note devrait être plafonnée à ${PLAFOND_BLOQUE}, elle est à ${apres.score}`,
+  );
 });
 
 test('les plans trop longs sont découpés, les autres intacts', () => {

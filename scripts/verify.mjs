@@ -451,15 +451,25 @@ check(
 // casse pas au moindre remaniement de classes.
 const scoreLabel = await page.locator('header [role="status"]').getAttribute('aria-label');
 const score = Number(scoreLabel?.match(/(\d+)\s+sur\s+100/)?.[1]);
-check('Une note de viralité est calculée', score > 0, `note ${score}/100`);
+check('Une note de montage est calculée', score > 0, `note ${score}/100`);
 await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
 
 /*
- * Poser les réglages recommandés, et vérifier que la note bouge.
+ * Poser les réglages recommandés, et vérifier que la chaîne complète aboutit.
  *
- * C'est la seule preuve que la chaîne complète fonctionne : le bouton écrit
- * dans le projet, l'analyse relit ce projet, et le chiffre affiché en découle.
- * Un test unitaire vérifierait le calcul, pas le fait que l'appui aboutisse.
+ * C'est la seule preuve que le bouton écrit dans le projet, que l'analyse relit
+ * ce projet, et que l'affichage en découle. Un test unitaire vérifierait le
+ * calcul, pas le fait que l'appui aboutisse.
+ *
+ * L'attente a changé de sens avec le plafond, et c'est le sujet même du
+ * changement. Elle disait « la note monte » ; les gabarits laissent pourtant
+ * leurs crochets à remplir — c'est écrit, testé et voulu, le studio ne peut pas
+ * écrire à la place de quelqu'un. Une note qui montait sur un montage dont les
+ * textes affichent encore « [Ce qui menace] » disait le contraire de la vérité.
+ *
+ * On vérifie donc les deux moitiés : le montage est bel et bien enrichi — des
+ * plans, des bruitages, des textes apparaissent — et la note reste plafonnée
+ * tant que les crochets sont là, en le disant.
  */
 {
   const lireNote = async () => {
@@ -471,6 +481,30 @@ await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
   await page.waitForTimeout(500);
   const avant = await lireNote();
 
+  /*
+   * On somme les critères affichés, et deux essais ont été nécessaires.
+   *
+   * Le premier comptait des éléments d'une liste par un sélecteur qui ne
+   * correspondait à rien : « 0 → 0 » passait à tous les coups. Un contrôle qui
+   * ne peut pas échouer est pire qu'un contrôle absent — il occupe la place de
+   * celui qui aurait servi.
+   *
+   * Le second comptait les plans, et ce n'était pas ce que le bouton fait : sur
+   * des rushes déjà courts, il n'y a rien à découper. Ce qu'il ajoute, ce sont
+   * des textes et des bruitages — donc c'est la somme des critères qui bouge,
+   * et c'est elle qu'on lit, dans les « N / M » du panneau d'analyse.
+   */
+  const lireCriteres = async () =>
+    page.evaluate(() =>
+      [...document.body.innerText.matchAll(/(\d+)\s*\/\s*(\d+)(?!\d)/g)]
+        .map((m) => [Number(m[1]), Number(m[2])])
+        // Les poids des critères sont 30, 20, 20, 15, 10 et 5 : on écarte tout
+        // autre « N / M » de la page, comme « 40 sur 100 ».
+        .filter(([obtenu, poids]) => [30, 20, 15, 10, 5].includes(poids) && obtenu <= poids)
+        .reduce((total, [obtenu]) => total + obtenu, 0),
+    );
+  const criteresAvant = await lireCriteres();
+
   const poser = page.getByRole('button', { name: /Poser les réglages/ });
   check('Le bouton de réglages recommandés est offert', await poser.isVisible());
   await poser.scrollIntoViewIfNeeded();
@@ -478,10 +512,21 @@ await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
   await page.waitForTimeout(900);
 
   const apres = await lireNote();
+  const criteresApres = await lireCriteres();
+
   check(
-    'Poser les réglages recommandés fait monter la note',
-    apres > avant,
+    'Poser les réglages fait progresser les critères',
+    criteresAvant > 0 && criteresApres > criteresAvant,
+    `${criteresAvant} → ${criteresApres} points de critères`,
+  );
+  check(
+    'La note reste plafonnée tant que les crochets ne sont pas remplis',
+    apres <= 40,
     `${avant} → ${apres} sur 100`,
+  );
+  check(
+    'Ce qui plafonne la note est nommé',
+    await page.evaluate(() => document.body.innerText.includes('Ta note est plafonnée')),
   );
 
   // On rend le montage à son état d'origine : la suite du parcours mesure le
