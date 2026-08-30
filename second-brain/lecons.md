@@ -4214,3 +4214,37 @@ support de longueur variable mesure la longueur autant que le contenu. Avant de
 classer quoi que ce soit avec une moyenne, vérifier qu'un élément long et un
 élément court y sont comparables — sinon le classement trie par durée en
 prétendant trier par qualité.
+## Une branche qui attend ne vieillit pas, elle devient destructrice
+
+La branche portait deux choses : une page neuve, et un module que le dépôt
+n'avait pas encore. Le temps qu'elle attende, **une autre session a écrit ce
+module** — mieux, avec des messages d'erreur qui distinguent une clé fausse
+d'un serveur muet, ce que la version en attente ne faisait pas.
+
+À cet instant la branche cesse d'être en retard et devient **destructrice** :
+la fusionner aurait remplacé leur fichier par le sien. Rien ne l'aurait
+signalé — pas de conflit, puisque la branche remplaçait un fichier entier ; les
+tests seraient restés verts, puisque le module marchait ; et le travail de
+l'autre session aurait disparu dans un lot qui parlait d'autre chose.
+
+**Le contrôle qui l'attrape tient en une commande**, et il ne consiste pas à
+regarder les conflits :
+
+```bash
+git ls-tree -r --name-only origin/main -- <les fichiers de la branche>
+git diff origin/main origin/<branche> -- <le fichier commun>
+```
+
+Un fichier présent des deux côtés **avec une différence** est le signal. Ici :
+230 lignes d'écart sur `useLicence.ts`, zéro conflit annoncé.
+
+**La réparation n'est pas de rebaser.** Un rebase aurait reporté l'écrasement
+sans le montrer. Il faut refaire la branche depuis `main` en n'y remettant que
+ce qui manque vraiment — la page — et **adapter ce qui reste à l'API de
+l'autre**, pas l'inverse. Le code qui est déjà fusionné a gagné ; celui qui
+attendait s'y plie.
+
+**Corollaire de rythme :** ce dépôt reçoit plusieurs sessions en parallèle, et
+une branche qui dort une demi-journée traverse deux ou trois fusions. Ouvrir la
+PR tôt ne sert pas qu'à éviter les conflits — c'est ce qui empêche un lot de se
+transformer en retour en arrière.
