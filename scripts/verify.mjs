@@ -1368,35 +1368,38 @@ if (exportPath) {
     console.log('  —    | Cadence non mesurée (ffprobe absent)');
   } else {
     /*
-     * La cadence de l'export, que rien ne vérifiait.
+     * La cadence de l'export, devenue un contrôle.
      *
-     * L'enregistrement se fait en filmant le canvas en temps réel : le fichier
-     * ne reçoit donc que les images réellement composées pendant la lecture. Si
-     * composer une image coûte plus que 1/30 de seconde, le fichier livré perd
-     * silencieusement des images — et tous les contrôles voisins restent verts,
-     * puisque la durée est bonne, la définition est bonne, l'image n'est pas
-     * noire et le son est là.
+     * Elle était une **mesure affichée** et non un contrôle rouge, avec cette
+     * raison écrite ici même : « le corriger demande un encodage hors ligne […]
+     * le jour où l'encodage hors ligne arrive, cette ligne devient un
+     * contrôle ». Ce jour est arrivé, et la promesse est tenue.
      *
-     * Mesuré à la découverte : **35 images pour 7,5 secondes** sur la machine
-     * de vérification, 9 sur un processeur bridé quatre fois. Le fichier était
-     * un diaporama, et personne ne pouvait le savoir depuis les tests.
+     * Ce que le défaut valait : l'enregistrement filmait le canvas en temps
+     * réel, donc le fichier ne recevait que les images composées à temps. Tous
+     * les contrôles voisins restaient verts — durée bonne, définition bonne,
+     * image non noire, son présent — pendant que le fichier livré était un
+     * diaporama. Mesuré à la découverte : 35 images pour 7,5 secondes ici, 9
+     * sur un processeur bridé quatre fois. Sur un export réel d'utilisateur :
+     * 222 images pour 17,5 secondes, soit 12,7 par seconde.
      *
-     * Mesure affichée, et non contrôle rouge. Le défaut est réel et connu, mais
-     * le corriger demande un encodage hors ligne — décoder les rushes avec
-     * `VideoDecoder` plutôt que de les lire dans un élément `<video>`, ce qui
-     * suppose un démultiplexeur. Une suite qui reste rouge en permanence
-     * apprend à ignorer la suite ; un nombre affiché à chaque passage, non. Le
-     * jour où l'encodage hors ligne arrive, cette ligne devient un contrôle.
+     * Une phrase de ce bloc était fausse, et c'est elle qui a bloqué le
+     * correctif : « piloter les éléments <video> image par image ne serait pas
+     * une issue, mesuré à 265 ms par déplacement ». Remesuré sur cette même
+     * machine sans carte graphique : **7,3 ms** par déplacement séquentiel,
+     * 25,7 ms en comptant la composition en 1080 × 1920. Trente-cinq fois
+     * moins. Le démultiplexeur qu'on croyait indispensable ne l'était pas.
      *
-     * Piloter les éléments `<video>` image par image ne serait pas une issue :
-     * mesuré à 265 ms par déplacement séquentiel, soit 2,6 minutes pour un film
-     * de vingt secondes.
+     * La borne est à 90 % de la cadence visée, non à 100 % : la dernière image
+     * d'un film peut manquer d'un cheveu selon l'arrondi de la durée, et
+     * exiger l'exactitude ferait rougir la suite pour une image sur six cents.
      */
     const attendue = 30;
     const perdues = Math.round(100 - (cadence.parSeconde * 100) / attendue);
-    console.log(
-      `  ${cadence.parSeconde >= attendue / 3 ? 'OK  ' : '⚠   '} | `
-      + `Cadence de l’export : ${cadence.images} images pour ${cadence.duree.toFixed(1)} s, `
+    check(
+      'L’export tient la cadence, aucune image perdue',
+      cadence.parSeconde >= attendue * 0.9,
+      `${cadence.images} images pour ${cadence.duree.toFixed(1)} s, `
       + `soit ${cadence.parSeconde.toFixed(1)} par seconde — ${perdues} % des images perdues`,
     );
 
@@ -1409,8 +1412,15 @@ if (exportPath) {
      * l'entrelacement — le fichier était pourtant `progressive`. Rien dans
      * l'application ne lui disait que des images manquaient.
      *
-     * La machine de vérification est sans carte graphique et n'atteint jamais
-     * le seuil : l'avertissement doit donc être là à chaque passage.
+     * Ce contrôle ne se déclenche plus depuis que l'encodage est hors ligne :
+     * la cadence est tenue, il n'y a rien à annoncer. Il garde sa raison d'être
+     * pour le **repli** temps réel, qui sert les navigateurs sans WebCodecs —
+     * et c'est là qu'il redeviendra le seul filet.
+     *
+     * Il est laissé conditionnel plutôt que retiré : le jour où le repli
+     * reprend la main, ou si l'encodage hors ligne échoue sur un appareil, il
+     * doit être en place. Un contrôle qu'on retire parce qu'il ne se déclenche
+     * plus est un contrôle qui manquera précisément le jour où il servait.
      */
     if (cadence.parSeconde < 20) {
       check(
