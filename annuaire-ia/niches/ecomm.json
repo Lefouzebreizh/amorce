@@ -82,6 +82,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nLa plupart des assistants de boutique répondent aux questions de livraison. Zipchat est construit pour vendre : il connaît le catalogue, recommande une référence, traite l’objection sur le prix ou la taille, et propose l’ajout au panier. Le chiffre d’affaires attribué aux conversations est affiché, ce qui rend l’arbitrage simple.\n\n## Points forts\n- Conçu pour la vente, pas seulement pour le support\n- Chiffre d’affaires attribué aux conversations, mesurable\n- Se nourrit du catalogue automatiquement, sans base de connaissances à écrire\n- Répond dans plusieurs langues, y compris en français\n\n## Points faibles\n- Un agent trop insistant dégrade l’expérience : le ton se règle avec soin\n- Facturé au volume de conversations, imprévisible en période de soldes\n- Sans catalogue riche, il n’a rien à recommander\n\n## Idéal pour\nLes boutiques dont le trafic est correct mais qui transforment mal, faute de conseil au moment de l’hésitation.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "nosto",
+      "nom": "Nosto",
+      "categorie": "Personnalisation",
+      "prix": "Sur devis",
+      "description_courte": "Les recommandations et les contenus adaptés au comportement de chaque visiteur, sans développement lourd.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/nosto",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nNosto occupe le terrain de la personnalisation clé en main : recommandations de produits, contenus adaptés, tests de variantes, le tout sans écrire de code. C'est ce qui explique son adoption chez des marques sans grande équipe technique. Le revers est classique — on gagne en rapidité de mise en œuvre ce qu'on perd en maîtrise fine, et l'effet sur la conversion mérite d'être mesuré plutôt que cru.\n\n## Points forts\n- Personnalisation opérationnelle sans développement\n- Recommandations, contenus et tests dans une même plateforme\n- Intégrations directes avec les principales solutions de boutique\n- Mise en place rapide comparée à un projet interne\n\n## Points faibles\n- Aucun tarif public, positionnement moyen et grand compte\n- Effet sur la conversion à mesurer sérieusement, promesse générique du secteur\n- Peu de maîtrise fine sur la logique de recommandation\n- Un outil de plus qui suit les visiteurs : à cadrer côté données personnelles\n\n## Idéal pour\nLes boutiques établies sans équipe technique dédiée, qui veulent personnaliser sans lancer un chantier.",
+      "date_ajout": "2026-08-29"
     }
   ]
 }

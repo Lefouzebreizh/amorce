@@ -82,6 +82,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nBreezy présente le recrutement comme un tableau que l’on fait glisser, ce qui suffit à faire adopter l’outil par des managers qui n’ouvriront jamais un logiciel RH. Les questionnaires éliminatoires et l’entretien vidéo différé sont inclus dès les formules basses, là où d’autres les facturent en supplément. La formule gratuite couvre un poste ouvert en permanence.\n\n## Points forts\n- Formule gratuite permanente pour un poste ouvert : idéal pour juger\n- Tableau visuel adopté sans formation par les managers opérationnels\n- Questionnaires de présélection et entretien vidéo différé inclus\n- Rédaction d’offres et résumés de candidature assistés\n\n## Points faibles\n- Le tarif grimpe fortement dès qu’on ouvre plusieurs postes\n- Moins puissant que les grandes plateformes sur le sourcing actif\n- Interface uniquement en anglais\n\n## Idéal pour\nLes PME et startups qui ouvrent deux ou trois postes à la fois et veulent impliquer les managers dans le tri.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "workable",
+      "nom": "Workable",
+      "categorie": "Sourcing",
+      "prix": "À partir de 189 $/mois",
+      "description_courte": "La diffusion d’offres sur deux cents sites, le vivier de quatre cents millions de profils et le tri assisté, en libre-service.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/workable",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nWorkable a le mérite d’être complet et de s’acheter en ligne sans passer par un commercial. Diffusion en un clic, base de profils à contacter directement, rédaction d’offres assistée, entretiens structurés : c’est la plateforme qu’on prend quand on recrute régulièrement mais qu’on n’a pas d’équipe recrutement dédiée pour piloter un projet lourd.\n\n## Points forts\n- Achat et mise en service en libre-service, sans cycle commercial\n- Diffusion automatique sur les principaux sites d’emploi\n- Vivier de profils intégré, avec prise de contact directe\n- Trames d’entretien structuré et grilles d’évaluation fournies\n\n## Points faibles\n- Tarif d’entrée élevé pour une structure qui recrute deux fois par an\n- Le vivier est nettement plus riche en anglophone\n- Les fonctions les plus utiles sont réservées aux formules hautes\n\n## Idéal pour\nLes entreprises de cinquante à cinq cents salariés qui recrutent en continu sans service recrutement constitué.",
+      "date_ajout": "2026-08-29"
     }
   ]
 }

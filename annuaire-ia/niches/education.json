@@ -82,6 +82,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nKahoot n’a rien à prouver côté engagement : le format est entré dans les mœurs scolaires. Le générateur de questions en fait un outil de préparation et non plus seulement d’animation — on colle un texte, on obtient une session complète. C’est le moyen le plus rapide de réveiller une classe en fin de journée.\n\n## Points forts\n- Format connu de tous : aucune explication à donner aux élèves\n- Questions générées à partir d’un texte, d’un document ou d’un sujet\n- Rapports de participation exportables pour le suivi\n- Tarif enseignant très bas, formule gratuite fonctionnelle\n\n## Points faibles\n- Fonctions génératives réservées aux formules payantes\n- L’aspect compétitif ne convient pas à toutes les classes\n- Peu adapté aux questions ouvertes et au raisonnement long\n\n## Idéal pour\nLes enseignants qui veulent réviser un chapitre en dix minutes sans préparer la séance la veille.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "kwyk",
+      "nom": "Kwyk",
+      "categorie": "Différenciation",
+      "prix": "Abonnement établissement ou famille",
+      "description_courte": "Les exercices de mathématiques générés et corrigés automatiquement, alignés sur les programmes français.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/kwyk",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nKwyk a une qualité que peu d'outils partagent : il est construit sur les programmes français, pas traduit depuis un système scolaire étranger. Les exercices sont générés avec des valeurs différentes pour chaque élève, corrigés automatiquement, et le professeur voit qui bloque et où. Sur une classe de trente, c'est la différence entre supposer et savoir.\n\n## Points forts\n- Aligné sur les programmes français, du collège au lycée\n- Énoncés générés avec des valeurs différentes par élève\n- Correction automatique et suivi individuel des blocages\n- Utilisé en établissement comme à la maison\n\n## Points faibles\n- Périmètre mathématique : rien pour les autres disciplines\n- Le suivi ne vaut que si les élèves font réellement les exercices\n- La correction automatique ne juge pas le raisonnement écrit\n- Abonnement à la charge de l'établissement ou des familles\n\n## Idéal pour\nLes professeurs de mathématiques qui veulent donner du travail différencié sans multiplier par trente le temps de correction.",
+      "date_ajout": "2026-08-29"
     }
   ]
 }
