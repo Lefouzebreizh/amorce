@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { debitVideo, downloadBlob, pickFormat, recordMontage, relireLExport, safeFilename } from '@/lib/export';
 import { encodageHorsLigneDisponible, encoderFilm } from '@/lib/exportHorsLigne';
 import { rendreMixage } from '@/lib/audioHorsLigne';
@@ -94,6 +94,29 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
   const height = Math.round(OUTPUT_HEIGHT * preset.scale);
 
   const [progress, setProgress] = useState<number | null>(null);
+
+  /*
+   * De quoi arrêter un export en cours.
+   *
+   * L'encodage hors ligne prend le temps qu'il faut à l'appareil : sur un
+   * téléphone modeste, un montage de trente-cinq secondes peut tourner plus
+   * d'une minute. Sans bouton d'arrêt, la seule issue était de fermer l'onglet
+   * — donc de perdre le montage. Les deux chemins d'export savaient déjà
+   * recevoir un signal ; personne ne leur en donnait.
+   */
+  const arretRef = useRef<AbortController | null>(null);
+
+  /*
+   * L'instant de départ, pour estimer ce qu'il reste.
+   *
+   * Un pourcentage seul ne dit pas s'il faut attendre dix secondes ou trois
+   * minutes, et c'est la seule question que se pose quelqu'un qui regarde une
+   * barre avancer. L'estimation vient du travail déjà fait, jamais d'une
+   * prédiction sur l'appareil : elle est fausse au début et juste ensuite,
+   * ce qui est le bon sens de l'erreur.
+   */
+  const departRef = useRef(0);
+  const [restant, setRestant] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [cadence, setCadence] = useState<number | null>(null);
@@ -137,6 +160,25 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
     setDone(null);
     setCadence(null);
     setProgress(0);
+    setRestant(null);
+    departRef.current = performance.now();
+    arretRef.current = new AbortController();
+
+    /*
+     * L'avancement porte aussi l'estimation.
+     *
+     * On mesure ce qui a été fait plutôt que de prédire ce qui reste : le
+     * premier dixième donne déjà le rythme réel de cet appareil-ci, sur ce
+     * montage-ci. Une estimation posée d'avance se tromperait de plusieurs
+     * minutes sur un téléphone modeste, et dans le mauvais sens.
+     */
+    const avancer = (part: number) => {
+      setProgress(part);
+      if (part > 0.03) {
+        const ecoule = (performance.now() - departRef.current) / 1000;
+        setRestant(Math.max(0, Math.round(ecoule / part - ecoule)));
+      }
+    };
 
     try {
       const audio = await engine.ensureAudio();
@@ -178,7 +220,8 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
           duree: duration,
           images: OUTPUT_FPS,
           debit: debitVideo(width, height, OUTPUT_FPS),
-          onProgress: setProgress,
+          onProgress: avancer,
+          signal: arretRef.current.signal,
         });
 
         const nom = safeFilename(project.name, 'mp4');
@@ -203,7 +246,8 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         stopPlayback: engine.pause,
         currentTime: () => useStudio.getState().playhead,
         isPlaying: () => useStudio.getState().playing,
-        onProgress: setProgress,
+        onProgress: avancer,
+        signal: arretRef.current.signal,
       });
 
       /*
@@ -248,13 +292,29 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         setDone(`${filename} — ${poids}`);
       }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'L’export a échoué.');
+      /*
+       * Un arrêt demandé n'est pas une panne.
+       *
+       * Afficher « l'export a échoué » à quelqu'un qui vient d'appuyer sur
+       * Arrêter lui apprendrait qu'il a cassé quelque chose. Il a seulement
+       * changé d'avis, et le montage est intact.
+       */
+      if (cause instanceof DOMException && cause.name === 'AbortError') {
+        setError(null);
+      } else {
+        setError(cause instanceof Error ? cause.message : 'L’export a échoué.');
+      }
     } finally {
       setProgress(null);
+      setRestant(null);
+      arretRef.current = null;
       engine.pause();
       engine.endExport();
     }
   };
+
+  /** Demande l'arrêt de l'export en cours. Le nettoyage se fait dans `run`. */
+  const arreter = () => arretRef.current?.abort();
 
   return (
     <div className="space-y-3">
@@ -357,7 +417,11 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
 
         <Button variant="primary" className="w-full" onClick={run} disabled={busy || duration <= 0 || !format}>
           {busy
-            ? `Enregistrement… ${Math.round((progress ?? 0) * 100)} %`
+            // « Encodage » et non « enregistrement » hors ligne : rien n'est
+            // enregistré, chaque image est composée puis encodée. Le mot juste
+            // évite de chercher pourquoi l'aperçu ne défile pas.
+            ? `${horsLigne ? 'Encodage' : 'Enregistrement'}… ${Math.round((progress ?? 0) * 100)} %`
+              + (restant !== null ? ` · ${restant} s restantes` : '')
             : audioOnly
               ? '⬇ Exporter la bande-son'
               : aRemplir.length > 0
@@ -368,12 +432,23 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         </Button>
 
         {busy && (
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slab">
-            <div
-              className="h-full rounded-full bg-accent transition-[width]"
-              style={{ width: `${Math.round((progress ?? 0) * 100)}%` }}
-            />
-          </div>
+          <>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slab">
+              <div
+                className="h-full rounded-full bg-accent transition-[width]"
+                style={{ width: `${Math.round((progress ?? 0) * 100)}%` }}
+              />
+            </div>
+            {/*
+              Un export qu'on ne peut pas arrêter n'est pas haut de gamme.
+              L'encodage hors ligne prend le temps qu'il faut à l'appareil, et
+              sans ce bouton la seule issue était de fermer l'onglet — donc de
+              perdre le montage.
+            */}
+            <Button variant="ghost" className="mt-2 w-full" onClick={arreter}>
+              Arrêter l’export
+            </Button>
+          </>
         )}
 
         {done && (

@@ -1196,6 +1196,48 @@ const expected = profile.mobile ? { width: 720, height: 1280 } : { width: 1080, 
 const format = (await page.locator('dt:text-is("Format") + dd').textContent())?.trim();
 check('Un format d’export est disponible', !/non pris en charge/.test(format ?? ''), format);
 
+/*
+ * On arrête un export avant de l'aller au bout, et on vérifie ce qu'il laisse.
+ *
+ * Le risque n'est pas le bouton, c'est l'état du studio après : l'encodage
+ * hors ligne prend le canvas à la boucle d'animation, met la lecture en pause
+ * et impose la définition de sortie. Un arrêt qui ne rendrait pas ces trois
+ * choses laisserait un studio figé, sans rien afficher d'anormal — et
+ * l'utilisateur croirait l'application plantée.
+ *
+ * Sans bouton d'arrêt, la seule issue d'un export trop long était de fermer
+ * l'onglet, donc de perdre le montage.
+ */
+await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
+await page.waitForTimeout(1200);
+
+const boutonArret = page.locator('button:has-text("Arrêter l’export")');
+check('Un export en cours peut être arrêté', (await boutonArret.count()) === 1);
+
+if ((await boutonArret.count()) === 1) {
+  await boutonArret.click();
+  await page.waitForTimeout(1500);
+
+  check(
+    'Un arrêt n’est pas présenté comme une panne',
+    !(await page.evaluate(() => document.body.innerText.includes('L’export a échoué'))),
+  );
+  check(
+    'Le bouton d’export redevient disponible après un arrêt',
+    await page.evaluate(() => {
+      const boutons = [...document.querySelectorAll('button')];
+      const cible = boutons.find((b) => b.textContent?.includes('⬇ Exporter la vidéo'));
+      return cible !== undefined && !cible.disabled;
+    }),
+  );
+  // Le montage doit être intact : c'est ce qu'on protégeait en offrant l'arrêt.
+  check(
+    'Le montage survit à un export arrêté',
+    (await page.locator('canvas').count()) > 0
+      && (await page.evaluate(() => !document.body.innerText.includes('La timeline est vide'))),
+  );
+}
+
 const downloading = page.waitForEvent('download', { timeout: 90000 });
 await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
 await page.waitForTimeout(2500);
