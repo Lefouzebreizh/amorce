@@ -32,7 +32,7 @@ class NameColor {
     (70, 'jaune'),
     (155, 'vert'),
     (185, 'turquoise'),
-    (205, 'cyan'),
+    (195, 'cyan'),
     (250, 'bleu'),
     (290, 'violet'),
     (330, 'magenta'),
@@ -56,8 +56,15 @@ class NameColor {
 
     // 2. Les gris. Le seuil de saturation n'est pas net — c'est justement la
     //    zone où un beige et un blanc se confondent — d'où la bande de doute
-    //    juste au-dessus, traitée en 3.
-    if (saturation < 0.08) {
+    //    juste au-dessus, traitée en 4.
+    //
+    //    Il monte fortement dans les tons sombres : sur un anthracite
+    //    (41, 44, 51), dix points d'écart entre canaux suffisent à porter la
+    //    saturation à 0,20, alors que personne n'y voit du bleu. Plus une
+    //    couleur est sombre, plus il lui faut de saturation pour mériter un
+    //    nom de teinte.
+    final seuilGris = luminosite < 0.25 ? 0.38 : 0.08;
+    if (saturation < seuilGris) {
       return ColorReading(_gris(luminosite));
     }
 
@@ -71,7 +78,7 @@ class NameColor {
     //    Examiné **avant** le doute sur les gris : un blanc cassé passe les
     //    deux, et de ces deux explications c'est la lumière qui aide, parce
     //    qu'elle dit quoi faire — se rapprocher d'une fenêtre.
-    if (teinte >= 20 && teinte < 60 && saturation < 0.35 && luminosite > 0.62) {
+    if (teinte >= 20 && teinte <= 65 && saturation < 0.35 && luminosite > 0.62) {
       return ColorReading(
         nom,
         alternative: 'blanc',
@@ -132,10 +139,13 @@ class NameColor {
       if (chaudSombre) return 'marron';
       if (saturation < 0.4 && luminosite > 0.62) return 'beige';
     }
-    if (base == 'rouge') {
+    if (base == 'rouge' || base == 'rose') {
       if (luminosite < 0.32) return 'bordeaux';
-      if (luminosite > 0.72 && saturation < 0.75) return 'rose';
+      if (base == 'rouge' && luminosite > 0.72 && saturation < 0.75) {
+        return 'rose';
+      }
     }
+    if (base == 'bleu' && luminosite > 0.68) return 'bleu clair';
     if (base == 'bleu' && luminosite < 0.3) return 'bleu marine';
     if (base == 'vert' && luminosite < 0.3) return 'vert foncé';
     return base;
