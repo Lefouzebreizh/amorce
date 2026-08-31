@@ -322,3 +322,43 @@ test('poser les réglages peut réordonner les plans de plusieurs rushes', () =>
   assert.notDeepEqual(rushes, ['a', 'a', 'b'], 'l’ordre d’origine ne devrait pas être conservé tel quel');
   assert.notEqual(rushes[0], rushes[1], 'deux morceaux du même rush ne devraient plus se suivre');
 });
+
+/*
+ * Un seul style de texte par montage.
+ *
+ * Chaque jeu mêlait deux à quatre styles — « Bande-annonce » posait du néon
+ * jaune, du blanc contouré, du karaoké vert et du rouge dans le même film.
+ * Rapporté ainsi : « trois styles différents, pas cohérents ».
+ *
+ * La variété se joue **entre** les jeux, jamais à l'intérieur d'un jeu, et ce
+ * test garde les deux moitiés de la règle.
+ */
+test('chaque trame n’emploie qu’un seul style de texte', () => {
+  for (const set of CAPTION_SETS) {
+    const styles = new Set(set.slots.map((slot) => slot.style));
+    assert.equal(styles.size, 1, `${set.id} en emploie ${styles.size} : ${[...styles].join(', ')}`);
+  }
+});
+
+test('la couleur ne souligne qu’un seul moment', () => {
+  for (const set of CAPTION_SETS) {
+    const colorees = set.slots.filter((slot) => slot.color !== undefined).length;
+    assert.ok(colorees <= 1, `${set.id} colore ${colorees} textes`);
+  }
+});
+
+/*
+ * Les échelles restent sous 1,2, et c'est mesuré.
+ *
+ * « QUEL [ROYAUME] TOMBE ENSUITE ? » en échelle 1,3 passe à quatre lignes, soit
+ * 638 px, quand la bande sûre des trois plateformes en fait 634. Aucune hauteur
+ * d'ancrage ne pouvait le sauver : il était trop grand, pas mal posé.
+ */
+test('aucune trame ne demande une échelle qui déborde la bande', () => {
+  for (const set of CAPTION_SETS) {
+    for (const slot of set.slots) {
+      const echelle = slot.scale ?? 1;
+      assert.ok(echelle <= 1.2, `${set.id} demande une échelle de ${echelle}`);
+    }
+  }
+});

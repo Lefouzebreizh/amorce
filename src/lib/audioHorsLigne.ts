@@ -129,7 +129,19 @@ export async function rendreMixage(project: Project, duree: number): Promise<Aud
 
   const plafond = contexte.createWaveShaper();
   plafond.curve = courbeDePlafond();
-  plafond.oversample = '4x';
+  /*
+   * Pas de suréchantillonnage : il **casse** le plafond au lieu de l'adoucir.
+   *
+   * En `4x`, la courbe est appliquée sur un signal suréchantillonné puis
+   * redescendue, et le filtre de décimation sonne : mesuré, il laisse passer
+   * jusqu'à 0,30 dB au-dessus du maximum de la courbe sur des transitoires durs
+   * — un plafond qui ne plafonne plus. En `none`, la sortie ne peut pas dépasser
+   * le maximum de la courbe, par construction.
+   *
+   * Ce qu'on perd est le repliement des harmoniques que la courbe fabrique ;
+   * elle n'écrête pas, elle plie, et ce qu'elle ajoute reste bas.
+   */
+  plafond.oversample = 'none';
 
   const sfxBus = contexte.createGain();
   sfxBus.connect(master);

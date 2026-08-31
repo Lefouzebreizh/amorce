@@ -104,6 +104,33 @@ export function dansLaBandeSure(y: number): number {
   return Math.min(BANDE_SURE.bas, Math.max(BANDE_SURE.haut, y));
 }
 
+/**
+ * Ramene le **bloc entier** dans la bande sure, pas seulement son ancre.
+ *
+ * `dansLaBandeSure` borne la hauteur ou le texte est ancre. Mais un texte se
+ * dessine centre sur cette hauteur : quatre lignes en corps 135 font 637 px, et
+ * un bloc ancre a 30 % descend alors jusqu'a 46,6 % — hors de la bande que ce
+ * depot se donne. Mesure sur le carton final du gabarit « bande-annonce ».
+ *
+ * La fonction d'origine etait exportee et **n'avait aucun appelant** hors de
+ * ses propres tests : la bande etait declaree, outillee, et rien ne
+ * l'appliquait. C'est le meme defaut que le module de licence, sous une autre
+ * forme — des pieces justes, aucune branchee.
+ *
+ * Quand le bloc est plus haut que la bande, on le centre dedans : on ne peut
+ * pas faire mieux, et le remonter davantage le ferait sortir par le haut, ou
+ * l'habillage de TikTok mange les neuf premiers pour cent.
+ */
+export function centreDuBloc(y: number, hauteurDuBloc: number): number {
+  const haut = BANDE_SURE.haut * OUTPUT_HEIGHT;
+  const bas = BANDE_SURE.bas * OUTPUT_HEIGHT;
+  const demi = hauteurDuBloc / 2;
+  const centre = y * OUTPUT_HEIGHT;
+
+  if (hauteurDuBloc >= bas - haut) return (haut + bas) / 2;
+  return Math.min(bas - demi, Math.max(haut + demi, centre));
+}
+
 export const CAPTION_STYLES: Record<CaptionStyleId, CaptionStyle> = {
   punch: {
     id: 'punch',
@@ -306,7 +333,8 @@ export function drawCaption(
   const lines = wrapLines(ctx, text, MAX_TEXT_WIDTH);
   const lineHeight = fontSize * LINE_HEIGHT_RATIO;
   const blockHeight = lines.length * lineHeight;
-  const centerY = caption.y * OUTPUT_HEIGHT;
+  // Le bloc entier tient dans la bande sure, pas seulement son ancre.
+  const centerY = centreDuBloc(caption.y, blockHeight);
 
   // L'animation part du centre du bloc pour que le rebond reste symétrique.
   // Apparition et pulsation se multiplient : le texte rebondit en arrivant,
