@@ -122,6 +122,41 @@ Dans l'ordre :
 Les **partages manuels ne sont pas un signal organique** et doivent être
 écartés de l'analyse.
 
+### Le taux de partage dit si la mesure est utilisable, avant tout le reste
+
+Écarter les partages manuels suppose de savoir qu'il y en a eu. Le rapport le
+dit, et c'est le premier chiffre à regarder — avant la rétention, avant la
+complétion :
+
+```
+partages ÷ vues
+```
+
+Un taux organique tient entre **1 et 3 %**. Relevé sur l'épisode 1, deux heures
+après publication : **63 partages pour 76 vues, soit 83 %.** Ce n'est pas une
+vidéo qui marche, c'est une vidéo qui a été envoyée à des contacts.
+
+**Au-dessus de 10 %, le rapport entier cesse d'être une mesure.** Les vues ne
+viennent plus de la distribution algorithmique mais des envois, et la rétention
+qu'elles produisent est celle de gens qui vous connaissent. Comparer l'épisode
+suivant à celui-là compare deux populations différentes.
+
+La conséquence pratique : **une ligne de base ne s'établit que sur une vidéo
+laissée seule.** Tant qu'aucun épisode n'a vécu sans coup de pouce, il n'y a
+rien à quoi comparer, et un montage changé sur la foi de ces chiffres est
+changé au hasard.
+
+### La moyenne ne dit pas où l'on part
+
+« Rétention moyenne 42 % » est un rapport — 7,4 s de visionnage moyen sur
+17,73 s de film. Il dit **combien** est vu, jamais **quoi**. Deux films de même
+moyenne peuvent perdre leur public à des endroits opposés.
+
+L'écran qui compte est la **courbe de rétention**, sous *Spectateurs* ou
+*Engagement*, qui donne le décrochage seconde par seconde. C'est le seul qui
+désigne un plan. Une moyenne fait refaire le montage entier ; une courbe fait
+refaire six secondes.
+
 ## Ce que ce protocole a en commun avec le reste du dépôt
 
 Les points 1 et 3 sont la même règle que `montage-sans-refaire` énonce pour le

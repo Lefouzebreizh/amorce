@@ -44,8 +44,26 @@ type PlacedNodes = Map<
  * valeur du bout de courbe, ce qui tient le plafond même sur un dépassement
  * franc. C'est exactement le cas qu'on cherche à couvrir.
  */
-const COUDE = 0.7;
-const PLAFOND = 0.89; // −1 dBFS
+const COUDE = 0.63;
+
+/*
+ * Le plafond borne les échantillons à −2,4 dBFS, pas à −1.
+ *
+ * L'écart n'est pas une marge de confort : il est **mesuré**, et trois étages
+ * s'y ajoutent après le limiteur. La courbe elle-même sort au plus à
+ * −1,47 dBFS. Le suréchantillonnage 4× du `WaveShaper` la laisse déborder
+ * jusqu'à −1,17 sur des transitoires durs — filtre de décimation qui sonne.
+ * Puis l'encodage Opus du vrai mixage rend −0,92 là où il recevait −1,41.
+ *
+ * Un fichier livré a été mesuré à **−0,13 dBFS de vrai pic** avec la courbe
+ * précédente : au-dessus de tout ce que le limiteur autorise, et exactement ce
+ * que le réencodage des plateformes transforme en écrêtage.
+ *
+ * `COUDE` descend avec `PLAFOND`, dans le même rapport : la courbe garde sa
+ * forme et donc son caractère, elle se contente d'agir plus bas. Baisser le
+ * seul plafond aurait durci le coude et fabriqué la distorsion qu'on évite.
+ */
+const PLAFOND = 0.76; // −2,4 dBFS sur l’échantillon, pour tenir −1 en vrai pic après Opus
 
 /*
  * Exportée pour le rendu hors ligne, qui doit poser **la même** courbe.
@@ -146,7 +164,19 @@ export class AudioEngine {
      */
     this.plafond = this.context.createWaveShaper();
     this.plafond.curve = courbeDePlafond();
-    this.plafond.oversample = '4x';
+    /*
+     * Pas de suréchantillonnage : il **casse** le plafond au lieu de l'adoucir.
+     *
+     * En `4x`, la courbe est appliquée sur un signal suréchantillonné puis
+     * redescendue, et le filtre de décimation sonne : mesuré, il laisse passer
+     * jusqu'à 0,30 dB au-dessus du maximum de la courbe sur des transitoires durs
+     * — un plafond qui ne plafonne plus. En `none`, la sortie ne peut pas dépasser
+     * le maximum de la courbe, par construction.
+     *
+     * Ce qu'on perd est le repliement des harmoniques que la courbe fabrique ;
+     * elle n'écrête pas, elle plie, et ce qu'elle ajoute reste bas.
+     */
+    this.plafond.oversample = 'none';
 
     /*
      * Les bruitages ont leur propre bus, plus fort que le reste.

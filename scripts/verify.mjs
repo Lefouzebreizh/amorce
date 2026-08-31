@@ -10,7 +10,7 @@
  * Prérequis : `npm run fixtures` puis `npm run dev` dans un autre terminal.
  * Usage : npm run verify
  */
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -132,6 +132,38 @@ const check = (name, ok, detail = '') => {
  * Renvoie null si ffmpeg n'est pas installé : le parcours doit rester
  * exécutable sans lui, et l'absence de mesure vaut mieux qu'un faux verdict.
  */
+/**
+ * Vrai pic du fichier livré, en dBFS, mesuré sur le son décodé.
+ *
+ * C'est le seul contrôle qui regarde ce qui part vraiment. Le limiteur borne
+ * les échantillons **avant** deux étages qui ajoutent du niveau : le
+ * suréchantillonnage du `WaveShaper`, puis l'encodage. Un fichier a été mesuré
+ * à −0,13 dBFS alors que le réglage promettait −1,4 — et rien dans le code ne
+ * pouvait le dire, parce que le défaut naissait après lui.
+ *
+ * Le rééchantillonnage à 192 kHz approche le pic entre les échantillons, celui
+ * que les plateformes retrouvent après leur propre réencodage.
+ */
+function mesurerPic(fichier) {
+  try {
+    execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+  } catch {
+    return null;
+  }
+  // `astats` écrit son rapport sur la sortie d'erreur : `execFileSync` ne rend
+  // que la sortie standard, vide ici, d'où `spawnSync` et sa lecture explicite.
+  const sortie = spawnSync(
+    'ffmpeg',
+    ['-hide_banner', '-nostdin', '-i', fichier, '-af', 'aresample=192000,astats=metadata=1:reset=0', '-f', 'null', '-'],
+    { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 },
+  ).stderr;
+  if (!sortie) return null;
+  const pics = [...sortie.matchAll(/Peak level dB:\s*(-?\d+(?:\.\d+)?|-inf)/g)].map((m) => m[1]);
+  if (pics.length === 0) return null;
+  const dernier = pics[pics.length - 1];
+  return dernier === '-inf' ? -Infinity : Number(dernier);
+}
+
 function mesurerSilence(fichier) {
   try {
     // Sonder `ffmpeg`, le seul binaire que cette fonction appelle. Gardé sur
@@ -527,6 +559,23 @@ await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
   check(
     'Ce qui plafonne la note est nommé',
     await page.evaluate(() => document.body.innerText.includes('Ta note est plafonnée')),
+  );
+
+  /*
+   * Et c'est le **bon** défaut qui est nommé.
+   *
+   * Une capture montrait « Du texte sur 0 % de la vidéo seulement » alors que
+   * des textes de gabarit s'affichaient à l'écran. Les deux moitiés étaient
+   * vraies séparément et le message envoyait pourtant écrire du texte là où il
+   * y en avait déjà. Après l'appui, ce qui plafonne est qu'il reste des
+   * crochets — jamais l'absence de texte.
+   */
+  check(
+    'Le défaut nommé après l’appui parle des crochets, pas d’un manque de texte',
+    await page.evaluate(() => {
+      const texte = document.body.innerText;
+      return texte.includes('restent à remplir') && !texte.includes('sur 0 % de la vidéo');
+    }),
   );
 
   // On rend le montage à son état d'origine : la suite du parcours mesure le
@@ -1283,7 +1332,18 @@ if ((await boutonArret.count()) === 1) {
   );
 }
 
-const downloading = page.waitForEvent('download', { timeout: 90000 });
+/*
+ * Cinq minutes, et non quatre-vingt-dix secondes.
+ *
+ * L'ancien délai était taillé pour l'export temps réel, qui durait exactement
+ * la longueur du film. L'encodage hors ligne, lui, prend le temps que la
+ * machine met à encoder — sur le profil téléphone, bridé quatre fois, il
+ * dépasse quatre-vingt-dix secondes et le parcours déclarait un échec de
+ * téléchargement là où l'export se déroulait normalement.
+ *
+ * Le délai ne coûte que dans le cas où quelque chose est vraiment cassé.
+ */
+const downloading = page.waitForEvent('download', { timeout: 300000 });
 await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
 await page.waitForTimeout(2500);
 await page.screenshot({ path: join(SHOTS, `05-export-${profile.id}.png`) });
@@ -1537,6 +1597,37 @@ if (exportPath) {
       'Le son ne s’interrompt pas en cours de montage',
       silence.muettes <= 1,
       `${silence.muettes} s de silence total sur ${silence.total} s`,
+    );
+  }
+
+  /*
+   * Le vrai pic du fichier livré, mesuré — et le seuil dit la vérité sur ce qui
+   * est atteint, pas sur ce qu'on vise.
+   *
+   * La cible reste −1 dBFS : au-dessus, le réencodage de TikTok, d'Instagram ou
+   * de Facebook écrête pour de bon, et l'écrêtage ne se rattrape pas. Elle n'est
+   * pas tenue aujourd'hui, et la mesure dit pourquoi. Le limiteur borne les
+   * échantillons à −2,4 dBFS ; le fichier sort à −0,7. Les 1,7 dB manquants
+   * naissent **dans l'encodeur** — un mixage borné à −1,41 ressort d'Opus à
+   * −0,92 sur ce même montage — et aucun réglage du graphe ne les rattrape.
+   *
+   * Descendre encore le plafond y arriverait, au prix de la sonie : le §2 dit
+   * qu'un mixage aux normes de diffusion est déjà trop faible là où le format
+   * court se regarde. C'est un arbitrage de produit, pas une correction ; il
+   * n'est pas pris ici.
+   *
+   * Le seuil garde donc ce qui ne se discute pas : le fichier n'écrête pas.
+   * Des montages denses ont été mesurés à 0,00 dBFS — plein pot, écrêté — et
+   * c'est exactement ce que ce contrôle attrape.
+   */
+  const pic = mesurerPic(exportPath);
+  if (pic === null) {
+    console.log('  —    | Vrai pic non mesuré (ffmpeg absent)');
+  } else {
+    check(
+      'Le fichier livré n’écrête pas',
+      pic <= -0.5,
+      `${pic.toFixed(2)} dBFS de vrai pic — cible −1, voir le commentaire`,
     );
   }
 

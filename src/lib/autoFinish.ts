@@ -99,6 +99,24 @@ export type CaptionSet = {
  * chiffres, ses délais, ses décisions. Les remplir d'une valeur plausible
  * détruit exactement ce qui fait marcher ces formats-là.
  */
+/*
+ * Un seul style de texte par montage.
+ *
+ * Chaque jeu mélangeait deux à quatre styles : « Bande-annonce » posait du néon
+ * jaune, du blanc contouré, du karaoké vert et du rouge dans le même film.
+ * Rapporté ainsi : « trois styles différents, pas cohérents ». Une vidéo bien
+ * montée a **une** identité de texte ; la variété se joue entre les jeux, pas
+ * à l'intérieur d'un jeu.
+ *
+ * La couleur ne sert qu'une fois, sur le moment qui doit trancher — la question
+ * finale, le chiffre, le basculement. Employée partout, elle ne souligne plus
+ * rien.
+ *
+ * Les échelles restent sous 1,2, et c'est mesuré : « QUEL [ROYAUME] TOMBE
+ * ENSUITE ? » en échelle 1,3 passe à quatre lignes, soit 638 px, quand la bande
+ * sûre des trois plateformes en fait 634. Aucune hauteur d'ancrage ne pouvait
+ * le sauver — il était trop grand, pas mal posé.
+ */
 export const CAPTION_SETS: CaptionSet[] = [
   {
     id: 'bande-annonce',
@@ -106,10 +124,10 @@ export const CAPTION_SETS: CaptionSet[] = [
     why: 'Un titre, une menace, un dévoilement, une question qui appelle la suite.',
     look: 'blockbuster',
     slots: [
-      { text: '[TITRE] — ÉPISODE [02]', style: 'neon', color: '#ffe14d', scale: 1.3, y: 0.22, at: 0, span: 0.17 },
+      { text: '[TITRE] — ÉPISODE [02]', style: 'punch', scale: 1.15, y: 0.22, at: 0, span: 0.17 },
       { text: '[Ce qui menace]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.22, span: 0.2 },
-      { text: '[Ce qui se réveille]', style: 'karaoke', color: '#ffe14d', y: Y_PAR_DEFAUT, at: 0.48, span: 0.19 },
-      { text: 'QUEL [ROYAUME] TOMBE ENSUITE ?', style: 'punch', color: '#ff5c68', scale: 1.3, y: 0.3, at: 0.83, span: 0.17 },
+      { text: '[Ce qui se réveille]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.48, span: 0.19 },
+      { text: 'QUEL [ROYAUME] TOMBE ENSUITE ?', style: 'punch', color: '#ff5c68', y: 0.3, at: 0.83, span: 0.17 },
     ],
   },
   {
@@ -117,10 +135,10 @@ export const CAPTION_SETS: CaptionSet[] = [
     label: 'Tutoriel',
     why: 'Une promesse chiffrée, les étapes annoncées, ce qu’il faut retenir.',
     slots: [
-      { text: '[3] erreurs qui tuent tes vues', style: 'punch', color: '#ffe14d', y: 0.28, at: 0, span: 0.17 },
+      { text: '[3] erreurs qui tuent tes vues', style: 'karaoke', scale: 1.15, y: 0.28, at: 0, span: 0.17 },
       { text: '[La première]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.22, span: 0.2 },
       { text: '[La deuxième]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.48, span: 0.19 },
-      { text: '[Fais ça à la place]', style: 'punch', color: '#22e37a', y: 0.3, at: 0.83, span: 0.17 },
+      { text: '[Fais ça à la place]', style: 'karaoke', color: '#22e37a', y: 0.3, at: 0.83, span: 0.17 },
     ],
   },
   {
@@ -130,9 +148,9 @@ export const CAPTION_SETS: CaptionSet[] = [
     look: 'argentique',
     slots: [
       { text: 'Le jour où j’ai [tout perdu]', style: 'punch', y: 0.28, at: 0, span: 0.18 },
-      { text: '[Ce qui s’est passé]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.24, span: 0.2 },
+      { text: '[Ce qui s’est passé]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.24, span: 0.2 },
       { text: '[Le moment où tout bascule]', style: 'punch', color: '#ffe14d', y: 0.3, at: 0.5, span: 0.18 },
-      { text: '[Ce que j’en ai tiré]', style: 'minimal', y: 0.7, at: 0.82, span: 0.18 },
+      { text: '[Ce que j’en ai tiré]', style: 'punch', y: 0.34, at: 0.82, span: 0.18 },
     ],
   },
   {
@@ -140,10 +158,10 @@ export const CAPTION_SETS: CaptionSet[] = [
     label: 'Épreuve → déclic',
     why: 'Le gabarit qui retient : ce qui n’allait pas, l’instant où ça bascule, ce qu’on a fait, puis on rend la main.',
     slots: [
-      { text: 'Pendant [trois semaines], [ce qui n’allait pas]', style: 'punch', y: 0.28, at: 0, span: 0.2 },
+      { text: 'Pendant [trois semaines], [ce qui n’allait pas]', style: 'karaoke', y: 0.28, at: 0, span: 0.2 },
       { text: 'Puis [ce que j’ai vu / entendu]', style: 'karaoke', color: '#ffe14d', y: Y_PAR_DEFAUT, at: 0.26, span: 0.2 },
       { text: '[Ce que j’ai fait, concrètement]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.52, span: 0.22 },
-      { text: 'Et toi, [ta version] ?', style: 'minimal', y: 0.68, at: 0.82, span: 0.18 },
+      { text: 'Et toi, [ta version] ?', style: 'karaoke', y: 0.34, at: 0.82, span: 0.18 },
     ],
   },
   {
@@ -152,9 +170,9 @@ export const CAPTION_SETS: CaptionSet[] = [
     why: 'Le résultat d’abord, la méthode ensuite. On ne regarde une méthode que si on a vu ce qu’elle donne.',
     look: 'cinema',
     slots: [
-      { text: '[Ce que ça donne maintenant]', style: 'punch', color: '#ffe14d', scale: 1.2, y: 0.24, at: 0, span: 0.18 },
-      { text: 'Il y a [deux mois] : [l’état d’avant]', style: 'minimal', y: Y_PAR_DEFAUT, at: 0.24, span: 0.18 },
-      { text: '[Ce qui a changé]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.48, span: 0.22 },
+      { text: '[Ce que ça donne maintenant]', style: 'punch', color: '#ffe14d', scale: 1.15, y: 0.24, at: 0, span: 0.18 },
+      { text: 'Il y a [deux mois] : [l’état d’avant]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.24, span: 0.18 },
+      { text: '[Ce qui a changé]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.48, span: 0.22 },
       { text: '[L’outil / le geste] — c’est tout', style: 'punch', y: 0.3, at: 0.82, span: 0.18 },
     ],
   },
@@ -163,10 +181,10 @@ export const CAPTION_SETS: CaptionSet[] = [
     label: 'Les chiffres du jour',
     why: 'Le format qui ne marche que s’il est vrai : ses vrais nombres, sans arrondir vers le haut.',
     slots: [
-      { text: 'Jour [N] : [le chiffre]', style: 'punch', color: '#ffe14d', scale: 1.25, y: 0.26, at: 0, span: 0.2 },
-      { text: '[Ce qui a marché]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.26, span: 0.22 },
-      { text: '[Ce qui n’a rien donné]', style: 'karaoke', color: '#ff5c68', y: Y_PAR_DEFAUT, at: 0.54, span: 0.2 },
-      { text: 'Demain : [la prochaine tentative]', style: 'minimal', y: 0.68, at: 0.82, span: 0.18 },
+      { text: 'Jour [N] : [le chiffre]', style: 'punch', color: '#ffe14d', scale: 1.15, y: 0.26, at: 0, span: 0.2 },
+      { text: '[Ce qui a marché]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.26, span: 0.22 },
+      { text: '[Ce qui n’a rien donné]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.54, span: 0.2 },
+      { text: 'Demain : [la prochaine tentative]', style: 'punch', y: 0.34, at: 0.82, span: 0.18 },
     ],
   },
   {
@@ -175,10 +193,10 @@ export const CAPTION_SETS: CaptionSet[] = [
     why: 'On apprend plus d’un échec raconté que d’un conseil. Le prix payé se dit avant le remède.',
     look: 'argentique',
     slots: [
-      { text: 'J’ai perdu [combien de temps] sur [quoi]', style: 'punch', y: 0.28, at: 0, span: 0.2 },
-      { text: 'La cause : [ce que je croyais]', style: 'karaoke', y: Y_PAR_DEFAUT, at: 0.26, span: 0.22 },
-      { text: 'En vrai : [ce qui se passait]', style: 'karaoke', color: '#ffe14d', y: Y_PAR_DEFAUT, at: 0.54, span: 0.2 },
-      { text: '[Ce que je fais maintenant]', style: 'punch', y: 0.3, at: 0.82, span: 0.18 },
+      { text: 'J’ai perdu [combien de temps] sur [quoi]', style: 'minimal', y: 0.28, at: 0, span: 0.2 },
+      { text: 'La cause : [ce que je croyais]', style: 'minimal', y: Y_PAR_DEFAUT, at: 0.26, span: 0.22 },
+      { text: 'En vrai : [ce qui se passait]', style: 'minimal', color: '#ffe14d', y: Y_PAR_DEFAUT, at: 0.54, span: 0.2 },
+      { text: '[Ce que je fais maintenant]', style: 'minimal', y: 0.34, at: 0.82, span: 0.18 },
     ],
   },
 ];
