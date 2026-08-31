@@ -187,3 +187,107 @@ La correction d'erreur est réglée sur Q et non sur H. Le maximum est fait pour
 les surfaces abîmées ou les codes portant un logo au centre ; sur une page de
 livre propre, il ne sert qu'à multiplier les modules, donc à les rétrécir —
 c'est lui qui faisait passer ce code-ci sous le seuil.
+
+## Ce qui manque vraiment au tome 1 — compté le 31 août 2026
+
+Le dépôt répétait depuis des semaines qu'il « manque une planche et une
+couverture », et que rien ne sortirait tant qu'une image ne serait pas
+fabriquée. **C'est faux, et la chaîne le prouve toute seule.** Les nombres
+ci-dessous sont mesurés, pas estimés.
+
+### Le compte des planches
+
+| | |
+| --- | --- |
+| Pages au sommaire du tome 1 (`charte.TOME_1`) | **27** |
+| Planches dessinées qui existent | **26** — toutes sauf la page 15 |
+| Planches dessinées réellement imprimées | **25** — la page 01 est remplacée par du vectoriel |
+| Plus le dos de couverture | 1 fichier, d'où les « 27 planches » de la mesure de piqué |
+| Pages du PDF final | **30**, dont 3 composées : 01, 15, 26 |
+
+**Une seule planche n'a jamais été dessinée** : la page 15, *Le secret de
+l'hermine*. Elle est annoncée au sommaire et sur la quatrième, et `page12.py`
+la raconte en prose vectorielle en attendant — le livre ne ment donc plus à son
+lecteur, il change de registre sur une page.
+
+**Une seule autre planche mérite d'être refaite**, et elle n'est pas manquante :
+*Faire le singe* (page 04), agrandie ×2,41, piqué 819. C'est la recommandation
+de `relecture/PASSE-RESOLUTION.md`, et c'est un gain de netteté, pas un blocage.
+
+### Le livre est déposable aujourd'hui, sans une seule image neuve
+
+Vérifié en faisant tourner la chaîne : compléments, assemblage, contrôle.
+
+```
+30 pages ≥ 24 · 30 pages, nombre pair · toutes les pages en 8.625 × 8.625 po
+toutes les images ≥ 300 DPI · aucun carton d'attente · 3 Mo ≤ 650 Mo
+une seule page · 17.3176 × 8.7500 po, tranche 1.72 mm pour 30 pages
+9/9 contrôles passés. PUBLIABLE
+```
+
+La couverture provisoire de `couverture_face.py` n'est pas un carton d'attente :
+elle emprunte son illustration à la page 21 et pose tout le texte en vectoriel.
+Elle passe les cinq contrôles de `vignette.py`, et **le titre se lit à 150 px**
+— surtitre, accroche, nom d'auteur et « Tome 1 » s'y perdent, ce qui est normal
+et sans importance pour une vignette de boutique.
+
+Ce qu'elle a contre elle tient en une phrase : **sa fenêtre d'illustration est
+un bandeau au milieu de la page**, si bien qu'à 150 px les deux personnages y
+seraient minuscules — or c'est le seul test qui décide d'une couverture
+d'album. C'est pour cela que `--pleine-page` existe.
+
+### Pourquoi on ne recadre pas un panneau de planche pour en faire la couverture
+
+L'arithmétique tranche avant le goût. Le panneau de face fait **2588 × 2625 px**
+à 300 DPI, et un panneau vaut environ 42 % du côté d'une planche :
+
+| Source | Ce qu'on en tire | Agrandissement |
+| --- | --- | --- |
+| Un panneau d'une planche à 1600 px | 672 × 624 px | **×3,85** |
+| Un panneau d'une planche à 2048 px | 860 × 799 px | **×3,01** |
+| Une illustration pleine page à 1600 px | 1600 × 1600 px | ×1,62 |
+| Une illustration pleine page à 2048 px | 2048 × 2048 px | **×1,26** |
+
+La page 01 a été jugée inutilisable et remplacée par du vectoriel à **×2,54**.
+Un panneau recadré est donc plus mou que le pire cas déjà écarté : cette piste
+est fermée par le calcul, il est inutile de l'essayer.
+
+Une illustration **pleine page**, en revanche, tient : à 1600 px elle tombe à
+×1,62, l'agrandissement de la plupart des planches du recueil, et à 2048 px à
+×1,26 — soit exactement la classe de *Avoir un chat dans la gorge*, la planche
+la mieux résolue du livre.
+
+### Le piège de `--pleine-page` : un avertissement DPI qui n'est pas un refus
+
+`couverture_face.py --pleine-page` écrit **« ATTENTION : 183 DPI, il en faut
+300 »** pour une illustration de 1600 px, et produit quand même le PDF. C'est
+correct et ce n'est pas un échec : en pleine page, l'illustration couvre les
+8,75 po du panneau, donc 1600 px font 183 DPI, 2048 px en font 234, et il en
+faut 2588 pour atteindre 300.
+
+Ce chiffre est à lire à côté de celui des planches, pas seul : **les seize
+planches du recueil sont à 186 DPI et les trois meilleures à 237**. Une
+couverture à 183 DPI n'est donc pas plus molle que le livre qu'elle annonce, et
+`valider.py` ne contrôle pas le DPI de la couverture — il contrôle le format, la
+page unique et l'absence de carton. L'avertissement dit où on en est ; il ne
+refuse rien.
+
+Mesuré : sur un essai pleine page de 1600 px, les cinq contrôles de
+`vignette.py` passent — contraste 44, détachement 77, 15 masses — et à 150 px le
+titre et l'accroche se lisent, les deux personnages tiennent chacun leur masse.
+C'est ce que la mise en page en vignette ne fait pas, et c'est toute la raison
+de préférer `--pleine-page`.
+
+### Le chemin le moins cher jusqu'au dépôt
+
+1. **Aujourd'hui, sans rien fabriquer.** Assembler avec la couverture provisoire
+   et la page d'hermine en prose, déposer chez KDP, **commander l'épreuve
+   papier** — elle ne publie rien (`depot/EPREUVE.md`). Deux semaines de délai
+   d'impression qui courent pendant qu'on travaille la couverture.
+2. **La couverture définitive part d'un essai qui existe déjà.** Trois essais
+   ont été générés ; `relecture/COUVERTURE-FACE.md` en retient un — la falaise
+   au couchant — comme le meilleur au test des 150 px. Son seul défaut est que
+   les personnages sont de dos. Une couverture avec les héros de dos vaut mieux
+   qu'un livre non publié, et `--pleine-page` la pose telle quelle.
+3. **Refaire l'image seulement si l'épreuve papier la condamne**, et depuis
+   l'appareil du propriétaire, qui a du vrai réseau.
