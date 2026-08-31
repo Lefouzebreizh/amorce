@@ -943,8 +943,11 @@ doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
 ### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
 
-Quatre projets Vercel sont branchés sur ce dépôt : `amorce` (racine),
-`amorce-51up` (dossier `artisan-express`), `iptv`, `nexuscrypto`. **Chacun se
+**Trois** projets Vercel sont branchés sur ce dépôt : `amorce` (racine),
+`amorce-51up` (dossier `artisan-express`), `iptv`. Ils étaient quatre jusqu'au
+31/08/2026 — `nexuscrypto` a été supprimé côté Vercel ce jour-là, ce qui retire
+un quart de la consommation. Les mesures datées de ce jour-là, dans `/debloquer`,
+portent donc sur **quatre** projets et restent lues telles quelles. **Chacun se
 déclenche sur chaque commit tant qu'il ne filtre pas par chemin**, et le palier
 gratuit plafonne à cent déploiements par jour — crevé deux fois, la seconde à
 80 fusions seulement, parce que le nombre de projets avait doublé dans la nuit.
@@ -970,9 +973,12 @@ choses à en retenir, et elles se paient toutes les deux en silence :
   `/debloquer`.
 
 `nexuscrypto` n'a rien à déployer — ni `package.json`, ni `api/`, et un moteur
-qui tourne en boucle n'a pas sa place sur une plateforme de pages. Son
-`vercel.json` le muselle (`exit 0`) en attendant que le propriétaire supprime
-le projet côté Vercel ; la raison est dans `nexuscrypto/README.md` §6 bis.
+qui tourne en boucle n'a pas sa place sur une plateforme de pages. Son projet
+Vercel a donc été **supprimé** le 31/08/2026. Son `vercel.json` (`exit 0`) est
+néanmoins **conservé**, et ce n'est pas un oubli : ce fichier ne coûte rien et
+il rattrape le piège nommé deux paragraphes plus haut — un projet recréé depuis
+le tableau de bord n'a pas de `vercel.json` et se déclenche sur tout. La raison
+complète est dans `nexuscrypto/README.md` §6 bis.
 
 ### Connecteurs
 
