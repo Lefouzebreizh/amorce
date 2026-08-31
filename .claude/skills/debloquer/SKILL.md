@@ -381,6 +381,49 @@ elle s'est relue ensuite comme si elle avait été mesurée elle aussi. « Ignor
 prouve que la **construction** a été évitée ; il ne prouve rien sur le
 **déploiement**, qui avait déjà eu lieu. Voir `/eprouver-une-regle`.
 
+### Le rouge « pages build and deployment » ne veut rien dire — mesuré le 31/08/2026
+
+Un contrôle nommé **`pages build and deployment`** échoue sur `main` et sur
+chaque PR, quel que soit le diff : il est tombé sur un commit d'un seul
+caractère Dart et sur un commit de Markdown pur. Ne pas le chercher dans les
+workflows du dépôt — **il n'y est pas**. Son chemin est
+`dynamic/pages/pages-build-deployment` : GitHub le fabrique tout seul quand
+*Settings → Pages* est réglé sur « Deploy from a branch ».
+
+**La cause, lisible dans son journal :** il lance **Jekyll sur la racine du
+monorepo**, qui essaie d'analyser tous les fichiers qu'il croise, y compris les
+`.astro` d'`hypersensible-bienveillance/` — dont l'en-tête est du TypeScript, pas
+du YAML.
+
+```
+Invalid YAML front matter in
+  /github/workspace/hypersensible-bienveillance/src/pages/app/reponse-bienveillante.astro
+ERROR: YOUR SITE COULD NOT BE BUILT
+```
+
+**Et personne ne s'en sert.** Vérifié : aucun `CNAME`, aucun workflow appelant
+`actions/deploy-pages` ou `actions/upload-pages`, aucune adresse `github.io`
+ailleurs que dans une bibliothèque tierce d'un dossier de build. Le réseau
+d'annuaires publie sur **Cloudflare** Pages (`annuaire-ia-pages.yml`), pas ici.
+
+Donc, pour une session :
+
+- **ce rouge n'est jamais le tien.** Ne pas l'investiguer, ne pas le rejouer, ne
+  pas retarder une fusion pour lui ;
+- **ne pas poser un `.nojekyll` à la racine** pour le faire taire : il ferait
+  *réussir* le déploiement, et publierait le monorepo entier comme site web.
+  Faire taire une alarme en accomplissant ce qu'elle annonçait est pire que
+  l'alarme.
+
+**Le geste qui le supprime est côté propriétaire, et il prend dix secondes :**
+*Settings → Pages → Source → None.*
+
+C'est le même motif que le quota Vercel deux sections plus haut, et il porte le
+même risque, que `annuaire-ia-pages.yml` nomme dans son propre en-tête : **une
+barrière rouge en permanence est une barrière qu'on cesse de lire.** Deux
+contrôles qui crient toujours, et le jour où un vrai défaut passe, personne ne
+regarde.
+
 ## 4. Une suite de tests introuvable, ou plus gardée
 
 **Où est la commande.** La dernière ligne de `hooks/session-start.sh` — celle que
