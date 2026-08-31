@@ -4399,3 +4399,31 @@ téléphone), et l'atteindre coûterait de la sonie sur tous les exports. Le
 contrôle garde donc ce qui ne se discute pas — le fichier n'écrête pas — et le
 commentaire nomme l'écart et son prix. Un seuil qui affiche la cible en la
 vérifiant pas est un mensonge vert.
+## Une valeur par défaut plausible se fait passer pour un fait
+
+`artisan-express/src/app/layout.tsx` portait
+`process.env.NEXT_PUBLIC_SITE_URL ?? 'https://artisan-express.vercel.app'`.
+Cette adresse n'a **jamais existé** — vérifié sur le tableau de bord le
+30/08/2026, deux projets Vercel seulement, aucun ne sert cette page.
+
+Le repli n'était pas faux au sens strict : c'est bien le nom que Vercel
+*donnerait* à un projet ainsi nommé. Il était **plausible**, ce qui est pire
+qu'une valeur manifestement fausse — une session l'a lue, en a conclu que le
+site était en ligne, et un résumé de reprise l'a répété pendant des jours.
+
+**Le second dégât était latent et coûtait plus cher.** Cette valeur alimentait
+`metadataBase` et `openGraph.url` : déployé sans la variable, le site aurait
+publié ses métadonnées de partage vers un domaine que personne ne sert. C'est
+la canonique morte du réseau d'annuaires, dans un second projet, née de la même
+cause — une adresse écrite pour combler un trou.
+
+**La règle existait déjà dans le même fichier de configuration**, à trois
+lignes de là : *« ce qui n'est pas réglé disparaît de l'écran au lieu
+d'afficher une valeur inventée »*. Elle était appliquée au téléphone, à
+WhatsApp et à Stripe, et pas à l'adresse du site. Une règle qui vaut pour
+quatre champs sur cinq est une règle qu'on croit tenue.
+
+**Ce qui garde le correctif n'est pas la valeur, c'est la source.** Le test
+relit `layout.tsx` et `config.ts` et refuse toute adresse en dur — vérifier ce
+que la variable *vaut* à l'exécution laisserait revenir le repli au prochain
+copier-coller.
