@@ -144,6 +144,20 @@ export function nomDossier(nomEntreprise: string, jour: string): string {
 
 /* ── Ce qu'on accepte ─────────────────────────────────────────────────────── */
 
+/**
+ * Un avis de client, tel qu'il est fourni — jamais fabriqué.
+ *
+ * Le dépôt s'interdit le faux témoignage sans exception : c'est la seule chose
+ * qui puisse coûter d'un coup la confiance d'une audience. Le générateur ne
+ * rend donc que ce qu'on lui donne, et n'en invente aucun. Sur une page de
+ * démonstration, la section porte en plus la mention qu'ils sont des exemples.
+ */
+export type Avis = {
+  texte: string;
+  prenom: string;
+  commune: string;
+};
+
 export type Commande = {
   modele: string;
   entreprise: string;
@@ -154,6 +168,8 @@ export type Commande = {
   options: string[];
   presentation: string;
   services: string;
+  /** Les avis à afficher. Absents ou vides, la section n'existe pas. */
+  avis?: readonly Avis[];
 };
 
 const CHAMPS_OBLIGATOIRES: readonly (keyof Commande)[] = ['modele', 'entreprise', 'telephone', 'ville'];

@@ -4479,3 +4479,27 @@ quatre champs sur cinq est une règle qu'on croit tenue.
 relit `layout.tsx` et `config.ts` et refuse toute adresse en dur — vérifier ce
 que la variable *vaut* à l'exécution laisserait revenir le repli au prochain
 copier-coller.
+
+## `git reset --hard` au milieu d'un lot efface le lot
+
+Une session venait d'écrire une fonctionnalité dans un projet, l'avait éprouvée
+par sabotage, et a enchaîné sur un second fichier dans un autre dossier. Le
+réflexe pour repartir propre — `git checkout main && git reset --hard
+origin/main` — a **effacé la fonctionnalité non commitée**.
+
+Rien ne l'a signalé. La poussée est partie avec un seul fichier au lieu de
+quatre, et le message de commit décrivait un travail que le commit ne contenait
+pas.
+
+**Le signal existait, et il était chiffré :** la suite de tests rendait 54 au
+lieu de 59, affiché dans la même sortie que le reste. Il a été lu comme un
+détail. **Un compte de tests qui baisse après un changement de branche est une
+perte, jamais un hasard** — c'est la seule ligne à regarder avant de pousser.
+
+**Ce qui a sauvé le lot est un accident** : une copie de travail laissée dans
+`/tmp` pendant les essais de sabotage. Sans elle, une heure était perdue.
+
+La règle qui l'évite tient en une phrase : **on commite avant de changer de
+dossier de travail**, même pour écrire un fichier qui n'a rien à voir. Le coût
+d'un commit de trop est nul ; celui d'un `reset --hard` sur du travail non
+commité est le travail lui-même.
