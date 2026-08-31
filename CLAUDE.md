@@ -959,6 +959,15 @@ choses à en retenir, et elles se paient toutes les deux en silence :
 - **Un chemin qui entre dans un build doit entrer dans la liste surveillée.**
   Un fichier que le build lit mais que le filtre ignore fait servir une version
   périmée sans qu'aucune ligne rouge n'apparaisse.
+- **Et le filtre n'empêche pas le rouge quand le quota est déjà épuisé.**
+  L'`ignoreCommand` s'exécute dans le conteneur de construction, donc *après* la
+  création du déploiement ; le refus de quota, lui, tombe *avant* — aucun script
+  ne tourne. Mesuré le 31/08/2026 sur deux PR de Markdown à trois minutes
+  d'écart : quatre rouges sur l'une, un « Ignored » vert et trois rouges sur
+  l'autre. Donc un rouge Vercel sur une PR de documentation **n'est pas un
+  signal**, et affiner les chemins surveillés ne desserre rien. Le levier est le
+  **nombre de projets branchés**. Détail et ce qui reste non mesuré dans
+  `/debloquer`.
 
 `nexuscrypto` n'a rien à déployer — ni `package.json`, ni `api/`, et un moteur
 qui tourne en boucle n'a pas sa place sur une plateforme de pages. Son
