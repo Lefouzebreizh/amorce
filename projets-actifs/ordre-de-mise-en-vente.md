@@ -30,6 +30,13 @@ Une note haute dit « ça se construit ». Elle ne dit pas « ça se vend ».
 | 5 | Réseau d'annuaires IA | **heures** | 3 à 6 mois | affiliation, passif |
 | 6 | Accord, couleurs, ingrédients | mois | indéterminé | aucun modèle défini |
 
+**Ce classement est à revoir, et sa propre règle le dit.** La section 3 posait
+« si cette image se débloque, ce chantier passe premier ». Elle s'est débloquée
+le 31/08/2026 — sans image, en mesurant que le livre était déjà déposable — et
+le rang 1 est par ailleurs suspendu au SIRET. Le rang de KDP n'est pas changé
+ici parce qu'un ordre de mise en vente est une décision de produit ; la
+condition, elle, est remplie.
+
 ## 1. Artisan Express — le seul dont tout est prêt sauf le déploiement
 
 C'est le premier parce que **rien ne manque, sauf un déploiement d'une heure** :
@@ -79,20 +86,36 @@ Le goulot est identifié et écrit dans sa fiche : **la prospection ne se fait p
 depuis une session distante** — Reddit, Hacker News et la recherche GitHub sont
 hors d'atteinte. Elle se fait à la main, depuis un navigateur.
 
-## 3. KDP — la meilleure audience, et un seul blocage
+## 3. KDP — la meilleure audience, et un blocage qui n'en était pas un
 
 Le seul chantier qui a **déjà son audience** : 48 000 personnes qui suivent
 l'auteur, et un `PLAN-DE-LANCEMENT.md` en six semaines écrit pour être exécuté.
 On ne cherche pas à recruter, on convertit.
 
-Ce qui bloque est écrit dans `CLAUDE.md` et ne se contourne pas depuis une
-session : il manque **une planche et une couverture**, et les quatre chemins de
-génération d'image sont fermés — pas de `torch`, pas de `diffusers`, et les cinq
-hôtes utiles refusés par le mandataire. Adobe retouche mais ne crée pas la
-première image.
+**Corrigé le 31 août 2026.** Cette section disait qu'il manquait « une planche
+et une couverture » et que rien ne sortirait tant qu'une image ne serait pas
+fabriquée. Les quatre chemins de génération sont bien fermés, cela n'a pas
+changé — mais le livre **n'en a pas besoin pour être déposé**. La chaîne a été
+relancée de bout en bout : 30 pages, aucun carton d'attente, **9 contrôles sur
+9 au vert, verdict PUBLIABLE**, sans une seule image neuve. Le compte exact est
+dans `kdp/README.md`.
 
-**Si cette image se débloque, ce chantier passe premier**, parce que le canal de
-vente existe déjà et qu'aucun autre n'en a un.
+Ce qui manque réellement, et ce que cela vaut :
+
+- **une planche jamais dessinée** — page 15, *Le secret de l'hermine* — que
+  `page12.py` raconte en prose vectorielle en attendant, sommaire et quatrième
+  de couverture honorés ;
+- **une couverture de face en propre**, dont un provisoire existe qui passe les
+  cinq contrôles de vignette et dont le titre se lit à 150 px ; et dont trois
+  essais générés dorment déjà chez le propriétaire, l'un d'eux retenu comme le
+  meilleur des trois au test des 150 px ;
+- une régénération de confort, *Faire le singe*, qui ne bloque rien.
+
+**Ce chantier n'attend donc plus une image, il attend un dépôt.** Le geste
+suivant n'est pas de fabriquer une illustration, c'est d'assembler avec le
+provisoire, de déposer et de **commander l'épreuve papier** — qui ne publie
+rien et dont les deux semaines d'impression courent pendant qu'on travaille la
+couverture définitive.
 
 ## 4. Amorce à 49 € — la plomberie d'abord
 
