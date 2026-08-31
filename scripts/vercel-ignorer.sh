@@ -41,6 +41,35 @@
 # déploiements en silence.
 #
 # ---------------------------------------------------------------------------
+# Première mesure après la mise en place — 31/08/2026, PR #485
+#
+# Diff de Markdown pur (`INDEX.md` et une fiche de `projets-actifs/`), donc
+# aucun des chemins déclarés. Résultat observé sur les statuts de la PR :
+#
+#     amorce        -> s'est déclenché  (attendu : annulé)
+#     amorce-51up   -> ne s'est pas déclenché
+#     iptv          -> ne s'est pas déclenché
+#     nexuscrypto   -> ne s'est pas déclenché
+#
+# Trois sur quatre se comportent comme prévu. Le cas d'`amorce` reste ouvert et
+# **ne se tranche pas depuis une session** — `vercel.com` et `*.vercel.app` sont
+# refusés par le mandataire. Deux explications tiennent, et il faut regarder le
+# journal du déploiement pour choisir :
+#
+#   1. Le **dossier racine** du projet `amorce` n'est pas la racine du dépôt, et
+#      Vercel ne lit alors pas ce `vercel.json`-ci. C'est le point que le
+#      README de `nexuscrypto` signale déjà comme à vérifier au tableau de bord :
+#      il n'était confirmé que pour `nexuscrypto`, déduit pour les trois autres.
+#   2. Le **refus de quota précède l'étape d'annulation**. Ce jour-là le palier
+#      était épuisé ; si Vercel compte la tentative et la refuse avant d'évaluer
+#      l'`ignoreCommand`, le filtre ne peut pas se manifester. Dans ce cas il
+#      n'y a rien à corriger et la mesure du lendemain le dira.
+#
+# Ne pas conclure que le filtre est cassé sur cette seule observation, ni qu'il
+# marche : la prochaine PR de Markdown pur, quota disponible, est la mesure qui
+# départage.
+#
+# ---------------------------------------------------------------------------
 # Le principe qui gouverne les cas douteux : on déploie
 # ---------------------------------------------------------------------------
 #
