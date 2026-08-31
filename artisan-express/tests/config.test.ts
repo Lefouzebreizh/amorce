@@ -27,3 +27,30 @@ test('ce qui n’est pas réglé disparaît, et n’est jamais inventé', () => 
   assert.equal(aUnWhatsapp, false);
   assert.equal(contact.telephoneAffiche, '');
 });
+
+test('aucune adresse de site n’est inventée', async () => {
+  /*
+   * Le défaut que ce test garde : `layout.tsx` portait
+   * `?? 'https://artisan-express.vercel.app'`, une adresse qui n'a jamais
+   * existé — aucun projet Vercel ne la sert, vérifié le 30/08/2026. Elle a
+   * fait croire à une session que le site était en ligne, et elle aurait
+   * publié une `og:url` vers un domaine mort le jour du déploiement.
+   *
+   * On relit donc les fichiers plutôt que la valeur : c'est la présence de
+   * l'adresse en dur dans la source qui est le défaut, pas ce qu'elle vaut à
+   * l'exécution.
+   */
+  const { readFileSync } = await import('node:fs');
+  for (const fichier of ['src/app/layout.tsx', 'src/lib/config.ts']) {
+    const texte = readFileSync(new URL(`../${fichier}`, import.meta.url), 'utf8');
+    const enDur = texte.match(/['"`]https?:\/\/[^'"`\s]+['"`]/g) ?? [];
+    // Les adresses citées dans un commentaire ne sont pas des valeurs.
+    assert.deepEqual(enDur, [], `${fichier} porte une adresse en dur : ${enDur.join(', ')}`);
+  }
+});
+
+test('sans variable réglée, le site n’affirme aucune adresse', async () => {
+  const { adresseDuSite } = await import('@/lib/config');
+  // L'environnement de test ne pose pas NEXT_PUBLIC_SITE_URL.
+  assert.equal(adresseDuSite, null);
+});

@@ -49,6 +49,28 @@ function lienTelephonique(brut: string): string {
   return chiffres;
 }
 
+/**
+ * L'adresse publique du site, ou **rien**.
+ *
+ * Elle alimentait une valeur par défaut — `artisan-express.vercel.app` — qui
+ * n'a jamais existé : aucun projet Vercel ne porte ce nom, vérifié sur le
+ * tableau de bord le 30/08/2026. Deux dégâts, et le second est le plus cher :
+ *
+ * 1. Une session lisait cette adresse et croyait le site en ligne. C'est arrivé,
+ *    et le résumé de reprise l'a répété.
+ * 2. Déployé sans cette variable, le site publiait une `og:url` et une base de
+ *    métadonnées vers un domaine que personne ne sert — la canonique morte,
+ *    exactement le défaut mesuré sur le réseau d'annuaires.
+ *
+ * La règle de ce fichier vaut donc ici aussi : **ce qui n'est pas réglé
+ * disparaît au lieu d'afficher une valeur inventée.** Sans adresse, la page se
+ * sert et se lit ; elle n'affirme simplement pas où elle habite.
+ */
+const SITE = process.env.NEXT_PUBLIC_SITE_URL?.trim() ?? '';
+
+/** L'adresse publique, ou `null` tant que personne ne l'a réglée. */
+export const adresseDuSite: string | null = /^https?:\/\//.test(SITE) ? SITE : null;
+
 export const contact = {
   telephoneAffiche: TELEPHONE,
   telephoneLien: TELEPHONE === '' ? '' : `tel:${lienTelephonique(TELEPHONE)}`,
