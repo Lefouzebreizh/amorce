@@ -48,8 +48,26 @@ Son `README.md` dit, daté du 30/08/2026 : **pas déployé**, vérifié sur le
 tableau de bord Vercel. Il ajoute que cela « a été affirmé à tort » auparavant —
 donc le vérifier avant d'annoncer quoi que ce soit.
 
-**Le premier pas, sous 48 h :** déployer la page, puis envoyer les messages de
-`PROSPECTION.md` à dix artisans. Rien à construire.
+### L'état du déploiement est à revérifier avant tout
+
+Le 31/08/2026, le robot Vercel a annoncé sur une pull request de ce dépôt un
+déploiement du projet **`amorce-51up`, dont le dossier racine est
+`artisan-express`**, avec une adresse d'aperçu. Cela contredit le « pas
+déployé » du README, daté de la veille.
+
+**Ce point n'est pas tranché**, et il ne peut pas l'être depuis une session
+distante : le mandataire refuse `*.vercel.app` — `code=000` au tunnel, mesuré.
+Ni le README ni l'annonce du robot ne suffisent seuls, et ce README a déjà
+affirmé le contraire à tort une fois.
+
+**Dix secondes depuis un navigateur le règlent** : ouvrir
+`https://amorce-51up.vercel.app`. Si la page à 300 € s'affiche, le premier pas
+n'est plus le déploiement mais la prospection — et ce chantier passe de
+« une heure » à « rien à faire avant d'écrire aux artisans ».
+
+**Le premier pas, sous 48 h :** vérifier cette adresse ; déployer seulement si
+elle ne rend rien ; puis envoyer les messages de `PROSPECTION.md` à dix
+artisans. Rien à construire dans les deux cas.
 
 ## 2. L'audit de code — aucun déploiement du tout
 
