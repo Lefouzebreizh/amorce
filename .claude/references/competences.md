@@ -21,6 +21,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/dependance-indisponible` | Livrer quand ce dont le code a besoin n'est pas là — clé d'API absente, GPU manquant, logiciel propriétaire non installé, réseau filtré, poids de… |
 | `/deposer-sur-kdp` | Accompagner le dépôt d'un livre papier sur Amazon KDP une fois les fichiers prêts — l'ordre réel des trois onglets, les réglages d'impression qui ne… |
 | `/epreuve-du-pouce` | Éprouver une interface comme un pouce la rencontre — conduire l'application qui tourne sur le terrain de référence (Redmi Note 12 Plus, 393 × 873) et… |
+| `/eprouver-une-regle` | Confronter à de vraies données une règle qu'on vient d'écrire — un seuil, un score, un classement, un nommage, un filtre — avant de la croire, parce… |
 | `/etalonner` | Faire tenir ensemble les plans d'un montage, puis poser un rendu filmique — détection des coupes, mesure de la luminance et de la dominante de chaque… |
 | `/etat-du-depot` | Répondre « qu'y a-t-il dans ce dépôt et où en est-ce » par une mesure plutôt que par une liste écrite à la main — les chantiers **découverts**… |
 | `/extraction-multiformat` | Ouvrir un fichier non textuel pour répondre à une question dessus, en écrivant et exécutant un script Python local plutôt qu'en déclarant le format… |
