@@ -2263,6 +2263,67 @@ Et deux règles qui en découlent :
 - **Relancer la vérification APRÈS la reprise de branche**, pas avant. Une
   barrière verte sur l'arbre d'avant ne prouve rien sur celui qu'on pousse.
 
+## Un agent partage ton répertoire de travail, et deux verbes git l'écrasent
+
+Mesuré le 31/08/2026, deux fois dans la même heure, sur le même agent.
+
+Un agent lancé par une session **ne travaille pas sur une copie** : même
+conteneur, même arbre de travail, même `.git`. Ce qu'il écrit apparaît dans le
+`git status` de la session parente, et réciproquement — ce que la parente fait à
+un chemin partagé lui passe dessus, en silence.
+
+Deux verbes l'ont fait, et le second est le plus traître :
+
+- **`git add -A`** a ramassé les quatre fichiers en cours de l'agent dans un
+  commit de documentation. Ils sont partis sur `main` **sans leurs tests** —
+  ils n'étaient pas encore écrits — dans une PR dont le corps annonçait « aucun
+  code touché », et `flutter analyze` est passé au rouge sur `main`.
+- **`git checkout <branche> -- <chemin>`** a réinitialisé le corpus à la version
+  committée. Il **a l'air chirurgical** — il nomme un chemin, il ne change pas
+  de branche — et c'est exactement un écrasement. Fait en fabriquant une branche
+  propre, c'est-à-dire au moment où l'on croit bien faire.
+
+**Ce qui a survécu les deux fois : les fichiers non suivis.** Aucun des deux
+verbes ne touche à ce que Git ne connaît pas. Les tests de l'agent, non suivis,
+sont passés intacts ; le corpus, suivi, a été détruit deux fois. C'est une
+asymétrie qu'on ne devine pas et sur laquelle on ne peut pas compter — elle
+sauve précisément ce qui n'est pas encore commité, jamais ce qui l'est.
+
+### La leçon qui vaut au-delà de git : une suite de tests détecte la perte, elle ne la mesure pas
+
+C'est le point à retenir. Après le second écrasement, la suite de l'agent est
+passée à **31 verts, 1 rouge**, et le rouge nommait exactement la tournure
+perdue — « curseur », un mot savant qu'il avait banni.
+
+Sauf que l'agent avait fait **douze** corrections. **Une seule était visible par
+un test.** Les onze autres étaient des tournures : un manteau qu'on pose « grand
+ouvert » au lieu de « l'intérieur en l'air » — sans quoi le geste ne marche pas
+du tout —, un « commence en bas » suivi de « descends », un « sans appuyer fort »
+une étape avant « appuie ».
+
+Un rouge dit donc **qu'il** s'est passé quelque chose. Il ne dit pas **combien**.
+Croire l'inverse — « un seul test rouge, donc une seule chose perdue » — fait
+livrer onze défauts avec la conscience tranquille.
+
+### Les parades, dans l'ordre où elles coûtent le moins
+
+1. **Nommer les chemins un par un** dès qu'un agent tourne. `git add <fichier>`,
+   jamais `add -A` ; et se méfier de `checkout -- <chemin>` autant que de
+   `checkout <branche>`.
+2. **Dire à l'agent de ne faire aucune commande git d'écriture** et de rendre
+   son travail dans l'arbre. Deux sessions qui committent dans le même dépôt se
+   changent la branche sous les pieds.
+3. **Lui demander de garder une copie hors du dépôt** — le répertoire de
+   brouillon de la session. Après le second écrasement, l'agent l'a fait de
+   lui-même : la version relue se remettait en une commande au lieu de se refaire
+   de mémoire.
+4. **Quand la perte est constatée, renvoyer l'agent** plutôt que de reconstituer.
+   Il a ses corrections en contexte ; la session parente n'a que le résumé, et un
+   résumé perd les onze tournures que les tests ne voient pas.
+
+Voisin de la leçon `git stash pop && git commit` ci-dessus : même famille — un
+geste git qui rend la main sans signaler ce qu'il a défait.
+
 ## Le HTML préconstruit de Next n'est pas une page servable
 
 Un quota d'hébergeur épuisé, une page de vente à mettre en ligne le soir même,
