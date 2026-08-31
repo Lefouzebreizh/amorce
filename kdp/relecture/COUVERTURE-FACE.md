@@ -32,6 +32,12 @@ tombe à ×1,62 — l'agrandissement de la plupart des planches du recueil ; à
 du livre. **L'essai de falaise déjà généré est donc utilisable tel quel** dès
 qu'il fait 1600 px ou plus, à mesurer d'une ligne :
 
+> **`--pleine-page` avertira « 183 DPI, il en faut 300 » pour un essai de
+> 1600 px, et produira quand même le PDF.** Ce n'est pas un refus : en pleine
+> page l'illustration couvre 8,75 po, et les planches du recueil sont elles-mêmes
+> à 186 DPI. `valider.py` ne contrôle pas le DPI de la couverture. Ne pas
+> rebrousser chemin sur cette ligne-là.
+
 ```bash
 python3 -c "from PIL import Image; print(Image.open('essai.png').size)"
 python3 kdp/vignette.py --source essai.png --vers .travail/vignette.png

@@ -257,6 +257,27 @@ Une illustration **pleine page**, en revanche, tient : à 1600 px elle tombe à
 ×1,26 — soit exactement la classe de *Avoir un chat dans la gorge*, la planche
 la mieux résolue du livre.
 
+### Le piège de `--pleine-page` : un avertissement DPI qui n'est pas un refus
+
+`couverture_face.py --pleine-page` écrit **« ATTENTION : 183 DPI, il en faut
+300 »** pour une illustration de 1600 px, et produit quand même le PDF. C'est
+correct et ce n'est pas un échec : en pleine page, l'illustration couvre les
+8,75 po du panneau, donc 1600 px font 183 DPI, 2048 px en font 234, et il en
+faut 2588 pour atteindre 300.
+
+Ce chiffre est à lire à côté de celui des planches, pas seul : **les seize
+planches du recueil sont à 186 DPI et les trois meilleures à 237**. Une
+couverture à 183 DPI n'est donc pas plus molle que le livre qu'elle annonce, et
+`valider.py` ne contrôle pas le DPI de la couverture — il contrôle le format, la
+page unique et l'absence de carton. L'avertissement dit où on en est ; il ne
+refuse rien.
+
+Mesuré : sur un essai pleine page de 1600 px, les cinq contrôles de
+`vignette.py` passent — contraste 44, détachement 77, 15 masses — et à 150 px le
+titre et l'accroche se lisent, les deux personnages tiennent chacun leur masse.
+C'est ce que la mise en page en vignette ne fait pas, et c'est toute la raison
+de préférer `--pleine-page`.
+
 ### Le chemin le moins cher jusqu'au dépôt
 
 1. **Aujourd'hui, sans rien fabriquer.** Assembler avec la couverture provisoire
