@@ -43,6 +43,28 @@ jamais le reste du chantier.
 Un compte rendu se donne au passé, sur ce qui est fusionné. « Je vais faire »
 n'est pas un compte rendu, c'est une pause.
 
+**Et un fichier se livre, il ne se décrit pas.** Le pilotage se fait depuis un
+téléphone : un fichier qu'on ne peut pas ouvrir en deux gestes est un fichier
+perdu. Dès qu'une session produit quelque chose pour le propriétaire — page,
+image, document, export, planche — elle le lui **envoie**, directement
+téléchargeable. Il l'ouvre, il voit le rendu, il le télécharge, il le transmet
+ailleurs. C'est la seule forme qui traverse les trois étapes.
+
+Ce qui accompagne l'envoi, et qui n'est pas facultatif :
+
+- le **chemin exact dans le dépôt**, depuis la racine — jamais « dans le
+  dossier des images » ;
+- pour un fichier versionné, le **lien GitHub direct vers ce fichier**, sur sa
+  branche. Pas le lien du dossier, pas celui de la PR ;
+- pour une page en ligne, l'**adresse complète en https, seule sur sa ligne**,
+  sans texte autour — elle doit se copier d'un appui long.
+
+« Tu le trouveras dans la branche », « voir la PR », « c'est dans le dossier » :
+ces formulations font naviguer à l'aveugle sur un écran de six pouces, et le
+fichier n'est jamais ouvert. **Une session qui ne peut pas produire le lien le
+dit franchement et explique pourquoi**, plutôt que de décrire vaguement un
+emplacement — une adresse approximative coûte plus qu'une absence d'adresse.
+
 **Ce régime a été remis en question et reconduit, le 29/08/2026.** Un gabarit
 « Lead Architect » proposait de le remplacer par un mode où l'agent liste les
 fichiers dont il a besoin et attend l'accord avant de les lire, puis s'arrête au
