@@ -4288,3 +4288,32 @@ Ce qui se rattrape à l'étalonnage : une dominante, une exposition, un contrast
 un saut entre deux plans. Ce qui ne se rattrape pas : **la couleur de la source
 de lumière**. La frontière est là, et elle se pose avant de lancer le premier
 filtre, pas après le cinquième.
+
+## Une règle que rien ne mesure finit par être enfreinte, même écrite
+
+`CLAUDE.md` §8 porte depuis longtemps la phrase : « le climax doit être le plus
+fort — s'il ne l'est pas, c'est le défaut, quelle que soit la sonie globale ».
+Elle est juste, elle est lue, et **rien ne la vérifiait** : `grep climax` dans
+tout le dépôt rendait zéro résultat.
+
+Mesuré sur un export réel de 13,84 s : le climax était **7,4 dB sous** le plan
+qui le précédait, filtré au-dessus de 400 Hz. La sonie globale était correcte,
+le vrai pic aussi, et aucune des mesures habituelles ne l'a dit — parce
+qu'elles sont toutes **agrégées**, et qu'une moyenne ne compare pas deux plans
+entre eux.
+
+**Le découpage décide de la mesure.** À la seconde, l'écart tombait à 6,6 dB ;
+aux changements de plan, à 7,4. C'est le plan qui est fort ou faible, pas la
+seconde — et un seuil de détection bas attrape aussi les fondus, qu'il faut
+fusionner sous peine de compter une transition comme un plan et de rendre un
+maximum qui n'existe pas.
+
+**Et le climax ne se déduit jamais du niveau.** Le prendre pour « le plan le
+plus fort » rendrait le contrôle circulaire et toujours vert. Il se pose : le
+dernier plan par défaut, ou un instant donné à la main.
+
+**Le remède compte autant que le constat**, et il n'est pas celui qu'on croit :
+baisser le plan trop fort vaut mieux que monter le climax. Monter fait
+travailler le limiteur, qui écrase précisément ce qu'on voulait faire
+ressortir — c'est le même piège que les deux couches d'un impact qui doivent
+partager leur niveau.
