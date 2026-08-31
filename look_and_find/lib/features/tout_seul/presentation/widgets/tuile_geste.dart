@@ -15,9 +15,9 @@ library;
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_colors.dart';
 import '../../domain/entities/geste.dart';
 import '../emojis.dart';
+import '../theme_enfant.dart';
 
 /// Hauteur fixe d'une tuile. Fixe, et non déduite de la largeur : sur une
 /// tablette, un ratio ferait des tuiles de 300 dp de haut où l'émoji se perd.
@@ -32,8 +32,18 @@ class TuileGeste extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.slab,
-      borderRadius: BorderRadius.circular(24),
+      color: CouleursEnfant.carte,
+      // `shape` **et rien d'autre** : un `Material` qui porte à la fois un
+      // `shape` et un `borderRadius` passe l'analyse et plante au premier
+      // rendu (piège consigné dans `look_and_find/CLAUDE.md`).
+      //
+      // Le trait n'est pas décoratif : deux surfaces claires ne se distinguent
+      // pas par leur teinte — blanc sur crème donne 1,10:1 — et c'est lui, à
+      // 3,41:1, qui dit où commence la tuile qu'on touche.
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: CouleursEnfant.bordure, width: 2),
+      ),
       child: InkWell(
         onTap: onTouche,
         borderRadius: BorderRadius.circular(24),
@@ -57,7 +67,7 @@ class TuileGeste extends StatelessWidget {
                   fontSize: 18,
                   height: 1.2,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.text,
+                  color: CouleursEnfant.encre,
                 ),
               ),
             ],

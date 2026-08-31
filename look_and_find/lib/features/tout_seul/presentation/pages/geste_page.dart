@@ -35,11 +35,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_colors.dart';
 import '../../domain/entities/geste.dart';
 import '../../domain/voix.dart';
 import '../emojis.dart';
 import '../mots_enfant.dart';
+import '../theme_enfant.dart';
 
 class GestePage extends StatefulWidget {
   const GestePage({super.key, required this.geste, required this.voix});
@@ -121,7 +121,7 @@ class _GestePageState extends State<GestePage> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 18,
-                        color: AppColors.muted,
+                        color: CouleursEnfant.encreDouce,
                       ),
                     ),
                   ),
@@ -165,7 +165,7 @@ class _GestePageState extends State<GestePage> {
                             fontSize: 34,
                             height: 1.25,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.text,
+                            color: CouleursEnfant.encre,
                           ),
                         ),
                       ],
@@ -182,7 +182,9 @@ class _GestePageState extends State<GestePage> {
                     contenu: Icon(
                       Icons.arrow_back_rounded,
                       size: 38,
-                      color: _rang == 0 ? AppColors.edge : AppColors.text,
+                      color: _rang == 0
+                          ? CouleursEnfant.eteint
+                          : CouleursEnfant.encre,
                     ),
                     intitule: MotsEnfant.retour,
                     onTouche: _rang == 0 ? null : _precedent,
@@ -193,8 +195,16 @@ class _GestePageState extends State<GestePage> {
                       onPressed: _suivant,
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(96),
-                        backgroundColor: AppColors.action,
-                        foregroundColor: Colors.white,
+                        backgroundColor: CouleursEnfant.soleil,
+                        foregroundColor: CouleursEnfant.encre,
+                        // Le contour n'est pas un ornement : sur fond clair,
+                        // un aplat orange ne tient que 2,20:1 contre la crème.
+                        // C'est ce trait à 6,79:1 qui dit « ceci est un
+                        // bouton », quand le libellé, lui, dit ce qu'il fait.
+                        side: const BorderSide(
+                          color: CouleursEnfant.braise,
+                          width: 3,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -256,7 +266,9 @@ class _Frise extends StatelessWidget {
             child: Container(
               height: 10,
               decoration: BoxDecoration(
-                color: i <= rang ? AppColors.action : AppColors.edge,
+                color: i <= rang
+                    ? CouleursEnfant.braise
+                    : CouleursEnfant.bordure,
                 borderRadius: BorderRadius.circular(5),
               ),
             ),
@@ -269,9 +281,9 @@ class _Frise extends StatelessWidget {
 
 /// Un bouton secondaire : rond, 72 dp, et intitulé pour les lecteurs d'écran.
 ///
-/// 72 plutôt que les 48 du dépôt parce que la main qui vise est celle d'un
-/// enfant ; plus petit que le bouton principal parce qu'on ne veut pas le
-/// toucher par erreur en visant « suivant ».
+/// `ThemeEnfant.cible` — 72 dp — plutôt que les 48 du dépôt, parce que la main
+/// qui vise est celle d'un enfant ; plus petit que le bouton principal parce
+/// qu'on ne veut pas le toucher par erreur en visant « suivant ».
 class _BoutonRond extends StatelessWidget {
   const _BoutonRond({
     required this.contenu,
@@ -288,14 +300,14 @@ class _BoutonRond extends StatelessWidget {
     return Tooltip(
       message: intitule,
       child: Material(
-        color: AppColors.raised,
+        color: CouleursEnfant.surfaceDouce,
         borderRadius: BorderRadius.circular(36),
         child: InkWell(
           onTap: onTouche,
           borderRadius: BorderRadius.circular(36),
           child: SizedBox(
-            width: 72,
-            height: 72,
+            width: ThemeEnfant.cible,
+            height: ThemeEnfant.cible,
             child: Center(child: contenu),
           ),
         ),

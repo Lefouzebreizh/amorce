@@ -17,7 +17,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:look_and_find/core/theme/app_theme.dart';
+import 'package:look_and_find/features/tout_seul/presentation/theme_enfant.dart';
 import 'package:look_and_find/main_tout_seul.dart';
 
 import 'fausse_voix.dart';
@@ -67,7 +67,10 @@ void main() {
     await tester.pumpAndSettle();
 
     final application = tester.widget<MaterialApp>(find.byType(MaterialApp));
-    expect(application.theme, AppTheme.dark);
+    expect(application.theme, ThemeEnfant.clair,
+        reason: 'Le thème de l\'enfant, clair, et non `AppTheme.dark`, qui '
+            'appartient à Look & Find et n\'est pas importé ici.');
+    expect(application.theme?.brightness, Brightness.light);
     expect(application.locale, const Locale('fr', 'FR'),
         reason: 'Les textes sont écrits en français ; une locale anglaise '
             'donnerait des libellés Material à moitié traduits.');

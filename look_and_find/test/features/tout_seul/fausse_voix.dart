@@ -10,9 +10,22 @@
 /// exécute tout fichier dont le nom finit ainsi, et celui-ci n'a pas de `main`.
 library;
 
+import 'dart:async';
+
 import 'package:look_and_find/features/tout_seul/domain/voix.dart';
 
 class FausseVoix implements Voix {
+  FausseVoix({this.bloquante = false});
+
+  /// Une voix qui note la phrase et **ne rend jamais la main**.
+  ///
+  /// C'est le seul moyen de prouver que rien n'attend la fin d'un énoncé : une
+  /// voix qui répond aussitôt fait passer au vert un écran qui l'attendrait
+  /// quand même. Sur un vrai téléphone, `dire` ne rend la main qu'à la fin de
+  /// la phrase — une seconde entière pour « Mettre ses chaussures au bon
+  /// pied ».
+  final bool bloquante;
+
   /// Tout ce qu'on a demandé de dire, dans l'ordre. C'est la seule trace qui
   /// permette d'affirmer qu'une étape a été annoncée à l'enfant.
   final List<String> dites = <String>[];
@@ -26,8 +39,9 @@ class FausseVoix implements Voix {
   }
 
   @override
-  Future<void> dire(String phrase) async {
+  Future<void> dire(String phrase) {
     dites.add(phrase);
+    return bloquante ? Completer<void>().future : Future<void>.value();
   }
 
   @override
