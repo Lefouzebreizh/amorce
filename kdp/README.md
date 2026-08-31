@@ -216,7 +216,22 @@ de `relecture/PASSE-RESOLUTION.md`, et c'est un gain de netteté, pas un blocage
 
 ### Le livre est déposable aujourd'hui, sans une seule image neuve
 
-Vérifié en faisant tourner la chaîne : compléments, assemblage, contrôle.
+Vérifié en faisant tourner la chaîne — compléments, assemblage, contrôle — **sur
+des planches fabriquées pour l'occasion**, puisque le dépôt n'en porte aucune :
+27 carrés de 2588 px, celui de l'hermine retiré pour reproduire la réalité.
+
+Ce que cette mesure établit, et ce qu'elle n'établit pas. Elle établit tout ce
+qui est **structurel** : le compte et la parité des pages, le format, la
+géométrie de la couverture et de sa tranche, l'absence de carton d'attente, le
+poids. Ce sont exactement les points sur lesquels KDP refuse un dépôt, et ils ne
+dépendent pas du dessin. Elle n'établit rien sur le **contenu** : le contrôle
+« toutes les images ≥ 300 DPI » passe ici parce que les carrés fabriqués sont à
+2588 px — avec les vraies planches, c'est l'étape `normaliser` qui les y amène,
+et `kdp.py controler` qui le juge en amont.
+
+Autrement dit : la chaîne ne bute sur rien, et les deux trous ne sont pas des
+trous. Le seul contrôle qui reste à faire sur les vrais fichiers est celui de
+l'œil, et il se fait sur l'épreuve papier.
 
 ```
 30 pages ≥ 24 · 30 pages, nombre pair · toutes les pages en 8.625 × 8.625 po
