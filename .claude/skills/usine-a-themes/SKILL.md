@@ -26,6 +26,27 @@ des images, et un fond clair fausse la perception du contraste et de
 l'étalonnage. Il n'y a donc pas de bascule clair/sombre à maintenir, et en
 ajouter une serait un changement de produit, pas de thème.
 
+### « Les surfaces séparent mieux que les traits » ne vaut que vers le noir
+
+La règle de la première ligne du tableau est vraie **ici**, et cesse de l'être
+dès qu'un fond est clair. Mesuré le 31/08/2026 en montant le thème clair de
+*Tout seul*, l'application enfant de Look & Find : une tuile blanche sur un fond
+crème donne **1,10:1**, et aucun réglage n'y change rien — **la limite du blanc
+est atteinte**, il n'y a plus de place au-dessus pour élever une surface.
+
+Vers le noir, au contraire, `ink < slab < panel < raised` dispose de toute
+l'échelle : c'est ce qui rend la règle rentable dans ce thème-ci.
+
+Donc, sur un fond clair, **ce qui sépare deux surfaces est un trait, pas une
+nuance.** Le thème enfant emploie un contour de tuile à 2 dp et un contour de
+bouton à 3 dp, là où le thème sombre s'en passerait. Ce n'est pas un
+relâchement de la règle : c'est la même exigence — que la séparation se **voie**
+— servie par le seul moyen qui reste disponible.
+
+À retenir avant de décliner cette palette en clair, ce qui arrivera le jour où
+un projet du dépôt vise autre chose que le jugement d'image : la table
+ci-dessus se transpose, la première règle non.
+
 ## Ajouter ou modifier un jeton
 
 1. **Écrire le jeton dans `@theme`, avec le commentaire qui dit pourquoi.** La
