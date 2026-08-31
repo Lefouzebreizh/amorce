@@ -108,6 +108,46 @@ class TestTheme(unittest.TestCase):
         self.assertIsNone(regles.theme("photo de vacances", CONFIG["classement"]["themes"]))
 
 
+class TestMatiereATheme(unittest.TestCase):
+    """Dans quoi on cherche un thème, et pourquoi le nom passe devant."""
+
+    def test_sans_texte_la_matiere_est_le_seul_nom(self):
+        self.assertEqual(regles.matiere_a_theme("facture.pdf"), "facture.pdf")
+
+    def test_le_nom_precede_le_document(self):
+        # `theme()` retient le premier thème qui correspond : l'ordre décide.
+        # Quelqu'un qui a nommé son fichier a déjà classé son document.
+        matiere = regles.matiere_a_theme("impots 2024.pdf", "quittance de loyer")
+        self.assertTrue(matiere.startswith("impots 2024.pdf"))
+
+    def test_le_document_est_borne(self):
+        # Lire tout un PDF ferait correspondre n'importe quel mot-clé : sa
+        # dernière page cite l'assurance, la banque et les recours.
+        matiere = regles.matiere_a_theme("a.pdf", "x" * 5000, caracteres_max=100)
+        self.assertEqual(len(matiere), len("a.pdf") + 1 + 100)
+
+    def test_un_document_muet_de_nom_est_classe_par_son_texte(self):
+        # Le cas qui motive tout : un scan nommé « scan001.pdf » finissait dans
+        # « Divers » alors que sa première page annonce sa nature.
+        rangement = regles.decider(
+            fiche("scan001.pdf"), CONFIG, "modification",
+            texte=regles.matiere_a_theme("scan001.pdf", "AVIS DE TAXE FONCIÈRE 2024"))
+        self.assertEqual(rangement.destination.parent,
+                         Path("Documents/Administratif/Impôts"))
+
+
+class TestAccents(unittest.TestCase):
+    def test_un_document_sans_accents_trouve_quand_meme_son_theme(self):
+        # Un OCR, un vieux PDF ou un encodage approximatif rendent « fonciere ».
+        # Comparer les formes accentuées ferait manquer le thème en silence.
+        trouve = regles.theme("avis de taxe fonciere 2024", CONFIG["classement"]["themes"])
+        self.assertEqual(trouve["nom"], "Impôts")
+
+    def test_un_mot_cle_accentue_reconnait_un_texte_accentue(self):
+        trouve = regles.theme("AVIS DE TAXE FONCIÈRE", CONFIG["classement"]["themes"])
+        self.assertEqual(trouve["nom"], "Impôts")
+
+
 class TestDossiersAParcourir(unittest.TestCase):
     def test_la_bibliotheque_n_est_pas_parcourue_d_office(self):
         # Sinon le rangement défait son propre travail : un fichier déjà rangé

@@ -12,7 +12,8 @@ options désactivées par défaut).
 > validé ; les six modules sont décrits ci-dessous. Trois sont écrits :
 > `nettoyage`, complet — photos floues, quasi-doublons puis vidéos abîmées
 > (`organizer nettoyer`) —, `classement`, qui range documents, photos et
-> vidéos par thème et par date (`organizer ranger`), et `conversion`, qui
+> vidéos par thème et par date en **lisant les premières pages d'un document**
+> quand son nom ne dit rien (`organizer ranger`), et `conversion`, qui
 > repasse les HEIC en JPG et les MKV en MP4 (`organizer convertir`).
 
 ## Arborescence
@@ -135,6 +136,15 @@ Ce que la commande décide, et pourquoi :
   `classement.themes`, et le premier thème de la liste l'emporte : c'est un
   ordre de priorité qu'on maîtrise, là où un score laisserait deviner pourquoi
   la facture d'électricité est partie chez « Banque ».
+- **Le thème se cherche dans le nom, puis dans le document.** Un scan nommé
+  `scan001.pdf` finissait dans le fourre-tout alors que sa première page annonce
+  sa nature. Le nom passe devant — qui a nommé son fichier l'a déjà classé — et
+  seules les premières pages sont lues : la dernière page d'un avis d'imposition
+  cite l'assurance, la banque et les recours, trois thèmes qui n'ont rien à
+  voir. La comparaison ignore les accents, sans quoi « taxe fonciere » rendu par
+  un scan manquerait « taxe foncière » en silence. Réglages dans
+  `classement.lecture_du_document` ; une image scannée reste hors de portée,
+  faute d'OCR installé, et le compte rendu le dit.
 - **Le motif dit d'où vient la date.** « mars 2024, d'après nom_de_fichier » ou
   « d'après la date de modification, faute de mieux ». Sans cette mention, rien
   ne distingue une photo rangée sur sa vraie date de prise de vue d'une photo
