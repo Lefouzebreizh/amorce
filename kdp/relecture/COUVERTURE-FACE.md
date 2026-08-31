@@ -11,6 +11,47 @@ n'est pas une couverture.
 
 ---
 
+## Le chemin le moins cher, mesuré le 31 août 2026
+
+Avant de chercher à faire fabriquer une image, trois faits chiffrés.
+
+**Le livre est déposable sans elle.** Le provisoire n'est pas un carton
+d'attente : la chaîne rend 30 pages, 9 contrôles sur 9 au vert, verdict
+PUBLIABLE, et `vignette.py` passe ses cinq contrôles sur ce provisoire — le
+titre se lit à 150 px. Le dépôt et l'épreuve papier n'attendent donc rien.
+
+**Recadrer un panneau de planche est fermé par le calcul, pas par le goût.** Le
+panneau de face fait 2588 × 2625 px à 300 DPI, et un panneau vaut environ 42 %
+du côté d'une planche : 672 px depuis une planche à 1600, soit **×3,85**. La
+page 01 a été jugée inutilisable et refaite en vectoriel à ×2,54. Inutile
+d'essayer.
+
+**Une illustration pleine page, en revanche, tient largement.** À 1600 px elle
+tombe à ×1,62 — l'agrandissement de la plupart des planches du recueil ; à
+2048 px à ×1,26, la classe de « Avoir un chat dans la gorge », la mieux résolue
+du livre. **L'essai de falaise déjà généré est donc utilisable tel quel** dès
+qu'il fait 1600 px ou plus, à mesurer d'une ligne :
+
+```bash
+python3 -c "from PIL import Image; print(Image.open('essai.png').size)"
+python3 kdp/vignette.py --source essai.png --vers .travail/vignette.png
+```
+
+Son seul défaut est que les personnages sont de dos, ce que la direction
+retenue ci-dessous corrige. **Une couverture avec les héros de dos vaut mieux
+qu'un livre non publié** : on dépose avec, on commande l'épreuve, et on refait
+l'image seulement si l'épreuve la condamne.
+
+**Et une piste jamais mesurée jusqu'ici, pour la refaire depuis l'appareil du
+propriétaire** : Canva génère des images à partir d'une invite (Magic Media /
+Dream Lab), accepte une **image de référence** — donc le verrou d'anatomie de
+Zéphy —, plafonne à **environ 2048 × 2048 px**, et le compte gratuit en offre
+**dix au total**, à vie. 2048 px, c'est ×1,26 : la meilleure classe de
+résolution du volume. Réponse du service d'aide officiel de Canva, le
+31/08/2026 ; les quatre chemins fermés de `CLAUDE.md` ne la couvraient pas.
+
+---
+
 ## L'épreuve à passer, avant toute autre
 
 Réduisez votre projet à **150 pixels de côté** et regardez-le. Si à cette taille

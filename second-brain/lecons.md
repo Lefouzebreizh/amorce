@@ -4528,3 +4528,44 @@ Conséquence directe, écrite dans `montage-sans-refaire` §13 : plus jamais
 d'image fixe ni d'affiche en première seconde. La règle disait l'inverse
 jusqu'ici — « 1,1 s pour huit lettres » — et une règle écrite que la mesure
 dément est pire qu'une règle absente.
+
+## Une impossibilité mesurée ne rend vrai que ce qu'elle mesure
+
+Mesuré le 31/08/2026, sur le tome 1 de Roussy & Zéphy.
+
+Le dépôt portait depuis des semaines, dans `CLAUDE.md` et dans deux autres
+fichiers, la même phrase : les quatre chemins de génération d'image sont fermés,
+**donc** le tome 1 est bloqué, il lui manque une planche et une couverture. La
+première moitié était juste et bien mesurée. La seconde n'avait jamais été
+vérifiée — et elle était fausse.
+
+Il a suffi de faire tourner la chaîne du projet sur des planches fabriquées pour
+l'occasion : **30 pages, aucun carton d'attente, 9 contrôles sur 9 au vert,
+verdict PUBLIABLE**, sans une seule image neuve. Les deux trous avaient chacun
+reçu, des mois plus tôt et par d'autres sessions, une version dégradée qui
+marche : l'histoire non illustrée composée en prose vectorielle, la couverture
+provisoire empruntant son illustration à une page intérieure. Personne n'avait
+relancé la chaîne pour voir ce que les deux valaient ensemble.
+
+**Le piège n'est pas la mesure, c'est la conséquence collée à côté.** Une
+conséquence fausse posée contre une mesure juste se relit comme si elle avait
+été mesurée elle aussi, et plus personne ne la rouvre — c'est même l'inverse :
+la mesure la protège. Trois fichiers la répétaient, dont le classement des
+chantiers, qui en avait déduit un rang.
+
+Trois gestes en découlent :
+
+- **Séparer, à l'écriture, ce qui est mesuré de ce qu'on en déduit.** « Les
+  hôtes rendent 000 » est une mesure ; « donc le projet est bloqué » est une
+  hypothèse, et elle se date et se signe comme telle.
+- **Relancer la chaîne du projet avant de croire à un blocage.** Elle sait
+  répondre, et elle répond en quelques secondes. Une chaîne qui rend un verdict
+  est plus fiable que trois documents qui se citent l'un l'autre.
+- **Chercher la version dégradée avant de chercher la ressource manquante.**
+  Dans un dépôt où les sessions se succèdent, elle a souvent déjà été écrite par
+  quelqu'un d'autre, et personne ne l'a rassemblée avec les autres.
+
+Corollaire de méthode, pour un livre en particulier : **l'épreuve papier se
+commande sans publier**, et ses deux semaines d'impression courent pendant qu'on
+travaille ce qui manque. Attendre d'avoir tout pour commencer à attendre est le
+seul choix strictement perdant.

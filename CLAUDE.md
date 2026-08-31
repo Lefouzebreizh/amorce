@@ -469,9 +469,22 @@ là. **Et le connecteur Adobe n'y change rien** : sa documentation dit en clair
 que la génération d'image y est indisponible, seul l'agrandissement de cadre
 (`image_generative_expand`) subsiste et il part d'une image existante. Adobe
 retouche, recadre, détoure, vectorise et met en page — il ne fait pas la
-première image. **Une session ne peut donc pas fabriquer une illustration**, et
-c'est ce qui bloque le tome 1 de KDP : il lui manque une planche et une
-couverture, et rien d'autre.
+première image. **Une session ne peut donc pas fabriquer une illustration.**
+
+**Mais cela ne bloque pas le tome 1 de KDP, et la phrase qui le disait était
+fausse — mesuré le 31/08/2026.** La chaîne a été relancée de bout en bout :
+30 pages, aucun carton d'attente, **9 contrôles sur 9 au vert, verdict
+PUBLIABLE**, sans une seule image neuve. La planche jamais dessinée — page 15,
+*Le secret de l'hermine* — est racontée en prose vectorielle par `page12.py`,
+et la couverture a un provisoire qui passe les cinq contrôles de vignette. Le
+compte exact des planches et le chemin le moins cher jusqu'au dépôt sont dans
+`kdp/README.md`.
+
+La leçon vaut au-delà de KDP : **une impossibilité mesurée ne rend vrai que ce
+qu'elle mesure.** Les quatre chemins d'image sont bien fermés ; ce qui était
+faux, c'est la conséquence qu'on en avait tirée — et une conséquence fausse
+attachée à une mesure juste se relit comme si elle avait été mesurée elle
+aussi.
 
 **La transcription, elle, marche** — et ce blocage-ci a coûté deux sessions
 avant d'être levé. `huggingface.co` est refusé par le mandataire, comme
