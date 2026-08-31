@@ -1,6 +1,6 @@
 ---
 name: montage-sans-refaire
-description: La liste de contrôle d'un montage vertical, écrite après vingt-cinq versions d'un même épisode livrées et rejetées en une nuit. Chaque ligne est un défaut réel, sa mesure et sa parade. À passer AVANT de rendre un montage — pas après une plainte — et dès qu'une demande dit « ça sature », « on n'entend pas », « ça coupe », « les sous-titres sont mal placés », « c'est trop long », « refais-le », ou dès qu'on s'apprête à livrer une deuxième version du même fichier. À utiliser aussi quand tout paraît juste : la moitié de ces défauts passent toutes les mesures habituelles et ne se voient qu'ici. Ici on relit un montage AVANT de le rendre, toutes causes confondues ; quand le défaut est visuel et tient aux plans qui ne vont pas ensemble — « ça fait amateur », « on dirait des clips collés », un saut de luminosité — c'est `etalonner` qui mesure et corrige.
+description: La liste de contrôle d'un montage vertical, écrite après vingt-cinq versions d'un même épisode livrées et rejetées en une nuit. Chaque ligne est un défaut réel, sa mesure et sa parade. À passer AVANT de rendre un montage — pas après une plainte — et dès qu'une demande dit « ça sature », « on n'entend pas », « ça coupe », « les sous-titres sont mal placés », « c'est trop long », « refais-le », « ils partent au bout de deux secondes », « personne ne regarde jusqu'au bout », ou dès qu'on s'apprête à livrer une deuxième version du même fichier. À utiliser aussi quand tout paraît juste : la moitié de ces défauts passent toutes les mesures habituelles et ne se voient qu'ici. Ici on relit un montage AVANT de le rendre, toutes causes confondues ; quand le défaut est visuel et tient aux plans qui ne vont pas ensemble — « ça fait amateur », « on dirait des clips collés », un saut de luminosité — c'est `etalonner` qui mesure et corrige.
 ---
 
 # Ne pas refaire la vidéo cinquante fois
@@ -362,8 +362,24 @@ chercher un défaut de son sur un plan ralenti, compter ses images figées.
 
 ## 13. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
 
-- **Une affiche d'ouverture** : le temps de lire son titre, pas plus. 0,6 s
-  gaspille les 0,6 s ; 1,6 s perd le spectateur ; **1,1 s** pour huit lettres.
+- **Jamais d'image fixe ni d'affiche en première seconde. On entre dans le
+  mouvement.** Cette ligne disait le contraire — « le temps de lire son titre,
+  1,1 s pour huit lettres » — et la mesure l'a démentie.
+
+  Relevé sur le teaser du **31/08/2026** : **la moitié de l'audience part avant
+  la deuxième seconde**. Visionnage moyen **4,3 s sur 17**, complétion
+  **3,6 %**. Une affiche ne demande pas au spectateur de patienter une seconde,
+  elle lui demande de décider s'il reste — et il décide non.
+
+  **Et les 63 partages ne sont pas de l'engagement : ce sont les miens.** Un
+  chiffre flatteur au tableau de bord qui ne mesure que sa propre diffusion. Le
+  compter comme un signal aurait fait conclure que le teaser marchait, alors
+  que la courbe de rétention disait l'inverse dans le même écran.
+
+  Ce que ça change en pratique : le premier plan porte du **mouvement dès la
+  première image** — un geste en cours, un travelling déjà lancé, une matière
+  qui bouge. Le titre, s'il en faut un, se pose **par-dessus** ce mouvement, il
+  ne le remplace pas.
 - **Une amorce** (un œil, une texture) ne porte aucune information : courte.
 - Une image qu'on ne peut pas lire ne coûte pas son temps, elle le **gaspille**
   — c'est le pire des deux mondes.

@@ -4503,3 +4503,28 @@ La règle qui l'évite tient en une phrase : **on commite avant de changer de
 dossier de travail**, même pour écrire un fichier qui n'a rien à voir. Le coût
 d'un commit de trop est nul ; celui d'un `reset --hard` sur du travail non
 commité est le travail lui-même.
+
+## Un partage qu'on a fait soi-même n'est pas un signal
+
+Le teaser du 31/08/2026 affichait **63 partages** — le seul chiffre flatteur du
+tableau de bord. Ils étaient **tous de l'auteur** : sa propre diffusion, comptée
+comme de l'engagement.
+
+Dans le même écran, la rétention disait l'inverse : **la moitié de l'audience
+partie avant la deuxième seconde**, **4,3 s de visionnage moyen sur 17**,
+**3,6 % de complétion**. Deux mesures côte à côte, une flatteuse et fausse,
+une brutale et vraie.
+
+**Le piège n'est pas le chiffre, c'est le tri.** Un tableau de bord met sur la
+même ligne ce qu'on a provoqué et ce qu'on a obtenu. Avant de lire une métrique,
+se demander **qui l'a produite** : un partage qu'on a fait, une vue qu'on a
+générée en se relisant, un clic depuis son propre lien ne mesurent que soi.
+
+**Et ce qui décide se lit toujours dans la rétention.** La complétion et la
+courbe des premières secondes ne peuvent pas être fabriquées par l'auteur —
+c'est ce qui les rend seules dignes de confiance sur un format court.
+
+Conséquence directe, écrite dans `montage-sans-refaire` §13 : plus jamais
+d'image fixe ni d'affiche en première seconde. La règle disait l'inverse
+jusqu'ici — « 1,1 s pour huit lettres » — et une règle écrite que la mesure
+dément est pire qu'une règle absente.
