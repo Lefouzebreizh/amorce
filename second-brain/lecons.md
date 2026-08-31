@@ -4117,6 +4117,43 @@ une pièce non branchée se voit.
 
 ---
 
+## Un contrôle qui ne peut pas réussir arrête la moitié qui marchait
+
+**Mesuré le 31/08/2026, deux jours après coup.** L'auto-pilote du réseau
+d'annuaires est rouge depuis le 29, et personne ne l'avait vu.
+
+La cause n'est pas un défaut : c'est un garde-fou qui fait exactement ce pour
+quoi il a été écrit. Il refuse de construire les onze sites tant que le domaine
+inscrit dans les bases ne résout pas — la leçon d'avant lui a appris qu'une
+balise canonique pointant vers une adresse que personne ne sert coûte des mois
+de référencement. Or `ma-panoplie-ia.com` a été **acheté** sans être branché :
+aucun enregistrement DNS, donc une condition que rien dans le dépôt ne peut
+satisfaire.
+
+Trois conséquences, dans cet ordre :
+
+1. Le travail programmé publie bien un outil par niche — la réserve descend —
+   puis **échoue à l'étape suivante**. La partie qui marchait est arrêtée par
+   celle qui ne peut pas marcher.
+2. La chaîne rouge tous les deux jours devient un clignotant. Le même fichier
+   dit pourtant, dix lignes plus haut, qu'une barrière rouge en permanence est
+   une barrière qu'on cesse de lire. On connaît la règle et on la reperd
+   au moment où on écrit le garde-fou.
+3. Personne ne l'a su pendant deux jours, parce qu'un travail programmé qui
+   rougit ne réveille personne.
+
+**La règle :** un contrôle dont la condition dépend de quelque chose
+d'**extérieur au dépôt** — un DNS, un compte tiers, un secret, un domaine acheté
+— ne s'écrit pas comme un contrôle de code. Le code, on peut le corriger dans la
+minute ; l'extérieur, non. Un tel contrôle prévient, ouvre un billet, et **laisse
+passer ce qui ne dépend pas de lui**.
+
+Le corollaire est plus dur à voir : ce garde-fou-ci offrait déjà sa porte de
+sortie, `--sans-dns`. Elle n'était prise par personne. **Une porte de sortie que
+la chaîne n'emprunte pas d'elle-même n'est pas une porte de sortie**, c'est une
+ligne de documentation dans un message d'erreur que personne ne lit — puisque
+justement, plus personne ne lit le rouge.
+
 ## Un contrôle qui ne peut pas échouer est pire qu'un contrôle absent
 
 **Mesuré le 30/08/2026, trois fois dans la même session.** À chaque fois un
