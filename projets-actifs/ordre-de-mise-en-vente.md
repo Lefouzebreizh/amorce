@@ -23,9 +23,9 @@ Une note haute dit « ça se construit ». Elle ne dit pas « ça se vend ».
 
 | Rang | Chantier | Déploiement | Premier euro | Montant |
 | --- | --- | --- | --- | --- |
-| **1** | **Artisan Express** — site vitrine | **une heure** | jours | 300 € / vente |
+| **1 ?** | **Artisan Express** — site vitrine | **une heure** | jours | 300 € / vente |
 | 2 | Audit de code généré par IA | **néant** (service) | jours à semaines | ~500 € / audit |
-| 3 | KDP — Roussy & Zéphy tome 1 | jours | jours après dépôt | quelques € / vente, **48 000 personnes déjà acquises** |
+| **1 ?** | KDP — Roussy & Zéphy tome 1 | jours | jours après dépôt | quelques € / vente, **48 000 personnes déjà acquises** |
 | 4 | Amorce à 49 € | semaines | semaines | 49 € / vente |
 | 5 | Réseau d'annuaires IA | **heures** | 3 à 6 mois | affiliation, passif |
 | 6 | Accord, couleurs, ingrédients | mois | indéterminé | aucun modèle défini |
@@ -36,6 +36,33 @@ le 31/08/2026 — sans image, en mesurant que le livre était déjà déposable 
 le rang 1 est par ailleurs suspendu au SIRET. Le rang de KDP n'est pas changé
 ici parce qu'un ordre de mise en vente est une décision de produit ; la
 condition, elle, est remplie.
+
+## Le rang 1 n'est plus tranché, et une seule question le décide
+
+Ce classement plaçait Artisan Express premier et KDP troisième, ce dernier étant
+donné pour bloqué par une image manquante. **Le blocage n'existait pas** — mesuré
+le 31/08, le livre rend un verdict PUBLIABLE sans une seule image neuve. La règle
+écrite plus bas dans ce document disait : *« si cette image se débloque, ce
+chantier passe premier »*. Sa condition est remplie.
+
+Mais la promotion ne s'applique pas mécaniquement, parce que **les deux
+prétendants butent sur le même mur, et peut-être pas de la même façon** :
+l'immatriculation est en cours au guichet unique de l'INPI, pas validée.
+
+- **Artisan Express vend une prestation de service à 300 €.** Facturer sans
+  numéro n'est pas possible, et l'encaissement en ligne est fermé pour cette
+  raison exacte — voir `SIRET_ACTIF` dans `artisan-express/src/components/Offre.tsx`.
+- **KDP verse des redevances d'auteur.** Est-ce soumis à la même contrainte ?
+  **Je n'en sais rien, et je ne l'invente pas.** C'est une question fiscale, pas
+  technique, et elle décide à elle seule lequel des deux est réellement premier.
+
+**Comment y répondre sans rien engager, et gratuitement :** ouvrir un compte KDP
+et remplir le questionnaire fiscal. Il est gratuit, il ne publie rien, et il dit
+exactement ce qu'Amazon demande pour verser. Si les redevances passent sans
+numéro d'entreprise, **KDP est premier sans discussion** — c'est le seul chantier
+qui a déjà son public, et le seul qui encaisserait avant le SIRET.
+
+Tant que cette réponse manque, les deux portent le rang **1 ?** dans le tableau.
 
 ## 1. Artisan Express — le seul dont tout est prêt sauf le déploiement
 
