@@ -234,6 +234,21 @@ Trois recettes utiles quand on ajoute un test :
   le test se fige **sans message** au bout de plusieurs minutes. Le symptôme
   est reconnaissable — « did not complete », puis « Cannot close sink while
   adding stream ».
+- **La règle précédente vaut pour tout canal de plateforme, pas seulement Hive**
+  — et le symptôme y est trompeur au lieu d'être bloquant. Un refus
+  `MissingPluginException`, celui que rend `availableCameras()` sur une machine
+  sans greffon, voyage par la **vraie** boucle d'événements : avancer l'horloge
+  simulée ne le fait jamais arriver. L'écran reste donc sur son état d'attente,
+  et le test conclut que la panne **n'est pas signalée** — alors qu'elle n'a
+  simplement pas encore eu lieu. On part corriger un écran qui va bien.
+  Mesuré le 31/08/2026 en éprouvant la sonde de reconnaissance.
+- **Les clefs JSON de ML Kit ne portent pas le nom de leurs champs Dart.**
+  `ImageLabel.fromJson` lit `json['text']`, **pas** `json['label']` ; et
+  `InputImage.toJson` écrit le chemin sous `path`, **pas** `filePath` comme le
+  nomme le champ. Une fausse réponse écrite avec le nom Dart rend des étiquettes
+  vides et fait chercher le défaut dans l'adaptateur, qui est sain. Les deux
+  clefs sont épinglées par un test dans `reconnaissance_mlkit_test.dart` :
+  elles cassent en silence à la première montée de version.
 
 ## Pièges connus
 
