@@ -26,7 +26,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 | Notice, dangerosité et ingrédients | **Faisable** | 8/10 | [fiche](projets-actifs/notice-et-dangerosite-produit.md) | Coller 3 réponses OpenFoodFacts réelles (mandataire bloqué ici) |
 | Où a mal mon animal | **En pause** | 5/10 | [fiche](archives-backlog/ou-a-mal-mon-animal.md) | Version sans diagnostic (7/10), ou trouver un vétérinaire relecteur |
 | Accord — l'éveil des couleurs | **En cours** | 8/10 | [fiche](projets-actifs/accord.md) | 3 photos de mur cadrées exprès, puis l'écran |
-| Ordre de mise en vente | **En cours** | — | [fiche](projets-actifs/ordre-de-mise-en-vente.md) | Déployer Artisan Express, puis 10 messages de PROSPECTION.md |
+| Ordre de mise en vente | **En cours** | — | [fiche](projets-actifs/ordre-de-mise-en-vente.md) | Ouvrir amorce-51up.vercel.app, puis 10 messages de PROSPECTION.md |
 
 ## Terrain existant (base du critère « Alignement »)
 
