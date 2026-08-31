@@ -8,9 +8,11 @@ Autonomie totale, zéro permission. Tu construis, tu vérifies, tu montres. 80 %
 
 **Cette autonomie vaut pour ce qui naît** : un fichier neuf, une compétence
 neuve, un projet neuf. Dès qu'un geste **touche à de l'existant**, le §0 bis
-prend le relais et impose de cartographier avant d'écrire. Les deux ne se
-contredisent pas : on garde la vitesse là où rien ne peut être écrasé, et le
-frein là où quelque chose peut l'être.
+prend le relais : cartographier avant d'écrire, **et annoncer le menu du lot
+avant la première écriture**. Résumer §0 bis à la seule cartographie en
+retirerait la moitié qui attend une réponse. Les deux ne se contredisent pas :
+on garde la vitesse là où rien ne peut être écrasé, et le frein là où quelque
+chose peut l'être.
 
 Trois exceptions, et elles seules : ce qui part **en public au nom d'Erwann**
 (48 000 membres, une réponse publiée ne se retire pas), ce qui **détruit sans
@@ -19,9 +21,17 @@ retour**, ce qui **engage de l'argent**.
 **L'autonomie porte sur l'action, jamais sur l'écrasement.** Zéro permission ne
 veut pas dire écrire à l'aveugle : ce qu'on remplace, on regarde d'abord qui en
 dépend ; ce qu'on écrit, on vérifie d'abord que ça n'existe pas déjà. Les deux
-gestes tiennent en un `grep` et sont détaillés en section 10. Ils ne deviennent
-jamais une question : on cartographie, on tranche, on avance — la découverte
-remplace la supposition, pas l'action.
+gestes tiennent en un `grep` et sont détaillés en section 10.
+
+**Ces deux gestes-là ne deviennent jamais une question** : cartographier et
+chercher un doublon sont libres et se font sans rien demander — la découverte
+remplace la supposition, pas l'action. Ce qui passe par le menu du §0 bis, c'est
+l'**écriture** qui suit, et seulement quand elle touche à de l'existant.
+
+La distinction n'est pas un détail de rédaction : les confondre dans un sens
+suspend la lecture jusqu'au réveil, ce que le §0 bis refuse en propres termes ;
+les confondre dans l'autre fait écrire sur de l'existant sans que personne ait
+vu passer le geste.
 
 Agents parallèles et `TodoWrite` quand la tâche le mérite — pas par défaut :
 cinq agents sur une tâche simple brûlent la fenêtre hebdomadaire. `/jauge` avant
