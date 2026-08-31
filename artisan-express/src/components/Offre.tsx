@@ -1,5 +1,23 @@
 import { BOUTON_CONTOUR, BOUTON_PRINCIPAL, SECTION, TITRE_SECTION } from '@/components/ui';
 import { aUnStripe, contact } from '@/lib/config';
+/*
+ * Aucun encaissement en ligne tant que le SIRET n'est pas actif.
+ *
+ * L'immatriculation est en cours au guichet unique de l'INPI et n'est pas
+ * validée. Encaisser trois cents euros avant d'avoir un numéro, c'est facturer
+ * sans pouvoir émettre de facture conforme — et le client qui paie n'a rien
+ * d'opposable en face.
+ *
+ * Le bouton mène donc au formulaire déjà présent en bas de page : on réserve,
+ * on convient du paiement de vive voix, et rien ne transite.
+ *
+ * Cette constante **commande réellement** le bouton : la passer à `true` rétablit
+ * le paiement en ligne, à condition qu'un lien Stripe soit configuré. Elle n'est
+ * pas un commentaire déguisé, et elle ne se bascule que sur confirmation du
+ * propriétaire que le SIRET est actif.
+ */
+const SIRET_ACTIF = false;
+const encaisseEnLigne = SIRET_ACTIF && aUnStripe;
 
 const COMPRIS = [
   ['Paiement en une fois', '300 €, et c’est fini — aucun abonnement, aucun prélèvement ensuite.'],
@@ -48,8 +66,11 @@ export function Offre() {
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <a className={BOUTON_PRINCIPAL} href={aUnStripe ? contact.stripeLien : '#formulaire'}>
-              {aUnStripe ? 'Je veux mon site en 48\u00a0h' : 'Je réserve ma place'}
+            <a
+              className={BOUTON_PRINCIPAL}
+              href={encaisseEnLigne ? contact.stripeLien : '#formulaire'}
+            >
+              {encaisseEnLigne ? 'Je veux mon site en 48\u00a0h' : 'Je réserve ma place'}
             </a>
             <a className={BOUTON_CONTOUR} href="#formulaire">
               J’ai une question avant
@@ -63,7 +84,7 @@ export function Offre() {
             * On dit donc ce qui se passe vraiment — on convient ensemble.
             */}
           <p className="mt-4 text-base text-ardoise">
-            {aUnStripe
+            {encaisseEnLigne
               ? 'Paiement chez Stripe. Ta carte ne passe jamais par ce site.'
               : 'Je réserve ta place, on convient du paiement ensemble. Rien à régler depuis cette page.'}
           </p>
