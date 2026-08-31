@@ -4380,3 +4380,29 @@ place de quelqu'un lui met des mots dans la bouche ; laisser le crochet fait
 que le garde-fou existant le voit et l'empêche de partir gravé dans le fichier.
 Quatre gabarits non remplis l'avaient déjà fait, et la couverture texte était
 même bonne — puisqu'il y avait du texte.
+
+## Un garde-fou posé en session peut casser un déploiement qu'on n'a pas lu
+
+Le contrôle DNS ajouté à `construire-sites.js` refuse de construire tant que
+l'adresse canonique ne résout pas. Juste — et il rend rouge le workflow
+« Annuaire IA — mise en ligne », qui appelle ce même script **sans**
+`--sans-dns`, sur des niches encore réglées sur un domaine mort.
+
+Le défaut n'est pas le garde-fou : c'est de l'avoir posé sans lire ce qui
+appelait le script. Un `grep` sur le nom du fichier — pas sur la fonction — le
+montrait en une seconde, et `.github/workflows/` fait partie des appelants au
+même titre que `package.json`.
+
+**Ce que ça donne à l'écran est le vrai coût :** l'échec ressemble à une panne
+de déploiement, pas à une adresse non réglée. Quelqu'un qui vient de poser ses
+secrets conclura que la mise en ligne est cassée.
+
+**Et l'ordre devient contraint, dans un sens qui ne se devine pas.** L'adresse
+gratuite d'un projet Cloudflare Pages ne résout **qu'une fois le projet créé** :
+il faut donc créer le projet d'abord, régler l'adresse ensuite, poser les
+secrets en dernier. Inverser les deux premiers fait échouer la construction sur
+une adresse qui n'existe pas encore.
+
+**Et le nom du projet n'était pas un choix ouvert** : le workflow le codait en
+dur depuis le début. Le README invitait pourtant à en choisir un — une question
+posée au propriétaire alors que la réponse était déjà dans le dépôt.
