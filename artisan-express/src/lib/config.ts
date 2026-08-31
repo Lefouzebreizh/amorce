@@ -88,5 +88,29 @@ export const contact = {
 
 export const aUnTelephone = contact.telephoneLien !== '';
 export const aUnWhatsapp = contact.whatsappLien !== '';
-export const aUnStripe = contact.stripeLien !== '';
+/**
+ * L'encaissement en ligne est **fermé**, et ce n'est pas un oubli de réglage.
+ *
+ * Une facture française porte obligatoirement un SIRET. L'immatriculation est
+ * en cours au guichet unique de l'INPI et n'est pas validée : encaisser
+ * maintenant reviendrait à facturer sans être enregistré, ce que
+ * `FACTURER.md` nomme comme le risque qui « coûte bien plus que 300 € ».
+ *
+ * Le verrou est ici et non dans une variable d'environnement laissée vide,
+ * parce qu'une variable vide se remplit par mégarde — un réglage posé sur
+ * l'hébergeur, et la page encaisse sans que personne l'ait décidé. Cette
+ * constante, elle, demande qu'on la change **dans le code**, donc qu'on la
+ * lise, donc qu'on relise pourquoi elle est là.
+ *
+ * À rouvrir le jour où le SIRET est actif, et pas avant : passer à `true`,
+ * poser `NEXT_PUBLIC_LIEN_STRIPE`, et vérifier que le bouton mène bien au
+ * paiement. Un test garde cette valeur.
+ */
+export const ENCAISSEMENT_OUVERT = false;
+
+/**
+ * Le paiement est-il proposé ? Les deux conditions, et la première prime :
+ * tant que l'encaissement est fermé, un lien Stripe réglé ne change rien.
+ */
+export const aUnStripe = ENCAISSEMENT_OUVERT && contact.stripeLien !== '';
 export const aUnCourrielDirect = contact.courrielDirect !== '';
