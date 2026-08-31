@@ -1,0 +1,4 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "ignoreCommand": "bash scripts/vercel-ignorer.sh src public next.config.ts package.json package-lock.json tsconfig.json postcss.config.mjs eslint.config.mjs vercel.json scripts/vercel-ignorer.sh"
+}
