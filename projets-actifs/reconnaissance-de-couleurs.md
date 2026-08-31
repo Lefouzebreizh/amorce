@@ -59,6 +59,29 @@ la moyenne du plus clair et du plus sombre, et c'est bien ainsi qu'on juge
 lampe ». La seconde passe en premier, parce qu'elle **dit quoi faire** — se
 rapprocher d'une fenêtre — là où la première ne fait que douter.
 
+### Ce que trente-quatre vraies couleurs ont montré
+
+Les vingt et un tests d'origine portaient sur des couleurs **franches** — rouge
+pur, bleu pur, gris moyen. Tous verts, et pourtant quatre défauts vivaient
+dedans. Ils ne sont apparus qu'en passant un corpus de couleurs usuelles :
+tomate, saumon, kaki, anthracite, lavande, prune.
+
+| Couleur | Rendu avant | Cause |
+| --- | --- | --- |
+| bordeaux | « rose, ou bordeaux » | La bande rose (330–348°) porte aussi les rouges profonds, sans règle de clarté. |
+| anthracite | « bleu marine » | Dix points d'écart entre canaux portent la saturation à 0,20 dans les tons sombres. |
+| bleu ciel | « cyan » | La bande cyan mordait jusqu'à 205° et « bleu clair » n'existait pas. |
+| beige | « beige, ou blanc » | La bande chaude s'arrêtait à 60° **exclu**, et un beige tombe pile dessus. |
+
+La leçon vaut au-delà des couleurs : **une suite de tests écrite en même temps
+que le code teste ce à quoi son auteur a pensé.** Ce sont les données réelles
+qui montrent le reste, et il suffit d'un corpus de trente lignes pour les
+obtenir. Les quatre cas sont désormais figés en tests de non-régression.
+
+Ce qui reste imparfait et qu'on assume : un lavande très pâle ressort « blanc »,
+et un olive ressort « marron ». À quarante noms, c'est le grain qu'on a choisi ;
+forcer plus fin casserait les vrais blancs.
+
 ## Outils nécessaires
 
 - Flutter et le paquet caméra : **déjà dans le projet**.

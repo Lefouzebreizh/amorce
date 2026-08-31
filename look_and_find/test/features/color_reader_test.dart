@@ -93,6 +93,34 @@ void main() {
     });
   });
 
+  group('couleurs réelles qui ont pris la règle en défaut', () {
+    // Relevés sur un corpus de trente-quatre couleurs usuelles. Aucun de ces
+    // quatre défauts n'apparaissait sur les couleurs franches : c'est le
+    // corpus qui les a montrés, pas le raisonnement.
+
+    test('un bordeaux reste un bordeaux, pas un rose sombre', () {
+      // La bande « rose » (330–348°) porte aussi les rouges profonds ; sans
+      // règle de clarté, elle rendait « rose, ou bordeaux ».
+      expect(NameColor.of(128, 0, 32).label, 'bordeaux');
+    });
+
+    test('un anthracite est noir, pas bleu marine', () {
+      // Dix points d'écart entre canaux portent la saturation à 0,20 dans les
+      // tons sombres. Personne n'y voit du bleu.
+      expect(NameColor.of(41, 44, 51).label, 'noir');
+    });
+
+    test('un bleu ciel est un bleu clair, pas un cyan', () {
+      expect(NameColor.of(135, 206, 235).label, 'bleu clair');
+    });
+
+    test('un beige à 60° garde la nuance de lumière chaude', () {
+      // La bande chaude s'arrêtait à 60° exclu ; un beige tombe pile dessus.
+      final lecture = NameColor.of(245, 245, 220);
+      expect(lecture.nuance, 'sous lumière chaude');
+    });
+  });
+
   group('les bornes ne lèvent pas', () {
     test('les huit coins du cube des couleurs', () {
       for (final r in [0, 255]) {
