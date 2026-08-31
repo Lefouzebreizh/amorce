@@ -60,7 +60,7 @@ même refus.
 | Étape | Livrable | Délai |
 | --- | --- | --- |
 | ~~1 — La porte~~ | **Faite le 31/08/2026.** `JudgePhoto.juger()` et `PhotoVerdict`, 11 tests. Cinq refus, chacun avec son conseil. | ✅ |
-| **2 — Les trois harmonies** | Complémentaire, analogue, triadique, calculées sur la dominante et nommées par `NameColor`. Pur, testable, sans interface. | < 48 h |
+| ~~2 — Les trois harmonies~~ | **Faite le 31/08/2026.** `BuildHarmonies.pour()`, 13 tests. Chaque harmonie rend un 30 % et un 10 % avec leurs objets. | ✅ |
 | **3 — Les objets et les proportions** | Traduction en coussin, tapis, plante, pot, avec le 60 / 30 / 10. C'est ici que le produit devient utile plutôt que juste — une palette sans objet ne se met pas en pratique. | 1 semaine |
 | **4 — L'écran** | Viseur, verdict, palette, objets. En dernier, comme pour `NameColor`. | après |
 
@@ -109,6 +109,27 @@ manquent encore**, et elles seules diront si le seuil est trop haut.
 Le test des deux blocs francs — la bâche verte — reste en place : deux surfaces
 nettes ne dispersent pas les teintes, elles en concentrent deux, et la mesure de
 dispersion seule ne les verrait pas.
+
+## Ce que l'étape 2 a appris, en regardant plutôt qu'en mesurant
+
+Les treize tests passaient. C'est en **affichant les palettes** que deux défauts
+sont apparus, et aucun n'était visible autrement.
+
+**Une réponse vraie peut être inutile.** Sur un mur vert, l'analogue rendait
+« vert » : l'angle était juste, le conseil ne disait rien — « posez un tapis
+vert sur votre mur vert ». La première parade, écarter la teinte jusqu'à changer
+de nom, échoue pour une raison de fond : la bande du vert fait quatre-vingts
+degrés, on n'en sort pas sans cesser d'être analogue. **Ce n'est pas le nom qui
+doit différer, c'est la valeur.** Le tapis analogue est désormais posé
+franchement plus clair ou plus sombre que le mur — sur le vert, 0,63 contre
+0,47. « Un tapis vert plus clair » se voit, s'achète, et reste analogue.
+
+**Un mélange d'unités ne lève aucune erreur.** La conversion vers le
+rouge-vert-bleu recevait une saturation TSV et la traitait comme une saturation
+TSL. Résultat : un tapis à 0,62 de saturation là où la borne demandait 0,45 —
+une couleur qui crie, alors qu'une constante existait pour l'en empêcher. Rien
+ne l'aurait signalé sans le test de borne, parce que la couleur restait
+plausible.
 
 ## Ce qui manque, et qui ne se code pas
 
