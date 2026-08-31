@@ -59,6 +59,7 @@ ont déjà coûté un détour dans ce dépôt :
 | `ffprobe` | `ffmpeg -i fichier` donne les mêmes informations sur sa sortie d'erreur. `imageio-ffmpeg` fournit ffmpeg, jamais ffprobe. |
 | Modèle Whisper | Le téléchargement est refusé ici. Demander le texte, ou faire lancer la transcription sur la machine de l'utilisateur. **Ne pas réessayer** : ce n'est pas une panne passagère. |
 | Voix edge-tts | Le service refuse les sessions distantes. Écrire le code, le couvrir par des tests unitaires, et le dire — plutôt que l'annoncer vérifié. |
+| Cloudflare (`wrangler`) | `api.cloudflare.com` et `dash.cloudflare.com` rendent **000** — mesuré le 30/08/2026 avec témoins, `api.github.com` et `registry.npmjs.org` répondant 200. Un jeton n'y changerait rien : le mandataire refuse le tunnel, et `wrangler login` ouvre justement `dash.cloudflare.com`. **Le repli est GitHub Actions** : le workflow « Annuaire IA — mise en ligne » déploie depuis un runner, où Cloudflare est joignable. Il ne manque que deux secrets de dépôt. |
 | Chromium de Playwright | Il est là, mais pas à la révision attendue : `AMORCE_CHROMIUM=/opt/pw-browsers/chromium`. Ne **jamais** lancer `playwright install`, le dépôt l'interdit. |
 
 ## La règle qui fait gagner du temps

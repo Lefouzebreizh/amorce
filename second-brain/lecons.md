@@ -4355,6 +4355,58 @@ travailler le limiteur, qui écrase précisément ce qu'on voulait faire
 ressortir — c'est le même piège que les deux couches d'un impact qui doivent
 partager leur niveau.
 
+## Une fin qui ne dit rien coûte l'épisode suivant
+
+Relevé sur un export réel : la vidéo s'arrêtait sur son dernier plan, écran
+noir, sans un mot. Aucune mesure ne s'en plaignait — la couverture texte était
+correcte, la durée juste, le montage propre.
+
+**Sur une plateforme qui enchaîne toute seule, une fin muette est une fin
+perdue.** TikTok lance la vidéo suivante, celle de quelqu'un d'autre, et rien
+n'a dit qu'il y avait une suite. Le défaut ne se voit pas sur le fichier ; il
+se voit sur la courbe d'abonnements, des semaines plus tard.
+
+**Ce qui décide, c'est le dernier instant, pas « vers la fin ».** Un sous-titre
+qui s'arrête une seconde avant la fin laisse le film mourir en silence : le
+contrôle porte donc sur ce qui est encore affiché au dernier dixième, pas sur
+la présence d'un texte quelque part dans le troisième acte.
+
+**Et le carton se prend sur la fin, jamais en plus.** Rallonger le film
+déplacerait la dernière image et le raccord audio — ce qui ne regarde pas un
+texte. La durée se soustrait, elle ne s'ajoute pas.
+
+**Le texte proposé porte un crochet, et c'est délibéré.** Écrire la phrase à la
+place de quelqu'un lui met des mots dans la bouche ; laisser le crochet fait
+que le garde-fou existant le voit et l'empêche de partir gravé dans le fichier.
+Quatre gabarits non remplis l'avaient déjà fait, et la couverture texte était
+même bonne — puisqu'il y avait du texte.
+
+## Un garde-fou posé en session peut casser un déploiement qu'on n'a pas lu
+
+Le contrôle DNS ajouté à `construire-sites.js` refuse de construire tant que
+l'adresse canonique ne résout pas. Juste — et il rend rouge le workflow
+« Annuaire IA — mise en ligne », qui appelle ce même script **sans**
+`--sans-dns`, sur des niches encore réglées sur un domaine mort.
+
+Le défaut n'est pas le garde-fou : c'est de l'avoir posé sans lire ce qui
+appelait le script. Un `grep` sur le nom du fichier — pas sur la fonction — le
+montrait en une seconde, et `.github/workflows/` fait partie des appelants au
+même titre que `package.json`.
+
+**Ce que ça donne à l'écran est le vrai coût :** l'échec ressemble à une panne
+de déploiement, pas à une adresse non réglée. Quelqu'un qui vient de poser ses
+secrets conclura que la mise en ligne est cassée.
+
+**Et l'ordre devient contraint, dans un sens qui ne se devine pas.** L'adresse
+gratuite d'un projet Cloudflare Pages ne résout **qu'une fois le projet créé** :
+il faut donc créer le projet d'abord, régler l'adresse ensuite, poser les
+secrets en dernier. Inverser les deux premiers fait échouer la construction sur
+une adresse qui n'existe pas encore.
+
+**Et le nom du projet n'était pas un choix ouvert** : le workflow le codait en
+dur depuis le début. Le README invitait pourtant à en choisir un — une question
+posée au propriétaire alors que la réponse était déjà dans le dépôt.
+=======
 ## Un plafond sonore ne se vérifie que sur le fichier livré
 
 *Mesuré le 31/08/2026 sur Amorce, et le raisonnement vaut pour tout export.*
