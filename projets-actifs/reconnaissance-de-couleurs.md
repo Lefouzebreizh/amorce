@@ -34,13 +34,30 @@ si le quota est atteint. Celle-ci, non.
 
 | Étape | Livrable | Délai |
 | --- | --- | --- |
-| **1 — Le noyau testable** | Une fonction pure `nommerCouleur(r, g, b)` et sa table de ~40 noms français, avec ses tests. Aucune interface. C'est là qu'est toute la difficulté réelle. | **< 48 h** |
+| ~~1 — Le noyau testable~~ | **Fait le 31/08/2026.** `NameColor.of()` et `ColorReading`, sous `features/color_reader/domain/`. 21 tests, `flutter analyze` propre. | ✅ |
 | **2 — Le viseur** | Réticule au centre du flux caméra, moyenne des pixels sur un petit carré (un pixel unique attrape un reflet), nom affiché en gros. | 3 à 5 jours |
 | **3 — L'usage réel** | Annonce vocale, historique des dernières couleurs, et le mode « comparer deux objets » — la vraie question d'un daltonien n'est pas « quelle couleur » mais « est-ce que ces deux-là vont ensemble ». | après retour d'usage |
 
 L'étape 1 est volontairement sans interface : la table de noms est le cœur du
 sujet, elle se travaille au test unitaire, et une interface posée trop tôt
 masque le fait qu'on nomme mal.
+
+## Ce que l'étape 1 a appris
+
+Deux causes ont fait échouer huit tests sur vingt et un au premier essai, et
+aucune ne se serait vue sans les écrire.
+
+**La saturation TSL ment près du blanc.** Sur un blanc cassé elle rend 0,60,
+parce qu'elle divise par une marge qui s'écrase aux extrêmes — alors que la
+couleur est manifestement délavée. La saturation TSV (`delta / max`) rend 0,12,
+qui décrit ce que l'œil voit. La luminosité, elle, reste celle de TSL : c'est
+la moyenne du plus clair et du plus sombre, et c'est bien ainsi qu'on juge
+« clair » ou « foncé ». Le mélange des deux modèles est délibéré.
+
+**L'ordre des règles d'hésitation compte.** Un blanc cassé déclenche à la fois
+« peu saturé, peut-être un gris » et « teinte chaude, peut-être un blanc sous
+lampe ». La seconde passe en premier, parce qu'elle **dit quoi faire** — se
+rapprocher d'une fenêtre — là où la première ne fait que douter.
 
 ## Outils nécessaires
 
