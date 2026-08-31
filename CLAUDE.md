@@ -471,6 +471,21 @@ que la génération d'image y est indisponible, seul l'agrandissement de cadre
 retouche, recadre, détoure, vectorise et met en page — il ne fait pas la
 première image. **Une session ne peut donc pas fabriquer une illustration.**
 
+**Un cinquième chemin existe, et il répond — mesuré le 31/08/2026.** Le
+connecteur **Canva** est joignable depuis une session distante : son outil de
+génération se charge et son schéma s'obtient. Il n'était dans aucune des quatre
+mesures ci-dessus, qui restent vraies pour ce qu'elles couvrent.
+
+Ce qui est mesuré, et rien de plus : **le serveur répond et l'outil est
+appelable**. N'ont été vérifiés ni le quota réel du compte, ni la résolution
+rendue, ni qu'une illustration exploitable en sorte — et surtout pas qu'elle
+tienne une charte graphique existante. Une prochaine session qui lit « Canva
+marche » et promet une planche referait l'erreur que la ligne suivante décrit.
+
+Le premier essai coûte donc quelque chose : si le compte gratuit est limité,
+chaque génération est prise sur un stock fini. **Demander avant de la
+dépenser.**
+
 **Mais cela ne bloque pas le tome 1 de KDP, et la phrase qui le disait était
 fausse — mesuré le 31/08/2026.** La chaîne a été relancée de bout en bout :
 30 pages, aucun carton d'attente, **9 contrôles sur 9 au vert, verdict
