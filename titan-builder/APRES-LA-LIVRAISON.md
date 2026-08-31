@@ -1,7 +1,7 @@
 # Ce qu'on répond après avoir livré
 
 C'est l'endroit où quarante-huit heures deviennent trois semaines. Un client
-content demande une petite chose, puis une autre, et le site à 299 € finit par
+content demande une petite chose, puis une autre, et le site à 300 € finit par
 coûter cinq jours.
 
 Ce fichier existe pour éviter ça sans être désagréable — et il commence par un

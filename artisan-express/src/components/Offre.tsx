@@ -2,7 +2,7 @@ import { BOUTON_CONTOUR, BOUTON_PRINCIPAL, SECTION, TITRE_SECTION } from '@/comp
 import { aUnStripe, contact } from '@/lib/config';
 
 const COMPRIS = [
-  ['Paiement en une fois', 'Carte bancaire par Stripe. 299 €, et c’est fini — aucun prélèvement ensuite.'],
+  ['Paiement en une fois', 'Carte bancaire par Stripe. 300 €, et c’est fini — aucun prélèvement ensuite.'],
   ['Livré en 48 h', 'Le compteur part quand j’ai tes infos et tes photos, pas quand tu paies.'],
   ['Une modification offerte', 'Après livraison, tu regardes, tu me dis ce qui cloche, je corrige.'],
   ['Le site est à toi', 'Le code, le texte, les images : tu repars avec si un jour tu veux changer de crémerie.'],
@@ -11,11 +11,11 @@ const COMPRIS = [
 export function Offre() {
   return (
     <section className={SECTION} id="offre">
-      <h2 className={TITRE_SECTION}>299&nbsp;€, une fois</h2>
+      <h2 className={TITRE_SECTION}>300&nbsp;€, une fois</h2>
 
       <div className="mt-8 overflow-hidden rounded-2xl border-2 border-bleu">
         <div className="bg-bleu px-6 py-7 text-white sm:px-8">
-          <p className="text-5xl font-bold tracking-tight sm:text-6xl">299&nbsp;€</p>
+          <p className="text-5xl font-bold tracking-tight sm:text-6xl">300&nbsp;€</p>
           {/* Blanc plein, pas 85 % : l’opacité rendait 2,58:1 sur le bleu. */}
           <p className="mt-2 text-lg text-white">
             Une fois. Pas d’abonnement, rien à résilier, pas de reconduction.

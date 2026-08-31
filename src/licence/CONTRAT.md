@@ -76,7 +76,7 @@ rend minuscule.
 
 **49 €, une fois, définitivement.** Pas d'abonnement, et ce n'est pas un choix
 de confort : la page de vente d'`artisan-express` attaque frontalement le
-prélèvement mensuel — « 299 € une fois. Rien le mois suivant. » Vendre Amorce
+prélèvement mensuel — « 300 € une fois. Rien le mois suivant. » Vendre Amorce
 autrement contredirait ce que ce dépôt dit déjà à son public.
 
 Le chiffre vient de `montage-titan`, qui vend **un** montage 49 €. L'argument

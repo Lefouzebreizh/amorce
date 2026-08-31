@@ -28,7 +28,7 @@ test('le récapitulatif enregistré porte le prix recalculé, pas un prix reçu'
   const base = await racine();
   const ecrit = await ecrireDossier(base, commande, [], '2026-08-27');
   const resume = JSON.parse(await readFile(path.join(ecrit.chemin, 'commande.json'), 'utf8'));
-  assert.equal(resume.prix_total_euros, 499);
+  assert.equal(resume.prix_total_euros, 500);
   assert.equal(resume.commande.entreprise, 'Maçonnerie Dupont');
 });
 
@@ -55,7 +55,7 @@ test('un nom de photo qui remonte l’arborescence est neutralisé', async () =>
 
 test('le courriel porte le total, les options payantes et les photos', () => {
   const corps = corpsDuCourriel(commande, 'maconnerie-dupont-2026-08-27', ['01-chantier.jpg'], '/tmp/x');
-  assert.ok(corps.includes('TOTAL       : 499 €'));
+  assert.ok(corps.includes('TOTAL       : 500 €'));
   assert.ok(corps.includes('Vidéo Titan AZEROTH'));
   assert.ok(corps.includes('+ 200 €'));
   assert.ok(corps.includes('01-chantier.jpg'));

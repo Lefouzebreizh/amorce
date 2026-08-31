@@ -75,7 +75,7 @@ export function construireCourriel(demande: Demande): { sujet: string; texte: st
   ];
 
   return {
-    sujet: `Site artisan 299 € — ${demande.nom} (${demande.metier}, ${demande.ville})`,
+    sujet: `Site artisan 300 € — ${demande.nom} (${demande.metier}, ${demande.ville})`,
     texte: lignes.join('\n'),
   };
 }

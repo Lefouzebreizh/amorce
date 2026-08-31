@@ -18,13 +18,13 @@ test('un modèle inconnu ne se trouve pas', () => {
 
 test('le prix de base est celui annoncé sur la page', () => {
   assert.equal(prixTotal([]), PRIX_BASE);
-  assert.equal(PRIX_BASE, 299);
+  assert.equal(PRIX_BASE, 300);
 });
 
 test('la vidéo Titan ajoute deux cents euros, une seule fois', () => {
-  assert.equal(prixTotal(['video-titan']), 499);
+  assert.equal(prixTotal(['video-titan']), 500);
   // Une case envoyée deux fois ne facture pas deux fois.
-  assert.equal(prixTotal(['video-titan', 'video-titan']), 499);
+  assert.equal(prixTotal(['video-titan', 'video-titan']), 500);
 });
 
 test('les options comprises ne coûtent rien', () => {
@@ -33,7 +33,7 @@ test('les options comprises ne coûtent rien', () => {
 });
 
 test('une option inventée est ignorée plutôt que facturée', () => {
-  assert.equal(prixTotal(['fusee-lunaire', 'video-titan']), 499);
+  assert.equal(prixTotal(['fusee-lunaire', 'video-titan']), 500);
 });
 
 test('le nom de dossier ne peut pas sortir de son dossier', () => {

@@ -39,7 +39,7 @@ const enAttente = (v) => v === '' || v === '#';
 const CIBLES = {
   solo: { champ: 'paiementSolo', ou: 'code', libelle: 'Montage Titan — formule solo' },
   trio: { champ: 'paiementTrio', ou: 'code', libelle: 'Montage Titan — formule trio' },
-  artisan: { champ: 'NEXT_PUBLIC_LIEN_STRIPE', ou: 'env', libelle: 'Site artisan — 299 €' },
+  artisan: { champ: 'NEXT_PUBLIC_LIEN_STRIPE', ou: 'env', libelle: 'Site artisan — 300 €' },
 };
 
 const lireContenu = () => fs.readFileSync(CONTENU, 'utf8');
@@ -89,7 +89,7 @@ async function etat() {
 
   ligne('Montage Titan — solo', solo, wa ? 'commande ouverte par WhatsApp' : 'AUCUN chemin');
   ligne('Montage Titan — trio', trio, wa ? 'commande ouverte par WhatsApp' : 'AUCUN chemin');
-  ligne('Site artisan — 299 €', artisan, 'repli : formulaire et téléphone');
+  ligne('Site artisan — 300 €', artisan, 'repli : formulaire et téléphone');
   ligne('Licence Amorce — 49 €', '', 'demande un SERVEUR, pas un lien');
 
   console.log(`

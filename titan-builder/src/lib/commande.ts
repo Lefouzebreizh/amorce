@@ -99,7 +99,7 @@ export const OPTIONS: readonly Option[] = [
   { id: 'video-titan', nom: 'Vidéo Titan AZEROTH — 21,5 s', aquoiCaSert: 'Le film d’accroche de ta page.', supplement: 200 },
 ] as const;
 
-export const PRIX_BASE = 299;
+export const PRIX_BASE = 300;
 
 export function optionParId(id: string): Option | undefined {
   return OPTIONS.find((o) => o.id === id);

@@ -7,9 +7,9 @@ export const metadata: Metadata = {
      d'URL relatives, là où une base inventée ferait pointer chaque partage vers
      un domaine que personne ne sert. */
   metadataBase: adresseDuSite ? new URL(adresseDuSite) : undefined,
-  title: 'Site vitrine artisan express — 299 €, livré en 48 h',
+  title: 'Site vitrine artisan express — 300 €, livré en 48 h',
   description:
-    'Maçon, couvreur, électricien : un site qui te trouve des chantiers, livré en 48 h. 299 € une fois, pas d’abonnement.',
+    'Maçon, couvreur, électricien : un site qui te trouve des chantiers, livré en 48 h. 300 € une fois, pas d’abonnement.',
   keywords: [
     'site internet artisan',
     'site vitrine maçon',
@@ -20,9 +20,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    title: 'Ton site artisan, livré en 48 h — 299 €',
+    title: 'Ton site artisan, livré en 48 h — 300 €',
     description:
-      'Un site d’une page qui te trouve des chantiers. 299 € une fois, pas d’abonnement, livré en 48 h.',
+      'Un site d’une page qui te trouve des chantiers. 300 € une fois, pas d’abonnement, livré en 48 h.',
     ...(adresseDuSite ? { url: adresseDuSite } : {}),
   },
   robots: { index: true, follow: true },

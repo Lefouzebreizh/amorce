@@ -4,7 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'TITAN BUILDER — ton site époustouflant livré en 48 h',
   description:
-    'Choisis ton modèle, configure ton site en cinq étapes, reçois-le sous 48 heures. À partir de 299 €, une fois, sans abonnement.',
+    'Choisis ton modèle, configure ton site en cinq étapes, reçois-le sous 48 heures. À partir de 300 €, une fois, sans abonnement.',
 };
 
 /*

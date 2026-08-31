@@ -1,6 +1,6 @@
 # Aller chercher les trois premiers clients
 
-La page à 299 € ne se vend pas toute seule. Personne n'arrive dessus par
+La page à 300 € ne se vend pas toute seule. Personne n'arrive dessus par
 hasard : il faut aller voir des artisans un par un. Ce fichier contient les
 messages, et surtout **ce qui les empêche d'être du spam**.
 
@@ -39,7 +39,7 @@ choses.
 > belles, et je n'ai trouvé votre numéro nulle part »⟧.
 >
 > Je fais des sites d'une page pour les artisans : votre métier, vos photos,
-> votre numéro, et un bouton pour vous appeler. 299 € une fois, livré en 48 h,
+> votre numéro, et un bouton pour vous appeler. 300 € une fois, livré en 48 h,
 > pas d'abonnement.
 >
 > Je ne suis pas une agence — je suis chauffeur poids lourd, je fais ça à côté,
@@ -75,7 +75,7 @@ Une seule. Pas deux.
 > Je reviens vers vous une fois, et je n'insisterai pas — vous avez sûrement
 > autre chose à faire qu'à répondre à un inconnu.
 >
-> Si le sujet du site revient un jour, ma proposition tient : 299 €, une page,
+> Si le sujet du site revient un jour, ma proposition tient : 300 €, une page,
 > 48 h. Vous m'écrivez, on en reparle.
 >
 > Bonne continuation, et belle saison.
@@ -91,7 +91,7 @@ Dire « je n'insisterai pas » et le tenir vaut mieux qu'un troisième message.
 
 C'est la question la plus fréquente, et la meilleure : il est intéressé. Elle
 arrive sous vingt formes — « ça ressemble à quoi ? », « vous avez des
-exemples ? », « c'est quoi exactement pour 299 € ? ».
+exemples ? », « c'est quoi exactement pour 300 € ? ».
 
 > Tenez, un exemple complet : ⟦adresse de ta démonstration⟧
 >
@@ -126,7 +126,7 @@ avant lui transforme le seul point faible en preuve d'honnêteté.
 Ne jamais baisser le prix. Un prix qui bouge au premier doute dit que le
 premier prix était faux.
 
-> Je comprends. 299 €, c'est une journée de chantier.
+> Je comprends. 300 €, c'est une journée de chantier.
 >
 > Ce que je peux vous dire, c'est ce que ça remplace : les annuaires qui
 > prennent 40 ou 50 € par mois vous coûtent ça en six mois, et le jour où vous

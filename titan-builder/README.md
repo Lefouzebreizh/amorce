@@ -64,7 +64,7 @@ transfert de photos pendant que le client est encore en ligne.
 
 ## Après la livraison
 
-`APRES-LA-LIVRAISON.md` : ce qui est compris dans les 299 €, ce qui ne l'est
+`APRES-LA-LIVRAISON.md` : ce qui est compris dans les 300 €, ce qui ne l'est
 pas, et comment le dire. Le fichier part d'une mesure — **une modification
 complète se régénère en 277 ms** — parce que c'est elle qui décide de la
 frontière : le travail n'est pas dans la modification, il est dans la

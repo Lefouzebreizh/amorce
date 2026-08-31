@@ -78,7 +78,7 @@ export const contact = {
     WHATSAPP === ''
       ? ''
       : `https://wa.me/${WHATSAPP.replace(/[^\d]/g, '')}?text=${encodeURIComponent(
-          'Salut Erwann, je veux mon site artisan à 299 €.',
+          'Salut Erwann, je veux mon site artisan à 300 €.',
         )}`,
   /** Sans lien de paiement, le bouton d'offre renvoie au formulaire. */
   stripeLien: STRIPE,
