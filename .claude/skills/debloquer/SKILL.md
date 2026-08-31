@@ -366,10 +366,11 @@ la fenêtre de vingt-quatre heures n'ayant pas encore tourné.
 - **inutile d'affiner les chemins surveillés** en espérant desserrer le quota :
   la PR #491 montre qu'ils font déjà leur travail quand ils ont l'occasion de
   tourner ;
-- **le levier qui marche dans les deux cas est le nombre de projets branchés.**
-  Quatre projets courent après le même plafond à chaque fusion. Supprimer
-  `nexuscrypto`, qui n'a rien à déployer, en retire un quart — geste côté
-  propriétaire, *Settings → Advanced → Delete Project* ;
+- **le levier qui marche dans les deux cas est le nombre de projets branchés**,
+  et il a été actionné : `nexuscrypto` a été supprimé côté Vercel le 31/08/2026,
+  faisant passer le dépôt de quatre projets à **trois**. Les deux mesures
+  ci-dessus lui sont antérieures et portent donc sur quatre — elles sont datées
+  et ne se réécrivent pas ;
 - **la vraie vérification attend le renouvellement du quota** : une PR de
   Markdown, quatre « Ignored », et alors seulement la phrase d'origine
   redeviendra vraie — ou pas.

@@ -290,12 +290,17 @@ Et quand bien même le build passerait, l'hébergement serait le mauvais :
 Le jour où ce moteur tourne pour de vrai, il tourne sur une machine qui reste
 allumée — pas sur une plateforme de pages.
 
-En attendant, `nexuscrypto/vercel.json` porte un `ignoreCommand` qui vaut
-`exit 0` : Vercel annule le déploiement au lieu de l'échouer, et les pull
-requests du dépôt cessent d'en porter le rouge. **C'est une muselière, pas une
-réparation.** Le geste qui règle vraiment la chose est de supprimer le projet
-`nexuscrypto` depuis le tableau de bord Vercel, et il appartient au
-propriétaire du compte.
+**Le projet a été supprimé côté Vercel le 31/08/2026**, par le propriétaire du
+compte. C'était le geste qui réglait vraiment la chose : le dépôt est passé de
+quatre projets branchés à trois, soit un quart de consommation de quota en
+moins à chaque fusion.
+
+`nexuscrypto/vercel.json` porte toujours un `ignoreCommand` qui vaut `exit 0`,
+et **il est conservé à dessein**. Il ne sert plus à museler quoi que ce soit —
+il n'y a plus rien à museler — mais il ne coûte rien et il couvre le seul cas
+qui reste : **un projet recréé depuis le tableau de bord n'emporte pas de
+`vercel.json`**, et se déclencherait alors sur chaque commit du dépôt entier.
+Le supprimer par souci de propreté retirerait cette assurance sans rien gagner.
 
 ---
 
