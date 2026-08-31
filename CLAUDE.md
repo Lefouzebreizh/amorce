@@ -238,7 +238,7 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   il ne touche à aucun média — voir plus bas.
 - **agence/** — Next.js 16, Supabase (PostgreSQL + RLS), Server Actions, shadcn.
   Se vérifie depuis son dossier, jamais depuis la racine.
-- **artisan-express/** — page de vente du site vitrine artisan à 299 €. Next.js
+- **artisan-express/** — page de vente du site vitrine artisan à 300 €. Next.js
   16, Tailwind v4, aucune dépendance ajoutée : ni SDK de courriel, ni
   bibliothèque d'icônes. Le formulaire poste sur `/api/devis`, qui envoie un
   courriel et n'enregistre rien. Ce qui n'est pas réglé — téléphone, WhatsApp,

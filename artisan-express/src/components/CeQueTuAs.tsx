@@ -78,7 +78,7 @@ const LOTS = [
 export function CeQueTuAs() {
   return (
     <section className={SECTION} id="contenu">
-      <h2 className={TITRE_SECTION}>Ce que tu as pour 299&nbsp;€</h2>
+      <h2 className={TITRE_SECTION}>Ce que tu as pour 300&nbsp;€</h2>
       <p className="mt-3 max-w-2xl text-lg text-ardoise">
         Tout est livré fini. Rien à installer, rien à apprendre, rien à payer le mois suivant.
       </p>

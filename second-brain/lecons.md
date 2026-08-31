@@ -3677,7 +3677,7 @@ qui n'a jamais été rejouée.
 
 `artisan-express/public/exemple.html` est la page qu'un artisan ouvre **sur son
 téléphone** au moment exact où il répond « montrez-moi ». C'est aussi le produit
-lui-même : elle sort de `titan-builder`, donc chaque site livré à 299 € lui
+lui-même : elle sort de `titan-builder`, donc chaque site livré à 300 € lui
 ressemble. Aucune commande ne la mesurait — ni `epreuve-du-pouce`, ni
 `page-qui-vend`. Elle est référencée par la prose et par le script qui la
 fabrique, par rien qui la vérifie.

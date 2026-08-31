@@ -1,7 +1,7 @@
-# Artisan Express — la page de vente du site à 299 €
+# Artisan Express — la page de vente du site à 300 €
 
 Une page, un prix, un formulaire. Elle vend un site vitrine d'une page à un
-artisan du bâtiment : 299 € une fois, livré en 48 h, sans abonnement.
+artisan du bâtiment : 300 € une fois, livré en 48 h, sans abonnement.
 
 Le formulaire n'ouvre pas de compte, ne pose pas de mouchard et n'enregistre
 rien : ce que l'artisan écrit part dans une boîte aux lettres, et nulle part
@@ -133,7 +133,7 @@ défilement horizontal, aucune cible tactile sous 44 px hors du piège à robots
 
 ## À remplir avant la première vente
 
-- Le lien de paiement Stripe à 299 €.
+- Le lien de paiement Stripe à 300 €.
 - Le numéro de téléphone et celui de WhatsApp.
 - La ligne du domaine dans `Offre.tsx` : elle annonce « une douzaine d'euros
   par an, payés au fournisseur ». C'est le seul chiffre de la page qui n'a pas
