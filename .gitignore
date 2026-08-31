@@ -159,3 +159,6 @@ visual_library/**/*.mp4
 # Les dossiers de commande des vrais clients ne sortent jamais d'ici : ils
 # portent un nom, un téléphone et des photos de chantier.
 /titan-builder/dossiers/
+
+# Le carnet rempli porte des coordonnées de tiers démarchés : il reste local.
+/artisan-express/prospects.md

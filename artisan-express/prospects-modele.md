@@ -1,8 +1,23 @@
 # Suivi de prospection
 
-Une ligne par artisan contacté. **À remplir à la main** : les numéros se
-relèvent sur Google Maps ou sur la page Facebook du professionnel, et aucune
-session n'y a accès.
+**Ceci est le modèle. Ne le remplis pas.**
+
+Copie-le en `prospects.md`, à côté : ce nom-là est ignoré par Git, et ta copie
+reste sur ta machine.
+
+```bash
+cp artisan-express/prospects-modele.md artisan-express/prospects.md
+```
+
+**Pourquoi cette gymnastique :** ce dépôt est **public**. Un tableau rempli
+porte les noms et les numéros de personnes qui n'ont rien demandé — des
+artisans démarchés, pas des clients. Les publier serait mettre en ligne leurs
+coordonnées sans leur accord, et cela se lit sans authentification, par
+n'importe qui, indéfiniment. Le fichier a d'abord été créé sous le nom
+`prospects.md` et versionné : c'était l'erreur, elle est corrigée ici.
+
+Une ligne par artisan contacté. Les numéros se relèvent sur Google Maps ou sur
+la page Facebook du professionnel, et aucune session n'y a accès.
 
 | Nom | Métier | Téléphone | Note Google | Date d'envoi | Réponse |
 | --- | --- | --- | --- | --- | --- |
