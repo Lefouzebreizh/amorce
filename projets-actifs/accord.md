@@ -62,7 +62,7 @@ même refus.
 | 1 — La porte | Écrite le 31/08/2026 : `JudgePhoto.juger()` et `PhotoVerdict`, 11 tests, cinq refus chacun avec son conseil. **Rouverte le même jour** : 47 photos réelles lui font accepter 10 scènes à tort. Il lui manque une mesure de contiguïté. | ⚠️ |
 | ~~2 — Les trois harmonies~~ | **Faite le 31/08/2026.** `BuildHarmonies.pour()`, 13 tests. Chaque harmonie rend un 30 % et un 10 % avec leurs objets. | ✅ |
 | ~~3 — Les objets et les proportions~~ | **Faite le 31/08/2026**, avec l'étape 2. Chaque proposition porte sa part et ses objets ; la plante n'apparaît que là où la couleur calculée tombe dans les verts. | ✅ |
-| 3 bis — La contiguïté | La plus grande zone d'un seul tenant, pour distinguer un mur d'une pièce de la même teinte. Passe avant l'écran : un écran bâti sur une porte qui dit oui une fois sur cinq à tort n'est pas livrable. | à faire |
+| 3 bis — La zone de visée | Un cadre au centre du viseur, et une porte qui ne juge que cette zone. Remplace la recherche d'une quatrième statistique : essayée, la contiguïté échoue comme la dispersion. Passe avant le reste de l'écran. | à faire |
 | **4 — L'écran** | Viseur, verdict, palette, objets. En dernier, comme pour `NameColor`. | après |
 
 ## Deux décisions prises au cadrage
@@ -186,9 +186,28 @@ histogramme et n'ont pas la même carte. Tant qu'on ne mesure que la teinte, il
 n'y a pas de seuil à trouver — l'hypothèse « la dispersion sépare une surface
 d'une pièce » est réfutée par ces quarante-sept photos.
 
-La piste qui reste est la **contiguïté** : la plus grande zone d'un seul tenant
-portant la teinte dominante. Elle sépare franchement un mur d'un salon beige,
-reste locale et coûte peu. C'est un ajout à la porte, pas un réglage de seuil.
+**La contiguïté a été essayée, et elle échoue aussi.** La plus grande zone d'un
+seul tenant portant la teinte dominante a été mesurée sur tout le corpus. Les
+surfaces cadrées vont de 0,50 à 1,00 ; les acceptations fausses, de 0,29 à
+0,85. Les intervalles se recouvrent encore, et croiser les deux mesures ne les
+sépare pas davantage : trois faux positifs survivent à toute paire de seuils
+qui laisse passer les vraies surfaces.
+
+**Et la raison est plus profonde qu'une mesure manquante.** Sur les photos
+acceptées à tort, il y a *vraiment* une grande surface unie dans le cadre — un
+mur de bureau, un canapé beige. Le calcul ne se trompe pas sur les pixels : il
+rend bien la couleur de la plus grande surface présente. Ce qui lui manque
+n'est pas dans l'image. **Une photo de mur et une photo de pièce contenant un
+mur sont statistiquement la même chose ; ce qui les distingue est l'intention
+de celui qui cadre.**
+
+Donc : ne pas deviner l'intention, la demander. Le viseur doit porter une
+**zone de visée** — un cadre au centre — et la porte ne juger que cette zone.
+C'est exactement ce que font les recadrages serrés de cette fiche, à la main,
+et ils se comportent bien : concentration de 0,825 à 1,000, et des couleurs
+justes (`#4A5647` pour un mur vert sauge, `#A37E26` pour un fauteuil moutarde).
+Cela déplace le travail de l'étape 1 vers l'étape 4, et supprime le besoin
+d'une quatrième statistique.
 
 **Ce que ce corpus vaut.** Il vient d'un seul foyer et d'un seul appareil : il
 prouve l'échec, il ne mesure pas le taux de refus qu'aurait un autre logement.
