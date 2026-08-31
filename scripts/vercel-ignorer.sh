@@ -65,9 +65,32 @@
 #      l'`ignoreCommand`, le filtre ne peut pas se manifester. Dans ce cas il
 #      n'y a rien à corriger et la mesure du lendemain le dira.
 #
-# Ne pas conclure que le filtre est cassé sur cette seule observation, ni qu'il
-# marche : la prochaine PR de Markdown pur, quota disponible, est la mesure qui
-# départage.
+# La mesure qui départage — 31/08/2026, PR #487
+#
+# Diff de Markdown pur à nouveau. Cette fois Vercel a rendu son verdict pour
+# chacun :
+#
+#     amorce-51up   -> Ignored
+#     iptv          -> Ignored
+#     nexuscrypto   -> Ignored
+#     amorce        -> s'est déclenché, puis refusé par le quota
+#
+# **La deuxième explication tombe.** Le refus de quota ne précède pas l'étape
+# d'annulation : trois projets ont bien été évalués et annulés alors que le
+# palier était épuisé. Le mécanisme fonctionne, et il fonctionne même quota
+# épuisé.
+#
+# Reste donc la première : **le projet `amorce` ne lit pas ce `vercel.json`**.
+# Les trois qui obéissent ont tous un dossier racine déclaré — `artisan-express`,
+# `iptv`, `nexuscrypto` — et leur `vercel.json` y vit. Celui d'`amorce` est à la
+# racine du dépôt ; si le réglage *Root Directory* du projet pointe ailleurs,
+# Vercel ne le voit pas.
+#
+# Ce qui reste à faire, au tableau de bord et par le propriétaire : vérifier
+# *Settings → General → Root Directory* du projet `amorce`. S'il est vide, la
+# racine du dépôt est bien lue et il faudra chercher ailleurs ; s'il porte un
+# dossier, le `vercel.json` doit y être déplacé ou la commande déclarée dans
+# *Settings → Git → Ignored Build Step*.
 #
 # ---------------------------------------------------------------------------
 # Le principe qui gouverne les cas douteux : on déploie
