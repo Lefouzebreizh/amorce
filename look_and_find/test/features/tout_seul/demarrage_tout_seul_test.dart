@@ -57,6 +57,27 @@ void main() {
             'l\'enfant :\n  ${fautes.join("\n  ")}');
   });
 
+  test('le point d\'entrée enfant n\'emporte pas la sonde de diagnostic', () {
+    // La sonde ouvre l'appareil photo, charge un moteur de reconnaissance et
+    // affiche des mots anglais : elle n'a rien à faire dans les mains d'un
+    // enfant. Elle a son propre point d'entrée, `lib/main_sonde.dart`, et
+    // c'est l'`import` qui décide de ce qui existe dans un binaire — pas
+    // l'absence de bouton pour y aller.
+    final lignes = File('lib/main_tout_seul.dart').readAsLinesSync();
+    final fautes = lignes
+        .map((l) => l.trim())
+        .where((l) => l.startsWith('import ') || l.startsWith('export '))
+        .where((l) =>
+            l.contains('sonde') ||
+            l.contains('reconnaissance') ||
+            l.contains('camera'))
+        .toList();
+
+    expect(fautes, isEmpty,
+        reason: 'L\'application enfant atteindrait la sonde :\n'
+            '  ${fautes.join("\n  ")}');
+  });
+
   testWidgets('l\'application enfant démarre sur la grille des gestes',
       (tester) async {
     tester.view.physicalSize = const Size(400, 2400);
