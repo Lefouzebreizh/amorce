@@ -22,7 +22,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 | Amorce Atelier — chaîne complète du rush au film | **Cousu** | — | [fiche](projets-actifs/amorce-atelier.md) | Les dix outils se lancent d'une seule recette — reste l'interface |
 | Studio audio (Streamlit) | **En pause** | — | [fiche](archives-backlog/studio-audio.md) | Reprendre si Amorce bute sur la voix off |
 | Assistant d'allocation d'actifs | **En pause** | — | [fiche](archives-backlog/assistant-patrimoine.md) | Reprendre au premier besoin réel de rééquilibrage |
-| Reconnaissance de couleurs | **En cours** | 9/10 | [fiche](projets-actifs/reconnaissance-de-couleurs.md) | Étape 2 : réticule sur le flux caméra |
+| Reconnaissance de couleurs | **Faisable** | 9/10 | [fiche](projets-actifs/reconnaissance-de-couleurs.md) | Noyau livré — brique partagée, la suite vit dans Accord |
 | Notice, dangerosité et ingrédients | **Faisable** | 8/10 | [fiche](projets-actifs/notice-et-dangerosite-produit.md) | Coller 3 réponses OpenFoodFacts réelles (mandataire bloqué ici) |
 | Où a mal mon animal | **En pause** | 5/10 | [fiche](archives-backlog/ou-a-mal-mon-animal.md) | Version sans diagnostic (7/10), ou trouver un vétérinaire relecteur |
 | Accord — l'éveil des couleurs | **En cours** | 8/10 | [fiche](projets-actifs/accord.md) | 3 photos de mur cadrées exprès, puis l'écran |

@@ -30,6 +30,20 @@ tromper quand la lumière ne permet pas de trancher.
 le reste de Look & Find s'arrête si la clé Gemini expire, si le réseau tombe ou
 si le quota est atteint. Celle-ci, non.
 
+## Ce que cette fiche est devenue
+
+`NameColor` a été livré, puis **repris tel quel par Accord** — le module qui
+répond « qu'est-ce qui va avec cette couleur ». Nommer une couleur n'est donc
+plus un produit à part : c'est une **brique partagée**, et c'est très bien ainsi.
+
+Les étapes 2 et 3 ci-dessous — viseur, réticule, annonce vocale — appartiennent
+désormais à l'écran d'Accord, où elles seront écrites une fois pour les deux.
+Voir `projets-actifs/accord.md`.
+
+Ce qui reste propre à cette fiche est le **noyau** : la table de noms, sa règle,
+et les quatre corrections que trente-quatre vraies couleurs ont imposées. C'est
+ce qui se relit quand un nom paraît faux.
+
 ## Plan d'action (MVP)
 
 | Étape | Livrable | Délai |
