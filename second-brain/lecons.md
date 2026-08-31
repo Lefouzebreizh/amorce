@@ -4248,3 +4248,43 @@ attendait s'y plie.
 une branche qui dort une demi-journée traverse deux ou trois fusions. Ouvrir la
 PR tôt ne sert pas qu'à éviter les conflits — c'est ce qui empêche un lot de se
 transformer en retour en arrière.
+
+## Une couleur qui est l'éclairage du plan ne se rattrape pas à l'étalonnage
+
+Cinq tentatives, cinq résultats faux, sur un même plan de six secondes. La
+règle du dépôt en autorise trois ; les deux dernières n'ont servi qu'à établir
+que le chemin lui-même était mauvais.
+
+Le rush d'Aznaroth est **éclairé** en cyan : la lumière de bord sur le visage,
+le halo sur la barbe, la lueur autour du globe. Ce n'est pas une couche de
+couleur posée par-dessus, c'est la lumière de l'image. La direction artistique
+demandait anthracite et or.
+
+| tentative | méthode | ce qui est sorti |
+| --- | --- | --- |
+| 1 | rotation de teinte globale (−192°) + masque de luminance | les fissures du globe, **déjà dorées**, viraient au vert acide |
+| 2 | masque de dominante bleue par `geq` en `gbrp` | sépia rouge, fissures toujours vertes |
+| 3-5 | `selectivecolor` sur cyans et bleus | le plus propre — et un visage éclairé en bleu, repeint en ambre, se **voit** repeint |
+
+**Ce que la mesure a dit à chaque fois : vert.** La passe 1 mesurait 0 % de
+cyan et 94,6 % d'ambre. Le vert des fissures pesait trop peu de pixels pour
+apparaître dans l'agrégat — et c'était le seul défaut. Encore la même famille
+que « la mesure disait vert et le fichier était faux » : la parade n'a pas été
+de mesurer plus finement, c'est d'avoir regardé la planche.
+
+**Et une mesure de conformité doit compter les teintes qu'elle ne cherche
+pas.** Le premier relevé n'avait que deux seaux, cyan et ambre. Le vert
+tombait entre les deux et se comptait nulle part. Un seau « reste » qui ne
+sert jamais vaut mieux qu'un défaut invisible.
+
+La sortie n'est donc pas un meilleur filtre :
+
+- **Soit on garde l'éclairage tel qu'il a été généré** et c'est l'affiche qui
+  s'aligne dessus. C'est ce qui a été retenu le 31/08/2026.
+- **Soit on regénère les rushes** sous l'éclairage voulu — et la génération
+  d'image est fermée ici, quatre chemins mesurés morts le 29/08.
+
+Ce qui se rattrape à l'étalonnage : une dominante, une exposition, un contraste,
+un saut entre deux plans. Ce qui ne se rattrape pas : **la couleur de la source
+de lumière**. La frontière est là, et elle se pose avant de lancer le premier
+filtre, pas après le cinquième.
