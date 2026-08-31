@@ -131,7 +131,7 @@ abstract final class TrouverGeste {
         assert(
           deja == null || identical(deja, geste),
           'L\'étiquette « $clef » est revendiquée par '
-          '${deja?.identifiant} et par ${geste.identifiant}.',
+          '${deja.identifiant} et par ${geste.identifiant}.',
         );
         index.putIfAbsent(clef, () => geste);
       }
