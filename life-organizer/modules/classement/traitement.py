@@ -21,6 +21,7 @@ doit pas être une condition pour lancer `organizer calendrier`.
 
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime
 from pathlib import Path
@@ -164,3 +165,61 @@ def ranger(rangements: list[regles.Rangement], bibliotheque: Path,
             continue
         ranges += 1
     return ranges
+
+
+# Ce dont on sait tirer du texte sans rien installer de plus. Les images
+# scannées en sont volontairement absentes : les lire demanderait un OCR, et
+# `tesseract` n'est pas un paquet Python — il manque dans la plupart des
+# environnements. Un document sans couche texte garde donc son nom de fichier
+# pour seul indice, ce que le compte rendu dit plutôt que de le taire.
+EXTENSIONS_LISIBLES = {"pdf", "txt", "md"}
+
+
+def texte_du_document(chemin: Path, pages_max: int = 2, caracteres_max: int = 2000,
+                      consigner: Callable[[Path, str], None] | None = None) -> str:
+    """Le début du texte d'un document, ou une chaîne vide si on ne sait pas le lire.
+
+    Vide et non une exception : un document illisible se range très bien sur son
+    nom et sa date, et refuser de traiter deux mille fichiers parce que l'un
+    d'eux est protégé par mot de passe serait une régression, pas une prudence.
+
+    `pypdf` s'importe ici et non en tête de fichier — le rangement des photos ne
+    doit pas dépendre d'une bibliothèque qui ne sert qu'aux documents.
+    """
+    extension = chemin.suffix.lower().lstrip(".")
+    if extension not in EXTENSIONS_LISIBLES:
+        return ""
+
+    if extension in {"txt", "md"}:
+        try:
+            return chemin.read_text(encoding="utf-8", errors="replace")[:caracteres_max]
+        except OSError as erreur:
+            if consigner:
+                consigner(chemin, f"illisible ({erreur.strerror or erreur})")
+            return ""
+
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return ""
+
+    # `pypdf` écrit « invalid pdf header » et « EOF marker not found » sur la
+    # sortie standard, au milieu du compte rendu. L'incident est déjà consigné
+    # proprement quelques lignes plus bas : ce doublon-là ne fait que salir la
+    # seule liste que l'utilisateur lit.
+    logging.getLogger("pypdf").setLevel(logging.ERROR)
+
+    try:
+        lecteur = PdfReader(str(chemin))
+        # Les premières pages seulement : un avis d'imposition annonce sa nature
+        # en en-tête, et sa dernière page cite trois thèmes qui n'ont rien à
+        # voir. Lire tout le document rendrait la détection moins fiable, pas
+        # plus — en plus de coûter du temps sur un dossier entier.
+        morceaux = [page.extract_text() or "" for page in lecteur.pages[:pages_max]]
+    except Exception as erreur:
+        # `pypdf` lève une famille entière selon le défaut du fichier : chiffré,
+        # tronqué, en-tête absent. Aucun de ces cas n'empêche de ranger.
+        if consigner:
+            consigner(chemin, f"texte illisible ({type(erreur).__name__})")
+        return ""
+    return "\n".join(morceaux)[:caracteres_max]
