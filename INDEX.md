@@ -23,7 +23,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 | Studio audio (Streamlit) | **En pause** | — | [fiche](archives-backlog/studio-audio.md) | Reprendre si Amorce bute sur la voix off |
 | Assistant d'allocation d'actifs | **En pause** | — | [fiche](archives-backlog/assistant-patrimoine.md) | Reprendre au premier besoin réel de rééquilibrage |
 | Reconnaissance de couleurs | **Faisable** | 9/10 | [fiche](projets-actifs/reconnaissance-de-couleurs.md) | nommerCouleur() et sa table de 40 noms, testée (< 48 h) |
-| Notice, dangerosité et ingrédients | **Faisable** | 8/10 | [fiche](projets-actifs/notice-et-dangerosite-produit.md) | Code-barres → OpenFoodFacts → liste brute, 5 produits réels (< 48 h) |
+| Notice, dangerosité et ingrédients | **Faisable** | 8/10 | [fiche](projets-actifs/notice-et-dangerosite-produit.md) | Coller 3 réponses OpenFoodFacts réelles (mandataire bloqué ici) |
 | Où a mal mon animal | **En pause** | 5/10 | [fiche](archives-backlog/ou-a-mal-mon-animal.md) | Version sans diagnostic (7/10), ou trouver un vétérinaire relecteur |
 
 ## Terrain existant (base du critère « Alignement »)
