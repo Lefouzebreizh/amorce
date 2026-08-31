@@ -1,6 +1,6 @@
 ---
 name: voir-le-son
-description: Regarder un média au lieu de le mesurer — spectrogramme, courbe de sonie et planche de vignettes rendus en images que Claude peut réellement lire. À utiliser avant de livrer un montage, un export, une bande-son ou un rush, et dès qu'on doit juger la qualité d'un fichier audio ou vidéo : « le son n'est pas bon », « on n'entend rien », « ça sonne amateur », « il manque quelque chose », « regarde ce que ça donne », « c'est prêt à publier ? », « pourquoi c'est nul ». À utiliser aussi quand un chiffre agrégé dit « conforme » alors que l'utilisateur dit « mauvais » — c'est précisément le cas où la mesure ment et où l'image tranche. Ne pas attendre le mot « spectrogramme » : personne ne le prononce.
+description: Regarder un média au lieu de le mesurer — spectrogramme, courbe de sonie et planche de vignettes rendus en images que Claude peut réellement lire. À utiliser avant de livrer un montage, un export, une bande-son ou un rush, et dès qu'on doit juger la qualité d'un fichier audio ou vidéo : « le son n'est pas bon », « on n'entend rien », « ça sonne amateur », « il manque quelque chose », « regarde ce que ça donne », « c'est prêt à publier ? », « pourquoi c'est nul ». À utiliser aussi quand un chiffre agrégé dit « conforme » alors que l'utilisateur dit « mauvais » — c'est précisément le cas où la mesure ment et où l'image tranche. Ne pas attendre le mot « spectrogramme » : personne ne le prononce. Porte aussi `climax.py`, qui répond à une question que l'image ne tranche pas : le plan le plus fort est-il bien le climax ? — « la fin retombe », « le milieu écrase la fin », « ça finit en queue de poisson ».
 ---
 
 # Un son se regarde
@@ -38,6 +38,34 @@ Le script rend deux images et un court rapport JSON :
 regard : il donne un chiffre de perte et un verdict, mais les défauts les plus
 coûteux — un trou de son, une saturation, un plan noir — n'apparaissent que
 sur l'image. Ouvrir les deux fichiers avec l'outil de lecture, et les regarder.
+
+## Le second geste : le climax est-il le plan le plus fort ?
+
+```bash
+python3 scripts/climax.py <fichier> [--climax <instant>] [--marge <dB>]
+```
+
+`voir.py` **dessine** ; celui-ci **tranche**. Il découpe le fichier aux
+changements de plan, mesure chaque plan au-dessus de 400 Hz, et sort en 1 quand
+le climax n'est pas le plus fort — de quoi barrer une publication.
+
+`CLAUDE.md` §8 posait la règle depuis longtemps et **rien ne la mesurait**.
+Relevé sur un export réel : le climax à **7,4 dB sous** le plan qui le
+précédait, avec une sonie globale correcte et un vrai pic conforme. Aucune
+mesure agrégée ne pouvait le dire — une moyenne ne compare pas deux plans
+entre eux.
+
+Trois choses à savoir avant de lire son verdict :
+
+- **Il découpe au plan, pas à la seconde.** C'est le plan qui est fort ou
+  faible. Sur le même fichier, l'écart passe de 6,6 dB mesuré à la seconde à
+  7,4 dB mesuré au plan.
+- **Le climax est le dernier plan par défaut**, jamais le plus fort — le
+  déduire du niveau rendrait le contrôle circulaire et toujours vert.
+  `--climax <instant>` quand la chute est ailleurs.
+- **Le remède n'est pas celui qu'on croit** : baisser le plan trop fort plutôt
+  que monter le climax. Monter fait travailler le limiteur, qui écrase
+  précisément ce qu'on voulait faire ressortir.
 
 ## Ce qu'on y voit, et ce que ça veut dire
 
