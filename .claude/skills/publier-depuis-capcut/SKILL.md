@@ -64,6 +64,31 @@ chiffres ne le dit.
 ffmpeg -v error -y -i export.mp4 -vf "fps=30,scale=160:-1" /tmp/c%04d.png
 ```
 
+**Et le seuil se prend sur la médiane LOCALE, jamais absolue.** Un seuil fixe
+rate les raccords à l'intérieur d'une séquence agitée et en invente dans un
+plan calme. Comparer chaque écart à la médiane des trente images qui
+l'entourent.
+
+**Un raccord entre deux plans de même composition ne se détecte pas — et ne se
+voit pas non plus.** Relevé sur l'épisode 1 publié : sur 17,73 s, huit raccords
+ressortent, et une fenêtre de **six secondes** n'en montre aucun. En la
+regardant à deux images par seconde, elle contient pourtant trois créatures
+différentes — même cadre, même palette, même volcan au même endroit. L'écart
+entre images successives ne bouge pas, et l'œil du spectateur non plus.
+
+C'est le plus long bloc du film, et c'est là que la rétention tombe : six
+secondes qui *paraissent* un plan fixe, au milieu d'un montage dont la durée
+médiane de plan est de 1,77 s. Le remède n'est pas de couper plus vite, c'est
+de **changer de cadre** — une échelle de plan, un axe, un contre-champ.
+
+Compter les plans ne suffit donc pas : il faut aussi compter les **cadres**.
+Une bande à deux images par seconde le dit en un coup d'œil.
+
+```bash
+ffmpeg -v error -y -ss <début> -t <durée> -i export.mp4 \
+  -vf "fps=2,scale=190:-1,tile=12x1" bande.png   # puis la REGARDER
+```
+
 ## 4. Les réglages d'export
 
 **1080p / 30 fps.** Suffisant pour TikTok.

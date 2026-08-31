@@ -147,6 +147,31 @@ Root-Gorilla Titan Awakens » — était mangé à gauche par les bulles de prof
 TikTok **et** sortait du cadre à droite. Il était pourtant au-dessus des 70 %
 que cette page interdisait.
 
+### Et la bande sûre a une largeur, pas seulement une hauteur
+
+Cette page n'a longtemps borné que la **hauteur**, et le même défaut est reparti
+en publication. Relevé sur l'épisode 1 d'Aznaroth, publié le 31/08/2026 :
+
+| titre | horizontal | verdict |
+| --- | --- | --- |
+| « RIFT ZERO FIVE » | 26,9 % → 70,3 % | dégagé |
+| « THE SHADOW TITAN AWAKENS » | **9,8 % → 94,7 %** | mangé à gauche, au ras du bord à droite |
+
+Les deux titres sont dans la bande verticale sûre, au même endroit, à la même
+taille de police. Le second est simplement **plus long**, et l'éditeur l'a
+étiré d'un bord à l'autre pour le faire tenir sur une ligne. C'est ce qui le
+fait entrer dans la colonne de boutons de Facebook — 14 → 22 % — que le tableau
+ci-dessus connaissait déjà sans que personne en tire de borne.
+
+**Un titre vit entre 22 % et 88 % de la largeur.** En deçà de 22 %, les boutons
+de Facebook ; au-delà de 88 %, on est au ras du bord, et un écran à coins
+arrondis y mange la dernière lettre.
+
+**Un titre trop long se casse en deux lignes, il ne s'étire pas.** Deux lignes
+posées entre 15 et 25 % de la hauteur tiennent largement dans la bande sûre —
+la hauteur disponible va jusqu'à 45 %, elle n'est jamais le facteur limitant.
+La largeur, elle, l'est toujours.
+
 ## Les instants se relèvent, ils ne s'écrivent pas
 
 Un sous-titre calé sur une grille tombe à côté de ce qui est dit. Relever les

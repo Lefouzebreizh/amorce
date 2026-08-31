@@ -268,6 +268,38 @@ dizaine de décibels sous le climax.
 
 ---
 
+## 9 bis. La première demi-seconde est le seul plan que tout le monde voit
+
+Relevé sur l'épisode 1 d'Aznaroth publié le 31/08/2026, par section, filtré
+au-dessus de 400 Hz — c'est-à-dire ce qu'un haut-parleur de téléphone rend :
+
+| section | tout le signal | téléphone | perte |
+| --- | --- | --- | --- |
+| **ouverture (0 → 0,63 s)** | −15,7 dB | **−33,3 dB** | **17,6** |
+| druide | −16,6 | −24,1 | 7,5 |
+| portail | **−9,2** | −21,7 | 12,6 |
+| vortex | −11,9 | −26,5 | 14,7 |
+| dragons | −10,8 | **−19,1** | 8,3 |
+| créature | −14,8 | −28,3 | 13,5 |
+
+Deux choses que seule la colonne « téléphone » dit.
+
+**L'ouverture est quatorze décibels sous le reste du film.** Elle mesure −15,7
+sur tout le signal — dans la moyenne — parce que son énergie est presque
+entièrement sous 400 Hz. Sur l'appareil où la vidéo est regardée, la première
+demi-seconde est **muette**, et c'est la seule que tout le monde voit : celle où
+le pouce décide.
+
+**Le classement s'inverse.** Le plan le plus fort du mixage est le portail
+(−9,2) ; sur un téléphone, c'est la séquence des dragons (−19,1) qui passe
+devant, le portail tombant deuxième. Ici la narration s'en sort — les dragons
+*sont* le climax. Mais le mixage ne le savait pas : il a désigné un autre plan,
+et c'est le filtre du téléphone qui a corrigé par accident.
+
+La règle du point 9 reste vraie et se complète : le climax doit être le plan le
+plus fort **au-dessus de 400 Hz**, et l'ouverture ne doit jamais être la plus
+faible. Les deux se lisent sur le même tableau, qui se tire en une commande.
+
 ## 10. Un texte se place où le sujet n'est pas
 
 ```bash
