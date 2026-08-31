@@ -25,7 +25,7 @@
 ///   d'affichage — rien ne s'affiche — c'est la longueur au-delà de laquelle
 ///   l'enfant a oublié le début de la phrase à la fin.
 /// - **Aucun mot que l'enfant n'emploie pas lui-même.** « Le doigt qui montre »
-///   plutôt que « l'index », « le trou de ton nez » plutôt que « la narine ».
+///   plutôt que « l'index », « le côté de ton nez » plutôt que « la narine ».
 ///
 /// ## Les étiquettes, et l'arbitrage qui se reperd
 ///
@@ -65,11 +65,11 @@ abstract final class CorpusGestes {
       etapes: [
         Etape('Tire les deux lacets pour serrer la chaussure.', 'serrer'),
         Etape('Croise les deux lacets l\'un sur l\'autre.', 'croiser'),
-        Etape('Passe un lacet sous l\'autre, puis tire.', 'passer-dessous'),
-        Etape('Fais une boucle avec le lacet de droite.', 'boucle'),
-        Etape('Enroule l\'autre lacet autour de la boucle.', 'enrouler'),
-        Etape('Pousse ce lacet dans le petit trou.', 'trou'),
-        Etape('Tire les deux boucles : c\'est noué.', 'noeud-fini'),
+        Etape('Passe un lacet sous l\'autre, puis tire fort.', 'premier-noeud'),
+        Etape('Fais une oreille de lapin avec un lacet.', 'oreille-un'),
+        Etape('Fais une deuxième oreille avec l\'autre lacet.', 'oreille-deux'),
+        Etape('Croise les deux oreilles l\'une sur l\'autre.', 'croiser-oreilles'),
+        Etape('Passe une oreille dans le trou, et tire.', 'noeud-fini'),
       ],
     ),
     Geste(
@@ -93,8 +93,8 @@ abstract final class CorpusGestes {
         Etape('Tiens le bas de ton blouson avec une main.', 'tenir-bas'),
         Etape('Mets la petite pointe dans la boîte du bas.', 'emboiter'),
         Etape('Pousse la pointe jusqu\'au fond de la boîte.', 'pousser-fond'),
-        Etape('Tiens toujours le bas, et tire le curseur en haut.',
-            'tirer-curseur'),
+        Etape('Tiens toujours le bas, et tire la tirette vers le haut.',
+            'tirer-tirette'),
         Etape('Monte doucement jusqu\'à ton menton.', 'menton'),
       ],
     ),
@@ -119,7 +119,7 @@ abstract final class CorpusGestes {
       etapes: [
         Etape('Ouvre le robinet et mouille tes deux mains.', 'robinet'),
         Etape('Prends du savon dans le creux de ta main.', 'savon'),
-        Etape('Frotte tes deux paumes l\'une contre l\'autre.', 'paumes'),
+        Etape('Frotte tes deux mains l\'une contre l\'autre.', 'mains-ensemble'),
         Etape('Frotte le dessus de chaque main.', 'dessus-main'),
         Etape('Rince tes mains jusqu\'à ce que la mousse parte.', 'rincer'),
         Etape('Essuie tes mains avec la serviette.', 'serviette'),
@@ -131,9 +131,9 @@ abstract final class CorpusGestes {
       etiquettes: ['mouchoir', 'boîte de mouchoirs', 'nez'],
       etapes: [
         Etape('Prends un mouchoir dans la boîte.', 'mouchoir'),
-        Etape('Pose-le sur ton nez, sans appuyer fort.', 'poser'),
-        Etape('Bouche un trou de ton nez avec ton doigt.', 'trou-du-nez'),
-        Etape('Souffle par l\'autre trou dans le mouchoir.', 'souffler'),
+        Etape('Mets le mouchoir devant ton nez.', 'poser'),
+        Etape('Appuie sur un côté de ton nez avec ton doigt.', 'cote-du-nez'),
+        Etape('Souffle par l\'autre côté dans le mouchoir.', 'souffler'),
         Etape('Fais pareil de l\'autre côté.', 'autre-cote'),
         Etape('Jette le mouchoir à la poubelle.', 'poubelle'),
       ],
@@ -146,7 +146,6 @@ abstract final class CorpusGestes {
         Etape('Pose tes deux chaussures par terre devant toi.', 'poser-sol'),
         Etape('Regarde le bout pointu de chaque chaussure.', 'bout-pointu'),
         Etape('Tourne-les jusqu\'à ce que les bouts s\'écartent.', 'ecarter'),
-        Etape('Entre les deux, tu vois un grand sourire.', 'sourire'),
         Etape('Mets ton pied gauche dans la chaussure de gauche.',
             'pied-gauche'),
         Etape('Mets ton pied droit dans l\'autre chaussure.', 'pied-droit'),
@@ -158,8 +157,8 @@ abstract final class CorpusGestes {
       etiquettes: ['pichet', 'carafe', 'verre', 'bouteille', 'broc'],
       etapes: [
         Etape('Pose ton verre bien à plat sur la table.', 'verre'),
-        Etape('Prends le pichet par l\'anse, avec toute ta main.', 'anse'),
-        Etape('Approche le bec du pichet du bord du verre.', 'bec'),
+        Etape('Prends le pichet par sa poignée, avec toute ta main.', 'poignee'),
+        Etape('Approche le bec du pichet tout près du verre.', 'bec'),
         Etape('Penche le pichet tout doucement.', 'pencher'),
         Etape('Arrête quand l\'eau arrive au milieu du verre.', 'moitie'),
         Etape('Redresse le pichet avant de le reposer.', 'redresser'),
@@ -172,8 +171,8 @@ abstract final class CorpusGestes {
       etapes: [
         Etape('Pose le tee-shirt à plat sur la table.', 'a-plat'),
         Etape('Lisse-le avec ta main pour enlever les plis.', 'lisser'),
-        Etape('Rabats une manche sur le milieu du dos.', 'manche-un'),
-        Etape('Rabats l\'autre manche sur le milieu du dos.', 'manche-deux'),
+        Etape('Rabats une manche sur le milieu du tee-shirt.', 'manche-un'),
+        Etape('Rabats l\'autre manche sur le milieu aussi.', 'manche-deux'),
         Etape('Plie le bas du tee-shirt jusqu\'au col.', 'plier-bas'),
         Etape('Range-le à plat dans ton tiroir.', 'tiroir'),
       ],
@@ -235,7 +234,8 @@ abstract final class CorpusGestes {
       etiquettes: ['manteau', 'blouson', 'veste', 'anorak', 'doudoune',
           'capuche'],
       etapes: [
-        Etape('Pose ton manteau par terre, grand ouvert.', 'manteau-sol'),
+        Etape('Pose ton manteau par terre, l\'intérieur en l\'air.',
+            'manteau-sol'),
         Etape('Mets le col du manteau contre tes pieds.', 'col-aux-pieds'),
         Etape('Glisse tes deux bras dans les deux manches.', 'manches'),
         Etape('Lève les bras au-dessus de ta tête.', 'lever-les-bras'),
@@ -253,7 +253,7 @@ abstract final class CorpusGestes {
             'crayon-sur-table'),
         Etape('Pince le crayon tout près de sa pointe.', 'pincer'),
         Etape('Bascule-le en arrière : il tombe dans ta main.', 'basculer'),
-        Etape('Laisse-le poser sur ton troisième doigt.', 'troisieme-doigt'),
+        Etape('Laisse-le reposer sur ton troisième doigt.', 'troisieme-doigt'),
         Etape('Écris sans serrer fort.', 'ecrire'),
       ],
     ),
@@ -263,8 +263,8 @@ abstract final class CorpusGestes {
       etiquettes: ['brosse à cheveux', 'peigne', 'cheveu'],
       etapes: [
         Etape('Tiens la brosse par son manche.', 'brosse'),
-        Etape('Commence tout en bas de tes cheveux.', 'bas-des-cheveux'),
-        Etape('Descends la brosse doucement, sans tirer.', 'descendre'),
+        Etape('Commence par le bas de tes cheveux.', 'bas-des-cheveux'),
+        Etape('Brosse par petits coups, sans tirer fort.', 'petits-coups'),
         Etape('Remonte petit à petit vers le haut de la tête.', 'remonter'),
         Etape('Passe la brosse aussi derrière ta tête.', 'derriere'),
       ],
