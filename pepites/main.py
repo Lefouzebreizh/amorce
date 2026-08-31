@@ -33,6 +33,7 @@ try:
 except ImportError:      # l'outil marche sans, il n'alerte simplement pas
     pass
 
+import bilan                                      # noqa: E402
 import pipeline                                   # noqa: E402
 import rapport                                    # noqa: E402
 import sonde                                      # noqa: E402
@@ -92,6 +93,16 @@ def commande_purger(arguments) -> int:
     return 0
 
 
+def commande_bilan(arguments) -> int:
+    """Ce que les pépites sont devenues. Aucun appel réseau : tout se calcule
+    sur la base locale, donc la commande répond aussi bien depuis une machine
+    sans accès aux API de marché."""
+    with Memoire(arguments.base) as memoire:
+        liste = bilan.parcours(memoire, arguments.note)
+        print(bilan.tableau(liste, bilan.juger(liste)))
+    return 0
+
+
 def principal(argv: list[str] | None = None) -> int:
     analyseur = argparse.ArgumentParser(description="Radar de pépites multi-chaînes.")
     analyseur.add_argument("--base", default=BASE_PAR_DEFAUT, help="fichier SQLite")
@@ -105,6 +116,11 @@ def principal(argv: list[str] | None = None) -> int:
     sous.add_parser(
         "sonde", help="les sources répondent-elles, et se lisent-elles ?"
     ).set_defaults(fonction=commande_sonde)
+
+    bil = sous.add_parser("bilan", help="ce que les pépites sont devenues")
+    bil.add_argument("--note", type=float, default=0.0,
+                     help="ne montrer que les jetons ayant atteint cette note")
+    bil.set_defaults(fonction=commande_bilan)
 
     purge = sous.add_parser("purger", help="efface les vieux relevés")
     purge.add_argument("--garder", type=float, default=30.0, help="en jours")
