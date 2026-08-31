@@ -40,6 +40,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/page-qui-vend` | Rendre une page de vente capable d'encaisser, en la mesurant plutôt qu'en la regardant — bouton d'achat mort, prix qui arrive après le bouton,… |
 | `/paper-manager` | Recette pour développer l'assistant administratif Paper-Manager (`paper-manager/`) — où poser chaque fichier, la frontière entre ce que l'humain… |
 | `/prepresse-kdp` | Règles de préparation d'un livre illustré pour l'impression à la demande KDP — résolution, fond perdu, zone de sécurité, calcul de tranche, compte de… |
+| `/publier-depuis-capcut` | La chaîne de montage et de publication d'une vidéo verticale faite au doigt, dans CapCut sur Android, puis publiée sur TikTok — l'ordre des… |
 | `/radar-crypto` | Où poser chaque fichier du radar crypto `pepites/`, l'ordre des cinq skills qu'on ne réarrange pas, les six invariants qui empêchent l'outil de… |
 | `/regenerer-planche` | Remplacer une planche illustrée du recueil Roussy & Zéphy par une version régénérée — décider si le remplacement en vaut la peine, écrire l'invite… |
 | `/regler-le-radar` | Régler le détecteur de pépites crypto et diagnostiquer un scan décevant — lire l'entonnoir de `pepites_radar.md` pour savoir quel seuil bouger,… |
