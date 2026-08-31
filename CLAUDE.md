@@ -959,6 +959,12 @@ choses à en retenir, et elles se paient toutes les deux en silence :
 - **Un chemin qui entre dans un build doit entrer dans la liste surveillée.**
   Un fichier que le build lit mais que le filtre ignore fait servir une version
   périmée sans qu'aucune ligne rouge n'apparaisse.
+- **Et le filtre n'économise pas le quota qui saute.** L'`ignoreCommand`
+  s'exécute dans le conteneur de construction, donc *après* la création du
+  déploiement — or c'est la création qui est plafonnée. Il épargne des minutes
+  de construction, pas des déploiements : mesuré le 31/08/2026, une PR
+  entièrement en Markdown a fait répondre les quatre projets en rouge. Le seul
+  levier est le **nombre de projets branchés**. Détail dans `/debloquer`.
 
 `nexuscrypto` n'a rien à déployer — ni `package.json`, ni `api/`, et un moteur
 qui tourne en boucle n'a pas sa place sur une plateforme de pages. Son

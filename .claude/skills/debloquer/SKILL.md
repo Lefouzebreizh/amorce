@@ -313,8 +313,9 @@ qu'une ligne de Markdown en lançait quatre.
 
 Depuis, chaque projet porte un `vercel.json` dont l'`ignoreCommand` appelle
 `scripts/vercel-ignorer.sh` avec les chemins qui le concernent. Une PR de
-Markdown n'en déclenche plus aucun ; une PR sur `iptv/` n'en déclenche qu'un.
-Le script est commenté au long — l'essentiel tient en deux lignes :
+Markdown ne fait plus **construire** aucun projet ; une PR sur `iptv/` n'en fait
+construire qu'un. Le script est commenté au long — l'essentiel tient en deux
+lignes :
 
 - **la convention de sortie est inversée** — `0` annule le déploiement, `1` le
   lance. Un `exit 0` ajouté par réflexe couperait tout en silence ;
@@ -326,6 +327,45 @@ Donc, si un rouge de quota revient malgré cela : compter d'abord les projets
 Vercel branchés sur le dépôt. Le filtre ne protège que ceux qui portent un
 `vercel.json` — **un projet créé depuis le tableau de bord n'en a pas**, et il
 se déclenche sur tout.
+
+### Mais le filtre n'économise pas le quota qui saute — mesuré le 31/08/2026
+
+La phrase précédente disait « une PR de Markdown n'en déclenche plus aucun ».
+Elle était fausse, et c'est la PR #490 qui l'a montrée : un diff **entièrement
+en Markdown**, ne touchant aucun chemin surveillé par les quatre `vercel.json`,
+a fait répondre **les quatre projets** — `amorce`, `amorce-51up`, `iptv`,
+`nexuscrypto` — chacun en rouge, `api-deployments-free-per-day`.
+
+La cause tient à l'ordre des opérations, et elle est contre-intuitive :
+
+- **l'`ignoreCommand` s'exécute dans le conteneur de construction**, donc
+  *après* que le déploiement a été créé ;
+- or le quota qui saute porte sur la **création** de déploiements, pas sur le
+  temps de construction.
+
+Le filtre économise donc des **minutes de construction**, pas des
+**déploiements**. Un déploiement « Ignored » a déjà été créé — et compté. C'est
+pourquoi le quota a continué de sauter après la pose du filtre, sans que rien ne
+paraisse cassé : chaque pièce faisait exactement ce qu'on lui demandait.
+
+Ce que ça change concrètement :
+
+- **inutile d'affiner les chemins surveillés** en espérant desserrer le quota.
+  Ils sont déjà justes ; ce n'est pas le levier ;
+- **le seul levier est le nombre de projets branchés sur le dépôt.** Quatre
+  projets multiplient par quatre chaque fusion, filtre ou pas. Supprimer
+  `nexuscrypto`, qui n'a rien à déployer, retire 25 % de la consommation d'un
+  coup — le geste est côté propriétaire, *Settings → Advanced → Delete Project* ;
+- **un rouge Vercel sur une PR de documentation n'est jamais un signal** tant
+  que le quota est épuisé. Il ne dit rien de la PR, et le filtre ne l'empêchera
+  pas d'apparaître.
+
+**Et la leçon de méthode, qui vaut au-delà de Vercel :** l'observation de la PR
+#489 — trois projets affichant « Ignored » — était juste. La conséquence qu'on
+en avait tirée — « le filtre protège donc du quota » — ne l'était pas, et elle
+s'est relue ensuite comme si elle avait été mesurée elle aussi. « Ignored »
+prouve que la construction a été évitée ; il ne prouve rien sur le déploiement,
+qui avait déjà eu lieu. Voir `/eprouver-une-regle`.
 
 ## 4. Une suite de tests introuvable, ou plus gardée
 
