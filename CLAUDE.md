@@ -916,6 +916,30 @@ plusieurs sessions en parallèle, et quelques heures suffisent à périmer une
 branche. Ce qui est fusionné gagne, toujours. `/branche-partagee` en cas de
 doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
+### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
+
+Quatre projets Vercel sont branchés sur ce dépôt : `amorce` (racine),
+`amorce-51up` (dossier `artisan-express`), `iptv`, `nexuscrypto`. **Chacun se
+déclenche sur chaque commit tant qu'il ne filtre pas par chemin**, et le palier
+gratuit plafonne à cent déploiements par jour — crevé deux fois, la seconde à
+80 fusions seulement, parce que le nombre de projets avait doublé dans la nuit.
+
+D'où le filtre : chaque projet porte un `vercel.json` dont l'`ignoreCommand`
+appelle `scripts/vercel-ignorer.sh` avec les chemins qui le concernent. Deux
+choses à en retenir, et elles se paient toutes les deux en silence :
+
+- **Un projet Vercel qui arrive n'a pas de `vercel.json`** — il se crée depuis
+  le tableau de bord et ne laisse aucune trace dans Git. Lui en écrire un est le
+  premier geste, sinon il consomme le quota de tous les autres.
+- **Un chemin qui entre dans un build doit entrer dans la liste surveillée.**
+  Un fichier que le build lit mais que le filtre ignore fait servir une version
+  périmée sans qu'aucune ligne rouge n'apparaisse.
+
+`nexuscrypto` n'a rien à déployer — ni `package.json`, ni `api/`, et un moteur
+qui tourne en boucle n'a pas sa place sur une plateforme de pages. Son
+`vercel.json` le muselle (`exit 0`) en attendant que le propriétaire supprime
+le projet côté Vercel ; la raison est dans `nexuscrypto/README.md` §6 bis.
+
 ### Connecteurs
 
 GitHub passe par le serveur MCP (`mcp__github__*`), jamais par `gh` ni `curl` :

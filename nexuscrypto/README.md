@@ -263,6 +263,42 @@ des relevés rejoués.
 
 ---
 
+## 6 bis. Ce projet ne se déploie pas — et surtout pas sur Vercel
+
+Un projet Vercel nommé `nexuscrypto`, branché sur ce dépôt, a existé le
+31/08/2026. Il **échouait au build à chaque poussée** — vérifié sur les statuts
+de plusieurs pull requests, `Deployment has failed`, pendant que les trois
+autres projets du dépôt réussissaient. Ce rouge-là était réel, et il se
+confondait avec le rouge de quota qui tombait le même jour sur tout le monde.
+
+La cause n'est pas un réglage à corriger : **il n'y a rien à déployer.** Ce
+dossier ne porte ni `package.json`, ni `index.html`, ni `public/`, ni le
+dossier `api/` que Vercel attend pour du Python. C'est une bibliothèque et une
+ligne de commande, et rien d'autre.
+
+Et quand bien même le build passerait, l'hébergement serait le mauvais :
+
+- **le moteur est une boucle qui vit**, pas une réponse à une requête. Il
+  observe, décide, place, surveille un stop. Une fonction sans état qui
+  s'arrête au bout d'une minute ne peut rien en faire ;
+- **il tient un état entre deux passes** — portefeuille, positions ouvertes,
+  coupe-circuit. Le disque d'une invocation disparaît avec elle ;
+- **il a besoin des API de marché**, que le mandataire des sessions distantes
+  refuse déjà, et qui demandent des clés qui n'ont rien à faire dans un
+  environnement de bord.
+
+Le jour où ce moteur tourne pour de vrai, il tourne sur une machine qui reste
+allumée — pas sur une plateforme de pages.
+
+En attendant, `nexuscrypto/vercel.json` porte un `ignoreCommand` qui vaut
+`exit 0` : Vercel annule le déploiement au lieu de l'échouer, et les pull
+requests du dépôt cessent d'en porter le rouge. **C'est une muselière, pas une
+réparation.** Le geste qui règle vraiment la chose est de supprimer le projet
+`nexuscrypto` depuis le tableau de bord Vercel, et il appartient au
+propriétaire du compte.
+
+---
+
 ## 7. Vérifier
 
 ```bash

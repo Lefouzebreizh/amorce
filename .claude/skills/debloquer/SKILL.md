@@ -304,6 +304,29 @@ regarde croit à une régression et cherche une cause qui n'existe pas.
 Un rouge qui persiste au-delà de vingt-quatre heures, ou qui ne frappe qu'une
 seule PR, n'est plus celui-là : reprendre au diagnostic normal.
 
+### La parade est posée : chaque projet filtre par chemin
+
+Le 31/08/2026, le quota a été épuisé une fois de plus — **80 fusions sur `main`
+en vingt-quatre heures, quatre projets Vercel branchés sur le dépôt, donc 320
+déploiements de production** pour un palier à cent. Une PR qui ne changeait
+qu'une ligne de Markdown en lançait quatre.
+
+Depuis, chaque projet porte un `vercel.json` dont l'`ignoreCommand` appelle
+`scripts/vercel-ignorer.sh` avec les chemins qui le concernent. Une PR de
+Markdown n'en déclenche plus aucun ; une PR sur `iptv/` n'en déclenche qu'un.
+Le script est commenté au long — l'essentiel tient en deux lignes :
+
+- **la convention de sortie est inversée** — `0` annule le déploiement, `1` le
+  lance. Un `exit 0` ajouté par réflexe couperait tout en silence ;
+- **au moindre doute, on déploie** : sans parent, hors dépôt, `git` en erreur,
+  le script sort en 1. Un déploiement de trop coûte une unité de quota ; un
+  déploiement manquant fait tester une version périmée pendant deux heures.
+
+Donc, si un rouge de quota revient malgré cela : compter d'abord les projets
+Vercel branchés sur le dépôt. Le filtre ne protège que ceux qui portent un
+`vercel.json` — **un projet créé depuis le tableau de bord n'en a pas**, et il
+se déclenche sur tout.
+
 ## 4. Une suite de tests introuvable, ou plus gardée
 
 **Où est la commande.** La dernière ligne de `hooks/session-start.sh` — celle que

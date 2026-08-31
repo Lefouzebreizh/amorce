@@ -4569,3 +4569,42 @@ Corollaire de méthode, pour un livre en particulier : **l'épreuve papier se
 commande sans publier**, et ses deux semaines d'impression courent pendant qu'on
 travaille ce qui manque. Attendre d'avoir tout pour commencer à attendre est le
 seul choix strictement perdant.
+
+## Un quota qui saute deux fois de suite n'est pas un quota, c'est un compte qui a grossi
+
+Le 29/08/2026, le plafond de cent déploiements Vercel avait déjà été crevé, et
+la leçon écrite ici disait quoi en faire : **grouper les lots** ce jour-là. Le
+31/08 il a sauté à nouveau, sur beaucoup moins de fusions — **80 en
+vingt-quatre heures** contre 154 — et le groupement n'aurait rien changé.
+
+Ce qui avait changé n'était pas le rythme, c'était le **multiplicateur** : le
+dépôt était passé de **deux projets Vercel à quatre** dans la nuit, `iptv` et
+`nexuscrypto` s'ajoutant à `amorce` et `amorce-51up`. Vérifié sur les statuts
+de pull requests successives — deux contextes `Vercel – *` à 01:22, quatre à
+02:18. Et **aucun des quatre ne filtrait par chemin** : chacun se déclenchait
+sur chaque commit, y compris une PR qui ne touchait qu'un Markdown. 80 × 4 =
+320 déploiements pour un palier à cent.
+
+**La quantité d'un quota se compte toujours par ce qui la multiplie, pas par ce
+qui la produit.** Compter les fusions répond à la mauvaise question quand c'est
+le nombre de consommateurs qui a doublé.
+
+Trois choses en sont sorties, et elles valent au-delà de Vercel :
+
+- **Un rouge de quota masque les vrais rouges.** `nexuscrypto` échouait au build
+  depuis sa création — `Deployment has failed`, pas « rate limited » — et
+  personne ne l'a distingué, parce que tout était rouge. Un service saturé
+  n'est pas seulement une gêne : c'est un endroit où une panne réelle devient
+  invisible.
+- **Un projet créé depuis un tableau de bord ne porte aucune trace dans le
+  dépôt.** Rien dans Git ne disait que deux projets s'étaient ajoutés ; on ne
+  peut le lire que sur les statuts d'une PR, ou sur le tableau de bord. Quand
+  quelque chose consomme un quota partagé, l'inventaire se fait là où il vit,
+  pas dans le code.
+- **Un filtre de déploiement se rate à l'envers.** L'`ignoreCommand` de Vercel
+  sort en `0` pour **annuler** et en `1` pour déployer — l'inverse de la
+  convention Unix. Un `exit 0` écrit par réflexe en fin de script coupe tous les
+  déploiements sans qu'aucune ligne rouge n'apparaisse. La parade tient dans une
+  règle : **tout cas douteux sort en 1**, parce qu'un déploiement de trop coûte
+  une unité de quota et qu'un déploiement manquant fait tester une version
+  périmée pendant deux heures — mesuré, ici même, le 29/08.
