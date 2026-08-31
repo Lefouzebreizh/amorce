@@ -20,7 +20,7 @@ const SIRET_ACTIF = false;
 const encaisseEnLigne = SIRET_ACTIF && aUnStripe;
 
 const COMPRIS = [
-  ['Paiement en une fois', '300 €, et c’est fini — aucun prélèvement ensuite, aucun abonnement.'],
+  ['Paiement en une fois', '300 €, et c’est fini — aucun abonnement, aucun prélèvement ensuite.'],
   ['Livré en 48 h', 'Le compteur part quand j’ai tes infos et tes photos, pas quand tu paies.'],
   ['Une modification offerte', 'Après livraison, tu regardes, tu me dis ce qui cloche, je corrige.'],
   ['Le site est à toi', 'Le code, le texte, les images : tu repars avec si un jour tu veux changer de crémerie.'],
@@ -77,10 +77,16 @@ export function Offre() {
             </a>
           </div>
 
+          {/*
+            * Deux phrases, jamais la même. Le paiement en ligne est fermé tant
+            * que le SIRET n'est pas actif : promettre une carte bancaire qui
+            * n'encaisse pas ferait rebrousser chemin à quelqu'un de décidé.
+            * On dit donc ce qui se passe vraiment — on convient ensemble.
+            */}
           <p className="mt-4 text-base text-ardoise">
             {encaisseEnLigne
               ? 'Paiement chez Stripe. Ta carte ne passe jamais par ce site.'
-              : 'Je réserve ma place, on convient du paiement ensemble.'}
+              : 'Je réserve ta place, on convient du paiement ensemble. Rien à régler depuis cette page.'}
           </p>
         </div>
       </div>
