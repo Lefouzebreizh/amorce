@@ -1,0 +1,69 @@
+# Reconnaissance de couleurs
+
+> **Hypothèses posées** : fonctionnalité de Look & Find, pas d'application
+> séparée. Public premier supposé **daltonien**, à confirmer — la question est
+> ouverte en bas, et elle change l'interface sans changer le score.
+
+## Pitch
+
+Viser un objet avec l'appareil photo, obtenir le nom de sa couleur. Aucun
+modèle, aucun réseau, aucune clé : un pixel, une table de correspondance, un
+nom. La seule fonction de Look & Find qui marche en mode avion.
+
+## Objectif mesurable
+
+**Nommer correctement la couleur de 20 objets courants sur 20**, tenus à bout de
+bras sous un éclairage d'intérieur, et annoncer « incertain » plutôt que de se
+tromper quand la lumière ne permet pas de trancher.
+
+## Score de faisabilité — 9/10
+
+| Critère | Note | Justification |
+| --- | --- | --- |
+| Temps / Effort | 9/10 | Le flux caméra existe déjà. Lire un pixel, le convertir en teinte-saturation-luminosité, le comparer à une table de noms : une journée. |
+| Complexité technique | 9/10 | Aucune intelligence artificielle. Pure logique Dart, testable hors appareil — donc réellement couverte par les tests, ce que le scan Gemini n'est pas. |
+| Coût / Rentabilité | 10/10 | Zéro. Pas d'appel réseau, pas de quota, pas de latence. |
+| Alignement | 8/10 | Même application, même caméra, même architecture. C'est la partie « Find » sans la partie « Look ». |
+
+**Verdict :** la note la plus haute de l'atelier, et le motif est contre-intuitif
+— **c'est la seule fonction de l'application qui ne dépend d'aucune IA**. Tout
+le reste de Look & Find s'arrête si la clé Gemini expire, si le réseau tombe ou
+si le quota est atteint. Celle-ci, non.
+
+## Plan d'action (MVP)
+
+| Étape | Livrable | Délai |
+| --- | --- | --- |
+| **1 — Le noyau testable** | Une fonction pure `nommerCouleur(r, g, b)` et sa table de ~40 noms français, avec ses tests. Aucune interface. C'est là qu'est toute la difficulté réelle. | **< 48 h** |
+| **2 — Le viseur** | Réticule au centre du flux caméra, moyenne des pixels sur un petit carré (un pixel unique attrape un reflet), nom affiché en gros. | 3 à 5 jours |
+| **3 — L'usage réel** | Annonce vocale, historique des dernières couleurs, et le mode « comparer deux objets » — la vraie question d'un daltonien n'est pas « quelle couleur » mais « est-ce que ces deux-là vont ensemble ». | après retour d'usage |
+
+L'étape 1 est volontairement sans interface : la table de noms est le cœur du
+sujet, elle se travaille au test unitaire, et une interface posée trop tôt
+masque le fait qu'on nomme mal.
+
+## Outils nécessaires
+
+- Flutter et le paquet caméra : **déjà dans le projet**.
+- Rien d'autre. Ni clé, ni service, ni abonnement.
+
+## Ce qui la ferait tomber
+
+1. **La lumière.** Une ampoule chaude fait virer un blanc au jaune et un gris au
+   beige. C'est le seul vrai problème du sujet. La parade est de **dire son
+   incertitude** — « beige, ou blanc sous lumière chaude » — plutôt que
+   d'affirmer. Une réponse fausse et assurée est pire que pas de réponse pour
+   quelqu'un qui ne peut pas vérifier.
+2. **La moyenne d'un objet bicolore.** Un réticule sur une rayure rend la
+   moyenne des deux couleurs, qui n'existe nulle part. Détecter la dispersion
+   et le dire.
+3. **Nommer trop finement.** « Bleu pétrole » impressionne et n'aide personne.
+   Une quarantaine de noms courants vaut mieux que deux cents nuances.
+
+## Questions ouvertes
+
+1. **Qui s'en sert, un daltonien ou quelqu'un qui assortit ?** Le premier veut
+   un nom sûr et une comparaison ; le second veut une nuance précise et un code
+   hexadécimal. Deux interfaces différentes, même noyau.
+2. **Annonce vocale dès le départ ?** Pour un daltonien, lire l'écran va de soi ;
+   pour un malvoyant, c'est la fonction entière.
