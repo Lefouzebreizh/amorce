@@ -61,6 +61,29 @@ même assurance.
 - OpenFoodFacts / OpenBeautyFacts — gratuits, sans clé.
 - Gemini : **déjà branché**, et volontairement hors du chemin principal.
 
+## Ce qui ne se fait pas depuis une session distante
+
+`world.openfoodfacts.org` est **refusé par le mandataire** (403 au tunnel
+CONNECT), vérifié le 31 août 2026. Conséquence : ni l'appel, ni le relevé de la
+forme réelle des réponses ne peuvent se faire ici.
+
+Écrire la couche de lecture de mémoire serait pire que ne rien écrire : on
+inventerait des noms de champs plausibles, et le défaut n'apparaîtrait qu'au
+premier essai sur un vrai téléphone. C'est précisément ce que
+`/api-tierce-verifiee` interdit.
+
+**Ce qui débloque, et coûte deux minutes :** ouvrir depuis un navigateur non
+filtré, coller la réponse dans la session, et l'enregistrer comme fixture.
+
+```
+https://world.openfoodfacts.org/api/v2/product/3017620422003.json
+```
+
+Avec deux ou trois réponses réelles — un produit riche, un produit pauvre, un
+code inconnu — toute la couche de lecture s'écrit et se teste ici, hors réseau.
+Il ne restera d'invérifié que l'appel lui-même, et c'est la seule part que le
+téléphone tranche.
+
 ## Ce qui la ferait tomber
 
 1. **Une donnée fausse présentée comme sûre.** C'est le seul risque grave. La
