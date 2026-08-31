@@ -50,6 +50,33 @@ void main() {
       }
     });
 
+    test('la plante n\'est proposée que là où sa couleur existe', () {
+      // Une plante est verte, et c'est tout. La proposer sur une teinte
+      // qu'aucun feuillage ne porte enverrait quelqu'un chercher ce qui
+      // n'existe pas.
+      var vertesTrouvees = 0;
+      for (final mur in [
+        [198, 156, 109],
+        [70, 100, 160],
+        [110, 125, 100],
+      ]) {
+        for (final h in BuildHarmonies.pour(mur[0], mur[1], mur[2])) {
+          for (final p in h.propositions) {
+            final estVert =
+                NameColor.of(p.rouge, p.vert, p.bleu).label.startsWith('vert');
+            final proposePlante = p.objets.any((o) => o.contains('plante'));
+            expect(proposePlante, estVert,
+                reason: 'mur $mur, ${h.type.nom}, ${p.part}% : '
+                    '${NameColor.of(p.rouge, p.vert, p.bleu).label} '
+                    '→ ${p.objets}');
+            if (estVert) vertesTrouvees++;
+          }
+        }
+      }
+      expect(vertesTrouvees, greaterThan(0),
+          reason: 'aucune proposition verte : le test ne prouve rien');
+    });
+
     test('les quantités désignent les objets', () {
       for (final h in ocre) {
         expect(h.propositions[0].objets, contains('tapis'));

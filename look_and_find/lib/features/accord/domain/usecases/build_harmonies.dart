@@ -32,6 +32,7 @@
 /// le mur : « un tapis vert plus clair » se voit, s'achète, et reste analogue.
 library;
 
+import '../../../color_reader/domain/usecases/name_color.dart';
 import '../entities/harmonie.dart';
 
 class BuildHarmonies {
@@ -97,10 +98,26 @@ class BuildHarmonies {
       rouge: r,
       vert: v,
       bleu: b,
-      objets: part == 30
-          ? const ['tapis', 'rideaux', 'plaid']
-          : const ['coussin', 'pot', 'vase'],
+      objets: _objets(part, r, v, b),
     );
+  }
+
+  /// Les objets qui portent naturellement cette quantité — plus la plante,
+  /// quand la couleur s'y prête.
+  static List<String> _objets(int part, int r, int v, int b) {
+    final base = part == 30
+        ? ['tapis', 'rideaux', 'plaid']
+        : ['coussin', 'pot', 'vase'];
+    final nom = NameColor.of(r, v, b).label;
+    // Le feuillage couvre du vert clair au vert foncé ; au-delà, aucune plante
+    // d'intérieur ne rend cette teinte, et la proposer serait envoyer quelqu'un
+    // chercher ce qui n'existe pas.
+    if (nom.startsWith('vert')) {
+      // Une plante occupe une petite masse, même grande : elle est ajourée.
+      // Elle ponctue, elle ne recouvre pas.
+      return part == 10 ? [...base, 'plante'] : [...base, 'grande plante'];
+    }
+    return base;
   }
 
   static (double, double, double) _tsl(int r, int g, int b) {
