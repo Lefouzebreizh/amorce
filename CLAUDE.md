@@ -257,7 +257,13 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   pas de contrat à auditer, et exiger une adresse pour LINK/USDT lui interdisait
   tout achat à chaque passe.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
-  sa promesse. Deux routes, une table de deux colonnes utiles, **zéro
+  sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
+  reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de
+  session. Le verbe s'écrit dans les accents graves à dessein : `/coherence-depot`
+  lit toute barre oblique suivie d'un nom, entre accents graves, comme une
+  compétence — une route documentée sans son verbe s'y fait donc signaler comme
+  compétence disparue.
+  Une table de deux colonnes utiles, **zéro
   dépendance** : la plateforme fournit `Request`, `Response` et `crypto.subtle`.
   Il sait deux choses — cette clé est-elle authentique, ce paiement tient-il
   toujours — et **aucun média ne l'atteint jamais**.
