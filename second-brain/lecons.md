@@ -4354,3 +4354,48 @@ baisser le plan trop fort vaut mieux que monter le climax. Monter fait
 travailler le limiteur, qui écrase précisément ce qu'on voulait faire
 ressortir — c'est le même piège que les deux couches d'un impact qui doivent
 partager leur niveau.
+
+## Un plafond sonore ne se vérifie que sur le fichier livré
+
+*Mesuré le 31/08/2026 sur Amorce, et le raisonnement vaut pour tout export.*
+
+Le limiteur d'Amorce bornait les échantillons à −1,4 dBFS. Le fichier exporté a
+été mesuré à **−0,13 dBFS de vrai pic** — au-dessus de tout ce que la courbe
+autorise, et exactement ce que le réencodage des plateformes transforme en
+écrêtage. Des montages denses sortaient même à **0,00 dBFS**, plein pot.
+
+Le réflexe est de soupçonner le limiteur. Il était juste : sondé dans un vrai
+Chromium, un `WaveShaper` portant cette courbe ne sort jamais au-dessus de son
+maximum. Trois étages **postérieurs** ajoutaient le niveau :
+
+| Étage | Ce qu'il ajoute | Comment il a été mesuré |
+| --- | --- | --- |
+| `oversample = '4x'` du `WaveShaper` | +0,30 dB sur des transitoires durs | même courbe, `none` / `2x` / `4x`, sur sinus, carré et impulsions |
+| Encodage Opus | +0,49 dB | mixage réel borné à −1,41, réencodé, remesuré |
+| Le reste, non isolé | ~1 dB | écart résiduel entre la borne et le fichier |
+
+Trois choses en sortent, et la troisième est la seule qui se généralise.
+
+**Le suréchantillonnage d'un limiteur casse son plafond au lieu de l'adoucir.**
+Il applique la courbe sur un signal suréchantillonné puis redescend, et le
+filtre de décimation sonne : la sortie repasse au-dessus du maximum de la
+courbe. En `none`, c'est impossible par construction. Le suréchantillonnage sert
+à une saturation qu'on veut douce, jamais à une borne qu'on veut sûre.
+
+**L'encodeur est le terme dominant, et aucun réglage du graphe ne le rattrape.**
+Baisser la courbe de 0,9 dB n'a rendu que 0,46 dB sur le fichier. Un plafond
+d'échantillon ne se convertit pas en plafond de vrai pic : il faut mesurer le
+rapport une fois, sur du vrai matériel, et en déduire la marge.
+
+**Et la règle qui vaut partout : un contrôle doit porter sur le fichier qui
+part.** Six mesures vertes décrivaient le graphe ; aucune ne décrivait le
+fichier, et c'est le fichier qu'on publie. Le contrôle ajouté à `verify.mjs`
+décode l'export, le rééchantillonne à 192 kHz et lit son vrai pic — le premier
+qui pouvait attraper le défaut, parce que le défaut naissait après tout le reste.
+
+Corollaire sur les seuils : **un seuil dit ce qui est atteint, pas ce qu'on
+vise.** La cible est −1 dBFS, elle n'est pas tenue (−0,94 sur le profil
+téléphone), et l'atteindre coûterait de la sonie sur tous les exports. Le
+contrôle garde donc ce qui ne se discute pas — le fichier n'écrête pas — et le
+commentaire nomme l'écart et son prix. Un seuil qui affiche la cible en la
+vérifiant pas est un mensonge vert.
