@@ -29,7 +29,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 | Ordre de mise en vente | **En cours** | — | [fiche](projets-actifs/ordre-de-mise-en-vente.md) | Questionnaire fiscal KDP : les redevances passent-elles sans SIRET ? |
 | Tout seul — tutos pour enfants | **En cours** | 8/10 | [fiche](projets-actifs/tout-seul-tutos-enfants.md) | Couche domaine et corpus de 17 gestes, puis l'écran et la voix |
 | Notice d'un appareil ménager | **Faisable** | 7/10 | [fiche](projets-actifs/notice-appareil-menager.md) | Relever les adresses de PDF chez cinq constructeurs — décide de l'issue |
-| Mécano — pièce en photo | **En pause** | 5/10 | [fiche](archives-backlog/mecano-photo-piece.md) | Trancher : catalogue fermé ou pas |
+| Mécano — pièce en photo | **En pause** | 5/10 | [fiche](archives-backlog/mecano-photo-piece.md) | Photographier dix pièces réellement déposées et compter les références lisibles |
 
 ## Terrain existant (base du critère « Alignement »)
 
