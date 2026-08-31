@@ -61,15 +61,20 @@ même refus.
 | --- | --- | --- |
 | ~~1 — La porte~~ | **Faite le 31/08/2026.** `JudgePhoto.juger()` et `PhotoVerdict`, 11 tests. Cinq refus, chacun avec son conseil. | ✅ |
 | ~~2 — Les trois harmonies~~ | **Faite le 31/08/2026.** `BuildHarmonies.pour()`, 13 tests. Chaque harmonie rend un 30 % et un 10 % avec leurs objets. | ✅ |
-| **3 — Les objets et les proportions** | Traduction en coussin, tapis, plante, pot, avec le 60 / 30 / 10. C'est ici que le produit devient utile plutôt que juste — une palette sans objet ne se met pas en pratique. | 1 semaine |
+| ~~3 — Les objets et les proportions~~ | **Faite le 31/08/2026**, avec l'étape 2. Chaque proposition porte sa part et ses objets ; la plante n'apparaît que là où la couleur calculée tombe dans les verts. | ✅ |
 | **4 — L'écran** | Viseur, verdict, palette, objets. En dernier, comme pour `NameColor`. | après |
 
 ## Deux décisions prises au cadrage
 
 **Le mur est le 60.** La dominante n'est donc jamais une harmonie : elle est la
-base. L'analogue prend les 30 %, la complémentaire les 10 %. C'est ce qui rend
-les objets concrets — on propose un coussin complémentaire, jamais un mur
-complémentaire.
+base, et **chaque** harmonie porte son propre 30 % et son propre 10 %. C'est ce
+qui rend les objets concrets — on propose un coussin complémentaire, jamais un
+mur complémentaire.
+
+_Cette fiche a d'abord écrit « l'analogue prend les 30 %, la complémentaire les
+10 % », ce qui répartissait les proportions **entre** les harmonies au lieu de
+les donner **à chacune**. Le cadrage disait « chacune accompagnée des
+proportions 60 / 30 / 10 » ; le code l'a suivi, le résumé s'en était écarté._
 
 **La dominante n'est pas le pixel le plus fréquent.** Un mur photographié porte
 ses ombres d'angle et ses reflets de fenêtre ; un histogramme naïf en fait trois
