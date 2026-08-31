@@ -93,6 +93,17 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nHouzz Pro tire son intérêt d'un endroit inattendu : il apporte des contacts en même temps que l'outil de gestion. Pour un artisan ou un maître d'œuvre, la vitrine, le devis chiffré, la visualisation 3D de la pièce rénovée et le suivi de chantier tiennent dans un seul abonnement, et la 3D est ce qui fait signer un client hésitant.\n\n## Points forts\n- Apporte du contact entrant, ce qu'aucun autre outil de gestion ne fait\n- Visualisation 3D de la rénovation intégrée au devis\n- Devis, factures et suivi de chantier dans le même endroit\n- Tarif accessible à un artisan seul ou à une petite équipe\n\n## Points faibles\n- L'apport de contacts est très inégal hors des grandes villes américaines\n- Moins profond que les outils spécialisés sur chaque fonction\n- Le catalogue produits est inutilisable depuis la France\n\n## Idéal pour\nLes artisans, décorateurs et maîtres d'œuvre qui cherchent autant des chantiers qu'un outil pour les gérer.",
       "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "fieldwire",
+      "nom": "Fieldwire",
+      "categorie": "Suivi de chantier",
+      "prix": "Freemium — à partir de 39 $/mois par utilisateur",
+      "description_courte": "Les plans, les tâches et les réserves dans la poche de chaque compagnon, hors ligne compris.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/fieldwire",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nFieldwire fait ce que la plupart des outils de chantier promettent sans le tenir : être réellement utilisé par les gens qui sont sur le chantier. Plans à jour dans le téléphone, tâche épinglée à un endroit précis, photo, hors ligne au sous-sol. La formule gratuite couvre trois utilisateurs et un chantier, ce qui suffit à juger sans réunion d'achat.\n\n## Points forts\n- Formule gratuite réellement utilisable : trois utilisateurs, un chantier\n- Fonctionne hors ligne, ce qui est la réalité d'un sous-sol ou d'un dernier étage\n- Version de plan toujours à jour : plus personne ne travaille sur l'indice précédent\n- Adopté par les compagnons, pas seulement par l'encadrement\n\n## Points faibles\n- Facturé par utilisateur : équiper tout le monde chiffre vite\n- Le module de planning reste basique face aux logiciels dédiés\n- Pas d'analyse d'avancement automatique : c'est de la saisie assistée\n\n## Idéal pour\nLes entreprises de second œuvre et les conducteurs de travaux qui relèvent encore leurs réserves sur carnet et retapent le soir.",
+      "date_ajout": "2026-08-31"
     }
   ]
 }

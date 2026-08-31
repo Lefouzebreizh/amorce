@@ -93,6 +93,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nFreed a été conçu par et pour des cliniciens en exercice, ce qui se voit à la simplicité : un bouton, aucune configuration, et une note qui apprend le style du praticien au fil des corrections. Pas de projet, pas d’intégration à négocier — c’est un abonnement individuel qu’on prend le matin et qu’on utilise l’après-midi.\n\n## Points forts\n- Aucune configuration : utilisable dès la première consultation\n- Apprend le style de rédaction du praticien à partir des corrections\n- Abonnement individuel en libre-service, résiliable à tout moment\n- Essai gratuit sur plusieurs consultations avant tout engagement\n\n## Points faibles\n- Aucune intégration au dossier patient : la note se copie à la main\n- Optimisé pour l’anglais américain, le français reste secondaire\n- Le cadre réglementaire européen sur les données de santé demande une vérification préalable\n\n## Idéal pour\nLe praticien seul, sans service informatique, qui veut arrêter de finir ses journées par une heure de rédaction.",
       "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "elicit",
+      "nom": "Elicit",
+      "categorie": "Recherche & veille",
+      "prix": "Freemium — à partir de 12 $/mois",
+      "description_courte": "La revue de littérature semi-automatisée : cent articles lus, résumés et rangés dans un tableau comparatif.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/elicit",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nElicit fait le travail ingrat d’une revue de littérature : trouver les articles pertinents, en extraire la population, la méthode, les effectifs et les résultats, et ranger le tout dans un tableau comparable ligne à ligne. Ce qui demandait deux semaines à un interne se ramène à une après-midi de vérification — la vérification restant indispensable.\n\n## Points forts\n- Extraction structurée des données de chaque article, en tableau\n- Sélection des articles pertinents à partir d’une question en langage courant\n- Export du tableau, exploitable dans un travail publiable\n- Formule gratuite suffisante pour une première revue\n\n## Points faibles\n- Chaque extraction doit être recoupée avec l’article : les erreurs existent\n- Couvre mal la littérature non anglophone\n- Le crédit gratuit s’épuise vite sur une revue sérieuse\n\n## Idéal pour\nLes internes, chefs de clinique et praticiens hospitaliers qui doivent produire une revue de littérature sans y passer un mois.",
+      "date_ajout": "2026-08-31"
     }
   ]
 }

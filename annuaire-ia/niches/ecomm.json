@@ -93,6 +93,17 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nNosto occupe le terrain de la personnalisation clé en main : recommandations de produits, contenus adaptés, tests de variantes, le tout sans écrire de code. C'est ce qui explique son adoption chez des marques sans grande équipe technique. Le revers est classique — on gagne en rapidité de mise en œuvre ce qu'on perd en maîtrise fine, et l'effet sur la conversion mérite d'être mesuré plutôt que cru.\n\n## Points forts\n- Personnalisation opérationnelle sans développement\n- Recommandations, contenus et tests dans une même plateforme\n- Intégrations directes avec les principales solutions de boutique\n- Mise en place rapide comparée à un projet interne\n\n## Points faibles\n- Aucun tarif public, positionnement moyen et grand compte\n- Effet sur la conversion à mesurer sérieusement, promesse générique du secteur\n- Peu de maîtrise fine sur la logique de recommandation\n- Un outil de plus qui suit les visiteurs : à cadrer côté données personnelles\n\n## Idéal pour\nLes boutiques établies sans équipe technique dédiée, qui veulent personnaliser sans lancer un chantier.",
       "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "botmind",
+      "nom": "Botmind",
+      "categorie": "Service client",
+      "prix": "Sur devis",
+      "description_courte": "L'assistant qui traite les demandes répétitives du service client — où est ma commande, comment je retourne — et laisse le reste.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/botmind",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nLa majorité des sollicitations d'un service client de boutique en ligne se résume à quelques questions répétées mille fois : où en est la commande, comment retourner, quand suis-je remboursé. Botmind, éditeur français, absorbe ce socle et transmet le reste à un conseiller. Le calcul est simple à faire pour n'importe quelle boutique : compter la part de ces trois questions dans le volume total, et en déduire la valeur.\n\n## Points forts\n- Cible franchement les demandes répétitives, sans promettre de tout traiter\n- Éditeur français, hébergement et support locaux\n- Se branche sur les outils de billetterie de service client existants\n- Mise en place plus légère que les plateformes de conversation généralistes\n\n## Points faibles\n- Aucun tarif public\n- Le gain dépend entièrement de la part de demandes répétitives\n- Suppose une base de connaissances tenue à jour\n- Périmètre plus étroit que les plateformes conversationnelles complètes\n\n## Idéal pour\nLes boutiques dont le service client croule sous les mêmes questions de suivi de commande et de retour.",
+      "date_ajout": "2026-08-31"
     }
   ]
 }

@@ -93,6 +93,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nEpique regroupe une quinzaine de générateurs pensés pour un seul métier : texte d'annonce à partir des caractéristiques du bien, publication pour les réseaux sociaux, courriel de prospection sur un secteur, biographie professionnelle, visuel de vitrine. Rien qu'un assistant généraliste ne saurait faire, mais chaque outil pose déjà les bonnes questions, ce qui fait la différence entre un usage régulier et un abonnement oublié.\n\n## Points forts\n- Trames spécifiques au métier : aucune consigne à rédiger soi-même\n- Génération d'images de biens et de visuels de vitrine incluse\n- Tarif accessible à un négociateur indépendant\n- Prise en main immédiate, sans formation\n\n## Points faibles\n- Textes calibrés sur le marché américain, à retravailler pour la France\n- La qualité varie beaucoup d'un générateur à l'autre\n- Rien n'empêche deux agences voisines de publier le même texte\n\n## Idéal pour\nLe négociateur indépendant ou la petite agence sans service marketing, qui publie ses annonces et ses réseaux sociaux entre deux visites.",
       "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "netty",
+      "nom": "Netty",
+      "categorie": "CRM & pilotage",
+      "prix": "À partir de 89 €/mois, site web inclus",
+      "description_courte": "Le logiciel d'agence qui inclut le site vitrine dans l'abonnement, avec quinze jours d'essai et un tarif affiché.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/netty",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nNetty joue la lisibilité là où ses concurrents jouent la modularité : un tarif affiché, le site internet de l'agence compris dans l'abonnement, quinze jours pour se décider. Pour une agence de deux à dix personnes qui ne veut pas piloter deux prestataires, c'est un argument concret. En contrepartie, ses fonctions d'IA sont plus légères que celles des concurrents qui en ont fait leur axe.\n\n## Points forts\n- Tarif public et lisible, sans devis préalable\n- Site web de l'agence inclus : un prestataire de moins\n- Essai gratuit de quinze jours, engagement limité\n- Interface simple, prise en main rapide pour une petite équipe\n\n## Points faibles\n- Fonctions d'IA plus limitées que chez les concurrents qui en ont fait leur axe\n- Le confort du tout-en-un se paie en souplesse si l'agence grandit\n- Moins d'intégrations tierces que les acteurs à large parc\n- Le site inclus contraint la liberté éditoriale de l'agence\n\n## Idéal pour\nLes agences de deux à dix personnes qui veulent un outil clair et un site web, sans négocier ni empiler les modules.",
+      "date_ajout": "2026-08-31"
     }
   ]
 }

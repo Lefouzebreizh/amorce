@@ -93,6 +93,17 @@
       "score_avis": 3.9,
       "description_longue": "## Notre verdict\nL'intérêt de Sage Copilot n'est pas d'être le meilleur assistant du marché, c'est d'être déjà là. Pour les cabinets et les entreprises équipés de Sage, il propose des relances clients rédigées, signale les anomalies de saisie et projette la trésorerie sans qu'aucune donnée sorte du système en place. La barrière la plus coûteuse d'un projet d'intelligence artificielle — l'intégration — disparaît.\n\n## Points forts\n- Aucun projet d'intégration : les données sont déjà dans l'outil\n- Relances clients rédigées et priorisées selon le risque d'impayé\n- Détection d'anomalies de saisie au fil de l'eau\n- Inclus dans certaines offres, donc sans arbitrage budgétaire supplémentaire\n\n## Points faibles\n- Nettement en retrait des outils spécialisés sur chaque fonction prise isolément\n- Disponibilité inégale selon les produits et les pays de la gamme\n- Enfermement accru dans l'écosystème d'un éditeur\n\n## Idéal pour\nLes cabinets et directions financières déjà équipés Sage, qui veulent un premier usage utile sans conduire un projet.",
       "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "docyt",
+      "nom": "Docyt",
+      "categorie": "Extraction de documents",
+      "prix": "À partir de 50 $/mois",
+      "description_courte": "La comptabilité tenue en continu : factures lues, écritures proposées, rapprochement bancaire quotidien.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/docyt",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nDocyt vise le point d’équilibre entre le simple lecteur de factures et la plateforme complète : les documents sont lus, catégorisés selon l’historique du dossier, et les écritures poussées dans le logiciel comptable existant. Le cabinet garde son outil de production, le client obtient des chiffres à jour toute l’année plutôt qu’une fois par trimestre.\n\n## Points forts\n- Se greffe sur le logiciel comptable en place, sans migration\n- Catégorisation qui apprend de l’historique du dossier\n- Rapprochement bancaire quotidien plutôt que trimestriel\n- Tableaux de bord de gestion pour le client final\n\n## Points faibles\n- Pensé pour le plan comptable américain : la TVA française demande du paramétrage\n- La mise en route d’un dossier prend plusieurs semaines\n- Peu de références en France, support en anglais\n\n## Idéal pour\nLes cabinets qui veulent vendre du suivi mensuel plutôt que de la production trimestrielle, sans changer d’outil.",
+      "date_ajout": "2026-08-31"
     }
   ]
 }

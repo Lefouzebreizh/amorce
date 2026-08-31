@@ -177,6 +177,17 @@
       "score_avis": 4.4,
       "description_longue": "## Notre verdict\nHeyGen est le plus convaincant des générateurs de vidéo à avatar, mais sa fonction décisive est ailleurs : le doublage d'une vidéo existante dans une autre langue, en conservant le timbre de l'orateur et en resynchronisant les lèvres. Une vidéo tournée une fois devient une vidéo dans huit langues, ce qui change l'économie de la formation et du support en entreprise internationale.\n\n## Points forts\n- Doublage multilingue avec conservation de la voix et synchronisation labiale\n- Avatar personnel entraîné à partir de quelques minutes d'enregistrement\n- Rendu nettement au-dessus de la moyenne des générateurs d'avatars\n- Formule gratuite pour juger du résultat avant de payer\n\n## Points faibles\n- L'avatar reste identifiable comme synthétique sur les formats longs\n- Le clonage de voix et d'apparence exige un consentement explicite et écrit\n- Le système de crédits part vite dès que l'on produit sérieusement\n\n## Idéal pour\nLes équipes de formation et de communication interne qui doivent servir plusieurs langues sans retourner ni refaire doubler chaque vidéo.",
       "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "ideogram",
+      "nom": "Ideogram",
+      "categorie": "Design",
+      "prix": "Freemium — à partir de 8 $/mois",
+      "description_courte": "Le générateur d’images qui écrit correctement le texte : affiches, logos et visuels avec des mots lisibles.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/ideogram",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nLe texte incrusté est le point faible historique des générateurs d’images : slogans déformés, lettres inventées. Ideogram a fait de la typographie sa spécialité, et rend des affiches, des vignettes et des visuels de marque où le texte est lisible du premier coup. Pour tout ce qui porte un mot, il évite la reprise systématique dans un logiciel de mise en page.\n\n## Points forts\n- Texte incrusté lisible, ce qui reste rare parmi les générateurs\n- Excellent sur les affiches, vignettes et visuels typographiques\n- Formule gratuite avec un quota quotidien réellement utilisable\n- Contrôle du format et du style sans consigne compliquée\n\n## Points faibles\n- Moins photoréaliste que les spécialistes de l’image\n- Les typographies exactes d’une marque ne sont pas reproductibles\n- Le rendu des mains et des visages reste inférieur à la concurrence\n\n## Idéal pour\nCeux qui fabriquent des visuels portant du texte — vignettes, affiches, publications — et repassent systématiquement par un logiciel de mise en page.",
+      "date_ajout": "2026-08-31"
     }
   ]
 }

@@ -93,6 +93,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nZenchef gère la réservation sans commission par couvert, ce qui change l'équation économique face aux plateformes. Sa partie intelligente travaille sur le plan de salle — quelle table pour quel groupe, à quelle heure, pour maximiser le nombre de services — et sur la relance des clients qui ne sont pas revenus depuis trois mois. Deux couverts récupérés par service suffisent à payer l'abonnement.\n\n## Points forts\n- Aucune commission par couvert, contrairement aux places de marché\n- Optimisation du plan de salle et des créneaux de rotation\n- Relances et rappels automatiques : moins de tables réservées et vides\n- Solution française, avec un support qui répond dans la langue du restaurateur\n\n## Points faibles\n- Abonnement fixe, à assumer même sur un mois creux\n- Ne remplace pas la visibilité d'une place de marché sur la clientèle de passage\n- Le paramétrage du plan de salle demande un temps de mise en route\n\n## Idéal pour\nLes établissements qui vivent d'une clientèle d'habitués et veulent réduire leur dépendance aux plateformes qui prélèvent sur chaque couvert.",
       "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "innovorder",
+      "nom": "Innovorder",
+      "categorie": "Pilotage",
+      "prix": "Sur devis",
+      "description_courte": "La caisse, la commande en ligne et les bornes réunies, avec l'analyse des ventes qui en découle.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/innovorder",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nInnovorder est un éditeur français qui a construit son offre autour du point le plus stratégique du restaurant : l'encaissement et la prise de commande. Les données d'exploitation qui en sortent — ce qui se vend, à quelle heure, avec quoi — valent bien plus que ce qu'un tableur en fera jamais. La valeur n'est donc pas dans une couche d'IA affichée, mais dans le fait de rassembler en un point ce que la plupart des établissements éparpillent entre trois prestataires.\n\n## Points forts\n- Caisse, commande en ligne et bornes dans un même ensemble\n- Analyse des ventes assise sur des données de première main\n- Éditeur français, conformité fiscale et accompagnement local\n- Adapté à la restauration rapide comme à la restauration collective\n\n## Points faibles\n- Aucun tarif public, matériel à prévoir en plus\n- Changer de caisse est le changement le plus risqué d'un restaurant\n- Périmètre large, dont une partie sera inutile selon le format\n- Ce n'est pas un outil d'IA au sens strict : l'automatisation sert l'exploitation\n\n## Idéal pour\nLes établissements qui veulent réunir encaissement et commande en ligne chez un seul prestataire français, et exploiter enfin leurs chiffres.",
+      "date_ajout": "2026-08-31"
     }
   ]
 }
