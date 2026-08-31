@@ -53,7 +53,7 @@ const LOTS = [
     icone: Ecran,
     titre: 'Un site d’une page qui donne envie d’appeler',
     texte:
-      'Le même gabarit que mes pages « Les 10 meilleurs outils IA pour… », remis à ton métier, à ta ville et à tes chantiers. Une seule page, parce qu’un client qui cherche un couvreur ne lit pas six onglets.',
+      'Un gabarit éprouvé, remis à ton métier, à ta ville et à tes chantiers. Une seule page, parce qu’un client qui cherche un couvreur ne lit pas six onglets.',
   },
   {
     icone: Telephone,

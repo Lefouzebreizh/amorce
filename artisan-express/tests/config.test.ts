@@ -54,3 +54,36 @@ test('sans variable réglée, le site n’affirme aucune adresse', async () => {
   // L'environnement de test ne pose pas NEXT_PUBLIC_SITE_URL.
   assert.equal(adresseDuSite, null);
 });
+
+test('aucun encaissement en ligne tant que le SIRET n’est pas actif', async () => {
+  /*
+   * Ce test est un verrou, pas une vérification.
+   *
+   * Une facture française porte obligatoirement un SIRET, et l'immatriculation
+   * n'est pas validée. Encaisser d'ici là, c'est facturer sans être
+   * enregistré — le risque que `FACTURER.md` chiffre à « bien plus que 300 € ».
+   *
+   * Il tombe le jour où quelqu'un rouvre le paiement, y compris par un réglage
+   * d'hébergeur : c'est exactement le moment où on veut être arrêté et
+   * relire pourquoi. Le rouvrir demande de changer cette ligne **et** la
+   * constante, donc de le décider deux fois.
+   */
+  const { ENCAISSEMENT_OUVERT, aUnStripe } = await import('@/lib/config');
+  assert.equal(ENCAISSEMENT_OUVERT, false, 'le SIRET est-il actif ? sinon, ne pas rouvrir');
+  assert.equal(aUnStripe, false);
+});
+
+test('un lien Stripe réglé ne rouvre pas l’encaissement à lui seul', async () => {
+  /*
+   * Le piège que ce test garde : `NEXT_PUBLIC_LIEN_STRIPE` se pose sur
+   * l'hébergeur, sans relire une ligne de code. Le verrou doit primer sur la
+   * variable, sans quoi il ne verrouille rien.
+   */
+  const { ENCAISSEMENT_OUVERT } = await import('@/lib/config');
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('../src/lib/config.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /aUnStripe = ENCAISSEMENT_OUVERT && /,
+    'aUnStripe doit dépendre du verrou avant la variable');
+  assert.equal(ENCAISSEMENT_OUVERT, false);
+});

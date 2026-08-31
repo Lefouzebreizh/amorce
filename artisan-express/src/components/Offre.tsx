@@ -2,7 +2,7 @@ import { BOUTON_CONTOUR, BOUTON_PRINCIPAL, SECTION, TITRE_SECTION } from '@/comp
 import { aUnStripe, contact } from '@/lib/config';
 
 const COMPRIS = [
-  ['Paiement en une fois', 'Carte bancaire par Stripe. 300 €, et c’est fini — aucun prélèvement ensuite.'],
+  ['Paiement en une fois', '300 €, et c’est fini — aucun abonnement, aucun prélèvement ensuite.'],
   ['Livré en 48 h', 'Le compteur part quand j’ai tes infos et tes photos, pas quand tu paies.'],
   ['Une modification offerte', 'Après livraison, tu regardes, tu me dis ce qui cloche, je corrige.'],
   ['Le site est à toi', 'Le code, le texte, les images : tu repars avec si un jour tu veux changer de crémerie.'],
@@ -49,18 +49,24 @@ export function Offre() {
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a className={BOUTON_PRINCIPAL} href={aUnStripe ? contact.stripeLien : '#formulaire'}>
-              Je veux mon site en 48&nbsp;h
+              {aUnStripe ? 'Je veux mon site en 48\u00a0h' : 'Je réserve ma place'}
             </a>
             <a className={BOUTON_CONTOUR} href="#formulaire">
               J’ai une question avant
             </a>
           </div>
 
-          {aUnStripe ? (
-            <p className="mt-4 text-base text-ardoise">
-              Paiement chez Stripe. Ta carte ne passe jamais par ce site.
-            </p>
-          ) : null}
+          {/*
+            * Deux phrases, jamais la même. Le paiement en ligne est fermé tant
+            * que le SIRET n'est pas actif : promettre une carte bancaire qui
+            * n'encaisse pas ferait rebrousser chemin à quelqu'un de décidé.
+            * On dit donc ce qui se passe vraiment — on convient ensemble.
+            */}
+          <p className="mt-4 text-base text-ardoise">
+            {aUnStripe
+              ? 'Paiement chez Stripe. Ta carte ne passe jamais par ce site.'
+              : 'Je réserve ta place, on convient du paiement ensemble. Rien à régler depuis cette page.'}
+          </p>
         </div>
       </div>
     </section>
