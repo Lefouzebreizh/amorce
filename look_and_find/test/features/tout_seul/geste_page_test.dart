@@ -14,11 +14,11 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:look_and_find/core/theme/app_theme.dart';
 import 'package:look_and_find/features/tout_seul/domain/corpus/corpus_gestes.dart';
 import 'package:look_and_find/features/tout_seul/domain/entities/geste.dart';
 import 'package:look_and_find/features/tout_seul/presentation/mots_enfant.dart';
 import 'package:look_and_find/features/tout_seul/presentation/pages/geste_page.dart';
+import 'package:look_and_find/features/tout_seul/presentation/theme_enfant.dart';
 
 import 'fausse_voix.dart';
 
@@ -41,7 +41,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.dark,
+        theme: ThemeEnfant.clair,
         locale: const Locale('fr', 'FR'),
         supportedLocales: const [Locale('fr', 'FR')],
         localizationsDelegates: const [
@@ -209,8 +209,10 @@ void main() {
 
     for (final intitule in [MotsEnfant.retour, MotsEnfant.sortir]) {
       final taille = tester.getSize(find.byTooltip(intitule));
-      expect(taille.height, greaterThanOrEqualTo(72), reason: intitule);
-      expect(taille.width, greaterThanOrEqualTo(72), reason: intitule);
+      expect(taille.height, greaterThanOrEqualTo(ThemeEnfant.cible),
+          reason: intitule);
+      expect(taille.width, greaterThanOrEqualTo(ThemeEnfant.cible),
+          reason: intitule);
     }
   });
 

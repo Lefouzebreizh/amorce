@@ -17,19 +17,33 @@
 /// enfant, et c'est le seul ordre qu'il puisse anticiper — trier par nom
 /// supposerait de savoir lire les noms.
 ///
-/// **La voix entre par le constructeur.** Cet écran ne la fait pas parler, mais
-/// il la transmet à l'écran du geste : c'est ce qui garde `VoixSysteme` dans le
-/// seul point d'entrée et rend toute la présentation vérifiable avec une
+/// **Toucher une tuile dit son nom à voix haute**, et c'est la réponse au seul
+/// vrai défaut de la grille : *l'émoji peut mentir*. Il n'existe pas d'émoji de
+/// fermeture éclair — c'est un sac à dos qui la représente — et deux gestes
+/// différents portent deux chaussures. Sans la voix, l'enfant ne découvre son
+/// erreur qu'une fois entré dans le geste, et il n'a aucun moyen de savoir
+/// que c'est lui qui s'est trompé plutôt que l'application.
+///
+/// **La navigation ne l'attend pas.** Le nom est lancé, l'écran s'ouvre dans la
+/// foulée, et la première étape coupe la phrase si l'enfant est déjà arrivé :
+/// c'est ce que `Voix.dire` fait par construction, et c'est le bon
+/// comportement — une ouverture qui attendrait la fin de l'énoncé donnerait un
+/// écran figé une seconde après chaque appui, ce qui s'apprend comme une panne.
+///
+/// **La voix entre par le constructeur.** C'est ce qui garde `VoixSysteme` dans
+/// le seul point d'entrée et rend toute la présentation vérifiable avec une
 /// fausse voix. Voir `voix.dart` pour la raison complète.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_colors.dart';
 import '../../domain/corpus/corpus_gestes.dart';
 import '../../domain/entities/geste.dart';
 import '../../domain/voix.dart';
 import '../mots_enfant.dart';
+import '../theme_enfant.dart';
 import '../widgets/tuile_geste.dart';
 import 'geste_page.dart';
 
@@ -59,13 +73,16 @@ class AccueilGestesPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.text,
+                      color: CouleursEnfant.encre,
                     ),
                   ),
                   SizedBox(height: 4),
                   Text(
                     MotsEnfant.choisir,
-                    style: TextStyle(fontSize: 18, color: AppColors.muted),
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: CouleursEnfant.encreDouce,
+                    ),
                   ),
                 ],
               ),
@@ -85,9 +102,7 @@ class AccueilGestesPage extends StatelessWidget {
                   final geste = CorpusGestes.gestes[rang];
                   return TuileGeste(
                     geste: geste,
-                    onTouche: () => Navigator.of(context).push(
-                      _routeVers(context, geste),
-                    ),
+                    onTouche: () => _ouvrir(context, geste),
                   );
                 },
               ),
@@ -96,6 +111,16 @@ class AccueilGestesPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Dire le nom, puis ouvrir — dans cet ordre, et sans rien attendre.
+  ///
+  /// `unawaited` n'est pas une négligence, c'est la décision : attendre la fin
+  /// de l'énoncé retarderait l'ouverture d'une seconde entière, et un écran qui
+  /// ne réagit pas à l'appui est un écran qu'un enfant réappuie.
+  void _ouvrir(BuildContext context, Geste geste) {
+    unawaited(voix.dire(geste.nom));
+    Navigator.of(context).push(_routeVers(context, geste));
   }
 
   /// Un fondu, et rien quand l'appareil demande moins d'animations.

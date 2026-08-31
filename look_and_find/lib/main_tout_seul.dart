@@ -22,7 +22,7 @@
 /// * **Aucune date.** `initializeDateFormatting` n'est appelé que par Look &
 ///   Find, qui affiche un historique. Ici rien n'est daté.
 ///
-/// ## Les deux choses qui se règlent ici
+/// ## Les trois choses qui se règlent ici
 ///
 /// 1. **Le portrait verrouillé.** Le grand bouton du bas est posé pour un
 ///    pouce ; en paysage, l'écran se réduit à trois lignes et la phrase de
@@ -30,22 +30,28 @@
 /// 2. **La voix, préparée une fois.** `Voix.preparer` doit précéder le premier
 ///    `dire` ; le faire ici évite qu'un écran ait à s'en souvenir, et c'est le
 ///    seul endroit du projet où `VoixSysteme` est construite.
+/// 3. **Les icônes de la barre système en sombre.** Elles suivent le thème de
+///    l'application précédente, pas le nôtre : laissées claires, elles
+///    disparaissent purement et simplement sur le fond crème. Le défaut ne se
+///    voit ni à l'analyse ni aux tests — la barre système n'appartient pas à
+///    l'arbre de widgets — et arrive avec le passage au thème clair.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'core/theme/app_theme.dart';
 import 'features/tout_seul/data/voix_systeme.dart';
 import 'features/tout_seul/domain/voix.dart';
 import 'features/tout_seul/presentation/mots_enfant.dart';
 import 'features/tout_seul/presentation/pages/accueil_gestes_page.dart';
+import 'features/tout_seul/presentation/theme_enfant.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
 
   final voix = VoixSysteme();
   await voix.preparer();
@@ -55,10 +61,11 @@ Future<void> main() async {
 
 /// Racine de l'application enfant.
 ///
-/// Le thème est celui du dépôt, sombre : le contraste du texte sur le fond y
-/// est de dix-sept pour un, très au-dessus du 4,5:1 exigé, et un fond clair
-/// tenu à trente centimètres des yeux le soir est ce qu'on reproche le plus
-/// souvent aux applications pour enfants.
+/// Le thème est celui de *Tout seul*, clair et chaud, et **non celui du
+/// dépôt** : `AppTheme` est sombre parce que la moitié du parcours de Look &
+/// Find est un viseur caméra, ce qui n'existe pas ici. Un écran noir se lit
+/// « éteint » à cinq ans. Le détail des contrastes mesurés est dans
+/// `theme_enfant.dart` ; le texte des étapes y tient 16,18:1.
 class ToutSeulApp extends StatelessWidget {
   const ToutSeulApp({super.key, required this.voix});
 
@@ -69,7 +76,7 @@ class ToutSeulApp extends StatelessWidget {
     return MaterialApp(
       title: MotsEnfant.titre,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: ThemeEnfant.clair,
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [Locale('fr', 'FR')],
       localizationsDelegates: const [
