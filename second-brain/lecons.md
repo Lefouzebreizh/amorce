@@ -4354,3 +4354,29 @@ baisser le plan trop fort vaut mieux que monter le climax. Monter fait
 travailler le limiteur, qui écrase précisément ce qu'on voulait faire
 ressortir — c'est le même piège que les deux couches d'un impact qui doivent
 partager leur niveau.
+
+## Une fin qui ne dit rien coûte l'épisode suivant
+
+Relevé sur un export réel : la vidéo s'arrêtait sur son dernier plan, écran
+noir, sans un mot. Aucune mesure ne s'en plaignait — la couverture texte était
+correcte, la durée juste, le montage propre.
+
+**Sur une plateforme qui enchaîne toute seule, une fin muette est une fin
+perdue.** TikTok lance la vidéo suivante, celle de quelqu'un d'autre, et rien
+n'a dit qu'il y avait une suite. Le défaut ne se voit pas sur le fichier ; il
+se voit sur la courbe d'abonnements, des semaines plus tard.
+
+**Ce qui décide, c'est le dernier instant, pas « vers la fin ».** Un sous-titre
+qui s'arrête une seconde avant la fin laisse le film mourir en silence : le
+contrôle porte donc sur ce qui est encore affiché au dernier dixième, pas sur
+la présence d'un texte quelque part dans le troisième acte.
+
+**Et le carton se prend sur la fin, jamais en plus.** Rallonger le film
+déplacerait la dernière image et le raccord audio — ce qui ne regarde pas un
+texte. La durée se soustrait, elle ne s'ajoute pas.
+
+**Le texte proposé porte un crochet, et c'est délibéré.** Écrire la phrase à la
+place de quelqu'un lui met des mots dans la bouche ; laisser le crochet fait
+que le garde-fou existant le voit et l'empêche de partir gravé dans le fichier.
+Quatre gabarits non remplis l'avaient déjà fait, et la couverture texte était
+même bonne — puisqu'il y avait du texte.
