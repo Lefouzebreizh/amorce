@@ -162,3 +162,9 @@ visual_library/**/*.mp4
 
 # Le carnet rempli porte des coordonnées de tiers démarchés : il reste local.
 /artisan-express/prospects.md
+
+# Les fichiers de travail intermédiaires — captures d'essai, exports d'un coup
+# d'œil. `site-client.tmp.png` était entré à la racine sans que personne le
+# décide : un `.tmp.` au milieu d'un nom se lit comme jetable, mais rien ne
+# l'empêchait d'être committé.
+*.tmp.*
