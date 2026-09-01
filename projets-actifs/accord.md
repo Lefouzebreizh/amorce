@@ -59,9 +59,10 @@ même refus.
 
 | Étape | Livrable | Délai |
 | --- | --- | --- |
-| ~~1 — La porte~~ | **Faite le 31/08/2026.** `JudgePhoto.juger()` et `PhotoVerdict`, 11 tests. Cinq refus, chacun avec son conseil. | ✅ |
+| 1 — La porte | Écrite le 31/08/2026 : `JudgePhoto.juger()` et `PhotoVerdict`, 11 tests, cinq refus chacun avec son conseil. **Rouverte le même jour** : 47 photos réelles lui font accepter 10 scènes à tort. Il lui manque une mesure de contiguïté. | ⚠️ |
 | ~~2 — Les trois harmonies~~ | **Faite le 31/08/2026.** `BuildHarmonies.pour()`, 13 tests. Chaque harmonie rend un 30 % et un 10 % avec leurs objets. | ✅ |
 | ~~3 — Les objets et les proportions~~ | **Faite le 31/08/2026**, avec l'étape 2. Chaque proposition porte sa part et ses objets ; la plante n'apparaît que là où la couleur calculée tombe dans les verts. | ✅ |
+| 3 bis — La zone de visée | Un cadre au centre du viseur, et une porte qui ne juge que cette zone. Remplace la recherche d'une quatrième statistique : essayée, la contiguïté échoue comme la dispersion. Passe avant le reste de l'écran. | à faire |
 | **4 — L'écran** | Viseur, verdict, palette, objets. En dernier, comme pour `NameColor`. | après |
 
 ## Deux décisions prises au cadrage
@@ -104,6 +105,12 @@ Un vide net entre 0,59 et 0,82. Les seuils — 0,50 de part dominante, 0,70 de
 concentration — sont posés dedans. La porte accepte désormais **quatre** de ces
 dix-sept photos.
 
+> **Ce vide n'existe pas.** Quarante-sept photos, mesurées le 31 août 2026, le
+> comblent entièrement : voir « Ce que quarante-sept photos ont réfuté » plus
+> bas. Le tableau ci-dessus décrit le lot de dix-sept, pas le monde — il est
+> conservé parce qu'il explique d'où viennent les seuils, pas parce qu'il les
+> justifie encore.
+
 **Ce que ce lot ne prouve pas**, et qu'il faut dire : aucune de ces photos
 n'avait été cadrée *pour* Accord. Ce sont des chats, des gens, des écrans, des
 pièces. En refuser treize est le comportement attendu, pas de la sévérité — mais
@@ -136,15 +143,92 @@ une couleur qui crie, alors qu'une constante existait pour l'en empêcher. Rien
 ne l'aurait signalé sans le test de borne, parce que la couleur restait
 plausible.
 
+## Ce que quarante-sept photos ont réfuté — 31 août 2026
+
+Quarante-sept photos réelles, prises sans intention pour Accord, passées dans
+`JudgePhoto.juger()` tel qu'il est livré. **La porte en accepte dix. Les dix
+sont fausses.**
+
+| Ce qui a été accepté | Dominante rendue | Part | Concentration |
+| --- | --- | --- | --- |
+| Sculpture sur un escalier | `#846D5A` | 0,679 | 0,995 |
+| Chat sur un canapé beige | `#967E6F` | 0,783 | 0,986 |
+| Salle informatique, seaux au sol | `#8D8476` | 0,926 | 0,986 |
+| La même, autre angle | `#938B7C` | 0,940 | 0,959 |
+| Salon, une personne qui boit | `#5C3F2F` | 0,550 | 0,894 |
+| Salon, une personne en casque VR | `#7B6C65` | 0,823 | 0,875 |
+| Boutique de fleurs | `#9A958D` | 0,637 | 0,852 |
+| Canapé en cuir, une personne assise | `#684C3A` | 0,577 | 0,771 |
+| Chat sur un plaid, devant un mur | `#977664` | 0,602 | 0,755 |
+| Fauteuil et arbre à chat | `#918A7C` | 0,581 | 0,743 |
+
+Aucune n'est une surface. Deux sont des bureaux, deux contiennent une personne
+au premier plan. Et les dix couleurs rendues sont **le même brun boueux** — la
+famille de `#8D704B` que cette fiche déclarait corrigée. Elle ne l'était pas :
+le lot de dix-sept ne contenait simplement pas les cas où la mesure échoue.
+
+**Aucun seuil ne sépare plus les deux populations.** Les acceptations fausses
+s'étalent de 0,743 à 0,995 en concentration ; les dix recadrages de vraies
+surfaces, de 0,825 à 1,000. Les intervalles se recouvrent presque entièrement.
+Monter le seuil coûterait des surfaces légitimes sans supprimer les pires faux
+positifs, qui sont précisément les plus concentrés.
+
+**La cause.** Les teintes dominantes de presque tout le corpus tombent entre
+16° et 42° — la bande orange-brun. Sous lumière artificielle chaude, le mur, le
+sol, le tissu, le bois et l'animal tombent **tous dans la même famille de
+teinte**. La dispersion ne voit alors qu'une seule surface, quelle que soit la
+pagaille dans le cadre. Les dix-sept photos qui ont réglé le seuil étaient
+éclairées au jour ; c'est pour cela que la mesure semblait fonctionner.
+
+**Ce que ça implique.** Les trois mesures de la porte sont des histogrammes :
+elles ignorent *où* sont les pixels. Un mur uni et un salon beige ont le même
+histogramme et n'ont pas la même carte. Tant qu'on ne mesure que la teinte, il
+n'y a pas de seuil à trouver — l'hypothèse « la dispersion sépare une surface
+d'une pièce » est réfutée par ces quarante-sept photos.
+
+**La contiguïté a été essayée, et elle échoue aussi.** La plus grande zone d'un
+seul tenant portant la teinte dominante a été mesurée sur tout le corpus. Les
+surfaces cadrées vont de 0,50 à 1,00 ; les acceptations fausses, de 0,29 à
+0,85. Les intervalles se recouvrent encore, et croiser les deux mesures ne les
+sépare pas davantage : trois faux positifs survivent à toute paire de seuils
+qui laisse passer les vraies surfaces.
+
+**Et la raison est plus profonde qu'une mesure manquante.** Sur les photos
+acceptées à tort, il y a *vraiment* une grande surface unie dans le cadre — un
+mur de bureau, un canapé beige. Le calcul ne se trompe pas sur les pixels : il
+rend bien la couleur de la plus grande surface présente. Ce qui lui manque
+n'est pas dans l'image. **Une photo de mur et une photo de pièce contenant un
+mur sont statistiquement la même chose ; ce qui les distingue est l'intention
+de celui qui cadre.**
+
+Donc : ne pas deviner l'intention, la demander. Le viseur doit porter une
+**zone de visée** — un cadre au centre — et la porte ne juger que cette zone.
+C'est exactement ce que font les recadrages serrés de cette fiche, à la main,
+et ils se comportent bien : concentration de 0,825 à 1,000, et des couleurs
+justes (`#4A5647` pour un mur vert sauge, `#A37E26` pour un fauteuil moutarde).
+Cela déplace le travail de l'étape 1 vers l'étape 4, et supprime le besoin
+d'une quatrième statistique.
+
+**Ce que ce corpus vaut.** Il vient d'un seul foyer et d'un seul appareil : il
+prouve l'échec, il ne mesure pas le taux de refus qu'aurait un autre logement.
+L'objectif — cinq palettes sur dix photos — demandera un lot plus large.
+
 ## Ce qui manque, et qui ne se code pas
 
-**Trois photos de mur cadrées exprès.** Le lot de dix-sept a réglé la dispersion,
-mais il ne contenait aucun cadrage volontaire — donc rien n'y démontre qu'un mur
-photographié de face passe la porte. C'est le seul essai qui manque, et il tient
-en trois clichés.
+**Le cadrage volontaire ne manque plus.** Faute de pouvoir photographier sur
+commande, dix recadrages serrés ont été découpés dans des photos réelles — même
+appareil, même lumière, même bruit — et passés dans le vrai code. Ils répondent
+à la question posée : une surface cadrée franchement obtient une concentration
+de **0,825 à 1,000**, très au-dessus du seuil. La porte ne bloque pas le geste
+normal.
+
+Ce que le recadrage ne reproduit pas : la mesure d'exposition qu'un appareil
+ferait en visant la surface. Un mur foncé recadré est refusé pour obscurité à
+0,151 contre 0,18 ; visé pour de vrai, il serait sans doute passé. C'est le
+seul point qui demande encore un vrai cliché.
 
 Les déposer dans le dépôt reste exclu — aucun binaire versionné. Les mesures,
-elles, se consignent : c'est ce que fait le tableau ci-dessus.
+elles, se consignent : c'est ce que font les tableaux de cette fiche.
 
 ## Ce qui la ferait tomber
 
