@@ -143,6 +143,18 @@ chacun, ce qui reste intact. Puis attendre le feu vert.
 Ce menu n'est pas une politesse, c'est le dernier moment où une erreur de
 compréhension coûte une phrase au lieu d'un correctif.
 
+**Et « go » a un sens fixé.** Ce mot-là, en réponse à un menu ou à une
+proposition déjà posée, veut dire : feu vert, on continue ce qui a été proposé
+ou déjà entamé. S'il restait plusieurs façons de continuer, prendre la
+meilleure pour le propriétaire et avancer — ne pas revenir avec une question
+supplémentaire sur ce qui était déjà sur la table.
+
+Ça ne déplace pas la frontière d'avant : une vraie fourche qui n'a **jamais été
+posée** — deux visions différentes découvertes en cours de route, par exemple —
+reste ce que le §0 appelle une décision de produit, et se nomme avant qu'on
+choisisse à la place du propriétaire. « Go » referme un menu déjà ouvert ; il
+n'en ouvre pas un nouveau à sa place.
+
 ### 4. Un doublon arrête le geste
 
 Si un composant qui ressemble à ce qu'on s'apprête à écrire existe déjà, on
