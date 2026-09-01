@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from modules.classement import commande as commande_classement  # noqa: E402
 from modules.conversion import commande as commande_conversion  # noqa: E402
 from modules.nettoyage import commande as commande_nettoyage  # noqa: E402
+from modules.upscale import commande as commande_upscale  # noqa: E402
 from noyau.config import charger, valider  # noqa: E402
 
 RACINE = Path(__file__).resolve().parent
@@ -127,6 +128,12 @@ def commande_convertir(options: argparse.Namespace) -> int:
     return commande_conversion.executer(options, config) if config else 1
 
 
+def commande_upscaler(options: argparse.Namespace) -> int:
+    """L'agrandissement : le plan se calcule ici, le modèle tourne ailleurs."""
+    config = config_valide(options)
+    return commande_upscale.executer(options, config) if config else 1
+
+
 def commande_ranger(options: argparse.Namespace) -> int:
     """Le rangement dans la bibliothèque : catégorie, thème, date."""
     config = config_valide(options)
@@ -162,6 +169,10 @@ def main() -> int:
         if nom == "convertir":
             commande_conversion.ajouter_arguments(module)
             module.set_defaults(faire=commande_convertir)
+            continue
+        if nom == "upscaler":
+            commande_upscale.ajouter_arguments(module)
+            module.set_defaults(faire=commande_upscaler)
             continue
         if nom == "ranger":
             commande_classement.ajouter_arguments(module)
