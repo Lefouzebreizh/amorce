@@ -4765,3 +4765,27 @@ générés ne sont pas un jeu de données.** Ils suffisent à trouver un défaut
 à régler un seuil. Une règle qu'ils suggèrent sans la trancher se laisse
 **écrite en commentaire et épinglée par un test**, jamais devinée — sans quoi
 un nombre inventé finit par avoir l'air d'une mesure.
+
+## IPTV : masquer un doublon doit aussi poser `teste_le`, sinon « Éprouver » le fait revenir
+
+Mesuré le 01/09/2026 en écrivant le dédoublonnage des chaînes (même titre,
+plusieurs qualités chez un fournisseur Xtream — TF1 quatre ou cinq fois de
+suite). Masquer le perdant avec `etat = 'doublon'` suffisait pour qu'il
+disparaisse de l'écran, mais pas pour qu'il **le reste** : `aTester({
+jamaisTestes: true })` filtre uniquement sur `teste_le IS NULL`, une colonne
+que le masquage ne touchait pas. Un doublon jamais éprouvé au moment du
+dédoublonnage restait donc candidat pour le bouton « Éprouver » — et s'il
+répondait, `marquerEtat(id, 'ok')` écrivait par-dessus `etat = 'doublon'`,
+défaisant le masquage sans qu'on l'ait demandé.
+
+**La règle, plus générale que ce seul cas :** dans ce schéma, `etat` (ce qu'on
+affiche) et `teste_le` (ce qui a déjà été regardé) sont deux colonnes
+distinctes qui doivent avancer ensemble dès qu'un geste écrit l'une sans
+passer par le chemin qui pose déjà l'autre (`marquerEtat`, `marquerTeste`). Un
+nouveau code qui touche `etat` directement — comme `dedoublonner`, en
+contournant `marquerEtat` parce que « doublon » n'est pas un état de test —
+doit se demander explicitement ce que `teste_le` devient, pas seulement ce que
+`etat` devient. Le symptôme ne se serait vu qu'à l'usage : un dédoublonnage
+qui tient jusqu'au premier clic sur « Éprouver », puis qui semble s'être
+« annulé tout seul ». Trouvé en relisant le diff, pas en le lançant — un test
+dédié (`aTester` après `dedoublonner`) l'épingle maintenant.

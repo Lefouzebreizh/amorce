@@ -100,6 +100,34 @@ test('le rangement rend de quoi l’afficher, sans rien décider de l’affichag
   )
 })
 
+test('le rangement dédoublonne aussi, et le dit dans son bilan', async () => {
+  // Le cas réel : un panneau Xtream classe TF1 dans plusieurs catégories
+  // qualité à la fois, et chacune ressort comme une entrée séparée.
+  const depot = ouvrirDepot(':memory:')
+  await importerM3U(
+    depot,
+    [
+      '#EXTM3U',
+      '#EXTINF:-1 group-title="FR | TNT",TF1 SD',
+      'http://exemple.tv/live/tf1sd.m3u8',
+      '#EXTINF:-1 group-title="FR | TNT HD",TF1 HD',
+      'http://exemple.tv/live/tf1hd.m3u8',
+      '#EXTINF:-1 group-title="FR | TNT",France 2',
+      'http://exemple.tv/live/f2.m3u8',
+    ].join('\n'),
+    { adresse: 'http://exemple.tv/fr.m3u' },
+  )
+
+  const bilan = rangerCatalogue(depot)
+  assert.equal(bilan.avant.chaines, 3, 'les trois entrées sont bien arrivées, avant nettoyage')
+  assert.equal(bilan.doublonsMasques, 1, 'un seul doublon : TF1 SD, au profit de TF1 HD')
+  assert.equal(bilan.apres.chaines, 2, 'TF1 (une fois) et France 2')
+  assert.equal(depot.compter({ genre: 'direct' }), 2)
+  assert.equal(depot.compter({ genre: 'direct', inclureMorts: true }), 3, 'rien n’est supprimé')
+
+  depot.fermer()
+})
+
 test('un lot ne dépasse jamais ce qu’on lui demande', async () => {
   const depot = await catalogue()
   assert.equal(choisirCandidats(depot, { lot: 3 }).length, 3)

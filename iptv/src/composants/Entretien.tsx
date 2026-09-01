@@ -93,11 +93,21 @@ export function Entretien({ initial }: { initial: Etat }) {
       const bilan = await appeler('ranger')
       await relire()
       const reclasses = bilan['reclasses'] ?? 0
+      const doublonsMasques = bilan['doublonsMasques'] ?? 0
+      const fichesDoublons = bilan['fichesDoublons'] ?? 0
       setMessage(
         (reclasses > 0
           ? `${String(reclasses)} entrées ont changé de genre — elles étaient classées par une ` +
             `règle depuis corrigée. `
           : '') +
+          (doublonsMasques > 0 || fichesDoublons > 0
+            ? `${String(doublonsMasques)} chaîne(s)/film(s) en double masqué(s) (la meilleure ` +
+              `qualité reste visible), ${String(fichesDoublons)} fiche(s) de série en double ` +
+              `retirée(s). `
+            : '') +
+          `Avant : ${String(bilan['avantChaines'])} chaînes, ${String(bilan['avantFilms'])} films, ` +
+          `${String(bilan['avantSeries'])} séries — après : ${String(bilan['apresChaines'])} chaînes, ` +
+          `${String(bilan['apresFilms'])} films, ${String(bilan['apresSeries'])} séries. ` +
           `${String(bilan['numerotees'])} chaînes numérotées sur ${String(bilan['chaines'])}. ` +
           `Les autres suivent par familles : sport, cinéma, musique, puis le reste.`,
       )

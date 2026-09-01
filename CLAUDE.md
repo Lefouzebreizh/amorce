@@ -712,6 +712,29 @@ doit connaître s'écrit et se fusionne — elle ne s'envoie pas. C'est aussi ce
 rend la fusion rapide utile au-delà des conflits : tant qu'un lot n'est pas sur
 `main`, il n'existe pour personne d'autre.
 
+**Mais on peut voir si le PC tourne, et c'est ce qu'il faut faire avant de
+déclarer un mur.** `list_sessions` le dit en une ligne :
+
+| Dans la fiche | Ce que c'est |
+| --- | --- |
+| `environment_kind: bridge` + `origin: claude_code_cli` | **le PC** |
+| `environment_kind: anthropic_cloud`, origine `android` ou `claude_code_mcp_seed` | un conteneur distant |
+| `connection_status: connected` | elle tourne **maintenant** |
+
+Voir n'est pas joindre : le paragraphe ci-dessus tient toujours, on ne lui parle
+pas. Le geste est donc de **nommer la session au propriétaire** — son
+identifiant et son titre — avec la tâche exacte à y reprendre, et de continuer
+sur ce qui ne dépend pas d'elle. C'est lui qui bascule d'un fil à l'autre ; ça
+lui coûte un geste, là où une impossibilité annoncée lui coûte la tâche.
+
+**Et le PC n'est pas d'office le meilleur endroit** : les deux murs ne sont pas
+les mêmes. Mesuré le 01/09/2026 sur l'agrandissement d'images — le PC tournait
+sur Python 3.14, où `basicsr` casse à l'import ; le conteneur distant sur 3.11,
+où il passe, mais sans carte graphique et derrière un mandataire qui refuse
+`download.pytorch.org` (la roue CPU allégée) tout en laissant passer PyPI et les
+objets de release GitHub. Router vers le PC est donc un **choix**, pas un
+réflexe : on regarde lequel des deux peut faire le travail, et on le dit.
+
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
 
@@ -1138,8 +1161,22 @@ doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 un quart de la consommation. Les mesures datées de ce jour-là, dans `/debloquer`,
 portent donc sur **quatre** projets et restent lues telles quelles. **Chacun se
 déclenche sur chaque commit tant qu'il ne filtre pas par chemin**, et le palier
-gratuit plafonne à cent déploiements par jour — crevé deux fois, la seconde à
-80 fusions seulement, parce que le nombre de projets avait doublé dans la nuit.
+gratuit plafonne à cent déploiements par jour — **crevé trois fois**. La
+seconde à 80 fusions seulement, parce que le nombre de projets avait doublé
+dans la nuit. La troisième le **01/09/2026**, à **18 PR fusionnées** dans la
+journée : trois projets branchés, chacun déclenché sur chaque commit, plus les
+commits de fusion — le compte y est sans qu'aucune journée n'ait paru
+exceptionnelle.
+
+**Ce que ça change en pratique : rien sur le code, tout sur la lecture des
+rouges.** Une fois le quota crevé, Vercel refuse *avant* que l'`ignoreCommand`
+tourne, donc le filtre de chemins n'y peut rien — c'est déjà écrit trois
+paragraphes plus bas, et c'est cette journée-ci qui l'a confirmé une troisième
+fois. Le message est explicite quand on le lit : « Resource is limited - try
+again in 24 hours (more than 100, code: api-deployments-free-per-day) ».
+
+Le seuil utile à retenir est donc **une vingtaine de fusions par jour**, pas
+cent : chaque fusion vaut trois déploiements ou plus.
 
 D'où le filtre : chaque projet porte un `vercel.json` dont l'`ignoreCommand`
 appelle `scripts/vercel-ignorer.sh` avec les chemins qui le concernent. Deux

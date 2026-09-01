@@ -381,6 +381,21 @@ async function principal(argv: readonly string[]): Promise<number> {
           )
         }
         console.log(
+          `Avant : ${String(bilan.avant.chaines)} chaînes, ${String(bilan.avant.films)} films, ` +
+            `${String(bilan.avant.series)} séries.`,
+        )
+        if (bilan.doublonsMasques > 0 || bilan.fichesDoublons > 0) {
+          console.log(
+            `${String(bilan.doublonsMasques)} chaîne(s)/film(s) en double masqué(s) (la meilleure ` +
+              `qualité reste), ${String(bilan.fichesDoublons)} fiche(s) de série en double retirée(s) ` +
+              `— rien n'est perdu, un titre seul n'est jamais touché.`,
+          )
+        }
+        console.log(
+          `Après : ${String(bilan.apres.chaines)} chaînes, ${String(bilan.apres.films)} films, ` +
+            `${String(bilan.apres.series)} séries.`,
+        )
+        console.log(
           `${String(bilan.numerotees)} chaînes numérotées sur ${String(bilan.chaines)} ` +
             `(les autres suivent par familles : sport, cinéma, musique, puis le reste).`,
         )
