@@ -1,0 +1,89 @@
+# Conseiller Patrimoine — modèle de configuration.
+#
+# Copiez ce fichier sous le nom « patrimoine.yaml », dans ce même dossier, et
+# remplacez les montants d'exemple par les vôtres. Le fichier réel n'est pas
+# versionné : il porte votre patrimoine, il n'a rien à faire dans Git.
+#
+# Aucune clé d'API n'apparaît ici, et il n'en existe pas ailleurs : ce module
+# ne sort pas sur le réseau. Les cours se saisissent à la main, avec leur date.
+
+profil:
+  # Une étiquette pour s'en souvenir, rien de plus. Ce sont les quatre
+  # pourcentages de « cibles_pct » qui pilotent tout — un profil déduit d'un
+  # mot-clé finit toujours par ne plus décrire ce qu'on détient vraiment.
+  appetence_risque: equilibre
+  horizon_annees: 15
+  apport_mensuel_eur: 500
+
+  # La somme doit faire exactement 100. Le chargeur refuse de démarrer sinon :
+  # à 97 %, chaque écart affiché serait décalé de trois points en silence.
+  cibles_pct:
+    bourse: 50
+    crypto: 10
+    immobilier: 30
+    liquidites: 10
+
+  # La largeur de la zone où l'on ne fait rien. Sous cet écart, arbitrer coûte
+  # plus en frais et en impôt que la discipline ne rapporte.
+  bande_tolerance_pct: 5
+
+  # Au-delà, un cours saisi à la main ne décrit plus le marché d'aujourd'hui :
+  # le bilan s'affiche encore, mais il se déclare partiel et le conseil se tait.
+  fraicheur_max_jours: 30
+
+# Les deux modules qu'on lit — en lecture seule, et sans jamais importer leur
+# code. Chemins relatifs à ce fichier-ci. Retirez une ligne pour ne pas
+# consulter la source correspondante.
+sources:
+  nexuscrypto: ../../nexuscrypto
+  pepites: ../../pepites
+
+actifs:
+  # Le « ticker » est celui de la place de cotation : CW8.PA pour Paris,
+  # CSPX.AS pour Amsterdam. L'enveloppe (PEA, CTO, AV, PER) n'entre pas dans le
+  # calcul : elle sert au conseil, parce qu'un arbitrage en PEA n'est pas
+  # imposé et qu'un arbitrage sur compte-titres l'est.
+  bourse:
+    - nom: MSCI Monde
+      ticker: CW8.PA
+      enveloppe: PEA
+      quantite: 24
+      pru_eur: 412.50
+      prix_eur: 487.20
+      releve_le: 2026-08-30
+    - nom: S&P 500
+      ticker: CSPX.AS
+      enveloppe: CTO
+      quantite: 8
+      pru_eur: 520.00
+      prix_eur: 611.40
+      releve_le: 2026-08-30
+
+  # La poche crypto se saisit ici, à la main — y compris ce que gère
+  # NexusCrypto. Ce n'est pas un oubli : le moteur garde son portefeuille en
+  # mémoire et ne l'écrit nulle part, donc personne ne peut le lire. Ce qu'il
+  # publie, lui, c'est son allocation *cible*, que « main.py sources » affiche.
+  crypto:
+    - nom: Bitcoin
+      symbole: BTC
+      conservation: portefeuille froid
+      quantite: 0.085
+      pru_eur: 41200.00
+      prix_eur: 58900.00
+      releve_le: 2026-08-30
+
+  # Un bien compte en valeur nette : estimation moins capital restant dû. Le
+  # crédit reste affiché à côté, pour ne pas perdre l'effet de levier de vue.
+  immobilier:
+    - nom: Studio Rennes
+      valeur_estimee_eur: 148000
+      capital_restant_du_eur: 76500
+      loyer_mensuel_brut_eur: 545
+      charges_annuelles_eur: 1450
+
+  liquidites:
+    - nom: Livret A
+      montant_eur: 12000
+      taux_annuel_pct: 1.7
+    - nom: Compte courant
+      montant_eur: 2400
