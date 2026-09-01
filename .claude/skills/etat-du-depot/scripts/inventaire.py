@@ -70,8 +70,14 @@ def _compter_tests(dossier: Path) -> int:
     # ligne, ses tests existent, tournent, et le tableau les affiche à zéro :
     # le pire des trois états, puisqu'il désigne comme découvert un chantier
     # qui est gardé.
+    # `.js` et `.mjs` manquaient aussi, et c'est le nom de test le plus
+    # répandu qui soit : `annuaire-ia/` s'est affiché à zéro test le jour où il
+    # en a reçu dix-huit. Le tableau ne se trompait pas sur le dépôt, il se
+    # trompait sur lui-même — ce qui est pire, puisqu'on s'y fie pour décider
+    # où le prochain défaut tombera.
     motifs = ('test_*.py', '*_test.py', '*_test.dart',
-              '*.test.ts', '*.test.tsx', '*.test.mts')
+              '*.test.ts', '*.test.tsx', '*.test.mts',
+              '*.test.js', '*.test.mjs')
     return sum(1 for m in motifs for f in dossier.rglob(m)
                if not any(p in IGNORES for p in f.parts))
 
