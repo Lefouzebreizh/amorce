@@ -13,7 +13,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -40,7 +40,7 @@ class Repliques(unittest.TestCase):
 
 class Police(unittest.TestCase):
     def test_toute_la_matiere_des_dossiers_se_dessine(self):
-        police = fitz.Font(fontfile=str(lettrage.CORPS))
+        police = pymupdf.Font(fontfile=str(lettrage.CORPS))
         manquants = {}
         for chemin in DOSSIERS:
             if not chemin.exists():
@@ -59,7 +59,7 @@ class Police(unittest.TestCase):
 
     def test_la_substitution_vise_bien_des_absents(self):
         """Un remplacement vers un caractère lui aussi absent ne servirait à rien."""
-        police = fitz.Font(fontfile=str(lettrage.CORPS))
+        police = pymupdf.Font(fontfile=str(lettrage.CORPS))
         for absent, present in lettrage.SANS_GLYPHE.items():
             self.assertFalse(police.has_glyph(ord(absent)),
                              f"U+{ord(absent):04X} n'est pas absent, "
@@ -78,12 +78,12 @@ class HauteurUtile(unittest.TestCase):
         g = charte.GABARIT_INTERIEUR
         texte = "Et c’est beaucoup plus joli qu’une tête qui boude ! HI HI !"
         haut = lettrage.hauteur_utile(g, 200, texte, 11)
-        d = fitz.open()
+        d = pymupdf.open()
         p = d.new_page(width=g.points[0], height=g.points[1])
         p.insert_font(fontname="corps", fontfile=str(lettrage.CORPS))
-        reste = p.insert_textbox(fitz.Rect(0, 0, 200, haut), lettrage.rendable(texte),
+        reste = p.insert_textbox(pymupdf.Rect(0, 0, 200, haut), lettrage.rendable(texte),
                                  fontname="corps", fontsize=11,
-                                 align=fitz.TEXT_ALIGN_CENTER, lineheight=1.25)
+                                 align=pymupdf.TEXT_ALIGN_CENTER, lineheight=1.25)
         d.close()
         self.assertGreaterEqual(reste, 0)
 
@@ -95,7 +95,7 @@ class Composition(unittest.TestCase):
         Image.new("RGB", (600, 600), (250, 244, 230)).save(planche)
         cible = dossier / "page.pdf"
         lettrage.composer(planche, cible, pages[numero], 1, numero)
-        return fitz.open(cible)
+        return pymupdf.open(cible)
 
     def test_la_page_sort_au_gabarit_avec_toutes_ses_repliques(self):
         with tempfile.TemporaryDirectory() as d:

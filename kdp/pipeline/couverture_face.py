@@ -21,7 +21,7 @@ import io
 import sys
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -63,7 +63,7 @@ BANDEAU = 0.888
 SOMBRE = (0.20, 0.13, 0.06)
 
 
-def _poser(page: fitz.Page, cadre: fitz.Rect, texte: str, police: str,
+def _poser(page: pymupdf.Page, cadre: pymupdf.Rect, texte: str, police: str,
            taille: float, couleur, interligne: float = 1.3) -> float:
     """Écrit dans une boîte en réduisant le corps jusqu'à ce que ça tienne.
 
@@ -74,7 +74,7 @@ def _poser(page: fitz.Page, cadre: fitz.Rect, texte: str, police: str,
     while taille > 6:
         if page.insert_textbox(cadre, texte, fontname=police, fontsize=taille,
                                lineheight=interligne, color=couleur,
-                               align=fitz.TEXT_ALIGN_CENTER) >= 0:
+                               align=pymupdf.TEXT_ALIGN_CENTER) >= 0:
             return taille
         taille -= 0.5
     raise SystemExit(f"texte impossible à poser : {texte[:40]}")
@@ -93,7 +93,7 @@ def _couvrir(image: Image.Image, largeur: float, hauteur: float) -> Image.Image:
     return image.crop((0, marge, image.width, marge + neuve))
 
 
-def _voile(page: fitz.Page, cadre: fitz.Rect, force: float) -> None:
+def _voile(page: pymupdf.Page, cadre: pymupdf.Rect, force: float) -> None:
     """Éclaircit doucement le ciel derrière le titre.
 
     Un titre sombre sur un ciel mauve tient à l'écran et se perd en vignette,
@@ -108,7 +108,7 @@ def _voile(page: fitz.Page, cadre: fitz.Rect, force: float) -> None:
         # Opacité maximale au centre du bandeau, nulle à ses bords : sans ce
         # dégradé, le voile dessinerait un rectangle sur le ciel.
         t = 1 - abs(i / (bandes - 1) - 0.5) * 2
-        page.draw_rect(fitz.Rect(cadre.x0, cadre.y0 + i * pas,
+        page.draw_rect(pymupdf.Rect(cadre.x0, cadre.y0 + i * pas,
                                  cadre.x1, cadre.y0 + (i + 1) * pas),
                        color=None, fill=CLAIR, fill_opacity=force * t)
 
@@ -119,7 +119,7 @@ def composer(bordure: Path, illustration: Path, cible: Path,
     largeur = (charte.FORMAT_ROGNE + charte.FOND_PERDU) * charte.POUCE_EN_POINTS
     hauteur = (charte.FORMAT_ROGNE + 2 * charte.FOND_PERDU) * charte.POUCE_EN_POINTS
 
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=largeur, height=hauteur)
 
     with Image.open(illustration) as brut:
@@ -129,14 +129,14 @@ def composer(bordure: Path, illustration: Path, cible: Path,
         pleine = _couvrir(dessin, largeur, hauteur)
         tampon = io.BytesIO()
         pleine.save(tampon, format="JPEG", quality=95, optimize=True, subsampling=0)
-        page.insert_image(fitz.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
+        page.insert_image(pymupdf.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
         dpi = pleine.width / (largeur / charte.POUCE_EN_POINTS)
     else:
         fond = fond_charte(bordure, cote_px).resize(
             (cote_px, round(cote_px * hauteur / largeur)), Image.LANCZOS)
         tampon = io.BytesIO()
         fond.save(tampon, format="JPEG", quality=94, optimize=True, subsampling=0)
-        page.insert_image(fitz.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
+        page.insert_image(pymupdf.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
         dpi = 0
 
     page.insert_font(fontname="corps", fontfile=str(CORPS))
@@ -154,17 +154,17 @@ def composer(bordure: Path, illustration: Path, cible: Path,
     # vignette, mais de peu, sur la seule ligne qui doive absolument s'y lire.
     # Les boîtes descendent donc dans le ciel, vide jusqu'aux personnages.
     if pleine_page:
-        _voile(page, fitz.Rect(gauche - 26, 0.066 * hauteur,
+        _voile(page, pymupdf.Rect(gauche - 26, 0.066 * hauteur,
                                droite + 26, 0.320 * hauteur), voile)
 
-    _poser(page, fitz.Rect(gauche, 0.072 * hauteur, droite, 0.112 * hauteur),
+    _poser(page, pymupdf.Rect(gauche, 0.072 * hauteur, droite, 0.112 * hauteur),
            SURTITRE, "ital", 17, pale)
-    corps = _poser(page, fitz.Rect(gauche, 0.112 * hauteur, droite, 0.232 * hauteur),
+    corps = _poser(page, pymupdf.Rect(gauche, 0.112 * hauteur, droite, 0.232 * hauteur),
                    TITRE, "gras", 60, encre, 1.15)
     # L'accroche est l'argument de vente, pas une légende : de 15 à 20, pour se
     # lire sur la fiche produit. Elle ne survivra pas à la vignette, et c'est
     # assumé — à cette taille, seul le titre le peut.
-    _poser(page, fitz.Rect(gauche, 0.240 * hauteur, droite, 0.310 * hauteur),
+    _poser(page, pymupdf.Rect(gauche, 0.240 * hauteur, droite, 0.310 * hauteur),
            ACCROCHE, "ital", 20, pale, 1.45)
 
     if not pleine_page:
@@ -179,7 +179,7 @@ def composer(bordure: Path, illustration: Path, cible: Path,
             ph, pl = bas - haut, (bas - haut) * rapport
         else:
             pl, ph = dispo_l, dispo_l / rapport
-        page.insert_image(fitz.Rect((largeur - pl) / 2, haut, (largeur + pl) / 2, haut + ph),
+        page.insert_image(pymupdf.Rect((largeur - pl) / 2, haut, (largeur + pl) / 2, haut + ph),
                           stream=vig.getvalue())
         dpi = vignette.width / (pl / charte.POUCE_EN_POINTS)
     else:
@@ -188,10 +188,10 @@ def composer(bordure: Path, illustration: Path, cible: Path,
         # éclaircir, et un voile assez fort pour rendre le nom lisible ternirait
         # le dessin. Le bandeau est le geste des albums jeunesse — il se lit
         # comme une intention, pas comme une rustine, et il garantit le contraste.
-        page.draw_rect(fitz.Rect(0, BANDEAU * hauteur, largeur, hauteur),
+        page.draw_rect(pymupdf.Rect(0, BANDEAU * hauteur, largeur, hauteur),
                        color=None, fill=CREME)
-        page.draw_line(fitz.Point(0, BANDEAU * hauteur),
-                       fitz.Point(largeur, BANDEAU * hauteur),
+        page.draw_line(pymupdf.Point(0, BANDEAU * hauteur),
+                       pymupdf.Point(largeur, BANDEAU * hauteur),
                        color=OR_SOURD, width=1.1)
 
     if pleine_page:
@@ -202,14 +202,14 @@ def composer(bordure: Path, illustration: Path, cible: Path,
         # le signalait : un texte dans la zone de sécurité s'imprime
         # normalement, jusqu'au jour où le massicot tombe mal.
         bas = hauteur - (charte.FOND_PERDU + 0.375) * charte.POUCE_EN_POINTS
-        _poser(page, fitz.Rect(gauche, bas - 38, droite, bas - 16),
+        _poser(page, pymupdf.Rect(gauche, bas - 38, droite, bas - 16),
                AUTEUR, "corps", 16, BRUN)
-        _poser(page, fitz.Rect(gauche, bas - 17, droite, bas),
+        _poser(page, pymupdf.Rect(gauche, bas - 17, droite, bas),
                TOME, "ital", 11, BRUN_PALE)
     else:
-        _poser(page, fitz.Rect(gauche, 0.805 * hauteur, droite, 0.858 * hauteur),
+        _poser(page, pymupdf.Rect(gauche, 0.805 * hauteur, droite, 0.858 * hauteur),
                AUTEUR, "corps", 16, encre)
-        _poser(page, fitz.Rect(gauche, 0.864 * hauteur, droite, 0.905 * hauteur),
+        _poser(page, pymupdf.Rect(gauche, 0.864 * hauteur, droite, 0.905 * hauteur),
                TOME, "ital", 12, pale)
 
     document.set_metadata({"title": f"{TITRE} — première de couverture",

@@ -73,9 +73,9 @@ def ouvrir(chemin: Path, page: int = 0) -> Image.Image:
     if chemin.suffix.lower() != '.pdf':
         return Image.open(chemin)
 
-    import fitz
+    import pymupdf
 
-    document = fitz.open(chemin)
+    document = pymupdf.open(chemin)
     # 300 dpi : on juge la vignette, mais les mesures de détail se font sur une
     # réduction depuis une source fine, comme le fera la boutique.
     rendu = document[page].get_pixmap(dpi=300)

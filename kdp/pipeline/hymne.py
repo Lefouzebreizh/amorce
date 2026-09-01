@@ -24,7 +24,7 @@ import io
 import sys
 from pathlib import Path
 
-import fitz
+import pymupdf
 import segno
 from PIL import Image
 
@@ -97,9 +97,9 @@ def composer(planche: Path, cible: Path, adresse: str = ADRESSE_PAR_DEFAUT,
     tampon = io.BytesIO()
     image.save(tampon, format="JPEG", quality=95, optimize=True, subsampling=0)
 
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=largeur, height=hauteur)
-    page.insert_image(fitz.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
+    page.insert_image(pymupdf.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
 
     code = segno.make(adresse, error=correction)
     modules = code.symbol_size(scale=1, border=0)[0]
@@ -116,16 +116,16 @@ def composer(planche: Path, cible: Path, adresse: str = ADRESSE_PAR_DEFAUT,
     for ligne, rangee in enumerate(code.matrix):
         for colonne, noir in enumerate(rangee):
             if noir:
-                page.draw_rect(fitz.Rect(gauche + colonne * pas, haut + ligne * pas,
+                page.draw_rect(pymupdf.Rect(gauche + colonne * pas, haut + ligne * pas,
                                          gauche + (colonne + 1) * pas,
                                          haut + (ligne + 1) * pas),
                                color=None, fill=(0, 0, 0))
 
     page.insert_font(fontname="corps", fontfile=str(POLICES / "Lora-Regular.ttf"))
     lisible = adresse.replace("https://", "").replace("http://", "")
-    page.insert_textbox(fitz.Rect(0, haut + cote + 3, largeur, haut + cote + hauteur_texte + 6),
+    page.insert_textbox(pymupdf.Rect(0, haut + cote + 3, largeur, haut + cote + hauteur_texte + 6),
                         lisible, fontname="corps", fontsize=7.5, color=BRUN_PALE,
-                        align=fitz.TEXT_ALIGN_CENTER)
+                        align=pymupdf.TEXT_ALIGN_CENTER)
 
     document.set_metadata({"title": "Roussy & Zéphy — L'hymne",
                            "author": "Erwann Lefouzèbreizh"})

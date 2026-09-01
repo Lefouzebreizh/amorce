@@ -17,12 +17,16 @@ Pillow>=10.0
 numpy>=1.24
 
 # Assemblage du PDF, géométrie de la couverture, contrôle des DPI. 14 fichiers
-# l'importent — **sous le nom `fitz`**, que PyMuPDF déprécie et retirera :
-#     warning: The `fitz` API is deprecated [...] Use `import pymupdf` instead.
-# Le renommage n'est pas fait ici parce qu'il touche 14 fichiers et mérite son
-# propre lot ; il est écrit dans `second-brain/audit-dependances.md` pour ne pas
-# se redécouvrir le jour où l'alias tombe et où la chaîne entière s'arrête.
-PyMuPDF>=1.24
+# l'importent, désormais sous son vrai nom : l'alias `fitz` est déprécié et sera
+# retiré, et il avertissait à chaque import.
+#
+# La borne est **1.24.3 et non 1.24**, et l'écart n'est pas cosmétique : c'est la
+# version qui livre le paquet `pymupdf/` à côté de `fitz/` dans la roue. Vérifié
+# en téléchargeant les quatre — 1.24.0, .1 et .2 n'embarquent que `fitz/`, donc
+# une installation qui respecterait `>=1.24` ferait tomber les quatorze fichiers
+# d'un coup sur un `ModuleNotFoundError`. Une borne se mesure, elle ne se
+# recopie pas.
+PyMuPDF>=1.24.3
 
 # Piqué des planches, gradient de Sobel. 4 fichiers. La variante « headless »
 # évite les bibliothèques graphiques de Qt, inutiles en ligne de commande.

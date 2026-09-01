@@ -24,7 +24,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -87,7 +87,7 @@ def composer(planches: Path, vers: Path, site: str) -> list[Path]:
         if item.blanchir:
             image = _blanchir(image)
 
-        document = fitz.open()
+        document = pymupdf.open()
         feuille = document.new_page(width=A4[0], height=A4[1])
         feuille.insert_font(fontname="ital", fontfile=str(POLICE))
 
@@ -99,15 +99,15 @@ def composer(planches: Path, vers: Path, site: str) -> list[Path]:
 
         tampon = io.BytesIO()
         image.save(tampon, format="PNG", compress_level=6)
-        feuille.insert_image(fitz.Rect(x, y, x + cote, y + cote), stream=tampon.getvalue())
+        feuille.insert_image(pymupdf.Rect(x, y, x + cote, y + cote), stream=tampon.getvalue())
 
-        feuille.insert_textbox(fitz.Rect(MARGE, MARGE, A4[0] - MARGE, MARGE + 30),
+        feuille.insert_textbox(pymupdf.Rect(MARGE, MARGE, A4[0] - MARGE, MARGE + 30),
                                item.titre, fontname="ital", fontsize=15,
-                               color=(0.36, 0.24, 0.12), align=fitz.TEXT_ALIGN_CENTER)
-        feuille.insert_textbox(fitz.Rect(MARGE, bas + 2, A4[0] - MARGE, A4[1] - MARGE),
+                               color=(0.36, 0.24, 0.12), align=pymupdf.TEXT_ALIGN_CENTER)
+        feuille.insert_textbox(pymupdf.Rect(MARGE, bas + 2, A4[0] - MARGE, A4[1] - MARGE),
                                f"{item.consigne}     ·     {site}",
                                fontname="ital", fontsize=8.5,
-                               color=(0.52, 0.44, 0.34), align=fitz.TEXT_ALIGN_CENTER)
+                               color=(0.52, 0.44, 0.34), align=pymupdf.TEXT_ALIGN_CENTER)
 
         document.set_metadata({"title": f"{item.titre} — Roussy & Zéphy",
                                "author": "Erwann Lefouzèbreizh"})

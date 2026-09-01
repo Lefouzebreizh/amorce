@@ -17,7 +17,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -49,21 +49,21 @@ def _fond(planche_source: Path, gabarit: charte.Gabarit) -> bytes:
     return tampon.getvalue()
 
 
-def _page(document: fitz.Document, fond: bytes, gabarit: charte.Gabarit) -> fitz.Page:
+def _page(document: pymupdf.Document, fond: bytes, gabarit: charte.Gabarit) -> pymupdf.Page:
     largeur, hauteur = gabarit.points
     page = document.new_page(width=largeur, height=hauteur)
-    page.insert_image(fitz.Rect(0, 0, largeur, hauteur), stream=fond)
+    page.insert_image(pymupdf.Rect(0, 0, largeur, hauteur), stream=fond)
     page.insert_font(fontname="corps", fontfile=str(CORPS))
     page.insert_font(fontname="ital", fontfile=str(ITALIQUE))
     page.insert_font(fontname="gras", fontfile=str(GRAS))
     return page
 
 
-def _cadre(gabarit: charte.Gabarit, haut: float, bas: float) -> fitz.Rect:
+def _cadre(gabarit: charte.Gabarit, haut: float, bas: float) -> pymupdf.Rect:
     """Bande de composition, toujours en deçà de la zone de sécurité."""
     largeur, hauteur = gabarit.points
     marge = (charte.FOND_PERDU + charte.MARGE_SECURITE + 0.12) * charte.POUCE_EN_POINTS
-    return fitz.Rect(marge, haut * hauteur, largeur - marge, bas * hauteur)
+    return pymupdf.Rect(marge, haut * hauteur, largeur - marge, bas * hauteur)
 
 
 # --- Les trois pages ---------------------------------------------------------
@@ -73,26 +73,26 @@ def faux_titre(document, fond, gabarit) -> None:
     page = _page(document, fond, gabarit)
     page.insert_textbox(_cadre(gabarit, 0.40, 0.52), "Roussy & Zéphy",
                         fontname="gras", fontsize=34, color=BRUN,
-                        align=fitz.TEXT_ALIGN_CENTER)
+                        align=pymupdf.TEXT_ALIGN_CENTER)
     page.insert_textbox(_cadre(gabarit, 0.53, 0.60), "Tome 1",
                         fontname="ital", fontsize=17, color=BRUN_PALE,
-                        align=fitz.TEXT_ALIGN_CENTER)
+                        align=pymupdf.TEXT_ALIGN_CENTER)
 
 
 def mentions_legales(document, fond, gabarit, annee: int, pages: int) -> None:
     page = _page(document, fond, gabarit)
     page.insert_textbox(_cadre(gabarit, 0.18, 0.28), "Roussy & Zéphy",
                         fontname="gras", fontsize=28, color=BRUN,
-                        align=fitz.TEXT_ALIGN_CENTER)
+                        align=pymupdf.TEXT_ALIGN_CENTER)
     page.insert_textbox(_cadre(gabarit, 0.28, 0.35),
                         "Douze aventures pour apprivoiser ses émotions\n"
                         "et quatre histoires bonus en Bretagne",
                         fontname="ital", fontsize=12.5, lineheight=1.5,
-                        color=BRUN_PALE, align=fitz.TEXT_ALIGN_CENTER)
+                        color=BRUN_PALE, align=pymupdf.TEXT_ALIGN_CENTER)
     page.insert_textbox(_cadre(gabarit, 0.38, 0.44),
                         "Texte et illustrations\nErwann Lefouzèbreizh",
                         fontname="corps", fontsize=13, lineheight=1.6,
-                        color=ENCRE, align=fitz.TEXT_ALIGN_CENTER)
+                        color=ENCRE, align=pymupdf.TEXT_ALIGN_CENTER)
 
     legal = (
         f"© {annee} Erwann Lefouzèbreizh. Tous droits réservés.\n\n"
@@ -107,7 +107,7 @@ def mentions_legales(document, fond, gabarit, annee: int, pages: int) -> None:
     )
     page.insert_textbox(_cadre(gabarit, 0.60, 0.90), legal,
                         fontname="corps", fontsize=8.6, lineheight=1.55,
-                        color=ENCRE, align=fitz.TEXT_ALIGN_CENTER)
+                        color=ENCRE, align=pymupdf.TEXT_ALIGN_CENTER)
 
 
 def solutions(document, fond, gabarit, ecarts) -> None:
@@ -115,12 +115,12 @@ def solutions(document, fond, gabarit, ecarts) -> None:
     page.insert_textbox(_cadre(gabarit, 0.100, 0.160),
                         "Les solutions du Goûter des menhirs",
                         fontname="gras", fontsize=18, color=BRUN,
-                        align=fitz.TEXT_ALIGN_CENTER)
+                        align=pymupdf.TEXT_ALIGN_CENTER)
     page.insert_textbox(_cadre(gabarit, 0.158, 0.222),
                         "Sept différences, de la plus facile à la plus difficile.\n"
                         "Tu les avais toutes trouvées ?",
                         fontname="ital", fontsize=10.5, lineheight=1.5,
-                        color=BRUN_PALE, align=fitz.TEXT_ALIGN_CENTER)
+                        color=BRUN_PALE, align=pymupdf.TEXT_ALIGN_CENTER)
 
     # Sept fentes de hauteur égale : une liste numérotée qui déborde sur le mot
     # de fin est pire qu'une liste serrée, et la planche ne s'agrandit pas.
@@ -128,23 +128,23 @@ def solutions(document, fond, gabarit, ecarts) -> None:
     fente = (cadre.y1 - cadre.y0) / len(ecarts)
     for i, e in enumerate(ecarts):
         haut = cadre.y0 + i * fente
-        page.insert_textbox(fitz.Rect(cadre.x0, haut + 1, cadre.x0 + 20, haut + 20),
+        page.insert_textbox(pymupdf.Rect(cadre.x0, haut + 1, cadre.x0 + 20, haut + 20),
                             f"{e.rang}.", fontname="gras", fontsize=11.5, color=BRUN)
-        page.insert_textbox(fitz.Rect(cadre.x0 + 22, haut, cadre.x1, haut + fente - 4),
+        page.insert_textbox(pymupdf.Rect(cadre.x0 + 22, haut, cadre.x1, haut + fente - 4),
                             # .capitalize() minusculerait « Zéphy » : on ne touche que l’initiale.
                             f"{e.intitule}.\n{e.ou[0].upper()}{e.ou[1:]}.",
                             fontname="corps", fontsize=9.8, lineheight=1.45, color=ENCRE)
 
     page.insert_textbox(_cadre(gabarit, 0.730, 0.782), "Merci",
                         fontname="gras", fontsize=16, color=BRUN,
-                        align=fitz.TEXT_ALIGN_CENTER)
+                        align=pymupdf.TEXT_ALIGN_CENTER)
     page.insert_textbox(_cadre(gabarit, 0.780, 0.905),
                         "Merci d’avoir accompagné Roussy et Zéphy jusqu’ici.\n"
                         "Si une seule de ces histoires t’a fait sourire un jour "
                         "où c’était difficile, alors ce livre a fait son travail.\n"
                         "À bientôt pour le tome 2.",
                         fontname="corps", fontsize=10.2, lineheight=1.7,
-                        color=ENCRE, align=fitz.TEXT_ALIGN_CENTER)
+                        color=ENCRE, align=pymupdf.TEXT_ALIGN_CENTER)
 
 
 def fabriquer(bordure: Path, vers: Path, annee: int, pages: int,
@@ -160,7 +160,7 @@ def fabriquer(bordure: Path, vers: Path, annee: int, pages: int,
                           ("00_mentions_legales",
                            lambda d: mentions_legales(d, fond, gabarit, annee, pages)),
                           ("99_solutions", lambda d: solutions(d, fond, gabarit, ECARTS))):
-        document = fitz.open()
+        document = pymupdf.open()
         composer(document)
         chemin = vers / f"{nom}.pdf"
         document.save(str(chemin), deflate=True, garbage=4)
