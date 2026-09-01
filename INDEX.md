@@ -33,7 +33,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge seize chantiers actifs sans code commun, plus deux en sommeil,
+Ce dépôt héberge dix-sept chantiers actifs sans code commun, plus deux en sommeil,
 et cinq ressources transverses qui ne sont pas des projets mais servent à tous.
 Une idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir
 un front de plus. La liste vieillit vite — recompter avant de noter.
@@ -49,6 +49,7 @@ un front de plus. La liste vieillit vite — recompter avant de noter.
 | **Life-Organizer** (`life-organizer/`) | Rangement de fichiers personnels. | Python | actif |
 | **Répondeur Facebook** (`repondeur-facebook/`) | Réponses aux commentaires via l'API Graph. | Python | actif |
 | **Chaîne de montage** (`montage-auto/`) | Montage automatisé. | Python | actif |
+| **Habillages animés** (`motion/`) | Titres, cartons et logos verticaux, rendus puis posés dans CapCut. | Remotion 4, React 19 | actif |
 | **Volet TikTok** (`tiktok/`) | Concepts et scripts, sans code. | — | actif |
 | **Annuaire IA** (`annuaire-ia/`) | Annuaire et comparateur d'outils IA, affiliation. | HTML, Tailwind CDN, JS natif | actif |
 | **IPTV / VOD** (`iptv/`) | Gestion et lecture de listes IPTV : direct, films, séries. | TypeScript, sans dépendance | actif |
@@ -75,5 +76,8 @@ dans lesquelles les chantiers puisent.
 ## À faire sur le dépôt lui-même
 
 - `inbox/` est vide (seul un `.gitkeep`) — normal si tout a été trié, à surveiller.
-- `site-client.tmp.png` traîne à la racine : fichier temporaire committé par
-  accident, à supprimer et à couvrir par une règle `*.tmp.*` dans `.gitignore`.
+- Le tableau ci-dessus ne se recompte pas tout seul : `motion/` y a manqué le
+  temps de plusieurs sessions alors que `CLAUDE.md` le documentait déjà.
+  `/coherence-depot` ne le voit pas non plus — il vérifie les compétences
+  citées, pas les chantiers listés. Confronter la liste à
+  `/etat-du-depot` avant de s'y fier.
