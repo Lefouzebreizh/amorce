@@ -403,6 +403,14 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   ses 27 tests compris — le dossier a été retiré, et sa fiche
   `archives-backlog/assistant-patrimoine.md` dit ce qui a été repris et pourquoi.
   Se vérifie depuis son dossier.
+- **visual_library/** — catalogue de références visuelles : LUT, étalonnages,
+  planches de contact, et les paniers à importer dans DaVinci et Premiere.
+  1109 lignes de Python, cinq dépendances, **aucun test**. Il n'était déclaré
+  nulle part avant l'audit du 01/09/2026, et c'est ce qui vaut d'être su : il
+  n'entre ni dans le hook de démarrage, ni dans `verifier.sh`, donc **rien ne
+  dit quand il casse**. Volontairement hors du hook — cinq paquets à chaque
+  session pour un chantier dormant serait un mauvais échange. Le garder,
+  l'archiver ou le retirer n'est pas tranché.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.
