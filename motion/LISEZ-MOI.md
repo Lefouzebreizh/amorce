@@ -8,6 +8,7 @@ npm run dev            # le studio, pour voir et régler
 npm run build          # rend out/ep02-titres.mp4  (calque, mode Écran)
 npm run build:carton   # rend out/ep02-carton.mp4  (clip normal)
 npm run typecheck
+npm test               # les bornes de la zone sûre, et l'écart du carton
 ```
 
 ## Ce que ce projet résout, et pourquoi il existe
@@ -30,6 +31,16 @@ s'étirer. Vérifié sur le rendu réel :
 
 Mesuré sur le fichier rendu, pas sur l'intention. La plus longue des trois
 passe sur trois lignes et reste dedans, là où l'épisode 1 l'aurait étirée.
+
+Les bornes elles-mêmes vivent dans `src/zone.ts` — sans JSX, parce que
+`node --test` dépouille les types mais pas le JSX, et qu'un invariant qu'aucun
+test ne peut relire n'est qu'une intention. `tests/zone-sure.test.mts` les
+constate au chiffre près, replace le défaut de l'épisode 1 hors des bornes, et
+fige un écart qu'on ne voyait pas : **le carton de fin a bien la largeur de la
+zone sûre (66 %), mais centré sur le cadre il occupe 17 → 83 %, quand la zone
+sûre tient 22 → 88 %**. Son bord gauche entre donc de 5 points dans la bande
+des boutons Facebook. C'est assumé — le carton est une carte de fin plein
+écran, pas un titre posé sur un rush — mais ce n'était écrit nulle part.
 
 ## Comment poser l'habillage dans CapCut
 

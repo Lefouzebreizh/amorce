@@ -63,7 +63,15 @@ def _compter_lignes(dossier: Path) -> int:
 
 
 def _compter_tests(dossier: Path) -> int:
-    motifs = ('test_*.py', '*_test.py', '*_test.dart', '*.test.ts', '*.test.tsx')
+    # `.mts` compte autant que `.ts` : dans un paquet sans `"type": "module"`,
+    # c'est la SEULE façon d'écrire un test en modules ES. `motion/` en est là
+    # — lui imposer `"type": "module"` toucherait à la façon dont Remotion
+    # charge sa configuration, pour le seul confort d'une extension. Sans cette
+    # ligne, ses tests existent, tournent, et le tableau les affiche à zéro :
+    # le pire des trois états, puisqu'il désigne comme découvert un chantier
+    # qui est gardé.
+    motifs = ('test_*.py', '*_test.py', '*_test.dart',
+              '*.test.ts', '*.test.tsx', '*.test.mts')
     return sum(1 for m in motifs for f in dossier.rglob(m)
                if not any(p in IGNORES for p in f.parts))
 
