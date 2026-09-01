@@ -47,12 +47,19 @@ def outil(nom):
     chemin = shutil.which(nom)
     if chemin:
         return chemin
-    try:
-        import imageio_ffmpeg
-        exe = imageio_ffmpeg.get_ffmpeg_exe()
-        return exe if nom == "ffmpeg" else exe.replace("ffmpeg", "ffprobe")
-    except Exception:
-        raise SystemExit(f"{nom} introuvable : installe ffmpeg avant de relancer.")
+    # `imageio-ffmpeg` ne livre QUE ffmpeg. Déduire le chemin de ffprobe en y
+    # remplaçant « ffmpeg » par « ffprobe » fabriquait un chemin qui ne peut
+    # pas exister : `str.replace` emporte toutes les occurrences, donc le nom
+    # du dossier `imageio_ffmpeg` avec — d'où un `.../imageio_ffprobe/...`
+    # fantôme, et une `FileNotFoundError` brute au lieu du message ci-dessous.
+    # Même corrigé, ce chemin n'existerait pas : le paquet n'a pas de ffprobe.
+    if nom == "ffmpeg":
+        try:
+            import imageio_ffmpeg
+            return imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception:
+            pass
+    raise SystemExit(f"{nom} introuvable : installe ffmpeg avant de relancer.")
 
 
 FFMPEG, FFPROBE = outil("ffmpeg"), outil("ffprobe")

@@ -58,6 +58,7 @@ commandes=(
   "Traducteur de chat : python3 -m unittest discover -s chat-traducteur/tests"
   "NexusCrypto : cd nexuscrypto && python3 -m unittest discover -s tests"
   "Bibliothèque visuelle : cd visual_library && python3 -m unittest discover -s tests"
+  "Kits (index des sons) : cd kits && python3 -m unittest discover -s tests"
 )
 
 echo "── Amorce : dépendances npm"
