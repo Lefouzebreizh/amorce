@@ -366,6 +366,20 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   `remotion.media`, que le mandataire refuse** : désigner le `headless_shell`
   de Playwright avec `--browser-executable`, et non le `chromium` complet, qui
   échoue sans dire pourquoi. Se vérifie depuis son dossier.
+- **chat-traducteur/** — traducteur de miaulements, Python. Deux étages, et le
+  premier est un **veto** : YAMNet en TFLite (4,1 Mo, `storage.googleapis.com`,
+  car `tfhub.dev`, `kaggle.com` et `huggingface.co` rendent `000`) dit si c'est
+  un chat ; rien ne cherche d'intention avant. Le modèle public livre déjà la
+  moitié du produit et la livre **mesurée** — il nomme lui-même `Purr`, `Hiss`
+  et `Caterwaul`, soit *contentement* et *stress*. Faim et envie de sortir sont
+  deux façons de miauler qu'aucun modèle public ne sépare : l'application rend
+  `indécis`, avec son propre écran, plutôt qu'un pourcentage inventé.
+  **`Cat` ouvre la porte et ne choisit jamais** — c'est une classe parente, qui
+  vaut 0,988 là où `Meow` vaut 0,891 ; la laisser concourir perdait la lecture
+  directe à tous les coups, et six tests verts ne le voyaient pas. Le noyau est
+  en bibliothèque standard **pure** : 20 tests en 1 ms sans rien installer.
+  CatMeows n'est pas récupérable d'ici (Zenodo refusé) et ses trois contextes
+  ne sont pas les quatre intentions visées. Se vérifie depuis la racine.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — deux
   chantiers en sommeil : `mon-app-audio/` et `patrimoine/`, tests verts, mis de
   côté et non abandonnés.

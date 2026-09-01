@@ -4700,3 +4700,68 @@ rapport d'image sort en **16:9** par défaut, et l'outil de génération ne
 l'expose pas — il se règle sur le nœud du flux. Une série verticale paie donc
 une image inutilisable qui a pourtant l'air réussie. `estimate_only: true`
 chiffre une génération sans rien dépenser : le faire avant tout lot.
+
+## Un hôte canonique fermé ne ferme pas le modèle — 01/09/2026
+
+Mesuré en montant le traducteur de chat. Les trois adresses que donne la
+documentation de YAMNet sont refusées au tunnel depuis une session distante :
+`tfhub.dev`, `kaggle.com` (qui a repris TF Hub) et `huggingface.co` rendent
+tous `000`. Le même modèle se télécharge en une commande depuis
+`storage.googleapis.com`, miroir MediaPipe, 4 126 810 octets.
+
+C'est la **quatrième** fois que la parade est la même — voix off, poids
+Wav2Lip, bougies CCXT, et maintenant YAMNet. La règle se formule enfin :
+quand un hôte d'éditeur est refusé, chercher **le miroir d'un grand projet**
+(`storage.googleapis.com`, `raw.githubusercontent.com`, les objets de release
+GitHub) *avant* de conclure à l'impossibilité. Deux hôtes essayés ne font
+toujours pas une impossibilité.
+
+Et une économie qui se reperd : **un `.tflite` porteur de métadonnées est
+aussi une archive ZIP.** `zipfile.ZipFile("yamnet.tflite").read(
+"yamnet_label_list.txt")` rend les 521 étiquettes. Aller chercher un CSV
+d'étiquettes ailleurs, c'est risquer un ordre différent de celui des sorties —
+un décalage qui ne casse rien et fausse tout.
+
+## Une classe parente écrase la classe précise, et aucun test ne le voit
+
+Le défaut le plus coûteux du traducteur de chat, trouvé en **regardant de
+vrais scores** et non en relisant du code.
+
+YAMNet range ses classes en hiérarchie. Sur un miaulement réel :
+
+    Animal 0,992   Cat 0,988   Meow 0,891
+
+`Cat` est le parent, `Meow` l'enfant — et le parent gagne toujours. Un
+`max()` sur les classes félines retenait donc `Cat`, qui ne porte aucune
+information, à la place de la classe précise qui en porte une. Conséquence :
+un ronronnement à `Cat 0,90 / Purr 0,60` repartait en « indécis », c'est-à-dire
+que la seule intention réellement mesurable était perdue à tous les coups.
+
+**Six tests étaient verts pendant ce temps.** Aucun ne pouvait le voir : le
+verdict rendu restait parfaitement plausible, et les scores écrits à la main
+dans les tests ne reproduisaient pas la hiérarchie réelle.
+
+La leçon dépasse YAMNet et vaut pour **toute sortie de modèle multi-étiquette
+hiérarchique** : un `argmax` sur des classes de niveaux différents ne compare
+pas ce qu'on croit. Séparer explicitement les classes qui *ouvrent une porte*
+de celles qui *portent une lecture* — les premières peuvent être génériques,
+les secondes jamais.
+
+## Un bruitage généré coûte 0,3 centime et vaut mieux qu'une synthèse maison
+
+Toujours le 01/09/2026. Pour éprouver le chemin positif d'un détecteur de son,
+deux synthèses maison ont échoué : un empilement de sinus est classé
+`Synthesizer` (cumul félin 0,008), et même un miaulement fabriqué avec source
+glottale, formants félins et vibrato ne monte qu'à 0,059 — sous le seuil.
+
+Quatre bruitages générés par le connecteur ElevenLabs (`sfx`,
+`eleven_text_to_sound_v2`) ont réglé la question en deux minutes pour
+**1,2 centime au total**. Ils ont fait apparaître le défaut de la classe
+parente, et confirmé qu'un seuil bas était le bon choix — un ronronnement réel
+ne franchit la porte qu'avec six centièmes de marge.
+
+Le garde-fou qui va avec, et qui n'est pas facultatif : **quatre bruitages
+générés ne sont pas un jeu de données.** Ils suffisent à trouver un défaut, pas
+à régler un seuil. Une règle qu'ils suggèrent sans la trancher se laisse
+**écrite en commentaire et épinglée par un test**, jamais devinée — sans quoi
+un nombre inventé finit par avoir l'air d'une mesure.

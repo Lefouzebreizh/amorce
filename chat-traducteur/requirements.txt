@@ -1,0 +1,8 @@
+# Ce que le projet installe, et rien de plus.
+#
+# Le `noyau/` n'en a besoin d'aucun : il s'éprouve en bibliothèque standard
+# pure. Ces trois lignes servent aux `adaptateurs/` et au prototype.
+
+numpy              # tableaux d'entrée du modèle — exigé par le moteur TFLite
+ai-edge-litert     # le moteur TFLite, successeur de `tflite-runtime`
+imageio-ffmpeg     # ffmpeg statique, pour lire le .m4a que rendent les téléphones
