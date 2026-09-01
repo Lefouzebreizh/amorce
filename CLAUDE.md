@@ -678,6 +678,17 @@ rend la fusion rapide utile au-delà des conflits : tant qu'un lot n'est pas sur
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
 
+**Un blocage levé se reprend, il ne se constate pas.** Un hôte refusé qui répond
+de nouveau, un connecteur qui retrouve ses outils, une clé qui marche enfin : la
+session qui l'observe reprend dans la foulée la tâche que ce blocage retenait —
+elle ne part pas sur une mesure ou une vérification annexe en laissant la tâche
+réelle en attente. Le re-sondage de `/capacites-session` sert à corriger une
+promesse, pas à remplacer le travail qu'il vient de débloquer. Trouvé le
+01/09/2026 : les 475 outils MCP sont revenus pendant qu'une session attendait
+sur une tâche vidéo — elle l'a noté, puis est partie mesurer la documentation au
+lieu de reprendre la vidéo. Le geste juste : noter en une phrase, puis reprendre
+immédiatement ce qui était en attente.
+
 ## 7 bis. MULTIMÉDIA — DOCUMENTATIONS ET DIRECTIVES
 
 Numéroté « 7 bis » pour la même raison que le « 0 bis » : d'autres fichiers
