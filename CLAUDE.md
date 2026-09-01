@@ -984,6 +984,31 @@ Le hook `.claude/hooks/session-start.sh` installe tout seul. Pas de compétence
 Après avoir ajouté un projet, une compétence ou un agent : `/coherence-depot`.
 C'est le geste qui rend la documentation fausse.
 
+## 9 bis. RÈGLE D'ARCHIVAGE
+
+Numéroté « 9 bis » pour la même raison que « 0 bis » et « 7 bis » : ne pas
+décaler les sections qui suivent.
+
+**Quand Erwann dit simplement « archive », sans autre précision, cela signifie :
+clore la session de conversation en cours et en ouvrir une nouvelle.** Pas
+archiver un fichier, une PR ou une session distante précise — ces demandes-là
+se disent autrement et se traitent autrement. « archive » seul, c'est le geste
+du `/relais` : ce skill porte déjà la mécanique (rassembler l'état depuis le
+dépôt, jamais de mémoire ; ce qu'on ne ferme pas ; le gabarit du résumé) et
+cette section ne la duplique pas — elle en fait un déclencheur explicite.
+
+Avant de clore, un message final qui résume : l'état d'avancement, ce qui
+reste à faire, et toute information nécessaire pour reprendre sans perte de
+contexte — le gabarit exact est celui de `/relais` (but à terme, où on en est,
+le prochain pas, ce qu'il faut savoir, où c'est écrit). Ce résumé se construit
+depuis le dépôt (branche, PR ouvertes, `git status`), jamais depuis le souvenir
+de la conversation.
+
+**La nouvelle session doit pouvoir démarrer directement avec ce résumé**, sans
+qu'Erwann ait à tout retaper. Comme pour tout ce qui se livre à lui (§0) : le
+résumé part en fichier téléchargeable, pas seulement affiché dans le message —
+il lui suffit de l'ouvrir et de le coller en premier message du fil suivant.
+
 ## 10. CONTEXTE PROJET CONSERVÉ
 
 ### Commandes
