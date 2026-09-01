@@ -183,7 +183,15 @@ echo "── Chaîne de montage : bibliothèques Python"
 # distante — alors que la CI, elle, est verte, `.github/requirements-tests.txt`
 # le listant depuis toujours. Un rouge local sur un projet qu'on n'a pas touché
 # coûte le temps de comprendre qu'il ne vient pas de soi.
-python3 -m pip install --quiet --break-system-packages elevenlabs tqdm scipy
+#
+# `pyloudnorm` est le quatrième, et il se rate autrement : il ne fait tomber
+# aucune suite. `sfx_pro.py` l'importe dans un `try` dont l'`except` rend `None`
+# — donc sans lui la mesure de sonie ne se trompe pas, elle se tait. Mesuré sur
+# un sinus de 1 kHz : `None` sans le paquet, −15.1 LUFS avec. `CLAUDE.md` §2
+# pose `/master-telephone` avant toute publication et §8 exige « le niveau
+# entendu section par section » : les deux reposaient sur une fonction qui ne
+# tournait dans aucune session.
+python3 -m pip install --quiet --break-system-packages elevenlabs tqdm scipy pyloudnorm
 
 echo "── Extraction multiformat : bibliothèques Python"
 # Ce que `/extraction-multiformat` et `/transcription-media` ne peuvent pas
@@ -258,7 +266,15 @@ echo "── Paper-Manager : bibliothèques Python"
 # l'installe déjà quelques lignes plus haut ; il est répété ici pour que le jour
 # où `archives-backlog/` disparaît, l'interface de ce projet ne s'éteigne pas
 # avec lui — pip ne réinstalle rien quand la version présente convient.
-python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow streamlit
+#
+# `pydantic` : la forme de ce que rend le modèle de vision. Il est déclaré par
+# `paper-manager/requirements.txt` **et** par `.github/requirements-tests.txt`,
+# et n'était installé nulle part ici — si bien que `test_vision.py`, les cinq
+# tests qui gardent cette forme, ne se chargeaient dans aucune session distante
+# pendant que la CI restait verte. Un module de test qui ne se charge pas ne
+# compte pas comme un échec : la suite annonçait 148 tests là où elle en porte
+# 259. Même piège que `scipy` plus haut, sur un projet différent.
+python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow streamlit pydantic
 echo "── Parole hors Hugging Face : reconnaissance et synthèse"
 # `faster-whisper` reste volontairement absent : il est lourd, et surtout ses
 # poids vivent sur `huggingface.co`, que la politique de sortie des sessions
