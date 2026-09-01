@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from noyau import fichiers
+from noyau import fichiers, rapport
 from noyau.journal import Journal
 
 from . import regles, traitement
@@ -37,6 +37,11 @@ def ajouter_arguments(analyseur: argparse.ArgumentParser) -> None:
     analyseur.add_argument(
         "--appliquer", action="store_true",
         help="déplacer pour de vrai (par défaut : simulation)",
+    )
+    analyseur.add_argument(
+        "--rapport", metavar="FICHIER.html", type=Path, nargs="?",
+        const=Path("rapport-rangement.html"),
+        help="écrire une page à ouvrir dans un navigateur, avec les vignettes",
     )
 
 
@@ -123,6 +128,17 @@ def executer(options: argparse.Namespace, config: dict) -> int:
         print(f"     {rangement.motif}")
     if len(a_deplacer) > LIGNES_AFFICHEES:
         print(f"  … et {len(a_deplacer) - LIGNES_AFFICHEES} autre(s)")
+
+    if getattr(options, "rapport", None):
+        chemin = rapport.ecrire(
+            [rapport.Ligne(chemin=a.fiche.chemin, action="À ranger", motif=a.motif,
+                           destination=a.destination)
+             for a in a_deplacer],
+            options.rapport, "Life-Organizer — rangement proposé",
+            f"{len(a_deplacer)} fichier(s) à ranger vers {bibliotheque}. "
+            "Rien n'a été déplacé : c'est une proposition.",
+        )
+        print(f"\nPage à ouvrir : {chemin}")
 
     verifier = config.get("securite", {}).get("verifier_empreinte_apres_deplacement", True)
     ranges = traitement.ranger(rangements, bibliotheque, journal, verifier_empreinte=verifier)

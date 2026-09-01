@@ -25,7 +25,7 @@ import argparse
 import time
 from pathlib import Path
 
-from noyau import fichiers
+from noyau import fichiers, rapport
 from noyau.journal import Journal
 from noyau.modele import ECARTER, SIGNALER
 
@@ -51,6 +51,13 @@ def ajouter_arguments(analyseur: argparse.ArgumentParser) -> None:
     analyseur.add_argument(
         "--appliquer", action="store_true",
         help="déplacer en quarantaine (par défaut : simulation)",
+    )
+    analyseur.add_argument(
+        "--rapport", metavar="FICHIER.html", type=Path, nargs="?",
+        const=Path("rapport-nettoyage.html"),
+        help="écrire une page à ouvrir dans un navigateur, avec les vignettes "
+             "de ce qui serait écarté — un nom de fichier ne dit pas si une "
+             "photo est floue",
     )
 
 
@@ -123,26 +130,36 @@ def executer(options: argparse.Namespace, config: dict) -> int:
         _incidents(journal)
         return 0
 
+    lignes = [] if getattr(options, "rapport", None) else None
     liberes = 0
     nettetes: dict[Path, float] = {}
     if reglages_flou.get("actif", True) and photos:
         photos, octets, nettetes = _passe_nettete(
-            photos, reglages_flou, quarantaine, journal
+            photos, reglages_flou, quarantaine, journal, lignes
         )
         liberes += octets
 
     if reglages_doublons.get("actif", True) and photos:
         liberes += _passe_doublons(
-            photos, config, ressemblance, quarantaine, journal, nettetes
+            photos, config, ressemblance, quarantaine, journal, nettetes, lignes
         )
 
     if videos_demandees and videos:
-        liberes += _passe_videos(videos, reglages_videos, quarantaine, journal)
+        liberes += _passe_videos(videos, reglages_videos, quarantaine, journal, lignes)
 
     if variantes_demandees:
         liberes += _passe_variantes(
             dossiers, config, reglages_variantes, quarantaine, journal
         )
+
+    if lignes is not None:
+        chemin_page = rapport.ecrire(
+            lignes, options.rapport, "Life-Organizer — ce qui serait écarté",
+            f"{len(lignes)} fichier(s) partiraient en quarantaine, purgée après "
+            f"{config.get('securite', {}).get('retention_quarantaine_jours', 30)} jours. "
+            "Rien n'a été déplacé : regardez avant d'appliquer.",
+        )
+        print(f"\nPage à ouvrir : {chemin_page}")
 
     retention = config.get("securite", {}).get("retention_quarantaine_jours", 30)
     purges = fichiers.purger_quarantaine(quarantaine, retention, journal)
@@ -160,7 +177,7 @@ def executer(options: argparse.Namespace, config: dict) -> int:
     return 0
 
 
-def _passe_nettete(chemins, reglages, quarantaine, journal
+def _passe_nettete(chemins, reglages, quarantaine, journal, lignes=None
                    ) -> tuple[list[Path], int, dict[Path, float]]:
     """Écarte les floues et rend ce qui reste, les octets libérés, et les netteté.
 
@@ -180,6 +197,7 @@ def _passe_nettete(chemins, reglages, quarantaine, journal
     maintenant = time.time()
     decisions = [regles.decider_nettete(media, reglages, maintenant) for media in medias]
     ecartees = [decision for decision in decisions if decision.geste == ECARTER]
+    _deposer(lignes, ((d.media.chemin, "Photo floue", d.motif) for d in ecartees))
 
     decompte = regles.compter(decisions)
     print(f"\nNetteté : {decompte.get(ECARTER, 0)} floue(s) sur {len(medias)} mesurée(s).")
@@ -198,7 +216,8 @@ def _passe_nettete(chemins, reglages, quarantaine, journal
     return restants, liberes, nettetes
 
 
-def _passe_doublons(chemins, config, ressemblance, quarantaine, journal, nettetes) -> int:
+def _passe_doublons(chemins, config, ressemblance, quarantaine, journal, nettetes,
+                    lignes=None) -> int:
     """Regroupe les quasi-identiques parmi ce qui reste et rend les octets libérés."""
     print(f"\nRessemblance : {ressemblance.distance_max} bits sur "
           f"{regles.BITS_DU_HACHAGE} — {ressemblance.origine}")
@@ -229,12 +248,15 @@ def _passe_doublons(chemins, config, ressemblance, quarantaine, journal, nettete
     if len(doublons) > LIGNES_AFFICHEES:
         print(f"\n  … et {len(doublons) - LIGNES_AFFICHEES} autre(s) groupe(s)")
 
+    _deposer(lignes, ((media.chemin, "Quasi-doublon",
+                       f"garde {doublon.conserve.chemin.name}")
+                      for doublon in doublons for media in doublon.ecartes))
     ecartees = sum(len(doublon.ecartes) for doublon in doublons)
     print(f"\n{len(doublons)} groupe(s), {ecartees} photo(s) en trop.")
     return traitement.ecarter(doublons, quarantaine, journal)
 
 
-def _passe_videos(chemins, reglages, quarantaine, journal) -> int:
+def _passe_videos(chemins, reglages, quarantaine, journal, lignes=None) -> int:
     """Inspecte les vidéos et écarte les abîmées. Rend les octets libérés.
 
     Rien n'est comparé entre vidéos : chacune est jugée seule, sur ce que ffprobe
@@ -280,6 +302,18 @@ def _du_type(chemins: list[Path], extensions: tuple[str, ...]) -> list[Path]:
     """Le sous-ensemble des chemins portant l'une de ces extensions."""
     voulues = set(extensions)
     return [chemin for chemin in chemins if chemin.suffix.lower().lstrip(".") in voulues]
+
+
+def _deposer(lignes, gestes) -> None:
+    """Verse dans la liste du rapport, quand un rapport a été demandé.
+
+    `None` quand il ne l'a pas été : construire des vignettes que personne ne
+    regardera coûterait une seconde par photo pour rien.
+    """
+    if lignes is None:
+        return
+    for chemin, action, motif in gestes:
+        lignes.append(rapport.Ligne(chemin=chemin, action=action, motif=motif))
 
 
 def _incidents(journal: Journal) -> None:
