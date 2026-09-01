@@ -19,8 +19,12 @@ utile entre les deux projets est donc celle-ci :
   thème. C'est ce que fait `modules/classement/traitement.texte_du_document`,
   qui lit les premières pages sans rien extraire.
 
-Ce module ne reste donc à écrire que le jour où Life-Organizer aura besoin de
-**renommer** un document, et il devra alors appeler `paper-manager` plutôt que
-de le refaire. Un module n'appelant jamais un autre module, cela demandera
-d'abord de décider où vit la frontière — ce qui est une décision, pas une tâche.
+La question restée ouverte — « Life-Organizer doit-il renommer les documents ? »
+— a été tranchée le **01/09/2026 : non.** Il range, il ne renomme pas. Ce module
+est donc **retiré du projet**, comme `calendrier`, et le projet est fini à
+quatre modules.
+
+Le dossier et ce fichier sont conservés plutôt que supprimés : c'est ici qu'on
+vient chercher le module quand on se demande pourquoi il manque, et une absence
+sans explication se comble par quelqu'un qui la prend pour un oubli.
 """

@@ -8,8 +8,13 @@ la charge mentale qui va avec.
 une clé d'API est explicitement renseignée pour l'OCR ou l'agrandissement (deux
 options désactivées par défaut).
 
-> État : squelette d'architecture. `organizer_config.json` est complet et
-> validé ; les six modules sont décrits ci-dessous. Trois sont écrits :
+> **Périmètre arrêté le 01/09/2026 : Life-Organizer range, il ne renomme pas.**
+> `scan_ocr` et `calendrier` sont retirés du projet — `paper-manager/` fait déjà
+> les deux, et un second extracteur de champs dans le même dépôt divergerait du
+> premier au premier motif ajouté. Il reste **quatre modules**, dont trois
+> écrits ; le projet est fini quand `upscale` l'est.
+>
+> État : `organizer_config.json` est complet et validé. Trois modules écrits :
 > `nettoyage`, complet — photos floues, quasi-doublons, vidéos abîmées, puis
 > copies de nom et exports recalculables sur **tous** les fichiers
 > (`organizer nettoyer`) —, `classement`, qui range documents, photos et
