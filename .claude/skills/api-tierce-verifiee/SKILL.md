@@ -75,3 +75,35 @@ identifiant de modèle tout juste sorti n'est pas ouvert à tous les comptes.
 Choisir par défaut la version la plus récente *généralement disponible* et
 laisser l'autre en option — un défaut qui échoue chez la moitié des
 utilisateurs est pire qu'un défaut modeste.
+
+## Le paquet qui porte le nom du dépôt officiel n'est pas le paquet officiel
+
+Mesuré le 01/09/2026, en cherchant le client Freesound. **`freesound-python`
+sur PyPI est un squat de « dependency confusion »** — son propre résumé porte
+ces deux mots, auteur `nvk0x`, version 0.1. Le vrai client du MTG s'appelle
+exactement pareil sur GitHub, et **n'est pas publié sur PyPI du tout**.
+
+Le piège tient à l'ordre habituel des gestes : on cherche le nom du dépôt sur
+PyPI, on trouve, on installe. Or `pip install` **exécute du code
+d'installation** avant qu'on ait lu une ligne de la bibliothèque.
+
+La parade coûte une requête et n'exécute rien :
+
+```bash
+# 1. lire la fiche AVANT d'installer : résumé, auteur, dépôt déclaré
+curl -s https://pypi.org/pypi/<paquet>/json | python3 -c "
+import json,sys; i=json.load(sys.stdin)['info']
+print(i['name'], i['version']); print(i['summary']); print(i.get('author'))
+print(i.get('project_urls') or i.get('home_page'))"
+
+# 2. lire la source depuis GitHub, sans rien installer
+curl -s https://raw.githubusercontent.com/<org>/<dépôt>/master/<fichier>.py
+```
+
+Trois signaux qui doivent arrêter le geste : une **version 0.1** pour un projet
+présenté comme mûr, un **auteur sans rapport** avec l'organisation attendue, et
+un **résumé vide, générique ou aveu** comme celui-ci.
+
+C'est la même discipline que le reste de cette page — lire la surface réelle
+avant d'écrire — appliquée un cran plus tôt : **avant même de choisir le
+paquet.**

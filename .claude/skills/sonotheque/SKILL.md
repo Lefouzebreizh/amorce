@@ -69,6 +69,34 @@ Aucune banque de sons n'est joignable depuis une session distante. Mesuré :
 mandataire refuse le tunnel, il n'y a pas même de réponse HTTP. Seul GitHub
 répond, et il n'héberge pas de banque de cris.
 
+**Reconfirmé le 01/09/2026, clé en main.** Le propriétaire a créé des
+identifiants d'API Freesound ; les trois hôtes rendent toujours `000`, et la
+route `/apiv2/search/text/` avec eux. **Une clé ne débloque rien** tant que
+`*.freesound.org` n'est pas dans la politique réseau de l'environnement.
+
+Ce que la mesure a appris en passant, et qui vaut au-delà de Freesound :
+
+- **Les noms de variables sont `FREESOUND_API_KEY`, `FREESOUND_CLIENT_ID` et
+  `FREESOUND_CLIENT_SECRET`.** Le premier suffit presque toujours : le client
+  officiel du MTG lit `os.getenv('FREESOUND_API_KEY')` dans ses propres
+  exemples, et l'authentification par jeton ouvre la recherche, les
+  métadonnées et les fichiers d'écoute. Les deux autres ne servent qu'au flux
+  OAuth2, seul chemin vers les **originaux en pleine qualité** — et le client
+  prévient qu'il faut l'implémenter soi-même.
+- Sur la page de crédentiels de Freesound, le champ est étiqueté « Client
+  secret / Api key » : **c'est la même chaîne**, ce qui explique qu'on croie
+  avoir deux valeurs quand on n'en a qu'une à poser.
+- **⚠️ `freesound-python` sur PyPI est un squat de « dependency confusion »** —
+  son propre résumé le dit, auteur `nvk0x`, version 0.1. Le vrai client du MTG
+  **n'est pas publié sur PyPI** : il vit sur GitHub, et se lit très bien par
+  `raw.githubusercontent.com` sans rien installer. Le seul portage plausible y
+  est `freesound-api`, qui se déclare clone et pointe vers son dépôt.
+
+**La leçon générale : un nom de paquet qui ressemble au dépôt officiel n'est
+pas le paquet officiel.** Lire la source depuis GitHub coûte une requête et
+n'exécute rien ; `pip install` exécute du code d'installation avant qu'on ait
+lu une ligne.
+
 Le matériau vient donc de l'extérieur, et la demande doit être **précise** :
 
 - **À chercher** : « tiger snarl », « lion growl close », « bear roar » — les
