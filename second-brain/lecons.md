@@ -4669,3 +4669,34 @@ Trois choses en sont sorties, et elles valent au-delà de Vercel :
   règle : **tout cas douteux sort en 1**, parce qu'un déploiement de trop coûte
   une unité de quota et qu'un déploiement manquant fait tester une version
   périmée pendant deux heures — mesuré, ici même, le 29/08.
+
+## Un connecteur MCP ne passe pas par la politique réseau — et c'est ce qui débloque
+
+Trois services ont été sondés le 01/09/2026, tous refusés au tunnel :
+`api.elevenlabs.io`, `mcp.hedra.com`, `freesound.org`. La conclusion évidente
+était qu'il fallait ouvrir ces domaines dans la politique réseau de
+l'environnement, et une heure y est passée — à chercher le bon écran, à
+composer la liste, à corriger la forme des jokers.
+
+**C'était la mauvaise piste pour ElevenLabs.** Son **connecteur MCP** travaille
+alors que son API directe est refusée, le même jour, depuis la même session. La
+documentation de Claude Code le dit d'ailleurs en une ligne facile à manquer :
+*« MCP connector traffic … don't go through this allowlist »*.
+
+La leçon n'est pas « les connecteurs marchent » — c'est **l'ordre des
+questions**. Avant de demander l'ouverture d'un domaine, regarder si un
+connecteur couvre déjà le besoin : il emprunte un autre chemin, et ce chemin
+peut être ouvert quand l'autre est fermé. `curl` mesure le réseau de la
+session ; il ne mesure pas ce qu'un connecteur sait faire.
+
+**Ce que ça a levé.** Ce dépôt affirmait depuis le 29/08 qu'« une session ne
+peut pas fabriquer une illustration », après quatre chemins d'image mesurés
+fermés. La mesure était juste, la conclusion trop large : une image a été
+produite depuis une session distante — 1344 × 768, `gemini-2.5-flash-image`,
+**4,57 centimes, dix secondes**.
+
+**Et le piège du premier essai, qui coûte de l'argent sans rien casser :** le
+rapport d'image sort en **16:9** par défaut, et l'outil de génération ne
+l'expose pas — il se règle sur le nœud du flux. Une série verticale paie donc
+une image inutilisable qui a pourtant l'air réussie. `estimate_only: true`
+chiffre une génération sans rien dépenser : le faire avant tout lot.
