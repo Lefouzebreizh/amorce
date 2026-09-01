@@ -339,7 +339,7 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 ## Traducteur de chat — `chat-traducteur/`
 
 ```bash
-python3 -m unittest discover -s chat-traducteur/tests   # 20 tests, ~1 ms, aucune dépendance
+python3 -m unittest discover -s chat-traducteur/tests   # 31 tests, ~3 ms, aucune dépendance
 ```
 
 Ces tests ne chargent **jamais** YAMNet et n'ouvrent aucun fichier son : ils
@@ -365,9 +365,33 @@ Le `--detail` n'est pas décoratif : il affiche les scores félins fenêtre par
 fenêtre, et c'est la seule vue où l'on voit une classe parente prendre le pas
 sur une classe précise. Un verdict seul ne le montre jamais.
 
+Et dès qu'un changement touche à `habillage/`, la même règle vaut avec un autre
+outil : **on regarde la planche**, on ne se contente pas du vert.
+
+```bash
+python3 chat-traducteur/scripts/fabriquer_cartes.py
+node chat-traducteur/scripts/planche.mjs
+```
+
+Elle trace les repères de zone sûre à 12 % et 45 % par-dessus les cinq cartes.
+Ce n'est pas décoratif : c'est elle qui a montré les cinq cartes sorties
+**vertes** alors que les cinq palettes étaient bonnes — un `id` SVG est global
+au document, et cinq dégradés nommés pareil résolvent tous vers le premier.
+Chaque fichier était juste pris isolément, donc aucun test de fichier ne
+pouvait l'attraper.
+
+Deux défauts sur ce projet, deux fois la même leçon : **ce qui se voit ne se
+mesure pas.**
+
+`planche.mjs` emprunte `playwright` au `package.json` d'Amorce — il n'est donc
+pas lancé par la CI, et c'est voulu : c'est un outil de regard, pas une étape
+de vérification.
+
 Ce que rien ne dit encore : **le comportement sur un téléphone.** Le modèle est
 en TFLite, pèse 4 Mo et coûte 1,9 ms par fenêtre sur un cœur de serveur — rien
-n'indique un obstacle, rien ne le prouve tant qu'aucun APK n'a tourné.
+n'indique un obstacle, rien ne le prouve tant qu'aucun APK n'a tourné. Et
+aucune carte n'a encore été vue **dans** TikTok, seulement contre des repères
+qui en reproduisent les bords.
 
 ## NexusCrypto — `nexuscrypto/`
 

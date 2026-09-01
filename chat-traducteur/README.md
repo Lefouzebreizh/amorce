@@ -109,15 +109,18 @@ chat-traducteur/
 │   └── yamnet.py         le modèle, chargé une fois
 ├── scripts/
 │   └── telecharger_modeles.py
-├── tests/                20 tests, 0,001 s, sans rien installer
+├── habillage/          ← la carte SVG, bibliothèque standard PURE aussi
+│   ├── carte.py          verdict → SVG 1080 × 1920, zone sûre câblée
+│   └── palette.py        une palette par intention, contraste ≥ 7:1
+├── tests/                31 tests, ~3 ms, sans rien installer
 ├── modeles/              poids — jamais versionnés
 └── cli.py                le prototype : un fichier entre, une intention sort
 ```
 
 **Le noyau ne connaît ni numpy, ni TFLite, ni fichier son.** Même règle que le
 cœur de NexusCrypto, et pour la même raison : ce qui *décide* doit s'éprouver
-sur une machine où rien n'est installé, sinon plus personne ne vérifie. Les 20
-tests tournent en 1 milliseconde sur une session fraîche.
+sur une machine où rien n'est installé, sinon plus personne ne vérifie. Les 31
+tests tournent en 3 millisecondes sur une session fraîche.
 
 Le corollaire pratique : **l'habillage visuel se branchera sans toucher à ce
 qui décide.** `noyau/intentions.py` porte déjà la table des scènes et des
@@ -194,13 +197,86 @@ et un seuil inventé ici aurait l'air d'une mesure. Le comportement actuel est
 épinglé par un test qui échouera le jour où on tranchera — pour que ce soit une
 décision et non une dérive.
 
+## L'habillage visuel
+
+C'est l'axe de différenciation choisi : un résultat doit être partageable tel
+quel, pas lu. Une carte est un SVG **1080 × 1920**, généré en bibliothèque
+standard pure — comme le noyau. Une carte est du texte posé dans un cadre : ni
+Pillow ni moteur de rendu n'y apporteraient quoi que ce soit, et chacun serait
+une dépendance de plus sur une machine fraîche.
+
+```bash
+python3 chat-traducteur/scripts/fabriquer_cartes.py   # 5 SVG dans .fixtures/cartes
+node chat-traducteur/scripts/planche.mjs              # la planche à regarder
+```
+
+### La règle du §1, rendue structurelle
+
+**La carte ne peut pas afficher un score que le modèle n'a pas mesuré.** Ce
+n'est pas une consigne laissée à la discipline de l'appelant : `blocs()` ne
+fabrique le bloc de confiance que si `source is MESUREE`. Un verdict provisoire
+ou indécis n'a **aucun chemin de code** menant à un pourcentage.
+
+Un chiffre inventé sur un écran de partage a exactement l'air d'une mesure, et
+le public visé est celui que ça blesse le plus. La seule façon d'en afficher un
+serait de modifier `habillage/carte.py` — ce qu'un test interdit, dans les deux
+sens : l'un vérifie qu'aucun score n'apparaît sans mesure, l'autre qu'il
+apparaît bien quand il y en a une. Sans le second, supprimer le bloc entier
+passerait inaperçu.
+
+### La zone sûre est câblée, pas recommandée
+
+Tout le texte vit entre **230 et 865 px** — 12 à 45 % de la hauteur, soit
+l'*intersection* des zones sûres de TikTok, Instagram et Facebook, jamais la
+plus permissive : une même carte part sur les trois, et Instagram ferme dès
+63 %. Un titre trop long **passe à la ligne**, il ne s'étire jamais : c'est le
+défaut de l'épisode 1 de `motion/`, où un titre étiré de 9,8 % à 94,7 % se
+faisait manger par les boutons de Facebook.
+
+Un test vérifie position par position, pour les cinq intentions, que rien ne
+sort de la bande ni de la colonne.
+
+### Le défaut que la planche a montré
+
+Les cinq palettes étaient justes et les cinq cartes sortaient **vertes**.
+
+Un `id` SVG est global au **document**, pas au fichier. Cinq cartes inlinées
+dans la même page avec `id="fond"` : les cinq `url(#fond)` résolvent vers le
+premier dégradé. Chaque fichier pris isolément restait parfaitement correct —
+rien ne pouvait le signaler, et le cas n'est pas théorique puisque ces cartes
+ont vocation à être posées plusieurs à la fois dans une page.
+
+L'identifiant porte désormais l'intention. C'est la deuxième fois sur ce projet
+qu'un défaut ne se voyait qu'en regardant : la première, c'était la classe
+parente `Cat`.
+
+### Contraste
+
+Chaque palette tient **au moins 7:1** entre son texte et les deux extrémités de
+son dégradé — pas 4,5:1, qui est le minimum légal et se révèle insuffisant en
+plein soleil sur le terrain de référence. Calculé en WCAG par un test, sur les
+deux extrémités : un texte lisible en haut et noyé en bas serait un défaut
+qu'une moyenne cache.
+
+Et le stress est **violet, pas rouge**. Le rouge sur un écran de partage
+fabrique de l'urgence, ce que le §1 interdit — on montre un chat qui demande de
+l'espace, pas une alarme.
+
+### Une dépendance empruntée, dite franchement
+
+`scripts/planche.mjs` utilise `playwright`, qui vient du `package.json`
+d'Amorce à la racine, pas de ce projet. C'est le « piège du projet niché » de
+`/nouveau-projet`. Toléré parce que ce script est un **outil de regard** et
+jamais une étape de vérification : les 31 tests n'en dépendent pas et la CI ne
+le lance pas. Le jour où `chat-traducteur/` gagne son propre `package.json`,
+c'est la première ligne à y écrire.
+
 ## La suite
 
 1. ~~Structure et faisabilité~~ — fait.
 2. ~~Prototype : un fichier audio entre, une intention sort~~ — fait.
-3. **Habillage visuel** par-dessus `noyau/intentions.py`. La table des scènes
-   existe ; il manque le rendu. Le §2 de `CLAUDE.md` le borne : texte entre
-   12 et 45 % de la hauteur, 18 px minimum, format 1080 × 1920.
+3. ~~Habillage visuel~~ — fait : cartes SVG 1080 × 1920, zone sûre câblée,
+   contraste ≥ 7:1, et l'impossibilité structurelle d'afficher un faux score.
 4. **Enregistrements réels du chat d'Erwann.** Ils tranchent trois choses que
    rien d'autre ne peut trancher : le seuil de la porte, la question ouverte
    ci-dessus, et si `Purr` se détecte sur un micro de téléphone à un mètre.
