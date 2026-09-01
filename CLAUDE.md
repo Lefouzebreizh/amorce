@@ -502,7 +502,33 @@ là. **Et le connecteur Adobe n'y change rien** : sa documentation dit en clair
 que la génération d'image y est indisponible, seul l'agrandissement de cadre
 (`image_generative_expand`) subsiste et il part d'une image existante. Adobe
 retouche, recadre, détoure, vectorise et met en page — il ne fait pas la
-première image. **Une session ne peut donc pas fabriquer une illustration.**
+première image.
+
+**Cette phrase disait « une session ne peut donc pas fabriquer une
+illustration ». Elle est fausse depuis le 01/09/2026, et voici l'image qui le
+prouve.** Le connecteur MCP **ElevenLabs** génère : une illustration a été
+produite depuis une session distante — druide de dos sur une crête volcanique,
+1344 × 768, modèle `gemini-2.5-flash-image`, **4,57 centimes, dix secondes**.
+
+Ce qui débloque n'est ni une clé ni un hôte ouvert, et c'est ce qui rend la
+leçon transposable : **le trafic d'un connecteur MCP ne passe pas par la liste
+de domaines de l'environnement.** L'API directe d'ElevenLabs reste refusée au
+tunnel — mesuré le même jour — pendant que son connecteur travaille. Chercher à
+ouvrir `*.elevenlabs.io` dans la politique réseau était donc inutile pour cet
+usage-là.
+
+Le connecteur porte 22 modèles d'image, 47 de vidéo (Veo, Sora, Kling,
+Seedance, Runway, jusqu'en 4K avec audio), le **lipsync** — Sync 3, Veed,
+OmniHuman, c'est-à-dire le remplaçant de Wav2Lip —, les bruitages, la musique,
+la voix, la transcription Scribe et un montage en frise.
+
+**Le piège, relevé au premier essai : le rapport d'image sort en 16:9.** Il
+vaut 16:9 par défaut et l'outil de génération **ne l'expose pas** — il se règle
+sur le nœud du flux. Une série verticale demande donc un passage par le flux,
+sans quoi on paie une image inutilisable qui a pourtant l'air réussie.
+
+Ce qui n'est **pas** mesuré et ne doit pas être supposé : le 9:16 réellement
+obtenu, la génération vidéo, le lipsync, et le quota du compte.
 
 **Et un sixième s'est ouvert le 01/09/2026 : l'API Gemini répond.**
 `generativelanguage.googleapis.com` rend 404 sur `/` et 403 sur `/v1beta/models`,
