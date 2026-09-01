@@ -255,6 +255,56 @@
       "taille_minimale_ko": 64,
       "signaler_sans_piste_video": true,
       "ignorer_si_modifiee_recemment_minutes": 5
+    },
+    "variantes": {
+      "actif": true,
+      "confirmer_par_empreinte": true,
+      "derives_recalculables": {
+        "pdf": [
+          "psd",
+          "xcf",
+          "indd",
+          "svg",
+          "md",
+          "docx"
+        ],
+        "jpg": [
+          "psd",
+          "xcf",
+          "tif",
+          "tiff",
+          "cr2",
+          "nef",
+          "dng",
+          "raw"
+        ],
+        "jpeg": [
+          "psd",
+          "xcf",
+          "tif",
+          "tiff",
+          "cr2",
+          "nef",
+          "dng",
+          "raw"
+        ],
+        "png": [
+          "psd",
+          "xcf",
+          "svg"
+        ],
+        "mp4": [
+          "mov",
+          "mkv",
+          "prproj"
+        ],
+        "webp": [
+          "psd",
+          "png",
+          "jpg"
+        ]
+      },
+      "signaler_au_dela_de_mo": 50
     }
   },
   "conversion": {

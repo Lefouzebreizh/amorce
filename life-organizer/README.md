@@ -10,7 +10,8 @@ options désactivées par défaut).
 
 > État : squelette d'architecture. `organizer_config.json` est complet et
 > validé ; les six modules sont décrits ci-dessous. Trois sont écrits :
-> `nettoyage`, complet — photos floues, quasi-doublons puis vidéos abîmées
+> `nettoyage`, complet — photos floues, quasi-doublons, vidéos abîmées, puis
+> copies de nom et exports recalculables sur **tous** les fichiers
 > (`organizer nettoyer`) —, `classement`, qui range documents, photos et
 > vidéos par thème et par date en **lisant les premières pages d'un document**
 > quand son nom ne dit rien (`organizer ranger`), et `conversion`, qui

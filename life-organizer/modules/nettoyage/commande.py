@@ -29,7 +29,7 @@ from noyau import fichiers
 from noyau.journal import Journal
 from noyau.modele import ECARTER, SIGNALER
 
-from . import regles, traitement
+from . import regles, traitement, variantes
 
 # Au-delà, la liste cesse d'être lue et devient un mur. Le journal, lui, porte
 # tout : ce qui n'est pas affiché n'est pas pour autant caché.
@@ -60,11 +60,15 @@ def executer(options: argparse.Namespace, config: dict) -> int:
     reglages_doublons = medias_config.get("doublons", {})
     reglages_videos = medias_config.get("videos", {})
 
+    reglages_variantes = medias_config.get("variantes", {})
+
     photos_demandees = (reglages_flou.get("actif", True)
                         or reglages_doublons.get("actif", True))
     videos_demandees = reglages_videos.get("verifier_integrite", True)
-    if not photos_demandees and not videos_demandees:
-        print("Flou, doublons et intégrité vidéo sont tous désactivés dans la configuration.")
+    variantes_demandees = reglages_variantes.get("actif", True)
+    if not photos_demandees and not videos_demandees and not variantes_demandees:
+        print("Flou, doublons, intégrité vidéo et variantes sont tous "
+              "désactivés dans la configuration.")
         return 0
 
     try:
@@ -113,7 +117,9 @@ def executer(options: argparse.Namespace, config: dict) -> int:
     comptes = ([f"{len(photos)} photo(s)"] if photos_demandees else []) \
         + ([f"{len(videos)} vidéo(s)"] if videos_demandees else [])
     print(f"{' et '.join(comptes)} trouvée(s) dans {len(dossiers)} dossier(s).")
-    if not chemins:
+    # La passe des variantes a son propre parcours, sur tous les fichiers : un
+    # dossier de PDF n'offre ni photo ni vidéo, et c'est justement là qu'elle sert.
+    if not chemins and not variantes_demandees:
         _incidents(journal)
         return 0
 
@@ -132,6 +138,11 @@ def executer(options: argparse.Namespace, config: dict) -> int:
 
     if videos_demandees and videos:
         liberes += _passe_videos(videos, reglages_videos, quarantaine, journal)
+
+    if variantes_demandees:
+        liberes += _passe_variantes(
+            dossiers, config, reglages_variantes, quarantaine, journal
+        )
 
     retention = config.get("securite", {}).get("retention_quarantaine_jours", 30)
     purges = fichiers.purger_quarantaine(quarantaine, retention, journal)
@@ -284,6 +295,48 @@ def _incidents(journal: Journal) -> None:
         print(f"  · {incident}")
     if len(journal.incidents) > 5:
         print(f"  … et {len(journal.incidents) - 5} autre(s)")
+
+
+def _passe_variantes(dossiers, config, reglages, quarantaine, journal) -> int:
+    """Copies de nom, exports recalculables, et relevé des fichiers volumineux.
+
+    Parcours distinct de celui des photos : ces trois questions se posent sur
+    tous les fichiers, et un dossier de PDF n'aurait aucune photo à offrir aux
+    deux passes précédentes.
+    """
+    fiches = traitement.relever_fiches(
+        dossiers, config.get("dossiers", {}).get("exclusions", []), journal
+    )
+    if not fiches:
+        return 0
+    print(f"\n{len(fiches)} fichier(s) au total, toutes natures confondues.")
+
+    redondances: list[variantes.Redondance] = []
+
+    if reglages.get("confirmer_par_empreinte", True):
+        empreintes = traitement.empreintes_de_contenu(fiches, journal)
+        copies = variantes.grouper_variantes_de_nom(fiches, empreintes)
+        if copies:
+            print(f"  {sum(len(r.variantes) for r in copies)} copie(s) de nom au contenu identique.")
+        redondances += copies
+
+    derives = variantes.derives_recalculables(fiches, reglages.get("derives_recalculables", {}))
+    if derives:
+        print(f"  {len(derives)} export(s) qu'une source encore présente permet de refabriquer.")
+    redondances += derives
+
+    # Le relevé du volume ne propose rien : il informe. Un master de tournage
+    # pèse lourd sans être en trop, et c'est à l'utilisateur d'en décider.
+    gros = variantes.volumineux(fiches, reglages.get("signaler_au_dela_de_mo", 0))
+    if gros:
+        print(f"\n  {len(gros)} fichier(s) de plus de "
+              f"{reglages.get('signaler_au_dela_de_mo')} Mo — à regarder, rien n'est proposé :")
+        for fiche in gros[:10]:
+            print(f"    {_taille(fiche.poids_octets):>9}  {fiche.chemin}")
+        if len(gros) > 10:
+            print(f"    … et {len(gros) - 10} autre(s)")
+
+    return traitement.ecarter_redondances(redondances, quarantaine, journal)
 
 
 def _chemin(valeur: str | None) -> Path | None:
