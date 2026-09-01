@@ -4789,3 +4789,71 @@ doit se demander explicitement ce que `teste_le` devient, pas seulement ce que
 qui tient jusqu'au premier clic sur « Éprouver », puis qui semble s'être
 « annulé tout seul ». Trouvé en relisant le diff, pas en le lançant — un test
 dédié (`aTester` après `dedoublonner`) l'épingle maintenant.
+
+---
+
+## Une suite qui passe peut ne passer que par chance alphabétique — 01/09/2026
+
+*Coût : rattrapé avant la CI, mais c'est un rouge que personne n'aurait su lire.*
+
+Sept fichiers de test du conseiller de patrimoine passaient tous ensemble.
+Lancés **un par un depuis la racine du dépôt**, cinq échouaient sur
+`ModuleNotFoundError`. La cause : un seul fichier — `tests/aides.py` — faisait
+le `sys.path.insert` vers la racine du projet, et les autres en profitaient
+**parce qu'un fichier importé plus tôt dans l'ordre alphabétique** l'avait déjà
+fait.
+
+Ce qui rend le piège vicieux : le mode de lancement local (`cd projet && python3
+-m unittest discover -s tests`) met le dossier du projet dans `sys.path` par le
+répertoire courant, donc tout marche. La CI, elle, lance depuis la racine du
+dépôt — c'est là que ça tombe, sur une machine où personne ne regarde.
+
+**La parade est déjà la convention du radar, il suffisait de la voir :** ses
+quinze fichiers de test font tous leur propre `sys.path.insert`, sans exception.
+Quinze sur quinze, ce n'est pas une redondance, c'est l'invariant.
+
+**Portée générale :** un test qui ne passe que dans un ordre donné n'est pas un
+test qui passe. Le vérifier coûte une boucle :
+
+```bash
+for f in projet/tests/test_*.py; do
+  python3 -m unittest discover -s projet/tests -p "$(basename "$f")" | tail -1
+done
+```
+
+À lancer **depuis la racine du dépôt**, jamais depuis le dossier du projet — le
+répertoire courant est précisément ce qui masque le défaut.
+
+---
+
+## Une espace insécable tapée au clavier est invisible dans un diff — 01/09/2026
+
+*Coût : deux tests faux, et cinq minutes à comparer deux chaînes identiques
+à l'œil.*
+
+La typographie française demande une espace insécable avant `€`, `%` et les
+unités, et en séparateur de milliers. Tapée directement dans le source, elle
+rend `'1 234 567,89 €' != '1 234 567,89 €'` — deux chaînes rigoureusement
+identiques à l'écran, et différentes pour la machine. Le diff ne montre rien, le
+message d'erreur non plus, et on relit trois fois la même ligne.
+
+Pire : dans un même fichier, une moitié des espaces peut être insécable et
+l'autre non, sans qu'aucune relecture ne le voie. C'est ce qui était arrivé —
+les séparateurs de milliers l'étaient, l'espace avant `€` ne l'était pas.
+
+**La parade : ne jamais la taper, l'écrire.** Une constante nommée, une fois :
+
+```python
+INSECABLE = " "          # et dans les tests : "12,3 %"
+```
+
+Et le garde-fou qui empêche la rechute, en une ligne :
+
+```bash
+grep -n $' ' fichier.py     # doit ne rien rendre, hors la constante
+```
+
+**Portée générale :** tout caractère invisible ou ambigu — insécable, espace
+fine, tiret cadratin, apostrophe courbe — s'écrit en séquence d'échappement dans
+le code, et se tape seulement dans la prose. Le code se relit à deux ; la prose
+se relit à l'œil.
