@@ -1,13 +1,14 @@
 # Ce que le constructeur de bibliothèque visuelle exige pour tourner.
 #
 # Écrit à l'occasion de l'audit du 01/09/2026, qui a trouvé ce projet sans
-# manifeste, sans test, et **absent de `CLAUDE.md` §4** — qui énumère pourtant
-# tous les projets du dépôt. 1109 lignes de Python que rien n'annonçait.
+# manifeste, sans test, et absent de `CLAUDE.md` — 1109 lignes de Python que
+# rien n'annonçait.
 #
-# Ce fichier ne règle que la moitié du problème : tant que le projet n'est pas
-# déclaré au §4, il reste hors de l'inventaire, hors du hook de démarrage et
-# hors de `verifier.sh`. La décision de le déclarer, de l'archiver dans
-# `archives-backlog/` ou de le retirer appartient au propriétaire.
+# Les quatre trous sont bouchés depuis. Ce projet est déclaré dans `CLAUDE.md`,
+# compté par `/etat-du-depot`, routé par `verifier.sh` (qui découvre seul tout
+# `tests/test_*.py`) et installé par le hook de démarrage. Sa suite vit dans
+# `tests/test_note_telephone.py` et éprouve ce qui fait sa raison d'être : la
+# note de visibilité sur téléphone.
 
 # Ouverture des images et fabrication des planches de contact.
 Pillow>=10.0
