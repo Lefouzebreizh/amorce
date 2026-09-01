@@ -1,6 +1,6 @@
 """Décider ce qui mérite un agrandissement, de combien, et où le poser.
 
-Six décisions tiennent ce fichier — et aucune n'a besoin du modèle, ce qui est
+Sept décisions tiennent ce fichier — et aucune n'a besoin du modèle, ce qui est
 tout l'intérêt : le module se juge, se règle et se corrige alors que l'inférence
 reste hors de portée.
 
@@ -32,7 +32,15 @@ reste hors de portée.
    rencontrée au passage suivant produirait `photo_hd_hd.jpg`, puis
    `photo_hd_hd_hd.jpg`. Le suffixe se reconnaît sur le nom, avant tout examen.
 
-6. **Le lot est borné.** `lot_maximal` coupe la file, et le compte rendu dit
+6. **La source se juge en définition, jamais en largeur.** Le seuil était
+   `largeur_source_maximale: 1280` ; il retenait 1 216 fichiers d'un vrai
+   Bureau, dont 1 177 captures d'écran de téléphone — 1080 × 2400 est *étroit*,
+   donc « petit » pour un seuil de largeur, alors que c'est 2,59 Mpx déjà nets,
+   et ce sont les plus longues à traiter. Le même dossier jugé en définition
+   rend 64 fichiers. Mesuré le 01/09/2026 par la session qui tourne sur la
+   machine d'Erwann, sur ses fichiers ; l'arithmétique se refait de tête.
+
+7. **Le lot est borné.** `lot_maximal` coupe la file, et le compte rendu dit
    combien restent. Proposer deux mille agrandissements à quelqu'un qui en
    lancera vingt-cinq n'informe pas, cela décourage.
 
@@ -143,10 +151,14 @@ def decider(candidat: Candidat, config: dict) -> Agrandissement:
     if deja_agrandie(candidat.chemin, suffixe):
         return refus("déjà agrandie", f"porte déjà le suffixe « {suffixe} »")
 
-    largeur_max = reglages.get("largeur_source_maximale", 1280)
-    if candidat.largeur > largeur_max:
+    # Décision 6 : la définition, et non la largeur — une capture de téléphone
+    # est étroite et pourtant deux fois trop définie pour valoir un calcul.
+    mpx_max = reglages.get("definition_source_maximale_mpx", 1.0)
+    mpx = candidat.definition / 1_000_000
+    if mpx > mpx_max:
         return refus("déjà assez définie",
-                     f"{candidat.largeur} px de large, au-delà du seuil de {largeur_max} px")
+                     f"{candidat.largeur} × {candidat.hauteur}, soit {mpx:.2f} Mpx, "
+                     f"au-delà du seuil de {mpx_max} Mpx")
 
     minimale = reglages.get("largeur_source_minimale", 0)
     if candidat.largeur < minimale:
