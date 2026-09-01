@@ -7,13 +7,13 @@ OpenCV sont installés), la détection de l'absence du modèle, et le message qu
 en découle. `python3 -m unittest discover -s life-organizer/tests` couvre la
 décision entière.
 
-Ce qui ne l'est pas, faute de dépendance : **l'inférence elle-même**. Ni
-`torch`, ni `realesrgan`, ni `basicsr` ne sont installés ici, et les poids du
-modèle ne sont pas téléchargeables — le mandataire refuse `huggingface.co`.
-`agrandir_une` est donc écrite contre l'API réelle de Real-ESRGAN mais n'a
-jamais tourné : la première exécution sur une machine équipée est une
-vérification qui reste à faire, et c'est écrit dans le README plutôt que
-supposé.
+**L'inférence a été exécutée pour de vrai le 01/09/2026**, dans une session
+distante — 512 px → 2048 px en 58 secondes sur processeur, poids téléchargés en
+deux secondes depuis les objets de release GitHub. Ce que la version précédente
+de ce fichier annonçait comme hors de portée était une **absence** de paquets,
+pas une impossibilité : `pip install torch realesrgan basicsr` passe ici (trois
+gigaoctets, quelques minutes), PyPI et `github.com/…/releases` répondent, et
+seul `download.pytorch.org` — la roue CPU allégée — est refusé.
 
 Trois décisions :
 
@@ -46,6 +46,44 @@ from .regles import Agrandissement, Candidat
 # incohérent d'un module à l'autre.
 LARGEUR_ANALYSE = 800
 
+# Le nom du réglage n'est pas le nom du fichier, et c'est ce qui a coûté trois
+# 404 au premier essai de bout en bout : la configuration dit
+# « realesrgan-x4plus », l'objet de release s'appelle `RealESRGAN_x4plus.pth`.
+# Fabriquer l'adresse à partir du réglage échoue donc en silence jusqu'à
+# l'exécution. La table dit les deux, et l'échelle du modèle avec — elle ne se
+# déduit pas non plus du nom de façon fiable.
+BASE_RELEASES = "https://github.com/xinntao/Real-ESRGAN/releases/download"
+MODELES = {
+    "realesrgan-x4plus": (f"{BASE_RELEASES}/v0.1.0/RealESRGAN_x4plus.pth", 4),
+    "realesrgan-x4plus-anime": (
+        f"{BASE_RELEASES}/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth", 4),
+    "realesrgan-x2plus": (f"{BASE_RELEASES}/v0.2.1/RealESRGAN_x2plus.pth", 2),
+}
+
+
+def _rebrancher_functional_tensor() -> None:
+    """Rebranche le module que `basicsr` importe et que torchvision a retiré.
+
+    `basicsr` 1.4.2 fait `from torchvision.transforms.functional_tensor import
+    rgb_to_grayscale`. Ce module a disparu de torchvision 0.17, et la fonction
+    vit maintenant dans `torchvision.transforms.functional`. Sans ce
+    rebranchement, l'import échoue **après** une installation que pip déclare
+    réussie — le piège coûte une demi-heure à qui croit le message de pip.
+
+    Mesuré le 01/09/2026 : torch 2.13.0, torchvision 0.28.0, basicsr 1.4.2.
+    Le jour où `basicsr` corrigera son import, ces trois lignes deviendront
+    inutiles sans rien casser — elles ne font qu'ajouter un alias.
+    """
+    import sys
+
+    if "torchvision.transforms.functional_tensor" in sys.modules:
+        return
+    try:
+        import torchvision.transforms.functional as fonctionnel
+    except ImportError:
+        return
+    sys.modules["torchvision.transforms.functional_tensor"] = fonctionnel
+
 
 def moteur_disponible() -> tuple[bool, str]:
     """Le modèle d'agrandissement est-il utilisable ici, et sinon que faire.
@@ -53,6 +91,7 @@ def moteur_disponible() -> tuple[bool, str]:
     Rend un couple plutôt qu'un booléen : un refus sans la commande qui le lève
     oblige à chercher ailleurs ce que la fonction savait déjà.
     """
+    _rebrancher_functional_tensor()
     manquants = []
     for paquet, pip in (("torch", "torch"), ("realesrgan", "realesrgan"),
                         ("basicsr", "basicsr")):
@@ -183,7 +222,14 @@ def agrandir(file: list[Agrandissement], reglages: dict, journal) -> tuple[int, 
             continue
         try:
             if moteur is None:
-                moteur = _charger_moteur(reglages, agrandissement.facteur)
+                # Une panne de chargement est définitive : le modèle ne
+                # s'installera pas tout seul entre deux images. Sans cette
+                # remontée, la même erreur se répète autant de fois qu'il y a
+                # de fichiers, et le compte rendu la noie.
+                try:
+                    moteur = _charger_moteur(reglages, agrandissement.facteur)
+                except Exception as erreur:
+                    return ecrits, [f"chargement du modèle impossible : {erreur}"]
             _agrandir_une(moteur, agrandissement)
         except Exception as erreur:
             # Le lot ne s'arrête pas sur une image : un modèle qui manque de
@@ -202,26 +248,40 @@ def _charger_moteur(reglages: dict, facteur: int):
     mémoire. Le refaire par image transformerait un lot de vingt-cinq en une
     demi-heure d'allers-retours disque.
     """
+    _rebrancher_functional_tensor()
+
     import torch
     from basicsr.archs.rrdbnet_arch import RRDBNet
     from realesrgan import RealESRGANer
 
     nom = reglages.get("modele", "realesrgan-x4plus")
+    if nom not in MODELES:
+        raise ValueError(
+            f"modèle inconnu : « {nom} ». Connus : {', '.join(sorted(MODELES))}. "
+            "Un nom inconnu ne se devine pas en adresse : le fichier de release "
+            "ne porte pas le nom du réglage."
+        )
     # Le modèle est entraîné pour un facteur donné : `RealESRGANer` le rend, et
     # `outscale` ajuste ensuite la sortie. Les deux ne se confondent pas.
-    echelle_modele = 4 if "x4" in nom else 2
+    adresse, echelle_modele = MODELES[nom]
     architecture = RRDBNet(num_in_ch=3, num_out_ch=3, num_feat=64,
                            num_block=23, num_grow_ch=32, scale=echelle_modele)
     appareil = reglages.get("appareil", "cpu")
     return RealESRGANer(
         scale=echelle_modele,
-        model_path=f"https://github.com/xinntao/Real-ESRGAN/releases/download/"
-                   f"v0.1.0/{nom}.pth",
+        model_path=adresse,
         model=architecture,
         device=torch.device(appareil),
         # Sur processeur, la demi-précision n'accélère rien et rend des images
         # noires sur certaines versions de torch.
         half=(appareil != "cpu"),
+        # En tuiles, sinon une photo de téléphone demande l'image entière en
+        # mémoire à chaque couche du réseau. 256 px tient largement sur un
+        # processeur ; `tuile: 0` la désactive pour qui a de la mémoire à
+        # revendre. Mesuré : 512 px → 2048 px en 58 s sur processeur, en neuf
+        # tuiles.
+        tile=reglages.get("tuile", 256),
+        tile_pad=reglages.get("recouvrement_tuile", 10),
     )
 
 

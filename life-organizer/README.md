@@ -12,8 +12,9 @@ options désactivées par défaut).
 > `scan_ocr` et `calendrier` sont retirés du projet — `paper-manager/` fait déjà
 > les deux, et un second extracteur de champs dans le même dépôt divergerait du
 > premier au premier motif ajouté. Il reste **quatre modules**, dont trois
-> écrits, et `upscale` posé — sa décision est vérifiée, son inférence ne peut
-> pas l'être ici (ni `torch` ni `realesrgan` dans cet environnement).
+> écrits, et `upscale` **vérifié de bout en bout** — inférence comprise :
+> 512 px → 2048 px en 58 s sur processeur, dépendances installables depuis PyPI
+> et poids téléchargés depuis les releases GitHub.
 >
 > État : `organizer_config.json` est complet et validé. Trois modules écrits :
 > `nettoyage`, complet — photos floues, quasi-doublons, vidéos abîmées, puis

@@ -37,3 +37,13 @@ python-dateutil>=2.9
 #     pip install torch realesrgan basicsr
 #
 # Sans eux, `organizer upscaler` calcule et affiche son plan, et n'écrit rien.
+#
+# Éprouvé le 01/09/2026 dans une session distante : l'installation passe (PyPI
+# est joignable), les poids se téléchargent depuis les releases GitHub, et
+# l'agrandissement tourne — 58 s par image en 512 → 2048 sur processeur. Seul
+# `download.pytorch.org` est refusé par le mandataire, donc pas de roue CPU
+# allégée : c'est la version complète, avec ses pilotes NVIDIA inutiles ici.
+#
+# `basicsr` casse à l'import avec torchvision ≥ 0.17 alors que pip annonce une
+# installation réussie — le module pose l'alias qui manque, il n'y a rien à
+# faire à la main.
