@@ -5,6 +5,7 @@ import { BandeAnnonce } from '../../../composants/BandeAnnonce.tsx'
 import { BoutonFavori } from '../../../composants/BoutonFavori.tsx'
 import { Etiquette } from '../../../composants/Carte.tsx'
 import { Lecteur } from '../../../composants/Lecteur.tsx'
+import { enrichirTmdb } from '../../../enrichissement/tmdb.ts'
 import { antennesDe } from '../../../serveur/antennes.ts'
 import { depot } from '../../../serveur/depot-partage.ts'
 import { adresseLecture } from '../../../serveur/flux.ts'
@@ -38,6 +39,17 @@ export default async function Lecture({ params }: { params: Promise<{ id: string
       ? undefined
       : cache.episodes(element.serie)[rang + 1]
 
+  // Un film n'a jamais de résumé côté catalogue — aucun fournisseur n'en sert
+  // un pour ce genre. Sans clé, `enrichirTmdb` rend `undefined` sans requête :
+  // la fiche s'affiche alors exactement comme avant.
+  const tmdb =
+    element.genre === 'film'
+      ? await enrichirTmdb(process.env['TMDB_API_KEY'] ?? '', element.titre, element.annee, 'film')
+      : undefined
+  // L'affiche du fournisseur prime quand elle existe : TMDB ne comble que
+  // l'absence, il ne remplace jamais une image déjà connue de la source.
+  const affiche = element.logo ?? tmdb?.affiche
+
   return (
     <>
       <p className="mb-3 text-sm">
@@ -62,20 +74,34 @@ export default async function Lecture({ params }: { params: Promise<{ id: string
         direct={element.genre === 'direct'}
       />
 
-      <header className="mt-5">
-        <h1 className="text-2xl font-bold">{element.titre}</h1>
-        {element.serie !== undefined && (
-          <p className="text-doux">
-            {element.serie}
-            {element.saison !== undefined && ` — saison ${element.saison}`}
-            {element.episode !== undefined && `, épisode ${element.episode}`}
-          </p>
+      <header className="mt-5 flex gap-4">
+        {affiche !== undefined && (
+          // eslint-disable-next-line @next/next/no-img-element -- une affiche
+          // TMDB ou fournisseur, jamais servie par ce serveur : `next/image`
+          // n'a rien à optimiser qu'un navigateur ne fasse déjà pour une seule
+          // vignette.
+          <img
+            src={affiche}
+            alt=""
+            className="h-32 w-auto shrink-0 rounded-carte border border-bord object-cover"
+          />
         )}
-        <div className="mt-2 flex flex-wrap gap-1">
-          {element.langue !== 'inconnue' && <Etiquette texte={element.langue} />}
-          {element.qualite !== 'inconnue' && <Etiquette texte={element.qualite} />}
-          {element.annee !== undefined && <Etiquette texte={String(element.annee)} />}
-          {element.groupe !== undefined && <Etiquette texte={element.groupe} />}
+        <div>
+          <h1 className="text-2xl font-bold">{element.titre}</h1>
+          {element.serie !== undefined && (
+            <p className="text-doux">
+              {element.serie}
+              {element.saison !== undefined && ` — saison ${element.saison}`}
+              {element.episode !== undefined && `, épisode ${element.episode}`}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-1">
+            {element.langue !== 'inconnue' && <Etiquette texte={element.langue} />}
+            {element.qualite !== 'inconnue' && <Etiquette texte={element.qualite} />}
+            {element.annee !== undefined && <Etiquette texte={String(element.annee)} />}
+            {element.groupe !== undefined && <Etiquette texte={element.groupe} />}
+          </div>
+          {tmdb?.resume !== undefined && <p className="mt-2 text-sm text-doux">{tmdb.resume}</p>}
         </div>
       </header>
 
