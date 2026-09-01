@@ -354,6 +354,18 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
   sont dans son `public/llms.txt`, pas ici.
+- **motion/** — les habillages animés des séries verticales, en Remotion 4 :
+  titres, cartons, logos, rendus en 1080 × 1920 à 30 i/s puis posés sur les
+  rushes dans CapCut en mode de fusion « Écran ». Le fond noir y tient lieu de
+  canal alpha, parce que CapCut Android ouvre le H.264 sans discuter là où son
+  support du WebM alpha est incertain. **La zone sûre est câblée dans le
+  code** — boîte fixe à 22–88 % de large, texte qui passe à la ligne au lieu
+  de s'étirer : c'est ce qui rend impossible le défaut de l'épisode 1, où un
+  titre trop long avait été étiré de 9,8 % à 94,7 % et se faisait manger par
+  les boutons de Facebook. **`remotion render` télécharge son Chrome depuis
+  `remotion.media`, que le mandataire refuse** : désigner le `headless_shell`
+  de Playwright avec `--browser-executable`, et non le `chromium` complet, qui
+  échoue sans dire pourquoi. Se vérifie depuis son dossier.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — deux
   chantiers en sommeil : `mon-app-audio/` et `patrimoine/`, tests verts, mis de
   côté et non abandonnés.

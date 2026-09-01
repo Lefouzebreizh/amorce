@@ -46,6 +46,7 @@ commandes=(
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
   "Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests"
   "Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests"
+  "Motion : (dans motion/) npm run typecheck, npm run build"
   "Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
   "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
   "Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
@@ -92,6 +93,12 @@ echo "── Hypersensible & Bienveillance : dépendances npm"
 # même raison que ce bloc : lancé sans `cd`, npm remonte jusqu'à la racine et
 # installe Astro dans les dépendances du studio Amorce.
 cd "$racine/hypersensible-bienveillance"
+npm install --no-audit --no-fund --silent
+
+echo "── Motion : dépendances Remotion"
+# Même raison que les deux blocs précédents : lancé sans `cd`, npm remonte à la
+# racine et installe Remotion dans l'arbre d'Amorce.
+cd "$racine/motion"
 npm install --no-audit --no-fund --silent
 
 echo "── Look & Find : SDK Flutter $FLUTTER_VERSION"
