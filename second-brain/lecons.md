@@ -3398,6 +3398,56 @@ qui a bougé produit un arbre que personne n'a jamais compilé : les tests
 seul moment où « la vérification est déjà passée » est faux tout en paraissant
 vrai.
 
+**Le même écart a un second symptôme, et celui-là annonce un travail qui
+n'existe pas — 01/09/2026.** Une fois la branche reposée sur `main` par
+`git checkout -B <branche> origin/main`, le crochet de fin de session compte
+« 5 commits non poussés ». Aucun n'est de nous : ce sont les commits de `main`
+que la branche distante, restée sur son commit d'avant l'écrasement, n'a pas.
+Un compteur qui lit « en avance / en retard » ne peut pas voir que le contenu
+est déjà fusionné, puisqu'il compare des histoires.
+
+Le geste juste n'est ni de pousser à l'aveugle ni d'ignorer l'alerte, mais de
+regarder ce que la branche distante porte d'**unique** avant de croire le
+compte :
+
+```bash
+git log --oneline origin/main..origin/<branche>   # vide ⇒ rien d'unique
+git diff --stat origin/main origin/<branche>      # ce qui lui manque
+```
+
+Le premier ne listant que des commits dont le contenu est sur `main`, la
+branche se réaligne par un `--force-with-lease` ancré sur son ancienne tête :
+on n'écrase alors que de l'histoire déjà fusionnée. Sauter la vérification,
+c'est risquer d'effacer le travail d'une autre session qui aurait poussé
+entre-temps sur la même branche.
+
+## Le rapport d'une session pair décrit sa machine, pas le dépôt — 01/09/2026
+
+Une session tournant sur le PC a écrit ici : « Le module 5 a été écrit ce soir
+— ne le réécris pas, il est en place et testé », avec un compte de tests précis
+et des changements de configuration nommés. Tout était vrai **chez elle**, et
+rien n'était sur `main` : le module y existait déjà, écrit par une autre
+session, et sa version à elle n'a jamais été poussée.
+
+Le piège n'est pas le mensonge, c'est la **forme**. Un rapport détaillé, chiffré
+et daté se lit comme un état du dépôt ; c'est un état de machine. Le croire
+mène soit à ne pas écrire ce qui manque (« c'est déjà fait »), soit à écraser
+une version fusionnée par une version locale.
+
+Trois gestes, dans cet ordre, avant d'agir sur un tel message :
+
+1. **`git log` sur les fichiers cités** — qui les a écrits, et quand ;
+2. **lire les valeurs annoncées dans le dépôt** plutôt que dans le message :
+   ici, la clé de configuration citée comme « remplacée » ne l'était pas ;
+3. **refaire l'arithmétique** quand une mesure est invoquée. Celle du pair
+   tenait : 1080 × 2400 fait 2,59 Mpx et passait bien sous un seuil de largeur
+   de 1280. Une mesure juste attachée à un état faux reste une mesure juste.
+
+Ce qui en découle : les **mesures** d'un pair se portent dans `main`, sa
+**version** ne se reprend pas. C'est la règle « ce qui est fusionné gagne », vue
+depuis l'autre bout. Et comme une session distante ne peut joindre personne, la
+seule façon de prévenir le pair est de le dire au propriétaire.
+
 ## Une adresse canonique se vérifie au DNS, pas à l'œil
 
 Onze sites annonçaient `ma-panoplie-ia.com` dans leurs balises canoniques, leurs
