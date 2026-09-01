@@ -161,7 +161,7 @@ def _mesureur_de_nettete(reglages: dict) -> Callable[[Path], float | None]:
         return lambda _chemin: None
 
     def mesurer_une(chemin: Path) -> float | None:
-        image = cv2.imread(str(chemin))
+        image = _lire(chemin, cv2.IMREAD_COLOR)
         if image is None:
             return None
         hauteur, largeur = image.shape[:2]
@@ -172,6 +172,39 @@ def _mesureur_de_nettete(reglages: dict) -> Callable[[Path], float | None]:
         return float(cv2.Laplacian(gris, cv2.CV_64F).var())
 
     return mesurer_une
+
+
+def _lire(chemin: Path, drapeau: int):
+    """Décode une image depuis ses octets, jamais depuis son chemin.
+
+    `cv2.imread` rend `None` **sans lever** sur tout chemin non ASCII sous
+    Windows — donc sur « Téléchargements », « Bureau », « À trier ». Le défaut
+    ne se voit pas : la netteté devient inconnue et le garde-fou du flou dort,
+    ou l'agrandissement se plaint d'une image « illisible » parfaitement saine.
+    `nettoyage/traitement.py` porte déjà la même parade, pour la même raison.
+    """
+    import cv2
+    import numpy
+
+    donnees = numpy.fromfile(str(chemin), dtype=numpy.uint8)
+    if not donnees.size:
+        return None
+    return cv2.imdecode(donnees, drapeau)
+
+
+def _ecrire(chemin: Path, image) -> bool:
+    """Encode puis écrit soi-même : `cv2.imwrite` bute sur le même mur.
+
+    L'extension décide toujours du format — c'est `imencode` qui la lit — mais
+    l'écriture passe par Python, qui sait ouvrir un chemin accentué.
+    """
+    import cv2
+
+    reussite, tampon = cv2.imencode(chemin.suffix, image)
+    if not reussite:
+        return False
+    chemin.write_bytes(tampon.tobytes())
+    return True
 
 
 def nettete_mesurable(reglages: dict) -> bool:
@@ -289,9 +322,9 @@ def _agrandir_une(moteur, agrandissement: Agrandissement) -> None:
     """Écrit une image agrandie à côté de son original."""
     import cv2
 
-    image = cv2.imread(str(agrandissement.candidat.chemin), cv2.IMREAD_UNCHANGED)
+    image = _lire(agrandissement.candidat.chemin, cv2.IMREAD_UNCHANGED)
     if image is None:
         raise OSError("image illisible par le décodeur")
     sortie, _ = moteur.enhance(image, outscale=agrandissement.facteur)
-    if not cv2.imwrite(str(agrandissement.sortie), sortie):
+    if not _ecrire(agrandissement.sortie, sortie):
         raise OSError(f"écriture refusée vers {agrandissement.sortie}")

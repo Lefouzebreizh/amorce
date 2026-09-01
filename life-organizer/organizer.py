@@ -26,6 +26,15 @@ import argparse
 import sys
 from pathlib import Path
 
+# Les quatre modules écrivent « → », « ✓ » et des tirets cadratins : 206 lignes
+# du paquet en portent. Aucun n'existe dans la page de code cp1252 d'une console
+# Windows française, et `print` y lève `UnicodeEncodeError` — jusqu'à
+# `organizer.py --help`, qui plantait avant d'avoir rien fait. Le forçage tient
+# au point d'entrée, une fois, plutôt que dans chaque module.
+for _flux in (sys.stdout, sys.stderr):
+    if hasattr(_flux, "reconfigure"):
+        _flux.reconfigure(encoding="utf-8", errors="replace")
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from modules.classement import commande as commande_classement  # noqa: E402
 from modules.conversion import commande as commande_conversion  # noqa: E402

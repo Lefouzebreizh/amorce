@@ -4857,3 +4857,49 @@ grep -n $' ' fichier.py     # doit ne rien rendre, hors la constante
 fine, tiret cadratin, apostrophe courbe — s'écrit en séquence d'échappement dans
 le code, et se tape seulement dans la prose. Le code se relit à deux ; la prose
 se relit à l'œil.
+
+## Une bibliothèque qui rend `None` sans lever ment plus longtemps qu'une qui plante — 01/09/2026
+
+`cv2.imread` rend `None` **sans lever d'exception** sur tout chemin non ASCII
+sous Windows. Sur une machine française, cela vise exactement les dossiers où
+vivent les fichiers : `Téléchargements`, `Bureau`, `À trier`, `Vidéos`. La
+parade est de ne jamais donner un chemin à OpenCV — lire les octets avec
+`numpy.fromfile` puis `cv2.imdecode`, encoder avec `cv2.imencode` puis écrire
+avec `Path.write_bytes`. `cv2.imwrite` bute sur le même mur, en rendant `False`.
+
+Ce qui rend la leçon chère n'est pas le défaut, c'est sa **forme**. Un plantage
+se voit et se corrige le jour même. Un `None` silencieux se propage : dans
+Life-Organizer, il faisait passer la netteté à « non mesurée », ce que la règle
+traduit — à raison — par « dans le doute, on agrandit ». Le garde-fou du flou
+dormait donc précisément sur les dossiers qui comptent, et le compte rendu
+affichait une décision parfaitement plausible.
+
+Le module `nettoyage` portait déjà la parade **et son commentaire**, écrits des
+semaines plus tôt. Le module `upscale`, écrit ensuite, a repris `imread`. Une
+parade consignée dans un seul fichier ne protège que ce fichier : elle vaut
+qu'on la cherche par ce qu'elle **fait** — `grep -rn "imread"` — avant d'écrire
+la ligne suivante qui lit une image.
+
+## Une console Windows française n'écrit pas « → » — et c'est `--help` qui tombe — 01/09/2026
+
+Les modules de Life-Organizer écrivent des flèches, des coches et des tirets
+cadratins : 206 lignes du paquet en portent. Aucun de ces caractères n'existe
+dans la page de code **cp1252**, celle d'une console Windows française, et
+`print` y lève `UnicodeEncodeError`. Le premier écran touché n'est pas une
+sortie exotique, c'est `organizer.py --help` : le programme plantait avant
+d'avoir rien fait.
+
+Le forçage tient au **point d'entrée**, une fois, et non dans chaque module :
+
+```python
+for _flux in (sys.stdout, sys.stderr):
+    if hasattr(_flux, "reconfigure"):
+        _flux.reconfigure(encoding="utf-8", errors="replace")
+```
+
+Ce qui rend ce défaut invisible ici : Linux et macOS sont en UTF-8, donc aucun
+test ne le voit, et l'intégration continue non plus. Il se reproduit en une
+commande, sans Windows — `PYTHONIOENCODING=cp1252 python3 -c "print('→')"` —
+et c'est le geste à faire dès qu'un programme en français destiné à une machine
+Windows imprime autre chose que de l'ASCII. Le dépôt écrit **tout** en
+français : la règle vaut donc pour chaque outil en ligne de commande qui y naît.

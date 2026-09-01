@@ -47,9 +47,23 @@ class TestFacteur(unittest.TestCase):
 
 class TestRefus(unittest.TestCase):
     def test_une_image_deja_assez_definie_est_refusee(self):
-        decision = regles.decider(image(largeur=1500), CONFIG)
+        decision = regles.decider(image(largeur=2000, hauteur=1500), CONFIG)
         self.assertFalse(decision.retenu)
         self.assertIn("au-delà du seuil", decision.motif)
+
+    def test_une_capture_de_telephone_est_refusee_malgre_sa_faible_largeur(self):
+        # Le cas qui a fait changer le critère : 1080 px de large passait sous
+        # un seuil de largeur de 1280, alors que 1080 × 2400 fait 2,59 Mpx.
+        # Mille cent soixante-dix-sept fichiers d'un vrai Bureau étaient dans ce
+        # cas, et ce sont les plus longs à agrandir.
+        decision = regles.decider(image(largeur=1080, hauteur=2400), CONFIG)
+        self.assertFalse(decision.retenu)
+        self.assertIn("2.59 Mpx", decision.motif)
+
+    def test_une_image_etroite_et_peu_definie_reste_un_candidat(self):
+        # Le symétrique : la bascule ne doit pas refuser tout ce qui est haut.
+        decision = regles.decider(image(largeur=600, hauteur=1200), CONFIG)
+        self.assertTrue(decision.retenu)
 
     def test_une_vignette_est_refusee(self):
         # Agrandir soixante pixels n'y retrouve rien : cela invente des pixels.
@@ -116,7 +130,8 @@ class TestFileReprenable(unittest.TestCase):
         self.assertEqual(regles.file_a_traiter(agrandissements, faits)[0], [])
 
     def test_les_refuses_n_entrent_jamais_dans_la_file(self):
-        agrandissements = self._trois() + [regles.decider(image(largeur=1500), CONFIG)]
+        agrandissements = self._trois() + [
+            regles.decider(image(largeur=2000, hauteur=1500), CONFIG)]
         file, _ = regles.file_a_traiter(agrandissements, set())
         self.assertEqual(len(file), 3)
 
@@ -124,8 +139,8 @@ class TestFileReprenable(unittest.TestCase):
 class TestCompteRendu(unittest.TestCase):
     def test_les_refus_se_regroupent_par_cause_et_non_par_fichier(self):
         agrandissements = [
-            regles.decider(image("a.jpg", largeur=1500), CONFIG),
-            regles.decider(image("b.jpg", largeur=1600), CONFIG),
+            regles.decider(image("a.jpg", largeur=2000, hauteur=1500), CONFIG),
+            regles.decider(image("b.jpg", largeur=1080, hauteur=2400), CONFIG),
             regles.decider(image("c_hd.jpg"), CONFIG),
         ]
         compte = regles.compter(agrandissements)
