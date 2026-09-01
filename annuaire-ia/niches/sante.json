@@ -104,6 +104,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nElicit fait le travail ingrat d’une revue de littérature : trouver les articles pertinents, en extraire la population, la méthode, les effectifs et les résultats, et ranger le tout dans un tableau comparable ligne à ligne. Ce qui demandait deux semaines à un interne se ramène à une après-midi de vérification — la vérification restant indispensable.\n\n## Points forts\n- Extraction structurée des données de chaque article, en tableau\n- Sélection des articles pertinents à partir d’une question en langage courant\n- Export du tableau, exploitable dans un travail publiable\n- Formule gratuite suffisante pour une première revue\n\n## Points faibles\n- Chaque extraction doit être recoupée avec l’article : les erreurs existent\n- Couvre mal la littérature non anglophone\n- Le crédit gratuit s’épuise vite sur une revue sérieuse\n\n## Idéal pour\nLes internes, chefs de clinique et praticiens hospitaliers qui doivent produire une revue de littérature sans y passer un mois.",
       "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "consensus",
+      "nom": "Consensus",
+      "categorie": "Recherche & veille",
+      "prix": "Freemium — à partir de 12 $/mois",
+      "description_courte": "La question clinique posée en français, la réponse tirée des publications scientifiques avec le niveau de preuve.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/consensus",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nConsensus interroge deux cents millions d’articles scientifiques et rend, pour une question donnée, ce que dit réellement la littérature : proportion d’études favorables, qualité des travaux, citations à l’appui. Pour tenir à jour sa pratique sans y consacrer ses soirées, c’est l’outil qui transforme une heure de lecture en trois minutes de vérification.\n\n## Points forts\n- Réponses appuyées sur des publications réelles, jamais inventées\n- Indication du niveau de preuve et du consensus entre études\n- Version gratuite largement suffisante pour un usage hebdomadaire\n- Utile bien au-delà de la médecine : toute question de recherche\n\n## Points faibles\n- Ne remplace pas la lecture d’un article : c’est une porte d’entrée\n- Ne couvre que ce qui est publié et indexé\n- Interface et résumés en anglais\n\n## Idéal pour\nLes praticiens et internes qui veulent vérifier ce que dit la littérature sur une question précise, entre deux consultations.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

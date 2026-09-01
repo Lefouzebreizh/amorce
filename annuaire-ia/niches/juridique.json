@@ -104,6 +104,17 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nUne demande de brevet contient une part considérable de texte formel : description des figures, résumé, reformulations des revendications. PatentPal génère ces sections à partir des revendications, dans le format attendu, et laisse au conseil le seul travail qui compte — la stratégie de protection. Le gain se compte en heures facturables récupérées par dossier.\n\n## Points forts\n- Génère les sections formelles à partir des seules revendications\n- Respecte les formats attendus par les offices\n- Export direct vers Word, prêt à relire\n- Abonnement mensuel en libre-service, résiliable\n\n## Points faibles\n- Périmètre étroit : uniquement la rédaction de brevets\n- Formats calés sur l’office américain, adaptation nécessaire ailleurs\n- Toute génération demande une relecture attentive du conseil\n\n## Idéal pour\nLes conseils en propriété industrielle et cabinets de brevets qui passent des heures sur des sections dont la valeur ajoutée est nulle.",
       "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "genie-ai",
+      "nom": "Genie AI",
+      "categorie": "Rédaction de contrats",
+      "prix": "Freemium — à partir de 49 $/mois",
+      "description_courte": "La bibliothèque de modèles de contrats commentés, avec l’assistant de rédaction et de relecture greffé dans Word.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/genie-ai",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nGenie combine deux choses rarement réunies : une bibliothèque ouverte de modèles de contrats réels, et un assistant qui rédige ou relit dans Word en s’appuyant dessus. Pour une petite structure sans bibliothèque interne, c’est un point de départ crédible plutôt qu’une page blanche, et la relecture signale les clauses manquantes par rapport aux usages du type de contrat.\n\n## Points forts\n- Bibliothèque de modèles réels, commentés, consultable gratuitement\n- Assistant intégré à Word : rien à changer dans les habitudes\n- Relecture qui signale les clauses absentes ou déséquilibrées\n- Formule gratuite suffisante pour juger sur un contrat\n\n## Points faibles\n- Modèles de droit anglais : à ne jamais reprendre tels quels en droit français\n- La responsabilité de la relecture reste entière, l’outil ne conseille pas\n- Fonctions collaboratives limitées face aux plateformes contractuelles\n\n## Idéal pour\nLes juristes d’entreprise isolés et les petits cabinets qui repartent d’une page blanche à chaque contrat.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

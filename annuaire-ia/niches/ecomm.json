@@ -104,6 +104,17 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nLa majorité des sollicitations d'un service client de boutique en ligne se résume à quelques questions répétées mille fois : où en est la commande, comment retourner, quand suis-je remboursé. Botmind, éditeur français, absorbe ce socle et transmet le reste à un conseiller. Le calcul est simple à faire pour n'importe quelle boutique : compter la part de ces trois questions dans le volume total, et en déduire la valeur.\n\n## Points forts\n- Cible franchement les demandes répétitives, sans promettre de tout traiter\n- Éditeur français, hébergement et support locaux\n- Se branche sur les outils de billetterie de service client existants\n- Mise en place plus légère que les plateformes de conversation généralistes\n\n## Points faibles\n- Aucun tarif public\n- Le gain dépend entièrement de la part de demandes répétitives\n- Suppose une base de connaissances tenue à jour\n- Périmètre plus étroit que les plateformes conversationnelles complètes\n\n## Idéal pour\nLes boutiques dont le service client croule sous les mêmes questions de suivi de commande et de retour.",
       "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "rebuy",
+      "nom": "Rebuy",
+      "categorie": "Personnalisation",
+      "prix": "À partir de 100 $/mois",
+      "description_courte": "Les recommandations, les ventes complémentaires et le panier intelligent, réglés sur ce que les clients achètent réellement ensemble.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/rebuy",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nRebuy travaille le panier moyen, levier le plus rentable d'une boutique parce qu'il ne coûte pas d'acquisition. Recommandations sur la fiche produit, ventes complémentaires dans le panier, offre au moment du paiement, relance après achat : chaque emplacement est testé en continu contre une variante. Les boutiques équipées mesurent couramment plusieurs points de panier moyen supplémentaires.\n\n## Points forts\n- Recommandations construites sur le comportement d'achat réel de la boutique\n- Test comparatif intégré sur chaque emplacement : le gain est mesuré, pas supposé\n- Couvre tout le parcours, de la fiche produit à la relance après achat\n- Mise en place sans développement sur les plateformes courantes\n\n## Points faibles\n- Facturation indexée sur le chiffre d'affaires généré, qui devient lourde à l'échelle\n- Un catalogue trop petit ne donne pas de matière aux recommandations\n- Le trop-plein d'offres dégrade le parcours si personne ne surveille\n\n## Idéal pour\nLes boutiques dont le coût d'acquisition monte et qui doivent chercher la croissance dans le panier moyen plutôt que dans le trafic.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

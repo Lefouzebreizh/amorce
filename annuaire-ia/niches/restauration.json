@@ -104,6 +104,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nInnovorder est un éditeur français qui a construit son offre autour du point le plus stratégique du restaurant : l'encaissement et la prise de commande. Les données d'exploitation qui en sortent — ce qui se vend, à quelle heure, avec quoi — valent bien plus que ce qu'un tableur en fera jamais. La valeur n'est donc pas dans une couche d'IA affichée, mais dans le fait de rassembler en un point ce que la plupart des établissements éparpillent entre trois prestataires.\n\n## Points forts\n- Caisse, commande en ligne et bornes dans un même ensemble\n- Analyse des ventes assise sur des données de première main\n- Éditeur français, conformité fiscale et accompagnement local\n- Adapté à la restauration rapide comme à la restauration collective\n\n## Points faibles\n- Aucun tarif public, matériel à prévoir en plus\n- Changer de caisse est le changement le plus risqué d'un restaurant\n- Périmètre large, dont une partie sera inutile selon le format\n- Ce n'est pas un outil d'IA au sens strict : l'automatisation sert l'exploitation\n\n## Idéal pour\nLes établissements qui veulent réunir encaissement et commande en ligne chez un seul prestataire français, et exploiter enfin leurs chiffres.",
       "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "owner-com",
+      "nom": "Owner",
+      "categorie": "Marketing & tendances",
+      "prix": "À partir de 99 $/mois",
+      "description_courte": "Le site, la commande en direct et le marketing du restaurant, pour cesser de laisser un tiers du chiffre aux plateformes.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/owner-com",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nOwner s’attaque au sujet qui fâche : la commission prélevée par les plateformes de livraison. L’outil monte un site de commande à la marque du restaurant, l’optimise pour la recherche locale, et relance automatiquement les clients par courriel et message texte. L’objectif affiché est de basculer une part des commandes en direct.\n\n## Points forts\n- Commande en direct, sans commission de plateforme\n- Site optimisé pour la recherche locale, ce que peu de restaurants ont\n- Relances automatiques des clients qui ne sont pas revenus\n- Mise en service prise en charge, sans travail technique du restaurateur\n\n## Points faibles\n- Abonnement mensuel réel, à amortir sur le volume récupéré\n- Ne remplace pas la visibilité des plateformes sur la clientèle de passage\n- Marché américain d’abord, avec les habitudes de commande correspondantes\n\n## Idéal pour\nLes restaurants qui font du volume en livraison et voient partir un tiers de leur chiffre en commissions.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

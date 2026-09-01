@@ -104,6 +104,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nNetty joue la lisibilité là où ses concurrents jouent la modularité : un tarif affiché, le site internet de l'agence compris dans l'abonnement, quinze jours pour se décider. Pour une agence de deux à dix personnes qui ne veut pas piloter deux prestataires, c'est un argument concret. En contrepartie, ses fonctions d'IA sont plus légères que celles des concurrents qui en ont fait leur axe.\n\n## Points forts\n- Tarif public et lisible, sans devis préalable\n- Site web de l'agence inclus : un prestataire de moins\n- Essai gratuit de quinze jours, engagement limité\n- Interface simple, prise en main rapide pour une petite équipe\n\n## Points faibles\n- Fonctions d'IA plus limitées que chez les concurrents qui en ont fait leur axe\n- Le confort du tout-en-un se paie en souplesse si l'agence grandit\n- Moins d'intégrations tierces que les acteurs à large parc\n- Le site inclus contraint la liberté éditoriale de l'agence\n\n## Idéal pour\nLes agences de deux à dix personnes qui veulent un outil clair et un site web, sans négocier ni empiler les modules.",
       "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "chatbase",
+      "nom": "Chatbase",
+      "categorie": "Capture de contacts",
+      "prix": "Freemium — à partir de 40 $/mois",
+      "description_courte": "Un assistant posé sur le site de l'agence, nourri de vos annonces, qui répond la nuit et laisse le numéro du visiteur.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/chatbase",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nLa majorité des visiteurs d'un site d'agence arrivent le soir et repartent sans laisser de trace. Chatbase installe en une heure un assistant entraîné sur vos propres pages — annonces, honoraires, secteurs — qui répond aux questions courantes et récupère un contact avant que le visiteur ne reparte. Aucune compétence technique, un extrait de code à coller.\n\n## Points forts\n- Entraîné sur vos pages et vos documents : il répond juste, pas en général\n- Installation en une heure, une ligne de code à coller sur le site\n- Récupération du contact intégrée, poussée vers le courriel ou le logiciel de gestion\n- Journal complet des conversations : on découvre ce que les visiteurs demandent vraiment\n\n## Points faibles\n- Un assistant mal cadré invente : les honoraires et les mentions légales se verrouillent à la main\n- Facturé au volume de messages, imprévisible sur un pic de trafic\n- Il faut réentraîner à chaque changement de catalogue\n\n## Idéal pour\nLes agences dont le site reçoit du trafic le soir et le week-end sans que personne ne soit là pour répondre.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

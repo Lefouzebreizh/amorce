@@ -104,6 +104,17 @@
       "score_avis": 4.4,
       "description_longue": "## Notre verdict\nFieldwire fait ce que la plupart des outils de chantier promettent sans le tenir : être réellement utilisé par les gens qui sont sur le chantier. Plans à jour dans le téléphone, tâche épinglée à un endroit précis, photo, hors ligne au sous-sol. La formule gratuite couvre trois utilisateurs et un chantier, ce qui suffit à juger sans réunion d'achat.\n\n## Points forts\n- Formule gratuite réellement utilisable : trois utilisateurs, un chantier\n- Fonctionne hors ligne, ce qui est la réalité d'un sous-sol ou d'un dernier étage\n- Version de plan toujours à jour : plus personne ne travaille sur l'indice précédent\n- Adopté par les compagnons, pas seulement par l'encadrement\n\n## Points faibles\n- Facturé par utilisateur : équiper tout le monde chiffre vite\n- Le module de planning reste basique face aux logiciels dédiés\n- Pas d'analyse d'avancement automatique : c'est de la saisie assistée\n\n## Idéal pour\nLes entreprises de second œuvre et les conducteurs de travaux qui relèvent encore leurs réserves sur carnet et retapent le soir.",
       "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "kairnial",
+      "nom": "Kairnial",
+      "categorie": "Suivi de chantier",
+      "prix": "Sur devis",
+      "description_courte": "La collaboration sur maquette 2D et 3D pour les grosses opérations, choisie par les majors du bâtiment français.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/kairnial",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nKairnial vise franchement le haut du marché : les opérations où la maquette numérique est un livrable contractuel et où des dizaines d'intervenants doivent travailler sur le même modèle. Bouygues, Eiffage et Suez figurent parmi ses clients, ce qui en dit long sur le type de projet auquel il est taillé. La contrepartie est mécanique — sur un chantier de trois entreprises, la moitié des fonctions ne servira jamais.\n\n## Points forts\n- Collaboration sur maquettes 2D et 3D depuis n'importe quel appareil\n- Couvre toutes les phases du cycle, de la conception à l'exploitation\n- Éprouvé chez les majors françaises du bâtiment\n- Gestion documentaire à la hauteur des exigences contractuelles des grosses opérations\n\n## Points faibles\n- Surdimensionné, et donc trop cher, pour une entreprise de taille moyenne\n- Aucun tarif public\n- Suppose une maquette numérique déjà en place et tenue à jour\n- Déploiement long, qui relève du projet d'entreprise\n\n## Idéal pour\nLes grandes opérations avec maquette numérique contractuelle et de nombreux intervenants à coordonner sur le même modèle.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

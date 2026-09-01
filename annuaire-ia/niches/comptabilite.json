@@ -104,6 +104,17 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nDocyt vise le point d’équilibre entre le simple lecteur de factures et la plateforme complète : les documents sont lus, catégorisés selon l’historique du dossier, et les écritures poussées dans le logiciel comptable existant. Le cabinet garde son outil de production, le client obtient des chiffres à jour toute l’année plutôt qu’une fois par trimestre.\n\n## Points forts\n- Se greffe sur le logiciel comptable en place, sans migration\n- Catégorisation qui apprend de l’historique du dossier\n- Rapprochement bancaire quotidien plutôt que trimestriel\n- Tableaux de bord de gestion pour le client final\n\n## Points faibles\n- Pensé pour le plan comptable américain : la TVA française demande du paramétrage\n- La mise en route d’un dossier prend plusieurs semaines\n- Peu de références en France, support en anglais\n\n## Idéal pour\nLes cabinets qui veulent vendre du suivi mensuel plutôt que de la production trimestrielle, sans changer d’outil.",
       "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "tiime",
+      "nom": "Tiime",
+      "categorie": "Plateforme comptable",
+      "prix": "Freemium — à partir de 20 €/mois",
+      "description_courte": "L'outil français qui met la facturation du client et la pré-comptabilité du cabinet dans le même flux.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/tiime",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nTiime aborde le problème par le client plutôt que par le cabinet : l'entrepreneur facture, encaisse, photographie ses justificatifs et suit sa trésorerie dans une application qu'il ouvre volontiers, et le cabinet récupère une pré-comptabilité déjà catégorisée. C'est la meilleure réponse au dossier de petite entreprise où le vrai coût n'est pas la saisie mais la collecte.\n\n## Points forts\n- Application client réellement adoptée, ce qui est la condition de tout le reste\n- Rapprochement bancaire et catégorisation automatiques\n- Solution française, avec les obligations de facturation locales prises en charge\n- Formule d'entrée gratuite pour les très petites structures\n\n## Points faibles\n- Moins puissant que les plateformes complètes sur les dossiers complexes\n- Le cabinet dépend de l'adhésion du client à l'application\n- Fonctions de production comptable en retrait sur les dossiers de taille moyenne\n\n## Idéal pour\nLes cabinets à forte proportion d'indépendants et de très petites entreprises, où la collecte des pièces est le vrai goulot d'étranglement.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }
