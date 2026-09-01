@@ -57,6 +57,7 @@ commandes=(
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
   "Traducteur de chat : python3 -m unittest discover -s chat-traducteur/tests"
   "NexusCrypto : cd nexuscrypto && python3 -m unittest discover -s tests"
+  "Kits (index des sons) : cd kits && python3 -m unittest discover -s tests"
 )
 
 echo "── Amorce : dépendances npm"

@@ -24,6 +24,7 @@ import json
 import shutil
 import subprocess
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parents[2]
@@ -44,19 +45,31 @@ DUREE_DEFAUT = 1.2
 FAMILLES = ["dragons", "impacts", "whooshes", "magic", "crowds", "atmos"]
 
 
+@lru_cache(maxsize=None)
 def outil(nom):
-    c = shutil.which(nom)
-    if c:
-        return c
-    try:
-        import imageio_ffmpeg
-        exe = imageio_ffmpeg.get_ffmpeg_exe()
-        return exe if nom == "ffmpeg" else exe.replace("ffmpeg", "ffprobe")
-    except Exception:
-        raise SystemExit("ffmpeg introuvable.")
+    """Le binaire demandé, ou un message qui dit quoi installer.
 
+    Résolu à l'APPEL et non au chargement : `verdict()` et `etiquettes()` sont
+    des fonctions pures, et exiger ffmpeg pour les relire rendait ce module
+    impossible à éprouver. Le cache fait que la recherche n'a lieu qu'une fois.
 
-FFMPEG, FFPROBE = outil("ffmpeg"), outil("ffprobe")
+    `imageio-ffmpeg` ne livre QUE ffmpeg. Déduire le chemin de ffprobe en y
+    remplaçant « ffmpeg » par « ffprobe » fabriquait un chemin qui ne peut pas
+    exister : `str.replace` emporte toutes les occurrences, donc le nom du
+    dossier `imageio_ffmpeg` avec — d'où un `.../imageio_ffprobe/...` fantôme,
+    et une `FileNotFoundError` brute au lieu du message ci-dessous. Même
+    corrigé, ce chemin n'existerait pas : le paquet n'a pas de ffprobe.
+    """
+    chemin = shutil.which(nom)
+    if chemin:
+        return chemin
+    if nom == "ffmpeg":
+        try:
+            import imageio_ffmpeg
+            return imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception:
+            pass
+    raise SystemExit(f"{nom} introuvable : installe ffmpeg avant de relancer.")
 
 
 def sh(a):
@@ -64,14 +77,14 @@ def sh(a):
 
 
 def mesurer(f):
-    d = sh([FFPROBE, "-v", "error", "-show_entries", "format=duration",
+    d = sh([outil("ffprobe"), "-v", "error", "-show_entries", "format=duration",
             "-of", "csv=p=0", str(f)])
     try:
         duree = float(d.stdout.strip())
     except ValueError:
         return None
 
-    r = sh([FFMPEG, "-hide_banner", "-i", str(f), "-af",
+    r = sh([outil("ffmpeg"), "-hide_banner", "-i", str(f), "-af",
             "ebur128=framelog=verbose", "-f", "null", "-"])
     lignes = [l for l in r.stderr.splitlines() if " I:" in l and "LUFS" in l]
     try:
@@ -79,14 +92,14 @@ def mesurer(f):
     except (IndexError, ValueError):
         sonie = -99.0
 
-    r = sh([FFMPEG, "-hide_banner", "-i", str(f), "-af",
+    r = sh([outil("ffmpeg"), "-hide_banner", "-i", str(f), "-af",
             "highpass=f=400,volumedetect", "-f", "null", "/dev/null"])
     m = [l for l in r.stderr.splitlines() if "mean_volume" in l]
     tel = float(m[0].split(":")[1].split("dB")[0]) if m else -99.0
 
     # Un silence long au milieu d'un bruitage le rend inutilisable en place :
     # on croit poser un impact, on pose un impact suivi d'un trou.
-    r = sh([FFMPEG, "-hide_banner", "-i", str(f), "-af",
+    r = sh([outil("ffmpeg"), "-hide_banner", "-i", str(f), "-af",
             "silencedetect=n=-45dB:d=0.5", "-f", "null", "-"])
     silences = len([l for l in r.stderr.splitlines() if "silence_start" in l])
 
