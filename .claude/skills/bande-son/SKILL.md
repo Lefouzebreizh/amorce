@@ -300,6 +300,39 @@ Passée à `voir-le-son`, cette voix perd **4 à 5 dB** sur un haut-parleur de
 téléphone : son fondamental descend sous les 400 Hz, mais ses formants n'y sont
 pas, et ce sont eux qui portent l'intelligibilité.
 
+## Les bruitages achetés : `eleven_sfx.py`, et le mur qui le précède
+
+`scripts/eleven_sfx.py` parle à l'API de bruitage d'ElevenLabs, dont la surface
+a été **lue dans le SDK installé** (2.65.0) et non écrite de mémoire :
+
+```python
+client.text_to_sound_effects.convert(
+    text=…, output_format='pcm_48000', duration_seconds=…,
+    prompt_influence=…, model_id='eleven_text_to_sound_v2') -> Iterator[bytes]
+```
+
+Deux détails de cette signature valent d'être sus avant d'écrire :
+**le retour est un itérateur**, pas des octets — l'oublier rend un fichier vide
+sans lever la moindre erreur ; et **`pcm_48000` existe**, ce qui évite un
+ré-encodage, la chaîne travaillant en 48 kHz de bout en bout.
+
+**Mais `api.elevenlabs.io` est refusé par le mandataire** — `connect_rejected`,
+mesuré le 01/09/2026. Une clé n'y change rien : le tunnel est refusé avant
+qu'une requête existe. Ce script tourne donc **sur la machine du propriétaire**,
+et tout ce qui ne touche pas au réseau y a été éprouvé ici — clé absente,
+écriture WAV, mesure du sol à 400 Hz sur deux signaux de contrôle (un 1500 Hz
+traverse sans perte, un 80 Hz perd 90,9 dB).
+
+Trois décisions du fichier, dont aucune n'est technique :
+
+- **La clé se lit dans `ELEVENLABS_API_KEY`, jamais en argument.** Une ligne de
+  commande est lisible dans l'historique du terminal et dans `ps`.
+- **`--je-confirme` est obligatoire.** Chaque appel consomme des crédits
+  payants ; sans ce drapeau le script affiche ce qu'il demanderait et s'arrête.
+- **Un bruitage acheté se mesure comme un bruitage fabriqué.** Le seuil ne
+  connaît pas la provenance : sous −22 dB au-dessus de 400 Hz, le script
+  prévient que le son ne portera pas, plutôt que de le ranger en silence.
+
 **Ce qui n'est toujours pas fabricable ici : la musique.** `bruitages.py` couvre
 les impacts, grondements, crépitements et nappes ; une mélodie, une harmonie,
 une rythmique, non. Le repli honnête reste une piste libre de droits déposée à

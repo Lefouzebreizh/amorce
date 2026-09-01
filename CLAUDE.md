@@ -472,14 +472,25 @@ sert dans la foulée. Trois par session au plus. Vérifier la doc officielle ava
 d'écrire contre une API : `/api-tierce-verifiee`.
 
 Avant de promettre un résultat qui dépend du réseau ou d'un outil :
-`/capacites-session`. Aujourd'hui **ni clé fal.ai, ni clé ElevenLabs** — mais la
-**voix off, elle, se fabrique** : `bande-son/scripts/voix.py`, par sherpa-onnx,
-modèle pris en release GitHub, 25× le temps réel et rien qui sorte de la
-machine. Deux chemins avaient été essayés et déclarés impossibles ; c'est le
-troisième qui répond.
-`fal-flux-image`, `fal-luma-video`, `fal-upscaler`, `eleven-sfx` se construisent
-le jour où les clés arrivent : une compétence qui ne peut pas tourner est un
-mensonge dans la liste.
+`/capacites-session`. La **voix off se fabrique** : `bande-son/scripts/voix.py`,
+par sherpa-onnx, modèle pris en release GitHub, 25× le temps réel et rien qui
+sorte de la machine. Deux chemins avaient été essayés et déclarés impossibles ;
+c'est le troisième qui répond.
+
+**Et depuis le 01/09/2026, ce n'est plus la clé qui manque, c'est l'hôte.** Une
+clé ElevenLabs à accès complet existe — et `api.elevenlabs.io` est refusé par
+le mandataire, `connect_rejected`, comme `mcp.hedra.com`. Le tunnel est refusé
+**avant** qu'une requête HTTP existe, donc avant toute authentification : une
+clé n'y change rien, et il ne sert à rien d'en demander une.
+
+Ce déplacement change la parade, pas la conclusion. **PyPI est joignable**,
+donc le SDK officiel s'installe et sa surface se lit : le code s'écrit contre
+l'API réelle, s'éprouve sur tout ce qui ne touche pas au réseau, et tourne sur
+la machine du propriétaire. `bande-son/scripts/eleven_sfx.py` est écrit ainsi.
+`fal-flux-image`, `fal-luma-video`, `fal-upscaler` restent à construire sur ce
+modèle — une compétence qui ne peut pas tourner est un mensonge dans la liste,
+mais une compétence qui tourne ailleurs qu'ici n'en est pas un, à condition de
+dire où.
 
 **Et pour l'image, les quatre chemins sont fermés, mesuré le 29/08/2026.** Ce
 n'est pas qu'une clé manque : `torch` et `diffusers` sont absents, donc aucune
