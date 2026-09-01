@@ -5,8 +5,8 @@
   "description": "Habillages animés verticaux — cartons, titres, logos — rendus par Remotion",
   "scripts": {
     "dev": "remotion studio src/index.ts",
-    "build": "remotion render src/index.ts Ep02 out/ep02-habillage.mp4",
-    "build:carton": "remotion render src/index.ts CartonFin out/carton-fin.mp4",
+    "build": "remotion render src/index.ts Ep02 out/ep02-titres.mp4",
+    "build:carton": "remotion render src/index.ts CartonFin out/ep02-carton.mp4",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

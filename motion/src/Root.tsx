@@ -25,11 +25,11 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="CartonFin"
         component={CartonFin}
-        durationInFrames={62}
+        durationInFrames={48}
         fps={30}
         width={1080}
         height={1920}
-        defaultProps={{ titre: 'AZNAROTH', sousTitre: 'Épisode 2', duree: 62 }}
+        defaultProps={{ titre: 'FAILLE ZÉRO-CINQ', sousTitre: 'EP02 · Les quatre sceaux', duree: 48 }}
       />
     </>
   );
