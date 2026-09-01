@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 import cv2
-import fitz
+import pymupdf
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -49,9 +49,9 @@ def _cases(img: np.ndarray) -> np.ndarray:
 
 
 def pique_du_pdf(pdf: Path, cote: int = 2600) -> float:
-    page = fitz.open(pdf)[0]
+    page = pymupdf.open(pdf)[0]
     z = cote / page.rect.width
-    pix = page.get_pixmap(matrix=fitz.Matrix(z, z), colorspace=fitz.csGRAY)
+    pix = page.get_pixmap(matrix=pymupdf.Matrix(z, z), colorspace=pymupdf.csGRAY)
     return pique(_cases(np.frombuffer(pix.samples, np.uint8)
                         .reshape(pix.height, pix.width)))
 

@@ -99,19 +99,33 @@ Python, cinq dépendances (`PIL`, `numpy`, `imagehash`, `imageio_ffmpeg`,
 PR #449. Ce n'est pas une dépendance manquante, c'est un projet entier hors
 inventaire.
 
-### d) `fitz` est déprécié, et 14 fichiers de `kdp` en dépendent
+### d) `fitz` était déprécié dans 14 fichiers de `kdp` — corrigé
 
-PyMuPDF l'annonce à chaque import :
+PyMuPDF l'annonçait à chaque import :
 
 ```
 warning: The `fitz` API is deprecated and will be removed in future.
 Use `import pymupdf` instead.
 ```
 
-`paper-manager` importe déjà `pymupdf`. `kdp` importe `fitz` dans 14 fichiers.
-Le jour où l'alias tombe, c'est la chaîne KDP entière qui s'arrête — sur une
-mise à jour qu'aucune ligne du dépôt ne déclenche. Le renommage coûte un
-`sed` aujourd'hui et un débogage plus tard.
+Les 14 fichiers et leurs 156 références sont passés à `pymupdf`, le nom que
+`paper-manager` employait déjà. Vérifié avant d'écrire plutôt qu'après : les dix
+symboles que la chaîne utilise — `Rect`, `Point`, `Page`, `Document`, `Font`,
+`Matrix`, `open`, `csGRAY` et les deux alignements — sont **les mêmes objets**
+des deux côtés (`fitz.Rect is pymupdf.Rect`), donc aucun `isinstance` ne pouvait
+basculer.
+
+**Et le renommage a découvert une borne fausse, dans les deux projets.** Le
+module `pymupdf` n'apparaît qu'en **1.24.3** : les roues 1.24.0, .1 et .2 ne
+livrent que `fitz/`, vérifié en les téléchargeant toutes les quatre. Or les deux
+manifestes disaient `PyMuPDF>=1.24`. `paper-manager` portait donc déjà le
+défaut — il importe `pymupdf` dans 8 fichiers depuis toujours — et il ne s'est
+jamais vu parce que pip installe la version la plus récente. Il se serait vu le
+jour où quelqu'un épingle. Les deux bornes sont à `>=1.24.3`.
+
+C'est la leçon du §7 sur les API tierces, appliquée à un renommage qui avait
+l'air purement mécanique : **la surface réelle se lit, elle ne se suppose pas.**
+Un `sed` bien écrit aurait laissé les deux bornes fausses derrière lui.
 
 ## 4. Côté JavaScript : Playwright tient à un fil
 
