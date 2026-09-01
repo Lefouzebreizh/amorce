@@ -678,6 +678,82 @@ rend la fusion rapide utile au-delà des conflits : tant qu'un lot n'est pas sur
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
 
+## 7 bis. MULTIMÉDIA — DOCUMENTATIONS ET DIRECTIVES
+
+Numéroté « 7 bis » pour la même raison que le « 0 bis » : d'autres fichiers
+citent les sections par leur numéro, et renuméroter casserait ces renvois en
+silence.
+
+### 📚 Nouvelles documentations (à charger via `/page` en cas de besoin)
+
+**`/page` n'existe pas dans ce dépôt** — `/coherence-depot` le signale, et
+aucune compétence ne porte ce nom. Le mécanisme de chargement reste donc à
+définir : soit une commande intégrée du client, soit une compétence à écrire.
+En attendant, une documentation se lit par `curl` — quand son hôte répond, ce
+qui n'est le cas d'aucune de celles-ci depuis une session distante.
+
+- **Vidéo** : https://ffmpeg.org · https://replicate.com
+- **Image** : https://readthedocs.org · https://sharp.pixelplumbing.com · https://developer.mozilla.org
+- **Audio** : https://developer.mozilla.org · https://elevenlabs.io · https://librosa.org
+- **Web** : https://tailwindcss.com · https://developer.mozilla.org · https://nextjs.org
+
+**Aucune de ces adresses n'est joignable depuis une session distante.** Les
+treize ont été sondées le 01/09/2026 : toutes rendent `000`,
+`connect_rejected`. `/page` ne les chargera donc pas ici — elles servent sur la
+machine du propriétaire, ou après ouverture de la politique réseau de
+l'environnement.
+
+Quatre corrections apportées à la liste d'origine, parce qu'une adresse fausse
+fait chercher au mauvais endroit :
+
+| écrit | réel |
+| --- | --- |
+| `github.io` | ce n'est pas un site : c'est le suffixe des pages GitHub |
+| `readthedocs.io` | `readthedocs.org` — le `.io` est le suffixe d'hébergement |
+| `mozilla.org` | `developer.mozilla.org` — MDN vit là, pas sur la racine |
+| `pixelplumbing.com` | `sharp.pixelplumbing.com` — la doc de Sharp est le sous-domaine |
+
+### 🎯 Directives de production multimédia
+
+- **Vidéo** : MoviePy pour les scripts simples, ou des commandes FFmpeg brutes
+  au terminal pour l'encodage et la compression. API Replicate pour la
+  génération par IA.
+- **Image** : traitement par lot avec Pillow (Python) ou Sharp (Node.js). SVG
+  propre pour les icônes et illustrations web.
+- **Audio** : appels ElevenLabs structurés pour la voix IA, et Librosa en
+  Python pour synchroniser l'audio sur le tempo (BPM) de la vidéo.
+- **Web** : JavaScript/TypeScript moderne selon MDN, Tailwind CSS pour les
+  interfaces, Next.js ou Vite selon le projet.
+
+### Ce que la machine porte réellement, mesuré le 01/09/2026
+
+| outil | état ici | conséquence |
+| --- | --- | --- |
+| **Librosa** | **0.11.0 présent** | la synchronisation au BPM se fait d'ici, sans rien installer |
+| **Pillow** | **12.3.0 présent** | le lot d'images tourne d'ici |
+| **Sharp** | **présent** | idem côté Node |
+| **ffmpeg** | **7.0.2 statique** | attention, ce binaire n'a **ni `drawtext` ni codecs propriétaires** — voir §7 et §10 |
+| **MoviePy** | **absent** | s'installe depuis PyPI, qui est joignable : `pip install moviepy` |
+| **Replicate** | **hôte refusé** | la génération par IA ne passe pas par là ici |
+
+**Et pour la voix IA, deux corrections qui changent le geste :**
+
+`api.elevenlabs.io` est **refusé au tunnel** — une clé n'y sert à rien. Mais
+deux chemins existent, tous deux mesurés :
+
+1. **Le connecteur MCP ElevenLabs fonctionne** — le trafic d'un connecteur ne
+   passe pas par la politique réseau. C'est lui qui a levé l'impossibilité de
+   l'image le 01/09/2026, et il porte aussi la voix, les bruitages, la musique,
+   le lipsync et la transcription.
+2. **La voix off se fabrique déjà sur la machine**, sans réseau ni clé :
+   `bande-son/scripts/voix.py`, par sherpa-onnx, à 25× le temps réel. Y
+   recourir avant de dépenser des crédits pour une voix qu'on a déjà.
+
+Un rappel qui vaut pour tout ce bloc : ce sont des **directives de production**,
+et le §2 les borne toutes. Un son qui vit sous 400 Hz n'existe pas sur un
+téléphone, quel qu'en soit l'outil ; une vidéo verticale se juge entre 12 et
+45 % de hauteur ; et `/master-telephone` passe avant toute publication.
+
 ## 8. DONE, ET CE QU'ON NE FAIT JAMAIS
 
 **Done** = vérification verte + **regardé, pas seulement mesuré** + leçon écrite.
