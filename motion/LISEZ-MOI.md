@@ -5,8 +5,8 @@ rendus en fichier vidéo qu'on pose ensuite sur les rushes dans CapCut.
 
 ```bash
 npm run dev            # le studio, pour voir et régler
-npm run build          # rend out/ep02-habillage.mp4
-npm run build:carton   # rend le seul carton de fin
+npm run build          # rend out/ep02-titres.mp4  (calque, mode Écran)
+npm run build:carton   # rend out/ep02-carton.mp4  (clip normal)
 npm run typecheck
 ```
 
@@ -22,30 +22,61 @@ de Facebook, au ras du bord à droite.
 88 % de large, 12 % à 45 % de haut — et le texte passe à la ligne au lieu de
 s'étirer. Vérifié sur le rendu réel :
 
-| titre | largeur occupée |
+| carte | largeur occupée |
 | --- | --- |
-| CYBER HYDRA TITAN | 29,7 % → 80,1 % |
-| PROTOCOLE ROMPU | 31,1 % → 78,9 % |
-| ELLE APPREND DE CHAQUE TÊTE COUPÉE (35 signes) | **25,8 % → 84,2 %** |
+| COUNT | 41,6 % → 68,5 % |
+| ZERO-FOUR — SEAL BROKEN | 27,2 % → 82,7 % |
+| THE SHADOW TITANS ARE WAKING | **28,7 % → 81,2 %** |
 
-Le plus long des trois est plus long que celui qui débordait, et il rentre.
+Mesuré sur le fichier rendu, pas sur l'intention. La plus longue des trois
+passe sur trois lignes et reste dedans, là où l'épisode 1 l'aurait étirée.
 
 ## Comment poser l'habillage dans CapCut
 
-Le rendu est **blanc et or sur fond noir**. Le noir n'est pas un fond, c'est
-un canal alpha du pauvre :
+**Deux fichiers, deux traitements différents.** Ce n'est pas une complication
+gratuite : le second ne peut pas passer par le même chemin que le premier, et
+c'est un composite regardé qui l'a montré.
 
-1. Poser `ep02-habillage.mp4` en calque **au-dessus** des rushes.
+**`ep02-titres.mp4` — les trois cartes, en mode Écran.**
+
+1. Le poser en calque **au-dessus** des rushes.
 2. Lui donner le mode de fusion **« Écran » (Screen)**.
-3. Le noir disparaît, le blanc et l'or restent.
+3. Le noir disparaît, le blanc reste.
 
-Ce chemin a été retenu plutôt qu'un vrai canal alpha parce que **CapCut
+**`ep02-carton.mp4` — le titre doré, en clip normal.**
+
+Il se pose **à la suite** du dernier rush, en fusion **Normale**. Pas en Écran.
+
+En Écran, le noir devient transparent — c'est tout l'intérêt, et c'est
+justement le problème : le fond du carton disparaît avec. Posé sur un dragon en
+contre-jour, l'or s'y dilue et le titre devient illisible. Le carton est
+opaque, il n'a rien à laisser passer.
+
+Le mode Écran a été retenu plutôt qu'un vrai canal alpha parce que **CapCut
 Android ouvre le H.264 sans discuter**, là où son support du WebM alpha et des
 séquences PNG est incertain. Un habillage qu'on ne peut pas importer ne sert à
 rien, si transparent soit-il.
 
+### Si on compose avec ffmpeg plutôt qu'avec CapCut
+
+`blend=all_mode=screen` s'applique **plan par plan**, chrominance comprise. Sur
+du `yuv420p`, il fusionne donc les plans U et V comme s'ils étaient des
+luminances, et l'image entière vire au violet. Rien ne le signale : le rendu
+sort, il est simplement faux.
+
+```bash
+# passer en RVB AVANT la fusion, revenir en YUV après
+-filter_complex "[0:v]format=gbrp[b];[1:v]format=gbrp[o];\
+                 [b][o]blend=all_mode=screen,format=yuv420p[v]"
+```
+
+Et si l'on colle ensuite deux morceaux : le **démultiplexeur** `concat` ne
+rééchantillonne pas l'audio. Deux parties à 44,1 et 48 kHz produisent un
+fichier plus long que la somme des deux — 18,64 s pour 13,92 + 1,60 mesurés.
+Passer par le **filtre** `concat` avec un `aresample` sur chaque entrée.
+
 **Le poids ne suit pas la règle du ~1 Mo/s** du protocole de publication :
-0,97 Mo pour 17,73 s, parce que l'image est noire à 95 %. C'est normal ici, et
+0,80 Mo pour 15,5 s, parce que l'image est noire à 95 %. C'est normal ici, et
 seulement ici — le contrôle du 1 Mo/s vaut pour le **montage final**, pas pour
 un calque.
 
@@ -64,8 +95,22 @@ npx remotion render src/index.ts Ep02 out/ep02.mp4 \
   --browser-executable=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell
 ```
 
+## Les instants sont ATTENDUS, pas mesurés
+
+`tiktok/feuilleton-ep02.md` laisse ses instants entre crochets à dessein, et
+écrit pourquoi : *« un instant plausible écrit d'avance est un instant qu'on
+croira mesuré dans trois semaines »*. La voix n'est pas enregistrée.
+
+Les valeurs de `FRISE_ATTENDUE` sont donc dérivées du seul chiffre que l'EP01
+ait mesuré — **3,04 syllabes par seconde** — et de la structure en trois actes.
+Elles servent à voir le montage tourner, pas à le caler.
+
+Dès que la voix existe : relever ses trois passages à l'enveloppe, reporter les
+instants dans `feuilleton-ep02.md`, puis ici. **Le nom de la constante dit son
+état** ; le renommer sans mesurer serait le seul vrai défaut possible.
+
 ## Changer d'épisode
 
-Un seul endroit : la constante `FRISE` en tête de `src/ep02.tsx`. Un texte,
-son image de début, sa durée. La zone sûre et le passage à la ligne suivent
-tout seuls, quel que soit ce qu'on y écrit.
+Un seul endroit : la constante `FRISE_ATTENDUE` en tête de `src/ep02.tsx`. Un
+texte, son image de début, sa durée. La zone sûre et le passage à la ligne
+suivent tout seuls, quel que soit ce qu'on y écrit.
