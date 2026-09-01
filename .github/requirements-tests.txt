@@ -16,6 +16,8 @@ Pillow         # chaîne pré-presse : ouverture des images
 pymupdf        # assistant administratif : lecture des PDF
 pydantic       # assistant administratif : forme de ce que rend le modèle de vision
 PyYAML         # radar crypto, NexusCrypto et Conseiller Patrimoine : seuils et allocation en YAML
-opencv-python-headless  # chaîne KDP : piqué des planches, gradient de Sobel
+opencv-python-headless<5  # chaîne KDP : piqué des planches, gradient de Sobel.
+                          # Le plafond vient de Life-Organizer : OpenCV 5 a retiré
+                          # `CascadeClassifier`, et un environnement n'a qu'une version.
 scipy          # chaîne de montage : les filtres de la palette de bruitages, importée au chargement du module
 pyloudnorm     # chaîne de montage : la mesure de sonie. Aucun test ne tombe sans lui — il rend `None` en silence
