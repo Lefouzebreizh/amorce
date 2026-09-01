@@ -367,6 +367,8 @@
       "webp"
     ],
     "appareil": "cpu",
+    "tuile": 256,
+    "recouvrement_tuile": 10,
     "lot_maximal": 25,
     "ecrire_a_cote": true,
     "suffixe": "_hd",
