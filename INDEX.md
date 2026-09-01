@@ -33,7 +33,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge dix-sept chantiers actifs sans code commun, plus deux en sommeil,
+Ce dépôt héberge dix-neuf chantiers actifs sans code commun, plus un en sommeil,
 et cinq ressources transverses qui ne sont pas des projets mais servent à tous.
 Une idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir
 un front de plus. La liste vieillit vite — recompter avant de noter.
@@ -58,8 +58,8 @@ un front de plus. La liste vieillit vite — recompter avant de noter.
 | **Pépites** (`pepites/`) | Radar multi-chaînes de jetons en phase d'accumulation. | Python | actif |
 | **Traducteur de chat** (`chat-traducteur/`) | Miaulement enregistré → intention probable, habillée pour le partage. | Python, YAMNet TFLite | actif |
 | **Titan Builder** (`titan-builder/`) | Plateforme où le client configure son site en cinq étapes. | Web | actif |
-| _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
 | **Conseiller Patrimoine** (`conseiller-patrimoine/`) | Vue d'ensemble du patrimoine et rééquilibrage, en lecture seule stricte. | Python | actif |
+| _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
 
 ## Ressources transverses
 
@@ -77,8 +77,11 @@ dans lesquelles les chantiers puisent.
 ## À faire sur le dépôt lui-même
 
 - `inbox/` est vide (seul un `.gitkeep`) — normal si tout a été trié, à surveiller.
-- Le tableau ci-dessus ne se recompte pas tout seul : `motion/` y a manqué le
-  temps de plusieurs sessions alors que `CLAUDE.md` le documentait déjà.
-  `/coherence-depot` ne le voit pas non plus — il vérifie les compétences
-  citées, pas les chantiers listés. Confronter la liste à
-  `/etat-du-depot` avant de s'y fier.
+- Le tableau ci-dessus **se recompte désormais tout seul**. Il ne le faisait
+  pas, et ça s'est vu deux fois le même jour : `motion/` absent pendant
+  plusieurs sessions alors que `CLAUDE.md` le documentait, puis un décompte
+  resté à « dix-sept » quand deux chantiers de plus avaient atterri.
+  `/coherence-depot` ne lisait que `CLAUDE.md` — il lit maintenant ce tableau
+  aussi, et démontre l'écart entre la phrase et les lignes, entre les dossiers
+  cités et le disque. Une ligne à ajouter reste un geste humain ; la fausseté,
+  elle, ne peut plus passer.
