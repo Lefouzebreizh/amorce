@@ -10,12 +10,14 @@ import { depot } from '../../serveur/depot-partage.ts'
  * Le plafond des fiches déclarées à lire, pas un vrai compte de séries.
  *
  * `500` suffisait aux panneaux d'essai ; un vrai catalogue Xtream en déclare
- * couramment plusieurs milliers. Sans ce relèvement, les trois quarts d'un
- * catalogue de 4 000 séries restaient invisibles, sans qu'aucune pagination
- * ne le signale — l'écran affichait juste « 499 séries » comme si c'était le
- * compte réel.
+ * couramment plusieurs milliers, et certains en comptent des dizaines de
+ * milliers. Sans ce relèvement, les trois quarts d'un catalogue de 4 000
+ * séries restaient invisibles, sans qu'aucune pagination ne le signale —
+ * l'écran affichait juste « 499 séries » comme si c'était le compte réel.
+ * Même ordre de grandeur que `TOUT` dans `entretien/taches.ts`, pour la même
+ * raison : au-delà, ce n'est plus un catalogue plausible.
  */
-const TOUTES_LES_FICHES = 20000
+const TOUTES_LES_FICHES = 200000
 
 /*
  * Deux notions de « série » cohabitent, et ce n'est pas un défaut de
