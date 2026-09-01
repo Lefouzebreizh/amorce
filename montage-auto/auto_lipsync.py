@@ -65,6 +65,15 @@ CHECKPOINTS_ACCEPTES = ("wav2lip_gan.pth", "wav2lip.pth")
 # Détecteur de visage S3FD. Wav2Lip le charge par un chemin relatif, en dur,
 # depuis son propre arbre : c'est la seule raison pour laquelle il ne peut pas
 # rester dans `models/` avec l'autre.
+# Miroir des poids, sur un objet de release GitHub. Ce fichier disait d'abord
+# qu'aucune adresse ne serait codée en dur, les liens d'origine (iiit.ac.in)
+# étant morts et les miroirs mouvants. La règle valait pour les sites
+# d'éditeurs ; elle ne vaut pas ici. Les releases GitHub sont le seul type
+# d'hôte que le mandataire des sessions distantes laisse passer, et celui-ci
+# sert bien les vrais fichiers : 416 Mo pour le générateur, 86 Mo pour le
+# détecteur — les tailles publiées par les auteurs. Vérifié avant d'être écrit.
+MIROIR = "https://github.com/justinjohn0306/Wav2Lip/releases/download/models"
+
 NOM_S3FD = "s3fd.pth"
 CHEMIN_S3FD_DANS_WAV2LIP = Path("face_detection") / "detection" / "sfd" / NOM_S3FD
 
@@ -229,7 +238,7 @@ def download_models(depot_wav2lip: Path | None = None) -> bool:
         None,
     )
     if checkpoint is None:
-        url = os.getenv("WAV2LIP_CHECKPOINT_URL")
+        url = os.getenv("WAV2LIP_CHECKPOINT_URL") or f"{MIROIR}/wav2lip_gan.pth"
         if url and _telecharger(url, DOSSIER_MODELES / CHECKPOINTS_ACCEPTES[0]):
             checkpoint = DOSSIER_MODELES / CHECKPOINTS_ACCEPTES[0]
         else:
@@ -260,9 +269,8 @@ def download_models(depot_wav2lip: Path | None = None) -> bool:
     else:
         copie_locale = DOSSIER_MODELES / NOM_S3FD
         if not copie_locale.is_file():
-            url = os.getenv("S3FD_URL")
-            if url:
-                _telecharger(url, copie_locale)
+            url = os.getenv("S3FD_URL") or f"{MIROIR}/s3fd.pth"
+            _telecharger(url, copie_locale)
 
         if copie_locale.is_file():
             # On copie plutôt qu'on ne crée un lien : Windows refuse les liens
@@ -301,6 +309,55 @@ def _duree(chemin: Path, ffprobe: str | None) -> float | None:
         return None
 
 
+
+def sonder_visages(video: Path, depot: Path, largeur_mini: int = 100) -> tuple[int, list[int]]:
+    """Passe chaque image au détecteur avant de lancer l'inférence.
+
+    Wav2Lip exige un visage sur **toutes** les images et ne le dit qu'après les
+    avoir toutes parcourues — mesuré ici : 4 min 51 sur processeur pour aboutir
+    à « Face not detected ». Sonder d'abord coûte quelques secondes.
+
+    Le seuil de largeur n'est pas une précaution de style. Sur les plans
+    stylisés d'un rush généré, `s3fd` rend volontiers des boîtes de douze à cent
+    pixels — des faux positifs qu'il accepte jusqu'à ce qu'il n'en trouve plus
+    du tout. Un plan sondé « bon » à cause d'eux échoue quand même.
+
+    Rend le nombre d'images et la liste de celles qui n'ont pas de visage
+    exploitable.
+    """
+    import warnings
+    warnings.filterwarnings("ignore")
+    sys.path.insert(0, str(depot))
+    try:
+        import cv2  # noqa: F401
+        import numpy
+        import face_detection
+    except ImportError as manque:
+        print(f"   Sonde impossible ({manque.name} absent) — on lance sans.", file=sys.stderr)
+        return 0, []
+
+    lecture = cv2.VideoCapture(str(video))
+    images = []
+    while True:
+        ok, image = lecture.read()
+        if not ok:
+            break
+        images.append(image)
+    lecture.release()
+    if not images:
+        return 0, []
+
+    detecteur = face_detection.FaceAlignment(
+        face_detection.LandmarksType._2D, flip_input=False, device="cpu")
+    manquantes = []
+    for debut in range(0, len(images), 8):
+        lot = numpy.array(images[debut:debut + 8])
+        for k, boite in enumerate(detecteur.get_detections_for_batch(lot)):
+            if boite is None or (boite[2] - boite[0]) < largeur_mini:
+                manquantes.append(debut + k)
+    return len(images), manquantes
+
+
 def run_lipsync(
     video_path: str | Path,
     audio_path: str | Path,
@@ -334,6 +391,44 @@ def run_lipsync(
     if not download_models(environnement.depot_wav2lip):
         print("\nModèles incomplets : voir les lignes marquées ABSENT ci-dessus.", file=sys.stderr)
         return False
+
+    # La sonde, avant tout calcul long. Le fichier vérifiait déjà FFmpeg, le GPU
+    # et les poids ; il ne regardait pas ses **données**, et c'est par elles que
+    # l'échec arrive.
+    print("── Sonde des visages")
+    total, manquantes = sonder_visages(video, environnement.depot_wav2lip)
+    if total and manquantes:
+        premiere = manquantes[0]
+        cadence = 24.0
+        print(f"   {len(manquantes)} image(s) sans visage exploitable sur {total}.",
+              file=sys.stderr)
+        print(f"   La première est l'image {premiere} (~{premiere / cadence:.2f} s).",
+              file=sys.stderr)
+        bonnes = [i for i in range(total) if i not in set(manquantes)]
+        if bonnes:
+            # La plus longue suite d'images consécutives valides : c'est elle
+            # qu'il faut découper, et la dire évite de la chercher à la main.
+            debut = fin = meilleur_debut = meilleur_fin = bonnes[0]
+            for i in bonnes[1:]:
+                if i == fin + 1:
+                    fin = i
+                else:
+                    if fin - debut > meilleur_fin - meilleur_debut:
+                        meilleur_debut, meilleur_fin = debut, fin
+                    debut = fin = i
+            if fin - debut > meilleur_fin - meilleur_debut:
+                meilleur_debut, meilleur_fin = debut, fin
+            duree = (meilleur_fin - meilleur_debut + 1) / cadence
+            print(f"   Fenêtre exploitable la plus longue : {meilleur_debut / cadence:.2f} s "
+                  f"→ {(meilleur_fin + 1) / cadence:.2f} s ({duree:.2f} s).", file=sys.stderr)
+            print(f"   ffmpeg -ss {meilleur_debut / cadence:.2f} -t {duree:.2f} "
+                  f"-i \"{video}\" -an visage.mp4", file=sys.stderr)
+        else:
+            print("   Aucune image exploitable : ce plan est trop serré, "
+                  "la tête entière doit tenir dans le cadre.", file=sys.stderr)
+        return False
+    if total:
+        print(f"   {total} image(s), toutes avec un visage exploitable.")
 
     checkpoint = next(
         DOSSIER_MODELES / nom for nom in CHECKPOINTS_ACCEPTES if (DOSSIER_MODELES / nom).is_file()
@@ -441,14 +536,28 @@ def _executer_avec_barre(commande, dossier: Path, env: dict, sortie: Path) -> bo
         print(f"\nWav2Lip a échoué (code {code}). Dernières lignes :", file=sys.stderr)
         for ligne in dernieres_lignes[-15:]:
             print(f"   {ligne}", file=sys.stderr)
-        # Les deux causes qui reviennent le plus souvent, et qui ne se lisent pas
-        # dans la trace Python que Wav2Lip laisse.
-        print(
-            "\n   Deux causes fréquentes :\n"
-            "   — aucun visage détecté sur une image : recadrer, ou éclairer le sujet ;\n"
-            "   — mémoire GPU insuffisante : relancer avec --resize-factor 2.",
-            file=sys.stderr,
-        )
+        # Un code négatif est un signal, pas une erreur de Wav2Lip : le
+        # processus a été tué de l'extérieur. Le distinguer compte, parce que la
+        # trace Python qu'il laisse ressemble alors à un échec de détection et
+        # envoie chercher un problème de cadrage qui n'existe pas. Mesuré ici :
+        # code -9 sur 53 images en 768 x 1344 sans GPU, avec une sonde qui
+        # tournait en parallèle — c'était la mémoire vive.
+        if code == -9:
+            print(
+                "\n   Code -9 : le système a tué le processus, faute de mémoire.\n"
+                "   Ce n'est ni le cadrage ni les poids. Relancer avec\n"
+                "   --resize-factor 2, et sans autre traitement lourd en parallèle.",
+                file=sys.stderr,
+            )
+        else:
+            # Les deux causes qui reviennent le plus souvent, et qui ne se lisent
+            # pas dans la trace Python que Wav2Lip laisse.
+            print(
+                "\n   Deux causes fréquentes :\n"
+                "   — aucun visage détecté sur une image : recadrer, ou éclairer le sujet ;\n"
+                "   — mémoire insuffisante : relancer avec --resize-factor 2.",
+                file=sys.stderr,
+            )
         return False
 
     poids = sortie.stat().st_size / 1024**2

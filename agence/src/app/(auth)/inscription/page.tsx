@@ -4,6 +4,14 @@ import Link from 'next/link';
 import { FormulaireInscription } from '@/components/formulaire-inscription';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+/*
+ * Rendu à la demande, et non pré-rendu à la compilation : le jeton de la
+ * politique de sécurité n'existe qu'au moment de la requête (voir
+ * `lib/securite.ts`). Une page pré-rendue n'en porte pas, et `strict-dynamic`
+ * refuserait alors ses scripts — la page s'afficherait sans jamais s'animer.
+ */
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = { title: 'Créer un compte' };
 
 export default function PageInscription() {

@@ -1,0 +1,354 @@
+{
+  "_lisez_moi": [
+    "AZNAROTH II — quatre plans, ~13,4 s, vertical 1080x1920.",
+    "Deposer les quatre rushes dans « rushes/ » — ils ne sont pas versionnes.",
+    "",
+    "  OEIL    l'accroche : un oeil-galaxie plein cadre, des la premiere image",
+    "  ~morph~ la pupille DEVIENT la sphere du mage",
+    "  MAGE    le visage aux runes, la sphere qui se fissure",
+    "  ~morph~ la sphere DEVIENT le coeur du vortex",
+    "  VORTEX  la chute dans la faille",
+    "  ~morph~ le coeur blanc DEVIENT la tete du titan",
+    "  DRAGON  l'eruption, trois pas, le cri",
+    "",
+    "Les trois raccords sont MESURES sur les images extraites, pas estimes.",
+    "Le zoom d'entree de chaque morph est choisi pour que les deux disques",
+    "aient le meme rayon apparent au moment du fondu : c'est le rapport des",
+    "rayons qui decide, jamais le gout. A un pour cent pres, le raccord se voit.",
+    "",
+    "Les bruitages sont TOUS synthetises : la bibliotheque sfx_library n'est pas",
+    "versionnee (aucun binaire dans Git), donc les noms de catalogue de la",
+    "premiere recette — braam_massif, whoosh_lourd — n'existent pas ici.",
+    "",
+    "Ligne de temps RELEVEE sur le rendu, pas deduite des durees de plan :",
+    "  oeil 0,0-1,5 | morph | mage 2,2-3,6 | morph | vortex 4,3-6,1 | morph | dragon 6,8-11,3",
+    "",
+    "Le raccord vortex→creature a ete refait : coordonnees relevees sur",
+    "l'image du raccord (580,925 r=170) et depart du dragon repousse a",
+    "2,2 s, ou sa tete est centree et large. Avant, les deux disques ne",
+    "se superposaient jamais et le raccord se lisait comme un fondu."
+  ],
+  "effets_db": 8,
+  "largeur_stereo": 2.1,
+  "reverberation_s": 2.2,
+  "finition": {
+    "etalonnage": {
+      "force": 0.6,
+      "grain": 0
+    },
+    "lut": "visual_library/02_LUTs_and_Grading/LUT_teal_orange.cube"
+  },
+  "plans": [
+    {
+      "nom": "oeil",
+      "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
+      "depart": 0.9,
+      "duree": 2.2,
+      "cible_db": -26.0,
+      "zoom": 0.06,
+      "morph": {
+        "duree": 0.7,
+        "point_a": [
+          552,
+          868
+        ],
+        "rayon_a": 165,
+        "point_b": [
+          547,
+          1752
+        ],
+        "rayon_b": 442,
+        "zoom": 2.9
+      }
+    },
+    {
+      "nom": "mage",
+      "source": "rushes/Cinematic_vertical.mp4",
+      "depart": 1.6,
+      "duree": 2.8,
+      "cible_db": -24.0,
+      "zoom": 0.08,
+      "morph": {
+        "duree": 0.7,
+        "point_a": [
+          547,
+          1752
+        ],
+        "rayon_a": 442,
+        "point_b": [
+          565,
+          855
+        ],
+        "rayon_b": 125,
+        "zoom": 1.4
+      }
+    },
+    {
+      "nom": "vortex",
+      "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
+      "depart": 0.4,
+      "duree": 3.2,
+      "cible_db": -19.0,
+      "zoom": 0.35,
+      "morph": {
+        "duree": 0.7,
+        "point_a": [
+          580,
+          925
+        ],
+        "rayon_a": 170,
+        "point_b": [
+          546,
+          630
+        ],
+        "rayon_b": 210,
+        "zoom": 2.9
+      }
+    },
+    {
+      "nom": "dragon",
+      "source": "rushes/Biomechanical_Dragon.mp4",
+      "depart": 2.2,
+      "duree": 4.35,
+      "cible_db": -11.0,
+      "zoom": 0.1,
+      "tremblements": [
+        {
+          "debut": 0.5,
+          "duree": 0.28,
+          "force": 0.06
+        },
+        {
+          "debut": 1.8,
+          "duree": 0.28,
+          "force": 0.075
+        },
+        {
+          "debut": 3.1,
+          "duree": 0.3,
+          "force": 0.09
+        }
+      ]
+    }
+  ],
+  "titres": [
+    {
+      "texte": "IL S'EST RÉVEILLÉ",
+      "debut": 0.3,
+      "fin": 1.55,
+      "y": 1520,
+      "taille": 74
+    },
+    {
+      "texte": "LE SCEAU A CÉDÉ",
+      "debut": 2.35,
+      "fin": 3.55,
+      "y": 1520,
+      "taille": 70
+    },
+    {
+      "texte": "AZNAROTH",
+      "debut": 7.3,
+      "fin": 10.0,
+      "y": 300,
+      "taille": 128
+    },
+    {
+      "texte": "ÉPISODE 01",
+      "debut": 10.25,
+      "fin": 11.2,
+      "y": 1520,
+      "taille": 64
+    }
+  ],
+  "effets": [
+    {
+      "son": "braam",
+      "instant": 0.0,
+      "gain": 2,
+      "parametres": {
+        "duree": 2.0,
+        "fondamentale": 48.0,
+        "graine": 11
+      }
+    },
+    {
+      "son": "grondement",
+      "instant": 0.0,
+      "gain": -12,
+      "parametres": {
+        "duree": 3.0,
+        "graine": 12
+      }
+    },
+    {
+      "son": "electricite",
+      "instant": 0.05,
+      "gain": -6,
+      "parametres": {
+        "duree": 1.0,
+        "graine": 91
+      }
+    },
+    {
+      "son": "souffle",
+      "instant": 1.45,
+      "gain": -2,
+      "parametres": {
+        "duree": 0.9,
+        "graine": 21
+      }
+    },
+    {
+      "son": "montee_sans_fin",
+      "instant": 2.2,
+      "gain": -4,
+      "largeur": 16,
+      "parametres": {
+        "duree": 2.0,
+        "graine": 77
+      }
+    },
+    {
+      "son": "electricite",
+      "instant": 2.6,
+      "gain": -1,
+      "parametres": {
+        "duree": 0.9,
+        "graine": 33
+      }
+    },
+    {
+      "son": "souffle",
+      "instant": 3.55,
+      "gain": 2,
+      "parametres": {
+        "duree": 0.9,
+        "graine": 22
+      }
+    },
+    {
+      "son": "souffle_tournant",
+      "instant": 4.3,
+      "gain": -1,
+      "largeur": 20,
+      "parametres": {
+        "duree": 2.5,
+        "graine": 46
+      }
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 4.6,
+      "gain": -4,
+      "largeur": 18,
+      "parametres": {
+        "duree": 2.2,
+        "graine": 63
+      }
+    },
+    {
+      "son": "souffle",
+      "instant": 6.05,
+      "gain": 9,
+      "parametres": {
+        "duree": 1.0,
+        "graine": 23
+      }
+    },
+    {
+      "son": "grondement",
+      "instant": 6.8,
+      "gain": 14,
+      "parametres": {
+        "duree": 4.0,
+        "graine": 55
+      }
+    },
+    {
+      "son": "braam",
+      "instant": 6.9,
+      "gain": 18,
+      "parametres": {
+        "duree": 1.6,
+        "fondamentale": 42.0,
+        "graine": 13
+      }
+    },
+    {
+      "son": "crepitement",
+      "instant": 6.9,
+      "gain": 7,
+      "largeur": 22,
+      "parametres": {
+        "duree": 3.6,
+        "densite": 80.0,
+        "graine": 775
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 7.6,
+      "gain": 17,
+      "parametres": {
+        "duree": 1.1,
+        "graine": 78
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 9.0,
+      "gain": 18,
+      "parametres": {
+        "duree": 1.2,
+        "graine": 79
+      }
+    },
+    {
+      "son": "pas_mecanique",
+      "instant": 10.4,
+      "gain": 20,
+      "parametres": {
+        "duree": 0.9,
+        "graine": 80
+      }
+    },
+    {
+      "son": "cri_titan",
+      "instant": 10.45,
+      "gain": 23,
+      "parametres": {
+        "duree": 0.85,
+        "fondamentale": 50.0,
+        "graine": 31
+      }
+    },
+    {
+      "son": "eclat",
+      "instant": 10.5,
+      "gain": 15,
+      "parametres": {
+        "duree": 0.8,
+        "graine": 773
+      }
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 10.9,
+      "gain": 8,
+      "largeur": 14,
+      "parametres": {
+        "duree": 0.4,
+        "fondamentale": 44.0,
+        "graine": 88
+      }
+    }
+  ],
+  "silences": [
+    {
+      "debut": 10.1,
+      "fin": 10.42,
+      "_note": "le vide avant le cri : c'est lui qui le rend fort"
+    }
+  ]
+}

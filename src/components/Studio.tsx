@@ -5,6 +5,9 @@ import type { FontSet } from '@/lib/captions';
 import { useStudio } from '@/lib/store';
 import { useIsCompact } from '@/hooks/useMediaQuery';
 import { usePlayback } from '@/hooks/usePlayback';
+import { signatureAAfficher } from '@/licence/etat';
+import { FournisseurLicence } from '@/licence/contexte';
+import { useLicence } from '@/licence/useLicence';
 import { usePersistence } from '@/hooks/usePersistence';
 import { useSharedFiles } from '@/hooks/useSharedFiles';
 import { StudioDesktop } from './StudioDesktop';
@@ -41,7 +44,21 @@ function readFonts(): FontSet {
 
 export function Studio() {
   const [fonts] = useState<FontSet>(readFonts);
-  const engine = usePlayback(fonts);
+  /*
+   * La licence décide de ce que l'interface propose, jamais de ce que le
+   * moteur fait d'un fichier. Elle vit donc ici, dans la coque, et le moteur
+   * ne reçoit qu'un texte.
+   *
+   * L'état vient du serveur, plus d'une constante. Il portait `ETAT_INITIAL`
+   * en dur : tout le module de licence existait — lire une clé, la ranger,
+   * interroger le serveur — et rien ne l'appelait. Une personne qui payait
+   * recevait une clé qu'elle ne pouvait coller nulle part.
+   *
+   * Tant que le serveur ne répond pas, l'état reste inconnu, qui vaut `libre` :
+   * le studio reste entier serveur éteint, comme l'exige la frontière du §4.
+   */
+  const licence = useLicence();
+  const engine = usePlayback(fonts, signatureAAfficher(licence.etat));
   const compact = useIsCompact();
   usePersistence();
 
@@ -101,11 +118,17 @@ export function Studio() {
 
   const openStep = useCallback((next: StepId) => setStep(next), []);
 
-  if (compact) {
-    return <StudioMobile engine={engine} step={step} onStep={setStep} />;
-  }
-
-  // La colonne latérale d'un grand écran affiche toujours une étape : on
-  // retombe sur l'import si le panneau avait été refermé côté téléphone.
-  return <StudioDesktop engine={engine} step={step ?? 'import'} onStep={openStep} />;
+  // Les deux coques rendent les mêmes panneaux : le fournisseur les enveloppe
+  // toutes deux, plutôt que d'enfiler l'état dans leurs signatures.
+  return (
+    <FournisseurLicence valeur={licence}>
+      {compact ? (
+        <StudioMobile engine={engine} step={step} onStep={setStep} />
+      ) : (
+        // La colonne latérale d'un grand écran affiche toujours une étape : on
+        // retombe sur l'import si le panneau avait été refermé côté téléphone.
+        <StudioDesktop engine={engine} step={step ?? 'import'} onStep={openStep} />
+      )}
+    </FournisseurLicence>
+  );
 }

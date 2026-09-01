@@ -18,6 +18,10 @@ dart run build_runner watch      # pendant le développement
 flutter analyze                  # doit sortir « No issues found! »
 flutter test
 flutter run --dart-define=GEMINI_API_KEY=votre_clé
+
+dart run tool/rejouer.dart reponse.json   # une réponse du modèle, passée par la lecture
+GEMINI_API_KEY=… dart run tool/banc_invite.dart photo.jpg   # l'invite, sur une vraie photo
+GEMINI_API_KEY=… dart run tool/banc_invite.dart --modeles   # ce que Google sert encore
 ```
 
 Avant de pousser : `flutter analyze && flutter test`. Si le changement touche
@@ -27,7 +31,17 @@ workflow `Look & Find` échoue si l'un d'eux a dérivé de sa source.
 Ce que la machine de développement ne peut pas vérifier : le build Android
 (SDK absent du conteneur), la caméra, la session de réalité augmentée. Le
 workflow GitHub construit l'APK de debug à chaque poussée et le publie en
-artéfact — c'est le chemin le plus court vers un vrai téléphone.
+artéfact — c'est le chemin le plus court vers un vrai téléphone. Le protocole
+d'essai correspondant est écrit dans `ESSAI-APPAREIL.md`, pensé pour être suivi
+sans rien relire d'autre : le rédiger a coûté moins cher que de répondre trois
+fois aux mêmes questions de sideload MIUI.
+
+**Ce qu'elle peut vérifier depuis peu**, et qui demandait auparavant ce même
+aller-retour de vingt minutes : la qualité de l'identification. Les deux
+commandes de `tool/` éprouvent l'invite et la lecture hors appareil, en
+important les constantes du dépôt plutôt qu'en les recopiant. Voir
+`/identification-produit`, qui tient la boucle complète — de la fiche fausse au
+correctif fusionné.
 
 ## Carte du code
 
@@ -39,13 +53,19 @@ lib/
 │   ├── constants/   app_config (clé, endpoint, bornes), app_colors, app_strings
 │   ├── network/     dio_client, retry_interceptor, logging_interceptor, app_exception
 │   ├── theme/       app_theme — thème unique, sombre
-│   └── utils/       result, formatters, extensions, image_compressor
+│   └── utils/       result, formatters, extensions, iterables, image_compressor
 └── features/
     ├── scanner/         viseur, capture, appel au modèle
     ├── product_detail/  fiche, comparateur, alternatives  ← propriétaire du produit
     ├── ar_view/         projection 3D et ancrage
     └── favorites/       stockage local, historique, alertes
+tool/                banc d'essai de l'invite et rejeu d'une réponse, hors Flutter
 ```
+
+`tool/` s'exécute avec `dart run`, sans appareil ni émulateur — ce qui n'est
+possible que parce que le `domain` et le `data` du produit sont sans dépendance
+à Flutter. C'est la raison pour laquelle `iterables.dart` existe à côté
+d'`extensions.dart` : le premier est pur, le second importe `material`.
 
 Chaque fonctionnalité porte ses trois couches (`data`, `domain`,
 `presentation`). `core/` ne contient que ce qui est réellement transverse : y
@@ -60,6 +80,7 @@ commencer à défaire le découpage.
 | `product_detail/data/models/product_dto.dart` | Toute la tolérance de lecture face à un modèle de langage. |
 | `scanner/data/datasources/gemini_prompt.dart` | L'invite et le schéma : c'est là que se règle la qualité d'identification. |
 | `core/network/app_exception.dart` | Les échecs que l'application sait expliquer, et lesquels valent un « Réessayer ». |
+| `tool/lecture_fiche.dart` | Ce qui se perd entre la réponse du modèle et la fiche — le diagnostic qui désigne le fichier à corriger. |
 
 ## Invariants à ne pas casser
 
@@ -186,6 +207,9 @@ méthode testée.
 | `demarrage_test.dart` | Le seul test qui monte `app.dart` : câblage du thème, de la locale et des surcharges. |
 | `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé. Le patron du faux `Dio` est là si un autre test en a besoin. |
+| `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |
+| `requete_gemini_test.dart` | Ce qui part réellement vers Gemini, et l'égalité avec ce qu'enverrait `tool/banc_invite.dart`. |
+| `diagnostic_reponse_test.dart` | La fidélité du diagnostic de `tool/lecture_fiche.dart` : ne rien signaler que le DTO accepte, ne rien taire de ce qu'il écarte. Un verdict inversé fait corriger le mauvais fichier. |
 
 Trois recettes utiles quand on ajoute un test :
 
@@ -210,6 +234,21 @@ Trois recettes utiles quand on ajoute un test :
   le test se fige **sans message** au bout de plusieurs minutes. Le symptôme
   est reconnaissable — « did not complete », puis « Cannot close sink while
   adding stream ».
+- **La règle précédente vaut pour tout canal de plateforme, pas seulement Hive**
+  — et le symptôme y est trompeur au lieu d'être bloquant. Un refus
+  `MissingPluginException`, celui que rend `availableCameras()` sur une machine
+  sans greffon, voyage par la **vraie** boucle d'événements : avancer l'horloge
+  simulée ne le fait jamais arriver. L'écran reste donc sur son état d'attente,
+  et le test conclut que la panne **n'est pas signalée** — alors qu'elle n'a
+  simplement pas encore eu lieu. On part corriger un écran qui va bien.
+  Mesuré le 31/08/2026 en éprouvant la sonde de reconnaissance.
+- **Les clefs JSON de ML Kit ne portent pas le nom de leurs champs Dart.**
+  `ImageLabel.fromJson` lit `json['text']`, **pas** `json['label']` ; et
+  `InputImage.toJson` écrit le chemin sous `path`, **pas** `filePath` comme le
+  nomme le champ. Une fausse réponse écrite avec le nom Dart rend des étiquettes
+  vides et fait chercher le défaut dans l'adaptateur, qui est sain. Les deux
+  clefs sont épinglées par un test dans `reconnaissance_mlkit_test.dart` :
+  elles cassent en silence à la première montée de version.
 
 ## Pièges connus
 
@@ -226,10 +265,29 @@ Trois recettes utiles quand on ajoute un test :
   renvoyé qu'un `.glb` est consultable en 3D sur iPhone mais pas posable dans
   la pièce ; l'interface le dit déjà, ne pas le masquer.
 - L'historique est borné à soixante entrées, taillées à l'écriture.
+- **Tout greffon qui touche à une ressource privée exige sa clé dans
+  `ios/Runner/Info.plist`** — appareil photo, photothèque, position,
+  micro. La politique de l'App Store la réclame par la seule présence du
+  greffon, même quand le code ne demande jamais la permission. L'oubli ne se
+  voit ni à l'analyse, ni aux tests, ni sur Android : il se découvre au rejet
+  de la soumission. Ajouter un greffon, c'est lire son README avant de
+  committer.
 - Les surcharges de providers de `demarrage_test.dart` doublent celles de
   `main.dart`, qui n'est pas appelable depuis un test. Ajouter une boîte Hive
   sans les mettre à jour toutes les deux fait échouer le démarrage réel sans
   qu'aucun test ne bronche.
+- **`AppConfig.geminiModel` est un alias (`gemini-flash-latest`), pas un
+  numéro.** Google arrête ses modèles à date annoncée : la génération 1.5, sur
+  laquelle l'application a pointé, répond déjà 404. Un modèle retiré ne dégrade
+  rien, il fait échouer *tous* les scans d'un coup, sur tous les appareils, sans
+  qu'une ligne du dépôt ait bougé — et la panne ressemble à un problème de
+  réseau. L'alias supprime cette falaise au prix d'un comportement qui peut
+  glisser quand Google avance la version ; c'est le bon côté du marché tant
+  qu'une réponse douteuse se diagnostique en cinq secondes avec
+  `tool/rejouer.dart`. Ne pas y substituer un numéro figé sans se donner un
+  moyen d'apprendre l'extinction autrement que par un utilisateur. Filet :
+  `ModelUnavailableException`. Ce qui est servi pour une clé :
+  `dart run tool/banc_invite.dart --modeles`.
 - Sans serveur, un prix ne peut bouger qu'au rescan. Ne pas ajouter de
   vocabulaire d'alerte de fond (« notification », « surveillance permanente ») :
   l'architecture ne le permet pas.

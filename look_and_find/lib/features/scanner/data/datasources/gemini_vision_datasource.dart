@@ -58,26 +58,7 @@ class GeminiVisionDataSource {
         '/models/${AppConfig.geminiModel}:generateContent',
         queryParameters: {'key': _apiKey},
         cancelToken: cancelToken,
-        data: {
-          'contents': [
-            {
-              'parts': [
-                {'text': GeminiPrompt.instruction},
-                {
-                  'inline_data': {'mime_type': 'image/jpeg', 'data': base64},
-                },
-              ],
-            },
-          ],
-          'generationConfig': {
-            // Une fiche produit n'a pas à varier d'un scan à l'autre : la
-            // même photo doit donner le même prix moyen, sinon le suivi de
-            // prix mesure le bruit du modèle plutôt que le marché.
-            'temperature': 0.1,
-            'responseMimeType': 'application/json',
-            'responseSchema': GeminiPrompt.responseSchema,
-          },
-        },
+        data: GeminiPrompt.corpsRequete(base64),
       );
     } on DioException catch (error) {
       throw AppException.from(error);

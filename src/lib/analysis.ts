@@ -1,8 +1,10 @@
+import { crochetsARemplir } from './captions.ts';
+import { groupesSemblables } from './ressemblance.ts';
 import { layoutClips, totalDuration, type PlacedClip } from './timeline.ts';
 import type { Caption, Project } from './types.ts';
 
 /**
- * Analyse de viralité.
+ * Analyse du montage.
  *
  * Ce moteur note la **structure du montage** — rythme des coupes, force du
  * hook, ponctuation sonore, couverture en texte, tenue de la tension. Il ne
@@ -60,9 +62,33 @@ export type Advice = {
   message: string;
 };
 
+/**
+ * Un défaut qui empêche un montage d'être bon, quoi que valent les autres.
+ *
+ * Ce n'est pas un critère de plus : c'est ce qui **plafonne** la note. La
+ * distinction vient d'une remarque de l'utilisateur, et elle était juste — une
+ * somme pondérée ne sait pas dire « celle-là, non ». Mesuré sur le cas le plus
+ * défavorable : une vidéo carrée, plan strictement fixe, cinquante secondes,
+ * celle qui fait 6 % de rétention réelle sur TikTok, décrochait **82 sur 100**
+ * parce que trois critères pleins portaient soixante-dix points à eux seuls.
+ */
+export type Bloquant = {
+  id: string;
+  /** Ce qui ne va pas, en une phrase, du point de vue de la personne. */
+  probleme: string;
+  /** Le geste qui le règle. Jamais « il faudrait », toujours quoi faire. */
+  remede: string;
+};
+
 export type Analysis = {
   /** Note globale sur 100. */
   score: number;
+  /**
+   * Ce qui plafonne la note. Vide quand rien ne bloque.
+   *
+   * L'ordre compte : le premier est celui qui coûte le plus cher à laisser.
+   */
+  bloquants: Bloquant[];
   /** Appréciation courte associée à la note. */
   verdict: string;
   criteria: Criterion[];
@@ -245,6 +271,9 @@ export function analyzeProject(project: Project): Analysis {
   if (shotCount === 0 || duration <= 0) {
     return {
       score: 0,
+      // Un montage vide n'a pas de defaut bloquant : il n'a rien du tout, et
+      // le guide dit deja quoi faire.
+      bloquants: [],
       verdict: 'Montage vide',
       criteria: [],
       curve: [],
@@ -376,10 +405,28 @@ export function analyzeProject(project: Project): Analysis {
     },
   ];
 
-  const score = Math.round(criteria.reduce((sum, c) => sum + c.score * c.weight, 0));
+  const somme = Math.round(criteria.reduce((sum, c) => sum + c.score * c.weight, 0));
+  const bloquants = defautsBloquants(project, { coverage, longestShot });
+
+  /*
+   * Un defaut bloquant PLAFONNE la note, il ne la penalise pas.
+   *
+   * C'etait une somme ponderee, et une somme ne sait pas dire « celle-la,
+   * non » : quatre crochets non remplis coutaient treize points quand
+   * l'accroche en rapportait trente. Mesure sur une video carree, plan
+   * strictement fixe, cinquante secondes — celle qui fait 6 % de retention
+   * reelle : 82 sur 100.
+   *
+   * Le plafond ne remplace pas les criteres, il les borne. Un montage sans
+   * defaut bloquant est note exactement comme avant ; un montage qui en porte
+   * un ne peut pas depasser `PLAFOND_BLOQUE`, quel que soit le reste. C'est ce
+   * que veut dire « bien monte avant d'etre viral ».
+   */
+  const score = bloquants.length > 0 ? Math.min(somme, PLAFOND_BLOQUE) : somme;
 
   return {
     score,
+    bloquants,
     verdict: verdictFor(score),
     criteria,
     curve,
@@ -391,12 +438,123 @@ export function analyzeProject(project: Project): Analysis {
   };
 }
 
-/** Part des clips dont la source est déjà verticale ou carrée. */
+/** Note maximale d'un montage qui porte au moins un défaut bloquant. */
+export const PLAFOND_BLOQUE = 40;
+
+/** Couverture texte en deçà de laquelle la vidéo ne se suit plus sans le son. */
+const COUVERTURE_BLOQUANTE = 0.25;
+
+/** Durée au-delà de laquelle un plan seul endort le film. */
+const PLAN_QUI_DORT = 6;
+
+/**
+ * Les défauts qui empêchent un montage d'être bon, quoi que valent les autres.
+ *
+ * Chacun est mesuré, jamais estimé, et chacun a été rencontré sur un vrai
+ * montage livré puis rejeté. Ils sont rendus dans l'ordre de ce qu'ils coûtent
+ * à laisser : un texte de gabarit non rempli part à l'écran et se lit, une
+ * vidéo sans texte ne se suit pas sans le son, un cadrage répété n'avance nulle
+ * part, un plan qui dort perd le spectateur, un format non vertical est rogné
+ * par la plateforme.
+ *
+ * Ce qui n'est **pas** ici : tout ce qui relève du goût. Le plafond ne juge pas
+ * si un montage est beau — il constate qu'il n'est pas fini.
+ */
+export function defautsBloquants(
+  project: Project,
+  mesures: { coverage: number; longestShot: number },
+): Bloquant[] {
+  const trouves: Bloquant[] = [];
+
+  /*
+   * Les crochets des gabarits, gravés dans le fichier.
+   *
+   * Constaté sur un montage livré : quatre textes sur quatre étaient des trous
+   * — « [Ce qui menace] », « QUEL [ROYAUME] TOMBE ENSUITE ? ». Aucune mesure ne
+   * le disait, la couverture texte était même bonne puisqu'il y avait du texte.
+   * C'est le défaut le plus visible d'une vidéo publiée, et le seul que
+   * personne ne pardonne.
+   */
+  const aRemplir = crochetsARemplir(project.captions);
+  if (aRemplir.length > 0) {
+    trouves.push({
+      id: 'crochets',
+      probleme: `${aRemplir.length} texte${aRemplir.length > 1 ? 's' : ''} du gabarit ${
+        aRemplir.length > 1 ? 'restent' : 'reste'
+      } à remplir`,
+      remede: 'Remplace ce qui est entre crochets par tes mots, dans Accroche.',
+    });
+  }
+
+  // Sans texte, une vidéo verticale ne se suit pas : la majorité la regarde
+  // sans le son, et le sous-titrage n'est pas un ornement.
+  if (mesures.coverage < COUVERTURE_BLOQUANTE && project.clips.length > 0) {
+    trouves.push({
+      id: 'texte-absent',
+      probleme: `Du texte sur ${Math.round(mesures.coverage * 100)} % de la vidéo seulement`,
+      remede: 'Ajoute des textes dans Accroche : on regarde sans le son.',
+    });
+  }
+
+  /*
+   * Des plans qui montrent la même chose.
+   *
+   * Un montage peut avoir la bonne cadence, la bonne durée et la bonne note, et
+   * n'avancer nulle part. Constaté sur un montage rejeté : neuf rushes, dont
+   * sept au même cadrage, et toutes les mesures au vert.
+   */
+  const montes = new Set(project.clips.map((c) => c.assetId));
+  const groupes = groupesSemblables(project.assets.filter((a) => montes.has(a.id)));
+  const plusGrand = groupes[0]?.length ?? 0;
+  if (plusGrand > 2) {
+    trouves.push({
+      id: 'ressemblance',
+      probleme: `${plusGrand} rushes montrent presque la même image`,
+      remede: 'Un plan large, un gros plan, un objet — varie les cadrages.',
+    });
+  }
+
+  if (mesures.longestShot > PLAN_QUI_DORT) {
+    trouves.push({
+      id: 'plan-qui-dort',
+      probleme: `Un plan dure ${mesures.longestShot.toFixed(1)} s sans rien changer`,
+      remede: `Découpe-le : au-delà de ${PLAN_QUI_DORT} s sans coupe, on décroche.`,
+    });
+  }
+
+  /*
+   * Un format qui n'est pas vertical.
+   *
+   * Le test était `height >= width`, donc **un carré passait pour vertical** et
+   * marquait plein. Relevé sur une vidéo carrée réellement publiée : 6 % de
+   * rétention moyenne, décrochage à la première seconde. La plateforme rogne ou
+   * encadre, et le résultat se voit tout de suite.
+   */
+  const nonVerticaux = project.clips.filter((clip) => {
+    const asset = project.assets.find((a) => a.id === clip.assetId);
+    return asset ? asset.height <= asset.width : false;
+  }).length;
+  if (nonVerticaux > 0) {
+    trouves.push({
+      id: 'format',
+      probleme: `${nonVerticaux} plan${nonVerticaux > 1 ? 's ne sont pas' : ' n’est pas'} au format vertical`,
+      remede: 'Reprends des rushes en 9:16 : un carré ou un paysage est rogné.',
+    });
+  }
+
+  return trouves;
+}
+
+/** Part des clips dont la source est strictement plus haute que large. */
 function verticalShare(project: Project): number {
   if (project.clips.length === 0) return 0;
   const vertical = project.clips.filter((clip) => {
     const asset = project.assets.find((a) => a.id === clip.assetId);
-    return asset ? asset.height >= asset.width : false;
+    // Strictement plus haut que large : le test était `>=`, et **un carré
+    // passait donc pour vertical**. Relevé sur une vidéo 1080 × 1080 réellement
+    // publiée : 6 % de rétention moyenne. Un carré n'est pas un format vertical,
+    // c'est un format que la plateforme encadre.
+    return asset ? asset.height > asset.width : false;
   }).length;
   return vertical / project.clips.length;
 }

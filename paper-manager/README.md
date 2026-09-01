@@ -5,10 +5,11 @@ strictement personnel : tout reste sur la machine, sauf le seul appel qui a
 besoin de sortir (la lecture d'un document par un modèle de vision, et
 uniquement si elle est activée).
 
-Ce fichier est le plan du projet. Trois modules sur quatre sont écrits et
-vérifiés : calendrier, abonnements, résiliation — plus le remplissage de
-formulaires PDF. Seul le module de lecture des documents (scan et extraction)
-reste une coquille portant sa justification.
+Ce fichier est le plan du projet. **Les quatre modules sont écrits et
+vérifiés** : lecture et classement des documents, calendrier, abonnements,
+résiliation — plus le remplissage de formulaires PDF. La reconnaissance des
+champs se fait par motifs, hors réseau ; le modèle de vision reste le recours
+prévu pour ce qu'ils ne trouvent pas.
 
 ## Les quatre modules
 
@@ -39,6 +40,10 @@ paper-manager/
 │   ├── calendrier.py     module 2 — les échéances deviennent un fichier .ics
 │   ├── abonnements.py    module 3 — l'état des contrats et le calcul des alertes
 │   └── resiliation.py    module 4 — le courrier, à partir d'un gabarit et du contrat
+├── interface/
+│   ├── app.py            l'écran du tableau de bord, en Streamlit — lecture seule
+│   ├── rendu.py          sa mise en forme, sans Streamlit : c'est ce qui se teste
+│   └── lancer.sh         démarrage en une commande
 ├── modeles/
 │   ├── formulaires/      un plan de remplissage par formulaire (JSON versionné)
 │   └── *.txt             gabarits de courriers (texte à trous)
@@ -114,6 +119,56 @@ alertée — alerter sur l'échéance, c'est alerter trop tard. La date d'avis
 d'échéance reçue de l'assureur est notée elle aussi : reçue en retard, elle
 rouvre un droit de résiliation.
 
+## Classer ce qui a été déposé
+
+```bash
+python3 paper.py classer                 # simule : montre ce qui irait où
+python3 paper.py classer --appliquer     # range pour de bon
+```
+
+Le parcours entier : lire le fichier, en tirer les champs, calculer son nom,
+l'inscrire au journal. **Rien ne bouge sans `--appliquer`** — un classement
+dont on n'a pas vu la sortie une première fois est un classement qu'on refait à
+la main.
+
+**Le modèle de vision est le recours, pas la règle.** Il ne part que si trois
+conditions sont réunies : `extraction.active`, une page rendue en image — ce que
+`scan.py` ne fait que faute de texte utile — et une confiance sous le seuil.
+Autrement dit, il ne part que pour les scans et les photos, jamais pour une
+facture téléchargée qui porte son texte. **Il complète, il n'écrase jamais** :
+un champ lu derrière son étiquette se retrouve en rouvrant le document, un champ
+rendu par un modèle non, et échanger le premier contre le second serait troquer
+du sûr contre du probable. Ce qu'il rend traverse exactement les mêmes contrôles
+que les motifs — montant plausible, date dans la fenêtre permise, nature de la
+liste — et pèse moins dans la confiance, parce que rien ne vient confirmer sa
+lecture.
+
+Ce que la lecture sait faire sans réseau, et pourquoi c'est suffisant la plupart
+du temps : une facture française est un document très régulier. « Net à payer »,
+« Référence client », une date en JJ/MM/AAAA sont des motifs, pas de la
+compréhension. Quatre pièges les rendent moins évidents qu'il n'y paraît :
+
+- **Les milliers sont séparés par une espace insécable** : un motif naïf lit
+  « 234,56 » dans « 1 234,56 € » et se trompe d'un facteur mille.
+- **Une date française commence par le jour** : 03/04/2026 est le 3 avril.
+- **Le plus gros nombre de la page n'est pas le total** : on cherche le montant
+  *étiqueté*, et « Net à payer » prime sur « Total TTC », qui peut inclure un
+  acompte déjà versé.
+- **La date du pied de page est celle de l'impression** : la prendre pour
+  l'émission range la facture au mauvais mois.
+
+**Ce qui n'est pas sûr n'est pas rangé.** La confiance se calcule sur la manière
+dont chaque champ a été trouvé — derrière son étiquette, ou ramassé au milieu de
+la page. Sous `extraction.confiance_minimale`, le document reste dans le dépôt
+avec la liste de ce qui lui manque, champ par champ : « il manque la date
+d'émission » se corrige, « à relire » non.
+
+Deux fichiers identiques ne sont rangés qu'une fois, reconnus par l'empreinte de
+leur contenu et non par leur nom — c'est le cas dès qu'on synchronise deux
+dossiers. Le compte rendu distingue « déjà rangé lors d'un passage précédent »
+de « deux copies dans le même dépôt » : la première est une bonne nouvelle, la
+seconde demande de choisir.
+
 ## Le tableau de bord
 
 ```bash
@@ -147,6 +202,57 @@ Ce que le calcul sait, et qui vaut d'être connu :
   de l'utilisateur que l'année reconduite n'était pas grave.
 - **Le statut décidé à la main survit au recalcul.** C'est la seule chose que
   le programme lit dans le fichier plutôt que de la calculer.
+- **La facture attendue qui n'arrive pas** ne se signale que si l'on a **déjà
+  vu** un document de cet émetteur. Sans cette garde, chaque abonnement crierait
+  au premier passage : l'assistant ne saurait pas distinguer une facture
+  manquante d'un coffre qu'on vient d'ouvrir, et c'est le faux signal qui fait
+  ignorer les vrais. Un délai de grâce s'ajoute à la période — une facture
+  mensuelle n'arrive pas le même jour tous les mois.
+- **Ce qu'on peut jeter est groupé par catégorie et par année.** Cinq ans de
+  factures d'énergie font soixante documents : une alerte par document noierait
+  tout le reste, alors qu'« les douze factures de 2020 peuvent être jetées » se
+  traite d'un geste. Le groupe n'expire qu'avec son document le plus récent —
+  mieux vaut garder un an de trop que jeter un justificatif encore utile. Et
+  **rien n'est jamais supprimé** : le programme signale.
+
+## L'écran, depuis le téléphone
+
+```bash
+bash interface/lancer.sh              # http://localhost:8502
+PORT=8600 bash interface/lancer.sh    # ailleurs
+```
+
+Le même tableau de bord que `python3 paper.py etat`, mais lisible à bout de
+bras : le total du mois, la répartition par catégorie de la plus chère à la
+moins chère, ce qu'il y a à faire aujourd'hui, et les contrats classés par
+urgence de préavis.
+
+- **Il ne calcule rien.** L'écran appelle `core.abonnements.tableau()` et
+  affiche ce qu'il rend. Ce n'est pas une élégance : un total réécrit dans
+  l'affichage finirait par diverger de celui que les tests vérifient, sans que
+  rien ne le signale — et c'est l'écran qu'on croirait, parce que c'est l'écran
+  qu'on regarde. Les deux affichages se comparent d'ailleurs côte à côte, sur
+  la configuration d'exemple, et disent le même mot.
+- **Il ne fait que lire.** Aucun bouton, aucune écriture. Marquer une alerte
+  traitée reste `python3 paper.py etat --traiter <id>` : une alerte fermée d'un
+  pouce distrait dans un couloir, c'est une échéance perdue.
+- **Les jauges sont deux barres horizontales**, jamais un cercle — la règle du
+  dépôt (`CLAUDE.md` §2, `/tailwind-mobile-ux`), et sa raison est le terrain :
+  la WebView de MIUI tronque les jauges circulaires en SVG. Deux et non une,
+  parce que la fenêtre courte (ce qu'il y a à faire aujourd'hui) ne laisse
+  jamais voir venir la longue (les préavis des trois prochains mois).
+- **`admin_config.json` absent n'est pas une panne.** Il est personnel et
+  ignoré par git : sur une machine neuve, il n'existe pas. L'écran affiche
+  alors la commande à taper, et rien d'autre.
+- **Ce qui se teste est dans `interface/rendu.py`**, qui n'importe pas
+  Streamlit. `app.py`, lui, l'importe — et la CI du dépôt ne l'installe pas
+  exprès, pour que la vérification reste à quinze secondes.
+
+Ce qui ne se voit qu'en le faisant, et qui reste donc à confirmer : le rendu
+réel sur le téléphone de référence, où la barre d'adresse de Chrome et la barre
+de gestes de HyperOS amputent la hauteur annoncée. Il a été mesuré ici dans un
+Chromium à 393 × 873, ce qui voit les débordements mais ni le tactile ni la
+police système.
 
 ## Les rappels d'agenda
 
@@ -263,9 +369,9 @@ Ce qui mérite d'être connu avant d'y toucher :
 - **Pas de base SQLite.** Quelques dizaines d'abonnements et quelques milliers
   de documents ; du JSON se lit, se corrige à la main et se sauvegarde par une
   copie de fichier.
-- **Pas d'interface web pour l'instant.** Le tableau de bord du module 3 est
-  d'abord `python3 paper.py etat`. Le jour où la ligne de commande ne suffira
-  plus, c'est un `interface/app.py` en Streamlit, comme `mon-app-audio/`.
+- **L'interface ne fait que lire.** `interface/app.py` affiche le tableau de
+  bord ; tout ce qui écrit — marquer une alerte traitée, classer un dépôt,
+  produire un courrier — reste à `python3 paper.py`. Voir plus bas.
 - **Pas de relève de boîte mail.** Beaucoup de factures arrivent par courriel,
   et c'est la suite logique — mais c'est un cinquième module, avec ses propres
   questions d'authentification.
@@ -312,7 +418,7 @@ Sections, dans l'ordre du fichier :
 | Champ | À quoi il sert |
 | --- | --- |
 | `id` | Stable, pour retrouver l'alerte d'un passage à l'autre. |
-| `type` | `preavis`, `renouvellement`, `paiement` — calculés. `document_manquant` et `conservation` viendront avec le journal des documents. |
+| `type` | `preavis`, `renouvellement`, `paiement`, `document_manquant`, `conservation` — tous calculés. Les deux derniers demandent le journal des documents. |
 | `source` | `abonnement:<id>` ou `document:<id>` — d'où elle vient. |
 | `echeance` | La date qui compte : celle du préavis, pas celle du contrat. |
 | `declenchement` | À partir de quand elle apparaît dans `paper.py etat`. |
@@ -327,7 +433,7 @@ python3 paper.py agenda [--vers coffre/rappels.ics]        # écrit
 python3 paper.py champs <formulaire.pdf> [--gabarit]       # écrit
 python3 paper.py remplir <plan.json> [--abonnement <id>]   # écrit
 python3 paper.py resilier <id> [--texte] [--motif ...]     # écrit
-python3 paper.py classer --source coffre/entree            # module 1, à venir
+python3 paper.py classer [--source ...] [--appliquer]      # écrit
 ```
 
 ## Vérifier
@@ -340,16 +446,42 @@ Les tests couvrent ce qui est calculable : l'arithmétique des échéances et de
 préavis, la validation et la réécriture de la configuration, le tableau de bord
 et la fusion des alertes, le format du fichier de rappels jusqu'au pliage des
 lignes, le choix du gabarit de résiliation et les mentions obligatoires du
-courrier, la résolution des gabarits et le remplissage effectif d'un PDF. Le formulaire de test est
-**fabriqué à l'exécution** — ce dépôt ne versionne aucun binaire, et un Cerfa
-vierge en est un.
+courrier, la résolution des gabarits et le remplissage effectif d'un PDF, et la
+mise en forme du tableau de bord. Le formulaire de test est **fabriqué à
+l'exécution** — ce dépôt ne versionne aucun binaire, et un Cerfa vierge en est
+un.
 
-Seul PyMuPDF est nécessaire au code écrit à ce jour ; il est déjà installé dans
-une session distante par le hook du dépôt, pour la chaîne pré-presse KDP.
+**La suite ne traverse jamais Streamlit.** `interface/app.py` l'importe,
+`interface/rendu.py` non : c'est là que vit tout ce qui se vérifie de
+l'affichage, et c'est ce qui garde la vérification à quinze secondes. La
+distinction est écrite en tête de `.github/requirements-tests.txt`, et il ne
+faut pas ajouter Streamlit à ce fichier pour « faire bonne mesure » — aucune
+assertion ne le traverse.
+
+PyMuPDF, `anthropic` et `pydantic` sont nécessaires aux tests ; Streamlit ne
+l'est qu'à l'exécution de l'écran. Le hook du dépôt les installe tous dans une
+session distante.
+
+## Ce qui n'a pas pu être vérifié ici
+
+Le chemin par modèle est éprouvé avec un client de substitution : la requête
+construite, la validation de ce qui revient, la fusion avec les motifs et le
+comportement en cas de panne. **Un vrai appel n'a jamais été fait** — aucune clé
+n'est présente dans l'environnement de développement. Reste donc à confirmer, le
+jour où une clé existe, que l'API rend bien la forme attendue.
+
+Les motifs, eux, ne diront jamais si une **vraie** facture d'un fournisseur donné
+les suit. Cela ne se verra qu'en déposant de vrais documents, et la pile « à
+relire » est faite pour que ça se voie sans rien perdre.
 
 ## Prochaine étape
 
-Le module 1, le seul qui manque : `scan.py`, `extraction.py`, `nommage.py` et
-`journal.py`. C'est aussi le seul qui sort sur le réseau, et celui qui débloque
-les deux types d'alerte encore inertes — la facture attendue qui n'arrive pas,
-et le document qu'on peut jeter.
+**Les gestes**, maintenant que l'écran a fait ses preuves : marquer une alerte
+traitée ou reportée depuis le téléphone, sans revenir au terminal. C'est la
+seule écriture qui manque vraiment au quotidien — les autres commandes
+(`classer`, `resilier`, `remplir`) produisent des fichiers qu'on veut de toute
+façon relire avant de s'en servir.
+
+**La relève de boîte mail** ensuite, le cinquième module : beaucoup de factures
+arrivent par courriel, et les déposer à la main dans `coffre/entree/` est le
+geste qui reste.

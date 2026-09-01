@@ -23,7 +23,7 @@ const body = Inter({
 export const metadata: Metadata = {
   title: 'Amorce — le studio qui rend tes vidéos IA virales',
   description:
-    'Monte tes vidéos IA au format vertical : transitions, bruitages, sous-titres, rendu cinéma et note de viralité. Tout se passe dans ton navigateur, aucun fichier n’est envoyé sur un serveur.',
+    'Monte tes vidéos IA au format vertical : transitions, bruitages, sous-titres, rendu cinéma et note de montage. Tout se passe dans ton navigateur, aucun fichier n’est envoyé sur un serveur.',
 };
 
 export const viewport: Viewport = {

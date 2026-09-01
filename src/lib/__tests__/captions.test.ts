@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
-import { CAPTION_COLORS, CAPTION_SCALES, type CaptionStyleId } from '../types.ts';
+import { centreDuBloc, crochetsARemplir, BANDE_SURE, HAUTEURS_LIBRES, Y_PAR_DEFAUT, dansLaBandeSure, boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
+import { CAPTION_COLORS, CAPTION_SCALES, OUTPUT_HEIGHT, type Caption, type CaptionStyleId } from '../types.ts';
 
 test('la détection sous le doigt inclut les bords du rectangle', () => {
   const box = { x: 100, y: 200, width: 300, height: 80 };
@@ -99,4 +99,129 @@ test('la pulsation part de la taille au repos et ne dépend que du temps de mont
   assert.equal(pulseScale(0.3), pulseScale(0.3));
   // Un aller-retour complet ramène à la taille de départ.
   assert.ok(Math.abs(pulseScale(0.7) - 1) < 1e-9);
+});
+
+// ------------------------------------------------ Zones sûres des plateformes
+
+test('la bande sûre correspond à ce qui a été mesuré sur les trois plateformes', () => {
+  /*
+   * Ce test n'éprouve pas un calcul : il empêche qu'on déplace en passant des
+   * valeurs relevées sur des captures réelles. Instagram ferme le bas dès 63 %,
+   * TikTok occupe sa colonne de droite à partir de 72 %, Facebook passe sa
+   * barre système sous 12 %. C'est l'intersection qui décide.
+   */
+  assert.equal(BANDE_SURE.haut, 0.12);
+  assert.equal(BANDE_SURE.bas, 0.45);
+  assert.ok(Y_PAR_DEFAUT > BANDE_SURE.haut && Y_PAR_DEFAUT < BANDE_SURE.bas);
+});
+
+test('une hauteur hors bande est ramenée dedans', () => {
+  assert.equal(dansLaBandeSure(0.72), 0.45, '72 % tombe dans la colonne de TikTok');
+  assert.equal(dansLaBandeSure(0.02), 0.12, '2 % passe sous la barre de Facebook');
+  assert.equal(dansLaBandeSure(0.3), 0.3, 'une hauteur déjà sûre ne bouge pas');
+});
+
+test('tous les paliers de sous-titre tiennent dans la bande sûre', () => {
+  /*
+   * Le chemin le plus emprunté est « + Ajouter » — c'est celui que le guide
+   * recommande quand la couverture texte est faible. Ses paliers étaient
+   * `[0.5, 0.32, 0.66, 0.2, 0.78]` : trois d'entre eux, dont celui par défaut,
+   * posaient le texte sous l'habillage des plateformes.
+   *
+   * Le déplacement des sous-titres dans la bande avait touché la voix off et
+   * les gabarits, et manqué celui-ci. Ce test le tient.
+   */
+  for (const y of HAUTEURS_LIBRES) {
+    assert.ok(y >= BANDE_SURE.haut, `palier à ${y} : sous la barre système de Facebook`);
+    assert.ok(y <= BANDE_SURE.bas, `palier à ${y} : dans la colonne de TikTok`);
+  }
+  assert.equal(HAUTEURS_LIBRES[0], Y_PAR_DEFAUT, 'le premier palier est la hauteur par défaut');
+  // Deux paliers plus proches que 0,08 ne seraient jamais retenus tous les
+  // deux : la recherche de place les considérerait comme le même.
+  for (let i = 1; i < HAUTEURS_LIBRES.length; i += 1) {
+    assert.ok(
+      Math.abs(HAUTEURS_LIBRES[i] - HAUTEURS_LIBRES[i - 1]) >= 0.079,
+      `paliers ${HAUTEURS_LIBRES[i - 1]} et ${HAUTEURS_LIBRES[i]} trop proches`,
+    );
+  }
+});
+
+test('un gabarit non rempli est repéré avant l’export', () => {
+  /*
+   * Constaté sur un montage livré : quatre textes sur quatre étaient des
+   * gabarits, gravés dans le fichier et prêts à publier. Aucune mesure ne le
+   * disait — la couverture texte était même bonne, puisqu'il y avait du texte.
+   *
+   * Le crochet se cherche n'importe où dans la phrase : une accroche à moitié
+   * remplie n'est pas remplie.
+   */
+  const texte = (t: string): Caption => ({
+    id: t, text: t, start: 0, end: 1, style: 'punch', y: 0.3,
+  });
+
+  const trous = [
+    '[TITRE] — ÉPISODE [02]',
+    '[Ce qui menace]',
+    'QUEL [ROYAUME] TOMBE ENSUITE ?',
+  ].map(texte);
+  assert.equal(crochetsARemplir(trous).length, 3);
+
+  const remplis = [
+    'AZNAROTH — ÉPISODE 02',
+    'Le royaume de glace tombe',
+    'Et toi, tu tiendrais combien ?',
+    '',
+  ].map(texte);
+  assert.deepEqual(crochetsARemplir(remplis), [], 'un texte écrit est pris pour un gabarit');
+});
+
+/*
+ * Le bloc entier dans la bande sûre, pas seulement son ancre.
+ *
+ * `dansLaBandeSure` bornait la hauteur d'ancrage et n'avait **aucun appelant**
+ * hors de ses propres tests : la bande était déclarée, outillée, et rien ne
+ * l'appliquait. Or un texte se dessine centré sur son ancre — quatre lignes du
+ * carton final de « bande-annonce » descendaient jusqu'à 46,6 % pour une bande
+ * qui s'arrête à 45 %.
+ */
+test('un bloc haut est remonté pour tenir dans la bande sûre', () => {
+  // Trois lignes en corps 104 : 368 px, la bande en fait 634. Il tient.
+  const bloc = 3 * 104 * 1.18;
+  const centre = centreDuBloc(0.42, bloc);
+
+  const bas = centre + bloc / 2;
+  assert.ok(bas <= BANDE_SURE.bas * OUTPUT_HEIGHT + 0.5, `le bas sort : ${bas}`);
+  assert.ok(centre < 0.42 * OUTPUT_HEIGHT, 'il aurait dû être remonté');
+});
+
+/*
+ * Le carton final du gabarit ne tient pas dans la bande, et ce n'est pas une
+ * question de placement.
+ *
+ * « QUEL [ROYAUME] TOMBE ENSUITE ? » passe à quatre lignes en échelle 1,3 :
+ * 638 px, quand la bande sûre en fait 634. Aucune hauteur d'ancrage ne peut le
+ * sauver — il est trop grand, pas mal posé. Ce test fige la mesure pour que le
+ * jour où l'on réduit l'échelle du gabarit, on sache que c'était la cause.
+ */
+test('le carton final du gabarit dépasse la hauteur de la bande', () => {
+  const bloc = 4 * 104 * 1.3 * 1.18;
+  const bande = (BANDE_SURE.bas - BANDE_SURE.haut) * OUTPUT_HEIGHT;
+  assert.ok(bloc > bande, `${bloc.toFixed(0)} px pour une bande de ${bande.toFixed(0)} px`);
+});
+
+test('un bloc qui tient déjà n’est pas déplacé', () => {
+  const bloc = 2 * 104 * 1.18;
+  assert.equal(centreDuBloc(0.38, bloc), 0.38 * OUTPUT_HEIGHT);
+});
+
+/*
+ * Un bloc plus haut que la bande ne peut pas y tenir : on le centre.
+ * Le remonter davantage le ferait sortir par le haut, où l'habillage de TikTok
+ * mange les neuf premiers pour cent — on perdrait le début du texte au lieu de
+ * sa fin.
+ */
+test('un bloc plus haut que la bande est centré dedans', () => {
+  const bande = (BANDE_SURE.bas - BANDE_SURE.haut) * OUTPUT_HEIGHT;
+  const centre = centreDuBloc(0.2, bande * 1.5);
+  assert.equal(centre, ((BANDE_SURE.haut + BANDE_SURE.bas) / 2) * OUTPUT_HEIGHT);
 });

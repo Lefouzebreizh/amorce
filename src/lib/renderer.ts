@@ -38,6 +38,11 @@ import { OUTPUT_HEIGHT, OUTPUT_WIDTH, type Clip, type MediaAsset, type Project }
  * Android, et dépasser ne prévient pas — les plans en trop ne décodent rien et
  * l'image sort noire. Six laisse la place aux deux couches d'une transition et
  * au préchargement des plans qui suivent.
+ *
+ * Ce plafond ne vaut que pour les rushes. Une image fixe ne mobilise aucun
+ * décodeur vidéo : la compter ici ferait évincer des plans qui ne coûtent
+ * rien, et un défilé d'illustrations — le cas d'usage même de l'image fixe —
+ * rechargerait sans cesse les mêmes fichiers en clignotant.
  */
 const DECODEURS_MAX = 6;
 
@@ -50,8 +55,18 @@ const DECODEURS_MAX = 6;
  */
 const RETARD = 1.5;
 
+/** Élément porteur d'un plan : un décodeur pour un rush, une image sinon. */
+export type ClipSource = HTMLVideoElement | HTMLImageElement;
+
+/** Dimensions natives d'un porteur de plan, quel qu'il soit. */
+export function sourceSize(source: ClipSource): { width: number; height: number } {
+  return source instanceof HTMLVideoElement
+    ? { width: source.videoWidth, height: source.videoHeight }
+    : { width: source.naturalWidth, height: source.naturalHeight };
+}
+
 export class ClipVideoPool {
-  private elements = new Map<string, HTMLVideoElement>();
+  private elements = new Map<string, ClipSource>();
 
   /**
    * Aligne le pool sur les plans proches de la tête de lecture.
@@ -62,39 +77,35 @@ export class ClipVideoPool {
    * reviendrait muet tant que son ancien nœud n'a pas été purgé.
    */
   sync(placed: PlacedClip[], assets: MediaAsset[], time: number): Set<string> {
-    const wanted = new Set(this.proches(placed, time));
+    const source = (item: PlacedClip) => assets.find((a) => a.id === item.clip.assetId);
+    const fixes = placed.filter((item) => source(item)?.kind === 'image');
+    const rushes = placed.filter((item) => source(item)?.kind !== 'image');
+
+    const wanted = new Set([
+      ...fixes.map((item) => item.clip.id),
+      ...this.proches(rushes, time),
+    ]);
 
     for (const [clipId, element] of this.elements) {
       if (wanted.has(clipId)) continue;
-      element.pause();
-      element.removeAttribute('src');
-      element.load();
+      this.release(element);
       this.elements.delete(clipId);
     }
 
     for (const item of placed) {
       const clip = item.clip;
       if (!wanted.has(clip.id) || this.elements.has(clip.id)) continue;
-      const asset = assets.find((a) => a.id === clip.assetId);
+      const asset = source(item);
       if (!asset) continue;
 
-      const video = document.createElement('video');
-      video.src = asset.url;
-      video.preload = 'auto';
-      video.playsInline = true;
-      video.crossOrigin = 'anonymous';
-      // Le son des clips passe par le graphe Web Audio, jamais par l'élément :
-      // c'est ce qui permet de le mixer avec les bruitages et la musique.
-      video.muted = true;
-      video.load();
-      this.elements.set(clip.id, video);
+      this.elements.set(clip.id, asset.kind === 'image' ? charger(asset) : chargerRush(asset));
     }
 
     return wanted;
   }
 
   /**
-   * Les plans à garder chargés, les plus proches de la tête de lecture d'abord.
+   * Les rushes à garder chargés, les plus proches de la tête de lecture d'abord.
    *
    * Un plan à l'écran est à distance nulle ; les autres sont classés par le
    * temps qui les sépare de la tête. Ceux qui viennent priment sur ceux qui
@@ -111,30 +122,123 @@ export class ClipVideoPool {
       .map((item) => item.clip.id);
   }
 
-  get(clipId: string): HTMLVideoElement | undefined {
+  /** Libère un élément, en ne demandant à une image que ce qu'elle sait faire. */
+  private release(element: ClipSource): void {
+    if (element instanceof HTMLVideoElement) {
+      element.pause();
+      element.removeAttribute('src');
+      element.load();
+      return;
+    }
+    element.removeAttribute('src');
+  }
+
+  get(clipId: string): ClipSource | undefined {
     return this.elements.get(clipId);
   }
 
-  all(): HTMLVideoElement[] {
+  /**
+   * L'élément d'un plan, s'il porte un décodeur vidéo.
+   *
+   * Le graphe audio passe par ici et jamais par `get` : brancher une source
+   * Web Audio sur une image lèverait une exception au premier plan fixe du
+   * montage, et couperait le son de tout le reste avec elle.
+   */
+  getVideo(clipId: string): HTMLVideoElement | undefined {
+    const element = this.elements.get(clipId);
+    return element instanceof HTMLVideoElement ? element : undefined;
+  }
+
+  all(): ClipSource[] {
     return [...this.elements.values()];
   }
 
   pauseAll(): void {
-    for (const element of this.elements.values()) element.pause();
+    for (const element of this.elements.values()) {
+      if (element instanceof HTMLVideoElement) element.pause();
+    }
   }
 
   dispose(): void {
-    for (const element of this.elements.values()) {
-      element.pause();
-      element.removeAttribute('src');
-      element.load();
-    }
+    for (const element of this.elements.values()) this.release(element);
     this.elements.clear();
   }
 }
 
+/** Prépare le décodeur d'un rush. */
+function chargerRush(asset: MediaAsset): HTMLVideoElement {
+  const video = document.createElement('video');
+  video.src = asset.url;
+  video.preload = 'auto';
+  video.playsInline = true;
+  video.crossOrigin = 'anonymous';
+  // Le son des clips passe par le graphe Web Audio, jamais par l'élément :
+  // c'est ce qui permet de le mixer avec les bruitages et la musique.
+  video.muted = true;
+  video.load();
+  return video;
+}
+
+/** Prépare l'élément d'une image fixe. */
+function charger(asset: MediaAsset): HTMLImageElement {
+  const image = new Image();
+  image.crossOrigin = 'anonymous';
+  image.decoding = 'async';
+  image.src = asset.url;
+  return image;
+}
+
+/**
+ * Vignettes, pour tenir l'écran pendant qu'une vidéo se cale.
+ *
+ * Déplacer la tête de lecture demande un repositionnement, et un
+ * repositionnement coûte deux à trois cents millisecondes sur un téléphone.
+ * Pendant ce temps l'aperçu n'a rien à montrer : on y voyait d'abord un aplat
+ * marron, puis — une fois l'étalonnage retenu — un fond noir. Les deux disent
+ * la même chose à l'utilisateur, « ça ne marche pas », alors qu'il cherche
+ * simplement une image.
+ *
+ * Or chaque rush porte déjà sa vignette, décodée à l'import. La poser en
+ * attendant montre **le bon plan**, à la bonne échelle, tout de suite : ce
+ * n'est pas l'image exacte de l'instant visé, mais c'est le plan qu'on
+ * cherche, et cela suffit pour viser.
+ *
+ * Le cache est un module et non un champ du vivier : une vignette pèse
+ * quelques kilo-octets, elle survit à la fenêtre de chargement des vidéos, et
+ * la recharger à chaque éviction annulerait tout le bénéfice.
+ */
+const vignettes = new Map<string, HTMLImageElement>();
+
+function vignette(asset: MediaAsset | undefined): HTMLImageElement | null {
+  if (!asset?.thumbnail) return null;
+  const connue = vignettes.get(asset.id);
+  if (connue) return connue.naturalWidth > 0 ? connue : null;
+
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = asset.thumbnail;
+  vignettes.set(asset.id, image);
+  return image.naturalWidth > 0 ? image : null;
+}
+
 /** Écart de synchronisation au-delà duquel on repositionne la lecture. */
 const DRIFT_TOLERANCE = 0.25;
+
+/*
+ * À l'arrêt, la tolérance tombe à une image.
+ *
+ * Le quart de seconde ci-dessus se justifie **en lecture** : la vidéo avance
+ * d'elle-même, et repositionner pour une broutille ferait sauter l'image à
+ * chaque correction. À l'arrêt il n'y a aucune dérive à tolérer — rien
+ * n'avance — et ces 0,25 s deviennent six images à 24 i/s pendant lesquelles
+ * la jauge bouge sans que l'image change.
+ *
+ * C'est ce qui empêchait de choisir une image précise : on déplaçait la tête de
+ * lecture pour tomber sur le plan qui porte un texte, l'aperçu ne suivait pas,
+ * et le montage paraissait ne pas répondre. Une image de marge suffit à éviter
+ * le repositionnement permanent quand la vidéo se cale à un cheveu près.
+ */
+const DRIFT_TOLERANCE_ARRET = 0.05;
 
 /** Avance à laquelle un clip est préchargé avant d'entrer à l'écran. */
 const PREROLL = 0.6;
@@ -153,7 +257,9 @@ export function syncPlayback(
   playing: boolean,
 ): void {
   for (const item of placed) {
-    const video = pool.get(item.clip.id);
+    // Une image fixe n'a ni tête de lecture, ni cadence, ni dérive à corriger :
+    // il n'y a rien à synchroniser, seulement à tracer.
+    const video = pool.getVideo(item.clip.id);
     if (!video) continue;
 
     const visible = time >= item.start && time < item.end;
@@ -171,7 +277,8 @@ export function syncPlayback(
     if (!Number.isFinite(video.duration) || video.readyState === 0) continue;
 
     const bounded = Math.max(0, Math.min(target, video.duration - 0.05));
-    if (Math.abs(video.currentTime - bounded) > DRIFT_TOLERANCE) {
+    const tolerance = playing ? DRIFT_TOLERANCE : DRIFT_TOLERANCE_ARRET;
+    if (Math.abs(video.currentTime - bounded) > tolerance) {
       video.currentTime = bounded;
     }
 
@@ -212,15 +319,14 @@ function motionTransform(clip: Clip, progress: number, timeInClip: number): Laye
   }
 }
 
-/** Dessine une image vidéo en remplissant le cadre 9:16, sans déformation. */
+/** Dessine une image de plan en remplissant le cadre 9:16, sans déformation. */
 function drawCover(
   ctx: CanvasRenderingContext2D,
-  video: HTMLVideoElement,
+  source: ClipSource,
   transform: LayerTransform,
   filter: string,
 ): void {
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
+  const { width: vw, height: vh } = sourceSize(source);
   if (!vw || !vh) return;
 
   // On recouvre plutôt que d'ajuster : des bandes noires en 9:16 gâcheraient
@@ -237,7 +343,7 @@ function drawCover(
   // ou les bandes d'un glitch ne doivent pas être étalonnés avec elle.
   if (filter !== 'none') ctx.filter = filter;
   try {
-    ctx.drawImage(video, x, y, width, height);
+    ctx.drawImage(source, x, y, width, height);
   } catch {
     // Une image pas encore décodée fait échouer drawImage : on saute le tracé
     // plutôt que d'interrompre toute la boucle de rendu.
@@ -251,9 +357,33 @@ function layerDrawer(
   layer: ActiveLayer,
   pool: ClipVideoPool,
   filter: string,
+  asset?: MediaAsset,
 ): LayerDrawer | null {
-  const video = pool.get(layer.placed.clip.id);
-  if (!video) return null;
+  const source = pool.get(layer.placed.clip.id) ?? vignette(asset);
+  if (!source) return null;
+
+  /*
+   * Présent dans le vivier ne veut pas dire prêt à être tracé.
+   *
+   * Un élément vidéo existe dès qu'on lui donne une source, bien avant d'avoir
+   * décodé quoi que ce soit. `drawCover` sortait déjà sur des dimensions nulles
+   * — mais trop tard : le tracé était réputé fait, et l'étalonnage repartait sur
+   * un cadre noir, qu'il virait au marron par sa teinte chaude.
+   *
+   * `readyState` doit valoir au moins `HAVE_CURRENT_DATA` : une vidéo peut
+   * connaître ses dimensions dès les métadonnées, plusieurs centaines de
+   * millisecondes avant d'avoir une image à donner.
+   */
+  let dessinable: ClipSource = source;
+  const { width, height } = sourceSize(source);
+  const prete = width > 0 && height > 0
+    && !(source instanceof HTMLVideoElement && source.readyState < 2);
+  if (!prete) {
+    // La vidéo n'a rien à donner : la vignette du rush tient l'écran.
+    const secours = vignette(asset);
+    if (!secours) return null;
+    dessinable = secours;
+  }
 
   const progress = layer.placed.duration > 0 ? layer.localTime / layer.placed.duration : 0;
   const motion = motionTransform(layer.placed.clip, progress, layer.localTime);
@@ -261,7 +391,7 @@ function layerDrawer(
   return (transform: LayerTransform) => {
     drawCover(
       ctx,
-      video,
+      dessinable,
       {
         alpha: transform.alpha,
         dx: transform.dx + motion.dx,
@@ -292,6 +422,15 @@ export type RenderOptions = {
   scale?: number;
   /** Halo sur les hautes lumières. Coupé sur les appareils lents. */
   bloom?: boolean;
+  /**
+   * Signature de l'offre libre, tracée en bas de l'image. Absente sans elle.
+   *
+   * Le moteur reçoit un texte, jamais un état d'abonnement : il ne connaît pas
+   * le module de licence et ne doit pas le connaître — c'est la frontière que
+   * `src/lib/__tests__/frontiere.test.ts` garde. Qui décide de la signature est
+   * l'affaire de l'interface ; le moteur ne sait que la dessiner.
+   */
+  signature?: string;
   /**
    * Reçoit la position de chaque sous-titre tracé.
    *
@@ -343,26 +482,92 @@ export function renderFrame(
   const look = getLook(project.cinema.look);
   const filter = options.grade ? options.grade.baseFilter(look, project.cinema.intensity) : 'none';
 
+  let dessine = false;
   if (slice) {
-    const drawTo = layerDrawer(ctx, slice.to, pool, filter);
-    const drawFrom = slice.from ? layerDrawer(ctx, slice.from, pool, filter) : null;
+    const asset = (id: string) => project.assets.find((a) => a.id === id);
+    const drawTo = layerDrawer(ctx, slice.to, pool, filter, asset(slice.to.placed.clip.assetId));
+    const drawFrom = slice.from
+      ? layerDrawer(ctx, slice.from, pool, filter, asset(slice.from.placed.clip.assetId))
+      : null;
     if (drawTo) {
       applyTransition(slice.to.placed.clip.transition, slice.progress, ctx, drawFrom, drawTo);
+      dessine = true;
     }
   }
 
-  options.grade?.apply(ctx, look, {
-    intensity: project.cinema.intensity,
-    frame: options.frame ?? 0,
-    bars: project.cinema.bars,
-    bloom: options.bloom ?? true,
-  });
+  /*
+   * Rien n'a pu être dessiné : on s'arrête au fond noir, ici aussi.
+   *
+   * Le cas de la frise vide était déjà traité plus haut, pour la même raison.
+   * Celui-ci ne l'était pas : le plan existe, mais son élément vidéo n'est pas
+   * encore dans le vivier — le navigateur ne garde qu'une poignée de décodeurs,
+   * et un montage long en déborde. `drawTo` est alors nul, rien n'est tracé,
+   * et l'étalonnage s'appliquait quand même à un cadre noir.
+   *
+   * Le résultat n'était pas noir mais **marron** : la teinte chaude des hautes
+   * lumières monte le rouge et le vert sur du noir. Vu sur un montage de 37 s,
+   * un aplat marron uni occupait l'aperçu pendant près de deux secondes — et
+   * un aplat coloré se lit comme un plan voulu, alors qu'un fond noir se lit
+   * comme une image qui arrive.
+   *
+   * Seul l'étalonnage est retenu. Les sous-titres, eux, continuent d'être
+   * tracés : ils ne dépendent pas de la vidéo, ils portent le propos, et les
+   * priver d'affichage parce qu'une image tarde reviendrait à effacer la seule
+   * chose encore lisible. Leur table de positions doit d'ailleurs être vidée
+   * puis remplie à chaque image, faute de quoi le doigt viserait des cadres qui
+   * n'existent plus.
+   */
+  if (dessine) {
+    options.grade?.apply(ctx, look, {
+      intensity: project.cinema.intensity,
+      frame: options.frame ?? 0,
+      bars: project.cinema.bars,
+      bloom: options.bloom ?? true,
+    });
+  }
 
   options.captionBoxes?.clear();
   for (const caption of captionsAt(project.captions, time)) {
     const box = drawCaption(ctx, caption, time, fonts);
     if (box) options.captionBoxes?.set(caption.id, box);
   }
+
+  if (options.signature) drawSignature(ctx, options.signature, fonts);
+}
+
+/** Hauteur de la signature, en part de l'image. */
+const SIGNATURE_Y = 0.94;
+/** Marge au bord droit, en pixels de la composition 1080 × 1920. */
+const SIGNATURE_MARGE = 34;
+
+/**
+ * La signature de l'offre libre.
+ *
+ * Elle est tracée **après les sous-titres**, jamais avant : un texte qui porte
+ * le propos ne doit pas passer sous une marque commerciale. Et après
+ * l'étalonnage, comme eux — la grainer la ferait scintiller d'une image à
+ * l'autre, ce qui attire l'œil bien plus que la marque elle-même.
+ *
+ * À 94 % de la hauteur, elle est **sous la bande sûre** des sous-titres
+ * (12–45 %) et sous la zone que l'habillage des plateformes occupe. C'est
+ * délibéré : une signature ne doit gêner ni la lecture ni la composition, et
+ * elle reste entière dans le fichier — c'est là qu'elle compte, puisque c'est
+ * le fichier qu'on republie et qu'on partage.
+ *
+ * Discrète et non dissimulée. Une marque qu'on cacherait à moitié serait un
+ * procédé : soit on l'assume, soit on ne la met pas.
+ */
+function drawSignature(ctx: CanvasRenderingContext2D, texte: string, fonts: FontSet): void {
+  ctx.save();
+  ctx.font = `600 30px ${fonts.body}`;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'alphabetic';
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 2;
+  ctx.fillStyle = 'rgba(255,255,255,0.82)';
+  ctx.fillText(texte, OUTPUT_WIDTH - SIGNATURE_MARGE, OUTPUT_HEIGHT * SIGNATURE_Y);
+  ctx.restore();
 }
 
 /**

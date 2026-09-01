@@ -1,0 +1,190 @@
+# hypersensible-bienveillance.com
+
+> Deux outils gratuits pour hypersensibles — reformuler en Communication Non
+> Violente un message qui a blessé, et tenir un journal émotionnel qui ne quitte
+> pas le navigateur — plus un radar des prix de dix applications de bien-être.
+> Adossé à un groupe Facebook de 48 000 membres, qui n'est pas un produit.
+
+Ce fichier est destiné aux agents (Claude Code et consorts) qui reprennent le
+projet dans une session neuve. Il dit ce que la lecture du code seul ne dit pas :
+les raisons. Le tenir à jour fait partie de tout changement d'architecture.
+
+## Doctrine
+
+Trois règles priment sur toute considération technique. Un changement qui les
+contredit est un changement à refuser, même s'il est élégant.
+
+1. **L'abri n'est pas un produit.** Le trafic venu du groupe (`?src=groupe`)
+   a un accès illimité, sans compte, sans carte, sans limite de requêtes et
+   sans écriture en base. Aucune vente n'est faite dans le groupe. Le soutien
+   à 19 € ne se propose qu'au trafic externe, une fois, sans bandeau qui revient.
+2. **Rien de ce qui est écrit n'est conservé.** Ni le message piquant collé dans
+   la reformulation, ni la page de journal. Pas en clair, pas haché, pas
+   tronqué, pas « pour améliorer le service ». La base ne contient que des
+   compteurs de quota, et l'adresse IP n'y figure que sous forme d'empreinte
+   salée.
+3. **Ce qui est simulé est annoncé.** Les variations de prix du radar sont
+   fabriquées tant qu'aucun analyseur de tarifs n'existe : la page le dit, et
+   l'API rend le drapeau `simule`. Faire passer une courbe de démonstration pour
+   un relevé serait exactement ce que ce site reproche aux autres.
+
+## Architecture
+
+Cloudflare Pages (front statique) + Pages Functions (API) + D1 (données) + R2
+(archives) + un Worker séparé pour la tâche planifiée.
+
+```
+hypersensible-bienveillance/
+├── wrangler.toml            projet Pages : bindings D1, R2, variables
+├── wrangler.veille.toml     Worker de veille (cron) — à la racine, voir plus bas
+├── schema.sql               initialisation D1, rejouable sans doublon
+├── astro.config.mjs         output: 'static' — voir « Pourquoi pas de SSR »
+├── tailwind.config.mjs      palette, chargée par @config depuis global.css
+├── src/
+│   ├── lib/cnv.ts           moteur de reformulation CNV (pur, testé)
+│   ├── lib/journal.ts       lecture du journal (pur, testé, navigateur seul)
+│   ├── layouts/Base.astro   coquille + détection ?src=groupe + badge d'accès
+│   ├── components/          Radar, AppCnv, AppJournal
+│   └── pages/               index.astro, app/reponse-bienveillante, app/journal-emotionnel
+├── functions/api/
+│   ├── reforme.ts           POST — quota + reformulation
+│   └── radar.ts             GET  — outils, prix, courbes
+├── workers/
+│   ├── tracker-healer.js    tournée de nuit : liens, prix, purge des quotas
+│   └── prix.js              lecture d'un prix déclaré (JSON-LD, microdonnées, OG)
+├── tests/                   node --test, sans dépendance
+└── public/llms.txt          ce fichier
+```
+
+### Pourquoi pas de rendu serveur
+
+`@astrojs/cloudflare` produit un `_worker.js` qui, sur Pages, prend la main sur
+tout le routage et **désactive le dossier `functions/`**. Or c'est là que vivent
+le quota et le moteur CNV. Aucune page ne dépendant de la requête, la coquille
+part en statique et les données arrivent par `fetch`. Ne pas « rétablir » le
+SSR sans avoir d'abord déplacé les deux fonctions.
+
+### Pourquoi `wrangler.veille.toml` est à la racine
+
+Wrangler déduit la racine du projet — donc l'emplacement de l'état local
+`.wrangler/state/` — du dossier du fichier de configuration. Rangé dans
+`workers/`, ce fichier faisait ouvrir au Worker une seconde base D1, vide, et la
+tournée répondait « no such table: tools » alors que `npm run db:init` avait
+bien travaillé, sur l'autre base. `--persist-to` ne rattrape rien : il se résout
+au même endroit. Ne pas le redéplacer.
+
+## Base de données (D1, binding `DB`)
+
+| Table | Colonnes | Rôle |
+| --- | --- | --- |
+| `users` | `id`, `ip_hash`, `src`, `usage_count`, `last_request`, `created_at` | Compteur de quota du trafic externe. Index unique sur `ip_hash`. Aucun texte soumis. **Purgée à trente jours** par la tournée de nuit. |
+| `tools` | `id`, `name`, `url`, `current_price`, `last_checked` | Les dix applications suivies. Index unique sur `url`. |
+| `price_history` | `id`, `tool_id`, `price`, `checked_at` | Points de courbe. Index sur `(tool_id, checked_at)`. |
+
+Le quota s'écrit en **un seul `INSERT … ON CONFLICT … WHERE … RETURNING`**.
+Ce n'est pas de la coquetterie : un `SELECT` puis un `UPDATE` séparés laissent
+deux onglets lire « 4 » et écrire « 5 » chacun, et six analyses passent.
+
+## Routes
+
+| Route | Méthode | Ce qu'elle fait |
+| --- | --- | --- |
+| `/api/reforme` | POST | Corps `{ texte, src }`. 200 avec les quatre blocs CNV ; 400 si la saisie est vide ou dépasse 2 000 signes ; 405 sur toute autre méthode ; **429 `quota_reached`** quand les cinq analyses du jour sont consommées. `src === 'groupe'` court-circuite tout le décompte. |
+| `/api/radar` | GET | `{ outils: [...], simule }`. Cache au bord : 15 minutes. |
+| `/` | — | Page unique : radar, reformulation, journal. |
+| `/app/reponse-bienveillante` | — | La reformulation seule, adresse dédiée. |
+| `/app/journal-emotionnel` | — | Le journal seul. Aucune requête réseau. |
+
+## Variables et secrets
+
+| Nom | Où | Rôle |
+| --- | --- | --- |
+| `ADMIN_EMAIL` | les deux configs | Destinataire des alertes de lien mort. |
+| `QUOTA_GRATUIT` | Pages | Analyses quotidiennes du trafic externe (5). |
+| `PRIX_SOUTIEN` | Pages | Montant affiché dans le message de quota (19). |
+| `RADAR_SIMULE` | Pages | « 1 » tant que les prix sont fabriqués. Se lève avec `SIMULER_PRIX`. |
+| `SIMULER_PRIX` | Veille | « 1 » : la tournée fabrique les variations au lieu de les lire. |
+| `SEL_QUOTA` | **secret** Pages | Sel du hachage des adresses. Sans lui, un SHA-256 d'IPv4 se casse en quelques secondes. `wrangler pages secret put SEL_QUOTA` |
+| `RESEND_API_KEY` | **secret** Veille | Envoi de l'alerte. Absente, la tournée continue et ne prévient personne. |
+
+## Commandes
+
+```bash
+npm install
+npm run db:init      # crée et remplit la base D1 locale (rejouable)
+npm run build        # Astro → dist/
+npm run preview      # Pages + fonctions sur http://localhost:8788
+npm run cron         # Worker de veille, puis curl "localhost:8787/__scheduled?cron=0+4+*+*+*"
+npm test             # moteur CNV et lecture de journal
+npm run check        # astro check + tsc --noEmit
+```
+
+`astro dev` ne sert **pas** les Pages Functions : le radar et la reformulation
+répondent alors « indisponible », et c'est normal. Pour les essayer, passer par
+`npm run build && npm run preview`.
+
+## Pièges déjà payés
+
+- **Ne jamais supprimer « jamais ».** La première version du moteur CNV effaçait
+  les généralisations, et « tu réponds jamais à mes messages » ressortait en
+  « quand tu réponds à mes messages » — le contraire exact. « Jamais » est
+  réécrit en « pas », « toujours » est retiré.
+- **Marqueurs en frontières de mots.** Une recherche par sous-chaîne trouvait
+  « nul » dans « annuler » et étiquetait « jugement sur la personne » une phrase
+  qui n'en contenait aucun.
+- **Un ordre n'est pas un fait.** « Calme-toi un peu » recollé derrière
+  « Quand » donne une phrase que personne n'a écrite. Les clauses impératives
+  sont sautées à l'extraction.
+- **D1 refuse les `UNION ALL` en série** au-delà d'un certain nombre de termes
+  (« too many terms in compound SELECT »). Les trente relevés d'amorce passent
+  par une liste `VALUES` dans un `WITH`.
+- **La fenêtre du radar est à 91 jours**, pas 90 : le relevé le plus ancien est
+  posé à exactement `-90 days` et une comparaison à la seconde près l'excluait,
+  faisant perdre le premier point de chaque courbe sans le moindre signal.
+- **`ctx.waitUntil` dans le gestionnaire `scheduled`** : sans lui, l'archive R2
+  et le courriel d'alerte partent parfois dans le vide.
+- **Les types de Node se déclarent ici, ils ne s'empruntent pas.** TypeScript
+  remonte l'arborescence à la recherche des types : ce dossier étant niché dans
+  un dépôt multi-projets, il trouvait le `@types/node` du studio Amorce, un cran
+  plus haut, et `npm run check` passait sur un paquet que ce projet ne déclarait
+  pas. L'intégration continue n'installe que ce dossier — plus de parent à
+  emprunter, et `node:test` devenait introuvable. Vert en session, rouge sur le
+  runner, quatre fois `ts(2591)`. Vaut pour toute dépendance de types ajoutée
+  ici : la déclarer dans ce `package.json`, jamais compter sur le voisin.
+- **Un prix n'est relevé que sur un site qui a répondu.** Prolonger la courbe
+  d'un site en panne inventerait une mesure. Depuis la lecture réelle, il y a
+  une **seconde** façon de ne pas répondre : un site joignable qui ne déclare
+  aucun prix, ou qui en déclare plusieurs — mensuel et annuel, prix barré et
+  prix courant. `workers/prix.js` rend alors `null`, et la tournée n'écrit
+  rien. Choisir entre deux tarifs déclarés serait fabriquer la courbe que ce
+  projet reproche aux autres. Le bilan de la tournée compte ces sites sous
+  `muets`.
+- **On ne cherche jamais un prix dans le texte visible.** Une page de tarifs en
+  affiche cinq et rien n'y dit lequel on suit. Seuls les formats *déclarés*
+  sont lus — JSON-LD `Offer`, `itemprop="price"`, `product:price:amount` — parce
+  qu'ils sont spécifiés, là où une apparence s'interprète.
+- **Le module d'entrée d'un Worker n'exporte que des fonctions.** `workerd`
+  refuse au chargement tout export nommé qui n'est ni une fonction ni un
+  `ExportedHandler` : une simple constante exportée de `tracker-healer.js`
+  pour les besoins d'un test empêchait le Worker entier de démarrer. Les tests
+  unitaires passaient au vert ; seul `npm run cron` l'a montré. Un test a
+  besoin d'une valeur du module : qu'il lise ce que le code en fait, pas la
+  constante elle-même.
+- **Comparer une date à une date.** `last_request` est écrit par `date('now')`,
+  donc sans heure. Confronté à un `datetime('now', '-30 days')`, « 2026-07-28 »
+  passe devant « 2026-07-28 10:52:00 » et la ligne du trentième jour est
+  effacée un jour trop tôt. Même piège que la fenêtre à 91 jours du radar, à
+  l'autre bout du projet.
+
+## Ce qui reste à faire
+
+1. **Valider la lecture des prix sur les dix éditeurs.** La couche normalisée
+   existe et est branchée (`workers/prix.js`, `SIMULER_PRIX=0` la met en
+   service), mais elle n'a **jamais été confrontée aux dix vraies pages** : la
+   session qui l'a écrite n'avait pas d'accès réseau vers ces hôtes. Ce qu'il
+   reste : lancer une tournée en lecture réelle depuis un poste qui les joint,
+   lire le champ `muets` du bilan, et n'écrire un analyseur propre à un éditeur
+   que pour ceux qui y figurent. Tant que `muets` n'est pas à zéro,
+   `SIMULER_PRIX` et `RADAR_SIMULE` restent à « 1 » — un radar dont trois
+   courbes s'arrêtent est pire que le radar simulé qui s'annonce.
+2. Le parcours de soutien à 19 €, aujourd'hui annoncé mais pas outillé.

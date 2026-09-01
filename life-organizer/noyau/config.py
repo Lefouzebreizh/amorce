@@ -23,6 +23,11 @@ SECTIONS_ATTENDUES = (
     "conversion", "upscale", "abonnements", "echeances", "alertes", "resiliation",
 )
 PERIODICITES = {"mensuel", "trimestriel", "semestriel", "annuel", "hebdomadaire"}
+# Recopiés de `modules/conversion/regles.py` plutôt qu'importés : le noyau ne
+# dépend d'aucun module, sans quoi `organizer verifier` chargerait les six pour
+# lire un JSON. Deux valeurs qui ne bougeront pas valent moins cher que cette
+# dépendance-là.
+OBJECTIFS_DE_CONVERSION = {"espace", "compatibilite"}
 STATUTS_ABONNEMENT = {"actif", "a_reexaminer", "resilie", "suspendu"}
 
 
@@ -91,6 +96,26 @@ def valider(config: dict) -> list[str]:
             "(bits d'un pHash). Repères : 0 identiques, 2 stricte, 5 prudente, 10 large"
         )
 
+    # Même danger que ci-dessus, sur les vidéos : un `duree_minimale_secondes`
+    # saisi en minutes ne fait pas échouer la commande, il lui fait déclarer
+    # abîmé tout un dossier de clips parfaitement lisibles. Le plafond n'est pas
+    # une limite technique — c'est le point au-delà duquel le réglage ne décrit
+    # plus une vidéo abîmée mais une vidéo courte.
+    videos = config.get("nettoyage_medias", {}).get("videos", {})
+    duree_minimale = videos.get("duree_minimale_secondes", 1.0)
+    if not isinstance(duree_minimale, (int, float)) or isinstance(duree_minimale, bool) \
+            or not 0 <= duree_minimale <= 60:
+        problemes.append(
+            "nettoyage_medias.videos.duree_minimale_secondes doit être un nombre de "
+            "secondes entre 0 et 60. Au-delà, ce ne sont plus les vidéos abîmées "
+            "qui partent en quarantaine, ce sont les vidéos courtes"
+        )
+    taille_minimale = videos.get("taille_minimale_ko", 64)
+    if not isinstance(taille_minimale, int) or isinstance(taille_minimale, bool) or taille_minimale < 0:
+        problemes.append(
+            "nettoyage_medias.videos.taille_minimale_ko doit être un entier de kilooctets ≥ 0"
+        )
+
     extensions_vues: dict[str, str] = {}
     for categorie, extensions in config.get("classement", {}).get("categories", {}).items():
         for extension in extensions:
@@ -144,9 +169,38 @@ def valider(config: dict) -> list[str]:
                 "d'entiers positifs"
             )
 
-    for regle in config.get("conversion", {}).get("regles", []):
+    # Même danger que les deux seuils ci-dessus, et c'est le troisième du
+    # fichier : mal saisis, ces réglages-là ne font pas échouer la commande, ils
+    # la font réussir à côté. Un `seuil_gain_minimal_pct` à 100 ne convertit
+    # plus rien et ressemble à un dossier déjà propre ; un `objectif` mal
+    # orthographié retombe en silence sur « espace », et les photos d'iPhone —
+    # qui grossissent toujours en JPEG — cessent d'être converties sans qu'une
+    # seule ligne rouge n'apparaisse.
+    conversion = config.get("conversion", {})
+    gain_minimal = conversion.get("seuil_gain_minimal_pct", 15)
+    if not isinstance(gain_minimal, (int, float)) or isinstance(gain_minimal, bool) \
+            or not 0 <= gain_minimal < 100:
+        problemes.append(
+            "conversion.seuil_gain_minimal_pct doit être un pourcentage entre 0 et 99. "
+            "À 100, aucune conversion d'espace ne serait jamais retenue"
+        )
+    inflation = conversion.get("inflation_max_pct", 100)
+    if not isinstance(inflation, (int, float)) or isinstance(inflation, bool) or inflation < 0:
+        problemes.append(
+            "conversion.inflation_max_pct doit être un pourcentage positif : "
+            "de combien une conversion de compatibilité a le droit d'alourdir un fichier"
+        )
+
+    for regle in conversion.get("regles", []):
         if not regle.get("de") or not regle.get("vers"):
             problemes.append("conversion.regles : une règle sans « de » ou sans « vers »")
+        objectif = regle.get("objectif")
+        if objectif is not None and objectif not in OBJECTIFS_DE_CONVERSION:
+            problemes.append(
+                f"conversion.regles : objectif « {objectif} » inconnu pour "
+                f"« {', '.join(regle.get('de', []))} » (attendu : "
+                f"{', '.join(sorted(OBJECTIFS_DE_CONVERSION))})"
+            )
 
     for section, cle in (("scan_ocr", "api_vision"), ("upscale", "api")):
         api = config.get(section, {}).get(cle, {})

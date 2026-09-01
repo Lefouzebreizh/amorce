@@ -1,3 +1,4 @@
+import { Y_PAR_DEFAUT } from './captions.ts';
 import type { Caption, CaptionStyleId } from './types.ts';
 
 /**
@@ -361,7 +362,7 @@ export function captionsFromVoice(
   makeId: () => string,
   options: Partial<AlignOptions> = {},
 ): Caption[] {
-  const { offset = 0, style = 'karaoke', y = 0.72 } = options;
+  const { offset = 0, style = 'karaoke', y = Y_PAR_DEFAUT } = options;
   const words = alignWords(script, segments);
   if (words.length === 0) return [];
 

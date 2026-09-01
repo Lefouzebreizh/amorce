@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
+import { BANDE_SURE } from '../captions.ts';
 import { useStudio } from '../store.ts';
 import { emptyProject } from '../timeline.ts';
 import { DEFAULT_MIX, MIN_CLIP_DURATION, type MediaAsset } from '../types.ts';
@@ -14,7 +15,7 @@ function reset() {
 }
 
 function asset(id: string, duration: number): MediaAsset {
-  return { id, name: `${id}.mp4`, url: `blob:${id}`, duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+  return { id, name: `${id}.mp4`, kind: 'video', url: `blob:${id}`, duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
 }
 
 /** Monte deux plans de 5 s, coupe franche, et place la tête de lecture au bout. */
@@ -237,7 +238,17 @@ test('des sous-titres qui ne se croisent pas retrouvent la hauteur par défaut',
   assert.equal(first.y, second.y);
 });
 
-test('les hauteurs proposées restent dans la zone lisible', () => {
+test('les hauteurs proposées restent dans la bande des trois plateformes', () => {
+  /*
+   * Les bornes de ce test étaient 0,15 et 0,85 — une « zone lisible » écrite
+   * avant que la bande sûre soit relevée sur des captures réelles. Elles
+   * laissaient donc passer 0,66 et 0,78, c'est-à-dire la colonne de boutons de
+   * TikTok, et c'est bien ce que `addCaption` proposait.
+   *
+   * Le seul juge est `BANDE_SURE` : 12 % à 45 %, l'intersection des trois
+   * habillages. Une borne écrite à la main à côté d'une constante mesurée est
+   * une règle périmée qui protège de rien.
+   */
   const store = useStudio.getState();
   store.addAssets([asset('a', 20)]);
   store.appendClip('a');
@@ -246,7 +257,10 @@ test('les hauteurs proposées restent dans la zone lisible', () => {
   for (let i = 0; i < 6; i++) useStudio.getState().addCaption();
 
   for (const caption of useStudio.getState().project.captions) {
-    assert.ok(caption.y >= 0.15 && caption.y <= 0.85, `hauteur hors zone lisible : ${caption.y}`);
+    assert.ok(
+      caption.y >= BANDE_SURE.haut && caption.y <= BANDE_SURE.bas,
+      `hauteur hors de la bande sûre : ${caption.y}`,
+    );
   }
 });
 
@@ -419,4 +433,61 @@ test('un sous-titre ajouté au milieu garde ses deux secondes', () => {
   const caption = useStudio.getState().project.captions.at(-1)!;
   assert.equal(caption.start, 2);
   assert.equal(caption.end, 4);
+});
+
+/*
+ * Le montage express et l'ajout, les deux gestes de l'étape d'import.
+ *
+ * Ils sont testés ensemble parce que c'est leur cohabitation qui posait
+ * problème : le premier remplace tout, le second n'existait pas, et le seul
+ * chemin pour faire entrer un rush de plus dans un montage passait donc par
+ * l'effacement du travail des étapes suivantes.
+ */
+test('le montage express s’annule', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5), asset('b', 5)]);
+  store.appendClip('a');
+  const avant = useStudio.getState().project.clips;
+  assert.equal(avant.length, 1);
+
+  useStudio.getState().montageExpress();
+  assert.ok(useStudio.getState().project.clips.length > 1, 'l’express devrait monter les deux rushes');
+
+  // C'est le point du lot : jusqu'ici l'express écrivait l'état directement,
+  // donc l'annulation remontait à un état antérieur sans rien dire.
+  useStudio.getState().undo();
+  assert.deepEqual(useStudio.getState().project.clips, avant, 'l’annulation devrait rendre le montage d’avant');
+});
+
+test('ajouter un rush ne touche ni aux textes ni aux bruitages', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5), asset('b', 5)]);
+  store.appendClip('a');
+  useStudio.getState().addCaption();
+  useStudio.getState().addCue('boom', 1);
+
+  const captions = useStudio.getState().project.captions;
+  const cues = useStudio.getState().project.cues;
+  assert.equal(captions.length, 1);
+  assert.equal(cues.length, 1);
+
+  useStudio.getState().ajouterAuMontage(['b']);
+
+  const apres = useStudio.getState().project;
+  assert.equal(apres.clips.length, 2, 'le rush devrait rejoindre la fin du montage');
+  assert.equal(apres.clips[1].assetId, 'b');
+  assert.deepEqual(apres.captions, captions, 'les textes devraient survivre');
+  assert.deepEqual(apres.cues, cues, 'les bruitages devraient survivre');
+});
+
+test('ajouter un lot ne fait qu’une seule annulation', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5), asset('b', 5), asset('c', 5)]);
+  store.appendClip('a');
+
+  useStudio.getState().ajouterAuMontage(['b', 'c']);
+  assert.equal(useStudio.getState().project.clips.length, 3);
+
+  useStudio.getState().undo();
+  assert.equal(useStudio.getState().project.clips.length, 1, 'les deux ajouts devraient se défaire d’un coup');
 });

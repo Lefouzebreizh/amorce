@@ -4,7 +4,7 @@ Aucun calcul ici : la liste affichée et les déplacements viennent des mêmes
 décisions, dans le même ordre, pour qu'une simulation soit une lecture fidèle de
 ce que fera `--appliquer`.
 
-Deux partis pris d'affichage :
+Trois partis pris d'affichage :
 
 - **La netteté passe avant les doublons**, et pas seulement dans le code. Une
   photo floue écartée n'a plus à être comparée : c'est un décodage de moins par
@@ -13,6 +13,10 @@ Deux partis pris d'affichage :
 - **On montre d'abord ce qu'on garde, ensuite ce qu'on écarte.** Une liste qui
   commence par ce qu'on retire se lit comme une menace, alors que la commande,
   par défaut, ne retire rien.
+- **Les vidéos viennent en dernier et à part.** Elles ne passent ni par la
+  netteté ni par les doublons — ce qu'on y cherche n'est pas une photo ratée
+  ni une photo en trop, c'est le fichier qui ne s'ouvrira plus le jour où on
+  voudra le revoir.
 """
 
 from __future__ import annotations
@@ -23,7 +27,7 @@ from pathlib import Path
 
 from noyau import fichiers
 from noyau.journal import Journal
-from noyau.modele import ECARTER
+from noyau.modele import ECARTER, SIGNALER
 
 from . import regles, traitement, variantes
 
@@ -54,13 +58,17 @@ def executer(options: argparse.Namespace, config: dict) -> int:
     medias_config = config.get("nettoyage_medias", {})
     reglages_flou = medias_config.get("flou", {})
     reglages_doublons = medias_config.get("doublons", {})
+    reglages_videos = medias_config.get("videos", {})
 
     reglages_variantes = medias_config.get("variantes", {})
 
-    if (not reglages_flou.get("actif", True)
-            and not reglages_doublons.get("actif", True)
-            and not reglages_variantes.get("actif", True)):
-        print("Flou, doublons et variantes sont tous désactivés dans la configuration.")
+    photos_demandees = (reglages_flou.get("actif", True)
+                        or reglages_doublons.get("actif", True))
+    videos_demandees = reglages_videos.get("verifier_integrite", True)
+    variantes_demandees = reglages_variantes.get("actif", True)
+    if not photos_demandees and not videos_demandees and not variantes_demandees:
+        print("Flou, doublons, intégrité vidéo et variantes sont tous "
+              "désactivés dans la configuration.")
         return 0
 
     try:
@@ -86,30 +94,52 @@ def executer(options: argparse.Namespace, config: dict) -> int:
     journal = Journal(_chemin(config.get("dossiers", {}).get("journal")), simulation=simulation)
     quarantaine = _chemin(config.get("dossiers", {}).get("quarantaine"))
 
-    # Le parcours n'a lieu qu'une fois : les deux passes travaillent sur la même
-    # liste, la seconde amputée de ce que la première a écarté.
+    # Le parcours n'a lieu qu'une fois : les trois passes travaillent sur la même
+    # liste. Photos et vidéos sont demandées ensemble puis séparées ici, plutôt
+    # que par deux parcours — le disque serait relu de bout en bout une seconde
+    # fois pour retrouver les mêmes dossiers.
+    extensions = ()
+    if photos_demandees:
+        extensions += traitement.EXTENSIONS_PHOTO
+    if videos_demandees:
+        extensions += traitement.EXTENSIONS_VIDEO
     chemins = list(fichiers.parcourir(
         dossiers,
-        extensions=traitement.EXTENSIONS_PHOTO,
+        extensions=extensions,
         exclusions=config.get("dossiers", {}).get("exclusions", []),
         consigner=journal.incident,
     ))
-    print(f"{len(chemins)} photo(s) trouvée(s) dans {len(dossiers)} dossier(s).")
+    photos = _du_type(chemins, traitement.EXTENSIONS_PHOTO)
+    videos = _du_type(chemins, traitement.EXTENSIONS_VIDEO)
+    # Ne compter que ce qui a été cherché : annoncer « 0 photo » à qui a
+    # désactivé les deux passes photo se lit comme « ce dossier n'en contient
+    # pas », ce qui est faux.
+    comptes = ([f"{len(photos)} photo(s)"] if photos_demandees else []) \
+        + ([f"{len(videos)} vidéo(s)"] if videos_demandees else [])
+    print(f"{' et '.join(comptes)} trouvée(s) dans {len(dossiers)} dossier(s).")
+    # La passe des variantes a son propre parcours, sur tous les fichiers : un
+    # dossier de PDF n'offre ni photo ni vidéo, et c'est justement là qu'elle sert.
+    if not chemins and not variantes_demandees:
+        _incidents(journal)
+        return 0
 
     liberes = 0
     nettetes: dict[Path, float] = {}
-    if reglages_flou.get("actif", True):
-        chemins, octets, nettetes = _passe_nettete(
-            chemins, reglages_flou, quarantaine, journal
+    if reglages_flou.get("actif", True) and photos:
+        photos, octets, nettetes = _passe_nettete(
+            photos, reglages_flou, quarantaine, journal
         )
         liberes += octets
 
-    if reglages_doublons.get("actif", True) and chemins:
+    if reglages_doublons.get("actif", True) and photos:
         liberes += _passe_doublons(
-            chemins, config, ressemblance, quarantaine, journal, nettetes
+            photos, config, ressemblance, quarantaine, journal, nettetes
         )
 
-    if reglages_variantes.get("actif", True):
+    if videos_demandees and videos:
+        liberes += _passe_videos(videos, reglages_videos, quarantaine, journal)
+
+    if variantes_demandees:
         liberes += _passe_variantes(
             dossiers, config, reglages_variantes, quarantaine, journal
         )
@@ -158,7 +188,7 @@ def _passe_nettete(chemins, reglages, quarantaine, journal
     if len(ecartees) > LIGNES_AFFICHEES:
         print(f"  … et {len(ecartees) - LIGNES_AFFICHEES} autre(s)")
 
-    liberes = traitement.ecarter_flous(decisions, quarantaine, journal)
+    liberes = traitement.ecarter_decidees(decisions, quarantaine, journal)
     retirees = regles.chemins_ecartes(decisions)
     # Ce que la première passe n'a pas su ouvrir ne repart pas vers la seconde :
     # elle échouerait dessus à son tour et le consignerait une deuxième fois.
@@ -202,6 +232,54 @@ def _passe_doublons(chemins, config, ressemblance, quarantaine, journal, nettete
     ecartees = sum(len(doublon.ecartes) for doublon in doublons)
     print(f"\n{len(doublons)} groupe(s), {ecartees} photo(s) en trop.")
     return traitement.ecarter(doublons, quarantaine, journal)
+
+
+def _passe_videos(chemins, reglages, quarantaine, journal) -> int:
+    """Inspecte les vidéos et écarte les abîmées. Rend les octets libérés.
+
+    Rien n'est comparé entre vidéos : chacune est jugée seule, sur ce que ffprobe
+    déclare et sur ce que ffmpeg parvient à décoder de sa fin.
+    """
+    disponible, message = traitement.integrite_disponible()
+    if message:
+        # Annoncé avant d'inspecter, comme la détection de visages : croire un
+        # dossier contrôlé alors que la passe n'a pas tourné est pire que de
+        # savoir qu'elle manque.
+        print("\n  ⚠ " + message.replace("\n", "\n    "))
+    if not disponible:
+        return 0
+
+    videos = traitement.inspecter_videos(chemins, consigner=journal.incident)
+    maintenant = time.time()
+    decisions = [regles.decider_video(video, reglages, maintenant) for video in videos]
+    decompte = regles.compter(decisions)
+
+    print(f"\nVidéos : {decompte.get(ECARTER, 0)} abîmée(s) sur "
+          f"{len(videos)} inspectée(s).")
+    ecartees = [decision for decision in decisions if decision.geste == ECARTER]
+    for decision in ecartees[:LIGNES_AFFICHEES]:
+        print(f"  Écarter {decision.media.chemin} — {decision.motif}")
+    if len(ecartees) > LIGNES_AFFICHEES:
+        print(f"  … et {len(ecartees) - LIGNES_AFFICHEES} autre(s)")
+
+    # Les signalements à part, et après : ce sont des fichiers qu'on garde, et
+    # les mêler à la liste de ce qui part en quarantaine ferait lire les uns
+    # pour les autres.
+    signalees = [decision for decision in decisions if decision.geste == SIGNALER]
+    if signalees:
+        print(f"\n  {len(signalees)} fichier(s) gardé(s) mais à connaître :")
+        for decision in signalees[:LIGNES_AFFICHEES]:
+            print(f"  · {decision.media.chemin} — {decision.motif}")
+        if len(signalees) > LIGNES_AFFICHEES:
+            print(f"  … et {len(signalees) - LIGNES_AFFICHEES} autre(s)")
+
+    return traitement.ecarter_decidees(decisions, quarantaine, journal)
+
+
+def _du_type(chemins: list[Path], extensions: tuple[str, ...]) -> list[Path]:
+    """Le sous-ensemble des chemins portant l'une de ces extensions."""
+    voulues = set(extensions)
+    return [chemin for chemin in chemins if chemin.suffix.lower().lstrip(".") in voulues]
 
 
 def _incidents(journal: Journal) -> None:

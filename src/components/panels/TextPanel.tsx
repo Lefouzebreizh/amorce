@@ -1,7 +1,8 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { CAPTION_STYLES } from '@/lib/captions';
-import { HOOK_WINDOW } from '@/lib/analysis';
+import { HOOK_WINDOW, captionCoverage } from '@/lib/analysis';
 import { hooksByFamily } from '@/lib/hooks';
 import { useStudio } from '@/lib/store';
 import { CAPTION_COLORS, CAPTION_SCALES, type CaptionStyleId } from '@/lib/types';
@@ -23,8 +24,60 @@ export function TextPanel() {
   const removeCaption = useStudio((s) => s.removeCaption);
   const playhead = useStudio((s) => s.playhead);
   const duration = useStudio((s) => s.duration());
+  const clips = useStudio((s) => s.project.clips);
+  const assets = useStudio((s) => s.project.assets);
+
+  /*
+   * Le chemin rapide n'est pas dans ce panneau, et rien ne le disait.
+   *
+   * Couvrir 70 % d'un montage de trente secondes demande une vingtaine de
+   * sous-titres. Posés un par un par « + Ajouter », c'est une vingtaine de
+   * fois : ajouter, écrire, régler le début, régler la fin. L'outil qui le
+   * fait en une passe — écrire son texte une fois, l'application le cale sur
+   * la voix — vit dans l'étape Monter, sur le plan sélectionné.
+   *
+   * Or c'est ici que le guide envoie quand la couverture est faible. Quelqu'un
+   * qui le suit tombe donc sur la méthode lente sans jamais apprendre que
+   * l'autre existe. Le raccourci est donc nommé là où le besoin se manifeste,
+   * et seulement quand il peut servir : il faut du son dans un plan pour
+   * qu'une voix se cale dessus.
+   */
+  const aDeLaVoix = clips.some((clip) => assets.find((a) => a.id === clip.assetId)?.hasAudio);
+  const couverture = captionCoverage(captions, duration);
 
   const selected = selection?.kind === 'caption' ? captions.find((c) => c.id === selection.id) : undefined;
+
+  /*
+   * L'éditeur vient à l'utilisateur, il ne l'attend pas.
+   *
+   * Sélectionner un texte — par « Modifier ce texte » ou en le touchant dans
+   * l'aperçu — faisait apparaître ce panneau **à 1 138 px**, soit 265 px sous
+   * le bas d'un écran de téléphone. Rien ne bougeait à l'écran : on appuyait,
+   * il ne se passait rien de visible, et le bouton était donc réputé cassé
+   * alors qu'il faisait exactement son travail.
+   *
+   * `scroll-mt` compense l'aperçu collé, sans quoi le titre du panneau se
+   * range derrière l'image.
+   */
+  const editeur = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!selected) return;
+    // Après le rendu suivant, et non tout de suite : sélectionner un texte
+    // change aussi l'étape ouverte, et le parent défile alors vers le haut de
+    // l'étape. Les effets d'un enfant passent avant ceux de son parent — le
+    // nôtre partait donc en premier et se faisait écraser. Une image plus tard,
+    // c'est lui qui a le dernier mot.
+    const t = requestAnimationFrame(() => {
+      editeur.current?.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+    return () => cancelAnimationFrame(t);
+    // Sur l'identifiant seul : rouvrir le même texte ne doit pas ramener la
+    // page en haut à chaque frappe dans le champ.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.id]);
   const hook = [...captions].sort((a, b) => a.start - b.start).find((c) => c.start <= 1.2);
 
   return (
@@ -37,9 +90,14 @@ export function TextPanel() {
           <div className="rounded-xl border border-accent/40 bg-accent/5 px-3 py-2.5">
             <p className="text-xs font-semibold text-accent">Accroche en place</p>
             <p className="mt-1 text-sm text-mist">« {hook.text} »</p>
+            {/*
+              `ghost` et non `subtle` : ce dernier n'a pour tout indice qu'un
+              fond au survol, et un téléphone ne survole pas — le bouton
+              s'affichait en gris permanent, indistinguable du texte au-dessus.
+            */}
             <Button
-              variant="subtle"
-              className="mt-1 px-0"
+              variant="ghost"
+              className="mt-2 w-full"
               onClick={() => select({ kind: 'caption', id: hook.id })}
             >
               Modifier ce texte
@@ -103,6 +161,17 @@ export function TextPanel() {
           </Button>
         }
       >
+        {aDeLaVoix && couverture < 0.5 && (
+          <div className="mb-3">
+            <Hint>
+            Tu parles dans tes rushes ? Plus rapide qu’un par un : va dans <strong>Monter</strong>,
+            choisis un plan, ouvre <strong>« Sous-titrer ce que je dis »</strong>, écris ton texte
+            d’un bloc et touche <strong>« Caler sur ma voix »</strong>. L’application découpe et
+              place les sous-titres elle-même.
+            </Hint>
+          </div>
+        )}
+
         {captions.length === 0 ? (
           <p className="text-xs text-muted">
             Aucun sous-titre. Le bouton « Ajouter » en pose un à la position de lecture actuelle.
@@ -118,7 +187,7 @@ export function TextPanel() {
                     onClick={() => select({ kind: 'caption', id: caption.id })}
                     className={`w-full rounded-xl border px-3 py-2 text-left transition-colors ${
                       selected?.id === caption.id
-                        ? 'bg-raised ring-1 ring-accent/60'
+                        ? 'bg-raised ring-1 ring-select/60'
                         : 'bg-slab hover:bg-raised'
                     }`}
                   >
@@ -137,6 +206,7 @@ export function TextPanel() {
       </Panel>
 
       {selected && (
+        <div ref={editeur} className="scroll-mt-[40dvh]">
         <Panel
           title="Texte sélectionné"
           action={
@@ -150,7 +220,7 @@ export function TextPanel() {
               value={selected.text}
               rows={2}
               onChange={(event) => updateCaption(selected.id, { text: event.target.value })}
-              className="w-full resize-none rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
+              className="w-full resize-none min-h-11 rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
             />
           </Field>
 
@@ -167,7 +237,7 @@ export function TextPanel() {
                     aria-pressed={active}
                     onClick={() => updateCaption(selected.id, { color: option.value })}
                     className={`h-9 w-9 rounded-full border-2 transition-transform ${
-                      active ? 'scale-110 border-accent' : 'border-edge'
+                      active ? 'scale-110 border-select' : 'border-edge'
                     }`}
                     style={{ backgroundColor: option.value }}
                   />
@@ -194,7 +264,7 @@ export function TextPanel() {
                       aria-pressed={active}
                       onClick={() => updateCaption(selected.id, { highlightColor: option.value })}
                       className={`h-9 w-9 rounded-full border-2 transition-transform ${
-                        active ? 'scale-110 border-accent' : 'border-edge'
+                        active ? 'scale-110 border-select' : 'border-edge'
                       }`}
                       style={{ backgroundColor: option.value }}
                     />
@@ -287,6 +357,7 @@ export function TextPanel() {
             />
           </Field>
         </Panel>
+        </div>
       )}
     </div>
   );

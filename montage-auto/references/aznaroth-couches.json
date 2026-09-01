@@ -1,0 +1,36 @@
+{
+  "_lisez_moi": [
+    "Les instants sont ceux de la frise REELLE de v15, pas ceux du cahier des",
+    "charges : l'affiche est passee de 0,6 a 1,5 s, tout ce qui suit a recule",
+    "de 0,9 s. Un impact cale sur l'ancienne frise tomberait a cote de l'image.",
+    "",
+    "  demande   frise reelle   ce qui s'y passe",
+    "   6,0 s      6,90 s       l'eclair sort des yeux du druide",
+    "   8,8-12,5   10,25-13,05  le vortex, du sigil au dragon",
+    "  14,8 s      16,25 s      le cri d'Aznaroth"
+  ],
+  "voix": {"fichier": "sfx_neufs/VOIXDRUIDEelevenlabs1.mp3", "debut": 2.90,
+           "gain_db": -60, "esquive_db": -5,
+           "_note": "servant d'AIGUILLEUR seulement — gain a -60 dB, elle ne s'entend pas. La voix du druide est deja dans le montage ; ce fichier ne sert qu'a dire QUAND il parle, pour que l'esquive suive les phrases au lieu d'une fenetre."},
+  "micro_silences": [
+    {"instant": 16.25, "avance": 0.15, "retour": 0.35, "gain_db": -8,
+     "_note": "le trou d'air avant le cri. Il MULTIPLIE l'esquive de la voix au lieu de s'y ajouter : deux creux cumules en decibels font une panne, pas un effet."}
+  ],
+  "couches": [
+    {"fichier": "sfx_neufs/Dark_cinematic_low_d_41787947741077.mp3",
+     "debut": 0.0, "gain_db": -18, "continue": true, "excitation": 1.4,
+     "_note": "la nappe. Seule des quatre a ne pas etre du silence sur un telephone : -28,8 dB entendus contre -59 pour ses soeurs. Excitee, elle monte a -20,6."},
+    {"fichier": "sfx_neufs/_nergie_du_Druide_0_31787947739387.mp3",
+     "debut": 2.70, "fin": 8.90, "gain_db": -20, "continue": true, "excitation": 0.8,
+     "_note": "la magie du druide. Le seul des quatre avec du vrai medium (-10,1 dB en 2-6 kHz) : il n'a presque pas besoin d'excitation."},
+    {"fichier": "sfx_neufs/Massive_cinematic_su_11787947775395.mp3",
+     "debut": 6.90, "gain_db": -2, "excitation": 1.6, "suit_la_voix": false,
+     "_note": "l'impact. Mesure a -61,3 dB entendus NU : inaudible sur un telephone, quel que soit le gain. Excite, il rend -28,7 — 32,6 dB gagnes sans toucher au volume."},
+    {"fichier": "sfx_neufs/Ambient_cloth_rustli_21787947765198.mp3",
+     "debut": 10.25, "fin": 13.05, "gain_db": -8, "continue": true,
+     "_note": "le vortex. Aucune excitation : il vit deja dans le medium (-5,2 dB en 2-6 kHz), et l'excitation ne lui rendrait rien — mesure, -0,2 dB."},
+    {"fichier": "sfx_neufs/Massive_cinematic_su_21787947775396.mp3",
+     "debut": 16.25, "gain_db": -1, "excitation": 1.5, "suit_la_voix": false,
+     "_note": "l'assise du cri. Aucun rugissement n'etait dans le lot ; celui du montage reste synthetise, ce sub lui donne le poids."}
+  ]
+}

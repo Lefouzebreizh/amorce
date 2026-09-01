@@ -1,0 +1,24 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: L52,Anton,52,&H00FFE500,&H00FFE500,&H28FFE500,&H00FFE500,-1,0,0,0,100,100,1,0,1,13,0,8,50,50,470,1
+Style: V52,Anton,52,&H00FFE500,&H00FFE500,&H00000000,&H80000000,-1,0,0,0,100,100,1,0,1,6,2,8,50,50,470,1
+Style: L78,Anton,78,&H00FFE500,&H00FFE500,&H28FFE500,&H00FFE500,-1,0,0,0,100,100,1,0,1,19,0,8,50,50,585,1
+Style: V78,Anton,78,&H00FFE500,&H00FFE500,&H00000000,&H80000000,-1,0,0,0,100,100,1,0,1,6,2,8,50,50,585,1
+Style: L56,Anton,56,&H00FFE500,&H00FFE500,&H28FFE500,&H00FFE500,-1,0,0,0,100,100,1,0,1,14,0,8,50,50,730,1
+Style: V56,Anton,56,&H00FFE500,&H00FFE500,&H00000000,&H80000000,-1,0,0,0,100,100,1,0,1,6,2,8,50,50,730,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.10,0:00:02.90,L52,,0,0,0,,{\blur12}{\fscx118\fscy118\t(0,110,\fscx100\fscy100)}THE NEXT CREATURE
+Dialogue: 1,0:00:00.10,0:00:02.90,V52,,0,0,0,,{\fscx118\fscy118\t(0,110,\fscx100\fscy100)}THE NEXT CREATURE
+Dialogue: 0,0:00:00.50,0:00:02.90,L78,,0,0,0,,{\blur12}{\fscx118\fscy118\t(0,110,\fscx100\fscy100)}THE CYBER HYDRA TITAN
+Dialogue: 1,0:00:00.50,0:00:02.90,V78,,0,0,0,,{\fscx118\fscy118\t(0,110,\fscx100\fscy100)}THE CYBER HYDRA TITAN
+Dialogue: 0,0:00:01.00,0:00:02.90,L56,,0,0,0,,{\blur12}{\fscx118\fscy118\t(0,110,\fscx100\fscy100)}ATTENDS L'ÉPISODE 2... 🔥
+Dialogue: 1,0:00:01.00,0:00:02.90,V56,,0,0,0,,{\fscx118\fscy118\t(0,110,\fscx100\fscy100)}ATTENDS L'ÉPISODE 2... 🔥

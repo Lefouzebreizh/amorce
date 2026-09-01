@@ -1,0 +1,17 @@
+{
+  "seuils": {
+    "sonie_lufs": -20.0,
+    "telephone_db": -22.0,
+    "duree_s": {
+      "impacts": 0.5,
+      "whooshes": 0.8,
+      "dragons": 1.5,
+      "magic": 0.6,
+      "crowds": 2.0,
+      "atmos": 2.0
+    }
+  },
+  "total": 0,
+  "utilisables": 0,
+  "sons": []
+}

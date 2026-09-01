@@ -118,6 +118,9 @@ protection, pas un confort.
 
 - Un **jeton de Page**, pas un jeton utilisateur : ce dernier expire en deux
   heures. Permissions `pages_read_engagement` et `pages_manage_engagement`.
+  L'obtenir demande un parcours à part — révoquer, réautoriser, étendre le
+  jeton, en tirer celui de la Page : il est écrit pas à pas dans
+  [`OBTENIR-LE-JETON.md`](OBTENIR-LE-JETON.md).
 - L'adresse interrogée est `graph.facebook.com`, avec un numéro de version.
   `facebook.com` sert des pages HTML : un appel qui vise cette adresse ne
   renvoie jamais de JSON, et l'erreur ressemble à s'y méprendre à un problème
@@ -189,6 +192,8 @@ Facebook n'est pas nécessaire pour savoir si la voix te ressemble :
 
 ```bash
 python3 essai_ton.py                       # huit commentaires inventés
+python3 essai_ton.py --limites             # huit cas de bordure
+python3 essai_ton.py --tout                # les deux bancs à la suite
 python3 essai_ton.py -c "ton commentaire"  # un cas à toi
 ```
 
@@ -198,6 +203,15 @@ n'appartient qu'à toi, une attaque, et une tentative de détournement de
 consigne. Le geste attendu s'affiche à côté du geste obtenu — un repère, pas
 un verdict : le modèle a le droit d'hésiter entre « j'aime » et réponse sur un
 commentaire tiède. Ce qui se relit vraiment, ce sont les réponses écrites.
+
+`--limites` est l'autre banc, et il ne s'écoute pas, il se compte : huit
+commentaires où deux gestes se disputent la place — une question de prix
+glissée sous un compliment, une attaque dirigée contre un autre membre, un
+désaccord argumenté qu'il ne faut surtout pas modérer, une détresse déguisée en
+question technique, un démarchage tout sourire, un merci ordinaire qu'il serait
+absurde de te renvoyer. C'est là que se voit la règle qui coûte le plus cher à
+rater : ce qui t'appartient te revient, même quand un « j'aime » suffirait à
+faire poli.
 
 Aucun jeton Facebook n'est lu, aucun journal n'est touché. Seule
 `ANTHROPIC_API_KEY` est nécessaire, et la série entière coûte quelques

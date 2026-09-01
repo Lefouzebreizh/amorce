@@ -146,7 +146,12 @@
       }
     ],
     "sans_date_vers": "À dater",
-    "sans_theme_vers": "Divers"
+    "sans_theme_vers": "Divers",
+    "lecture_du_document": {
+      "actif": true,
+      "pages_max": 2,
+      "caracteres_max": 2000
+    }
   },
   "scan_ocr": {
     "moteur": "tesseract",
@@ -248,7 +253,8 @@
       "verifier_integrite": true,
       "duree_minimale_secondes": 1.0,
       "taille_minimale_ko": 64,
-      "signaler_sans_piste_video": true
+      "signaler_sans_piste_video": true,
+      "ignorer_si_modifiee_recemment_minutes": 5
     },
     "variantes": {
       "actif": true,
@@ -303,6 +309,7 @@
   },
   "conversion": {
     "seuil_gain_minimal_pct": 15,
+    "inflation_max_pct": 100,
     "conserver_original_jusqua_verification": true,
     "regles": [
       {
@@ -311,6 +318,7 @@
           "heif"
         ],
         "vers": "jpg",
+        "objectif": "compatibilite",
         "qualite": 88,
         "conserver_exif": true
       },
@@ -319,6 +327,7 @@
           "png"
         ],
         "vers": "jpg",
+        "objectif": "espace",
         "qualite": 90,
         "si_sans_transparence": true
       },
@@ -330,6 +339,8 @@
           "m4v"
         ],
         "vers": "mp4",
+        "objectif": "compatibilite",
+        "remuxer_si_compatible": true,
         "codec_video": "libx264",
         "crf": 21,
         "preset": "slow",

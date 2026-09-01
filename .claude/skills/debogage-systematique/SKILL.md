@@ -27,6 +27,12 @@ surtout quand elle semble superflue — quand le bug paraît simple, quand on es
 pressé, quand la correction saute aux yeux. C'est exactement là qu'on corrige un
 symptôme.
 
+**Un cas qui n'est pas un bug.** Quand la commande n'échoue pas mais *manque* —
+`command not found`, `No module named`, un `playwright install` réclamé — c'est
+l'environnement, pas le code. C'est `/debloquer` qu'il faut : chercher la cause
+d'un défaut dans du code qui n'a jamais pu s'exécuter est le plus coûteux des
+faux départs.
+
 ## Avant tout : les pièges déjà connus
 
 Ce dépôt tient une liste de quatorze pièges dans la section « Pièges connus » de
@@ -71,6 +77,9 @@ après rechargement lui échappent complètement. Un test vert ne dit rien d'un
 | Chaîne KDP | `python3 kdp/pipeline/valider.py` |
 | Studio audio | `python3 -m unittest discover -s mon-app-audio/tests` |
 | Assistant d'allocation | `python3 -m unittest discover -s patrimoine/tests` |
+| Radar crypto : notation, filtres, sécurité | `cd pepites && python3 -m unittest discover -s tests` |
+| Radar crypto : l'effet d'un réglage | `cd pepites && python3 profils.py` — les tests passent sans dire que la note du profil « accumulation » est tombée de 100 à 48 |
+| Radar crypto : une réponse d'API malformée | ajouter la charge utile à `ClientFactice` dans `pepites/tests/test_pipeline.py` — un vrai scan est impossible ici, voir plus bas |
 
 `npm run fixtures` fabrique les rushes de test si `.fixtures/rushes/` est vide.
 Les captures et exports du parcours atterrissent dans `.fixtures/captures/` :
@@ -147,6 +156,23 @@ Si tu te surprends à penser l'une de ces phrases, l'enquête n'est pas faite :
 Et si l'utilisateur dit « arrête de deviner », « tu as vérifié ? » ou « on
 tourne en rond » : la réponse n'est pas un correctif de plus, c'est de revenir
 à la reproduction.
+
+## Le faux diagnostic propre aux sessions distantes
+
+Le mandataire réseau refuse une partie du monde extérieur, et le symptôme
+ressemble à s'y méprendre à une panne de code :
+
+- **`api.dexscreener.com` et les services de sécurité sont bloqués.** Un
+  `python3 pepites/main.py scan` s'arrête sur « Réseau indisponible » après une
+  trentaine de secondes. C'est le comportement attendu de l'outil face à une
+  coupure, pas un défaut à corriger. Le radar se déboguit ici sur des réponses
+  rejouées.
+- **`dl.google.com` est bloqué**, donc pas de SDK Android : c'est l'intégration
+  continue qui construit l'APK.
+
+Avant de conclure « ça ne marche pas », vérifier de quel côté du mandataire se
+trouve la panne : `curl -sS "$HTTPS_PROXY/__agentproxy/status"` dit ce qui a été
+refusé et pourquoi.
 
 ## Ce qu'on ne conclut pas trop vite
 

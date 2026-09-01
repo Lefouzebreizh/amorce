@@ -18,12 +18,13 @@ Trois choses le structurent :
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
-from noyau import fichiers
+from noyau import fichiers, outils_externes
 from noyau.journal import Journal
-from noyau.modele import ECARTER, Decision, Doublon, Fiche, Media
+from noyau.modele import ECARTER, Decision, Doublon, Fiche, Media, Video
 
 from . import regles, variantes
 
@@ -315,8 +316,11 @@ def mesurer_nettete(
     return medias
 
 
-def ecarter_flous(decisions: list[Decision], quarantaine: Path, journal: Journal) -> int:
-    """Déplace en quarantaine les photos jugées floues. Rend les octets libérés.
+def ecarter_decidees(decisions: list[Decision], quarantaine: Path, journal: Journal) -> int:
+    """Déplace en quarantaine ce que les décisions écartent. Rend les octets libérés.
+
+    Photos floues ou vidéos abîmées : le geste ne regarde que le chemin et le
+    motif, et les deux passes le posent à l'identique.
 
     L'échec d'un déplacement n'interrompt pas les autres : une photo verrouillée
     par une visionneuse ouverte est un incident courant, pas une raison de
@@ -335,6 +339,231 @@ def ecarter_flous(decisions: list[Decision], quarantaine: Path, journal: Journal
                 continue
         liberes += media.poids_octets
     return liberes
+
+
+# ────────────────────────── L'intégrité des vidéos ───────────────────────────
+#
+# Les vidéos ne passent ni par la netteté ni par les doublons : un film n'a pas
+# de variance du laplacien qui veuille dire quelque chose, et deux plans du même
+# lieu ne sont pas deux fichiers en trop. Ce qu'on cherche ici est autre chose —
+# le fichier qui ne s'ouvrira plus le jour où on voudra le revoir.
+
+# Les conteneurs qu'on inspecte. Volontairement larges : un fichier abîmé est
+# souvent un fichier dont on ne se sert plus, donc dans un format ancien.
+EXTENSIONS_VIDEO = (
+    "mp4", "mov", "m4v", "avi", "mkv", "webm", "mpg", "mpeg",
+    "wmv", "3gp", "mts", "m2ts", "ts", "flv", "ogv",
+)
+
+# Le décodage ne porte que sur la fin du fichier. C'est là qu'est la coupure
+# d'un transfert interrompu, d'une carte mémoire retirée trop tôt ou d'une
+# copie sur un disque plein — et décoder l'intégralité coûterait plusieurs
+# minutes par gigaoctet pour le même constat. Ce que cela ne voit pas est dit
+# dans le README : une corruption au milieu d'un fichier par ailleurs complet.
+SECONDES_DE_FIN_DECODEES = 3
+
+# Un fichier pathologique peut occuper ffmpeg indéfiniment. Passé ce délai on
+# renonce à le juger — et on ne l'écarte pas : une mesure qui n'a pas abouti
+# n'est pas une mesure mauvaise, c'est le même parti pris que `nettete = None`.
+DELAI_SONDE_SECONDES = 30
+DELAI_DECODAGE_SECONDES = 120
+
+
+def inspecter_videos(
+    chemins: Iterable[Path],
+    consigner: Callable[[Path, str], None] | None = None,
+) -> list[Video]:
+    """Ouvre chaque vidéo par ffprobe, puis décode sa fin par ffmpeg.
+
+    Deux passages parce qu'ils ne trouvent pas la même chose : ffprobe lit
+    l'en-tête et repère le conteneur mort, le fichier sans image, la durée
+    aberrante — en quelques millisecondes. Il ne voit pas le fichier tronqué,
+    dont l'en-tête est intact et continue d'annoncer la durée d'origine ; seul
+    un décodage réel le révèle, et il suffit d'en décoder la fin.
+
+    Sans ffprobe, la fonction ne rend rien : l'appelant l'a déjà annoncé
+    (`integrite_disponible`) et n'aurait pas dû arriver ici.
+    """
+    import subprocess  # noqa: PLC0415 — décision 2 du README
+
+    ffprobe = outils_externes.trouver_ffprobe()
+    if ffprobe is None:
+        return []
+    ffmpeg = outils_externes.trouver_ffmpeg()
+
+    videos: list[Video] = []
+    for chemin in chemins:
+        try:
+            infos = chemin.stat()
+        except OSError as erreur:
+            if consigner:
+                consigner(chemin, f"illisible ({erreur.strerror})")
+            continue
+
+        sonde = _sonder(subprocess, ffprobe, chemin)
+        if sonde is None:
+            if consigner:
+                consigner(chemin, f"ffprobe n'a pas répondu en {DELAI_SONDE_SECONDES} s")
+            continue
+
+        erreur_de_fin = None
+        # Rien à décoder si le conteneur est déjà mort, et rien à quoi se fier
+        # si la durée est inconnue : `-sseof` ne sait pas d'où reculer, et son
+        # échec ressemblerait à une corruption.
+        if sonde.lisible and sonde.duree_secondes is not None and ffmpeg is not None:
+            erreur_de_fin = _decoder_la_fin(subprocess, ffmpeg, chemin, consigner)
+
+        videos.append(Video(
+            chemin=chemin,
+            poids_octets=infos.st_size,
+            date_horodatage=infos.st_mtime,
+            lisible=sonde.lisible,
+            diagnostic=sonde.diagnostic,
+            duree_secondes=sonde.duree_secondes,
+            largeur=sonde.largeur,
+            hauteur=sonde.hauteur,
+            piste_video=sonde.piste_video,
+            erreur_de_fin=erreur_de_fin,
+        ))
+    return videos
+
+
+def _sonder(subprocess, ffprobe: Path, chemin: Path) -> Video | None:
+    """Ce que l'en-tête déclare. `None` si ffprobe n'a pas rendu la main à temps.
+
+    Le résultat voyage dans un `Video` de travail : ses champs sont exactement
+    ceux que l'inspection produit, et en fabriquer un second type pour les mêmes
+    six valeurs n'apprendrait rien de plus à personne.
+    """
+    import json  # noqa: PLC0415
+
+    try:
+        sortie = subprocess.run(
+            [str(ffprobe), "-v", "error", "-print_format", "json",
+             "-show_format", "-show_streams", "--", str(chemin)],
+            capture_output=True, text=True, timeout=DELAI_SONDE_SECONDES,
+        )
+    except subprocess.TimeoutExpired:
+        return None
+    except OSError as erreur:
+        return Video(chemin=chemin, poids_octets=0, date_horodatage=0.0,
+                     lisible=False, diagnostic=f"ffprobe injoignable ({erreur.strerror})")
+
+    if sortie.returncode != 0:
+        return Video(chemin=chemin, poids_octets=0, date_horodatage=0.0,
+                     lisible=False, diagnostic=_premiere_ligne(sortie.stderr))
+
+    try:
+        donnees = json.loads(sortie.stdout or "{}")
+    except json.JSONDecodeError:
+        return Video(chemin=chemin, poids_octets=0, date_horodatage=0.0,
+                     lisible=False, diagnostic="ffprobe n'a rendu aucune description")
+
+    flux = donnees.get("streams") or []
+    # Une pochette d'album est un flux « video » d'une seule image : la compter
+    # ferait passer un enregistrement sonore pour une vidéo, et le signalement
+    # « aucune piste vidéo » ne se déclencherait jamais sur les fichiers qu'il
+    # vise précisément.
+    images = [
+        piste for piste in flux
+        if piste.get("codec_type") == "video"
+        and (piste.get("disposition") or {}).get("attached_pic") != 1
+    ]
+
+    duree = _nombre(donnees.get("format", {}).get("duration"))
+    if duree is None and images:
+        # Un MKV n'annonce sa durée que sur ses flux : l'absence au niveau du
+        # conteneur ne veut pas dire que personne ne la connaît.
+        duree = _nombre(images[0].get("duration"))
+
+    return Video(
+        chemin=chemin, poids_octets=0, date_horodatage=0.0,
+        lisible=bool(flux),
+        diagnostic="" if flux else "aucun flux dans le conteneur",
+        duree_secondes=duree,
+        largeur=int(images[0].get("width") or 0) if images else 0,
+        hauteur=int(images[0].get("height") or 0) if images else 0,
+        piste_video=bool(images),
+    )
+
+
+def _decoder_la_fin(
+    subprocess, ffmpeg: Path, chemin: Path,
+    consigner: Callable[[Path, str], None] | None,
+) -> str | None:
+    """La première erreur rencontrée en décodant la fin du fichier, ou rien.
+
+    `-sseof` recule depuis la fin, ce qui évite de traverser tout le fichier
+    pour atteindre l'endroit où la coupure se trouve. Un dépassement de délai
+    n'est pas une corruption : il est consigné et la vidéo n'est pas jugée
+    dessus.
+    """
+    try:
+        sortie = subprocess.run(
+            [str(ffmpeg), "-v", "error", "-sseof", f"-{SECONDES_DE_FIN_DECODEES}",
+             "-i", str(chemin), "-f", "null", "-"],
+            capture_output=True, text=True, timeout=DELAI_DECODAGE_SECONDES,
+        )
+    except subprocess.TimeoutExpired:
+        if consigner:
+            consigner(chemin, f"décodage interrompu après {DELAI_DECODAGE_SECONDES} s")
+        return None
+    except OSError as erreur:
+        if consigner:
+            consigner(chemin, f"ffmpeg injoignable ({erreur.strerror})")
+        return None
+
+    if sortie.returncode == 0 and not sortie.stderr.strip():
+        return None
+    return _premiere_ligne(sortie.stderr) or f"ffmpeg a rendu le code {sortie.returncode}"
+
+
+# ffmpeg préfixe ses erreurs du composant et de son adresse mémoire :
+# « [NULL @ 0x55cc278aef80] Invalid NAL unit size ». L'adresse change à chaque
+# exécution — la garder ferait porter au même fichier un motif différent à
+# chaque passage, et rendrait deux quarantaines incomparables.
+_PREFIXE_FFMPEG = re.compile(r"^\[[^\]]*@\s*0x[0-9a-f]+\]\s*")
+
+
+def _premiere_ligne(texte: str) -> str:
+    """La première ligne utile de ce qu'a dit l'outil, sans son préfixe technique.
+
+    Une seule ligne : ffmpeg répète la même erreur une fois par image abîmée, et
+    déverser deux cents lignes identiques dans un motif de quarantaine rendrait
+    le manifeste illisible.
+    """
+    for ligne in (texte or "").splitlines():
+        ligne = _PREFIXE_FFMPEG.sub("", ligne.strip())
+        if ligne:
+            return ligne
+    return ""
+
+
+def _nombre(valeur: object) -> float | None:
+    """Un flottant, ou `None` — ffprobe écrit « N/A » quand il ne sait pas."""
+    try:
+        nombre = float(str(valeur))
+    except (TypeError, ValueError):
+        return None
+    return nombre if nombre == nombre and nombre >= 0 else None
+
+
+def integrite_disponible() -> tuple[bool, str]:
+    """Dit si la passe vidéo peut tourner, et ce qu'il manque sinon.
+
+    Demandé **avant** d'inspecter quoi que ce soit : découvrir après coup qu'une
+    passe annoncée par la configuration n'a pas tourné, c'est croire un dossier
+    contrôlé alors qu'il ne l'a pas été.
+    """
+    if outils_externes.trouver_ffprobe() is None:
+        return False, outils_externes.message_installation("ffprobe")
+    if outils_externes.trouver_ffmpeg() is None:
+        return True, (
+            "L'en-tête des vidéos sera lu, mais leur fin ne sera pas décodée : "
+            "un fichier tronqué passera inaperçu.\n"
+            + outils_externes.message_installation("ffmpeg")
+        )
+    return True, ""
 
 
 # ─────────────────────── Les redondances hors des images ─────────────────────
@@ -415,3 +644,4 @@ def ecarter_redondances(
                     continue
             liberes += fiche.poids_octets
     return liberes
+

@@ -1,6 +1,6 @@
-import { analyzeProject, type Analysis } from './analysis.ts';
+import { analyzeProject, PLAFOND_BLOQUE, type Analysis } from './analysis.ts';
 import type { StepId } from './steps.ts';
-import { clipDuration } from './timeline.ts';
+import { clipDuration, MORCEAUX_MAX } from './timeline.ts';
 import type { Project } from './types.ts';
 
 /**
@@ -79,6 +79,56 @@ export function nextStep(project: Project, analysis: Analysis = analyzeProject(p
     };
   }
 
+  /*
+   * Un rush unique et long passe **avant** l'accroche, alors que la découpe
+   * vient après elle dans le cas général. Ce n'est pas une exception de
+   * confort : une accroche écrite sur un plan de vingt secondes sans coupe
+   * devra être replacée dès qu'on le découpera, et le découpage change à ce
+   * point la vidéo qu'il rend le travail précédent caduc.
+   *
+   * Mesuré : après l'import d'une seule vidéo de 19,5 s, le bouton de découpe
+   * n'était atteignable qu'en passant à l'étape 2 puis en touchant le plan sur
+   * la timeline — deux gestes de plus, sur un téléphone, pour l'action qui
+   * apporte le plus.
+   */
+  /*
+   * Trop long **avant** de proposer la découpe.
+   *
+   * La règle des quarante-cinq secondes existait déjà, mais elle venait après.
+   * Un rush de cinquante-six secondes recevait donc d'abord « découper en
+   * vingt-huit plans de 2 s » — et vingt-huit morceaux de la même prise ne font
+   * pas un montage, ils font la même prise coupée vingt-huit fois. Rapporté
+   * ainsi : « il m'a mis la vidéo en cinquante secondes, il a ajouté des plans
+   * partout, il a tout découpé ».
+   *
+   * L'ordre juste est l'inverse : on raccourcit, puis on découpe ce qui reste.
+   * Découper d'abord multiplie le travail de raccourcissement par vingt-huit.
+   */
+  const single = project.clips.length === 1 ? clipDuration(project.clips[0]) : 0;
+  if (single > TOO_LONG) {
+    return {
+      title: `Ton rush fait ${single.toFixed(0)} s`,
+      why: 'Trop long pour un format court, et le découper d’abord donnerait des dizaines de '
+        + 'morceaux d’une même prise. Garde le meilleur passage — vingt secondes suffisent — '
+        + 'puis on découpera.',
+      actionLabel: 'Raccourcir le plan',
+      action: { kind: 'goto', step: 'montage' },
+      done: false,
+    };
+  }
+
+  if (single > LONG_SHOT * 2) {
+    const pieces = Math.min(MORCEAUX_MAX, Math.floor(single / 2));
+    return {
+      title: `Un seul plan de ${single.toFixed(1)} s`,
+      why: 'Une vidéo sans coupe se regarde comme un plan fixe, quel que soit son contenu. '
+        + 'Découpe d\u2019abord : l\u2019accroche et les bruitages se poseront sur les raccords.',
+      actionLabel: `Découper en ${pieces} plans`,
+      action: { kind: 'chopLongest' },
+      done: false,
+    };
+  }
+
   const hasHook = project.captions.some((c) => c.start <= 1.2 && c.end > c.start && c.text.trim().length > 0);
   if (!hasHook) {
     return {
@@ -141,6 +191,30 @@ export function nextStep(project: Project, analysis: Analysis = analyzeProject(p
       why: 'Un étalonnage bien dosé sépare une vidéo amateur d’une vidéo tenue. Ça prend dix secondes.',
       actionLabel: 'Voir les rendus',
       action: { kind: 'goto', step: 'cinema' },
+      done: false,
+    };
+  }
+
+  /*
+   * Un défaut bloquant passe avant le feu vert.
+   *
+   * Le guide annonçait « ton montage tient la route » sur un film dont les
+   * quatre textes affichaient encore « [Ce qui menace] » — et la note, elle,
+   * était plafonnée à quarante. Deux voix qui se contredisent dans la même
+   * interface valent moins qu'une seule qui dit non : l'utilisateur suit celle
+   * qui l'arrange, publie, et découvre ses crochets sur la plateforme.
+   *
+   * On reprend le premier bloquant tel qu'il est écrit dans l'analyse plutôt
+   * que de le reformuler ici : deux formulations du même défaut dériveraient,
+   * et c'est l'analyse qui mesure.
+   */
+  const bloquant = analysis.bloquants[0];
+  if (bloquant) {
+    return {
+      title: bloquant.probleme,
+      why: `${bloquant.remede} Tant que ça reste, la note ne dépassera pas ${PLAFOND_BLOQUE}.`,
+      actionLabel: 'Voir ce qui bloque',
+      action: { kind: 'goto', step: 'analyse' },
       done: false,
     };
   }

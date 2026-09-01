@@ -13,17 +13,51 @@ export const OUTPUT_WIDTH = 1080;
 export const OUTPUT_HEIGHT = 1920;
 export const OUTPUT_FPS = 30;
 
-/** Un fichier vidéo importé par l'utilisateur. */
+/**
+ * Durée accordée à une image fixe importée, en secondes.
+ *
+ * Une image n'a pas de durée : il faut donc lui en inventer une, et ce nombre
+ * est le plafond de ce qu'on pourra l'afficher. Six secondes sont déjà très
+ * au-delà de ce que le format court supporte — l'analyse pénalise tout plan
+ * qui passe 2,5 s — mais laissent la place à un plan d'ouverture tenu, sans
+ * qu'un montage express sur une seule image produise une minute d'immobilité.
+ */
+export const IMAGE_DURATION = 6;
+
+/**
+ * Nature d'un média importé.
+ *
+ * Une image fixe n'a ni piste sonore, ni tête de lecture, ni durée propre :
+ * partout où le moteur interroge un décodeur vidéo, il faut d'abord savoir
+ * qu'il n'y en a pas. Un média enregistré avant l'arrivée des images n'en
+ * porte pas — l'absence vaut donc `video`, et rien n'est à migrer.
+ */
+export type MediaKind = 'video' | 'image';
+
+/** Un fichier vidéo ou une image fixe importés par l'utilisateur. */
 export type MediaAsset = {
   id: string;
   name: string;
+  kind: MediaKind;
   /** URL objet du fichier, valable tant que l'onglet est ouvert. */
   url: string;
+  /**
+   * Durée exploitable, en secondes.
+   *
+   * Pour une image, c'est une convention : `IMAGE_DURATION`, la durée maximale
+   * qu'on peut lui donner à l'écran. Elle n'est pas mesurée, elle est offerte.
+   */
   duration: number;
   width: number;
   height: number;
   /** Vignette en data URL, affichée dans la bibliothèque et la timeline. */
   thumbnail: string;
+  /**
+   * Empreinte visuelle du rush, pour repérer deux plans qui montrent la même
+   * chose. Absente des projets enregistrés avant cette mesure : ce qui la lit
+   * doit traiter son absence comme « on ne sait pas », jamais comme « pareil ».
+   */
+  empreinte?: string;
   /** Le média porte-t-il une piste sonore exploitable. */
   hasAudio: boolean;
 };
@@ -216,7 +250,7 @@ export type VoiceCue = {
  * plateformes efface de toute façon en grande partie.
  */
 export type ExportPreset = {
-  id: 'full' | 'light';
+  id: 'full' | 'light' | 'share';
   label: string;
   description: string;
   /** Facteur appliqué à la définition de référence. */
@@ -235,6 +269,21 @@ export const EXPORT_PRESETS: ExportPreset[] = [
     label: '720 × 1280',
     description: 'Deux fois moins de pixels : à choisir si l’export saccade.',
     scale: 2 / 3,
+  },
+  {
+    /*
+     * Pour envoyer, pas pour publier.
+     *
+     * Un fichier de trente mégaoctets ne passe pas dans une messagerie depuis
+     * un téléphone, et c'est là que meurent la plupart des montages : on les
+     * exporte, on n'arrive pas à les envoyer, on abandonne. Quatre fois moins
+     * de pixels tiennent largement pour montrer un montage à quelqu'un ou pour
+     * le garder en brouillon.
+     */
+    id: 'share',
+    label: '540 × 960',
+    description: 'Quatre fois plus léger : pour envoyer un aperçu, pas pour publier.',
+    scale: 1 / 2,
   },
 ];
 

@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    /*
+     * `src/lib/site.ts` importe `./commande.ts` avec son extension, parce que
+     * `scripts/generer.mjs` le charge avec `node` tout court : la résolution
+     * ESM de Node exige l'extension, là où l'alias `@/` du reste du dépôt
+     * demanderait un résolveur. Sans cette option, TypeScript refuse l'import
+     * qui fait précisément marcher le script de livraison.
+     */
+    "allowImportingTsExtensions": true,
+    "target": "ES2022",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

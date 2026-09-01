@@ -1,0 +1,9 @@
+{
+  "name": "licence-serveur",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\""
+  }
+}

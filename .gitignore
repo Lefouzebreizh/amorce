@@ -32,6 +32,14 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# Sauf le gabarit, qui ne contient aucune valeur et doit être versionné :
+# `.env*` l'attrape sinon, et le fichier disparaît sans un mot.
+!.env.exemple
+# Les gabarits, eux, se versionnent : ils documentent quels secrets existent
+# sans en porter aucun, et sans eux personne ne sait quoi remplir. Ceux
+# d'`agence/`, d'`artisan-express/` et de `titan-builder/` sont déjà suivis —
+# ils y étaient entrés en forçant, ce qui rendait la règle invisible.
+!**/.env.example
 
 # vercel
 .vercel
@@ -42,6 +50,11 @@ next-env.d.ts
 
 # Rushes de test et captures produits par les scripts de vérification
 .fixtures/
+
+# Bibliotheque d'effets sonores : entierement regeneree par
+# montage-auto/download_blockbuster_sfx.py, et l'invariant du depot interdit
+# tout binaire versionne. Seul le script fait foi.
+sfx_library/
 
 # Plan de travail pré-presse KDP (rushes, PDF, épreuves)
 .travail/
@@ -72,3 +85,80 @@ montage-auto/Wav2Lip/
 paper-manager/coffre/
 paper-manager/admin_config.json
 paper-manager/admin_config.json.bak
+
+# Cache de .claude/skills/verifier/scripts/comme-la-ci.sh
+.verif-ci/
+
+# Réseau d'annuaires : les sites prêts à déposer se refabriquent d'une commande
+# (`npm run sites`) à partir des bases et de la feuille compilée. Les sitemaps,
+# eux, sont versionnés — ils sont ce que l'auto-pilote met à jour et poussent.
+/annuaire-ia/dist/
+
+# La bibliothèque de sons : les fichiers restent locaux, l'index les décrit.
+# Invariant n°8 — aucun binaire versionné. Ce sont les médias que le cap
+# Cloudflare R2 est destiné à héberger le jour où un projet en aura besoin.
+kits/**/*.wav
+kits/**/*.mp3
+kits/**/*.flac
+kits/**/*.ogg
+kits/**/*.m4a
+
+# Les sons de la bibliothèque sont des binaires : ils vivent hors de Git,
+# seul leur index mesuré est versionné (invariant « aucun binaire versionné »).
+kits/**/*.wav
+kits/**/*.mp3
+kits/**/*.flac
+
+# Images produites par /voir-le-son — spectrogrammes, courbes, planches de
+# vignettes. Se refabriquent d'une commande, et le dépôt ne versionne aucun
+# binaire.
+/regard/
+
+# La bibliothèque visuelle est fabriquée par son script : ce sont des binaires,
+# et l'invariant n°8 les tient hors de Git. Seuls le script, les catalogues,
+# les recettes et la fiche sont versionnés — ils suffisent à tout refaire.
+visual_library/**/*.png
+visual_library/**/*.jpg
+visual_library/**/*.webp
+visual_library/**/*.mp4
+
+# NexusCrypto : journal tournant du moteur de trading. Se refabrique tout seul,
+# et peut contenir des montants et des identifiants d'ordre — rien de tout cela
+# n'a sa place dans l'historique.
+/nexuscrypto/logs/
+
+# Les rushes d'un montage. Les trois recettes de `montage-auto/references/`
+# les nomment toutes en relatif — « rushes/…​ » — donc ce dossier apparaît chez
+# quiconque rend un épisode. Sans cette ligne, un `git add -A` y verse des
+# dizaines de mégaoctets de vidéo, et l'invariant « aucun binaire versionné »
+# tombe sans que personne l'ait décidé.
+/rushes/
+
+# IPTV : rien de ce qui identifie un abonnement ne rentre ici. Les listes et
+# les caches se refabriquent d'un import, les identifiants ne se retirent pas
+# de l'historique une fois poussés.
+/iptv/node_modules/
+/iptv/.next/
+/iptv/.essai/
+/iptv/donnees/
+/iptv/*.db
+/iptv/*.db-journal
+/iptv/*.m3u
+/iptv/*.m3u8
+/iptv/*.xml
+
+# TITAN Builder : la démonstration se refabrique d'une commande à partir de son
+# `commande.json`, et les photos qu'on y dépose sont des binaires — l'invariant
+# du dépôt les tient dehors. Seule la commande est versionnée.
+/titan-builder/demo/index.html
+/titan-builder/demo/*.jpg
+/titan-builder/demo/*.jpeg
+/titan-builder/demo/*.png
+/titan-builder/demo/*.webp
+
+# Les dossiers de commande des vrais clients ne sortent jamais d'ici : ils
+# portent un nom, un téléphone et des photos de chantier.
+/titan-builder/dossiers/
+
+# Le carnet rempli porte des coordonnées de tiers démarchés : il reste local.
+/artisan-express/prospects.md

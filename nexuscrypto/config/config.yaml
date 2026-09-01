@@ -1,0 +1,346 @@
+# NexusCrypto — tous les paramètres ajustables du système.
+#
+# Rien de ce fichier n'est un secret : les clés d'API, le jeton Telegram et
+# l'URL de crochet Discord vivent dans `.env`, jamais ici. Ce fichier-ci est
+# versionné, il se relit en revue, et c'est précisément pour cela qu'il ne doit
+# rien contenir qu'on regretterait de publier.
+#
+# Un réglage se change ici et nulle part ailleurs. Un seuil écrit en dur dans le
+# code est un seuil qu'on ne retrouve plus au moment où il faut le bouger.
+
+# --------------------------------------------------------------------------
+# Général
+# --------------------------------------------------------------------------
+general:
+  # Le mode par défaut est la simulation, et ce défaut n'est pas négociable :
+  # le passage en réel se fait par un argument explicite de la ligne de
+  # commande, jamais par ce fichier. Un `config.yaml` mal recopié ne doit pas
+  # pouvoir engager d'argent.
+  devise: USDT
+  intervalle_bougies: 4h
+  profondeur_bougies: 300      # ~50 jours en 4h : de quoi calculer une EMA 200
+  periode_boucle_secondes: 3600
+  journal_niveau: INFO
+
+# --------------------------------------------------------------------------
+# Portefeuille cible
+# --------------------------------------------------------------------------
+#
+# La somme des poids doit faire exactement 100. Le chargeur le vérifie et
+# refuse de démarrer sinon : une allocation à 97 % laisse 3 % de capital qui
+# n'est réclamé par personne et ne sera jamais investi.
+portefeuille:
+  capital_initial_usd: 10000
+  # Enveloppe DCA de référence, par passage de calendrier. Le DCA dynamique
+  # multiplie ce montant, il ne le remplace pas.
+  enveloppe_dca_usd: 200
+  cadence_dca: hebdomadaire     # quotidienne | hebdomadaire | mensuelle
+  allocation:
+    BTC/USDT:
+      poids: 50
+      role: socle
+      # Le socle ne se vend pas sur signal technique : c'est la réserve, et la
+      # seule chose qui la fait bouger est le rééquilibrage.
+      vente_sur_signal: false
+    SOL/USDT:
+      poids: 20
+      role: croissance
+      vente_sur_signal: true
+    ETH/USDT:
+      poids: 10
+      role: croissance
+      vente_sur_signal: true
+    # Les 20 % restants sont une enveloppe, pas une ligne : deux positions
+    # nommées et la place pour ce que le scanner ramène.
+    HYPE/USDC:
+      poids: 10
+      role: pepite
+      vente_sur_signal: true
+      plateforme: hyperliquid
+    LINK/USDT:
+      poids: 5
+      role: pepite
+      vente_sur_signal: true
+  # Réserve de l'enveloppe « pépites » laissée libre pour les jetons que le
+  # scanner détecte. Compte dans les 100 %.
+  reserve_decouverte:
+    poids: 5
+    plafond_par_jeton_usd: 150
+  # En deçà de cet écart, on ne rééquilibre pas : le coût des frais dépasse le
+  # gain de précision.
+  tolerance_derive: 0.05
+
+# --------------------------------------------------------------------------
+# Sources de données
+# --------------------------------------------------------------------------
+sources:
+  marche:
+    plateformes: [binance, bybit]
+    plateforme_defaut: binance
+    hyperliquid_api: https://api.hyperliquid.xyz/info
+    profondeur_carnet: 20
+  onchain:
+    defillama_api: https://api.llama.fi
+    dexscreener_api: https://api.dexscreener.com/latest/dex
+    # Les protocoles suivis pour la TVL, par actif.
+    protocoles:
+      SOL/USDT: [jito-liquid-staking, raydium-amm]
+      ETH/USDT: [lido, aave-v3]
+      HYPE/USDC: [hyperliquid-spot]
+  sentiment:
+    fear_greed_api: https://api.alternative.me/fng/
+    reddit_api: https://www.reddit.com/r/CryptoCurrency/hot.json
+    # Le NLP est un lexique pondéré, pas un modèle : voir le bloc d'en-tête de
+    # `src/data_engine/sentiment.py` pour la raison, qui est mesurée.
+    mentions_minimum: 15
+  macro:
+    flux_rss:
+      - https://www.coindesk.com/arc/outboundfeeds/rss/
+      - https://cointelegraph.com/rss
+      - https://feeds.a.dj.com/rss/RSSMarketsMain.xml
+    fenetre_heures: 24
+
+# --------------------------------------------------------------------------
+# Réseau
+# --------------------------------------------------------------------------
+reseau:
+  delai_secondes: 15
+  tentatives: 3
+  attente_initiale_secondes: 1.0     # doublée à chaque échec
+  requetes_par_minute: 45            # limite globale, tous points d'entrée
+  agent_utilisateur: NexusCrypto/1.0
+
+# --------------------------------------------------------------------------
+# Stratégie
+# --------------------------------------------------------------------------
+strategie:
+  # Pondérations du score de confiance. Elles doivent sommer à 1.0.
+  #
+  # Le technique domine parce que c'est la seule des trois familles qui soit
+  # mesurée sur des données que personne ne peut fabriquer : un carnet et des
+  # bougies. Le sentiment est le plus manipulable des trois, il pèse le moins.
+  poids:
+    technique: 0.5
+    sentiment: 0.2
+    onchain: 0.3
+  # Quand une famille est absente, son poids est redistribué sur les autres
+  # plutôt que compté à zéro — sans quoi une panne de DeFiLlama ferait passer
+  # tous les scores sous le seuil d'achat, et le système s'arrêterait d'acheter
+  # pour une raison qui n'a rien à voir avec le marché.
+  redistribuer_poids_absents: true
+  technique:
+    rsi_periode: 14
+    rsi_survente: 30
+    rsi_surachat: 70
+    ema_courte: 21
+    ema_moyenne: 50
+    ema_longue: 200
+    volume_periode: 20
+    # Noter l'écart à l'EMA longue par rapport à sa **propre distribution**
+    # plutôt que sur des seuils absolus.
+    #
+    # Mesuré sur cinq fenêtres de BTC réel (2016→2025), gain moyen sur le prix
+    # d'achat contre un DCA aveugle :
+    #
+    #            absolu    relatif
+    #   moyenne   −3,4 %    +1,7 %
+    #   pire cas −27,4 %   −10,2 %   ← 2020-2021, la grande hausse
+    #
+    # Le mode relatif est meilleur sur la moyenne **et** sur le pire cas : en
+    # tendance, le prix vit durablement au-delà de +30 % de son EMA 200, et les
+    # seuils absolus collent alors la note à zéro toute la période. Il n'est pas
+    # meilleur partout — il perd 10 points sur 2023-2025 — mais il supprime le
+    # cas catastrophique, et c'est ce qui décide.
+    ecart_ema_relatif: true
+  dca:
+    # Multiplicateurs appliqués à l'enveloppe, par zone de valorisation.
+    # « avidite_extreme » à 0 est la temporisation demandée : on n'achète pas
+    # le sommet, on garde la balle.
+    multiplicateurs_zone:
+      peur_extreme: 2.0
+      peur: 1.4
+      neutre: 1.0
+      avidite: 0.6
+      avidite_extreme: 0.0
+    # Bonus quand le prix est sous une moyenne mobile clé.
+    bonus_sous_ema_longue: 1.3
+    bonus_sous_ema_moyenne: 1.1
+    malus_au_dessus_ema_longue: 0.85
+    # Le score de confiance module encore le montant. Plafonné à 1/3 par
+    # construction : au-delà, un bon score en zone neutre achèterait plus qu'un
+    # mauvais score en peur extrême, et la zone cesserait d'être le signal
+    # dominant. La démonstration est dans le bloc d'en-tête de `strategy/dca.py`.
+    influence_score: 0.3
+    multiplicateur_min: 0.0
+    multiplicateur_max: 2.5
+    # En dessous de ce score, on n'achète plus que le plancher ci-dessous.
+    score_minimum_achat: 45
+    # Le plancher de discipline : la fraction de l'enveloppe achetée malgré
+    # tout quand la valorisation dit non — score sous le seuil, ou
+    # multiplicateur de zone à zéro.
+    #
+    # Sa valeur est **mesurée**, pas choisie. Sans lui (plancher à 0), le rejeu
+    # du scénario « hausse continue » rend zéro ordre sur 398 échéances : la
+    # note technique étant contrarienne, elle stagne sous le seuil pendant
+    # toute une tendance haussière, et la temporisation devient une abstention
+    # d'un an. Le balayage complet, sur les six marchés :
+    #
+    #   plancher   abstentions   gain moyen vs DCA aveugle
+    #      0 %         1/6              +13,9 %
+    #     15 %         0/6              +13,0 %   ← retenu
+    #     25 %         0/6              +12,2 %
+    #     40 %         0/6              +11,1 %
+    #
+    # 15 % est la plus petite valeur qui supprime l'abstention, et elle coûte
+    # 0,9 point de performance relative. Rejouer `python3 profils.py` après
+    # tout changement de seuil : c'est ce tableau qui décide, pas l'intention.
+    plancher_enveloppe: 0.15
+    # Un achat sous ce montant coûte plus en frais qu'il n'apporte.
+    montant_minimum_usd: 20
+  pepites:
+    # Croissance de volume exigée par rapport à la moyenne de la fenêtre.
+    croissance_volume_min: 3.0
+    liquidite_min_usd: 250000
+    age_minimum_heures: 72
+    variation_liquidite_24h_min: 0.15
+    capitalisation_max_usd: 300000000
+    score_minimum: 65
+    candidats_max: 5
+
+  # ------------------------------------------------------------------------
+  # Bouclier anti-rugpull — un veto, pas une note.
+  #
+  # Le scanner repère une anomalie de volume ; il ne sait pas si le jeton est
+  # revendable. GoPlus lit le contrat, honeypot.is simule un achat puis une
+  # revente (Ethereum, BNB Chain, Base seulement), RugCheck couvre Solana. Les
+  # trois répondent sans clé d'API : un garde-fou qui dépend d'un abonnement
+  # est un garde-fou qu'on finira par désactiver.
+  #
+  # `acheter_si_inconnu: false` est le réglage qui mérite d'être discuté. Un
+  # service muet bloque l'achat, ce qui coûte des occasions. L'asymétrie le
+  # justifie : une occasion manquée coûte un gain, un jeton dont on ne peut pas
+  # sortir coûte la ligne entière.
+  # ------------------------------------------------------------------------
+  bouclier:
+    actif: true
+    acheter_si_inconnu: false
+    taxe_achat_max_pct: 10
+    taxe_vente_max_pct: 10
+    lp_verrouillee_min_pct: 50
+    top10_detenteurs_max_pct: 50
+    # Plafond global des trois appels, lancés en parallèle. Une pépite se
+    # décide en secondes ; au-delà, le bouclier tranche sur ce qu'il a.
+    delai_s: 8
+
+# --------------------------------------------------------------------------
+# Risque
+# --------------------------------------------------------------------------
+risque:
+  # Fraction du capital total risquée sur une entrée, avant tout levier.
+  #
+  # **Mesuré inerte à l'enveloppe actuelle**, et il faut le savoir avant de
+  # croire que le dimensionnement suit le risque. Sur 158 dimensionnements d'un
+  # rejeu multi-actifs, le plafond qui mord est l'enveloppe DCA (62 %) ou
+  # l'exposition par actif (38 %) — celui-ci **jamais**. Le faire varier de 1 %
+  # à 8 % ne change pas un seul ordre.
+  #
+  # La raison est arithmétique : avec un stop à 4 ATR, la distance au stop vaut
+  # ~15 % du prix, donc ce plafond autorise ~6,7 % du capital, quand
+  # l'enveloppe DCA d'une ligne en demande dix fois moins. Il mordrait avec une
+  # enveloppe bien plus grosse ou des stops bien plus serrés — il est conservé
+  # pour ce cas, pas parce qu'il agit aujourd'hui.
+  risque_par_position: 0.01
+  # Plafond de la valeur d'une ligne, tous renforcements compris.
+  #
+  # Mesuré sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de
+  # recul exposé :
+  #
+  #   exposition   2018-21   2022-26   tout   moyenne   recul (tout)
+  #      55 %        8,05      2,25    7,93     6,08       81,3 %
+  #      75 %        9,71      2,36   10,00     7,36       80,3 %   ← retenu
+  #      85 %       10,13      2,36   10,51     7,67       80,1 %
+  #      95 %       10,13      2,36   10,51     7,67       80,1 %
+  #
+  # Desserrer améliore le rendement **et** le recul en même temps : l'arbitrage
+  # attendu n'existe pas ici, parce qu'un plafond serré force la trésorerie à
+  # dormir au lieu de se répartir sur les autres lignes.
+  #
+  # 75 % plutôt que 85 % : au-delà de 85 % le plafond ne mord plus jamais — les
+  # deux dernières lignes du tableau sont identiques — et il cesse donc d'être
+  # un garde-fou. Les 0,31 de gain supplémentaire s'achèteraient en supprimant
+  # la seule limite de concentration du portefeuille. À 75 %, elle tient encore.
+  exposition_max_par_actif: 0.75
+  # Stop-loss dynamique : multiple de l'ATR sous le prix d'entrée.
+  atr_periode: 14
+  # Mesuré sur trois fenêtres de BTC + ETH + LINK réels, gain par unité de
+  # recul exposé :
+  #
+  #   stop    2018-21   2022-26   tout    moyenne
+  #    2,5      4,96      2,27     7,28     4,84
+  #    4        8,05      2,25     7,93     6,08   ← retenu
+  #    6        8,23      2,21     7,95     6,13
+  #
+  # À 2,5, les stops liquidaient ETH et LINK dix-neuf fois en quatre ans et le
+  # portefeuille finissait concentré sur le seul actif qu'il est interdit de
+  # vendre. Desserrer à 4 fait passer le rendement de +305 % à +498 % sur
+  # 2018-2021 pour **un demi-point** de recul exposé en plus : l'arbitrage
+  # supposé entre rendement et protection n'existait presque pas à ce réglage.
+  #
+  # 4 plutôt que 6 : l'essentiel du gain est dans le pas de 2,5 à 4, le reste
+  # n'ajoute rien (+0,05) et coûte du recul sur la fenêtre longue. Et couper
+  # les stops complètement est **pire** que 4 — ils servent, mais pas si serrés.
+  atr_multiple_stop: 4.0
+  # Prise de bénéfice suiveuse : déclenchée au-delà de ce gain, puis elle suit
+  # le plus haut atteint à cette distance.
+  trailing_activation: 0.20
+  trailing_distance: 0.12
+  coupe_circuit:
+    # Perte journalière du portefeuille au-delà de laquelle tout s'arrête.
+    drawdown_journalier_max: 0.07
+    # Perte depuis le plus haut historique du portefeuille.
+    drawdown_total_max: 0.25
+    # Chute d'un actif sur la dernière heure : au-delà, on ne rattrape pas un
+    # couteau qui tombe, on attend la reprise du calme.
+    chute_marche_1h: 0.12
+    # Une actualité macro critique suspend les entrées le temps qu'elle sorte
+    # de la fenêtre.
+    suspendre_sur_actualite_critique: true
+    # Échecs réseau consécutifs au-delà desquels on considère qu'on ne voit
+    # plus le marché. Acheter à l'aveugle est pire que ne pas acheter.
+    echecs_reseau_max: 5
+    # Durée de la coupure avant réarmement automatique.
+    refroidissement_minutes: 180
+
+# --------------------------------------------------------------------------
+# Exécution
+# --------------------------------------------------------------------------
+execution:
+  plateforme: binance
+  type_ordre: marche
+  # Simulation réaliste : ces trois nombres sont ce qui sépare un rapport de
+  # simulation crédible d'un rapport flatteur. Les frais sont ceux d'un compte
+  # sans remise, le glissement est mesuré contre la profondeur du carnet quand
+  # elle est disponible, et le taux de base sert de repli quand elle ne l'est
+  # pas.
+  simulation:
+    frais_taker: 0.001
+    frais_maker: 0.0002
+    glissement_base: 0.0005
+    # Part de la profondeur du carnet au-delà de laquelle l'ordre est découpé.
+    part_carnet_max: 0.1
+  # Écart maximal toléré entre le prix attendu et le prix obtenu. Au-delà,
+  # l'ordre est annulé plutôt qu'exécuté à n'importe quel prix.
+  glissement_max_tolere: 0.01
+
+# --------------------------------------------------------------------------
+# Notifications
+# --------------------------------------------------------------------------
+notifications:
+  canaux: [console]          # console | telegram | discord
+  alerter_sur:
+    - signal
+    - ordre
+    - coupe_circuit
+    - recapitulatif
+  # Heure UTC du récapitulatif quotidien de PnL.
+  heure_recapitulatif: 18

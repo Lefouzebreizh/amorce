@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { analyzeProject } from '../analysis.ts';
-import { CAPTION_SETS, applyFinish, buildFinish, captionSet, soundsOnCuts, thinCues } from '../autoFinish.ts';
+import { analyzeProject, PLAFOND_BLOQUE } from '../analysis.ts';
+import {
+  CAPTION_SETS,
+  applyFinish,
+  buildFinish,
+  captionSet,
+  cinemaFor,
+  soundsOnCuts,
+  thinCues,
+} from '../autoFinish.ts';
 import { emptyProject, totalDuration } from '../timeline.ts';
 import { DEFAULT_CLIP, type Caption, type MediaAsset, type Project, type SoundCue } from '../types.ts';
 
@@ -12,7 +20,7 @@ function counter() {
 }
 
 function asset(id: string): MediaAsset {
-  return { id, name: `${id}.mp4`, url: `blob:${id}`, duration: 30, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+  return { id, name: `${id}.mp4`, kind: 'video', url: `blob:${id}`, duration: 30, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
 }
 
 /** Un montage nu : des plans, rien d'autre. C'est le cas qu'on vient corriger. */
@@ -34,15 +42,46 @@ function bare(shots: number[]): Project {
 const run = (project: Project, setId = 'bande-annonce') =>
   applyFinish(project, analyzeProject(project), setId, counter());
 
-test('la note monte franchement sur un montage nu', () => {
+/*
+ * Poser les réglages améliore le montage, et ne suffit pas à ouvrir la note.
+ *
+ * Cette attente a changé de sens, et c'est le sujet même du plafond. Elle
+ * disait « la note dépasse 75 » ; les gabarits laissent pourtant leurs crochets
+ * à remplir — c'est écrit, testé, et voulu : le studio ne peut pas écrire à la
+ * place de quelqu'un. Une note qui montait à 78 sur un montage dont les quatre
+ * textes affichent encore « [Ce qui menace] » disait donc le contraire de la
+ * vérité, et c'est exactement ce que l'utilisateur avait relevé.
+ *
+ * Ce qu'on vérifie maintenant : les critères progressent réellement, et la note
+ * reste plafonnée tant que les crochets sont là. Les deux comptent — sans le
+ * premier, on aurait un plafond qui masque un bouton devenu inutile.
+ */
+test('poser les réglages fait progresser les critères', () => {
   const project = bare([2.5, 2.5, 2.5, 2.5, 2.5]);
-  const avant = analyzeProject(project).score;
-  const apres = analyzeProject(run(project)).score;
+  const avant = analyzeProject(project);
+  const apres = analyzeProject(run(project));
 
-  // Un montage nu marque déjà sur le rythme et la tension : ce qui compte
-  // n'est pas son niveau de départ mais l'écart que le bouton produit.
-  assert.ok(apres - avant >= 25, `la note ne gagne que ${apres - avant} points (${avant} → ${apres})`);
-  assert.ok(apres >= 75, `la note devrait dépasser 75, elle est à ${apres}`);
+  const somme = (a: typeof avant) =>
+    a.criteria.reduce((total, c) => total + c.score * c.weight, 0);
+
+  assert.ok(
+    somme(apres) - somme(avant) >= 25,
+    `les critères ne gagnent que ${(somme(apres) - somme(avant)).toFixed(0)} points`,
+  );
+  assert.ok(somme(apres) >= 75, `les critères devraient dépasser 75, ils sont à ${somme(apres).toFixed(0)}`);
+});
+
+test('la note reste plafonnée tant que les crochets ne sont pas remplis', () => {
+  const apres = analyzeProject(run(bare([2.5, 2.5, 2.5, 2.5, 2.5])));
+
+  assert.ok(
+    apres.bloquants.some((b) => b.id === 'crochets'),
+    'les crochets du gabarit devraient être signalés comme bloquants',
+  );
+  assert.ok(
+    apres.score <= PLAFOND_BLOQUE,
+    `la note devrait être plafonnée à ${PLAFOND_BLOQUE}, elle est à ${apres.score}`,
+  );
 });
 
 test('les plans trop longs sont découpés, les autres intacts', () => {
@@ -142,22 +181,50 @@ test('les bruitages tombent sur les coupes', () => {
   assert.deepEqual(cues.map((c) => c.time).sort((a, b) => a - b), [0.02, 2, 4]);
 });
 
-test('un rendu déjà choisi est respecté, l’absence de parti pris est corrigée', () => {
+test('un rendu déjà choisi est respecté, l’absence de parti pris reçoit celui de la trame', () => {
+  // La trame pose désormais son propre rendu plutôt que le générique
+  // « cinema » : une bande-annonce n'a pas la couleur d'un tutoriel.
   const naturel = bare([2, 2]);
   naturel.cinema = { ...naturel.cinema, look: 'naturel' };
-  assert.equal(run(naturel).cinema.look, 'cinema');
+  assert.equal(run(naturel).cinema.look, 'blockbuster');
 
   const choisi = bare([2, 2]);
   choisi.cinema = { ...choisi.cinema, look: 'argentique' };
   assert.equal(run(choisi).cinema.look, 'argentique');
+
+  // Une trame qui ne déclare aucun rendu ne touche à rien.
+  const tutoriel = bare([2, 2]);
+  tutoriel.cinema = { ...tutoriel.cinema, look: 'naturel' };
+  assert.equal(run(tutoriel, 'tutoriel').cinema.look, 'naturel');
 });
 
-test('les trois trames sont utilisables et distinctes', () => {
+test('la trame impose son rendu, sauf si un choix a été fait', () => {
+  const set = captionSet('bande-annonce');
+
+  // Absence de parti pris, et le rendu que pose le montage express : ni l'un ni
+  // l'autre n'est une décision.
+  assert.equal(cinemaFor(set, { look: 'naturel', intensity: 0.5, bars: 0 }).look, 'blockbuster');
+  assert.equal(cinemaFor(set, { look: 'cinema', intensity: 0.7, bars: 0 }).look, 'blockbuster');
+
+  // Un rendu choisi est une décision : on n'y touche pas, ni à son intensité.
+  assert.equal(cinemaFor(set, { look: 'argentique', intensity: 0.6, bars: 0 }).look, 'argentique');
+  assert.equal(cinemaFor(set, { look: 'noir', intensity: 0.4, bars: 0 }).intensity, 0.4);
+});
+
+test('les trames sont utilisables, distinctes, et laissent leurs crochets', () => {
   assert.equal(new Set(CAPTION_SETS.map((s) => s.id)).size, CAPTION_SETS.length);
   for (const set of CAPTION_SETS) {
     assert.ok(set.slots.length >= 3, `${set.id} n’a pas assez de textes`);
     assert.equal(set.slots[0].at, 0, `${set.id} ne commence pas à la première image`);
     assert.equal(captionSet(set.id).id, set.id);
+    // Chaque trame doit garder au moins un crochet : c'est la marque de ce que
+    // l'utilisateur seul peut écrire, et une trame entièrement pré-remplie
+    // ferait publier les mots de quelqu'un d'autre.
+    assert.ok(set.slots.some((slot) => slot.text.includes('[')),
+      `${set.id} ne laisse aucun crochet à remplir`);
+    // La dernière rend la main : sans elle, la trame s'arrête sur un constat.
+    assert.ok(set.slots[set.slots.length - 1].at > 0.6,
+      `${set.id} n’a pas de texte de fin`);
   }
   // Un identifiant inconnu retombe sur la première trame plutôt que d'échouer.
   assert.equal(captionSet('inconnue').id, CAPTION_SETS[0].id);
@@ -202,4 +269,96 @@ test('poser un bruitage par coupe dégrade le son d’un montage déjà ponctué
     son({ ...dense, cues: [...dense.cues, ...ajoutes] }) < son(dense),
     'sans cette baisse, le bouton conditionné n’aurait plus de raison d’être',
   );
+});
+
+/*
+ * Ce que « Poser les réglages » change vraiment, et ce qu'il laisse.
+ *
+ * Le panneau d'analyse annonçait « rien de ce que tu as déjà fait n'est
+ * remplacé ». C'est vrai des textes et des bruitages, et faux des plans :
+ * `alterneLesRushes` réordonne le montage pour que deux morceaux d'un même
+ * rush ne se suivent pas. Quelqu'un qui a passé l'étape 2 à ranger ses plans
+ * les retrouve rebattus, sans qu'on le lui ait dit.
+ *
+ * Le comportement est bon — c'est lui qui évite les trente vignettes
+ * identiques sur quarante. C'est la phrase qui était fausse, et ces deux tests
+ * l'ancrent : le jour où le comportement change, l'un des deux tombe et la
+ * formulation se rediscute.
+ */
+test('poser les réglages garde tous les textes et bruitages existants', () => {
+  const project: Project = {
+    ...bare([2, 2, 2, 2]),
+    captions: [
+      { id: 'mien', text: 'Mon texte à moi', start: 0.5, end: 2, style: 'punch', y: 0.3 },
+    ],
+    cues: [{ id: 'mien-son', sfx: 'boom', time: 1, gain: 1 }],
+  };
+
+  const apres = run(project);
+
+  assert.ok(
+    apres.captions.some((c) => c.id === 'mien' && c.text === 'Mon texte à moi'),
+    'le texte écrit à la main devrait survivre tel quel',
+  );
+  assert.ok(apres.cues.some((c) => c.id === 'mien-son'), 'le bruitage posé à la main devrait survivre');
+});
+
+test('poser les réglages peut réordonner les plans de plusieurs rushes', () => {
+  const project: Project = {
+    ...emptyProject(),
+    assets: [asset('a'), asset('b')],
+    // Deux morceaux de « a » qui se suivent : exactement ce que l'alternance
+    // est là pour défaire.
+    clips: [
+      { ...DEFAULT_CLIP, id: 'a1', assetId: 'a', outPoint: 2, transition: 'cut', transitionDuration: 0 },
+      { ...DEFAULT_CLIP, id: 'a2', assetId: 'a', outPoint: 2, transition: 'cut', transitionDuration: 0 },
+      { ...DEFAULT_CLIP, id: 'b1', assetId: 'b', outPoint: 2, transition: 'cut', transitionDuration: 0 },
+    ],
+  };
+
+  const rushes = run(project).clips.map((c) => c.assetId);
+
+  assert.equal(rushes.length, 3, 'aucun plan ne devrait disparaître');
+  assert.notDeepEqual(rushes, ['a', 'a', 'b'], 'l’ordre d’origine ne devrait pas être conservé tel quel');
+  assert.notEqual(rushes[0], rushes[1], 'deux morceaux du même rush ne devraient plus se suivre');
+});
+
+/*
+ * Un seul style de texte par montage.
+ *
+ * Chaque jeu mêlait deux à quatre styles — « Bande-annonce » posait du néon
+ * jaune, du blanc contouré, du karaoké vert et du rouge dans le même film.
+ * Rapporté ainsi : « trois styles différents, pas cohérents ».
+ *
+ * La variété se joue **entre** les jeux, jamais à l'intérieur d'un jeu, et ce
+ * test garde les deux moitiés de la règle.
+ */
+test('chaque trame n’emploie qu’un seul style de texte', () => {
+  for (const set of CAPTION_SETS) {
+    const styles = new Set(set.slots.map((slot) => slot.style));
+    assert.equal(styles.size, 1, `${set.id} en emploie ${styles.size} : ${[...styles].join(', ')}`);
+  }
+});
+
+test('la couleur ne souligne qu’un seul moment', () => {
+  for (const set of CAPTION_SETS) {
+    const colorees = set.slots.filter((slot) => slot.color !== undefined).length;
+    assert.ok(colorees <= 1, `${set.id} colore ${colorees} textes`);
+  }
+});
+
+/*
+ * Les échelles restent sous 1,2, et c'est mesuré.
+ *
+ * « QUEL [ROYAUME] TOMBE ENSUITE ? » en échelle 1,3 passe à quatre lignes, soit
+ * 638 px, quand la bande sûre des trois plateformes en fait 634. Aucune hauteur
+ * d'ancrage ne pouvait le sauver : il était trop grand, pas mal posé.
+ */
+test('aucune trame ne demande une échelle qui déborde la bande', () => {
+  for (const set of CAPTION_SETS) {
+    for (const slot of set.slots) {
+      const echelle = slot.scale ?? 1;
+      assert.ok(echelle <= 1.2, `${set.id} demande une échelle de ${echelle}`);
+    }
+  }
 });

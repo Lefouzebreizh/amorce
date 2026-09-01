@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+/*
+ * Le thème, en jetons plutôt qu'en couleurs semées dans les composants.
+ *
+ * Sombre par défaut, et pas par mode : on regarde de la vidéo, le plus souvent
+ * le soir, et un fond clair autour d'une image lumineuse fatigue et fausse les
+ * contrastes de ce qu'on regarde.
+ *
+ * Le corps du texte est à 18 px, jamais moins — règle du dépôt, et elle vaut
+ * doublement sur un écran tenu à bout de bras dans un canapé.
+ */
+@theme {
+  --color-fond: #0b0d10;
+  --color-surface: #14181d;
+  --color-surface-haute: #1d232b;
+  --color-bord: #2a323c;
+  --color-texte: #e9eef4;
+  --color-doux: #97a3b2;
+  --color-accent: #4aa8ff;
+  --color-accent-sombre: #1b3a5c;
+
+  --font-size-base: 1.125rem;
+  --radius-carte: 0.75rem;
+}
+
+html,
+body {
+  background: var(--color-fond);
+  color: var(--color-texte);
+  font-size: 18px;
+  /* `dvh` et non `vh` : sur Android, la barre d'adresse se rétracte et `vh`
+     garde l'ancienne hauteur — le bas de la page passe alors sous le pouce. */
+  min-height: 100dvh;
+}
+
+/* Tout ce qui se touche fait au moins 44 px. Écrit une fois ici plutôt que
+   répété sur chaque bouton, où l'oubli ne se voit qu'à l'usage. */
+a,
+button,
+[role='button'] {
+  min-height: 44px;
+}
+
+a.compact,
+button.compact {
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -357,6 +357,92 @@ def preparer_montage(rushes: list[Path]) -> bool:
     return True
 
 
+def verifier(dossier: Path, fichiers: list[str] | None) -> bool:
+    """Contrôle l'installation et **sonde la vraie API**, sans rien créer.
+
+    Ce mode existe parce que ce fichier a été écrit contre la documentation de
+    Resolve, pas contre le module lui-même : celui-ci n'est pas installable
+    ailleurs qu'avec le logiciel. Les seize appels employés sont donc des
+    hypothèses jusqu'à ce qu'une machine qui a Resolve les confronte au réel.
+
+    Plutôt que de laisser cette confrontation se produire au milieu d'un
+    traitement, sous la forme d'un AttributeError, on la fait ici, à froid, et
+    on la rend lisible. Un appel manquant se corrige ; un appel manquant
+    découvert après la création d'un projet laisse un projet à moitié fait.
+    """
+    print("── Vérification, sans rien créer\n")
+
+    rushes = rassembler_rushes(dossier, fichiers)
+    if rushes:
+        print(f"   Rushes trouvés : {len(rushes)}")
+        for chemin in rushes[:5]:
+            print(f"     {chemin.name}")
+        if len(rushes) > 5:
+            print(f"     … et {len(rushes) - 5} de plus")
+    else:
+        print(f"   Rushes : aucun dans {dossier}")
+        print(f"     Extensions cherchées : {', '.join(EXTENSIONS_VIDEO)}")
+
+    import shutil
+    if shutil.which("ffprobe"):
+        cadence = detecter_cadence(rushes[0]) if rushes else None
+        print(f"   ffprobe : présent"
+              + (f", cadence du premier rush {cadence:g} im/s" if cadence else ""))
+    else:
+        print(f"   ffprobe : absent — la cadence sera supposée à {CADENCE_PAR_DEFAUT:g} im/s")
+
+    print()
+    resolve = connecter_resolve()
+    if resolve is None:
+        return False
+
+    # Le sondage proprement dit. `hasattr` suffit : on demande à l'objet vivant
+    # s'il connaît le nom, on ne l'appelle pas — appeler créerait des choses.
+    attendus = {
+        "Resolve": (resolve, ["GetProjectManager", "GetMediaStorage", "OpenPage",
+                              "GetProductName", "GetVersionString"]),
+    }
+    gestionnaire = resolve.GetProjectManager()
+    if gestionnaire is not None:
+        attendus["ProjectManager"] = (gestionnaire, ["CreateProject", "LoadProject"])
+    stockage = resolve.GetMediaStorage()
+    if stockage is not None:
+        attendus["MediaStorage"] = (stockage, ["AddItemListToMediaPool"])
+    projet = gestionnaire.GetCurrentProject() if gestionnaire else None
+    if projet is not None:
+        attendus["Project"] = (projet, ["SetSetting", "GetMediaPool",
+                                        "SetCurrentTimeline", "GetName"])
+        chutier = projet.GetMediaPool()
+        if chutier is not None:
+            attendus["MediaPool"] = (chutier, ["CreateEmptyTimeline",
+                                               "AppendToTimeline", "ImportMedia"])
+
+    print("\n   Appels employés par ce script, confrontés à votre Resolve :")
+    manquants = []
+    for objet_nom, (objet, noms) in attendus.items():
+        for nom in noms:
+            present = hasattr(objet, nom)
+            print(f"     {'✓' if present else '✗'} {objet_nom}.{nom}")
+            if not present:
+                manquants.append(f"{objet_nom}.{nom}")
+
+    if "Project" not in attendus:
+        print("\n   Aucun projet ouvert : les appels de projet, de chutier et de")
+        print("   timeline n'ont pas pu être sondés. Ouvrir n'importe quel projet")
+        print("   dans Resolve et relancer donnera le tableau complet.")
+
+    if manquants:
+        print(f"\n   {len(manquants)} appel(s) absent(s) de votre version :")
+        for nom in manquants:
+            print(f"     {nom}")
+        print("   Me les donner tels quels : ce sont eux qu'il faut corriger,")
+        print("   et cette liste vaut mieux qu'une trace d'erreur.")
+        return False
+
+    print("\n   Tout répond. Lancer sans --check pour faire le travail.")
+    return True
+
+
 # --------------------------------------------------------------------------
 # Ligne de commande
 # --------------------------------------------------------------------------
@@ -381,9 +467,16 @@ def main() -> int:
         "--file", nargs="+", dest="fichiers",
         help="Fichiers précis à importer, au lieu de scanner un dossier.",
     )
+    analyseur.add_argument(
+        "--check", action="store_true",
+        help="vérifie l'installation et sonde l'API, sans rien créer.",
+    )
     arguments = analyseur.parse_args()
 
     dossier = Path(arguments.dossier).expanduser().resolve()
+    if arguments.check:
+        return 0 if verifier(dossier, arguments.fichiers) else 1
+
     if not arguments.fichiers and not dossier.is_dir():
         print(f"Dossier introuvable : {dossier}", file=sys.stderr)
         return 1

@@ -20,7 +20,27 @@ import os
 import sys
 import time
 
-DEPOT = os.path.join(os.environ.get('TMPDIR', '/tmp'), f'claude-jauge-{os.getuid()}.json')
+def _depots() -> list[str]:
+    """Les endroits où une ligne d'état a pu déposer son relevé.
+
+    Il y en a deux parce qu'il y a deux lignes d'état : `ligne-etat.sh` sur
+    Unix, qui écrit dans `TMPDIR` avec l'UID au nom pour ne pas se marcher
+    dessus entre comptes, et `ligne-etat.ps1` sur Windows, qui écrit dans
+    `%TEMP%` — déjà propre à l'utilisateur, d'où l'absence de suffixe.
+
+    Chercher un seul des deux rendait « aucun relevé disponible » sur l'autre
+    système, alors que la jauge tournait et affichait ses barres à l'écran.
+    """
+    trouves = []
+    if hasattr(os, 'getuid'):
+        trouves.append(os.path.join(os.environ.get('TMPDIR', '/tmp'),
+                                    f'claude-jauge-{os.getuid()}.json'))
+    for base in (os.environ.get('TEMP'), os.environ.get('TMP')):
+        if base:
+            trouves.append(os.path.join(base, 'claude-jauge.json'))
+    return trouves
+
+
 FENETRES = (('five_hour', 'Cinq heures'), ('seven_day', 'Sept jours'))
 
 
@@ -42,10 +62,15 @@ def duree(secondes: float) -> str:
 
 
 def main() -> int:
-    try:
-        with open(DEPOT, encoding='utf-8') as f:
-            releve = json.load(f)
-    except (OSError, ValueError):
+    releve = None
+    for chemin in _depots():
+        try:
+            with open(chemin, encoding='utf-8-sig') as f:
+                releve = json.load(f)
+            break
+        except (OSError, ValueError):
+            continue
+    if releve is None:
         print("Aucun relevé disponible.\n"
               "La ligne d'état n'a pas encore tourné dans cette session, ou le "
               "compte n'a pas d'abonnement Claude.\n"

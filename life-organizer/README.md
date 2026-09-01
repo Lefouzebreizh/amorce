@@ -9,11 +9,13 @@ une clé d'API est explicitement renseignée pour l'OCR ou l'agrandissement (deu
 options désactivées par défaut).
 
 > État : squelette d'architecture. `organizer_config.json` est complet et
-> validé ; les six modules sont décrits ci-dessous. Deux sont écrits :
-> `nettoyage` (`organizer nettoyer`) — flou, quasi-doublons, puis copies de nom
-> et exports recalculables sur **tous** les fichiers, les vidéos abîmées restant
-> à faire — et `classement`, qui range documents, photos et vidéos par thème et
-> par date (`organizer ranger`).
+> validé ; les six modules sont décrits ci-dessous. Trois sont écrits :
+> `nettoyage`, complet — photos floues, quasi-doublons, vidéos abîmées, puis
+> copies de nom et exports recalculables sur **tous** les fichiers
+> (`organizer nettoyer`) —, `classement`, qui range documents, photos et
+> vidéos par thème et par date en **lisant les premières pages d'un document**
+> quand son nom ne dit rien (`organizer ranger`), et `conversion`, qui
+> repasse les HEIC en JPG et les MKV en MP4 (`organizer convertir`).
 
 ## Arborescence
 
@@ -104,6 +106,7 @@ python3 organizer.py verifier
 python3 organizer.py --help
 
 # 2. Les dépendances. `nettoyer` a besoin de Pillow, d'ImageHash et d'OpenCV ;
+#    `convertir` ajoute pillow-heif pour les HEIC, et ffmpeg pour les vidéos ;
 #    les autres modules ajouteront les leurs à mesure qu'ils seront écrits.
 pip install -r requirements.txt
 
@@ -134,6 +137,15 @@ Ce que la commande décide, et pourquoi :
   `classement.themes`, et le premier thème de la liste l'emporte : c'est un
   ordre de priorité qu'on maîtrise, là où un score laisserait deviner pourquoi
   la facture d'électricité est partie chez « Banque ».
+- **Le thème se cherche dans le nom, puis dans le document.** Un scan nommé
+  `scan001.pdf` finissait dans le fourre-tout alors que sa première page annonce
+  sa nature. Le nom passe devant — qui a nommé son fichier l'a déjà classé — et
+  seules les premières pages sont lues : la dernière page d'un avis d'imposition
+  cite l'assurance, la banque et les recours, trois thèmes qui n'ont rien à
+  voir. La comparaison ignore les accents, sans quoi « taxe fonciere » rendu par
+  un scan manquerait « taxe foncière » en silence. Réglages dans
+  `classement.lecture_du_document` ; une image scannée reste hors de portée,
+  faute d'OCR installé, et le compte rendu le dit.
 - **Le motif dit d'où vient la date.** « mars 2024, d'après nom_de_fichier » ou
   « d'après la date de modification, faute de mieux ». Sans cette mention, rien
   ne distingue une photo rangée sur sa vraie date de prise de vue d'une photo
@@ -156,6 +168,123 @@ Ce que la commande décide, et pourquoi :
   relue et comparée à l'original **avant** que celui-ci ne soit retiré. C'est le
   seul ordre qui protège d'une copie tronquée entre deux disques.
 
+## Convertir
+
+```bash
+python3 organizer.py convertir                       # simulation sur dossiers.entree
+python3 organizer.py convertir ~/Images --appliquer  # un dossier précis, pour de vrai
+python3 organizer.py convertir --seulement photos    # une photo prend une seconde…
+python3 organizer.py convertir --seulement videos    # … une vidéo, plusieurs minutes
+```
+
+Ce module repasse les HEIC en JPG et les MKV en MP4. Il a besoin de **Pillow**
+et **pillow-heif** pour les photos, de **ffmpeg et ffprobe** pour les vidéos ;
+ce qui manque est dit avant le premier fichier, pas au millième.
+
+Ce que la commande décide, et pourquoi :
+
+- **Chaque règle dit ce qu'elle achète : de la place, ou un fichier qui
+  s'ouvre.** `conversion.regles[].objectif` vaut `espace` ou `compatibilite`, et
+  c'est la décision qui fait exister ce module. Un HEIC repassé en JPEG
+  **grossit** presque toujours, souvent du simple au double : lui appliquer le
+  seuil de gain de 15 % revenait à ne convertir aucune photo d'iPhone tout en
+  ayant l'air de marcher. Une règle `espace` doit rendre au moins
+  `seuil_gain_minimal_pct` ; une règle `compatibilite` passe quoi qu'il arrive,
+  tant qu'elle n'alourdit pas de plus de `inflation_max_pct`.
+- **Le gain est mesuré, jamais estimé.** Le fichier est encodé à côté, dans un
+  temporaire caché posé sur le même disque ; c'est son poids réel qui décide.
+  Une capture d'écran d'aplats, que le PNG comprime déjà très bien, grossit de
+  79 % en JPEG — elle est refusée, et le compte rendu le dit dans ces termes.
+  Conséquence assumée : **en simulation, rien n'est encodé et aucun gain n'est
+  annoncé.** Réencoder une photothèque entière « pour voir » coûterait des
+  heures de machine pour un chiffre aussitôt jeté.
+- **Un MKV déjà en H.264 est remuxé, pas réencodé.** Ses flux sont recopiés tels
+  quels dans un conteneur MP4 : quelques secondes au lieu de plusieurs minutes,
+  et pas une image retouchée. C'est la deuxième raison pour laquelle la règle
+  vidéo vise la compatibilité — son gain d'espace est nul par construction.
+- **L'original ne part en quarantaine qu'après relecture du fichier produit.**
+  Une conversion est une perte définitive ; la seule chose qui la rend
+  rattrapable est que l'original existe encore. Un encodage interrompu par un
+  disque plein produit un fichier d'apparence normale, plus petit que
+  l'original, que le seuil de gain accueillerait à bras ouverts.
+- **Une entrée abîmée n'est pas convertie.** Mesuré sur un dossier d'essai : une
+  vidéo tronquée se remuxe **sans erreur** — ffmpeg recopie ce qu'il trouve et
+  rend le code 0. Le MP4 produit est aussi mort que son original, mais il a
+  l'air neuf, et l'unique exemplaire d'origine part en quarantaine où la purge
+  l'attend à trente jours. La plainte que ffmpeg écrit malgré son code 0 fait
+  donc renoncer au fichier, avec le renvoi vers `organizer nettoyer`.
+
+Les sept refus, et ce qu'ils protègent :
+
+| Constat | Geste |
+| --- | --- |
+| le fichier est déjà au format visé | gardé |
+| son format réel est déjà celui visé, malgré son extension | gardé — le convertir le recompresserait une seconde fois |
+| il est animé (APNG, GIF) | gardé — la conversion ne garderait que la première image |
+| sa transparence est **utilisée** | gardé — le JPEG l'aplatirait sur du noir |
+| sa transparence n'a pas pu être mesurée | gardé, par prudence |
+| un `.mkv` sans piste vidéo | gardé — c'est un enregistrement sonore |
+| des sous-titres image (PGS, VobSub) | gardé — le MP4 ne sait pas les porter, et les perdre en silence serait pire |
+
+Trois points méritent leur explication :
+
+- **La transparence se mesure sur le canal, pas sur le mode de l'image.** La
+  moitié des captures d'écran sont en RGBA sans qu'un seul pixel ne soit
+  transparent : les refuser sur leur mode écarterait le gros du volume que
+  `si_sans_transparence` est censé protéger.
+- **Les côtés réduits sont ramenés à un nombre pair**, que libx264 exige — et
+  dont l'absence ne se découvre qu'**après** le temps de réencodage.
+- **Un fichier refusé est réessayé à chaque exécution.** Une capture d'écran
+  dont le gain était insuffisant sera réencodée puis refusée à la suivante. Sur
+  des photos c'est une seconde ; sur une vidéo, ce serait à consigner dans
+  `donnees/`. Ce n'est pas fait : personne n'en a encore souffert.
+
+## Inspecter les vidéos
+
+La troisième passe de `organizer nettoyer` ne cherche ni une image ratée ni une
+image en trop : elle cherche le fichier qui ne s'ouvrira plus le jour où on
+voudra le revoir. Elle a besoin de **ffprobe et de ffmpeg**, qui sont un paquet
+système et non un paquet Python (`sudo apt install ffmpeg`). Sans eux, la passe
+le dit et ne tourne pas — elle ne devine pas.
+
+Ce qu'elle constate, et le geste qui suit :
+
+| Constat | Geste |
+| --- | --- |
+| ffprobe n'ouvre pas le conteneur, et le fichier est sous `taille_minimale_ko` | quarantaine — « vide ou tronquée » |
+| ffprobe n'ouvre pas le conteneur, et le fichier a un poids normal | quarantaine — « illisible », avec le mot exact de l'outil |
+| la fin du fichier ne se décode pas | quarantaine — « fin de fichier corrompue » |
+| durée sous `duree_minimale_secondes` | quarantaine — « trop courte » |
+| aucune piste vidéo (un `.mp4` qui ne porte que du son) | **gardé** et signalé |
+| le fichier a été modifié il y a moins de `ignorer_si_modifiee_recemment_minutes` | **gardé**, sans être jugé |
+
+Quatre choix méritent leur explication :
+
+- **Le poids ne condamne jamais seul.** Il ne fait que nommer « vide ou
+  tronquée » ce que l'inspection a déjà déclaré illisible. Mesuré sur un vrai
+  dossier : un MKV de quatre secondes en 320×240 pèse 20 ko et se lit
+  parfaitement — en faisant du poids un critère de plein droit, il partait en
+  quarantaine, et son motif masquait au passage le vrai diagnostic des quatre
+  fichiers réellement abîmés, tous plus petits que le seuil.
+- **Seule la fin du fichier est décodée**, sur trois secondes. C'est là qu'est
+  la coupure d'un transfert interrompu, d'une carte mémoire retirée trop tôt ou
+  d'une copie sur un disque plein — et c'est le seul symptôme d'un fichier
+  tronqué, dont l'en-tête reste intact et continue d'annoncer la durée
+  d'origine. **Ce que cela ne voit pas :** une corruption au milieu d'un fichier
+  par ailleurs complet. La chercher demanderait de décoder l'intégralité de
+  chaque vidéo, soit plusieurs minutes par gigaoctet.
+- **Une pochette d'album n'est pas une piste vidéo.** Un fichier sonore avec
+  jaquette porte un flux « video » d'une seule image ; le compter ferait passer
+  un enregistrement pour une vidéo, et le signalement ne se déclencherait jamais
+  sur les fichiers qu'il vise.
+- **Un téléchargement en cours ressemble trait pour trait à un fichier
+  tronqué** : en-tête complet, fin absente. C'est le seul faux positif que cette
+  passe produirait en masse, et il viserait précisément ce que l'utilisateur est
+  en train de récupérer — d'où le délai de grâce, réglable.
+
+Une durée absente n'est jamais tenue pour nulle : beaucoup de MKV et tous les
+flux enregistrés en direct n'annoncent aucune durée et se lisent très bien.
+
 ## Configuration
 
 `organizer_config.json` est le modèle versionné. À l'usage, il se copie et la
@@ -172,7 +301,7 @@ cp organizer_config.json ~/.config/life-organizer/config.json
 | `classement` | schéma des dossiers, extensions par catégorie, thèmes et leurs mots-clés |
 | `scan_ocr` | moteur, langues, seuil de confiance, modèle de nom, champs extraits |
 | `nettoyage_medias` | seuils de flou, ressemblance des doublons (voir plus bas), intégrité vidéo |
-| `conversion` | règles de format, qualité, gain minimal pour valider un remplacement |
+| `conversion` | règles de format, objectif de chacune, qualité, gain minimal et inflation tolérée |
 | `upscale` | modèle, facteur, taille source maximale, appareil de calcul |
 | `abonnements` | un objet par abonnement : montant, périodicité, préavis, statut |
 | `echeances` | paiements datés et leurs rappels |

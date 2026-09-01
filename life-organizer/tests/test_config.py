@@ -80,10 +80,50 @@ class Validation(unittest.TestCase):
         config["nettoyage_medias"]["doublons"]["distance_max"] = 0
         self.assertEqual([p for p in valider(config) if "distance_max" in p], [])
 
+    def test_une_duree_minimale_de_video_en_minutes_est_signalee(self):
+        # 5 saisi en pensant « minutes » ne fait pas échouer la commande : il
+        # fait déclarer abîmé tout un dossier de clips lisibles.
+        config = copy.deepcopy(MODELE)
+        config["nettoyage_medias"]["videos"]["duree_minimale_secondes"] = 300
+        self.assertTrue(any("duree_minimale_secondes" in p for p in valider(config)))
+
+    def test_une_duree_minimale_de_video_nulle_est_acceptee(self):
+        # 0 veut dire « aucune vidéo n'est trop courte » : c'est la façon de
+        # désactiver ce seul critère sans désactiver la passe entière.
+        config = copy.deepcopy(MODELE)
+        config["nettoyage_medias"]["videos"]["duree_minimale_secondes"] = 0
+        self.assertEqual(
+            [p for p in valider(config) if "duree_minimale_secondes" in p], []
+        )
+
     def test_une_cle_dapi_en_clair_est_refusee(self):
         config = copy.deepcopy(MODELE)
         config["upscale"]["api"]["cle"] = "sk-quelque-chose"
         self.assertTrue(any("variable d'environnement" in p for p in valider(config)))
+
+    def test_un_objectif_de_conversion_mal_orthographie_est_signale(self):
+        # C'est le défaut le plus silencieux de la section : le module retombe
+        # sur « espace » par prudence, et les photos d'iPhone — qui grossissent
+        # toujours en JPEG — cessent d'être converties sans qu'on sache pourquoi.
+        config = copy.deepcopy(MODELE)
+        config["conversion"]["regles"][0]["objectif"] = "compatibilité"
+        self.assertTrue(any("objectif" in p for p in valider(config)))
+
+    def test_un_seuil_de_gain_a_cent_pour_cent_est_refuse(self):
+        # À 100, aucune conversion d'espace ne peut plus être retenue : le
+        # dossier a l'air propre alors que rien n'a été fait.
+        config = copy.deepcopy(MODELE)
+        config["conversion"]["seuil_gain_minimal_pct"] = 100
+        self.assertTrue(any("seuil_gain_minimal_pct" in p for p in valider(config)))
+
+    def test_un_seuil_de_gain_nul_est_accepte(self):
+        # 0 veut dire « toute conversion qui ne fait pas grossir est bonne à
+        # prendre » : c'est un réglage légitime, pas une erreur de saisie.
+        config = copy.deepcopy(MODELE)
+        config["conversion"]["seuil_gain_minimal_pct"] = 0
+        self.assertEqual(
+            [p for p in valider(config) if "seuil_gain_minimal_pct" in p], []
+        )
 
     def test_une_fin_dengagement_absente_est_acceptee(self):
         # `null` veut dire « sans engagement » : c'est le cas le plus fréquent,

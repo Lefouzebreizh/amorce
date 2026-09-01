@@ -120,6 +120,92 @@ une citation, un moment.
   transcription est un flux continu. On peut deviner les tours de parole au
   contexte, mais dis-le plutôt que d'attribuer des propos à quelqu'un.
 
+## Quand `huggingface.co` est refusé
+
+`faster-whisper` va chercher ses poids sur Hugging Face. En session distante la
+politique de sortie le refuse au CONNECT, et la transcription paraît impossible.
+Elle ne l'est pas : deux hôtes restent ouverts, et `scripts/asr_hors_ligne.py`
+y va.
+
+| Route | Ce qui passe |
+| --- | --- |
+| **PyPI en direct** | le mandataire le liste dans `noProxy` ; tout modèle livré dans une roue s'installe. `pocketsphinx` embarque 38 Mo d'anglais, zéro téléchargement. |
+| **Objets de release GitHub** | `github.com` redirige vers `release-assets.githubusercontent.com`, qui répond 200. Les modèles sherpa-onnx y sont publiés, Whisper compris. |
+
+Mesuré le 27 août 2026 : `huggingface.co`, `alphacephei.com` et
+`openaipublic.azureedge.net` échouent tous les trois ; les deux routes ci-dessus
+rendent 200 et un modèle a été téléchargé, chargé et exécuté. Ce n'est pas un
+contournement — ni le TLS ni le mandataire ne sont touchés, ce sont des hôtes
+que la politique autorise.
+
+```bash
+# ce qui se dit, multilingue (tiny 116 Mo · base 208 · small 639 · medium 1931)
+python3 scripts/asr_hors_ligne.py media.mp4 --modele base
+
+# à quelle seconde commence chaque mot — anglais seulement
+python3 scripts/asr_hors_ligne.py media.mp4 --instants
+
+# dernier repli, sans aucun réseau
+python3 scripts/asr_hors_ligne.py media.mp4 --pocketsphinx
+```
+
+**Deux pièges, et le second est sournois.**
+
+`from_whisper` a pour défaut `language="en"` et **ne prévient pas** : sur du
+français il rend de l'anglais grammatical et faux, qu'on relit sans broncher.
+Le script renverse ce défaut à `fr` parce que ce dépôt est francophone, mais
+`--langue` reste à poser dès qu'on sort du français.
+
+`--instants` (zipformer) n'existe qu'en anglais : aucun modèle français dans
+cette release, vérifié par requête. Et son premier jeton tombe volontiers à
+0,00 s par artefact de décodage. **Recouper avec `--passages` avant de croire
+un instant** : sur le clip qui a motivé ces scripts, le zipformer annonçait un
+mot à 0,04 s là où la parole ne commence qu'à 1,86 s.
+
+## Les passages parlés, dans n'importe quelle langue
+
+C'est le relevé qui sert vraiment à caler une voix off sur des images : pas un
+mur de texte, mais « le passage 2 commence à 4,20 s ».
+
+```bash
+python3 scripts/asr_hors_ligne.py media.mp4 --passages --modele base
+```
+
+Silero VAD (640 ko) donne les bornes — **il ne dépend d'aucune langue** — et
+Whisper transcrit chaque passage. Sortent les instants, les durées, le texte,
+et les respirations entre passages.
+
+C'est la bonne réponse au « français à dater » : un seuil posé à la main sur
+l'enveloppe se trompe dès qu'un bruitage couvre une syllabe, et c'est
+exactement ainsi qu'une session a conclu « pas de voix » sur un fichier qui en
+portait une, mixée bas.
+
+## Relever les instants d'un montage
+
+`scripts/relever_instants.py` répond à « à quelle seconde se passe quoi », qui
+est une autre question que « qu'est-ce qui se dit ». Il existe parce qu'un plan
+sonore donnait l'apparition d'un dragon à 7,50 s là où le fichier la met à
+10,29 s : trois secondes d'erreur que personne n'a vues, parce qu'un instant
+plausible se relit sans broncher.
+
+```bash
+python3 scripts/relever_instants.py montage.mp4                 # tout
+python3 scripts/relever_instants.py montage.mp4 --fenetre 10 11 --par-seconde 8
+```
+
+Deux pièges qu'il connaît, et qui valent d'être connus même sans lui :
+
+- **Un score de rupture bas ne veut pas dire « pas de temps forts ».** Un fondu
+  ou un iris ne font aucun pic : l'image change beaucoup, mais lentement. Quand
+  le maximum plafonne bas, c'est un plan continu, et les temps forts se lisent
+  sur la planche contact.
+- **L'énergie dans la bande de parole ne prouve pas qu'on parle.** Un choc, une
+  étincelle, une cymbale l'occupent aussi bien qu'une syllabe — et une voix
+  mixée bas s'y cache. Sur le clip qui a motivé ces scripts, la lecture de
+  l'enveloppe a conclu « aucune voix » alors qu'il y en avait une : c'est la
+  reconnaissance lancée pour de bon qui a tranché. **Devant un doute, transcris
+  au lieu de raisonner sur des courbes.**
+
 ## Ce qu'il ne faut pas faire
 
 - **Envoyer le média à un service externe.** Tout est local : `ffmpeg` décode,

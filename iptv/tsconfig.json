@@ -1,0 +1,58 @@
+{
+  // Un seul tsconfig pour deux mondes, et c'est le point délicat du projet.
+  //
+  // Le cœur tourne sous Node par simple retrait des types
+  // (`--experimental-strip-types`) : ses imports portent donc l'extension
+  // `.ts`, que Node exige. L'application, elle, passe par le bundler de
+  // Next, qui veut `moduleResolution: bundler`.
+  //
+  // `allowImportingTsExtensions` réconcilie les deux : le bundler résout un
+  // chemin explicite sans broncher, et `tsc` cesse de refuser l'extension.
+  // Sans lui il faudrait deux configurations, donc deux vérités sur le même
+  // code — et la seconde serait fausse un jour sans que rien ne le dise.
+  //
+  // `erasableSyntaxOnly` reste : il interdit la syntaxe TypeScript que Node ne
+  // sait pas retirer seul, et c'est ce qui garde `npm test` exécutable sans
+  // compilation.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "allowJs": false,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

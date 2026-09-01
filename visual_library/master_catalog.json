@@ -1,0 +1,262 @@
+{
+  "visuels": {
+    "total": 10,
+    "au_dessus_du_seuil": 4,
+    "corriges": 4,
+    "seuils": {
+      "luma_mini": 40.0,
+      "note_mini": 50.0,
+      "baisse_ecran": 0.8
+    },
+    "assets": [
+      {
+        "nom": "light_leak_orange.png",
+        "categorie": "overlay",
+        "chemin": "visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_orange.png",
+        "resolution": "3840x2160",
+        "fps": null,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 59.2,
+        "contraste": 27.9,
+        "visibilite_telephone": 44.9,
+        "corrige_pour_telephone": true,
+        "empreinte": "a1a35e5c53e3193c",
+        "versions": {
+          "webp": "visual_library/app_optimized/light_leak_orange.webp"
+        }
+      },
+      {
+        "nom": "light_leak_blue.png",
+        "categorie": "overlay",
+        "chemin": "visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_blue.png",
+        "resolution": "3840x2160",
+        "fps": null,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 59.5,
+        "contraste": 37.3,
+        "visibilite_telephone": 52.4,
+        "corrige_pour_telephone": true,
+        "empreinte": "b794697e00ff4069",
+        "versions": {
+          "webp": "visual_library/app_optimized/light_leak_blue.webp"
+        }
+      },
+      {
+        "nom": "light_leak_magenta.png",
+        "categorie": "overlay",
+        "chemin": "visual_library/01_Overlays_and_FX/Light_Leaks/light_leak_magenta.png",
+        "resolution": "3840x2160",
+        "fps": null,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 49.8,
+        "contraste": 38.5,
+        "visibilite_telephone": 49.5,
+        "corrige_pour_telephone": true,
+        "empreinte": "f0e01ffe030f0f07",
+        "versions": {
+          "webp": "visual_library/app_optimized/light_leak_magenta.webp"
+        }
+      },
+      {
+        "nom": "vignette_strong.png",
+        "categorie": "matte",
+        "chemin": "visual_library/05_Matte_and_Bars/vignette_strong.png",
+        "resolution": "3840x2160",
+        "fps": null,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 20.4,
+        "contraste": 0.0,
+        "visibilite_telephone": 8.0,
+        "corrige_pour_telephone": true,
+        "empreinte": "0000000000000000",
+        "versions": {
+          "webp": "visual_library/app_optimized/vignette_strong.webp"
+        }
+      },
+      {
+        "nom": "LUT_teal_orange.cube",
+        "categorie": "lut",
+        "chemin": "visual_library/02_LUTs_and_Grading/LUT_teal_orange.cube",
+        "resolution": "33x33",
+        "fps": null,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 0.0,
+        "contraste": 0.0,
+        "visibilite_telephone": 100.0,
+        "corrige_pour_telephone": false,
+        "empreinte": "",
+        "versions": {}
+      },
+      {
+        "nom": "LUT_bw_film.cube",
+        "categorie": "lut",
+        "chemin": "visual_library/02_LUTs_and_Grading/LUT_bw_film.cube",
+        "resolution": "33x33",
+        "fps": null,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 0.0,
+        "contraste": 0.0,
+        "visibilite_telephone": 100.0,
+        "corrige_pour_telephone": false,
+        "empreinte": "",
+        "versions": {}
+      },
+      {
+        "nom": "glitch_transition_01.mp4",
+        "categorie": "transition",
+        "chemin": "visual_library/03_Transitions/glitch_transition_01.mp4",
+        "resolution": "1920x1080",
+        "fps": 24.0,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 103.1,
+        "contraste": 0.8,
+        "visibilite_telephone": 40.9,
+        "corrige_pour_telephone": false,
+        "empreinte": "8000800080008000",
+        "versions": {
+          "720p": "visual_library/app_optimized/glitch_transition_01_720p.mp4"
+        }
+      },
+      {
+        "nom": "dust_particles_4k.mp4",
+        "categorie": "overlay",
+        "chemin": "visual_library/01_Overlays_and_FX/Dust/dust_particles_4k.mp4",
+        "resolution": "3840x2160",
+        "fps": 24.0,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 6.1,
+        "contraste": 3.2,
+        "visibilite_telephone": 4.9,
+        "corrige_pour_telephone": false,
+        "empreinte": "f86f23800da8a37f",
+        "versions": {
+          "720p": "visual_library/app_optimized/dust_particles_4k_720p.mp4"
+        }
+      },
+      {
+        "nom": "smoke_drift_2k.mp4",
+        "categorie": "overlay",
+        "chemin": "visual_library/01_Overlays_and_FX/Smoke/smoke_drift_2k.mp4",
+        "resolution": "1920x1080",
+        "fps": 24.0,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 108.5,
+        "contraste": 17.8,
+        "visibilite_telephone": 56.3,
+        "corrige_pour_telephone": false,
+        "empreinte": "9adc2471e9734732",
+        "versions": {
+          "720p": "visual_library/app_optimized/smoke_drift_2k_720p.mp4"
+        }
+      },
+      {
+        "nom": "film_grain_4k.mp4",
+        "categorie": "overlay",
+        "chemin": "visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4",
+        "resolution": "3840x2160",
+        "fps": 24.0,
+        "origine": "synthèse",
+        "licence": "CC0 — fabriqué par code, aucun droit tiers",
+        "luma": 106.5,
+        "contraste": 1.7,
+        "visibilite_telephone": 42.9,
+        "corrige_pour_telephone": false,
+        "empreinte": "be25d92ac17b63a0",
+        "versions": {
+          "720p": "visual_library/app_optimized/film_grain_4k_720p.mp4"
+        }
+      }
+    ]
+  },
+  "audio": {
+    "source": "second-brain/sound_index.json",
+    "total": 9,
+    "utilisables": 9,
+    "seuils": {
+      "sonie_lufs": -20.0,
+      "telephone_db": -22.0,
+      "duree_s": {
+        "impacts": 0.5,
+        "whooshes": 0.8,
+        "dragons": 1.5,
+        "magic": 0.6,
+        "crowds": 2.0,
+        "atmos": 2.0
+      }
+    },
+    "sons": [
+      {
+        "id": "energie-scifi",
+        "chemin": "kits/sfx/atmos/energie-scifi.wav",
+        "duree": 2.6,
+        "telephone_db": -14.9,
+        "utilisable": true
+      },
+      {
+        "id": "rugissement-dragon",
+        "chemin": "kits/sfx/dragons/rugissement-dragon.wav",
+        "duree": 2.0,
+        "telephone_db": -18.6,
+        "utilisable": true
+      },
+      {
+        "id": "eclair-craquant",
+        "chemin": "kits/sfx/impacts/eclair-craquant.wav",
+        "duree": 1.0,
+        "telephone_db": -15.1,
+        "utilisable": true
+      },
+      {
+        "id": "foudre",
+        "chemin": "kits/sfx/impacts/foudre.wav",
+        "duree": 1.48,
+        "telephone_db": -21.0,
+        "utilisable": true
+      },
+      {
+        "id": "pas-du-titan",
+        "chemin": "kits/sfx/impacts/pas-du-titan.wav",
+        "duree": 0.85,
+        "telephone_db": -13.6,
+        "utilisable": true
+      },
+      {
+        "id": "magie-du-sorcier",
+        "chemin": "kits/sfx/magic/magie-du-sorcier.wav",
+        "duree": 3.0,
+        "telephone_db": -18.9,
+        "utilisable": true
+      },
+      {
+        "id": "runes-rotatives",
+        "chemin": "kits/sfx/magic/runes-rotatives.wav",
+        "duree": 0.73,
+        "telephone_db": -13.8,
+        "utilisable": true
+      },
+      {
+        "id": "faille-dimensionnelle",
+        "chemin": "kits/sfx/whooshes/faille-dimensionnelle.wav",
+        "duree": 1.42,
+        "telephone_db": -14.3,
+        "utilisable": true
+      },
+      {
+        "id": "druide-avertissement",
+        "chemin": "kits/voice/takes/druide-avertissement.wav",
+        "duree": 6.3,
+        "telephone_db": -16.2,
+        "utilisable": true
+      }
+    ]
+  }
+}

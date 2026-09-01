@@ -1,0 +1,121 @@
+# Table d'identité des blockchains.
+#
+# C'est le fichier fondateur du projet, et la raison est simple : les quatre
+# sources de données appellent la même chaîne de quatre façons différentes.
+# DexScreener dit `bsc`, GoPlus dit `56`, Etherscan dit `chainid=56`,
+# l'utilisateur dit « BNB Chain ». Sans cette table, chaque skill réinvente sa
+# propre correspondance et le premier oubli fait qu'un jeton passe l'analyse de
+# momentum sans jamais passer l'analyse de sécurité.
+#
+# Ajouter une chaîne, c'est ajouter une entrée ici. Aucun autre fichier ne
+# nomme une blockchain.
+#
+# `quotes` : les seuls jetons de cotation acceptés. Une paire cotée en un autre
+# jeton donne des montants en dollars dérivés d'un actif lui-même volatil ou
+# illiquide — et c'est le montage exact des faux volumes : créer une paire
+# SCAM/AUTRESCAM, faire tourner les deux, et laisser l'agrégateur convertir en
+# dollars imaginaires. Les adresses sont en minuscules, la comparaison aussi.
+#
+# Une adresse erronée ici écarte un jeton légitime : elle ne fabrique jamais une
+# fausse alerte. C'est le bon sens de l'échec, mais il vaut mieux les vérifier
+# avant la première mise en service.
+
+ethereum:
+  nom: Ethereum
+  goplus: "1"                       # identifiant numérique EVM, aussi valable pour Etherscan V2
+  honeypot_is: 1                    # simulateur d'achat/revente : ETH, BSC et Base seulement
+  explorateur: "https://etherscan.io/token/"
+  # Le gaz coûte plusieurs dollars : sous 80 000 $ de liquidité, les frais
+  # d'entrée et de sortie mangent la thèse. Plancher plus haut qu'ailleurs.
+  liquidite_min_usd: 80000
+  quotes:
+    - "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"   # WETH
+    - "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"   # USDC
+    - "0xdac17f958d2ee523a2206206994597c13d831ec7"   # USDT
+    - "0x6b175474e89094c44da98b954eedeac495271d0f"   # DAI
+    - "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"   # WBTC
+
+bsc:
+  nom: BNB Chain
+  goplus: "56"
+  honeypot_is: 56
+  explorateur: "https://bscscan.com/token/"
+  liquidite_min_usd: 50000
+  quotes:
+    - "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c"   # WBNB
+    - "0x55d398326f99059ff775485246999027b3197955"   # USDT
+    - "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"   # USDC
+    - "0xe9e7cea3dedca5984780bafc599bd69add087d56"   # BUSD
+
+base:
+  nom: Base
+  goplus: "8453"
+  honeypot_is: 8453
+  explorateur: "https://basescan.org/token/"
+  liquidite_min_usd: 50000
+  quotes:
+    - "0x4200000000000000000000000000000000000006"   # WETH
+    - "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"   # USDC
+    - "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf"   # cbBTC
+
+arbitrum:
+  nom: Arbitrum
+  goplus: "42161"
+  honeypot_is: null                 # non couvert : le bouclier se rabat sur GoPlus seul
+  explorateur: "https://arbiscan.io/token/"
+  liquidite_min_usd: 50000
+  quotes:
+    - "0x82af49447d8a07e3bd95bd0d56f35241523fbab1"   # WETH
+    - "0xaf88d065e77c8cc2239327c5edb3a432268e5831"   # USDC
+    - "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9"   # USDT
+    - "0x912ce59144191c1204e64559fe8253a0e49e6548"   # ARB
+
+avalanche:
+  nom: Avalanche
+  goplus: "43114"
+  honeypot_is: null
+  explorateur: "https://snowscan.xyz/token/"
+  liquidite_min_usd: 50000
+  quotes:
+    - "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7"   # WAVAX
+    - "0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e"   # USDC
+    - "0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7"   # USDT
+
+polygon:
+  nom: Polygon
+  goplus: "137"
+  honeypot_is: null
+  explorateur: "https://polygonscan.com/token/"
+  liquidite_min_usd: 50000
+  quotes:
+    - "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270"   # WPOL (ex-WMATIC)
+    - "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"   # USDC natif
+    - "0x2791bca1f2de4661ed88a30c99a7a9449aa84174"   # USDC.e (pont)
+    - "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"   # USDT
+
+optimism:
+  nom: Optimism
+  goplus: "10"
+  honeypot_is: null
+  explorateur: "https://optimistic.etherscan.io/token/"
+  liquidite_min_usd: 50000
+  quotes:
+    - "0x4200000000000000000000000000000000000006"   # WETH
+    - "0x0b2c639c533813f4aa9d7837caf62653d097ff85"   # USDC
+    - "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58"   # USDT
+
+solana:
+  nom: Solana
+  goplus: solana                    # point d'entrée distinct : /api/v1/solana/token_security
+  honeypot_is: null                 # remplacé par RugCheck, qui ne connaît que Solana
+  explorateur: "https://solscan.io/token/"
+  # Les frais sont négligeables et les paires y naissent par milliers : un
+  # plancher plus bas garde des candidats réels sans ouvrir la porte aux scams,
+  # que le bouclier arrête de toute façon.
+  liquidite_min_usd: 30000
+  # Les adresses Solana sont sensibles à la casse (base58) : pas de minuscules ici.
+  sensible_a_la_casse: true
+  quotes:
+    - "So11111111111111111111111111111111111111112"   # WSOL
+    - "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC
+    - "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"  # USDT

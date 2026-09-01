@@ -87,6 +87,20 @@ export function Button({
   const styles: Record<string, string> = {
     primary: 'bg-accent text-ink font-semibold hover:bg-accent/85 active:bg-accent/75',
     ghost: 'bg-raised text-mist hover:bg-edge active:bg-edge/70',
+    /*
+     * `subtle` veut dire **indisponible**, pas « discret ».
+     *
+     * Son seul indice visuel est un fond au survol — et un téléphone ne
+     * survole pas : au repos, un bouton `subtle` est du texte gris,
+     * indistinguable de la légende qui le précède. C'est exactement ce qu'on
+     * veut pour Annuler et Rétablir quand il n'y a rien à annuler, et c'est le
+     * seul emploi juste.
+     *
+     * Quatre boutons bien vivants l'ont porté — « Modifier ce texte »,
+     * « Aller à l'Accroche », « Écouter », « Retirer » — et passaient tous
+     * pour morts. Ils fonctionnaient ; personne ne pouvait le savoir. Pour une
+     * action disponible mais secondaire, c'est `ghost` qu'il faut.
+     */
     subtle: 'text-muted hover:text-mist hover:bg-raised/60',
     danger: 'text-danger hover:bg-danger/10 active:bg-danger/15',
   };
@@ -97,8 +111,17 @@ export function Button({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      // 44 px de haut : la cible minimale qu'un doigt atteint sans viser.
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3.5 text-[13.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${styles[variant]} ${className}`}
+      /*
+       * 44 px **dans les deux sens** : la cible minimale qu'un doigt atteint
+       * sans viser. La hauteur était fixée, la largeur non — elle ne venait
+       * que du remplissage et du contenu, si bien qu'un bouton d'icône sortait
+       * à 37 px de large. Mesurés d'un coup sur le studio : trente-et-un
+       * boutons dans ce cas, tous ceux qui ne portent qu'un signe.
+       *
+       * `min-w-11` ne coûte rien aux boutons de texte, déjà plus larges — un
+       * seul jeton posé ici règle les trente-et-un.
+       */
+      className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-3.5 text-[13.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${styles[variant]} ${className}`}
     >
       {children}
     </button>
@@ -271,7 +294,7 @@ export function Choice<T extends string>({
             onClick={() => onChange(option.value)}
             className={`min-h-11 rounded-xl px-3 py-2.5 text-left text-[13px] transition-colors ${
               active
-                ? 'bg-raised text-mist ring-1 ring-accent/60'
+                ? 'bg-raised text-mist ring-1 ring-select/60'
                 : 'bg-slab text-muted hover:bg-raised hover:text-mist'
             }`}
           >
@@ -302,12 +325,19 @@ export function Hint({ children, tone = 'neutral' }: { children: ReactNode; tone
  * s'afficher de la même couleur partout, sans quoi le repère visuel ne veut
  * plus rien dire. Le seuil accepte aussi bien une note sur 100 qu'un rapport
  * de 0 à 1.
+ *
+ * Quatre crans, pris dans l'échelle `gauge` et non dans l'accent. Une note est
+ * un **constat**, pas une action : la dire avec la couleur des boutons faisait
+ * chercher où cliquer sur un chiffre. Et la clarté de l'échelle croît d'un
+ * cran à l'autre, ce qui la rend lisible même pour qui ne distingue pas le
+ * rouge du vert — sur une jauge, la teinte seule ne suffit jamais.
  */
 export function scoreColor(score: number): string {
   const ratio = score > 1 ? score / 100 : score;
-  if (ratio >= 0.75) return 'var(--color-accent)';
-  if (ratio >= 0.45) return 'var(--color-warn)';
-  return 'var(--color-danger)';
+  if (ratio >= 0.9) return 'var(--color-gauge-peak)';
+  if (ratio >= 0.7) return 'var(--color-gauge-high)';
+  if (ratio >= 0.45) return 'var(--color-gauge-mid)';
+  return 'var(--color-gauge-low)';
 }
 
 /**
@@ -315,19 +345,25 @@ export function scoreColor(score: number): string {
  *
  * Portée par les deux dispositions. `role="status"` et le libellé explicite
  * font annoncer la note par un lecteur d'écran, là où un simple nombre à côté
- * du mot « Viralité » ne veut rien dire hors contexte visuel.
+ * du mot ne veut rien dire hors contexte visuel.
+ *
+ * Elle disait « Viralité », et l'utilisateur a eu raison de s'en plaindre :
+ * personne ne peut prédire des vues honnêtement, et une note qui le prétendait
+ * récompensait une vidéo à 6 % de rétention. Elle dit maintenant ce qu'elle
+ * mesure vraiment — la qualité du montage — et se plafonne sur les défauts qui
+ * empêchent un film d'être fini.
  */
 export function ScoreBadge({ score, compact = false }: { score: number; compact?: boolean }) {
   return (
     <div
       role="status"
-      aria-label={`Note de viralité : ${score} sur 100`}
+      aria-label={`Note de montage : ${score} sur 100`}
       className={`flex items-center gap-2 rounded-full bg-raised ${
         compact ? 'px-3 py-1' : 'px-3.5 py-1.5'
       }`}
     >
       <span className="text-[12px] text-muted" aria-hidden="true">
-        Viralité
+        Montage
       </span>
       <span
         className="font-display text-[15px] tabular-nums"

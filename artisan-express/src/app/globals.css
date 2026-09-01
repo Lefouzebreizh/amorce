@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+
+/*
+ * La palette tient en six couleurs, et c'est volontaire.
+ *
+ * Blanc et bleu de chantier (#004AAD) portent la structure ; l'orange ne sert
+ * qu'aux boutons qui engagent quelque chose. Un accent unique veut dire qu'on
+ * ne cherche jamais où cliquer : ce qui est orange est ce qu'on fait.
+ *
+ * Les couleurs passent par des jetons plutôt que d'être posées en dur dans les
+ * composants — c'est aussi ce qui empêche Chrome Android de recolorer d'autorité
+ * une page qui ne se déclare pas.
+ */
+@theme {
+  --color-bleu: #004aad;
+  --color-bleu-sombre: #00306f;
+  --color-bleu-pale: #eef4fc;
+  /*
+   * Mesuré : #e35d00 sous du blanc rend 3,60:1 — sous le seuil, et le bouton
+   * qui porte toute la page en est fait. Approfondi jusqu'à 4,65:1, ce qui
+   * était déjà la teinte du survol : la page était donc plus lisible au doigt
+   * posé qu'au repos.
+   */
+  --color-chantier: #c74e00;
+  --color-encre: #101f2e;
+  --color-ardoise: #4a5b6d;
+  --color-bordure: #d7e1ee;
+
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/*
+ * 18 px de base et non 16 : le filtre du dépôt vaut ici plus qu'ailleurs. Cette
+ * page se lit sur un chantier, au soleil, sur un téléphone tenu à bout de bras,
+ * par quelqu'un qui a peut-être agrandi la police de son système.
+ */
+html {
+  font-size: 18px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--color-encre);
+  font-family: var(--font-sans);
+  /* Un bandeau d'action fixe couvre le bas de l'écran : sans cette réserve, il
+     masque la dernière ligne de la page. */
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 0;
+  }
+}
+
+/*
+ * Rien ne bouge pour ceux qui ont demandé que rien ne bouge. Le défilement
+ * animé compris : c'est lui qui donne le mal de mer, pas les transitions.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Le focus au clavier reste visible partout : c'est la seule façon de remplir
+   le formulaire sans souris. */
+:focus-visible {
+  outline: 3px solid var(--color-chantier);
+  outline-offset: 2px;
+}

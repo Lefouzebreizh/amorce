@@ -1,4 +1,4 @@
-import { DEFAULT_CINEMA, DEFAULT_MIX, type Clip, type Project } from './types.ts';
+import { DEFAULT_CINEMA, DEFAULT_MIX, type Clip, type ClipMotion, type Project } from './types.ts';
 
 /**
  * Calcul des positions sur la timeline.
@@ -132,10 +132,106 @@ export function placeOnCuts(starts: number[], count: number, from = 0): number[]
  * morceau hérite de la transition d'origine ; les suivants s'enchaînent sec,
  * sans quoi le découpage perdrait la nervosité qui le justifie.
  */
+/**
+ * Mouvements alternés, donnés aux plans qui se suivent.
+ *
+ * Découper une prise continue en morceaux contigus ne crée aucune coupe
+ * visible : l'image se poursuit exactement là où elle s'était arrêtée. On
+ * obtenait donc neuf raccords invisibles sur une prise de vingt secondes — et
+ * neuf bruitages qui claquaient sur rien, puisque `addSoundsOnCuts` en pose un
+ * par raccord. Rapporté depuis le téléphone en trois mots : « c'est n'importe
+ * quoi ».
+ *
+ * La cause n'est pas la découpe, qui reste juste : une vidéo sans coupe se
+ * regarde comme un plan fixe. C'est qu'aucun morceau ne se distinguait du
+ * précédent. En changeant le cadrage à chaque morceau, la coupe se voit — et
+ * le bruitage tombe sur quelque chose.
+ *
+ * L'ordre n'est pas quelconque. Deux poussées d'échelle consécutives se lisent
+ * comme un seul mouvement saccadé, donc zoom et glissement alternent ; et le
+ * tremblement n'apparaît qu'une fois sur six, parce qu'il fatigue vite.
+ *
+ * **Aucun plan fixe dans la liste.** Le montage express en posait un sur trois,
+ * et sur des rushes qui se ressemblent — même personnage, même palette — un
+ * plan immobile entre deux autres ne se lit pas comme une coupe mais comme un
+ * arrêt. Mesuré sur un film livré : des plans de 2,1 s qui donnaient des suites
+ * de 4,6 et 7,5 secondes sans qu'aucun raccord ne se voie. C'est le « plan
+ * fixe » que le guide dénonce par ailleurs, posé par le montage lui-même.
+ */
+/** Combien de morceaux une découpe peut produire au plus. Voir `chopped`. */
+export const MORCEAUX_MAX = 12;
+
+export const MOUVEMENTS_ALTERNES: ClipMotion[] = [
+  'zoomIn',
+  'panLeft',
+  'zoomOut',
+  'panRight',
+  'zoomIn',
+  'shake',
+];
+
+/**
+ * Répartit les plans pour que deux morceaux du même rush ne se suivent pas.
+ *
+ * Découper un rush en huit et alterner les mouvements ne fabrique pas de la
+ * variété : ça fabrique de la répétition avec du mouvement dessus. Constaté sur
+ * un montage rejeté — neuf rushes, dix-huit morceaux, et **trente vignettes sur
+ * quarante montraient la même image**. La cadence était bonne, la note aussi,
+ * et le film ne racontait rien parce qu'il n'avançait pas.
+ *
+ * L'algorithme prend à chaque tour le rush dont il reste le plus de morceaux,
+ * en évitant celui qu'on vient de poser. C'est ce qui étale un rush très long
+ * sur tout le film au lieu de le laisser en bloc — et quand il ne reste qu'un
+ * seul rush, on le pose quand même : mieux vaut deux morceaux qui se suivent
+ * qu'un film amputé.
+ *
+ * L'ordre relatif à l'intérieur d'un rush est conservé : les morceaux d'une
+ * même prise gardent leur chronologie, sans quoi une action se jouerait à
+ * l'envers.
+ */
+export function alterneLesRushes(clips: Clip[]): Clip[] {
+  const parRush = new Map<string, Clip[]>();
+  for (const clip of clips) {
+    const file = parRush.get(clip.assetId);
+    if (file) file.push(clip);
+    else parRush.set(clip.assetId, [clip]);
+  }
+
+  const sortie: Clip[] = [];
+  let precedent = '';
+  while (sortie.length < clips.length) {
+    const candidats = [...parRush.entries()].filter(([, f]) => f.length > 0);
+    if (candidats.length === 0) break;
+    const autres = candidats.filter(([id]) => id !== precedent);
+    // Le plus fourni d'abord : c'est ce qui empêche un rush long de finir en
+    // bloc à la fin, faute d'avoir été étalé.
+    const choix = (autres.length > 0 ? autres : candidats).reduce((a, b) =>
+      b[1].length > a[1].length ? b : a,
+    );
+    sortie.push(choix[1].shift() as Clip);
+    precedent = choix[0];
+  }
+  return sortie;
+}
+
 export function chopped(clip: Clip, target: number, makeId: () => string): Clip[] {
   const sourceSpan = clip.outPoint - clip.inPoint;
   const shown = sourceSpan / Math.max(0.1, clip.speed);
-  const pieces = Math.floor(shown / Math.max(0.5, target));
+  /*
+   * Le nombre de morceaux est borné.
+   *
+   * Une prise de cinquante-six secondes donnait vingt-huit plans de deux
+   * secondes : la même image coupée vingt-huit fois, avec autant de bruitages
+   * posés sur des raccords qui ne se voient pas. Douze morceaux couvrent déjà
+   * un format court entier ; au-delà, ce qu'il faut n'est pas plus de coupes
+   * mais moins de rush.
+   *
+   * Les morceaux s'allongent alors au lieu de se multiplier : douze morceaux
+   * d'une prise de cinquante-six secondes font quatre secondes sept chacun.
+   * C'est long pour un plan, et c'est le signe qu'il fallait raccourcir avant —
+   * ce que le guide dit désormais en premier.
+   */
+  const pieces = Math.min(MORCEAUX_MAX, Math.floor(shown / Math.max(0.5, target)));
   if (pieces < 2) return [clip];
 
   const step = sourceSpan / pieces;
@@ -146,6 +242,69 @@ export function chopped(clip: Clip, target: number, makeId: () => string): Clip[
     outPoint: clip.inPoint + (piece + 1) * step,
     transition: piece === 0 ? clip.transition : ('cut' as const),
     transitionDuration: piece === 0 ? clip.transitionDuration : 0,
+    motion: MOUVEMENTS_ALTERNES[piece % MOUVEMENTS_ALTERNES.length],
+  }));
+}
+
+/**
+ * Le même plan, débarrassé de ses blancs.
+ *
+ * Le premier défaut d'un rush tourné au téléphone n'est pas le cadrage, c'est le
+ * temps mort : on lance l'enregistrement, on cherche ses mots, on termine sa
+ * phrase, on cherche le bouton. Trois secondes de rien au début et deux à la
+ * fin, sur chaque plan, et le film perd son rythme sans qu'aucun réglage ne soit
+ * en cause.
+ *
+ * Les passages parlés viennent de `speechSegments`, qui sait déjà les relever —
+ * plancher de bruit adaptatif, recollage des respirations, marge de sécurité. Ce
+ * qui reste à faire tient en trois décisions.
+ *
+ * **On garde, on ne retire pas.** Raisonner en « morceaux à supprimer »
+ * obligerait à traiter à part le cas du plan qui commence ou finit dans le
+ * silence ; en partant des passages conservés, ces deux cas n'existent plus.
+ *
+ * **Les bornes du plan priment sur celles de l'analyse.** Les segments portent
+ * sur le fichier entier, le plan n'en montre qu'une tranche : tout passage est
+ * ramené dans `[inPoint, outPoint]`, et ceux qui tombent dehors disparaissent.
+ *
+ * **Un seul morceau restant n'est pas un découpage.** On rend alors un plan
+ * unique aux nouvelles bornes, plutôt qu'une liste d'un élément : c'est le cas
+ * le plus fréquent — un rush avec du blanc au début et à la fin, et rien au
+ * milieu — et il ne doit pas produire de raccord.
+ *
+ * Rend le plan inchangé quand il n'y a rien à retirer, pour que l'appelant
+ * puisse comparer les identités et savoir s'il s'est passé quelque chose.
+ */
+export function withoutSilences(
+  clip: Clip,
+  segments: { start: number; end: number }[],
+  makeId: () => string,
+  minKeep = 0.15,
+): Clip[] {
+  const gardes = segments
+    .map((s) => ({
+      start: Math.max(s.start, clip.inPoint),
+      end: Math.min(s.end, clip.outPoint),
+    }))
+    .filter((s) => s.end - s.start >= minKeep);
+
+  if (gardes.length === 0) return [clip];
+
+  const couvert = gardes.reduce((somme, s) => somme + (s.end - s.start), 0);
+  // Rien de significatif à gagner : on ne touche pas au montage pour cinquante
+  // millisecondes, qui ne s'entendent pas et coûtent un raccord.
+  if (couvert >= clip.outPoint - clip.inPoint - 0.05) return [clip];
+
+  return gardes.map((s, rang) => ({
+    ...clip,
+    id: rang === 0 ? clip.id : makeId(),
+    inPoint: s.start,
+    outPoint: s.end,
+    // Seul le premier morceau hérite de la transition entrante : les suivants
+    // sont des raccords internes, et un fondu à chaque blanc retiré rendrait
+    // exactement la mollesse qu'on cherche à supprimer.
+    transition: rang === 0 ? clip.transition : ('cut' as const),
+    transitionDuration: rang === 0 ? clip.transitionDuration : 0,
   }));
 }
 

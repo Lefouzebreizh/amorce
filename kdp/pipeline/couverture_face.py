@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import charte  # noqa: E402
 from pipeline.bordure import fond_charte  # noqa: E402
 
-POLICES = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
+POLICES = charte.POLICES
 CORPS, ITALIQUE, GRAS = (POLICES / f"Lora-{n}.ttf" for n in ("Regular", "Italic", "Bold"))
 
 BRUN, BRUN_PALE, ENCRE = (0.34, 0.22, 0.10), (0.45, 0.34, 0.20), (0.16, 0.13, 0.11)
@@ -148,16 +148,24 @@ def composer(bordure: Path, illustration: Path, cible: Path,
     encre = SOMBRE if pleine_page else BRUN
     pale = SOMBRE if pleine_page else BRUN_PALE
 
+    # Les boîtes décident du corps, pas la taille demandée : `_poser` réduit
+    # jusqu'à ce que ça tienne. Le titre réclamait 46 et sortait à 42, soit 6,7 %
+    # de la hauteur — au-dessus des 5 % sous lesquels un texte ne survit pas à la
+    # vignette, mais de peu, sur la seule ligne qui doive absolument s'y lire.
+    # Les boîtes descendent donc dans le ciel, vide jusqu'aux personnages.
     if pleine_page:
-        _voile(page, fitz.Rect(gauche - 26, 0.075 * hauteur,
-                               droite + 26, 0.295 * hauteur), voile)
+        _voile(page, fitz.Rect(gauche - 26, 0.066 * hauteur,
+                               droite + 26, 0.320 * hauteur), voile)
 
-    _poser(page, fitz.Rect(gauche, 0.080 * hauteur, droite, 0.118 * hauteur),
-           SURTITRE, "ital", 15, pale)
-    corps = _poser(page, fitz.Rect(gauche, 0.118 * hauteur, droite, 0.215 * hauteur),
-                   TITRE, "gras", 46, encre, 1.15)
-    _poser(page, fitz.Rect(gauche, 0.222 * hauteur, droite, 0.282 * hauteur),
-           ACCROCHE, "ital", 15, pale, 1.45)
+    _poser(page, fitz.Rect(gauche, 0.072 * hauteur, droite, 0.112 * hauteur),
+           SURTITRE, "ital", 17, pale)
+    corps = _poser(page, fitz.Rect(gauche, 0.112 * hauteur, droite, 0.232 * hauteur),
+                   TITRE, "gras", 60, encre, 1.15)
+    # L'accroche est l'argument de vente, pas une légende : de 15 à 20, pour se
+    # lire sur la fiche produit. Elle ne survivra pas à la vignette, et c'est
+    # assumé — à cette taille, seul le titre le peut.
+    _poser(page, fitz.Rect(gauche, 0.240 * hauteur, droite, 0.310 * hauteur),
+           ACCROCHE, "ital", 20, pale, 1.45)
 
     if not pleine_page:
         haut, bas = 0.315 * hauteur, 0.755 * hauteur
@@ -187,10 +195,17 @@ def composer(bordure: Path, illustration: Path, cible: Path,
                        color=OR_SOURD, width=1.1)
 
     if pleine_page:
-        _poser(page, fitz.Rect(gauche, 0.900 * hauteur, droite, 0.930 * hauteur),
-               AUTEUR, "corps", 14, BRUN)
-        _poser(page, fitz.Rect(gauche, 0.928 * hauteur, droite, 0.950 * hauteur),
-               TOME, "ital", 10, BRUN_PALE)
+        # Le bas du bloc auteur se déduit de la zone de sécurité au lieu de se
+        # viser en fraction de hauteur. C'est en le visant à l'œil que « Tome 1 »
+        # est descendu à 0,354 po du trait de coupe, sous les 0,375 po que le
+        # commentaire de BANDEAU énonce pourtant deux écrans plus haut. Rien ne
+        # le signalait : un texte dans la zone de sécurité s'imprime
+        # normalement, jusqu'au jour où le massicot tombe mal.
+        bas = hauteur - (charte.FOND_PERDU + 0.375) * charte.POUCE_EN_POINTS
+        _poser(page, fitz.Rect(gauche, bas - 38, droite, bas - 16),
+               AUTEUR, "corps", 16, BRUN)
+        _poser(page, fitz.Rect(gauche, bas - 17, droite, bas),
+               TOME, "ital", 11, BRUN_PALE)
     else:
         _poser(page, fitz.Rect(gauche, 0.805 * hauteur, droite, 0.858 * hauteur),
                AUTEUR, "corps", 16, encre)

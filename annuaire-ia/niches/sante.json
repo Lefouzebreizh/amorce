@@ -1,0 +1,120 @@
+{
+  "niche": {
+    "id": "sante",
+    "nom": "IA Santé",
+    "emoji": "🩺",
+    "domaine": "https://ma-panoplie-ia.com/sante/",
+    "metier": "médecins et professionnels de santé",
+    "h1_accent": "L'IA du cabinet médical",
+    "h1_suite": "qui rend du temps au patient",
+    "slogan": "Compte rendu de consultation, aide à la prescription, imagerie, courriers : les outils qui reprennent l'administratif, pas la décision.",
+    "meta_titre": "IA Santé — les outils IA des médecins et des soignants",
+    "meta_description": "Compte rendu de consultation, information médicament, imagerie, courriers : les outils IA testés en cabinet. Prix, avis et cadre réglementaire.",
+    "theme": {
+      "primaire": "#14b8a6",
+      "secondaire": "#2dd4bf"
+    },
+    "note_transparence": "Certains liens de cette page sont des liens affiliés : le prix reste le même pour vous, le site touche une commission si vous vous abonnez. Les tarifs sont indicatifs et changent souvent — vérifiez sur la page de l'éditeur. Aucun outil listé ici ne remplace un jugement clinique."
+  },
+  "outils": [
+    {
+      "id": "nabla",
+      "nom": "Nabla",
+      "categorie": "Compte rendu de consultation",
+      "prix": "Freemium — à partir d'environ 120 €/mois",
+      "description_courte": "L'assistant qui écoute la consultation et rédige l'observation : le médecin regarde son patient au lieu de son écran.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/nabla",
+      "score_avis": 4.7,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nNabla transcrit la consultation et en tire une observation structurée — motif, antécédents, examen, conclusion, conduite à tenir — poussée dans le logiciel métier. C'est le meilleur exemple d'IA en santé qui ne touche pas à la décision médicale et se contente de reprendre l'administratif : deux à trois minutes récupérées par consultation, soit près d'une heure sur une journée pleine. Conçu en France, avec un cadre de traitement des données pensé pour le secteur.\n\n## Points forts\n- Observation structurée selon les habitudes du praticien, pas un résumé brut\n- Excellente tenue du vocabulaire médical français, y compris les abréviations\n- Intégration avec les principaux logiciels de cabinet\n- Aucune interprétation diagnostique : l'outil retranscrit, le médecin conclut\n\n## Points faibles\n- Le consentement du patient à l'enregistrement doit être recueilli à chaque fois\n- Les consultations à plusieurs voix, avec un accompagnant, brouillent la transcription\n- Le tarif se justifie sur un exercice à fort volume, moins en activité partielle\n\n## Idéal pour\nLes médecins généralistes et spécialistes en secteur libéral qui terminent leurs journées par une heure de rédaction de comptes rendus."
+    },
+    {
+      "id": "posos",
+      "nom": "Posos",
+      "categorie": "Information médicament",
+      "prix": "Freemium — à partir d'environ 20 €/mois",
+      "description_courte": "La question de prescription posée en français, la réponse sourcée en quelques secondes : interactions, grossesse, insuffisance rénale.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/posos",
+      "score_avis": 4.4,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nChercher une interaction médicamenteuse dans une base classique prend plusieurs minutes et une consultation n'en dispose pas. Posos accepte la question telle qu'on la poserait à un confrère — posologie chez l'insuffisant rénal, compatibilité avec une grossesse, association à risque — et rend une réponse courte avec ses références. Le service est français, ce qui compte pour la conformité des sources aux recommandations en vigueur.\n\n## Points forts\n- Question posée en langage naturel, sans syntaxe de base de données à connaître\n- Réponses référencées, remontant aux recommandations et aux résumés des caractéristiques\n- Cas particuliers bien couverts : grossesse, allaitement, pédiatrie, insuffisance rénale\n- Application mobile utilisable pendant la consultation, en quelques secondes\n\n## Points faibles\n- Outil d'information, jamais de prescription : la responsabilité reste entière\n- La formule gratuite limite le nombre de requêtes mensuelles\n- Les situations très rares renvoient parfois à une simple citation de source\n\n## Idéal pour\nLes prescripteurs de ville confrontés à la polymédication, et les pharmaciens d'officine qui doivent trancher une interaction au comptoir."
+    },
+    {
+      "id": "aidoc",
+      "nom": "Aidoc",
+      "categorie": "Imagerie médicale",
+      "prix": "Sur devis (établissements)",
+      "description_courte": "L'analyse des examens d'imagerie en tâche de fond : les urgences vitales remontent en tête de liste de lecture.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/aidoc",
+      "score_avis": 4.3,
+      "date_ajout": "2026-08-27",
+      "description_longue": "## Notre verdict\nAidoc s'insère dans le flux de travail radiologique et analyse les examens dès leur acquisition pour signaler les situations critiques — hémorragie intracrânienne, embolie pulmonaire, pneumothorax. L'apport n'est pas de diagnostiquer à la place du radiologue mais de réordonner la liste de lecture : l'examen urgent cesse d'attendre son tour derrière quarante examens de routine. Les gains publiés portent sur des dizaines de minutes de délai de prise en charge.\n\n## Points forts\n- Priorisation automatique de la liste de lecture sur les urgences vitales\n- Plusieurs modules validés cliniquement et marqués pour un usage médical\n- S'intègre au système d'archivage existant sans changer les habitudes de lecture\n- Le radiologue garde la main : l'outil signale, il ne conclut pas\n\n## Points faibles\n- Déploiement d'établissement : totalement hors de portée d'un cabinet de ville\n- Les faux positifs demandent un temps de vérification qu'il faut accepter\n- Chaque module se négocie séparément : le périmètre monte vite en coût\n\n## Idéal pour\nLes services d'imagerie hospitaliers et les groupes de radiologie dont le délai de lecture des urgences est un enjeu de prise en charge."
+    },
+    {
+      "id": "therapixel",
+      "nom": "Therapixel",
+      "categorie": "Imagerie médicale",
+      "prix": "Sur devis",
+      "description_courte": "La seconde lecture en dépistage du cancer du sein, sur des performances mesurées lors de comparaisons internationales.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/therapixel",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nTherapixel s'est fait connaître en se classant en tête d'une comparaison internationale sur la lecture de mammographies. L'outil assiste la seconde lecture du dépistage organisé, poste où la double lecture humaine est obligatoire et où la démographie médicale rend cette obligation difficile à tenir. Le radiologue garde évidemment la décision : l'outil trie et signale.\n\n## Points forts\n- Performances établies sur des jeux de données de comparaison publics\n- Répond à une tension réelle de démographie médicale sur le dépistage organisé\n- Marquage médical européen et éditeur français\n- S'intègre aux stations de lecture existantes\n\n## Points faibles\n- Périmètre volontairement étroit : la mammographie et rien d'autre\n- Cadre du dépistage organisé strictement encadré, l'usage se négocie institutionnellement\n- Achat de structure, sans version d'essai possible\n\n## Idéal pour\nLes centres de radiologie et structures de gestion du dépistage organisé, confrontés à la raréfaction des lecteurs disponibles.",
+      "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "lifen",
+      "nom": "Lifen",
+      "categorie": "Courriers médicaux",
+      "prix": "Sur devis",
+      "description_courte": "Le courrier médical envoyé au bon confrère par le bon canal, sans secrétariat qui cherche une adresse ni fax qui bloque.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/lifen",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nLifen s'attaque à une plaie administrative française : le compte rendu qui n'arrive pas au médecin traitant. L'outil identifie automatiquement le destinataire dans l'annuaire santé, choisit le canal disponible — messagerie sécurisée, dossier partagé, courrier papier en dernier recours — et trace l'envoi. Ce n'est pas spectaculaire, c'est simplement le poste où un secrétariat perd le plus de temps.\n\n## Points forts\n- Identification automatique du destinataire dans l'annuaire national\n- Choix du canal d'envoi géré tout seul, papier compris si nécessaire\n- Traçabilité complète des envois, opposable en cas de litige\n- Intégration aux logiciels hospitaliers français\n\n## Points faibles\n- Utile surtout dans le contexte réglementaire français\n- Déploiement à mener avec la direction des systèmes d'information\n- L'annuaire national comporte des données obsolètes qui ressortent\n\n## Idéal pour\nLes établissements et cabinets de groupe dont les secrétariats passent leurs journées à chercher des adresses de confrères et à relancer des envois.",
+      "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "glass-health",
+      "nom": "Glass Health",
+      "categorie": "Aide au raisonnement",
+      "prix": "Freemium — à partir de 30 $/mois",
+      "description_courte": "Le tableau clinique saisi en une phrase, et le diagnostic différentiel structuré qui revient, avec le plan d’examens.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/glass-health",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nGlass ne prétend pas diagnostiquer : il propose un différentiel structuré à partir d’un résumé clinique, et un plan d’exploration cohérent. L’intérêt est le filet — la pathologie rare à laquelle on n’avait pas pensé apparaît dans la liste. C’est un second avis instantané, et l’outil ne cesse de rappeler que la décision reste au clinicien.\n\n## Points forts\n- Différentiel structuré, hiérarchisé, avec les arguments pour et contre\n- Plan d’examens proposé, cohérent avec les hypothèses\n- Rappelle explicitement que la décision reste médicale\n- Formule gratuite pour juger sur des cas réels\n\n## Points faibles\n- Aucune valeur diagnostique : c’est une aide à la réflexion, rien de plus\n- Recommandations calées sur les référentiels américains\n- Aucune donnée patient ne doit y être saisie en clair\n\n## Idéal pour\nLes urgentistes et généralistes qui veulent un second regard structuré sur un tableau clinique atypique.",
+      "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "freed",
+      "nom": "Freed",
+      "categorie": "Compte rendu de consultation",
+      "prix": "À partir de 99 $/mois",
+      "description_courte": "L’assistant de documentation pensé pour le praticien seul : on lance, on parle, la note est prête à la fin.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/freed",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nFreed a été conçu par et pour des cliniciens en exercice, ce qui se voit à la simplicité : un bouton, aucune configuration, et une note qui apprend le style du praticien au fil des corrections. Pas de projet, pas d’intégration à négocier — c’est un abonnement individuel qu’on prend le matin et qu’on utilise l’après-midi.\n\n## Points forts\n- Aucune configuration : utilisable dès la première consultation\n- Apprend le style de rédaction du praticien à partir des corrections\n- Abonnement individuel en libre-service, résiliable à tout moment\n- Essai gratuit sur plusieurs consultations avant tout engagement\n\n## Points faibles\n- Aucune intégration au dossier patient : la note se copie à la main\n- Optimisé pour l’anglais américain, le français reste secondaire\n- Le cadre réglementaire européen sur les données de santé demande une vérification préalable\n\n## Idéal pour\nLe praticien seul, sans service informatique, qui veut arrêter de finir ses journées par une heure de rédaction.",
+      "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "elicit",
+      "nom": "Elicit",
+      "categorie": "Recherche & veille",
+      "prix": "Freemium — à partir de 12 $/mois",
+      "description_courte": "La revue de littérature semi-automatisée : cent articles lus, résumés et rangés dans un tableau comparatif.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/elicit",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nElicit fait le travail ingrat d’une revue de littérature : trouver les articles pertinents, en extraire la population, la méthode, les effectifs et les résultats, et ranger le tout dans un tableau comparable ligne à ligne. Ce qui demandait deux semaines à un interne se ramène à une après-midi de vérification — la vérification restant indispensable.\n\n## Points forts\n- Extraction structurée des données de chaque article, en tableau\n- Sélection des articles pertinents à partir d’une question en langage courant\n- Export du tableau, exploitable dans un travail publiable\n- Formule gratuite suffisante pour une première revue\n\n## Points faibles\n- Chaque extraction doit être recoupée avec l’article : les erreurs existent\n- Couvre mal la littérature non anglophone\n- Le crédit gratuit s’épuise vite sur une revue sérieuse\n\n## Idéal pour\nLes internes, chefs de clinique et praticiens hospitaliers qui doivent produire une revue de littérature sans y passer un mois.",
+      "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "consensus",
+      "nom": "Consensus",
+      "categorie": "Recherche & veille",
+      "prix": "Freemium — à partir de 12 $/mois",
+      "description_courte": "La question clinique posée en français, la réponse tirée des publications scientifiques avec le niveau de preuve.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/consensus",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nConsensus interroge deux cents millions d’articles scientifiques et rend, pour une question donnée, ce que dit réellement la littérature : proportion d’études favorables, qualité des travaux, citations à l’appui. Pour tenir à jour sa pratique sans y consacrer ses soirées, c’est l’outil qui transforme une heure de lecture en trois minutes de vérification.\n\n## Points forts\n- Réponses appuyées sur des publications réelles, jamais inventées\n- Indication du niveau de preuve et du consensus entre études\n- Version gratuite largement suffisante pour un usage hebdomadaire\n- Utile bien au-delà de la médecine : toute question de recherche\n\n## Points faibles\n- Ne remplace pas la lecture d’un article : c’est une porte d’entrée\n- Ne couvre que ce qui est publié et indexé\n- Interface et résumés en anglais\n\n## Idéal pour\nLes praticiens et internes qui veulent vérifier ce que dit la littérature sur une question précise, entre deux consultations.",
+      "date_ajout": "2026-09-01"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 ---
 name: revue-invariants
-description: Relit un changement contre les invariants écrits de ce dépôt — ceux d'Amorce, ceux de Look & Find et les décisions consignées dans la chaîne KDP. À lancer avant de committer un changement qui touche au rendu, à l'audio, à l'export, au parcours de scan, au stockage local ou aux providers Riverpod. Ne cherche pas les bugs génériques (c'est le rôle de /code-review) mais les règles propres à ce dépôt, que rien d'autre ne connaît.
+description: Relit un changement contre les invariants écrits de ce dépôt — ceux d'Amorce, ceux de Look & Find, ceux du radar crypto et les décisions consignées dans la chaîne KDP. À lancer avant de committer un changement qui touche au rendu, à l'audio, à l'export, au parcours de scan, au stockage local, aux providers Riverpod, ou à la notation et aux sources de données du radar. Ne cherche pas les bugs génériques (c'est le rôle de /code-review) mais les règles propres à ce dépôt, que rien d'autre ne connaît.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -21,6 +21,12 @@ payée par un bug.
    - `kdp/` → la chaîne pré-presse, dont les décisions sont portées par les
      docstrings de tête de chaque script (`kdp/pipeline/tout.py` explique
      notamment pourquoi l'ordre des sept étapes n'est pas négociable).
+   - `pepites/` → le **radar crypto**, dont les six invariants sont listés dans
+     la compétence `radar-crypto` et justifiés en tête de chaque module. Les
+     deux qui se cassent le plus discrètement : une source qui se met à décider
+     (un seuil glissé dans `sources/`), et une lecture de mémoire déplacée
+     **après** son écriture — le filtre continue alors de tourner en ne
+     filtrant plus rien.
    - Plusieurs → traite-les tous, mais ne mélange pas les listes.
 2. **Lis le fichier d'invariants correspondant.** Ne travaille pas de mémoire :
    la liste évolue, et une règle mal citée est pire qu'une règle oubliée.

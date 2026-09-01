@@ -1,0 +1,18 @@
+{
+  "reference": "demo-couverture-tanguy",
+  "commande": {
+    "modele": "btp",
+    "entreprise": "Couverture Tanguy",
+    "telephone": "02 97 00 00 00",
+    "ville": "Auray",
+    "couleur": "#2f6f4e",
+    "slogan": "Couvreur zingueur dans le Morbihan. Devis sous 48 h.",
+    "presentation": "Je travaille seul, sur des toits que je connais. Ardoise, zinc, Velux. Je viens voir, je chiffre, et je dis non quand ce n'est pas mon métier.\n\nCette page est une démonstration : « Couverture Tanguy » n’existe pas, et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré pour 300 € — avec vos textes, vos photos, votre numéro.",
+    "services": "Toiture ardoise et tuile\nZinguerie et gouttières\nPose de Velux\nDémoussage et entretien",
+    "options": [
+      "appel",
+      "whatsapp"
+    ]
+  },
+  "photos": []
+}

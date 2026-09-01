@@ -2,11 +2,13 @@
 
 import { create } from 'zustand';
 import { analyzeProject } from './analysis.ts';
+import { HAUTEURS_LIBRES, Y_PAR_DEFAUT } from './captions.ts';
 import { uid } from './id.ts';
+import { applyAutoEdit } from './autoEdit.ts';
 import { applyFinish, soundsOnCuts, tensionFills, thinCues } from './autoFinish.ts';
 import type { SharedFile } from './share.ts';
 import { captionsFromVoice } from './voice.ts';
-import { chopped, emptyProject, layoutClips, totalDuration } from './timeline.ts';
+import { chopped, emptyProject, layoutClips, totalDuration, withoutSilences } from './timeline.ts';
 import type { QualityTier } from './quality.ts';
 import {
   DEFAULT_CLIP,
@@ -128,6 +130,20 @@ type StudioState = {
   addAssets: (assets: MediaAsset[]) => void;
   removeAsset: (assetId: string) => void;
 
+  /**
+   * Monte tout d'un coup à partir des rushes importés.
+   *
+   * Passe par `mutate`, donc s'annule. Ce n'était pas le cas jusqu'ici : le
+   * geste le plus destructeur du studio — il remplace plans, textes et
+   * bruitages d'un seul coup — était le seul à écrire l'état directement,
+   * donc le seul qu'on ne pouvait pas défaire. Pire, l'annulation suivante
+   * remontait alors à un état antérieur sans le dire.
+   */
+  montageExpress: () => void;
+
+  /** Ajoute des rushes à la fin du montage, sans toucher au reste. */
+  ajouterAuMontage: (assetIds: string[]) => void;
+
   // -- Clips ----------------------------------------------------------------
   appendClip: (assetId: string) => void;
   updateClip: (id: string, patch: Partial<Clip>) => void;
@@ -135,6 +151,13 @@ type StudioState = {
   duplicateClip: (id: string) => void;
   /** Découpe un plan en morceaux d'environ `target` secondes. */
   chopClip: (id: string, target?: number) => void;
+  cutSilences: (id: string, segments: { start: number; end: number }[]) => void;
+  /** Cale un texte dicté sur la parole mesurée d'un plan. */
+  captionsFromClip: (
+    id: string,
+    script: string,
+    segments: { start: number; end: number }[],
+  ) => void;
   /** Pose un bruitage sur chaque raccord qui n'en a pas encore. */
   addSoundsOnCuts: () => void;
   /** Écarte les bruitages en trop, pour rendre du silence entre les impacts. */
@@ -302,6 +325,46 @@ export const useStudio = create<StudioState>((set, get) => {
       });
     }),
 
+  montageExpress: () =>
+    mutate('montage-express', (state) => ({
+      project: applyAutoEdit(state.project),
+      selection: null,
+      playhead: 0,
+      playing: false,
+    })),
+
+  /*
+   * L'ajout existait déjà plan par plan (`appendClip`), mais nulle part depuis
+   * l'étape d'import — la seule porte pour faire entrer un rush de plus dans un
+   * montage en cours était le montage express, qui efface tout le reste. Ajouter
+   * une vidéo revenait donc à perdre ses textes et ses bruitages.
+   *
+   * Une seule entrée d'historique pour le lot : c'est un geste unique de
+   * l'utilisateur, et l'annuler doit tout reprendre d'un coup.
+   */
+  ajouterAuMontage: (assetIds) =>
+    mutate('montage-ajout', (state) => {
+      const nouveaux = assetIds
+        .map((id) => state.project.assets.find((a) => a.id === id))
+        .filter((a): a is MediaAsset => a !== undefined);
+      if (nouveaux.length === 0) return state;
+
+      const clips: Clip[] = nouveaux.map((asset, rang) => ({
+        ...DEFAULT_CLIP,
+        id: uid('clip'),
+        assetId: asset.id,
+        outPoint: asset.duration,
+        // Même règle que `appendClip` : le tout premier plan démarre sec.
+        transition:
+          state.project.clips.length === 0 && rang === 0 ? 'cut' : DEFAULT_CLIP.transition,
+      }));
+
+      return {
+        project: { ...state.project, clips: [...state.project.clips, ...clips] },
+        selection: { kind: 'clip', id: clips[0].id },
+      };
+    }),
+
   appendClip: (assetId) =>
     mutate('ajout-plan', (state) => {
       const asset = state.project.assets.find((a) => a.id === assetId);
@@ -371,6 +434,110 @@ export const useStudio = create<StudioState>((set, get) => {
    * couper une dizaine de fois de suite. Les morceaux s'enchaînent en coupe
    * franche, la cadence la plus nerveuse.
    */
+  /**
+   * Retire les blancs d'un plan, à partir des passages parlés relevés ailleurs.
+   *
+   * L'analyse est asynchrone — il faut décoder l'audio — et le magasin ne l'est
+   * pas : c'est l'appelant qui relève les passages, et cette action ne fait que
+   * poser le résultat. Séparer les deux garde l'action instantanée, donc
+   * annulable comme n'importe quelle autre modification.
+   */
+  cutSilences: (id, segments) =>
+    mutate('coupe des blancs', (state) => {
+      const index = state.project.clips.findIndex((c) => c.id === id);
+      if (index === -1) return state;
+
+      const pieces = withoutSilences(state.project.clips[index], segments, () => uid('clip'));
+      // Rendre le plan inchangé signifie qu'il n'y avait rien à retirer : on
+      // n'écrit alors pas d'entrée dans l'historique pour rien.
+      if (pieces.length === 1 && pieces[0] === state.project.clips[index]) return state;
+
+      /*
+       * La sélection reste sur le plan.
+       *
+       * Le premier morceau garde l'identité du plan d'origine, donc le panneau
+       * de réglage reste ouvert et le compte rendu — « blancs retirés » —
+       * s'affiche. En vidant la sélection, on repliait le panneau au moment
+       * exact où il avait quelque chose à dire : on appuyait, l'écran se vidait,
+       * et rien n'indiquait que quoi que ce soit s'était produit.
+       */
+      const clips = [...state.project.clips];
+      clips.splice(index, 1, ...pieces);
+      return reclamp({ ...state, project: { ...state.project, clips } });
+    }),
+
+  /**
+   * Sous-titre un plan à partir de ce qu'on y dit.
+   *
+   * Le calage d'un texte sur la parole existait déjà, mais seulement pour une
+   * voix off importée. Or le cas le plus courant est l'inverse : on se filme
+   * en parlant, et la parole est **dans le rush**. Il fallait alors écrire
+   * chaque sous-titre à la main, un par un, en cherchant ses bornes à la
+   * jauge — le travail le plus long d'un montage court.
+   *
+   * Trois conversions séparent les segments du rush des sous-titres du
+   * montage, et les oublier produit des textes qui ne s'affichent jamais :
+   *
+   * Les segments sont relevés sur le **fichier entier**, le plan n'en montre
+   * qu'une tranche : on écarte ce qui tombe hors de `[inPoint, outPoint]`.
+   *
+   * Le temps du fichier n'est pas celui du montage : un plan joué deux fois
+   * plus vite montre deux secondes de source par seconde de montage.
+   *
+   * Et le plan commence quelque part sur la ligne de temps : `placed.start`
+   * s'ajoute en dernier.
+   */
+  captionsFromClip: (id, script, segments) =>
+    mutate('sous-titres', (state) => {
+      const place = layoutClips(state.project.clips).find((p) => p.clip.id === id);
+      if (!place || script.trim() === '') return state;
+
+      const { clip } = place;
+      const vitesse = Math.max(0.1, clip.speed);
+      const dansLePlan = segments
+        .map((s) => ({
+          start: Math.max(s.start, clip.inPoint),
+          end: Math.min(s.end, clip.outPoint),
+        }))
+        .filter((s) => s.end > s.start)
+        // Du temps de fichier au temps de montage, origine au début du plan.
+        .map((s) => ({
+          start: (s.start - clip.inPoint) / vitesse,
+          end: (s.end - clip.inPoint) / vitesse,
+        }));
+
+      if (dansLePlan.length === 0) return state;
+
+      const limite = totalDuration(state.project.clips);
+      const produits = captionsFromVoice(script, dansLePlan, () => uid('cap'), {
+        offset: place.start,
+      })
+        .map((caption) => ({
+          ...caption,
+          // Jamais au-delà du plan : un sous-titre qui déborde s'afficherait
+          // sur le plan suivant, dont il ne dit rien.
+          end: Math.min(caption.end, place.end, limite > 0 ? limite : caption.end),
+        }))
+        .filter((caption) => caption.end > caption.start && caption.start < place.end);
+
+      if (produits.length === 0) return state;
+
+      return {
+        ...state,
+        project: {
+          ...state.project,
+          // Ceux du plan sont remplacés, jamais complétés : relancer le calage
+          // après avoir corrigé une faute doublerait tout le texte.
+          captions: [
+            ...state.project.captions.filter(
+              (c) => !(c.start >= place.start - 1e-6 && c.start < place.end && !c.voiceId),
+            ),
+            ...produits,
+          ],
+        },
+      };
+    }),
+
   chopClip: (id, target = 2) =>
     mutate('decoupage', (state) => {
       const index = state.project.clips.findIndex((c) => c.id === id);
@@ -495,10 +662,21 @@ export const useStudio = create<StudioState>((set, get) => {
         .filter((c) => c.start < end && c.end > start)
         .map((c) => c.y);
 
-      // On descend par paliers jusqu'à trouver une hauteur libre, sans jamais
-      // sortir de la zone lisible.
-      const candidates = [0.5, 0.32, 0.66, 0.2, 0.78];
-      const free = candidates.find((y) => occupied.every((taken) => Math.abs(taken - y) > 0.08));
+      /*
+       * On monte par paliers jusqu'à trouver une hauteur libre, sans jamais
+       * sortir de la bande que les trois plateformes laissent visible.
+       *
+       * Les paliers étaient `[0.5, 0.32, 0.66, 0.2, 0.78]` : trois d'entre eux,
+       * dont celui par défaut, posaient le texte sous l'habillage — 66 % et
+       * 78 % sont dans la colonne de boutons de TikTok, 50 % franchit déjà la
+       * marge que la fermeture d'Instagram à 63 % impose une fois la hauteur du
+       * texte comptée.
+       *
+       * Le déplacement des sous-titres dans la bande sûre avait touché la voix
+       * off et les gabarits, et manqué ce chemin-ci — qui est précisément celui
+       * que le guide recommande, et donc le plus emprunté.
+       */
+      const free = HAUTEURS_LIBRES.find((y) => occupied.every((taken) => Math.abs(taken - y) > 0.08));
 
       const caption: Caption = {
         id: uid('cap'),
@@ -506,7 +684,9 @@ export const useStudio = create<StudioState>((set, get) => {
         start,
         end,
         style,
-        y: free ?? 0.5,
+        // Toutes les hauteurs prises : mieux vaut un texte superposé dans la
+        // bande qu'un texte seul sous l'habillage d'une plateforme.
+        y: free ?? Y_PAR_DEFAUT,
       };
       return {
         project: { ...state.project, captions: [...state.project.captions, caption] },

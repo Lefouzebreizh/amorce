@@ -90,6 +90,56 @@ Deux conséquences visibles à l'usage :
 - **`/administration` renvoie un 404 à qui n'est pas administrateur**, et non un
   refus : un refus confirmerait que la page existe et inviterait à insister.
 
+## Montrer l'application à un client
+
+Le socle démarre vide, et un tableau de bord à zéro ne se juge pas. Une fois
+votre compte créé par le formulaire d'inscription :
+
+```sql
+set demo.compte = 'vous@exemple.fr';
+\i supabase/demo.sql
+```
+
+Dix projets répartis sur les trois statuts, avec des montants et des dates
+plausibles. Les données sont rattachées à **votre** compte, et pas à des
+utilisateurs fictifs : la RLS ne montre un projet qu'à son propriétaire, donc
+de faux comptes ne rempliraient l'écran de personne — et il faudrait leur
+inventer un mot de passe, qui finirait versionné ici.
+
+Le script refuse de s'exécuter sur une base qui porte d'autres comptes que le
+vôtre : c'est le signe le plus simple qu'on n'est pas sur une base de
+démonstration. Tout se retire d'une ligne, donnée en fin de fichier.
+
+## Ce qu'exige une livraison en France
+
+L'application collecte un nom, une entreprise et une adresse électronique. Trois
+choses en découlent, et aucune n'est optionnelle.
+
+**L'effacement du compte s'exerce depuis l'application.** L'article 17 du RGPD
+donne droit à l'effacement ; le mettre derrière un courriel au support
+reviendrait à ne pas l'accorder. La page « Mon compte » efface définitivement le
+compte, le profil et tous les projets.
+
+Techniquement, c'est le point le plus intéressant du socle. Supprimer un compte
+touche `auth.users`, que la clé publique n'atteint pas — la voie habituelle est
+d'appeler `auth.admin.deleteUser()` avec la clé `service_role`, celle qui
+contourne toute la RLS. Loger ce passe-partout dans le serveur applicatif pour
+un geste que l'utilisateur déclenche lui-même est un mauvais échange. La
+fonction `public.supprimer_mon_compte()` fait le même travail depuis le schéma :
+elle **ne prend aucun paramètre**, si bien que viser le compte d'un autre n'est
+pas refusé — c'est impossible à formuler. Le reste part par les clés étrangères.
+
+**Deux pages sont obligatoires**, et elles sont livrées en gabarit :
+`/mentions-legales` (article 6-III de la LCEN) et `/confidentialite`
+(articles 13 et 14 du RGPD). Ce qui dépend du client y est marqué **« à
+compléter » en jaune, visible à l'écran** : un gabarit qui se déguise en page
+finie part en production tel quel. Ce qui décrit le socle lui-même — les données
+collectées, l'hébergement, l'effacement — y est en revanche affirmé, parce que
+c'est constatable dans le code.
+
+**Livrer avec un « à compléter » restant est un défaut de livraison.** C'est le
+dernier contrôle à faire avant de rendre les clés.
+
 ## Nommer un administrateur
 
 Le rôle ne se change pas depuis l'application — c'est tout l'objet des
@@ -110,7 +160,9 @@ Modifier la fiche d'un client se fait avec lui, pas à sa place.
 
 ```
 supabase/schema.sql      tables, RLS, privilèges de colonnes, triggers
-supabase/verifier-rls.sql  contrôle des politiques, à rejouer sur le projet client
+supabase/verifier-rls.sql  contrôle des politiques, sur une base jetable (CI)
+supabase/demo.sql        dix projets de démonstration, pour un écran qui se juge
+supabase/etat-rls.sql    contrôle de dérive, en lecture seule, sur la base d'un client
 src/proxy.ts             rafraîchissement de session (ex-middleware, renommé en Next.js 16)
 src/app/                 routes — (auth) public, (prive) sous session, auth/confirmer
 src/components/ui/       briques d'interface (Shadcn/ui, écrites à la main)

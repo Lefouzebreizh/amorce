@@ -12,12 +12,19 @@
    * tout est encadré se lit comme une pile de boîtes, et plus rien n'y ressort.
    * Les bordures sont donc réservées à ce qui sépare vraiment — bandeaux, barre
    * d'étapes — et à ce qui est sélectionné.
+   *
+   * Les cinq surfaces partagent une même teinte violette très désaturée. Un
+   * gris strictement neutre laissait l'accent seul porter la couleur, et
+   * l'interface paraissait éteinte entre deux boutons ; une teinte commune,
+   * même à peine perceptible, donne à l'ensemble une famille sans jamais
+   * concurrencer les images qu'on y juge. Les écarts entre voisines restent
+   * autour de 1,07 — au-dessus, on retomberait sur des boîtes empilées.
    */
-  --color-ink: #07070b;
-  --color-slab: #101017;
-  --color-panel: #17171f;
-  --color-raised: #1f1f29;
-  --color-edge: #24242f;
+  --color-ink: #08060f;
+  --color-slab: #110e1e;
+  --color-panel: #191529;
+  --color-raised: #221d35;
+  --color-edge: #2a2440;
 
   /*
    * Texte plus clair qu'auparavant.
@@ -26,17 +33,74 @@
    * gris trop discret cesse simplement d'être lu, et l'explication qu'il porte
    * ne sert alors plus à rien.
    */
-  --color-mist: #f1f1f7;
-  --color-muted: #a2a2b6;
+  --color-mist: #f2effc;
+  --color-muted: #aaa4c6;
 
   /*
    * L'accent ne désigne qu'une chose : l'action à faire, et ce qui va bien.
    * L'employer aussi pour les états actifs le rendait décoratif — donc muet.
+   *
+   * Turquoise plutôt que vert : posé sur des surfaces violettes, il en est
+   * presque le complémentaire, et c'est ce qui le fait ressortir sur les cinq
+   * à la fois — 9,0:1 dans le pire cas, sur la surface la plus haute. Un vert
+   * y aurait perdu de la séparation à mesure que les fonds s'éclaircissent, et
+   * un accent qui ne fonctionne que sur le fond le plus sombre oblige à des
+   * exceptions.
    */
-  --color-accent: #2ee87f;
-  --color-accent-deep: #0d7a3f;
+  --color-accent: #25e3c4;
+  /*
+   * Valeur de **fond**, pas de texte : ce jeton n'est employé nulle part
+   * aujourd'hui, et son contraste se jugera sur ce qu'on posera dessus le jour
+   * où il servira — pas sur les surfaces, comme pour l'accent clair.
+   */
+  --color-accent-deep: #0a7d6b;
   --color-warn: #ffb340;
-  --color-danger: #ff6470;
+  --color-danger: #ff5c8a;
+
+  /*
+   * Ce qui est **choisi**, et rien d'autre.
+   *
+   * La sélection empruntait l'accent. Elle en faisait alors une couleur de
+   * décor autant que d'action, et un accent employé pour deux choses n'en
+   * désigne plus aucune — c'est la règle la plus facile à casser sans s'en
+   * apercevoir. Un violet clair sépare les deux sans ajouter de famille : il
+   * appartient déjà à celle des surfaces, en beaucoup plus clair.
+   */
+  --color-select: #9d7bff;
+
+  /*
+   * L'échelle des jauges de qualité.
+   *
+   * Quatre crans, et une contrainte qui a décidé de leurs valeurs : la clarté
+   * **croît d'un cran à l'autre**, de 1,33 à 1,82 fois. Une échelle qui ne
+   * varierait que par la teinte — un ambre et un vert de même clarté — ne se
+   * lirait pas du tout pour qui ne distingue pas le rouge du vert, et une
+   * jauge illisible est pire qu'une jauge absente puisqu'elle rassure.
+   *
+   * Elles ne parlent jamais la langue de l'accent : une note n'est pas une
+   * action, et la confondre avec un bouton ferait cliquer sur un constat.
+   */
+  --color-gauge-low: #e8688c;
+  --color-gauge-mid: #e8a33f;
+  --color-gauge-high: #4fe0b0;
+  --color-gauge-peak: #a8f0ff;
+
+  /*
+   * Les trois couleurs de la page de vente `/montage-titan`, et d'elle seule.
+   *
+   * Elles ne servent jamais au studio : une page commerciale crie, un atelier
+   * de montage se tait. Elles passent malgré tout par le thème parce que c'est
+   * la parade au piège n° 5 du terrain — une couleur écrite en dur dans un
+   * composant est exactement celle que le thème sombre automatique de Chrome
+   * Android se croit autorisé à recolorer.
+   *
+   * Contrastes mesurés sur `--color-titan-night` : 11,3:1 pour le cyan, 5,8:1
+   * pour la braise. Les deux passent en texte courant ; sur un bouton plein,
+   * c'est le texte qui repasse en sombre, jamais l'inverse.
+   */
+  --color-titan-neon: #00d4ff;
+  --color-titan-ember: #ff4500;
+  --color-titan-night: #05070d;
 
   --font-display: var(--font-display-src), system-ui, sans-serif;
   --font-body: var(--font-body-src), system-ui, sans-serif;

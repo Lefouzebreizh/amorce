@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { analyzeProject, SFX_PER_10S, type Analysis, type CriterionId } from '@/lib/analysis';
+import { analyzeProject, PLAFOND_BLOQUE, SFX_PER_10S, type Analysis, type CriterionId } from '@/lib/analysis';
 import { CAPTION_SETS } from '@/lib/autoFinish';
 import { useStudio } from '@/lib/store';
 import type { PlaybackEngine } from '@/hooks/usePlayback';
@@ -57,9 +57,21 @@ function RecommendedPanel() {
   const chosen = CAPTION_SETS.find((set) => set.id === setId) ?? CAPTION_SETS[0];
 
   return (
+    /*
+     * La phrase disait « rien de ce que tu as déjà fait n'est remplacé ».
+     * Vrai des textes et des bruitages, faux des plans : `applyFinish` les
+     * passe dans `alterneLesRushes`, qui réordonne le montage pour que deux
+     * morceaux d'un même rush ne se suivent pas. Quelqu'un qui vient de
+     * ranger ses plans à l'étape 2 les retrouve rebattus.
+     *
+     * Le comportement est bon — c'est lui qui évite les trente vignettes
+     * identiques sur quarante. C'est la promesse qui était fausse, et une
+     * promesse fausse coûte plus cher qu'un avertissement : on découvre le
+     * changement après coup, sur le fichier, sans savoir d'où il vient.
+     */
     <Panel
       title="Poser les réglages recommandés"
-      subtitle="Tout ce que la note récompense, d’un seul geste. Rien de ce que tu as déjà fait n’est remplacé."
+      subtitle="Tout ce que la note récompense, d’un seul geste. Tes textes et tes bruitages sont gardés ; l’ordre des plans, lui, peut changer."
     >
       <Field label="Trame de textes" help={chosen.why}>
         <Choice
@@ -93,8 +105,9 @@ function RecommendedPanel() {
           </Hint>
         ) : (
           <Hint>
-            Découpe les plans de plus de 3,5 s, pose un bruitage sur chaque coupe et sur chaque creux
-            d’attention, et met en place la trame de textes. Annulable d’un seul geste.
+            Découpe les plans de plus de 3,5 s, redistribue les morceaux pour que deux bouts du même
+            rush ne se suivent pas, pose un bruitage sur chaque coupe et sur chaque creux d’attention,
+            et met en place la trame de textes. Annulable d’un seul geste.
           </Hint>
         )}
       </div>
@@ -103,7 +116,7 @@ function RecommendedPanel() {
 }
 
 /**
- * Note de viralité.
+ * Note de montage.
  *
  * La note seule ne sert à rien : ce qui compte, c'est le conseil rattaché et le
  * moyen d'aller voir le problème. Chaque descente de tension est donc cliquable
@@ -196,7 +209,7 @@ export function AnalysisPanel({
     <div className="space-y-3">
       <RecommendedPanel />
 
-      <Panel title="6 · Note de viralité" subtitle="Ce que la structure de ton montage laisse présager.">
+      <Panel title="6 · Note de montage" subtitle="Ce qui fait un montage propre, et ce qui l’en empêche.">
         <ScoreHeader analysis={analysis} />
 
         <div className="mt-4 space-y-3">
@@ -244,9 +257,21 @@ export function AnalysisPanel({
                         </p>
                       </>
                     ) : (
+                      /*
+                        `ghost` et non `subtle`, pleine largeur et non collé à
+                        gauche. `subtle` n'a pour tout indice qu'un fond au
+                        survol — et un téléphone ne survole pas : le bouton s'y
+                        affichait en gris, indistinguable du texte d'aide qui le
+                        précède. Il fonctionnait, personne ne pouvait le savoir.
+
+                        Même position et même largeur que le bouton de
+                        correction automatique qui le remplace dans l'autre
+                        branche : les deux issues d'un même défaut doivent se
+                        présenter au même endroit.
+                      */
                       <Button
-                        variant="subtle"
-                        className="mt-1 px-0 text-[11px]"
+                        variant="ghost"
+                        className="mt-2 w-full text-[11px]"
                         onClick={() => onStep(target)}
                       >
                         Aller à « {STEP_LABEL[target]} » →
@@ -313,7 +338,32 @@ export function AnalysisPanel({
 }
 
 function ScoreHeader({ analysis }: { analysis: Analysis }) {
+  const bloque = analysis.bloquants.length > 0;
   return (
+    <>
+    {/*
+      Ce qui plafonne la note se lit AVANT la note.
+      Un nombre bas sans sa raison se prend pour un verdict ; nommé, il devient
+      une liste de choses à faire. C'est toute la différence entre une note qui
+      juge et une note qui aide — et c'est ce que la précédente ne savait pas
+      faire, puisqu'une somme pondérée noyait chaque défaut dans les autres.
+    */}
+    {bloque && (
+      <div className="mb-2 rounded-xl border border-warn/40 bg-warn/5 px-4 py-3">
+        <p className="text-xs font-semibold text-warn">
+          Ta note est plafonnée à {PLAFOND_BLOQUE} tant que ceci n’est pas réglé
+        </p>
+        <ul className="mt-2 flex flex-col gap-2">
+          {analysis.bloquants.map((bloquant) => (
+            <li key={bloquant.id} className="text-xs leading-relaxed">
+              <span className="font-semibold text-mist">{bloquant.probleme}</span>
+              <br />
+              <span className="text-muted">{bloquant.remede}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
     <div className="flex items-center gap-4 rounded-xl border border-edge bg-slab px-4 py-3">
       <div className="text-center">
         <p className="font-display text-4xl leading-none" style={{ color: scoreColor(analysis.score) }}>
@@ -329,6 +379,7 @@ function ScoreHeader({ analysis }: { analysis: Analysis }) {
         </p>
       </div>
     </div>
+    </>
   );
 }
 

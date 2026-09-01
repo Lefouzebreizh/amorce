@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { layoutClips, sliceAt, totalDuration, effectiveTransition } from '../timeline.ts';
+import { alterneLesRushes, chopped, layoutClips, sliceAt, totalDuration, effectiveTransition, withoutSilences } from '../timeline.ts';
 import { DEFAULT_CLIP, type Clip, type TransitionKind } from '../types.ts';
 
 function makeClip(seconds: number, transition: TransitionKind = 'cut', td = 0): Clip {
@@ -88,4 +88,163 @@ test('au-delà de la fin, on fige sur la dernière image', () => {
   const slice = sliceAt(placed, 99)!;
   assert.equal(slice.to.placed.index, 0);
   assert.ok(slice.to.sourceTime <= 3 && slice.to.sourceTime > 2.99);
+});
+
+// ------------------------------------------------ Découpe des blancs
+
+function clipEntre(entree: number, sortie: number): Clip {
+  return { ...DEFAULT_CLIP, id: 'source', assetId: 'a', inPoint: entree, outPoint: sortie };
+}
+
+let compteur = 0;
+const donneUnId = () => `neuf-${++compteur}`;
+
+test('les blancs du début et de la fin partent sans créer de raccord', () => {
+  // Un rush de 10 s dont on ne parle qu'entre 2 et 8 : un seul morceau reste,
+  // donc un seul plan — surtout pas une liste d'un élément avec un raccord.
+  const pieces = withoutSilences(clipEntre(0, 10), [{ start: 2, end: 8 }], donneUnId);
+  assert.equal(pieces.length, 1);
+  assert.equal(pieces[0].inPoint, 2);
+  assert.equal(pieces[0].outPoint, 8);
+  assert.equal(pieces[0].id, 'source', 'le plan garde son identité');
+});
+
+test('un blanc au milieu coupe le plan en deux', () => {
+  const pieces = withoutSilences(
+    clipEntre(0, 10),
+    [{ start: 0, end: 3 }, { start: 6, end: 10 }],
+    donneUnId,
+  );
+  assert.equal(pieces.length, 2);
+  assert.deepEqual(pieces.map((p) => [p.inPoint, p.outPoint]), [[0, 3], [6, 10]]);
+});
+
+test('seul le premier morceau garde la transition entrante', () => {
+  const source = { ...clipEntre(0, 10), transition: 'fade' as TransitionKind, transitionDuration: 0.5 };
+  const pieces = withoutSilences(source, [{ start: 0, end: 3 }, { start: 6, end: 10 }], donneUnId);
+  assert.equal(pieces[0].transition, 'fade');
+  assert.equal(pieces[0].transitionDuration, 0.5);
+  assert.equal(pieces[1].transition, 'cut', 'un fondu à chaque blanc rendrait la mollesse qu’on retire');
+  assert.equal(pieces[1].transitionDuration, 0);
+});
+
+test('les passages hors des bornes du plan sont ignorés', () => {
+  // Les segments portent sur le fichier entier ; le plan n'en montre que 4→8.
+  const pieces = withoutSilences(
+    clipEntre(4, 8),
+    [{ start: 0, end: 2 }, { start: 5, end: 6.5 }, { start: 20, end: 25 }],
+    donneUnId,
+  );
+  assert.equal(pieces.length, 1);
+  assert.deepEqual([pieces[0].inPoint, pieces[0].outPoint], [5, 6.5]);
+});
+
+test('un plan sans le moindre blanc n’est pas touché', () => {
+  const source = clipEntre(0, 5);
+  assert.equal(withoutSilences(source, [{ start: 0, end: 5 }], donneUnId)[0], source);
+});
+
+test('un plan entièrement muet n’est pas vidé', () => {
+  // Rendre une liste vide effacerait le plan : mieux vaut ne rien faire et le
+  // dire, l'utilisateur décidera lui-même de le supprimer.
+  const source = clipEntre(0, 5);
+  assert.deepEqual(withoutSilences(source, [], donneUnId), [source]);
+});
+
+test('les miettes plus courtes que le minimum ne font pas de plan', () => {
+  const pieces = withoutSilences(
+    clipEntre(0, 10),
+    [{ start: 0, end: 3 }, { start: 4, end: 4.05 }, { start: 6, end: 10 }],
+    donneUnId,
+  );
+  assert.equal(pieces.length, 2, 'le morceau de 50 ms est écarté');
+});
+
+test('les morceaux d’une découpe changent de cadrage', () => {
+  /*
+   * Découper une prise continue en morceaux contigus ne crée aucune coupe
+   * visible : l'image se poursuit exactement là où elle s'était arrêtée. Sans
+   * changement de cadrage, on obtient des raccords invisibles — et autant de
+   * bruitages qui claquent sur rien.
+   */
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'x', assetId: 'a', outPoint: 12 }, 2, donneUnId);
+  assert.ok(pieces.length >= 5, `${pieces.length} morceaux`);
+  const mouvements = pieces.map((p) => p.motion);
+  assert.equal(new Set(mouvements).size >= 3, true, `mouvements : ${mouvements.join(', ')}`);
+  for (let i = 1; i < mouvements.length; i += 1) {
+    assert.notEqual(mouvements[i], mouvements[i - 1], `deux morceaux de suite en « ${mouvements[i]} »`);
+  }
+});
+
+test('aucun morceau ne reste immobile', () => {
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'y', assetId: 'a', outPoint: 10 }, 2, donneUnId);
+  assert.ok(pieces.every((p) => p.motion !== 'none'), 'un plan fixe ne montre aucune coupe');
+});
+
+test('une découpe ne produit jamais des dizaines de morceaux', () => {
+  /*
+   * Une prise de cinquante-six secondes donnait vingt-huit plans de deux
+   * secondes : la même image coupée vingt-huit fois, avec autant de bruitages
+   * posés sur des raccords qui ne se voient pas. Rapporté depuis le téléphone :
+   * « il a ajouté des plans partout, il a tout découpé ».
+   */
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'long', assetId: 'a', outPoint: 56 }, 2, donneUnId);
+  assert.ok(pieces.length <= 12, `${pieces.length} morceaux`);
+  // Ils s'allongent au lieu de se multiplier, et couvrent toujours la prise.
+  const couvert = pieces.reduce((s, p) => s + (p.outPoint - p.inPoint), 0);
+  assert.ok(Math.abs(couvert - 56) < 0.01, `${couvert.toFixed(2)} s couvertes`);
+});
+
+test('une prise courte se découpe toujours normalement', () => {
+  // La borne ne doit pas changer le cas courant : 10 s visées à 2 s font 5.
+  const pieces = chopped({ ...DEFAULT_CLIP, id: 'court', assetId: 'a', outPoint: 10 }, 2, donneUnId);
+  assert.equal(pieces.length, 5);
+});
+
+test('deux morceaux du même rush ne se suivent pas', () => {
+  /*
+   * Constaté sur un montage rejeté : neuf rushes, dix-huit morceaux, et trente
+   * vignettes sur quarante montraient la même image. Découper un rush en huit
+   * et alterner les mouvements ne fabrique pas de la variété — ça fabrique de
+   * la répétition avec du mouvement dessus.
+   */
+  const morceau = (assetId: string, n: number): Clip => ({
+    ...DEFAULT_CLIP, id: `${assetId}-${n}`, assetId, inPoint: n, outPoint: n + 1,
+  });
+  const entree = [
+    ...Array.from({ length: 8 }, (_, i) => morceau('a', i)),
+    ...Array.from({ length: 3 }, (_, i) => morceau('b', i)),
+    morceau('c', 0),
+  ];
+
+  const sortie = alterneLesRushes(entree);
+  assert.equal(sortie.length, entree.length, 'un morceau a été perdu');
+
+  // Le rush « a » est majoritaire : on ne peut pas éviter qu'il se répète, mais
+  // les deux autres doivent être étalés, pas empilés à la fin.
+  const positions = sortie.map((c) => c.assetId);
+  const dernierB = positions.lastIndexOf('b');
+  assert.ok(dernierB > 3, `le rush b finit en bloc au début : ${positions.join('')}`);
+
+  // L'ordre à l'intérieur d'un rush est conservé : une action ne se joue pas à
+  // l'envers.
+  const ordreA = sortie.filter((c) => c.assetId === 'a').map((c) => c.inPoint);
+  assert.deepEqual(ordreA, [0, 1, 2, 3, 4, 5, 6, 7], 'les morceaux de « a » ont été mélangés');
+});
+
+test('avec assez de rushes, aucune répétition ne subsiste', () => {
+  const morceau = (assetId: string, n: number): Clip => ({
+    ...DEFAULT_CLIP, id: `${assetId}-${n}`, assetId, inPoint: n, outPoint: n + 1,
+  });
+  // Neuf rushes coupés en deux : le cas d'Erwann, dix-huit morceaux.
+  const entree = 'abcdefghi'.split('').flatMap((a) => [morceau(a, 0), morceau(a, 1)]);
+
+  const sortie = alterneLesRushes(entree);
+  for (let i = 1; i < sortie.length; i += 1) {
+    assert.notEqual(
+      sortie[i].assetId,
+      sortie[i - 1].assetId,
+      `deux morceaux de « ${sortie[i].assetId} » se suivent en position ${i}`,
+    );
+  }
 });

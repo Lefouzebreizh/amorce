@@ -43,7 +43,7 @@ qui la produit — pas dans `core/`, dont le contenu est figé à
 5. **Le test d'interface** sur ce que la fonctionnalité promet, pas sur des
    pixels.
 
-## Les quatre pièges qui coûtent une heure
+## Les six pièges qui coûtent une heure
 
 - **`ref` après un `await`.** Le provider peut avoir été libéré. Convention du
   dépôt : tout ce qui vient de `ref` est lu **avant le premier `await`**.
@@ -56,6 +56,21 @@ qui la produit — pas dans `core/`, dont le contenu est figé à
 - **`Material` avec `shape` **et** `borderRadius`.** L'analyse statique laisse
   passer, l'application plante au premier rendu. Pour un liseré conditionnel,
   n'utiliser que `shape`, avec `BorderSide.none` par défaut.
+- **Un `locale` de test sans ses délégués.** Un `MaterialApp` de banc d'essai
+  qui déclare `locale: const Locale('fr', 'FR')` **sans** les
+  `GlobalMaterialLocalizations` fait échouer *tous* les tests de l'écran — et
+  par une exception de délégué manquant, pas par une assertion. On cherche
+  alors le défaut dans le widget, qui est sain. Les bancs existants du dépôt
+  incluent les délégués ; personne ne l'avait écrit. Mesuré le 31/08/2026 sur
+  les écrans de *Tout seul*.
+- **Deux `pumpWidget` successifs réutilisent le `State`.** Même type de page à
+  la même position dans l'arbre : Flutter reconnaît le widget et **ne rappelle
+  pas `initState`**. Un rang d'étape, un index de page, un contrôleur d'animation
+  survivent donc d'un cas de test au suivant, et le second échoue pour l'état
+  laissé par le premier. La parade est une `ValueKey` distincte par cas.
+  **Ce défaut n'existe qu'en test** — en vrai chaque écran arrive par une route
+  neuve — ce qui le rend d'autant plus déroutant : le code de production est
+  juste, seul le banc ment.
 
 ## Interface
 

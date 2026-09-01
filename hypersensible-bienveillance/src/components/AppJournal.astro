@@ -1,0 +1,129 @@
+---
+/**
+ * Journal émotionnel. Tout se passe dans le navigateur, y compris l'analyse :
+ * `src/lib/journal.ts` est importé par le script de page, pas appelé par une
+ * route. Il n'y a donc aucune requête à intercepter et rien à supprimer
+ * ailleurs — c'est ce qui rend le bouton « Libérer » honnête.
+ */
+---
+
+<section id="journal-emotionnel" class="scroll-mt-20">
+  <h2 class="titre-section">Journal émotionnel</h2>
+  <p class="aide mt-2 max-w-2xl">
+    Écris sans te relire. La page te renvoie une météo, ce qu’elle a entendu, et une seule
+    piste — pas douze. Rien ne part sur le réseau : le texte reste dans cet onglet, et le
+    bouton « Libérer » l’efface pour de bon.
+  </p>
+
+  <div class="carte mt-6 p-5 sm:p-6 flex flex-col gap-4">
+    <div>
+      <label for="page-journal" class="font-medium">Ta page</label>
+      <p class="aide mt-1 mb-2">
+        Brouillon conservé dans cet onglet le temps de la visite, pour survivre à un
+        rechargement accidentel. Il disparaît quand tu fermes le navigateur.
+      </p>
+      <textarea
+        id="page-journal"
+        rows="10"
+        class="champ"
+        placeholder="Aujourd'hui, ce qui m'a serré, c'est…"
+      ></textarea>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button type="button" class="bouton-accent" id="bouton-lire">Lecture bienveillante</button>
+      <button type="button" class="bouton-discret" id="bouton-liberer">Libérer</button>
+      <p class="aide" id="journal-etat" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div id="resultat-journal" class="mt-6 hidden"></div>
+</section>
+
+<script>
+  import { lire } from '../lib/journal.ts';
+
+  const champ = document.getElementById('page-journal') as HTMLTextAreaElement | null;
+  const boutonLire = document.getElementById('bouton-lire');
+  const boutonLiberer = document.getElementById('bouton-liberer');
+  const etat = document.getElementById('journal-etat');
+  const sortie = document.getElementById('resultat-journal');
+  const CLE = 'hb-journal';
+
+  function echapper(texte: string): string {
+    const noeud = document.createElement('div');
+    noeud.textContent = texte;
+    return noeud.innerHTML;
+  }
+
+  // Brouillon restauré au chargement : perdre dix minutes d'écriture parce
+  // qu'on a effleuré « précédent » suffit à ne plus jamais revenir écrire.
+  try {
+    const brouillon = sessionStorage.getItem(CLE);
+    if (brouillon && champ) champ.value = brouillon;
+  } catch { /* stockage refusé : on écrit sans filet, c'est tout */ }
+
+  champ?.addEventListener('input', () => {
+    try {
+      sessionStorage.setItem(CLE, champ.value);
+    } catch { /* idem */ }
+  });
+
+  boutonLire?.addEventListener('click', () => {
+    if (!champ || !sortie || !etat) return;
+    const texte = champ.value.trim();
+    if (texte.length < 10) {
+      etat.textContent = 'Écris quelques lignes de plus, il n’y a pas encore de quoi lire.';
+      return;
+    }
+    etat.textContent = '';
+
+    const lecture = lire(texte);
+    const barres = lecture.emotions
+      .map(
+        (emotion) => `
+        <div>
+          <div class="flex justify-between text-sm">
+            <span>${echapper(emotion.nom)}</span>
+            <span class="text-estompe tabular-nums">${emotion.intensite} %</span>
+          </div>
+          <div class="mt-1 h-2 rounded-full bg-bord/60 overflow-hidden">
+            <div class="h-full rounded-full bg-violet" style="width:${emotion.intensite}%"></div>
+          </div>
+        </div>`,
+      )
+      .join('');
+
+    sortie.classList.remove('hidden');
+    sortie.innerHTML = `
+      <div class="carte p-5 sm:p-6 flex flex-col gap-5">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <p class="text-xl font-semibold">${echapper(lecture.meteo)}</p>
+          <p class="aide tabular-nums">${lecture.mots} mots écrits</p>
+        </div>
+        <p>${echapper(lecture.accueil)}</p>
+        ${barres ? `<div class="flex flex-col gap-3">${barres}</div>` : ''}
+        ${
+          lecture.autocritique > 0
+            ? `<p class="aide">Retours contre toi repérés : ${lecture.autocritique} % des phrases.</p>`
+            : ''
+        }
+        <div class="rounded-xl bg-fond/60 p-4">
+          <p class="text-xs uppercase tracking-wider text-cyan">Une seule piste</p>
+          <p class="mt-2">${echapper(lecture.piste)}</p>
+        </div>
+      </div>`;
+  });
+
+  boutonLiberer?.addEventListener('click', () => {
+    if (!champ || !sortie || !etat) return;
+    champ.value = '';
+    try {
+      sessionStorage.removeItem(CLE);
+    } catch { /* rien à retirer si rien n'a pu être écrit */ }
+    sortie.classList.add('hidden');
+    sortie.innerHTML = '';
+    etat.textContent = 'Effacé. Il n’en reste rien, nulle part.';
+    champ.focus();
+  });
+</script>

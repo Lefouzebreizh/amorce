@@ -40,6 +40,12 @@
   ],
   "exclude": [
     "node_modules",
-    "agence"
+    "agence",
+    "artisan-express",
+    "hypersensible-bienveillance",
+    "titan-builder",
+    "iptv",
+    "licence-serveur",
+    "motion"
   ]
 }

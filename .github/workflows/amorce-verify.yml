@@ -1,0 +1,110 @@
+# Le parcours complet d'Amorce dans un vrai Chromium — le seul filet qui voie
+# le décodage vidéo, le mixage, le tracé canvas, l'enregistrement et la reprise.
+#
+# Il a longtemps été tenu hors de l'intégration continue au motif qu'il serait
+# trop long et trop instable pour servir de barrière. C'était une supposition,
+# et elle était fausse : mesuré deux fois de suite, **85 vérifications sur 85**,
+# en 3 min 29 s puis 3 min 12 s, verdict identique. Les valeurs intermédiaires
+# bougent d'un passage à l'autre (la luminosité relevée est passée de 34,8 à
+# 47,1) mais aucune assertion ne s'en approche : ce sont des mesures affichées,
+# pas des seuils.
+#
+# Il reste **séparé** de `amorce.yml`, et c'est délibéré. Le typage, le lint et
+# les tests unitaires rendent leur verdict en quarante secondes ; les faire
+# attendre un parcours navigateur de quatre minutes coûterait ce délai à chaque
+# poussée, pour une information qui arrive de toute façon plus tard. Deux
+# signaux séparés valent mieux qu'un signal lent.
+#
+# Les captures et les fichiers exportés partent en artéfact **en cas d'échec** :
+# ce parcours juge sur les pixels et sur le signal sonore, et un échec qu'on ne
+# peut pas regarder est un échec qu'on relance sans le lire.
+
+name: Amorce · parcours navigateur
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/amorce-verify.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/amorce-verify.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: amorce-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parcours:
+    name: Parcours complet dans Chromium
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      # Le Chromium de Playwright, et non celui du système : `verify.mjs` le
+      # lance sans `executablePath` quand AMORCE_CHROMIUM n'est pas posée, donc
+      # c'est bien celui-ci qui sert. `--with-deps` apporte les bibliothèques
+      # partagées que l'image Ubuntu ne fournit pas d'office.
+      - name: Installer Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Les rushes de test sont fabriqués, jamais versionnés — le dépôt
+      # n'accepte aucun binaire. Vingt secondes.
+      - name: Fabriquer les rushes de test
+        run: npm run fixtures
+
+      # Le parcours pilote l'application par le réseau : il lui faut un serveur.
+      # On attend qu'il réponde vraiment plutôt que de dormir un temps arbitraire
+      # — une attente fixe est soit trop courte sur une machine chargée, soit du
+      # temps perdu sur une machine libre.
+      - name: Démarrer le serveur de développement
+        run: |
+          npm run dev > /tmp/dev.log 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -sf -o /dev/null http://localhost:3000; then
+              echo "Serveur prêt."; exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Le serveur de développement n'a pas répondu en 120 s."
+          cat /tmp/dev.log
+          exit 1
+
+      - name: Parcours complet
+        run: npm run verify
+
+      - name: Reprise après rechargement
+        if: ${{ !cancelled() }}
+        run: npm run verify:reprise
+
+      # Sans ces fichiers, un échec sur les pixels ou sur le son ne se diagnostique
+      # pas : il n'y a rien à regarder, et la seule issue est de relancer.
+      - name: Publier les captures en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amorce-captures
+          path: |
+            .fixtures/captures/
+            /tmp/dev.log
+          if-no-files-found: warn
+          retention-days: 7

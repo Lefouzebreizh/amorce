@@ -37,6 +37,100 @@ type CaptionStyle = {
   pop: boolean;
 };
 
+/**
+ * La bande où un texte survit aux trois plateformes.
+ *
+ * Relevé sur des captures réelles — Redmi Note 12 Plus, TikTok, Instagram Reels
+ * et Facebook Reels — et non déduit des chartes, qui ne disent rien de la barre
+ * système ni des bulles de profil :
+ *
+ * | | haut occupé | bas occupé |
+ * | --- | --- | --- |
+ * | TikTok | 9 % | à partir de 72 % |
+ * | Instagram | 9,5 % | à partir de **63 %** |
+ * | Facebook | 12 % | à partir de 84 % |
+ *
+ * **C'est l'intersection qui décide, jamais la plus permissive** : une même
+ * vidéo part sur les trois, et c'est Instagram qui ferme le bas. La bande sûre
+ * va donc de 12 % à 45 % — au-delà on entre dans la colonne de droite de
+ * TikTok, en deçà on passe sous la barre système de Facebook.
+ *
+ * L'application posait pourtant ses sous-titres à **72 %**, c'est-à-dire dans
+ * la zone que les trois plateformes recouvrent. Un titre gravé à 62 % avait
+ * déjà été mangé à gauche par les bulles de profil **et** sorti du cadre à
+ * droite ; 72 % est pire.
+ */
+export const BANDE_SURE = { haut: 0.12, bas: 0.45 } as const;
+
+/** Hauteur par défaut d'un sous-titre, au milieu de la bande sûre. */
+export const Y_PAR_DEFAUT = 0.38;
+
+/*
+ * Les paliers où poser des sous-titres qui coexistent.
+ *
+ * Deux textes affichés en même temps à la même hauteur se recouvrent : il faut
+ * donc plusieurs hauteurs, et toutes doivent rester dans la bande. Le pas de
+ * 0,08 est celui que la recherche de place utilise pour juger deux textes
+ * distincts — des paliers plus serrés ne seraient jamais retenus.
+ *
+ * Quatre paliers, du plus naturel au plus haut : la bande ne fait que 0,33 de
+ * hauteur, et un cinquième tomberait à moins de 0,08 du premier.
+ */
+export const HAUTEURS_LIBRES = [Y_PAR_DEFAUT, 0.3, 0.22, 0.14] as const;
+
+/**
+ * Les textes qui portent encore un crochet à remplir.
+ *
+ * Les gabarits d'`autoFinish` posent volontairement des trous — `[Ce qui
+ * menace]`, `QUEL [ROYAUME] TOMBE ENSUITE ?` — parce qu'écrire les phrases à
+ * la place de quelqu'un serait lui mettre des mots dans la bouche. C'est un
+ * bon principe, et il avait une conséquence que personne n'avait vue : **rien
+ * n'empêchait d'exporter les trous eux-mêmes.**
+ *
+ * Constaté sur un montage livré : quatre textes sur quatre étaient des
+ * gabarits non remplis, gravés dans le fichier et prêts à publier. Aucune
+ * mesure ne le disait — la couverture texte était même bonne, puisqu'il y
+ * avait du texte.
+ *
+ * Le crochet est cherché n'importe où dans la phrase : `QUEL [ROYAUME] TOMBE
+ * ENSUITE ?` est à moitié rempli, donc pas rempli.
+ */
+export function crochetsARemplir(captions: Caption[]): Caption[] {
+  return captions.filter((c) => /\[[^\]]+\]/.test(c.text));
+}
+
+/** Ramène une hauteur dans la bande que les trois plateformes laissent libre. */
+export function dansLaBandeSure(y: number): number {
+  return Math.min(BANDE_SURE.bas, Math.max(BANDE_SURE.haut, y));
+}
+
+/**
+ * Ramene le **bloc entier** dans la bande sure, pas seulement son ancre.
+ *
+ * `dansLaBandeSure` borne la hauteur ou le texte est ancre. Mais un texte se
+ * dessine centre sur cette hauteur : quatre lignes en corps 135 font 637 px, et
+ * un bloc ancre a 30 % descend alors jusqu'a 46,6 % — hors de la bande que ce
+ * depot se donne. Mesure sur le carton final du gabarit « bande-annonce ».
+ *
+ * La fonction d'origine etait exportee et **n'avait aucun appelant** hors de
+ * ses propres tests : la bande etait declaree, outillee, et rien ne
+ * l'appliquait. C'est le meme defaut que le module de licence, sous une autre
+ * forme — des pieces justes, aucune branchee.
+ *
+ * Quand le bloc est plus haut que la bande, on le centre dedans : on ne peut
+ * pas faire mieux, et le remonter davantage le ferait sortir par le haut, ou
+ * l'habillage de TikTok mange les neuf premiers pour cent.
+ */
+export function centreDuBloc(y: number, hauteurDuBloc: number): number {
+  const haut = BANDE_SURE.haut * OUTPUT_HEIGHT;
+  const bas = BANDE_SURE.bas * OUTPUT_HEIGHT;
+  const demi = hauteurDuBloc / 2;
+  const centre = y * OUTPUT_HEIGHT;
+
+  if (hauteurDuBloc >= bas - haut) return (haut + bas) / 2;
+  return Math.min(bas - demi, Math.max(haut + demi, centre));
+}
+
 export const CAPTION_STYLES: Record<CaptionStyleId, CaptionStyle> = {
   punch: {
     id: 'punch',
@@ -239,7 +333,8 @@ export function drawCaption(
   const lines = wrapLines(ctx, text, MAX_TEXT_WIDTH);
   const lineHeight = fontSize * LINE_HEIGHT_RATIO;
   const blockHeight = lines.length * lineHeight;
-  const centerY = caption.y * OUTPUT_HEIGHT;
+  // Le bloc entier tient dans la bande sure, pas seulement son ancre.
+  const centerY = centreDuBloc(caption.y, blockHeight);
 
   // L'animation part du centre du bloc pour que le rebond reste symétrique.
   // Apparition et pulsation se multiplient : le texte rebondit en arrivant,

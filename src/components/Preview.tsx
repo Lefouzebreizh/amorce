@@ -18,7 +18,17 @@ import { Button } from './ui';
 /** Déplacement en dessous duquel un geste reste un simple appui. */
 const DRAG_THRESHOLD_PX = 6;
 
-export function Preview({ engine }: { engine: PlaybackEngine }) {
+export function Preview({
+  engine,
+  agrandi,
+  onAgrandir,
+}: {
+  engine: PlaybackEngine;
+  /** Vrai quand l'aperçu occupe presque tout l'écran. */
+  agrandi?: boolean;
+  /** Absent sur le bureau, où l'aperçu a déjà toute la place qu'il faut. */
+  onAgrandir?: () => void;
+}) {
   const playing = useStudio((s) => s.playing);
   const clipCount = useStudio((s) => s.project.clips.length);
   const select = useStudio((s) => s.select);
@@ -42,7 +52,39 @@ export function Preview({ engine }: { engine: PlaybackEngine }) {
      * laisse plus assez de place, l'aperçu s'écrase à zéro et la barre de
      * lecture déborde par-dessus la timeline.
      */
-    <div className="flex min-h-[11rem] flex-1 flex-col items-center gap-2 overflow-hidden">
+    <div className="relative flex min-h-[11rem] flex-1 flex-col items-center gap-2 overflow-hidden">
+      {/*
+        Agrandir, et non « plein écran ».
+        Dans le bloc collé, l'image mesure 80 × 142 px sur un Redmi : le
+        mobilier — barre de lecture 64 px, frise 98 px — occupe plus de place
+        qu'elle. On ne juge pas un cadrage, on ne relit pas un sous-titre et on
+        ne place pas un texte sur un centimètre et demi de large.
+
+        Le bloc ne peut pas grandir en permanence : à 38 % de la hauteur il
+        prend déjà sa part, et au-delà les panneaux disparaissent. C'est donc un
+        agrandissement à la demande, réversible d'un doigt.
+
+        Le bouton se pose sur **ce** conteneur, qui fait toute la largeur, et
+        non sur le cadre de l'image : celui-ci se réduit à la largeur du canvas,
+        et un bouton de 44 px y recouvrait 55 % d'une image de 80 px — le doigt
+        qui visait un sous-titre tombait sur le bouton. Le vide noir à droite de
+        l'image ne servait à rien ; il sert à ça.
+
+        Bouton séparé, et non un appui sur l'image : l'appui lance déjà la
+        lecture, et lui donner un second rôle rendrait les deux incertains.
+      */}
+      {onAgrandir && clipCount > 0 && (
+        <button
+          type="button"
+          onClick={onAgrandir}
+          aria-pressed={agrandi}
+          title={agrandi ? "Réduire l’aperçu" : "Agrandir l’aperçu"}
+          className="absolute top-0 right-0 z-10 grid h-11 w-11 place-items-center rounded-xl bg-raised/80 text-[17px] text-mist backdrop-blur-sm"
+        >
+          {agrandi ? '⤡' : '⤢'}
+          <span className="sr-only">{agrandi ? 'Réduire l’aperçu' : 'Agrandir l’aperçu'}</span>
+        </button>
+      )}
       <div className="relative flex min-h-[6rem] flex-1 items-center justify-center overflow-hidden">
         {/*
           Le canvas n'a pas d'enfants : un texte qui y est dessiné n'est pas un
@@ -106,7 +148,14 @@ export function Preview({ engine }: { engine: PlaybackEngine }) {
         )}
       </div>
 
-      <Transport engine={engine} playing={playing} />
+      {/*
+        Rien à lire, pas de commandes. Les quatre contrôles étaient bien
+        désactivés, mais les afficher quand même occupait le quart de la
+        hauteur utile pour montrer ce qu'on ne peut pas faire — au moment
+        précis où l'on ne sait pas encore quoi faire. Un bouton grisé
+        n'enseigne rien ; il fait douter que l'application fonctionne.
+      */}
+      {clipCount > 0 && <Transport engine={engine} playing={playing} />}
     </div>
   );
 }

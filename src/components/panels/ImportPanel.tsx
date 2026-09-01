@@ -4,9 +4,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { applyAutoEdit } from '@/lib/autoEdit';
-import { formatTime, loadSampleCue, loadVideoAsset, loadVoiceCue } from '@/lib/media';
-import { isVideo, toFile } from '@/lib/share';
+import { PLANS_MAX } from '@/lib/autoEdit';
+import { formatTime, loadAsset, loadSampleCue, loadVoiceCue } from '@/lib/media';
+import { isVisuel, toFile } from '@/lib/share';
 import { useStudio } from '@/lib/store';
 import { placeOnCuts, placeWithoutOverlap, shotStarts } from '@/lib/timeline';
 import { useIsHydrated } from '@/hooks/useMediaQuery';
@@ -18,8 +18,9 @@ import { Button, EmptyState, Hint, Panel } from '../ui';
  *
  * Rien dans un fichier audio ne dit s'il s'agit d'une réplique ou d'un bruitage.
  * Deviner mènerait la moitié du temps au mauvais panneau, où l'utilisateur ne
- * les chercherait pas : on demande, une fois pour le lot entier. Les vidéos, elles,
- * n'ont aucune ambiguïté et rejoignent la bibliothèque quoi qu'il arrive.
+ * les chercherait pas : on demande, une fois pour le lot entier. Les vidéos et
+ * les images, elles, n'ont aucune ambiguïté et rejoignent la bibliothèque quoi
+ * qu'il arrive.
  */
 function SharedTray({ engine }: { engine: PlaybackEngine }) {
   const shared = useStudio((s) => s.sharedFiles);
@@ -35,17 +36,17 @@ function SharedTray({ engine }: { engine: PlaybackEngine }) {
 
   if (shared.length === 0) return null;
 
-  const videos = shared.filter(isVideo);
-  const sounds = shared.filter((file) => !isVideo(file));
+  const visuels = shared.filter(isVisuel);
+  const sounds = shared.filter((file) => !isVisuel(file));
 
   const accept = async (kind: 'voix' | 'bruitage') => {
     setBusy(true);
     setError(null);
 
     try {
-      if (videos.length > 0) {
+      if (visuels.length > 0) {
         const assets = [];
-        for (const file of videos) assets.push(await loadVideoAsset(toFile(file)));
+        for (const file of visuels) assets.push(await loadAsset(toFile(file)));
         addAssets(assets);
       }
 
@@ -128,6 +129,10 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
   const addAssets = useStudio((s) => s.addAssets);
   const removeAsset = useStudio((s) => s.removeAsset);
   const appendClip = useStudio((s) => s.appendClip);
+  const captions = useStudio((s) => s.project.captions);
+  const cues = useStudio((s) => s.project.cues);
+  const montageExpress = useStudio((s) => s.montageExpress);
+  const ajouterAuMontage = useStudio((s) => s.ajouterAuMontage);
 
   /**
    * Avancement de l'import, ou null au repos.
@@ -143,23 +148,25 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
   const ready = useIsHydrated();
 
   const ingest = async (files: FileList | File[]) => {
-    const videos = [...files].filter((file) => file.type.startsWith('video/'));
-    if (videos.length === 0) {
-      setError('Aucun fichier vidéo reconnu. Formats attendus : MP4, MOV, WebM.');
+    const visuels = [...files].filter(
+      (file) => file.type.startsWith('video/') || file.type.startsWith('image/'),
+    );
+    if (visuels.length === 0) {
+      setError('Aucun fichier reconnu. Vidéos : MP4, MOV, WebM. Images : PNG, JPEG, WebP.');
       return;
     }
 
     setError(null);
-    const loaded = [];
     const failed: string[] = [];
 
-    for (const [index, file] of videos.entries()) {
-      setBusy({ done: index, total: videos.length });
+    for (const [index, file] of visuels.entries()) {
+      setBusy({ done: index, total: visuels.length });
       try {
-        const asset = await loadVideoAsset(file);
-        loaded.push(asset);
-        // Chaque rush rejoint la bibliothèque dès qu'il est prêt : attendre le
-        // dernier pour tout afficher donne l'impression que rien n'avance.
+        // Le type MIME choisit le décodeur : tenter une image avec un élément
+        // <video> rendrait « format non pris en charge » sur un fichier sain.
+        const asset = await loadAsset(file);
+        // Chaque fichier rejoint la bibliothèque dès qu'il est prêt : attendre
+        // le dernier pour tout afficher donne l'impression que rien n'avance.
         addAssets([asset]);
       } catch {
         failed.push(file.name);
@@ -172,11 +179,15 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
     setBusy(null);
   };
 
-  const autoEdit = () => {
-    const state = useStudio.getState();
-    const next = applyAutoEdit(state.project);
-    useStudio.setState({ project: next, selection: null, playhead: 0, playing: false });
-  };
+  /*
+   * Rushes importés qui ne sont dans aucun plan.
+   *
+   * C'est ce qu'on vient chercher en revenant sur cette étape : une vidéo de
+   * plus. Sans ce compte, la seule façon de l'inclure était le montage express,
+   * qui efface tout le reste.
+   */
+  const absents = assets.filter((asset) => !clips.some((clip) => clip.assetId === asset.id));
+  const monte = clips.length > 0;
 
   return (
     <div className="space-y-3">
@@ -212,20 +223,20 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
             {!ready
               ? 'Préparation du studio…'
               : busy
-                ? `Lecture de la vidéo ${busy.done + 1} sur ${busy.total}…`
-                : 'Dépose tes vidéos ici'}
+                ? `Lecture du fichier ${busy.done + 1} sur ${busy.total}…`
+                : 'Dépose tes vidéos ou tes images ici'}
           </p>
           <p className="mt-1 text-xs text-muted">
             {!ready
               ? 'Encore un instant, l’application se met en place.'
               : busy
                 ? 'Cela peut prendre un moment sur téléphone.'
-                : 'ou clique pour les choisir · MP4, MOV, WebM'}
+                : 'ou clique pour les choisir · MP4, MOV, WebM · PNG, JPEG, WebP'}
           </p>
           <input
             ref={inputRef}
             type="file"
-            accept="video/*"
+            accept="video/*,image/*"
             multiple
             className="hidden"
             onChange={(event) => {
@@ -244,18 +255,84 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
         <Hint tone="warn">{storageError}</Hint>
       )}
 
-      {assets.length > 0 && (
+      {/*
+        Deux visages pour un même bloc, et c'est tout l'enjeu de cette étape.
+
+        Tant qu'aucun montage n'existe, le montage express est bien la première
+        chose à faire : il reste l'action principale, pleine largeur.
+
+        Dès qu'un montage existe, il devient le geste le plus destructeur du
+        studio — il remplace plans, textes et bruitages d'un coup. Or on revient
+        ici pour une seule raison : ajouter un rush. Laisser l'express en bouton
+        principal, libellé « Monter automatiquement (5 rushes) », c'était offrir
+        exactement le bouton qu'on croit devoir presser pour inclure le nouveau
+        venu — et perdre tout le travail des étapes 3, 4 et 5.
+
+        L'ajout prend donc la place principale, l'express passe en retrait, et
+        son avertissement passe **avant** lui avec les comptes réels : une ligne
+        grise sous un bouton se lit après l'avoir pressé.
+      */}
+      {assets.length > 0 && !monte && (
         <Panel
           title="Montage express"
           subtitle="Assemble tout automatiquement : plans courts, transitions, bruitages, rendu cinéma."
         >
-          <Button variant="primary" className="w-full" onClick={autoEdit}>
-            ⚡ Monter automatiquement ({assets.length} rush{assets.length > 1 ? 'es' : ''})
+          <Button variant="primary" className="w-full" onClick={montageExpress}>
+            ⚡ Monter automatiquement (
+            {assets.length > PLANS_MAX
+              ? `${PLANS_MAX} des ${assets.length} rushes`
+              : `${assets.length} rush${assets.length > 1 ? 'es' : ''}`}
+            )
           </Button>
           <p className="mt-2 text-xs leading-relaxed text-muted">
-            Point de départ, pas résultat final : chaque plan reste modifiable ensuite. Attention, cela
-            remplace le montage en cours.
+            Point de départ, pas résultat final : chaque plan reste modifiable ensuite.
           </p>
+          {/*
+            Le bouton dit combien il prend, et cette phrase dit pourquoi.
+            Un montage qui écarterait des rushes sans le dire passerait pour un
+            bogue — et un montage qui les prendrait tous dépasserait les
+            trente-cinq secondes au-delà desquelles l'analyse elle-même
+            pénalise le film.
+          */}
+          {assets.length > PLANS_MAX && (
+            <p className="mt-1 text-xs leading-relaxed text-muted">
+              Les {assets.length - PLANS_MAX} autres restent dans ta bibliothèque : au-delà, le
+              montage dépasse 35 s et on décroche avant la fin.
+            </p>
+          )}
+        </Panel>
+      )}
+
+      {monte && (
+        <Panel
+          title="Ajouter à ton montage"
+          subtitle={`${clips.length} plan${clips.length > 1 ? 's' : ''} déjà en place.`}
+        >
+          {absents.length > 0 ? (
+            <Button
+              variant="primary"
+              className="w-full"
+              onClick={() => ajouterAuMontage(absents.map((asset) => asset.id))}
+            >
+              ➕ Ajouter à la fin ({absents.length} rush{absents.length > 1 ? 'es' : ''})
+            </Button>
+          ) : (
+            <p className="text-xs leading-relaxed text-muted">
+              Tous tes rushes sont déjà dans le montage. Dépose-en un autre ci-dessus pour
+              l’ajouter.
+            </p>
+          )}
+
+          <Hint tone="warn">
+            <b>Tout refaire effacerait ton travail.</b> Le montage express repart des rushes : il
+            remplacerait tes {clips.length} plan{clips.length > 1 ? 's' : ''}
+            {captions.length > 0 && `, tes ${captions.length} texte${captions.length > 1 ? 's' : ''}`}
+            {cues.length > 0 && ` et tes ${cues.length} bruitage${cues.length > 1 ? 's' : ''}`}. Tu
+            pourras l’annuler, mais autant le savoir avant.
+          </Hint>
+          <Button variant="ghost" className="mt-2 w-full" onClick={montageExpress}>
+            ⚡ Tout refaire depuis les rushes
+          </Button>
         </Panel>
       )}
 
@@ -281,6 +358,8 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
         {assets.length === 0 ? (
           <EmptyState title="Rien pour l’instant">
             Importe tes vidéos IA ci-dessus. Une dizaine de plans de 2 à 5 secondes suffit largement.
+            Une illustration, une page, une capture font aussi bien l’affaire : une image fixe devient
+            un plan qu’un mouvement de caméra fait vivre.
           </EmptyState>
         ) : (
           <ul className="space-y-1.5">
@@ -310,7 +389,7 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
                 <Button variant="ghost" onClick={() => appendClip(asset.id)} title="Ajouter à la timeline">
                   +
                 </Button>
-                <Button variant="subtle" onClick={() => removeAsset(asset.id)} title="Retirer de la bibliothèque">
+                <Button variant="ghost" onClick={() => removeAsset(asset.id)} title="Retirer de la bibliothèque">
                   ✕
                 </Button>
               </li>

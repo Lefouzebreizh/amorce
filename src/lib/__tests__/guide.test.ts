@@ -8,7 +8,7 @@ let counter = 0;
 const id = () => `g${counter++}`;
 
 function asset(duration = 30): MediaAsset {
-  return { id: 'a', name: 'r.mp4', url: 'blob:a', duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+  return { id: 'a', name: 'r.mp4', kind: 'video', url: 'blob:a', duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
 }
 
 function clip(seconds: number): Clip {
@@ -118,4 +118,25 @@ test('le guide ne donne jamais qu’une consigne, toujours motivée', () => {
     assert.ok(step.why.length > 20, 'consigne sans justification');
     assert.ok(step.actionLabel.length > 3, 'bouton sans intitulé');
   }
+});
+
+test('un rush trop long se raccourcit avant de se découper', () => {
+  /*
+   * La règle des quarante-cinq secondes existait, mais après la proposition de
+   * découpe : un rush de cinquante-six secondes recevait d'abord « découper en
+   * vingt-huit plans », et vingt-huit morceaux d'une même prise ne font pas un
+   * montage. On raccourcit, puis on découpe ce qui reste.
+   */
+  const project = { ...emptyProject(), assets: [asset(56)], clips: [clip(56)] };
+  const conseil = nextStep(project);
+  assert.match(conseil.title, /56 s/);
+  assert.match(conseil.actionLabel, /Raccourcir/);
+});
+
+test('un rush long mais publiable se découpe, en morceaux bornés', () => {
+  const project = { ...emptyProject(), assets: [asset(30)], clips: [clip(30)] };
+  const conseil = nextStep(project);
+  assert.match(conseil.actionLabel, /Découper en (\d+) plans/);
+  const morceaux = Number(conseil.actionLabel.match(/(\d+)/)?.[1]);
+  assert.ok(morceaux <= 12, `${morceaux} morceaux proposés`);
 });

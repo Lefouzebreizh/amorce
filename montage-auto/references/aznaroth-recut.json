@@ -1,0 +1,527 @@
+{
+  "_lisez_moi": [
+    "AZNAROTH EP01 — remontage.",
+    "",
+    "  OEIL      0.00   MAGE    2.00   ECLAIRS  6.60",
+    "  SIGIL     8.00   VORTEX  8.60 (x1,8)  DRAGON 10.16 (x0,8)",
+    "  fin      19.22",
+    "",
+    "ATTENTION : avec « vitesse », « duree » compte en secondes SOURCE et la",
+    "longueur rendue vaut duree / vitesse. Un instant pose a la main sur la frise",
+    "voulue tombe donc faux des qu'un plan change de vitesse — 1,24 s d'ecart",
+    "mesure ici, soit tous les accents du dragon a cote de ses evenements.",
+    "LE RUSH DU DRAGON MENE, LES ACCENTS SUIVENT. Releve tranche par tranche",
+    "au-dessus de 400 Hz, il porte deja une construction complete : arrivee,",
+    "silence, montee, creux, eclair, rugissement — 17 dB de dynamique et la",
+    "crete du film. Les accents poses AILLEURS que sur ces instants ne s'y",
+    "ajoutaient pas, ils les MASQUAIENT : deux demi-scenes qui se battaient,",
+    "et les silences menages par le rush bouches par des nappes continues.",
+    "Resultat mesure sur la version precedente : six secondes de courbe PLATE,",
+    "-11 a -14 dB sans un evenement, et un voile large bande permanent.",
+    "",
+    "Instants du rush, ramenes a la frise apres le ralenti x0,8 :",
+    "  11,53  l'arrivee            15,65  l'eclair (crete -17,4)",
+    "  12,46  le silence           16,65  le second creux",
+    "  13,78  la montee            16,78  LE RUGISSEMENT (crete -14,1)"
+  ],
+  "bibliotheque": "sfx_library",
+  "effets_db": 9,
+  "largeur_stereo": 2.6,
+  "reverberation_s": 1.4,
+  "plans": [
+    {
+      "nom": "affiche",
+      "source": "rushes/affiche_aznaroth.mp4",
+      "depart": 0.0,
+      "duree": 1.1,
+      "cible_db": -90.0,
+      "_note": "l'affiche ouvre le film : le temps de lire AZNAROTH, pas plus. Muette — son son vient des effets."
+    },
+    {
+      "nom": "oeil",
+      "source": "rushes/Cosmic_Eye_Macro_Shot.mp4",
+      "depart": 0.3,
+      "duree": 1.2,
+      "cible_db": -35.0,
+      "zoom": 0.16
+    },
+    {
+      "nom": "mage",
+      "source": "rushes/Cybernetic_Druid_Holding_Earth.mp4",
+      "depart": 0.2,
+      "duree": 4.6,
+      "cible_db": -31.0
+    },
+    {
+      "nom": "eclairs",
+      "source": "rushes/PLAN3_eclairs_SON_1s5.mp4",
+      "depart": 0.0,
+      "duree": 1.4,
+      "cible_db": -24.0,
+      "tremblements": [
+        {
+          "debut": 0.05,
+          "duree": 0.45,
+          "force": 0.14
+        }
+      ],
+      "flashs": [
+        {
+          "debut": 0.03,
+          "duree": 0.16,
+          "force": 0.6
+        }
+      ]
+    },
+    {
+      "nom": "sigil",
+      "source": "rushes/Holographic_Sci_Fi_Symbol_Rotation2.mp4",
+      "depart": 1.2,
+      "duree": 0.85,
+      "cible_db": -60.0,
+      "rotation": 0.55,
+      "zoom": 0.3,
+      "flashs": [
+        {
+          "debut": 0.0,
+          "duree": 0.12,
+          "force": 0.35
+        }
+      ],
+      "_note": "les runes. Leur piste mesure -91 dB : c'est du silence. Une cible a -29 lui demandait +62 dB de gain, c'est-a-dire d'amplifier son plancher de bruit. -60 la laisse muette ; le son du plan vient des effets."
+    },
+    {
+      "nom": "vortex",
+      "source": "rushes/Chasing_The_Turquoise_Vortex.mp4",
+      "depart": 0.6,
+      "duree": 2.8,
+      "cible_db": -29.0,
+      "zoom": 0.55,
+      "flou_radial": 0.13,
+      "vitesse": 1.8
+    },
+    {
+      "nom": "dragon",
+      "source": "rushes/Duration_seconds_Cinemat.mp4",
+      "depart": 4.2,
+      "duree": 5.8,
+      "cible_db": -13.5,
+      "zoom": 0.18,
+      "tremblements": [
+        {
+          "debut": 0.1,
+          "duree": 0.35,
+          "force": 0.1
+        }
+      ],
+      "flashs": [
+        {
+          "debut": 3.4,
+          "duree": 0.14,
+          "force": 0.5
+        },
+        {
+          "debut": 4.3,
+          "duree": 0.06,
+          "force": 0.28
+        }
+      ],
+      "_note": "le dragon. cible -14 et non -9 : le rush mesure -13,4 dB avec une CRETE a 0,973, a un quart de decibel du plein echelle. Lui demander -9 revient a +4,4 dB de gain, donc une crete a 1,61 — il sature avant meme d'atteindre le limiteur. On ne demande jamais un gain POSITIF a un rush dont la crete frole le plafond ; on descend le reste et le master remonte l'ensemble."
+    }
+  ],
+  "effets": [
+    {
+      "son": "braam",
+      "instant": 0.0,
+      "gain": 6,
+      "distance": "proche",
+      "telephone": 1.3,
+      "parametres": {
+        "duree": 1.5,
+        "fondamentale": 52.0,
+        "graine": 140
+      }
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 0.0,
+      "gain": -2,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 1.9,
+        "fondamentale": 44.0,
+        "graine": 141
+      },
+      "_note": "le lit de l'affiche : sans lui le son tombe entre le braam et l'aspiration de l'oeil"
+    },
+    {
+      "son": "eclat",
+      "instant": 0.02,
+      "gain": 7,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.8,
+        "graine": 142,
+        "densite": 200.0
+      }
+    },
+    {
+      "son": "souffle_caverne",
+      "instant": 0.05,
+      "gain": 4,
+      "distance": "moyen",
+      "_note": "le lit de l'affiche, et il est en MEDIUM : le braam et la nappe qui l'accompagnent vivent sous 400 Hz, donc dans le silence sur un telephone. Mesure sans lui : -43 dB pendant toute la premiere seconde."
+    },
+    {
+      "son": "montee",
+      "instant": 0.35,
+      "gain": -2,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 0.9,
+        "graine": 33
+      },
+      "_note": "la tension qui amene l'oeil"
+    },
+    {
+      "son": "aspiration",
+      "instant": 1.1,
+      "gain": 10,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.9,
+        "graine": 44,
+        "tours_final": 26.0
+      },
+      "_note": "l'in-suck demande. Elle ouvre sur du mouvement, pas sur un carton"
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 1.1,
+      "gain": -7,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 2.2,
+        "fondamentale": 44.0,
+        "graine": 141
+      }
+    },
+    {
+      "son": "whoosh_rapide",
+      "instant": 2.95,
+      "gain": 6,
+      "distance": "moyen"
+    },
+    {
+      "son": "souffle_caverne",
+      "instant": 3.1,
+      "gain": 0,
+      "distance": "lointain"
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 3.1,
+      "gain": -6,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 4.8,
+        "fondamentale": 58.0,
+        "graine": 88
+      }
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 4.55,
+      "gain": 1,
+      "distance": "lointain",
+      "_note": "le blanc entre la deuxieme et la troisieme replique. Un silence detecte a 4,8 s : le lit du mage etait grave, donc absent sur un telephone. `grondement_braises` perd 1,3 dB la ou une nappe en perd quinze — c'est lui qui porte un lit audible, jamais un drone."
+    },
+    {
+      "son": "grondement_braises",
+      "instant": 4.55,
+      "gain": 1,
+      "distance": "lointain",
+      "_note": "le blanc entre la deuxieme et la troisieme replique. Un silence detecte a 4,8 s : le lit du mage etait grave, donc absent sur un telephone. `grondement_braises` perd 1,3 dB la ou une nappe en perd quinze — c'est lui qui porte un lit audible, jamais un drone."
+    },
+    {
+      "son": "electricite",
+      "instant": 5.42,
+      "gain": 21,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.1,
+        "graine": 88
+      },
+      "_note": "les eclairs qui sortent des yeux du druide, cales a l'image : les pixels tres clairs quadruplent entre 5,42 et 5,50 s. Rien ne les sonorisait — le premier son arrivait 1,2 s plus tard."
+    },
+    {
+      "son": "transition_eclair",
+      "instant": 5.44,
+      "gain": 15,
+      "distance": "proche"
+    },
+    {
+      "son": "riser_court",
+      "instant": 6.6,
+      "gain": -7,
+      "distance": "moyen"
+    },
+    {
+      "son": "electricite",
+      "instant": 6.94,
+      "gain": 14,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.9,
+        "graine": 91
+      },
+      "_note": "le second eclair, celui qui fend la Terre : 16 782 pixels tres clairs sur une seule image, la plus forte poussee du film."
+    },
+    {
+      "son": "eclat",
+      "instant": 6.96,
+      "gain": 6,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.6,
+        "graine": 92,
+        "densite": 180.0
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 7.52,
+      "gain": -2,
+      "distance": "moyen"
+    },
+    {
+      "son": "chute_sous_grave",
+      "instant": 7.7,
+      "gain": 1,
+      "distance": "proche",
+      "telephone": 1.6,
+      "parametres": {
+        "duree": 1.5,
+        "graine": 45,
+        "depart_hz": 40.0
+      },
+      "_note": "le sub-drop a 40 Hz. NU il n'existe pas sur un telephone — la membrane ne descend pas la. Excite, ses harmoniques passent : c'est la seule facon d'avoir un sub-drop qui s'entende sur l'appareil"
+    },
+    {
+      "son": "impact_debris",
+      "instant": 7.72,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 7.85,
+      "gain": -3,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.3,
+        "graine": 51
+      }
+    },
+    {
+      "son": "transition_eclair",
+      "instant": 9.05,
+      "gain": 7,
+      "distance": "proche"
+    },
+    {
+      "son": "whoosh_rapide",
+      "instant": 9.12,
+      "gain": 3,
+      "distance": "moyen"
+    },
+    {
+      "son": "aspiration",
+      "instant": 9.7,
+      "gain": 1,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 2.8,
+        "graine": 46,
+        "tours_final": 34.0
+      },
+      "enveloppe": {
+        "coupe": 2.6,
+        "chute": 0.5
+      }
+    },
+    {
+      "son": "souffle_tournant",
+      "instant": 9.7,
+      "gain": -10,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 2.8,
+        "graine": 46
+      }
+    },
+    {
+      "son": "braam_massif",
+      "instant": 10.806,
+      "gain": 10,
+      "distance": "proche",
+      "_note": "l'arrivee, TAILLEE a 0,75 s. Sa queue tenait jusqu'a 12,2 s et couvrait les deux pas poses derriere : mesure, le premier pas ressortait de -1,2 dB sur ce qui le precede, c'est-a-dire sous son propre fond. Un accent qui dure plus que son plan masque tout ce qui vient apres lui.",
+      "enveloppe": {
+        "coupe": 0.75,
+        "attaque": 0.005,
+        "chute": 0.35
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 11.056,
+      "gain": 5,
+      "distance": "moyen",
+      "enveloppe": {
+        "coupe": 0.45,
+        "chute": 0.2
+      }
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 12.406,
+      "gain": 6,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 1.6,
+        "graine": 63
+      },
+      "_note": "les debris apres le cri : c'est ce qui fait que le monde existe autour"
+    },
+    {
+      "son": "cri_titan",
+      "instant": 13.531,
+      "gain": 5,
+      "distance": "moyen",
+      "telephone": 1.5,
+      "parametres": {
+        "duree": 1.0,
+        "fondamentale": 108.0,
+        "graine": 12,
+        "dechirure": 0.55
+      },
+      "enveloppe": {
+        "attaque": 0.14,
+        "accent_s": 0.3,
+        "accent_db": 3.0,
+        "chute": 0.35
+      },
+      "_note": "le grognement. Il ANNONCE la montee du rush, il ne la couvre pas — et rien entre 12,46 et 13,68 : le silence du rush est un choix, pas un trou"
+    },
+    {
+      "son": "riser_court",
+      "instant": 13.556,
+      "gain": 4,
+      "distance": "moyen"
+    },
+    {
+      "son": "electricite",
+      "instant": 14.106,
+      "gain": 17,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.8,
+        "graine": 77
+      },
+      "_note": "SUR l'eclair du rush. 0,8 s et non 1,3 : ce qui traine apres remplirait le creux qui precede le cri, et ce creux est ce qui fait le cri"
+    },
+    {
+      "son": "eclat",
+      "instant": 14.126,
+      "gain": 10,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.5,
+        "graine": 773,
+        "densite": 170.0
+      }
+    },
+    {
+      "son": "braam_double",
+      "instant": 14.946,
+      "gain": 6,
+      "distance": "proche",
+      "enveloppe": {
+        "coupe": 1.9,
+        "chute": 0.6
+      }
+    },
+    {
+      "son": "chute_pierres",
+      "instant": 15.756,
+      "gain": 5,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.6,
+        "graine": 63
+      },
+      "_note": "les debris apres le cri : c'est eux qui font exister le monde autour"
+    },
+    {
+      "son": "cri_titan",
+      "instant": 16.631,
+      "gain": 21,
+      "distance": "proche",
+      "telephone": 1.1,
+      "parametres": {
+        "duree": 1.6,
+        "fondamentale": 54.0,
+        "graine": 31,
+        "dechirure": 1.15
+      },
+      "enveloppe": {
+        "attaque": 0.04,
+        "accent_s": 0.35,
+        "accent_db": 6.0,
+        "chute": 0.35
+      },
+      "_note": "le cri, DOUBLANT celui du rush au lieu de le preceder. 1,6 s et non 3,3 : le rush tient la longueur, mon cri lui donne le corps"
+    },
+    {
+      "son": "aspiration",
+      "instant": 16.681,
+      "gain": 4,
+      "distance": "proche",
+      "parametres": {
+        "duree": 1.4,
+        "graine": 91,
+        "tours_final": 48.0
+      },
+      "_note": "la turbine demandee, hybridee dans le cri. 48 tours : au-dessus de l'identification, elle devient une texture et non plus une rotation"
+    }
+  ],
+  "esquive": {
+    "gain": -5,
+    "depuis": 3.1,
+    "jusqu_a": 7.7
+  },
+  "sous_titres": [],
+  "titres": [],
+  "finition": {
+    "_note": "LUT_teal_orange plutot qu'une chaine de courbes ecrite a la main : mesuree, elle REMONTE la luminance de 3 % (71,6 -> 73,4) quand ma chaine la faisait perdre 15 %. Un rendu cinema n'a pas besoin d'assombrir, et sur un Redmi regarde dehors il ne le peut pas.",
+    "etalonnage": {
+      "force": 0.6,
+      "grain": 0
+    },
+    "lut": "visual_library/02_LUTs_and_Grading/LUT_teal_orange.cube",
+    "calques": [
+      {
+        "fichier": "visual_library/01_Overlays_and_FX/Film_Grain/film_grain_4k.mp4",
+        "fusion": "screen",
+        "opacite": 0.1,
+        "_note": "le grain en dernier : tout filtre qui le suit le lisse"
+      },
+      {
+        "fichier": "visual_library/05_Matte_and_Bars/vignette_soft.png",
+        "fusion": "multiply",
+        "opacite": 0.45,
+        "_note": "la douce, pas la forte : a pleine opacite le vignettage eteint le titre"
+      }
+    ]
+  }
+}

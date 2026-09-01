@@ -373,7 +373,7 @@ function VoicePanel({ engine }: { engine: PlaybackEngine }) {
                           rows={3}
                           placeholder="Alerte : le secteur 09 s'effondre…"
                           onChange={(event) => updateVoice(voice.id, { script: event.target.value })}
-                          className="w-full resize-none rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
+                          className="w-full resize-none min-h-11 rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
                         />
                       </Field>
 
@@ -503,7 +503,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
                 <p className="text-xs font-semibold text-mist">{sfx.label}</p>
                 <p className="text-[11px] text-muted">{sfx.description}</p>
               </div>
-              <Button variant="subtle" onClick={() => void audition(sfx.id)} title="Écouter">
+              <Button variant="ghost" onClick={() => void audition(sfx.id)} title="Écouter">
                 ♪
               </Button>
               <Button variant="ghost" onClick={() => addCue(sfx.id)} title="Poser à la position de lecture">
@@ -532,7 +532,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
                     type="button"
                     onClick={() => select({ kind: 'cue', id: cue.id })}
                     className={`flex min-h-11 w-full items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors ${
-                      selected?.id === cue.id ? 'bg-raised ring-1 ring-accent/60' : 'bg-slab hover:bg-raised'
+                      selected?.id === cue.id ? 'bg-raised ring-1 ring-select/60' : 'bg-slab hover:bg-raised'
                     }`}
                   >
                     <span className="text-xs font-semibold text-mist">
@@ -592,7 +592,7 @@ export function SoundPanel({ engine }: { engine: PlaybackEngine }) {
           <>
             <div className="mb-3 flex items-center justify-between gap-2 rounded-xl bg-slab px-3 py-2">
               <p className="min-w-0 flex-1 truncate text-xs font-semibold text-mist">{music.name}</p>
-              <Button variant="subtle" onClick={() => setMusic(null)} title="Retirer la musique">
+              <Button variant="ghost" onClick={() => setMusic(null)} title="Retirer la musique">
                 ✕
               </Button>
             </div>
