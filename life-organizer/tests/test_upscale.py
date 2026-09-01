@@ -45,6 +45,21 @@ class TestFacteur(unittest.TestCase):
         self.assertEqual(regles.facteur_effectif(3900, 4, 4000), 1)
 
 
+class TestVideo(unittest.TestCase):
+    def test_les_extensions_video_courantes_sont_reconnues(self):
+        for nom in ("film.mp4", "prise.MOV", "clip.mkv", "vieux.avi", "tel.3gp"):
+            self.assertTrue(regles.est_video(Path(nom)), nom)
+
+    def test_une_image_n_est_pas_une_video(self):
+        for nom in ("photo.jpg", "capture.PNG", "dessin.webp"):
+            self.assertFalse(regles.est_video(Path(nom)), nom)
+
+    def test_un_fichier_sans_extension_n_est_pas_une_video(self):
+        # Le parcours en croise : un refus par défaut les enverrait dans le
+        # compte des vidéos, et le compte rendu mentirait sur ce qu'il a vu.
+        self.assertFalse(regles.est_video(Path("archive")))
+
+
 class TestRefus(unittest.TestCase):
     def test_une_image_deja_assez_definie_est_refusee(self):
         decision = regles.decider(image(largeur=2000, hauteur=1500), CONFIG)
