@@ -18,3 +18,4 @@ pydantic       # assistant administratif : forme de ce que rend le modèle de vi
 PyYAML         # radar crypto, NexusCrypto et Conseiller Patrimoine : seuils et allocation en YAML
 opencv-python-headless  # chaîne KDP : piqué des planches, gradient de Sobel
 scipy          # chaîne de montage : les filtres de la palette de bruitages, importée au chargement du module
+pyloudnorm     # chaîne de montage : la mesure de sonie. Aucun test ne tombe sans lui — il rend `None` en silence

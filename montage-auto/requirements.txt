@@ -14,3 +14,20 @@
 
 numpy>=1.24
 soundfile>=0.12
+
+# Mesure de sonie aux normes EBU R128. À part parce qu'elle se rate autrement
+# que les deux du dessus : `sfx_pro.py` l'importe dans un `try` dont l'`except`
+# rend `None`, donc son absence ne casse rien — elle rend la mesure muette.
+# Relevé sur un sinus de 1 kHz : `None` sans le paquet, −15.1 LUFS avec. Tout
+# ce que `/master-telephone` et `/voir-le-son` jugent passe par là.
+pyloudnorm>=0.1
+
+# Les filtres de la palette de bruitages, importés au chargement de
+# `bruitages.py` — donc trois suites de tests tombent sans lui.
+scipy>=1.11
+
+# Le tracé du spectrogramme de `sfx_pro.py`, en sortie `Agg` (aucun affichage).
+# Facultatif à l'exécution : sans lui la fonction rend `False` et le reste du
+# module tourne. Déclaré quand même, parce qu'un tracé qui ne sort pas est
+# exactement le genre d'absence qu'on met une heure à imputer au bon endroit.
+matplotlib>=3.8
