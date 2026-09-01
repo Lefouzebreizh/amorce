@@ -1,5 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig, Easing } from 'remotion';
+import { CARTON_LARGEUR_PCT } from './zone';
 
 /**
  * Le carton de fin — doré sur noir.
@@ -55,7 +56,13 @@ export const CartonFin: React.FC<{
             fontSize: 96,
             lineHeight: 1.06,
             letterSpacing: '0.04em',
-            maxWidth: 1080 * 0.66, // la même largeur utile que la zone sûre
+            // Même LARGEUR que la zone sûre, mais centrée sur le cadre là où
+            // la zone sûre ne l'est pas (22 → 88 %, centre à 55 %). Le carton
+            // tient donc 17 → 83 % : son bord gauche entre de 5 points dans la
+            // bande des boutons Facebook. Assumé — le carton est une carte de
+            // fin plein écran, pas un titre posé sur un rush — et `tests/
+            // zone-sure.test.mts` fige l'écart pour qu'il ne dérive pas seul.
+            maxWidth: 1080 * (CARTON_LARGEUR_PCT / 100),
             textWrap: 'balance',
             textShadow: `0 0 ${40 * souffle}px rgba(232,176,75,.45)`,
             fontFamily: 'Inter, "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif',

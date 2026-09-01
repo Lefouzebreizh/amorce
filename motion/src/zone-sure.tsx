@@ -1,27 +1,10 @@
 import React from 'react';
+import { ZONE } from './zone';
 
-/**
- * La zone sûre d'une vidéo verticale, et la seule raison d'être de ce projet.
- *
- * Une vidéo 9:16 n'est jamais vue en plein cadre : l'habillage de la
- * plateforme en mange les bords, et ce n'est pas le même sur les trois. C'est
- * leur INTERSECTION qui décide, jamais la plus permissive — une même vidéo
- * part sur TikTok, Instagram et Facebook.
- *
- * Les bornes ci-dessous sont relevées sur le terrain de référence (Redmi
- * Note 12 Plus), jamais déduites des chartes des plateformes, qui ne disent
- * rien de la barre système ni des bulles de profil.
- */
-export const ZONE = {
-  /** 12 % : sous cette ligne on passe derrière la barre système de Facebook. */
-  hautPct: 12,
-  /** 45 % : au-delà on entre dans la colonne de droite de TikTok. */
-  basPct: 45,
-  /** 22 % : les boutons de gauche de Facebook occupent 14 à 22 %. */
-  gauchePct: 22,
-  /** 88 % : au-delà on est au ras du bord, qu'un écran arrondi rogne. */
-  droitePct: 88,
-} as const;
+// Les bornes vivent dans `zone.ts`, sans JSX, pour qu'un test puisse les lire.
+// Réexportées ici : `ZONE` s'importait depuis ce fichier, et déplacer une
+// constante sans laisser son ancien chemin casse les appelants en silence.
+export { ZONE };
 
 /**
  * Le défaut que ce composant rend impossible.
