@@ -34,7 +34,12 @@ class TestCategorie(unittest.TestCase):
         self.assertEqual(regles.categorie(Path("a.mkv"), categories), "Videos")
 
     def test_une_extension_inconnue_n_a_pas_de_categorie(self):
-        self.assertIsNone(regles.categorie(Path("a.odp"), CONFIG["classement"]["categories"]))
+        # Une extension inventée, et non un format réel : le jour où `.odp` a
+        # été ajouté aux documents, trois tests sont tombés d'un coup — leur
+        # intention était juste, leur exemple avait vieilli. Un exemple qui ne
+        # peut pas devenir vrai ne vieillira pas.
+        self.assertIsNone(regles.categorie(Path("a.inconnu"),
+                                           CONFIG["classement"]["categories"]))
 
 
 class TestDossierDate(unittest.TestCase):
@@ -82,7 +87,7 @@ class TestDecider(unittest.TestCase):
                          Path("Documents/Divers/2024/03 - mars"))
 
     def test_une_extension_inconnue_n_est_pas_deplacee(self):
-        rangement = regles.decider(fiche("presentation.odp"), CONFIG, "exif")
+        rangement = regles.decider(fiche("presentation.inconnu"), CONFIG, "exif")
         self.assertFalse(rangement.a_deplacer)
         self.assertIn("classement.categories", rangement.motif)
 
@@ -173,7 +178,7 @@ class TestCompter(unittest.TestCase):
         rangements = [
             regles.decider(fiche("a.jpg"), CONFIG, "exif"),
             regles.decider(fiche("b.jpg"), CONFIG, "exif"),
-            regles.decider(fiche("c.odp"), CONFIG, "exif"),
+            regles.decider(fiche("c.inconnu"), CONFIG, "exif"),
         ]
         self.assertEqual(regles.compter(rangements), {"Photos/2024/03 - mars": 2})
 

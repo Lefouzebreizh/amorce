@@ -34,7 +34,15 @@
         "txt",
         "rtf",
         "xlsx",
-        "csv"
+        "csv",
+        "doc",
+        "xls",
+        "ppt",
+        "pptx",
+        "odp",
+        "ods",
+        "pages",
+        "md"
       ],
       "Photos": [
         "jpg",
@@ -80,6 +88,24 @@
       "modification"
     ],
     "themes": [
+      {
+        "nom": "Entreprise",
+        "dossier": "Documents/Administratif/Entreprise",
+        "mots_cles": [
+          "guichet unique des entreprises",
+          "formalité de création",
+          "entreprise individuelle",
+          "extrait kbis",
+          "avis de situation sirene",
+          "siret",
+          "siren",
+          "urssaf",
+          "greffe du tribunal de commerce",
+          "code ape",
+          "micro-entrepreneur",
+          "déclaration de début d'activité"
+        ]
+      },
       {
         "nom": "Impôts",
         "dossier": "Documents/Administratif/Impôts",
