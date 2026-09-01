@@ -1,0 +1,33 @@
+# Ce que la chaîne KDP exige pour *tourner*.
+#
+# Cette liste vivait jusqu'ici en dur à la ligne 140 du hook de démarrage et
+# dans `.github/requirements-tests.txt` — c'est-à-dire à deux endroits dont
+# aucun n'était ce projet. Tous les autres projets Python du dépôt déclarent
+# chez eux ; celui-ci dérogeait, et rien ne le signalait tant que le hook
+# tournait. Dans une session où il n'a pas tourné, quatre modules de test sur
+# cinq ne se chargent pas — sans qu'aucun test ne rougisse, puisqu'un module
+# qui ne se charge pas ne compte pas.
+
+# Ouverture, composition et mesure des planches. C'est la dépendance la plus
+# large du projet : 26 fichiers l'importent.
+Pillow>=10.0
+
+# `coquilles.py` opère au pixel et `planches.py` mesure les bulles : ni Pillow
+# ni PyMuPDF ne l'apportent. 19 fichiers.
+numpy>=1.24
+
+# Assemblage du PDF, géométrie de la couverture, contrôle des DPI. 14 fichiers
+# l'importent — **sous le nom `fitz`**, que PyMuPDF déprécie et retirera :
+#     warning: The `fitz` API is deprecated [...] Use `import pymupdf` instead.
+# Le renommage n'est pas fait ici parce qu'il touche 14 fichiers et mérite son
+# propre lot ; il est écrit dans `second-brain/audit-dependances.md` pour ne pas
+# se redécouvrir le jour où l'alias tombe et où la chaîne entière s'arrête.
+PyMuPDF>=1.24
+
+# Piqué des planches, gradient de Sobel. 4 fichiers. La variante « headless »
+# évite les bibliothèques graphiques de Qt, inutiles en ligne de commande.
+opencv-python-headless>=4.9
+
+# `hymne.py` grave un QR code sur la page de l'hymne. Un seul module de la
+# chaîne en dépend, et c'est précisément celui qu'on oublie.
+segno>=1.6

@@ -1,0 +1,29 @@
+# Ce que le constructeur de bibliothèque visuelle exige pour tourner.
+#
+# Écrit à l'occasion de l'audit du 01/09/2026, qui a trouvé ce projet sans
+# manifeste, sans test, et **absent de `CLAUDE.md` §4** — qui énumère pourtant
+# tous les projets du dépôt. 1109 lignes de Python que rien n'annonçait.
+#
+# Ce fichier ne règle que la moitié du problème : tant que le projet n'est pas
+# déclaré au §4, il reste hors de l'inventaire, hors du hook de démarrage et
+# hors de `verifier.sh`. La décision de le déclarer, de l'archiver dans
+# `archives-backlog/` ou de le retirer appartient au propriétaire.
+
+# Ouverture des images et fabrication des planches de contact.
+Pillow>=10.0
+
+# Mesures au pixel sur les vignettes.
+numpy>=1.24
+
+# Hachage perceptuel : rapprocher deux visuels identiques dont les octets
+# diffèrent — recadrage, recompression. Même rôle que dans Life-Organizer.
+ImageHash>=4.3
+
+# ffmpeg sous forme de binaire statique, pour la séquence de démonstration
+# (`--make-demo`). Pas de paquet système à installer à part.
+imageio-ffmpeg>=0.4.9
+
+# Barre de progression sur les longues inspections. Déjà facultative dans le
+# code (`except ImportError` ligne 947, repli sur une fonction transparente) :
+# elle est déclarée ici pour être installée, pas pour devenir obligatoire.
+tqdm>=4.66
