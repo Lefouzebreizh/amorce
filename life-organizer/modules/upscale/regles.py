@@ -61,6 +61,14 @@ LARGEUR_CIBLE_PAR_DEFAUT = 4000
 # prix du ×4 pour un résultat moindre. On ne le propose donc pas.
 FACTEURS = (1, 2, 4)
 
+# Le module travaille image par image, et c'est mesuré : 2 min 13 pour du
+# 512 × 512, 5 min 14 pour du 768 × 768 sur un processeur sans carte graphique.
+# Une minute de film à 30 i/s fait 1 800 passages, soit des jours. La vidéo est
+# donc refusée — mais **nommément**, jamais en la laissant tomber du filtre
+# d'extensions : quelqu'un qui pointe le module sur son dossier de vidéos et lit
+# « 0 image trouvée » croit à une panne, et cherche au mauvais endroit.
+EXTENSIONS_VIDEO = ("mp4", "mov", "avi", "mkv", "webm", "m4v", "mpg", "mpeg", "wmv", "3gp")
+
 
 @dataclass(frozen=True)
 class Candidat:
@@ -107,6 +115,15 @@ class Agrandissement:
     @property
     def largeur_obtenue(self) -> int:
         return self.candidat.largeur * self.facteur
+
+
+def est_video(chemin: Path) -> bool:
+    """Sur l'extension seule : rien n'est ouvert à ce stade, et rien ne doit l'être.
+
+    Ouvrir pour vérifier coûterait un décodage par fichier sur un dossier qui
+    peut en compter des milliers — pour une réponse que l'extension donne juste.
+    """
+    return chemin.suffix.lower().lstrip(".") in EXTENSIONS_VIDEO
 
 
 def deja_agrandie(chemin: Path, suffixe: str) -> bool:

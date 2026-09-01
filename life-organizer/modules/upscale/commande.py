@@ -83,16 +83,27 @@ def executer(options: argparse.Namespace, config: dict) -> int:
     # agrandie » pour le fichier produit, puis « 1 reprise » pour son original.
     # Le refus reste dans `regles.decider` : c'est le filet, pas le filtre.
     suffixe = reglages.get("suffixe", "_hd")
-    chemins = [
-        chemin for chemin in fichiers.parcourir(
-            dossiers,
-            extensions=reglages.get("extensions", ["jpg", "jpeg", "png", "webp"]),
-            exclusions=dossiers_config.get("exclusions", []),
-            consigner=journal.incident,
-        )
-        if not regles.deja_agrandie(chemin, suffixe)
-    ]
+    # Un seul parcours pour les deux : les extensions vidéo entrent dans le
+    # filtre non pour être traitées, mais pour être **comptées et nommées**.
+    # Sans elles, un dossier de films rendait « 0 image trouvée », ce qui se lit
+    # comme une panne du module plutôt que comme son périmètre.
+    extensions_image = reglages.get("extensions", ["jpg", "jpeg", "png", "webp"])
+    chemins, videos = [], 0
+    for chemin in fichiers.parcourir(
+        dossiers,
+        extensions=list(extensions_image) + list(regles.EXTENSIONS_VIDEO),
+        exclusions=dossiers_config.get("exclusions", []),
+        consigner=journal.incident,
+    ):
+        if regles.est_video(chemin):
+            videos += 1
+        elif not regles.deja_agrandie(chemin, suffixe):
+            chemins.append(chemin)
     print(f"{len(chemins)} image(s) trouvée(s) dans {len(dossiers)} dossier(s).")
+    if videos:
+        print(f"{videos} vidéo(s) laissée(s) de côté : le modèle agrandit image par "
+              "image — 2 min 13 pour du 512 × 512 sur ce genre de processeur, soit "
+              "1 800 passages pour une minute de film.")
     if not chemins:
         _incidents(journal)
         return 0
