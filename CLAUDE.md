@@ -689,6 +689,29 @@ doit connaître s'écrit et se fusionne — elle ne s'envoie pas. C'est aussi ce
 rend la fusion rapide utile au-delà des conflits : tant qu'un lot n'est pas sur
 `main`, il n'existe pour personne d'autre.
 
+**Mais on peut voir si le PC tourne, et c'est ce qu'il faut faire avant de
+déclarer un mur.** `list_sessions` le dit en une ligne :
+
+| Dans la fiche | Ce que c'est |
+| --- | --- |
+| `environment_kind: bridge` + `origin: claude_code_cli` | **le PC** |
+| `environment_kind: anthropic_cloud`, origine `android` ou `claude_code_mcp_seed` | un conteneur distant |
+| `connection_status: connected` | elle tourne **maintenant** |
+
+Voir n'est pas joindre : le paragraphe ci-dessus tient toujours, on ne lui parle
+pas. Le geste est donc de **nommer la session au propriétaire** — son
+identifiant et son titre — avec la tâche exacte à y reprendre, et de continuer
+sur ce qui ne dépend pas d'elle. C'est lui qui bascule d'un fil à l'autre ; ça
+lui coûte un geste, là où une impossibilité annoncée lui coûte la tâche.
+
+**Et le PC n'est pas d'office le meilleur endroit** : les deux murs ne sont pas
+les mêmes. Mesuré le 01/09/2026 sur l'agrandissement d'images — le PC tournait
+sur Python 3.14, où `basicsr` casse à l'import ; le conteneur distant sur 3.11,
+où il passe, mais sans carte graphique et derrière un mandataire qui refuse
+`download.pytorch.org` (la roue CPU allégée) tout en laissant passer PyPI et les
+objets de release GitHub. Router vers le PC est donc un **choix**, pas un
+réflexe : on regarde lequel des deux peut faire le travail, et on le dit.
+
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
 
