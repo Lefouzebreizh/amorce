@@ -28,3 +28,12 @@ python-dateutil>=2.9
 #
 # Real-ESRGAN et PyTorch non plus : plusieurs gigaoctets pour le seul module
 # d'agrandissement, désactivé par défaut. Qui en a besoin les installe à part.
+
+# Agrandissement (module 5) — volontairement HORS du hook de démarrage et de
+# l'installation par défaut : plusieurs gigaoctets pour un module désactivé dans
+# la configuration livrée. `torch` se choisit sur pytorch.org, la version par
+# défaut tirant les pilotes NVIDIA même sur une machine qui n'en a pas.
+#
+#     pip install torch realesrgan basicsr
+#
+# Sans eux, `organizer upscaler` calcule et affiche son plan, et n'écrit rien.

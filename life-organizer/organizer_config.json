@@ -357,6 +357,15 @@
     "modele": "realesrgan-x4plus",
     "facteur": 2,
     "largeur_source_maximale": 1280,
+    "largeur_source_minimale": 320,
+    "largeur_cible_maximale": 4000,
+    "nettete_minimale": 60,
+    "extensions": [
+      "jpg",
+      "jpeg",
+      "png",
+      "webp"
+    ],
     "appareil": "cpu",
     "lot_maximal": 25,
     "ecrire_a_cote": true,

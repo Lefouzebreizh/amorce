@@ -12,7 +12,8 @@ options désactivées par défaut).
 > `scan_ocr` et `calendrier` sont retirés du projet — `paper-manager/` fait déjà
 > les deux, et un second extracteur de champs dans le même dépôt divergerait du
 > premier au premier motif ajouté. Il reste **quatre modules**, dont trois
-> écrits ; le projet est fini quand `upscale` l'est.
+> écrits, et `upscale` posé — sa décision est vérifiée, son inférence ne peut
+> pas l'être ici (ni `torch` ni `realesrgan` dans cet environnement).
 >
 > État : `organizer_config.json` est complet et validé. Trois modules écrits :
 > `nettoyage`, complet — photos floues, quasi-doublons, vidéos abîmées, puis
@@ -40,7 +41,7 @@ life-organizer/
 │   ├── calendrier/           2. échéances, abonnements, lettres de résiliation
 │   ├── nettoyage/            3. photos floues, doublons, vidéos abîmées
 │   ├── conversion/           4. HEIC→JPG, MKV→MP4, compression
-│   ├── upscale/              5. agrandissement des vieilles photos et vidéos
+│   ├── upscale/              5. agrandissement des vieilles photos (pas les vidéos)
 │   └── classement/           6. rangement par date, par type, par thème
 ├── donnees/                  état local (empreintes, index) — non versionné
 └── tests/                    tests unitaires, sans dépendance externe

@@ -1,0 +1,237 @@
+"""Mesurer les images, dire si le modèle est là, et agrandir quand il l'est.
+
+**Ce fichier porte la frontière du vérifiable, et elle est nette.**
+
+Ce qui est éprouvé dans cet environnement : la mesure des images (Pillow et
+OpenCV sont installés), la détection de l'absence du modèle, et le message qui
+en découle. `python3 -m unittest discover -s life-organizer/tests` couvre la
+décision entière.
+
+Ce qui ne l'est pas, faute de dépendance : **l'inférence elle-même**. Ni
+`torch`, ni `realesrgan`, ni `basicsr` ne sont installés ici, et les poids du
+modèle ne sont pas téléchargeables — le mandataire refuse `huggingface.co`.
+`agrandir_une` est donc écrite contre l'API réelle de Real-ESRGAN mais n'a
+jamais tourné : la première exécution sur une machine équipée est une
+vérification qui reste à faire, et c'est écrit dans le README plutôt que
+supposé.
+
+Trois décisions :
+
+1. **L'absence se constate au démarrage, jamais au millième fichier.**
+   `moteur_disponible` est appelée avant la première image. Découvrir l'absence
+   après quarante minutes de mesure coûte les quarante minutes.
+2. **La mesure ne dépend pas du modèle.** Elle tourne, elle décide, elle rend un
+   plan — même sans une seule bibliothèque d'agrandissement. C'est ce qui permet
+   de régler les seuils aujourd'hui et de lancer le calcul le jour où la
+   machine le permet.
+3. **La netteté est mesurée ici, et non partagée avec `nettoyage`.** La formule
+   est la même — variance du laplacien sur l'image réduite en niveaux de gris —
+   mais la fonction de `nettoyage` est couplée à son type `Media`, à la
+   détection de visages et à son propre redimensionnement : l'extraire serait
+   refactoriser un module qui marche pour trois lignes. Le jour où un troisième
+   module en a besoin, elle monte dans `noyau/` — c'est à ce moment-là que le
+   partage devient moins cher que la copie, pas avant.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Callable, Iterable
+
+from .regles import Agrandissement, Candidat
+
+# Même valeur que dans `nettoyage` : la variance du laplacien dépend de la
+# taille de l'image, donc deux seuils calculés sur deux tailles différentes ne
+# se comparent pas. Changer l'une sans l'autre rendrait `nettete_minimale`
+# incohérent d'un module à l'autre.
+LARGEUR_ANALYSE = 800
+
+
+def moteur_disponible() -> tuple[bool, str]:
+    """Le modèle d'agrandissement est-il utilisable ici, et sinon que faire.
+
+    Rend un couple plutôt qu'un booléen : un refus sans la commande qui le lève
+    oblige à chercher ailleurs ce que la fonction savait déjà.
+    """
+    manquants = []
+    for paquet, pip in (("torch", "torch"), ("realesrgan", "realesrgan"),
+                        ("basicsr", "basicsr")):
+        try:
+            __import__(paquet)
+        except ImportError:
+            manquants.append(pip)
+
+    if not manquants:
+        return True, ""
+    return False, (
+        f"agrandissement indisponible — {', '.join(manquants)} absent(s). "
+        "Les installer : pip install " + " ".join(manquants) + "\n"
+        "   (torch se choisit sur pytorch.org : la version par défaut tire les "
+        "pilotes NVIDIA même sans carte graphique.)"
+    )
+
+
+def mesurer(chemins: Iterable[Path], reglages: dict,
+            consigner: Callable[[Path, str], None] | None = None) -> list[Candidat]:
+    """Ouvre chaque image une fois et en tire ses dimensions et sa netteté.
+
+    Une image illisible est consignée et enjambée, jamais jugée — même parti
+    pris que le module de nettoyage. Et une netteté qu'on n'a pas su mesurer
+    reste `None`, ce qui ne vaut pas « floue » : la décision le sait.
+    """
+    try:
+        from PIL import Image, UnidentifiedImageError
+    except ImportError:
+        return []
+
+    mesure_nettete = _mesureur_de_nettete(reglages)
+    candidats = []
+    for chemin in chemins:
+        try:
+            infos = chemin.stat()
+            with Image.open(chemin) as image:
+                largeur, hauteur = image.size
+        except UnidentifiedImageError:
+            # Un `.jpg` qui n'en est pas : ce n'est pas un incident, c'est un
+            # fichier qui n'a rien à faire ici.
+            continue
+        except (OSError, ValueError) as erreur:
+            if consigner:
+                consigner(chemin, f"illisible ({getattr(erreur, 'strerror', None) or erreur})")
+            continue
+
+        candidats.append(Candidat(
+            chemin=chemin, largeur=largeur, hauteur=hauteur,
+            poids_octets=infos.st_size, nettete=mesure_nettete(chemin),
+        ))
+    return candidats
+
+
+def _mesureur_de_nettete(reglages: dict) -> Callable[[Path], float | None]:
+    """Rend la fonction de mesure, ou une qui rend toujours `None`.
+
+    Décidé une fois pour toutes plutôt qu'à chaque image : sans OpenCV, la
+    décision se prend quand même — le garde-fou du flou dort, et le compte rendu
+    le dit.
+    """
+    if reglages.get("nettete_minimale") is None:
+        return lambda _chemin: None
+    try:
+        import cv2
+    except ImportError:
+        return lambda _chemin: None
+
+    def mesurer_une(chemin: Path) -> float | None:
+        image = cv2.imread(str(chemin))
+        if image is None:
+            return None
+        hauteur, largeur = image.shape[:2]
+        if largeur > LARGEUR_ANALYSE:
+            echelle = LARGEUR_ANALYSE / largeur
+            image = cv2.resize(image, (LARGEUR_ANALYSE, max(1, int(hauteur * echelle))))
+        gris = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        return float(cv2.Laplacian(gris, cv2.CV_64F).var())
+
+    return mesurer_une
+
+
+def nettete_mesurable(reglages: dict) -> bool:
+    """OpenCV est-il là pour que le garde-fou du flou serve à quelque chose ?"""
+    if reglages.get("nettete_minimale") is None:
+        return False
+    try:
+        import cv2  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def sorties_existantes(agrandissements: list[Agrandissement]) -> set[Path]:
+    """Les sorties déjà présentes sur le disque — c'est l'état de la reprise.
+
+    Le disque plutôt qu'un journal : un journal se désynchronise du réel dès
+    qu'on efface un fichier à la main, et il faudrait alors le réparer. Le
+    disque, lui, ne peut pas mentir sur ce qu'il contient.
+    """
+    return {a.sortie for a in agrandissements if a.retenu and a.sortie.exists()}
+
+
+def agrandir(file: list[Agrandissement], reglages: dict, journal) -> tuple[int, list[str]]:
+    """Agrandit ce que la file contient. Rend le nombre écrit et les incidents.
+
+    **Cette fonction n'a jamais tourné** : `torch` et `realesrgan` sont absents
+    de l'environnement où elle a été écrite. Elle suit l'API publiée de
+    Real-ESRGAN, et sa première exécution sur une machine équipée est une
+    vérification qui reste entière.
+
+    Le journal décide seul s'il faut agir (mode simulation) : la condition n'est
+    pas réécrite ici, sans quoi elle finirait par diverger de celle des autres
+    modules.
+    """
+    disponible, message = moteur_disponible()
+    if not disponible:
+        return 0, [message]
+
+    ecrits, incidents = 0, []
+    moteur = None
+    for agrandissement in file:
+        if not journal.prevoir(
+            f"agrandir : {agrandissement.candidat.chemin} → "
+            f"{agrandissement.sortie} ({agrandissement.motif})"
+        ):
+            ecrits += 1
+            continue
+        try:
+            if moteur is None:
+                moteur = _charger_moteur(reglages, agrandissement.facteur)
+            _agrandir_une(moteur, agrandissement)
+        except Exception as erreur:
+            # Le lot ne s'arrête pas sur une image : un modèle qui manque de
+            # mémoire sur une grande photo doit pouvoir finir les suivantes.
+            incidents.append(f"{agrandissement.candidat.chemin} : {erreur}")
+            journal.incident(agrandissement.candidat.chemin, f"agrandissement impossible ({erreur})")
+            continue
+        ecrits += 1
+    return ecrits, incidents
+
+
+def _charger_moteur(reglages: dict, facteur: int):
+    """Charge le modèle une seule fois pour tout le lot.
+
+    Une fois : le chargement prend plusieurs secondes et l'essentiel de la
+    mémoire. Le refaire par image transformerait un lot de vingt-cinq en une
+    demi-heure d'allers-retours disque.
+    """
+    import torch
+    from basicsr.archs.rrdbnet_arch import RRDBNet
+    from realesrgan import RealESRGANer
+
+    nom = reglages.get("modele", "realesrgan-x4plus")
+    # Le modèle est entraîné pour un facteur donné : `RealESRGANer` le rend, et
+    # `outscale` ajuste ensuite la sortie. Les deux ne se confondent pas.
+    echelle_modele = 4 if "x4" in nom else 2
+    architecture = RRDBNet(num_in_ch=3, num_out_ch=3, num_feat=64,
+                           num_block=23, num_grow_ch=32, scale=echelle_modele)
+    appareil = reglages.get("appareil", "cpu")
+    return RealESRGANer(
+        scale=echelle_modele,
+        model_path=f"https://github.com/xinntao/Real-ESRGAN/releases/download/"
+                   f"v0.1.0/{nom}.pth",
+        model=architecture,
+        device=torch.device(appareil),
+        # Sur processeur, la demi-précision n'accélère rien et rend des images
+        # noires sur certaines versions de torch.
+        half=(appareil != "cpu"),
+    )
+
+
+def _agrandir_une(moteur, agrandissement: Agrandissement) -> None:
+    """Écrit une image agrandie à côté de son original."""
+    import cv2
+
+    image = cv2.imread(str(agrandissement.candidat.chemin), cv2.IMREAD_UNCHANGED)
+    if image is None:
+        raise OSError("image illisible par le décodeur")
+    sortie, _ = moteur.enhance(image, outscale=agrandissement.facteur)
+    if not cv2.imwrite(str(agrandissement.sortie), sortie):
+        raise OSError(f"écriture refusée vers {agrandissement.sortie}")
