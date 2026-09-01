@@ -23,9 +23,9 @@ from pathlib import Path
 
 from noyau import fichiers
 from noyau.journal import Journal
-from noyau.modele import ECARTER, Decision, Doublon, Media
+from noyau.modele import ECARTER, Decision, Doublon, Fiche, Media
 
-from . import regles
+from . import regles, variantes
 
 # Les seuls formats dont on tire une empreinte. Les RAW en sont absents à
 # dessein : les décoder demande une bibliothèque de plus, et un RAW cohabite
@@ -334,4 +334,84 @@ def ecarter_flous(decisions: list[Decision], quarantaine: Path, journal: Journal
                 journal.incident(media.chemin, f"déplacement impossible ({erreur.strerror})")
                 continue
         liberes += media.poids_octets
+    return liberes
+
+
+# ─────────────────────── Les redondances hors des images ─────────────────────
+
+def relever_fiches(chemins: list[Path], exclusions: list[str],
+                   journal: Journal | None = None) -> list[Fiche]:
+    """Décrit chaque fichier sans l'ouvrir : chemin, poids, date de modification.
+
+    La date est celle du système de fichiers, la seule disponible sans décoder.
+    Elle ne sert ici qu'à départager deux copies, jamais à ranger — c'est
+    `classement.source_de_la_date` qui décide de la date qui fait foi, et elle
+    commence par l'EXIF pour de bonnes raisons.
+    """
+    releve: list[Fiche] = []
+    # Nommé, et non positionnel : le deuxième paramètre de `parcourir` est
+    # `extensions`, et l'y confondre filtre tout sans rien dire.
+    for chemin in fichiers.parcourir(chemins, exclusions=exclusions,
+                                     consigner=journal.incident if journal else None):
+        try:
+            etat = chemin.stat()
+        except OSError:
+            # Un lien qui boucle, un fichier disparu entre le parcours et ici :
+            # on enjambe, un dossier réel en contient toujours.
+            continue
+        releve.append(Fiche(chemin=chemin, poids_octets=etat.st_size,
+                            date_horodatage=etat.st_mtime))
+    return releve
+
+
+def empreintes_de_contenu(fiches: list[Fiche], journal: Journal) -> dict[Path, str]:
+    """Hache le contenu des seuls fichiers qu'un homonyme rend suspects.
+
+    Hacher tout un Drive coûterait des minutes pour rien : seuls les groupes de
+    même nom de base peuvent conclure à une redondance, et un fichier sans
+    homonyme n'a aucune chance d'en faire partie.
+    """
+    par_base: dict[str, list[Fiche]] = {}
+    for fiche in fiches:
+        par_base.setdefault(variantes.nom_de_base(fiche.chemin), []).append(fiche)
+
+    empreintes: dict[Path, str] = {}
+    for groupe in par_base.values():
+        if len(groupe) < 2:
+            continue
+        for fiche in groupe:
+            try:
+                empreintes[fiche.chemin] = fichiers.empreinte(fiche.chemin)
+            except OSError as erreur:
+                journal.incident(fiche.chemin, f"lecture impossible ({erreur.strerror})")
+    return empreintes
+
+
+def ecarter_redondances(
+    redondances: list[variantes.Redondance],
+    quarantaine: Path,
+    journal: Journal,
+) -> int:
+    """Met les variantes en quarantaine. L'original n'est jamais touché.
+
+    Le motif voyage avec le fichier : un mois plus tard, « même contenu que
+    rapport.pdf » explique la quarantaine, là où « doublon » laisserait devant
+    une énigme.
+    """
+    liberes = 0
+    deja_vues: set[Path] = set()
+    for redondance in redondances:
+        for fiche in redondance.variantes:
+            # Un fichier peut être à la fois copie de nom et dérivé recalculable :
+            # le déplacer deux fois échouerait la seconde, bruyamment et pour rien.
+            if fiche.chemin in deja_vues:
+                continue
+            deja_vues.add(fiche.chemin)
+            if journal.prevoir(f"quarantaine : {fiche.chemin} — {redondance.motif}"):
+                try:
+                    fichiers.mettre_en_quarantaine(fiche.chemin, quarantaine, redondance.motif)
+                except OSError as erreur:
+                    journal.incident(fiche.chemin, f"déplacement impossible ({erreur.strerror})")
+                    continue
+            liberes += fiche.poids_octets
     return liberes

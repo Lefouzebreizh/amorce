@@ -1,7 +1,6 @@
 {
   "version": 1,
   "devise": "EUR",
-
   "dossiers": {
     "entree": [
       "~/Téléchargements",
@@ -18,7 +17,6 @@
       "**/Bibliothèque/**"
     ]
   },
-
   "securite": {
     "simulation_par_defaut": true,
     "suppression_directe": false,
@@ -26,56 +24,136 @@
     "confirmer_au_dela_de_mo": 2000,
     "verifier_empreinte_apres_deplacement": true
   },
-
   "classement": {
     "schema": "{categorie}/{annee}/{mois} - {mois_nom}",
     "categories": {
-      "Documents": ["pdf", "docx", "odt", "txt", "rtf", "xlsx", "csv"],
-      "Photos": ["jpg", "jpeg", "png", "heic", "heif", "webp", "tiff", "dng", "raw", "cr2", "nef"],
-      "Videos": ["mp4", "mov", "mkv", "avi", "wmv", "m4v", "webm"],
-      "Audio": ["mp3", "wav", "m4a", "flac", "ogg"],
-      "Archives": ["zip", "rar", "7z", "tar", "gz"]
+      "Documents": [
+        "pdf",
+        "docx",
+        "odt",
+        "txt",
+        "rtf",
+        "xlsx",
+        "csv"
+      ],
+      "Photos": [
+        "jpg",
+        "jpeg",
+        "png",
+        "heic",
+        "heif",
+        "webp",
+        "tiff",
+        "dng",
+        "raw",
+        "cr2",
+        "nef"
+      ],
+      "Videos": [
+        "mp4",
+        "mov",
+        "mkv",
+        "avi",
+        "wmv",
+        "m4v",
+        "webm"
+      ],
+      "Audio": [
+        "mp3",
+        "wav",
+        "m4a",
+        "flac",
+        "ogg"
+      ],
+      "Archives": [
+        "zip",
+        "rar",
+        "7z",
+        "tar",
+        "gz"
+      ]
     },
-    "source_de_la_date": ["exif", "metadonnees", "nom_de_fichier", "modification"],
+    "source_de_la_date": [
+      "exif",
+      "metadonnees",
+      "nom_de_fichier",
+      "modification"
+    ],
     "themes": [
       {
         "nom": "Impôts",
         "dossier": "Documents/Administratif/Impôts",
-        "mots_cles": ["avis d'imposition", "direction générale des finances", "revenu fiscal", "taxe foncière", "taxe d'habitation"]
+        "mots_cles": [
+          "avis d'imposition",
+          "direction générale des finances",
+          "revenu fiscal",
+          "taxe foncière",
+          "taxe d'habitation"
+        ]
       },
       {
         "nom": "Santé",
         "dossier": "Documents/Administratif/Santé",
-        "mots_cles": ["mutuelle", "assurance maladie", "ameli", "décompte de remboursement", "ordonnance"]
+        "mots_cles": [
+          "mutuelle",
+          "assurance maladie",
+          "ameli",
+          "décompte de remboursement",
+          "ordonnance"
+        ]
       },
       {
         "nom": "Logement",
         "dossier": "Documents/Administratif/Logement",
-        "mots_cles": ["quittance de loyer", "bail", "charges de copropriété", "état des lieux", "syndic"]
+        "mots_cles": [
+          "quittance de loyer",
+          "bail",
+          "charges de copropriété",
+          "état des lieux",
+          "syndic"
+        ]
       },
       {
         "nom": "Banque",
         "dossier": "Documents/Administratif/Banque",
-        "mots_cles": ["relevé de compte", "RIB", "échéancier de prêt", "assurance emprunteur"]
+        "mots_cles": [
+          "relevé de compte",
+          "RIB",
+          "échéancier de prêt",
+          "assurance emprunteur"
+        ]
       },
       {
         "nom": "Énergie & télécom",
         "dossier": "Documents/Administratif/Énergie et télécom",
-        "mots_cles": ["électricité", "gaz", "facture d'eau", "abonnement fibre", "forfait mobile"]
+        "mots_cles": [
+          "électricité",
+          "gaz",
+          "facture d'eau",
+          "abonnement fibre",
+          "forfait mobile"
+        ]
       },
       {
         "nom": "Véhicule",
         "dossier": "Documents/Administratif/Véhicule",
-        "mots_cles": ["carte grise", "certificat d'immatriculation", "contrôle technique", "assurance auto"]
+        "mots_cles": [
+          "carte grise",
+          "certificat d'immatriculation",
+          "contrôle technique",
+          "assurance auto"
+        ]
       }
     ],
     "sans_date_vers": "À dater",
     "sans_theme_vers": "Divers"
   },
-
   "scan_ocr": {
     "moteur": "tesseract",
-    "langues_ocr": ["fra", "eng"],
+    "langues_ocr": [
+      "fra",
+      "eng"
+    ],
     "dpi_rasterisation": 300,
     "pages_max_par_document": 8,
     "confiance_minimale": 0.72,
@@ -88,12 +166,54 @@
       "numero_de_securite_sociale": false
     },
     "types_reconnus": [
-      { "type": "facture",   "mots_cles": ["facture", "montant dû", "TVA", "total TTC"] },
-      { "type": "impots",    "mots_cles": ["avis d'impôt", "revenu fiscal de référence", "direction générale des finances publiques"] },
-      { "type": "quittance", "mots_cles": ["quittance de loyer", "période du", "acquitté"] },
-      { "type": "releve",    "mots_cles": ["relevé de compte", "solde créditeur", "solde débiteur"] },
-      { "type": "contrat",   "mots_cles": ["conditions générales", "durée d'engagement", "signature des parties"] },
-      { "type": "attestation", "mots_cles": ["atteste que", "attestation de"] }
+      {
+        "type": "facture",
+        "mots_cles": [
+          "facture",
+          "montant dû",
+          "TVA",
+          "total TTC"
+        ]
+      },
+      {
+        "type": "impots",
+        "mots_cles": [
+          "avis d'impôt",
+          "revenu fiscal de référence",
+          "direction générale des finances publiques"
+        ]
+      },
+      {
+        "type": "quittance",
+        "mots_cles": [
+          "quittance de loyer",
+          "période du",
+          "acquitté"
+        ]
+      },
+      {
+        "type": "releve",
+        "mots_cles": [
+          "relevé de compte",
+          "solde créditeur",
+          "solde débiteur"
+        ]
+      },
+      {
+        "type": "contrat",
+        "mots_cles": [
+          "conditions générales",
+          "durée d'engagement",
+          "signature des parties"
+        ]
+      },
+      {
+        "type": "attestation",
+        "mots_cles": [
+          "atteste que",
+          "attestation de"
+        ]
+      }
     ],
     "api_vision": {
       "actif": false,
@@ -102,7 +222,6 @@
       "envoyer_hors_ligne_seulement_si_echec_local": true
     }
   },
-
   "nettoyage_medias": {
     "flou": {
       "actif": true,
@@ -117,7 +236,12 @@
       "hachage": "phash",
       "distance_max": 5,
       "conserver": "meilleure_definition",
-      "departager_par": ["nettete", "definition", "poids", "date_la_plus_ancienne"],
+      "departager_par": [
+        "nettete",
+        "definition",
+        "poids",
+        "date_la_plus_ancienne"
+      ],
       "comparer_entre_dossiers": true
     },
     "videos": {
@@ -125,27 +249,86 @@
       "duree_minimale_secondes": 1.0,
       "taille_minimale_ko": 64,
       "signaler_sans_piste_video": true
+    },
+    "variantes": {
+      "actif": true,
+      "confirmer_par_empreinte": true,
+      "derives_recalculables": {
+        "pdf": [
+          "psd",
+          "xcf",
+          "indd",
+          "svg",
+          "md",
+          "docx"
+        ],
+        "jpg": [
+          "psd",
+          "xcf",
+          "tif",
+          "tiff",
+          "cr2",
+          "nef",
+          "dng",
+          "raw"
+        ],
+        "jpeg": [
+          "psd",
+          "xcf",
+          "tif",
+          "tiff",
+          "cr2",
+          "nef",
+          "dng",
+          "raw"
+        ],
+        "png": [
+          "psd",
+          "xcf",
+          "svg"
+        ],
+        "mp4": [
+          "mov",
+          "mkv",
+          "prproj"
+        ],
+        "webp": [
+          "psd",
+          "png",
+          "jpg"
+        ]
+      },
+      "signaler_au_dela_de_mo": 50
     }
   },
-
   "conversion": {
     "seuil_gain_minimal_pct": 15,
     "conserver_original_jusqua_verification": true,
     "regles": [
       {
-        "de": ["heic", "heif"],
+        "de": [
+          "heic",
+          "heif"
+        ],
         "vers": "jpg",
         "qualite": 88,
         "conserver_exif": true
       },
       {
-        "de": ["png"],
+        "de": [
+          "png"
+        ],
         "vers": "jpg",
         "qualite": 90,
         "si_sans_transparence": true
       },
       {
-        "de": ["mkv", "avi", "wmv", "m4v"],
+        "de": [
+          "mkv",
+          "avi",
+          "wmv",
+          "m4v"
+        ],
         "vers": "mp4",
         "codec_video": "libx264",
         "crf": 21,
@@ -158,7 +341,6 @@
     "largeur_max_photo": 4096,
     "hauteur_max_video": 1080
   },
-
   "upscale": {
     "actif": false,
     "modele": "realesrgan-x4plus",
@@ -174,7 +356,6 @@
       "cle_variable_env": "LIFE_ORGANIZER_UPSCALE_KEY"
     }
   },
-
   "abonnements": [
     {
       "id": "abo-fibre",
@@ -222,7 +403,6 @@
       "notes": "Résiliable à tout moment après un an (loi Hamon), préavis d'un mois."
     }
   ],
-
   "echeances": [
     {
       "id": "ech-impot-revenu-solde",
@@ -230,7 +410,11 @@
       "montant": 0,
       "date_limite": "2026-09-15",
       "recurrence": "annuel",
-      "rappels_jours_avant": [30, 7, 1],
+      "rappels_jours_avant": [
+        30,
+        7,
+        1
+      ],
       "document_lie": "",
       "statut": "a_payer"
     },
@@ -240,7 +424,11 @@
       "montant": 0,
       "date_limite": "2026-10-15",
       "recurrence": "annuel",
-      "rappels_jours_avant": [30, 7, 1],
+      "rappels_jours_avant": [
+        30,
+        7,
+        1
+      ],
       "document_lie": "",
       "statut": "a_payer"
     },
@@ -250,22 +438,30 @@
       "montant": 0,
       "date_limite": "2027-02-28",
       "recurrence": "biennal",
-      "rappels_jours_avant": [60, 15],
+      "rappels_jours_avant": [
+        60,
+        15
+      ],
       "document_lie": "",
       "statut": "a_planifier"
     }
   ],
-
   "alertes": {
-    "canaux": ["console", "ics"],
+    "canaux": [
+      "console",
+      "ics"
+    ],
     "fichier_ics": "~/Life-Organizer/rappels.ics",
     "heure_du_rappel": "08:30",
-    "rappels_jours_avant_defaut": [30, 7, 1],
+    "rappels_jours_avant_defaut": [
+      30,
+      7,
+      1
+    ],
     "seuil_hausse_abonnement_pct": 10,
     "abonnement_dormant_apres_jours": 90,
     "signaler_doublon_de_service": true
   },
-
   "resiliation": {
     "fournisseur_ia": "aucun",
     "modele": "",

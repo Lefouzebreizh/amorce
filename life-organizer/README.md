@@ -10,9 +10,10 @@ options désactivées par défaut).
 
 > État : squelette d'architecture. `organizer_config.json` est complet et
 > validé ; les six modules sont décrits ci-dessous. Deux sont écrits :
-> `nettoyage` pour les photos — flou puis quasi-doublons (`organizer nettoyer`,
-> les vidéos abîmées restent à faire) — et `classement`, qui range documents,
-> photos et vidéos par thème et par date (`organizer ranger`).
+> `nettoyage` (`organizer nettoyer`) — flou, quasi-doublons, puis copies de nom
+> et exports recalculables sur **tous** les fichiers, les vidéos abîmées restant
+> à faire — et `classement`, qui range documents, photos et vidéos par thème et
+> par date (`organizer ranger`).
 
 ## Arborescence
 

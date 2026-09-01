@@ -25,7 +25,7 @@ from noyau import fichiers
 from noyau.journal import Journal
 from noyau.modele import ECARTER
 
-from . import regles, traitement
+from . import regles, traitement, variantes
 
 # Au-delà, la liste cesse d'être lue et devient un mur. Le journal, lui, porte
 # tout : ce qui n'est pas affiché n'est pas pour autant caché.
@@ -55,8 +55,12 @@ def executer(options: argparse.Namespace, config: dict) -> int:
     reglages_flou = medias_config.get("flou", {})
     reglages_doublons = medias_config.get("doublons", {})
 
-    if not reglages_flou.get("actif", True) and not reglages_doublons.get("actif", True):
-        print("Flou et doublons sont tous deux désactivés dans la configuration.")
+    reglages_variantes = medias_config.get("variantes", {})
+
+    if (not reglages_flou.get("actif", True)
+            and not reglages_doublons.get("actif", True)
+            and not reglages_variantes.get("actif", True)):
+        print("Flou, doublons et variantes sont tous désactivés dans la configuration.")
         return 0
 
     try:
@@ -91,9 +95,6 @@ def executer(options: argparse.Namespace, config: dict) -> int:
         consigner=journal.incident,
     ))
     print(f"{len(chemins)} photo(s) trouvée(s) dans {len(dossiers)} dossier(s).")
-    if not chemins:
-        _incidents(journal)
-        return 0
 
     liberes = 0
     nettetes: dict[Path, float] = {}
@@ -106,6 +107,11 @@ def executer(options: argparse.Namespace, config: dict) -> int:
     if reglages_doublons.get("actif", True) and chemins:
         liberes += _passe_doublons(
             chemins, config, ressemblance, quarantaine, journal, nettetes
+        )
+
+    if reglages_variantes.get("actif", True):
+        liberes += _passe_variantes(
+            dossiers, config, reglages_variantes, quarantaine, journal
         )
 
     retention = config.get("securite", {}).get("retention_quarantaine_jours", 30)
@@ -211,6 +217,48 @@ def _incidents(journal: Journal) -> None:
         print(f"  · {incident}")
     if len(journal.incidents) > 5:
         print(f"  … et {len(journal.incidents) - 5} autre(s)")
+
+
+def _passe_variantes(dossiers, config, reglages, quarantaine, journal) -> int:
+    """Copies de nom, exports recalculables, et relevé des fichiers volumineux.
+
+    Parcours distinct de celui des photos : ces trois questions se posent sur
+    tous les fichiers, et un dossier de PDF n'aurait aucune photo à offrir aux
+    deux passes précédentes.
+    """
+    fiches = traitement.relever_fiches(
+        dossiers, config.get("dossiers", {}).get("exclusions", []), journal
+    )
+    if not fiches:
+        return 0
+    print(f"\n{len(fiches)} fichier(s) au total, toutes natures confondues.")
+
+    redondances: list[variantes.Redondance] = []
+
+    if reglages.get("confirmer_par_empreinte", True):
+        empreintes = traitement.empreintes_de_contenu(fiches, journal)
+        copies = variantes.grouper_variantes_de_nom(fiches, empreintes)
+        if copies:
+            print(f"  {sum(len(r.variantes) for r in copies)} copie(s) de nom au contenu identique.")
+        redondances += copies
+
+    derives = variantes.derives_recalculables(fiches, reglages.get("derives_recalculables", {}))
+    if derives:
+        print(f"  {len(derives)} export(s) qu'une source encore présente permet de refabriquer.")
+    redondances += derives
+
+    # Le relevé du volume ne propose rien : il informe. Un master de tournage
+    # pèse lourd sans être en trop, et c'est à l'utilisateur d'en décider.
+    gros = variantes.volumineux(fiches, reglages.get("signaler_au_dela_de_mo", 0))
+    if gros:
+        print(f"\n  {len(gros)} fichier(s) de plus de "
+              f"{reglages.get('signaler_au_dela_de_mo')} Mo — à regarder, rien n'est proposé :")
+        for fiche in gros[:10]:
+            print(f"    {_taille(fiche.poids_octets):>9}  {fiche.chemin}")
+        if len(gros) > 10:
+            print(f"    … et {len(gros) - 10} autre(s)")
+
+    return traitement.ecarter_redondances(redondances, quarantaine, journal)
 
 
 def _chemin(valeur: str | None) -> Path | None:
