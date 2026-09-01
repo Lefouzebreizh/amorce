@@ -196,3 +196,45 @@ exactement la fonction d'un titre de feuilleton. **EP02 · Le second sceau** a
 
 Le fichier de voix ne sera pas versionné — le dépôt ne porte aucun binaire.
 C'est ce fichier-ci qui le remplace s'il se perd.
+
+## Le remontage du 01/09/2026 — les instants pour CapCut
+
+Un premier montage de l'épisode existait, 19,43 s. Il a été mesuré et refait
+pour la rétention. **Ces instants se lisent sur ce montage-là**, pas sur les
+rushes bruts.
+
+**Le défaut trouvé, et il ne se voyait pas à l'œil :** le dragon apparaissait à
+**9,87 s** quand le visionnage moyen de l'épisode 1 est de **7,4 s**. La moitié
+du public partait avant la créature. La règle qui en découle est écrite dans
+`/montage-sans-refaire` § 9 ter.
+
+| # | plan | de → à | durée | cumul |
+| --- | --- | --- | --- | --- |
+| 1 | Amorce portail | 5,40 → 6,30 | 0,90 s | 0,90 |
+| 2 | Druide, fissure au plus actif | 4,40 → 5,40 | 1,00 s | 1,90 |
+| 3 | Portail | 6,30 → 7,37 | 1,07 s | 2,97 |
+| 4 | Vortex, la partie la plus forte | 8,60 → 9,87 | 1,27 s | **4,24** |
+| 5 | Dragons | 9,87 → 11,00 | 1,13 s | 5,37 |
+| 6 | Dragons | 12,00 → 13,60 | 1,60 s | 6,97 |
+| 7 | Créature | 14,50 → 16,13 | 1,63 s | 8,60 |
+| 8 | Profil doré | 17,43 → 17,90 | 0,47 s | 9,07 |
+| 9 | Carton CYBER HYDRA TITAN | 18,00 → 19,20 | 1,20 s | **10,27** |
+
+**19,43 s → 10,27 s. Le dragon à 4,24 s au lieu de 9,87.**
+
+Le mouvement mesuré, par tranche de 0,5 s — c'est lui qui a désigné les coupes :
+
+| segment | mouvement |
+| --- | --- |
+| 0,0 → 3,7 s · carton puis druide figé | **0,26 à 3,1** |
+| 5,4 → 7,4 s · portail | 11,5 à 17,9 |
+| 7,4 → 9,9 s · vortex | jusqu'à **22,1**, le pic du film |
+| **11,0 → 12,0 s · creux dans les dragons** | **5,3** — invisible à l'œil |
+| 16,5 → 18,0 s · profil doré | 0,17 à 1,9 |
+
+Deux renoncements assumés, à rediscuter si le rendu ne va pas : le carton
+AZNAROTH d'ouverture saute (0,63 s de logo immobile là où la rétention se
+décide), et l'enchaînement portail → vortex n'est plus continu.
+
+**Un piège de matériau :** le fichier analysé était la copie **Messenger**, en
+576 × 1040. Le remontage se fait sur le master, jamais sur elle.
