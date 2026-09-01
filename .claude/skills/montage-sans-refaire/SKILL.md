@@ -300,6 +300,54 @@ La règle du point 9 reste vraie et se complète : le climax doit être le plan 
 plus fort **au-dessus de 400 Hz**, et l'ouverture ne doit jamais être la plus
 faible. Les deux se lisent sur le même tableau, qui se tire en une commande.
 
+## 9 ter. Le palier doit arriver avant la moyenne de visionnage
+
+Le défaut le plus coûteux d'un format court ne se voit pas à l'œil, et aucune
+relecture du montage ne le trouve. Il se lit en croisant **deux mesures qui
+vivent à deux endroits différents** : les statistiques de la plateforme et la
+frise du film.
+
+Relevé sur Aznaroth, le 02/09/2026 :
+
+| | |
+| --- | --- |
+| visionnage moyen de l'épisode 1 | **7,4 s** |
+| instant où le dragon apparaît dans l'épisode 2 | **9,87 s** |
+
+La moitié du public partait donc **avant d'avoir vu la créature** — c'est-à-dire
+avant la seule image pour laquelle l'épisode existe. Le montage était bon, les
+plans étaient bons, et le palier arrivait deux secondes et demie trop tard.
+
+**La règle : l'image qui justifie le film se place avant la moyenne de
+visionnage du précédent.** Pas au milieu, pas au climax dramatique — avant le
+chiffre. Sur l'épisode 2 remonté, elle passe de 9,87 s à **4,24 s**.
+
+Deux corollaires, et le second se calcule :
+
+- **Ce qui précède le palier se taille au plus court.** Un portrait fixe de
+  3,7 s en ouverture — mouvement mesuré entre 1,4 et 3,1, quand le portail
+  voisin est à 17 — coûte deux fois : il n'accroche pas, et il retarde ce qui
+  accroche.
+- **Raccourcir le film augmente la complétion sans rien changer d'autre.** À
+  visionnage moyen constant, la part de gens qui atteignent la fin est
+  mécaniquement plus grande sur un film court. L'épisode 1 faisait 7,53 % de
+  complétion sur 17,73 s ; l'épisode 2 est passé de 19,43 s à **10,27 s** par
+  la seule suppression de ce qui ne bouge pas.
+
+**Comment repérer les creux :** l'écart moyen entre images successives, par
+tranche de 0,5 s. Un bloc sous 3 quand ses voisins sont à 12 est un trou, même
+s'il dure une seconde au milieu de l'action — il y en avait un de 11,0 à
+12,0 s, à 5,3, invisible en regardant le film.
+
+```bash
+ffmpeg -v error -y -i film.mp4 -vf "fps=30,scale=160:-1" /tmp/i%04d.png
+# puis, par demi-seconde : la moyenne de |image[n] − image[n−1]|
+```
+
+Ce que ça ne remplace pas : **la courbe de rétention** de la plateforme, qui
+dit *où* les gens partent. Ici on décide avant de l'avoir ; quand elle existe,
+c'est elle qui tranche.
+
 ## 10. Un texte se place où le sujet n'est pas
 
 ```bash

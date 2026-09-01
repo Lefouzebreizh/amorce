@@ -146,6 +146,34 @@ laissée seule.** Tant qu'aucun épisode n'a vécu sans coup de pouce, il n'y a
 rien à quoi comparer, et un montage changé sur la foi de ces chiffres est
 changé au hasard.
 
+### La rétention moyenne sert à une chose : caler le palier du film SUIVANT
+
+Elle ne dit pas où l'on part — la section suivante le rappelle — mais elle
+donne un chiffre qui décide d'un montage : **l'instant avant lequel l'image qui
+justifie le film doit apparaître.**
+
+Relevé sur Aznaroth : visionnage moyen de l'épisode 1 à **7,4 s**, dragon de
+l'épisode 2 à **9,87 s**. La moitié du public partait avant la créature. Le
+montage remonté la place à **4,24 s**, et le film passe de 19,43 à 10,27 s.
+
+C'est le seul usage d'une moyenne qui ne soit pas trompeur : on ne l'interprète
+pas, on s'en sert comme d'une **échéance**. Détail et méthode dans
+`/montage-sans-refaire` § 9 ter.
+
+### La rétention moyenne sert à une chose : caler le palier du film SUIVANT
+
+Elle ne dit pas où l'on part — la section suivante le rappelle — mais elle
+donne un chiffre qui décide d'un montage : **l'instant avant lequel l'image qui
+justifie le film doit apparaître.**
+
+Relevé sur Aznaroth : visionnage moyen de l'épisode 1 à **7,4 s**, dragon de
+l'épisode 2 à **9,87 s**. La moitié du public partait avant la créature. Le
+montage remonté la place à **4,24 s**, et le film passe de 19,43 à 10,27 s.
+
+C'est le seul usage d'une moyenne qui ne soit pas trompeur : on ne l'interprète
+pas, on s'en sert comme d'une **échéance**. Détail et méthode dans
+`/montage-sans-refaire` § 9 ter.
+
 ### La moyenne ne dit pas où l'on part
 
 « Rétention moyenne 42 % » est un rapport — 7,4 s de visionnage moyen sur
