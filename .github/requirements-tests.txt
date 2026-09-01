@@ -10,12 +10,11 @@
 # qu'il faut compléter — un seul endroit, exprès.
 
 pydub          # studio audio : découpe et mixage
-tabulate       # assistant d'allocation : tableaux console
-requests       # répondeur Facebook, cours des cryptos
+requests       # répondeur Facebook
 numpy          # chaîne pré-presse : mesure des planches
 Pillow         # chaîne pré-presse : ouverture des images
 pymupdf        # assistant administratif : lecture des PDF
 pydantic       # assistant administratif : forme de ce que rend le modèle de vision
-PyYAML         # radar crypto et NexusCrypto : seuils et allocation en YAML
+PyYAML         # radar crypto, NexusCrypto et Conseiller Patrimoine : seuils et allocation en YAML
 opencv-python-headless  # chaîne KDP : piqué des planches, gradient de Sobel
 scipy          # chaîne de montage : les filtres de la palette de bruitages, importée au chargement du module

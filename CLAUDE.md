@@ -380,9 +380,32 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   en bibliothèque standard **pure** : 20 tests en 1 ms sans rien installer.
   CatMeows n'est pas récupérable d'ici (Zenodo refusé) et ses trois contextes
   ne sont pas les quatre intentions visées. Se vérifie depuis la racine.
-- **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — deux
-  chantiers en sommeil : `mon-app-audio/` et `patrimoine/`, tests verts, mis de
-  côté et non abandonnés.
+- **conseiller-patrimoine/** — la vue d'ensemble du patrimoine, **en lecture
+  seule stricte**. Il lit, il ne touche à rien : ni ordre, ni portefeuille, ni un
+  seul fichier de NexusCrypto ou du radar. Une dépendance — PyYAML — et le
+  raisonnement entier en bibliothèque standard pure.
+  **Ce qu'il faut savoir avant de s'étonner d'un total : NexusCrypto ne persiste
+  aucune position.** Son portefeuille naît en mémoire à `capital_initial_usd` et
+  meurt avec le processus ; seuls se lisent son allocation *cible* et ses
+  journaux. Présenter cette cible comme une détention afficherait un patrimoine
+  imaginaire et parfaitement plausible — d'où la poche crypto saisie à la main,
+  comme le reste. Le radar, lui, a une vraie mémoire, mais une pépite repérée
+  n'est pas une pépite détenue : ses trouvailles sortent en notes, jamais dans le
+  total.
+  **La lecture seule est vérifiée, pas promise** : zéro dépendance réseau, base
+  SQLite ouverte en `mode=ro`, porte unique vers l'environnement, et un test qui
+  relit le source du paquet pour refuser `requests`, `ccxt`, `yfinance`, un accès
+  à `os.environ` hors de cette porte, une manipulation de `sys.path` ou une
+  écriture disque — y compris dans un fichier écrit demain. Les quatre refus ont
+  été éprouvés en injectant les quatre violations. Un accès bancaire futur sera
+  en portée **AISP** (consultation), jamais **PISP** (initiation de paiement).
+  Il **absorbe** l'assistant d'allocation qui dormait sous `archives-backlog/`,
+  ses 27 tests compris — le dossier a été retiré, et sa fiche
+  `archives-backlog/assistant-patrimoine.md` dit ce qui a été repris et pourquoi.
+  Se vérifie depuis son dossier.
+- **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
+  chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
+  abandonné.
 
 Build vert obligatoire avant toute poussée.
 

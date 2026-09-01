@@ -94,15 +94,17 @@ L'idée se greffe-t-elle sur ce qui tourne déjà ?
 | **Chaîne de montage** (`montage-auto/`) | Montage automatisé. Python. | actif |
 | **Volet TikTok** (`tiktok/`) | Concepts et scripts. Sans code. | actif |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. Python, Streamlit. | **en sommeil** |
-| _Patrimoine_ (`archives-backlog/patrimoine/`) | Allocation d'actifs. Python. | **en sommeil** |
+| **Conseiller Patrimoine** (`conseiller-patrimoine/`) | Vue d'ensemble du patrimoine, en lecture seule. Python. | actif |
 
-**Un chantier en sommeil ne porte pas un alignement.** Les deux derniers sont
-sous `archives-backlog/` : leur code tourne et leurs tests passent, mais
-personne ne les fait avancer. S'y greffer réveille un chantier au lieu d'en
-accompagner un — plafonner l'alignement à 6 dans ce cas.
+**Un chantier en sommeil ne porte pas un alignement.** Le dernier est sous
+`archives-backlog/` : son code tourne et ses tests passent, mais personne ne le
+fait avancer. S'y greffer réveille un chantier au lieu d'en accompagner un —
+plafonner l'alignement à 6 dans ce cas.
 
-Ne pas juger l'ampleur au nombre de fichiers : `patrimoine/` en compte deux et
-fait passer vingt-sept tests. Compter les tests verts plutôt — et recompter la
+Ne pas juger l'ampleur au nombre de fichiers : l'assistant d'allocation en
+comptait deux et faisait passer vingt-sept tests — assez pour être absorbé plutôt
+que refait, le 01/09/2026, dans `conseiller-patrimoine/`. Compter les tests verts
+plutôt — et recompter la
 liste avant de noter, car elle vieillit vite : elle est passée de cinq à dix
 entrées en une journée.
 

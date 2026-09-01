@@ -1,0 +1,8 @@
+# Le patrimoine réel. Il ne monte jamais dans Git : c'est le fichier le plus
+# personnel du dépôt, et le modèle versionné (patrimoine.exemple.yaml) suffit
+# à faire tourner l'outil.
+config/patrimoine.yaml
+
+# Les rapports produits par --sortie.
+*.md
+!README.md

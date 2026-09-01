@@ -45,7 +45,7 @@ commandes=(
   "Look & Find : flutter analyze|test"
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
   "Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests"
-  "Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests"
+  "Conseiller Patrimoine : cd conseiller-patrimoine && python3 -m unittest discover -s tests"
   "Motion : (dans motion/) npm run typecheck, npm run build"
   "Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
   "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
@@ -162,8 +162,13 @@ echo "── Répondeur Facebook : bibliothèques Python"
 # sans elles les tests du répondeur ne se lancent même pas.
 python3 -m pip install --quiet --break-system-packages anthropic python-dotenv
 
-echo "── Assistant d'allocation : bibliothèques Python"
-python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
+echo "── Conseiller Patrimoine : bibliothèques Python"
+# Rien à installer ici, et c'est le sujet du module. PyYAML arrive déjà par le
+# radar crypto ci-dessous, et c'est sa seule dépendance : le conseiller n'a ni
+# client réseau, ni source de cours, ni SDK de plateforme d'échange — un test
+# relit le source du paquet pour le refuser. `yfinance` et `tabulate`, qui
+# servaient à l'assistant d'allocation que ce module absorbe, ont donc disparu
+# du dépôt avec lui.
 
 echo "── Chaîne de montage : bibliothèques Python"
 # PyTorch est volontairement absent, pour la même raison que dans le studio
