@@ -1,0 +1,15 @@
+# Poids de modèles : 4,1 Mo pour YAMNet aujourd'hui, davantage dès que la tête
+# d'intention existera. `CLAUDE.md` interdit le binaire versionné, et un poids
+# entré dans l'historique n'en sort plus.
+modeles/*.tflite
+modeles/*.onnx
+modeles/*.h5
+
+# Enregistrements : ce sont les chats de vraies personnes.
+enregistrements/
+*.wav
+*.mp3
+*.m4a
+
+__pycache__/
+*.pyc

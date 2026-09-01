@@ -336,6 +336,39 @@ contre DexScreener ni GoPlus en conditions réelles ; tout est validé sur des
 réponses rejouées. Un changement dans `pepites/sources/` se signale comme non
 vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 
+## Traducteur de chat — `chat-traducteur/`
+
+```bash
+python3 -m unittest discover -s chat-traducteur/tests   # 20 tests, ~1 ms, aucune dépendance
+```
+
+Ces tests ne chargent **jamais** YAMNet et n'ouvrent aucun fichier son : ils
+écrivent les scores à la main, y compris des combinaisons qu'aucun micro ne
+produira. C'est délibéré — c'est ce qui permet de les lancer sur une session
+vierge, et c'est ce qui éprouve la *frontière* plutôt que le modèle.
+
+Le prix de cette pureté est écrit ici pour qu'on ne l'oublie pas : **ils ne
+peuvent pas voir le défaut le plus coûteux du projet.** La classe parente `Cat`
+écrasait la classe précise et faisait perdre toute lecture directe ; six tests
+étaient verts pendant ce temps, parce que le verdict rendu restait plausible.
+Ce qui l'a trouvé, c'est d'avoir passé de vrais sons dans la chaîne.
+
+Donc, dès qu'un changement touche à `noyau/verdict.py`, aux classes retenues ou
+au seuil de la porte, la vérification n'est pas finie tant que ceci n'a pas
+tourné sur un fichier son réel :
+
+```bash
+python3 chat-traducteur/cli.py enregistrement.m4a --detail
+```
+
+Le `--detail` n'est pas décoratif : il affiche les scores félins fenêtre par
+fenêtre, et c'est la seule vue où l'on voit une classe parente prendre le pas
+sur une classe précise. Un verdict seul ne le montre jamais.
+
+Ce que rien ne dit encore : **le comportement sur un téléphone.** Le modèle est
+en TFLite, pèse 4 Mo et coûte 1,9 ms par fenêtre sur un cœur de serveur — rien
+n'indique un obstacle, rien ne le prouve tant qu'aucun APK n'a tourné.
+
 ## NexusCrypto — `nexuscrypto/`
 
 ```bash

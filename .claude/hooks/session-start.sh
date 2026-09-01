@@ -55,6 +55,7 @@ commandes=(
   "TITAN Builder : (dans titan-builder/) npm run lint|typecheck|test|build"
   "IPTV / VOD : (dans iptv/) npm test, npm run check"
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
+  "Traducteur de chat : python3 -m unittest discover -s chat-traducteur/tests"
   "NexusCrypto : cd nexuscrypto && python3 -m unittest discover -s tests"
 )
 
@@ -145,6 +146,16 @@ echo "── Studio audio : bibliothèques Python"
 # `pip install -r archives-backlog/mon-app-audio/requirements.txt`.
 python3 -m pip install --quiet --break-system-packages \
   streamlit pydub imageio-ffmpeg edge-tts requests
+
+echo "── Traducteur de chat (chat-traducteur/) : bibliothèques Python"
+# Rien pour les *tests* : le noyau du traducteur est en bibliothèque standard
+# pure, et ses 20 tests tournent sur une machine vierge. C'est aussi pourquoi
+# ce projet n'ajoute rien à `.github/requirements-tests.txt`.
+# Ces deux-là servent à *exécuter* le prototype : ai-edge-litert est le moteur
+# TFLite (successeur de `tflite-runtime`), numpy son format d'entrée. ffmpeg
+# arrive déjà par `imageio-ffmpeg` du studio audio, et c'est lui qui ouvre le
+# .m4a que rendent les téléphones — la bibliothèque standard ne lit que le WAV.
+python3 -m pip install --quiet --break-system-packages numpy ai-edge-litert
 
 echo "── Répondeur Facebook : bibliothèques Python"
 # `requests` est déjà là pour le studio audio ; ces deux-là ne le sont pas, et
