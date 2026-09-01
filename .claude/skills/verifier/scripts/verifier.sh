@@ -364,13 +364,18 @@ lancer_flutter() {
 # couverture : on lit « couvert », on voit vert, on pousse.
 lancer_annuaire() {
   local d="annuaire-ia"; local j="$journal/annuaire"; local e=0
-  # `valider` d'abord : il est rapide et dit si les données tiennent. Inutile de
-  # promener un navigateur sur onze sites bâtis sur une base fausse.
-  ( cd "$d" || exit 1; etape "$j.valider" "données" npm run valider ) || e=1
+  # Les tests d'abord : ils éprouvent le validateur lui-même, et valider onze
+  # bases avec un filet troué ne prouve rien. Puis `valider`, rapide, qui dit si
+  # les données tiennent — inutile de promener un navigateur sur onze sites
+  # bâtis sur une base fausse.
+  ( cd "$d" || exit 1; etape "$j.test" "tests du validateur" npm test ) || e=1
+  if [ $e -eq 0 ]; then
+    ( cd "$d" || exit 1; etape "$j.valider" "données" npm run valider ) || e=1
+  fi
   if [ $e -eq 0 ]; then
     ( cd "$d" || exit 1; etape "$j.parcours" "parcours Chromium (~5 min)" npm run verifier ) || e=1
   fi
-  cat "$j".{valider,parcours} > "$j" 2>/dev/null
+  cat "$j".{test,valider,parcours} > "$j" 2>/dev/null
   return $e
 }
 
