@@ -128,14 +128,32 @@ Trois écarts, tous sur la même bibliothèque.
 alors que `verifier.mjs` conduit un vrai navigateur et que
 `construire-styles.mjs` compile du Tailwind.
 
-Les deux ne marchent aujourd'hui que parce qu'un `npm install` à la racine hisse
-Playwright dans le `node_modules` du dessus. Or `CLAUDE.md` §4 dit de ces deux
-projets qu'ils « se vérifient depuis leur dossier ». Un `cd iptv && npm ci`
-suffit à casser la vérification — et c'est la vérification **regardée**,
-celle du §8, pas les tests unitaires.
+**Correction, apportée le jour même : ce n'est pas un oubli, c'est un choix, et
+il est écrit dans le code.** Les deux fichiers chargent Playwright par un
+`await import()` sous `try`, et leur message d'échec dit quoi faire :
 
-Playwright est donc la bibliothèque transversale du versant JavaScript :
-un paquet, le « regardé » de trois projets.
+```
+Playwright est introuvable.
+  Il vient des dépendances du dépôt : lancer `npm install` à la racine d'Amorce.
+  Le navigateur, lui, est déjà là — ne pas lancer `playwright install`.
+```
+
+Playwright est **mutualisé à la racine, exprès**. Le déclarer dans les deux
+projets installerait une seconde copie — et surtout une seconde *révision*,
+alors que les deux fichiers gèrent explicitement le décalage entre la révision
+qu'attend le Playwright de la racine et le Chromium préinstallé du conteneur.
+Deux révisions en désaccord, c'est le téléchargement que la politique réseau
+refuse, et qu'ils évitent tous les deux à la main.
+
+C'est donc le §0 bis règle 4 qui s'applique — un doublon arrête le geste — et
+la correction vaut d'être écrite parce que **c'est un croisement automatique
+d'imports et de manifestes qui a produit le faux positif** : un `await import()`
+sous `try` avec un message d'aide est indiscernable, pour un script, d'un import
+oublié. La lecture du code les sépare en dix secondes ; le script, jamais.
+
+Ce qui reste vrai, et qui ne demande rien : `cd iptv && npm ci` seul ne suffit
+pas à lancer la vérification regardée. Mais ce n'est pas un défaut silencieux —
+c'est un repli explicite qui nomme sa parade, le motif standard du dépôt.
 
 ## 5. Les fonctionnalités annoncées jamais commencées
 
