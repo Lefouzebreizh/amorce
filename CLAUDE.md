@@ -504,6 +504,22 @@ que la génération d'image y est indisponible, seul l'agrandissement de cadre
 retouche, recadre, détoure, vectorise et met en page — il ne fait pas la
 première image. **Une session ne peut donc pas fabriquer une illustration.**
 
+**Et un sixième s'est ouvert le 01/09/2026 : l'API Gemini répond.**
+`generativelanguage.googleapis.com` rend 404 sur `/` et 403 sur `/v1beta/models`,
+avec le JSON « Please use API Key » — de vraies réponses HTTP, là où
+ElevenLabs et Hedra n'accordent même pas le tunnel. Une clé y servira donc
+réellement, et le SDK `google-genai` s'installe depuis PyPI.
+
+**Ce qui est mesuré s'arrête là, et la ligne suivante existe pour l'empêcher
+d'être étendue.** Ont été vérifiés : l'hôte répond, la route existe, l'API
+réclame une clé. N'ont été vérifiés ni le quota du palier sans frais, ni
+qu'une image en sorte, ni sa résolution, ni qu'elle tienne une charte
+graphique. Le paragraphe ci-dessus sur les quatre chemins fermés reste vrai
+pour ce qu'il mesure — `fal.run`, `api.openai.com`, `api.stability.ai`,
+`image.pollinations.ai`, `huggingface.co` — et sa conséquence « une session ne
+peut pas fabriquer une illustration » redevient **une question ouverte**, pas
+une réponse. C'est le premier essai avec la clé qui tranchera.
+
 **Un cinquième chemin existe, et il répond — mesuré le 31/08/2026.** Le
 connecteur **Canva** est joignable depuis une session distante : son outil de
 génération se charge et son schéma s'obtient. Il n'était dans aucune des quatre
