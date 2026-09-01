@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Point d'entrée unique de Life-Organizer : une sous-commande par module.
 
-Le point d'entrée est unique parce que les six modules partagent la même
-configuration, le même journal et la même quarantaine. Six scripts séparés
-auraient six façons de les lire, et un jour l'un d'eux supprimerait pour de bon.
+Le point d'entrée est unique parce que les quatre modules partagent la même
+configuration, le même journal et la même quarantaine. Quatre scripts séparés
+auraient quatre façons de les lire, et un jour l'un d'eux supprimerait pour de
+bon.
 
 `verifier` doit fonctionner avant toutes les autres, puisque tout le reste
 dépend de la configuration. `nettoyer` lui a succédé : photos floues, photos
@@ -15,8 +16,8 @@ heures des vidéos qu'on allait écarter.
 
 Un module écrit se branche ici en trois lignes : sa `commande.py` pose ses
 arguments et reçoit la configuration déjà chargée. Le point d'entrée ne connaît
-donc rien de ses réglages — sans quoi ce fichier grossirait de six sections qui
-ne se ressemblent pas.
+donc rien de ses réglages — sans quoi ce fichier grossirait d'autant de sections
+qui ne se ressemblent pas.
 """
 
 from __future__ import annotations
@@ -35,9 +36,12 @@ RACINE = Path(__file__).resolve().parent
 
 # Ordre d'apparition dans l'aide : celui du parcours réel d'un fichier, du
 # document scanné jusqu'à son rangement — et non l'ordre alphabétique.
+# `scan` et `calendrier` ont été retirés le 01/09/2026 : `paper-manager/` fait
+# déjà l'extraction des champs, le nommage et le suivi des échéances. Les
+# annoncer ici promettait deux commandes qui n'arriveront jamais — et une aide
+# qui ment coûte plus cher qu'une aide incomplète. La raison est dans la fiche
+# de chacun des deux modules, qu'on a gardée exprès.
 MODULES = [
-    ("scan", "Lire les documents, en extraire dates et montants, les renommer"),
-    ("calendrier", "Échéances de paiement, abonnements, lettres de résiliation"),
     ("nettoyer", "Écarter les photos floues, les quasi-doublons et les vidéos abîmées"),
     ("convertir", "HEIC → JPG, MKV → MP4, compression sans perte visible"),
     ("upscaler", "Agrandir les photos et vidéos basse définition"),
