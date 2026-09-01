@@ -131,8 +131,16 @@ def noter(image: numpy.ndarray) -> tuple[float, float, float]:
         if vue.ndim == 3 else vue
     moyenne = float(luma.mean())
     contraste = float(luma.std())
-    # La note pèse les deux à parts égales, bornées : une image très claire mais
-    # plate est aussi inutilisable qu'une image sombre et contrastée.
+    # Ce n'est PAS une note de qualité symétrique — la phrase qui était écrite
+    # ici l'affirmait, et la mesure la dément : blanc uni 210/0 note 82 et
+    # passe, sombre contrasté 30/24 note 30 et se fait recaler. La luminance
+    # seule franchit le seuil, le contraste n'est qu'un bonus plafonné à 64.
+    # C'est donc un DÉTECTEUR D'OBSCURITÉ, ce qui est exactement l'outil que
+    # ce fichier cherche : un calque qui disparaît sur un téléphone. Le corriger
+    # en note symétrique redéciderait quels calques d'une bibliothèque déjà
+    # fabriquée sont à retoucher — c'est un choix, pas un correctif.
+    # `tests/test_note_telephone.py::test_la_note_n_est_PAS_symetrique` fige
+    # l'asymétrie pour qu'elle ne se reperde pas.
     note = min(100.0, moyenne / 128.0 * 50.0 + min(contraste, 64.0) / 64.0 * 50.0)
     return moyenne, contraste, note
 

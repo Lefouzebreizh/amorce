@@ -46,7 +46,7 @@ commandes=(
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
   "Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests"
   "Conseiller Patrimoine : cd conseiller-patrimoine && python3 -m unittest discover -s tests"
-  "Motion : (dans motion/) npm run typecheck, npm run build"
+  "Motion : (dans motion/) npm test, npm run typecheck — jamais `build`, qui rend une vidéo"
   "Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
   "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
   "Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
@@ -57,6 +57,7 @@ commandes=(
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
   "Traducteur de chat : python3 -m unittest discover -s chat-traducteur/tests"
   "NexusCrypto : cd nexuscrypto && python3 -m unittest discover -s tests"
+  "Bibliothèque visuelle : cd visual_library && python3 -m unittest discover -s tests"
   "Kits (index des sons) : cd kits && python3 -m unittest discover -s tests"
 )
 
@@ -294,6 +295,20 @@ echo "── Volet TikTok : bibliothèque du carnet"
 # `tiktok/carnet.py` fabrique le PDF de tournage depuis les Markdown du volet.
 # Sans reportlab, la seule chose qu'on emporte en tournage ne se fabrique pas.
 python3 -m pip install --quiet --break-system-packages reportlab
+
+echo "── Bibliothèque visuelle : mesure au pixel"
+# `visual_library/construire_bibliotheque.py` note chaque calque à travers une
+# simulation d'écran de téléphone, et sa suite éprouve cette note. Sans ces
+# paquets elle ne s'importe même pas. `numpy` et `Pillow` sont déjà posés plus
+# haut ; ils sont redits ici parce qu'une ligne qui dépend d'une autre plus
+# haut se casse le jour où celle-là bouge.
+#   - `imagehash` : le hachage perceptuel d'`empreinte()`, importé à l'appel.
+#   - `imageio-ffmpeg` : le ffmpeg statique de `--make-demo`, importé en repli
+#     quand le système n'en fournit pas.
+#   - `tqdm` : facultatif dans le code (`except ImportError`), déclaré pour que
+#     les longues inspections affichent où elles en sont.
+python3 -m pip install --quiet --break-system-packages \
+  Pillow numpy ImageHash imageio-ffmpeg tqdm
 
 echo "── Amorce : Chromium pour le parcours de vérification"
 # L'environnement fournit un Chromium, mais sous un autre numéro de révision que
