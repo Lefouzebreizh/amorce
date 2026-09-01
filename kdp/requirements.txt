@@ -30,7 +30,14 @@ PyMuPDF>=1.24.3
 
 # Piqué des planches, gradient de Sobel. 4 fichiers. La variante « headless »
 # évite les bibliothèques graphiques de Qt, inutiles en ligne de commande.
-opencv-python-headless>=4.9
+#
+# Le plafond `<5` n'est pas pour KDP : Sobel, la morphologie et
+# `connectedComponentsWithStats` sont intacts en 5. Il est là parce qu'un
+# environnement n'installe QU'UNE version d'OpenCV, et que Life-Organizer, lui,
+# ne peut pas monter — la raison est écrite dans son `requirements.txt`. Sans
+# cette ligne, installer KDP après lui remonterait la version et emporterait
+# son garde-fou sans un mot.
+opencv-python-headless>=4.9,<5
 
 # `hymne.py` grave un QR code sur la page de l'hymne. Un seul module de la
 # chaîne en dépend, et c'est précisément celui qu'on oublie.

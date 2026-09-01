@@ -221,8 +221,14 @@ echo "── Life-Organizer : bibliothèques Python"
 # Real-ESRGAN et PyTorch sont volontairement absents : plusieurs gigaoctets pour
 # un module désactivé par défaut. `tesseract` n'est pas un paquet Python et
 # s'installe à part ; `outils_externes.py` désactive proprement l'OCR sans lui.
+#
+# `opencv-python-headless<5` : la 5 a retiré `CascadeClassifier`, donc le
+# garde-fou « ne pas écarter une photo où un visage est reconnu ». La borne
+# posée dans les `requirements.txt` ne sert à rien ici — ce hook installe à la
+# main, sans les lire — et chaque session distante repartirait sur la dernière.
+# Les guillemets ne sont pas décoratifs : sans eux, `<5` est une redirection.
 python3 -m pip install --quiet --break-system-packages \
-  Pillow python-dateutil pypdf ImageHash opencv-python-headless imageio-ffmpeg
+  Pillow python-dateutil pypdf ImageHash 'opencv-python-headless<5' imageio-ffmpeg
 
 # `imageio-ffmpeg`, installé plus haut pour le studio audio, embarque un ffmpeg
 # statique complet — mais sous un nom que rien ne trouve. Le lier suffit à
