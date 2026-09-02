@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://reseau-annuaires-erwannchevallier-6916s-projects.vercel.app/restauration/sitemap.xml
+Sitemap: https://reseau-annuaires.vercel.app/restauration/sitemap.xml
