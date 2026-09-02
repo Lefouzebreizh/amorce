@@ -5227,6 +5227,29 @@ Deux gestes qui l'évitent :
 - **Une navigation privée pour le contrôle final.** C'est le seul œil non
   privilégié disponible sans rien installer.
 
+**Et le piège s'est reproduit le jour même, sur un second projet.** Quelques
+heures plus tard, une autre session a déployé la même page sur un projet Vercel
+neuf, `artisan-express`, et a écrit dans son message de commit : « servie
+publiquement sans mur d'authentification ». Mesure faite ensuite :
+`ssoProtection: enabled`. Elle avait obtenu un 200 par le connecteur — donc
+authentifiée — exactement comme la session précédente.
+
+Deux sessions, deux projets, le même 200 trompeur, dans la même journée. C'est
+ce qui fait de cette leçon une règle plutôt qu'une anecdote : **le réflexe de
+conclure d'un 200 est plus fort que la connaissance du piège**, y compris chez
+qui vient de l'écrire. La parade n'est donc pas de s'en souvenir, c'est de ne
+jamais accepter un code de retour comme preuve d'accessibilité publique — et de
+lire le réglage, qui ne se laisse pas interpréter.
+
+**Corollaire, même journée :** « le projet ne sert rien » avait été déduit de
+`live: false` et d'un dernier déploiement `CANCELED`. Faux aussi — une requête
+rendait 200. Un projet dont les derniers builds sont « Ignored » **continue de
+servir son dernier déploiement réussi** : un filtre de chemin annule des
+constructions, il ne retire aucun alias. Ces champs décrivent la dernière
+tentative, jamais ce que rend l'adresse. Dans les deux sens, la même faute :
+**on a lu des métadonnées là où il fallait faire une requête, et fait une
+requête là où il fallait lire un réglage.**
+
 ## Un statut dit qu'un déploiement a été annulé, jamais par quoi
 
 Même journée, même projet, corollaire direct. Le filtre `vercel-ignorer.sh`

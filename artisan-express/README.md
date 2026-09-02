@@ -42,6 +42,13 @@ conclu que le site était en ligne ; un résumé de reprise l'a répété. L'adr
 inventée est retirée — sans `NEXT_PUBLIC_SITE_URL`, la page ne déclare plus où
 elle habite, et un test le garde.
 
+**Deux projets Vercel servent cette page, et ils ne se valent pas.** Un second,
+`artisan-express`, est né le même jour d'un **dépôt de fichiers** — il ne se met
+donc pas à jour quand la branche bouge, et il porte encore le mur décrit
+ci-dessus (`ssoProtection: enabled`, mesuré). **C'est `amorce-51up` qui fait
+foi** : lié à Git, à jour, et sans mur. C'est son adresse qui est donnée aux
+prospects dans `PROSPECTION.md`.
+
 **Ce qui reste à régler sur le projet**, et qui n'a pas été mesuré ici :
 
 1. `NEXT_PUBLIC_DEVIS_MAILTO` — la seule variable qui ne demande aucun compte,

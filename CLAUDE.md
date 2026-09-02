@@ -1418,10 +1418,32 @@ projet déjà lié au dépôt au lieu d'en créer un : appelé avec
 « Reused project amorce-51up ». Le `rootDirectory` ne s'applique qu'à la
 création, jamais à une réutilisation.
 
-**Et `amorce-51up` ne sert rien** — mesuré le même jour : `live: false`, et son
-dernier déploiement est `CANCELED`. Le décrire comme « le dossier
-`artisan-express` en ligne » ferait chercher une page à une adresse qui ne rend
-rien.
+**Ce projet-là a été annoncé « servie publiquement sans mur d'authentification »,
+et il porte le mur.** Mesuré quelques heures après :
+`ssoProtection: enabled, all_except_custom_domains`. La session qui l'a déployé
+avait obtenu un 200 par le connecteur — qui passe par l'authentification du
+compte — et en avait conclu que la page était publique. **Le même piège, deux
+fois dans la même journée, sur deux projets différents**, et la seconde fois par
+une session qui venait de le documenter. C'est pourquoi la règle est écrite plus
+bas en propres termes : le 200 d'un outil authentifié ne dit rien de ce que voit
+un inconnu ; seul le réglage le dit.
+
+Il reste donc **deux projets qui servent la même page**, et ils ne se valent
+pas : `amorce-51up` est lié à Git et se met à jour, `artisan-express` est un
+dépôt de fichiers figé. C'est le premier qui porte l'adresse donnée aux
+prospects dans `artisan-express/PROSPECTION.md`.
+
+**« `amorce-51up` ne sert rien » a été écrit ici le 02/09/2026, et c'est faux.**
+La phrase s'appuyait sur `live: false` et sur un dernier déploiement `CANCELED`.
+Une requête le même jour rend **200** sur `https://amorce-51up.vercel.app` comme
+sur `/exemple.html`, avec la bonne page.
+
+La cause vaut plus que la correction : **un projet dont les derniers builds sont
+« Ignored » continue de servir son dernier déploiement réussi.** Le filtre de
+chemin annule des constructions, il ne retire aucun alias — et `live: false` ne
+dit pas « rien n'est servi ». Ces deux champs décrivent la dernière tentative,
+jamais ce que rend l'adresse. **La seule mesure d'une adresse est une requête
+dessus**, et le connecteur Vercel en fait une.
 
 D'où le filtre : chaque projet porte un `vercel.json` dont l'`ignoreCommand`
 appelle `scripts/vercel-ignorer.sh` avec les chemins qui le concernent. Deux
