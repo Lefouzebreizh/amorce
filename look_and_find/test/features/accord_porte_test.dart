@@ -100,6 +100,27 @@ void main() {
       expect(verdict.refus!.conseil, contains('une surface à la fois'));
     });
 
+    test('un plaid gris uni est dit gris, pas « plusieurs surfaces »', () {
+      // Le défaut que ce test fige : sur une surface désaturée, la teinte n'est
+      // que du bruit. Les pixels d'un plaid parfaitement uni s'éparpillaient
+      // dans toutes les familles, la dispersion criait « plusieurs surfaces »,
+      // et le conseil disait de recadrer — un geste qui ne change rien.
+      // Relevé sur trois cadres du corpus de quarante-sept photos.
+      final pixels = <(int, int, int)>[];
+      for (var i = 0; i < 600; i++) {
+        // Un gris qui vire d'un rien, comme un tissu sous une lumière tiède :
+        // assez pour disperser les teintes, pas assez pour porter une couleur.
+        final n = i % 6;
+        pixels.add((128 + n, 128 + (n + 2) % 6, 128 + (n + 4) % 6));
+      }
+      final verdict = JudgePhoto.juger(pixels);
+      expect(verdict.estAcceptee, isFalse);
+      expect(verdict.refus, PhotoRefus.surfaceDelavee,
+          reason: 'le geste juste est « choisissez une surface qui a une '
+              'couleur », pas « cadrez une seule surface » — '
+              'rendu : ${verdict.refus}');
+    });
+
     test('un mur gris : une harmonie y serait vraie et inutile', () {
       final verdict = JudgePhoto.juger(_surface(150, 151, 152));
       expect(verdict.refus, PhotoRefus.surfaceDelavee);
