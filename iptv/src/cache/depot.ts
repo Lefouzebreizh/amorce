@@ -279,6 +279,17 @@ export interface Depot {
   /** Ce qui a disparu du catalogue et que l'utilisateur avait marqué. */
   retraits(): Retrait[]
   /**
+   * L'import le plus récent, toutes sources confondues, en ISO 8601.
+   *
+   * `undefined` quand aucune source n'a jamais été importée — l'écran
+   * d'entretien s'en sert pour dire « il y a 3 jours » plutôt qu'une date
+   * brute, et pour signaler un catalogue périmé au-delà d'une semaine.
+   *
+   * La donnée existait déjà — `source.importe_le`, posée à chaque import — il
+   * n'y avait pas de lecteur.
+   */
+  dernierImport(): string | undefined
+  /**
    * Repose les numéros de canal d'une base déjà remplie.
    *
    * Le numéro se calcule à l'import — mais une base importée par une version
@@ -718,6 +729,13 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
         | Ligne
         | undefined
       return ligne === undefined ? undefined : versElement(ligne)
+    },
+
+    dernierImport(): string | undefined {
+      const ligne = base
+        .prepare('SELECT MAX(importe_le) AS dernier FROM source WHERE importe_le IS NOT NULL')
+        .get() as Ligne | undefined
+      return texte(ligne?.['dernier'])
     },
 
     reglage(cle): string | undefined {
