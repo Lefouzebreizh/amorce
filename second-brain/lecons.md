@@ -5396,3 +5396,68 @@ de chemins, avant les quotas, avant tout le reste.
 | --- | --- |
 | des contrôles rouges | un vrai échec, à diagnostiquer |
 | **aucun contrôle** | un conflit, ou des exécutions en file |
+
+---
+
+## Un constat tiré d'une reconstruction ne dit rien du fichier — trois fois le même jour, 02/09/2026
+
+*Coût : trois constats faux publiés dans des rapports d'audit, dont un « critique ».*
+
+Trois fois dans la même journée, un défaut a été annoncé sur du code qui n'en
+avait pas. Les trois fois, ce n'est **pas le code réel** qui avait été mesuré.
+
+| Le constat annoncé | Ce qui avait été mesuré | Le vrai état |
+| --- | --- | --- |
+| TITAN : traversée par `..` dans `nomSur()` | la **première ligne** de la fonction, recopiée dans un banc d'essai | la seconde ligne mappe `.` et `..` vers `photo-N.bin` — rien à traverser |
+| Hypersensible : `?src=groupe` classé « important » | le **seul** bloc du groupe | le fichier dégrade ouvert partout ailleurs, avec ses raisons écrites — c'était une question de produit |
+| Annuaria : « aucun jeton d'accent » | un `grep` sur `--color-accent` | le projet nomme les siens `--teinte-1` / `--teinte-2`, posés par niche |
+
+**La cause commune : on mesure ce qu'on a sous la main, et on conclut sur ce qui
+est dans le dépôt.** Un banc d'essai qui recopie une fonction mesure la copie.
+Un `grep` sur un nom supposé mesure le vocabulaire de celui qui cherche, pas
+celui du projet. Un bloc lu seul mesure une intention hors de son régime.
+
+Et le défaut ne se signale pas, parce que **la mesure, elle, est juste** : la
+fonction recopiée traverse vraiment, le `grep` rend vraiment zéro. C'est la
+phrase qui les relie au fichier qui est fausse.
+
+### Les trois parades, dans l'ordre où elles coûtent le moins
+
+1. **Appeler le vrai code, jamais une copie.** Importer la fonction depuis son
+   fichier, avec son chemin. Un banc d'essai qui recopie trois lignes a déjà
+   perdu — c'est la ligne non recopiée qui portait la défense.
+2. **Chercher ce que la chose fait, pas le nom qu'on lui donnerait.** C'est le
+   même geste que le §10 de `CLAUDE.md` pose contre les doublons, et il vaut
+   aussi contre les faux manques : `grep -rn "background.*var(--" ` trouve
+   l'accent quel que soit son nom, `grep "--color-accent"` ne trouve que le sien.
+3. **Lire la fonction entière, et son fichier au-delà.** Les trois défauts se
+   voyaient à la ligne suivante, au paragraphe suivant, ou dans un fichier voisin.
+
+### Ce qui rend la leçon rentable plutôt que morale
+
+**Deux des trois vérifications ont rendu quelque chose de meilleur que le
+constat qu'elles annulaient.** Chercher pourquoi Annuaria n'avait « pas
+d'accent » a trouvé que le bouton affilié portait du texte blanc à **1,5:1** —
+dix niches sur onze sous 3:1, sur le seul élément qui rapporte de ces pages.
+Relire le handler d'Hypersensible en entier a montré que le vrai défaut n'était
+pas le régime dégradé mais l'**absence de preuve** : `?src=groupe` se déclarait
+et ne se prouvait pas.
+
+Vérifier un constat n'est donc pas une dépense de prudence : c'est là que se
+trouve le défaut suivant, et il est presque toujours plus grave.
+
+### Le lien avec ce que le dépôt disait déjà
+
+Le §8 de `CLAUDE.md` porte « une mesure disait vert et le fichier était faux »,
+tiré de six montages livrés conformes et rejetés à l'écoute. **Ceci en est le
+symétrique, et il manquait : une mesure disait rouge et le fichier était juste.**
+
+Les deux ont la même cause — mesurer ailleurs que sur ce qui part — et la même
+parade, qui n'est jamais de mesurer plus. Le sens de l'erreur change seulement
+qui la paie : le premier fait livrer un défaut, le second fait corriger du code
+sain, et publier un rapport qui accuse à tort.
+
+**Et une correction ne s'efface pas, elle s'écrit.** Les trois rapports gardent
+leur constat faux avec sa réfutation à côté. Un rapport nettoyé se relit comme
+s'il n'avait jamais eu tort, et la prochaine session refait exactement le même
+banc d'essai.
