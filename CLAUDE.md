@@ -1402,8 +1402,11 @@ again in 24 hours (more than 100, code: api-deployments-free-per-day) ».
 Le seuil utile à retenir est donc **une vingtaine de fusions par jour**, pas
 cent : chaque fusion vaut trois déploiements ou plus.
 
-**Un quatrième projet existe depuis le 02/09/2026, et il ne compte pas dans ce
-total : `artisan-express`.** Il est né d'un **dépôt de fichiers**
+**Un cinquième projet existe depuis le 02/09/2026, et il ne compte pas dans ce
+total : `artisan-express`.** Il s'est appelé « quatrième » tant que le total
+valait trois, et le rang a glissé quand `reseau-annuaires` est arrivé : un
+décompte tenu à deux endroits se désaccorde au premier changement, et c'est
+toujours le second qui garde l'ancienne valeur. Il est né d'un **dépôt de fichiers**
 (`deploy_to_vercel`), pas d'un lien Git — donc aucun commit ne le déclenche, et
 il ne consomme rien du quota quotidien. La contrepartie est symétrique : il ne
 se met **pas** à jour tout seul quand la branche bouge. Une modification de
