@@ -196,10 +196,18 @@ d'autre que le propriétaire ne peut le faire.
 À écrire, sinon la prochaine session lira ce rapport comme une couverture
 complète :
 
-- **Les suites JavaScript n'ont pas été exécutées.** Aucun `node_modules` dans
-  cette session, et neuf `npm install` coûtaient plus que ce qu'ils auraient
-  appris — les écarts du §4 se lisent dans les manifestes. Ce qui reste non
-  mesuré : combien de tests JS s'ouvriraient réellement.
+- **Les suites JavaScript, elles, ont fini par être exécutées** — et cette
+  ligne disait le contraire, ce qui la rendait fausse. Huit `npm install`, puis
+  les dix-huit suites : **631 tests, 0 échec, 0 ignoré, 0 todo** (racine 267,
+  iptv 155, agence 70, titan-builder 59, hypersensible 37, artisan-express 29,
+  licence-serveur 14). Cela confirme **en exécutant** ce que le §1 n'avait fait
+  que chercher : aucun test ignoré nulle part, JS compris.
+
+  Les vérifications regardées passent aussi : `annuaire-ia` rend 213 contrôles
+  sur 11 niches, `iptv` déroule son flux HLS réel et son mandataire signé, et
+  Amorce donne **110/110** plus ses trois parcours annexes.
+
+  Ce qu'il a fallu réparer pour y arriver est le sujet du §7 ci-dessous.
 - **Look & Find n'a pas été touché.** Flutter est absent de la session.
 - **Le hook n'a pas tourné ici** : ni `node_modules`, ni Flutter, ni `ffmpeg`,
   ni un seul paquet Python. C'est ce qui a rendu la mesure possible — un
@@ -207,6 +215,44 @@ complète :
   veut dire que les 13 erreurs du §2 ne se voient pas dans une session où le
   hook a fait son travail. **Sauf `pydantic` et `pyloudnorm`, que le hook
   n'installe pas.** Ces deux-là manquent partout, tout le temps.
+
+## 7. Ce que le montage de l'environnement JS a trouvé — 02/09/2026
+
+Six défauts, tous du même motif que ceux du §3 : **une parade qui existe, mais
+au mauvais endroit.**
+
+| Où | Ce qui n'allait pas |
+| --- | --- |
+| `scripts/*.mjs` d'Amorce | sept scripts lançaient Chromium sans repli sur `/opt/pw-browsers` — `iptv` et `annuaire-ia` l'avaient tous les deux, Amorce non |
+| `scripts/planche.mjs` | pire : il ne lisait **même pas** `AMORCE_CHROMIUM`. La copie avait dérivé |
+| `iptv/scripts/verifier-interface.mjs` | annonçait « le reste, si » sans ffmpeg, puis lisait le `.m3u8` sans garde et tombait |
+| `motion/package.json` | `remotion render` sans `--browser-executable` : la parade était dans `CLAUDE.md`, pas dans le code |
+| `motion/tsconfig.json` | `typecheck` rouge sur `main` — le test importe `.ts`, indispensable à Node, refusé par `tsc` |
+| `.github/requirements-tests.txt` | `imageio-ffmpeg` absent, donc le repli de `kits` ne pouvait pas jouer |
+
+**Trois d'entre eux méritent d'être retenus nommément.**
+
+*La copie dérive, et c'est mesurable.* Six scripts d'Amorce lisaient la
+variable puis retombaient sur `undefined` ; le septième ne lisait rien. Une
+règle recopiée sept fois s'était désynchronisée en silence. `scripts/chromium.mjs`
+en fait un point unique — la raison écrite une fois, pas sept.
+
+*Un plantage brut coûte trois fois.* En tombant sur le `.m3u8` manquant,
+`iptv` laissait un `next start` orphelin que `ss` ne montrait pas — seul `curl`
+le révélait. Les deux exécutions suivantes ont donc échoué sur « le port 3210
+répond déjà », une cause qui n'était plus la vraie. Un seul défaut, trois
+diagnostics.
+
+*Le test qui garde un repli est le premier à tomber quand le repli n'est
+déclaré nulle part.* `kits` a `imageio_ffmpeg` en repli de `ffmpeg`, et
+`test_ffmpeg_a_bien_un_repli_lui` pour le garder. Le paquet n'étant dans aucune
+liste, le runner sans ffmpeg faisait échouer exactement ce test-là. Invisible
+en local, où le hook installe le paquet pour Life-Organizer.
+
+**Et deux échecs n'étaient pas des défauts** : `agence` veut un `.env.local`
+(des valeurs factices suffisent, le build ne joint jamais Supabase — le hook
+l'écrit désormais), et `verify.mjs` réclamait `npm run dev` en le disant
+clairement. Un message qui guide n'est pas une panne.
 
 ## La leçon, en une phrase
 

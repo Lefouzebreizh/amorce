@@ -23,6 +23,7 @@ import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { optionsChromium } from './chromium.mjs';
 
 /**
  * Le ffmpeg du système d'abord.
@@ -92,7 +93,7 @@ function fabriquerRushes() {
 fabriquerRushes();
 mkdirSync(SORTIE, { recursive: true });
 
-const navigateur = await chromium.launch();
+const navigateur = await chromium.launch({ ...optionsChromium });
 const contexte = await navigateur.newContext({
   viewport: { width: 390, height: 640 },
   deviceScaleFactor: 2,

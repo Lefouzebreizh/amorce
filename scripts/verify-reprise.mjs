@@ -12,6 +12,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
+import { optionsChromium } from './chromium.mjs';
 
 const RUSHES = join(process.cwd(), '.fixtures', 'rushes');
 
@@ -25,7 +26,7 @@ const files = readdirSync(RUSHES).map((f) => join(RUSHES, f));
 // Même variable que les autres scripts : elle désigne le Chromium déjà présent
 // sur la machine, quand celui de Playwright n'y a pas été téléchargé.
 const browser = await chromium.launch({
-  executablePath: process.env.AMORCE_CHROMIUM || undefined,
+  ...optionsChromium,
 });
 const page = await browser.newPage();
 

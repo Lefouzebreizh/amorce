@@ -71,6 +71,31 @@ echo "── Socle Agence : dépendances npm"
 cd "$racine/agence"
 npm install --no-audit --no-fund --silent
 
+# `npm run build` est annoncé plus haut comme vérification du socle, et il ne
+# passait pas : le prérendu de `/administration` lit la configuration Supabase
+# et lève « Configuration Supabase absente » avant d'avoir écrit une page. Une
+# session distante n'a pas de projet Supabase, donc la commande annoncée
+# échouait à chaque fois, sur un message qui a l'air d'une erreur de code.
+#
+# Mesuré : des valeurs factices suffisent. Le build ne joint jamais Supabase —
+# il veut seulement que les deux variables existent — et il passe entièrement
+# avec celles-ci. Ce qui a besoin d'un vrai projet, ce sont `npm run test:rls`
+# et `etat:rls`, qui parlent à la base et que ce fichier ne prétend pas servir.
+#
+# Écrit seulement s'il n'y en a pas : un `.env.local` déjà présent porte de
+# vraies clés, et les écraser couperait la session du projet du propriétaire.
+# `.env*` est ignoré par git, donc rien de tout cela n'atteint le dépôt.
+if [ ! -f .env.local ]; then
+  cat > .env.local <<'ENV'
+# Valeurs factices écrites par le hook de démarrage, pour que `npm run build`
+# tourne dans une session distante. Aucune requête ne part vers cette adresse.
+# Pour parler à un vrai projet, remplacer par les clés de `.env.example`.
+NEXT_PUBLIC_SUPABASE_URL="https://exemple-hors-ligne.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="cle-factice-le-build-ne-joint-jamais-supabase"
+ENV
+  echo "   .env.local factice écrit — npm run build peut tourner"
+fi
+
 echo "── Artisan Express : dépendances npm"
 # Page de vente Next.js indépendante, avec son propre `package.json` : lancée
 # sans `cd`, npm remonte à la racine et installe dans l'arbre d'Amorce.
