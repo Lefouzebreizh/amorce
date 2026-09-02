@@ -12,6 +12,7 @@
     "generer": "node --experimental-strip-types scripts/generer.mjs",
     "nouveau-client": "node --experimental-strip-types scripts/nouveau-client.mjs",
     "demo": "npm run generer demo",
+    "demo-prospect": "node --experimental-strip-types scripts/demo-prospect.mjs",
     "regarder": "node ../.claude/skills/verifier/scripts/regarder.mjs"
   },
   "dependencies": {
