@@ -295,7 +295,12 @@ de préférer `--pleine-page`.
 
 ### Le chemin le moins cher jusqu'au dépôt
 
-1. **Aujourd'hui, sans rien fabriquer.** Assembler avec la couverture provisoire
+0. **Avant tout, et gratuitement : le questionnaire fiscal** (`depot/FISCAL.md`).
+   Il ne publie rien, il se remplit une fois, et il décide si les redevances
+   peuvent être versées sans numéro d'entreprise — donc si ce chantier encaisse
+   avant le SIRET, ou pas du tout. Compte ouvert le 31/08/2026, questionnaire
+   non rempli.
+1. **Puis, sans rien fabriquer.** Assembler avec la couverture provisoire
    et la page d'hermine en prose, déposer chez KDP, **commander l'épreuve
    papier** — elle ne publie rien (`depot/EPREUVE.md`). Deux semaines de délai
    d'impression qui courent pendant qu'on travaille la couverture.

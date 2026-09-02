@@ -62,11 +62,17 @@ exactement ce qu'Amazon demande pour verser. Si les redevances passent sans
 numéro d'entreprise, **KDP est premier sans discussion** — c'est le seul chantier
 qui a déjà son public, et le seul qui encaisserait avant le SIRET.
 
+Le parcours est déroulé écran par écran dans `kdp/depot/FISCAL.md`, avec l'écran
+qui décide — particulier plutôt qu'entreprise — et les trois lignes à relever qui
+constituent la mesure. **Le compte est ouvert depuis le 31/08/2026 ; le
+questionnaire ne l'est pas.**
+
 Tant que cette réponse manque, les deux portent le rang **1 ?** dans le tableau.
 
-## 1. Artisan Express — le seul dont tout est prêt sauf le déploiement
+## 1. Artisan Express — le seul dont plus rien ne manque
 
-C'est le premier parce que **rien ne manque, sauf un déploiement d'une heure** :
+C'est le premier parce que **rien ne manque** — le déploiement d'une heure que
+ce titre annonçait était déjà fait, voir plus bas :
 
 - la page de vente existe, avec sa route d'API et ses tests au vert ;
 - le prix est fixé — 300 €, une fois, livré en 48 h, sans abonnement ;
@@ -78,30 +84,35 @@ C'est le premier parce que **rien ne manque, sauf un déploiement d'une heure** 
 Autrement dit : la partie qui bloque tous les autres chantiers — *comment on
 trouve le premier client* — est **déjà écrite ici**.
 
-Son `README.md` dit, daté du 30/08/2026 : **pas déployé**, vérifié sur le
-tableau de bord Vercel. Il ajoute que cela « a été affirmé à tort » auparavant —
-donc le vérifier avant d'annoncer quoi que ce soit.
+Son `README.md` a dit **pas déployé** du 30/08 au 02/09/2026, et c'était faux ;
+il porte désormais la mesure, et la raison pour laquelle deux sessions s'étaient
+trompées dans les deux sens.
 
-### L'état du déploiement est à revérifier avant tout
+### L'état du déploiement est tranché — et le déploiement n'était pas le sujet
 
-Le 31/08/2026, le robot Vercel a annoncé sur une pull request de ce dépôt un
-déploiement du projet **`amorce-51up`, dont le dossier racine est
-`artisan-express`**, avec une adresse d'aperçu. Cela contredit le « pas
-déployé » du README, daté de la veille.
+**Tranché le 02/09/2026, par le connecteur Vercel.** Le projet `amorce-51up`
+existe, il sert bien cette page, et `https://amorce-51up.vercel.app` rend 200.
+Le robot avait raison, le « pas déployé » du README avait tort. Le déploiement
+d'une heure que ce classement portait au débit d'Artisan Express **n'existe
+pas** : il était déjà fait.
 
-**Ce point n'est pas tranché**, et il ne peut pas l'être depuis une session
-distante : le mandataire refuse `*.vercel.app` — `code=000` au tunnel, mesuré.
-Ni le README ni l'annonce du robot ne suffisent seuls, et ce README a déjà
-affirmé le contraire à tort une fois.
+**Mais la page était déployée et invisible**, et c'est le vrai blocage, que
+personne n'avait cherché. Le projet portait `ssoProtection` à
+`all_except_custom_domains` : toutes ses adresses en `.vercel.app` étaient
+derrière l'authentification Vercel, et un artisan qui cliquait tombait sur un
+mur de connexion. Le réglage a été mis à `false` le même jour, sur accord
+explicite du propriétaire.
 
-**Dix secondes depuis un navigateur le règlent** : ouvrir
-`https://amorce-51up.vercel.app`. Si la page à 300 € s'affiche, le premier pas
-n'est plus le déploiement mais la prospection — et ce chantier passe de
-« une heure » à « rien à faire avant d'écrire aux artisans ».
+**Ce document proposait « dix secondes depuis un navigateur » pour trancher, et
+cette méthode ne pouvait pas donner la bonne réponse.** Depuis le navigateur du
+propriétaire, connecté à Vercel, la page s'affiche — mur ou pas. Le contrôle
+aurait donc conclu « déployé, tout va bien » alors qu'aucun prospect ne voyait
+la page. Ce qui tranche est le réglage de *Deployment Protection*, jamais
+l'affichage ; et de l'extérieur, seule la navigation privée le dit. Le détail
+est dans `artisan-express/README.md`.
 
-**Le premier pas, sous 48 h :** vérifier cette adresse ; déployer seulement si
-elle ne rend rien ; puis envoyer les messages de `PROSPECTION.md` à dix
-artisans. Rien à construire dans les deux cas.
+**Le premier pas, sous 48 h :** envoyer les messages de `PROSPECTION.md` à dix
+artisans. Rien à déployer, rien à construire.
 
 ## 2. L'audit de code — aucun déploiement du tout
 

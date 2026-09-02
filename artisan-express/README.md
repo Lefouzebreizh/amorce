@@ -7,29 +7,48 @@ Le formulaire n'ouvre pas de compte, ne pose pas de mouchard et n'enregistre
 rien : ce que l'artisan écrit part dans une boîte aux lettres, et nulle part
 ailleurs.
 
-## État : **pas déployé**
+## État : **déployé, et public depuis le 02/09/2026**
 
-Vérifié sur le tableau de bord Vercel le 30/08/2026 — deux projets existent,
-`amorce` et `amorce-51up`, **aucun ne sert cette page**. Le dépôt ne porte ni
-`vercel.json` ni `.vercel`, et son workflow est une barrière de vérification,
-pas un déploiement.
+Mesuré le 02/09/2026 par le connecteur Vercel : le projet `amorce-51up` —
+dossier racine `artisan-express` — existe, et l'adresse ci-dessous rend **200**
+en servant bien cette page, titre « Site vitrine artisan express — 300 €, livré
+en 48 h ».
 
-Cela a été affirmé à tort, et il faut savoir pourquoi pour ne pas le refaire :
-`layout.tsx` portait une adresse par défaut, `artisan-express.vercel.app`, qui
-n'a jamais existé. Une session l'a lue et en a conclu que le site était en
-ligne ; un résumé de reprise l'a répété. L'adresse inventée est retirée — sans
-`NEXT_PUBLIC_SITE_URL`, la page ne déclare plus où elle habite, et un test le
-garde.
+https://amorce-51up.vercel.app
 
-**Ce qu'il manque pour la mettre en ligne**, dans l'ordre :
+**Elle a pourtant été déployée et invisible, et c'est ce piège-là qu'il faut
+retenir.** Le projet portait `ssoProtection` à `all_except_custom_domains` :
+**toutes** ses adresses en `.vercel.app` étaient derrière l'authentification
+Vercel, et un artisan qui cliquait sur le lien tombait sur un mur de connexion.
+Le réglage a été mis à `false` le 02/09/2026, sur accord explicite du
+propriétaire — rendre publique une page de vente à son nom relève de la première
+exception du §0.
 
-1. Créer le projet sur Vercel — dossier racine `artisan-express`, cadre Next.js
-   détecté seul.
-2. Poser `NEXT_PUBLIC_DEVIS_MAILTO` : c'est la seule variable qui ne demande
-   aucun compte, et celle sans laquelle un formulaire en panne ne laisse aucun
-   moyen de te joindre.
-3. Poser `NEXT_PUBLIC_SITE_URL` sur l'adresse réelle une fois connue, sans quoi
-   les métadonnées de partage restent muettes.
+**Le mur ne se voit pas en ouvrant l'adresse, et c'est ce qui le rend coûteux.**
+Depuis un navigateur connecté à Vercel — celui du propriétaire — la page
+s'affiche normalement ; depuis n'importe quel autre, elle ne s'affiche pas. Une
+vérification « j'ouvre le lien, ça marche » conclut donc toujours au vert, quel
+que soit l'état réel. Ce qui tranche est le réglage de *Deployment Protection*,
+pas la page. Une lecture anonyme reste hors d'atteinte d'une session — le
+mandataire refuse `*.vercel.app`, et le connecteur Vercel passe par
+l'authentification du compte : **le seul contrôle qui vaut de l'extérieur est
+d'ouvrir l'adresse en navigation privée.**
+
+Ce README a longtemps affirmé « pas déployé », et une session avait affirmé le
+contraire plus tôt encore — les deux sur des indices, aucune sur une mesure. La
+première erreur est instructive : `layout.tsx` portait une adresse par défaut,
+`artisan-express.vercel.app`, qui n'a jamais existé. Une session l'a lue et en a
+conclu que le site était en ligne ; un résumé de reprise l'a répété. L'adresse
+inventée est retirée — sans `NEXT_PUBLIC_SITE_URL`, la page ne déclare plus où
+elle habite, et un test le garde.
+
+**Ce qui reste à régler sur le projet**, et qui n'a pas été mesuré ici :
+
+1. `NEXT_PUBLIC_DEVIS_MAILTO` — la seule variable qui ne demande aucun compte,
+   et celle sans laquelle un formulaire en panne ne laisse aucun moyen de te
+   joindre.
+2. `NEXT_PUBLIC_SITE_URL` sur l'adresse ci-dessus, sans quoi les métadonnées de
+   partage restent muettes.
 
 Rien d'autre n'est requis : Resend, Stripe, téléphone et WhatsApp améliorent la
 page, ils ne la conditionnent pas.
@@ -192,7 +211,27 @@ compromis se défait en réglant la variable sur une adresse dédiée.
 
 « Montre-moi un exemple » est sa première question, et sans lien la conversation
 s'arrête là. `public/exemple.html` est servi à **`/exemple.html`**, et la page de
-vente y renvoie sous l'avant/après.
+vente y renvoie sous l'avant/après. Depuis le 02/09/2026, l'adresse existe et se
+colle telle quelle dans les messages de `PROSPECTION.md` :
+
+https://amorce-51up.vercel.app/exemple.html
+
+**Trois autres démonstrations existent, publiées en artefacts**, et le dépôt ne
+les portait nulle part — ce qui obligeait à les rechercher à chaque fois. Elles
+ne sont pas servies par ce projet et ne se régénèrent pas par `npm run exemple` :
+
+| Métier | Adresse |
+| --- | --- |
+| Plomberie Kerhervé — Rennes | https://claude.ai/code/artifact/cd3c916f-1768-4615-ba10-d1e7e60ce21e |
+| Couverture Tanguy — Rennes | https://claude.ai/code/artifact/a553d824-123e-4b04-b4eb-ccd75b38153c |
+| Maçonnerie Le Goff | https://claude.ai/code/artifact/df8ad2ff-67b2-461f-bed6-39c69264ffdd |
+
+**Avant d'en envoyer une, l'ouvrir en navigation privée.** Un artefact partagé
+peut servir une **version épinglée**, antérieure à celle que son auteur voit en
+direct — c'est le même piège que le mur de connexion plus haut, et il se règle
+du même geste. Les trois portaient d'ailleurs le métier et la ville de Rennes
+quand `exemple.html` porte Auray : ce sont bien des pages distinctes, pas des
+copies.
 
 ```bash
 npm run exemple      # régénère depuis titan-builder/demo, puis recopie

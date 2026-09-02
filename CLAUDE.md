@@ -1443,6 +1443,29 @@ choses à en retenir, et elles se paient toutes les deux en silence :
   **nombre de projets branchés**. Détail et ce qui reste non mesuré dans
   `/debloquer`.
 
+**Et un projet peut être déployé et invisible — mesuré le 02/09/2026.** Vercel
+pose par défaut une protection, *Deployment Protection*, dont le réglage
+`ssoProtection` à `all_except_custom_domains` met **toutes** les adresses en
+`.vercel.app` derrière l'authentification du compte. `amorce-51up` la portait :
+la page de vente à 300 € était en ligne depuis des jours, et n'importe qui
+d'autre que le propriétaire tombait sur un mur de connexion.
+
+Ce qui rend ce piège coûteux, c'est qu'**il ne se voit pas en ouvrant
+l'adresse** : depuis un navigateur connecté à Vercel, la page s'affiche
+normalement. Un contrôle « j'ouvre le lien, ça marche » conclut donc toujours au
+vert. Deux sessions et le README d'`artisan-express` s'étaient contredits
+là-dessus pendant trois jours, chacun sur un indice, aucun sur une mesure. Ce
+qui tranche est **le réglage**, jamais l'affichage ; et de l'extérieur, seule la
+navigation privée le dit — le connecteur Vercel passe par l'authentification du
+compte, et le mandataire refuse `*.vercel.app`.
+
+**Le journal de construction tranche ce que les statuts ne départagent pas.**
+Un statut dit qu'un déploiement a été annulé, jamais par quoi. Trois
+observations de statut avaient laissé ouverte la question de savoir si `amorce`
+lisait son `vercel.json` ; une lecture du journal l'a réglée en trois lignes le
+02/09/2026 — il le lit. Aller au journal avant de bâtir une hypothèse, et avant
+de confier une vérification à quelqu'un. Détail dans `scripts/vercel-ignorer.sh`.
+
 `nexuscrypto` n'a rien à déployer — ni `package.json`, ni `api/`, et un moteur
 qui tourne en boucle n'a pas sa place sur une plateforme de pages. Son projet
 Vercel a donc été **supprimé** le 31/08/2026. Son `vercel.json` (`exit 0`) est
@@ -1515,6 +1538,15 @@ attend une réponse. C'est le seul relais qui existe, et il lui coûte un geste 
 où le silence lui coûte la tâche.
 
 ---
+**Vercel est apparu le 02/09/2026, et il lève un mur que ce fichier donnait pour
+infranchissable.** Le mandataire refuse `vercel.com` et `*.vercel.app` — c'est
+toujours vrai — mais le connecteur ne passe pas par la politique réseau, comme
+ElevenLabs avant lui. Il rend l'état d'un projet, ses déploiements, **le journal
+de construction** et les réglages de protection, et il les modifie. Deux
+questions que le dépôt confiait au propriétaire depuis des jours se sont
+tranchées d'ici en trois appels. Une session qui lit « `*.vercel.app` est
+refusé » et en conclut qu'on ne sait rien de Vercel se trompe : c'est l'hôte qui
+est refusé, pas le connecteur.
 
 ---
 
