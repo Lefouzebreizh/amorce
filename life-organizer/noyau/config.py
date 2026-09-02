@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 from datetime import date
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 SECTIONS_ATTENDUES = (
     "dossiers", "securite", "classement", "scan_ocr", "nettoyage_medias",
@@ -54,6 +54,23 @@ def _date_valide(valeur: object) -> bool:
         return True
     except (TypeError, ValueError):
         return False
+
+
+def _chemin_confine(valeur: object) -> str | None:
+    """Ce qui cloche dans un chemin de rangement, ou `None` s'il est sain.
+
+    Rend une fin de phrase, pas un booléen : `valider` compose des messages qui
+    disent quoi corriger, et « chemin invalide » n'aide personne à trouver la
+    ligne fautive dans son fichier de configuration.
+    """
+    if not isinstance(valeur, str) or not valeur.strip():
+        return "vide ou absent"
+    chemin = PurePosixPath(valeur.replace("\\", "/"))
+    if chemin.is_absolute() or valeur.startswith("~"):
+        return f"« {valeur} » est absolu : il sortirait de la bibliothèque"
+    if ".." in chemin.parts:
+        return f"« {valeur} » remonte avec « .. » : il sortirait de la bibliothèque"
+    return None
 
 
 def valider(config: dict) -> list[str]:
@@ -132,6 +149,24 @@ def valider(config: dict) -> list[str]:
                     f"et « {categorie} » : le rangement serait arbitraire"
                 )
             extensions_vues[extension] = categorie
+
+    # Un chemin de rangement doit rester **relatif et descendant**. En Python,
+    # `bibliotheque / "/tmp/ailleurs"` ne joint pas : l'opérande absolu remplace
+    # le gauche, et le document part hors de la bibliothèque sans rien signaler.
+    # Un `../..` en tête produit le même effet en remontant. Ce sont des relevés
+    # bancaires et des avis d'imposition : le refus est ici, au démarrage, plutôt
+    # qu'au moment où le fichier a déjà bougé.
+    classement = config.get("classement", {})
+    for theme in classement.get("themes", []):
+        probleme = _chemin_confine(theme.get("dossier", ""))
+        if probleme:
+            problemes.append(
+                f"classement.themes « {theme.get('nom', 'sans nom')} » : dossier {probleme}"
+            )
+    if "schema" in classement:
+        probleme = _chemin_confine(classement["schema"])
+        if probleme:
+            problemes.append(f"classement.schema : {probleme}")
 
     identifiants: set[str] = set()
     for abonnement in config.get("abonnements", []):

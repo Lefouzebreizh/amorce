@@ -154,6 +154,20 @@ def ranger(rangements: list[regles.Rangement], bibliotheque: Path,
         if not rangement.a_deplacer:
             continue
         destination = bibliotheque / rangement.destination
+        # Dernier rempart, après la validation de `noyau/config.py`. Les deux ne
+        # font pas double emploi : celle-là refuse au démarrage une
+        # configuration fautive et dit quoi corriger ; celui-ci protège le cas
+        # où la destination arrive par un autre chemin — configuration écrite à
+        # la main entre deux `verifier`, réglages fabriqués par un appelant.
+        # Un fichier qui sortirait de la bibliothèque est consigné et laissé où
+        # il est : déplacer un relevé bancaire hors de la zone prévue est pire
+        # que ne pas le ranger.
+        if not destination.resolve().is_relative_to(bibliotheque.resolve()):
+            journal.incident(
+                rangement.fiche.chemin,
+                f"rangement refusé : « {rangement.destination} » sort de la bibliothèque",
+            )
+            continue
         if not journal.prevoir(f"ranger : {rangement.fiche.chemin} → {destination} "
                                f"({rangement.motif})"):
             ranges += 1

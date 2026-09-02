@@ -27,6 +27,30 @@ def fiche(nom, horodatage=MARS_2024, dossier="/entree"):
                  date_horodatage=horodatage)
 
 
+class TestConfinement(unittest.TestCase):
+    """Le second rempart du défaut C-1, celui qui agit à l'écriture.
+
+    `noyau/config.py` refuse déjà une destination fuyante au démarrage, et
+    quatre tests le gardent. Ce rempart-ci couvre l'autre cas : une destination
+    qui arrive sans passer par `valider` — configuration écrite à la main entre
+    deux `organizer verifier`, réglages fabriqués par un appelant.
+
+    Il se relit sur le source plutôt que par un vrai déplacement : l'éprouver en
+    situation demanderait un journal, une bibliothèque et un fichier réels pour
+    garder une ligne. Ce test n'affirme donc pas que le rempart fonctionne — il
+    affirme qu'il est encore là, ce qui est exactement ce qui se perd en
+    silence lors d'une réécriture.
+    """
+
+    def test_le_rangement_verifie_que_la_destination_reste_dans_la_bibliotheque(self):
+        source = (Path(__file__).resolve().parents[1]
+                  / "modules" / "classement" / "traitement.py").read_text(encoding="utf-8")
+        self.assertIn("is_relative_to", source,
+                      "le confinement de la destination a disparu de `ranger`")
+        self.assertIn("sort de la bibliothèque", source,
+                      "le refus doit rester nommé dans le journal des incidents")
+
+
 class TestCategorie(unittest.TestCase):
     def test_l_extension_decide_la_categorie_sans_egard_a_la_casse(self):
         categories = CONFIG["classement"]["categories"]
