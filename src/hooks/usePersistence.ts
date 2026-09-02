@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { load, save, worthSaving } from '@/lib/persistence';
+import { clear, load, save, worthSaving } from '@/lib/persistence';
 import { useStudio } from '@/lib/store';
 
 /**
@@ -53,18 +53,29 @@ export function usePersistence(): void {
     const unsubscribe = useStudio.subscribe((state) => {
       if (state.project === previous) return;
       previous = state.project;
-      if (!worthSaving(state.project)) return;
+
+      // Un projet devenu vide n'est pas « rien à faire » : c'est un effacement.
+      // Rendre la main ici laissait les rushes dans le stockage pour toujours,
+      // puisque c'est `save` qui porte le ménage des fichiers déréférencés — et
+      // retirer son dernier rush est précisément le geste de qui veut que ses
+      // vidéos disparaissent. `clear` existait pour ça, sans être appelé.
+      const projet = previous;
+      const conserver = worthSaving(projet);
 
       clearTimeout(timer);
       timer = setTimeout(() => {
-        void save(previous)
+        void (conserver ? save(projet) : clear())
           .then(() => {
             if (useStudio.getState().storageError) useStudio.setState({ storageError: null });
           })
           .catch(() => {
+            // Un effacement qui échoue ne parle pas de place manquante : le
+            // message doit dire ce qui s'est passé, sans quoi l'utilisateur
+            // croit son montage perdu alors qu'il est intact.
             useStudio.setState({
-              storageError:
-                'Ton montage ne peut pas être conservé : il n’y a plus de place sur cet appareil. Exporte avant de fermer.',
+              storageError: conserver
+                ? 'Ton montage ne peut pas être conservé : il n’y a plus de place sur cet appareil. Exporte avant de fermer.'
+                : 'Les fichiers gardés sur cet appareil n’ont pas pu être effacés. Réessaie, ou vide les données du site.',
             });
           });
       }, QUIET_MS);

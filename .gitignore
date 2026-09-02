@@ -32,6 +32,12 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+
+# Les secrets de développement de Wrangler. `.env*` ne les couvre pas — le nom
+# est `.dev.vars`, et c'est là que `wrangler dev` lit SECRET_WEBHOOK et
+# SECRET_CLES en local. Sans cette ligne, un `git add .` après une session de
+# développement sur le serveur de licence versionne le vrai secret Stripe.
+.dev.vars
 # Sauf le gabarit, qui ne contient aucune valeur et doit être versionné :
 # `.env*` l'attrape sinon, et le fichier disparaît sans un mot.
 !.env.exemple
