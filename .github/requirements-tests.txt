@@ -21,3 +21,6 @@ opencv-python-headless<5  # chaîne KDP : piqué des planches, gradient de Sobel
                           # `CascadeClassifier`, et un environnement n'a qu'une version.
 scipy          # chaîne de montage : les filtres de la palette de bruitages, importée au chargement du module
 pyloudnorm     # chaîne de montage : la mesure de sonie. Aucun test ne tombe sans lui — il rend `None` en silence
+imageio-ffmpeg # kits : le repli de `indexer.outil("ffmpeg")`. Le runner n'a pas ffmpeg, donc sans ce paquet
+               # le repli ne peut pas jouer et `test_ffmpeg_a_bien_un_repli_lui` échoue — un test qui garde
+               # un repli est le premier à tomber quand le repli n'est déclaré nulle part

@@ -4953,3 +4953,60 @@ commande, sans Windows — `PYTHONIOENCODING=cp1252 python3 -c "print('→')"` �
 et c'est le geste à faire dès qu'un programme en français destiné à une machine
 Windows imprime autre chose que de l'ASCII. Le dépôt écrit **tout** en
 français : la règle vaut donc pour chaque outil en ligne de commande qui y naît.
+
+## `verifier.sh` vert ne veut pas dire CI verte — mesuré sur le réseau d'annuaires
+
+Le 02/09/2026, `bash .claude/skills/verifier/scripts/verifier.sh` a rendu
+**« ✓ Réseau d'annuaires IA »**, parcours Chromium compris, 319 s. La même
+poussée a fait **rouge** le workflow « Annuaire IA » en 22 secondes.
+
+Les deux disent vrai. Ils ne lancent pas la même chose : la barrière locale
+joue le validateur, les données et le parcours navigateur ; `annuaire-ia.yml`
+joue en plus `node construire-sites.js`, qui porte le garde-fou DNS et sort en
+code 1 quand le domaine ne résout pas.
+
+Ce que ça change : `CLAUDE.md` §10 dit « avant de pousser, une seule commande ».
+C'est vrai pour ce qu'elle couvre, et faux comme promesse de CI verte. Une
+session qui lit la barrière verte annonce un lot prêt et découvre le rouge
+après la poussée — un cycle perdu, et l'annonce était fausse au sens du §8.
+
+La parade ne coûte rien : avant d'annoncer, lire les `run:` du workflow du
+projet touché et lancer ce qui manque à la main. Ici, `node construire-sites.js`.
+
+## Un domaine qui ne résout pas n'est pas un domaine libre
+
+`getent hosts` ne lit que les `A`/`AAAA` : un domaine enregistré mais jamais
+pointé rend exactement le même vide qu'un domaine qui n'existe pas. Conclure
+« il n'est pas acheté » depuis cette absence est le piège, et il oriente vers
+un achat inutile.
+
+Deux sondes le séparent, et la seconde marche ici :
+
+* **Les NS**, par DNS-over-HTTPS — **refusé** depuis une session distante :
+  `dns.google/resolve` et `cloudflare-dns.com` rendent `000`, alors que le
+  résolveur du conteneur, lui, répond. Ni `dig` ni `host` ne sont installés.
+* **Le registre**, par `mcp__Vercel__check_domain_availability_and_price`, qui
+  répond. `ma-panoplie-ia.com` en ressort **« not available for purchase »** :
+  il est enregistré. Un domaine libre, lui, sort avec son prix — mesuré sur
+  `mapanoplie-ia.com`, 11,25 $.
+
+Toujours joindre un témoin dont on connaît la réponse : sans `github.com` qui
+résout à côté, l'absence se lit comme un mandataire qui bloque.
+
+## GitHub Pages allumé en mode Jekyll échoue à chaque commit, en silence
+
+Mesuré le 02/09/2026 : le dépôt avait Pages activé avec la source « Deploy from
+a branch », donc `actions/jekyll-build-pages` sur la racine. Jekyll lit alors
+tout le dépôt, y compris les `.astro`, et meurt sur
+`hypersensible-bienveillance/src/pages/app/reponse-bienveillante.astro` —
+« Invalid YAML front matter ». **Soixante-trois exécutions rouges** que personne
+n'avait vues : ce workflow est ajouté par GitHub, n'apparaît sur aucune PR, et
+ne bloque rien.
+
+Deux conséquences. Un dépôt polyglotte ne doit jamais laisser Pages sur la
+source « branche » ; et un rouge qu'aucune PR n'affiche peut durer des semaines
+— `actions_list` sans filtre de branche est le seul endroit où il se voit.
+
+Corollaire utile : `actions/configure-pages` **ne peut pas** basculer la source
+depuis un workflow. Son `action.yml` dit que `enablement` exige un jeton autre
+que `GITHUB_TOKEN`. Le geste reste humain, dans Settings → Pages.
