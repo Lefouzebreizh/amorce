@@ -119,6 +119,23 @@ class JudgePhoto {
       return const PhotoVerdict.refusee(PhotoRefus.tropSombre);
     }
 
+    // La grisaille se juge **avant** la teinte, et cet ordre est un correctif.
+    //
+    // Sur une surface désaturée, la teinte n'est que du bruit : un plaid gris
+    // parfaitement uni voit ses pixels s'éparpiller dans toutes les familles
+    // sans que sa couleur change d'un iota. Les mesures de dispersion rendaient
+    // alors « le cadre contient plusieurs surfaces » sur une surface unique, et
+    // conseillaient de recadrer — un geste qui ne change rien, puisque le
+    // problème est que la surface est grise.
+    //
+    // Trois cadres du corpus étaient dans ce cas. L'ordre ne déplace aucun
+    // verdict : il ne corrige que la raison, donc le geste proposé.
+    final saturationCadre =
+        utiles.map((p) => p.$5).reduce((a, b) => a + b) / utiles.length;
+    if (saturationCadre < _delavee) {
+      return const PhotoVerdict.refusee(PhotoRefus.surfaceDelavee);
+    }
+
     // Familles de teinte de trente degrés : assez large pour réunir un mur et
     // son ombre, assez étroite pour séparer un ocre d'un vert.
     final familles = <int, List<(int, int, int, double, double)>>{};
@@ -150,6 +167,8 @@ class JudgePhoto {
       return const PhotoVerdict.refusee(PhotoRefus.plusieursSurfaces);
     }
 
+    // La même borne, sur la dominante seule : un cadre globalement coloré peut
+    // avoir une famille majoritaire grise, et c'est elle qu'on rendrait.
     final dominante = classees[0].value;
     final saturationMoyenne =
         dominante.map((p) => p.$5).reduce((a, b) => a + b) / dominante.length;
