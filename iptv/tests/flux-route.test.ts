@@ -8,6 +8,10 @@
 
 process.env['IPTV_BASE'] = ':memory:'
 process.env['IPTV_DELAI_AMONT_MS'] = '80'
+// L'origine muette de ce test écoute sur 127.0.0.1, que le filtre anti-SSRF de
+// `adresseRelayable` refuse — à raison. La porte est donc ouverte ici, et ici
+// seulement.
+process.env['IPTV_RELAI_AUTORISE_LOCAL'] = '1'
 
 import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'

@@ -76,6 +76,61 @@ export function entetesDepuisOptions(options: readonly string[]): Record<string,
   return entetes
 }
 
+/*
+ * Le filtre d'adresse : ce que la signature ne dit pas.
+ *
+ * La signature prouve que l'adresse vient de nous. Elle ne dit **rien** de sa
+ * destination — et les adresses du catalogue viennent d'une liste M3U fournie
+ * par un tiers. Une entrée pointant sur `http://127.0.0.1:…` ou sur un service
+ * du réseau local devenait donc une requête émise par le serveur, dont la
+ * réponse repartait au client. Le chemin `?e=<id>` n'exige même pas de
+ * signature : il suffit d'un identifiant du catalogue.
+ *
+ * Ce qui est couvert : le schéma, les adresses littérales privées, locales et
+ * de lien-local, en IPv4 comme en IPv6.
+ *
+ * Ce qui ne l'est pas, et il faut le savoir : un **nom** qui résout vers une
+ * adresse privée. Le fermer demanderait une résolution DNS par requête, sur un
+ * chemin qui sert chaque segment vidéo — le coût tomberait sur la lecture. Le
+ * cas réaliste ici est une liste M3U portant une adresse littérale, et c'est
+ * celui-là qui est fermé.
+ */
+const SCHEMAS = new Set(['http:', 'https:'])
+
+function hoteInterdit(hote: string): boolean {
+  const h = hote.toLowerCase().replace(/^\[|\]$/g, '')
+  if (h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local')) return true
+  if (h === '::1' || h === '::' || h.startsWith('fe80:') || h.startsWith('fc') || h.startsWith('fd')) return true
+
+  const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h)
+  if (v4 === null) return false
+  const [a, b] = [Number(v4[1]), Number(v4[2])]
+  if (a === 10 || a === 127 || a === 0) return true
+  if (a === 192 && b === 168) return true
+  if (a === 172 && b >= 16 && b <= 31) return true
+  if (a === 169 && b === 254) return true // lien-local, dont les métadonnées d'hébergeur
+  if (a === 100 && b >= 64 && b <= 127) return true // partage d'opérateur
+  return false
+}
+
+export function adresseRelayable(url: string): boolean {
+  let analysee: URL
+  try {
+    analysee = new URL(url)
+  } catch {
+    return false
+  }
+  if (!SCHEMAS.has(analysee.protocol)) return false
+  // La seule porte, et elle est réservée aux tests : ceux du délai amont
+  // servent une origine sur `127.0.0.1`, qu'il n'y a pas d'autre façon de
+  // joindre. Absente de l'environnement, elle laisse le filtre entier — donc
+  // rien à faire pour être protégé, et un geste délibéré pour ne plus l'être.
+  // Ne jamais la poser en production : elle rouvre exactement le défaut que
+  // cette fonction ferme.
+  if (process.env['IPTV_RELAI_AUTORISE_LOCAL'] === '1') return true
+  return !hoteInterdit(analysee.hostname)
+}
+
 const EXTENSION_MANIFESTE = /\.m3u8?($|\?)/i
 
 export function estManifeste(url: string, typeContenu: string | null): boolean {

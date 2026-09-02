@@ -3,6 +3,7 @@
 
 import { depot } from '../../../serveur/depot-partage.ts'
 import {
+  adresseRelayable,
   entetesDepuisOptions,
   estManifeste,
   reecrireManifeste,
@@ -57,6 +58,13 @@ export async function GET(requete: Request): Promise<Response> {
     return new Response(cible.erreur, { status: cible.code })
   }
 
+  // Après `resoudre`, donc sur les **deux** chemins : l'adresse signée comme
+  // celle d'un élément du catalogue. C'est la seconde qui compte le plus — elle
+  // n'exige aucune signature et vient d'une liste fournie par un tiers.
+  if (!adresseRelayable(cible.url)) {
+    return new Response('Adresse refusée', { status: 403 })
+  }
+
   // La plage demandée est transmise telle quelle : sans elle, on ne peut pas se
   // déplacer dans un film — le navigateur retéléchargerait depuis le début à
   // chaque saut, et la barre de progression deviendrait décorative.
@@ -74,9 +82,32 @@ export async function GET(requete: Request): Promise<Response> {
     arret.abort()
   }, delaiAmontMs())
 
+  // `redirect: 'manual'` et non `'follow'` : suivie automatiquement, une
+  // redirection emmène où elle veut et le filtre ci-dessus ne sert plus à rien.
+  // Chaque saut est donc revalidé, et leur nombre est borné — une boucle de
+  // redirections tiendrait sinon la connexion jusqu'au délai.
+  const SAUTS_MAX = 5
+  let adresseCourante = cible.url
   let amont: Response
   try {
-    amont = await fetch(cible.url, { headers: entetes, redirect: 'follow', signal: arret.signal })
+    for (let saut = 0; ; saut += 1) {
+      amont = await fetch(adresseCourante, {
+        headers: entetes,
+        redirect: 'manual',
+        signal: arret.signal,
+      })
+      if (amont.status < 300 || amont.status >= 400) break
+      const suivante = amont.headers.get('location')
+      if (suivante === null) break
+      if (saut >= SAUTS_MAX) {
+        return new Response('Trop de redirections', { status: 502 })
+      }
+      const resolue = new URL(suivante, adresseCourante).toString()
+      if (!adresseRelayable(resolue)) {
+        return new Response('Adresse refusée', { status: 403 })
+      }
+      adresseCourante = resolue
+    }
   } catch (cause) {
     // Le message d'origine porte l'URL, donc les identifiants du fournisseur.
     const delai = cause instanceof Error && cause.name === 'AbortError'
@@ -93,11 +124,11 @@ export async function GET(requete: Request): Promise<Response> {
 
   const typeContenu = amont.headers.get('content-type')
 
-  if (estManifeste(cible.url, typeContenu)) {
+  if (estManifeste(adresseCourante, typeContenu)) {
     // Un manifeste tient en quelques kilooctets : le lire entièrement est ici
     // sans conséquence, contrairement à un segment vidéo.
     const texte = await amont.text()
-    return new Response(reecrireManifeste(texte, amont.url), {
+    return new Response(reecrireManifeste(texte, adresseCourante), {
       status: 200,
       headers: {
         'content-type': 'application/vnd.apple.mpegurl',

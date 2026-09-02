@@ -3,10 +3,29 @@
 **Date** : 02/09/2026 · **Périmètre** : `hypersensible-bienveillance/` (2 093 lignes)
 **Posture** : lecture seule. Aucun fichier de code modifié.
 
-Un constat, et il porte sur ce qui rapporte : le quota gratuit se contourne en
-ajoutant un paramètre à l'adresse.
+Un constat, et il n'est pas un défaut mais une question de produit : le quota
+gratuit se contourne en ajoutant un paramètre à l'adresse — délibérément, dans
+un projet qui préfère servir que refuser. Reste à dire si c'est voulu jusque-là.
 
-## 🟠 IMPORTANT
+## 🟡 À TRANCHER — ce n'est pas un défaut, c'est un choix de produit
+
+**Reclassé le 02/09/2026, après lecture du fichier entier.** La première version
+de ce rapport le classait « important », comme un contournement de péage. Le
+fait est exact ; la lecture était trop dure, et voici pourquoi.
+
+Le même fichier dégrade **déjà volontairement** dans deux autres cas — sel
+absent, base en panne — et écrit sa raison : *« un secret que l'exploitant a
+oublié de poser n'est pas la faute de la personne qui écrit »*. Servir plutôt
+que refuser est une **règle assumée** de ce projet, pas un oubli.
+
+Et `PRIX_SOUTIEN` est un soutien, pas un péage : le message d'atteinte du quota
+dit *« si tu veux que ça reste gratuit pour le groupe, l'accès complet est à
+19 € »*. C'est un appel au don, pas un mur.
+
+`src === 'groupe'` est donc un **régime de confiance**, cohérent avec tout le
+reste. Reste une question qui n'appartient qu'au propriétaire, et c'est la seule
+chose que ce rapport tranche : est-ce voulu que **n'importe qui** puisse s'en
+réclamer en ajoutant un paramètre à l'adresse ?
 
 ### H-1 · `?src=groupe` accorde un accès illimité, sur parole
 
