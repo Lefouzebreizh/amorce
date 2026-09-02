@@ -534,7 +534,7 @@ test('dedoublonner ne garde que la meilleure qualité, sans jamais retirer un ti
 function chaineDeTest(id: string, url: string, qualite: Element['qualite']): Element {
   return {
     id, source: 'm3u', genre: 'direct', titre: 'TF1', titreBrut: `TF1 ${qualite}`,
-    url, langue: 'inconnue', qualite,
+    url, langue: 'inconnue', qualite, pays: undefined,
     groupe: undefined, logo: undefined, tvgId: undefined, canal: undefined, rang: undefined,
     theme: undefined, annee: undefined, serie: undefined, saison: undefined, episode: undefined,
     etiquettes: [], optionsLecture: [], refExterne: undefined,

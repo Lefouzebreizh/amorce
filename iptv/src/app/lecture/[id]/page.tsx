@@ -8,7 +8,7 @@ import { Lecteur } from '../../../composants/Lecteur.tsx'
 import { enrichirTmdb } from '../../../enrichissement/tmdb.ts'
 import { antennesDe } from '../../../serveur/antennes.ts'
 import { depot } from '../../../serveur/depot-partage.ts'
-import { adresseLecture } from '../../../serveur/flux.ts'
+import { adresseLecture, estManifeste } from '../../../serveur/flux.ts'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,6 +72,10 @@ export default async function Lecture({ params }: { params: Promise<{ id: string
         src={adresseLecture(element)}
         positionDepart={reprise?.position ?? 0}
         direct={element.genre === 'direct'}
+        // Sur `element.url` et non sur `adresseLecture(element)` : celle-ci rend
+        // `/api/flux?e=…`, sans extension, où la détection répondrait toujours
+        // faux et priverait tout flux HLS de hls.js.
+        manifeste={estManifeste(element.url, null)}
       />
 
       <header className="mt-5 flex gap-4">
