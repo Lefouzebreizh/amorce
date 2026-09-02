@@ -417,12 +417,15 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Se vérifie depuis son dossier.
 - **visual_library/** — catalogue de références visuelles : LUT, étalonnages,
   planches de contact, et les paniers à importer dans DaVinci et Premiere.
-  1109 lignes de Python, cinq dépendances, **aucun test**. Il n'était déclaré
-  nulle part avant l'audit du 01/09/2026, et c'est ce qui vaut d'être su : il
-  n'entre ni dans le hook de démarrage, ni dans `verifier.sh`, donc **rien ne
-  dit quand il casse**. Volontairement hors du hook — cinq paquets à chaque
-  session pour un chantier dormant serait un mauvais échange. Le garder,
-  l'archiver ou le retirer n'est pas tranché.
+  1117 lignes de Python, cinq dépendances, et **18 tests verts** depuis le
+  01/09/2026 au soir. Il n'était déclaré nulle part avant l'audit du même jour,
+  et il est passé de « plus gros chantier nu du dépôt » à gardé en une nuit :
+  le hook l'installe et annonce sa suite. **`verifier.sh` ne le connaît toujours
+  pas**, en revanche — c'est le seul endroit du filet qui l'ignore encore.
+  Ce que ses tests gardent vaut au-delà de lui : un calque conforme à l'écran de
+  montage **disparaît sur un téléphone en plein jour**, exactement comme un
+  mixage conforme au casque devient inaudible. Le garder, l'archiver ou le
+  retirer n'est toujours pas tranché.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.
