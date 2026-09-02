@@ -1,0 +1,73 @@
+# Vérification des habillages animés — cartons, titres et logos en Remotion.
+#
+# **Il n'en avait aucun jusqu'ici**, comme le serveur de licence : cinq tests
+# écrits, zéro exécuté par la CI. Les deux trous ont été trouvés le même soir
+# par le contrôle de couverture ajouté à `verifier-coherence.py`.
+#
+# Ce que ce workflow **ne fait pas**, et c'est délibéré : `npm run build` rend
+# une vidéo. Il lance un Chromium, prend des minutes, et n'a rien à faire dans
+# une vérification — la même décision que dans `verifier.sh`. Ce qui se garde
+# ici est l'invariant de la zone sûre, qui se lit sans rendre une seule image.
+#
+# Il ne pourrait d'ailleurs pas tourner : `remotion render` télécharge son
+# Chrome depuis `remotion.media`, hôte que le mandataire du dépôt refuse.
+#
+# Les tests passent **avant** l'installation, et ce n'est pas de l'ordre : ils
+# ne dépendent de rien — cinq assertions de bibliothèque standard sur des
+# fonctions pures. Les faire attendre 278 paquets serait payer onze secondes
+# pour rien, et masquer le fait qu'ils sont autonomes.
+
+name: Habillages animés
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'motion/**'
+      - '.github/workflows/motion.yml'
+  pull_request:
+    paths:
+      - 'motion/**'
+      - '.github/workflows/motion.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: motion-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: motion
+
+jobs:
+  verifier:
+    name: Tests et types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          # Le dépôt contient plusieurs verrous ; sans ce chemin, le cache
+          # serait calculé sur celui d'Amorce et ne servirait jamais.
+          cache-dependency-path: motion/package-lock.json
+
+      # Aucune dépendance nécessaire : mesuré, les cinq tests passent sur un
+      # arbre vide. C'est la propriété qui les rend utiles.
+      - name: Tests
+        if: ${{ !cancelled() }}
+        run: npm test
+
+      # `npm ci` et non `npm install` : il installe exactement le verrou et
+      # échoue s'il diverge de `package.json`. Mesuré à onze secondes.
+      - name: Installer les dépendances
+        if: ${{ !cancelled() }}
+        run: npm ci
+
+      - name: Types
+        if: ${{ !cancelled() }}
+        run: npm run typecheck
