@@ -294,6 +294,37 @@ export function Accueil() {
           </p>
         </Section>
 
+        {/*
+          Ce qui se passe après le paiement, dit avant.
+
+          C'est le moment où quelqu'un renonce : il ne sait pas ce qu'il reçoit,
+          ni où le coller, ni ce qui arrive s'il change de téléphone. Les quatre
+          étapes ci-dessous décrivent le chemin réel — `/remise` rend la clé
+          contre l'identifiant de session Stripe, `LicenceBloc` la reçoit — et
+          non un chemin souhaité.
+        */}
+        <Section titre="Ce qui se passe quand tu paies">
+          <ol className="flex flex-col gap-4">
+            {[
+              'Tu paies par carte, chez Stripe. Amorce ne voit jamais ton numéro.',
+              'Stripe te renvoie sur une page qui affiche ta clé, tout de suite.',
+              'Tu colles la clé dans le studio, à l’étape Exporter. C’est fini.',
+              'Elle reste sur cet appareil, sans compte ni mot de passe. Sur un autre téléphone, tu recolles la même.',
+            ].map((etape, index) => (
+              <li key={etape} className="flex gap-4">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-raised text-base font-semibold tabular-nums text-accent">
+                  {index + 1}
+                </span>
+                <span className="pt-0.5 text-lg leading-relaxed text-muted">{etape}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="text-base leading-relaxed text-muted">
+            Garde ta clé quelque part : c’est ta preuve d’achat, et il n’y a pas
+            de compte pour la retrouver à ta place.
+          </p>
+        </Section>
+
         {/* --- L'honnêteté, qui est aussi un argument ----------------------- */}
         <Section titre="Ce qu’il ne fait pas, et je préfère te le dire avant">
           <ul className="flex flex-col gap-3 text-lg leading-relaxed text-muted">
@@ -341,10 +372,37 @@ export function Accueil() {
           )}
         </Section>
 
-        <footer className="border-t border-edge pt-6 text-base leading-relaxed text-muted">
-          Amorce est fait par une personne, pour des gens qui montent leurs
-          vidéos seuls, souvent tard. Si quelque chose coince, écris — c’est la
-          même personne qui répond.
+        <footer className="flex flex-col gap-4 border-t border-edge pt-6 text-base leading-relaxed text-muted">
+          <p>
+            Amorce est fait par une personne, pour des gens qui montent leurs
+            vidéos seuls, souvent tard. Si quelque chose coince, écris — c’est la
+            même personne qui répond.
+          </p>
+          {/*
+            Les liens qu'on cherche machinalement avant de payer. Ils vivent
+            dans un pied de page parce que c'est là qu'on les cherche, et ils
+            existent parce que vendre à des particuliers les impose.
+          */}
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <Link
+              href="/mentions-legales"
+              className="inline-flex min-h-11 items-center text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Mentions légales
+            </Link>
+            <Link
+              href="/cgv"
+              className="inline-flex min-h-11 items-center text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Conditions de vente
+            </Link>
+            <a
+              href="mailto:erwannchevallier@gmail.com"
+              className="inline-flex min-h-11 items-center text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Nous écrire
+            </a>
+          </nav>
         </footer>
       </div>
 
