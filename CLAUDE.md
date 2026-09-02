@@ -584,6 +584,21 @@ vaut 16:9 par défaut et l'outil de génération **ne l'expose pas** — il se r
 sur le nœud du flux. Une série verticale demande donc un passage par le flux,
 sans quoi on paie une image inutilisable qui a pourtant l'air réussie.
 
+**Et le chemin du flux est barré depuis une session distante — mesuré le
+02/09/2026.** Le paramètre existe bien : `aspect_ratio`, valeur par défaut
+`16:9`, avec `9:16`, `2:3` et `3:4` dans la liste — vérifié sur
+`gemini-2.5-flash-image` comme sur `gpt-image-2`, et **les deux ont le même
+défaut paysage**. Mais l'outil de génération directe ne le prend pas : il faut
+`creative_update_node` pour poser le rapport, puis `creative_run_flow_nodes`
+pour lancer — et **c'est ce second appel que le classificateur de session
+refuse**, là où la génération directe passe.
+
+La conséquence est pratique et vaut d'être sue avant de promettre une planche :
+depuis une session distante, on sait **fabriquer une image**, on ne sait pas
+**choisir son cadrage**. Le nœud se configure ici, et se lance d'un clic sur la
+page du flux. Un cadrage demandé dans le texte du prompt ne suffit pas — « composition
+verticale » a été ignoré et l'image est sortie en 1344 × 768.
+
 Ce qui n'est **pas** mesuré et ne doit pas être supposé : le 9:16 réellement
 obtenu, la génération vidéo, le lipsync, et le quota du compte.
 
