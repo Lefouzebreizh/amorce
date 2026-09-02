@@ -187,11 +187,29 @@ def _passe_nettete(chemins, reglages, quarantaine, journal, lignes=None
     """
     if reglages.get("ignorer_si_visage_detecte", True) \
             and not traitement.detection_de_visages_disponible():
-        # Annoncé avant d'analyser : découvrir après coup qu'une protection
-        # promise par la configuration n'a pas tourné, c'est l'apprendre une
-        # fois les photos déjà déplacées.
+        # La passe entière est abandonnée, et non seulement annoncée. Un
+        # avertissement imprimé une fois en tête d'un traitement qui défile sur
+        # des milliers de fichiers ne retient personne, et ce qui se joue
+        # derrière n'est pas rattrapable : 9 portraits de famille sur 10 marqués
+        # « flous » ont un visage détectable (mesuré le 02/09/2026 sur la machine
+        # du propriétaire). Sans le classifieur ils partent en quarantaine, puis
+        # `purger_quarantaine()` les efface au bout de `retention_quarantaine_jours`.
+        #
+        # Ne rien écarter vaut mieux qu'écarter les portraits : les floues
+        # restent, elles se retrient à la main, et aucune photo n'est perdue.
+        # Qui ne veut pas de cette protection règle `ignorer_si_visage_detecte`
+        # à `false`, et la passe reprend son cours.
         print("  ⚠ Cet OpenCV ne fournit pas de détecteur de visages : la protection "
-              "« ne pas écarter une photo où un visage est reconnu » ne s'appliquera pas.")
+              "« ne pas écarter une photo où un visage est reconnu » ne peut pas "
+              "s'appliquer.")
+        print("    La recherche de photos floues est donc SAUTÉE — sans elle, des "
+              "portraits nets seraient écartés puis effacés après "
+              f"{reglages.get('retention_quarantaine_jours', 30)} jours.")
+        print("    Pour la rétablir : pip install 'opencv-python-headless<5' — la "
+              "branche 5 a retiré `CascadeClassifier`.")
+        print("    Pour l'ignorer : régler nettoyage_medias.flou."
+              "ignorer_si_visage_detecte à false.")
+        return list(chemins), 0, {}
 
     medias = traitement.mesurer_nettete(chemins, reglages, consigner=journal.incident)
     maintenant = time.time()

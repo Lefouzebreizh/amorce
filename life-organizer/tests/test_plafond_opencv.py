@@ -20,8 +20,10 @@ ici que la chaîne KDP, la CI ou le hook de démarrage contredisent ne protège
 rien du tout.
 """
 
+import io
 import re
 import sys
+from contextlib import redirect_stdout
 import unittest
 from pathlib import Path
 
@@ -89,6 +91,39 @@ class PlafondOpenCV(unittest.TestCase):
         self.assertEqual(oublis, [], "site(s) installant OpenCV sans borne haute")
 
 
+class VersionReellementInstallee(unittest.TestCase):
+    """Ce que la machine fait, et non ce que les fichiers déclarent.
+
+    Les tests de `PlafondOpenCV` tiennent la borne sur les quatre fichiers qui
+    installent OpenCV. Ils passaient tous les quatre le 02/09/2026 sur une
+    machine portant la **5.0.0**, sans `CascadeClassifier` : la protection
+    « ne pas écarter une photo où un visage est reconnu » était inerte, et rien
+    ne le disait. C'est l'écart exact entre ce que le dépôt affirme et ce que
+    l'environnement exécute — l'audit l'a nommé I-1.
+
+    La cause tenait en un `pip install opencv-python-headless` sans borne, tapé
+    par une session pour tout autre chose. Le hook, lui, pose bien la borne.
+    """
+
+    def test_l_opencv_importe_livre_le_detecteur_de_visages(self):
+        try:
+            import cv2
+        except ImportError:
+            self.skipTest("OpenCV n'est pas installé : rien à vérifier ici")
+        majeure = int(cv2.__version__.split(".")[0])
+        self.assertLess(
+            majeure, 5,
+            f"OpenCV {cv2.__version__} est installé : la branche 5 a retiré "
+            "`CascadeClassifier`, donc le garde-fou « visage » ne peut pas "
+            "s'appliquer. Réinstaller avec « pip install 'opencv-python-headless<5' ».",
+        )
+        self.assertTrue(
+            hasattr(cv2, "CascadeClassifier"),
+            f"OpenCV {cv2.__version__} ne livre pas `CascadeClassifier` : les "
+            "portraits nets marqués flous partiraient en quarantaine.",
+        )
+
+
 class DegradationBruyante(unittest.TestCase):
     """Le plafond est la ceinture ; l'avertissement reste les bretelles.
 
@@ -106,6 +141,65 @@ class DegradationBruyante(unittest.TestCase):
     def test_le_classifieur_est_cherche_et_jamais_suppose(self):
         source = (RACINE / "modules" / "nettoyage" / "traitement.py").read_text(encoding="utf-8")
         self.assertIn('getattr(cv2, "CascadeClassifier", None)', source)
+
+
+class PasseSauteeSansDetecteur(unittest.TestCase):
+    """Le correctif du constat I-1, éprouvé sur le comportement et non sur le source.
+
+    Annoncer ne suffisait pas. L'avertissement s'imprimait une fois, en tête
+    d'un traitement qui défile sur des milliers de fichiers, **puis l'analyse
+    écartait quand même** — et 9 portraits de famille sur 10 marqués « flous »
+    ont un visage détectable. Ils partaient en quarantaine, puis
+    `purger_quarantaine()` les effaçait.
+
+    La passe entière est donc abandonnée quand la protection est demandée et
+    indisponible : ne rien écarter vaut mieux qu'écarter les portraits.
+    """
+
+    def _passe(self, disponible, protection):
+        from modules.nettoyage import commande, traitement
+
+        chemins = [Path("/photos/mariage.jpg"), Path("/photos/enfance.jpg")]
+        vrai = traitement.detection_de_visages_disponible
+        mesure_appelee = []
+        vraie_mesure = traitement.mesurer_nettete
+        traitement.detection_de_visages_disponible = lambda: disponible
+        traitement.mesurer_nettete = lambda *a, **k: mesure_appelee.append(1) or []
+        # La passe parle à l'écran : capté ici, sinon la sortie des tests se lit
+        # comme un incident alors que c'est le message qu'on vérifie.
+        try:
+            with redirect_stdout(io.StringIO()):
+                restants, octets, netteté = commande._passe_nettete(
+                    chemins,
+                    {"ignorer_si_visage_detecte": protection},
+                    quarantaine=Path("/quarantaine"),
+                    journal=_JournalMuet(),
+                )
+        finally:
+            traitement.detection_de_visages_disponible = vrai
+            traitement.mesurer_nettete = vraie_mesure
+        return restants, bool(mesure_appelee)
+
+    def test_sans_detecteur_aucune_photo_n_est_analysee_ni_ecartee(self):
+        restants, mesuree = self._passe(disponible=False, protection=True)
+        self.assertFalse(mesuree, "l'analyse a tourné alors que le garde-fou manquait")
+        self.assertEqual(len(restants), 2, "les photos doivent toutes rester")
+
+    def test_qui_refuse_la_protection_garde_son_analyse(self):
+        """`ignorer_si_visage_detecte: false` dit explicitement de ne pas protéger."""
+        _, mesuree = self._passe(disponible=False, protection=False)
+        self.assertTrue(mesuree, "la passe ne doit pas être sautée sans qu'on l'ait demandée")
+
+    def test_avec_detecteur_la_passe_tourne_normalement(self):
+        _, mesuree = self._passe(disponible=True, protection=True)
+        self.assertTrue(mesuree)
+
+
+class _JournalMuet:
+    """Le strict nécessaire : la passe ne consigne qu'en cas d'incident de lecture."""
+
+    def incident(self, *_a, **_k):
+        pass
 
 
 if __name__ == "__main__":
