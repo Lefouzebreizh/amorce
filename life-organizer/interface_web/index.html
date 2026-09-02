@@ -1,0 +1,2369 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Life-Organizer — le bureau du soir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Palette premium, revue le 03/09/2026 sur la base de la maquette « Le
+     Coffre » validée par Erwann — sobre, sans orange ni jaune nulle part
+     (préférence durable, tous projets). Ardoise chaude sombre par défaut,
+     pas une préférence système à suivre. Vert d'eau (--accent) porte les
+     titres, les liens et tout ce qui est actif ou cliquable. Le bleu-violet
+     discret (--clay, le nom reste mais le rôle a changé) sert aux états
+     secondaires et aux rappels à venir, jamais un aplat large. Le rouge-rose
+     sourd (--wine) est réservé à l'urgent — une échéance dépassée, une
+     erreur — et le violet (--violet) au seul geste ponctuel (un bouton
+     d'action précis), jamais un fond. Chaque paire texte/fond a été
+     vérifiée au ratio WCAG AA (4.5:1 minimum pour le texte normal). */
+  :root{
+    --paper: #16151A;
+    --paper-raised: #1F1E25;
+    --ink: #F1EFEA;
+    --ink-soft: #B7B3A9;
+    --line: #2E2C34;
+    --accent: #4FB39C;
+    --accent-strong: #6FCAB4;
+    --accent-ink: #0D2A25;
+    --moss: #6FCAB4;
+    --moss-soft: #1C332E;
+    --moss-ink: #8FCBB4;
+    --clay: #8892C4;
+    --clay-soft: #252942;
+    --clay-ink: #A6AEDA;
+    --wine: #C97783;
+    --wine-soft: #392328;
+    --wine-ink: #DD97A1;
+    --violet: #9B8FE0;
+    --violet-strong: #8177CC;
+    --violet-ink: #1D1A33;
+    --shadow: rgba(0,0,0,0.4);
+    --focus: #4FB39C;
+    /* L'aurore du bandeau titre : violet profond en haut, glissant directement
+       vers le turquoise puis le vert en bas — jamais un paysage, juste un
+       dégradé de couleur. Le rouge n'y figure plus : il reste réservé aux
+       accents ponctuels ailleurs (alertes, pastilles d'erreur). */
+    --aurore-fond: #05080B;
+    --aurore-violet: #4C1D95;
+    --aurore-cyan: #0E8C82;
+    --aurore-vert: #15803D;
+    --titre-ombre: rgba(0,0,0,.7);
+    /* Couleurs des raccourcis de catégorie : des variations vert-turquoise-bleu,
+       jamais violet ni rouge — ces deux-là restent des accents ponctuels
+       ailleurs dans l'interface, pas une famille de badges. */
+    --cat-ranger: #22C55E;
+    --cat-nettoyer: #14B8A6;
+    --cat-convertir: #06B6D4;
+    --cat-upscaler: #84CC16;
+    --grain: .22;
+  }
+  :root[data-theme="dark"]{
+    --paper: #16151A; --paper-raised: #1F1E25; --ink: #F1EFEA; --ink-soft: #B7B3A9;
+    --line: #2E2C34; --accent: #4FB39C; --accent-strong: #6FCAB4; --accent-ink: #0D2A25;
+    --moss: #6FCAB4; --moss-soft: #1C332E; --moss-ink: #8FCBB4;
+    --clay: #8892C4; --clay-soft: #252942; --clay-ink: #A6AEDA;
+    --wine: #C97783; --wine-soft: #392328; --wine-ink: #DD97A1;
+    --violet: #9B8FE0; --violet-strong: #8177CC; --violet-ink: #1D1A33;
+    --shadow: rgba(0,0,0,0.4); --focus: #4FB39C;
+    --aurore-fond: #05080B; --aurore-violet: #4C1D95;
+    --aurore-cyan: #0E8C82; --aurore-vert: #15803D; --titre-ombre: rgba(0,0,0,.7); --grain: .22;
+  }
+  /* Le clair reste disponible au geste explicite (le bouton jour/nuit), mais
+     n'est plus jamais montré par défaut : la nouvelle identité est sombre,
+     pas « sombre si le système le demande ». Même logique de couleur —
+     vert/turquoise dominant, bleu discret, violet et rouge ponctuels —
+     reportée sur un fond clair, chaque paire revérifiée au même seuil AA. */
+  :root[data-theme="light"]{
+    --paper: #F3F1EC; --paper-raised: #FFFFFF; --ink: #1B1A1E; --ink-soft: #6B6963;
+    --line: #E4E0D6; --accent: #14514A; --accent-strong: #0D3B36; --accent-ink: #F7FAF8;
+    --moss: #0D3B36; --moss-soft: #E4EEEA; --moss-ink: #0D3B36;
+    --clay: #47517D; --clay-soft: #E7E9F2; --clay-ink: #333C68;
+    --wine: #8A3A44; --wine-soft: #F2E1E1; --wine-ink: #6E2731;
+    --violet: #5B4FA6; --violet-strong: #473E85; --violet-ink: #FFFFFF;
+    --shadow: rgba(27,26,30,0.12); --focus: #14514A;
+    --aurore-fond: #EAF6F2; --aurore-violet: #C4B5FD;
+    --aurore-cyan: #7DE0D3; --aurore-vert: #86EFAC; --titre-ombre: rgba(255,255,255,.75); --grain: .45;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background: var(--paper); color: var(--ink);
+    font-family:'Plus Jakarta Sans', system-ui, sans-serif; line-height:1.55;
+  }
+  h1,h2{ font-family:'Instrument Serif', Georgia, serif; text-wrap:balance; margin:0; }
+  code, .mono{ font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  /* Pleine largeur, pleine hauteur. `100dvh` et non `100vh` : sur mobile, la
+     barre d'adresse fait mentir `vh` et coupe le bas de la page. */
+  .wrap{ max-width: 1400px; margin:0 auto; padding: 56px 48px 100px; min-height: 100dvh; position:relative; }
+  /* Tout le contenu passe au-dessus du decor, sans avoir a le redire partout. */
+  .wrap > *{ position:relative; z-index:2; }
+
+  /* Le grain : un bruit fractal en SVG, fixe. Le crème cesse d'etre une couleur
+     plate et devient du papier. Fixe et non defilant — un grain qui glisse avec
+     la page se voit, un grain immobile se sent seulement. */
+  .grain{
+    position:fixed; inset:0; z-index:0; pointer-events:none; opacity: var(--grain);
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)' opacity='.22'/></svg>");
+  }
+
+  /* L'aurore, derriere l'en-tete seulement. Il accueille, puis il s'efface :
+     des que les cartes commencent, la page redevient calme. Pas de paysage ni
+     de silhouette : un dégradé de couleur, et rien d'autre — violet profond en
+     haut, glissant directement vers le turquoise puis le vert en bas, sans
+     bande rouge. Le voile noir assombrit juste assez le haut pour que le
+     titre reste lisible sans éteindre la couleur en dessous. */
+  .ciel{
+    position:absolute; top:0; left:0; right:0; height:212px; z-index:0; pointer-events:none; overflow:hidden;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.88) 0%, transparent 62%),
+      linear-gradient(180deg,
+        var(--aurore-fond) 0%,
+        var(--aurore-violet) 30%,
+        var(--aurore-cyan) 66%,
+        var(--aurore-vert) 90%,
+        var(--paper) 100%);
+  }
+  /* Fines lignes façon circuit imprimé, en filigrane par-dessus le dégradé —
+     un motif géométrique et technique, jamais figuratif. */
+  .ciel .circuits{ position:absolute; inset:0; width:100%; height:100%; opacity:.09; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:.09em;
+    text-transform:uppercase; color: var(--ink-soft);
+    text-shadow: 0 1px 6px var(--titre-ombre), 0 1px 2px var(--titre-ombre);
+  }
+  .intro{ margin-bottom:40px; }
+  /* Le titre est assis sur un dégradé qui change de teinte sur toute sa
+     hauteur : la seule couleur var(--ink) ne suffit pas a garantir qu'il
+     ressorte a chaque endroit possible. L'ombre portee agit comme un halo
+     qui le detache du fond, quelle que soit la couleur derriere. */
+  .intro h1{
+    font-size: clamp(30px, 5.5vw, 42px); font-weight:400; margin-top:6px;
+    color: var(--ink); text-shadow: 0 2px 16px var(--titre-ombre), 0 1px 3px var(--titre-ombre);
+  }
+
+  .theme-fab{
+    position:fixed; top:20px; right:20px; z-index:20;
+    width:42px; height:42px; border-radius:50%;
+    border:1px solid var(--line); background: var(--paper-raised); color: var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow: 0 6px 16px -8px var(--shadow);
+    transition: color .2s ease, box-shadow .2s ease;
+  }
+  .theme-fab:hover{ color: var(--accent); }
+  .theme-fab:active{ transform: scale(.92); }
+  .theme-fab:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .theme-fab svg{ width:19px; height:19px; transition: transform .4s cubic-bezier(.16,1,.3,1), opacity .3s ease; }
+  .theme-fab .i-moon{ position:absolute; opacity:0; transform: rotate(-40deg) scale(.5); }
+  .theme-fab .i-sun{ opacity:1; transform:none; }
+  :root[data-theme="dark"] .theme-fab .i-sun{ opacity:0; transform: rotate(40deg) scale(.5); }
+  :root[data-theme="dark"] .theme-fab .i-moon{ opacity:1; transform:none; }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .theme-fab .i-sun{ opacity:0; transform: rotate(40deg) scale(.5); }
+    :root:not([data-theme="light"]) .theme-fab .i-moon{ opacity:1; transform:none; }
+  }
+
+  .prompt-bar{
+    display:flex; align-items:center; gap:10px;
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:18px;
+    padding:14px 16px; margin-bottom:8px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 8px 20px -16px var(--shadow);
+    transition: box-shadow .25s ease, border-color .25s ease;
+  }
+  .prompt-bar:focus-within{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 16%, transparent), 0 8px 20px -16px var(--shadow);
+  }
+  .prompt-bar input{
+    flex:1; border:none; background:transparent; outline:none;
+    font-family:'Plus Jakarta Sans', sans-serif; font-size:16px; color: var(--ink);
+  }
+  .prompt-bar input::placeholder{ color: var(--ink-soft); opacity:.8; }
+  /* Seul bouton violet de la page — un geste ponctuel (« envoyer une
+     demande ») qui mérite de se distinguer du vert dominant des actions de
+     dépôt, sans jamais devenir une couleur de fond ou de masse. */
+  .prompt-bar button{
+    font-family:'Plus Jakarta Sans', sans-serif; font-weight:700; font-size:14px;
+    background: var(--violet); color: var(--violet-ink);
+    border:none; border-radius:12px; padding:10px 18px; cursor:pointer;
+    /* Pas de transition sur background/color : ces teintes viennent de
+       variables CSS qui changent au bascule de thème, et Chromium peut
+       laisser la transition bloquée sur l'ancienne valeur interpolée. */
+    transition: transform .15s ease, opacity .2s ease;
+  }
+  .prompt-bar button:hover{ background: var(--violet-strong); }
+  .prompt-bar button:active{ transform: scale(.96); }
+  .prompt-bar button:disabled{ opacity:.55; cursor:default; transform:none; }
+  .prompt-bar button:focus-visible{ outline:2px solid var(--violet); outline-offset:2px; }
+  .hint{ font-size:12.5px; color: var(--ink-soft); margin: 0 2px 36px; }
+
+  /* L'en-tete prend toute la largeur, mais en deux colonnes plutot qu'en
+     etirant un champ de saisie sur deux mille pixels — ce qui ne se lit pas
+     mieux, seulement plus loin. A gauche le depot, a droite la demande et
+     l'etat du flux. Sous 1100 px, les colonnes se remettent l'une sous l'autre. */
+  .entete{
+    display:grid; gap:36px; align-items:stretch; margin-bottom:48px;
+    grid-template-columns: minmax(440px, 1fr) minmax(400px, .88fr);
+  }
+  @media (max-width: 1100px){ .entete{ grid-template-columns: 1fr; } }
+  /* Le titre coiffe les deux colonnes : sans cela il occupe une case et
+     repousse le depot a droite, ce qui ouvre un trou sous le titre. */
+  .entete > .intro{ grid-column: 1 / -1; margin-bottom:0; }
+  .entete .depot{ margin-bottom:0; }
+  .colonne-droite{ display:flex; flex-direction:column; gap:16px; }
+
+  .etat{
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:14px;
+    padding:20px 22px; margin-top:auto;
+  }
+  .etat h2{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.09em;
+    text-transform:uppercase; color: var(--ink-soft); font-weight:500; margin-bottom:10px;
+  }
+  .etat dl{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px 16px; margin:0; }
+  .etat dl > div{ display:flex; flex-direction:column; }
+  .etat dt{ font-size:12px; color: var(--ink-soft); order:2; }
+  .etat dd{
+    font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;
+    font-size:22px; font-weight:500; margin:0; order:1; line-height:1.2;
+  }
+  .etat dd.rien{ color: var(--ink-soft); opacity:.45; }
+  .etat dd.alerte{ color: var(--clay); }
+  .etat dd.bien{ color: var(--moss); }
+  /* La zone de contenu (filtres + flux) forme son propre panneau, plutôt que
+     des elements epars sur le fond de page : c'est ce qui separe visuellement
+     « l'action » (en-tete) du « contenu » (le flux), et qui rend l'espace a
+     droite des filtres lisible comme une marge de carte plutot que du vide
+     oublie. */
+  .contenu{
+    background: var(--paper); border:1px solid var(--line); border-radius:22px;
+    padding: 32px 32px 36px;
+  }
+  .filters{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:26px; }
+  .filter-chip{
+    font-family:'Plus Jakarta Sans', sans-serif; font-size:13px; font-weight:600; color: var(--ink-soft);
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:999px;
+    padding:7px 14px; cursor:pointer;
+    transition: background .2s ease, color .2s ease, border-color .2s ease, transform .15s ease;
+  }
+  .filter-chip:hover{ border-color: var(--accent); color: var(--ink); transform: translateY(-1px); }
+  .filter-chip.active{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .filter-chip:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+
+  /* Barre de dépôt groupé. N'apparaît qu'à partir de deux propositions : sur
+     une seule, elle ferait un détour pour rien — le bouton de la carte suffit. */
+  .barre-lot{
+    position: sticky; top: 8px; z-index: 5;
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+    background: var(--paper-raised); border:1px solid var(--accent); border-radius:14px;
+    padding:12px 16px; margin-bottom:16px;
+    box-shadow: 0 10px 24px -18px var(--shadow);
+  }
+  /* `display:flex` l'emporte sur la regle `[hidden]{display:none}` du
+     navigateur : sans ce rappel, la barre reste visible alors qu'on la croit
+     cachee — elle s'affichait des l'ouverture, avant la moindre carte. */
+  .barre-lot[hidden]{ display:none; }
+  .barre-lot .compte{ font-size:15px; font-weight:700; color: var(--ink); margin-right:auto; }
+  .barre-lot .compte .ecarte{ display:block; font-size:12.5px; font-weight:400; color: var(--ink-soft); margin-top:2px; }
+  .barre-lot .lien{
+    font-family:'Plus Jakarta Sans', sans-serif; font-size:13px; font-weight:600; color: var(--ink-soft);
+    background:none; border:1px solid var(--line); border-radius:999px;
+    padding:7px 13px; cursor:pointer; transition: color .2s ease, border-color .2s ease;
+  }
+  .barre-lot .lien:hover{ color: var(--ink); border-color: var(--accent); }
+  .barre-lot .lien:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .barre-lot .btn-lot{
+    font-family:'Plus Jakarta Sans', sans-serif; font-weight:700; font-size:14px;
+    background: var(--accent); color: var(--accent-ink); border:none; border-radius:10px;
+    min-height:44px; padding:10px 18px; cursor:pointer;
+    transition: background .2s ease, opacity .2s ease;
+  }
+  .barre-lot .btn-lot:hover{ background: var(--accent-strong); }
+  .barre-lot .btn-lot:disabled{ opacity:.5; cursor:default; }
+  .barre-lot .btn-lot:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  /* Jauge en barre horizontale, jamais en cercle — règle du dépôt. */
+  .barre-lot .jauge{
+    flex-basis:100%; height:8px; border-radius:999px;
+    background: var(--paper); border:1px solid var(--line); overflow:hidden;
+  }
+  .barre-lot .jauge > div{ height:100%; width:0; background: var(--accent); transition: width .2s ease; }
+  .barre-lot .bilan{ flex-basis:100%; font-size:13.5px; color: var(--ink-soft); }
+  .barre-lot .bilan.echec{ color: var(--wine); font-weight:600; }
+
+  .row1 > .titre-lot{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .titre-lot input[type="checkbox"]{ width:18px; height:18px; accent-color: var(--accent); flex:none; cursor:pointer; }
+  .titre-lot input[type="checkbox"]:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+
+  .empty{
+    text-align:center; color: var(--ink-soft); font-size:14.5px;
+    border:1px dashed var(--line); border-radius:16px; padding:36px 20px;
+  }
+
+  /* Une colonne unique sur un ecran large donnerait des lignes de texte
+     illisibles. La grille remplit la largeur en gardant chaque carte a une
+     largeur de lecture, et se replie seule sur un ecran etroit. */
+  .results{
+    display:grid; gap:22px; align-items:start;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+  .card{
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:16px;
+    padding:24px 26px; display:flex; flex-direction:column; gap:10px; position:relative;
+    animation: rise .45s cubic-bezier(.16,1,.3,1) backwards;
+    transition: transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s ease, border-color .25s ease,
+                opacity .2s ease, max-height .3s ease, padding .25s ease, margin .25s ease;
+  }
+  .card:hover{ transform: translateY(-2px); box-shadow: 0 14px 28px -18px var(--shadow); }
+
+  /* Un liseré sur la tranche : mousse quand le classement est sûr, terre cuite
+     quand il ne l'est pas. L'oeil trouve les douteuses de loin sans lire un seul
+     pourcentage — et c'est une couleur de la palette, pas un signal d'alarme. */
+  .card.proposition::before{
+    content:''; position:absolute; left:0; top:18px; bottom:18px; width:3px;
+    border-radius:0 3px 3px 0; background: var(--moss); opacity:.5;
+  }
+  .card.proposition.incertain::before{
+    background: var(--clay); opacity:1; width:5px; top:0; bottom:0;
+    border-radius:16px 0 0 16px;
+  }
+  .card.proposition.attente::before{ background: var(--line); opacity:.6; }
+
+  /* Squelette de chargement : des blocs a la forme de la vraie carte plutot
+     qu'une ligne de texte. L'attente ne raccourcit pas, elle se sent moins. */
+  .os{ background: var(--line); border-radius:6px; opacity:.4; height:11px; }
+  .os.large{ width:100%; } .os.moyen{ width:70%; } .os.bouton{ width:38%; height:26px; border-radius:9px; }
+  .squelette{ display:flex; flex-direction:column; gap:9px; margin-top:6px; }
+  @media (prefers-reduced-motion: no-preference){
+    .squelette .os{ animation: respire 1.6s ease-in-out infinite; }
+    .squelette .os:nth-child(2){ animation-delay:.15s; }
+    .squelette .os:nth-child(3){ animation-delay:.3s; }
+  }
+  @keyframes respire{ 0%,100%{ opacity:.25; } 50%{ opacity:.58; } }
+  /* En grille, une carte repliee garderait sa case : elle trouerait la
+     mosaique. On la retire de la mise en page, l'animation de repli n'a plus
+     lieu d'etre. */
+  .card.is-hidden{ display:none; }
+  @keyframes rise{ from{ opacity:0; transform: translateY(10px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .card{ animation:none; } }
+
+  .row1{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .card .title{ font-weight:700; font-size:15px; }
+  .card .when{ font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--ink-soft); margin-top:2px; }
+  .pill{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.02em;
+    padding:4px 10px; border-radius:999px; white-space:nowrap; flex:none;
+  }
+  .pill.simulation{ background: var(--clay-soft); color: var(--clay-ink); }
+  .pill.applique{ background: var(--moss-soft); color: var(--moss-ink); }
+  .pill.erreur{ background: var(--wine-soft); color: var(--wine-ink); }
+
+  .card .commande{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color: var(--ink-soft);
+    background: var(--paper); border:1px solid var(--line); border-radius:8px; padding:6px 10px;
+    overflow-x:auto; white-space:pre;
+  }
+  .card .sortie{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; line-height:1.6; color: var(--ink);
+    background: var(--paper); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+    white-space:pre-wrap; max-height:280px; overflow-y:auto;
+  }
+  .card .message{ font-size:14px; color: var(--ink-soft); }
+
+  .card .actions{ display:flex; gap:10px; align-items:center; }
+  .btn-appliquer{
+    font-family:'Plus Jakarta Sans', sans-serif; font-weight:700; font-size:13px;
+    background: var(--accent); color: var(--accent-ink); border:none; border-radius:10px;
+    padding:8px 14px; cursor:pointer; transition: background .2s ease, transform .15s ease, opacity .2s ease;
+  }
+  .btn-appliquer:hover{ background: var(--accent-strong); }
+  .btn-appliquer:active{ transform: scale(.96); }
+  .btn-appliquer:disabled{ opacity:.55; cursor:default; }
+  .btn-appliquer:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .note-simulation{ font-size:12.5px; color: var(--ink-soft); }
+
+  .dot-pulse{
+    width:8px; height:8px; border-radius:50%; background: var(--accent); flex:none;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{ opacity:.3; transform:scale(.85); } 50%{ opacity:1; transform:scale(1); } }
+
+  /* ---- dépôt ---- */
+  .depot{
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:18px;
+    padding:22px 24px; margin-bottom:32px;
+  }
+  /* Sérif réservé aux vrais moments de titre (le grand titre, le nom d'un
+     document dans sa fiche) : un intitulé de section utilitaire reste dans
+     la même famille que le reste du texte, sans quoi le sérif se dilue. */
+  .depot h2{ font-family:'Plus Jakarta Sans', sans-serif; font-size:17px; font-weight:700; margin-bottom:4px; }
+  .depot .sous-titre{ font-size:13px; color: var(--ink-soft); margin-bottom:16px; }
+  .dropzone{
+    border:1.5px dashed var(--line); border-radius:14px; padding:22px;
+    display:flex; align-items:center; gap:14px; cursor:pointer;
+    transition: border-color .25s cubic-bezier(.16,1,.3,1), background .25s ease,
+                transform .25s cubic-bezier(.16,1,.3,1), box-shadow .3s ease;
+  }
+  .dropzone:hover{ border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  /* L'état de survol pendant un vrai glisser-déposer va plus loin qu'un
+     simple changement de couleur : la carte se soulève légèrement, un halo
+     respire autour d'elle et l'icône flotte — un retour qui se sent, pas
+     seulement un contour qui change. */
+  .dropzone.survole{
+    border:2px solid var(--accent); border-style:solid;
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    transform: scale(1.016);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 9%, transparent), 0 20px 36px -22px var(--shadow);
+  }
+  .dropzone input[type="file"]{ display:none; }
+  .dropzone .icone{
+    width:38px; height:38px; border-radius:50%; background: var(--clay-soft); color: var(--clay-ink);
+    display:flex; align-items:center; justify-content:center; flex:none;
+    transition: background .25s ease, color .25s ease, transform .25s cubic-bezier(.16,1,.3,1);
+  }
+  .dropzone.survole .icone{
+    background: var(--accent); color: var(--accent-ink);
+    transform: scale(1.15) translateY(-2px);
+    animation: icone-flotte 1.15s ease-in-out infinite;
+  }
+  @keyframes icone-flotte{
+    0%, 100%{ transform: scale(1.15) translateY(-2px); }
+    50%{ transform: scale(1.15) translateY(2px); }
+  }
+  @media (prefers-reduced-motion: reduce){ .dropzone.survole .icone{ animation:none; } }
+  .dropzone .icone svg{ width:18px; height:18px; }
+  .dropzone .texte{ font-size:14px; color: var(--ink-soft); transition: color .2s ease; }
+  .dropzone.survole .texte{ color: var(--ink); }
+
+  .en-attente{ margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+  .en-attente ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .en-attente li{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    font-size:13px; color: var(--ink); background: var(--paper); border:1px solid var(--line);
+    border-radius:8px; padding:7px 10px;
+  }
+  .en-attente li button{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color: var(--ink-soft);
+    background:transparent; border:none; cursor:pointer; padding:0 2px; line-height:1;
+  }
+  .en-attente li button:hover{ color: var(--wine); }
+  .en-attente .actions{ display:flex; gap:10px; margin-top:2px; }
+  .dropzone .texte strong{ color: var(--ink); }
+  .depot-etat{ font-size:13px; color: var(--ink-soft); margin-top:12px; display:flex; align-items:center; gap:8px; }
+
+  /* `.proposition` ne porte plus son propre cadre : les cartes de dépôt
+     partagent désormais `.card` (fond, bordure, animation, survol, filtre)
+     avec celles du chat, une seule chronologie plutôt que deux styles. */
+  .proposition select{
+    font-family:'Plus Jakarta Sans', sans-serif; font-size:13px; color: var(--ink);
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:8px;
+    padding:6px 10px; cursor:pointer;
+  }
+  .proposition select:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .proposition .destination{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color: var(--ink-soft);
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:8px;
+    padding:8px 10px; margin:10px 0; overflow-x:auto; white-space:nowrap;
+  }
+  .proposition .incertain{
+    font-size:12.5px; color: var(--wine-ink); background: var(--wine-soft);
+    border-radius:8px; padding:6px 10px; margin-bottom:10px;
+  }
+  .btn-annuler{
+    font-family:'Plus Jakarta Sans', sans-serif; font-weight:600; font-size:13px;
+    background:transparent; color: var(--ink-soft); border:1px solid var(--line); border-radius:10px;
+    padding:8px 14px; cursor:pointer;
+    /* Idem : pas de transition sur des couleurs pilotées par variables de
+       thème, pour éviter le même blocage de rendu que sur .prompt-bar button. */
+    transition: border-color .2s ease;
+  }
+  .btn-annuler:hover{ color: var(--ink); border-color: var(--ink-soft); }
+  .btn-annuler:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+
+  /* Bleu de soutien, pas vert ni violet : ce bouton ouvre une lecture assistée,
+     un geste secondaire et ponctuel, jamais l'action principale de la carte. */
+  .btn-comprendre{
+    font-family:'Plus Jakarta Sans', sans-serif; font-weight:600; font-size:13px; color: var(--clay-ink);
+    background: var(--clay-soft); border:none; border-radius:10px;
+    padding:9px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:7px;
+    transition: transform .15s ease, filter .2s ease;
+  }
+  .btn-comprendre:hover{ filter:brightness(1.12); }
+  .btn-comprendre:active{ transform: scale(.97); }
+  .btn-comprendre:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .btn-comprendre svg{ width:15px; height:15px; flex:none; }
+  .btn-comprendre[hidden]{ display:none; }
+
+  /* Le bas de page ne s'arrête plus au flux : un tableau de bord (historique
+     + chiffres de la session) et un accès rapide aux catégories lui donnent
+     une vraie fin, plutôt qu'un grand vide sous la dernière carte. */
+  .tableau-bord{
+    display:grid; gap:24px; margin-top:32px;
+    grid-template-columns: minmax(320px, 1.3fr) minmax(280px, 1fr);
+  }
+  @media (max-width: 900px){ .tableau-bord{ grid-template-columns: 1fr; } }
+  .panneau{
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:20px;
+    padding: 26px 28px;
+  }
+  .panneau-entete{ margin-bottom:18px; }
+  .panneau-entete h2{ font-family:'Plus Jakarta Sans', sans-serif; font-size:16px; font-weight:700; margin:0; }
+  .panneau-sous{ font-size:12.5px; color: var(--ink-soft); }
+
+  .liste-historique{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+  .liste-historique[hidden]{ display:none; }
+  .liste-historique li{
+    display:flex; align-items:center; gap:12px; padding:11px 2px; border-bottom:1px solid var(--line);
+  }
+  .liste-historique li:last-child{ border-bottom:none; padding-bottom:2px; }
+  .liste-historique li:first-child{ padding-top:2px; }
+  .hist-icone{
+    width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    flex:none; background: var(--paper); color: var(--accent);
+  }
+  .hist-icone svg{ width:16px; height:16px; }
+  .hist-icone.erreur{ color: var(--wine); }
+  .hist-corps{ min-width:0; flex:1; }
+  .hist-titre{
+    font-size:13.5px; font-weight:600; color: var(--ink);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .hist-detail{
+    font-size:12px; color: var(--ink-soft);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .hist-temps{ font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--ink-soft); flex:none; }
+  .hist-vide{ color: var(--ink-soft); font-size:13.5px; padding:6px 2px; }
+
+  .stats-grille{ display:grid; grid-template-columns: repeat(2, 1fr); gap:20px 16px; }
+  .stat-valeur{
+    font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;
+    font-size:30px; font-weight:600; color: var(--accent); line-height:1.1;
+  }
+  .stat-label{ font-size:12.5px; color: var(--ink-soft); margin-top:4px; }
+
+  .raccourcis{ margin-top:24px; }
+  .raccourcis-titre{ font-size:16px; font-weight:600; margin:0 0 16px; }
+  .raccourcis-grille{ display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .raccourci{
+    display:flex; align-items:center; gap:13px; text-align:left;
+    background: var(--paper-raised); border:1px solid var(--line); border-left:3px solid var(--cat, var(--accent));
+    border-radius:14px; padding:16px 18px; cursor:pointer; font-family:'Plus Jakarta Sans', sans-serif;
+    transition: transform .15s ease, box-shadow .2s ease;
+  }
+  .raccourci:hover{ transform: translateY(-2px); box-shadow: 0 12px 24px -18px var(--shadow); }
+  .raccourci:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .raccourci-icone{
+    width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    flex:none; background: color-mix(in srgb, var(--cat, var(--accent)) 18%, var(--paper)); color: var(--cat, var(--accent));
+  }
+  .raccourci-icone svg{ width:19px; height:19px; }
+  .raccourci-label{ font-size:14px; font-weight:600; color: var(--ink); }
+
+  /* Le coffre : même grammaire visuelle que le tableau de bord (panneau,
+     liste), pour qu'un espace de stockage chiffré ait l'air de faire partie
+     du même produit plutôt que d'un module greffé à part. */
+  .panneau-coffre{ margin-top:24px; }
+  .panneau-entete-coffre{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+  .coffre-verrouille{ display:flex; flex-direction:column; align-items:flex-start; gap:14px; padding:4px 0; }
+  .coffre-verrouille[hidden]{ display:none; }
+  .coffre-ligne{ display:flex; align-items:center; gap:12px; padding:11px 2px; border-bottom:1px solid var(--line); }
+  .coffre-ligne:last-child{ border-bottom:none; }
+  .coffre-ligne-actions{ display:flex; gap:8px; flex:none; }
+  .coffre-ligne-actions button{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color: var(--ink-soft);
+    background:none; border:1px solid var(--line); border-radius:8px; padding:5px 9px; cursor:pointer;
+    transition: color .2s ease, border-color .2s ease;
+  }
+  .coffre-ligne-actions button:hover{ color: var(--ink); border-color: var(--accent); }
+  .coffre-ligne-actions button.coffre-supprimer:hover{ color: var(--wine); border-color: var(--wine); }
+  .coffre-champ-groupe{ margin-bottom:16px; }
+  .coffre-champ-groupe label{ display:block; font-size:12.5px; font-weight:600; color: var(--ink-soft); margin-bottom:6px; }
+
+  /* L'assistant de lecture des documents administratifs : une fenêtre
+     centrée, pas de fioriture, un champ à la fois. Le fond flouté détache la
+     fenêtre du reste de la page sans la faire disparaître complètement — on
+     reste conscient d'être encore sur « le bureau du soir ». */
+  .assistant-fond{
+    position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    padding:24px; background: color-mix(in srgb, var(--paper) 72%, transparent);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    animation: assistant-fond-entree .25s ease backwards;
+  }
+  .assistant-fond[hidden]{ display:none; }
+  @keyframes assistant-fond-entree{ from{ opacity:0; } to{ opacity:1; } }
+  .assistant{
+    position:relative; width:100%; max-width:520px; max-height:min(640px, 88vh); overflow-y:auto;
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:22px;
+    padding:36px 34px 30px; box-shadow: 0 30px 60px -24px var(--shadow);
+    animation: assistant-entree .32s cubic-bezier(.16,1,.3,1) backwards;
+  }
+  @keyframes assistant-entree{ from{ opacity:0; transform: translateY(14px) scale(.97); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .assistant-fond, .assistant{ animation:none; } }
+  .assistant-fermer{
+    position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%;
+    border:1px solid var(--line); background: var(--paper); color: var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition: color .2s ease, border-color .2s ease;
+  }
+  .assistant-fermer:hover{ color: var(--ink); border-color: var(--accent); }
+  .assistant-fermer:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .assistant-fermer svg{ width:16px; height:16px; }
+
+  .assistant-eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:.08em;
+    text-transform:uppercase; color: var(--accent); margin-bottom:6px;
+  }
+  .assistant h3{ font-family:'Instrument Serif', Georgia, serif; font-size:24px; font-weight:400; margin:0 0 8px; padding-right:30px; }
+  .assistant-resume{ font-size:14px; color: var(--ink-soft); margin-bottom:22px; }
+
+  .assistant-progres{ display:flex; gap:6px; margin-bottom:22px; }
+  .assistant-progres span{
+    height:5px; flex:1; border-radius:999px; background: var(--line);
+    transition: background .3s ease;
+  }
+  .assistant-progres span.fait{ background: var(--accent); }
+  .assistant-progres span.actif{ background: var(--accent); opacity:.55; }
+
+  .assistant-etape{ animation: assistant-etape-entree .28s cubic-bezier(.16,1,.3,1) backwards; }
+  @keyframes assistant-etape-entree{ from{ opacity:0; transform: translateX(10px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .assistant-etape{ animation:none; } }
+  .assistant-etape-compte{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color: var(--ink-soft); margin-bottom:6px;
+  }
+  .assistant-champ-nom{ font-size:17px; font-weight:700; color: var(--ink); margin-bottom:8px; }
+  .assistant-champ-explication{ font-size:14px; color: var(--ink-soft); line-height:1.6; margin-bottom:18px; }
+  .assistant-champ-input{
+    width:100%; font-family:'Plus Jakarta Sans', sans-serif; font-size:15px; color: var(--ink);
+    background: var(--paper); border:1.5px solid var(--line); border-radius:12px;
+    padding:12px 14px; transition: border-color .2s ease;
+  }
+  .assistant-champ-input:focus-visible, .assistant-champ-input:focus{ outline:none; border-color: var(--accent); }
+
+  .assistant-nav{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:26px; }
+  .assistant-nav-gauche{ display:flex; gap:10px; }
+  .assistant-btn{
+    font-family:'Plus Jakarta Sans', sans-serif; font-weight:700; font-size:14px; cursor:pointer;
+    border-radius:12px; padding:10px 18px; border:none;
+    transition: background .2s ease, opacity .2s ease, transform .15s ease;
+  }
+  .assistant-btn:active{ transform: scale(.96); }
+  .assistant-btn-suivant{ background: var(--accent); color: var(--accent-ink); }
+  .assistant-btn-suivant:hover{ background: var(--accent-strong); }
+  .assistant-btn-precedent{ background: var(--paper); color: var(--ink-soft); border:1px solid var(--line); }
+  .assistant-btn-precedent:hover{ color: var(--ink); border-color: var(--ink-soft); }
+  .assistant-btn:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+
+  .assistant-recap-liste{ list-style:none; margin:0 0 22px; padding:0; display:flex; flex-direction:column; gap:12px; }
+  .assistant-recap-liste li{
+    background: var(--paper); border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+  }
+  .assistant-recap-nom{ font-size:12.5px; font-weight:700; color: var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; }
+  .assistant-recap-valeur{ font-size:14.5px; color: var(--ink); margin-top:4px; white-space:pre-wrap; }
+  .assistant-recap-valeur.vide{ color: var(--ink-soft); font-style:italic; }
+
+  .assistant-vide{ font-size:14px; color: var(--ink-soft); padding:6px 0 4px; }
+  .assistant-erreur{ font-size:13.5px; color: var(--wine); background: var(--wine-soft); border-radius:10px; padding:10px 12px; margin-top:4px; }
+
+  @media (max-width: 600px){
+    .wrap{ padding: 76px 16px 90px; }
+    .theme-fab{ top:14px; right:14px; width:38px; height:38px; }
+    .card{ padding:16px 16px; }
+    .depot{ padding:18px 16px; }
+    .dropzone{ padding:16px; }
+    .panneau{ padding:20px; }
+    .stats-grille{ grid-template-columns: 1fr 1fr; }
+    .assistant{ padding:28px 22px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<button type="button" class="theme-fab" id="themeFab" aria-label="Basculer entre le bureau de jour et le bureau du soir" aria-pressed="false">
+  <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+  <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg>
+</button>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="wrap">
+  <div class="ciel" aria-hidden="true">
+    <svg class="circuits" aria-hidden="true">
+      <defs>
+        <pattern id="motifCircuits" width="130" height="130" patternUnits="userSpaceOnUse">
+          <path d="M0 34H42M42 34V78M42 78H96M96 78V22M96 22H130" fill="none" stroke="var(--ink)" stroke-width="1"/>
+          <path d="M18 0V54M18 54H70M70 54V130" fill="none" stroke="var(--ink)" stroke-width="1"/>
+          <path d="M110 0V46M110 46H130" fill="none" stroke="var(--ink)" stroke-width="1"/>
+          <circle cx="42" cy="34" r="2.4" fill="var(--ink)"/>
+          <circle cx="96" cy="78" r="2.4" fill="var(--ink)"/>
+          <circle cx="18" cy="54" r="2.4" fill="var(--ink)"/>
+          <circle cx="70" cy="54" r="2.4" fill="var(--ink)"/>
+          <circle cx="110" cy="46" r="2.4" fill="var(--ink)"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#motifCircuits)"/>
+    </svg>
+  </div>
+  <div class="entete">
+  <div class="intro">
+    <div class="eyebrow">Life-Organizer</div>
+    <h1>Le bureau du soir</h1>
+  </div>
+
+  <div class="depot" id="depot">
+    <h2>Déposer un fichier</h2>
+    <div class="sous-titre">Une ou plusieurs photos, vidéos ou documents — chacun reçoit sa propre proposition, à valider avant que rien ne bouge.</div>
+
+    <label class="dropzone" id="dropzone" for="depotInput">
+      <span class="icone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+      </span>
+      <span class="texte"><strong>Choisir un ou plusieurs fichiers</strong> ou les déposer ici</span>
+      <input type="file" id="depotInput" multiple accept=".jpg,.jpeg,.png,.heic,.heif,.webp,.tiff,.bmp,.pdf,.mp4,.mov,.mkv,.avi,.webm,.m4v,.wmv" />
+    </label>
+
+    <div class="en-attente" id="depotEnAttente" hidden></div>
+  </div>
+
+  <div class="colonne-droite">
+  <form id="promptForm">
+    <div class="prompt-bar">
+      <input id="promptInput" type="text" autocomplete="off"
+             placeholder="Range les photos, nettoie les doublons, convertis une vidéo…" />
+      <button type="submit" id="promptSubmit">Envoyer</button>
+    </div>
+  </form>
+  <p class="hint">Toujours une simulation d'abord — rien ne bouge tant que tu ne cliques pas « Appliquer » sur une réponse.</p>
+
+  <div class="etat" id="etatFlux" hidden>
+    <h2>Ce soir</h2>
+    <dl>
+      <div><dd id="etatAttente">0</dd><dt>à valider</dt></div>
+      <div><dd id="etatChoisis">0</dd><dt>sélectionnés</dt></div>
+      <div><dd id="etatIncertains">0</dd><dt>incertains</dt></div>
+      <div><dd id="etatDeposes">0</dd><dt>déposés</dt></div>
+    </dl>
+  </div>
+  </div>
+  </div>
+
+  <section class="contenu">
+  <div class="filters" id="filters" role="group" aria-label="Filtrer le flux">
+    <button type="button" class="filter-chip active" data-filter="tout">Tout</button>
+    <button type="button" class="filter-chip" data-filter="depot">Dépôts</button>
+    <button type="button" class="filter-chip" data-filter="ranger">Rangement</button>
+    <button type="button" class="filter-chip" data-filter="nettoyer">Nettoyage</button>
+    <button type="button" class="filter-chip" data-filter="convertir">Conversion</button>
+    <button type="button" class="filter-chip" data-filter="upscaler">Agrandissement</button>
+  </div>
+
+  <div class="barre-lot" id="barreLot" hidden>
+    <span class="compte" id="lotCompte"></span>
+    <button type="button" class="lien" id="lotTout">Tout cocher</button>
+    <button type="button" class="lien" id="lotFiables">Seulement les sûrs</button>
+    <button type="button" class="lien" id="lotAucun">Décocher</button>
+    <button type="button" class="btn-lot" id="lotDeposer">Déposer</button>
+    <div class="jauge" id="lotJauge" hidden><div id="lotJaugeRemplie"></div></div>
+    <div class="bilan" id="lotBilan" hidden></div>
+  </div>
+  <div class="results" id="results"></div>
+  <div class="empty" id="empty">Rien pour l'instant — tape une demande ou dépose un fichier pour commencer.</div>
+  </section>
+
+  <section class="tableau-bord">
+    <div class="panneau panneau-historique">
+      <div class="panneau-entete">
+        <h2>Historique</h2>
+        <span class="panneau-sous">Les dernières actions de cette session</span>
+      </div>
+      <ul class="liste-historique" id="listeHistorique"></ul>
+    </div>
+    <div class="panneau panneau-stats">
+      <div class="panneau-entete">
+        <h2>En un coup d'œil</h2>
+        <span class="panneau-sous">Cumulé sur cette session</span>
+      </div>
+      <div class="stats-grille" id="statsGrille"></div>
+    </div>
+  </section>
+
+  <section class="raccourcis">
+    <h2 class="raccourcis-titre">Accès rapide</h2>
+    <div class="raccourcis-grille">
+      <button type="button" class="raccourci" data-filtre="ranger" style="--cat: var(--cat-ranger)">
+        <span class="raccourci-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2-4h14l2 4"/><path d="M3 8v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8"/><path d="M9 12h6"/></svg></span>
+        <span class="raccourci-label">Rangement</span>
+      </button>
+      <button type="button" class="raccourci" data-filtre="nettoyer" style="--cat: var(--cat-nettoyer)">
+        <span class="raccourci-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4 9 15"/><path d="M17 7l3-3 1 1-3 3"/><path d="M9 15l-1 5-5 1 1-5 5-1z"/></svg></span>
+        <span class="raccourci-label">Nettoyage</span>
+      </button>
+      <button type="button" class="raccourci" data-filtre="convertir" style="--cat: var(--cat-convertir)">
+        <span class="raccourci-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3"/><path d="M20 17H7l3 3"/></svg></span>
+        <span class="raccourci-label">Conversion</span>
+      </button>
+      <button type="button" class="raccourci" data-filtre="upscaler" style="--cat: var(--cat-upscaler)">
+        <span class="raccourci-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H4v5"/><path d="M15 4h5v5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/></svg></span>
+        <span class="raccourci-label">Agrandissement</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="panneau panneau-coffre">
+    <div class="panneau-entete panneau-entete-coffre">
+      <div>
+        <h2>🔒 Le coffre</h2>
+        <span class="panneau-sous">Stockage chiffré de bout en bout — voir SECURITY.md</span>
+      </div>
+      <button type="button" class="btn-comprendre" id="coffreSauvegarderBtn" hidden>Créer une sauvegarde</button>
+    </div>
+    <div id="coffreEtatVerrouille" class="coffre-verrouille">
+      <p class="assistant-vide" id="coffreMessageVerrou">Chargement…</p>
+      <button type="button" class="assistant-btn assistant-btn-suivant" id="coffreDeverrouillerBtn" hidden>Déverrouiller le coffre</button>
+    </div>
+    <ul class="liste-historique" id="coffreListe" hidden></ul>
+  </section>
+</div>
+
+<div class="assistant-fond" id="coffreFond" hidden>
+  <div class="assistant" id="coffreBoite" role="dialog" aria-modal="true" aria-labelledby="coffreTitre">
+    <button type="button" class="assistant-fermer" id="coffreFermer" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <div id="coffreAuthCorps"></div>
+  </div>
+</div>
+
+<div class="assistant-fond" id="assistantFond" hidden>
+  <div class="assistant" id="assistant" role="dialog" aria-modal="true" aria-labelledby="assistantTitre">
+    <button type="button" class="assistant-fermer" id="assistantFermer" aria-label="Fermer l'assistant">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <div id="assistantCorps"></div>
+  </div>
+</div>
+
+<script>
+var LOHistorique = (function(){
+  var CLE = 'life-organizer-historique-v1';
+  var MAX_ENTREES = 50;
+
+  function charger(){
+    try {
+      var brut = window.localStorage.getItem(CLE);
+      var liste = brut ? JSON.parse(brut) : [];
+      return Array.isArray(liste) ? liste : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function ajouter(entree){
+    if (!entree.temps) entree.temps = Date.now();
+    try {
+      var liste = charger();
+      liste.push(entree);
+      if (liste.length > MAX_ENTREES) liste = liste.slice(liste.length - MAX_ENTREES);
+      window.localStorage.setItem(CLE, JSON.stringify(liste));
+    } catch (e) {
+      // Stockage plein ou navigateur en navigation privée : l'historique ne
+      // survit pas au rechargement, mais la session en cours continue.
+    }
+    // Le tableau de bord (historique + stats) se tient à jour sans que
+    // chaque appelant ait à y penser : un seul point d'entrée le prévient.
+    document.dispatchEvent(new CustomEvent('lo:historique-maj'));
+  }
+
+  return { charger: charger, ajouter: ajouter };
+})();
+
+// Une seule chronologie pour les commandes du chat et les dépôts de fichier :
+// avant, chacun vivait dans sa propre liste, sans vue d'ensemble de ce qui
+// venait de se passer. `data-sous-commande="depot"` range les cartes de
+// dépôt sous leur propre filtre, au même titre que « ranger » ou « nettoyer ».
+var LOFlux = (function(){
+  var results, empty, filters;
+  var restaurateurs = {};
+
+  function enregistrerRestaurateur(type, fn){
+    restaurateurs[type] = fn;
+  }
+
+  function restaurerTout(){
+    LOHistorique.charger().forEach(function(entree){
+      var fn = restaurateurs[entree.type];
+      if (fn) ajouter(fn(entree));
+    });
+  }
+
+  function init(){
+    results = document.getElementById('results');
+    empty = document.getElementById('empty');
+    filters = document.getElementById('filters');
+    filters.addEventListener('click', function(e){
+      var chip = e.target.closest('.filter-chip');
+      if (!chip) return;
+      filters.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.toggle('active', c === chip); });
+      appliquer();
+    });
+  }
+
+  function ajouter(carte){
+    results.prepend(carte);
+    appliquer();
+  }
+
+  function appliquer(){
+    var actif = filters.querySelector('.filter-chip.active').getAttribute('data-filter');
+    var visibles = 0;
+    results.querySelectorAll('.card').forEach(function(carte){
+      var match = actif === 'tout' || carte.getAttribute('data-sous-commande') === actif;
+      carte.classList.toggle('is-hidden', !match);
+      if (match) visibles++;
+    });
+    if (results.children.length === 0){
+      empty.textContent = "Rien pour l'instant — tape une demande ou dépose un fichier pour commencer.";
+      empty.style.display = 'block';
+    } else if (visibles === 0){
+      empty.textContent = "Rien dans ce filtre pour l'instant.";
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+    }
+    if (window.LOLot) LOLot.rafraichir();
+  }
+
+  return {
+    init: init, ajouter: ajouter, appliquer: appliquer,
+    enregistrerRestaurateur: enregistrerRestaurateur, restaurerTout: restaurerTout,
+  };
+})();
+
+/**
+ * Dépôt groupé.
+ *
+ * **Pourquoi les incertaines ne sont pas cochées par défaut.** Le seuil
+ * `depot.seuil_confiance_auto` sépare déjà ce que le modèle assume de ce qu'il
+ * devine ; cocher tout d'un geste effacerait cette distinction au moment précis
+ * où elle sert. Deux cents photos validées d'un clic dont quinze mal rangées
+ * coûtent plus cher à démêler que les quinze qu'on aurait relues.
+ *
+ * **Séquentiel, pas parallèle.** Chaque dépôt déplace un fichier et écrit une
+ * ligne de journal. Deux cents requêtes lancées ensemble entrelaceraient les
+ * écritures et rendraient un échec illisible ; à la file, un échec nomme son
+ * fichier et les suivants continuent.
+ */
+var LOLot = (function(){
+  var enCours = false;
+
+  function el(id){ return document.getElementById(id); }
+  function cartes(){
+    return Array.prototype.slice.call(
+      document.querySelectorAll('.card.proposition:not(.is-hidden)')
+    ).filter(function(c){ return c._depot && !c._depot.enCours; });
+  }
+  function cochees(){
+    return cartes().filter(function(c){
+      var b = c.querySelector('.carteChoix');
+      return b && b.checked;
+    });
+  }
+
+  /**
+   * L'etat du soir, dans la colonne de droite. Il se lit sur le DOM plutot que
+   * sur un compteur tenu a part : un compteur se desynchronise des qu'une
+   * carte disparait par un chemin qu'on avait oublie, le DOM ne ment jamais.
+   */
+  function etat(){
+    var panneau = el('etatFlux');
+    if (!panneau) return;
+    var attente = cartes().length;
+    var choisis = cochees().length;
+    var incertains = cartes().filter(function(c){ return !c._depot.data.fiable; }).length;
+    var deposes = document.querySelectorAll('.pill.applique').length;
+    var echecs = document.querySelectorAll('.pill.erreur').length;
+
+    panneau.hidden = attente === 0 && deposes === 0 && echecs === 0;
+
+    var poser = function(id, valeur, classe){
+      var e = el(id);
+      e.textContent = String(valeur);
+      e.className = valeur === 0 ? 'rien' : (classe || '');
+    };
+    poser('etatAttente', attente);
+    poser('etatChoisis', choisis);
+    poser('etatIncertains', incertains, 'alerte');
+    poser('etatDeposes', deposes, 'bien');
+  }
+
+  function rafraichir(){
+    etat();
+    var barre = el('barreLot');
+    if (!barre) return;
+    var toutes = cartes();
+    if (enCours) return;
+    var commandes = ['lotTout', 'lotFiables', 'lotAucun', 'lotDeposer'];
+
+    // Plus rien à déposer. La barre ne disparaît que s'il n'y a rien à lire :
+    // sinon elle reste, dépouillée de ses commandes, pour porter le bilan du
+    // lot qui vient de passer — sans quoi « 4 déposés, 1 en échec » s'effacerait
+    // au moment précis où on le cherche des yeux.
+    if (toutes.length < 2){
+      var bilanLisible = !el('lotBilan').hidden;
+      barre.hidden = !bilanLisible;
+      el('lotCompte').textContent = '';
+      commandes.forEach(function(id){ el(id).hidden = bilanLisible; });
+      return;
+    }
+
+    el('lotBilan').hidden = true;
+    commandes.forEach(function(id){ el(id).hidden = false; });
+    barre.hidden = false;
+
+    var choisies = cochees();
+    var incertaines = choisies.filter(function(c){ return !c._depot.data.fiable; }).length;
+    var texte = choisies.length + ' sur ' + toutes.length + ' sélectionné' + (choisies.length > 1 ? 's' : '');
+    if (incertaines > 0){
+      texte += '<span class="ecarte">dont ' + incertaines + ' au classement incertain — relis-les avant de valider</span>';
+    } else if (choisies.length < toutes.length){
+      texte += '<span class="ecarte">' + (toutes.length - choisies.length) + ' laissée(s) de côté</span>';
+    }
+    el('lotCompte').innerHTML = texte;
+
+    var bouton = el('lotDeposer');
+    bouton.disabled = choisies.length === 0;
+    bouton.textContent = choisies.length === 0 ? 'Déposer' : 'Déposer les ' + choisies.length;
+  }
+
+  function cocher(filtre){
+    cartes().forEach(function(c){
+      var b = c.querySelector('.carteChoix');
+      if (b) b.checked = filtre(c);
+    });
+    rafraichir();
+  }
+
+  function lancer(){
+    var file = cochees();
+    if (file.length === 0 || enCours) return;
+    enCours = true;
+
+    var jauge = el('lotJauge'), remplie = el('lotJaugeRemplie'), bilan = el('lotBilan');
+    var bouton = el('lotDeposer');
+    jauge.hidden = false; bilan.hidden = true; bilan.className = 'bilan';
+    bouton.disabled = true;
+    el('lotTout').disabled = el('lotFiables').disabled = el('lotAucun').disabled = true;
+
+    var faits = 0, reussis = 0, echecs = [];
+
+    function avancer(){
+      el('lotCompte').textContent = 'Dépôt en cours — ' + faits + ' sur ' + file.length;
+      remplie.style.width = Math.round((faits / file.length) * 100) + '%';
+    }
+
+    function suivant(){
+      if (faits >= file.length){
+        enCours = false;
+        jauge.hidden = true;
+        el('lotTout').disabled = el('lotFiables').disabled = el('lotAucun').disabled = false;
+        bilan.hidden = false;
+        if (echecs.length === 0){
+          bilan.textContent = reussis + ' fichier' + (reussis > 1 ? 's déposés' : ' déposé') + '. Rien n\u2019est resté en route.';
+        } else {
+          bilan.className = 'bilan echec';
+          bilan.textContent = reussis + ' déposé(s), ' + echecs.length + ' en échec : ' + echecs.slice(0, 3).join(', ') +
+            (echecs.length > 3 ? ' et ' + (echecs.length - 3) + ' autre(s)' : '') + '. Les cartes concernées sont restées à l\u2019écran.';
+        }
+        rafraichir();
+        return;
+      }
+      var carte = file[faits];
+      window.LODepot.deposerUne(carte).then(function(resultat){
+        faits++;
+        if (resultat && resultat.ok) reussis++;
+        else echecs.push(carte._depot.data.nom_fichier);
+        avancer();
+        suivant();
+      });
+    }
+
+    avancer();
+    suivant();
+  }
+
+  function init(){
+    var barre = el('barreLot');
+    if (!barre) return;
+    el('lotTout').addEventListener('click', function(){ cocher(function(){ return true; }); });
+    el('lotFiables').addEventListener('click', function(){ cocher(function(c){ return c._depot.data.fiable; }); });
+    el('lotAucun').addEventListener('click', function(){ cocher(function(){ return false; }); });
+    el('lotDeposer').addEventListener('click', lancer);
+    document.getElementById('results').addEventListener('change', function(e){
+      if (e.target.classList.contains('carteChoix')) rafraichir();
+    });
+  }
+
+  return { init: init, rafraichir: rafraichir };
+})();
+
+(function(){
+  var CLE_THEME = 'life-organizer-theme';
+  var fab = document.getElementById('themeFab');
+  var choix;
+  try { choix = window.localStorage.getItem(CLE_THEME); } catch (e) { choix = null; }
+
+  // Sombre par défaut, sans consulter la préférence système : c'est
+  // l'identité du produit, pas une question de confort de lecture qu'on
+  // laisserait à l'OS. Seul un choix explicite (le bouton) bascule en clair.
+  var isDark = choix ? choix === 'dark' : true;
+  if (choix) document.documentElement.setAttribute('data-theme', choix);
+  fab.setAttribute('aria-pressed', String(isDark));
+
+  fab.addEventListener('click', function(){
+    isDark = !isDark;
+    var theme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    fab.setAttribute('aria-pressed', String(isDark));
+    try { window.localStorage.setItem(CLE_THEME, theme); } catch (e) { /* tant pis, le choix ne survivra pas au rechargement */ }
+  });
+})();
+
+(function(){
+  var LABELS = {
+    ranger: 'Rangement', nettoyer: 'Nettoyage', convertir: 'Conversion',
+    upscaler: 'Agrandissement', verifier: 'Vérification'
+  };
+  var PILL_LABEL = { simulation: 'simulation', applique: 'appliqué', erreur: 'erreur' };
+
+  var form = document.getElementById('promptForm');
+  var input = document.getElementById('promptInput');
+  var submitBtn = document.getElementById('promptSubmit');
+
+  LOFlux.init();
+  LOLot.init();
+
+  function heure(){
+    var d = new Date();
+    return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' }) + ' · ' +
+           d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  function creerCarte(data, texteOriginal){
+    var card = document.createElement('div');
+    card.className = 'card';
+
+    if (!data.reconnue){
+      card.setAttribute('data-sous-commande', '');
+      card.innerHTML =
+        '<div class="row1">' +
+          '<span class="title">« ' + escapeHtml(texteOriginal) + ' »</span>' +
+          '<span class="pill erreur">non reconnue</span>' +
+        '</div>' +
+        '<div class="message">' + escapeHtml(data.message) + '</div>' +
+        '<div class="when">' + heure() + '</div>';
+      return card;
+    }
+
+    card.setAttribute('data-sous-commande', data.sous_commande);
+    card.setAttribute('data-code', String(data.code));
+
+    var titre = LABELS[data.sous_commande] || data.sous_commande;
+    if (data.dossiers && data.dossiers.length) titre += ' — ' + data.dossiers.join(', ');
+
+    var actions = '';
+    if (data.statut === 'simulation' && data.code === 0 && data.sous_commande !== 'verifier'){
+      actions =
+        '<div class="actions">' +
+          '<button type="button" class="btn-appliquer">Appliquer pour de vrai</button>' +
+          '<span class="note-simulation">rien n\'a encore bougé</span>' +
+        '</div>';
+    }
+
+    card.innerHTML =
+      '<div class="row1">' +
+        '<span class="title">' + escapeHtml(titre) + '</span>' +
+        '<span class="pill ' + data.statut + '">' + PILL_LABEL[data.statut] + '</span>' +
+      '</div>' +
+      '<div class="commande">$ ' + escapeHtml(data.commande_texte) + '</div>' +
+      (data.sortie ? '<div class="sortie">' + escapeHtml(data.sortie) + '</div>' : '') +
+      actions +
+      '<div class="when">' + heure() + '</div>';
+
+    var btn = card.querySelector('.btn-appliquer');
+    if (btn){
+      btn.addEventListener('click', function(){
+        btn.disabled = true;
+        btn.textContent = 'Application…';
+        envoyer(texteOriginal, true, card);
+      });
+    }
+    return card;
+  }
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function envoyer(texte, appliquer, carteExistante){
+    return fetch('/api/commande', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texte: texte, appliquer: !!appliquer })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var carte = creerCarte(data, texte);
+      if (carteExistante && carteExistante.parentNode){
+        carteExistante.replaceWith(carte);
+        LOFlux.appliquer();
+      } else {
+        LOFlux.ajouter(carte);
+      }
+      LOHistorique.ajouter({ type: 'chat', texte: texte, data: data });
+      return data;
+    })
+    .catch(function(err){
+      var carte = document.createElement('div');
+      carte.className = 'card';
+      carte.setAttribute('data-sous-commande', '');
+      carte.innerHTML =
+        '<div class="row1"><span class="title">Le serveur ne répond pas</span><span class="pill erreur">erreur</span></div>' +
+        '<div class="message">' + escapeHtml(String(err)) + '</div>';
+      if (carteExistante && carteExistante.parentNode){ carteExistante.replaceWith(carte); LOFlux.appliquer(); }
+      else { LOFlux.ajouter(carte); }
+    });
+  }
+
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){
+      e.preventDefault();
+      if (typeof form.requestSubmit === 'function') form.requestSubmit();
+      else form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var texte = input.value.trim();
+    if (!texte) return;
+    submitBtn.disabled = true;
+    var texteBtn = submitBtn.textContent;
+    submitBtn.textContent = '…';
+    envoyer(texte, false).finally(function(){
+      submitBtn.disabled = false;
+      submitBtn.textContent = texteBtn;
+      input.value = '';
+      input.focus();
+    });
+  });
+
+  LOFlux.enregistrerRestaurateur('chat', function(entree){
+    return creerCarte(entree.data, entree.texte);
+  });
+})();
+
+(function(){
+  var LABELS_CATEGORIE = {
+    papier_administratif: 'Papier administratif',
+    photo_personnelle: 'Photo personnelle',
+    video_projet_creatif: 'Vidéo / projet créatif',
+  };
+
+  var dropzone = document.getElementById('dropzone');
+  var input = document.getElementById('depotInput');
+
+  // La liste figée dans l'attribut `accept` sert de repli immédiat ; dès que
+  // le serveur répond, elle est remplacée par celle que `depot_traitement`
+  // accepte vraiment, pour ne jamais dériver silencieusement l'une de l'autre.
+  fetch('/api/depot/formats').then(function(r){ return r.json(); }).then(function(d){
+    if (d && d.extensions && d.extensions.length) input.setAttribute('accept', d.extensions.join(','));
+  }).catch(function(){ /* le repli codé dans le HTML reste valable */ });
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function formatTaille(octets){
+    if (octets < 1024) return octets + ' o';
+    if (octets < 1024 * 1024) return (octets / 1024).toFixed(0) + ' Ko';
+    return (octets / (1024 * 1024)).toFixed(1) + ' Mo';
+  }
+
+  function carteEnAttente(nomFichier, taille){
+    var carte = document.createElement('div');
+    carte.className = 'card proposition';
+    carte.setAttribute('data-sous-commande', 'depot');
+    var suffixe = taille > 15 * 1024 * 1024 ? ' — gros fichier, l\'analyse prendra un peu plus longtemps' : '';
+    carte.classList.add('attente');
+    carte.innerHTML =
+      '<div class="row1"><span class="title">' + escapeHtml(nomFichier) + '</span>' +
+      '<span class="when">' + formatTaille(taille) + '</span></div>' +
+      '<div class="depot-etat"><span class="dot-pulse"></span><span>Analyse en cours…' + suffixe + '</span></div>' +
+      // Les blocs reprennent la forme de la vraie proposition — description,
+      // catégorie, bouton — pour que la carte ne change pas de taille au moment
+      // où elle se remplit. Un saut de mise en page a le prix d'une attente.
+      '<div class="squelette" aria-hidden="true">' +
+        '<div class="os large"></div><div class="os moyen"></div><div class="os bouton"></div>' +
+      '</div>';
+    return carte;
+  }
+
+  function carteErreur(nomFichier, message){
+    var carte = document.createElement('div');
+    carte.className = 'card proposition';
+    carte.setAttribute('data-sous-commande', 'depot');
+    carte.innerHTML =
+      '<div class="row1"><span class="title">' + escapeHtml(nomFichier) + '</span>' +
+      '<span class="pill erreur">erreur</span></div><div class="message">' + escapeHtml(message) + '</div>';
+    return carte;
+  }
+
+  function carteDeposee(nomFichier, destination, note){
+    var carte = document.createElement('div');
+    carte.className = 'card proposition';
+    carte.setAttribute('data-sous-commande', 'depot');
+    carte.innerHTML = '<div class="row1"><span class="title">' + escapeHtml(nomFichier) +
+      '</span><span class="pill applique">déposé</span></div>' +
+      (note ? '<div class="message">' + escapeHtml(note) + '</div>' : '') +
+      '<div class="destination">' + escapeHtml(destination) + '</div>' +
+      '<div class="actions"></div>';
+    carte.querySelector('.actions').appendChild(boutonOuvrirDossier(destination));
+    return carte;
+  }
+
+  function formatDate(iso){
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+    } catch (e){ return iso; }
+  }
+
+  function boutonOuvrirDossier(chemin){
+    var bouton = document.createElement('button');
+    bouton.type = 'button';
+    bouton.className = 'btn-annuler';
+    bouton.textContent = 'Ouvrir le dossier';
+    bouton.addEventListener('click', function(){
+      bouton.disabled = true;
+      fetch('/api/depot/ouvrir_dossier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chemin: chemin }),
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(resultat){
+          bouton.disabled = false;
+          if (!resultat.ok) bouton.title = resultat.erreur || 'Impossible d’ouvrir le dossier.';
+        })
+        .catch(function(){ bouton.disabled = false; });
+    });
+    return bouton;
+  }
+
+  /**
+   * Dépose une carte, et rend une promesse qui **ne rejette jamais** : le dépôt
+   * groupé enchaîne dessus, et un échec au milieu d'une file de deux cents ne
+   * doit pas emporter les cent quatre-vingt-dix-huit suivants. L'état vit sur
+   * la carte (`_depot`) et non dans une fermeture, pour que la barre de lot
+   * puisse lire la catégorie corrigée à la main avant de valider.
+   */
+  function deposerUne(carte){
+    var etat = carte._depot;
+    if (!etat || etat.enCours) return Promise.resolve({ ok: false, erreur: 'Dépôt déjà en cours.' });
+    etat.enCours = true;
+    var data = etat.data;
+    var bouton = carte.querySelector('.btn-appliquer');
+    if (bouton){ bouton.disabled = true; bouton.textContent = 'Dépôt…'; }
+
+    return fetch('/api/depot/confirmer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: data.id, projet: data.projet, categorie: etat.categorie(),
+      }),
+    })
+      .then(function(r){ return r.json(); })
+      .then(function(resultat){
+        if (!resultat.ok){
+          carte.replaceWith(carteErreur(data.nom_fichier, resultat.erreur));
+          LOFlux.appliquer();
+          LOHistorique.ajouter({ type: 'depot', phase: 'erreur', nomFichier: data.nom_fichier, message: resultat.erreur });
+          return resultat;
+        }
+        carte.replaceWith(carteDeposee(data.nom_fichier, resultat.destination));
+        LOFlux.appliquer();
+        LOHistorique.ajouter({ type: 'depot', phase: 'depose', nomFichier: data.nom_fichier, destination: resultat.destination });
+        return resultat;
+      })
+      .catch(function(err){
+        etat.enCours = false;
+        if (bouton){ bouton.disabled = false; bouton.textContent = 'Déposer ici'; }
+        // Un `.message` existe déjà sur toute proposition — c'est la raison du
+        // classement. L'ancien code testait sa présence avant d'écrire l'erreur,
+        // qui n'apparaissait donc jamais. On ajoute, on ne conditionne pas.
+        var message = 'Le serveur ne répond pas : ' + String(err);
+        carte.insertAdjacentHTML('beforeend', '<div class="message">' + escapeHtml(message) + '</div>');
+        return { ok: false, erreur: message };
+      });
+  }
+
+  function carteDeposeeCoffre(nomFichier){
+    var carte = document.createElement('div');
+    carte.className = 'card proposition';
+    carte.setAttribute('data-sous-commande', 'depot');
+    carte.innerHTML = '<div class="row1"><span class="title">' + escapeHtml(nomFichier) +
+      '</span><span class="pill applique">🔒 chiffré dans le coffre</span></div>' +
+      '<div class="message">Consultable uniquement depuis le panneau « Le coffre », une fois déverrouillé — voir SECURITY.md.</div>';
+    return carte;
+  }
+
+  function construireProposition(data, fichierOriginal){
+    var options = data.categories_possibles.map(function(cat){
+      var choisi = cat === data.categorie ? ' selected' : '';
+      return '<option value="' + cat + '"' + choisi + '>' + (LABELS_CATEGORIE[cat] || cat) + '</option>';
+    }).join('');
+
+    var carte = document.createElement('div');
+    carte.className = 'card proposition' + (data.fiable ? '' : ' incertain');
+    carte.setAttribute('data-sous-commande', 'depot');
+    carte.innerHTML =
+      '<div class="row1">' +
+        '<span class="titre-lot">' +
+          '<input type="checkbox" class="carteChoix"' + (data.fiable ? ' checked' : '') +
+            ' aria-label="Sélectionner ce fichier pour un dépôt groupé">' +
+          '<span class="title">' + escapeHtml(data.nom_fichier) + '</span>' +
+        '</span>' +
+        '<span class="pill ' + (data.fiable ? 'applique' : 'simulation') + '" ' +
+          'title="À quel point le modèle de vision est sûr de sa catégorie. ' +
+          'En dessous du seuil réglé dans la configuration (depot.seuil_confiance_auto), ' +
+          'la proposition reste affichée mais marquée incertaine plutôt que devinée en silence.">' +
+          (data.confiance * 100).toFixed(0) + '% confiance' +
+        '</span>' +
+      '</div>' +
+      (data.fiable ? '' : '<div class="incertain">Classement incertain — vérifie la catégorie avant de déposer.</div>') +
+      '<div class="message">' + escapeHtml(data.raison) + '</div>' +
+      '<label class="type-label" style="display:block;margin-top:10px;">Catégorie' +
+        '<select class="categorieSelect" style="display:block;margin-top:4px;">' + options + '</select>' +
+      '</label>' +
+      '<div class="destination">' + escapeHtml(data.destination_apercu) + '</div>' +
+      '<label class="type-label" style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer;">' +
+        '<input type="checkbox" class="coffreCase">' +
+        '🔒 Stocker chiffré dans le coffre, pas dans le dossier Drive habituel' +
+      '</label>' +
+      '<div class="assistant-vide coffreNote" hidden>Le contenu a été lu brièvement, en clair, par l\'analyse ci-dessus pour proposer une catégorie — il n\'est jamais conservé en clair : seule la version chiffrée sera stockée.</div>' +
+      '<div class="actions">' +
+        '<button type="button" class="btn-appliquer">Déposer ici</button>' +
+        '<button type="button" class="btn-annuler">Laisser de côté</button>' +
+        '<button type="button" class="btn-comprendre" hidden>' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3.5 11 6l2.5-1L15 7.5 17.5 8l-1 2.5L18 13l-2.5 1L15 16.5 12.5 16 11 18.5 9.5 16 7 16.5 6 13l-2.5-1.5L5 9 4 6.5 6.5 6 8 3.5"/><circle cx="11.5" cy="11.5" r="2.2"/></svg>' +
+          'Comprendre ce document' +
+        '</button>' +
+      '</div>';
+
+    var select = carte.querySelector('.categorieSelect');
+    var destinationEl = carte.querySelector('.destination');
+    var boutonComprendre = carte.querySelector('.btn-comprendre');
+    var caseCoffre = carte.querySelector('.coffreCase');
+    var noteCoffre = carte.querySelector('.coffreNote');
+    var categorieChoisie = data.categorie;
+    var reponseChamps = null; // le résultat de /api/depot/champs, une fois connu — réutilisé par « Comprendre ce document »
+    carte._depot = {
+      data: data, enCours: false, categorie: function(){ return categorieChoisie; },
+    };
+
+    // Le bouton n'existe que pour un document administratif : ailleurs, il
+    // n'y a rien de sensé à « comprendre » (une photo n'a pas de champ à
+    // remplir), et le montrer partout ferait croire à une capacité qui n'agit
+    // que sur cette seule catégorie.
+    function actualiserBoutonComprendre(){
+      boutonComprendre.hidden = categorieChoisie !== 'papier_administratif';
+    }
+    actualiserBoutonComprendre();
+
+    // Appelé automatiquement pour un document administratif : de quoi
+    // préremplir « Comprendre ce document » sans geste supplémentaire, une
+    // seule fois par carte.
+    var champsEnCours = false;
+    function chargerChamps(){
+      if (reponseChamps || champsEnCours || categorieChoisie !== 'papier_administratif') return;
+      champsEnCours = true;
+      fetch('/api/depot/champs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: data.id }),
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(reponse){
+          champsEnCours = false;
+          if (!reponse.ok) return; // silencieux : ce n'est pas l'action demandée par l'utilisateur, une carte d'erreur serait de trop
+          reponseChamps = reponse;
+        })
+        .catch(function(){ champsEnCours = false; });
+    }
+    chargerChamps();
+
+    caseCoffre.addEventListener('change', function(){ noteCoffre.hidden = !caseCoffre.checked; });
+
+    select.addEventListener('change', function(){
+      categorieChoisie = select.value;
+      var destinations = data.destinations_par_categorie || {};
+      destinationEl.textContent = destinations[categorieChoisie] || data.destination_apercu;
+      actualiserBoutonComprendre();
+      chargerChamps();
+    });
+
+    carte.querySelector('.btn-annuler').addEventListener('click', function(){
+      carte.remove();
+      LOFlux.appliquer();
+    });
+
+    carte.querySelector('.btn-appliquer').addEventListener('click', function(){
+      if (!caseCoffre.checked){ deposerUne(carte); return; }
+      if (!fichierOriginal){
+        carte.insertAdjacentHTML('beforeend', '<div class="message">Fichier d\'origine perdu (page rechargée ?) — impossible de le chiffrer. Redépose-le.</div>');
+        return;
+      }
+      if (!window.LOCoffre || !window.LOCoffre.estDeverrouille()){
+        carte.insertAdjacentHTML('beforeend', '<div class="message">Déverrouille d\'abord le coffre (panneau « Le coffre » en bas de page), puis reclique ici.</div>');
+        if (window.LOCoffre) window.LOCoffre.ouvrirFenetre();
+        return;
+      }
+      var bouton = carte.querySelector('.btn-appliquer');
+      bouton.disabled = true; bouton.textContent = 'Chiffrement…';
+      window.LOCoffre.deposerFichier(fichierOriginal, { categorie: categorieChoisie }).then(function(){
+        carte.replaceWith(carteDeposeeCoffre(data.nom_fichier));
+        LOFlux.appliquer();
+        LOHistorique.ajouter({ type: 'depot', phase: 'depose', nomFichier: data.nom_fichier, destination: '🔒 le coffre' });
+      }).catch(function(err){
+        bouton.disabled = false; bouton.textContent = 'Déposer ici';
+        carte.insertAdjacentHTML('beforeend', '<div class="message">Échec du chiffrement : ' + escapeHtml(String(err.message || err)) + '</div>');
+      });
+    });
+
+    boutonComprendre.addEventListener('click', function(){
+      if (window.LOAssistant) window.LOAssistant.ouvrir(data.id, data.nom_fichier, reponseChamps);
+    });
+
+    return carte;
+  }
+
+  function analyser(fichier){
+    var placeholder = carteEnAttente(fichier.name, fichier.size);
+    LOFlux.ajouter(placeholder);
+
+    var donnees = new FormData();
+    donnees.append('fichier', fichier);
+
+    return fetch('/api/depot/analyser', { method: 'POST', body: donnees })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data.ok){
+          placeholder.replaceWith(carteErreur(fichier.name, data.erreur));
+          LOFlux.appliquer();
+          return;
+        }
+        if (data.deja_depose){
+          var note = 'Déjà déposé le ' + formatDate(data.depose_le) + ' — non renvoyé à l\'API de vision.';
+          placeholder.replaceWith(carteDeposee(data.nom_fichier, data.destination, note));
+          LOFlux.appliquer();
+          LOHistorique.ajouter({ type: 'depot', phase: 'depose', nomFichier: data.nom_fichier, destination: data.destination });
+          return;
+        }
+        placeholder.replaceWith(construireProposition(data, fichier));
+        LOFlux.appliquer();
+      })
+      .catch(function(err){
+        placeholder.replaceWith(carteErreur(fichier.name, 'Le serveur ne répond pas : ' + err));
+        LOFlux.appliquer();
+      });
+  }
+
+  // Trois analyses à la fois au plus : au-delà, un dépôt groupé de dix ou
+  // vingt fichiers partirait d'un coup vers l'API de vision et risquerait le
+  // 429 (trop de requêtes) en rafale plutôt qu'un simple ralentissement.
+  var MAX_ANALYSES_SIMULTANEES = 3;
+
+  function analyserPlusieurs(fichiers){
+    var enAttente = Array.prototype.slice.call(fichiers);
+    var enCours = 0;
+
+    function suivant(){
+      while (enCours < MAX_ANALYSES_SIMULTANEES && enAttente.length){
+        var fichier = enAttente.shift();
+        enCours++;
+        analyser(fichier).finally(function(){
+          enCours--;
+          suivant();
+        });
+      }
+    }
+
+    suivant();
+  }
+
+  // Choisir des fichiers ne les envoie pas tout de suite : une liste
+  // d'attente s'affiche d'abord, pour retirer celui qui s'est glissé par
+  // erreur avant de dépenser un appel à l'API de vision pour chacun.
+  var zoneEnAttente = document.getElementById('depotEnAttente');
+  var fichiersEnAttente = [];
+
+  function afficherEnAttente(){
+    if (!fichiersEnAttente.length){
+      zoneEnAttente.hidden = true;
+      zoneEnAttente.innerHTML = '';
+      return;
+    }
+    zoneEnAttente.hidden = false;
+    var items = fichiersEnAttente.map(function(f, i){
+      return '<li><span>' + escapeHtml(f.name) + ' <span class="mono">(' + formatTaille(f.size) + ')</span></span>' +
+        '<button type="button" data-i="' + i + '" aria-label="Retirer">✕</button></li>';
+    }).join('');
+    zoneEnAttente.innerHTML =
+      '<ul>' + items + '</ul>' +
+      '<div class="actions">' +
+        '<button type="button" class="btn-appliquer" id="btnLancerAnalyse">Analyser ' + fichiersEnAttente.length +
+          ' fichier' + (fichiersEnAttente.length > 1 ? 's' : '') + '</button>' +
+        '<button type="button" class="btn-annuler" id="btnViderAttente">Tout retirer</button>' +
+      '</div>';
+    zoneEnAttente.querySelectorAll('li button').forEach(function(bouton){
+      bouton.addEventListener('click', function(){
+        fichiersEnAttente.splice(Number(bouton.getAttribute('data-i')), 1);
+        afficherEnAttente();
+      });
+    });
+    document.getElementById('btnViderAttente').addEventListener('click', function(){
+      fichiersEnAttente = [];
+      afficherEnAttente();
+    });
+    document.getElementById('btnLancerAnalyse').addEventListener('click', function(){
+      var lot = fichiersEnAttente;
+      fichiersEnAttente = [];
+      afficherEnAttente();
+      analyserPlusieurs(lot);
+    });
+  }
+
+  function mettreEnAttente(fichiers){
+    Array.prototype.forEach.call(fichiers, function(f){ fichiersEnAttente.push(f); });
+    afficherEnAttente();
+  }
+
+  input.addEventListener('change', function(){
+    if (input.files && input.files.length) mettreEnAttente(input.files);
+    input.value = '';
+  });
+
+  // Un simple `dragleave` se déclenche aussi en survolant l'icône ou le texte
+  // à l'intérieur de la zone (ce sont des éléments à part entière pour le
+  // navigateur) : sans compteur, la bordure clignote à chaque pixel traversé
+  // au lieu de rester stable pendant tout le survol. Le compteur ne retombe
+  // à zéro — et donc l'état actif ne s'éteint — qu'en sortant vraiment.
+  var profondeurGlisse = 0;
+  var texteZone = dropzone.querySelector('.texte');
+  var texteReposHTML = texteZone.innerHTML;
+
+  function entrerSurvol(){
+    dropzone.classList.add('survole');
+    texteZone.innerHTML = '<strong>Lâche-le ici</strong> pour lancer l’analyse';
+  }
+  function sortirSurvol(){
+    dropzone.classList.remove('survole');
+    texteZone.innerHTML = texteReposHTML;
+  }
+
+  dropzone.addEventListener('dragenter', function(e){
+    e.preventDefault();
+    profondeurGlisse++;
+    entrerSurvol();
+  });
+  dropzone.addEventListener('dragover', function(e){ e.preventDefault(); });
+  dropzone.addEventListener('dragleave', function(){
+    profondeurGlisse = Math.max(0, profondeurGlisse - 1);
+    if (profondeurGlisse === 0) sortirSurvol();
+  });
+  dropzone.addEventListener('dragend', function(){ profondeurGlisse = 0; sortirSurvol(); });
+  dropzone.addEventListener('drop', function(e){
+    e.preventDefault();
+    profondeurGlisse = 0;
+    sortirSurvol();
+    var fichiers = e.dataTransfer && e.dataTransfer.files;
+    if (fichiers && fichiers.length) mettreEnAttente(fichiers);
+  });
+
+  // Seuls les dépôts déjà résolus (posés ou en échec) sont conservés : une
+  // proposition encore en attente de validation référence un fichier
+  // temporaire qui peut avoir été purgé entre-temps, la restaurer comme si
+  // elle restait valable tromperait plus qu'elle n'aiderait.
+  LOFlux.enregistrerRestaurateur('depot', function(entree){
+    return entree.phase === 'depose'
+      ? carteDeposee(entree.nomFichier, entree.destination)
+      : carteErreur(entree.nomFichier, entree.message);
+  });
+
+  // La barre de dépôt groupé enchaîne les cartes une à une par ce seul point
+  // d'entrée : le bouton de la carte et le lot font exactement le même geste.
+  window.LODepot = { deposerUne: deposerUne };
+
+  LOFlux.restaurerTout();
+})();
+
+// Assistant de lecture des documents administratifs : appelle
+// `/api/depot/champs` (une vraie lecture par le modèle de vision, pas une
+// liste figée) puis guide pas à pas, un champ à la fois. Les valeurs tapées
+// restent dans la page — rien n'est écrit dans le PDF ni envoyé où que ce
+// soit d'autre : c'est un guide, pas un remplisseur de formulaire automatique.
+window.LOAssistant = (function(){
+  var fond = document.getElementById('assistantFond');
+  var corps = document.getElementById('assistantCorps');
+  var fermer = document.getElementById('assistantFermer');
+  if (!fond || !corps) return { ouvrir: function(){} };
+
+  var etat = null; // { id, nomFichier, typeDocument, resume, champs, pas, reponses, chargement, erreur }
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function fermerAssistant(){
+    fond.hidden = true;
+    corps.innerHTML = '';
+    etat = null;
+  }
+
+  function rendreProgres(){
+    var n = etat.champs.length;
+    var points = '';
+    for (var i = 0; i < n; i++){
+      var cls = i < etat.pas ? 'fait' : (i === etat.pas ? 'actif' : '');
+      points += '<span class="' + cls + '"></span>';
+    }
+    return '<div class="assistant-progres">' + points + '</div>';
+  }
+
+  function rendreChargement(){
+    corps.innerHTML =
+      '<div class="assistant-eyebrow">Documents administratifs</div>' +
+      '<h3>' + escapeHtml(etat.nomFichier) + '</h3>' +
+      '<p class="assistant-resume"><span class="dot-pulse"></span> Lecture du document en cours…</p>';
+  }
+
+  function rendreErreur(){
+    corps.innerHTML =
+      '<div class="assistant-eyebrow">Documents administratifs</div>' +
+      '<h3>' + escapeHtml(etat.nomFichier) + '</h3>' +
+      '<div class="assistant-erreur">' + escapeHtml(etat.erreur) + '</div>' +
+      '<div class="assistant-nav"><span></span><button type="button" class="assistant-btn assistant-btn-suivant" id="assistantOk">Fermer</button></div>';
+    document.getElementById('assistantOk').addEventListener('click', fermerAssistant);
+  }
+
+  function rendreSansChamps(){
+    corps.innerHTML =
+      '<div class="assistant-eyebrow">' + escapeHtml(etat.typeDocument) + '</div>' +
+      '<h3>' + escapeHtml(etat.nomFichier) + '</h3>' +
+      '<p class="assistant-resume">' + escapeHtml(etat.resume) + '</p>' +
+      '<p class="assistant-vide">Ce document ne semble comporter aucun champ à remplir.</p>' +
+      '<div class="assistant-nav"><span></span><button type="button" class="assistant-btn assistant-btn-suivant" id="assistantOk">Fermer</button></div>';
+    document.getElementById('assistantOk').addEventListener('click', fermerAssistant);
+  }
+
+  function rendreChamp(){
+    var n = etat.champs.length;
+    var champ = etat.champs[etat.pas];
+    var valeur = etat.reponses[etat.pas] || '';
+    corps.innerHTML =
+      '<div class="assistant-eyebrow">' + escapeHtml(etat.typeDocument) + '</div>' +
+      '<h3>' + escapeHtml(etat.nomFichier) + '</h3>' +
+      rendreProgres() +
+      '<div class="assistant-etape" data-pas="' + etat.pas + '">' +
+        '<div class="assistant-etape-compte">Champ ' + (etat.pas + 1) + ' sur ' + n + '</div>' +
+        '<div class="assistant-champ-nom">' + escapeHtml(champ.nom) + '</div>' +
+        '<div class="assistant-champ-explication">' + escapeHtml(champ.explication) + '</div>' +
+        '<input type="text" class="assistant-champ-input" id="assistantValeur" ' +
+          'placeholder="Ta réponse (reste sur cette page, n’est envoyée nulle part)" value="' + escapeHtml(valeur) + '">' +
+      '</div>' +
+      '<div class="assistant-nav">' +
+        '<div class="assistant-nav-gauche">' +
+          (etat.pas > 0 ? '<button type="button" class="assistant-btn assistant-btn-precedent" id="assistantPrecedent">Précédent</button>' : '') +
+        '</div>' +
+        '<button type="button" class="assistant-btn assistant-btn-suivant" id="assistantSuivant">' +
+          (etat.pas === n - 1 ? 'Voir le récapitulatif' : 'Suivant') +
+        '</button>' +
+      '</div>';
+
+    var champInput = document.getElementById('assistantValeur');
+    champInput.focus();
+    function memoriser(){ etat.reponses[etat.pas] = champInput.value; }
+
+    var precedent = document.getElementById('assistantPrecedent');
+    if (precedent) precedent.addEventListener('click', function(){ memoriser(); etat.pas--; rendre(); });
+
+    document.getElementById('assistantSuivant').addEventListener('click', function(){
+      memoriser();
+      etat.pas++;
+      rendre();
+    });
+    champInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter'){ e.preventDefault(); memoriser(); etat.pas++; rendre(); }
+    });
+  }
+
+  function rendreRecap(){
+    var lignes = etat.champs.map(function(champ, i){
+      var valeur = (etat.reponses[i] || '').trim();
+      return '<li><div class="assistant-recap-nom">' + escapeHtml(champ.nom) + '</div>' +
+        '<div class="assistant-recap-valeur' + (valeur ? '' : ' vide') + '">' +
+        escapeHtml(valeur || 'laissé vide') + '</div></li>';
+    }).join('');
+    corps.innerHTML =
+      '<div class="assistant-eyebrow">' + escapeHtml(etat.typeDocument) + '</div>' +
+      '<h3>Récapitulatif</h3>' +
+      '<p class="assistant-resume">Relis avant de reporter ces réponses sur le vrai document — rien ici ne le remplit à ta place.</p>' +
+      '<ul class="assistant-recap-liste">' + lignes + '</ul>' +
+      '<div class="assistant-nav">' +
+        '<div class="assistant-nav-gauche">' +
+          '<button type="button" class="assistant-btn assistant-btn-precedent" id="assistantPrecedent">Précédent</button>' +
+        '</div>' +
+        '<button type="button" class="assistant-btn assistant-btn-suivant" id="assistantCopier">Copier tout</button>' +
+      '</div>';
+
+    document.getElementById('assistantPrecedent').addEventListener('click', function(){
+      etat.pas = etat.champs.length - 1;
+      rendre();
+    });
+    document.getElementById('assistantCopier').addEventListener('click', function(){
+      var texte = etat.champs.map(function(champ, i){
+        return champ.nom + ' : ' + ((etat.reponses[i] || '').trim() || '(vide)');
+      }).join('\n');
+      var bouton = document.getElementById('assistantCopier');
+      var copie = function(){ bouton.textContent = 'Copié'; setTimeout(function(){ bouton.textContent = 'Copier tout'; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(texte).then(copie).catch(function(){});
+      }
+    });
+  }
+
+  function rendre(){
+    if (etat.chargement) return rendreChargement();
+    if (etat.erreur) return rendreErreur();
+    if (!etat.champs.length) return rendreSansChamps();
+    if (etat.pas >= etat.champs.length) return rendreRecap();
+    return rendreChamp();
+  }
+
+  function remplirDepuisReponse(data){
+    etat.chargement = false;
+    if (!data.ok){ etat.erreur = data.erreur || 'La lecture du document a échoué.'; rendre(); return; }
+    etat.typeDocument = data.type_document || 'Document';
+    etat.resume = data.resume || '';
+    etat.champs = data.champs || [];
+    etat.reponses = etat.champs.map(function(){ return ''; });
+    rendre();
+  }
+
+  // `donneesPrechargees` : la carte a déjà appelé /api/depot/champs pour
+  // afficher l'échéance dès l'analyse — inutile de payer un deuxième appel
+  // à l'API de vision pour ouvrir cette fenêtre juste après.
+  function ouvrir(id, nomFichier, donneesPrechargees){
+    etat = { id: id, nomFichier: nomFichier, typeDocument: '', resume: '', champs: [], pas: 0, reponses: [], chargement: true, erreur: '' };
+    fond.hidden = false;
+    rendre();
+
+    if (donneesPrechargees){
+      remplirDepuisReponse(donneesPrechargees);
+      return;
+    }
+
+    fetch('/api/depot/champs', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id }),
+    })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!etat) return; // fermé entre-temps
+        remplirDepuisReponse(data);
+      })
+      .catch(function(err){
+        if (!etat) return;
+        etat.chargement = false;
+        etat.erreur = 'Le serveur ne répond pas : ' + err;
+        rendre();
+      });
+  }
+
+  fermer.addEventListener('click', fermerAssistant);
+  fond.addEventListener('click', function(e){ if (e.target === fond) fermerAssistant(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !fond.hidden) fermerAssistant();
+  });
+
+  return { ouvrir: ouvrir };
+})();
+
+// Le coffre : chiffrement et déchiffrement entièrement dans le navigateur
+// (Web Crypto), avant tout envoi. Ce serveur ne reçoit et ne stocke que des
+// octets chiffrés sous des noms opaques — jamais la phrase secrète, jamais
+// la clé qui en est dérivée. Détails complets dans SECURITY.md.
+window.LOCoffre = (function(){
+  var ITERATIONS = 600000;
+  var TEXTE_VERIF = 'coffre-life-organizer-verification';
+
+  var cle = null;          // CryptoKey non extractible, en mémoire seulement
+  var index = null;        // { objets: { [nomOpaque]: {nom, taille, type, categorie, depose_le} } }
+  var etatServeur = null;  // { initialise: bool } — connu après le premier chargement
+
+  var fond = document.getElementById('coffreFond');
+  var boite = document.getElementById('coffreAuthCorps');
+  var fermer = document.getElementById('coffreFermer');
+  var panneauVerrou = document.getElementById('coffreEtatVerrouille');
+  var messageVerrou = document.getElementById('coffreMessageVerrou');
+  var boutonDeverrouiller = document.getElementById('coffreDeverrouillerBtn');
+  var boutonSauvegarder = document.getElementById('coffreSauvegarderBtn');
+  var listeEl = document.getElementById('coffreListe');
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  // --- Encodage --------------------------------------------------------
+  function b64FromBuf(buf){
+    var octets = new Uint8Array(buf), binaire = '';
+    for (var i = 0; i < octets.length; i++) binaire += String.fromCharCode(octets[i]);
+    return btoa(binaire);
+  }
+  function bufFromB64(b64){
+    var binaire = atob(b64), octets = new Uint8Array(binaire.length);
+    for (var i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
+    return octets.buffer;
+  }
+  // Un seul blob par objet : les 12 premiers octets sont le vecteur
+  // d'initialisation AES-GCM, le reste est le texte chiffré (avec son
+  // étiquette d'authentification déjà incluse par Web Crypto).
+  function empaqueter(ivBuf, cipherBuf){
+    var iv = new Uint8Array(ivBuf), cipher = new Uint8Array(cipherBuf);
+    var tout = new Uint8Array(iv.length + cipher.length);
+    tout.set(iv, 0); tout.set(cipher, iv.length);
+    return tout.buffer;
+  }
+  function depaqueter(buf){
+    var tout = new Uint8Array(buf);
+    return { iv: tout.slice(0, 12), cipher: tout.slice(12) };
+  }
+
+  // --- Cryptographie (Web Crypto, aucune bibliothèque externe) ----------
+  function deriverCle(motDePasse, selBuf, iterations){
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(motDePasse), 'PBKDF2', false, ['deriveKey'])
+      .then(function(cleBase){
+        return crypto.subtle.deriveKey(
+          { name: 'PBKDF2', salt: selBuf, iterations: iterations, hash: 'SHA-256' },
+          cleBase,
+          { name: 'AES-GCM', length: 256 },
+          false, // non extractible : même la console du navigateur ne peut pas en sortir les octets
+          ['encrypt', 'decrypt']
+        );
+      });
+  }
+  function chiffrerOctets(buf){
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, cle, buf)
+      .then(function(cipher){ return empaqueter(iv.buffer, cipher); });
+  }
+  function dechiffrerOctets(buf){
+    var paquet = depaqueter(buf);
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: paquet.iv }, cle, paquet.cipher);
+  }
+  function chiffrerTexte(texte){ return chiffrerOctets(new TextEncoder().encode(texte)); }
+  function dechiffrerTexte(buf){ return dechiffrerOctets(buf).then(function(b){ return new TextDecoder().decode(b); }); }
+
+  function nomOpaque(){
+    var octets = crypto.getRandomValues(new Uint8Array(16));
+    return Array.prototype.map.call(octets, function(o){ return o.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  // --- Index (le seul endroit où nom d'origine et catégorie existent) ---
+  function chargerIndex(){
+    return fetch('/api/coffre/index').then(function(r){ return r.json(); }).then(function(data){
+      if (!data.ok) throw new Error(data.erreur || "Impossible de lire l'index du coffre.");
+      if (!data.existe){ index = { objets: {} }; return index; }
+      return dechiffrerOctets(bufFromB64(data.contenu)).then(function(buf){
+        index = JSON.parse(new TextDecoder().decode(buf));
+        if (!index.objets) index.objets = {};
+        return index;
+      });
+    });
+  }
+  function sauvegarderIndex(){
+    return chiffrerTexte(JSON.stringify(index)).then(function(paquet){
+      return fetch('/api/coffre/index', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contenu: b64FromBuf(paquet) }),
+      }).then(function(r){ return r.json(); });
+    });
+  }
+
+  // --- API publique : déposer, récupérer, supprimer ---------------------
+  function deposerFichier(fichier, meta){
+    if (!cle) return Promise.reject(new Error('Le coffre est verrouillé.'));
+    return fichier.arrayBuffer()
+      .then(function(buf){ return chiffrerOctets(buf); })
+      .then(function(paquet){
+        var nom = nomOpaque();
+        return fetch('/api/coffre/objets/' + nom, {
+          method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: paquet,
+        }).then(function(r){ return r.json(); }).then(function(data){
+          if (!data.ok) throw new Error(data.erreur || 'Échec du dépôt dans le coffre.');
+          index.objets[nom] = {
+            nom: fichier.name, taille: fichier.size, type: fichier.type || 'application/octet-stream',
+            categorie: (meta && meta.categorie) || '', depose_le: new Date().toISOString(),
+          };
+          return sauvegarderIndex().then(function(){ rendreListe(); return nom; });
+        });
+      });
+  }
+
+  function recupererFichier(nom){
+    var info = index.objets[nom];
+    if (!info) return Promise.reject(new Error('Objet inconnu.'));
+    return fetch('/api/coffre/objets/' + nom).then(function(r){
+      if (!r.ok) throw new Error('Objet introuvable sur le disque.');
+      return r.arrayBuffer();
+    }).then(function(buf){ return dechiffrerOctets(buf); })
+      .then(function(clairBuf){ return new Blob([clairBuf], { type: info.type }); });
+  }
+
+  function supprimerFichier(nom){
+    return fetch('/api/coffre/objets/' + nom, { method: 'DELETE' })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data.ok) throw new Error(data.erreur || 'Échec de la suppression.');
+        delete index.objets[nom];
+        return sauvegarderIndex().then(function(){ rendreListe(); });
+      });
+  }
+
+  // --- Rendu de la liste --------------------------------------------------
+  function formatTaille(octets){
+    if (octets < 1024) return octets + ' o';
+    if (octets < 1024 * 1024) return (octets / 1024).toFixed(0) + ' Ko';
+    return (octets / (1024 * 1024)).toFixed(1) + ' Mo';
+  }
+
+  function rendreListe(){
+    if (!cle || !index) return;
+    var noms = Object.keys(index.objets);
+    listeEl.hidden = false;
+    panneauVerrou.hidden = true;
+    boutonSauvegarder.hidden = false;
+    if (!noms.length){
+      listeEl.innerHTML = '<li class="hist-vide">Le coffre est vide pour l\'instant — dépose un document administratif et coche « Stocker chiffré dans le coffre ».</li>';
+      return;
+    }
+    listeEl.innerHTML = noms.map(function(nom){
+      var info = index.objets[nom];
+      return '<li class="coffre-ligne" data-nom="' + nom + '">' +
+        '<span class="hist-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>' +
+        '<span class="hist-corps">' +
+          '<span class="hist-titre">' + escapeHtml(info.nom) + '</span>' +
+          '<span class="hist-detail">' + formatTaille(info.taille) + (info.categorie ? ' · ' + escapeHtml(info.categorie) : '') + '</span>' +
+        '</span>' +
+        '<span class="coffre-ligne-actions">' +
+          '<button type="button" class="coffre-telecharger" data-nom="' + nom + '">Télécharger</button>' +
+          '<button type="button" class="coffre-supprimer" data-nom="' + nom + '">Supprimer</button>' +
+        '</span>' +
+      '</li>';
+    }).join('');
+  }
+
+  listeEl.addEventListener('click', function(e){
+    var boutonTelecharger = e.target.closest('.coffre-telecharger');
+    var boutonSupprimer = e.target.closest('.coffre-supprimer');
+    if (boutonTelecharger){
+      var nom1 = boutonTelecharger.getAttribute('data-nom');
+      var info1 = index.objets[nom1];
+      boutonTelecharger.textContent = '…';
+      recupererFichier(nom1).then(function(blob){
+        boutonTelecharger.textContent = 'Télécharger';
+        var url = URL.createObjectURL(blob);
+        var lien = document.createElement('a');
+        lien.href = url; lien.download = info1.nom;
+        document.body.appendChild(lien); lien.click(); lien.remove();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+      }).catch(function(err){
+        boutonTelecharger.textContent = 'Télécharger';
+        alert('Déchiffrement impossible : ' + err.message);
+      });
+    }
+    if (boutonSupprimer){
+      var nom2 = boutonSupprimer.getAttribute('data-nom');
+      var info2 = index.objets[nom2];
+      if (!confirm('Supprimer définitivement « ' + info2.nom + ' » ? Le fichier sera écrasé puis effacé — aucun retour en arrière possible.')) return;
+      boutonSupprimer.textContent = '…';
+      supprimerFichier(nom2).catch(function(err){ alert('Suppression impossible : ' + err.message); });
+    }
+  });
+
+  boutonSauvegarder.addEventListener('click', function(){
+    boutonSauvegarder.disabled = true;
+    boutonSauvegarder.textContent = 'Sauvegarde en cours…';
+    fetch('/api/coffre/sauvegarde', { method: 'POST' }).then(function(r){ return r.json(); }).then(function(data){
+      boutonSauvegarder.disabled = false;
+      boutonSauvegarder.textContent = 'Créer une sauvegarde';
+      if (!data.ok){ alert('Sauvegarde impossible : ' + data.erreur); return; }
+      alert('Sauvegarde créée : ' + data.dossier);
+    });
+  });
+
+  // --- Ouverture / fermeture de la fenêtre de phrase secrète -------------
+  function fermerFenetre(){ fond.hidden = true; boite.innerHTML = ''; }
+  fermer.addEventListener('click', fermerFenetre);
+  fond.addEventListener('click', function(e){ if (e.target === fond) fermerFenetre(); });
+
+  function rendreFormulaireInitialisation(){
+    boite.innerHTML =
+      '<div class="assistant-eyebrow">Le coffre</div>' +
+      '<h3 id="coffreTitre">Choisis ta phrase secrète</h3>' +
+      '<p class="assistant-resume">Elle chiffre chaque document déposé dans le coffre, entièrement dans ce navigateur. Ce serveur ne la reçoit jamais.</p>' +
+      '<div class="assistant-erreur">⚠️ Il n\'existe aucun moyen de la récupérer si tu l\'oublies. Personne — pas même toi en tant qu\'administrateur — ne peut la retrouver ni contourner le chiffrement : le perdre, c\'est perdre définitivement l\'accès à tout ce que le coffre contient.</div>' +
+      '<div class="coffre-champ-groupe"><label for="coffreMdp1">Phrase secrète</label><input type="password" id="coffreMdp1" class="assistant-champ-input" autocomplete="new-password"></div>' +
+      '<div class="coffre-champ-groupe"><label for="coffreMdp2">Retape-la</label><input type="password" id="coffreMdp2" class="assistant-champ-input" autocomplete="new-password"></div>' +
+      '<div id="coffreErreurInit"></div>' +
+      '<div class="assistant-nav"><span></span><button type="button" class="assistant-btn assistant-btn-suivant" id="coffreValiderInit">Créer le coffre</button></div>';
+
+    document.getElementById('coffreValiderInit').addEventListener('click', function(){
+      var m1 = document.getElementById('coffreMdp1').value;
+      var m2 = document.getElementById('coffreMdp2').value;
+      var zoneErreur = document.getElementById('coffreErreurInit');
+      zoneErreur.innerHTML = '';
+      if (m1.length < 10){
+        zoneErreur.innerHTML = '<p class="assistant-erreur">Au moins 10 caractères — c\'est elle, et elle seule, qui protège tout le coffre.</p>';
+        return;
+      }
+      if (m1 !== m2){
+        zoneErreur.innerHTML = '<p class="assistant-erreur">Les deux phrases ne correspondent pas.</p>';
+        return;
+      }
+      var sel = crypto.getRandomValues(new Uint8Array(16));
+      deriverCle(m1, sel, ITERATIONS).then(function(cleDerivee){
+        cle = cleDerivee;
+        return chiffrerTexte(TEXTE_VERIF);
+      }).then(function(paquetVerif){
+        return fetch('/api/coffre/initialiser', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sel: b64FromBuf(sel.buffer), iterations: ITERATIONS,
+            verificateur_iv: b64FromBuf(depaqueter(paquetVerif).iv.buffer),
+            verificateur_texte: b64FromBuf(depaqueter(paquetVerif).cipher.buffer),
+          }),
+        });
+      }).then(function(r){ return r.json(); }).then(function(data){
+        if (!data.ok){ zoneErreur.innerHTML = '<p class="assistant-erreur">' + escapeHtml(data.erreur) + '</p>'; cle = null; return; }
+        index = { objets: {} };
+        fermerFenetre();
+        rendreListe();
+      }).catch(function(err){
+        zoneErreur.innerHTML = '<p class="assistant-erreur">' + escapeHtml(String(err)) + '</p>';
+        cle = null;
+      });
+    });
+  }
+
+  function rendreFormulaireDeverrouillage(){
+    boite.innerHTML =
+      '<div class="assistant-eyebrow">Le coffre</div>' +
+      '<h3 id="coffreTitre">Entre ta phrase secrète</h3>' +
+      '<p class="assistant-resume">Une seule fois par session — elle reste en mémoire le temps que cette page est ouverte, jamais au-delà.</p>' +
+      '<div class="coffre-champ-groupe"><label for="coffreMdp3">Phrase secrète</label><input type="password" id="coffreMdp3" class="assistant-champ-input" autocomplete="current-password"></div>' +
+      '<div id="coffreErreurOuvrir"></div>' +
+      '<div class="assistant-nav"><span></span><button type="button" class="assistant-btn assistant-btn-suivant" id="coffreValiderOuvrir">Déverrouiller</button></div>';
+
+    var champ = document.getElementById('coffreMdp3');
+    champ.focus();
+
+    function tenter(){
+      var mdp = champ.value;
+      var zoneErreur = document.getElementById('coffreErreurOuvrir');
+      zoneErreur.innerHTML = '<p class="assistant-vide"><span class="dot-pulse"></span> Vérification…</p>';
+      fetch('/api/coffre/cle').then(function(r){ return r.json(); }).then(function(data){
+        if (!data.ok) throw new Error(data.erreur);
+        var sel = bufFromB64(data.sel);
+        return deriverCle(mdp, sel, data.iterations).then(function(cleDerivee){
+          cle = cleDerivee;
+          return dechiffrerTexte(empaqueter(bufFromB64(data.verificateur_iv), bufFromB64(data.verificateur_texte)));
+        });
+      }).then(function(texte){
+        if (texte !== TEXTE_VERIF) throw new Error('Phrase secrète incorrecte.');
+        return chargerIndex();
+      }).then(function(){
+        fermerFenetre();
+        rendreListe();
+      }).catch(function(){
+        cle = null;
+        zoneErreur.innerHTML = '<p class="assistant-erreur">Phrase secrète incorrecte.</p>';
+      });
+    }
+    document.getElementById('coffreValiderOuvrir').addEventListener('click', tenter);
+    champ.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); tenter(); } });
+  }
+
+  function ouvrirFenetre(){
+    fond.hidden = false;
+    if (etatServeur && etatServeur.initialise) rendreFormulaireDeverrouillage();
+    else rendreFormulaireInitialisation();
+  }
+
+  boutonDeverrouiller.addEventListener('click', ouvrirFenetre);
+
+  // --- État au chargement -------------------------------------------------
+  fetch('/api/coffre/etat').then(function(r){ return r.json(); }).then(function(data){
+    if (!data.ok){
+      messageVerrou.textContent = data.erreur || 'Le coffre est indisponible.';
+      return;
+    }
+    etatServeur = data;
+    messageVerrou.textContent = data.initialise
+      ? 'Le coffre existe mais est verrouillé — entre ta phrase secrète pour voir son contenu.'
+      : "Aucun coffre pour l'instant : choisis une phrase secrète pour en créer un.";
+    boutonDeverrouiller.hidden = false;
+    boutonDeverrouiller.textContent = data.initialise ? 'Déverrouiller le coffre' : 'Créer le coffre';
+  }).catch(function(){
+    messageVerrou.textContent = 'Le coffre est indisponible pour l\'instant.';
+  });
+
+  return {
+    estDeverrouille: function(){ return !!cle; },
+    ouvrirFenetre: ouvrirFenetre,
+    deposerFichier: deposerFichier,
+  };
+})();
+
+// Tableau de bord (historique + chiffres de session) et raccourcis de
+// catégorie : lus depuis LOHistorique, jamais inventés — pas de nombre qui
+// prétend mesurer quelque chose (comme un espace disque libéré) sans donnée
+// réelle derrière.
+(function(){
+  var LABELS_HIST = {
+    ranger: 'Rangement', nettoyer: 'Nettoyage', convertir: 'Conversion',
+    upscaler: 'Agrandissement', verifier: 'Vérification'
+  };
+  var ICONES = {
+    ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    erreur: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2.5 18a1.5 1.5 0 0 0 1.3 2.2h16.4a1.5 1.5 0 0 0 1.3-2.2L13.7 3.9a1.5 1.5 0 0 0-2.6 0Z"/></svg>',
+    simulation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4l3 2"/></svg>'
+  };
+
+  var listeEl = document.getElementById('listeHistorique');
+  var statsEl = document.getElementById('statsGrille');
+  if (!listeEl || !statsEl) return;
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function formatRelatif(temps){
+    if (!temps) return '';
+    var diff = Math.max(0, Date.now() - temps);
+    var min = Math.round(diff / 60000);
+    if (min < 1) return "à l'instant";
+    if (min < 60) return 'il y a ' + min + ' min';
+    var h = Math.round(min / 60);
+    if (h < 24) return 'il y a ' + h + ' h';
+    return 'il y a ' + Math.round(h / 24) + ' j';
+  }
+
+  function ligne(entree){
+    var titre, detail, icone, cssIcone = '';
+    if (entree.type === 'depot'){
+      if (entree.phase === 'depose'){
+        titre = entree.nomFichier || 'Fichier déposé';
+        detail = entree.destination || '';
+        icone = ICONES.ok;
+      } else {
+        titre = entree.nomFichier || 'Dépôt en échec';
+        detail = entree.message || '';
+        icone = ICONES.erreur; cssIcone = ' erreur';
+      }
+    } else {
+      var data = entree.data || {};
+      if (data.reconnue === false){
+        titre = 'Commande non reconnue';
+        detail = entree.texte || '';
+        icone = ICONES.erreur; cssIcone = ' erreur';
+      } else {
+        titre = LABELS_HIST[data.sous_commande] || data.sous_commande || entree.texte || 'Commande';
+        detail = data.statut === 'applique' ? 'appliqué pour de vrai' : 'simulation';
+        icone = data.statut === 'applique' ? ICONES.ok : ICONES.simulation;
+      }
+    }
+    var li = document.createElement('li');
+    li.innerHTML =
+      '<span class="hist-icone' + cssIcone + '">' + icone + '</span>' +
+      '<span class="hist-corps">' +
+        '<span class="hist-titre">' + escapeHtml(titre) + '</span>' +
+        (detail ? '<span class="hist-detail">' + escapeHtml(detail) + '</span>' : '') +
+      '</span>' +
+      '<span class="hist-temps">' + formatRelatif(entree.temps) + '</span>';
+    return li;
+  }
+
+  function rafraichirHistorique(){
+    var liste = LOHistorique.charger();
+    listeEl.innerHTML = '';
+    if (!liste.length){
+      var vide = document.createElement('li');
+      vide.className = 'hist-vide';
+      vide.textContent = "Aucune action pour l'instant.";
+      listeEl.appendChild(vide);
+      return;
+    }
+    liste.slice(-6).reverse().forEach(function(entree){ listeEl.appendChild(ligne(entree)); });
+  }
+
+  function rafraichirStats(){
+    var liste = LOHistorique.charger();
+    var deposes = 0, appliques = 0, categories = {};
+    liste.forEach(function(entree){
+      if (entree.type === 'depot' && entree.phase === 'depose') deposes++;
+      if (entree.type === 'chat' && entree.data){
+        if (entree.data.statut === 'applique') appliques++;
+        if (entree.data.sous_commande) categories[entree.data.sous_commande] = true;
+      }
+    });
+    var stats = [
+      { valeur: liste.length, label: 'actions cette session' },
+      { valeur: deposes, label: 'fichiers déposés' },
+      { valeur: appliques, label: 'commandes appliquées' },
+      { valeur: Object.keys(categories).length, label: 'catégories utilisées' }
+    ];
+    statsEl.innerHTML = stats.map(function(s){
+      return '<div class="stat"><div class="stat-valeur">' + s.valeur + '</div><div class="stat-label">' + escapeHtml(s.label) + '</div></div>';
+    }).join('');
+  }
+
+  function rafraichir(){ rafraichirHistorique(); rafraichirStats(); }
+
+  document.addEventListener('lo:historique-maj', rafraichir);
+  rafraichir();
+
+  document.querySelectorAll('.raccourci').forEach(function(bouton){
+    bouton.addEventListener('click', function(){
+      var cible = bouton.getAttribute('data-filtre');
+      var chip = document.querySelector('.filter-chip[data-filter="' + cible + '"]');
+      if (chip) chip.click();
+      var contenu = document.querySelector('.contenu');
+      if (contenu) contenu.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+})();
+</script>
+</body>
+</html>

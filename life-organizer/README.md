@@ -31,19 +31,27 @@ life-organizer/
 ├── organizer.py              point d'entrée unique : une sous-commande par module
 ├── organizer_config.json     modèle de configuration (celui-ci, versionné)
 ├── requirements.txt
-├── noyau/                    ce que les six modules partagent
+├── SECURITY.md                masquage IBAN/NIR et chiffrement de bout en bout du coffre
+├── noyau/                    ce que les modules partagent
 │   ├── config.py             lecture, validation et écriture de la configuration
 │   ├── modele.py             types communs (Fiche, Document, Media, Doublon…)
 │   ├── fichiers.py           parcours, empreintes, quarantaine, déplacements sûrs
 │   ├── journal.py            trace des opérations et mode simulation
-│   └── outils_externes.py    localisation de ffmpeg / tesseract, repli s'ils manquent
+│   ├── outils_externes.py    localisation de ffmpeg / tesseract, repli s'ils manquent
+│   └── redaction.py          masquage IBAN/NIR avant tout envoi à l'API de vision
 ├── modules/
-│   ├── scan_ocr/             1. extraction du texte des documents, renommage
-│   ├── calendrier/           2. échéances, abonnements, lettres de résiliation
-│   ├── nettoyage/            3. photos floues, doublons, vidéos abîmées
-│   ├── conversion/           4. HEIC→JPG, MKV→MP4, compression
-│   ├── upscale/              5. agrandissement des vieilles photos (pas les vidéos)
-│   └── classement/           6. rangement par date, par type, par thème
+│   ├── scan_ocr/             1. retiré le 01/09/2026 — voir paper-manager/
+│   ├── calendrier/           2. retiré le 01/09/2026 — voir paper-manager/
+│   ├── depot/                 dépôt assisté d'un fichier (interface web uniquement)
+│   ├── coffre/                stockage chiffré de bout en bout (interface web uniquement)
+│   ├── nettoyage/             photos floues, doublons, vidéos abîmées
+│   ├── conversion/            HEIC→JPG, MKV→MP4, compression
+│   ├── upscale/                agrandissement des vieilles photos (pas les vidéos)
+│   └── classement/             rangement par date, par type, par thème
+├── interface_web/            façade web locale (127.0.0.1 uniquement) sur organizer.py et modules/depot
+│   ├── serveur.py             routes Flask, jamais de décision de tri réimplémentée
+│   ├── interpreteur.py         traduit une phrase en langage naturel en commande organizer.py
+│   └── index.html              l'interface elle-même
 ├── donnees/                  état local (empreintes, index) — non versionné
 └── tests/                    tests unitaires, sans dépendance externe
 ```
@@ -100,6 +108,27 @@ tôt ou tard dans une sauvegarde ou un partage d'écran.
 Le module 1 alimente le 2 (une facture scannée devient une échéance) et le 6
 (un type détecté devient un dossier). Le 3 précède le 4, qui précède le 5 :
 inutile de convertir puis d'agrandir une photo floue qu'on allait jeter.
+
+## L'interface web, le dépôt et le coffre
+
+`interface_web/serveur.py` (`python interface_web/serveur.py`, puis
+`http://127.0.0.1:8420`) est une façade Flask strictement locale sur
+`organizer.py` : chaque action de l'interface se traduit en la même commande
+qu'on taperait soi-même, en simulation par défaut. Aucune décision de tri n'y
+est réimplémentée.
+
+Deux capacités n'existent que par cette interface, pas en ligne de commande :
+
+- **`modules/depot/`** — déposer un fichier, le faire classer par un modèle de
+  vision (`depot.actif`, désactivé par défaut), et pour un document
+  administratif, comprendre ses champs avant de le déposer pour de vrai. Le
+  texte extrait d'un PDF est masqué (IBAN, NIR) avant tout envoi à l'API —
+  voir `SECURITY.md`.
+- **`modules/coffre/`** — un espace où déposer des documents sensibles avec un
+  chiffrement de bout en bout entièrement côté navigateur (AES-256-GCM,
+  dérivation PBKDF2) : ni ce serveur, ni un accès direct au disque, ne peuvent
+  lire leur contenu sans la phrase secrète choisie dans le navigateur. Détails
+  complets, y compris ce que ce chiffrement ne couvre pas, dans `SECURITY.md`.
 
 ## Installation et vérification
 

@@ -404,6 +404,32 @@
       "cle_variable_env": "LIFE_ORGANIZER_UPSCALE_KEY"
     }
   },
+  "depot": {
+    "actif": false,
+    "seuil_confiance_auto": 0.7,
+    "projet_par_defaut": "personnel",
+    "api_vision": {
+      "point_de_terminaison": "https://api.anthropic.com/v1/messages",
+      "modele": "claude-sonnet-5",
+      "cle_variable_env": "LIFE_ORGANIZER_DEPOT_VISION_KEY"
+    },
+    "projets": {
+      "personnel": {
+        "racine_drive": "G:/Mon Drive/Life-Organizer/Depot",
+        "regles": [
+          {"categorie": "papier_administratif", "dossier": "Documents/{annee}"},
+          {"categorie": "photo_personnelle", "dossier": "Photos/{annee}/{mois}"},
+          {"categorie": "video_projet_creatif", "dossier": "Videos/À trier"}
+        ]
+      }
+    }
+  },
+  "coffre": {
+    "actif": true,
+    "dossier": "G:/Mon Drive/Life-Organizer/Coffre",
+    "dossier_sauvegarde": "~/Life-Organizer/CoffreSauvegardes",
+    "_note": "Le contenu de 'dossier' n'est jamais lisible sans la phrase secrète choisie dans le navigateur — voir SECURITY.md. 'dossier_sauvegarde' n'est pas synchronisé avec Drive : il vaut mieux le pointer vers un disque externe ou un second compte pour une vraie séparation physique, voir SECURITY.md."
+  },
   "abonnements": [
     {
       "id": "abo-fibre",

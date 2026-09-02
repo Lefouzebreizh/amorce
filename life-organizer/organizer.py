@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Point d'entrée unique de Life-Organizer : une sous-commande par module.
 
-Le point d'entrée est unique parce que les quatre modules partagent la même
-configuration, le même journal et la même quarantaine. Quatre scripts séparés
-auraient quatre façons de les lire, et un jour l'un d'eux supprimerait pour de
-bon.
+Le point d'entrée est unique parce que les modules partagent la même
+configuration, le même journal et la même quarantaine. Des scripts séparés
+auraient chacun leur façon de les lire, et un jour l'un d'eux supprimerait pour
+de bon.
 
 `verifier` doit fonctionner avant toutes les autres, puisque tout le reste
 dépend de la configuration. `nettoyer` lui a succédé : photos floues, photos
@@ -38,6 +38,7 @@ for _flux in (sys.stdout, sys.stderr):
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from modules.classement import commande as commande_classement  # noqa: E402
 from modules.conversion import commande as commande_conversion  # noqa: E402
+from modules.depot import commande as commande_depot  # noqa: E402
 from modules.nettoyage import commande as commande_nettoyage  # noqa: E402
 from modules.upscale import commande as commande_upscale  # noqa: E402
 from noyau.config import charger, valider  # noqa: E402
@@ -52,6 +53,7 @@ RACINE = Path(__file__).resolve().parent
 # qui ment coûte plus cher qu'une aide incomplète. La raison est dans la fiche
 # de chacun des deux modules, qu'on a gardée exprès.
 MODULES = [
+    ("deposer", "Recevoir un fichier déposé, le comprendre, le ranger sur Drive"),
     ("nettoyer", "Écarter les photos floues, les quasi-doublons et les vidéos abîmées"),
     ("convertir", "HEIC → JPG, MKV → MP4, compression sans perte visible"),
     ("upscaler", "Agrandir les photos et vidéos basse définition"),
@@ -125,6 +127,12 @@ def config_valide(options: argparse.Namespace) -> dict | None:
     return None
 
 
+def commande_deposer(options: argparse.Namespace) -> int:
+    """L'analyse d'un fichier déposé, et sa proposition de rangement sur Drive."""
+    config = config_valide(options)
+    return commande_depot.executer(options, config) if config else 1
+
+
 def commande_nettoyer(options: argparse.Namespace) -> int:
     """Les photos floues, puis les quasi-identiques, puis les vidéos abîmées."""
     config = config_valide(options)
@@ -160,8 +168,10 @@ def main() -> int:
     analyseur = argparse.ArgumentParser(
         prog="organizer",
         description="Assistant local de rangement : documents, photos, vidéos.",
-        epilog="Aucun fichier ne quitte la machine. Rien n'est supprimé : "
-               "ce qui est écarté passe par la quarantaine.",
+        epilog="Aucun fichier ne quitte la machine, sauf « deposer » si depot.actif "
+               "est vrai (une image ou un texte extrait part vers le modèle de "
+               "vision, jamais le fichier entier). Rien n'est supprimé : ce qui "
+               "est écarté passe par la quarantaine.",
     )
     analyseur.add_argument("--config", type=Path, help="fichier de configuration à utiliser")
     sous = analyseur.add_subparsers(dest="commande", metavar="commande")
@@ -171,6 +181,10 @@ def main() -> int:
 
     for nom, aide in MODULES:
         module = sous.add_parser(nom, help=aide)
+        if nom == "deposer":
+            commande_depot.ajouter_arguments(module)
+            module.set_defaults(faire=commande_deposer)
+            continue
         if nom == "nettoyer":
             commande_nettoyage.ajouter_arguments(module)
             module.set_defaults(faire=commande_nettoyer)
