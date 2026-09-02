@@ -61,9 +61,20 @@ body { background: #07070f; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
   background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
+/*
+ * Texte **sombre**, et c'est mesuré — pas une préférence.
+ *
+ * Ce bouton porte le lien affilié : la seule chose qui rapporte sur ces onze
+ * sites. Il était en blanc sur des teintes saturées et claires, ce qui donnait
+ * de 1,5 à 3,7:1 selon la niche — dix des onze sous 3:1, donc illisible dehors,
+ * sur un téléphone, ce qui est exactement la condition du §2.
+ *
+ * En sombre, les mêmes teintes rendent 4,9 à 10,5:1. La couleur de chaque niche
+ * est conservée : c'est le texte posé dessus qui était le défaut.
+ */
 .bouton-accent {
   background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
-  color: #fff; transition: filter .15s ease;
+  color: var(--color-nuit); transition: filter .15s ease;
 }
 .bouton-accent:hover { filter: brightness(1.15); }
 .pastille-accent { background: var(--teinte-1); }

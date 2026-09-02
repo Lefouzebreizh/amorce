@@ -23,7 +23,7 @@ Quatre projets sombres, **quatre vocabulaires différents pour les mêmes rôles
 | bordure | `edge` | `bord` | `bord` | `bord` |
 | texte | `mist` | `brume` | *(absent)* | `texte` |
 | texte d'aide | `muted` | `sourdine` | `sourdine` | `doux` |
-| accent | `accent` | *(absent)* | `neon` | `accent` |
+| accent | `accent` | `teinte-1` / `teinte-2` | `neon` | `accent` |
 
 **Personne n'a inventé une autre façon de faire.** Le désaccord n'est pas sur la
 méthode, il est sur les mots. C'est ce qui rend la décision 1 ci-dessous facile.
@@ -77,7 +77,7 @@ sur lui.
 | **TITAN Builder** | accent `#7c3aed` sur son `bord` : **2,6:1** | **illisible** |
 | **IPTV** | accent `#4aa8ff` sur son `bord` : **5,1:1** | sous le seuil de 7 |
 | **Annuaria** | aide `#8a8ab0` sur son `bord` : **4,4:1** | sous 4,5, de peu |
-| **Annuaria** | **aucun jeton d'accent** | les onze sites n'ont pas de couleur d'action |
+| **Annuaria** | bouton affilié, texte blanc : **1,5 à 3,7:1** | **corrigé le 02/09** — dix des onze étaient sous 3:1 |
 
 Les jetons `titan-*` d'Amorce ressemblent à un cinquième défaut ; ils n'en sont
 pas un — voir D6.
@@ -129,15 +129,38 @@ Mesuré sur la montée, parce que l'intuition se trompe ici : `#6fb8ff` ne donne
 que 6,2:1 et `#7ec2ff` 6,8:1 — tous deux **sous le seuil**, alors qu'ils
 paraissent déjà bien plus clairs que l'actuel. Il faut aller jusqu'à `#8ccaff`.
 
-### D5 — L'accent absent d'Annuaria
+### D5 — Le bouton affilié d'Annuaria — **tranché et fait le 02/09/2026**
 
-Onze sites publics sans couleur d'action : le lien vers l'outil affilié n'a rien
-qui le distingue, et c'est **la seule chose qui rapporte** sur ces pages.
+**La première version de cette décision partait d'un constat faux.** Elle disait
+qu'Annuaria n'avait aucun accent, et proposait d'en inventer un. Le `grep`
+portait sur `--color-accent` ; le projet nomme les siens `--teinte-1` et
+`--teinte-2`, posés **par niche** depuis `niche.theme` et choisis dans une
+palette de quinze paires (`nouvelle-niche.js`). Chaque site avait donc déjà sa
+couleur, et le bouton affilié sa classe `.bouton-accent`.
 
-**Recommandation : `#7fd68a` sauge** (8,3:1 sur sa bordure), déjà mesurée et
-libre. Assez loin du `warn` ambre et du `danger` rose pour ne pas s'y confondre.
+Le vrai défaut était ailleurs, et il était pire : ce bouton portait
+`color: #fff` sur des teintes saturées et **claires**.
 
-C'est la décision qui a le plus d'effet immédiat des six.
+| niche | texte blanc, pire des deux teintes |
+| --- | --- |
+| `education`, `btp` | **1,5:1** |
+| `sante`, `comptabilite` | 1,9:1 |
+| `ecomm`, `immobilier` | 2,1 – 2,3:1 |
+| `rh`, `restauration`, `juridique` | 2,5 – 2,7:1 |
+| `architecture` | 3,0:1 |
+| `generaliste` | 3,7:1 |
+
+**Dix des onze sous 3:1**, sur le seul élément qui rapporte de ces pages, lues
+dehors sur un téléphone — la condition exacte du §2.
+
+**Ce qui a été fait** : le texte du bouton passe à `var(--color-nuit)`. Les
+teintes de chaque niche sont **conservées** — c'est le blanc posé dessus qui
+était le défaut, pas la couleur. Les onze remontent alors entre **4,7 et
+10,5:1**.
+
+Une seule ne passait pas : `architecture`, dont la primaire `#6366f1` rendait
+4,49:1, sous le seuil de 4,5 d'un cheveu. Elle est montée à `#6a6df3`, soit
+4,87:1, même teinte.
 
 ### D6 — Les trois jetons `titan-*` dans Amorce
 

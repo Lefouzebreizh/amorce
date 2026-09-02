@@ -909,7 +909,7 @@ body {
 }
 .bouton-accent {
   background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
-  color: #fff;
+  color: var(--color-nuit);
   transition: filter .15s ease;
 }
 .bouton-accent:hover {
