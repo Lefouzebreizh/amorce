@@ -174,3 +174,7 @@ visual_library/**/*.mp4
 # décide : un `.tmp.` au milieu d'un nom se lit comme jetable, mais rien ne
 # l'empêchait d'être committé.
 *.tmp.*
+
+# Les démonstrations portent le nom et le numéro de vrais artisans : elles ne
+# montent pas dans un dépôt public, pour la même raison que `prospects.md`.
+/titan-builder/demos/

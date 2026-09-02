@@ -121,6 +121,50 @@ avant lui transforme le seul point faible en preuve d'honnêteté.
 
 ---
 
+## 3 bis. Le coup qui change tout : la démonstration **à son nom**
+
+Le lien de la section précédente montre le site d'une entreprise inventée. Il
+fait le travail. Mais il existe mieux, et ça coûte trente secondes :
+
+```bash
+cd titan-builder
+npm run demo-prospect -- --entreprise "LE GOFF TOITURES" \
+  --metier couvreur --ville Rennes --telephone "02 99 00 00 00"
+```
+
+Tu obtiens un fichier `index.html` avec **son enseigne en haut**, sa ville, ses
+prestations et son numéro. Tu l'envoies **tel quel dans la conversation** — un
+seul fichier, aucun hébergement, aucun lien qui meurt : Messenger et WhatsApp
+acceptent les pièces jointes, et son téléphone l'ouvre dans le navigateur.
+
+Métiers prévus : `couvreur`, `macon`, `plombier`, `electricien`, `menuisier`,
+`peintre`. `--services "Toiture;Zinguerie;Velux"` remplace la liste par la
+sienne — et c'est ce qu'il faut faire dès qu'on a lu sa page : ses mots à lui
+valent mieux que les meilleurs mots génériques.
+
+**Pourquoi ça marche là où le lien générique fait tiède.** Il ne se demande plus
+« à quoi ça ressemblerait » — il le voit. La question passe de « est-ce que
+j'achète un site » à « est-ce que je garde celui-là ». Ce n'est pas la même
+décision, et ce n'est pas le même taux de réponse.
+
+**Trois choses que le script fait tout seul, et qu'il ne faut jamais défaire :**
+
+1. La page porte une **mention forcée** : « une proposition, préparée pour X —
+   ce n'est pas votre site officiel, elle n'est en ligne nulle part ». Sans
+   elle, une page qui affiche l'enseigne de quelqu'un devient son site aux yeux
+   de n'importe qui. Il n'existe aucune option pour l'enlever, exprès.
+2. La page sort en **`noindex, nofollow`**. Elle ne peut pas remonter dans
+   Google à la place du vrai artisan.
+3. **Le numéro se recopie depuis sa page, jamais ne s'invente.** Le script le
+   refuse s'il manque, et un faux numéro sous son enseigne serait pire que pas
+   de démonstration du tout.
+
+**Et le fichier produit ne monte pas dans Git** : `titan-builder/demos/` est
+ignoré, comme `prospects.md`. Il porte le nom et le numéro d'une vraie
+entreprise, et ce dépôt est public.
+
+---
+
 ## 4. Quand il répond « c'est trop cher »
 
 Ne jamais baisser le prix. Un prix qui bouge au premier doute dit que le
@@ -160,6 +204,42 @@ et demande **tout d'un coup**.
 client. Tu n'as pas encore de références à montrer : c'est toi qui prends le
 risque, pas lui. Ça ne se dit qu'aux premiers — dès qu'il y a trois sites en
 ligne, l'acompte redevient normal.
+
+---
+
+## 6. Au téléphone
+
+Tout ce qui précède s'écrit. L'appel obéit à d'autres règles, et il convertit
+mieux — un artisan répond à un numéro, il laisse traîner un message.
+
+**Quand appeler.** Entre 12 h et 13 h 30, ou après 17 h 30. Jamais 8 h : il
+charge sa camionnette et il t'en voudra.
+
+**Les vingt premières secondes**, et elles décident du reste :
+
+> Bonjour, ⟦prénom⟧ ? Erwann Chevallier. Je ne vous vends pas d'annuaire,
+> rassurez-vous — je fais des sites pour les artisans et je suis tombé sur
+> votre page. ⟦Ce que vous avez vu.⟧ Vous avez deux minutes, ou je vous
+> rappelle ?
+
+Trois choses en trois phrases : qui, **ce que tu n'es pas**, et la permission
+de raccrocher. « Je ne vous vends pas d'annuaire » désamorce la garde qu'il a
+levée dès « bonjour » — il en reçoit trois par semaine.
+
+**Ensuite, tu te tais.** C'est le plus dur et c'est ce qui vend. La question
+« vous avez un site ? » ouvre tout, et sa réponse te donne le reste de l'appel.
+
+**Ce qui se dit en fin d'appel, quoi qu'il ait répondu :**
+
+> Je vous envoie une page à votre nom, vous regardez tranquillement ce soir.
+> Si ça ne vous parle pas, vous ne me rappelez pas et il n'y a pas de souci.
+
+Puis tu envoies la démonstration nominative **dans l'heure**, tant que la
+conversation est chaude. C'est là que la section 3 bis paie.
+
+**Le seul chiffre à noter, et il tient sur un coin de feuille :** appelés,
+décrochés, intéressés. Trois colonnes. Sans elles, au bout de trente appels tu
+ne sauras pas s'il faut changer le message ou seulement en passer plus.
 
 ---
 
