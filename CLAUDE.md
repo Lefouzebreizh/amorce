@@ -215,6 +215,111 @@ la leçon, ou qu'on refait un outil qui vient d'arriver. Le fichier bouge
 plusieurs fois par jour, poussé par les autres sessions : ce qu'on y a lu il y
 a une heure peut être faux.
 
+## 2 bis. IDENTITÉ VISUELLE PARTAGÉE
+
+Numérotée « 2 bis » pour ne décaler aucun renvoi, comme les autres.
+
+Plusieurs produits avancent en parallèle et doivent se **reconnaître entre eux**
+sans se ressembler : Amorce, le bureau du soir (`life-organizer`), le conseiller
+patrimoine, Artisan Express, Annuaria (`annuaire-ia`), TITAN Builder, IPTV, et
+ceux en réflexion — le Décodeur Animal, le diagnostic mécanique par photo, le
+cherche-et-trouve pour enfants (`look_and_find`).
+
+Cette section ne réinvente rien : elle **généralise** ce qu'Amorce a déjà éprouvé
+et dit ce qui vaut désormais partout. Le détail des jetons reste dans
+`/usine-a-themes`, celui des écrans dans `/custom-frontend-designer`, celui du
+pouce dans `/tailwind-mobile-ux`. Ici, seulement ce qui traverse les projets.
+
+### Les cinq invariants
+
+**1. Cinq rôles de surface, et les mêmes noms partout.** Du fond de page à la
+carte la plus haute : `ink`, `slab`, `panel`, `raised`, `edge`. Les écarts entre
+voisines tournent autour de **1,07** — au-dessus, on retombe sur des boîtes
+empilées. Les surfaces séparent, les traits sont réservés à ce qui sépare
+vraiment et à ce qui est sélectionné.
+
+Ces noms-là, pas d'autres. Mesuré le 02/09/2026 : trois projets sombres portent
+la même structure sous trois vocabulaires — Amorce dit `ink`, `slab`, `panel`, `raised`, `edge` ;
+TITAN Builder dit `fond`, `fond-doux`, `verre`, `bord` ; IPTV a les siens encore. Rien n'est
+faux, mais une brique ne se déplace plus d'un projet à l'autre, et c'est
+exactement ce qu'une identité partagée doit rendre possible.
+
+**2. Deux polices, deux rôles.** `--font-display` pour les titres, `--font-body`
+pour tout le reste. Une troisième fonte n'ajoute pas du caractère, elle en
+retire.
+
+**3. Un accent unique par produit**, et il ne désigne qu'une chose : **l'action à
+faire, et ce qui va bien.** S'en servir pour les états actifs le rend décoratif,
+donc muet. `warn` et `danger` sont communs à tous les produits et gardent le même
+sens partout — les employer pour décorer leur ferait perdre le même pouvoir.
+
+**4. Le mouvement sert à ne pas perdre l'utilisateur**, jamais à impressionner.
+Transitions sur la couleur, l'opacité et les transformations — **jamais** sur des
+propriétés qui recalculent la mise en page. Le garde-fou `prefers-reduced-motion`
+se pose dans la feuille de style et ne se contourne pas par une animation
+JavaScript.
+
+**5. Le §2 s'applique d'office** : 18 px minimum, cibles ≥ 44 px, `100dvh` et non
+`100vh`, aucun autoplay, et le terrain de référence est le Redmi Note 12 Plus à
+393 × 873. Ce ne sont pas des règles de style, ce sont les conditions dans
+lesquelles ces produits sont réellement utilisés.
+
+### Le registre des accents
+
+Relevé et mesuré le 02/09/2026, **chacun contre la surface la plus claire de son
+propre projet** — c'est le pire cas, celui qui décide.
+
+| Produit | Accent | Contraste | État |
+| --- | --- | --- | --- |
+| Amorce | `#25e3c4` turquoise | **9,0:1** | la référence |
+| IPTV | `#4aa8ff` bleu | 5,1:1 | sous le standard de la maison |
+| TITAN Builder | `#7c3aed` violet | **2,6:1** | **inutilisable comme accent** — voir plus bas |
+| Artisan Express | `#004AAD` sur fond clair | — | page de vente, thème clair assumé |
+| `look_and_find` | thème chaud clair | — | appli enfants, thème clair assumé |
+
+**Comment un nouveau produit choisit le sien.** Deux contraintes, et elles se
+vérifient en trois lignes de calcul avant d'écrire la moindre classe :
+
+- **≥ 7:1 sur la surface la plus claire du projet.** Pas 4,5 : ces interfaces
+  s'utilisent dehors, sur un téléphone, souvent à une main.
+- **Assez loin de `warn` et de `danger`** pour ne pas s'y confondre. Un accent
+  ambre à côté d'un avertissement ambre annule les deux.
+
+Quatre teintes ont déjà été mesurées et passent, disponibles pour qui en a
+besoin : lavande `#c0abff` (7,4:1), sauge `#7fd68a` (8,3:1), corail `#ff9c7a`
+(7,2:1), citron `#d9e34a` (10,6:1). L'ambre a été écarté : il passe le contraste
+mais tombe sur `warn`.
+
+**Le violet de TITAN Builder est un défaut, pas un choix.** À 2,6:1 sur son
+propre `--color-bord`, il ne se lit pas. Le projet porte déjà deux valeurs qui
+tiennent — `#a78bfa` (5,4:1) et `#22d3ee` (8,1:1) ; c'est au projet de trancher,
+et cette ligne existe pour que le prochain qui y touche le sache.
+
+### L'exception, et elle est mesurée
+
+**Trois produits sont en thème clair, et c'est juste** : Artisan Express est une
+page de vente, `agence` est une coque montrée aux clients, `look_and_find` est
+une application pour enfants. Les convertir au sombre serait un contresens de
+produit.
+
+Et la règle des surfaces **cesse d'être vraie chez eux**. Mesuré le 31/08/2026 en
+montant le thème clair de *Tout seul* : une tuile blanche sur un fond crème donne
+**1,10:1**, et aucun réglage n'y change rien — la limite du blanc est atteinte,
+il n'y a plus de place au-dessus pour élever une surface. Vers le noir,
+`ink < slab < panel < raised` dispose de toute l'échelle.
+
+Donc **sur fond clair, ce qui sépare est un trait, pas une nuance** : contour de
+tuile à 2 dp, contour de bouton à 3 dp. Ce qui reste partagé chez eux : les deux
+polices, l'accent unique, les règles de mouvement, et tout le §2.
+
+### Ce qui n'est pas tranché
+
+Le fond sombre commun n'a **pas** été unifié en valeurs : Amorce tire vers le
+violet (`#08060f`), IPTV vers le bleu-gris (`#0b0d10`). Les deux sont défendables
+— on juge des images chez l'un, des flux vidéo chez l'autre. Ce qui est partagé
+est la **structure** et le rapport de 1,07, pas la teinte. Un produit qui n'a pas
+de raison d'en changer prend celle d'Amorce.
+
 ## 3. MÉMOIRE
 
 La mémoire vit dans ce fichier, dans `.claude/skills/`, dans `INDEX.md` et dans
