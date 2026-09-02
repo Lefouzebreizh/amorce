@@ -33,7 +33,7 @@ seule façon de rater ce projet.
 | Intention | D'où elle vient | État |
 | --- | --- | --- |
 | **contentement** | YAMNet nomme `Purr` lui-même | **mesurée**, marche aujourd'hui |
-| **stress** | YAMNet nomme `Hiss` ou `Caterwaul` | **mesurée**, marche aujourd'hui |
+| **stress** | YAMNet nomme `Caterwaul` | **mesurée**, marche depuis le 02/09 |
 | **faim** | il faut séparer deux façons de miauler | tête entraînée manquante |
 | **envie de sortir** | idem | tête entraînée manquante |
 
@@ -112,14 +112,14 @@ chat-traducteur/
 ├── habillage/          ← la carte SVG, bibliothèque standard PURE aussi
 │   ├── carte.py          verdict → SVG 1080 × 1920, zone sûre câblée
 │   └── palette.py        une palette par intention, contraste ≥ 7:1
-├── tests/                31 tests, ~3 ms, sans rien installer
+├── tests/                33 tests, ~3 ms, sans rien installer
 ├── modeles/              poids — jamais versionnés
 └── cli.py                le prototype : un fichier entre, une intention sort
 ```
 
 **Le noyau ne connaît ni numpy, ni TFLite, ni fichier son.** Même règle que le
 cœur de NexusCrypto, et pour la même raison : ce qui *décide* doit s'éprouver
-sur une machine où rien n'est installé, sinon plus personne ne vérifie. Les 31
+sur une machine où rien n'est installé, sinon plus personne ne vérifie. Les 33
 tests tournent en 3 millisecondes sur une session fraîche.
 
 Le corollaire pratique : **l'habillage visuel se branchera sans toucher à ce
@@ -184,92 +184,66 @@ plus discret que YAMNet connaisse, et c'est lui qui interdit de relever le
 seuil sans mesurer. (Le cumul dépasse 1,0 parce que YAMNet est multi-étiquette :
 521 sigmoïdes indépendantes, pas un softmax. Ce n'est donc pas une probabilité.)
 
-### Une question reste ouverte
+### La question qui était ouverte, et ce qu'elle a coûté
 
-`Meow` ne porte aucune lecture — c'est la classe résiduelle. `Purr`, `Hiss` et
-`Caterwaul` en portent une. Prendre le maximum fait donc parfois gagner celle
-qui n'apprend rien : sur un chat qui feule, `Meow 0,891` bat `Caterwaul 0,586`
-et le stress est perdu.
+`Meow` ne porte aucune lecture — c'est la classe résiduelle, « un chat a
+vocalisé ». `Purr`, `Hiss` et `Caterwaul` en portent une. Prendre le maximum
+faisait donc gagner celle qui n'apprend rien.
 
-Une règle « la classe porteuse de lecture l'emporte » réglerait ce cas. Elle
-n'est **pas** écrite : quatre bruitages générés ne sont pas un jeu de données,
-et un seuil inventé ici aurait l'air d'une mesure. Le comportement actuel est
-épinglé par un test qui échouera le jour où on tranchera — pour que ce soit une
-décision et non une dérive.
+Sur quatre bruitages, la règle a été **refusée** : un seuil inventé là aurait
+eu l'air d'une mesure. Elle a été écrite le 02/09/2026, sur un corpus de 15
+sons générés, quand les chiffres l'ont rendue évidente :
 
-## L'habillage visuel
+| registre | `Caterwaul` observé |
+| --- | --- |
+| miaulements ordinaires | 0,000 · 0,016 · 0,031 |
+| feulements et caterwauls | 0,199 · 0,332 · 0,414 · 0,586 · 0,738 |
 
-C'est l'axe de différenciation choisi : un résultat doit être partageable tel
-quel, pas lu. Une carte est un SVG **1080 × 1920**, généré en bibliothèque
-standard pure — comme le noyau. Une carte est du texte posé dans un cadre : ni
-Pillow ni moteur de rendu n'y apporteraient quoi que ce soit, et chacun serait
-une dépendance de plus sur une machine fraîche.
+Un rapport de **six** entre le plus haut miaulement ordinaire et le plus bas
+son de détresse. Le plancher est à 0,10, au milieu, proche d'aucune valeur
+observée.
+
+**Ce que le corpus a révélé et que personne ne soupçonnait : le stress était
+inatteignable.** `Caterwaul` perdait les **cinq** duels contre `Meow`. Les cinq
+sons de détresse ressortaient `indécis`. Le dépôt annonçait que le modèle
+public livrait la moitié du produit ; il en livrait le quart, et rien ne le
+disait — chaque verdict pris isolément restait plausible.
+
+Troisième fois sur ce projet qu'un `max()` compare des choses de rangs
+différents. La première, c'était `Cat` contre `Meow` ; la deuxième, les
+identifiants SVG ; celle-ci, `Meow` contre `Caterwaul`.
+
+### `Hiss` est une classe muette
+
+**0,000 sur les trois feulements du corpus.** La classe existe dans YAMNet et
+ne se déclenche pas sur un chat — c'est `Caterwaul` qui porte seul le stress.
+Elle reste branchée : si elle répond un jour sur de vrais chats, la lecture
+directe fonctionnera. Mais la croire active ferait chercher un défaut ailleurs,
+et c'est pour ça qu'un test grave le fait.
+
+### La porte, elle, est franche
+
+| | cumul félin |
+| --- | --- |
+| 12 sons félins | **0,398 à 2,566** |
+| 3 bruits domestiques (porte, pas, chaise, trafic) | **0,008 à 0,012** |
+
+**Trente-trois fois d'écart** entre le plus faible chat et le plus fort
+non-chat. Le seuil de 0,20 tombe dans ce trou et n'est plus une hypothèse.
+Le son le plus discret reste le ronronnement, à 0,398 — c'est toujours lui qui
+interdit de relever le seuil.
+
+### Ce que ce corpus n'est pas
+
+**Quinze sons générés, pas enregistrés.** Ils ont suffi à trouver deux défauts
+et à séparer franchement deux registres — ce qui se joue là est la *hiérarchie*
+des classes de YAMNet, une propriété du modèle, pas des chats. Mais le plancher
+de 0,10 n'a jamais vu un vrai chat, ni un vrai micro de téléphone à un mètre.
+Les enregistrements du chat d'Erwann le confirmeront ou le déplaceront.
 
 ```bash
-python3 chat-traducteur/scripts/fabriquer_cartes.py   # 5 SVG dans .fixtures/cartes
-node chat-traducteur/scripts/planche.mjs              # la planche à regarder
+python3 chat-traducteur/scripts/mesurer_corpus.py .fixtures/corpus
 ```
-
-### La règle du §1, rendue structurelle
-
-**La carte ne peut pas afficher un score que le modèle n'a pas mesuré.** Ce
-n'est pas une consigne laissée à la discipline de l'appelant : `blocs()` ne
-fabrique le bloc de confiance que si `source is MESUREE`. Un verdict provisoire
-ou indécis n'a **aucun chemin de code** menant à un pourcentage.
-
-Un chiffre inventé sur un écran de partage a exactement l'air d'une mesure, et
-le public visé est celui que ça blesse le plus. La seule façon d'en afficher un
-serait de modifier `habillage/carte.py` — ce qu'un test interdit, dans les deux
-sens : l'un vérifie qu'aucun score n'apparaît sans mesure, l'autre qu'il
-apparaît bien quand il y en a une. Sans le second, supprimer le bloc entier
-passerait inaperçu.
-
-### La zone sûre est câblée, pas recommandée
-
-Tout le texte vit entre **230 et 865 px** — 12 à 45 % de la hauteur, soit
-l'*intersection* des zones sûres de TikTok, Instagram et Facebook, jamais la
-plus permissive : une même carte part sur les trois, et Instagram ferme dès
-63 %. Un titre trop long **passe à la ligne**, il ne s'étire jamais : c'est le
-défaut de l'épisode 1 de `motion/`, où un titre étiré de 9,8 % à 94,7 % se
-faisait manger par les boutons de Facebook.
-
-Un test vérifie position par position, pour les cinq intentions, que rien ne
-sort de la bande ni de la colonne.
-
-### Le défaut que la planche a montré
-
-Les cinq palettes étaient justes et les cinq cartes sortaient **vertes**.
-
-Un `id` SVG est global au **document**, pas au fichier. Cinq cartes inlinées
-dans la même page avec `id="fond"` : les cinq `url(#fond)` résolvent vers le
-premier dégradé. Chaque fichier pris isolément restait parfaitement correct —
-rien ne pouvait le signaler, et le cas n'est pas théorique puisque ces cartes
-ont vocation à être posées plusieurs à la fois dans une page.
-
-L'identifiant porte désormais l'intention. C'est la deuxième fois sur ce projet
-qu'un défaut ne se voyait qu'en regardant : la première, c'était la classe
-parente `Cat`.
-
-### Contraste
-
-Chaque palette tient **au moins 7:1** entre son texte et les deux extrémités de
-son dégradé — pas 4,5:1, qui est le minimum légal et se révèle insuffisant en
-plein soleil sur le terrain de référence. Calculé en WCAG par un test, sur les
-deux extrémités : un texte lisible en haut et noyé en bas serait un défaut
-qu'une moyenne cache.
-
-Et le stress est **violet, pas rouge**. Le rouge sur un écran de partage
-fabrique de l'urgence, ce que le §1 interdit — on montre un chat qui demande de
-l'espace, pas une alarme.
-
-### Une dépendance empruntée, dite franchement
-
-`scripts/planche.mjs` utilise `playwright`, qui vient du `package.json`
-d'Amorce à la racine, pas de ce projet. C'est le « piège du projet niché » de
-`/nouveau-projet`. Toléré parce que ce script est un **outil de regard** et
-jamais une étape de vérification : les 31 tests n'en dépendent pas et la CI ne
-le lance pas. Le jour où `chat-traducteur/` gagne son propre `package.json`,
-c'est la première ligne à y écrire.
 
 ## La suite
 
@@ -277,9 +251,10 @@ c'est la première ligne à y écrire.
 2. ~~Prototype : un fichier audio entre, une intention sort~~ — fait.
 3. ~~Habillage visuel~~ — fait : cartes SVG 1080 × 1920, zone sûre câblée,
    contraste ≥ 7:1, et l'impossibilité structurelle d'afficher un faux score.
-4. **Enregistrements réels du chat d'Erwann.** Ils tranchent trois choses que
-   rien d'autre ne peut trancher : le seuil de la porte, la question ouverte
-   ci-dessus, et si `Purr` se détecte sur un micro de téléphone à un mètre.
+4. **Enregistrements réels du chat d'Erwann.** Le corpus généré a tranché la
+   question ouverte et confirmé le seuil ; il reste à savoir si le plancher de
+   0,10 tient sur un vrai chat, et si `Purr` — à 0,398 le son le plus discret
+   du lot — se détecte sur un micro de téléphone à un mètre.
 5. **La tête d'intention**, quand il y aura des étiquettes. La couture est déjà
    là : `juger(..., tete_intention=…)`, éprouvée par un test.
 

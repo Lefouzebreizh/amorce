@@ -339,7 +339,7 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 ## Traducteur de chat — `chat-traducteur/`
 
 ```bash
-python3 -m unittest discover -s chat-traducteur/tests   # 31 tests, ~3 ms, aucune dépendance
+python3 -m unittest discover -s chat-traducteur/tests   # 33 tests, ~3 ms, aucune dépendance
 ```
 
 Ces tests ne chargent **jamais** YAMNet et n'ouvrent aucun fichier son : ils
@@ -380,8 +380,25 @@ au document, et cinq dégradés nommés pareil résolvent tous vers le premier.
 Chaque fichier était juste pris isolément, donc aucun test de fichier ne
 pouvait l'attraper.
 
-Deux défauts sur ce projet, deux fois la même leçon : **ce qui se voit ne se
-mesure pas.**
+Et dès qu'un changement touche au **choix de la classe dominante** ou à un
+seuil, un troisième outil : le corpus.
+
+```bash
+python3 chat-traducteur/scripts/mesurer_corpus.py .fixtures/corpus
+```
+
+Il rend un tableau par fichier — cumul félin, les cinq classes une par une,
+verdict — et refuse d'agréger en une note, parce qu'une moyenne cache les cas
+limites qu'on cherche. C'est lui qui a montré que le stress était
+**inatteignable** : `Caterwaul` perdait cinq duels sur cinq contre `Meow`, et
+chaque verdict pris isolément restait plausible. Ni les tests ni la planche ne
+pouvaient l'attraper — il fallait quinze sons côte à côte.
+
+Trois défauts sur ce projet, trois fois un `max()` qui compare des choses de
+rangs différents, et trois outils différents pour les voir : les scores bruts
+pour `Cat`, la planche pour les identifiants SVG, le corpus pour `Caterwaul`.
+La leçon tient en une phrase : **un verdict isolé ne dit jamais si une règle
+tient — il dit ce qu'elle a répondu une fois.**
 
 `planche.mjs` emprunte `playwright` au `package.json` d'Amorce — il n'est donc
 pas lancé par la CI, et c'est voulu : c'est un outil de regard, pas une étape
