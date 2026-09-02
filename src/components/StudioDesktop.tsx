@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useMemo } from 'react';
 import { analyzeProject } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
@@ -81,7 +83,12 @@ function DesktopHeader() {
   return (
     <header className="flex shrink-0 items-center justify-between gap-4 border-b border-edge px-4 py-2.5">
       <div className="flex items-baseline gap-3">
-        <span className="font-display text-xl tracking-tight text-mist">amorce</span>
+        <Link
+          href="/"
+          className="flex min-h-11 items-center font-display text-xl tracking-tight text-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          amorce
+        </Link>
         <span className="hidden text-[13px] text-muted sm:block">
           Le studio qui rend tes vidéos IA virales — tout se passe dans ton navigateur
         </span>
