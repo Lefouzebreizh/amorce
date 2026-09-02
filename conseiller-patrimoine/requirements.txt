@@ -1,0 +1,37 @@
+# Conseiller Patrimoine — une seule dépendance, et la liste de ce qui est banni.
+#
+# Les fichiers de configuration de ce module, de NexusCrypto et du radar sont
+# tous en YAML. C'est la seule raison d'être de cette ligne.
+#
+# Elle est importée **tardivement**, dans les deux fonctions qui en ont besoin :
+# tout le raisonnement patrimonial — modèles, valorisation, écarts, conseil,
+# rédaction — s'importe et s'éprouve sans elle. C'est la propriété héritée de
+# NexusCrypto, et elle rend le cœur vérifiable là où rien n'est installé.
+PyYAML>=6.0
+
+
+# --------------------------------------------------------------------------
+# Ce qui n'est PAS ici, et ne doit jamais y entrer
+# --------------------------------------------------------------------------
+#
+# `requests`, `aiohttp`, `httpx`, `urllib3` — ce module lit l'argent de
+#   quelqu'un. Zéro sortie réseau n'est pas une précaution de style : c'est une
+#   propriété *vérifiable*, et `tests/test_lecture_seule.py` la vérifie en
+#   relisant le source du paquet. « Il ne fait que des GET » serait une
+#   promesse qu'il faudrait recontrôler à chaque modification.
+#
+# `yfinance`, et toute source de cours — deux raisons qui se cumulent. D'abord
+#   la précédente. Ensuite le terrain : les hôtes de cours ne répondent pas
+#   depuis une session distante de ce dépôt, donc un module de cours écrit ici
+#   serait du code jamais éprouvé, présenté comme fonctionnel. Les cours se
+#   saisissent à la main, avec leur date, et vieillissent au vu de tous.
+#
+# `ccxt`, et tout SDK de plateforme d'échange — un client de négoce n'a rien à
+#   faire dans un outil qui ne passe pas d'ordre. Sa seule présence dans
+#   l'arbre de dépendances rendrait fausse la phrase qui justifie ce module.
+#
+# `tabulate` — l'assistant d'allocation dont ce module reprend le calcul en
+#   dépendait pour aligner ses colonnes. Les tableaux sont désormais en
+#   Markdown, écrits en trois lignes de format : ils se lisent aussi bien dans
+#   un terminal, et se déposent tels quels dans un fichier qu'on ouvre depuis
+#   un téléphone.

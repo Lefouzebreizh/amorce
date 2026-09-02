@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import { ouvrirDepot, requeteFts, type Depot } from '../src/cache/depot.ts'
 import { importerM3U } from '../src/cache/importer.ts'
+import type { Element } from '../src/domaine/types.ts'
 
 const LISTE = [
   '#EXTM3U url-tvg="http://exemple.tv/epg.xml"',
@@ -482,6 +483,149 @@ test('une fiche de série se retrouve par son identifiant', async () => {
     ])
     assert.equal(depot.ficheParId('se_abc')?.titre, 'Kaamelott')
     assert.equal(depot.ficheParId('inexistant'), undefined)
+  } finally {
+    depot.fermer()
+  }
+})
+
+test('dedoublonner ne garde que la meilleure qualité, sans jamais retirer un titre seul', async () => {
+  // Le cas réel qui l'impose : un panneau Xtream classe TF1 dans plusieurs
+  // catégories qualité à la fois, et chacune ressort comme une entrée à part.
+  const depot = ouvrirDepot(':memory:')
+  try {
+    await importerM3U(
+      depot,
+      [
+        '#EXTM3U',
+        '#EXTINF:-1 group-title="FR",TF1 SD',
+        'http://exemple.tv/live/tf1sd.m3u8',
+        '#EXTINF:-1 group-title="FR",TF1 FHD',
+        'http://exemple.tv/live/tf1fhd.m3u8',
+        '#EXTINF:-1 group-title="FR",TF1 4K',
+        'http://exemple.tv/live/tf14k.m3u8',
+        // Seule en SD : rien à qui perdre, doit rester visible telle quelle.
+        '#EXTINF:-1 group-title="FR",France 5 SD',
+        'http://exemple.tv/live/f5sd.m3u8',
+      ].join('\n'),
+      { adresse: 'http://exemple.tv/fr.m3u' },
+    )
+    assert.equal(depot.compter({ genre: 'direct' }), 4, 'les quatre entrées sont bien importées')
+
+    const bilan = depot.dedoublonner('direct')
+    assert.equal(bilan.groupes, 1, 'un seul titre a plus d’une entrée : TF1')
+    assert.equal(bilan.masques, 2, 'les deux moins bonnes qualités de TF1 sont masquées')
+
+    const visibles = depot.lister({ genre: 'direct' })
+    assert.equal(visibles.length, 2, 'TF1 (une fois) + France 5')
+    const tf1 = visibles.find((element) => element.titre === 'TF1')
+    assert.equal(tf1?.qualite, '4k', 'la meilleure qualité de TF1 est celle qui reste')
+    assert.ok(
+      visibles.some((element) => element.titre === 'France 5'),
+      'un titre qui n’existe qu’en une qualité n’est jamais retiré',
+    )
+
+    // Masqué, pas supprimé : la même réversibilité qu’un flux mort.
+    assert.equal(depot.compter({ genre: 'direct', inclureMorts: true }), 4)
+  } finally {
+    depot.fermer()
+  }
+})
+
+function chaineDeTest(id: string, url: string, qualite: Element['qualite']): Element {
+  return {
+    id, source: 'm3u', genre: 'direct', titre: 'TF1', titreBrut: `TF1 ${qualite}`,
+    url, langue: 'inconnue', qualite,
+    groupe: undefined, logo: undefined, tvgId: undefined, canal: undefined, rang: undefined,
+    theme: undefined, annee: undefined, serie: undefined, saison: undefined, episode: undefined,
+    etiquettes: [], optionsLecture: [], refExterne: undefined,
+  }
+}
+
+test('dedoublonner est idempotent : un réimport qui change les qualités disponibles est rejoué depuis zéro', async () => {
+  const depot = ouvrirDepot(':memory:')
+  try {
+    const sourceId = depot.declarerSource({ genre: 'm3u', adresse: 'http://exemple.tv/fr.m3u' })
+    await depot.importer(sourceId, (async function* () {
+      yield chaineDeTest('tf1-sd', 'http://exemple.tv/live/1.m3u8', 'sd')
+      yield chaineDeTest('tf1-hd', 'http://exemple.tv/live/2.m3u8', 'hd')
+    })())
+
+    depot.dedoublonner('direct')
+    assert.equal(depot.lister({ genre: 'direct' })[0]?.qualite, 'hd', 'le HD gagne sur le SD')
+
+    // Le fournisseur relève sa qualité : le SD devient FHD au réimport
+    // suivant, sur le même identifiant.
+    await depot.importer(
+      sourceId,
+      (async function* () {
+        yield chaineDeTest('tf1-sd', 'http://exemple.tv/live/1.m3u8', 'fhd')
+      })(),
+      { purger: false },
+    )
+
+    const bilan = depot.dedoublonner('direct')
+    assert.equal(depot.lister({ genre: 'direct' })[0]?.qualite, 'fhd', 'le nouveau meilleur l’emporte')
+    assert.equal(bilan.masques, 1)
+  } finally {
+    depot.fermer()
+  }
+})
+
+test('un doublon masqué ne revient pas dans le lot à éprouver', async () => {
+  // Le piège trouvé en écrivant ce correctif : sans ceci, un doublon jamais
+  // testé au moment du masquage restait candidat pour « Éprouver ». S'il
+  // répondait, `marquerEtat(id, 'ok')` écrasait `etat = 'doublon'` — le
+  // masquage se défaisait tout seul, sans qu'on l'ait demandé.
+  const depot = ouvrirDepot(':memory:')
+  try {
+    const sourceId = depot.declarerSource({ genre: 'm3u', adresse: 'http://exemple.tv/fr.m3u' })
+    await depot.importer(sourceId, (async function* () {
+      yield chaineDeTest('tf1-sd', 'http://exemple.tv/live/1.m3u8', 'sd')
+      yield chaineDeTest('tf1-hd', 'http://exemple.tv/live/2.m3u8', 'hd')
+    })())
+
+    // Ni l'un ni l'autre n'a encore été éprouvé pour de vrai.
+    assert.equal(depot.aTester(100, { jamaisTestes: true }).length, 2)
+
+    depot.dedoublonner('direct')
+
+    const candidats = depot.aTester(100, { jamaisTestes: true })
+    assert.equal(candidats.length, 1, 'seul le survivant reste à éprouver')
+    assert.equal(candidats[0]?.id, 'tf1-hd')
+  } finally {
+    depot.fermer()
+  }
+})
+
+test('dedoublonnerFiches garde la fiche la plus utile, résumé avant affiche', async () => {
+  const depot = ouvrirDepot(':memory:')
+  try {
+    const sourceId = depot.declarerSource({
+      genre: 'xtream',
+      adresse: 'http://exemple.tv',
+      utilisateur: 'jean',
+    })
+    depot.enregistrerFiches(sourceId, [
+      {
+        id: 'se_1', refExterne: '1', titre: 'Kaamelott', titreBrut: 'Kaamelott',
+        annee: undefined, logo: 'http://exemple.tv/logo.jpg', resume: undefined,
+        genres: [], groupe: undefined, langue: 'vf',
+      },
+      {
+        id: 'se_2', refExterne: '2', titre: 'Kaamelott', titreBrut: 'Kaamelott',
+        annee: undefined, logo: undefined, resume: 'Un roi et sa table, en Bretagne.',
+        genres: [], groupe: undefined, langue: 'vf',
+      },
+    ])
+    assert.equal(depot.fiches().length, 2)
+
+    const bilan = depot.dedoublonnerFiches()
+    assert.equal(bilan.groupes, 1)
+    assert.equal(bilan.retirees, 1)
+
+    const restantes = depot.fiches()
+    assert.equal(restantes.length, 1)
+    assert.equal(restantes[0]?.resume, 'Un roi et sa table, en Bretagne.', 'la fiche avec résumé survit')
   } finally {
     depot.fermer()
   }

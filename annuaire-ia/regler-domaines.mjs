@@ -95,10 +95,12 @@ async function etat() {
     console.log(
       `\n⚠ ${morts.join(', ')} ne résout pas. Les balises canoniques, les sitemaps et` +
         '\n  les `og:url` désignent donc une adresse que personne ne sert.' +
-        '\n  Cloudflare Pages en donne une gratuite : `--base https://<projet>.pages.dev`,' +
-        '\n  où `<projet>` est le nom donné au projet Pages — il se lit sur le tableau' +
-        '\n  de bord après le premier dépôt, il ne se devine pas d’ici.' +
-        '\n  Le domaine acheté se branchera plus tard, par la même commande.',
+        '\n  `ma-panoplie-ia.com` est enregistré mais ne pointe nulle part : quatre' +
+        '\n  `A` sur l’apex vers 185.199.108.153, .109.153, .110.153 et .111.153,' +
+        '\n  puis Settings → Pages → Source → GitHub Actions.' +
+        '\n  Décidé le 02/09/2026 : pas d’adresse provisoire — les onze bases' +
+        '\n  déclarent déjà ce domaine, et le faire indexer pour le remplacer' +
+        '\n  ensuite remettrait le référencement à zéro.',
     );
   }
 

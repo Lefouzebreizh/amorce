@@ -35,6 +35,7 @@ Rien n'est ouvert ici : ce fichier ne juge que ce que `traitement.py` a mesuré.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 
@@ -93,12 +94,51 @@ def theme(texte: str, themes: list[dict]) -> dict | None:
     texte extrait par le module de scan quand il existera. La règle ne change
     pas, seule sa matière s'enrichit.
     """
-    minuscules = texte.lower()
+    minuscules = _sans_accents(texte)
     for candidat in themes:
         for mot in candidat.get("mots_cles", []):
-            if str(mot).lower() in minuscules:
+            if _sans_accents(str(mot)) in minuscules:
                 return candidat
     return None
+
+
+def matiere_a_theme(nom_fichier: str, texte_document: str = "",
+                    caracteres_max: int = 2000) -> str:
+    """Le texte dans lequel chercher un thème : le nom d'abord, le document ensuite.
+
+    Trois décisions tiennent cette fonction :
+
+    1. **Le nom de fichier passe devant.** Quelqu'un qui a pris la peine de
+       nommer « impots 2024.pdf » a déjà classé son document ; le corps du texte
+       n'est qu'un recours. Comme `theme()` retient le premier thème qui
+       correspond, cet ordre-là fait foi.
+    2. **Seul le début du document compte.** Un avis d'imposition annonce sa
+       nature dans son en-tête ; sa dernière page parle d'assurance, de banque et
+       de recours — trois thèmes qui n'ont rien à voir. Lire tout le document
+       ferait correspondre n'importe quel mot-clé et rendrait le classement
+       moins fiable qu'avec le seul nom de fichier.
+    3. **Rien n'est lu deux fois.** Le nom est déjà dans la matière ; le texte
+       vient après, séparé, pour qu'un mot coupé en fin de plafond ne se colle
+       pas au nom.
+    """
+    if not texte_document:
+        return nom_fichier
+    return f"{nom_fichier}\n{texte_document[:max(0, caracteres_max)]}"
+
+
+def _sans_accents(texte: str) -> str:
+    """Minuscules et sans accents, des deux côtés de la comparaison.
+
+    Un document scanné, un vieux PDF ou un encodage approximatif rendent « taxe
+    fonciere » là où la configuration écrit « taxe foncière ». Comparer les
+    formes accentuées ferait manquer le thème **sans que rien ne le signale** :
+    le document partirait dans le fourre-tout, et on conclurait que la détection
+    ne marche pas plutôt qu'elle n'a pas reconnu un mot.
+    """
+    return "".join(
+        c for c in unicodedata.normalize("NFD", texte.lower())
+        if unicodedata.category(c) != "Mn"
+    )
 
 
 def dossier_date(schema: str, nom_categorie: str, annee: int, mois: int) -> Path:

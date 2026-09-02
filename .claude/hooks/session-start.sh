@@ -45,16 +45,20 @@ commandes=(
   "Look & Find : flutter analyze|test"
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
   "Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests"
-  "Patrimoine : python3 -m unittest discover -s archives-backlog/patrimoine/tests"
+  "Conseiller Patrimoine : cd conseiller-patrimoine && python3 -m unittest discover -s tests"
+  "Motion : (dans motion/) npm test, npm run typecheck — jamais `build`, qui rend une vidéo"
   "Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
   "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
   "Life-Organizer : python3 -m unittest discover -s life-organizer/tests"
   "Paper-Manager : python3 -m unittest discover -s paper-manager/tests"
-  "Réseau d'annuaires : (dans annuaire-ia/) npm run valider|verifier|sites"
+  "Réseau d'annuaires : (dans annuaire-ia/) npm test, puis npm run valider|verifier|sites"
   "TITAN Builder : (dans titan-builder/) npm run lint|typecheck|test|build"
   "IPTV / VOD : (dans iptv/) npm test, npm run check"
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
+  "Traducteur de chat : python3 -m unittest discover -s chat-traducteur/tests"
   "NexusCrypto : cd nexuscrypto && python3 -m unittest discover -s tests"
+  "Bibliothèque visuelle : cd visual_library && python3 -m unittest discover -s tests"
+  "Kits (index des sons) : cd kits && python3 -m unittest discover -s tests"
 )
 
 echo "── Amorce : dépendances npm"
@@ -66,6 +70,31 @@ echo "── Socle Agence : dépendances npm"
 # de la racine ne lui servent à rien, et les siennes ne doivent pas remonter.
 cd "$racine/agence"
 npm install --no-audit --no-fund --silent
+
+# `npm run build` est annoncé plus haut comme vérification du socle, et il ne
+# passait pas : le prérendu de `/administration` lit la configuration Supabase
+# et lève « Configuration Supabase absente » avant d'avoir écrit une page. Une
+# session distante n'a pas de projet Supabase, donc la commande annoncée
+# échouait à chaque fois, sur un message qui a l'air d'une erreur de code.
+#
+# Mesuré : des valeurs factices suffisent. Le build ne joint jamais Supabase —
+# il veut seulement que les deux variables existent — et il passe entièrement
+# avec celles-ci. Ce qui a besoin d'un vrai projet, ce sont `npm run test:rls`
+# et `etat:rls`, qui parlent à la base et que ce fichier ne prétend pas servir.
+#
+# Écrit seulement s'il n'y en a pas : un `.env.local` déjà présent porte de
+# vraies clés, et les écraser couperait la session du projet du propriétaire.
+# `.env*` est ignoré par git, donc rien de tout cela n'atteint le dépôt.
+if [ ! -f .env.local ]; then
+  cat > .env.local <<'ENV'
+# Valeurs factices écrites par le hook de démarrage, pour que `npm run build`
+# tourne dans une session distante. Aucune requête ne part vers cette adresse.
+# Pour parler à un vrai projet, remplacer par les clés de `.env.example`.
+NEXT_PUBLIC_SUPABASE_URL="https://exemple-hors-ligne.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="cle-factice-le-build-ne-joint-jamais-supabase"
+ENV
+  echo "   .env.local factice écrit — npm run build peut tourner"
+fi
 
 echo "── Artisan Express : dépendances npm"
 # Page de vente Next.js indépendante, avec son propre `package.json` : lancée
@@ -92,6 +121,12 @@ echo "── Hypersensible & Bienveillance : dépendances npm"
 # même raison que ce bloc : lancé sans `cd`, npm remonte jusqu'à la racine et
 # installe Astro dans les dépendances du studio Amorce.
 cd "$racine/hypersensible-bienveillance"
+npm install --no-audit --no-fund --silent
+
+echo "── Motion : dépendances Remotion"
+# Même raison que les deux blocs précédents : lancé sans `cd`, npm remonte à la
+# racine et installe Remotion dans l'arbre d'Amorce.
+cd "$racine/motion"
 npm install --no-audit --no-fund --silent
 
 echo "── Look & Find : SDK Flutter $FLUTTER_VERSION"
@@ -139,13 +174,28 @@ echo "── Studio audio : bibliothèques Python"
 python3 -m pip install --quiet --break-system-packages \
   streamlit pydub imageio-ffmpeg edge-tts requests
 
+echo "── Traducteur de chat (chat-traducteur/) : bibliothèques Python"
+# Rien pour les *tests* : le noyau du traducteur est en bibliothèque standard
+# pure, et ses 20 tests tournent sur une machine vierge. C'est aussi pourquoi
+# ce projet n'ajoute rien à `.github/requirements-tests.txt`.
+# Ces deux-là servent à *exécuter* le prototype : ai-edge-litert est le moteur
+# TFLite (successeur de `tflite-runtime`), numpy son format d'entrée. ffmpeg
+# arrive déjà par `imageio-ffmpeg` du studio audio, et c'est lui qui ouvre le
+# .m4a que rendent les téléphones — la bibliothèque standard ne lit que le WAV.
+python3 -m pip install --quiet --break-system-packages numpy ai-edge-litert
+
 echo "── Répondeur Facebook : bibliothèques Python"
 # `requests` est déjà là pour le studio audio ; ces deux-là ne le sont pas, et
 # sans elles les tests du répondeur ne se lancent même pas.
 python3 -m pip install --quiet --break-system-packages anthropic python-dotenv
 
-echo "── Assistant d'allocation : bibliothèques Python"
-python3 -m pip install --quiet --break-system-packages yfinance requests tabulate
+echo "── Conseiller Patrimoine : bibliothèques Python"
+# Rien à installer ici, et c'est le sujet du module. PyYAML arrive déjà par le
+# radar crypto ci-dessous, et c'est sa seule dépendance : le conseiller n'a ni
+# client réseau, ni source de cours, ni SDK de plateforme d'échange — un test
+# relit le source du paquet pour le refuser. `yfinance` et `tabulate`, qui
+# servaient à l'assistant d'allocation que ce module absorbe, ont donc disparu
+# du dépôt avec lui.
 
 echo "── Chaîne de montage : bibliothèques Python"
 # PyTorch est volontairement absent, pour la même raison que dans le studio
@@ -160,7 +210,15 @@ echo "── Chaîne de montage : bibliothèques Python"
 # distante — alors que la CI, elle, est verte, `.github/requirements-tests.txt`
 # le listant depuis toujours. Un rouge local sur un projet qu'on n'a pas touché
 # coûte le temps de comprendre qu'il ne vient pas de soi.
-python3 -m pip install --quiet --break-system-packages elevenlabs tqdm scipy
+#
+# `pyloudnorm` est le quatrième, et il se rate autrement : il ne fait tomber
+# aucune suite. `sfx_pro.py` l'importe dans un `try` dont l'`except` rend `None`
+# — donc sans lui la mesure de sonie ne se trompe pas, elle se tait. Mesuré sur
+# un sinus de 1 kHz : `None` sans le paquet, −15.1 LUFS avec. `CLAUDE.md` §2
+# pose `/master-telephone` avant toute publication et §8 exige « le niveau
+# entendu section par section » : les deux reposaient sur une fonction qui ne
+# tournait dans aucune session.
+python3 -m pip install --quiet --break-system-packages elevenlabs tqdm scipy pyloudnorm
 
 echo "── Extraction multiformat : bibliothèques Python"
 # Ce que `/extraction-multiformat` et `/transcription-media` ne peuvent pas
@@ -190,8 +248,14 @@ echo "── Life-Organizer : bibliothèques Python"
 # Real-ESRGAN et PyTorch sont volontairement absents : plusieurs gigaoctets pour
 # un module désactivé par défaut. `tesseract` n'est pas un paquet Python et
 # s'installe à part ; `outils_externes.py` désactive proprement l'OCR sans lui.
+#
+# `opencv-python-headless<5` : la 5 a retiré `CascadeClassifier`, donc le
+# garde-fou « ne pas écarter une photo où un visage est reconnu ». La borne
+# posée dans les `requirements.txt` ne sert à rien ici — ce hook installe à la
+# main, sans les lire — et chaque session distante repartirait sur la dernière.
+# Les guillemets ne sont pas décoratifs : sans eux, `<5` est une redirection.
 python3 -m pip install --quiet --break-system-packages \
-  Pillow python-dateutil pypdf ImageHash opencv-python-headless imageio-ffmpeg
+  Pillow python-dateutil pypdf ImageHash 'opencv-python-headless<5' imageio-ffmpeg
 
 # `imageio-ffmpeg`, installé plus haut pour le studio audio, embarque un ffmpeg
 # statique complet — mais sous un nom que rien ne trouve. Le lier suffit à
@@ -235,7 +299,15 @@ echo "── Paper-Manager : bibliothèques Python"
 # l'installe déjà quelques lignes plus haut ; il est répété ici pour que le jour
 # où `archives-backlog/` disparaît, l'interface de ce projet ne s'éteigne pas
 # avec lui — pip ne réinstalle rien quand la version présente convient.
-python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow streamlit
+#
+# `pydantic` : la forme de ce que rend le modèle de vision. Il est déclaré par
+# `paper-manager/requirements.txt` **et** par `.github/requirements-tests.txt`,
+# et n'était installé nulle part ici — si bien que `test_vision.py`, les cinq
+# tests qui gardent cette forme, ne se chargeaient dans aucune session distante
+# pendant que la CI restait verte. Un module de test qui ne se charge pas ne
+# compte pas comme un échec : la suite annonçait 148 tests là où elle en porte
+# 259. Même piège que `scipy` plus haut, sur un projet différent.
+python3 -m pip install --quiet --break-system-packages PyMuPDF Pillow streamlit pydantic
 echo "── Parole hors Hugging Face : reconnaissance et synthèse"
 # `faster-whisper` reste volontairement absent : il est lourd, et surtout ses
 # poids vivent sur `huggingface.co`, que la politique de sortie des sessions
@@ -254,6 +326,20 @@ echo "── Volet TikTok : bibliothèque du carnet"
 # `tiktok/carnet.py` fabrique le PDF de tournage depuis les Markdown du volet.
 # Sans reportlab, la seule chose qu'on emporte en tournage ne se fabrique pas.
 python3 -m pip install --quiet --break-system-packages reportlab
+
+echo "── Bibliothèque visuelle : mesure au pixel"
+# `visual_library/construire_bibliotheque.py` note chaque calque à travers une
+# simulation d'écran de téléphone, et sa suite éprouve cette note. Sans ces
+# paquets elle ne s'importe même pas. `numpy` et `Pillow` sont déjà posés plus
+# haut ; ils sont redits ici parce qu'une ligne qui dépend d'une autre plus
+# haut se casse le jour où celle-là bouge.
+#   - `imagehash` : le hachage perceptuel d'`empreinte()`, importé à l'appel.
+#   - `imageio-ffmpeg` : le ffmpeg statique de `--make-demo`, importé en repli
+#     quand le système n'en fournit pas.
+#   - `tqdm` : facultatif dans le code (`except ImportError`), déclaré pour que
+#     les longues inspections affichent où elles en sont.
+python3 -m pip install --quiet --break-system-packages \
+  Pillow numpy ImageHash imageio-ffmpeg tqdm
 
 echo "── Amorce : Chromium pour le parcours de vérification"
 # L'environnement fournit un Chromium, mais sous un autre numéro de révision que

@@ -92,9 +92,18 @@ function serveurOrigine() {
       reponse.end('interdit')
       return
     }
-    if (chemin.endsWith('.m3u8')) {
+    // Sans ffmpeg, `fabriquerFlux` a renoncé et l'a dit — en promettant que
+    // « le reste » serait vérifié. Cette garde-là est ce qui rend la promesse
+    // vraie : sans elle, `readFileSync` levait un ENOENT dans le gestionnaire
+    // de requête, ce qui tuait le processus entier au lieu de sauter la seule
+    // lecture. Le plantage laissait en plus le `next start` orphelin, si bien
+    // que les deux exécutions suivantes échouaient sur « le port 3210 répond
+    // déjà » — une cause qui n'était plus la vraie. Les segments, dix lignes
+    // plus bas, étaient gardés depuis toujours : c'est l'asymétrie qui a coûté.
+    const manifeste = join(FLUX, 'essai.m3u8')
+    if (chemin.endsWith('.m3u8') && existsSync(manifeste)) {
       reponse.writeHead(200, { 'content-type': 'application/vnd.apple.mpegurl' })
-      reponse.end(readFileSync(join(FLUX, 'essai.m3u8')))
+      reponse.end(readFileSync(manifeste))
       return
     }
     const segment = join(FLUX, basename(chemin))

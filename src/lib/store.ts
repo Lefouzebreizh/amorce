@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { analyzeProject } from './analysis.ts';
 import { HAUTEURS_LIBRES, Y_PAR_DEFAUT } from './captions.ts';
 import { uid } from './id.ts';
+import { applyAutoEdit } from './autoEdit.ts';
 import { applyFinish, soundsOnCuts, tensionFills, thinCues } from './autoFinish.ts';
 import type { SharedFile } from './share.ts';
 import { captionsFromVoice } from './voice.ts';
@@ -128,6 +129,20 @@ type StudioState = {
   // -- Médias ---------------------------------------------------------------
   addAssets: (assets: MediaAsset[]) => void;
   removeAsset: (assetId: string) => void;
+
+  /**
+   * Monte tout d'un coup à partir des rushes importés.
+   *
+   * Passe par `mutate`, donc s'annule. Ce n'était pas le cas jusqu'ici : le
+   * geste le plus destructeur du studio — il remplace plans, textes et
+   * bruitages d'un seul coup — était le seul à écrire l'état directement,
+   * donc le seul qu'on ne pouvait pas défaire. Pire, l'annulation suivante
+   * remontait alors à un état antérieur sans le dire.
+   */
+  montageExpress: () => void;
+
+  /** Ajoute des rushes à la fin du montage, sans toucher au reste. */
+  ajouterAuMontage: (assetIds: string[]) => void;
 
   // -- Clips ----------------------------------------------------------------
   appendClip: (assetId: string) => void;
@@ -308,6 +323,46 @@ export const useStudio = create<StudioState>((set, get) => {
           clips: state.project.clips.filter((c) => c.assetId !== assetId),
         },
       });
+    }),
+
+  montageExpress: () =>
+    mutate('montage-express', (state) => ({
+      project: applyAutoEdit(state.project),
+      selection: null,
+      playhead: 0,
+      playing: false,
+    })),
+
+  /*
+   * L'ajout existait déjà plan par plan (`appendClip`), mais nulle part depuis
+   * l'étape d'import — la seule porte pour faire entrer un rush de plus dans un
+   * montage en cours était le montage express, qui efface tout le reste. Ajouter
+   * une vidéo revenait donc à perdre ses textes et ses bruitages.
+   *
+   * Une seule entrée d'historique pour le lot : c'est un geste unique de
+   * l'utilisateur, et l'annuler doit tout reprendre d'un coup.
+   */
+  ajouterAuMontage: (assetIds) =>
+    mutate('montage-ajout', (state) => {
+      const nouveaux = assetIds
+        .map((id) => state.project.assets.find((a) => a.id === id))
+        .filter((a): a is MediaAsset => a !== undefined);
+      if (nouveaux.length === 0) return state;
+
+      const clips: Clip[] = nouveaux.map((asset, rang) => ({
+        ...DEFAULT_CLIP,
+        id: uid('clip'),
+        assetId: asset.id,
+        outPoint: asset.duration,
+        // Même règle que `appendClip` : le tout premier plan démarre sec.
+        transition:
+          state.project.clips.length === 0 && rang === 0 ? 'cut' : DEFAULT_CLIP.transition,
+      }));
+
+      return {
+        project: { ...state.project, clips: [...state.project.clips, ...clips] },
+        selection: { kind: 'clip', id: clips[0].id },
+      };
     }),
 
   appendClip: (assetId) =>

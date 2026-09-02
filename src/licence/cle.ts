@@ -13,6 +13,31 @@
 
 const CLEF_STOCKAGE = 'amorce.licence';
 
+/*
+ * Les abonnés au changement de clé.
+ *
+ * `localStorage` ne prévient personne dans l'onglet qui écrit — l'événement
+ * `storage` ne part que vers les **autres** onglets. Sans ce petit registre,
+ * l'interface qui vient d'enregistrer une clé continuerait d'afficher l'état
+ * d'avant, et il faudrait recharger la page pour la voir.
+ *
+ * C'est aussi ce qui permet de lire la clé par `useSyncExternalStore`, l'outil
+ * que ce dépôt emploie partout pour une source extérieure à React, plutôt que
+ * par un effet suivi d'un `setState`.
+ */
+const abonnes = new Set<() => void>();
+
+export function sabonnerALaCle(prevenir: () => void): () => void {
+  abonnes.add(prevenir);
+  return () => {
+    abonnes.delete(prevenir);
+  };
+}
+
+function prevenirLesAbonnes(): void {
+  for (const prevenir of abonnes) prevenir();
+}
+
 /**
  * Toute lecture est protégée : `localStorage` **lève** en navigation privée et
  * quand un navigateur refuse le stockage, avant même qu'on lise quoi que ce
@@ -30,6 +55,7 @@ export function lireCle(): string {
 export function poserCle(cle: string): boolean {
   try {
     localStorage.setItem(CLEF_STOCKAGE, cle.trim());
+    prevenirLesAbonnes();
     return true;
   } catch {
     return false;
@@ -39,6 +65,7 @@ export function poserCle(cle: string): boolean {
 export function oublierCle(): void {
   try {
     localStorage.removeItem(CLEF_STOCKAGE);
+    prevenirLesAbonnes();
   } catch {
     // Rien à faire : il n'y avait rien à oublier.
   }

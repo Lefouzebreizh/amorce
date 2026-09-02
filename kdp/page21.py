@@ -20,7 +20,7 @@ import io
 import sys
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -110,9 +110,9 @@ def composer(source: Path, cible: Path, gabarit: charte.Gabarit) -> None:
     vignette.save(vig, format="PNG", compress_level=9)
 
     largeur, hauteur = gabarit.points
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=largeur, height=hauteur)
-    page.insert_image(fitz.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
+    page.insert_image(pymupdf.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
 
     # Vignette centrée, contenue dans sa bande sans jamais être déformée.
     haut, bas = BANDE_IMAGE[0] * hauteur, BANDE_IMAGE[1] * hauteur
@@ -123,7 +123,7 @@ def composer(source: Path, cible: Path, gabarit: charte.Gabarit) -> None:
     else:
         pl, ph = dispo_l, dispo_l / rapport
     x = (largeur - pl) / 2
-    page.insert_image(fitz.Rect(x, haut, x + pl, haut + ph), stream=vig.getvalue())
+    page.insert_image(pymupdf.Rect(x, haut, x + pl, haut + ph), stream=vig.getvalue())
 
     page.insert_font(fontname="corps", fontfile=str(CORPS))
     page.insert_font(fontname="corpsit", fontfile=str(CORPS_ITALIQUE))
@@ -133,13 +133,13 @@ def composer(source: Path, cible: Path, gabarit: charte.Gabarit) -> None:
     gauche, droite = marge, largeur - marge
 
     y = BANDE_TEXTE[0] * hauteur
-    page.insert_textbox(fitz.Rect(gauche, y, droite, y + 34), TITRE_TEXTE,
+    page.insert_textbox(pymupdf.Rect(gauche, y, droite, y + 34), TITRE_TEXTE,
                         fontname="titre", fontsize=21, color=(0.36, 0.24, 0.12),
-                        align=fitz.TEXT_ALIGN_CENTER)
+                        align=pymupdf.TEXT_ALIGN_CENTER)
     y += 28
-    page.insert_textbox(fitz.Rect(gauche, y, droite, y + 24), SIGNATURE,
+    page.insert_textbox(pymupdf.Rect(gauche, y, droite, y + 24), SIGNATURE,
                         fontname="corpsit", fontsize=12, color=(0.45, 0.34, 0.20),
-                        align=fitz.TEXT_ALIGN_CENTER)
+                        align=pymupdf.TEXT_ALIGN_CENTER)
     y += 30
 
     # Le corps est justifié et réduit jusqu'à tenir : la planche est de taille
@@ -147,17 +147,17 @@ def composer(source: Path, cible: Path, gabarit: charte.Gabarit) -> None:
     bas_texte = BANDE_TEXTE[1] * hauteur - 34
     for corps in (11.5, 11.0, 10.5, 10.0, 9.5, 9.0, 8.5):
         reste = page.insert_textbox(
-            fitz.Rect(gauche, y, droite, bas_texte), TEXTE, fontname="corps",
+            pymupdf.Rect(gauche, y, droite, bas_texte), TEXTE, fontname="corps",
             fontsize=corps, lineheight=1.45, color=(0.16, 0.13, 0.11),
-            align=fitz.TEXT_ALIGN_JUSTIFY)
+            align=pymupdf.TEXT_ALIGN_JUSTIFY)
         if reste >= 0:
             break
     else:
         raise SystemExit("Le texte ne tient pas, même au plus petit corps.")
 
-    page.insert_textbox(fitz.Rect(gauche, bas_texte + 4, droite, bas_texte + 36),
+    page.insert_textbox(pymupdf.Rect(gauche, bas_texte + 4, droite, bas_texte + 36),
                         CHUTE, fontname="corpsit", fontsize=12,
-                        color=(0.36, 0.24, 0.12), align=fitz.TEXT_ALIGN_CENTER)
+                        color=(0.36, 0.24, 0.12), align=pymupdf.TEXT_ALIGN_CENTER)
 
     document.set_metadata({"title": "Roussy & Zéphy — page 21, Mon histoire",
                            "author": SIGNATURE})

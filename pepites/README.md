@@ -366,14 +366,17 @@ Ce qui reste **fragile ou incomplet**, dit franchement :
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env                       # jeton Telegram, clés facultatives
+cp .env.exemple .env                       # jeton Telegram, clés facultatives
 
 python3 main.py sonde                      # les sources se lisent-elles encore ?
 python3 main.py scan                       # un tour complet → pepites_radar.md
 python3 main.py scan --bavard              # avec le détail des appels
 python3 main.py purger --garder 30         # efface les vieux relevés
 
-python3 -m unittest discover -s tests      # 148 tests, sans réseau
+python3 main.py bilan                      # ce que les pépites sont devenues
+python3 main.py bilan --note 65            # seulement celles qui ont bien noté
+
+python3 -m unittest discover -s tests      # 167 tests, sans réseau
 python3 profils.py                         # l'effet des réglages sur six profils connus
 ```
 
@@ -431,6 +434,35 @@ est un bon rythme :
 */15 * * * * cd /chemin/vers/pepites && /usr/bin/python3 main.py scan >> scan.log 2>&1
 ```
 
+**Sous Windows, où ce radar tourne réellement**, l'équivalent se déclare une
+fois dans PowerShell. Le détour par `cmd.exe` n'est pas une coquetterie : il
+apporte la redirection vers `scan.log`, qu'une tâche planifiée ne fait pas
+d'elle-même, et sans journal un tour qui échoue toutes les quinze minutes est
+indiscernable d'un marché calme.
+
+```powershell
+$dossier = "$HOME\Downloads\amorce-main\amorce-main\pepites"
+$action  = New-ScheduledTaskAction -Execute "cmd.exe" `
+             -Argument "/c python main.py scan >> scan.log 2>&1" `
+             -WorkingDirectory $dossier
+$rythme  = New-ScheduledTaskTrigger -Once -At (Get-Date) `
+             -RepetitionInterval (New-TimeSpan -Minutes 15) `
+             -RepetitionDuration ([TimeSpan]::MaxValue)
+Register-ScheduledTask -TaskName "Radar pepites" -Action $action -Trigger $rythme
+```
+
+`-RepetitionDuration` compte : sans elle, le déclencheur `-Once` ne se répète
+que pendant vingt-quatre heures, puis s'arrête sans erreur — la tâche reste
+listée, elle ne se déclenche plus, et le radar paraît simplement n'avoir rien
+trouvé depuis la veille.
+
+Ce chemin est écrit contre la surface documentée de `ScheduledTasks` et n'a pas
+été exécuté : aucune session de ce dépôt ne tourne sous Windows. Il se vérifie
+en une minute — `Get-ScheduledTask "Radar pepites"` doit rendre `Ready`, et
+`scan.log` doit grossir au quart d'heure suivant.
+
+Pour l'arrêter : `Unregister-ScheduledTask "Radar pepites"`.
+
 **Un seul scan tourne à la fois**, et le radar s'en charge : un verrou de
 fichier est pris pour la durée du tour, et un second passage lancé pendant le
 premier est refusé au lieu de doubler la cadence. Ce n'était pas théorique —
@@ -476,3 +508,44 @@ faut le dire ici. Tant que l'épreuve n'a pas été faite, la protection y est
 Ce qui **n'est pas** en cause, et qu'on croit toujours : la confirmation. Un
 relevé écrit à la seconde ne peut pas confirmer un candidat, `ecart_min_minutes`
 le refuse quelle que soit son origine.
+
+### Le bilan, à lire après quelques semaines
+
+**Le radar n'avait jamais été noté sur ses résultats.** Il l'était sur le fait
+qu'il ne plante pas et qu'il rend un entonnoir plausible — jamais sur la seule
+question qui compte : *ce qu'il a désigné est-il monté ?* La matière était
+pourtant déjà en base, `releves` gardant `prix_usd` et `note` à chaque tour.
+Personne ne la relisait.
+
+```bash
+python3 main.py bilan
+```
+
+Aucun appel réseau : tout se calcule sur le fichier SQLite local. La commande
+répond donc aussi bien depuis une machine qui n'atteint aucune API de marché.
+
+**Elle refuse de conclure quatre fois plutôt qu'une**, et c'est son intérêt
+principal — un bulletin bâti sur rien rend toujours le verdict le plus
+rassurant, et personne ne va vérifier un chiffre qui fait plaisir :
+
+| Situation | Ce qui est affiché | Pourquoi pas autre chose |
+| --- | --- | --- |
+| Un seul relevé | `indécidable` | « 0 % » se lirait comme « ça n'a pas bougé », qui est une mesure. Personne n'a regardé deux fois. |
+| Deux relevés en moins de 6 h | la variation, suivie de `(trop tôt)` | Une heure sur une pépite, c'est la respiration du carnet d'ordres. La variation est vraie, le verdict qu'on en tirerait ne l'est pas. |
+| Prix de départ nul | `indécidable` | Une division par zéro y passerait inaperçue précisément parce que le cas n'arrive jamais. |
+| Moins de 20 jetons jugeables | pas de taux de réussite | Sur cinq jetons, trois hausses font « 60 % » et ne disent rien du réglage, seulement du marché de la semaine. |
+
+**L'âge du dernier relevé est affiché à côté de chaque ligne.** Un jeton qui
+sort de l'entonnoir cesse d'être relevé : son dernier prix connu peut dater de
+trois semaines, et sans cet âge une hausse ancienne se lit comme une hausse
+d'aujourd'hui.
+
+**Le taux global est une médiane, jamais une moyenne.** Un seul jeton multiplié
+par cinquante tirerait une moyenne vers le haut et donnerait au radar un
+bulletin flatteur que quarante-neuf lignes perdantes ne corrigeraient pas.
+
+**Le symbole manque sur les relevés antérieurs à sa colonne**, et la ligne porte
+alors `?` avec son adresse. Ce n'est pas une perte grave : une adresse est un
+meilleur identifiant qu'un nom, qui se copie à l'identique par n'importe qui.
+La colonne est ajoutée par migration à l'ouverture de la base — une base qui
+tourne depuis des semaines la gagne sans rien perdre de ses lignes.

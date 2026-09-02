@@ -24,6 +24,34 @@ export type ExportFormat = {
 const CANDIDATES: ExportFormat[] = [
   // MP4 en premier : c'est le seul format que toutes les plateformes acceptent
   // sans reconversion. Les navigateurs récents savent l'enregistrer directement.
+  /*
+   * Trois profils H.264, du plus capable au plus modeste.
+   *
+   * La liste ne portait que le dernier, `avc1.42E01E` — Baseline, **niveau
+   * 3.0**. Or le niveau 3.0 plafonne à 1 620 macroblocs, soit 720p ; la
+   * composition d'Amorce fait 1080 × 1920, qui en demande 8 160. On réclamait
+   * donc un profil trop petit pour l'image qu'on lui donne, et le Baseline
+   * n'a par surcroît ni CABAC ni images bidirectionnelles : à débit égal, il
+   * rend nettement moins bien.
+   *
+   * Relevé sur un export livré : `profile=Baseline`, 2,35 Mb/s, là où la
+   * source de l'utilisateur était en `High` à 9,6 Mb/s. Il l'a décrit comme
+   * « on dirait du 540p agrandi ».
+   *
+   * `pickFormat` prend le premier type accepté : ajouter devant ne retire
+   * rien, et un navigateur qui refuse les deux nouveaux retombe exactement sur
+   * le comportement d'avant.
+   *
+   * Non vérifiable ici, et c'est dit plutôt que supposé : le Chromium de
+   * vérification est bâti sans codecs propriétaires — il refuse **toutes** les
+   * chaînes `avc1`, y compris celle qui tournait déjà, et ne garde que le
+   * `video/mp4` nu de la ligne suivante. Le choix ne se départage donc que sur
+   * un vrai appareil. Chrome peut par ailleurs encoder en Baseline malgré un
+   * profil plus élevé demandé, quand il retombe sur son encodeur logiciel :
+   * cette ligne autorise le meilleur, elle ne le garantit pas.
+   */
+  { mimeType: 'video/mp4;codecs=avc1.640028,mp4a.40.2', extension: 'mp4', label: 'MP4 (H.264 High)' },
+  { mimeType: 'video/mp4;codecs=avc1.4D4028,mp4a.40.2', extension: 'mp4', label: 'MP4 (H.264 Main)' },
   { mimeType: 'video/mp4;codecs=avc1.42E01E,mp4a.40.2', extension: 'mp4', label: 'MP4 (H.264)' },
   /*
    * `video/mp4` sans précision de codec reste, alors que son équivalent audio

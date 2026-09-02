@@ -82,6 +82,39 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nKahoot n’a rien à prouver côté engagement : le format est entré dans les mœurs scolaires. Le générateur de questions en fait un outil de préparation et non plus seulement d’animation — on colle un texte, on obtient une session complète. C’est le moyen le plus rapide de réveiller une classe en fin de journée.\n\n## Points forts\n- Format connu de tous : aucune explication à donner aux élèves\n- Questions générées à partir d’un texte, d’un document ou d’un sujet\n- Rapports de participation exportables pour le suivi\n- Tarif enseignant très bas, formule gratuite fonctionnelle\n\n## Points faibles\n- Fonctions génératives réservées aux formules payantes\n- L’aspect compétitif ne convient pas à toutes les classes\n- Peu adapté aux questions ouvertes et au raisonnement long\n\n## Idéal pour\nLes enseignants qui veulent réviser un chapitre en dix minutes sans préparer la séance la veille.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "kwyk",
+      "nom": "Kwyk",
+      "categorie": "Différenciation",
+      "prix": "Abonnement établissement ou famille",
+      "description_courte": "Les exercices de mathématiques générés et corrigés automatiquement, alignés sur les programmes français.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/kwyk",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nKwyk a une qualité que peu d'outils partagent : il est construit sur les programmes français, pas traduit depuis un système scolaire étranger. Les exercices sont générés avec des valeurs différentes pour chaque élève, corrigés automatiquement, et le professeur voit qui bloque et où. Sur une classe de trente, c'est la différence entre supposer et savoir.\n\n## Points forts\n- Aligné sur les programmes français, du collège au lycée\n- Énoncés générés avec des valeurs différentes par élève\n- Correction automatique et suivi individuel des blocages\n- Utilisé en établissement comme à la maison\n\n## Points faibles\n- Périmètre mathématique : rien pour les autres disciplines\n- Le suivi ne vaut que si les élèves font réellement les exercices\n- La correction automatique ne juge pas le raisonnement écrit\n- Abonnement à la charge de l'établissement ou des familles\n\n## Idéal pour\nLes professeurs de mathématiques qui veulent donner du travail différencié sans multiplier par trente le temps de correction.",
+      "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "quizizz-ai",
+      "nom": "Quizizz",
+      "categorie": "Activités interactives",
+      "prix": "Freemium — à partir de 8 $/mois",
+      "description_courte": "Le quiz de classe généré à partir d’un support, joué en direct ou en autonomie, corrigé tout seul.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/quizizz-ai",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nQuizizz est déjà dans des millions de classes ; ses fonctions génératives ont supprimé la partie fastidieuse — écrire les questions. On dépose un texte, un chapitre ou un lien, l’outil propose des questions avec des distracteurs plausibles, et le rendu ludique fait participer des élèves qui ne lèvent jamais la main.\n\n## Points forts\n- Questions générées à partir de vos propres supports, pas d’une banque générique\n- Distracteurs plausibles : le quiz évalue au lieu de se deviner\n- Correction et statistiques automatiques, élève par élève\n- Formule gratuite très généreuse, adoptée mondialement\n\n## Points faibles\n- Les questions générées demandent une relecture disciplinaire\n- Le format ludique ne convient pas à toutes les évaluations\n- Suppose un appareil connecté par élève ou par binôme\n\n## Idéal pour\nLes enseignants qui veulent une évaluation formative rapide sans passer une soirée à écrire vingt questions.",
+      "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "eduaide-ai",
+      "nom": "Eduaide.ai",
+      "categorie": "Préparation de cours",
+      "prix": "Freemium — à partir de 10 $/mois",
+      "description_courte": "Une centaine de générateurs pédagogiques, alignables sur un référentiel de compétences donné.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/eduaide-ai",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nEduaide se distingue par la finesse de ses générateurs : plus de cent types de ressources — séquence, consigne différenciée, question de discussion, grille d’évaluation — et surtout la possibilité de tout aligner sur un référentiel de compétences fourni. C’est ce qui le rend transposable hors du système américain, contrairement à ses concurrents.\n\n## Points forts\n- Plus de cent générateurs, chacun avec sa trame propre\n- Alignement possible sur un référentiel de compétences que l’on fournit\n- Espace de travail qui conserve et réorganise les ressources produites\n- Formule gratuite suffisante pour un usage hebdomadaire\n\n## Points faibles\n- Interface dense : trouver le bon générateur demande un temps d’adaptation\n- Le rendu français est correct mais moins nuancé que l’anglais\n- Toute ressource demande une relecture disciplinaire\n\n## Idéal pour\nLes enseignants et formateurs qui travaillent par compétences et refont chaque année les mêmes supports.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

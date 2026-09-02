@@ -21,7 +21,7 @@ import io
 import sys
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import charte  # noqa: E402
@@ -49,9 +49,9 @@ def composer(bordure: Path, cible: Path, gabarit: charte.Gabarit | None = None,
     fond_charte(bordure, cote_px).save(tampon, format="JPEG", quality=94,
                                        optimize=True, subsampling=0)
 
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=largeur, height=hauteur)
-    page.insert_image(fitz.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
+    page.insert_image(pymupdf.Rect(0, 0, largeur, hauteur), stream=tampon.getvalue())
     page.insert_font(fontname="corps", fontfile=str(CORPS))
     page.insert_font(fontname="ital", fontfile=str(ITALIQUE))
     page.insert_font(fontname="gras", fontfile=str(GRAS))
@@ -60,19 +60,19 @@ def composer(bordure: Path, cible: Path, gabarit: charte.Gabarit | None = None,
     gauche, droite = marge, largeur - marge
 
     for texte, y, corps, police in CHAMPS:
-        page.insert_textbox(fitz.Rect(gauche, y * hauteur, droite, (y + 0.06) * hauteur),
+        page.insert_textbox(pymupdf.Rect(gauche, y * hauteur, droite, (y + 0.06) * hauteur),
                             texte, fontname=police, fontsize=corps,
                             color=BRUN if police == "gras" else BRUN_PALE,
-                            align=fitz.TEXT_ALIGN_CENTER)
+                            align=pymupdf.TEXT_ALIGN_CENTER)
         # La ligne se pose sous le libellé, avec de quoi écrire dessus.
         base = (y + 0.075) * hauteur
-        page.draw_line(fitz.Point(gauche + 18, base), fitz.Point(droite - 18, base),
+        page.draw_line(pymupdf.Point(gauche + 18, base), pymupdf.Point(droite - 18, base),
                        color=LIGNE, width=0.9)
 
-    _triskell(page, fitz.Point(largeur / 2, 0.775 * hauteur), 16)
-    page.insert_textbox(fitz.Rect(gauche, 0.845 * hauteur, droite, 0.895 * hauteur),
+    _triskell(page, pymupdf.Point(largeur / 2, 0.775 * hauteur), 16)
+    page.insert_textbox(pymupdf.Rect(gauche, 0.845 * hauteur, droite, 0.895 * hauteur),
                         "Roussy & Zéphy  ·  Tome 1", fontname="ital", fontsize=11,
-                        color=BRUN_PALE, align=fitz.TEXT_ALIGN_CENTER)
+                        color=BRUN_PALE, align=pymupdf.TEXT_ALIGN_CENTER)
 
     document.set_metadata({"title": "Roussy & Zéphy — page de garde",
                            "author": "Erwann Lefouzèbreizh"})

@@ -311,6 +311,34 @@ export interface Depot {
       pays?: string | undefined
     },
   ): { numerotees: number; reclasses: number; etrangeres: number }
+  /**
+   * Ne garde qu'une entrée par titre — chaînes ou films — la meilleure
+   * qualité disponible.
+   *
+   * **Le cas réel qui l'impose** : un panneau Xtream classe souvent la même
+   * chaîne dans plusieurs catégories qualité à la fois (« FR TV HD »,
+   * « FR TV FULL HD|4K »…), et chacune ressort comme une entrée séparée —
+   * TF1 quatre ou cinq fois de suite, sous le même numéro. Masquer plutôt que
+   * supprimer : c'est la même réversibilité que « flux mort ».
+   *
+   * **Un titre qui n'existe qu'en qualité inférieure n'est jamais retiré** —
+   * un groupe d'un seul membre n'a personne à qui perdre.
+   *
+   * Idempotent : un masquage précédent est d'abord levé, puis rejoué sur
+   * l'état actuel — un réimport qui a changé les qualités disponibles est
+   * donc repris depuis zéro, jamais accumulé.
+   */
+  dedoublonner(genre: 'direct' | 'film'): { groupes: number; masques: number }
+  /**
+   * Même geste que `dedoublonner`, pour les fiches de séries déclarées.
+   *
+   * Une fiche n'a pas de qualité — c'est une chaîne ou un film qui en a une,
+   * jamais une série. Le départage se fait donc sur ce qui rend la fiche
+   * utile : un résumé, à défaut une affiche. Une fiche est **retirée**, pas
+   * masquée : rien ne la référence jamais (favoris et reprises ciblent un
+   * épisode, jamais une fiche), et un réimport la redéclare de toute façon.
+   */
+  dedoublonnerFiches(): { groupes: number; retirees: number }
   /** L'état mesuré d'une entrée, ou `undefined` si elle n'a jamais été testée. */
   etat(elementId: string): 'ok' | 'mort' | undefined
   /** Rend tout le monde visible et à retester. */
@@ -392,7 +420,12 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
     }
     // `etat IS NULL` compte comme vivant : ce qui n'a pas été mesuré n'est pas
     // condamné. Sans cela, une base jamais testée s'afficherait vide.
-    if (filtres.inclureMorts !== true) morceaux.push("(etat IS NULL OR etat <> 'mort')")
+    // `doublon` suit le même masquage que `mort` — un même bouton (« inclure
+    // les morts ») révèle les deux, plutôt que d'ajouter un second réglage
+    // pour une distinction que l'écran n'a pas besoin de faire.
+    if (filtres.inclureMorts !== true) {
+      morceaux.push("(etat IS NULL OR (etat <> 'mort' AND etat <> 'doublon'))")
+    }
     // Même logique pour `pays` : NULL veut dire français ou indécis, jamais
     // étranger. Voir `normalisation/pays.ts`. Une langue explicitement choisie
     // lève ce filtre : pour un film ou une série, « étranger » ne veut jamais
@@ -1078,6 +1111,117 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
         throw cause
       }
       return { numerotees, reclasses, etrangeres }
+    },
+
+    dedoublonner(genre): { groupes: number; masques: number } {
+      // L'ordre est celui déjà retenu par `detecterQualite` : « UHD » et
+      // « 4K » y sont confondus sous une seule étiquette, il n'y a donc pas de
+      // palier UHD séparé à ajouter ici.
+      const RANG_QUALITE = ['4k', 'fhd', 'hd', 'sd', 'inconnue']
+
+      base.exec('BEGIN')
+      try {
+        // Idempotent : un masquage précédent est levé avant d'être rejoué —
+        // un réimport a pu changer les qualités disponibles pour un titre.
+        // `teste_le` aussi : lui seul l'avait posé, jamais un vrai test de
+        // flux ; le laisser ferait passer pour « déjà éprouvée » une entrée
+        // qui ne l'a jamais été, si elle cesse d'être un doublon.
+        base
+          .prepare("UPDATE element SET etat = NULL, teste_le = NULL WHERE genre = ? AND etat = 'doublon'")
+          .run(genre)
+
+        const lignes = base
+          .prepare(
+            `SELECT id, titre, qualite FROM element
+             WHERE genre = ? AND (etat IS NULL OR etat = 'ok')`,
+          )
+          .all(genre) as Ligne[]
+
+        const groupesParTitre = new Map<string, { id: string; qualite: string }[]>()
+        for (const ligne of lignes) {
+          const cle = (texte(ligne['titre']) ?? '').toLocaleLowerCase('fr')
+          const membre = { id: texte(ligne['id']) ?? '', qualite: texte(ligne['qualite']) ?? 'inconnue' }
+          const groupe = groupesParTitre.get(cle)
+          if (groupe === undefined) groupesParTitre.set(cle, [membre])
+          else groupe.push(membre)
+        }
+
+        // `teste_le` aussi, sinon un doublon jamais éprouvé reste candidat
+        // pour « Éprouver » — et un test qui le trouve vivant écrirait
+        // `etat = 'ok'` par-dessus, défaisant le masquage sans qu'on l'ait
+        // demandé.
+        const masquer = base.prepare(
+          "UPDATE element SET etat = 'doublon', teste_le = ? WHERE id = ?",
+        )
+        let groupes = 0
+        let masques = 0
+        for (const membres of groupesParTitre.values()) {
+          // Un groupe d'un seul membre n'a personne à qui perdre : c'est
+          // exactement ce qui protège un titre qui n'existe qu'en qualité
+          // inférieure.
+          if (membres.length < 2) continue
+          groupes += 1
+          const rang = (m: { qualite: string }): number => {
+            const position = RANG_QUALITE.indexOf(m.qualite)
+            return position === -1 ? RANG_QUALITE.length : position
+          }
+          const tries = [...membres].sort((a, b) => rang(a) - rang(b))
+          for (const perdant of tries.slice(1)) {
+            masquer.run(new Date().toISOString(), perdant.id)
+            masques += 1
+          }
+        }
+        base.exec('COMMIT')
+        return { groupes, masques }
+      } catch (cause) {
+        base.exec('ROLLBACK')
+        throw cause
+      }
+    },
+
+    dedoublonnerFiches(): { groupes: number; retirees: number } {
+      base.exec('BEGIN')
+      try {
+        const lignes = base.prepare('SELECT id, titre, resume, logo FROM serie').all() as Ligne[]
+
+        const groupesParTitre = new Map<
+          string,
+          { id: string; resume: string | undefined; logo: string | undefined }[]
+        >()
+        for (const ligne of lignes) {
+          const cle = (texte(ligne['titre']) ?? '').toLocaleLowerCase('fr')
+          const membre = {
+            id: texte(ligne['id']) ?? '',
+            resume: texte(ligne['resume']),
+            logo: texte(ligne['logo']),
+          }
+          const groupe = groupesParTitre.get(cle)
+          if (groupe === undefined) groupesParTitre.set(cle, [membre])
+          else groupe.push(membre)
+        }
+
+        const retirer = base.prepare('DELETE FROM serie WHERE id = ?')
+        let groupes = 0
+        let retirees = 0
+        for (const membres of groupesParTitre.values()) {
+          if (membres.length < 2) continue
+          groupes += 1
+          // La plus utile d'abord : un résumé vaut mieux qu'une affiche
+          // seule, une affiche seule vaut mieux que rien.
+          const rang = (m: { resume: string | undefined; logo: string | undefined }): number =>
+            m.resume !== undefined ? 0 : m.logo !== undefined ? 1 : 2
+          const tries = [...membres].sort((a, b) => rang(a) - rang(b))
+          for (const perdante of tries.slice(1)) {
+            retirer.run(perdante.id)
+            retirees += 1
+          }
+        }
+        base.exec('COMMIT')
+        return { groupes, retirees }
+      } catch (cause) {
+        base.exec('ROLLBACK')
+        throw cause
+      }
     },
 
     themes(filtres = {}): { nom: string; compte: number }[] {

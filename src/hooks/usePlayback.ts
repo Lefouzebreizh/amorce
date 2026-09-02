@@ -8,7 +8,7 @@ import { guessTier, PanicDetector, QualityGovernor, QUALITY_TIERS, tierById } fr
 import { ClipVideoPool, preloadCaptionFonts, renderFrame, syncPlayback } from '@/lib/renderer';
 import type { Project } from '@/lib/types';
 import { useStudio } from '@/lib/store';
-import { layoutClips } from '@/lib/timeline';
+import { layoutClips, type PlacedClip } from '@/lib/timeline';
 import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
 
 /**
@@ -59,9 +59,24 @@ export type PlaybackEngine = {
    * que l'enregistrement ne commence, sinon le fichier sortirait à la
    * définition réduite de la prévisualisation.
    */
-  beginExport: (scale?: number) => Promise<void>;
+  beginExport: (scale?: number, horsLigne?: boolean) => Promise<void>;
+  /**
+   * Compose l'image d'un instant précis et ne rend la main qu'une fois prête.
+   *
+   * Réservé à l'encodage hors ligne : la boucle d'animation cède le canvas tant
+   * que `beginExport` a été appelé avec `horsLigne`.
+   */
+  composerA: (temps: number, image: number) => Promise<void>;
   /** Rend la main à la surveillance de qualité. */
   endExport: () => void;
+  /**
+   * Images composées pendant le dernier export.
+   *
+   * Rapportée à la durée du montage, elle donne la cadence réellement obtenue —
+   * la seule façon de dire à l'utilisateur que son fichier saccade avant qu'il
+   * ne le découvre en le regardant.
+   */
+  exportedFrames: () => number;
 };
 
 /**
@@ -105,6 +120,66 @@ type ContextCache = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; 
  *   `12.500|true|fluide|0.5|540x960|37.200`. Les deux sont des chaînes, donc
  *   ni le compilateur ni les tests n'auraient bronché.
  */
+/** Écart en deçà duquel un rush est considéré déjà au bon endroit. */
+const TOLERANCE_HORS_LIGNE = 0.004;
+
+/**
+ * Délai au-delà duquel on renonce à attendre un déplacement.
+ *
+ * Un `seeked` qui n'arrive jamais figerait l'export entier. Mieux vaut une
+ * image prise un peu tôt qu'un export qui ne rend jamais la main — et le cas
+ * ne se produit que sur un fichier abîmé, où l'image d'après sera fausse de
+ * toute façon.
+ */
+const ATTENTE_MAX_MS = 3000;
+
+/**
+ * Place un rush à l'instant voulu et attend que l'image y soit réellement.
+ *
+ * Régler `currentTime` ne change pas l'image tout de suite : le décodeur doit
+ * atteindre la position demandée. Dessiner sans attendre `seeked` grave donc
+ * l'image **précédente** — et comme l'écart est d'une fraction de seconde, le
+ * défaut ne se voit qu'en regardant le film, jamais dans une mesure.
+ *
+ * Une image fixe n'a rien à déplacer : `getVideo` ne rend que les rushes, et
+ * c'est voulu — brancher quoi que ce soit sur un `<img>` lèverait.
+ */
+function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Promise<void> {
+  const video = pool.getVideo(item.clip.id);
+  if (!video) return Promise.resolve();
+
+  const visible = temps >= item.start && temps < item.end;
+  if (!visible) {
+    if (!video.paused) video.pause();
+    return Promise.resolve();
+  }
+
+  // Hors ligne, un rush ne joue jamais : on le déplace image par image. Le
+  // laisser jouer le ferait dériver entre deux compositions.
+  if (!video.paused) video.pause();
+
+  if (!Number.isFinite(video.duration) || video.readyState === 0) return Promise.resolve();
+
+  const vise = item.clip.inPoint + (temps - item.start) * item.clip.speed;
+  const borne = Math.max(0, Math.min(vise, video.duration - 0.02));
+
+  if (Math.abs(video.currentTime - borne) <= TOLERANCE_HORS_LIGNE) return Promise.resolve();
+
+  return new Promise<void>((resoudre) => {
+    let fini = false;
+    const finir = () => {
+      if (fini) return;
+      fini = true;
+      video.removeEventListener('seeked', finir);
+      clearTimeout(minuteur);
+      resoudre();
+    };
+    const minuteur = setTimeout(finir, ATTENTE_MAX_MS);
+    video.addEventListener('seeked', finir, { once: true });
+    video.currentTime = borne;
+  });
+}
+
 export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<ContextCache | null>(null);
@@ -117,6 +192,36 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
    * livré, il ne se rejoue pas.
    */
   const exportingRef = useRef<number | null>(null);
+
+  /*
+   * Images réellement composées pendant l'enregistrement.
+   *
+   * L'export capture le canvas **en temps réel** : le fichier ne reçoit que ce
+   * que la boucle a eu le temps de dessiner. Un appareil qui ne tient pas la
+   * cadence produit donc un fichier saccadé — et rien ne le disait.
+   *
+   * Mesuré sur un export livré par l'utilisateur : 222 images pour 17,5 s, soit
+   * 12,7 par seconde au lieu de 30, avec des écarts de 9 à 517 ms. Il l'a
+   * décrit comme un tremblement, un scintillement, une image qui vibre, et a
+   * cherché du côté de l'entrelacement — les deux fichiers étaient pourtant
+   * `progressive`. Ce n'est pas une image mal encodée, ce sont des images
+   * absentes.
+   *
+   * Compter ici plutôt que relire le fichier après coup : la boucle sait
+   * exactement combien de fois elle a composé, sans décoder quoi que ce soit.
+   */
+  const exportFramesRef = useRef(0);
+
+  /*
+   * Vrai pendant un encodage hors ligne.
+   *
+   * La boucle d'animation continue de tourner — on ne l'arrête pas, elle porte
+   * la sécurité et l'état — mais elle cesse de **dessiner** : pendant un export
+   * hors ligne, le canvas appartient à `composerA`, qui le remplit pour un
+   * instant précis. Deux écrivains sur le même canvas donneraient une image sur
+   * deux prise au mauvais moment, et le défaut ne se verrait qu'au montage.
+   */
+  const horsLigneRef = useRef(false);
   const poolRef = useRef<ClipVideoPool | null>(null);
   const gradeRef = useRef<GradePipeline | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
@@ -186,6 +291,8 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
 
       // Copie, jamais l'objet du gouverneur : il vient de `QUALITY_TIERS`, et
       // le muter changerait la constante pour toute la session.
+      if (exporting) exportFramesRef.current += 1;
+
       const tier = exporting
         ? { ...tierById('full'), scale: exportingRef.current! }
         : { ...governor.current() };
@@ -239,6 +346,12 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
       // Le canvas est retrouvé à chaque image plutôt que capturé au démarrage :
       // la boucle devient insensible à l'ordre de montage des composants et
       // survit à un remplacement du canvas.
+      // Pendant un encodage hors ligne, le canvas appartient à `composerA`.
+      if (horsLigneRef.current) {
+        raf = requestAnimationFrame(loop);
+        return;
+      }
+
       const ctx = resolveContext(canvasRef.current, ctxRef, tier.scale);
       if (!ctx) {
         raf = requestAnimationFrame(loop);
@@ -478,8 +591,22 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
     [],
   );
 
-  const beginExport = useCallback(async (scale = 1) => {
+  const beginExport = useCallback(async (scale = 1, horsLigne = false) => {
     exportingRef.current = scale;
+    exportFramesRef.current = 0;
+    horsLigneRef.current = horsLigne;
+
+    /*
+     * Hors ligne, le redimensionnement se fait ici et non plus par la boucle.
+     *
+     * C'est `resolveContext` qui donne au canvas sa définition de sortie, et la
+     * boucle cesse de l'appeler dès qu'elle cède le canvas. Sans cette ligne,
+     * l'encodeur était configuré sur la taille de l'**aperçu** — mesuré à
+     * 378 × 672 au lieu de 720 × 1280, et rien ne le signalait : le fichier
+     * était lisible, à la bonne durée, à la bonne cadence, simplement quatre
+     * fois trop petit.
+     */
+    if (horsLigne && canvasRef.current) resolveContext(canvasRef.current, ctxRef, scale);
     // Deux images d'attente : la première applique la nouvelle taille, la
     // seconde garantit qu'elle a bien été composée avant toute capture.
     await new Promise<void>((resolve) =>
@@ -489,7 +616,59 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
 
   const endExport = useCallback(() => {
     exportingRef.current = null;
+    horsLigneRef.current = false;
   }, []);
+
+  /** Nombre d'images composées depuis le dernier `beginExport`. */
+  const exportedFrames = useCallback(() => exportFramesRef.current, []);
+
+/*
+ * Compositeur déterministe, pour l'encodage hors ligne.
+ *
+ * C'est le cœur du correctif d'export. L'ancien chemin filmait l'aperçu pendant
+ * qu'il jouait : le fichier recevait ce que l'appareil avait eu le temps de
+ * composer, et une image manquée ne se rattrapait jamais. Ici on demande une
+ * image à un instant donné, et on **attend** qu'elle soit prête. Un téléphone
+ * lent met plus longtemps ; il ne perd rien.
+ *
+ * L'attente porte sur le déplacement des rushes, et c'est le seul endroit où
+ * elle est indispensable : régler `currentTime` ne change pas l'image tout de
+ * suite, et dessiner sans attendre `seeked` grave l'image précédente. C'est
+ * exactement ce défaut qui produisait des plans dupliqués.
+ *
+ * Le rendu passe par `renderFrame`, comme l'aperçu : l'invariant du chemin de
+ * rendu unique tient, et l'export ne peut pas diverger de ce qu'on a vu.
+ */
+  const composerA = useCallback(async (temps: number, image: number): Promise<void> => {
+    const pool = poolRef.current;
+    const grade = gradeRef.current;
+    const canvas = canvasRef.current;
+    if (!pool || !grade || !canvas) return;
+
+    const { project } = useStudio.getState();
+    const placed = layoutClips(project.clips);
+
+    // Même fenêtre de chargement que la lecture : au plus six décodeurs, ce que
+    // le navigateur d'un téléphone accorde.
+    pool.sync(placed, project.assets, temps);
+
+    const ctx = resolveContext(canvas, ctxRef, exportingRef.current ?? 1);
+    if (!ctx) return;
+
+    await Promise.all(placed.map((item) => placerA(pool, item, temps)));
+
+    renderFrame(ctx, project, temps, pool, fonts, {
+      placed,
+      grade,
+      // Le numéro d'image vient du compteur d'export, jamais d'un compteur qui
+      // court : le grain doit être reproductible d'un export à l'autre.
+      frame: image,
+      scale: exportingRef.current ?? 1,
+      bloom: true,
+      captionBoxes: captionBoxesRef.current,
+      signature: marqueRef.current,
+    });
+  }, [fonts]);
 
   /** Position du point dans le repère de sortie, ou null hors du canvas. */
   const toOutput = useCallback((clientX: number, clientY: number) => {
@@ -553,7 +732,9 @@ export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
       ensureAudio,
       beginExport,
       endExport,
+      exportedFrames,
+      composerA,
     }),
-    [setCanvas, getCanvas, play, pause, toggle, seek, captionAt, toRelativeY, resources, ensureAudio, beginExport, endExport],
+    [setCanvas, getCanvas, play, pause, toggle, seek, captionAt, toRelativeY, resources, ensureAudio, beginExport, endExport, exportedFrames, composerA],
   );
 }

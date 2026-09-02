@@ -82,6 +82,39 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nSpacely est l’outil d’appoint : une photo de pièce existante, un style, et l’on obtient en trente secondes une proposition d’aménagement présentable à un client. Ce n’est pas de la conception, c’est un support de discussion — et à quinze dollars par mois, il remplace l’après-midi passée à chercher des références sur des sites de décoration.\n\n## Points forts\n- Résultat en trente secondes à partir d’une simple photo\n- Une trentaine de styles, du minimaliste au classique\n- Génère aussi des vues d’extérieur et de façade\n- Tarif très accessible, formule gratuite pour essayer\n\n## Points faibles\n- La géométrie de la pièce est parfois réinterprétée : à vérifier\n- Rien à voir avec un projet : c’est un support de discussion\n- Les résultats demandent souvent plusieurs essais\n\n## Idéal pour\nLes maîtres d’œuvre et décorateurs qui doivent proposer trois ambiances à un client dès le premier rendez-vous.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "hypar",
+      "nom": "Hypar",
+      "categorie": "Conception générative",
+      "prix": "Freemium, puis abonnement",
+      "description_courte": "La règle métier de l'agence transformée en générateur réutilisable, plutôt que refaite à la main sur chaque projet.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/hypar",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nHypar s'adresse aux agences qui répètent : mêmes typologies, mêmes règles d'implantation, mêmes gabarits d'un projet à l'autre. Au lieu de refaire, on encode une fois la logique et on la rejoue. C'est plus proche de l'outillage que du dessin, ce qui explique la barrière d'entrée réelle — il faut quelqu'un dans l'agence que la logique ne rebute pas.\n\n## Points forts\n- Capitalise le savoir-faire de l'agence au lieu de le refaire à chaque projet\n- Générateurs partageables entre projets et entre équipes\n- Particulièrement rentable sur les programmes répétitifs\n- Palier gratuit pour évaluer l'approche\n\n## Points faibles\n- Barrière d'entrée réelle : plus proche de l'outillage que du dessin\n- Sans profil un peu technique dans l'agence, l'outil dort\n- Peu d'intérêt sur des projets tous singuliers\n- Écosystème restreint\n\n## Idéal pour\nLes agences qui traitent des programmes répétitifs — logement, bureaux, équipements — et veulent cesser de refaire la même étude.",
+      "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "snaptrude",
+      "nom": "Snaptrude",
+      "categorie": "Esquisse",
+      "prix": "Freemium, puis abonnement par utilisateur",
+      "description_courte": "L'esquisse dessinée dans le navigateur qui devient un modèle exploitable, sans repasser par la case modélisation.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/snaptrude",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nLa perte de temps classique de l'agence n'est pas l'esquisse, c'est sa re-saisie : ce qui a été dessiné vite est remodélisé lentement dans l'outil de production. Snaptrude attaque exactement ce point — l'esquisse se fait dans le navigateur, à plusieurs, et sort en modèle exploitable plutôt qu'en image morte. Les surfaces et les métrés suivent au fur et à mesure, ce qui rend la discussion avec le client plus honnête dès les premières minutes.\n\n## Points forts\n- Travail à plusieurs dans le navigateur, sans installation\n- L'esquisse produit un modèle exploitable, pas seulement une image\n- Surfaces et métrés calculés en continu pendant la conception\n- Passerelles vers les outils de production courants\n\n## Points faibles\n- Ne remplace pas un outil de production sur les phases avancées\n- Le travail dans le navigateur montre ses limites sur les projets lourds\n- Écosystème plus jeune que celui des éditeurs installés\n- Abonnement par utilisateur, qui pèse sur une petite agence\n\n## Idéal pour\nLes agences qui perdent du temps entre l'esquisse et la modélisation, et celles qui veulent chiffrer des surfaces devant le client plutôt qu'après.",
+      "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "architechtures",
+      "nom": "Architechtures",
+      "categorie": "Faisabilité",
+      "prix": "Sur devis",
+      "description_courte": "Les variantes de projet résidentiel générées à partir des contraintes de la parcelle et du programme, chiffrées d'emblée.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/architechtures",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nSur le logement, la phase de faisabilité consiste à explorer des hypothèses qu'on n'a jamais le temps d'explorer toutes. L'outil renverse la contrainte : on saisit la parcelle, les règles et le programme, il produit des variantes avec leurs surfaces et leurs coûts. La valeur n'est pas dans le projet qu'il propose — un architecte n'en veut pas — mais dans les quinze qu'il permet d'éliminer en une matinée.\n\n## Points forts\n- Variantes générées à partir des vraies contraintes de parcelle et de programme\n- Chiffrage et surfaces attachés à chaque hypothèse\n- Fait gagner la phase où l'on décide sans avoir le temps de comparer\n- Sortie exploitable dans les outils de conception\n\n## Points faibles\n- Périmètre résidentiel : peu utile hors logement\n- Aucun tarif public\n- Le rendu formel reste générique : c'est un outil de faisabilité, pas de projet\n- Suppose une saisie rigoureuse des règles applicables\n\n## Idéal pour\nLes agences et promoteurs qui doivent trancher vite entre plusieurs hypothèses d'implantation sur une parcelle, avec les surfaces et les coûts en face.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

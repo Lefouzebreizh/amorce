@@ -9,7 +9,7 @@ facture, et c'est là qu'on improvise. Ce fichier existe pour que non.
 
 Une facture porte obligatoirement le numéro SIRET de celui qui l'émet. Pas de
 SIRET, pas de facture — et encaisser une prestation sans être enregistré expose
-à des ennuis qui coûtent bien plus que 299 €.
+à des ennuis qui coûtent bien plus que 300 €.
 
 Si ce numéro n'existe pas encore, **c'est la première chose à faire**, avant le
 premier message de prospection. L'inscription en micro-entrepreneur se fait en
@@ -44,9 +44,9 @@ avant la première facture. Après, c'est réglé pour toutes les suivantes.
 >
 > | Prestation | Quantité | Prix unitaire | Total |
 > | --- | --- | --- | --- |
-> | Création d'un site vitrine d'une page, livré et mis en ligne | 1 | 299,00 € | 299,00 € |
+> | Création d'un site vitrine d'une page, livré et mis en ligne | 1 | 300,00 € | 300,00 € |
 >
-> **Total : 299,00 €**
+> **Total : 300,00 €**
 > *TVA non applicable, article 293 B du CGI*
 >
 > Prestation réalisée le ⟦date de livraison⟧.
@@ -80,6 +80,6 @@ la garantie crédible.
 
 **On ne facture pas une modification comprise.** `APRES-LA-LIVRAISON.md` dit ce
 qui l'est et ce qui ne l'est pas. Une facture surprise pour un changement de
-numéro de téléphone coûte le bouche-à-oreille, qui vaut bien plus que 299 €.
+numéro de téléphone coûte le bouche-à-oreille, qui vaut bien plus que 300 €.
 
 **On garde une copie de chaque facture.** Pas dans ce dépôt — il est public.

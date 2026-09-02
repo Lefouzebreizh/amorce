@@ -129,11 +129,17 @@ async function main() {
       '  adresse que personne ne sert. Les sites s’afficheraient pourtant très\n' +
       '  bien, et tous les autres contrôles passeraient : c’est exactement ce qui\n' +
       '  rend ce défaut cher.\n\n' +
-      '  Régler l’adresse d’abord, reconstruire ensuite :\n' +
-      '    node regler-domaines.mjs --base https://<projet>.pages.dev\n' +
-      '    npm run sites\n\n' +
-      '  Cloudflare Pages donne cette adresse gratuitement, et `<projet>` est le\n' +
-      '  nom que porte le projet Pages — pas un nom deviné ici.\n\n' +
+      '  Régler l’adresse d’abord, reconstruire ensuite. `ma-panoplie-ia.com`\n' +
+      '  est enregistré — le registre le refuse à l’achat — mais ne pointe nulle\n' +
+      '  part : il lui manque quatre `A` sur l’apex, vers 185.199.108.153,\n' +
+      '  .109.153, .110.153 et .111.153, puis Settings → Pages → Source →\n' +
+      '  GitHub Actions.\n\n' +
+      '  Décidé le 02/09/2026 : on ne publie pas sur une adresse provisoire.\n' +
+      '  Les onze bases déclarent déjà ce domaine ; publier ailleurs obligerait\n' +
+      '  à faire indexer une adresse pour la remplacer ensuite, ce qui remet le\n' +
+      '  référencement à zéro sur un projet qui ne vaut que par lui.\n\n' +
+      '  Autre adresse malgré tout : node regler-domaines.mjs --base <adresse>\n' +
+      '  puis npm run sites.\n\n' +
       '  Domaine acheté dont le DNS n’a pas fini de se propager : --sans-dns.'
     );
     process.exit(1);

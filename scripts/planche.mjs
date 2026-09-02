@@ -23,6 +23,24 @@ import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { optionsChromium } from './chromium.mjs';
+
+/**
+ * Le ffmpeg du système d'abord.
+ *
+ * Deux ffmpeg cohabitent dans les sessions distantes, et celui que le `PATH`
+ * rend en premier — le binaire statique de `/usr/local/bin` — n'a pas
+ * `drawtext`, alors même que sa ligne `configuration:` annonce
+ * `--enable-libfreetype`. Les rushes de la planche portent leur numéro écrit
+ * dessus : sans ce filtre, la fabrication s'arrête sur « No such filter:
+ * 'drawtext' », qui nomme le filtre et jamais le binaire. Le script ne tournait
+ * donc pas du tout ici, alors que `/usr/bin/ffmpeg` sait tout faire.
+ *
+ * C'est la règle déjà écrite dans `second-brain/lecons.md` et appliquée par
+ * `montage-auto/monter_episode.ffmpeg()` : le binaire système s'il existe, le
+ * `PATH` ensuite.
+ */
+const FFMPEG = existsSync('/usr/bin/ffmpeg') ? '/usr/bin/ffmpeg' : 'ffmpeg';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const URL_BASE = process.env.AMORCE_URL || 'http://localhost:3000';
@@ -57,7 +75,7 @@ function fabriquerRushes() {
   for (let i = 1; i <= NB; i += 1) {
     const couleur = `0x${[(i * 29) % 120 + 40, (i * 61) % 120 + 40, (i * 97) % 120 + 40]
       .map((v) => v.toString(16).padStart(2, '0')).join('')}`;
-    execFileSync('ffmpeg', [
+    execFileSync(FFMPEG, [
       '-v', 'error', '-y',
       '-f', 'lavfi', '-i', 'color=c=black:s=540x960:d=5:r=30',
       '-f', 'lavfi', '-i', `sine=frequency=${200 + i * 40}:duration=5`,
@@ -75,7 +93,7 @@ function fabriquerRushes() {
 fabriquerRushes();
 mkdirSync(SORTIE, { recursive: true });
 
-const navigateur = await chromium.launch();
+const navigateur = await chromium.launch({ ...optionsChromium });
 const contexte = await navigateur.newContext({
   viewport: { width: 390, height: 640 },
   deviceScaleFactor: 2,
@@ -132,7 +150,7 @@ const planche = `${film.replace(/\.\w+$/, '')}-planche.png`;
  * logent les cartons hérités et les textes qui traînent, et c'est précisément
  * l'endroit qu'un échantillonnage régulier rate.
  */
-execFileSync('ffmpeg', [
+execFileSync(FFMPEG, [
   '-v', 'error', '-y', '-i', film,
   '-vf', `fps=${IMAGES}/${duree.toFixed(3)},scale=216:384,tile=8x5`,
   '-frames:v', '1', planche,

@@ -1,11 +1,38 @@
-# Artisan Express — la page de vente du site à 299 €
+# Artisan Express — la page de vente du site à 300 €
 
 Une page, un prix, un formulaire. Elle vend un site vitrine d'une page à un
-artisan du bâtiment : 299 € une fois, livré en 48 h, sans abonnement.
+artisan du bâtiment : 300 € une fois, livré en 48 h, sans abonnement.
 
 Le formulaire n'ouvre pas de compte, ne pose pas de mouchard et n'enregistre
 rien : ce que l'artisan écrit part dans une boîte aux lettres, et nulle part
 ailleurs.
+
+## État : **pas déployé**
+
+Vérifié sur le tableau de bord Vercel le 30/08/2026 — deux projets existent,
+`amorce` et `amorce-51up`, **aucun ne sert cette page**. Le dépôt ne porte ni
+`vercel.json` ni `.vercel`, et son workflow est une barrière de vérification,
+pas un déploiement.
+
+Cela a été affirmé à tort, et il faut savoir pourquoi pour ne pas le refaire :
+`layout.tsx` portait une adresse par défaut, `artisan-express.vercel.app`, qui
+n'a jamais existé. Une session l'a lue et en a conclu que le site était en
+ligne ; un résumé de reprise l'a répété. L'adresse inventée est retirée — sans
+`NEXT_PUBLIC_SITE_URL`, la page ne déclare plus où elle habite, et un test le
+garde.
+
+**Ce qu'il manque pour la mettre en ligne**, dans l'ordre :
+
+1. Créer le projet sur Vercel — dossier racine `artisan-express`, cadre Next.js
+   détecté seul.
+2. Poser `NEXT_PUBLIC_DEVIS_MAILTO` : c'est la seule variable qui ne demande
+   aucun compte, et celle sans laquelle un formulaire en panne ne laisse aucun
+   moyen de te joindre.
+3. Poser `NEXT_PUBLIC_SITE_URL` sur l'adresse réelle une fois connue, sans quoi
+   les métadonnées de partage restent muettes.
+
+Rien d'autre n'est requis : Resend, Stripe, téléphone et WhatsApp améliorent la
+page, ils ne la conditionnent pas.
 
 ## Lancer
 
@@ -106,7 +133,7 @@ défilement horizontal, aucune cible tactile sous 44 px hors du piège à robots
 
 ## À remplir avant la première vente
 
-- Le lien de paiement Stripe à 299 €.
+- Le lien de paiement Stripe à 300 €.
 - Le numéro de téléphone et celui de WhatsApp.
 - La ligne du domaine dans `Offre.tsx` : elle annonce « une douzaine d'euros
   par an, payés au fournisseur ». C'est le seul chiffre de la page qui n'a pas

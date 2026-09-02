@@ -299,6 +299,41 @@ ${images}
   </section>`);
   }
 
+  /*
+   * Les avis, et rien qu'eux.
+   *
+   * Le générateur n'en fabrique aucun : il rend ce que la commande porte, ou
+   * rien du tout. Un témoignage inventé sur le site d'un artisan est le seul
+   * défaut de cette page qui puisse lui coûter sa réputation, et le dépôt se
+   * l'interdit sans exception.
+   *
+   * En démonstration, la mention est explicite : la page montre une mise en
+   * page, pas des clients. Sur un vrai site elle disparaît — l'y laisser
+   * jetterait un doute sur des avis authentiques.
+   */
+  const avis = (commande.avis ?? []).filter((a) => a.texte.trim() !== '');
+  if (avis.length > 0) {
+    const cartes = avis
+      .map(
+        (a) => `      <blockquote>
+        <p>${echapper(a.texte)}</p>
+        <cite>${echapper(a.prenom)}, ${echapper(a.commune)}</cite>
+      </blockquote>`,
+      )
+      .join('\n');
+    blocs.push(`  <section class="bloc">
+    <h2>Ce qu’en disent mes clients</h2>${
+      options.demonstration !== true
+        ? ''
+        : `
+    <p class="mention">Avis d’exemple. Comme le reste de cette page, ils montrent la mise en page — ce sont vos vrais avis qui prendront leur place.</p>`
+    }
+    <div class="avis">
+${cartes}
+    </div>
+  </section>`);
+  }
+
   blocs.push(`  <section class="bloc">
     <h2>Où j’interviens</h2>
     <p>${ville} et les communes autour.</p>
@@ -400,6 +435,16 @@ ${ficheEtablissement(commande, domaine)}
   .services li { margin: .35rem 0; }
   .galerie { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
   .galerie figure { margin: 0; }
+  .avis { display: grid; gap: 1rem; }
+  /* Un filet à gauche plutôt qu'un cadre : l'œil suit la colonne de texte, et
+     deux avis ne se lisent pas comme deux boutons. */
+  .avis blockquote {
+    margin: 0; padding: .25rem 0 .25rem 1rem;
+    border-left: 3px solid var(--accent-texte);
+  }
+  .avis p { margin: 0 0 .4rem; }
+  .avis cite { font-style: normal; font-weight: 700; color: var(--gris); }
+  .mention { color: var(--gris); font-size: 1rem; margin: -.25rem 0 1rem; }
   .galerie img { width: 100%; height: 100%; object-fit: cover; border-radius: .6rem; display: block; }
   .actions { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1.5rem 0; }
   /* 56 px de haut : des mains de chantier, souvent gantées, et un téléphone

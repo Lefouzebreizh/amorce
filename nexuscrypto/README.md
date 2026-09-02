@@ -263,6 +263,47 @@ des relevés rejoués.
 
 ---
 
+## 6 bis. Ce projet ne se déploie pas — et surtout pas sur Vercel
+
+Un projet Vercel nommé `nexuscrypto`, branché sur ce dépôt, a existé le
+31/08/2026. Il **échouait au build à chaque poussée** — vérifié sur les statuts
+de plusieurs pull requests, `Deployment has failed`, pendant que les trois
+autres projets du dépôt réussissaient. Ce rouge-là était réel, et il se
+confondait avec le rouge de quota qui tombait le même jour sur tout le monde.
+
+La cause n'est pas un réglage à corriger : **il n'y a rien à déployer.** Ce
+dossier ne porte ni `package.json`, ni `index.html`, ni `public/`, ni le
+dossier `api/` que Vercel attend pour du Python. C'est une bibliothèque et une
+ligne de commande, et rien d'autre.
+
+Et quand bien même le build passerait, l'hébergement serait le mauvais :
+
+- **le moteur est une boucle qui vit**, pas une réponse à une requête. Il
+  observe, décide, place, surveille un stop. Une fonction sans état qui
+  s'arrête au bout d'une minute ne peut rien en faire ;
+- **il tient un état entre deux passes** — portefeuille, positions ouvertes,
+  coupe-circuit. Le disque d'une invocation disparaît avec elle ;
+- **il a besoin des API de marché**, que le mandataire des sessions distantes
+  refuse déjà, et qui demandent des clés qui n'ont rien à faire dans un
+  environnement de bord.
+
+Le jour où ce moteur tourne pour de vrai, il tourne sur une machine qui reste
+allumée — pas sur une plateforme de pages.
+
+**Le projet a été supprimé côté Vercel le 31/08/2026**, par le propriétaire du
+compte. C'était le geste qui réglait vraiment la chose : le dépôt est passé de
+quatre projets branchés à trois, soit un quart de consommation de quota en
+moins à chaque fusion.
+
+`nexuscrypto/vercel.json` porte toujours un `ignoreCommand` qui vaut `exit 0`,
+et **il est conservé à dessein**. Il ne sert plus à museler quoi que ce soit —
+il n'y a plus rien à museler — mais il ne coûte rien et il couvre le seul cas
+qui reste : **un projet recréé depuis le tableau de bord n'emporte pas de
+`vercel.json`**, et se déclencherait alors sur chaque commit du dépôt entier.
+Le supprimer par souci de propreté retirerait cette assurance sans rien gagner.
+
+---
+
 ## 7. Vérifier
 
 ```bash

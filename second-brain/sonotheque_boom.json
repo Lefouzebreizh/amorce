@@ -1,0 +1,904 @@
+{
+  "_lisez_moi": [
+    "Index mesuré des échantillons BOOM Library, relevé le 29/08/2026.",
+    "entendu_crete_db : le moment le plus fort AU-DESSUS DE 400 Hz, sur 200 ms.",
+    "C'est LUI qui décide, pas la moyenne — voir la lecon du meme jour.",
+    "Au-dessus de -22 dB : le son porte sur un haut-parleur de telephone.",
+    "attenuation_conseillee_db : ce qu'il faut retirer pour ne pas saturer",
+    "dans le plan ; la plupart de ces fichiers depassent 1,0 de crete.",
+    "Les fichiers eux-memes ne sont PAS dans le depot (invariant 8) :",
+    "ils vivent sur la machine du proprietaire."
+  ],
+  "sons": [
+    {
+      "fichier": "DSGNImpt_HIT_AGGRESSIVESlap_My_Crunch_Up_B00M_CIDS.wav",
+      "bibliotheque": "Impacts DS",
+      "entendu_crete_db": -4.6,
+      "entendu_moyen_db": -18.9,
+      "instant_du_sommet_s": 7.4,
+      "duree_s": 26.87,
+      "crete": 1.421,
+      "attenuation_conseillee_db": -4.0
+    },
+    {
+      "fichier": "DSGNVocl_EXTREMEScream_Piercer_B00M_HRDS.wav",
+      "bibliotheque": "Horror DS",
+      "entendu_crete_db": -6.8,
+      "entendu_moyen_db": -16.5,
+      "instant_du_sommet_s": 15.7,
+      "duree_s": 48.14,
+      "crete": 1.405,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "WHSH_CINEMATIC_ORGANIC_FASTBlurb_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -6.9,
+      "entendu_moyen_db": -20.4,
+      "instant_du_sommet_s": 0.8,
+      "duree_s": 22.9,
+      "crete": 1.401,
+      "attenuation_conseillee_db": -3.8
+    },
+    {
+      "fichier": "DSGNImpt_HITVecna_B00M_CIDS.wav",
+      "bibliotheque": "Impacts DS",
+      "entendu_crete_db": -8.7,
+      "entendu_moyen_db": -23.2,
+      "instant_du_sommet_s": 11.6,
+      "duree_s": 45.1,
+      "crete": 1.394,
+      "attenuation_conseillee_db": -3.8
+    },
+    {
+      "fichier": "DSGNImpt_WHOOSH_HIT_AGGRESSIVERage_B00M_CIDS.wav",
+      "bibliotheque": "Impacts DS",
+      "entendu_crete_db": -8.7,
+      "entendu_moyen_db": -20.6,
+      "instant_du_sommet_s": 15.1,
+      "duree_s": 28.61,
+      "crete": 1.392,
+      "attenuation_conseillee_db": -3.8
+    },
+    {
+      "fichier": "DSGNRise_RISESilverwind_B00M_CTRDS.wav",
+      "bibliotheque": "Trailers DS",
+      "entendu_crete_db": -9.1,
+      "entendu_moyen_db": -18.4,
+      "instant_du_sommet_s": 7.0,
+      "duree_s": 11.63,
+      "crete": 1.415,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "MUSCWind_INSTRUMENTFlute_Bansuri_Overblowing_G_B00M_CXCK.wav",
+      "bibliotheque": "Expressions CK",
+      "entendu_crete_db": -9.2,
+      "entendu_moyen_db": -18.1,
+      "instant_du_sommet_s": 10.5,
+      "duree_s": 24.1,
+      "crete": 0.847,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "METLImpt_Impact_Distorted_Poles_P0_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -9.4,
+      "entendu_moyen_db": -17.5,
+      "instant_du_sommet_s": 0.1,
+      "duree_s": 19.5,
+      "crete": 1.561,
+      "attenuation_conseillee_db": -4.8
+    },
+    {
+      "fichier": "DSGNStngr_STINGERBrass_Demon_B00M_CTRDS.wav",
+      "bibliotheque": "Trailers DS",
+      "entendu_crete_db": -9.8,
+      "entendu_moyen_db": -17.6,
+      "instant_du_sommet_s": 8.4,
+      "duree_s": 17.94,
+      "crete": 1.286,
+      "attenuation_conseillee_db": -3.1
+    },
+    {
+      "fichier": "DSGNStngr_PUNCHStubby_B00M_CSDS.wav",
+      "bibliotheque": "Strikes DS",
+      "entendu_crete_db": -9.9,
+      "entendu_moyen_db": -20.3,
+      "instant_du_sommet_s": 8.6,
+      "duree_s": 10.58,
+      "crete": 1.495,
+      "attenuation_conseillee_db": -4.4
+    },
+    {
+      "fichier": "DSGNWhsh_LEAD_INTonal_Voice_Slash_B00M_CICK.wav",
+      "bibliotheque": "Impacts CK",
+      "entendu_crete_db": -10.2,
+      "entendu_moyen_db": -22.2,
+      "instant_du_sommet_s": 7.6,
+      "duree_s": 20.2,
+      "crete": 1.38,
+      "attenuation_conseillee_db": -3.7
+    },
+    {
+      "fichier": "DSGNDist_SCREAMHarsh_High_B00M_CDCK.wav",
+      "bibliotheque": "Darkness CK",
+      "entendu_crete_db": -10.7,
+      "entendu_moyen_db": -16.6,
+      "instant_du_sommet_s": 6.3,
+      "duree_s": 12.96,
+      "crete": 1.126,
+      "attenuation_conseillee_db": -1.9
+    },
+    {
+      "fichier": "DSGNMisc_WHOOSH_HITClean_Almost_There_B00M_CSDS.wav",
+      "bibliotheque": "Strikes DS",
+      "entendu_crete_db": -10.7,
+      "entendu_moyen_db": -25.9,
+      "instant_du_sommet_s": 24.4,
+      "duree_s": 30.69,
+      "crete": 1.397,
+      "attenuation_conseillee_db": -3.8
+    },
+    {
+      "fichier": "DSGNSynth_STUTTERSoft_B00M_CDDS.wav",
+      "bibliotheque": "Darkness DS",
+      "entendu_crete_db": -10.8,
+      "entendu_moyen_db": -22.1,
+      "instant_du_sommet_s": 12.3,
+      "duree_s": 20.08,
+      "crete": 1.357,
+      "attenuation_conseillee_db": -3.6
+    },
+    {
+      "fichier": "DSGNStngr_WHOOSH_HITArnigator_B00M_CTRDS.wav",
+      "bibliotheque": "Trailers DS",
+      "entendu_crete_db": -11.0,
+      "entendu_moyen_db": -23.6,
+      "instant_du_sommet_s": 1.2,
+      "duree_s": 8.43,
+      "crete": 1.514,
+      "attenuation_conseillee_db": -4.5
+    },
+    {
+      "fichier": "WATRWave_UNDERWATERWhoosh_Aggressive_Medium_B00M_CEDS.wav",
+      "bibliotheque": "Elements DS",
+      "entendu_crete_db": -11.0,
+      "entendu_moyen_db": -21.3,
+      "instant_du_sommet_s": 11.6,
+      "duree_s": 40.6,
+      "crete": 1.394,
+      "attenuation_conseillee_db": -3.8
+    },
+    {
+      "fichier": "DSGNMisc_WHOOSH_HITAggressive_Liftoff_B00M_CSDS.wav",
+      "bibliotheque": "Strikes DS",
+      "entendu_crete_db": -11.2,
+      "entendu_moyen_db": -23.5,
+      "instant_du_sommet_s": 1.4,
+      "duree_s": 28.61,
+      "crete": 1.413,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "DSGNStngr_HITAggressive_Gut_Punch_B00M_CSDS.wav",
+      "bibliotheque": "Strikes DS",
+      "entendu_crete_db": -11.3,
+      "entendu_moyen_db": -25.9,
+      "instant_du_sommet_s": 8.6,
+      "duree_s": 32.45,
+      "crete": 1.415,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "WHSH_WHOOSHFiresworn_B00M_CTRDS.wav",
+      "bibliotheque": "Trailers DS",
+      "entendu_crete_db": -11.3,
+      "entendu_moyen_db": -23.5,
+      "instant_du_sommet_s": 0.7,
+      "duree_s": 7.57,
+      "crete": 1.599,
+      "attenuation_conseillee_db": -5.0
+    },
+    {
+      "fichier": "METLFric_SCREECHBrick_Trowel_Metal_Wall_Scrape_Slow_B00M_CTCK.wav",
+      "bibliotheque": "Metal Titan CK",
+      "entendu_crete_db": -11.5,
+      "entendu_moyen_db": -19.2,
+      "instant_du_sommet_s": 6.3,
+      "duree_s": 30.5,
+      "crete": 0.835,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "DSGNImpt_HIT_SOFTIridium_B00M_CIDS.wav",
+      "bibliotheque": "Impacts DS",
+      "entendu_crete_db": -11.7,
+      "entendu_moyen_db": -26.5,
+      "instant_du_sommet_s": 0.1,
+      "duree_s": 30.34,
+      "crete": 1.375,
+      "attenuation_conseillee_db": -3.7
+    },
+    {
+      "fichier": "DSGNMisc_SYNTHGrainy_Doppler_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -11.7,
+      "entendu_moyen_db": -24.1,
+      "instant_du_sommet_s": 17.4,
+      "duree_s": 19.4,
+      "crete": 1.379,
+      "attenuation_conseillee_db": -3.7
+    },
+    {
+      "fichier": "DSGNDist_BLASTHeavy_Harsh_B00M_CDCK.wav",
+      "bibliotheque": "Darkness CK",
+      "entendu_crete_db": -11.8,
+      "entendu_moyen_db": -19.2,
+      "instant_du_sommet_s": 0.1,
+      "duree_s": 17.71,
+      "crete": 1.18,
+      "attenuation_conseillee_db": -2.4
+    },
+    {
+      "fichier": "DSGNStngr_IMPACT_TRANSITION_INHard_Line_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -11.8,
+      "entendu_moyen_db": -21.5,
+      "instant_du_sommet_s": 8.4,
+      "duree_s": 14.2,
+      "crete": 1.404,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "MUSCMisc_RISEOrchestra_Tutti_Chaos_B00M_CTRCK.wav",
+      "bibliotheque": "Trailers CK",
+      "entendu_crete_db": -11.8,
+      "entendu_moyen_db": -22.6,
+      "instant_du_sommet_s": 27.1,
+      "duree_s": 48.39,
+      "crete": 1.094,
+      "attenuation_conseillee_db": -1.7
+    },
+    {
+      "fichier": "METLImpt_Impact_Container_Door_P0_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -11.9,
+      "entendu_moyen_db": -22.7,
+      "instant_du_sommet_s": 0.2,
+      "duree_s": 44.15,
+      "crete": 1.394,
+      "attenuation_conseillee_db": -3.8
+    },
+    {
+      "fichier": "DSGNDist_TRANSITIONTexture_Crack_Transient_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -12.0,
+      "entendu_moyen_db": -24.6,
+      "instant_du_sommet_s": 4.4,
+      "duree_s": 23.35,
+      "crete": 1.067,
+      "attenuation_conseillee_db": -1.5
+    },
+    {
+      "fichier": "DSGNMisc_ZAPWarp_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -12.2,
+      "entendu_moyen_db": -22.7,
+      "instant_du_sommet_s": 8.7,
+      "duree_s": 11.18,
+      "crete": 1.424,
+      "attenuation_conseillee_db": -4.0
+    },
+    {
+      "fichier": "DSGNStngr_Impact_Mid_Meteorite_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -12.2,
+      "entendu_moyen_db": -26.1,
+      "instant_du_sommet_s": 0.5,
+      "duree_s": 7.69,
+      "crete": 1.51,
+      "attenuation_conseillee_db": -4.5
+    },
+    {
+      "fichier": "METLImpt_Impact_Bicycle_P1_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -12.6,
+      "entendu_moyen_db": -23.1,
+      "instant_du_sommet_s": 17.1,
+      "duree_s": 43.79,
+      "crete": 1.614,
+      "attenuation_conseillee_db": -5.1
+    },
+    {
+      "fichier": "METLTonl_SWELLWaterphone_Bowing_High_Screech_B00M_CTCK.wav",
+      "bibliotheque": "Metal Titan CK",
+      "entendu_crete_db": -12.6,
+      "entendu_moyen_db": -23.6,
+      "instant_du_sommet_s": 12.6,
+      "duree_s": 46.57,
+      "crete": 0.477,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "DSGNImpt_IMPACTExplosion_Cloth_Thunder_Snap_B00M_CICK.wav",
+      "bibliotheque": "Impacts CK",
+      "entendu_crete_db": -12.7,
+      "entendu_moyen_db": -27.4,
+      "instant_du_sommet_s": 11.5,
+      "duree_s": 21.87,
+      "crete": 1.382,
+      "attenuation_conseillee_db": -3.7
+    },
+    {
+      "fichier": "DSGNDist_BLASTFatty_B00M_CDDS.wav",
+      "bibliotheque": "Darkness DS",
+      "entendu_crete_db": -12.8,
+      "entendu_moyen_db": -20.7,
+      "instant_du_sommet_s": 12.7,
+      "duree_s": 32.18,
+      "crete": 1.365,
+      "attenuation_conseillee_db": -3.6
+    },
+    {
+      "fichier": "DSGNMisc_TRANSITIONHeavy_Head_Pounder_B00M_CTDS2.wav",
+      "bibliotheque": "Trailers DS2",
+      "entendu_crete_db": -12.8,
+      "entendu_moyen_db": -25.8,
+      "instant_du_sommet_s": 13.7,
+      "duree_s": 29.06,
+      "crete": 1.375,
+      "attenuation_conseillee_db": -3.7
+    },
+    {
+      "fichier": "WHSH_WHOOSHSpeaker_Creature_Harsh_B00M_CTRCK.wav",
+      "bibliotheque": "Trailers CK",
+      "entendu_crete_db": -12.8,
+      "entendu_moyen_db": -22.8,
+      "instant_du_sommet_s": 12.0,
+      "duree_s": 13.68,
+      "crete": 1.134,
+      "attenuation_conseillee_db": -2.0
+    },
+    {
+      "fichier": "DSGNStngr_SMASHEDSqueak_Distorted_B00M_CDCK.wav",
+      "bibliotheque": "Darkness CK",
+      "entendu_crete_db": -12.9,
+      "entendu_moyen_db": -22.6,
+      "instant_du_sommet_s": 1.8,
+      "duree_s": 9.06,
+      "crete": 1.368,
+      "attenuation_conseillee_db": -3.6
+    },
+    {
+      "fichier": "WATRImpt_MAGMAImpact_Medium_B00M_CEDS.wav",
+      "bibliotheque": "Elements DS",
+      "entendu_crete_db": -13.0,
+      "entendu_moyen_db": -23.6,
+      "instant_du_sommet_s": 25.0,
+      "duree_s": 35.35,
+      "crete": 1.384,
+      "attenuation_conseillee_db": -3.7
+    },
+    {
+      "fichier": "DSGNMisc_SUSTAINFire_Cloth_Short_B00M_CICK.wav",
+      "bibliotheque": "Impacts CK",
+      "entendu_crete_db": -13.4,
+      "entendu_moyen_db": -21.9,
+      "instant_du_sommet_s": 0.4,
+      "duree_s": 15.16,
+      "crete": 1.088,
+      "attenuation_conseillee_db": -1.6
+    },
+    {
+      "fichier": "DSGNStngr_HITDrum_Soft_Flutes_B00M_CTDS2.wav",
+      "bibliotheque": "Trailers DS2",
+      "entendu_crete_db": -13.5,
+      "entendu_moyen_db": -27.3,
+      "instant_du_sommet_s": 8.0,
+      "duree_s": 28.56,
+      "crete": 1.414,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "FIREMisc_FIREMovement_Soft_Large_B00M_CEDS.wav",
+      "bibliotheque": "Elements DS",
+      "entendu_crete_db": -13.5,
+      "entendu_moyen_db": -19.1,
+      "instant_du_sommet_s": 1.8,
+      "duree_s": 35.6,
+      "crete": 1.4,
+      "attenuation_conseillee_db": -3.8
+    },
+    {
+      "fichier": "DSGNStngr_IMPACT_TRANSITION_OUTFast_Lane_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -13.7,
+      "entendu_moyen_db": -25.8,
+      "instant_du_sommet_s": 6.0,
+      "duree_s": 20.84,
+      "crete": 1.613,
+      "attenuation_conseillee_db": -5.1
+    },
+    {
+      "fichier": "METLImpt_Impact_Small_Iron_Hammer_P0_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -13.7,
+      "entendu_moyen_db": -24.8,
+      "instant_du_sommet_s": 16.7,
+      "duree_s": 27.17,
+      "crete": 1.283,
+      "attenuation_conseillee_db": -3.1
+    },
+    {
+      "fichier": "DSGNStngr_Impact_High_Wobbler_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -13.9,
+      "entendu_moyen_db": -26.5,
+      "instant_du_sommet_s": 0.0,
+      "duree_s": 4.61,
+      "crete": 1.466,
+      "attenuation_conseillee_db": -4.2
+    },
+    {
+      "fichier": "DSGNRise_REVERSEDRumble_Rise_B00M_HRDS.wav",
+      "bibliotheque": "Horror DS",
+      "entendu_crete_db": -14.0,
+      "entendu_moyen_db": -29.7,
+      "instant_du_sommet_s": 13.7,
+      "duree_s": 32.69,
+      "crete": 1.262,
+      "attenuation_conseillee_db": -2.9
+    },
+    {
+      "fichier": "DSGNBoom_BASS_DIVEPrecipice_B00M_CSDS.wav",
+      "bibliotheque": "Strikes DS",
+      "entendu_crete_db": -14.5,
+      "entendu_moyen_db": -30.0,
+      "instant_du_sommet_s": 25.3,
+      "duree_s": 32.79,
+      "crete": 1.412,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "DSGNStngr_Impact_Massive_Anvil_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -14.5,
+      "entendu_moyen_db": -28.8,
+      "instant_du_sommet_s": 0.0,
+      "duree_s": 6.77,
+      "crete": 1.337,
+      "attenuation_conseillee_db": -3.4
+    },
+    {
+      "fichier": "FIRESizz_Grease_Sizzle_Burst_Small_Long_B00M_CECK.wav",
+      "bibliotheque": "Elements CK",
+      "entendu_crete_db": -14.5,
+      "entendu_moyen_db": -27.0,
+      "instant_du_sommet_s": 31.1,
+      "duree_s": 43.65,
+      "crete": 1.18,
+      "attenuation_conseillee_db": -2.4
+    },
+    {
+      "fichier": "DOORSlid_Impact_Slidedoor_Open_P1_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -14.6,
+      "entendu_moyen_db": -24.5,
+      "instant_du_sommet_s": 0.3,
+      "duree_s": 32.21,
+      "crete": 1.295,
+      "attenuation_conseillee_db": -3.2
+    },
+    {
+      "fichier": "DSGNWhsh_WHOOSHSoft_Premonition_B00M_CTDS2.wav",
+      "bibliotheque": "Trailers DS2",
+      "entendu_crete_db": -14.7,
+      "entendu_moyen_db": -29.0,
+      "instant_du_sommet_s": 5.4,
+      "duree_s": 24.54,
+      "crete": 1.414,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "FIREBrst_FIREImpact_2_Medium_B00M_CEDS.wav",
+      "bibliotheque": "Elements DS",
+      "entendu_crete_db": -14.8,
+      "entendu_moyen_db": -25.9,
+      "instant_du_sommet_s": 13.1,
+      "duree_s": 16.73,
+      "crete": 1.41,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "VEHMech_Impact_Car_Hood_Outside_P0_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -14.9,
+      "entendu_moyen_db": -24.9,
+      "instant_du_sommet_s": 0.1,
+      "duree_s": 22.21,
+      "crete": 1.443,
+      "attenuation_conseillee_db": -4.1
+    },
+    {
+      "fichier": "WHSH_ZAPHigh_Whining_In_Metal_Drone_Out_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -15.2,
+      "entendu_moyen_db": -27.6,
+      "instant_du_sommet_s": 0.6,
+      "duree_s": 15.22,
+      "crete": 1.361,
+      "attenuation_conseillee_db": -3.6
+    },
+    {
+      "fichier": "MUSCPerc_SWEETENERMetal_Pan_Flam_Far_B00M_CSCK.wav",
+      "bibliotheque": "Strikes CK",
+      "entendu_crete_db": -15.3,
+      "entendu_moyen_db": -28.6,
+      "instant_du_sommet_s": 19.2,
+      "duree_s": 36.67,
+      "crete": 0.806,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "METLImpt_Impact_Hammer_Rattle_P2_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -15.6,
+      "entendu_moyen_db": -25.4,
+      "instant_du_sommet_s": 0.1,
+      "duree_s": 26.71,
+      "crete": 1.393,
+      "attenuation_conseillee_db": -3.8
+    },
+    {
+      "fichier": "DSGNImpt_WHOOSH_HIT_SOFTNight_Fall_B00M_CIDS.wav",
+      "bibliotheque": "Impacts DS",
+      "entendu_crete_db": -15.9,
+      "entendu_moyen_db": -30.8,
+      "instant_du_sommet_s": 22.3,
+      "duree_s": 28.64,
+      "crete": 1.412,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "WHSH_PROCESSEDWhoosh_Metal_Rattling_B00M_CXCK.wav",
+      "bibliotheque": "Expressions CK",
+      "entendu_crete_db": -16.1,
+      "entendu_moyen_db": -27.5,
+      "instant_du_sommet_s": 25.8,
+      "duree_s": 35.0,
+      "crete": 0.91,
+      "attenuation_conseillee_db": -0.1
+    },
+    {
+      "fichier": "FIREMisc_SWEETENERFire_Burst_Distortion_B00M_CECK.wav",
+      "bibliotheque": "Elements CK",
+      "entendu_crete_db": -16.2,
+      "entendu_moyen_db": -27.9,
+      "instant_du_sommet_s": 15.1,
+      "duree_s": 20.55,
+      "crete": 1.011,
+      "attenuation_conseillee_db": -1.0
+    },
+    {
+      "fichier": "LIQBubl_Lava_Bubble_Burst_Single_Large_B00M_CECK.wav",
+      "bibliotheque": "Elements CK",
+      "entendu_crete_db": -16.6,
+      "entendu_moyen_db": -25.9,
+      "instant_du_sommet_s": 9.4,
+      "duree_s": 24.0,
+      "crete": 0.919,
+      "attenuation_conseillee_db": -0.2
+    },
+    {
+      "fichier": "MUSCPerc_DRUMKodo_Roll_Soft_Beater_Medium_B00M_CSCK.wav",
+      "bibliotheque": "Strikes CK",
+      "entendu_crete_db": -16.9,
+      "entendu_moyen_db": -31.2,
+      "instant_du_sommet_s": 7.9,
+      "duree_s": 35.38,
+      "crete": 1.319,
+      "attenuation_conseillee_db": -3.3
+    },
+    {
+      "fichier": "METLImpt_Impact_Sheet_Dark_P1_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -17.0,
+      "entendu_moyen_db": -28.6,
+      "instant_du_sommet_s": 39.3,
+      "duree_s": 44.36,
+      "crete": 1.393,
+      "attenuation_conseillee_db": -3.8
+    },
+    {
+      "fichier": "MUSCPerc_WOODWood_Drum_Mounted_Hit_Whip_Medium_B00M_CSCK.wav",
+      "bibliotheque": "Strikes CK",
+      "entendu_crete_db": -17.0,
+      "entendu_moyen_db": -30.6,
+      "instant_du_sommet_s": 0.3,
+      "duree_s": 23.89,
+      "crete": 1.321,
+      "attenuation_conseillee_db": -3.3
+    },
+    {
+      "fichier": "METLMvmt_VIBRATIONSheet_Metal_Rattles_Random_Groan_Rattles_B00M_CTCK.wav",
+      "bibliotheque": "Metal Titan CK",
+      "entendu_crete_db": -17.1,
+      "entendu_moyen_db": -25.4,
+      "instant_du_sommet_s": 1.1,
+      "duree_s": 31.83,
+      "crete": 1.092,
+      "attenuation_conseillee_db": -1.7
+    },
+    {
+      "fichier": "MUSCPerc_SNAREGroup_01_Roll_Medium_B00M_CSCK.wav",
+      "bibliotheque": "Strikes CK",
+      "entendu_crete_db": -17.3,
+      "entendu_moyen_db": -27.6,
+      "instant_du_sommet_s": 27.3,
+      "duree_s": 32.05,
+      "crete": 1.066,
+      "attenuation_conseillee_db": -1.5
+    },
+    {
+      "fichier": "MUSCPerc_SNAREPearl_Marching_Hit_Rim_Far_B00M_CSCK.wav",
+      "bibliotheque": "Strikes CK",
+      "entendu_crete_db": -17.4,
+      "entendu_moyen_db": -30.6,
+      "instant_du_sommet_s": 13.2,
+      "duree_s": 26.2,
+      "crete": 0.772,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "DSGNWhsh_WHOOSHThe_Swarm_B00M_CTDS2.wav",
+      "bibliotheque": "Trailers DS2",
+      "entendu_crete_db": -17.5,
+      "entendu_moyen_db": -27.6,
+      "instant_du_sommet_s": 2.5,
+      "duree_s": 31.34,
+      "crete": 1.358,
+      "attenuation_conseillee_db": -3.6
+    },
+    {
+      "fichier": "OBJCont_CLUNKContainer_Box_Latch_B00M_CTCK.wav",
+      "bibliotheque": "Metal Titan CK",
+      "entendu_crete_db": -17.9,
+      "entendu_moyen_db": -29.6,
+      "instant_du_sommet_s": 0.2,
+      "duree_s": 12.93,
+      "crete": 1.325,
+      "attenuation_conseillee_db": -3.4
+    },
+    {
+      "fichier": "WATRBubl_Vase_Submersion_Bubbles_UW_B00M_CECK.wav",
+      "bibliotheque": "Elements CK",
+      "entendu_crete_db": -18.0,
+      "entendu_moyen_db": -29.6,
+      "instant_du_sommet_s": 9.6,
+      "duree_s": 25.34,
+      "crete": 1.222,
+      "attenuation_conseillee_db": -2.7
+    },
+    {
+      "fichier": "WATRSplsh_Bucket_Emptying_Splash_UW_B00M_CECK.wav",
+      "bibliotheque": "Elements CK",
+      "entendu_crete_db": -18.3,
+      "entendu_moyen_db": -26.7,
+      "instant_du_sommet_s": 6.2,
+      "duree_s": 21.01,
+      "crete": 1.209,
+      "attenuation_conseillee_db": -2.6
+    },
+    {
+      "fichier": "GLASCrsh_IMPACTGlass_Debris_B00M_CTRCK.wav",
+      "bibliotheque": "Trailers CK",
+      "entendu_crete_db": -18.7,
+      "entendu_moyen_db": -29.7,
+      "instant_du_sommet_s": 4.3,
+      "duree_s": 7.99,
+      "crete": 0.735,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "MUSCChor_IMPACTVoice_Choir_Male_Whisper_B00M_CTRCK.wav",
+      "bibliotheque": "Trailers CK",
+      "entendu_crete_db": -19.3,
+      "entendu_moyen_db": -30.6,
+      "instant_du_sommet_s": 6.7,
+      "duree_s": 10.0,
+      "crete": 0.689,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "DSGNRise_RISE_War_Stomp_B00M_CTRDS.wav",
+      "bibliotheque": "Trailers DS",
+      "entendu_crete_db": -19.6,
+      "entendu_moyen_db": -36.0,
+      "instant_du_sommet_s": 0.0,
+      "duree_s": 10.07,
+      "crete": 1.414,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "CREASrce_Lava_Spluttery_Long_B00M_CECK.wav",
+      "bibliotheque": "Elements CK",
+      "entendu_crete_db": -19.7,
+      "entendu_moyen_db": -28.9,
+      "instant_du_sommet_s": 5.6,
+      "duree_s": 18.76,
+      "crete": 1.159,
+      "attenuation_conseillee_db": -2.2
+    },
+    {
+      "fichier": "DSGNStngr_Impact_Mid_Flame_Breath_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -19.9,
+      "entendu_moyen_db": -31.4,
+      "instant_du_sommet_s": 0.3,
+      "duree_s": 4.22,
+      "crete": 1.426,
+      "attenuation_conseillee_db": -4.0
+    },
+    {
+      "fichier": "FIREWhsh_WHOOSHFire_Torch_Med_Flange_RL_B00M_CTRCK.wav",
+      "bibliotheque": "Trailers CK",
+      "entendu_crete_db": -19.9,
+      "entendu_moyen_db": -30.1,
+      "instant_du_sommet_s": 6.0,
+      "duree_s": 10.92,
+      "crete": 1.072,
+      "attenuation_conseillee_db": -1.5
+    },
+    {
+      "fichier": "DSGNBoom_HITDeep_Bass_Drop_B00M_CDDS.wav",
+      "bibliotheque": "Darkness DS",
+      "entendu_crete_db": -20.0,
+      "entendu_moyen_db": -34.6,
+      "instant_du_sommet_s": 20.3,
+      "duree_s": 38.92,
+      "crete": 1.413,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "METLImpt_IMPACTAquaphone_Harsh_B00M_CTRCK.wav",
+      "bibliotheque": "Trailers CK",
+      "entendu_crete_db": -20.2,
+      "entendu_moyen_db": -35.0,
+      "instant_du_sommet_s": 20.4,
+      "duree_s": 43.87,
+      "crete": 0.883,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "MUSCInst_INSTRUMENTChurch_Organ_Braam_Very_Short_B00M_CXCK.wav",
+      "bibliotheque": "Expressions CK",
+      "entendu_crete_db": -20.3,
+      "entendu_moyen_db": -32.4,
+      "instant_du_sommet_s": 10.4,
+      "duree_s": 29.62,
+      "crete": 1.343,
+      "attenuation_conseillee_db": -3.5
+    },
+    {
+      "fichier": "DSGNSynth_Impact_Scifi_Angry_Pc_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -20.6,
+      "entendu_moyen_db": -29.8,
+      "instant_du_sommet_s": 0.3,
+      "duree_s": 5.84,
+      "crete": 1.429,
+      "attenuation_conseillee_db": -4.0
+    },
+    {
+      "fichier": "DSGNMisc_PARTICLE_BIG_CONSTANT_SLOWWormhole_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -21.5,
+      "entendu_moyen_db": -27.8,
+      "instant_du_sommet_s": 4.8,
+      "duree_s": 30.2,
+      "crete": 1.043,
+      "attenuation_conseillee_db": -1.3
+    },
+    {
+      "fichier": "WHSH_WHOOSH_SOFTSlightly_B00M_CTRDS.wav",
+      "bibliotheque": "Trailers DS",
+      "entendu_crete_db": -21.7,
+      "entendu_moyen_db": -32.6,
+      "instant_du_sommet_s": 0.5,
+      "duree_s": 8.25,
+      "crete": 1.236,
+      "attenuation_conseillee_db": -2.8
+    },
+    {
+      "fichier": "MUSCPerc_IMPACTOrchestra_Grancassa_Wood_B00M_CTRCK.wav",
+      "bibliotheque": "Trailers CK",
+      "entendu_crete_db": -22.5,
+      "entendu_moyen_db": -35.6,
+      "instant_du_sommet_s": 17.3,
+      "duree_s": 25.52,
+      "crete": 0.958,
+      "attenuation_conseillee_db": -0.5
+    },
+    {
+      "fichier": "WHSH_ORGANICGranular_Leaves_Bundle_Slow_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -22.7,
+      "entendu_moyen_db": -32.1,
+      "instant_du_sommet_s": 2.0,
+      "duree_s": 37.51,
+      "crete": 0.643,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "DOORMetl_IMPACTDoor_Container_Slide_Kick_Rattle_B00M_CTCK.wav",
+      "bibliotheque": "Metal Titan CK",
+      "entendu_crete_db": -22.9,
+      "entendu_moyen_db": -35.5,
+      "instant_du_sommet_s": 16.7,
+      "duree_s": 18.59,
+      "crete": 1.354,
+      "attenuation_conseillee_db": -3.5
+    },
+    {
+      "fichier": "DSGNStngr_IMPACT_LOWPunch_Stomp_B00M_CDCK.wav",
+      "bibliotheque": "Darkness CK",
+      "entendu_crete_db": -24.7,
+      "entendu_moyen_db": -34.7,
+      "instant_du_sommet_s": 8.4,
+      "duree_s": 10.01,
+      "crete": 1.402,
+      "attenuation_conseillee_db": -3.9
+    },
+    {
+      "fichier": "DSGNMisc_LEAD_INVentilation_Hose_Mangled_B00M_CICK.wav",
+      "bibliotheque": "Impacts CK",
+      "entendu_crete_db": -25.1,
+      "entendu_moyen_db": -36.8,
+      "instant_du_sommet_s": 18.9,
+      "duree_s": 21.15,
+      "crete": 1.088,
+      "attenuation_conseillee_db": -1.7
+    },
+    {
+      "fichier": "METLMvmt_ORGANICRoll_Suitcase_Metal_Bar_Slow_B00M_CMCK.wav",
+      "bibliotheque": "Motion/Metal CK",
+      "entendu_crete_db": -26.0,
+      "entendu_moyen_db": -34.3,
+      "instant_du_sommet_s": 0.8,
+      "duree_s": 15.88,
+      "crete": 0.698,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "DSGNBoom_Impact_Low_Cavern_Hit_B00M_CMDS.wav",
+      "bibliotheque": "Motion/Metal DS",
+      "entendu_crete_db": -26.1,
+      "entendu_moyen_db": -38.7,
+      "instant_du_sommet_s": 0.0,
+      "duree_s": 8.02,
+      "crete": 1.354,
+      "attenuation_conseillee_db": -3.5
+    },
+    {
+      "fichier": "WHSH_WHOOSHSynth_Big_Flame_B00M_CTRCK.wav",
+      "bibliotheque": "Trailers CK",
+      "entendu_crete_db": -26.8,
+      "entendu_moyen_db": -39.1,
+      "instant_du_sommet_s": 10.4,
+      "duree_s": 23.62,
+      "crete": 0.696,
+      "attenuation_conseillee_db": 0.0
+    },
+    {
+      "fichier": "DSGNSynth_IMPACTSynth_Low_Boom_B00M_CTRCK.wav",
+      "bibliotheque": "Trailers CK",
+      "entendu_crete_db": -39.1,
+      "entendu_moyen_db": -51.1,
+      "instant_du_sommet_s": 0.5,
+      "duree_s": 14.0,
+      "crete": 0.942,
+      "attenuation_conseillee_db": -0.4
+    }
+  ]
+}

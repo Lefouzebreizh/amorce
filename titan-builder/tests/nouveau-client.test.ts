@@ -62,7 +62,7 @@ test('le dossier écrit a la même forme que celui de la route web', async () =>
   for (const cle of ['reference', 'recue_le', 'prix_total_euros', 'commande', 'photos']) {
     assert.ok(cle in dossier, `clé absente : ${cle}`);
   }
-  assert.equal(dossier.prix_total_euros, 299);
+  assert.equal(dossier.prix_total_euros, 300);
   assert.deepEqual(dossier.commande.options, ['appel', 'whatsapp']);
 });
 

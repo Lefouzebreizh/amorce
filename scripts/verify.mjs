@@ -10,11 +10,12 @@
  * Prérequis : `npm run fixtures` puis `npm run dev` dans un autre terminal.
  * Usage : npm run verify
  */
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { optionsChromium } from './chromium.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const RUSHES = join(ROOT, '.fixtures', 'rushes');
@@ -132,6 +133,38 @@ const check = (name, ok, detail = '') => {
  * Renvoie null si ffmpeg n'est pas installé : le parcours doit rester
  * exécutable sans lui, et l'absence de mesure vaut mieux qu'un faux verdict.
  */
+/**
+ * Vrai pic du fichier livré, en dBFS, mesuré sur le son décodé.
+ *
+ * C'est le seul contrôle qui regarde ce qui part vraiment. Le limiteur borne
+ * les échantillons **avant** deux étages qui ajoutent du niveau : le
+ * suréchantillonnage du `WaveShaper`, puis l'encodage. Un fichier a été mesuré
+ * à −0,13 dBFS alors que le réglage promettait −1,4 — et rien dans le code ne
+ * pouvait le dire, parce que le défaut naissait après lui.
+ *
+ * Le rééchantillonnage à 192 kHz approche le pic entre les échantillons, celui
+ * que les plateformes retrouvent après leur propre réencodage.
+ */
+function mesurerPic(fichier) {
+  try {
+    execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+  } catch {
+    return null;
+  }
+  // `astats` écrit son rapport sur la sortie d'erreur : `execFileSync` ne rend
+  // que la sortie standard, vide ici, d'où `spawnSync` et sa lecture explicite.
+  const sortie = spawnSync(
+    'ffmpeg',
+    ['-hide_banner', '-nostdin', '-i', fichier, '-af', 'aresample=192000,astats=metadata=1:reset=0', '-f', 'null', '-'],
+    { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 },
+  ).stderr;
+  if (!sortie) return null;
+  const pics = [...sortie.matchAll(/Peak level dB:\s*(-?\d+(?:\.\d+)?|-inf)/g)].map((m) => m[1]);
+  if (pics.length === 0) return null;
+  const dernier = pics[pics.length - 1];
+  return dernier === '-inf' ? -Infinity : Number(dernier);
+}
+
 function mesurerSilence(fichier) {
   try {
     // Sonder `ffmpeg`, le seul binaire que cette fonction appelle. Gardé sur
@@ -232,7 +265,7 @@ function mesurerCadence(fichier) {
 }
 
 const browser = await chromium.launch({
-  executablePath: process.env.AMORCE_CHROMIUM || undefined,
+  ...optionsChromium,
   args: ['--autoplay-policy=no-user-gesture-required'],
 });
 
@@ -451,15 +484,25 @@ check(
 // casse pas au moindre remaniement de classes.
 const scoreLabel = await page.locator('header [role="status"]').getAttribute('aria-label');
 const score = Number(scoreLabel?.match(/(\d+)\s+sur\s+100/)?.[1]);
-check('Une note de viralité est calculée', score > 0, `note ${score}/100`);
+check('Une note de montage est calculée', score > 0, `note ${score}/100`);
 await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
 
 /*
- * Poser les réglages recommandés, et vérifier que la note bouge.
+ * Poser les réglages recommandés, et vérifier que la chaîne complète aboutit.
  *
- * C'est la seule preuve que la chaîne complète fonctionne : le bouton écrit
- * dans le projet, l'analyse relit ce projet, et le chiffre affiché en découle.
- * Un test unitaire vérifierait le calcul, pas le fait que l'appui aboutisse.
+ * C'est la seule preuve que le bouton écrit dans le projet, que l'analyse relit
+ * ce projet, et que l'affichage en découle. Un test unitaire vérifierait le
+ * calcul, pas le fait que l'appui aboutisse.
+ *
+ * L'attente a changé de sens avec le plafond, et c'est le sujet même du
+ * changement. Elle disait « la note monte » ; les gabarits laissent pourtant
+ * leurs crochets à remplir — c'est écrit, testé et voulu, le studio ne peut pas
+ * écrire à la place de quelqu'un. Une note qui montait sur un montage dont les
+ * textes affichent encore « [Ce qui menace] » disait le contraire de la vérité.
+ *
+ * On vérifie donc les deux moitiés : le montage est bel et bien enrichi — des
+ * plans, des bruitages, des textes apparaissent — et la note reste plafonnée
+ * tant que les crochets sont là, en le disant.
  */
 {
   const lireNote = async () => {
@@ -471,6 +514,30 @@ await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
   await page.waitForTimeout(500);
   const avant = await lireNote();
 
+  /*
+   * On somme les critères affichés, et deux essais ont été nécessaires.
+   *
+   * Le premier comptait des éléments d'une liste par un sélecteur qui ne
+   * correspondait à rien : « 0 → 0 » passait à tous les coups. Un contrôle qui
+   * ne peut pas échouer est pire qu'un contrôle absent — il occupe la place de
+   * celui qui aurait servi.
+   *
+   * Le second comptait les plans, et ce n'était pas ce que le bouton fait : sur
+   * des rushes déjà courts, il n'y a rien à découper. Ce qu'il ajoute, ce sont
+   * des textes et des bruitages — donc c'est la somme des critères qui bouge,
+   * et c'est elle qu'on lit, dans les « N / M » du panneau d'analyse.
+   */
+  const lireCriteres = async () =>
+    page.evaluate(() =>
+      [...document.body.innerText.matchAll(/(\d+)\s*\/\s*(\d+)(?!\d)/g)]
+        .map((m) => [Number(m[1]), Number(m[2])])
+        // Les poids des critères sont 30, 20, 20, 15, 10 et 5 : on écarte tout
+        // autre « N / M » de la page, comme « 40 sur 100 ».
+        .filter(([obtenu, poids]) => [30, 20, 15, 10, 5].includes(poids) && obtenu <= poids)
+        .reduce((total, [obtenu]) => total + obtenu, 0),
+    );
+  const criteresAvant = await lireCriteres();
+
   const poser = page.getByRole('button', { name: /Poser les réglages/ });
   check('Le bouton de réglages recommandés est offert', await poser.isVisible());
   await poser.scrollIntoViewIfNeeded();
@@ -478,10 +545,38 @@ await page.screenshot({ path: join(SHOTS, `02-montage-${profile.id}.png`) });
   await page.waitForTimeout(900);
 
   const apres = await lireNote();
+  const criteresApres = await lireCriteres();
+
   check(
-    'Poser les réglages recommandés fait monter la note',
-    apres > avant,
+    'Poser les réglages fait progresser les critères',
+    criteresAvant > 0 && criteresApres > criteresAvant,
+    `${criteresAvant} → ${criteresApres} points de critères`,
+  );
+  check(
+    'La note reste plafonnée tant que les crochets ne sont pas remplis',
+    apres <= 40,
     `${avant} → ${apres} sur 100`,
+  );
+  check(
+    'Ce qui plafonne la note est nommé',
+    await page.evaluate(() => document.body.innerText.includes('Ta note est plafonnée')),
+  );
+
+  /*
+   * Et c'est le **bon** défaut qui est nommé.
+   *
+   * Une capture montrait « Du texte sur 0 % de la vidéo seulement » alors que
+   * des textes de gabarit s'affichaient à l'écran. Les deux moitiés étaient
+   * vraies séparément et le message envoyait pourtant écrire du texte là où il
+   * y en avait déjà. Après l'appui, ce qui plafonne est qu'il reste des
+   * crochets — jamais l'absence de texte.
+   */
+  check(
+    'Le défaut nommé après l’appui parle des crochets, pas d’un manque de texte',
+    await page.evaluate(() => {
+      const texte = document.body.innerText;
+      return texte.includes('restent à remplir') && !texte.includes('sur 0 % de la vidéo');
+    }),
   );
 
   // On rend le montage à son état d'origine : la suite du parcours mesure le
@@ -1196,7 +1291,60 @@ const expected = profile.mobile ? { width: 720, height: 1280 } : { width: 1080, 
 const format = (await page.locator('dt:text-is("Format") + dd').textContent())?.trim();
 check('Un format d’export est disponible', !/non pris en charge/.test(format ?? ''), format);
 
-const downloading = page.waitForEvent('download', { timeout: 90000 });
+/*
+ * On arrête un export avant de l'aller au bout, et on vérifie ce qu'il laisse.
+ *
+ * Le risque n'est pas le bouton, c'est l'état du studio après : l'encodage
+ * hors ligne prend le canvas à la boucle d'animation, met la lecture en pause
+ * et impose la définition de sortie. Un arrêt qui ne rendrait pas ces trois
+ * choses laisserait un studio figé, sans rien afficher d'anormal — et
+ * l'utilisateur croirait l'application plantée.
+ *
+ * Sans bouton d'arrêt, la seule issue d'un export trop long était de fermer
+ * l'onglet, donc de perdre le montage.
+ */
+await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
+await page.waitForTimeout(1200);
+
+const boutonArret = page.locator('button:has-text("Arrêter l’export")');
+check('Un export en cours peut être arrêté', (await boutonArret.count()) === 1);
+
+if ((await boutonArret.count()) === 1) {
+  await boutonArret.click();
+  await page.waitForTimeout(1500);
+
+  check(
+    'Un arrêt n’est pas présenté comme une panne',
+    !(await page.evaluate(() => document.body.innerText.includes('L’export a échoué'))),
+  );
+  check(
+    'Le bouton d’export redevient disponible après un arrêt',
+    await page.evaluate(() => {
+      const boutons = [...document.querySelectorAll('button')];
+      const cible = boutons.find((b) => b.textContent?.includes('⬇ Exporter la vidéo'));
+      return cible !== undefined && !cible.disabled;
+    }),
+  );
+  // Le montage doit être intact : c'est ce qu'on protégeait en offrant l'arrêt.
+  check(
+    'Le montage survit à un export arrêté',
+    (await page.locator('canvas').count()) > 0
+      && (await page.evaluate(() => !document.body.innerText.includes('La timeline est vide'))),
+  );
+}
+
+/*
+ * Cinq minutes, et non quatre-vingt-dix secondes.
+ *
+ * L'ancien délai était taillé pour l'export temps réel, qui durait exactement
+ * la longueur du film. L'encodage hors ligne, lui, prend le temps que la
+ * machine met à encoder — sur le profil téléphone, bridé quatre fois, il
+ * dépasse quatre-vingt-dix secondes et le parcours déclarait un échec de
+ * téléchargement là où l'export se déroulait normalement.
+ *
+ * Le délai ne coûte que dans le cas où quelque chose est vraiment cassé.
+ */
+const downloading = page.waitForEvent('download', { timeout: 300000 });
 await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
 await page.waitForTimeout(2500);
 await page.screenshot({ path: join(SHOTS, `05-export-${profile.id}.png`) });
@@ -1210,6 +1358,20 @@ try {
 } catch (error) {
   check('Un fichier est téléchargé', false, String(error).slice(0, 120));
 }
+
+/*
+ * L'avertissement de cadence se relève **ici**, pas plus bas avec la mesure.
+ *
+ * Sur ordinateur, un second export — la bande-son seule — suit immédiatement,
+ * et il remet l'état du panneau à zéro : c'est le comportement voulu, un
+ * nouvel export ne doit pas afficher le verdict du précédent. Le contrôle
+ * placé après la mesure ffprobe passait donc sur mobile et tombait sur
+ * ordinateur, pour une raison qui n'avait rien à voir avec le défaut.
+ */
+const cadenceAnnoncee = await page.locator('text=/images par seconde au lieu de/').count();
+// Un cliché pris ici, et non au lancement : le précédent montrait la barre de
+// progression à 66 %, donc jamais le verdict.
+await page.screenshot({ path: join(SHOTS, `05b-verdict-${profile.id}.png`), fullPage: true });
 
 if (!profile.mobile) {
   // La bande-son seule : le mixage est déjà fait dans le graphe audio, seule la
@@ -1354,37 +1516,67 @@ if (exportPath) {
     console.log('  —    | Cadence non mesurée (ffprobe absent)');
   } else {
     /*
-     * La cadence de l'export, que rien ne vérifiait.
+     * La cadence de l'export, devenue un contrôle.
      *
-     * L'enregistrement se fait en filmant le canvas en temps réel : le fichier
-     * ne reçoit donc que les images réellement composées pendant la lecture. Si
-     * composer une image coûte plus que 1/30 de seconde, le fichier livré perd
-     * silencieusement des images — et tous les contrôles voisins restent verts,
-     * puisque la durée est bonne, la définition est bonne, l'image n'est pas
-     * noire et le son est là.
+     * Elle était une **mesure affichée** et non un contrôle rouge, avec cette
+     * raison écrite ici même : « le corriger demande un encodage hors ligne […]
+     * le jour où l'encodage hors ligne arrive, cette ligne devient un
+     * contrôle ». Ce jour est arrivé, et la promesse est tenue.
      *
-     * Mesuré à la découverte : **35 images pour 7,5 secondes** sur la machine
-     * de vérification, 9 sur un processeur bridé quatre fois. Le fichier était
-     * un diaporama, et personne ne pouvait le savoir depuis les tests.
+     * Ce que le défaut valait : l'enregistrement filmait le canvas en temps
+     * réel, donc le fichier ne recevait que les images composées à temps. Tous
+     * les contrôles voisins restaient verts — durée bonne, définition bonne,
+     * image non noire, son présent — pendant que le fichier livré était un
+     * diaporama. Mesuré à la découverte : 35 images pour 7,5 secondes ici, 9
+     * sur un processeur bridé quatre fois. Sur un export réel d'utilisateur :
+     * 222 images pour 17,5 secondes, soit 12,7 par seconde.
      *
-     * Mesure affichée, et non contrôle rouge. Le défaut est réel et connu, mais
-     * le corriger demande un encodage hors ligne — décoder les rushes avec
-     * `VideoDecoder` plutôt que de les lire dans un élément `<video>`, ce qui
-     * suppose un démultiplexeur. Une suite qui reste rouge en permanence
-     * apprend à ignorer la suite ; un nombre affiché à chaque passage, non. Le
-     * jour où l'encodage hors ligne arrive, cette ligne devient un contrôle.
+     * Une phrase de ce bloc était fausse, et c'est elle qui a bloqué le
+     * correctif : « piloter les éléments <video> image par image ne serait pas
+     * une issue, mesuré à 265 ms par déplacement ». Remesuré sur cette même
+     * machine sans carte graphique : **7,3 ms** par déplacement séquentiel,
+     * 25,7 ms en comptant la composition en 1080 × 1920. Trente-cinq fois
+     * moins. Le démultiplexeur qu'on croyait indispensable ne l'était pas.
      *
-     * Piloter les éléments `<video>` image par image ne serait pas une issue :
-     * mesuré à 265 ms par déplacement séquentiel, soit 2,6 minutes pour un film
-     * de vingt secondes.
+     * La borne est à 90 % de la cadence visée, non à 100 % : la dernière image
+     * d'un film peut manquer d'un cheveu selon l'arrondi de la durée, et
+     * exiger l'exactitude ferait rougir la suite pour une image sur six cents.
      */
     const attendue = 30;
     const perdues = Math.round(100 - (cadence.parSeconde * 100) / attendue);
-    console.log(
-      `  ${cadence.parSeconde >= attendue / 3 ? 'OK  ' : '⚠   '} | `
-      + `Cadence de l’export : ${cadence.images} images pour ${cadence.duree.toFixed(1)} s, `
+    check(
+      'L’export tient la cadence, aucune image perdue',
+      cadence.parSeconde >= attendue * 0.9,
+      `${cadence.images} images pour ${cadence.duree.toFixed(1)} s, `
       + `soit ${cadence.parSeconde.toFixed(1)} par seconde — ${perdues} % des images perdues`,
     );
+
+    /*
+     * Faute de pouvoir tenir la cadence, l'application doit au moins la dire.
+     *
+     * C'est le seul contrôle rouge que ce défaut permet aujourd'hui, et il vaut
+     * d'être tenu : un utilisateur a livré un export à 12,7 images par seconde,
+     * l'a décrit comme un tremblement, et est allé chercher la cause du côté de
+     * l'entrelacement — le fichier était pourtant `progressive`. Rien dans
+     * l'application ne lui disait que des images manquaient.
+     *
+     * Ce contrôle ne se déclenche plus depuis que l'encodage est hors ligne :
+     * la cadence est tenue, il n'y a rien à annoncer. Il garde sa raison d'être
+     * pour le **repli** temps réel, qui sert les navigateurs sans WebCodecs —
+     * et c'est là qu'il redeviendra le seul filet.
+     *
+     * Il est laissé conditionnel plutôt que retiré : le jour où le repli
+     * reprend la main, ou si l'encodage hors ligne échoue sur un appareil, il
+     * doit être en place. Un contrôle qu'on retire parce qu'il ne se déclenche
+     * plus est un contrôle qui manquera précisément le jour où il servait.
+     */
+    if (cadence.parSeconde < 20) {
+      check(
+        'Un export saccadé est annoncé à l’utilisateur',
+        cadenceAnnoncee > 0,
+        cadenceAnnoncee > 0 ? 'le panneau nomme la cadence obtenue' : 'aucun avertissement affiché',
+      );
+    }
   }
 
   const creux = mesurerImagesVides(exportPath);
@@ -1406,6 +1598,37 @@ if (exportPath) {
       'Le son ne s’interrompt pas en cours de montage',
       silence.muettes <= 1,
       `${silence.muettes} s de silence total sur ${silence.total} s`,
+    );
+  }
+
+  /*
+   * Le vrai pic du fichier livré, mesuré — et le seuil dit la vérité sur ce qui
+   * est atteint, pas sur ce qu'on vise.
+   *
+   * La cible reste −1 dBFS : au-dessus, le réencodage de TikTok, d'Instagram ou
+   * de Facebook écrête pour de bon, et l'écrêtage ne se rattrape pas. Elle n'est
+   * pas tenue aujourd'hui, et la mesure dit pourquoi. Le limiteur borne les
+   * échantillons à −2,4 dBFS ; le fichier sort à −0,7. Les 1,7 dB manquants
+   * naissent **dans l'encodeur** — un mixage borné à −1,41 ressort d'Opus à
+   * −0,92 sur ce même montage — et aucun réglage du graphe ne les rattrape.
+   *
+   * Descendre encore le plafond y arriverait, au prix de la sonie : le §2 dit
+   * qu'un mixage aux normes de diffusion est déjà trop faible là où le format
+   * court se regarde. C'est un arbitrage de produit, pas une correction ; il
+   * n'est pas pris ici.
+   *
+   * Le seuil garde donc ce qui ne se discute pas : le fichier n'écrête pas.
+   * Des montages denses ont été mesurés à 0,00 dBFS — plein pot, écrêté — et
+   * c'est exactement ce que ce contrôle attrape.
+   */
+  const pic = mesurerPic(exportPath);
+  if (pic === null) {
+    console.log('  —    | Vrai pic non mesuré (ffmpeg absent)');
+  } else {
+    check(
+      'Le fichier livré n’écrête pas',
+      pic <= -0.5,
+      `${pic.toFixed(2)} dBFS de vrai pic — cible −1, voir le commentaire`,
     );
   }
 

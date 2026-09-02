@@ -27,7 +27,7 @@ import io
 import sys
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -79,7 +79,7 @@ def _fond(bordure: Path, cote: int = 2600) -> bytes:
     return tampon.getvalue()
 
 
-def _triskell(page: fitz.Page, centre: fitz.Point, rayon: float,
+def _triskell(page: pymupdf.Page, centre: pymupdf.Point, rayon: float,
               tours: float = 0.95, points: int = 44) -> None:
     """Triskell tracé, et non posé en image : net à toute échelle.
 
@@ -97,7 +97,7 @@ def _triskell(page: fitz.Page, centre: fitz.Point, rayon: float,
             t = i / (points - 1)
             angle = depart + t * tours * 2 * math.pi
             r = rayon * (0.08 + 0.92 * t ** 0.75)
-            ligne.append(centre + fitz.Point(math.cos(angle) * r, math.sin(angle) * r))
+            ligne.append(centre + pymupdf.Point(math.cos(angle) * r, math.sin(angle) * r))
         forme.draw_polyline(ligne)
     forme.finish(color=BRUN_PALE, width=1.4, closePath=False, lineCap=1, lineJoin=1)
     forme.commit()
@@ -106,9 +106,9 @@ def _triskell(page: fitz.Page, centre: fitz.Point, rayon: float,
 def composer(bordure: Path, cible: Path, gabarit: charte.Gabarit | None = None) -> None:
     gabarit = gabarit or charte.GABARIT_INTERIEUR
     largeur, hauteur = gabarit.points
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=largeur, height=hauteur)
-    page.insert_image(fitz.Rect(0, 0, largeur, hauteur), stream=_fond(bordure))
+    page.insert_image(pymupdf.Rect(0, 0, largeur, hauteur), stream=_fond(bordure))
     page.insert_font(fontname="corps", fontfile=str(CORPS))
     page.insert_font(fontname="ital", fontfile=str(ITALIQUE))
     page.insert_font(fontname="gras", fontfile=str(GRAS))
@@ -116,27 +116,27 @@ def composer(bordure: Path, cible: Path, gabarit: charte.Gabarit | None = None) 
     marge = (charte.FOND_PERDU + charte.MARGE_SECURITE + 0.14) * charte.POUCE_EN_POINTS
     gauche, droite = marge, largeur - marge
 
-    page.insert_textbox(fitz.Rect(gauche, 0.115 * hauteur, droite, 0.175 * hauteur),
+    page.insert_textbox(pymupdf.Rect(gauche, 0.115 * hauteur, droite, 0.175 * hauteur),
                         TITRE, fontname="gras", fontsize=20, color=BRUN,
-                        align=fitz.TEXT_ALIGN_CENTER)
-    _triskell(page, fitz.Point(largeur / 2, 0.198 * hauteur), 15)
+                        align=pymupdf.TEXT_ALIGN_CENTER)
+    _triskell(page, pymupdf.Point(largeur / 2, 0.198 * hauteur), 15)
 
     # Le conte se réduit jusqu'à tenir : la page ne s'agrandit pas, et une
     # colonne qui déborde sur le parchemin est pire qu'un corps plus petit.
     haut, bas = 0.235 * hauteur, 0.775 * hauteur
     for corps in (11.0, 10.5, 10.0, 9.5, 9.0, 8.5, 8.0):
-        reste = page.insert_textbox(fitz.Rect(gauche, haut, droite, bas), CONTE,
+        reste = page.insert_textbox(pymupdf.Rect(gauche, haut, droite, bas), CONTE,
                                     fontname="corps", fontsize=corps, lineheight=1.55,
-                                    color=ENCRE, align=fitz.TEXT_ALIGN_JUSTIFY)
+                                    color=ENCRE, align=pymupdf.TEXT_ALIGN_JUSTIFY)
         if reste >= 0:
             break
     else:
         raise SystemExit("le conte ne tient pas dans la page, même au plus petit corps")
 
-    _triskell(page, fitz.Point(largeur / 2, 0.808 * hauteur), 12)
-    page.insert_textbox(fitz.Rect(gauche, 0.835 * hauteur, droite, 0.905 * hauteur),
+    _triskell(page, pymupdf.Point(largeur / 2, 0.808 * hauteur), 12)
+    page.insert_textbox(pymupdf.Rect(gauche, 0.835 * hauteur, droite, 0.905 * hauteur),
                         PARCHEMIN, fontname="ital", fontsize=11.5, lineheight=1.6,
-                        color=BRUN, align=fitz.TEXT_ALIGN_CENTER)
+                        color=BRUN, align=pymupdf.TEXT_ALIGN_CENTER)
 
     document.set_metadata({"title": "Roussy & Zéphy — Le secret de l'hermine",
                            "author": "Erwann Lefouzèbreizh"})

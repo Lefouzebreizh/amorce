@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "npx --yes serve . --listen 8080",
+    "test": "node --test \"tests/*.test.js\"",
     "valider": "node valider.js",
     "verifier": "node verifier.mjs",
     "styles": "node construire-styles.mjs",

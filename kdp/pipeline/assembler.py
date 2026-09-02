@@ -15,14 +15,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import charte  # noqa: E402
 
 
-def _placer(page: fitz.Page, rect: fitz.Rect, chemin: Path) -> str:
+def _placer(page: pymupdf.Page, rect: pymupdf.Rect, chemin: Path) -> str:
     """Pose une image dans un rectangle, sans perte et sans rééchantillonnage."""
     with Image.open(chemin) as im:
         largeur, hauteur = im.size
@@ -46,12 +46,12 @@ def _placer(page: fitz.Page, rect: fitz.Rect, chemin: Path) -> str:
     return note
 
 
-def _carton(page: fitz.Page, rect: fitz.Rect, libelle: str) -> None:
+def _carton(page: pymupdf.Page, rect: pymupdf.Rect, libelle: str) -> None:
     page.draw_rect(rect, color=(0.85, 0, 0.5), fill=(1, 0.93, 0.98), width=3)
     page.insert_textbox(
-        fitz.Rect(rect.x0 + 24, rect.y0 + rect.height / 2 - 60, rect.x1 - 24, rect.y1 - 24),
+        pymupdf.Rect(rect.x0 + 24, rect.y0 + rect.height / 2 - 60, rect.x1 - 24, rect.y1 - 24),
         f"FICHIER MANQUANT\nNE PAS PUBLIER\n\n{libelle}",
-        fontname="hebo", fontsize=20, color=(0.7, 0, 0.4), align=fitz.TEXT_ALIGN_CENTER)
+        fontname="hebo", fontsize=20, color=(0.7, 0, 0.4), align=pymupdf.TEXT_ALIGN_CENTER)
 
 
 def _trouver(dossier: Path, base: str) -> Path | None:
@@ -65,10 +65,10 @@ def _trouver(dossier: Path, base: str) -> Path | None:
 def interieur(planches: Path, complements: Path, cible: Path, tome: int = 1) -> int:
     gabarit = charte.GABARIT_INTERIEUR
     largeur, hauteur = gabarit.points
-    document = fitz.open()
+    document = pymupdf.open()
 
     for nom in ("00_faux_titre", "00_mentions_legales"):
-        document.insert_pdf(fitz.open(str(complements / f"{nom}.pdf")))
+        document.insert_pdf(pymupdf.open(str(complements / f"{nom}.pdf")))
         print(f"  page {len(document):02d}  {nom}")
 
     manquantes, composees = [], []
@@ -82,23 +82,23 @@ def interieur(planches: Path, complements: Path, cible: Path, tome: int = 1) -> 
         composee = sorted(complements.glob(f"{planche.numero:02d}_*.pdf"))
         chemin = _trouver(planches, charte.nom_de_page(planche.numero, planche.slug, ""))
         if composee:
-            document.insert_pdf(fitz.open(str(composee[0])))
+            document.insert_pdf(pymupdf.open(str(composee[0])))
             composees.append(planche.numero)
             etat = "composée" if chemin else "composée, en attente de planche"
             print(f"  page {len(document):02d}  {composee[0].name:52s} {etat}")
             continue
         if chemin is None:
             feuille = document.new_page(width=largeur, height=hauteur)
-            _carton(feuille, fitz.Rect(0, 0, largeur, hauteur),
+            _carton(feuille, pymupdf.Rect(0, 0, largeur, hauteur),
                     charte.nom_de_page(planche.numero, planche.slug))
             manquantes.append(planche.numero)
             print(f"  page {len(document):02d}  MANQUANTE — {planche.titre}")
         else:
             feuille = document.new_page(width=largeur, height=hauteur)
-            note = _placer(feuille, fitz.Rect(0, 0, largeur, hauteur), chemin)
+            note = _placer(feuille, pymupdf.Rect(0, 0, largeur, hauteur), chemin)
             print(f"  page {len(document):02d}  {chemin.name:52s} {note}")
 
-    document.insert_pdf(fitz.open(str(complements / "99_solutions.pdf")))
+    document.insert_pdf(pymupdf.open(str(complements / "99_solutions.pdf")))
     print(f"  page {len(document):02d}  99_solutions")
 
     document.set_metadata({"title": f"Roussy & Zéphy — Tome {tome}",
@@ -127,15 +127,15 @@ def couverture(planches: Path, cible: Path, pages: int) -> None:
     gabarit, tranche = charte.gabarit_couverture(pages)
     largeur, hauteur = gabarit.points
     p = charte.POUCE_EN_POINTS
-    document = fitz.open()
+    document = pymupdf.open()
     feuille = document.new_page(width=largeur, height=hauteur)
 
     bord_face = (charte.FOND_PERDU + charte.FORMAT_ROGNE + tranche) * p
     absents = []
     for nom, rect in ((charte.COUVERTURE_DOS,
-                       fitz.Rect(0, 0, (charte.FOND_PERDU + charte.FORMAT_ROGNE) * p, hauteur)),
+                       pymupdf.Rect(0, 0, (charte.FOND_PERDU + charte.FORMAT_ROGNE) * p, hauteur)),
                       (charte.COUVERTURE_FACE,
-                       fitz.Rect(bord_face, 0, largeur, hauteur))):
+                       pymupdf.Rect(bord_face, 0, largeur, hauteur))):
         chemin = _trouver(planches, nom)
         if chemin is None:
             _carton(feuille, rect, nom)
@@ -144,7 +144,7 @@ def couverture(planches: Path, cible: Path, pages: int) -> None:
         else:
             print(f"  {nom:20s} {chemin.name:34s} {_placer(feuille, rect, chemin)}")
 
-    feuille.draw_rect(fitz.Rect((charte.FOND_PERDU + charte.FORMAT_ROGNE) * p, 0,
+    feuille.draw_rect(pymupdf.Rect((charte.FOND_PERDU + charte.FORMAT_ROGNE) * p, 0,
                                 bord_face, hauteur), color=None, fill=(0.98, 0.96, 0.90))
 
     document.set_metadata({"title": "Roussy & Zéphy — couverture",

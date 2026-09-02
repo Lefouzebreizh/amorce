@@ -1,0 +1,229 @@
+#!/usr/bin/env python3
+"""Ce que la porte doit refuser, et ce qu'elle doit laisser passer.
+
+Ces tests portent surtout sur des **refus**, et c'est délibéré : le défaut
+qu'on redoute ici n'est pas un modèle qui se trompe de chat, c'est une chaîne
+qui trouve une intention à une porte qui claque. Un utilisateur qui voit
+« ton chat a faim » sur l'enregistrement d'un aspirateur ne revient pas.
+
+Aucun de ces tests ne charge YAMNet. Ils écrivent les scores à la main — y
+compris des combinaisons qu'aucun micro ne produira — parce que c'est le seul
+moyen d'éprouver la frontière elle-même plutôt que le modèle qui la nourrit.
+"""
+
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from noyau.intentions import Intention, Source, habiller  # noqa: E402
+from noyau.verdict import SEUIL_PORTE, juger  # noqa: E402
+
+# Scores relevés sur deux miaulements réels passés dans YAMNet le
+# 01/09/2026, et recopiés tels quels. Ce sont eux, et non un raisonnement,
+# qui ont fait apparaître le défaut de la classe parente `Cat`.
+MIAULEMENT_REEL = {
+    "Animal": 0.992, "Cat": 0.988, "Meow": 0.891,
+    "Domestic animals, pets": 0.930, "Caterwaul": 0.016,
+}
+
+
+class TestLaPorte(unittest.TestCase):
+    """L'étage 1 : un veto, jamais une note qu'un étage suivant rattrape."""
+
+    def test_aucune_fenetre_ne_conclut_pas(self):
+        v = juger([])
+        self.assertIs(v.intention, Intention.INDECIS)
+        self.assertIs(v.source, Source.AUCUNE)
+        self.assertFalse(v.affichable)
+
+    def test_un_son_humain_ne_passe_pas(self):
+        v = juger([{"Speech": 0.94, "Music": 0.30}])
+        self.assertIs(v.source, Source.AUCUNE)
+        self.assertEqual(v.classe_dominante, "")
+        self.assertIn("pas un chat", v.raison)
+
+    def test_un_rugissement_de_lion_ne_passe_pas(self):
+        """`Roaring cats` est hors des cinq classes retenues, exprès.
+
+        Sans cette exclusion, un documentaire animalier franchirait la porte
+        et l'étage 2 lui trouverait une intention de chat domestique.
+        """
+        v = juger([{"Roaring cats (lions, tigers)": 0.88, "Animal": 0.6}])
+        self.assertIs(v.source, Source.AUCUNE)
+
+    def test_juste_sous_le_seuil_refuse(self):
+        v = juger([{"Meow": SEUIL_PORTE - 0.01}])
+        self.assertIs(v.source, Source.AUCUNE)
+
+    def test_juste_au_seuil_passe(self):
+        """La borne est inclusive — et ce test existe pour qu'elle le reste.
+
+        Une comparaison retournée un jour en `<=` ferait basculer toute une
+        classe d'enregistrements limites sans qu'aucun autre test ne bouge.
+        """
+        v = juger([{"Meow": SEUIL_PORTE}])
+        self.assertEqual(v.classe_dominante, "Meow")
+
+    def test_le_cumul_des_cinq_classes_ouvre_la_porte(self):
+        """Un miaulement se répartit souvent entre `Cat` et `Meow`.
+
+        Aucune des deux ne franchit seule le seuil ; leur somme le doit,
+        sinon on refuse exactement les enregistrements les plus ordinaires.
+        """
+        v = juger([{"Cat": 0.12, "Meow": 0.11}])
+        self.assertTrue(v.affichable)
+
+    def test_la_meilleure_fenetre_decide_pas_la_moyenne(self):
+        """Trois secondes de silence autour d'un miaulement d'une demi-seconde.
+
+        C'est le cas d'usage normal — quelqu'un appuie sur enregistrer, puis
+        attend. Une moyenne sur les fenêtres noierait le seul instant utile.
+        """
+        v = juger([{"Silence": 0.9}, {"Silence": 0.9}, {"Purr": 0.71}, {"Silence": 0.9}])
+        self.assertIs(v.intention, Intention.CONTENTEMENT)
+
+
+class TestLectureDirecte(unittest.TestCase):
+    """L'étage 2 : ce que YAMNet nomme lui-même n'est pas une supposition."""
+
+    def test_ronronnement_donne_contentement_mesure(self):
+        v = juger([{"Purr": 0.66}])
+        self.assertIs(v.intention, Intention.CONTENTEMENT)
+        self.assertIs(v.source, Source.MESUREE)
+        self.assertAlmostEqual(v.confiance, 0.66)
+
+    def test_feulement_donne_stress_mesure(self):
+        for etiquette in ("Hiss", "Caterwaul"):
+            with self.subTest(etiquette=etiquette):
+                v = juger([{etiquette: 0.51}])
+                self.assertIs(v.intention, Intention.STRESS)
+                self.assertIs(v.source, Source.MESUREE)
+
+    def test_cat_ouvre_la_porte_mais_ne_choisit_jamais(self):
+        """Le défaut trouvé en regardant, que six tests verts n'avaient pas vu.
+
+        `Cat` est la classe parente et gagne toujours contre la classe
+        précise — 0,988 contre 0,891 sur un miaulement réel. S'il concourt,
+        un ronronnement franc repart en `INDECIS` : la lecture directe, qui
+        est la seule chose que ce projet mesure vraiment, ne se déclenche
+        jamais. Et rien ne le signale, parce que le verdict rendu reste
+        plausible.
+        """
+        v = juger([{"Cat": 0.90, "Purr": 0.60, "Animal": 0.95}])
+        self.assertEqual(v.classe_dominante, "Purr")
+        self.assertIs(v.intention, Intention.CONTENTEMENT)
+        self.assertIs(v.source, Source.MESUREE)
+
+    def test_sur_les_scores_reels_le_verdict_est_un_miaulement(self):
+        """Le garde-fou de non-régression, sur des chiffres non inventés."""
+        v = juger([MIAULEMENT_REEL])
+        self.assertEqual(v.classe_dominante, "Meow")
+        self.assertTrue(v.affichable)
+
+    def test_la_dominante_se_choisit_parmi_les_felines_seulement(self):
+        """`Animal` est vrai et n'apprend rien — il ne doit pas gagner.
+
+        Ce test tient la frontière : YAMNet place souvent `Animal` ou
+        `Domestic animals` au-dessus de la classe précise, et retenir le
+        maximum global viderait l'étage 2 de son sens.
+        """
+        v = juger([{"Animal": 0.80, "Domestic animals, pets": 0.75, "Purr": 0.22}])
+        self.assertEqual(v.classe_dominante, "Purr")
+        self.assertIs(v.intention, Intention.CONTENTEMENT)
+
+
+class TestMiaulementSansTete(unittest.TestCase):
+    """L'étage 2 bis : le refus de conclure est le comportement normal.
+
+    Faim et envie de sortir sont deux façons de miauler qu'aucun modèle public
+    ne sépare. Tant que la tête entraînée n'existe pas, `INDECIS` est le seul
+    verdict qui ne ment pas — et ces tests sont là pour qu'une session pressée
+    ne le remplace pas un jour par un tirage au sort déguisé en score.
+    """
+
+    def test_un_miaulement_seul_reste_indecis(self):
+        v = juger([{"Meow": 0.62}])
+        self.assertIs(v.intention, Intention.INDECIS)
+        self.assertIs(v.source, Source.AUCUNE)
+        self.assertEqual(v.confiance, 0.0)
+
+    def test_mais_il_reste_affichable(self):
+        """Le doute a son écran : on a bien entendu un chat, et on le dit."""
+        v = juger([{"Meow": 0.62}])
+        self.assertTrue(v.affichable)
+        self.assertEqual(v.classe_dominante, "Meow")
+
+    def test_la_couture_de_la_tete_entrainee_est_branchee(self):
+        """Le jour où la tête existe, elle doit prendre la main ici.
+
+        On l'éprouve avec une fausse tête plutôt qu'en attendant la vraie :
+        une couture jamais traversée est une couture qui ne marche pas.
+        """
+        v = juger([{"Meow": 0.62}],
+                  tete_intention=lambda: (Intention.FAIM, 0.73))
+        self.assertIs(v.intention, Intention.FAIM)
+        self.assertIs(v.source, Source.PROVISOIRE)
+        self.assertAlmostEqual(v.confiance, 0.73)
+
+    def test_la_tete_ne_court_circuite_jamais_la_porte(self):
+        """Même branchée, elle ne voit pas ce que la porte a refusé."""
+        v = juger([{"Speech": 0.99}],
+                  tete_intention=lambda: (Intention.FAIM, 0.99))
+        self.assertIs(v.intention, Intention.INDECIS)
+        self.assertIs(v.source, Source.AUCUNE)
+
+
+class TestHabillage(unittest.TestCase):
+    def test_chaque_intention_a_son_ecran_indecis_compris(self):
+        for intention in Intention:
+            with self.subTest(intention=intention):
+                p = habiller(intention)
+                self.assertTrue(p.titre and p.scene and p.sous_titre)
+
+    def test_le_sous_titre_tient_dans_la_bande_utile(self):
+        """Le §2 borne le texte entre 12 et 45 % de la hauteur.
+
+        Sur 1080 de large, cela laisse deux lignes lisibles à 18 px minimum.
+        Quarante-cinq caractères par ligne est la limite éprouvée du dépôt ;
+        au-delà, le sous-titre passe à trois lignes et sort de la bande.
+        """
+        for intention in Intention:
+            with self.subTest(intention=intention):
+                self.assertLessEqual(len(habiller(intention).sous_titre), 90)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
+
+
+class TestComportementEpingle(unittest.TestCase):
+    """Ce qui n'est pas encore tranché, épinglé pour qu'un changement soit voulu.
+
+    Ces tests ne disent pas « c'est juste ». Ils disent « c'est ce que le code
+    fait aujourd'hui ». Le jour où de vrais enregistrements trancheront la
+    question ouverte de `verdict.py`, ils échoueront — et c'est exactement leur
+    rôle : rendre visible une décision qui, sans eux, se prendrait en silence.
+    """
+
+    def test_meow_l_emporte_sur_caterwaul_pour_l_instant(self):
+        """Scores relevés sur un chat qui feule, le 01/09/2026.
+
+        Le verdict est probablement faux — un feulement est du stress. Il est
+        épinglé tel quel plutôt que corrigé au jugé.
+        """
+        v = juger([{"Cat": 0.969, "Meow": 0.891, "Caterwaul": 0.586}])
+        self.assertEqual(v.classe_dominante, "Meow")
+        self.assertIs(v.intention, Intention.INDECIS)
+
+    def test_un_ronronnement_faible_franchit_quand_meme_la_porte(self):
+        """Mesuré : cumul 0,262 sur un vrai ronronnement, seuil à 0,20.
+
+        La marge est de six centièmes. C'est ce qui justifie un seuil aussi
+        bas, et c'est aussi ce qui interdit de le relever sans mesurer : un
+        ronronnement est le son félin le plus discret que YAMNet connaisse.
+        """
+        v = juger([{"Cat": 0.109, "Purr": 0.148}])
+        self.assertIs(v.intention, Intention.CONTENTEMENT)
+        self.assertIs(v.source, Source.MESUREE)

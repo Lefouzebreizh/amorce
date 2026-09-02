@@ -16,7 +16,7 @@ export function Hero() {
           </h1>
 
           <p className="mt-4 text-2xl font-bold text-bleu sm:text-3xl">
-            299&nbsp;€ une fois. Pas d’abonnement.
+            300&nbsp;€ une fois. Pas d’abonnement.
           </p>
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-ardoise">

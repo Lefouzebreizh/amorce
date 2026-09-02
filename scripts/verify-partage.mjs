@@ -14,13 +14,14 @@
  * Prérequis : `npm run dev` dans un autre terminal.
  */
 import { chromium } from 'playwright';
+import { optionsChromium } from './chromium.mjs';
 
 const BASE = 'http://localhost:3000';
 
 // Même variable que les autres scripts : elle désigne le Chromium déjà présent
 // sur la machine, quand celui de Playwright n'y a pas été téléchargé.
 const browser = await chromium.launch({
-  executablePath: process.env.AMORCE_CHROMIUM || undefined,
+  ...optionsChromium,
 });
 const page = await browser.newPage();
 

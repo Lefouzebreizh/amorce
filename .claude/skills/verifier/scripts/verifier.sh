@@ -100,6 +100,7 @@ while IFS= read -r f; do
     hypersensible-bienveillance/*) inscrire hypersensible ;;
     titan-builder/*) inscrire titan ;;
     iptv/*)          inscrire iptv ;;
+    motion/*)        inscrire motion ;;
     licence-serveur/*) inscrire licence ;;
     annuaire-ia/*)   inscrire annuaire ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
@@ -291,6 +292,19 @@ lancer_licence() {
   return $e
 }
 
+lancer_motion() {
+  # Deux étapes, et c'est délibéré : ici `npm run build` REND UNE VIDÉO — il
+  # lance un Chromium, prend des minutes, et n'a rien à faire dans une
+  # vérification. Ce qui se garde est l'invariant de la zone sûre, qui se lit
+  # sans rendre une seule image.
+  local d="motion"; local j="$journal/motion"; local e=0
+  ( cd "$d" || exit 1; etape "$j.typecheck" "typecheck" npm run typecheck ) & local a=$!
+  ( cd "$d" || exit 1; etape "$j.test"      "tests"     npm test ) & local b=$!
+  wait $a || e=1; wait $b || e=1
+  cat "$j".{typecheck,test} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_titan() {
   local d="titan-builder"; local j="$journal/titan"; local e=0
   # Lint et typecheck ne se lisent pas l'un l'autre : ils partent ensemble.
@@ -350,13 +364,18 @@ lancer_flutter() {
 # couverture : on lit « couvert », on voit vert, on pousse.
 lancer_annuaire() {
   local d="annuaire-ia"; local j="$journal/annuaire"; local e=0
-  # `valider` d'abord : il est rapide et dit si les données tiennent. Inutile de
-  # promener un navigateur sur onze sites bâtis sur une base fausse.
-  ( cd "$d" || exit 1; etape "$j.valider" "données" npm run valider ) || e=1
+  # Les tests d'abord : ils éprouvent le validateur lui-même, et valider onze
+  # bases avec un filet troué ne prouve rien. Puis `valider`, rapide, qui dit si
+  # les données tiennent — inutile de promener un navigateur sur onze sites
+  # bâtis sur une base fausse.
+  ( cd "$d" || exit 1; etape "$j.test" "tests du validateur" npm test ) || e=1
+  if [ $e -eq 0 ]; then
+    ( cd "$d" || exit 1; etape "$j.valider" "données" npm run valider ) || e=1
+  fi
   if [ $e -eq 0 ]; then
     ( cd "$d" || exit 1; etape "$j.parcours" "parcours Chromium (~5 min)" npm run verifier ) || e=1
   fi
-  cat "$j".{valider,parcours} > "$j" 2>/dev/null
+  cat "$j".{test,valider,parcours} > "$j" 2>/dev/null
   return $e
 }
 
@@ -417,6 +436,7 @@ for p in $projets; do
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     titan)   lancer_titan & pid_de[titan]=$! ;;
     iptv)    lancer_iptv  & pid_de[iptv]=$! ;;
+    motion)  lancer_motion & pid_de[motion]=$! ;;
     licence) lancer_licence & pid_de[licence]=$! ;;
     annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
     outillage) lancer_outillage & pid_de[outillage]=$! ;;
@@ -441,6 +461,7 @@ nom_lisible() {
     hypersensible) echo "Hypersensible & Bienveillance" ;;
     titan)   echo "TITAN Builder" ;;
     iptv)    echo "IPTV / VOD" ;;
+    motion)  echo "Habillages animés (motion)" ;;
     licence) echo "Serveur de licence" ;;
     annuaire) echo "Réseau d'annuaires IA" ;;
     outillage) echo "Outillage du dépôt (syntaxe seule)" ;;

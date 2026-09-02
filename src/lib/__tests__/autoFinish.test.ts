@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { analyzeProject } from '../analysis.ts';
+import { analyzeProject, PLAFOND_BLOQUE } from '../analysis.ts';
 import {
   CAPTION_SETS,
   applyFinish,
@@ -42,15 +42,46 @@ function bare(shots: number[]): Project {
 const run = (project: Project, setId = 'bande-annonce') =>
   applyFinish(project, analyzeProject(project), setId, counter());
 
-test('la note monte franchement sur un montage nu', () => {
+/*
+ * Poser les réglages améliore le montage, et ne suffit pas à ouvrir la note.
+ *
+ * Cette attente a changé de sens, et c'est le sujet même du plafond. Elle
+ * disait « la note dépasse 75 » ; les gabarits laissent pourtant leurs crochets
+ * à remplir — c'est écrit, testé, et voulu : le studio ne peut pas écrire à la
+ * place de quelqu'un. Une note qui montait à 78 sur un montage dont les quatre
+ * textes affichent encore « [Ce qui menace] » disait donc le contraire de la
+ * vérité, et c'est exactement ce que l'utilisateur avait relevé.
+ *
+ * Ce qu'on vérifie maintenant : les critères progressent réellement, et la note
+ * reste plafonnée tant que les crochets sont là. Les deux comptent — sans le
+ * premier, on aurait un plafond qui masque un bouton devenu inutile.
+ */
+test('poser les réglages fait progresser les critères', () => {
   const project = bare([2.5, 2.5, 2.5, 2.5, 2.5]);
-  const avant = analyzeProject(project).score;
-  const apres = analyzeProject(run(project)).score;
+  const avant = analyzeProject(project);
+  const apres = analyzeProject(run(project));
 
-  // Un montage nu marque déjà sur le rythme et la tension : ce qui compte
-  // n'est pas son niveau de départ mais l'écart que le bouton produit.
-  assert.ok(apres - avant >= 25, `la note ne gagne que ${apres - avant} points (${avant} → ${apres})`);
-  assert.ok(apres >= 75, `la note devrait dépasser 75, elle est à ${apres}`);
+  const somme = (a: typeof avant) =>
+    a.criteria.reduce((total, c) => total + c.score * c.weight, 0);
+
+  assert.ok(
+    somme(apres) - somme(avant) >= 25,
+    `les critères ne gagnent que ${(somme(apres) - somme(avant)).toFixed(0)} points`,
+  );
+  assert.ok(somme(apres) >= 75, `les critères devraient dépasser 75, ils sont à ${somme(apres).toFixed(0)}`);
+});
+
+test('la note reste plafonnée tant que les crochets ne sont pas remplis', () => {
+  const apres = analyzeProject(run(bare([2.5, 2.5, 2.5, 2.5, 2.5])));
+
+  assert.ok(
+    apres.bloquants.some((b) => b.id === 'crochets'),
+    'les crochets du gabarit devraient être signalés comme bloquants',
+  );
+  assert.ok(
+    apres.score <= PLAFOND_BLOQUE,
+    `la note devrait être plafonnée à ${PLAFOND_BLOQUE}, elle est à ${apres.score}`,
+  );
 });
 
 test('les plans trop longs sont découpés, les autres intacts', () => {
@@ -238,4 +269,96 @@ test('poser un bruitage par coupe dégrade le son d’un montage déjà ponctué
     son({ ...dense, cues: [...dense.cues, ...ajoutes] }) < son(dense),
     'sans cette baisse, le bouton conditionné n’aurait plus de raison d’être',
   );
+});
+
+/*
+ * Ce que « Poser les réglages » change vraiment, et ce qu'il laisse.
+ *
+ * Le panneau d'analyse annonçait « rien de ce que tu as déjà fait n'est
+ * remplacé ». C'est vrai des textes et des bruitages, et faux des plans :
+ * `alterneLesRushes` réordonne le montage pour que deux morceaux d'un même
+ * rush ne se suivent pas. Quelqu'un qui a passé l'étape 2 à ranger ses plans
+ * les retrouve rebattus, sans qu'on le lui ait dit.
+ *
+ * Le comportement est bon — c'est lui qui évite les trente vignettes
+ * identiques sur quarante. C'est la phrase qui était fausse, et ces deux tests
+ * l'ancrent : le jour où le comportement change, l'un des deux tombe et la
+ * formulation se rediscute.
+ */
+test('poser les réglages garde tous les textes et bruitages existants', () => {
+  const project: Project = {
+    ...bare([2, 2, 2, 2]),
+    captions: [
+      { id: 'mien', text: 'Mon texte à moi', start: 0.5, end: 2, style: 'punch', y: 0.3 },
+    ],
+    cues: [{ id: 'mien-son', sfx: 'boom', time: 1, gain: 1 }],
+  };
+
+  const apres = run(project);
+
+  assert.ok(
+    apres.captions.some((c) => c.id === 'mien' && c.text === 'Mon texte à moi'),
+    'le texte écrit à la main devrait survivre tel quel',
+  );
+  assert.ok(apres.cues.some((c) => c.id === 'mien-son'), 'le bruitage posé à la main devrait survivre');
+});
+
+test('poser les réglages peut réordonner les plans de plusieurs rushes', () => {
+  const project: Project = {
+    ...emptyProject(),
+    assets: [asset('a'), asset('b')],
+    // Deux morceaux de « a » qui se suivent : exactement ce que l'alternance
+    // est là pour défaire.
+    clips: [
+      { ...DEFAULT_CLIP, id: 'a1', assetId: 'a', outPoint: 2, transition: 'cut', transitionDuration: 0 },
+      { ...DEFAULT_CLIP, id: 'a2', assetId: 'a', outPoint: 2, transition: 'cut', transitionDuration: 0 },
+      { ...DEFAULT_CLIP, id: 'b1', assetId: 'b', outPoint: 2, transition: 'cut', transitionDuration: 0 },
+    ],
+  };
+
+  const rushes = run(project).clips.map((c) => c.assetId);
+
+  assert.equal(rushes.length, 3, 'aucun plan ne devrait disparaître');
+  assert.notDeepEqual(rushes, ['a', 'a', 'b'], 'l’ordre d’origine ne devrait pas être conservé tel quel');
+  assert.notEqual(rushes[0], rushes[1], 'deux morceaux du même rush ne devraient plus se suivre');
+});
+
+/*
+ * Un seul style de texte par montage.
+ *
+ * Chaque jeu mêlait deux à quatre styles — « Bande-annonce » posait du néon
+ * jaune, du blanc contouré, du karaoké vert et du rouge dans le même film.
+ * Rapporté ainsi : « trois styles différents, pas cohérents ».
+ *
+ * La variété se joue **entre** les jeux, jamais à l'intérieur d'un jeu, et ce
+ * test garde les deux moitiés de la règle.
+ */
+test('chaque trame n’emploie qu’un seul style de texte', () => {
+  for (const set of CAPTION_SETS) {
+    const styles = new Set(set.slots.map((slot) => slot.style));
+    assert.equal(styles.size, 1, `${set.id} en emploie ${styles.size} : ${[...styles].join(', ')}`);
+  }
+});
+
+test('la couleur ne souligne qu’un seul moment', () => {
+  for (const set of CAPTION_SETS) {
+    const colorees = set.slots.filter((slot) => slot.color !== undefined).length;
+    assert.ok(colorees <= 1, `${set.id} colore ${colorees} textes`);
+  }
+});
+
+/*
+ * Les échelles restent sous 1,2, et c'est mesuré.
+ *
+ * « QUEL [ROYAUME] TOMBE ENSUITE ? » en échelle 1,3 passe à quatre lignes, soit
+ * 638 px, quand la bande sûre des trois plateformes en fait 634. Aucune hauteur
+ * d'ancrage ne pouvait le sauver : il était trop grand, pas mal posé.
+ */
+test('aucune trame ne demande une échelle qui déborde la bande', () => {
+  for (const set of CAPTION_SETS) {
+    for (const slot of set.slots) {
+      const echelle = slot.scale ?? 1;
+      assert.ok(echelle <= 1.2, `${set.id} demande une échelle de ${echelle}`);
+    }
+  }
 });

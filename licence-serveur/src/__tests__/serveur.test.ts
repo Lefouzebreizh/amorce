@@ -181,3 +181,98 @@ test('le partage d’origine ne s’ouvre qu’aux origines nommées', async () 
   const sans = await traiter(new Request('https://x/etat', { headers: { Origin: 'https://pirate.example' } }), r);
   assert.equal(sans.headers.get('access-control-allow-origin'), null);
 });
+
+// -------------------------------------------------------------- La remise
+
+test('après paiement, la clé se retire avec l’identifiant de session', async () => {
+  /*
+   * Le trou que cette route bouche : le webhook enregistrait le paiement, et
+   * l'acheteur n'avait aucun moyen d'obtenir sa clé. La clé rendue ici doit
+   * être exactement celle que `/etat` reconnaîtra — sinon on remet une clé qui
+   * ne marche pas, à quelqu'un qui vient de payer.
+   */
+  const base = baseEnMemoire();
+  const corps = paiement('cs_test_remise_0001');
+  await traiter(
+    new Request('https://licence/webhook', { method: 'POST', body: corps, headers: { 'Stripe-Signature': await signer(corps) } }),
+    reglages(base),
+  );
+
+  const reponse = await traiter(
+    new Request('https://licence/remise?session=cs_test_remise_0001'),
+    reglages(base),
+  );
+  assert.equal(reponse.status, 200);
+  const { cle } = await reponse.json() as { cle: string };
+
+  /* La clé est authentique **et** liée à cette session-là : sans la seconde
+     moitié, une clé forgée pour un autre paiement passerait le contrôle. */
+  assert.equal(await referenceDeLaCle(SECRET_CLES, cle), 'STREMISE0001');
+  const etat = await traiter(
+    new Request('https://licence/etat', { headers: { Authorization: `Bearer ${cle}` } }),
+    reglages(base),
+  );
+  assert.deepEqual(await etat.json(), { statut: 'pro' });
+});
+
+test('un paiement pas encore enregistré rend 404, pas un refus', async () => {
+  /*
+   * Le webhook a quelques secondes de retard sur la redirection : c'est le cas
+   * normal, pas une panne. La page de succès réessaie sur ce code — le
+   * confondre avec un refus ferait croire à un paiement échoué.
+   */
+  const reponse = await traiter(
+    new Request('https://licence/remise?session=cs_test_jamais_vu_9'),
+    reglages(baseEnMemoire()),
+  );
+  assert.equal(reponse.status, 404);
+});
+
+test('un paiement remboursé ne remet plus de clé', async () => {
+  const base = baseEnMemoire();
+  const corps = paiement('cs_test_rembourse_02');
+  const r = reglages(base);
+  await traiter(new Request('https://licence/webhook', { method: 'POST', body: corps, headers: { 'Stripe-Signature': await signer(corps) } }), r);
+
+  const remboursement = JSON.stringify({ type: 'charge.refunded', data: { object: { id: 'cs_test_rembourse_02' } } });
+  await traiter(new Request('https://licence/webhook', { method: 'POST', body: remboursement, headers: { 'Stripe-Signature': await signer(remboursement) } }), r);
+
+  const reponse = await traiter(new Request('https://licence/remise?session=cs_test_rembourse_02'), r);
+  assert.equal(reponse.status, 410);
+});
+
+test('une session mal formée ne touche jamais la base', async () => {
+  /*
+   * L'adresse est publique. Sans ce filtre, elle devient un guichet où l'on
+   * essaie des identifiants au kilo, une lecture de base par tentative.
+   */
+  const base = baseEnMemoire();
+  let lectures = 0;
+  const espionne: Base = { ...base, async lire(ref) { lectures += 1; return base.lire(ref); } };
+
+  for (const session of ['', 'cs_', 'pi_test_1234567890', 'cs_court', '../../etc', 'cs_ab*()']) {
+    const reponse = await traiter(
+      new Request(`https://licence/remise?session=${encodeURIComponent(session)}`),
+      reglages(espionne),
+    );
+    assert.equal(reponse.status, 400, `acceptée à tort : « ${session} »`);
+  }
+  assert.equal(lectures, 0, 'la base a été interrogée sur une session illisible');
+});
+
+test('la remise ne s’ouvre qu’aux origines nommées', async () => {
+  const base = baseEnMemoire();
+  const corps = paiement('cs_test_origine_003');
+  const r = reglages(base);
+  await traiter(new Request('https://licence/webhook', { method: 'POST', body: corps, headers: { 'Stripe-Signature': await signer(corps) } }), r);
+
+  const permise = await traiter(
+    new Request('https://licence/remise?session=cs_test_origine_003', { headers: { Origin: 'https://amorce.app' } }), r,
+  );
+  assert.equal(permise.headers.get('access-control-allow-origin'), 'https://amorce.app');
+
+  const inconnue = await traiter(
+    new Request('https://licence/remise?session=cs_test_origine_003', { headers: { Origin: 'https://ailleurs.example' } }), r,
+  );
+  assert.equal(inconnue.headers.get('access-control-allow-origin'), null);
+});

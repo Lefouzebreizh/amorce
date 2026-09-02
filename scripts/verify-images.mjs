@@ -17,6 +17,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
+import { optionsChromium } from './chromium.mjs';
 
 const IMAGES = join(process.cwd(), '.fixtures', 'images');
 const URL_BASE = process.env.AMORCE_URL || 'http://localhost:3000';
@@ -36,7 +37,7 @@ const files = readdirSync(IMAGES)
 const attendus = files.length * TOURS;
 
 const browser = await chromium.launch({
-  executablePath: process.env.AMORCE_CHROMIUM || undefined,
+  ...optionsChromium,
 });
 const page = await browser.newPage();
 

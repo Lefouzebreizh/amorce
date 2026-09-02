@@ -91,10 +91,25 @@ export interface BilanRangement {
   /** Entrées classées étrangères — voir `normalisation/pays.ts`. */
   readonly etrangeres: number
   readonly dossiers: readonly { genre: 'film' | 'serie'; nommes: number; autres: number }[]
+  /** Chaînes et films masqués comme doublons — la meilleure qualité reste visible. */
+  readonly doublonsMasques: number
+  /** Fiches de séries retirées comme doublons. */
+  readonly fichesDoublons: number
+  /**
+   * Le compte visible, chaînes / films / séries, avant et après le rangement.
+   *
+   * Pas un total du catalogue entier : ce que l'import a réellement écrit,
+   * pour vérifier qu'un plafond n'en a pas amputé une partie et que le
+   * dédoublonnage n'a rien perdu — seulement masqué ou retiré ce qui faisait
+   * double emploi.
+   */
+  readonly avant: { chaines: number; films: number; series: number }
+  readonly apres: { chaines: number; films: number; series: number }
 }
 
 /**
- * Reclasse le catalogue entier : genre, ordre des chaînes, thèmes.
+ * Reclasse le catalogue entier : genre, ordre des chaînes, thèmes — puis
+ * dédoublonne chaînes, films et séries.
  *
  * Tout se calcule à l'import — donc tout reste figé sur la règle qui avait
  * cours ce jour-là, et un correctif livré ensuite ne touche jamais une base
@@ -102,10 +117,21 @@ export interface BilanRangement {
  * cinéma — Ciné+, Canal+ Cinémas, les chaînes Pluto — rangées dans l'onglet
  * Films par une règle depuis corrigée, et qui y seraient restées pour toujours.
  *
+ * Le dédoublonnage vient **après** le reclassement, et c'est l'ordre qui
+ * compte : grouper par titre sur un genre encore faux mélangerait des chaînes
+ * et des films sous la même règle.
+ *
  * Rejouer la classification coûte quelques secondes, là où un réimport complet
  * coûte plusieurs minutes et demande de retrouver l'adresse de sa source.
  */
 export function rangerCatalogue(depot: Depot): BilanRangement {
+  const compterTout = (): { chaines: number; films: number; series: number } => ({
+    chaines: depot.compter({ genre: 'direct' }),
+    films: depot.compter({ genre: 'film' }),
+    series: depot.fiches({ limite: TOUT }).length,
+  })
+  const avant = compterTout()
+
   const { numerotees, reclasses, etrangeres } = depot.reclasser(({ titre, url, groupe, langue }) => {
     const genre = detecterGenre({
       url,
@@ -129,6 +155,10 @@ export function rangerCatalogue(depot: Depot): BilanRangement {
       : { genre, theme: detecterTheme(groupe), pays }
   })
 
+  const directs = depot.dedoublonner('direct')
+  const films = depot.dedoublonner('film')
+  const fiches = depot.dedoublonnerFiches()
+
   const dossiers = (['film', 'serie'] as const)
     .map((genre) => {
       const themes = depot.themes({ genre, inclureMorts: true })
@@ -146,6 +176,10 @@ export function rangerCatalogue(depot: Depot): BilanRangement {
     etrangeres,
     chaines: depot.compter({ genre: 'direct', inclureMorts: true }),
     dossiers,
+    doublonsMasques: directs.masques + films.masques,
+    fichesDoublons: fiches.retirees,
+    avant,
+    apres: compterTout(),
   }
 }
 

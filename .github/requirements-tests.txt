@@ -10,12 +10,17 @@
 # qu'il faut compléter — un seul endroit, exprès.
 
 pydub          # studio audio : découpe et mixage
-tabulate       # assistant d'allocation : tableaux console
-requests       # répondeur Facebook, cours des cryptos
+requests       # répondeur Facebook
 numpy          # chaîne pré-presse : mesure des planches
 Pillow         # chaîne pré-presse : ouverture des images
 pymupdf        # assistant administratif : lecture des PDF
 pydantic       # assistant administratif : forme de ce que rend le modèle de vision
-PyYAML         # radar crypto et NexusCrypto : seuils et allocation en YAML
-opencv-python-headless  # chaîne KDP : piqué des planches, gradient de Sobel
+PyYAML         # radar crypto, NexusCrypto et Conseiller Patrimoine : seuils et allocation en YAML
+opencv-python-headless<5  # chaîne KDP : piqué des planches, gradient de Sobel.
+                          # Le plafond vient de Life-Organizer : OpenCV 5 a retiré
+                          # `CascadeClassifier`, et un environnement n'a qu'une version.
 scipy          # chaîne de montage : les filtres de la palette de bruitages, importée au chargement du module
+pyloudnorm     # chaîne de montage : la mesure de sonie. Aucun test ne tombe sans lui — il rend `None` en silence
+imageio-ffmpeg # kits : le repli de `indexer.outil("ffmpeg")`. Le runner n'a pas ffmpeg, donc sans ce paquet
+               # le repli ne peut pas jouer et `test_ffmpeg_a_bien_un_repli_lui` échoue — un test qui garde
+               # un repli est le premier à tomber quand le repli n'est déclaré nulle part

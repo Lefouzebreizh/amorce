@@ -64,7 +64,20 @@ export async function POST(requete: Request): Promise<Response> {
   const cache = depot()
 
   if (tache === 'ranger') {
-    return Response.json({ tache, ...rangerCatalogue(cache) })
+    // Aplati pour le client : son contrat est un simple `Record<string,
+    // number>`, et `avant`/`après` sont les seuls champs du bilan qui ne le
+    // seraient pas tels quels.
+    const { avant, apres, ...reste } = rangerCatalogue(cache)
+    return Response.json({
+      tache,
+      ...reste,
+      avantChaines: avant.chaines,
+      avantFilms: avant.films,
+      avantSeries: avant.series,
+      apresChaines: apres.chaines,
+      apresFilms: apres.films,
+      apresSeries: apres.series,
+    })
   }
 
   if (tache === 'ranimer') {

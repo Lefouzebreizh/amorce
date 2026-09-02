@@ -1,4 +1,4 @@
-# Mise en ligne du réseau d'annuaires sur Cloudflare Pages.
+# Mise en ligne du réseau d'annuaires sur GitHub Pages.
 #
 # Jusqu'ici le réseau publiait dans le dépôt et nulle part ailleurs : onze
 # sites parfaitement construits, zéro visiteur possible. `construire-sites.js`
@@ -12,17 +12,19 @@
 #   `niches/<id>.json`). C'est la forme la moins chère pour la phase de mesure ;
 #   le jour où un domaine est acheté, `regler-domaines.mjs <niche> <adresse>`
 #   bascule cette niche-là et elle seule.
-# * **Production uniquement (`--branch=main`).** Le gabarit réécrit sa balise
-#   canonique depuis l'adresse courante — vérifié : servi en local, il se
-#   déclare canonique sur `127.0.0.1`. Un déploiement d'aperçu, servi sur son
-#   propre sous-domaine `*.pages.dev`, se déclarerait donc canonique lui aussi
-#   et concurrencerait la production dans l'index. On ne déploie que la
-#   production, et le problème n'existe pas.
+# * **Un seul site, et pas d'aperçu.** Le gabarit réécrit sa balise canonique
+#   depuis l'adresse courante — vérifié : servi en local, il se déclare
+#   canonique sur `127.0.0.1`. Un déploiement d'aperçu servi sur son propre
+#   sous-domaine se déclarerait donc canonique lui aussi et concurrencerait la
+#   production dans l'index. GitHub Pages n'expose qu'un site par dépôt et son
+#   mode aperçu n'est pas public : ce que Cloudflare demandait d'éviter à la
+#   main, par un `--branch=main` explicite, ne peut plus arriver ici.
 # * **Appelable par l'auto-pilote (`workflow_call`).** Une poussée faite avec le
 #   jeton d'Actions ne déclenche aucun workflow — protection anti-boucle de
 #   GitHub, pas un réglage. Sans cet appel explicite, l'outil publié le lundi
 #   n'apparaîtrait en ligne que le mercredi, et rien ne le signalerait.
-# * **Sans les secrets, on prévient, on continue — et on ouvre un billet.**
+# * **Sans la source Pages réglée, on prévient, on continue — et on ouvre un
+#   billet.**
 #   Échouer rendrait l'auto-pilote rouge tous les deux jours, et une barrière
 #   rouge en permanence est une barrière qu'on cesse de lire ; la publication
 #   dans le dépôt, elle, a bien eu lieu. Mais l'avertissement seul ne suffit
@@ -33,10 +35,30 @@
 #   premier dépôt réussi : une alerte qu'on doit fermer à la main finit par
 #   rester ouverte pour rien.
 #
-# Réglages à faire une fois, côté GitHub (Settings → Secrets and variables →
-# Actions) : `CLOUDFLARE_API_TOKEN` (permission « Cloudflare Pages — Edit ») et
-# `CLOUDFLARE_ACCOUNT_ID`. Côté Cloudflare : un projet Pages nommé exactement
-# `annuaire-ia`, créé en « Direct Upload ».
+# **Pourquoi GitHub Pages et non Cloudflare, décidé le 02/09/2026.** Les onze
+# bases déclarent déjà `ma-panoplie-ia.com/<niche>/` dans chaque balise
+# canonique, chaque sitemap et chaque `og:url`. Publier ailleurs — sur un
+# `*.pages.dev` ou sur un sous-chemin `github.io/amorce/` — obligeait à changer
+# cette adresse, donc à la faire indexer pour la remplacer ensuite : sur un
+# projet qui ne vaut que par son référencement, une adresse provisoire n'est
+# pas un raccourci, c'est une dette. GitHub Pages sert le domaine à sa racine,
+# gratuitement, sur un dépôt public — et sans les deux secrets ni le compte
+# tiers que Cloudflare réclamait.
+#
+# Réglages à faire une fois, et **aucun n'est automatisable d'ici** :
+#
+# 1. Chez le registrar : quatre `A` sur l'apex vers 185.199.108.153,
+#    185.199.109.153, 185.199.110.153 et 185.199.111.153, plus un `CNAME`
+#    `www` vers `lefouzebreizh.github.io`.
+# 2. Settings → Pages → Source → **GitHub Actions**. L'entrée `enablement` de
+#    `actions/configure-pages` le ferait — mais son `action.yml` exige en
+#    propres termes un jeton *autre* que `GITHUB_TOKEN`, que ce workflow n'a
+#    pas. D'où la détection plus bas plutôt qu'une tentative vouée à échouer.
+#    Et cette détection lit `build_type` par l'API, **pas** le succès de
+#    `configure-pages` : celui-ci réussit aussi sur une source « branche », ce
+#    qui a rendu le billet muet le jour même où il devait servir.
+# 3. Settings → Pages → Custom domain → `ma-panoplie-ia.com`, puis *Enforce
+#    HTTPS* une fois le certificat émis.
 
 name: Annuaire IA — mise en ligne
 
@@ -52,17 +74,27 @@ on:
 permissions:
   contents: read
   issues: write
+  # `actions/deploy-pages` s'authentifie par OIDC : sans `id-token: write` il
+  # ne peut pas prouver son identité, et le dépôt est refusé sans que la cause
+  # apparaisse dans le journal.
+  pages: write
+  id-token: write
 
-# Deux dépôts simultanés sur le même projet Pages se marchent dessus ; on garde
-# le plus récent, qui contient de toute façon ce que portait le précédent.
+# Deux dépôts simultanés sur le même site se marchent dessus. On ne coupe plus
+# celui qui est en cours, contrairement au temps de Cloudflare : un dépôt Pages
+# interrompu en plein vol laisse un déploiement bloqué côté GitHub, qui refuse
+# les suivants. On laisse donc finir, et le suivant passe derrière.
 concurrency:
   group: pages-annuaire-ia
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deployer:
     name: Construire et déposer les onze sites
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.depot.outputs.page_url }}
     defaults:
       run:
         working-directory: annuaire-ia
@@ -88,18 +120,68 @@ jobs:
         working-directory: .
         run: npm ci
 
-      - name: Les secrets Cloudflare sont-ils posés
-        id: secrets
+      # GitHub Pages ne demande aucun secret. Il demande une chose que le dépôt
+      # ne porte pas : que la source soit réglée sur « GitHub Actions ». Tant
+      # qu'elle reste sur « Deploy from a branch », cette étape échoue — d'où
+      # le `continue-on-error`, qui la transforme en détection au lieu d'un
+      # arrêt, exactement comme le faisait la sonde de secrets Cloudflare.
+      # GitHub Pages ne demande aucun secret. Il demande une chose que le dépôt
+      # ne porte pas : que la source soit réglée sur « GitHub Actions ».
+      #
+      # `actions/configure-pages` ne sait PAS le dire, et c'est le piège qui a
+      # coûté un lot entier le 02/09/2026. Son `src/api-client.js` appelle
+      # `GET /repos/…/pages` et réussit dès qu'une page existe — **quelle que
+      # soit sa source**. Ce dépôt avait Pages activé en mode « branche », donc
+      # la détection passait au vert, le billet ne s'ouvrait jamais, et le dépôt
+      # se serait tenté pour rien.
+      #
+      # On lit donc `build_type` nous-mêmes : « workflow » = prêt, « legacy » =
+      # source encore sur une branche. Un appel refusé rend « introuvable », qui
+      # compte comme pas prêt : on préfère un billet de trop à un dépôt muet.
+      - name: La source Pages est-elle réglée sur Actions
+        id: source
         env:
-          JETON: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          COMPTE: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -z "$JETON" ] || [ -z "$COMPTE" ]; then
-            echo "::warning::Cloudflare non configuré : les sites sont construits mais pas déposés. Poser CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID dans les secrets du dépôt."
-            echo "pret=non" >> "$GITHUB_OUTPUT"
-          else
+          set -uo pipefail
+          type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' 2>/dev/null || echo introuvable)
+          echo "Source Pages : $type"
+          if [ "$type" = "workflow" ]; then
             echo "pret=oui" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Source Pages « $type » : les sites sont construits mais pas déposés. Settings → Pages → Source → GitHub Actions."
+            echo "pret=non" >> "$GITHUB_OUTPUT"
           fi
+
+      # Un avertissement vit dans le journal d'exécution, que personne n'ouvre.
+      # Celui-ci arrive dans les notifications, et une seule fois : si le billet
+      # est déjà ouvert, on n'y ajoute rien.
+      - name: Signaler que le réseau n'est toujours pas en ligne
+        if: steps.source.outputs.pret == 'non'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          titre="Le réseau d'annuaires n'est pas encore en ligne"
+          existant=$(gh issue list --state open --search "$titre in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existant" ]; then
+            echo "Billet #$existant déjà ouvert, rien à ajouter."
+            exit 0
+          fi
+          cat > /tmp/corps.md <<'TEXTE'
+          Les onze sites sont construits et contrôlés à chaque poussée, mais **rien n'est déposé** : la source Pages du dépôt n'est pas réglée sur « GitHub Actions », l'étape de dépôt est sautée, et l'exécution reste verte.
+
+          Tant que ce billet est ouvert, le réseau publie dans le dépôt et nulle part ailleurs — les balises canoniques annoncent une adresse que personne ne sert.
+
+          Trois gestes, une fois pour toutes. Aucun ne peut être fait depuis une session : les deux premiers vivent hors du dépôt, et le troisième exige un jeton que ce workflow n'a pas.
+
+          1. **Chez le registrar de `ma-panoplie-ia.com`** → quatre enregistrements `A` sur l'apex vers `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`, plus un `CNAME` `www` vers `lefouzebreizh.github.io`.
+          2. **GitHub** → Settings → Pages → Source → **GitHub Actions**.
+          3. **GitHub** → Settings → Pages → Custom domain → `ma-panoplie-ia.com`, puis *Enforce HTTPS* dès que la case se débloque.
+
+          Ce billet se referme tout seul au premier dépôt réussi.
+          TEXTE
+          gh issue create --title "$titre" --body-file /tmp/corps.md
 
       # `construire-sites.js` valide les bases et s'arrête sur la première
       # erreur : une base cassée ne peut pas atteindre l'hébergeur.
@@ -141,51 +223,29 @@ jobs:
           console.log('\nDossier de dépôt conforme.');
           "
 
-      # Un avertissement vit dans le journal d'exécution, que personne n'ouvre.
-      # Celui-ci arrive dans les notifications, et une seule fois : si le billet
-      # est déjà ouvert, on n'y ajoute rien.
-      - name: Signaler que le réseau n'est toujours pas en ligne
-        if: steps.secrets.outputs.pret == 'non'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          titre="Le réseau d'annuaires n'est pas encore en ligne"
-          existant=$(gh issue list --state open --search "$titre in:title" --json number --jq '.[0].number // empty')
-          if [ -n "$existant" ]; then
-            echo "Billet #$existant déjà ouvert, rien à ajouter."
-            exit 0
-          fi
-          cat > /tmp/corps.md <<'TEXTE'
-          Les onze sites sont construits et contrôlés à chaque poussée, mais **rien n'est déposé** : les secrets Cloudflare manquent, l'étape de dépôt est sautée, et l'exécution reste verte.
+      - name: Préparer le dépôt Pages
+        if: steps.source.outputs.pret == 'oui'
+        uses: actions/configure-pages@v6
 
-          Tant que ce billet est ouvert, le réseau publie dans le dépôt et nulle part ailleurs — les balises canoniques annoncent une adresse que personne ne sert.
+      - name: Empaqueter les onze sites
+        if: steps.source.outputs.pret == 'oui'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          # Chemin depuis la racine du dépôt, et non depuis `annuaire-ia` :
+          # `defaults.run.working-directory` ne vaut que pour les étapes `run`,
+          # jamais pour une action. Un chemin relatif ici empaquetterait le
+          # vide, et le dépôt réussirait en servant un site introuvable.
+          path: annuaire-ia/dist
 
-          Trois gestes, une fois pour toutes :
-
-          1. **Cloudflare** → Workers & Pages → un projet Pages nommé exactement `annuaire-ia`, en *Direct Upload*.
-          2. **GitHub** → Settings → Secrets and variables → Actions → `CLOUDFLARE_API_TOKEN` (permission *Cloudflare Pages — Edit*) et `CLOUDFLARE_ACCOUNT_ID`.
-          3. **Actions** → « Annuaire IA — mise en ligne » → *Run workflow*.
-
-          Ce billet se referme tout seul au premier dépôt réussi.
-          TEXTE
-          gh issue create --title "$titre" --body-file /tmp/corps.md
-
-      - name: Déposer sur Cloudflare Pages
-        if: steps.secrets.outputs.pret == 'oui'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          npx --yes wrangler@4 pages deploy dist \
-            --project-name=annuaire-ia \
-            --branch=main \
-            --commit-dirty=true
+      - name: Déposer sur GitHub Pages
+        id: depot
+        if: steps.source.outputs.pret == 'oui'
+        uses: actions/deploy-pages@v5
 
       # Le premier dépôt réussi rend le billet caduc : le laisser ouvert
       # apprendrait à ignorer les billets de ce dépôt.
       - name: Refermer le billet de mise en ligne
-        if: steps.secrets.outputs.pret == 'oui'
+        if: steps.source.outputs.pret == 'oui'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

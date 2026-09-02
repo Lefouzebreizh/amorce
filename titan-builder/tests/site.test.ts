@@ -339,3 +339,47 @@ test('sans numéro, le pied de page ne fabrique pas de lien mort', () => {
   assert.equal(pied.includes('tel:'), false);
   assert.equal(pied.includes('<a'), false);
 });
+
+test('sans avis dans la commande, la section n’existe pas', () => {
+  /*
+   * C'est la garantie qui compte : le générateur ne fabrique aucun
+   * témoignage. Un faux avis sur le site d'un artisan est le seul défaut de
+   * cette page qui puisse lui coûter sa réputation.
+   */
+  const html = genererSite(commande({}));
+  assert.equal(html.includes('Ce qu’en disent mes clients'), false);
+  assert.equal(genererSite(commande({ avis: [] })).includes('disent mes clients'), false);
+});
+
+test('un avis vide ne fabrique pas une carte vide', () => {
+  const html = genererSite(commande({ avis: [{ texte: '   ', prenom: 'Marc', commune: 'Rennes' }] }));
+  assert.equal(html.includes('disent mes clients'), false);
+});
+
+test('les avis fournis sortent avec leur prénom et leur commune', () => {
+  const html = genererSite(
+    commande({ avis: [{ texte: 'Travail net, délai tenu.', prenom: 'Marc', commune: 'Cesson-Sévigné' }] }),
+  );
+  assert.ok(html.includes('Ce qu’en disent mes clients'));
+  assert.ok(html.includes('Travail net, délai tenu.'));
+  assert.ok(html.includes('Marc, Cesson-Sévigné'));
+});
+
+test('la mention « exemple » n’apparaît qu’en démonstration', () => {
+  /*
+   * Les deux moitiés comptent. En démonstration, sans la mention, un prospect
+   * croirait à de vrais clients. Sur un vrai site, la mention jetterait un
+   * doute sur des avis authentiques — c'est le même mensonge, retourné.
+   */
+  const avis = [{ texte: 'Rapide et propre.', prenom: 'Élodie', commune: 'Bruz' }];
+  assert.ok(genererSite(commande({ avis }), [], { demonstration: true }).includes('Avis d’exemple'));
+  assert.equal(genererSite(commande({ avis })).includes('Avis d’exemple'), false);
+});
+
+test('un avis n’échappe pas au filtre des balises', () => {
+  const html = genererSite(
+    commande({ avis: [{ texte: '<script>alert(1)</script>', prenom: '<b>x</b>', commune: 'Rennes' }] }),
+  );
+  assert.equal(html.includes('<script>alert(1)</script>'), false);
+  assert.equal(html.includes('<b>x</b>'), false);
+});

@@ -82,6 +82,39 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nL’échec de la plupart des outils de notes de frais est humain : les salariés n’installent pas l’application. Fyle contourne le problème — on transfère le courriel du reçu, ou on envoie une photo par message texte, et la note se crée. L’alerte en temps réel sur la carte bancaire réclame le justificatif dans la minute qui suit l’achat.\n\n## Points forts\n- Aucune application à installer : courriel ou message texte suffisent\n- Alerte en temps réel sur la carte, le justificatif est réclamé dans la minute\n- Règles de politique interne vérifiées à la saisie, pas à la validation\n- S’intègre aux principaux logiciels comptables\n\n## Points faibles\n- Tarif par utilisateur qui grimpe avec l’effectif\n- Fonctions de reporting en retrait des grands acteurs\n- Documentation et support en anglais\n\n## Idéal pour\nLes entreprises dont les salariés ne rendent jamais leurs justificatifs et où l’application dédiée a déjà échoué.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "sage-copilot",
+      "nom": "Sage Copilot",
+      "categorie": "Assistant intégré",
+      "prix": "Inclus dans certaines offres Sage",
+      "description_courte": "L'assistant greffé dans le logiciel comptable déjà en place : relances, anomalies, prévision de trésorerie, sans changer d'outil.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/sage-copilot",
+      "score_avis": 3.9,
+      "description_longue": "## Notre verdict\nL'intérêt de Sage Copilot n'est pas d'être le meilleur assistant du marché, c'est d'être déjà là. Pour les cabinets et les entreprises équipés de Sage, il propose des relances clients rédigées, signale les anomalies de saisie et projette la trésorerie sans qu'aucune donnée sorte du système en place. La barrière la plus coûteuse d'un projet d'intelligence artificielle — l'intégration — disparaît.\n\n## Points forts\n- Aucun projet d'intégration : les données sont déjà dans l'outil\n- Relances clients rédigées et priorisées selon le risque d'impayé\n- Détection d'anomalies de saisie au fil de l'eau\n- Inclus dans certaines offres, donc sans arbitrage budgétaire supplémentaire\n\n## Points faibles\n- Nettement en retrait des outils spécialisés sur chaque fonction prise isolément\n- Disponibilité inégale selon les produits et les pays de la gamme\n- Enfermement accru dans l'écosystème d'un éditeur\n\n## Idéal pour\nLes cabinets et directions financières déjà équipés Sage, qui veulent un premier usage utile sans conduire un projet.",
+      "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "docyt",
+      "nom": "Docyt",
+      "categorie": "Extraction de documents",
+      "prix": "À partir de 50 $/mois",
+      "description_courte": "La comptabilité tenue en continu : factures lues, écritures proposées, rapprochement bancaire quotidien.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/docyt",
+      "score_avis": 4,
+      "description_longue": "## Notre verdict\nDocyt vise le point d’équilibre entre le simple lecteur de factures et la plateforme complète : les documents sont lus, catégorisés selon l’historique du dossier, et les écritures poussées dans le logiciel comptable existant. Le cabinet garde son outil de production, le client obtient des chiffres à jour toute l’année plutôt qu’une fois par trimestre.\n\n## Points forts\n- Se greffe sur le logiciel comptable en place, sans migration\n- Catégorisation qui apprend de l’historique du dossier\n- Rapprochement bancaire quotidien plutôt que trimestriel\n- Tableaux de bord de gestion pour le client final\n\n## Points faibles\n- Pensé pour le plan comptable américain : la TVA française demande du paramétrage\n- La mise en route d’un dossier prend plusieurs semaines\n- Peu de références en France, support en anglais\n\n## Idéal pour\nLes cabinets qui veulent vendre du suivi mensuel plutôt que de la production trimestrielle, sans changer d’outil.",
+      "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "tiime",
+      "nom": "Tiime",
+      "categorie": "Plateforme comptable",
+      "prix": "Freemium — à partir de 20 €/mois",
+      "description_courte": "L'outil français qui met la facturation du client et la pré-comptabilité du cabinet dans le même flux.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/tiime",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nTiime aborde le problème par le client plutôt que par le cabinet : l'entrepreneur facture, encaisse, photographie ses justificatifs et suit sa trésorerie dans une application qu'il ouvre volontiers, et le cabinet récupère une pré-comptabilité déjà catégorisée. C'est la meilleure réponse au dossier de petite entreprise où le vrai coût n'est pas la saisie mais la collecte.\n\n## Points forts\n- Application client réellement adoptée, ce qui est la condition de tout le reste\n- Rapprochement bancaire et catégorisation automatiques\n- Solution française, avec les obligations de facturation locales prises en charge\n- Formule d'entrée gratuite pour les très petites structures\n\n## Points faibles\n- Moins puissant que les plateformes complètes sur les dossiers complexes\n- Le cabinet dépend de l'adhésion du client à l'application\n- Fonctions de production comptable en retrait sur les dossiers de taille moyenne\n\n## Idéal pour\nLes cabinets à forte proportion d'indépendants et de très petites entreprises, où la collecte des pièces est le vrai goulot d'étranglement.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

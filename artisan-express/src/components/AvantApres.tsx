@@ -20,7 +20,7 @@ const AVANT = [
 const APRES = [
   'Une page à toi seul, à ton nom, avec tes chantiers.',
   'Ton téléphone en gros, du haut de l’écran jusqu’en bas.',
-  '299 € une fois. Rien le mois suivant.',
+  '300 € une fois. Rien le mois suivant.',
   'Une modification offerte, et le site t’appartient.',
 ];
 

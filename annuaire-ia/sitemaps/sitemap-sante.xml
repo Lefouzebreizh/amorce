@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ma-panoplie-ia.com/sante/?niche=sante</loc>
-    <lastmod>2026-08-27</lastmod>
+    <lastmod>2026-09-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -39,6 +39,24 @@
   <url>
     <loc>https://ma-panoplie-ia.com/sante/?niche=sante&amp;outil=glass-health</loc>
     <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ma-panoplie-ia.com/sante/?niche=sante&amp;outil=freed</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ma-panoplie-ia.com/sante/?niche=sante&amp;outil=elicit</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ma-panoplie-ia.com/sante/?niche=sante&amp;outil=consensus</loc>
+    <lastmod>2026-09-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>

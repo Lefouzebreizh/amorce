@@ -304,6 +304,127 @@ regarde croit à une régression et cherche une cause qui n'existe pas.
 Un rouge qui persiste au-delà de vingt-quatre heures, ou qui ne frappe qu'une
 seule PR, n'est plus celui-là : reprendre au diagnostic normal.
 
+### La parade est posée : chaque projet filtre par chemin
+
+Le 31/08/2026, le quota a été épuisé une fois de plus — **80 fusions sur `main`
+en vingt-quatre heures, quatre projets Vercel branchés sur le dépôt, donc 320
+déploiements de production** pour un palier à cent. Une PR qui ne changeait
+qu'une ligne de Markdown en lançait quatre.
+
+Depuis, chaque projet porte un `vercel.json` dont l'`ignoreCommand` appelle
+`scripts/vercel-ignorer.sh` avec les chemins qui le concernent. Une PR de
+Markdown ne fait plus **construire** aucun projet ; une PR sur `iptv/` n'en fait
+construire qu'un. Le script est commenté au long — l'essentiel tient en deux
+lignes :
+
+- **la convention de sortie est inversée** — `0` annule le déploiement, `1` le
+  lance. Un `exit 0` ajouté par réflexe couperait tout en silence ;
+- **au moindre doute, on déploie** : sans parent, hors dépôt, `git` en erreur,
+  le script sort en 1. Un déploiement de trop coûte une unité de quota ; un
+  déploiement manquant fait tester une version périmée pendant deux heures.
+
+Donc, si un rouge de quota revient malgré cela : compter d'abord les projets
+Vercel branchés sur le dépôt. Le filtre ne protège que ceux qui portent un
+`vercel.json` — **un projet créé depuis le tableau de bord n'en a pas**, et il
+se déclenche sur tout.
+
+### Ce que le filtre empêche, et ce qu'il n'empêche pas — mesuré le 31/08/2026
+
+La phrase précédente disait « une PR de Markdown n'en déclenche plus aucun ».
+Elle promettait plus que ce qu'on peut vérifier. Deux PR de documentation, à
+trois minutes d'intervalle, ont rendu deux résultats différents :
+
+- **PR #490** — que du Markdown : les **quatre** projets en rouge,
+  `api-deployments-free-per-day` ;
+- **PR #491** — que du Markdown elle aussi : `amorce` en **vert**, « Canceled by
+  Ignored Build Step », les trois autres toujours en rouge.
+
+Trois choses en découlent, et il faut les tenir séparées — c'est là qu'on se
+trompe.
+
+**Ce qui est mesuré.** « Canceled by Ignored Build Step » veut dire qu'un
+déploiement a bien été **créé**, puis annulé : l'`ignoreCommand` s'exécute dans
+le conteneur de construction, donc *après* la création. Et le rouge de quota,
+lui, tombe *avant* — le déploiement est refusé sans qu'aucun script ne tourne.
+Les deux états coexistent sur la même PR parce que les quatre projets courent
+contre un plafond commun : celui qui passe voit son filtre s'exécuter, les
+autres non.
+
+**Ce qui n'est pas mesuré, et qu'il ne faut pas conclure.** On ne sait **pas**
+si un déploiement annulé consomme une unité du plafond journalier. C'est
+plausible — la création précède l'annulation — mais `vercel.com` est hors
+d'atteinte depuis une session, et tant que le quota est épuisé l'expérience est
+inconduisible. L'hypothèse concurrente tient tout aussi bien : le plafond
+courant peut n'être rempli que par les **80 fusions d'avant la pose du filtre**,
+la fenêtre de vingt-quatre heures n'ayant pas encore tourné.
+
+**Ce qui est vrai sous les deux hypothèses**, et qui suffit à décider :
+
+- **un rouge Vercel sur une PR de documentation n'est pas un signal** tant que
+  le quota est épuisé. Il ne dit rien de la PR, et le filtre ne l'empêche pas
+  d'apparaître — le refus tombe avant lui ;
+- **inutile d'affiner les chemins surveillés** en espérant desserrer le quota :
+  la PR #491 montre qu'ils font déjà leur travail quand ils ont l'occasion de
+  tourner ;
+- **le levier qui marche dans les deux cas est le nombre de projets branchés**,
+  et il a été actionné : `nexuscrypto` a été supprimé côté Vercel le 31/08/2026,
+  faisant passer le dépôt de quatre projets à **trois**. Les deux mesures
+  ci-dessus lui sont antérieures et portent donc sur quatre — elles sont datées
+  et ne se réécrivent pas ;
+- **la vraie vérification attend le renouvellement du quota** : une PR de
+  Markdown, quatre « Ignored », et alors seulement la phrase d'origine
+  redeviendra vraie — ou pas.
+
+**Et la leçon de méthode, qui vaut au-delà de Vercel.** L'observation de la PR
+#489 — trois projets affichant « Ignored » — était **juste**. La conséquence
+qu'on en avait tirée — « le filtre protège donc du quota » — ne l'était pas, et
+elle s'est relue ensuite comme si elle avait été mesurée elle aussi. « Ignored »
+prouve que la **construction** a été évitée ; il ne prouve rien sur le
+**déploiement**, qui avait déjà eu lieu. Voir `/eprouver-une-regle`.
+
+### Le rouge « pages build and deployment » ne veut rien dire — mesuré le 31/08/2026
+
+Un contrôle nommé **`pages build and deployment`** échoue sur `main` et sur
+chaque PR, quel que soit le diff : il est tombé sur un commit d'un seul
+caractère Dart et sur un commit de Markdown pur. Ne pas le chercher dans les
+workflows du dépôt — **il n'y est pas**. Son chemin est
+`dynamic/pages/pages-build-deployment` : GitHub le fabrique tout seul quand
+*Settings → Pages* est réglé sur « Deploy from a branch ».
+
+**La cause, lisible dans son journal :** il lance **Jekyll sur la racine du
+monorepo**, qui essaie d'analyser tous les fichiers qu'il croise, y compris les
+`.astro` d'`hypersensible-bienveillance/` — dont l'en-tête est du TypeScript, pas
+du YAML.
+
+```
+Invalid YAML front matter in
+  /github/workspace/hypersensible-bienveillance/src/pages/app/reponse-bienveillante.astro
+ERROR: YOUR SITE COULD NOT BE BUILT
+```
+
+**Et personne ne s'en sert.** Vérifié : aucun `CNAME`, aucun workflow appelant
+`actions/deploy-pages` ou `actions/upload-pages`, aucune adresse `github.io`
+ailleurs que dans une bibliothèque tierce d'un dossier de build. Le réseau
+d'annuaires publie sur **Cloudflare** Pages (`annuaire-ia-pages.yml`), pas ici.
+
+Donc, pour une session :
+
+- **ce rouge n'est jamais le tien.** Ne pas l'investiguer, ne pas le rejouer, ne
+  pas retarder une fusion pour lui ;
+- **ne pas poser un `.nojekyll` à la racine** pour le faire taire : il ferait
+  *réussir* le déploiement, et publierait le monorepo entier comme site web.
+  Faire taire une alarme en accomplissant ce qu'elle annonçait est pire que
+  l'alarme.
+
+**Le geste qui le supprime est côté propriétaire, et il prend dix secondes :**
+*Settings → Pages → Source → None.*
+
+C'est le même motif que le quota Vercel deux sections plus haut, et il porte le
+même risque, que `annuaire-ia-pages.yml` nomme dans son propre en-tête : **une
+barrière rouge en permanence est une barrière qu'on cesse de lire.** Deux
+contrôles qui crient toujours, et le jour où un vrai défaut passe, personne ne
+regarde.
+
 ## 4. Une suite de tests introuvable, ou plus gardée
 
 **Où est la commande.** La dernière ligne de `hooks/session-start.sh` — celle que

@@ -45,6 +45,12 @@ CREATE TABLE IF NOT EXISTS releves (
     prix_usd      REAL NOT NULL,
     note          REAL NOT NULL,
     acceleration  REAL NOT NULL,
+    -- Ajouté après coup, donc **en dernier** : `ALTER TABLE ADD COLUMN` place
+    -- toujours en fin de table, et un ordre différent entre base neuve et base
+    -- migrée ferait rendre autre chose à `SELECT *` selon l'âge du fichier.
+    -- Vide sur les relevés antérieurs à la migration : le nom n'était alors
+    -- gardé que par `alertes`, donc uniquement au-dessus du seuil d'alerte.
+    symbole       TEXT NOT NULL DEFAULT '',
     PRIMARY KEY (chaine, adresse, vu_le)
 );
 -- La recherche se fait toujours « le dernier relevé de ce jeton avant telle
@@ -74,6 +80,14 @@ CREATE INDEX IF NOT EXISTS idx_apparitions_jeton ON apparitions (chaine, jeton);
 """
 
 
+# Les colonnes nées après le schéma initial. Une base neuve les reçoit par
+# `SCHEMA`, une base déjà vécue par `_migrer`. Toute colonne ajoutée ici doit
+# l'être **aussi** dans `SCHEMA`, en dernière position de sa table.
+_COLONNES_AJOUTEES = (
+    ("releves", "symbole", "TEXT NOT NULL DEFAULT ''"),
+)
+
+
 def _iso(moment: datetime) -> str:
     return moment.astimezone(timezone.utc).isoformat(timespec="seconds")
 
@@ -92,7 +106,33 @@ class Memoire:
         self.connexion = sqlite3.connect(self.chemin)
         self.connexion.row_factory = sqlite3.Row
         self.connexion.executescript(SCHEMA)
+        self._migrer()
         self.connexion.commit()
+
+    def _migrer(self) -> None:
+        """Rattrape les colonnes ajoutées après coup, sur une base déjà vécue.
+
+        `CREATE TABLE IF NOT EXISTS` ne touche pas une table qui existe : sur le
+        fichier de quelqu'un qui scanne depuis des semaines, la colonne du
+        schéma n'apparaîtrait jamais et la première lecture tomberait sur « no
+        such column ». Le défaut ne se voit pas en test, où toute base est
+        neuve — c'est exactement ce piège qui a déjà coûté un débogage dans
+        `iptv/`.
+
+        Volontairement minuscule : lire les colonnes présentes, ajouter celles
+        qui manquent. Pas de table de versions tant qu'une seule colonne est
+        concernée — elle coûterait plus à maintenir qu'à remplacer le jour où
+        une vraie migration arrive.
+        """
+        for table, colonne, definition in _COLONNES_AJOUTEES:
+            presentes = {
+                ligne["name"]
+                for ligne in self.connexion.execute(f"PRAGMA table_info({table})")
+            }
+            if colonne not in presentes:
+                self.connexion.execute(
+                    f"ALTER TABLE {table} ADD COLUMN {colonne} {definition}"
+                )
 
     def __enter__(self) -> Memoire:
         return self
@@ -110,11 +150,17 @@ class Memoire:
         moment = moment or datetime.now(timezone.utc)
         jeton = candidat.jeton
         chaine, adresse = jeton.identite
+        # Les colonnes sont nommées, jamais positionnelles : un `VALUES (?,…)`
+        # nu se décale en silence dès qu'une colonne s'ajoute, et le décalage
+        # écrit des nombres justes dans les mauvaises cases.
         self.connexion.execute(
-            "INSERT OR REPLACE INTO releves VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "INSERT OR REPLACE INTO releves "
+            "(chaine, adresse, vu_le, liquidite_usd, market_cap, volume_h1, "
+            " volume_h24, prix_usd, note, acceleration, symbole) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             (chaine, adresse, _iso(moment), candidat.liquidite_usd, candidat.market_cap,
              candidat.volume_h1, candidat.volume_h24, candidat.paire_principale.prix_usd,
-             note, metriques.acceleration),
+             note, metriques.acceleration, jeton.symbole),
         )
         self.connexion.commit()
 

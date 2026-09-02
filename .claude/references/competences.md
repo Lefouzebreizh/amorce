@@ -21,6 +21,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/dependance-indisponible` | Livrer quand ce dont le code a besoin n'est pas là — clé d'API absente, GPU manquant, logiciel propriétaire non installé, réseau filtré, poids de… |
 | `/deposer-sur-kdp` | Accompagner le dépôt d'un livre papier sur Amazon KDP une fois les fichiers prêts — l'ordre réel des trois onglets, les réglages d'impression qui ne… |
 | `/epreuve-du-pouce` | Éprouver une interface comme un pouce la rencontre — conduire l'application qui tourne sur le terrain de référence (Redmi Note 12 Plus, 393 × 873) et… |
+| `/eprouver-une-regle` | Confronter à de vraies données une règle qu'on vient d'écrire — un seuil, un score, un classement, un nommage, un filtre — avant de la croire, parce… |
 | `/etalonner` | Faire tenir ensemble les plans d'un montage, puis poser un rendu filmique — détection des coupes, mesure de la luminance et de la dominante de chaque… |
 | `/etat-du-depot` | Répondre « qu'y a-t-il dans ce dépôt et où en est-ce » par une mesure plutôt que par une liste écrite à la main — les chantiers **découverts**… |
 | `/extraction-multiformat` | Ouvrir un fichier non textuel pour répondre à une question dessus, en écrivant et exécutant un script Python local plutôt qu'en déclarant le format… |
@@ -40,6 +41,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/page-qui-vend` | Rendre une page de vente capable d'encaisser, en la mesurant plutôt qu'en la regardant — bouton d'achat mort, prix qui arrive après le bouton,… |
 | `/paper-manager` | Recette pour développer l'assistant administratif Paper-Manager (`paper-manager/`) — où poser chaque fichier, la frontière entre ce que l'humain… |
 | `/prepresse-kdp` | Règles de préparation d'un livre illustré pour l'impression à la demande KDP — résolution, fond perdu, zone de sécurité, calcul de tranche, compte de… |
+| `/publier-depuis-capcut` | La chaîne de montage et de publication d'une vidéo verticale faite au doigt, dans CapCut sur Android, puis publiée sur TikTok — l'ordre des… |
 | `/radar-crypto` | Où poser chaque fichier du radar crypto `pepites/`, l'ordre des cinq skills qu'on ne réarrange pas, les six invariants qui empêchent l'outil de… |
 | `/regenerer-planche` | Remplacer une planche illustrée du recueil Roussy & Zéphy par une version régénérée — décider si le remplacement en vaut la peine, écrire l'invite… |
 | `/regler-le-radar` | Régler le détecteur de pépites crypto et diagnostiquer un scan décevant — lire l'entonnoir de `pepites_radar.md` pour savoir quel seuil bouger,… |

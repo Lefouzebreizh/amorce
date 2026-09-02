@@ -1,4 +1,4 @@
-import { analyzeProject, type Analysis } from './analysis.ts';
+import { analyzeProject, PLAFOND_BLOQUE, type Analysis } from './analysis.ts';
 import type { StepId } from './steps.ts';
 import { clipDuration, MORCEAUX_MAX } from './timeline.ts';
 import type { Project } from './types.ts';
@@ -191,6 +191,30 @@ export function nextStep(project: Project, analysis: Analysis = analyzeProject(p
       why: 'Un étalonnage bien dosé sépare une vidéo amateur d’une vidéo tenue. Ça prend dix secondes.',
       actionLabel: 'Voir les rendus',
       action: { kind: 'goto', step: 'cinema' },
+      done: false,
+    };
+  }
+
+  /*
+   * Un défaut bloquant passe avant le feu vert.
+   *
+   * Le guide annonçait « ton montage tient la route » sur un film dont les
+   * quatre textes affichaient encore « [Ce qui menace] » — et la note, elle,
+   * était plafonnée à quarante. Deux voix qui se contredisent dans la même
+   * interface valent moins qu'une seule qui dit non : l'utilisateur suit celle
+   * qui l'arrange, publie, et découvre ses crochets sur la plateforme.
+   *
+   * On reprend le premier bloquant tel qu'il est écrit dans l'analyse plutôt
+   * que de le reformuler ici : deux formulations du même défaut dériveraient,
+   * et c'est l'analyse qui mesure.
+   */
+  const bloquant = analysis.bloquants[0];
+  if (bloquant) {
+    return {
+      title: bloquant.probleme,
+      why: `${bloquant.remede} Tant que ça reste, la note ne dépassera pas ${PLAFOND_BLOQUE}.`,
+      actionLabel: 'Voir ce qui bloque',
+      action: { kind: 'goto', step: 'analyse' },
       done: false,
     };
   }

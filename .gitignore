@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# Sauf le gabarit, qui ne contient aucune valeur et doit être versionné :
+# `.env*` l'attrape sinon, et le fichier disparaît sans un mot.
+!.env.exemple
 # Les gabarits, eux, se versionnent : ils documentent quels secrets existent
 # sans en porter aucun, et sans eux personne ne sait quoi remplir. Ceux
 # d'`agence/`, d'`artisan-express/` et de `titan-builder/` sont déjà suivis —
@@ -156,3 +159,12 @@ visual_library/**/*.mp4
 # Les dossiers de commande des vrais clients ne sortent jamais d'ici : ils
 # portent un nom, un téléphone et des photos de chantier.
 /titan-builder/dossiers/
+
+# Le carnet rempli porte des coordonnées de tiers démarchés : il reste local.
+/artisan-express/prospects.md
+
+# Les fichiers de travail intermédiaires — captures d'essai, exports d'un coup
+# d'œil. `site-client.tmp.png` était entré à la racine sans que personne le
+# décide : un `.tmp.` au milieu d'un nom se lit comme jetable, mais rien ne
+# l'empêchait d'être committé.
+*.tmp.*

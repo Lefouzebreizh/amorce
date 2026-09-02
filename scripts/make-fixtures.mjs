@@ -17,6 +17,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { optionsChromium } from './chromium.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, '.fixtures', 'rushes');
@@ -45,7 +46,7 @@ mkdirSync(OUT, { recursive: true });
 mkdirSync(IMAGES, { recursive: true });
 
 const browser = await chromium.launch({
-  executablePath: process.env.AMORCE_CHROMIUM || undefined,
+  ...optionsChromium,
   args: ['--autoplay-policy=no-user-gesture-required'],
 });
 const page = await browser.newPage();

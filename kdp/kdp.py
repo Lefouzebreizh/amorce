@@ -32,7 +32,7 @@ import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
-import fitz  # PyMuPDF
+import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -280,7 +280,7 @@ def _trouver(dossier: Path, base: str) -> Path | None:
 # --- Placement des images ----------------------------------------------------
 
 
-def _placer(page: fitz.Page, rect: fitz.Rect, chemin: Path) -> str:
+def _placer(page: pymupdf.Page, rect: pymupdf.Rect, chemin: Path) -> str:
     """Pose une image dans un rectangle, sans perte et sans rééchantillonnage."""
     rapport_cible = rect.width / rect.height
     with Image.open(chemin) as im:
@@ -313,22 +313,22 @@ def _placer(page: fitz.Page, rect: fitz.Rect, chemin: Path) -> str:
     return note
 
 
-def _carton_absent(page: fitz.Page, rect: fitz.Rect, libelle: str) -> None:
+def _carton_absent(page: pymupdf.Page, rect: pymupdf.Rect, libelle: str) -> None:
     """Carton d'attente impossible à confondre avec une page finie."""
     page.draw_rect(rect, color=(0.85, 0, 0.5), fill=(1, 0.93, 0.98), width=3)
     pas = 24
     x = rect.x0 - rect.height
     while x < rect.x1:
         page.draw_line(
-            fitz.Point(max(x, rect.x0), rect.y0 + max(0, rect.x0 - x)),
-            fitz.Point(min(x + rect.height, rect.x1), rect.y0 + min(rect.height, rect.x1 - x)),
+            pymupdf.Point(max(x, rect.x0), rect.y0 + max(0, rect.x0 - x)),
+            pymupdf.Point(min(x + rect.height, rect.x1), rect.y0 + min(rect.height, rect.x1 - x)),
             color=(0.95, 0.75, 0.87), width=1,
         )
         x += pas
     page.insert_textbox(
-        fitz.Rect(rect.x0 + 24, rect.y0 + rect.height / 2 - 60, rect.x1 - 24, rect.y1 - 24),
+        pymupdf.Rect(rect.x0 + 24, rect.y0 + rect.height / 2 - 60, rect.x1 - 24, rect.y1 - 24),
         f"FICHIER MANQUANT\nNE PAS PUBLIER\n\n{libelle}",
-        fontname="hebo", fontsize=20, color=(0.7, 0, 0.4), align=fitz.TEXT_ALIGN_CENTER,
+        fontname="hebo", fontsize=20, color=(0.7, 0, 0.4), align=pymupdf.TEXT_ALIGN_CENTER,
     )
 
 
@@ -340,11 +340,11 @@ def commande_interieur(args: argparse.Namespace) -> int:
     gabarit = charte.GABARIT_INTERIEUR_KDP if args.kdp_strict else charte.GABARIT_INTERIEUR
     largeur, hauteur = gabarit.points
 
-    document = fitz.open()
+    document = pymupdf.open()
     manquantes: list[int] = []
     for page in charte.pages(args.tome):
         feuille = document.new_page(width=largeur, height=hauteur)
-        rect = fitz.Rect(0, 0, largeur, hauteur)
+        rect = pymupdf.Rect(0, 0, largeur, hauteur)
         chemin = _trouver(source, charte.nom_de_page(page.numero, page.slug, ""))
         if chemin is None:
             _carton_absent(feuille, rect, charte.nom_de_page(page.numero, page.slug))
@@ -383,15 +383,15 @@ def commande_couverture(args: argparse.Namespace) -> int:
     gabarit, tranche = charte.gabarit_couverture(pages)
     largeur, hauteur = gabarit.points
 
-    document = fitz.open()
+    document = pymupdf.open()
     feuille = document.new_page(width=largeur, height=hauteur)
 
     # De gauche à droite, à plat : fond perdu, dos, tranche, face, fond perdu.
     p = charte.POUCE_EN_POINTS
     bord_face = (charte.FOND_PERDU + charte.FORMAT_ROGNE + tranche) * p
     panneaux = (
-        (charte.COUVERTURE_DOS, fitz.Rect(0, 0, (charte.FOND_PERDU + charte.FORMAT_ROGNE) * p, hauteur)),
-        (charte.COUVERTURE_FACE, fitz.Rect(bord_face, 0, largeur, hauteur)),
+        (charte.COUVERTURE_DOS, pymupdf.Rect(0, 0, (charte.FOND_PERDU + charte.FORMAT_ROGNE) * p, hauteur)),
+        (charte.COUVERTURE_FACE, pymupdf.Rect(bord_face, 0, largeur, hauteur)),
     )
 
     absents: list[str] = []
@@ -407,7 +407,7 @@ def commande_couverture(args: argparse.Namespace) -> int:
 
     # La tranche reste unie : à 1,2 mm, aucun texte n'y tient et KDP refuse
     # tout titre en dos sous 79 pages.
-    tranche_rect = fitz.Rect(
+    tranche_rect = pymupdf.Rect(
         (charte.FOND_PERDU + charte.FORMAT_ROGNE) * p, 0, bord_face, hauteur)
     feuille.draw_rect(tranche_rect, color=None, fill=(0.98, 0.96, 0.90))
 
@@ -449,7 +449,7 @@ def commande_epreuve(args: argparse.Namespace) -> int:
     chiffre ne tranche pas ce genre de question, un tracé si — d'où cette
     épreuve, à regarder à l'écran et à ne jamais envoyer à l'imprimeur.
     """
-    document = fitz.open(args.source)
+    document = pymupdf.open(args.source)
     p = charte.POUCE_EN_POINTS
     for feuille in document:
         rect = feuille.rect
@@ -464,7 +464,7 @@ def commande_epreuve(args: argparse.Namespace) -> int:
             tranche = largeur_po - 2 * charte.FORMAT_ROGNE - 2 * charte.FOND_PERDU
             for x in (charte.FOND_PERDU + charte.FORMAT_ROGNE,
                       charte.FOND_PERDU + charte.FORMAT_ROGNE + tranche):
-                feuille.draw_line(fitz.Point(x * p, 0), fitz.Point(x * p, rect.height),
+                feuille.draw_line(pymupdf.Point(x * p, 0), pymupdf.Point(x * p, rect.height),
                                   color=(0, 0.6, 0.3), width=1, dashes="[8 4] 0")
         else:
             # Page intérieure : le débord est ce qui dépasse du format rogné,
@@ -472,10 +472,10 @@ def commande_epreuve(args: argparse.Namespace) -> int:
             debord_h = (largeur_po - charte.FORMAT_ROGNE) / 2
             debord_v = (hauteur_po - charte.FORMAT_ROGNE) / 2
 
-        coupe = fitz.Rect(debord_h * p, debord_v * p,
+        coupe = pymupdf.Rect(debord_h * p, debord_v * p,
                           rect.width - debord_h * p, rect.height - debord_v * p)
         marge = charte.MARGE_SECURITE * p
-        securite = fitz.Rect(coupe.x0 + marge, coupe.y0 + marge,
+        securite = pymupdf.Rect(coupe.x0 + marge, coupe.y0 + marge,
                              coupe.x1 - marge, coupe.y1 - marge)
         feuille.draw_rect(coupe, color=(0.9, 0, 0.3), width=1.2, dashes="[6 4] 0")
         feuille.draw_rect(securite, color=(0, 0.55, 0.9), width=1.2, dashes="[3 3] 0")

@@ -1,0 +1,30 @@
+# Ce que le constructeur de bibliothèque visuelle exige pour tourner.
+#
+# Écrit à l'occasion de l'audit du 01/09/2026, qui a trouvé ce projet sans
+# manifeste, sans test, et absent de `CLAUDE.md` — 1109 lignes de Python que
+# rien n'annonçait.
+#
+# Les quatre trous sont bouchés depuis. Ce projet est déclaré dans `CLAUDE.md`,
+# compté par `/etat-du-depot`, routé par `verifier.sh` (qui découvre seul tout
+# `tests/test_*.py`) et installé par le hook de démarrage. Sa suite vit dans
+# `tests/test_note_telephone.py` et éprouve ce qui fait sa raison d'être : la
+# note de visibilité sur téléphone.
+
+# Ouverture des images et fabrication des planches de contact.
+Pillow>=10.0
+
+# Mesures au pixel sur les vignettes.
+numpy>=1.24
+
+# Hachage perceptuel : rapprocher deux visuels identiques dont les octets
+# diffèrent — recadrage, recompression. Même rôle que dans Life-Organizer.
+ImageHash>=4.3
+
+# ffmpeg sous forme de binaire statique, pour la séquence de démonstration
+# (`--make-demo`). Pas de paquet système à installer à part.
+imageio-ffmpeg>=0.4.9
+
+# Barre de progression sur les longues inspections. Déjà facultative dans le
+# code (`except ImportError` ligne 947, repli sur une fonction transparente) :
+# elle est déclarée ici pour être installée, pas pour devenir obligatoire.
+tqdm>=4.66

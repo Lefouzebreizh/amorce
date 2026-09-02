@@ -243,10 +243,23 @@ npm run sites                                                 # reconstruire
 # puis les secrets Cloudflare, et le workflow « Annuaire IA — mise en ligne »
 ```
 
-`<projet>` est le nom donné au projet Cloudflare Pages : l'adresse gratuite en
-découle, elle ne se devine pas à l'avance. Se lit sur le tableau de bord après
-le premier dépôt — et tant que le projet n'existe pas, `<projet>.pages.dev` ne
-résout pas non plus (mesuré le 29/08 sur `annuaire-ia.pages.dev`).
+**`<projet>` est `annuaire-ia`, et ce n'est pas un choix ouvert** : le workflow
+« Annuaire IA — mise en ligne » le code en dur (`--project-name=annuaire-ia`).
+Le projet Cloudflare doit donc porter exactement ce nom, créé en « Direct
+Upload ». L'adresse qui en découle est `annuaire-ia.pages.dev`.
+
+**Et l'ordre a une contrainte que rien n'annonce :** tant que le projet Pages
+n'existe pas, `annuaire-ia.pages.dev` ne résout pas (mesuré le 29/08) — donc
+`npm run sites` **refuse de construire**, y compris dans le workflow, qui
+l'appelle sans `--sans-dns`. Ce refus est voulu, mais il ressemble à une panne
+de déploiement. Les trois gestes vont donc dans cet ordre, et pas un autre :
+
+1. **créer le projet Pages** nommé `annuaire-ia` — l'adresse se met à résoudre ;
+2. **régler l'adresse** et committer le résultat ;
+3. **poser les deux secrets** de dépôt, et le workflow passe au vert.
+
+Inverser 1 et 2 fait échouer la construction sur une adresse qui n'existe pas
+encore, et donne à croire que la mise en ligne est cassée.
 
 Un domaine acheté dont le DNS n'a pas fini de se propager est le seul cas
 légitime de blocage à tort : `npm run sites -- --sans-dns` passe outre. **Les

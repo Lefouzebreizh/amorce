@@ -1,13 +1,15 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://artisan-express.vercel.app';
+import { adresseDuSite } from '@/lib/config';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE),
-  title: 'Site vitrine artisan express — 299 €, livré en 48 h',
+  /* Pas d'adresse réglée, pas de base de métadonnées : Next se contente alors
+     d'URL relatives, là où une base inventée ferait pointer chaque partage vers
+     un domaine que personne ne sert. */
+  metadataBase: adresseDuSite ? new URL(adresseDuSite) : undefined,
+  title: 'Site vitrine artisan express — 300 €, livré en 48 h',
   description:
-    'Maçon, couvreur, électricien : un site qui te trouve des chantiers, livré en 48 h. 299 € une fois, pas d’abonnement.',
+    'Maçon, couvreur, électricien : un site qui te trouve des chantiers, livré en 48 h. 300 € une fois, pas d’abonnement.',
   keywords: [
     'site internet artisan',
     'site vitrine maçon',
@@ -18,10 +20,10 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    title: 'Ton site artisan, livré en 48 h — 299 €',
+    title: 'Ton site artisan, livré en 48 h — 300 €',
     description:
-      'Un site d’une page qui te trouve des chantiers. 299 € une fois, pas d’abonnement, livré en 48 h.',
-    url: SITE,
+      'Un site d’une page qui te trouve des chantiers. 300 € une fois, pas d’abonnement, livré en 48 h.',
+    ...(adresseDuSite ? { url: adresseDuSite } : {}),
   },
   robots: { index: true, follow: true },
 };

@@ -38,8 +38,13 @@ conséquence des trois autres, pas un levier.
 
 ## Phase 0 — Avant d'avoir une date (à partir de maintenant)
 
-Le livre n'est pas prêt : il manque une planche et la première de couverture.
-Ce n'est pas une raison d'attendre, c'est le moment le plus utile pour parler.
+Le livre est **déposable dès aujourd'hui** : la chaîne rend 30 pages et un
+verdict PUBLIABLE sans une seule image neuve, avec la page d'hermine composée en
+prose et la couverture provisoire. Ce qui manque est une couverture *définitive*
+— le compte exact est dans `kdp/README.md`. Ce n'est pas une raison d'attendre
+pour parler, et ce n'en est plus une pour retarder le dépôt : l'épreuve papier
+se commande sans publier, et ses deux semaines d'impression courent pendant
+qu'on travaille la couverture.
 
 **Ce qu'on publie : la fabrication, pas le produit.** Les coulisses marchent
 mieux qu'une annonce commerciale, et vous en avez à revendre.
@@ -181,5 +186,7 @@ ce qui fait qu'une adresse e-mail reste vivante au lieu de dormir.
 3. **Ne pas demander les avis.** C'est la seule chose qui débloque l'algorithme,
    et personne ne le fait spontanément.
 4. **Échanger quoi que ce soit contre un avis.** Risque réel sur le compte.
-5. **Laisser le site devenir le refuge.** Faire une page est agréable ; finir
-   deux illustrations ne l'est pas. C'est pourtant la seule chose qui bloque.
+5. **Laisser le site devenir le refuge.** Faire une page est agréable ; déposer
+   le livre chez KDP ne l'est pas. Ce n'est plus une illustration qui bloque —
+   mesuré le 31/08/2026, la chaîne rend un verdict PUBLIABLE sans image neuve —
+   c'est le dépôt lui-même, qui n'a jamais été fait.

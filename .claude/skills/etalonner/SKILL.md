@@ -84,3 +84,28 @@ avant la couleur. Un montage mal coupé reste mal coupé, mieux étalonné.
 
 Et il ne touche pas au son — pour ça, `/voir-le-son` avant de livrer, et
 `/bande-son` pour le mixage et la sonie.
+
+## Ce que l'étalonnage ne peut pas faire : changer la couleur de la lumière
+
+Une dominante se corrige, une exposition se rattrape, un saut entre deux plans
+se recale. **La couleur de la source de lumière, non.**
+
+Un visage éclairé en cyan — lumière de bord bleue sur la joue, halo bleu dans
+la barbe — repeint en ambre se *voit* repeint, quel que soit le filtre. Cinq
+méthodes ont été essayées sur le même plan : rotation de teinte avec masque de
+luminance, masque de dominante bleue par `geq`, et trois réglages de
+`selectivecolor`. La plus propre reste fausse à l'œil.
+
+Deux pièges pour la route, chacun payé :
+
+- **Une rotation de teinte globale casse ce qui était déjà conforme.** Les
+  fissures dorées d'un globe, passées à −192°, sont devenues vertes.
+- **Un agrégat de conformité ne voit pas un défaut local.** La passe qui
+  produisait ces fissures vertes mesurait 0 % de cyan et 94,6 % d'ambre. Une
+  mesure de teinte doit avoir un seau pour ce qu'elle ne cherche pas, sinon le
+  défaut tombe entre deux catégories et disparaît.
+
+Donc : avant de lancer le premier filtre, demander si la couleur à changer est
+**dans la lumière** ou **sur la matière**. Si elle est dans la lumière, le
+choix est de garder la source telle quelle ou de la regénérer — pas d'étalonner.
+Détail et mesures dans `second-brain/lecons.md`.

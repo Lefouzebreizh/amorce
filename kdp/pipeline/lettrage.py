@@ -34,7 +34,7 @@ import re
 import sys
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -111,14 +111,14 @@ def _fond(planche: Path, cote: int) -> bytes:
 def hauteur_utile(gabarit: charte.Gabarit, largeur: float, texte: str,
                   corps: float) -> float:
     """Hauteur minimale où le texte tient, mesurée sur une page jetable."""
-    brouillon = fitz.open()
+    brouillon = pymupdf.open()
     page = brouillon.new_page(width=gabarit.points[0], height=gabarit.points[1])
     page.insert_font(fontname="corps", fontfile=str(CORPS))
     haut = corps
     while haut < gabarit.points[1] * 0.5:
-        reste = page.insert_textbox(fitz.Rect(0, 0, largeur, haut), rendable(texte),
+        reste = page.insert_textbox(pymupdf.Rect(0, 0, largeur, haut), rendable(texte),
                                     fontname="corps", fontsize=corps,
-                                    align=fitz.TEXT_ALIGN_CENTER, lineheight=1.25)
+                                    align=pymupdf.TEXT_ALIGN_CENTER, lineheight=1.25)
         if reste >= 0:
             brouillon.close()
             return haut
@@ -127,8 +127,8 @@ def hauteur_utile(gabarit: charte.Gabarit, largeur: float, texte: str,
     return haut
 
 
-def _bulle(page: fitz.Page, cadre: fitz.Rect, texte: str, corps: float,
-           gabarit: charte.Gabarit) -> fitz.Rect:
+def _bulle(page: pymupdf.Page, cadre: pymupdf.Rect, texte: str, corps: float,
+           gabarit: charte.Gabarit) -> pymupdf.Rect:
     marge = cadre.width * 0.055
     large = cadre.width - 2 * marge
     plein = hauteur_utile(gabarit, large, texte, corps)
@@ -141,28 +141,28 @@ def _bulle(page: fitz.Page, cadre: fitz.Rect, texte: str, corps: float,
         etroit = essai
 
     demi = (cadre.width - (etroit + 2 * marge)) / 2
-    boite = fitz.Rect(cadre.x0 + demi, cadre.y0,
+    boite = pymupdf.Rect(cadre.x0 + demi, cadre.y0,
                       cadre.x1 - demi, cadre.y0 + plein + 2 * marge)
 
     page.draw_rect(boite, radius=0.30, color=BRUN, fill=CREME, width=1.1)
     cx = boite.x0 + boite.width * 0.5
-    page.draw_polyline([fitz.Point(cx - boite.width * 0.055, boite.y1 - 1),
-                        fitz.Point(cx, boite.y1 + boite.height * 0.28),
-                        fitz.Point(cx + boite.width * 0.055, boite.y1 - 1)],
+    page.draw_polyline([pymupdf.Point(cx - boite.width * 0.055, boite.y1 - 1),
+                        pymupdf.Point(cx, boite.y1 + boite.height * 0.28),
+                        pymupdf.Point(cx + boite.width * 0.055, boite.y1 - 1)],
                        color=BRUN, fill=CREME, width=1.1, closePath=True)
-    page.insert_textbox(fitz.Rect(boite.x0 + marge, boite.y0 + marge,
+    page.insert_textbox(pymupdf.Rect(boite.x0 + marge, boite.y0 + marge,
                                   boite.x1 - marge, boite.y1),
                         rendable(texte), fontname="corps", fontsize=corps, color=ENCRE,
-                        align=fitz.TEXT_ALIGN_CENTER, lineheight=1.25)
+                        align=pymupdf.TEXT_ALIGN_CENTER, lineheight=1.25)
     return boite
 
 
-def _medaillon(page: fitz.Page, centre: fitz.Point, rayon: float, n: int) -> None:
+def _medaillon(page: pymupdf.Page, centre: pymupdf.Point, rayon: float, n: int) -> None:
     page.draw_circle(centre, rayon, color=BRUN, fill=CREME, width=1.2)
-    page.insert_textbox(fitz.Rect(centre.x - rayon, centre.y - rayon * 0.75,
+    page.insert_textbox(pymupdf.Rect(centre.x - rayon, centre.y - rayon * 0.75,
                                   centre.x + rayon, centre.y + rayon),
                         str(n), fontname="corps", fontsize=rayon * 1.05,
-                        color=BRUN, align=fitz.TEXT_ALIGN_CENTER)
+                        color=BRUN, align=pymupdf.TEXT_ALIGN_CENTER)
 
 
 def composer(planche: Path, cible: Path, page_dossier: dict, tome: int,
@@ -172,19 +172,19 @@ def composer(planche: Path, cible: Path, page_dossier: dict, tome: int,
     largeur, hauteur = gabarit.points
     cote = int(round(largeur / charte.POUCE_EN_POINTS * 300))
 
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=largeur, height=hauteur)
-    page.insert_image(fitz.Rect(0, 0, largeur, hauteur), stream=_fond(planche, cote))
+    page.insert_image(pymupdf.Rect(0, 0, largeur, hauteur), stream=_fond(planche, cote))
     page.insert_font(fontname="corps", fontfile=str(CORPS))
     page.insert_font(fontname="ital", fontfile=str(ITALIQUE))
 
-    cases = [fitz.Rect(a * largeur, b * hauteur, c * largeur, d * hauteur)
+    cases = [pymupdf.Rect(a * largeur, b * hauteur, c * largeur, d * hauteur)
              for a, b, c, d in CASES]
 
-    page.insert_textbox(fitz.Rect(0, hauteur * 0.030, largeur, hauteur * 0.090),
+    page.insert_textbox(pymupdf.Rect(0, hauteur * 0.030, largeur, hauteur * 0.090),
                         rendable(f"Roussy & Zéphy - {page_dossier['titre']}"),
                         fontname="ital", fontsize=largeur * 0.032,
-                        color=BRUN, align=fitz.TEXT_ALIGN_CENTER)
+                        color=BRUN, align=pymupdf.TEXT_ALIGN_CENTER)
 
     posees = 0
     for indice, case in enumerate(cases):
@@ -198,7 +198,7 @@ def composer(planche: Path, cible: Path, page_dossier: dict, tome: int,
             raise ValueError(f"page {numero}, case {indice+1} : "
                              f"{len(bulles)} bulles, aucun placement connu")
         for (a, b, c, d), (_, texte) in zip(offre, bulles):
-            cadre = fitz.Rect(case.x0 + a * case.width, case.y0 + b * case.height,
+            cadre = pymupdf.Rect(case.x0 + a * case.width, case.y0 + b * case.height,
                               case.x0 + c * case.width, case.y0 + d * case.height)
             if reperes:
                 page.draw_rect(cadre, color=(0, 0.5, 1), width=1.5)
@@ -211,16 +211,16 @@ def composer(planche: Path, cible: Path, page_dossier: dict, tome: int,
     # Après les bulles : une bulle posée par-dessus effacerait le numéro, et
     # avec lui l'ordre de lecture des quatre cases.
     for indice, case in enumerate(cases):
-        _medaillon(page, fitz.Point(case.x0 + case.width * 0.055,
+        _medaillon(page, pymupdf.Point(case.x0 + case.width * 0.055,
                                     case.y0 + case.height * 0.06),
                    case.width * 0.038, indice + 1)
 
     if page_dossier["parchemin"]:
-        page.insert_textbox(fitz.Rect(largeur * 0.14, hauteur * 0.905,
+        page.insert_textbox(pymupdf.Rect(largeur * 0.14, hauteur * 0.905,
                                       largeur * 0.86, hauteur * 0.960),
                             rendable(page_dossier["parchemin"]), fontname="ital",
                             fontsize=largeur * 0.0155, color=BRUN,
-                            align=fitz.TEXT_ALIGN_CENTER, lineheight=1.3)
+                            align=pymupdf.TEXT_ALIGN_CENTER, lineheight=1.3)
 
     document.set_metadata({"title": f"Roussy & Zéphy — {page_dossier['titre']}",
                            "author": "Erwann Lefouzèbreizh"})

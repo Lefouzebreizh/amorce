@@ -82,6 +82,39 @@
       "score_avis": 4,
       "description_longue": "## Notre verdict\nJolt remplace le classeur d’hygiène et les listes affichées en cuisine par des contrôles horodatés avec photo. En cas de contrôle sanitaire, la traçabilité est immédiate ; au quotidien, le gérant sait ce qui a été fait sans être sur place. Les étiquettes de date de péremption imprimées à la demande suppriment une non-conformité classique.\n\n## Points forts\n- Traçabilité horodatée et photographiée, opposable en contrôle\n- Le gérant voit à distance ce qui a été fait, et par qui\n- Étiquetage des dates de péremption imprimé à la demande\n- Adopté facilement par les équipes, y compris saisonnières\n\n## Points faibles\n- Matériel à prévoir : tablette et imprimante d’étiquettes\n- Le paramétrage des listes demande une vraie mise à plat des procédures\n- Pensé pour la réglementation américaine, à adapter aux obligations françaises\n\n## Idéal pour\nLes groupes multi-sites et les établissements à fort renouvellement d’équipe, où les procédures ne tiennent que si elles sont vérifiables.",
       "date_ajout": "2026-08-27"
+    },
+    {
+      "id": "zenchef",
+      "nom": "Zenchef",
+      "categorie": "Réservation",
+      "prix": "À partir de 100 €/mois",
+      "description_courte": "Le carnet de réservation français qui remplit les creux tout seul : optimisation des tables, rappels, relances des habitués.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/zenchef",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nZenchef gère la réservation sans commission par couvert, ce qui change l'équation économique face aux plateformes. Sa partie intelligente travaille sur le plan de salle — quelle table pour quel groupe, à quelle heure, pour maximiser le nombre de services — et sur la relance des clients qui ne sont pas revenus depuis trois mois. Deux couverts récupérés par service suffisent à payer l'abonnement.\n\n## Points forts\n- Aucune commission par couvert, contrairement aux places de marché\n- Optimisation du plan de salle et des créneaux de rotation\n- Relances et rappels automatiques : moins de tables réservées et vides\n- Solution française, avec un support qui répond dans la langue du restaurateur\n\n## Points faibles\n- Abonnement fixe, à assumer même sur un mois creux\n- Ne remplace pas la visibilité d'une place de marché sur la clientèle de passage\n- Le paramétrage du plan de salle demande un temps de mise en route\n\n## Idéal pour\nLes établissements qui vivent d'une clientèle d'habitués et veulent réduire leur dépendance aux plateformes qui prélèvent sur chaque couvert.",
+      "date_ajout": "2026-08-29"
+    },
+    {
+      "id": "innovorder",
+      "nom": "Innovorder",
+      "categorie": "Pilotage",
+      "prix": "Sur devis",
+      "description_courte": "La caisse, la commande en ligne et les bornes réunies, avec l'analyse des ventes qui en découle.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/innovorder",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nInnovorder est un éditeur français qui a construit son offre autour du point le plus stratégique du restaurant : l'encaissement et la prise de commande. Les données d'exploitation qui en sortent — ce qui se vend, à quelle heure, avec quoi — valent bien plus que ce qu'un tableur en fera jamais. La valeur n'est donc pas dans une couche d'IA affichée, mais dans le fait de rassembler en un point ce que la plupart des établissements éparpillent entre trois prestataires.\n\n## Points forts\n- Caisse, commande en ligne et bornes dans un même ensemble\n- Analyse des ventes assise sur des données de première main\n- Éditeur français, conformité fiscale et accompagnement local\n- Adapté à la restauration rapide comme à la restauration collective\n\n## Points faibles\n- Aucun tarif public, matériel à prévoir en plus\n- Changer de caisse est le changement le plus risqué d'un restaurant\n- Périmètre large, dont une partie sera inutile selon le format\n- Ce n'est pas un outil d'IA au sens strict : l'automatisation sert l'exploitation\n\n## Idéal pour\nLes établissements qui veulent réunir encaissement et commande en ligne chez un seul prestataire français, et exploiter enfin leurs chiffres.",
+      "date_ajout": "2026-08-31"
+    },
+    {
+      "id": "owner-com",
+      "nom": "Owner",
+      "categorie": "Marketing & tendances",
+      "prix": "À partir de 99 $/mois",
+      "description_courte": "Le site, la commande en direct et le marketing du restaurant, pour cesser de laisser un tiers du chiffre aux plateformes.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/owner-com",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nOwner s’attaque au sujet qui fâche : la commission prélevée par les plateformes de livraison. L’outil monte un site de commande à la marque du restaurant, l’optimise pour la recherche locale, et relance automatiquement les clients par courriel et message texte. L’objectif affiché est de basculer une part des commandes en direct.\n\n## Points forts\n- Commande en direct, sans commission de plateforme\n- Site optimisé pour la recherche locale, ce que peu de restaurants ont\n- Relances automatiques des clients qui ne sont pas revenus\n- Mise en service prise en charge, sans travail technique du restaurateur\n\n## Points faibles\n- Abonnement mensuel réel, à amortir sur le volume récupéré\n- Ne remplace pas la visibilité des plateformes sur la clientèle de passage\n- Marché américain d’abord, avec les habitudes de commande correspondantes\n\n## Idéal pour\nLes restaurants qui font du volume en livraison et voient partir un tiers de leur chiffre en commissions.",
+      "date_ajout": "2026-09-01"
     }
   ]
 }

@@ -17,7 +17,24 @@ ImageHash>=4.3
 # Analyse de netteté (variance du laplacien, transformée de Fourier) et détection
 # de visages. La variante « headless » évite d'installer les bibliothèques
 # graphiques de Qt, inutiles pour un outil en ligne de commande.
-opencv-python-headless>=4.9
+#
+# **Plafonné sous la 5 à dessein.** OpenCV 5 a retiré `CascadeClassifier` des
+# liaisons Python, et avec lui le garde-fou « ne pas écarter une photo où un
+# visage est reconnu ». Le code sait dégrader — il cherche le classifieur au
+# lieu de le supposer, et `modules/nettoyage/commande.py` avertit AVANT
+# d'analyser. Mais un avertissement n'aide que si quelqu'un lit la sortie, or
+# ces commandes tournent en lots de plus de mille fichiers. Mesuré le
+# 02/09/2026 sur la machine du propriétaire : 9 portraits de famille sur 10
+# marqués « flous » avaient un visage détectable.
+#
+# Ce que coûte le plafond : rester sur la branche 4 pour un usage qui n'emploie
+# que le laplacien, la FFT et `imread` — rien qu'OpenCV 5 améliore. Ce qu'il
+# évite : des photos de famille en quarantaine. L'échange n'est pas symétrique.
+#
+# `tests/test_plafond_opencv.py` tient la règle sur les QUATRE fichiers qui
+# installent ce paquet : une borne posée ici que la chaîne KDP, la CI ou le
+# hook contredisent ne protège rien — un environnement n'a qu'une version.
+opencv-python-headless>=4.9,<5
 
 # Analyse des dates en français dans le texte extrait des documents.
 python-dateutil>=2.9
@@ -28,3 +45,22 @@ python-dateutil>=2.9
 #
 # Real-ESRGAN et PyTorch non plus : plusieurs gigaoctets pour le seul module
 # d'agrandissement, désactivé par défaut. Qui en a besoin les installe à part.
+
+# Agrandissement (module 5) — volontairement HORS du hook de démarrage et de
+# l'installation par défaut : plusieurs gigaoctets pour un module désactivé dans
+# la configuration livrée. `torch` se choisit sur pytorch.org, la version par
+# défaut tirant les pilotes NVIDIA même sur une machine qui n'en a pas.
+#
+#     pip install torch realesrgan basicsr
+#
+# Sans eux, `organizer upscaler` calcule et affiche son plan, et n'écrit rien.
+#
+# Éprouvé le 01/09/2026 dans une session distante : l'installation passe (PyPI
+# est joignable), les poids se téléchargent depuis les releases GitHub, et
+# l'agrandissement tourne — 58 s par image en 512 → 2048 sur processeur. Seul
+# `download.pytorch.org` est refusé par le mandataire, donc pas de roue CPU
+# allégée : c'est la version complète, avec ses pilotes NVIDIA inutiles ici.
+#
+# `basicsr` casse à l'import avec torchvision ≥ 0.17 alors que pip annonce une
+# installation réussie — le module pose l'alias qui manque, il n'y a rien à
+# faire à la main.

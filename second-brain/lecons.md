@@ -1478,6 +1478,20 @@ souvent le mauvais. **Le binaire système d'abord**, partout et sans exception :
 même résolution, y compris les scripts de vérification — le mien s'est fait
 prendre par sa propre règle.
 
+**Et ce n'est pas qu'`imageio-ffmpeg` : le binaire statique de johnvansickle
+ment sur sa propre configuration.** Mesuré le 29/08/2026 dans une session
+distante, où il occupe `/usr/local/bin/ffmpeg` et passe donc devant
+`/usr/bin/ffmpeg` (6.1.1, complet). Sa ligne `configuration:` annonce
+`--enable-libfreetype` **et** `--enable-libass` ; `ffmpeg -filters` en rend 494,
+dont `drawbox` et `drawgrid`, et **pas `drawtext`**. Lire la configuration pour
+décider ne sert donc à rien — seule la liste des filtres dit la vérité.
+
+Ce que ça coûte quand personne ne l'a écrit : `npm run planche`, l'outil
+qu'Amorce impose avant de livrer un montage, ne démarrait pas du tout ici. Il
+s'arrêtait sur « No such filter: 'drawtext' » — un message qui nomme le filtre,
+jamais le binaire — au milieu d'une trace `execFileSync` de trente lignes de
+`Buffer`.
+
 ## Un bruitage « cinéma » peut être du silence sur un téléphone
 
 Seize bruitages arrivent d'un coup, tous étiquetés cinéma : nappes sombres,
@@ -2248,6 +2262,67 @@ Et deux règles qui en découlent :
   dit pas ce qu'on croit ; c'est la liste des fichiers en conflit qui le dit.
 - **Relancer la vérification APRÈS la reprise de branche**, pas avant. Une
   barrière verte sur l'arbre d'avant ne prouve rien sur celui qu'on pousse.
+
+## Un agent partage ton répertoire de travail, et deux verbes git l'écrasent
+
+Mesuré le 31/08/2026, deux fois dans la même heure, sur le même agent.
+
+Un agent lancé par une session **ne travaille pas sur une copie** : même
+conteneur, même arbre de travail, même `.git`. Ce qu'il écrit apparaît dans le
+`git status` de la session parente, et réciproquement — ce que la parente fait à
+un chemin partagé lui passe dessus, en silence.
+
+Deux verbes l'ont fait, et le second est le plus traître :
+
+- **`git add -A`** a ramassé les quatre fichiers en cours de l'agent dans un
+  commit de documentation. Ils sont partis sur `main` **sans leurs tests** —
+  ils n'étaient pas encore écrits — dans une PR dont le corps annonçait « aucun
+  code touché », et `flutter analyze` est passé au rouge sur `main`.
+- **`git checkout <branche> -- <chemin>`** a réinitialisé le corpus à la version
+  committée. Il **a l'air chirurgical** — il nomme un chemin, il ne change pas
+  de branche — et c'est exactement un écrasement. Fait en fabriquant une branche
+  propre, c'est-à-dire au moment où l'on croit bien faire.
+
+**Ce qui a survécu les deux fois : les fichiers non suivis.** Aucun des deux
+verbes ne touche à ce que Git ne connaît pas. Les tests de l'agent, non suivis,
+sont passés intacts ; le corpus, suivi, a été détruit deux fois. C'est une
+asymétrie qu'on ne devine pas et sur laquelle on ne peut pas compter — elle
+sauve précisément ce qui n'est pas encore commité, jamais ce qui l'est.
+
+### La leçon qui vaut au-delà de git : une suite de tests détecte la perte, elle ne la mesure pas
+
+C'est le point à retenir. Après le second écrasement, la suite de l'agent est
+passée à **31 verts, 1 rouge**, et le rouge nommait exactement la tournure
+perdue — « curseur », un mot savant qu'il avait banni.
+
+Sauf que l'agent avait fait **douze** corrections. **Une seule était visible par
+un test.** Les onze autres étaient des tournures : un manteau qu'on pose « grand
+ouvert » au lieu de « l'intérieur en l'air » — sans quoi le geste ne marche pas
+du tout —, un « commence en bas » suivi de « descends », un « sans appuyer fort »
+une étape avant « appuie ».
+
+Un rouge dit donc **qu'il** s'est passé quelque chose. Il ne dit pas **combien**.
+Croire l'inverse — « un seul test rouge, donc une seule chose perdue » — fait
+livrer onze défauts avec la conscience tranquille.
+
+### Les parades, dans l'ordre où elles coûtent le moins
+
+1. **Nommer les chemins un par un** dès qu'un agent tourne. `git add <fichier>`,
+   jamais `add -A` ; et se méfier de `checkout -- <chemin>` autant que de
+   `checkout <branche>`.
+2. **Dire à l'agent de ne faire aucune commande git d'écriture** et de rendre
+   son travail dans l'arbre. Deux sessions qui committent dans le même dépôt se
+   changent la branche sous les pieds.
+3. **Lui demander de garder une copie hors du dépôt** — le répertoire de
+   brouillon de la session. Après le second écrasement, l'agent l'a fait de
+   lui-même : la version relue se remettait en une commande au lieu de se refaire
+   de mémoire.
+4. **Quand la perte est constatée, renvoyer l'agent** plutôt que de reconstituer.
+   Il a ses corrections en contexte ; la session parente n'a que le résumé, et un
+   résumé perd les onze tournures que les tests ne voient pas.
+
+Voisin de la leçon `git stash pop && git commit` ci-dessus : même famille — un
+geste git qui rend la main sans signaler ce qu'il a défait.
 
 ## Le HTML préconstruit de Next n'est pas une page servable
 
@@ -3323,6 +3398,56 @@ qui a bougé produit un arbre que personne n'a jamais compilé : les tests
 seul moment où « la vérification est déjà passée » est faux tout en paraissant
 vrai.
 
+**Le même écart a un second symptôme, et celui-là annonce un travail qui
+n'existe pas — 01/09/2026.** Une fois la branche reposée sur `main` par
+`git checkout -B <branche> origin/main`, le crochet de fin de session compte
+« 5 commits non poussés ». Aucun n'est de nous : ce sont les commits de `main`
+que la branche distante, restée sur son commit d'avant l'écrasement, n'a pas.
+Un compteur qui lit « en avance / en retard » ne peut pas voir que le contenu
+est déjà fusionné, puisqu'il compare des histoires.
+
+Le geste juste n'est ni de pousser à l'aveugle ni d'ignorer l'alerte, mais de
+regarder ce que la branche distante porte d'**unique** avant de croire le
+compte :
+
+```bash
+git log --oneline origin/main..origin/<branche>   # vide ⇒ rien d'unique
+git diff --stat origin/main origin/<branche>      # ce qui lui manque
+```
+
+Le premier ne listant que des commits dont le contenu est sur `main`, la
+branche se réaligne par un `--force-with-lease` ancré sur son ancienne tête :
+on n'écrase alors que de l'histoire déjà fusionnée. Sauter la vérification,
+c'est risquer d'effacer le travail d'une autre session qui aurait poussé
+entre-temps sur la même branche.
+
+## Le rapport d'une session pair décrit sa machine, pas le dépôt — 01/09/2026
+
+Une session tournant sur le PC a écrit ici : « Le module 5 a été écrit ce soir
+— ne le réécris pas, il est en place et testé », avec un compte de tests précis
+et des changements de configuration nommés. Tout était vrai **chez elle**, et
+rien n'était sur `main` : le module y existait déjà, écrit par une autre
+session, et sa version à elle n'a jamais été poussée.
+
+Le piège n'est pas le mensonge, c'est la **forme**. Un rapport détaillé, chiffré
+et daté se lit comme un état du dépôt ; c'est un état de machine. Le croire
+mène soit à ne pas écrire ce qui manque (« c'est déjà fait »), soit à écraser
+une version fusionnée par une version locale.
+
+Trois gestes, dans cet ordre, avant d'agir sur un tel message :
+
+1. **`git log` sur les fichiers cités** — qui les a écrits, et quand ;
+2. **lire les valeurs annoncées dans le dépôt** plutôt que dans le message :
+   ici, la clé de configuration citée comme « remplacée » ne l'était pas ;
+3. **refaire l'arithmétique** quand une mesure est invoquée. Celle du pair
+   tenait : 1080 × 2400 fait 2,59 Mpx et passait bien sous un seuil de largeur
+   de 1280. Une mesure juste attachée à un état faux reste une mesure juste.
+
+Ce qui en découle : les **mesures** d'un pair se portent dans `main`, sa
+**version** ne se reprend pas. C'est la règle « ce qui est fusionné gagne », vue
+depuis l'autre bout. Et comme une session distante ne peut joindre personne, la
+seule façon de prévenir le pair est de le dire au propriétaire.
+
 ## Une adresse canonique se vérifie au DNS, pas à l'œil
 
 Onze sites annonçaient `ma-panoplie-ia.com` dans leurs balises canoniques, leurs
@@ -3400,6 +3525,29 @@ pièges, et ils ont ceci de commun qu'aucun ne produit de message d'erreur.
    une ligne d'état bash existait ici depuis des mois et n'avait jamais pu
    tourner sur la machine du propriétaire. Ce qu'on peut supposer sur un
    Windows nu, c'est PowerShell, et rien d'autre.
+4. **Une machine réglée en français écrit `17,96`, et ffmpeg le refuse — avec
+   trois messages différents qui ne nomment jamais la cause.** PowerShell
+   formate ses décimales selon la culture du système ; le nombre calculé par le
+   script part donc avec une virgule. Mesuré ici, quatre fois :
+
+   | où | ce que ffmpeg rend |
+   | --- | --- |
+   | `-t 17,96` | `Invalid duration for option t: 17,96` |
+   | `-ss 1,5` | `Invalid duration for option ss: 1,5` |
+   | `fade=…:st=2,5:d=0.4` | `No option name near '0.4'` |
+   | `xfade=…:offset=3,75` | `No such filter: '75'` |
+   | `eq=contrast='1,18'` | `Invalid chars ',18' at the end of expression` |
+
+   **Aucune ne passe en silence**, et c'est la bonne nouvelle de cette mesure :
+   dans un filtre, la virgule est le séparateur de filtres, donc `offset=3,75`
+   se lit « offset vaut 3, puis un filtre nommé 75 ». Le fichier n'est jamais
+   faux, il n'est jamais produit.
+
+   Le piège n'est donc pas la sortie, c'est le **diagnostic** : les trois
+   messages accusent la syntaxe, jamais la locale, et le même script marche
+   chez qui l'a écrit. Formater chaque nombre en `InvariantCulture` avant de
+   le passer à ffmpeg — `$n.ToString($ci)` — plutôt que d'espérer le
+   reconnaître à l'erreur.
 
 **Et le portage vaut contre-épreuve.** Réécrire un script dans un second
 langage force à relire son calcul, et c'est ce qui a relevé le défaut de
@@ -3640,7 +3788,7 @@ qui n'a jamais été rejouée.
 
 `artisan-express/public/exemple.html` est la page qu'un artisan ouvre **sur son
 téléphone** au moment exact où il répond « montrez-moi ». C'est aussi le produit
-lui-même : elle sort de `titan-builder`, donc chaque site livré à 299 € lui
+lui-même : elle sort de `titan-builder`, donc chaque site livré à 300 € lui
 ressemble. Aucune commande ne la mesurait — ni `epreuve-du-pouce`, ni
 `page-qui-vend`. Elle est référencée par la prose et par le script qui la
 fabrique, par rien qui la vérifie.
@@ -3899,3 +4047,1007 @@ changement de code, sans exception** — même quand `check` est vert, même
 quand la mesure directe en base est juste. Un `verify` vert sur un build
 périmé ne prouve rien du tout ; il a fallu redescendre au niveau de la base
 pour comprendre que le code était correct et l'écran, obsolète.
+
+## Le doublon ne se trouve pas en cherchant le nom qu'on allait donner
+
+Une session a écrit un serveur de licence complet — clés, table, webhook
+Stripe, dix-huit tests — pendant qu'une autre venait de fusionner le même
+produit sous **`licence-serveur/`**. Le doublon s'appelait `serveur-licence/`.
+Les deux mots, inversés.
+
+Ce qui a manqué n'est pas un `grep` : c'est le **bon** `grep`. Lire
+`src/licence/` (le client) et n'y trouver aucun serveur a suffi à conclure
+qu'il n'existait pas. La recherche portait sur l'endroit où la chose *aurait dû*
+être, jamais sur ce qu'elle *fait* — `grep -ril "stripe\|webhook\|licence"` à la
+racine la trouvait en une seconde.
+
+**Le signal a été donné, et il a été lu trop tard.** `tsconfig.json` avait
+changé sous les doigts, avec `"licence-serveur"` ajouté à ses exclusions. Il
+était pris pour une faute de frappe du nom qu'on s'apprêtait à créer, alors
+qu'il annonçait le projet déjà fusionné. **Un fichier de configuration qui bouge
+tout seul nomme ce qui vient d'arriver** ; c'est un inventaire, pas du bruit.
+
+**Ce que ça coûte au-delà du travail jeté :** le propriétaire a tranché
+« Supabase ou Cloudflare » sur une question dont la prémisse était fausse — le
+dépôt avait choisi Cloudflare quelques heures plus tôt. Faire arbitrer une
+décision déjà prise use la seule ressource qu'un menu est censé économiser.
+
+**Et le doublon était moins bon.** Trois écarts mesurés à la comparaison : la
+clé de l'existant porte sa preuve par HMAC — le serveur n'a rien à lire pour
+l'authentifier, quand le doublon exigeait une lecture en base à chaque
+démarrage ; zéro dépendance contre deux ; comparaison en temps constant, absente
+du doublon. La règle « un doublon arrête le geste » ne protège pas seulement du
+travail perdu : **celui qui arrive après écrit moins bien, parce qu'il n'a pas
+la journée de réflexion qui a précédé.**
+
+La seule chose qui valait d'être gardée était un manque, pas du code : aucune
+route ne remettait la clé à l'acheteur. Écrite chez eux, avec leurs primitives,
+elle tient en soixante lignes — et n'a pas besoin de la colonne en clair que le
+doublon avait prévue, puisque leur clé se recalcule.
+
+## Remplacer un plan se coupe SUR la coupe du film, pas à côté
+
+Mesuré le 29/08/2026 en échangeant le dragon d'un épisode. Retour : « une mini
+coupure d'image quand le dragon apparaît ». Le raccord était posé à 12,292 s,
+la coupe du film elle-même tombait à **12,200 s** : quatre-vingt-douze
+millisecondes d'écart, soit **deux images**.
+
+Ces deux images-là contenaient l'ANCIEN plan. Le montage enchaînait donc
+vortex → ancien dragon (2 images) → nouveau dragon. Deux coupes au lieu d'une,
+sur deux versions du même plan qui ne diffèrent que par leur éclairage. L'œil ne
+lit pas « deux plans » : il lit un **saut**.
+
+**Et la détection de coupes de ffmpeg ne voyait rien.** `select='gt(scene,X)'`
+rend une liste vide sur ce film à 0,3 — comme à 0,15, 0,08 et 0,04. Il y avait
+pourtant une coupe franche. Conclure « ce film n'a que des fondus » sur ce
+silence-là était faux, et c'est cette conclusion qui a fait poser le raccord au
+jugé.
+
+Ce qui marche, en une dizaine de lignes : l'écart moyen entre images
+consécutives, comparé **au fond local** et non à un seuil absolu.
+
+```python
+mv = np.abs(np.diff(images, axis=0)).mean(axis=(1, 2))
+fond = np.median(mv)                      # le mouvement propre du plan
+coupes = [t for t, v in zip(temps, mv) if v > 1.6 * fond]
+```
+
+Le seuil relatif est ce qui compte. Sur ce raccord, la vraie coupe sortait à
+**2,9 fois le fond** et le saut parasite à **2,2 fois** — un seuil absolu à 35
+attrapait la première et manquait le second, c'est-à-dire exactement le défaut
+rapporté. Après correction : un seul événement, à 3,4 fois le fond.
+
+**La règle qui s'en déduit :** avant de substituer un plan, relever la coupe du
+film à l'image près et s'y aligner. Un raccord « à peu près au bon endroit »
+n'est pas approximatif, il est **faux** — il ajoute une coupe au lieu d'en
+remplacer une.
+
+---
+
+## Mesurer la paire réellement tracée, pas celle qui est dans la configuration
+
+**Mesuré le 29/08/2026, sur les sous-titres d'Amorce.** Le jeu de textes
+« Bande-annonce » pose une couleur jaune `#ffe14d`, et le style karaoké pose un
+surlignage vert `#22e37a`. Lus côte à côte dans la configuration, les deux
+donnent **1,31 : 1** de contraste — là où il en faut 4,5. Un défaut apparemment
+flagrant, et un correctif prêt à partir.
+
+Le rendu ne trace jamais cette paire. Sur le mot allumé, il remplace la couleur
+du texte par `color2`, presque noire : la paire réelle est **11,0 : 1**. Sur les
+mots éteints, le jaune est posé sur un contour noir : **16,1 : 1**. Les deux
+sont excellents, et « réparer » aurait dégradé un rendu soigné.
+
+**La règle :** deux valeurs voisines dans un fichier de configuration ne sont
+pas une paire tant qu'on n'a pas lu le code qui les dessine. Le `grep` avant de
+remplacer vaut aussi pour ce qu'on croit avoir mesuré — ici il tenait en une
+lecture de trente lignes du traceur.
+
+C'est la version « couleur » d'un piège déjà écrit ici sous une autre forme :
+une mesure disait rouge et le fichier était juste.
+
+## Une critique de vidéo écrite par une autre IA se vérifie avant d'être suivie
+
+**Mesuré le 29/08/2026.** Un rapport détaillé, plan par plan, horodaté à la
+seconde, accompagnait un export rejeté. Sept accusations. Trois étaient fausses,
+et chacune envoyait travailler ailleurs :
+
+- « entrelacé, scanlines » → `field_order=progressive` sur les deux fichiers ;
+- « audio coupé à deux mots » → le son court sur les 17 s, avec un seul trou
+  d'une seconde ;
+- « rouge cramé à 200 % » → l'inverse, 2,2 % de rouge saturé dans la source
+  contre 0,6 % dans l'export.
+
+Le vrai défaut n'était dans aucune des sept lignes : **222 images pour 17,5 s,
+soit 12,7 par seconde au lieu de 30**, avec un écart montant à 517 ms. Ce que
+l'auteur du rapport avait pris pour un tremblement d'encodage était une absence
+d'images.
+
+**La règle :** un rapport de ce genre décrit une impression, avec l'aplomb d'une
+mesure. Trois commandes le départagent avant d'écrire la moindre ligne —
+`ffprobe` sur les entêtes, les écarts de `pts_time`, un niveau seconde par
+seconde. Suivre le rapport sans les passer, c'est corriger des défauts qui
+n'existent pas pendant que le vrai reste en place.
+
+---
+
+## Un chiffre écrit dans un commentaire bloque plus longtemps qu'un bug
+
+**Mesuré le 30/08/2026, sur l'export d'Amorce.** Le dépôt portait cette phrase,
+au point exact où l'on aurait cherché la solution :
+
+> Piloter les éléments `<video>` image par image ne serait pas une issue :
+> mesuré à 265 ms par déplacement séquentiel, soit 2,6 minutes pour un film de
+> vingt secondes.
+
+Elle a tenu le correctif à distance pendant des semaines. Le défaut qu'elle
+protégeait était grave et connu — un export livré à **12,7 images par seconde
+au lieu de 30**, décrit par son auteur comme un tremblement.
+
+Remesuré sur la même machine, sans carte graphique : **7,3 ms** par déplacement
+séquentiel, 25,7 ms en comptant la composition en 1080 × 1920. **Trente-cinq
+fois moins.** Vingt secondes de film s'encodent en 15 s, plus vite que le temps
+réel. Le démultiplexeur qu'on croyait indispensable ne l'était pas, et la
+solution tenait en deux fichiers.
+
+**La règle :** un chiffre qui sert à *renoncer* se remesure avant d'être suivi,
+et cela d'autant plus qu'il est écrit avec assurance au bon endroit. Un
+commentaire qui dit « ce serait trop lent » a exactement la forme d'une mesure
+et le poids d'une décision — sans porter ni sa date, ni ses conditions, ni la
+machine sur laquelle elle a été prise.
+
+Le corollaire vaut pour ce qu'on écrit : une mesure consignée pour fermer une
+piste se date et se chiffre, sans quoi elle devient une croyance.
+
+## Ce qu'un test unitaire ne peut pas voir : des pièces justes, aucune branchée
+
+**Mesuré le 30/08/2026, sur le module de licence d'Amorce.** Lire une clé, la
+ranger, interroger le serveur, décider de ce qu'une offre autorise : tout était
+écrit, commenté, testé. Chaque test passait.
+
+Et **rien n'appelait rien**. Le composant racine passait une constante figée ;
+il n'existait nulle part de champ où saisir une clé ; la seule capacité payante
+n'était contrôlée nulle part. Quelqu'un qui payait recevait une clé qu'il ne
+pouvait coller nulle part — sur un produit vendu 49 €.
+
+Aucun test unitaire ne pouvait le voir : ils éprouvent des fonctions, et toutes
+étaient justes. Ce qui manquait n'était dans aucune d'elles, c'était entre
+elles.
+
+**La règle :** un module dont on ne peut nommer l'appelant n'est pas terminé,
+il est écrit. Le `grep` qui compte est celui du **nom de la fonction hors de
+ses propres tests** — deux secondes, et il distingue un module livré d'un
+module rangé.
+
+```bash
+grep -rn "maFonction" src/ --include=*.ts --include=*.tsx | grep -v __tests__
+```
+
+Ce qui l'a rattrapé ici : un parcours de bout en bout dans un vrai navigateur,
+sur le paquet de production, devant un vrai serveur. C'est le seul niveau où
+une pièce non branchée se voit.
+
+---
+
+## Un contrôle qui ne peut pas réussir arrête la moitié qui marchait
+
+**Mesuré le 31/08/2026, deux jours après coup.** L'auto-pilote du réseau
+d'annuaires est rouge depuis le 29, et personne ne l'avait vu.
+
+La cause n'est pas un défaut : c'est un garde-fou qui fait exactement ce pour
+quoi il a été écrit. Il refuse de construire les onze sites tant que le domaine
+inscrit dans les bases ne résout pas — la leçon d'avant lui a appris qu'une
+balise canonique pointant vers une adresse que personne ne sert coûte des mois
+de référencement. Or `ma-panoplie-ia.com` a été **acheté** sans être branché :
+aucun enregistrement DNS, donc une condition que rien dans le dépôt ne peut
+satisfaire.
+
+Trois conséquences, dans cet ordre :
+
+1. Le travail programmé publie bien un outil par niche — la réserve descend —
+   puis **échoue à l'étape suivante**. La partie qui marchait est arrêtée par
+   celle qui ne peut pas marcher.
+2. La chaîne rouge tous les deux jours devient un clignotant. Le même fichier
+   dit pourtant, dix lignes plus haut, qu'une barrière rouge en permanence est
+   une barrière qu'on cesse de lire. On connaît la règle et on la reperd
+   au moment où on écrit le garde-fou.
+3. Personne ne l'a su pendant deux jours, parce qu'un travail programmé qui
+   rougit ne réveille personne.
+
+**La règle :** un contrôle dont la condition dépend de quelque chose
+d'**extérieur au dépôt** — un DNS, un compte tiers, un secret, un domaine acheté
+— ne s'écrit pas comme un contrôle de code. Le code, on peut le corriger dans la
+minute ; l'extérieur, non. Un tel contrôle prévient, ouvre un billet, et **laisse
+passer ce qui ne dépend pas de lui**.
+
+Le corollaire est plus dur à voir : ce garde-fou-ci offrait déjà sa porte de
+sortie, `--sans-dns`. Elle n'était prise par personne. **Une porte de sortie que
+la chaîne n'emprunte pas d'elle-même n'est pas une porte de sortie**, c'est une
+ligne de documentation dans un message d'erreur que personne ne lit — puisque
+justement, plus personne ne lit le rouge.
+
+## Un contrôle qui ne peut pas échouer est pire qu'un contrôle absent
+
+**Mesuré le 30/08/2026, trois fois dans la même session.** À chaque fois un
+contrôle neuf est passé au vert du premier coup, et à chaque fois il ne
+mesurait rien.
+
+1. **Un parcours de licence** vérifiait que la pleine définition n'était pas
+   proposée sans clé. Elle ne l'était pas — parce que le projet était vide et
+   que l'étape d'export n'affiche aucune définition sans montage. Contrôle vert
+   sur un écran qui ne proposait rien du tout.
+2. **Une attente** portait sur le texte « Récupère le fichier », qui se trouve
+   être aussi le sous-titre de l'entrée de la barre latérale. Elle était donc
+   satisfaite sans que le panneau soit ouvert.
+3. **Un comptage** utilisait un sélecteur qui ne correspondait à rien :
+   `0 → 0` satisfaisait un `>=` à tous les coups.
+
+Aucun n'aurait été trouvé par relecture : ils étaient verts, et un vert ne se
+relit pas. Ce qui les a démasqués est chaque fois le même geste — **rendre le
+contrôle capable d'échouer, et vérifier qu'il échoue**.
+
+**La règle :** un contrôle neuf se prouve en le cassant. On change une valeur,
+on retire la fonctionnalité qu'il surveille, on force la condition inverse — et
+s'il reste vert, il ne surveille rien. Trente secondes, et c'est la seule
+différence entre un filet et une décoration.
+
+Le corollaire porte sur la forme : un comparateur `>=` sur des compteurs qui
+peuvent être nuls, une assertion sur l'**absence** d'un texte, une attente sur
+une chaîne qui existe ailleurs dans la page — les trois sont les formes que
+prend un contrôle vide. Préférer un `> 0 && ...`, une assertion sur une
+présence, et un sélecteur propre au composant.
+
+## Une somme pondérée ne sait pas dire « celle-là, non »
+
+**Mesuré le 30/08/2026, sur la note d'Amorce.** Six critères pondérés,
+additionnés : une vidéo carrée à plan strictement fixe — 6 % de rétention
+réelle sur TikTok, décrochage à la première seconde — décrochait **82 sur 100**.
+Trois critères pleins portaient soixante-dix points à eux seuls, et quatre
+textes non remplis coûtaient treize points quand l'accroche en rapportait
+trente.
+
+Le défaut n'était dans aucun critère : chacun mesurait correctement ce qu'il
+mesurait. Il était dans **l'addition**, qui ne connaît pas de cas rédhibitoire.
+
+**La règle :** dès qu'un domaine comporte des défauts qui invalident tout le
+reste — un livrable non fini, une contrainte de format, une donnée manquante —
+il faut un **plafond** à côté de la somme, pas un critère de plus. Un critère se
+noie ; un plafond tient.
+
+Et il se double d'une obligation : le plafond **nomme** ce qu'il bloque, avec le
+geste qui le lève. Un nombre bas sans sa raison se prend pour un verdict ;
+nommé, il devient une liste de choses à faire.
+
+Le piège voisin, rencontré dans la foulée : une seconde voix de l'interface —
+un guide, un assistant — qui continue d'appliquer l'ancienne logique et annonce
+« ça tient la route » pendant que la note dit non. Deux voix qui se contredisent
+valent moins qu'une seule qui refuse, parce qu'on suit celle qui arrange.
+
+## Un bruitage se mesure sur son moment fort, pas en moyenne sur son fichier
+
+Mesuré le 29/08/2026 sur **67 sons de douze bibliothèques professionnelles**
+(BOOM Library : Cinematic Darkness, Elements, Trailers, Strikes, Motion, Metal).
+Le premier verdict — « 11 sons sur 61 portent, la moitié est inaudible sur un
+téléphone » — était **faux**, et il aurait fait jeter des bibliothèques entières.
+
+La cause tient à l'instrument : une moyenne quadratique sur tout le fichier.
+Une prise professionnelle dure 8 à 48 secondes dont l'essentiel est du silence
+avant et après l'événement. La moyenne y mesure donc **la durée du fichier**,
+pas le son.
+
+```python
+n = 9600                                   # 200 ms : la durée d'un ÉVÉNEMENT
+e = [np.sqrt((h[i:i+n]**2).mean())         # h = le signal au-dessus de 400 Hz
+     for i in range(0, len(h)-n, n//2)]
+porte = 20*np.log10(max(e))                # son moment le plus fort
+```
+
+| | moyenne sur le fichier | crête sur 200 ms |
+| --- | --- | --- |
+| sons qui portent (> −22 dB) | **11 / 61** | **59 / 67** |
+
+**L'écart moyen entre les deux est de 11,3 dB**, et il monte à 15 dB sur les
+prises les plus longues. Une caisse claire sortait à −30 dB en moyenne — un
+chiffre qui n'a aucun sens physique pour un instrument dont toute l'énergie est
+dans le médium.
+
+**Ce qui reste vrai après correction**, et qui vaut pour choisir : ce que le nom
+promet n'est pas ce que le téléphone rend. Les huit sons réellement faibles
+s'appellent tous `IMPACT`, `BOOM` ou `LOW` — `IMPACTSynth_Low_Boom` sort à
+−39,1 dB, `Impact_Low_Cavern_Hit` à −26,1. Ils sont excellents dans une salle à
+caisson ; ils n'existent pas sur un haut-parleur de téléphone. Ce qui porte
+s'appelle `SCREAM`, `STINGER`, `RISE`, `WHOOSH`, `SCREECH`.
+
+**Et la leçon de méthode, qui dépasse le son :** un indicateur agrégé sur un
+support de longueur variable mesure la longueur autant que le contenu. Avant de
+classer quoi que ce soit avec une moyenne, vérifier qu'un élément long et un
+élément court y sont comparables — sinon le classement trie par durée en
+prétendant trier par qualité.
+## Une branche qui attend ne vieillit pas, elle devient destructrice
+
+La branche portait deux choses : une page neuve, et un module que le dépôt
+n'avait pas encore. Le temps qu'elle attende, **une autre session a écrit ce
+module** — mieux, avec des messages d'erreur qui distinguent une clé fausse
+d'un serveur muet, ce que la version en attente ne faisait pas.
+
+À cet instant la branche cesse d'être en retard et devient **destructrice** :
+la fusionner aurait remplacé leur fichier par le sien. Rien ne l'aurait
+signalé — pas de conflit, puisque la branche remplaçait un fichier entier ; les
+tests seraient restés verts, puisque le module marchait ; et le travail de
+l'autre session aurait disparu dans un lot qui parlait d'autre chose.
+
+**Le contrôle qui l'attrape tient en une commande**, et il ne consiste pas à
+regarder les conflits :
+
+```bash
+git ls-tree -r --name-only origin/main -- <les fichiers de la branche>
+git diff origin/main origin/<branche> -- <le fichier commun>
+```
+
+Un fichier présent des deux côtés **avec une différence** est le signal. Ici :
+230 lignes d'écart sur `useLicence.ts`, zéro conflit annoncé.
+
+**La réparation n'est pas de rebaser.** Un rebase aurait reporté l'écrasement
+sans le montrer. Il faut refaire la branche depuis `main` en n'y remettant que
+ce qui manque vraiment — la page — et **adapter ce qui reste à l'API de
+l'autre**, pas l'inverse. Le code qui est déjà fusionné a gagné ; celui qui
+attendait s'y plie.
+
+**Corollaire de rythme :** ce dépôt reçoit plusieurs sessions en parallèle, et
+une branche qui dort une demi-journée traverse deux ou trois fusions. Ouvrir la
+PR tôt ne sert pas qu'à éviter les conflits — c'est ce qui empêche un lot de se
+transformer en retour en arrière.
+
+## Une couleur qui est l'éclairage du plan ne se rattrape pas à l'étalonnage
+
+Cinq tentatives, cinq résultats faux, sur un même plan de six secondes. La
+règle du dépôt en autorise trois ; les deux dernières n'ont servi qu'à établir
+que le chemin lui-même était mauvais.
+
+Le rush d'Aznaroth est **éclairé** en cyan : la lumière de bord sur le visage,
+le halo sur la barbe, la lueur autour du globe. Ce n'est pas une couche de
+couleur posée par-dessus, c'est la lumière de l'image. La direction artistique
+demandait anthracite et or.
+
+| tentative | méthode | ce qui est sorti |
+| --- | --- | --- |
+| 1 | rotation de teinte globale (−192°) + masque de luminance | les fissures du globe, **déjà dorées**, viraient au vert acide |
+| 2 | masque de dominante bleue par `geq` en `gbrp` | sépia rouge, fissures toujours vertes |
+| 3-5 | `selectivecolor` sur cyans et bleus | le plus propre — et un visage éclairé en bleu, repeint en ambre, se **voit** repeint |
+
+**Ce que la mesure a dit à chaque fois : vert.** La passe 1 mesurait 0 % de
+cyan et 94,6 % d'ambre. Le vert des fissures pesait trop peu de pixels pour
+apparaître dans l'agrégat — et c'était le seul défaut. Encore la même famille
+que « la mesure disait vert et le fichier était faux » : la parade n'a pas été
+de mesurer plus finement, c'est d'avoir regardé la planche.
+
+**Et une mesure de conformité doit compter les teintes qu'elle ne cherche
+pas.** Le premier relevé n'avait que deux seaux, cyan et ambre. Le vert
+tombait entre les deux et se comptait nulle part. Un seau « reste » qui ne
+sert jamais vaut mieux qu'un défaut invisible.
+
+La sortie n'est donc pas un meilleur filtre :
+
+- **Soit on garde l'éclairage tel qu'il a été généré** et c'est l'affiche qui
+  s'aligne dessus. C'est ce qui a été retenu le 31/08/2026.
+- **Soit on regénère les rushes** sous l'éclairage voulu — et la génération
+  d'image est fermée ici, quatre chemins mesurés morts le 29/08.
+
+Ce qui se rattrape à l'étalonnage : une dominante, une exposition, un contraste,
+un saut entre deux plans. Ce qui ne se rattrape pas : **la couleur de la source
+de lumière**. La frontière est là, et elle se pose avant de lancer le premier
+filtre, pas après le cinquième.
+
+## Une règle que rien ne mesure finit par être enfreinte, même écrite
+
+`CLAUDE.md` §8 porte depuis longtemps la phrase : « le climax doit être le plus
+fort — s'il ne l'est pas, c'est le défaut, quelle que soit la sonie globale ».
+Elle est juste, elle est lue, et **rien ne la vérifiait** : `grep climax` dans
+tout le dépôt rendait zéro résultat.
+
+Mesuré sur un export réel de 13,84 s : le climax était **7,4 dB sous** le plan
+qui le précédait, filtré au-dessus de 400 Hz. La sonie globale était correcte,
+le vrai pic aussi, et aucune des mesures habituelles ne l'a dit — parce
+qu'elles sont toutes **agrégées**, et qu'une moyenne ne compare pas deux plans
+entre eux.
+
+**Le découpage décide de la mesure.** À la seconde, l'écart tombait à 6,6 dB ;
+aux changements de plan, à 7,4. C'est le plan qui est fort ou faible, pas la
+seconde — et un seuil de détection bas attrape aussi les fondus, qu'il faut
+fusionner sous peine de compter une transition comme un plan et de rendre un
+maximum qui n'existe pas.
+
+**Et le climax ne se déduit jamais du niveau.** Le prendre pour « le plan le
+plus fort » rendrait le contrôle circulaire et toujours vert. Il se pose : le
+dernier plan par défaut, ou un instant donné à la main.
+
+**Le remède compte autant que le constat**, et il n'est pas celui qu'on croit :
+baisser le plan trop fort vaut mieux que monter le climax. Monter fait
+travailler le limiteur, qui écrase précisément ce qu'on voulait faire
+ressortir — c'est le même piège que les deux couches d'un impact qui doivent
+partager leur niveau.
+
+## Une fin qui ne dit rien coûte l'épisode suivant
+
+Relevé sur un export réel : la vidéo s'arrêtait sur son dernier plan, écran
+noir, sans un mot. Aucune mesure ne s'en plaignait — la couverture texte était
+correcte, la durée juste, le montage propre.
+
+**Sur une plateforme qui enchaîne toute seule, une fin muette est une fin
+perdue.** TikTok lance la vidéo suivante, celle de quelqu'un d'autre, et rien
+n'a dit qu'il y avait une suite. Le défaut ne se voit pas sur le fichier ; il
+se voit sur la courbe d'abonnements, des semaines plus tard.
+
+**Ce qui décide, c'est le dernier instant, pas « vers la fin ».** Un sous-titre
+qui s'arrête une seconde avant la fin laisse le film mourir en silence : le
+contrôle porte donc sur ce qui est encore affiché au dernier dixième, pas sur
+la présence d'un texte quelque part dans le troisième acte.
+
+**Et le carton se prend sur la fin, jamais en plus.** Rallonger le film
+déplacerait la dernière image et le raccord audio — ce qui ne regarde pas un
+texte. La durée se soustrait, elle ne s'ajoute pas.
+
+**Le texte proposé porte un crochet, et c'est délibéré.** Écrire la phrase à la
+place de quelqu'un lui met des mots dans la bouche ; laisser le crochet fait
+que le garde-fou existant le voit et l'empêche de partir gravé dans le fichier.
+Quatre gabarits non remplis l'avaient déjà fait, et la couverture texte était
+même bonne — puisqu'il y avait du texte.
+
+## Un garde-fou posé en session peut casser un déploiement qu'on n'a pas lu
+
+Le contrôle DNS ajouté à `construire-sites.js` refuse de construire tant que
+l'adresse canonique ne résout pas. Juste — et il rend rouge le workflow
+« Annuaire IA — mise en ligne », qui appelle ce même script **sans**
+`--sans-dns`, sur des niches encore réglées sur un domaine mort.
+
+Le défaut n'est pas le garde-fou : c'est de l'avoir posé sans lire ce qui
+appelait le script. Un `grep` sur le nom du fichier — pas sur la fonction — le
+montrait en une seconde, et `.github/workflows/` fait partie des appelants au
+même titre que `package.json`.
+
+**Ce que ça donne à l'écran est le vrai coût :** l'échec ressemble à une panne
+de déploiement, pas à une adresse non réglée. Quelqu'un qui vient de poser ses
+secrets conclura que la mise en ligne est cassée.
+
+**Et l'ordre devient contraint, dans un sens qui ne se devine pas.** L'adresse
+gratuite d'un projet Cloudflare Pages ne résout **qu'une fois le projet créé** :
+il faut donc créer le projet d'abord, régler l'adresse ensuite, poser les
+secrets en dernier. Inverser les deux premiers fait échouer la construction sur
+une adresse qui n'existe pas encore.
+
+**Et le nom du projet n'était pas un choix ouvert** : le workflow le codait en
+dur depuis le début. Le README invitait pourtant à en choisir un — une question
+posée au propriétaire alors que la réponse était déjà dans le dépôt.
+=======
+## Un plafond sonore ne se vérifie que sur le fichier livré
+
+*Mesuré le 31/08/2026 sur Amorce, et le raisonnement vaut pour tout export.*
+
+Le limiteur d'Amorce bornait les échantillons à −1,4 dBFS. Le fichier exporté a
+été mesuré à **−0,13 dBFS de vrai pic** — au-dessus de tout ce que la courbe
+autorise, et exactement ce que le réencodage des plateformes transforme en
+écrêtage. Des montages denses sortaient même à **0,00 dBFS**, plein pot.
+
+Le réflexe est de soupçonner le limiteur. Il était juste : sondé dans un vrai
+Chromium, un `WaveShaper` portant cette courbe ne sort jamais au-dessus de son
+maximum. Trois étages **postérieurs** ajoutaient le niveau :
+
+| Étage | Ce qu'il ajoute | Comment il a été mesuré |
+| --- | --- | --- |
+| `oversample = '4x'` du `WaveShaper` | +0,30 dB sur des transitoires durs | même courbe, `none` / `2x` / `4x`, sur sinus, carré et impulsions |
+| Encodage Opus | +0,49 dB | mixage réel borné à −1,41, réencodé, remesuré |
+| Le reste, non isolé | ~1 dB | écart résiduel entre la borne et le fichier |
+
+Trois choses en sortent, et la troisième est la seule qui se généralise.
+
+**Le suréchantillonnage d'un limiteur casse son plafond au lieu de l'adoucir.**
+Il applique la courbe sur un signal suréchantillonné puis redescend, et le
+filtre de décimation sonne : la sortie repasse au-dessus du maximum de la
+courbe. En `none`, c'est impossible par construction. Le suréchantillonnage sert
+à une saturation qu'on veut douce, jamais à une borne qu'on veut sûre.
+
+**L'encodeur est le terme dominant, et aucun réglage du graphe ne le rattrape.**
+Baisser la courbe de 0,9 dB n'a rendu que 0,46 dB sur le fichier. Un plafond
+d'échantillon ne se convertit pas en plafond de vrai pic : il faut mesurer le
+rapport une fois, sur du vrai matériel, et en déduire la marge.
+
+**Et la règle qui vaut partout : un contrôle doit porter sur le fichier qui
+part.** Six mesures vertes décrivaient le graphe ; aucune ne décrivait le
+fichier, et c'est le fichier qu'on publie. Le contrôle ajouté à `verify.mjs`
+décode l'export, le rééchantillonne à 192 kHz et lit son vrai pic — le premier
+qui pouvait attraper le défaut, parce que le défaut naissait après tout le reste.
+
+Corollaire sur les seuils : **un seuil dit ce qui est atteint, pas ce qu'on
+vise.** La cible est −1 dBFS, elle n'est pas tenue (−0,94 sur le profil
+téléphone), et l'atteindre coûterait de la sonie sur tous les exports. Le
+contrôle garde donc ce qui ne se discute pas — le fichier n'écrête pas — et le
+commentaire nomme l'écart et son prix. Un seuil qui affiche la cible en la
+vérifiant pas est un mensonge vert.
+## Une valeur par défaut plausible se fait passer pour un fait
+
+`artisan-express/src/app/layout.tsx` portait
+`process.env.NEXT_PUBLIC_SITE_URL ?? 'https://artisan-express.vercel.app'`.
+Cette adresse n'a **jamais existé** — vérifié sur le tableau de bord le
+30/08/2026, deux projets Vercel seulement, aucun ne sert cette page.
+
+Le repli n'était pas faux au sens strict : c'est bien le nom que Vercel
+*donnerait* à un projet ainsi nommé. Il était **plausible**, ce qui est pire
+qu'une valeur manifestement fausse — une session l'a lue, en a conclu que le
+site était en ligne, et un résumé de reprise l'a répété pendant des jours.
+
+**Le second dégât était latent et coûtait plus cher.** Cette valeur alimentait
+`metadataBase` et `openGraph.url` : déployé sans la variable, le site aurait
+publié ses métadonnées de partage vers un domaine que personne ne sert. C'est
+la canonique morte du réseau d'annuaires, dans un second projet, née de la même
+cause — une adresse écrite pour combler un trou.
+
+**La règle existait déjà dans le même fichier de configuration**, à trois
+lignes de là : *« ce qui n'est pas réglé disparaît de l'écran au lieu
+d'afficher une valeur inventée »*. Elle était appliquée au téléphone, à
+WhatsApp et à Stripe, et pas à l'adresse du site. Une règle qui vaut pour
+quatre champs sur cinq est une règle qu'on croit tenue.
+
+**Ce qui garde le correctif n'est pas la valeur, c'est la source.** Le test
+relit `layout.tsx` et `config.ts` et refuse toute adresse en dur — vérifier ce
+que la variable *vaut* à l'exécution laisserait revenir le repli au prochain
+copier-coller.
+
+## `git reset --hard` au milieu d'un lot efface le lot
+
+Une session venait d'écrire une fonctionnalité dans un projet, l'avait éprouvée
+par sabotage, et a enchaîné sur un second fichier dans un autre dossier. Le
+réflexe pour repartir propre — `git checkout main && git reset --hard
+origin/main` — a **effacé la fonctionnalité non commitée**.
+
+Rien ne l'a signalé. La poussée est partie avec un seul fichier au lieu de
+quatre, et le message de commit décrivait un travail que le commit ne contenait
+pas.
+
+**Le signal existait, et il était chiffré :** la suite de tests rendait 54 au
+lieu de 59, affiché dans la même sortie que le reste. Il a été lu comme un
+détail. **Un compte de tests qui baisse après un changement de branche est une
+perte, jamais un hasard** — c'est la seule ligne à regarder avant de pousser.
+
+**Ce qui a sauvé le lot est un accident** : une copie de travail laissée dans
+`/tmp` pendant les essais de sabotage. Sans elle, une heure était perdue.
+
+La règle qui l'évite tient en une phrase : **on commite avant de changer de
+dossier de travail**, même pour écrire un fichier qui n'a rien à voir. Le coût
+d'un commit de trop est nul ; celui d'un `reset --hard` sur du travail non
+commité est le travail lui-même.
+
+## Un partage qu'on a fait soi-même n'est pas un signal
+
+Le teaser du 31/08/2026 affichait **63 partages** — le seul chiffre flatteur du
+tableau de bord. Ils étaient **tous de l'auteur** : sa propre diffusion, comptée
+comme de l'engagement.
+
+Dans le même écran, la rétention disait l'inverse : **la moitié de l'audience
+partie avant la deuxième seconde**, **4,3 s de visionnage moyen sur 17**,
+**3,6 % de complétion**. Deux mesures côte à côte, une flatteuse et fausse,
+une brutale et vraie.
+
+**Le piège n'est pas le chiffre, c'est le tri.** Un tableau de bord met sur la
+même ligne ce qu'on a provoqué et ce qu'on a obtenu. Avant de lire une métrique,
+se demander **qui l'a produite** : un partage qu'on a fait, une vue qu'on a
+générée en se relisant, un clic depuis son propre lien ne mesurent que soi.
+
+**Et ce qui décide se lit toujours dans la rétention.** La complétion et la
+courbe des premières secondes ne peuvent pas être fabriquées par l'auteur —
+c'est ce qui les rend seules dignes de confiance sur un format court.
+
+Conséquence directe, écrite dans `montage-sans-refaire` §13 : plus jamais
+d'image fixe ni d'affiche en première seconde. La règle disait l'inverse
+jusqu'ici — « 1,1 s pour huit lettres » — et une règle écrite que la mesure
+dément est pire qu'une règle absente.
+
+## Une impossibilité mesurée ne rend vrai que ce qu'elle mesure
+
+Mesuré le 31/08/2026, sur le tome 1 de Roussy & Zéphy.
+
+Le dépôt portait depuis des semaines, dans `CLAUDE.md` et dans deux autres
+fichiers, la même phrase : les quatre chemins de génération d'image sont fermés,
+**donc** le tome 1 est bloqué, il lui manque une planche et une couverture. La
+première moitié était juste et bien mesurée. La seconde n'avait jamais été
+vérifiée — et elle était fausse.
+
+Il a suffi de faire tourner la chaîne du projet sur des planches fabriquées pour
+l'occasion : **30 pages, aucun carton d'attente, 9 contrôles sur 9 au vert,
+verdict PUBLIABLE**, sans une seule image neuve. Les deux trous avaient chacun
+reçu, des mois plus tôt et par d'autres sessions, une version dégradée qui
+marche : l'histoire non illustrée composée en prose vectorielle, la couverture
+provisoire empruntant son illustration à une page intérieure. Personne n'avait
+relancé la chaîne pour voir ce que les deux valaient ensemble.
+
+**Le piège n'est pas la mesure, c'est la conséquence collée à côté.** Une
+conséquence fausse posée contre une mesure juste se relit comme si elle avait
+été mesurée elle aussi, et plus personne ne la rouvre — c'est même l'inverse :
+la mesure la protège. Trois fichiers la répétaient, dont le classement des
+chantiers, qui en avait déduit un rang.
+
+Trois gestes en découlent :
+
+- **Séparer, à l'écriture, ce qui est mesuré de ce qu'on en déduit.** « Les
+  hôtes rendent 000 » est une mesure ; « donc le projet est bloqué » est une
+  hypothèse, et elle se date et se signe comme telle.
+- **Relancer la chaîne du projet avant de croire à un blocage.** Elle sait
+  répondre, et elle répond en quelques secondes. Une chaîne qui rend un verdict
+  est plus fiable que trois documents qui se citent l'un l'autre.
+- **Chercher la version dégradée avant de chercher la ressource manquante.**
+  Dans un dépôt où les sessions se succèdent, elle a souvent déjà été écrite par
+  quelqu'un d'autre, et personne ne l'a rassemblée avec les autres.
+
+Corollaire de méthode, pour un livre en particulier : **l'épreuve papier se
+commande sans publier**, et ses deux semaines d'impression courent pendant qu'on
+travaille ce qui manque. Attendre d'avoir tout pour commencer à attendre est le
+seul choix strictement perdant.
+
+## Un quota qui saute deux fois de suite n'est pas un quota, c'est un compte qui a grossi
+
+Le 29/08/2026, le plafond de cent déploiements Vercel avait déjà été crevé, et
+la leçon écrite ici disait quoi en faire : **grouper les lots** ce jour-là. Le
+31/08 il a sauté à nouveau, sur beaucoup moins de fusions — **80 en
+vingt-quatre heures** contre 154 — et le groupement n'aurait rien changé.
+
+Ce qui avait changé n'était pas le rythme, c'était le **multiplicateur** : le
+dépôt était passé de **deux projets Vercel à quatre** dans la nuit, `iptv` et
+`nexuscrypto` s'ajoutant à `amorce` et `amorce-51up`. Vérifié sur les statuts
+de pull requests successives — deux contextes `Vercel – *` à 01:22, quatre à
+02:18. Et **aucun des quatre ne filtrait par chemin** : chacun se déclenchait
+sur chaque commit, y compris une PR qui ne touchait qu'un Markdown. 80 × 4 =
+320 déploiements pour un palier à cent.
+
+**La quantité d'un quota se compte toujours par ce qui la multiplie, pas par ce
+qui la produit.** Compter les fusions répond à la mauvaise question quand c'est
+le nombre de consommateurs qui a doublé.
+
+Trois choses en sont sorties, et elles valent au-delà de Vercel :
+
+- **Un rouge de quota masque les vrais rouges.** `nexuscrypto` échouait au build
+  depuis sa création — `Deployment has failed`, pas « rate limited » — et
+  personne ne l'a distingué, parce que tout était rouge. Un service saturé
+  n'est pas seulement une gêne : c'est un endroit où une panne réelle devient
+  invisible.
+- **Un projet créé depuis un tableau de bord ne porte aucune trace dans le
+  dépôt.** Rien dans Git ne disait que deux projets s'étaient ajoutés ; on ne
+  peut le lire que sur les statuts d'une PR, ou sur le tableau de bord. Quand
+  quelque chose consomme un quota partagé, l'inventaire se fait là où il vit,
+  pas dans le code.
+- **Un filtre de déploiement se rate à l'envers.** L'`ignoreCommand` de Vercel
+  sort en `0` pour **annuler** et en `1` pour déployer — l'inverse de la
+  convention Unix. Un `exit 0` écrit par réflexe en fin de script coupe tous les
+  déploiements sans qu'aucune ligne rouge n'apparaisse. La parade tient dans une
+  règle : **tout cas douteux sort en 1**, parce qu'un déploiement de trop coûte
+  une unité de quota et qu'un déploiement manquant fait tester une version
+  périmée pendant deux heures — mesuré, ici même, le 29/08.
+
+## Un connecteur MCP ne passe pas par la politique réseau — et c'est ce qui débloque
+
+Trois services ont été sondés le 01/09/2026, tous refusés au tunnel :
+`api.elevenlabs.io`, `mcp.hedra.com`, `freesound.org`. La conclusion évidente
+était qu'il fallait ouvrir ces domaines dans la politique réseau de
+l'environnement, et une heure y est passée — à chercher le bon écran, à
+composer la liste, à corriger la forme des jokers.
+
+**C'était la mauvaise piste pour ElevenLabs.** Son **connecteur MCP** travaille
+alors que son API directe est refusée, le même jour, depuis la même session. La
+documentation de Claude Code le dit d'ailleurs en une ligne facile à manquer :
+*« MCP connector traffic … don't go through this allowlist »*.
+
+La leçon n'est pas « les connecteurs marchent » — c'est **l'ordre des
+questions**. Avant de demander l'ouverture d'un domaine, regarder si un
+connecteur couvre déjà le besoin : il emprunte un autre chemin, et ce chemin
+peut être ouvert quand l'autre est fermé. `curl` mesure le réseau de la
+session ; il ne mesure pas ce qu'un connecteur sait faire.
+
+**Ce que ça a levé.** Ce dépôt affirmait depuis le 29/08 qu'« une session ne
+peut pas fabriquer une illustration », après quatre chemins d'image mesurés
+fermés. La mesure était juste, la conclusion trop large : une image a été
+produite depuis une session distante — 1344 × 768, `gemini-2.5-flash-image`,
+**4,57 centimes, dix secondes**.
+
+**Et le piège du premier essai, qui coûte de l'argent sans rien casser :** le
+rapport d'image sort en **16:9** par défaut, et l'outil de génération ne
+l'expose pas — il se règle sur le nœud du flux. Une série verticale paie donc
+une image inutilisable qui a pourtant l'air réussie. `estimate_only: true`
+chiffre une génération sans rien dépenser : le faire avant tout lot.
+
+## Un hôte canonique fermé ne ferme pas le modèle — 01/09/2026
+
+Mesuré en montant le traducteur de chat. Les trois adresses que donne la
+documentation de YAMNet sont refusées au tunnel depuis une session distante :
+`tfhub.dev`, `kaggle.com` (qui a repris TF Hub) et `huggingface.co` rendent
+tous `000`. Le même modèle se télécharge en une commande depuis
+`storage.googleapis.com`, miroir MediaPipe, 4 126 810 octets.
+
+C'est la **quatrième** fois que la parade est la même — voix off, poids
+Wav2Lip, bougies CCXT, et maintenant YAMNet. La règle se formule enfin :
+quand un hôte d'éditeur est refusé, chercher **le miroir d'un grand projet**
+(`storage.googleapis.com`, `raw.githubusercontent.com`, les objets de release
+GitHub) *avant* de conclure à l'impossibilité. Deux hôtes essayés ne font
+toujours pas une impossibilité.
+
+Et une économie qui se reperd : **un `.tflite` porteur de métadonnées est
+aussi une archive ZIP.** `zipfile.ZipFile("yamnet.tflite").read(
+"yamnet_label_list.txt")` rend les 521 étiquettes. Aller chercher un CSV
+d'étiquettes ailleurs, c'est risquer un ordre différent de celui des sorties —
+un décalage qui ne casse rien et fausse tout.
+
+## Une classe parente écrase la classe précise, et aucun test ne le voit
+
+Le défaut le plus coûteux du traducteur de chat, trouvé en **regardant de
+vrais scores** et non en relisant du code.
+
+YAMNet range ses classes en hiérarchie. Sur un miaulement réel :
+
+    Animal 0,992   Cat 0,988   Meow 0,891
+
+`Cat` est le parent, `Meow` l'enfant — et le parent gagne toujours. Un
+`max()` sur les classes félines retenait donc `Cat`, qui ne porte aucune
+information, à la place de la classe précise qui en porte une. Conséquence :
+un ronronnement à `Cat 0,90 / Purr 0,60` repartait en « indécis », c'est-à-dire
+que la seule intention réellement mesurable était perdue à tous les coups.
+
+**Six tests étaient verts pendant ce temps.** Aucun ne pouvait le voir : le
+verdict rendu restait parfaitement plausible, et les scores écrits à la main
+dans les tests ne reproduisaient pas la hiérarchie réelle.
+
+La leçon dépasse YAMNet et vaut pour **toute sortie de modèle multi-étiquette
+hiérarchique** : un `argmax` sur des classes de niveaux différents ne compare
+pas ce qu'on croit. Séparer explicitement les classes qui *ouvrent une porte*
+de celles qui *portent une lecture* — les premières peuvent être génériques,
+les secondes jamais.
+
+## Un bruitage généré coûte 0,3 centime et vaut mieux qu'une synthèse maison
+
+Toujours le 01/09/2026. Pour éprouver le chemin positif d'un détecteur de son,
+deux synthèses maison ont échoué : un empilement de sinus est classé
+`Synthesizer` (cumul félin 0,008), et même un miaulement fabriqué avec source
+glottale, formants félins et vibrato ne monte qu'à 0,059 — sous le seuil.
+
+Quatre bruitages générés par le connecteur ElevenLabs (`sfx`,
+`eleven_text_to_sound_v2`) ont réglé la question en deux minutes pour
+**1,2 centime au total**. Ils ont fait apparaître le défaut de la classe
+parente, et confirmé qu'un seuil bas était le bon choix — un ronronnement réel
+ne franchit la porte qu'avec six centièmes de marge.
+
+Le garde-fou qui va avec, et qui n'est pas facultatif : **quatre bruitages
+générés ne sont pas un jeu de données.** Ils suffisent à trouver un défaut, pas
+à régler un seuil. Une règle qu'ils suggèrent sans la trancher se laisse
+**écrite en commentaire et épinglée par un test**, jamais devinée — sans quoi
+un nombre inventé finit par avoir l'air d'une mesure.
+
+## IPTV : masquer un doublon doit aussi poser `teste_le`, sinon « Éprouver » le fait revenir
+
+Mesuré le 01/09/2026 en écrivant le dédoublonnage des chaînes (même titre,
+plusieurs qualités chez un fournisseur Xtream — TF1 quatre ou cinq fois de
+suite). Masquer le perdant avec `etat = 'doublon'` suffisait pour qu'il
+disparaisse de l'écran, mais pas pour qu'il **le reste** : `aTester({
+jamaisTestes: true })` filtre uniquement sur `teste_le IS NULL`, une colonne
+que le masquage ne touchait pas. Un doublon jamais éprouvé au moment du
+dédoublonnage restait donc candidat pour le bouton « Éprouver » — et s'il
+répondait, `marquerEtat(id, 'ok')` écrivait par-dessus `etat = 'doublon'`,
+défaisant le masquage sans qu'on l'ait demandé.
+
+**La règle, plus générale que ce seul cas :** dans ce schéma, `etat` (ce qu'on
+affiche) et `teste_le` (ce qui a déjà été regardé) sont deux colonnes
+distinctes qui doivent avancer ensemble dès qu'un geste écrit l'une sans
+passer par le chemin qui pose déjà l'autre (`marquerEtat`, `marquerTeste`). Un
+nouveau code qui touche `etat` directement — comme `dedoublonner`, en
+contournant `marquerEtat` parce que « doublon » n'est pas un état de test —
+doit se demander explicitement ce que `teste_le` devient, pas seulement ce que
+`etat` devient. Le symptôme ne se serait vu qu'à l'usage : un dédoublonnage
+qui tient jusqu'au premier clic sur « Éprouver », puis qui semble s'être
+« annulé tout seul ». Trouvé en relisant le diff, pas en le lançant — un test
+dédié (`aTester` après `dedoublonner`) l'épingle maintenant.
+
+---
+
+## Une suite qui passe peut ne passer que par chance alphabétique — 01/09/2026
+
+*Coût : rattrapé avant la CI, mais c'est un rouge que personne n'aurait su lire.*
+
+Sept fichiers de test du conseiller de patrimoine passaient tous ensemble.
+Lancés **un par un depuis la racine du dépôt**, cinq échouaient sur
+`ModuleNotFoundError`. La cause : un seul fichier — `tests/aides.py` — faisait
+le `sys.path.insert` vers la racine du projet, et les autres en profitaient
+**parce qu'un fichier importé plus tôt dans l'ordre alphabétique** l'avait déjà
+fait.
+
+Ce qui rend le piège vicieux : le mode de lancement local (`cd projet && python3
+-m unittest discover -s tests`) met le dossier du projet dans `sys.path` par le
+répertoire courant, donc tout marche. La CI, elle, lance depuis la racine du
+dépôt — c'est là que ça tombe, sur une machine où personne ne regarde.
+
+**La parade est déjà la convention du radar, il suffisait de la voir :** ses
+quinze fichiers de test font tous leur propre `sys.path.insert`, sans exception.
+Quinze sur quinze, ce n'est pas une redondance, c'est l'invariant.
+
+**Portée générale :** un test qui ne passe que dans un ordre donné n'est pas un
+test qui passe. Le vérifier coûte une boucle :
+
+```bash
+for f in projet/tests/test_*.py; do
+  python3 -m unittest discover -s projet/tests -p "$(basename "$f")" | tail -1
+done
+```
+
+À lancer **depuis la racine du dépôt**, jamais depuis le dossier du projet — le
+répertoire courant est précisément ce qui masque le défaut.
+
+---
+
+## Une espace insécable tapée au clavier est invisible dans un diff — 01/09/2026
+
+*Coût : deux tests faux, et cinq minutes à comparer deux chaînes identiques
+à l'œil.*
+
+La typographie française demande une espace insécable avant `€`, `%` et les
+unités, et en séparateur de milliers. Tapée directement dans le source, elle
+rend `'1 234 567,89 €' != '1 234 567,89 €'` — deux chaînes rigoureusement
+identiques à l'écran, et différentes pour la machine. Le diff ne montre rien, le
+message d'erreur non plus, et on relit trois fois la même ligne.
+
+Pire : dans un même fichier, une moitié des espaces peut être insécable et
+l'autre non, sans qu'aucune relecture ne le voie. C'est ce qui était arrivé —
+les séparateurs de milliers l'étaient, l'espace avant `€` ne l'était pas.
+
+**La parade : ne jamais la taper, l'écrire.** Une constante nommée, une fois :
+
+```python
+INSECABLE = " "          # et dans les tests : "12,3 %"
+```
+
+Et le garde-fou qui empêche la rechute, en une ligne :
+
+```bash
+grep -n $' ' fichier.py     # doit ne rien rendre, hors la constante
+```
+
+**Portée générale :** tout caractère invisible ou ambigu — insécable, espace
+fine, tiret cadratin, apostrophe courbe — s'écrit en séquence d'échappement dans
+le code, et se tape seulement dans la prose. Le code se relit à deux ; la prose
+se relit à l'œil.
+
+## Une bibliothèque qui rend `None` sans lever ment plus longtemps qu'une qui plante — 01/09/2026
+
+`cv2.imread` rend `None` **sans lever d'exception** sur tout chemin non ASCII
+sous Windows. Sur une machine française, cela vise exactement les dossiers où
+vivent les fichiers : `Téléchargements`, `Bureau`, `À trier`, `Vidéos`. La
+parade est de ne jamais donner un chemin à OpenCV — lire les octets avec
+`numpy.fromfile` puis `cv2.imdecode`, encoder avec `cv2.imencode` puis écrire
+avec `Path.write_bytes`. `cv2.imwrite` bute sur le même mur, en rendant `False`.
+
+Ce qui rend la leçon chère n'est pas le défaut, c'est sa **forme**. Un plantage
+se voit et se corrige le jour même. Un `None` silencieux se propage : dans
+Life-Organizer, il faisait passer la netteté à « non mesurée », ce que la règle
+traduit — à raison — par « dans le doute, on agrandit ». Le garde-fou du flou
+dormait donc précisément sur les dossiers qui comptent, et le compte rendu
+affichait une décision parfaitement plausible.
+
+Le module `nettoyage` portait déjà la parade **et son commentaire**, écrits des
+semaines plus tôt. Le module `upscale`, écrit ensuite, a repris `imread`. Une
+parade consignée dans un seul fichier ne protège que ce fichier : elle vaut
+qu'on la cherche par ce qu'elle **fait** — `grep -rn "imread"` — avant d'écrire
+la ligne suivante qui lit une image.
+
+## Une console Windows française n'écrit pas « → » — et c'est `--help` qui tombe — 01/09/2026
+
+Les modules de Life-Organizer écrivent des flèches, des coches et des tirets
+cadratins : 206 lignes du paquet en portent. Aucun de ces caractères n'existe
+dans la page de code **cp1252**, celle d'une console Windows française, et
+`print` y lève `UnicodeEncodeError`. Le premier écran touché n'est pas une
+sortie exotique, c'est `organizer.py --help` : le programme plantait avant
+d'avoir rien fait.
+
+Le forçage tient au **point d'entrée**, une fois, et non dans chaque module :
+
+```python
+for _flux in (sys.stdout, sys.stderr):
+    if hasattr(_flux, "reconfigure"):
+        _flux.reconfigure(encoding="utf-8", errors="replace")
+```
+
+Ce qui rend ce défaut invisible ici : Linux et macOS sont en UTF-8, donc aucun
+test ne le voit, et l'intégration continue non plus. Il se reproduit en une
+commande, sans Windows — `PYTHONIOENCODING=cp1252 python3 -c "print('→')"` —
+et c'est le geste à faire dès qu'un programme en français destiné à une machine
+Windows imprime autre chose que de l'ASCII. Le dépôt écrit **tout** en
+français : la règle vaut donc pour chaque outil en ligne de commande qui y naît.
+
+## `verifier.sh` vert ne veut pas dire CI verte — mesuré sur le réseau d'annuaires
+
+Le 02/09/2026, `bash .claude/skills/verifier/scripts/verifier.sh` a rendu
+**« ✓ Réseau d'annuaires IA »**, parcours Chromium compris, 319 s. La même
+poussée a fait **rouge** le workflow « Annuaire IA » en 22 secondes.
+
+Les deux disent vrai. Ils ne lancent pas la même chose : la barrière locale
+joue le validateur, les données et le parcours navigateur ; `annuaire-ia.yml`
+joue en plus `node construire-sites.js`, qui porte le garde-fou DNS et sort en
+code 1 quand le domaine ne résout pas.
+
+Ce que ça change : `CLAUDE.md` §10 dit « avant de pousser, une seule commande ».
+C'est vrai pour ce qu'elle couvre, et faux comme promesse de CI verte. Une
+session qui lit la barrière verte annonce un lot prêt et découvre le rouge
+après la poussée — un cycle perdu, et l'annonce était fausse au sens du §8.
+
+La parade ne coûte rien : avant d'annoncer, lire les `run:` du workflow du
+projet touché et lancer ce qui manque à la main. Ici, `node construire-sites.js`.
+
+## Un domaine qui ne résout pas n'est pas un domaine libre
+
+`getent hosts` ne lit que les `A`/`AAAA` : un domaine enregistré mais jamais
+pointé rend exactement le même vide qu'un domaine qui n'existe pas. Conclure
+« il n'est pas acheté » depuis cette absence est le piège, et il oriente vers
+un achat inutile.
+
+Deux sondes le séparent, et la seconde marche ici :
+
+* **Les NS**, par DNS-over-HTTPS — **refusé** depuis une session distante :
+  `dns.google/resolve` et `cloudflare-dns.com` rendent `000`, alors que le
+  résolveur du conteneur, lui, répond. Ni `dig` ni `host` ne sont installés.
+* **Le registre**, par `mcp__Vercel__check_domain_availability_and_price`, qui
+  répond. `ma-panoplie-ia.com` en ressort **« not available for purchase »** :
+  il est enregistré. Un domaine libre, lui, sort avec son prix — mesuré sur
+  `mapanoplie-ia.com`, 11,25 $.
+
+Toujours joindre un témoin dont on connaît la réponse : sans `github.com` qui
+résout à côté, l'absence se lit comme un mandataire qui bloque.
+
+## GitHub Pages allumé en mode Jekyll échoue à chaque commit, en silence
+
+Mesuré le 02/09/2026 : le dépôt avait Pages activé avec la source « Deploy from
+a branch », donc `actions/jekyll-build-pages` sur la racine. Jekyll lit alors
+tout le dépôt, y compris les `.astro`, et meurt sur
+`hypersensible-bienveillance/src/pages/app/reponse-bienveillante.astro` —
+« Invalid YAML front matter ». **Soixante-trois exécutions rouges** que personne
+n'avait vues : ce workflow est ajouté par GitHub, n'apparaît sur aucune PR, et
+ne bloque rien.
+
+Deux conséquences. Un dépôt polyglotte ne doit jamais laisser Pages sur la
+source « branche » ; et un rouge qu'aucune PR n'affiche peut durer des semaines
+— `actions_list` sans filtre de branche est le seul endroit où il se voit.
+
+Corollaire utile : `actions/configure-pages` **ne peut pas** basculer la source
+depuis un workflow. Son `action.yml` dit que `enablement` exige un jeton autre
+que `GITHUB_TOKEN`. Le geste reste humain, dans Settings → Pages.
+
+## `configure-pages` ne dit pas si la source Pages est « GitHub Actions »
+
+Mesuré le 02/09/2026, et ça a coûté un lot livré comme réparé alors qu'il ne
+l'était pas.
+
+Pour savoir si un dépôt est prêt à recevoir un dépôt Pages par Actions, le
+réflexe est de lancer `actions/configure-pages` avec `continue-on-error` et de
+lire son `outcome`. **C'est faux.** Son `src/api-client.js` appelle
+`GET /repos/…/pages` et rend la page dès qu'elle existe — *quelle que soit sa
+source*. Sur un dépôt où Pages tourne encore en mode « Deploy from a branch »,
+l'étape réussit donc, et toute la logique qui en dépend part du mauvais pied :
+ici, le billet censé prévenir que rien n'est en ligne ne s'ouvrait jamais.
+
+La sonde juste lit le champ lui-même :
+
+```bash
+type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' 2>/dev/null || echo introuvable)
+# "workflow" = prêt · "legacy" = source encore sur une branche
+```
+
+Traiter l'échec de l'appel comme « pas prêt » plutôt que comme « prêt » : un
+billet de trop coûte moins qu'un dépôt muet.
+
+**Le témoin qui tranche sans lire l'API :** si le workflow *dynamique*
+`pages build and deployment` tourne encore sur les poussées, la source est
+forcément « branche » — c'est le constructeur Jekyll historique, et il ne se
+déclenche pas autrement.
+
+## Les filtres de `mcp__github__actions_list` sont ignorés
+
+Mesuré le même jour. `workflow_id` (nom de fichier comme identifiant numérique),
+`head_sha` et `branch` ont été passés séparément : la réponse rend les
+exécutions récentes du dépôt entier, pas le sous-ensemble demandé. On croit lire
+« ce workflow n'a pas tourné » alors qu'on lit « il n'est pas dans les dix
+premières lignes ».
+
+Conséquence pratique : ne jamais conclure l'absence d'une exécution depuis cet
+outil. Chercher un témoin indirect — un billet ouvert, un artefact, un autre
+workflow dont la présence implique l'état cherché — ou remonter par un
+`check_run` dont on a l'identifiant.

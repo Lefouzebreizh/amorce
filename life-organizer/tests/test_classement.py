@@ -34,7 +34,12 @@ class TestCategorie(unittest.TestCase):
         self.assertEqual(regles.categorie(Path("a.mkv"), categories), "Videos")
 
     def test_une_extension_inconnue_n_a_pas_de_categorie(self):
-        self.assertIsNone(regles.categorie(Path("a.odp"), CONFIG["classement"]["categories"]))
+        # Une extension inventée, et non un format réel : le jour où `.odp` a
+        # été ajouté aux documents, trois tests sont tombés d'un coup — leur
+        # intention était juste, leur exemple avait vieilli. Un exemple qui ne
+        # peut pas devenir vrai ne vieillira pas.
+        self.assertIsNone(regles.categorie(Path("a.inconnu"),
+                                           CONFIG["classement"]["categories"]))
 
 
 class TestDossierDate(unittest.TestCase):
@@ -82,7 +87,7 @@ class TestDecider(unittest.TestCase):
                          Path("Documents/Divers/2024/03 - mars"))
 
     def test_une_extension_inconnue_n_est_pas_deplacee(self):
-        rangement = regles.decider(fiche("presentation.odp"), CONFIG, "exif")
+        rangement = regles.decider(fiche("presentation.inconnu"), CONFIG, "exif")
         self.assertFalse(rangement.a_deplacer)
         self.assertIn("classement.categories", rangement.motif)
 
@@ -106,6 +111,46 @@ class TestTheme(unittest.TestCase):
 
     def test_aucun_mot_cle_ne_donne_aucun_theme(self):
         self.assertIsNone(regles.theme("photo de vacances", CONFIG["classement"]["themes"]))
+
+
+class TestMatiereATheme(unittest.TestCase):
+    """Dans quoi on cherche un thème, et pourquoi le nom passe devant."""
+
+    def test_sans_texte_la_matiere_est_le_seul_nom(self):
+        self.assertEqual(regles.matiere_a_theme("facture.pdf"), "facture.pdf")
+
+    def test_le_nom_precede_le_document(self):
+        # `theme()` retient le premier thème qui correspond : l'ordre décide.
+        # Quelqu'un qui a nommé son fichier a déjà classé son document.
+        matiere = regles.matiere_a_theme("impots 2024.pdf", "quittance de loyer")
+        self.assertTrue(matiere.startswith("impots 2024.pdf"))
+
+    def test_le_document_est_borne(self):
+        # Lire tout un PDF ferait correspondre n'importe quel mot-clé : sa
+        # dernière page cite l'assurance, la banque et les recours.
+        matiere = regles.matiere_a_theme("a.pdf", "x" * 5000, caracteres_max=100)
+        self.assertEqual(len(matiere), len("a.pdf") + 1 + 100)
+
+    def test_un_document_muet_de_nom_est_classe_par_son_texte(self):
+        # Le cas qui motive tout : un scan nommé « scan001.pdf » finissait dans
+        # « Divers » alors que sa première page annonce sa nature.
+        rangement = regles.decider(
+            fiche("scan001.pdf"), CONFIG, "modification",
+            texte=regles.matiere_a_theme("scan001.pdf", "AVIS DE TAXE FONCIÈRE 2024"))
+        self.assertEqual(rangement.destination.parent,
+                         Path("Documents/Administratif/Impôts"))
+
+
+class TestAccents(unittest.TestCase):
+    def test_un_document_sans_accents_trouve_quand_meme_son_theme(self):
+        # Un OCR, un vieux PDF ou un encodage approximatif rendent « fonciere ».
+        # Comparer les formes accentuées ferait manquer le thème en silence.
+        trouve = regles.theme("avis de taxe fonciere 2024", CONFIG["classement"]["themes"])
+        self.assertEqual(trouve["nom"], "Impôts")
+
+    def test_un_mot_cle_accentue_reconnait_un_texte_accentue(self):
+        trouve = regles.theme("AVIS DE TAXE FONCIÈRE", CONFIG["classement"]["themes"])
+        self.assertEqual(trouve["nom"], "Impôts")
 
 
 class TestDossiersAParcourir(unittest.TestCase):
@@ -133,7 +178,7 @@ class TestCompter(unittest.TestCase):
         rangements = [
             regles.decider(fiche("a.jpg"), CONFIG, "exif"),
             regles.decider(fiche("b.jpg"), CONFIG, "exif"),
-            regles.decider(fiche("c.odp"), CONFIG, "exif"),
+            regles.decider(fiche("c.inconnu"), CONFIG, "exif"),
         ]
         self.assertEqual(regles.compter(rangements), {"Photos/2024/03 - mars": 2})
 

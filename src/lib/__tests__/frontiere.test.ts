@@ -38,9 +38,12 @@ test('le moteur n’importe rien du module de licence', () => {
    * éteint, et la licence pilote ce que l'interface propose, jamais ce que le
    * moteur fait d'un fichier.
    *
-   * Ce test passe aujourd'hui parce que le module n'existe pas encore. C'est
-   * précisément le moment de l'écrire : posé après coup, il constate une
-   * frontière déjà franchie au lieu de l'empêcher.
+   * Le module existe désormais — `src/licence/` — et ce test ne passe donc plus
+   * par défaut : il mesure. Le moteur ne l'importe nulle part ; le seul
+   * importateur est `src/components/Studio.tsx`, c'est-à-dire l'interface, et
+   * c'est exactement le sens autorisé. Vérifié en le cassant exprès : un
+   * `import ... from '@/licence/types'` posé dans `src/lib/timeline.ts` fait
+   * échouer ce test-ci et lui seul.
    */
   const coupables: string[] = [];
   for (const dossier of MOTEUR) {
@@ -65,6 +68,7 @@ test('le moteur n’importe rien du module de licence', () => {
  * l'est pas.
  */
 const FETCH_AUTORISES: Record<string, string> = {
+  'src/lib/audioHorsLigne.ts': 'relit un lien objet pour décoder le mixage de l’export hors ligne',
   'src/lib/voice.ts': 'relit un lien objet pour décoder la voix hors ligne',
   'src/lib/persistence.ts': 'relit un lien objet pour ranger le fichier dans IndexedDB',
 };

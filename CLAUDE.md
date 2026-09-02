@@ -8,9 +8,11 @@ Autonomie totale, zéro permission. Tu construis, tu vérifies, tu montres. 80 %
 
 **Cette autonomie vaut pour ce qui naît** : un fichier neuf, une compétence
 neuve, un projet neuf. Dès qu'un geste **touche à de l'existant**, le §0 bis
-prend le relais et impose de cartographier avant d'écrire. Les deux ne se
-contredisent pas : on garde la vitesse là où rien ne peut être écrasé, et le
-frein là où quelque chose peut l'être.
+prend le relais : cartographier avant d'écrire, **et annoncer le menu du lot
+avant la première écriture**. Résumer §0 bis à la seule cartographie en
+retirerait la moitié qui attend une réponse. Les deux ne se contredisent pas :
+on garde la vitesse là où rien ne peut être écrasé, et le frein là où quelque
+chose peut l'être.
 
 Trois exceptions, et elles seules : ce qui part **en public au nom d'Erwann**
 (48 000 membres, une réponse publiée ne se retire pas), ce qui **détruit sans
@@ -19,9 +21,17 @@ retour**, ce qui **engage de l'argent**.
 **L'autonomie porte sur l'action, jamais sur l'écrasement.** Zéro permission ne
 veut pas dire écrire à l'aveugle : ce qu'on remplace, on regarde d'abord qui en
 dépend ; ce qu'on écrit, on vérifie d'abord que ça n'existe pas déjà. Les deux
-gestes tiennent en un `grep` et sont détaillés en section 10. Ils ne deviennent
-jamais une question : on cartographie, on tranche, on avance — la découverte
-remplace la supposition, pas l'action.
+gestes tiennent en un `grep` et sont détaillés en section 10.
+
+**Ces deux gestes-là ne deviennent jamais une question** : cartographier et
+chercher un doublon sont libres et se font sans rien demander — la découverte
+remplace la supposition, pas l'action. Ce qui passe par le menu du §0 bis, c'est
+l'**écriture** qui suit, et seulement quand elle touche à de l'existant.
+
+La distinction n'est pas un détail de rédaction : les confondre dans un sens
+suspend la lecture jusqu'au réveil, ce que le §0 bis refuse en propres termes ;
+les confondre dans l'autre fait écrire sur de l'existant sans que personne ait
+vu passer le geste.
 
 Agents parallèles et `TodoWrite` quand la tâche le mérite — pas par défaut :
 cinq agents sur une tâche simple brûlent la fenêtre hebdomadaire. `/jauge` avant
@@ -42,6 +52,28 @@ jamais le reste du chantier.
 
 Un compte rendu se donne au passé, sur ce qui est fusionné. « Je vais faire »
 n'est pas un compte rendu, c'est une pause.
+
+**Et un fichier se livre, il ne se décrit pas.** Le pilotage se fait depuis un
+téléphone : un fichier qu'on ne peut pas ouvrir en deux gestes est un fichier
+perdu. Dès qu'une session produit quelque chose pour le propriétaire — page,
+image, document, export, planche — elle le lui **envoie**, directement
+téléchargeable. Il l'ouvre, il voit le rendu, il le télécharge, il le transmet
+ailleurs. C'est la seule forme qui traverse les trois étapes.
+
+Ce qui accompagne l'envoi, et qui n'est pas facultatif :
+
+- le **chemin exact dans le dépôt**, depuis la racine — jamais « dans le
+  dossier des images » ;
+- pour un fichier versionné, le **lien GitHub direct vers ce fichier**, sur sa
+  branche. Pas le lien du dossier, pas celui de la PR ;
+- pour une page en ligne, l'**adresse complète en https, seule sur sa ligne**,
+  sans texte autour — elle doit se copier d'un appui long.
+
+« Tu le trouveras dans la branche », « voir la PR », « c'est dans le dossier » :
+ces formulations font naviguer à l'aveugle sur un écran de six pouces, et le
+fichier n'est jamais ouvert. **Une session qui ne peut pas produire le lien le
+dit franchement et explique pourquoi**, plutôt que de décrire vaguement un
+emplacement — une adresse approximative coûte plus qu'une absence d'adresse.
 
 **Ce régime a été remis en question et reconduit, le 29/08/2026.** Un gabarit
 « Lead Architect » proposait de le remplacer par un mode où l'agent liste les
@@ -110,6 +142,18 @@ chacun, ce qui reste intact. Puis attendre le feu vert.
 
 Ce menu n'est pas une politesse, c'est le dernier moment où une erreur de
 compréhension coûte une phrase au lieu d'un correctif.
+
+**Et « go » a un sens fixé.** Ce mot-là, en réponse à un menu ou à une
+proposition déjà posée, veut dire : feu vert, on continue ce qui a été proposé
+ou déjà entamé. S'il restait plusieurs façons de continuer, prendre la
+meilleure pour le propriétaire et avancer — ne pas revenir avec une question
+supplémentaire sur ce qui était déjà sur la table.
+
+Ça ne déplace pas la frontière d'avant : une vraie fourche qui n'a **jamais été
+posée** — deux visions différentes découvertes en cours de route, par exemple —
+reste ce que le §0 appelle une décision de produit, et se nomme avant qu'on
+choisisse à la place du propriétaire. « Go » referme un menu déjà ouvert ; il
+n'en ouvre pas un nouveau à sa place.
 
 ### 4. Un doublon arrête le geste
 
@@ -216,7 +260,7 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   il ne touche à aucun média — voir plus bas.
 - **agence/** — Next.js 16, Supabase (PostgreSQL + RLS), Server Actions, shadcn.
   Se vérifie depuis son dossier, jamais depuis la racine.
-- **artisan-express/** — page de vente du site vitrine artisan à 299 €. Next.js
+- **artisan-express/** — page de vente du site vitrine artisan à 300 €. Next.js
   16, Tailwind v4, aucune dépendance ajoutée : ni SDK de courriel, ni
   bibliothèque d'icônes. Le formulaire poste sur `/api/devis`, qui envoie un
   courriel et n'enregistre rien. Ce qui n'est pas réglé — téléphone, WhatsApp,
@@ -257,7 +301,13 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   pas de contrat à auditer, et exiger une adresse pour LINK/USDT lui interdisait
   tout achat à chaque passe.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
-  sa promesse. Deux routes, une table de deux colonnes utiles, **zéro
+  sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
+  reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de
+  session. Le verbe s'écrit dans les accents graves à dessein : `/coherence-depot`
+  lit toute barre oblique suivie d'un nom, entre accents graves, comme une
+  compétence — une route documentée sans son verbe s'y fait donc signaler comme
+  compétence disparue.
+  Une table de deux colonnes utiles, **zéro
   dépendance** : la plateforme fournit `Request`, `Response` et `crypto.subtle`.
   Il sait deux choses — cette clé est-elle authentique, ce paiement tient-il
   toujours — et **aucun média ne l'atteint jamais**.
@@ -316,9 +366,72 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 - **hypersensible-bienveillance/** — Astro + Cloudflare Pages, D1, R2, un
   Worker cron. Se vérifie depuis son dossier ; ses décisions et ses pièges
   sont dans son `public/llms.txt`, pas ici.
-- **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — deux
-  chantiers en sommeil : `mon-app-audio/` et `patrimoine/`, tests verts, mis de
-  côté et non abandonnés.
+- **motion/** — les habillages animés des séries verticales, en Remotion 4 :
+  titres, cartons, logos, rendus en 1080 × 1920 à 30 i/s puis posés sur les
+  rushes dans CapCut en mode de fusion « Écran ». Le fond noir y tient lieu de
+  canal alpha, parce que CapCut Android ouvre le H.264 sans discuter là où son
+  support du WebM alpha est incertain. **La zone sûre est câblée dans le
+  code** — boîte fixe à 22–88 % de large, texte qui passe à la ligne au lieu
+  de s'étirer : c'est ce qui rend impossible le défaut de l'épisode 1, où un
+  titre trop long avait été étiré de 9,8 % à 94,7 % et se faisait manger par
+  les boutons de Facebook. **`remotion render` télécharge son Chrome depuis
+  `remotion.media`, que le mandataire refuse** : désigner le `headless_shell`
+  de Playwright avec `--browser-executable`, et non le `chromium` complet, qui
+  échoue sans dire pourquoi. Se vérifie depuis son dossier.
+- **chat-traducteur/** — traducteur de miaulements, Python. Deux étages, et le
+  premier est un **veto** : YAMNet en TFLite (4,1 Mo, `storage.googleapis.com`,
+  car `tfhub.dev`, `kaggle.com` et `huggingface.co` rendent `000`) dit si c'est
+  un chat ; rien ne cherche d'intention avant. Le modèle public livre déjà la
+  moitié du produit et la livre **mesurée** — il nomme lui-même `Purr`, `Hiss`
+  et `Caterwaul`, soit *contentement* et *stress*. Faim et envie de sortir sont
+  deux façons de miauler qu'aucun modèle public ne sépare : l'application rend
+  `indécis`, avec son propre écran, plutôt qu'un pourcentage inventé.
+  **`Cat` ouvre la porte et ne choisit jamais** — c'est une classe parente, qui
+  vaut 0,988 là où `Meow` vaut 0,891 ; la laisser concourir perdait la lecture
+  directe à tous les coups, et six tests verts ne le voyaient pas. Le noyau est
+  en bibliothèque standard **pure** : 20 tests en 1 ms sans rien installer.
+  CatMeows n'est pas récupérable d'ici (Zenodo refusé) et ses trois contextes
+  ne sont pas les quatre intentions visées. Se vérifie depuis la racine.
+- **conseiller-patrimoine/** — la vue d'ensemble du patrimoine, **en lecture
+  seule stricte**. Il lit, il ne touche à rien : ni ordre, ni portefeuille, ni un
+  seul fichier de NexusCrypto ou du radar. Une dépendance — PyYAML — et le
+  raisonnement entier en bibliothèque standard pure.
+  **Ce qu'il faut savoir avant de s'étonner d'un total : NexusCrypto ne persiste
+  aucune position.** Son portefeuille naît en mémoire à `capital_initial_usd` et
+  meurt avec le processus ; seuls se lisent son allocation *cible* et ses
+  journaux. Présenter cette cible comme une détention afficherait un patrimoine
+  imaginaire et parfaitement plausible — d'où la poche crypto saisie à la main,
+  comme le reste. Le radar, lui, a une vraie mémoire, mais une pépite repérée
+  n'est pas une pépite détenue : ses trouvailles sortent en notes, jamais dans le
+  total.
+  **La lecture seule est vérifiée, pas promise** : zéro dépendance réseau, base
+  SQLite ouverte en `mode=ro`, porte unique vers l'environnement, et un test qui
+  relit le source du paquet pour refuser `requests`, `ccxt`, `yfinance`, un accès
+  à `os.environ` hors de cette porte, une manipulation de `sys.path` ou une
+  écriture disque — y compris dans un fichier écrit demain. Les quatre refus ont
+  été éprouvés en injectant les quatre violations. Un accès bancaire futur sera
+  en portée **AISP** (consultation), jamais **PISP** (initiation de paiement).
+  Il **absorbe** l'assistant d'allocation qui dormait sous `archives-backlog/`,
+  ses 27 tests compris — le dossier a été retiré, et sa fiche
+  `archives-backlog/assistant-patrimoine.md` dit ce qui a été repris et pourquoi.
+  Se vérifie depuis son dossier.
+- **visual_library/** — catalogue de références visuelles : LUT, étalonnages,
+  planches de contact, et les paniers à importer dans DaVinci et Premiere.
+  1117 lignes de Python, cinq dépendances, et **18 tests verts** depuis le
+  01/09/2026 au soir. Il n'était déclaré nulle part avant l'audit du même jour,
+  et il est passé de « plus gros chantier nu du dépôt » à entièrement gardé en
+  une nuit : le hook l'installe et annonce sa suite, et `verifier.sh` la lance.
+  **Son nom n'apparaît pourtant dans aucun des deux** — `verifier.sh` découvre
+  les suites Python au lieu de les énumérer, si bien qu'un `grep` sur le nom du
+  projet rend zéro et laisse croire qu'il est ignoré. Mesurer ce que la
+  découverte rend, jamais chercher le nom.
+  Ce que ses tests gardent vaut au-delà de lui : un calque conforme à l'écran de
+  montage **disparaît sur un téléphone en plein jour**, exactement comme un
+  mixage conforme au casque devient inaudible. Le garder, l'archiver ou le
+  retirer n'est toujours pas tranché.
+- **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
+  chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
+  abandonné.
 
 Build vert obligatoire avant toute poussée.
 
@@ -422,14 +535,25 @@ sert dans la foulée. Trois par session au plus. Vérifier la doc officielle ava
 d'écrire contre une API : `/api-tierce-verifiee`.
 
 Avant de promettre un résultat qui dépend du réseau ou d'un outil :
-`/capacites-session`. Aujourd'hui **ni clé fal.ai, ni clé ElevenLabs** — mais la
-**voix off, elle, se fabrique** : `bande-son/scripts/voix.py`, par sherpa-onnx,
-modèle pris en release GitHub, 25× le temps réel et rien qui sorte de la
-machine. Deux chemins avaient été essayés et déclarés impossibles ; c'est le
-troisième qui répond.
-`fal-flux-image`, `fal-luma-video`, `fal-upscaler`, `eleven-sfx` se construisent
-le jour où les clés arrivent : une compétence qui ne peut pas tourner est un
-mensonge dans la liste.
+`/capacites-session`. La **voix off se fabrique** : `bande-son/scripts/voix.py`,
+par sherpa-onnx, modèle pris en release GitHub, 25× le temps réel et rien qui
+sorte de la machine. Deux chemins avaient été essayés et déclarés impossibles ;
+c'est le troisième qui répond.
+
+**Et depuis le 01/09/2026, ce n'est plus la clé qui manque, c'est l'hôte.** Une
+clé ElevenLabs à accès complet existe — et `api.elevenlabs.io` est refusé par
+le mandataire, `connect_rejected`, comme `mcp.hedra.com`. Le tunnel est refusé
+**avant** qu'une requête HTTP existe, donc avant toute authentification : une
+clé n'y change rien, et il ne sert à rien d'en demander une.
+
+Ce déplacement change la parade, pas la conclusion. **PyPI est joignable**,
+donc le SDK officiel s'installe et sa surface se lit : le code s'écrit contre
+l'API réelle, s'éprouve sur tout ce qui ne touche pas au réseau, et tourne sur
+la machine du propriétaire. `bande-son/scripts/eleven_sfx.py` est écrit ainsi.
+`fal-flux-image`, `fal-luma-video`, `fal-upscaler` restent à construire sur ce
+modèle — une compétence qui ne peut pas tourner est un mensonge dans la liste,
+mais une compétence qui tourne ailleurs qu'ici n'en est pas un, à condition de
+dire où.
 
 **Et pour l'image, les quatre chemins sont fermés, mesuré le 29/08/2026.** Ce
 n'est pas qu'une clé manque : `torch` et `diffusers` sont absents, donc aucune
@@ -441,9 +565,94 @@ là. **Et le connecteur Adobe n'y change rien** : sa documentation dit en clair
 que la génération d'image y est indisponible, seul l'agrandissement de cadre
 (`image_generative_expand`) subsiste et il part d'une image existante. Adobe
 retouche, recadre, détoure, vectorise et met en page — il ne fait pas la
-première image. **Une session ne peut donc pas fabriquer une illustration**, et
-c'est ce qui bloque le tome 1 de KDP : il lui manque une planche et une
-couverture, et rien d'autre.
+première image.
+
+**Cette phrase disait « une session ne peut donc pas fabriquer une
+illustration ». Elle est fausse depuis le 01/09/2026, et voici l'image qui le
+prouve.** Le connecteur MCP **ElevenLabs** génère : une illustration a été
+produite depuis une session distante — druide de dos sur une crête volcanique,
+1344 × 768, modèle `gemini-2.5-flash-image`, **4,57 centimes, dix secondes**.
+
+Ce qui débloque n'est ni une clé ni un hôte ouvert, et c'est ce qui rend la
+leçon transposable : **le trafic d'un connecteur MCP ne passe pas par la liste
+de domaines de l'environnement.** L'API directe d'ElevenLabs reste refusée au
+tunnel — mesuré le même jour — pendant que son connecteur travaille. Chercher à
+ouvrir `*.elevenlabs.io` dans la politique réseau était donc inutile pour cet
+usage-là.
+
+Le connecteur porte 22 modèles d'image, 47 de vidéo (Veo, Sora, Kling,
+Seedance, Runway, jusqu'en 4K avec audio), le **lipsync** — Sync 3, Veed,
+OmniHuman, c'est-à-dire le remplaçant de Wav2Lip —, les bruitages, la musique,
+la voix, la transcription Scribe et un montage en frise.
+
+**Le piège, relevé au premier essai : le rapport d'image sort en 16:9.** Il
+vaut 16:9 par défaut et l'outil de génération **ne l'expose pas** — il se règle
+sur le nœud du flux. Une série verticale demande donc un passage par le flux,
+sans quoi on paie une image inutilisable qui a pourtant l'air réussie.
+
+**Et le chemin du flux est barré depuis une session distante — mesuré le
+02/09/2026.** Le paramètre existe bien : `aspect_ratio`, valeur par défaut
+`16:9`, avec `9:16`, `2:3` et `3:4` dans la liste — vérifié sur
+`gemini-2.5-flash-image` comme sur `gpt-image-2`, et **les deux ont le même
+défaut paysage**. Mais l'outil de génération directe ne le prend pas : il faut
+`creative_update_node` pour poser le rapport, puis `creative_run_flow_nodes`
+pour lancer — et **c'est ce second appel que le classificateur de session
+refuse**, là où la génération directe passe.
+
+La conséquence est pratique et vaut d'être sue avant de promettre une planche :
+depuis une session distante, on sait **fabriquer une image**, on ne sait pas
+**choisir son cadrage**. Le nœud se configure ici, et se lance d'un clic sur la
+page du flux. Un cadrage demandé dans le texte du prompt ne suffit pas — « composition
+verticale » a été ignoré et l'image est sortie en 1344 × 768.
+
+Ce qui n'est **pas** mesuré et ne doit pas être supposé : le 9:16 réellement
+obtenu, la génération vidéo, le lipsync, et le quota du compte.
+
+**Et un sixième s'est ouvert le 01/09/2026 : l'API Gemini répond.**
+`generativelanguage.googleapis.com` rend 404 sur `/` et 403 sur `/v1beta/models`,
+avec le JSON « Please use API Key » — de vraies réponses HTTP, là où
+ElevenLabs et Hedra n'accordent même pas le tunnel. Une clé y servira donc
+réellement, et le SDK `google-genai` s'installe depuis PyPI.
+
+**Ce qui est mesuré s'arrête là, et la ligne suivante existe pour l'empêcher
+d'être étendue.** Ont été vérifiés : l'hôte répond, la route existe, l'API
+réclame une clé. N'ont été vérifiés ni le quota du palier sans frais, ni
+qu'une image en sorte, ni sa résolution, ni qu'elle tienne une charte
+graphique. Le paragraphe ci-dessus sur les quatre chemins fermés reste vrai
+pour ce qu'il mesure — `fal.run`, `api.openai.com`, `api.stability.ai`,
+`image.pollinations.ai`, `huggingface.co` — et sa conséquence « une session ne
+peut pas fabriquer une illustration » redevient **une question ouverte**, pas
+une réponse. C'est le premier essai avec la clé qui tranchera.
+
+**Un cinquième chemin existe, et il répond — mesuré le 31/08/2026.** Le
+connecteur **Canva** est joignable depuis une session distante : son outil de
+génération se charge et son schéma s'obtient. Il n'était dans aucune des quatre
+mesures ci-dessus, qui restent vraies pour ce qu'elles couvrent.
+
+Ce qui est mesuré, et rien de plus : **le serveur répond et l'outil est
+appelable**. N'ont été vérifiés ni le quota réel du compte, ni la résolution
+rendue, ni qu'une illustration exploitable en sorte — et surtout pas qu'elle
+tienne une charte graphique existante. Une prochaine session qui lit « Canva
+marche » et promet une planche referait l'erreur que la ligne suivante décrit.
+
+Le premier essai coûte donc quelque chose : si le compte gratuit est limité,
+chaque génération est prise sur un stock fini. **Demander avant de la
+dépenser.**
+
+**Mais cela ne bloque pas le tome 1 de KDP, et la phrase qui le disait était
+fausse — mesuré le 31/08/2026.** La chaîne a été relancée de bout en bout :
+30 pages, aucun carton d'attente, **9 contrôles sur 9 au vert, verdict
+PUBLIABLE**, sans une seule image neuve. La planche jamais dessinée — page 15,
+*Le secret de l'hermine* — est racontée en prose vectorielle par `page12.py`,
+et la couverture a un provisoire qui passe les cinq contrôles de vignette. Le
+compte exact des planches et le chemin le moins cher jusqu'au dépôt sont dans
+`kdp/README.md`.
+
+La leçon vaut au-delà de KDP : **une impossibilité mesurée ne rend vrai que ce
+qu'elle mesure.** Les quatre chemins d'image sont bien fermés ; ce qui était
+faux, c'est la conséquence qu'on en avait tirée — et une conséquence fausse
+attachée à une mesure juste se relit comme si elle avait été mesurée elle
+aussi.
 
 **La transcription, elle, marche** — et ce blocage-ci a coûté deux sessions
 avant d'être levé. `huggingface.co` est refusé par le mandataire, comme
@@ -544,12 +753,152 @@ doit connaître s'écrit et se fusionne — elle ne s'envoie pas. C'est aussi ce
 rend la fusion rapide utile au-delà des conflits : tant qu'un lot n'est pas sur
 `main`, il n'existe pour personne d'autre.
 
+**Mais on peut voir si le PC tourne, et c'est ce qu'il faut faire avant de
+déclarer un mur.** `list_sessions` le dit en une ligne :
+
+| Dans la fiche | Ce que c'est |
+| --- | --- |
+| `environment_kind: bridge` + `origin: claude_code_cli` | **le PC** |
+| `environment_kind: anthropic_cloud`, origine `android` ou `claude_code_mcp_seed` | un conteneur distant |
+| `connection_status: connected` | elle tourne **maintenant** |
+
+Voir n'est pas joindre : le paragraphe ci-dessus tient toujours, on ne lui parle
+pas. Le geste est donc de **nommer la session au propriétaire** — son
+identifiant et son titre — avec la tâche exacte à y reprendre, et de continuer
+sur ce qui ne dépend pas d'elle. C'est lui qui bascule d'un fil à l'autre ; ça
+lui coûte un geste, là où une impossibilité annoncée lui coûte la tâche.
+
+**Et le PC n'est pas d'office le meilleur endroit** : les deux murs ne sont pas
+les mêmes. Mesuré le 01/09/2026 sur l'agrandissement d'images — le PC tournait
+sur Python 3.14, où `basicsr` casse à l'import ; le conteneur distant sur 3.11,
+où il passe, mais sans carte graphique et derrière un mandataire qui refuse
+`download.pytorch.org` (la roue CPU allégée) tout en laissant passer PyPI et les
+objets de release GitHub. Router vers le PC est donc un **choix**, pas un
+réflexe : on regarde lequel des deux peut faire le travail, et on le dit.
+
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
+
+**Un blocage levé se reprend, il ne se constate pas.** Un hôte refusé qui répond
+de nouveau, un connecteur qui retrouve ses outils, une clé qui marche enfin : la
+session qui l'observe reprend dans la foulée la tâche que ce blocage retenait —
+elle ne part pas sur une mesure ou une vérification annexe en laissant la tâche
+réelle en attente. Le re-sondage de `/capacites-session` sert à corriger une
+promesse, pas à remplacer le travail qu'il vient de débloquer. Trouvé le
+01/09/2026 : les 475 outils MCP sont revenus pendant qu'une session attendait
+sur une tâche vidéo — elle l'a noté, puis est partie mesurer la documentation au
+lieu de reprendre la vidéo. Le geste juste : noter en une phrase, puis reprendre
+immédiatement ce qui était en attente.
+
+## 7 bis. MULTIMÉDIA — DOCUMENTATIONS ET DIRECTIVES
+
+Numéroté « 7 bis » pour la même raison que le « 0 bis » : d'autres fichiers
+citent les sections par leur numéro, et renuméroter casserait ces renvois en
+silence.
+
+### 📚 Nouvelles documentations (à charger via `/page` en cas de besoin)
+
+**`/page` n'existe pas dans ce dépôt** — `/coherence-depot` le signale, et
+aucune compétence ne porte ce nom. Le mécanisme de chargement reste donc à
+définir : soit une commande intégrée du client, soit une compétence à écrire.
+En attendant, une documentation se lit par `curl` — quand son hôte répond, ce
+qui n'est le cas d'aucune de celles-ci depuis une session distante.
+
+- **Vidéo** : https://ffmpeg.org · https://replicate.com
+- **Image** : https://readthedocs.org · https://sharp.pixelplumbing.com · https://developer.mozilla.org
+- **Audio** : https://developer.mozilla.org · https://elevenlabs.io · https://librosa.org
+- **Web** : https://tailwindcss.com · https://developer.mozilla.org · https://nextjs.org
+
+**Aucune de ces adresses n'est joignable depuis une session distante.** Les
+treize ont été sondées le 01/09/2026 : toutes rendent `000`,
+`connect_rejected`. `/page` ne les chargera donc pas ici — elles servent sur la
+machine du propriétaire, ou après ouverture de la politique réseau de
+l'environnement.
+
+Quatre corrections apportées à la liste d'origine, parce qu'une adresse fausse
+fait chercher au mauvais endroit :
+
+| écrit | réel |
+| --- | --- |
+| `github.io` | ce n'est pas un site : c'est le suffixe des pages GitHub |
+| `readthedocs.io` | `readthedocs.org` — le `.io` est le suffixe d'hébergement |
+| `mozilla.org` | `developer.mozilla.org` — MDN vit là, pas sur la racine |
+| `pixelplumbing.com` | `sharp.pixelplumbing.com` — la doc de Sharp est le sous-domaine |
+
+### 🎯 Directives de production multimédia
+
+- **Vidéo** : MoviePy pour les scripts simples, ou des commandes FFmpeg brutes
+  au terminal pour l'encodage et la compression. API Replicate pour la
+  génération par IA.
+- **Image** : traitement par lot avec Pillow (Python) ou Sharp (Node.js). SVG
+  propre pour les icônes et illustrations web.
+- **Audio** : appels ElevenLabs structurés pour la voix IA, et Librosa en
+  Python pour synchroniser l'audio sur le tempo (BPM) de la vidéo.
+- **Web** : JavaScript/TypeScript moderne selon MDN, Tailwind CSS pour les
+  interfaces, Next.js ou Vite selon le projet.
+
+### Ce que la machine porte réellement, mesuré le 01/09/2026
+
+| outil | état ici | conséquence |
+| --- | --- | --- |
+| **Librosa** | **0.11.0 présent** | la synchronisation au BPM se fait d'ici, sans rien installer |
+| **Pillow** | **12.3.0 présent** | le lot d'images tourne d'ici |
+| **Sharp** | **présent** | idem côté Node |
+| **ffmpeg** | **7.0.2 statique** | attention, ce binaire n'a **ni `drawtext` ni codecs propriétaires** — voir §7 et §10 |
+| **MoviePy** | **absent** | s'installe depuis PyPI, qui est joignable : `pip install moviepy` |
+| **Replicate** | **hôte refusé** | la génération par IA ne passe pas par là ici |
+
+**Et pour la voix IA, deux corrections qui changent le geste :**
+
+`api.elevenlabs.io` est **refusé au tunnel** — une clé n'y sert à rien. Mais
+deux chemins existent, tous deux mesurés :
+
+1. **Le connecteur MCP ElevenLabs fonctionne** — le trafic d'un connecteur ne
+   passe pas par la politique réseau. C'est lui qui a levé l'impossibilité de
+   l'image le 01/09/2026, et il porte aussi la voix, les bruitages, la musique,
+   le lipsync et la transcription.
+2. **La voix off se fabrique déjà sur la machine**, sans réseau ni clé :
+   `bande-son/scripts/voix.py`, par sherpa-onnx, à 25× le temps réel. Y
+   recourir avant de dépenser des crédits pour une voix qu'on a déjà.
+
+Un rappel qui vaut pour tout ce bloc : ce sont des **directives de production**,
+et le §2 les borne toutes. Un son qui vit sous 400 Hz n'existe pas sur un
+téléphone, quel qu'en soit l'outil ; une vidéo verticale se juge entre 12 et
+45 % de hauteur ; et `/master-telephone` passe avant toute publication.
 
 ## 8. DONE, ET CE QU'ON NE FAIT JAMAIS
 
 **Done** = vérification verte + **regardé, pas seulement mesuré** + leçon écrite.
+
+### Les quatre règles de méthode, posées par le propriétaire le 29/08/2026
+
+Elles viennent d'une série de livrables annoncés prêts et qui ne l'étaient pas.
+Leur objectif tient en une phrase : **ne plus faire perdre de temps avec un
+« c'est bon » qui n'en est pas un.**
+
+1. **Ne jamais présenter un livrable comme prêt sans l'avoir vérifié soi-même,
+   en entier et en détail** — pas seulement constaté que l'exécution technique
+   s'est terminée sans erreur. Pour une vidéo : **image par image et son en
+   continu**. Pour un autre livrable : le contrôle équivalent, adapté à sa
+   nature. « Le rendu s'est terminé » n'est pas une vérification, c'est
+   l'absence de plantage.
+2. **Ne jamais repartir d'une version antérieure ni d'une base différente de la
+   dernière version validée** — même partiellement, même pour un correctif
+   ciblé. On part toujours de ce qui est demandé dans l'instant. Reprendre une
+   base plus ancienne ramène des défauts déjà corrigés, et c'est invisible dans
+   un diff qui ne montre que le correctif.
+3. **Si un élément déjà validé disparaît ou change par erreur, le corriger
+   soi-même, immédiatement**, pour rester fidèle à la dernière version validée.
+   Sans redemander confirmation : une voix synchronisée ou des sous-titres qui
+   sautent en cours de route ne sont pas une question, ce sont une régression.
+4. **En cas de doute sur la conformité, corriger AVANT de livrer, jamais
+   après.** Le doute est une raison de vérifier, pas une raison de livrer en
+   prévenant.
+
+**Ce que ces règles ne suspendent pas :** le §0 continue de valoir — on n'attend
+pas la permission pour corriger, on corrige. Elles ne rendent pas le travail
+plus lent, elles déplacent la vérification **avant** l'annonce au lieu
+d'**après** le rejet.
 
 Le « regardé » n'est pas décoratif : six montages ont été livrés en une nuit,
 chacun mesuré conforme, chacun rejeté à l'écoute. Le défaut se voyait en une
@@ -668,6 +1017,31 @@ Le hook `.claude/hooks/session-start.sh` installe tout seul. Pas de compétence
 Après avoir ajouté un projet, une compétence ou un agent : `/coherence-depot`.
 C'est le geste qui rend la documentation fausse.
 
+## 9 bis. RÈGLE D'ARCHIVAGE
+
+Numéroté « 9 bis » pour la même raison que « 0 bis » et « 7 bis » : ne pas
+décaler les sections qui suivent.
+
+**Quand Erwann dit simplement « archive », sans autre précision, cela signifie :
+clore la session de conversation en cours et en ouvrir une nouvelle.** Pas
+archiver un fichier, une PR ou une session distante précise — ces demandes-là
+se disent autrement et se traitent autrement. « archive » seul, c'est le geste
+du `/relais` : ce skill porte déjà la mécanique (rassembler l'état depuis le
+dépôt, jamais de mémoire ; ce qu'on ne ferme pas ; le gabarit du résumé) et
+cette section ne la duplique pas — elle en fait un déclencheur explicite.
+
+Avant de clore, un message final qui résume : l'état d'avancement, ce qui
+reste à faire, et toute information nécessaire pour reprendre sans perte de
+contexte — le gabarit exact est celui de `/relais` (but à terme, où on en est,
+le prochain pas, ce qu'il faut savoir, où c'est écrit). Ce résumé se construit
+depuis le dépôt (branche, PR ouvertes, `git status`), jamais depuis le souvenir
+de la conversation.
+
+**La nouvelle session doit pouvoir démarrer directement avec ce résumé**, sans
+qu'Erwann ait à tout retaper. Comme pour tout ce qui se livre à lui (§0) : le
+résumé part en fichier téléchargeable, pas seulement affiché dans le message —
+il lui suffit de l'ouvrir et de le coller en premier message du fil suivant.
+
 ## 10. CONTEXTE PROJET CONSERVÉ
 
 ### Commandes
@@ -679,7 +1053,10 @@ verdict par projet suivi de ce qu'elle ne couvre pas.
 
 `npm run dev | build | typecheck | lint | test` — Amorce. `npm run fixtures`
 puis `npm run verify` : parcours complet dans un vrai Chromium, plus
-`verify:reprise`, `verify:partage` et `verify:images`. Les tests unitaires ne
+`verify:reprise`, `verify:partage`, `verify:images` et `verify:licence`.
+Ce dernier est **exclusif** — il construit le paquet de production et sert
+l'application lui-même, donc il ne se lance pas pendant qu'un `npm run dev`
+tourne, contrairement aux autres. Les tests unitaires ne
 voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
@@ -735,6 +1112,15 @@ disaient pas.
 - Les deux couches d'un impact **partagent** le niveau, sans quoi le limiteur
   fait pomper tout le mixage.
 - L'export MP4 n'existe que sous Chrome et Edge : ne pas supposer l'extension.
+- **L'export encode hors ligne, image par image**, et ne filme plus l'aperçu.
+  Aucune image ne peut donc manquer, quel que soit l'appareil — c'est ce qui a
+  remplacé un export mesuré à 12,7 images par seconde au lieu de 30. Le chemin
+  temps réel reste en repli pour les navigateurs sans WebCodecs, et c'est le
+  seul cas où la cadence peut encore se perdre.
+- **Un Chromium libre n'a pas les codecs propriétaires.** Sondé : il refuse
+  toutes les chaînes `avc1` à l'encodage comme au décodage, et l'AAC, et ne
+  garde que VP9, AV1 et Opus. Rien qui touche au H.264 ne se départage donc sur
+  la machine de vérification — seulement sur un vrai appareil.
 
 ### Modifier ce dépôt
 
@@ -832,6 +1218,59 @@ fichier, chacun résolu à la main. Fusionner tôt les évite tous.
 plusieurs sessions en parallèle, et quelques heures suffisent à périmer une
 branche. Ce qui est fusionné gagne, toujours. `/branche-partagee` en cas de
 doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
+
+### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
+
+**Trois** projets Vercel sont branchés sur ce dépôt : `amorce` (racine),
+`amorce-51up` (dossier `artisan-express`), `iptv`. Ils étaient quatre jusqu'au
+31/08/2026 — `nexuscrypto` a été supprimé côté Vercel ce jour-là, ce qui retire
+un quart de la consommation. Les mesures datées de ce jour-là, dans `/debloquer`,
+portent donc sur **quatre** projets et restent lues telles quelles. **Chacun se
+déclenche sur chaque commit tant qu'il ne filtre pas par chemin**, et le palier
+gratuit plafonne à cent déploiements par jour — **crevé trois fois**. La
+seconde à 80 fusions seulement, parce que le nombre de projets avait doublé
+dans la nuit. La troisième le **01/09/2026**, à **18 PR fusionnées** dans la
+journée : trois projets branchés, chacun déclenché sur chaque commit, plus les
+commits de fusion — le compte y est sans qu'aucune journée n'ait paru
+exceptionnelle.
+
+**Ce que ça change en pratique : rien sur le code, tout sur la lecture des
+rouges.** Une fois le quota crevé, Vercel refuse *avant* que l'`ignoreCommand`
+tourne, donc le filtre de chemins n'y peut rien — c'est déjà écrit trois
+paragraphes plus bas, et c'est cette journée-ci qui l'a confirmé une troisième
+fois. Le message est explicite quand on le lit : « Resource is limited - try
+again in 24 hours (more than 100, code: api-deployments-free-per-day) ».
+
+Le seuil utile à retenir est donc **une vingtaine de fusions par jour**, pas
+cent : chaque fusion vaut trois déploiements ou plus.
+
+D'où le filtre : chaque projet porte un `vercel.json` dont l'`ignoreCommand`
+appelle `scripts/vercel-ignorer.sh` avec les chemins qui le concernent. Deux
+choses à en retenir, et elles se paient toutes les deux en silence :
+
+- **Un projet Vercel qui arrive n'a pas de `vercel.json`** — il se crée depuis
+  le tableau de bord et ne laisse aucune trace dans Git. Lui en écrire un est le
+  premier geste, sinon il consomme le quota de tous les autres.
+- **Un chemin qui entre dans un build doit entrer dans la liste surveillée.**
+  Un fichier que le build lit mais que le filtre ignore fait servir une version
+  périmée sans qu'aucune ligne rouge n'apparaisse.
+- **Et le filtre n'empêche pas le rouge quand le quota est déjà épuisé.**
+  L'`ignoreCommand` s'exécute dans le conteneur de construction, donc *après* la
+  création du déploiement ; le refus de quota, lui, tombe *avant* — aucun script
+  ne tourne. Mesuré le 31/08/2026 sur deux PR de Markdown à trois minutes
+  d'écart : quatre rouges sur l'une, un « Ignored » vert et trois rouges sur
+  l'autre. Donc un rouge Vercel sur une PR de documentation **n'est pas un
+  signal**, et affiner les chemins surveillés ne desserre rien. Le levier est le
+  **nombre de projets branchés**. Détail et ce qui reste non mesuré dans
+  `/debloquer`.
+
+`nexuscrypto` n'a rien à déployer — ni `package.json`, ni `api/`, et un moteur
+qui tourne en boucle n'a pas sa place sur une plateforme de pages. Son projet
+Vercel a donc été **supprimé** le 31/08/2026. Son `vercel.json` (`exit 0`) est
+néanmoins **conservé**, et ce n'est pas un oubli : ce fichier ne coûte rien et
+il rattrape le piège nommé deux paragraphes plus haut — un projet recréé depuis
+le tableau de bord n'a pas de `vercel.json` et se déclenche sur tout. La raison
+complète est dans `nexuscrypto/README.md` §6 bis.
 
 ### Connecteurs
 

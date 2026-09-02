@@ -1,6 +1,6 @@
 ---
 name: montage-sans-refaire
-description: La liste de contrôle d'un montage vertical, écrite après vingt-cinq versions d'un même épisode livrées et rejetées en une nuit. Chaque ligne est un défaut réel, sa mesure et sa parade. À passer AVANT de rendre un montage — pas après une plainte — et dès qu'une demande dit « ça sature », « on n'entend pas », « ça coupe », « les sous-titres sont mal placés », « c'est trop long », « refais-le », ou dès qu'on s'apprête à livrer une deuxième version du même fichier. À utiliser aussi quand tout paraît juste : la moitié de ces défauts passent toutes les mesures habituelles et ne se voient qu'ici. Ici on relit un montage AVANT de le rendre, toutes causes confondues ; quand le défaut est visuel et tient aux plans qui ne vont pas ensemble — « ça fait amateur », « on dirait des clips collés », un saut de luminosité — c'est `etalonner` qui mesure et corrige.
+description: La liste de contrôle d'un montage vertical, écrite après vingt-cinq versions d'un même épisode livrées et rejetées en une nuit. Chaque ligne est un défaut réel, sa mesure et sa parade. À passer AVANT de rendre un montage — pas après une plainte — et dès qu'une demande dit « ça sature », « on n'entend pas », « ça coupe », « les sous-titres sont mal placés », « c'est trop long », « refais-le », « ils partent au bout de deux secondes », « personne ne regarde jusqu'au bout », ou dès qu'on s'apprête à livrer une deuxième version du même fichier. À utiliser aussi quand tout paraît juste : la moitié de ces défauts passent toutes les mesures habituelles et ne se voient qu'ici. Ici on relit un montage AVANT de le rendre, toutes causes confondues ; quand le défaut est visuel et tient aux plans qui ne vont pas ensemble — « ça fait amateur », « on dirait des clips collés », un saut de luminosité — c'est `etalonner` qui mesure et corrige.
 ---
 
 # Ne pas refaire la vidéo cinquante fois
@@ -252,7 +252,6 @@ Trois causes possibles, dans cet ordre :
 ---
 
 ## 9. Le climax doit être le plan le plus fort, et ça se vérifie
-## 8. Le climax doit être le plan le plus fort, et ça se vérifie
 
 ```bash
 # par section, au-dessus de 400 Hz — si le climax n'est pas en tete,
@@ -269,8 +268,87 @@ dizaine de décibels sous le climax.
 
 ---
 
+## 9 bis. La première demi-seconde est le seul plan que tout le monde voit
+
+Relevé sur l'épisode 1 d'Aznaroth publié le 31/08/2026, par section, filtré
+au-dessus de 400 Hz — c'est-à-dire ce qu'un haut-parleur de téléphone rend :
+
+| section | tout le signal | téléphone | perte |
+| --- | --- | --- | --- |
+| **ouverture (0 → 0,63 s)** | −15,7 dB | **−33,3 dB** | **17,6** |
+| druide | −16,6 | −24,1 | 7,5 |
+| portail | **−9,2** | −21,7 | 12,6 |
+| vortex | −11,9 | −26,5 | 14,7 |
+| dragons | −10,8 | **−19,1** | 8,3 |
+| créature | −14,8 | −28,3 | 13,5 |
+
+Deux choses que seule la colonne « téléphone » dit.
+
+**L'ouverture est quatorze décibels sous le reste du film.** Elle mesure −15,7
+sur tout le signal — dans la moyenne — parce que son énergie est presque
+entièrement sous 400 Hz. Sur l'appareil où la vidéo est regardée, la première
+demi-seconde est **muette**, et c'est la seule que tout le monde voit : celle où
+le pouce décide.
+
+**Le classement s'inverse.** Le plan le plus fort du mixage est le portail
+(−9,2) ; sur un téléphone, c'est la séquence des dragons (−19,1) qui passe
+devant, le portail tombant deuxième. Ici la narration s'en sort — les dragons
+*sont* le climax. Mais le mixage ne le savait pas : il a désigné un autre plan,
+et c'est le filtre du téléphone qui a corrigé par accident.
+
+La règle du point 9 reste vraie et se complète : le climax doit être le plan le
+plus fort **au-dessus de 400 Hz**, et l'ouverture ne doit jamais être la plus
+faible. Les deux se lisent sur le même tableau, qui se tire en une commande.
+
+## 9 ter. Le palier doit arriver avant la moyenne de visionnage
+
+Le défaut le plus coûteux d'un format court ne se voit pas à l'œil, et aucune
+relecture du montage ne le trouve. Il se lit en croisant **deux mesures qui
+vivent à deux endroits différents** : les statistiques de la plateforme et la
+frise du film.
+
+Relevé sur Aznaroth, le 02/09/2026 :
+
+| | |
+| --- | --- |
+| visionnage moyen de l'épisode 1 | **7,4 s** |
+| instant où le dragon apparaît dans l'épisode 2 | **9,87 s** |
+
+La moitié du public partait donc **avant d'avoir vu la créature** — c'est-à-dire
+avant la seule image pour laquelle l'épisode existe. Le montage était bon, les
+plans étaient bons, et le palier arrivait deux secondes et demie trop tard.
+
+**La règle : l'image qui justifie le film se place avant la moyenne de
+visionnage du précédent.** Pas au milieu, pas au climax dramatique — avant le
+chiffre. Sur l'épisode 2 remonté, elle passe de 9,87 s à **4,24 s**.
+
+Deux corollaires, et le second se calcule :
+
+- **Ce qui précède le palier se taille au plus court.** Un portrait fixe de
+  3,7 s en ouverture — mouvement mesuré entre 1,4 et 3,1, quand le portail
+  voisin est à 17 — coûte deux fois : il n'accroche pas, et il retarde ce qui
+  accroche.
+- **Raccourcir le film augmente la complétion sans rien changer d'autre.** À
+  visionnage moyen constant, la part de gens qui atteignent la fin est
+  mécaniquement plus grande sur un film court. L'épisode 1 faisait 7,53 % de
+  complétion sur 17,73 s ; l'épisode 2 est passé de 19,43 s à **10,27 s** par
+  la seule suppression de ce qui ne bouge pas.
+
+**Comment repérer les creux :** l'écart moyen entre images successives, par
+tranche de 0,5 s. Un bloc sous 3 quand ses voisins sont à 12 est un trou, même
+s'il dure une seconde au milieu de l'action — il y en avait un de 11,0 à
+12,0 s, à 5,3, invisible en regardant le film.
+
+```bash
+ffmpeg -v error -y -i film.mp4 -vf "fps=30,scale=160:-1" /tmp/i%04d.png
+# puis, par demi-seconde : la moyenne de |image[n] − image[n−1]|
+```
+
+Ce que ça ne remplace pas : **la courbe de rétention** de la plateforme, qui
+dit *où* les gens partent. Ici on décide avant de l'avoir ; quand elle existe,
+c'est elle qui tranche.
+
 ## 10. Un texte se place où le sujet n'est pas
-## 9. Un texte se place où le sujet n'est pas
 
 ```bash
 python3 montage-auto/placer_texte.py film.mp4 3.0 4.4 5.8
@@ -289,7 +367,6 @@ le texte sur le front, yeux et bouche libres.
 ---
 
 ## 11. Ce qu'on tire d'une image du film hérite de cette image
-## 10. Ce qu'on tire d'une image du film hérite de cette image
 
 Un carton fabriqué depuis la dernière image portait le **titre encore
 incrusté**, figé derrière ses trois lignes : quatre textes empilés. Les deux
@@ -306,7 +383,6 @@ ressortis à −45 dB.
 ---
 
 ## 12. Un ralenti sans interpolation duplique une image sur cinq
-## 11. Un ralenti sans interpolation duplique une image sur cinq
 
 `vitesse: 0.8` sans `interpolation` : ffmpeg tient la cadence en **dupliquant**.
 Mesuré sur le plan du dragon — **29 images figées sur 144**, soit une sur cinq à
@@ -333,10 +409,25 @@ chercher un défaut de son sur un plan ralenti, compter ses images figées.
 ---
 
 ## 13. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
-## 12. Les durées : ce qui ouvre se regarde, ce qui traverse se coupe
 
-- **Une affiche d'ouverture** : le temps de lire son titre, pas plus. 0,6 s
-  gaspille les 0,6 s ; 1,6 s perd le spectateur ; **1,1 s** pour huit lettres.
+- **Jamais d'image fixe ni d'affiche en première seconde. On entre dans le
+  mouvement.** Cette ligne disait le contraire — « le temps de lire son titre,
+  1,1 s pour huit lettres » — et la mesure l'a démentie.
+
+  Relevé sur le teaser du **31/08/2026** : **la moitié de l'audience part avant
+  la deuxième seconde**. Visionnage moyen **4,3 s sur 17**, complétion
+  **3,6 %**. Une affiche ne demande pas au spectateur de patienter une seconde,
+  elle lui demande de décider s'il reste — et il décide non.
+
+  **Et les 63 partages ne sont pas de l'engagement : ce sont les miens.** Un
+  chiffre flatteur au tableau de bord qui ne mesure que sa propre diffusion. Le
+  compter comme un signal aurait fait conclure que le teaser marchait, alors
+  que la courbe de rétention disait l'inverse dans le même écran.
+
+  Ce que ça change en pratique : le premier plan porte du **mouvement dès la
+  première image** — un geste en cours, un travelling déjà lancé, une matière
+  qui bouge. Le titre, s'il en faut un, se pose **par-dessus** ce mouvement, il
+  ne le remplace pas.
 - **Une amorce** (un œil, une texture) ne porte aucune information : courte.
 - Une image qu'on ne peut pas lire ne coûte pas son temps, elle le **gaspille**
   — c'est le pire des deux mondes.
@@ -344,7 +435,6 @@ chercher un défaut de son sur un plan ralenti, compter ses images figées.
 ---
 
 ## 14. Les trois relevés obligatoires, sur le fichier qui part
-## 13. Les trois relevés obligatoires, sur le fichier qui part
 
 Écrits dans `CLAUDE.md` § 8, rappelés ici parce que c'est le moment de les
 faire, et **sur le fichier final**, pas sur celui d'avant :

@@ -47,7 +47,9 @@ RACINE = Path(__file__).resolve().parents[4]
 NOMBRES = {
     "un": 1, "deux": 2, "trois": 3, "quatre": 4, "cinq": 5, "six": 6,
     "sept": 7, "huit": 8, "neuf": 9, "dix": 10, "onze": 11, "douze": 12,
-    "treize": 13, "quatorze": 14, "quinze": 15, "seize": 16, "vingt": 20,
+    "treize": 13, "quatorze": 14, "quinze": 15, "seize": 16,
+    "dix-sept": 17, "dix-huit": 18, "dix-neuf": 19, "vingt": 20,
+    "vingt et un": 21, "vingt-deux": 22, "vingt-trois": 23, "vingt-quatre": 24,
 }
 
 # Ce qui, à la racine, n'est pas un projet mais un dossier de service.
@@ -119,6 +121,71 @@ def controler_projets(claude_md: str, releve: Releve) -> None:
             f"CLAUDE.md annonce « {annonce.group(1)} projets » ({compte_annonce}) "
             f"pour {premier_niveau} projet(s) à la racine.",
         )
+
+
+def controler_terrain_de_index(releve: Releve) -> None:
+    """Le tableau « Terrain existant » d'INDEX.md, confronté aux dossiers.
+
+    Ce script ne lisait que `CLAUDE.md`. Or le tableau de bord des chantiers
+    vit dans `INDEX.md`, et c'est LUI qu'une session lit pour noter
+    l'« Alignement » d'une idée neuve. Deux dérives sont passées à travers le
+    même jour : `motion/` absent du tableau alors que `CLAUDE.md` le
+    documentait, puis un décompte resté à « dix-sept » quand deux chantiers de
+    plus avaient atterri. Aucune n'était détectable ici, faute d'y regarder.
+
+    Deux comparaisons, toutes deux démontrables : la phrase contre les lignes,
+    et les dossiers cités contre le disque.
+    """
+    fichier = RACINE / "INDEX.md"
+    if not fichier.is_file():
+        return
+    index_md = fichier.read_text(encoding="utf-8")
+
+    lignes_actives = re.findall(r"^\|.*\| actif \|\s*$", index_md, re.MULTILINE)
+    lignes_sommeil = re.findall(r"^\|.*\| en sommeil \|\s*$", index_md, re.MULTILINE)
+
+    annonce = re.search(
+        r"héberge ([\w-]+(?: et [\w-]+)?) chantiers? actifs?[^.]*?"
+        r"plus ([\w-]+) en sommeil", index_md)
+    if annonce and lignes_actives:
+        attendu = NOMBRES.get(annonce.group(1).lower())
+        releve.faux_si(
+            attendu is not None and attendu != len(lignes_actives),
+            f"INDEX.md annonce « {annonce.group(1)} chantiers actifs » "
+            f"({attendu}) pour {len(lignes_actives)} ligne(s) « actif » "
+            "dans son tableau Terrain.",
+        )
+        dormants = NOMBRES.get(annonce.group(2).lower())
+        releve.faux_si(
+            dormants is not None and dormants != len(lignes_sommeil),
+            f"INDEX.md annonce « {annonce.group(2)} en sommeil » ({dormants}) "
+            f"pour {len(lignes_sommeil)} ligne(s) « en sommeil ».",
+        )
+
+    # Un dossier cité par le tableau et absent du disque : le tableau envoie
+    # une session sur un chemin mort. C'est arrivé quand `patrimoine/` a été
+    # absorbé par `conseiller-patrimoine/` sans que sa ligne bouge.
+    cites = set(re.findall(r"^\|[^|]*\(`([\w./-]+)/`\)", index_md, re.MULTILINE))
+    fantomes = sorted(c for c in cites if not (RACINE / c).is_dir())
+    releve.faux_si(
+        bool(fantomes),
+        "dossier(s) cité(s) par le tableau Terrain d'INDEX.md et absent(s) du "
+        f"disque : {', '.join(fantomes)}.",
+    )
+
+    # L'inverse : un chantier livré, jamais inscrit au tableau. Signalé et non
+    # démontré — un dossier neuf peut être une ressource transverse, que le
+    # tableau ne liste pas, et le script ne sait pas trancher.
+    racine_seule = {c for c in cites if "/" not in c}
+    manquants = sorted(
+        n for n in projets_reels()
+        if "/" not in n and n not in racine_seule and n not in index_md
+    )
+    releve.regarder_si(
+        bool(manquants),
+        f"chantier(s) hors du tableau Terrain d'INDEX.md : {', '.join(manquants)}. "
+        "Chantier oublié, ou ressource transverse ?",
+    )
 
 
 def controler_competences(claude_md: str, releve: Releve) -> None:
@@ -459,6 +526,7 @@ def main(argv: list[str]) -> int:
     releve = Releve()
 
     controler_projets(claude_md, releve)
+    controler_terrain_de_index(releve)
     controler_competences(claude_md, releve)
     controler_agents(claude_md, releve)
     controler_chemins_cites(claude_md, releve)

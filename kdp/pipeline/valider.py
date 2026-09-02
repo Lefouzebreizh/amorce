@@ -18,7 +18,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import charte  # noqa: E402
@@ -40,7 +40,7 @@ def _n(intitule, detail=""): return Controle(intitule, False, detail)
 def controler_interieur(chemin: Path) -> list[Controle]:
     if not chemin.exists():
         return [_n("le fichier existe", str(chemin))]
-    document = fitz.open(str(chemin))
+    document = pymupdf.open(str(chemin))
     resultats: list[Controle] = []
     attendu = charte.GABARIT_INTERIEUR
 
@@ -97,7 +97,7 @@ def controler_interieur(chemin: Path) -> list[Controle]:
 def controler_couverture(chemin: Path, pages: int) -> list[Controle]:
     if not chemin.exists():
         return [_n("le fichier existe", str(chemin))]
-    document = fitz.open(str(chemin))
+    document = pymupdf.open(str(chemin))
     resultats: list[Controle] = []
     attendu, tranche = charte.gabarit_couverture(pages)
 
@@ -131,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
     dossier = Path(args.dossier)
 
     interieur = dossier / "interieur_kdp.pdf"
-    pages = len(fitz.open(str(interieur))) if interieur.exists() else charte.PAGES_MINIMUM_KDP
+    pages = len(pymupdf.open(str(interieur))) if interieur.exists() else charte.PAGES_MINIMUM_KDP
 
     tout: list[Controle] = []
     for titre, controles in (("INTÉRIEUR", controler_interieur(interieur)),

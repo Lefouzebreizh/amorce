@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from noyau import fichiers
+from noyau import fichiers, rapport
 from noyau.journal import Journal
 
 from . import regles, traitement
@@ -37,6 +37,11 @@ def ajouter_arguments(analyseur: argparse.ArgumentParser) -> None:
     analyseur.add_argument(
         "--appliquer", action="store_true",
         help="déplacer pour de vrai (par défaut : simulation)",
+    )
+    analyseur.add_argument(
+        "--rapport", metavar="FICHIER.html", type=Path, nargs="?",
+        const=Path("rapport-rangement.html"),
+        help="écrire une page à ouvrir dans un navigateur, avec les vignettes",
     )
 
 
@@ -88,11 +93,23 @@ def executer(options: argparse.Namespace, config: dict) -> int:
         _incidents(journal)
         return 0
 
+    lecture = reglages.get("lecture_du_document", {})
+    lire = lecture.get("actif", True)
     rangements = [
-        regles.decider(fiche, config, source, texte=fiche.chemin.name,
-                       bibliotheque=bibliotheque)
+        regles.decider(
+            fiche, config, source,
+            texte=_matiere(fiche, categories, lecture, lire, journal),
+            bibliotheque=bibliotheque,
+        )
         for fiche, source in traitement.dater(chemins, sources, consigner=journal.incident)
     ]
+    if lire:
+        illisibles = sum(1 for r in rangements
+                         if r.a_deplacer and "Divers" in str(r.destination))
+        if illisibles:
+            print(f"  ⚠ {illisibles} document(s) sans thème reconnu — aucun mot-clé de "
+                  "classement.themes n'apparaît dans leur nom ni dans leur texte. "
+                  "Un PDF scanné n'a d'ailleurs aucune couche texte à lire.")
     a_deplacer = [rangement for rangement in rangements if rangement.a_deplacer]
 
     if not a_deplacer:
@@ -112,6 +129,17 @@ def executer(options: argparse.Namespace, config: dict) -> int:
     if len(a_deplacer) > LIGNES_AFFICHEES:
         print(f"  … et {len(a_deplacer) - LIGNES_AFFICHEES} autre(s)")
 
+    if getattr(options, "rapport", None):
+        chemin = rapport.ecrire(
+            [rapport.Ligne(chemin=a.fiche.chemin, action="À ranger", motif=a.motif,
+                           destination=a.destination)
+             for a in a_deplacer],
+            options.rapport, "Life-Organizer — rangement proposé",
+            f"{len(a_deplacer)} fichier(s) à ranger vers {bibliotheque}. "
+            "Rien n'a été déplacé : c'est une proposition.",
+        )
+        print(f"\nPage à ouvrir : {chemin}")
+
     verifier = config.get("securite", {}).get("verifier_empreinte_apres_deplacement", True)
     ranges = traitement.ranger(rangements, bibliotheque, journal, verifier_empreinte=verifier)
 
@@ -121,6 +149,26 @@ def executer(options: argparse.Namespace, config: dict) -> int:
         print("Simulation : rien n'a été déplacé. Pour appliquer : --appliquer")
     _incidents(journal)
     return 0
+
+
+def _matiere(fiche, categories: dict, lecture: dict, lire: bool, journal) -> str:
+    """Ce dans quoi chercher un thème : le nom, et le texte du document s'il en a un.
+
+    Seuls les documents sont ouverts. Lire une photo n'apprendrait rien et
+    coûterait un décodage par fichier — sur une bibliothèque de vacances, c'est
+    la différence entre une commande qui répond et une commande qu'on
+    interrompt.
+    """
+    nom = fiche.chemin.name
+    if not lire or regles.categorie(fiche.chemin, categories) != "Documents":
+        return nom
+    texte = traitement.texte_du_document(
+        fiche.chemin,
+        pages_max=lecture.get("pages_max", 2),
+        caracteres_max=lecture.get("caracteres_max", 2000),
+        consigner=journal.incident,
+    )
+    return regles.matiere_a_theme(nom, texte, lecture.get("caracteres_max", 2000))
 
 
 def _laisses_sur_place(rangements: list[regles.Rangement]) -> None:
