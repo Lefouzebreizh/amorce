@@ -3,8 +3,9 @@
 **Date** : 02/09/2026 · **Périmètre** : `titan-builder/` (2 262 lignes)
 **Posture** : lecture seule. Aucun fichier de code modifié.
 
-Un seul constat, mineur. Le point le plus sensible du projet — le prix — a été
-vérifié et il tient.
+**Aucun constat.** Le rapport en portait un ; il était faux, et sa correction
+est gardée plus bas plutôt qu'effacée — c'est elle qui a le plus à apprendre.
+Le point le plus sensible du projet — le prix — a été vérifié et il tient.
 
 ## ✅ La promesse du prix est vraie, vérifiée
 
@@ -24,33 +25,41 @@ route d'API importe la validation du même module.
 Un client qui trafiquerait un total dans sa requête n'obtiendrait donc rien : la
 valeur est recalculée des deux côtés de la sortie.
 
-## 🟡 MINEUR — le nettoyeur de nom de fichier laisse passer `..`
+## ✅ Le nom de fichier est déjà sûr — un constat de ce rapport était faux
 
-**Où** — `src/lib/dossier.ts:24-25`.
+**Corrigé le 02/09/2026.** La première version de ce rapport signalait que
+`nomSur()` laissait passer `..`. **C'était faux**, et la façon dont l'erreur est
+née mérite d'être écrite, parce qu'elle est exactement le défaut que ce dépôt
+traque.
+
+La fonction fait **deux** choses (`src/lib/dossier.ts:24-27`) :
 
 ```ts
 const base = path.basename(brut).replace(/[^\w.\- ]+/g, '_').slice(-80);
+return base === '' || base === '.' || base === '..'
+  ? `photo-${rang}.bin`
+  : `${String(rang).padStart(2, '0')}-${base}`;
 ```
 
-`path.basename` retire bien les dossiers, et le remplacement neutralise tout ce
-qui n'est pas alphanumérique. **Mais le point est dans la classe autorisée**, et
-`..` en ressort intact :
+L'audit n'avait recopié que la **première ligne** dans son banc d'essai, puis
+mesuré sa propre réécriture au lieu du vrai code. La seconde ligne écarte
+précisément `.` et `..`, et préfixe tout le reste par son rang.
 
-| nom reçu | après nettoyage | chemin joint |
+Éprouvé sur la fonction réelle, cette fois :
+
+| nom reçu | résultat | chemin joint |
 | --- | --- | --- |
-| `photo.jpg` | `photo.jpg` | `/dossier/cmd/photo.jpg` |
-| `../../../etc/passwd` | `passwd` | `/dossier/cmd/passwd` ✓ |
-| **`..`** | **`..`** | **`/dossier`** ⚠ |
-| **`....//..`** | **`..`** | **`/dossier`** ⚠ |
+| `photo.jpg` | `01-photo.jpg` | `/dossier/cmd/01-photo.jpg` |
+| `../../../etc/passwd` | `01-passwd` | `/dossier/cmd/01-passwd` |
+| `..` | `photo-1.bin` | `/dossier/cmd/photo-1.bin` |
+| `....//..` | `photo-1.bin` | `/dossier/cmd/photo-1.bin` |
+| *(vide)* | `photo-1.bin` | `/dossier/cmd/photo-1.bin` |
 
-**Pourquoi c'est mineur et pas plus** — la cible devient un **dossier**, et
-`writeFile` sur un dossier échoue (`EISDIR`). Je n'ai donc pas d'écriture
-arbitraire à montrer, et je ne prétends pas en avoir une. Le trou est dans le
-nettoyeur, pas dans ses conséquences observées.
+**Aucune sortie du dossier n'est possible.** Rien à corriger.
 
-**Piste de correction** — Refuser explicitement `.` et `..` après nettoyage, ou
-n'accepter qu'un nom construit par le serveur (le rang est déjà passé en
-paramètre) en ne gardant du nom d'origine que l'extension.
+La leçon, elle, vaut au-delà de ce projet : *une mesure disait rouge et le
+fichier était juste* — parce que ce qui avait été mesuré n'était pas ce qui
+tourne. Le §8 le dit dans l'autre sens, et c'est le même défaut.
 
 ## Non couvert
 
