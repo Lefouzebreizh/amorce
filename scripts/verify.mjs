@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { optionsChromium } from './chromium.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const RUSHES = join(ROOT, '.fixtures', 'rushes');
@@ -264,7 +265,7 @@ function mesurerCadence(fichier) {
 }
 
 const browser = await chromium.launch({
-  executablePath: process.env.AMORCE_CHROMIUM || undefined,
+  ...optionsChromium,
   args: ['--autoplay-policy=no-user-gesture-required'],
 });
 

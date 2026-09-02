@@ -30,6 +30,7 @@ import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
+import { optionsChromium } from './chromium.mjs';
 
 const RUSHES = join(process.cwd(), '.fixtures', 'rushes');
 if (!existsSync(RUSHES) || readdirSync(RUSHES).length === 0) {
@@ -179,7 +180,7 @@ if (!pret) {
 }
 console.log(`  application sur ${base}\n`);
 
-const browser = await chromium.launch({ executablePath: process.env.AMORCE_CHROMIUM || undefined });
+const browser = await chromium.launch({ ...optionsChromium });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 
 /*
