@@ -1,6 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "node construire-sites.js",
-  "outputDirectory": "dist",
-  "ignoreCommand": "bash ../scripts/vercel-ignorer.sh annuaire-ia scripts/vercel-ignorer.sh"
+  "ignoreCommand": "exit 0"
 }
