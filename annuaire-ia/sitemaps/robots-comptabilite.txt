@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ma-panoplie-ia.com/comptabilite/sitemap.xml
+Sitemap: https://reseau-annuaires-erwannchevallier-6916s-projects.vercel.app/comptabilite/sitemap.xml
