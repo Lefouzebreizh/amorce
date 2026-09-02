@@ -31,7 +31,7 @@ const check = (label, ok, detail = '') => {
   if (!ok) bad++;
 };
 
-await page.goto(BASE, { waitUntil: 'networkidle' });
+await page.goto(`${BASE}/studio`, { waitUntil: 'networkidle' });
 
 // Le worker prend la main de lui-même (`skipWaiting` puis `clients.claim`) :
 // sans cela il resterait en attente et ne recevrait aucun partage.
@@ -111,7 +111,7 @@ if (controlled) {
     stored.length ? `${stored[0].name}, ${stored[0].size} octets` : 'réserve vide');
 
   // L'application doit le trouver au démarrage et le proposer.
-  await page.goto(`${BASE}/?partage=1`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE}/studio?partage=1`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2500);
 
   const visible = await page.evaluate(() => document.body.innerText.includes('reçu par partage'));

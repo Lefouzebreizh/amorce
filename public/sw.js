@@ -101,10 +101,10 @@ async function receive(request) {
 
     // 303 : le navigateur repart en GET vers l'application, qui videra la
     // réserve au démarrage.
-    return Response.redirect(`/?partage=${files.length}`, 303);
+    return Response.redirect(`/studio?partage=${files.length}`, 303);
   } catch {
     // L'échec doit rester silencieux et ramener à l'application : une page
     // d'erreur du navigateur ne dirait rien d'utile.
-    return Response.redirect('/?partage=0', 303);
+    return Response.redirect('/studio?partage=0', 303);
   }
 }
