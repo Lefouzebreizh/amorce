@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { BandeSure } from './BandeSure';
+
 /**
  * La page qu'un visiteur voit avant d'avoir entendu parler d'Amorce.
  *
@@ -169,6 +171,17 @@ export function Accueil() {
               </div>
             ))}
           </div>
+        </Section>
+
+        {/*
+          Montrer plutôt que dire, une fois et bien placée.
+
+          Le bloc précédent affirme que le texte est posé là où il survit ; ce
+          dessin le prouve en une seconde, avec les vraies bornes du moteur.
+          Une seule figure sur la page : la deuxième dilue la première.
+        */}
+        <Section titre="Là où ton texte survit, et où il disparaît">
+          <BandeSure />
         </Section>
 
         {/* --- La preuve, en chiffres vérifiables --------------------------- */}

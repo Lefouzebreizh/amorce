@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { analyzeProject } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
@@ -240,7 +242,15 @@ function MobileHeader() {
       className="flex shrink-0 items-center justify-between gap-3 border-b border-edge px-3 py-2.5"
       style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
     >
-      <span className="font-display text-[19px] tracking-tight text-mist">amorce</span>
+      {/* Le nom ramène à l'accueil : c'est là que tout le monde clique, et le
+          studio n'offrait aucune sortie — on y entrait sans pouvoir revenir lire
+          ce qu'on venait d'ouvrir. */}
+      <Link
+        href="/"
+        className="flex min-h-11 items-center font-display text-[19px] tracking-tight text-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        amorce
+      </Link>
       <div className="flex items-center gap-2">
         <UndoControls canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
         {analysis.shotCount > 0 && <ScoreBadge score={analysis.score} compact />}
