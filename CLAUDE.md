@@ -1244,6 +1244,27 @@ again in 24 hours (more than 100, code: api-deployments-free-per-day) ».
 Le seuil utile à retenir est donc **une vingtaine de fusions par jour**, pas
 cent : chaque fusion vaut trois déploiements ou plus.
 
+**Un quatrième projet existe depuis le 02/09/2026, et il ne compte pas dans ce
+total : `artisan-express`.** Il est né d'un **dépôt de fichiers**
+(`deploy_to_vercel`), pas d'un lien Git — donc aucun commit ne le déclenche, et
+il ne consomme rien du quota quotidien. La contrepartie est symétrique : il ne
+se met **pas** à jour tout seul quand la branche bouge. Une modification de
+`artisan-express/` n'atteint la page en ligne qu'après un nouveau dépôt de
+fichiers, et l'arbre envoyé doit contenir `public/` — l'oubli d'`exemple.html`
+au premier essai a mis « Voir un site fini, en vrai » en 404 pendant que le
+reste de la page servait parfaitement.
+
+Il a fallu passer par là parce que `create_git_project` **réutilise** tout
+projet déjà lié au dépôt au lieu d'en créer un : appelé avec
+`projectName: artisan-express` et `rootDirectory: artisan-express`, il a rendu
+« Reused project amorce-51up ». Le `rootDirectory` ne s'applique qu'à la
+création, jamais à une réutilisation.
+
+**Et `amorce-51up` ne sert rien** — mesuré le même jour : `live: false`, et son
+dernier déploiement est `CANCELED`. Le décrire comme « le dossier
+`artisan-express` en ligne » ferait chercher une page à une adresse qui ne rend
+rien.
+
 D'où le filtre : chaque projet porte un `vercel.json` dont l'`ignoreCommand`
 appelle `scripts/vercel-ignorer.sh` avec les chemins qui le concernent. Deux
 choses à en retenir, et elles se paient toutes les deux en silence :
