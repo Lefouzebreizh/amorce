@@ -184,3 +184,21 @@ souvent reproductible — c'est même la raison d'être de ce bridage.
 
 Si l'enquête aboutit vraiment à une cause extérieure, dis ce que tu as écarté et
 comment, pour que le prochain ne recommence pas.
+
+## Mesurer un média en lecture : suivre la tête de lecture
+
+Payé deux fois dans la même séance, sur deux sondes différentes. **Un silence de
+fin de montage ressemble exactement à un silence de panne.** Un montage de
+sept secondes et demie mesuré pendant huit secondes rend un relevé muet aux deux
+tiers, et le chiffre paraît accablant.
+
+La première sonde a conclu « défaut reproduit » sur un son tombé de 0,23 à
+0,0018 : la lecture était simplement arrivée au bout. La seconde y est retombée
+en mesurant après une manipulation qui avait avancé la tête.
+
+La parade tient en une ligne : **relever la position de lecture avec la
+grandeur mesurée, et s'arrêter dès qu'elle cesse d'avancer.** Un relevé où la
+tête n'a pas bougé ne prouve rien — ni dans un sens ni dans l'autre.
+
+La même précaution vaut pour l'image, la cadence et le niveau : toute grandeur
+qui dépend du temps se mesure pendant que le temps passe.
