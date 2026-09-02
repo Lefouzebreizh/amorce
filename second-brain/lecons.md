@@ -5079,3 +5079,56 @@ la voir.
 Le parcours `npm run verify`, lui, conduit bien un vrai Chromium — mais sur
 `localhost:3000`, qui ne sort pas par le mandataire. La distinction n'est pas
 « Chromium marche ou pas », c'est **local ou distant**.
+
+## `/coherence-depot` lit `a/b/c` entre accents graves comme un chemin de fichier
+
+Mesuré le 02/09/2026 en écrivant une section de `CLAUDE.md`. Énumérer cinq
+jetons séparés par des barres obliques — `` `ink/slab/panel/raised/edge` `` — a
+fait rendre au contrôle :
+
+```
+✗ chemin(s) cité(s) dans CLAUDE.md qui n'existe(nt) pas :
+  fond/fond-doux/verre/bord, ink/slab/panel/raised/edge.
+1 affirmation(s) fausse(s)
+```
+
+C'est `coherence.yml` qui lance ce contrôle : la CI serait passée au rouge sur
+une PR de pure documentation, pour une énumération parfaitement lisible.
+
+**La parade est d'écrire les jetons séparément** : `` `ink` ``, `` `slab` ``,
+`` `panel` ``… La barre oblique entre accents graves est réservée aux vrais
+chemins.
+
+C'est le **symétrique** du piège déjà consigné dans `CLAUDE.md` §4 à propos du
+serveur de licence : là-bas, une route écrite `` `/etat` `` sans son verbe se
+fait signaler comme *compétence disparue*, parce que le contrôle lit toute barre
+oblique **initiale** comme un nom de compétence. Ici c'est une barre oblique
+**interne** qui se fait lire comme un chemin. Les deux viennent du même
+analyseur, et aucun des deux ne se devine en écrivant.
+
+## La limite d'appels GitHub frappe les modifications avant les créations
+
+Mesuré le 02/09/2026, sur trois PR de documentation. Le comportement n'est pas
+« tout passe ou rien ne passe », et c'est ce qui trompe :
+
+| Appel | État pendant la limite |
+| --- | --- |
+| `create_pull_request` | **passait encore** |
+| `update_pull_request` (sortir du brouillon, corriger un corps) | refusé |
+| `merge_pull_request` | refusé |
+| `git push` | **passait** — il n'emprunte pas l'API REST |
+
+Une session qui voit une création réussir en conclut que la limite est retombée,
+réessaie une modification, se fait refuser, et brûle un appel à chaque tour.
+
+**Trois conséquences pratiques.** Ne pas insister : chaque tentative consomme un
+appel sans rien changer. Pousser quand même, puisque `git` passe — la branche
+est alors en ligne et le travail n'est plus dans un conteneur éphémère. Et
+programmer une reprise par `send_later` plutôt que de sonder : la limite retombe
+d'elle-même en moins d'une heure, et une reprise à cinquante minutes a suffi ici
+pour fusionner les trois.
+
+**Le corollaire qui compte pour un dépôt à plusieurs sessions** : pendant
+l'attente, `main` avance. Les trois branches ont été retestées par
+`git merge-tree` contre le `main` du moment avant d'être fusionnées — trois
+fusions propres, mais c'est le test qui le disait, pas l'espoir.
