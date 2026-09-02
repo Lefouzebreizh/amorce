@@ -725,9 +725,12 @@ réclame une clé. N'ont été vérifiés ni le quota du palier sans frais, ni
 qu'une image en sorte, ni sa résolution, ni qu'elle tienne une charte
 graphique. Le paragraphe ci-dessus sur les quatre chemins fermés reste vrai
 pour ce qu'il mesure — `fal.run`, `api.openai.com`, `api.stability.ai`,
-`image.pollinations.ai`, `huggingface.co` — et sa conséquence « une session ne
-peut pas fabriquer une illustration » redevient **une question ouverte**, pas
-une réponse. C'est le premier essai avec la clé qui tranchera.
+`image.pollinations.ai`, `huggingface.co`. Sa conséquence « une session ne
+peut pas fabriquer une illustration », elle, est **tranchée et fausse** : deux
+connecteurs ont produit une image — ElevenLabs plus haut, higgsfield plus
+bas. Ce qui reste
+ouvert pour Gemini n'est donc plus la question de l'image, mais seulement ce
+que cette clé-ci ajouterait aux deux chemins qui marchent déjà.
 
 **Un cinquième chemin existe, et il répond — mesuré le 31/08/2026.** Le
 connecteur **Canva** est joignable depuis une session distante : son outil de
@@ -743,6 +746,32 @@ marche » et promet une planche referait l'erreur que la ligne suivante décrit.
 Le premier essai coûte donc quelque chose : si le compte gratuit est limité,
 chaque génération est prise sur un stock fini. **Demander avant de la
 dépenser.**
+
+**Un septième chemin, et celui-là a produit une image — mesuré le
+01/09/2026.** Le connecteur **higgsfield** répond depuis une session distante :
+`balance` rend **10 crédits, plan gratuit** ; `get_cost` annonce **2 crédits**
+pour une image, soit cinq images en tout ; et la génération est allée au bout —
+modèle demandé `nano_banana_pro`, servi par `nano_banana_2`, terminée en une
+quarantaine de secondes, adresse de résultat rendue.
+
+**Mais la session ne peut pas regarder ce qu'elle vient de fabriquer.** Le CDN
+qui sert l'image — `d8j0ntlcm91z4.cloudfront.net` — est refusé par le
+mandataire, `connect_rejected`, comme les hôtes du paragraphe sur les quatre
+chemins fermés. L'image existe et s'ouvre depuis le navigateur du propriétaire ;
+elle n'entre pas ici.
+
+Cela précise la leçon écrite plus haut plutôt que de la contredire : le trafic
+d'un connecteur MCP échappe bien à la politique réseau, **mais seulement pour
+l'appel — pas pour les fichiers qu'il rend**. Les deux moitiés ne voyagent pas
+par le même chemin, et c'est la seconde qui bute.
+
+Conséquence à ne pas apprendre en la payant : le « regardé, pas seulement
+mesuré » du §8 **ne peut pas s'appliquer ici**. Une planche générée depuis une
+session ne s'y juge pas, une couverture ne s'y valide pas en vignette, et le
+piège du 16:9 ci-dessus ne s'y vérifie même pas à l'œil. Ce qui se fabrique à
+distance se regarde sur l'appareil du propriétaire, ou par un chemin qui
+rapatrie les octets — pas en faisant confiance au fait que la génération a
+réussi.
 
 **Mais cela ne bloque pas le tome 1 de KDP, et la phrase qui le disait était
 fausse — mesuré le 31/08/2026.** La chaîne a été relancée de bout en bout :
