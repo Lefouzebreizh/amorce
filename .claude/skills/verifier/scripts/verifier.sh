@@ -100,6 +100,7 @@ while IFS= read -r f; do
     hypersensible-bienveillance/*) inscrire hypersensible ;;
     titan-builder/*) inscrire titan ;;
     iptv/*)          inscrire iptv ;;
+    bilan-patrimoine/*) inscrire bilan ;;
     motion/*)        inscrire motion ;;
     licence-serveur/*) inscrire licence ;;
     annuaire-ia/*)   inscrire annuaire ;;
@@ -323,6 +324,17 @@ lancer_titan() {
   return $e
 }
 
+lancer_bilan() {
+  local d="bilan-patrimoine"; local j="$journal/bilan"; local e=0
+  # Ni build ni interface : ce lot est du calcul pur. Les deux étapes ne se
+  # lisent pas l'une l'autre, donc elles partent ensemble.
+  ( cd "$d" || exit 1; etape "$j.test"  "tests" npm test ) & local a=$!
+  ( cd "$d" || exit 1; etape "$j.check" "types" npm run check ) & local b=$!
+  wait $a || e=1; wait $b || e=1
+  cat "$j".{test,check} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_iptv() {
   local d="iptv"; local j="$journal/iptv"; local e=0
   # Les deux premières ne se lisent pas l'une l'autre : elles partent ensemble.
@@ -436,6 +448,7 @@ for p in $projets; do
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     titan)   lancer_titan & pid_de[titan]=$! ;;
     iptv)    lancer_iptv  & pid_de[iptv]=$! ;;
+    bilan)   lancer_bilan & pid_de[bilan]=$! ;;
     motion)  lancer_motion & pid_de[motion]=$! ;;
     licence) lancer_licence & pid_de[licence]=$! ;;
     annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
@@ -461,6 +474,7 @@ nom_lisible() {
     hypersensible) echo "Hypersensible & Bienveillance" ;;
     titan)   echo "TITAN Builder" ;;
     iptv)    echo "IPTV / VOD" ;;
+    bilan)   echo "Bilan Patrimoine" ;;
     motion)  echo "Habillages animés (motion)" ;;
     licence) echo "Serveur de licence" ;;
     annuaire) echo "Réseau d'annuaires IA" ;;
@@ -526,6 +540,16 @@ case " $projets " in
     echo "    Codes n'a aucune spécification publiée à leur opposer"
     echo "  • l'interface, le lecteur et le mandataire de flux : npm run verify"
     echo "    (dans iptv/, Chromium réel et flux HLS fabriqué par ffmpeg)" ;;
+esac
+case " $projets " in
+  *" bilan "*)
+    echo "  • si le bilan se lit vraiment : npm run exemple (dans"
+    echo "    bilan-patrimoine/), trois profils contrastés à parcourir des yeux."
+    echo "    Les deux défauts les plus sérieux trouvés jusqu'ici — un rapport"
+    echo "    qui ouvrait sur des reproches, un conseil qui contredisait son"
+    echo "    propre texte — sont passés à travers cinquante-trois tests verts"
+    echo "  • si les taux de référence sont à jour : ils portent leur date, et"
+    echo "    les valeurs livrées sont à confirmer avant toute mise en ligne" ;;
 esac
 case " $projets " in
   *" py:kdp "*)

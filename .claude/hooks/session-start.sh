@@ -46,6 +46,7 @@ commandes=(
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
   "Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests"
   "Conseiller Patrimoine : cd conseiller-patrimoine && python3 -m unittest discover -s tests"
+  "Bilan Patrimoine : cd bilan-patrimoine && npm test"
   "Motion : (dans motion/) npm test, npm run typecheck — jamais `build`, qui rend une vidéo"
   "Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
   "Répondeur Facebook : python3 -m unittest discover -s repondeur-facebook/tests"
@@ -188,6 +189,12 @@ echo "── Répondeur Facebook : bibliothèques Python"
 # `requests` est déjà là pour le studio audio ; ces deux-là ne le sont pas, et
 # sans elles les tests du répondeur ne se lancent même pas.
 python3 -m pip install --quiet --break-system-packages anthropic python-dotenv
+
+echo "── Bilan Patrimoine : dépendances npm"
+# Zéro dépendance d'exécution — seuls TypeScript et les types de Node, pour
+# `npx tsc --noEmit`. Les tests, eux, tournent sans installation : Node retire
+# les types tout seul.
+(cd "$racine/bilan-patrimoine" && npm install --no-audit --no-fund --silent) || true
 
 echo "── Conseiller Patrimoine : bibliothèques Python"
 # Rien à installer ici, et c'est le sujet du module. PyYAML arrive déjà par le

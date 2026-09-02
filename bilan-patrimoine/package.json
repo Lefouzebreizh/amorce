@@ -1,0 +1,19 @@
+{
+  "name": "bilan-patrimoine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bilan de patrimoine pour particuliers — le calcul, les barèmes et le texte, sans site",
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
+    "check": "tsc --noEmit",
+    "exemple": "node --disable-warning=ExperimentalWarning src/exemple.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.22"
+  }
+}
