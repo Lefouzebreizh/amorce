@@ -39,6 +39,16 @@ opencv-python-headless>=4.9,<5
 # Analyse des dates en français dans le texte extrait des documents.
 python-dateutil>=2.9
 
+# Serveur local de interface_web/ — une façade sur organizer.py, jamais un
+# réseau ouvert au-delà de 127.0.0.1.
+Flask>=3.1
+
+# Le seul appel réseau sortant du projet : modules/depot/, qui envoie une
+# image ou un texte au modèle de vision pour classer un fichier déposé.
+# Désactivé tant que depot.actif est faux ou que la clé d'API n'est pas
+# définie — voir modules/depot/__init__.py.
+requests>=2.31
+
 # Ffmpeg n'est PAS listé ici : c'est un binaire système, pas un paquet Python.
 #   Debian/Ubuntu : sudo apt install ffmpeg tesseract-ocr tesseract-ocr-fra
 #   macOS         : brew install ffmpeg tesseract tesseract-lang
