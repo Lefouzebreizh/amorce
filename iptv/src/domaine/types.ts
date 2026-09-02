@@ -59,6 +59,12 @@ export interface Element {
    * `undefined` se range dans « Autres » plutôt que d'être classé de force.
    */
   readonly theme: string | undefined
+  /**
+   * 'etranger' si rien n'y est en français — un groupe de chaînes qui désigne
+   * un autre pays, ou un film/une série sans piste française. `undefined` vaut
+   * pour « français » et pour « on ne sait pas ». Voir normalisation/pays.ts.
+   */
+  readonly pays: string | undefined
   readonly annee: number | undefined
   /** Renseignés seulement pour un épisode ; `serie` sert à regrouper. */
   readonly serie: string | undefined

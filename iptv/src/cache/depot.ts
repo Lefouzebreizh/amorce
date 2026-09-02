@@ -23,6 +23,7 @@ import {
   type Programme,
 } from '../domaine/types.ts'
 import { ordreTheme } from '../normalisation/theme.ts'
+import type { Affiche } from '../tmdb/tmdb.ts'
 import { COLONNES_AJOUTEES, INDEX, SCHEMA } from './schema.ts'
 
 /**
@@ -37,8 +38,11 @@ const ORDRE_LANGUE = `CASE langue ${(
   .map((langue) => `WHEN '${langue}' THEN ${prioriteFrancophone(langue)}`)
   .join(' ')} ELSE 9 END`
 
+/** Le rang d'abord, puis la langue préférée : l'ordre qu'on a dans la tête. */
+const ORDRE_AFFICHAGE = `rang IS NULL, rang, ${ORDRE_LANGUE}, saison, episode, titre COLLATE NOCASE`
+
 const COLONNES = `id, source_id, source, genre, titre, titre_brut, url, langue, qualite, groupe,
-  logo, tvg_id, canal, rang, theme, annee, serie, saison, episode, etiquettes, options_lecture, ref_externe`
+  logo, tvg_id, canal, rang, theme, pays, annee, serie, saison, episode, etiquettes, options_lecture, ref_externe`
 
 /** Les colonnes préfixées, pour les requêtes qui joignent une autre table. */
 const COLONNES_PREFIXEES = COLONNES.split(',')
@@ -69,6 +73,21 @@ export interface Filtres {
    * des portes fermées.
    */
   readonly inclureMorts?: boolean
+  /**
+   * Montrer aussi ce qui a été classé étranger — un groupe de chaînes qui
+   * désigne un autre pays, ou une piste sans français. Faux par défaut : voir
+   * `normalisation/pays.ts`.
+   */
+  readonly inclureEtranger?: boolean
+  /**
+   * Une seule entrée par titre — la première dans l'ordre d'affichage.
+   *
+   * Un abonnement liste souvent la même chaîne plusieurs fois : une par
+   * qualité, une par groupe fournisseur. TF1 apparaît alors cinq fois de
+   * suite dans la mosaïque du direct, cinq fois le même canal « 1 ». Ce n'est
+   * utile pour aucun écran — voir `Catalogue.tsx`, seul appelant.
+   */
+  readonly dedupliquer?: boolean
 }
 
 export interface ResumeImport {
@@ -112,6 +131,21 @@ export interface Reprise {
   readonly termine: boolean
 }
 
+/**
+ * Une entrée que le fournisseur ne sert plus, et sur laquelle l'utilisateur
+ * avait laissé un favori ou une position de lecture.
+ *
+ * Le titre est recopié plutôt que retrouvé : l'entrée d'origine est supprimée,
+ * et l'identifiant seul est une empreinte d'URL qui ne se remonte pas.
+ */
+export interface Retrait {
+  readonly elementId: string
+  readonly titre: string
+  readonly genre: string | undefined
+  readonly serie: string | undefined
+  readonly retireLe: string
+}
+
 type Ligne = Record<string, unknown>
 
 /** SQLite n'accepte pas `undefined` : il faut le dire, sinon la liaison lève. */
@@ -144,6 +178,7 @@ function versElement(ligne: Ligne): Element {
     canal: entier(ligne['canal']),
     rang: entier(ligne['rang']),
     theme: texte(ligne['theme']),
+    pays: texte(ligne['pays']),
     tvgId: texte(ligne['tvg_id']),
     annee: entier(ligne['annee']),
     serie: texte(ligne['serie']),
@@ -207,20 +242,16 @@ export interface Depot {
   fiches(filtres?: Filtres): FicheSerie[]
   /** La fiche d'une série par son titre affiché — ce que l'URL porte. */
   ficheParTitre(titre: string): FicheSerie | undefined
+  /** La fiche d'une série par son identifiant — ce que la recherche d'affiche demande. */
+  ficheParId(id: string): FicheSerie | undefined
   /** Un élément par son identifiant — ce que le lecteur et le mandataire demandent. */
   element(id: string): Element | undefined
   reglage(cle: string): string | undefined
   poserReglage(cle: string, valeur: string): void
-  /**
-   * L'import le plus récent, toutes sources confondues, ou `undefined` si le
-   * catalogue est vide.
-   *
-   * Le classement (`reclasser`) ne relit que ce qui est déjà en base : sur une
-   * liste communautaire dont les hôtes tournent en continu, une base jamais
-   * réimportée accumule des URL périmées qu'aucun reclassement ne corrige. Le
-   * seul remède visible depuis l'interface est de savoir *que* c'est vieux.
-   */
-  dernierImport(): string | undefined
+  /** L'affiche déjà trouvée pour un film ou une fiche de série, si la recherche a déjà eu lieu. */
+  affiche(id: string): Affiche | undefined
+  /** Retient ce que TMDB a rendu — y compris l'absence de résultat, voir `schema.ts`. */
+  enregistrerAffiche(id: string, affiche: Affiche): void
   compter(filtres?: Filtres): number
   lister(filtres?: Filtres): Element[]
   chercher(saisie: string, filtres?: Filtres): Element[]
@@ -245,6 +276,8 @@ export interface Depot {
   favoris(): Element[]
   enregistrerPosition(elementId: string, position: number, duree?: number): void
   reprises(limite?: number): Reprise[]
+  /** Ce qui a disparu du catalogue et que l'utilisateur avait marqué. */
+  retraits(): Retrait[]
   /**
    * Repose les numéros de canal d'une base déjà remplie.
    *
@@ -269,13 +302,15 @@ export interface Depot {
       titre: string
       url: string
       groupe: string | undefined
+      langue: Langue
     }) => {
       genre: Genre
       canal?: number | undefined
       rang?: number | undefined
       theme?: string | undefined
+      pays?: string | undefined
     },
-  ): { numerotees: number; reclasses: number }
+  ): { numerotees: number; reclasses: number; etrangeres: number }
   /**
    * Ne garde qu'une entrée par titre — chaînes ou films — la meilleure
    * qualité disponible.
@@ -391,6 +426,14 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
     if (filtres.inclureMorts !== true) {
       morceaux.push("(etat IS NULL OR (etat <> 'mort' AND etat <> 'doublon'))")
     }
+    // Même logique pour `pays` : NULL veut dire français ou indécis, jamais
+    // étranger. Voir `normalisation/pays.ts`. Une langue explicitement choisie
+    // lève ce filtre : pour un film ou une série, « étranger » ne veut jamais
+    // dire que la piste VOSTFR ou VO — proposer le bouton puis rendre zéro
+    // résultat serait pire que ne pas filtrer du tout.
+    if (filtres.inclureEtranger !== true && filtres.langue === undefined) {
+      morceaux.push("(pays IS NULL OR pays <> 'etranger')")
+    }
     return { sql: morceaux.length === 0 ? '' : ` WHERE ${morceaux.join(' AND ')}`, valeurs }
   }
 
@@ -399,6 +442,21 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
     const decalage = filtres.decalage ?? 0
     return { sql: ' LIMIT ? OFFSET ?', valeurs: [limite, decalage] }
   }
+
+  /**
+   * La table de départ d'une requête : `element` telle quelle, ou une seule
+   * ligne par titre quand `dedupliquer` le demande.
+   *
+   * Le rang tient dans la même fenêtre que le tri final — c'est ce qui
+   * garantit que la ligne gardée est celle qui serait apparue en premier de
+   * toute façon, jamais un choix arbitraire entre les doublons.
+   */
+  const depuis = (ouSql: string, dedupliquer: boolean | undefined): string =>
+    dedupliquer === true
+      ? `FROM (SELECT *, ROW_NUMBER() OVER (
+           PARTITION BY LOWER(TRIM(titre)) ORDER BY ${ORDRE_AFFICHAGE}
+         ) AS rn FROM element${ouSql}) WHERE rn = 1`
+      : `FROM element${ouSql}`
 
   return {
     base,
@@ -433,13 +491,14 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
 
       const ecrire = base.prepare(
         `INSERT INTO element (${COLONNES}, vu_le)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT (id) DO UPDATE SET
            source_id = excluded.source_id, source = excluded.source, genre = excluded.genre,
            titre = excluded.titre, titre_brut = excluded.titre_brut,
            url = excluded.url, langue = excluded.langue, qualite = excluded.qualite,
            groupe = excluded.groupe, logo = excluded.logo, tvg_id = excluded.tvg_id,
            canal = excluded.canal, rang = excluded.rang, theme = excluded.theme,
+           pays = excluded.pays,
            annee = excluded.annee, serie = excluded.serie, saison = excluded.saison,
            episode = excluded.episode, etiquettes = excluded.etiquettes,
            options_lecture = excluded.options_lecture, ref_externe = excluded.ref_externe,
@@ -486,6 +545,7 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
             ouNul(element.canal),
             ouNul(element.rang),
             ouNul(element.theme),
+            ouNul(element.pays),
             ouNul(element.annee),
             ouNul(element.serie),
             ouNul(element.saison),
@@ -522,15 +582,41 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
       // au milieu.
       const perimes = purger
         ? (base
-            .prepare('SELECT rowid FROM element WHERE source_id = ? AND vu_le < ?')
+            .prepare(
+              'SELECT rowid, id, titre, genre, serie FROM element ' +
+                'WHERE source_id = ? AND vu_le < ?',
+            )
             .all(sourceId, horodatage) as Ligne[])
         : []
       if (perimes.length > 0) {
         base.exec('BEGIN')
         const retirer = base.prepare('DELETE FROM element WHERE rowid = ?')
+        // Consigné **avant** la suppression, et seulement pour ce que
+        // l'utilisateur a marqué : après le DELETE il ne reste qu'un
+        // identifiant, qui est une empreinte de l'URL et ne dit pas quel film a
+        // disparu. Le filtre vit dans le SQL plutôt que dans une lecture
+        // préalable — deux `EXISTS` sur des clés primaires coûtent moins qu'un
+        // aller-retour par ligne sur les cent quatre-vingts d'un import.
+        const consigner = base.prepare(
+          'INSERT OR REPLACE INTO retrait (element_id, titre, genre, serie, retire_le) ' +
+            'SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM favori WHERE element_id = ?) ' +
+            'OR EXISTS (SELECT 1 FROM lecture WHERE element_id = ?)',
+        )
         for (const ligne of perimes) {
           const rang = entier(ligne['rowid'])
           if (rang === undefined) continue
+          const id = texte(ligne['id'])
+          if (id !== undefined) {
+            consigner.run(
+              id,
+              texte(ligne['titre']) ?? '',
+              texte(ligne['genre']) ?? null,
+              texte(ligne['serie']) ?? null,
+              horodatage,
+              id,
+              id,
+            )
+          }
           retirer.run(rang)
           oublier.run(rang)
         }
@@ -650,13 +736,6 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
         .run(cle, valeur)
     },
 
-    dernierImport(): string | undefined {
-      const ligne = base.prepare('SELECT MAX(importe_le) AS dernier FROM source').get() as
-        | Ligne
-        | undefined
-      return texte(ligne?.['dernier'])
-    },
-
     ficheParTitre(titre): FicheSerie | undefined {
       const ligne = base
         .prepare(
@@ -687,10 +766,57 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
       }
     },
 
+    ficheParId(id): FicheSerie | undefined {
+      const ligne = base
+        .prepare(
+          `SELECT id, ref_externe, titre, titre_brut, annee, logo, resume, genres,
+                  groupe, langue
+           FROM serie WHERE id = ?`,
+        )
+        .get(id) as Ligne | undefined
+      if (ligne === undefined) return undefined
+      let genres: string[] = []
+      try {
+        const brut: unknown = JSON.parse(String(ligne['genres'] ?? '[]'))
+        if (Array.isArray(brut)) genres = brut.filter((g): g is string => typeof g === 'string')
+      } catch {
+        genres = []
+      }
+      return {
+        id: texte(ligne['id']) ?? '',
+        refExterne: texte(ligne['ref_externe']),
+        titre: texte(ligne['titre']) ?? '',
+        titreBrut: texte(ligne['titre_brut']) ?? '',
+        annee: entier(ligne['annee']),
+        logo: texte(ligne['logo']),
+        resume: texte(ligne['resume']),
+        genres,
+        groupe: texte(ligne['groupe']),
+        langue: (texte(ligne['langue']) ?? 'inconnue') as Langue,
+      }
+    },
+
+    affiche(id): Affiche | undefined {
+      const ligne = base.prepare('SELECT url, resume FROM affiche WHERE id = ?').get(id) as
+        | Ligne
+        | undefined
+      return ligne === undefined ? undefined : { url: texte(ligne['url']), resume: texte(ligne['resume']) }
+    },
+
+    enregistrerAffiche(id, affiche): void {
+      base
+        .prepare(
+          `INSERT INTO affiche (id, url, resume, interroge_le) VALUES (?, ?, ?, ?)
+           ON CONFLICT (id) DO UPDATE SET
+             url = excluded.url, resume = excluded.resume, interroge_le = excluded.interroge_le`,
+        )
+        .run(id, ouNul(affiche.url), ouNul(affiche.resume), new Date().toISOString())
+    },
+
     compter(filtres = {}): number {
       const ou = conditions(filtres)
       const ligne = base
-        .prepare(`SELECT COUNT(*) AS n FROM element${ou.sql}`)
+        .prepare(`SELECT COUNT(*) AS n ${depuis(ou.sql, filtres.dedupliquer)}`)
         .get(...ou.valeurs) as Ligne | undefined
       return entier(ligne?.['n']) ?? 0
     },
@@ -702,9 +828,8 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
         .prepare(
           // Le rang d'abord : c'est l'ordre qu'on a dans la tête pour les
           // chaînes, et il est sans effet ailleurs — un film n'en a jamais.
-          `SELECT ${COLONNES} FROM element${ou.sql}
-           ORDER BY rang IS NULL, rang, ${ORDRE_LANGUE}, saison, episode,
-             titre COLLATE NOCASE${fin.sql}`,
+          `SELECT ${COLONNES} ${depuis(ou.sql, filtres.dedupliquer)}
+           ORDER BY ${ORDRE_AFFICHAGE}${fin.sql}`,
         )
         .all(...ou.valeurs, ...fin.valeurs) as Ligne[]
       return lignes.map(versElement)
@@ -947,15 +1072,16 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
       return lignes.map(versProgramme)
     },
 
-    reclasser(recalcul): { numerotees: number; reclasses: number } {
+    reclasser(recalcul): { numerotees: number; reclasses: number; etrangeres: number } {
       const lignes = base
-        .prepare('SELECT id, titre, url, groupe, genre FROM element')
+        .prepare('SELECT id, titre, url, groupe, genre, langue FROM element')
         .all() as Ligne[]
       const poser = base.prepare(
-        'UPDATE element SET genre = ?, canal = ?, rang = ?, theme = ? WHERE id = ?',
+        'UPDATE element SET genre = ?, canal = ?, rang = ?, theme = ?, pays = ? WHERE id = ?',
       )
       let numerotees = 0
       let reclasses = 0
+      let etrangeres = 0
 
       base.exec('BEGIN')
       try {
@@ -965,23 +1091,26 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
             titre: texte(ligne['titre']) ?? '',
             url: texte(ligne['url']) ?? '',
             groupe: texte(ligne['groupe']),
+            langue: (texte(ligne['langue']) ?? 'inconnue') as Langue,
           })
           poser.run(
             decision.genre,
             decision.canal ?? null,
             decision.rang ?? null,
             decision.theme ?? null,
+            decision.pays ?? null,
             texte(ligne['id']) ?? '',
           )
           if (decision.canal !== undefined) numerotees += 1
           if (avant !== decision.genre) reclasses += 1
+          if (decision.pays === 'etranger') etrangeres += 1
         }
         base.exec('COMMIT')
       } catch (cause) {
         base.exec('ROLLBACK')
         throw cause
       }
-      return { numerotees, reclasses }
+      return { numerotees, reclasses, etrangeres }
     },
 
     dedoublonner(genre): { groupes: number; masques: number } {
@@ -1177,6 +1306,21 @@ export function ouvrirDepot(chemin = ':memory:'): Depot {
         position: reel(ligne['position_s']) ?? 0,
         duree: reel(ligne['duree_s']),
         termine: entier(ligne['termine']) === 1,
+      }))
+    },
+
+    retraits(): Retrait[] {
+      // Sans jointure sur `element` : tout l'intérêt de cette table est de
+      // parler d'entrées qui n'y sont plus. Une jointure la viderait.
+      const lignes = base
+        .prepare('SELECT element_id, titre, genre, serie, retire_le FROM retrait ORDER BY retire_le DESC')
+        .all() as Ligne[]
+      return lignes.map((ligne) => ({
+        elementId: texte(ligne['element_id']) ?? '',
+        titre: texte(ligne['titre']) ?? '',
+        genre: texte(ligne['genre']),
+        serie: texte(ligne['serie']),
+        retireLe: texte(ligne['retire_le']) ?? '',
       }))
     },
   }

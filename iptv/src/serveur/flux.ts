@@ -84,6 +84,17 @@ export function estManifeste(url: string, typeContenu: string | null): boolean {
 }
 
 /**
+ * Le lecteur en a besoin **avant** toute requête, pour choisir entre hls.js et
+ * la lecture native : lui donner un `.mp4` ou un `.mkv` à parser comme un
+ * manifeste échoue à coup sûr, image et son perdus ensemble, quel que soit le
+ * navigateur. Extension seule, sans requête — le type MIME du fournisseur
+ * n'est connu qu'après avoir déjà lancé la lecture.
+ */
+export function probableManifeste(url: string): boolean {
+  return EXTENSION_MANIFESTE.test(url)
+}
+
+/**
  * Réécrit un manifeste HLS pour que tout ce qu'il désigne repasse par ici.
  *
  * Relayer le manifeste sans toucher à son contenu ne sert à rien : le lecteur

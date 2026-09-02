@@ -14,6 +14,7 @@ import { entier, texte } from '../domaine/valeurs.ts'
 import { detecterEpisode } from './episode.ts'
 import { detecterLangue, detecterQualite } from './etiquettes.ts'
 import { numeroDeCanal, rangDeChaine } from './canal.ts'
+import { estEtrangerDirect, estEtrangerVod } from './pays.ts'
 import { detecterTheme } from './theme.ts'
 import { detecterGenre } from './genre.ts'
 import { analyserTitre } from './titre.ts'
@@ -61,6 +62,10 @@ export function normaliserEntreeM3U(entree: EntreeM3U): Element {
     episode: episode !== undefined,
   })
   const contexte = groupe ?? ''
+  const langue = detecterLangue(analyse.etiquettes, contexte)
+  // Le groupe tranche pour une chaîne, la piste pour un film ou une série —
+  // voir normalisation/pays.ts.
+  const etranger = genre === 'direct' ? estEtrangerDirect(groupe) : estEtrangerVod(langue)
 
   return {
     // L'URL est la seule chose stable d'une liste M3U : ni le titre, ni l'ordre,
@@ -73,7 +78,7 @@ export function normaliserEntreeM3U(entree: EntreeM3U): Element {
     titre: analyse.titre,
     titreBrut,
     url: entree.url,
-    langue: detecterLangue(analyse.etiquettes, contexte),
+    langue,
     qualite: detecterQualite(analyse.etiquettes, contexte),
     groupe,
     logo: attributs['tvg-logo'],
@@ -85,6 +90,7 @@ export function normaliserEntreeM3U(entree: EntreeM3U): Element {
     // Et le pendant pour ce qui se regarde plutôt que se zappe : une chaîne n'a
     // pas de thème, elle a un numéro.
     theme: genre === 'direct' ? undefined : detecterTheme(groupe),
+    pays: etranger ? 'etranger' : undefined,
     annee: analyse.annee,
     serie: episode?.serie,
     saison: episode?.saison,
@@ -133,6 +139,7 @@ export function normaliserDirectXtream(
     // vaut pas celui de la TNT, mais il vaut mieux que rien pour le reste.
     rang: rangDeChaine(analyse.titre, { num: texte(brut['num']) ?? '' }),
     theme: undefined,
+    pays: estEtrangerDirect(groupe) ? 'etranger' : undefined,
     annee: analyse.annee,
     serie: undefined,
     saison: undefined,
@@ -157,6 +164,7 @@ export function normaliserFilmXtream(
   // Le conteneur est celui que le panneau annonce : demander un `.m3u8` sur un
   // `.mkv` rend 404, et c'est la première cause de « le film ne démarre pas ».
   const extension = texte(brut['container_extension'])
+  const langue = detecterLangue(analyse.etiquettes, contexte)
 
   return {
     id: idXtream('fi', urls.base, 'movie', ref),
@@ -165,7 +173,7 @@ export function normaliserFilmXtream(
     titre: analyse.titre,
     titreBrut,
     url: urls.urlFilm(ref, extension),
-    langue: detecterLangue(analyse.etiquettes, contexte),
+    langue,
     qualite: detecterQualite(analyse.etiquettes, contexte),
     groupe,
     logo: texte(brut['stream_icon']) ?? texte(brut['cover']),
@@ -173,6 +181,7 @@ export function normaliserFilmXtream(
     canal: undefined,
     rang: undefined,
     theme: detecterTheme(groupe, [texte(brut['genre']) ?? '']),
+    pays: estEtrangerVod(langue) ? 'etranger' : undefined,
     annee: analyse.annee ?? anneeDepuis(brut),
     serie: undefined,
     saison: undefined,
@@ -276,8 +285,9 @@ export function normaliserEpisodeXtream(
     canal: undefined,
     rang: undefined,
     // L'épisode hérite du thème de sa série : le panneau ne le déclare qu'une
-    // fois, sur la fiche, jamais sur chaque épisode.
+    // fois, sur la fiche, jamais sur chaque épisode. Même chose pour la langue.
     theme: detecterTheme(fiche.groupe, fiche.genres),
+    pays: estEtrangerVod(fiche.langue) ? 'etranger' : undefined,
     annee: fiche.annee,
     serie: fiche.titre,
     saison: saison ?? entier(brut['season']),
