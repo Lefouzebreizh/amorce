@@ -521,6 +521,54 @@ def controler_projets_dans_la_barriere(releve: Releve) -> None:
         )
 
 
+def controler_projets_dans_la_ci(releve: Releve) -> None:
+    """
+    Tout projet qui sait se tester doit être surveillé par un workflow.
+
+    Jumeau de `controler_projets_dans_la_barriere`, et il a fallu les deux :
+    la barrière locale et l'intégration continue sont deux listes écrites à la
+    main, et **réparer l'une ne répare pas l'autre**. Chaque projet npm porte
+    ici son propre fichier de workflow — la racine l'écarte de son typecheck, et
+    rien ne le vérifierait sans lui.
+
+    L'oubli est invisible par construction : les tests passent en local, la CI
+    reste verte, et personne n'apprend qu'elle ne les a jamais lancés. C'est
+    pire qu'un projet sans tests, parce qu'on croit le contraire.
+
+    Mesuré le 02/09/2026, à l'écriture de ce contrôle : `licence-serveur/` —
+    le projet qui garde l'argent — avait quatorze tests, dont ceux de la
+    signature Stripe, et aucun workflow. Il était déjà tombé dans le trou
+    jumeau côté `verifier.sh`, réparé là, jamais reporté ici.
+
+    Le marqueur cherché est le filtre de chemins (`<projet>/**`) et non le nom
+    du fichier : un workflow peut s'appeler autrement que son dossier — c'est
+    le cas de `hypersensible.yml` — et c'est le filtre, lui, qui décide
+    réellement si le projet déclenche quelque chose.
+    """
+    flux = RACINE / ".github" / "workflows"
+    if not flux.is_dir():
+        return
+    textes = [chemin.read_text(encoding="utf-8") for chemin in flux.glob("*.yml")]
+
+    for dossier in sorted(RACINE.iterdir()):
+        if not dossier.is_dir() or dossier.name in PAS_DES_PROJETS or dossier.name.startswith("."):
+            continue
+        manifeste = dossier / "package.json"
+        if not manifeste.exists():
+            continue
+        try:
+            scripts = json.loads(manifeste.read_text(encoding="utf-8")).get("scripts", {})
+        except json.JSONDecodeError:
+            continue
+        if "test" not in scripts:
+            continue
+        releve.faux_si(
+            not any(f"{dossier.name}/**" in texte for texte in textes),
+            f"{dossier.name}/ sait se tester mais aucun workflow ne le surveille : "
+            f"ses tests ne tourneront jamais dans la CI, qui restera verte en le disant.",
+        )
+
+
 def main(argv: list[str]) -> int:
     claude_md = (RACINE / "CLAUDE.md").read_text(encoding="utf-8")
     releve = Releve()
@@ -533,6 +581,7 @@ def main(argv: list[str]) -> int:
     controler_listes_numerotees(claude_md, releve)
     controler_hook(releve)
     controler_tests_python(releve)
+    controler_projets_dans_la_ci(releve)
     controler_annonce_verifications(releve)
     controler_projets_typescript(releve)
     controler_declencheurs_partages(releve)

@@ -1,0 +1,74 @@
+# Vérification du serveur de licence — le projet qui garde l'argent.
+#
+# **Il n'en avait aucun jusqu'ici**, et personne ne le savait : quatorze tests
+# écrits, dont ceux de la signature Stripe, et zéro exécuté par la CI. Le défaut
+# a été trouvé par le contrôle de couverture ajouté à `verifier-coherence.py`,
+# qui compare les projets sachant se tester aux workflows qui les surveillent.
+#
+# C'est la deuxième fois que ce projet précis tombe dans ce trou : la même
+# absence avait déjà été relevée côté `verifier.sh`, corrigée là, et jamais
+# reportée ici. Une barrière réparée n'en répare pas une autre.
+#
+# **Zéro dépendance d'exécution**, et c'est la mesure du projet : la plateforme
+# fournit `Request`, `Response` et `crypto.subtle`. Il n'y a donc ni verrou ni
+# `npm ci` — mais `tsc` doit bien venir de quelque part. Il est installé sans
+# être enregistré : l'écrire dans `package.json` créerait une dépendance que le
+# projet revendique de ne pas avoir, et c'est cette absence qui fait sa sûreté.
+#
+# Ce que ce workflow ne lance pas : rien qui touche à D1, à wrangler ou au
+# réseau. La suite entière, signature Stripe comprise, s'éprouve sans eux — et
+# c'est précisément ce qui la rend exécutable ici.
+
+name: Serveur de licence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'licence-serveur/**'
+      - '.github/workflows/licence-serveur.yml'
+  pull_request:
+    paths:
+      - 'licence-serveur/**'
+      - '.github/workflows/licence-serveur.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: licence-serveur-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: licence-serveur
+
+jobs:
+  verifier:
+    name: Tests et types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 au minimum : les tests s'exécutent sur les sources TypeScript
+      # sans compilation préalable (`--experimental-strip-types`).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Les tests ne demandent rien du tout — c'est la propriété du projet, et
+      # elle passe avant le typage pour que le résumé la montre en premier.
+      - name: Tests
+        if: ${{ !cancelled() }}
+        run: npm test
+
+      # `--no-save` : le compilateur sert à vérifier, pas à tourner. Il n'entre
+      # donc pas dans `package.json`, qui doit continuer à dire vrai — ce projet
+      # n'a aucune dépendance.
+      - name: Installer le compilateur
+        if: ${{ !cancelled() }}
+        run: npm install --no-save typescript@^5
+
+      - name: Types
+        if: ${{ !cancelled() }}
+        run: npm run typecheck

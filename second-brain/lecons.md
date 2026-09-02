@@ -5237,3 +5237,43 @@ risque et un coût, une panne et une lenteur, un bloquant et un confort — il f
 un rang explicite, jamais une pondération qui fait semblant de les rendre
 comparables. Et le défaut ne se voit pas dans un test : il se voit en lisant la
 liste produite, à voix haute, sur un cas réel.
+
+---
+
+## Réparer une barrière n'en répare pas une autre — 02/09/2026
+
+*Coût : deux projets sans aucune vérification automatique, pendant des mois.
+Dont celui qui garde l'argent.*
+
+Ce dépôt entretient **deux listes écrites à la main** qui disent presque la même
+chose : les projets routés dans `verifier.sh` (la barrière locale) et les
+projets qui ont un workflow de CI. Un projet neuf manque aux deux par défaut.
+
+`licence-serveur/` était déjà tombé dans le premier trou. Il avait été repéré,
+un contrôle avait été écrit pour l'empêcher de se reproduire — et **le même
+projet était toujours absent du second**, sans que personne le voie. Quatorze
+tests, dont ceux de la signature Stripe, jamais exécutés par la CI. `motion/`
+aussi, avec cinq tests.
+
+**Ce qui rend l'oubli invisible est qu'il ne produit aucun rouge.** Les tests
+passent en local, la CI est verte, et son vert affirme quelque chose qu'elle n'a
+pas vérifié. C'est pire qu'un projet sans tests : là on sait qu'on ne sait pas.
+
+**La parade — et c'est la partie transposable.** Quand un contrôle est écrit
+pour empêcher un oubli, se demander aussitôt : *cet oubli a-t-il un jumeau ?*
+Une même information tenue à deux endroits en a presque toujours un. Le contrôle
+se duplique alors en dix lignes, et le second trouve immédiatement ce que le
+premier avait laissé passer — ici, dès la première exécution, deux projets.
+
+```python
+# Le jumeau, en une ligne de comparaison
+releve.faux_si(
+    not any(f"{dossier.name}/**" in texte for texte in workflows),
+    f"{dossier.name}/ sait se tester mais aucun workflow ne le surveille",
+)
+```
+
+**Portée générale :** un contrôle qui protège une liste tenue à la main doit
+être écrit autant de fois qu'il existe de listes tenues à la main sur le même
+sujet. Et la façon de les trouver n'est pas de les chercher : c'est de demander,
+à chaque fois qu'on répare, *où est l'autre endroit qui dit la même chose ?*
