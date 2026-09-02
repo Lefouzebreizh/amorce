@@ -78,7 +78,9 @@ sur lui.
 | **IPTV** | accent `#4aa8ff` sur son `bord` : **5,1:1** | sous le seuil de 7 |
 | **Annuaria** | aide `#8a8ab0` sur son `bord` : **4,4:1** | sous 4,5, de peu |
 | **Annuaria** | **aucun jeton d'accent** | les onze sites n'ont pas de couleur d'action |
-| **Amorce** | porte `titan-neon`, `titan-ember`, `titan-night` | jetons d'un autre projet |
+
+Les jetons `titan-*` d'Amorce ressemblent à un cinquième défaut ; ils n'en sont
+pas un — voir D6.
 
 Amorce est le seul dont tout tient : texte 17,8:1 sur le fond, 13,0:1 sur le
 plan le plus haut, aide à 6,2:1, accent à 9,0:1.
