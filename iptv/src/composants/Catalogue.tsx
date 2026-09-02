@@ -99,6 +99,10 @@ export function Catalogue({
     ...(langue === undefined ? {} : { langue }),
     ...(groupe === undefined ? {} : { groupe }),
     ...(theme === undefined ? {} : { theme }),
+    // Un abonnement liste souvent la même chaîne plusieurs fois — une par
+    // qualité, une par groupe fournisseur. Sans effet sur films et séries,
+    // où deux titres identiques peuvent être deux œuvres différentes.
+    dedupliquer: genre === 'direct',
   }
 
   // Un film et une série se rangent par thème et se regardent en jaquettes ;

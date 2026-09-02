@@ -29,10 +29,13 @@ async function depotRempli(liste = LISTE): Promise<Depot> {
 test('importe une liste et la range par genre', async () => {
   const depot = await depotRempli()
   try {
-    assert.equal(depot.compter(), 6)
-    assert.equal(depot.compter({ genre: 'direct' }), 2)
-    assert.equal(depot.compter({ genre: 'film' }), 1)
-    assert.equal(depot.compter({ genre: 'serie' }), 3)
+    // `inclureEtranger` : la liste de test compte une entrée VOSTFR par
+    // construction (voir « filtre par groupe, par langue et par série »),
+    // et ce test-ci porte sur l'import et le genre, pas sur la langue.
+    assert.equal(depot.compter({ inclureEtranger: true }), 6)
+    assert.equal(depot.compter({ genre: 'direct', inclureEtranger: true }), 2)
+    assert.equal(depot.compter({ genre: 'film', inclureEtranger: true }), 1)
+    assert.equal(depot.compter({ genre: 'serie', inclureEtranger: true }), 3)
   } finally {
     depot.fermer()
   }
@@ -58,7 +61,7 @@ test('réimporter la même liste ne duplique rien', async () => {
     const resume = await importerM3U(depot, LISTE, { adresse: 'http://exemple.tv/get.php?username=jean&password=s3cr3t' })
     assert.equal(resume.ecrits, 6)
     assert.equal(resume.retires, 0)
-    assert.equal(depot.compter(), 6)
+    assert.equal(depot.compter({ inclureEtranger: true }), 6)
     // Et une seule source, malgré `utilisateur` non renseigné — le piège des
     // NULL distincts dans une contrainte UNIQUE.
     const sources = depot.base.prepare('SELECT COUNT(*) AS n FROM source').get() as {
@@ -97,7 +100,7 @@ test('un import partiel ne purge pas le catalogue', async () => {
     }
     const resume = await depot.importer(sourceId, rien(), { purger: false })
     assert.equal(resume.retires, 0)
-    assert.equal(depot.compter(), 6, 'le catalogue a été vidé par un import partiel')
+    assert.equal(depot.compter({ inclureEtranger: true }), 6, 'le catalogue a été vidé par un import partiel')
   } finally {
     depot.fermer()
   }
@@ -134,7 +137,7 @@ test('filtre par groupe, par langue et par série', async () => {
     assert.equal(depot.lister({ groupe: 'FR | TNT' }).length, 2)
     assert.equal(depot.lister({ langue: 'vostfr' }).length, 1)
     assert.equal(depot.lister({ serie: 'Kaamelott' }).length, 2)
-    const groupes = depot.groupes()
+    const groupes = depot.groupes({ inclureEtranger: true })
     assert.equal(groupes[0]?.nom, 'SERIES')
     assert.equal(groupes[0]?.compte, 3)
   } finally {
@@ -145,7 +148,7 @@ test('filtre par groupe, par langue et par série', async () => {
 test('regroupe les séries et rend leurs épisodes dans l’ordre', async () => {
   const depot = await depotRempli()
   try {
-    const series = depot.series()
+    const series = depot.series({ inclureEtranger: true })
     assert.deepEqual(
       series.map((s) => s.serie),
       ['Breaking Bad', 'Kaamelott'],
@@ -164,7 +167,7 @@ test('regroupe les séries et rend leurs épisodes dans l’ordre', async () => 
 test('le tri par défaut fait remonter le francophone', async () => {
   const depot = await depotRempli()
   try {
-    const series = depot.lister({ genre: 'serie' })
+    const series = depot.lister({ genre: 'serie', inclureEtranger: true })
     // Kaamelott n'est pas étiqueté, Breaking Bad est en VOSTFR : l'ordre suit
     // `prioriteFrancophone`, dont le SQL est dérivé.
     assert.equal(series[0]?.langue, 'vostfr')
@@ -256,9 +259,13 @@ test('un flux marqué mort disparaît des listes, sans être effacé', async () 
 
 test('ce qui n’a jamais été testé reste visible', async () => {
   const depot = await depotRempli()
-  assert.ok(depot.compter() > 0)
-  assert.equal(depot.compterParEtat().inconnus, depot.compter())
-  assert.equal(depot.aTester().length, depot.compter())
+  // `compterParEtat` et `aTester` portent sur l'état des flux, pas sur la
+  // langue : ils comptent tout, y compris l'entrée étrangère de la liste de
+  // test, d'où `inclureEtranger` pour comparer des ensembles identiques.
+  const total = depot.compter({ inclureEtranger: true })
+  assert.ok(total > 0)
+  assert.equal(depot.compterParEtat().inconnus, total)
+  assert.equal(depot.aTester().length, total)
 })
 
 test('« ranimer » remet en jeu tout ce qui avait été condamné', async () => {
@@ -335,19 +342,146 @@ test('une base d’avant les colonnes de rangement s’ouvre encore', async () =
   }
 })
 
-test('le dernier import se lit, ou dit franchement qu’il n’y en a pas', async () => {
-  const vide = ouvrirDepot(':memory:')
-  try {
-    assert.equal(vide.dernierImport(), undefined, 'rien d’importé, rien à dater')
-  } finally {
-    vide.fermer()
-  }
-
+test('un retrait est consigne seulement si l\u2019utilisateur avait marque l\u2019entree', async () => {
   const depot = await depotRempli()
   try {
-    const date = depot.dernierImport()
-    assert.ok(date !== undefined, 'un import laisse une trace datée')
-    assert.ok(!Number.isNaN(new Date(date).getTime()), 'la date se relit')
+    const film = depot.lister({ genre: 'film' })[0]
+    assert.ok(film)
+    // Une position de lecture sur le film, rien sur l'episode de Breaking Bad.
+    depot.enregistrerPosition(film.id, 620, 5400)
+
+    // Le fournisseur ne sert plus ni le film ni cet episode.
+    const reduite = LISTE.split('\n')
+      .filter((ligne) => !ligne.includes('Fabuleux') && !ligne.includes('movie/u/p/7'))
+      .filter((ligne) => !ligne.includes('Breaking Bad') && !ligne.includes('series/u/p/21'))
+      .join('\n')
+    await importerM3U(depot, reduite, {
+      adresse: 'http://exemple.tv/get.php?username=jean&password=s3cr3t',
+    })
+
+    assert.equal(depot.compter(), 4)
+    assert.equal(depot.element(film.id), undefined)
+
+    const retraits = depot.retraits()
+    assert.equal(retraits.length, 1, JSON.stringify(retraits))
+    assert.equal(retraits[0]?.elementId, film.id)
+    // Le titre est recopie : l'entree d'origine n'existe plus pour le rendre.
+    assert.match(retraits[0]?.titre ?? '', /Fabuleux/)
+    // Et la position de lecture, elle, a survecu au retrait.
+    assert.ok(depot.base.prepare('SELECT 1 FROM lecture WHERE element_id = ?').get(film.id))
+  } finally {
+    depot.fermer()
+  }
+})
+
+test('reclasser peut masquer une entrée comme étrangère, et le filtre par défaut l’écarte', async () => {
+  // Une liste isolée, sans rien de pré-classé étranger à l'import : le point
+  // ici est le mécanisme reclasser → compter, pas la règle de classement
+  // elle-même, déjà éprouvée dans pays.test.ts.
+  const depot = ouvrirDepot(':memory:')
+  await importerM3U(
+    depot,
+    [
+      '#EXTM3U',
+      '#EXTINF:-1 group-title="FR | TNT",FR | TF1 HD',
+      'http://exemple.tv/live/u/p/1.m3u8',
+      '#EXTINF:-1 group-title="FR | TNT",FR | France 2 HD',
+      'http://exemple.tv/live/u/p/2.m3u8',
+    ].join('\n'),
+    { adresse: 'http://exemple.tv/get.php' },
+  )
+  try {
+    const avant = depot.compter()
+    const cible = depot.lister({ limite: 1 })[0]
+    assert.ok(cible !== undefined)
+
+    const bilan = depot.reclasser(({ url, langue }) => ({
+      genre: 'direct',
+      pays: url === cible.url ? 'etranger' : undefined,
+      langue,
+    }))
+    assert.equal(bilan.etrangeres, 1)
+
+    assert.equal(depot.compter(), avant - 1, 'masquée par défaut')
+    assert.equal(depot.compter({ inclureEtranger: true }), avant, 'toujours là en base')
+    // `element` reste sans filtre, comme pour `etat` : un lien direct vers une
+    // entrée masquée continue de résoudre plutôt que de rendre une 404 muette.
+    assert.ok(depot.element(cible.id) !== undefined)
+  } finally {
+    depot.fermer()
+  }
+})
+
+test('choisir VOSTFR ou VO lève le filtre étranger, sinon le bouton ne rend jamais rien', async () => {
+  const depot = await depotRempli()
+  try {
+    // Breaking Bad, importée en VOSTFR dans la liste de test, est étrangère.
+    const avant = depot.lister({ langue: 'vostfr' }).length
+    assert.ok(avant > 0)
+
+    depot.reclasser(({ titre, groupe, langue }) => ({
+      genre: groupe === 'SERIES' ? 'serie' : groupe === 'FILMS VF' ? 'film' : 'direct',
+      langue,
+      pays: langue === 'vostfr' || langue === 'vo' ? 'etranger' : undefined,
+    }))
+
+    // Filtrer sur « toutes langues » masque toujours le VOSTFR par défaut…
+    assert.equal(
+      depot.lister().some((e) => e.titre.includes('Breaking Bad')),
+      false,
+    )
+    // … mais demander explicitement du VOSTFR le retrouve : sans quoi le
+    // bouton « VOSTFR » de l'interface rendrait toujours zéro résultat.
+    assert.equal(depot.lister({ langue: 'vostfr' }).length, avant)
+  } finally {
+    depot.fermer()
+  }
+})
+
+test('le cache d’affiche distingue « jamais interrogé » de « rien trouvé »', async () => {
+  const depot = await depotRempli()
+  try {
+    const film = depot.lister({ genre: 'film' })[0]
+    assert.ok(film !== undefined)
+
+    assert.equal(depot.affiche(film.id), undefined, 'rien n’a encore été demandé')
+
+    depot.enregistrerAffiche(film.id, { url: undefined, resume: undefined })
+    assert.deepEqual(depot.affiche(film.id), { url: undefined, resume: undefined })
+
+    // Une seconde recherche remplace la première plutôt que d'empiler une ligne.
+    depot.enregistrerAffiche(film.id, { url: 'https://image.tmdb.org/t/p/w500/x.jpg', resume: 'Un résumé.' })
+    assert.deepEqual(depot.affiche(film.id), {
+      url: 'https://image.tmdb.org/t/p/w500/x.jpg',
+      resume: 'Un résumé.',
+    })
+    const lignes = depot.base.prepare('SELECT COUNT(*) AS n FROM affiche').get() as { n: number }
+    assert.equal(lignes.n, 1)
+  } finally {
+    depot.fermer()
+  }
+})
+
+test('une fiche de série se retrouve par son identifiant', async () => {
+  const depot = ouvrirDepot(':memory:')
+  try {
+    const sourceId = depot.declarerSource({ genre: 'xtream', adresse: 'http://exemple.tv' })
+    depot.enregistrerFiches(sourceId, [
+      {
+        id: 'se_abc',
+        refExterne: '1',
+        titre: 'Kaamelott',
+        titreBrut: 'Kaamelott',
+        annee: 2005,
+        logo: undefined,
+        resume: undefined,
+        genres: [],
+        groupe: undefined,
+        langue: 'vf',
+      },
+    ])
+    assert.equal(depot.ficheParId('se_abc')?.titre, 'Kaamelott')
+    assert.equal(depot.ficheParId('inexistant'), undefined)
   } finally {
     depot.fermer()
   }

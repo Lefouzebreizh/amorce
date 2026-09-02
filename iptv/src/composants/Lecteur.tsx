@@ -26,6 +26,8 @@ interface Props {
   readonly src: string
   readonly positionDepart: number
   readonly direct: boolean
+  /** Faux pour un `.mp4`/`.mkv` : hls.js n'a rien à y analyser. */
+  readonly manifeste: boolean
 }
 
 /** Le nom d'une piste tel qu'il s'affiche : ce que le flux déclare, ou son code. */
@@ -64,8 +66,26 @@ function nommer(piste: { name?: string; lang?: string }, rang: number): string {
  * mieux (décodage matériel, économie de batterie). Ailleurs, aucun navigateur
  * de bureau ne sait lire un `.m3u8`, d'où la bibliothèque — chargée à la
  * demande, pour qu'elle ne pèse pas sur les écrans de navigation.
+ *
+ * **`canPlayType` ment sur Windows.** Edge y répond « maybe » pour
+ * `application/vnd.apple.mpegurl` sans savoir vraiment lire le flux : le
+ * pipeline natif (Media Foundation) échoue sur `DEMUXER_ERROR_COULD_NOT_PARSE`,
+ * image et son coupés ensemble, sur toute chaîne et tout titre — mesuré en
+ * conditions réelles. La détection ne peut donc pas se fier au seul
+ * `canPlayType` ; elle demande en plus la présence de
+ * `webkitShowPlaybackTargetPicker`, l'API AirPlay propre à WebKit/Safari et
+ * déjà utilisée pour la diffusion — un signal qu'Edge ne porte pas.
+ *
+ * **Et hls.js seulement si la source est un manifeste.** Un film ou un
+ * épisode Xtream est presque toujours un `.mp4`/`.mkv` direct — mesuré sur le
+ * catalogue réel, jamais un `.m3u8`. Lui donner quand même à hls.js le fait
+ * échouer à l'analyse du manifeste, à coup sûr et pour tout le monde : image
+ * et son perdus ensemble, sans rapport avec le piège Edge ci-dessus. Un
+ * fichier direct se pose donc tel quel sur `element.src`, comme n'importe
+ * quelle vidéo — c'est ce que sait faire nativement tout navigateur, sans
+ * MSE ni bibliothèque.
  */
-export function Lecteur({ id, src, positionDepart, direct }: Props) {
+export function Lecteur({ id, src, positionDepart, direct, manifeste }: Props) {
   const video = useRef<HTMLVideoElement>(null)
   const [pistesAudio, setPistesAudio] = useState<Piste[]>([])
   const [pistesSousTitres, setPistesSousTitres] = useState<Piste[]>([])
@@ -95,7 +115,10 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
     let annule = false
     let detruire: (() => void) | undefined
 
-    const natif = element.canPlayType('application/vnd.apple.mpegurl') !== ''
+    const webkit =
+      typeof (element as unknown as { webkitShowPlaybackTargetPicker?: unknown })
+        .webkitShowPlaybackTargetPicker === 'function'
+    const natif = webkit && element.canPlayType('application/vnd.apple.mpegurl') !== ''
 
     const preparer = async (): Promise<void> => {
       // En diffusion, la source doit être une **adresse**, pas un flux assemblé
@@ -104,7 +127,7 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
         element.src = adresseAbsolue(src, window.location.href)
         return
       }
-      if (natif) {
+      if (!manifeste || natif) {
         element.src = src
         return
       }
@@ -195,7 +218,7 @@ export function Lecteur({ id, src, positionDepart, direct }: Props) {
       detruire?.()
       detruireLecture.current = undefined
     }
-  }, [src, direct, mode])
+  }, [src, direct, mode, manifeste])
 
   // Ce que le navigateur sait faire, et s'il voit un appareil.
   useEffect(() => {

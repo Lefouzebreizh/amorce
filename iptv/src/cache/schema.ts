@@ -34,6 +34,7 @@ export const COLONNES_AJOUTEES: readonly { table: string; colonne: string; sql: 
   { table: 'element', colonne: 'canal', sql: 'ALTER TABLE element ADD COLUMN canal INTEGER' },
   { table: 'element', colonne: 'rang', sql: 'ALTER TABLE element ADD COLUMN rang INTEGER' },
   { table: 'element', colonne: 'theme', sql: 'ALTER TABLE element ADD COLUMN theme TEXT' },
+  { table: 'element', colonne: 'pays', sql: 'ALTER TABLE element ADD COLUMN pays TEXT' },
 ]
 
 export const SCHEMA = `
@@ -90,6 +91,10 @@ CREATE TABLE IF NOT EXISTS element (
   -- ne les distingue à l'œil d'un flux valide.
   etat            TEXT,
   teste_le        TEXT,
+  -- 'etranger' si le groupe (chaîne) ou la piste (film, série) ne porte aucun
+  -- français ; NULL sinon, ce qui vaut « français » comme ce qui vaut « on ne
+  -- sait pas ». Voir normalisation/pays.ts pour la règle de classement.
+  pays            TEXT,
   -- Horodatage du dernier import qui a vu cette entrée. C'est lui qui permet de
   -- retirer, après coup, ce que le fournisseur ne sert plus : on ne vide pas la
   -- table avant d'importer, sans quoi une coupure réseau en cours de route
@@ -155,6 +160,26 @@ CREATE TABLE IF NOT EXISTS lecture (
   vu_le      TEXT NOT NULL
 );
 
+-- Ce qui a disparu du catalogue alors que l'utilisateur y avait laissé quelque
+-- chose. C'est le complément direct de la décision ci-dessus : un favori et une
+-- position survivent au retrait, mais ils ne désignent plus qu'un identifiant —
+-- et cet identifiant est une empreinte de l'URL du flux, qui ne dit ni le titre
+-- ni rien d'autre. Sans cette table, tout ce qu'on sait afficher est « vous
+-- étiez à 22 % d'un film que le fournisseur ne sert plus », sans pouvoir dire
+-- lequel. C'est exactement ce qui est arrivé le 01/09/2026, sur deux films.
+--
+-- Seuls les retraits **référencés** sont consignés. Un import purge aussi les
+-- épisodes chargés à la demande — cent quatre-vingts au dernier passage, qui
+-- reviendront tels quels à la prochaine ouverture de leur série : les garder
+-- tous noierait les seuls retraits dont quelqu'un se souvienne.
+CREATE TABLE IF NOT EXISTS retrait (
+  element_id TEXT PRIMARY KEY,
+  titre      TEXT NOT NULL,
+  genre      TEXT,
+  serie      TEXT,
+  retire_le  TEXT NOT NULL
+);
+
 -- Le guide des programmes.
 --
 -- La clé primaire est (chaine, debut) : un guide se réimporte tous les jours et
@@ -174,6 +199,25 @@ CREATE TABLE IF NOT EXISTS programme (
   categories TEXT NOT NULL,     -- JSON
   icone      TEXT,
   PRIMARY KEY (chaine, debut)
+);
+
+-- L'affiche et le résumé trouvés chez TMDB, en cache pour ne pas réinterroger
+-- le service à chaque ouverture de la même fiche.
+--
+-- La clé est l'identifiant d'un film (« fi_… ») ou d'une fiche de série
+-- (« se_… ») : les deux vivent dans des espaces de préfixes distincts, jamais
+-- une chaîne ou un épisode, qui n'ont pas de fiche propre à eux. Pas de clé
+-- étrangère vers « element » ou « serie », même raison que pour « favori » : un
+-- retrait passager du fournisseur ne doit pas effacer une affiche déjà trouvée.
+--
+-- « url » et « resume » peuvent être NULL : TMDB a répondu et n'a rien sous ce
+-- titre. C'est un résultat à part entière, pas une absence — voir le
+-- commentaire de tête de « src/tmdb/tmdb.ts ».
+CREATE TABLE IF NOT EXISTS affiche (
+  id           TEXT PRIMARY KEY,
+  url          TEXT,
+  resume       TEXT,
+  interroge_le TEXT NOT NULL
 );
 
 -- Les réglages de l'installation. Une seule entrée pour l'instant : le secret

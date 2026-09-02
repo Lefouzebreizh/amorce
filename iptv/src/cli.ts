@@ -324,6 +324,18 @@ async function principal(argv: readonly string[]): Promise<number> {
           const n = depot.compter({ langue })
           if (n > 0) console.log(`  ${langue.padEnd(9)} ${n}`)
         }
+        // Affiché ici et pas au moment de l'import : le retrait se constate à
+        // la fin d'un import, mais il se lit plus tard — quand on cherche le
+        // film qu'on avait commencé et qu'on ne retrouve pas.
+        const retraits = depot.retraits()
+        if (retraits.length > 0) {
+          console.log(`\nDisparus du catalogue, et vous les aviez marqués (${retraits.length}) :`)
+          for (const retrait of retraits.slice(0, 20)) {
+            const ou = retrait.serie ? ` — ${retrait.serie}` : ''
+            console.log(`  ${retrait.retireLe.slice(0, 10)}  ${retrait.titre}${ou}`)
+          }
+          if (retraits.length > 20) console.log(`  … et ${retraits.length - 20} autre(s)`)
+        }
         return 0
       }
 
@@ -392,6 +404,10 @@ async function principal(argv: readonly string[]): Promise<number> {
                 : `, ${String(dossier.autres)} sans thème reconnu (dossier « Autres »)`),
           )
         }
+        console.log(
+          `${String(bilan.etrangeres)} entrées masquées comme étrangères (chaîne d'un autre pays, ` +
+            `film ou série sans piste française) — rien n'est supprimé, seulement écarté de l'affichage.`,
+        )
         return 0
       }
 

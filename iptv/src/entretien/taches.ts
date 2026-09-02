@@ -20,6 +20,7 @@ import { testerFlux, type OptionsTest } from '../lecture/tester.ts'
 import { numeroDeCanal, rangDeChaine } from '../normalisation/canal.ts'
 import { detecterEpisode } from '../normalisation/episode.ts'
 import { detecterGenre } from '../normalisation/genre.ts'
+import { estEtrangerDirect, estEtrangerVod } from '../normalisation/pays.ts'
 import { detecterTheme } from '../normalisation/theme.ts'
 
 /** Le plafond d'un balayage complet : au-delà, ce n'est plus un catalogue. */
@@ -87,6 +88,8 @@ export interface BilanRangement {
   readonly chaines: number
   /** Entrées dont le **genre** a changé : le classement d'un import ancien. */
   readonly reclasses: number
+  /** Entrées classées étrangères — voir `normalisation/pays.ts`. */
+  readonly etrangeres: number
   readonly dossiers: readonly { genre: 'film' | 'serie'; nommes: number; autres: number }[]
 }
 
@@ -103,7 +106,7 @@ export interface BilanRangement {
  * coûte plusieurs minutes et demande de retrouver l'adresse de sa source.
  */
 export function rangerCatalogue(depot: Depot): BilanRangement {
-  const { numerotees, reclasses } = depot.reclasser(({ titre, url, groupe }) => {
+  const { numerotees, reclasses, etrangeres } = depot.reclasser(({ titre, url, groupe, langue }) => {
     const genre = detecterGenre({
       url,
       groupe,
@@ -111,10 +114,19 @@ export function rangerCatalogue(depot: Depot): BilanRangement {
     })
     // Chacun ne porte que ce qui le concerne : une chaîne a un numéro, une
     // œuvre a un thème. Poser les deux partout reviendrait à afficher un rang
-    // de famille à côté d'un film.
+    // de famille à côté d'un film. La langue étrangère se lit différemment
+    // selon le genre — le groupe pour une chaîne, la piste pour une œuvre.
+    const pays =
+      genre === 'direct'
+        ? estEtrangerDirect(groupe)
+          ? 'etranger'
+          : undefined
+        : estEtrangerVod(langue)
+          ? 'etranger'
+          : undefined
     return genre === 'direct'
-      ? { genre, canal: numeroDeCanal(titre), rang: rangDeChaine(titre) }
-      : { genre, theme: detecterTheme(groupe) }
+      ? { genre, canal: numeroDeCanal(titre), rang: rangDeChaine(titre), pays }
+      : { genre, theme: detecterTheme(groupe), pays }
   })
 
   const dossiers = (['film', 'serie'] as const)
@@ -131,6 +143,7 @@ export function rangerCatalogue(depot: Depot): BilanRangement {
   return {
     numerotees,
     reclasses,
+    etrangeres,
     chaines: depot.compter({ genre: 'direct', inclureMorts: true }),
     dossiers,
   }
