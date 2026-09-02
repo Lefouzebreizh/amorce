@@ -44,6 +44,35 @@ CLASSES_FELINES = ("Cat", "Purr", "Meow", "Hiss", "Caterwaul")
 # `Domestic animals, pets`, qui sont vrais et n'apprennent rien.
 CLASSES_SPECIFIQUES = ("Purr", "Meow", "Hiss", "Caterwaul")
 
+# Parmi elles, celles qui portent une **lecture**. `Meow` n'y est pas : c'est la
+# classe résiduelle, « un chat a vocalisé », et elle n'apprend rien de plus.
+CLASSES_PORTEUSES = ("Purr", "Hiss", "Caterwaul")
+
+# Plancher au-dessus duquel une classe porteuse l'emporte sur `Meow`.
+#
+# Ce nombre a été refusé une première fois, faute de données — quatre bruitages
+# ne sont pas un jeu de données, et un seuil inventé aurait eu l'air d'une
+# mesure. Il est écrit maintenant parce qu'un corpus de 15 sons le sépare
+# franchement, mesuré le 02/09/2026 :
+#
+#     miaulements ordinaires   Caterwaul  0,000  0,016  0,031
+#     feulements / caterwauls  Caterwaul  0,199  0,332  0,414  0,586  0,738
+#
+# Un rapport de 6 entre le plus haut miaulement ordinaire et le plus bas son de
+# détresse. 0,10 tombe au milieu et n'est proche d'aucune valeur observée.
+#
+# CE QUI L'A RENDU NÉCESSAIRE : sans lui, `Meow` gagnait **les cinq duels sur
+# cinq**, et le stress n'était jamais atteint. Le dépôt affirmait que le modèle
+# public livrait « contentement et stress » ; mesuré, il ne livrait que le
+# contentement. Un `max()` sur des classes de rangs différents ne compare pas
+# ce qu'on croit — c'est la même leçon que la classe parente `Cat`, une couche
+# plus bas.
+#
+# CE QUI RESTE À ÉPROUVER : ces quinze sons sont **générés**, pas enregistrés.
+# Le plancher sépare proprement ce corpus-là ; il n'a jamais vu un vrai chat.
+# Les enregistrements du chat d'Erwann le confirmeront ou le déplaceront.
+SEUIL_LECTURE = 0.10
+
 # Ce que YAMNet nomme lui-même, et qu'on n'a donc pas à deviner.
 # `Cat` et `Meow` n'y sont pas : ce sont eux qui demandent l'étage 2.
 LECTURE_DIRECTE = {
@@ -134,28 +163,23 @@ def juger(
     # Parmi les quatre classes *spécifiques* seulement — voir le commentaire de
     # `CLASSES_SPECIFIQUES` : ni `Animal`, ni `Domestic animals`, ni `Cat` ne
     # concourent, parce qu'ils sont vrais et n'apprennent rien.
-    # QUESTION OUVERTE, et le premier enregistrement réel doit la trancher.
+    # QUESTION TRANCHÉE le 02/09/2026, sur un corpus de 15 sons.
     #
-    # `Meow` ne porte aucune lecture : c'est la classe résiduelle, « un chat a
-    # vocalisé ». `Purr`, `Hiss` et `Caterwaul` en portent une. Prendre le
-    # maximum fait donc parfois gagner celle qui n'apprend rien. Mesuré sur
-    # deux bruitages le 01/09/2026 :
+    # Une classe porteuse de lecture l'emporte sur `Meow` dès qu'elle franchit
+    # `SEUIL_LECTURE` — voir le commentaire de cette constante pour les chiffres
+    # qui l'ont décidée. En dessous, `Meow` reprend la main et l'étage 2 bis
+    # s'applique.
     #
-    #     miaulement d'1 s   Meow 0,586   Caterwaul 0,500  -> `Meow` gagne
-    #     chat qui feule     Meow 0,891   Caterwaul 0,586  -> `Meow` gagne
-    #
-    # Le second cas est probablement une erreur : un chat qui feule est
-    # stressé, et c'est justement la lecture qu'on perd. Le premier, on ne
-    # sait pas — un miaulement insistant *est* acoustiquement proche d'un
-    # caterwaul, et personne ici n'a pu écouter le fichier.
-    #
-    # Une règle « la classe porteuse de lecture l'emporte au-dessus d'un
-    # plancher » réglerait le second cas et casserait peut-être le premier.
-    # Elle n'est donc **pas** écrite : quatre bruitages générés ne sont pas un
-    # jeu de données, et un seuil inventé ici aurait l'air d'une mesure. On
-    # garde le maximum, qui est au moins explicable, et on tranche sur les
-    # enregistrements du chat d'Erwann.
-    dominante = max(CLASSES_SPECIFIQUES, key=lambda c: fenetre.get(c, 0.0))
+    # `Hiss` est dans la liste et n'en sortira pas, mais il faut savoir qu'il
+    # est **muet** : 0,000 sur les trois feulements du corpus. La classe existe
+    # dans YAMNet et ne se déclenche pas sur un chat — c'est `Caterwaul` qui
+    # porte seul le stress aujourd'hui. Le retirer ne changerait rien ; le
+    # croire actif ferait chercher un défaut ailleurs.
+    porteuse = max(CLASSES_PORTEUSES, key=lambda c: fenetre.get(c, 0.0))
+    if fenetre.get(porteuse, 0.0) >= SEUIL_LECTURE:
+        dominante = porteuse
+    else:
+        dominante = max(CLASSES_SPECIFIQUES, key=lambda c: fenetre.get(c, 0.0))
 
     # --- Étage 2 : ce que le modèle nomme déjà lui-même. ---
     if dominante in LECTURE_DIRECTE:

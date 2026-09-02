@@ -10,12 +10,23 @@ from habillage.carte import en_svg  # noqa: E402
 from noyau.intentions import Intention  # noqa: E402
 from noyau.verdict import juger  # noqa: E402
 
-# Un jeu de scores par intention. Ceux des trois premiers sont **relevés** sur
-# de vrais sons ; les deux derniers sont fabriqués faute d'enregistrement.
+# Un jeu de scores par intention, **relevé sur le corpus** du 02/09/2026 pour
+# les trois premiers ; les deux derniers passent par la couture, faute de tête
+# entraînée.
+#
+# Le stress portait auparavant un cas fabriqué à la main, `Hiss 0,51`, et la
+# planche l'affichait fièrement : « Hiss · 51% ». Or `Hiss` est **muet** —
+# 0,000 sur les trois feulements réels. La carte de démonstration annonçait donc
+# une mention qu'aucun chat ne produira jamais. Défaut invisible aux tests, qui
+# ne regardent pas la planche, et invisible au corpus, qui ne regarde pas les
+# cartes : il fallait les deux, puis un œil.
+#
+# D'où la règle qui s'applique ici : **une planche de démonstration se nourrit
+# de mesures, jamais de valeurs choisies pour bien rendre.**
 CAS = {
-    "contentement": [{"Cat": 0.109, "Purr": 0.148}],
-    "stress": [{"Cat": 0.60, "Hiss": 0.51}],
-    "indecis": [{"Cat": 0.988, "Meow": 0.891}],
+    "contentement": [{"Cat": 0.500, "Purr": 0.586}],           # ronron-1
+    "stress": [{"Cat": 0.980, "Meow": 0.801, "Caterwaul": 0.586}],  # feulement-3
+    "indecis": [{"Cat": 0.996, "Meow": 0.891, "Caterwaul": 0.031}],  # miaou-3
     "faim": None,        # via la couture, tant que la tête n'existe pas
     "sortir": None,
 }

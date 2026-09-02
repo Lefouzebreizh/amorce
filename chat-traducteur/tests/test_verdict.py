@@ -207,15 +207,49 @@ class TestComportementEpingle(unittest.TestCase):
     rôle : rendre visible une décision qui, sans eux, se prendrait en silence.
     """
 
-    def test_meow_l_emporte_sur_caterwaul_pour_l_instant(self):
-        """Scores relevés sur un chat qui feule, le 01/09/2026.
+    def test_caterwaul_l_emporte_sur_meow_desormais(self):
+        """La question ouverte, tranchée le 02/09/2026 sur un corpus de 15 sons.
 
-        Le verdict est probablement faux — un feulement est du stress. Il est
-        épinglé tel quel plutôt que corrigé au jugé.
+        Ce test remplace celui qui épinglait le comportement inverse. Il n'a
+        pas basculé tout seul : le test épinglé a échoué au moment où la règle
+        a changé, ce qui était exactement son rôle — rendre visible une
+        décision qui, sans lui, se serait prise en silence.
+
+        Les scores sont ceux d'un vrai feulement du corpus. Avant la règle,
+        `Meow 0,891` battait `Caterwaul 0,586` et le stress était perdu : les
+        **cinq** sons de détresse du corpus ressortaient `indécis`, et la
+        moitié du produit que le dépôt annonçait n'existait pas.
         """
-        v = juger([{"Cat": 0.969, "Meow": 0.891, "Caterwaul": 0.586}])
+        v = juger([{"Cat": 0.980, "Meow": 0.801, "Caterwaul": 0.586}])
+        self.assertEqual(v.classe_dominante, "Caterwaul")
+        self.assertIs(v.intention, Intention.STRESS)
+        self.assertIs(v.source, Source.MESUREE)
+
+    def test_un_miaulement_ordinaire_ne_bascule_pas_en_stress(self):
+        """Le symétrique, et c'est lui qui borne le plancher.
+
+        Les trois miaulements ordinaires du corpus portent `Caterwaul` à
+        0,000, 0,016 et 0,031 — tous sous `SEUIL_LECTURE`. Un plancher plus
+        bas ferait passer un chat qui réclame sa gamelle pour un chat en
+        détresse, ce qui est le pire des deux sens : l'application inquiéterait
+        quelqu'un sans raison.
+        """
+        v = juger([{"Cat": 0.996, "Meow": 0.891, "Caterwaul": 0.031}])
         self.assertEqual(v.classe_dominante, "Meow")
         self.assertIs(v.intention, Intention.INDECIS)
+
+    def test_hiss_est_une_classe_muette(self):
+        """Mesuré : 0,000 sur les trois feulements du corpus.
+
+        La classe existe dans YAMNet et ne se déclenche pas sur un chat. Le
+        test ne l'exige pas — il grave le fait, pour qu'une session qui cherche
+        pourquoi le stress n'arrive pas ne parte pas fouiller la porte.
+        Si `Hiss` se met un jour à répondre sur de vrais chats, il fonctionne
+        déjà : la lecture directe est branchée.
+        """
+        v = juger([{"Cat": 0.60, "Hiss": 0.51}])
+        self.assertIs(v.intention, Intention.STRESS)
+        self.assertEqual(v.classe_dominante, "Hiss")
 
     def test_un_ronronnement_faible_franchit_quand_meme_la_porte(self):
         """Mesuré : cumul 0,262 sur un vrai ronronnement, seuil à 0,20.

@@ -486,15 +486,29 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 - **chat-traducteur/** — traducteur de miaulements, Python. Deux étages, et le
   premier est un **veto** : YAMNet en TFLite (4,1 Mo, `storage.googleapis.com`,
   car `tfhub.dev`, `kaggle.com` et `huggingface.co` rendent `000`) dit si c'est
-  un chat ; rien ne cherche d'intention avant. Le modèle public livre déjà la
-  moitié du produit et la livre **mesurée** — il nomme lui-même `Purr`, `Hiss`
-  et `Caterwaul`, soit *contentement* et *stress*. Faim et envie de sortir sont
+  un chat ; rien ne cherche d'intention avant. Le modèle public livre une part
+  du produit et la livre **mesurée** — mais moins que ce que cette ligne
+  annonçait jusqu'au 02/09/2026, et la correction vaut d'être lue.
+  Sur un corpus de 15 sons : `Purr` porte le *contentement*, `Caterwaul` porte
+  seul le *stress*, et **`Hiss` est une classe muette** — 0,000 sur les trois
+  feulements. Surtout, `Caterwaul` perdait **cinq duels sur cinq** contre
+  `Meow`, si bien que le stress n'était jamais atteint : le dépôt annonçait la
+  moitié du produit, le code en livrait le quart. Une classe porteuse de
+  lecture l'emporte désormais sur `Meow` au-dessus de 0,10 — plancher mesuré,
+  six fois au-dessus du plus haut miaulement ordinaire.
+  **La porte, elle, est franche** : 12 sons félins entre 0,398 et 2,566, trois
+  bruits domestiques entre 0,008 et 0,012 — trente-trois fois d'écart. Faim et envie de sortir sont
   deux façons de miauler qu'aucun modèle public ne sépare : l'application rend
   `indécis`, avec son propre écran, plutôt qu'un pourcentage inventé.
   **`Cat` ouvre la porte et ne choisit jamais** — c'est une classe parente, qui
   vaut 0,988 là où `Meow` vaut 0,891 ; la laisser concourir perdait la lecture
   directe à tous les coups, et six tests verts ne le voyaient pas. Le noyau est
-  en bibliothèque standard **pure** : 20 tests en 1 ms sans rien installer.
+  en bibliothèque standard **pure** : 31 tests en 3 ms sans rien installer,
+  **habillage compris** — la carte SVG 1080 × 1920 est pure elle aussi. Elle
+  ne peut pas afficher un score que le modèle n'a pas mesuré : le bloc de
+  confiance n'existe que pour une lecture `MESUREE`, et deux tests le
+  tiennent dans les deux sens — l'un refuse le score sans mesure, l'autre
+  refuse qu'on supprime le bloc entier.
   CatMeows n'est pas récupérable d'ici (Zenodo refusé) et ses trois contextes
   ne sont pas les quatre intentions visées. Se vérifie depuis la racine.
 - **conseiller-patrimoine/** — la vue d'ensemble du patrimoine, **en lecture

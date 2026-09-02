@@ -5132,3 +5132,63 @@ pour fusionner les trois.
 l'attente, `main` avance. Les trois branches ont été retestées par
 `git merge-tree` contre le `main` du moment avant d'être fusionnées — trois
 fusions propres, mais c'est le test qui le disait, pas l'espoir.
+
+## Un `max()` sur des classes de rangs différents — trois fois le même défaut
+
+Le traducteur de chat a payé **trois fois** la même erreur en deux jours, sous
+trois apparences, et c'est la répétition qui rend la leçon utile.
+
+| ce qui était comparé | ce qui gagnait à tort | ce qui l'a montré |
+| --- | --- | --- |
+| `Cat` (parent) contre `Meow` (enfant) | le parent, qui n'apprend rien | des scores bruts affichés |
+| cinq `id="fond"` dans une page | le premier, pour les cinq cartes | une planche d'images |
+| `Meow` (résiduel) contre `Caterwaul` (porteur) | le résiduel, cinq fois sur cinq | un corpus de 15 sons |
+
+Le point commun n'est pas le code, c'est la **forme du défaut** : deux
+grandeurs de rangs différents mises dans le même `max()`, et le résultat reste
+toujours plausible. Aucun test n'échoue, aucun verdict n'a l'air faux.
+
+La parade, elle, est structurelle : **séparer ce qui ouvre une porte de ce qui
+porte une lecture.** Les classes génériques (`Animal`, `Cat`) autorisent ; les
+classes précises (`Purr`, `Caterwaul`) décident ; la résiduelle (`Meow`) ne
+décide jamais tant qu'une porteuse répond. Vaut pour toute sortie de modèle
+multi-étiquette hiérarchique, pas seulement YAMNet.
+
+Et le corollaire de méthode, qui vaut au-delà des modèles : **un verdict isolé
+ne dit jamais si une règle tient — il dit ce qu'elle a répondu une fois.** Les
+trois défauts ont été trouvés en mettant plusieurs cas côte à côte, jamais en
+relisant du code, jamais en lançant les tests.
+
+## Un seuil se refuse d'abord, puis s'écrit quand les chiffres le portent
+
+Le 01/09, le plancher qui départage `Meow` et `Caterwaul` a été **refusé** :
+quatre bruitages ne sont pas un jeu de données, et un nombre inventé là aurait
+eu l'air d'une mesure. Le refus a été écrit en commentaire et **épinglé par un
+test** qui gravait le comportement d'alors.
+
+Le 02/09, quinze sons ont rendu la séparation évidente — miaulements ordinaires
+à `Caterwaul` ≤ 0,031, sons de détresse ≥ 0,199, un rapport de six. Le seuil
+s'est écrit à 0,10, et **le test épinglé a échoué**, exactement comme prévu.
+
+C'est ce qu'un test d'épinglage sert à faire : il ne dit pas « c'est juste », il
+dit « c'est ce que le code fait aujourd'hui », et il transforme un changement
+silencieux en décision visible. Sans lui, la règle aurait pu être écrite au jugé
+un soir de fatigue sans que rien ne s'y oppose.
+
+## Un bruitage généré trouve un défaut, il ne règle pas un seuil — sauf en nombre
+
+Quinze bruitages ElevenLabs (`sfx`, `eleven_text_to_sound_v2`) coûtent **4,5
+centimes** et se génèrent en deux minutes, cinq invites de trois variations.
+Ils ont fait ce qu'aucune synthèse maison n'a réussi : franchir la porte de
+YAMNet, et révéler que le stress était inatteignable.
+
+La borne du 01/09 — « ils suffisent à trouver un défaut, pas à régler un
+seuil » — se précise plutôt qu'elle ne tombe. Ce qu'un corpus généré établit,
+c'est la **hiérarchie interne du modèle** : quelles classes co-occurrent,
+laquelle écrase laquelle. C'est une propriété du modèle, pas des chats, et elle
+se transporte. Ce qu'il n'établit pas, c'est un seuil absolu sur du son réel —
+micro de téléphone, distance, pièce, bruit de fond.
+
+**Penser à des témoins négatifs**, qui coûtent le même prix et valent autant :
+trois bruits domestiques ont montré 33× d'écart avec le plus faible son félin,
+ce qui a transformé un seuil deviné en seuil mesuré.
