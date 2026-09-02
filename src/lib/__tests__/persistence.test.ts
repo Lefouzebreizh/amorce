@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fichierExploitable, fileKey, fileRefs, restoreProject, serializeProject, worthSaving } from '../persistence.ts';
 import { emptyProject } from '../timeline.ts';
@@ -33,6 +34,28 @@ function allUrls(p: Project): Map<string, string> {
 test('les clés de rangement séparent les familles', () => {
   assert.notEqual(fileKey('asset', 'x'), fileKey('voix', 'x'));
   assert.equal(fileKey('musique', 'peu importe'), 'musique');
+});
+
+test('vider son montage efface vraiment, au lieu de ne rien faire', () => {
+  /*
+   * `worthSaving` ne distingue pas un projet **vierge** d'un projet **vidé**,
+   * et c'est voulu : les deux n'ont rien à conserver. Mais la conséquence ne
+   * l'était pas. Le ménage des fichiers déréférencés vit dans `save`, si bien
+   * qu'un projet retombé à zéro rush ne déclenchait plus rien — et les vidéos
+   * restaient dans le stockage de l'appareil pour toujours. Retirer son dernier
+   * rush est précisément le geste de qui veut qu'elles disparaissent.
+   *
+   * Le hook appelle donc `clear` là où il rendait la main. Ce test relit son
+   * source, comme `frontiere.test.ts` relit celui du moteur : la règle qui
+   * s'érode sans bruit est celle qu'aucun test ne garde.
+   */
+  const source = readFileSync(new URL('../../hooks/usePersistence.ts', import.meta.url), 'utf8');
+  assert.match(source, /\bclear\b/, 'le hook doit pouvoir effacer, pas seulement écrire');
+  assert.doesNotMatch(
+    source,
+    /if \(!worthSaving\([^)]*\)\) return;/,
+    'rendre la main sur un projet vidé laisse ses fichiers sur l’appareil',
+  );
 });
 
 test('un projet vierge n’a rien à conserver', () => {
