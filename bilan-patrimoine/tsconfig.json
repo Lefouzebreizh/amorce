@@ -1,0 +1,26 @@
+{
+  // Le cœur tourne sous Node par simple retrait des types
+  // (`--experimental-strip-types`), comme celui d'IPTV : ses imports portent
+  // donc l'extension `.ts`, que Node exige, et `allowImportingTsExtensions`
+  // empêche `tsc` de la refuser.
+  //
+  // `erasableSyntaxOnly` interdit la syntaxe TypeScript que Node ne sait pas
+  // retirer seul — pas d'`enum`, pas de propriétés de constructeur. C'est ce
+  // qui garde `npm test` exécutable sans étape de compilation, donc sans une
+  // seconde vérité sur le même code.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
+}

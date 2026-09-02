@@ -5192,3 +5192,48 @@ micro de téléphone, distance, pièce, bruit de fond.
 **Penser à des témoins négatifs**, qui coûtent le même prix et valent autant :
 trois bruits domestiques ont montré 33× d'écart avec le plus faible son félin,
 ce qui a transformé un seuil deviné en seuil mesuré.
+
+---
+
+## Un tri par une seule grandeur devient faux dès qu'il en existe deux — 02/09/2026
+
+*Coût : rattrapé avant livraison, en lisant une sortie. Cinquante-trois tests
+verts ne l'avaient pas vu.*
+
+Un bilan de patrimoine classait ses recommandations par **euros économisés par
+an**, du plus cher au moins cher. Le tri paraissait évident, il était testé, et
+il donnait sur un profil réel :
+
+> **1.** Vous avez probablement droit au LEP — *environ 60 € par an*
+> **2.** Votre matelas de sécurité couvre moins de deux mois
+
+Le conseil est faux dans cet ordre, et il se contredisait tout seul : le constat
+numéro 2 disait noir sur blanc qu'il était « le premier objectif à viser avant
+de penser à placer quoi que ce soit ailleurs ».
+
+**La cause :** deux grandeurs incommensurables cohabitaient dans la même liste.
+Un **risque** — ne pas pouvoir encaisser une chaudière qui lâche — et un **coût
+d'opportunité** — soixante euros non gagnés. Les trier ensemble revient à
+comparer un danger et un manque à gagner sur la même échelle, ce qui n'a pas de
+sens : soixante euros valent toujours plus que « zéro euro de risque », donc le
+risque perd systématiquement.
+
+**La parade tient en une ligne**, et elle est plus honnête qu'un poids bricolé
+qui rendrait les deux grandeurs artificiellement comparables :
+
+```ts
+const URGENCE: Record<string, number> = { reserve_insuffisante: 1 }
+const rang = (c) => URGENCE[c.cle] ?? 99
+liste.sort((a, b) => rang(a) - rang(b) || (b.cout ?? -1) - (a.cout ?? -1))
+```
+
+Un rang explicite d'abord, le montant ensuite. Le rang reste minuscule — une
+seule entrée — parce que chaque exception ajoutée rend le classement moins
+lisible et plus difficile à défendre.
+
+**Portée générale :** avant de trier une liste, vérifier que tous ses éléments
+se mesurent bien dans la **même unité**. Dès que deux natures cohabitent — un
+risque et un coût, une panne et une lenteur, un bloquant et un confort — il faut
+un rang explicite, jamais une pondération qui fait semblant de les rendre
+comparables. Et le défaut ne se voit pas dans un test : il se voit en lisant la
+liste produite, à voix haute, sur un cas réel.

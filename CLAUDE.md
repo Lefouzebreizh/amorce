@@ -548,6 +548,29 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   montage **disparaît sur un téléphone en plein jour**, exactement comme un
   mixage conforme au casque devient inaudible. Le garder, l'archiver ou le
   retirer n'est toujours pas tranché.
+- **bilan-patrimoine/** — le produit destiné aux particuliers, dont
+  `conseiller-patrimoine/` est l'outil personnel. TypeScript nu, **zéro
+  dépendance d'exécution**, exécuté par simple retrait des types comme le cœur
+  d'IPTV. Ce dossier est le **lot 1** : le calcul, les barèmes et le texte, sans
+  site — si le bilan n'est pas bon à lire, une interface ne le sauvera pas.
+  **Les taux de référence sont une table versionnée, pas une API.** Huit nombres
+  publics révisés une à deux fois par an ; aucun hôte financier n'étant joignable
+  d'ici, et un taux faux venu d'une API se propageant sans que personne le voie.
+  Chacun porte sa source et ses deux dates, et **tant qu'un barème est périmé,
+  aucun montant en euros ne s'affiche** — le constat sort sans son chiffre, et le
+  rapport dit pourquoi. `VERIFIE_LE` est la seule date qui atteste qu'un humain a
+  regardé ; un test échoue au-delà de deux cents jours. Les valeurs livrées datent
+  d'août 2025 et sont **à confirmer avant toute mise en ligne**.
+  **Un constat qui ne se chiffre pas ne fait rien bouger**, mais **l'urgence passe
+  avant le montant** : une réserve trop mince devance une optimisation plus
+  rentable — trouvé en lisant un bilan, où le tri par euros seul plaçait « droit
+  au LEP, 60 €/an » devant « moins de deux mois de matelas », et où le rapport se
+  contredisait deux paragraphes plus bas. **Aucun produit commercial n'est jamais
+  nommé** : recommander un contrat relève du conseil réglementé (CIF, ORIAS), et
+  un test relit tous les textes produits pour le refuser.
+  `npm run exemple` sert à **regarder** : les deux défauts les plus sérieux
+  trouvés ici sont passés à travers cinquante-trois tests verts. Se vérifie depuis
+  son dossier.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.

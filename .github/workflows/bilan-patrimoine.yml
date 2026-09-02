@@ -1,0 +1,73 @@
+# Vérification du bilan de patrimoine grand public.
+#
+# Le projet vit à côté d'Amorce avec ses propres `package.json` et
+# `tsconfig.json` : la racine l'écarte de son typecheck, et **rien ne le
+# vérifierait sans ce workflow**. Chaque projet npm de ce dépôt a le sien, et
+# l'oubli ne se voit nulle part — les tests passent en local, la CI reste verte,
+# et personne ne sait qu'elle ne les a jamais lancés.
+#
+# Pas d'étape `build` ici, contrairement à IPTV : ce lot est du calcul pur, sans
+# interface ni App Router. Elle viendra avec le site du lot 2.
+#
+# Les deux étapes sont séparées pour que le résumé dise laquelle a cassé, et
+# `!cancelled()` les laisse toutes deux parler : un test rouge n'empêche pas de
+# savoir si le typage l'est aussi.
+#
+# Ce que ce workflow ne dit pas, et qui compte autant : **si le bilan se lit**.
+# `npm run exemple` rend trois profils à parcourir des yeux, et les deux défauts
+# les plus sérieux trouvés jusqu'ici sont passés à travers cinquante-trois tests
+# verts. Il se lance à la main, parce qu'aucune machine ne sait juger une phrase.
+
+name: Bilan Patrimoine
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bilan-patrimoine/**'
+      - '.github/workflows/bilan-patrimoine.yml'
+  pull_request:
+    paths:
+      - 'bilan-patrimoine/**'
+      - '.github/workflows/bilan-patrimoine.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: bilan-patrimoine-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: bilan-patrimoine
+
+jobs:
+  verifier:
+    name: Tests et types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 au minimum : les tests s'exécutent sur les sources TypeScript
+      # sans compilation préalable (`--experimental-strip-types`).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          # Le dépôt contient plusieurs verrous ; sans ce chemin, le cache
+          # serait calculé sur celui d'Amorce et ne servirait jamais.
+          cache-dependency-path: bilan-patrimoine/package-lock.json
+
+      # `npm ci` et non `npm install` : il installe exactement le verrou et
+      # échoue s'il diverge de `package.json`, au lieu de le réécrire en silence.
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Tests
+        if: ${{ !cancelled() }}
+        run: npm test
+
+      - name: Types
+        if: ${{ !cancelled() }}
+        run: npm run check

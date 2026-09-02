@@ -22,6 +22,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 | Amorce Atelier — chaîne complète du rush au film | **Cousu** | — | [fiche](projets-actifs/amorce-atelier.md) | Les dix outils se lancent d'une seule recette — reste l'interface |
 | Studio audio (Streamlit) | **En pause** | — | [fiche](archives-backlog/studio-audio.md) | Reprendre si Amorce bute sur la voix off |
 | Conseiller Patrimoine | **En cours** | — | [fiche](archives-backlog/assistant-patrimoine.md) | Absorbe l'assistant d'allocation — reste à brancher un accès bancaire AISP |
+| Bilan Patrimoine — produit grand public | **En cours** | — | — | Lot 1 livré (calcul + barèmes + texte) — reste le site, les comptes, le suivi |
 | Reconnaissance de couleurs | **Faisable** | 9/10 | [fiche](projets-actifs/reconnaissance-de-couleurs.md) | Noyau livré — brique partagée, la suite vit dans Accord |
 | Notice, dangerosité et ingrédients | **Faisable** | 8/10 | [fiche](projets-actifs/notice-et-dangerosite-produit.md) | Coller 3 réponses OpenFoodFacts réelles (mandataire bloqué ici) |
 | Où a mal mon animal | **En pause** | 5/10 | [fiche](archives-backlog/ou-a-mal-mon-animal.md) | Version sans diagnostic (7/10), ou trouver un vétérinaire relecteur |
@@ -33,7 +34,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge dix-neuf chantiers actifs sans code commun, plus un en sommeil,
+Ce dépôt héberge vingt chantiers actifs sans code commun, plus un en sommeil,
 et cinq ressources transverses qui ne sont pas des projets mais servent à tous.
 Une idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir
 un front de plus. La liste vieillit vite — recompter avant de noter.
@@ -59,6 +60,7 @@ un front de plus. La liste vieillit vite — recompter avant de noter.
 | **Traducteur de chat** (`chat-traducteur/`) | Miaulement enregistré → intention probable, habillée pour le partage. | Python, YAMNet TFLite | actif |
 | **Titan Builder** (`titan-builder/`) | Plateforme où le client configure son site en cinq étapes. | Web | actif |
 | **Conseiller Patrimoine** (`conseiller-patrimoine/`) | Vue d'ensemble du patrimoine et rééquilibrage, en lecture seule stricte. | Python | actif |
+| **Bilan Patrimoine** (`bilan-patrimoine/`) | Le produit grand public : diagnostic gratuit puis suivi payant. Lot 1 — calcul, barèmes et texte. | TypeScript | actif |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
 
 ## Ressources transverses
