@@ -1369,10 +1369,20 @@ doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
 ### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
 
-**Trois** projets Vercel sont branchés sur ce dépôt : `amorce` (racine),
-`amorce-51up` (dossier `artisan-express`), `iptv`. Ils étaient quatre jusqu'au
-31/08/2026 — `nexuscrypto` a été supprimé côté Vercel ce jour-là, ce qui retire
-un quart de la consommation. Les mesures datées de ce jour-là, dans `/debloquer`,
+**Quatre** projets Vercel sont branchés sur ce dépôt : `amorce` (racine),
+`amorce-51up` (dossier `artisan-express`), `iptv`, et **`reseau-annuaires`
+(dossier `annuaire-ia`), apparu le 02/09/2026**. Ce dernier est un résidu : le
+réseau d'annuaires est mis en ligne par **GitHub Pages** depuis le même jour, et
+son projet Vercel ne fait plus qu'échouer — vu en rouge sur une pull request qui
+ne touchait que `life-organizer/`. Il porte donc un `vercel.json` à
+`ignoreCommand: exit 0`, comme `nexuscrypto`. **Le supprimer côté tableau de
+bord reste à faire, et seul le propriétaire a la main dessus.**
+
+Ce cas est exactement le piège décrit deux paragraphes plus bas — un projet créé
+depuis le tableau de bord n'a pas de `vercel.json` et se déclenche sur tout — et
+il s'est produit **le lendemain** du jour où la phrase a été écrite. Ils étaient
+trois entre le 31/08 et le 02/09/2026 : `nexuscrypto` a été supprimé côté Vercel
+le 31/08, ce qui retirait un quart de la consommation. Les mesures datées de ce jour-là, dans `/debloquer`,
 portent donc sur **quatre** projets et restent lues telles quelles. **Chacun se
 déclenche sur chaque commit tant qu'il ne filtre pas par chemin**, et le palier
 gratuit plafonne à cent déploiements par jour — **crevé trois fois**. La
