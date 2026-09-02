@@ -24,6 +24,12 @@ interface Env {
   QUOTA_GRATUIT?: string;
   PRIX_SOUTIEN?: string;
   /**
+   * Le mot de passe du groupe, à distribuer dans le groupe et nulle part
+   * ailleurs. Sans lui, `src=groupe` ne donne plus rien de particulier.
+   *   wrangler pages secret put JETON_GROUPE
+   */
+  JETON_GROUPE?: string;
+  /**
    * Sel du hachage des adresses. Une adresse IPv4 tient dans 32 bits : sans
    * sel, retrouver l'adresse derrière un SHA-256 prend quelques secondes sur
    * un ordinateur portable, et la « pseudonymisation » n'en est pas une.
@@ -36,6 +42,7 @@ interface Env {
 interface CorpsRequete {
   texte?: unknown;
   src?: unknown;
+  jeton?: unknown;
 }
 
 const QUOTA_PAR_DEFAUT = 5;
@@ -107,6 +114,24 @@ async function consommer(
   return Math.max(0, quota - ligne.usage_count);
 }
 
+/**
+ * Comparaison en temps constant, sur les octets.
+ *
+ * Un `===` sur deux chaînes s'arrête au premier caractère qui diffère, et le
+ * temps de réponse dit alors combien de caractères étaient justes. Sur un
+ * secret partagé par un groupe entier, c'est peu exploitable — mais l'écrire
+ * juste coûte six lignes, et `licence-serveur` fait déjà de même.
+ */
+function memeSecret(a: string, b: string): boolean {
+  const encodeur = new TextEncoder();
+  const x = encodeur.encode(a);
+  const y = encodeur.encode(b);
+  if (x.length !== y.length) return false;
+  let ecart = 0;
+  for (let i = 0; i < x.length; i += 1) ecart |= x[i]! ^ y[i]!;
+  return ecart === 0;
+}
+
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let corps: CorpsRequete;
   try {
@@ -124,7 +149,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const prix = env.PRIX_SOUTIEN ?? '19';
   const src = typeof corps.src === 'string' ? corps.src : null;
 
-  if (src === 'groupe') {
+  // L'accès du groupe se **prouve** désormais, il ne se déclare plus.
+  //
+  // Avant, `?src=groupe` suffisait : n'importe qui l'ajoutait à l'adresse et
+  // n'était plus décompté. L'intention était juste — quelqu'un qui arrive du
+  // groupe ne doit pas voir un quota clignoter — mais elle reposait sur la
+  // parole du visiteur.
+  //
+  // Le repli est **volontairement le régime normal**, pas un refus : sans
+  // `JETON_GROUPE` posé, ou avec un jeton qui ne correspond pas, on retombe
+  // sur le quota de tout le monde. Personne n'est renvoyé, et un secret que
+  // l'exploitant a oublié de poser ne coûte à personne son analyse — c'est la
+  // même règle que le sel absent et la base en panne, deux paragraphes plus
+  // bas.
+  const jeton = typeof corps.jeton === 'string' ? corps.jeton : null;
+  if (src === 'groupe' && env.JETON_GROUPE && jeton && memeSecret(jeton, env.JETON_GROUPE)) {
     return json({ ...reformuler(controle.texte), acces: 'groupe', restant: null, quota });
   }
 

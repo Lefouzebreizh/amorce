@@ -81,15 +81,44 @@ test('en local, l’absence de sel ne bloque rien', async () => {
   assert.ok(db.ecritures.length > 0);
 });
 
-test('le groupe reste hors du garde-fou comme du décompte', async () => {
-  const db = baseFactice();
-  const request = new Request('https://exemple.test/api/reforme', {
+function demandeGroupe(corps: Record<string, unknown>): Request {
+  return new Request('https://exemple.test/api/reforme', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'cf-connecting-ip': '203.0.113.7' },
-    body: JSON.stringify({ texte: 'tu ne réponds jamais', src: 'groupe' }),
+    body: JSON.stringify({ texte: 'tu ne réponds jamais', ...corps }),
   });
-  const charge = (await (await appeler(request, { DB: db })).json()) as Record<string, unknown>;
+}
+
+test('le groupe reste hors du garde-fou comme du décompte — avec son jeton', async () => {
+  const db = baseFactice();
+  const requete = demandeGroupe({ src: 'groupe', jeton: 'secret-du-groupe' });
+  const charge = (await (await appeler(requete, { DB: db, JETON_GROUPE: 'secret-du-groupe' })).json()) as Record<string, unknown>;
 
   assert.equal(charge.acces, 'groupe');
   assert.deepEqual(db.ecritures, []);
+});
+
+// Le défaut que la restriction ferme : `?src=groupe` suffisait, sur la seule
+// parole du visiteur. Ces trois cas sont les trois façons de ne pas prouver.
+test('se dire du groupe sans le prouver ne donne plus rien', async () => {
+  for (const [nom, corps, env] of [
+    ['sans jeton', { src: 'groupe' }, { JETON_GROUPE: 'secret-du-groupe' }],
+    ['mauvais jeton', { src: 'groupe', jeton: 'au-hasard' }, { JETON_GROUPE: 'secret-du-groupe' }],
+    ['aucun jeton configuré', { src: 'groupe', jeton: 'peu-importe' }, {}],
+  ] as const) {
+    const db = baseFactice();
+    const charge = (await (await appeler(demandeGroupe(corps), { DB: db, ...env })).json()) as Record<string, unknown>;
+    assert.notEqual(charge.acces, 'groupe', nom);
+  }
+});
+
+// Et le repli est le régime normal, jamais un refus : un secret que
+// l'exploitant a oublié de poser ne coûte son analyse à personne.
+test('sans jeton configuré, on sert quand même', async () => {
+  const db = baseFactice();
+  const reponse = await appeler(demandeGroupe({ src: 'groupe' }), { DB: db });
+  const charge = (await reponse.json()) as Record<string, unknown>;
+
+  assert.equal(reponse.status, 200);
+  assert.ok(typeof charge.reformulation === 'string' || charge.acces !== undefined);
 });
