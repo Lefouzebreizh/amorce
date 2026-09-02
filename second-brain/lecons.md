@@ -5010,3 +5010,44 @@ source « branche » ; et un rouge qu'aucune PR n'affiche peut durer des semaine
 Corollaire utile : `actions/configure-pages` **ne peut pas** basculer la source
 depuis un workflow. Son `action.yml` dit que `enablement` exige un jeton autre
 que `GITHUB_TOKEN`. Le geste reste humain, dans Settings → Pages.
+
+## `configure-pages` ne dit pas si la source Pages est « GitHub Actions »
+
+Mesuré le 02/09/2026, et ça a coûté un lot livré comme réparé alors qu'il ne
+l'était pas.
+
+Pour savoir si un dépôt est prêt à recevoir un dépôt Pages par Actions, le
+réflexe est de lancer `actions/configure-pages` avec `continue-on-error` et de
+lire son `outcome`. **C'est faux.** Son `src/api-client.js` appelle
+`GET /repos/…/pages` et rend la page dès qu'elle existe — *quelle que soit sa
+source*. Sur un dépôt où Pages tourne encore en mode « Deploy from a branch »,
+l'étape réussit donc, et toute la logique qui en dépend part du mauvais pied :
+ici, le billet censé prévenir que rien n'est en ligne ne s'ouvrait jamais.
+
+La sonde juste lit le champ lui-même :
+
+```bash
+type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' 2>/dev/null || echo introuvable)
+# "workflow" = prêt · "legacy" = source encore sur une branche
+```
+
+Traiter l'échec de l'appel comme « pas prêt » plutôt que comme « prêt » : un
+billet de trop coûte moins qu'un dépôt muet.
+
+**Le témoin qui tranche sans lire l'API :** si le workflow *dynamique*
+`pages build and deployment` tourne encore sur les poussées, la source est
+forcément « branche » — c'est le constructeur Jekyll historique, et il ne se
+déclenche pas autrement.
+
+## Les filtres de `mcp__github__actions_list` sont ignorés
+
+Mesuré le même jour. `workflow_id` (nom de fichier comme identifiant numérique),
+`head_sha` et `branch` ont été passés séparément : la réponse rend les
+exécutions récentes du dépôt entier, pas le sous-ensemble demandé. On croit lire
+« ce workflow n'a pas tourné » alors qu'on lit « il n'est pas dans les dix
+premières lignes ».
+
+Conséquence pratique : ne jamais conclure l'absence d'une exécution depuis cet
+outil. Chercher un témoin indirect — un billet ouvert, un artefact, un autre
+workflow dont la présence implique l'état cherché — ou remonter par un
+`check_run` dont on a l'identifiant.
