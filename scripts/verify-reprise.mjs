@@ -59,7 +59,7 @@ const sample = () =>
     return { mean, deviation: Math.sqrt(values.reduce((a, v) => a + (v - mean) ** 2, 0) / values.length) };
   });
 
-await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
+await page.goto('http://localhost:3000/studio', { waitUntil: 'networkidle' });
 await page.setInputFiles('input[type=file][accept*="video/*"]', files);
 await page.waitForFunction(() => document.querySelectorAll('li img').length >= 4, { timeout: 90000 });
 await page.getByRole("button", { name: /⚡ Monter automatiquement/ }).click();

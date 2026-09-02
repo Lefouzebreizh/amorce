@@ -217,7 +217,7 @@ const propose1080 = () =>
   page.evaluate(() => document.body.innerText.includes('1080 × 1920'));
 
 try {
-  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${base}/studio`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2500);
 
   /*

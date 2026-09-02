@@ -20,7 +20,7 @@ import { optionsChromium } from './chromium.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const RUSHES = join(ROOT, '.fixtures', 'rushes');
 const SHOTS = join(ROOT, '.fixtures', 'captures');
-const URL_BASE = process.env.AMORCE_URL || 'http://localhost:3000';
+const URL_BASE = (process.env.AMORCE_URL || 'http://localhost:3000') + '/studio';
 
 /** Durée attendue du montage express sur les rushes de test, en secondes. */
 const EXPECTED_DURATION = 7.5;

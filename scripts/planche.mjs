@@ -43,7 +43,7 @@ import { optionsChromium } from './chromium.mjs';
 const FFMPEG = existsSync('/usr/bin/ffmpeg') ? '/usr/bin/ffmpeg' : 'ffmpeg';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const URL_BASE = process.env.AMORCE_URL || 'http://localhost:3000';
+const URL_BASE = (process.env.AMORCE_URL || 'http://localhost:3000') + '/studio';
 const NB = Number(process.argv[2]) || 28;
 const LOT = join(ROOT, '.fixtures', `lot${NB}`);
 const SORTIE = join(ROOT, '.fixtures', 'captures');

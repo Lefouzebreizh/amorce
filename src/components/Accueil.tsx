@@ -100,6 +100,21 @@ export function Accueil() {
             </div>
           </dl>
 
+          {/*
+            La preuve tient dans le premier écran, et c'est mesuré.
+
+            `/page-qui-vend` contrôle que promesse, prix, preuve et bouton
+            cohabitent au-dessus de 873 px : sans elle, il faut décider de
+            faire défiler avant d'avoir une raison de le faire. Ce sont les
+            valeurs relevées sur le dernier export, pas des arrondis.
+          */}
+          <p className="text-base leading-relaxed text-muted">
+            <span className="font-semibold tabular-nums text-mist">
+              1080 × 1920, 30 images par seconde
+            </span>{' '}
+            — mesuré sur chaque fichier qui sort, pas estimé.
+          </p>
+
           <Link
             href="/studio"
             className="flex min-h-14 items-center justify-center rounded-2xl bg-accent px-6 text-lg font-semibold text-ink transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -184,6 +199,21 @@ export function Accueil() {
           </p>
         </Section>
 
+        {/*
+          Deuxième action, et elle est placée par la mesure, pas au jugé.
+
+          Le contrôle « un bouton toujours à moins d'un écran » tombait à
+          1,16 écran entre l'ouverture et le milieu de page : quelqu'un qui se
+          décide en lisant les chiffres devait chercher. Une page longue se
+          jalonne, sinon elle se lit sans jamais rien demander.
+        */}
+        <Link
+          href="/studio"
+          className="flex min-h-14 items-center justify-center rounded-2xl border border-edge px-6 text-lg font-semibold text-mist transition-colors hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Ouvrir le studio
+        </Link>
+
         {/* --- L'argument qui n'appartient qu'à ce studio ------------------- */}
         <Section titre="Aucun de tes fichiers ne part. Ce n’est pas une politique, c’est une absence.">
           <p className="text-lg leading-relaxed text-muted">
@@ -198,6 +228,22 @@ export function Accueil() {
             fichier.
           </p>
         </Section>
+
+        {/*
+          Une action au milieu, et ce n'est pas une redite.
+
+          Mesuré : sans elle, 2,01 écrans séparaient le bouton d'ouverture du
+          suivant. Quelqu'un qui se décide ici — juste après avoir lu que rien
+          ne part — devait remonter ou continuer à chercher. Le bandeau du
+          pouce couvre le téléphone ; celle-ci couvre l'ordinateur, où il n'y
+          en a pas.
+        */}
+        <Link
+          href="/studio"
+          className="flex min-h-14 items-center justify-center rounded-2xl border border-accent px-6 text-lg font-semibold text-accent transition-colors hover:bg-accent hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Ouvrir le studio et essayer
+        </Link>
 
         {/* --- Le prix, comparé pour de vrai ------------------------------- */}
         <Section titre="49 €, une seule fois">

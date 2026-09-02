@@ -20,7 +20,7 @@ import { chromium } from 'playwright';
 import { optionsChromium } from './chromium.mjs';
 
 const IMAGES = join(process.cwd(), '.fixtures', 'images');
-const URL_BASE = process.env.AMORCE_URL || 'http://localhost:3000';
+const URL_BASE = (process.env.AMORCE_URL || 'http://localhost:3000') + '/studio';
 
 /** Nombre d'imports successifs. Deux images par tour, soit dix plans. */
 const TOURS = 5;

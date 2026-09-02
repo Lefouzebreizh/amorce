@@ -2,7 +2,7 @@
   "name": "Amorce — studio de montage vertical",
   "short_name": "Amorce",
   "description": "Monte tes vidéos IA au format vertical. Tout se passe dans ton navigateur, aucun fichier n'est envoyé sur un serveur.",
-  "start_url": "/",
+  "start_url": "/studio",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
