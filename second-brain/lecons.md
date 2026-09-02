@@ -5051,3 +5051,31 @@ Conséquence pratique : ne jamais conclure l'absence d'une exécution depuis cet
 outil. Chercher un témoin indirect — un billet ouvert, un artefact, un autre
 workflow dont la présence implique l'état cherché — ou remonter par un
 `check_run` dont on a l'identifiant.
+
+## `curl` atteint un site que Chromium ne peut pas ouvrir
+
+*Mesuré le 02/09/2026, sur `https://amorce.vercel.app` depuis une session distante.*
+
+Les deux ne passent pas par le même chemin, et rien ne le signale :
+
+| outil | résultat |
+| --- | --- |
+| `curl` | **200** — il lit la variable `HTTPS_PROXY` tout seul |
+| Chromium par Playwright | `ERR_CONNECTION_RESET` |
+| Chromium avec `proxy: { server: process.env.HTTPS_PROXY }` | `ERR_CONNECTION_RESET` **aussi** |
+
+Le troisième essai est celui qui compte : passer le mandataire à Playwright ne
+suffit pas, alors que c'est le réflexe et qu'il paraît devoir marcher.
+
+Conséquence pratique, et c'est elle qu'on vient chercher ici : **une session
+distante peut vérifier qu'un site répond, jamais regarder à quoi il
+ressemble.** Un contrôle de disponibilité se fait donc en `curl` ; une capture
+d'écran d'un site en ligne ne se promet pas. Ce qui reste possible, et qui a
+tranché la question du jour en trois secondes : **lire le source**. Savoir ce
+qu'une page affiche se déduit de son composant racine — `src/app/page.tsx` ne
+contenait que `<Studio />`, donc aucune page d'accueil, sans avoir eu besoin de
+la voir.
+
+Le parcours `npm run verify`, lui, conduit bien un vrai Chromium — mais sur
+`localhost:3000`, qui ne sort pas par le mandataire. La distinction n'est pas
+« Chromium marche ou pas », c'est **local ou distant**.
