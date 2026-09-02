@@ -419,9 +419,12 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   planches de contact, et les paniers à importer dans DaVinci et Premiere.
   1117 lignes de Python, cinq dépendances, et **18 tests verts** depuis le
   01/09/2026 au soir. Il n'était déclaré nulle part avant l'audit du même jour,
-  et il est passé de « plus gros chantier nu du dépôt » à gardé en une nuit :
-  le hook l'installe et annonce sa suite. **`verifier.sh` ne le connaît toujours
-  pas**, en revanche — c'est le seul endroit du filet qui l'ignore encore.
+  et il est passé de « plus gros chantier nu du dépôt » à entièrement gardé en
+  une nuit : le hook l'installe et annonce sa suite, et `verifier.sh` la lance.
+  **Son nom n'apparaît pourtant dans aucun des deux** — `verifier.sh` découvre
+  les suites Python au lieu de les énumérer, si bien qu'un `grep` sur le nom du
+  projet rend zéro et laisse croire qu'il est ignoré. Mesurer ce que la
+  découverte rend, jamais chercher le nom.
   Ce que ses tests gardent vaut au-delà de lui : un calque conforme à l'écran de
   montage **disparaît sur un téléphone en plein jour**, exactement comme un
   mixage conforme au casque devient inaudible. Le garder, l'archiver ou le
