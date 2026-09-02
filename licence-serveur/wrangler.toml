@@ -10,7 +10,7 @@ ORIGINES = "https://amorce.vercel.app"
 [[d1_databases]]
 binding = "BASE"
 database_name = "amorce-licence"
-database_id = "à-remplir-après-wrangler-d1-create"
+database_id = "ed78b05f-25fa-4481-8640-82f136d3b380"
 
 # SECRET_WEBHOOK et SECRET_CLES ne sont pas ici : ce sont des secrets.
 #   wrangler secret put SECRET_WEBHOOK   (celui que Stripe affiche pour le webhook)
