@@ -5237,3 +5237,47 @@ risque et un coût, une panne et une lenteur, un bloquant et un confort — il f
 un rang explicite, jamais une pondération qui fait semblant de les rendre
 comparables. Et le défaut ne se voit pas dans un test : il se voit en lisant la
 liste produite, à voix haute, sur un cas réel.
+
+## Un déploiement « Ready » ne dit pas que l'adresse le sert
+
+*Mesuré le 02/09/2026 sur `amorce.vercel.app`, après deux diagnostics faux.*
+
+Trois fusions vertes, un déploiement Production marqué **Ready**, et l'adresse
+publique servait toujours la version d'avant. Les deux hypothèses avancées
+étaient plausibles et fausses : d'abord le quota quotidien crevé, puis une
+construction en cours.
+
+**Ce qui a tranché tient dans les en-têtes de la réponse**, et coûte une
+commande :
+
+```bash
+curl -sSI https://exemple.vercel.app | grep -iE "^(age|last-modified|x-vercel-cache)"
+```
+
+| en-tête | valeur | ce qu'elle dit |
+| --- | --- | --- |
+| `age` | 19192 | la réponse a **5 h 20** — bien avant les fusions |
+| `last-modified` | 17:55:23 | l'heure du déploiement réellement servi |
+| `x-vercel-cache` | HIT | servi depuis le cache de bordure |
+
+**Et le second contrôle est celui qui élimine le cache** : demander une route
+qui n'existe que dans la nouvelle version, avec un paramètre de contournement.
+
+```bash
+curl -o /dev/null -w '%{http_code}\n' "https://exemple.vercel.app/route-neuve?x=1"
+```
+
+Un **404** répond que ce n'est pas le contenu qui est vieux, c'est le
+**routage** : une page absente du déploiement servi ne peut pas exister, quel
+que soit le cache. Le cache de bordure étant **par déploiement**, il ne survit
+pas à un changement d'alias — donc l'alias lui-même n'a pas bougé.
+
+Trois causes possibles, à départager dans le tableau de bord et non d'ici : la
+branche de production n'est pas celle qu'on fusionne, le domaine est assigné à
+la main à un déploiement précis, ou la promotion n'a pas eu lieu.
+
+**La leçon qui se généralise, et c'est elle qui compte :** l'état d'un
+déploiement décrit une **construction**, jamais ce qu'une **adresse** rend.
+Les deux se mesurent séparément, et confondre les deux fait chercher du côté du
+build pendant que le problème est dans l'aliasage. Un « Ready » se lit toujours
+avec un `curl` sur l'adresse en face.
