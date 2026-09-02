@@ -111,6 +111,19 @@ git merge-tree --write-tree origin/main origin/claude/BRANCHE | head -1
 # ce SHA d'arbre égale `git rev-parse origin/main^{tree}` → la branche n'apporte rien
 ```
 
+**Et son verdict positif n'est pas un quitus.** « La fusion changerait l'arbre »
+répond à *ce que la fusion ferait*, jamais à *y a-t-il du travail à sauver* — et
+sur une branche ancienne les deux divergent. Mesuré le 02/09/2026 sur les 209
+branches jamais fusionnées : vingt-deux changeraient l'arbre, et pas une ne
+portait de travail perdu. Ce qu'elles apportent est une **ancienne version** d'un
+code que `main` a corrigé depuis, exactement le cas décrit plus bas pour les
+conflits — sauf qu'ici rien ne conflicte, donc rien n'alerte.
+
+Le test mécanique borne donc la recherche ; il ne la conclut pas. Ce qui
+conclut, c'est d'ouvrir le fichier : les cinq branches IPTV du lot annonçaient
+un correctif d'ordre des index, et il était déjà dans `main`, son commentaire
+d'origine compris.
+
 En conflit, `merge-tree` ne rend pas d'arbre : il faut alors fusionner
 réellement dans un worktree jetable, résoudre, puis comparer.
 
