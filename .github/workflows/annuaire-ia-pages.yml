@@ -54,6 +54,9 @@
 #    `actions/configure-pages` le ferait — mais son `action.yml` exige en
 #    propres termes un jeton *autre* que `GITHUB_TOKEN`, que ce workflow n'a
 #    pas. D'où la détection plus bas plutôt qu'une tentative vouée à échouer.
+#    Et cette détection lit `build_type` par l'API, **pas** le succès de
+#    `configure-pages` : celui-ci réussit aussi sur une source « branche », ce
+#    qui a rendu le billet muet le jour même où il devait servir.
 # 3. Settings → Pages → Custom domain → `ma-panoplie-ia.com`, puis *Enforce
 #    HTTPS* une fois le certificat émis.
 
@@ -122,16 +125,39 @@ jobs:
       # qu'elle reste sur « Deploy from a branch », cette étape échoue — d'où
       # le `continue-on-error`, qui la transforme en détection au lieu d'un
       # arrêt, exactement comme le faisait la sonde de secrets Cloudflare.
+      # GitHub Pages ne demande aucun secret. Il demande une chose que le dépôt
+      # ne porte pas : que la source soit réglée sur « GitHub Actions ».
+      #
+      # `actions/configure-pages` ne sait PAS le dire, et c'est le piège qui a
+      # coûté un lot entier le 02/09/2026. Son `src/api-client.js` appelle
+      # `GET /repos/…/pages` et réussit dès qu'une page existe — **quelle que
+      # soit sa source**. Ce dépôt avait Pages activé en mode « branche », donc
+      # la détection passait au vert, le billet ne s'ouvrait jamais, et le dépôt
+      # se serait tenté pour rien.
+      #
+      # On lit donc `build_type` nous-mêmes : « workflow » = prêt, « legacy » =
+      # source encore sur une branche. Un appel refusé rend « introuvable », qui
+      # compte comme pas prêt : on préfère un billet de trop à un dépôt muet.
       - name: La source Pages est-elle réglée sur Actions
         id: source
-        uses: actions/configure-pages@v6
-        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' 2>/dev/null || echo introuvable)
+          echo "Source Pages : $type"
+          if [ "$type" = "workflow" ]; then
+            echo "pret=oui" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Source Pages « $type » : les sites sont construits mais pas déposés. Settings → Pages → Source → GitHub Actions."
+            echo "pret=non" >> "$GITHUB_OUTPUT"
+          fi
 
       # Un avertissement vit dans le journal d'exécution, que personne n'ouvre.
       # Celui-ci arrive dans les notifications, et une seule fois : si le billet
       # est déjà ouvert, on n'y ajoute rien.
       - name: Signaler que le réseau n'est toujours pas en ligne
-        if: steps.source.outcome != 'success'
+        if: steps.source.outputs.pret == 'non'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -197,8 +223,12 @@ jobs:
           console.log('\nDossier de dépôt conforme.');
           "
 
+      - name: Préparer le dépôt Pages
+        if: steps.source.outputs.pret == 'oui'
+        uses: actions/configure-pages@v6
+
       - name: Empaqueter les onze sites
-        if: steps.source.outcome == 'success'
+        if: steps.source.outputs.pret == 'oui'
         uses: actions/upload-pages-artifact@v5
         with:
           # Chemin depuis la racine du dépôt, et non depuis `annuaire-ia` :
@@ -209,13 +239,13 @@ jobs:
 
       - name: Déposer sur GitHub Pages
         id: depot
-        if: steps.source.outcome == 'success'
+        if: steps.source.outputs.pret == 'oui'
         uses: actions/deploy-pages@v5
 
       # Le premier dépôt réussi rend le billet caduc : le laisser ouvert
       # apprendrait à ignorer les billets de ce dépôt.
       - name: Refermer le billet de mise en ligne
-        if: steps.source.outcome == 'success'
+        if: steps.source.outputs.pret == 'oui'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
