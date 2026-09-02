@@ -46,6 +46,39 @@ class Validation(unittest.TestCase):
         config["securite"]["suppression_directe"] = True
         self.assertTrue(any("quarantaine" in p for p in valider(config)))
 
+    def test_un_dossier_de_theme_absolu_est_refuse(self):
+        """Le défaut C-1 de `AUDIT.md`, refusé au démarrage.
+
+        En Python, `bibliotheque / "/tmp/ailleurs"` ne joint pas : l'opérande
+        absolu **remplace** le gauche. Un thème ainsi configuré envoyait relevés
+        bancaires et avis d'imposition hors de la bibliothèque, sans que rien ne
+        le signale.
+        """
+        config = copy.deepcopy(MODELE)
+        config["classement"]["themes"] = [{"nom": "fuite", "dossier": "/tmp/exfiltration",
+                                           "mots": ["impot"]}]
+        self.assertTrue(any("sortirait de la bibliothèque" in p for p in valider(config)))
+
+    def test_un_dossier_de_theme_qui_remonte_est_refuse(self):
+        """Même sortie, par « .. » plutôt que par la racine."""
+        config = copy.deepcopy(MODELE)
+        config["classement"]["themes"] = [{"nom": "fuite", "dossier": "../../../tmp/ailleurs",
+                                           "mots": ["impot"]}]
+        self.assertTrue(any("sortirait de la bibliothèque" in p for p in valider(config)))
+
+    def test_un_schema_qui_remonte_est_refuse(self):
+        """`classement.schema` porte le même défaut, et se corrige au même endroit."""
+        config = copy.deepcopy(MODELE)
+        config["classement"]["schema"] = "../{categorie}/{annee}"
+        self.assertTrue(any("classement.schema" in p for p in valider(config)))
+
+    def test_un_dossier_de_theme_relatif_passe(self):
+        """La garde ne doit pas refuser ce que le modèle livré emploie."""
+        config = copy.deepcopy(MODELE)
+        config["classement"]["themes"] = [{"nom": "sain", "dossier": "Documents/Administratif",
+                                           "mots": ["impot"]}]
+        self.assertFalse(any("sortirait de la bibliothèque" in p for p in valider(config)))
+
     def test_une_extension_dans_deux_categories_est_signalee(self):
         config = copy.deepcopy(MODELE)
         config["classement"]["categories"]["Documents"].append("jpg")
