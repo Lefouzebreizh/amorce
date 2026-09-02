@@ -1310,6 +1310,54 @@ le même jour. Une règle écrite sur une seule forme ne couvre alors rien, et r
 ne le signale — la demande d'autorisation revient, et on croit à un oubli. Adobe, Gmail, Agenda et Drive servent le média, les factures, les échéances
 et les fichiers.
 
+## 10 bis. COORDINATION ENTRE SESSIONS
+
+Numéroté « 10 bis » pour la même raison que les autres : ne pas décaler des
+renvois existants.
+
+Plusieurs sessions travaillent en parallèle sur ce dépôt, et certaines écrivent
+dans les **mêmes fichiers partagés** — `CLAUDE.md`, `INDEX.md`, la table des
+compétences, le hook, et les fichiers transverses comme `SECURITY.md` ou un
+`AUDIT.md`. Elles doivent se coordonner **entre elles**, sans faire arbitrer
+Erwann à chaque fois.
+
+**Le canal est le dépôt, et lui seul.** Ce n'est pas un choix de style, c'est
+une contrainte mesurée deux fois (§7) : `SendMessage` refuse et `ListAgents` ne
+rend aucun pair, alors même que `list_sessions` montre les autres sessions en
+train de tourner. Une session ne peut donc pas en prévenir une autre ; elle peut
+seulement **lire ce qu'elles ont publié** et **publier ce qu'elles liront**.
+
+Ce que « se coordonner » veut dire concrètement, dans l'ordre :
+
+1. **Regarder avant d'écrire.** Avant de toucher un fichier partagé :
+   `git fetch`, puis les branches distantes et les PR ouvertes. Une PR ouverte
+   sur le même fichier est une session au travail, pas un obstacle.
+2. **Fusionner, jamais écraser.** Si une autre session a déjà écrit à cet
+   endroit, lire son contenu, garder ses phrases, et ajouter les siennes à
+   côté. Reprendre `main` dans sa branche coûte une commande ; écraser le
+   travail d'une autre coûte sa session entière.
+3. **Le doublon arrête le geste** (§0 bis règle 4). Deux fichiers qui disent la
+   même chose se contredisent au premier changement, et c'est le moins bon qui
+   est lu une fois sur deux. Étendre l'existant plutôt qu'en poser un second.
+4. **Publier tôt.** Tant qu'un lot n'est pas sur `main`, il n'existe pour
+   personne d'autre — c'est aussi ce qui rend la fusion rapide utile au-delà des
+   conflits.
+5. **Se nommer dans ce qu'on publie.** Un fichier transverse gagne une ligne qui
+   dit ce qu'il couvre et ce qu'il ne couvre pas : c'est ce qui évite qu'une
+   autre session refasse le travail ou croie couvert ce qui ne l'est pas.
+
+**Ne remonter à Erwann qu'en cas de vrai désaccord de fond** — deux visions
+incompatibles d'une même règle, une décision de produit, un arbitrage qu'aucune
+hypothèse raisonnable ne remplace. Une fusion à faire, un conflit à résoudre, un
+doublon à réunir : ça se règle entre sessions, sans lui.
+
+**Et quand une autre session est bloquée**, ce qu'on ne peut pas lui dire se dit
+à Erwann : son identifiant, son titre, et la question exacte à laquelle elle
+attend une réponse. C'est le seul relais qui existe, et il lui coûte un geste là
+où le silence lui coûte la tâche.
+
+---
+
 ---
 
 *Les compétences se déclenchent seules ; table générée dans
