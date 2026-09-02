@@ -24,7 +24,7 @@
     "addressCountry": "FR"
   },
   "areaServed": "Auray",
-  "description": "Je travaille seul, sur des toits que je connais. Ardoise, zinc, Velux. Je viens voir, je chiffre, et je dis non quand ce n'est pas mon métier. Cette page est une démonstration : « Couverture Tanguy » n’existe pas, et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré pour 299 € — avec vos textes, vos photos, votre numéro.",
+  "description": "Je travaille seul, sur des toits que je connais. Ardoise, zinc, Velux. Je viens voir, je chiffre, et je dis non quand ce n'est pas mon métier. Cette page est une démonstration : « Couverture Tanguy » n’existe pas, et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré pour 300 € — avec vos textes, vos photos, votre numéro.",
   "hasOfferCatalog": {
     "@type": "OfferCatalog",
     "name": "Prestations — Couverture Tanguy",
@@ -89,6 +89,16 @@
   .services li { margin: .35rem 0; }
   .galerie { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
   .galerie figure { margin: 0; }
+  .avis { display: grid; gap: 1rem; }
+  /* Un filet à gauche plutôt qu'un cadre : l'œil suit la colonne de texte, et
+     deux avis ne se lisent pas comme deux boutons. */
+  .avis blockquote {
+    margin: 0; padding: .25rem 0 .25rem 1rem;
+    border-left: 3px solid var(--accent-texte);
+  }
+  .avis p { margin: 0 0 .4rem; }
+  .avis cite { font-style: normal; font-weight: 700; color: var(--gris); }
+  .mention { color: var(--gris); font-size: 1rem; margin: -.25rem 0 1rem; }
   .galerie img { width: 100%; height: 100%; object-fit: cover; border-radius: .6rem; display: block; }
   .actions { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1.5rem 0; }
   /* 56 px de haut : des mains de chantier, souvent gantées, et un téléphone
@@ -143,7 +153,7 @@
   <section class="bloc">
     <h2>Qui je suis</h2>
     <p>Je travaille seul, sur des toits que je connais. Ardoise, zinc, Velux. Je viens voir, je chiffre, et je dis non quand ce n&#39;est pas mon métier.</p>
-    <p>Cette page est une démonstration : « Couverture Tanguy » n’existe pas, et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré pour 299 € — avec vos textes, vos photos, votre numéro.</p>
+    <p>Cette page est une démonstration : « Couverture Tanguy » n’existe pas, et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré pour 300 € — avec vos textes, vos photos, votre numéro.</p>
   </section>
   <section class="bloc">
     <h2>Ce que je fais</h2>
