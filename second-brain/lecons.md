@@ -5325,3 +5325,74 @@ déploiement décrit une **construction**, jamais ce qu'une **adresse** rend.
 Les deux se mesurent séparément, et confondre les deux fait chercher du côté du
 build pendant que le problème est dans l'aliasage. Un « Ready » se lit toujours
 avec un `curl` sur l'adresse en face.
+
+---
+
+## Une mesure faite dans le dépôt hérite de ses `node_modules` — 02/09/2026
+
+*Coût : un workflow rouge à sa première exécution, alors qu'il avait été
+« vérifié ».*
+
+Un nouveau workflow installait `typescript` puis lançait `tsc`. Mesuré en local,
+tout passait. Sur l'exécuteur GitHub, première exécution :
+
+```
+error TS2688: Cannot find type definition file for 'node'.
+```
+
+`tsconfig.json` déclarait `types: ["node"]`, et `@types/node` manquait. En local
+il ne manquait pas — **il venait du `node_modules` de la racine du dépôt**, que
+`npm` et `tsc` remontent chercher tout seuls dans les dossiers parents. La
+mesure était juste, et elle ne mesurait pas ce qu'on croyait : elle décrivait
+une machine où un voisin fournit ce qui manque.
+
+**Un exécuteur n'a pas de parent à qui emprunter.** C'est toute la différence,
+et elle est invisible depuis l'intérieur du dépôt.
+
+**La parade : mesurer hors de l'arbre.** Copier le projet dans un dossier
+temporaire situé **en dehors du dépôt**, y refaire exactement les étapes du
+workflow, et lire le vrai code de sortie :
+
+```bash
+BAC=$(mktemp -d)                       # hors du dépôt, exprès
+cp -r projet/src projet/package.json projet/tsconfig.json "$BAC/"
+cd "$BAC" && npm install --no-save typescript@^5 && npm run typecheck
+echo "code réel : $?"                  # et non celui du `tail` qui suit
+```
+
+Le défaut s'y reproduit en dix secondes, et le correctif s'y prouve.
+
+**Portée générale :** toute vérification lancée depuis un dossier du dépôt peut
+emprunter à ses parents — `node_modules`, un binaire global, une variable
+d'environnement, un fichier de configuration. Dès qu'on écrit une recette qui
+tournera ailleurs (CI, machine d'un client, conteneur neuf), la seule mesure qui
+vaut est celle faite là où rien ne peut se substituer à ce qui manque.
+
+---
+
+## Une PR en conflit ne montre pas un rouge, elle ne montre rien — 02/09/2026
+
+*Coût : plusieurs minutes à chercher au mauvais endroit.*
+
+Une PR n'affichait **aucun** contrôle. Pas un rouge : zéro ligne. Le workflow de
+cohérence, qui tourne pourtant sur toutes les PR sans le moindre filtre de
+chemins, n'apparaissait pas non plus — ce qui écartait l'hypothèse d'un filtre
+mal écrit, la première à laquelle on pense.
+
+La cause tenait dans un champ que rien n'affiche à côté des contrôles :
+
+```
+mergeable_state: "dirty"
+```
+
+`main` avait bougé pendant la rédaction. **Une PR en conflit ne déclenche aucun
+workflow**, parce qu'il n'existe pas de commit de fusion sur lequel les lancer.
+
+**Le réflexe qui fait gagner ces minutes :** devant une PR sans aucun contrôle —
+et non devant une PR rouge — lire d'abord son état de fusion, avant les filtres
+de chemins, avant les quotas, avant tout le reste.
+
+| ce qu'on voit | ce que c'est |
+| --- | --- |
+| des contrôles rouges | un vrai échec, à diagnostiquer |
+| **aucun contrôle** | un conflit, ou des exécutions en file |

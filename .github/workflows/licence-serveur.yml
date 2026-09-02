@@ -65,9 +65,21 @@ jobs:
       # `--no-save` : le compilateur sert à vérifier, pas à tourner. Il n'entre
       # donc pas dans `package.json`, qui doit continuer à dire vrai — ce projet
       # n'a aucune dépendance.
+      #
+      # **`@types/node` est indispensable**, et son absence a fait échouer la
+      # toute première exécution de ce workflow. `tsconfig.json` déclare
+      # `types: ["node"]`, et `tsc` refuse alors de démarrer sans lui — erreur
+      # TS2688, avant même de regarder une ligne de code.
+      #
+      # Le piège vient de la mesure : en local, la vérification passait parce
+      # que le `node_modules` de la **racine du dépôt** fournissait
+      # `@types/node` sans qu'on le demande. Un exécuteur GitHub n'a pas de
+      # parent à qui emprunter. Le correctif a donc été éprouvé dans un dossier
+      # hors du dépôt, seul endroit où rien ne peut se substituer à ce qui
+      # manque.
       - name: Installer le compilateur
         if: ${{ !cancelled() }}
-        run: npm install --no-save typescript@^5
+        run: npm install --no-save typescript@^5 @types/node@^22
 
       - name: Types
         if: ${{ !cancelled() }}
