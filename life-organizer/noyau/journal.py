@@ -20,6 +20,8 @@ from __future__ import annotations
 from datetime import date, datetime
 from pathlib import Path
 
+from .fichiers import creer_dossier_prive, ouvrir_prive
+
 
 class Journal:
     """Ce qu'une commande a fait, ou aurait fait."""
@@ -55,9 +57,12 @@ class Journal:
         if not self.dossier:
             return
         try:
-            self.dossier.mkdir(parents=True, exist_ok=True)
+            # Même raison que la quarantaine : le journal nomme les fichiers
+            # traités, donc il cartographie l'arborescence personnelle même pour
+            # qui ne lirait aucun document.
+            creer_dossier_prive(self.dossier)
             fichier = self.dossier / f"{date.today().isoformat()}.log"
-            with fichier.open("a", encoding="utf-8") as trace:
+            with ouvrir_prive(fichier, encoding="utf-8") as trace:
                 trace.write(f"{datetime.now().isoformat(timespec='seconds')} {ligne}\n")
         except OSError as erreur:
             # Ne pas pouvoir écrire la trace n'est pas une raison d'abandonner le

@@ -83,6 +83,23 @@ dit ce qu'elle ferait et ne fait rien. Ce qui est écarté part dans un dossier 
 quarantaine daté, purgé après trente jours. Un outil qui range des souvenirs de
 famille n'a pas droit à un faux positif définitif.
 
+**3 bis. Ce que l'outil crée n'est lisible que par vous — sur les systèmes qui
+savent le faire.** Bibliothèque, quarantaine et journal naissent en `0o700`, et
+les fichiers de manifeste et de journal en `0o600`. Ce n'est pas décoratif : ces
+dossiers contiennent relevés de compte, RIB, avis d'imposition, ordonnances et
+baux, et sous les droits par défaut (`0o755`) n'importe quel autre compte de la
+machine les lit sans privilège particulier. Le manifeste `origines.jsonl` est le
+pire des trois — il consigne le **chemin d'origine complet** de chaque document
+écarté, ce qui cartographie votre arborescence même pour qui ne lirait aucun
+fichier.
+
+Deux limites, dites plutôt que sous-entendues. **Sur Windows, le mode POSIX est
+ignoré par la plateforme** : la protection ne s'y applique pas, et rien dans la
+sortie ne le signalera. Et les **dossiers parents qui existaient déjà** ne sont
+jamais resserrés — votre dossier personnel, un disque partagé, un point de
+montage ne nous appartiennent pas. Le dossier de l'outil, lui, est resserré même
+s'il datait d'une version antérieure.
+
 **4. Une seule source de vérité pour les réglages.** `organizer_config.json`
 porte à la fois les paramètres de tri, le suivi des abonnements et les alertes.
 Un seuil ne se code jamais en dur : s'il mérite d'être réglé, il est dans le
