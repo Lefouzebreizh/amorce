@@ -1047,6 +1047,34 @@ où il passe, mais sans carte graphique et derrière un mandataire qui refuse
 objets de release GitHub. Router vers le PC est donc un **choix**, pas un
 réflexe : on regarde lequel des deux peut faire le travail, et on le dit.
 
+**Composio est installable ici, et inutilisable — mesuré le 03/09/2026.** La
+distinction vaut d'être écrite parce qu'elle se reperd : le CLI **s'installe**,
+il **tourne**, et il ne peut **rien faire**.
+
+`composio.dev` refuse le tunnel, donc `curl -fsSL https://composio.dev/install`
+ne démarre jamais — inutile de chercher du côté du rate limit GitHub que la
+documentation d'installation évoque. La parade des releases GitHub marche :
+`composio-linux-x64.zip`, 117 Mo, somme sha256 conforme à `checksums.txt`,
+extrait, lié, `composio --version` rend `0.4.1-beta.374`.
+
+Et `composio login` tombe sur `403 request blocked: no rule or allowlist entry
+allows host "backend.composio.dev"`. Confirmé au mandataire, pas seulement dans
+l'outil. `--no-browser --no-wait` existe pourtant, et c'est le bon chemin
+depuis un conteneur sans navigateur — il imprime l'URL, `--poll` termine —
+mais il faut d'abord que l'hôte soit ouvert.
+
+**Une clé d'API n'y change rien, et c'est le point à retenir.**
+`--user-api-key` l'écrit dans `~/.composio/user_data.json`, dont le `base_url`
+vaut `https://backend.composio.dev` : sans tunnel, il n'y a pas de requête à
+authentifier. Même forme que le mur ElevenLabs plus haut — ce n'est pas la clé
+qui manque, c'est l'hôte. Ouvrir `composio.dev`, `backend.composio.dev` et
+`dashboard.composio.dev` dans la politique réseau de l'environnement est le
+seul déblocage, et seul le propriétaire l'a.
+
+Piège annexe : le paquet npm `composio` est un homonyme sans rapport — « UI
+Components for the web », aucun binaire. Le SDK Python `composio` sur PyPI est
+authentique mais **n'est pas le CLI** : il ne pose aucun exécutable.
+
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
 
