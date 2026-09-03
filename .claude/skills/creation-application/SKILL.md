@@ -238,6 +238,36 @@ déjà passés autrement — est dans `/branche-partagee`. Et la règle qui les 
 tous : **fusionner tôt et en lots courts**. Une seule nuit à retarder a produit
 trois conflits sur le même fichier.
 
+## 10. Vérifier, puis déclarer
+
+Une application qui garde des données a deux vérifications qu'une vitrine n'a
+pas, et aucune des deux ne se voit dans une suite verte.
+
+**La première : rejouer sur une base qui a vécu.** Les tests partent d'une base
+neuve ; le défaut de migration du point 5 n'existe que sur l'autre. Garder une
+base de la version précédente, l'ouvrir avec le code d'aujourd'hui, et regarder.
+
+**La seconde : regarder les sorties, pas seulement les compter.** Un import qui
+annonce « 120 000 entrées » ne dit pas si les titres sont lisibles, si le
+dédoublonnage a mangé un film rare, ni si une catégorie entière est partie dans
+« inconnue ». `bilan-patrimoine/` a une commande dédiée à ça, et ses deux
+défauts les plus sérieux sont passés à travers cinquante-trois tests verts.
+
+Avant de pousser, une seule commande quel que soit le projet touché :
+
+```bash
+bash .claude/skills/verifier/scripts/verifier.sh
+```
+
+Elle déduit de ce qui a changé les projets concernés et rend un verdict par
+projet, **suivi de ce qu'elle ne couvre pas** — c'est cette seconde moitié qui
+dit ce qu'il reste à regarder soi-même. Le détail est dans `/verifier`.
+
+Et le projet ne vit vraiment qu'une fois **déclaré** : `/nouveau-projet` liste
+les six endroits où il doit apparaître pour être installé, vérifié, gardé par
+l'intégration continue et retrouvé par la session suivante. C'est la déclaration
+qu'on oublie, jamais le code.
+
 ## Leçons apprises
 
 1. **Une couche de décision qui a besoin du disque n'en est pas une.** Le test
