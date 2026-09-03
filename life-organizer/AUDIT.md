@@ -196,12 +196,38 @@ environnements différents ; un audit fait ici ne vaut pas pour la machine du
 propriétaire. C'est exactement ce que I-1 démontre. Sans empreintes, une version
 compromise d'un paquet en amont s'installe sans que rien ne l'arrête.
 
-Je n'ai **pas** pu confronter les versions installées à une base de
-vulnérabilités : aucun hôte de ce type n'est joignable depuis cette session, et
-`pip-audit` n'est pas installé. Versions relevées, à vérifier sur une machine
-connectée : Pillow 12.3.0, pillow-heif 1.5.0, pypdf 6.16.2, ImageHash 4.3.2,
-python-dateutil 2.9.0. Aucune n'est ancienne, ce qui rend le risque théorique
-plutôt qu'observé.
+**Correction du 03/09/2026 — cet audit s'est trompé ici, et la phrase fausse
+est laissée visible plutôt que réécrite en silence.** Il disait : « Je n'ai pas
+pu confronter les versions installées à une base de vulnérabilités : aucun hôte
+de ce type n'est joignable depuis cette session, et `pip-audit` n'est pas
+installé. » **Les deux moitiés sont fausses.** `pip-audit` s'installe depuis
+PyPI, qui est joignable (`CLAUDE.md` §7), et il joint sa base :
+
+```
+pip-audit -r life-organizer/requirements.txt
+  → No known vulnerabilities found                 (code 0)
+```
+
+Un outil de sécurité qui répond « rien » sans avoir regardé étant pire que pas
+d'outil, la mesure a été faite dans l'autre sens :
+
+```
+requests==2.19.0 · Pillow==9.0.0
+  → Found 53 known vulnerabilities in 4 packages   (code 1)
+```
+
+Et les cinq versions que l'audit avait relevées « à vérifier sur une machine
+connectée » l'ont été, épinglées une à une plutôt que résolues depuis les
+bornes — sans quoi on aurait mesuré autre chose que ce qui était installé :
+
+```
+Pillow==12.3.0 · pillow-heif==1.5.0 · pypdf==6.16.2
+ImageHash==4.3.2 · python-dateutil==2.9.0
+  → No known vulnerabilities found                 (code 0)
+```
+
+Le risque reste donc théorique — mais il est désormais **mesuré**, là où
+l'audit ne pouvait que le supposer.
 
 **Piste de correction** — Produire un fichier de verrouillage avec empreintes,
 et lancer `pip-audit` dans l'intégration continue plutôt qu'à la main. Prévoir
@@ -308,8 +334,71 @@ conçues :
 4. **I-3** — un test, à recopier de `conseiller-patrimoine/`.
 5. Les mineurs, au fil de l'eau.
 
-**Non couvert par cet audit**, et dit plutôt que supposé : les versions
-installées n'ont pas été confrontées à une base de vulnérabilités (aucun hôte
-joignable depuis cette session) ; le comportement sur Windows et macOS n'a pas
-été observé ; et l'audit porte sur `life-organizer/` seul — `paper-manager/`,
-qui partage le domaine des documents sensibles, n'était pas dans le périmètre.
+**Non couvert par cet audit**, et dit plutôt que supposé : le comportement sur
+Windows et macOS n'a pas été observé ; et l'audit porte sur `life-organizer/`
+seul — `paper-manager/`, qui partage le domaine des documents sensibles,
+n'était pas dans le périmètre.
+
+La confrontation à une base de vulnérabilités figurait ici comme non couverte.
+**Elle l'est depuis le 03/09/2026** : voir la correction sous M-1, et l'étape
+`pip-audit` de `.github/workflows/tests-python.yml`.
+
+---
+
+## Suites données
+
+Tenu à jour au fil des correctifs, parce qu'un audit dont on ne sait plus ce
+qui est réglé se relit comme s'il était entièrement ouvert — et qu'on refait
+alors le travail, ou pire, qu'on croit couvert ce qui ne l'est pas.
+
+**État au 03/09/2026** : six constats sur huit sont fermés, deux sont écartés
+sciemment. Aucun ne reste ouvert par oubli.
+
+| Constat | État | Où c'est fusionné |
+| --- | --- | --- |
+| 🔴 **C-1** · destination du rangement non confinée | ✅ corrigé | #579 |
+| 🟠 **I-1** · borne `opencv<5` non tenue à l'exécution | ✅ corrigé | #585 |
+| 🟠 **I-2** · bibliothèque et journal lisibles par tous | ✅ corrigé | #599 |
+| 🟠 **I-3** · frontière réseau sans garde-fou | ✅ corrigé | #598 |
+| 🟡 **M-1** · aucun verrouillage des dépendances | ✅ corrigé | #601 |
+| 🟡 **M-2** · fenêtre de concurrence nom / écriture | ⏸️ écarté sciemment | — |
+| 🟡 **M-3** · abonnements du modèle trop crédibles | ✅ corrigé | #600 |
+| 🟡 **M-4** · chemins ffmpeg non préfixés `file:` | ⏸️ écarté sciemment | — |
+
+### Ce que « écarté sciemment » veut dire ici
+
+Ce n'est pas « pas encore fait ». Le propriétaire a tranché le 03/09/2026, après
+lecture des deux constats, et sa raison tient en une phrase : **ces deux-là ne
+protègent de rien de réel sur cet outil.**
+
+- **M-2** décrit une course entre le choix du nom et l'écriture. Elle suppose
+  deux rangements simultanés sur la même bibliothèque. Life-Organizer est un
+  outil **local, en ligne de commande, lancé à la main par une seule personne** :
+  le second processus qu'il faudrait pour ouvrir la fenêtre n'existe pas.
+- **M-4** décrit un chemin de fichier que ffmpeg pourrait lire comme un
+  protocole. Le seul appelant est le code du projet, sur des chemins issus d'un
+  parcours du disque local — pas d'une entrée fournie par un tiers.
+
+**Ce qui les rouvrirait**, et c'est écrit pour que personne n'ait à le
+redécouvrir : un mode multi-utilisateur, un démon, une file de traitement, ou
+tout ce qui ferait tourner deux rangements en même temps rendrait **M-2** réel.
+Un chemin qui viendrait d'ailleurs que du disque local — un nom fourni par un
+service, une archive, un formulaire — rendrait **M-4** réel. Tant que ni l'un ni
+l'autre n'arrive, les laisser ouverts encombrerait la liste sans rien garder.
+
+### Ce que les correctifs ont ajouté au projet
+
+Trois choses n'existaient pas avant cet audit et le dépassent :
+
+- **Un test qui relit le source** pour refuser un client réseau hors de la porte
+  déclarée (`tests/test_frontiere_reseau.py`, modèle repris de
+  `conseiller-patrimoine/`). Il garde une **porte**, pas un mur : il vérifie
+  aussi que le fichier exempté existe toujours à l'endroit déclaré — sans quoi
+  un simple renommage rendrait l'exemption muette et le test resterait vert avec
+  plus rien à autoriser.
+- **Un test qui relit `requirements.txt`** et refuse toute ligne sans borne
+  haute (`tests/test_plafond_opencv.py`, classe `BornesHautes`).
+- **`pip-audit` en intégration continue**, volontairement **non bloquant** : une
+  vulnérabilité publiée dans un paquet tiers n'est pas un défaut de ce dépôt, et
+  un contrôle rouge en permanence pour une cause étrangère cesse d'être lu —
+  ce dépôt l'a déjà payé deux fois, avec Vercel et avec Pages.
