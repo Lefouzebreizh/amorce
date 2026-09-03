@@ -15,8 +15,8 @@
  */
 
 import { chromium } from 'playwright';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readdirSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 /* Redmi Note 12 Plus, Chrome Android — le terrain de référence du dépôt. */
 const ECRAN = { width: 393, height: 873 };
@@ -49,9 +49,41 @@ if (!servie && !existsSync(resolve(process.cwd(), dossier, 'index.html'))) {
  * qui n'a rien à voir avec le code. Le 3 dit « non effectué », et la
  * vérification l'affiche comme tel au lieu de le compter vert.
  */
+/*
+ * Et il faut le **chercher**, parce que Playwright ne le trouve pas ici.
+ *
+ * Mesuré le 03/09/2026 : Playwright réclame
+ * `chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell`,
+ * et l'environnement fournit `chromium_headless_shell-1194/chrome-linux/headless_shell`
+ * — une révision et un nom de binaire différents. Le contrôle sortait donc en
+ * « non effectué » à chaque passage, sur une machine qui a Chromium.
+ *
+ * Ce n'est pas un détail de confort : c'est **ce contrôle-là** qui a trouvé une
+ * signature de pied à 15,2 px et 3,10:1 que soixante-dix tests verts laissaient
+ * passer. Un contrôle qui s'annonce « non effectué » depuis assez longtemps
+ * cesse d'être lu, exactement comme une alerte qui ne s'éteint jamais.
+ *
+ * On garde `CHROMIUM` prioritaire, puis on découvre, puis on laisse Playwright
+ * décider : la découverte s'ajoute aux deux chemins existants, elle ne les
+ * remplace pas.
+ */
+function chromiumDecouvert() {
+  if (process.env.CHROMIUM) return process.env.CHROMIUM;
+  const racine = process.env.PLAYWRIGHT_BROWSERS_PATH ?? '/opt/pw-browsers';
+  if (!existsSync(racine)) return undefined;
+  for (const dossier of readdirSync(racine).filter((d) => d.startsWith('chromium'))) {
+    for (const binaire of ['chrome-linux/headless_shell', 'chrome-linux/chrome',
+      'chrome-headless-shell-linux64/chrome-headless-shell']) {
+      const chemin = join(racine, dossier, binaire);
+      if (existsSync(chemin)) return chemin;
+    }
+  }
+  return undefined;
+}
+
 let navigateur;
 try {
-  navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM ?? undefined });
+  navigateur = await chromium.launch({ executablePath: chromiumDecouvert() });
 } catch (erreur) {
   console.error(`⊘ contrôle non effectué — pas de Chromium : ${erreur.message.split('\n')[0]}`);
   process.exit(3);
