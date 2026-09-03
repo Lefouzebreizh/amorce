@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --import ./tests/resolveur-alias.mjs --test \"tests/**/*.test.ts\"",
     "regarder": "node ../.claude/skills/verifier/scripts/regarder.mjs",
-    "exemple": "node ../titan-builder/scripts/generer.mjs ../titan-builder/demo --demonstration && cp ../titan-builder/demo/index.html public/exemple.html"
+    "exemple": "node ../titan-builder/scripts/generer.mjs ../titan-builder/demo --demonstration && cp ../titan-builder/demo/index.html public/exemple.html",
+    "facture": "node --experimental-strip-types scripts/facture.mjs"
   },
   "dependencies": {
     "next": "16.3.3",

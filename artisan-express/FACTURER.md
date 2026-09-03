@@ -32,9 +32,39 @@ elles ont été vérifiées le 03/09/2026, et l'une d'elles venait de changer.
 
 ---
 
-## Le modèle
+## La commande — une facture en trente secondes
 
-À recopier dans un document, à remplir, à envoyer en PDF.
+```bash
+cd artisan-express
+npm run facture -- --client "LE GOFF TOITURES" \
+  --adresse "12 rue des Lilas, 35000 Rennes"
+```
+
+Elle écrit un fichier HTML dans `factures/`. Tu l'ouvres, tu imprimes en PDF
+depuis le navigateur, tu envoies le PDF. Toutes les mentions y sont, et le
+**numéro se suit tout seul** — c'est la mention la plus contrôlée, et celle
+qu'on rate en recopiant à la main.
+
+**Au premier passage, elle refuse et écrit `factures/emetteur.json`.** Il faut
+y mettre ton **IBAN** : sans lui la facture est conforme, lisible… et
+impayable. C'est le seul champ à remplir, tout le reste est prérempli. Ce
+fichier n'entre pas dans Git, et `factures/` non plus — il porte ton IBAN et le
+nom de tes clients, et le dépôt est public.
+
+Options : `--montant 49`, `--prestation "…"`, `--siret …`, `--livre 2026-09-05`
+si la prestation a été faite un autre jour que l'émission.
+
+**Le numéro sert de référence de virement**, et il est écrit sur la facture.
+Sans lui, un virement arrive sans qu'on sache lequel il solde — au premier
+client ça se devine, au dixième non.
+
+---
+
+## Le modèle, si tu préfères à la main
+
+À recopier dans un document, à remplir, à envoyer en PDF. **La commande
+ci-dessus fait la même chose sans risque d'oubli** ; ce gabarit reste là pour
+savoir ce qu'elle produit, et pour le jour où tu factures depuis un téléphone.
 
 > **FACTURE ⟦numéro⟧**
 > Émise le ⟦date d'émission⟧
@@ -57,7 +87,14 @@ elles ont été vérifiées le 03/09/2026, et l'une d'elles venait de changer.
 > *TVA non applicable, art. L. 233-1 du CIBS*
 >
 > Prestation réalisée le ⟦date de livraison⟧.
-> Paiement à réception. Règlement par ⟦virement / espèces / lien de paiement⟧.
+>
+> **Règlement par virement**
+> Titulaire : Erwann Chevallier
+> IBAN ⟦ton IBAN⟧
+> BIC ⟦ton BIC⟧
+> Référence à indiquer : ⟦le numéro de la facture⟧
+>
+> Paiement à réception.
 > En cas de retard : pénalités au taux légal, et indemnité forfaitaire de
 > recouvrement de 40 €.
 

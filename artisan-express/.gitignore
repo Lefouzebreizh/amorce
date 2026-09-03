@@ -9,3 +9,7 @@ next-env.d.ts
 # Le dépôt ignore tout `.env*` à sa racine ; le gabarit, lui, se versionne —
 # c'est la seule liste des variables à renseigner avant la mise en ligne.
 !.env.example
+
+# Les factures portent l'IBAN de l'émetteur et le nom des clients avec les
+# montants : jamais dans un dépôt public, même raison que `prospects.md`.
+/factures/
