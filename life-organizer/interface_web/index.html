@@ -2080,6 +2080,19 @@ window.LOCoffre = (function(){
   var ITERATIONS = 600000;
   var TEXTE_VERIF = 'coffre-life-organizer-verification';
 
+  // Le nombre d'itérations vient du serveur, jamais de la page : on ne le
+  // croit donc jamais à la baisse (une ligne corrompue à `iterations: 1`
+  // dériverait une clé faible en silence). ITERATIONS est un plancher, pas
+  // une valeur par défaut — une valeur plus haute est honorée telle quelle,
+  // une valeur absente/négative/non numérique retombe au plancher plutôt que
+  // de lever, pour ne jamais enfermer l'utilisateur dehors de son propre
+  // coffre. Même correctif que le-coffre/src/lib/crypto.ts et
+  // le-coffre-hosted/index.html : les trois doivent bouger ensemble.
+  function iterationsSures(annoncees){
+    var n = (typeof annoncees === 'number' && isFinite(annoncees)) ? Math.floor(annoncees) : 0;
+    return Math.max(ITERATIONS, n);
+  }
+
   var cle = null;          // CryptoKey non extractible, en mémoire seulement
   var index = null;        // { objets: { [nomOpaque]: {nom, taille, type, categorie, depose_le} } }
   var etatServeur = null;  // { initialise: bool } — connu après le premier chargement
@@ -2360,7 +2373,7 @@ window.LOCoffre = (function(){
       fetch('/api/coffre/cle').then(function(r){ return r.json(); }).then(function(data){
         if (!data.ok) throw new Error(data.erreur);
         var sel = bufFromB64(data.sel);
-        return deriverCle(mdp, sel, data.iterations).then(function(cleDerivee){
+        return deriverCle(mdp, sel, iterationsSures(data.iterations)).then(function(cleDerivee){
           cle = cleDerivee;
           return dechiffrerTexte(empaqueter(bufFromB64(data.verificateur_iv), bufFromB64(data.verificateur_texte)));
         });
