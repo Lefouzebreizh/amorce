@@ -864,6 +864,38 @@ engage moins de capital que le témoin — 9 676 $ contre 9 986 $ — parce qu'e
 temporise, et une temporisation coûte toujours quelque chose sur un actif qui
 monte à long terme.
 
+### Ce que « elle engage moins » explique vraiment : un cinquième
+
+Le paragraphe ci-dessus était juste dans son sens et faux dans sa portée. Mesuré
+le 03/09/2026, sur la même fenêtre et les mêmes trois séries réelles :
+
+| | stratégie | témoin | écart |
+| --- | --- | --- | --- |
+| rendement | +586,6 % | +684,7 % | **−98,1 points** |
+| recul exposé | 60,4 % | 62,0 % | −1,6 point (en sa faveur) |
+| capital engagé | 9 676 $ | 9 986 $ | −310 $, soit −3,1 % |
+
+À performance par dollar identique, une stratégie qui engage 3,1 % de moins
+rendrait **663,4 %**. Elle rend 586,6 %.
+
+| l'écart de 98,1 points | points | part |
+| --- | --- | --- |
+| expliqué par « elle engage moins » | **21,3** | **22 %** |
+| **inexpliqué** | **76,8** | **78 %** |
+
+**Les quatre cinquièmes du reliquat ne viennent donc pas de la quantité engagée,
+mais du fait que le capital engagé rend moins par dollar** — c'est-à-dire qu'il
+est déployé à de moins bons moments. C'est une autre affirmation, et elle n'a
+pas encore été creusée.
+
+Et le prix de la protection se lit dans le même tableau : elle achète 98,1
+points de rendement au prix de **1,6 point** de recul exposé évité.
+
+**Une réserve sur ce partage** : il suppose qu'à capital égal la performance par
+dollar serait inchangée — or c'est précisément le calendrier des achats qui
+diffère entre les deux. Le chiffre est donc solide sur son ordre de grandeur,
+pas au point près. Ce qu'il établit : un cinquième, pas la totalité.
+
 ---
 
 ## 15. Les pondérations du score — le balayage qui ne change rien
