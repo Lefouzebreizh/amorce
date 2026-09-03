@@ -16,14 +16,29 @@ from dataclasses import dataclass
 
 from .intentions import Intention, Source
 
-# Les cinq classes félines de YAMNet, relevées dans le fichier de poids
-# lui-même (`yamnet_label_list.txt`, 521 lignes) et non de mémoire :
-# 76 Cat, 77 Purr, 78 Meow, 79 Hiss, 80 Caterwaul.
+# Les classes félines de YAMNet, relevées dans le fichier de poids lui-même
+# (`yamnet_label_list.txt`, 521 lignes) et non de mémoire : 76 Cat, 77 Purr,
+# 78 Meow, 79 Hiss, 80 Caterwaul, et 104 Roaring cats (lions, tigers).
 #
-# `Roaring cats (lions, tigers)` (104) est **volontairement absent** : le
-# retenir ferait passer la porte à un rugissement de documentaire animalier,
-# et l'étage suivant lui trouverait une intention.
-CLASSES_FELINES = ("Cat", "Purr", "Meow", "Hiss", "Caterwaul")
+# **`Roaring cats` était exclu, et le premier vrai chat a montré que c'était
+# faux.** Le raisonnement tenait : retenir cette classe ferait passer la porte
+# à un documentaire animalier. Mesuré le 03/09/2026 sur un enregistrement du
+# chat d'Erwann, un chat domestique noir et blanc filmé dans son salon :
+#
+#     fenêtres 0 à 8 (4,5 s)   Roaring cats 0,94 à 1,00   cumul félin 0,000
+#     fenêtres 9 à 14 (3 s)    Cat 1,00  Purr 1,00        cumul félin 1,99
+#
+# Le chat bâille bruyamment, gueule grande ouverte — visible sur l'image — et
+# YAMNet le range en rugissement. **Quatre secondes et demie de vrai chat
+# scoraient zéro à la porte**, et seule la queue de ronronnement a sauvé le
+# verdict. Sur un enregistrement sans ronronnement, ce chat aurait été refusé.
+#
+# Le compromis est donc inversé, et c'est le bon sens du produit : **perdre un
+# vrai chat domestique coûte plus cher qu'admettre un lion.** Personne
+# n'enregistre un lion avec cette application ; tout le monde enregistre un
+# chat qui bâille.
+CLASSES_FELINES = ("Cat", "Purr", "Meow", "Hiss", "Caterwaul",
+                   "Roaring cats (lions, tigers)")
 
 # `Cat` est une classe **parente**, pas une sœur des quatre autres — et c'est
 # le défaut que ce projet a payé en premier, découvert en regardant de vrais
@@ -42,6 +57,10 @@ CLASSES_FELINES = ("Cat", "Purr", "Meow", "Hiss", "Caterwaul")
 #
 # `Cat` ouvre donc la porte et ne choisit jamais. Même raison qu'`Animal` et
 # `Domestic animals, pets`, qui sont vrais et n'apprennent rien.
+#
+# `Roaring cats` est dans le même cas, et pour une raison de plus : sur le
+# bâillement mesuré ci-dessus, rien ne dit si le chat est content, agacé ou
+# seulement fatigué. C'est un son félin fort, et c'est tout ce qu'on en sait.
 CLASSES_SPECIFIQUES = ("Purr", "Meow", "Hiss", "Caterwaul")
 
 # Parmi elles, celles qui portent une **lecture**. `Meow` n'y est pas : c'est la
@@ -153,9 +172,15 @@ def juger(
         return Verdict(Intention.INDECIS, Source.AUCUNE, 0.0,
                        "Aucune fenêtre analysable : l'enregistrement est trop court.", "")
     if score_felin < seuil_porte:
+        # « Aucun son de chat », et non « ce n'est pas un chat ». La nuance
+        # a été payée sur un vrai fichier : une vidéo où le chat quémande en
+        # silence, sur une bande-son d'accordéon, rendait « ce n'est pas un
+        # chat » à quelqu'un qui filmait son chat. Le verdict était juste, la
+        # phrase était fausse — et c'est elle que l'utilisateur lit.
         return Verdict(
             Intention.INDECIS, Source.AUCUNE, 0.0,
-            f"Ce n'est pas un chat (score félin {score_felin:.2f} < {seuil_porte:.2f}).",
+            f"Aucun son de chat entendu (score félin {score_felin:.2f} "
+            f"< {seuil_porte:.2f}) — trop loin du micro, ou couvert par autre chose.",
             "",
         )
 
@@ -179,7 +204,21 @@ def juger(
     if fenetre.get(porteuse, 0.0) >= SEUIL_LECTURE:
         dominante = porteuse
     else:
-        dominante = max(CLASSES_SPECIFIQUES, key=lambda c: fenetre.get(c, 0.0))
+        # Le repli est `Meow` **en dur**, et non un `max()` sur les classes
+        # spécifiques. La nuance a l'air cosmétique et ne l'est pas :
+        # `max()` sur des scores tous égaux à zéro rend le **premier** élément
+        # du tuple, c'est-à-dire `Purr`. Un son qui franchit la porte sans
+        # qu'aucune classe précise ne réponde — un rugissement, un miaulement
+        # trop lointain — ressortait donc « contentement, mesuré, 0 % ».
+        #
+        # Le défaut est resté invisible tant que `Roaring cats` était hors de
+        # la porte : il fallait un son félin fort qu'aucune classe précise ne
+        # nomme, et il n'y en avait pas. Le test du lion l'a attrapé à la
+        # seconde où cette classe est entrée.
+        #
+        # `Meow` est le bon repli parce qu'il ne porte aucune lecture : il dit
+        # « un chat a vocalisé », ce qui est exactement tout ce qu'on sait.
+        dominante = "Meow"
 
     # --- Étage 2 : ce que le modèle nomme déjà lui-même. ---
     if dominante in LECTURE_DIRECTE:

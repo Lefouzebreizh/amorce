@@ -65,6 +65,11 @@ function lireNiches() {
   });
 }
 
+/* Une niche en pause n'a pas d'URL à annoncer : la laisser dans un sitemap
+   enverrait un moteur sur une page qui n'est plus construite, donc sur un 404
+   déclaré par nos soins. */
+const nichesActives = (bases) => bases.filter((base) => base?.niche?.actif !== false);
+
 /** Faute de date d'ajout, on retombe sur la date de modification du fichier :
  *  toujours plus honnête qu'une date du jour inventée. */
 function jour(valeur, secours) {
@@ -111,7 +116,7 @@ export function sitemap(entrees) {
 
 function main() {
   const impose = process.argv[2] || process.env.SITE_URL;
-  const niches = lireNiches();
+  const niches = nichesActives(lireNiches());
 
   fs.mkdirSync(dossierSortie, { recursive: true });
 

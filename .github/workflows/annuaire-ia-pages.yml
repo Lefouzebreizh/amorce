@@ -207,6 +207,9 @@ jobs:
           for (const f of niches) {
             const base = JSON.parse(fs.readFileSync(path.join('niches', f), 'utf8'));
             const id = base.niche.id;
+            // Une niche en pause n'est plus construite : lui réclamer un dossier
+            // ferait échouer le dépôt du seul site réellement en ligne.
+            if (base.niche.actif === false) { console.log('  (' + id + ') en pause, non construite'); continue; }
             if (!base.outils.length) { console.log('  (' + id + ') niche vide, non construite'); continue; }
             const dossier = path.join('dist', id);
             for (const attendu of ['index.html', 'styles.css', 'sitemap.xml', 'robots.txt', 'niches/' + id + '.json']) {

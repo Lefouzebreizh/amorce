@@ -62,7 +62,12 @@ function lireNiches() {
       const base = JSON.parse(fs.readFileSync(fichier, 'utf8'));
       valider(base, fichier);
       return { fichier, base };
-    });
+    })
+    /* Les niches en pause sortent ici, et c'est l'effet qui compte le plus :
+       l'auto-pilote cesse d'y puiser. La réserve entière se reporte sur les
+       niches restées actives, ce qui multiplie d'autant leur autonomie avant
+       la prochaine réalimentation. */
+    .filter(({ base }) => base?.niche?.actif !== false);
 }
 
 function publierUnOutil({ fichier, base }) {

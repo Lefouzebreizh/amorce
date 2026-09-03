@@ -526,14 +526,25 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   moitié du produit, le code en livrait le quart. Une classe porteuse de
   lecture l'emporte désormais sur `Meow` au-dessus de 0,10 — plancher mesuré,
   six fois au-dessus du plus haut miaulement ordinaire.
-  **La porte, elle, est franche** : 12 sons félins entre 0,398 et 2,566, trois
-  bruits domestiques entre 0,008 et 0,012 — trente-trois fois d'écart. Faim et envie de sortir sont
+  **`Roaring cats` ouvre la porte depuis le 03/09/2026**, et l'exclure était
+  une erreur : le premier vrai chat **bâille** pendant 4,5 s de ses 8 s, YAMNet
+  le range en rugissement, et son cumul félin valait **zéro**. Perdre un vrai
+  chat coûte plus cher qu'admettre un lion — lequel ne reçoit d'ailleurs aucune
+  intention, la classe ouvrant la porte sans porter de lecture. Ça se paie :
+  l'écart entre chats et bruits domestiques passe de 33× à **5,5×**, et le
+  seuil de 0,20 n'est plus qu'à 1,28× du pire faux positif.
+  **La tête acoustique** lit hauteur et durée d'après un référentiel de
+  vulgarisation, et ne voit **que les fenêtres où `Meow` domine** : appliquée à
+  toutes les fenêtres félines, elle rendait « détresse » sur un chat qui
+  ronronne à 1,00. Elle refuse deux choses — séparer faim et envie de sortir,
+  que le référentiel lui-même range sous un seul type, et lire le grave en
+  « douleur », que `archives-backlog/ou-a-mal-mon-animal.md` a déjà tranché. Faim et envie de sortir sont
   deux façons de miauler qu'aucun modèle public ne sépare : l'application rend
   `indécis`, avec son propre écran, plutôt qu'un pourcentage inventé.
   **`Cat` ouvre la porte et ne choisit jamais** — c'est une classe parente, qui
   vaut 0,988 là où `Meow` vaut 0,891 ; la laisser concourir perdait la lecture
   directe à tous les coups, et six tests verts ne le voyaient pas. Le noyau est
-  en bibliothèque standard **pure** : 33 tests en 3 ms sans rien installer,
+  en bibliothèque standard **pure** : 47 tests sans rien installer,
   **habillage compris** — la carte SVG 1080 × 1920 est pure elle aussi. Elle
   ne peut pas afficher un score que le modèle n'a pas mesuré : le bloc de
   confiance n'existe que pour une lecture `MESUREE`, et deux tests le
@@ -1431,10 +1442,14 @@ messages que le réglage a été coché**. La première rédaction de ce paragra
 l'avait conclu, à tort, et c'est la raison pour laquelle la nuance est écrite
 ici plutôt que corrigée en silence.
 
-Ce qui est mesuré, et rien de plus : l'appel ne rend plus la phrase citée, et
-il n'arme dans aucun des deux états. Ce qui reste inconnu : l'état réel de la
-case dans *Settings → General → Pull Requests → Allow auto-merge*. Seul le
-propriétaire peut le lire.
+Ce qui est mesuré : l'appel ne rend plus la phrase citée, et il n'arme dans
+aucun des deux états. **Et le propriétaire a confirmé le 03/09/2026 que la case
+est bien cochée** dans *Settings → General → Pull Requests → Allow auto-merge*.
+
+Les deux faits tiennent ensemble et disent la chose utile : **le réglage du
+dépôt n'était pas le blocage.** L'outil refuse pour ses propres raisons — PR
+déjà fusionnable, ou contrôles non terminés — et la conséquence pratique est
+inchangée.
 
 Donc, en pratique et sans changement : **on arme quand même** — l'appel coûte
 une seconde et son message dira le jour où ça marche — puis **on sonde jusqu'au
