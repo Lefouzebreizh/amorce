@@ -505,14 +505,37 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   dépendance** : la plateforme fournit `Request`, `Response` et `crypto.subtle`.
   Il sait deux choses — cette clé est-elle authentique, ce paiement tient-il
   toujours — et **aucun média ne l'atteint jamais**.
-  **Pas de comptes** : Amorce se vend une fois, 49 €, et une clé suffit. Le
-  serveur ne sait donc pas qui vous êtes, seulement qu'une clé a été payée. La
-  clé porte sa propre preuve — `AMO-<référence>-<sceau>`, le sceau étant un
-  HMAC de la référence — si bien que la base ne répond qu'aux deux questions que
-  le calcul ne tranche pas : ce paiement a-t-il eu lieu, a-t-il été remboursé.
+  **Pas de comptes** pour l'édition : Amorce se vend une fois, 49 €, et une clé
+  suffit. Le serveur ne sait donc pas qui vous êtes, seulement qu'une clé a été
+  payée. La clé porte sa propre preuve — `AMO-<référence>-<sceau>`, le sceau
+  étant un HMAC de la référence — si bien que la base ne répond qu'aux deux
+  questions que le calcul ne tranche pas : ce paiement a-t-il eu lieu, a-t-il
+  été remboursé.
   Tout ce qui décide vit dans `src/index.ts`, qui ne connaît que l'interface
   `Base` : la suite entière, **signature Stripe comprise**, s'éprouve sans D1,
   sans wrangler et sans réseau. Se vérifie depuis son dossier.
+  Ce périmètre reste inchangé par la génération intégrée ci-dessous : c'est
+  `comptes-serveur/`, un service séparé, qui porte l'identité et le solde que
+  la génération demande — pas celui-ci.
+- **comptes-serveur/** — comptes et grand livre de crédits, phase 1 de la
+  génération intégrée. Décision du 03/09/2026 : Amorce devient un studio de
+  création complet (image, son, vidéo générés), pas seulement un studio de
+  montage — ce qui casse « rien ne quitte l'appareil » pour cette partie-là,
+  puisque générer demande un serveur. Le modèle est en **crédits, pas
+  abonnement** : l'usage est irrégulier, par vagues de création.
+  Séparé de `licence-serveur/` plutôt qu'ajouté dedans : celui-ci garde son
+  rôle inchangé, et un solde qui bouge à chaque appel de génération n'est pas
+  la « deuxième chose » qu'il annonce savoir.
+  Même mesure que lui — **zéro dépendance d'exécution**, `Base` comme seule
+  interface avec D1. La connexion se fait par **lien envoyé par courriel**
+  (Resend), quinze minutes de validité, jamais de mot de passe. Le grand
+  livre distingue le solde (lu à chaque appel) des mouvements (écrits à
+  chaque achat), et `crediter` est **idempotent sur l'id du mouvement** — un
+  webhook Stripe rejoué ne crédite qu'une fois.
+  **Le prix des packs de crédits n'est pas décidé** (`PACKS` vaut `{}`) et
+  **le fournisseur de génération vidéo non plus**, volontairement — à trancher
+  en phase 4, le marché bouge vite. Aucune route de dépense encore : elle
+  attend la passerelle de génération, phase 2, qui n'existe pas.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un

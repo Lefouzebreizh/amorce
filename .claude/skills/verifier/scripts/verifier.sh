@@ -103,6 +103,7 @@ while IFS= read -r f; do
     bilan-patrimoine/*) inscrire bilan ;;
     motion/*)        inscrire motion ;;
     licence-serveur/*) inscrire licence ;;
+    comptes-serveur/*) inscrire comptes ;;
     annuaire-ia/*)   inscrire annuaire ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
                      inscrire amorce ;;
@@ -293,6 +294,17 @@ lancer_licence() {
   return $e
 }
 
+lancer_comptes() {
+  # Même mesure que licence-serveur, même raison : zéro dépendance, rien à
+  # installer. Ses tests tournent sans D1 ni Resend.
+  local d="comptes-serveur"; local j="$journal/comptes"; local e=0
+  ( cd "$d" || exit 1; etape "$j.typecheck" "typecheck" npm run typecheck ) & local a=$!
+  ( cd "$d" || exit 1; etape "$j.test"      "tests"     npm test ) & local b=$!
+  wait $a || e=1; wait $b || e=1
+  cat "$j".{typecheck,test} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_motion() {
   # Deux étapes, et c'est délibéré : ici `npm run build` REND UNE VIDÉO — il
   # lance un Chromium, prend des minutes, et n'a rien à faire dans une
@@ -451,6 +463,7 @@ for p in $projets; do
     bilan)   lancer_bilan & pid_de[bilan]=$! ;;
     motion)  lancer_motion & pid_de[motion]=$! ;;
     licence) lancer_licence & pid_de[licence]=$! ;;
+    comptes) lancer_comptes & pid_de[comptes]=$! ;;
     annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
     outillage) lancer_outillage & pid_de[outillage]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
@@ -477,6 +490,7 @@ nom_lisible() {
     bilan)   echo "Bilan Patrimoine" ;;
     motion)  echo "Habillages animés (motion)" ;;
     licence) echo "Serveur de licence" ;;
+    comptes) echo "Serveur de comptes" ;;
     annuaire) echo "Réseau d'annuaires IA" ;;
     outillage) echo "Outillage du dépôt (syntaxe seule)" ;;
     py:*)    echo "${1#py:}" ;;

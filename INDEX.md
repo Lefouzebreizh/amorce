@@ -74,6 +74,7 @@ dans lesquelles les chantiers puisent.
 | `kits/` | Ce qui a marché quelque part et se recopie ailleurs sans réfléchir : gabarits, composants, prompts. |
 | `visual_library/` | LUTs, recettes d'étalonnage et catalogues visuels, avec les bins Premiere / DaVinci. |
 | `licence-serveur/` | Serveur de licence d'Amorce : trois routes, zéro dépendance. Rattaché à Amorce, pas autonome. |
+| `comptes-serveur/` | Comptes et grand livre de crédits pour la génération intégrée d'Amorce. Rattaché à Amorce, pas autonome. |
 | `scripts/` | Scripts de vérification et de fixtures pour Amorce à la racine. |
 
 ## À faire sur le dépôt lui-même
