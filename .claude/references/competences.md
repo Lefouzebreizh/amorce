@@ -52,6 +52,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/resilier-un-contrat` | Résilier un abonnement, une assurance ou un contrat à reconduction tacite avec `paper-manager` — savoir jusqu'à quand c'est encore possible sans… |
 | `/retouche-planche` | Corriger au pixel une illustration dont le texte ou le dessin est incrusté — coquille dans une bulle, mot en trop, regard raté, élément à effacer ou… |
 | `/roussy-zephy` | Charte du recueil illustré « Roussy & Zéphy » — personnages, palette hexadécimale, mécanique des histoires en quatre temps, titres de référence,… |
+| `/site-web` | Construire un site vitrine d'une seule page pour un client — thérapeute, coach, commerce, association, indépendant, profession libérale — de la… |
 | `/sonotheque` | Constituer et tenir la bibliothèque de bruitages du dépôt — dragons et créatures, impacts, whooshes, magie, foules, ambiances — puis choisir dans le… |
 | `/sortir-les-fichiers` | Mettre à l'abri ce qu'une session distante contient et que le dépôt Git ne porte pas — planches, rushes, PDF de dépôt, exports, captures — avant que… |
 | `/sound-design-de-scene` | Concevoir le son d'une scène à partir de son IMAGE — relever ses événements, donner à chacun le sien, mesurer le contraste de chacun contre son fond,… |

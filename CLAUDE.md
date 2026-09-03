@@ -475,6 +475,11 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   lien Stripe — **disparaît de la page** au lieu d'afficher une valeur
   inventée. Se vérifie depuis son dossier. Ce qu'on vend **après** les 300 € —
   mise à jour annuelle, avis Google — est chiffré dans son `OPTIONS.md`.
+  Ce que ce projet a appris sur les sites vitrine d'une page est écrit à deux
+  niveaux, et il ne faut pas les confondre : `/web-artisan` porte le gabarit
+  artisan lui-même — palette par métier, tests, pièges du livrable ;
+  `/site-web` porte la **méthode** pour un client qui n'est pas artisan, en
+  citant l'autre plutôt qu'en la recopiant.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
@@ -811,8 +816,8 @@ préparation, pas de chance. `/jauge` avant un gros lot.
 - **Livrer tôt.** Un résultat qui tourne vaut mieux que le bon résultat annoncé
   au quinzième message.
 - **Trois essais par bug**, puis on livre la version dégradée qui marche et on
-  écrit la cause dans `second-brain/lecons.md`. Le quatrième essai coûte plus
-  que le défaut.
+  écrit la cause dans `second-brain/lecons/`, un fichier par leçon. Le
+  quatrième essai coûte plus que le défaut.
 - **Explorer petit, finir grand** : brouillon avec le modèle et les réglages les
   moins chers, qualité maximale sur la seule version finale.
 - **Rien de lourd sans raison** : pas de bibliothèque de graphiques ni
@@ -1367,8 +1372,9 @@ Trois règles en découlent, et chacune a déjà été payée :
   quand Hugging Face et les sites d'éditeurs sont refusés. C'est le premier
   endroit où chercher, pas le dernier.
 - **Un blocage qui dure plus d'une journée se traite en le nommant par écrit.**
-  Dans `second-brain/lecons.md` s'il traverse les projets, dans la compétence
-  concernée sinon. Un blocage écrit se résout ; un blocage raconté se répète.
+  Dans `second-brain/lecons/` s'il traverse les projets — son propre fichier,
+  daté —, dans la compétence concernée sinon. Un blocage écrit se résout ; un
+  blocage raconté se répète.
 - **Quand rien ne débloque, livrer la version dégradée qui marche** et dire
   précisément ce qu'elle n'a pas. Une vidéo publiée qui n'est pas belle vaut
   mieux que quatre jours à attendre celle qui le serait.
