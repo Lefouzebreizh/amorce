@@ -129,6 +129,17 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   oui. Rien ne distinguait la troisième, sinon que le dépôt recevait moins de
   monde à cette minute-là. Le déclenchement manuel, lui, n'a jamais manqué :
   c'est la seule voie qui dispense d'aller vérifier qu'elle a marché.
+
+  **Sauf qu'il n'est pas toujours ouvert, et il faut alors une autre porte.**
+  Mesuré le 03/09/2026 : `POST /actions/workflows/{fichier}/dispatches` rend
+  **403** quand le jeton de la session n'a pas `actions: write`. La branche est
+  alors restée trente minutes sans aucun run, pendant que d'autres branches, sur
+  des empreintes plus récentes, recevaient les leurs — donc ni quota, ni panne
+  générale. Ce qui a fini par déclencher : un **rebase sur `main` à jour suivi
+  d'une poussée forcée**. Le rebase était nécessaire de toute façon, et c'est ce
+  qui le rend recommandable — il n'a rien d'un commit vide destiné à secouer la
+  CI. Prudence sur la cause : la poussée coïncide avec la fin de la condition,
+  elle ne la prouve pas.
 - **Vérifier le verdict sur l'empreinte exacte qui sera fusionnée.** Un commit
   poussé après le déclenchement invalide le résultat précédent, et ne relance
   que les workflows dont le filtre de chemins l'accepte — `tests-python`
