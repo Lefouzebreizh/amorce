@@ -39,6 +39,21 @@ class ZoneVisee {
   /// cinq prises au hasard, et ce n'est plus une porte.
   static const double partParDefaut = 0.60;
 
+  /// Le carré à découper : sa position et son côté, en pixels.
+  ///
+  /// Exposé parce que deux appelants en ont besoin et qu'ils ne doivent pas
+  /// le recalculer chacun de son côté : celui qui découpe une liste de pixels
+  /// (`extraire`) et celui qui découpe une photo décodée avant de la réduire.
+  /// Deux copies d'un même calcul finissent par diverger — ce projet en a déjà
+  /// payé une, une saturation TSV traitée comme une saturation TSL.
+  static (int, int, int) cadre(int largeur, int hauteur, [double part = partParDefaut]) {
+    final petitCote = largeur < hauteur ? largeur : hauteur;
+    // Au moins un pixel : une part minuscule sur une petite image donnerait un
+    // cadre vide, et la porte rendrait « trop sombre » pour une image correcte.
+    final cote = (petitCote * part).round().clamp(1, petitCote);
+    return ((largeur - cote) ~/ 2, (hauteur - cote) ~/ 2, cote);
+  }
+
   /// Les pixels du carré centré, dans l'ordre des lignes.
   ///
   /// Le cadre est **carré** et non au format de l'image : un mur se vise de
@@ -62,14 +77,7 @@ class ZoneVisee {
       throw ArgumentError('La part du cadre se tient dans ]0, 1].');
     }
 
-    // Au moins un pixel : une part minuscule sur une petite image donnerait un
-    // cadre vide, et la porte rendrait « trop sombre » pour une image correcte.
-    final cote = ((largeur < hauteur ? largeur : hauteur) * part).round().clamp(
-          1,
-          largeur < hauteur ? largeur : hauteur,
-        );
-    final gauche = (largeur - cote) ~/ 2;
-    final haut = (hauteur - cote) ~/ 2;
+    final (gauche, haut, cote) = cadre(largeur, hauteur, part);
 
     final zone = <(int, int, int)>[];
     for (var y = haut; y < haut + cote; y++) {
