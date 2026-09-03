@@ -96,6 +96,59 @@ Ce qui reste imparfait et qu'on assume : un lavande très pâle ressort « blanc
 et un olive ressort « marron ». À quarante noms, c'est le grain qu'on a choisi ;
 forcer plus fin casserait les vrais blancs.
 
+## Ce que le cadre bicolore a coûté — 3 septembre 2026
+
+Le défaut listé sous « ce qui la ferait tomber » est traité. Trois mesures ont
+été nécessaires, et **les deux premières ont été écartées par les chiffres**,
+pas par un raisonnement.
+
+| candidate | ce qu'elle comptait | verdict |
+| --- | --- | --- |
+| part du nom majoritaire | le nom le plus fréquent | surfaces unies **0,594–0,996** contre cadres mêlés **0,293–0,497** : les plages se touchent |
+| part portant le nom de la moyenne | le nom réellement annoncé | pire — un plaid uni tombe à **0,196**, sous tous les cadres mêlés |
+| la même, clarté neutralisée | retenue, mais pas pour sa séparation | une nef d'église atteint **0,928**, au-dessus de deux surfaces unies |
+
+**Les deux premières échouent pour une seule cause**, et elle vaut d'être sue :
+`NameColor` change de nom avec la clarté — « gris » et « gris clair », « orange »
+et « marron ». Une ombre sur un mur uni compte donc comme une seconde couleur.
+La troisième ramène chaque pixel à la clarté du cadre avant de le nommer, et
+c'est **pour ça** qu'elle est gardée, pas parce qu'elle sépare mieux.
+
+### La question était mal posée, et c'est la mesure qui l'a dit
+
+Aucune des trois ne sépare les surfaces unies des scènes. En le constatant, on a
+vu pourquoi : **annoncer « deux couleurs » sur une scène encombrée n'est pas un
+faux positif, c'est la bonne réponse** — la moyenne n'y nomme rien. La seule
+chose interdite est de le dire d'une surface unie.
+
+L'exigence n'a donc qu'un côté, et un seul seuil y suffit : la part du **second**
+nom. Le seuil de majorité, celui qui n'avait aucun vide où se poser, a été
+retiré au lieu d'être ajusté.
+
+### Un piège attrapé par un test, pas par la mesure
+
+La neutralisation de la clarté **détruit le blanc** : ramené à la clarté moyenne
+d'un cadre rouge et blanc, le blanc ressort « gris clair ». La première version
+annonçait donc « rouge, ou gris clair » devant un pull rouge et blanc.
+
+Le blanc est une clarté ; la neutraliser efface ce qui le définit. La correction
+sépare les deux rôles — les pixels normalisés **décident** s'il y a deux
+couleurs, les pixels d'origine les **nomment**. C'est un test qui l'a attrapé,
+sur un cas fabriqué que la mesure sur photos réelles ne contenait pas.
+
+### Ce que ce seuil vaut, dit franchement
+
+**La marge est mince et le corpus est court** : trois surfaces unies plafonnent à
+0,122 de second nom, le premier cadre réellement mêlé est à 0,151. Trois
+centièmes, sur trois exemplaires d'un côté. Le seuil est à 0,14 et il se
+remesure dès qu'il existe des photos prises **dans l'application, viseur à
+l'écran** — les photos de ce corpus ont été prises sans le voir, et deux refus
+sur trois y venaient du cadrage.
+
+Sur les neuf cadres réels : **aucune surface unie dédoublée**, quatre cadres
+mêlés sur six signalés. Les deux non signalés sont des scènes que la lumière
+chaude rend réellement monochromes — leur nommer une couleur n'est pas absurde.
+
 ## Outils nécessaires
 
 - Flutter et le paquet caméra : **déjà dans le projet**.
@@ -108,9 +161,12 @@ forcer plus fin casserait les vrais blancs.
    incertitude** — « beige, ou blanc sous lumière chaude » — plutôt que
    d'affirmer. Une réponse fausse et assurée est pire que pas de réponse pour
    quelqu'un qui ne peut pas vérifier.
-2. **La moyenne d'un objet bicolore.** Un réticule sur une rayure rend la
-   moyenne des deux couleurs, qui n'existe nulle part. Détecter la dispersion
-   et le dire.
+2. ~~**La moyenne d'un objet bicolore.**~~ **Traité le 03/09/2026** —
+   `LectureCadre.lire()`, à côté de `NameColor` qui n'a pas été touché. Un pull
+   rouge et blanc rend désormais « rouge, ou blanc — deux couleurs dans le
+   viseur », et jamais le rose de la moyenne, qui n'existe nulle part. Le
+   vocabulaire est celui que `ColorReading` portait déjà : rien n'a été ajouté
+   à l'entité non plus. Ce que trois mesures ont coûté est écrit plus bas.
 3. **Nommer trop finement.** « Bleu pétrole » impressionne et n'aide personne.
    Une quarantaine de noms courants vaut mieux que deux cents nuances.
 
