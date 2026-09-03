@@ -1650,8 +1650,8 @@ Le premier est `.nojekyll`, et c'est la correction que tout le monde propose en
 voyant l'erreur Jekyll — le propriétaire l'a proposée lui-même. En mode branche,
 Jekyll tourne sur `source: /github/workspace/.`, soit la **racine du
 monorepo** : `.nojekyll` éteindrait bien le rouge, mais Pages publierait alors
-cette racine telle quelle. Or le site vit dans `annuaire-ia/dist/`, qui est
-**ignoré par git**. On obtiendrait un vert franc, les sources servies en HTTP,
+cette racine telle quelle. Or le site vit dans le dossier construit de
+l'annuaire, **ignoré par git** — donc absent d'un dépôt fraîchement cloné. On obtiendrait un vert franc, les sources servies en HTTP,
 et toujours pas d'annuaire. Un rouge honnête vaut mieux qu'un vert qui publie
 autre chose ; le seul correctif était le réglage de la source.
 
