@@ -1906,37 +1906,46 @@ complète est dans `nexuscrypto/README.md` §6 bis.
 
 ### Connecteurs
 
-GitHub : **les lectures passent par le serveur MCP (`mcp__github__*`), les
-écritures par `curl` avec `$GH_TOKEN`.** C'est l'inverse de ce que ce
-paragraphe disait jusqu'au 03/09/2026, et l'ancienne rédaction — « jamais par
-`gh` ni `curl` : l'appel direct rend 403 » — faisait renoncer au seul chemin
-qui fonctionne.
+GitHub : **le serveur MCP (`mcp__github__*`) est le chemin, en lecture comme en
+écriture — fusion comprise. `curl` ne sert qu'en repli, si le MCP refuse.**
 
-Mesuré le 03/09/2026, en ouvrant et fusionnant les PR #618 et #619 :
+Mesuré le 03/09/2026, dans une seule session : **sept fusions** par
+`mcp__github__merge_pull_request` (#582, #609, #611, #612, #614, #628, #629),
+chacune rendant `{"merged": true}`, plus plusieurs ouvertures par
+`create_pull_request`. Le MCP écrit.
 
-| appel | MCP `mcp__github__*` | `curl` + `$GH_TOKEN` |
+**Ce paragraphe a porté deux rédactions fausses en un jour, en sens
+contraires**, et c'est cette instabilité-là qui vaut d'être retenue :
+
+| écrit le | ce qu'il disait | pourquoi c'était faux |
 | --- | --- | --- |
-| lire (`get_me`, `list_pull_requests`) | ✅ | ✅ |
-| ouvrir une PR | ❌ 403 *not accessible by integration* | ✅ |
-| modifier une PR | ❌ | ✅ |
-| fusionner | ❌ 403 | ✅ |
+| avant le 03/09 | « jamais par `gh` ni `curl` : l'appel direct rend 403 » | vrai avant que l'application GitHub soit connectée, périmé après |
+| le 03/09 au matin | « les écritures par `curl`, le MCP rend 403 en écriture » | une session avait bien reçu ce 403 ; une autre fusionnait sept fois par le MCP le même jour |
 
-`gh` n'entre pas dans le tableau : **il n'est pas installé** dans le conteneur
-distant — `command not found`, pas un refus d'autorisation. Le citer à côté de
-`curl` dans une même interdiction mélangeait deux causes qui n'ont rien à voir.
+Aucune des deux n'était inventée : chacune décrivait fidèlement **la session qui
+l'écrivait**. Et c'est exactement le piège, parce que le fichier lui-même dit
+deux paragraphes plus bas que **cet accès se donne à la conversation, jamais par
+le dépôt**. Une session peut naître avec l'écriture MCP, une autre sans, le même
+jour, sur le même dépôt.
 
-**Ce qui a changé entre-temps, et qui explique l'ancienne phrase.** Avant que
-l'application GitHub de Claude soit connectée pour l'organisation, `curl`
-rendait un refus explicite du mandataire — « GitHub access is not enabled for
-this session. An org admin must connect the Claude GitHub App » — et le MCP
-rendait 403 sur tout. Les deux chemins étaient fermés, et l'ancienne rédaction
-décrivait fidèlement cet état-là. Le propriétaire a connecté l'application le
-03/09/2026 : `curl` s'est ouvert, le MCP est resté fermé en écriture.
+**Donc : une observation d'outillage n'est jamais une propriété de l'outil.**
+Elle vaut pour la session qui l'a faite, à l'heure où elle l'a faite. L'écrire au
+présent général — « le MCP ne peut pas fusionner » — fait renoncer la session
+suivante à un chemin qui, chez elle, est ouvert.
 
-D'où la leçon, qui vaut au-delà de GitHub : **une règle d'outillage écrite sur
-un état d'autorisation se périme quand l'autorisation change, et rien ne le
-signale.** Elle continue de se lire comme une vérité technique. Une session qui
-la suit renonce au chemin ouvert et conclut qu'elle ne peut pas fusionner.
+**Le geste qui tranche, et il coûte un appel** : tenter le MCP. S'il rend
+`{"merged": true}`, c'est fini. S'il rend 403 *not accessible by integration*,
+passer à `curl` — et **ne pas chercher de clé** : mesuré le 03/09/2026, la même
+requête rend la même identité `Lefouzebreizh` avec `$GH_TOKEN`, sans aucun
+en-tête d'autorisation, et avec un jeton volontairement faux. C'est le
+**mandataire** qui authentifie ; la variable ne vaut que 14 caractères et
+n'entre pour rien dans le résultat. Une session qui ne la trouve pas conclurait
+à tort qu'elle ne peut pas écrire.
+
+`gh` n'entre dans aucun des deux chemins : **il n'est pas installé** dans le
+conteneur distant — `command not found`, pas un refus d'autorisation. Le citer à
+côté de `curl` dans une même interdiction mélangeait deux causes qui n'ont rien
+à voir.
 
 **Le contrôler au premier message** reste juste, et c'est même le geste qui
 tranche : essayer les deux, garder celui qui répond. Cet accès se donne à la
