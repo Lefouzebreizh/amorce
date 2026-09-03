@@ -456,6 +456,10 @@
     border-style: var(--tw-border-style);
     border-width: 1px;
   }
+  .border-2 {
+    border-style: var(--tw-border-style);
+    border-width: 2px;
+  }
   .border-t {
     border-top-style: var(--tw-border-style);
     border-top-width: 1px;
@@ -915,6 +919,11 @@ body {
 }
 .bouton-accent:hover {
   filter: brightness(1.15);
+}
+.filtre-actif {
+  background: var(--color-relief);
+  color: var(--color-brume);
+  border-color: var(--color-sourdine);
 }
 .pastille-accent {
   background: var(--teinte-1);
