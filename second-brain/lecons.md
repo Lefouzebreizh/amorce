@@ -5594,3 +5594,52 @@ Ce qui s'est passé le premier jour reste inexpliqué, et c'est écrit tel quel
 dans le script plutôt que comblé par une troisième hypothèse. **Aller au journal
 avant de bâtir une explication — et surtout avant de déléguer une vérification :
 une hypothèse plausible écrite dans un fichier se relit comme un fait.**
+
+## Un test écrit sur l'ancienne barre ne dit pas qu'une nouvelle existe
+
+Mesuré le 03/09/2026 sur le traducteur de chat, et la forme du défaut vaut bien
+au-delà de lui.
+
+Le §2 bis a posé un standard de maison — **accent à 7:1** — après que le projet
+eut écrit son test de contraste sur **4,5:1**, la barre légale. Résultat : trois
+accents sur cinq étaient sous le nouveau standard, la suite restait **verte**,
+et rien nulle part ne le signalait.
+
+C'est le plus discret des défauts, parce qu'il n'a aucun symptôme : un test
+rouge se voit, un test qui mesure la mauvaise chose ne se voit pas. Et il naît
+mécaniquement dès qu'une règle transverse arrive **après** le code qu'elle
+concerne — ce qui est le cas normal dans un dépôt où les règles s'écrivent au
+fil des mesures.
+
+La parade tient en un geste : **quand une règle transverse est posée ou
+relevée, chercher les tests qui gardaient l'ancienne valeur**, et pas seulement
+le code. `grep` sur le nombre, pas sur le nom :
+
+```bash
+grep -rn "4\.5\|4,5" --include=*.py --include=*.ts --include=*.md .
+```
+
+Et son corollaire, qui coûte trente secondes : **relire `CLAUDE.md` avant
+chaque lot, pas seulement au début du fil.** Le §2 bis n'existait pas la veille.
+Une session qui enchaîne sur son propre contexte hérite de son état et perd les
+règles arrivées entre-temps.
+
+## Remonter un contraste sans changer la couleur
+
+Geste réutilisable, et il évite l'erreur qui rend la correction pire que le
+défaut : remplacer un accent trop sombre par une couleur qui passe le calcul
+mais ne dit plus rien — le violet du stress devient un violet quelconque.
+
+On garde l'angle de teinte et la saturation, on ne monte que la clarté, par pas
+d'un pour cent, jusqu'à franchir la cible **avec une marge** (7,2 visé pour
+7,0 exigé, pour qu'un arrondi ne repasse pas dessous) :
+
+```python
+h, l, s = colorsys.rgb_to_hls(*rvb)
+while contraste(hls_en_hex(h, l, s), fond) < 7.2:
+    l += 0.01
+```
+
+Mesuré : trois à neuf points de clarté ont suffi sur les trois accents en
+défaut, et la planche montre que chacun tient encore son registre. Le calcul
+propose, l'œil valide — l'un sans l'autre ne suffit pas.

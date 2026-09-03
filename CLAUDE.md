@@ -275,6 +275,7 @@ propre projet** — c'est le pire cas, celui qui décide.
 | IPTV | `#4aa8ff` bleu | 5,1:1 | sous le standard de la maison |
 | TITAN Builder | `#7c3aed` violet | **2,6:1** | **inutilisable comme accent** — voir plus bas |
 | Artisan Express | `#004AAD` sur fond clair | — | page de vente, thème clair assumé |
+| `chat-traducteur` | `#7FD99A` sauge | **8,3:1** | cinq accents de contenu — voir plus bas |
 | `look_and_find` | thème chaud clair | — | appli enfants, thème clair assumé |
 
 **Comment un nouveau produit choisit le sien.** Deux contraintes, et elles se
@@ -294,6 +295,35 @@ mais tombe sur `warn`.
 propre `--color-bord`, il ne se lit pas. Le projet porte déjà deux valeurs qui
 tiennent — `#a78bfa` (5,4:1) et `#22d3ee` (8,1:1) ; c'est au projet de trancher,
 et cette ligne existe pour que le prochain qui y touche le sache.
+
+### Le cas du traducteur de chat : la couleur est le contenu
+
+Il porte **cinq** accents et non un seul, et c'est la seule entrée du registre
+dans ce cas. La raison tient à ce que ses couleurs habillent : ses cartes
+1080 × 1920 sont des **artefacts de sortie** partagés sur TikTok, pas une
+interface. L'accent y porte le registre émotionnel du verdict — vert pour le
+contentement, violet froid pour le stress, bleu de contre-jour pour l'envie de
+sortir — et l'unifier reviendrait à effacer ce que la carte dit.
+
+Le `#7FD99A` inscrit au registre est donc l'accent du **produit** : celui que
+prendra son interface le jour où elle existera. Il tombe à trois millièmes de
+la sauge pré-mesurée du paragraphe suivant, ce qui n'était pas concerté et
+confirme surtout que la contrainte de 7:1 mène à un petit nombre de teintes.
+
+**Les cinq tiennent la même barre**, et il a fallu les y amener : mesuré le
+03/09/2026, trois étaient dessous — `sortir` 6,80, `stress` 6,24, `indecis`
+5,59 — parce que le test du projet demandait 4,5:1, la barre légale, écrite
+avant le §2 bis. **Un test écrit sur l'ancienne barre ne signale pas qu'une
+nouvelle existe** : il reste vert, et c'est le plus discret des défauts.
+
+La correction n'a pas changé les teintes : même angle, même saturation, la
+clarté seule monte de trois à neuf points. Un accent choisi pour son registre
+ne se remplace pas par une couleur qui passe le calcul.
+
+**Une réserve, dite plutôt que tue** : l'accent de la faim est un ambre
+`#FFB35C`, donc proche d'un `warn`. Aucune confusion n'est possible *sur la
+carte*, qui ne porte aucune couleur d'état — mais la réserve vaut si une
+interface reprend un jour cette teinte à côté d'un avertissement.
 
 ### L'exception, et elle est mesurée
 
@@ -503,7 +533,7 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   **`Cat` ouvre la porte et ne choisit jamais** — c'est une classe parente, qui
   vaut 0,988 là où `Meow` vaut 0,891 ; la laisser concourir perdait la lecture
   directe à tous les coups, et six tests verts ne le voyaient pas. Le noyau est
-  en bibliothèque standard **pure** : 31 tests en 3 ms sans rien installer,
+  en bibliothèque standard **pure** : 33 tests en 3 ms sans rien installer,
   **habillage compris** — la carte SVG 1080 × 1920 est pure elle aussi. Elle
   ne peut pas afficher un score que le modèle n'a pas mesuré : le bloc de
   confiance n'existe que pour une lecture `MESUREE`, et deux tests le
