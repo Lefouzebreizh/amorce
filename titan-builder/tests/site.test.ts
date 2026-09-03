@@ -434,3 +434,66 @@ test('un avis n’échappe pas au filtre des balises', () => {
   assert.equal(html.includes('<script>alert(1)</script>'), false);
   assert.equal(html.includes('<b>x</b>'), false);
 });
+
+test('aucune taille de texte du site livré ne passe sous le plancher de 18 px', () => {
+  /*
+   * La garde générale, écrite après la troisième occurrence du même défaut.
+   *
+   * `rem` vaut 16 px — jamais les 18 px que le corps déclare. Donc `.95rem`
+   * fait 15,2 px et **`1rem` lui-même fait 16 px** : les deux passent sous le
+   * plancher du §2, et les deux ont été écrits ici de bonne foi.
+   *
+   * Ce test ne vise pas une règle précise, il lit **toutes** les tailles de la
+   * feuille émise. C'est la seule forme qui tienne : les deux fois précédentes,
+   * le défaut était dans une règle que personne ne relisait — la signature du
+   * pied, puis la mention des avis, dormante tant qu'aucune démo n'avait
+   * d'avis à afficher.
+   *
+   * Le contrôle visuel les a trouvés tous les deux, et aucun test ne les
+   * voyait. Celui-ci les voit maintenant sans qu'il faille rendre la page.
+   */
+  const html = genererSite(commande({ couleur: 'plombier' }));
+  /*
+   * On retire les commentaires avant de lire, et ce n'est pas un détail : le
+   * premier jet de ce test se déclenchait sur le commentaire qui **explique**
+   * le piège du rem, parce qu'il en cite la valeur fautive. Une garde qui lit
+   * la prose au lieu du code condamne l'explication et pousse à l'effacer.
+   * C'est la troisième fois que ce dépôt s'y reprend — après le mot
+   * « prefers-color-scheme » et l'hexadécimal de l'orange retiré.
+   */
+  const css = html
+    .slice(html.indexOf('<style>'), html.indexOf('</style>'))
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const PLANCHER = 18;
+
+  for (const [regle, valeur, unite] of css.matchAll(/font-size:\s*([\d.]+)(rem|px)/g)) {
+    const px = unite === 'rem' ? Number(valeur) * 16 : Number(valeur);
+    assert.ok(px >= PLANCHER,
+      `« ${regle!.trim()} » rend ${px} px, sous le plancher de ${PLANCHER} px du §2`);
+  }
+
+  // Et la police du corps elle-même, qui sert de repli à tout le reste.
+  assert.match(css, /font: 18px\//, 'le corps ne déclare plus 18 px');
+});
+
+test('une démonstration montre le bloc d’avis, et dit que ce sont des exemples', () => {
+  /*
+   * Le bloc que l'artisan cherche des yeux. Son absence donnait une page qui
+   * avait l'air inachevée — signalé par le propriétaire, et il avait raison.
+   *
+   * Ce qui est gardé ici est le couple : **le bloc et sa mention**. Afficher
+   * des avis d'exemple sans dire qu'ils le sont serait un faux témoignage, ce
+   * que le dépôt s'interdit sans exception ; et la mention seule, sur un vrai
+   * site, jetterait un doute sur des avis authentiques.
+   */
+  const avec = { avis: [{ texte: 'Un emplacement.', prenom: 'Prénom', commune: 'commune' }] };
+
+  // `options` est le troisième argument : le second porte les photos.
+  const demo = genererSite(commande(avec), [], { demonstration: true });
+  assert.match(demo, /Ce qu’en disent mes clients/);
+  assert.match(demo, /Avis d’exemple/);
+
+  const vrai = genererSite(commande(avec));
+  assert.match(vrai, /Ce qu’en disent mes clients/, 'un vrai site garde ses avis');
+  assert.doesNotMatch(vrai, /Avis d’exemple/, 'la mention doit disparaître sur un vrai site');
+});

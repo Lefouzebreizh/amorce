@@ -527,7 +527,22 @@ ${ficheEtablissement(commande, domaine)}
   }
   .avis p { margin: 0 0 .4rem; }
   .avis cite { font-style: normal; font-weight: 700; color: var(--encre-douce); }
-  .mention { color: var(--encre-douce); font-size: 1rem; margin: -.25rem 0 1rem; }
+  /*
+   * La mention des avis d'exemple, et **pas de taille réduite**.
+   *
+   * Elle valait « font-size: 1rem », soit 16 px : sous le plancher de 18 px du
+   * §2. Le défaut dormait ici depuis l'écriture du bloc — aucune démonstration
+   * ne portait d'avis, donc la règle n'était jamais appliquée à rien. Il s'est
+   * réveillé le jour où les démos en ont reçu, et c'est le contrôle visuel qui
+   * l'a vu, pas les tests.
+   *
+   * C'est la troisième fois que « rem » piège cette page : il vaut 16 px, jamais
+   * les 18 px que le corps déclare. Toute fraction de rem, et « 1rem » lui-même,
+   * passent sous le plancher.
+   *
+   * Ce qui la met en retrait est donc l'encre et l'italique, pas la taille.
+   */
+  .mention { color: var(--encre-douce); font-style: italic; margin: -.25rem 0 1rem; }
   .galerie img {
     width: 100%; height: 100%; object-fit: cover; border-radius: .6rem; display: block;
     background: var(--slab);

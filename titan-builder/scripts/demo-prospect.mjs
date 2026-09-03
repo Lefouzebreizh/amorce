@@ -53,6 +53,7 @@
  */
 
 import { spawn } from 'node:child_process';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -291,6 +292,40 @@ async function principal() {
     console.error('   commande. Sa sortie est au-dessus ; l’ordre des questions a peut-être changé.\n');
     process.exit(1);
   }
+
+  /*
+   * Les avis d'exemple, posés entre les deux passes.
+   *
+   * `nouveau-client.mjs` ne les demande pas — c'est voulu, il sert un vrai
+   * client et **le dépôt s'interdit le faux témoignage sans exception**. Une
+   * démonstration a pourtant besoin de montrer ce bloc : c'est celui que
+   * l'artisan cherche des yeux, et son absence donne une page qui a l'air
+   * incomplète.
+   *
+   * La sortie est donc la même que pour les photos : des emplacements qui
+   * **disent qu'ils sont vides**. Aucun prénom inventé, aucune phrase de client
+   * fabriquée — « Prénom, commune » et un texte qui explique ce qui prendra la
+   * place. Un faux avis plausible resterait faux même sous une mention, et une
+   * mention se rate à la lecture.
+   *
+   * `generer.mjs --demonstration` ajoute par-dessus la phrase « Avis d'exemple »
+   * qui vit déjà dans `site.ts` : elle disparaît d'elle-même sur un vrai site.
+   */
+  const cheminCommande = path.join(RACINE, dossier, 'commande.json');
+  const dossierCommande = JSON.parse(await readFile(cheminCommande, 'utf8'));
+  dossierCommande.commande.avis = [
+    {
+      texte: 'Votre premier avis prendra cette place, avec les mots exacts de votre client.',
+      prenom: 'Prénom',
+      commune: 'commune',
+    },
+    {
+      texte: 'Le deuxième juste en dessous. Deux ou trois suffisent : au-delà, plus personne ne les lit.',
+      prenom: 'Prénom',
+      commune: 'commune',
+    },
+  ];
+  await writeFile(cheminCommande, `${JSON.stringify(dossierCommande, null, 2)}\n`, 'utf8');
 
   // Deuxième passe : la première a écrit la page sans `noindex`, parce que
   // `nouveau-client.mjs` sert un vrai client. Ici on la réécrit en démonstration.

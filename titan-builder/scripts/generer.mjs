@@ -52,13 +52,38 @@ function cadresDeDemonstration(teinte, surfaces, encres) {
   const accent = teinte.accent;
 
   return legendes.map((legende, rang) => {
+    /*
+     * Un appareil photo, et plus le rond barré d'avant.
+     *
+     * Le dessin précédent était un cercle surmonté d'une barre. Il voulait dire
+     * « image », il disait « pictogramme de toilettes » — le propriétaire l'a vu
+     * en une seconde et il avait raison. Sur une page qu'on envoie à un artisan
+     * pour lui montrer du soin, un dessin qui fait bon marché coûte plus que
+     * l'absence de dessin.
+     *
+     * Le fond est un dégradé du voile de sa teinte vers la surface élevée : il
+     * donne de la profondeur là où l'aplat faisait trou, et il change avec le
+     * métier comme le reste de la charte.
+     *
+     * Le cadre reste en pointillé. C'est lui qui dit « il manquera quelque
+     * chose ici » — un cadre plein donnerait une image finie, et l'artisan
+     * croirait que c'est ce qu'il reçoit.
+     */
+    const id = `d${rang}`;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
-<rect width="400" height="300" fill="${surfaces.slab}"/>
-<rect x="8" y="8" width="384" height="284" rx="14" fill="none" stroke="${accent}" stroke-width="3" stroke-dasharray="12 9"/>
-<circle cx="200" cy="126" r="34" fill="none" stroke="${accent}" stroke-width="6"/>
-<rect x="150" y="86" width="100" height="12" rx="6" fill="${accent}"/>
-<text x="200" y="205" text-anchor="middle" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="${encres.vive}">Votre photo ${rang + 1}</text>
-<text x="200" y="238" text-anchor="middle" font-family="system-ui, sans-serif" font-size="19" fill="${encres.douce}">${legende}</text>
+<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="${teinte.voile}"/><stop offset="1" stop-color="${surfaces.slab}"/>
+</linearGradient></defs>
+<rect width="400" height="300" fill="url(#${id})"/>
+<rect x="8" y="8" width="384" height="284" rx="14" fill="none" stroke="${accent}" stroke-width="3" stroke-dasharray="12 9" opacity="0.7"/>
+<g fill="none" stroke="${accent}" stroke-width="6" stroke-linejoin="round">
+<path d="M172 96h56l10 18h22a14 14 0 0 1 14 14v54a14 14 0 0 1-14 14H140a14 14 0 0 1-14-14v-54a14 14 0 0 1 14-14h22z"/>
+<circle cx="200" cy="155" r="26"/>
+</g>
+<circle cx="200" cy="155" r="11" fill="${accent}"/>
+<circle cx="252" cy="132" r="5" fill="${accent}"/>
+<text x="200" y="232" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="${encres.vive}">Votre photo ${rang + 1}</text>
+<text x="200" y="262" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" fill="${encres.douce}">${legende}</text>
 </svg>`;
 
     return {
