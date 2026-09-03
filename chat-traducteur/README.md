@@ -112,14 +112,14 @@ chat-traducteur/
 ├── habillage/          ← la carte SVG, bibliothèque standard PURE aussi
 │   ├── carte.py          verdict → SVG 1080 × 1920, zone sûre câblée
 │   └── palette.py        une palette par intention, contraste ≥ 7:1
-├── tests/                33 tests, ~3 ms, sans rien installer
+├── tests/                47 tests, ~90 ms, sans rien installer
 ├── modeles/              poids — jamais versionnés
 └── cli.py                le prototype : un fichier entre, une intention sort
 ```
 
 **Le noyau ne connaît ni numpy, ni TFLite, ni fichier son.** Même règle que le
 cœur de NexusCrypto, et pour la même raison : ce qui *décide* doit s'éprouver
-sur une machine où rien n'est installé, sinon plus personne ne vérifie. Les 33
+sur une machine où rien n'est installé, sinon plus personne ne vérifie. Les 47
 tests tournent en 3 millisecondes sur une session fraîche.
 
 Le corollaire pratique : **l'habillage visuel se branchera sans toucher à ce
@@ -244,6 +244,117 @@ Les enregistrements du chat d'Erwann le confirmeront ou le déplaceront.
 ```bash
 python3 chat-traducteur/scripts/mesurer_corpus.py .fixtures/corpus
 ```
+
+## Les premiers vrais enregistrements — 03/09/2026
+
+Deux vidéos de huit secondes, le même chat noir et blanc. Elles ont corrigé
+trois choses, dont une décision que ce fichier défendait.
+
+### `Roaring cats` devait ouvrir la porte
+
+Elle en était **volontairement** exclue, pour tenir les documentaires
+animaliers dehors. Mesuré sur le premier chat réel :
+
+| fenêtres | classe dominante | cumul félin |
+| --- | --- | --- |
+| 0 à 8 (4,5 s) | `Roaring cats (lions, tigers)` 0,94 à 1,00 | **0,000** |
+| 9 à 14 (3 s) | `Cat` 1,00 · `Purr` 1,00 | 1,99 |
+
+Le chat **bâille**, gueule grande ouverte — visible sur l'image — et YAMNet le
+range en rugissement. Quatre secondes et demie de vrai chat scoraient zéro, et
+seule la queue de ronronnement a sauvé le verdict. Sur un enregistrement sans
+ronronnement, ce chat était refusé.
+
+Le compromis est inversé : **perdre un vrai chat coûte plus cher qu'admettre un
+lion.** Un lion ne reçoit d'ailleurs aucune intention — la classe ouvre la
+porte et ne porte pas de lecture, comme `Cat`.
+
+**Et ça se paie.** La marge de la porte s'est resserrée, parce que
+`Roaring cats` répond aussi un peu sur les bruits domestiques :
+
+| | avant | après |
+| --- | --- | --- |
+| chats, cumul minimum | 0,398 | 0,859 |
+| témoins domestiques, maximum | 0,012 | **0,156** |
+| écart | 33× | **5,5×** |
+
+Le seuil de 0,20 n'est plus qu'à **1,28× au-dessus du pire faux positif**. Il
+n'est pas déplacé : un chat lointain sur un micro de téléphone est exactement
+ce qu'on ne veut pas perdre. Mais c'est le premier réglage que d'autres
+enregistrements réels devront trancher.
+
+### La porte a eu raison sur le second fichier
+
+Cumul 0,180, refusé de deux centièmes. Et c'était juste : la vidéo porte une
+**bande-son d'accordéon** (`Music` 1,00 sur onze fenêtres) et le chat quémande
+**en silence**, debout sur ses pattes arrière. Il n'y avait aucun son de chat à
+lire.
+
+Le message, lui, était faux : il disait « ce n'est pas un chat » à quelqu'un qui
+filmait son chat. Il dit désormais « aucun son de chat entendu — trop loin du
+micro, ou couvert par autre chose ».
+
+### Le défaut du zéro, exposé par le rugissement
+
+Le repli de l'étage 2 était un `max()` sur les classes spécifiques. Sur des
+scores tous nuls, `max()` rend le **premier** élément du tuple — `Purr` — et un
+rugissement ressortait « contentement, mesuré, 0 % ».
+
+Il est resté invisible tant que rien ne pouvait franchir la porte sans qu'une
+classe précise réponde. `Roaring cats` a créé ce cas, et le test du lion l'a
+attrapé dans la seconde. Le repli est désormais `Meow` en dur.
+
+## La tête acoustique — hauteur et durée
+
+Un référentiel de miaulements fourni par le propriétaire classe par **hauteur
+et durée**, deux grandeurs mesurables sans modèle entraîné. C'est la seule voie
+ouverte vers l'étage 2 sans jeu d'étiquettes, et elle se branche sur la couture
+prévue depuis le premier jour.
+
+    aigu + long    -> requête      faim, soif, litière sale, veut sortir
+    aigu + court   -> salutation   chat bavard, content
+    grave          -> alerte       stress
+
+### La faute qu'elle a failli commettre
+
+Appliqué **sans borne** au premier enregistrement, ce référentiel rend
+**« détresse »** sur un chat qui bâille puis ronronne à 1,00 : la porte accepte
+les quinze fenêtres, la hauteur médiane tombe à 152 Hz, la durée à 7,8 s —
+grave et long.
+
+La cause n'est pas le référentiel, c'est son application. **Il classe des
+miaulements, pas n'importe quel son de chat.** La tête ne reçoit donc que les
+fenêtres où `Meow` domine, et `Purr`, `Hiss` et `Caterwaul` ne l'atteignent
+jamais — ils sont lus en direct.
+
+### Ce qu'elle refuse de dire
+
+**`REQUETE` ne se sépare pas en faim et envie de sortir.** Le référentiel range
+lui-même « faim », « soif », « litière sale » et « veut sortir » sous le *même*
+type. Ce n'était donc pas une limite de YAMNet : **ces deux intentions sont
+acoustiquement la même chose**, et aucun modèle n'y changera rien. C'est une
+décision de produit — soit l'application dit « il demande quelque chose », soit
+elle garde deux cartes qu'elle ne saura jamais départager. En attendant,
+`REQUETE` rend `indécis`.
+
+**Le grave se lit en stress, jamais en douleur.** Le référentiel conseille un
+vétérinaire ; le dépôt a déjà tranché contre ce genre de verdict dans
+`archives-backlog/ou-a-mal-mon-animal.md`. Un test empêche qu'une session
+« complète » un jour la correspondance.
+
+**Et la confiance est plafonnée à 0,5.** Les deux frontières — 400 Hz et 0,7 s —
+sont des **hypothèses déclarées**, posées au milieu de ce qui a été observé, et
+qu'aucun corpus étiqueté n'a confirmées.
+
+### Trois pièges mesurés sur du vrai son
+
+1. **L'autocorrélation ne sait pas ce qu'elle écoute** : sur la vidéo à
+   l'accordéon elle rend 300 à 500 Hz à 0,8 de confiance pendant cinq secondes.
+2. **Un ronronnement vit sous le plancher de silence** — 0,006 de RMS là où le
+   seuil habituel est 0,01, et ce sont les fenêtres que YAMNet nomme le mieux.
+3. **Une autocorrélation qui échoue se colle à la borne** au lieu de le dire.
+   Un résultat à `fmax` est désormais rejeté : mieux vaut « inconnu » qu'un
+   nombre faux qui a l'air juste.
 
 ## La suite
 

@@ -5760,3 +5760,59 @@ Deux règles en sortent, et la seconde a été payée dans la minute :
 Le dépôt portait déjà la parade sans qu'elle soit nommée : les routes du
 serveur de licence s'écrivent avec leur verbe (`GET /etat`) exactement pour
 rompre cette correspondance.
+
+## Un corpus généré ne bâille pas
+
+Le traducteur de chat a été réglé sur quinze bruitages générés, qui ont trouvé
+deux défauts réels. Puis deux vraies vidéos de huit secondes sont arrivées, et
+elles ont trouvé ce qu'aucun corpus généré ne pouvait montrer.
+
+**Un vrai chat fait des sons qu'on ne pense pas à commander.** Celui-ci bâille,
+gueule grande ouverte, pendant 4,5 de ses 8 secondes — et YAMNet range ça en
+`Roaring cats (lions, tigers)`, une classe qui avait été **exclue par
+raisonnement** pour tenir les documentaires animaliers dehors. Le raisonnement
+était bon et le résultat faux : 4,5 secondes de vrai chat scoraient zéro.
+
+**Une vraie vidéo porte une bande-son.** La seconde a un accordéon sur onze
+fenêtres, et le chat quémande en silence. Toute analyse de hauteur appliquée au
+fichier entier mesurait l'accordéon avec 0,8 de confiance.
+
+La leçon n'annule pas l'intérêt des bruitages générés — ils restent le moyen le
+moins cher de trouver un défaut de **hiérarchie de modèle**, qui est une
+propriété du modèle. Elle borne ce qu'ils couvrent : **ils ne contiennent que
+les sons qu'on a su demander.** Un corpus commandé par invite est un corpus
+sans surprise, et la surprise est exactement ce qu'on cherche.
+
+D'où le geste : **un seul enregistrement réel, le plus tôt possible**, avant de
+régler quoi que ce soit sur du généré. Il coûte un message et il déplace des
+décisions qu'on croyait tranchées.
+
+## Un référentiel s'applique là où il s'applique, et nulle part ailleurs
+
+Un référentiel de miaulements — aigu/grave, court/long — a été fourni pour
+lever le dernier blocage du traducteur. Appliqué au premier vrai fichier **sans
+borne**, il a rendu « détresse, surveiller, vétérinaire » sur un chat qui
+bâille puis ronronne à 1,00, visiblement détendu sur l'image.
+
+La cause n'était pas le référentiel : c'est qu'il classe des **miaulements**, et
+qu'on lui donnait tous les sons de chat. Un bâillement n'est pas un miaulement,
+un ronronnement non plus. Borné aux seules fenêtres où la classe `Meow` domine,
+il se tait sur ce fichier — ce qui est la bonne réponse.
+
+La règle générale, et elle vaut pour toute table d'interprétation reprise de
+l'extérieur : **la première question n'est pas « que dit la table » mais « sur
+quoi porte-t-elle ».** Une table juste appliquée hors de son domaine produit
+des verdicts confiants et faux, et c'est pire qu'une table absente.
+
+Deux corollaires écrits dans le même lot, parce qu'ils se reperdent :
+
+- **Ce que la source ne sépare pas, on ne le sépare pas non plus.** Le
+  référentiel range « faim », « soif », « litière sale » et « veut sortir » sous
+  un seul type. Deux intentions demandées au départ sont donc acoustiquement la
+  même chose, et aucun modèle n'y changera rien — c'est une décision de produit,
+  pas un manque technique.
+- **Une table venue du dehors peut proposer ce que le dépôt a déjà refusé.**
+  Celle-ci conseille un vétérinaire sur le grave ; `archives-backlog/` porte la
+  décision de ne pas faire de tri de santé animale. La table ne renverse pas une
+  décision écrite — un test empêche qu'une session « complète » la
+  correspondance un jour.

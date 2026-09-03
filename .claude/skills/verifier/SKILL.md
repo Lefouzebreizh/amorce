@@ -339,7 +339,7 @@ vérifié tant qu'un vrai `python3 main.py scan` n'a pas tourné.
 ## Traducteur de chat — `chat-traducteur/`
 
 ```bash
-python3 -m unittest discover -s chat-traducteur/tests   # 33 tests, ~3 ms, aucune dépendance
+python3 -m unittest discover -s chat-traducteur/tests   # 47 tests, ~90 ms, aucune dépendance
 ```
 
 Ces tests ne chargent **jamais** YAMNet et n'ouvrent aucun fichier son : ils
@@ -394,8 +394,16 @@ limites qu'on cherche. C'est lui qui a montré que le stress était
 chaque verdict pris isolément restait plausible. Ni les tests ni la planche ne
 pouvaient l'attraper — il fallait quinze sons côte à côte.
 
-Trois défauts sur ce projet, trois fois un `max()` qui compare des choses de
-rangs différents, et trois outils différents pour les voir : les scores bruts
+Et depuis le 03/09/2026, un quatrième outil, qui a trouvé ce qu'aucun des
+trois ne pouvait voir : **de vrais enregistrements**. Deux vidéos de huit
+secondes ont montré qu'une classe exclue de la porte par raisonnement — le
+rugissement — portait 4,5 secondes de vrai chat qui bâille, et qu'un
+référentiel de hauteur appliqué sans borne rendait « détresse » sur un chat qui
+ronronne. Aucun corpus généré ne l'aurait dit : un bruitage de miaulement ne
+bâille pas.
+
+Quatre défauts sur ce projet, quatre fois un `max()` qui compare des choses de
+rangs différents, et quatre outils différents pour les voir : les scores bruts
 pour `Cat`, la planche pour les identifiants SVG, le corpus pour `Caterwaul`.
 La leçon tient en une phrase : **un verdict isolé ne dit jamais si une règle
 tient — il dit ce qu'elle a répondu une fois.**
