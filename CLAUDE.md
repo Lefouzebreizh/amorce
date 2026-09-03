@@ -1396,18 +1396,33 @@ contexte à chaque sondage, et elle meurt avec la session — une PR verte reste
 alors ouverte à attendre quelqu'un. Armée, GitHub fusionne seul dès que les
 contrôles passent, téléphone éteint.
 
-**Sauf qu'ici l'outil refuse toujours**, et c'est mesuré : `enable_pr_auto_merge`
-rend « Auto-merge is not enabled for this repository ». Le réglage est coupé
-dans *Settings → General → Pull Requests → Allow auto-merge*, et tant qu'il
-l'est, le paragraphe ci-dessus décrit un geste qui échoue à chaque PR. Une
-session qui l'ignore essaie, se fait refuser, et croit à une erreur de sa part.
+**Et la case est cochée depuis le 03/09/2026** — ce paragraphe disait le
+contraire, et le disait « mesuré ». Il l'était : `enable_pr_auto_merge` rendait
+« Auto-merge is not enabled for this repository », le réglage étant coupé dans
+*Settings → General → Pull Requests → Allow auto-merge*. C'est ce qui a changé,
+pas la mesure — et c'est exactement le cas que le §3 nomme le plus coûteux, une
+règle périmée qu'on suit parce qu'elle porte le mot « mesuré ».
 
-Donc, tant que la case n'est pas cochée : on arme quand même — l'appel coûte une
-seconde et dira le jour où le réglage change — puis **on sonde jusqu'au vert et
-on fusionne à la main**. C'est le chemin normal de ce dépôt, pas un repli.
-Cocher la case est un geste de trente secondes qui rendrait le paragraphe
-précédent vrai ; c'est au propriétaire de le faire, personne d'autre n'a la
-main dessus.
+Relevé sur la PR #602, trois appels et trois réponses, **dont aucune n'est
+celle d'avant** :
+
+| état de la PR | ce que l'appel rend |
+| --- | --- |
+| un contrôle en cours | « in unstable status (required checks are failing) » |
+| tous les contrôles verts | « already in clean status — you can merge directly » |
+
+L'appel traverse donc le contrôle du réglage, ce qu'il ne faisait pas : un dépôt
+où l'auto-fusion est coupée rend « not enabled » quel que soit l'état de la PR.
+
+**Ce que ça change en pratique, et c'est modeste** : armer à l'ouverture marche
+désormais, et sert dans le seul cas où c'était l'intérêt — une PR ouverte dont
+les contrôles tournent encore. Sur une PR déjà verte, l'outil refuse et dit de
+fusionner directement : ce n'est pas un échec, c'est la réponse juste.
+
+Donc : **armer à l'ouverture, avant que les contrôles ne finissent.** Si la
+réponse est « clean status », c'est qu'ils sont déjà passés — on fusionne à la
+main dans la foulée. Le sondage jusqu'au vert reste le chemin des lots courts,
+où tout est vert avant qu'on ait fini d'écrire le corps de la PR.
 
 Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
 plusieurs sessions en parallèle, et une branche qui attend collectionne les

@@ -5643,3 +5643,27 @@ while contraste(hls_en_hex(h, l, s), fond) < 7.2:
 Mesuré : trois à neuf points de clarté ont suffi sur les trois accents en
 défaut, et la planche montre que chacun tient encore son registre. Le calcul
 propose, l'œil valide — l'un sans l'autre ne suffit pas.
+
+## Une mesure juste devient fausse sans que rien ne bouge dans le dépôt
+
+Le 03/09/2026, `CLAUDE.md` affirmait — à raison, et avec le mot « mesuré » — que
+l'auto-fusion était coupée sur ce dépôt : `enable_pr_auto_merge` rendait
+« Auto-merge is not enabled for this repository ». La mesure était bonne. Le
+réglage a été changé **hors du dépôt**, dans les paramètres GitHub, et la phrase
+est devenue fausse sans qu'aucun commit ne la touche.
+
+C'est une famille de phrases à part, et elle mérite d'être reconnue : celles qui
+décrivent un **état extérieur** — un réglage de plateforme, un quota, une clé,
+une politique réseau, un hôte joignable. Elles se périment toutes seules, en
+silence, et elles portent le mot « mesuré », ce qui les rend plus crédibles
+qu'une phrase ordinaire au moment où elles cessent d'être vraies.
+
+La parade est un réflexe, pas une relecture : **quand une règle dit « l'outil X
+refuse », faire l'appel une fois avant de la croire.** Il coûte une seconde,
+et son message dit lui-même si la règle tient encore. Le paragraphe corrigé le
+prévoyait d'ailleurs — « on arme quand même, l'appel dira le jour où le réglage
+change » — et c'est exactement ce qui l'a levé.
+
+Le corollaire pour l'écriture : une phrase qui décrit un état extérieur se date
+et dit **par quel appel** on la revérifie. Sans ça, elle se relit comme une
+propriété du dépôt, et personne ne pense à la réinterroger.
