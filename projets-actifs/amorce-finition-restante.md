@@ -18,11 +18,18 @@ Aucun de ces trois points ne bloque une vente. Ils ont été relevés à l'œil 
 la mesure, et ils sont écrits ici plutôt que corrigés parce que le fil s'est
 arrêté avant.
 
-**Le mouvement est plat.** Cinq transitions sur toute la page d'accueil, toutes
-des survols. Rien n'apparaît, rien ne guide l'œil vers l'action. Le §2 bis borne
-ce qui est permis : couleur, opacité et transformations seulement, jamais une
-propriété qui recalcule la mise en page, et `prefers-reduced-motion` dans la
-feuille de style.
+~~**Le mouvement est plat.**~~ **Corrigé, et la phrase ci-dessus est fausse
+depuis le 03/09/2026.** Mesuré sur le fichier : la page porte **sept** entrées
+`.entree` avec sept décalages posés en ligne, et **dix-sept** révélations au
+défilement. `globals.css` documente les deux mécanismes, borne l'animation à
+l'opacité et au déplacement vertical — jamais une propriété qui recalcule la
+mise en page — et protège `.revele` par `@supports`, si bien qu'un navigateur
+sans `animation-timeline` garde le contenu visible au lieu de le cacher en
+attendant un mécanisme absent.
+
+La phrase est conservée barrée plutôt que supprimée : une autre session
+lisant la fiche y chercherait sinon un défaut déjà réparé, et le réparerait une
+seconde fois.
 
 **Aucun état de chargement à l'ouverture du studio.** C'est pourtant le
 chargement le plus lourd du site : quelqu'un appuie sur « Ouvrir le studio » et
@@ -46,16 +53,19 @@ produit, pas une correction.
 d'`artisan-express` : ce qui n'est pas réglé disparaît au lieu d'afficher un
 lien mort.
 
-## Les deux manques légaux, qui eux comptent
+## Le manque légal qui reste, et le réglage qui l'accompagne
 
 Écrits dans les pages plutôt que comblés, et **seul le propriétaire peut les
 lever** :
 
-- le **SIRET**, en cours d'attribution ;
+- ~~le **SIRET**, en cours d'attribution~~ — **obtenu**. SIREN **109356972**,
+  immatriculation confirmée le 31/08/2026. `src/app/mentions-legales/page.tsx`
+  affiche « SIRET 109 356 972 00017 » depuis, vérifié le 03/09 ; il ne reste
+  donc qu'un manque légal sur les deux, celui du dessous ;
 - le **médiateur de la consommation**, obligatoire pour qui vend à des
   particuliers, à souscrire auprès d'un organisme agréé.
 
-Et un troisième qui n'est pas une page mais un réglage : la **case de
+Et un second point, qui n'est pas une page mais un réglage : la **case de
 renonciation au droit de rétractation** se pose dans la page de paiement Stripe,
 avant l'encaissement. Sans elle, le délai de quatorze jours court malgré la
 livraison immédiate et le remboursement est de droit (L221-28 13°).
