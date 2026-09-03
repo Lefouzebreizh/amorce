@@ -197,11 +197,42 @@ sépare.
 Ce qui les sépare est ailleurs, et la fiche le dit déjà à sa façon : c'est **le
 seul vrai problème du sujet**. Deux pistes, ni l'une ni l'autre mesurée :
 
-- **la répartition dans le cadre** plutôt que la moyenne — une pièce éclairée
-  au tungstène tire *tout* vers le chaud, un meuble brun est brun au milieu de
-  voisins qui ne le sont pas ;
+- ~~**la répartition dans le cadre** plutôt que la moyenne~~ — **mesurée et
+  écartée le 03/09/2026, voir juste en dessous** ;
 - **un point de référence blanc** dans la scène, que la personne désignerait une
   fois — ce qui change l'interface, donc le produit.
+
+### La première piste est morte, et sa mort est instructive
+
+L'idée : une ampoule tungstène tire **tout** le cadre vers le chaud, alors qu'un
+meuble brun a des voisins neutres — un mur, un sol, un plafond. On mesurerait
+donc la **part du cadre qui n'est pas chaude**, et une part quasi nulle
+trahirait la lumière plutôt que la matière.
+
+Elle sépare très bien ce qu'on ne lui demandait pas : les six cadres mal nommés
+tombent entre **0,012 et 0,263**, les scènes de plein jour entre **0,761 et
+1,000**. De quoi croire que ça marche.
+
+**La grange l'a tuée.** Des murs de terre ocre, photographiés de jour, porte
+ouverte : part hors-chaud **0,032** — au milieu des six, alors que son ocre est
+réel et que « orange » y serait juste.
+
+La raison se voit après coup et vaut au-delà de ce projet : la mesure répond
+« tout le cadre est-il chaud ». Or c'est **exactement ce que produit aussi une
+grande surface réellement chaude**. Elle ne distingue pas « tout est chaud parce
+que la lumière l'est » de « tout est chaud parce que la chose l'est ».
+
+Et le coup de grâce est dans le produit lui-même : cette mesure a besoin du
+**contexte autour** de la surface, et l'application demande précisément de
+**cadrer serré sur la surface**. Le viseur détruit ce dont la piste avait besoin.
+Une idée peut être juste en physique et incompatible avec le geste qu'on demande
+à l'utilisateur.
+
+### Ce qui reste
+
+La seconde piste — **un point de référence blanc**, désigné une fois par la
+personne — n'est pas mesurée et **change l'interface**. C'est donc une décision
+de produit, et c'est la seule qui reste sur la table.
 
 **Rien n'a été touché dans `NameColor`.** C'est une brique partagée, la
 consigne est de ne pas y toucher, et ce constat appelle une décision de produit
