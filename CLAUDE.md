@@ -1625,8 +1625,46 @@ jour — la route est tranchée et le workflow écrit — et son projet Vercel n
 plus qu'échouer — vu en rouge sur une pull request qui
 ne touchait que `life-organizer/`.
 
-**Mais « doit » n'est pas « est », et rien n'est en ligne — mesuré le 02/09/2026
-au soir.** La source Pages du dépôt est restée sur une **branche**, pas sur
+**Le réseau est en ligne depuis le 03/09/2026 à 05 h 15**, et tout le bloc
+ci-dessous décrit l'état d'avant. Il est conservé parce que sa mécanique reste
+juste — c'est la conclusion qui a changé.
+
+La source Pages est passée sur « GitHub Actions ». Le workflow détecte
+`build_type: workflow`, saute l'étape d'alerte, construit, empaquette et
+**dépose** : mesuré deux fois, sur un lancement manuel puis sur la fusion
+suivante. Le billet **#557 s'est refermé tout seul** à 05:15:07, ce que le
+workflow ne fait qu'au premier dépôt réussi — c'est la preuve la plus solide
+disponible d'ici.
+
+L'adresse est `lefouzebreizh.github.io/amorce/<niche>/`, et non
+`ma-panoplie-ia.com`, qui **ne résout toujours pas** — aucun `CNAME` versionné.
+Les canoniques, sitemaps et robots.txt y ont été repointés (#628) : ils
+annonçaient `reseau-annuaires.vercel.app`, dont le projet a été supprimé et qui
+rend 404. Dette assumée : le jour où le domaine sera délégué, ces adresses-ci
+seront indexées et demanderont une redirection. Une adresse indexée qu'on
+redirige vaut mieux qu'une adresse indexée qui rend 404.
+
+**Deux pièges de ce chantier, qui coûteront à qui les ignore.**
+
+Le premier est `.nojekyll`, et c'est la correction que tout le monde propose en
+voyant l'erreur Jekyll — le propriétaire l'a proposée lui-même. En mode branche,
+Jekyll tourne sur `source: /github/workspace/.`, soit la **racine du
+monorepo** : `.nojekyll` éteindrait bien le rouge, mais Pages publierait alors
+cette racine telle quelle. Or le site vit dans `annuaire-ia/dist/`, qui est
+**ignoré par git**. On obtiendrait un vert franc, les sources servies en HTTP,
+et toujours pas d'annuaire. Un rouge honnête vaut mieux qu'un vert qui publie
+autre chose ; le seul correctif était le réglage de la source.
+
+Le second est que **`*.github.io` est refusé par le mandataire** —
+`CONNECT tunnel failed, 403`, alors que le DNS résout parfaitement. Une session
+ne peut donc **pas ouvrir la page qu'elle vient de déposer** : elle en est
+réduite aux étapes du workflow et à la fermeture du billet. C'est le même
+partage qu'avec le CDN de higgsfield au §7 — on peut agir, pas regarder. Le
+« regardé, pas seulement mesuré » du §8 passe donc par le navigateur du
+propriétaire, et une session qui annonce le site en ligne doit dire qu'elle ne
+l'a pas vu.
+
+**Ce qui suit décrit l'état du 02/09/2026 au soir, et n'est plus vrai.** La source Pages du dépôt est restée sur une **branche**, pas sur
 Actions : le billet **#557** le dit depuis 15 h 46 et attend trois gestes que
 seul le propriétaire peut faire. Le workflow `annuaire-ia-pages.yml` se comporte
 comme prévu — il détecte, il prévient, il ouvre le billet, il reste vert — mais
