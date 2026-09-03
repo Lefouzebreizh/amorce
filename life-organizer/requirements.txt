@@ -1,18 +1,46 @@
+# Pourquoi chaque ligne porte une borne haute — constat M-1 de `AUDIT.md`
+#
+# Deux installations à deux dates donnaient deux environnements, et un audit
+# fait ici ne valait pas pour la machine du propriétaire. Le constat I-1 en est
+# la démonstration : une session a installé `opencv-python-headless` **sans la
+# borne** pour tout autre chose, la 5 est arrivée, et le garde-fou « visage »
+# est devenu inerte sans qu'aucun test ne rougisse.
+#
+# La borne est posée sur la **majeure suivante** : c'est là que les API cassent.
+# Elle n'est pas un verrouillage — deux installations à deux dates peuvent
+# encore différer en mineure. Ce qui manque pour l'être, et pourquoi ce n'est
+# pas fait ici :
+#
+# * un fichier de verrouillage **avec empreintes** figerait les roues par
+#   plateforme et par version de Python. Or ce dépôt tourne sur deux : le poste
+#   du propriétaire en 3.14, les sessions distantes en 3.11 (voir `CLAUDE.md`
+#   §7). Un lot d'empreintes juste chez l'un casse à l'installation chez
+#   l'autre — le remède serait pire que le mal tant que les deux coexistent.
+#
+# `pip-audit -r life-organizer/requirements.txt` confronte ces versions aux
+# vulnérabilités connues. **Il fonctionne depuis une session distante**, mesuré
+# le 03/09/2026 — l'audit le croyait impossible, et le disait de bonne foi :
+# « aucun hôte de ce type n'est joignable, et pip-audit n'est pas installé ».
+# Les deux moitiés sont fausses. Il s'installe depuis PyPI, joint sa base, et
+# rend « No known vulnerabilities found » sur ce fichier. Éprouvé dans l'autre
+# sens pour être sûr que ce n'est pas le silence d'un outil déconnecté :
+# `requests==2.19.0` et `Pillow==9.0.0` lui font trouver 53 vulnérabilités.
+
 # Lecture et écriture d'images, conversion HEIC/PNG/JPG, lecture des données EXIF
 # qui portent la date de prise de vue — celle sur laquelle le classement s'appuie
 # avant de se rabattre sur la date de modification, souvent celle d'une copie.
-Pillow>=10.3
+Pillow>=10.3,<14
 
 # Ouverture des HEIC des iPhone, que Pillow ne sait pas décoder seul.
-pillow-heif>=0.16
+pillow-heif>=0.16,<2
 
 # Lecture du texte des PDF déjà numériques. Le passage par l'OCR coûte cent fois
 # plus cher : on ne rastérise que les PDF qui ne rendent aucun texte.
-pypdf>=4.2
+pypdf>=4.2,<7
 
 # Hachage perceptuel (pHash) pour rapprocher deux images visuellement identiques
 # dont les octets diffèrent — recadrage, recompression, capture d'écran.
-ImageHash>=4.3
+ImageHash>=4.3,<5
 
 # Analyse de netteté (variance du laplacien, transformée de Fourier) et détection
 # de visages. La variante « headless » évite d'installer les bibliothèques
@@ -34,20 +62,28 @@ ImageHash>=4.3
 # `tests/test_plafond_opencv.py` tient la règle sur les QUATRE fichiers qui
 # installent ce paquet : une borne posée ici que la chaîne KDP, la CI ou le
 # hook contredisent ne protège rien — un environnement n'a qu'une version.
+#
+# **À réexaminer avant le 01/03/2027.** Ce plafond finira par retenir un
+# correctif de sécurité de la branche 5, et l'échange s'inversera ce jour-là.
+# Deux façons d'en sortir quand le moment viendra, dans l'ordre de préférence :
+# remplacer la détection de visages par une bibliothèque que la 5 n'a pas
+# retirée, ou accepter la 5 et laisser la passe de netteté se sauter d'office —
+# le comportement que `modules/nettoyage/commande.py` applique déjà quand le
+# classifieur manque. La seconde ne coûte rien à écrire : elle est en place.
 opencv-python-headless>=4.9,<5
 
 # Analyse des dates en français dans le texte extrait des documents.
-python-dateutil>=2.9
+python-dateutil>=2.9,<3
 
 # Serveur local de interface_web/ — une façade sur organizer.py, jamais un
 # réseau ouvert au-delà de 127.0.0.1.
-Flask>=3.1
+Flask>=3.1,<4
 
 # Le seul appel réseau sortant du projet : modules/depot/, qui envoie une
 # image ou un texte au modèle de vision pour classer un fichier déposé.
 # Désactivé tant que depot.actif est faux ou que la clé d'API n'est pas
 # définie — voir modules/depot/__init__.py.
-requests>=2.31
+requests>=2.31,<3
 
 # Ffmpeg n'est PAS listé ici : c'est un binaire système, pas un paquet Python.
 #   Debian/Ubuntu : sudo apt install ffmpeg tesseract-ocr tesseract-ocr-fra

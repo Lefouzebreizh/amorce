@@ -432,49 +432,49 @@
   },
   "abonnements": [
     {
-      "id": "abo-fibre",
-      "nom": "Fibre — opérateur",
+      "id": "exemple-abonnement-mensuel",
+      "nom": "Exemple — abonnement mensuel",
       "categorie": "Télécom",
-      "montant": 39.99,
+      "montant": 30.0,
       "periodicite": "mensuel",
-      "date_souscription": "2024-03-12",
-      "date_prochain_prelevement": "2026-09-12",
-      "fin_engagement": "2025-03-12",
+      "date_souscription": "2024-01-01",
+      "date_prochain_prelevement": "2026-10-01",
+      "fin_engagement": "2025-01-01",
       "preavis_jours": 30,
       "moyen_paiement": "Prélèvement — compte courant",
       "statut": "actif",
       "url_resiliation": "",
-      "notes": "Prix passé de 29,99 € à 39,99 € en janvier 2026."
+      "notes": "Exemple. « fin_engagement » dit quand la résiliation devient libre."
     },
     {
-      "id": "abo-streaming",
-      "nom": "Streaming vidéo",
+      "id": "exemple-a-reexaminer",
+      "nom": "Exemple — service peu utilisé",
       "categorie": "Loisirs",
-      "montant": 13.49,
+      "montant": 10.0,
       "periodicite": "mensuel",
-      "date_souscription": "2023-11-02",
-      "date_prochain_prelevement": "2026-09-02",
+      "date_souscription": "2024-01-01",
+      "date_prochain_prelevement": "2026-10-01",
       "fin_engagement": null,
       "preavis_jours": 0,
       "moyen_paiement": "Carte bancaire",
       "statut": "a_reexaminer",
       "url_resiliation": "",
-      "notes": "Non ouvert depuis mai."
+      "notes": "Exemple. Le statut « a_reexaminer » le fait remonter dans le bilan."
     },
     {
-      "id": "abo-assurance-habitation",
-      "nom": "Assurance habitation",
+      "id": "exemple-abonnement-annuel",
+      "nom": "Exemple — abonnement annuel",
       "categorie": "Assurance",
-      "montant": 218.4,
+      "montant": 200.0,
       "periodicite": "annuel",
-      "date_souscription": "2022-10-01",
+      "date_souscription": "2022-01-01",
       "date_prochain_prelevement": "2026-10-01",
       "fin_engagement": null,
       "preavis_jours": 60,
       "moyen_paiement": "Prélèvement — compte courant",
       "statut": "actif",
       "url_resiliation": "",
-      "notes": "Résiliable à tout moment après un an (loi Hamon), préavis d'un mois."
+      "notes": "Exemple. Un préavis long se calcule à rebours du prochain prélèvement."
     }
   ],
   "echeances": [

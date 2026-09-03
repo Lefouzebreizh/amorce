@@ -29,6 +29,35 @@ class ModeleLivre(unittest.TestCase):
         expediteur = MODELE["resiliation"]["expediteur"]
         self.assertTrue(all(valeur == "" for valeur in expediteur.values()))
 
+    def test_les_abonnements_du_modele_sont_manifestement_fictifs(self):
+        """Le constat M-3 : l'identité était gardée, les dépenses non.
+
+        Le test ci-dessus couvrait `resiliation.expediteur` — nom, adresse,
+        IBAN — et s'arrêtait là. Les trois abonnements livrés portaient pourtant
+        des montants au centime, des dates de souscription et des notes qui se
+        lisent comme un carnet de comptes : « Prix passé de 29,99 € à 39,99 € en
+        janvier 2026 », « Non ouvert depuis mai ».
+
+        Ce n'est ni un secret ni un identifiant — et c'est bien pour ça que rien
+        ne le signalait. C'est de la donnée de dépense, publiée et indexable dans
+        un dépôt public, et l'historique git la garde même après correction.
+
+        Deux marques suffisent à rendre la confusion impossible : un montant rond
+        et un nom qui se déclare exemple. Un vrai abonnement n'a presque jamais
+        les deux.
+        """
+        for abonnement in MODELE["abonnements"]:
+            with self.subTest(abonnement=abonnement["id"]):
+                self.assertIn(
+                    "exemple", abonnement["id"].lower(),
+                    "l'identifiant doit se déclarer comme un exemple",
+                )
+                montant = abonnement["montant"]
+                self.assertEqual(
+                    montant, round(montant),
+                    f"{montant} € se lit comme une vraie dépense : arrondir",
+                )
+
 
 class Validation(unittest.TestCase):
     def config(self, **remplacements):

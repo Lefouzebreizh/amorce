@@ -87,6 +87,32 @@ jobs:
       # La boucle ne s'arrête pas au premier rouge. Savoir que trois suites sur
       # sept sont cassées vaut mieux que de s'arrêter à la première et de
       # découvrir les deux autres au prochain tour.
+      # Constat M-1 de `life-organizer/AUDIT.md`. Volontairement **non
+      # bloquant**, et la raison vaut d'être écrite parce qu'elle se rediscute :
+      # une vulnérabilité publiée dans un paquet tiers n'est pas un défaut de ce
+      # dépôt, et souvent rien ici ne peut la corriger le jour où elle sort. Un
+      # contrôle bloquant deviendrait rouge en permanence pour une cause qui
+      # n'est pas celle de la PR — exactement ce que ce dépôt a déjà payé avec
+      # Vercel et avec Pages, où un rouge permanent cesse d'être lu.
+      #
+      # Informatif, il fait ce qu'on attend de lui : le journal nomme le paquet
+      # et la version corrigée, et c'est au propriétaire de décider quand
+      # relever une borne.
+      #
+      # Mesuré le 03/09/2026 : pip-audit s'installe depuis PyPI et joint sa base
+      # de vulnérabilités depuis une session distante — `AUDIT.md` le croyait
+      # impossible. Éprouvé dans les deux sens : « No known vulnerabilities
+      # found » sur le fichier réel, 53 trouvées sur requests 2.19 et Pillow 9.
+      - name: Confronter les dépendances aux vulnérabilités connues
+        continue-on-error: true
+        run: |
+          python -m pip install --quiet pip-audit
+          for exigences in $(find . -maxdepth 2 -name requirements.txt \
+                                  -not -path '*/node_modules/*' | sort); do
+            echo "── $exigences"
+            pip-audit -r "$exigences" --progress-spinner off || true
+          done
+
       - name: Lancer chaque suite
         run: |
           echec=0

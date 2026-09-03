@@ -91,6 +91,34 @@ class PlafondOpenCV(unittest.TestCase):
         self.assertEqual(oublis, [], "site(s) installant OpenCV sans borne haute")
 
 
+class BornesHautes(unittest.TestCase):
+    """Constat M-1 : chaque dépendance porte une borne haute.
+
+    Le plafond `opencv<5` était le seul, et le constat I-1 a montré ce que
+    coûte son absence ailleurs : une session installe un paquet sans borne pour
+    tout autre chose, une majeure arrive, et un garde-fou devient inerte sans
+    qu'aucun test ne rougisse.
+
+    La borne n'est pas un verrouillage — deux installations peuvent encore
+    différer en mineure. Elle empêche seulement le saut de majeure, qui est là
+    où les API cassent. Le fichier dit pourquoi un lock à empreintes n'est pas
+    la réponse ici : deux versions de Python coexistent sur ce dépôt.
+    """
+
+    def test_chaque_dependance_porte_une_borne_haute(self):
+        chemin = RACINE / "requirements.txt"
+        for ligne in chemin.read_text(encoding="utf-8").splitlines():
+            ligne = ligne.strip()
+            if not ligne or ligne.startswith("#"):
+                continue
+            with self.subTest(dependance=ligne):
+                self.assertIn(
+                    "<", ligne,
+                    f"« {ligne} » n'a pas de borne haute : une majeure suivante "
+                    "s'installerait sans que rien ne le signale",
+                )
+
+
 class VersionReellementInstallee(unittest.TestCase):
     """Ce que la machine fait, et non ce que les fichiers déclarent.
 
