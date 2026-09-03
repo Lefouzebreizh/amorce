@@ -14,9 +14,11 @@ les raisons. Le tenir à jour fait partie de tout changement d'architecture.
 Trois règles priment sur toute considération technique. Un changement qui les
 contredit est un changement à refuser, même s'il est élégant.
 
-1. **L'abri n'est pas un produit.** Le trafic venu du groupe (`?src=groupe`)
-   a un accès illimité, sans compte, sans carte, sans limite de requêtes et
-   sans écriture en base. Aucune vente n'est faite dans le groupe. Le soutien
+1. **L'abri n'est pas un produit.** Le trafic venu du groupe (`?src=groupe`
+   accompagné du jeton `JETON_GROUPE`) a un accès illimité, sans compte, sans
+   carte, sans limite de requêtes et sans écriture en base. Le jeton est requis
+   depuis le 02/09/2026 : le paramètre seul se déclarait, il ne se prouvait pas.
+   Sans lui on retombe sur le quota ordinaire, on ne refuse personne. Aucune vente n'est faite dans le groupe. Le soutien
    à 19 € ne se propose qu'au trafic externe, une fois, sans bandeau qui revient.
 2. **Rien de ce qui est écrit n'est conservé.** Ni le message piquant collé dans
    la reformulation, ni la page de journal. Pas en clair, pas haché, pas
@@ -89,7 +91,7 @@ deux onglets lire « 4 » et écrire « 5 » chacun, et six analyses passent.
 
 | Route | Méthode | Ce qu'elle fait |
 | --- | --- | --- |
-| `/api/reforme` | POST | Corps `{ texte, src }`. 200 avec les quatre blocs CNV ; 400 si la saisie est vide ou dépasse 2 000 signes ; 405 sur toute autre méthode ; **429 `quota_reached`** quand les cinq analyses du jour sont consommées. `src === 'groupe'` court-circuite tout le décompte. |
+| `/api/reforme` | POST | Corps `{ texte, src }`. 200 avec les quatre blocs CNV ; 400 si la saisie est vide ou dépasse 2 000 signes ; 405 sur toute autre méthode ; **429 `quota_reached`** quand les cinq analyses du jour sont consommées. `src === 'groupe'` **accompagné d'un `jeton` qui correspond à `JETON_GROUPE`** court-circuite tout le décompte ; sans jeton valide, le quota ordinaire s'applique. |
 | `/api/radar` | GET | `{ outils: [...], simule }`. Cache au bord : 15 minutes. |
 | `/` | — | Page unique : radar, reformulation, journal. |
 | `/app/reponse-bienveillante` | — | La reformulation seule, adresse dédiée. |

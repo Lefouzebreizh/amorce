@@ -19,9 +19,14 @@ produit, et ne le deviendra pas.
 Elles priment sur n'importe quelle considération technique. Une amélioration qui
 les contredit est une amélioration qu'on refuse.
 
-1. **Qui vient du groupe a tout.** Un lien avec `?src=groupe` ouvre l'accès
-   illimité : pas de compte, pas de carte, pas de compteur, aucune écriture en
-   base. Rien n'est vendu dans le groupe.
+1. **Qui vient du groupe a tout.** Un lien avec `?src=groupe` **et le jeton du
+   groupe** ouvre l'accès illimité : pas de compte, pas de carte, pas de
+   compteur, aucune écriture en base. Rien n'est vendu dans le groupe.
+
+   Le jeton est nécessaire depuis le 02/09/2026 : le seul paramètre suffisait,
+   et n'importe qui l'ajoutait à l'adresse pour ne plus jamais être décompté
+   (`AUDIT.md`, H-1). Sans jeton on ne refuse personne — on retombe sur le
+   quota ordinaire.
 2. **Rien de ce que tu écris n'est conservé.** Ni le message collé dans la
    reformulation, ni la page de journal. Pas en clair, pas haché, pas tronqué.
    La base ne contient que des compteurs, et ton adresse n'y figure que sous
@@ -42,7 +47,9 @@ npm run build        # Astro → dist/
 npm run preview      # site + fonctions sur http://localhost:8788
 ```
 
-Puis, pour essayer l'accès communauté : <http://localhost:8788/?src=groupe>.
+Puis, pour essayer l'accès communauté : `http://localhost:8788/?src=groupe&jeton=…`,
+avec la valeur posée dans `JETON_GROUPE`. Sans elle, l'adresse s'ouvre mais le
+quota ordinaire s'applique — c'est le comportement voulu, pas une panne.
 
 > `npm run dev` (Astro seul) ne sert **pas** les Pages Functions : le radar et la
 > reformulation répondent « indisponible », et c'est normal. C'est `npm run
