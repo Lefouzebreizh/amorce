@@ -473,13 +473,13 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   bibliothèque d'icônes. Le formulaire poste sur `/api/devis`, qui envoie un
   courriel et n'enregistre rien. Ce qui n'est pas réglé — téléphone, WhatsApp,
   lien Stripe — **disparaît de la page** au lieu d'afficher une valeur
-  inventée. Se vérifie depuis son dossier.
-  Ce que ce projet a appris sur les sites vitrine d'une page — les cinq blocs,
-  le choix d'une teinte qui passe le contraste, les contacts cliquables, le
-  fichier autonome et les pièges d'hébergement — est généralisé au-delà des
-  artisans dans `/site-web`.
   inventée. Se vérifie depuis son dossier. Ce qu'on vend **après** les 300 € —
   mise à jour annuelle, avis Google — est chiffré dans son `OPTIONS.md`.
+  Ce que ce projet a appris sur les sites vitrine d'une page est écrit à deux
+  niveaux, et il ne faut pas les confondre : `/web-artisan` porte le gabarit
+  artisan lui-même — palette par métier, tests, pièges du livrable ;
+  `/site-web` porte la **méthode** pour un client qui n'est pas artisan, en
+  citant l'autre plutôt qu'en la recopiant.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance

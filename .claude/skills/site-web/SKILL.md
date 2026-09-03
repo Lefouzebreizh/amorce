@@ -1,22 +1,41 @@
 ---
 name: site-web
-description: Construire un site vitrine d'une seule page pour un client — artisan, thérapeute, coach, commerce, association, indépendant — de la structure au fichier livrable. Dit les cinq blocs qui tiennent debout sur un téléphone, comment choisir la teinte et le ton d'après l'activité **sans inventer une couleur qui échoue au contraste**, comment rendre le téléphone et le courriel réellement cliquables, quand livrer un seul fichier HTML autonome plutôt qu'un projet, et les pièges déjà payés — le mur d'authentification qui rend une page invisible, la promesse « pas en ligne » qui devient fausse dès qu'on héberge, les conflits Git quand deux sessions écrivent le même jour. À utiliser dès qu'une demande dit « fais un site à X », « une page vitrine », « un site simple pour mon client », « une landing », « il me faut un site pour ma boîte », « une page de présentation », « un mini-site » — et aussi quand elle décrit seulement le client sans prononcer le mot site. Ici on **construit** ; pour mesurer ensuite si la page vend, c'est `/page-qui-vend`, et si elle s'utilise au pouce, `/epreuve-du-pouce`. Les trois s'enchaînent dans cet ordre.
+description: Construire un site vitrine d'une seule page pour un client — thérapeute, coach, commerce, association, indépendant, profession libérale — de la structure au fichier livrable. **Si le client est un artisan, c'est `web-artisan` qui prime**, pas celle-ci : elle porte le gabarit réel, la table des métiers et ses tests ; celle-ci porte la méthode générale, pour les activités qui n'y figurent pas. Dit les cinq blocs qui tiennent debout sur un téléphone, comment choisir la teinte et le ton d'après l'activité **sans inventer une couleur qui échoue au contraste**, comment rendre le téléphone et le courriel réellement cliquables, quand livrer un seul fichier HTML autonome plutôt qu'un projet, et les pièges déjà payés — le mur d'authentification qui rend une page invisible, la promesse « pas en ligne » qui devient fausse dès qu'on héberge, les conflits Git quand deux sessions écrivent le même jour. À utiliser dès qu'une demande dit « fais un site à X », « une page vitrine », « un site simple pour mon client », « une landing », « il me faut un site pour ma boîte », « une page de présentation », « un mini-site » — et aussi quand elle décrit seulement le client sans prononcer le mot site. Ici on **construit** ; pour mesurer ensuite si la page vend, c'est `page-qui-vend`, et si elle s'utilise au pouce, `epreuve-du-pouce`. Les trois s'enchaînent dans cet ordre.
 ---
 
-# D'où vient ce qui est écrit ici
+# D'où vient ce qui est écrit ici, et ce qu'elle ne refait pas
 
-Une demande a parlé d'un skill « web-artisan » à généraliser. **Il n'existe pas** —
-ni dossier, ni mention nulle part dans le dépôt, vérifié le 03/09/2026. Le
-savoir-faire, lui, existe bel et bien, et il vit à trois endroits :
+**`/web-artisan` existe, et cette compétence se pose au-dessus d'elle.** Le
+premier jet de ce fichier affirmait le contraire — « il n'existe pas, vérifié le
+03/09/2026 » — et c'était vrai à la seconde où le `grep` a tourné : la
+compétence a été fusionnée sur `main` à **07:25 le même matin**, par une session
+parallèle, pendant que celle-ci l'écrivait. La leçon vaut plus que la
+correction, et c'est le §10 bis de `CLAUDE.md` mot pour mot : dans ce dépôt,
+`main` a bougé depuis la dernière lecture, et c'est le cas normal. **Une absence
+constatée est datée à la minute, pas acquise.**
+
+Le partage est donc celui-ci, et il tient en une phrase : **`/web-artisan` est
+la spécialisation, celle-ci est la méthode.**
+
+| | `/web-artisan` | `/site-web` |
+| --- | --- | --- |
+| pour qui | un artisan, 300 €, livré en 48 h | n'importe quel client — thérapeute, coach, commerce, association, indépendant |
+| la teinte | une table fermée, du métier vers l'accent | la **mesure** qui a produit cette table, appliquée à une activité qui n'y figure pas |
+| le détail | le gabarit réel, ses tests, ses valeurs | l'ordre des décisions, et ce qui change d'un client à l'autre |
+
+Ce qui est écrit là-bas n'est **pas recopié ici** : la table des cinq métiers,
+le piège `wa.me/0`, le filet de 3 px, les emplacements photo en base64, le mur
+Vercel. Deux fichiers qui disent la même chose se contredisent au premier
+changement, et c'est le moins bon qui est lu une fois sur deux (§0 bis, règle 4).
+Quand le client est un artisan, `/web-artisan` prime et celle-ci ne sert à rien.
+
+Les trois sources d'origine restent les mêmes, et elles valent pour les deux :
 
 | Où | Ce qu'on y apprend |
 | --- | --- |
 | `artisan-express/public/exemple.html` | la page autonome livrable — 13 796 octets, un seul `<style>`, **zéro feuille externe** |
 | `titan-builder/src/lib/charte.ts` | les surfaces, la palette fermée, et ce qui fait la patte |
 | `artisan-express/src/components/` | le découpage réel en blocs : `Hero`, `Offre`, `CeQueTuAs`, `AvantApres`, `FormulaireDevis`, `BarreAction` |
-
-Cette compétence les généralise au-delà des artisans. Elle ne remplace aucun des
-trois : elle dit **comment s'y prendre**, ils disent ce qui a été fait.
 
 # La structure : cinq blocs, et le téléphone décide
 
@@ -56,12 +75,14 @@ Deux règles, et la seconde est celle qu'on oublie :
 - **Assez loin de l'ambre d'avertissement et du rouge de danger** pour qu'aucun
   des trois ne prenne le sens d'un autre.
 
-**Pourquoi on ne dérive pas une couleur librement, et c'est mesuré.** Sur
-`artisan-express`, l'orange `#c74e00` rendait **4,6:1** sur blanc : il passait le
-minimum WCAG de 4,5 et échouait au plancher de 7:1 — et c'était le bouton qui
-portait toute la page. Pire, remonter automatiquement des teintes de métier
-jusqu'à 7:1 **ramenait l'orange** : l'électricien ressortait en `#E18E3B`, le
-maçon en beige chaud. La palette de ce produit est donc **choisie**, pas dérivée.
+**Pourquoi une teinte se mesure au lieu de se dériver.** La démonstration
+complète est dans `/web-artisan` — l'orange à 4,6:1, la barre prise sur le fond
+au lieu de la surface la plus claire, et deux teintes devenues indiscernables à
+force d'être éclaircies ensemble. Elle n'est pas recopiée ici. Ce qu'il faut en
+retenir tient en une ligne : **remonter automatiquement une teinte jusqu'à 7:1
+la déplace**, parfois jusqu'à ramener celle qu'on venait d'écarter. Une palette
+de produit est donc **choisie**, pas calculée — et c'est pourquoi la table des
+cinq métiers de là-bas est une commodité, pas la règle.
 
 Ce que ça donne comme méthode, pour n'importe quel client :
 
@@ -123,6 +144,8 @@ Trois points que la page d'exemple montre et qui ne s'inventent pas :
   appareils. Ce que l'utilisateur lit et ce que le lien porte sont deux choses.
 - **WhatsApp veut le numéro sans `+` ni espaces**, et son `text=` doit être
   encodé — un espace non encodé casse le message pré-rempli sans rien signaler.
+  Le piège précis, `wa.me/0…`, et le test qui le refuse sont dans
+  `/web-artisan` : c'est un bouton mort qui a l'air de marcher.
 - **`exemple.html` ne porte aucun `mailto:`**, et c'est délibéré : il propose
   `tel:` et WhatsApp. Sur un métier d'urgence, un courriel est une voie morte.
   Le canal se choisit par activité, comme la couleur.
@@ -168,11 +191,11 @@ manquer.
 
 **Le mur d'authentification, trois fois sur trois projets.** Un projet Vercel
 neuf naît avec `ssoProtection: all_except_custom_domains` : **toutes** les
-adresses en `.vercel.app` passent derrière l'authentification du compte. La page
-de vente à 300 € est restée invisible pendant des jours. Ce qui rend le piège
-coûteux : **il ne se voit pas en ouvrant l'adresse**, puisque le navigateur du
+adresses en `.vercel.app` passent derrière l'authentification du compte, et
+**ça ne se voit pas en ouvrant l'adresse**, puisque le navigateur du
 propriétaire est connecté. Le contrôle qui vaut n'est jamais « j'ouvre le lien,
-ça marche » — c'est la **lecture du réglage**.
+ça marche » — c'est la **lecture du réglage**. Le déroulé et le dossier `public/`
+oublié au premier dépôt sont dans `/web-artisan`.
 
 **Une page qui promet « elle n'est en ligne nulle part » devient fausse dès
 qu'on l'héberge.** La mention était vraie d'un fichier envoyé en conversation.
@@ -216,5 +239,8 @@ Elle **construit**. Elle ne juge pas.
 - S'utilise-t-elle au pouce ? → `/epreuve-du-pouce`, qui mesure débordement,
   cibles de 44 px et contrastes sur le rendu réel.
 - Les jetons de thème eux-mêmes → `/usine-a-themes`.
+- **Le client est un artisan ?** → `/web-artisan`, qui fabrique *et* vérifie,
+  avec le gabarit réel, la table des métiers et ses tests. Celle-ci n'a alors
+  rien à ajouter.
 
 Les trois se lancent après celle-ci, jamais à sa place.
