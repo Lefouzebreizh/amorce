@@ -1731,12 +1731,43 @@ complète est dans `nexuscrypto/README.md` §6 bis.
 
 ### Connecteurs
 
-GitHub passe par le serveur MCP (`mcp__github__*`), jamais par `gh` ni `curl` :
-l'appel direct rend 403, et c'est l'outil qu'il faut changer, pas la
-configuration. Cet accès se donne à la **conversation**, jamais par le dépôt :
-une session peut naître sans lui, et rien ne le signale. Le contrôler donc **au
-premier message** et le dire aussitôt — découvrir à la poussée qu'on ne pourra
-pas fusionner coûte un cycle entier, mesuré sur la PR #94.
+GitHub : **les lectures passent par le serveur MCP (`mcp__github__*`), les
+écritures par `curl` avec `$GH_TOKEN`.** C'est l'inverse de ce que ce
+paragraphe disait jusqu'au 03/09/2026, et l'ancienne rédaction — « jamais par
+`gh` ni `curl` : l'appel direct rend 403 » — faisait renoncer au seul chemin
+qui fonctionne.
+
+Mesuré le 03/09/2026, en ouvrant et fusionnant les PR #618 et #619 :
+
+| appel | MCP `mcp__github__*` | `curl` + `$GH_TOKEN` |
+| --- | --- | --- |
+| lire (`get_me`, `list_pull_requests`) | ✅ | ✅ |
+| ouvrir une PR | ❌ 403 *not accessible by integration* | ✅ |
+| modifier une PR | ❌ | ✅ |
+| fusionner | ❌ 403 | ✅ |
+
+`gh` n'entre pas dans le tableau : **il n'est pas installé** dans le conteneur
+distant — `command not found`, pas un refus d'autorisation. Le citer à côté de
+`curl` dans une même interdiction mélangeait deux causes qui n'ont rien à voir.
+
+**Ce qui a changé entre-temps, et qui explique l'ancienne phrase.** Avant que
+l'application GitHub de Claude soit connectée pour l'organisation, `curl`
+rendait un refus explicite du mandataire — « GitHub access is not enabled for
+this session. An org admin must connect the Claude GitHub App » — et le MCP
+rendait 403 sur tout. Les deux chemins étaient fermés, et l'ancienne rédaction
+décrivait fidèlement cet état-là. Le propriétaire a connecté l'application le
+03/09/2026 : `curl` s'est ouvert, le MCP est resté fermé en écriture.
+
+D'où la leçon, qui vaut au-delà de GitHub : **une règle d'outillage écrite sur
+un état d'autorisation se périme quand l'autorisation change, et rien ne le
+signale.** Elle continue de se lire comme une vérité technique. Une session qui
+la suit renonce au chemin ouvert et conclut qu'elle ne peut pas fusionner.
+
+**Le contrôler au premier message** reste juste, et c'est même le geste qui
+tranche : essayer les deux, garder celui qui répond. Cet accès se donne à la
+**conversation**, jamais par le dépôt : une session peut naître sans lui, et
+rien ne le signale — découvrir à la poussée qu'on ne pourra pas fusionner coûte
+un cycle entier, mesuré sur la PR #94.
 
 Supabase : lecture d'office, `execute_sql` et `apply_migration`
 non — et la liste est écrite **deux fois**, sous le nom `Supabase` et sous
