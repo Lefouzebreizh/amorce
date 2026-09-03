@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+
+/*
+ * Même famille visuelle que l'interface locale de Life-Organizer
+ * (interface_web/index.html) : fond sombre, un seul accent bleu-violet,
+ * jamais d'orange ni de jaune (préférence posée pour tous les projets).
+ */
+@theme {
+  --color-paper: #16151a;
+  --color-paper-raised: #1f1e25;
+  --color-ink: #f1efea;
+  --color-ink-soft: #b7b3a9;
+  --color-line: #2e2c34;
+  --color-accent: #4fb39c;
+  --color-accent-strong: #6fcab4;
+  --color-violet: #9b8fe0;
+  --color-wine: #c97783;
+
+  --font-affiche: 'Instrument Serif', Georgia, serif;
+  --font-corps: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-corps);
+}

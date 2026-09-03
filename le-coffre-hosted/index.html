@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Coffre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --paper:#F7F5F1; --paper-raised:#FFFFFF; --ink:#1C1A17; --ink-soft:#6B6459;
+    --line:#E4DFD6; --accent:#14514A; --accent-strong:#0D3B36; --accent-ink:#F7FAF8;
+    --wine:#8A3A44; --wine-soft:#F2E1E1; --wine-ink:#6E2731;
+    --clay:#47517D; --clay-soft:#E7E9F2;
+    --shadow: rgba(28,26,23,.12); --focus:#14514A;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#16151A; --paper-raised:#1F1E25; --ink:#F1EFEA; --ink-soft:#B7B3A9;
+      --line:#2E2C34; --accent:#4FB39C; --accent-strong:#6FCAB4; --accent-ink:#0D2A25;
+      --wine:#C97783; --wine-soft:#392328; --wine-ink:#DD97A1;
+      --clay:#8892C4; --clay-soft:#252942;
+      --shadow: rgba(0,0,0,.4); --focus:#4FB39C;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#16151A; --paper-raised:#1F1E25; --ink:#F1EFEA; --ink-soft:#B7B3A9;
+    --line:#2E2C34; --accent:#4FB39C; --accent-strong:#6FCAB4; --accent-ink:#0D2A25;
+    --wine:#C97783; --wine-soft:#392328; --wine-ink:#DD97A1;
+    --clay:#8892C4; --clay-soft:#252942;
+    --shadow: rgba(0,0,0,.4); --focus:#4FB39C;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Plus Jakarta Sans', system-ui, sans-serif; font-size:15px; line-height:1.55;
+  }
+  .page{ max-width:640px; margin:0 auto; padding:56px 24px 80px; }
+  .eyebrow{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; }
+  h1{ font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:40px; margin:6px 0 8px; text-wrap:balance; }
+  .sous-titre{ color:var(--ink-soft); font-size:15px; margin-bottom:36px; max-width:52ch; }
+  .panneau{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:20px;
+    padding:28px 30px; margin-bottom:20px; box-shadow:0 20px 40px -32px var(--shadow);
+  }
+  .panneau h2{ font-family:'Plus Jakarta Sans', sans-serif; font-size:16px; font-weight:700; margin:0 0 6px; }
+  .panneau .aide{ color:var(--ink-soft); font-size:13px; margin:0 0 18px; }
+  label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; }
+  input[type=email], input[type=password], input[type=text]{
+    width:100%; font:inherit; padding:11px 13px; border-radius:11px; border:1px solid var(--line);
+    background:var(--paper); color:var(--ink); margin-bottom:14px;
+  }
+  input:focus-visible{ outline:2px solid var(--focus); outline-offset:1px; }
+  button{ font:inherit; cursor:pointer; border:none; border-radius:11px; }
+  .btn-principal{
+    background:var(--accent); color:var(--accent-ink); font-weight:700; padding:11px 18px;
+    transition:filter .15s ease, transform .1s ease;
+  }
+  .btn-principal:hover{ filter:brightness(1.08); }
+  .btn-principal:active{ transform:scale(.98); }
+  .btn-principal:disabled{ opacity:.55; cursor:default; }
+  .btn-discret{ background:transparent; color:var(--ink-soft); text-decoration:underline; padding:6px 0; font-size:13px; }
+  .rangee{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:24px; }
+  .rangee .compte{ font-size:13px; color:var(--ink-soft); }
+  .erreur{ background:var(--wine-soft); color:var(--wine-ink); border-radius:10px; padding:9px 12px; font-size:13px; margin-bottom:14px; }
+  .avertissement{ background:var(--wine-soft); color:var(--wine-ink); border-radius:12px; padding:12px 14px; font-size:13px; line-height:1.5; margin-bottom:18px; }
+  .info{ background:var(--clay-soft); color:var(--clay); border-radius:12px; padding:12px 14px; font-size:13px; line-height:1.5; margin-bottom:18px; }
+  .dropzone{
+    display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;
+    border:1.5px dashed var(--line); border-radius:16px; padding:28px 16px; cursor:pointer;
+    color:var(--ink-soft); font-size:13.5px; transition:border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover, .dropzone.survole{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 6%, var(--paper)); }
+  .dropzone strong{ color:var(--ink); }
+  .dropzone input{ display:none; }
+  ul.liste{ list-style:none; margin:18px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  ul.liste li{
+    display:flex; align-items:center; gap:12px; padding:11px 12px; border:1px solid var(--line);
+    border-radius:12px; background:var(--paper);
+  }
+  .item-corps{ flex:1; min-width:0; }
+  .item-titre{ font-weight:600; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .item-detail{ color:var(--ink-soft); font-size:12px; }
+  .item-actions{ display:flex; gap:6px; flex:none; }
+  .item-actions button{ background:var(--paper-raised); border:1px solid var(--line); color:var(--ink); font-size:12px; padding:6px 10px; border-radius:8px; }
+  .item-actions button:hover{ border-color:var(--accent); }
+  .vide{ color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0; }
+  [hidden]{ display:none !important; }
+  .lien-bas{ text-align:center; margin-top:6px; }
+  a{ color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow">Le Coffre</div>
+  <h1>Tes papiers, à l'abri</h1>
+  <p class="sous-titre">Dépose tes documents administratifs sensibles — personne, pas même nous, ne peut les lire sans ta phrase secrète.</p>
+
+  <div id="zoneAuth" class="panneau">
+    <h2 id="authTitre">Se connecter</h2>
+    <p class="aide" id="authAide">Ton compte protège l'accès au site. Ta phrase secrète (à l'étape suivante) protège le contenu de tes documents — les deux sont différents, et volontairement.</p>
+    <div id="authErreur"></div>
+    <label for="champEmail">Adresse e-mail</label>
+    <input type="email" id="champEmail" autocomplete="email">
+    <label for="champMdp">Mot de passe</label>
+    <input type="password" id="champMdp" autocomplete="current-password">
+    <button type="button" class="btn-principal" id="btnConnexion">Se connecter</button>
+    <div class="lien-bas"><button type="button" class="btn-discret" id="btnBasculer">Pas encore de compte ? Inscris-toi</button></div>
+  </div>
+
+  <div id="zoneCoffre" hidden>
+    <div class="rangee">
+      <span class="compte">Connecté en tant que <strong id="emailActuel"></strong></span>
+      <button type="button" class="btn-discret" id="btnDeconnexion">Se déconnecter</button>
+    </div>
+
+    <div id="zoneVerrou" class="panneau">
+      <h2 id="verrouTitre">Chargement…</h2>
+      <p class="aide" id="verrouAide"></p>
+      <div id="verrouErreur"></div>
+      <div id="champsPhrase1" hidden>
+        <label for="phrase1">Phrase secrète</label>
+        <input type="password" id="phrase1" autocomplete="new-password">
+        <label for="phrase2">Retape-la</label>
+        <input type="password" id="phrase2" autocomplete="new-password">
+        <div class="avertissement">⚠️ Il n'existe aucun moyen de la récupérer si tu l'oublies. Ni nous, ni personne d'autre ne peut la retrouver ou contourner le chiffrement : la perdre, c'est perdre définitivement l'accès à ce que le coffre contient.</div>
+      </div>
+      <div id="champPhraseUnique" hidden>
+        <label for="phrase3">Phrase secrète</label>
+        <input type="password" id="phrase3" autocomplete="current-password">
+      </div>
+      <button type="button" class="btn-principal" id="btnValiderPhrase"></button>
+    </div>
+
+    <div id="zoneContenu" class="panneau" hidden>
+      <h2>Tes documents</h2>
+      <p class="aide">Chiffrés avant de quitter ce navigateur — ce site ne voit jamais leur contenu en clair.</p>
+      <label class="dropzone" id="dropzone">
+        <strong>Choisir un fichier</strong> ou le déposer ici
+        <input type="file" id="entreeFichier">
+      </label>
+      <ul class="liste" id="listeDocuments"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var SUPABASE_URL = "https://hftofsrykuobbepfusuf.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_uecgifgH1-x3_Xp2F2p9aA_bnBUyGrc";
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  var ITERATIONS = 600000;
+  var TEXTE_VERIF = "coffre-verification";
+  var BUCKET = "coffre-objets";
+
+  var cle = null;       // CryptoKey non extractible, en mémoire seulement
+  var index = null;     // { objets: { [nomOpaque]: {nom, taille, type, depose_le} } }
+  var userId = null;
+
+  function echapper(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  // --- Encodage ----------------------------------------------------------
+  function b64FromBuf(buf){
+    var octets = new Uint8Array(buf), binaire = "";
+    for (var i = 0; i < octets.length; i++) binaire += String.fromCharCode(octets[i]);
+    return btoa(binaire);
+  }
+  function bufFromB64(b64){
+    var binaire = atob(b64), octets = new Uint8Array(binaire.length);
+    for (var i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
+    return octets.buffer;
+  }
+  function empaqueter(ivBuf, cipherBuf){
+    var iv = new Uint8Array(ivBuf), cipher = new Uint8Array(cipherBuf);
+    var tout = new Uint8Array(iv.length + cipher.length);
+    tout.set(iv, 0); tout.set(cipher, iv.length);
+    return tout.buffer;
+  }
+  function depaqueter(buf){
+    var tout = new Uint8Array(buf);
+    return { iv: tout.slice(0, 12), cipher: tout.slice(12) };
+  }
+
+  // --- Cryptographie (Web Crypto, aucune bibliothèque externe) -----------
+  function deriverCle(motDePasse, selBuf, iterations){
+    return crypto.subtle.importKey("raw", new TextEncoder().encode(motDePasse), "PBKDF2", false, ["deriveKey"])
+      .then(function(cleBase){
+        return crypto.subtle.deriveKey(
+          { name: "PBKDF2", salt: selBuf, iterations: iterations, hash: "SHA-256" },
+          cleBase, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+        );
+      });
+  }
+  function chiffrerOctets(buf){
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    return crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, cle, buf)
+      .then(function(cipher){ return empaqueter(iv.buffer, cipher); });
+  }
+  function dechiffrerOctets(buf){
+    var paquet = depaqueter(buf);
+    return crypto.subtle.decrypt({ name: "AES-GCM", iv: paquet.iv }, cle, paquet.cipher);
+  }
+  function chiffrerTexte(t){ return chiffrerOctets(new TextEncoder().encode(t)); }
+  function dechiffrerTexte(buf){ return dechiffrerOctets(buf).then(function(b){ return new TextDecoder().decode(b); }); }
+  function nomOpaque(){
+    var octets = crypto.getRandomValues(new Uint8Array(16));
+    return Array.prototype.map.call(octets, function(o){ return o.toString(16).padStart(2, "0"); }).join("");
+  }
+  function cheminObjet(nom){ return userId + "/" + nom; }
+
+  // --- Authentification ----------------------------------------------------
+  var modeInscription = false;
+  var elAuth = document.getElementById("zoneAuth");
+  var elAuthTitre = document.getElementById("authTitre");
+  var elAuthErreur = document.getElementById("authErreur");
+  var elEmail = document.getElementById("champEmail");
+  var elMdp = document.getElementById("champMdp");
+  var elBtnConnexion = document.getElementById("btnConnexion");
+  var elBtnBasculer = document.getElementById("btnBasculer");
+  var elCoffreZone = document.getElementById("zoneCoffre");
+  var elEmailActuel = document.getElementById("emailActuel");
+
+  elBtnBasculer.addEventListener("click", function(){
+    modeInscription = !modeInscription;
+    elAuthTitre.textContent = modeInscription ? "Créer un compte" : "Se connecter";
+    elBtnConnexion.textContent = modeInscription ? "Créer mon compte" : "Se connecter";
+    elBtnBasculer.textContent = modeInscription ? "Déjà un compte ? Connecte-toi" : "Pas encore de compte ? Inscris-toi";
+    elAuthErreur.innerHTML = "";
+  });
+  elBtnConnexion.textContent = "Se connecter";
+
+  elBtnConnexion.addEventListener("click", function(){
+    var email = elEmail.value.trim(), mdp = elMdp.value;
+    elAuthErreur.innerHTML = "";
+    if (!email || mdp.length < 8){
+      elAuthErreur.innerHTML = '<div class="erreur">Adresse e-mail et mot de passe (8 caractères minimum) requis.</div>';
+      return;
+    }
+    elBtnConnexion.disabled = true;
+    var appel = modeInscription
+      ? sb.auth.signUp({ email: email, password: mdp })
+      : sb.auth.signInWithPassword({ email: email, password: mdp });
+    appel.then(function(res){
+      elBtnConnexion.disabled = false;
+      if (res.error){ elAuthErreur.innerHTML = '<div class="erreur">' + echapper(res.error.message) + "</div>"; return; }
+      // onAuthStateChange prend le relais pour afficher le coffre.
+    });
+  });
+
+  document.getElementById("btnDeconnexion").addEventListener("click", function(){
+    sb.auth.signOut().then(function(){ location.reload(); });
+  });
+
+  sb.auth.onAuthStateChange(function(_evt, session){
+    if (session && session.user){
+      userId = session.user.id;
+      elAuth.hidden = true;
+      elCoffreZone.hidden = false;
+      elEmailActuel.textContent = session.user.email;
+      demarrerCoffre();
+    } else {
+      userId = null; cle = null; index = null;
+      elAuth.hidden = false;
+      elCoffreZone.hidden = true;
+    }
+  });
+
+  // --- Le coffre : création / déverrouillage ------------------------------
+  var elVerrouZone = document.getElementById("zoneVerrou");
+  var elVerrouTitre = document.getElementById("verrouTitre");
+  var elVerrouAide = document.getElementById("verrouAide");
+  var elVerrouErreur = document.getElementById("verrouErreur");
+  var elChampsInit = document.getElementById("champsPhrase1");
+  var elChampUnique = document.getElementById("champPhraseUnique");
+  var elBtnPhrase = document.getElementById("btnValiderPhrase");
+  var elContenu = document.getElementById("zoneContenu");
+
+  var coffreExistant = null; // ligne de la table `coffres`, ou null
+
+  function demarrerCoffre(){
+    elVerrouTitre.textContent = "Chargement…";
+    elChampsInit.hidden = true; elChampUnique.hidden = true; elBtnPhrase.hidden = true;
+    sb.from("coffres").select("*").eq("user_id", userId).maybeSingle().then(function(res){
+      if (res.error){
+        elVerrouAide.textContent = "";
+        elVerrouErreur.innerHTML = '<div class="erreur">' + echapper(res.error.message) + "</div>";
+        return;
+      }
+      coffreExistant = res.data;
+      if (coffreExistant){
+        elVerrouTitre.textContent = "Entre ta phrase secrète";
+        elVerrouAide.textContent = "Une seule fois par session — elle reste en mémoire le temps que cette page reste ouverte, jamais au-delà.";
+        elChampUnique.hidden = false;
+        elBtnPhrase.hidden = false; elBtnPhrase.textContent = "Déverrouiller";
+        elBtnPhrase.onclick = tenterDeverrouillage;
+      } else {
+        elVerrouTitre.textContent = "Choisis ta phrase secrète";
+        elVerrouAide.textContent = "Elle chiffre chaque document déposé, entièrement dans ce navigateur. Ce site ne la reçoit jamais.";
+        elChampsInit.hidden = false;
+        elBtnPhrase.hidden = false; elBtnPhrase.textContent = "Créer le coffre";
+        elBtnPhrase.onclick = tenterCreation;
+      }
+    });
+  }
+
+  function tenterCreation(){
+    var m1 = document.getElementById("phrase1").value;
+    var m2 = document.getElementById("phrase2").value;
+    elVerrouErreur.innerHTML = "";
+    if (m1.length < 10){
+      elVerrouErreur.innerHTML = '<div class="erreur">Au moins 10 caractères — c\'est elle, et elle seule, qui protège tout le coffre.</div>';
+      return;
+    }
+    if (m1 !== m2){
+      elVerrouErreur.innerHTML = '<div class="erreur">Les deux phrases ne correspondent pas.</div>';
+      return;
+    }
+    elBtnPhrase.disabled = true;
+    var sel = crypto.getRandomValues(new Uint8Array(16));
+    deriverCle(m1, sel, ITERATIONS).then(function(cleDerivee){
+      cle = cleDerivee;
+      return chiffrerTexte(TEXTE_VERIF);
+    }).then(function(paquetVerif){
+      var p = depaqueter(paquetVerif);
+      return sb.from("coffres").insert({
+        user_id: userId, sel: b64FromBuf(sel.buffer), iterations: ITERATIONS,
+        verificateur_iv: b64FromBuf(p.iv.buffer), verificateur_texte: b64FromBuf(p.cipher.buffer),
+      });
+    }).then(function(res){
+      elBtnPhrase.disabled = false;
+      if (res.error){ elVerrouErreur.innerHTML = '<div class="erreur">' + echapper(res.error.message) + "</div>"; cle = null; return; }
+      index = { objets: {} };
+      afficherContenu();
+    }).catch(function(err){
+      elBtnPhrase.disabled = false;
+      elVerrouErreur.innerHTML = '<div class="erreur">' + echapper(String(err)) + "</div>";
+      cle = null;
+    });
+  }
+
+  function tenterDeverrouillage(){
+    var mdp = document.getElementById("phrase3").value;
+    elVerrouErreur.innerHTML = '<div class="aide">Vérification…</div>';
+    elBtnPhrase.disabled = true;
+    var sel = bufFromB64(coffreExistant.sel);
+    deriverCle(mdp, sel, coffreExistant.iterations).then(function(cleDerivee){
+      cle = cleDerivee;
+      return dechiffrerTexte(empaqueter(bufFromB64(coffreExistant.verificateur_iv), bufFromB64(coffreExistant.verificateur_texte)));
+    }).then(function(texte){
+      if (texte !== TEXTE_VERIF) throw new Error("Phrase secrète incorrecte.");
+      if (!coffreExistant.index_chiffre){ index = { objets: {} }; return; }
+      return dechiffrerTexte(bufFromB64(coffreExistant.index_chiffre)).then(function(json){
+        index = JSON.parse(json);
+        if (!index.objets) index.objets = {};
+      });
+    }).then(function(){
+      elBtnPhrase.disabled = false;
+      afficherContenu();
+    }).catch(function(){
+      elBtnPhrase.disabled = false;
+      cle = null;
+      elVerrouErreur.innerHTML = '<div class="erreur">Phrase secrète incorrecte.</div>';
+    });
+  }
+
+  function afficherContenu(){
+    elVerrouZone.hidden = true;
+    elContenu.hidden = false;
+    rendreListe();
+  }
+
+  function sauvegarderIndex(){
+    return chiffrerTexte(JSON.stringify(index)).then(function(paquet){
+      return sb.from("coffres").update({ index_chiffre: b64FromBuf(paquet) }).eq("user_id", userId);
+    });
+  }
+
+  // --- Dépôt / liste / téléchargement / suppression -----------------------
+  var elDropzone = document.getElementById("dropzone");
+  var elEntreeFichier = document.getElementById("entreeFichier");
+  var elListe = document.getElementById("listeDocuments");
+
+  function formatTaille(o){
+    if (o < 1024) return o + " o";
+    if (o < 1024 * 1024) return (o / 1024).toFixed(0) + " Ko";
+    return (o / (1024 * 1024)).toFixed(1) + " Mo";
+  }
+
+  function deposerFichier(fichier){
+    if (!cle) return Promise.reject(new Error("Le coffre est verrouillé."));
+    return fichier.arrayBuffer()
+      .then(function(buf){ return chiffrerOctets(buf); })
+      .then(function(paquet){
+        var nom = nomOpaque();
+        return sb.storage.from(BUCKET).upload(cheminObjet(nom), paquet, {
+          contentType: "application/octet-stream", upsert: false,
+        }).then(function(res){
+          if (res.error) throw res.error;
+          index.objets[nom] = {
+            nom: fichier.name, taille: fichier.size,
+            type: fichier.type || "application/octet-stream",
+            depose_le: new Date().toISOString(),
+          };
+          return sauvegarderIndex().then(function(){ rendreListe(); });
+        });
+      });
+  }
+
+  function recupererFichier(nom){
+    var info = index.objets[nom];
+    return sb.storage.from(BUCKET).download(cheminObjet(nom)).then(function(res){
+      if (res.error) throw res.error;
+      return res.data.arrayBuffer();
+    }).then(function(buf){ return dechiffrerOctets(buf); })
+      .then(function(clairBuf){ return new Blob([clairBuf], { type: info.type }); });
+  }
+
+  function supprimerFichier(nom){
+    return sb.storage.from(BUCKET).remove([cheminObjet(nom)]).then(function(res){
+      if (res.error) throw res.error;
+      delete index.objets[nom];
+      return sauvegarderIndex().then(function(){ rendreListe(); });
+    });
+  }
+
+  function rendreListe(){
+    var noms = Object.keys(index.objets);
+    if (!noms.length){
+      elListe.innerHTML = '<li class="vide">Le coffre est vide pour l\'instant.</li>';
+      return;
+    }
+    elListe.innerHTML = noms.map(function(nom){
+      var info = index.objets[nom];
+      return '<li data-nom="' + nom + '">' +
+        '<span class="item-corps">' +
+          '<span class="item-titre">' + echapper(info.nom) + "</span>" +
+          '<span class="item-detail">' + formatTaille(info.taille) + "</span>" +
+        "</span>" +
+        '<span class="item-actions">' +
+          '<button type="button" class="tel" data-nom="' + nom + '">Télécharger</button>' +
+          '<button type="button" class="sup" data-nom="' + nom + '">Supprimer</button>' +
+        "</span>" +
+      "</li>";
+    }).join("");
+  }
+
+  elListe.addEventListener("click", function(e){
+    var tel = e.target.closest(".tel"), sup = e.target.closest(".sup");
+    if (tel){
+      var nom1 = tel.getAttribute("data-nom"), info1 = index.objets[nom1];
+      tel.textContent = "…";
+      recupererFichier(nom1).then(function(blob){
+        tel.textContent = "Télécharger";
+        var url = URL.createObjectURL(blob), lien = document.createElement("a");
+        lien.href = url; lien.download = info1.nom;
+        document.body.appendChild(lien); lien.click(); lien.remove();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+      }).catch(function(err){ tel.textContent = "Télécharger"; alert("Déchiffrement impossible : " + err.message); });
+    }
+    if (sup){
+      var nom2 = sup.getAttribute("data-nom"), info2 = index.objets[nom2];
+      if (!confirm('Supprimer définitivement « ' + info2.nom + ' » ?')) return;
+      sup.textContent = "…";
+      supprimerFichier(nom2).catch(function(err){ alert("Suppression impossible : " + err.message); });
+    }
+  });
+
+  elDropzone.addEventListener("click", function(e){ if (e.target !== elEntreeFichier) elEntreeFichier.click(); });
+  elEntreeFichier.addEventListener("change", function(){
+    if (elEntreeFichier.files && elEntreeFichier.files[0]) deposerFichier(elEntreeFichier.files[0]);
+    elEntreeFichier.value = "";
+  });
+  elDropzone.addEventListener("dragover", function(e){ e.preventDefault(); elDropzone.classList.add("survole"); });
+  elDropzone.addEventListener("dragleave", function(){ elDropzone.classList.remove("survole"); });
+  elDropzone.addEventListener("drop", function(e){
+    e.preventDefault(); elDropzone.classList.remove("survole");
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) deposerFichier(f);
+  });
+})();
+</script>
+</body>
+</html>

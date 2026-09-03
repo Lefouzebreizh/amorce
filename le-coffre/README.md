@@ -1,0 +1,68 @@
+# Le Coffre — version hébergée
+
+La version personnelle et locale de ce projet vit dans `life-organizer/modules/coffre/`
+et `life-organizer/interface_web/` : un serveur Flask sur `127.0.0.1`, sans compte,
+pensé pour tourner sur une seule machine. Celui-ci en est la **productisation** —
+même garantie de chiffrement, mais accessible depuis un navigateur, sans rien
+installer, avec un compte par personne.
+
+## Ce qui ne change pas
+
+Le chiffrement est **entièrement côté navigateur** (Web Crypto API, `src/lib/crypto.ts`,
+porté sans changement de logique depuis `modules/coffre/stockage.py` et le module
+`LOCoffre` de l'interface locale) :
+
+- PBKDF2-HMAC-SHA256, 600 000 itérations, sel propre à chaque coffre.
+- AES-256-GCM pour chaque document et pour l'index qui porte les noms d'origine.
+- Le serveur — ici Supabase plutôt qu'un Flask local — ne reçoit jamais la phrase
+  secrète ni la clé qui en dérive, seulement des octets opaques.
+
+## Ce qui change
+
+| | Local (`life-organizer`) | Hébergé (`le-coffre`) |
+| --- | --- | --- |
+| Qui peut s'en servir | Une personne, sur sa machine | N'importe qui, avec un compte |
+| Authentification | Aucune (127.0.0.1 seul) | Supabase Auth, lien magique par e-mail |
+| Isolation des données | Un seul utilisateur | Row Level Security Postgres, par `auth.uid()` |
+| Stockage des blobs chiffrés | Dossier local (Drive synchronisé) | Bucket Supabase Storage `coffre-objets` |
+| Index + clé | Fichiers locaux (`_cle.json`, `_index.enc`) | Tables Postgres `coffre_cles`, `coffre_index` |
+
+**Deux comptes séparés, par construction** : le compte (e-mail + lien magique,
+Supabase Auth) dit *qui* tu es à ce service. La phrase secrète du coffre dit *ce
+que tu peux déchiffrer* — elle n'atteint jamais ce service, sous aucune forme.
+Les deux ne se substituent jamais l'un à l'autre.
+
+## Architecture
+
+```
+le-coffre/
+├── src/
+│   ├── app/
+│   │   ├── page.tsx            connexion (lien magique par e-mail)
+│   │   └── coffre/page.tsx     création / déverrouillage / liste des documents
+│   └── lib/
+│       ├── crypto.ts           primitives Web Crypto — pas de dépendance
+│       ├── supabase.ts         client Supabase (clé publiable, sécurité par RLS)
+│       └── coffre.ts           les opérations du coffre, contre Supabase
+└── .env.example                 variables à copier en .env.local
+```
+
+Projet Supabase : **LIFE ORGANIZER** (`hftofsrykuobbepfusuf`, région `eu-west-1`).
+Schéma posé par la migration `creer_le_coffre_multi_utilisateurs` et
+`creer_bucket_coffre_objets` (voir l'historique des migrations du projet).
+
+## Démarrer en local
+
+```bash
+cp .env.example .env.local   # remplir avec les valeurs du tableau de bord Supabase
+npm install
+npm run dev
+```
+
+## Ce qui reste à faire avant un vrai lancement
+
+Voir `SECURITY.md` pour le détail — en résumé : pas de limite de taille sur les
+dépôts, pas de tests automatisés pour `src/lib/coffre.ts`, et la garantie de
+suppression irréversible de la version locale (écrasement avant effacement) ne
+tient pas de la même façon sur du stockage cloud — Supabase Storage supprime
+l'objet, sans garantie d'effacement physique immédiat côté fournisseur.
