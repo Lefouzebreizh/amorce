@@ -155,6 +155,51 @@ conseil qui contredisait son propre texte. `npm run exemple` est là pour ça.
 ## 6. Ce que ce lot ne fait pas
 
 Pas de site, pas de compte, pas de base de données, **rien n'est enregistré**.
-Le lot 2 posera l'interface sur le socle `agence/` ; le lot 3 les comptes et le
-chiffrement ; le lot 4 le suivi dans le temps, dont le moteur d'alertes existe
-déjà dans `paper-manager/core/abonnements.py` et sera extrait plutôt que réécrit.
+Le lot 2 posera l'interface sur le socle `agence/` ; le lot 3 les comptes et ce
+que dit la section suivante ; le lot 4 le suivi dans le temps, dont le moteur
+d'alertes existe déjà dans `paper-manager/core/abonnements.py` et sera extrait
+plutôt que réécrit.
+
+---
+
+## 7. La sécurité du lot 3, telle qu'elle a été mesurée
+
+Cette section existe parce que la précédente disait « le lot 3, les comptes et
+le chiffrement » — et que **le chiffrement n'est pas la bonne première réponse**.
+
+**Mesuré le 02/09/2026 : il n'existe aucun chiffrement applicatif dans ce
+dépôt.** Cherché dans `agence/`, `licence-serveur/` et `paper-manager/` :
+`pgsodium`, `pgcrypto`, Vault, AES, Fernet, `nacl` — zéro occurrence. Ce que ces
+projets font est différent, et probablement mieux :
+
+| Projet | Le principe réel |
+| --- | --- |
+| `agence/` | **La RLS est la seule barrière qui compte.** La sécurité est en base, pas dans le code — une faille d'interface n'expose pas les données d'un autre |
+| `licence-serveur/` | **Ne pas stocker ce qu'on peut recalculer.** La clé n'est jamais gardée en clair : elle se prouve par son sceau HMAC |
+
+D'où l'ordre proposé pour le lot 3, du plus fort au plus coûteux :
+
+1. **La minimisation, qui est le vrai bouclier.** Le bilan n'a besoin d'aucun
+   nom de banque, d'aucun numéro de contrat, d'aucun IBAN — que des montants et
+   des catégories. Ce qu'on ne collecte pas ne fuite pas. C'est déjà la forme du
+   formulaire décrit en §4, et ce n'est pas un hasard.
+2. **Le bilan gratuit ne stocke rien du tout.** La personne saisit, on calcule,
+   on affiche. On n'écrit en base **que** si elle crée un compte pour le suivi.
+   C'est aussi un argument commercial : « votre bilan n'a pas été enregistré ».
+3. **Pas de connexion bancaire au départ.** Saisie manuelle. Moins moderne,
+   infiniment plus défendable — et cela évite le statut d'agrégateur agréé.
+   Quand elle viendra, ce sera en portée **AISP**, jamais **PISP** : la règle et
+   sa raison sont écrites dans `conseiller-patrimoine/lecteurs/banque.py`.
+4. **La RLS du socle `agence/`**, reprise telle quelle.
+5. **Le chiffrement des montants, alors — et son coût doit être dit.** Un champ
+   chiffré ne se compare plus en SQL. Le suivi qui doit repérer « ce contrat a
+   pris la poussière » devra donc tout déchiffrer et comparer côté application.
+   C'est faisable, ce n'est pas gratuit, et **c'est la seule ligne de cette
+   section qui reste à trancher**.
+
+**Un point réglementaire, une fois.** Conseiller sur des placements est encadré
+en France (statut CIF, registre ORIAS). La ligne tenue par ce module : on
+informe, on chiffre, on renvoie vers des dispositifs publics — et **on ne nomme
+jamais un produit commercial**. Un test relit tous les textes produits pour le
+refuser. Ce n'est pas une précaution ajoutée après coup : c'est ce qui donne au
+bilan son ton, en plus de le mettre à l'abri.
