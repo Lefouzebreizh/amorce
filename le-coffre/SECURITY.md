@@ -62,6 +62,36 @@ peut vérifier ni tenir — exactement le même aveu que la version locale fait 
 pour un SSD, un cran plus loin puisque l'infrastructure elle-même échappe à ce
 dépôt.
 
+## Deux bugs de configuration réels, trouvés et corrigés (03/09/2026)
+
+Ni l'un ni l'autre n'est un défaut de conception documenté ci-dessus — deux
+erreurs de configuration Supabase, distinctes du modèle de chiffrement, qui
+ont chacune rendu l'application totalement inutilisable jusqu'à leur
+correction. À vérifier explicitement si la base ou le projet Auth sont un
+jour recréés.
+
+**GRANT manquant sur `coffre_cles` et `coffre_index`.** Les policies RLS
+(`auth.uid() = user_id`) étaient correctement écrites, mais Postgres exige en
+plus un droit de base sur la table pour le rôle `authenticated` — sans lui,
+toute requête échoue en « permission denied » avant même que RLS n'entre en
+jeu. Repéré en interrogeant `information_schema.role_table_grants`, avant
+qu'aucun test de bout en bout n'ait réussi passé la connexion. Corrigé par :
+
+```sql
+grant select, insert, update on public.coffre_cles to authenticated;
+grant select, insert, update on public.coffre_index to authenticated;
+```
+
+**Site URL / Redirect URLs pointaient vers un autre projet.** Le projet
+Supabase « LIFE ORGANIZER » héberge plusieurs sites (dont un IPTV, sans
+rapport). L'URL de redirection par défaut de Auth (Authentication → URL
+Configuration) était restée réglée sur ce second site : après avoir cliqué
+sur le lien magique, un utilisateur de Le Coffre atterrissait sur l'IPTV —
+la connexion elle-même réussissait (session créée), seule la redirection
+était fausse. Corrigé en réglant Site URL sur
+`https://coffre-puce.vercel.app` et en ajoutant
+`https://coffre-puce.vercel.app/**` aux Redirect URLs.
+
 ## Ce qui reste fragile — non corrigé pour l'instant
 
 - **Pas de limite de taille sur les dépôts** : un fichier de plusieurs centaines
