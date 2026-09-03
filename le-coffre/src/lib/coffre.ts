@@ -2,8 +2,8 @@
  * Le coffre, hébergé — mêmes opérations qu'en local (modules/coffre/ de
  * Life-Organizer), sur des tables Postgres et un bucket Supabase Storage
  * plutôt qu'un dossier synchronisé et un fichier JSON. La sécurité tient aux
- * policies RLS posées sur chaque table et sur le bucket (voir la migration
- * `creer_le_coffre_multi_utilisateurs`) : chaque requête est filtrée côté
+ * policies RLS posées sur chaque table et sur le bucket (voir
+ * `supabase/schema.sql`) : chaque requête est filtrée côté
  * serveur par auth.uid(), jamais laissée à la bonne volonté du client.
  */
 

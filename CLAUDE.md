@@ -724,22 +724,34 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   `npm run exemple` sert à **regarder** : les deux défauts les plus sérieux
   trouvés ici sont passés à travers cinquante-trois tests verts. Se vérifie depuis
   son dossier.
-- **le-coffre/** et **le-coffre-hosted/** — coffre-fort de documents chiffré,
-  multi-utilisateurs : la productisation du coffre local de `life-organizer/`.
+- **le-coffre/** — coffre-fort de documents chiffré, multi-utilisateurs : la
+  productisation du coffre local de `life-organizer/`.
   Le chiffrement est **entièrement côté navigateur** — PBKDF2-HMAC-SHA256 à
   600 000 itérations, AES-256-GCM par document et pour l'index qui porte les
   noms d'origine. Supabase ne reçoit jamais la phrase secrète ni la clé qui en
   dérive, seulement des octets opaques. **Deux comptes séparés par
   construction** : le compte dit *qui* tu es, la phrase secrète dit *ce que tu
   peux déchiffrer*, et la seconde n'atteint jamais le service.
-  **Les deux dossiers font la même chose, et ce n'est pas tranché.**
-  `le-coffre/` est un projet Next.js complet, lié à Vercel donc déployé à
-  chaque commit ; `le-coffre-hosted/` est une seule page statique. Chacun se
-  décrit dans son propre README comme « la productisation de
-  `life-organizer/modules/coffre/` ». Tant que le choix n'est pas fait, les
-  déclarer tous les deux dit la vérité ; en déclarer un seul figerait le
-  doublon sans l'avoir résolu. `le-coffre/` est écarté du `tsconfig.json` de la
-  racine, comme les autres projets à pile propre.
+  **Le doublon est tranché depuis le 03/09/2026** : `le-coffre-hosted`, une
+  page statique qui faisait le même produit, a été retiré sur décision du
+  propriétaire. Son nom s'écrit ici **sans barre oblique finale**, à dessein :
+  `/coherence-depot` lit tout ce qui en contient une, entre accents graves,
+  comme un chemin, et criait donc sur la phrase même qui annonce le retrait.
+  Ne pas la remettre en croyant corriger une coquille. Ce qui survit est le projet Next.js, celui que Vercel sert sous
+  le nom `coffre`. Il est écarté du `tsconfig.json` de la racine, comme les
+  autres projets à pile propre.
+  **Et retirer le doublon a découvert un trou que le doublon cachait.** Le seul
+  fichier SQL du dépôt vivait chez la page seule, et il décrivait *son* modèle à
+  elle — une table unique `coffres` — quand le code conservé interroge
+  `coffre_cles`, `coffre_index` et le bucket `coffre-objets`. L'entête de
+  `src/lib/coffre.ts` renvoyait pourtant à une migration
+  `creer_le_coffre_multi_utilisateurs` qui n'existait que dans le projet
+  Supabase : un clone neuf portait le client et pas la base qu'il interroge.
+  `supabase/schema.sql` a donc été **reconstruit depuis le code**, colonne par
+  colonne, et il n'a **pas** été rejoué contre un vrai projet — `execute_sql`
+  n'est pas accordé d'ici. La leçon dépasse ce dossier : un doublon ne fait pas
+  que dédoubler, il **couvre** ce qui manque à celui qu'on garde, et c'est en le
+  retirant qu'on le voit.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.

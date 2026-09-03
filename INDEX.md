@@ -34,7 +34,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt-six chantiers actifs sans code commun, plus un en sommeil,
+Ce dépôt héberge vingt-cinq chantiers actifs sans code commun, plus un en sommeil,
 et cinq ressources transverses qui ne sont pas des projets mais servent à tous.
 Une idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir
 un front de plus. La liste vieillit vite — recompter avant de noter.
@@ -62,7 +62,6 @@ un front de plus. La liste vieillit vite — recompter avant de noter.
 | **Conseiller Patrimoine** (`conseiller-patrimoine/`) | Vue d'ensemble du patrimoine et rééquilibrage, en lecture seule stricte. | Python | actif |
 | **Bilan Patrimoine** (`bilan-patrimoine/`) | Le produit grand public : diagnostic gratuit puis suivi payant. Lot 1 — calcul, barèmes et texte. | TypeScript | actif |
 | **Le Coffre** (`le-coffre/`) | Coffre-fort de documents chiffré côté navigateur, multi-utilisateurs. Productisation du coffre de Life-Organizer. | Next.js 16, Supabase | actif |
-| **Le Coffre, page seule** (`le-coffre-hosted/`) | Le même produit en une page statique. **Fait doublon avec le précédent** — le choix n'est pas tranché. | HTML, JS natif, Supabase | à trancher |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
 
 ## Ressources transverses
