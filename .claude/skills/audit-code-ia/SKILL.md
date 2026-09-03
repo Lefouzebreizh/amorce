@@ -221,6 +221,18 @@ Le rapport se clôt sur trois options chiffrées, jamais une seule :
    figurer : elle rend les deux autres crédibles, et un client qui se sent
    forcé ne signe pas.
 
+## 6. L'envoi, quand personne n'a rien demandé
+
+Le rapport prouve la compétence ; le **courrier** décide s'il sera lu. Gabarit,
+règles de ton et réponses types dans `assets/courrier.md`.
+
+Ce qu'il faut en retenir sans l'ouvrir : le correctif du n°1 est donné entier et
+gratuit — c'est la seule chose qui sépare l'aide du chantage ; aucune échéance
+et jamais « avant que quelqu'un d'autre ne le trouve » ; le courrier dit où le
+relevé s'est arrêté ; **le constat ne se publie nulle part**, quelle que soit la
+réponse, y compris son absence. Un envoi, un seul : relancer sur un sujet de
+sécurité non sollicité bascule du côté de la pression.
+
 ## Convention
 
 Français partout. Le rapport est un document client : relire pour qu'il tienne
