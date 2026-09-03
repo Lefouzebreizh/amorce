@@ -1,0 +1,55 @@
+# Vérification du serveur de comptes — même patron que licence-serveur.yml,
+# posé dès la création du projet cette fois plutôt que découvert manquant
+# après coup (voir #588, qui a trouvé licence-serveur sans CI après quatorze
+# tests écrits).
+#
+# Zéro dépendance d'exécution : la plateforme fournit `Request`, `Response`
+# et `crypto.subtle`. `tsc` est installé sans être enregistré, pour que
+# `package.json` continue à dire vrai.
+
+name: Serveur de comptes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'comptes-serveur/**'
+      - '.github/workflows/comptes-serveur.yml'
+  pull_request:
+    paths:
+      - 'comptes-serveur/**'
+      - '.github/workflows/comptes-serveur.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: comptes-serveur-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: comptes-serveur
+
+jobs:
+  verifier:
+    name: Tests et types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Tests
+        if: ${{ !cancelled() }}
+        run: npm test
+
+      - name: Installer le compilateur
+        if: ${{ !cancelled() }}
+        run: npm install --no-save typescript@^5 @types/node@^22
+
+      - name: Types
+        if: ${{ !cancelled() }}
+        run: npm run typecheck
