@@ -48,13 +48,80 @@ retenue ci-dessous corrige. **Une couverture avec les héros de dos vaut mieux
 qu'un livre non publié** : on dépose avec, on commande l'épreuve, et on refait
 l'image seulement si l'épreuve la condamne.
 
-**Et une piste jamais mesurée jusqu'ici, pour la refaire depuis l'appareil du
-propriétaire** : Canva génère des images à partir d'une invite (Magic Media /
-Dream Lab), accepte une **image de référence** — donc le verrou d'anatomie de
-Zéphy —, plafonne à **environ 2048 × 2048 px**, et le compte gratuit en offre
-**dix au total**, à vie. 2048 px, c'est ×1,26 : la meilleure classe de
-résolution du volume. Réponse du service d'aide officiel de Canva, le
-31/08/2026 ; les quatre chemins fermés de `CLAUDE.md` ne la couvraient pas.
+---
+
+## L'essai de falaise, mesuré et regardé — 03/09/2026
+
+L'essai a été fourni et passé à la chaîne. **1600 × 1600 px**, WEBP, RGB : soit
+exactement le cas prévu plus haut — **×1,62, 182 DPI en pleine page**. Il est
+donc utilisable tel quel.
+
+`vignette.py` rend **cinq contrôles sur cinq**, et confortablement :
+
+| Contrôle | Valeur | Seuil |
+| --- | --- | --- |
+| Contraste global | 63 | 40 |
+| Détachement du sujet | 99 | 40 |
+| Masses distinctes | 16 | 3 |
+
+**Et l'œil, qui ne dit pas la même chose que les chiffres :**
+
+- **Le titre passe.** « Roussy & Zéphy » se lit franchement à 150 px. C'est le
+  plus dur, et c'est gagné.
+- **L'accroche ne passe pas.** Ses trois lignes font une bouillie grise. Or
+  c'est elle qui fait cliquer un parent — voir plus haut, elle compte plus que
+  le titre.
+- **On ne rencontre pas les héros.** La silhouette du zèbre ailé tient mieux
+  qu'attendu, les ailes violettes sortent. Mais il n'y a ni visage ni regard :
+  une masse orange et une masse rayée. Le défaut annoncé se confirme à l'œil.
+- La **bordure décorative** crème mange une large part du carré, au détriment de
+  la scène.
+- Le **nom de l'auteur** n'y figure pas.
+
+**Le point qui décide est structurel : le texte est incrusté dans l'image.** La
+chaîne pose surtitre, titre, accroche et nom **en vectoriel** ; avec cette
+image, ce serait écrire par-dessus un texte déjà là. Et les deux textes ne
+concordent pas — l'image annonce « Un voyage au cœur des émotions, de l'amitié
+et de la différence » là où l'accroche retenue, et le sous-titre déposé chez KDP
+dans `FICHE-KDP.md`, disent **« Et si ta différence était ta plus grande
+force ? »**. Deux promesses différentes sur le même produit.
+
+C'est le piège nommé au bas de ce fichier, vérifié sur pièce.
+
+**Conclusion : cet essai est une bonne référence, pas une couverture finale.**
+Il sert à deux choses — déposer dès maintenant si on veut lancer les deux
+semaines d'épreuve, et servir d'image de référence à la régénération. Ce qu'il
+faut ajouter au prompt, en plus du retournement des personnages :
+
+```
+NO decorative border, no frame, no paper texture edging — full-bleed
+illustration to the edges.
+```
+
+**Et une piste pour la refaire depuis l'appareil du propriétaire** : Canva
+génère des images à partir d'une invite (Magic Media), et **accepte une image de
+référence** — donc l'essai de falaise, et par lui le verrou d'anatomie de Zéphy.
+Confirmé par le service d'aide de Canva le 03/09/2026.
+
+**Deux corrections à ce qui était écrit ici le 31/08, et elles vont dans le sens
+de la prudence :**
+
+- **Le « dix au total, à vie » ne porte pas sur la génération d'image.** Il
+  porte sur **Magic Design** — la mise en page automatique. Pour **Magic Media**,
+  l'aide de Canva répond en propres termes que *« la limite exacte d'images
+  générées sur Canva Free n'est pas précisée »*. Deux fonctions voisines avaient
+  été confondues, et c'est précisément le chiffre qui faisait hésiter à dépenser
+  un essai. **Le quota réel s'affiche dans l'éditeur**, sous Magic Media : c'est
+  là qu'il se lit, pas ici.
+- **Le plafond de 2048 px n'est pas confirmé.** L'aide ne le donne pas. Viser
+  la plus grande taille proposée par l'éditeur, et mesurer ce qui sort.
+
+**Et le connecteur MCP de Canva ne sait pas le faire.** Mesuré le 03/09/2026 :
+il expose des outils de mise en page — `generate-design` fabrique une affiche ou
+un document à partir d'un texte, et son paramètre `asset_ids` **insère** des
+images existantes au lieu de s'en servir comme référence. Magic Media vit dans
+l'éditeur. **Cette passe-là est donc à la main du propriétaire**, et une session
+qui lit « Canva répond » et promet une couverture se trompe d'outil.
 
 ---
 

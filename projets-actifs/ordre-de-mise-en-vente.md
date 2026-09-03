@@ -23,56 +23,61 @@ Une note haute dit « ça se construit ». Elle ne dit pas « ça se vend ».
 
 | Rang | Chantier | Déploiement | Premier euro | Montant |
 | --- | --- | --- | --- | --- |
-| **1 ?** | **Artisan Express** — site vitrine | **une heure** | jours | 300 € / vente |
-| 2 | Audit de code généré par IA | **néant** (service) | jours à semaines | ~500 € / audit |
-| **1 ?** | KDP — Roussy & Zéphy tome 1 | jours | jours après dépôt | quelques € / vente, **48 000 personnes déjà acquises** |
+| **1** | **Artisan Express** — site vitrine | **fait** | jours | 300 € / vente |
+| 2 | KDP — Roussy & Zéphy tome 1 | jours | jours après dépôt | quelques € / vente, **48 000 personnes déjà acquises** |
+| 3 | Audit de code généré par IA | **néant** (service) | jours à semaines | ~500 € / audit |
 | 4 | Amorce à 49 € | semaines | semaines | 49 € / vente |
 | 5 | Réseau d'annuaires IA | **heures** | 3 à 6 mois | affiliation, passif |
 | 6 | Accord, couleurs, ingrédients | mois | indéterminé | aucun modèle défini |
 
-**Ce classement est à revoir, et sa propre règle le dit.** La section 3 posait
-« si cette image se débloque, ce chantier passe premier ». Elle s'est débloquée
-le 31/08/2026 — sans image, en mesurant que le livre était déjà déposable — et
-le rang 1 est par ailleurs suspendu au SIRET. Le rang de KDP n'est pas changé
-ici parce qu'un ordre de mise en vente est une décision de produit ; la
-condition, elle, est remplie.
+## Le rang 1 est tranché — et pas par la réponse qu'on attendait
 
-## Le rang 1 n'est plus tranché, et une seule question le décide
+**Le SIRET est validé.** SIREN **109356972**, immatriculation confirmée par le
+propriétaire, validée le 31/08/2026. Les deux verrous d'encaissement sont levés
+le 03/09 — `ENCAISSEMENT_OUVERT` dans `artisan-express/src/lib/config.ts` et
+`SIRET_ACTIF` dans `Offre.tsx` — et un test refuse qu'on efface le SIREN écrit à
+côté.
 
-Ce classement plaçait Artisan Express premier et KDP troisième, ce dernier étant
-donné pour bloqué par une image manquante. **Le blocage n'existait pas** — mesuré
-le 31/08, le livre rend un verdict PUBLIABLE sans une seule image neuve. La règle
-écrite plus bas dans ce document disait : *« si cette image se débloque, ce
-chantier passe premier »*. Sa condition est remplie.
+Ce document a longtemps porté une question fiscale comme arbitre du rang 1 :
+*« les redevances KDP peuvent-elles être versées sans SIRET ? »* **Elle n'a plus
+d'objet.** Il y a un SIRET. La question n'était pas mauvaise — elle était la
+bonne tant que l'immatriculation traînait — mais elle est devenue sans effet, et
+une question périmée gardée comme arbitre fait attendre une réponse qui ne
+changerait plus rien.
 
-Mais la promotion ne s'applique pas mécaniquement, parce que **les deux
-prétendants butent sur le même mur, et peut-être pas de la même façon** :
-l'immatriculation est en cours au guichet unique de l'INPI, pas validée.
+**Artisan Express est donc premier, sans « ? ».** Non par arbitrage, mais parce
+que plus rien ne lui manque :
 
-- **Artisan Express vend une prestation de service à 300 €.** Facturer sans
-  numéro n'est pas possible, et l'encaissement en ligne est fermé pour cette
-  raison exacte — voir `SIRET_ACTIF` dans `artisan-express/src/components/Offre.tsx`.
-- **KDP verse des redevances d'auteur.** Est-ce soumis à la même contrainte ?
-  **Je n'en sais rien, et je ne l'invente pas.** C'est une question fiscale, pas
-  technique, et elle décide à elle seule lequel des deux est réellement premier.
+- déployé et public, mur d'authentification Vercel abattu le 02/09 ;
+- le SIRET permet de facturer ;
+- `npm run facture` produit la facture entière, virement en premier, avec toutes
+  les mentions obligatoires — éprouvée de bout en bout le 03/09 ;
+- les messages de prospection sont écrits, et l'adresse de démonstration y est
+  collée.
 
-**Comment y répondre sans rien engager, et gratuitement :** ouvrir un compte KDP
-et remplir le questionnaire fiscal. Il est gratuit, il ne publie rien, et il dit
-exactement ce qu'Amazon demande pour verser. Si les redevances passent sans
-numéro d'entreprise, **KDP est premier sans discussion** — c'est le seul chantier
-qui a déjà son public, et le seul qui encaisserait avant le SIRET.
+Il ne reste que deux gestes, et **aucun n'est du code** : l'IBAN dans
+`factures/emetteur.json`, et écrire à dix artisans.
 
-Le parcours est déroulé écran par écran dans `kdp/depot/FISCAL.md`, avec l'écran
-qui décide — particulier plutôt qu'entreprise — et les trois lignes à relever qui
-constituent la mesure. **Le compte est ouvert depuis le 31/08/2026 ; le
-questionnaire ne l'est pas.**
+**KDP passe deuxième**, et son propre blocage n'existait pas non plus : mesuré le
+31/08, le livre rend un verdict PUBLIABLE sans une seule image neuve. Il est
+derrière Artisan Express pour une raison de délai, pas de blocage — il faut
+déposer, commander l'épreuve, et attendre deux semaines d'impression.
 
-Tant que cette réponse manque, les deux portent le rang **1 ?** dans le tableau.
+### Ce que devient le questionnaire fiscal KDP
+
+**Une formalité de versement, plus un arbitre.** Amazon ne verse rien sans lui,
+donc il reste à faire ; il ne décide plus de l'ordre. Le parcours est déroulé
+écran par écran dans `kdp/depot/FISCAL.md`. **Le compte est ouvert depuis le
+31/08/2026 ; le questionnaire ne l'est pas.**
+
+Et le SIREN change peut-être la réponse à donner sur l'écran qui compte —
+particulier ou entreprise. `FISCAL.md` a été écrit quand aucune entreprise
+n'existait ; il porte désormais l'avertissement.
 
 ## 1. Artisan Express — le seul dont plus rien ne manque
 
 C'est le premier parce que **rien ne manque** — le déploiement d'une heure que
-ce titre annonçait était déjà fait, voir plus bas :
+ce classement lui portait au débit était déjà fait, voir plus bas :
 
 - la page de vente existe, avec sa route d'API et ses tests au vert ;
 - le prix est fixé — 300 €, une fois, livré en 48 h, sans abonnement ;
@@ -114,17 +119,7 @@ est dans `artisan-express/README.md`.
 **Le premier pas, sous 48 h :** envoyer les messages de `PROSPECTION.md` à dix
 artisans. Rien à déployer, rien à construire.
 
-## 2. L'audit de code — aucun déploiement du tout
-
-Un service ne se déploie pas. L'outillage est écrit et éprouvé (`/audit-code-ia`,
-`scan.py`, `scan_surface.py`, le gabarit de rapport). Le montant est le plus
-élevé du lot, ~500 € l'audit.
-
-Le goulot est identifié et écrit dans sa fiche : **la prospection ne se fait pas
-depuis une session distante** — Reddit, Hacker News et la recherche GitHub sont
-hors d'atteinte. Elle se fait à la main, depuis un navigateur.
-
-## 3. KDP — la meilleure audience, et un blocage qui n'en était pas un
+## 2. KDP — la meilleure audience, et un blocage qui n'en était pas un
 
 Le seul chantier qui a **déjà son audience** : 48 000 personnes qui suivent
 l'auteur, et un `PLAN-DE-LANCEMENT.md` en six semaines écrit pour être exécuté.
@@ -154,6 +149,16 @@ suivant n'est pas de fabriquer une illustration, c'est d'assembler avec le
 provisoire, de déposer et de **commander l'épreuve papier** — qui ne publie
 rien et dont les deux semaines d'impression courent pendant qu'on travaille la
 couverture définitive.
+
+## 3. L'audit de code — aucun déploiement du tout
+
+Un service ne se déploie pas. L'outillage est écrit et éprouvé (`/audit-code-ia`,
+`scan.py`, `scan_surface.py`, le gabarit de rapport). Le montant est le plus
+élevé du lot, ~500 € l'audit.
+
+Le goulot est identifié et écrit dans sa fiche : **la prospection ne se fait pas
+depuis une session distante** — Reddit, Hacker News et la recherche GitHub sont
+hors d'atteinte. Elle se fait à la main, depuis un navigateur.
 
 ## 4. Amorce à 49 € — la plomberie d'abord
 
