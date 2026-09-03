@@ -188,6 +188,31 @@ pas le présenter comme un défaut du dépôt.
 Ne pas sonder en boucle : une exécution dure de quinze secondes à sept minutes
 selon le workflow. Attendre par une commande de fond, puis relire une fois.
 
+**Et sonder ne fait pas que coûter : ça trompe.** Mesuré le 03/09/2026 sur la
+PR #611. `list_workflow_jobs` a rendu **quatre fois de suite le même instantané
+figé**, pendant une vingtaine de minutes, montrant une étape démarrée à 01:50:43
+et jamais terminée. La conclusion tirée — « l'étape est bloquée » — était fausse
+et a été écrite sur la pull request avant d'être corrigée : cette étape s'était
+terminée à **01:52:06**, en 83 secondes, et le travail entier était vert à
+01:52:33.
+
+Ce qui rend le piège difficile à voir : **une étape en cours et une étape servie
+depuis un cache ont exactement la même forme** — un horodatage de début, aucun de
+fin. Rien dans la réponse ne les distingue, et rien ne signale qu'elle est
+périmée. Sonder davantage ne lève pas le doute, ça le confirme faussement, parce
+que chaque appel rend la même chose.
+
+La lecture juste tient en un geste : **comparer l'horodatage de début à l'heure
+qu'il est**. Une étape « en cours » depuis vingt minutes dans un workflow qui en
+dure deux n'est pas lente — c'est la réponse qui est vieille. Et attendre par une
+commande de fond, puis relire **une fois**, comme le dit le paragraphe ci-dessus,
+évite les deux problèmes d'un coup.
+
+Cela nuance la réputation de `list_workflow_jobs` sans la renverser : il reste le
+seul à donner l'état étape par étape, et il reste plus frais que `get_check_runs`
+ou `list_workflow_runs`. Mais **il n'est pas à l'abri du cache**, et une session
+qui le croit infaillible refera l'erreur en étant sûre d'elle.
+
 Ne pas relancer non plus par réflexe : chaque workflow groupe ses exécutions par
 référence avec `cancel-in-progress`, donc un second déclenchement tue le
 premier. Un run `cancelled` n'est pas un run vert — c'est un run dont on ne sait
