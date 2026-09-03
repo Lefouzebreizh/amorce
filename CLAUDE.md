@@ -475,6 +475,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   lien Stripe — **disparaît de la page** au lieu d'afficher une valeur
   inventée. Se vérifie depuis son dossier. Ce qu'on vend **après** les 300 € —
   mise à jour annuelle, avis Google — est chiffré dans son `OPTIONS.md`.
+  **Un SMS de prospection se termine obligatoirement par « STOP au [numéro] »**,
+  et cette obligation ne vaut **pas** pour les courriels, dont le modèle actuel
+  est déjà conforme — l'ajouter là les ferait passer pour du publipostage. La
+  règle et sa raison sont dans `artisan-express/PROSPECTION.md`.
   Ce que ce projet a appris sur les sites vitrine d'une page est écrit à deux
   niveaux, et il ne faut pas les confondre : `/web-artisan` porte le gabarit
   artisan lui-même — palette par métier, tests, pièges du livrable ;

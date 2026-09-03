@@ -27,6 +27,30 @@ fois :
 
 ---
 
+## Le SMS : une phrase obligatoire, sans exception
+
+**Tout SMS envoyé à un prospect se termine par une mention d'opposition —
+« STOP au [numéro] ».** Pas « si vous ne voulez plus, dites-le », pas un
+équivalent poli : la formule, avec un numéro qui reçoit vraiment les réponses.
+
+Elle n'est pas négociable et ne dépend pas de la longueur du message. Un SMS
+de deux lignes la porte comme un autre.
+
+**Pourquoi le SMS et pas l'email.** Les deux canaux ne sont pas jugés pareil.
+Un email professionnel envoyé au titre de l'intérêt légitime se contente d'une
+voie de refus claire — la nôtre est « répondez stop », et elle suffit. Le SMS
+arrive sur un téléphone personnel, souvent le soir, et c'est ce qui lui vaut
+une exigence de forme que l'email n'a pas.
+
+**Cette règle ne s'applique donc pas aux emails**, dont le modèle actuel est
+déjà conforme. Ne l'ajoute pas là où elle n'a rien à faire : une mention
+« STOP au » dans un courriel signale un publipostage et coûte des réponses.
+
+À la date d'écriture, **aucun SMS de prospection n'a été envoyé** — la règle
+s'applique au premier.
+
+---
+
 ## 1. Le premier contact
 
 Par Messenger, sur sa page. Court : il le lit sur un chantier, entre deux
