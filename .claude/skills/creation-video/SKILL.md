@@ -184,12 +184,34 @@ donc une image inutilisable qui a pourtant l'air réussie.
 
 ## Ce qui n'existe pas, et qu'il ne faut pas chercher
 
-**Il n'y a pas de montage « Couverture Martin ».** Deux noms voisins existent et
-n'ont rien à voir : *Couverture Tanguy* est la **page web** de démonstration
-d'Artisan Express, un couvreur inventé — aucune vidéo n'en a été tirée ; et
-*Boulangerie Martin* est un nom de client d'exemple dans
-`/demarrer-projet-client`. Aucun des deux n'a produit de leçon de montage, et
-les inventer aurait mis dans ce fichier des chiffres que personne n'a mesurés.
+**« Il n'y a pas de montage Couverture Martin » a été écrit ici, et c'est faux.**
+Le montage existe : `promocouverturemartin9x16.mp4`, 8,6 s, 1080×1920, H.264 +
+AAC, produit par ffmpeg/x264 en deux passes d'encodage. Il montre un avant/après
+— une fiche Google « Aucun site internet renseigné » à gauche, la page Artisan
+Express à droite — et se termine sur le portrait d'Erwann, « créateur de sites
+pour artisans ».
+
+L'entreprise y est **fictive et l'assume à l'écran** : « Ceci est un exemple
+fictif pour présenter le principe Artisan Express. Aucun artisan réel n'est
+représenté ici — nom, coordonnées et photos sont inventés. » L'adresse montrée,
+*12 Rue des Tisserands, 35000 Rennes*, et le numéro `06 XX XX XX XX` sont
+inventés eux aussi — c'est voulu, et c'est ce qui distingue ce montage d'une
+démonstration au nom d'un vrai prospect.
+
+**Ce que la page n'a pas : de source.** Aucun fichier de ce dépôt ne contient
+« COUVERTURE MARTIN », « Tisserands » ni « exemple fictif », et `git log --all
+-S` ne les trouve à aucun commit. La page n'a jamais été versionnée : elle
+n'existe que filmée. La refabriquer demande de repartir du gabarit d'Artisan
+Express, teinte `vert`.
+
+**La leçon, et elle vaut au-delà de ce fichier :** une session a écrit « ça
+n'existe pas » à partir d'une recherche dans le dépôt, alors que la seule preuve
+d'existence était un fichier hors dépôt. Ne pas trouver n'est pas une preuve
+d'absence quand le livrable est une vidéo, qui ne se versionne pas.
+
+*Couverture Tanguy* — page de démonstration d'Artisan Express, couvreur inventé
+— et *Boulangerie Martin* — client d'exemple de `/demarrer-projet-client` — sont
+deux noms voisins, et restent sans rapport avec ce montage.
 
 **Il n'y a pas non plus de compétence `monter-video`.** Le montage est tenu par
 `/video-du-jour` — qui fabrique — et `/montage-sans-refaire` — qui relit avant
