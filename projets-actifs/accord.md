@@ -64,7 +64,7 @@ même refus.
 | ~~3 — Les objets et les proportions~~ | **Faite le 31/08/2026**, avec l'étape 2. Chaque proposition porte sa part et ses objets ; la plante n'apparaît que là où la couleur calculée tombe dans les verts. | ✅ |
 | ~~3 bis — La zone de visée~~ | **Faite le 03/09/2026.** `ZoneVisee`, carré centré à 0,60 du petit côté — part mesurée, pas choisie — et `EchantillonAccord` qui décode, découpe et réduit en 40 × 40. 14 tests. | ✅ |
 | ~~4 — L'écran~~ | **Fait le 03/09/2026.** `CadreVisee` dessine le carré depuis `ZoneVisee.cadre()`, `PanneauAccord` rend le refus avec son geste ou la palette, `AccordPage` enchaîne caméra, déclencheur et résultat. 12 tests. | ✅ |
-| 5 — Un lot de photos venu d'ailleurs | Le seul point ouvert, et il ne se code pas. Les seuils viennent d'un foyer et d'un appareil. | à faire |
+| 5 — De vrais retours sur des photos variées | Le seul point ouvert, et il ne se code pas. **On livre avec les seuils actuels et on ajuste sur les retours**, décision du propriétaire du 03/09/2026 — voir « Ce que ce corpus vaut ». | en attente d'usage |
 
 ## Deux décisions prises au cadrage
 
@@ -212,7 +212,21 @@ d'une quatrième statistique.
 
 **Ce que ce corpus vaut.** Il vient d'un seul foyer et d'un seul appareil : il
 prouve l'échec, il ne mesure pas le taux de refus qu'aurait un autre logement.
-L'objectif — cinq palettes sur dix photos — demandera un lot plus large.
+
+**Et le propriétaire a tranché le 03/09/2026 : on livre avec les seuils
+actuels.** L'objectif reste cinq palettes sur dix photos d'intérieur ; on
+ajustera sur de vrais retours, pris sur des photos variées. Attendre un lot
+représentatif avant de livrer coûterait plus que de livrer et corriger.
+
+**Ce qui découle de cette décision, et qui vaut d'être écrit avant qu'une
+session ne s'en aperçoive à ses dépens : ces seuils ne se retouchent pas sur
+ce corpus-ci.** Il a servi à les régler ; les rejouer dessus dira toujours
+qu'ils vont bien, et « améliorer » un chiffre pour qu'il passe mieux sur les
+quarante-sept photos ne fait que resserrer le réglage autour d'un seul foyer.
+Une mesure ne vaut que pour ce qu'elle mesure — celle-ci a calibré, elle ne
+peut pas valider. Le corpus reste utile pour une chose et une seule :
+**vérifier qu'un changement ne casse pas ce qui marchait**, jamais pour
+justifier un seuil déplacé.
 
 ## Ce que la version un a livré — 3 septembre 2026
 
