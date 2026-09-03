@@ -6013,3 +6013,43 @@ sur ce que la chose fait :
 ```bash
 grep -rln "formulaire.*bilan\|lib/bilan" --include=*.tsx --include=*.ts . | grep -v node_modules
 ```
+
+## Un contrôle de contraste doit laisser le navigateur convertir la couleur
+
+Mesuré le 03/09/2026 : `regarder.mjs` rendait **90 défauts** sur la page de bilan
+d'`agence`, dont « Suivant » à **1,16:1** — un bouton blanc sur bleu franc,
+parfaitement lisible à l'écran. Après correction : **46**, et plus un seul
+contraste. L'outil inventait quarante-quatre échecs.
+
+La cause : il lisait les nombres de la chaîne rendue par `getComputedStyle` en
+supposant un `rgb()`. **Tailwind v4 rend ses couleurs calculées en `lab()` et en
+`oklch()`** — `lab(41.7 22.9 -70.7)` était donc lu comme `rgb(41, 22, 70)`.
+
+Ce n'est pas le défaut habituel du contrôle muet : celui-ci **criait**, et sur
+des chiffres faux. C'est pire, parce qu'on cherche la cause dans la page.
+
+**La parade ne se code pas, elle se délègue** : un `<canvas>` résout n'importe
+quelle couleur CSS en sRGB, y compris les fonctions qui n'existaient pas quand
+le script a été écrit.
+
+```js
+pinceau.fillStyle = '#000'        // remise à zéro : une couleur invalide
+pinceau.fillStyle = couleur       // laisserait sinon la précédente en place
+pinceau.fillRect(0, 0, 1, 1)
+const [r, v, b] = pinceau.getImageData(0, 0, 1, 1).data
+```
+
+Deux voisins trouvés dans le même passage, et de la même famille :
+
+- **`textContent` voit le corps des `<script>`.** Next les place dans le
+  `<body>` : le contrôle mesurait la taille et le contraste de lignes de
+  `self.__next_f.push(...)`. Écarter `SCRIPT`, `STYLE`, `NOSCRIPT`, `TEMPLATE`.
+- **La transparence ne se teste pas sur la forme de la chaîne.** Chercher
+  « rgba » et « , 0) » manque `oklch(... / 0)`, qui est tout aussi transparent.
+  L'alpha se lit sur le pixel peint, comme le reste.
+
+**Et la leçon de méthode, qui explique pourquoi rien n'avait été vu plus tôt :
+l'outil n'avait jamais servi que sur un build de production servi par
+`next start`.** C'est `next dev` qui place ces scripts en ligne. Un outil éprouvé
+dans un seul mode n'est éprouvé qu'à moitié — et celui-ci gardait déjà deux
+projets dans `verifier.sh`.

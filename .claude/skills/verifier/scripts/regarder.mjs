@@ -92,9 +92,35 @@ const onglet = await navigateur.newPage({ viewport: ECRAN, deviceScaleFactor: 2 
 await onglet.goto(page);
 
 const releve = await onglet.evaluate(({ CORPS_MINIMUM, CIBLE_MINIMUM, CONTRASTE_MINIMUM }) => {
+  /*
+   * La conversion est confiée au navigateur, jamais à une expression régulière.
+   *
+   * Le premier jet lisait les nombres de la chaîne en supposant un `rgb()`.
+   * Tailwind v4 rend ses couleurs calculées en `lab()` et en `oklch()` : sur
+   * `agence`, « Suivant » ressortait à **1,16:1** parce que `lab(41.7 22.9
+   * -70.7)` était lu comme un `rgb(41, 22, 70)`. Le contrôle n'était pas
+   * silencieux — il criait, et sur des chiffres faux, ce qui est pire.
+   *
+   * Un `<canvas>` résout **n'importe quelle** couleur CSS en sRGB, y compris
+   * celles qui n'existaient pas quand ce script a été écrit. Le pinceau est
+   * remis au noir entre deux mesures : sans cela, une couleur invalide
+   * laisserait la précédente en place et rendrait un contraste plausible.
+   */
+  const pinceau = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+
+  const alpha = (couleur) => {
+    pinceau.clearRect(0, 0, 1, 1);
+    pinceau.fillStyle = couleur;
+    pinceau.fillRect(0, 0, 1, 1);
+    return pinceau.getImageData(0, 0, 1, 1).data[3];
+  };
+
   const lum = (couleur) => {
-    const [r, v, b] = couleur.match(/\d+(\.\d+)?/g).slice(0, 3)
-      .map((c) => Number(c) / 255)
+    pinceau.fillStyle = '#000';
+    pinceau.fillStyle = couleur;
+    pinceau.fillRect(0, 0, 1, 1);
+    const [r, v, b] = [...pinceau.getImageData(0, 0, 1, 1).data].slice(0, 3)
+      .map((c) => c / 255)
       .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
     return 0.2126 * r + 0.7152 * v + 0.0722 * b;
   };
@@ -112,7 +138,11 @@ const releve = await onglet.evaluate(({ CORPS_MINIMUM, CIBLE_MINIMUM, CONTRASTE_
   const fondReel = (element) => {
     for (let n = element; n; n = n.parentElement) {
       const fond = getComputedStyle(n).backgroundColor;
-      if (fond && !/rgba\(.*,\s*0\)$/.test(fond) && fond !== 'transparent') return fond;
+      /*
+       * L'opacité se lit sur la couleur peinte, pas sur la forme du texte : une
+       * couleur `oklch(... / 0)` est transparente sans porter « rgba » ni « 0) ».
+       */
+      if (fond && fond !== 'transparent' && alpha(fond) > 0) return fond;
     }
     return 'rgb(255, 255, 255)';
   };
@@ -129,10 +159,26 @@ const releve = await onglet.evaluate(({ CORPS_MINIMUM, CIBLE_MINIMUM, CONTRASTE_
    */
   const decor = (element) => element.closest('[aria-hidden="true"]') !== null;
 
+  /*
+   * Ce que le navigateur ne peint pas n'a ni taille ni contraste.
+   *
+   * `textContent` voit le corps des `<script>` et des `<style>`, que Next place
+   * dans le `<body>` : mesuré sur `agence` servi par `next dev`, cela rendait
+   * **quatre-vingt-seize** défauts dont l'immense majorité portaient sur des
+   * lignes de `self.__next_f.push(...)`. Le contrôle criait sur du code, et les
+   * vrais défauts s'y noyaient.
+   *
+   * Le piège n'apparaissait pas jusqu'ici parce que les mesures précédentes
+   * portaient sur un build de production servi par `next start`, qui ne place
+   * pas les mêmes scripts en ligne. Un outil éprouvé dans un seul mode ne l'est
+   * qu'à moitié.
+   */
+  const INVISIBLES = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'TITLE']);
+
   const defauts = [];
 
   for (const element of document.querySelectorAll('body *')) {
-    if (decor(element)) continue;
+    if (INVISIBLES.has(element.tagName) || decor(element)) continue;
     const texte = [...element.childNodes]
       .filter((n) => n.nodeType === 3 && n.textContent.trim() !== '')
       .map((n) => n.textContent.trim())
