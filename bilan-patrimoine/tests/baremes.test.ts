@@ -24,13 +24,13 @@ test('chaque barème porte sa source et ses deux dates', () => {
 })
 
 test('un barème dont la révision est passée est signalé périmé', () => {
-  const apres = new Date('2026-03-01T00:00:00Z')
+  const apres = new Date('2027-03-01T00:00:00Z')
   const cles = baremesPerimes(apres).map((entree) => entree.cle)
   assert.ok(cles.includes('livret_a'), 'le Livret A se révise au 1er février')
 })
 
 test('avant sa révision, un barème ne l’est pas', () => {
-  assert.equal(baremesPerimes(new Date('2025-09-01T00:00:00Z')).length, 0)
+  assert.equal(baremesPerimes(new Date('2026-09-02T00:00:00Z')).length, 0)
 })
 
 test('un barème inconnu lève au lieu de rendre zéro', () => {
@@ -60,9 +60,9 @@ test('les plafonds réglementés sont ceux du Livret A, du LDDS et du LEP', () =
   assert.equal(PLAFONDS_EUR.lep, 10000)
 })
 
-test('la table livrée est signalée à relire — c’est le comportement voulu', () => {
-  // Les valeurs de départ datent d'août 2025 et servent à faire tourner le
-  // calcul. Ce test échouera le jour où quelqu'un les remplacera par les
-  // vraies sans mettre VERIFIE_LE à jour — et c'est exactement son rôle.
-  assert.equal(joursDepuisVerification(new Date('2026-09-02T00:00:00Z')) > JOURS_AVANT_RELECTURE, true)
+test('la table livrée vient d’être relue, elle n’a pas besoin de l’être encore', () => {
+  // Le pendant du test précédent : juste après une vraie relecture (celle du
+  // 3 septembre 2026), le drapeau ne doit pas se lever. S'il se lève ici,
+  // c'est que VERIFIE_LE n'a pas été mis à jour en même temps que les taux.
+  assert.equal(joursDepuisVerification(new Date(`${VERIFIE_LE}T00:00:00Z`)) > JOURS_AVANT_RELECTURE, false)
 })

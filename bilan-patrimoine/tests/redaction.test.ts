@@ -4,8 +4,8 @@ import test from 'node:test'
 import type { Situation } from '../src/modeles.ts'
 import { CONSTATS_MONTRES_MAX, rediger } from '../src/redaction.ts'
 
-const FRAIS = new Date('2025-09-01T12:00:00Z')
-const PERIME = new Date('2026-09-02T12:00:00Z')
+const FRAIS = new Date('2026-09-15T12:00:00Z')
+const PERIME = new Date('2027-04-01T12:00:00Z')
 
 const BASE: Situation = {
   age: '30-39',

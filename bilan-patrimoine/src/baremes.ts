@@ -47,66 +47,60 @@ export type Bareme = {
  * une virgule sans que ses nombres aient été vérifiés. C'est la seule date qui
  * dit « quelqu'un a regardé ».
  */
-export const VERIFIE_LE = '2025-08-01'
+export const VERIFIE_LE = '2026-09-03'
 
 /**
- * ⚠️ **Valeurs de départ, à confirmer avant toute mise en ligne.**
- *
- * Elles sont datées d'août 2025 et servent à faire tourner et éprouver le
- * calcul. Deux révisions du Livret A ont eu lieu depuis — février et août 2026 —
- * donc `baremesPerimes()` les signale toutes, et c'est le comportement voulu :
- * le mécanisme fonctionne, il attend ses vrais nombres.
- *
- * Les remplacer demande dix minutes et huit consultations, une fois par
- * semestre. La marche à suivre est dans le README.
+ * Relues le 3 septembre 2026 face aux quatre sources citées dans le README —
+ * Banque de France, arrêté annuel, France Assureurs, INSEE. Le prochain tour
+ * est dans le README (§2) : dix minutes, une à deux fois par an.
  */
 export const BAREMES: readonly Bareme[] = [
   {
     cle: 'livret_a',
     libelle: 'Livret A',
     valeurPct: 1.7,
-    enVigueurDepuis: '2025-08-01',
-    prochaineRevision: '2026-02-01',
+    enVigueurDepuis: '2026-08-01',
+    prochaineRevision: '2027-02-01',
     source: 'Banque de France — taux réglementé',
   },
   {
     cle: 'ldds',
     libelle: 'LDDS',
     valeurPct: 1.7,
-    enVigueurDepuis: '2025-08-01',
-    prochaineRevision: '2026-02-01',
+    enVigueurDepuis: '2026-08-01',
+    prochaineRevision: '2027-02-01',
     source: 'Banque de France — taux réglementé, aligné sur le Livret A',
   },
   {
     cle: 'lep',
     libelle: "Livret d'épargne populaire",
-    valeurPct: 2.7,
-    enVigueurDepuis: '2025-08-01',
-    prochaineRevision: '2026-02-01',
+    valeurPct: 2.5,
+    enVigueurDepuis: '2026-08-01',
+    prochaineRevision: '2027-02-01',
     source: 'Banque de France — taux réglementé',
   },
   {
     cle: 'pel',
-    libelle: "Plan d'épargne logement (plans ouverts depuis 2025)",
-    valeurPct: 1.75,
-    enVigueurDepuis: '2025-01-01',
-    prochaineRevision: '2026-01-01',
+    libelle: "Plan d'épargne logement (plans ouverts depuis 2026)",
+    valeurPct: 2.0,
+    enVigueurDepuis: '2026-01-01',
+    prochaineRevision: '2027-01-01',
     source: 'Arrêté annuel — taux des nouveaux plans',
   },
   {
     cle: 'fonds_euros',
     libelle: 'Fonds euros en assurance vie — moyenne du marché',
     valeurPct: 2.6,
-    enVigueurDepuis: '2025-01-01',
-    prochaineRevision: '2026-01-01',
+    enVigueurDepuis: '2026-03-26',
+    prochaineRevision: '2027-03-01',
     source: 'France Assureurs — rendement moyen servi, net de frais de gestion',
   },
   {
     cle: 'inflation',
     libelle: 'Inflation sur douze mois',
-    valeurPct: 1.0,
-    enVigueurDepuis: '2025-08-01',
-    prochaineRevision: '2025-11-01',
+    valeurPct: 2.1,
+    enVigueurDepuis: '2026-08-01',
+    prochaineRevision: '2026-11-01',
     source: 'INSEE — indice des prix à la consommation, glissement annuel',
   },
 ]

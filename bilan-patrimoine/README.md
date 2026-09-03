@@ -53,16 +53,18 @@ sont pas des cours de bourse : une table versionnée fait mieux qu'une API.
 | Aucun hôte financier n'est joignable ici | Mesuré : les neuf hôtes de marché refusent le tunnel |
 | Une table se relit en revue | Un taux faux venu d'une API se propage sans que personne le voie |
 
-### ⚠️ Les valeurs livrées sont à confirmer
+### Les valeurs sont à jour au 3 septembre 2026
 
-Elles datent d'**août 2025** et servent à faire tourner le calcul. Deux
-révisions ont eu lieu depuis, donc `baremesPerimes()` les signale toutes — et
-c'est le comportement voulu : le mécanisme marche, il attend ses vrais nombres.
+Relues face aux quatre sources ci-dessous : Livret A et LDDS à 1,7 %, LEP à
+2,5 % (taux du 1ᵉʳ août 2026), PEL à 2,00 % (plans ouverts en 2026), fonds
+euros à 2,6 % de moyenne 2025 (France Assureurs, 26 mars 2026), inflation à
+2,1 % sur un an (INSEE, définitif juillet 2026, publié le 14 août 2026).
 
 **Tant qu'un barème est périmé, aucun montant en euros ne s'affiche.** Le constat
 sort quand même — le fait qualitatif reste vrai — mais sans son chiffre, et le
 rapport dit pourquoi en tête. Un taux de l'an dernier donnerait un manque à
-gagner faux avec l'aplomb d'un chiffre juste.
+gagner faux avec l'aplomb d'un chiffre juste. `baremesPerimes()` referme ce
+robinet tout seul dès qu'une des dates de révision ci-dessus est dépassée.
 
 Pour les mettre à jour, dix minutes, deux fois par an :
 
