@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { join as joinPosix } from 'node:path/posix';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 /**
  * La frontière du moteur de montage.
@@ -16,18 +18,33 @@ import { test } from 'node:test';
  * et c'est ce qui la sépare d'une intention.
  */
 
-const RACINE = new URL('../../..', import.meta.url).pathname;
+/*
+ * `fileURLToPath`, jamais `.pathname` : sur Windows, `new URL(...).pathname`
+ * rend `/C:/Users/...` — le `/` de tête, joint ensuite avec `path.join`, se
+ * résout en `C:\C:\Users\...`. Mesuré : les trois tests de ce fichier
+ * échouaient tous en ENOENT sur cette machine, jamais en CI, qui tourne sous
+ * Ubuntu et ne voit donc jamais le piège.
+ */
+const RACINE = fileURLToPath(new URL('../../..', import.meta.url));
 const MOTEUR = ['src/lib', 'src/hooks'];
 
+/*
+ * `dossier` et les chemins qu'on en tire (`FETCH_AUTORISES`, les imports
+ * relus) sont des identifiants logiques, toujours en `/` — jamais des chemins
+ * du système de fichiers. `path.join` les joindrait en `\` sous Windows,
+ * cassant leur comparaison avec les clés écrites à la main plus bas. Seul le
+ * chemin qui touche vraiment le disque (`join(RACINE, ...)`) doit prendre le
+ * séparateur de la plateforme.
+ */
 function fichiers(dossier: string): string[] {
   const chemin = join(RACINE, dossier);
   return readdirSync(chemin).flatMap((nom) => {
     const complet = join(chemin, nom);
     if (statSync(complet).isDirectory()) {
       // Les tests eux-mêmes ne sont pas le moteur : ils décrivent le moteur.
-      return nom === '__tests__' ? [] : fichiers(join(dossier, nom));
+      return nom === '__tests__' ? [] : fichiers(joinPosix(dossier, nom));
     }
-    return nom.endsWith('.ts') || nom.endsWith('.tsx') ? [join(dossier, nom)] : [];
+    return nom.endsWith('.ts') || nom.endsWith('.tsx') ? [joinPosix(dossier, nom)] : [];
   });
 }
 
