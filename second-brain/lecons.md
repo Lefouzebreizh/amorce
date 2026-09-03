@@ -5816,3 +5816,64 @@ Deux corollaires écrits dans le même lot, parce qu'ils se reperdent :
   décision de ne pas faire de tri de santé animale. La table ne renverse pas une
   décision écrite — un test empêche qu'une session « complète » la
   correspondance un jour.
+
+## 03/09/2026 — Trois pièges d'une bascule de thème, chacun mesuré
+
+Séance de charte graphique sur Artisan Express : palette unique, thème sombre,
+teinte par métier. Ce qui suit ne raconte pas la séance — seulement ce qui a
+coûté un aller-retour et qui se reproduira ailleurs.
+
+### 1. Chercher un mot condamne le commentaire qui explique sa disparition
+
+Deux fois dans la même séance, sur deux projets. Un test refusait
+`prefers-color-scheme` dans un gabarit HTML : il a fait tomber le commentaire
+qui explique **pourquoi** il n'y a plus de second thème. Un autre refusait
+`#c74e00` dans une feuille de style : il a fait tomber le paragraphe qui
+explique pourquoi cet orange a été retiré.
+
+Les deux fois, le réflexe est de supprimer l'explication pour faire passer le
+test — c'est-à-dire d'effacer exactement ce que le dépôt a de plus précieux.
+
+**Une garde porte sur la forme employée, jamais sur la chaîne.** On cherche
+`@media (prefers-color-scheme`, pas le mot ; `--color-x: #c74e00`, pas
+l'hexadécimal. C'est le même geste que la parade des accents graves du §7 bis
+de `CLAUDE.md` — là-bas on rompt la correspondance, ici on la resserre.
+
+### 2. `rem` vaut 16 px même quand le corps déclare 18 px
+
+Le plancher du dépôt est 18 px. Une signature écrite en `font-size: .95rem`
+est sortie à **15,2 px** — parce que `rem` se rapporte à la racine, pas au
+corps. `1rem` ne suffit pas non plus : 16 px reste sous le plancher.
+
+Conséquence directe : **toute fraction de `rem` viole le §2**, et la moitié des
+gabarits en portent une par habitude. La discrétion se fait par l'espace, le
+trait et l'encre — jamais en rapetissant.
+
+Le second défaut du même élément vaut aussi : une encre mesurée sur le fond de
+page rendait 3,10:1 sur le pied, qui est un cran plus clair. **Une couleur se
+mesure sur la surface où elle vit**, pas sur la plus favorable — c'est la même
+erreur que le point 3.
+
+Aucun des deux n'était visible dans soixante-dix tests verts. Le contrôle
+visuel les a montrés en une seconde.
+
+### 3. Un serveur survivant sert un HTML qui pointe vers un CSS effacé
+
+`rm -rf .next` puis reconstruction, pendant qu'un `next start` tournait encore :
+le vieux serveur continue de servir son HTML, dont la feuille de style a
+disparu du disque. Elle rend **500**, la page s'affiche avec les réglages par
+défaut du navigateur — Times noir sur blanc, liens bleus soulignés — et la
+capture d'écran ressemble à une décision de design.
+
+Deux gardes, et la seconde est la vraie :
+
+- `pkill -f "next"` est refusé (le motif attrape le processus Claude). Tuer par
+  PID : `ps aux | grep "[n]ext-server" | awk '{print $2}' | xargs -r kill -9`.
+- **Avant toute capture, mesurer une propriété calculée** — la couleur de fond
+  du corps, par exemple — et refuser de photographier si elle ne vaut pas ce
+  que la feuille déclare. Compter les règles CSS ne marche pas : Tailwind v4
+  range tout dans quelques `@layer`, et `cssRules` n'en voit que le premier
+  niveau. Quarante et une règles est un chiffre parfaitement normal.
+
+Une capture est une mesure comme une autre : elle a besoin de sa propre
+vérification avant de servir de preuve.
