@@ -1690,7 +1690,7 @@ doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
 ### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
 
-**État mesuré le 03/09/2026 à 00 h 23, par `list_projects`** — il contredit une
+**État mesuré le 03/09/2026 à 16 h 10, par `list_projects`** — il contredit une
 partie de ce qui suit, et c'est cette liste-ci qui fait foi. Le raisonnement des
 paragraphes suivants reste juste ; ce sont les noms et le compte qui ont bougé.
 
@@ -1698,16 +1698,36 @@ paragraphes suivants reste juste ; ce sont les noms et le compte qui ont bougé.
 | --- | --- | --- |
 | `amorce` (racine) | oui | **oui** |
 | `iptv` | oui | **oui** |
+| `coffre` (dossier `le-coffre/`) | oui | **oui** |
 | `annuaire-ia` | non — dépôt de fichiers | non |
 | `artisan-express` | non — dépôt de fichiers | non |
+| `artisan-express-demos` | non — dépôt de fichiers | non |
+| `couverture-martin-demo` | non — dépôt de fichiers | non |
 
-**Deux projets branchés, pas quatre.** `amorce-51up` et `reseau-annuaires`
-**n'existent plus** : ils ont été supprimés côté tableau de bord entre 00 h 05 et
-00 h 21, ce que les commentaires du robot Vercel montrent en passant de quatre
-déploiements ignorés à deux. La consommation quotidienne est donc **divisée par
-deux**, et le seuil d'une vingtaine de fusions par jour écrit plus bas remonte
-d'autant. La ligne « le supprimer côté tableau de bord reste à faire » est
-caduque : c'est fait.
+**Trois projets branchés, et c'était deux le matin même.** `coffre` est arrivé
+dans la journée, lié à Git dès sa création — donc déclenché par **chaque**
+commit, y compris ceux qui ne touchent pas à `le-coffre/`. Il porte bien son
+`vercel.json`, ce qui évite le piège nommé plus bas ; mais un filtre de chemins
+annule une construction, il n'empêche pas la **création** du déploiement, et
+c'est elle que le quota compte.
+
+Conséquence arithmétique, et c'est la seule qui compte au quotidien : **chaque
+fusion vaut maintenant trois déploiements au lieu de deux**, plus les commits de
+fusion. Le seuil d'« une vingtaine de fusions par jour » écrit plus bas
+redescend d'un tiers — **une quinzaine**. Ce paragraphe disait « deux projets
+branchés » et « la consommation est divisée par deux » : les deux phrases
+étaient vraies à 00 h 23 et fausses seize heures plus tard.
+
+D'où la règle que ce cas illustre mieux qu'aucun autre : **un décompte de
+projets Vercel se périme en une journée**, parce qu'un projet se crée depuis le
+tableau de bord sans laisser la moindre trace dans Git. Le seul relevé qui vaut
+est celui qu'on vient de faire ; celui d'hier se relit comme s'il avait été
+mesuré aujourd'hui. Le geste tient en un appel — `list_projects` — et il coûte
+une seconde.
+
+`amorce-51up` et `reseau-annuaires` **n'existent plus** : supprimés côté tableau
+de bord le 03/09 entre 00 h 05 et 00 h 21. La ligne « le supprimer côté tableau
+de bord reste à faire » est caduque : c'est fait.
 
 **Et `annuaire-ia` est un projet neuf, par dépôt de fichiers**, déployé le
 02/09/2026 à 22 h 54, état `READY`, cible production. Trois choses à en savoir
@@ -1829,8 +1849,11 @@ paragraphes plus bas, et c'est cette journée-ci qui l'a confirmé une troisièm
 fois. Le message est explicite quand on le lit : « Resource is limited - try
 again in 24 hours (more than 100, code: api-deployments-free-per-day) ».
 
-Le seuil utile à retenir est donc **une vingtaine de fusions par jour**, pas
-cent : chaque fusion vaut trois déploiements ou plus.
+Le seuil utile à retenir est donc **une quinzaine de fusions par jour**, pas
+cent : chaque fusion vaut au moins un déploiement par projet lié, plus le commit
+de fusion. Ce chiffre **suit le nombre de projets liés** et se recalcule quand
+il bouge — il valait une vingtaine à deux projets, il en vaut une quinzaine à
+trois.
 
 **Et un projet de démos est né le 03/09/2026 : `artisan-express-demos`.** Dépôt
 de fichiers lui aussi, donc hors quota. Il sert les pages nominatives préparées
