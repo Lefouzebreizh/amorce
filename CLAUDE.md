@@ -460,6 +460,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   courriel et n'enregistre rien. Ce qui n'est pas réglé — téléphone, WhatsApp,
   lien Stripe — **disparaît de la page** au lieu d'afficher une valeur
   inventée. Se vérifie depuis son dossier.
+  Ce que ce projet a appris sur les sites vitrine d'une page — les cinq blocs,
+  le choix d'une teinte qui passe le contraste, les contacts cliquables, le
+  fichier autonome et les pièges d'hébergement — est généralisé au-delà des
+  artisans dans `/site-web`.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
