@@ -7,14 +7,33 @@ Le formulaire n'ouvre pas de compte, ne pose pas de mouchard et n'enregistre
 rien : ce que l'artisan écrit part dans une boîte aux lettres, et nulle part
 ailleurs.
 
-## État : **déployé, et public depuis le 02/09/2026**
+## État : **en ligne et public, mesuré le 03/09/2026**
 
-Mesuré le 02/09/2026 par le connecteur Vercel : le projet `amorce-51up` —
-dossier racine `artisan-express` — existe, et l'adresse ci-dessous rend **200**
-en servant bien cette page, titre « Site vitrine artisan express — 300 €, livré
-en 48 h ».
+L'adresse qui fait foi, et la seule à donner à un prospect :
 
-https://amorce-51up.vercel.app
+https://artisan-express-ashy.vercel.app
+
+Mesuré le 03/09/2026 : `200` sur la racine, sur `/exemple.html` et sur
+`/mentions-legales`. Protection du déploiement lue au réglage —
+`passwordProtection`, `ssoProtection` et `trustedIps` **désactivées toutes les
+trois**. La feuille de style servie porte la charte (`#67c1a0`, `#16151a`) et
+plus une trace de l'ancien orange `#c74e00` ni de l'ancien bleu `#004aad`.
+
+**`amorce-51up` est mort, et ce README le donnait encore pour l'adresse de
+référence.** Le projet a été supprimé du tableau de bord dans la nuit du
+02 au 03/09 ; l'adresse rend **404**, vérifié. Elle était écrite dans
+`PROSPECTION.md` : chaque artisan contacté serait tombé sur une page d'erreur
+Vercel. C'est le défaut le plus cher qu'un fichier de prospection puisse
+porter, et il ne se voyait nulle part — aucun test ne lit une adresse dans un
+Markdown.
+
+**La contrepartie du projet qui reste : il ne se met pas à jour tout seul.** Il
+est né d'un dépôt de fichiers, pas d'un lien Git. Une modification de
+`artisan-express/` n'atteint la page qu'après un nouveau dépôt, et l'arbre
+envoyé doit contenir `public/` — l'oubli d'`exemple.html` a déjà mis « Voir un
+site fini, en vrai » en 404 pendant que le reste servait parfaitement. Il a
+d'ailleurs été oublié une seconde fois au premier envoi du 03/09, et rattrapé
+avant mise en ligne.
 
 **Elle a pourtant été déployée et invisible, et c'est ce piège-là qu'il faut
 retenir.** Le projet portait `ssoProtection` à `all_except_custom_domains` :
@@ -42,12 +61,10 @@ conclu que le site était en ligne ; un résumé de reprise l'a répété. L'adr
 inventée est retirée — sans `NEXT_PUBLIC_SITE_URL`, la page ne déclare plus où
 elle habite, et un test le garde.
 
-**Deux projets Vercel servent cette page, et ils ne se valent pas.** Un second,
-`artisan-express`, est né le même jour d'un **dépôt de fichiers** — il ne se met
-donc pas à jour quand la branche bouge, et il porte encore le mur décrit
-ci-dessus (`ssoProtection: enabled`, mesuré). **C'est `amorce-51up` qui fait
-foi** : lié à Git, à jour, et sans mur. C'est son adresse qui est donnée aux
-prospects dans `PROSPECTION.md`.
+**Il n'en reste qu'un, et c'est `artisan-express`.** Ils étaient deux le
+02/09 ; `amorce-51up` a été supprimé depuis. Le survivant ne porte plus aucun
+mur — les trois protections sont lues à `false` le 03/09 — et c'est son adresse
+qui est donnée aux prospects dans `PROSPECTION.md`.
 
 **Ce qui reste à régler sur le projet**, et qui n'a pas été mesuré ici :
 
@@ -221,7 +238,7 @@ s'arrête là. `public/exemple.html` est servi à **`/exemple.html`**, et la pag
 vente y renvoie sous l'avant/après. Depuis le 02/09/2026, l'adresse existe et se
 colle telle quelle dans les messages de `PROSPECTION.md` :
 
-https://amorce-51up.vercel.app/exemple.html
+https://artisan-express-ashy.vercel.app/exemple.html
 
 **Trois autres démonstrations existent, publiées en artefacts**, et le dépôt ne
 les portait nulle part — ce qui obligeait à les rechercher à chaque fois. Elles

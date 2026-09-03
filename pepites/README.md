@@ -44,7 +44,7 @@ pepites/
 ├── pipeline.py               # ✅ l'enchaînement des étages
 ├── rapport.py                # ✅ écriture de `pepites_radar.md`
 ├── main.py                   # ✅ `scan`, `purger`
-└── tests/                    # ✅ 121 tests, sans réseau
+└── tests/                    # ✅ 167 tests, sans réseau
 ```
 
 Les cinq skills sont écrits. Aucun test ne touche au réseau.
@@ -318,7 +318,7 @@ même jeton finit en sourdine — et c'est ce jour-là qu'il a raison.
 ## 5. Où en est le projet
 
 **Les cinq skills tournent**, du premier appel DexScreener au message Telegram.
-148 tests, dont un qui traverse tout le tuyau sur client factice : deux scans à
+167 tests, dont un qui traverse tout le tuyau sur client factice : deux scans à
 quinze minutes d'écart, confirmation, bouclier, alerte, puis silence.
 
 Ce qui reste **fragile ou incomplet**, dit franchement :

@@ -60,10 +60,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 332 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 337 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **332 tests, moins de deux secondes.**
+`python3 -m unittest discover -s tests` : **337 tests, une dizaine de secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -308,7 +308,7 @@ Le supprimer par souci de propreté retirerait cette assurance sans rien gagner.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 332 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 337 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```

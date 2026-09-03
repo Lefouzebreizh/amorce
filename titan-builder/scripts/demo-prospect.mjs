@@ -73,6 +73,46 @@ const RACINE = path.resolve(ICI, '..');
  * meilleurs mots génériques.
  */
 const METIERS = {
+  carreleur: {
+    modele: 'btp',
+    accroche: 'Carrelage et faïence',
+    services: 'Carrelage intérieur et extérieur;Faïence salle de bains;Chape et ragréage;Terrasse et margelles',
+  },
+  plaquiste: {
+    modele: 'btp',
+    accroche: 'Plâtrerie et cloisons',
+    services: 'Cloisons et doublages;Plafonds et faux plafonds;Isolation intérieure;Bandes et finitions',
+  },
+  paysagiste: {
+    modele: 'btp',
+    accroche: 'Paysagiste jardinier',
+    services: 'Création de jardin;Terrasse et clôture;Élagage et taille de haie;Entretien à l’année',
+  },
+  serrurier: {
+    modele: 'btp',
+    accroche: 'Serrurerie et dépannage',
+    services: 'Ouverture de porte;Changement de serrure;Porte blindée;Dépannage d’urgence',
+  },
+  charpentier: {
+    modele: 'btp',
+    accroche: 'Charpente',
+    services: 'Charpente traditionnelle;Fermettes industrielles;Réparation et renfort;Ossature bois',
+  },
+  zingueur: {
+    modele: 'btp',
+    accroche: 'Zinguerie',
+    services: 'Gouttières et descentes;Habillage de rive;Noues et solins;Réparation de fuite',
+  },
+  terrassier: {
+    modele: 'btp',
+    accroche: 'Terrassement',
+    services: 'Terrassement de terrain;Fondations et tranchées;Assainissement;Empierrement et accès',
+  },
+  chauffagiste: {
+    modele: 'btp',
+    accroche: 'Chauffage',
+    services: 'Chaudière et entretien;Pompe à chaleur;Plancher chauffant;Dépannage chauffage',
+  },
   couvreur: {
     modele: 'btp',
     accroche: 'Couvreur zingueur',

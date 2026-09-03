@@ -95,11 +95,17 @@ confort, pas un prérequis. Les points 8 à 13 rapportent plus vite que les poin
 
 **Donc l'ordre réel :**
 
-1. Le **téléphone** dans les variables (point 8) — une minute, et la page
-   redevient joignable.
-2. Les **50 artisans** (point 12).
-3. La **facture par virement** au premier qui dit oui.
-4. Stripe et les mentions légales pendant que ça tourne.
+1. ~~Le **téléphone** dans les variables~~ — fait le 03/09.
+2. ~~Les **mentions légales**~~ — faites, en ligne, `/mentions-legales`.
+3. ~~L'**IBAN** dans `factures/emetteur.json`~~ — fait le 03/09, contrôlé
+   trois fois, facture d'essai rendue et regardée. **La chaîne d'encaissement
+   par virement est complète de bout en bout.**
+4. Les **50 artisans** (point 12) — **c'est le seul point qui reste entre toi
+   et 300 €**, et il ne peut venir que de toi : aucune plateforme sociale
+   n'est joignable depuis une session.
+5. La **facture par virement** au premier qui dit oui : une commande, le PDF
+   part.
+6. Stripe pendant que ça tourne.
 
 ---
 
