@@ -242,6 +242,15 @@ Trois recettes utiles quand on ajoute un test :
   et le test conclut que la panne **n'est pas signalée** — alors qu'elle n'a
   simplement pas encore eu lieu. On part corriger un écran qui va bien.
   Mesuré le 31/08/2026 en éprouvant la sonde de reconnaissance.
+- **Une boîte plus grande que la fenêtre de test déborde, et les positions
+  relevées ne sont alors celles d'aucun écran réel.** Un `Center` autour d'un
+  `SizedBox(420 × 900)` dans la fenêtre de test par défaut (800 × 600) a rendu
+  un texte à `top: 456` là où le même écran, monté par
+  `tester.binding.setSurfaceSize`, le pose à **606**. Le test lisait donc une
+  géométrie qui n'existe nulle part, et concluait à un défaut absent. Pour
+  toute assertion sur des positions : régler la surface, et rendre l'écran à sa
+  taille — jamais l'enfermer dans une boîte. Mesuré le 03/09/2026 sur l'écran
+  d'Accord.
 - **Les clefs JSON de ML Kit ne portent pas le nom de leurs champs Dart.**
   `ImageLabel.fromJson` lit `json['text']`, **pas** `json['label']` ; et
   `InputImage.toJson` écrit le chemin sous `path`, **pas** `filePath` comme le
