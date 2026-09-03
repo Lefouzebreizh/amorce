@@ -260,3 +260,32 @@ python3 chat-traducteur/scripts/mesurer_corpus.py .fixtures/corpus
 
 Les deux autres axes — personnalisation par animal, correction collective —
 restent notés pour plus tard, comme décidé.
+
+## Les accents tiennent 7:1, et il a fallu les y amener
+
+Le §2 bis de `CLAUDE.md` a posé un standard de maison : **accent à 7:1** sur la
+surface la plus claire du produit — pas 4,5:1, la barre légale, parce que ces
+écrans se regardent dehors, sur un téléphone, souvent à une main.
+
+Mesuré le 03/09/2026, **trois accents sur cinq étaient dessous** :
+
+| intention | avant | après | clarté |
+| --- | --- | --- | --- |
+| `sortir` | `#6FB4FF` — 6,80 | `#7EBCFF` — **7,42** | 72 % → 75 % |
+| `stress` | `#C08CE8` — 6,24 | `#C99DEB` — **7,27** | 73 % → 77 % |
+| `indecis` | `#9A9A9A` — 5,59 | `#B1B1B1` — **7,33** | 60 % → 69 % |
+| `faim` | `#FFB35C` — 8,21 | inchangé | — |
+| `contentement` | `#7FD99A` — 8,33 | inchangé | — |
+
+**Rien ne le signalait**, et c'est la leçon : le test du projet demandait 4,5:1,
+écrit avant que le standard n'existe. **Un test écrit sur l'ancienne barre ne
+dit pas qu'une nouvelle est arrivée** — il reste vert. Le défaut le plus discret
+n'est pas un test rouge, c'est un test qui mesure la mauvaise chose.
+
+La correction n'a **pas** changé les teintes : même angle, même saturation, la
+clarté seule monte de trois à neuf points, calculée et non choisie à l'œil. Un
+accent retenu pour son registre émotionnel ne se remplace pas par une couleur
+qui passe le calcul — le violet du stress deviendrait un violet quelconque.
+Vérifié ensuite sur la planche : le bleu reste bleu, le violet reste violet.
+
+Le test exige désormais 7:1.

@@ -146,11 +146,21 @@ class TestPalette(unittest.TestCase):
                 with self.subTest(intention=intention, fond=fond):
                     self.assertGreaterEqual(_contraste(teintes.texte, fond), 7.0)
 
-    def test_l_accent_reste_lisible_lui_aussi(self):
-        """Il porte la mention de confiance : 4,5:1 suffit pour ce petit texte."""
+    def test_l_accent_tient_le_standard_de_la_maison(self):
+        """7:1, et non 4,5:1 — le §2 bis l'a posé pour tous les produits.
+
+        Ce test demandait 4,5:1, la barre légale, et **trois accents sur cinq
+        étaient sous 7 sans que rien ne le dise** : `sortir` 6,80, `stress`
+        6,24, `indecis` 5,59. Un test écrit sur l'ancienne barre ne signale pas
+        qu'une nouvelle existe — c'est le plus discret des défauts, parce qu'il
+        reste vert.
+
+        La justification du §2 bis s'applique ici mot pour mot : ces cartes se
+        regardent dehors, sur un téléphone, souvent à une main.
+        """
         for intention, teintes in PALETTES.items():
             with self.subTest(intention=intention):
-                self.assertGreaterEqual(_contraste(teintes.accent, teintes.fond), 4.5)
+                self.assertGreaterEqual(_contraste(teintes.accent, teintes.fond), 7.0)
 
 
 class TestSvg(unittest.TestCase):
