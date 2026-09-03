@@ -34,6 +34,15 @@ export function PiedDePage() {
           <a className="min-h-11 py-2 font-bold text-bleu underline" href="#formulaire">
             Formulaire
           </a>
+          {/*
+            La loi demande que les mentions légales soient **accessibles**, pas
+            qu'elles soient mises en avant. Un lien de pied de page est
+            exactement ce qu'elle attend, et c'est là que tout le monde les
+            cherche.
+          */}
+          <a className="min-h-11 py-2 font-bold text-bleu underline" href="/mentions-legales">
+            Mentions légales
+          </a>
         </div>
 
         {/*
