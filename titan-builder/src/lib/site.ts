@@ -29,6 +29,13 @@
  * harnais n'est pas un script de livraison.
  */
 import { MODELES, OPTIONS, modeleParId, type Commande, type IdentifiantOption } from './commande.ts';
+/*
+ * La charte, en import relatif pour la même raison que `commande.ts` : ce
+ * module est chargé par `scripts/generer.mjs`, qui tourne avec `node` tout
+ * court. Et `charte.ts` n'importe rien — c'est ce qui empêche le cycle, les
+ * fonctions de contraste vivant ici et les valeurs là-bas.
+ */
+import { ENCRES, SURFACES, teinteDeCharte, type Teinte } from './charte.ts';
 
 /**
  * Échappe ce qui va entre des balises.
@@ -125,16 +132,35 @@ export function accentLisible(accent: string, fond: string): string {
 }
 
 /**
- * Une couleur de commande, ou celle du modèle.
+ * La teinte de la charte que porte cette commande.
  *
- * On n'accepte qu'un hexadécimal : la valeur part dans une feuille de style, et
- * une chaîne libre y ouvrirait une injection CSS. Un client qui a laissé le
- * champ vide reçoit la teinte de son modèle plutôt qu'un noir par défaut.
+ * **Le client ne choisit plus un hexadécimal, il nomme son métier.** Ce champ
+ * acceptait n'importe quelle couleur, et c'était le défaut : deux artisans
+ * livrés la même semaine ne se ressemblaient par rien, un orange y passait, et
+ * la seule chose que le code garantissait était l'absence d'injection CSS.
+ *
+ * Ce que ça règle, et qui ne se voyait pas : la lisibilité n'est plus rattrapée
+ * après coup. `accentLisible` déplaçait la teinte jusqu'à ce qu'elle passe le
+ * seuil — ce qui marchait, mais ramenait un orange dès qu'on partait d'un
+ * brun. Une palette fermée et mesurée n'a rien à rattraper.
+ *
+ * `teinteDeCharte` rend toujours une teinte : un vieux dossier portant
+ * `#2f6f4e` continue donc de se générer, et se génère **dans la charte**.
+ */
+export function teinteRetenue(commande: Commande): Teinte {
+  return teinteDeCharte(commande.couleur);
+}
+
+/**
+ * L'accent de cette commande, en hexadécimal.
+ *
+ * Elle garde son nom et sa signature : `scripts/generer.mjs` l'appelle pour
+ * teinter les cadres de démonstration, et `tests/site.test.ts` l'éprouve. Ce
+ * qui a changé est ce qu'elle peut rendre — une valeur de la charte, et rien
+ * d'autre.
  */
 export function couleurRetenue(commande: Commande): string {
-  const propre = commande.couleur.trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(propre)) return propre;
-  return modeleParId(commande.modele)?.teintes[0] ?? '#004AAD';
+  return teinteRetenue(commande).accent.toLowerCase();
 }
 
 /**
@@ -255,7 +281,7 @@ export function genererSite(
   options: { domaine?: string; demonstration?: boolean } = {},
 ): string {
   const modele = modeleParId(commande.modele);
-  const couleur = couleurRetenue(commande);
+  const teinte = teinteRetenue(commande);
   const entreprise = echapper(commande.entreprise);
   const ville = echapper(commande.ville);
   const services = servicesListes(commande);
@@ -356,14 +382,21 @@ ${cartes}
   }
 
   /*
-   * L'entête écrit sur la couleur du client. On prend d'abord la meilleure des
-   * deux encres ; si même la meilleure reste sous 4,5:1 — ce qui arrive sur les
-   * teintes moyennes, un gris-vert ou un orange terne — on approfondit le fond
-   * juste assez. La teinte se déplace alors un peu, et c'est un choix assumé :
-   * un titre illisible sur un chantier coûte la visite, pas une nuance exacte.
+   * L'entête écrivait sur la couleur du client, et il fallait la rattraper :
+   * on prenait la meilleure des deux encres, puis on approfondissait le fond
+   * jusqu'à franchir 4,5:1. Ça marchait, et ça déplaçait la teinte.
+   *
+   * **La charte n'a plus rien à rattraper.** Chaque teinte porte l'encre qui
+   * se lit dessus, mesurée une fois pour toutes par `tests/charte.test.ts` —
+   * et le fond de l'entête n'est plus un aplat de couleur mais un halo sur le
+   * fond de page, ce qui règle le problème à la racine : on n'écrit plus sur
+   * la teinte, on écrit à côté d'elle.
+   *
+   * `accentLisible` et `encreSurAccent` restent exportées et éprouvées : elles
+   * ne sauvent plus rien ici, elles servent à **prouver** la charte.
    */
-  const encreEntete = encreSurAccent(couleur);
-  const fondEntete = accentLisible(couleur, encreEntete);
+  const encreEntete = teinte.encre.toLowerCase();
+  const accent = teinte.accent.toLowerCase();
 
   /*
    * Une démonstration porte un nom d'entreprise qui n'existe pas. Indexée, elle
@@ -408,31 +441,81 @@ ${options.demonstration !== true ? '' : `<meta name="robots" content="noindex, n
 ${ficheEtablissement(commande, domaine)}
 </script>
 <style>
-  /* Une seule couleur d'accent, celle du client. Tout le reste est neutre :
-     c'est ce qui fait qu'on ne cherche jamais où appuyer. */
+  /*
+   * La charte d'Artisan Express, posée en jetons.
+   *
+   * **Une seule teinte par site, et elle vient du métier** — pas d'un
+   * hexadécimal saisi au clavier. Elle est choisie dans une palette fermée de
+   * cinq valeurs froides, toutes mesurées au-dessus de 7:1 sur le fond de
+   * page : c'est le plancher que « CLAUDE.md » §2 bis impose à un accent, et il
+   * est plus haut que le minimum légal parce que ces pages se lisent dehors.
+   *
+   * Les noms de surface sont ceux du dépôt — « ink », « slab », « panel », « edge » —
+   * et non un vocabulaire propre à ce gabarit : une brique doit pouvoir se
+   * déplacer d'un projet à l'autre.
+   *
+   * Ce qui a disparu ici et qui ne doit pas revenir : le thème clair et son
+   * « prefers-color-scheme ». Deux palettes tenues en parallèle divergent au
+   * premier changement, et c'est toujours celle qu'on ne regarde pas qui part
+   * en vrille. Le sombre est la charte, sans variante.
+   */
   :root {
-    --accent: ${fondEntete}; --encre-entete: ${encreEntete};
-    /* La même teinte, poussée jusqu'à se lire comme texte sur le papier. Le
-       fond, lui, garde la couleur choisie : c'est là qu'elle se voit. */
-    --accent-texte: ${accentLisible(couleur, '#ffffff')};
-    --encre: ${ENCRE}; --papier: #ffffff; --gris: #5b6b7a;
+    color-scheme: dark;
+    --ink: ${SURFACES.ink.toLowerCase()}; --slab: ${SURFACES.slab.toLowerCase()};
+    --panel: ${SURFACES.panel.toLowerCase()}; --edge: ${SURFACES.edge.toLowerCase()};
+    --encre: ${ENCRES.vive.toLowerCase()}; --encre-douce: ${ENCRES.douce.toLowerCase()};
+    --encre-eteinte: ${ENCRES.eteinte.toLowerCase()};
+    --accent: ${accent}; --accent-vif: ${teinte.vif.toLowerCase()};
+    /* Ce qu'on écrit **sur** l'accent : le libellé du bouton plein. */
+    --encre-entete: ${encreEntete};
+    /* Le halo de l'entête et le fond des blocs discrets. */
+    --voile: ${teinte.voile.toLowerCase()};
+    /*
+     * L'accent en tant que **texte**. Sur fond clair il fallait l'assombrir ;
+     * sur le fond de la charte il se lit tel quel, et le jeton reste émis en
+     * clair pour qu'un test puisse le mesurer plutôt que le supposer.
+     */
+    --accent-texte: ${accent};
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--papier); color: var(--encre);
+    margin: 0; background: var(--ink); color: var(--encre);
     font: 18px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
+  /*
+   * L'entête en halo, jamais en aplat de couleur.
+   *
+   * C'est la signature qui se reconnaît d'un site à l'autre, et c'est aussi ce
+   * qui règle la lisibilité à la racine : un titre écrit sur un aplat dépend
+   * de la teinte, un titre écrit sur le fond de page n'en dépend plus.
+   */
   header {
-    background: var(--accent); color: var(--encre-entete); padding: 2.5rem 1.25rem;
+    padding: 3rem 1.25rem 2.25rem;
+    background: radial-gradient(120% 150% at 15% 0%, var(--voile) 0%, var(--ink) 68%);
+    border-bottom: 1px solid var(--edge);
   }
-  header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.2; }
-  header p { margin: 0; font-size: 1.15rem; }
+  header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.2; letter-spacing: -.01em; }
+  header p { margin: 0; font-size: 1.15rem; color: var(--accent); font-weight: 600; }
   main { max-width: 40rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
-  .bloc { padding: 2rem 0; border-bottom: 1px solid #e4e9ee; }
+  .bloc { padding: 2rem 0; border-bottom: 1px solid var(--edge); }
   .bloc:last-of-type { border-bottom: 0; }
-  h2 { font-size: 1.4rem; margin: 0 0 .75rem; }
-  .services { margin: 0; padding-left: 1.2rem; }
-  .services li { margin: .35rem 0; }
+  /* Le filet vertical sous chaque titre : l'autre moitié de la signature. */
+  h2 {
+    font-size: 1.4rem; margin: 0 0 .9rem; padding-left: .8rem;
+    border-left: 3px solid var(--accent);
+  }
+  /*
+   * Les prestations en liste fléchée plutôt qu'en puces.
+   *
+   * La flèche porte l'accent et rien d'autre ne le porte dans ce bloc : elle
+   * indique, elle ne décore pas. Une puce ronde en accent aurait fait de la
+   * couleur un ornement, donc muet — ce que §2 bis interdit en propres termes.
+   */
+  .services { margin: 0; padding: 0; list-style: none; }
+  .services li { margin: .35rem 0; padding-left: 1.6rem; position: relative; }
+  .services li::before {
+    content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: 700;
+  }
   .galerie { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
   .galerie figure { margin: 0; }
   .avis { display: grid; gap: 1rem; }
@@ -440,24 +523,31 @@ ${ficheEtablissement(commande, domaine)}
      deux avis ne se lisent pas comme deux boutons. */
   .avis blockquote {
     margin: 0; padding: .25rem 0 .25rem 1rem;
-    border-left: 3px solid var(--accent-texte);
+    border-left: 3px solid var(--accent);
   }
   .avis p { margin: 0 0 .4rem; }
-  .avis cite { font-style: normal; font-weight: 700; color: var(--gris); }
-  .mention { color: var(--gris); font-size: 1rem; margin: -.25rem 0 1rem; }
-  .galerie img { width: 100%; height: 100%; object-fit: cover; border-radius: .6rem; display: block; }
+  .avis cite { font-style: normal; font-weight: 700; color: var(--encre-douce); }
+  .mention { color: var(--encre-douce); font-size: 1rem; margin: -.25rem 0 1rem; }
+  .galerie img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: .6rem; display: block;
+    background: var(--slab);
+  }
   .actions { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1.5rem 0; }
   /* 56 px de haut : des mains de chantier, souvent gantées, et un téléphone
      tenu à bout de bras au soleil. */
   .action {
     flex: 1 1 12rem; min-height: 56px; display: flex; align-items: center;
     justify-content: center; border-radius: .75rem; text-decoration: none;
-    font-weight: 700; border: 2px solid var(--accent-texte); color: var(--accent-texte);
+    font-weight: 700; border: 2px solid var(--accent); color: var(--accent);
+    background: var(--slab);
   }
+  /* Un bouton plein contre des boutons contour : une seule action principale
+     par écran, et on ne cherche jamais où appuyer. */
   .action.principale { background: var(--accent); color: var(--encre-entete); border-color: var(--accent); }
-  /* 1 rem, pas .95 : le plancher du dépôt est 18 px, et le pied de page porte
-     le numéro de téléphone — c'est la ligne la moins bien vue et la plus utile. */
-  footer { padding: 2rem 1.25rem; color: var(--gris); text-align: center; }
+  footer {
+    padding: 2rem 1.25rem; color: var(--encre-douce); text-align: center;
+    background: var(--slab); border-top: 1px solid var(--edge);
+  }
   /*
    * Et cette ligne-là s'appelle. Elle était lisible et pas cliquable : le
    * visiteur qui vient de faire défiler les photos et de lire « et les communes
@@ -466,9 +556,7 @@ ${ficheEtablissement(commande, domaine)}
    *
    * 44 px et non les 56 des boutons du haut : c'est un numéro dans une phrase,
    * pas une action principale. Le plancher du dépôt est tenu, la mise en page
-   * du pied ne se déforme pas. La couleur est celle qu'accentLisible garantit
-   * au-dessus de 4,5:1 sur les deux fonds — un lien en gris de pied de page ne
-   * se voit pas comme un lien.
+   * du pied ne se déforme pas.
    */
   footer a {
     display: flex; align-items: center; justify-content: center;
@@ -476,13 +564,29 @@ ${ficheEtablissement(commande, domaine)}
     min-height: 44px; padding: 0 .5rem; color: var(--accent-texte);
     font-weight: 700; text-decoration: underline; text-underline-offset: .2em;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --encre: #eef3f7; --papier: #10171e; --gris: #93a3b1;
-      /* Sur fond sombre, la même teinte doit s'éclaircir au lieu de foncer. */
-      --accent-texte: ${accentLisible(couleur, '#10171e')};
-    }
-    .bloc { border-bottom-color: #24313d; }
+  /*
+   * La signature, et **sans lien**.
+   *
+   * Elle n'est pas décorative : c'est elle qui fait qu'un voisin de chantier
+   * demande qui a fait le site. Elle ne porte volontairement aucune adresse —
+   * le dépôt s'interdit d'écrire une adresse qu'il n'a pas vérifiée servie, et
+   * une adresse morte en pied de page de tous les sites livrés coûterait plus
+   * que l'absence de lien.
+   *
+   * **Ni taille réduite, ni encre éteinte, et ce n'est pas un choix de goût.**
+   * Le premier jet portait « font-size: .95rem » et « --encre-eteinte » : le
+   * rendu est sorti à 15,2 px et 3,10:1, sous les deux planchers du §2 — et
+   * les soixante-dix tests de ce projet étaient verts. Deux pièges pour un
+   * seul défaut : « rem » vaut 16 px, pas les 18 px que le corps déclare,
+   * donc toute fraction de rem passe sous le plancher ; et l'encre éteinte
+   * n'était mesurée que sur le fond de page, alors que le pied est un cran
+   * plus clair.
+   *
+   * La discrétion se fait donc par l'espace et le trait, jamais en rapetissant.
+   */
+  .signature {
+    margin: 1.5rem 0 0; padding-top: 1.25rem;
+    border-top: 1px solid var(--edge); color: var(--encre-douce);
   }
 </style>
 </head>
@@ -499,7 +603,7 @@ ${blocs.join('\n')}
   telephone === ''
     ? ''
     : `<a href="tel:${echapper(lienTelephonique(telephone))}">${echapper(telephone)}</a>`
-}</footer>
+}<p class="signature">Site réalisé par Artisan Express</p></footer>
 </body>
 </html>
 `;

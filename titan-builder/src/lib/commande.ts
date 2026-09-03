@@ -11,6 +11,13 @@
  * un prix recalculé à partir des seules options cochées ne se négocie pas.
  */
 
+/*
+ * La charte, en import relatif comme dans `site.ts` : ce module est lu par le
+ * formulaire, par la route d'API et par `scripts/generer.mjs`, qui tourne sans
+ * résolveur d'alias.
+ */
+import { nomDeTeinte } from './charte.ts';
+
 export type IdentifiantModele = 'routier' | 'btp' | 'food' | 'beaute';
 
 export type Modele = {
@@ -208,8 +215,27 @@ export function reproches(commande: Partial<Commande>): string[] {
     liste.push('Ce numéro de téléphone est trop court.');
   }
 
-  if (typeof commande.couleur === 'string' && commande.couleur !== '' && !/^#[0-9a-fA-F]{6}$/.test(commande.couleur)) {
-    liste.push('La couleur doit s’écrire en hexadécimal, par exemple #ff6600.');
+  /*
+   * Le champ `couleur` ne porte plus une couleur, il porte un **métier**.
+   *
+   * Il a longtemps accepté n'importe quel hexadécimal, et la seule chose que
+   * cette règle garantissait était l'absence d'injection CSS. Deux artisans
+   * livrés la même semaine ne se ressemblaient alors par rien — et c'est
+   * précisément ce qu'une charte doit empêcher.
+   *
+   * On refuse ici ce que `teinteDeCharte` accepterait quand même : elle rend
+   * toujours une teinte, ce qu'il faut pour générer un vieux dossier et ce
+   * qu'il ne faut pas pour valider une saisie. Un métier mal orthographié
+   * passerait en vert sans que rien ne le signale, et le client recevrait la
+   * teinte d'un autre corps de métier.
+   *
+   * Les anciens hexadécimaux restent acceptés : les dossiers déjà écrits
+   * doivent continuer de se régénérer, et `charte.ts` les rattache chacun à sa
+   * teinte plutôt que de les servir tels quels.
+   */
+  if (typeof commande.couleur === 'string' && commande.couleur !== ''
+      && nomDeTeinte(commande.couleur) === undefined) {
+    liste.push('Ce métier n’est pas dans la liste.');
   }
 
   return liste;

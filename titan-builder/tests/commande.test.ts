@@ -55,7 +55,7 @@ test('un nom à rallonge est tronqué avant de devenir un chemin', () => {
 
 const valide = {
   modele: 'btp', entreprise: 'Dupont', telephone: '06 12 34 56 78', ville: 'Rennes',
-  couleur: '#ff6600', slogan: '', options: [], presentation: '', services: '',
+  couleur: 'couvreur', slogan: '', options: [], presentation: '', services: '',
 };
 
 test('une commande complète ne se voit rien reprocher', () => {
@@ -76,8 +76,24 @@ test('un téléphone trop court est refusé, un format libre accepté', () => {
   assert.deepEqual(reproches({ ...valide, telephone: '+33 6 12 34 56 78' }), []);
 });
 
-test('une couleur qui n’est pas hexadécimale est refusée', () => {
-  assert.ok(reproches({ ...valide, couleur: 'rouge' }).some((r) => r.includes('hexadécimal')));
-  // Vide reste accepté : la couleur a une valeur par défaut côté page.
+test('un métier hors de la charte est refusé', () => {
+  /*
+   * Ce test demandait un hexadécimal, et c'était juste tant que le champ
+   * portait une couleur : la valeur part dans une feuille de style, et une
+   * chaîne libre y ouvrait une injection CSS.
+   *
+   * Le champ porte désormais un **métier**, et la garde vaut davantage : elle
+   * ne protège plus seulement la feuille de style, elle protège la charte. Le
+   * cas qui compte est la faute de frappe — « plombie » serait accepté en
+   * silence par `teinteDeCharte`, qui rend toujours une teinte, et le client
+   * recevrait le vert du couvreur sans que rien ne l'ait signalé.
+   */
+  assert.ok(reproches({ ...valide, couleur: 'rouge' }).some((r) => r.includes('métier')));
+  assert.ok(reproches({ ...valide, couleur: 'plombie' }).some((r) => r.includes('métier')));
+  assert.ok(reproches({ ...valide, couleur: 'red; } body {' }).some((r) => r.includes('métier')));
+
+  // Un dossier déjà écrit porte un hexadécimal : il doit rester régénérable.
+  assert.deepEqual(reproches({ ...valide, couleur: '#2f6f4e' }), []);
+  // Vide reste accepté : la charte a une teinte par défaut.
   assert.deepEqual(reproches({ ...valide, couleur: '' }), []);
 });

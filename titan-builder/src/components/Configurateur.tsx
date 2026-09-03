@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   type Commande, type Modele, OPTIONS, PRIX_BASE, prixTotal, reproches,
 } from '@/lib/commande';
+import { METIERS_PROPOSES, teinteDeCharte } from '@/lib/charte';
 
 /*
  * Le configurateur en cinq étapes.
@@ -85,15 +86,38 @@ function EtapeInfos({ commande, modifier }: { commande: Commande; modifier: (p: 
         onChange={(v) => modifier({ slogan: v })} placeholder="Le mur droit du premier coup."
         aide="Facultatif. Si tu n’en as pas, j’en propose un." />
 
+      {/*
+        * Le métier, et non plus un nuancier.
+        *
+        * Cet écran portait un `input type="color"` : seize millions de valeurs,
+        * dont l'orange que la charte refuse et toutes celles qui ne se lisent
+        * pas. Deux artisans livrés la même semaine ne se ressemblaient alors
+        * par rien, et c'est exactement ce qu'une charte doit empêcher.
+        *
+        * Le champ garde son nom — `couleur` — parce qu'il voyage dans les
+        * dossiers déjà écrits et dans la route d'API. Ce qui a changé est ce
+        * qu'on y met : un métier, que `charte.ts` traduit en teinte.
+        *
+        * La pastille montre le résultat tout de suite : sans elle, choisir son
+        * métier reviendrait à choisir une couleur à l'aveugle.
+        */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="couleur" className="text-sm font-semibold">Couleur principale</label>
+        <label htmlFor="couleur" className="text-sm font-semibold">Ton métier</label>
         <div className="flex items-center gap-3">
-          <input id="couleur" type="color" value={commande.couleur}
+          <select id="couleur" value={commande.couleur}
             onChange={(e) => modifier({ couleur: e.target.value })}
-            className="h-12 w-16 cursor-pointer rounded-xl border border-bord bg-fond-doux p-1" />
-          <span className="font-mono text-sm text-sourdine">{commande.couleur}</span>
+            className="min-h-11 flex-1 rounded-xl border border-bord bg-fond-doux px-3 py-2 text-sm">
+            {METIERS_PROPOSES.map((m) => (
+              <option key={m.cle} value={m.cle}>{m.libelle}</option>
+            ))}
+          </select>
+          <span className="inline-block h-8 w-8 shrink-0 rounded-lg border border-bord"
+            style={{ background: teinteDeCharte(commande.couleur).accent }} />
         </div>
-        <p className="text-xs text-sourdine">Celle de ton camion, de ton logo, de ta tenue.</p>
+        <p className="text-xs text-sourdine">
+          C’est lui qui donne la teinte de ton site. Cinq teintes, toutes tenues par la charte
+          Artisan Express — un client reconnaît la patte, quel que soit le métier.
+        </p>
       </div>
     </div>
   );
@@ -229,10 +253,11 @@ function EtapeRecap({ modele, commande, photos, total, envoi, erreur, envoyer }:
           <div><dt className="text-sourdine">Ville</dt><dd className="font-medium">{commande.ville}</dd></div>
           <div><dt className="text-sourdine">Téléphone</dt><dd className="font-medium">{commande.telephone}</dd></div>
           <div>
-            <dt className="text-sourdine">Couleur</dt>
+            <dt className="text-sourdine">Métier</dt>
             <dd className="flex items-center gap-2 font-medium">
-              <span className="inline-block h-4 w-4 rounded border border-bord" style={{ background: commande.couleur }} />
-              {commande.couleur}
+              <span className="inline-block h-4 w-4 rounded border border-bord"
+                style={{ background: teinteDeCharte(commande.couleur).accent }} />
+              {METIERS_PROPOSES.find((m) => m.cle === commande.couleur)?.libelle ?? commande.couleur}
             </dd>
           </div>
         </dl>
@@ -314,7 +339,7 @@ export function Configurateur({ modele }: { modele: Modele }) {
   const [reference, setReference] = useState('');
   const [commande, setCommande] = useState<Commande>({
     modele: modele.id,
-    entreprise: '', telephone: '', ville: '', couleur: '#7c3aed', slogan: '',
+    entreprise: '', telephone: '', ville: '', couleur: 'couvreur', slogan: '',
     options: ['appel', 'devis'], presentation: '', services: '',
   });
 

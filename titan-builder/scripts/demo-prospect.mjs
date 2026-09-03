@@ -77,37 +77,31 @@ const METIERS = {
     modele: 'btp',
     accroche: 'Couvreur zingueur',
     services: 'Toiture ardoise et tuile;Zinguerie et gouttières;Pose de Velux;Démoussage et entretien',
-    couleur: '#2f6f4e',
   },
   macon: {
     modele: 'btp',
     accroche: 'Maçonnerie générale',
     services: 'Murs et clôtures;Terrasse et dallage;Ouverture dans un mur porteur;Rénovation de façade',
-    couleur: '#8a5a2b',
   },
   plombier: {
     modele: 'btp',
     accroche: 'Plomberie et chauffage',
     services: 'Fuite et dépannage;Salle de bains complète;Chauffe-eau et chaudière;Recherche de fuite',
-    couleur: '#1f5f8b',
   },
   electricien: {
     modele: 'btp',
     accroche: 'Électricité générale',
     services: 'Mise aux normes;Tableau électrique;Rénovation complète;Dépannage',
-    couleur: '#a8611a',
   },
   menuisier: {
     modele: 'btp',
     accroche: 'Menuiserie',
     services: 'Fenêtres et portes;Parquet et escalier;Aménagement sur mesure;Volets et portail',
-    couleur: '#6b4f2a',
   },
   peintre: {
     modele: 'btp',
     accroche: 'Peinture et décoration',
     services: 'Peinture intérieure;Ravalement de façade;Papier peint et enduits;Sols souples',
-    couleur: '#3d5a80',
   },
 };
 
@@ -187,7 +181,9 @@ async function principal() {
     console.error('    --entreprise "LE GOFF TOITURES" --metier couvreur \\');
     console.error('    --ville Rennes --telephone "02 99 00 00 00"\n');
     console.error(`  --metier au choix : ${Object.keys(METIERS).join(', ')}`);
-    console.error('  --services, --couleur, --slogan, --modele : facultatifs\n');
+    console.error('  --services, --slogan, --modele : facultatifs');
+    // Le métier donne déjà la teinte : --couleur ne sert qu'à en emprunter une autre.
+    console.error('  --couleur : un autre métier, ou un nom de teinte de la charte\n');
     console.error('  --telephone est obligatoire : la validation partagée avec le');
     console.error('  formulaire web refuse un site d’artisan sans numéro. Recopie');
     console.error('  celui de sa page — ne l’invente jamais.\n');
@@ -210,7 +206,7 @@ async function principal() {
     options.slogan ?? `${metrage.accroche} à ${ville} et alentours. Devis sous 48 h.`,
     mention(entreprise),
     options.services ?? metrage.services,
-    options.couleur ?? metrage.couleur,
+    options.couleur ?? metier,
     'appel whatsapp',
     '',
   ].join('\n');

@@ -5,6 +5,7 @@ import {
   lienTelephonique, servicesListes,
 } from '@/lib/site';
 import type { Commande } from '@/lib/commande';
+import { TEINTES } from '@/lib/charte';
 
 function commande(remplacements: Partial<Commande> = {}): Commande {
   return {
@@ -42,12 +43,21 @@ test('le slogan et les services sont échappés aussi', () => {
   assert.equal(html.includes('<b>Charpente</b>'), false);
 });
 
-test('une couleur libre est refusée, celle du modèle prend le relais', () => {
-  // La valeur part dans une feuille de style : une chaîne libre y ouvrirait
-  // une injection CSS.
-  assert.equal(couleurRetenue(commande({ couleur: 'red; } body { display:none' })), '#38bdf8');
-  assert.equal(couleurRetenue(commande({ couleur: '#ff8800' })), '#ff8800');
-  assert.equal(couleurRetenue(commande({ couleur: '' })), '#38bdf8');
+test('la teinte livrée vient toujours de la charte, jamais de la saisie', () => {
+  /*
+   * Ce test disait « une couleur libre est refusée, celle du modèle prend le
+   * relais », et il ne gardait qu'une chose : l'absence d'injection CSS. Un
+   * `#ff8800` passait donc — un orange franc sur un site livré.
+   *
+   * Ce qui est gardé maintenant est la promesse entière : **aucun chemin ne
+   * produit une couleur hors charte.** Ni une injection, ni un orange, ni un
+   * champ vide, ni un vieux dossier.
+   */
+  assert.equal(couleurRetenue(commande({ couleur: 'plombier' })), '#3eadd4');
+  assert.equal(couleurRetenue(commande({ couleur: '#2f6f4e' })), '#4fb39c', 'le vieux vert de Tanguy');
+  assert.equal(couleurRetenue(commande({ couleur: 'red; } body { display:none' })), '#4fb39c');
+  assert.equal(couleurRetenue(commande({ couleur: '#ff8800' })), '#4fb39c', 'l’orange ne passe pas');
+  assert.equal(couleurRetenue(commande({ couleur: '' })), '#4fb39c');
 });
 
 test('ce qui n’est pas rempli disparaît, jamais un texte de remplacement', () => {
@@ -202,11 +212,19 @@ test('une couleur déjà lisible n’est pas touchée', () => {
   assert.equal(accentLisible('#004aad', '#ffffff'), '#004aad');
 });
 
-test('aucune couleur de client ne produit un entête illisible', () => {
+test('aucune saisie de client ne produit une page hors charte ni illisible', () => {
   /*
-   * Le tour complet de la roue, par pas de 15°, plus les gris : c'est la seule
-   * façon de savoir que le seuil tient partout et pas seulement sur l'exemple
-   * qui a servi à l'écrire. Les teintes moyennes sont celles qui échouaient.
+   * Le tour complet de la roue, par pas de 15°, plus les gris et deux métiers.
+   * C'est la seule façon de savoir que la règle tient partout et pas seulement
+   * sur l'exemple qui a servi à l'écrire.
+   *
+   * **Ce que ce test mesurait avant, et pourquoi ça ne suffit plus.** Il
+   * vérifiait 4,5:1 sur fond blanc — la barre légale, et la page était claire.
+   * Deux choses ont changé : la page est sombre, donc mesurer sur du blanc ne
+   * mesure plus rien ; et le dépôt tient un plancher de 7:1 pour un accent,
+   * parce que ces pages se lisent dehors. Un test écrit sur l'ancienne barre
+   * reste vert et ne signale jamais qu'une nouvelle existe — c'est le plus
+   * discret des défauts, et il a déjà été payé sur `chat-traducteur`.
    */
   const teintes = [
     ...Array.from({ length: 24 }, (_, i) => {
@@ -215,19 +233,52 @@ test('aucune couleur de client ne produit un entête illisible', () => {
       ));
       return `#${[r, v, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
     }),
-    '#808080', '#ffffff', '#000000', '#7f9a6d', '#c8783c',
+    '#808080', '#ffffff', '#000000', '#7f9a6d', '#c8783c', 'plombier', 'Maçon', '', 'nimportequoi',
   ];
+  const accentsDeLaCharte = new Set(Object.values(TEINTES).map((t) => t.accent.toLowerCase()));
 
   for (const teinte of teintes) {
     const html = genererSite(commande({ couleur: teinte }));
-    const fond = /--accent: (#[0-9a-f]{6})/.exec(html)?.[1];
+    const fond = /--ink: (#[0-9a-f]{6})/.exec(html)?.[1];
+    const accent = /--accent: (#[0-9a-f]{6})/.exec(html)?.[1];
     const encre = /--encre-entete: (#[0-9a-f]{6})/.exec(html)?.[1];
     const texte = /--accent-texte: (#[0-9a-f]{6})/.exec(html)?.[1];
 
-    assert.ok(fond && encre && texte, `jetons absents pour ${teinte}`);
-    assert.ok(contraste(fond, encre) >= 4.5, `entête à ${contraste(fond, encre).toFixed(2)}:1 pour ${teinte}`);
-    assert.ok(contraste(texte, '#ffffff') >= 4.5, `bouton à ${contraste(texte, '#ffffff').toFixed(2)}:1 pour ${teinte}`);
+    assert.ok(fond && accent && encre && texte, `jetons absents pour « ${teinte} »`);
+    assert.ok(accentsDeLaCharte.has(accent!), `« ${teinte} » a produit ${accent}, hors charte`);
+    // L'accent, sur le fond de page : le plancher de la maison, pas celui du standard.
+    assert.ok(contraste(accent!, fond!) >= 7,
+      `accent à ${contraste(accent!, fond!).toFixed(2)}:1 pour « ${teinte} »`);
+    // Le libellé du bouton plein, sur sa propre teinte.
+    assert.ok(contraste(encre!, accent!) >= 4.5,
+      `bouton à ${contraste(encre!, accent!).toFixed(2)}:1 pour « ${teinte} »`);
+    // L'accent en tant que texte vit sur le même fond : même plancher.
+    assert.ok(contraste(texte!, fond!) >= 7,
+      `texte d’accent à ${contraste(texte!, fond!).toFixed(2)}:1 pour « ${teinte} »`);
   }
+});
+
+test('la page livrée est sombre, et n’emporte pas un second thème', () => {
+  /*
+   * Deux palettes tenues en parallèle divergent au premier changement, et
+   * c'est toujours celle qu'on ne regarde pas qui part en vrille. Le gabarit
+   * portait un `prefers-color-scheme: dark` qui recalculait l'accent : deux
+   * jeux de valeurs, un seul éprouvé.
+   */
+  const html = genererSite(commande({ couleur: 'peintre' }));
+
+  /*
+   * On cherche la règle, pas le mot : le commentaire du gabarit **cite**
+   * `prefers-color-scheme` pour expliquer pourquoi il n'y en a plus, et il
+   * part avec la feuille de style comme tous les autres commentaires de ce
+   * fichier. Chercher le mot condamnait donc l'explication elle-même.
+   */
+  assert.equal(html.includes('@media (prefers-color-scheme'), false, 'un second thème est revenu');
+  assert.match(html, /color-scheme: dark/);
+  assert.match(html, /Site réalisé par Artisan Express/, 'la signature du pied a disparu');
+  // Le filet vertical et la flèche : la patte se reconnaît avant la teinte.
+  assert.match(html, /border-left: 3px solid var\(--accent\)/);
+  assert.match(html, /content: "→"/);
 });
 
 test('un nom d’entreprise ne peut pas refermer le bloc de données structurées', () => {

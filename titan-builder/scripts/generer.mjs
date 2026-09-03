@@ -35,17 +35,30 @@ const EXTENSIONS_IMAGE = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.g
  * En SVG embarqué plutôt qu'en fichiers : la page reste **un seul fichier**
  * autonome, qui s'ouvre depuis le disque comme depuis un hébergement.
  */
-function cadresDeDemonstration(accent) {
+/*
+ * Les cadres suivent la charte, et il a fallu les regarder pour le voir.
+ *
+ * Ils étaient en `#eef1f4` avec du texte `#16202b` : des cartons blancs sur
+ * une page sombre, qui criaient plus fort que les photos qu'ils annoncent.
+ * Aucun test ne l'a signalé, et le contrôleur de lisibilité non plus — il lit
+ * le HTML, et ceux-ci sont des SVG encodés en base64. C'est la capture d'écran
+ * qui l'a montré, en une seconde.
+ *
+ * Ils prennent donc la surface élevée de la charte et ses deux encres, comme
+ * le reste de la page.
+ */
+function cadresDeDemonstration(teinte, surfaces, encres) {
   const legendes = ['Avant / après', 'Une finition', 'Le chantier fini'];
+  const accent = teinte.accent;
 
   return legendes.map((legende, rang) => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
-<rect width="400" height="300" fill="#eef1f4"/>
+<rect width="400" height="300" fill="${surfaces.slab}"/>
 <rect x="8" y="8" width="384" height="284" rx="14" fill="none" stroke="${accent}" stroke-width="3" stroke-dasharray="12 9"/>
 <circle cx="200" cy="126" r="34" fill="none" stroke="${accent}" stroke-width="6"/>
 <rect x="150" y="86" width="100" height="12" rx="6" fill="${accent}"/>
-<text x="200" y="205" text-anchor="middle" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#16202b">Votre photo ${rang + 1}</text>
-<text x="200" y="238" text-anchor="middle" font-family="system-ui, sans-serif" font-size="19" fill="#5b6b7a">${legende}</text>
+<text x="200" y="205" text-anchor="middle" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="${encres.vive}">Votre photo ${rang + 1}</text>
+<text x="200" y="238" text-anchor="middle" font-family="system-ui, sans-serif" font-size="19" fill="${encres.douce}">${legende}</text>
 </svg>`;
 
     return {
@@ -111,7 +124,8 @@ async function principal() {
     .sort()
     .map((fichier) => ({ fichier }));
 
-  const { genererSite, couleurRetenue } = await import('../src/lib/site.ts');
+  const { genererSite, teinteRetenue } = await import('../src/lib/site.ts');
+  const { SURFACES, ENCRES } = await import('../src/lib/charte.ts');
   const complete = {
     couleur: '', slogan: '', presentation: '', services: '', options: [],
     ...commande,
@@ -120,7 +134,7 @@ async function principal() {
   // Une démonstration sans photo montre des cadres : sans eux, le prospect ne
   // voit pas l'endroit où les siennes viendront.
   const aMontrer = demonstration && photos.length === 0
-    ? cadresDeDemonstration(couleurRetenue(complete))
+    ? cadresDeDemonstration(teinteRetenue(complete), SURFACES, ENCRES)
     : photos;
 
   const html = genererSite(complete, aMontrer, { domaine, demonstration });
