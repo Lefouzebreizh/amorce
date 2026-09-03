@@ -24,7 +24,7 @@ import { POCHES, type LignePoche, type Patrimoine, type Poche, type Situation } 
  *  Écrite ` ` en toutes lettres et jamais tapée au clavier : une insécable
  *  est invisible dans un diff, et deux relecteurs ne voient pas la même chose
  *  selon leur éditeur. */
-export const INSECABLE = ' '
+export const INSECABLE = ' '
 
 export function euros(montant: number): string {
   const arrondi = Math.round(montant)

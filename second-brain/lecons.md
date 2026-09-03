@@ -5951,3 +5951,65 @@ fini quand quelque chose le rappelle sans qu'on y pense. Tant que la tâche
 planifiée n'existe pas, le compte rendu dit « écrit et vérifié », jamais
 « opérationnel » — les deux mots ne recouvrent pas la même chose, et c'est le
 second que le propriétaire lit.
+
+## Une constante dont le nom affirme une propriété doit voir cette propriété testée
+
+Mesuré le 03/09/2026 sur la copie du calcul de Bilan Patrimoine dans `agence/` :
+
+```
+bilan-patrimoine/src/valorisation.ts   INSECABLE = U+00A0  NO-BREAK SPACE
+agence/src/lib/bilan/valorisation.ts   INSECABLE = U+0020  SPACE
+```
+
+La constante ne faisait plus rien. Elle sert de **séparateur de milliers** et de
+liant avant le symbole : « 40 000 € » pouvait donc se couper en « 40 » puis
+« 000 € », sur un téléphone de 393 px, dans l'affichage des montants d'un produit
+qui parle d'argent.
+
+**Rien ne pouvait le voir.** Les deux fichiers compilent, les deux rendent une
+chaîne, tous les appels sont corrects — c'est la *valeur* qui est fausse, et elle
+est invisible à l'œil comme au diff qu'on lit vite. Une revue humaine passe
+dessus, un test de rendu compare deux chaînes contenant toutes deux « une
+espace ».
+
+**La règle : quand le nom d'une constante affirme une propriété — insécable,
+signé, borné, normalisé — cette propriété se teste sur le point de code, pas sur
+l'usage.** Un test qui vérifie que `euros(40000)` rend « 40 000 € » passe dans les
+deux cas.
+
+Et le vecteur mérite d'être connu : **un caractère invisible ne survit pas à un
+copier-coller**. Il se perd en passant par un presse-papier, un heredoc de shell,
+un éditeur qui normalise les espaces. J'ai d'ailleurs raté ma propre tentative de
+reproduire le défaut pour la même raison, et il a fallu écrire `\u0020` et
+`\u00a0` explicitement pour y arriver.
+
+## Un générateur fabrique un doublon aussi bien qu'un projet
+
+Le §0 bis règle 4 dit qu'un doublon arrête le geste. Je l'ai payé le 03/09/2026
+en croyant l'appliquer : j'avais cherché s'il existait une *interface* pour le
+Bilan Patrimoine — `grep` sur le nom du produit, rien hors de son propre dossier
+— puis lancé `nouveau-client.sh`. Le lot entier existait déjà **dans le socle
+`agence/` lui-même**, sous `(public)/bilan-patrimoine/`, avec son formulaire, ses
+actions et une copie du calcul. Le script en a fabriqué un clone complet en
+quatre secondes, plus quatre branchements à la racine.
+
+Deux causes, et la seconde est celle qu'on n'anticipe pas :
+
+- **J'ai cherché le nom, pas le geste.** Le dépôt écrit déjà que le `grep` porte
+  sur ce que la chose *fait* — ici « un formulaire qui rend un bilan » — jamais
+  sur le nom qu'on comptait lui donner. Le fichier existant s'appelait pourtant
+  presque comme mon produit ; c'est le **dossier** où je cherchais qui était
+  faux, pas le motif.
+- **Un générateur ne cartographie pas.** `nouveau-client.sh` est excellent et
+  fait exactement ce qu'il promet — il ne peut pas savoir que ce qu'il fabrique
+  existe ailleurs. La cartographie se fait **avant** de l'appeler, jamais par lui.
+
+Ce qui a rattrapé le coup : ouvrir le fichier produit au lieu de se fier au
+rapport du script. Son en-tête disait « Le lot 2 » en toutes lettres.
+
+**La parade coûte une commande** — chercher dans les dossiers *voisins* du sien,
+sur ce que la chose fait :
+
+```bash
+grep -rln "formulaire.*bilan\|lib/bilan" --include=*.tsx --include=*.ts . | grep -v node_modules
+```
