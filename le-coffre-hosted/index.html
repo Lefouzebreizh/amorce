@@ -190,6 +190,18 @@
   }
 
   // --- Cryptographie (Web Crypto, aucune bibliothèque externe) -----------
+  // Le nombre d'itérations vient du serveur, jamais de la page. On ne le croit
+  // jamais à la baisse : une ligne corrompue — ou altérée — à 1 ferait dériver
+  // une clé faible en silence. ITERATIONS est un plancher, pas un défaut : une
+  // valeur plus haute est honorée, une valeur absente ou non numérique retombe
+  // au plancher plutôt que de lever, sans quoi on enfermerait l'utilisateur
+  // dehors de son propre coffre. Jumeau de `iterationsSures` dans
+  // le-coffre/src/lib/crypto.ts : les deux doivent bouger ensemble.
+  function iterationsSures(annoncees){
+    var n = (typeof annoncees === "number" && isFinite(annoncees)) ? Math.floor(annoncees) : 0;
+    return Math.max(ITERATIONS, n);
+  }
+
   function deriverCle(motDePasse, selBuf, iterations){
     return crypto.subtle.importKey("raw", new TextEncoder().encode(motDePasse), "PBKDF2", false, ["deriveKey"])
       .then(function(cleBase){
@@ -351,7 +363,7 @@
     elVerrouErreur.innerHTML = '<div class="aide">Vérification…</div>';
     elBtnPhrase.disabled = true;
     var sel = bufFromB64(coffreExistant.sel);
-    deriverCle(mdp, sel, coffreExistant.iterations).then(function(cleDerivee){
+    deriverCle(mdp, sel, iterationsSures(coffreExistant.iterations)).then(function(cleDerivee){
       cle = cleDerivee;
       return dechiffrerTexte(empaqueter(bufFromB64(coffreExistant.verificateur_iv), bufFromB64(coffreExistant.verificateur_texte)));
     }).then(function(texte){
