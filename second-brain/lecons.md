@@ -5643,6 +5643,60 @@ while contraste(hls_en_hex(h, l, s), fond) < 7.2:
 Mesuré : trois à neuf points de clarté ont suffi sur les trois accents en
 défaut, et la planche montre que chacun tient encore son registre. Le calcul
 propose, l'œil valide — l'un sans l'autre ne suffit pas.
+
+## Deux causes, un seul message : ce qu'un refus ne permet pas de conclure
+
+Le 03/09/2026, `CLAUDE.md` affirmait — avec le mot « mesuré » — que
+l'auto-fusion était coupée sur ce dépôt, en citant le message
+« Auto-merge is not enabled for this repository ». Ce message ne sort plus.
+
+Le réflexe a été de conclure que le réglage avait été coché. **C'était faux**,
+et l'erreur a été rattrapée avant la fusion parce qu'un second essai a été fait
+dans l'autre état : contrôles en cours, l'appel refuse aussi. L'auto-fusion ne
+s'arme donc dans aucun des deux états — seul le libellé a changé.
+
+La cause de l'erreur mérite d'être nommée, parce qu'elle se reproduira :
+**l'outil refuse pour deux raisons distinctes avec des messages voisins** — le
+réglage coupé, et la PR déjà fusionnable. Un message qui n'est plus celui qu'on
+attendait ne dit pas laquelle des deux s'applique. Un changement de libellé
+n'est pas un changement d'état.
+
+La règle qui en sort : **un message d'erreur mesure ce qu'il dit, jamais ce
+qu'on en déduit.** Avant de réécrire une phrase du dépôt sur la foi d'un refus,
+provoquer le même appel dans un **second état** — et si les deux refusent, on a
+mesuré un comportement, pas un réglage.
+
+Et la famille de phrases à surveiller, plus large que ce cas : celles qui
+décrivent un **état extérieur** — réglage de plateforme, quota, clé, hôte
+joignable. Elles ne bougent dans aucun diff, elles se périment toutes seules, et
+elles portent le mot « mesuré » au moment précis où elles cessent d'être vraies.
+Une phrase de ce genre se date et dit **par quel appel** on la revérifie.
+
+## « stale info » après une fusion : la branche a été supprimée, pas dépassée
+
+Mesuré le 03/09/2026, et ça a coûté trois tentatives.
+
+Ce dépôt **supprime la branche à la fusion**. Une session qui réutilise ensuite
+le même nom de branche — ce que la consigne de branche désignée impose — se
+retrouve avec un `refs/remotes/origin/<branche>` qui pointe sur un commit
+disparu du serveur. `git push --force-with-lease` compare son bail à cette
+référence fantôme et refuse :
+
+    ! [rejected]  (stale info)
+
+Le message fait chercher un conflit ou une divergence. Il n'y en a aucune : la
+branche distante **n'existe plus**. Un `git fetch` n'y change rien, puisqu'il
+n'a pas de branche à rapporter.
+
+Le diagnostic tient en une commande, et c'est le vide qui répond :
+
+```bash
+git ls-remote origin refs/heads/<branche>   # ne rend rien -> elle est supprimée
+```
+
+La suite est alors un `git push -u origin <branche>` **ordinaire** : on crée une
+branche neuve, il n'y a rien à écraser. `--force-with-lease` n'a de sens que
+contre une branche qui existe encore.
 ## Un `ls` répond sur le commit sorti, jamais sur `main` — et « ça n'existe pas » se lit comme un fait
 
 Symétrique de la leçon sur `origin/main` périmé, et plus traître : là-bas une
