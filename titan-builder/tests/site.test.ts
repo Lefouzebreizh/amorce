@@ -497,3 +497,29 @@ test('une démonstration montre le bloc d’avis, et dit que ce sont des exemple
   assert.match(vrai, /Ce qu’en disent mes clients/, 'un vrai site garde ses avis');
   assert.doesNotMatch(vrai, /Avis d’exemple/, 'la mention doit disparaître sur un vrai site');
 });
+
+test('la page fait la largeur d’un téléphone, et rien ne la rélargit', () => {
+  const html = genererSite(commande());
+
+  // Le corps est borné à une largeur de téléphone. Sur un téléphone la règle
+  // ne mord pas — le corps y occupe déjà tout le viewport, mesuré à 390, 360
+  // et 320 px sans un pixel de débordement ; elle mord sur l'écran large où
+  // la page se relit avant d'être envoyée.
+  const corps = /body\s*\{[^}]*\}/.exec(html)?.[0] ?? '';
+  assert.match(corps, /max-width:\s*26rem/, 'le corps doit être borné à 26rem');
+  assert.match(corps, /margin:\s*0 auto/, 'le corps doit être centré');
+
+  // Le fond va sur « html » : un corps borné laisse voir la page derrière lui,
+  // et ce serait du blanc au bord d'un site sombre.
+  assert.match(html, /html\s*\{[^}]*background:\s*#16151a/,
+    'le fond doit couvrir l’écran au-delà du corps');
+
+  // Et surtout : aucune autre règle ne doit rouvrir la page plus large que
+  // ça. C'est « main { max-width: 40rem } » qui donnait 640 px, et c'est
+  // exactement ce qu'une prochaine session réintroduirait sans y penser.
+  const sansCommentaires = html.replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const [, valeur] of sansCommentaires.matchAll(/max-width:\s*([\d.]+)rem/g)) {
+    assert.ok(Number(valeur) <= 26,
+      `une largeur de ${valeur}rem dépasse celle d’un téléphone`);
+  }
+});

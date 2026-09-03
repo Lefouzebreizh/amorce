@@ -478,8 +478,26 @@ ${ficheEtablissement(commande, domaine)}
     --accent-texte: ${accent};
   }
   * { box-sizing: border-box; }
+  /*
+   * La page fait la largeur d'un telephone, partout.
+   *
+   * Sur un telephone la contrainte ne mord pas : le corps occupe deja 100 %
+   * du viewport, mesure a 390, 360 et 320 px sans un pixel de debordement.
+   * Elle mord sur un ecran large, ou une colonne de 40rem donnait 640 px --
+   * soit une page qui ne ressemblait plus du tout a ce que l'artisan voit
+   * quand il ouvre le lien, et c'est pourtant sur cet ecran-la qu'on la
+   * relit avant de l'envoyer. On jugeait donc une mise en page que personne
+   * ne verrait.
+   *
+   * 26rem = 416 px : entre les 390 px d'un iPhone 14 et les 430 d'un Max.
+   *
+   * Le fond va sur << html >> et pas seulement ici : un corps borne laisse
+   * voir la page derriere lui, et ce serait du blanc au bord d'un site sombre.
+   */
+  html { background: #16151a; }
   body {
-    margin: 0; background: var(--ink); color: var(--encre);
+    margin: 0 auto; max-width: 26rem;
+    background: var(--ink); color: var(--encre);
     font: 18px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   /*
@@ -496,7 +514,7 @@ ${ficheEtablissement(commande, domaine)}
   }
   header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.2; letter-spacing: -.01em; }
   header p { margin: 0; font-size: 1.15rem; color: var(--accent); font-weight: 600; }
-  main { max-width: 40rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
+  main { padding: 0 1.25rem 3rem; }
   .bloc { padding: 2rem 0; border-bottom: 1px solid var(--edge); }
   .bloc:last-of-type { border-bottom: 0; }
   /* Le filet vertical sous chaque titre : l'autre moitié de la signature. */
