@@ -1396,18 +1396,33 @@ contexte à chaque sondage, et elle meurt avec la session — une PR verte reste
 alors ouverte à attendre quelqu'un. Armée, GitHub fusionne seul dès que les
 contrôles passent, téléphone éteint.
 
-**Sauf qu'ici l'outil refuse toujours**, et c'est mesuré : `enable_pr_auto_merge`
-rend « Auto-merge is not enabled for this repository ». Le réglage est coupé
-dans *Settings → General → Pull Requests → Allow auto-merge*, et tant qu'il
-l'est, le paragraphe ci-dessus décrit un geste qui échoue à chaque PR. Une
-session qui l'ignore essaie, se fait refuser, et croit à une erreur de sa part.
+**Sauf qu'ici l'outil ne s'arme jamais**, et le 03/09/2026 a précisé pourquoi.
+Ce paragraphe citait un message — « Auto-merge is not enabled for this
+repository » — qui ne sort plus. Ce qui a changé est **le message, pas le
+résultat** : trois appels sur les PR #602 et #604, deux états, deux refus.
 
-Donc, tant que la case n'est pas cochée : on arme quand même — l'appel coûte une
-seconde et dira le jour où le réglage change — puis **on sonde jusqu'au vert et
-on fusionne à la main**. C'est le chemin normal de ce dépôt, pas un repli.
-Cocher la case est un geste de trente secondes qui rendrait le paragraphe
-précédent vrai ; c'est au propriétaire de le faire, personne d'autre n'a la
-main dessus.
+| état de la PR | ce que l'appel rend |
+| --- | --- |
+| un contrôle en cours | « in unstable status (required checks are failing) » |
+| tous les contrôles verts | « already in clean status — you can merge directly » |
+
+Aucun des deux n'arme quoi que ce soit. Et **le second message décrit
+exactement le comportement documenté de l'outil**, qui refuse aussi bien quand
+l'auto-fusion est coupée que quand la PR est déjà fusionnable : les deux causes
+rendent le même genre de refus, si bien qu'**on ne peut pas conclure de ces
+messages que le réglage a été coché**. La première rédaction de ce paragraphe
+l'avait conclu, à tort, et c'est la raison pour laquelle la nuance est écrite
+ici plutôt que corrigée en silence.
+
+Ce qui est mesuré, et rien de plus : l'appel ne rend plus la phrase citée, et
+il n'arme dans aucun des deux états. Ce qui reste inconnu : l'état réel de la
+case dans *Settings → General → Pull Requests → Allow auto-merge*. Seul le
+propriétaire peut le lire.
+
+Donc, en pratique et sans changement : **on arme quand même** — l'appel coûte
+une seconde et son message dira le jour où ça marche — puis **on sonde jusqu'au
+vert et on fusionne à la main**. C'est le chemin normal de ce dépôt, pas un
+repli.
 
 Ce n'est pas une préférence de style, c'est arithmétique : ce dépôt reçoit
 plusieurs sessions en parallèle, et une branche qui attend collectionne les
