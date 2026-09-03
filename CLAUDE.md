@@ -1211,6 +1211,23 @@ et le §2 les borne toutes. Un son qui vit sous 400 Hz n'existe pas sur un
 téléphone, quel qu'en soit l'outil ; une vidéo verticale se juge entre 12 et
 45 % de hauteur ; et `/master-telephone` passe avant toute publication.
 
+### Par où prendre une vidéo : `/creation-video`
+
+**Douze compétences touchaient déjà la vidéo et le son, et aucune ne disait dans
+quel ordre les appeler.** `/creation-video` comble ce trou-là et rien
+d'autre : elle n'exécute pas, elle ordonne — juger la matière, le son avant l'image, monter,
+sortir au niveau, regarder, publier — et nomme à chaque étape la compétence qui
+tient le travail. **À charger au début**, quand on ne sait pas encore par où
+prendre le sujet, pas au milieu du montage.
+
+Elle porte aussi la seule chose que ce bloc ne disait pas : **le choix de la
+destination**. Ce dépôt est vertical de naissance — zones sûres, gabarits de
+`motion/`, scripts de `tiktok/`, plancher sonore : tout est écrit pour
+1080 × 1920. Le 16:9 et le 1:1 y sont désormais décrits, **et donnés pour non
+mesurés ici**, ce qu'une session qui promet de l'horizontal doit savoir avant de
+s'engager. Avec la règle qui coûte un remontage entier quand on l'ignore :
+**deux formats, c'est deux montages, jamais un recadrage.**
+
 ## 8. DONE, ET CE QU'ON NE FAIT JAMAIS
 
 **Done** = vérification verte + **regardé, pas seulement mesuré** + leçon écrite.
