@@ -413,8 +413,22 @@ de raison d'en changer prend celle d'Amorce.
 
 La mémoire vit dans ce fichier, dans `.claude/skills/`, dans `INDEX.md` et dans
 `second-brain/` — jamais dans la discussion. Ce qui vaut pour **un** projet va
-dans sa compétence ; ce qui traverse les projets va dans `second-brain/lecons.md`,
-et ce qui se recopie tel quel dans `kits/`. Le jour même : le lendemain on se
+dans sa compétence ; ce qui traverse les projets va dans `second-brain/lecons/`,
+**un fichier par leçon**, nommé `AAAA-MM-JJ-sujet.md` ; et ce qui se recopie tel
+quel dans `kits/`.
+
+**Un fichier par leçon, et la raison est mesurée.** `second-brain/lecons.md` est
+devenu le fichier le plus disputé du dépôt : plusieurs sessions écrivent en
+parallèle, toutes à la fin du même fichier, et Git ne sait pas fusionner deux
+ajouts à la même ligne. Une seule nuit de retard a produit **trois conflits sur
+ce fichier**, chacun résolu à la main. Le coût n'est pas la résolution, c'est ce
+qu'elle fait perdre : une session pressée garde sa version et écrase la leçon de
+l'autre sans la lire. Deux sessions du même jour créent maintenant deux fichiers
+différents, et il n'y a plus rien à fusionner.
+
+`lecons.md` n'est pas supprimé et ne le sera pas — il porte des mois de leçons et
+des renvois le citent. Il est l'archive ; le dossier reçoit la suite, et son
+`LISEZ-MOI.md` dit ce qu'un fichier contient. Le jour même : le lendemain on se
 souvient du correctif et plus de la cause, et c'est la cause qui vaut. Fil qui
 s'alourdit → `/relais`.
 
@@ -464,6 +478,8 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   le choix d'une teinte qui passe le contraste, les contacts cliquables, le
   fichier autonome et les pièges d'hébergement — est généralisé au-delà des
   artisans dans `/site-web`.
+  inventée. Se vérifie depuis son dossier. Ce qu'on vend **après** les 300 € —
+  mise à jour annuelle, avis Google — est chiffré dans son `OPTIONS.md`.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
@@ -546,6 +562,12 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   formulaire en cinq étapes, un dossier de commande écrit et envoyé par
   courriel. Le prix est **recalculé côté serveur**, jamais lu depuis le
   navigateur, et le formulaire partage sa validation avec la route d'API.
+  **La méthode de fabrication du site livré est dans `/web-artisan`** : structure
+  de la page unique, mise en page au pouce, palette fermée par métier,
+  emplacements photo, section avis et sa mention, téléphone cliquable, signature
+  de pied — et les pièges déjà payés. Un site d'artisan ne s'écrit pas à la main :
+  `src/lib/charte.ts` décide de la teinte depuis le métier, et écrire une page
+  « juste pour ce client-là » est la première façon de perdre la charte.
 - **iptv/** — tableau de bord de gestion et de lecture IPTV / VOD. TypeScript,
   **zéro dépendance d'exécution** dans le cœur : ingestion M3U et Xtream,
   normalisation, classification en direct / films / séries. Une liste M3U ne se
@@ -1214,6 +1236,23 @@ Un rappel qui vaut pour tout ce bloc : ce sont des **directives de production**,
 et le §2 les borne toutes. Un son qui vit sous 400 Hz n'existe pas sur un
 téléphone, quel qu'en soit l'outil ; une vidéo verticale se juge entre 12 et
 45 % de hauteur ; et `/master-telephone` passe avant toute publication.
+
+### Par où prendre une vidéo : `/creation-video`
+
+**Douze compétences touchaient déjà la vidéo et le son, et aucune ne disait dans
+quel ordre les appeler.** `/creation-video` comble ce trou-là et rien
+d'autre : elle n'exécute pas, elle ordonne — juger la matière, le son avant l'image, monter,
+sortir au niveau, regarder, publier — et nomme à chaque étape la compétence qui
+tient le travail. **À charger au début**, quand on ne sait pas encore par où
+prendre le sujet, pas au milieu du montage.
+
+Elle porte aussi la seule chose que ce bloc ne disait pas : **le choix de la
+destination**. Ce dépôt est vertical de naissance — zones sûres, gabarits de
+`motion/`, scripts de `tiktok/`, plancher sonore : tout est écrit pour
+1080 × 1920. Le 16:9 et le 1:1 y sont désormais décrits, **et donnés pour non
+mesurés ici**, ce qu'une session qui promet de l'horizontal doit savoir avant de
+s'engager. Avec la règle qui coûte un remontage entier quand on l'ignore :
+**deux formats, c'est deux montages, jamais un recadrage.**
 
 ## 8. DONE, ET CE QU'ON NE FAIT JAMAIS
 
