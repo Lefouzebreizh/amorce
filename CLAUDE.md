@@ -274,7 +274,7 @@ propre projet** — c'est le pire cas, celui qui décide.
 | Amorce | `#25e3c4` turquoise | **9,0:1** | la référence |
 | IPTV | `#4aa8ff` bleu | 5,1:1 | sous le standard de la maison |
 | TITAN Builder | `#7c3aed` violet | **2,6:1** | **inutilisable comme accent** — voir plus bas |
-| Artisan Express | `#004AAD` sur fond clair | — | page de vente, thème clair assumé |
+| Artisan Express | `#67C1A0` vert | **7,08:1** | sombre depuis le 03/09/2026 — voir plus bas |
 | Annuaria | `#7fd68a` sauge | **8,19:1** | posé le 03/09/2026 — voir plus bas |
 | `chat-traducteur` | `#7FD99A` sauge | **8,3:1** | cinq accents de contenu — voir plus bas |
 | `look_and_find` | thème chaud clair | — | appli enfants, thème clair assumé |
@@ -343,10 +343,53 @@ interface reprend un jour cette teinte à côté d'un avertissement.
 
 ### L'exception, et elle est mesurée
 
-**Trois produits sont en thème clair, et c'est juste** : Artisan Express est une
-page de vente, `agence` est une coque montrée aux clients, `look_and_find` est
-une application pour enfants. Les convertir au sombre serait un contresens de
-produit.
+**Deux produits sont en thème clair, et c'est juste** : `agence` est une coque
+montrée aux clients, `look_and_find` est une application pour enfants. Les
+convertir au sombre serait un contresens de produit.
+
+**Ils étaient trois, et Artisan Express en est sorti le 03/09/2026.** La phrase
+disait « Artisan Express est une page de vente », et c'était vrai sans être
+suffisant : une page de vente doit ressembler à **ce qu'elle vend**. Les sites
+livrés sont sombres depuis `titan-builder/src/lib/charte.ts` ; une vitrine
+blanche promettait autre chose que la marchandise.
+
+Ce qui a réellement forcé la main est mesuré, et vaut au-delà de ce produit :
+son accent `#c74e00` rendait **4,6:1** sur blanc. Il passait le minimum WCAG et
+échouait au plancher de 7:1 ci-dessus — et le bouton qui portait toute la page
+en était fait. Le thème clair n'était donc pas le problème : c'était le seul
+endroit où cet accent-là tenait à peu près.
+
+**Et la charte d'Artisan Express est la seule du dépôt qui vive dans deux
+projets à la fois.** `titan-builder` la porte en valeurs, `artisan-express` la
+recopie dans ses jetons Tailwind — deux projets npm distincts ne peuvent pas
+s'importer. `artisan-express/tests/charte.test.ts` relit donc le fichier voisin
+**en texte** et refuse qu'ils s'écartent. Le prochain qui touche l'un des deux
+le saura par ce test, pas par une capture d'écran six mois plus tard.
+
+**Un dernier point qui n'est pas propre à ce produit : la teinte suit le
+métier.** Cinq teintes froides, toutes ≥ 7:1 sur `panel`, et une table qui dit
+quel corps de métier porte laquelle — un couvreur en vert, un plombier en
+bleu-pétrole. C'est la seule entrée du registre où l'accent varie *à
+l'intérieur* du produit, et la raison est la même que pour le traducteur de
+chat : ici, l'accent est une **information**, pas une décoration. Ce qui fait la
+patte reconnaissable n'est donc pas la couleur mais la structure — filet
+vertical sous chaque titre, entête en halo, prestations fléchées, un seul bouton
+plein.
+
+**Et cette palette-là a été mesurée deux fois, parce que la première mesure
+portait sur la mauvaise surface.** Les cinq premières teintes rendaient 7,0 à
+9,3 — sur `ink`, le fond de page, donc le plus sombre et le meilleur cas. Sur
+`panel`, la plus claire, elles tombaient entre **5,91 et 6,02**. La règle de
+cette section dit pourtant « sur la surface la plus claire du projet — c'est le
+pire cas, celui qui décide » : c'est la moitié de la phrase qui s'était perdue
+entre la règle et le test.
+
+La correction n'a pas été d'éclaircir les cinq. Deux d'entre elles n'étaient
+séparées que par la clarté — `menthe` était littéralement le `vif` du `vert` —
+et les remonter ensemble vers le blanc les rendait indiscernables. Les **angles**
+ont donc été réécartés (108°, 158°, 193°, 224°, 262°) avant de remonter chacune.
+Un test compare désormais les angles deux à deux et refuse moins de 28° d'écart :
+sans lui, la garde de contraste se satisfait de cinq nuances identiques.
 
 Et la règle des surfaces **cesse d'être vraie chez eux**. Mesuré le 31/08/2026 en
 montant le thème clair de *Tout seul* : une tuile blanche sur un fond crème donne

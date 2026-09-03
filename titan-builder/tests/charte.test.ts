@@ -26,14 +26,20 @@ import { contraste } from '@/lib/site';
 /** Le plancher d'un accent, imposé par `CLAUDE.md` §2 bis. */
 const PLANCHER_ACCENT = 7;
 
-test('chaque teinte de métier tient le plancher de 7:1 sur le fond', () => {
+test('chaque teinte tient le plancher de 7:1 sur la surface la plus claire', () => {
   /*
    * Pas 4,5 : ces pages se lisent dehors, sur un chantier, sur un téléphone à
-   * moitié assombri. C'est le standard de la maison, et il est plus haut que
-   * le minimum légal pour cette raison-là.
+   * moitié assombri. C'est le standard de la maison, plus haut que le minimum
+   * légal pour cette raison-là.
+   *
+   * **Et pas sur `ink` : sur `panel`.** Ce test mesurait le fond de page, le
+   * plus sombre — donc le meilleur cas. Il rendait 7,0 à 9,3 et restait vert
+   * pendant que la même palette tombait à 5,91 sur les cartes. Le §2 bis dit
+   * « la surface la plus claire du projet — c'est le pire cas, celui qui
+   * décide », et c'est la moitié de la phrase que le premier jet avait perdue.
    */
   for (const [nom, teinte] of Object.entries(TEINTES)) {
-    const mesure = contraste(teinte.accent, SURFACES.ink);
+    const mesure = contraste(teinte.accent, SURFACES.panel);
     assert.ok(
       mesure >= PLANCHER_ACCENT,
       `${nom} (${teinte.accent}) rend ${mesure.toFixed(1)}:1, sous le plancher de ${PLANCHER_ACCENT}`,
@@ -41,15 +47,38 @@ test('chaque teinte de métier tient le plancher de 7:1 sur le fond', () => {
   }
 });
 
-test('chaque teinte reste lisible sur la surface élevée, pas seulement sur le fond', () => {
+test('deux métiers voisins ne portent pas la même teinte', () => {
   /*
-   * Le piège que ce test garde : un accent mesuré sur le fond le plus sombre
-   * passe toujours. Il vit pourtant aussi sur les cartes, qui sont plus
-   * claires — et c'est là qu'il perd le plus.
+   * La garde qui manquait, et sans laquelle la précédente se satisfait de cinq
+   * nuances identiques. Le premier jet portait `menthe` — qui n'était que le
+   * `vif` du vert — et remonter les cinq vers le blanc pour tenir la barre les
+   * aurait tassées au même endroit.
+   *
+   * On compare les angles de teinte, pas les contrastes : deux couleurs de même
+   * clarté rendent toujours un rapport proche de 1, ce qui ne dit rien. Trente
+   * degrés est l'écart mesuré le plus serré de la palette — assez pour qu'un
+   * plombier et un couvreur ne reçoivent pas la même page.
    */
-  for (const [nom, teinte] of Object.entries(TEINTES)) {
-    const mesure = contraste(teinte.accent, SURFACES.slab);
-    assert.ok(mesure >= 4.5, `${nom} rend ${mesure.toFixed(1)}:1 sur une carte`);
+  const angle = (hexa: string) => {
+    const [r, v, b] = [1, 3, 5].map((i) => parseInt(hexa.slice(i, i + 2), 16) / 255);
+    const max = Math.max(r!, v!, b!);
+    const ecart = max - Math.min(r!, v!, b!);
+    if (ecart === 0) return 0;
+    const brut = max === r! ? (v! - b!) / ecart
+      : max === v! ? 2 + (b! - r!) / ecart
+        : 4 + (r! - v!) / ecart;
+    return ((brut * 60) % 360 + 360) % 360;
+  };
+  const noms = Object.keys(TEINTES);
+
+  for (let i = 0; i < noms.length; i += 1) {
+    for (let j = i + 1; j < noms.length; j += 1) {
+      const a = angle(TEINTES[noms[i]!]!.accent);
+      const b = angle(TEINTES[noms[j]!]!.accent);
+      const ecart = Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+      assert.ok(ecart >= 28,
+        `${noms[i]} et ${noms[j]} ne sont séparés que de ${ecart.toFixed(0)}°`);
+    }
   }
 });
 
@@ -104,7 +133,7 @@ test('chaque métier connu tombe sur une teinte qui existe', () => {
 });
 
 test('un métier se reconnaît avec ou sans accent, avec ou sans casse', () => {
-  const attendue = TEINTES.menthe;
+  const attendue = TEINTES.sauge;
   assert.deepEqual(teinteDeCharte('macon'), attendue);
   assert.deepEqual(teinteDeCharte('Maçon'), attendue);
   assert.deepEqual(teinteDeCharte('  MAÇON  '), attendue);

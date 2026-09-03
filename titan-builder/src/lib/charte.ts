@@ -87,8 +87,22 @@ export type Teinte = {
 };
 
 /*
- * La palette fermée, cinq teintes, toutes froides et toutes ≥ 7:1 sur
- * `SURFACES.ink` — mesuré, et tenu par `tests/charte.test.ts`.
+ * La palette fermée : cinq teintes froides, toutes ≥ 7:1 **sur `SURFACES.panel`**.
+ *
+ * Le nom de la surface compte plus que le chiffre, et le premier jet l'avait
+ * manqué. La règle de `CLAUDE.md` §2 bis dit « ≥ 7:1 sur la surface **la plus
+ * claire** du projet — c'est le pire cas, celui qui décide ». Mesurée sur
+ * `ink`, la première palette rendait 7,0 à 9,3 et paraissait conforme ; sur
+ * `panel`, elle tombait entre **5,91 et 6,02**. Le test la disait verte parce
+ * qu'il mesurait le meilleur cas, exactement le défaut que ce même §2 bis
+ * décrit à propos du traducteur de chat : « un test écrit sur l'ancienne barre
+ * reste vert et ne signale jamais qu'une nouvelle existe ».
+ *
+ * La correction n'a pas seulement éclairci : `menthe` était le `vif` du vert,
+ * et les remonter toutes vers le blanc les rendait indiscernables l'une de
+ * l'autre. Les cinq angles ont donc été **réécartés** — 108°, 158°, 193°, 224°,
+ * 262° — puis chacun monté en clarté jusqu'à franchir la barre. Deux artisans
+ * ne se ressemblent que si leurs teintes se distinguent vraiment.
  *
  * Fermée est le mot qui compte : un artisan ne choisit pas un hexadécimal
  * libre, il reçoit la teinte de son métier. C'est ce qui garantit qu'un
@@ -96,11 +110,11 @@ export type Teinte = {
  * qu'on les reconnaisse, et diffèrent assez pour ne pas être la même page.
  */
 export const TEINTES: Readonly<Record<string, Teinte>> = {
-  vert: { accent: '#4FB39C', vif: '#6FCAB4', encre: '#0D2A25', voile: '#1C332E' },
-  menthe: { accent: '#6FCAB4', vif: '#8FD9C6', encre: '#0D2A25', voile: '#1C332E' },
-  petrole: { accent: '#3EADD4', vif: '#5FBFDE', encre: '#082530', voile: '#16303B' },
-  ardoise: { accent: '#969FCB', vif: '#B0B7DA', encre: '#151931', voile: '#232742' },
-  lavande: { accent: '#A499E3', vif: '#BBB2EC', encre: '#1D1A33', voile: '#292544' },
+  sauge: { accent: '#7BC269', vif: '#9AD08D', encre: '#0F2B08', voile: '#1C3515' },
+  vert: { accent: '#67C1A0', vif: '#8BD0B7', encre: '#082B1E', voile: '#153529' },
+  petrole: { accent: '#69BCD3', vif: '#90CEDF', encre: '#05252E', voile: '#122F37' },
+  ardoise: { accent: '#A4B1D6', vif: '#C7CFE6', encre: '#09122A', voile: '#171E33' },
+  lavande: { accent: '#BCA6E3', vif: '#D9CDEF', encre: '#14062D', voile: '#201237' },
 };
 
 /** La teinte servie quand rien ne correspond. */
@@ -118,9 +132,9 @@ export const TEINTE_DU_METIER: Readonly<Record<string, string>> = {
   couvreur: 'vert',
   charpentier: 'vert',
   zingueur: 'vert',
-  macon: 'menthe',
-  terrassier: 'menthe',
-  paysagiste: 'menthe',
+  macon: 'sauge',
+  terrassier: 'sauge',
+  paysagiste: 'sauge',
   plombier: 'petrole',
   chauffagiste: 'petrole',
   carreleur: 'petrole',
@@ -147,7 +161,7 @@ const ANCIENNES: Readonly<Record<string, string>> = {
   '#2f6f4e': 'vert',
   '#1f6f8b': 'petrole',
   '#1f5f8b': 'petrole',
-  '#8a5a2b': 'menthe',
+  '#8a5a2b': 'sauge',
   '#a8611a': 'ardoise',
   '#6b4f2a': 'lavande',
   '#3d5a80': 'ardoise',

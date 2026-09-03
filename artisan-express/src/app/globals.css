@@ -37,18 +37,22 @@
 
   /*
    * L'accent unique de ce produit : le vert de la charte, celui que reçoit un
-   * couvreur, et la teinte par défaut de la palette. Mesuré à 9,4:1 sur le fond
-   * de page — au-dessus du plancher de 7:1.
+   * couvreur, et la teinte par défaut de la palette.
+   *
+   * Mesuré **7,08:1 sur `panel`**, la surface la plus claire — c'est le pire
+   * cas, et c'est celui que le §2 bis désigne. La première valeur, `#4fb39c`,
+   * rendait 7,1 sur le fond de page et seulement 6,0 sur les cartes : elle
+   * paraissait conforme parce qu'elle était mesurée au meilleur endroit.
    *
    * Il ne désigne qu'une chose : **l'action à faire.** S'en servir pour décorer
    * le rendrait muet, ce que §2 bis interdit en propres termes.
    */
-  --color-accent: #4fb39c;
-  --color-accent-vif: #6fcab4;
+  --color-accent: #67c1a0;
+  --color-accent-vif: #8bd0b7;
   /* Ce qu'on écrit **sur** l'accent — le libellé d'un bouton plein. */
-  --color-accent-encre: #0d2a25;
+  --color-accent-encre: #082b1e;
   /* Le voile : halo d'entête et fond de bloc discret. */
-  --color-voile: #1c332e;
+  --color-voile: #153529;
 
   /*
    * Le danger. Il est commun à tous les produits et garde le même sens partout

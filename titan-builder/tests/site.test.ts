@@ -53,11 +53,11 @@ test('la teinte livrée vient toujours de la charte, jamais de la saisie', () =>
    * produit une couleur hors charte.** Ni une injection, ni un orange, ni un
    * champ vide, ni un vieux dossier.
    */
-  assert.equal(couleurRetenue(commande({ couleur: 'plombier' })), '#3eadd4');
-  assert.equal(couleurRetenue(commande({ couleur: '#2f6f4e' })), '#4fb39c', 'le vieux vert de Tanguy');
-  assert.equal(couleurRetenue(commande({ couleur: 'red; } body { display:none' })), '#4fb39c');
-  assert.equal(couleurRetenue(commande({ couleur: '#ff8800' })), '#4fb39c', 'l’orange ne passe pas');
-  assert.equal(couleurRetenue(commande({ couleur: '' })), '#4fb39c');
+  assert.equal(couleurRetenue(commande({ couleur: 'plombier' })), '#69bcd3');
+  assert.equal(couleurRetenue(commande({ couleur: '#2f6f4e' })), '#67c1a0', 'le vieux vert de Tanguy');
+  assert.equal(couleurRetenue(commande({ couleur: 'red; } body { display:none' })), '#67c1a0');
+  assert.equal(couleurRetenue(commande({ couleur: '#ff8800' })), '#67c1a0', 'l’orange ne passe pas');
+  assert.equal(couleurRetenue(commande({ couleur: '' })), '#67c1a0');
 });
 
 test('ce qui n’est pas rempli disparaît, jamais un texte de remplacement', () => {

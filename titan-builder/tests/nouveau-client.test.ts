@@ -74,13 +74,13 @@ test('la page porte ce qui a été saisi', async () => {
 
   assert.ok(html.includes('Couverture Tanguy'));
   /*
-   * Le dossier porte `#2f6f4e`, la page sort en `#4fb39c` : c'est le vert de la
+   * Le dossier porte `#2f6f4e`, la page sort en `#67c1a0` : c'est le vert de la
    * charte, et c'est le comportement voulu. Un dossier écrit avant la charte
    * doit rester régénérable — et se régénérer **dans** la charte, sinon un
    * site livré demain depuis un vieux dossier s'en écarterait sans que rien ne
    * le signale.
    */
-  assert.ok(html.includes('--accent: #4fb39c'), 'la teinte livrée sort de la charte');
+  assert.ok(html.includes('--accent: #67c1a0'), 'la teinte livrée sort de la charte');
   assert.ok(html.includes('tel:+33645129803'));
   assert.ok(html.includes('Zinguerie'));
 });
