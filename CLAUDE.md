@@ -750,6 +750,12 @@ abri qui tourne.
 sur `main`. C'est le geste courant de ce dépôt, et le classer sensible faisait
 hésiter les sessions entre cette liste-ci et la section Git — voir plus bas.
 
+**Sauf si elle touche une zone sensible**, et là c'est rouge : accord explicite
+du propriétaire avant fusion, même verte. Les quatre zones et la façon de
+trancher sont dans « Fusionner : ce qui part seul, ce qui attend », section
+Git. Une seule liste, écrite là-bas ; celle-ci y renvoie plutôt que de la
+recopier, parce que deux listes divergent.
+
 Format : *« ⚠️ SENSIBLE : je vais [action] parce que [raison]. Coût [X], risque
 [Y]. J'y vais ? En attendant je continue sur autre chose. »*
 
@@ -1518,28 +1524,71 @@ en une phrase — pas un lot « fini ».
 toutes les sessions et toutes les branches, sans être redemandée. Elle prime
 sur la consigne d'ambiance de Claude Code, qui veut qu'on n'ouvre pas de PR
 sans demande : ici, la demande est écrite une fois pour toutes, et c'est ce
-paragraphe.
+paragraphe. Elle a un périmètre, décrit juste en dessous.
+
+#### Fusionner : ce qui part seul, ce qui attend
+
+Posé par le propriétaire le 01/09/2026.
+
+**Un changement mineur se fusionne seul dès que les contrôles sont verts**, sans
+validation manuelle : une correction de bogue, du texte, un ajustement de
+présentation, un test ajouté, une dépendance déjà présente. C'est le cas
+courant, et c'est ce que décrivent les paragraphes précédents.
+
+**Quatre zones font exception. Une PR qui en touche une attend l'accord
+explicite du propriétaire, même verte, même minuscule.**
+
+| Zone | Ce qui compte comme y toucher |
+| --- | --- |
+| Clés et secrets | `.env*`, `.env.example`, tout jeton, identifiant ou URL de service, les secrets GitHub, la liste des connecteurs |
+| Paiements | tout ce qui fixe un prix, une remise, un montant ou un encaissement — `titan-builder/src/lib/commande.ts`, `artisan-express/src/components/Offre.tsx`, les six règles qui protègent l'argent de NexusCrypto |
+| Structure des dossiers | créer, supprimer, renommer ou déplacer un dossier de premier niveau ; déplacer un projet ; changer où vivent les compétences ou les abris |
+| Configuration sensible | `.github/workflows/**`, `.claude/settings.json`, `next.config.ts`, `tsconfig.json`, les hooks, tout ce qui décide *comment* le dépôt se construit, se déploie ou s'autorise |
+
+**Le doute compte comme un oui.** Si une PR touche peut-être une de ces zones,
+elle attend. Se tromper en attendant coûte un aller-retour ; se tromper en
+fusionnant peut coûter une clé publiée ou un prix faux en production, et ces
+deux-là ne se rattrapent pas par un `git revert`.
+
+**Ce qui décide, c'est le diff, pas l'intention.** Une PR annoncée « juste une
+faute de frappe » qui modifie `.github/workflows/` touche la configuration
+sensible : elle attend. À l'inverse, une PR qui refait trois cents lignes de
+texte dans une fiche projet ne touche rien de tout ça : elle part seule. La
+taille n'est pas le critère — la zone l'est.
+
+**Comment le vérifier**, avant d'armer la fusion ou de fusionner :
+
+```
+git diff --name-only origin/main...HEAD
+```
+
+Si aucun chemin ne tombe dans le tableau, la PR est mineure. Sinon, on l'ouvre,
+on la laisse verte, et on le dit au propriétaire au format de la section 5 —
+puis **on enchaîne sur autre chose**, on n'attend pas en silence.
 
 **Demander est la faute, pas la prudence.** « Dis-moi si tu veux que je
 fusionne » en fin de message coûte un aller-retour depuis un téléphone pour
 une réponse qui est toujours oui, et laisse pendant ce temps une branche qui
-collectionne les conflits. Une PR verte se fusionne ; on l'annonce faite, au
-passé.
+collectionne les conflits. Une PR verte **et mineure** se fusionne ; on
+l'annonce faite, au passé.
 
 **Et « le feu vert » désigne deux choses que ce fichier confondait.** Le §0 bis
 en réclame un avant d'écrire sur de l'existant : celui-là vient du
 propriétaire. Les contrôles d'intégration continue en donnent un autre : celui-là
-vient de GitHub. **La fusion n'attend que le second.** Posé explicitement par le
-propriétaire le 03/09/2026, après une session qui écrivait « j'attends le vert
-pour fusionner » à chaque lot — une phrase que rien ne distingue d'une demande
+vient de GitHub. **La fusion n'attend que le second** — sauf dans les quatre
+zones sensibles décrites plus bas, qui attendent les deux. Posé explicitement
+par le propriétaire le 03/09/2026, après une session qui écrivait « j'attends
+le vert pour fusionner » à chaque lot — une phrase que rien ne distingue d'une demande
 d'autorisation, et qui fait donc surveiller un fil qu'il n'a aucune raison de
 surveiller.
 
 Ce qui en découle pour la rédaction, et pas seulement pour le geste : on
 n'annonce pas qu'on attend. On attend en silence, on fusionne, et le message
 suivant dit ce qui est fusionné. Une session qui écrit « j'attends » a déjà
-rendu la main sans le vouloir. Les seules choses qui s'arrêtent encore pour demander sont celles de la
-section 5, et la fusion n'en est pas.
+rendu la main sans le vouloir. Ce qui s'arrête encore pour demander : les
+choses de la section 5, et les PR qui touchent une des quatre zones ci-dessus.
+Une PR verte et mineure n'en est pas, et hésiter sur elle est la faute que ce
+paragraphe vise.
 
 **Armer la fusion automatique à l'ouverture**, avec `enable_pr_auto_merge`,
 plutôt que de sonder les contrôles en boucle jusqu'au vert. La surveillance
