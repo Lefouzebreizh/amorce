@@ -275,6 +275,7 @@ propre projet** — c'est le pire cas, celui qui décide.
 | IPTV | `#4aa8ff` bleu | 5,1:1 | sous le standard de la maison |
 | TITAN Builder | `#7c3aed` violet | **2,6:1** | **inutilisable comme accent** — voir plus bas |
 | Artisan Express | `#004AAD` sur fond clair | — | page de vente, thème clair assumé |
+| Annuaria | `#7fd68a` sauge | **8,19:1** | posé le 03/09/2026 — voir plus bas |
 | `chat-traducteur` | `#7FD99A` sauge | **8,3:1** | cinq accents de contenu — voir plus bas |
 | `look_and_find` | thème chaud clair | — | appli enfants, thème clair assumé |
 
@@ -290,6 +291,21 @@ Quatre teintes ont déjà été mesurées et passent, disponibles pour qui en a
 besoin : lavande `#c0abff` (7,4:1), sauge `#7fd68a` (8,3:1), corail `#ff9c7a`
 (7,2:1), citron `#d9e34a` (10,6:1). L'ambre a été écarté : il passe le contraste
 mais tombe sur `warn`.
+
+**Annuaria n'avait pas d'accent, elle en avait onze — et c'est pire.** Jusqu'au
+03/09/2026 ses surfaces d'action empruntaient la teinte de la niche, la même que
+le halo du fond, le dégradé du titre, les pastilles, les badges « nouveau », la
+bordure d'une carte survolée et l'anneau de focus. L'invariant 3 ci-dessus dit
+qu'un accent qui sert aux états devient décoratif ; celui-là servait à tout, donc
+le **lien affilié — seule chose qui rapporte sur ce site — n'avait rien qui le
+distingue du décor**.
+
+Le défaut ne se voyait dans aucune mesure, parce que la seule qui existait
+portait sur le texte *posé* sur le bouton, corrigé en juillet et parfaitement
+juste : 4,9 à 10,5:1. Personne n'avait mesuré la couleur du bouton **contre le
+reste de la page**. Le violet rendait 3,42:1 sur `--color-bord`, la sauge en rend
+8,19. Une mesure juste sur le mauvais objet laisse un défaut intact et donne
+l'impression du contraire.
 
 **Le violet de TITAN Builder est un défaut, pas un choix.** À 2,6:1 sur son
 propre `--color-bord`, il ne se lit pas. Le projet porte déjà deux valeurs qui
