@@ -5644,29 +5644,33 @@ Mesuré : trois à neuf points de clarté ont suffi sur les trois accents en
 défaut, et la planche montre que chacun tient encore son registre. Le calcul
 propose, l'œil valide — l'un sans l'autre ne suffit pas.
 
-## Une mesure juste devient fausse sans que rien ne bouge dans le dépôt
+## Deux causes, un seul message : ce qu'un refus ne permet pas de conclure
 
-Le 03/09/2026, `CLAUDE.md` affirmait — à raison, et avec le mot « mesuré » — que
-l'auto-fusion était coupée sur ce dépôt : `enable_pr_auto_merge` rendait
-« Auto-merge is not enabled for this repository ». La mesure était bonne. Le
-réglage a été changé **hors du dépôt**, dans les paramètres GitHub, et la phrase
-est devenue fausse sans qu'aucun commit ne la touche.
+Le 03/09/2026, `CLAUDE.md` affirmait — avec le mot « mesuré » — que
+l'auto-fusion était coupée sur ce dépôt, en citant le message
+« Auto-merge is not enabled for this repository ». Ce message ne sort plus.
 
-C'est une famille de phrases à part, et elle mérite d'être reconnue : celles qui
-décrivent un **état extérieur** — un réglage de plateforme, un quota, une clé,
-une politique réseau, un hôte joignable. Elles se périment toutes seules, en
-silence, et elles portent le mot « mesuré », ce qui les rend plus crédibles
-qu'une phrase ordinaire au moment où elles cessent d'être vraies.
+Le réflexe a été de conclure que le réglage avait été coché. **C'était faux**,
+et l'erreur a été rattrapée avant la fusion parce qu'un second essai a été fait
+dans l'autre état : contrôles en cours, l'appel refuse aussi. L'auto-fusion ne
+s'arme donc dans aucun des deux états — seul le libellé a changé.
 
-La parade est un réflexe, pas une relecture : **quand une règle dit « l'outil X
-refuse », faire l'appel une fois avant de la croire.** Il coûte une seconde,
-et son message dit lui-même si la règle tient encore. Le paragraphe corrigé le
-prévoyait d'ailleurs — « on arme quand même, l'appel dira le jour où le réglage
-change » — et c'est exactement ce qui l'a levé.
+La cause de l'erreur mérite d'être nommée, parce qu'elle se reproduira :
+**l'outil refuse pour deux raisons distinctes avec des messages voisins** — le
+réglage coupé, et la PR déjà fusionnable. Un message qui n'est plus celui qu'on
+attendait ne dit pas laquelle des deux s'applique. Un changement de libellé
+n'est pas un changement d'état.
 
-Le corollaire pour l'écriture : une phrase qui décrit un état extérieur se date
-et dit **par quel appel** on la revérifie. Sans ça, elle se relit comme une
-propriété du dépôt, et personne ne pense à la réinterroger.
+La règle qui en sort : **un message d'erreur mesure ce qu'il dit, jamais ce
+qu'on en déduit.** Avant de réécrire une phrase du dépôt sur la foi d'un refus,
+provoquer le même appel dans un **second état** — et si les deux refusent, on a
+mesuré un comportement, pas un réglage.
+
+Et la famille de phrases à surveiller, plus large que ce cas : celles qui
+décrivent un **état extérieur** — réglage de plateforme, quota, clé, hôte
+joignable. Elles ne bougent dans aucun diff, elles se périment toutes seules, et
+elles portent le mot « mesuré » au moment précis où elles cessent d'être vraies.
+Une phrase de ce genre se date et dit **par quel appel** on la revérifie.
 
 ## « stale info » après une fusion : la branche a été supprimée, pas dépassée
 
