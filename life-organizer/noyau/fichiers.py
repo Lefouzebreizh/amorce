@@ -29,6 +29,74 @@ from pathlib import Path
 # devient une enquête.
 NOM_DU_MANIFESTE = "origines.jsonl"
 
+# Ce que ces dossiers contiennent, d'après la configuration livrée elle-même :
+# relevés de compte, RIB, avis d'imposition, décomptes de mutuelle, ordonnances,
+# baux, cartes grises. Sur un poste familial ou une machine d'entreprise, le
+# mode par défaut (0o755 sous un umask 0o022) les rend lisibles par n'importe
+# quel autre compte local, sans privilège particulier.
+#
+# Le manifeste aggrave le cas : il consigne le **chemin d'origine complet** de
+# chaque fichier écarté, ce qui cartographie l'arborescence personnelle même
+# pour qui ne lirait pas les documents eux-mêmes.
+MODE_DOSSIER_PRIVE = 0o700
+MODE_FICHIER_PRIVE = 0o600
+
+
+def creer_dossier_prive(dossier: Path) -> Path:
+    """Crée un dossier lisible par son seul propriétaire, parents compris.
+
+    Trois pièges de `Path.mkdir` justifient cette fonction plutôt qu'un
+    paramètre `mode=` posé aux quatre appels :
+
+    1. **`mode` ne s'applique pas aux parents.** Avec `parents=True`, les
+       dossiers intermédiaires sont créés au mode par défaut — donc la
+       bibliothèque serait privée mais son parent ouvert.
+    2. **`mode` est masqué par l'umask**, qui est un réglage global qu'aucun
+       outil ne maîtrise. Le `chmod` explicite, lui, pose la valeur voulue.
+    3. **`exist_ok=True` ne touche pas un dossier déjà là.** Un dossier créé
+       avant cette version garderait ses droits ouverts pour toujours.
+
+    Le **dossier demandé** est resserré même s'il existait déjà : c'est celui de
+    l'outil, et une bibliothèque créée avant cette version garderait sinon ses
+    droits ouverts pour toujours — le cas exact que le constat I-2 décrit.
+
+    Ses **parents existants**, eux, ne sont jamais touchés : le dossier
+    personnel, un point de montage, un disque partagé ne nous appartiennent pas,
+    et resserrer leurs droits parce qu'on range dedans serait une surprise
+    désagréable — voire une casse ailleurs.
+
+    Sur Windows, le mode POSIX est ignoré par la plateforme. Le `README` le dit
+    plutôt que de laisser croire à une protection uniforme.
+    """
+    dossier = Path(dossier).expanduser()
+    a_resserrer = [parent for parent in dossier.parents if not parent.exists()]
+    dossier.mkdir(parents=True, exist_ok=True)
+    for cree in [dossier, *a_resserrer]:
+        try:
+            cree.chmod(MODE_DOSSIER_PRIVE)
+        except OSError:
+            # Windows, un système de fichiers sans droits POSIX, un montage en
+            # lecture seule : le rangement reste plus utile que la permission.
+            pass
+    return dossier
+
+
+def ouvrir_prive(fichier: Path, mode: str = "a", **options):
+    """Ouvre un fichier en le créant, s'il le faut, lisible par son seul propriétaire.
+
+    Le `chmod` vient **avant** l'ouverture pour qu'il n'existe aucun instant où
+    le fichier est lisible par d'autres — une fenêtre de quelques microsecondes
+    suffit à un autre processus qui attend.
+    """
+    fichier = Path(fichier)
+    if not fichier.exists():
+        fichier.touch(mode=MODE_FICHIER_PRIVE)
+        try:
+            fichier.chmod(MODE_FICHIER_PRIVE)
+        except OSError:
+            pass
+    return fichier.open(mode, **options)
+
 
 def parcourir(
     racines: Iterable[Path],
@@ -121,15 +189,15 @@ def mettre_en_quarantaine(chemin: Path, dossier_quarantaine: Path, motif: str) -
     pour qu'une reprise en main humaine porte sur « ce qu'a fait la commande de
     mardi » plutôt que sur un tas.
     """
-    dossier_du_jour = Path(dossier_quarantaine).expanduser() / date.today().isoformat()
-    dossier_du_jour.mkdir(parents=True, exist_ok=True)
+    dossier_du_jour = creer_dossier_prive(
+        Path(dossier_quarantaine).expanduser() / date.today().isoformat())
     destination = nom_disponible(dossier_du_jour / chemin.name)
 
     # `shutil.move` traverse les systèmes de fichiers, `Path.rename` non : la
     # quarantaine est souvent sur un autre disque que les photos.
     shutil.move(str(chemin), str(destination))
 
-    with (dossier_du_jour / NOM_DU_MANIFESTE).open("a", encoding="utf-8") as manifeste:
+    with ouvrir_prive(dossier_du_jour / NOM_DU_MANIFESTE, encoding="utf-8") as manifeste:
         manifeste.write(json.dumps(
             {"origine": str(chemin), "quarantaine": str(destination), "motif": motif},
             ensure_ascii=False,
@@ -200,7 +268,7 @@ def deplacer(source: Path, destination: Path, verifier: bool = False) -> Path:
     un fichier abîmé et plus aucun original pour le remplacer.
     """
     destination = nom_disponible(destination)
-    destination.parent.mkdir(parents=True, exist_ok=True)
+    creer_dossier_prive(destination.parent)
 
     if not verifier:
         shutil.move(str(source), str(destination))
