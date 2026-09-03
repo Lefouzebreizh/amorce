@@ -3,6 +3,7 @@
     "id": "juridique",
     "nom": "IA Juridique",
     "emoji": "⚖️",
+    "actif": false,
     "domaine": "https://reseau-annuaires.vercel.app/juridique/",
     "metier": "avocats et juristes d'entreprise",
     "h1_accent": "L'IA des juristes",

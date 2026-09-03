@@ -177,6 +177,27 @@ export function validerBase(base, nomFichier, releve = creerReleve()) {
   return releve;
 }
 
+/* Une niche mise en pause reste dans le dépôt, entièrement versionnée, et
+   cesse simplement d'être produite : pas de dossier construit, pas de sitemap,
+   pas une ligne de réserve consommée pour elle. C'est une décision du
+   02/09/2026 — onze sites publics à surveiller en parallèle d'autres projets
+   coûtaient plus d'attention qu'ils ne rapportaient, et un seul site suivi vaut
+   mieux que onze laissés en friche.
+
+   L'absence du champ vaut « active » : c'est ce qui permet de ne toucher que
+   les bases réellement mises en pause, et de ne pas casser une base écrite
+   avant cette règle. */
+export const nicheActive = (base) => base?.niche?.actif !== false;
+
+/* Les producteurs — construction, sitemaps, auto-pilote, alerte de réserve —
+   passent par là. `lireBases` continue de tout rendre, et ce n'est pas une
+   négligence : `nouvelle-niche.js` s'en sert pour refuser un identifiant déjà
+   pris, et une niche en pause occupe toujours le sien. Filtrer dans le
+   chargeur laisserait donc recréer le doublon d'une niche endormie. */
+export function lireBasesActives() {
+  return lireBases().filter(({ base }) => nicheActive(base));
+}
+
 export function lireBases() {
   if (!fs.existsSync(dossierNiches)) throw new Error(`Dossier introuvable : ${dossierNiches}`);
   const fichiers = fs.readdirSync(dossierNiches).filter((f) => f.endsWith('.json')).sort();
@@ -249,6 +270,10 @@ export function validerReseau(backlog = null, releve = creerReleve()) {
       }
     }
     for (const { fichier, base } of bases) {
+      /* Une niche en pause n'a rien à publier : lui réclamer une réserve
+         ferait crier la validation dix fois à chaque passage, et une alerte
+         qu'on apprend à ignorer ne protège plus rien. */
+      if (!nicheActive(base)) continue;
       if (!backlog[base?.niche?.id]) {
         alerter(releve, 'sans-reserve', `${fichier} — aucune réserve : l’auto-pilote n’a rien à y publier`);
       }

@@ -3,6 +3,7 @@
     "id": "sante",
     "nom": "IA Santé",
     "emoji": "🩺",
+    "actif": false,
     "domaine": "https://reseau-annuaires.vercel.app/sante/",
     "metier": "médecins et professionnels de santé",
     "h1_accent": "L'IA du cabinet médical",

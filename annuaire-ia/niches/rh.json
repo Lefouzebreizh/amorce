@@ -3,6 +3,7 @@
     "id": "rh",
     "nom": "IA RH",
     "emoji": "👥",
+    "actif": false,
     "domaine": "https://reseau-annuaires.vercel.app/rh/",
     "metier": "recruteurs et responsables des ressources humaines",
     "h1_accent": "L'IA des RH",

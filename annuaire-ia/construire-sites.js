@@ -27,7 +27,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { lireBases, validerBase, creerReleve, rendreCompte } from './valider.js';
+import { lireBasesActives, validerBase, creerReleve, rendreCompte } from './valider.js';
 import { entreesDeNiche, sitemap, robots } from './generate-sitemap.js';
 import { auditerAdresses } from './sonde-dns.mjs';
 
@@ -91,7 +91,11 @@ async function main() {
     throw new Error('styles.css absent — lancer `npm run styles` avant de construire les sites.');
   }
 
-  const toutes = lireBases();
+  /* Les niches en pause ne sont pas construites : ni dossier, ni sitemap, ni
+     adresse à faire résoudre par la sonde DNS juste en dessous — c'est ce
+     dernier point qui compte, car un domaine en pause ferait échouer la
+     construction du seul site qu'on met réellement en ligne. */
+  const toutes = lireBasesActives();
   const bases = demandees.length ? toutes.filter(({ base }) => demandees.includes(base.niche.id)) : toutes;
   if (bases.length === 0) throw new Error(`Aucune niche ne correspond à : ${demandees.join(', ')}`);
 

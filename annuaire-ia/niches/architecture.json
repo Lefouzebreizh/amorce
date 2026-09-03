@@ -3,6 +3,7 @@
     "id": "architecture",
     "nom": "IA Architecture",
     "emoji": "📐",
+    "actif": false,
     "domaine": "https://reseau-annuaires.vercel.app/architecture/",
     "metier": "architectes et maîtres d'œuvre",
     "h1_accent": "L'IA de l'agence",

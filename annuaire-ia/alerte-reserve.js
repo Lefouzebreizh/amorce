@@ -23,12 +23,14 @@
  */
 
 import { BACKLOG } from './auto-pilot.js';
-import { lireBases } from './valider.js';
+import { lireBasesActives } from './valider.js';
 
 const SEUIL = 2;
 const CORPS = process.argv.includes('--corps');
 
-const bases = lireBases();
+/* Une niche en pause n'est pas publiée : sa réserve peut être à zéro sans que
+   cela mérite d'alerter qui que ce soit. */
+const bases = lireBasesActives();
 const restant = {};
 for (const { base } of bases) {
   const enLigne = new Set(base.outils.map((o) => o.id));

@@ -3,6 +3,7 @@
     "id": "ecomm",
     "nom": "IA E-commerce",
     "emoji": "🛒",
+    "actif": false,
     "domaine": "https://reseau-annuaires.vercel.app/ecomm/",
     "metier": "e-commerçants et responsables de boutique en ligne",
     "h1_accent": "L'IA de la boutique",

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { creerReleve, lireBases, rendreCompte, validerBase } from '../valider.js';
+import { creerReleve, lireBases, lireBasesActives, nicheActive, rendreCompte, validerBase } from '../valider.js';
 
 /**
  * Ce que le filet du réseau doit tenir.
@@ -225,5 +225,37 @@ test('les onze bases versionnées passent leur propre validation', () => {
   assert.ok(bases.length >= 11, `${bases.length} base(s) lue(s)`);
   const releve = creerReleve();
   for (const { fichier, base: b } of bases) validerBase(b, fichier, releve);
+  assert.deepEqual(releve.erreurs, []);
+});
+
+// ── La mise en pause ────────────────────────────────────────────────────────
+//
+// Ces trois tests gardent une décision qui ne casse rien quand on l'enfreint :
+// une niche remise en production par inadvertance se construit, s'indexe et
+// consomme la réserve sans qu'aucune erreur n'apparaisse nulle part. C'est
+// exactement le genre de régression qu'aucun autre test ne peut voir.
+
+test('l’absence du champ vaut « active »', () => {
+  // Toutes les bases écrites avant cette règle en dépendent : si l'absence
+  // valait « en pause », le réseau entier disparaîtrait en silence.
+  assert.equal(nicheActive({ niche: { id: 'x' } }), true);
+  assert.equal(nicheActive({ niche: { id: 'x', actif: true } }), true);
+  assert.equal(nicheActive({ niche: { id: 'x', actif: false } }), false);
+});
+
+test('un seul site est actif, et c’est la Boîte à Outils IA', () => {
+  const actives = lireBasesActives();
+  assert.deepEqual(actives.map(({ base: b }) => b.niche.id), ['generaliste']);
+});
+
+test('les niches en pause restent lisibles et valides', () => {
+  // La pause n'est pas une suppression : les dix bases restent versionnées et
+  // doivent pouvoir revenir en ligne d'un seul champ. Une base en pause qui se
+  // dégrade sans être vue rendrait ce retour impossible.
+  const toutes = lireBases();
+  const enPause = toutes.filter(({ base: b }) => !nicheActive(b));
+  assert.equal(enPause.length, 10, `${enPause.length} niche(s) en pause`);
+  const releve = creerReleve();
+  for (const { fichier, base: b } of enPause) validerBase(b, fichier, releve);
   assert.deepEqual(releve.erreurs, []);
 });
