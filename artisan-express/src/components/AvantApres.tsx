@@ -26,13 +26,18 @@ const APRES = [
 
 export function AvantApres() {
   return (
-    <section className="bg-bleu-pale">
+    <section className="bg-slab">
       <div className={SECTION} id="avant-apres">
         <h2 className={TITRE_SECTION}>Ce que tu as aujourd’hui, ce que tu auras jeudi</h2>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">
-          {/* Avant */}
-          <div className="flex flex-col rounded-2xl border border-bordure bg-white p-6">
+          {/*
+            * Avant. La capture d'annuaire garde ses gris clairs, et c'est
+            * délibéré : c'est **le sujet** — une vraie page d'annuaire est
+            * blanche et grise. La montrer sombre reviendrait à la maquiller,
+            * et le contraste avec la carte « après » porte tout le message.
+            */}
+          <div className="flex flex-col rounded-2xl border border-edge bg-panel p-6">
             <p className="text-base font-bold uppercase tracking-[0.16em] text-ardoise">
               Aujourd’hui — ta fiche dans un annuaire
             </p>
@@ -64,7 +69,7 @@ export function AvantApres() {
             <ul className="mt-5 space-y-3 text-base leading-relaxed text-ardoise">
               {AVANT.map((ligne) => (
                 <li key={ligne} className="flex gap-2.5">
-                  <span aria-hidden="true" className="mt-0.5 font-bold text-[#b4231d]">
+                  <span aria-hidden="true" className="mt-0.5 font-bold text-danger">
                     ✕
                   </span>
                   <span>{ligne}</span>
@@ -74,14 +79,14 @@ export function AvantApres() {
           </div>
 
           {/* Après */}
-          <div className="flex flex-col rounded-2xl border-2 border-bleu bg-white p-6">
-            <p className="text-base font-bold uppercase tracking-[0.16em] text-bleu">
+          <div className="flex flex-col rounded-2xl border-2 border-accent bg-panel p-6">
+            <p className="text-base font-bold uppercase tracking-[0.16em] text-accent">
               Jeudi — ton site à toi
             </p>
 
-            <div className="mt-4 overflow-hidden rounded-lg border border-bordure" aria-hidden="true">
-              <div className="bg-bleu px-3 py-2 text-white">
-                <p className="text-[0.6rem] font-bold uppercase tracking-[0.16em] text-white/70">
+            <div className="mt-4 overflow-hidden rounded-lg border border-edge" aria-hidden="true">
+              <div className="bg-accent px-3 py-2 text-accent-encre">
+                <p className="text-[0.6rem] font-bold uppercase tracking-[0.16em] text-accent-encre/70">
                   Couverture
                 </p>
                 <p className="text-sm font-bold leading-tight">LE GOFF TOITURES</p>
@@ -91,7 +96,7 @@ export function AvantApres() {
                   Toiture, zinguerie, fuite urgente — Quimper et alentours.
                 </p>
                 <div className="mt-2 flex gap-1.5">
-                  <span className="rounded bg-chantier px-2 py-1 text-[0.55rem] font-bold text-white">
+                  <span className="rounded bg-accent px-2 py-1 text-[0.55rem] font-bold text-accent-encre">
                     Appeler
                   </span>
                   <span className="rounded bg-[#25D366] px-2 py-1 text-[0.55rem] font-bold text-white">
@@ -99,7 +104,7 @@ export function AvantApres() {
                   </span>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-1">
-                  {['#c7d7ec', '#b4c8e2', '#d3dfef'].map((teinte) => (
+                  {['var(--color-panel)', 'var(--color-edge)', 'var(--color-slab)'].map((teinte) => (
                     <div key={teinte} className="h-8 rounded" style={{ backgroundColor: teinte }} />
                   ))}
                 </div>
@@ -109,7 +114,7 @@ export function AvantApres() {
             <ul className="mt-5 space-y-3 text-base leading-relaxed text-encre">
               {APRES.map((ligne) => (
                 <li key={ligne} className="flex gap-2.5">
-                  <span aria-hidden="true" className="mt-0.5 font-bold text-bleu">
+                  <span aria-hidden="true" className="mt-0.5 font-bold text-accent">
                     ✓
                   </span>
                   <span>{ligne}</span>
@@ -129,7 +134,7 @@ export function AvantApres() {
           */}
         <p className="mt-8 text-center text-lg leading-relaxed text-ardoise">
           <a
-            className="inline-flex min-h-14 items-center justify-center rounded-xl border-2 border-bleu bg-white px-6 text-lg font-semibold text-bleu"
+            className="inline-flex min-h-14 items-center justify-center rounded-xl border-2 border-accent bg-slab px-6 text-lg font-semibold text-accent"
             href="/exemple.html"
           >
             Voir un site fini, en vrai

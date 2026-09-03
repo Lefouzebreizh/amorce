@@ -60,7 +60,7 @@ function Bloc({ titre, children }: { titre: string; children: React.ReactNode })
 export default function MentionsLegales() {
   return (
     <main className="mx-auto w-full max-w-3xl px-5 py-12">
-      <Link className="text-lg font-bold text-bleu underline" href="/">
+      <Link className="text-lg font-bold text-accent underline" href="/">
         ← Retour à la page
       </Link>
 
@@ -73,13 +73,13 @@ export default function MentionsLegales() {
         <p>{EDITEUR.adresse}</p>
         <p>SIREN {EDITEUR.siren}</p>
         <p>
-          <a className="font-bold text-bleu underline" href={`mailto:${contact.courrielDirect}`}>
+          <a className="font-bold text-accent underline" href={`mailto:${contact.courrielDirect}`}>
             {contact.courrielDirect}
           </a>
         </p>
         {contact.telephoneLien === '' ? null : (
           <p>
-            <a className="font-bold text-bleu underline" href={contact.telephoneLien}>
+            <a className="font-bold text-accent underline" href={contact.telephoneLien}>
               {contact.telephoneAffiche}
             </a>
           </p>

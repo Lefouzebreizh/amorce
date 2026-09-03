@@ -45,7 +45,7 @@ const METIERS = [
   'Serrurier',
 ];
 
-const CHAMPS = 'w-full min-h-14 rounded-xl border-2 border-bordure bg-white px-4 text-lg text-encre placeholder:text-ardoise/60 focus:border-bleu';
+const CHAMPS = 'w-full min-h-14 rounded-xl border-2 border-edge bg-slab px-4 text-lg text-encre placeholder:text-ardoise/60 focus:border-accent';
 
 /*
  * Le message sous un champ, défini hors du formulaire : React interdit de créer
@@ -56,7 +56,7 @@ function MessageErreur({ id, message }: { id: string; message: string | undefine
   if (message === undefined) return null;
 
   return (
-    <p id={id} className="mt-1.5 text-base font-semibold text-[#b4231d]">
+    <p id={id} className="mt-1.5 text-base font-semibold text-[var(--color-danger)]">
       {message}
     </p>
   );
@@ -113,7 +113,7 @@ export function FormulaireDevis() {
   if (etat.nom === 'recu') {
     return (
       <section className={SECTION} id="formulaire">
-        <div className="rounded-2xl border-2 border-bleu bg-bleu-pale p-8 text-center">
+        <div className="rounded-2xl border-2 border-accent bg-slab p-8 text-center">
           <h2 className={TITRE_SECTION}>C’est envoyé.</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-ardoise">
             Je te rappelle dans la journée. On parle cinq minutes de ton métier et de ta zone, et je
@@ -233,7 +233,7 @@ export function FormulaireDevis() {
            * chez lui — mais il reste surtout un chemin, là où la page n'en
            * offrait plus aucun tant que rien n'était réglé.
            */
-          <div role="alert" className="rounded-xl bg-bleu-pale p-4 sm:col-span-2">
+          <div role="alert" className="rounded-xl bg-slab p-4 sm:col-span-2">
             <p className="text-lg leading-relaxed text-encre">
               L’envoi automatique ne marche pas — c’est de mon côté, pas du tien. Ton message est
               prêt : appuie, il part de ta messagerie.
@@ -247,12 +247,12 @@ export function FormulaireDevis() {
           </div>
         ) : null}
         {etat.nom === 'panne' && !(aUnCourrielDirect && etat.demande !== null) ? (
-          <p role="alert" className="rounded-xl bg-bleu-pale p-4 text-lg leading-relaxed text-encre sm:col-span-2">
+          <p role="alert" className="rounded-xl bg-slab p-4 text-lg leading-relaxed text-encre sm:col-span-2">
             Le formulaire ne part pas — c’est de mon côté, pas du tien.{' '}
             {aUnTelephone ? (
               <>
                 Appelle-moi directement au{' '}
-                <a className="font-bold text-bleu underline" href={contact.telephoneLien}>
+                <a className="font-bold text-accent underline" href={contact.telephoneLien}>
                   {contact.telephoneAffiche}
                 </a>
                 .
@@ -262,7 +262,7 @@ export function FormulaireDevis() {
               <>
                 {' '}
                 Ou écris-moi sur{' '}
-                <a className="font-bold text-bleu underline" href={contact.whatsappLien}>
+                <a className="font-bold text-accent underline" href={contact.whatsappLien}>
                   WhatsApp
                 </a>
                 .

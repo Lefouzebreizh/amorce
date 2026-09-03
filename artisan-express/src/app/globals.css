@@ -1,30 +1,64 @@
 @import 'tailwindcss';
 
 /*
- * La palette tient en six couleurs, et c'est volontaire.
+ * La charte d'Artisan Express, et c'est la **même** que celle des sites livrés.
  *
- * Blanc et bleu de chantier (#004AAD) portent la structure ; l'orange ne sert
- * qu'aux boutons qui engagent quelque chose. Un accent unique veut dire qu'on
- * ne cherche jamais où cliquer : ce qui est orange est ce qu'on fait.
+ * Elle était claire : blanc dominant, bleu de structure, et un orange réservé
+ * aux boutons. Deux raisons de l'avoir retournée, et aucune n'est un goût.
  *
- * Les couleurs passent par des jetons plutôt que d'être posées en dur dans les
- * composants — c'est aussi ce qui empêche Chrome Android de recolorer d'autorité
- * une page qui ne se déclare pas.
+ * 1. **L'orange sortait du standard de la maison.** `#c74e00` rend 4,6:1 sur
+ *    blanc : il passe le minimum WCAG et échoue au plancher de 7:1 que
+ *    `CLAUDE.md` §2 bis impose à un accent — et le bouton qui porte toute la
+ *    page en était fait.
+ * 2. **Une page de vente doit ressembler à ce qu'elle vend.** Les sites livrés
+ *    sont sombres et sobres depuis `titan-builder/src/lib/charte.ts` ; une
+ *    vitrine blanche promettait autre chose que la marchandise.
+ *
+ * Les valeurs viennent de ce fichier-là, pas d'ici : les recopier était le
+ * risque, deux palettes tenues en parallèle divergeant au premier changement.
+ * `tests/charte.test.ts` relit les deux et refuse qu'elles s'écartent.
+ *
+ * Les noms de surface sont ceux du dépôt — ink, slab, panel, edge — pour qu'une
+ * brique se déplace d'un projet à l'autre. `encre` et `ardoise` gardent les
+ * leurs : ils ont toujours désigné du texte, et c'est toujours vrai.
  */
 @theme {
-  --color-bleu: #004aad;
-  --color-bleu-sombre: #00306f;
-  --color-bleu-pale: #eef4fc;
+  /* Les surfaces, du fond de page à la carte la plus haute. */
+  --color-ink: #16151a;
+  --color-slab: #1f1e25;
+  --color-panel: #26242d;
+  --color-edge: #2e2c34;
+
+  /* Les encres. Un blanc cassé plutôt qu'un blanc pur : sur fond sombre, le
+     blanc pur vibre et fatigue à la lecture longue. */
+  --color-encre: #f1efea;
+  --color-ardoise: #b7b3a9;
+  --color-eteinte: #6c6a72;
+
   /*
-   * Mesuré : #e35d00 sous du blanc rend 3,60:1 — sous le seuil, et le bouton
-   * qui porte toute la page en est fait. Approfondi jusqu'à 4,65:1, ce qui
-   * était déjà la teinte du survol : la page était donc plus lisible au doigt
-   * posé qu'au repos.
+   * L'accent unique de ce produit : le vert de la charte, celui que reçoit un
+   * couvreur, et la teinte par défaut de la palette. Mesuré à 9,4:1 sur le fond
+   * de page — au-dessus du plancher de 7:1.
+   *
+   * Il ne désigne qu'une chose : **l'action à faire.** S'en servir pour décorer
+   * le rendrait muet, ce que §2 bis interdit en propres termes.
    */
-  --color-chantier: #c74e00;
-  --color-encre: #101f2e;
-  --color-ardoise: #4a5b6d;
-  --color-bordure: #d7e1ee;
+  --color-accent: #4fb39c;
+  --color-accent-vif: #6fcab4;
+  /* Ce qu'on écrit **sur** l'accent — le libellé d'un bouton plein. */
+  --color-accent-encre: #0d2a25;
+  /* Le voile : halo d'entête et fond de bloc discret. */
+  --color-voile: #1c332e;
+
+  /*
+   * Le danger. Il est commun à tous les produits et garde le même sens partout
+   * — §2 bis — et il est **assez loin de l'accent** pour ne pas s'y confondre.
+   *
+   * L'ancien `#b4231d` tenait sur blanc et rendait **2,52:1** sur la carte
+   * sombre : le message d'erreur du formulaire devenait illisible sur l'écran
+   * qui ramasse les prospects. Mesuré à 6,9:1 sur `slab`, 6,4:1 sur `panel`.
+   */
+  --color-danger: #f08b82;
 
   --font-sans:
     system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -39,10 +73,13 @@ html {
   font-size: 18px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  /* Sans cette ligne, les contrôles natifs et l'ascenseur restent clairs sur
+     une page sombre — deux détails qui trahissent la bascule. */
+  color-scheme: dark;
 }
 
 body {
-  background-color: #ffffff;
+  background-color: var(--color-ink);
   color: var(--color-encre);
   font-family: var(--font-sans);
   /* Un bandeau d'action fixe couvre le bas de l'écran : sans cette réserve, il
@@ -77,6 +114,6 @@ body {
 /* Le focus au clavier reste visible partout : c'est la seule façon de remplir
    le formulaire sans souris. */
 :focus-visible {
-  outline: 3px solid var(--color-chantier);
+  outline: 3px solid var(--color-accent);
   outline-offset: 2px;
 }

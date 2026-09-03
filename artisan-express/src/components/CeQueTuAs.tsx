@@ -87,9 +87,9 @@ export function CeQueTuAs() {
         {LOTS.map(({ icone: Icone, titre, texte }) => (
           <li
             key={titre}
-            className="rounded-2xl border border-bordure bg-bleu-pale p-6 sm:p-7"
+            className="rounded-2xl border border-edge bg-slab p-6 sm:p-7"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-bleu text-white">
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-accent-encre">
               <svg
                 width="26"
                 height="26"

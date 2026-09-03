@@ -13,7 +13,7 @@ export function Temoignage() {
     <section className={SECTION} id="temoignage">
       <h2 className={TITRE_SECTION}>La place du premier client</h2>
 
-      <figure className="mt-8 rounded-2xl border-2 border-dashed border-bleu bg-bleu-pale p-6 sm:p-8">
+      <figure className="mt-8 rounded-2xl border-2 border-dashed border-accent bg-slab p-6 sm:p-8">
         <blockquote className="text-xl leading-relaxed text-encre sm:text-2xl">
           Cette place est vide.
         </blockquote>

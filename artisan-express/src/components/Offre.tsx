@@ -32,20 +32,20 @@ export function Offre() {
     <section className={SECTION} id="offre">
       <h2 className={TITRE_SECTION}>300&nbsp;€, une fois</h2>
 
-      <div className="mt-8 overflow-hidden rounded-2xl border-2 border-bleu">
-        <div className="bg-bleu px-6 py-7 text-white sm:px-8">
+      <div className="mt-8 overflow-hidden rounded-2xl border-2 border-accent">
+        <div className="bg-accent px-6 py-7 text-accent-encre sm:px-8">
           <p className="text-5xl font-bold tracking-tight sm:text-6xl">300&nbsp;€</p>
           {/* Blanc plein, pas 85 % : l’opacité rendait 2,58:1 sur le bleu. */}
-          <p className="mt-2 text-lg text-white">
+          <p className="mt-2 text-lg text-accent-encre">
             Une fois. Pas d’abonnement, rien à résilier, pas de reconduction.
           </p>
         </div>
 
-        <div className="bg-white px-6 py-7 sm:px-8">
+        <div className="bg-slab px-6 py-7 sm:px-8">
           <dl className="grid gap-5 sm:grid-cols-2">
             {COMPRIS.map(([titre, detail]) => (
               <div key={titre} className="flex gap-3">
-                <span aria-hidden="true" className="mt-0.5 text-xl font-bold text-bleu">
+                <span aria-hidden="true" className="mt-0.5 text-xl font-bold text-accent">
                   ✓
                 </span>
                 <div>
@@ -60,7 +60,7 @@ export function Offre() {
             La ligne que les pages de vente cachent. Elle est ici parce qu'un
             artisan qui découvre un frais après coup ne rappelle jamais.
           */}
-          <p className="mt-7 rounded-xl bg-bleu-pale p-4 text-base leading-relaxed text-ardoise">
+          <p className="mt-7 rounded-xl bg-slab p-4 text-base leading-relaxed text-ardoise">
             <strong className="text-encre">Ce qui n’est pas dedans&nbsp;:</strong> le nom de domaine
             à ton nom (une douzaine d’euros par an, payés directement au fournisseur, jamais à moi).
             Je te montre comment le prendre, ou je m’en occupe avec toi au téléphone.

@@ -29,11 +29,16 @@ export const metadata: Metadata = {
 };
 
 /*
- * `themeColor` en bleu : Chrome Android colore sa barre d'adresse avec, et une
- * page qui ne déclare rien se fait appliquer un thème sombre automatique.
+ * `themeColor` sur le fond de page : Chrome Android colore sa barre d'adresse
+ * avec, et une page qui ne déclare rien se fait appliquer un thème automatique.
+ *
+ * Il valait `#004aad`, le bleu d'avant la charte. Sur une page désormais
+ * sombre, une barre d'adresse bleu vif au-dessus d'un fond `#16151a` fait une
+ * bande de couleur qui n'appartient à rien — le genre de détail qu'on ne voit
+ * que sur l'appareil, jamais dans une capture de navigateur de bureau.
  */
 export const viewport: Viewport = {
-  themeColor: '#004aad',
+  themeColor: '#16151a',
   width: 'device-width',
   initialScale: 1,
 };

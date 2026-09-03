@@ -4,10 +4,10 @@ import { aUnTelephone, contact } from '@/lib/config';
 
 export function Hero() {
   return (
-    <header className="border-b border-bordure bg-white">
+    <header className="border-b border-edge bg-slab">
       <div className="mx-auto grid w-full max-w-5xl gap-10 px-5 pb-14 pt-10 sm:pt-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:gap-14 md:pb-20">
         <div>
-          <p className="text-base font-bold uppercase tracking-[0.18em] text-bleu">
+          <p className="text-base font-bold uppercase tracking-[0.18em] text-accent">
             Maçon, couvreur, électricien
           </p>
 
@@ -15,7 +15,7 @@ export function Hero() {
             Ton site qui trouve des chantiers, livré en 48&nbsp;h.
           </h1>
 
-          <p className="mt-4 text-2xl font-bold text-bleu sm:text-3xl">
+          <p className="mt-4 text-2xl font-bold text-accent sm:text-3xl">
             300&nbsp;€ une fois. Pas d’abonnement.
           </p>
 
@@ -42,14 +42,14 @@ export function Hero() {
             Trois repères et pas un slogan de plus : ce sont les trois questions
             que se pose un artisan devant une page de vente, dans cet ordre.
           */}
-          <dl className="mt-8 grid max-w-lg grid-cols-3 gap-4 border-t border-bordure pt-6">
+          <dl className="mt-8 grid max-w-lg grid-cols-3 gap-4 border-t border-edge pt-6">
             {[
               ['48 h', 'de délai, pas six semaines'],
               ['0 €', 'par mois, rien à résilier'],
               ['1', 'modification offerte'],
             ].map(([chiffre, quoi]) => (
               <div key={chiffre}>
-                <dt className="text-2xl font-bold text-bleu">{chiffre}</dt>
+                <dt className="text-2xl font-bold text-accent">{chiffre}</dt>
                 <dd className="mt-1 text-base leading-snug text-ardoise">{quoi}</dd>
               </div>
             ))}
