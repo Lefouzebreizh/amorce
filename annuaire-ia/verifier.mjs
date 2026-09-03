@@ -144,6 +144,26 @@ for (const { niche, outils } of aParcourir) {
   const cartes = await page.locator('#grille article').count();
   verifier('tous les outils affichés', cartes === outils.length, `${cartes}/${outils.length}`);
 
+  /* Aucun lien mort visible, quel que soit l'état d'avancement des programmes.
+
+     `exemple-affiliation.com` est un gabarit : le domaine n'existe pas. Le
+     02/09/2026, 99 outils sur 106 le portaient et le bouton y menait quand
+     même — sur le seul élément de la page qui rapporte. Le gabarit masque
+     désormais le bouton tant que l'adresse n'est pas posée ; ce contrôle
+     existe pour que le retrait de ce garde-fou se voie ici et non en ligne.
+
+     Il se lit dans les deux sens : les boutons visibles doivent valoir
+     exactement le nombre d'outils dont l'adresse est réellement posée. */
+  const morts = await page.locator('a[href*="exemple-affiliation"]').count();
+  verifier('aucun lien de démonstration cliquable', morts === 0, `${morts} trouvé(s)`);
+
+  const poses = outils.filter((o) => {
+    const a = typeof o.lien_affiliation === 'string' ? o.lien_affiliation.trim() : '';
+    return a !== '' && !/exemple-affiliation\.com/.test(a);
+  }).length;
+  const visibles = await page.locator('#grille article a.bouton-accent').count();
+  verifier('un bouton affilié par adresse posée', visibles === poses, `${visibles} bouton(s) / ${poses} posée(s)`);
+
   if (niche.emoji) {
     const favicon = decodeURIComponent(await page.getAttribute('link[rel=icon]', 'href'));
     verifier('favicon de la niche', favicon.includes(niche.emoji));
@@ -185,11 +205,33 @@ for (const { niche, outils } of aParcourir) {
   verifier('avis tracé en sections', (await page.locator('#modale-corps h3').count()) >= 4);
   verifier('adresse profonde poussée', page.url().includes(`?niche=${niche.id}&outil=${premier.id}`));
   verifier('titre suit l’outil ouvert', (await page.title()).startsWith(premier.nom));
-  verifier(
-    'lien affilié en rel="sponsored"',
-    (await page.getAttribute('#modale-lien', 'rel')).includes('sponsored')
-    && (await page.getAttribute('#modale-lien', 'href')) === premier.lien_affiliation
-  );
+  /* Deux régimes, et le contrôle doit tenir les deux — sans quoi il devient
+     vert par accident le jour où le pied de fenêtre est masqué à tort.
+
+     Adresse posée : le pied s'affiche, le lien porte `sponsored` et pointe
+     exactement sur elle. Adresse encore en gabarit : le pied est masqué, et
+     surtout le visiteur n'a rien à cliquer qui mène au vide. */
+  const adressePremier = typeof premier.lien_affiliation === 'string' ? premier.lien_affiliation.trim() : '';
+  const posee = adressePremier !== '' && !/exemple-affiliation\.com/.test(adressePremier);
+  const piedVisible = await page.isVisible('#modale-lien');
+  if (posee) {
+    verifier(
+      'lien affilié en rel="sponsored"',
+      piedVisible
+      && (await page.getAttribute('#modale-lien', 'rel')).includes('sponsored')
+      && (await page.getAttribute('#modale-lien', 'href')) === premier.lien_affiliation
+    );
+  } else {
+    verifier(
+      'adresse pas encore posée → aucun bouton à cliquer',
+      !piedVisible,
+      piedVisible ? 'le pied de fenêtre reste affiché' : ''
+    );
+    verifier(
+      'le focus reste dans la fenêtre quand le bouton est retiré',
+      await page.evaluate(() => document.activeElement?.closest('#modale') !== null)
+    );
+  }
   await page.keyboard.press('Escape');
   verifier('échap referme', await page.isHidden('#modale-corps'));
 

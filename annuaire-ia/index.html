@@ -131,6 +131,26 @@
      pas une URL distincte pour un moteur de recherche, et le sitemap n'aurait
      alors qu'une seule adresse par site à proposer. */
 
+  /* Un bouton d'affiliation pas encore posé ne s'affiche pas.
+
+     `exemple-affiliation.com` est un gabarit de démonstration : le domaine
+     n'existe pas et ne répond pas. Tant qu'un outil le porte, son bouton
+     menait le visiteur sur une page d'erreur de navigateur — sur le seul
+     élément de la page censé inspirer confiance, et sur un site dont c'est
+     la seule raison d'être. Mesuré le 02/09/2026 : 99 outils sur 106, les
+     onze niches.
+
+     Le marqueur est celui de `valider.js` et de `regler-affiliations.mjs`,
+     volontairement, et pour la raison que ce dernier écrit déjà : deux
+     définitions de « lien pas encore posé » font deux compteurs qui se
+     contredisent. La fiche reste ouverte par « En savoir plus » — on retire
+     un lien mort, pas l'outil. */
+  const LIEN_DEMO = /exemple-affiliation\.com/;
+  const lienUtilisable = (outil) => {
+    const adresse = typeof outil?.lien_affiliation === 'string' ? outil.lien_affiliation.trim() : '';
+    return adresse !== '' && !LIEN_DEMO.test(adresse) ? adresse : null;
+  };
+
   const NICHE_DEFAUT = 'immobilier';
   const etat = { niche: null, outils: [], categorie: 'Tous', recherche: '', ouvert: null, dernierFocus: null };
 
@@ -278,16 +298,20 @@
     const actions = document.createElement('div');
     actions.className = 'mt-5 flex flex-col gap-2';
 
-    const lien = document.createElement('a');
-    lien.href = outil.lien_affiliation;
-    lien.target = '_blank';
-    lien.rel = 'sponsored noopener';
-    lien.className = 'bouton-accent flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold';
-    lien.textContent = 'Voir l’outil';
-    const mention = document.createElement('span');
-    mention.className = 'ml-1.5 text-[11px] font-normal opacity-80';
-    mention.textContent = '(lien affilié)';
-    lien.append(mention);
+    const adresse = lienUtilisable(outil);
+    let lien = null;
+    if (adresse !== null) {
+      lien = document.createElement('a');
+      lien.href = adresse;
+      lien.target = '_blank';
+      lien.rel = 'sponsored noopener';
+      lien.className = 'bouton-accent flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold';
+      lien.textContent = 'Voir l’outil';
+      const mention = document.createElement('span');
+      mention.className = 'ml-1.5 text-[11px] font-normal opacity-80';
+      mention.textContent = '(lien affilié)';
+      lien.append(mention);
+    }
 
     const savoir = document.createElement('button');
     savoir.type = 'button';
@@ -295,7 +319,7 @@
     savoir.className = 'min-h-11 w-full rounded-xl border border-bord bg-relief/60 px-4 text-sm font-semibold text-sourdine transition hover:text-white';
     savoir.textContent = 'En savoir plus';
 
-    actions.append(lien, savoir);
+    actions.append(...(lien === null ? [] : [lien]), savoir);
     article.append(haut, titre, prix, courte, actions);
     return article;
   }
@@ -387,11 +411,26 @@
     meta.replaceChildren(note, prix);
 
     $('#modale-corps').replaceChildren(articleVersDom(outil.description_longue));
-    $('#modale-lien').href = outil.lien_affiliation;
+    /* `hidden` plutôt qu'une adresse vide : un `<a href="">` recharge la page.
+
+       Et c'est le pied de fenêtre entier qui se masque, pas seulement le lien :
+       masquer le seul `<a>` laissait une bande de 33 px avec sa bordure et son
+       fond — mesuré — qui se lit comme un défaut d'affichage. */
+    const adresseModale = lienUtilisable(outil);
+    const boutonModale = $('#modale-lien');
+    boutonModale.closest('footer').hidden = adresseModale === null;
+    if (adresseModale !== null) boutonModale.href = adresseModale;
 
     modale.classList.remove('hidden');
     document.body.classList.add('fige');
-    $('#modale-lien').focus();
+    /* Le focus ne se pose pas sur un élément masqué : il n'irait nulle part et
+       la navigation au clavier resterait bloquée derrière la fenêtre.
+
+       `button[…]` et non `[…]` seul : le voile de fond porte le même
+       `data-action="fermer"` et vient avant dans le document. Un `querySelector`
+       sans le nom de balise rend donc le voile — un `<div>` sans `tabindex`, sur
+       lequel `focus()` ne fait rien et ne lève rien. */
+    (adresseModale === null ? modale.querySelector('button[data-action="fermer"]') : boutonModale).focus();
 
     const suffixe = `?niche=${etat.niche.id}&outil=${outil.id}`;
     tete({
