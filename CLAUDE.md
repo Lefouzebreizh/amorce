@@ -1395,9 +1395,42 @@ doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 **Quatre** projets Vercel sont branchés sur ce dépôt : `amorce` (racine),
 `amorce-51up` (dossier `artisan-express`), `iptv`, et **`reseau-annuaires`
 (dossier `annuaire-ia`), apparu le 02/09/2026**. Ce dernier est un résidu : le
-réseau d'annuaires est mis en ligne par **GitHub Pages** depuis le même jour, et
-son projet Vercel ne fait plus qu'échouer — vu en rouge sur une pull request qui
-ne touchait que `life-organizer/`. Il porte donc un `vercel.json` à
+réseau d'annuaires **doit** être mis en ligne par GitHub Pages depuis le même
+jour — la route est tranchée et le workflow écrit — et son projet Vercel ne fait
+plus qu'échouer — vu en rouge sur une pull request qui
+ne touchait que `life-organizer/`.
+
+**Mais « doit » n'est pas « est », et rien n'est en ligne — mesuré le 02/09/2026
+au soir.** La source Pages du dépôt est restée sur une **branche**, pas sur
+Actions : le billet **#557** le dit depuis 15 h 46 et attend trois gestes que
+seul le propriétaire peut faire. Le workflow `annuaire-ia-pages.yml` se comporte
+comme prévu — il détecte, il prévient, il ouvre le billet, il reste vert — mais
+il ne dépose rien.
+
+Deux conséquences qu'une session pressée additionnerait mal :
+
+- **Les onze sites ne sont servis nulle part.** Leurs balises canoniques
+  annoncent `ma-panoplie-ia.com`, que personne ne sert. Toute phrase de compte
+  rendu qui les dit « en ligne » est fausse tant que #557 est ouvert.
+- **Le contrôle `pages build and deployment` est rouge à chaque poussée sur
+  `main`**, et ce n'est ni le workflow du réseau ni une PR fautive. En mode
+  branche, GitHub lance l'action officielle `jekyll-build-pages` sur la **racine entière** du
+  dépôt, `source: .` ; Jekyll y lit tous les fichiers et meurt sur le premier
+  qui ressemble à du front matter YAML sans en être :
+
+  ```
+  Invalid YAML front matter in hypersensible-bienveillance/src/pages/app/reponse-bienveillante.astro
+  ```
+
+  Un fichier Astro d'un projet sans rapport fait donc échouer la mise en ligne
+  d'un autre. Le régler côté Astro ne servirait à rien : Jekyll trouverait le
+  suivant. **C'est le mode branche qui est le défaut**, et le passage à
+  « GitHub Actions » l'éteint d'un coup, avec les onze sites en prime.
+
+Ce rouge-là est de la même famille que celui de Vercel décrit plus bas : **un
+contrôle rouge en permanence pour une raison qui n'est pas celle de la PR**. La
+lecture juste est la même — ce n'est pas un signal, et on ne cherche pas la cause
+dans le diff. Il porte donc un `vercel.json` à
 `ignoreCommand: exit 0`, comme `nexuscrypto`. **Le supprimer côté tableau de
 bord reste à faire, et seul le propriétaire a la main dessus.**
 
