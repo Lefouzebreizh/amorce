@@ -2086,8 +2086,9 @@ window.LOCoffre = (function(){
   // une valeur par défaut — une valeur plus haute est honorée telle quelle,
   // une valeur absente/négative/non numérique retombe au plancher plutôt que
   // de lever, pour ne jamais enfermer l'utilisateur dehors de son propre
-  // coffre. Même correctif que le-coffre/src/lib/crypto.ts et
-  // le-coffre-hosted/index.html : les trois doivent bouger ensemble.
+  // coffre. Même correctif que le-coffre/src/lib/crypto.ts : les deux doivent
+  // bouger ensemble. Ils étaient trois jusqu'au 03/09/2026 — la page seule du
+  // coffre a été retirée comme doublon, pas parce que ce correctif changeait.
   function iterationsSures(annoncees){
     var n = (typeof annoncees === 'number' && isFinite(annoncees)) ? Math.floor(annoncees) : 0;
     return Math.max(ITERATIONS, n);
