@@ -1,6 +1,6 @@
 ---
 name: branche-partagee
-description: Travailler sur une branche pendant que d'autres sessions font avancer `main` — savoir en une commande de combien on a pris du retard, quels commits de la branche sont déjà passés dans `main` par une autre PR, et quoi faire ensuite. À utiliser avant de commencer un lot de travail, avant d'ouvrir une pull request, dès qu'une fusion est refusée pour conflit, dès qu'un « déjà à jour » ou un « 52 commits non poussés » surprend, et dès qu'une PR semble annoncer autre chose que son diff. À utiliser aussi quand on reprend une branche laissée de côté quelques heures : dans un dépôt à plusieurs sessions, quelques heures suffisent à la périmer.
+description: "Travailler sur une branche pendant que d'autres sessions font avancer `main` — savoir en une commande de combien on a pris du retard, quels commits de la branche sont déjà passés dans `main` par une autre PR, et quoi faire ensuite. À utiliser avant de commencer un lot de travail, avant d'ouvrir une pull request, dès qu'une fusion est refusée pour conflit, dès qu'un « déjà à jour » ou un « 52 commits non poussés » surprend, et dès qu'une PR semble annoncer autre chose que son diff. À utiliser aussi quand on reprend une branche laissée de côté quelques heures : dans un dépôt à plusieurs sessions, quelques heures suffisent à la périmer."
 ---
 
 # Une branche dans un dépôt à plusieurs sessions

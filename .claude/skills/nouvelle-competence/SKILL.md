@@ -1,6 +1,6 @@
 ---
 name: nouvelle-competence
-description: Écrire une compétence pour ce dépôt sans en fabriquer un doublon ni un doublon d'intention — vérifier d'abord ce qui existe **y compris sur `main`**, découper par tâche et non par sujet, laisser l'outillage dans le projet, écrire en français, et l'inscrire dans la table de `CLAUDE.md`. À utiliser dès qu'on dit « crée une skill », « fais-en une compétence », « note ça quelque part pour la prochaine fois », « il faudrait un skill pour ça », « documente cette méthode », ou dès qu'un enseignement mérite de survivre à la conversation. Complète `skill-creator`, qui donne la méthode générale : ici, ce sont les règles propres à ce dépôt-ci.
+description: "Écrire une compétence pour ce dépôt sans en fabriquer un doublon ni un doublon d'intention — vérifier d'abord ce qui existe **y compris sur `main`**, découper par tâche et non par sujet, laisser l'outillage dans le projet, écrire en français, et l'inscrire dans la table de `CLAUDE.md`. À utiliser dès qu'on dit « crée une skill », « fais-en une compétence », « note ça quelque part pour la prochaine fois », « il faudrait un skill pour ça », « documente cette méthode », ou dès qu'un enseignement mérite de survivre à la conversation. Complète `skill-creator`, qui donne la méthode générale : ici, ce sont les règles propres à ce dépôt-ci."
 ---
 
 # Une compétence de plus n'est pas toujours un progrès

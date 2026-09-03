@@ -27,6 +27,18 @@ for dossier in sorted(p for p in SKILLS.iterdir() if (p / "SKILL.md").is_file())
     # ce marqueur se retrouvait tel quel en tête de sept lignes du tableau —
     # là où le lecteur attend la première phrase de la compétence.
     brut = re.sub(r"^\s*[>|][-+]?\s*", "", brut)
+    # Les guillemets d'un scalaire YAML n'en font pas partie non plus, et c'est
+    # le même défaut que ci-dessus sous une autre forme. Il est arrivé le
+    # 03/09/2026 : trente-trois descriptions ont été quotées d'un coup — un
+    # scalaire non quoté ne peut pas contenir « : » — et le guillemet ouvrant
+    # s'est retrouvé en tête de trente-trois lignes du tableau. Le contrôle de
+    # cohérence était vert : il vérifie que la compétence est citée, jamais à
+    # quoi ressemble la citation.
+    brut = brut.strip()
+    for guillemet in ('"', "'"):
+        if len(brut) > 1 and brut.startswith(guillemet) and brut.endswith(guillemet):
+            brut = brut[1:-1]
+            break
     resume = " ".join(brut.split())[:150]
     if len(resume) == 150:
         resume = resume.rsplit(" ", 1)[0] + "…"

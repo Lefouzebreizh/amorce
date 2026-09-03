@@ -1,6 +1,6 @@
 ---
 name: capacites-session
-description: Savoir ce que cette session-ci peut réellement faire — binaires présents, bibliothèques installées, hôtes que le mandataire laisse joindre, modèles en cache — et par quoi remplacer ce qui manque. Sonde le terrain en une seconde avec `sonder.py`. À utiliser avant toute tâche qui dépend du réseau ou d'un outil externe : transcrire un média, fabriquer une voix, lancer un navigateur, appeler une API, télécharger un modèle, installer une dépendance — et dès qu'une commande échoue par « 403 », « connection refused », « command not found » ou « please run install ». À utiliser aussi avant d'annoncer un résultat qui dépend d'un de ces outils : une promesse tenue à moitié coûte plus cher qu'un « voici ce que je peux faire ici ».
+description: "Savoir ce que cette session-ci peut réellement faire — binaires présents, bibliothèques installées, hôtes que le mandataire laisse joindre, modèles en cache — et par quoi remplacer ce qui manque. Sonde le terrain en une seconde avec `sonder.py`. À utiliser avant toute tâche qui dépend du réseau ou d'un outil externe : transcrire un média, fabriquer une voix, lancer un navigateur, appeler une API, télécharger un modèle, installer une dépendance — et dès qu'une commande échoue par « 403 », « connection refused », « command not found » ou « please run install ». À utiliser aussi avant d'annoncer un résultat qui dépend d'un de ces outils : une promesse tenue à moitié coûte plus cher qu'un « voici ce que je peux faire ici »."
 ---
 
 # Ce que cette session peut faire
