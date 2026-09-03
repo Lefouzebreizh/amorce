@@ -2158,5 +2158,10 @@ est refusé, pas le connecteur.
 `.claude/references/competences.md`. L'agent `revue-invariants` relit un diff
 contre les invariants écrits ; l'agent `garde-du-bot` fait de même pour
 NexusCrypto, contre les six règles qui protègent l'argent ;
+l'agent `banc-du-bot` répond à l'autre moitié de la question sur ce bot-là :
+non pas « le changement est-il licite » mais « rend-il la stratégie
+meilleure », que ni les 337 tests ni le garde ne tranchent — et son nom se
+garde **sur la même ligne que le mot « agent »**, le contrôle de cohérence
+n'acceptant qu'une espace entre les deux, jamais un retour à la ligne ;
 l'agent `verificateur` rend un verdict sans déverser la sortie des tests.
 `/etat-du-depot` pour l'inventaire du jour.*
