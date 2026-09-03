@@ -269,3 +269,33 @@ Trois choses, et il vaut mieux les dire que les découvrir :
   quelles niches amènent du monde ; on achète ensuite pour celles-là, avec
   `regler-domaines.mjs`. Rien ne vérifie qu'un domaine écrit dans une base
   existe, ni qu'il est à nous.
+
+### La garde DNS est aveugle aux sous-domaines jokers
+
+`construire-sites.js` refuse de construire quand un `niche.domaine` ne résout
+pas, et `sonde-dns.mjs` range les adresses en « vivantes » et « mortes ». Cette
+garde protège d'une faute de frappe et d'un domaine jamais délégué. Elle ne
+protège **pas** de l'hébergeur qui a disparu, et c'est mesuré le 03/09/2026 :
+
+| ce qu'on regarde | ce que ça rend |
+| --- | --- |
+| `getent hosts reseau-annuaires.vercel.app` | deux adresses IP |
+| `auditerAdresses([…])` | `vivants: [reseau-annuaires.vercel.app]` |
+| une vraie requête HTTP dessus | **404 `DEPLOYMENT_NOT_FOUND`** |
+
+La cause tient en un mot : **`*.vercel.app` est un joker**. Tout sous-domaine y
+résout, que le projet existe ou non — le projet `reseau-annuaires` avait été
+supprimé du tableau de bord quelques heures plus tôt, et le DNS répondait
+toujours. La même chose vaut pour `*.pages.dev` et pour tout hébergeur à
+sous-domaines jokers, c'est-à-dire pour tous ceux que ce réseau vise.
+
+Ce qui rend le piège coûteux, c'est que la garde **dit vert** : elle ne se tait
+pas, elle affirme. Une session qui la lit conclut que l'adresse est bonne, et
+les onze balises canoniques sont restées à pointer une adresse qui ne sert plus
+rien sans qu'aucun contrôle ne bronche — ni la construction, ni les sitemaps,
+ni l'intégration continue, qui étaient tous verts le jour même.
+
+**Une résolution DNS n'est donc pas un quitus** : elle dit qu'un nom a une
+adresse, jamais qu'un serveur y répond, et encore moins que c'est notre site
+qu'il rend. Seule une requête HTTP le dit, et c'est le geste à faire avant
+d'écrire une adresse dans `niche.domaine` — pas après.
