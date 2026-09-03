@@ -53,7 +53,7 @@ sans validation manuelle, et public du réseau qui achète réellement ce produi
 
 | # | Programme | Commission | Inscription | Couvre | Vérifié |
 | --- | --- | --- | --- | --- | --- |
-| 1 | **Gamma** | 30 % | [help.gamma.app](https://help.gamma.app/en/articles/11048092-how-do-i-join-the-gamma-affiliate-program) | Gamma (éducation, généraliste) | Taux lu, conditions à confirmer |
+| 1 | **Gamma** | 30 % | **Candidature déposée le 03/09/2026 à 22 h 13** — le programme tourne sur PartnerStack, pas sur `help.gamma.app` ; voir la note ci-dessous | Gamma (éducation, généraliste) | Taux lu, conditions à confirmer |
 | 2 | **Synthesia** | 25 % récurrent pendant 12 mois | Programme public, page partenaires du site | Synthesia (généraliste) | Taux et durée lus |
 | 3 | **ElevenLabs** | 22 % récurrent, cookie 60 à 90 j | Programme public | ElevenLabs (généraliste) | Taux et cookie lus |
 | 4 | **Klaviyo** | 20 % récurrent pendant 12 mois, cookie 90 j | Programme partenaires Klaviyo | Klaviyo (e-commerce) | Taux, durée et cookie lus |
@@ -66,6 +66,26 @@ sans validation manuelle, et public du réseau qui achète réellement ce produi
 
 Les quatre premiers sont récurrents : une inscription qui reste payée douze
 mois vaut mieux qu'une prime unique plus élevée.
+
+**Gamma, premier programme réellement demandé — état au 03/09/2026 à 22 h 14.**
+La candidature est déposée et **en attente de réponse** ; PartnerStack la montre
+comme reçue, et Gamma répondra par courriel. Le compte PartnerStack est créé au
+nom **Erwann Chevallier**, celui de l'immatriculation — un nom de partenaire qui
+s'écarte du titulaire du compte bancaire bloque le versement au moment où il y a
+enfin quelque chose à verser.
+
+**Le chemin d'inscription n'était pas celui qui est écrit dans la colonne.**
+`help.gamma.app` explique le programme ; l'inscription elle-même se fait sur
+`dash.partnerstack.com`, parce que **Gamma gère ses partenariats sur
+PartnerStack** — la page le dit en toutes lettres. Une recherche « gamma
+affiliation » remonte d'ailleurs d'abord **MyLead**, un intermédiaire qui
+revend l'accès : sa commission n'est pas celle de Gamma, ses conditions et son
+seuil de versement non plus. Quand le programme direct existe, il gagne.
+
+Reste à faire quand l'acceptation tombera : relever les quatre informations de
+la section « Ce qu'il faut noter », puis poser le lien dans le champ
+`lien_affiliation` de Gamma — outil à créer, il n'est pas encore dans
+`niches/generaliste.json`.
 
 ## À ne pas chercher — c'est déjà tranché
 
