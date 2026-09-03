@@ -200,9 +200,13 @@ démonstration au nom d'un vrai prospect.
 
 **Ce que la page n'a pas : de source.** Aucun fichier de ce dépôt ne contient
 « COUVERTURE MARTIN », « Tisserands » ni « exemple fictif », et `git log --all
--S` ne les trouve à aucun commit. La page n'a jamais été versionnée : elle
-n'existe que filmée. La refabriquer demande de repartir du gabarit d'Artisan
-Express, teinte `vert`.
+-S` ne les trouve à aucun commit — la page n'avait jamais été versionnée, elle
+n'existait que filmée. **Elle a été refabriquée depuis le gabarit d'Artisan
+Express, teinte `vert`, et remise en ligne :**
+`artisan-express-demos.vercel.app/couverture-martin.html`. Ses deux boutons
+sont des `<span>` et non des liens : le numéro affiché est `06 XX XX XX XX`,
+donc aucun `tel:` n'est possible, et un bouton mort vaut moins qu'un bouton
+inerte.
 
 **La leçon, et elle vaut au-delà de ce fichier :** une session a écrit « ça
 n'existe pas » à partir d'une recherche dans le dépôt, alors que la seule preuve
