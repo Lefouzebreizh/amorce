@@ -100,6 +100,31 @@ body { background: #07070f; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
   color: var(--color-nuit); transition: filter .15s ease;
 }
 .bouton-accent:hover { filter: brightness(1.15); }
+
+/*
+ * La pastille de filtre sélectionnée, et pourquoi elle ne porte **pas**
+ * l'accent.
+ *
+ * Elle a porté `.bouton-accent` jusqu'au 03/09/2026, donc le dégradé de niche
+ * d'abord, puis la sauge à l'instant où celle-ci est devenue l'accent produit.
+ * C'est précisément l'invariant 3 du §2 bis : « un accent unique par produit,
+ * et il ne désigne qu'une chose : l'action à faire. S'en servir pour les états
+ * actifs le rend décoratif, donc muet. » La sauge avait été posée pour que le
+ * lien affilié se distingue du décor ; une pastille sauge est visible dès
+ * l'ouverture — « Tous » est actif par défaut — donc l'accent était déjà
+ * dépensé avant que le premier bouton d'affiliation entre dans le cadre.
+ *
+ * Ce qui marque la sélection est donc ce que l'invariant 1 lui réserve : une
+ * surface montée d'un cran et un trait. `relief` sur `panneau` vaut 1,06, dans
+ * la bande de 1,07 de la maison ; le texte `brume` y rend 10,95:1, et le trait
+ * `sourdine` 5,35:1 — au-dessus du plancher de 3:1 des éléments non textuels.
+ * Mesuré, pas choisi à l'œil.
+ */
+.filtre-actif {
+  background: var(--color-relief);
+  color: var(--color-brume);
+  border-color: var(--color-sourdine);
+}
 .pastille-accent { background: var(--teinte-1); }
 .texte-accent { color: var(--teinte-2); }
 .bandeau-accent { background-image: linear-gradient(90deg, color-mix(in srgb, var(--teinte-1) 20%, transparent), color-mix(in srgb, var(--teinte-2) 8%, transparent)); }
