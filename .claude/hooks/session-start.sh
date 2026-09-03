@@ -66,6 +66,13 @@ echo "── Amorce : dépendances npm"
 cd "$racine"
 npm install --no-audit --no-fund --silent
 
+echo "── Le Coffre : dépendances npm"
+# Projet Next.js indépendant, même raison que le socle agence : ses dépendances
+# ne remontent pas à la racine, et celles de la racine ne lui servent à rien.
+cd "$racine/le-coffre"
+npm install --no-audit --no-fund --silent
+cd "$racine"
+
 echo "── Socle Agence : dépendances npm"
 # Projet Next.js indépendant, avec son propre `package.json` : les dépendances
 # de la racine ne lui servent à rien, et les siennes ne doivent pas remonter.
