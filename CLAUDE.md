@@ -997,13 +997,30 @@ Numéroté « 7 bis » pour la même raison que le « 0 bis » : d'autres fichie
 citent les sections par leur numéro, et renuméroter casserait ces renvois en
 silence.
 
-### 📚 Nouvelles documentations (à charger via `/page` en cas de besoin)
+### 📚 Nouvelles documentations (à charger via « /page » en cas de besoin)
 
-**`/page` n'existe pas dans ce dépôt** — `/coherence-depot` le signale, et
-aucune compétence ne porte ce nom. Le mécanisme de chargement reste donc à
-définir : soit une commande intégrée du client, soit une compétence à écrire.
-En attendant, une documentation se lit par `curl` — quand son hôte répond, ce
-qui n'est le cas d'aucune de celles-ci depuis une session distante.
+**« /page » n'existe pas dans ce dépôt**, et aucune compétence ne porte ce nom.
+Le mécanisme de chargement reste à définir : soit une commande intégrée du
+client, soit une compétence à écrire. En attendant, une documentation se lit
+par `curl` — quand son hôte répond, ce qui n'est le cas d'aucune de celles-ci
+depuis une session distante.
+
+**Le nom est écrit entre guillemets et non entre accents graves, à dessein.**
+`/coherence-depot` lit toute barre oblique suivie d'un nom, entre accents
+graves, comme une compétence : les trois mentions de ce paragraphe faisaient
+donc crier son contrôle à **chaque passage**, et depuis des jours — y compris
+la phrase qui explique que la compétence n'existe pas.
+
+La formulation ci-dessus est elle-même contrainte, et le premier jet ne l'était
+pas : écrire le motif littéralement, pour l'expliquer, le fait détecter. Il se
+décrit donc en toutes lettres, jamais en exemple. Une alerte qui ne s'éteint jamais
+apprend à ignorer le vérificateur, ce qui coûte plus cher que ce qu'elle
+signale.
+
+C'est la même parade que les routes du serveur de licence, une ligne plus haut
+dans ce fichier : là-bas le verbe HTTP suffit à rompre la correspondance
+(`GET /etat`), ici il n'y en a pas, donc les guillemets. **Ne pas les remettre
+en accents graves** en croyant corriger une coquille.
 
 - **Vidéo** : https://ffmpeg.org · https://replicate.com
 - **Image** : https://readthedocs.org · https://sharp.pixelplumbing.com · https://developer.mozilla.org
@@ -1012,7 +1029,7 @@ qui n'est le cas d'aucune de celles-ci depuis une session distante.
 
 **Aucune de ces adresses n'est joignable depuis une session distante.** Les
 treize ont été sondées le 01/09/2026 : toutes rendent `000`,
-`connect_rejected`. `/page` ne les chargera donc pas ici — elles servent sur la
+`connect_rejected`. « /page » ne les chargera donc pas ici — elles servent sur la
 machine du propriétaire, ou après ouverture de la politique réseau de
 l'environnement.
 
