@@ -19,7 +19,7 @@ local, en Python 3, sur des API gratuites.
 pepites/
 ├── README.md
 ├── requirements.txt
-├── .env.example              # jetons et clés — le `.env` réel n'est pas versionné
+├── .env.exemple              # jetons et clés — le `.env` réel n'est pas versionné
 ├── config/
 │   ├── chaines.yaml          # ✅ table d'identité des blockchains
 │   └── reglages.yaml         # ✅ seuils, trapèzes, pondérations
