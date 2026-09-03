@@ -187,3 +187,7 @@ visual_library/**/*.mp4
 # Les démonstrations portent le nom et le numéro de vrais artisans : elles ne
 # montent pas dans un dépôt public, pour la même raison que `prospects.md`.
 /titan-builder/demos/
+
+# La liste de cibles de l'audit nomme des entreprises réelles à côté
+# d'une hypothèse sur leur sécurité : elle reste locale, comme `prospects.md`.
+/projets-actifs/cibles-audit.md
