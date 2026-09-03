@@ -14,6 +14,17 @@ quatrième ne vivait que dans une conversation, et qu'un fil se ferme.
 
 ## Ce qui reste, et c'est du confort
 
+**Rien, en fait — les trois ont été repris à la mesure le 03/09/2026, et aucun
+ne survit tel quel.** Deux étaient déjà réparés, le troisième est faux. Le
+détail est conservé sous chaque point plutôt que supprimé : c'est ce qui empêche
+la prochaine session de rouvrir le chantier.
+
+La leçon de cette fiche n'est donc pas ce qu'elle listait, c'est **ce qu'une
+liste de défauts devient en vingt-quatre heures dans un dépôt à plusieurs
+sessions**. Trois constats relevés à l'œil le 02/09, aucun encore vrai le
+lendemain. Un relevé qui n'est pas daté et remesuré fait refaire du travail
+déjà fait — ou pire, casser ce qui a été réparé entre-temps.
+
 Aucun de ces trois points ne bloque une vente. Ils ont été relevés à l'œil et à
 la mesure, et ils sont écrits ici plutôt que corrigés parce que le fil s'est
 arrêté avant.
@@ -31,14 +42,29 @@ La phrase est conservée barrée plutôt que supprimée : une autre session
 lisant la fiche y chercherait sinon un défaut déjà réparé, et le réparerait une
 seconde fois.
 
-**Aucun état de chargement à l'ouverture du studio.** C'est pourtant le
-chargement le plus lourd du site : quelqu'un appuie sur « Ouvrir le studio » et
-ne voit rien bouger pendant une seconde ou deux. Un signe d'attente vaut mieux
-qu'un écran figé, et c'est le seul des trois qui touche à la confiance.
+**L'état de chargement à l'ouverture du studio : le constat est juste, le
+chiffre non — et l'écart change la conclusion.** Mesuré le 03/09/2026 dans un
+vrai Chromium à 393 × 873, studio déjà compilé : la page d'accueil reste
+affichée **220 ms**, puis le studio apparaît entier. Pas « une seconde ou
+deux », et surtout **pas un écran vide** : la capture montre la page d'accueil
+intacte pendant l'attente, ce que Next.js fait exprès.
 
-**Le bandeau collant recouvre la dernière ligne du premier écran** — « Rien à
-installer. Ça démarre dans cet onglet. » Huit pixels, vus sur une capture à
-393 × 873. Un `pb` un peu plus grand sur l'en-tête suffit.
+Ce que ça change : **un indicateur de chargement pour 220 ms serait un défaut
+de plus**, pas une correction — un voile qui apparaît et disparaît plus vite
+que l'œil ne le suit. Rien n'est donc à faire ici tant que la mesure n'a pas
+été refaite **sur le terrain de référence**, un Redmi Note 12 en production et
+sur réseau mobile, où c'est le téléchargement du paquet JavaScript qui
+domine — et pas ce conteneur, où tout est chaud et local.
+
+~~**Le bandeau collant recouvre la dernière ligne du premier écran.**~~
+**Faux, mesuré le 03/09/2026.** Le même Chromium à 393 × 873 rend : bas de la
+ligne « Rien à installer » à **785 px**, haut du bandeau à **800 px**. Il y a
+**15 pixels de dégagement**, et la capture le confirme à l'œil — la ligne se
+lit en entier.
+
+Les huit pixels relevés le 02/09 l'avaient sans doute été sur un état
+différent ; ce qui compte est qu'aucun `pb` n'est à retoucher, et qu'en
+retoucher un aurait éloigné le bouton du pouce sans rien réparer.
 
 ## Ce qui n'est pas un défaut
 
