@@ -62,31 +62,81 @@
 }
 </script>
 <style>
-  /* Une seule couleur d'accent, celle du client. Tout le reste est neutre :
-     c'est ce qui fait qu'on ne cherche jamais où appuyer. */
+  /*
+   * La charte d'Artisan Express, posée en jetons.
+   *
+   * **Une seule teinte par site, et elle vient du métier** — pas d'un
+   * hexadécimal saisi au clavier. Elle est choisie dans une palette fermée de
+   * cinq valeurs froides, toutes mesurées au-dessus de 7:1 sur le fond de
+   * page : c'est le plancher que « CLAUDE.md » §2 bis impose à un accent, et il
+   * est plus haut que le minimum légal parce que ces pages se lisent dehors.
+   *
+   * Les noms de surface sont ceux du dépôt — « ink », « slab », « panel », « edge » —
+   * et non un vocabulaire propre à ce gabarit : une brique doit pouvoir se
+   * déplacer d'un projet à l'autre.
+   *
+   * Ce qui a disparu ici et qui ne doit pas revenir : le thème clair et son
+   * « prefers-color-scheme ». Deux palettes tenues en parallèle divergent au
+   * premier changement, et c'est toujours celle qu'on ne regarde pas qui part
+   * en vrille. Le sombre est la charte, sans variante.
+   */
   :root {
-    --accent: #2f6f4e; --encre-entete: #ffffff;
-    /* La même teinte, poussée jusqu'à se lire comme texte sur le papier. Le
-       fond, lui, garde la couleur choisie : c'est là qu'elle se voit. */
-    --accent-texte: #2f6f4e;
-    --encre: #16202b; --papier: #ffffff; --gris: #5b6b7a;
+    color-scheme: dark;
+    --ink: #16151a; --slab: #1f1e25;
+    --panel: #26242d; --edge: #2e2c34;
+    --encre: #f1efea; --encre-douce: #b7b3a9;
+    --encre-eteinte: #6c6a72;
+    --accent: #67c1a0; --accent-vif: #8bd0b7;
+    /* Ce qu'on écrit **sur** l'accent : le libellé du bouton plein. */
+    --encre-entete: #082b1e;
+    /* Le halo de l'entête et le fond des blocs discrets. */
+    --voile: #153529;
+    /*
+     * L'accent en tant que **texte**. Sur fond clair il fallait l'assombrir ;
+     * sur le fond de la charte il se lit tel quel, et le jeton reste émis en
+     * clair pour qu'un test puisse le mesurer plutôt que le supposer.
+     */
+    --accent-texte: #67c1a0;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--papier); color: var(--encre);
+    margin: 0; background: var(--ink); color: var(--encre);
     font: 18px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
+  /*
+   * L'entête en halo, jamais en aplat de couleur.
+   *
+   * C'est la signature qui se reconnaît d'un site à l'autre, et c'est aussi ce
+   * qui règle la lisibilité à la racine : un titre écrit sur un aplat dépend
+   * de la teinte, un titre écrit sur le fond de page n'en dépend plus.
+   */
   header {
-    background: var(--accent); color: var(--encre-entete); padding: 2.5rem 1.25rem;
+    padding: 3rem 1.25rem 2.25rem;
+    background: radial-gradient(120% 150% at 15% 0%, var(--voile) 0%, var(--ink) 68%);
+    border-bottom: 1px solid var(--edge);
   }
-  header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.2; }
-  header p { margin: 0; font-size: 1.15rem; }
+  header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.2; letter-spacing: -.01em; }
+  header p { margin: 0; font-size: 1.15rem; color: var(--accent); font-weight: 600; }
   main { max-width: 40rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
-  .bloc { padding: 2rem 0; border-bottom: 1px solid #e4e9ee; }
+  .bloc { padding: 2rem 0; border-bottom: 1px solid var(--edge); }
   .bloc:last-of-type { border-bottom: 0; }
-  h2 { font-size: 1.4rem; margin: 0 0 .75rem; }
-  .services { margin: 0; padding-left: 1.2rem; }
-  .services li { margin: .35rem 0; }
+  /* Le filet vertical sous chaque titre : l'autre moitié de la signature. */
+  h2 {
+    font-size: 1.4rem; margin: 0 0 .9rem; padding-left: .8rem;
+    border-left: 3px solid var(--accent);
+  }
+  /*
+   * Les prestations en liste fléchée plutôt qu'en puces.
+   *
+   * La flèche porte l'accent et rien d'autre ne le porte dans ce bloc : elle
+   * indique, elle ne décore pas. Une puce ronde en accent aurait fait de la
+   * couleur un ornement, donc muet — ce que §2 bis interdit en propres termes.
+   */
+  .services { margin: 0; padding: 0; list-style: none; }
+  .services li { margin: .35rem 0; padding-left: 1.6rem; position: relative; }
+  .services li::before {
+    content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: 700;
+  }
   .galerie { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
   .galerie figure { margin: 0; }
   .avis { display: grid; gap: 1rem; }
@@ -94,24 +144,31 @@
      deux avis ne se lisent pas comme deux boutons. */
   .avis blockquote {
     margin: 0; padding: .25rem 0 .25rem 1rem;
-    border-left: 3px solid var(--accent-texte);
+    border-left: 3px solid var(--accent);
   }
   .avis p { margin: 0 0 .4rem; }
-  .avis cite { font-style: normal; font-weight: 700; color: var(--gris); }
-  .mention { color: var(--gris); font-size: 1rem; margin: -.25rem 0 1rem; }
-  .galerie img { width: 100%; height: 100%; object-fit: cover; border-radius: .6rem; display: block; }
+  .avis cite { font-style: normal; font-weight: 700; color: var(--encre-douce); }
+  .mention { color: var(--encre-douce); font-size: 1rem; margin: -.25rem 0 1rem; }
+  .galerie img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: .6rem; display: block;
+    background: var(--slab);
+  }
   .actions { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1.5rem 0; }
   /* 56 px de haut : des mains de chantier, souvent gantées, et un téléphone
      tenu à bout de bras au soleil. */
   .action {
     flex: 1 1 12rem; min-height: 56px; display: flex; align-items: center;
     justify-content: center; border-radius: .75rem; text-decoration: none;
-    font-weight: 700; border: 2px solid var(--accent-texte); color: var(--accent-texte);
+    font-weight: 700; border: 2px solid var(--accent); color: var(--accent);
+    background: var(--slab);
   }
+  /* Un bouton plein contre des boutons contour : une seule action principale
+     par écran, et on ne cherche jamais où appuyer. */
   .action.principale { background: var(--accent); color: var(--encre-entete); border-color: var(--accent); }
-  /* 1 rem, pas .95 : le plancher du dépôt est 18 px, et le pied de page porte
-     le numéro de téléphone — c'est la ligne la moins bien vue et la plus utile. */
-  footer { padding: 2rem 1.25rem; color: var(--gris); text-align: center; }
+  footer {
+    padding: 2rem 1.25rem; color: var(--encre-douce); text-align: center;
+    background: var(--slab); border-top: 1px solid var(--edge);
+  }
   /*
    * Et cette ligne-là s'appelle. Elle était lisible et pas cliquable : le
    * visiteur qui vient de faire défiler les photos et de lire « et les communes
@@ -120,9 +177,7 @@
    *
    * 44 px et non les 56 des boutons du haut : c'est un numéro dans une phrase,
    * pas une action principale. Le plancher du dépôt est tenu, la mise en page
-   * du pied ne se déforme pas. La couleur est celle qu'accentLisible garantit
-   * au-dessus de 4,5:1 sur les deux fonds — un lien en gris de pied de page ne
-   * se voit pas comme un lien.
+   * du pied ne se déforme pas.
    */
   footer a {
     display: flex; align-items: center; justify-content: center;
@@ -130,13 +185,29 @@
     min-height: 44px; padding: 0 .5rem; color: var(--accent-texte);
     font-weight: 700; text-decoration: underline; text-underline-offset: .2em;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --encre: #eef3f7; --papier: #10171e; --gris: #93a3b1;
-      /* Sur fond sombre, la même teinte doit s'éclaircir au lieu de foncer. */
-      --accent-texte: #558a6f;
-    }
-    .bloc { border-bottom-color: #24313d; }
+  /*
+   * La signature, et **sans lien**.
+   *
+   * Elle n'est pas décorative : c'est elle qui fait qu'un voisin de chantier
+   * demande qui a fait le site. Elle ne porte volontairement aucune adresse —
+   * le dépôt s'interdit d'écrire une adresse qu'il n'a pas vérifiée servie, et
+   * une adresse morte en pied de page de tous les sites livrés coûterait plus
+   * que l'absence de lien.
+   *
+   * **Ni taille réduite, ni encre éteinte, et ce n'est pas un choix de goût.**
+   * Le premier jet portait « font-size: .95rem » et « --encre-eteinte » : le
+   * rendu est sorti à 15,2 px et 3,10:1, sous les deux planchers du §2 — et
+   * les soixante-dix tests de ce projet étaient verts. Deux pièges pour un
+   * seul défaut : « rem » vaut 16 px, pas les 18 px que le corps déclare,
+   * donc toute fraction de rem passe sous le plancher ; et l'encre éteinte
+   * n'était mesurée que sur le fond de page, alors que le pied est un cran
+   * plus clair.
+   *
+   * La discrétion se fait donc par l'espace et le trait, jamais en rapetissant.
+   */
+  .signature {
+    margin: 1.5rem 0 0; padding-top: 1.25rem;
+    border-top: 1px solid var(--edge); color: var(--encre-douce);
   }
 </style>
 </head>
@@ -167,9 +238,9 @@
   <section class="bloc">
     <h2>Mes réalisations</h2>
     <div class="galerie">
-      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNlZWYxZjQiLz4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyODQiIHJ4PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmY2ZjRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1kYXNoYXJyYXk9IjEyIDkiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTI2IiByPSIzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmY2ZjRlIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iMTUwIiB5PSI4NiIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyZjZmNGUiLz4KPHRleHQgeD0iMjAwIiB5PSIyMDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxNjIwMmIiPlZvdHJlIHBob3RvIDE8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjM4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5IiBmaWxsPSIjNWI2YjdhIj5BdmFudCAvIGFwcsOoczwvdGV4dD4KPC9zdmc+" alt="Emplacement d’une photo de chantier — Avant / après" loading="lazy"></figure>
-      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNlZWYxZjQiLz4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyODQiIHJ4PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmY2ZjRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1kYXNoYXJyYXk9IjEyIDkiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTI2IiByPSIzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmY2ZjRlIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iMTUwIiB5PSI4NiIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyZjZmNGUiLz4KPHRleHQgeD0iMjAwIiB5PSIyMDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxNjIwMmIiPlZvdHJlIHBob3RvIDI8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjM4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5IiBmaWxsPSIjNWI2YjdhIj5VbmUgZmluaXRpb248L3RleHQ+Cjwvc3ZnPg==" alt="Emplacement d’une photo de chantier — Une finition" loading="lazy"></figure>
-      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNlZWYxZjQiLz4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyODQiIHJ4PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmY2ZjRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1kYXNoYXJyYXk9IjEyIDkiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTI2IiByPSIzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmY2ZjRlIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iMTUwIiB5PSI4NiIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiMyZjZmNGUiLz4KPHRleHQgeD0iMjAwIiB5PSIyMDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxNjIwMmIiPlZvdHJlIHBob3RvIDM8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjM4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5IiBmaWxsPSIjNWI2YjdhIj5MZSBjaGFudGllciBmaW5pPC90ZXh0Pgo8L3N2Zz4=" alt="Emplacement d’une photo de chantier — Le chantier fini" loading="lazy"></figure>
+      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjFFMjUiLz4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyODQiIHJ4PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1kYXNoYXJyYXk9IjEyIDkiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTI2IiByPSIzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iMTUwIiB5PSI4NiIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiM2N0MxQTAiLz4KPHRleHQgeD0iMjAwIiB5PSIyMDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNGMUVGRUEiPlZvdHJlIHBob3RvIDE8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjM4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5IiBmaWxsPSIjQjdCM0E5Ij5BdmFudCAvIGFwcsOoczwvdGV4dD4KPC9zdmc+" alt="Emplacement d’une photo de chantier — Avant / après" loading="lazy"></figure>
+      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjFFMjUiLz4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyODQiIHJ4PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1kYXNoYXJyYXk9IjEyIDkiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTI2IiByPSIzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iMTUwIiB5PSI4NiIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiM2N0MxQTAiLz4KPHRleHQgeD0iMjAwIiB5PSIyMDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNGMUVGRUEiPlZvdHJlIHBob3RvIDI8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjM4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5IiBmaWxsPSIjQjdCM0E5Ij5VbmUgZmluaXRpb248L3RleHQ+Cjwvc3ZnPg==" alt="Emplacement d’une photo de chantier — Une finition" loading="lazy"></figure>
+      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjFFMjUiLz4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyODQiIHJ4PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1kYXNoYXJyYXk9IjEyIDkiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTI2IiByPSIzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iMTUwIiB5PSI4NiIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiM2N0MxQTAiLz4KPHRleHQgeD0iMjAwIiB5PSIyMDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNGMUVGRUEiPlZvdHJlIHBob3RvIDM8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjM4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5IiBmaWxsPSIjQjdCM0E5Ij5MZSBjaGFudGllciBmaW5pPC90ZXh0Pgo8L3N2Zz4=" alt="Emplacement d’une photo de chantier — Le chantier fini" loading="lazy"></figure>
     </div>
   </section>
   <section class="bloc">
@@ -177,6 +248,6 @@
     <p>Auray et les communes autour.</p>
   </section>
 </main>
-<footer>Couverture Tanguy — Auray<a href="tel:+33297000000">02 97 00 00 00</a></footer>
+<footer>Couverture Tanguy — Auray<a href="tel:+33297000000">02 97 00 00 00</a><p class="signature">Site réalisé par Artisan Express</p></footer>
 </body>
 </html>

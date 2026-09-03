@@ -59,11 +59,12 @@ même refus.
 
 | Étape | Livrable | Délai |
 | --- | --- | --- |
-| 1 — La porte | Écrite le 31/08/2026 : `JudgePhoto.juger()` et `PhotoVerdict`, 11 tests, cinq refus chacun avec son conseil. **Rouverte le même jour** : 47 photos réelles lui font accepter 10 scènes à tort. Il lui manque une mesure de contiguïté. | ⚠️ |
+| ~~1 — La porte~~ | Écrite le 31/08/2026, rouverte le même jour — 47 photos réelles lui faisaient accepter 10 scènes à tort — et **refermée le 03/09/2026 par la zone de visée**, pas par une quatrième statistique : celles-ci ne peuvent pas séparer une photo de mur d'une photo de pièce contenant un mur. 12 tests. | ✅ |
 | ~~2 — Les trois harmonies~~ | **Faite le 31/08/2026.** `BuildHarmonies.pour()`, 13 tests. Chaque harmonie rend un 30 % et un 10 % avec leurs objets. | ✅ |
 | ~~3 — Les objets et les proportions~~ | **Faite le 31/08/2026**, avec l'étape 2. Chaque proposition porte sa part et ses objets ; la plante n'apparaît que là où la couleur calculée tombe dans les verts. | ✅ |
-| 3 bis — La zone de visée | Un cadre au centre du viseur, et une porte qui ne juge que cette zone. Remplace la recherche d'une quatrième statistique : essayée, la contiguïté échoue comme la dispersion. Passe avant le reste de l'écran. | à faire |
-| **4 — L'écran** | Viseur, verdict, palette, objets. En dernier, comme pour `NameColor`. | après |
+| ~~3 bis — La zone de visée~~ | **Faite le 03/09/2026.** `ZoneVisee`, carré centré à 0,60 du petit côté — part mesurée, pas choisie — et `EchantillonAccord` qui décode, découpe et réduit en 40 × 40. 14 tests. | ✅ |
+| ~~4 — L'écran~~ | **Fait le 03/09/2026.** `CadreVisee` dessine le carré depuis `ZoneVisee.cadre()`, `PanneauAccord` rend le refus avec son geste ou la palette, `AccordPage` enchaîne caméra, déclencheur et résultat. 12 tests. | ✅ |
+| 5 — Un lot de photos venu d'ailleurs | Le seul point ouvert, et il ne se code pas. Les seuils viennent d'un foyer et d'un appareil. | à faire |
 
 ## Deux décisions prises au cadrage
 
@@ -212,6 +213,41 @@ d'une quatrième statistique.
 **Ce que ce corpus vaut.** Il vient d'un seul foyer et d'un seul appareil : il
 prouve l'échec, il ne mesure pas le taux de refus qu'aurait un autre logement.
 L'objectif — cinq palettes sur dix photos — demandera un lot plus large.
+
+## Ce que la version un a livré — 3 septembre 2026
+
+La chaîne tourne de bout en bout : on vise une surface, on déclenche, on obtient
+sa palette — ou un refus qui dit quoi faire.
+
+| Brique | Ce qu'elle porte |
+| --- | --- |
+| `ZoneVisee` | Le carré visé, à 0,60 du petit côté. Source unique de la géométrie. |
+| `EchantillonAccord` | Décode, découpe le cadre, réduit en 40 × 40 par moyenne d'aire. |
+| `JudgePhoto` | Les cinq refus, chacun avec son geste. Ne juge que la zone. |
+| `BuildHarmonies` | Les trois harmonies, chacune avec son 30 % et son 10 %. |
+| `AnalyserPhoto` | La chaîne complète, **dans un isolat**. |
+| `CadreVisee`, `PanneauAccord`, `AccordPage` | Le viseur, le verdict, la palette. |
+
+**Le cadre dessiné et la zone mesurée viennent du même calcul**, et c'est la
+propriété qui tient tout l'édifice. S'ils se décollent, la personne aligne son
+mur sur l'un pendant que l'application lit l'autre — et rien ne le signalerait :
+ni la porte, ni l'échantillonnage, ni l'œil. Un test les compare sur trois
+formats.
+
+**La part de 0,60 est mesurée.** Rétrécir le cadre rend la porte permissive :
+sur le corpus, 8 photos acceptées à 0,60, mais 15 à 0,40 et 17 à 0,25. En
+dessous de 0,40 elle accepterait deux photos sur cinq prises au hasard, et ce
+n'est plus une porte.
+
+**Le passage de la photo à la porte a été mesuré contre un second chemin.** Le
+code Dart complet a été confronté aux 47 photos réduites par PIL : **47 verdicts
+sur 47 identiques**, sept couleurs différant d'au plus 5/255 — l'écart du filtre
+de réduction. Un passage qui décode et redimensionne ne lève aucune erreur quand
+il se trompe ; il rend une couleur fausse et plausible.
+
+**Un défaut n'a été vu qu'en rendant l'écran en image** : le déclencheur
+recouvrait le texte d'aide de soixante pixels. Sept tests verts ne le disaient
+pas, parce qu'aucun ne regardait deux widgets ensemble.
 
 ## Ce qui manque, et qui ne se code pas
 

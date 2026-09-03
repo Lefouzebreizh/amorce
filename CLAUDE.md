@@ -505,14 +505,37 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   dépendance** : la plateforme fournit `Request`, `Response` et `crypto.subtle`.
   Il sait deux choses — cette clé est-elle authentique, ce paiement tient-il
   toujours — et **aucun média ne l'atteint jamais**.
-  **Pas de comptes** : Amorce se vend une fois, 49 €, et une clé suffit. Le
-  serveur ne sait donc pas qui vous êtes, seulement qu'une clé a été payée. La
-  clé porte sa propre preuve — `AMO-<référence>-<sceau>`, le sceau étant un
-  HMAC de la référence — si bien que la base ne répond qu'aux deux questions que
-  le calcul ne tranche pas : ce paiement a-t-il eu lieu, a-t-il été remboursé.
+  **Pas de comptes** pour l'édition : Amorce se vend une fois, 49 €, et une clé
+  suffit. Le serveur ne sait donc pas qui vous êtes, seulement qu'une clé a été
+  payée. La clé porte sa propre preuve — `AMO-<référence>-<sceau>`, le sceau
+  étant un HMAC de la référence — si bien que la base ne répond qu'aux deux
+  questions que le calcul ne tranche pas : ce paiement a-t-il eu lieu, a-t-il
+  été remboursé.
   Tout ce qui décide vit dans `src/index.ts`, qui ne connaît que l'interface
   `Base` : la suite entière, **signature Stripe comprise**, s'éprouve sans D1,
   sans wrangler et sans réseau. Se vérifie depuis son dossier.
+  Ce périmètre reste inchangé par la génération intégrée ci-dessous : c'est
+  `comptes-serveur/`, un service séparé, qui porte l'identité et le solde que
+  la génération demande — pas celui-ci.
+- **comptes-serveur/** — comptes et grand livre de crédits, phase 1 de la
+  génération intégrée. Décision du 03/09/2026 : Amorce devient un studio de
+  création complet (image, son, vidéo générés), pas seulement un studio de
+  montage — ce qui casse « rien ne quitte l'appareil » pour cette partie-là,
+  puisque générer demande un serveur. Le modèle est en **crédits, pas
+  abonnement** : l'usage est irrégulier, par vagues de création.
+  Séparé de `licence-serveur/` plutôt qu'ajouté dedans : celui-ci garde son
+  rôle inchangé, et un solde qui bouge à chaque appel de génération n'est pas
+  la « deuxième chose » qu'il annonce savoir.
+  Même mesure que lui — **zéro dépendance d'exécution**, `Base` comme seule
+  interface avec D1. La connexion se fait par **lien envoyé par courriel**
+  (Resend), quinze minutes de validité, jamais de mot de passe. Le grand
+  livre distingue le solde (lu à chaque appel) des mouvements (écrits à
+  chaque achat), et `crediter` est **idempotent sur l'id du mouvement** — un
+  webhook Stripe rejoué ne crédite qu'une fois.
+  **Le prix des packs de crédits n'est pas décidé** (`PACKS` vaut `{}`) et
+  **le fournisseur de génération vidéo non plus**, volontairement — à trancher
+  en phase 4, le marché bouge vite. Aucune route de dépense encore : elle
+  attend la passerelle de génération, phase 2, qui n'existe pas.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
@@ -1053,6 +1076,34 @@ où il passe, mais sans carte graphique et derrière un mandataire qui refuse
 objets de release GitHub. Router vers le PC est donc un **choix**, pas un
 réflexe : on regarde lequel des deux peut faire le travail, et on le dit.
 
+**Composio est installable ici, et inutilisable — mesuré le 03/09/2026.** La
+distinction vaut d'être écrite parce qu'elle se reperd : le CLI **s'installe**,
+il **tourne**, et il ne peut **rien faire**.
+
+`composio.dev` refuse le tunnel, donc `curl -fsSL https://composio.dev/install`
+ne démarre jamais — inutile de chercher du côté du rate limit GitHub que la
+documentation d'installation évoque. La parade des releases GitHub marche :
+`composio-linux-x64.zip`, 117 Mo, somme sha256 conforme à `checksums.txt`,
+extrait, lié, `composio --version` rend `0.4.1-beta.374`.
+
+Et `composio login` tombe sur `403 request blocked: no rule or allowlist entry
+allows host "backend.composio.dev"`. Confirmé au mandataire, pas seulement dans
+l'outil. `--no-browser --no-wait` existe pourtant, et c'est le bon chemin
+depuis un conteneur sans navigateur — il imprime l'URL, `--poll` termine —
+mais il faut d'abord que l'hôte soit ouvert.
+
+**Une clé d'API n'y change rien, et c'est le point à retenir.**
+`--user-api-key` l'écrit dans `~/.composio/user_data.json`, dont le `base_url`
+vaut `https://backend.composio.dev` : sans tunnel, il n'y a pas de requête à
+authentifier. Même forme que le mur ElevenLabs plus haut — ce n'est pas la clé
+qui manque, c'est l'hôte. Ouvrir `composio.dev`, `backend.composio.dev` et
+`dashboard.composio.dev` dans la politique réseau de l'environnement est le
+seul déblocage, et seul le propriétaire l'a.
+
+Piège annexe : le paquet npm `composio` est un homonyme sans rapport — « UI
+Components for the web », aucun binaire. Le SDK Python `composio` sur PyPI est
+authentique mais **n'est pas le CLI** : il ne pose aucun exécutable.
+
 Dépendance manquante pour de bon : `/dependance-indisponible`. Session qui
 refuse d'avancer : `/debloquer`.
 
@@ -1522,6 +1573,23 @@ collectionne les conflits. Une PR verte **et mineure** se fusionne ; on l'annonc
 passé. Ce qui s'arrête encore pour demander : les choses de la section 5, et
 les PR qui touchent une des quatre zones ci-dessus. Une PR verte et mineure
 n'en est pas, et hésiter sur elle est la faute que ce paragraphe vise.
+collectionne les conflits. Une PR verte se fusionne ; on l'annonce faite, au
+passé.
+
+**Et « le feu vert » désigne deux choses que ce fichier confondait.** Le §0 bis
+en réclame un avant d'écrire sur de l'existant : celui-là vient du
+propriétaire. Les contrôles d'intégration continue en donnent un autre : celui-là
+vient de GitHub. **La fusion n'attend que le second.** Posé explicitement par le
+propriétaire le 03/09/2026, après une session qui écrivait « j'attends le vert
+pour fusionner » à chaque lot — une phrase que rien ne distingue d'une demande
+d'autorisation, et qui fait donc surveiller un fil qu'il n'a aucune raison de
+surveiller.
+
+Ce qui en découle pour la rédaction, et pas seulement pour le geste : on
+n'annonce pas qu'on attend. On attend en silence, on fusionne, et le message
+suivant dit ce qui est fusionné. Une session qui écrit « j'attends » a déjà
+rendu la main sans le vouloir. Les seules choses qui s'arrêtent encore pour demander sont celles de la
+section 5, et la fusion n'en est pas.
 
 **Armer la fusion automatique à l'ouverture**, avec `enable_pr_auto_merge`,
 plutôt que de sonder les contrôles en boucle jusqu'au vert. La surveillance
@@ -1621,8 +1689,46 @@ jour — la route est tranchée et le workflow écrit — et son projet Vercel n
 plus qu'échouer — vu en rouge sur une pull request qui
 ne touchait que `life-organizer/`.
 
-**Mais « doit » n'est pas « est », et rien n'est en ligne — mesuré le 02/09/2026
-au soir.** La source Pages du dépôt est restée sur une **branche**, pas sur
+**Le réseau est en ligne depuis le 03/09/2026 à 05 h 15**, et tout le bloc
+ci-dessous décrit l'état d'avant. Il est conservé parce que sa mécanique reste
+juste — c'est la conclusion qui a changé.
+
+La source Pages est passée sur « GitHub Actions ». Le workflow détecte
+`build_type: workflow`, saute l'étape d'alerte, construit, empaquette et
+**dépose** : mesuré deux fois, sur un lancement manuel puis sur la fusion
+suivante. Le billet **#557 s'est refermé tout seul** à 05:15:07, ce que le
+workflow ne fait qu'au premier dépôt réussi — c'est la preuve la plus solide
+disponible d'ici.
+
+L'adresse est `lefouzebreizh.github.io/amorce/<niche>/`, et non
+`ma-panoplie-ia.com`, qui **ne résout toujours pas** — aucun `CNAME` versionné.
+Les canoniques, sitemaps et robots.txt y ont été repointés (#628) : ils
+annonçaient `reseau-annuaires.vercel.app`, dont le projet a été supprimé et qui
+rend 404. Dette assumée : le jour où le domaine sera délégué, ces adresses-ci
+seront indexées et demanderont une redirection. Une adresse indexée qu'on
+redirige vaut mieux qu'une adresse indexée qui rend 404.
+
+**Deux pièges de ce chantier, qui coûteront à qui les ignore.**
+
+Le premier est `.nojekyll`, et c'est la correction que tout le monde propose en
+voyant l'erreur Jekyll — le propriétaire l'a proposée lui-même. En mode branche,
+Jekyll tourne sur `source: /github/workspace/.`, soit la **racine du
+monorepo** : `.nojekyll` éteindrait bien le rouge, mais Pages publierait alors
+cette racine telle quelle. Or le site vit dans le dossier construit de
+l'annuaire, **ignoré par git** — donc absent d'un dépôt fraîchement cloné. On obtiendrait un vert franc, les sources servies en HTTP,
+et toujours pas d'annuaire. Un rouge honnête vaut mieux qu'un vert qui publie
+autre chose ; le seul correctif était le réglage de la source.
+
+Le second est que **`*.github.io` est refusé par le mandataire** —
+`CONNECT tunnel failed, 403`, alors que le DNS résout parfaitement. Une session
+ne peut donc **pas ouvrir la page qu'elle vient de déposer** : elle en est
+réduite aux étapes du workflow et à la fermeture du billet. C'est le même
+partage qu'avec le CDN de higgsfield au §7 — on peut agir, pas regarder. Le
+« regardé, pas seulement mesuré » du §8 passe donc par le navigateur du
+propriétaire, et une session qui annonce le site en ligne doit dire qu'elle ne
+l'a pas vu.
+
+**Ce qui suit décrit l'état du 02/09/2026 au soir, et n'est plus vrai.** La source Pages du dépôt est restée sur une **branche**, pas sur
 Actions : le billet **#557** le dit depuis 15 h 46 et attend trois gestes que
 seul le propriétaire peut faire. Le workflow `annuaire-ia-pages.yml` se comporte
 comme prévu — il détecte, il prévient, il ouvre le billet, il reste vert — mais
@@ -1678,6 +1784,29 @@ again in 24 hours (more than 100, code: api-deployments-free-per-day) ».
 
 Le seuil utile à retenir est donc **une vingtaine de fusions par jour**, pas
 cent : chaque fusion vaut trois déploiements ou plus.
+
+**Et un projet de démos est né le 03/09/2026 : `artisan-express-demos`.** Dépôt
+de fichiers lui aussi, donc hors quota. Il sert les pages nominatives préparées
+pour un prospect — nom, téléphone et métier d'une entreprise réelle — à
+`artisan-express-demos.vercel.app`.
+
+Trois choses s'y décident, et aucune n'est technique :
+
+- **Les fichiers ne sont pas dans Git**, et c'est la même règle que
+  `prospects.md` : ils portent les coordonnées de tiers.
+  `/artisan-express/public/demo/` est ignoré, et le dépôt de fichiers envoie ce
+  qui est sur le disque, pas ce qui est commité — rien n'oblige à les committer.
+- **La page dit qu'elle est en ligne**, parce qu'elle l'est. Le générateur avait
+  une seule mention — « elle n'est en ligne nulle part et personne d'autre que
+  vous ne l'a reçue » — vraie du fichier envoyé en conversation et **fausse** dès
+  qu'on héberge. `demo-prospect.mjs --en-ligne` bascule sur la version qui dit le
+  vrai : adresse donnée à lui seul, `noindex`, et **retrait sur un mot**. Cette
+  dernière promesse n'est pas décorative : mettre le nom et le numéro de
+  quelqu'un en ligne sans le lui avoir demandé oblige à pouvoir le défaire.
+- **Le mur d'authentification était là, pour la troisième fois.** Un projet
+  Vercel neuf naît avec `ssoProtection: all_except_custom_domains`. Vérifié au
+  réglage avant toute annonce, désactivé, revérifié. Le contrôle qui vaut n'est
+  jamais « j'ouvre le lien » : c'est la lecture de *Deployment Protection*.
 
 **Un cinquième projet existe depuis le 02/09/2026, et il ne compte pas dans ce
 total : `artisan-express`.** Il s'est appelé « quatrième » tant que le total
@@ -1778,12 +1907,43 @@ complète est dans `nexuscrypto/README.md` §6 bis.
 
 ### Connecteurs
 
-GitHub passe par le serveur MCP (`mcp__github__*`), jamais par `gh` ni `curl` :
-l'appel direct rend 403, et c'est l'outil qu'il faut changer, pas la
-configuration. Cet accès se donne à la **conversation**, jamais par le dépôt :
-une session peut naître sans lui, et rien ne le signale. Le contrôler donc **au
-premier message** et le dire aussitôt — découvrir à la poussée qu'on ne pourra
-pas fusionner coûte un cycle entier, mesuré sur la PR #94.
+GitHub : **les lectures passent par le serveur MCP (`mcp__github__*`), les
+écritures par `curl` avec `$GH_TOKEN`.** C'est l'inverse de ce que ce
+paragraphe disait jusqu'au 03/09/2026, et l'ancienne rédaction — « jamais par
+`gh` ni `curl` : l'appel direct rend 403 » — faisait renoncer au seul chemin
+qui fonctionne.
+
+Mesuré le 03/09/2026, en ouvrant et fusionnant les PR #618 et #619 :
+
+| appel | MCP `mcp__github__*` | `curl` + `$GH_TOKEN` |
+| --- | --- | --- |
+| lire (`get_me`, `list_pull_requests`) | ✅ | ✅ |
+| ouvrir une PR | ❌ 403 *not accessible by integration* | ✅ |
+| modifier une PR | ❌ | ✅ |
+| fusionner | ❌ 403 | ✅ |
+
+`gh` n'entre pas dans le tableau : **il n'est pas installé** dans le conteneur
+distant — `command not found`, pas un refus d'autorisation. Le citer à côté de
+`curl` dans une même interdiction mélangeait deux causes qui n'ont rien à voir.
+
+**Ce qui a changé entre-temps, et qui explique l'ancienne phrase.** Avant que
+l'application GitHub de Claude soit connectée pour l'organisation, `curl`
+rendait un refus explicite du mandataire — « GitHub access is not enabled for
+this session. An org admin must connect the Claude GitHub App » — et le MCP
+rendait 403 sur tout. Les deux chemins étaient fermés, et l'ancienne rédaction
+décrivait fidèlement cet état-là. Le propriétaire a connecté l'application le
+03/09/2026 : `curl` s'est ouvert, le MCP est resté fermé en écriture.
+
+D'où la leçon, qui vaut au-delà de GitHub : **une règle d'outillage écrite sur
+un état d'autorisation se périme quand l'autorisation change, et rien ne le
+signale.** Elle continue de se lire comme une vérité technique. Une session qui
+la suit renonce au chemin ouvert et conclut qu'elle ne peut pas fusionner.
+
+**Le contrôler au premier message** reste juste, et c'est même le geste qui
+tranche : essayer les deux, garder celui qui répond. Cet accès se donne à la
+**conversation**, jamais par le dépôt : une session peut naître sans lui, et
+rien ne le signale — découvrir à la poussée qu'on ne pourra pas fusionner coûte
+un cycle entier, mesuré sur la PR #94.
 
 Supabase : lecture d'office, `execute_sql` et `apply_migration`
 non — et la liste est écrite **deux fois**, sous le nom `Supabase` et sous

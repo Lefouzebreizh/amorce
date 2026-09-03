@@ -5877,3 +5877,77 @@ Deux gardes, et la seconde est la vraie :
 
 Une capture est une mesure comme une autre : elle a besoin de sa propre
 vérification avant de servir de preuve.
+
+## Un test de non-régression qui ne tombe pas sans son correctif ne fige rien — 03/09/2026
+
+Mesuré deux fois dans la même séance, sur le module Accord de Look & Find, et
+les deux issues opposées disent la même chose.
+
+**Le cas qui marche.** Un refus désignait le mauvais geste : sur une surface
+grise unie, la porte rendait « le cadre contient plusieurs surfaces » et
+conseillait de recadrer, alors que le problème était la grisaille. Correctif
+posé, test écrit, puis le correctif **retiré** pour voir : le test tombe, avec
+exactement le mauvais geste qu'il vise. Il fige donc quelque chose.
+
+**Le cas qui ne marche pas, et il avait l'air identique.** Sur l'écran, le
+déclencheur recouvrait le texte d'aide de soixante pixels. Correctif posé, test
+écrit, tout vert. Le correctif retiré : **le test reste vert.** Il ne figeait
+rien, et il aurait été fusionné comme s'il gardait quelque chose.
+
+La cause est plus intéressante que le symptôme. Le défaut était une **collision
+entre deux widgets** — l'aide et le bouton — et le test montait le cadre
+**seul**, où la collision ne peut pas exister. Il éprouvait le mécanisme du
+correctif (l'ancrage), pas le défaut (le chevauchement). Les deux se
+ressemblent au moment où on l'écrit, et rien ne les distingue à la lecture.
+
+### La parade tient en un geste, et il coûte trente secondes
+
+```bash
+git stash push -q <le fichier corrigé>
+<lancer le test>          # il doit ÉCHOUER, et sur le bon message
+git stash pop -q
+```
+
+Un test qui reste vert des deux côtés se réécrit ailleurs — dans le cas
+ci-dessus, à l'échelle de la page, où les deux widgets coexistent. Le test
+d'origine n'est pas jeté pour autant : il décrit l'ancrage, ce qui est utile,
+mais son commentaire dit désormais qu'il ne fige pas la collision.
+
+### Ce que ça complète dans le dépôt
+
+Le §8 de `CLAUDE.md` dit déjà « une mesure disait vert et le fichier était
+faux ». C'en est le pendant côté tests : **un test peut être vert et vide**, et
+sa vacuité ne se voit dans aucune suite — elle grossit même le compte de tests,
+qui rassure. La seule mesure d'un test de non-régression est le défaut qu'il
+attrape, jamais le fait qu'il passe.
+
+---
+## Un outil livré, testé et documenté n'a encore rien produit s'il ne tourne pas
+
+*Coût : rien encore, et c'est le problème — dix jours pendant lesquels un outil
+fini n'a accumulé aucune donnée.*
+
+Le radar de pépites est complet : 6 305 lignes, 167 tests verts, un audit de
+sécurité sans constat, un scan réel mesuré de bout en bout — 887 paires
+ramenées à 11 candidats en 27 secondes. Tout dit qu'il marche.
+
+**Et rien ne le lance.** Aucun des seize workflows du dépôt ne le déclenche, et
+son planificateur vit dans une ligne de `README` que personne n'a appliquée. Or
+son propre juge, `bilan.py`, refuse de conclure sous **20 jetons jugeables** —
+une exigence saine, qui suppose des semaines de tours réguliers. Un outil de ce
+type ne produit pas de valeur au moment où il est écrit, mais au bout de sa
+cinquantième exécution.
+
+Ce qui rend le défaut invisible tient en une phrase : **tous les signaux du
+dépôt regardent le code, aucun ne regarde s'il s'exécute.** Les tests passent,
+la CI est verte, `/coherence-depot` dit vrai, l'audit ne trouve rien. Chacun
+mesure ce qu'il sait mesurer, et la question « depuis quand ce programme
+a-t-il tourné pour de bon ? » n'appartient à aucun d'eux.
+
+La parade, pour tout outil dont la valeur s'accumule — radar, auto-pilote,
+veille, sauvegarde : **la planification fait partie de la livraison, pas de la
+suite.** Un projet de ce genre n'est pas fini quand ses tests passent, il est
+fini quand quelque chose le rappelle sans qu'on y pense. Tant que la tâche
+planifiée n'existe pas, le compte rendu dit « écrit et vérifié », jamais
+« opérationnel » — les deux mots ne recouvrent pas la même chose, et c'est le
+second que le propriétaire lit.

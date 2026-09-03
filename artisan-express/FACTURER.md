@@ -45,11 +45,23 @@ depuis le navigateur, tu envoies le PDF. Toutes les mentions y sont, et le
 **numéro se suit tout seul** — c'est la mention la plus contrôlée, et celle
 qu'on rate en recopiant à la main.
 
-**Au premier passage, elle refuse et écrit `factures/emetteur.json`.** Il faut
-y mettre ton **IBAN** : sans lui la facture est conforme, lisible… et
-impayable. C'est le seul champ à remplir, tout le reste est prérempli. Ce
-fichier n'entre pas dans Git, et `factures/` non plus — il porte ton IBAN et le
-nom de tes clients, et le dépôt est public.
+**`factures/emetteur.json` est rempli depuis le 03/09/2026** — IBAN BoursoBank
+et BIC compris. La commande ne refuse plus rien : `reproches()` rend une liste
+vide, et une facture d'essai a été rendue et **regardée**, mentions comprises.
+
+Ce fichier n'entre pas dans Git, et `factures/` non plus — il porte ton IBAN et
+le nom de tes clients, et le dépôt est public. Vérifié par
+`git check-ignore -v` sur le fichier réel, pas sur le motif.
+
+**Il portait avant un IBAN factice**, un gabarit d'exemple laissé en place — et
+c'est le piège à retenir : une facture émise avec lui aurait été parfaitement
+conforme, parfaitement lisible, et impayable. Rien ne l'aurait signalé. Un
+IBAN faux ne ressemble pas à une erreur, il ressemble à un IBAN.
+
+Le vrai a donc été contrôlé trois fois avant d'être écrit, et pas seulement
+recopié : clé IBAN mod 97 = 1, clé RIB recalculée = celle affichée, et l'IBAN
+recomposé depuis banque + guichet + compte + clé tombe exactement dessus. Le
+même contrôle vaut le jour où tu changes de banque.
 
 Options : `--montant 49`, `--prestation "…"`, `--siret …`, `--livre 2026-09-05`
 si la prestation a été faite un autre jour que l'émission.

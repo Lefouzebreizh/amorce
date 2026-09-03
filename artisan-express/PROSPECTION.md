@@ -93,7 +93,7 @@ C'est la question la plus fréquente, et la meilleure : il est intéressé. Elle
 arrive sous vingt formes — « ça ressemble à quoi ? », « vous avez des
 exemples ? », « c'est quoi exactement pour 300 € ? ».
 
-> Tenez, un exemple complet : https://amorce-51up.vercel.app/exemple.html
+> Tenez, un exemple complet : https://artisan-express-ashy.vercel.app/exemple.html
 >
 > C'est une entreprise inventée — je le dis sur la page, je ne vais pas vous
 > faire croire à un vrai client alors que vous seriez le premier. Mais c'est
