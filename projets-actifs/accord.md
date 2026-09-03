@@ -64,7 +64,7 @@ même refus.
 | ~~3 — Les objets et les proportions~~ | **Faite le 31/08/2026**, avec l'étape 2. Chaque proposition porte sa part et ses objets ; la plante n'apparaît que là où la couleur calculée tombe dans les verts. | ✅ |
 | ~~3 bis — La zone de visée~~ | **Faite le 03/09/2026.** `ZoneVisee`, carré centré à 0,60 du petit côté — part mesurée, pas choisie — et `EchantillonAccord` qui décode, découpe et réduit en 40 × 40. 14 tests. | ✅ |
 | ~~4 — L'écran~~ | **Fait le 03/09/2026.** `CadreVisee` dessine le carré depuis `ZoneVisee.cadre()`, `PanneauAccord` rend le refus avec son geste ou la palette, `AccordPage` enchaîne caméra, déclencheur et résultat. 12 tests. | ✅ |
-| 5 — De vrais retours sur des photos variées | Le seul point ouvert, et il ne se code pas. **On livre avec les seuils actuels et on ajuste sur les retours**, décision du propriétaire du 03/09/2026 — voir « Ce que ce corpus vaut ». | en attente d'usage |
+| 5 — De vrais retours sur des photos variées | Le seul point ouvert, et il ne se code pas. **On livre avec les seuils actuels et on ajuste sur les retours**, décision du propriétaire du 03/09/2026 — voir « Ce que ce corpus vaut ». **Premier retour reçu le 03/09 au soir : trente-deux photos, huit acceptées, et les huit sont fausses** — voir la section dédiée. | premier retour dépouillé, il en manque un : des photos cadrées sur une surface |
 
 ## Deux décisions prises au cadrage
 
@@ -279,6 +279,84 @@ seul point qui demande encore un vrai cliché.
 
 Les déposer dans le dépôt reste exclu — aucun binaire versionné. Les mesures,
 elles, se consignent : c'est ce que font les tableaux de cette fiche.
+
+## Ce que trente-deux photos du propriétaire ont établi — 3 septembre 2026
+
+Premier vrai retour, celui que l'étape 5 attendait : trente-deux photos prises
+par le propriétaire sur son propre appareil, passées dans la **vraie** chaîne —
+`EchantillonAccord` puis `JudgePhoto.juger()`, par `dart run`, rien de
+réimplémenté.
+
+**Huit acceptées, vingt-quatre refusées. Et les huit acceptées sont fausses.**
+
+| ce qui a été rendu | sujet |
+| --- | --- |
+| `#5D4737` | un salon de nuit |
+| `#7C5E4C` | un salon avec un télescope |
+| `#816753` | une grange, sol béton |
+| `#694734` | une rue vue depuis un porche |
+| `#7A685D` | une cour d'immeuble |
+| `#978871` | une nef d'église, l'orgue |
+| `#735D50` | une nef, les mariés |
+| `#9E8A70` | une nef, l'assemblée |
+
+Huit sujets sans rapport, **huit fois le même brun** : les teintes tiennent dans
+**14,8 degrés**, de 21,5° à 36,3°, saturation moyenne 0,34. Aucune n'est la
+couleur d'un objet qu'on pourrait accorder à quoi que ce soit.
+
+### Ce que ça réfute
+
+C'est **exactement** le défaut que les seuils de dispersion étaient censés
+éteindre — le « brun boueux autour de `#8D704B` » décrit dans le bloc de tête de
+`judge_photo.dart`. Il n'a pas disparu, il est devenu **plus rare** : quinze
+photos sur dix-sept avant, huit sur trente-deux ici. On avait pris une baisse de
+fréquence pour une correction.
+
+La cause, elle, est neuve et n'était pas dans le raisonnement d'origine. La
+concentration mesure **l'accord des teintes**, et une lumière chaude en fabrique
+à partir de n'importe quoi : une nef en pierre blonde, un salon sous une ampoule
+au tungstène, une grange en terre — tous les pixels tombent dans la même bande
+chaude, la concentration monte, une famille dépasse la moitié. **La mesure ne
+distingue pas « une surface » de « une scène éclairée d'une seule lumière ».**
+
+Ce n'est donc pas un seuil trop permissif qu'on remonterait : le remonter
+refuserait aussi les vraies surfaces. C'est la grandeur mesurée qui est en
+cause.
+
+### Une piste essayée et écartée le jour même
+
+L'idée : une scène étale sa luminance — une nef a des vitraux et des bancs
+sombres — là où une surface la resserre. Mesuré, étalement interquartile dans le
+cadre :
+
+- les huit fausses acceptations : **0,100 à 0,473** ;
+- la seule vraie surface du lot, un plaid kaki : **0,166**.
+
+Elle tombe **au milieu** des fausses, et la grange fait mieux qu'elle à 0,100.
+Aucune séparation. La piste n'est pas livrée — c'est la troisième candidate
+écartée après la contiguïté et le retrait des tests de dispersion, et les trois
+l'ont été pour la même raison : mesurées avant d'être crues.
+
+### Ce que ce corpus ne permet pas
+
+**Il ne permet pas de reposer les seuils**, et la garde écrite plus haut vaut
+mot pour mot ici : une seule de ces trente-deux photos cadre une surface unique.
+Les autres sont des scènes — un mariage, un chantier, une rue, un balcon. Elles
+disent que **les acceptations sont fausses**, elles ne disent pas où placer une
+borne.
+
+Et le seul vrai cadrage du lot, le plaid, est **refusé pour « presque grise » —
+à juste titre** : sa moyenne est `#9CA29C`, saturation 0,04. Le geste rendu est
+le bon. Un refus correct sur la seule photo bien cadrée, et huit acceptations
+fausses sur des photos qui ne le sont pas : la porte se trompe dans le sens que
+le §1 de « Ce qui la ferait tomber » ne prévoyait pas.
+
+### Le prochain pas, inchangé dans sa forme
+
+Il faut toujours ce que l'étape 5 demande : des photos **cadrées sur une
+surface**, mur, canapé, tapis, rideau, plan de travail. Sans elles on sait
+désormais que la porte laisse passer des scènes ; on ne sait toujours pas si
+elle laisse passer les surfaces qu'elle doit accepter.
 
 ## Ce qui la ferait tomber
 
