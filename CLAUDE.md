@@ -1573,13 +1573,13 @@ collectionne les conflits. Une PR verte **et mineure** se fusionne ; on l'annonc
 passé. Ce qui s'arrête encore pour demander : les choses de la section 5, et
 les PR qui touchent une des quatre zones ci-dessus. Une PR verte et mineure
 n'en est pas, et hésiter sur elle est la faute que ce paragraphe vise.
-collectionne les conflits. Une PR verte se fusionne ; on l'annonce faite, au
-passé.
 
 **Et « le feu vert » désigne deux choses que ce fichier confondait.** Le §0 bis
 en réclame un avant d'écrire sur de l'existant : celui-là vient du
 propriétaire. Les contrôles d'intégration continue en donnent un autre : celui-là
-vient de GitHub. **La fusion n'attend que le second.** Posé explicitement par le
+vient de GitHub. **Hors zone sensible, la fusion n'attend que le second** — les
+quatre zones décrites plus haut, elles, attendent bien le premier, et c'est la
+seule exception. Posé explicitement par le
 propriétaire le 03/09/2026, après une session qui écrivait « j'attends le vert
 pour fusionner » à chaque lot — une phrase que rien ne distingue d'une demande
 d'autorisation, et qui fait donc surveiller un fil qu'il n'a aucune raison de
@@ -1588,8 +1588,7 @@ surveiller.
 Ce qui en découle pour la rédaction, et pas seulement pour le geste : on
 n'annonce pas qu'on attend. On attend en silence, on fusionne, et le message
 suivant dit ce qui est fusionné. Une session qui écrit « j'attends » a déjà
-rendu la main sans le vouloir. Les seules choses qui s'arrêtent encore pour demander sont celles de la
-section 5, et la fusion n'en est pas.
+rendu la main sans le vouloir.
 
 **Armer la fusion automatique à l'ouverture**, avec `enable_pr_auto_merge`,
 plutôt que de sonder les contrôles en boucle jusqu'au vert. La surveillance
