@@ -351,12 +351,53 @@ le bon. Un refus correct sur la seule photo bien cadrée, et huit acceptations
 fausses sur des photos qui ne le sont pas : la porte se trompe dans le sens que
 le §1 de « Ce qui la ferait tomber » ne prévoyait pas.
 
-### Le prochain pas, inchangé dans sa forme
+### Trois photos de plus, le même soir, et la réponse qui manquait
 
-Il faut toujours ce que l'étape 5 demande : des photos **cadrées sur une
-surface**, mur, canapé, tapis, rideau, plan de travail. Sans elles on sait
-désormais que la porte laisse passer des scènes ; on ne sait toujours pas si
-elle laisse passer les surfaces qu'elle doit accepter.
+La phrase qui terminait cette section disait qu'on ne savait toujours pas si la
+porte laisse passer les surfaces qu'elle doit accepter. **On le sait
+maintenant : elle les laisse passer.**
+
+Trois photos de plus, dont deux enfin cadrées sur une surface. Les trois sont
+refusées, et **les trois refus sont justes** :
+
+| photo | verdict | ce que le carré contenait vraiment |
+| --- | --- | --- |
+| un salon | plusieurs surfaces | fauteuil, sol, cartons, bouteilles |
+| **un mur vert d'eau** | plusieurs surfaces | **la moitié haute du téléviseur** |
+| un fauteuil clair | surface délavée | le fauteuil, saturation 0,04 |
+
+Le deuxième est le cas qui apprend quelque chose. La photo vise un mur peint et
+le mur remplit l'image — mais le **centre** de l'image, lui, est le téléviseur.
+Le carré de visée est tombé à cheval sur les deux, et le refus est exact : il y
+avait bien deux surfaces dedans.
+
+**Découpée sur le mur seul et repassée dans la même porte, la photo est
+acceptée et rend `#7D8E83`** — un vert-de-gris sauge, regardé à côté du cadre :
+c'est la couleur du mur. C'est le **premier vrai positif** de tout ce qui a été
+soumis à Accord : une surface de décoration réelle, une couleur juste, et rien
+du brun boueux.
+
+### Ce que ça déplace
+
+Le défaut mesuré plus haut reste entier : la porte accepte des scènes entières
+et en rend un brun qui n'est la couleur de rien. Mais son symétrique est
+maintenant établi — **elle accepte aussi les vraies surfaces, et rend leur vraie
+couleur**. Le module n'est donc pas cassé, il est **imprécis dans un seul sens**,
+celui des faux positifs sur les scènes.
+
+Et le geste qui manquait n'est pas dans le code : c'est **le viseur**. Ces trois
+photos ont été prises sans voir le carré, et deux des trois refus viennent de
+là, pas de la surface. Dans l'application, `CadreVisee` dessine ce carré à
+l'écran — la personne cadre ce qui sera jugé. **Le corpus de cette fiche mesure
+donc un usage que le produit n'impose pas**, et c'est une limite à garder en
+tête avant d'en tirer un seuil.
+
+### Le prochain pas
+
+Ce qui reste à obtenir n'a pas changé de nature, seulement de précision : des
+photos prises **dans l'application, viseur à l'écran**, plutôt que des photos
+recadrées après coup. C'est le seul dispositif qui mesure ce que le produit fait
+réellement.
 
 ## Ce qui la ferait tomber
 
