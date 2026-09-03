@@ -724,6 +724,22 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   `npm run exemple` sert à **regarder** : les deux défauts les plus sérieux
   trouvés ici sont passés à travers cinquante-trois tests verts. Se vérifie depuis
   son dossier.
+- **le-coffre/** et **le-coffre-hosted/** — coffre-fort de documents chiffré,
+  multi-utilisateurs : la productisation du coffre local de `life-organizer/`.
+  Le chiffrement est **entièrement côté navigateur** — PBKDF2-HMAC-SHA256 à
+  600 000 itérations, AES-256-GCM par document et pour l'index qui porte les
+  noms d'origine. Supabase ne reçoit jamais la phrase secrète ni la clé qui en
+  dérive, seulement des octets opaques. **Deux comptes séparés par
+  construction** : le compte dit *qui* tu es, la phrase secrète dit *ce que tu
+  peux déchiffrer*, et la seconde n'atteint jamais le service.
+  **Les deux dossiers font la même chose, et ce n'est pas tranché.**
+  `le-coffre/` est un projet Next.js complet, lié à Vercel donc déployé à
+  chaque commit ; `le-coffre-hosted/` est une seule page statique. Chacun se
+  décrit dans son propre README comme « la productisation de
+  `life-organizer/modules/coffre/` ». Tant que le choix n'est pas fait, les
+  déclarer tous les deux dit la vérité ; en déclarer un seul figerait le
+  doublon sans l'avoir résolu. `le-coffre/` est écarté du `tsconfig.json` de la
+  racine, comme les autres projets à pile propre.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.
