@@ -155,8 +155,17 @@ function lireArguments() {
     lu[morceau.slice(2, egal)] = morceau.slice(egal + 1);
   }
 
-  // La forme `--clef valeur` est celle qu'on tape naturellement : on l'accepte
-  // aussi, sinon la première utilisation échoue sans qu'on comprenne pourquoi.
+  /*
+   * La forme `--clef valeur` est celle qu'on tape naturellement : on l'accepte
+   * aussi, sinon la première utilisation échoue sans qu'on comprenne pourquoi.
+   *
+   * **Et un drapeau seul vaut `true`.** Il était purement ignoré : `--en-ligne`
+   * posé en fin de ligne ne laissait aucune trace, la commande réussissait, et
+   * la page sortait avec la mention de l'autre canal. Rien ne le signalait —
+   * pas d'erreur, pas d'avertissement, juste une phrase fausse sur une page
+   * envoyée à un artisan. Un drapeau qu'on tape et qui ne fait rien est le
+   * pire des trois cas possibles : plus coûteux qu'un refus, et invisible.
+   */
   for (let i = 0; i < brut.length; i += 1) {
     const morceau = brut[i];
     if (!morceau.startsWith('--') || morceau.includes('=')) continue;
@@ -164,6 +173,8 @@ function lireArguments() {
     if (suivant !== undefined && !suivant.startsWith('--')) {
       lu[morceau.slice(2)] = suivant;
       i += 1;
+    } else {
+      lu[morceau.slice(2)] = true;
     }
   }
 
@@ -177,14 +188,32 @@ function lireArguments() {
  * s'il la trouve froide ou menaçante, il ferme la page et on a perdu. Elle dit
  * donc trois choses dans cet ordre — ce que c'est, qu'il ne s'est rien passé
  * dans son dos, et ce qu'il peut en faire.
+ *
+ * **Et elle a deux versions, parce qu'une seule mentirait.** La démo se
+ * transmet de deux façons : le fichier envoyé dans la conversation, et la page
+ * déposée en ligne à une adresse qu'on ne donne qu'à lui. « Elle n'est en ligne
+ * nulle part » est vrai du premier et faux du second — et c'est exactement le
+ * genre de phrase qu'on oublie de changer en changeant de canal, parce que rien
+ * ne la relie à l'hébergement.
+ *
+ * La version en ligne dit donc ce qui est vrai : l'adresse n'a été donnée qu'à
+ * lui, la page porte `noindex` donc aucun moteur ne la référencera, et **elle
+ * se retire sur un mot**. Cette dernière promesse n'est pas décorative : mettre
+ * le nom et le numéro de quelqu'un en ligne sans lui avoir demandé oblige à
+ * pouvoir le défaire tout de suite.
  */
-function mention(entreprise) {
+function mention(entreprise, enLigne) {
+  const ou = enLigne
+    ? `ce n’est pas votre site officiel. Elle est à une adresse que je n’ai ` +
+      `donnée qu’à vous, et aucun moteur de recherche ne la référencera. ` +
+      `Un mot de vous et je la retire.`
+    : `ce n’est pas votre site officiel, elle n’est en ligne nulle part et ` +
+      `personne d’autre que vous ne l’a reçue.`;
+
   return (
-    `Cette page est une proposition, préparée pour ${entreprise} — ` +
-    `ce n’est pas votre site officiel, elle n’est en ligne nulle part et ` +
-    `personne d’autre que vous ne l’a reçue. Les photos sont des emplacements, ` +
-    `pas des chantiers. Si elle vous plaît, on la remplit avec vos vraies ` +
-    `photos, vos mots et votre numéro.`
+    `Cette page est une proposition, préparée pour ${entreprise} — ${ou} ` +
+    `Les photos sont des emplacements, pas des chantiers. Si elle vous plaît, ` +
+    `on la remplit avec vos vraies photos, vos mots et votre numéro.`
   );
 }
 
@@ -223,7 +252,10 @@ async function principal() {
     console.error(`  --metier au choix : ${Object.keys(METIERS).join(', ')}`);
     console.error('  --services, --slogan, --modele : facultatifs');
     // Le métier donne déjà la teinte : --couleur ne sert qu'à en emprunter une autre.
-    console.error('  --couleur : un autre métier, ou un nom de teinte de la charte\n');
+    console.error('  --couleur : un autre métier, ou un nom de teinte de la charte');
+    // Change la mention de la page : « en ligne à une adresse donnée qu'à vous »
+    // au lieu de « en ligne nulle part ». À poser dès qu'on héberge la démo.
+    console.error('  --en-ligne : la démo sera déposée en ligne, pas envoyée en fichier\n');
     console.error('  --telephone est obligatoire : la validation partagée avec le');
     console.error('  formulaire web refuse un site d’artisan sans numéro. Recopie');
     console.error('  celui de sa page — ne l’invente jamais.\n');
@@ -244,7 +276,7 @@ async function principal() {
     telephone,
     ville,
     options.slogan ?? `${metrage.accroche} à ${ville} et alentours. Devis sous 48 h.`,
-    mention(entreprise),
+    mention(entreprise, options['en-ligne'] === true),
     options.services ?? metrage.services,
     options.couleur ?? metier,
     'appel whatsapp',

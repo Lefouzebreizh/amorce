@@ -1683,6 +1683,29 @@ again in 24 hours (more than 100, code: api-deployments-free-per-day) ».
 Le seuil utile à retenir est donc **une vingtaine de fusions par jour**, pas
 cent : chaque fusion vaut trois déploiements ou plus.
 
+**Et un projet de démos est né le 03/09/2026 : `artisan-express-demos`.** Dépôt
+de fichiers lui aussi, donc hors quota. Il sert les pages nominatives préparées
+pour un prospect — nom, téléphone et métier d'une entreprise réelle — à
+`artisan-express-demos.vercel.app`.
+
+Trois choses s'y décident, et aucune n'est technique :
+
+- **Les fichiers ne sont pas dans Git**, et c'est la même règle que
+  `prospects.md` : ils portent les coordonnées de tiers.
+  `/artisan-express/public/demo/` est ignoré, et le dépôt de fichiers envoie ce
+  qui est sur le disque, pas ce qui est commité — rien n'oblige à les committer.
+- **La page dit qu'elle est en ligne**, parce qu'elle l'est. Le générateur avait
+  une seule mention — « elle n'est en ligne nulle part et personne d'autre que
+  vous ne l'a reçue » — vraie du fichier envoyé en conversation et **fausse** dès
+  qu'on héberge. `demo-prospect.mjs --en-ligne` bascule sur la version qui dit le
+  vrai : adresse donnée à lui seul, `noindex`, et **retrait sur un mot**. Cette
+  dernière promesse n'est pas décorative : mettre le nom et le numéro de
+  quelqu'un en ligne sans le lui avoir demandé oblige à pouvoir le défaire.
+- **Le mur d'authentification était là, pour la troisième fois.** Un projet
+  Vercel neuf naît avec `ssoProtection: all_except_custom_domains`. Vérifié au
+  réglage avant toute annonce, désactivé, revérifié. Le contrôle qui vaut n'est
+  jamais « j'ouvre le lien » : c'est la lecture de *Deployment Protection*.
+
 **Un cinquième projet existe depuis le 02/09/2026, et il ne compte pas dans ce
 total : `artisan-express`.** Il s'est appelé « quatrième » tant que le total
 valait trois, et le rang a glissé quand `reseau-annuaires` est arrivé : un

@@ -172,6 +172,11 @@ visual_library/**/*.mp4
 
 # Le carnet rempli porte des coordonnées de tiers démarchés : il reste local.
 /artisan-express/prospects.md
+# Les démos nominatives : elles portent le nom et le numéro d'entreprises
+# tierces, exactement comme `prospects.md`. Elles se déposent sur l'hébergeur,
+# jamais dans un dépôt public — le déploiement envoie les fichiers du disque,
+# pas ceux de Git, donc rien n'oblige à les committer.
+/artisan-express/public/demo/
 
 # Les fichiers de travail intermédiaires — captures d'essai, exports d'un coup
 # d'œil. `site-client.tmp.png` était entré à la racine sans que personne le
