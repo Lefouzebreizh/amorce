@@ -502,6 +502,51 @@
   .btn-comprendre svg{ width:15px; height:15px; flex:none; }
   .btn-comprendre[hidden]{ display:none; }
 
+  /* Le tableau de bord de Paper-Manager, en lecture seule — jamais affiché
+     si le projet n'est pas relié (voir organizer_config.json:paper_manager).
+     Même grammaire de couleur que le reste : trois tons seulement, jamais
+     l'orange. */
+  .echeances-panneau{
+    background: var(--paper-raised); border:1px solid var(--line); border-radius:20px;
+    padding:22px 26px; margin-bottom:28px;
+  }
+  .echeances-panneau[hidden]{ display:none; }
+  .echeances-entete{
+    display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .echeances-entete h2{
+    font-family:'Plus Jakarta Sans', sans-serif; font-size:16px; font-weight:700; margin:0;
+  }
+  .echeances-totaux{ font-size:13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .echeances-totaux strong{ color: var(--ink); font-weight:700; }
+
+  .echeances-categories{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .echeances-categorie{
+    font-size:12px; color: var(--ink-soft); background: var(--paper);
+    border:1px solid var(--line); border-radius:999px; padding:5px 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .echeances-categorie strong{ color: var(--ink); font-weight:600; }
+
+  .echeances-alertes{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .echeances-alerte{
+    display:flex; gap:12px; align-items:flex-start; border-radius:14px;
+    padding:12px 14px; font-size:13.5px; line-height:1.5;
+  }
+  .echeances-alerte.calme{ background: color-mix(in srgb, var(--accent) 14%, var(--paper)); }
+  .echeances-alerte.bientot{ background: color-mix(in srgb, var(--clay) 16%, var(--paper)); }
+  .echeances-alerte.urgent{ background: color-mix(in srgb, var(--wine) 18%, var(--paper)); }
+  .echeances-alerte .quand{
+    flex:none; font-weight:700; font-size:12.5px; white-space:nowrap; padding-top:1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .echeances-alerte.calme .quand{ color: var(--accent); }
+  .echeances-alerte.bientot .quand{ color: var(--clay); }
+  .echeances-alerte.urgent .quand{ color: var(--wine); }
+  .echeances-alerte .texte{ color: var(--ink); }
+  .echeances-vide{ font-size:13px; color: var(--ink-soft); }
+
   /* Le bas de page ne s'arrête plus au flux : un tableau de bord (historique
      + chiffres de la session) et un accès rapide aux catégories lui donnent
      une vraie fin, plutôt qu'un grand vide sous la dernière carte. */
@@ -711,6 +756,15 @@
       <rect width="100%" height="100%" fill="url(#motifCircuits)"/>
     </svg>
   </div>
+  <div class="echeances-panneau" id="echeancesPanneau" hidden>
+    <div class="echeances-entete">
+      <h2>Ce que je paie, ce qui arrive</h2>
+      <span class="echeances-totaux" id="echeancesTotaux"></span>
+    </div>
+    <div class="echeances-categories" id="echeancesCategories"></div>
+    <ul class="echeances-alertes" id="echeancesAlertes"></ul>
+  </div>
+
   <div class="entete">
   <div class="intro">
     <div class="eyebrow">Life-Organizer</div>
@@ -2475,6 +2529,65 @@ window.LOCoffre = (function(){
       if (contenu) contenu.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
+})();
+
+// Le tableau de bord de Paper-Manager, en lecture seule — jamais un écran
+// d'erreur si le projet n'est pas relié : le panneau reste simplement caché,
+// exactement comme le fait `/api/echeances/etat` côté serveur (`actif: false`
+// n'est pas une panne). Aucune écriture d'ici : « traiter » ou « reporter »
+// une alerte reste un geste de `paper.py etat`, jamais de ce panneau.
+(function(){
+  var panneau = document.getElementById('echeancesPanneau');
+  if (!panneau) return;
+  var elTotaux = document.getElementById('echeancesTotaux');
+  var elCategories = document.getElementById('echeancesCategories');
+  var elAlertes = document.getElementById('echeancesAlertes');
+
+  function echapper(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function euros(n){
+    return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+
+  // Même seuil « bientôt » que le reste de l'interface (30 jours) : une
+  // échéance dans une semaine ne se lit pas comme une échéance dans un mois.
+  function etatJours(jours){
+    if (jours < 0) return 'urgent';
+    if (jours <= 30) return 'bientot';
+    return 'calme';
+  }
+
+  function delai(jours){
+    if (jours < 0) return 'en retard de ' + (-jours) + ' j';
+    if (jours === 0) return "aujourd'hui";
+    return 'dans ' + jours + ' j';
+  }
+
+  fetch('/api/echeances/etat').then(function(r){ return r.json(); }).then(function(data){
+    if (!data.ok || !data.actif) return;
+
+    panneau.hidden = false;
+    elTotaux.innerHTML = '<strong>' + euros(data.total_mensuel) + '</strong> / mois · ' +
+      '<strong>' + euros(data.total_annuel) + '</strong> / an';
+
+    elCategories.innerHTML = data.par_categorie.map(function(c){
+      return '<span class="echeances-categorie">' + echapper(c.libelle) +
+        ' <strong>' + euros(c.montant_mensuel) + '</strong></span>';
+    }).join('');
+
+    elAlertes.innerHTML = data.alertes.length
+      ? data.alertes.map(function(a){
+          return '<li class="echeances-alerte ' + etatJours(a.jours) + '">' +
+            '<span class="quand">' + delai(a.jours) + '</span>' +
+            '<span class="texte">' + echapper(a.action) + '</span>' +
+          '</li>';
+        }).join('')
+      : '<li class="echeances-vide">Rien en attente pour l’instant.</li>';
+  }).catch(function(){ /* panneau optionnel : une panne ici ne doit pas se voir */ });
 })();
 </script>
 </body>

@@ -73,6 +73,56 @@ def _config_actuelle() -> dict | None:
     return None if valider_config(config) else config
 
 
+# --- Échéances et abonnements : lecture seule de Paper-Manager -----------
+#
+# Life-Organizer range les fichiers, il ne suit pas d'échéances (décision du
+# 01/09/2026, voir modules/scan_ocr/__init__.py et modules/calendrier/__init__.py) :
+# ce suivi appartient à Paper-Manager, projet frère de celui-ci dans le même
+# dépôt. Plutôt que de réécrire une seconde fois le calcul de préavis et les
+# alertes, cette section importe directement `paper-manager/core/` — en
+# lecture seule, jamais une écriture : `paper.py etat --traiter` reste le seul
+# geste qui modifie `admin_config.json`, exactement comme Paper-Manager
+# l'impose déjà à sa propre interface Streamlit.
+
+
+def _racine_paper_manager(config: dict) -> Path | None:
+    """Le dossier de Paper-Manager, ou `None` si la fonctionnalité est éteinte.
+
+    Par défaut le dossier frère `paper-manager/` du dépôt qui contient ce
+    projet — la disposition réelle de ce monorepo — mais `paper_manager.racine`
+    dans la configuration permet de pointer ailleurs.
+    """
+    reglages = config.get("paper_manager", {})
+    if not reglages.get("actif", False):
+        return None
+    brut = reglages.get("racine") or "../paper-manager"
+    racine = Path(brut).expanduser()
+    if not racine.is_absolute():
+        racine = (RACINE_PROJET / racine).resolve()
+    return racine if racine.is_dir() else None
+
+
+def _configuration_paper_manager(config: dict):
+    """La configuration de Paper-Manager déjà chargée, ou `None` sans erreur.
+
+    `None` couvre trois cas qui ne sont pas des pannes : la fonctionnalité est
+    désactivée, le dossier de Paper-Manager n'existe pas sur cette machine, ou
+    son `admin_config.json` personnel n'a pas encore été créé (c'est le cas sur
+    une machine neuve — Paper-Manager le dit déjà de sa propre interface).
+    """
+    racine = _racine_paper_manager(config)
+    if racine is None:
+        return None
+    chemin_config = racine / "admin_config.json"
+    if not chemin_config.is_file():
+        return None
+    if str(racine) not in sys.path:
+        sys.path.insert(0, str(racine))
+    from core import config as pm_config  # noqa: PLC0415
+
+    return pm_config.charger(chemin_config)
+
+
 def _purger_depot_temp(max_age_heures: int = 24) -> None:
     """Un fichier téléversé jamais confirmé ne doit pas s'accumuler sans fin."""
     import time
@@ -376,6 +426,61 @@ def api_depot_ouvrir_dossier():
         return jsonify(ok=False, erreur=f"Impossible de lancer l'explorateur : {erreur}"), 500
 
     return jsonify(ok=True)
+
+
+@app.get("/api/echeances/etat")
+def api_echeances_etat():
+    """L'état des abonnements et des alertes tenu par Paper-Manager — lecture seule.
+
+    `{ok: true, actif: false}` n'est pas une erreur : la fonctionnalité est
+    éteinte, Paper-Manager n'est pas sur cette machine, ou son
+    `admin_config.json` personnel n'existe pas encore. Rien de tout ça
+    n'empêche le reste de l'interface de fonctionner.
+    """
+    config = _config_actuelle()
+    if config is None:
+        return jsonify(ok=False, erreur="Configuration invalide."), 400
+
+    try:
+        configuration = _configuration_paper_manager(config)
+    except Exception as erreur:  # ErreurConfiguration de Paper-Manager, ou tout import cassé
+        return jsonify(ok=False, erreur=f"Paper-Manager illisible : {erreur}"), 400
+
+    if configuration is None:
+        return jsonify(ok=True, actif=False)
+
+    from core import abonnements as pm_abonnements  # noqa: PLC0415
+    from datetime import date as _date  # noqa: PLC0415
+
+    aujourdhui = _date.today()
+    tableau = pm_abonnements.tableau(configuration, aujourdhui)
+
+    alertes_json = [
+        {
+            "id": alerte.id,
+            "type": alerte.type.value,
+            "echeance": alerte.echeance.isoformat(),
+            "jours": (alerte.echeance - aujourdhui).days,
+            "montant": None if alerte.montant is None else float(alerte.montant),
+            "action": alerte.action,
+        }
+        for alerte in sorted(tableau.alertes, key=lambda a: a.echeance)
+        if alerte.visible(aujourdhui)
+    ]
+
+    return jsonify(
+        ok=True,
+        actif=True,
+        total_mensuel=float(tableau.total_mensuel),
+        total_annuel=float(tableau.total_annuel),
+        par_categorie=[
+            {"categorie": cle, "libelle": (configuration.classement.categories.get(cle).libelle
+                                            if cle in configuration.classement.categories else cle),
+             "montant_mensuel": float(montant)}
+            for cle, montant in tableau.par_categorie.items()
+        ],
+        alertes=alertes_json,
+    )
 
 
 # --- Le coffre : stockage chiffré de bout en bout -------------------------
