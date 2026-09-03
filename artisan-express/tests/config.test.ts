@@ -23,26 +23,38 @@ test('sans rien de réglé, il reste un chemin pour joindre le vendeur', () => {
 
 test('ce qui n’est pas réglé disparaît, et n’est jamais inventé', () => {
   /*
-   * La raison de ce test tient en une phrase, et elle n'a pas bougé : **un
-   * numéro faux sur une page de vente coûte plus cher qu'un bouton absent.**
+   * La raison de ce test n'a jamais bougé : **un contact faux sur une page de
+   * vente coûte plus cher qu'un bouton absent.** Ce qu'elle couvre, si.
    *
-   * Ce qui a bougé, c'est ce qu'elle couvre. Le téléphone y était, et il en
-   * sort le 03/09/2026 : le propriétaire a donné le sien, il est écrit dans
-   * `config.ts` avec sa raison, et un numéro réel n'est pas un numéro inventé.
-   * C'est le même choix que le courriel de repli, testé juste au-dessus.
+   * Le téléphone en est sorti le 03/09/2026, WhatsApp le même jour : le
+   * propriétaire a donné son numéro et confirmé qu'il est bien sur WhatsApp.
+   * Un contact réel, confirmé, n'est pas un contact inventé.
    *
-   * WhatsApp et Stripe restent gardés, eux, parce que rien de réel ne les
-   * remplit : un lien WhatsApp fabriqué mènerait à une conversation qui ne
-   * s'ouvre pas, et un bouton de paiement sans lien Stripe est la panne la
-   * plus chère que cette page puisse avoir.
-   *
-   * Le téléphone, lui, est gardé ailleurs et dans l'autre sens —
-   * `mentions-legales.test.ts` exige qu'il soit **présent**, parce que c'est
-   * son absence qui coûte désormais.
+   * **Stripe reste seul gardé ici**, et c'est le cas qui compte le plus : un
+   * bouton « payer » sans lien est la panne la plus chère que cette page
+   * puisse avoir — celui qui a sorti sa carte et s'est heurté à une page morte
+   * ne rappelle pas, et il le raconte.
    */
-  assert.equal(aUnWhatsapp, false);
-  assert.equal(contact.whatsappLien, '');
   assert.equal(aUnStripe, false, 'aucun paiement proposé sans lien réglé');
+  assert.equal(contact.stripeLien, '');
+});
+
+test('le lien WhatsApp part en format international, jamais en 06', () => {
+  /*
+   * Le piège que ce test garde, et il ne se voit pas à la lecture : `wa.me`
+   * veut un numéro **international sans le +**. Retirer simplement les
+   * non-chiffres d'un numéro français donne `0621381115`, que WhatsApp lit
+   * comme un indicatif `06` inconnu.
+   *
+   * Le lien s'ouvre quand même, l'application affiche « numéro invalide », et
+   * rien dans le code ne l'avait annoncé. C'est exactement le bouton mort que
+   * la page refuse partout ailleurs — sauf qu'ici il a l'air de marcher.
+   */
+  assert.equal(aUnWhatsapp, true);
+  assert.match(contact.whatsappLien, /^https:\/\/wa\.me\/33\d{9}\?text=/,
+    'le numéro doit être international, sans le zéro de tête');
+  assert.doesNotMatch(contact.whatsappLien, /wa\.me\/0/,
+    'un numéro commençant par 0 est refusé par WhatsApp');
 });
 
 test('aucune adresse de site n’est inventée', async () => {

@@ -32,7 +32,17 @@
  */
 const TELEPHONE_DU_VENDEUR = '06 21 38 11 15';
 const TELEPHONE = process.env.NEXT_PUBLIC_TELEPHONE ?? TELEPHONE_DU_VENDEUR;
-const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP ?? '';
+/*
+ * Le même numéro, sur WhatsApp — confirmé par le propriétaire le 03/09/2026.
+ *
+ * Il n'est pas déduit du téléphone, et c'est délibéré : un numéro qui sonne
+ * n'est pas forcément un numéro sur WhatsApp, et un bouton qui ouvre une
+ * conversation vers un compte inexistant est exactement le bouton mort que
+ * cette page refuse partout ailleurs. Les deux constantes se ressemblent donc
+ * aujourd'hui et peuvent diverger demain.
+ */
+const WHATSAPP_DU_VENDEUR = '06 21 38 11 15';
+const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP ?? WHATSAPP_DU_VENDEUR;
 const STRIPE = process.env.NEXT_PUBLIC_LIEN_STRIPE ?? '';
 /*
  * L'adresse vers laquelle le formulaire bascule quand l'envoi serveur n'est pas
@@ -94,10 +104,19 @@ export const adresseDuSite: string | null = /^https?:\/\//.test(SITE) ? SITE : n
 export const contact = {
   telephoneAffiche: TELEPHONE,
   telephoneLien: TELEPHONE === '' ? '' : `tel:${lienTelephonique(TELEPHONE)}`,
+  /*
+   * `wa.me` veut un numéro **international sans le +** : `33621381115`.
+   *
+   * Le piège, et il ne se voit pas : retirer simplement les non-chiffres d'un
+   * numéro français donne `0621381115`, que WhatsApp lit comme un indicatif
+   * `06` inconnu. Le lien s'ouvre, l'application dit « numéro invalide », et
+   * rien dans le code ne l'annonçait. On passe donc par `lienTelephonique`,
+   * qui sait déjà transformer `06…` en `+33…`, et on retire le `+`.
+   */
   whatsappLien:
     WHATSAPP === ''
       ? ''
-      : `https://wa.me/${WHATSAPP.replace(/[^\d]/g, '')}?text=${encodeURIComponent(
+      : `https://wa.me/${lienTelephonique(WHATSAPP).replace(/\D/g, '')}?text=${encodeURIComponent(
           'Salut Erwann, je veux mon site artisan à 300 €.',
         )}`,
   /** Sans lien de paiement, le bouton d'offre renvoie au formulaire. */
