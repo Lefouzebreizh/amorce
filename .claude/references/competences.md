@@ -68,3 +68,4 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/video-de-reference` | Prendre une vidéo qu'on admire — un TikTok, un Reel, un Short téléchargé — et en extraire par la mesure ce qui est reproductible dans Amorce :… |
 | `/video-du-jour` | Fabriquer un fichier vidéo publiable à partir d'un script TikTok, d'une prise de voix et d'images — analyse et découpe de la voix, recadrage 9:16 sur… |
 | `/voir-le-son` | Regarder un média au lieu de le mesurer — spectrogramme, courbe de sonie et planche de vignettes rendus en images que Claude peut réellement lire. À… |
+| `/web-artisan` | Fabriquer le site vitrine d'un artisan — une page, thème sombre, teinte du métier, livré en 48 h pour 300 € — et le vérifier avant de l'envoyer.… |
