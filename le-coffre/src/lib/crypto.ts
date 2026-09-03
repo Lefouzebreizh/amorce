@@ -9,6 +9,25 @@
 export const ITERATIONS = 600_000;
 export const TEXTE_VERIF = 'coffre-life-organizer-verification';
 
+/**
+ * Le nombre d'itérations vient du serveur, jamais de la page. On ne le croit
+ * donc **jamais à la baisse** : une ligne corrompue — ou altérée — à
+ * `iterations: 1` ferait dériver une clé faible en silence, sans qu'aucune
+ * erreur ne sorte et sans que rien ne s'affiche différemment.
+ *
+ * `ITERATIONS` est un **plancher**, pas une valeur par défaut : une valeur
+ * plus haute est honorée telle quelle, parce qu'elle ne peut que renforcer.
+ * Une valeur absente, négative, non numérique ou non finie retombe au
+ * plancher plutôt que de lever — l'utilisateur n'a rien à décider ici, et une
+ * exception l'enfermerait dehors de son propre coffre.
+ */
+export function iterationsSures(annoncees: unknown): number {
+  const n = typeof annoncees === 'number' && Number.isFinite(annoncees)
+    ? Math.floor(annoncees)
+    : 0;
+  return Math.max(ITERATIONS, n);
+}
+
 export function b64FromBuf(buf: ArrayBuffer): string {
   const octets = new Uint8Array(buf);
   let binaire = '';

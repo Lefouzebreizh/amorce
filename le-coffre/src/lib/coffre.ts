@@ -12,6 +12,7 @@ import {
   ITERATIONS, TEXTE_VERIF, b64FromBuf, bufFromB64, chiffrerOctets, dechiffrerOctets,
   chiffrerTexte, dechiffrerTexte, deriverCle, empaqueterVerificateur, nomOpaque,
   reempaqueterVerificateur,
+  iterationsSures,
 } from './crypto';
 
 export type ObjetIndex = {
@@ -60,7 +61,7 @@ export async function deverrouillerCoffre(userId: string, motDePasse: string): P
   if (error || !data) throw new Error('Coffre introuvable.');
 
   const sel = new Uint8Array(bufFromB64(data.sel));
-  const cle = await deriverCle(motDePasse, sel, data.iterations);
+  const cle = await deriverCle(motDePasse, sel, iterationsSures(data.iterations));
   const paquetVerif = reempaqueterVerificateur(data.verificateur_iv, data.verificateur_texte);
   const texte = await dechiffrerTexte(cle, paquetVerif).catch(() => null);
   if (texte !== TEXTE_VERIF) throw new Error('Phrase secrète incorrecte.');
