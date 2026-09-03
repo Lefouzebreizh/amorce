@@ -18,7 +18,7 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 | Idée | Statut | Score | Fiche | Prochain pas |
 | --- | --- | --- | --- | --- |
 | Producteur de formats courts IA | **En pause** | 7/10 | [fiche](archives-backlog/producteur-formats-courts-ia.md) | Reprendre si un prospect demande spontanément |
-| Audit & reprise de code généré par IA | **Faisable** | 8/10 | [fiche](projets-actifs/audit-reprise-code-genere-ia.md) | 1 audit gratuit d'une page, envoyé non sollicité (< 48 h) |
+| Audit & reprise de code généré par IA | **En cours** | 8/10 | [fiche](projets-actifs/audit-reprise-code-genere-ia.md) | Outillé et éprouvé — reste 20 cibles filtrées sur leur page de tarifs, puis 3 rapports envoyés |
 | Amorce Atelier — chaîne complète du rush au film | **Cousu** | — | [fiche](projets-actifs/amorce-atelier.md) | Les dix outils se lancent d'une seule recette — reste l'interface |
 | Studio audio (Streamlit) | **En pause** | — | [fiche](archives-backlog/studio-audio.md) | Reprendre si Amorce bute sur la voix off |
 | Conseiller Patrimoine | **En cours** | — | [fiche](archives-backlog/assistant-patrimoine.md) | Absorbe l'assistant d'allocation — reste à brancher un accès bancaire AISP |

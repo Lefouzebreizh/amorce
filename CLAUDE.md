@@ -2001,6 +2001,20 @@ tranche : essayer les deux, garder celui qui répond. Cet accès se donne à la
 rien ne le signale — découvrir à la poussée qu'on ne pourra pas fusionner coûte
 un cycle entier, mesuré sur la PR #94.
 
+**Et le contrôler avec le bon appel, parce qu'il existe un troisième état entre
+« absent » et « bon » — mesuré le 03/09/2026.** Le connecteur peut être présent
+et **en lecture seule** : `get_me` a répondu normalement, et
+`create_pull_request` a rendu `403 Resource not accessible by integration`. Une
+session qui vérifie avec `get_me` conclut donc que tout va bien, et rejoue la
+PR #94 quelques heures plus tard.
+
+Le contrôle utile porte sur l'**écriture**, pas sur l'identité. En attendant
+mieux : ne pas annoncer une fusion comme acquise tant qu'aucun appel en
+écriture n'a réussi. La parade coûte peu, car `git push` reste indépendant du
+connecteur et **fonctionne** : on pousse la branche, on donne le lien
+`pull/new/<branche>` à Erwann, et on continue. Ce qui est perdu est le clic,
+pas le lot.
+
 Supabase : lecture d'office, `execute_sql` et `apply_migration`
 non — et la liste est écrite **deux fois**, sous le nom `Supabase` et sous
 l'identifiant opaque `f3258232-…`. Ce n'est pas de la prudence : le serveur
