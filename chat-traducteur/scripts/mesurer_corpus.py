@@ -26,7 +26,14 @@ from adaptateurs.audio import AudioIllisible, charger, fenetrer  # noqa: E402
 from adaptateurs.yamnet import Yamnet  # noqa: E402
 from noyau.verdict import CLASSES_FELINES, juger  # noqa: E402
 
-EXTENSIONS = {".wav", ".mp3", ".m4a", ".ogg", ".flac", ".aac"}
+# La vidéo est dans la liste, et ce n'est pas un luxe : **un téléphone filme
+# autant qu'il enregistre**, et les premiers fichiers réels arrivés sur ce
+# projet étaient deux `.mp4`. Le corpus les a refusés en bloc — « aucun son
+# dans ce dossier » — alors que `adaptateurs.audio` sait les lire depuis le
+# premier jour, puisqu'il passe par ffmpeg. Le manque était ici, dans une
+# liste écrite en pensant à des fichiers son.
+EXTENSIONS = {".wav", ".mp3", ".m4a", ".ogg", ".flac", ".aac",
+              ".mp4", ".mov", ".m4v", ".webm", ".3gp"}
 
 
 def mesurer(chemin: Path, modele: Yamnet) -> dict | None:

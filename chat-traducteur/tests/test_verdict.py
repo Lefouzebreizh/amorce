@@ -42,15 +42,45 @@ class TestLaPorte(unittest.TestCase):
         v = juger([{"Speech": 0.94, "Music": 0.30}])
         self.assertIs(v.source, Source.AUCUNE)
         self.assertEqual(v.classe_dominante, "")
-        self.assertIn("pas un chat", v.raison)
+        # Le message dit « aucun son de chat entendu », jamais « ce n'est pas
+        # un chat » : sur une vidéo où le chat quémande en silence, la seconde
+        # formule est fausse pour la personne qui filme son propre chat.
+        self.assertIn("Aucun son de chat", v.raison)
+        self.assertNotIn("pas un chat", v.raison)
 
-    def test_un_rugissement_de_lion_ne_passe_pas(self):
-        """`Roaring cats` est hors des cinq classes retenues, exprès.
+    def test_un_rugissement_franchit_la_porte_mais_ne_dit_rien(self):
+        """`Roaring cats` ouvre la porte depuis le 03/09/2026, et ne choisit pas.
 
-        Sans cette exclusion, un documentaire animalier franchirait la porte
-        et l'étage 2 lui trouverait une intention de chat domestique.
+        Ce test disait l'inverse — « un rugissement ne passe pas » — et
+        l'exclusion se défendait : elle tenait les documentaires animaliers
+        dehors. Le premier vrai chat l'a démentie. Un chat domestique qui
+        bâille bruyamment est classé `Roaring cats` à 1,00 pendant quatre
+        secondes et demie, avec un cumul félin de **zéro**.
+
+        Le compromis est assumé : perdre un vrai chat coûte plus cher
+        qu'admettre un lion. Mais un lion ne reçoit **aucune intention** — la
+        classe ouvre la porte et ne porte pas de lecture, comme `Cat`.
         """
         v = juger([{"Roaring cats (lions, tigers)": 0.88, "Animal": 0.6}])
+        self.assertTrue(v.affichable, "le son est félin, la porte s'ouvre")
+        self.assertIs(v.intention, Intention.INDECIS)
+        self.assertIs(v.source, Source.AUCUNE)
+
+    def test_aucune_classe_precise_ne_donne_jamais_contentement(self):
+        """Le défaut du zéro, épinglé pour qu'il ne revienne pas.
+
+        Le repli était un `max()` sur les classes spécifiques. Sur des scores
+        tous nuls, `max()` rend le **premier** élément du tuple — `Purr` — et
+        le verdict sortait « contentement, mesuré, 0 % » sur un son qui ne
+        contient aucun ronronnement.
+
+        Il est resté invisible tant que rien ne pouvait franchir la porte sans
+        qu'une classe précise réponde. `Roaring cats` a créé ce cas, et le test
+        du lion l'a attrapé dans la seconde.
+        """
+        v = juger([{"Roaring cats (lions, tigers)": 0.90}])
+        self.assertNotEqual(v.classe_dominante, "Purr")
+        self.assertIsNot(v.intention, Intention.CONTENTEMENT)
         self.assertIs(v.source, Source.AUCUNE)
 
     def test_juste_sous_le_seuil_refuse(self):
