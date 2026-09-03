@@ -19,7 +19,7 @@ la spécialisation, celle-ci est la méthode.**
 
 | | `/web-artisan` | `/site-web` |
 | --- | --- | --- |
-| pour qui | un artisan, 300 €, livré en 48 h | n'importe quel client — thérapeute, coach, commerce, association, indépendant |
+| pour qui | un artisan, 300 €, livré en 48 h | tout **autre** client — thérapeute, coach, commerce, association, indépendant |
 | la teinte | une table fermée, du métier vers l'accent | la **mesure** qui a produit cette table, appliquée à une activité qui n'y figure pas |
 | le détail | le gabarit réel, ses tests, ses valeurs | l'ordre des décisions, et ce qui change d'un client à l'autre |
 
@@ -101,12 +101,16 @@ Quatre teintes du dépôt sont déjà mesurées et passent : lavande `#c0abff`
 (10,6:1). Les reprendre coûte zéro mesure.
 
 **Et la couleur n'est pas ce qui fait reconnaître un site.** C'est la leçon la
-plus contre-intuitive de `charte.ts` : ce qui se reconnaît d'un site à l'autre,
-ce sont les **formes** — filet vertical sous chaque titre, entête en halo plutôt
-qu'en aplat, prestations en liste fléchée, un bouton plein contre un bouton
-contour, signature en pied. La teinte ne dit que le métier. Un même gabarit en
-cinq couleurs reste reconnaissable ; cinq gabarits d'une même couleur ne le sont
-pas.
+plus contre-intuitive de `charte.ts`, et elle survit au changement de client :
+ce qui se reconnaît d'une page à l'autre, ce sont les **formes**, pas la teinte.
+Un même gabarit en cinq couleurs reste reconnaissable ; cinq gabarits d'une même
+couleur ne le sont pas.
+
+Quelles formes exactement, c'est au produit de le fixer une fois — `/web-artisan`
+donne les siennes et n'a pas à être recopiée ici. Ce qui se généralise est la
+**consigne** : arrêter trois ou quatre gestes de mise en page et ne plus en
+changer d'un client à l'autre. Un accent qui bouge et des formes qui bougent
+aussi, ce n'est plus une patte, c'est une page à chaque fois.
 
 # Le ton : il se règle sur le client, jamais sur soi
 
