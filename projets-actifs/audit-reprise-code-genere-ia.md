@@ -295,3 +295,38 @@ répond « j'ai déjà passé un scanner » n'est pas perdu : **c'est le mieux
 qualifié du lot**. Il a une liste de quarante lignes que personne n'a classée,
 et il est déjà convaincu que le problème existe. L'offre, c'est le classement —
 et le cas ci-dessus prouve ce que l'automatique rend seul.
+
+---
+
+## Le canal qui trouve les cibles — mesuré le 03/09/2026
+
+Le plan disait « la liste, c'est toi, au navigateur ». **C'est faux pour la
+moitié du travail**, et la correction vaut d'être écrite parce qu'elle change le
+partage des tâches.
+
+**Ce qui marche : `site:lovable.app` dans WebSearch.** Toute application Lovable
+déployée sans domaine propre vit sur ce suffixe, et l'index les voit. Croisé
+avec le vocabulaire du métier visé — « devis facture artisan », « tarifs
+abonnement professionnels », « gestion clients » — il rend en une recherche une
+douzaine d'applications françaises réelles, avec leur adresse et une ligne sur
+ce qu'elles font. Une session peut donc **constituer la liste**.
+
+**Ce qui ne marche pas : les ouvrir.** `*.lovable.app` est refusé au mandataire,
+comme `lovable.dev`, Product Hunt, Reddit et Hacker News. Une session ne peut ni
+lire la page de tarifs, ni lancer `scan_surface.py`. Le filtre décisif — un vrai
+palier payant — et le relevé restent sur la machine du propriétaire.
+
+Le partage devient donc : **la liste et le tri d'un côté, l'ouverture et le
+relevé de l'autre.** C'est un meilleur découpage que le précédent, parce que la
+partie longue — chercher — se fait ici, et la partie courte — trente secondes
+par adresse — se fait là-bas.
+
+**La liste elle-même ne se versionne pas.** Elle nomme des entreprises réelles à
+côté d'une hypothèse sur leur sécurité ; dans un dépôt public, c'est une liste
+de proies. Elle vit dans `projets-actifs/cibles-audit.md`, ignoré, pour la même
+raison que `artisan-express/prospects.md`.
+
+**Et toute cible ne se démarche pas.** Un service de télévision en direct à
+6,99 €/mois a été trouvé et écarté : sans licence de diffusion, son problème
+n'est pas la sécurité de son code. Envoyer un audit à une activité elle-même
+irrégulière n'apporte ni client ni crédit.
