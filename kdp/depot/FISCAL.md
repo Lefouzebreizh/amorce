@@ -1,15 +1,25 @@
-# Le questionnaire fiscal — celui qui décide du rang un
+# Le questionnaire fiscal — la formalité sans laquelle Amazon ne verse rien
 
-`projets-actifs/ordre-de-mise-en-vente.md` laisse deux chantiers à égalité au
-rang **1 ?**, et une seule question les départage : **les redevances d'auteur
-KDP peuvent-elles être versées sans SIRET ?** Artisan Express, lui, vend une
-prestation de service — facturer sans numéro n'est pas possible, et son
-encaissement en ligne est fermé pour cette raison exacte.
+> **Ce fichier a changé de rôle le 03/09/2026, et il faut le savoir avant de le
+> lire.** Il a été écrit pour trancher le rang 1 du classement, quand
+> l'immatriculation n'était pas validée et qu'on ignorait si KDP verserait sans
+> SIRET. **Le SIRET est validé** — SIREN 109356972, confirmé le 31/08/2026 — donc
+> cette question n'a plus d'objet et le classement est tranché autrement.
+>
+> Ce qui reste vrai, et pourquoi ce fichier sert encore : **Amazon ne verse rien
+> tant que le questionnaire n'est pas rempli.** C'est une formalité obligatoire,
+> plus un arbitre.
+>
+> **Et l'écran qui décide se relit autrement.** Ce fichier dit plus bas de
+> répondre « particulier », au motif qu'aucune entreprise n'existait. Une
+> entreprise individuelle existe désormais. **Ce choix est à reprendre à cette
+> lumière, et il n'est pas tranché ici** — c'est une question fiscale, et
+> l'inventer coûterait plus cher que de la poser.
 
-Ce questionnaire est la façon d'obtenir la réponse. Il est **gratuit**, il
-**ne publie rien**, et il se refait autant de fois qu'on veut.
+Ce questionnaire est **gratuit**, il **ne publie rien**, et il se refait autant
+de fois qu'on veut.
 
-État au 31/08/2026 : **compte KDP ouvert, questionnaire non rempli.**
+État au 03/09/2026 : **compte KDP ouvert, questionnaire non rempli.**
 
 ---
 
@@ -25,9 +35,8 @@ française ; ce formulaire n'a pas de champ pour lui. Ce n'est pas une
 tolérance, c'est qu'il ne pose pas la question.
 
 **Ce qu'il ne règle pas :** comment vous déclarez ces revenus en France. C'est
-une autre question, elle relève du fisc français et pas d'Amazon, elle ne bloque
-pas l'encaissement, et l'immatriculation est de toute façon en cours au guichet
-unique. Rien de ce fichier n'est un conseil fiscal.
+une autre question, elle relève du fisc français et pas d'Amazon, et elle ne
+bloque pas l'encaissement. Rien de ce fichier n'est un conseil fiscal.
 
 ---
 
@@ -45,13 +54,28 @@ publier.
 
 **1. Êtes-vous une personne américaine ?** → Non.
 
-**2. Particulier ou entreprise ?** → **Particulier** *(Individual)*.
+**2. Particulier ou entreprise ?** → **à trancher, et ce n'est plus évident.**
 
-C'est **l'écran qui décide**. Le parcours « particulier » aboutit à un
-formulaire W-8BEN, qui est celui des personnes physiques. Le parcours
-« entreprise » aboutit à un W-8BEN-E et réclame des pièces d'entité que vous
-n'avez pas encore. Tant que le SIRET n'est pas validé, il n'y a rien à déclarer
-comme entreprise : c'est « particulier », et ce n'est pas un contournement.
+C'est **l'écran qui décide**, et c'est le seul point de ce fichier que
+l'immatriculation a rouvert. Le parcours « particulier » aboutit à un formulaire
+W-8BEN, celui des personnes physiques ; le parcours « entreprise » aboutit à un
+W-8BEN-E et réclame des pièces d'entité.
+
+**Ce fichier disait « particulier », et sa raison a disparu.** Elle était :
+« tant que le SIRET n'est pas validé, il n'y a rien à déclarer comme
+entreprise ». Le SIRET est validé depuis le 31/08/2026.
+
+Ce qui complique, et pourquoi je ne tranche pas : **une entreprise individuelle
+n'est pas une personne morale.** L'entrepreneur individuel et la personne
+physique sont le même contribuable, ce qui plaide pour « particulier » et le
+W-8BEN — mais c'est un raisonnement, pas une mesure, et il porte sur du droit
+fiscal américain appliqué à une forme juridique française.
+
+**Le formulaire lui-même est la meilleure source** : ses écrans nomment les
+types d'entité qu'il attend, et un parcours abandonné ne coûte rien puisqu'il se
+refait. Lisez ce qu'il propose avant de choisir, et notez ce qui a été retenu
+dans le tableau plus bas — la prochaine session lira « particulier » sans savoir
+qui l'a décidé, sinon.
 
 **3. Identité et adresse.** Nom, prénom, adresse en France. Le nom doit être le
 vôtre, pas le nom de plume — c'est le bénéficiaire du virement.
@@ -73,8 +97,9 @@ espace sur `impots.gouv.fr`.
   parlent de « numéro INSEE » à cet endroit — c'est une confusion entre
   l'identifiant social et l'identifiant fiscal. Ne la suivez pas : lisez le
   numéro sur l'avis.
-- Ce n'est **pas le SIRET**, y compris quand il sera arrivé. Le SIRET identifie
-  une entreprise, ce champ identifie un contribuable.
+- Ce n'est **pas le SIRET**, qui existe pourtant désormais. Le SIRET identifie
+  une entreprise, ce champ identifie un contribuable — et c'est le contribuable
+  qu'Amazon paie.
 
 **5. Traité fiscal France–États-Unis.** Demandez le bénéfice du traité. Sans
 numéro fiscal renseigné, la retenue par défaut est de **30 %** ; le traité la
@@ -87,32 +112,35 @@ réduit. **Le formulaire affiche le taux qu'il va appliquer — c'est le chiffre
 
 ## Ce qu'il faut noter en sortant
 
-C'est la mesure, et elle tient en trois lignes. Sans elles, le rang 1 reste
-indécidable.
+Ce n'est plus une mesure qui décide d'un classement — c'est **l'état de votre
+compte**, et il se reperd s'il n'est écrit nulle part. Quatre lignes.
 
 | À relever | Réponse |
 | --- | --- |
-| Le questionnaire est-il allé au bout **en particulier**, sans jamais réclamer de numéro d'entreprise ? | |
+| Statut retenu à l'écran 2 *(particulier / entreprise)*, et ce que le formulaire proposait | |
+| Numéro fiscal saisi *(le numéro fiscal personnel, ou autre chose ?)* | |
 | Taux de retenue affiché à la fin | |
 | Statut affiché ensuite *(en cours de validation / validé / autre)* | |
 
+La première ligne compte plus que les autres : c'est le seul choix de ce
+parcours qui ne se déduit pas, et une session qui lit « particulier » sans
+savoir qui l'a décidé le reconduira sans le vérifier.
+
 ---
 
-## Ce que chaque réponse décide
+## Une fois qu'il est rempli
 
-**Il est allé au bout sans numéro d'entreprise** → **KDP est premier, sans
-discussion.** C'est le seul chantier qui a déjà son public — 48 000 personnes —
-et le seul qui encaisserait avant le SIRET. Le geste suivant n'est alors pas de
-fabriquer une image : c'est d'assembler avec la couverture provisoire, de
-déposer, et de **commander l'épreuve papier** — voir `EPREUVE.md`, dont les deux
-semaines d'impression courent pendant qu'on travaille la couverture définitive.
-Les champs du formulaire de dépôt sont prêts à coller dans `FICHE-KDP.md`, et la
-suite est dans `../lancement/PLAN-DE-LANCEMENT.md`.
+Le versement n'est plus bloqué, et le chemin est déjà écrit. Le geste suivant
+n'est pas de fabriquer une image : c'est d'assembler avec la couverture
+provisoire, de déposer, et de **commander l'épreuve papier** — voir
+`EPREUVE.md`, dont les deux semaines d'impression courent pendant qu'on travaille
+la couverture définitive. Les champs du formulaire de dépôt sont prêts à coller
+dans `FICHE-KDP.md`, et la suite est dans `../lancement/PLAN-DE-LANCEMENT.md`.
 
-**Il a réclamé un numéro d'entreprise** → KDP bute sur le même mur qu'Artisan
-Express. Les deux attendent le SIRET, et le classement se rejoue sur d'autres
-critères. Écrivez-le dans `projets-actifs/ordre-de-mise-en-vente.md` : c'est
-une réponse qui vaut autant que l'autre, et qui ferme la question.
+**Et le dépôt n'attend pas ce questionnaire.** Rien n'empêche de déposer et de
+commander l'épreuve avant de l'avoir rempli : il conditionne le **versement**,
+pas le dépôt. Les deux semaines d'impression peuvent donc courir pendant ce
+temps-là aussi.
 
 ---
 
