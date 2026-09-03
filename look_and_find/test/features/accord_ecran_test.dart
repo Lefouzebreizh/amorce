@@ -47,6 +47,34 @@ void main() {
       }
     });
 
+    testWidgets("l'aide se pose sous le carré, jamais dedans ni sous le "
+        'déclencheur', (tester) async {
+      // Ce test décrit l'ancrage, pas la collision : c'est le mécanisme du
+      // correctif. Le défaut lui-même — le déclencheur qui recouvrait l'aide —
+      // se produit à l'échelle de la page et se fige dans
+      // `accord_page_test.dart`. Vérifié en retirant le correctif : ce test-ci
+      // reste vert, celui de la page tombe.
+      // La surface est réglée pour de vrai plutôt qu'enfermée dans un `Center` :
+      // une boîte plus grande que la fenêtre de test déborde, et les positions
+      // relevées ne sont alors celles d'aucun écran réel.
+      await tester.binding.setSurfaceSize(const Size(420, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: CadreVisee(aide: 'Remplissez le cadre.')),
+        ),
+      );
+
+      final cadre = tester.getRect(find.byType(CadreVisee));
+      final carre = CadreVisee.carre(cadre.size);
+      final aide = tester.getRect(find.text('Remplissez le cadre.'));
+
+      expect(aide.top, greaterThan(cadre.top + carre.bottom),
+          reason: "l'aide doit commencer sous le carré, pas dedans");
+      expect(aide.bottom, lessThan(cadre.bottom),
+          reason: "l'aide doit tenir dans l'écran");
+    });
+
     testWidgets('il se monte et affiche son aide', (tester) async {
       await tester.pumpWidget(
         _monte(const CadreVisee(aide: 'Remplissez le cadre avec le mur.')),

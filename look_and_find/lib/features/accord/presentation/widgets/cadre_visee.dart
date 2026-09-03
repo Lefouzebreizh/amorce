@@ -54,11 +54,22 @@ class CadreVisee extends StatelessWidget {
         painter: _EquerresPainter(part),
         child: aide == null
             ? const SizedBox.expand()
-            : Align(
-                alignment: const Alignment(0, 0.82),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: DecoratedBox(
+            : LayoutBuilder(
+                // L'aide se pose **sous le carré**, pas à un alignement fixe.
+                // Posée à une fraction de l'écran, elle passait sous le
+                // déclencheur sur un format allongé — vu en rendant la page,
+                // invisible dans les tests.
+                builder: (context, contraintes) {
+                  final carre = CadreVisee.carre(contraintes.biggest, part);
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      top: carre.bottom + 20,
+                      left: 32,
+                      right: 32,
+                    ),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: DecoratedBox(
                     decoration: BoxDecoration(
                       // Le texte se pose sur un flux vidéo dont on ne connaît
                       // pas la luminosité : sans fond propre il devient
@@ -82,7 +93,9 @@ class CadreVisee extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
+                    ),
+                  );
+                },
               ),
       ),
     );
