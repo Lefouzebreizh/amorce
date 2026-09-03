@@ -5667,3 +5667,29 @@ change » — et c'est exactement ce qui l'a levé.
 Le corollaire pour l'écriture : une phrase qui décrit un état extérieur se date
 et dit **par quel appel** on la revérifie. Sans ça, elle se relit comme une
 propriété du dépôt, et personne ne pense à la réinterroger.
+
+## « stale info » après une fusion : la branche a été supprimée, pas dépassée
+
+Mesuré le 03/09/2026, et ça a coûté trois tentatives.
+
+Ce dépôt **supprime la branche à la fusion**. Une session qui réutilise ensuite
+le même nom de branche — ce que la consigne de branche désignée impose — se
+retrouve avec un `refs/remotes/origin/<branche>` qui pointe sur un commit
+disparu du serveur. `git push --force-with-lease` compare son bail à cette
+référence fantôme et refuse :
+
+    ! [rejected]  (stale info)
+
+Le message fait chercher un conflit ou une divergence. Il n'y en a aucune : la
+branche distante **n'existe plus**. Un `git fetch` n'y change rien, puisqu'il
+n'a pas de branche à rapporter.
+
+Le diagnostic tient en une commande, et c'est le vide qui répond :
+
+```bash
+git ls-remote origin refs/heads/<branche>   # ne rend rien -> elle est supprimée
+```
+
+La suite est alors un `git push -u origin <branche>` **ordinaire** : on crée une
+branche neuve, il n'y a rien à écraser. `--force-with-lease` n'a de sens que
+contre une branche qui existe encore.
