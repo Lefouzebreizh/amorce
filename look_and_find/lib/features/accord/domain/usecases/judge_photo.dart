@@ -14,6 +14,13 @@
 /// ce qui est trop sombre ou trop clair pour porter une couleur — c'est
 /// l'ombre et le reflet de la même surface, pas deux couleurs de plus.
 ///
+/// **Ce qu'elle reçoit est une zone, pas une photo.** L'appelant lui passe les
+/// pixels du cadre de visée — voir `ZoneVisee` — et jamais l'image entière.
+/// Quarante-sept photos réelles ont montré pourquoi : sur une pièce, la porte
+/// rend la couleur de la plus grande surface présente, ce qui est exact et
+/// inutile. Elle ne sait pas, et ne saura pas depuis les pixels, si cette
+/// surface est celle qu'on visait. C'est le cadre qui porte cette réponse.
+///
 /// L'ordre des refus n'est pas décoratif. Le contre-jour passe avant « trop
 /// sombre » parce qu'une pièce sombre **avec** une fenêtre brûlée n'est pas le
 /// même problème qu'une pièce simplement mal éclairée, et n'appelle pas le même

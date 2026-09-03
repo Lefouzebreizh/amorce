@@ -1,0 +1,88 @@
+/// De la photo prise à l'échantillon que la porte sait juger.
+///
+/// **Ce fichier est un passage, et les passages sont là où les défauts se
+/// cachent.** Rien de ce qu'il fait n'est visible : il décode, découpe,
+/// réduit. Une erreur ici ne lève aucune exception et ne casse aucun test de
+/// la porte — elle rend simplement une couleur fausse, plausible, sur laquelle
+/// tout le reste s'appuie. Ce projet a déjà payé exactement cela une fois, avec
+/// une saturation TSV traitée comme une saturation TSL : la couleur restait
+/// crédible, seul un test de borne l'a attrapée.
+///
+/// D'où deux décisions.
+///
+/// *Le cadre n'est pas recalculé ici* : il vient de `ZoneVisee.cadre()`, la
+/// même source que le découpage sur une liste de pixels. Deux copies d'un même
+/// calcul finissent par diverger.
+///
+/// *La réduction se fait par moyenne d'aire*, pas par échantillonnage au plus
+/// proche. Sur un mur, le plus proche voisin retiendrait un pixel de bruit du
+/// capteur là où la moyenne rend la couleur de la surface — et c'est la
+/// couleur de la surface qu'on cherche.
+library;
+
+import 'dart:typed_data';
+
+import 'package:image/image.dart' as img;
+
+import '../domain/usecases/zone_visee.dart';
+
+class EchantillonAccord {
+  const EchantillonAccord._();
+
+  /// Le côté de l'échantillon rendu, en pixels.
+  ///
+  /// Quarante par quarante, soit mille six cents pixels. C'est la taille sur
+  /// laquelle tous les seuils de la porte ont été réglés, sur quarante-sept
+  /// photos réelles ; la changer déplacerait les mesures sans que rien ne le
+  /// signale.
+  static const int cote = 40;
+
+  /// Les pixels du cadre de visée, réduits en [cote] × [cote].
+  ///
+  /// Rend `null` si les octets ne sont pas une image décodable — l'appelant
+  /// décide quoi en dire, ce n'est pas un refus d'Accord mais une panne.
+  static List<(int, int, int)>? depuisOctets(
+    Uint8List octets, {
+    double part = ZoneVisee.partParDefaut,
+  }) {
+    final image = img.decodeImage(octets);
+    if (image == null) return null;
+    return depuisImage(image, part: part);
+  }
+
+  /// Le même travail sur une image déjà décodée.
+  static List<(int, int, int)> depuisImage(
+    img.Image image, {
+    double part = ZoneVisee.partParDefaut,
+  }) {
+    final (gauche, haut, cadre) =
+        ZoneVisee.cadre(image.width, image.height, part);
+
+    final zone = img.copyCrop(
+      image,
+      x: gauche,
+      y: haut,
+      width: cadre,
+      height: cadre,
+    );
+    final reduite = img.copyResize(
+      zone,
+      width: cote,
+      height: cote,
+      interpolation: img.Interpolation.average,
+    );
+
+    final pixels = <(int, int, int)>[];
+    for (var y = 0; y < cote; y++) {
+      for (var x = 0; x < cote; x++) {
+        final p = reduite.getPixel(x, y);
+        pixels.add((
+          p.r.round().clamp(0, 255),
+          p.g.round().clamp(0, 255),
+          p.b.round().clamp(0, 255),
+        ));
+      }
+    }
+    return pixels;
+  }
+}
