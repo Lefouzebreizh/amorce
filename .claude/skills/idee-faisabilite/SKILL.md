@@ -1,6 +1,6 @@
 ---
 name: idee-faisabilite
-description: Capturer une idée en vrac, la noter sur 10 selon quatre critères (temps, complexité technique, coût/rentabilité, alignement avec les cinq chantiers du dépôt), puis écrire la fiche dans /inbox/, /projets-actifs/ ou /archives-backlog/ et mettre à jour INDEX.md. À utiliser dès que quelqu'un lance une idée, même à moitié formulée — « j'ai pensé à un truc », « et si on faisait une app qui… », « ça vaut le coup de… », « note ça quelque part », « est-ce que c'est faisable » — et aussi pour trier l'inbox, relancer une idée en pause ou décider entre deux projets. Ne pas attendre le mot « faisabilité » : une idée jetée en passant est exactement le cas d'usage.
+description: "Capturer une idée en vrac, la noter sur 10 selon quatre critères (temps, complexité technique, coût/rentabilité, alignement avec les cinq chantiers du dépôt), puis écrire la fiche dans /inbox/, /projets-actifs/ ou /archives-backlog/ et mettre à jour INDEX.md. À utiliser dès que quelqu'un lance une idée, même à moitié formulée — « j'ai pensé à un truc », « et si on faisait une app qui… », « ça vaut le coup de… », « note ça quelque part », « est-ce que c'est faisable » — et aussi pour trier l'inbox, relancer une idée en pause ou décider entre deux projets. Ne pas attendre le mot « faisabilité » : une idée jetée en passant est exactement le cas d'usage."
 ---
 
 # Trier une idée : de la phrase en vrac à la fiche exécutable

@@ -1,6 +1,6 @@
 ---
 name: module-life-organizer
-description: Dans quel ordre écrire un module de l'assistant de rangement Life-Organizer, et les quatre pièges du domaine qui coûtent chacun une reprise complète — la date qui ment, le doublon qui n'en est pas, l'outil externe absent, le dossier qui contient n'importe quoi. À utiliser dès qu'on touche à `life-organizer/`, et dès qu'une demande parle de ranger, trier, dédoublonner, convertir, agrandir, scanner ou nettoyer des fichiers personnels : « écris le module nettoyage », « ajoute la détection des photos floues », « il faut convertir les HEIC », « range mes photos par date », « détecte les doublons », « suis mes abonnements ». Les pièges ne sont écrits nulle part ailleurs, et aucun ne se voit avant d'avoir traité deux mille fichiers.
+description: "Dans quel ordre écrire un module de l'assistant de rangement Life-Organizer, et les quatre pièges du domaine qui coûtent chacun une reprise complète — la date qui ment, le doublon qui n'en est pas, l'outil externe absent, le dossier qui contient n'importe quoi. À utiliser dès qu'on touche à `life-organizer/`, et dès qu'une demande parle de ranger, trier, dédoublonner, convertir, agrandir, scanner ou nettoyer des fichiers personnels : « écris le module nettoyage », « ajoute la détection des photos floues », « il faut convertir les HEIC », « range mes photos par date », « détecte les doublons », « suis mes abonnements ». Les pièges ne sont écrits nulle part ailleurs, et aucun ne se voit avant d'avoir traité deux mille fichiers."
 ---
 
 # Écrire un module de Life-Organizer

@@ -1,6 +1,6 @@
 ---
 name: supabase-en-direct
-description: Piloter un projet Supabase depuis la session, quand le serveur MCP Supabase est connecté — appliquer le schéma en migration, éprouver les politiques RLS sur la vraie base, lire les advisors de sécurité, récupérer l'URL et la clé publique pour `.env.local`, générer les types TypeScript. À utiliser dès qu'une tâche bute sur « il faudrait une base » : appliquer un schéma, vérifier des politiques, brancher un projet client, diagnostiquer une requête qui renvoie zéro ligne, ou remplir un `.env.local`. Sert aussi à savoir quoi faire quand le serveur MCP est absent ou tombe en cours de route — l'éditeur SQL du tableau de bord fait le même travail, et ce fichier dit lequel des deux chemins a réellement été éprouvé.
+description: "Piloter un projet Supabase depuis la session, quand le serveur MCP Supabase est connecté — appliquer le schéma en migration, éprouver les politiques RLS sur la vraie base, lire les advisors de sécurité, récupérer l'URL et la clé publique pour `.env.local`, générer les types TypeScript. À utiliser dès qu'une tâche bute sur « il faudrait une base » : appliquer un schéma, vérifier des politiques, brancher un projet client, diagnostiquer une requête qui renvoie zéro ligne, ou remplir un `.env.local`. Sert aussi à savoir quoi faire quand le serveur MCP est absent ou tombe en cours de route — l'éditeur SQL du tableau de bord fait le même travail, et ce fichier dit lequel des deux chemins a réellement été éprouvé."
 ---
 
 # Piloter Supabase depuis la session

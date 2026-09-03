@@ -1,6 +1,6 @@
 ---
 name: formulaire-pdf
-description: Remplir un formulaire PDF — Cerfa, mandat de prélèvement, bulletin d'adhésion, dossier à compléter — avec l'outillage de `paper-manager` : repérer les champs, écrire un plan de remplissage rejouable d'une année sur l'autre, produire un PDF aplati prêt à imprimer. Couvre aussi les PDF plats, sans champs, remplis par coordonnées relevées une fois. À utiliser dès qu'il est question d'un Cerfa, d'un formulaire à remplir, de « remplir un PDF », d'un mandat SEPA, d'un dossier administratif à compléter, de champs de formulaire introuvables ou renommés, ou quand un PDF rempli ressort vierge à l'impression.
+description: "Remplir un formulaire PDF — Cerfa, mandat de prélèvement, bulletin d'adhésion, dossier à compléter — avec l'outillage de `paper-manager` : repérer les champs, écrire un plan de remplissage rejouable d'une année sur l'autre, produire un PDF aplati prêt à imprimer. Couvre aussi les PDF plats, sans champs, remplis par coordonnées relevées une fois. À utiliser dès qu'il est question d'un Cerfa, d'un formulaire à remplir, de « remplir un PDF », d'un mandat SEPA, d'un dossier administratif à compléter, de champs de formulaire introuvables ou renommés, ou quand un PDF rempli ressort vierge à l'impression."
 ---
 
 # Remplir un formulaire PDF

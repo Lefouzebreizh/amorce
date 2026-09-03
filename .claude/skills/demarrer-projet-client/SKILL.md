@@ -1,6 +1,6 @@
 ---
 name: demarrer-projet-client
-description: Fabriquer un nouveau projet client de l'agence à partir du socle `agence/` — copie, renommage, branchements à la racine, intégration continue, en une commande vérifiée. À utiliser dès qu'un projet client démarre pour de bon : « on lance le projet pour Boulangerie Martin », « crée-moi l'appli pour ce client », « on attaque le dev », « mets en place le projet », « il faut un espace client pour X », ou juste après un cadrage validé avec `/cadrage-brief-client`. Ne surtout pas recopier `agence/` à la main : trois branchements à la racine se voient seulement quand la vérification casse, chez quelqu'un d'autre. Pour l'ordre de travail une fois le projet créé, enchaîner sur `/stack-agence-supabase`.
+description: "Fabriquer un nouveau projet client de l'agence à partir du socle `agence/` — copie, renommage, branchements à la racine, intégration continue, en une commande vérifiée. À utiliser dès qu'un projet client démarre pour de bon : « on lance le projet pour Boulangerie Martin », « crée-moi l'appli pour ce client », « on attaque le dev », « mets en place le projet », « il faut un espace client pour X », ou juste après un cadrage validé avec `/cadrage-brief-client`. Ne surtout pas recopier `agence/` à la main : trois branchements à la racine se voient seulement quand la vérification casse, chez quelqu'un d'autre. Pour l'ordre de travail une fois le projet créé, enchaîner sur `/stack-agence-supabase`."
 ---
 
 # Démarrer un projet client

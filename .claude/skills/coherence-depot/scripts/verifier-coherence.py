@@ -214,6 +214,58 @@ def controler_competences(claude_md: str, releve: Releve) -> None:
     )
 
 
+def controler_frontmatter_competences(releve: Releve) -> None:
+    """Le frontmatter d'une compétence doit être du YAML valide.
+
+    Le défaut attrapé ici a vécu longtemps sans être vu : **un scalaire YAML
+    non quoté ne peut pas contenir un deux-points suivi d'une espace.** Une
+    description qui dit « pas un site vitrine : où passe la frontière » casse
+    donc le document — et rien ne le signalait, parce que le chargeur de
+    compétences est tolérant. C'est GitHub qui l'affiche, en rouge, à la place
+    du fichier.
+
+    Mesuré le 03/09/2026 : **trente-trois compétences sur soixante-six** étaient
+    dans ce cas. Aucune n'avait été signalée, parce qu'on ne lit pas un
+    `SKILL.md` sur GitHub — on le lit depuis le dépôt, où le défaut est muet.
+
+    Ce contrôle n'utilise pas PyYAML : le workflow qui le lance n'installe rien,
+    et cette contrainte est délibérée — voir l'en-tête de `coherence.yml`. Il
+    cherche donc la seule forme qui produit ce défaut, plutôt que de parser.
+    """
+    dossier = RACINE / ".claude" / "skills"
+    if not dossier.is_dir():
+        return
+
+    fautives: list[str] = []
+    for fiche in sorted(dossier.glob("*/SKILL.md")):
+        texte = fiche.read_text(encoding="utf-8")
+        if not texte.startswith("---\n"):
+            continue
+        fin = texte.find("\n---", 3)
+        if fin == -1:
+            continue
+        for ligne in texte[4:fin].split("\n"):
+            # Une ligne de continuation ou un bloc plié (« >- ») ne sont pas
+            # concernés : seule une valeur posée sur la même ligne que sa clé
+            # peut se faire couper par un deux-points.
+            correspondance = re.match(r"^([a-z_]+): (.*)$", ligne)
+            if correspondance is None:
+                continue
+            valeur = correspondance.group(2)
+            if valeur[:1] in ('"', "'", ">", "|"):
+                continue
+            if ": " in valeur:
+                fautives.append(fiche.parent.name)
+                break
+
+    releve.faux_si(
+        bool(fautives),
+        f"frontmatter YAML invalide — une valeur non quotée contient « : » : "
+        f"{', '.join(fautives)}. Entourer la valeur de guillemets droits, ou "
+        f"passer en bloc plié (« description: >- »).",
+    )
+
+
 def controler_agents(claude_md: str, releve: Releve) -> None:
     dossier = RACINE / ".claude" / "agents"
     if not dossier.is_dir():
@@ -577,6 +629,7 @@ def main(argv: list[str]) -> int:
     controler_terrain_de_index(releve)
     controler_competences(claude_md, releve)
     controler_agents(claude_md, releve)
+    controler_frontmatter_competences(releve)
     controler_chemins_cites(claude_md, releve)
     controler_listes_numerotees(claude_md, releve)
     controler_hook(releve)

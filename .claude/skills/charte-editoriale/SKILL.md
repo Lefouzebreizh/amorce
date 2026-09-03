@@ -1,6 +1,6 @@
 ---
 name: charte-editoriale
-description: La voix d'Erwann — pédagogue, chaleureuse, d'égal à égal, avec une touche d'humour et de poésie visuelle. À utiliser pour **tout texte destiné à son public** : réponse à un commentaire, légende, publication, script ou accroche TikTok, page de présentation, newsletter, message à la communauté, texte de couverture, README qui s'adresse à un lecteur. Contient aussi les tournures qui trahissent immédiatement une écriture automatique, et ce qu'on ne rédige jamais à sa place. À charger dès qu'une demande dit « écris », « rédige », « une accroche », « un script », « une légende », « reformule », « trouve un titre », « qu'est-ce que je réponds à… », ou quand on retouche un texte que quelqu'un d'autre va lire.
+description: "La voix d'Erwann — pédagogue, chaleureuse, d'égal à égal, avec une touche d'humour et de poésie visuelle. À utiliser pour **tout texte destiné à son public** : réponse à un commentaire, légende, publication, script ou accroche TikTok, page de présentation, newsletter, message à la communauté, texte de couverture, README qui s'adresse à un lecteur. Contient aussi les tournures qui trahissent immédiatement une écriture automatique, et ce qu'on ne rédige jamais à sa place. À charger dès qu'une demande dit « écris », « rédige », « une accroche », « un script », « une légende », « reformule », « trouve un titre », « qu'est-ce que je réponds à… », ou quand on retouche un texte que quelqu'un d'autre va lire."
 ---
 
 # Écrire dans la voix d'Erwann
