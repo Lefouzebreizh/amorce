@@ -1361,6 +1361,27 @@ résumé de la précédente hérite de son état sans hériter de ses règles. C
 ainsi qu'on redemande une fusion déjà autorisée une fois pour toutes, ou qu'on
 pose un projet sans le déclarer aux six endroits.
 
+**Et le lire ne suffit pas : les fichiers d'instruction viennent du disque, donc
+de la branche, jamais de `main`.** Une session reprise après quelques jours
+relit consciencieusement un fichier périmé et croit l'avoir mis à jour. Mesuré
+le 03/09/2026 sur un fil rouvert une semaine après sa dernière poussée : sa
+copie de travail portait **292 lignes** là où `main` en comptait **1812**, soit
+885 commits de retard — tout le §0 bis, les quatre règles de méthode du §8 et le
+§10 bis lui étaient invisibles, et elle a répondu deux messages sur cet état-là
+avant que quiconque le remarque.
+
+Le geste tient en deux commandes et se fait **avant** de se fier à ce qu'on
+vient de lire :
+
+```bash
+git fetch --prune -q origin main
+git rev-list --count HEAD..origin/main   # 0 attendu ; sinon, se remettre à jour
+```
+
+Ça vaut pour tout fil qui reprend, pas seulement après une semaine : ce fichier
+bouge plusieurs fois par jour, et le §2 le dit déjà pour les changements. Ici,
+c'est la lecture elle-même qui est en jeu.
+
 **Un « bonjour » se répond par un point et une sortie, jamais par « on fait
 quoi ? ».** Le propriétaire ouvre souvent un fil sans consigne, parfois fatigué,
 parfois après trois jours de blocage. Lui renvoyer la question lui fait porter
