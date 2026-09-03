@@ -12,20 +12,20 @@ export const metadata: Metadata = {
  *
  * ## Ce qui est écrit, et ce qui ne l'est pas
  *
- * Le numéro SIRET manque : l'immatriculation était en cours au moment d'écrire.
- * Il est annoncé comme tel plutôt qu'omis en silence — un visiteur qui cherche
- * l'identité d'un vendeur et ne trouve rien conclut à une absence, pas à une
- * attente. **Aucun numéro n'est inventé**, et la mention se retire le jour où
- * le vrai arrive.
+ * Le SIRET est actif depuis le 31 août 2026 — SIREN 109356972, vérifié le
+ * 3 septembre sur le registre public `recherche-entreprises.api.gouv.fr`
+ * (état administratif « A »). C'est la même entreprise individuelle qui porte
+ * Artisan Express : un seul numéro pour toute l'activité d'Erwann Chevallier,
+ * pas un par produit.
  *
- * Deux points restent à compléter et sont signalés dans le texte plutôt que
- * comblés : le SIRET, et le médiateur de la consommation — que la loi impose à
- * qui vend à des particuliers, et qui se souscrit auprès d'un organisme agréé.
- * Écrire un nom de médiateur qu'on n'a pas serait un faux.
+ * Un point reste à compléter et est signalé dans le texte plutôt que comblé :
+ * le médiateur de la consommation, que la loi impose à qui vend à des
+ * particuliers et qui se souscrit auprès d'un organisme agréé. Écrire un nom
+ * de médiateur qu'on n'a pas serait un faux.
  */
 export default function Page() {
   return (
-    <PageTexte titre="Mentions légales" miseAJour="2 septembre 2026">
+    <PageTexte titre="Mentions légales" miseAJour="3 septembre 2026">
       <Bloc titre="Éditeur du site">
         <p>
           Amorce est édité par <strong className="text-mist">Erwann Chevallier</strong>,
@@ -37,10 +37,7 @@ export default function Page() {
         <a href="mailto:erwannchevallier@gmail.com" className="inline-flex min-h-11 items-center text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
           erwannchevallier@gmail.com
         </a>
-        <p className="text-base">
-          SIRET en cours d’attribution — l’immatriculation est déposée et le numéro
-          sera publié ici dès qu’il sera délivré.
-        </p>
+        <p className="text-base">SIRET 109 356 972 00017.</p>
       </Bloc>
 
       <Bloc titre="Directeur de la publication">

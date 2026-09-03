@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { BandeSure } from './BandeSure';
+import { RevealFooter, RevealLink, Section } from './RevealArea';
 
 /**
  * La page qu'un visiteur voit avant d'avoir entendu parler d'Amorce.
@@ -47,23 +48,6 @@ const CONCURRENTS = [
   { nom: 'Filmora', prix: '79,99 $', cadence: 'une fois' },
 ];
 
-function Section({
-  titre,
-  children,
-}: {
-  titre: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-balance text-2xl font-semibold leading-tight text-mist sm:text-3xl">
-        {titre}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
 export function Accueil() {
   return (
     <div className="min-h-dvh bg-ink text-mist">
@@ -77,21 +61,33 @@ export function Accueil() {
 
         {/* --- Premier écran : promesse, preuve, prix, action --------------- */}
         <header className="flex flex-col gap-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">
+          <p
+            className="entree text-sm font-semibold uppercase tracking-[0.18em] text-accent"
+            style={{ animationDelay: '0ms' }}
+          >
             Amorce
           </p>
 
-          <h1 className="text-balance text-4xl font-bold leading-[1.08] text-mist sm:text-5xl">
+          <h1
+            className="entree text-balance text-4xl font-bold leading-[1.08] text-mist sm:text-5xl"
+            style={{ animationDelay: '70ms' }}
+          >
             Monte ta vidéo verticale sans rien envoyer à personne.
           </h1>
 
-          <p className="text-lg leading-relaxed text-muted">
+          <p
+            className="entree text-lg leading-relaxed text-muted"
+            style={{ animationDelay: '140ms' }}
+          >
             Tes rushes restent sur ton téléphone. Amorce les coupe, les
             sous-titre, les sonorise et te rend un fichier prêt à publier — sans
             compte, sans téléversement, sans serveur qui garde une copie.
           </p>
 
-          <dl className="flex flex-wrap gap-x-8 gap-y-3 rounded-2xl bg-slab p-5">
+          <dl
+            className="entree flex flex-wrap gap-x-8 gap-y-3 rounded-2xl bg-slab p-5"
+            style={{ animationDelay: '210ms' }}
+          >
             <div>
               <dt className="text-sm text-muted">Le studio complet</dt>
               <dd className="text-2xl font-semibold text-mist">49 € une fois</dd>
@@ -110,7 +106,10 @@ export function Accueil() {
             faire défiler avant d'avoir une raison de le faire. Ce sont les
             valeurs relevées sur le dernier export, pas des arrondis.
           */}
-          <p className="text-base leading-relaxed text-muted">
+          <p
+            className="entree text-base leading-relaxed text-muted"
+            style={{ animationDelay: '280ms' }}
+          >
             <span className="font-semibold tabular-nums text-mist">
               1080 × 1920, 30 images par seconde
             </span>{' '}
@@ -119,11 +118,15 @@ export function Accueil() {
 
           <Link
             href="/studio"
-            className="flex min-h-14 items-center justify-center rounded-2xl bg-accent px-6 text-lg font-semibold text-ink transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="entree flex min-h-14 items-center justify-center rounded-2xl bg-accent px-6 text-lg font-semibold text-ink transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            style={{ animationDelay: '350ms' }}
           >
             Ouvrir le studio
           </Link>
-          <p className="-mt-2 text-center text-base text-muted">
+          <p
+            className="entree -mt-2 text-center text-base text-muted"
+            style={{ animationDelay: '350ms' }}
+          >
             Rien à installer. Ça démarre dans cet onglet.
           </p>
         </header>
@@ -220,12 +223,12 @@ export function Accueil() {
           décide en lisant les chiffres devait chercher. Une page longue se
           jalonne, sinon elle se lit sans jamais rien demander.
         */}
-        <Link
+        <RevealLink
           href="/studio"
           className="flex min-h-14 items-center justify-center rounded-2xl border border-edge px-6 text-lg font-semibold text-mist transition-colors hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Ouvrir le studio
-        </Link>
+        </RevealLink>
 
         {/* --- L'argument qui n'appartient qu'à ce studio ------------------- */}
         <Section titre="Aucun de tes fichiers ne part. Ce n’est pas une politique, c’est une absence.">
@@ -251,12 +254,12 @@ export function Accueil() {
           pouce couvre le téléphone ; celle-ci couvre l'ordinateur, où il n'y
           en a pas.
         */}
-        <Link
+        <RevealLink
           href="/studio"
           className="flex min-h-14 items-center justify-center rounded-2xl border border-accent px-6 text-lg font-semibold text-accent transition-colors hover:bg-accent hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Ouvrir le studio et essayer
-        </Link>
+        </RevealLink>
 
         {/* --- Le prix, comparé pour de vrai ------------------------------- */}
         <Section titre="49 €, une seule fois">
@@ -385,7 +388,7 @@ export function Accueil() {
           )}
         </Section>
 
-        <footer className="flex flex-col gap-4 border-t border-edge pt-6 text-base leading-relaxed text-muted">
+        <RevealFooter>
           <p>
             Amorce est fait par une personne, pour des gens qui montent leurs
             vidéos seuls, souvent tard. Si quelque chose coince, écris — c’est la
@@ -416,7 +419,7 @@ export function Accueil() {
               Nous écrire
             </a>
           </nav>
-        </footer>
+        </RevealFooter>
       </div>
 
       {/* --- Le bandeau du pouce ------------------------------------------- */}

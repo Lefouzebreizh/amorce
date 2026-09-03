@@ -115,7 +115,7 @@ export function Remise() {
             Gardez-la quelque part. Cette page peut vous la redonner tant que
             l’adresse reçue après le paiement fonctionne.
           </p>
-          <Link className="flex min-h-14 items-center justify-center rounded-2xl border-2 border-current px-6 font-bold" href="/">
+          <Link className="flex min-h-14 items-center justify-center rounded-2xl border-2 border-current px-6 font-bold" href="/studio">
             Ouvrir le studio
           </Link>
         </>
@@ -124,7 +124,7 @@ export function Remise() {
       {etape.quoi === 'echec' && (
         <>
           <p aria-live="polite">{etape.message}</p>
-          <Link className="flex min-h-14 items-center justify-center rounded-2xl border-2 border-current px-6 font-bold" href="/">
+          <Link className="flex min-h-14 items-center justify-center rounded-2xl border-2 border-current px-6 font-bold" href="/studio">
             Ouvrir le studio
           </Link>
         </>
