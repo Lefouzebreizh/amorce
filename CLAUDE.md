@@ -1576,7 +1576,7 @@ l'annonce faite, au passé.
 en réclame un avant d'écrire sur de l'existant : celui-là vient du
 propriétaire. Les contrôles d'intégration continue en donnent un autre : celui-là
 vient de GitHub. **La fusion n'attend que le second** — sauf dans les quatre
-zones sensibles décrites plus bas, qui attendent les deux. Posé explicitement
+zones sensibles décrites plus haut, qui attendent les deux. Posé explicitement
 par le propriétaire le 03/09/2026, après une session qui écrivait « j'attends
 le vert pour fusionner » à chaque lot — une phrase que rien ne distingue d'une demande
 d'autorisation, et qui fait donc surveiller un fil qu'il n'a aucune raison de
