@@ -5518,3 +5518,79 @@ de la fenêtre est souvent hors cadre :
 ```js
 Math.round(el.closest('footer').getBoundingClientRect().height)   // 33 → 0
 ```
+
+## Un contrôle fait avec des yeux privilégiés ne mesure pas ce que voit un inconnu
+
+Mesuré le 02/09/2026 sur `amorce-51up`, le projet Vercel d'Artisan Express. La
+page de vente à 300 € était **déployée et invisible** : le projet portait
+`ssoProtection` à `all_except_custom_domains`, ce qui met toutes ses adresses en
+`.vercel.app` derrière l'authentification du compte. En ligne depuis des jours,
+et un mur de connexion pour tout le monde sauf le propriétaire.
+
+**Le coût n'est pas le réglage, c'est que le contrôle prévu ne pouvait pas le
+voir.** Le dépôt proposait « dix secondes depuis un navigateur : ouvrir
+l'adresse ». Depuis le navigateur du propriétaire, connecté à Vercel, la page
+s'affiche — mur ou pas. Le contrôle aurait donc conclu « déployé, tout va bien »
+dans les deux cas, et la mesure fausse aurait été écrite avec assurance. Une
+session est tombée dans le même piège le même jour : son 200 venait du
+connecteur Vercel, qui passe lui aussi par l'authentification du compte.
+
+Trois jours de contradiction en découlent — un README affirmant « pas déployé »,
+un robot annonçant un déploiement, deux sessions se croyant l'une l'autre en
+faute — sans que personne cherche du côté de la visibilité.
+
+**La règle, et elle dépasse Vercel :** quand on vérifie qu'une chose est
+accessible *aux autres*, l'identité qui fait le contrôle fait partie de la
+mesure. Un propriétaire connecté, un connecteur authentifié, un jeton d'API dans
+l'environnement : chacun voit une réalité que le public ne voit pas. Le même
+piège existe sur les artefacts publiés — le lien partagé peut servir une version
+épinglée, différente de celle que l'auteur voit en direct.
+
+Deux gestes qui l'évitent :
+
+- **Lire le réglage plutôt que la page.** Ce qui décide de la visibilité est une
+  configuration, pas un affichage — et elle, elle se lit sans ambiguïté.
+- **Une navigation privée pour le contrôle final.** C'est le seul œil non
+  privilégié disponible sans rien installer.
+
+**Et le piège s'est reproduit le jour même, sur un second projet.** Quelques
+heures plus tard, une autre session a déployé la même page sur un projet Vercel
+neuf, `artisan-express`, et a écrit dans son message de commit : « servie
+publiquement sans mur d'authentification ». Mesure faite ensuite :
+`ssoProtection: enabled`. Elle avait obtenu un 200 par le connecteur — donc
+authentifiée — exactement comme la session précédente.
+
+Deux sessions, deux projets, le même 200 trompeur, dans la même journée. C'est
+ce qui fait de cette leçon une règle plutôt qu'une anecdote : **le réflexe de
+conclure d'un 200 est plus fort que la connaissance du piège**, y compris chez
+qui vient de l'écrire. La parade n'est donc pas de s'en souvenir, c'est de ne
+jamais accepter un code de retour comme preuve d'accessibilité publique — et de
+lire le réglage, qui ne se laisse pas interpréter.
+
+**Corollaire, même journée :** « le projet ne sert rien » avait été déduit de
+`live: false` et d'un dernier déploiement `CANCELED`. Faux aussi — une requête
+rendait 200. Un projet dont les derniers builds sont « Ignored » **continue de
+servir son dernier déploiement réussi** : un filtre de chemin annule des
+constructions, il ne retire aucun alias. Ces champs décrivent la dernière
+tentative, jamais ce que rend l'adresse. Dans les deux sens, la même faute :
+**on a lu des métadonnées là où il fallait faire une requête, et fait une
+requête là où il fallait lire un réglage.**
+
+## Un statut dit qu'un déploiement a été annulé, jamais par quoi
+
+Même journée, même projet, corollaire direct. Le filtre `vercel-ignorer.sh`
+paraissait ignoré par le projet `amorce` : trois observations de statut sur deux
+pull requests avaient produit deux hypothèses — dossier racine mal réglé, ou
+refus de quota précédant l'évaluation — et le dépôt avait fini par écarter la
+seconde, garder la première, et confier au propriétaire une vérification au
+tableau de bord.
+
+**Le journal de construction a réglé la question en trois lignes** : le script
+est appelé, il décide, et Vercel annule en le disant — *« canceled as a result
+of running the command defined in the Ignored Build Step setting »*. Les deux
+hypothèses étaient fausses, et la tâche confiée au propriétaire était inutile.
+
+Ce qui s'est passé le premier jour reste inexpliqué, et c'est écrit tel quel
+dans le script plutôt que comblé par une troisième hypothèse. **Aller au journal
+avant de bâtir une explication — et surtout avant de déléguer une vérification :
+une hypothèse plausible écrite dans un fichier se relit comme un fait.**

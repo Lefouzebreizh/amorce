@@ -86,11 +86,35 @@
 # racine du dépôt ; si le réglage *Root Directory* du projet pointe ailleurs,
 # Vercel ne le voit pas.
 #
-# Ce qui reste à faire, au tableau de bord et par le propriétaire : vérifier
-# *Settings → General → Root Directory* du projet `amorce`. S'il est vide, la
-# racine du dépôt est bien lue et il faudra chercher ailleurs ; s'il porte un
-# dossier, le `vercel.json` doit y être déplacé ou la commande déclarée dans
-# *Settings → Git → Ignored Build Step*.
+# ---------------------------------------------------------------------------
+# Tranché — 02/09/2026, par le journal de construction
+#
+# **`amorce` lit bien ce `vercel.json`.** La première explication tombe à son
+# tour, et il n'y a plus rien à vérifier au tableau de bord. Journal du
+# déploiement `dpl_5hT3BWLMM22ASi7TRkm98giyxYGb` (branche `main`, commit
+# 28beb4e), lu par le connecteur Vercel, trois lignes qui suffisent :
+#
+#     Running "bash scripts/vercel-ignorer.sh src public next.config.ts …"
+#     Rien de touché dans : … — déploiement annulé.
+#     The Deployment has been canceled as a result of running the command
+#     defined in the "Ignored Build Step" setting.
+#
+# Le script est donc appelé, il décide, et Vercel obéit. Les trois projets
+# restants — `amorce`, `amorce-51up`, `iptv` — se comportent tous comme prévu.
+# `nexuscrypto` a quitté la liste : son projet Vercel a été supprimé le
+# 31/08/2026, ce que `CLAUDE.md` porte déjà.
+#
+# **Ce qui n'est pas expliqué, et qu'il ne faut pas inventer :** pourquoi
+# `amorce` s'était déclenché le 31/08. Les deux explications écrites ci-dessus
+# sont maintenant réfutées toutes les deux, et rien dans ce qui a été mesuré ne
+# dit ce qui s'est passé ce jour-là. Le palier de quota était épuisé — c'est le
+# seul fait établi qui distingue les deux journées.
+#
+# La leçon de méthode, elle, est nette : **le journal de construction tranche en
+# une lecture ce que trois observations de statut n'avaient pas départagé.** Un
+# statut dit qu'un déploiement a été annulé, jamais par quoi. Aller au journal
+# avant de bâtir une hypothèse, et avant de confier une vérification à
+# quelqu'un.
 #
 # ---------------------------------------------------------------------------
 # Le principe qui gouverne les cas douteux : on déploie

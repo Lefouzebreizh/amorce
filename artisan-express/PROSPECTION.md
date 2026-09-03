@@ -93,7 +93,7 @@ C'est la question la plus fréquente, et la meilleure : il est intéressé. Elle
 arrive sous vingt formes — « ça ressemble à quoi ? », « vous avez des
 exemples ? », « c'est quoi exactement pour 300 € ? ».
 
-> Tenez, un exemple complet : ⟦adresse de ta démonstration⟧
+> Tenez, un exemple complet : https://amorce-51up.vercel.app/exemple.html
 >
 > C'est une entreprise inventée — je le dis sur la page, je ne vais pas vous
 > faire croire à un vrai client alors que vous seriez le premier. Mais c'est
@@ -102,11 +102,17 @@ exemples ? », « c'est quoi exactement pour 300 € ? ».
 >
 > Ouvrez-le sur votre téléphone, c'est là qu'il sera lu.
 
-**Où trouver cette adresse :** ta page de vente sert la démonstration à
-`/exemple.html`. Si ta page est à `https://truc.vercel.app`, le lien est
-`https://truc.vercel.app/exemple.html`. **Ouvre-le une fois toi-même avant de
-l'envoyer** — un lien mort dans le message qui suit un « oui, montrez-moi »
-coûte la vente, et c'est le pire moment pour le découvrir.
+**L'adresse est connue depuis le 02/09/2026** et remplace le blanc qui était ici :
+la page de vente est déployée, et elle sert la démonstration à `/exemple.html`.
+Trois autres démonstrations, d'autres métiers, sont listées dans `README.md`.
+
+**Ouvre-le une fois toi-même, en navigation privée, avant de l'envoyer.** Un
+lien mort dans le message qui suit un « oui, montrez-moi » coûte la vente, et
+c'est le pire moment pour le découvrir. La navigation privée n'est pas une
+précaution de principe : ce projet a été **déployé et invisible** pendant trois
+jours — une protection Vercel renvoyait tout le monde sauf le propriétaire vers
+un mur de connexion, et l'ouvrir depuis son propre navigateur ne le montrait
+pas. Le cas est écrit dans `README.md`.
 
 **Pourquoi le lien n'est pas dans le premier message.** Un lien dans un message
 non sollicité fait deux choses, toutes deux mauvaises : il fait tomber le
