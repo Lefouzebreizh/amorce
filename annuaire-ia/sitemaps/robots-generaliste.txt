@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://reseau-annuaires.vercel.app/generaliste/sitemap.xml
+Sitemap: https://lefouzebreizh.github.io/amorce/generaliste/sitemap.xml
