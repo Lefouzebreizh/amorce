@@ -3,6 +3,7 @@
     "id": "immobilier",
     "nom": "IA Immobilier",
     "emoji": "🏠",
+    "actif": false,
     "domaine": "https://reseau-annuaires.vercel.app/immobilier/",
     "metier": "agents et négociateurs immobiliers",
     "h1_accent": "L'IA des agents",

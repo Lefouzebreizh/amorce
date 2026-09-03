@@ -3,6 +3,7 @@
     "id": "restauration",
     "nom": "IA Restauration",
     "emoji": "🍽️",
+    "actif": false,
     "domaine": "https://reseau-annuaires.vercel.app/restauration/",
     "metier": "restaurateurs et gérants d'établissement",
     "h1_accent": "L'IA en salle",

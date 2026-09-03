@@ -61,6 +61,7 @@
     --color-bord: #262647;
     --color-brume: #c9c9e6;
     --color-sourdine: #8a8ab0;
+    --color-accent: #7fd68a;
   }
 }
 @layer base {
@@ -908,7 +909,7 @@ body {
   color: transparent;
 }
 .bouton-accent {
-  background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
+  background: var(--color-accent);
   color: var(--color-nuit);
   transition: filter .15s ease;
 }
