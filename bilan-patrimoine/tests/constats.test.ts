@@ -6,9 +6,9 @@ import type { Situation } from '../src/modeles.ts'
 
 /** Une date où tous les barèmes livrés sont encore en vigueur : c'est la seule
  *  façon d'éprouver le chiffrage lui-même, séparément de la péremption. */
-const FRAIS = new Date('2025-09-01T12:00:00Z')
+const FRAIS = new Date('2026-09-15T12:00:00Z')
 /** Une date où ils sont tous périmés — pour éprouver le refus de chiffrer. */
-const PERIME = new Date('2026-09-02T12:00:00Z')
+const PERIME = new Date('2027-04-01T12:00:00Z')
 
 const BASE: Situation = {
   age: '30-39',
@@ -56,13 +56,16 @@ test('sans assurance vie du tout, aucun des deux constats ne sort', () => {
 
 test('un revenu sous le plafond fait signaler le LEP', () => {
   const trouve = constat({}, 'lep_probable')
-  // (2,7 − 1,7) % sur le plafond LEP de 10 000 €, l'épargne le dépassant.
-  assert.ok(Math.abs((trouve?.coutAnnuelEur ?? 0) - 100) < 0.01)
+  // (2,5 − 1,7) % sur le plafond LEP de 10 000 €, l'épargne le dépassant.
+  assert.ok(Math.abs((trouve?.coutAnnuelEur ?? 0) - 80) < 0.01)
 })
 
 test('le LEP se mesure sur l’épargne réelle quand elle est sous le plafond', () => {
-  const trouve = constat({ livretsEur: 4000 }, 'lep_probable')
-  assert.ok(Math.abs((trouve?.coutAnnuelEur ?? 0) - 40) < 0.01)
+  // 4 000 € donnerait 32 €, sous le seuil utile de 40 € — le constat
+  // disparaîtrait alors entièrement, pas seulement son montant. 6 000 € garde
+  // ce test dans le régime qu'il éprouve : sous le plafond, mais utile.
+  const trouve = constat({ livretsEur: 6000 }, 'lep_probable')
+  assert.ok(Math.abs((trouve?.coutAnnuelEur ?? 0) - 48) < 0.01)
 })
 
 test('un revenu élevé ne fait pas espérer le LEP', () => {
@@ -86,9 +89,12 @@ test('un barème périmé fait disparaître le montant, jamais le constat', () =
 test('l’excédent oisif ne sort que sur un horizon lointain', () => {
   // C'est ce qui justifie la seule question « conseil » du formulaire : sans
   // elle, impossible de dire si de l'argent disponible est une sagesse.
-  assert.ok(!cles({ horizon: '3ans' }).includes('excedent_sans_emploi'))
-  assert.ok(cles({ horizon: '10ans' }).includes('excedent_sans_emploi'))
-  assert.ok(cles({ horizon: 'retraite' }).includes('excedent_sans_emploi'))
+  // Taux fixé au-dessus de l'inflation à dessein : ce test isole l'effet de
+  // l'horizon, pas celui de l'érosion — déjà couvert par le test suivant.
+  const auDessusDeLinflation = { tauxLivretsPct: 3 }
+  assert.ok(!cles({ ...auDessusDeLinflation, horizon: '3ans' }).includes('excedent_sans_emploi'))
+  assert.ok(cles({ ...auDessusDeLinflation, horizon: '10ans' }).includes('excedent_sans_emploi'))
+  assert.ok(cles({ ...auDessusDeLinflation, horizon: 'retraite' }).includes('excedent_sans_emploi'))
 })
 
 test('quand l’argent s’érode vraiment, c’est le constat chiffré qui parle', () => {
