@@ -29,7 +29,27 @@ au code annoté `@riverpod`, régénérer **et committer** les `.g.dart` — le
 workflow `Look & Find` échoue si l'un d'eux a dérivé de sa source.
 
 Ce que la machine de développement ne peut pas vérifier : le build Android
-(SDK absent du conteneur), la caméra, la session de réalité augmentée. Le
+(SDK absent du conteneur), la caméra, la session de réalité augmentée.
+
+**Et le SDK Dart lui-même n'est pas dans le conteneur** — il disparaît à chaque
+reprise après inactivité, si bien qu'une session qui veut faire tourner du Dart
+pur croit d'abord ne pas pouvoir. Il se réinstalle en une commande, mesuré le
+03/09/2026 : `storage.googleapis.com/dart-archive/` répond, comme pour les
+modèles TFLite du traducteur de chat.
+
+```bash
+curl -sSLO https://storage.googleapis.com/dart-archive/channels/stable/release/latest/VERSION
+curl -sSL -o dart.zip https://storage.googleapis.com/dart-archive/channels/stable/release/<version>/sdk/dartsdk-linux-x64-release.zip
+```
+
+Ce qui suit vaut la peine d'être su avant de renoncer : **le cœur d'Accord
+n'importe pas Flutter.** `zone_visee.dart`, `photo_verdict.dart` et
+`judge_photo.dart` n'ont aucune dépendance ; `echantillon_accord.dart` ne veut
+que `package:image`. Un banc d'essai jetable — un `pubspec.yaml` de quatre
+lignes hors du projet, qui importe ces fichiers par `file:///` — fait donc
+tourner la **vraie** chaîne sur de vraies photos, sans `flutter pub get` et
+sans toucher au dépôt. C'est ce qui a permis de dépouiller trente-deux photos
+du propriétaire sans réimplémenter une ligne. Le
 workflow GitHub construit l'APK de debug à chaque poussée et le publie en
 artéfact — c'est le chemin le plus court vers un vrai téléphone. Le protocole
 d'essai correspondant est écrit dans `ESSAI-APPAREIL.md`, pensé pour être suivi
