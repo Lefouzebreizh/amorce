@@ -27,7 +27,12 @@ reste. Reste une question qui n'appartient qu'au propriétaire, et c'est la seul
 chose que ce rapport tranche : est-ce voulu que **n'importe qui** puisse s'en
 réclamer en ajoutant un paramètre à l'adresse ?
 
-### H-1 · `?src=groupe` accorde un accès illimité, sur parole
+### H-1 · `?src=groupe` accorde un accès illimité, sur parole — **CORRIGÉ**
+
+> **Bouché depuis le 02/09/2026.** Le constat ci-dessous est conservé tel qu'il
+> a été écrit : un rapport d'audit est daté, et effacer une faille corrigée
+> ferait perdre la raison du code qui la garde aujourd'hui. Mais **elle n'est
+> plus ouverte** — voir « Ce qui a été fait » en fin de section.
 
 **Où** — `functions/api/reforme.ts:125-128`, alimenté par
 `src/layouts/Base.astro:43`.
@@ -59,6 +64,21 @@ visiteur ne peut pas se donner : un lien signé distribué dans le groupe (HMAC
 sur un identifiant et une date d'expiration, vérifié côté serveur), ou à défaut
 un décompte plus large pour cette source plutôt qu'un décompte absent. Un
 contrôle de référent ne suffirait pas — il se falsifie aussi.
+
+**Ce qui a été fait** — Un secret partagé, plus simple que le HMAC proposé et
+suffisant pour ce que l'accès protège. `Env.JETON_GROUPE` est posé en secret
+Cloudflare (`wrangler pages secret put JETON_GROUPE`) ; le client envoie un
+`jeton` avec sa requête, et l'accès illimité n'est accordé que si les deux
+coïncident, comparés **en temps constant** (`memeSecret`) plutôt que par `===`,
+qui trahit par sa durée combien de caractères étaient justes.
+
+Le repli mérite d'être noté parce qu'il n'était pas évident : sans jeton, avec
+un mauvais jeton, ou sans `JETON_GROUPE` posé du tout, on **retombe sur le
+quota de tout le monde** — on ne refuse personne. Un secret que l'exploitant a
+oublié de poser ne coûte donc son analyse à personne, ce qui est la même règle
+que le sel absent et la base en panne ailleurs dans ce fichier.
+
+L'accès du groupe se **prouve** désormais, il ne se déclare plus.
 
 ## Ce qui est sain, et deux points valent d'être cités
 
