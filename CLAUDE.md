@@ -1392,6 +1392,44 @@ doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
 ### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
 
+**État mesuré le 03/09/2026 à 00 h 23, par `list_projects`** — il contredit une
+partie de ce qui suit, et c'est cette liste-ci qui fait foi. Le raisonnement des
+paragraphes suivants reste juste ; ce sont les noms et le compte qui ont bougé.
+
+| Projet | Lié à Git ? | Déclenché par un commit ? |
+| --- | --- | --- |
+| `amorce` (racine) | oui | **oui** |
+| `iptv` | oui | **oui** |
+| `annuaire-ia` | non — dépôt de fichiers | non |
+| `artisan-express` | non — dépôt de fichiers | non |
+
+**Deux projets branchés, pas quatre.** `amorce-51up` et `reseau-annuaires`
+**n'existent plus** : ils ont été supprimés côté tableau de bord entre 00 h 05 et
+00 h 21, ce que les commentaires du robot Vercel montrent en passant de quatre
+déploiements ignorés à deux. La consommation quotidienne est donc **divisée par
+deux**, et le seuil d'une vingtaine de fusions par jour écrit plus bas remonte
+d'autant. La ligne « le supprimer côté tableau de bord reste à faire » est
+caduque : c'est fait.
+
+**Et `annuaire-ia` est un projet neuf, par dépôt de fichiers**, déployé le
+02/09/2026 à 22 h 54, état `READY`, cible production. Trois choses à en savoir
+avant de s'en réjouir ou de s'en inquiéter :
+
+- **Il n'est pas public.** Une requête rend `302` vers la porte d'authentification de Vercel et
+  l'en-tête `x-robots-tag: noindex`. Personne d'autre que le propriétaire connecté
+  ne l'atteint, et aucun moteur ne l'indexe. Ce n'est donc pas « le réseau en
+  ligne » : #557 et le geste de la source Pages restent entiers.
+- **Il ne se met pas à jour tout seul**, comme `artisan-express` et pour la même
+  raison — aucun lien Git, donc aucun commit ne le déclenche. Le contenu servi
+  est celui de 22 h 54, soit **avant** le garde-fou des liens morts fusionné à
+  00 h 21 (#594). Le rouvrir sans redéposer les fichiers exposerait les 99
+  boutons vers `exemple-affiliation.com`.
+- **L'ouvrir au public rouvrirait la question tranchée du canonique.** Le gabarit
+  réécrit sa balise depuis l'adresse courante : servi sur `vercel.app`, il s'y
+  déclare canonique et concurrence la production visée. C'est exactement ce que
+  le choix de GitHub Pages évitait.
+
+
 **Quatre** projets Vercel sont branchés sur ce dépôt : `amorce` (racine),
 `amorce-51up` (dossier `artisan-express`), `iptv`, et **`reseau-annuaires`
 (dossier `annuaire-ia`), apparu le 02/09/2026**. Ce dernier est un résidu : le
