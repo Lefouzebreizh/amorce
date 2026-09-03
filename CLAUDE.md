@@ -816,8 +816,8 @@ préparation, pas de chance. `/jauge` avant un gros lot.
 - **Livrer tôt.** Un résultat qui tourne vaut mieux que le bon résultat annoncé
   au quinzième message.
 - **Trois essais par bug**, puis on livre la version dégradée qui marche et on
-  écrit la cause dans `second-brain/lecons.md`. Le quatrième essai coûte plus
-  que le défaut.
+  écrit la cause dans `second-brain/lecons/`, un fichier par leçon. Le
+  quatrième essai coûte plus que le défaut.
 - **Explorer petit, finir grand** : brouillon avec le modèle et les réglages les
   moins chers, qualité maximale sur la seule version finale.
 - **Rien de lourd sans raison** : pas de bibliothèque de graphiques ni
@@ -1372,8 +1372,9 @@ Trois règles en découlent, et chacune a déjà été payée :
   quand Hugging Face et les sites d'éditeurs sont refusés. C'est le premier
   endroit où chercher, pas le dernier.
 - **Un blocage qui dure plus d'une journée se traite en le nommant par écrit.**
-  Dans `second-brain/lecons.md` s'il traverse les projets, dans la compétence
-  concernée sinon. Un blocage écrit se résout ; un blocage raconté se répète.
+  Dans `second-brain/lecons/` s'il traverse les projets — son propre fichier,
+  daté —, dans la compétence concernée sinon. Un blocage écrit se résout ; un
+  blocage raconté se répète.
 - **Quand rien ne débloque, livrer la version dégradée qui marche** et dire
   précisément ce qu'elle n'a pas. Une vidéo publiée qui n'est pas belle vaut
   mieux que quatre jours à attendre celle qui le serait.
