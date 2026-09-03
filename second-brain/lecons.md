@@ -5727,3 +5727,36 @@ Deux parades, et la seconde vaut pour les deux leçons :
 - **Dire sur quoi on a mesuré.** « Six modules » n'est vrai que daté d'un
   commit. Un compte rendu qui donne le SHA à côté du chiffre rend l'erreur
   visible en une relecture ; sans lui, elle se transmet comme une mesure.
+
+## Une alerte qui ne s'éteint jamais coûte plus cher que ce qu'elle signale
+
+`/coherence-depot` criait la même chose à chaque passage depuis des jours :
+« nom en `/…` cité sans compétence correspondante : page ». La réponse était
+pourtant écrite dans `CLAUDE.md` — cette compétence n'existe pas, c'est su et
+assumé.
+
+Le coût n'est pas l'alerte, c'est ce qu'elle apprend : **un vérificateur qui
+crie toujours devient un vérificateur qu'on ne lit plus**, et le jour où il
+signale un vrai défaut, il est dans le même paragraphe que le bruit. Une
+session pressée voit « 1 point à regarder » et passe.
+
+La cause était typographique et parfaitement circulaire : le contrôle lit toute
+barre oblique suivie d'un nom, entre accents graves, comme une citation de
+compétence — si bien que **la phrase expliquant que la compétence n'existe pas
+était elle-même ce qui déclenchait l'alerte**. Écrire le nom entre guillemets
+l'éteint sans rien perdre du sens.
+
+Deux règles en sortent, et la seconde a été payée dans la minute :
+
+1. **Une alerte connue et assumée se tait, elle ne se tolère pas.** Soit on
+   corrige la cause, soit on requalifie l'écriture pour que le contrôle cesse
+   de la voir — et on écrit pourquoi, sinon la session suivante « corrige » en
+   arrière.
+2. **Un motif de détection ne s'explique pas en l'écrivant.** Le premier jet de
+   la correction donnait le motif en exemple, entre accents graves : le
+   contrôle l'a détecté aussitôt, et l'alerte a simplement changé de nom. Ce
+   qu'un outil reconnaît se décrit **en toutes lettres**.
+
+Le dépôt portait déjà la parade sans qu'elle soit nommée : les routes du
+serveur de licence s'écrivent avec leur verbe (`GET /etat`) exactement pour
+rompre cette correspondance.
