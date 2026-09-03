@@ -630,3 +630,57 @@ test('dedoublonnerFiches garde la fiche la plus utile, résumé avant affiche', 
     depot.fermer()
   }
 })
+
+test('la date du dernier import est celle de la source la plus récente', async () => {
+  const depot = ouvrirDepot(':memory:')
+  try {
+    assert.equal(depot.dernierImport(), undefined, 'base neuve : rien à dater')
+
+    await importerM3U(depot, LISTE, { adresse: 'http://un.tv/get.php' })
+    const premier = depot.dernierImport()
+    assert.ok(
+      typeof premier === 'string' && !Number.isNaN(Date.parse(premier)),
+      `attendu une date ISO, reçu ${String(premier)}`,
+    )
+
+    /* Vieillir la première source puis en importer une seconde est le seul moyen
+       d'obtenir deux dates franchement distinctes sans dépendre de l'horloge :
+       deux imports d'affilée tombent dans la même milliseconde, et le test
+       passerait alors avec un `LIMIT 1` comme avec un `MAX`. Ici, un `LIMIT 1`
+       rendrait 2020 une fois sur deux — et l'écran d'entretien annoncerait un
+       catalogue périmé de cinq ans sur une base importée à l'instant. */
+    depot.base.exec("UPDATE source SET importe_le = '2020-01-01T00:00:00.000Z'")
+    await importerM3U(depot, LISTE, { adresse: 'http://deux.tv/get.php' })
+
+    const dernier = depot.dernierImport()
+    assert.ok(dernier !== undefined)
+    assert.ok(dernier > '2020-01-01T00:00:00.000Z', `rendu ${String(dernier)}`)
+
+    const compte = depot.base.prepare('SELECT COUNT(*) AS n FROM source').get() as { n: number }
+    assert.equal(compte.n, 2, 'les deux adresses font bien deux sources')
+  } finally {
+    depot.fermer()
+  }
+})
+
+test('une source jamais importée ne masque pas la date des autres', async () => {
+  const depot = ouvrirDepot(':memory:')
+  try {
+    await importerM3U(depot, LISTE, { adresse: 'http://un.tv/get.php' })
+    const attendu = depot.dernierImport()
+    assert.ok(attendu !== undefined)
+
+    /* Une source déclarée et jamais importée porte `importe_le` à NULL. Elle ne
+       doit ni effacer la date des autres, ni se faire compter comme un import. */
+    depot.base
+      .prepare(
+        `INSERT INTO source (genre, adresse, utilisateur, importe_le)
+         VALUES ('m3u', 'http://jamais.tv/get.php', '', NULL)`,
+      )
+      .run()
+
+    assert.equal(depot.dernierImport(), attendu)
+  } finally {
+    depot.fermer()
+  }
+})
