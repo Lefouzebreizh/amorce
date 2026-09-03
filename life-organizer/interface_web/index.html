@@ -472,6 +472,11 @@
     font-size:12.5px; color: var(--wine-ink); background: var(--wine-soft);
     border-radius:8px; padding:6px 10px; margin-bottom:10px;
   }
+  .avertissement-depot{
+    font-size:13px; color: var(--wine-ink); background: var(--wine-soft);
+    border-radius:10px; padding:10px 13px; margin-top:12px; line-height:1.5;
+  }
+  .avertissement-depot[hidden]{ display:none; }
   .btn-annuler{
     font-family:'Plus Jakarta Sans', sans-serif; font-weight:600; font-size:13px;
     background:transparent; color: var(--ink-soft); border:1px solid var(--line); border-radius:10px;
@@ -724,6 +729,7 @@
       <input type="file" id="depotInput" multiple accept=".jpg,.jpeg,.png,.heic,.heif,.webp,.tiff,.bmp,.pdf,.mp4,.mov,.mkv,.avi,.webm,.m4v,.wmv" />
     </label>
 
+    <div class="avertissement-depot" id="avertissementDepot" hidden></div>
     <div class="en-attente" id="depotEnAttente" hidden></div>
   </div>
 
@@ -1687,12 +1693,118 @@ var LOLot = (function(){
     if (profondeurGlisse === 0) sortirSurvol();
   });
   dropzone.addEventListener('dragend', function(){ profondeurGlisse = 0; sortirSurvol(); });
+
+  var zoneAvertissement = document.getElementById('avertissementDepot');
+  function afficherAvertissement(texte){
+    zoneAvertissement.hidden = false;
+    zoneAvertissement.textContent = texte;
+  }
+  function masquerAvertissement(){
+    zoneAvertissement.hidden = true;
+    zoneAvertissement.textContent = '';
+  }
+
+  // Un dossier glissé (« Vavances Beg Leguer », un dossier Drive entier) n'est
+  // pas un fichier : `dataTransfer.files` en tire un objet qui ressemble à un
+  // fichier de zéro octet, et l'analyse échoue avec une erreur réseau illisible
+  // (« TypeError: Failed to fetch ») sans dire ce qui a réellement raté. Un
+  // parent posant les papiers de toute une année n'a pas à sortir chaque
+  // fichier du dossier un par un pour l'éviter.
+  //
+  // `webkitGetAsEntry` (Chrome, Edge, Firefox récents) distingue un fichier
+  // d'un dossier et sait lire le contenu de ce dernier — récursivement, sous-
+  // dossiers compris. Sans cette API (navigateur trop ancien), on retombe sur
+  // `dataTransfer.files` : les fichiers glissés seuls continuent de marcher
+  // comme avant, seul le cas du dossier reste non pris en charge.
+  var LIMITE_FICHIERS_DOSSIER = 300; // au-delà, mieux vaut déposer en plusieurs fois que geler l'onglet
+
+  function extensionDe(nom){
+    var i = nom.lastIndexOf('.');
+    return i === -1 ? '' : nom.slice(i).toLowerCase();
+  }
+
+  function extensionsAcceptees(){
+    return (input.getAttribute('accept') || '').split(',')
+      .map(function(e){ return e.trim().toLowerCase(); }).filter(Boolean);
+  }
+
+  // Empile dans `sortie` les fichiers d'une entrée (fichier ou dossier),
+  // en s'arrêtant à `LIMITE_FICHIERS_DOSSIER`. `readEntries` ne rend jamais
+  // tout un gros dossier d'un coup (Chrome le plafonne autour de 100) : il
+  // faut le rappeler jusqu'à ce qu'il rende une liste vide.
+  function explorerEntree(entree, sortie, compte, acceptees){
+    return new Promise(function(resolve){
+      if (compte.n >= LIMITE_FICHIERS_DOSSIER){ resolve(); return; }
+      if (entree.isFile){
+        entree.file(function(fichier){
+          if (compte.n < LIMITE_FICHIERS_DOSSIER && acceptees.indexOf(extensionDe(fichier.name)) !== -1){
+            sortie.push(fichier);
+            compte.n++;
+          }
+          resolve();
+        }, function(){ resolve(); }); // fichier illisible : ignoré plutôt que de bloquer tout le dossier
+        return;
+      }
+      if (entree.isDirectory){
+        var lecteur = entree.createReader();
+        (function lireLot(){
+          lecteur.readEntries(function(entrees){
+            if (!entrees.length || compte.n >= LIMITE_FICHIERS_DOSSIER){ resolve(); return; }
+            Promise.all(entrees.map(function(e){ return explorerEntree(e, sortie, compte, acceptees); }))
+              .then(lireLot);
+          }, function(){ resolve(); });
+        })();
+        return;
+      }
+      resolve();
+    });
+  }
+
   dropzone.addEventListener('drop', function(e){
     e.preventDefault();
     profondeurGlisse = 0;
     sortirSurvol();
-    var fichiers = e.dataTransfer && e.dataTransfer.files;
-    if (fichiers && fichiers.length) mettreEnAttente(fichiers);
+
+    var items = e.dataTransfer && e.dataTransfer.items;
+    var supportEntrees = items && items.length && typeof items[0].webkitGetAsEntry === 'function';
+    if (!supportEntrees){
+      var fichiers = e.dataTransfer && e.dataTransfer.files;
+      if (fichiers && fichiers.length) mettreEnAttente(fichiers);
+      return;
+    }
+
+    var entrees = [];
+    for (var i = 0; i < items.length; i++){
+      var entree = items[i].webkitGetAsEntry();
+      if (entree) entrees.push(entree);
+    }
+    if (!entrees.length) return;
+
+    // Un dossier peut prendre un instant à parcourir (sous-dossiers compris) :
+    // le dire évite de croire l'interface bloquée pendant la lecture.
+    var contientDossier = entrees.some(function(e){ return e.isDirectory; });
+    if (contientDossier) texteZone.innerHTML = '<strong>Lecture du ou des dossiers…</strong>';
+
+    var sortie = [];
+    var compte = { n: 0 };
+    var acceptees = extensionsAcceptees();
+    Promise.all(entrees.map(function(entree){ return explorerEntree(entree, sortie, compte, acceptees); }))
+      .then(function(){
+        texteZone.innerHTML = texteReposHTML;
+        if (compte.n >= LIMITE_FICHIERS_DOSSIER){
+          afficherAvertissement(
+            'Plus de ' + LIMITE_FICHIERS_DOSSIER + ' fichiers trouvés — seuls les ' +
+            LIMITE_FICHIERS_DOSSIER + ' premiers ont été retenus. Dépose le reste en plusieurs fois.'
+          );
+        } else if (!sortie.length && contientDossier){
+          afficherAvertissement(
+            "Aucun fichier reconnu dans ce dossier (photo, vidéo ou document administratif attendu)."
+          );
+        } else {
+          masquerAvertissement();
+        }
+        if (sortie.length) mettreEnAttente(sortie);
+      });
   });
 
   // Seuls les dépôts déjà résolus (posés ou en échec) sont conservés : une
