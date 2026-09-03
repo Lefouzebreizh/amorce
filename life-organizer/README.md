@@ -147,6 +147,15 @@ Deux capacités n'existent que par cette interface, pas en ligne de commande :
   lire leur contenu sans la phrase secrète choisie dans le navigateur. Détails
   complets, y compris ce que ce chiffrement ne couvre pas, dans `SECURITY.md`.
 
+Un panneau « Ce que je paie, ce qui arrive » s'ajoute en tête de page quand
+`paper_manager.actif` est vrai dans la configuration **et** que
+`paper-manager/admin_config.json` existe déjà : Life-Organizer ne suit pas
+d'échéances lui-même (décision du 01/09/2026, voir
+`modules/scan_ocr/__init__.py`) — ce panneau lit en lecture seule le tableau
+de bord de `paper-manager/core/abonnements.py`, projet frère dans ce même
+dépôt, sans jamais écrire dans son fichier personnel. Absent l'un des deux
+réglages, le panneau reste simplement caché, pas une erreur.
+
 ## Installation et vérification
 
 ```bash

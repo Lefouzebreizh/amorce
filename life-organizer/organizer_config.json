@@ -430,6 +430,11 @@
     "dossier_sauvegarde": "~/Life-Organizer/CoffreSauvegardes",
     "_note": "Le contenu de 'dossier' n'est jamais lisible sans la phrase secrète choisie dans le navigateur — voir SECURITY.md. 'dossier_sauvegarde' n'est pas synchronisé avec Drive : il vaut mieux le pointer vers un disque externe ou un second compte pour une vraie séparation physique, voir SECURITY.md."
   },
+  "paper_manager": {
+    "actif": false,
+    "racine": "../paper-manager",
+    "_note": "Life-Organizer ne suit pas d'échéances (décision du 01/09/2026) : ce panneau lit en lecture seule le tableau de bord de Paper-Manager, projet frère, sans jamais écrire dans son admin_config.json. 'racine' est relative à ce dossier life-organizer/ si elle n'est pas absolue. N'a d'effet que si Paper-Manager est installé et que paper-manager/admin_config.json existe déjà (voir paper-manager/README.md)."
+  },
   "abonnements": [
     {
       "id": "exemple-abonnement-mensuel",
