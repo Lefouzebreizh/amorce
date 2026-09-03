@@ -191,3 +191,13 @@ visual_library/**/*.mp4
 # La liste de cibles de l'audit nomme des entreprises réelles à côté
 # d'une hypothèse sur leur sécurité : elle reste locale, comme `prospects.md`.
 /projets-actifs/cibles-audit.md
+
+# Les planches de « Roussy & Zéphy » déposées pour faire tourner la chaîne KDP.
+# Trente mégaoctets d'illustrations : l'invariant du §8 les tient dehors, et le
+# §4 dit où vont les fichiers lourds — R2, jamais Git.
+#
+# Ce dossier est donc un **atelier, pas une archive** : il vit le temps d'une
+# session et disparaît avec le conteneur. Les originaux sont chez le
+# propriétaire, et `kdp/tome1/DOSSIER.md` dit pourquoi ils ne se régénèrent
+# pas à l'identique — les invites d'origine ont été perdues.
+/kdp/.planches/
