@@ -5877,3 +5877,46 @@ Deux gardes, et la seconde est la vraie :
 
 Une capture est une mesure comme une autre : elle a besoin de sa propre
 vérification avant de servir de preuve.
+
+## Un test de non-régression qui ne tombe pas sans son correctif ne fige rien — 03/09/2026
+
+Mesuré deux fois dans la même séance, sur le module Accord de Look & Find, et
+les deux issues opposées disent la même chose.
+
+**Le cas qui marche.** Un refus désignait le mauvais geste : sur une surface
+grise unie, la porte rendait « le cadre contient plusieurs surfaces » et
+conseillait de recadrer, alors que le problème était la grisaille. Correctif
+posé, test écrit, puis le correctif **retiré** pour voir : le test tombe, avec
+exactement le mauvais geste qu'il vise. Il fige donc quelque chose.
+
+**Le cas qui ne marche pas, et il avait l'air identique.** Sur l'écran, le
+déclencheur recouvrait le texte d'aide de soixante pixels. Correctif posé, test
+écrit, tout vert. Le correctif retiré : **le test reste vert.** Il ne figeait
+rien, et il aurait été fusionné comme s'il gardait quelque chose.
+
+La cause est plus intéressante que le symptôme. Le défaut était une **collision
+entre deux widgets** — l'aide et le bouton — et le test montait le cadre
+**seul**, où la collision ne peut pas exister. Il éprouvait le mécanisme du
+correctif (l'ancrage), pas le défaut (le chevauchement). Les deux se
+ressemblent au moment où on l'écrit, et rien ne les distingue à la lecture.
+
+### La parade tient en un geste, et il coûte trente secondes
+
+```bash
+git stash push -q <le fichier corrigé>
+<lancer le test>          # il doit ÉCHOUER, et sur le bon message
+git stash pop -q
+```
+
+Un test qui reste vert des deux côtés se réécrit ailleurs — dans le cas
+ci-dessus, à l'échelle de la page, où les deux widgets coexistent. Le test
+d'origine n'est pas jeté pour autant : il décrit l'ancrage, ce qui est utile,
+mais son commentaire dit désormais qu'il ne fige pas la collision.
+
+### Ce que ça complète dans le dépôt
+
+Le §8 de `CLAUDE.md` dit déjà « une mesure disait vert et le fichier était
+faux ». C'en est le pendant côté tests : **un test peut être vert et vide**, et
+sa vacuité ne se voit dans aucune suite — elle grossit même le compte de tests,
+qui rassure. La seule mesure d'un test de non-régression est le défaut qu'il
+attrape, jamais le fait qu'il passe.
