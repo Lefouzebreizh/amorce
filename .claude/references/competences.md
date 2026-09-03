@@ -14,6 +14,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/capacites-session` | Savoir ce que cette session-ci peut réellement faire — binaires présents, bibliothèques installées, hôtes que le mandataire laisse joindre, modèles… |
 | `/charte-editoriale` | La voix d'Erwann — pédagogue, chaleureuse, d'égal à égal, avec une touche d'humour et de poésie visuelle. À utiliser pour **tout texte destiné à son… |
 | `/coherence-depot` | Vérifier que ce que le dépôt affirme de lui-même est encore vrai, en comptant des deux côtés plutôt qu'en relisant — projets réels contre projets… |
+| `/creation-video` | La chaîne complète d'une vidéo, du média brut au fichier publié — dans quel ordre, quelle compétence tient chaque étape, et ce qui change selon la… |
 | `/custom-frontend-designer` | Concevoir et coder une interface pour le studio Amorce — Next.js 15, React 19, Tailwind v4. Dit où atterrit chaque fichier, quelles briques existent… |
 | `/debloquer` | Reprendre la main quand une session distante refuse d'avancer — une permission refusée par le classificateur, un appel réseau qui rend 403, une suite… |
 | `/debogage-systematique` | Diagnostiquer un bug, un test qui échoue ou un comportement inattendu en trouvant la cause avant de proposer le moindre correctif. Dit quelle… |
