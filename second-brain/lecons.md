@@ -5920,3 +5920,34 @@ faux ». C'en est le pendant côté tests : **un test peut être vert et vide**,
 sa vacuité ne se voit dans aucune suite — elle grossit même le compte de tests,
 qui rassure. La seule mesure d'un test de non-régression est le défaut qu'il
 attrape, jamais le fait qu'il passe.
+
+---
+## Un outil livré, testé et documenté n'a encore rien produit s'il ne tourne pas
+
+*Coût : rien encore, et c'est le problème — dix jours pendant lesquels un outil
+fini n'a accumulé aucune donnée.*
+
+Le radar de pépites est complet : 6 305 lignes, 167 tests verts, un audit de
+sécurité sans constat, un scan réel mesuré de bout en bout — 887 paires
+ramenées à 11 candidats en 27 secondes. Tout dit qu'il marche.
+
+**Et rien ne le lance.** Aucun des seize workflows du dépôt ne le déclenche, et
+son planificateur vit dans une ligne de `README` que personne n'a appliquée. Or
+son propre juge, `bilan.py`, refuse de conclure sous **20 jetons jugeables** —
+une exigence saine, qui suppose des semaines de tours réguliers. Un outil de ce
+type ne produit pas de valeur au moment où il est écrit, mais au bout de sa
+cinquantième exécution.
+
+Ce qui rend le défaut invisible tient en une phrase : **tous les signaux du
+dépôt regardent le code, aucun ne regarde s'il s'exécute.** Les tests passent,
+la CI est verte, `/coherence-depot` dit vrai, l'audit ne trouve rien. Chacun
+mesure ce qu'il sait mesurer, et la question « depuis quand ce programme
+a-t-il tourné pour de bon ? » n'appartient à aucun d'eux.
+
+La parade, pour tout outil dont la valeur s'accumule — radar, auto-pilote,
+veille, sauvegarde : **la planification fait partie de la livraison, pas de la
+suite.** Un projet de ce genre n'est pas fini quand ses tests passent, il est
+fini quand quelque chose le rappelle sans qu'on y pense. Tant que la tâche
+planifiée n'existe pas, le compte rendu dit « écrit et vérifié », jamais
+« opérationnel » — les deux mots ne recouvrent pas la même chose, et c'est le
+second que le propriétaire lit.
