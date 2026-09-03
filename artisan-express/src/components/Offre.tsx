@@ -35,7 +35,12 @@ export function Offre() {
       <div className="mt-8 overflow-hidden rounded-2xl border-2 border-accent">
         <div className="bg-accent px-6 py-7 text-accent-encre sm:px-8">
           <p className="text-5xl font-bold tracking-tight sm:text-6xl">300&nbsp;€</p>
-          {/* Blanc plein, pas 85 % : l’opacité rendait 2,58:1 sur le bleu. */}
+          {/*
+            L'encre pleine, jamais une opacité. Elle valait 85 % et rendait
+            2,58:1 sur le bleu d'avant la charte ; la teinte a changé, le piège
+            non — une opacité sur un aplat de couleur mange le contraste sans
+            qu'aucun jeton ne le montre.
+          */}
           <p className="mt-2 text-lg text-accent-encre">
             Une fois. Pas d’abonnement, rien à résilier, pas de reconduction.
           </p>
@@ -60,7 +65,10 @@ export function Offre() {
             La ligne que les pages de vente cachent. Elle est ici parce qu'un
             artisan qui découvre un frais après coup ne rappelle jamais.
           */}
-          <p className="mt-7 rounded-xl bg-slab p-4 text-base leading-relaxed text-ardoise">
+          {/* `panel` et non `slab` : posé sur une carte `slab`, cet encadré
+              avait exactement la couleur de son fond et ne se détachait plus —
+              or c'est le seul bloc de la page qu'on veut faire remarquer. */}
+          <p className="mt-7 rounded-xl border border-edge bg-panel p-4 text-base leading-relaxed text-ardoise">
             <strong className="text-encre">Ce qui n’est pas dedans&nbsp;:</strong> le nom de domaine
             à ton nom (une douzaine d’euros par an, payés directement au fournisseur, jamais à moi).
             Je te montre comment le prendre, ou je m’en occupe avec toi au téléphone.
