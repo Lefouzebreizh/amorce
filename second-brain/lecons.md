@@ -5461,3 +5461,60 @@ sain, et publier un rapport qui accuse à tort.
 leur constat faux avec sa réfutation à côté. Un rapport nettoyé se relit comme
 s'il n'avait jamais eu tort, et la prochaine session refait exactement le même
 banc d'essai.
+
+---
+
+## Deux éléments qui partagent un attribut : `querySelector` prend le premier, et `focus()` échoue sans rien dire — 03/09/2026
+
+*Coût : un repli d'accessibilité écrit, déployé et inopérant, que six contrôles verts ne voyaient pas.*
+
+Une fenêtre modale masque son bouton d'action ; le focus doit alors se replier
+sur la fermeture :
+
+```js
+modale.querySelector('[data-action="fermer"]').focus();   // ne fait rien
+modale.querySelector('button[data-action="fermer"]').focus();   // juste
+```
+
+**Le voile de fond portait le même attribut que le bouton**, et vient avant lui
+dans le document — c'est le motif habituel : on ferme aussi en cliquant à côté,
+donc le voile et le bouton déclenchent la même action et partagent son marqueur.
+
+### Pourquoi rien ne le signale
+
+Trois silences qui s'additionnent, et c'est leur cumul qui rend le défaut cher :
+
+1. `querySelector` **ne prévient pas** qu'il avait le choix ; il rend le premier.
+2. `focus()` sur un `<div>` sans `tabindex` **ne lève rien** et ne rend rien.
+3. Le repli étant un cas de **secours**, aucun parcours nominal ne le traverse.
+
+Le test « la fenêtre s'ouvre » restait vert, le test « échap referme » aussi.
+Seul un relevé de `document.activeElement` après le clic l'a montré — et il n'a
+été écrit que parce qu'on regardait, pas parce qu'une mesure avait alerté.
+
+### La parade, et elle tient en une règle
+
+**Un sélecteur de repli nomme sa balise.** `button[data-action=…]`,
+`a[data-role=…]` : dès qu'un attribut décrit une *intention* plutôt qu'un
+élément, plusieurs nœuds la portent légitimement, et le premier du document est
+rarement celui qu'on veut. Le coût est de sept caractères.
+
+Et le contrôle qui l'aurait attrapé se pose en une ligne :
+
+```js
+await page.evaluate(() => document.activeElement?.closest('#modale') !== null)
+```
+
+### Le corollaire, mesuré le même jour
+
+**Masquer un enfant laisse l'habillage du parent.** Le même bouton retiré par
+`hidden` laissait le `<footer>` qui le portait — bordure haute, fond, marges
+intérieures : **33 px** de bande vide qui se lit comme un défaut d'affichage.
+
+Ce qui se masque est donc le **conteneur porteur de l'habillage**, pas l'élément
+utile. Et ça se mesure, plutôt que de se juger à l'œil sur une capture où le bas
+de la fenêtre est souvent hors cadre :
+
+```js
+Math.round(el.closest('footer').getBoundingClientRect().height)   // 33 → 0
+```
