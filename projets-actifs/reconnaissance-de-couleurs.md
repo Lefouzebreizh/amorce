@@ -149,6 +149,64 @@ Sur les neuf cadres réels : **aucune surface unie dédoublée**, quatre cadres
 mêlés sur six signalés. Les deux non signalés sont des scènes que la lumière
 chaude rend réellement monochromes — leur nommer une couleur n'est pas absurde.
 
+## Ce que quatre-vingt-six cadres réels ont montré du nommage
+
+Passés dans `LectureCadre` le 03/09/2026 — le vrai code, sur les photos du
+propriétaire. **Soixante-quatorze sur quatre-vingt-six annoncent deux
+couleurs.** Ce taux ne dit rien du produit : ces photos ont été prises **sans
+viseur à l'écran**, ce sont donc massivement des scènes, et « deux couleurs »
+y est la bonne réponse. Il ne s'interprétera qu'avec des photos prises dans
+l'application.
+
+Ce qui s'interprète, ce sont les **douze cadres où l'application s'engage sur un
+nom unique** : c'est là qu'un nom faux ne peut pas être rattrapé.
+
+### Six sur douze sont faux, et pour une seule raison
+
+Quatre « orange » et deux « marron » désignent en réalité de la **pierre, du
+beige et du bois sous lumière chaude** — une nef d'église, deux bureaux aux murs
+crème, un porche. Aucun n'est orange ni marron ; ce sont des surfaces neutres
+que l'ampoule a réchauffées.
+
+C'est exactement le défaut n° 1 de « ce qui la ferait tomber », et la parade
+existe déjà dans `NameColor` : la règle de la lumière chaude, qui répond
+« beige, ou blanc sous lumière chaude » au lieu d'affirmer. **Elle ne se
+déclenche pas**, et la mesure dit pourquoi.
+
+| cadre | teinte | saturation TSV | clarté TSL | rendu |
+| --- | --- | --- | --- | --- |
+| nef, orgue | 29,1° | 0,29 | **0,38** | marron |
+| bureau crème | 31,2° | 0,17 | **0,54** | orange |
+| bureau blanc | 36,5° | 0,14 | **0,61** | orange, ou gris |
+| porche | 25,7° | 0,34 | **0,34** | marron |
+| nef, assemblée | 30,7° | 0,32 | **0,45** | orange |
+| nef, mariés | 24,0° | 0,23 | **0,44** | orange |
+
+La règle demande trois choses : teinte entre 20 et 65°, saturation sous 0,35,
+**et clarté au-dessus de 0,62**. Les six remplissent les deux premières et
+échouent toutes sur la troisième. L'une d'elles la manque d'**un centième**.
+
+### Pourquoi ce n'est pas un seuil à descendre
+
+La tentation est d'abaisser 0,62. Elle est mauvaise : à 0,30, un vrai marron —
+du bois, du cuir, un meuble — s'entendrait répondre « marron, ou blanc sous
+lumière chaude », ce qui est faux et bavard. Un beige sombre sous ampoule et un
+brun franc **rendent la même moyenne** ; aucune règle sur trois nombres ne les
+sépare.
+
+Ce qui les sépare est ailleurs, et la fiche le dit déjà à sa façon : c'est **le
+seul vrai problème du sujet**. Deux pistes, ni l'une ni l'autre mesurée :
+
+- **la répartition dans le cadre** plutôt que la moyenne — une pièce éclairée
+  au tungstène tire *tout* vers le chaud, un meuble brun est brun au milieu de
+  voisins qui ne le sont pas ;
+- **un point de référence blanc** dans la scène, que la personne désignerait une
+  fois — ce qui change l'interface, donc le produit.
+
+**Rien n'a été touché dans `NameColor`.** C'est une brique partagée, la
+consigne est de ne pas y toucher, et ce constat appelle une décision de produit
+avant une ligne de code.
+
 ## Outils nécessaires
 
 - Flutter et le paquet caméra : **déjà dans le projet**.
