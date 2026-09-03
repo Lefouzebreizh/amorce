@@ -5697,3 +5697,33 @@ git ls-remote origin refs/heads/<branche>   # ne rend rien -> elle est supprimé
 La suite est alors un `git push -u origin <branche>` **ordinaire** : on crée une
 branche neuve, il n'y a rien à écraser. `--force-with-lease` n'a de sens que
 contre une branche qui existe encore.
+## Un `ls` répond sur le commit sorti, jamais sur `main` — et « ça n'existe pas » se lit comme un fait
+
+Symétrique de la leçon sur `origin/main` périmé, et plus traître : là-bas une
+référence mentait, ici c'est le **disque**. `ls`, `grep`, `find` répondent sur
+l'arbre de travail, c'est-à-dire sur le commit réellement sorti — qui, dans une
+session ouverte sur une vieille branche, peut avoir des semaines.
+
+Mesuré le 03/09/2026. Une session distante a listé `life-organizer/modules/` et
+rendu six modules ; elle a conclu, et écrit au propriétaire, que le module
+`depot` **n'existait pas** — puis lui a donné cette réponse à transmettre à une
+autre session, qui elle travaillait dessus et avait raison. Le dossier existait :
+697 lignes, fusionnées à 01 h 51 le matin même. La session avait simplement
+lancé son `ls` **avant** son `git checkout -B … origin/main`, sur une branche de
+huit jours.
+
+Ce qui rend l'erreur coûteuse tient en une phrase : **une absence ne ressemble
+pas à une erreur.** Un fichier périmé se contredit et alerte ; un fichier
+*absent* rend une liste courte, propre, et parfaitement plausible — on ne
+revérifie pas ce qui n'a rien d'étrange. Aucun outil ne le signale, et la
+conclusion voyage : elle a traversé deux sessions avant d'être reprise.
+
+Deux parades, et la seconde vaut pour les deux leçons :
+
+- **Avant toute lecture qui servira de preuve d'inexistence**, aligner l'arbre —
+  `git fetch origin main && git checkout -B <branche> origin/main` — ou lire la
+  référence plutôt que le disque : `git ls-tree --name-only origin/main <chemin>`
+  répond sur `main` quel que soit l'état du disque, et coûte la même seconde.
+- **Dire sur quoi on a mesuré.** « Six modules » n'est vrai que daté d'un
+  commit. Un compte rendu qui donne le SHA à côté du chiffre rend l'erreur
+  visible en une relecture ; sans lui, elle se transmet comme une mesure.
