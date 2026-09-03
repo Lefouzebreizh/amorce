@@ -89,28 +89,34 @@ export const contact = {
 export const aUnTelephone = contact.telephoneLien !== '';
 export const aUnWhatsapp = contact.whatsappLien !== '';
 /**
- * L'encaissement en ligne est **fermé**, et ce n'est pas un oubli de réglage.
+ * L'encaissement en ligne est **ouvert depuis le 03/09/2026**.
  *
- * Une facture française porte obligatoirement un SIRET. L'immatriculation est
- * en cours au guichet unique de l'INPI et n'est pas validée : encaisser
- * maintenant reviendrait à facturer sans être enregistré, ce que
- * `FACTURER.md` nomme comme le risque qui « coûte bien plus que 300 € ».
+ * Il a été fermé tout l'été pour une raison précise : une facture française
+ * porte obligatoirement un SIRET, et encaisser sans être immatriculé revenait
+ * à facturer sans pouvoir émettre de facture conforme — le risque que
+ * `FACTURER.md` chiffre à « bien plus que 300 € ».
  *
- * Le verrou est ici et non dans une variable d'environnement laissée vide,
- * parce qu'une variable vide se remplit par mégarde — un réglage posé sur
- * l'hébergeur, et la page encaisse sans que personne l'ait décidé. Cette
- * constante, elle, demande qu'on la change **dans le code**, donc qu'on la
- * lise, donc qu'on relise pourquoi elle est là.
+ * **Cette raison a disparu.** Le propriétaire a confirmé l'immatriculation :
+ * SIREN **109356972**, validée le **31/08/2026**. Le verrou est donc levé,
+ * et il l'est ici, dans le code, comme il y avait été posé — pas par un
+ * réglage d'hébergeur qu'on remplit sans relire pourquoi.
  *
- * À rouvrir le jour où le SIRET est actif, et pas avant : passer à `true`,
- * poser `NEXT_PUBLIC_LIEN_STRIPE`, et vérifier que le bouton mène bien au
- * paiement. Un test garde cette valeur.
+ * Ce qui **ne change pas** avec cette ligne, et c'est le point important : la
+ * page n'encaisse toujours rien tant que `NEXT_PUBLIC_LIEN_STRIPE` n'est pas
+ * réglé. `aUnStripe` ci-dessous exige les deux, et sans lien le bouton
+ * continue de mener au formulaire. Ouvrir le verrou autorise le paiement ;
+ * c'est le lien qui le fabrique.
+ *
+ * Refermer se fait par la même ligne, et les tests suivent.
  */
-export const ENCAISSEMENT_OUVERT = false;
+export const ENCAISSEMENT_OUVERT = true;
 
 /**
  * Le paiement est-il proposé ? Les deux conditions, et la première prime :
- * tant que l'encaissement est fermé, un lien Stripe réglé ne change rien.
+ * un lien Stripe réglé ne rouvre rien à lui seul, et un verrou ouvert
+ * n'encaisse rien sans lien. C'est cette seconde moitié qui garde la page
+ * aujourd'hui — un bouton « payer » qui ne mène nulle part coûterait le
+ * client et la réputation d'un coup.
  */
 export const aUnStripe = ENCAISSEMENT_OUVERT && contact.stripeLien !== '';
 export const aUnCourrielDirect = contact.courrielDirect !== '';

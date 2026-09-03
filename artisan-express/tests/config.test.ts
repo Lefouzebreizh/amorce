@@ -55,35 +55,60 @@ test('sans variable réglée, le site n’affirme aucune adresse', async () => {
   assert.equal(adresseDuSite, null);
 });
 
-test('aucun encaissement en ligne tant que le SIRET n’est pas actif', async () => {
+test('le verrou d’encaissement est ouvert, et sa raison est écrite', async () => {
   /*
-   * Ce test est un verrou, pas une vérification.
+   * Ce test a longtemps dit l'inverse, et c'était juste : il tenait le
+   * paiement fermé tant que l'immatriculation n'était pas validée.
    *
-   * Une facture française porte obligatoirement un SIRET, et l'immatriculation
-   * n'est pas validée. Encaisser d'ici là, c'est facturer sans être
-   * enregistré — le risque que `FACTURER.md` chiffre à « bien plus que 300 € ».
+   * Elle l'est — SIREN 109356972, confirmé le 03/09/2026 pour une validation
+   * du 31/08. Le verrou n'a donc plus de raison d'être, et le garder fermé
+   * coûterait maintenant des ventes au lieu d'en protéger.
    *
-   * Il tombe le jour où quelqu'un rouvre le paiement, y compris par un réglage
-   * d'hébergeur : c'est exactement le moment où on veut être arrêté et
-   * relire pourquoi. Le rouvrir demande de changer cette ligne **et** la
-   * constante, donc de le décider deux fois.
-   */
-  const { ENCAISSEMENT_OUVERT, aUnStripe } = await import('@/lib/config');
-  assert.equal(ENCAISSEMENT_OUVERT, false, 'le SIRET est-il actif ? sinon, ne pas rouvrir');
-  assert.equal(aUnStripe, false);
-});
-
-test('un lien Stripe réglé ne rouvre pas l’encaissement à lui seul', async () => {
-  /*
-   * Le piège que ce test garde : `NEXT_PUBLIC_LIEN_STRIPE` se pose sur
-   * l'hébergeur, sans relire une ligne de code. Le verrou doit primer sur la
-   * variable, sans quoi il ne verrouille rien.
+   * Ce qui reste gardé n'est plus la valeur, c'est **la traçabilité** : le
+   * SIREN doit rester écrit à côté de la constante. Sans lui, la prochaine
+   * session lit `true` sans savoir qui l'a décidé ni sur quelle preuve, et
+   * c'est exactement ce qu'on voulait éviter en posant le verrou dans le code
+   * plutôt que dans un réglage d'hébergeur.
    */
   const { ENCAISSEMENT_OUVERT } = await import('@/lib/config');
   const { readFileSync } = await import('node:fs');
   const source = readFileSync(new URL('../src/lib/config.ts', import.meta.url), 'utf8');
 
+  assert.equal(ENCAISSEMENT_OUVERT, true);
+  assert.match(source, /SIREN \*\*109356972\*\*/,
+    'le SIREN qui autorise l’encaissement doit rester écrit à côté de la constante');
+});
+
+test('un verrou ouvert n’encaisse rien sans lien Stripe', async () => {
+  /*
+   * Le garde-fou qui compte désormais, et il vaut plus que le précédent.
+   *
+   * Le verrou levé, il ne reste qu'une chose entre la page et un bouton
+   * « payer » cassé : `NEXT_PUBLIC_LIEN_STRIPE`. L'environnement de test ne le
+   * pose pas — donc `aUnStripe` doit être faux, et le bouton doit continuer de
+   * mener au formulaire.
+   *
+   * Un bouton de paiement qui ne mène nulle part coûte le client **et** la
+   * réputation : celui qui a sorti sa carte et s'est heurté à une page morte
+   * ne rappelle pas, et il le raconte.
+   */
+  const { aUnStripe, contact } = await import('@/lib/config');
+
+  assert.equal(contact.stripeLien, '', 'l’environnement de test ne règle aucun lien');
+  assert.equal(aUnStripe, false, 'sans lien réglé, aucun paiement ne doit être proposé');
+});
+
+test('le lien Stripe ne peut pas rouvrir l’encaissement à lui seul', async () => {
+  /*
+   * Le piège que ce test garde depuis le début, et qui survit à l'ouverture :
+   * `NEXT_PUBLIC_LIEN_STRIPE` se pose sur l'hébergeur, sans relire une ligne
+   * de code. L'ordre des deux conditions doit rester celui-ci — le verrou
+   * d'abord, la variable ensuite — sans quoi refermer le paiement un jour
+   * demanderait de retrouver le réglage au lieu de changer la constante.
+   */
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('../src/lib/config.ts', import.meta.url), 'utf8');
+
   assert.match(source, /aUnStripe = ENCAISSEMENT_OUVERT && /,
     'aUnStripe doit dépendre du verrou avant la variable');
-  assert.equal(ENCAISSEMENT_OUVERT, false);
 });

@@ -1,22 +1,23 @@
 import { BOUTON_CONTOUR, BOUTON_PRINCIPAL, SECTION, TITRE_SECTION } from '@/components/ui';
 import { aUnStripe, contact } from '@/lib/config';
 /*
- * Aucun encaissement en ligne tant que le SIRET n'est pas actif.
+ * Le SIRET est actif — SIREN 109356972, confirmé par le propriétaire le
+ * 03/09/2026 pour une immatriculation validée le 31/08.
  *
- * L'immatriculation est en cours au guichet unique de l'INPI et n'est pas
- * validée. Encaisser trois cents euros avant d'avoir un numéro, c'est facturer
- * sans pouvoir émettre de facture conforme — et le client qui paie n'a rien
- * d'opposable en face.
+ * Cette constante a tenu le bouton fermé tout l'été : encaisser trois cents
+ * euros sans numéro, c'est facturer sans pouvoir émettre de facture conforme,
+ * et le client qui paie n'a rien d'opposable en face. Elle n'était pas un
+ * commentaire déguisé — elle commandait réellement le bouton — et elle ne se
+ * bascule que sur confirmation du propriétaire. Elle vient de l'être.
  *
- * Le bouton mène donc au formulaire déjà présent en bas de page : on réserve,
- * on convient du paiement de vive voix, et rien ne transite.
- *
- * Cette constante **commande réellement** le bouton : la passer à `true` rétablit
- * le paiement en ligne, à condition qu'un lien Stripe soit configuré. Elle n'est
- * pas un commentaire déguisé, et elle ne se bascule que sur confirmation du
- * propriétaire que le SIRET est actif.
+ * **Le bouton ne devient pas un bouton de paiement pour autant.**
+ * `encaisseEnLigne` exige aussi `aUnStripe`, qui exige un lien Stripe réglé.
+ * Tant qu'il manque, le bouton mène au formulaire, comme depuis le début :
+ * on réserve, on convient du paiement, et rien ne transite. C'est voulu —
+ * promettre une carte bancaire qui n'encaisse pas ferait rebrousser chemin à
+ * quelqu'un de décidé, et ce serait pire que l'absence de paiement en ligne.
  */
-const SIRET_ACTIF = false;
+const SIRET_ACTIF = true;
 const encaisseEnLigne = SIRET_ACTIF && aUnStripe;
 
 const COMPRIS = [
