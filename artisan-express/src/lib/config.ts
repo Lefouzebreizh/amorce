@@ -11,7 +11,27 @@
  * faux numéro coûte plus cher qu'une page qui n'en affiche pas.
  */
 
-const TELEPHONE = process.env.NEXT_PUBLIC_TELEPHONE ?? '';
+/*
+ * Le numéro du vendeur, avec une valeur par défaut — comme le courriel plus
+ * bas, et pour la même raison.
+ *
+ * La règle de ce fichier reste « ce qui n'est pas réglé disparaît », et elle
+ * vaut toujours pour WhatsApp et pour Stripe. Mais le téléphone est le seul
+ * canal que l'artisan visé utilise vraiment : il appelle, il ne remplit pas de
+ * formulaire à 19 h depuis un chantier. Laisser ce champ vide faisait
+ * disparaître le bouton d'appel de l'entête **et** du bandeau collé en bas —
+ * la page restait belle et devenait injoignable.
+ *
+ * Et l'objection habituelle ne tient pas ici : ce numéro n'est pas un secret
+ * qui fuiterait dans le paquet envoyé au navigateur. **Il est fait pour être
+ * affiché** — c'est précisément le bouton qu'on veut voir. Le mettre en dur
+ * n'expose rien de plus que la page elle-même.
+ *
+ * La variable garde la priorité : `NEXT_PUBLIC_TELEPHONE` remplace cette
+ * valeur sans toucher au code, le jour où le numéro change.
+ */
+const TELEPHONE_DU_VENDEUR = '06 21 38 11 15';
+const TELEPHONE = process.env.NEXT_PUBLIC_TELEPHONE ?? TELEPHONE_DU_VENDEUR;
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP ?? '';
 const STRIPE = process.env.NEXT_PUBLIC_LIEN_STRIPE ?? '';
 /*

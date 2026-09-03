@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { aUnCourrielDirect, aUnTelephone, aUnWhatsapp, contact } from '@/lib/config';
+import { aUnCourrielDirect, aUnStripe, aUnWhatsapp, contact } from '@/lib/config';
 
 /*
  * Ce fichier éprouve un seul comportement, et c'est le plus cher de la page :
@@ -22,10 +22,27 @@ test('sans rien de réglé, il reste un chemin pour joindre le vendeur', () => {
 });
 
 test('ce qui n’est pas réglé disparaît, et n’est jamais inventé', () => {
-  // Un numéro faux sur une page de vente coûte plus cher qu'un bouton absent.
-  assert.equal(aUnTelephone, false);
+  /*
+   * La raison de ce test tient en une phrase, et elle n'a pas bougé : **un
+   * numéro faux sur une page de vente coûte plus cher qu'un bouton absent.**
+   *
+   * Ce qui a bougé, c'est ce qu'elle couvre. Le téléphone y était, et il en
+   * sort le 03/09/2026 : le propriétaire a donné le sien, il est écrit dans
+   * `config.ts` avec sa raison, et un numéro réel n'est pas un numéro inventé.
+   * C'est le même choix que le courriel de repli, testé juste au-dessus.
+   *
+   * WhatsApp et Stripe restent gardés, eux, parce que rien de réel ne les
+   * remplit : un lien WhatsApp fabriqué mènerait à une conversation qui ne
+   * s'ouvre pas, et un bouton de paiement sans lien Stripe est la panne la
+   * plus chère que cette page puisse avoir.
+   *
+   * Le téléphone, lui, est gardé ailleurs et dans l'autre sens —
+   * `mentions-legales.test.ts` exige qu'il soit **présent**, parce que c'est
+   * son absence qui coûte désormais.
+   */
   assert.equal(aUnWhatsapp, false);
-  assert.equal(contact.telephoneAffiche, '');
+  assert.equal(contact.whatsappLien, '');
+  assert.equal(aUnStripe, false, 'aucun paiement proposé sans lien réglé');
 });
 
 test('aucune adresse de site n’est inventée', async () => {
