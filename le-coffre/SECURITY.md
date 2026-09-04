@@ -182,20 +182,38 @@ la connexion elle-même réussissait (session créée), seule la redirection
 `https://coffre-puce.vercel.app` et en ajoutant
 `https://coffre-puce.vercel.app/**` aux Redirect URLs.
 
+## Limite de taille et limite de tentatives (05/09/2026)
+
+**Taille des dépôts** : `storage.buckets.coffre-objets.file_size_limit` posé
+à 20 Mo côté serveur (le vrai garde-fou), doublé d'un contrôle client dans
+`surDepot` pour un message immédiat sans même tenter le chiffrement. Les
+deux doivent rester synchronisés — voir `TAILLE_MAX_OCTETS` dans
+`src/app/coffre/page.tsx`.
+
+**Tentatives de déverrouillage** : le serveur ne voit jamais la phrase
+secrète, donc jamais si une tentative a réussi au moment où elle a lieu —
+mais `deverrouillerCoffre` journalise le résultat juste après
+(`coffre_tentatives`), et refuse d'aller plus loin au-delà de 10 échecs
+récents (15 minutes glissantes). Un vérificateur à 600 000 itérations
+PBKDF2 est déjà lent à attaquer ; ce compteur ajoute une barrière côté
+serveur, indépendante du temps de calcul côté client.
+
+## Tests automatisés (05/09/2026)
+
+`src/lib/crypto.test.ts` et `src/lib/coffre.test.ts` (`npm run test`,
+Vitest) — chiffrement/déchiffrement, dérivation de clé, empaquetage du
+vérificateur, `iterationsSures` (jamais crue à la baisse), et
+`composerLettreResiliation` (mentions obligatoires). **Un vrai bug trouvé à
+l'écriture des tests** : le contrôle des mentions cherchait le mot
+« confirmation », mais le gabarit écrivait « confirmer » — la lettre était
+correcte, mais se signalait elle-même à tort comme incomplète. Corrigé dans
+le même geste. Pas de test pour `src/app/coffre/page.tsx` (React, demande
+un harnais différent) ni pour les fonctions Supabase (dépendent d'un
+environnement Deno + réseau).
+
 ## Ce qui reste fragile — non corrigé pour l'instant
 
-- **Pas de limite de taille sur les dépôts** : un fichier de plusieurs centaines
-  de Mo peut ralentir ou bloquer l'onglet (chiffrement en mémoire, sans
-  découpage), même limite connue que la version locale.
-- **Pas de tests automatisés** pour `src/lib/coffre.ts` ni `src/lib/crypto.ts` —
-  seulement la vérification manuelle faite à l'écriture (création de compte,
-  création de coffre, dépôt, liste).
 - **Le lien magique de connexion expire et se régénère par e-mail** : un compte
   e-mail compromis permet de se reconnecter, mais pas de lire le coffre sans la
   phrase secrète — cohérent avec la séparation des deux secrets ci-dessus, à
   garder en tête si l'un des deux est un jour affaibli.
-- **Aucune limite de débit sur les tentatives de déverrouillage** posée côté
-  application : rien n'empêche aujourd'hui un grand nombre de tentatives de
-  phrase secrète contre le vérificateur chiffré stocké dans `coffre_cles` — à
-  poser avant un vrai lancement public (limite de tentatives, ou repli sur les
-  quotas par défaut de l'API Supabase).

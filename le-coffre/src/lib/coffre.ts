@@ -96,7 +96,7 @@ export function composerLettreResiliation(
     `${referenceClient ? ` (référence client ${referenceClient})` : ''} souscrit auprès de ${emetteur}, ` +
     `pour des raisons qui me sont personnelles.\n\n` +
     `Je vous demande de prendre en compte cette résiliation avec effet au ${effet}, ` +
-    `et vous remercie de bien vouloir m'en confirmer la prise en compte par écrit.\n\n` +
+    `et vous remercie de bien vouloir m'en adresser une confirmation écrite.\n\n` +
     `Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.\n\n` +
     `${identite.nom}`;
 
@@ -170,7 +170,37 @@ export async function initialiserCoffre(userId: string, motDePasse: string): Pro
   return cle;
 }
 
+const TENTATIVES_MAX = 10;
+const FENETRE_MINUTES = 15;
+
+// Le serveur ne voit jamais la phrase secrète, donc jamais si CETTE tentative
+// a réussi au moment où elle a lieu — mais il peut compter les échecs
+// récents journalisés après coup, et refuser d'aller plus loin s'il y en a
+// trop. Un vérificateur chiffré à 600 000 itérations PBKDF2 est déjà lent à
+// attaquer ; ce compteur ajoute une deuxième barrière, côté serveur celle-là.
+async function tropDeTentatives(userId: string): Promise<boolean> {
+  const depuis = new Date(Date.now() - FENETRE_MINUTES * 60_000).toISOString();
+  const { count, error } = await supabase
+    .from('coffre_tentatives')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('reussie', false)
+    .gte('le', depuis);
+  if (error) return false; // une panne de journalisation ne doit pas bloquer un utilisateur légitime
+  return (count ?? 0) >= TENTATIVES_MAX;
+}
+
+async function journaliserTentative(userId: string, reussie: boolean): Promise<void> {
+  await supabase.from('coffre_tentatives').insert({ user_id: userId, reussie });
+}
+
 export async function deverrouillerCoffre(userId: string, motDePasse: string): Promise<CryptoKey> {
+  if (await tropDeTentatives(userId)) {
+    throw new Error(
+      `Trop de tentatives incorrectes. Réessaie dans ${FENETRE_MINUTES} minutes.`,
+    );
+  }
+
   const { data, error } = await supabase
     .from('coffre_cles')
     .select('sel, iterations, verificateur_iv, verificateur_texte')
@@ -182,7 +212,9 @@ export async function deverrouillerCoffre(userId: string, motDePasse: string): P
   const cle = await deriverCle(motDePasse, sel, iterationsSures(data.iterations));
   const paquetVerif = reempaqueterVerificateur(data.verificateur_iv, data.verificateur_texte);
   const texte = await dechiffrerTexte(cle, paquetVerif).catch(() => null);
-  if (texte !== TEXTE_VERIF) throw new Error('Phrase secrète incorrecte.');
+  const reussie = texte === TEXTE_VERIF;
+  await journaliserTentative(userId, reussie);
+  if (!reussie) throw new Error('Phrase secrète incorrecte.');
   return cle;
 }
 
