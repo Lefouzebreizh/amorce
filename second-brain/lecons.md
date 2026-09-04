@@ -6053,3 +6053,45 @@ l'outil n'avait jamais servi que sur un build de production servi par
 `next start`.** C'est `next dev` qui place ces scripts en ligne. Un outil éprouvé
 dans un seul mode n'est éprouvé qu'à moitié — et celui-ci gardait déjà deux
 projets dans `verifier.sh`.
+
+---
+
+## Un commentaire qui justifie un choix se lit comme une mesure, et n'en est pas
+
+*Gain : deux défauts d'accessibilité livrés depuis des semaines dans le socle
+client, trouvés en trois minutes le jour où quelque chose a compté.*
+
+`agence/src/app/globals.css` portait cette phrase au-dessus de ses couleurs
+d'état : « une couleur d'état lisible prime sur une couleur d'état jolie ». Elle
+est juste, elle est bien écrite, et elle a l'aplomb d'un fait vérifié. Le vert
+qu'elle justifiait rendait **4,11:1** sur son propre aplat, là où un texte
+courant en réclame 4,5.
+
+Le commentaire n'était pas faux : il disait une intention. Ce qui manquait,
+c'est que rien ne distingue une intention d'un constat une fois écrite au même
+endroit, du même ton. Trois sessions ont relu ce bloc — dont deux audits de
+sécurité — et l'ont pris pour une vérification.
+
+Le deuxième défaut du même passage n'avait, lui, aucun commentaire du tout :
+`--input` valait `--border`, par convention Shadcn, à **1,26:1** contre la
+surface du champ. Un champ de saisie vide n'a que son contour pour se signaler.
+Personne ne l'avait vu parce que personne ne le regardait — un champ vide dans
+le thème sombre n'apparaît sur aucune capture d'un parcours nominal.
+
+**Portée générale :** quand un commentaire affirme une propriété mesurable —
+lisible, assez rapide, sous la limite, compatible —, ou bien la mesure existe et
+le commentaire doit la citer avec son chiffre, ou bien elle n'existe pas et la
+phrase doit dire « choisi pour », jamais « est ». C'est le même piège que le
+banc sans témoin, dans l'autre sens : là on croyait un chiffre qui ne mesurait
+rien, ici on croyait une phrase qui ne mesurait rien du tout.
+
+Deux corollaires ramassés au passage, qui coûtent chacun une demi-heure :
+
+- **`not-sr-only` remet `padding` à zéro.** Un lien d'évitement écrit
+  `sr-only ... px-4 py-3 focus:not-sr-only` sort collé à son texte, 115 × 20 px.
+  La marge doit passer sous la même variante : `focus:px-4 focus:py-3`. Vaut
+  pour toute paire utilitaire/variante où la seconde réinitialise la première.
+- **Un `<main>` cible d'ancre a besoin de `tabIndex={-1}`.** Sans lui, le
+  navigateur défile bien jusqu'à lui mais n'y pose pas le focus : la tabulation
+  suivante repart du haut de la page, et le lien d'évitement n'évite rien tout
+  en ayant l'air de marcher.
