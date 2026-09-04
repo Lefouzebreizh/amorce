@@ -529,7 +529,9 @@ case " $projets " in
 esac
 case " $projets " in
   *" agence "*)
-    echo "  • les politiques RLS : npm run test:rls, sur un vrai PostgreSQL" ;;
+    echo "  • les politiques RLS : npm run test:rls, sur un vrai PostgreSQL"
+    echo "  • la sauvegarde d'une base client : npm run test:sauvegarde,"
+    echo "    qui sauvegarde, détruit la base et restaure — quelques secondes" ;;
 esac
 case " $projets " in
   *" artisan "*)
