@@ -1,0 +1,19 @@
+{
+  "name": "chat-traducteur-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Le cœur du traducteur de chat en TypeScript, pour le navigateur — porté depuis le noyau Python, qui fait foi",
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
+    "check": "tsc --noEmit",
+    "temoins": "python3 outils/engendrer-temoins.py"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.22"
+  }
+}

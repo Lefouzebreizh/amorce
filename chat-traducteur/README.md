@@ -173,6 +173,8 @@ chat-traducteur/
 │   ├── carte.py          verdict → SVG 1080 × 1920, zone sûre câblée
 │   └── palette.py        une palette par intention, contraste ≥ 7:1
 ├── tests/                48 tests, ~90 ms, sans rien installer
+├── web/                  le même cœur en TypeScript, pour le navigateur
+│                         — témoins de conformité engendrés depuis le Python
 ├── modeles/              poids — jamais versionnés
 └── cli.py                le prototype : un fichier entre, une intention sort
 ```
