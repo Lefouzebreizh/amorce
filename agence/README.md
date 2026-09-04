@@ -309,9 +309,28 @@ sauvegarde, pour qu'on ne l'apprenne pas le jour de la restauration.
 ## Déployer
 
 N'importe quel hébergeur Node ou Vercel. Les trois variables de `.env.example`
-sont à déclarer côté hébergeur, et `NEXT_PUBLIC_SITE_URL` doit porter l'adresse
-publique réelle — c'est elle qui construit le lien de confirmation envoyé par
-courriel.
+sont à déclarer côté hébergeur.
+
+**`NEXT_PUBLIC_SITE_URL` mérite sa propre ligne**, parce que c'est la seule dont
+l'oubli ne se voit nulle part. Les deux variables Supabase manquantes font
+échouer la construction, avec leur nom dans le message ; celle-ci se repliait
+sur `localhost`, et le site se construisait, se déployait et s'affichait
+normalement — pendant que **chaque courriel de confirmation et de
+réinitialisation envoyait le client vers sa propre machine**. Personne ne
+pouvait créer de compte ni récupérer le sien, et aucune page ne le montrait.
+
+Elle lève donc désormais en production, et sa valeur est normalisée :
+
+| Valeur déclarée | Ce qui se passe |
+| --- | --- |
+| absente ou vide | l'inscription échoue en nommant la variable |
+| `https://client.fr/` | la barre finale est retirée — sinon `//auth/confirmer`, que la liste blanche de Supabase refuse au caractère près |
+| `https://client.fr/espace?utm=1` | ramenée à l'origine seule |
+| `client.fr` | refusée : sans protocole, le lien du courriel est relatif, donc mort |
+
+Le pendant côté Supabase se règle dans **Authentication → URL Configuration** :
+la même adresse en *Site URL*, et `https://client.fr/auth/confirmer` dans les
+*Redirect URLs*. Les deux listes doivent dire la même chose.
 
 ## Annexe — cadrage client
 

@@ -11,6 +11,18 @@
  * sait imbriquer les deux tables, mais deux requêtes à plat restent typées sans
  * acrobatie et se lisent d'un coup d'œil, pour un socle qui compte ses clients
  * en dizaines.
+ *
+ * Ce choix a une frontière, et elle est plus proche qu'on ne croit :
+ * **PostgREST plafonne une réponse à mille lignes** (`db.max-rows`, réglage par
+ * défaut de Supabase). Au-delà, la requête réussit et rend mille lignes — sans
+ * erreur, sans en-tête d'avertissement dans le corps de la réponse. Les totaux
+ * affichés deviennent alors *faux* et non *lents*, ce qui est bien pire : un
+ * chiffre présenté comme le total du compte client est en réalité celui des
+ * mille premières lignes, et rien à l'écran ne le laisse deviner.
+ *
+ * D'où le `count: 'exact'` sur les deux requêtes. Il coûte un `count(*)` au
+ * serveur et rend le nombre réel, que l'on compare à ce qui est arrivé. Quand
+ * les deux diffèrent, la page le dit au lieu d'afficher un total inventé.
  */
 import type { Session } from '@/lib/supabase/session';
 import type { Profil, Projet } from '@/lib/types';
@@ -24,22 +36,48 @@ export type FicheClient = {
 
 export type VueAdministration = {
   clients: FicheClient[];
+  /** Nombre réel de comptes, qui peut dépasser `clients.length`. */
+  nombreDeComptes: number;
+  /** Nombre réel de projets, qui peut dépasser ce qui a servi au montant. */
   nombreDeProjets: number;
+  /** Somme des projets **reçus** : une minoration dès que `tronquee` est posée. */
   montantTotal: number;
+  /**
+   * Non nul quand le serveur a coupé la réponse. Porte ce qui manque, ligne
+   * pour ligne — c'est la seule chose qui permette à la page de dire
+   * honnêtement ce qu'elle montre.
+   */
+  tronquee: { comptes: number; projets: number } | null;
 };
+
+/** Totaux réels rendus par `count: 'exact'`, quand la requête les fournit. */
+export type Totaux = { comptes: number | null; projets: number | null };
 
 export async function lireVueAdministration(session: Session): Promise<VueAdministration> {
   const [profils, projets] = await Promise.all([
-    session.client.from('profiles').select('*'),
-    session.client.from('projects').select('*').order('created_at', { ascending: false }),
+    session.client.from('profiles').select('*', { count: 'exact' }),
+    session.client
+      .from('projects')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false }),
   ]);
 
   if (profils.error || projets.error) {
     console.error('[socle-agence]', profils.error ?? projets.error);
-    return { clients: [], nombreDeProjets: 0, montantTotal: 0 };
+
+    return {
+      clients: [],
+      nombreDeComptes: 0,
+      nombreDeProjets: 0,
+      montantTotal: 0,
+      tronquee: null,
+    };
   }
 
-  return assemblerFiches(profils.data, projets.data);
+  return assemblerFiches(profils.data, projets.data, {
+    comptes: profils.count,
+    projets: projets.count,
+  });
 }
 
 /**
@@ -53,6 +91,7 @@ export async function lireVueAdministration(session: Session): Promise<VueAdmini
 export function assemblerFiches(
   profils: readonly Profil[],
   projets: readonly Projet[],
+  totaux: Totaux = { comptes: null, projets: null },
 ): VueAdministration {
   const fiches = new Map<string, FicheClient>();
 
@@ -85,10 +124,23 @@ export function assemblerFiches(
 
   const clients = [...fiches.values()].sort(comparerFiches);
 
+  // `?? profils.length` : sans `count`, on ne sait rien de plus que ce qu'on a
+  // reçu, et supposer une coupure inventerait un avertissement.
+  const nombreDeComptes = totaux.comptes ?? profils.length;
+  const nombreDeProjets = totaux.projets ?? projets.length;
+
+  const comptesManquants = Math.max(0, nombreDeComptes - profils.length);
+  const projetsManquants = Math.max(0, nombreDeProjets - projets.length);
+
   return {
     clients,
-    nombreDeProjets: projets.length,
+    nombreDeComptes,
+    nombreDeProjets,
     montantTotal: projets.reduce((total, projet) => total + projet.amount_estimated, 0),
+    tronquee:
+      comptesManquants + projetsManquants > 0
+        ? { comptes: comptesManquants, projets: projetsManquants }
+        : null,
   };
 }
 

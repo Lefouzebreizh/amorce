@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Euro, FolderKanban, Users } from 'lucide-react';
 
+import { TriangleAlert } from 'lucide-react';
+
 import { CarteStatistique } from '@/components/carte-statistique';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,10 +27,33 @@ export default async function PageAdministration() {
         </p>
       </header>
 
+      {/*
+        PostgREST coupe une réponse à mille lignes sans le dire dans son corps.
+        Passé ce seuil, le montant affiché plus bas n'est plus le total mais
+        celui des lignes reçues. Une page qui montre un chiffre faux sans
+        prévenir vaut moins qu'une page qui prévient : l'administrateur décide
+        alors s'il peut s'y fier.
+      */}
+      {vue.tronquee ? (
+        <div
+          role="status"
+          className="flex gap-3 rounded-lg border border-warning/40 bg-warning/20 p-4 text-sm text-warning-foreground"
+        >
+          <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+          <p>
+            Le serveur a rendu une réponse partielle : {vue.tronquee.projets} projet
+            {vue.tronquee.projets > 1 ? 's' : ''} et {vue.tronquee.comptes} compte
+            {vue.tronquee.comptes > 1 ? 's' : ''} manquent à l&apos;appel. Les nombres
+            ci-dessous sont exacts ; <strong>le montant estimé est une minoration</strong>,
+            et le tableau ne montre que les comptes reçus.
+          </p>
+        </div>
+      ) : null}
+
       <section aria-label="Indicateurs" className="grid gap-4 sm:grid-cols-3">
         <CarteStatistique
           intitule="Comptes"
-          valeur={String(vue.clients.length)}
+          valeur={String(vue.nombreDeComptes)}
           precision="Profils créés à ce jour"
           icone={<Users aria-hidden className="size-4 text-muted-foreground" />}
         />
@@ -41,7 +66,11 @@ export default async function PageAdministration() {
         <CarteStatistique
           intitule="Montant estimé"
           valeur={formaterMontant(vue.montantTotal)}
-          precision="Somme des enveloppes déclarées"
+          precision={
+            vue.tronquee
+              ? 'Somme des enveloppes reçues — minorée'
+              : 'Somme des enveloppes déclarées'
+          }
           icone={<Euro aria-hidden className="size-4 text-muted-foreground" />}
         />
       </section>
