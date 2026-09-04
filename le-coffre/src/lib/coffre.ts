@@ -15,15 +15,63 @@ import {
   iterationsSures,
 } from './crypto';
 
+export type Echeance = {
+  presente: boolean;
+  date: string | null;
+  libelle: string | null;
+  confiance: 'haute' | 'moyenne' | 'basse';
+};
+
 export type ObjetIndex = {
   nom: string;
   taille: number;
   type: string;
   categorie: string;
   deposeLe: string;
+  echeance?: Echeance;
 };
 
 export type IndexCoffre = { objets: Record<string, ObjetIndex> };
+
+export type PropositionClassement = {
+  lisible: boolean;
+  categorie: string;
+  nomSuggere: string;
+  echeance: Echeance;
+};
+
+function b64FromFichier(buf: ArrayBuffer): string {
+  // Par blocs de 32 Ko : String.fromCharCode(...octets) sur un fichier de
+  // plusieurs Mo dépasserait la pile d'appels (trop d'arguments d'un coup).
+  const octets = new Uint8Array(buf);
+  const TAILLE_BLOC = 32768;
+  let binaire = '';
+  for (let i = 0; i < octets.length; i += TAILLE_BLOC) {
+    binaire += String.fromCharCode(...octets.subarray(i, i + TAILLE_BLOC));
+  }
+  return btoa(binaire);
+}
+
+// Envoie le fichier EN CLAIR à la fonction serveur classer-document — le seul
+// instant où un document du coffre est lisible ailleurs que dans ce
+// navigateur (voir SECURITY.md). N'échoue jamais bruyamment : en cas de
+// panne, on renvoie une proposition vide plutôt que de bloquer le dépôt.
+export async function proposerClassement(fichier: File): Promise<PropositionClassement> {
+  const vide: PropositionClassement = {
+    lisible: false, categorie: '', nomSuggere: '',
+    echeance: { presente: false, date: null, libelle: null, confiance: 'basse' },
+  };
+  try {
+    const buf = await fichier.arrayBuffer();
+    const { data, error } = await supabase.functions.invoke('classer-document', {
+      body: { donnees: b64FromFichier(buf), type: fichier.type || 'application/octet-stream' },
+    });
+    if (error || !data || 'erreur' in data) return vide;
+    return data as PropositionClassement;
+  } catch {
+    return vide;
+  }
+}
 
 export async function coffreExiste(userId: string): Promise<boolean> {
   const { data, error } = await supabase
@@ -92,6 +140,7 @@ async function sauvegarderIndex(userId: string, cle: CryptoKey, index: IndexCoff
 
 export async function deposerFichier(
   userId: string, cle: CryptoKey, fichier: File, categorie: string, index: IndexCoffre,
+  nomAffiche?: string, echeance?: Echeance,
 ): Promise<IndexCoffre> {
   const buf = await fichier.arrayBuffer();
   const paquet = await chiffrerOctets(cle, buf);
@@ -102,18 +151,19 @@ export async function deposerFichier(
     .upload(`${userId}/${nom}`, paquet, { contentType: 'application/octet-stream' });
   if (error) throw new Error(error.message);
 
-  const nouvel_index: IndexCoffre = {
-    objets: {
-      ...index.objets,
-      [nom]: {
-        nom: fichier.name,
-        taille: fichier.size,
-        type: fichier.type || 'application/octet-stream',
-        categorie,
-        deposeLe: new Date().toISOString(),
-      },
-    },
+  const objet: ObjetIndex = {
+    nom: nomAffiche || fichier.name,
+    taille: fichier.size,
+    type: fichier.type || 'application/octet-stream',
+    categorie,
+    deposeLe: new Date().toISOString(),
   };
+  // Une échéance chiffrée comme le reste de l'index : visible seulement une
+  // fois le coffre déverrouillé, jamais lisible côté serveur — pas encore
+  // d'alerte proactive (par e-mail, notamment), ce point reste ouvert.
+  if (echeance && echeance.presente) objet.echeance = echeance;
+
+  const nouvel_index: IndexCoffre = { objets: { ...index.objets, [nom]: objet } };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }

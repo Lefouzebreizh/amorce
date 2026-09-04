@@ -32,6 +32,16 @@ Supabase Auth) dit *qui* tu es à ce service. La phrase secrète du coffre dit *
 que tu peux déchiffrer* — elle n'atteint jamais ce service, sous aucune forme.
 Les deux ne se substituent jamais l'un à l'autre.
 
+## Le classement automatique (04/09/2026)
+
+Au dépôt d'un fichier, la fonction `classer-document` propose une catégorie,
+un nom, et une échéance éventuelle (lecture par Claude en vision) —
+**toujours à valider avant que le dépôt n'ait lieu**, jamais appliqué
+automatiquement. C'est la seule exception à « rien de lisible ne sort » du
+projet ; voir `SECURITY.md`, section « Le classement automatique », pour ce
+que ça implique et ses limites (notamment : pas encore d'alerte proactive
+avant l'échéance).
+
 ## Architecture
 
 ```
@@ -39,11 +49,14 @@ le-coffre/
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx            connexion (lien magique par e-mail)
-│   │   └── coffre/page.tsx     création / déverrouillage / liste des documents
+│   │   └── coffre/page.tsx     création / déverrouillage / dépôt (avec validation) / liste
 │   └── lib/
 │       ├── crypto.ts           primitives Web Crypto — pas de dépendance
 │       ├── supabase.ts         client Supabase (clé publiable, sécurité par RLS)
 │       └── coffre.ts           les opérations du coffre, contre Supabase
+├── supabase/functions/
+│   └── classer-document/       lit un document en clair côté serveur (Claude vision),
+│                                ne conserve rien — voir SECURITY.md
 └── .env.example                 variables à copier en .env.local
 ```
 
