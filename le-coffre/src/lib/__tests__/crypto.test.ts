@@ -29,7 +29,20 @@ import {
   iterationsSures,
   nomOpaque,
   reempaqueterVerificateur,
-} from '../crypto.ts';
+} from '../crypto';
+
+/** Le même paquet, avec un octet retourné. Sert aux deux tests de falsification.
+ *
+ * Passe par `set` plutôt que par une affectation indexée : `noUncheckedIndexedAccess`
+ * rend toute lecture d'indice `number | undefined`, et une assertion non nulle
+ * cacherait ici exactement ce qu'on veut lire.
+ */
+function abimer(paquet: ArrayBuffer, index: number): ArrayBuffer {
+  const octets = new Uint8Array(paquet.slice(0));
+  const cible = index < 0 ? octets.length + index : index;
+  octets.set([(octets.at(cible) ?? 0) ^ 0x01], cible);
+  return octets.buffer;
+}
 
 const SEL = new Uint8Array(16).fill(7);
 
@@ -125,16 +138,12 @@ describe('chiffrement', () => {
     // « chiffré et non falsifiable ». Un serveur qui modifierait un octet ne
     // doit pas pouvoir le faire passer pour du contenu légitime.
     const paquet = await chiffrerTexte(cle, TEXTE_VERIF);
-    const abime = new Uint8Array(paquet.slice(0));
-    abime[abime.length - 1] ^= 0x01;
-    await assert.rejects(() => dechiffrerTexte(cle, abime.buffer as ArrayBuffer));
+    await assert.rejects(() => dechiffrerTexte(cle, abimer(paquet, -1)));
   });
 
   it('refuse un paquet dont le vecteur a changé', async () => {
     const paquet = await chiffrerTexte(cle, TEXTE_VERIF);
-    const abime = new Uint8Array(paquet.slice(0));
-    abime[0] ^= 0x01;
-    await assert.rejects(() => dechiffrerTexte(cle, abime.buffer as ArrayBuffer));
+    await assert.rejects(() => dechiffrerTexte(cle, abimer(paquet, 0)));
   });
 
   it('refuse un paquet tronqué', async () => {

@@ -17,7 +17,7 @@
 import { strict as assert } from 'node:assert';
 import { describe, it, mock } from 'node:test';
 
-import { clientFactice, toutCeQuiEstSorti, type Factice } from './aides-coffre.ts';
+import { clientFactice, toutCeQuiEstSorti, type Factice } from './aides-coffre';
 import {
   ITERATIONS,
   TEXTE_VERIF,
@@ -27,7 +27,7 @@ import {
   bufFromB64,
   deriverCle,
   empaqueterVerificateur,
-} from '../crypto.ts';
+} from '../crypto';
 
 // Le module `./supabase` construit son client à l'import et lève sans les
 // variables d'environnement : on le remplace avant que `./coffre` ne le
@@ -42,7 +42,7 @@ mock.module(new URL('../supabase.ts', import.meta.url).href, {
   },
 });
 
-const coffre = await import('../coffre.ts');
+const coffre = await import('../coffre');
 type IndexCoffre = Awaited<ReturnType<typeof coffre.chargerIndex>>;
 
 const UTILISATEUR = 'u-123';
