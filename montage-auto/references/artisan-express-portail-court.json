@@ -13,8 +13,21 @@
     "   Ce n'est pas un ornement : c'est ce qui fait entendre un montage plutôt",
     "   qu'une animation, et l'oreille tient l'attention que l'œil relâche.",
     "3. UNE VOIX OFF, fabriquée sur la machine par `.claude/skills/bande-son`.",
-    "   Quatre répliques seulement — un fil se regarde souvent sans lire, et",
-    "   une voix qui double chaque carton fatigue au lieu de porter.",
+    "   Quatre répliques seulement — un fil se regarde souvent sans lire, et une",
+    "   voix qui double chaque carton fatigue au lieu de porter.",
+    "",
+    "   LE TIMBRE EST `tom`, ET C'EST UNE MESURE, PAS UN GOÛT. Fondamentale",
+    "   médiane relevée par autocorrélation sur les trames voisées, même phrase :",
+    "",
+    "     siwis   235 Hz      tom     131 Hz",
+    "     upmc    227 Hz      gilles   96 Hz",
+    "",
+    "   Le défaut de `couche_voix` est `upmc`, à 227 Hz. Or la vidéo dit « J'AI",
+    "   fait ce modèle » : c'est Erwann qui parle, et une voix à 227 Hz le",
+    "   contredit à la première syllabe. `gilles` à 96 Hz est la voix de",
+    "   bande-annonce — elle vendrait une créature, pas une prestation.",
+    "   `tom` récite un peu (4,2 demi-tons d'ampleur, contre 8,9 à siwis) ; la",
+    "   parade est la ponctuation, pas le modèle, et elle est dans les textes.",
     "",
     "POUR LA VERSION SANS VOIX, retirer la clé avant le montage :",
     "",
@@ -30,81 +43,356 @@
   "largeur_stereo": 2.4,
   "reverberation_s": 2.2,
   "plans": [
-    { "nom": "portail-court", "source": "rushes/portail-martin-court.mp4",
-      "depart": 0.0, "duree": 12.0, "cible_db": -30.0 }
+    {
+      "nom": "portail-court",
+      "source": "rushes/portail-martin-court.mp4",
+      "depart": 0.0,
+      "duree": 12.0,
+      "cible_db": -30.0
+    }
   ],
   "voix": [
-    { "instant": 0.12, "timbre": "upmc", "vitesse": 1.0, "cible_db": -14.0,
-      "texte": "Ton site ne te ramène aucun chantier ?" },
-    { "instant": 2.60, "timbre": "upmc", "vitesse": 1.0, "cible_db": -14.0,
-      "texte": "J'ai fait ce modèle pour les artisans : bouton d'appel direct, photos de chantier, vrais avis." },
-    { "instant": 7.70, "timbre": "upmc", "vitesse": 1.0, "cible_db": -14.0,
-      "texte": "En ligne en sept jours." },
-    { "instant": 9.35, "timbre": "upmc", "vitesse": 1.0, "cible_db": -14.0,
-      "texte": "Commente : site. Et je t'envoie le modèle." }
+    {
+      "instant": 0.12,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "Ton site ne te ramène aucun chantier ?"
+    },
+    {
+      "instant": 2.6,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "J'ai fait ce modèle pour les artisans : bouton d'appel direct, photos de chantier, vrais avis."
+    },
+    {
+      "instant": 7.7,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "En ligne en sept jours."
+    },
+    {
+      "instant": 9.35,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "Commente : site. Et je t'envoie le modèle."
+    }
   ],
   "effets": [
-    { "son": "drone_tendu", "instant": 0.00, "gain": -8, "distance": "lointain" },
-    { "son": "whoosh_moyen", "instant": 0.00, "gain": 2, "distance": "moyen" },
-    { "son": "montee", "instant": 0.00, "gain": -4, "distance": "moyen",
-      "parametres": { "duree": 0.20, "graine": 11 } },
-
-    { "son": "transition_eclair", "instant": 0.14, "gain": 6, "distance": "proche" },
-    { "son": "impact_lourd_court", "instant": 0.16, "gain": 4, "distance": "proche" },
-    { "son": "eclat", "instant": 0.16, "gain": 0, "distance": "proche",
-      "parametres": { "duree": 0.4, "graine": 141, "densite": 190.0 } },
-    { "son": "choc_acier", "instant": 0.30, "gain": -3, "distance": "moyen" },
-    { "son": "choc_acier", "instant": 0.44, "gain": -5, "distance": "moyen" },
-
-    { "son": "braam_massif", "instant": 0.56, "gain": 9, "distance": "proche" },
-    { "son": "impact_debris", "instant": 0.58, "gain": 0, "distance": "proche" },
-    { "son": "grondement_terre", "instant": 0.58, "gain": 3, "distance": "lointain" },
-    { "son": "electricite", "instant": 0.58, "gain": 2, "distance": "proche",
-      "parametres": { "duree": 0.8, "graine": 77 } },
-    { "son": "crepitement", "instant": 0.62, "gain": -16, "largeur": 22, "distance": "lointain",
-      "parametres": { "duree": 1.8, "densite": 80.0, "graine": 775 } },
-
-    { "son": "whoosh_tournant_long", "instant": 0.84, "gain": -6, "distance": "moyen" },
-    { "son": "aspiration", "instant": 0.88, "gain": 0, "largeur": 22, "distance": "lointain",
-      "parametres": { "duree": 1.6, "graine": 44, "tours_final": 34.0 } },
-    { "son": "souffle_tournant", "instant": 0.92, "gain": -8, "largeur": 20, "distance": "lointain",
-      "parametres": { "duree": 1.6, "graine": 46 } },
-    { "son": "drone_braam", "instant": 0.95, "gain": -3, "distance": "lointain" },
-    { "son": "montee_sans_fin", "instant": 1.25, "gain": -2, "largeur": 16, "distance": "moyen",
-      "parametres": { "duree": 1.0, "graine": 77 } },
-
-    { "son": "whoosh_lourd", "instant": 1.96, "gain": 5, "distance": "moyen" },
-    { "son": "braam_double", "instant": 2.06, "gain": 8, "distance": "proche" },
-    { "son": "impact_lourd_long", "instant": 2.10, "gain": 5, "distance": "proche" },
-    { "son": "transition_impact", "instant": 2.12, "gain": 3, "distance": "moyen" },
-    { "son": "chute_sous_grave", "instant": 2.14, "gain": 1, "distance": "moyen",
-      "parametres": { "duree": 1.2, "graine": 45, "depart_hz": 150.0 } },
-
-    { "son": "drone_sombre", "instant": 2.40, "gain": -5, "distance": "lointain" },
-    { "son": "ui_apparition", "instant": 2.55, "gain": 4, "distance": "proche" },
-    { "son": "carillon", "instant": 2.58, "gain": -4, "distance": "moyen",
-      "parametres": { "duree": 1.8, "fondamentale": 523.25, "graine": 21 } },
-    { "son": "drone_grave", "instant": 2.90, "gain": 15, "distance": "lointain" },
-    { "son": "pulsation", "instant": 3.00, "gain": 10, "distance": "moyen",
-      "parametres": { "duree": 4.4, "graine": 51 } },
-
-    { "son": "ui_clic_doux", "instant": 1.97, "gain": 1, "distance": "proche" },
-    { "son": "ui_clic_doux", "instant": 3.07, "gain": 1, "distance": "proche" },
-    { "son": "ui_clic_doux", "instant": 4.32, "gain": 1, "distance": "proche" },
-    { "son": "ui_clic_doux", "instant": 5.62, "gain": 1, "distance": "proche" },
-    { "son": "ui_clic_doux", "instant": 6.72, "gain": 1, "distance": "proche" },
-
-    { "son": "whoosh_retour", "instant": 7.50, "gain": 3, "distance": "moyen" },
-    { "son": "descente_tension", "instant": 7.55, "gain": 0, "distance": "moyen" },
-    { "son": "nappe_sombre", "instant": 7.60, "gain": 15, "largeur": 18, "distance": "lointain",
-      "parametres": { "duree": 4.4, "fondamentale": 65.0, "graine": 12 } },
-    { "son": "braam_court", "instant": 7.74, "gain": 4, "distance": "proche" },
-
-    { "son": "ui_clic_doux", "instant": 9.30, "gain": 1, "distance": "proche" },
-    { "son": "transition_eclair", "instant": 9.90, "gain": 0, "distance": "moyen" },
-    { "son": "braam_court", "instant": 9.86, "gain": 5, "distance": "proche" },
-    { "son": "ui_validation", "instant": 9.95, "gain": 3, "distance": "proche" },
-    { "son": "carillon", "instant": 9.95, "gain": -2, "distance": "moyen",
-      "parametres": { "duree": 2.0, "fondamentale": 659.26, "graine": 9 } }
+    {
+      "son": "drone_tendu",
+      "instant": 0.0,
+      "gain": -8,
+      "distance": "lointain"
+    },
+    {
+      "son": "whoosh_moyen",
+      "instant": 0.0,
+      "gain": 2,
+      "distance": "moyen"
+    },
+    {
+      "son": "montee",
+      "instant": 0.0,
+      "gain": -4,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 0.2,
+        "graine": 11
+      }
+    },
+    {
+      "son": "transition_eclair",
+      "instant": 0.14,
+      "gain": 6,
+      "distance": "proche"
+    },
+    {
+      "son": "impact_lourd_court",
+      "instant": 0.16,
+      "gain": 4,
+      "distance": "proche"
+    },
+    {
+      "son": "eclat",
+      "instant": 0.16,
+      "gain": 0,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.4,
+        "graine": 141,
+        "densite": 190.0
+      }
+    },
+    {
+      "son": "choc_acier",
+      "instant": 0.3,
+      "gain": -3,
+      "distance": "moyen"
+    },
+    {
+      "son": "choc_acier",
+      "instant": 0.44,
+      "gain": -5,
+      "distance": "moyen"
+    },
+    {
+      "son": "braam_massif",
+      "instant": 0.56,
+      "gain": 9,
+      "distance": "proche"
+    },
+    {
+      "son": "impact_debris",
+      "instant": 0.58,
+      "gain": 0,
+      "distance": "proche"
+    },
+    {
+      "son": "grondement_terre",
+      "instant": 0.58,
+      "gain": 3,
+      "distance": "lointain"
+    },
+    {
+      "son": "electricite",
+      "instant": 0.58,
+      "gain": 2,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.8,
+        "graine": 77
+      }
+    },
+    {
+      "son": "crepitement",
+      "instant": 0.62,
+      "gain": -16,
+      "largeur": 22,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 1.8,
+        "densite": 80.0,
+        "graine": 775
+      }
+    },
+    {
+      "son": "whoosh_tournant_long",
+      "instant": 0.84,
+      "gain": -6,
+      "distance": "moyen"
+    },
+    {
+      "son": "aspiration",
+      "instant": 0.88,
+      "gain": 0,
+      "largeur": 22,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 1.6,
+        "graine": 44,
+        "tours_final": 34.0
+      }
+    },
+    {
+      "son": "souffle_tournant",
+      "instant": 0.92,
+      "gain": -8,
+      "largeur": 20,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 1.6,
+        "graine": 46
+      }
+    },
+    {
+      "son": "drone_braam",
+      "instant": 0.95,
+      "gain": -3,
+      "distance": "lointain"
+    },
+    {
+      "son": "montee_sans_fin",
+      "instant": 1.25,
+      "gain": -2,
+      "largeur": 16,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.0,
+        "graine": 77
+      }
+    },
+    {
+      "son": "whoosh_lourd",
+      "instant": 1.96,
+      "gain": 5,
+      "distance": "moyen"
+    },
+    {
+      "son": "braam_double",
+      "instant": 2.06,
+      "gain": 8,
+      "distance": "proche"
+    },
+    {
+      "son": "impact_lourd_long",
+      "instant": 2.1,
+      "gain": 5,
+      "distance": "proche"
+    },
+    {
+      "son": "transition_impact",
+      "instant": 2.12,
+      "gain": 3,
+      "distance": "moyen"
+    },
+    {
+      "son": "chute_sous_grave",
+      "instant": 2.14,
+      "gain": 1,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.2,
+        "graine": 45,
+        "depart_hz": 150.0
+      }
+    },
+    {
+      "son": "drone_sombre",
+      "instant": 2.4,
+      "gain": -5,
+      "distance": "lointain"
+    },
+    {
+      "son": "ui_apparition",
+      "instant": 2.55,
+      "gain": 4,
+      "distance": "proche"
+    },
+    {
+      "son": "carillon",
+      "instant": 2.58,
+      "gain": -4,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 1.8,
+        "fondamentale": 523.25,
+        "graine": 21
+      }
+    },
+    {
+      "son": "drone_grave",
+      "instant": 2.9,
+      "gain": 15,
+      "distance": "lointain"
+    },
+    {
+      "son": "pulsation",
+      "instant": 3.0,
+      "gain": 10,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 4.4,
+        "graine": 51
+      }
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 1.97,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 3.07,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 4.32,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 5.62,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 6.72,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "whoosh_retour",
+      "instant": 7.5,
+      "gain": 3,
+      "distance": "moyen"
+    },
+    {
+      "son": "descente_tension",
+      "instant": 7.55,
+      "gain": 0,
+      "distance": "moyen"
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 7.6,
+      "gain": 15,
+      "largeur": 18,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 4.4,
+        "fondamentale": 65.0,
+        "graine": 12
+      }
+    },
+    {
+      "son": "braam_court",
+      "instant": 7.74,
+      "gain": 4,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 9.3,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "transition_eclair",
+      "instant": 9.9,
+      "gain": 0,
+      "distance": "moyen"
+    },
+    {
+      "son": "braam_court",
+      "instant": 9.86,
+      "gain": 5,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_validation",
+      "instant": 9.95,
+      "gain": 3,
+      "distance": "proche"
+    },
+    {
+      "son": "carillon",
+      "instant": 9.95,
+      "gain": -2,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 2.0,
+        "fondamentale": 659.26,
+        "graine": 9
+      }
+    }
   ]
 }
