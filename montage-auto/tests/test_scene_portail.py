@@ -24,6 +24,8 @@ sys.path.insert(0, str(DEPOT / ".claude/skills/bande-son/scripts"))
 RECETTE = json.loads(
     (RACINE / "references/artisan-express-portail.json").read_text(encoding="utf-8"))
 SCENE = (RACINE / "scenes/portail.html").read_text(encoding="utf-8")
+RECITS = {p.name: json.loads(p.read_text(encoding="utf-8"))
+          for p in sorted((RACINE / "scenes/recits").glob("*.json"))}
 # Le code seul, commentaires ôtés. Les commentaires de la scène nomment
 # volontiers ce qu'elle s'interdit — « pas de Math.random » — et une recherche
 # littérale s'y prendrait les pieds : le test tomberait sur la phrase qui dit
@@ -135,21 +137,21 @@ class Scene(unittest.TestCase):
         self.assertIsNotNone(zone, "la scène ne déclare plus de zone sûre")
         self.assertEqual((int(zone[1]), int(zone[2])), (230, 865))
 
-    def test_aucun_texte_ne_sort_de_la_zone_sure(self):
-        """Un titre hors zone passe sous les boutons de la plateforme.
+    def test_les_hauteurs_de_texte_viennent_du_recit(self):
+        """Plus aucune hauteur écrite dans un appel : elles sont toutes réglables.
 
-        Les hauteurs sont relues dans les appels eux-mêmes plutôt que dans une
-        constante : c'est l'appel qui décide, et c'est donc lui qu'il faut
-        contraindre. Une demi-hauteur de police est ajoutée de chaque côté,
-        parce qu'un texte est centré sur sa ligne de base médiane.
+        Ce test a d'abord relu les hauteurs dans les appels `ligneCentree`
+        eux-mêmes. Depuis qu'un récit peut les remplacer, les y relire ne
+        prouverait plus rien : c'est la classe `Recits` qui tient la zone sûre,
+        pour tous les montages à la fois. Celui-ci garde seulement la porte
+        fermée — un littéral qui reviendrait dans le code échapperait à l'autre.
         """
-        appels = re.findall(r"ligneCentree\([^,]+,\s*([\d.]+)[^,]*,\s*(\d+)", SCENE)
+        appels = re.findall(r"ligneCentree\([^;]*?\)", CODE, re.S)
         self.assertTrue(appels, "plus aucun texte dans la scène ?")
-        for y, taille in appels:
-            haut, demi = float(y), int(taille) / 2
-            with self.subTest(y=haut, taille=taille):
-                self.assertGreaterEqual(haut - demi, 230)
-                self.assertLessEqual(haut + demi, 865)
+        for appel in appels:
+            with self.subTest(appel=appel[:60]):
+                self.assertNotRegex(appel, r",\s*\d{3}(\.\d+)?\s*[,)]",
+                                    "une hauteur en dur : elle échappe au réglage")
 
     def test_le_rendu_est_deterministe(self):
         """Aucune horloge, aucun hasard non semé : sans quoi le son ne cale plus.
@@ -167,6 +169,73 @@ class Scene(unittest.TestCase):
         fin = re.search(r"fin\s*:\s*([\d.]+)", SCENE)
         self.assertIsNotNone(fin)
         self.assertAlmostEqual(float(fin[1]), float(RECETTE["plans"][0]["duree"]), places=2)
+
+
+class Recits(unittest.TestCase):
+    """Les récits déplacent les textes hors du code : le garde-fou les suit.
+
+    Le premier montage écrivait ses hauteurs dans les appels eux-mêmes, et
+    `Scene.test_aucun_texte_ne_sort_de_la_zone_sure` les y relisait. Depuis
+    qu'un récit peut les remplacer, ce test ne couvre plus que les valeurs par
+    défaut : sans ce qui suit, un montage entier passerait sous les boutons de
+    la plateforme sans que rien ne le dise.
+    """
+
+    def test_il_y_a_des_recits_a_verifier(self):
+        self.assertTrue(RECITS, "scenes/recits/ est vide — le test ne prouve rien")
+
+    def test_le_recit_par_defaut_et_le_fichier_long_disent_la_meme_chose(self):
+        """La scène porte son récit deux fois : en dur, et en fichier.
+
+        En dur pour qu'ouvrir `portail.html` dans un navigateur montre quelque
+        chose ; en fichier pour que le montage long se compare au court sur le
+        même pied. Deux copies dérivent toujours — celle-ci ne le peut pas.
+        """
+        bloc = re.search(r"const DEFAUT = \{\s*\n\s*T: \{(.*?)\n\s*\},", SCENE, re.S)
+        self.assertIsNotNone(bloc, "la scène ne déclare plus de récit par défaut")
+        en_dur = {c: float(v) for c, v in re.findall(r"(\w+)\s*:\s*([\d.]+)", bloc[1])}
+        self.assertEqual(en_dur, {c: float(v) for c, v in RECITS["artisan-long.json"]["T"].items()})
+
+    def test_aucun_carton_ne_sort_de_la_zone_sure(self):
+        for nom, recit in RECITS.items():
+            for carte in recit.get("cartes", []):
+                taille = float(carte["taille"])
+                interligne = taille * 1.24
+                milieu = float(carte["y"])
+                y0 = milieu - (len(carte["lignes"]) - 1) * interligne / 2
+                y1 = y0 + (len(carte["lignes"]) - 1) * interligne
+                with self.subTest(recit=nom, debut=carte["debut"]):
+                    self.assertGreaterEqual(y0 - taille / 2, 230)
+                    self.assertLessEqual(y1 + taille / 2, 865)
+
+    def test_la_signature_reste_dans_la_zone_sure(self):
+        for nom, recit in RECITS.items():
+            signe = recit.get("signature")
+            if not signe:
+                continue
+            with self.subTest(recit=nom):
+                self.assertGreaterEqual(signe["y"] - signe["taille"] / 2, 230)
+                self.assertLessEqual(signe["y"] + signe["taille"] / 2, 865)
+
+    def test_les_cartons_ne_se_chevauchent_pas(self):
+        """Deux textes à la même hauteur au même instant sont illisibles."""
+        for nom, recit in RECITS.items():
+            cartes = sorted(recit.get("cartes", []), key=lambda c: c["debut"])
+            for avant, apres in zip(cartes, cartes[1:]):
+                with self.subTest(recit=nom, avant=avant["debut"], apres=apres["debut"]):
+                    self.assertLessEqual(float(avant["fin"]), float(apres["debut"]),
+                                         "deux cartons se recouvrent")
+
+    def test_rien_ne_joue_apres_la_derniere_image(self):
+        for nom, recit in RECITS.items():
+            fin = float(recit["T"]["fin"])
+            for carte in recit.get("cartes", []):
+                with self.subTest(recit=nom, debut=carte["debut"]):
+                    self.assertLessEqual(float(carte["fin"]), fin)
+            signe = recit.get("signature")
+            if signe:
+                with self.subTest(recit=nom, signature=True):
+                    self.assertLess(float(signe["debut"]), fin)
 
 
 if __name__ == "__main__":

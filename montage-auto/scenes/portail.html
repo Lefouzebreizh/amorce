@@ -32,8 +32,18 @@ const HALO  = '#0090ff';
 const COEUR = '#eafcff';
 const ENCRE = '#04070c';
 
-/* --- Les bornes du montage ------------------------------------------------ */
-const T = {
+/* --- LE RÉCIT ---------------------------------------------------------------
+   Une même mécanique, plusieurs montages. Les bornes, les cartons et la
+   fenêtre de défilement se posent ici et NULLE PART ailleurs dans le dessin :
+   `rendre_scene.py --recit fichier.json` les remplace sans toucher au code.
+
+   C'est ce qui permet de tester deux ouvertures sur la même scène. La première
+   version installait le portail pendant 3,4 s avant de montrer le site — beau,
+   et trop lent pour un fil où l'on décide en une seconde. Plutôt que de jeter
+   le portail, on le comprime : c'est un réglage, pas une réécriture.
+--------------------------------------------------------------------------- */
+const DEFAUT = {
+  T: {
   etincelle : 0.00,   // l'étincelle fonce sur nous
   anneaux   : 0.30,   // les trois anneaux claquent en place
   fracture  : 1.30,   // le centre se déchire
@@ -41,9 +51,32 @@ const T = {
   emergence : 3.40,   // le site monte hors de la lumière
   lecture   : 5.60,   // on peut le lire, il défile
   message   : 8.40,   // il recule, le texte prend la place
-  fin       : 13.40
+    fin       : 13.40
+  },
+  anneaux: { ecart: 0.26, rebond: 0.42, allumage: 0.16 },
+  defilement: null,          // { debut, fin } — sinon déduit des bornes
+  cartes: [
+    { debut: 8.70,  fin: 10.35, lignes: ['CETTE VIDÉO A DEMANDÉ', 'DES HEURES.'], taille: 74 },
+    { debut: 10.35, fin: 12.00, lignes: ['VOTRE SITE RECEVRA', 'LE MÊME SOIN.'],  taille: 74 }
+  ],
+  signature: { debut: 11.90, texte: 'ARTISAN EXPRESS', y: 612, trait: 722, taille: 84 }
 };
+
+const RECIT = Object.assign({}, DEFAUT, window.__RECIT__ || {});
+if (window.__RECIT__ && window.__RECIT__.T) RECIT.T = Object.assign({}, DEFAUT.T, window.__RECIT__.T);
+if (window.__RECIT__ && window.__RECIT__.anneaux) RECIT.anneaux = Object.assign({}, DEFAUT.anneaux, window.__RECIT__.anneaux);
+
+const T = RECIT.T;
 const DUREE = T.fin;
+/* La durée de l'émergence commande une poignée de gestes qui doivent la suivre
+   quand elle change : le souffle des braises, la fuite des anneaux, la largeur
+   finale du portail et le choc de sortie. Ils sont donc écrits en fraction
+   d'elle, jamais en secondes absolues. */
+const EM = T.lecture - T.emergence;
+/* Le défilement de la page. Par défaut il démarre dès qu'elle est lisible et
+   s'arrête juste avant que le texte prenne la place — mais un montage court
+   veut souvent le lancer plus tôt et plus vite, d'où le réglage. */
+const DEFILE = RECIT.defilement || { debut: T.lecture - 0.40, fin: T.message - 0.10 };
 
 /* --- La zone sûre, câblée. CLAUDE.md §2 : 12 % à 45 % de la hauteur, soit
        230 à 865 sur 1920. C'est l'intersection des trois plateformes, pas la
@@ -73,10 +106,10 @@ const claque = u => { u = borne(u); const c = 1.9; return 1 + (c + 1) * Math.pow
 /* --- La secousse. Une impulsion qui décroît, jamais un bruit permanent : une
        caméra qui tremble tout le temps ne tremble plus. --------------------- */
 const CHOCS = [
-  { instant: 0.00, force: 26, duree: 0.30 },
-  { instant: 1.30, force: 54, duree: 0.55 },
-  { instant: 2.02, force: 22, duree: 0.40 },
-  { instant: 4.75, force: 46, duree: 0.60 }
+  { instant: T.etincelle,        force: 26, duree: 0.30 },
+  { instant: T.fracture,         force: 54, duree: 0.55 },
+  { instant: T.ouverture + 0.02, force: 22, duree: 0.40 },
+  { instant: T.emergence + EM * (1.35 / 2.2), force: 46, duree: 0.60 }
 ];
 function secousse(t) {
   const h = graine(Math.floor(t * 120) + 7);
@@ -123,7 +156,7 @@ const BRAISES = (() => {
 })();
 
 function braises(t) {
-  const souffle = Math.pow(seg(t, 1.30, 4.60), 1.7);
+  const souffle = Math.pow(seg(t, T.fracture, T.emergence + EM * (1.20 / 2.2)), 1.7);
   x.globalCompositeOperation = 'lighter';
   for (const b of BRAISES) {
     const r = Math.max(14, b.rayon - b.vitesse * t * 62 + souffle * 1250 * b.vitesse);
@@ -144,21 +177,21 @@ function braises(t) {
 
 /* --- Les anneaux ----------------------------------------------------------- */
 const ANNEAUX = [
-  { rayon: 196, arrivee: 0.30, sens:  1, traits: 18, epaisseur: 7 },
-  { rayon: 306, arrivee: 0.56, sens: -1, traits: 26, epaisseur: 9 },
-  { rayon: 428, arrivee: 0.84, sens:  1, traits: 12, epaisseur: 5 }
+  { rayon: 196, arrivee: T.anneaux,                          sens:  1, traits: 18, epaisseur: 7 },
+  { rayon: 306, arrivee: T.anneaux + RECIT.anneaux.ecart,     sens: -1, traits: 26, epaisseur: 9 },
+  { rayon: 428, arrivee: T.anneaux + RECIT.anneaux.ecart * 2.077, sens: 1, traits: 12, epaisseur: 5 }
 ];
 
 function anneaux(t) {
   x.globalCompositeOperation = 'lighter';
   ANNEAUX.forEach((an, i) => {
-    const u = seg(t, an.arrivee, an.arrivee + 0.42);
+    const u = seg(t, an.arrivee, an.arrivee + RECIT.anneaux.rebond);
     if (u <= 0) return;
     /* après la fracture les anneaux s'écartent et s'éteignent : ils ont fait
        leur travail, et rien ne doit rester devant le portail. */
-    const fuite = Math.pow(seg(t, 1.30, 3.60), 1.6);
+    const fuite = Math.pow(seg(t, T.fracture, T.emergence + EM * (0.20 / 2.2)), 1.6);
     const r = an.rayon * claque(u) * (1 + fuite * 2.1);
-    const vie = (1 - fuite) * lisse(seg(t, an.arrivee, an.arrivee + 0.16));
+    const vie = (1 - fuite) * lisse(seg(t, an.arrivee, an.arrivee + RECIT.anneaux.allumage));
     if (vie <= 0.01) return;
     const rot = t * an.sens * (0.55 + i * 0.22) + fuite * an.sens * 5.5;
 
@@ -187,9 +220,9 @@ function anneaux(t) {
 
 /* --- Le portail : la déchirure, puis le vortex ----------------------------- */
 function portail(t) {
-  const haut = 1250 * sortie(seg(t, 1.28, 2.00));
+  const haut = 1250 * sortie(seg(t, T.fracture - 0.02, T.ouverture));
   if (haut <= 1) return 0;
-  const large = 10 + 560 * Math.pow(seg(t, 1.98, 4.20), 1.55);
+  const large = 10 + 560 * Math.pow(seg(t, T.ouverture - 0.02, T.emergence + EM * (0.80 / 2.2)), 1.55);
   /* Il se REFERME, il ne rétrécit pas de 30 %. Premier jet : l'anneau du
      portail restait assez large pour traverser la dalle et le texte de fin —
      un trait blanc en travers de « ARTISAN EXPRESS ». Une porte qui s'est
@@ -217,7 +250,7 @@ function portail(t) {
     const a0 = rais() * 6.284, v = 0.10 + rais() * 0.34, ep = 0.006 + rais() * 0.030;
     const a = a0 + t * v * (k % 2 ? 1 : -1);
     const bat = 0.35 + 0.65 * Math.abs(Math.sin(t * 1.6 + a0 * 3));
-    const lg = (rx * 1.3 + rais() * 900) * (0.5 + 0.5 * seg(t, 2.0, 4.2));
+    const lg = (rx * 1.3 + rais() * 900) * (0.5 + 0.5 * seg(t, T.ouverture, T.emergence + EM * (0.80 / 2.2)));
     const g = x.createLinearGradient(0, 0, Math.cos(a) * lg, Math.sin(a) * lg);
     g.addColorStop(0, 'rgba(230,252,255,' + (0.20 * bat).toFixed(3) + ')');
     g.addColorStop(1, 'rgba(0,180,255,0)');
@@ -248,7 +281,7 @@ function portail(t) {
      n'est pas une lampe — c'est un bord lumineux autour d'un dedans qu'on
      devine. D'où un anneau net et un intérieur seulement voilé, à travers
      lequel la dalle monte. */
-  const chaud = borne(seg(t, 1.9, 2.7)) * (1 - ferme);
+  const chaud = borne(seg(t, T.ouverture - 0.10, T.ouverture + 0.70)) * (1 - ferme);
   x.fillStyle = 'rgba(255,255,255,' + (0.42 * chaud).toFixed(3) + ')';
   x.beginPath(); x.ellipse(CX, CY, rx * 0.60, ry * 0.66, 0, 0, 6.284); x.fill();
   x.lineWidth = 10 + 12 * chaud;
@@ -275,7 +308,7 @@ function coinsArrondis(px, py, w, h, r) {
 }
 
 function site(t, img) {
-  const em = seg(t, T.emergence, T.emergence + 2.2);
+  const em = seg(t, T.emergence, T.lecture);
   if (em <= 0) return;
   const monte = sortie(em);
   /* au moment du message, elle recule dans la lumière au lieu de disparaître */
@@ -308,7 +341,7 @@ function site(t, img) {
      de page — « Site réalisé par Artisan Express » — juste avant le carton qui
      le dit à son tour. */
   const course = Math.max(0, img.height - visible);
-  const sy = course * lisse(seg(t, 5.20, T.message - 0.10));
+  const sy = course * lisse(seg(t, DEFILE.debut, DEFILE.fin));
   x.drawImage(img, 0, sy, img.width, visible, px, py, w, h);
   /* tant qu'elle n'a pas fini de monter, elle est encore faite de lumière */
   const voile = 1 - lisse(seg(em, 0.18, 0.62));
@@ -341,7 +374,7 @@ function site(t, img) {
 const DEPART = [1004, 92];
 
 function etincelle(t) {
-  const u = seg(t, 0, 0.34);
+  const u = seg(t, T.etincelle, T.anneaux + 0.04);
   if (u >= 1) return;
   x.globalCompositeOperation = 'lighter';
   for (let k = 25; k >= 0; k--) {
@@ -369,7 +402,7 @@ function etincelle(t) {
 
 /* L'impact : c'est lui qui allume le premier anneau. */
 function eclat(t) {
-  const u = seg(t, 0.30, 0.64);
+  const u = seg(t, T.anneaux, T.anneaux + 0.34);
   if (u <= 0 || u >= 1) return;
   const a = Math.pow(1 - u, 1.8), r = 130 + 1020 * sortie(u);
   x.globalCompositeOperation = 'lighter';
@@ -386,8 +419,8 @@ function eclat(t) {
        collée dessus ; ce voile la remet DEDANS. C'est la différence entre un
        site qui apparaît dans la lumière et un site posé sur un fond. ------ */
 function voileAvant(t) {
-  const em = seg(t, T.emergence, T.emergence + 2.2);
-  const f = (1 - lisse(seg(em, 0.05, 0.72))) * lisse(seg(t, 1.90, 2.45));
+  const em = seg(t, T.emergence, T.lecture);
+  const f = (1 - lisse(seg(em, 0.05, 0.72))) * lisse(seg(t, T.ouverture - 0.10, T.ouverture + 0.45));
   if (f <= 0.003) return;
   x.globalCompositeOperation = 'lighter';
   const g = x.createRadialGradient(CX, CY, 0, CX, CY, 960);
@@ -400,10 +433,21 @@ function voileAvant(t) {
 }
 
 /* --- Le texte. Il ne sort jamais de la zone sûre. -------------------------- */
-const CARTES = [
-  { debut: 8.70,  fin: 10.35, lignes: ['CETTE VIDÉO A DEMANDÉ', 'DES HEURES.'], taille: 74 },
-  { debut: 10.35, fin: 12.00, lignes: ['VOTRE SITE RECEVRA', 'LE MÊME SOIN.'],  taille: 74 }
-];
+const CARTES = RECIT.cartes;
+const SIGNATURE = RECIT.signature;
+
+/* Le bandeau. Un carton posé PENDANT que la page défile tombe sur elle, et les
+   deux deviennent illisibles ensemble. Un dégradé sombre en haut du cadre les
+   sépare sans rien cacher — c'est la solution de toutes les plateformes, et
+   elle vaut mieux qu'un texte qu'on déplace hors de sa zone sûre. */
+function bandeau(force) {
+  const g = x.createLinearGradient(0, 0, 0, 980);
+  g.addColorStop(0.00, 'rgba(4,7,12,' + (0.86 * force).toFixed(3) + ')');
+  g.addColorStop(0.62, 'rgba(4,7,12,' + (0.55 * force).toFixed(3) + ')');
+  g.addColorStop(1.00, 'rgba(4,7,12,0)');
+  x.fillStyle = g;
+  x.fillRect(0, 0, L, 980);
+}
 
 function ligneCentree(texte, py, taille, teinte, halo, espacement) {
   x.font = '700 ' + taille + 'px "Liberation Sans","DejaVu Sans",sans-serif';
@@ -428,15 +472,16 @@ function textes(t) {
     const e = lisse(v);
     const glisse = (1 - e) * 26;
     x.save();
+    if (c.bandeau) bandeau(e);
     x.globalAlpha = e;
     const interligne = c.taille * 1.24;
-    const y0 = 390 - (c.lignes.length - 1) * interligne / 2;
+    const y0 = (c.y || 390) - (c.lignes.length - 1) * interligne / 2;
     c.lignes.forEach((l, i) => ligneCentree(l, y0 + i * interligne + glisse, c.taille, '#f4fbff', HALO, 2));
     x.restore();
   }
 
   /* ARTISAN EXPRESS — la signature, au moment précis du message */
-  const s = seg(t, 11.90, 12.30);
+  const s = seg(t, SIGNATURE.debut, SIGNATURE.debut + 0.40);
   if (s > 0) {
     const e = lisse(s);
     x.save();
@@ -446,10 +491,11 @@ function textes(t) {
     x.globalCompositeOperation = 'lighter';
     x.strokeStyle = 'rgba(0,229,255,0.9)';
     x.lineWidth = 4; x.shadowColor = CYAN; x.shadowBlur = 24;
-    x.beginPath(); x.moveTo(CX - lg, 722); x.lineTo(CX + lg, 722); x.stroke();
+    x.beginPath(); x.moveTo(CX - lg, SIGNATURE.trait); x.lineTo(CX + lg, SIGNATURE.trait); x.stroke();
     x.shadowBlur = 0;
     x.globalCompositeOperation = 'source-over';
-    ligneCentree('ARTISAN EXPRESS', 612 - (1 - e) * 16, 84, '#eafcff', CYAN, 9);
+    if (SIGNATURE.bandeau) bandeau(e);
+    ligneCentree(SIGNATURE.texte, SIGNATURE.y - (1 - e) * 16, SIGNATURE.taille, '#eafcff', CYAN, 9);
     x.restore();
   }
 }
@@ -480,7 +526,7 @@ function dessiner(t) {
   x.fillRect(0, 0, L, H);
 
   /* la caméra : elle avance sans arrêt, plus vite au moment du choc */
-  const avance = 1 + 0.13 * lisse(seg(t, 0, T.lecture)) + 0.06 * seg(t, T.lecture, T.fin) + 0.05 * Math.pow(1 - borne(seg(t, 1.30, 2.10)), 2);
+  const avance = 1 + 0.13 * lisse(seg(t, 0, T.lecture)) + 0.06 * seg(t, T.lecture, T.fin) + 0.05 * Math.pow(1 - borne(seg(t, T.fracture, T.fracture + 0.80)), 2);
   const [sx, sy] = secousse(t);
   x.save();
   x.translate(CX + sx, CY + sy);

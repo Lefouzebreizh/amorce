@@ -32,6 +32,38 @@ disque d'une session est une allocation fixe, pas une machine : écrire la
 séquence puis l'encoder, c'est demander ce gigaoctet pour rien. Le tube est là
 par précaution, pas après un incident.
 
+## Un récit, plusieurs montages
+
+Les bornes, les cartons et la fenêtre de défilement vivent dans un JSON, pas
+dans le dessin :
+
+```bash
+python3 montage-auto/rendre_scene.py \
+    --scene montage-auto/scenes/portail.html \
+    --recit montage-auto/scenes/recits/artisan-court.json \
+    --site capture.png --sortie rushes/court.mp4
+```
+
+| récit | durée | le pari |
+| --- | --- | --- |
+| `artisan-long.json` | 13,4 s | le portail s'installe 3,4 s avant le site ; le message parle du soin apporté |
+| `artisan-court.json` | 12,0 s | le portail tient en 1,3 s, le texte est là dès l'image zéro, chaque carton nomme ce qui est à l'écran |
+
+**Le court n'est pas une coupe du long, c'est un pari inverse**, et il vient
+d'une critique juste : trois secondes de spectacle muet, sur un fil où l'on
+décide en une seconde, c'est trois secondes offertes au pouce. La réponse n'a
+pas été de jeter le portail — il est la seule chose qui distingue ces vidéos de
+toutes les autres du même service — mais de le **comprimer** et de faire jouer
+le spectacle et la promesse **ensemble**. C'était un réglage, pas une
+réécriture, et c'est précisément pour ça que le récit est un fichier.
+
+Les deux existent pour être comparés sur les vues. Personne ici ne sait
+d'avance lequel tient.
+
+**Le récit par défaut est aussi écrit en dur dans la scène** (`DEFAUT`), pour
+qu'ouvrir `portail.html` dans un navigateur montre quelque chose sans rien
+passer. Un test tient les deux copies d'accord — deux copies dérivent toujours.
+
 ## `portail.html` — le portail d'Artisan Express
 
 L'ouverture d'Aznaroth, mais ce qui sort du portail est le **site d'un artisan**,

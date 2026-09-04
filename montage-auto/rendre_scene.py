@@ -55,7 +55,7 @@ def chrome() -> str:
 
 def rendre(scene: Path, site: Path | None, sortie: Path,
            images_s: int, duree: float | None, largeur: int, hauteur: int,
-           apercus: list[float]) -> int:
+           apercus: list[float], recit: Path | None = None) -> int:
     from playwright.sync_api import sync_playwright
 
     atelier = Path(tempfile.mkdtemp(prefix="scene-"))
@@ -74,6 +74,11 @@ def rendre(scene: Path, site: Path | None, sortie: Path,
             page = navigateur.new_page(
                 viewport={"width": largeur, "height": hauteur},
                 device_scale_factor=1)
+            if recit:
+                # Posé AVANT le chargement : la scène lit `window.__RECIT__`
+                # à l'exécution de son script, pas après.
+                page.add_init_script(
+                    "window.__RECIT__ = " + recit.read_text(encoding="utf-8"))
             page.goto((atelier / "scene.html").as_uri())
             charge = page.evaluate("() => window.pret")
             if site and not charge:
@@ -135,10 +140,12 @@ def main() -> int:
     a.add_argument("--hauteur", type=int, default=1920)
     a.add_argument("--apercu", type=float, nargs="*", default=[],
                    help="instants à écrire aussi en PNG, pour regarder")
+    a.add_argument("--recit", type=Path, default=None,
+                   help="un JSON qui remplace les bornes et les cartons de la scène")
     o = a.parse_args()
     o.sortie.parent.mkdir(parents=True, exist_ok=True)
     return rendre(o.scene, o.site, o.sortie, o.images_s, o.duree,
-                  o.largeur, o.hauteur, o.apercu)
+                  o.largeur, o.hauteur, o.apercu, o.recit)
 
 
 if __name__ == "__main__":
