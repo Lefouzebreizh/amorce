@@ -65,6 +65,31 @@ sur ce que l'alpha exige.
 suffit : aucun CDN n'est joint, ce qui compte doublement ici — le mandataire les
 refuse tous, et le produit promet que rien ne quitte l'appareil.
 
+## L'application, et ce qu'on a vu en la regardant
+
+`page/index.html` est l'application : un bouton, un repli par fichier, la
+carte, un bouton pour l'enregistrer. Elle n'a **aucune logique de décision** —
+elle branche des pièces déjà éprouvées. Si une intention paraît fausse, ce
+n'est pas là qu'il faut chercher.
+
+```bash
+npm run temoins:chaine   # engendre le WAV d'épreuve et la référence Python
+npm run bati && npm run epreuve
+```
+
+L'épreuve la conduit à **393 × 873**, le terrain de référence, part d'un
+**fichier** et compare au Python — ce qui fait entrer le décodage, le
+rééchantillonnage et le fenêtrage dans la comparaison, la partie que les
+témoins précédents ne couvraient pas. Trois fenêtres des deux côtés, même
+verdict, même phrase.
+
+**Et un défaut n'est sorti que du regard.** Toutes les mesures étaient vertes,
+et la capture montrait le bouton « Enregistrer la carte » **sous la ligne de
+flottaison** : un aperçu 9:16 large de 300 px en fait 533 de haut, si bien
+qu'il fallait défiler pour trouver le bouton qui fait exactement ce pour quoi
+le produit existe. L'aperçu est désormais borné en **hauteur** — `min(42dvh,
+380px)` — et tout tient sur un écran.
+
 ### Ce que cette mesure ne couvre pas
 
 Les quatre signaux sont **fabriqués** — un accord, du silence, un bruit, un
@@ -73,6 +98,11 @@ deux moteurs, elle ne mesure pas la justesse de YAMNet. La chaîne complète sur
 un vrai enregistrement, du micro à la carte, **n'a pas encore été éprouvée dans
 le navigateur** — c'est le prochain lot, et il attend le corpus décrit dans
 `../CORPUS.md`.
+
+**Et le micro lui-même n'a jamais servi.** L'épreuve entre par le fichier,
+parce que la capture d'un vrai micro passe par le rééchantillonnage de
+l'appareil — souvent 48 kHz — et ne peut donc pas se comparer au Python sur
+les mêmes octets. Le chemin `getUserMedia` est écrit, il n'est pas éprouvé.
 
 ## Les témoins de conformité, et pourquoi ils décident de tout
 
