@@ -83,7 +83,11 @@ jobs:
           set -o pipefail
           node --version
           if ! npm test 2>&1 | tee /tmp/tests-coffre.log; then
-            echo "::error title=Tests du coffre::$(grep -E '^ *not ok|Error|error' /tmp/tests-coffre.log | head -8 | tr '\n' ' | ' | cut -c1-900)"
+            # La version de Node entre dans l'annotation, pas seulement dans le
+            # journal : c'est le journal qui est illisible d'ici, donc une
+            # information qui n'y figure que là ne sert à personne au moment où
+            # elle compte.
+            echo "::error title=Tests du coffre (Node $(node --version))::$(grep -E '^ *not ok|Error|error' /tmp/tests-coffre.log | head -8 | tr '\n' ' | ' | cut -c1-900)"
             exit 1
           fi
 
