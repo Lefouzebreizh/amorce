@@ -50,6 +50,13 @@ Seule la date sort en clair de la base pour rendre ça possible ; jamais le
 nom du document. Voir `SECURITY.md`, section « L'alerte proactive », pour le
 compromis exact et sa justification.
 
+## Les rendez-vous (04/09/2026)
+
+Un rendez-vous se note directement (libellé + date), sans document associé —
+même mécanique d'alerte que pour une échéance de document, même compromis :
+la date seule sort en clair (`coffre_echeances`, `type = 'rendezvous'`), le
+libellé reste chiffré dans l'index, comme un nom de fichier.
+
 ## Architecture
 
 ```

@@ -31,7 +31,16 @@ export type ObjetIndex = {
   echeance?: Echeance;
 };
 
-export type IndexCoffre = { objets: Record<string, ObjetIndex> };
+export type RendezVous = {
+  id: string;
+  libelle: string;
+  date: string;
+};
+
+export type IndexCoffre = {
+  objets: Record<string, ObjetIndex>;
+  rendezVous?: Record<string, RendezVous>;
+};
 
 export type PropositionClassement = {
   lisible: boolean;
@@ -123,10 +132,11 @@ export async function chargerIndex(userId: string, cle: CryptoKey): Promise<Inde
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data) return { objets: {} };
+  if (!data) return { objets: {}, rendezVous: {} };
   const texte = await dechiffrerTexte(cle, bufFromB64(data.contenu));
   const index = JSON.parse(texte) as IndexCoffre;
   if (!index.objets) index.objets = {};
+  if (!index.rendezVous) index.rendezVous = {};
   return index;
 }
 
@@ -197,6 +207,38 @@ export async function supprimerFichier(
   const objets = { ...index.objets };
   delete objets[nom];
   const nouvel_index: IndexCoffre = { objets };
+  await sauvegarderIndex(userId, cle, nouvel_index);
+  return nouvel_index;
+}
+
+// Un rendez-vous n'a pas de fichier : le libellé (« Dentiste, cabinet
+// Martin ») reste chiffré dans l'index, comme un nom de document — seule la
+// date part en clair vers coffre_echeances, avec type='rendezvous', pour que
+// la fonction d'alerte sache prévenir sans jamais savoir de quoi il s'agit.
+export async function ajouterRendezVous(
+  userId: string, cle: CryptoKey, libelle: string, date: string, index: IndexCoffre,
+): Promise<IndexCoffre> {
+  const id = nomOpaque();
+  const { error } = await supabase
+    .from('coffre_echeances')
+    .insert({ user_id: userId, objet_nom: id, date, type: 'rendezvous' });
+  if (error) throw new Error(error.message);
+
+  const nouvel_index: IndexCoffre = {
+    objets: index.objets,
+    rendezVous: { ...index.rendezVous, [id]: { id, libelle, date } },
+  };
+  await sauvegarderIndex(userId, cle, nouvel_index);
+  return nouvel_index;
+}
+
+export async function supprimerRendezVous(
+  userId: string, cle: CryptoKey, id: string, index: IndexCoffre,
+): Promise<IndexCoffre> {
+  await supabase.from('coffre_echeances').delete().eq('user_id', userId).eq('objet_nom', id);
+  const rendezVous = { ...index.rendezVous };
+  delete rendezVous[id];
+  const nouvel_index: IndexCoffre = { objets: index.objets, rendezVous };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }

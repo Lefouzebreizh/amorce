@@ -29,7 +29,7 @@ Deno.serve(async (requete: Request) => {
 
   const { data: echeances, error } = await admin
     .from("coffre_echeances")
-    .select("id, user_id, date")
+    .select("id, user_id, date, type")
     .is("alerte_envoyee_le", null)
     .lte("date", limiteIso);
 
@@ -49,6 +49,20 @@ Deno.serve(async (requete: Request) => {
       continue;
     }
 
+    const estRendezVous = echeance.type === "rendezvous";
+    const sujet = estRendezVous
+      ? "Un rendez-vous approche dans Le Coffre"
+      : "Une échéance approche dans Le Coffre";
+    const corps = estRendezVous
+      ? `Un rendez-vous noté dans Le Coffre est prévu le ${echeance.date}.\n\n` +
+        `Connecte-toi et déverrouille ton coffre pour voir lequel — ` +
+        `ce message ne le dit jamais : nous ne le savons pas nous-mêmes.\n\n` +
+        `https://coffre-puce.vercel.app`
+      : `Un document déposé dans Le Coffre a une échéance le ${echeance.date}.\n\n` +
+        `Connecte-toi et déverrouille ton coffre pour voir de quoi il s'agit — ` +
+        `ce message ne dit jamais lequel, ni pourquoi : nous ne le savons pas nous-mêmes.\n\n` +
+        `https://coffre-puce.vercel.app`;
+
     const reponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -58,12 +72,8 @@ Deno.serve(async (requete: Request) => {
       body: JSON.stringify({
         from: "Le Coffre <alertes@erwannchevallier.com>",
         to: email,
-        subject: "Une échéance approche dans Le Coffre",
-        text:
-          `Un document déposé dans Le Coffre a une échéance le ${echeance.date}.\n\n` +
-          `Connecte-toi et déverrouille ton coffre pour voir de quoi il s'agit — ` +
-          `ce message ne dit jamais lequel, ni pourquoi : nous ne le savons pas nous-mêmes.\n\n` +
-          `https://coffre-puce.vercel.app`,
+        subject: sujet,
+        text: corps,
       }),
     });
 
