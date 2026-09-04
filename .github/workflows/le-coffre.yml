@@ -71,9 +71,21 @@ jobs:
       # Les tests n'ont besoin d'aucune dépendance — Web Crypto vient de Node et
       # le client Supabase est remplacé avant d'être chargé — mais `typecheck` et
       # `lint` en ont besoin, et l'installation est mutualisée.
+      # La sortie est répétée en annotation quand elle échoue, et ce n'est pas
+      # du décor : le journal d'un job vit sur `productionresultssa7.blob.core.windows.net`,
+      # que le mandataire des sessions distantes refuse. Sans ces lignes, un
+      # rouge se lit « exit code 1 » et rien d'autre — il faut alors pousser un
+      # commit pour apprendre ce qui a cassé. Les annotations, elles, passent
+      # par l'API GitHub, qui répond.
       - name: Tests
         if: ${{ !cancelled() }}
-        run: npm test
+        run: |
+          set -o pipefail
+          node --version
+          if ! npm test 2>&1 | tee /tmp/tests-coffre.log; then
+            echo "::error title=Tests du coffre::$(grep -E '^ *not ok|Error|error' /tmp/tests-coffre.log | head -8 | tr '\n' ' | ' | cut -c1-900)"
+            exit 1
+          fi
 
       - name: Types
         if: ${{ !cancelled() }}
