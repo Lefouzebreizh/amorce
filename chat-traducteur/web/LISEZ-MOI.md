@@ -99,10 +99,27 @@ un vrai enregistrement, du micro à la carte, **n'a pas encore été éprouvée 
 le navigateur** — c'est le prochain lot, et il attend le corpus décrit dans
 `../CORPUS.md`.
 
-**Et le micro lui-même n'a jamais servi.** L'épreuve entre par le fichier,
-parce que la capture d'un vrai micro passe par le rééchantillonnage de
-l'appareil — souvent 48 kHz — et ne peut donc pas se comparer au Python sur
-les mêmes octets. Le chemin `getUserMedia` est écrit, il n'est pas éprouvé.
+**Le micro, lui, est éprouvé depuis le 04/09/2026 — mais pas de la même
+façon, et la nuance est le sujet.** Chromium rejoue un fichier à la place du
+matériel (`--use-file-for-fake-audio-capture`), ce qui rend `getUserMedia`
+mesurable sans micro et sans clic.
+
+Cette épreuve-là ne compare **rien** au Python, et c'est délibéré : une
+capture passe par le rééchantillonnage de l'appareil — 48 kHz — puis par un
+encodage Opus avec perte. Exiger l'égalité serait exiger l'impossible. Ce
+qu'elle prouve est plus modeste et n'était pas prouvé : `getUserMedia`,
+`MediaRecorder`, le décodage, le retour à 16 kHz et le fenêtrage
+s'enchaînent pour de bon, et l'application rend un verdict au lieu de rester
+muette.
+
+**Elle a été verte à tort d'abord, et il faut savoir pourquoi.** Le premier
+jet lisait `dernierVerdict()` sans remettre l'état à zéro : la boucle
+d'attente sortait aussitôt sur le verdict de l'étape *précédente*, et
+l'épreuve annonçait « contentement » sur un glissando. Impossible, et verte.
+Ce qui l'a fait voir n'est aucun test : c'est d'avoir lu le résultat et de
+l'avoir trouvé absurde. L'épreuve recharge désormais la page avant de
+mesurer, ce qui repart d'un état vierge et éprouve en prime
+l'initialisation.
 
 ## Les témoins de conformité, et pourquoi ils décident de tout
 
