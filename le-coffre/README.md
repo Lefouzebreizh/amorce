@@ -98,10 +98,12 @@ npm install
 npm run dev
 ```
 
+Tests : `npm run test` (Vitest — chiffrement, dérivation de clé, gabarit de
+lettre de résiliation ; voir `SECURITY.md`).
+
 ## Ce qui reste à faire avant un vrai lancement
 
-Voir `SECURITY.md` pour le détail — en résumé : pas de limite de taille sur les
-dépôts, pas de tests automatisés pour `src/lib/coffre.ts`, et la garantie de
-suppression irréversible de la version locale (écrasement avant effacement) ne
-tient pas de la même façon sur du stockage cloud — Supabase Storage supprime
-l'objet, sans garantie d'effacement physique immédiat côté fournisseur.
+Voir `SECURITY.md` pour le détail — en résumé : la garantie de suppression
+irréversible de la version locale (écrasement avant effacement) ne tient pas
+de la même façon sur du stockage cloud — Supabase Storage supprime l'objet,
+sans garantie d'effacement physique immédiat côté fournisseur.

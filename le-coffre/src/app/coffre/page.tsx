@@ -14,6 +14,10 @@ type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
 
 const ECHEANCE_VIDE: Echeance = { presente: false, date: null, libelle: null, confiance: 'basse' };
 const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et internet'];
+// Doit correspondre à storage.buckets.file_size_limit sur coffre-objets — le
+// contrôle client donne un message clair et immédiat, celui du serveur reste
+// le vrai garde-fou (voir SECURITY.md).
+const TAILLE_MAX_OCTETS = 20 * 1024 * 1024;
 
 type EnAttente = {
   cle: string;
@@ -133,7 +137,21 @@ export default function PageCoffre() {
   async function surDepot(fichiers: FileList | null) {
     if (!fichiers || !fichiers.length || !utilisateur || !cle) return;
     setErreur('');
-    const nouveaux: EnAttente[] = Array.from(fichiers).map((fichier) => ({
+
+    const tropGros = Array.from(fichiers).filter((f) => f.size > TAILLE_MAX_OCTETS);
+    if (tropGros.length > 0) {
+      setErreur(
+        `${tropGros.map((f) => f.name).join(', ')} dépasse ${formatTaille(TAILLE_MAX_OCTETS)} — ` +
+        `non déposé. Le serveur refuserait aussi le dépôt au-delà de cette taille.`,
+      );
+    }
+    const fichiersValides = Array.from(fichiers).filter((f) => f.size <= TAILLE_MAX_OCTETS);
+    if (fichiersValides.length === 0) {
+      if (entreeFichier.current) entreeFichier.current.value = '';
+      return;
+    }
+
+    const nouveaux: EnAttente[] = fichiersValides.map((fichier) => ({
       cle: `${fichier.name}-${fichier.size}-${crypto.randomUUID()}`,
       fichier, enAnalyse: true, categorie: '', nomAffiche: fichier.name, echeance: ECHEANCE_VIDE,
       emetteur: '', referenceClient: '',
@@ -465,12 +483,16 @@ export default function PageCoffre() {
         </p>
         <form onSubmit={surEnregistrementIdentite} className="flex flex-wrap gap-3">
           <input name="nom" placeholder="Nom complet" required defaultValue={index.identite?.nom}
+            autoComplete="name"
             className="min-w-[10rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
           <input name="adresse" placeholder="Adresse" required defaultValue={index.identite?.adresse}
+            autoComplete="street-address"
             className="min-w-[10rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
           <input name="codePostal" placeholder="Code postal" defaultValue={index.identite?.codePostal}
+            autoComplete="postal-code" inputMode="numeric"
             className="w-28 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
           <input name="ville" placeholder="Ville" defaultValue={index.identite?.ville}
+            autoComplete="address-level2"
             className="min-w-[8rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
           <button type="submit" disabled={enCours}
             className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
