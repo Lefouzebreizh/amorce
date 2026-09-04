@@ -101,14 +101,18 @@ class Lecture:
 # limite de l'outillage : le référentiel lui-même range « faim », « soif »,
 # « litière sale » et « veut sortir » sous le *même* type. Les deux intentions
 # demandées au départ sont acoustiquement la même chose, et aucun modèle n'y
-# changera rien. C'est une décision de produit, pas une question technique :
-# soit l'application dit « il demande quelque chose », soit elle garde deux
-# cartes qu'elle ne saura jamais départager.
+# changera rien.
 #
-# En attendant cette décision, `REQUETE` rend `INDECIS` — le seul verdict qui
-# ne choisit pas à la place du propriétaire.
+# **La décision de produit a été prise le 04/09/2026** : une carte unique,
+# `DEMANDE`, plutôt que deux cartes qu'aucune mesure ne départage. `REQUETE`
+# rend donc une vraie intention et non plus `INDECIS` — ce qui change ce que
+# l'application ose dire, pas ce qu'elle sait.
+#
+# Ne pas relire ce `DEMANDE` comme un progrès de la lecture : la tête n'en
+# sait pas plus qu'hier. C'est la carte qui a cessé de promettre plus que la
+# tête ne mesure.
 CORRESPONDANCE: dict[TypeMiaulement, Intention] = {
-    TypeMiaulement.REQUETE: Intention.INDECIS,
+    TypeMiaulement.REQUETE: Intention.DEMANDE,       # ne dit jamais *quoi*
     TypeMiaulement.SALUTATION: Intention.CONTENTEMENT,
     TypeMiaulement.ALERTE: Intention.STRESS,
     TypeMiaulement.INDETERMINE: Intention.INDECIS,

@@ -276,7 +276,7 @@ propre projet** — c'est le pire cas, celui qui décide.
 | TITAN Builder | `#7c3aed` violet | **2,6:1** | **inutilisable comme accent** — voir plus bas |
 | Artisan Express | `#67C1A0` vert | **7,08:1** | sombre depuis le 03/09/2026 — voir plus bas |
 | Annuaria | `#7fd68a` sauge | **8,19:1** | posé le 03/09/2026 — voir plus bas |
-| `chat-traducteur` | `#7FD99A` sauge | **8,3:1** | cinq accents de contenu — voir plus bas |
+| `chat-traducteur` | `#7FD99A` sauge | **8,3:1** | quatre accents de contenu — voir plus bas |
 | `look_and_find` | thème chaud clair | — | appli enfants, thème clair assumé |
 
 **Comment un nouveau produit choisit le sien.** Deux contraintes, et elles se
@@ -314,20 +314,28 @@ et cette ligne existe pour que le prochain qui y touche le sache.
 
 ### Le cas du traducteur de chat : la couleur est le contenu
 
-Il porte **cinq** accents et non un seul, et c'est la seule entrée du registre
+Il porte **quatre** accents et non un seul, et c'est la seule entrée du registre
 dans ce cas. La raison tient à ce que ses couleurs habillent : ses cartes
 1080 × 1920 sont des **artefacts de sortie** partagés sur TikTok, pas une
 interface. L'accent y porte le registre émotionnel du verdict — vert pour le
-contentement, violet froid pour le stress, bleu de contre-jour pour l'envie de
-sortir — et l'unifier reviendrait à effacer ce que la carte dit.
+contentement, violet froid pour le stress, ambre de cuisine pour la demande —
+et l'unifier reviendrait à effacer ce que la carte dit.
+
+**Ils étaient cinq jusqu'au 04/09/2026**, et le cinquième n'a pas été retiré
+pour une raison de couleur : le propriétaire a fusionné `faim` et `sortir` en
+une seule carte `demande`, faute qu'aucune mesure ne les sépare. Le bleu de
+contre-jour `#7EBCFF` (7,42:1) est parti avec l'intention qu'il portait. Ce
+cas vaut d'être noté au registre parce qu'il est l'inverse du cas ordinaire :
+**une palette a rétréci parce qu'un produit a cessé de promettre**, pas parce
+qu'une teinte tenait mal.
 
 Le `#7FD99A` inscrit au registre est donc l'accent du **produit** : celui que
 prendra son interface le jour où elle existera. Il tombe à trois millièmes de
 la sauge pré-mesurée du paragraphe suivant, ce qui n'était pas concerté et
 confirme surtout que la contrainte de 7:1 mène à un petit nombre de teintes.
 
-**Les cinq tiennent la même barre**, et il a fallu les y amener : mesuré le
-03/09/2026, trois étaient dessous — `sortir` 6,80, `stress` 6,24, `indecis`
+**Tous tiennent la même barre**, et il a fallu les y amener : mesuré le
+03/09/2026 quand ils étaient cinq, trois étaient dessous — `sortir` 6,80, `stress` 6,24, `indecis`
 5,59 — parce que le test du projet demandait 4,5:1, la barre légale, écrite
 avant le §2 bis. **Un test écrit sur l'ancienne barre ne signale pas qu'une
 nouvelle existe** : il reste vert, et c'est le plus discret des défauts.
@@ -336,10 +344,13 @@ La correction n'a pas changé les teintes : même angle, même saturation, la
 clarté seule monte de trois à neuf points. Un accent choisi pour son registre
 ne se remplace pas par une couleur qui passe le calcul.
 
-**Une réserve, dite plutôt que tue** : l'accent de la faim est un ambre
+**Une réserve, dite plutôt que tue** : l'accent de la demande est un ambre
 `#FFB35C`, donc proche d'un `warn`. Aucune confusion n'est possible *sur la
 carte*, qui ne porte aucune couleur d'état — mais la réserve vaut si une
-interface reprend un jour cette teinte à côté d'un avertissement.
+interface reprend un jour cette teinte à côté d'un avertissement. Elle a
+d'ailleurs **grandi** le 04/09 : cet ambre était celui de `faim`, une carte
+sur cinq, et il est désormais celui de la demande, qui est le cas le plus
+fréquent que l'application sache nommer.
 
 ### L'exception, et elle est mesurée
 
@@ -659,13 +670,20 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   toutes les fenêtres félines, elle rendait « détresse » sur un chat qui
   ronronne à 1,00. Elle refuse deux choses — séparer faim et envie de sortir,
   que le référentiel lui-même range sous un seul type, et lire le grave en
-  « douleur », que `archives-backlog/ou-a-mal-mon-animal.md` a déjà tranché. Faim et envie de sortir sont
-  deux façons de miauler qu'aucun modèle public ne sépare : l'application rend
-  `indécis`, avec son propre écran, plutôt qu'un pourcentage inventé.
+  « douleur », que `archives-backlog/ou-a-mal-mon-animal.md` a déjà tranché.
+  **Faim et envie de sortir n'existent plus, et c'est une décision de produit
+  du 04/09/2026.** Ce ne sont pas deux sons qu'on ne sait pas distinguer : le
+  référentiel les range lui-même, avec la soif et la litière sale, sous un
+  **seul** type de miaulement — vérifié à sa source. Le propriétaire a donc
+  fusionné les deux cartes en une, `demande`, qui ne dit jamais *quoi*. Les
+  deux membres ont été **retirés de l'énumération**, et un test refuse leur
+  retour : tant qu'ils existaient, une session pouvait les rebrancher en une
+  ligne. Quatre intentions demandées au départ, **trois** que l'application ose
+  nommer, et l'écran du doute reste pour ce qui n'entre dans aucune.
   **`Cat` ouvre la porte et ne choisit jamais** — c'est une classe parente, qui
   vaut 0,988 là où `Meow` vaut 0,891 ; la laisser concourir perdait la lecture
   directe à tous les coups, et six tests verts ne le voyaient pas. Le noyau est
-  en bibliothèque standard **pure** : 47 tests sans rien installer,
+  en bibliothèque standard **pure** : 48 tests sans rien installer,
   **habillage compris** — la carte SVG 1080 × 1920 est pure elle aussi. Elle
   ne peut pas afficher un score que le modèle n'a pas mesuré : le bloc de
   confiance n'existe que pour une lecture `MESUREE`, et deux tests le
