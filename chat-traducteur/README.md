@@ -119,6 +119,44 @@ c'est ainsi que le référentiel a été confronté à sa source — mais il ne 
 pas les octets d'un média à une adresse de centre de données. Ce n'est pas le
 mandataire, c'est la plateforme, et aucune clé n'y change rien.
 
+## Licences — ce qui est mesuré, et le trou qui reste
+
+**Ce projet est destiné à être vendu**, ce qui rend cette section obligatoire
+plutôt que polie. Relevé le 04/09/2026, par requête et non de mémoire.
+
+| Élément | Licence | État |
+| --- | --- | --- |
+| **Le code de YAMNet** (`research/audioset/yamnet/`) | **Apache 2.0** | **mesuré** — `/research` est nommé dans le `LICENSE` du dépôt `tensorflow/models` |
+| **Les poids** (`yamnet.h5`, et le `.tflite` qui en dérive) | *non établie* | **non mesuré — voir plus bas** |
+| Les 521 étiquettes de classes | issues d'AudioSet | non vérifiée d'ici |
+| Le noyau, l'habillage, les cartes | écrits ici | à nous |
+
+**Le trou est réel et il faut le nommer plutôt que de l'arrondir.** Le fichier
+`LICENSE` couvre « tous les fichiers dans les dossiers suivants », et il liste
+`/research`, où vit le code de YAMNet. Mais **les poids ne sont pas dans ce
+dépôt** : ils se téléchargent depuis `storage.googleapis.com/audioset/`, un
+hébergement séparé. Or c'est le fichier de poids que l'application embarque et
+distribue à chaque installation.
+
+Conclure « le dépôt est en Apache 2.0, donc les poids aussi » serait exactement
+la faute que `CLAUDE.md` §7 décrit : **une conséquence tirée d'une mesure
+juste, qui se relit ensuite comme si elle avait été mesurée elle aussi.** Elle
+est plausible — Google publie ce modèle pour qu'on s'en serve — et elle n'est
+pas vérifiée.
+
+Ce qu'il faut faire avant la première vente, et personne d'autre ne peut le
+faire à notre place : **obtenir par écrit le statut du fichier de poids**, soit
+depuis la fiche officielle du modèle, soit auprès de Google. Tant que ce n'est
+pas écrit, le projet se développe et ne se vend pas.
+
+Deux points annexes, moins urgents mais réels :
+
+- Apache 2.0 **oblige à distribuer une attribution** et le fichier `NOTICE`
+  s'il existe. Une application vendue doit donc porter un écran de mentions,
+  et il n'existe pas encore.
+- La table des étiquettes vient d'AudioSet, dont l'ontologie est publiée sous
+  sa propre licence. Non sondée d'ici.
+
 ## Structure
 
 ```
