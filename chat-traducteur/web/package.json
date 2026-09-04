@@ -12,7 +12,9 @@
     "epreuve": "node outils/epreuve.mjs",
     "etiquettes": "python3 outils/extraire-etiquettes.py",
     "temoins:oreille": "python3 outils/engendrer-temoins-oreille.py",
-    "temoins:chaine": "python3 outils/engendrer-temoin-chaine.py"
+    "temoins:chaine": "python3 outils/engendrer-temoin-chaine.py",
+    "temoins:corpus": "python3 outils/engendrer-temoins-corpus.py",
+    "epreuve:corpus": "node outils/epreuve-corpus.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

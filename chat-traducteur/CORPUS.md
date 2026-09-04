@@ -1,5 +1,10 @@
 # Le corpus : ce qui manque, et comment le remplir
 
+> **L'application aussi a entendu ces quarante chats**, et par le chemin de
+> l'utilisateur : `web/outils/epreuve-corpus.mjs` la conduit dans un vrai
+> Chromium sur les 60 fichiers et compare au noyau Python. **60 verdicts
+> identiques sur 60**, malgré deux rééchantillonnages différents.
+>
 > **Mis à jour le 04/09/2026.** Une partie de ce fichier décrivait un projet
 > qui n'avait jamais entendu de vrai chat. Il en a entendu **quarante** —
 > ESC-50, récupéré par `scripts/mesurer_esc50.py` — et ce qu'ils ont montré
