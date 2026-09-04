@@ -7,12 +7,13 @@ import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
-  type IndexCoffre, type Echeance,
+  enregistrerIdentite, composerLettreResiliation, type IndexCoffre, type Echeance, type Identite,
 } from '@/lib/coffre';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
 
 const ECHEANCE_VIDE: Echeance = { presente: false, date: null, libelle: null, confiance: 'basse' };
+const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et internet'];
 
 type EnAttente = {
   cle: string;
@@ -21,7 +22,26 @@ type EnAttente = {
   categorie: string;
   nomAffiche: string;
   echeance: Echeance;
+  emetteur: string;
+  referenceClient: string;
 };
+
+function LettrePreview({ identite, emetteur, referenceClient, date }: {
+  identite: Identite; emetteur: string; referenceClient: string | null; date: string;
+}) {
+  const lettre = composerLettreResiliation(identite, emetteur, referenceClient, date);
+  return (
+    <div className="rounded-lg border border-line bg-paper p-3 text-sm">
+      <p className="mb-2 font-medium">Lettre de résiliation (brouillon — à relire avant signature)</p>
+      <pre className="mb-2 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans text-ink-soft">
+        {lettre.objet}{'\n\n'}{lettre.corps}
+      </pre>
+      {lettre.mentionsManquantes.length > 0 && (
+        <p className="text-wine">Manque : {lettre.mentionsManquantes.join(', ')}.</p>
+      )}
+    </div>
+  );
+}
 
 function formatTaille(octets: number): string {
   if (octets < 1024) return `${octets} o`;
@@ -116,6 +136,7 @@ export default function PageCoffre() {
     const nouveaux: EnAttente[] = Array.from(fichiers).map((fichier) => ({
       cle: `${fichier.name}-${fichier.size}-${crypto.randomUUID()}`,
       fichier, enAnalyse: true, categorie: '', nomAffiche: fichier.name, echeance: ECHEANCE_VIDE,
+      emetteur: '', referenceClient: '',
     }));
     setAValider((precedent) => [...precedent, ...nouveaux]);
     if (entreeFichier.current) entreeFichier.current.value = '';
@@ -127,6 +148,8 @@ export default function PageCoffre() {
         categorie: proposition.lisible ? proposition.categorie : '',
         nomAffiche: proposition.lisible && proposition.nomSuggere ? proposition.nomSuggere : p.fichier.name,
         echeance: proposition.echeance,
+        emetteur: proposition.emetteur || '',
+        referenceClient: proposition.referenceClient || '',
       } : p)));
     }
   }
@@ -146,6 +169,7 @@ export default function PageCoffre() {
     try {
       const nouvelIndex = await deposerFichier(
         utilisateur.id, cle, item.fichier, item.categorie, index, item.nomAffiche, item.echeance,
+        item.emetteur || null, item.referenceClient || null,
       );
       setIndex(nouvelIndex);
       retirerAttente(item.cle);
@@ -218,6 +242,29 @@ export default function PageCoffre() {
       setIndex(nouvelIndex);
     } catch (err) {
       alert(`Suppression impossible : ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  async function surEnregistrementIdentite(e: React.FormEvent) {
+    e.preventDefault();
+    if (!utilisateur || !cle) return;
+    const forme = new FormData(e.target as HTMLFormElement);
+    const identite: Identite = {
+      nom: String(forme.get('nom') || '').trim(),
+      adresse: String(forme.get('adresse') || '').trim(),
+      codePostal: String(forme.get('codePostal') || '').trim(),
+      ville: String(forme.get('ville') || '').trim(),
+    };
+    if (!identite.nom || !identite.adresse) return;
+    setEnCours(true);
+    setErreur('');
+    try {
+      const nouvelIndex = await enregistrerIdentite(utilisateur.id, cle, identite, index);
+      setIndex(nouvelIndex);
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : String(err));
+    } finally {
+      setEnCours(false);
     }
   }
 
@@ -338,6 +385,32 @@ export default function PageCoffre() {
                       </p>
                     </div>
                   )}
+                  {item.echeance.presente && CATEGORIES_RESILIABLES.includes(item.categorie) && (
+                    <>
+                      <label className="text-sm text-ink-soft" htmlFor={`emetteur-${item.cle}`}>
+                        Émetteur (pour la lettre de résiliation)
+                      </label>
+                      <input id={`emetteur-${item.cle}`} value={item.emetteur}
+                        placeholder="Non lu — à préciser pour obtenir une lettre"
+                        onChange={(e) => modifierAttente(item.cle, { emetteur: e.target.value })}
+                        className="rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
+                      <label className="text-sm text-ink-soft" htmlFor={`ref-${item.cle}`}>Référence client (si connue)</label>
+                      <input id={`ref-${item.cle}`} value={item.referenceClient}
+                        onChange={(e) => modifierAttente(item.cle, { referenceClient: e.target.value })}
+                        className="rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
+                      {item.emetteur && index.identite && item.echeance.date && (
+                        <LettrePreview
+                          identite={index.identite} emetteur={item.emetteur}
+                          referenceClient={item.referenceClient || null} date={item.echeance.date}
+                        />
+                      )}
+                      {item.emetteur && !index.identite && (
+                        <p className="text-sm text-wine">
+                          Renseigne ton identité plus bas pour obtenir une lettre de résiliation prête à signer.
+                        </p>
+                      )}
+                    </>
+                  )}
                   <div className="mt-1 flex gap-3 text-sm">
                     <button onClick={() => confirmerDepot(item)} disabled={enCours}
                       className="rounded-lg bg-accent px-3 py-1.5 font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
@@ -385,6 +458,27 @@ export default function PageCoffre() {
         )}
       </section>
 
+      <section className="mb-8">
+        <h2 className="mb-3 font-affiche text-xl">Mon identité</h2>
+        <p className="mb-3 text-sm text-ink-soft">
+          Sert uniquement à remplir l&apos;en-tête des lettres de résiliation — chiffrée comme le reste.
+        </p>
+        <form onSubmit={surEnregistrementIdentite} className="flex flex-wrap gap-3">
+          <input name="nom" placeholder="Nom complet" required defaultValue={index.identite?.nom}
+            className="min-w-[10rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
+          <input name="adresse" placeholder="Adresse" required defaultValue={index.identite?.adresse}
+            className="min-w-[10rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
+          <input name="codePostal" placeholder="Code postal" defaultValue={index.identite?.codePostal}
+            className="w-28 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
+          <input name="ville" placeholder="Ville" defaultValue={index.identite?.ville}
+            className="min-w-[8rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
+          <button type="submit" disabled={enCours}
+            className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
+            Enregistrer
+          </button>
+        </form>
+      </section>
+
       <h2 className="mb-3 font-affiche text-xl">Documents</h2>
       {noms.length === 0 ? (
         <p className="text-ink-soft">Le coffre est vide pour l&apos;instant.</p>
@@ -394,22 +488,35 @@ export default function PageCoffre() {
             const info = index.objets[nom];
             if (!info) return null;
             return (
-              <li key={nom} className="flex items-center justify-between rounded-xl border border-line bg-paper-raised px-4 py-3">
-                <div>
-                  <p className="font-medium">{info.nom}</p>
-                  <p className="text-sm text-ink-soft">
-                    {formatTaille(info.taille)}{info.categorie ? ` · ${info.categorie}` : ''}
-                  </p>
-                  {info.echeance?.presente && (
-                    <p className="text-sm text-accent">
-                      {info.echeance.libelle} — {info.echeance.date}
+              <li key={nom} className="rounded-xl border border-line bg-paper-raised px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{info.nom}</p>
+                    <p className="text-sm text-ink-soft">
+                      {formatTaille(info.taille)}{info.categorie ? ` · ${info.categorie}` : ''}
                     </p>
-                  )}
+                    {info.echeance?.presente && (
+                      <p className="text-sm text-accent">
+                        {info.echeance.libelle} — {info.echeance.date}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-3 text-sm">
+                    <button onClick={() => telecharger(nom)} className="text-accent hover:underline">Télécharger</button>
+                    <button onClick={() => supprimer(nom)} className="text-wine hover:underline">Supprimer</button>
+                  </div>
                 </div>
-                <div className="flex gap-3 text-sm">
-                  <button onClick={() => telecharger(nom)} className="text-accent hover:underline">Télécharger</button>
-                  <button onClick={() => supprimer(nom)} className="text-wine hover:underline">Supprimer</button>
-                </div>
+                {info.lettre && (
+                  <div className="mt-3 rounded-lg border border-line bg-paper p-3 text-sm">
+                    <p className="mb-2 font-medium">Lettre de résiliation (brouillon — à relire avant signature)</p>
+                    <pre className="mb-2 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans text-ink-soft">
+                      {info.lettre.objet}{'\n\n'}{info.lettre.corps}
+                    </pre>
+                    {info.lettre.mentionsManquantes.length > 0 && (
+                      <p className="text-wine">Manque : {info.lettre.mentionsManquantes.join(', ')}.</p>
+                    )}
+                  </div>
+                )}
               </li>
             );
           })}
