@@ -3,6 +3,7 @@ import { Composition } from 'remotion';
 import './style.css';
 import { Ep02, DUREE_TOTALE } from './ep02';
 import { CartonFin } from './carton-fin';
+import { RuneVortexTest, DUREE_RUNE_VORTEX } from './rune-vortex-test';
 
 /**
  * 1080 × 1920 à 30 images/seconde, et ce n'est pas négociable :
@@ -30,6 +31,16 @@ export const RemotionRoot: React.FC = () => {
         width={1080}
         height={1920}
         defaultProps={{ titre: 'FAILLE ZÉRO-CINQ', sousTitre: 'EP02 · Les quatre sceaux', duree: 48 }}
+      />
+
+      {/* Test technique — hors continuité, voir l'en-tête de rune-vortex-test.tsx */}
+      <Composition
+        id="RuneVortexTest"
+        component={RuneVortexTest}
+        durationInFrames={DUREE_RUNE_VORTEX}
+        fps={30}
+        width={1080}
+        height={1920}
       />
     </>
   );
