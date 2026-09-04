@@ -14,9 +14,11 @@
 # repaierait l'installation des dépendances, plus longue que l'ensemble des
 # vérifications.
 #
-# Le second travail, lui, est bien séparé : il éprouve les politiques RLS sur un
-# vrai PostgreSQL, sans avoir besoin d'une seule dépendance npm. Rien ne le fait
-# attendre le premier, et un échec de l'un ne masque pas l'autre.
+# Le second travail, lui, est bien séparé : il éprouve sur un vrai PostgreSQL ce
+# qu'aucune ligne de TypeScript ne dit — les politiques RLS, puis l'aller-retour
+# de sauvegarde. Ni l'un ni l'autre n'a besoin d'une seule dépendance npm. Rien
+# ne le fait attendre le premier travail, et un échec de l'un ne masque pas
+# l'autre.
 
 name: Socle Agence
 
@@ -92,10 +94,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # Le seul contrôle qui voie ce qu'aucune ligne de TypeScript ne peut dire :
-    # ce que PostgreSQL accepte de servir à qui. Il applique le schéma sur une
-    # base neuve, puis rejoue les tentatives d'accès d'un utilisateur, d'un
-    # administrateur et d'un visiteur anonyme.
+    # Les deux seuls contrôles qui voient ce qu'aucune ligne de TypeScript ne
+    # peut dire. Le premier applique le schéma sur une base neuve, puis rejoue
+    # les tentatives d'accès d'un utilisateur, d'un administrateur et d'un
+    # visiteur anonyme : ce que PostgreSQL accepte de servir à qui. Le second
+    # détruit une base remplie et la ramène depuis sa sauvegarde.
+    #
+    # Le nom du travail ne change pas alors que sa portée s'élargit : c'est sur
+    # ce nom que GitHub accroche un contrôle requis, et le renommer casserait en
+    # silence toute protection de branche qui le cite.
     services:
       postgres:
         # Version épinglée pour que le contrôle ne change pas de comportement
@@ -120,7 +127,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # `psql` est déjà présent sur les images Ubuntu de GitHub, et le script
-      # n'a besoin de rien d'autre : ni Node, ni `node_modules`.
+      # `psql`, `pg_dump` et `pg_restore` sont déjà présents sur les images
+      # Ubuntu de GitHub, et les scripts n'ont besoin de rien d'autre : ni Node,
+      # ni `node_modules`.
       - name: Contrôler les politiques
         run: npm run test:rls
+
+      # L'aller-retour de sauvegarde : on remplit une base au schéma du socle,
+      # on la sauvegarde, **on la détruit**, on la restaure, et on compte. Sans
+      # cette étape, le contrôle existe et ne tourne que sur le poste de qui
+      # l'a écrit — ce qui, pour une sauvegarde, revient à ne pas l'avoir.
+      #
+      # `pg_dump` refuse un serveur plus récent que lui. Le service est épinglé
+      # à postgres:16 et les images Ubuntu portent un client 16 ou plus : la
+      # contrainte est tenue par construction, et `sauvegarder.sh` l'arrête
+      # franchement si elle cesse de l'être.
+      - name: Contrôler la sauvegarde
+        run: npm run test:sauvegarde
