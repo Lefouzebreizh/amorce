@@ -192,15 +192,15 @@ class TestMiaulementSansTete(unittest.TestCase):
         une couture jamais traversée est une couture qui ne marche pas.
         """
         v = juger([{"Meow": 0.62}],
-                  tete_intention=lambda: (Intention.FAIM, 0.73))
-        self.assertIs(v.intention, Intention.FAIM)
+                  tete_intention=lambda: (Intention.DEMANDE, 0.73))
+        self.assertIs(v.intention, Intention.DEMANDE)
         self.assertIs(v.source, Source.PROVISOIRE)
         self.assertAlmostEqual(v.confiance, 0.73)
 
     def test_la_tete_ne_court_circuite_jamais_la_porte(self):
         """Même branchée, elle ne voit pas ce que la porte a refusé."""
         v = juger([{"Speech": 0.99}],
-                  tete_intention=lambda: (Intention.FAIM, 0.99))
+                  tete_intention=lambda: (Intention.DEMANDE, 0.99))
         self.assertIs(v.intention, Intention.INDECIS)
         self.assertIs(v.source, Source.AUCUNE)
 

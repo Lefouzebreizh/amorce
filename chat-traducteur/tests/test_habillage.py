@@ -26,16 +26,15 @@ from habillage.palette import PALETTES, palette  # noqa: E402
 from noyau.intentions import Intention, Source  # noqa: E402
 from noyau.verdict import juger  # noqa: E402
 
-# Un verdict par intention. Les trois premiers passent par la porte, les deux
-# derniers par la couture de la tête d'intention.
+# Un verdict par intention. Les trois premiers passent par la porte, le
+# dernier par la couture de la tête d'intention.
 def _verdicts():
     yield juger([{"Cat": 0.109, "Purr": 0.148}])          # contentement, mesuré
     yield juger([{"Cat": 0.60, "Hiss": 0.51}])            # stress, mesuré
     yield juger([{"Cat": 0.988, "Meow": 0.891}])          # indécis
     yield juger([{"Speech": 0.99}])                       # porte fermée
-    for i in (Intention.FAIM, Intention.SORTIR):
-        yield juger([{"Cat": 0.9, "Meow": 0.8}],
-                    tete_intention=lambda i=i: (i, 0.71))  # provisoire
+    yield juger([{"Cat": 0.9, "Meow": 0.8}],
+                tete_intention=lambda: (Intention.DEMANDE, 0.71))  # provisoire
 
 
 def _luminance(hexa: str) -> float:

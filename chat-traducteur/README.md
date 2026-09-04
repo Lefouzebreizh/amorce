@@ -28,25 +28,34 @@ Sous-titre: C'est bien. Ne bouge pas.
 
 Les quatre intentions demandées — faim, envie de sortir, stress, contentement —
 **ne sont pas au même niveau de preuve**, et confondre les deux moitiés est la
-seule façon de rater ce projet.
+seule façon de rater ce projet. **Elles sont trois depuis le 04/09/2026**, et
+la ligne qui a disparu explique le projet mieux que les autres.
 
 | Intention | D'où elle vient | État |
 | --- | --- | --- |
 | **contentement** | YAMNet nomme `Purr` lui-même | **mesurée**, marche aujourd'hui |
 | **stress** | YAMNet nomme `Caterwaul` | **mesurée**, marche depuis le 02/09 |
-| **faim** | il faut séparer deux façons de miauler | tête entraînée manquante |
-| **envie de sortir** | idem | tête entraînée manquante |
+| **demande** | hauteur et durée, tête acoustique | **provisoire**, jamais de score affiché |
+| ~~faim~~, ~~envie de sortir~~ | un seul et même son | **fusionnées** en `demande` |
 
 C'est la bonne nouvelle du projet, et elle n'était pas prévue : **le modèle
 public livre déjà la moitié du produit**, et il la livre *mesurée*. Un
 ronronnement n'est pas une supposition, c'est une classe que le modèle a
 nommée.
 
-L'autre moitié demande un classifieur entraîné sur des miaulements étiquetés
-par contexte réel. Tant qu'il n'existe pas, l'application rend `indécis` — avec
-son propre écran, conçu, qui dit « j'ai bien entendu un chat, mais je ne devine
-pas plus ». Un pourcentage inventé sur un écran de partage a l'air d'une
-mesure : `CLAUDE.md` interdit le procédé qui manipule, et c'en est un.
+L'autre moitié ne demandait pas un meilleur modèle, et c'est ce qu'on a mis
+huit jours à comprendre : **faim et envie de sortir sont un seul son.** Le
+référentiel qui fonde la lecture acoustique les range lui-même, avec la soif et
+la litière sale, sous un unique type — vérifié à sa source le 04/09/2026.
+Aucun classifieur, si bien entraîné soit-il, ne sépare deux choses que la
+personne qui a filmé son chat sépare avec ses yeux et pas avec ses oreilles.
+
+Le propriétaire a donc tranché : **une carte unique, `demande`, qui ne dit
+jamais *quoi*.** Elle sort en `provisoire` et **n'affiche aucun pourcentage** —
+un score inventé sur un écran de partage a l'air d'une mesure, et `CLAUDE.md`
+interdit le procédé qui manipule. L'écran `indécis` reste, pour ce qui n'entre
+dans aucune des trois : « j'ai bien entendu un chat, mais je ne devine pas
+plus ».
 
 ## Faisabilité — ce qui a été mesuré, pas supposé
 
@@ -125,7 +134,7 @@ chat-traducteur/
 ├── habillage/          ← la carte SVG, bibliothèque standard PURE aussi
 │   ├── carte.py          verdict → SVG 1080 × 1920, zone sûre câblée
 │   └── palette.py        une palette par intention, contraste ≥ 7:1
-├── tests/                47 tests, ~90 ms, sans rien installer
+├── tests/                48 tests, ~90 ms, sans rien installer
 ├── modeles/              poids — jamais versionnés
 └── cli.py                le prototype : un fichier entre, une intention sort
 ```
@@ -345,10 +354,14 @@ jamais — ils sont lus en direct.
 **`REQUETE` ne se sépare pas en faim et envie de sortir.** Le référentiel range
 lui-même « faim », « soif », « litière sale » et « veut sortir » sous le *même*
 type. Ce n'était donc pas une limite de YAMNet : **ces deux intentions sont
-acoustiquement la même chose**, et aucun modèle n'y changera rien. C'est une
-décision de produit — soit l'application dit « il demande quelque chose », soit
-elle garde deux cartes qu'elle ne saura jamais départager. En attendant,
-`REQUETE` rend `indécis`.
+acoustiquement la même chose**, et aucun modèle n'y changera rien.
+
+**Tranché le 04/09/2026** : une carte unique. `REQUETE` rend `demande`, et
+`FAIM` comme `SORTIR` ont été **retirées de l'énumération** — pas seulement
+débranchées. La nuance vaut la ligne : tant que les deux membres existaient,
+une session pouvait les rebrancher en une ligne sans rien casser, et le seul
+garde-fou était un test qui les nommait. Il faut désormais recréer les membres,
+ce qu'aucune distraction ne fait.
 
 **Le grave se lit en stress, jamais en douleur.** Le référentiel conseille un
 vétérinaire ; le dépôt a déjà tranché contre ce genre de verdict dans
