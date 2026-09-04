@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Épreuve du traducteur</title>
+<script src="/node_modules/@tensorflow/tfjs-core/dist/tf-core.js"></script>
+<script src="/node_modules/@tensorflow/tfjs-backend-cpu/dist/tf-backend-cpu.js"></script>
+<script src="/node_modules/@tensorflow/tfjs-tflite/dist/tf-tflite.js"></script>
+<script type="module">
+  // Cette page n'est pas l'application : c'est le banc qui l'éprouve. Elle
+  // expose une fonction que Playwright appelle, et rend ce qu'elle a mesuré.
+  import { Oreille } from '/dist/adaptateurs/yamnet.js';
+  import { juger } from '/dist/verdict.js';
+  import { enSvg } from '/dist/carte.js';
+
+  const etiquettes = await (await fetch('/donnees/etiquettes.json')).json();
+  const oreille = new Oreille(tf, tflite, {
+    modele: '/modeles/yamnet.tflite',
+    cheminWasm: '/wasm/',
+    etiquettes,
+  });
+  await oreille.ouvrir();
+
+  const FREQ = 16000, TAILLE = 15600;
+  const signaux = {
+    accord: (n) => Array.from({ length: n }, (_, i) =>
+      0.6 * Math.sin(2*Math.PI*440*i/FREQ) + 0.3 * Math.sin(2*Math.PI*880*i/FREQ)
+      + 0.1 * Math.sin(2*Math.PI*1760*i/FREQ)),
+    silence: (n) => new Array(n).fill(0),
+    // MINSTD, et pas le classique 1103515245 : ce dernier fait dépasser
+    // 2^53 au produit, et JavaScript arrondit alors en silence. Voir
+    // outils/engendrer-temoins-oreille.py, qui porte les nombres mesurés.
+    bruit: (n) => { let e = 12345; return Array.from({ length: n }, () => {
+      e = (48271 * e) % 2147483647; return e / 1073741823.5 - 1; }); },
+    balayage: (n) => Array.from({ length: n }, (_, i) =>
+      Math.sin(2*Math.PI*(200 + 1000*i/n)*i/FREQ)),
+  };
+
+  window.epreuve = async (nom, nbFenetres) => {
+    const brut = Float32Array.from(signaux[nom](TAILLE * nbFenetres));
+    const fenetres = [];
+    for (let f = 0; f < nbFenetres; f++) {
+      fenetres.push(brut.subarray(f * TAILLE, (f + 1) * TAILLE));
+    }
+    const nommees = await oreille.ecouterToutes(fenetres);
+    const etiquettesOrdre = etiquettes;
+    return {
+      scores: nommees.map((f) => etiquettesOrdre.map((e) => f[e])),
+      verdict: juger(nommees),
+    };
+  };
+  window.carte = (v) => enSvg(v);
+  window.pret = true;
+</script>

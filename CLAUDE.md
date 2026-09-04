@@ -698,8 +698,18 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   **témoins engendrés depuis lui** — `outils/engendrer-temoins.py` fait tourner
   le noyau, `tests/conformite.test.ts` rejoue les mêmes entrées et compare le
   **SVG entier au caractère près**. Aucune attente n'y est écrite à la main.
-  Il ne contient **pas le modèle** : tout part de `Record<string, number>[]`,
-  et la couture attend YAMNet dans le navigateur.
+  **Et le modèle y tourne depuis le 04/09/2026, mesuré** : le même vecteur de
+  15 600 échantillons dans `ai_edge_litert` et dans le WASM de
+  `@tensorflow/tfjs-tflite` conduit par un vrai Chromium rend **exactement les
+  mêmes 521 scores**, écart `0.000e+0`, sur quatre signaux et sept fenêtres.
+  C'est ce qui autorise à parler d'un seul produit : le corpus mesuré côté
+  Python vaut côté navigateur sans être refait. Deux pièges : l'alpha épingle
+  `tfjs-core@4.9.0` **exactement** (ni `--force` ni `--legacy-peer-deps`), et
+  ses WASM sont **livrés dans le paquet** — aucun CDN à joindre, ce que le
+  mandataire imposait de toute façon.
+  Ce qui n'est **pas** couvert : les quatre signaux sont fabriqués, aucun n'est
+  un chat, et la chaîne du micro à la carte n'a jamais tourné sur un vrai
+  enregistrement dans le navigateur.
   Deux pièges mesurés y sont écrits : un `enum` ne survit pas au retrait de
   types de Node (`strip-only mode`), ce qui vaut pour tous les projets TS du
   dépôt ; et le `tsconfig.json` racine **avale ces huit fichiers** sans casser

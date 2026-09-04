@@ -7,7 +7,10 @@
   "scripts": {
     "test": "node --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
     "check": "tsc --noEmit",
-    "temoins": "python3 outils/engendrer-temoins.py"
+    "temoins": "python3 outils/engendrer-temoins.py",
+    "bati": "tsc -p tsconfig.navigateur.json",
+    "epreuve": "node outils/epreuve.mjs",
+    "etiquettes": "python3 outils/extraire-etiquettes.py"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
@@ -15,5 +18,10 @@
   },
   "engines": {
     "node": ">=22.22"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs-backend-cpu": "4.9.0",
+    "@tensorflow/tfjs-core": "4.9.0",
+    "@tensorflow/tfjs-tflite": "0.0.1-alpha.10"
   }
 }

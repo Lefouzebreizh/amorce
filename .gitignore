@@ -149,6 +149,7 @@ visual_library/**/*.mp4
 # de l'historique une fois poussés.
 /iptv/node_modules/
 /chat-traducteur/web/node_modules/
+/chat-traducteur/web/dist/
 /iptv/.next/
 /iptv/.essai/
 /iptv/donnees/
