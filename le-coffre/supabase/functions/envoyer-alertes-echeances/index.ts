@@ -56,7 +56,7 @@ Deno.serve(async (requete: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Le Coffre <onboarding@resend.dev>",
+        from: "Le Coffre <alertes@erwannchevallier.com>",
         to: email,
         subject: "Une échéance approche dans Le Coffre",
         text:
