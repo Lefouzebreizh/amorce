@@ -715,7 +715,13 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   tiennent dans les deux sens — l'un refuse le score sans mesure, l'autre
   refuse qu'on supprime le bloc entier.
   CatMeows n'est pas récupérable d'ici (Zenodo refusé) et ses trois contextes
-  ne sont pas les quatre intentions visées. Se vérifie depuis la racine.
+  ne sont pas les quatre intentions visées. **Ce qui manque encore est un corpus
+  étiqueté par contexte, et la liste existe depuis le 04/09/2026** :
+  `scripts/telecharger_corpus_etiquete.py` porte 28 vidéos repérées par
+  TubeAlfred dont le téléverseur écrit la situation dans le titre — « hungry
+  cat meowing for food », « cat greets owner home ». Étiquette faible, jamais
+  écoutée d'ici, et la première vérité de terrain que la tête acoustique aura
+  eue. Les octets viennent de la machine d'Erwann, pour la raison du §7. Se vérifie depuis la racine.
   **`web/` porte le même cœur en TypeScript**, pour le navigateur — décidé le
   04/09/2026 après avoir mesuré que Flutter, Dart et `adb` sont absents : une
   application native ne peut être ni construite ni *regardée* d'ici, ce que le
@@ -1156,7 +1162,11 @@ le 04/09/2026, et la conséquence qu'on en tirait l'est entièrement.**
 | `i.ytimg.com` (vignettes) | non sondé | refusé |
 
 Et le **connecteur TubeAlfred** rend recherche, fiches et **transcriptions**
-— une transcription entière obtenue pour 1 crédit sur 100. La phrase « une page
+— une transcription entière obtenue pour 1 crédit sur 100. Piège de facturation
+mesuré le 04/09 : `youtube_videos_batch` prend 50 identifiants en un appel et
+facture **un crédit par vidéo**, pas par appel — 29 fiches ont coûté 29 crédits.
+Trier sur les résultats de recherche, qui portent déjà titre, durée et vues,
+avant de demander les fiches. La phrase « une page
 YouTube ne donne qu'un titre » ne tient donc plus : elle donne le texte complet
 de ce qui est dit, ce qui suffit à vérifier une source de vulgarisation sans
 regarder la vidéo. C'est ainsi que le référentiel de `chat-traducteur/` a été
@@ -1171,7 +1181,8 @@ PyPI :
 | --- | --- |
 | métadonnées, liste des formats | **passent** |
 | flux DASH `140` (client par défaut) | `403 Forbidden` |
-| clients `tv`, `web_safari`, `ios` | *« Sign in to confirm you're not a bot »* |
+| clients `tv`, `web_safari`, `ios`, `android_vr`, `tv_embedded` | *« Sign in to confirm you're not a bot »* |
+| client `mweb` | **« require a GVS PO Token »** — le refus se nomme |
 | flux HLS `233` | `403` sur chaque fragment |
 | URL média en direct, redirection suivie | `403`, zéro octet |
 
@@ -1179,7 +1190,20 @@ La distinction se paie si on l'ignore : un `403` se lit comme une clé
 manquante, un `000` comme un mur réseau, et ici ce n'est **ni l'un ni
 l'autre** — c'est une adresse de centre de données qu'une plateforme refuse
 sans cookies de session. Aucune clé, aucune ouverture de domaine n'y changera
-quoi que ce soit ; et rien ne dit qu'un *runner* GitHub ferait mieux, son
+quoi que ce soit ;
+
+**Et le huitième client dit ce que les sept autres cachent** : `mweb` ne parle
+ni de compte ni de robot, il réclame un **jeton PO**, calculé en exécutant du
+JavaScript de Google. `yt-dlp` sait le faire fabriquer localement par le
+greffon `bgutil-ytdlp-pot-provider`, qui s'installe depuis PyPI et se charge —
+mais son script serveur vit dans un dépôt GitHub **hors de la portée accordée à
+la session** : `403` sur l'API, sur la page de publication et sur `codeload`,
+seul `raw.githubusercontent.com` répond, fichier par fichier. Le mur est donc
+*logiciel* et non contractuel, ce qui condamne définitivement la recherche
+d'une clé ou d'un compte. Détail dans
+`second-brain/lecons/2026-09-04-youtube-ne-demande-pas-un-compte-mais-un-jeton.md`.
+
+ et rien ne dit qu'un *runner* GitHub ferait mieux, son
 adresse étant de la même famille — non mesuré, à ne pas promettre.
 
 Le sixième chemin a été essayé aussi, parce qu'il ne passait pas par le CDN de
