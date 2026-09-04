@@ -6,10 +6,21 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
-  supprimerFichier, chargerIndex, type IndexCoffre,
+  supprimerFichier, chargerIndex, proposerClassement, type IndexCoffre, type Echeance,
 } from '@/lib/coffre';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
+
+const ECHEANCE_VIDE: Echeance = { presente: false, date: null, libelle: null, confiance: 'basse' };
+
+type EnAttente = {
+  cle: string;
+  fichier: File;
+  enAnalyse: boolean;
+  categorie: string;
+  nomAffiche: string;
+  echeance: Echeance;
+};
 
 function formatTaille(octets: number): string {
   if (octets < 1024) return `${octets} o`;
@@ -25,6 +36,7 @@ export default function PageCoffre() {
   const [index, setIndex] = useState<IndexCoffre>({ objets: {} });
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
+  const [aValider, setAValider] = useState<EnAttente[]>([]);
   const entreeFichier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -92,21 +104,54 @@ export default function PageCoffre() {
     }
   }
 
+  // Un fichier choisi ne se dépose pas tout de suite : on propose d'abord une
+  // catégorie, un nom et une échéance éventuelle (fonction classer-document,
+  // qui lit le fichier une fraction de seconde côté serveur puis ne garde
+  // rien — voir SECURITY.md), et rien ne bouge tant que l'utilisateur n'a
+  // pas validé chaque proposition.
   async function surDepot(fichiers: FileList | null) {
     if (!fichiers || !fichiers.length || !utilisateur || !cle) return;
+    setErreur('');
+    const nouveaux: EnAttente[] = Array.from(fichiers).map((fichier) => ({
+      cle: `${fichier.name}-${fichier.size}-${crypto.randomUUID()}`,
+      fichier, enAnalyse: true, categorie: '', nomAffiche: fichier.name, echeance: ECHEANCE_VIDE,
+    }));
+    setAValider((precedent) => [...precedent, ...nouveaux]);
+    if (entreeFichier.current) entreeFichier.current.value = '';
+
+    for (const item of nouveaux) {
+      const proposition = await proposerClassement(item.fichier);
+      setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
+        ...p, enAnalyse: false,
+        categorie: proposition.lisible ? proposition.categorie : '',
+        nomAffiche: proposition.lisible && proposition.nomSuggere ? proposition.nomSuggere : p.fichier.name,
+        echeance: proposition.echeance,
+      } : p)));
+    }
+  }
+
+  function modifierAttente(cleItem: string, champs: Partial<EnAttente>) {
+    setAValider((precedent) => precedent.map((p) => (p.cle === cleItem ? { ...p, ...champs } : p)));
+  }
+
+  function retirerAttente(cleItem: string) {
+    setAValider((precedent) => precedent.filter((p) => p.cle !== cleItem));
+  }
+
+  async function confirmerDepot(item: EnAttente) {
+    if (!utilisateur || !cle) return;
     setEnCours(true);
     setErreur('');
     try {
-      let indexCourant = index;
-      for (const fichier of Array.from(fichiers)) {
-        indexCourant = await deposerFichier(utilisateur.id, cle, fichier, '', indexCourant);
-      }
-      setIndex(indexCourant);
+      const nouvelIndex = await deposerFichier(
+        utilisateur.id, cle, item.fichier, item.categorie, index, item.nomAffiche, item.echeance,
+      );
+      setIndex(nouvelIndex);
+      retirerAttente(item.cle);
     } catch (err) {
       setErreur(err instanceof Error ? err.message : String(err));
     } finally {
       setEnCours(false);
-      if (entreeFichier.current) entreeFichier.current.value = '';
     }
   }
 
@@ -230,8 +275,48 @@ export default function PageCoffre() {
         />
       </label>
 
-      {enCours && <p className="mb-4 text-sm text-ink-soft">Chiffrement en cours…</p>}
       {erreur && <p className="mb-4 text-sm text-wine">{erreur}</p>}
+
+      {aValider.length > 0 && (
+        <ul className="mb-6 flex flex-col gap-3">
+          {aValider.map((item) => (
+            <li key={item.cle} className="rounded-xl border border-accent/40 bg-paper-raised p-4">
+              {item.enAnalyse ? (
+                <p className="text-sm text-ink-soft">Lecture de « {item.fichier.name} »…</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm text-ink-soft" htmlFor={`nom-${item.cle}`}>Nom</label>
+                  <input id={`nom-${item.cle}`} value={item.nomAffiche}
+                    onChange={(e) => modifierAttente(item.cle, { nomAffiche: e.target.value })}
+                    className="rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
+                  <label className="text-sm text-ink-soft" htmlFor={`cat-${item.cle}`}>Catégorie</label>
+                  <input id={`cat-${item.cle}`} value={item.categorie}
+                    placeholder="Non proposée — à préciser ou laisser vide"
+                    onChange={(e) => modifierAttente(item.cle, { categorie: e.target.value })}
+                    className="rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
+                  {item.echeance.presente && (
+                    <div className="rounded-lg border border-accent/40 bg-accent/10 p-3 text-sm">
+                      <p className="font-medium">Échéance détectée : {item.echeance.libelle}</p>
+                      <p className="text-ink-soft">
+                        {item.echeance.date} — confiance {item.echeance.confiance}. À vérifier avant de valider.
+                      </p>
+                    </div>
+                  )}
+                  <div className="mt-1 flex gap-3 text-sm">
+                    <button onClick={() => confirmerDepot(item)} disabled={enCours}
+                      className="rounded-lg bg-accent px-3 py-1.5 font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
+                      Déposer
+                    </button>
+                    <button onClick={() => retirerAttente(item.cle)} className="text-ink-soft hover:underline">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {noms.length === 0 ? (
         <p className="text-ink-soft">Le coffre est vide pour l&apos;instant.</p>
@@ -244,7 +329,14 @@ export default function PageCoffre() {
               <li key={nom} className="flex items-center justify-between rounded-xl border border-line bg-paper-raised px-4 py-3">
                 <div>
                   <p className="font-medium">{info.nom}</p>
-                  <p className="text-sm text-ink-soft">{formatTaille(info.taille)}</p>
+                  <p className="text-sm text-ink-soft">
+                    {formatTaille(info.taille)}{info.categorie ? ` · ${info.categorie}` : ''}
+                  </p>
+                  {info.echeance?.presente && (
+                    <p className="text-sm text-accent">
+                      {info.echeance.libelle} — {info.echeance.date}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-3 text-sm">
                   <button onClick={() => telecharger(nom)} className="text-accent hover:underline">Télécharger</button>

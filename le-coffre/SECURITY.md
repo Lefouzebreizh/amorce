@@ -49,6 +49,41 @@ accès infrastructure. Ce qu'il ne cache pas, comme en local (voir
 dépôt, et — nouveau ici — l'adresse e-mail associée au compte (nécessaire pour
 l'authentification, jamais liée au contenu déchiffré).
 
+## Le classement automatique : une exception explicite à « rien de lisible ne sort »
+
+Depuis l'ajout de la fonction `classer-document` (04/09/2026), un document
+déposé est envoyé **en clair** à cette fonction Supabase, qui le transmet à
+l'API Claude (lecture en vision) pour proposer une catégorie, un nom, et une
+échéance éventuelle — avant chiffrement. C'est la seule exception à « ce
+serveur ne voit jamais le contenu en clair » de tout ce projet, et elle est
+volontaire : impossible de proposer un classement sans lire le document.
+
+Ce qui limite cette exception : la fonction ne conserve rien (pas d'écriture
+disque, pas de trace en base — voir le commentaire en tête de
+`supabase/functions/classer-document/index.ts`), le fichier est chiffré côté
+navigateur juste après comme avant, et **rien n'est jamais appliqué sans
+validation explicite** — l'utilisateur voit la proposition (catégorie, nom,
+échéance) avant que le dépôt n'ait lieu, jamais après coup.
+
+**Le modèle peut se tromper, et l'a fait à l'essai** : testé sur une image
+sans contenu, `claude-sonnet-4-5` a d'abord inventé une catégorie, un nom de
+fichier et une échéance avec « confiance haute » — un vrai risque pour une
+fonctionnalité dont le métier est justement d'annoncer des dates limites.
+Corrigé en ajoutant un champ `lisible` explicite au format attendu, une
+consigne stricte de ne jamais deviner, et `temperature: 0`. Revérifié ensuite
+sur la même image : plus aucune invention. Cela ne garantit pas l'absence
+totale d'erreur sur un vrai document ambigu — d'où l'obligation de validation
+humaine avant tout dépôt, qui reste la vraie garde-fou, pas le prompt.
+
+**Ce que ça n'inclut pas encore** : aucune alerte proactive (e-mail avant
+l'échéance). L'échéance détectée est chiffrée comme le reste de l'index —
+visible seulement une fois le coffre déverrouillé. Un serveur ne peut donc
+pas savoir qu'il faut prévenir quelqu'un sans que cette personne ait d'abord
+rouvert l'application. Décision de périmètre à trancher séparément :
+chiffrer la date (comme aujourd'hui, pas d'alerte proactive possible) ou la
+stocker en clair sans le contenu du document (alerte proactive possible, au
+prix d'exposer qu'une échéance existe à telle date).
+
 ## Suppression : une garantie plus faible qu'en local, à le dire
 
 La version locale écrase le contenu du fichier (deux passes aléatoires puis des
