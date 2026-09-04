@@ -55,6 +55,19 @@ rien d'autre ne le fait à sa place :
 | flux HLS `233` | `403` sur chaque fragment |
 | URL média en direct, redirection suivie | `403`, zéro octet |
 | `file-upload.com` (liens des chaînes de bruitage) | `000` — refusé au tunnel |
+| clients `android_vr`, `tv_embedded` | *« Sign in to confirm you're not a bot »* |
+| client `mweb` | **« require a GVS PO Token »** — le refus se nomme enfin |
+
+**Huit clients, un seul mur, et le huitième dit lequel.** `mweb` ne parle ni de
+compte ni de robot : il réclame un **jeton PO**, que `yt-dlp` sait faire
+fabriquer localement par le greffon `bgutil-ytdlp-pot-provider`. Le greffon
+s'installe depuis PyPI et se charge — mais son script serveur vit dans un dépôt
+GitHub que la portée accordée à cette session refuse (`403` sur l'API comme sur
+la page de publication ; seul `raw.githubusercontent.com` répond, fichier par
+fichier). Le chemin existe donc, et il ne s'ouvre pas d'ici.
+
+Ça change la parade sans changer la conclusion : inutile de chercher une clé ou
+un compte YouTube — ce n'est pas ce qui manque.
 
 **Ce n'est pas le mandataire, c'est la plateforme.** Une adresse de centre de
 données sans cookies de session est refusée quoi qu'on tente : ni clé, ni
@@ -125,6 +138,66 @@ encadrent `FRONTIERE_LONG` des deux côtés.
 
 Adresse d'une fiche : `https://www.youtube.com/watch?v=<identifiant>`.
 
+## 4 bis. Les enregistrements **étiquetés par contexte** — 04/09/2026
+
+La section 5 ci-dessous disait qu'un bruitage n'est pas étiqueté par contexte et
+que « la seule source possible est le chat d'Erwann ». C'était vrai des chaînes
+de bruitages, et faux du reste de YouTube : **des milliers de gens filment leur
+chat et écrivent le contexte dans le titre.** « Hungry cat meowing for food »,
+« Cat meowing to go outside », « Cat greets owner home » — l'étiquette est
+posée par la personne qui était dans la pièce.
+
+C'est une étiquette **faible** : personne ne l'a vérifiée, et un téléverseur
+qui écrit « hungry » décrit une situation, pas un son. Mais c'est la première
+vérité de terrain que la tête acoustique aura jamais eue, et elle couvre
+exactement les trois intentions que l'application ose nommer.
+
+Vingt-huit enregistrements retenus, relevés par TubeAlfred, triés à la main sur
+les fiches. La liste vit dans `scripts/telecharger_corpus_etiquete.py`, avec la
+commande qui les rapatrie sur la machine d'Erwann :
+
+| intention | fichiers | durée | ce que ça éprouve |
+| --- | --- | --- | --- |
+| `demande` | 9 | 14 min 34 | la carte que l'application produit le plus souvent, jamais confrontée |
+| `salutation` | 6 | 2 min 37 | `FRONTIERE_LONG` — le seuil de 0,7 s posé sans un seul enregistrement |
+| `contentement` | 6 | 2 min 50 | la lecture directe `Purr`, seule porteuse depuis ce matin |
+| contrôles | 4 | 2 min 45 | ce que le traducteur ne doit **pas** affirmer |
+| bruitages libres | 3 | 1 min 07 | la porte, sans contexte |
+
+**Six des neuf « demande » sont des demandes de nourriture et trois des
+demandes de sortie** : c'est le lot qui vérifiera, sur du son, la décision de
+produit du 04/09 — fusionner les deux en une seule carte parce qu'aucune mesure
+ne les sépare. Si la hauteur et la durée les séparaient franchement ici, la
+décision mériterait d'être rouverte. Si elles ne les séparent pas, elle est
+confirmée par autre chose qu'un référentiel de vulgarisation.
+
+### Ce qui a été écarté, et pourquoi ça compte
+
+- **`rsucLntx76E`**, le meilleur titre du lot — « My cat meowing and begging to
+  open the door » — porte une **musique de fond**, annoncée dans sa propre
+  description. Un fond musical déplace tout ce que YAMNet lit. Un titre parfait
+  ne fait pas un enregistrement utilisable.
+- **Deux vidéos ont changé de colonne à la lecture de leur description.**
+  `Ev9S6SAQpPk` est titrée « Cat meowing loud at a door » et raconte un chat
+  **paniqué** par quelque chose dans le garage ; `_Z-neVXZtXY` est titrée « to
+  open door » et décrite en toutes lettres comme un **appel de chaleur**. Les
+  deux sont passées en contrôles. **Le titre étiquette, la description
+  corrige** — et lire les vingt-neuf descriptions a coûté un appel.
+
+### Ce que cette liste n'est pas
+
+Aucun de ces sons n'a pu être **écouté** d'ici, pour la raison de la section 2.
+Les durées, les descriptions et l'absence de piste de sous-titres viennent des
+fiches TubeAlfred ; l'absence de sous-titres rend une voix off improbable, elle
+ne la réfute pas. Personne ne doit lire ce tableau comme validé à l'oreille.
+
+**La licence n'est pas réglée non plus.** Six entrées viennent de chaînes qui
+annoncent le domaine public ou l'usage libre ; les vingt-deux autres sont sous
+licence YouTube standard. Elles servent à **éprouver** chez Erwann, comme
+ESC-50 et pour la même raison, et ne peuvent pas être embarquées dans un
+produit vendu. Un corpus qu'on ne peut pas redistribuer reste un corpus qu'on
+peut mesurer.
+
 ## 5. Ce qu'un corpus téléchargé ne réglera pas
 
 Deux choses, et il vaut mieux les savoir avant de s'en réjouir :
@@ -132,8 +205,10 @@ Deux choses, et il vaut mieux les savoir avant de s'en réjouir :
 - **Un bruitage n'est pas étiqueté par contexte.** « Chat qui miaule » ne dit
   pas si le chat a faim ou dit bonjour. Ces fichiers éprouvent la **porte**, la
   hauteur et la durée — ils ne valident aucune correspondance vers une
-  intention. Pour ça il faut un chat qu'on connaît, filmé dans une situation
-  qu'on sait nommer, et la seule source possible est le chat d'Erwann.
+  intention. Pour ça il faut un chat filmé dans une situation qu'on sait
+  nommer — et **la section 4 bis en a trouvé vingt-huit**, étiquetés par leur
+  téléverseur. La phrase « la seule source possible est le chat d'Erwann »
+  était fausse : elle décrivait les chaînes de bruitages, pas YouTube.
 - **La base de référence de l'animal manque toujours.** La source du référentiel
   attache le miaulement aigu et long aux chats *habituellement silencieux*, et
   l'aigu et court aux *bavards* : c'est une habitude, pas un son. Aucun corpus
