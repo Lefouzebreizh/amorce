@@ -71,6 +71,41 @@ presque noire. Ils sont désormais séparés — le rebond du rayon dure
 0,42 s, la lumière arrive en 0,16 s. **Ce qui apparaît et ce qui s'allume ne
 sont pas la même horloge.**
 
+**5. Le son sifflait et soufflait, et une seule des deux causes venait de la
+scène.** Première écoute d'Erwann : « le son est fiii, chut chut chut ». Deux
+défauts, pas un.
+
+Le **souffle** tenait à trois sons, tous dans les deux premières secondes —
+là où le spectateur décide. Mesurés source par source, part de l'énergie
+au-dessus de 2 kHz et part tenue par les vingt raies les plus fortes :
+
+| son | > 2 kHz | tonal | centroïde |
+| --- | --- | --- | --- |
+| `whoosh_tournant_long` | **65,6 %** | 0,9 % | 2878 Hz |
+| `grondement_braises` | **56,9 %** | 2,3 % | 2887 Hz |
+| `impact_debris` | **56,8 %** | 39,6 % | 4073 Hz |
+
+Une part tonale de 1 % avec les deux tiers de l'énergie dans l'aigu, c'est la
+définition du bruit blanc. Ces trois-là sont descendus de 8 à 10 dB.
+
+Le **sifflement**, lui, était une bavure de la correction du son précédente :
+en comblant quatre secondes de creux sous le message, le lit avait été monté de
++11 dB **en bloc**. `drone_grave` et `nappe_sombre` le portent sans percer —
+90 % tonal, rien au-dessus de 2 kHz — mais `riser_long`, un balayage de
+centroïde 944 Hz, s'est retrouvé à +16 dB sous le texte. **Un lit se monte son
+par son, jamais d'un seul geste sur un groupe.** Le lit tient d'ailleurs à
+−25 dB sans lui : le riser n'y était pour rien.
+
+`tests/test_scene_portail.py` interdit désormais qu'un son passé au-dessus de
++12 dB ait un centroïde au-dessus de 200 Hz.
+
+**6. La page ne défilait qu'au tiers.** La course était écrite en dur — 1020 px
+sur les 3143 disponibles. Elle se déduit maintenant de la capture
+(`img.height - visible`), donc n'importe quelle page d'artisan arrive à son
+pied, quelle que soit sa longueur. Le montage y gagne un raccord : le pied de
+page dit « Site réalisé par Artisan Express » une seconde avant que le carton
+ne le dise à son tour.
+
 ## La zone sûre est câblée
 
 `ZONE = { haut: 230, bas: 865 }`, soit 12 % à 45 % de 1920 — l'intersection des

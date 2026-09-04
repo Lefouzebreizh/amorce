@@ -302,8 +302,13 @@ function site(t, img) {
   x.clip();
   const ratio = w / img.width;
   const visible = h / ratio;
-  const defile = 1020 * lisse(seg(t, 5.95, T.message));
-  const sy = Math.min(defile, Math.max(0, img.height - visible));
+  /* La page défile JUSQU'EN BAS, et la course se déduit de la capture au lieu
+     d'être écrite en dur : une page plus longue défilerait sinon d'un tiers et
+     s'arrêterait au milieu, sans que rien ne le signale. Elle arrive au pied
+     de page — « Site réalisé par Artisan Express » — juste avant le carton qui
+     le dit à son tour. */
+  const course = Math.max(0, img.height - visible);
+  const sy = course * lisse(seg(t, 5.20, T.message - 0.10));
   x.drawImage(img, 0, sy, img.width, visible, px, py, w, h);
   /* tant qu'elle n'a pas fini de monter, elle est encore faite de lumière */
   const voile = 1 - lisse(seg(em, 0.18, 0.62));

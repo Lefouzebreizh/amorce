@@ -32,7 +32,27 @@
     "jetée. Sur un plan lent ça ne se voit pas ; ici tout est mouvement, et le",
     "rendu sort sans la moindre erreur — simplement saccadé.",
     "Aucune voix : le message est à l'écran. L'esquive est donc absente — elle",
-    "n'a rien à esquiver, et posée sans voix elle ne ferait que creuser le mixage."
+    "n'a rien à esquiver, et posée sans voix elle ne ferait que creuser le mixage.",
+    "",
+    "LE SOUFFLE ET LE SIFFLEMENT, ET COMMENT ON LES A TROUVÉS.",
+    "",
+    "Première écoute : « le son est fiii, chut chut chut ». Deux défauts, pas un.",
+    "Mesure par source — part de l'énergie au-dessus de 2 kHz, centroïde, et part",
+    "tenue par les vingt raies les plus fortes :",
+    "",
+    "  whoosh_tournant_long   65,6 % > 2 kHz   0,9 % tonal   → du bruit pur",
+    "  grondement_braises     56,9 % > 2 kHz   2,3 % tonal   centroïde 2887 Hz",
+    "  impact_debris          56,8 % > 2 kHz                 centroïde 4073 Hz",
+    "",
+    "Ces trois-là faisaient le « chut chut chut », et ils jouent tous dans les",
+    "deux premières secondes — là où le spectateur décide.",
+    "",
+    "Le sifflement, lui, était une bavure de la correction précédente. En comblant",
+    "le trou de -34 dB sous le message, j'avais monté le lit de +11 dB EN BLOC :",
+    "`riser_long` est passé à +16, et un balayage à +16 dB sous un texte, c'est un",
+    "sifflet. Le lit est porté par `drone_grave` et `nappe_sombre` — 90 % tonal,",
+    "0 % au-dessus de 2 kHz — pas par le riser. La leçon : un lit se monte son par",
+    "son, jamais d'un seul geste sur un groupe."
   ],
   "bibliotheque": "sfx_library",
   "cadence": 30,
@@ -98,13 +118,13 @@
     {
       "son": "grondement_braises",
       "instant": 0.32,
-      "gain": -6,
+      "gain": -14,
       "distance": "lointain"
     },
     {
       "son": "riser_moyen",
       "instant": 0.55,
-      "gain": 3,
+      "gain": -2,
       "distance": "moyen"
     },
     {
@@ -146,7 +166,7 @@
     {
       "son": "impact_debris",
       "instant": 1.3,
-      "gain": 6,
+      "gain": 0,
       "distance": "proche"
     },
     {
@@ -158,7 +178,7 @@
     {
       "son": "electricite",
       "instant": 1.3,
-      "gain": 8,
+      "gain": 2,
       "distance": "proche",
       "parametres": {
         "duree": 1.1,
@@ -169,7 +189,7 @@
     {
       "son": "crepitement",
       "instant": 1.34,
-      "gain": -8,
+      "gain": -16,
       "largeur": 22,
       "distance": "lointain",
       "parametres": {
@@ -181,13 +201,13 @@
     {
       "son": "whoosh_tournant_long",
       "instant": 1.95,
-      "gain": 4,
+      "gain": -6,
       "distance": "moyen"
     },
     {
       "son": "aspiration",
       "instant": 2.0,
-      "gain": 6,
+      "gain": 0,
       "largeur": 22,
       "distance": "lointain",
       "parametres": {
@@ -199,7 +219,7 @@
     {
       "son": "souffle_tournant",
       "instant": 2.05,
-      "gain": -2,
+      "gain": -8,
       "largeur": 20,
       "distance": "lointain",
       "parametres": {
@@ -216,7 +236,7 @@
     {
       "son": "riser_long",
       "instant": 2.6,
-      "gain": 2,
+      "gain": -3,
       "distance": "moyen"
     },
     {
@@ -355,7 +375,7 @@
     {
       "son": "riser_long",
       "instant": 10.6,
-      "gain": 16,
+      "gain": 4,
       "distance": "moyen"
     },
     {

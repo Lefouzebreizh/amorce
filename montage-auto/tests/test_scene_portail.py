@@ -88,6 +88,46 @@ class Recette(unittest.TestCase):
         self.assertEqual(RECETTE.get("cadence"), 30)
 
 
+    def test_seuls_les_sons_graves_sont_poussés_fort(self):
+        """Un son poussé fort doit être grave, sinon c'est un sifflet.
+
+        La règle vient d'une bavure : pour combler quatre secondes de creux
+        sous le message final, le lit avait été monté de +11 dB **en bloc**.
+        `drone_grave` et `nappe_sombre` le portent bien — 90 % de leur énergie
+        est tonale et rien ne dépasse 2 kHz — mais `riser_long`, un balayage de
+        centroïde 944 Hz, est passé à +16 et s'est mis à siffler sous le texte.
+
+        Le seuil n'est pas une esthétique : au-delà de +12 dB un son n'est plus
+        posé, il domine, et seul un grave peut dominer sans percer. Un lit se
+        monte son par son, jamais d'un seul geste sur un groupe.
+        """
+        import numpy
+
+        import bruitages
+        import sfx_pro
+        banque = catalogue()
+        if banque is None:
+            self.skipTest("sfx_library/ absente — `download_blockbuster_sfx.py` la régénère")
+        for pose in RECETTE["effets"]:
+            if float(pose.get("gain", 0)) <= 12:
+                continue
+            nom = pose["son"]
+            if nom in banque:
+                onde, taux = sfx_pro.lire_wav(DEPOT / "sfx_library" / banque[nom]["chemin"])
+            else:
+                onde, taux = bruitages.BRUITAGES[nom](**pose.get("parametres", {})), 48000
+            if onde.ndim > 1:
+                onde = onde.mean(axis=1)
+            spectre = numpy.abs(numpy.fft.rfft(onde * numpy.hanning(len(onde))))
+            frequences = numpy.fft.rfftfreq(len(onde), 1 / taux)
+            energie = float((spectre ** 2).sum())
+            centroide = float((frequences * spectre ** 2).sum() / max(energie, 1e-12))
+            with self.subTest(son=nom, instant=pose["instant"], gain=pose["gain"]):
+                self.assertLess(centroide, 200,
+                                f"« {nom} » est poussé à {pose['gain']:+g} dB avec un "
+                                f"centroïde de {centroide:.0f} Hz : ça siffle")
+
+
 class Scene(unittest.TestCase):
     def test_la_zone_sure_est_celle_du_depot(self):
         """12 % à 45 % de 1920 — l'intersection des trois plateformes."""
