@@ -105,6 +105,11 @@ while IFS= read -r f; do
     licence-serveur/*) inscrire licence ;;
     comptes-serveur/*) inscrire comptes ;;
     annuaire-ia/*)   inscrire annuaire ;;
+    # Avant la découverte Python plus bas, qui inscrira *aussi* la suite
+    # `chat-traducteur` : c'est voulu. Le Python fait foi, et les témoins de
+    # conformité du portage sont engendrés depuis lui — toucher au TypeScript
+    # sans revoir sa jumelle est exactement ce qu'il faut attraper.
+    chat-traducteur/web/*) inscrire chatweb ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
                      inscrire amorce ;;
     # L'outillage du dépôt — hooks et scripts de compétences — n'appartenait à
@@ -347,6 +352,26 @@ lancer_bilan() {
   return $e
 }
 
+lancer_chatweb() {
+  # Le cœur du traducteur, porté en TypeScript pour le navigateur.
+  #
+  # Ses tests ne demandent **rien** : Node retire les types lui-même et le
+  # paquet n'a aucune dépendance d'exécution. Le typecheck, lui, a besoin de
+  # `typescript`, que seul `npm install` pose — et le hook de démarrage ne
+  # connaît pas encore ce projet. On le lance quand il est là, et on dit
+  # franchement qu'il ne l'est pas sinon : le compter vert serait une mesure
+  # qui n'a rien mesuré, ce que `etape_regard` refuse déjà par ailleurs.
+  local d="chat-traducteur/web"; local j="$journal/chatweb"; local e=0
+  ( cd "$d" || exit 1; etape "$j.test" "conformité au noyau Python" npm test ) || e=1
+  if [ -d "$d/node_modules" ]; then
+    ( cd "$d" || exit 1; etape "$j.check" "types" npm run check ) || e=1
+  else
+    echo "    ⊘ types — non effectué, dépendances non installées" >> "$j.check"
+  fi
+  cat "$j".{test,check} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_iptv() {
   local d="iptv"; local j="$journal/iptv"; local e=0
   # Les deux premières ne se lisent pas l'une l'autre : elles partent ensemble.
@@ -460,6 +485,7 @@ for p in $projets; do
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     titan)   lancer_titan & pid_de[titan]=$! ;;
     iptv)    lancer_iptv  & pid_de[iptv]=$! ;;
+    chatweb) lancer_chatweb & pid_de[chatweb]=$! ;;
     bilan)   lancer_bilan & pid_de[bilan]=$! ;;
     motion)  lancer_motion & pid_de[motion]=$! ;;
     licence) lancer_licence & pid_de[licence]=$! ;;
@@ -487,6 +513,7 @@ nom_lisible() {
     hypersensible) echo "Hypersensible & Bienveillance" ;;
     titan)   echo "TITAN Builder" ;;
     iptv)    echo "IPTV / VOD" ;;
+    chatweb) echo "Traducteur de chat — cœur TypeScript" ;;
     bilan)   echo "Bilan Patrimoine" ;;
     motion)  echo "Habillages animés (motion)" ;;
     licence) echo "Serveur de licence" ;;

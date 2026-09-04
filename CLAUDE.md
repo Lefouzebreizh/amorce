@@ -691,6 +691,20 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   refuse qu'on supprime le bloc entier.
   CatMeows n'est pas récupérable d'ici (Zenodo refusé) et ses trois contextes
   ne sont pas les quatre intentions visées. Se vérifie depuis la racine.
+  **`web/` porte le même cœur en TypeScript**, pour le navigateur — décidé le
+  04/09/2026 après avoir mesuré que Flutter, Dart et `adb` sont absents : une
+  application native ne peut être ni construite ni *regardée* d'ici, ce que le
+  §8 exige. Le Python reste la référence, et le portage est tenu par des
+  **témoins engendrés depuis lui** — `outils/engendrer-temoins.py` fait tourner
+  le noyau, `tests/conformite.test.ts` rejoue les mêmes entrées et compare le
+  **SVG entier au caractère près**. Aucune attente n'y est écrite à la main.
+  Il ne contient **pas le modèle** : tout part de `Record<string, number>[]`,
+  et la couture attend YAMNet dans le navigateur.
+  Deux pièges mesurés y sont écrits : un `enum` ne survit pas au retrait de
+  types de Node (`strip-only mode`), ce qui vaut pour tous les projets TS du
+  dépôt ; et le `tsconfig.json` racine **avale ces huit fichiers** sans casser
+  pour l'instant — dette assumée, dont le correctif tient en une ligne
+  d'`exclude` en zone sensible.
 - **conseiller-patrimoine/** — la vue d'ensemble du patrimoine, **en lecture
   seule stricte**. Il lit, il ne touche à rien : ni ordre, ni portefeuille, ni un
   seul fichier de NexusCrypto ou du radar. Une dépendance — PyYAML — et le
