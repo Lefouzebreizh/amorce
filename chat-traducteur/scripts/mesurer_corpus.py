@@ -36,7 +36,17 @@ EXTENSIONS = {".wav", ".mp3", ".m4a", ".ogg", ".flac", ".aac",
               ".mp4", ".mov", ".m4v", ".webm", ".3gp"}
 
 
-def mesurer(chemin: Path, modele: Yamnet) -> dict | None:
+def _nom(chemin: Path, racine: Path) -> str:
+    """`demande/wWVNqWx9KfI` plutôt que `wWVNqWx9KfI`, quand il y a un sous-dossier.
+
+    L'étiquette de contexte **est** le nom du dossier : la perdre dans le tableau
+    reviendrait à mesurer un corpus étiqueté comme s'il ne l'était pas.
+    """
+    relatif = chemin.relative_to(racine)
+    return str(relatif.with_suffix(""))
+
+
+def mesurer(chemin: Path, racine: Path, modele: Yamnet) -> dict | None:
     """Rend une ligne de tableau, ou `None` si le fichier est illisible."""
     try:
         fenetres = fenetrer(charger(chemin))
@@ -54,7 +64,7 @@ def mesurer(chemin: Path, modele: Yamnet) -> dict | None:
     fenetre = scores[indice]
 
     return {
-        "nom": chemin.stem,
+        "nom": _nom(chemin, racine),
         "cumul": sum(fenetre.get(c, 0.0) for c in CLASSES_FELINES),
         **{c: fenetre.get(c, 0.0) for c in CLASSES_FELINES},
         "intention": verdict.intention.value,
@@ -69,20 +79,25 @@ def principal() -> int:
         print(f"Dossier introuvable : {dossier}", file=sys.stderr)
         return 1
 
-    fichiers = sorted(f for f in dossier.iterdir() if f.suffix.lower() in EXTENSIONS)
+    # `rglob` et non `iterdir` : le corpus étiqueté range ses fichiers par
+    # intention, en sous-dossiers. Avec `iterdir`, un dossier parfaitement
+    # rempli rendait « aucun son » — le tri est plat, la mesure ne l'est pas.
+    # Un dossier plat, lui, se comporte exactement comme avant.
+    fichiers = sorted(f for f in dossier.rglob("*")
+                      if f.is_file() and f.suffix.lower() in EXTENSIONS)
     if not fichiers:
         print(f"Aucun son dans {dossier}", file=sys.stderr)
         return 1
 
     modele = Yamnet()
-    lignes = [l for l in (mesurer(f, modele) for f in fichiers) if l]
+    lignes = [l for l in (mesurer(f, dossier, modele) for f in fichiers) if l]
 
-    entete = f"{'fichier':<22} {'cumul':>6} " + " ".join(f"{c:>10}" for c in CLASSES_FELINES) \
+    entete = f"{'fichier':<30} {'cumul':>6} " + " ".join(f"{c:>10}" for c in CLASSES_FELINES) \
              + f"  {'dominante':<11} {'intention':<13} source"
     print(entete)
     print("─" * len(entete))
     for l in lignes:
-        print(f"{l['nom']:<22} {l['cumul']:>6.3f} "
+        print(f"{l['nom']:<30} {l['cumul']:>6.3f} "
               + " ".join(f"{l[c]:>10.3f}" for c in CLASSES_FELINES)
               + f"  {l['dominante']:<11} {l['intention']:<13} {l['source']}")
 
@@ -115,7 +130,7 @@ def principal() -> int:
         print(f"\nMeow et Caterwaul tous deux au-dessus de 0,05 : {len(duel)} cas, "
               f"Caterwaul retenu {retenu} fois")
         for l in duel:
-            print(f"    {l['nom']:<22} Meow {l['Meow']:.3f}  Caterwaul {l['Caterwaul']:.3f}"
+            print(f"    {l['nom']:<30} Meow {l['Meow']:.3f}  Caterwaul {l['Caterwaul']:.3f}"
                   f"  -> {l['dominante']}")
     return 0
 
