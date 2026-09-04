@@ -651,13 +651,38 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   un chat ; rien ne cherche d'intention avant. Le modèle public livre une part
   du produit et la livre **mesurée** — mais moins que ce que cette ligne
   annonçait jusqu'au 02/09/2026, et la correction vaut d'être lue.
-  Sur un corpus de 15 sons : `Purr` porte le *contentement*, `Caterwaul` porte
-  seul le *stress*, et **`Hiss` est une classe muette** — 0,000 sur les trois
-  feulements. Surtout, `Caterwaul` perdait **cinq duels sur cinq** contre
-  `Meow`, si bien que le stress n'était jamais atteint : le dépôt annonçait la
-  moitié du produit, le code en livrait le quart. Une classe porteuse de
-  lecture l'emporte désormais sur `Meow` au-dessus de 0,10 — plancher mesuré,
-  six fois au-dessus du plus haut miaulement ordinaire.
+  **Quarante vrais chats ont retiré le stress mesuré, le 04/09/2026, et c'est
+  la correction la plus lourde du projet.** Tout ce que le dépôt savait venait
+  jusque-là de quinze sons **fabriqués** — et il écrivait lui-même que le
+  plancher de `Caterwaul` n'avait jamais vu un vrai chat.
+  Le corpus qui a tranché est ESC-50, jeu de données de recherche récupéré sur
+  GitHub par `scripts/mesurer_esc50.py` : 40 enregistrements de chat, 20
+  témoins. Sondés le même jour, Wikimedia, archive.org, freesound et Zenodo
+  rendent tous `000` ; seul `raw.githubusercontent.com` répond, une fois de
+  plus.
+
+  | sur les 40 chats | médiane | ≥ 0,10 |
+  | --- | --- | --- |
+  | `Meow` | 0,627 | 39/40 |
+  | `Caterwaul` | **0,199** | **31/40** |
+  | `Purr` | 0,004 | 3/40 |
+  | `Hiss` | **0,000** | **0/40** |
+
+  YAMNet allume `Caterwaul` sur **n'importe quel** miaulement, à un tiers du
+  score de `Meow`. L'ancienne règle rendait donc **30 chats sur 40 en
+  « stress »**, annoncé comme *mesuré* : le produit aurait dit à quatre
+  propriétaires sur cinq que leur chat va mal. Deux réparations ont été
+  essayées et écartées, mesures à l'appui — monter le plancher (aucun trou où
+  le poser, tout nombre serait inventé) et exiger que la porteuse dépasse
+  `Meow` (la règle s'allume alors deux fois sur vingt témoins contre une fois
+  sur quarante chats).
+  **`Purr` reste donc seule porteuse**, et elle sépare franchement : 0,148 à
+  0,262 sur trois chats, **0,008 au maximum sur les vingt témoins**. Le prix
+  est dit plutôt que tu : **aucune classe de YAMNet ne porte le stress.** Il
+  n'est plus atteignable que par la tête acoustique, en `PROVISOIRE` plafonné
+  à 0,5 — et la carte cesse alors d'afficher un pourcentage, sans qu'on ait eu
+  à toucher à l'habillage. Mieux vaut « je n'ai pas compris » qu'une fausse
+  alarme sur la santé d'un animal.
   **`Roaring cats` ouvre la porte depuis le 03/09/2026**, et l'exclure était
   une erreur : le premier vrai chat **bâille** pendant 4,5 s de ses 8 s, YAMNet
   le range en rugissement, et son cumul félin valait **zéro**. Perdre un vrai
@@ -683,7 +708,7 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   **`Cat` ouvre la porte et ne choisit jamais** — c'est une classe parente, qui
   vaut 0,988 là où `Meow` vaut 0,891 ; la laisser concourir perdait la lecture
   directe à tous les coups, et six tests verts ne le voyaient pas. Le noyau est
-  en bibliothèque standard **pure** : 48 tests sans rien installer,
+  en bibliothèque standard **pure** : 49 tests sans rien installer,
   **habillage compris** — la carte SVG 1080 × 1920 est pure elle aussi. Elle
   ne peut pas afficher un score que le modèle n'a pas mesuré : le bloc de
   confiance n'existe que pour une lecture `MESUREE`, et deux tests le

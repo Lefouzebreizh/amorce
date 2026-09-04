@@ -1,5 +1,23 @@
 # Le corpus : ce qui manque, et comment le remplir
 
+> **Mis à jour le 04/09/2026.** Une partie de ce fichier décrivait un projet
+> qui n'avait jamais entendu de vrai chat. Il en a entendu **quarante** —
+> ESC-50, récupéré par `scripts/mesurer_esc50.py` — et ce qu'ils ont montré
+> est écrit en tête plutôt qu'en note de bas de page.
+>
+> **La règle du stress était fausse.** `Caterwaul` s'allume sur n'importe quel
+> miaulement : 30 chats sur 40 ressortaient « stress, mesuré ». Détail et
+> chiffres dans le bloc de `CLASSES_PORTEUSES` de `noyau/verdict.py`.
+>
+> **La porte, elle, tient** : les 40 chats vont de 0,387 à 2,719 de cumul
+> félin ; 16 des 20 témoins sont refusés sous 0,062. Quatre passent, et
+> c'est la part non réglée — voir la fin de ce fichier.
+>
+> Ce que ce corpus **n'apporte pas** : des étiquettes de contexte. ESC-50 dit
+> « chat », jamais « chat qui a faim ». La tête acoustique reste donc sans
+> vérité de terrain, et sa licence CC BY-NC interdit d'embarquer ces fichiers
+> dans un produit vendu.
+
 Le projet a un modèle qui écoute, une tête qui lit, 47 tests qui gardent — et
 **quatre sons réels** en tout. Ce fichier dit lesquels manquent, pourquoi ils ne
 peuvent pas venir d'ici, et la commande qui les fait venir d'ailleurs.
@@ -115,3 +133,31 @@ Deux choses, et il vaut mieux les savoir avant de s'en réjouir :
   attache le miaulement aigu et long aux chats *habituellement silencieux*, et
   l'aigu et court aux *bavards* : c'est une habitude, pas un son. Aucun corpus
   d'enregistrements isolés ne la porte.
+
+
+## Ce que les quarante chats laissent non réglé — 04/09/2026
+
+**Quatre témoins sur vingt franchissent la porte**, et deux méritent d'être
+nommés parce qu'ils disent où elle est fragile :
+
+| témoin | cumul félin | ce que YAMNet dit surtout |
+| --- | --- | --- |
+| coup à la porte | **0,590** | `Roaring cats` 0,586, `Roar` 0,586 |
+| bébé qui pleure | 0,445 | `Babbling` 0,332, `Baby laughter` 0,199 |
+| bébé qui pleure | 0,453 | `Animal` 0,500, `Domestic animals` 0,500 |
+
+Le premier vient de `Roaring cats`, entré dans la porte le 03/09 parce que le
+chat d'Erwann **bâille** et que YAMNet le range en rugissement. Sur les 40
+chats d'ESC-50, cette classe vaut 0,000 à 0,043 — elle n'y sert à rien et y
+coûte un faux positif.
+
+**Ce n'est pas une raison suffisante pour la retirer**, et c'est pourquoi rien
+n'a bougé : le contre-exemple qui l'a fait entrer est un vrai chat, filmé par
+le propriétaire, dont 4,5 s sur 8 scoraient **zéro** sans elle. Deux corpus
+disent deux choses opposées, et trancher demande de savoir lequel ressemble le
+plus à ce que les gens enregistreront. Personne ne le sait encore.
+
+Avec l'ancienne règle, le bébé qui pleure ressortait en **« stress, mesuré »**.
+Il ressort désormais `indécis`, non parce que la porte a été réparée, mais
+parce que plus aucune classe ne porte le stress. Le défaut de porte est intact
+et il est écrit ici pour ne pas être oublié.

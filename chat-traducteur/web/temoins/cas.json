@@ -79,14 +79,14 @@
       ],
       "tete": null,
       "attendu": {
-        "intention": "stress",
-        "source": "mesuree",
-        "confiance": 0.51,
-        "raison": "YAMNet a nommé « Hiss » à 0.51.",
-        "classeDominante": "Hiss",
+        "intention": "indecis",
+        "source": "aucune",
+        "confiance": 0.0,
+        "raison": "Miaulement reconnu, mais faim et envie de sortir ne se séparent pas sans tête entraînée — voir README, « Ce qui manque ».",
+        "classeDominante": "Meow",
         "affichable": true
       },
-      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-stress\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#2B1B33\"/>\n      <stop offset=\"100%\" stop-color=\"#120A16\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-stress)\"/>\n  <rect x=\"96\" y=\"323\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#C99DEB\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"451\" font-size=\"84\" font-weight=\"800\" fill=\"#F4E9FA\">« Recule. »</text>\n  <text x=\"96\" y=\"609\" font-size=\"52\" font-weight=\"400\" fill=\"#F4E9FA\">Là, tout de suite, j&apos;ai besoin</text>\n  <text x=\"96\" y=\"672\" font-size=\"52\" font-weight=\"400\" fill=\"#F4E9FA\">d&apos;espace.</text>\n  <text x=\"96\" y=\"775\" font-size=\"30\" font-weight=\"600\" fill=\"#C99DEB\">Hiss · 51%</text>\n  </g>\n</svg>\n"
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-indecis\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#232323\"/>\n      <stop offset=\"100%\" stop-color=\"#0D0D0D\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-indecis)\"/>\n  <rect x=\"96\" y=\"310\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#B1B1B1\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"438\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">« Je n&apos;ai pas</text>\n  <text x=\"96\" y=\"540\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">compris. »</text>\n  <text x=\"96\" y=\"698\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">J&apos;ai bien entendu un chat.</text>\n  <text x=\"96\" y=\"761\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">Mais je ne devine pas plus.</text>\n  </g>\n</svg>\n"
     },
     {
       "nom": "lecture directe Caterwaul",
@@ -99,14 +99,14 @@
       ],
       "tete": null,
       "attendu": {
-        "intention": "stress",
-        "source": "mesuree",
-        "confiance": 0.586,
-        "raison": "YAMNet a nommé « Caterwaul » à 0.59.",
-        "classeDominante": "Caterwaul",
+        "intention": "indecis",
+        "source": "aucune",
+        "confiance": 0.0,
+        "raison": "Miaulement reconnu, mais faim et envie de sortir ne se séparent pas sans tête entraînée — voir README, « Ce qui manque ».",
+        "classeDominante": "Meow",
         "affichable": true
       },
-      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-stress\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#2B1B33\"/>\n      <stop offset=\"100%\" stop-color=\"#120A16\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-stress)\"/>\n  <rect x=\"96\" y=\"323\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#C99DEB\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"451\" font-size=\"84\" font-weight=\"800\" fill=\"#F4E9FA\">« Recule. »</text>\n  <text x=\"96\" y=\"609\" font-size=\"52\" font-weight=\"400\" fill=\"#F4E9FA\">Là, tout de suite, j&apos;ai besoin</text>\n  <text x=\"96\" y=\"672\" font-size=\"52\" font-weight=\"400\" fill=\"#F4E9FA\">d&apos;espace.</text>\n  <text x=\"96\" y=\"775\" font-size=\"30\" font-weight=\"600\" fill=\"#C99DEB\">Caterwaul · 59%</text>\n  </g>\n</svg>\n"
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-indecis\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#232323\"/>\n      <stop offset=\"100%\" stop-color=\"#0D0D0D\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-indecis)\"/>\n  <rect x=\"96\" y=\"310\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#B1B1B1\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"438\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">« Je n&apos;ai pas</text>\n  <text x=\"96\" y=\"540\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">compris. »</text>\n  <text x=\"96\" y=\"698\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">J&apos;ai bien entendu un chat.</text>\n  <text x=\"96\" y=\"761\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">Mais je ne devine pas plus.</text>\n  </g>\n</svg>\n"
     },
     {
       "nom": "Meow domine, porteuse sous le plancher",
