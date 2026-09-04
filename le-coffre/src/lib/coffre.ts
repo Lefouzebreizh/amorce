@@ -22,6 +22,12 @@ export type Echeance = {
   confiance: 'haute' | 'moyenne' | 'basse';
 };
 
+export type Lettre = {
+  objet: string;
+  corps: string;
+  mentionsManquantes: string[];
+};
+
 export type ObjetIndex = {
   nom: string;
   taille: number;
@@ -29,6 +35,9 @@ export type ObjetIndex = {
   categorie: string;
   deposeLe: string;
   echeance?: Echeance;
+  emetteur?: string;
+  referenceClient?: string;
+  lettre?: Lettre;
 };
 
 export type RendezVous = {
@@ -37,17 +46,69 @@ export type RendezVous = {
   date: string;
 };
 
+export type Identite = {
+  nom: string;
+  adresse: string;
+  codePostal: string;
+  ville: string;
+};
+
 export type IndexCoffre = {
   objets: Record<string, ObjetIndex>;
   rendezVous?: Record<string, RendezVous>;
+  identite?: Identite;
 };
 
 export type PropositionClassement = {
   lisible: boolean;
   categorie: string;
   nomSuggere: string;
+  emetteur: string | null;
+  referenceClient: string | null;
   echeance: Echeance;
 };
+
+// Catégories où un document a des chances d'être un abonnement résiliable —
+// sert seulement à décider si on propose une lettre, jamais à choisir un
+// fondement légal précis (on n'a pas la date d'engagement ni le préavis
+// exact, contrairement à paper-manager/core/resiliation.py — voir SECURITY.md).
+const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et internet'];
+
+// Un gabarit fixe, jamais du texte librement généré par un modèle : c'est le
+// gabarit qui garantit le fond (mentions obligatoires), pas la formulation.
+// Toujours présenté comme un brouillon à relire, jamais envoyé seul —
+// version volontairement simplifiée de paper-manager/core/resiliation.py :
+// pas de calcul de préavis, pas de fondement légal par catégorie, parce que
+// Le Coffre n'a que ce qu'une photo laisse voir.
+export function composerLettreResiliation(
+  identite: Identite, emetteur: string, referenceClient: string | null, dateEffet: string,
+): Lettre {
+  const aujourdhui = new Date().toLocaleDateString('fr-FR');
+  const effet = new Date(dateEffet + 'T00:00:00').toLocaleDateString('fr-FR');
+  const objet = `Résiliation de mon contrat${referenceClient ? ` — réf. client ${referenceClient}` : ''}`;
+  const corps =
+    `${identite.nom}\n${identite.adresse}\n${identite.codePostal} ${identite.ville}\n\n` +
+    `${identite.ville}, le ${aujourdhui}\n\n` +
+    `À l'attention du service résiliation — ${emetteur}\n\n` +
+    `Objet : ${objet}\n\n` +
+    `Madame, Monsieur,\n\n` +
+    `Je vous informe par la présente de ma décision de résilier mon contrat` +
+    `${referenceClient ? ` (référence client ${referenceClient})` : ''} souscrit auprès de ${emetteur}, ` +
+    `pour des raisons qui me sont personnelles.\n\n` +
+    `Je vous demande de prendre en compte cette résiliation avec effet au ${effet}, ` +
+    `et vous remercie de bien vouloir m'en confirmer la prise en compte par écrit.\n\n` +
+    `Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.\n\n` +
+    `${identite.nom}`;
+
+  const entier = `${objet}\n${corps}`;
+  const mentionsManquantes = [
+    !referenceClient && "la référence client (non lue sur le document — à ajouter à la main si tu la connais)",
+    !entier.includes(effet) && "la date d'effet",
+    !entier.toLowerCase().includes('confirmation') && "la demande de confirmation écrite",
+  ].filter((m): m is string => Boolean(m));
+
+  return { objet, corps, mentionsManquantes };
+}
 
 function b64FromFichier(buf: ArrayBuffer): string {
   // Par blocs de 32 Ko : String.fromCharCode(...octets) sur un fichier de
@@ -67,7 +128,7 @@ function b64FromFichier(buf: ArrayBuffer): string {
 // panne, on renvoie une proposition vide plutôt que de bloquer le dépôt.
 export async function proposerClassement(fichier: File): Promise<PropositionClassement> {
   const vide: PropositionClassement = {
-    lisible: false, categorie: '', nomSuggere: '',
+    lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null,
     echeance: { presente: false, date: null, libelle: null, confiance: 'basse' },
   };
   try {
@@ -150,7 +211,7 @@ async function sauvegarderIndex(userId: string, cle: CryptoKey, index: IndexCoff
 
 export async function deposerFichier(
   userId: string, cle: CryptoKey, fichier: File, categorie: string, index: IndexCoffre,
-  nomAffiche?: string, echeance?: Echeance,
+  nomAffiche?: string, echeance?: Echeance, emetteur?: string | null, referenceClient?: string | null,
 ): Promise<IndexCoffre> {
   const buf = await fichier.arrayBuffer();
   const paquet = await chiffrerOctets(cle, buf);
@@ -180,6 +241,17 @@ export async function deposerFichier(
         .from('coffre_echeances')
         .insert({ user_id: userId, objet_nom: nom, date: echeance.date });
       if (erreurEcheance) throw new Error(erreurEcheance.message);
+    }
+    // La lettre est un gabarit rempli, jamais un texte deviné : seulement si
+    // l'émetteur a été lu noir sur blanc, la catégorie ressemble à un
+    // abonnement, et l'identité de l'utilisateur est renseignée.
+    if (
+      echeance.date && emetteur && index.identite
+      && CATEGORIES_RESILIABLES.includes(categorie)
+    ) {
+      objet.emetteur = emetteur;
+      if (referenceClient) objet.referenceClient = referenceClient;
+      objet.lettre = composerLettreResiliation(index.identite, emetteur, referenceClient ?? null, echeance.date);
     }
   }
 
@@ -239,6 +311,17 @@ export async function supprimerRendezVous(
   const rendezVous = { ...index.rendezVous };
   delete rendezVous[id];
   const nouvel_index: IndexCoffre = { objets: index.objets, rendezVous };
+  await sauvegarderIndex(userId, cle, nouvel_index);
+  return nouvel_index;
+}
+
+// L'identité (nom, adresse) sert uniquement à remplir l'en-tête des lettres
+// de résiliation — chiffrée dans l'index comme le reste, jamais transmise
+// ailleurs, jamais utilisée pour rien d'autre.
+export async function enregistrerIdentite(
+  userId: string, cle: CryptoKey, identite: Identite, index: IndexCoffre,
+): Promise<IndexCoffre> {
+  const nouvel_index: IndexCoffre = { ...index, identite };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }

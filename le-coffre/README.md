@@ -57,6 +57,16 @@ même mécanique d'alerte que pour une échéance de document, même compromis :
 la date seule sort en clair (`coffre_echeances`, `type = 'rendezvous'`), le
 libellé reste chiffré dans l'index, comme un nom de fichier.
 
+## La lettre de résiliation (04/09/2026)
+
+Quand un document classé « Assurance », « Énergie » ou « Téléphonie et
+internet » a une échéance, et que l'émetteur a pu être lu sur le document,
+un brouillon de lettre de résiliation est composé à partir d'un gabarit fixe
+(jamais un texte librement écrit par l'IA) — voir `SECURITY.md`, section
+« La lettre de résiliation », pour ce qui la distingue volontairement de la
+version complète de `paper-manager/core/resiliation.py`. Toujours présentée
+comme un brouillon, avec la liste de ce qui manque pour être complète.
+
 ## Architecture
 
 ```

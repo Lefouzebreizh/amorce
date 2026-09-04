@@ -75,6 +75,38 @@ sur la même image : plus aucune invention. Cela ne garantit pas l'absence
 totale d'erreur sur un vrai document ambigu — d'où l'obligation de validation
 humaine avant tout dépôt, qui reste la vraie garde-fou, pas le prompt.
 
+## La lettre de résiliation : un gabarit fixe, jamais du texte deviné
+
+Ajoutée le 04/09/2026, en version volontairement simplifiée par rapport à
+`paper-manager/core/resiliation.py` (voir ce fichier pour la version
+complète — quatre gabarits selon la situation juridique, calcul du préavis,
+fondement légal précis). Le Coffre n'a que ce qu'une photo laisse voir :
+catégorie, émetteur, référence client si visible, date d'échéance. Pas de
+date d'engagement, pas de durée de préavis — donc pas de calcul de date
+d'effet fiable, et un seul gabarit générique, jamais un article de loi cité.
+
+**Le texte du gabarit est fixe, écrit dans le code — jamais généré librement
+par Claude.** Seuls les champs (émetteur, référence, date, identité)
+viennent du modèle ou de l'utilisateur ; la formulation elle-même ne varie
+pas. C'est le même principe que `paper-manager` : *le gabarit garantit le
+fond, jamais le modèle.*
+
+`emetteur` et `referenceClient` sont désormais aussi demandés à
+`classer-document`, dans le même appel que la catégorie et l'échéance — pas
+un second moment d'exposition. La consigne de ne jamais deviner s'applique
+pareil : `null` plutôt qu'une référence inventée.
+
+**Toujours présentée comme un brouillon** : la fonction qui compose la
+lettre (`composerLettreResiliation`, purement côté navigateur, aucun appel
+serveur) liste explicitement les mentions manquantes (référence client non
+lue, notamment) plutôt que de les taire — contrairement à `paper-manager`
+qui refuse de produire un courrier incomplet, ici on préfère montrer un
+brouillon imparfait à corriger plutôt que rien.
+
+L'identité de l'utilisateur (nom, adresse) est chiffrée dans l'index comme
+le reste — ne sert qu'à remplir l'en-tête de la lettre, jamais transmise
+ailleurs.
+
 ## L'alerte proactive : la date seule sort en clair, rien d'autre
 
 Décision tranchée le 04/09/2026 : plutôt que de garder l'échéance entièrement

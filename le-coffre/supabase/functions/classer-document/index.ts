@@ -23,6 +23,8 @@ type Resultat = {
   lisible: boolean;
   categorie: string;
   nomSuggere: string;
+  emetteur: string | null;
+  referenceClient: string | null;
   echeance: {
     presente: boolean;
     date: string | null; // AAAA-MM-JJ
@@ -64,7 +66,7 @@ Deno.serve(async (requete: Request) => {
     // .zip) — on répond une proposition vide plutôt qu'une erreur : le
     // dépôt continue, juste sans suggestion.
     return reponseJson({
-      lisible: false, categorie: "", nomSuggere: "",
+      lisible: false, categorie: "", nomSuggere: "", emetteur: null, referenceClient: null,
       echeance: { presente: false, date: null, libelle: null, confiance: "basse" },
     } satisfies Resultat);
   }
@@ -85,12 +87,16 @@ Deno.serve(async (requete: Request) => {
     `{"lisible": booléen — vrai seulement si tu identifies avec certitude un vrai document lisible, ` +
     `"categorie": une valeur parmi ${JSON.stringify(CATEGORIES)} si lisible sinon "", ` +
     `"nomSuggere": un nom de fichier court et clair sans extension si lisible sinon "" (ex. "EDF facture juillet"), ` +
+    `"emetteur": le nom de l'entreprise ou de l'organisme qui a émis ce document, écrit noir sur blanc, sinon null (jamais deviné à partir du logo ou du sujet), ` +
+    `"referenceClient": le numéro de client/contrat/abonné s'il est écrit noir sur blanc, sinon null (jamais un numéro de facture ou une date prise pour une référence), ` +
     `"echeance": {"presente": booléen — vrai seulement si CE document contient, noir sur blanc, une date limite, ` +
     `une date de préavis, une échéance de paiement ou de renouvellement, ` +
     `"date": la date au format AAAA-MM-JJ si présente sinon null, ` +
     `"libelle": une courte description de ce qui arrive à cette date si présente sinon null (ex. "Fin du préavis assurance habitation"), ` +
     `"confiance": "haute" seulement si la date est écrite noir sur blanc et que tu l'as lue directement, jamais "haute" si déduite ou incertaine}}\n` +
-    `Ne devine jamais une date, un nom, ou une catégorie : dans le doute, "lisible": false et tout le reste vide/faux.`;
+    `Ne devine jamais une date, un nom, un émetteur, une référence, ou une catégorie : ` +
+    `dans le doute sur le document entier, "lisible": false et tout le reste vide/faux ; ` +
+    `dans le doute sur un champ précis (émetteur, référence), laisse-le null plutôt que d'inventer.`;
 
   const reponse = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
