@@ -1067,13 +1067,54 @@ Deuxième raison, indépendante de la première : un greffon installé ici atter
 dans `/root/.claude/`, à l'intérieur d'un conteneur repris après inactivité. Il
 disparaît. **Seul le dépôt persiste.**
 
-**`youtu.be` et `youtube.com` sont refusés eux aussi** — `EGRESS_BLOCKED`,
-mesuré le 29/08. Cela compte parce qu'un lien vidéo arrive souvent seul, sans
-un mot : le réflexe est d'aller le lire, et il est perdu d'avance. Deux raisons
-plutôt qu'une, d'ailleurs — même joignable, une page YouTube ne donne qu'un
-titre, et **regarder une vidéo n'est de toute façon pas possible**. La seule
-réponse utile est donc de demander en une phrase ce qu'il faut en retenir, et
-de continuer autre chose en attendant.
+**`youtu.be` et `youtube.com` étaient donnés pour refusés eux aussi —
+`EGRESS_BLOCKED`, mesuré le 29/08. La moitié de cette phrase est fausse depuis
+le 04/09/2026, et la conséquence qu'on en tirait l'est entièrement.**
+
+| hôte | 29/08 | 04/09 |
+| --- | --- | --- |
+| `www.youtube.com` | refusé | **200** |
+| `googlevideo.com` (l'hôte qui sert les médias) | non sondé | **répond** |
+| `youtu.be` | refusé | refusé |
+| `i.ytimg.com` (vignettes) | non sondé | refusé |
+
+Et le **connecteur TubeAlfred** rend recherche, fiches et **transcriptions**
+— une transcription entière obtenue pour 1 crédit sur 100. La phrase « une page
+YouTube ne donne qu'un titre » ne tient donc plus : elle donne le texte complet
+de ce qui est dit, ce qui suffit à vérifier une source de vulgarisation sans
+regarder la vidéo. C'est ainsi que le référentiel de `chat-traducteur/` a été
+confronté à sa source le 04/09.
+
+**Ce qui reste vrai, et la cause a changé de nature.** Les octets d'un média ne
+s'obtiennent toujours pas — mais ce n'est plus le mandataire qui refuse, c'est
+YouTube. Cinq chemins essayés le même jour, `yt-dlp 2026.08.19` installé depuis
+PyPI :
+
+| chemin | ce qu'il rend |
+| --- | --- |
+| métadonnées, liste des formats | **passent** |
+| flux DASH `140` (client par défaut) | `403 Forbidden` |
+| clients `tv`, `web_safari`, `ios` | *« Sign in to confirm you're not a bot »* |
+| flux HLS `233` | `403` sur chaque fragment |
+| URL média en direct, redirection suivie | `403`, zéro octet |
+
+La distinction se paie si on l'ignore : un `403` se lit comme une clé
+manquante, un `000` comme un mur réseau, et ici ce n'est **ni l'un ni
+l'autre** — c'est une adresse de centre de données qu'une plateforme refuse
+sans cookies de session. Aucune clé, aucune ouverture de domaine n'y changera
+quoi que ce soit ; et rien ne dit qu'un *runner* GitHub ferait mieux, son
+adresse étant de la même famille — non mesuré, à ne pas promettre.
+
+Le sixième chemin a été essayé aussi, parce qu'il ne passait pas par le CDN de
+YouTube : une chaîne de bruitages qui met des liens `file-upload.com` dans ses
+descriptions. **`file-upload.com` rend `000`** — refusé au tunnel, celui-là
+pour de bon.
+
+**Donc, en pratique :** on lit et on transcrit une vidéo d'ici ; on ne
+rapatrie pas son son. Un corpus audio se constitue sur la machine du
+propriétaire, en une commande, et la liste des candidats se prépare ici — c'est
+exactement le partage du §7 sur higgsfield, une troisième fois : **le connecteur
+travaille, les octets ne suivent pas.**
 
 **La parade est celle de la voix off et des poids Wav2Lip, une troisième fois :
 GitHub répond.** Des bougies réelles au format CCXT — `[horodatage_ms, o, h, b,

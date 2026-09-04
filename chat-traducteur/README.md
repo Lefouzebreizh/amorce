@@ -97,6 +97,19 @@ C'est aussi ce qui rend l'axe communautaire — la correction collective, mise d
 côté pour plus tard — plus stratégique qu'il n'en avait l'air : c'est la seule
 source d'étiquettes qui passe à l'échelle.
 
+**Et il manque plus simple que des étiquettes : un miaulement.** La tête
+acoustique est câblée, testée, et n'a **jamais lu un vrai miaulement franc** —
+les deux enregistrements réels dont dispose le projet sont un bâillement suivi
+d'un ronronnement, et un chat qui quémande en silence. Ce qui a été mesuré le
+04/09/2026 sur les chemins possibles, les candidats repérés et la commande à
+lancer depuis la machine d'Erwann sont dans **`CORPUS.md`**, à côté de ce
+fichier.
+
+Le résumé tient en une ligne : YouTube répond d'ici, il **transcrit** même —
+c'est ainsi que le référentiel a été confronté à sa source — mais il ne rend
+pas les octets d'un média à une adresse de centre de données. Ce n'est pas le
+mandataire, c'est la plateforme, et aucune clé n'y change rien.
+
 ## Structure
 
 ```

@@ -52,7 +52,15 @@ CONFIANCE_MIN = 0.55
 # annotés devront confirmer ou déplacer.
 FRONTIERE_AIGU = 400.0
 
-# Frontière court / long, en secondes. Même statut : hypothèse déclarée.
+# Frontière court / long, en secondes. Même statut : hypothèse déclarée — mais
+# elle ne porte pas la même charge que la précédente, et la transcription de la
+# source, relue le 04/09/2026, l'a rendu visible.
+#
+# Les deux premiers types du référentiel sont **aigus tous les deux** : seule la
+# durée les sépare. Ce nombre-ci décide donc à lui seul entre « il demande
+# quelque chose » et « il te dit bonjour », là où `FRONTIERE_AIGU` ne fait que
+# détacher l'alerte. À corpus annoté égal, c'est celui des deux qu'il faut
+# mesurer en premier.
 FRONTIERE_LONG = 0.7
 
 
