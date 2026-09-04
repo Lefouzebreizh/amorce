@@ -6,7 +6,8 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
-  supprimerFichier, chargerIndex, proposerClassement, type IndexCoffre, type Echeance,
+  supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
+  type IndexCoffre, type Echeance,
 } from '@/lib/coffre';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
@@ -33,7 +34,7 @@ export default function PageCoffre() {
   const [utilisateur, setUtilisateur] = useState<User | null>(null);
   const [etape, setEtape] = useState<Etape>('chargement');
   const [cle, setCle] = useState<CryptoKey | null>(null);
-  const [index, setIndex] = useState<IndexCoffre>({ objets: {} });
+  const [index, setIndex] = useState<IndexCoffre>({ objets: {}, rendezVous: {} });
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [aValider, setAValider] = useState<EnAttente[]>([]);
@@ -75,7 +76,7 @@ export default function PageCoffre() {
     try {
       const nouvelleCle = await initialiserCoffre(utilisateur.id, m1);
       setCle(nouvelleCle);
-      setIndex({ objets: {} });
+      setIndex({ objets: {}, rendezVous: {} });
       setEtape('ouvert');
     } catch (err) {
       setErreur(err instanceof Error ? err.message : String(err));
@@ -187,6 +188,39 @@ export default function PageCoffre() {
     }
   }
 
+  async function surAjoutRendezVous(e: React.FormEvent) {
+    e.preventDefault();
+    if (!utilisateur || !cle) return;
+    const forme = new FormData(e.target as HTMLFormElement);
+    const libelle = String(forme.get('libelle') || '').trim();
+    const date = String(forme.get('date') || '');
+    if (!libelle || !date) return;
+    setEnCours(true);
+    setErreur('');
+    try {
+      const nouvelIndex = await ajouterRendezVous(utilisateur.id, cle, libelle, date, index);
+      setIndex(nouvelIndex);
+      (e.target as HTMLFormElement).reset();
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : String(err));
+    } finally {
+      setEnCours(false);
+    }
+  }
+
+  async function retirerRendezVous(id: string) {
+    if (!utilisateur || !cle) return;
+    const rdv = index.rendezVous?.[id];
+    if (!rdv) return;
+    if (!confirm(`Retirer le rendez-vous « ${rdv.libelle} » ?`)) return;
+    try {
+      const nouvelIndex = await supprimerRendezVous(utilisateur.id, cle, id, index);
+      setIndex(nouvelIndex);
+    } catch (err) {
+      alert(`Suppression impossible : ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
   if (etape === 'chargement') {
     return <main className="flex min-h-screen items-center justify-center text-ink-soft">Chargement…</main>;
   }
@@ -245,6 +279,8 @@ export default function PageCoffre() {
   }
 
   const noms = Object.keys(index.objets);
+  const rendezVousTries = Object.values(index.rendezVous || {})
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -318,6 +354,38 @@ export default function PageCoffre() {
         </ul>
       )}
 
+      <section className="mb-8">
+        <h2 className="mb-3 font-affiche text-xl">Rendez-vous</h2>
+        <form onSubmit={surAjoutRendezVous} className="mb-4 flex flex-wrap gap-3">
+          <input name="libelle" placeholder="Dentiste, cabinet Martin…" required
+            className="min-w-[12rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
+          <input name="date" type="date" required
+            className="rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
+          <button type="submit" disabled={enCours}
+            className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
+            Ajouter
+          </button>
+        </form>
+        {rendezVousTries.length === 0 ? (
+          <p className="text-sm text-ink-soft">Aucun rendez-vous noté.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {rendezVousTries.map((rdv) => (
+              <li key={rdv.id} className="flex items-center justify-between rounded-xl border border-line bg-paper-raised px-4 py-3">
+                <div>
+                  <p className="font-medium">{rdv.libelle}</p>
+                  <p className="text-sm text-ink-soft">{rdv.date}</p>
+                </div>
+                <button onClick={() => retirerRendezVous(rdv.id)} className="text-sm text-wine hover:underline">
+                  Retirer
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <h2 className="mb-3 font-affiche text-xl">Documents</h2>
       {noms.length === 0 ? (
         <p className="text-ink-soft">Le coffre est vide pour l&apos;instant.</p>
       ) : (

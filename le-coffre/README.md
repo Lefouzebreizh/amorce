@@ -39,8 +39,23 @@ un nom, et une échéance éventuelle (lecture par Claude en vision) —
 **toujours à valider avant que le dépôt n'ait lieu**, jamais appliqué
 automatiquement. C'est la seule exception à « rien de lisible ne sort » du
 projet ; voir `SECURITY.md`, section « Le classement automatique », pour ce
-que ça implique et ses limites (notamment : pas encore d'alerte proactive
-avant l'échéance).
+que ça implique et ses limites.
+
+## Les alertes d'échéance (04/09/2026)
+
+Une échéance validée déclenche, une fois par jour, un e-mail d'alerte avant
+qu'elle n'arrive — envoyé par `envoyer-alertes-echeances` (Supabase, tâche
+planifiée `pg_cron`), via Resend depuis `alertes@erwannchevallier.com`.
+Seule la date sort en clair de la base pour rendre ça possible ; jamais le
+nom du document. Voir `SECURITY.md`, section « L'alerte proactive », pour le
+compromis exact et sa justification.
+
+## Les rendez-vous (04/09/2026)
+
+Un rendez-vous se note directement (libellé + date), sans document associé —
+même mécanique d'alerte que pour une échéance de document, même compromis :
+la date seule sort en clair (`coffre_echeances`, `type = 'rendezvous'`), le
+libellé reste chiffré dans l'index, comme un nom de fichier.
 
 ## Architecture
 
@@ -55,8 +70,9 @@ le-coffre/
 │       ├── supabase.ts         client Supabase (clé publiable, sécurité par RLS)
 │       └── coffre.ts           les opérations du coffre, contre Supabase
 ├── supabase/functions/
-│   └── classer-document/       lit un document en clair côté serveur (Claude vision),
-│                                ne conserve rien — voir SECURITY.md
+│   ├── classer-document/       lit un document en clair côté serveur (Claude vision),
+│   │                            ne conserve rien — voir SECURITY.md
+│   └── envoyer-alertes-echeances/  tâche quotidienne, envoie les alertes via Resend
 └── .env.example                 variables à copier en .env.local
 ```
 

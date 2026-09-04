@@ -75,14 +75,37 @@ sur la même image : plus aucune invention. Cela ne garantit pas l'absence
 totale d'erreur sur un vrai document ambigu — d'où l'obligation de validation
 humaine avant tout dépôt, qui reste la vraie garde-fou, pas le prompt.
 
-**Ce que ça n'inclut pas encore** : aucune alerte proactive (e-mail avant
-l'échéance). L'échéance détectée est chiffrée comme le reste de l'index —
-visible seulement une fois le coffre déverrouillé. Un serveur ne peut donc
-pas savoir qu'il faut prévenir quelqu'un sans que cette personne ait d'abord
-rouvert l'application. Décision de périmètre à trancher séparément :
-chiffrer la date (comme aujourd'hui, pas d'alerte proactive possible) ou la
-stocker en clair sans le contenu du document (alerte proactive possible, au
-prix d'exposer qu'une échéance existe à telle date).
+## L'alerte proactive : la date seule sort en clair, rien d'autre
+
+Décision tranchée le 04/09/2026 : plutôt que de garder l'échéance entièrement
+chiffrée (ce qui interdirait toute alerte tant que personne n'a rouvert
+l'application), sa **date seule** part aussi, en clair, vers une table séparée
+(`coffre_echeances` : `user_id`, `date`, et le nom opaque de l'objet — déjà
+sans signification, utile seulement pour retirer la ligne si le document est
+supprimé). Le nom du document, sa catégorie et son libellé restent
+exclusivement dans l'index chiffré, comme avant.
+
+Ce que ce compromis expose : qu'une échéance existe, à telle date, pour tel
+compte — rien sur sa nature. Ce qu'il permet : une fonction serveur
+(`envoyer-alertes-echeances`), programmée une fois par jour via `pg_cron`,
+qui cherche les échéances proches non encore signalées et envoie un e-mail
+via Resend (domaine `erwannchevallier.com`, vérifié) — sans jamais nommer le
+document dans le message. Protégée par un secret partagé (`x-cron-secret`,
+distinct de la vérification JWT standard) : rien d'autre que la tâche
+planifiée ne peut la déclencher.
+
+**Vérifié de bout en bout, pas seulement en théorie** : la fonction a été
+testée avec une vraie échéance insérée directement en base, un vrai envoi via
+l'API Resend, et une vraie réception confirmée dans la boîte mail cible —
+pas seulement une réponse API à 200.
+
+Comme pour `service_role`, un même piège de GRANT manquant a été retrouvé et
+corrigé sur `coffre_echeances` (la clé service_role contourne RLS mais pas
+les droits de base sur la table) :
+
+```sql
+grant select, insert, update, delete on public.coffre_echeances to service_role;
+```
 
 ## Suppression : une garantie plus faible qu'en local, à le dire
 
