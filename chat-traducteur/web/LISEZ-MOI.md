@@ -24,12 +24,55 @@ Flutter.
 | | |
 | --- | --- |
 | **Contient** | la porte, les deux étages, la tête acoustique, l'autocorrélation, l'habillage, la carte SVG 1080 × 1920 |
-| **Ne contient pas** | **le modèle**. Rien ici ne produit les 521 scores de YAMNet |
+| **Ne contient pas** | ~~le modèle~~ — il tourne depuis le 04/09/2026, voir plus bas |
 
 C'est la couture, et elle est nette : tout ce qui décide part de
-`fenetres: Record<string, number>[]`. Le jour où le modèle tourne dans le
-navigateur, il se branche là et rien d'autre ne bouge. Tant qu'il n'y est pas,
-**ce dossier ne fait pas une application** — il en fait la moitié qui décide.
+`fenetres: Record<string, number>[]`. Le modèle s'y branche par
+`adaptateurs/yamnet.ts` et rien d'autre n'a bougé — c'est ce qu'une couture
+doit faire.
+
+## Le modèle tourne dans le navigateur, et c'est mesuré
+
+Le même vecteur de 15 600 échantillons dans les deux moteurs — le
+`ai_edge_litert` de Python et le WASM de `@tensorflow/tfjs-tflite` conduit par
+un vrai Chromium :
+
+    écart maximum sur les 521 classes : 0.000e+0
+
+Bit pour bit, sur quatre signaux et sept fenêtres. C'est ce qui autorise à
+parler d'**un** produit plutôt que de deux : tout ce que le corpus Python a
+mesuré — le plancher de `Caterwaul`, la classe muette `Hiss`, le bâillement
+rangé en rugissement — vaut ici sans être remesuré.
+
+```bash
+npm run bati       # tsc vers dist/, ce que le navigateur charge
+npm run epreuve    # Chromium + le vrai modèle, comparés au Python
+```
+
+L'épreuve rend **3** — « non effectué » — quand Chromium, le modèle ou les
+dépendances manquent, et écrit alors sa propre raison. Le compter vert serait
+une mesure qui n'a rien mesuré ; le compter rouge punirait le code d'un manque
+de la machine.
+
+### Deux choses à savoir avant d'y toucher
+
+**`tfjs-tflite` épingle exactement `tfjs-core@4.9.0`.** Installer le `^4.22.0`
+courant fait échouer `npm install` sur un `ERESOLVE`. Ni `--force` ni
+`--legacy-peer-deps` : les versions sont fixes dans le `package.json`, alignées
+sur ce que l'alpha exige.
+
+**Les WASM sont livrés dans le paquet npm.** `setWasmPath` sur un dossier local
+suffit : aucun CDN n'est joint, ce qui compte doublement ici — le mandataire les
+refuse tous, et le produit promet que rien ne quitte l'appareil.
+
+### Ce que cette mesure ne couvre pas
+
+Les quatre signaux sont **fabriqués** — un accord, du silence, un bruit, un
+glissando. Aucun n'est un chat, et ce n'est pas le sujet : l'épreuve compare
+deux moteurs, elle ne mesure pas la justesse de YAMNet. La chaîne complète sur
+un vrai enregistrement, du micro à la carte, **n'a pas encore été éprouvée dans
+le navigateur** — c'est le prochain lot, et il attend le corpus décrit dans
+`../CORPUS.md`.
 
 ## Les témoins de conformité, et pourquoi ils décident de tout
 

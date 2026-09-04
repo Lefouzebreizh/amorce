@@ -365,10 +365,28 @@ lancer_chatweb() {
   ( cd "$d" || exit 1; etape "$j.test" "conformité au noyau Python" npm test ) || e=1
   if [ -d "$d/node_modules" ]; then
     ( cd "$d" || exit 1; etape "$j.check" "types" npm run check ) || e=1
+    # L'épreuve du navigateur conduit un vrai Chromium sur le vrai modèle et
+    # compare les 521 scores à ceux du Python. Elle rend 3 quand il lui manque
+    # une pièce de la machine — Chromium, le modèle non versionné, le bâti —
+    # et **écrit alors sa propre raison** plutôt que la raison générique
+    # d'`etape_regard` : « pas de Chromium » sur un modèle absent enverrait
+    # chercher le défaut au mauvais endroit.
+    ( cd "$d" || exit 1; npm run bati --silent ) >"$j.bati.brut" 2>&1 || {
+      echo "    ✗ bâti navigateur" >> "$j.check"; e=1; }
+    local sortie
+    sortie=$( cd "$d" && node outils/epreuve.mjs 2>&1 ); local code=$?
+    case $code in
+      0) echo "    ✓ épreuve du navigateur (521 scores × 7 fenêtres)" >> "$j.epreuve" ;;
+      3) echo "    ⊘ épreuve du navigateur — $(echo "$sortie" | tail -1)" >> "$j.epreuve" ;;
+      *) echo "    ✗ épreuve du navigateur" >> "$j.epreuve"
+         { echo "── épreuve du navigateur"; echo "$sortie" | tail -20; } > "$j.epreuve.echec"
+         e=1 ;;
+    esac
   else
     echo "    ⊘ types — non effectué, dépendances non installées" >> "$j.check"
+    echo "    ⊘ épreuve du navigateur — non effectué, dépendances non installées" >> "$j.epreuve"
   fi
-  cat "$j".{test,check} > "$j" 2>/dev/null
+  cat "$j".{test,check,epreuve} > "$j" 2>/dev/null
   return $e
 }
 
