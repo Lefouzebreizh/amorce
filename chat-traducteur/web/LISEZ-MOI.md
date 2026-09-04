@@ -90,6 +90,39 @@ qu'il fallait défiler pour trouver le bouton qui fait exactement ce pour quoi
 le produit existe. L'aperçu est désormais borné en **hauteur** — `min(42dvh,
 380px)` — et tout tient sur un écran.
 
+## L'épreuve sur des vrais chats — 04/09/2026
+
+Les épreuves ci-dessus comparent deux moteurs sur des signaux **fabriqués**, au
+bit près. Celle-ci pose l'autre question, la seule qui compte pour quelqu'un qui
+appuie sur le bouton : **les deux chaînes concluent-elles la même chose sur du
+son réel ?**
+
+```bash
+python3 ../scripts/mesurer_esc50.py        # récupère 40 chats + 20 témoins
+npm run temoins:corpus                     # la référence, par le noyau Python
+npm run bati && npm run epreuve:corpus
+```
+
+**60 verdicts identiques sur 60.**
+
+Ce n'était pas acquis, et c'est même le contraire d'un bit à bit : les fichiers
+sont en 44,1 kHz, donc ffmpeg les rééchantillonne d'un côté et le navigateur de
+l'autre, avec deux filtres différents. Les décimales divergent ; **la décision
+ne bouge pas**. Exiger le bit ici reviendrait à exiger que deux filtres soient
+le même filtre.
+
+Le corpus n'est pas versionné — CC BY-NC, et binaire. L'épreuve rend **3**,
+« non effectué », quand il manque, et **dit laquelle des six pièces manque** —
+éprouvé en retirant la référence, puis le corpus.
+
+**Elle n'est pas branchée dans `verifier.sh`, et c'est délibéré.** Soixante
+fichiers passés dans un modèle WASM prennent plusieurs minutes, là où toute la
+barrière du dépôt tient en quelques secondes. Une vérification qu'on n'ose plus
+lancer parce qu'elle est longue finit par ne plus être lancée du tout, et
+c'est pire qu'une vérification absente : on croit qu'elle tourne. Celle-ci se
+lance à la main, quand la règle de lecture bouge — c'est-à-dire exactement
+quand elle sert.
+
 ### Ce que cette mesure ne couvre pas
 
 Les quatre signaux sont **fabriqués** — un accord, du silence, un bruit, un
