@@ -29,6 +29,12 @@
     "   `tom` récite un peu (4,2 demi-tons d'ampleur, contre 8,9 à siwis) ; la",
     "   parade est la ponctuation, pas le modèle, et elle est dans les textes.",
     "",
+    "   LA SYNTHÈSE N'EST PAS REPRODUCTIBLE : la même phrase sort entre 1,91 et",
+    "   2,15 s d'un tirage à l'autre, relevé sur trois passes. Les répliques sont",
+    "   donc placées sur la durée MAXIMALE observée, avec deux dixièmes de marge.",
+    "   `monter_episode` avertit quand deux se recouvrent — c'est cet avertissement",
+    "   qu'il faut lire après chaque montage, pas la durée qu'on avait prévue.",
+    "",
     "POUR LA VERSION SANS VOIX, retirer la clé avant le montage :",
     "",
     "  python3 -c \"import json;d=json.load(open('montage-auto/references/artisan-express-portail-court.json'));d.pop('voix');json.dump(d,open('/tmp/sans-voix.json','w'))\"",
@@ -53,32 +59,39 @@
   ],
   "voix": [
     {
-      "instant": 0.12,
+      "instant": 0.1,
       "timbre": "tom",
       "vitesse": 1.0,
       "cible_db": -14.0,
       "texte": "Ton site ne te ramène aucun chantier ?"
     },
     {
-      "instant": 2.6,
+      "instant": 2.45,
       "timbre": "tom",
       "vitesse": 1.0,
       "cible_db": -14.0,
-      "texte": "J'ai fait ce modèle pour les artisans : bouton d'appel direct, photos de chantier, vrais avis."
+      "texte": "J'ai fait ce modèle pour les artisans."
     },
     {
-      "instant": 7.7,
+      "instant": 4.8,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "Appel direct. Tes photos. Tes avis."
+    },
+    {
+      "instant": 7.65,
       "timbre": "tom",
       "vitesse": 1.0,
       "cible_db": -14.0,
       "texte": "En ligne en sept jours."
     },
     {
-      "instant": 9.35,
+      "instant": 9.55,
       "timbre": "tom",
       "vitesse": 1.0,
       "cible_db": -14.0,
-      "texte": "Commente : site. Et je t'envoie le modèle."
+      "texte": "Commente site, je t'envoie le modèle."
     }
   ],
   "effets": [

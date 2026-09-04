@@ -837,6 +837,28 @@ def lire_catalogue(bibliotheque: Path) -> dict:
     return catalogue
 
 
+def mono_depuis(chemin: Path) -> numpy.ndarray:
+    """Le signal mono d'un WAV, quel que soit son nombre de canaux.
+
+    `sfx_pro.lire_wav` rend le tampon **entrelacé, à plat** : pour un fichier
+    stéréo, `signal.ndim` vaut 1 quand même. Un test `if son.ndim > 1` n'est
+    donc jamais vrai, et le tampon entrelacé se retrouve posé tel quel sur la
+    ligne de temps — **deux fois trop long, et une octave trop bas**.
+
+    Le défaut ne se voyait dans aucune mesure : sonie, crête et dynamique
+    restaient défendables, la voix était simplement au ralenti. Il n'a jamais
+    touché les bruitages, parce que les quarante-deux sons de `sfx_library/`
+    sont mono ; il ne frappait que la voix, la seule que le montage convertit
+    en stéréo avant de la relire. Relevé sur « Ton site ne te ramène aucun
+    chantier ? » : 2,05 s de synthèse posés sur 4,11 s de ligne de temps,
+    exactement 2,00 ×.
+    """
+    with wave.open(str(chemin), "rb") as source:
+        canaux = source.getnchannels()
+    son, _ = sfx_pro.lire_wav(chemin)
+    return son if canaux == 1 else son.reshape(-1, canaux).mean(axis=1)
+
+
 def couche_voix(entrees: list, total_s: float, atelier: Path) -> tuple[numpy.ndarray, list]:
     """Fabrique les répliques sur la machine et les pose sur la ligne de temps.
 
@@ -907,8 +929,7 @@ def couche_voix(entrees: list, total_s: float, atelier: Path) -> tuple[numpy.nda
                         "-ar", str(TAUX), "-ac", "2",
                         "-af", f"volume={gain:.1f}dB,alimiter=limit=0.95",
                         str(rendu)], check=True)
-        son, _ = sfx_pro.lire_wav(rendu)
-        mono = son if son.ndim == 1 else son.mean(axis=1)
+        mono = mono_depuis(rendu)
 
         debut = int(float(entree["instant"]) * TAUX)
         n = min(len(mono), total - debut)

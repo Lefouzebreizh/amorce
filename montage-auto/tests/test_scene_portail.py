@@ -171,6 +171,44 @@ class Scene(unittest.TestCase):
         self.assertAlmostEqual(float(fin[1]), float(RECETTE["plans"][0]["duree"]), places=2)
 
 
+class CoucheVoix(unittest.TestCase):
+    """Le tampon entrelacé, et pourquoi aucune mesure ne le signalait.
+
+    `sfx_pro.lire_wav` rend le WAV **à plat** : pour un fichier stéréo, le
+    tableau reste de dimension 1 et vaut deux fois la longueur. `couche_voix`
+    testait `son.ndim > 1` avant de moyenner les canaux — un test qui n'est
+    jamais vrai — et posait donc l'entrelacé tel quel : voix deux fois trop
+    longue, une octave trop bas. Sonie, crête et dynamique restaient
+    défendables ; seule l'oreille l'entendait.
+
+    Le test ne synthétise rien : il fabrique un WAV stéréo d'une seconde, ce
+    qui suffit et garde la suite à cinq secondes.
+    """
+
+    def _wav(self, canaux: int, secondes: float, taux: int = 48000) -> Path:
+        import struct
+        import tempfile
+        import wave as w
+        chemin = Path(tempfile.mkdtemp()) / f"{canaux}c.wav"
+        n = int(secondes * taux)
+        with w.open(str(chemin), "wb") as f:
+            f.setnchannels(canaux)
+            f.setsampwidth(2)
+            f.setframerate(taux)
+            f.writeframes(struct.pack("<%dh" % (n * canaux), *([1000] * (n * canaux))))
+        return chemin
+
+    def test_un_wav_stereo_rend_sa_vraie_duree(self):
+        import monter_episode
+
+        for canaux in (1, 2):
+            with self.subTest(canaux=canaux):
+                mono = monter_episode.mono_depuis(self._wav(canaux, 1.0))
+                self.assertEqual(len(mono), 48000,
+                                 "un tampon entrelacé pris pour du mono : "
+                                 "la voix sortirait deux fois trop longue")
+
+
 class Recits(unittest.TestCase):
     """Les récits déplacent les textes hors du code : le garde-fou les suit.
 
