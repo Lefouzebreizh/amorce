@@ -51,11 +51,16 @@ produit vendu. Un corpus qu'on ne peut pas redistribuer reste un corpus qu'on
 peut mesurer.
 """
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(RACINE))
+
+from adaptateurs.audio import _ffmpeg  # noqa: E402
+
 DOSSIER = RACINE / ".fixtures" / "corpus-etiquete"
 
 
@@ -109,14 +114,38 @@ CORPUS = [
 
 
 def commande(identifiant: str, intention: str) -> list[str]:
-    """La commande exacte, en WAV 16 kHz mono — la forme que lit `adaptateurs/audio.py`."""
+    """La commande exacte, en WAV 16 kHz mono quand ffmpeg est joignable.
+
+    **Le piège vaut d'être écrit** : `yt-dlp` cherche ffmpeg sur le `PATH` et
+    nulle part ailleurs. Or le dépôt l'installe par `imageio-ffmpeg`, une roue
+    Python qui ne le pose **pas** sur le `PATH` — `adaptateurs/audio.py` le sait
+    depuis toujours et va le chercher dans la roue. Sans cette précaution, une
+    machine parfaitement équipée refusait les 28 fichiers avec « ffmpeg not
+    found », et il aurait fallu installer un second ffmpeg pour rien.
+
+    On réutilise donc `_ffmpeg()` plutôt que d'en réécrire un : deux façons de
+    trouver le même binaire finissent toujours par diverger.
+
+    Et quand il reste introuvable, **on ne renonce pas** : on prend le son natif
+    (`.m4a`, `.webm`), que `mesurer_corpus.py` accepte dans ses extensions et
+    que la chaîne convertira à la lecture. Un fichier brut mesurable vaut mieux
+    qu'un WAV qu'on n'a pas.
+    """
+    sortie = ["-o", str(DOSSIER / intention / f"{identifiant}.%(ext)s")]
+    adresse = [f"https://www.youtube.com/watch?v={identifiant}"]
+
+    binaire = _ffmpeg()
+    if binaire is None:
+        return ["yt-dlp", "-f", "bestaudio", *sortie, *adresse]
+
     return [
         "yt-dlp",
         "-x",
         "--audio-format", "wav",
         "--postprocessor-args", "-ar 16000 -ac 1",
-        "-o", str(DOSSIER / intention / f"{identifiant}.%(ext)s"),
-        f"https://www.youtube.com/watch?v={identifiant}",
+        "--ffmpeg-location", binaire,
+        *sortie,
+        *adresse,
     ]
 
 
@@ -204,10 +233,13 @@ def main() -> int:
     if "--feuille" in sys.argv:
         return 0
 
-    manque = subprocess.run(["which", "yt-dlp"], capture_output=True).returncode
-    if manque:
+    if shutil.which("yt-dlp") is None:
         print("\nyt-dlp est absent : `pip install -U yt-dlp`.")
         return 3
+
+    if _ffmpeg() is None:
+        print("\nffmpeg introuvable : les fichiers arriveront en son natif "
+              "(.m4a / .webm), que `mesurer_corpus.py` sait lire.")
 
     echecs = []
     for intention, identifiant, _, contexte, _ in CORPUS:
