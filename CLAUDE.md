@@ -496,6 +496,15 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   La sonde rend « reçus » et « lus » par point d'entrée et ne crie que sur
   l'écart. Un scan tient un **verrou de fichier** le temps du tour : deux tours
   simultanés valent deux fois le débit annoncé, et les 429 frappent les deux.
+  **Il tourne enfin tout seul depuis le 04/09/2026** : `radar-pepites.yml` le
+  lance toutes les trois heures, la sonde décidant à chaque tour si le scan a
+  lieu. Trois heures parce qu'un tour sur deux est alors espacé de six, soit le
+  plancher qui rend un jeton **jugeable** — et `bilan` en exige vingt avant de
+  se prononcer, si bien qu'un scan unique ne prouve rien, aussi bon soit-il. Sa
+  mémoire vit dans le cache d'Actions et non dans Git, qui refuse les binaires,
+  ni dans un commit, qui vaudrait vingt-quatre déploiements Vercel par jour.
+  **Le cache s'évince au bout de sept jours sans usage** : si le planning
+  s'arrête une semaine, le compteur des jugeables repart de zéro.
 - **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
   asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
   bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
@@ -1096,6 +1105,23 @@ Ce qui reste impossible : l'ingestion **en direct**, le sentiment, l'on-chain et
 la macro. Une stratégie se règle donc hors ligne sur des données téléchargées,
 et son branchement aux sources ne se vérifie que sur une machine sans mandataire
 filtrant.
+
+**Et cette machine-là existait depuis le début : le runner du dépôt — mesuré le
+04/09/2026.** Le mur ci-dessus est celui d'une **session distante**, pas celui
+d'un workflow GitHub. Le radar de pépites, lancé par `radar-pepites.yml` sur
+`ubuntu-latest`, rend `828 paires → 182 jetons → 7 candidats en 17 s` sur des
+données DexScreener réelles, sonde répondue en quatre secondes.
+
+Ce qui était faux n'est donc pas la mesure des neuf hôtes — elle tient — mais
+la conséquence qu'on en tirait : « il faut une machine du propriétaire, allumée
+et planifiée ». Le radar est resté fini, vert et **à l'arrêt cinq jours** pour
+cette phrase-là. Avant de conclure qu'une tâche a besoin du PC, se demander si
+elle tiendrait dans un workflow : pas de secret, le temps d'un job, et un
+résultat qui vit dans un cache ou un artefact plutôt que dans Git. Ce qui ne se
+transpose pas : un runner n'a ni carte graphique, ni logiciel de bureau, ni
+compte connecté. Il a du **réseau**, et c'est tout ce que cette mesure dit.
+Détail et ce qui reste non vérifié dans
+`second-brain/lecons/2026-09-04-le-mandataire-du-runner-nest-pas-celui-de-la-session.md`.
 
 **Une session distante ne peut pas en joindre une autre.** Mesuré deux fois le
 29/08 : `ListAgents` ne rend aucun pair joignable et `SendMessage` refuse, alors
