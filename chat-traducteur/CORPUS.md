@@ -96,6 +96,14 @@ Puis, depuis la racine du dépôt :
 python3 chat-traducteur/scripts/mesurer_corpus.py chat-traducteur/.fixtures/corpus
 ```
 
+`mesurer_corpus.py` **descend dans les sous-dossiers** depuis le 04/09/2026, et
+c'est ce qui rend le corpus étiqueté mesurable : il range ses fichiers par
+intention, là où `iterdir` ne lisait qu'un dossier plat et rendait « aucun son »
+sur un dossier parfaitement rempli. Un dossier plat se comporte exactement comme
+avant. Le nom de fichier porte désormais son sous-dossier — perdre l'étiquette
+dans le tableau reviendrait à mesurer un corpus étiqueté comme s'il ne l'était
+pas.
+
 **Ces fichiers ne se committent jamais** — `.fixtures/` est ignoré, et
 l'invariant « aucun binaire versionné » ne souffre pas d'exception. Ce qui
 revient dans le dépôt est le **tableau de mesures**, jamais le son.
@@ -183,6 +191,28 @@ confirmée par autre chose qu'un référentiel de vulgarisation.
   open door » et décrite en toutes lettres comme un **appel de chaleur**. Les
   deux sont passées en contrôles. **Le titre étiquette, la description
   corrige** — et lire les vingt-neuf descriptions a coûté un appel.
+
+### L'oreille passe avant la mesure — décidé le 04/09/2026
+
+Le propriétaire a tranché l'ordre : **écouter les vingt-huit d'abord**, mesurer
+ensuite, et ne rien dépenser de plus tant que ce contrôle n'est pas fait.
+C'est le bon sens de ce projet appliqué à lui-même — mesurer une liste que
+personne n'a écoutée est exactement le défaut qu'il a payé deux fois, avec les
+quinze sons fabriqués puis avec le plancher de `Caterwaul`.
+
+Le script écrit donc une **feuille d'écoute** à côté des fichiers,
+`FEUILLE-ECOUTE.md`, avec deux colonnes à remplir par fichier :
+
+- **étiquette** — ce qu'on entend correspond-il au contexte annoncé ?
+- **son** — un seul chat, sans musique ni voix par-dessus ?
+
+Un `non` dans l'une des deux retire le fichier, **avant** la mesure. Un corpus
+qu'on nettoie après avoir vu les résultats n'est plus un corpus : c'est un tri,
+et il donne raison à celui qui trie.
+
+La feuille vit dans `.fixtures/`, hors de Git. Ce qui revient dans le dépôt est
+le verdict — quels fichiers tiennent, lesquels sautent et pourquoi — jamais les
+enregistrements.
 
 ### Ce que cette liste n'est pas
 

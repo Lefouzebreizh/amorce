@@ -30,6 +30,12 @@ serveur vit dans un dépôt GitHub **hors de la portée accordée à la session*
 Donc : la liste se prépare ici, les octets viennent de chez toi.
 
     python3 chat-traducteur/scripts/telecharger_corpus_etiquete.py
+    python3 chat-traducteur/scripts/telecharger_corpus_etiquete.py --feuille  # sans rien télécharger
+    python3 chat-traducteur/scripts/telecharger_corpus_etiquete.py --liste    # le décompte seul
+
+Il écrit dans tous les cas une **feuille d'écoute** à côté des fichiers :
+l'étiquette du téléverseur n'a jamais été vérifiée par une oreille, et c'est ce
+contrôle-là qui décide si ce corpus vaut quelque chose.
 
 Les fichiers atterrissent dans `.fixtures/corpus-etiquete/<intention>/`, ignoré
 par Git — l'invariant « aucun binaire versionné » ne souffre pas d'exception.
@@ -114,6 +120,70 @@ def commande(identifiant: str, intention: str) -> list[str]:
     ]
 
 
+def feuille() -> str:
+    """La feuille d'écoute : ce que l'oreille d'Erwann doit trancher, fichier par fichier.
+
+    Elle existe parce qu'une écoute qui ne laisse pas de trace est une écoute
+    à refaire. Les deux colonnes vides sont l'objet du travail : l'étiquette du
+    téléverseur est **faible** — personne ne l'a vérifiée — et c'est la seule
+    oreille du projet qui peut la valider ou l'écarter.
+
+    Deux verdicts par fichier, et pas un de plus :
+
+    - **étiquette** : ce qu'on entend correspond-il au contexte annoncé ?
+    - **son** : un seul chat, sans musique, sans voix par-dessus ?
+
+    Un `non` dans l'une ou l'autre colonne retire le fichier du corpus, et il
+    vaut mieux qu'il le retire **avant** la mesure — un corpus qu'on nettoie
+    après avoir vu les résultats n'est plus un corpus, c'est un tri.
+    """
+    lignes = [
+        "# Feuille d'écoute — corpus étiqueté",
+        "",
+        "Vingt-huit fichiers, étiquetés par leur téléverseur et **jamais écoutés**.",
+        "Deux colonnes à remplir : `oui`, `non`, ou `?`.",
+        "",
+        "- **étiquette** — ce que j'entends correspond-il au contexte annoncé ?",
+        "- **son** — un seul chat, sans musique ni voix par-dessus ?",
+        "",
+        "Un `non` dans l'une des deux retire le fichier, et le retire **avant**",
+        "la mesure. Nettoyer un corpus après avoir vu les résultats n'est plus",
+        "un nettoyage.",
+        "",
+    ]
+    for intention in ("demande", "salutation", "contentement", "controle", "bruitage"):
+        lot = [c for c in CORPUS if c[0] == intention]
+        lignes += [
+            f"## {intention} — {len(lot)} fichiers",
+            "",
+            "| fichier | durée | contexte annoncé | étiquette | son | note |",
+            "| --- | --- | --- | --- | --- | --- |",
+        ]
+        for _, identifiant, duree, contexte, libre in lot:
+            marque = " 🆓" if libre else ""
+            lignes.append(
+                f"| `{identifiant}`{marque} | {duree // 60}:{duree % 60:02} "
+                f"| {contexte} |  |  |  |"
+            )
+        lignes.append("")
+
+    lignes += [
+        "🆓 = chaîne qui annonce le domaine public ou l'usage libre.",
+        "",
+        "Une fois rempli, la mesure :",
+        "",
+        "```bash",
+        f"python3 chat-traducteur/scripts/mesurer_corpus.py {DOSSIER}",
+        "```",
+        "",
+        "Ce fichier vit dans `.fixtures/`, donc hors de Git. Ce qui revient dans",
+        "le dépôt est le **verdict** — quels fichiers tiennent, lesquels sautent",
+        "et pourquoi —, jamais les enregistrements.",
+        "",
+    ]
+    return "\n".join(lignes)
+
+
 def main() -> int:
     print(f"{len(CORPUS)} enregistrements, étiquetés par leur téléverseur.\n")
     for intention in ("demande", "salutation", "contentement", "controle", "bruitage"):
@@ -124,6 +194,14 @@ def main() -> int:
               f"  ({libres} libre{'s' if libres > 1 else ''})")
 
     if "--liste" in sys.argv:
+        return 0
+
+    DOSSIER.mkdir(parents=True, exist_ok=True)
+    chemin = DOSSIER / "FEUILLE-ECOUTE.md"
+    chemin.write_text(feuille(), encoding="utf-8")
+    print(f"\nFeuille d'écoute : {chemin}")
+
+    if "--feuille" in sys.argv:
         return 0
 
     manque = subprocess.run(["which", "yt-dlp"], capture_output=True).returncode
