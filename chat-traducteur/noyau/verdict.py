@@ -65,49 +65,75 @@ CLASSES_SPECIFIQUES = ("Purr", "Meow", "Hiss", "Caterwaul")
 
 # Parmi elles, celles qui portent une **lecture**. `Meow` n'y est pas : c'est la
 # classe résiduelle, « un chat a vocalisé », et elle n'apprend rien de plus.
-CLASSES_PORTEUSES = ("Purr", "Hiss", "Caterwaul")
+#
+# **Elles étaient trois jusqu'au 04/09/2026. Quarante vrais chats en ont retiré
+# deux, et c'est la correction la plus lourde de ce projet.**
+#
+# Le corpus : ESC-50, jeu de données de recherche, 40 enregistrements de chat
+# et 20 témoins — chien, bébé qui pleure, oiseaux, aspirateur, coup à la porte.
+# Le script qui le récupère est `scripts/mesurer_esc50.py`.
+#
+#     sur les 40 chats        min      médiane      max     ≥ 0,10
+#     Meow                  0,020      0,627      0,918      39/40
+#     Caterwaul             0,000      0,199      0,801      31/40
+#     Purr                  0,000      0,004      0,262       3/40
+#     Hiss                  0,000      0,000      0,000       0/40
+#
+# **`Hiss` est morte, et cette fois sur du réel** : 0,000 sur les quarante. Le
+# dépôt la disait déjà muette sur trois feulements fabriqués ; la voilà muette
+# sur un corpus de recherche. Elle sort.
+#
+# **`Caterwaul` ne distingue rien, et c'est le défaut qui comptait.** YAMNet
+# l'allume sur *n'importe quel* miaulement, à environ un tiers du score de
+# `Meow` — médiane 0,199, soit **deux fois le plancher**. Conséquence mesurée
+# avec l'ancienne règle : **30 chats sur 40 ressortaient en « stress »**.
+# Le produit aurait annoncé à quatre propriétaires sur cinq que leur chat va
+# mal, et l'aurait annoncé comme **mesuré**.
+#
+# Deux réparations ont été essayées avant celle-ci, et écrites ici parce
+# qu'elles ferment des chemins :
+#
+# - **monter le plancher** : impossible à justifier. `Caterwaul` va de 0,000 à
+#   0,801 sur des chats ordinaires, sans trou. Tout nombre choisi là-dedans
+#   serait inventé et aurait l'air d'une mesure — ce que le §1 interdit.
+# - **exiger que la porteuse dépasse `Meow`** : la règle s'allume alors **deux
+#   fois sur vingt témoins contre une fois sur quarante chats**. Une règle qui
+#   se déclenche plus souvent sur ce qui n'est pas un chat ne se garde pas.
+#
+# **`Purr`, elle, sépare** — et c'est pour ça qu'elle reste seule :
+# 0,148 / 0,199 / 0,262 sur trois chats, et **0,008 au maximum sur les vingt
+# témoins**. Un facteur trente entre le plus fort témoin et le plus faible
+# ronronnement retenu. Le plancher de 0,10 tombe au milieu de cet écart-là.
+#
+# **Ce que ça coûte, dit franchement : le stress mesuré n'existe plus.** Aucune
+# classe de YAMNet ne le porte. Il reste atteignable par la tête acoustique,
+# en `PROVISOIRE` et plafonné à 0,5 — c'est-à-dire annoncé comme une
+# hypothèse, jamais comme une mesure. Mieux vaut « je n'ai pas compris » qu'une
+# fausse alarme sur la santé d'un animal.
+CLASSES_PORTEUSES = ("Purr",)
 
 # Plancher au-dessus duquel une classe porteuse l'emporte sur `Meow`.
 #
-# Ce nombre a été refusé une première fois, faute de données — quatre bruitages
-# ne sont pas un jeu de données, et un seuil inventé aurait eu l'air d'une
-# mesure. Il est écrit maintenant parce qu'un corpus de 15 sons le sépare
-# franchement, mesuré le 02/09/2026 :
+# Ce nombre a d'abord été mesuré sur quinze sons **fabriqués**, où il séparait
+# proprement — et le fichier disait alors : « ces quinze sons sont générés, pas
+# enregistrés ; le plancher n'a jamais vu un vrai chat ». Il l'a vu le
+# 04/09/2026, et il **ne tenait pas** pour `Caterwaul`.
 #
-#     miaulements ordinaires   Caterwaul  0,000  0,016  0,031
-#     feulements / caterwauls  Caterwaul  0,199  0,332  0,414  0,586  0,738
-#
-# Un rapport de 6 entre le plus haut miaulement ordinaire et le plus bas son de
-# détresse. 0,10 tombe au milieu et n'est proche d'aucune valeur observée.
-#
-# CE QUI L'A RENDU NÉCESSAIRE : sans lui, `Meow` gagnait **les cinq duels sur
-# cinq**, et le stress n'était jamais atteint. Le dépôt affirmait que le modèle
-# public livrait « contentement et stress » ; mesuré, il ne livrait que le
-# contentement. Un `max()` sur des classes de rangs différents ne compare pas
-# ce qu'on croit — c'est la même leçon que la classe parente `Cat`, une couche
-# plus bas.
-#
-# CE QUI RESTE À ÉPROUVER : ces quinze sons sont **générés**, pas enregistrés.
-# Le plancher sépare proprement ce corpus-là ; il n'a jamais vu un vrai chat.
-# Les enregistrements du chat d'Erwann le confirmeront ou le déplaceront.
+# Il tient pour `Purr`, qui est la seule classe restée porteuse : les trois
+# ronronnements retenus valent 0,148 à 0,262, le plus fort témoin vaut 0,008.
+# 0,10 n'est proche d'aucune valeur observée, des deux côtés.
 SEUIL_LECTURE = 0.10
 
 # Ce que YAMNet nomme lui-même, et qu'on n'a donc pas à deviner.
-# `Cat` et `Meow` n'y sont pas : ce sont eux qui demandent l'étage 2.
+#
+# **`Hiss` et `Caterwaul` en sont sorties le 04/09/2026** — voir le bloc de
+# `CLASSES_PORTEUSES` pour les quarante mesures qui l'ont décidé. Ne pas les
+# remettre : elles ne sont plus dominantes, donc les laisser ici ferait croire
+# à une lecture qui n'arrive jamais.
 LECTURE_DIRECTE = {
     "Purr": Intention.CONTENTEMENT,
-    "Hiss": Intention.STRESS,
-    "Caterwaul": Intention.STRESS,
 }
 
-# Seuil de la porte, sur la fenêtre la plus féline de l'enregistrement.
-#
-# 0,20 n'est pas mesuré sur de vrais miaulements — il n'y en avait aucun sous
-# la main quand ce fichier a été écrit. C'est une valeur d'attente, choisie
-# basse parce que YAMNet répartit sa masse sur 521 classes et qu'un miaulement
-# net y plafonne rarement au-dessus de 0,6. **Le premier enregistrement réel
-# du chat d'Erwann doit le confirmer ou le déplacer**, et tant que ce n'est pas
-# fait, ce nombre est une hypothèse qui a l'air d'une mesure.
 SEUIL_PORTE = 0.20
 
 

@@ -21,15 +21,20 @@ export const CLASSES_FELINES = [
 ] as const;
 
 export const CLASSES_SPECIFIQUES = ["Purr", "Meow", "Hiss", "Caterwaul"] as const;
-export const CLASSES_PORTEUSES = ["Purr", "Hiss", "Caterwaul"] as const;
+// **Une seule depuis le 04/09/2026**, et c'est quarante vrais chats qui l'ont
+// décidé — voir le bloc de `CLASSES_PORTEUSES` dans `noyau/verdict.py`, qui
+// porte les quatre distributions mesurées. En deux lignes : `Hiss` vaut 0,000
+// sur les quarante, et `Caterwaul` s'allume sur n'importe quel miaulement, si
+// bien que l'ancienne règle rendait 30 chats sur 40 en « stress ».
+export const CLASSES_PORTEUSES = ["Purr"] as const;
 
 export const SEUIL_LECTURE = 0.10;
 export const SEUIL_PORTE = 0.20;
 
+// Aucune classe de YAMNet ne porte le stress. Il reste atteignable par la tête
+// acoustique, en `PROVISOIRE` — une hypothèse annoncée comme telle.
 export const LECTURE_DIRECTE: Record<string, Intention> = {
   Purr: Intention.CONTENTEMENT,
-  Hiss: Intention.STRESS,
-  Caterwaul: Intention.STRESS,
 };
 
 export type Fenetre = Record<string, number>;

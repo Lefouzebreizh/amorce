@@ -26,15 +26,27 @@ from habillage.palette import PALETTES, palette  # noqa: E402
 from noyau.intentions import Intention, Source  # noqa: E402
 from noyau.verdict import juger  # noqa: E402
 
-# Un verdict par intention. Les trois premiers passent par la porte, le
-# dernier par la couture de la tête d'intention.
+# Un verdict par intention, et la liste doit **rester exhaustive** : c'est le
+# seul endroit où les quatre palettes sont mesurées contre la barre de 7:1.
+#
+# Le 04/09/2026, le stress est passé par cette liste sans y être : le cas
+# `{"Cat": 0.60, "Hiss": 0.51}` rendait « stress mesuré » jusqu'à ce que
+# quarante vrais chats retirent `Hiss` des classes porteuses. Le test restait
+# vert **en couvrant une intention de moins** — la palette du stress n'était
+# plus éprouvée du tout, et rien ne le disait.
+#
+# D'où `test_les_quatre_intentions_sont_traversees` plus bas : une liste de cas
+# ne se garde pas toute seule, il faut compter ce qu'elle produit.
 def _verdicts():
     yield juger([{"Cat": 0.109, "Purr": 0.148}])          # contentement, mesuré
-    yield juger([{"Cat": 0.60, "Hiss": 0.51}])            # stress, mesuré
     yield juger([{"Cat": 0.988, "Meow": 0.891}])          # indécis
     yield juger([{"Speech": 0.99}])                       # porte fermée
     yield juger([{"Cat": 0.9, "Meow": 0.8}],
                 tete_intention=lambda: (Intention.DEMANDE, 0.71))  # provisoire
+    # Le stress ne vient plus que de la tête acoustique, en PROVISOIRE : aucune
+    # classe de YAMNet ne le porte depuis le 04/09/2026.
+    yield juger([{"Cat": 0.9, "Meow": 0.8}],
+                tete_intention=lambda: (Intention.STRESS, 0.5))
 
 
 def _luminance(hexa: str) -> float:
@@ -197,3 +209,18 @@ class TestSvg(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestCouvertureDesIntentions(unittest.TestCase):
+    """Le garde-fou que l'absence de stress a rendu nécessaire.
+
+    Une liste de cas écrite à la main dérive dès qu'une règle change : les
+    entrées restent, les verdicts qu'elles produisent glissent, et le test
+    continue de passer en mesurant moins. Compter ce qui **sort** de la liste
+    est le seul contrôle qui ne dérive pas avec elle.
+    """
+
+    def test_les_quatre_intentions_sont_traversees(self):
+        obtenues = {v.intention for v in _verdicts()}
+        self.assertEqual(obtenues, set(Intention),
+                         "la liste de cas ne produit plus toutes les intentions")

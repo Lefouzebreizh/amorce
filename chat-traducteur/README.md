@@ -34,7 +34,7 @@ la ligne qui a disparu explique le projet mieux que les autres.
 | Intention | D'où elle vient | État |
 | --- | --- | --- |
 | **contentement** | YAMNet nomme `Purr` lui-même | **mesurée**, marche aujourd'hui |
-| **stress** | YAMNet nomme `Caterwaul` | **mesurée**, marche depuis le 02/09 |
+| **stress** | ~~YAMNet nomme `Caterwaul`~~ → tête acoustique | **provisoire** depuis le 04/09 — voir plus bas |
 | **demande** | hauteur et durée, tête acoustique | **provisoire**, jamais de score affiché |
 | ~~faim~~, ~~envie de sortir~~ | un seul et même son | **fusionnées** en `demande` |
 
@@ -172,7 +172,7 @@ chat-traducteur/
 ├── habillage/          ← la carte SVG, bibliothèque standard PURE aussi
 │   ├── carte.py          verdict → SVG 1080 × 1920, zone sûre câblée
 │   └── palette.py        une palette par intention, contraste ≥ 7:1
-├── tests/                48 tests, ~90 ms, sans rien installer
+├── tests/                49 tests, ~90 ms, sans rien installer
 ├── web/                  le même cœur en TypeScript, pour le navigateur
 │                         — témoins de conformité engendrés depuis le Python
 ├── modeles/              poids — jamais versionnés

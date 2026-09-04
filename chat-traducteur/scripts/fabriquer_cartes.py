@@ -25,7 +25,9 @@ from noyau.verdict import juger  # noqa: E402
 # de mesures, jamais de valeurs choisies pour bien rendre.**
 CAS = {
     "contentement": [{"Cat": 0.500, "Purr": 0.586}],           # ronron-1
-    "stress": [{"Cat": 0.980, "Meow": 0.801, "Caterwaul": 0.586}],  # feulement-3
+    # Le stress n'a plus de scores : aucune classe de YAMNet ne le porte
+    # depuis le 04/09/2026. Il passe par la tête acoustique, comme la demande.
+    "stress": None,
     "indecis": [{"Cat": 0.996, "Meow": 0.891, "Caterwaul": 0.031}],  # miaou-3
     "demande": None,     # via la couture : la tête acoustique, pas la porte
 }
@@ -35,7 +37,7 @@ def principal() -> int:
     dossier.mkdir(parents=True, exist_ok=True)
     for nom, fenetres in CAS.items():
         if fenetres is None:
-            intention = Intention.DEMANDE
+            intention = (Intention.STRESS if nom == "stress" else Intention.DEMANDE)
             verdict = juger([{"Cat": 0.9, "Meow": 0.8}],
                             tete_intention=lambda i=intention: (i, 0.71))
         else:
