@@ -57,6 +57,7 @@ commandes=(
   "IPTV / VOD : (dans iptv/) npm test, npm run check"
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
   "Traducteur de chat : python3 -m unittest discover -s chat-traducteur/tests"
+  "Traducteur de chat (navigateur) : (dans chat-traducteur/web/) npm test, npm run check, puis npm run bati && npm run epreuve"
   "NexusCrypto : cd nexuscrypto && python3 -m unittest discover -s tests"
   "Bibliothèque visuelle : cd visual_library && python3 -m unittest discover -s tests"
   "Kits (index des sons) : cd kits && python3 -m unittest discover -s tests"
@@ -202,6 +203,22 @@ echo "── Bilan Patrimoine : dépendances npm"
 # `npx tsc --noEmit`. Les tests, eux, tournent sans installation : Node retire
 # les types tout seul.
 (cd "$racine/bilan-patrimoine" && npm install --no-audit --no-fund --silent) || true
+
+echo "── Traducteur de chat, cœur navigateur : dépendances npm"
+# Le portage TypeScript du traducteur. Ses tests de conformité tournent **sans
+# installation** — Node retire les types tout seul — mais deux choses en ont
+# besoin : `npm run check` et surtout `npm run epreuve`, qui conduit un vrai
+# Chromium sur le vrai modèle et compare les 521 scores à ceux du Python.
+#
+# Sans cette ligne, une session fraîche voit ces deux étapes « non
+# effectuées » : elles ne sont ni vertes ni rouges, et la preuve la plus
+# solide du projet ne tourne jamais chez personne.
+#
+# `@tensorflow/tfjs-tflite` est en alpha et **épingle `tfjs-core@4.9.0`
+# exactement** : les versions du `package.json` sont fixes et alignées
+# dessus. Ne pas les « mettre à jour », et surtout ne pas ajouter
+# `--legacy-peer-deps` — l'installation passe telle quelle.
+(cd "$racine/chat-traducteur/web" && npm install --no-audit --no-fund --silent) || true
 
 echo "── Conseiller Patrimoine : bibliothèques Python"
 # Rien à installer ici, et c'est le sujet du module. PyYAML arrive déjà par le

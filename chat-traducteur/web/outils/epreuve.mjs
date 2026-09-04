@@ -87,7 +87,18 @@ const port = serveur.address().port;
 
 const temoins = JSON.parse(await readFile(join(RACINE, 'temoins', 'oreille.json'), 'utf-8'));
 
-const nav = await chromium.launch({ executablePath: CHROME });
+// Le micro simulé : Chromium rejoue un fichier à la place du matériel, ce qui
+// rend `getUserMedia` éprouvable sans micro et sans clic. `--use-fake-ui`
+// accorde l'autorisation d'office — sans lui, la demande reste pendante et la
+// page attend indéfiniment.
+const nav = await chromium.launch({
+  executablePath: CHROME,
+  args: [
+    '--use-fake-ui-for-media-stream',
+    '--use-fake-device-for-media-stream',
+    `--use-file-for-fake-audio-capture=${join(RACINE, 'temoins', 'signal.wav')}`,
+  ],
+});
 const page = await nav.newPage();
 const erreurs = [];
 page.on('pageerror', (e) => erreurs.push(String(e)));
@@ -178,6 +189,41 @@ const carteOk = carte.intention === 'contentement' && carte.source === 'mesuree'
 if (!carteOk) echecs++;
 console.log(`  ${carteOk ? '✓' : '✗'} carte à l'écran  ${carte.intention} (${carte.source})`);
 await appli.screenshot({ path: join(RACINE, 'temoins', 'ecran-carte.png') });
+
+// ── Le micro, et ce que cette épreuve peut en dire ─────────────────────────
+//
+// Elle ne compare **rien** au Python, et c'est délibéré : une capture passe
+// par le rééchantillonnage de l'appareil — 48 kHz ici — puis par un encodage
+// Opus avec perte. Exiger l'égalité serait exiger l'impossible.
+//
+// Ce qu'elle prouve est plus modeste et n'était pas prouvé : `getUserMedia`,
+// `MediaRecorder`, le décodage, le rééchantillonnage vers 16 kHz et le
+// fenêtrage s'enchaînent pour de bon, et l'application rend un verdict au
+// lieu de rester muette. C'est le seul chemin que l'utilisateur empruntera,
+// et il n'avait jamais servi.
+// **On recharge avant de mesurer**, et ce n'est pas de la coquetterie : le
+// premier jet lisait `dernierVerdict()` sans le remettre à zéro, si bien que
+// la boucle d'attente sortait aussitôt sur le verdict de l'étape précédente.
+// L'épreuve rendait « contentement » sur un glissando — impossible, et verte.
+// Recharger repart d'un état vierge et éprouve en prime l'initialisation.
+await appli.reload();
+await appli.waitForFunction('window.appliPrete === true', { timeout: 120_000 });
+
+const micro = await appli.evaluate(async () => {
+  document.getElementById('micro').click();
+  await new Promise((r) => setTimeout(r, 1500));       // on laisse enregistrer
+  document.getElementById('micro').click();            // et on arrête
+  for (let i = 0; i < 200 && !window.dernierVerdict(); i++) {
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  return { verdict: window.dernierVerdict(), fenetres: window.nbFenetres(),
+           texte: document.getElementById('etat').textContent };
+});
+const microOk = micro.verdict !== null && micro.fenetres > 0;
+if (!microOk) echecs++;
+console.log(`  ${microOk ? '✓' : '✗'} micro simulé    ` +
+  `${micro.fenetres} fenêtre(s) capturées -> ${micro.verdict?.intention ?? 'aucun verdict'}`);
+if (!microOk) console.log('      état de la page :', micro.texte);
 
 if (erreursAppli.length) {
   console.log("Erreurs de l'application :");
