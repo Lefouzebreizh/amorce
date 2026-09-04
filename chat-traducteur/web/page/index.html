@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qu'est-ce qu'il dit ?</title>
+<style>
+  /* Le §2 de CLAUDE.md, appliqué : 18 px minimum, cibles ≥ 44 px, 100dvh et
+     non 100vh — la barre d'adresse d'Android mange la différence et coupe le
+     bouton. Aucune animation qui recalcule la mise en page. */
+  :root {
+    --ink: #0f0d12; --slab: #17141b; --panel: #201c26;
+    --texte: #F2EEF6; --doux: #A79FB3; --accent: #FFB35C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100dvh; background: var(--ink); color: var(--texte);
+    font: 18px/1.5 Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 20px 40px; gap: 20px;
+  }
+  h1 { font-size: 26px; margin: 8px 0 0; text-align: center; font-weight: 800; }
+  .sous { color: var(--doux); margin: 0; text-align: center; max-width: 34ch; }
+  button, label.bouton {
+    min-height: 56px; min-width: 56px; padding: 14px 26px; border-radius: 14px;
+    font: inherit; font-weight: 700; border: 0; cursor: pointer;
+    transition: background-color .18s, opacity .18s;
+  }
+  #micro { background: var(--accent); color: #241505; width: min(100%, 340px); }
+  #micro[data-etat="enregistre"] { background: #C99DEB; color: #1b0f22; }
+  label.bouton {
+    background: transparent; color: var(--doux); border: 2px solid var(--panel);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  #etat {
+    color: var(--doux); text-align: center; min-height: 3em; max-width: 40ch;
+    margin: 0;
+  }
+  /* L'aperçu est borné en **hauteur**, pas en largeur, et c'est un défaut vu
+     à l'écran plutôt que mesuré : une carte 9:16 large de 300 px en fait 533
+     de haut, ce qui poussait « Enregistrer la carte » hors du premier écran
+     sur le terrain de référence (393 × 873). Il fallait défiler pour trouver
+     le bouton qui fait exactement ce pour quoi le produit existe. */
+  #carte { display: flex; justify-content: center; width: 100%; }
+  #carte svg {
+    height: min(42dvh, 380px); width: auto; max-width: 100%;
+    border-radius: 16px; display: block;
+  }
+  #telecharger { background: var(--panel); color: var(--texte); }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<h1>Qu'est-ce qu'il dit&nbsp;?</h1>
+<p class="sous">Enregistre quelques secondes. Tout se passe sur ton téléphone&nbsp;: aucun son n'est envoyé nulle part.</p>
+
+<button id="micro" data-etat="pret">Écouter mon chat</button>
+<label class="bouton" for="fichier">…ou choisir un fichier</label>
+<input type="file" id="fichier" accept="audio/*,video/*">
+
+<p id="etat">Prêt.</p>
+<div id="carte" hidden></div>
+<button id="telecharger" hidden>Enregistrer la carte</button>
+
+<script src="./tf/tf-core.js"></script>
+<script src="./tf/tf-backend-cpu.js"></script>
+<script src="./tf/tf-tflite.js"></script>
+<script type="module" src="./dist/appli.js"></script>

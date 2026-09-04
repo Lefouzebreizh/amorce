@@ -7,7 +7,7 @@ minimum légal et se révèle insuffisant en plein soleil sur un Redmi.
 
 **Et les accents aussi, depuis le 03/09/2026.** Le §2 bis a posé un standard de
 maison — accent à 7:1 sur la surface la plus claire du produit — et trois des
-cinq étaient dessous : `sortir` 6,80, `stress` 6,24, `indecis` 5,59. Le test ne
+cinq d'alors étaient dessous : `sortir` 6,80, `stress` 6,24, `indecis` 5,59. Le test ne
 demandait alors que 4,5:1, la barre légale, si bien que rien ne les signalait.
 
 La correction n'a **pas** changé les teintes : même angle, même saturation,
@@ -35,19 +35,23 @@ class Palette:
 
 
 PALETTES: dict[Intention, Palette] = {
-    # Chaud, cuisine, fin de journée. Pas d'urgence : un chat qui a faim le
+    # Chaud, cuisine, fin de journée. Pas d'urgence : un chat qui réclame le
     # dit posément, il ne hurle pas.
-    Intention.FAIM: Palette("#3A2417", "#1B0F08", "#FFF3E4", "#FFB35C"),
-    # Bleu de dehors vu depuis dedans — la couleur du contre-jour à la porte
-    # vitrée, qui est exactement la scène.
-    Intention.SORTIR: Palette("#16293D", "#080F18", "#E6F1FF", "#7EBCFF"),
+    #
+    # **C'était la palette de `faim`, et elle survit à la fusion du
+    # 04/09/2026** — le bleu de contre-jour de `sortir` (`#7EBCFF`, 7,42:1) a
+    # été retiré avec son intention. Départager les deux n'était pas un
+    # arbitrage de goût : la demande d'un chat se joue à l'intérieur, tournée
+    # vers quelqu'un, et c'est ce que dit le chaud. Le bleu racontait le
+    # dehors, c'est-à-dire précisément la moitié qu'on ne sait pas lire.
+    Intention.DEMANDE: Palette("#3A2417", "#1B0F08", "#FFF3E4", "#FFB35C"),
     # Violet froid, pas rouge. Le stress d'un chat se respecte, il ne
     # s'alarme pas — et le rouge sur un écran de partage fabrique de
     # l'urgence, ce que le §1 interdit.
     Intention.STRESS: Palette("#2B1B33", "#120A16", "#F4E9FA", "#C99DEB"),
     # Vert profond, presque immobile. Le seul cas où rien ne demande rien.
     Intention.CONTENTEMENT: Palette("#16301F", "#07130C", "#E8F7EC", "#7FD99A"),
-    # Gris neutre, et volontairement le moins beau des cinq : on ne décore
+    # Gris neutre, et volontairement le moins beau des quatre : on ne décore
     # pas un doute, on l'assume.
     Intention.INDECIS: Palette("#232323", "#0D0D0D", "#EDEDED", "#B1B1B1"),
 }

@@ -117,11 +117,43 @@ Mener la PR jusqu'à la fusion fait partie du travail : c'est dit dans
   de la racine, `agence.yml` sur `agence/**`, `look-and-find.yml` sur
   `look_and_find/**`). Une PR qui ne touche qu'à `.claude/` ou à du Markdown n'a
   donc qu'un contrôle qui ne dit rien de son contenu.
-- **L'ouverture d'une PR ne déclenche aucune CI.** Elle passe par un jeton
-  d'application GitHub, que GitHub refuse comme source de workflow — protection
-  contre les boucles. Une PR ouverte puis laissée telle quelle reste donc sans
-  contrôle, indéfiniment, sans que rien ne le signale : ne pas l'attendre, la
-  déclencher à la main (`workflow_dispatch` sur la branche).
+- **L'ouverture d'une PR ne déclenche aucune CI — quand elle passe par un jeton
+  d'application GitHub**, que GitHub refuse comme source de workflow, en
+  protection contre les boucles. La PR reste alors sans contrôle indéfiniment,
+  sans que rien ne le signale : ne pas l'attendre, la déclencher à la main
+  (`workflow_dispatch` sur la branche).
+
+  **Ce n'est pas vrai de toutes les sessions, et la restriction a été ajoutée
+  après mesure — 04/09/2026.** Cinq PR ouvertes par `mcp__github__create_pull_request`
+  (#686, #687, #688, #690, #692) ont chacune déclenché les trois workflows dans
+  les **trois secondes** suivant leur création, en événement `pull_request`. La
+  poussée précédait la création sur une branche sans PR ouverte : aucun
+  événement `pull_request` ne pouvait exister avant, donc c'est bien
+  l'ouverture qui a déclenché.
+
+  Ce qui diffère est probablement l'identité : ces runs portent
+  `actor: Lefouzebreizh`, pas une application. `CLAUDE.md` note que le
+  mandataire authentifie les écritures GitHub de certaines sessions, et rend
+  l'identité du propriétaire — le refus « source de workflow » ne s'applique
+  alors pas.
+
+  **Cause probable, pas établie.** Ce qui est mesuré : cinq ouvertures, cinq
+  déclenchements, un acteur humain. Ce qui ne l'est pas : que l'acteur en soit
+  la raison, ni ce qui se passe dans une session dont les écritures passent
+  réellement par une application.
+
+  La conséquence pratique tient en une ligne, et elle est la même dans les deux
+  cas : **regarder si les runs sont là plutôt que supposer** — trois secondes
+  après l'ouverture s'ils viennent, jamais s'ils ne viennent pas. C'est le
+  contrôle qui coûte un appel et qui vaut dans les deux mondes. Le paragraphe
+  d'à côté le redit pour une autre raison : le verdict se lit sur l'empreinte
+  exacte qui sera fusionnée.
+
+  C'est la même leçon que le connecteur GitHub dans `CLAUDE.md`, où deux
+  rédactions contraires ont tenu en un jour : **une observation d'outillage
+  n'est jamais une propriété de l'outil.** Elle vaut pour la session qui l'a
+  faite, à l'heure où elle l'a faite ; l'écrire au présent général fait
+  renoncer la suivante à un chemin qui, chez elle, est ouvert.
 
   Une *poussée* sur la branche déclenche `pull_request`, elle — mais pas à tous
   les coups, et c'est ce qui la rend traître. Trois poussées d'une même session

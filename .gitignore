@@ -148,6 +148,11 @@ visual_library/**/*.mp4
 # les caches se refabriquent d'un import, les identifiants ne se retirent pas
 # de l'historique une fois poussés.
 /iptv/node_modules/
+/chat-traducteur/web/node_modules/
+/chat-traducteur/web/dist/
+# Engendrés par les outils, et binaires : ni l'un ni l'autre ne se versionne.
+/chat-traducteur/web/temoins/*.wav
+/chat-traducteur/web/temoins/*.png
 /iptv/.next/
 /iptv/.essai/
 /iptv/donnees/

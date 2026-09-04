@@ -276,7 +276,7 @@ propre projet** — c'est le pire cas, celui qui décide.
 | TITAN Builder | `#7c3aed` violet | **2,6:1** | **inutilisable comme accent** — voir plus bas |
 | Artisan Express | `#67C1A0` vert | **7,08:1** | sombre depuis le 03/09/2026 — voir plus bas |
 | Annuaria | `#7fd68a` sauge | **8,19:1** | posé le 03/09/2026 — voir plus bas |
-| `chat-traducteur` | `#7FD99A` sauge | **8,3:1** | cinq accents de contenu — voir plus bas |
+| `chat-traducteur` | `#7FD99A` sauge | **8,3:1** | quatre accents de contenu — voir plus bas |
 | `look_and_find` | thème chaud clair | — | appli enfants, thème clair assumé |
 
 **Comment un nouveau produit choisit le sien.** Deux contraintes, et elles se
@@ -314,20 +314,28 @@ et cette ligne existe pour que le prochain qui y touche le sache.
 
 ### Le cas du traducteur de chat : la couleur est le contenu
 
-Il porte **cinq** accents et non un seul, et c'est la seule entrée du registre
+Il porte **quatre** accents et non un seul, et c'est la seule entrée du registre
 dans ce cas. La raison tient à ce que ses couleurs habillent : ses cartes
 1080 × 1920 sont des **artefacts de sortie** partagés sur TikTok, pas une
 interface. L'accent y porte le registre émotionnel du verdict — vert pour le
-contentement, violet froid pour le stress, bleu de contre-jour pour l'envie de
-sortir — et l'unifier reviendrait à effacer ce que la carte dit.
+contentement, violet froid pour le stress, ambre de cuisine pour la demande —
+et l'unifier reviendrait à effacer ce que la carte dit.
+
+**Ils étaient cinq jusqu'au 04/09/2026**, et le cinquième n'a pas été retiré
+pour une raison de couleur : le propriétaire a fusionné `faim` et `sortir` en
+une seule carte `demande`, faute qu'aucune mesure ne les sépare. Le bleu de
+contre-jour `#7EBCFF` (7,42:1) est parti avec l'intention qu'il portait. Ce
+cas vaut d'être noté au registre parce qu'il est l'inverse du cas ordinaire :
+**une palette a rétréci parce qu'un produit a cessé de promettre**, pas parce
+qu'une teinte tenait mal.
 
 Le `#7FD99A` inscrit au registre est donc l'accent du **produit** : celui que
 prendra son interface le jour où elle existera. Il tombe à trois millièmes de
 la sauge pré-mesurée du paragraphe suivant, ce qui n'était pas concerté et
 confirme surtout que la contrainte de 7:1 mène à un petit nombre de teintes.
 
-**Les cinq tiennent la même barre**, et il a fallu les y amener : mesuré le
-03/09/2026, trois étaient dessous — `sortir` 6,80, `stress` 6,24, `indecis`
+**Tous tiennent la même barre**, et il a fallu les y amener : mesuré le
+03/09/2026 quand ils étaient cinq, trois étaient dessous — `sortir` 6,80, `stress` 6,24, `indecis`
 5,59 — parce que le test du projet demandait 4,5:1, la barre légale, écrite
 avant le §2 bis. **Un test écrit sur l'ancienne barre ne signale pas qu'une
 nouvelle existe** : il reste vert, et c'est le plus discret des défauts.
@@ -336,10 +344,13 @@ La correction n'a pas changé les teintes : même angle, même saturation, la
 clarté seule monte de trois à neuf points. Un accent choisi pour son registre
 ne se remplace pas par une couleur qui passe le calcul.
 
-**Une réserve, dite plutôt que tue** : l'accent de la faim est un ambre
+**Une réserve, dite plutôt que tue** : l'accent de la demande est un ambre
 `#FFB35C`, donc proche d'un `warn`. Aucune confusion n'est possible *sur la
 carte*, qui ne porte aucune couleur d'état — mais la réserve vaut si une
-interface reprend un jour cette teinte à côté d'un avertissement.
+interface reprend un jour cette teinte à côté d'un avertissement. Elle a
+d'ailleurs **grandi** le 04/09 : cet ambre était celui de `faim`, une carte
+sur cinq, et il est désormais celui de la demande, qui est le cas le plus
+fréquent que l'application sache nommer.
 
 ### L'exception, et elle est mesurée
 
@@ -496,6 +507,15 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   La sonde rend « reçus » et « lus » par point d'entrée et ne crie que sur
   l'écart. Un scan tient un **verrou de fichier** le temps du tour : deux tours
   simultanés valent deux fois le débit annoncé, et les 429 frappent les deux.
+  **Il tourne enfin tout seul depuis le 04/09/2026** : `radar-pepites.yml` le
+  lance toutes les trois heures, la sonde décidant à chaque tour si le scan a
+  lieu. Trois heures parce qu'un tour sur deux est alors espacé de six, soit le
+  plancher qui rend un jeton **jugeable** — et `bilan` en exige vingt avant de
+  se prononcer, si bien qu'un scan unique ne prouve rien, aussi bon soit-il. Sa
+  mémoire vit dans le cache d'Actions et non dans Git, qui refuse les binaires,
+  ni dans un commit, qui vaudrait vingt-quatre déploiements Vercel par jour.
+  **Le cache s'évince au bout de sept jours sans usage** : si le planning
+  s'arrête une semaine, le compteur des jugeables repart de zéro.
 - **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
   asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
   bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
@@ -631,13 +651,38 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   un chat ; rien ne cherche d'intention avant. Le modèle public livre une part
   du produit et la livre **mesurée** — mais moins que ce que cette ligne
   annonçait jusqu'au 02/09/2026, et la correction vaut d'être lue.
-  Sur un corpus de 15 sons : `Purr` porte le *contentement*, `Caterwaul` porte
-  seul le *stress*, et **`Hiss` est une classe muette** — 0,000 sur les trois
-  feulements. Surtout, `Caterwaul` perdait **cinq duels sur cinq** contre
-  `Meow`, si bien que le stress n'était jamais atteint : le dépôt annonçait la
-  moitié du produit, le code en livrait le quart. Une classe porteuse de
-  lecture l'emporte désormais sur `Meow` au-dessus de 0,10 — plancher mesuré,
-  six fois au-dessus du plus haut miaulement ordinaire.
+  **Quarante vrais chats ont retiré le stress mesuré, le 04/09/2026, et c'est
+  la correction la plus lourde du projet.** Tout ce que le dépôt savait venait
+  jusque-là de quinze sons **fabriqués** — et il écrivait lui-même que le
+  plancher de `Caterwaul` n'avait jamais vu un vrai chat.
+  Le corpus qui a tranché est ESC-50, jeu de données de recherche récupéré sur
+  GitHub par `scripts/mesurer_esc50.py` : 40 enregistrements de chat, 20
+  témoins. Sondés le même jour, Wikimedia, archive.org, freesound et Zenodo
+  rendent tous `000` ; seul `raw.githubusercontent.com` répond, une fois de
+  plus.
+
+  | sur les 40 chats | médiane | ≥ 0,10 |
+  | --- | --- | --- |
+  | `Meow` | 0,627 | 39/40 |
+  | `Caterwaul` | **0,199** | **31/40** |
+  | `Purr` | 0,004 | 3/40 |
+  | `Hiss` | **0,000** | **0/40** |
+
+  YAMNet allume `Caterwaul` sur **n'importe quel** miaulement, à un tiers du
+  score de `Meow`. L'ancienne règle rendait donc **30 chats sur 40 en
+  « stress »**, annoncé comme *mesuré* : le produit aurait dit à quatre
+  propriétaires sur cinq que leur chat va mal. Deux réparations ont été
+  essayées et écartées, mesures à l'appui — monter le plancher (aucun trou où
+  le poser, tout nombre serait inventé) et exiger que la porteuse dépasse
+  `Meow` (la règle s'allume alors deux fois sur vingt témoins contre une fois
+  sur quarante chats).
+  **`Purr` reste donc seule porteuse**, et elle sépare franchement : 0,148 à
+  0,262 sur trois chats, **0,008 au maximum sur les vingt témoins**. Le prix
+  est dit plutôt que tu : **aucune classe de YAMNet ne porte le stress.** Il
+  n'est plus atteignable que par la tête acoustique, en `PROVISOIRE` plafonné
+  à 0,5 — et la carte cesse alors d'afficher un pourcentage, sans qu'on ait eu
+  à toucher à l'habillage. Mieux vaut « je n'ai pas compris » qu'une fausse
+  alarme sur la santé d'un animal.
   **`Roaring cats` ouvre la porte depuis le 03/09/2026**, et l'exclure était
   une erreur : le premier vrai chat **bâille** pendant 4,5 s de ses 8 s, YAMNet
   le range en rugissement, et son cumul félin valait **zéro**. Perdre un vrai
@@ -650,20 +695,67 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   toutes les fenêtres félines, elle rendait « détresse » sur un chat qui
   ronronne à 1,00. Elle refuse deux choses — séparer faim et envie de sortir,
   que le référentiel lui-même range sous un seul type, et lire le grave en
-  « douleur », que `archives-backlog/ou-a-mal-mon-animal.md` a déjà tranché. Faim et envie de sortir sont
-  deux façons de miauler qu'aucun modèle public ne sépare : l'application rend
-  `indécis`, avec son propre écran, plutôt qu'un pourcentage inventé.
+  « douleur », que `archives-backlog/ou-a-mal-mon-animal.md` a déjà tranché.
+  **Faim et envie de sortir n'existent plus, et c'est une décision de produit
+  du 04/09/2026.** Ce ne sont pas deux sons qu'on ne sait pas distinguer : le
+  référentiel les range lui-même, avec la soif et la litière sale, sous un
+  **seul** type de miaulement — vérifié à sa source. Le propriétaire a donc
+  fusionné les deux cartes en une, `demande`, qui ne dit jamais *quoi*. Les
+  deux membres ont été **retirés de l'énumération**, et un test refuse leur
+  retour : tant qu'ils existaient, une session pouvait les rebrancher en une
+  ligne. Quatre intentions demandées au départ, **trois** que l'application ose
+  nommer, et l'écran du doute reste pour ce qui n'entre dans aucune.
   **`Cat` ouvre la porte et ne choisit jamais** — c'est une classe parente, qui
   vaut 0,988 là où `Meow` vaut 0,891 ; la laisser concourir perdait la lecture
   directe à tous les coups, et six tests verts ne le voyaient pas. Le noyau est
-  en bibliothèque standard **pure** : 47 tests sans rien installer,
+  en bibliothèque standard **pure** : 49 tests sans rien installer,
   **habillage compris** — la carte SVG 1080 × 1920 est pure elle aussi. Elle
   ne peut pas afficher un score que le modèle n'a pas mesuré : le bloc de
   confiance n'existe que pour une lecture `MESUREE`, et deux tests le
   tiennent dans les deux sens — l'un refuse le score sans mesure, l'autre
   refuse qu'on supprime le bloc entier.
   CatMeows n'est pas récupérable d'ici (Zenodo refusé) et ses trois contextes
-  ne sont pas les quatre intentions visées. Se vérifie depuis la racine.
+  ne sont pas les quatre intentions visées. **Ce qui manque encore est un corpus
+  étiqueté par contexte, et la liste existe depuis le 04/09/2026** :
+  `scripts/telecharger_corpus_etiquete.py` porte 28 vidéos repérées par
+  TubeAlfred dont le téléverseur écrit la situation dans le titre — « hungry
+  cat meowing for food », « cat greets owner home ». Étiquette faible, jamais
+  écoutée d'ici, et la première vérité de terrain que la tête acoustique aura
+  eue. Les octets viennent de la machine d'Erwann, pour la raison du §7. Se vérifie depuis la racine.
+  **`web/` porte le même cœur en TypeScript**, pour le navigateur — décidé le
+  04/09/2026 après avoir mesuré que Flutter, Dart et `adb` sont absents : une
+  application native ne peut être ni construite ni *regardée* d'ici, ce que le
+  §8 exige. Le Python reste la référence, et le portage est tenu par des
+  **témoins engendrés depuis lui** — `outils/engendrer-temoins.py` fait tourner
+  le noyau, `tests/conformite.test.ts` rejoue les mêmes entrées et compare le
+  **SVG entier au caractère près**. Aucune attente n'y est écrite à la main.
+  **Et le modèle y tourne depuis le 04/09/2026, mesuré** : le même vecteur de
+  15 600 échantillons dans `ai_edge_litert` et dans le WASM de
+  `@tensorflow/tfjs-tflite` conduit par un vrai Chromium rend **exactement les
+  mêmes 521 scores**, écart `0.000e+0`, sur quatre signaux et sept fenêtres.
+  C'est ce qui autorise à parler d'un seul produit : le corpus mesuré côté
+  Python vaut côté navigateur sans être refait. Le piège est que l'alpha épingle
+  `tfjs-core@4.9.0` **exactement** — ni `--force` ni `--legacy-peer-deps`, on
+  s'aligne. La bonne nouvelle est que ses WASM sont **livrés dans le paquet** :
+  aucun CDN à joindre, ce que le mandataire imposait de toute façon et ce qui
+  fait tourner l'application hors ligne.
+  **L'application existe depuis le 04/09/2026** — `web/page/index.html`, un
+  bouton, un repli par fichier, la carte et son téléchargement — et l'épreuve
+  la conduit à 393 × 873 depuis un **fichier**, ce qui fait entrer décodage,
+  rééchantillonnage et fenêtrage dans la comparaison avec le Python : trois
+  fenêtres des deux côtés, même verdict, même phrase. Un défaut n'est sorti que
+  du **regard** : toutes les mesures étaient vertes et le bouton « Enregistrer
+  la carte » tombait sous la ligne de flottaison, un aperçu 9:16 large de
+  300 px en faisant 533 de haut. L'aperçu se borne désormais en hauteur.
+  Ce qui n'est **pas** couvert : les signaux d'épreuve sont fabriqués, aucun
+  n'est un chat, et le chemin `getUserMedia` est écrit sans être éprouvé — une
+  capture réelle passe par le rééchantillonnage de l'appareil et ne se compare
+  pas au Python sur les mêmes octets.
+  Deux pièges mesurés y sont écrits : un `enum` ne survit pas au retrait de
+  types de Node (`strip-only mode`), ce qui vaut pour tous les projets TS du
+  dépôt ; et le `tsconfig.json` racine **avale ces huit fichiers** sans casser
+  pour l'instant — dette assumée, dont le correctif tient en une ligne
+  d'`exclude` en zone sensible.
 - **conseiller-patrimoine/** — la vue d'ensemble du patrimoine, **en lecture
   seule stricte**. Il lit, il ne touche à rien : ni ordre, ni portefeuille, ni un
   seul fichier de NexusCrypto ou du radar. Une dépendance — PyYAML — et le
@@ -1058,13 +1150,72 @@ Deuxième raison, indépendante de la première : un greffon installé ici atter
 dans `/root/.claude/`, à l'intérieur d'un conteneur repris après inactivité. Il
 disparaît. **Seul le dépôt persiste.**
 
-**`youtu.be` et `youtube.com` sont refusés eux aussi** — `EGRESS_BLOCKED`,
-mesuré le 29/08. Cela compte parce qu'un lien vidéo arrive souvent seul, sans
-un mot : le réflexe est d'aller le lire, et il est perdu d'avance. Deux raisons
-plutôt qu'une, d'ailleurs — même joignable, une page YouTube ne donne qu'un
-titre, et **regarder une vidéo n'est de toute façon pas possible**. La seule
-réponse utile est donc de demander en une phrase ce qu'il faut en retenir, et
-de continuer autre chose en attendant.
+**`youtu.be` et `youtube.com` étaient donnés pour refusés eux aussi —
+`EGRESS_BLOCKED`, mesuré le 29/08. La moitié de cette phrase est fausse depuis
+le 04/09/2026, et la conséquence qu'on en tirait l'est entièrement.**
+
+| hôte | 29/08 | 04/09 |
+| --- | --- | --- |
+| `www.youtube.com` | refusé | **200** |
+| `googlevideo.com` (l'hôte qui sert les médias) | non sondé | **répond** |
+| `youtu.be` | refusé | refusé |
+| `i.ytimg.com` (vignettes) | non sondé | refusé |
+
+Et le **connecteur TubeAlfred** rend recherche, fiches et **transcriptions**
+— une transcription entière obtenue pour 1 crédit sur 100. Piège de facturation
+mesuré le 04/09 : `youtube_videos_batch` prend 50 identifiants en un appel et
+facture **un crédit par vidéo**, pas par appel — 29 fiches ont coûté 29 crédits.
+Trier sur les résultats de recherche, qui portent déjà titre, durée et vues,
+avant de demander les fiches. La phrase « une page
+YouTube ne donne qu'un titre » ne tient donc plus : elle donne le texte complet
+de ce qui est dit, ce qui suffit à vérifier une source de vulgarisation sans
+regarder la vidéo. C'est ainsi que le référentiel de `chat-traducteur/` a été
+confronté à sa source le 04/09.
+
+**Ce qui reste vrai, et la cause a changé de nature.** Les octets d'un média ne
+s'obtiennent toujours pas — mais ce n'est plus le mandataire qui refuse, c'est
+YouTube. Cinq chemins essayés le même jour, `yt-dlp 2026.08.19` installé depuis
+PyPI :
+
+| chemin | ce qu'il rend |
+| --- | --- |
+| métadonnées, liste des formats | **passent** |
+| flux DASH `140` (client par défaut) | `403 Forbidden` |
+| clients `tv`, `web_safari`, `ios`, `android_vr`, `tv_embedded` | *« Sign in to confirm you're not a bot »* |
+| client `mweb` | **« require a GVS PO Token »** — le refus se nomme |
+| flux HLS `233` | `403` sur chaque fragment |
+| URL média en direct, redirection suivie | `403`, zéro octet |
+
+La distinction se paie si on l'ignore : un `403` se lit comme une clé
+manquante, un `000` comme un mur réseau, et ici ce n'est **ni l'un ni
+l'autre** — c'est une adresse de centre de données qu'une plateforme refuse
+sans cookies de session. Aucune clé, aucune ouverture de domaine n'y changera
+quoi que ce soit ;
+
+**Et le huitième client dit ce que les sept autres cachent** : `mweb` ne parle
+ni de compte ni de robot, il réclame un **jeton PO**, calculé en exécutant du
+JavaScript de Google. `yt-dlp` sait le faire fabriquer localement par le
+greffon `bgutil-ytdlp-pot-provider`, qui s'installe depuis PyPI et se charge —
+mais son script serveur vit dans un dépôt GitHub **hors de la portée accordée à
+la session** : `403` sur l'API, sur la page de publication et sur `codeload`,
+seul `raw.githubusercontent.com` répond, fichier par fichier. Le mur est donc
+*logiciel* et non contractuel, ce qui condamne définitivement la recherche
+d'une clé ou d'un compte. Détail dans
+`second-brain/lecons/2026-09-04-youtube-ne-demande-pas-un-compte-mais-un-jeton.md`.
+
+ et rien ne dit qu'un *runner* GitHub ferait mieux, son
+adresse étant de la même famille — non mesuré, à ne pas promettre.
+
+Le sixième chemin a été essayé aussi, parce qu'il ne passait pas par le CDN de
+YouTube : une chaîne de bruitages qui met des liens `file-upload.com` dans ses
+descriptions. **`file-upload.com` rend `000`** — refusé au tunnel, celui-là
+pour de bon.
+
+**Donc, en pratique :** on lit et on transcrit une vidéo d'ici ; on ne
+rapatrie pas son son. Un corpus audio se constitue sur la machine du
+propriétaire, en une commande, et la liste des candidats se prépare ici — c'est
+exactement le partage du §7 sur higgsfield, une troisième fois : **le connecteur
+travaille, les octets ne suivent pas.**
 
 **La parade est celle de la voix off et des poids Wav2Lip, une troisième fois :
 GitHub répond.** Des bougies réelles au format CCXT — `[horodatage_ms, o, h, b,
@@ -1096,6 +1247,23 @@ Ce qui reste impossible : l'ingestion **en direct**, le sentiment, l'on-chain et
 la macro. Une stratégie se règle donc hors ligne sur des données téléchargées,
 et son branchement aux sources ne se vérifie que sur une machine sans mandataire
 filtrant.
+
+**Et cette machine-là existait depuis le début : le runner du dépôt — mesuré le
+04/09/2026.** Le mur ci-dessus est celui d'une **session distante**, pas celui
+d'un workflow GitHub. Le radar de pépites, lancé par `radar-pepites.yml` sur
+`ubuntu-latest`, rend `828 paires → 182 jetons → 7 candidats en 17 s` sur des
+données DexScreener réelles, sonde répondue en quatre secondes.
+
+Ce qui était faux n'est donc pas la mesure des neuf hôtes — elle tient — mais
+la conséquence qu'on en tirait : « il faut une machine du propriétaire, allumée
+et planifiée ». Le radar est resté fini, vert et **à l'arrêt cinq jours** pour
+cette phrase-là. Avant de conclure qu'une tâche a besoin du PC, se demander si
+elle tiendrait dans un workflow : pas de secret, le temps d'un job, et un
+résultat qui vit dans un cache ou un artefact plutôt que dans Git. Ce qui ne se
+transpose pas : un runner n'a ni carte graphique, ni logiciel de bureau, ni
+compte connecté. Il a du **réseau**, et c'est tout ce que cette mesure dit.
+Détail et ce qui reste non vérifié dans
+`second-brain/lecons/2026-09-04-le-mandataire-du-runner-nest-pas-celui-de-la-session.md`.
 
 **Une session distante ne peut pas en joindre une autre.** Mesuré deux fois le
 29/08 : `ListAgents` ne rend aucun pair joignable et `SendMessage` refuse, alors

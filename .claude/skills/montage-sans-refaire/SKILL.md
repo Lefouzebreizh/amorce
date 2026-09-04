@@ -366,6 +366,52 @@ le texte sur le front, yeux et bouche libres.
 
 ---
 
+## 10 bis. Un enregistrement d'écran porte sa propre barre de statut, fixe
+
+Sur une promo « Couverture Martin » (03/09/2026) : un bandeau de texte posé
+au-dessus d'un panneau montrant le début d'un scroll de site — et à la
+jonction, la barre de statut Android (l'heure, les icônes Bluetooth/wifi/
+batterie) venait **manger le haut des lettres** du titre « Qui je suis » qui
+scrollait juste en dessous.
+
+La cause n'est pas un bug de superposition : c'est que **la barre de statut
+est fixe dans chaque image de l'enregistrement**, pendant que le contenu de la
+page défile en dessous. Dans un plein écran classique ça ne se voit jamais —
+elle est toujours au même endroit, sur un fond sombre, personne ne la
+remarque. Mais dès qu'on découpe une fenêtre qui commence à `y=0` de cette
+même image (un panneau de split-screen, une vignette, tout cadrage qui prend
+le haut brut de l'enregistrement), la bande de statut se retrouve collée au
+bord du panneau — et au moment précis où un titre scrolle jusque-là, les deux
+se chevauchent.
+
+**Mesurer la hauteur de la barre avant de couper**, elle n'est pas la même
+sur tous les enregistrements (dépend du téléphone, de la densité d'écran) :
+
+```bash
+python3 -c "
+from PIL import Image
+im = Image.open('frame.png').convert('RGB')
+# une colonne x loin de toute icone : releve la ou le fond uniforme
+# de la barre laisse place au contenu de la page
+for y in range(0, 220, 4):
+    print(y, im.getpixel((400, y)))
+"
+```
+
+Ici : 90 px sur 2400 (fond `(20,20,20)` uniforme jusqu'à `y=90`, puis le
+contenu de la page). **Recadrer la source avant de poser quoi que ce soit
+dessus** — bandeau, split-screen, texte — jamais après :
+
+```bash
+ffmpeg -i source.mp4 -vf "crop=1080:2310:0:90,scale=1080:2400" source_sans_barre.mp4
+```
+
+Le recadrage se fait une fois, sur la source, et tout le reste du montage
+(panneaux, crops, overlays) se construit dessus. Le corriger après coup sur
+un panneau déjà composé oblige à tout refaire.
+
+---
+
 ## 11. Ce qu'on tire d'une image du film hérite de cette image
 
 Un carton fabriqué depuis la dernière image portait le **titre encore
@@ -447,6 +493,30 @@ faire, et **sur le fichier final**, pas sur celui d'avant :
 
 Puis `voir.py` sur le fichier livré : **aucun silence détecté**, et l'écart
 entre les deux courbes sous 7 dB.
+
+---
+
+## 15. Une vérification automatique par Gemini, avant de livrer
+
+Les points 1 à 14 mesurent — mouvement, niveau, spectrogramme. Aucun ne
+regarde le montage **comme un spectateur** : est-ce que ça enchaîne trop de
+scènes sans respiration, est-ce que la créature reste figée, est-ce qu'un
+plan jure avec les autres. C'est ce que fait ce script, sur le fichier qui
+part, en plus de tout ce qui précède — pas à sa place :
+
+```bash
+python3 .claude/skills/montage-sans-refaire/scripts/verifier_gemini.py montage.mp4
+```
+
+Clé lue dans `GEMINI_API_KEY` (variable d'environnement ou `.claude/.env` —
+jamais dans le `.env` de l'app elle-même, jamais en argument de commande).
+Sans clé, le script s'arrête et le dit ; il ne livre jamais un verdict
+inventé.
+
+Posé le 04/09/2026, après un montage de test (14,3 s, quatre scènes) jugé
+« sans respiration » à l'œil — un défaut de rythme éditorial que le relevé de
+mouvement du point 9 ter ne peut pas voir : ce point-là détecte un plan mort,
+pas un enchaînement trop serré entre des plans qui bougent tous.
 
 ---
 

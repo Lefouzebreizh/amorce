@@ -87,3 +87,14 @@ perception réelle du contraste en plein jour. C'est le troisième niveau de
 
 Elle ne juge pas non plus si l'écran est **beau**. Une interface peut passer les
 quatre contrôles et rester laide ; l'inverse est plus rare, mais il existe.
+
+**Et elle ne remplace pas un contrôle des jetons eux-mêmes.** Elle mesure le
+contraste sur l'interface qui tourne : il lui faut un serveur, une URL, et elle
+ne voit que la palette du système au moment du relevé — donc un seul thème, et
+seulement les états présents à l'écran. `agence/src/lib/__tests__/contraste.test.ts`
+prend l'autre bout : il lit les jetons dans `globals.css`, compose les aplats
+semi-transparents et rend le rapport des deux thèmes dans `npm test`, sans
+navigateur ni base. C'est ce qui a trouvé le contour de champ à 1,26:1 — un
+champ vide, dans le thème sombre, n'apparaît sur aucune capture d'un parcours
+nominal. Les deux se complètent : celui-ci éprouve ce qui est affiché, celui-là
+garde ce qu'un client réécrira.

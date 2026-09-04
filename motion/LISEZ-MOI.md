@@ -106,6 +106,18 @@ npx remotion render src/index.ts Ep02 out/ep02.mp4 \
   --browser-executable=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell
 ```
 
+**Sur Windows**, le même piège se pose et se corrige pareil — Playwright a
+déjà mis un `headless_shell` en cache dès qu'un autre projet du dépôt l'a
+utilisé une fois (le chemin varie avec la version, `dir /s /b` le retrouve) :
+
+```powershell
+npx remotion render src/index.ts RuneVortexTest out/rune-vortex-test.mp4 `
+  --browser-executable="C:\Users\<utilisateur>\AppData\Local\ms-playwright\chromium_headless_shell-XXXX\chrome-headless-shell-win64\chrome-headless-shell.exe"
+```
+
+Vérifié le 03/09/2026 sur `RuneVortexTest` (`src/rune-vortex-test.tsx`) : rendu
+complet en une poignée de secondes, sans toucher au réseau.
+
 ## Les instants sont ATTENDUS, pas mesurés
 
 `tiktok/feuilleton-ep02.md` laisse ses instants entre crochets à dessein, et

@@ -246,12 +246,91 @@ s'accorder le rôle administrateur »*. En élargissant la politique des projets
 `using (true)`, il s'arrête sur *« Alice voit des projets qui ne sont pas les
 siens »*. Un contrôle qui ne casse jamais ne prouve rien.
 
+## Sauvegarder la base d'un client
+
+La sauvegarde d'un hébergeur protège de la panne, jamais de l'hébergeur. Un
+projet suspendu pour impayé, une carte qui expire, un compte fermé — et les
+données du client sont derrière une porte que personne n'ouvre. La copie qu'on
+détient soi-même est la seule qui reste quand le fournisseur *est* le problème.
+
+```bash
+npm run sauvegarder -- "postgresql://postgres:MDP@db.PROJET.supabase.co:5432/postgres"
+npm run restaurer -- ~/sauvegardes-agence/2026-09-04-1530
+```
+
+La première commande écrit quatre fichiers dans `~/sauvegardes-agence/<horodatage>` :
+le schéma en clair (comparable à `supabase/schema.sql`, donc lisible comme un
+relevé de dérive), les données au format propriétaire de PostgreSQL, les comptes
+`auth` à part, et un **manifeste** qui compte les lignes table par table.
+
+La seconde restaure dans une base locale jetable et **vérifie** : les comptes
+reviennent-ils, la RLS est-elle réactivée, les politiques sont-elles là. C'est
+la moitié qui manque partout — une sauvegarde planifiée jamais relue reste verte
+pendant deux ans sur une base vidée par une migration ratée. `npm run
+test:sauvegarde` joue l'aller-retour complet sur un PostgreSQL local : on
+sauvegarde, **on détruit la base**, on restaure, on compte.
+
+### Trois choses que ce chemin a apprises, et qu'il coûte cher de redécouvrir
+
+**`pg_dump --schema=public` laisse dehors le déclencheur d'inscription.** Il vit
+sur `auth.users`, un schéma que Supabase gère, mais il appelle une fonction de
+`public` : sans lui, une base restaurée accepte de nouveaux comptes **sans jamais
+leur créer de profil**, et rien ne le signale avant la première inscription
+réelle. `sauvegarder.sh` le reprend explicitement, `restaurer.sh` exige sa
+présence.
+
+**Restaurer les comptes réveille ce déclencheur**, qui fabrique un profil vide
+par compte — lesquels entrent aussitôt en collision avec les vrais profils de la
+sauvegarde (`duplicate key value violates unique constraint`). L'ordre est
+contraint : les comptes d'abord, puisque `profiles.id` les référence. On efface
+donc ce que le déclencheur vient d'inventer avant de poser ce que la sauvegarde
+contient. Chaque moitié est juste ; c'est leur enchaînement qui casse.
+
+**`pg_dump` refuse un serveur plus récent que lui**, et les projets Supabase de
+ce compte tournent en **PostgreSQL 17** (mesuré le 04/09/2026) quand cette
+machine porte un client **16.13**. Le script s'arrête donc net avec le remède
+plutôt que de laisser lire une erreur anglaise au milieu d'une sortie longue.
+Concrètement : la sauvegarde d'un vrai projet demande un client PostgreSQL 17,
+ou un `docker run --rm postgres:17`. L'aller-retour, lui, est éprouvé de bout en
+bout en 16 — c'est le mécanisme qui est prouvé, pas la connexion à Supabase.
+
+Deux refus de plus, chacun payé une fois : le **pooler** (port 6543) ne sait pas
+servir `pg_dump`, et une sauvegarde **n'entre jamais dans un dépôt Git** — elle
+porte les données personnelles des utilisateurs du client. Le script vérifie les
+deux avant d'écrire quoi que ce soit.
+
+### Ce que la sauvegarde ne contient pas
+
+Les fichiers du stockage Supabase, les fonctions edge et leurs secrets, les
+variables d'environnement de l'hébergeur, et les réglages du projet
+(fournisseurs d'authentification, SMTP). Le manifeste le répète dans chaque
+sauvegarde, pour qu'on ne l'apprenne pas le jour de la restauration.
+
 ## Déployer
 
 N'importe quel hébergeur Node ou Vercel. Les trois variables de `.env.example`
-sont à déclarer côté hébergeur, et `NEXT_PUBLIC_SITE_URL` doit porter l'adresse
-publique réelle — c'est elle qui construit le lien de confirmation envoyé par
-courriel.
+sont à déclarer côté hébergeur.
+
+**`NEXT_PUBLIC_SITE_URL` mérite sa propre ligne**, parce que c'est la seule dont
+l'oubli ne se voit nulle part. Les deux variables Supabase manquantes font
+échouer la construction, avec leur nom dans le message ; celle-ci se repliait
+sur `localhost`, et le site se construisait, se déployait et s'affichait
+normalement — pendant que **chaque courriel de confirmation et de
+réinitialisation envoyait le client vers sa propre machine**. Personne ne
+pouvait créer de compte ni récupérer le sien, et aucune page ne le montrait.
+
+Elle lève donc désormais en production, et sa valeur est normalisée :
+
+| Valeur déclarée | Ce qui se passe |
+| --- | --- |
+| absente ou vide | l'inscription échoue en nommant la variable |
+| `https://client.fr/` | la barre finale est retirée — sinon `//auth/confirmer`, que la liste blanche de Supabase refuse au caractère près |
+| `https://client.fr/espace?utm=1` | ramenée à l'origine seule |
+| `client.fr` | refusée : sans protocole, le lien du courriel est relatif, donc mort |
+
+Le pendant côté Supabase se règle dans **Authentication → URL Configuration** :
+la même adresse en *Site URL*, et `https://client.fr/auth/confirmer` dans les
+*Redirect URLs*. Les deux listes doivent dire la même chose.
 
 ## Annexe — cadrage client
 

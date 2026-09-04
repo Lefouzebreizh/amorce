@@ -6,13 +6,39 @@ mène : sur un **miaulement**. Ce n'est pas un détail d'implémentation, c'est 
 qui empêche la faute décrite plus bas.
 
 Le référentiel vient d'une source de vulgarisation fournie par le propriétaire,
-et son statut est écrit ici plutôt que supposé : **il n'est pas validé par une
-publication**, et rien dans ce fichier ne doit se lire comme mesuré. Ce qui est
-mesuré porte une date.
+et son statut est écrit ici plutôt que supposé : **il n'est toujours pas validé
+par une publication**, et rien dans ce fichier ne doit se lire comme mesuré. Ce
+qui est mesuré porte une date.
 
     aigu + long    -> requête      faim, soif, litière sale, veut sortir
     aigu + court   -> salutation   chat bavard, content
     grave          -> alerte       douleur, stress, peur, défense
+
+**La table ci-dessus a été confrontée à sa source le 04/09/2026**, dont la
+transcription a été relue mot à mot. Elle est fidèle — ce qui écarte une erreur
+de recopie, et rien de plus : une vidéo de vulgarisation vérifiée reste une
+vidéo de vulgarisation. Ce qui change, c'est qu'on sait désormais ce qu'on
+suit.
+
+Et la source dit deux choses que la table ne portait pas. Toutes deux
+contraignent ce module, donc elles sont écrites ici.
+
+**1. Le même son ne dit pas la même chose selon le chat.** La source attache le
+type *aigu et long* aux chats « qui ne sont pas spécialement bavards, qui ne
+font pas de bruit en temps normal », et le type *aigu et court* aux races
+bavardes qui vocalisent « sans raison particulière ». Ce n'est pas un trait
+acoustique, c'est une **habitude de l'animal** — et aucune mesure faite sur un
+seul enregistrement n'y donne accès. Une tête qui ignore la base de référence
+d'un chat lit donc au mieux la moitié de ce que son propre référentiel décrit.
+C'est la limite haute de ce module, et c'est aussi ce qui rend la
+personnalisation par animal structurelle plutôt que décorative.
+
+**2. Seule la durée sépare la requête de la salutation.** Les deux premiers
+types sont *aigus* tous les deux ; la hauteur ne les départage pas. Tout le
+poids du partage repose donc sur `FRONTIERE_LONG`, une hypothèse déclarée et
+jamais mesurée — un seuil unique dont dépend, à lui seul, la différence entre
+« il demande quelque chose » et « il te dit bonjour ». `FRONTIERE_AIGU`, lui,
+ne fait que séparer l'alerte du reste.
 
 ## La faute que ce module refuse de commettre
 
@@ -34,8 +60,11 @@ l'atteignent jamais.
 
 ## Ce qui n'est pas ici, et pourquoi
 
-Le référentiel associe le grave à « douleur » et conseille un vétérinaire.
-**Cette partie n'est pas implémentée et ne le sera pas ainsi.** Le dépôt porte
+Le référentiel associe le grave à « douleur » et conseille un vétérinaire —
+confirmé dans la transcription du 04/09, qui parle de « mal-être physique ou
+psychologique », de douleur, et conseille « un vétérinaire ou un
+comportementaliste félin ». **Cette partie n'est pas implémentée et ne le sera
+pas ainsi**, et le savoir de première main ne change pas la décision. Le dépôt porte
 déjà la décision, dans `archives-backlog/ou-a-mal-mon-animal.md` : un outil qui
 tranche sur la santé d'un animal produit du soulagement ou de l'alarme, et les
 deux sont dangereux quand personne n'a examiné la bête. Le grave se lit ici en
@@ -72,14 +101,18 @@ class Lecture:
 # limite de l'outillage : le référentiel lui-même range « faim », « soif »,
 # « litière sale » et « veut sortir » sous le *même* type. Les deux intentions
 # demandées au départ sont acoustiquement la même chose, et aucun modèle n'y
-# changera rien. C'est une décision de produit, pas une question technique :
-# soit l'application dit « il demande quelque chose », soit elle garde deux
-# cartes qu'elle ne saura jamais départager.
+# changera rien.
 #
-# En attendant cette décision, `REQUETE` rend `INDECIS` — le seul verdict qui
-# ne choisit pas à la place du propriétaire.
+# **La décision de produit a été prise le 04/09/2026** : une carte unique,
+# `DEMANDE`, plutôt que deux cartes qu'aucune mesure ne départage. `REQUETE`
+# rend donc une vraie intention et non plus `INDECIS` — ce qui change ce que
+# l'application ose dire, pas ce qu'elle sait.
+#
+# Ne pas relire ce `DEMANDE` comme un progrès de la lecture : la tête n'en
+# sait pas plus qu'hier. C'est la carte qui a cessé de promettre plus que la
+# tête ne mesure.
 CORRESPONDANCE: dict[TypeMiaulement, Intention] = {
-    TypeMiaulement.REQUETE: Intention.INDECIS,
+    TypeMiaulement.REQUETE: Intention.DEMANDE,       # ne dit jamais *quoi*
     TypeMiaulement.SALUTATION: Intention.CONTENTEMENT,
     TypeMiaulement.ALERTE: Intention.STRESS,
     TypeMiaulement.INDETERMINE: Intention.INDECIS,

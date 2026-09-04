@@ -1,0 +1,31 @@
+{
+  "name": "chat-traducteur-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Le cœur du traducteur de chat en TypeScript, pour le navigateur — porté depuis le noyau Python, qui fait foi",
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --test \"tests/*.test.ts\"",
+    "check": "tsc --noEmit",
+    "temoins": "python3 outils/engendrer-temoins.py",
+    "bati": "tsc -p tsconfig.navigateur.json",
+    "epreuve": "node outils/epreuve.mjs",
+    "etiquettes": "python3 outils/extraire-etiquettes.py",
+    "temoins:oreille": "python3 outils/engendrer-temoins-oreille.py",
+    "temoins:chaine": "python3 outils/engendrer-temoin-chaine.py",
+    "temoins:corpus": "python3 outils/engendrer-temoins-corpus.py",
+    "epreuve:corpus": "node outils/epreuve-corpus.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.22"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs-backend-cpu": "4.9.0",
+    "@tensorflow/tfjs-core": "4.9.0",
+    "@tensorflow/tfjs-tflite": "0.0.1-alpha.10"
+  }
+}

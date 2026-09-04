@@ -41,15 +41,26 @@
    * d'opacité (les pastilles de statut). Ils sont donc choisis sombres en
    * thème clair et clairs en thème sombre : une couleur d'état lisible prime
    * sur une couleur d'état jolie.
+   *
+   * Cette phrase a longtemps été une intention. Elle est désormais mesurée :
+   * `contraste.test.ts` compose l'aplat à 15 % et exige 4,5:1, ce que le vert
+   * précédent (clarté 0,52) ne tenait pas — il rendait 4,11.
    */
-  --success: oklch(0.52 0.13 152);
+  --success: oklch(0.48 0.13 152);
   --success-foreground: oklch(0.985 0.005 258);
 
   --warning: oklch(0.55 0.12 70);
   --warning-foreground: oklch(0.3 0.06 70);
 
   --border: oklch(0.922 0.006 258);
-  --input: oklch(0.922 0.006 258);
+  /*
+   * `--input` cerne un champ de saisie vide, `--border` sépare des blocs qui se
+   * reconnaissent à leur contenu : deux rôles, donc deux valeurs, alors que la
+   * convention Shadcn leur donne la même. Le critère 1.4.11 des WCAG réclame
+   * 3:1 pour le contour d'un élément de formulaire — mesuré dans
+   * `contraste.test.ts`, et c'est ce test qui interdit de les réaligner.
+   */
+  --input: oklch(0.63 0.016 258);
   --ring: oklch(0.52 0.2 267);
 }
 
@@ -88,7 +99,7 @@
     --warning-foreground: oklch(0.88 0.09 78);
 
     --border: oklch(0.3 0.016 266);
-    --input: oklch(0.33 0.016 266);
+    --input: oklch(0.55 0.016 266);
     --ring: oklch(0.68 0.16 267);
   }
 }

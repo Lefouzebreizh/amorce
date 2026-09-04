@@ -105,6 +105,11 @@ while IFS= read -r f; do
     licence-serveur/*) inscrire licence ;;
     comptes-serveur/*) inscrire comptes ;;
     annuaire-ia/*)   inscrire annuaire ;;
+    # Avant la découverte Python plus bas, qui inscrira *aussi* la suite
+    # `chat-traducteur` : c'est voulu. Le Python fait foi, et les témoins de
+    # conformité du portage sont engendrés depuis lui — toucher au TypeScript
+    # sans revoir sa jumelle est exactement ce qu'il faut attraper.
+    chat-traducteur/web/*) inscrire chatweb ;;
     src/*|scripts/*|package.json|package-lock.json|tsconfig.json|eslint.config.mjs|next.config.ts|postcss.config.mjs)
                      inscrire amorce ;;
     # L'outillage du dépôt — hooks et scripts de compétences — n'appartenait à
@@ -347,6 +352,44 @@ lancer_bilan() {
   return $e
 }
 
+lancer_chatweb() {
+  # Le cœur du traducteur, porté en TypeScript pour le navigateur.
+  #
+  # Ses tests ne demandent **rien** : Node retire les types lui-même et le
+  # paquet n'a aucune dépendance d'exécution. Le typecheck, lui, a besoin de
+  # `typescript`, que seul `npm install` pose — et le hook de démarrage ne
+  # connaît pas encore ce projet. On le lance quand il est là, et on dit
+  # franchement qu'il ne l'est pas sinon : le compter vert serait une mesure
+  # qui n'a rien mesuré, ce que `etape_regard` refuse déjà par ailleurs.
+  local d="chat-traducteur/web"; local j="$journal/chatweb"; local e=0
+  ( cd "$d" || exit 1; etape "$j.test" "conformité au noyau Python" npm test ) || e=1
+  if [ -d "$d/node_modules" ]; then
+    ( cd "$d" || exit 1; etape "$j.check" "types" npm run check ) || e=1
+    # L'épreuve du navigateur conduit un vrai Chromium sur le vrai modèle et
+    # compare les 521 scores à ceux du Python. Elle rend 3 quand il lui manque
+    # une pièce de la machine — Chromium, le modèle non versionné, le bâti —
+    # et **écrit alors sa propre raison** plutôt que la raison générique
+    # d'`etape_regard` : « pas de Chromium » sur un modèle absent enverrait
+    # chercher le défaut au mauvais endroit.
+    ( cd "$d" || exit 1; npm run bati --silent ) >"$j.bati.brut" 2>&1 || {
+      echo "    ✗ bâti navigateur" >> "$j.check"; e=1; }
+    local sortie
+    sortie=$( cd "$d" && node outils/epreuve.mjs 2>&1 ); local code=$?
+    case $code in
+      0) echo "    ✓ épreuve du navigateur (521 scores × 7 fenêtres)" >> "$j.epreuve" ;;
+      3) echo "    ⊘ épreuve du navigateur — $(echo "$sortie" | tail -1)" >> "$j.epreuve" ;;
+      *) echo "    ✗ épreuve du navigateur" >> "$j.epreuve"
+         { echo "── épreuve du navigateur"; echo "$sortie" | tail -20; } > "$j.epreuve.echec"
+         e=1 ;;
+    esac
+  else
+    echo "    ⊘ types — non effectué, dépendances non installées" >> "$j.check"
+    echo "    ⊘ épreuve du navigateur — non effectué, dépendances non installées" >> "$j.epreuve"
+  fi
+  cat "$j".{test,check,epreuve} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_iptv() {
   local d="iptv"; local j="$journal/iptv"; local e=0
   # Les deux premières ne se lisent pas l'une l'autre : elles partent ensemble.
@@ -460,6 +503,7 @@ for p in $projets; do
     hypersensible) lancer_hypersensible & pid_de[hypersensible]=$! ;;
     titan)   lancer_titan & pid_de[titan]=$! ;;
     iptv)    lancer_iptv  & pid_de[iptv]=$! ;;
+    chatweb) lancer_chatweb & pid_de[chatweb]=$! ;;
     bilan)   lancer_bilan & pid_de[bilan]=$! ;;
     motion)  lancer_motion & pid_de[motion]=$! ;;
     licence) lancer_licence & pid_de[licence]=$! ;;
@@ -487,6 +531,7 @@ nom_lisible() {
     hypersensible) echo "Hypersensible & Bienveillance" ;;
     titan)   echo "TITAN Builder" ;;
     iptv)    echo "IPTV / VOD" ;;
+    chatweb) echo "Traducteur de chat — cœur TypeScript" ;;
     bilan)   echo "Bilan Patrimoine" ;;
     motion)  echo "Habillages animés (motion)" ;;
     licence) echo "Serveur de licence" ;;
@@ -529,7 +574,9 @@ case " $projets " in
 esac
 case " $projets " in
   *" agence "*)
-    echo "  • les politiques RLS : npm run test:rls, sur un vrai PostgreSQL" ;;
+    echo "  • les politiques RLS : npm run test:rls, sur un vrai PostgreSQL"
+    echo "  • la sauvegarde d'une base client : npm run test:sauvegarde,"
+    echo "    qui sauvegarde, détruit la base et restaure — quelques secondes" ;;
 esac
 case " $projets " in
   *" artisan "*)

@@ -107,13 +107,33 @@ class TestClassement(unittest.TestCase):
 class TestCeQuOnRefuseDeDire(unittest.TestCase):
     """Les deux refus, et ils valent plus que les trois classements."""
 
-    def test_requete_ne_choisit_pas_entre_faim_et_sortir(self):
+    def test_requete_ne_dit_jamais_ce_qui_est_demande(self):
         """Le référentiel range faim, soif, litière et « veut sortir » sous le
         **même** type. Les séparer serait inventer.
+
+        La décision de produit du 04/09/2026 a fusionné les deux cartes en
+        une : `REQUETE` rend désormais `DEMANDE`, qui ne nomme pas l'objet de
+        la demande. Ce test a changé de forme et **pas de garantie** — c'est
+        toujours la même chose qu'il refuse.
         """
-        self.assertIs(CORRESPONDANCE[TypeMiaulement.REQUETE], Intention.INDECIS)
-        for interdite in (Intention.FAIM, Intention.SORTIR):
-            self.assertNotIn(interdite, CORRESPONDANCE.values())
+        self.assertIs(CORRESPONDANCE[TypeMiaulement.REQUETE], Intention.DEMANDE)
+
+    def test_faim_et_sortir_nexistent_plus(self):
+        """La garantie précédente, dans sa forme la plus solide.
+
+        Tant que `FAIM` et `SORTIR` existaient dans l'énumération, une session
+        pouvait les rebrancher en une ligne et le seul garde-fou était un test
+        qui les nommait. Les avoir **retirées** rend la faute impossible à
+        commettre par distraction : il faudrait recréer les membres.
+
+        Ce test veille sur ce retrait. S'il tombe un jour, ce n'est pas une
+        coquille à corriger — c'est qu'une session a rouvert une question que
+        le propriétaire a tranchée, et il faut le lui redemander.
+        """
+        noms = {i.name for i in Intention}
+        self.assertNotIn("FAIM", noms)
+        self.assertNotIn("SORTIR", noms)
+        self.assertIn("DEMANDE", noms)
 
     def test_le_grave_se_lit_en_stress_jamais_en_douleur(self):
         """Le référentiel dit « douleur, consulter un vétérinaire ».
@@ -122,10 +142,17 @@ class TestCeQuOnRefuseDeDire(unittest.TestCase):
         `archives-backlog/ou-a-mal-mon-animal.md`. Le grave se lit en `STRESS`,
         ce que l'application sait dire, et rien de plus. Ce test existe pour
         qu'une session ne « complète » pas la correspondance un jour.
+
+        L'ensemble est **clos à dessein** : il refuse toute intention qui
+        n'est pas nommée ici, et c'est ce qui rend impossible l'ajout discret
+        d'une « douleur ». Il a gagné `DEMANDE` le 04/09/2026, sur décision
+        du propriétaire et par une modification visible de cette ligne — ce
+        qui est exactement le prix qu'un ensemble clos doit faire payer.
         """
         self.assertIs(CORRESPONDANCE[TypeMiaulement.ALERTE], Intention.STRESS)
         self.assertEqual(set(CORRESPONDANCE.values()),
-                         {Intention.INDECIS, Intention.CONTENTEMENT, Intention.STRESS})
+                         {Intention.INDECIS, Intention.CONTENTEMENT,
+                          Intention.STRESS, Intention.DEMANDE})
 
     def test_la_confiance_reste_plafonnee(self):
         """0,5 au plus : les deux frontières sont des hypothèses déclarées."""

@@ -28,25 +28,34 @@ Sous-titre: C'est bien. Ne bouge pas.
 
 Les quatre intentions demandées — faim, envie de sortir, stress, contentement —
 **ne sont pas au même niveau de preuve**, et confondre les deux moitiés est la
-seule façon de rater ce projet.
+seule façon de rater ce projet. **Elles sont trois depuis le 04/09/2026**, et
+la ligne qui a disparu explique le projet mieux que les autres.
 
 | Intention | D'où elle vient | État |
 | --- | --- | --- |
 | **contentement** | YAMNet nomme `Purr` lui-même | **mesurée**, marche aujourd'hui |
-| **stress** | YAMNet nomme `Caterwaul` | **mesurée**, marche depuis le 02/09 |
-| **faim** | il faut séparer deux façons de miauler | tête entraînée manquante |
-| **envie de sortir** | idem | tête entraînée manquante |
+| **stress** | ~~YAMNet nomme `Caterwaul`~~ → tête acoustique | **provisoire** depuis le 04/09 — voir plus bas |
+| **demande** | hauteur et durée, tête acoustique | **provisoire**, jamais de score affiché |
+| ~~faim~~, ~~envie de sortir~~ | un seul et même son | **fusionnées** en `demande` |
 
 C'est la bonne nouvelle du projet, et elle n'était pas prévue : **le modèle
 public livre déjà la moitié du produit**, et il la livre *mesurée*. Un
 ronronnement n'est pas une supposition, c'est une classe que le modèle a
 nommée.
 
-L'autre moitié demande un classifieur entraîné sur des miaulements étiquetés
-par contexte réel. Tant qu'il n'existe pas, l'application rend `indécis` — avec
-son propre écran, conçu, qui dit « j'ai bien entendu un chat, mais je ne devine
-pas plus ». Un pourcentage inventé sur un écran de partage a l'air d'une
-mesure : `CLAUDE.md` interdit le procédé qui manipule, et c'en est un.
+L'autre moitié ne demandait pas un meilleur modèle, et c'est ce qu'on a mis
+huit jours à comprendre : **faim et envie de sortir sont un seul son.** Le
+référentiel qui fonde la lecture acoustique les range lui-même, avec la soif et
+la litière sale, sous un unique type — vérifié à sa source le 04/09/2026.
+Aucun classifieur, si bien entraîné soit-il, ne sépare deux choses que la
+personne qui a filmé son chat sépare avec ses yeux et pas avec ses oreilles.
+
+Le propriétaire a donc tranché : **une carte unique, `demande`, qui ne dit
+jamais *quoi*.** Elle sort en `provisoire` et **n'affiche aucun pourcentage** —
+un score inventé sur un écran de partage a l'air d'une mesure, et `CLAUDE.md`
+interdit le procédé qui manipule. L'écran `indécis` reste, pour ce qui n'entre
+dans aucune des trois : « j'ai bien entendu un chat, mais je ne devine pas
+plus ».
 
 ## Faisabilité — ce qui a été mesuré, pas supposé
 
@@ -97,6 +106,57 @@ C'est aussi ce qui rend l'axe communautaire — la correction collective, mise d
 côté pour plus tard — plus stratégique qu'il n'en avait l'air : c'est la seule
 source d'étiquettes qui passe à l'échelle.
 
+**Et il manque plus simple que des étiquettes : un miaulement.** La tête
+acoustique est câblée, testée, et n'a **jamais lu un vrai miaulement franc** —
+les deux enregistrements réels dont dispose le projet sont un bâillement suivi
+d'un ronronnement, et un chat qui quémande en silence. Ce qui a été mesuré le
+04/09/2026 sur les chemins possibles, les candidats repérés et la commande à
+lancer depuis la machine d'Erwann sont dans **`CORPUS.md`**, à côté de ce
+fichier.
+
+Le résumé tient en une ligne : YouTube répond d'ici, il **transcrit** même —
+c'est ainsi que le référentiel a été confronté à sa source — mais il ne rend
+pas les octets d'un média à une adresse de centre de données. Ce n'est pas le
+mandataire, c'est la plateforme, et aucune clé n'y change rien.
+
+## Licences — ce qui est mesuré, et le trou qui reste
+
+**Ce projet est destiné à être vendu**, ce qui rend cette section obligatoire
+plutôt que polie. Relevé le 04/09/2026, par requête et non de mémoire.
+
+| Élément | Licence | État |
+| --- | --- | --- |
+| **Le code de YAMNet** (`research/audioset/yamnet/`) | **Apache 2.0** | **mesuré** — `/research` est nommé dans le `LICENSE` du dépôt `tensorflow/models` |
+| **Les poids** (`yamnet.h5`, et le `.tflite` qui en dérive) | *non établie* | **non mesuré — voir plus bas** |
+| Les 521 étiquettes de classes | issues d'AudioSet | non vérifiée d'ici |
+| Le noyau, l'habillage, les cartes | écrits ici | à nous |
+
+**Le trou est réel et il faut le nommer plutôt que de l'arrondir.** Le fichier
+`LICENSE` couvre « tous les fichiers dans les dossiers suivants », et il liste
+`/research`, où vit le code de YAMNet. Mais **les poids ne sont pas dans ce
+dépôt** : ils se téléchargent depuis `storage.googleapis.com/audioset/`, un
+hébergement séparé. Or c'est le fichier de poids que l'application embarque et
+distribue à chaque installation.
+
+Conclure « le dépôt est en Apache 2.0, donc les poids aussi » serait exactement
+la faute que `CLAUDE.md` §7 décrit : **une conséquence tirée d'une mesure
+juste, qui se relit ensuite comme si elle avait été mesurée elle aussi.** Elle
+est plausible — Google publie ce modèle pour qu'on s'en serve — et elle n'est
+pas vérifiée.
+
+Ce qu'il faut faire avant la première vente, et personne d'autre ne peut le
+faire à notre place : **obtenir par écrit le statut du fichier de poids**, soit
+depuis la fiche officielle du modèle, soit auprès de Google. Tant que ce n'est
+pas écrit, le projet se développe et ne se vend pas.
+
+Deux points annexes, moins urgents mais réels :
+
+- Apache 2.0 **oblige à distribuer une attribution** et le fichier `NOTICE`
+  s'il existe. Une application vendue doit donc porter un écran de mentions,
+  et il n'existe pas encore.
+- La table des étiquettes vient d'AudioSet, dont l'ontologie est publiée sous
+  sa propre licence. Non sondée d'ici.
+
 ## Structure
 
 ```
@@ -112,7 +172,9 @@ chat-traducteur/
 ├── habillage/          ← la carte SVG, bibliothèque standard PURE aussi
 │   ├── carte.py          verdict → SVG 1080 × 1920, zone sûre câblée
 │   └── palette.py        une palette par intention, contraste ≥ 7:1
-├── tests/                47 tests, ~90 ms, sans rien installer
+├── tests/                49 tests, ~90 ms, sans rien installer
+├── web/                  le même cœur en TypeScript, pour le navigateur
+│                         — témoins de conformité engendrés depuis le Python
 ├── modeles/              poids — jamais versionnés
 └── cli.py                le prototype : un fichier entre, une intention sort
 ```
@@ -332,10 +394,14 @@ jamais — ils sont lus en direct.
 **`REQUETE` ne se sépare pas en faim et envie de sortir.** Le référentiel range
 lui-même « faim », « soif », « litière sale » et « veut sortir » sous le *même*
 type. Ce n'était donc pas une limite de YAMNet : **ces deux intentions sont
-acoustiquement la même chose**, et aucun modèle n'y changera rien. C'est une
-décision de produit — soit l'application dit « il demande quelque chose », soit
-elle garde deux cartes qu'elle ne saura jamais départager. En attendant,
-`REQUETE` rend `indécis`.
+acoustiquement la même chose**, et aucun modèle n'y changera rien.
+
+**Tranché le 04/09/2026** : une carte unique. `REQUETE` rend `demande`, et
+`FAIM` comme `SORTIR` ont été **retirées de l'énumération** — pas seulement
+débranchées. La nuance vaut la ligne : tant que les deux membres existaient,
+une session pouvait les rebrancher en une ligne sans rien casser, et le seul
+garde-fou était un test qui les nommait. Il faut désormais recréer les membres,
+ce qu'aucune distraction ne fait.
 
 **Le grave se lit en stress, jamais en douleur.** Le référentiel conseille un
 vétérinaire ; le dépôt a déjà tranché contre ce genre de verdict dans

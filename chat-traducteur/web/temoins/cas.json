@@ -1,0 +1,320 @@
+{
+  "verdicts": [
+    {
+      "nom": "porte : aucune fenetre",
+      "fenetres": [],
+      "tete": null,
+      "attendu": {
+        "intention": "indecis",
+        "source": "aucune",
+        "confiance": 0.0,
+        "raison": "Aucune fenêtre analysable : l'enregistrement est trop court.",
+        "classeDominante": "",
+        "affichable": false
+      },
+      "svg": null
+    },
+    {
+      "nom": "porte : sous le seuil",
+      "fenetres": [
+        {
+          "Speech": 0.99
+        }
+      ],
+      "tete": null,
+      "attendu": {
+        "intention": "indecis",
+        "source": "aucune",
+        "confiance": 0.0,
+        "raison": "Aucun son de chat entendu (score félin 0.00 < 0.20) — trop loin du micro, ou couvert par autre chose.",
+        "classeDominante": "",
+        "affichable": false
+      },
+      "svg": null
+    },
+    {
+      "nom": "porte : juste sous le seuil",
+      "fenetres": [
+        {
+          "Cat": 0.19
+        }
+      ],
+      "tete": null,
+      "attendu": {
+        "intention": "indecis",
+        "source": "aucune",
+        "confiance": 0.0,
+        "raison": "Aucun son de chat entendu (score félin 0.19 < 0.20) — trop loin du micro, ou couvert par autre chose.",
+        "classeDominante": "",
+        "affichable": false
+      },
+      "svg": null
+    },
+    {
+      "nom": "lecture directe Purr",
+      "fenetres": [
+        {
+          "Cat": 0.5,
+          "Purr": 0.586
+        }
+      ],
+      "tete": null,
+      "attendu": {
+        "intention": "contentement",
+        "source": "mesuree",
+        "confiance": 0.586,
+        "raison": "YAMNet a nommé « Purr » à 0.59.",
+        "classeDominante": "Purr",
+        "affichable": true
+      },
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-contentement\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#16301F\"/>\n      <stop offset=\"100%\" stop-color=\"#07130C\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-contentement)\"/>\n  <rect x=\"96\" y=\"355\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#7FD99A\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"483\" font-size=\"84\" font-weight=\"800\" fill=\"#E8F7EC\">« Reste. »</text>\n  <text x=\"96\" y=\"641\" font-size=\"52\" font-weight=\"400\" fill=\"#E8F7EC\">C&apos;est bien. Ne bouge pas.</text>\n  <text x=\"96\" y=\"744\" font-size=\"30\" font-weight=\"600\" fill=\"#7FD99A\">Purr · 59%</text>\n  </g>\n</svg>\n"
+    },
+    {
+      "nom": "lecture directe Hiss",
+      "fenetres": [
+        {
+          "Cat": 0.6,
+          "Hiss": 0.51
+        }
+      ],
+      "tete": null,
+      "attendu": {
+        "intention": "indecis",
+        "source": "aucune",
+        "confiance": 0.0,
+        "raison": "Miaulement reconnu, mais faim et envie de sortir ne se séparent pas sans tête entraînée — voir README, « Ce qui manque ».",
+        "classeDominante": "Meow",
+        "affichable": true
+      },
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-indecis\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#232323\"/>\n      <stop offset=\"100%\" stop-color=\"#0D0D0D\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-indecis)\"/>\n  <rect x=\"96\" y=\"310\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#B1B1B1\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"438\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">« Je n&apos;ai pas</text>\n  <text x=\"96\" y=\"540\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">compris. »</text>\n  <text x=\"96\" y=\"698\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">J&apos;ai bien entendu un chat.</text>\n  <text x=\"96\" y=\"761\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">Mais je ne devine pas plus.</text>\n  </g>\n</svg>\n"
+    },
+    {
+      "nom": "lecture directe Caterwaul",
+      "fenetres": [
+        {
+          "Cat": 0.98,
+          "Meow": 0.801,
+          "Caterwaul": 0.586
+        }
+      ],
+      "tete": null,
+      "attendu": {
+        "intention": "indecis",
+        "source": "aucune",
+        "confiance": 0.0,
+        "raison": "Miaulement reconnu, mais faim et envie de sortir ne se séparent pas sans tête entraînée — voir README, « Ce qui manque ».",
+        "classeDominante": "Meow",
+        "affichable": true
+      },
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-indecis\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#232323\"/>\n      <stop offset=\"100%\" stop-color=\"#0D0D0D\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-indecis)\"/>\n  <rect x=\"96\" y=\"310\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#B1B1B1\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"438\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">« Je n&apos;ai pas</text>\n  <text x=\"96\" y=\"540\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">compris. »</text>\n  <text x=\"96\" y=\"698\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">J&apos;ai bien entendu un chat.</text>\n  <text x=\"96\" y=\"761\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">Mais je ne devine pas plus.</text>\n  </g>\n</svg>\n"
+    },
+    {
+      "nom": "Meow domine, porteuse sous le plancher",
+      "fenetres": [
+        {
+          "Cat": 0.996,
+          "Meow": 0.891,
+          "Caterwaul": 0.031
+        }
+      ],
+      "tete": null,
+      "attendu": {
+        "intention": "indecis",
+        "source": "aucune",
+        "confiance": 0.0,
+        "raison": "Miaulement reconnu, mais faim et envie de sortir ne se séparent pas sans tête entraînée — voir README, « Ce qui manque ».",
+        "classeDominante": "Meow",
+        "affichable": true
+      },
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-indecis\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#232323\"/>\n      <stop offset=\"100%\" stop-color=\"#0D0D0D\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-indecis)\"/>\n  <rect x=\"96\" y=\"310\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#B1B1B1\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"438\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">« Je n&apos;ai pas</text>\n  <text x=\"96\" y=\"540\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">compris. »</text>\n  <text x=\"96\" y=\"698\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">J&apos;ai bien entendu un chat.</text>\n  <text x=\"96\" y=\"761\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">Mais je ne devine pas plus.</text>\n  </g>\n</svg>\n"
+    },
+    {
+      "nom": "le lion : felin fort, aucune classe precise",
+      "fenetres": [
+        {
+          "Roaring cats (lions, tigers)": 0.97
+        }
+      ],
+      "tete": null,
+      "attendu": {
+        "intention": "indecis",
+        "source": "aucune",
+        "confiance": 0.0,
+        "raison": "Miaulement reconnu, mais faim et envie de sortir ne se séparent pas sans tête entraînée — voir README, « Ce qui manque ».",
+        "classeDominante": "Meow",
+        "affichable": true
+      },
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-indecis\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#232323\"/>\n      <stop offset=\"100%\" stop-color=\"#0D0D0D\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-indecis)\"/>\n  <rect x=\"96\" y=\"310\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#B1B1B1\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"438\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">« Je n&apos;ai pas</text>\n  <text x=\"96\" y=\"540\" font-size=\"84\" font-weight=\"800\" fill=\"#EDEDED\">compris. »</text>\n  <text x=\"96\" y=\"698\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">J&apos;ai bien entendu un chat.</text>\n  <text x=\"96\" y=\"761\" font-size=\"52\" font-weight=\"400\" fill=\"#EDEDED\">Mais je ne devine pas plus.</text>\n  </g>\n</svg>\n"
+    },
+    {
+      "nom": "meilleure fenetre, jamais la moyenne",
+      "fenetres": [
+        {
+          "Speech": 0.9
+        },
+        {
+          "Cat": 0.5,
+          "Purr": 0.586
+        },
+        {
+          "Speech": 0.9
+        }
+      ],
+      "tete": null,
+      "attendu": {
+        "intention": "contentement",
+        "source": "mesuree",
+        "confiance": 0.586,
+        "raison": "YAMNet a nommé « Purr » à 0.59.",
+        "classeDominante": "Purr",
+        "affichable": true
+      },
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-contentement\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#16301F\"/>\n      <stop offset=\"100%\" stop-color=\"#07130C\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-contentement)\"/>\n  <rect x=\"96\" y=\"355\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#7FD99A\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"483\" font-size=\"84\" font-weight=\"800\" fill=\"#E8F7EC\">« Reste. »</text>\n  <text x=\"96\" y=\"641\" font-size=\"52\" font-weight=\"400\" fill=\"#E8F7EC\">C&apos;est bien. Ne bouge pas.</text>\n  <text x=\"96\" y=\"744\" font-size=\"30\" font-weight=\"600\" fill=\"#7FD99A\">Purr · 59%</text>\n  </g>\n</svg>\n"
+    },
+    {
+      "nom": "couture : la tete rend une demande",
+      "fenetres": [
+        {
+          "Cat": 0.9,
+          "Meow": 0.8
+        }
+      ],
+      "tete": [
+        "demande",
+        0.71
+      ],
+      "attendu": {
+        "intention": "demande",
+        "source": "provisoire",
+        "confiance": 0.71,
+        "raison": "Tête d'intention sur un « Meow ».",
+        "classeDominante": "Meow",
+        "affichable": true
+      },
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-demande\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#3A2417\"/>\n      <stop offset=\"100%\" stop-color=\"#1B0F08\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-demande)\"/>\n  <rect x=\"96\" y=\"361\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#FFB35C\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"489\" font-size=\"84\" font-weight=\"800\" fill=\"#FFF3E4\">« Toi. Viens. »</text>\n  <text x=\"96\" y=\"647\" font-size=\"52\" font-weight=\"400\" fill=\"#FFF3E4\">Je ne dirai pas quoi. Tu vas</text>\n  <text x=\"96\" y=\"710\" font-size=\"52\" font-weight=\"400\" fill=\"#FFF3E4\">trouver.</text>\n  </g>\n</svg>\n"
+    },
+    {
+      "nom": "couture : la tete plafonnee",
+      "fenetres": [
+        {
+          "Cat": 0.9,
+          "Meow": 0.8
+        }
+      ],
+      "tete": [
+        "demande",
+        0.5
+      ],
+      "attendu": {
+        "intention": "demande",
+        "source": "provisoire",
+        "confiance": 0.5,
+        "raison": "Tête d'intention sur un « Meow ».",
+        "classeDominante": "Meow",
+        "affichable": true
+      },
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1080\" height=\"1920\" viewBox=\"0 0 1080 1920\">\n  <defs>\n    <linearGradient id=\"fond-demande\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0%\" stop-color=\"#3A2417\"/>\n      <stop offset=\"100%\" stop-color=\"#1B0F08\"/>\n    </linearGradient>\n  </defs>\n  <rect width=\"1080\" height=\"1920\" fill=\"url(#fond-demande)\"/>\n  <rect x=\"96\" y=\"361\" width=\"120\" height=\"10\" rx=\"5\" fill=\"#FFB35C\"/>\n  <g font-family=\"Inter, Roboto, 'Helvetica Neue', Arial, sans-serif\">\n  <text x=\"96\" y=\"489\" font-size=\"84\" font-weight=\"800\" fill=\"#FFF3E4\">« Toi. Viens. »</text>\n  <text x=\"96\" y=\"647\" font-size=\"52\" font-weight=\"400\" fill=\"#FFF3E4\">Je ne dirai pas quoi. Tu vas</text>\n  <text x=\"96\" y=\"710\" font-size=\"52\" font-weight=\"400\" fill=\"#FFF3E4\">trouver.</text>\n  </g>\n</svg>\n"
+    }
+  ],
+  "tetes": [
+    {
+      "nom": "aigu et long -> requete",
+      "traits": {
+        "hauteur": 500.0,
+        "duree": 1.0,
+        "mesuresFiables": 5
+      },
+      "attendu": {
+        "type": "requete",
+        "intention": "demande",
+        "confiance": 0.5,
+        "raison": "500 Hz sur 1.0 s — aigu, long : requete."
+      }
+    },
+    {
+      "nom": "aigu et court -> salutation",
+      "traits": {
+        "hauteur": 500.0,
+        "duree": 0.3,
+        "mesuresFiables": 5
+      },
+      "attendu": {
+        "type": "salutation",
+        "intention": "contentement",
+        "confiance": 0.5,
+        "raison": "500 Hz sur 0.3 s — aigu, court : salutation."
+      }
+    },
+    {
+      "nom": "grave -> alerte",
+      "traits": {
+        "hauteur": 200.0,
+        "duree": 1.0,
+        "mesuresFiables": 5
+      },
+      "attendu": {
+        "type": "alerte",
+        "intention": "stress",
+        "confiance": 0.5,
+        "raison": "200 Hz sur 1.0 s — grave, long : alerte."
+      }
+    },
+    {
+      "nom": "hauteur absente -> indetermine",
+      "traits": {
+        "hauteur": null,
+        "duree": 2.0,
+        "mesuresFiables": 0
+      },
+      "attendu": {
+        "type": "indetermine",
+        "intention": "indecis",
+        "confiance": 0.0,
+        "raison": "Miaulement reconnu, hauteur non mesurable (0 fenêtre(s) fiable(s))."
+      }
+    },
+    {
+      "nom": "trop peu de mesures -> indetermine",
+      "traits": {
+        "hauteur": 500.0,
+        "duree": 1.0,
+        "mesuresFiables": 1
+      },
+      "attendu": {
+        "type": "indetermine",
+        "intention": "indecis",
+        "confiance": 0.0,
+        "raison": "Miaulement reconnu, hauteur non mesurable (1 fenêtre(s) fiable(s))."
+      }
+    }
+  ],
+  "hauteurs": [
+    {
+      "nom": "sinus a 440 Hz",
+      "hertz": 440.0,
+      "echantillons": 4096,
+      "attendu": {
+        "f0": 444.44444444444446,
+        "confiance": 0.9888585183129475
+      }
+    },
+    {
+      "nom": "sinus a 200 Hz",
+      "hertz": 200.0,
+      "echantillons": 4096,
+      "attendu": {
+        "f0": 200.0,
+        "confiance": 0.9798144195310394
+      }
+    },
+    {
+      "nom": "bloc trop court",
+      "hertz": 300.0,
+      "echantillons": 128,
+      "attendu": {
+        "f0": null,
+        "confiance": 0.0
+      }
+    }
+  ]
+}

@@ -124,12 +124,23 @@ class TestLectureDirecte(unittest.TestCase):
         self.assertIs(v.source, Source.MESUREE)
         self.assertAlmostEqual(v.confiance, 0.66)
 
-    def test_feulement_donne_stress_mesure(self):
+    def test_aucune_classe_de_yamnet_ne_porte_le_stress(self):
+        """Le 04/09/2026, quarante vrais chats ont retiré le stress mesuré.
+
+        `Hiss` vaut 0,000 sur les quarante. `Caterwaul` s'allume sur
+        n'importe quel miaulement — médiane 0,199, soit deux fois le
+        plancher — et l'ancienne règle rendait **30 chats sur 40 en
+        « stress »**.
+
+        Le stress reste atteignable par la tête acoustique, en `PROVISOIRE`
+        et plafonné à 0,5 : annoncé comme une hypothèse, jamais comme une
+        mesure. Ce test refuse le retour de la seconde forme.
+        """
         for etiquette in ("Hiss", "Caterwaul"):
             with self.subTest(etiquette=etiquette):
                 v = juger([{etiquette: 0.51}])
-                self.assertIs(v.intention, Intention.STRESS)
-                self.assertIs(v.source, Source.MESUREE)
+                self.assertIsNot(v.intention, Intention.STRESS)
+                self.assertIsNot(v.source, Source.MESUREE)
 
     def test_cat_ouvre_la_porte_mais_ne_choisit_jamais(self):
         """Le défaut trouvé en regardant, que six tests verts n'avaient pas vu.
@@ -192,15 +203,15 @@ class TestMiaulementSansTete(unittest.TestCase):
         une couture jamais traversée est une couture qui ne marche pas.
         """
         v = juger([{"Meow": 0.62}],
-                  tete_intention=lambda: (Intention.FAIM, 0.73))
-        self.assertIs(v.intention, Intention.FAIM)
+                  tete_intention=lambda: (Intention.DEMANDE, 0.73))
+        self.assertIs(v.intention, Intention.DEMANDE)
         self.assertIs(v.source, Source.PROVISOIRE)
         self.assertAlmostEqual(v.confiance, 0.73)
 
     def test_la_tete_ne_court_circuite_jamais_la_porte(self):
         """Même branchée, elle ne voit pas ce que la porte a refusé."""
         v = juger([{"Speech": 0.99}],
-                  tete_intention=lambda: (Intention.FAIM, 0.99))
+                  tete_intention=lambda: (Intention.DEMANDE, 0.99))
         self.assertIs(v.intention, Intention.INDECIS)
         self.assertIs(v.source, Source.AUCUNE)
 
@@ -237,23 +248,27 @@ class TestComportementEpingle(unittest.TestCase):
     rôle : rendre visible une décision qui, sans eux, se prendrait en silence.
     """
 
-    def test_caterwaul_l_emporte_sur_meow_desormais(self):
-        """La question ouverte, tranchée le 02/09/2026 sur un corpus de 15 sons.
+    def test_caterwaul_ne_porte_plus_le_stress(self):
+        """Ce test a basculé deux fois, et c'est son histoire qui vaut.
 
-        Ce test remplace celui qui épinglait le comportement inverse. Il n'a
-        pas basculé tout seul : le test épinglé a échoué au moment où la règle
-        a changé, ce qui était exactement son rôle — rendre visible une
-        décision qui, sans lui, se serait prise en silence.
+        Écrit le 02/09/2026 pour épingler que `Caterwaul` **devait** l'emporter
+        sur `Meow` — décision prise sur quinze sons **fabriqués**, où la classe
+        valait 0,000 à 0,031 sur les miaulements ordinaires et 0,199 à 0,738
+        sur les sons de détresse. Un écart de six, franc.
 
-        Les scores sont ceux d'un vrai feulement du corpus. Avant la règle,
-        `Meow 0,891` battait `Caterwaul 0,586` et le stress était perdu : les
-        **cinq** sons de détresse du corpus ressortaient `indécis`, et la
-        moitié du produit que le dépôt annonçait n'existait pas.
+        Cet écart n'existe pas dans la réalité. Sur quarante enregistrements de
+        chats d'ESC-50, `Caterwaul` a une médiane de **0,199** — la valeur que
+        le corpus fabriqué rangeait du côté de la détresse — et dépasse 0,10
+        sur **31 chats sur 40**. La classe ne distingue rien : elle suit le
+        volume du miaulement.
+
+        Le score ci-dessous est celui d'un vrai feulement, et il ressort
+        désormais `indécis`. C'est le prix assumé : aucune classe de YAMNet ne
+        porte le stress, et le dire vaut mieux que l'inventer.
         """
         v = juger([{"Cat": 0.980, "Meow": 0.801, "Caterwaul": 0.586}])
-        self.assertEqual(v.classe_dominante, "Caterwaul")
-        self.assertIs(v.intention, Intention.STRESS)
-        self.assertIs(v.source, Source.MESUREE)
+        self.assertEqual(v.classe_dominante, "Meow")
+        self.assertIs(v.intention, Intention.INDECIS)
 
     def test_un_miaulement_ordinaire_ne_bascule_pas_en_stress(self):
         """Le symétrique, et c'est lui qui borne le plancher.
@@ -269,17 +284,21 @@ class TestComportementEpingle(unittest.TestCase):
         self.assertIs(v.intention, Intention.INDECIS)
 
     def test_hiss_est_une_classe_muette(self):
-        """Mesuré : 0,000 sur les trois feulements du corpus.
+        """Mesuré deux fois, et la seconde a été décisive.
 
-        La classe existe dans YAMNet et ne se déclenche pas sur un chat. Le
-        test ne l'exige pas — il grave le fait, pour qu'une session qui cherche
-        pourquoi le stress n'arrive pas ne parte pas fouiller la porte.
-        Si `Hiss` se met un jour à répondre sur de vrais chats, il fonctionne
-        déjà : la lecture directe est branchée.
+        0,000 sur les trois feulements du corpus fabriqué, puis **0,000 sur
+        les quarante chats d'ESC-50**. Une classe qui n'a jamais répondu sur
+        aucun chat, réel ou fabriqué, n'est pas une classe en attente : c'est
+        une classe morte.
+
+        Elle a donc été retirée des porteuses. Ce test grave le fait pour
+        qu'une session qui cherche pourquoi le stress n'arrive pas ne parte
+        pas fouiller la porte — la porte va bien, c'est le modèle qui ne sait
+        pas.
         """
         v = juger([{"Cat": 0.60, "Hiss": 0.51}])
-        self.assertIs(v.intention, Intention.STRESS)
-        self.assertEqual(v.classe_dominante, "Hiss")
+        self.assertIs(v.intention, Intention.INDECIS)
+        self.assertEqual(v.classe_dominante, "Meow")
 
     def test_un_ronronnement_faible_franchit_quand_meme_la_porte(self):
         """Mesuré : cumul 0,262 sur un vrai ronronnement, seuil à 0,20.
