@@ -158,10 +158,20 @@ export async function deposerFichier(
     categorie,
     deposeLe: new Date().toISOString(),
   };
-  // Une échéance chiffrée comme le reste de l'index : visible seulement une
-  // fois le coffre déverrouillé, jamais lisible côté serveur — pas encore
-  // d'alerte proactive (par e-mail, notamment), ce point reste ouvert.
-  if (echeance && echeance.presente) objet.echeance = echeance;
+  // L'échéance complète (libellé compris) reste chiffrée dans l'index, comme
+  // le reste — visible seulement une fois le coffre déverrouillé. La date
+  // seule, sans rien d'autre, part aussi vers coffre_echeances : c'est ce qui
+  // permet à la fonction d'alerte de savoir qu'il faut prévenir, sans jamais
+  // savoir de quel document il s'agit ni ce qu'il contient.
+  if (echeance && echeance.presente) {
+    objet.echeance = echeance;
+    if (echeance.date) {
+      const { error: erreurEcheance } = await supabase
+        .from('coffre_echeances')
+        .insert({ user_id: userId, objet_nom: nom, date: echeance.date });
+      if (erreurEcheance) throw new Error(erreurEcheance.message);
+    }
+  }
 
   const nouvel_index: IndexCoffre = { objets: { ...index.objets, [nom]: objet } };
   await sauvegarderIndex(userId, cle, nouvel_index);
@@ -181,6 +191,9 @@ export async function supprimerFichier(
 ): Promise<IndexCoffre> {
   const { error } = await supabase.storage.from('coffre-objets').remove([`${userId}/${nom}`]);
   if (error) throw new Error(error.message);
+  // Retire aussi l'échéance en clair associée, s'il y en avait une — sinon
+  // une alerte finirait par arriver pour un document qui n'existe plus.
+  await supabase.from('coffre_echeances').delete().eq('user_id', userId).eq('objet_nom', nom);
   const objets = { ...index.objets };
   delete objets[nom];
   const nouvel_index: IndexCoffre = { objets };
