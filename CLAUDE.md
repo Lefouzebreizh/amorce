@@ -703,13 +703,23 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   `@tensorflow/tfjs-tflite` conduit par un vrai Chromium rend **exactement les
   mêmes 521 scores**, écart `0.000e+0`, sur quatre signaux et sept fenêtres.
   C'est ce qui autorise à parler d'un seul produit : le corpus mesuré côté
-  Python vaut côté navigateur sans être refait. Deux pièges : l'alpha épingle
-  `tfjs-core@4.9.0` **exactement** (ni `--force` ni `--legacy-peer-deps`), et
-  ses WASM sont **livrés dans le paquet** — aucun CDN à joindre, ce que le
-  mandataire imposait de toute façon.
-  Ce qui n'est **pas** couvert : les quatre signaux sont fabriqués, aucun n'est
-  un chat, et la chaîne du micro à la carte n'a jamais tourné sur un vrai
-  enregistrement dans le navigateur.
+  Python vaut côté navigateur sans être refait. Le piège est que l'alpha épingle
+  `tfjs-core@4.9.0` **exactement** — ni `--force` ni `--legacy-peer-deps`, on
+  s'aligne. La bonne nouvelle est que ses WASM sont **livrés dans le paquet** :
+  aucun CDN à joindre, ce que le mandataire imposait de toute façon et ce qui
+  fait tourner l'application hors ligne.
+  **L'application existe depuis le 04/09/2026** — `web/page/index.html`, un
+  bouton, un repli par fichier, la carte et son téléchargement — et l'épreuve
+  la conduit à 393 × 873 depuis un **fichier**, ce qui fait entrer décodage,
+  rééchantillonnage et fenêtrage dans la comparaison avec le Python : trois
+  fenêtres des deux côtés, même verdict, même phrase. Un défaut n'est sorti que
+  du **regard** : toutes les mesures étaient vertes et le bouton « Enregistrer
+  la carte » tombait sous la ligne de flottaison, un aperçu 9:16 large de
+  300 px en faisant 533 de haut. L'aperçu se borne désormais en hauteur.
+  Ce qui n'est **pas** couvert : les signaux d'épreuve sont fabriqués, aucun
+  n'est un chat, et le chemin `getUserMedia` est écrit sans être éprouvé — une
+  capture réelle passe par le rééchantillonnage de l'appareil et ne se compare
+  pas au Python sur les mêmes octets.
   Deux pièges mesurés y sont écrits : un `enum` ne survit pas au retrait de
   types de Node (`strip-only mode`), ce qui vaut pour tous les projets TS du
   dépôt ; et le `tsconfig.json` racine **avale ces huit fichiers** sans casser

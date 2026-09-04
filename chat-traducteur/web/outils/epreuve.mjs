@@ -31,6 +31,7 @@ for (const [quoi, chemin] of [
   ['le modèle yamnet.tflite', join(RACINE, '..', 'modeles', 'yamnet.tflite')],
   ['les dépendances (npm install)', join(RACINE, 'node_modules', '@tensorflow')],
   ['le bâti (npm run bati)', join(RACINE, 'dist', 'verdict.js')],
+  ['le signal d\'épreuve (npm run temoins:chaine)', join(RACINE, 'temoins', 'signal.wav')],
 ]) {
   if (!existsSync(chemin)) {
     console.log(`⊘ non effectué : ${quoi} est absent.`);
@@ -48,16 +49,31 @@ const TYPES = {
 
 // Le modèle et les WASM ne vivent pas sous `web/` : on les sert depuis là où
 // ils sont, plutôt que de les recopier. Une copie se périme.
+const TF = join(RACINE, 'node_modules', '@tensorflow');
 const ALIAS = {
+  // L'application charge tout en **relatif** — `./modeles/`, `./wasm/`,
+  // `./tf/` — pour être servie depuis n'importe quel sous-dossier, y compris
+  // une page de projet GitHub. Le serveur d'épreuve reconstitue donc ces
+  // chemins-là, plutôt que de recopier 45 Mo dans `page/`.
+  '/page/modeles/': join(RACINE, '..', 'modeles'),
+  '/page/wasm/': join(TF, 'tfjs-tflite', 'wasm'),
+  '/page/donnees/': join(RACINE, 'donnees'),
+  '/page/dist/': join(RACINE, 'dist'),
+  '/page/tf/tf-core.js': join(TF, 'tfjs-core', 'dist', 'tf-core.js'),
+  '/page/tf/tf-backend-cpu.js': join(TF, 'tfjs-backend-cpu', 'dist', 'tf-backend-cpu.js'),
+  '/page/tf/tf-tflite.js': join(TF, 'tfjs-tflite', 'dist', 'tf-tflite.js'),
   '/modeles/': join(RACINE, '..', 'modeles'),
-  '/wasm/': join(RACINE, 'node_modules', '@tensorflow', 'tfjs-tflite', 'wasm'),
+  '/wasm/': join(TF, 'tfjs-tflite', 'wasm'),
 };
 
 const serveur = createServer(async (req, res) => {
   const url = decodeURI(req.url.split('?')[0]);
   let chemin = null;
-  for (const [prefixe, dossier] of Object.entries(ALIAS)) {
-    if (url.startsWith(prefixe)) { chemin = join(dossier, normalize(url.slice(prefixe.length))); break; }
+  for (const [prefixe, cible] of Object.entries(ALIAS)) {
+    if (url === prefixe) { chemin = cible; break; }
+    if (prefixe.endsWith('/') && url.startsWith(prefixe)) {
+      chemin = join(cible, normalize(url.slice(prefixe.length))); break;
+    }
   }
   if (!chemin) chemin = join(RACINE, normalize(url));
   try {
@@ -108,6 +124,65 @@ for (const cas of temoins.cas) {
     console.log('      python  :', JSON.stringify(cas.verdict));
     console.log('      browser :', JSON.stringify(obtenu.verdict));
   }
+}
+
+// ── Deuxième moitié : l'application elle-même, conduite comme un utilisateur
+// la conduit ────────────────────────────────────────────────────────────────
+//
+// La première moitié compare deux moteurs sur des échantillons déjà prêts.
+// Celle-ci part d'un **fichier** et fait donc entrer le décodage, le
+// rééchantillonnage et le fenêtrage dans la comparaison — la partie que rien
+// ne couvrait, et celle où deux implémentations divergent le plus facilement.
+console.log('');
+const chaine = JSON.parse(await readFile(join(RACINE, 'temoins', 'chaine.json'), 'utf-8'));
+const appli = await nav.newPage();
+const erreursAppli = [];
+appli.on('pageerror', (e) => erreursAppli.push(String(e)));
+await appli.setViewportSize({ width: 393, height: 873 });   // le terrain de référence
+await appli.goto(`http://127.0.0.1:${port}/page/index.html`);
+await appli.waitForFunction('window.appliPrete === true', { timeout: 120_000 });
+
+const wav = await readFile(join(RACINE, 'temoins', 'signal.wav'));
+await appli.evaluate(async (octets) => {
+  await window.ecouterOctets(new Uint8Array(octets).buffer);
+}, Array.from(wav));
+
+const obtenuChaine = await appli.evaluate(() => ({
+  verdict: window.dernierVerdict(), fenetres: window.nbFenetres(),
+  texte: document.getElementById('etat').textContent,
+}));
+
+const memeChaine =
+  obtenuChaine.fenetres === chaine.fenetres &&
+  obtenuChaine.verdict.intention === chaine.verdict.intention &&
+  obtenuChaine.verdict.source === chaine.verdict.source &&
+  obtenuChaine.verdict.raison === chaine.verdict.raison &&
+  obtenuChaine.verdict.classeDominante === chaine.verdict.classeDominante;
+if (!memeChaine) echecs++;
+console.log(`  ${memeChaine ? '✓' : '✗'} chaîne complète  ` +
+  `${obtenuChaine.fenetres} fenêtres (python ${chaine.fenetres})  ` +
+  `${obtenuChaine.verdict.intention} (python ${chaine.verdict.intention})`);
+if (!memeChaine) {
+  console.log('      python  :', JSON.stringify(chaine.verdict));
+  console.log('      browser :', JSON.stringify(obtenuChaine.verdict));
+}
+await appli.screenshot({ path: join(RACINE, 'temoins', 'ecran-refus.png') });
+
+// Et la carte, par la couture : les scores mesurés sur un vrai ronronnement du
+// corpus, tels que `fabriquer_cartes.py` les emploie côté Python. Ce n'est pas
+// une simulation — c'est un son réel dont on rejoue la mesure au lieu de le
+// rejouer lui-même.
+const carte = await appli.evaluate(() =>
+  window.jugerScores([{ Cat: 0.500, Purr: 0.586 }]));
+const carteOk = carte.intention === 'contentement' && carte.source === 'mesuree';
+if (!carteOk) echecs++;
+console.log(`  ${carteOk ? '✓' : '✗'} carte à l'écran  ${carte.intention} (${carte.source})`);
+await appli.screenshot({ path: join(RACINE, 'temoins', 'ecran-carte.png') });
+
+if (erreursAppli.length) {
+  console.log("Erreurs de l'application :");
+  erreursAppli.forEach((e) => console.log('   ', e));
+  echecs++;
 }
 
 await nav.close();
