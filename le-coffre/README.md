@@ -67,6 +67,16 @@ un brouillon de lettre de résiliation est composé à partir d'un gabarit fixe
 version complète de `paper-manager/core/resiliation.py`. Toujours présentée
 comme un brouillon, avec la liste de ce qui manque pour être complète.
 
+## L'habillage visuel (05/09/2026)
+
+Interface responsive : une seule colonne sur téléphone, trois colonnes
+(documents / rendez-vous / identité) sur grand écran, pleine largeur jusqu'à
+1400px. Chaque catégorie de document a une icône et une couleur reconnaissable
+(`accent`, `violet` ou `wine` selon le sens — santé/logement, argent,
+abonnement/urgence), une bannière signale l'échéance la plus proche en haut de
+page. Aucun impact sur la sécurité ou le flux de données : purement la mise en
+forme de ce que l'index déjà déchiffré contient.
+
 ## Architecture
 
 ```
