@@ -104,7 +104,11 @@ export function composerLettreResiliation(
   const mentionsManquantes = [
     !referenceClient && "la référence client (non lue sur le document — à ajouter à la main si tu la connais)",
     !entier.includes(effet) && "la date d'effet",
-    !entier.toLowerCase().includes('confirmation') && "la demande de confirmation écrite",
+    // `confirm` et non `confirmation` : la lettre écrit « m'en confirmer la
+    // prise en compte par écrit ». Chercher le substantif signalait toujours
+    // manquante une mention qui y est — et une liste qui se trompe une fois
+    // sur trois ne se lit plus.
+    !/confirm/i.test(entier) && "la demande de confirmation écrite",
   ].filter((m): m is string => Boolean(m));
 
   return { objet, corps, mentionsManquantes };
@@ -255,7 +259,11 @@ export async function deposerFichier(
     }
   }
 
-  const nouvel_index: IndexCoffre = { objets: { ...index.objets, [nom]: objet } };
+  // Étalé, jamais reconstruit : une opération qui renomme les champs qu'elle
+  // connaît efface ceux qu'elle ignore. Mesuré — un dépôt effaçait tous les
+  // rendez-vous et l'identité, donc les lettres de résiliation à venir, sans
+  // erreur et sans que rien ne s'affiche différemment.
+  const nouvel_index: IndexCoffre = { ...index, objets: { ...index.objets, [nom]: objet } };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }
@@ -278,7 +286,7 @@ export async function supprimerFichier(
   await supabase.from('coffre_echeances').delete().eq('user_id', userId).eq('objet_nom', nom);
   const objets = { ...index.objets };
   delete objets[nom];
-  const nouvel_index: IndexCoffre = { objets };
+  const nouvel_index: IndexCoffre = { ...index, objets };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }
@@ -297,7 +305,7 @@ export async function ajouterRendezVous(
   if (error) throw new Error(error.message);
 
   const nouvel_index: IndexCoffre = {
-    objets: index.objets,
+    ...index,
     rendezVous: { ...index.rendezVous, [id]: { id, libelle, date } },
   };
   await sauvegarderIndex(userId, cle, nouvel_index);
@@ -310,7 +318,7 @@ export async function supprimerRendezVous(
   await supabase.from('coffre_echeances').delete().eq('user_id', userId).eq('objet_nom', id);
   const rendezVous = { ...index.rendezVous };
   delete rendezVous[id];
-  const nouvel_index: IndexCoffre = { objets: index.objets, rendezVous };
+  const nouvel_index: IndexCoffre = { ...index, rendezVous };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }

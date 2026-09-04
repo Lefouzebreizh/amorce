@@ -101,6 +101,7 @@ while IFS= read -r f; do
     titan-builder/*) inscrire titan ;;
     iptv/*)          inscrire iptv ;;
     bilan-patrimoine/*) inscrire bilan ;;
+    le-coffre/*)     inscrire coffre ;;
     motion/*)        inscrire motion ;;
     licence-serveur/*) inscrire licence ;;
     comptes-serveur/*) inscrire comptes ;;
@@ -286,6 +287,17 @@ lancer_hypersensible() {
     etape "$j.build" "build"  npm run build || exit 1 ) || e=1
   cat "$j".{test,types,build} > "$j" 2>/dev/null
   return $e
+}
+
+lancer_coffre() {
+  # Une seule étape, et c'est délibéré : ce projet n'a pas de `node_modules`
+  # ici, donc `tsc` et ESLint ne s'y lancent pas. Ses tests, eux, tournent sans
+  # rien installer — Web Crypto vient de Node, et le client Supabase est
+  # remplacé avant d'être chargé, si bien que son SDK n'est jamais importé.
+  local d="le-coffre"; local j="$journal/coffre"
+  ( cd "$d" || exit 1; etape "$j.test" "tests" npm test ) || return 1
+  cat "$j".test > "$j" 2>/dev/null
+  return 0
 }
 
 lancer_licence() {
@@ -506,6 +518,7 @@ for p in $projets; do
     chatweb) lancer_chatweb & pid_de[chatweb]=$! ;;
     bilan)   lancer_bilan & pid_de[bilan]=$! ;;
     motion)  lancer_motion & pid_de[motion]=$! ;;
+    coffre)  lancer_coffre  & pid_de[coffre]=$! ;;
     licence) lancer_licence & pid_de[licence]=$! ;;
     comptes) lancer_comptes & pid_de[comptes]=$! ;;
     annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
@@ -534,6 +547,7 @@ nom_lisible() {
     chatweb) echo "Traducteur de chat — cœur TypeScript" ;;
     bilan)   echo "Bilan Patrimoine" ;;
     motion)  echo "Habillages animés (motion)" ;;
+    coffre)  echo "Le Coffre (chiffrement navigateur)" ;;
     licence) echo "Serveur de licence" ;;
     comptes) echo "Serveur de comptes" ;;
     annuaire) echo "Réseau d'annuaires IA" ;;
