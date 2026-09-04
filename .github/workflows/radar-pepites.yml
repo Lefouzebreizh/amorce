@@ -1,0 +1,154 @@
+# Le radar de pépites, planifié — le dernier kilomètre qui lui manquait.
+#
+# L'outil est complet et vert depuis le 31/08/2026, et il n'avait tourné
+# **qu'une fois** : 887 paires → 232 jetons → 11 candidats en 27 secondes, le
+# 29/08. Depuis, rien ne le lançait. Un détecteur qui ne tourne pas ne détecte
+# rien, et surtout il ne peut pas se noter lui-même : `main.py bilan` exige
+# vingt jetons **jugeables**, un jugeable étant un jeton vu deux fois à six
+# heures d'écart au moins. Un scan unique en rend zéro, quelle qu'en soit la
+# qualité.
+#
+# Pourquoi ici et pas sur le PC : le mandataire des sessions distantes refuse
+# les neuf hôtes de marché, `api.dexscreener.com` compris. Un runner GitHub
+# n'a pas ce mandataire. C'est la seule machine toujours allumée à laquelle ce
+# dépôt ait accès.
+
+name: Radar de pépites
+
+on:
+  # Toutes les trois heures : deux tours consécutifs sont alors espacés de
+  # 3 h et un tour sur deux de 6 h, soit exactement le plancher qui rend un
+  # jeton jugeable. Plus fréquent ne rendrait pas plus de verdicts — seulement
+  # plus d'appels d'API, sur des quotas gratuits que le radar est justement
+  # conçu pour ménager.
+  #
+  # Minute 17 et non 0 : GitHub met en file les tâches planifiées à l'heure
+  # pile, où tout le monde se donne rendez-vous, et les retarde parfois de
+  # plusieurs dizaines de minutes. Un décalage arbitraire coûte zéro et évite
+  # la cohue.
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+
+# Un scan tient un verrou de fichier le temps du tour, et la raison est écrite
+# dans le projet : deux tours simultanés valent deux fois le débit annoncé, et
+# les 429 frappent les deux. Ce verrou-là ne protège rien entre deux runners,
+# qui ne partagent pas de disque — d'où ce garde-fou au niveau de GitHub.
+# `cancel-in-progress: false` à dessein : on met en file, on n'interrompt pas
+# un tour en cours, qui perdrait ses relevés sans les avoir écrits.
+concurrency:
+  group: radar-pepites
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  scanner:
+    name: Un tour du radar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: pepites/requirements.txt
+
+      - name: Installer ce dont le radar a besoin
+        run: python -m pip install --quiet -r pepites/requirements.txt
+
+      # LA MÉMOIRE, ET POURQUOI ELLE VIT DANS LE CACHE ET NULLE PART AILLEURS.
+      #
+      # Tout l'intérêt du radar est cumulatif : `bilan` compare le prix d'un
+      # jeton entre deux relevés. Sans mémoire d'un tour à l'autre, chaque scan
+      # repart de zéro et aucun verdict n'est jamais possible.
+      #
+      # Les deux autres endroits où on serait tenté de la mettre sont fermés :
+      #
+      #   - **Dans Git, non.** `CLAUDE.md` §8 l'interdit en propres termes —
+      #     « jamais de binaire versionné » — et `pepites/.gitignore` écarte
+      #     déjà `donnees/`. Une base SQLite est un binaire.
+      #   - **Par un commit, non plus**, même en texte. Trois projets Vercel
+      #     sont liés à ce dépôt, et un filtre de chemins annule la
+      #     *construction* sans empêcher la *création* du déploiement — c'est
+      #     elle que le quota compte. Huit tours par jour vaudraient vingt-quatre
+      #     déploiements quotidiens pris sur un palier gratuit de cent, déjà
+      #     crevé trois fois.
+      #
+      # Le cache ne touche ni à l'un ni à l'autre. Clé roulante parce qu'une
+      # entrée de cache est immuable : on écrit sous une clé neuve à chaque
+      # tour, et `restore-keys` retrouve la plus récente par préfixe.
+      #
+      # Ce que ça coûte, et il faut le savoir avant de compter dessus : GitHub
+      # **évince une entrée inutilisée depuis sept jours**. Si le planning
+      # s'arrête une semaine, la mémoire est perdue et le compteur des jetons
+      # jugeables repart de zéro. Ce n'est pas une sauvegarde.
+      - name: Retrouver la mémoire du tour précédent
+        uses: actions/cache@v4
+        with:
+          path: pepites/donnees
+          key: pepites-memoire-${{ github.run_id }}
+          restore-keys: pepites-memoire-
+
+      # La sonde passe AVANT le scan, et elle décide s'il a lieu. Le projet
+      # écrit pourquoi : trois situations rendent le même rapport vide — marché
+      # calme, service muet, ou service qui répond dans une forme qu'on ne sait
+      # plus lire. Scanner sur une source muette produirait un rapport vide
+      # parfaitement plausible, et personne ne verrait la panne.
+      #
+      # `commande_sonde` rend le code 4 sur une source muette ou dérivée, et
+      # son propre docstring dit que c'est « pour qu'une tâche planifiée puisse
+      # s'en apercevoir sans lire le tableau ». C'est ce contrat-là qu'on
+      # utilise ici : un 4 fait rougir l'étape, et le scan n'a pas lieu.
+      - name: Les sources répondent-elles, et se lisent-elles ?
+        working-directory: pepites
+        run: python main.py sonde
+
+      - name: Un tour complet
+        working-directory: pepites
+        run: python main.py scan
+
+      # `bilan` ne touche à aucun réseau : il relit la base. Il dira
+      # honnêtement « trop peu pour juger » tant que vingt jetons jugeables ne
+      # sont pas réunis — c'est le comportement voulu, pas un échec.
+      - name: Ce que les pépites sont devenues
+        working-directory: pepites
+        run: python main.py bilan
+
+      # Le pilotage se fait depuis un téléphone : le résumé d'exécution
+      # s'ouvre en deux gestes sur la page du run, là où un artefact demande un
+      # téléchargement puis un éditeur. On écrit les deux — le résumé pour
+      # regarder, l'artefact pour garder.
+      #
+      # `always()` : un tour où la sonde a crié est précisément celui qu'on
+      # veut lire.
+      - name: Poser le rapport sur la page du run
+        if: always()
+        working-directory: pepites
+        run: |
+          {
+            echo "## Radar de pépites"
+            echo
+            if [ -f pepites_radar.md ]; then
+              cat pepites_radar.md
+            else
+              echo "_Aucun rapport produit : le scan n'a pas eu lieu._"
+            fi
+            echo
+            echo "### Ce que les pépites sont devenues"
+            echo
+            python main.py bilan 2>&1 || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Garder le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pepites-radar-${{ github.run_number }}
+          path: pepites/pepites_radar.md
+          if-no-files-found: ignore
+          retention-days: 30
