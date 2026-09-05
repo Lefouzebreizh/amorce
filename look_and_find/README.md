@@ -1,12 +1,12 @@
 # Look & Find
 
-Photographiez un objet du quotidien, retrouvez-le au meilleur prix, et posez-le
-chez vous en réalité augmentée avant de l'acheter.
+Photographiez un objet du quotidien, et sachez ce que c'est, de quoi il est
+fait, et comment vous en servir.
 
 L'application est écrite en Flutter (Dart 3), pour iOS et Android. Elle
-n'embarque pas de serveur : l'identification passe par un appel direct à un
-modèle multimodal, et tout le reste — favoris, historique, suivi de prix — vit
-sur le téléphone.
+n'embarque pas de serveur : la description passe par un appel direct à un
+modèle multimodal, la couleur est mesurée sur le téléphone, et rien ne quitte
+l'appareil hors la photo envoyée pour être décrite.
 
 ---
 
@@ -16,19 +16,27 @@ sur le téléphone.
    geste qu'elle propose est à un appui de l'ouverture. Une photo déjà prise
    fait aussi bien l'affaire — utile quand l'objet a été vu ailleurs, quand la
    pièce est sombre, ou quand la caméra ne s'ouvre pas.
-2. **Identifier.** La photo est réduite, envoyée au modèle, et revient en fiche
-   produit structurée : nom, marque, catégorie, prix moyen, dimensions,
-   marchands, alternatives moins chères.
-3. **Comparer.** Le comparateur met en avant **le moins cher parmi les
-   marchands en stock**, et dit ce que cela fait économiser contre le prix
-   moyen constaté.
-4. **Essayer.** « Voir chez moi » pose le modèle 3D dans la pièce, à l'échelle
-   1:1 — la fonction répond à « est-ce que ça rentre », pas « est-ce que c'est
-   joli ». Sans modèle 3D, les cotes et le volume prennent le relais.
-5. **Suivre.** Un cœur met l'objet dans la liste et fige le prix du jour. Chaque
-   nouveau scan du même objet vaut relevé de prix. Ce qui est passé sous son
-   seuil se compte sur une pastille dans le viseur, se résume en tête de « Ma
-   liste » et remonte en haut des lignes — puis se tait dès qu'on l'a vu.
+2. **Décrire.** La photo est réduite et envoyée au modèle, qui rend le nom
+   courant de l'objet, sa catégorie, à quoi il sert, la matière apparente et ce
+   qui se voit dessus. **Ni marque ni référence** : une catégorie suffit à
+   choisir la notice, et c'est précisément la demande d'une référence exacte qui
+   pousse un modèle de langage à en inventer une.
+3. **Nommer la couleur.** Elle n'est pas demandée au modèle : elle est mesurée
+   sur la photo, dans le cadre visé, et **dit quand elle hésite** — « rouge, ou
+   blanc selon l'endroit visé » sur un pull bicolore. Un modèle répondrait
+   « rose » avec le même aplomb, et personne ne pourrait le vérifier.
+4. **Se servir de l'objet.** Quelques gestes utiles pour sa catégorie — usage,
+   entretien, sécurité — numérotés pour se retrouver après avoir levé les yeux.
+
+---
+
+## Ce que la version un ne fait pas
+
+Le comparateur de prix, le suivi des baisses et la projection en réalité
+augmentée **sont écrits et testés**, et ne sont pas dans le parcours : ils
+reviendront en version deux. Ce n'est pas un chantier inachevé mais un périmètre
+choisi — une application qui décrit bien vaut mieux qu'une application qui
+compare mal.
 
 ---
 
@@ -201,6 +209,9 @@ signale plus rien.
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé : la réponse est retenue même quand elle est inexploitable. |
 | `requete_gemini_test.dart` | Ce qui **part** réellement vers Gemini : modèle visé, invite avant la photo, décodage contraint par le schéma. Le dernier maillon, qu'un faux `Dio` rendant une réponse toute faite ne regardait pas. |
 | `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |
+| `fiche_objet_dto_test.dart` | Ce que la lecture de la fiche v1 encaisse : liste rendue en une phrase, « null » écrit en toutes lettres, clé absente. |
+| `contrat_fiche_lecture_test.dart` | Le pacte de la version un — et le périmètre lui-même : l'invite doit continuer d'interdire marque et prix. |
+| `fiche_objet_page_test.dart` | La fiche v1 montée pour de vrai, et ce qu'elle ne montre plus — ni « € », ni « Acheter ». |
 | `diagnostic_reponse_test.dart` | La fidélité du diagnostic qui désigne le fichier à corriger — il décide entre l'invite et la lecture, et un verdict inversé coûte une correction au mauvais endroit. |
 
 Ce qui ne peut pas être testé ainsi et demande un appareil : le décodage

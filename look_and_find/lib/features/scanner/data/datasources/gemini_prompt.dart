@@ -12,6 +12,8 @@
 /// tromper sur un texte qui contient une accolade.
 library;
 
+import 'corps_requete.dart';
+
 class GeminiPrompt {
   const GeminiPrompt._();
 
@@ -98,32 +100,15 @@ Réponds uniquement avec le JSON demandé.
     'required': ['title', 'category', 'average_price', 'currency'],
   };
 
-  /// Le corps de la requête, assemblé ici plutôt que sur le lieu de l'appel.
+  /// Le corps de la requête pour cette invite-ci.
   ///
-  /// **Parce qu'il y a deux appelants.** L'application envoie cette requête
-  /// depuis un téléphone ; `tool/banc_invite.dart` l'envoie depuis un
-  /// terminal, précisément pour éprouver l'invite sans appareil. Deux copies
-  /// d'un même corps divergent — et le jour où elles divergent, le banc cesse
-  /// de mesurer ce que l'application fait, sans que rien ne le signale. Une
-  /// seule description, deux appelants.
-  static Map<String, Object?> corpsRequete(String photoBase64) => {
-    'contents': [
-      {
-        'parts': [
-          {'text': instruction},
-          {
-            'inline_data': {'mime_type': 'image/jpeg', 'data': photoBase64},
-          },
-        ],
-      },
-    ],
-    'generationConfig': {
-      // Une fiche produit n'a pas à varier d'un scan à l'autre : la même photo
-      // doit donner le même prix moyen, sinon le suivi de prix mesure le bruit
-      // du modèle plutôt que le marché.
-      'temperature': 0.1,
-      'responseMimeType': 'application/json',
-      'responseSchema': responseSchema,
-    },
-  };
+  /// L'enveloppe elle-même vit dans `corps_requete.dart`, partagée avec l'invite
+  /// de la fiche v1 : seules la consigne et le schéma distinguent les deux
+  /// appels, et deux copies de tout le reste finiraient par diverger.
+  static Map<String, Object?> corpsRequete(String photoBase64) =>
+      enveloppeGemini(
+    instruction: instruction,
+    schema: responseSchema,
+    photoBase64: photoBase64,
+  );
 }

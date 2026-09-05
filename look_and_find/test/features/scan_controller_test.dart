@@ -20,6 +20,7 @@ import 'package:look_and_find/core/network/app_exception.dart';
 import 'package:look_and_find/core/utils/result.dart';
 import 'package:look_and_find/features/favorites/domain/entities/favorite.dart';
 import 'package:look_and_find/features/favorites/presentation/providers/favorites_providers.dart';
+import 'package:look_and_find/features/fiche_objet/domain/entities/fiche_objet.dart';
 import 'package:look_and_find/features/product_detail/domain/entities/product.dart';
 import 'package:look_and_find/features/scanner/domain/repositories/scanner_repository.dart';
 import 'package:look_and_find/features/scanner/presentation/providers/scanner_providers.dart';
@@ -33,6 +34,12 @@ class _FauxDepot implements ScannerRepository {
 
   @override
   Future<Result<Product>> identify(Uint8List photo) async => reponse;
+
+  /// Ce faux-là sert le parcours du comparateur, gardé pour la version deux.
+  /// La description a le sien, dans `fiche_controller_test.dart`.
+  @override
+  Future<Result<FicheObjet>> decrire(Uint8List photo) async =>
+      throw UnimplementedError();
 
   @override
   void abort() => abandons++;

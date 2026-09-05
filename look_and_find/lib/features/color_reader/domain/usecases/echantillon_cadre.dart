@@ -58,7 +58,17 @@ class EchantillonCadre {
     Uint8List octets, {
     double part = ZoneVisee.partParDefaut,
   }) {
-    final image = img.decodeImage(octets);
+    // `decodeImage` ne rend pas toujours `null` sur des octets qui ne sont pas
+    // une image : il essaie chaque décodeur, et celui du PSD lit au-delà de la
+    // fin d'un tampon trop court avant d'avoir pu conclure — il lève alors un
+    // `RangeError`. Sans cette garde, une photo tronquée ne coûte pas la
+    // couleur, elle fait échouer tout ce qui l'appelle.
+    final img.Image? image;
+    try {
+      image = img.decodeImage(octets);
+    } catch (_) {
+      return null;
+    }
     if (image == null) return null;
     return depuisImage(image, part: part);
   }

@@ -20,6 +20,8 @@ import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/result.dart';
 import '../../../../core/constants/app_config.dart';
 import '../../../favorites/presentation/providers/favorites_providers.dart';
+import '../../../fiche_objet/domain/entities/fiche_objet.dart';
+import '../../../fiche_objet/domain/usecases/decrire_objet.dart';
 import '../../../product_detail/domain/entities/product.dart';
 import '../../data/datasources/api_key_store.dart';
 import '../../data/datasources/gemini_vision_datasource.dart';
@@ -91,8 +93,63 @@ ScannerRepository scannerRepository(Ref ref) =>
     ScannerRepositoryImpl(ref.watch(geminiVisionDataSourceProvider));
 
 @Riverpod(keepAlive: true)
+DecrireObjet decrireObjet(Ref ref) =>
+    DecrireObjet(ref.watch(scannerRepositoryProvider));
+
+/// Le parcours du comparateur, gardé pour la version deux : plus personne ne le
+/// déclenche depuis le viseur, et il reste câblé et testé. Le remettre en
+/// service doit coûter une ligne de navigation.
+@Riverpod(keepAlive: true)
 IdentifyProduct identifyProduct(Ref ref) =>
     IdentifyProduct(ref.watch(scannerRepositoryProvider));
+
+/// L'état d'**une** description, pas la liste des scans passés.
+///
+/// Jumeau de [ScanController] et non son remplaçant : les deux parcours ne
+/// rendent pas la même chose et n'ont pas les mêmes effets de bord — celui-ci
+/// n'écrit rien dans le journal de prix, la version un n'en ayant pas.
+///
+/// `autoDispose` par défaut : quitter le viseur annule l'appel en cours plutôt
+/// que de laisser courir une requête facturée dont plus personne ne lira le
+/// résultat.
+@riverpod
+class FicheController extends _$FicheController {
+  /// `null` = viseur au repos.
+  @override
+  Future<FicheObjet?> build() async {
+    // Le cas d'usage est capturé pendant la construction, jamais relu dans un
+    // callback de cycle de vie : Riverpod 3 interdit d'y toucher à `ref`.
+    final decrire = ref.watch(decrireObjetProvider);
+    ref.onDispose(decrire.abort);
+    return null;
+  }
+
+  Future<FicheObjet?> decrire(Uint8List photo, {String? imagePath}) async {
+    // Tout ce qui vient de `ref` est lu avant le premier `await` : au retour, le
+    // contrôleur peut avoir été libéré et `ref` n'est plus utilisable.
+    final decrire = ref.read(decrireObjetProvider);
+
+    state = const AsyncValue.loading();
+    final resultat = await decrire.call(photo, imagePath: imagePath);
+
+    if (!ref.mounted) return null;
+
+    switch (resultat) {
+      case Success(:final value):
+        state = AsyncValue.data(value);
+        return value;
+      case Failure(:final error):
+        state = AsyncValue.error(error, StackTrace.current);
+        return null;
+    }
+  }
+
+  /// Retour au viseur après une erreur ou après lecture de la fiche.
+  void reset() {
+    ref.read(decrireObjetProvider).abort();
+    state = const AsyncValue.data(null);
+  }
+}
 
 @riverpod
 class ScanController extends _$ScanController {
@@ -150,7 +207,7 @@ class ScanController extends _$ScanController {
 
 /// Petit confort de lecture : l'erreur du scan, déjà typée, sans passer par
 /// `asError` et un transtypage à chaque widget.
-extension ScanErrorX on AsyncValue<Product?> {
+extension ScanErrorX<T> on AsyncValue<T?> {
   AppException? get appError {
     final error = this.error;
     return error is AppException ? error : null;
