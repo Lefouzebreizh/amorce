@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+import {
+  Bell, Briefcase, Car, File, FileText, Heart, Home, Landmark, LogOut, Shield, UploadCloud,
+  Wallet, Wifi, X, Zap, type LucideIcon,
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
@@ -14,6 +18,31 @@ type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
 
 const ECHEANCE_VIDE: Echeance = { presente: false, date: null, libelle: null, confiance: 'basse' };
 const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et internet'];
+// Doit correspondre à storage.buckets.file_size_limit sur coffre-objets — le
+// contrôle client donne un message clair et immédiat, celui du serveur reste
+// le vrai garde-fou (voir SECURITY.md).
+const TAILLE_MAX_OCTETS = 20 * 1024 * 1024;
+
+// Une couleur reconnaissable par catégorie — les mêmes trois teintes que le
+// reste de l'appli (accent, violet, wine), jamais d'orange/jaune. La
+// couleur porte un sens grossier (santé/logement en accent, argent en
+// violet, urgence/abonnement en wine), pas une charte arbitraire par mot.
+const STYLE_CATEGORIE: Record<string, { icone: LucideIcon; classe: string }> = {
+  'Administratif': { icone: FileText, classe: 'bg-violet/15 text-violet' },
+  'Impôts': { icone: Landmark, classe: 'bg-violet/15 text-violet' },
+  'Santé': { icone: Heart, classe: 'bg-accent/15 text-accent' },
+  'Logement': { icone: Home, classe: 'bg-accent/15 text-accent' },
+  'Banque': { icone: Wallet, classe: 'bg-violet/15 text-violet' },
+  'Assurance': { icone: Shield, classe: 'bg-wine/15 text-wine' },
+  'Énergie': { icone: Zap, classe: 'bg-wine/15 text-wine' },
+  'Téléphonie et internet': { icone: Wifi, classe: 'bg-violet/15 text-violet' },
+  'Emploi': { icone: Briefcase, classe: 'bg-accent/15 text-accent' },
+  'Véhicule': { icone: Car, classe: 'bg-violet/15 text-violet' },
+};
+const STYLE_CATEGORIE_DEFAUT = { icone: File, classe: 'bg-ink-soft/15 text-ink-soft' };
+function styleCategorie(categorie: string) {
+  return STYLE_CATEGORIE[categorie] ?? STYLE_CATEGORIE_DEFAUT;
+}
 
 type EnAttente = {
   cle: string;
@@ -25,6 +54,40 @@ type EnAttente = {
   emetteur: string;
   referenceClient: string;
 };
+
+function joursRestants(dateIso: string): number {
+  const cible = new Date(`${dateIso}T00:00:00`);
+  const aujourdhui = new Date();
+  aujourdhui.setHours(0, 0, 0, 0);
+  return Math.round((cible.getTime() - aujourdhui.getTime()) / 86_400_000);
+}
+
+function formatJours(jours: number): string {
+  if (jours < 0) return `en retard de ${Math.abs(jours)} j`;
+  if (jours === 0) return "aujourd'hui";
+  if (jours === 1) return 'demain';
+  return `dans ${jours} j`;
+}
+
+// La plus proche échéance ou rendez-vous, tous confondus — calculé côté
+// navigateur sur l'index déjà déchiffré, jamais envoyé nulle part.
+function prochaineAlerte(index: IndexCoffre): { libelle: string; date: string; jours: number } | null {
+  const items: { libelle: string; date: string; jours: number }[] = [];
+  for (const objet of Object.values(index.objets)) {
+    if (objet.echeance?.presente && objet.echeance.date) {
+      items.push({
+        libelle: objet.echeance.libelle || objet.nom,
+        date: objet.echeance.date,
+        jours: joursRestants(objet.echeance.date),
+      });
+    }
+  }
+  for (const rdv of Object.values(index.rendezVous || {})) {
+    items.push({ libelle: rdv.libelle, date: rdv.date, jours: joursRestants(rdv.date) });
+  }
+  if (items.length === 0) return null;
+  return items.sort((a, b) => a.jours - b.jours)[0] ?? null;
+}
 
 function LettrePreview({ identite, emetteur, referenceClient, date }: {
   identite: Identite; emetteur: string; referenceClient: string | null; date: string;
@@ -49,6 +112,17 @@ function formatTaille(octets: number): string {
   return `${(octets / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
+// Champ de saisie commun aux petits formulaires (identité, rendez-vous) —
+// un seul endroit à toucher pour l'habillage plutôt que de le répéter.
+function Champ(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
+    />
+  );
+}
+
 export default function PageCoffre() {
   const routeur = useRouter();
   const [utilisateur, setUtilisateur] = useState<User | null>(null);
@@ -58,6 +132,8 @@ export default function PageCoffre() {
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [aValider, setAValider] = useState<EnAttente[]>([]);
+  const [survole, setSurvole] = useState(false);
+  const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const entreeFichier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -118,8 +194,8 @@ export default function PageCoffre() {
       setCle(cleTrouvee);
       setIndex(indexCharge);
       setEtape('ouvert');
-    } catch {
-      setErreur('Phrase secrète incorrecte.');
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : 'Phrase secrète incorrecte.');
     } finally {
       setEnCours(false);
     }
@@ -133,7 +209,21 @@ export default function PageCoffre() {
   async function surDepot(fichiers: FileList | null) {
     if (!fichiers || !fichiers.length || !utilisateur || !cle) return;
     setErreur('');
-    const nouveaux: EnAttente[] = Array.from(fichiers).map((fichier) => ({
+
+    const tropGros = Array.from(fichiers).filter((f) => f.size > TAILLE_MAX_OCTETS);
+    if (tropGros.length > 0) {
+      setErreur(
+        `${tropGros.map((f) => f.name).join(', ')} dépasse ${formatTaille(TAILLE_MAX_OCTETS)} — ` +
+        `non déposé. Le serveur refuserait aussi le dépôt au-delà de cette taille.`,
+      );
+    }
+    const fichiersValides = Array.from(fichiers).filter((f) => f.size <= TAILLE_MAX_OCTETS);
+    if (fichiersValides.length === 0) {
+      if (entreeFichier.current) entreeFichier.current.value = '';
+      return;
+    }
+
+    const nouveaux: EnAttente[] = fichiersValides.map((fichier) => ({
       cle: `${fichier.name}-${fichier.size}-${crypto.randomUUID()}`,
       fichier, enAnalyse: true, categorie: '', nomAffiche: fichier.name, echeance: ECHEANCE_VIDE,
       emetteur: '', referenceClient: '',
@@ -258,9 +348,12 @@ export default function PageCoffre() {
     if (!identite.nom || !identite.adresse) return;
     setEnCours(true);
     setErreur('');
+    setIdentiteEnregistree(false);
     try {
       const nouvelIndex = await enregistrerIdentite(utilisateur.id, cle, identite, index);
       setIndex(nouvelIndex);
+      setIdentiteEnregistree(true);
+      setTimeout(() => setIdentiteEnregistree(false), 3000);
     } catch (err) {
       setErreur(err instanceof Error ? err.message : String(err));
     } finally {
@@ -269,7 +362,11 @@ export default function PageCoffre() {
   }
 
   if (etape === 'chargement') {
-    return <main className="flex min-h-screen items-center justify-center text-ink-soft">Chargement…</main>;
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-paper text-ink-soft">
+        Chargement…
+      </main>
+    );
   }
 
   if (etape === 'creer') {
@@ -277,26 +374,24 @@ export default function PageCoffre() {
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <div>
           <p className="text-sm tracking-widest text-ink-soft uppercase">Le Coffre</p>
-          <h1 className="mt-2 font-affiche text-3xl">Choisis ta phrase secrète</h1>
-          <p className="mt-3 text-sm text-ink-soft">
+          <h1 className="mt-2 font-affiche text-4xl">Choisis ta phrase secrète</h1>
+          <p className="mt-3 text-ink-soft">
             Elle chiffre chaque document déposé, entièrement dans ce navigateur. Nous ne la
             recevons jamais.
           </p>
         </div>
-        <div className="rounded-xl border border-wine/40 bg-wine/10 p-4 text-sm text-ink">
+        <div className="rounded-xl border border-wine/40 bg-wine/10 p-4 text-sm">
           ⚠️ Il n&apos;existe aucun moyen de la récupérer si tu l&apos;oublies. Personne — pas même
           nous — ne peut la retrouver ni contourner le chiffrement.
         </div>
         <form onSubmit={creerCoffre} className="flex flex-col gap-3">
           <label className="text-sm text-ink-soft" htmlFor="mdp1">Phrase secrète</label>
-          <input id="mdp1" name="mdp1" type="password" autoComplete="new-password"
-            className="rounded-xl border border-line bg-paper-raised px-4 py-3 outline-none focus:border-accent" />
+          <Champ id="mdp1" name="mdp1" type="password" autoComplete="new-password" />
           <label className="text-sm text-ink-soft" htmlFor="mdp2">Retape-la</label>
-          <input id="mdp2" name="mdp2" type="password" autoComplete="new-password"
-            className="rounded-xl border border-line bg-paper-raised px-4 py-3 outline-none focus:border-accent" />
+          <Champ id="mdp2" name="mdp2" type="password" autoComplete="new-password" />
           {erreur && <p className="text-sm text-wine">{erreur}</p>}
           <button type="submit" disabled={enCours}
-            className="rounded-xl bg-accent px-4 py-3 font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
+            className="rounded-xl bg-accent px-4 py-3 font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
             {enCours ? 'Création…' : 'Créer le coffre'}
           </button>
         </form>
@@ -309,14 +404,13 @@ export default function PageCoffre() {
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <div>
           <p className="text-sm tracking-widest text-ink-soft uppercase">Le Coffre</p>
-          <h1 className="mt-2 font-affiche text-3xl">Entre ta phrase secrète</h1>
+          <h1 className="mt-2 font-affiche text-4xl">Entre ta phrase secrète</h1>
         </div>
         <form onSubmit={deverrouiller} className="flex flex-col gap-3">
-          <input name="mdp" type="password" autoComplete="current-password" autoFocus
-            className="rounded-xl border border-line bg-paper-raised px-4 py-3 outline-none focus:border-accent" />
+          <Champ name="mdp" type="password" autoComplete="current-password" autoFocus />
           {erreur && <p className="text-sm text-wine">{erreur}</p>}
           <button type="submit" disabled={enCours}
-            className="rounded-xl bg-accent px-4 py-3 font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
+            className="rounded-xl bg-accent px-4 py-3 font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
             {enCours ? 'Vérification…' : 'Déverrouiller'}
           </button>
         </form>
@@ -328,200 +422,261 @@ export default function PageCoffre() {
   const noms = Object.keys(index.objets);
   const rendezVousTries = Object.values(index.rendezVous || {})
     .sort((a, b) => (a.date < b.date ? -1 : 1));
+  const alerte = prochaineAlerte(index);
+  const prenom = (index.identite?.nom || utilisateur?.email || '').trim().split(/\s+/)[0];
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-12">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <p className="text-sm tracking-widest text-ink-soft uppercase">Le Coffre</p>
-          <h1 className="font-affiche text-3xl">{utilisateur?.email}</h1>
-        </div>
-        <button onClick={seDeconnecter} className="text-sm text-ink-soft underline">Se déconnecter</button>
-      </div>
-
-      <label
-        className="mb-6 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line bg-paper-raised px-6 py-10 text-center transition hover:border-accent"
-      >
-        <span className="font-semibold">Choisir un ou plusieurs fichiers</span>
-        <span className="text-sm text-ink-soft">ou les déposer ici</span>
-        <input
-          ref={entreeFichier}
-          type="file"
-          multiple
-          hidden
-          onChange={(e) => surDepot(e.target.files)}
-          onDrop={(e) => {
-            e.preventDefault();
-            surDepot(e.dataTransfer.files);
-          }}
-          onDragOver={(e) => e.preventDefault()}
-        />
-      </label>
-
-      {erreur && <p className="mb-4 text-sm text-wine">{erreur}</p>}
-
-      {aValider.length > 0 && (
-        <ul className="mb-6 flex flex-col gap-3">
-          {aValider.map((item) => (
-            <li key={item.cle} className="rounded-xl border border-accent/40 bg-paper-raised p-4">
-              {item.enAnalyse ? (
-                <p className="text-sm text-ink-soft">Lecture de « {item.fichier.name} »…</p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-ink-soft" htmlFor={`nom-${item.cle}`}>Nom</label>
-                  <input id={`nom-${item.cle}`} value={item.nomAffiche}
-                    onChange={(e) => modifierAttente(item.cle, { nomAffiche: e.target.value })}
-                    className="rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
-                  <label className="text-sm text-ink-soft" htmlFor={`cat-${item.cle}`}>Catégorie</label>
-                  <input id={`cat-${item.cle}`} value={item.categorie}
-                    placeholder="Non proposée — à préciser ou laisser vide"
-                    onChange={(e) => modifierAttente(item.cle, { categorie: e.target.value })}
-                    className="rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
-                  {item.echeance.presente && (
-                    <div className="rounded-lg border border-accent/40 bg-accent/10 p-3 text-sm">
-                      <p className="font-medium">Échéance détectée : {item.echeance.libelle}</p>
-                      <p className="text-ink-soft">
-                        {item.echeance.date} — confiance {item.echeance.confiance}. À vérifier avant de valider.
-                      </p>
-                    </div>
-                  )}
-                  {item.echeance.presente && CATEGORIES_RESILIABLES.includes(item.categorie) && (
-                    <>
-                      <label className="text-sm text-ink-soft" htmlFor={`emetteur-${item.cle}`}>
-                        Émetteur (pour la lettre de résiliation)
-                      </label>
-                      <input id={`emetteur-${item.cle}`} value={item.emetteur}
-                        placeholder="Non lu — à préciser pour obtenir une lettre"
-                        onChange={(e) => modifierAttente(item.cle, { emetteur: e.target.value })}
-                        className="rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
-                      <label className="text-sm text-ink-soft" htmlFor={`ref-${item.cle}`}>Référence client (si connue)</label>
-                      <input id={`ref-${item.cle}`} value={item.referenceClient}
-                        onChange={(e) => modifierAttente(item.cle, { referenceClient: e.target.value })}
-                        className="rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
-                      {item.emetteur && index.identite && item.echeance.date && (
-                        <LettrePreview
-                          identite={index.identite} emetteur={item.emetteur}
-                          referenceClient={item.referenceClient || null} date={item.echeance.date}
-                        />
-                      )}
-                      {item.emetteur && !index.identite && (
-                        <p className="text-sm text-wine">
-                          Renseigne ton identité plus bas pour obtenir une lettre de résiliation prête à signer.
-                        </p>
-                      )}
-                    </>
-                  )}
-                  <div className="mt-1 flex gap-3 text-sm">
-                    <button onClick={() => confirmerDepot(item)} disabled={enCours}
-                      className="rounded-lg bg-accent px-3 py-1.5 font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
-                      Déposer
-                    </button>
-                    <button onClick={() => retirerAttente(item.cle)} className="text-ink-soft hover:underline">
-                      Annuler
-                    </button>
-                  </div>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <section className="mb-8">
-        <h2 className="mb-3 font-affiche text-xl">Rendez-vous</h2>
-        <form onSubmit={surAjoutRendezVous} className="mb-4 flex flex-wrap gap-3">
-          <input name="libelle" placeholder="Dentiste, cabinet Martin…" required
-            className="min-w-[12rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
-          <input name="date" type="date" required
-            className="rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
-          <button type="submit" disabled={enCours}
-            className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
-            Ajouter
+    <main className="min-h-screen bg-paper pb-24">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
+        {/* En-tête */}
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm tracking-widest text-ink-soft uppercase">Le Coffre</p>
+            <h1 className="mt-1 font-affiche text-3xl sm:text-4xl">
+              Bonjour {prenom || 'toi'}
+            </h1>
+          </div>
+          <button onClick={seDeconnecter}
+            className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-ink-soft transition hover:border-wine/60 hover:text-wine">
+            <LogOut size={16} /> Se déconnecter
           </button>
-        </form>
-        {rendezVousTries.length === 0 ? (
-          <p className="text-sm text-ink-soft">Aucun rendez-vous noté.</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {rendezVousTries.map((rdv) => (
-              <li key={rdv.id} className="flex items-center justify-between rounded-xl border border-line bg-paper-raised px-4 py-3">
-                <div>
-                  <p className="font-medium">{rdv.libelle}</p>
-                  <p className="text-sm text-ink-soft">{rdv.date}</p>
-                </div>
-                <button onClick={() => retirerRendezVous(rdv.id)} className="text-sm text-wine hover:underline">
-                  Retirer
-                </button>
+        </header>
+
+        {/* Bannière d'alerte */}
+        {alerte && (
+          <div className="flex items-start gap-4 rounded-2xl border border-line bg-paper-raised p-5">
+            <div className="rounded-xl bg-accent/15 p-2.5 text-accent"><Bell size={20} /></div>
+            <div>
+              <p className="text-sm tracking-widest text-ink-soft uppercase">On te prévient à l&apos;avance</p>
+              <p className="mt-1">
+                <span className="font-semibold text-accent">{alerte.libelle}</span>
+                {' '}— {formatJours(alerte.jours)} ({alerte.date})
+              </p>
+            </div>
+          </div>
+        )}
+
+        {erreur && (
+          <p className="rounded-lg border border-wine/40 bg-wine/10 px-4 py-3 text-sm text-wine">{erreur}</p>
+        )}
+
+        {/* Dépôt */}
+        <label
+          onDragOver={(e) => { e.preventDefault(); setSurvole(true); }}
+          onDragLeave={() => setSurvole(false)}
+          onDrop={(e) => { e.preventDefault(); setSurvole(false); surDepot(e.dataTransfer.files); }}
+          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-12 text-center transition ${
+            survole ? 'border-accent bg-accent/5' : 'border-line bg-paper-raised hover:border-accent/60'
+          }`}
+        >
+          <UploadCloud size={28} className="mb-1 text-accent" />
+          <span className="font-semibold">Choisir un ou plusieurs fichiers</span>
+          <span className="text-sm text-ink-soft">ou les déposer ici — une photo suffit</span>
+          <input
+            ref={entreeFichier}
+            type="file"
+            multiple
+            hidden
+            onChange={(e) => surDepot(e.target.files)}
+          />
+        </label>
+
+        {/* File d'attente de validation */}
+        {aValider.length > 0 && (
+          <ul className="flex flex-col gap-3">
+            {aValider.map((item) => (
+              <li key={item.cle} className="rounded-2xl border border-accent/40 bg-paper-raised p-5">
+                {item.enAnalyse ? (
+                  <p className="text-sm text-ink-soft">Lecture de « {item.fichier.name} »…</p>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+                        <div className="flex-1">
+                          <label className="text-sm text-ink-soft" htmlFor={`nom-${item.cle}`}>Nom</label>
+                          <Champ id={`nom-${item.cle}`} value={item.nomAffiche}
+                            onChange={(e) => modifierAttente(item.cle, { nomAffiche: e.target.value })} />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-sm text-ink-soft" htmlFor={`cat-${item.cle}`}>Catégorie</label>
+                          <Champ id={`cat-${item.cle}`} value={item.categorie}
+                            placeholder="Non proposée — à préciser ou laisser vide"
+                            onChange={(e) => modifierAttente(item.cle, { categorie: e.target.value })} />
+                        </div>
+                      </div>
+                      <button onClick={() => retirerAttente(item.cle)}
+                        className="rounded-lg p-1.5 text-ink-soft transition hover:bg-wine/10 hover:text-wine" aria-label="Annuler">
+                        <X size={18} />
+                      </button>
+                    </div>
+                    {item.echeance.presente && (
+                      <div className="flex items-start gap-3 rounded-lg border border-accent/40 bg-accent/10 p-3 text-sm">
+                        <Bell size={16} className="mt-0.5 shrink-0 text-accent" />
+                        <div>
+                          <p className="font-medium">Échéance détectée : {item.echeance.libelle}</p>
+                          <p className="text-ink-soft">
+                            {item.echeance.date} — confiance {item.echeance.confiance}. À vérifier avant de valider.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {item.echeance.presente && CATEGORIES_RESILIABLES.includes(item.categorie) && (
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <div className="flex-1">
+                          <label className="text-sm text-ink-soft" htmlFor={`emetteur-${item.cle}`}>
+                            Émetteur (pour la lettre de résiliation)
+                          </label>
+                          <Champ id={`emetteur-${item.cle}`} value={item.emetteur}
+                            placeholder="Non lu — à préciser pour obtenir une lettre"
+                            onChange={(e) => modifierAttente(item.cle, { emetteur: e.target.value })} />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-sm text-ink-soft" htmlFor={`ref-${item.cle}`}>Référence client (si connue)</label>
+                          <Champ id={`ref-${item.cle}`} value={item.referenceClient}
+                            onChange={(e) => modifierAttente(item.cle, { referenceClient: e.target.value })} />
+                        </div>
+                      </div>
+                    )}
+                    {item.emetteur && index.identite && item.echeance.date && (
+                      <LettrePreview
+                        identite={index.identite} emetteur={item.emetteur}
+                        referenceClient={item.referenceClient || null} date={item.echeance.date}
+                      />
+                    )}
+                    {item.emetteur && !index.identite && (
+                      <p className="text-sm text-wine">
+                        Renseigne ton identité plus bas pour obtenir une lettre de résiliation prête à signer.
+                      </p>
+                    )}
+                    <div>
+                      <button onClick={() => confirmerDepot(item)} disabled={enCours}
+                        className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                        Déposer
+                      </button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
         )}
-      </section>
 
-      <section className="mb-8">
-        <h2 className="mb-3 font-affiche text-xl">Mon identité</h2>
-        <p className="mb-3 text-sm text-ink-soft">
-          Sert uniquement à remplir l&apos;en-tête des lettres de résiliation — chiffrée comme le reste.
-        </p>
-        <form onSubmit={surEnregistrementIdentite} className="flex flex-wrap gap-3">
-          <input name="nom" placeholder="Nom complet" required defaultValue={index.identite?.nom}
-            className="min-w-[10rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
-          <input name="adresse" placeholder="Adresse" required defaultValue={index.identite?.adresse}
-            className="min-w-[10rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
-          <input name="codePostal" placeholder="Code postal" defaultValue={index.identite?.codePostal}
-            className="w-28 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
-          <input name="ville" placeholder="Ville" defaultValue={index.identite?.ville}
-            className="min-w-[8rem] flex-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent" />
-          <button type="submit" disabled={enCours}
-            className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-paper hover:bg-accent-strong disabled:opacity-60">
-            Enregistrer
-          </button>
-        </form>
-      </section>
+        {/* Grille principale : documents (large) + rendez-vous/identité (colonne) */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <section className="lg:col-span-2">
+            <h2 className="mb-4 font-affiche text-2xl">Documents</h2>
+            {noms.length === 0 ? (
+              <p className="rounded-2xl border border-line bg-paper-raised p-6 text-ink-soft">
+                Le coffre est vide pour l&apos;instant.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {noms.map((nom) => {
+                  const info = index.objets[nom];
+                  if (!info) return null;
+                  const { icone: Icone, classe } = styleCategorie(info.categorie);
+                  return (
+                    <li key={nom} className="rounded-2xl border border-line bg-paper-raised p-4 transition hover:border-line/80">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className={`shrink-0 rounded-xl p-2.5 ${classe}`}><Icone size={18} /></div>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">{info.nom}</p>
+                            <p className="text-sm text-ink-soft">
+                              {formatTaille(info.taille)}{info.categorie ? ` · ${info.categorie}` : ''}
+                            </p>
+                            {info.echeance?.presente && (
+                              <p className="text-sm text-accent">
+                                {info.echeance.libelle} — {info.echeance.date}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 gap-4 text-sm">
+                          <button onClick={() => telecharger(nom)} className="text-accent hover:underline">Télécharger</button>
+                          <button onClick={() => supprimer(nom)} className="text-wine hover:underline">Supprimer</button>
+                        </div>
+                      </div>
+                      {info.lettre && (
+                        <div className="mt-3 rounded-lg border border-line bg-paper p-3 text-sm">
+                          <p className="mb-2 font-medium">Lettre de résiliation (brouillon — à relire avant signature)</p>
+                          <pre className="mb-2 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans text-ink-soft">
+                            {info.lettre.objet}{'\n\n'}{info.lettre.corps}
+                          </pre>
+                          {info.lettre.mentionsManquantes.length > 0 && (
+                            <p className="text-wine">Manque : {info.lettre.mentionsManquantes.join(', ')}.</p>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-      <h2 className="mb-3 font-affiche text-xl">Documents</h2>
-      {noms.length === 0 ? (
-        <p className="text-ink-soft">Le coffre est vide pour l&apos;instant.</p>
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {noms.map((nom) => {
-            const info = index.objets[nom];
-            if (!info) return null;
-            return (
-              <li key={nom} className="rounded-xl border border-line bg-paper-raised px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{info.nom}</p>
-                    <p className="text-sm text-ink-soft">
-                      {formatTaille(info.taille)}{info.categorie ? ` · ${info.categorie}` : ''}
-                    </p>
-                    {info.echeance?.presente && (
-                      <p className="text-sm text-accent">
-                        {info.echeance.libelle} — {info.echeance.date}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-3 text-sm">
-                    <button onClick={() => telecharger(nom)} className="text-accent hover:underline">Télécharger</button>
-                    <button onClick={() => supprimer(nom)} className="text-wine hover:underline">Supprimer</button>
-                  </div>
+          <div className="flex flex-col gap-8">
+            <section>
+              <h2 className="mb-4 font-affiche text-2xl">Rendez-vous</h2>
+              <form onSubmit={surAjoutRendezVous} className="mb-4 flex flex-col gap-2">
+                <Champ name="libelle" placeholder="Dentiste, cabinet Martin…" required />
+                <div className="flex gap-2">
+                  <Champ name="date" type="date" required />
+                  <button type="submit" disabled={enCours}
+                    className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    Ajouter
+                  </button>
                 </div>
-                {info.lettre && (
-                  <div className="mt-3 rounded-lg border border-line bg-paper p-3 text-sm">
-                    <p className="mb-2 font-medium">Lettre de résiliation (brouillon — à relire avant signature)</p>
-                    <pre className="mb-2 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans text-ink-soft">
-                      {info.lettre.objet}{'\n\n'}{info.lettre.corps}
-                    </pre>
-                    {info.lettre.mentionsManquantes.length > 0 && (
-                      <p className="text-wine">Manque : {info.lettre.mentionsManquantes.join(', ')}.</p>
-                    )}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+              </form>
+              {rendezVousTries.length === 0 ? (
+                <p className="text-sm text-ink-soft">Aucun rendez-vous noté.</p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {rendezVousTries.map((rdv) => (
+                    <li key={rdv.id} className="flex items-center justify-between rounded-xl border border-line bg-paper-raised px-4 py-3">
+                      <div>
+                        <p className="font-medium">{rdv.libelle}</p>
+                        <p className="text-sm text-ink-soft">{rdv.date}</p>
+                      </div>
+                      <button onClick={() => retirerRendezVous(rdv.id)} className="text-sm text-wine hover:underline">
+                        Retirer
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section>
+              <h2 className="mb-2 font-affiche text-2xl">Mon identité</h2>
+              <p className="mb-4 text-sm text-ink-soft">
+                Sert uniquement à remplir l&apos;en-tête des lettres de résiliation — chiffrée comme le reste.
+              </p>
+              <form onSubmit={surEnregistrementIdentite} className="flex flex-col gap-2">
+                <Champ name="nom" placeholder="Nom complet" required defaultValue={index.identite?.nom}
+                  autoComplete="name" />
+                <Champ name="adresse" placeholder="Adresse" required defaultValue={index.identite?.adresse}
+                  autoComplete="street-address" />
+                <div className="flex gap-2">
+                  <Champ name="codePostal" placeholder="Code postal" defaultValue={index.identite?.codePostal}
+                    autoComplete="postal-code" inputMode="numeric" />
+                  <Champ name="ville" placeholder="Ville" defaultValue={index.identite?.ville}
+                    autoComplete="address-level2" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <button type="submit" disabled={enCours}
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    Enregistrer
+                  </button>
+                  {identiteEnregistree && (
+                    <span className="text-sm text-accent">Identité enregistrée ✓</span>
+                  )}
+                </div>
+              </form>
+            </section>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }
