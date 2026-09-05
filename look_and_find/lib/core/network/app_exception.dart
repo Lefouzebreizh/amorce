@@ -33,17 +33,20 @@ sealed class AppException implements Exception {
       DioExceptionType.transformTimeout => const TimeoutException(),
       DioExceptionType.connectionError => const NetworkException(),
       DioExceptionType.cancel => const CancelledException(),
-      DioExceptionType.badResponse => _fromStatus(error.response?.statusCode),
+      DioExceptionType.badResponse => _fromStatus(
+        error.response?.statusCode,
+        error.response?.data,
+      ),
       _ => UnknownException(error.message ?? 'Erreur réseau inconnue'),
     };
   }
 
-  static AppException _fromStatus(int? status) {
+  static AppException _fromStatus(int? status, [Object? corps]) {
     if (status == null) {
       return const UnknownException('Réponse sans code de statut.');
     }
     return switch (status) {
-      400 => const InvalidRequestException(),
+      400 => InvalidRequestException(raisonDuServeur(corps)),
       401 || 403 => const AuthException(),
       404 => const ModelUnavailableException(),
       429 => const QuotaException(),
@@ -85,6 +88,21 @@ final class AuthException extends AppException {
   bool get isRetryable => false;
 }
 
+/// Le message que l'API a écrit, quand elle en a écrit un.
+///
+/// Les erreurs de Google suivent toutes la même forme —
+/// `{"error": {"code": …, "message": …, "status": …}}` — et le `message` est
+/// rédigé pour être lu. Borné à 300 caractères : au-delà, c'est une trace de
+/// pile qui n'apprend rien de plus à l'écran.
+String? raisonDuServeur(Object? corps) {
+  if (corps is! Map) return null;
+  final erreur = corps['error'];
+  if (erreur is! Map) return null;
+  final message = erreur['message']?.toString().trim();
+  if (message == null || message.isEmpty) return null;
+  return message.length <= 300 ? message : '${message.substring(0, 300)}…';
+}
+
 /// Le chemin est bon, le modèle n'existe plus.
 ///
 /// Google arrête ses modèles à date annoncée, et l'API répond alors 404 sur une
@@ -104,9 +122,28 @@ final class ModelUnavailableException extends AppException {
   bool get isRetryable => false;
 }
 
+/// Requête refusée par le service — et **la raison qu'il donne est reprise**.
+///
+/// Elle ne l'était pas, et c'est ce qui a coûté le plus cher : un 400 se répète
+/// à l'identique à chaque essai, « reprenez la photo » invite à recommencer un
+/// geste qui échouera toujours, et le seul texte capable de dire pourquoi —
+/// « Unknown name X », « Invalid value at … » — était jeté à la traduction.
+/// Google écrit des messages lisibles ; les taire revient à transformer un
+/// diagnostic d'une seconde en une soirée.
 final class InvalidRequestException extends AppException {
-  const InvalidRequestException()
-    : super('La photo n\'a pas pu être envoyée. Reprenez-la.');
+  InvalidRequestException([String? raison])
+    : super(
+        raison == null
+            ? 'La photo n\'a pas pu être envoyée. Reprenez-la.'
+            : 'Requête refusée par le service : $raison',
+      );
+
+  /// Une requête refusée l'est pour ce qu'elle contient, pas pour le moment où
+  /// elle part : la rejouer telle quelle rend le même refus. Proposer
+  /// « Réessayer » ici fait tourner l'utilisateur en rond — le geste utile est
+  /// de reprendre la photo, que l'écran propose à part.
+  @override
+  bool get isRetryable => false;
 }
 
 final class CancelledException extends AppException {
