@@ -36,7 +36,7 @@ export default function PageAccueil() {
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-8 px-6 py-16">
       <div>
-        <p className="text-sm tracking-widest text-ink-soft uppercase">Le Coffre</p>
+        <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
         <h1 className="mt-2 font-affiche text-4xl leading-tight">Tes papiers, tes échéances</h1>
         <p className="mt-4 text-ink-soft">
           Dépose tes documents administratifs — chiffrés entièrement dans ton navigateur avant
