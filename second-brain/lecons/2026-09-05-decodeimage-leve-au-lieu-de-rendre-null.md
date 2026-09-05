@@ -49,6 +49,18 @@ qui vaut pour tout le registre : **une entrée de couleur se relit contre le cod
 qui la pose**, jamais contre l'idée qu'on a du produit. Le geste tient en un
 `grep` sur le thème monté par `app.dart` ou sur les jetons du projet.
 
+**Et la vérification a rapporté plus que la correction.** Une fois l'entrée
+relue contre le code, la mesure qui remplace la description est mauvaise :
+`#7C5CFF` rend **2,93:1** sur `edge`, la surface la plus claire du projet, là où
+le §2 bis demande 7:1. Tant que la ligne parlait de thème clair, rien
+n'invitait à sortir la calculatrice — **une description fausse ne se contente
+pas d'être fausse, elle dispense de la vérification.**
+
+Corollaire pour qui écrit dans un registre : ne jamais y poser un rapport de
+contraste sans l'avoir calculé. Le premier jet de cette correction en portait un
+inventé, plausible et flatteur (« 6,6:1 »), qui aurait clos la question pour des
+mois.
+
 Même famille que le défaut d'Artisan Express noté le 03/09 — une mesure juste
 sur le mauvais objet — mais un cran plus discret : ici il n'y avait pas de
 mesure du tout, seulement une description qui sonnait vrai.

@@ -279,7 +279,7 @@ propre projet** — c'est le pire cas, celui qui décide.
 | Artisan Express | `#67C1A0` vert | **7,08:1** | sombre depuis le 03/09/2026 — voir plus bas |
 | Annuaria | `#7fd68a` sauge | **8,19:1** | posé le 03/09/2026 — voir plus bas |
 | `chat-traducteur` | `#7FD99A` sauge | **8,3:1** | quatre accents de contenu — voir plus bas |
-| `look_and_find` | `#7C5CFF` violet | **6,6:1** sur `slab` | thème **sombre** ; le clair est celui de `tout_seul`, une de ses fonctionnalités |
+| `look_and_find` | `#7C5CFF` violet | **2,93:1** | thème **sombre** ; sous le plancher, comme TITAN Builder — voir plus bas |
 
 **Comment un nouveau produit choisit le sien.** Deux contraintes, et elles se
 vérifient en trois lignes de calcul avant d'écrire la moindre classe :
@@ -371,6 +371,15 @@ la ligne n'était pas devenue fausse, elle l'avait toujours été, et sa
 plausibilité l'a protégée de la vérification. Un registre de couleurs se relit
 **contre le code qui les pose**, jamais contre le souvenir de ce que le produit
 est censé être.
+
+**Et la mesure qui a remplacé la description est mauvaise, ce qui est le point.**
+`#7C5CFF` rend 4,48:1 sur `ink`, 4,10 sur `slab`, 3,64 sur `raised` et
+**2,93 sur `edge`**, la plus claire — donc celle qui décide. C'est le même état
+que le violet de TITAN Builder, et pour une teinte voisine. Tant que l'entrée
+disait « thème clair assumé », personne n'avait de raison de mesurer quoi que ce
+soit : **une description fausse ne se contente pas d'être fausse, elle dispense
+de la vérification.** Le corriger relève d'une décision de produit — l'accent
+porte toute l'interface — et n'est pas fait ici.
 
 **Ils étaient trois, et Artisan Express en est sorti le 03/09/2026.** La phrase
 disait « Artisan Express est une page de vente », et c'était vrai sans être
