@@ -57,10 +57,22 @@ FRONTIERE_AIGU = 400.0
 # source, relue le 04/09/2026, l'a rendu visible.
 #
 # Les deux premiers types du référentiel sont **aigus tous les deux** : seule la
-# durée les sépare. Ce nombre-ci décide donc à lui seul entre « il demande
-# quelque chose » et « il te dit bonjour », là où `FRONTIERE_AIGU` ne fait que
-# détacher l'alerte. À corpus annoté égal, c'est celui des deux qu'il faut
-# mesurer en premier.
+# durée les sépare. Ce nombre-ci décide donc à lui seul entre `REQUETE` et
+# `SALUTATION`, là où `FRONTIERE_AIGU` ne fait que détacher l'alerte.
+#
+# **Et il ne décide pas entre deux cartes que l'utilisateur distinguerait.**
+# `tete.py` fait sortir `SALUTATION` en `CONTENTEMENT` — « Reste. » — et non en
+# une carte « bonjour », qui n'existe pas. Une note écrite ici disait le
+# contraire jusqu'au 05/09/2026 ; elle décrivait une intention retirée de
+# l'énumération.
+#
+# **Première confrontation à une oreille, le 05/09/2026.** Le propriétaire a
+# écouté un « bonjour » de 11 s contre deux demandes, et les miaulements du
+# premier lui ont paru **nettement plus courts**. C'est cohérent avec ce seuil,
+# et ça ne le mesure pas : une paire, trois chats différents, aucune durée
+# relevée. La différence entendue peut venir du chat autant que de l'intention.
+# À corpus annoté égal, c'est toujours celui des deux qu'il faut mesurer en
+# premier — mais il n'est plus tout à fait sans témoin.
 FRONTIERE_LONG = 0.7
 
 

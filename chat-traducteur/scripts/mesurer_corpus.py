@@ -22,9 +22,21 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from adaptateurs.audio import AudioIllisible, charger, fenetrer  # noqa: E402
+from adaptateurs.audio import (  # noqa: E402
+    PAS, TAILLE_FENETRE, AudioIllisible, charger, fenetrer,
+)
 from adaptateurs.yamnet import Yamnet  # noqa: E402
+from noyau.tete import tete_pour  # noqa: E402
+from noyau.traits import traits_vocalisation  # noqa: E402
 from noyau.verdict import CLASSES_FELINES, juger  # noqa: E402
+
+# `_fenetres_de_miaulement` vit dans `cli.py` et **ne se recopie pas ici**.
+# Son bloc de tête porte la raison d'un défaut déjà payé — donner à la tête
+# les fenêtres *félines* plutôt que les fenêtres où `Meow` domine faisait
+# rendre « détresse » sur un chat qui ronronne, à cause de neuf fenêtres de
+# bâillement classées `Roaring cats`. Deux copies de cette règle divergeraient,
+# et c'est celle sans le commentaire qui gagnerait.
+from cli import _fenetres_de_miaulement  # noqa: E402
 
 # La vidéo est dans la liste, et ce n'est pas un luxe : **un téléphone filme
 # autant qu'il enregistre**, et les premiers fichiers réels arrivés sur ce
@@ -49,13 +61,23 @@ def _nom(chemin: Path, racine: Path) -> str:
 def mesurer(chemin: Path, racine: Path, modele: Yamnet) -> dict | None:
     """Rend une ligne de tableau, ou `None` si le fichier est illisible."""
     try:
-        fenetres = fenetrer(charger(chemin))
+        echantillons = charger(chemin)
+        fenetres = fenetrer(echantillons)
     except AudioIllisible as erreur:
         print(f"  ✗ {chemin.name} : {erreur}", file=sys.stderr)
         return None
 
     scores = modele.scorer_toutes(fenetres)
-    verdict = juger(scores)
+
+    # **La tête est passée au juge, comme dans `cli.py`.** Sans elle, la colonne
+    # « intention » est celle de la *porte* seule : elle rend `indecis` sur tout
+    # ce que l'application nomme très bien, et un corpus étiqueté mesuré ainsi
+    # donnerait l'impression que rien n'est compris. Le défaut ne se voyait pas
+    # sur ESC-50, dont aucun fichier ne porte d'étiquette de contexte — donc où
+    # personne n'attendait autre chose qu'`indecis`.
+    traits = traits_vocalisation(echantillons, _fenetres_de_miaulement(scores),
+                                 TAILLE_FENETRE, PAS)
+    verdict = juger(scores, tete_intention=tete_pour(traits))
 
     # La fenêtre la plus féline, celle-là même sur laquelle la porte statue :
     # afficher la moyenne du fichier dirait autre chose que ce qui a décidé.
