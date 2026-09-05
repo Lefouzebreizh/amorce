@@ -275,6 +275,35 @@ ordinaire. Sous l'ancienne règle, ce chat-là sortait en « stress, mesuré ».
 Ces fichiers vivent dans `.fixtures/erwann/`, ignoré par Git, et n'en sortent
 pas.
 
+### Un second référentiel, apporté le 05/09/2026 — et ce qu'il corrige
+
+Le propriétaire a proposé trois vidéos de vulgarisation françaises. **Aucune
+n'entre au corpus** : une voix humaine parle du début à la fin des trois, ce
+qui est exactement le motif de rejet de `rsucLntx76E`. Leur valeur est ailleurs
+— elles sont un **référentiel**, et le projet n'en avait qu'un.
+
+Lu par transcription (PlanèteAnimal, 4 min 46, 1,2 M de vues), il liste **onze**
+vocalisations là où la tête acoustique en connaît trois. Quatre écarts méritent
+d'être notés :
+
+| ce que dit le référentiel | ce que le projet en fait |
+| --- | --- |
+| **le ronronnement n'est pas toujours du plaisir** — chat malade, vulnérable, menacé, ou grondé | ⚠️ contredit la seule lecture `MESUREE` — voir le bloc `LECTURE_DIRECTE` de `verdict.py` |
+| le **trille** (*chirrup*) : bref, moins d'une seconde, bouche fermée, salutation affectueuse | tombe du bon côté par accident — sous `FRONTIERE_LONG`, donc lu en contentement |
+| le **grondement fréquent** peut signaler une douleur, « consultez un vétérinaire » | délibérément non implémenté — `archives-backlog/ou-a-mal-mon-animal.md` |
+| l'**appel de chaleur** : hurlement long et traînant | confirme le reclassement de `_Z-neVXZtXY` en contrôle |
+
+**Le premier est le plus lourd, et il n'est pas réglé.** Le modèle nomme un
+*son*, `Purr` ; la carte en conclut un *état*, « il est content », avec un
+pourcentage qui lui donne l'air d'une mesure. C'est la forme exacte du défaut
+de `Caterwaul` corrigé la veille — sauf que l'erreur va cette fois dans le sens
+rassurant, ce qui la rend plus dure à voir et plus grave à laisser.
+
+**Ce qu'un référentiel ne remplace pas** : il dit ce qu'un son *signifie*, jamais
+si le modèle sait le *distinguer*. `Purr` reste la classe la mieux séparée des
+mesures — 0,148 à 0,262 sur trois chats, 0,008 au pire témoin. Ce qui est en
+cause n'est pas la détection, c'est la phrase qu'on écrit dessus.
+
 ### Ce que cette liste n'est pas
 
 Aucun de ces sons n'a pu être **écouté** d'ici, pour la raison de la section 2.

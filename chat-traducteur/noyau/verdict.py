@@ -130,6 +130,35 @@ SEUIL_LECTURE = 0.10
 # `CLASSES_PORTEUSES` pour les quarante mesures qui l'ont décidé. Ne pas les
 # remettre : elles ne sont plus dominantes, donc les laisser ici ferait croire
 # à une lecture qui n'arrive jamais.
+#
+# ## Une réserve sérieuse sur `Purr`, relevée le 05/09/2026
+#
+# **Le ronronnement n'est pas toujours du contentement**, et cette table le
+# prétend. Un second référentiel de vulgarisation, apporté par le propriétaire
+# et confronté à sa source (PlanèteAnimal, 4 min 46, transcription lue), liste
+# onze vocalisations et dit ceci du ronronnement :
+#
+#     « purring is not always synonymous with pleasure. Cats can purr when they
+#     are sick, when they feel vulnerable and threatened by another feline, or
+#     when they are being scolded by their owner. »
+#
+# C'est la **seule lecture `MESUREE` du produit** — la seule qui affiche un
+# pourcentage sur la carte, parce que le modèle a nommé la classe lui-même. Or
+# ce que le modèle nomme est un **son**, `Purr`, et ce que la carte en conclut
+# est un **état**, « il est content ». Le premier est mesuré, le second ne l'est
+# pas — et le référentiel dit qu'il peut être l'exact contraire.
+#
+# La forme du défaut est exactement celle de `Caterwaul` la veille : une classe
+# acoustique juste, une conclusion affective fausse, affichée avec un chiffre
+# qui lui donne l'air d'une mesure. La différence est qu'ici l'erreur va dans le
+# sens rassurant — dire « il est content » d'un chat qui souffre — ce qui la
+# rend plus difficile à repérer et plus grave à laisser.
+#
+# **Rien n'est changé ici**, et c'est une décision de produit qui appartient au
+# propriétaire : retirer le pourcentage, adoucir la phrase, ou garder en l'état
+# en assumant qu'un ronronnement est content dans l'immense majorité des cas.
+# Ce commentaire existe pour que le choix soit fait en connaissance, et non par
+# omission.
 LECTURE_DIRECTE = {
     "Purr": Intention.CONTENTEMENT,
 }
