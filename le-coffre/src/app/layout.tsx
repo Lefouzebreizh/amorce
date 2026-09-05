@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Le Coffre — tes papiers, tes échéances',
+  title: 'Le Tiroir Secret — tes papiers, tes échéances',
   description:
     'Dépose tes papiers administratifs, chiffrés de bout en bout — rien de lisible ne sort de ton navigateur, pas même vers nous.',
   robots: { index: true, follow: true },

@@ -91,10 +91,20 @@ viennent du modèle ou de l'utilisateur ; la formulation elle-même ne varie
 pas. C'est le même principe que `paper-manager` : *le gabarit garantit le
 fond, jamais le modèle.*
 
-`emetteur` et `referenceClient` sont désormais aussi demandés à
-`classer-document`, dans le même appel que la catégorie et l'échéance — pas
-un second moment d'exposition. La consigne de ne jamais deviner s'applique
-pareil : `null` plutôt qu'une référence inventée.
+`emetteur`, `referenceClient`, `montant` et, depuis le même jour,
+`texteExtrait` (jusqu'à 500 caractères du texte lisible sur le document)
+sont désormais aussi demandés à `classer-document`, dans le même appel que
+la catégorie et l'échéance — pas un second moment d'exposition. La
+consigne de ne jamais deviner s'applique pareil : `null` plutôt qu'un
+champ recalculé ou déduit. Tous restent dans l'index chiffré comme le
+reste ; aucun ne part vers une table en clair (contrairement à la date
+d'échéance, seule donnée qui sort pour permettre l'alerte).
+
+`texteExtrait` sert uniquement à `rechercheCorrespond` (`src/lib/coffre.ts`) :
+une recherche filtre les documents déjà déchiffrés, entièrement côté
+navigateur, sur leur nom, catégorie, émetteur et ce texte — jamais une
+requête envoyée où que ce soit. Il n'est jamais affiché tel quel dans
+l'interface, seulement comparé.
 
 **Toujours présentée comme un brouillon** : la fonction qui compose la
 lettre (`composerLettreResiliation`, purement côté navigateur, aucun appel
@@ -210,6 +220,12 @@ correcte, mais se signalait elle-même à tort comme incomplète. Corrigé dans
 le même geste. Pas de test pour `src/app/coffre/page.tsx` (React, demande
 un harnais différent) ni pour les fonctions Supabase (dépendent d'un
 environnement Deno + réseau).
+
+**Complété le même jour** : `statutEcheance` (les cinq bornes du badge
+urgent/bientôt/calme) et une régression sur la fusion de l'index — Supabase
+est simulé (`vi.mock('./supabase', ...)`) pour observer ce que
+`deposerFichier`, `supprimerFichier`, `ajouterRendezVous` et
+`supprimerRendezVous` écrivent réellement, sans réseau ni projet réel.
 
 ## Ce qui reste fragile — non corrigé pour l'instant
 
