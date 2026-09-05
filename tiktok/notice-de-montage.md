@@ -105,6 +105,13 @@ pas la devancer.
 
 ## Le rugissement d'une créature
 
+**Aucun des chemins essayés ici n'a donné un cri acceptable, et c'est le
+propriétaire qui a arrêté les frais** — « laisse tomber, on va se débrouiller
+autrement ». Ce qui suit garde ce qui a été mesuré, parce que la mesure reste
+juste ; la conclusion, elle, est que **le cri d'une créature ne se fabrique pas
+depuis cette session**, et qu'un montage se livre alors **sans lui**, sur son
+son d'origine intact, pour qu'il soit posé ailleurs.
+
 Un rush de génération montre souvent une gueule qui s'ouvre sans qu'on entende
 rien. Deux chemins existent, et **l'ordre entre les deux est tranché** :
 
