@@ -15,6 +15,7 @@ import {
   rechercheCorrespond, SEUIL_BIENTOT_JOURS,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
 } from '@/lib/coffre';
+import { RemplirFormulaire } from './RemplirFormulaire';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
 
@@ -97,12 +98,13 @@ function BadgeStatut({ jours }: { jours: number }) {
   );
 }
 
-// Une jauge horizontale, vert → violet → wine, jamais l'ambre demandé au
+// Un dégradé continu vert → turquoise → violet, jamais l'ambre demandé au
 // départ : cette appli a banni l'orange/jaune de toute sa palette (voir
-// globals.css), et les trois teintes de BadgeStatut portent déjà exactement
-// ce sens — la jauge en est juste la version continue. Se remplit à mesure
-// que l'échéance approche : vide loin dans le temps (SEUIL_BIENTOT_JOURS et
-// au-delà), pleine à l'échéance ou en retard.
+// globals.css). Le fond du rail porte le dégradé sur toute sa largeur ; un
+// cache de la couleur du rail vide recouvre la partie non atteinte depuis la
+// droite, si bien que la teinte visible avance en continu avec le temps au
+// lieu de sauter entre trois aplats — la jauge se lit comme un vrai dégradé,
+// pas comme un badge de statut redondant avec BadgeStatut.
 const HORIZON_JAUGE_JOURS = SEUIL_BIENTOT_JOURS + 15; // marge pour qu'« encore loin » ne soit pas déjà à moitié pleine
 function JaugeEcheance({ jours }: { jours: number }) {
   const statut = statutEcheance(jours);
@@ -115,11 +117,12 @@ function JaugeEcheance({ jours }: { jours: number }) {
       aria-valuemax={100}
       aria-label={`Échéance : ${LIBELLE_STATUT[statut]}`}
       title={`${LIBELLE_STATUT[statut]} — ${formatJours(jours)}`}
-      className="h-1.5 w-full overflow-hidden rounded-full bg-line"
+      className="relative h-1.5 w-full overflow-hidden rounded-full bg-line"
     >
+      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-vert via-accent to-violet" />
       <div
-        className={`h-full rounded-full transition-all ${CLASSE_STATUT[statut]}`}
-        style={{ width: `${rempli}%` }}
+        className="absolute inset-y-0 right-0 rounded-r-full bg-line transition-all"
+        style={{ width: `${100 - rempli}%` }}
       />
     </div>
   );
@@ -304,6 +307,7 @@ export default function PageCoffre() {
   const [survole, setSurvole] = useState(false);
   const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
+  const [formulaireOuvert, setFormulaireOuvert] = useState(false);
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
   const [recherche, setRecherche] = useState('');
   const [correction, setCorrection] = useState<Correction | null>(null);
@@ -1078,9 +1082,28 @@ export default function PageCoffre() {
                 </div>
               </form>
             </section>
+
+            <section>
+              <h2 className="mb-2 font-affiche text-2xl">Remplir un formulaire</h2>
+              <p className="mb-4 text-sm text-ink-soft">
+                Dépose un CERFA ou un mandat vierge : l&apos;appli détecte ses champs et les
+                propose remplis avec ton identité, jamais hors de ce navigateur.
+              </p>
+              <button
+                type="button"
+                onClick={() => setFormulaireOuvert(true)}
+                className="flex items-center gap-2 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong"
+              >
+                <FileText size={16} /> Remplir un PDF vierge
+              </button>
+            </section>
           </div>
         </div>
       </div>
+
+      {formulaireOuvert && (
+        <RemplirFormulaire identite={index.identite} onFermer={() => setFormulaireOuvert(false)} />
+      )}
 
       {/* Bouton flottant : seul point d'entrée visible pour ajouter un papier
           (la page entière reste aussi déposable, voir onDrop sur <main>).
