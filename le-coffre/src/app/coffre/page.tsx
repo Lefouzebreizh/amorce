@@ -102,15 +102,18 @@ function formatJours(jours: number): string {
 }
 
 // La plus proche échéance ou rendez-vous, tous confondus — calculé côté
-// navigateur sur l'index déjà déchiffré, jamais envoyé nulle part.
-function prochaineAlerte(index: IndexCoffre): { libelle: string; date: string; jours: number } | null {
-  const items: { libelle: string; date: string; jours: number }[] = [];
-  for (const objet of Object.values(index.objets)) {
+// navigateur sur l'index déjà déchiffré, jamais envoyé nulle part. `nom`
+// n'est présent que pour une échéance de document (jamais un rendez-vous) :
+// c'est ce qui permet à la bannière d'ouvrir directement la fiche concernée.
+function prochaineAlerte(index: IndexCoffre): { libelle: string; date: string; jours: number; nom?: string } | null {
+  const items: { libelle: string; date: string; jours: number; nom?: string }[] = [];
+  for (const [nom, objet] of Object.entries(index.objets)) {
     if (objet.echeance?.presente && objet.echeance.date) {
       items.push({
         libelle: objet.echeance.libelle || objet.nom,
         date: objet.echeance.date,
         jours: joursRestants(objet.echeance.date),
+        nom,
       });
     }
   }
@@ -279,6 +282,18 @@ export default function PageCoffre() {
       setEtape(existe ? 'deverrouiller' : 'creer');
     });
   }, [routeur]);
+
+  // Le bouton retour du téléphone déclenche cet événement plutôt que de
+  // recharger la page — voir ouvrirDetail/fermerDetail pour l'entrée
+  // d'historique correspondante.
+  useEffect(() => {
+    function surRetourArriere() {
+      setDetailOuvert(null);
+      setCorrection(null);
+    }
+    window.addEventListener('popstate', surRetourArriere);
+    return () => window.removeEventListener('popstate', surRetourArriere);
+  }, []);
 
   const seDeconnecter = useCallback(async () => {
     await supabase.auth.signOut();
@@ -478,16 +493,31 @@ export default function PageCoffre() {
   // Fiche détail : ouverte au clic sur un document, porte la correction du
   // classement (nom, catégorie, montant) — jamais l'échéance ni la lettre,
   // qui restent celles calculées au dépôt.
+  //
+  // L'ouverture pousse une entrée d'historique : sans elle, le bouton retour
+  // du téléphone n'a rien à consommer dans l'app et saute directement à la
+  // page précédente (souvent le mail d'où vient le lien), donnant
+  // l'impression que la fiche fait quitter le site entier au lieu de se
+  // refermer. Voir le popstate ci-dessous et fermerDetail, qui consomme
+  // cette même entrée à la fermeture.
   function ouvrirDetail(nom: string) {
     const info = index.objets[nom];
     if (!info) return;
     setCorrection({ nom: info.nom, categorie: info.categorie, montant: info.montant || '' });
     setDetailOuvert(nom);
+    window.history.pushState({ ficheDetail: nom }, '');
   }
 
   function fermerDetail() {
-    setDetailOuvert(null);
-    setCorrection(null);
+    const etatHistorique = window.history.state as { ficheDetail?: string } | null;
+    if (etatHistorique?.ficheDetail) {
+      // Consomme l'entrée poussée par ouvrirDetail plutôt que d'en laisser
+      // une orpheline en avant — le popstate qui suit referme la fiche.
+      window.history.back();
+    } else {
+      setDetailOuvert(null);
+      setCorrection(null);
+    }
   }
 
   async function enregistrerCorrection() {
@@ -690,9 +720,18 @@ export default function PageCoffre() {
           </button>
         </header>
 
-        {/* Bannière d'alerte */}
+        {/* Bannière d'alerte — cliquable seulement quand elle porte sur un
+            document (jamais un rendez-vous, qui n'a pas de fiche) : ouvre
+            directement la fiche détail concernée. */}
         {alerte && (
-          <div className="flex items-start gap-4 rounded-2xl border border-line bg-paper-raised p-5">
+          <button
+            type="button"
+            onClick={alerte.nom ? () => ouvrirDetail(alerte.nom as string) : undefined}
+            disabled={!alerte.nom}
+            className={`flex w-full items-start gap-4 rounded-2xl border border-line bg-paper-raised p-5 text-left transition ${
+              alerte.nom ? 'cursor-pointer hover:border-accent/60' : 'cursor-default'
+            }`}
+          >
             <div className="rounded-xl bg-accent/15 p-2.5 text-accent"><Bell size={20} /></div>
             <div>
               <p className="text-sm tracking-widest text-ink-soft uppercase">On te prévient à l&apos;avance</p>
@@ -701,7 +740,7 @@ export default function PageCoffre() {
                 {' '}— {formatJours(alerte.jours)} ({alerte.date})
               </p>
             </div>
-          </div>
+          </button>
         )}
 
         {erreur && (
@@ -959,16 +998,20 @@ export default function PageCoffre() {
       </div>
 
       {/* Bouton flottant : seul point d'entrée visible pour ajouter un papier
-          (la page entière reste aussi déposable, voir onDrop sur <main>). */}
-      <div className="fixed inset-x-0 bottom-6 z-40 flex flex-col items-center gap-2 px-4">
+          (la page entière reste aussi déposable, voir onDrop sur <main>).
+          `pointer-events-none` sur le conteneur pleine largeur, `auto` sur
+          le seul bouton : sans ça, toute la bande invisible du bas de
+          l'écran — pas seulement le bouton visible — interceptait les
+          taps destinés aux lignes de documents rendues dessous, quel que
+          soit le défilement (position `fixed`). */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
         <button
           type="button"
           onClick={() => entreeFichier.current?.click()}
-          className="flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 font-semibold text-paper shadow-lg transition hover:bg-accent-strong"
+          className="pointer-events-auto flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 font-semibold text-paper shadow-lg transition hover:bg-accent-strong"
         >
           <Plus size={20} /> Ajouter un papier
         </button>
-        <span className="text-xs text-ink-soft">Une photo suffit — on s&apos;occupe du reste</span>
       </div>
 
       {/* Fiche détail : ouverte au clic sur un document, porte la correction

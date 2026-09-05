@@ -173,6 +173,29 @@ qu'Emploi pour tout ce qui touche directement à un véhicule, même
 professionnel). Les dix catégories elles-mêmes n'ont pas changé — seule la
 frontière entre elles est écrite noir sur blanc.
 
+## Trois vrais bugs remontés par l'usage réel (05/09/2026)
+
+Trouvés sur des vidéos montrant l'appli en main, pas devinés :
+
+- **Le bouton flottant bloquait des clics à distance.** Son conteneur pleine
+  largeur (`fixed inset-x-0 bottom-6`) interceptait les taps sur toute sa
+  bande, pas seulement sur le bouton visible — n'importe quelle ligne de
+  document rendue à cette hauteur d'écran devenait inatteignable, quel que
+  soit le défilement (position `fixed`). Corrigé par `pointer-events-none`
+  sur le conteneur et `pointer-events-auto` sur le seul bouton. La légende
+  « Une photo suffit — on s'occupe du reste » sous le bouton, jugée inutile
+  à l'usage, est retirée au passage.
+- **La bannière d'échéance ne menait nulle part.** Elle annonçait la
+  prochaine échéance sans permettre d'ouvrir le document concerné. Elle
+  ouvre désormais sa fiche détail au clic quand l'échéance vient d'un
+  document (jamais pour un rendez-vous, qui n'en a pas).
+- **Le bouton retour du téléphone quittait le site entier** au lieu de
+  refermer la fiche détail ouverte : sans entrée d'historique poussée à
+  l'ouverture, le retour n'avait rien à consommer dans l'app et sautait
+  directement à la page précédente (le mail, le plus souvent). `ouvrirDetail`
+  pousse maintenant une entrée d'historique, et un écouteur `popstate`
+  referme la fiche au lieu de laisser le navigateur sortir de l'application.
+
 ## Architecture
 
 ```
