@@ -141,6 +141,38 @@ document plutôt que de réinitialiser son état depuis un effet (évite le
 rendu en cascade que le lint React signale sur un `setState` synchrone en
 effet). Les autres types de fichiers gardent le seul bouton Télécharger.
 
+## Dépôt d'un dossier chargé : analyse en parallèle et dépôt groupé (05/09/2026)
+
+Deux défauts trouvés à l'usage réel, en déposant un dossier de plusieurs
+fichiers d'un coup :
+
+- **L'analyse tournait un fichier après l'autre** (`for (const item of
+  nouveaux) { await proposerClassement(...) }`) — pour dix fichiers à deux ou
+  trois secondes chacun, l'attente devenait interminable avant que le premier
+  n'apparaisse même prêt à valider. Elle tourne maintenant en parallèle
+  (`Promise.all`), chaque mise à jour utilisant la forme fonctionnelle de
+  `setAValider` — les réponses qui reviennent dans le désordre ne s'écrasent
+  jamais entre elles.
+- **Il fallait cliquer « Déposer » sur chaque papier**, un par un. Un bouton
+  « Déposer tout » (`confirmerTout`) apparaît dès qu'il y a plus d'un papier
+  en attente. Il enchaîne les dépôts **en série**, jamais en parallèle, sur un
+  index local (`indexCourant`) plutôt que sur l'état React : deux appels à
+  `deposerFichier` lancés côte à côte partiraient tous les deux du même index
+  de départ, et le second écraserait le premier au lieu de s'y ajouter — le
+  même risque que le bug d'index corrigé plus haut, pour la même raison.
+
+## Catégories mieux définies (05/09/2026)
+
+`classer-document` ne donnait au modèle qu'une liste nue de dix catégories,
+sans dire où passait la frontière entre deux voisines — un document lié à un
+métier de conducteur professionnel (carte de conducteur, par exemple)
+pouvait atterrir dans « Emploi » ou « Véhicule » selon l'humeur du modèle.
+Le prompt porte désormais une définition d'une ligne par catégorie et la
+consigne de choisir la plus spécifique dans le doute (Véhicule plutôt
+qu'Emploi pour tout ce qui touche directement à un véhicule, même
+professionnel). Les dix catégories elles-mêmes n'ont pas changé — seule la
+frontière entre elles est écrite noir sur blanc.
+
 ## Architecture
 
 ```

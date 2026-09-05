@@ -363,7 +363,12 @@ export default function PageCoffre() {
     setAValider((precedent) => [...precedent, ...nouveaux]);
     if (entreeFichier.current) entreeFichier.current.value = '';
 
-    for (const item of nouveaux) {
+    // En parallèle, pas un par un : dix fichiers analysés en série, à
+    // deux ou trois secondes chacun, rendaient un dossier « interminable ».
+    // Chaque `setAValider` porte sa propre clé et utilise la forme
+    // fonctionnelle — les réponses qui reviennent dans le désordre ne
+    // s'écrasent jamais entre elles.
+    await Promise.all(nouveaux.map(async (item) => {
       const proposition = await proposerClassement(item.fichier);
       setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
         ...p, enAnalyse: false,
@@ -375,7 +380,7 @@ export default function PageCoffre() {
         montant: proposition.montant || '',
         texteExtrait: proposition.texteExtrait || '',
       } : p)));
-    }
+    }));
   }
 
   function modifierAttente(cleItem: string, champs: Partial<EnAttente>) {
@@ -403,6 +408,38 @@ export default function PageCoffre() {
     } finally {
       setEnCours(false);
     }
+  }
+
+  // Dépose tous les papiers prêts d'un coup, plutôt que de cliquer
+  // « Déposer » sur chacun — le geste qui rendait le dépôt d'un dossier
+  // interminable. Les dépôts s'enchaînent l'un après l'autre (jamais en
+  // parallèle) sur un index local plutôt que sur l'état React : deux appels
+  // à deposerFichier lancés côte à côte partiraient tous les deux du même
+  // index de départ, et le second écraserait le premier au lieu de s'y
+  // ajouter.
+  async function confirmerTout() {
+    if (!utilisateur || !cle) return;
+    const prets = aValider.filter((p) => !p.enAnalyse);
+    if (prets.length === 0) return;
+    setEnCours(true);
+    setErreur('');
+    let indexCourant = index;
+    const echecs: string[] = [];
+    for (const item of prets) {
+      try {
+        indexCourant = await deposerFichier(
+          utilisateur.id, cle, item.fichier, item.categorie, indexCourant, item.nomAffiche, item.echeance,
+          item.emetteur || null, item.referenceClient || null, item.montant || null,
+          item.texteExtrait || null,
+        );
+        setIndex(indexCourant);
+        retirerAttente(item.cle);
+      } catch (err) {
+        echecs.push(`${item.nomAffiche} (${err instanceof Error ? err.message : String(err)})`);
+      }
+    }
+    if (echecs.length > 0) setErreur(`Non déposés : ${echecs.join(', ')}.`);
+    setEnCours(false);
   }
 
   async function telecharger(nom: string) {
@@ -673,6 +710,23 @@ export default function PageCoffre() {
 
         {/* File d'attente de validation */}
         {aValider.length > 0 && (
+          <>
+            {aValider.length > 1 && (
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-ink-soft">
+                  {aValider.length} papiers en attente
+                  {aValider.some((p) => p.enAnalyse) && ' — lecture en cours…'}
+                </p>
+                <button
+                  type="button"
+                  onClick={confirmerTout}
+                  disabled={enCours || aValider.every((p) => p.enAnalyse)}
+                  className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60"
+                >
+                  Déposer tout ({aValider.filter((p) => !p.enAnalyse).length})
+                </button>
+              </div>
+            )}
           <ul className="flex flex-col gap-3">
             {aValider.map((item) => (
               <li key={item.cle} className="rounded-2xl border border-accent/40 bg-paper-raised p-5">
@@ -755,6 +809,7 @@ export default function PageCoffre() {
               </li>
             ))}
           </ul>
+          </>
         )}
 
         {/* Grille principale : documents (large) + rendez-vous/identité (colonne) */}
