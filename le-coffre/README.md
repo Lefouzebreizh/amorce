@@ -102,6 +102,28 @@ déposer un fichier, par exemple, effaçait silencieusement l'identité et les
 rendez-vous déjà enregistrés. Couvert par quatre tests de régression dans
 `coffre.test.ts`.
 
+## Renommage en « Le Tiroir Secret » (05/09/2026)
+
+Textes visibles seulement — titre de page, en-têtes des trois écrans,
+sujet/corps/expéditeur de l'e-mail d'alerte. L'adresse `coffre-puce.vercel.app`,
+le projet Vercel `coffre` et le chemin `le-coffre/` restent inchangés :
+renommer l'infrastructure (domaine, redirection du lien magique Supabase)
+est une décision à part, plus risquée, laissée en attente.
+
+## Dépôt de dossiers entiers et étiquettes personnalisables (05/09/2026)
+
+Glisser un **dossier** sur la page dépose tout son contenu, sous-dossiers
+compris — `fichiersDuGlisserDeposer` explore l'arborescence via l'API
+File and Directory Entries (`webkitGetAsEntry`, non standardisée : hors
+Chrome/Edge, on retombe sur les fichiers à plat que `dataTransfer.files`
+donne déjà, sans erreur). La zone de survol s'illumine sur toute la page,
+pas seulement sur un encart.
+
+Les étiquettes (le champ « Catégorie ») restent du texte libre — jamais une
+liste fermée — mais se retapent moins : une `<datalist>` suggère les
+catégories déjà utilisées dans le coffre, et des puces de filtre au-dessus
+de la liste des papiers permettent de n'en voir qu'une à la fois.
+
 ## Architecture
 
 ```

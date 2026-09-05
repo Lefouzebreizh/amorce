@@ -141,6 +141,59 @@ function formatTaille(octets: number): string {
   return `${(octets / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
+// Surface minimale de l'API File and Directory Entries — non standardisée
+// (préfixe « webkit »), donc absente des types DOM de TypeScript. Déclarée
+// ici plutôt que globalement : elle ne sert qu'à explorer un dossier glissé.
+type EntreeSysteme = {
+  isFile: boolean;
+  isDirectory: boolean;
+  file?: (succes: (f: File) => void, echec: (e: unknown) => void) => void;
+  createReader?: () => {
+    readEntries: (succes: (e: EntreeSysteme[]) => void, echec: (e: unknown) => void) => void;
+  };
+};
+
+// Un dossier glissé n'est pas une liste de fichiers : seule cette API sait
+// descendre dans un sous-dossier. Hors Chrome/Edge (webkitGetAsEntry
+// absent), on retombe sur les fichiers à plat que dataTransfer.files donne
+// déjà — jamais d'erreur, juste moins de fichiers trouvés.
+async function fichiersDuGlisserDeposer(dataTransfer: DataTransfer): Promise<File[]> {
+  const items = Array.from(dataTransfer.items || []);
+  const racines = items
+    .map((item) => (item as unknown as { webkitGetAsEntry?: () => EntreeSysteme | null }).webkitGetAsEntry?.())
+    .filter((e): e is EntreeSysteme => Boolean(e));
+  if (racines.length === 0) return Array.from(dataTransfer.files);
+
+  async function lireDossier(entree: EntreeSysteme): Promise<EntreeSysteme[]> {
+    const lecteur = entree.createReader?.();
+    if (!lecteur) return [];
+    const tout: EntreeSysteme[] = [];
+    // readEntries ne rend qu'un lot à la fois — un dossier de plus de cent
+    // fichiers ne sortirait pas en entier sans boucler jusqu'au lot vide.
+    let lot: EntreeSysteme[];
+    do {
+      lot = await new Promise<EntreeSysteme[]>((resolve, reject) => lecteur.readEntries(resolve, reject));
+      tout.push(...lot);
+    } while (lot.length > 0);
+    return tout;
+  }
+
+  async function explorer(entree: EntreeSysteme): Promise<File[]> {
+    if (entree.isFile && entree.file) {
+      return [await new Promise<File>((resolve, reject) => entree.file?.(resolve, reject))];
+    }
+    if (entree.isDirectory) {
+      const enfants = await lireDossier(entree);
+      const listes = await Promise.all(enfants.map(explorer));
+      return listes.flat();
+    }
+    return [];
+  }
+
+  const listes = await Promise.all(racines.map(explorer));
+  return listes.flat();
+}
+
 // Champ de saisie commun aux petits formulaires (identité, rendez-vous) —
 // un seul endroit à toucher pour l'habillage plutôt que de le répéter.
 function Champ(props: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -164,6 +217,7 @@ export default function PageCoffre() {
   const [survole, setSurvole] = useState(false);
   const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
+  const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
   const [correction, setCorrection] = useState<Correction | null>(null);
   const entreeFichier = useRef<HTMLInputElement>(null);
 
@@ -237,18 +291,18 @@ export default function PageCoffre() {
   // qui lit le fichier une fraction de seconde côté serveur puis ne garde
   // rien — voir SECURITY.md), et rien ne bouge tant que l'utilisateur n'a
   // pas validé chaque proposition.
-  async function surDepot(fichiers: FileList | null) {
-    if (!fichiers || !fichiers.length || !utilisateur || !cle) return;
+  async function surDepot(fichiers: File[]) {
+    if (!fichiers.length || !utilisateur || !cle) return;
     setErreur('');
 
-    const tropGros = Array.from(fichiers).filter((f) => f.size > TAILLE_MAX_OCTETS);
+    const tropGros = fichiers.filter((f) => f.size > TAILLE_MAX_OCTETS);
     if (tropGros.length > 0) {
       setErreur(
         `${tropGros.map((f) => f.name).join(', ')} dépasse ${formatTaille(TAILLE_MAX_OCTETS)} — ` +
         `non déposé. Le serveur refuserait aussi le dépôt au-delà de cette taille.`,
       );
     }
-    const fichiersValides = Array.from(fichiers).filter((f) => f.size <= TAILLE_MAX_OCTETS);
+    const fichiersValides = fichiers.filter((f) => f.size <= TAILLE_MAX_OCTETS);
     if (fichiersValides.length === 0) {
       if (entreeFichier.current) entreeFichier.current.value = '';
       return;
@@ -485,7 +539,17 @@ export default function PageCoffre() {
     );
   }
 
-  const noms = Object.keys(index.objets);
+  const tousLesNoms = Object.keys(index.objets);
+  // Étiquettes existantes, dérivées des documents déjà déposés — jamais une
+  // liste fixe : l'utilisateur écrit ce qu'il veut dans le champ « Catégorie »
+  // (aValider comme fiche détail), et ce qu'il a déjà écrit revient en
+  // suggestion la fois suivante, via la <datalist> ci-dessous.
+  const categoriesConnues = Array.from(
+    new Set(tousLesNoms.map((n) => index.objets[n]?.categorie).filter((c): c is string => Boolean(c))),
+  ).sort((a, b) => a.localeCompare(b, 'fr'));
+  const noms = filtreCategorie
+    ? tousLesNoms.filter((n) => index.objets[n]?.categorie === filtreCategorie)
+    : tousLesNoms;
   const rendezVousTries = Object.values(index.rendezVous || {})
     .sort((a, b) => (a.date < b.date ? -1 : 1));
   const alerte = prochaineAlerte(index);
@@ -493,18 +557,29 @@ export default function PageCoffre() {
 
   return (
     <main
-      className={`min-h-screen bg-paper pb-32 transition ${survole ? 'ring-2 ring-accent ring-inset' : ''}`}
+      className={`min-h-screen bg-paper pb-32 transition ${survole ? 'bg-accent/5 ring-2 ring-accent ring-inset' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setSurvole(true); }}
       onDragLeave={() => setSurvole(false)}
-      onDrop={(e) => { e.preventDefault(); setSurvole(false); surDepot(e.dataTransfer.files); }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setSurvole(false);
+        // Glisser un dossier entier passe par ici (fichiers imbriqués
+        // aplatis) ; un simple glisser de fichiers marche aussi, inchangé.
+        fichiersDuGlisserDeposer(e.dataTransfer).then(surDepot);
+      }}
     >
       <input
         ref={entreeFichier}
         type="file"
         multiple
         hidden
-        onChange={(e) => surDepot(e.target.files)}
+        onChange={(e) => surDepot(Array.from(e.target.files || []))}
       />
+      {/* Suggestions d'étiquettes déjà utilisées — jamais une liste imposée,
+          juste ce que l'utilisateur a lui-même déjà tapé. */}
+      <datalist id="categories-connues">
+        {categoriesConnues.map((c) => <option key={c} value={c} />)}
+      </datalist>
       <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
         {/* En-tête */}
         <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
@@ -562,7 +637,7 @@ export default function PageCoffre() {
                         </div>
                         <div className="flex-1">
                           <label className="text-sm text-ink-soft" htmlFor={`cat-${item.cle}`}>Catégorie</label>
-                          <Champ id={`cat-${item.cle}`} value={item.categorie}
+                          <Champ id={`cat-${item.cle}`} value={item.categorie} list="categories-connues"
                             placeholder="Non proposée — à préciser ou laisser vide"
                             onChange={(e) => modifierAttente(item.cle, { categorie: e.target.value })} />
                         </div>
@@ -636,10 +711,33 @@ export default function PageCoffre() {
             <p className="mb-4 text-sm font-semibold tracking-widest text-ink-soft uppercase">
               Vos papiers ({noms.length})
             </p>
-            {noms.length === 0 ? (
+            {categoriesConnues.length > 0 && (
+              <div className="mb-4 flex flex-wrap gap-2">
+                <button type="button" onClick={() => setFiltreCategorie(null)}
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                    filtreCategorie === null ? 'bg-accent text-paper' : 'bg-paper-raised text-ink-soft hover:text-ink'
+                  }`}>
+                  Tout
+                </button>
+                {categoriesConnues.map((c) => (
+                  <button key={c} type="button"
+                    onClick={() => setFiltreCategorie(filtreCategorie === c ? null : c)}
+                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                      filtreCategorie === c ? 'bg-accent text-paper' : 'bg-paper-raised text-ink-soft hover:text-ink'
+                    }`}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+            {tousLesNoms.length === 0 ? (
               <p className="rounded-2xl border border-line bg-paper-raised p-6 text-ink-soft">
                 Le coffre est vide pour l&apos;instant — touche « Ajouter un papier » ci-dessous,
                 ou dépose une photo n&apos;importe où sur cette page.
+              </p>
+            ) : noms.length === 0 ? (
+              <p className="rounded-2xl border border-line bg-paper-raised p-6 text-ink-soft">
+                Aucun papier dans « {filtreCategorie} ».
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
@@ -839,7 +937,7 @@ export default function PageCoffre() {
                     </div>
                     <div className="flex-1">
                       <label className="text-sm text-ink-soft" htmlFor="correction-categorie">Catégorie</label>
-                      <Champ id="correction-categorie" value={correction.categorie}
+                      <Champ id="correction-categorie" value={correction.categorie} list="categories-connues"
                         onChange={(e) => setCorrection({ ...correction, categorie: e.target.value })} />
                     </div>
                   </div>
