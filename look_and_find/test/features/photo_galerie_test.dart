@@ -19,8 +19,9 @@ import 'package:look_and_find/core/constants/app_strings.dart';
 import 'package:look_and_find/core/theme/app_theme.dart';
 import 'package:look_and_find/core/utils/result.dart';
 import 'package:look_and_find/features/favorites/presentation/providers/favorites_providers.dart';
+import 'package:look_and_find/features/fiche_objet/domain/entities/fiche_objet.dart';
+import 'package:look_and_find/features/fiche_objet/presentation/pages/fiche_objet_page.dart';
 import 'package:look_and_find/features/product_detail/domain/entities/product.dart';
-import 'package:look_and_find/features/product_detail/presentation/pages/product_detail_page.dart';
 import 'package:look_and_find/features/scanner/data/datasources/api_key_store.dart';
 import 'package:look_and_find/core/network/app_exception.dart';
 import 'package:look_and_find/features/scanner/data/datasources/photo_picker.dart';
@@ -55,26 +56,27 @@ class _CameraAbsente extends CameraSession {
 class _FauxDepot implements ScannerRepository {
   _FauxDepot(this.reponse);
 
-  final Result<Product> reponse;
+  final Result<FicheObjet> reponse;
   Uint8List? recue;
 
   @override
-  Future<Result<Product>> identify(Uint8List photo) async {
+  Future<Result<FicheObjet>> decrire(Uint8List photo) async {
     recue = photo;
     return reponse;
   }
 
   @override
+  Future<Result<Product>> identify(Uint8List photo) async =>
+      throw UnimplementedError();
+
+  @override
   void abort() {}
 }
 
-const _produit = Product(
-  id: 'lampe',
-  title: 'Lampe Tolomeo',
-  brand: 'Artemide',
-  category: ProductCategory.decor,
-  averagePrice: 200,
-  currency: 'EUR',
+const _fiche = FicheObjet(
+  nom: 'Lampe de bureau articulée',
+  categorie: 'luminaire',
+  usage: 'Éclairer un plan de travail sans éblouir.',
 );
 
 final _photo = PickedPhoto(
@@ -177,7 +179,7 @@ void main() {
     await monter(
       tester,
       selecteur: _FauxSelecteur(),
-      depot: _FauxDepot(const Success(_produit)),
+      depot: _FauxDepot(const Success(_fiche)),
     );
     await stabiliser(tester);
     expect(find.text(AppStrings.pickPhoto), findsOneWidget);
@@ -185,7 +187,7 @@ void main() {
 
   testWidgets('une photo choisie mène à sa fiche', (tester) async {
     final selecteur = _FauxSelecteur(reponse: _photo);
-    final depot = _FauxDepot(const Success(_produit));
+    final depot = _FauxDepot(const Success(_fiche));
 
     await monter(tester, selecteur: selecteur, depot: depot);
     await stabiliser(tester);
@@ -194,13 +196,13 @@ void main() {
     expect(selecteur.appels, 1);
     // La photo choisie est bien celle qui part à l'identification.
     expect(depot.recue, _photo.bytes);
-    expect(find.byType(ProductDetailPage), findsOneWidget);
-    expect(find.text('Lampe Tolomeo'), findsOneWidget);
+    expect(find.byType(FicheObjetPage), findsOneWidget);
+    expect(find.text(_fiche.nom), findsOneWidget);
   });
 
   testWidgets('renoncer à choisir ne déclenche rien', (tester) async {
     final selecteur = _FauxSelecteur();
-    final depot = _FauxDepot(const Success(_produit));
+    final depot = _FauxDepot(const Success(_fiche));
 
     await monter(tester, selecteur: selecteur, depot: depot);
     await stabiliser(tester);
@@ -208,25 +210,27 @@ void main() {
 
     expect(selecteur.appels, 1);
     expect(depot.recue, isNull, reason: 'aucune identification lancée');
-    expect(find.byType(ProductDetailPage), findsNothing);
+    expect(find.byType(FicheObjetPage), findsNothing);
   });
 
-  testWidgets('la photo choisie est datée et rangée dans l\'historique', (
+  testWidgets('la photo choisie est datée et attachée à la fiche', (
     tester,
   ) async {
+    // Ces deux champs ne viennent pas du modèle : le cas d'usage les pose, et
+    // c'est ce qui garantit qu'une fiche est toujours datée quel que soit le
+    // chemin qui l'a produite. L'historique, lui, appartient au suivi de prix
+    // et attend la version deux — plus rien ne l'alimente depuis le viseur.
     final container = await monter(
       tester,
       selecteur: _FauxSelecteur(reponse: _photo),
-      depot: _FauxDepot(const Success(_produit)),
+      depot: _FauxDepot(const Success(_fiche)),
     );
     await stabiliser(tester);
     await toucher(tester, find.text(AppStrings.pickPhoto));
 
-    final historiqueLu = container
-        .read(favoritesLocalDataSourceProvider)
-        .readHistory();
-    expect(historiqueLu, hasLength(1));
-    expect(historiqueLu.single.imagePath, _photo.path);
-    expect(historiqueLu.single.capturedAt, isNotNull);
+    final obtenue = container.read(ficheControllerProvider).value;
+    expect(obtenue, isNotNull);
+    expect(obtenue!.imagePath, _photo.path);
+    expect(obtenue.capturedAt, isNotNull);
   });
 }

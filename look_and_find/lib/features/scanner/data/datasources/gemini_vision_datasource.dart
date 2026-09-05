@@ -19,8 +19,12 @@ import 'package:dio/dio.dart';
 import '../../../../core/constants/app_config.dart';
 import '../../../../core/network/app_exception.dart';
 import '../../../../core/utils/image_compressor.dart';
+import '../../../fiche_objet/data/models/fiche_objet_dto.dart';
+import '../../../fiche_objet/domain/entities/fiche_objet.dart';
 import '../../../product_detail/data/models/product_dto.dart';
 import '../../../product_detail/domain/entities/product.dart';
+import 'corps_requete.dart';
+import 'fiche_prompt.dart';
 import 'gemini_prompt.dart';
 
 class GeminiVisionDataSource {
@@ -50,6 +54,70 @@ class GeminiVisionDataSource {
   Future<Product> identify(Uint8List photo, {CancelToken? cancelToken}) async {
     if (_apiKey.isEmpty) throw const MissingApiKeyException();
 
+    final texte = await _demander(
+      photo,
+      GeminiPrompt.corpsRequete,
+      cancelToken: cancelToken,
+    );
+
+    final ProductDto dto;
+    try {
+      dto = ProductDto.decode(texte);
+    } on FormatException {
+      throw const UnreadableAnswerException(
+        'Réponse illisible du service d\'identification.',
+      );
+    }
+
+    final product = dto.toEntity();
+    if (product == null) throw const UnreadableAnswerException();
+    return product;
+  }
+
+  /// Décrire l'objet d'une photo — le parcours de la version un.
+  ///
+  /// Même appel, même enveloppe, autre invite : c'est le schéma de
+  /// [FichePrompt] qui décide de ce qui revient. La couleur n'est pas demandée
+  /// au modèle ; elle est mesurée sur la photo plus haut dans la chaîne.
+  Future<FicheObjet> decrire(
+    Uint8List photo, {
+    CancelToken? cancelToken,
+  }) async {
+    if (_apiKey.isEmpty) throw const MissingApiKeyException();
+
+    final texte = await _demander(
+      photo,
+      (base64) => enveloppeGemini(
+        instruction: FichePrompt.instruction,
+        schema: FichePrompt.responseSchema,
+        photoBase64: base64,
+      ),
+      cancelToken: cancelToken,
+    );
+
+    final FicheObjetDto dto;
+    try {
+      dto = FicheObjetDto.decode(texte);
+    } on FormatException {
+      throw const UnreadableAnswerException(
+        'Réponse illisible du service d\'identification.',
+      );
+    }
+
+    final fiche = dto.toEntity();
+    if (fiche == null) throw const UnreadableAnswerException();
+    return fiche;
+  }
+
+  /// Compresse, envoie, et rend le texte du modèle — la part qui ne dépend pas
+  /// de l'invite. La retenue de [lastRawAnswer] est ici, donc valable pour les
+  /// deux parcours : une réponse illisible est justement celle qu'on a le plus
+  /// besoin de pouvoir regarder, quel que soit ce qu'on avait demandé.
+  Future<String> _demander(
+    Uint8List photo,
+    Map<String, Object?> Function(String base64) corps, {
+    CancelToken? cancelToken,
+  }) async {
     final base64 = await ImageCompressor.toBase64Jpeg(photo);
 
     final Response<Map<String, dynamic>> response;
@@ -58,16 +126,21 @@ class GeminiVisionDataSource {
         '/models/${AppConfig.geminiModel}:generateContent',
         queryParameters: {'key': _apiKey},
         cancelToken: cancelToken,
-        data: GeminiPrompt.corpsRequete(base64),
+        data: corps(base64),
       );
     } on DioException catch (error) {
       throw AppException.from(error);
     }
 
-    return _parse(response.data);
+    return _texteBrut(response.data);
   }
 
-  Product _parse(Map<String, dynamic>? body) {
+  /// L'enveloppe de la réponse : ce qui est commun aux deux invites.
+  ///
+  /// Rend le texte du modèle, ou lève l'échec qui explique pourquoi il n'y en a
+  /// pas. Le décodage de ce texte appartient à l'appelant, seul à savoir quel
+  /// schéma il avait demandé.
+  String _texteBrut(Map<String, dynamic>? body) {
     if (body == null) throw const UnreadableAnswerException();
 
     // Photo refusée par les filtres de sécurité (visage, contenu sensible).
@@ -99,20 +172,6 @@ class GeminiVisionDataSource {
     // Retenue avant le décodage : une réponse illisible est justement celle
     // qu'on a le plus besoin de pouvoir regarder.
     _lastRawAnswer = text;
-
-    final ProductDto dto;
-    try {
-      dto = ProductDto.decode(text);
-    } on FormatException {
-      // `responseSchema` rend ce cas très improbable ; s'il survient, c'est un
-      // signal que le contrat avec l'API a changé, pas une mauvaise photo.
-      throw const UnreadableAnswerException(
-        'Réponse illisible du service d\'identification.',
-      );
-    }
-
-    final product = dto.toEntity();
-    if (product == null) throw const UnreadableAnswerException();
-    return product;
+    return text;
   }
 }

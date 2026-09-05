@@ -13,9 +13,16 @@ library;
 import 'dart:typed_data';
 
 import '../../../../core/utils/result.dart';
+import '../../../fiche_objet/domain/entities/fiche_objet.dart';
 import '../../../product_detail/domain/entities/product.dart';
 
 abstract interface class ScannerRepository {
+  /// Le parcours de la version un : décrire l'objet.
+  Future<Result<FicheObjet>> decrire(Uint8List photo);
+
+  /// Le parcours du comparateur, gardé pour la version deux. Hors du chemin de
+  /// l'application, mais toujours testé : le remettre en service doit coûter
+  /// une ligne de navigation, pas une réécriture.
   Future<Result<Product>> identify(Uint8List photo);
 
   void abort();
