@@ -55,7 +55,18 @@
     "dixièmes. La contrainte la plus dure a imposé de raccourcir une phrase :",
     "« Zéro blabla. Un bouton qui appelle. » durait 2,42 s, plus que la fenêtre",
     "du bouton ne le permettait. Elle est devenue « Un bouton qui appelle »,",
-    "1,41 s. Une phrase se coupe ; une page ne se déplace pas."
+    "1,41 s. Une phrase se coupe ; une page ne se déplace pas.",
+    "",
+    "LE SITE RESTE À L'ÉCRAN JUSQU'AU BOUT.",
+    "",
+    "La dalle reculait et le cadre s'assombrissait dès que le prix apparaissait —",
+    "on ne voyait plus le site du tout sur les sept dernières secondes. C'est une",
+    "faute de raisonnement, pas de réglage : sur un montage qui VEND le site,",
+    "l'effacer pour lire le prix revient à ranger l'argument au moment de conclure.",
+    "",
+    "`finale.recul` passe de 1,0 à 0,12 et `finale.voile` de 0,55 à 0,18. Le",
+    "bandeau sombre en haut du cadre suffit à détacher les cartons — il est donc",
+    "activé aussi sur le dernier, qui s'en passait."
   ],
   "T": {
     "etincelle": -1.2,
@@ -131,15 +142,16 @@
       "taille": 60,
       "lignes": [
         "ÉCRIS « SITE » EN COMMENTAIRE."
-      ]
+      ],
+      "bandeau": true
     }
   ],
   "signature": {
     "debut": 13.1,
     "texte": "ARTISAN EXPRESS",
-    "y": 640,
-    "trait": 750,
-    "taille": 80
+    "y": 495,
+    "trait": 560,
+    "taille": 70
   },
   "dalle": {
     "large": 528,
@@ -149,5 +161,9 @@
   "defilement": {
     "debut": 1.6,
     "fin": 8.5
+  },
+  "finale": {
+    "recul": 0.12,
+    "voile": 0.18
   }
 }

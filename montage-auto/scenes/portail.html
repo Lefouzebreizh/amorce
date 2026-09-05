@@ -73,6 +73,12 @@ const DEFAUT = {
      le site cache le seul argument de vente qu'on ait. Sans ce réglage, la
      dalle est centrée sur le cadre comme avant. */
   dalle: { large: 604, haut: 1130, hautEcran: null },
+  /* La fin. `recul` dit de combien la dalle s'efface quand le texte prend la
+     place, `voile` de combien le cadre s'assombrit. Les deux étaient câblés,
+     et c'était une erreur d'appréciation : sur un montage qui VEND le site,
+     l'effacer pour lire le prix revient à ranger l'argument au moment de
+     conclure. Le bandeau des cartons suffit à les détacher. */
+  finale: { recul: 1.0, voile: 0.55 },
   cartes: [
     { debut: 8.70,  fin: 10.35, lignes: ['CETTE VIDÉO A DEMANDÉ', 'DES HEURES.'], taille: 74 },
     { debut: 10.35, fin: 12.00, lignes: ['VOTRE SITE RECEVRA', 'LE MÊME SOIN.'],  taille: 74 }
@@ -97,6 +103,7 @@ const EM = T.lecture - T.emergence;
 const DEFILE = RECIT.defilement || { debut: T.lecture - 0.40, fin: T.message - 0.10 };
 const DECOR = RECIT.decor || DEFAUT.decor;
 const FOYERS = RECIT.foyers;
+const FINALE = Object.assign({}, DEFAUT.finale, RECIT.finale || {});
 
 /* Le foyer de l'instant t. Deux foyers voisins se rejoignent par la même
    courbe que le reste du montage : une caméra qui démarre et s'arrête sec se
@@ -363,7 +370,7 @@ function site(t, img) {
   if (em <= 0) return;
   const monte = sortie(em);
   /* au moment du message, elle recule dans la lumière au lieu de disparaître */
-  const recul = lisse(seg(t, T.message, T.message + 1.10));
+  const recul = lisse(seg(t, T.message, T.message + 1.10)) * FINALE.recul;
   /* Le foyer agrandit la DALLE, il ne grossit pas l'image dedans : la fenêtre
      de page montrée reste la même, seule la caméra s'approche. Grossir dans
      une dalle fixe donnerait une capture zoomée ; ici on avance. */
@@ -667,7 +674,7 @@ function dessiner(t) {
   /* Le voile du message. Sans lui, le texte de fin tombe sur la page qu'on
      vient de montrer et les deux deviennent illisibles ensemble. Il ne cache
      pas le site : il le met derrière. */
-  const voile = 0.55 * lisse(seg(t, T.message, T.message + 0.55));
+  const voile = FINALE.voile * lisse(seg(t, T.message, T.message + 0.55));
   if (voile > 0.002) {
     x.fillStyle = 'rgba(4,7,12,' + voile.toFixed(3) + ')';
     x.fillRect(0, 0, L, H);
