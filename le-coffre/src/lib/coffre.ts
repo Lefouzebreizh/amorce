@@ -96,7 +96,7 @@ export function composerLettreResiliation(
     `${referenceClient ? ` (référence client ${referenceClient})` : ''} souscrit auprès de ${emetteur}, ` +
     `pour des raisons qui me sont personnelles.\n\n` +
     `Je vous demande de prendre en compte cette résiliation avec effet au ${effet}, ` +
-    `et vous remercie de bien vouloir m'en confirmer la prise en compte par écrit.\n\n` +
+    `et vous remercie de bien vouloir m'en adresser une confirmation écrite.\n\n` +
     `Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.\n\n` +
     `${identite.nom}`;
 
@@ -104,10 +104,17 @@ export function composerLettreResiliation(
   const mentionsManquantes = [
     !referenceClient && "la référence client (non lue sur le document — à ajouter à la main si tu la connais)",
     !entier.includes(effet) && "la date d'effet",
-    // `confirm` et non `confirmation` : la lettre écrit « m'en confirmer la
-    // prise en compte par écrit ». Chercher le substantif signalait toujours
-    // manquante une mention qui y est — et une liste qui se trompe une fois
-    // sur trois ne se lit plus.
+    // `confirm` et non `confirmation`, et la raison a changé en cours de route
+    // — 05/09/2026. Deux sessions ont corrigé le même défaut par deux bouts
+    // opposés : l'une a réécrit la lettre pour qu'elle porte le substantif,
+    // l'autre a élargi la recherche au radical. Git a pris les deux moitiés
+    // sans conflit.
+    //
+    // On garde la recherche large, qui est la seule des deux à survivre à une
+    // reformulation : « confirmer », « confirmation », « confirmez » passent
+    // tous. Lier un contrôle au mot exact d'un texte qu'on réécrit un jour sur
+    // deux, c'est le refaire tomber au premier remaniement — et une liste de
+    // mentions manquantes qui se trompe ne se lit plus.
     !/confirm/i.test(entier) && "la demande de confirmation écrite",
   ].filter((m): m is string => Boolean(m));
 
@@ -174,7 +181,37 @@ export async function initialiserCoffre(userId: string, motDePasse: string): Pro
   return cle;
 }
 
+const TENTATIVES_MAX = 10;
+const FENETRE_MINUTES = 15;
+
+// Le serveur ne voit jamais la phrase secrète, donc jamais si CETTE tentative
+// a réussi au moment où elle a lieu — mais il peut compter les échecs
+// récents journalisés après coup, et refuser d'aller plus loin s'il y en a
+// trop. Un vérificateur chiffré à 600 000 itérations PBKDF2 est déjà lent à
+// attaquer ; ce compteur ajoute une deuxième barrière, côté serveur celle-là.
+async function tropDeTentatives(userId: string): Promise<boolean> {
+  const depuis = new Date(Date.now() - FENETRE_MINUTES * 60_000).toISOString();
+  const { count, error } = await supabase
+    .from('coffre_tentatives')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('reussie', false)
+    .gte('le', depuis);
+  if (error) return false; // une panne de journalisation ne doit pas bloquer un utilisateur légitime
+  return (count ?? 0) >= TENTATIVES_MAX;
+}
+
+async function journaliserTentative(userId: string, reussie: boolean): Promise<void> {
+  await supabase.from('coffre_tentatives').insert({ user_id: userId, reussie });
+}
+
 export async function deverrouillerCoffre(userId: string, motDePasse: string): Promise<CryptoKey> {
+  if (await tropDeTentatives(userId)) {
+    throw new Error(
+      `Trop de tentatives incorrectes. Réessaie dans ${FENETRE_MINUTES} minutes.`,
+    );
+  }
+
   const { data, error } = await supabase
     .from('coffre_cles')
     .select('sel, iterations, verificateur_iv, verificateur_texte')
@@ -186,7 +223,9 @@ export async function deverrouillerCoffre(userId: string, motDePasse: string): P
   const cle = await deriverCle(motDePasse, sel, iterationsSures(data.iterations));
   const paquetVerif = reempaqueterVerificateur(data.verificateur_iv, data.verificateur_texte);
   const texte = await dechiffrerTexte(cle, paquetVerif).catch(() => null);
-  if (texte !== TEXTE_VERIF) throw new Error('Phrase secrète incorrecte.');
+  const reussie = texte === TEXTE_VERIF;
+  await journaliserTentative(userId, reussie);
+  if (!reussie) throw new Error('Phrase secrète incorrecte.');
   return cle;
 }
 

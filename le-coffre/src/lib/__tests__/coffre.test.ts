@@ -89,6 +89,23 @@ describe('la lettre de résiliation', () => {
     assert.match(lettre.objet, /CL-42/);
   });
 
+  it('rend un brouillon utilisable même incomplet, jamais une exception', () => {
+    // Porté de la suite vitest retirée le 05/09/2026 : une lettre à laquelle il
+    // manque une mention reste une lettre. Refuser de la composer priverait
+    // l'utilisateur du brouillon au moment précis où il en a le plus besoin.
+    const lettre = coffre.composerLettreResiliation(IDENTITE, 'EDF', null, '2026-11-01');
+    assert.ok(lettre.corps.length > 0);
+  });
+
+  it('n’invente pas de référence client dans l’objet quand elle est inconnue', () => {
+    // Porté de la suite vitest. L'objet d'une lettre de résiliation est lu par
+    // un service courrier : une référence inventée y ferait plus de dégâts
+    // qu'une référence absente.
+    const inconnue = coffre.composerLettreResiliation(IDENTITE, 'EDF', null, '2026-11-01');
+    assert.equal(inconnue.objet.includes('réf. client'), false);
+    assert.equal(/REF|ABC|CL-/.test(inconnue.objet), false);
+  });
+
   it('signale la référence client quand elle n’a pas été lue', () => {
     const lettre = coffre.composerLettreResiliation(IDENTITE, 'Assureur X', null, '2026-11-15');
     assert.ok(lettre.mentionsManquantes.some((m) => m.includes('référence client')));
@@ -96,12 +113,18 @@ describe('la lettre de résiliation', () => {
   });
 
   it('ne réclame pas une mention que la lettre contient déjà', () => {
-    // La lettre demande « m'en confirmer la prise en compte par écrit ». La
-    // signaler manquante enverrait l'utilisateur ajouter à la main une phrase
-    // qui y est déjà — et userait la confiance dans la liste, qui n'a d'usage
-    // que si tout ce qu'elle nomme manque vraiment.
+    // Signaler manquante une mention qui y est enverrait l'utilisateur ajouter
+    // à la main une phrase déjà écrite — et userait la confiance dans la liste,
+    // qui n'a d'usage que si tout ce qu'elle nomme manque vraiment.
+    //
+    // **On cherche le radical, pas la formulation.** Ce test épinglait
+    // « m'en confirmer la prise en compte par écrit », et il est tombé le
+    // 05/09/2026 : une autre session avait réécrit la phrase en « m'en adresser
+    // une confirmation écrite ». Un test qui recopie le texte qu'il garde casse
+    // à chaque reformulation, et fait croire à une régression là où il n'y a
+    // qu'une tournure différente.
     const lettre = coffre.composerLettreResiliation(IDENTITE, 'Assureur X', 'CL-42', '2026-11-15');
-    assert.match(lettre.corps.toLowerCase(), /confirmer .*par écrit/);
+    assert.match(lettre.corps.toLowerCase(), /confirm/);
     assert.deepEqual(lettre.mentionsManquantes, []);
   });
 });

@@ -111,6 +111,25 @@ class Lecture:
 # Ne pas relire ce `DEMANDE` comme un progrès de la lecture : la tête n'en
 # sait pas plus qu'hier. C'est la carte qui a cessé de promettre plus que la
 # tête ne mesure.
+#
+# **La phrase « c'est un seul son » a été contredite le 05/09/2026, par la
+# première oreille qui l'ait vérifiée.** Le propriétaire a écouté un chat qui
+# réclame à manger et un chat qui veut sortir, et il a entendu **deux sons
+# différents**.
+#
+# Rien n'a bougé ici, et c'est délibéré. Ce qu'il a écouté, ce sont **deux
+# chats différents, dans deux maisons différentes** : la différence entendue
+# peut venir de l'animal autant que de l'intention, et une paire ne renverse
+# pas une décision de produit. Le référentiel, lui, range toujours les deux
+# sous un seul type, et cet argument-là tient sans l'oreille.
+#
+# Ce que ça change : la fusion cesse d'être évidente et devient une question
+# ouverte. Elle se tranche sur les neuf enregistrements `demande` du corpus
+# étiqueté — six réclament à manger, trois veulent sortir — en regardant si un
+# trait sépare les deux groupes **à travers des chats différents**. Tant que
+# cette mesure n'existe pas, on garde la carte unique : se tromper en fusionnant
+# coûte une carte de moins, se tromper en séparant fait dire à quelqu'un que son
+# chat veut sortir quand il a faim.
 CORRESPONDANCE: dict[TypeMiaulement, Intention] = {
     TypeMiaulement.REQUETE: Intention.DEMANDE,       # ne dit jamais *quoi*
     TypeMiaulement.SALUTATION: Intention.CONTENTEMENT,

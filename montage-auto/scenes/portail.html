@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<title>Portail — Artisan Express</title>
+<style>
+  html,body{margin:0;background:#000;overflow:hidden}
+  canvas{display:block;width:1080px;height:1920px}
+</style>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+/* ---------------------------------------------------------------------------
+   LE PORTAIL — l'ouverture d'Aznaroth, mais ce qui en sort est un site.
+
+   Une seule fonction compte ici : `dessiner(t)`, qui peint l'image de l'instant
+   `t` (en secondes) et ne dépend de RIEN d'autre. Pas d'horloge, pas de
+   requestAnimationFrame, pas de Math.random. C'est ce qui permet à
+   `rendre_scene.py` de fabriquer 402 images identiques à chaque exécution :
+   une scène qui se rejoue autrement à chaque rendu n'est pas montable.
+
+   Tout le hasard passe par `graine()`. Toutes les durées sont en secondes et
+   nommées en haut, parce qu'un montage se règle en déplaçant des bornes, pas
+   en cherchant des nombres au milieu du code.
+--------------------------------------------------------------------------- */
+
+const L = 1080, H = 1920, CX = L / 2, CY = H / 2;
+const cvs = document.getElementById('c');
+const x = cvs.getContext('2d', { alpha: false });
+
+/* --- La charte d'Aznaroth. Relevée dans montage-auto/references/*.json ----- */
+const CYAN  = '#00E5FF';
+const HALO  = '#0090ff';
+const COEUR = '#eafcff';
+const ENCRE = '#04070c';
+
+/* --- Les bornes du montage ------------------------------------------------ */
+const T = {
+  etincelle : 0.00,   // l'étincelle fonce sur nous
+  anneaux   : 0.30,   // les trois anneaux claquent en place
+  fracture  : 1.30,   // le centre se déchire
+  ouverture : 2.00,   // la déchirure s'élargit, le vortex prend
+  emergence : 3.40,   // le site monte hors de la lumière
+  lecture   : 5.60,   // on peut le lire, il défile
+  message   : 8.40,   // il recule, le texte prend la place
+  fin       : 13.40
+};
+const DUREE = T.fin;
+
+/* --- La zone sûre, câblée. CLAUDE.md §2 : 12 % à 45 % de la hauteur, soit
+       230 à 865 sur 1920. C'est l'intersection des trois plateformes, pas la
+       plus permissive. Aucun texte ne sort d'ici. ------------------------- */
+const ZONE = { haut: 230, bas: 865 };
+
+/* --- Hasard reproductible (mulberry32) ------------------------------------ */
+function graine(s) {
+  return function () {
+    s |= 0; s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/* --- Fondus ---------------------------------------------------------------- */
+const borne  = u => u < 0 ? 0 : u > 1 ? 1 : u;
+const seg    = (t, a, b) => borne((t - a) / (b - a));
+const lisse  = u => { u = borne(u); return u * u * (3 - 2 * u); };
+const sortie = u => 1 - Math.pow(1 - borne(u), 3);
+const entree = u => Math.pow(borne(u), 3);
+/* rebond court : dépasse la cible puis revient. C'est lui qui fait « claquer »
+   les anneaux au lieu de les faire arriver mollement. */
+const claque = u => { u = borne(u); const c = 1.9; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); };
+
+/* --- La secousse. Une impulsion qui décroît, jamais un bruit permanent : une
+       caméra qui tremble tout le temps ne tremble plus. --------------------- */
+const CHOCS = [
+  { instant: 0.00, force: 26, duree: 0.30 },
+  { instant: 1.30, force: 54, duree: 0.55 },
+  { instant: 2.02, force: 22, duree: 0.40 },
+  { instant: 4.75, force: 46, duree: 0.60 }
+];
+function secousse(t) {
+  const h = graine(Math.floor(t * 120) + 7);
+  let ax = 0, ay = 0;
+  for (const c of CHOCS) {
+    const u = (t - c.instant) / c.duree;
+    if (u < 0 || u > 1) continue;
+    const a = c.force * Math.pow(1 - u, 2.2);
+    ax += (h() - 0.5) * 2 * a;
+    ay += (h() - 0.5) * 2 * a;
+  }
+  return [ax, ay];
+}
+
+/* --- Le grain, fabriqué une fois puis déplacé image par image -------------- */
+let GRAIN = null;
+function grain() {
+  if (GRAIN) return GRAIN;
+  const n = 512, g = document.createElement('canvas');
+  g.width = g.height = n;
+  const gc = g.getContext('2d'), im = gc.createImageData(n, n), h = graine(4242);
+  for (let i = 0; i < n * n; i++) {
+    const v = 110 + (h() - 0.5) * 150;
+    im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = v;
+    im.data[i * 4 + 3] = 255;
+  }
+  gc.putImageData(im, 0, 0);
+  return (GRAIN = g);
+}
+
+/* --- Les braises. Elles tombent vers le centre, puis le portail les souffle - */
+const BRAISES = (() => {
+  const h = graine(91), lot = [];
+  for (let i = 0; i < 240; i++) {
+    lot.push({
+      angle: h() * Math.PI * 2,
+      rayon: 260 + h() * 1250,
+      vitesse: 0.35 + h() * 1.0,
+      taille: 1.1 + h() * 3.4,
+      scintille: h() * 6.28
+    });
+  }
+  return lot;
+})();
+
+function braises(t) {
+  const souffle = Math.pow(seg(t, 1.30, 4.60), 1.7);
+  x.globalCompositeOperation = 'lighter';
+  for (const b of BRAISES) {
+    const r = Math.max(14, b.rayon - b.vitesse * t * 62 + souffle * 1250 * b.vitesse);
+    const a = b.angle + t * 0.16 * b.vitesse + souffle * 0.5;
+    const px = CX + Math.cos(a) * r, py = CY + Math.sin(a) * r * 1.35;
+    if (px < -40 || px > L + 40 || py < -40 || py > H + 40) continue;
+    const bat = 0.55 + 0.45 * Math.sin(t * 7 + b.scintille);
+    const proche = borne(1 - r / 1500);
+    x.globalAlpha = 0.30 * bat * proche;
+    x.fillStyle = COEUR;
+    x.beginPath();
+    x.arc(px, py, b.taille * (0.6 + proche), 0, 6.284);
+    x.fill();
+  }
+  x.globalAlpha = 1;
+  x.globalCompositeOperation = 'source-over';
+}
+
+/* --- Les anneaux ----------------------------------------------------------- */
+const ANNEAUX = [
+  { rayon: 196, arrivee: 0.30, sens:  1, traits: 18, epaisseur: 7 },
+  { rayon: 306, arrivee: 0.56, sens: -1, traits: 26, epaisseur: 9 },
+  { rayon: 428, arrivee: 0.84, sens:  1, traits: 12, epaisseur: 5 }
+];
+
+function anneaux(t) {
+  x.globalCompositeOperation = 'lighter';
+  ANNEAUX.forEach((an, i) => {
+    const u = seg(t, an.arrivee, an.arrivee + 0.42);
+    if (u <= 0) return;
+    /* après la fracture les anneaux s'écartent et s'éteignent : ils ont fait
+       leur travail, et rien ne doit rester devant le portail. */
+    const fuite = Math.pow(seg(t, 1.30, 3.60), 1.6);
+    const r = an.rayon * claque(u) * (1 + fuite * 2.1);
+    const vie = (1 - fuite) * lisse(seg(t, an.arrivee, an.arrivee + 0.16));
+    if (vie <= 0.01) return;
+    const rot = t * an.sens * (0.55 + i * 0.22) + fuite * an.sens * 5.5;
+
+    for (const [dx, dy, teinte] of [[-2.5, 0, 'rgba(255,40,90,'], [2.5, 0, 'rgba(0,255,190,'], [0, 0, 'rgba(0,229,255,']]) {
+      x.save();
+      x.translate(CX + dx, CY + dy);
+      x.rotate(rot);
+      x.lineWidth = an.epaisseur * (0.7 + 0.3 * vie);
+      x.lineCap = 'round';
+      x.shadowColor = HALO;
+      x.shadowBlur = 60 * vie;
+      const pas = (Math.PI * 2) / an.traits, plein = pas * 0.62;
+      for (let k = 0; k < an.traits; k++) {
+        const bat = 0.72 + 0.28 * Math.sin(t * 4 + k * 1.7 + i);
+        x.strokeStyle = teinte + (0.80 * vie * bat).toFixed(3) + ')';
+        x.beginPath();
+        x.arc(0, 0, r, k * pas, k * pas + plein);
+        x.stroke();
+      }
+      x.restore();
+    }
+  });
+  x.shadowBlur = 0;
+  x.globalCompositeOperation = 'source-over';
+}
+
+/* --- Le portail : la déchirure, puis le vortex ----------------------------- */
+function portail(t) {
+  const haut = 1250 * sortie(seg(t, 1.28, 2.00));
+  if (haut <= 1) return 0;
+  const large = 10 + 560 * Math.pow(seg(t, 1.98, 4.20), 1.55);
+  /* Il se REFERME, il ne rétrécit pas de 30 %. Premier jet : l'anneau du
+     portail restait assez large pour traverser la dalle et le texte de fin —
+     un trait blanc en travers de « ARTISAN EXPRESS ». Une porte qui s'est
+     ouverte doit se refermer sur ce qu'elle a laissé passer. */
+  const ferme = lisse(seg(t, T.message, T.message + 1.30));
+  const rx = large * 0.5 * (1 - 0.88 * ferme);
+  const ry = haut * 0.5 * (1 - 0.94 * ferme);
+
+  x.globalCompositeOperation = 'lighter';
+
+  /* le halo, large et doux : c'est lui qui éclaire tout le cadre */
+  const ampleur = Math.max(rx, ry, 250 * ferme);
+  const halo = x.createRadialGradient(CX, CY, 0, CX, CY, ampleur * 2.6);
+  halo.addColorStop(0.00, 'rgba(190,250,255,0.85)');
+  halo.addColorStop(0.18, 'rgba(0,229,255,0.42)');
+  halo.addColorStop(0.55, 'rgba(0,144,255,0.16)');
+  halo.addColorStop(1.00, 'rgba(0,60,120,0)');
+  x.fillStyle = halo;
+  x.beginPath(); x.ellipse(CX, CY, ampleur * 2.6, ampleur * 2.6, 0, 0, 6.284); x.fill();
+
+  /* les rais : ce qui donne le volume. Ils tournent, ils battent. */
+  const rais = graine(303);
+  x.save(); x.translate(CX, CY);
+  for (let k = 0; k < 44; k++) {
+    const a0 = rais() * 6.284, v = 0.10 + rais() * 0.34, ep = 0.006 + rais() * 0.030;
+    const a = a0 + t * v * (k % 2 ? 1 : -1);
+    const bat = 0.35 + 0.65 * Math.abs(Math.sin(t * 1.6 + a0 * 3));
+    const lg = (rx * 1.3 + rais() * 900) * (0.5 + 0.5 * seg(t, 2.0, 4.2));
+    const g = x.createLinearGradient(0, 0, Math.cos(a) * lg, Math.sin(a) * lg);
+    g.addColorStop(0, 'rgba(230,252,255,' + (0.20 * bat).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(0,180,255,0)');
+    x.fillStyle = g;
+    x.beginPath();
+    x.moveTo(0, 0);
+    x.lineTo(Math.cos(a - ep) * lg, Math.sin(a - ep) * lg);
+    x.lineTo(Math.cos(a + ep) * lg, Math.sin(a + ep) * lg);
+    x.closePath(); x.fill();
+  }
+  x.restore();
+
+  /* la déchirure elle-même, en trois couches décalées : l'aberration
+     chromatique est ici, sur le bord le plus lumineux du cadre. */
+  for (const [dx, teinte, ech] of [[-4, 'rgba(255,60,110,0.55)', 1.02],
+                                   [ 4, 'rgba(60,255,210,0.55)', 1.02],
+                                   [ 0, 'rgba(235,253,255,0.95)', 1.00]]) {
+    const g = x.createRadialGradient(CX + dx, CY, 0, CX + dx, CY, Math.max(rx, ry));
+    g.addColorStop(0.0, teinte);
+    g.addColorStop(0.5, teinte.replace(/[\d.]+\)$/, '0.30)'));
+    g.addColorStop(1.0, 'rgba(0,0,0,0)');
+    x.fillStyle = g;
+    x.beginPath(); x.ellipse(CX + dx, CY, rx * ech, ry * ech, 0, 0, 6.284); x.fill();
+  }
+
+  /* Le cœur. Il a d'abord été peint plein et opaque : à l'écran, un œuf blanc
+     de 1,6 s au milieu du cadre, où il ne se passait plus rien. Un portail
+     n'est pas une lampe — c'est un bord lumineux autour d'un dedans qu'on
+     devine. D'où un anneau net et un intérieur seulement voilé, à travers
+     lequel la dalle monte. */
+  const chaud = borne(seg(t, 1.9, 2.7)) * (1 - ferme);
+  x.fillStyle = 'rgba(255,255,255,' + (0.42 * chaud).toFixed(3) + ')';
+  x.beginPath(); x.ellipse(CX, CY, rx * 0.60, ry * 0.66, 0, 0, 6.284); x.fill();
+  x.lineWidth = 10 + 12 * chaud;
+  x.strokeStyle = 'rgba(255,255,255,' + (0.85 * chaud).toFixed(3) + ')';
+  x.shadowColor = CYAN; x.shadowBlur = 70;
+  x.beginPath(); x.ellipse(CX, CY, rx * 0.86, ry * 0.90, 0, 0, 6.284); x.stroke();
+  x.shadowBlur = 0;
+
+  x.globalCompositeOperation = 'source-over';
+  return Math.max(rx, ry);
+}
+
+/* --- Le site qui sort de la lumière ---------------------------------------- */
+const DALLE = { large: 604, haut: 1130 };
+
+function coinsArrondis(px, py, w, h, r) {
+  x.beginPath();
+  x.moveTo(px + r, py);
+  x.arcTo(px + w, py, px + w, py + h, r);
+  x.arcTo(px + w, py + h, px, py + h, r);
+  x.arcTo(px, py + h, px, py, r);
+  x.arcTo(px, py, px + w, py, r);
+  x.closePath();
+}
+
+function site(t, img) {
+  const em = seg(t, T.emergence, T.emergence + 2.2);
+  if (em <= 0) return;
+  const monte = sortie(em);
+  /* au moment du message, elle recule dans la lumière au lieu de disparaître */
+  const recul = lisse(seg(t, T.message, T.message + 1.10));
+  const ech = (0.14 + 0.86 * monte) * (1 - 0.40 * recul);
+  const w = DALLE.large * ech, h = DALLE.haut * ech;
+  const cy = CY + 150 * (1 - monte) + 330 * recul;
+  const px = CX - w / 2, py = cy - h / 2;
+  const opacite = (1 - 0.58 * recul);
+
+  x.save();
+  x.globalAlpha = opacite;
+
+  /* l'ombre portée par le portail : elle assoit la dalle dans la lumière */
+  x.shadowColor = 'rgba(0,0,0,0.75)';
+  x.shadowBlur = 60 * ech; x.shadowOffsetY = 22 * ech;
+  coinsArrondis(px, py, w, h, 26 * ech);
+  x.fillStyle = ENCRE; x.fill();
+  x.shadowBlur = 0; x.shadowOffsetY = 0;
+
+  /* la page réelle, découpée aux coins */
+  x.save();
+  coinsArrondis(px, py, w, h, 26 * ech);
+  x.clip();
+  const ratio = w / img.width;
+  const visible = h / ratio;
+  const defile = 1020 * lisse(seg(t, 5.95, T.message));
+  const sy = Math.min(defile, Math.max(0, img.height - visible));
+  x.drawImage(img, 0, sy, img.width, visible, px, py, w, h);
+  /* tant qu'elle n'a pas fini de monter, elle est encore faite de lumière */
+  const voile = 1 - lisse(seg(em, 0.18, 0.62));
+  if (voile > 0.002) {
+    x.globalCompositeOperation = 'lighter';
+    x.fillStyle = 'rgba(215,250,255,' + (voile * 0.98).toFixed(3) + ')';
+    x.fillRect(px, py, w, h);
+    x.globalCompositeOperation = 'source-over';
+  }
+  x.restore();
+
+  /* le liseré cyan : c'est lui qui rattache la dalle à l'univers */
+  x.globalCompositeOperation = 'lighter';
+  x.lineWidth = 3.2 * ech;
+  x.strokeStyle = 'rgba(0,229,255,0.85)';
+  x.shadowColor = CYAN; x.shadowBlur = 34 * ech;
+  coinsArrondis(px, py, w, h, 26 * ech);
+  x.stroke();
+  x.shadowBlur = 0;
+  x.globalCompositeOperation = 'source-over';
+  x.restore();
+  x.globalAlpha = 1;
+}
+
+/* --- L'étincelle. Les trois premières secondes n'ont pas droit à un plan
+       fixe, et la toute première image encore moins : c'est elle qui décide
+       si la vidéo est regardée. Le premier jet ouvrait sur du noir pendant
+       trois dixièmes de seconde — trois dixièmes de rien, en haut du fil.
+       Une comète arrive donc du hors-champ dès l'image zéro. -------------- */
+const DEPART = [1004, 92];
+
+function etincelle(t) {
+  const u = seg(t, 0, 0.34);
+  if (u >= 1) return;
+  x.globalCompositeOperation = 'lighter';
+  for (let k = 25; k >= 0; k--) {
+    /* la traînée remonte AVANT le départ, donc hors du cadre : c'est ce qui
+       fait qu'à l'image zéro la comète vient déjà de quelque part. */
+    const uk = u - k * 0.013;
+    const e = uk >= 0 ? Math.pow(uk, 1.5) : uk * 1.35;
+    const tx = DEPART[0] + (CX - DEPART[0]) * e, ty = DEPART[1] + (CY - DEPART[1]) * e;
+    x.globalAlpha = 0.62 * (1 - k / 26);
+    x.fillStyle = k < 6 ? COEUR : CYAN;
+    x.beginPath(); x.arc(tx, ty, 15 * (1 - k / 32) + 2.5, 0, 6.284); x.fill();
+  }
+  const e = Math.pow(u, 1.5);
+  const px = DEPART[0] + (CX - DEPART[0]) * e, py = DEPART[1] + (CY - DEPART[1]) * e;
+  x.globalAlpha = 1;
+  const g = x.createRadialGradient(px, py, 0, px, py, 130);
+  g.addColorStop(0.00, 'rgba(255,255,255,0.95)');
+  g.addColorStop(0.30, 'rgba(0,229,255,0.50)');
+  g.addColorStop(1.00, 'rgba(0,144,255,0)');
+  x.fillStyle = g;
+  x.beginPath(); x.arc(px, py, 130, 0, 6.284); x.fill();
+  x.globalAlpha = 1;
+  x.globalCompositeOperation = 'source-over';
+}
+
+/* L'impact : c'est lui qui allume le premier anneau. */
+function eclat(t) {
+  const u = seg(t, 0.30, 0.64);
+  if (u <= 0 || u >= 1) return;
+  const a = Math.pow(1 - u, 1.8), r = 130 + 1020 * sortie(u);
+  x.globalCompositeOperation = 'lighter';
+  const g = x.createRadialGradient(CX, CY, 0, CX, CY, r);
+  g.addColorStop(0.00, 'rgba(255,255,255,' + (0.95 * a).toFixed(3) + ')');
+  g.addColorStop(0.42, 'rgba(0,229,255,' + (0.52 * a).toFixed(3) + ')');
+  g.addColorStop(1.00, 'rgba(0,120,255,0)');
+  x.fillStyle = g;
+  x.beginPath(); x.arc(CX, CY, r, 0, 6.284); x.fill();
+  x.globalCompositeOperation = 'source-over';
+}
+
+/* --- Le voile de devant. La dalle est dessinée par-dessus le portail, donc
+       collée dessus ; ce voile la remet DEDANS. C'est la différence entre un
+       site qui apparaît dans la lumière et un site posé sur un fond. ------ */
+function voileAvant(t) {
+  const em = seg(t, T.emergence, T.emergence + 2.2);
+  const f = (1 - lisse(seg(em, 0.05, 0.72))) * lisse(seg(t, 1.90, 2.45));
+  if (f <= 0.003) return;
+  x.globalCompositeOperation = 'lighter';
+  const g = x.createRadialGradient(CX, CY, 0, CX, CY, 960);
+  g.addColorStop(0.00, 'rgba(235,253,255,' + (0.46 * f).toFixed(3) + ')');
+  g.addColorStop(0.50, 'rgba(0,229,255,' + (0.18 * f).toFixed(3) + ')');
+  g.addColorStop(1.00, 'rgba(0,0,0,0)');
+  x.fillStyle = g;
+  x.fillRect(0, 0, L, H);
+  x.globalCompositeOperation = 'source-over';
+}
+
+/* --- Le texte. Il ne sort jamais de la zone sûre. -------------------------- */
+const CARTES = [
+  { debut: 8.70,  fin: 10.35, lignes: ['CETTE VIDÉO A DEMANDÉ', 'DES HEURES.'], taille: 74 },
+  { debut: 10.35, fin: 12.00, lignes: ['VOTRE SITE RECEVRA', 'LE MÊME SOIN.'],  taille: 74 }
+];
+
+function ligneCentree(texte, py, taille, teinte, halo, espacement) {
+  x.font = '700 ' + taille + 'px "Liberation Sans","DejaVu Sans",sans-serif';
+  x.textAlign = 'center';
+  x.textBaseline = 'middle';
+  x.letterSpacing = espacement + 'px';
+  x.lineJoin = 'round';
+  x.lineWidth = Math.max(6, taille * 0.13);
+  x.strokeStyle = 'rgba(2,8,14,0.88)';
+  x.strokeText(texte, CX, py);
+  x.shadowColor = halo; x.shadowBlur = 26;
+  x.fillStyle = teinte;
+  x.fillText(texte, CX, py);
+  x.shadowBlur = 0;
+  x.letterSpacing = '0px';
+}
+
+function textes(t) {
+  for (const c of CARTES) {
+    const v = Math.min(seg(t, c.debut, c.debut + 0.26), 1 - seg(t, c.fin - 0.22, c.fin));
+    if (v <= 0.001) continue;
+    const e = lisse(v);
+    const glisse = (1 - e) * 26;
+    x.save();
+    x.globalAlpha = e;
+    const interligne = c.taille * 1.24;
+    const y0 = 390 - (c.lignes.length - 1) * interligne / 2;
+    c.lignes.forEach((l, i) => ligneCentree(l, y0 + i * interligne + glisse, c.taille, '#f4fbff', HALO, 2));
+    x.restore();
+  }
+
+  /* ARTISAN EXPRESS — la signature, au moment précis du message */
+  const s = seg(t, 11.90, 12.30);
+  if (s > 0) {
+    const e = lisse(s);
+    x.save();
+    x.globalAlpha = e;
+    /* un trait qui s'ouvre sous le nom, plutôt qu'un logo qu'on n'a pas */
+    const lg = 300 * e;
+    x.globalCompositeOperation = 'lighter';
+    x.strokeStyle = 'rgba(0,229,255,0.9)';
+    x.lineWidth = 4; x.shadowColor = CYAN; x.shadowBlur = 24;
+    x.beginPath(); x.moveTo(CX - lg, 722); x.lineTo(CX + lg, 722); x.stroke();
+    x.shadowBlur = 0;
+    x.globalCompositeOperation = 'source-over';
+    ligneCentree('ARTISAN EXPRESS', 612 - (1 - e) * 16, 84, '#eafcff', CYAN, 9);
+    x.restore();
+  }
+}
+
+/* --- Finition : vignettage et grain, dans cet ordre et en dernier ---------- */
+function finition(t) {
+  const v = x.createRadialGradient(CX, CY * 0.92, 260, CX, CY, 1180);
+  v.addColorStop(0, 'rgba(0,0,0,0)');
+  v.addColorStop(1, 'rgba(0,0,0,0.62)');
+  x.fillStyle = v;
+  x.fillRect(0, 0, L, H);
+
+  const h = graine(Math.floor(t * 30) + 1);
+  x.save();
+  x.globalAlpha = 0.055;
+  x.globalCompositeOperation = 'overlay';
+  const g = grain(), ox = -Math.floor(h() * 512), oy = -Math.floor(h() * 512);
+  for (let px = ox; px < L; px += 512) for (let py = oy; py < H; py += 512) x.drawImage(g, px, py);
+  x.restore();
+}
+
+/* --- L'image de l'instant t ------------------------------------------------ */
+function dessiner(t) {
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  x.globalAlpha = 1;
+  x.globalCompositeOperation = 'source-over';
+  x.fillStyle = ENCRE;
+  x.fillRect(0, 0, L, H);
+
+  /* la caméra : elle avance sans arrêt, plus vite au moment du choc */
+  const avance = 1 + 0.13 * lisse(seg(t, 0, T.lecture)) + 0.06 * seg(t, T.lecture, T.fin) + 0.05 * Math.pow(1 - borne(seg(t, 1.30, 2.10)), 2);
+  const [sx, sy] = secousse(t);
+  x.save();
+  x.translate(CX + sx, CY + sy);
+  x.scale(avance, avance);
+  x.translate(-CX, -CY);
+
+  etincelle(t);
+  braises(t);
+  eclat(t);
+  anneaux(t);
+  portail(t);
+  site(t, window.__SITE__);
+  voileAvant(t);
+
+  x.restore();
+
+  /* Le voile du message. Sans lui, le texte de fin tombe sur la page qu'on
+     vient de montrer et les deux deviennent illisibles ensemble. Il ne cache
+     pas le site : il le met derrière. */
+  const voile = 0.55 * lisse(seg(t, T.message, T.message + 0.55));
+  if (voile > 0.002) {
+    x.fillStyle = 'rgba(4,7,12,' + voile.toFixed(3) + ')';
+    x.fillRect(0, 0, L, H);
+  }
+
+  textes(t);
+  finition(t);
+}
+
+window.dessiner = dessiner;
+window.DUREE = DUREE;
+
+/* --- Le chargement de la capture, promis à Playwright ---------------------- */
+window.pret = new Promise(resolve => {
+  const p = new URLSearchParams(location.search);
+  const src = p.get('site') || 'site.png';
+  const img = new Image();
+  img.onload = () => { window.__SITE__ = img; resolve(true); };
+  img.onerror = () => resolve(false);
+  img.src = src;
+});
+</script>
+</html>
