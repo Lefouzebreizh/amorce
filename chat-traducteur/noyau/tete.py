@@ -112,24 +112,32 @@ class Lecture:
 # sait pas plus qu'hier. C'est la carte qui a cessé de promettre plus que la
 # tête ne mesure.
 #
-# **La phrase « c'est un seul son » a été contredite le 05/09/2026, par la
-# première oreille qui l'ait vérifiée.** Le propriétaire a écouté un chat qui
-# réclame à manger et un chat qui veut sortir, et il a entendu **deux sons
+# **La phrase « c'est un seul son » est fausse pour une oreille humaine, et la
+# carte unique reste juste quand même — 05/09/2026.** Les deux moitiés tiennent
+# ensemble, et c'est tout l'intérêt de les écrire côte à côte.
+#
+# Le propriétaire a écouté les enregistrements `demande` du corpus étiqueté et
+# tranché sans ambiguïté : **« chaque son est différent, on reconnaît quand il a
+# faim, on reconnaît quand il sort. »** L'affirmation du référentiel — un seul
+# type de miaulement — ne décrit donc pas ce qu'un humain entend.
+#
+# Et il a maintenu la carte unique. Ce n'est pas une contradiction : **il ne
+# distingue pas avec ce que la tête mesure.** Un humain reconnaît au timbre, au
+# contexte, à l'heure, à la pièce, au chat qu'il connaît depuis six ans. La tête,
+# elle, ne lit que deux grandeurs — hauteur et durée — et rien dans les mesures
+# ne montre qu'elles séparent les deux groupes **à travers des chats
 # différents**.
 #
-# Rien n'a bougé ici, et c'est délibéré. Ce qu'il a écouté, ce sont **deux
-# chats différents, dans deux maisons différentes** : la différence entendue
-# peut venir de l'animal autant que de l'intention, et une paire ne renverse
-# pas une décision de produit. Le référentiel, lui, range toujours les deux
-# sous un seul type, et cet argument-là tient sans l'oreille.
+# Ce qui change par rapport au 04/09 est donc la **raison**, pas la décision.
+# Hier : « on fusionne parce qu'on croit que c'est un seul son. » Aujourd'hui :
+# « on fusionne parce que ce sont deux sons que *nous* ne savons pas séparer. »
+# La seconde est plus honnête et plus solide — elle ne repose plus sur une
+# affirmation du référentiel qu'une oreille vient de démentir.
 #
-# Ce que ça change : la fusion cesse d'être évidente et devient une question
-# ouverte. Elle se tranche sur les neuf enregistrements `demande` du corpus
-# étiqueté — six réclament à manger, trois veulent sortir — en regardant si un
-# trait sépare les deux groupes **à travers des chats différents**. Tant que
-# cette mesure n'existe pas, on garde la carte unique : se tromper en fusionnant
-# coûte une carte de moins, se tromper en séparant fait dire à quelqu'un que son
-# chat veut sortir quand il a faim.
+# **Ce qui rouvrirait la question**, et rien d'autre : un trait mesurable qui
+# sépare les deux groupes sur plusieurs animaux. Tant qu'il n'existe pas, se
+# tromper en fusionnant coûte une carte de moins ; se tromper en séparant fait
+# dire à quelqu'un que son chat veut sortir quand il a faim.
 CORRESPONDANCE: dict[TypeMiaulement, Intention] = {
     TypeMiaulement.REQUETE: Intention.DEMANDE,       # ne dit jamais *quoi*
     TypeMiaulement.SALUTATION: Intention.CONTENTEMENT,
