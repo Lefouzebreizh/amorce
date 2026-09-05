@@ -15,6 +15,25 @@ soit un montant dont on ignore s'il est grave.
 cinq points d'écart, arbitrer coûte plus en frais et en impôt que la discipline
 ne rapporte. C'est pourquoi « aucun écart hors bande » se dit franchement — un
 écran sans action doit se lire comme un feu vert, jamais comme une panne.
+
+**Et cette bande est absolue, donc elle ment sur les petites cibles.** Mesuré
+le 05/09/2026 sur le profil validé — bourse 1 %, crypto 3,5 %, immobilier 95 %,
+liquidités 0,5 % —, cinq points en valeur absolue tolèrent :
+
+| poche | cible | part encore tolérée | soit |
+| --- | --- | --- | --- |
+| liquidités | 0,5 % | 5,5 % | **onze fois la cible** |
+| bourse | 1 % | 6 % | six fois |
+| crypto | 3,5 % | 8,5 % | 2,4 fois |
+| immobilier | 95 % | 100 % | 1,05 fois |
+
+Vérifié sur ce moteur, avec un patrimoine fabriqué de 220 000 € : une poche de liquidités à
+10 780 € au lieu des 1 100 € visés sort « dans la bande », rien à faire. Ce
+n'est pas un défaut de calcul — `ecart_pts` est juste — c'est le seuil qui
+n'a de sens que pour les poches larges. Une bande **relative** (jamais plus de
+la moitié de la cible, avec un plancher de 0,5 pt) le corrigerait ; elle n'est
+pas posée ici parce qu'elle change ce que l'outil recommande, et cette
+décision-là appartient au propriétaire.
 """
 
 from __future__ import annotations

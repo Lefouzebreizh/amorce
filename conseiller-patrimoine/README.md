@@ -142,6 +142,16 @@ arbitrer coûte plus en frais et en impôt que la discipline ne rapporte. Et
 « ne rien faire » s'écrit en toutes lettres : un écran sans action doit se lire
 comme un feu vert, jamais comme une panne.
 
+**Mais la bande est absolue, et sur une petite cible elle ne veut plus rien
+dire.** Mesuré le 05/09/2026 sur le profil validé — bourse 1 %, crypto 3,5 %,
+immobilier 95 %, liquidités 0,5 % : cinq points laissent la poche de liquidités
+monter jusqu'à 5,5 %, soit **onze fois sa cible**, sans qu'un seul écart sorte
+de la bande. Sur un patrimoine fabriqué de 220 000 €, cela fait 10 780 € de
+trésorerie dormante que l'outil déclare conformes. La bourse en tolère six
+fois, la crypto 2,4 fois ; seul l'immobilier, large, est correctement gardé.
+Le calcul est juste, c'est le seuil qui ne l'est que pour les poches larges —
+le détail et la parade envisagée sont dans l'en-tête d'`analyse/ecarts.py`.
+
 **Un prix manquant ne s'invente pas.** Une ligne sans cours vaut `None`, jamais
 zéro, et n'entre pas dans le total — que le rapport annonce alors partiel. Le
 conseil, lui, est **retenu** : une répartition calculée sur un total incomplet

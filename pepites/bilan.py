@@ -98,7 +98,8 @@ class Parcours:
         return self.symbole or "?"
 
 
-def parcours(memoire: Memoire, note_minimale: float = 0.0) -> list[Parcours]:
+def parcours(memoire: Memoire, note_minimale: float = 0.0,
+             temoins: bool = False) -> list[Parcours]:
     """Un `Parcours` par jeton relevé, du mieux noté au moins bien.
 
     La lecture se fait en un seul passage trié plutôt qu'en une requête par
@@ -108,7 +109,8 @@ def parcours(memoire: Memoire, note_minimale: float = 0.0) -> list[Parcours]:
     """
     lignes = memoire.connexion.execute(
         "SELECT chaine, adresse, symbole, vu_le, prix_usd, note "
-        "FROM releves ORDER BY chaine, adresse, vu_le"
+        "FROM releves WHERE temoin = ? ORDER BY chaine, adresse, vu_le",
+        (int(temoins),),
     ).fetchall()
 
     groupes: dict[tuple[str, str], list] = {}
@@ -191,8 +193,16 @@ def _age(dernier: datetime, maintenant: datetime) -> str:
 
 
 def tableau(liste: list[Parcours], verdict: Verdict,
-            maintenant: datetime | None = None) -> str:
-    """Le bulletin, en texte. Rend toujours quelque chose de lisible, même vide."""
+            maintenant: datetime | None = None,
+            temoin: Verdict | None = None) -> str:
+    """Le bulletin, en texte. Rend toujours quelque chose de lisible, même vide.
+
+    `temoin` est le même verdict calculé sur les jetons que les filtres ont
+    **écartés**. C'est lui qui donne son sens au premier : un taux de hausses
+    ne dit rien tant qu'on ignore ce qu'a fait le tout-venant sur la même
+    fenêtre. Il reste facultatif — une base d'avant les témoins n'en a pas, et
+    le bulletin doit rester lisible sans.
+    """
     maintenant = maintenant or datetime.now(timezone.utc)
 
     if not liste:
@@ -230,6 +240,23 @@ def tableau(liste: list[Parcours], verdict: Verdict,
             f"{JETONS_POUR_CONCLURE}. Un taux calculé sur moins ne dirait rien "
             f"du réglage, seulement du marché de la semaine."
         )
+    if temoin is not None:
+        if temoin.concluant and verdict.concluant:
+            ecart = verdict.mediane - temoin.mediane  # type: ignore[operator]
+            lignes.append(
+                f"\n**Témoin** — les jetons écartés par les filtres : "
+                f"{temoin.taux:.0f} % de hausses sur {temoin.decidables}, "
+                f"médiane {temoin.mediane:+.1f} %. "
+                f"Le radar fait **{ecart:+.1f} point(s)** de médiane."
+            )
+        else:
+            lignes.append(
+                f"\n*Témoin (jetons écartés) : {temoin.decidables} jugeable(s), "
+                f"il en faut {JETONS_POUR_CONCLURE}. Sans lui, un taux de hausses "
+                f"ne se compare à rien — dans un marché qui monte, 60 % peut être "
+                f"une contre-performance.*"
+            )
+
     lignes.append(
         f"\n*Jugeable = au moins deux relevés espacés de {HEURES_POUR_JUGER:.0f} h. "
         f"Le dernier prix connu n'est pas le prix d'aujourd'hui : un jeton sorti "

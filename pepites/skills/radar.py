@@ -28,6 +28,7 @@ rien ce soir, ou si un seuil est de travers. Le bilan remonte jusqu'au rapport.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -50,6 +51,10 @@ class Bilan:
     jetons: int = 0
     retenus: int = 0
     rejets: Counter = field(default_factory=Counter)
+    # Les jetons écartés retenus comme point de comparaison. Ils ne sont pas
+    # des candidats et n'entrent nulle part ailleurs : le pipeline les relève,
+    # le bulletin les compare, le radar les ignore.
+    temoins: list[Candidat] = field(default_factory=list)
 
     def resume(self) -> str:
         return f"{self.paires} paires → {self.jetons} jetons → {self.retenus} candidats"
@@ -171,6 +176,44 @@ def filtrer(candidats: list[Candidat], filtres: Filtres) -> tuple[list[Candidat]
     return retenus, rejets
 
 
+# Un écarté sur quatre sert de témoin. La part n'est pas un réglage fin : elle
+# doit seulement remplir les vingt jetons jugeables qu'exige le bulletin en
+# quelques jours, sans faire enfler la base — huit tours par jour sur ~185
+# écartés donnent quelques centaines de lignes quotidiennes, que `purger`
+# ramasse au bout de trente jours.
+PART_TEMOIN = 4
+
+
+def echantillon_temoin(ecartes: list[Candidat], part: int = PART_TEMOIN) -> list[Candidat]:
+    """Un écarté sur `part`, choisi de façon **stable dans le temps**.
+
+    C'est toute la difficulté, et un tirage au hasard la manquerait : un témoin
+    n'a de valeur que relevé **plusieurs fois**, puisque le bulletin compare un
+    premier et un dernier prix. Tiré à neuf à chaque tour, l'échantillon
+    n'accumulerait jamais deux relevés du même jeton et resterait éternellement
+    « indécidable ».
+
+    Le choix se fait donc sur l'adresse, qui ne change pas — et par un hachage
+    **explicite** plutôt que par `hash()`, dont Python randomise la valeur d'un
+    processus à l'autre pour les chaînes. Avec `hash()`, chaque tour du workflow
+    étant un processus neuf, l'échantillon aurait changé à chaque fois sans que
+    rien ne le signale : le défaut aurait ressemblé à un marché instable.
+
+    Aucun appel réseau ici, ni ailleurs pour les témoins : leurs données
+    viennent du tour de découverte qui vient d'avoir lieu.
+    """
+    if part <= 1:
+        return list(ecartes)
+    garde = []
+    for candidat in ecartes:
+        empreinte = hashlib.blake2b(
+            candidat.jeton.adresse.encode("utf-8"), digest_size=8
+        ).digest()
+        if int.from_bytes(empreinte, "big") % part == 0:
+            garde.append(candidat)
+    return garde
+
+
 def scanner(client: ClientHttp, reglages: Reglages, memoire: Memoire | None = None,
             moment: datetime | None = None) -> tuple[list[Candidat], Bilan]:
     """Un tour complet du radar : de l'API aux candidats notables."""
@@ -178,9 +221,13 @@ def scanner(client: ClientHttp, reglages: Reglages, memoire: Memoire | None = No
     candidats, rejets_cotation = regrouper(paires, reglages.chaines)
     retenus, rejets_filtres = filtrer(candidats, reglages.filtres)
 
+    gardes = {c.jeton.identite for c in retenus}
+    ecartes = [c for c in candidats if c.jeton.identite not in gardes]
+
     bilan = Bilan(
         paires=len(paires), jetons=len(candidats), retenus=len(retenus),
         rejets=rejets_cotation + rejets_filtres,
+        temoins=echantillon_temoin(ecartes),
     )
     JOURNAL.info("radar : %s", bilan.resume())
     return retenus, bilan
