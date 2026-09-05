@@ -6,11 +6,27 @@
 C'est le projet le plus exposé des quatre de ce lot, et le seul à porter un
 constat grave.
 
-## 🔴 CRITIQUE
+**État au 05/09/2026 : ce constat grave est corrigé.** Le détail est dans le
+bloc I-1 ci-dessous, qui reste écrit au présent de l'époque avec sa correction
+en tête. Rien d'autre n'a été trouvé, et rien n'a été rouvert depuis.
+
+## ✅ CORRIGÉ — ce qui était le seul constat critique
 
 ### I-1 · Le mandataire de flux accepte n'importe quelle adresse interne (SSRF)
 
-**Où** — `src/app/api/flux/route.ts:32-51` (résolution) et `:78` (la requête).
+> **Fermé le 03/09/2026**, commit `4d2c6e5` (PR #577). Vérifié sur `main` le
+> 05/09 : `adresseRelayable()` vit dans `src/serveur/flux.ts`, elle est appelée
+> **après** la résolution de la cible, et **revérifiée à chaque saut** de
+> redirection, plafonnés à cinq. Cinq tests la tiennent dans les deux sens —
+> `tests/adresse-relayable.test.ts`.
+>
+> Le constat est conservé tel qu'il a été écrit, avec ses numéros de ligne
+> d'alors. Un rapport nettoyé se relit comme s'il n'avait jamais eu tort, et
+> la prochaine session qui touche à ce mandataire a besoin de savoir **pourquoi**
+> ce filtre existe.
+
+**Où, à la date de l'audit** — `src/app/api/flux/route.ts:32-51` (résolution) et
+`:78` (la requête). Les lignes ont bougé depuis le correctif.
 
 La signature est **bien faite** : HMAC-SHA256 sur l'URL, comparaison en temps
 constant, longueurs vérifiées d'abord (`src/serveur/flux.ts:38-47`). Elle empêche
