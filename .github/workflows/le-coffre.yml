@@ -1,0 +1,100 @@
+# Vérification du coffre-fort de documents chiffré.
+#
+# Le projet vit à côté d'Amorce avec ses propres `package.json` et
+# `tsconfig.json` : la racine l'écarte de son typecheck, et **rien ne le
+# vérifierait sans ce workflow**. Chaque projet npm de ce dépôt a le sien, et
+# l'oubli ne se voit nulle part — les tests passent en local, la CI reste verte,
+# et personne ne sait qu'elle ne les a jamais lancés. C'est le contrôle de
+# cohérence du dépôt qui a réclamé ce fichier, le jour où le projet a gagné un
+# script `test` : « sait se tester mais aucun workflow ne le surveille ».
+#
+# Pas d'étape `build` : ce qui compte ici est le chiffrement et les opérations
+# du coffre, et `typecheck` couvre déjà ce que le build vérifierait du code.
+#
+# Les trois étapes sont séparées pour que le résumé dise laquelle a cassé, et
+# `!cancelled()` les laisse toutes parler : un test rouge n'empêche pas de
+# savoir si le typage l'est aussi.
+#
+# Ce que ce workflow ne dit pas, et qui compte autant : **rien n'est joué contre
+# un vrai projet Supabase**. Les policies RLS — la seconde moitié de la sécurité
+# du coffre, celle qui empêche un utilisateur de lire les octets d'un autre — ne
+# sont vérifiées par aucune machine d'ici. Les tests couvrent ce qui sort du
+# navigateur ; ils ne couvrent pas ce que le serveur accepte.
+
+name: Le Coffre
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'le-coffre/**'
+      - '.github/workflows/le-coffre.yml'
+  pull_request:
+    paths:
+      - 'le-coffre/**'
+      - '.github/workflows/le-coffre.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: le-coffre-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: le-coffre
+
+jobs:
+  verifier:
+    name: Tests, types et lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 au minimum : les tests s'exécutent sur les sources TypeScript
+      # sans compilation préalable (`--experimental-strip-types`), et la
+      # simulation de module demande `--experimental-test-module-mocks`.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          # Le dépôt contient plusieurs verrous ; sans ce chemin, le cache
+          # serait calculé sur celui d'Amorce et ne servirait jamais.
+          cache-dependency-path: le-coffre/package-lock.json
+
+      # `npm ci` et non `npm install` : il installe exactement le verrou et
+      # échoue s'il diverge de `package.json`, au lieu de le réécrire en silence.
+      - name: Installer les dépendances
+        run: npm ci
+
+      # Les tests n'ont besoin d'aucune dépendance — Web Crypto vient de Node et
+      # le client Supabase est remplacé avant d'être chargé — mais `typecheck` et
+      # `lint` en ont besoin, et l'installation est mutualisée.
+      # La sortie est répétée en annotation quand elle échoue, et ce n'est pas
+      # du décor : le journal d'un job vit sur `productionresultssa7.blob.core.windows.net`,
+      # que le mandataire des sessions distantes refuse. Sans ces lignes, un
+      # rouge se lit « exit code 1 » et rien d'autre — il faut alors pousser un
+      # commit pour apprendre ce qui a cassé. Les annotations, elles, passent
+      # par l'API GitHub, qui répond.
+      - name: Tests
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          node --version
+          if ! npm test 2>&1 | tee /tmp/tests-coffre.log; then
+            # La version de Node entre dans l'annotation, pas seulement dans le
+            # journal : c'est le journal qui est illisible d'ici, donc une
+            # information qui n'y figure que là ne sert à personne au moment où
+            # elle compte.
+            echo "::error title=Tests du coffre (Node $(node --version))::$(grep -E '^ *not ok|Error|error' /tmp/tests-coffre.log | head -8 | tr '\n' ' | ' | cut -c1-900)"
+            exit 1
+          fi
+
+      - name: Types
+        if: ${{ !cancelled() }}
+        run: npm run typecheck
+
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: npm run lint

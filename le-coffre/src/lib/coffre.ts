@@ -147,7 +147,18 @@ export function composerLettreResiliation(
   const mentionsManquantes = [
     !referenceClient && "la référence client (non lue sur le document — à ajouter à la main si tu la connais)",
     !entier.includes(effet) && "la date d'effet",
-    !entier.toLowerCase().includes('confirmation') && "la demande de confirmation écrite",
+    // `confirm` et non `confirmation`, et la raison a changé en cours de route
+    // — 05/09/2026. Deux sessions ont corrigé le même défaut par deux bouts
+    // opposés : l'une a réécrit la lettre pour qu'elle porte le substantif,
+    // l'autre a élargi la recherche au radical. Git a pris les deux moitiés
+    // sans conflit.
+    //
+    // On garde la recherche large, qui est la seule des deux à survivre à une
+    // reformulation : « confirmer », « confirmation », « confirmez » passent
+    // tous. Lier un contrôle au mot exact d'un texte qu'on réécrit un jour sur
+    // deux, c'est le refaire tomber au premier remaniement — et une liste de
+    // mentions manquantes qui se trompe ne se lit plus.
+    !/confirm/i.test(entier) && "la demande de confirmation écrite",
   ].filter((m): m is string => Boolean(m));
 
   return { objet, corps, mentionsManquantes };
@@ -335,8 +346,16 @@ export async function deposerFichier(
   }
 
   // On reprend tout l'index (`...index`), pas seulement `objets` : oublier
-  // rendezVous ou identite ici les efface silencieusement au dépôt suivant —
-  // un vrai bug trouvé en écrivant cette fonction, corrigé le 05/09/2026.
+  // rendezVous ou identite ici les efface silencieusement au dépôt suivant.
+  //
+  // **Deux sessions l'ont trouvé séparément, et la seconde l'a mesuré.** Deux
+  // gestes ordinaires suffisaient — saisir son identité, puis déposer un
+  // document : l'identité perdue, plus aucune lettre de résiliation n'était
+  // composée, par la condition même écrite pour le cas légitime « l'utilisateur
+  // n'a pas renseigné son adresse ». Aucune erreur, aucun signal. TypeScript
+  // était d'accord : les deux champs sont optionnels, donc un index amputé
+  // reste un `IndexCoffre` valide. Le typage vérifie la forme, la perte est une
+  // question de contenu.
   const nouvel_index: IndexCoffre = { ...index, objets: { ...index.objets, [nom]: objet } };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
