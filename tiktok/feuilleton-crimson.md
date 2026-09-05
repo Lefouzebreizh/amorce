@@ -17,8 +17,11 @@ cadre à découper.
 
 Sonie : **−11,5 LUFS** intégré, vrai pic **−1,6 dBFS**, et **−15,2 LUFS**
 au-dessus de 400 Hz — c'est-à-dire ce qu'un haut-parleur de téléphone restitue.
-Ces trois nombres sont **identiques sur le fichier livré** : c'est la preuve que
-le son n'a pas été touché.
+**La version 1 rendait ces trois nombres à l'identique** : le son n'y avait pas
+été touché, les octets AAC étaient recopiés. La version 2 ajoute un rugissement,
+donc elle réencode — et l'écart se lit : −11,7 LUFS au lieu de −11,5, porté en
+entier par les 1,6 dernières secondes. Partout ailleurs, échantillon pour
+échantillon, c'est le rush.
 
 ## La voix, qui est déjà dedans
 
@@ -76,58 +79,112 @@ Attaques relevées (saut de plus de 4 dB au-dessus de 400 Hz) :
 **Le défaut du rush est là :** un tiers de la durée est un cadrage fixe sur un
 visage. C'est exactement le « plan statique » que la notice interdit.
 
-## Le découpage livré
+## Le découpage livré — version 3
+
+Les versions 1 et 2 sont décrites plus bas, parce que ce qu'elles ont raté vaut
+d'être gardé. Ce qui part aujourd'hui :
 
 Tête coupée à **0,6333 s** (19 images) : `Warning` tombe alors à **0,08 s** au
 lieu de 0,70. C'est la seule seconde retirée du fichier, et elle ne contenait
 que de l'ambiance à 30 dB sous la voix.
 
-**Aucune seconde n'est retirée à l'intérieur.** Les treize coupes sont des
-changements d'échelle sur un temps continu — voir `notice-de-montage.md`.
+**Aucune seconde n'est retirée à l'intérieur**, et les runes n'en ajoutent
+aucune : elles sont en surimpression.
 
-| # | montage | durée | échelle | ce que la coupe suit |
+| # | montage | durée | cadre | ce que la coupe suit |
 | --- | --- | --- | --- | --- |
-| 1 | 0,00 | 1,27 s | visage ×1,35 | on entre dans son regard sur `Warning` |
-| 2 | 1,27 | 0,93 s | plein cadre | `Sector 99` — on découvre l'orbe |
-| 3 | 2,20 | 1,20 s | très serré ×1,45 | `is collapsing` |
-| 4 | 3,40 | 0,97 s | l'orbe ×1,70 | **le trou de son** |
-| 5 | 4,37 | 1,10 s | visage ×1,35 | `the Crimson Reaper emerges` |
-| 6 | 5,47 | 1,00 s | plein cadre | l'attaque à −11,3 |
-| 7 | 6,47 | 1,20 s | ×1,18 | les éclairs |
-| 8 | 7,67 | 1,30 s | ×1,30 | le vortex, resserré |
-| 9 | 8,97 | 1,70 s | **plein cadre** | **la révélation — intacte** |
-| 10 | 10,67 | 1,50 s | ×1,22 | l'attaque à 11,30 |
-| 11 | 12,17 | 1,40 s | plein cadre | l'attaque à 12,80 |
-| 12 | 13,57 | 1,30 s | ×1,25 | la charge |
-| 13 | 14,87 | 1,59 s | plein cadre | la crête à 16,60 |
+| 1 | 0,00 | 3,40 s | visage, poussée 1,05 → 1,20, centre fixe | `Warning`, puis `Sector 99 is collapsing` |
+| 2 | 3,40 | 2,07 s | visage, 1,28 → 1,44, centre fixe | le trou de son, puis `emerges` |
+| 3 | 5,47 | 1,00 s | **plein cadre** | l'attaque à −11,3 : l'explosion |
+| 4 | 6,47 | 1,20 s | ×1,18 | les éclairs — **les runes s'allument** |
+| 5 | 7,67 | 1,30 s | ×1,30 | le vortex — **les runes s'ouvrent** |
+| 6 | 8,97 | 1,70 s | **plein cadre** | la révélation — intacte |
+| 7 | 10,67 | 1,50 s | ×1,22 | l'attaque à 11,30 |
+| 8 | 12,17 | 1,40 s | plein cadre | l'attaque à 12,80 |
+| 9 | 13,57 | 1,30 s | ×1,25 | la charge |
+| 10 | 14,87 | 1,59 s | plein cadre | la crête — **le rugissement** |
 
-**16,47 s, 494 images, 1,27 s de plan moyen.** Onze plans sur treize tombent
-dans la bande 1,1–2,8 s que `src/lib/analysis.ts` récompense ; le rush n'y
-plaçait rien, puisqu'il n'avait qu'un plan.
+**16,47 s, 494 images.** Le bloc du druide fait **deux plans**, son échelle ne
+redescend jamais et son centre ne bouge pas — 0,345 puis 0,335, soit dix-neuf
+pixels sur 1920.
+
+### Les runes
+
+Fenêtre : **7,867 → 8,800 s** en temps source, à cheval sur la coupe du vortex —
+c'est ce qui les fait tenir les deux plans ensemble. Neuf glyphes angulaires,
+tirés de l'écriture qui brûle déjà sur le front du druide, allumés un par un
+autour d'un anneau de 335 px centré à 44 % de hauteur ; l'anneau se referme,
+tient, puis s'ouvre de moitié en s'éteignant.
+
+Dessinés en **mode Écran** par-dessus l'image, jamais à la place : la doctrine
+de `motion/`, et la seule façon d'ajouter quelque chose sans toucher au son.
+Chaque trait est peint trois fois — halo large et sombre, chair, cœur clair —
+plutôt que flouté : sur 1080 × 1920 le flou coûte, les trois passes non.
+
+**Non validées.** « Je n'imaginais pas ça comme ça, mais il faut voir. » Elles
+restent en l'état tant que rien d'autre n'est demandé.
+
+### Le rugissement
+
+**14,60 → 16,47 s**, la crête du cri tombant sur la gueule ouverte.
+`eleven_text_to_sound_v2`, prompt *« Colossal metallic beast roar, deep guttural
+bellow with grinding steel resonance, close-mic »*, quatre variations à
+0,3 centime pièce, la troisième retenue — 61 % de son énergie dans la bande
+400-3000 Hz contre 17 % pour la première, qui aurait été inaudible.
+
+Posé **sans aucun traitement** : ni égalisation, ni compression. Le rush s'efface
+de 20 dB dessous, avec une rampe qui **descend avant la coupe**.
 
 ## Ce qui a été vérifié sur le fichier livré, pas sur un intermédiaire
 
 Les trois relevés de `CLAUDE.md §8` :
 
-1. **Planche de quarante images** sur toute la durée, dernière seconde comprise.
-   Les changements d'échelle se lisent ; aucune image noire, aucun texte
-   fantôme.
-2. **Niveau entendu plan par plan**, au-dessus de 400 Hz. Le plus fort est **le
-   climax** (−16,3 dB) ; le plan du trou mesure −37,4 dB, soit 20 dB sous ses
-   voisins — la coupe est bien tombée dessus.
-3. **Le raccord** : image 16,467 s, son 16,455 s. Le son traverse chaque coupe,
-   puisqu'il n'a jamais été coupé.
+1. **Planche de quarante images** sur toute la durée, plus une planche de neuf
+   sur le seul bloc du druide : la tête ne bouge pas d'un pixel en hauteur, la
+   poussée se lit sans marche. Les runes se voient sur trois vignettes ; aucune
+   image noire, aucun texte fantôme.
+2. **Niveau entendu plan par plan**, au-dessus de 400 Hz :
 
-Le calage a été mesuré, pas supposé : la première attaque passe de 0,720 s dans
-le rush à 0,080 s dans le fichier livré, soit un déplacement de 0,640 s pour une
-image déplacée de 0,633 s — **6,7 ms de dérive**, un cinquième d'image.
+   | plan | entendu |
+   | --- | --- |
+   | l'explosion | −17,4 dB |
+   | la charge | −17,3 dB |
+   | **le climax — le rugissement** | **−13,4 dB** |
+
+   Le climax est le plus fort, de 4,0 dB. Il ne l'était pas avant le
+   rugissement : la charge et l'explosion se tenaient à 0,1 dB.
+3. **Le raccord** : image 16,467 s, son 16,466 s. **Vrai pic −0,5 dBFS**, aucun
+   écrêtage. Sonie −11,2 LUFS.
+
+Et le contrôle qui dit qu'aucune dureté n'a été fabriquée : pendant le
+rugissement, la bande 8-16 kHz mesure **−39,9 dB** sous la bande 300-3000 Hz,
+soit **4 dB de moins** que pendant l'explosion. Le cri ajoute du corps, pas du
+sifflement.
+
+## Ce que les versions 1 et 2 ont raté
+
+**La v1** découpait le bloc du druide en cinq plans d'échelles alternées —
+1,35 / 1,00 / 1,45 / 1,70 / 1,35 — sur une image qui ne change pas. Renvoyée en
+une phrase : « ça fait mal au crâne ». Cause écrite en sixième règle de
+`notice-de-montage.md` : sur un contenu qui ne change pas, une coupe d'échelle
+se lit comme un zoom.
+
+**La v2** corrigeait l'échelle et déplaçait le centre à la place — 0,34 vers
+0,60 puis retour, pour cadrer l'orbe pendant le trou de son. Renvoyée pareil :
+« zoome moins de haut en bas, ça casse la tête ». Le va-et-vient vertical se lit
+comme le va-et-vient d'échelle ; ce n'est pas l'axe qui gêne, c'est l'aller et
+le retour.
+
+**Et son cri était synthétisé** — deux caractères de `cri_dragon.py` mélangés,
+basculés, comprimés. « Horrible, ça ne va pas du tout avec la créature. » Toutes
+les mesures étaient pourtant au vert.
 
 ## Ce qui n'est pas fait
 
 - **Pas de sous-titres.** L'EP01 en porte ; ils n'ont pas été demandés ici. Les
-  trois passages sont mesurés ci-dessus, le calage se ferait en une passe.
+  trois passages sont mesurés plus haut, le calage se ferait en une passe.
 - **Pas de carton de fin**, pas de titre, pas de numéro d'épisode. La série
   compte à rebours depuis Zéro-Cinq (`feuilleton-ep02.md`) et `Sector 99`
   n'entre pas dans ce compte : le rattachement au feuilleton n'est pas tranché.
-- **Le son n'a pas été masterisé.** À −11,5 LUFS il est déjà au-dessus de la
-  cible de `/master-telephone` ; y toucher aurait été toucher au son.
+- **Le son du film n'est toujours pas masterisé.** À −11,2 LUFS il est déjà
+  au-dessus de la cible de `/master-telephone`.
