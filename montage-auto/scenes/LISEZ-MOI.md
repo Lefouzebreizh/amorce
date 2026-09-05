@@ -76,7 +76,7 @@ rien n'y est maquetté, c'est le site qu'on vend qui apparaît.
 commande, une vidéo. C'est là qu'est la valeur : pas dans un montage, dans une
 fabrique.
 
-## Dix défauts mesurés, et ce qu’ils enseignent
+## Treize défauts mesurés, et ce qu’ils enseignent
 
 Chacun était invisible dans le code, et évident dès qu'on regardait le rendu au
 bon endroit : une planche de vignettes pour l'image, une analyse par bandes pour
@@ -211,11 +211,43 @@ ils étaient masqués. **Un déséquilibre voix/lit se lit par bandes avant de s
 régler au fader.**
 
 `creuser_pour_la_voix.py` creuse donc la forme de la voix **dans** le lit,
-pendant qu'elle parle et nulle part ailleurs : −9 dB sous 130 Hz, −7 dB de 700
-à 3 500 Hz, par transformée à court terme (Hann 2048, saut 512), flancs de
-0,10 s. Les 0,32 premières secondes ne sont jamais touchées — l'entrée du
-dragon y est intacte. Et `cible_db` passe de −22 à −23 : **creuser retire de
-l'énergie, donc la normalisation rendrait le plan plus fort.**
+pendant qu'elle parle et nulle part ailleurs, par transformée à court terme
+(Hann 2048, saut 512). Les 0,32 premières secondes ne sont jamais touchées —
+l'entrée du dragon y est intacte. Et `cible_db` suit : **creuser retire de
+l'énergie, donc la normalisation rendrait le plan plus fort** si on ne la
+recalait pas.
+
+**Puis « on n'entend plus du tout le dragon », et les deux premiers réglages
+étaient en cause.**
+
+Le premier coupait aussi 11 dB sous 130 Hz, au nom du masquage ascendant.
+C'était vrai et c'était trop : **le grave EST le dragon**, et le retirer l'a
+fait disparaître pour l'oreille sans que la bande des consonnes s'en porte
+mieux — mesuré, la couper à 300 Hz au lieu de 700 fait tout le travail. Le
+creux du grave est passé à zéro.
+
+Le second était la **fenêtre plate**. Elle retirait le rush pendant toute la
+réplique, silences compris : deux secondes de dragon retiré pour 1,26 s de
+parole utile. `--suivre` construit l'enveloppe depuis la prise elle-même,
+énergie relevée **au-dessus de 300 Hz** — en large bande, le grondement du rush
+déclencherait le creux et celui-ci se creuserait lui-même — attaque 0,10 s,
+retour 0,40 s.
+
+| | fenêtre plate | suivie |
+| --- | --- | --- |
+| le dragon entre les syllabes | −7,9 dB | **−7,0** (le rush nu vaut −7,1) |
+| le dragon sur toute la fenêtre | −19,2 dB | **−11,9** |
+| la voix au-dessus, 700-1k6 | +10,1 dB | **+14,7** |
+| la voix au-dessus, 1k6-3k5 | +7,8 dB | **+12,4** |
+
+Sept décibels de dragon rendus **et** quatre décibels de voix gagnés. Un creux
+fixe ne pouvait donner ni l'un ni l'autre : il fallait le faire respirer.
+
+**Et vérifier chez qui écoute.** Le fichier réexporté depuis son téléphone
+portait une courbe « loudness » d'éditeur — +3 dB dans le grave, −8 dB dans le
+bas-médium, 4 LUFS plus bas en tout — qui vidait le dragon de son corps à elle
+seule. Un master livré prêt à publier évite ce détour ; un master qu'on
+réexporte le subit.
 
 **10. Une vraie prise plafonne là où la synthèse ne plafonnait pas.** Le gain
 d'une réplique se borne à la marge réelle sous 0 dBFS — règle juste, écrite
@@ -230,6 +262,50 @@ absorbant le reste. Six décibels rendent +2,9 dB de niveau entendu et +3,1 dB
 dans la bande des consonnes, **sans toucher au rapport consonnes/voyelles** :
 −17,8 avant, −17,8 après. Ce ne sont pas des consonnes écrasées, ce sont des
 crêtes rognées — et c'est la mesure qui fait la différence entre les deux.
+
+**11. Un carton qui arrive d'un bloc est correct, et il est mort.** Sur un
+format où la rétention se joue à la seconde, un texte qui **s'écrit devant** le
+spectateur le retient là où un texte déjà écrit le laisse partir. Les mots
+arrivent donc un par un, chacun d'un ressaut d'échelle de 26 %, et tous sont
+posés **avant la moitié du carton** — écrire n'est pas lire, et une phrase qui
+disparaît au moment où elle finit de s'écrire est pire qu'un carton fixe.
+
+La mise en page reste exactement celle du bloc : la largeur totale est mesurée
+d'un coup sur la ligne complète, la position de chaque mot se déduit de la
+largeur de ce qui le précède. **Mesurer les mots séparément et les rabouter
+donnerait une ligne plus large que la même ligne dessinée d'un trait** — le
+crénage et le `letterSpacing` ne s'additionnent pas ainsi — et elle sortirait
+de la boîte de 605 px sans que rien ne le signale.
+
+Deux couleurs, et on ne les dépense pas : **vert** `#5fe0a8`, celui des boutons
+et du numéro sur la page de l'artisan, donc un mot qui renvoie à ce qu'on voit
+à l'écran une seconde plus tard ; **or** `#ffd24a` pour le prix et l'appel à
+l'action, rien d'autre. Une couleur qui sert partout ne signale plus rien.
+
+Deux tests tiennent l'ensemble, et ils attrapent des fautes muettes. `PHOTOS`
+au lieu de `PHOTOS.` dans la liste des accents ne colore rien, ne lève rien, et
+ne se voit qu'en regardant la bonne image ; `300 €` écrit avec une espace
+ordinaire fait deux mots dont aucun ne correspond. L'espace **insécable** est
+donc la typographie correcte *et* la condition pour que le nombre et son unité
+soient un seul mot.
+
+**12. La scène coupe les lignes gloutonnement, et ça se voit dès qu'on les
+anime.** Le carton du prix sortait en **cinq** lignes — « POUR LES » puis
+« PREMIERS. » seul — et le premier laissait « AS » orphelin au milieu. Invisible
+tant que le carton arrivait d'un bloc, flagrant quand on regarde chaque mot se
+poser. Les coupures des cartons longs sont donc **écrites à la main**, à 52 px :
+533, 416, 400 et 602 px pour une boîte de 605. Le bloc du prix monte de
+233 → 574 à 271 → 523.
+
+Et le mesureur affichait les lignes **déclarées**, pas les lignes dessinées : il
+marquait « ¶ » sans dire en combien. C'est `verifier_dalle.py`, qui lit la
+découpe réelle dans le navigateur, qui a montré les cinq.
+
+**13. Un fichier « refait » par l'utilisateur n'est pas forcément différent.**
+La version renvoyée « j'ai coupé ce qu'il fallait » était image pour image
+identique à la livraison, décalage nul, durée à deux centièmes près. Le mesurer
+avant de repartir de zéro a évité de reconstruire un montage sur une base qu'on
+aurait crue nouvelle — et a désigné la seule chose qui avait bougé : le son.
 
 ## La zone sûre est câblée
 

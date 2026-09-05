@@ -331,6 +331,56 @@ class Recits(unittest.TestCase):
                     self.assertLessEqual(float(avant["fin"]), float(apres["debut"]),
                                          "deux cartons se recouvrent")
 
+    def test_un_mot_accentue_existe_vraiment_dans_le_carton(self):
+        """Un accent qui ne correspond à aucun mot ne colore rien, en silence.
+
+        La comparaison est une égalité de chaînes sur les mots séparés par des
+        espaces. « PHOTOS » au lieu de « PHOTOS. » ne lève rien, ne se voit
+        pas au rendu si on ne regarde pas la bonne image, et le carton sort
+        tout blanc. C'est exactement le genre de faute qui survit à une
+        relecture et coûte un rendu de huit minutes.
+
+        Elle attrape aussi l'espace insécable : « 300 € » écrit avec une
+        espace ordinaire fait deux mots, dont aucun ne correspond à l'accent.
+        """
+        for nom, recit in RECITS.items():
+            for carte in recit.get("cartes", []):
+                anime = carte.get("anime")
+                if not anime:
+                    continue
+                mots = {m for ligne in carte["lignes"] for m in ligne.split(" ")}
+                for accent in anime.get("accent", []):
+                    with self.subTest(recit=nom, accent=accent):
+                        self.assertIn(accent, mots,
+                                      f"« {accent} » n'est aucun mot de ce carton")
+
+    def test_un_carton_anime_a_fini_de_s_ecrire_avant_de_partir(self):
+        """Écrire n'est pas lire, et un carton doit laisser le temps des deux.
+
+        Les mots arrivent au rythme `pas`. Si le dernier tombe trop près de
+        la fin, la phrase n'a jamais existé en entier à l'écran : le
+        spectateur a vu une phrase s'écrire et disparaître, ce qui est pire
+        qu'un carton fixe. Une demi-seconde de phrase entière est le
+        minimum ; les cartons du dépôt tiennent entre 0,46 et 1,28 s.
+
+        Le rang est GLOBAL au carton, comme dans la scène : un carton qui
+        tient sur deux lignes ne repart pas à zéro sur la seconde.
+        """
+        for nom, recit in RECITS.items():
+            for carte in recit.get("cartes", []):
+                anime = carte.get("anime")
+                if not anime:
+                    continue
+                mots = sum(len(ligne.split(" ")) for ligne in carte["lignes"])
+                pas = anime.get("pas") or min(
+                    0.13, (carte["fin"] - carte["debut"]) * 0.5 / max(mots, 1))
+                pose = carte["debut"] + anime.get("retard", 0.06) + (mots - 1) * pas
+                with self.subTest(recit=nom, debut=carte["debut"]):
+                    self.assertGreaterEqual(
+                        carte["fin"] - pose, 0.45,
+                        f"le dernier mot tombe à {pose:.2f} et le carton part "
+                        f"à {carte['fin']:.2f}")
+
     def test_la_dalle_ne_passe_jamais_sous_le_texte(self):
         """Un récit qui pose la dalle sous le texte doit l'y garder.
 

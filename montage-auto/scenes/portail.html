@@ -31,6 +31,19 @@ const CYAN  = '#00E5FF';
 const HALO  = '#0090ff';
 const COEUR = '#eafcff';
 const ENCRE = '#04070c';
+/* Les deux accents des sous-titres, et pourquoi ce sont ceux-là.
+
+   VERT — c'est celui de la page de l'artisan : le bouton d'appel, le numéro,
+   les puces des services. Le mot coloré du sous-titre renvoie donc à quelque
+   chose que le spectateur voit à l'écran une seconde plus tard, au lieu
+   d'être une couleur de plus.
+
+   OR — réservé au prix et à l'appel à l'action. C'est la teinte la plus
+   éloignée du bleu du film sur la roue, donc celle qui saute le plus, et on
+   ne la dépense que deux fois : sur « 48 HEURES » et sur « SITE ». Une
+   couleur qui sert partout ne signale plus rien. */
+const VERT  = '#5fe0a8';
+const OR    = '#ffd24a';
 
 /* --- LE RÉCIT ---------------------------------------------------------------
    Une même mécanique, plusieurs montages. Les bornes, les cartons et la
@@ -636,7 +649,8 @@ function tailleQuiTient(lignes, taille, espacement) {
    texte s'arrête. Mesuré sur le plan le plus clair du film — la lueur du
    portail à 5,0 s, la pire situation du montage —, il tient le contraste que
    le bandeau donnait, et le site reste entier. */
-function ligneCentree(texte, py, taille, teinte, halo, espacement) {
+function ligneCentree(texte, py, taille, teinte, halo, espacement, cx) {
+  const px = cx === undefined ? CX : cx;
   x.font = police(taille);
   x.textAlign = 'center';
   x.textBaseline = 'middle';
@@ -649,24 +663,85 @@ function ligneCentree(texte, py, taille, teinte, halo, espacement) {
   x.shadowColor = 'rgba(0,0,0,0.92)';
   x.shadowBlur = taille * 0.55;
   x.lineWidth = Math.max(8, taille * 0.22);
-  x.strokeText(texte, CX, py);
-  x.strokeText(texte, CX, py);
+  x.strokeText(texte, px, py);
+  x.strokeText(texte, px, py);
   x.shadowBlur = 0;
   x.lineWidth = Math.max(6, taille * 0.13);
-  x.strokeText(texte, CX, py);
+  x.strokeText(texte, px, py);
   x.shadowColor = halo; x.shadowBlur = 26;
   x.fillStyle = teinte;
-  x.fillText(texte, CX, py);
+  x.fillText(texte, px, py);
   x.shadowBlur = 0;
   x.letterSpacing = '0px';
 }
 
-function textes(t) {
-  for (const c of CARTES) {
-    const v = Math.min(seg(t, c.debut, c.debut + 0.26), 1 - seg(t, c.fin - 0.22, c.fin));
+/* Une ligne dessinée MOT PAR MOT, chacun avec son instant et sa teinte.
+
+   Le carton entier apparaissait d'un bloc, en fondu de 0,26 s. C'est correct
+   et c'est mort : sur un format où la rétention se joue à la seconde, un
+   texte qui s'écrit devant le spectateur le retient là où un texte déjà écrit
+   le laisse partir. Les mots arrivent donc l'un après l'autre, chacun d'un
+   petit ressaut d'échelle, et un mot par phrase porte la couleur.
+
+   La mise en page reste EXACTEMENT celle du bloc : la largeur totale est
+   mesurée d'un coup sur la ligne complète, et la position de chaque mot se
+   déduit de la largeur de ce qui le précède. Mesurer les mots séparément et
+   les rabouter donnerait une ligne plus large que la même ligne dessinée
+   d'un trait — le crénage et le `letterSpacing` ne s'additionnent pas ainsi,
+   et la ligne sortirait de la boîte de 605 px sans que rien ne le dise. */
+function ligneMots(texte, py, taille, teinte, halo, espacement,
+                   depart, pas, t, accents, accent) {
+  x.font = police(taille);
+  x.letterSpacing = espacement + 'px';
+  const mots = texte.split(' ');
+  const gauche = CX - x.measureText(texte).width / 2;
+  x.letterSpacing = '0px';
+  for (let k = 0; k < mots.length; k++) {
+    const v = borne((t - (depart + k * pas)) / 0.16);
     if (v <= 0.001) continue;
     const e = lisse(v);
-    const glisse = (1 - e) * 26;
+    x.letterSpacing = espacement + 'px';
+    const avant = k ? x.measureText(mots.slice(0, k).join(' ') + ' ').width : 0;
+    const large = x.measureText(mots[k]).width;
+    x.letterSpacing = '0px';
+    const colore = accents.indexOf(mots[k]) >= 0;
+    x.save();
+    x.globalAlpha *= e;
+    /* le ressaut : le mot arrive un peu trop grand et se pose. Il est mis à
+       l'échelle autour de SON centre, pas de celui du cadre, sinon les mots
+       de gauche partiraient vers la gauche en apparaissant.
+
+       ET IL EST BORNÉ PAR LA BOÎTE, pas par une valeur choisie à la main.
+       Un ressaut de 26 % sur « COMMENTAIRE. » — 490 px à 60 — le porte à
+       617, douze de plus que les 605 de la boîte, et son bord entre dans la
+       bande des boutons Facebook. Bref, et dans la zone interdite quand
+       même. On calcule donc la largeur que le mot peut atteindre SANS
+       sortir, compte tenu de l'endroit où il est posé : les mots courts
+       gardent les 26 %, les longs prennent ce qui reste. */
+    const centre = gauche + avant + large / 2;
+    const place = 2 * Math.min(centre - (CX - BOITE / 2), (CX + BOITE / 2) - centre);
+    const ampleur = Math.min(0.26, Math.max(0, place / Math.max(large, 1) - 1));
+    x.translate(centre, py);
+    const ech = 1 + ampleur * (1 - e);
+    x.scale(ech, ech);
+    ligneCentree(mots[k], 0, taille, colore ? accent : teinte,
+                 colore ? accent : halo, espacement, 0);
+    x.restore();
+  }
+}
+
+function textes(t) {
+  for (const c of CARTES) {
+    /* L'entrée et la sortie se règlent à part depuis que les mots arrivent un
+       par un : un fondu d'ensemble par-dessus des mots qui apparaissent déjà
+       les rendrait tous gris pendant un quart de seconde. La sortie, elle,
+       reste un fondu de bloc — on ne défait pas une phrase mot par mot. */
+    const anime = c.anime || null;
+    const ouvre = anime ? 1 : seg(t, c.debut, c.debut + 0.26);
+    const v = Math.min(ouvre, 1 - seg(t, c.fin - 0.22, c.fin));
+    if (v <= 0.001 || t < c.debut) continue;
+    const e = lisse(v);
+    const glisse = anime ? 0 : (1 - e) * 26;
     x.save();
     if (c.bandeau) bandeau(e, c.bandeau);
     x.globalAlpha = e;
@@ -674,7 +749,26 @@ function textes(t) {
     const lignes = decouper(c.lignes, taille, 2);
     const interligne = taille * 1.24;
     const y0 = (c.y || 390) - (lignes.length - 1) * interligne / 2;
-    lignes.forEach((l, i) => ligneCentree(l, y0 + i * interligne + glisse, taille, '#f4fbff', HALO, 2));
+    if (!anime) {
+      lignes.forEach((l, i) => ligneCentree(l, y0 + i * interligne + glisse, taille, '#f4fbff', HALO, 2));
+      x.restore();
+      continue;
+    }
+    /* Le rang du mot est GLOBAL au carton, pas propre à sa ligne : un carton
+       qui passe à la ligne continue de s'écrire au même rythme au lieu de
+       repartir à zéro en haut de la deuxième. */
+    const accents = anime.accent || [];
+    const accent = anime.or ? OR : VERT;
+    const total = lignes.reduce((n, l) => n + l.split(' ').length, 0);
+    /* Tous les mots sont posés avant la moitié du carton : la phrase doit être
+       lisible en entier assez longtemps pour être lue, pas seulement écrite. */
+    const pas = anime.pas || Math.min(0.13, (c.fin - c.debut) * 0.5 / Math.max(total, 1));
+    let rang = 0;
+    for (let i = 0; i < lignes.length; i++) {
+      ligneMots(lignes[i], y0 + i * interligne, taille, '#f4fbff', HALO, 2,
+                c.debut + (anime.retard || 0.06) + rang * pas, pas, t, accents, accent);
+      rang += lignes[i].split(' ').length;
+    }
     x.restore();
   }
 

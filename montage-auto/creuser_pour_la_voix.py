@@ -24,8 +24,15 @@ moyen ne le voit. Et surtout il est 2 dB AU-DESSUS de la voix entre 1,6 et
 D'où « il manque des mots » — ils étaient prononcés, ils étaient masqués.
 
 Ce qu'il faut n'est pas de baisser le lit mais d'y CREUSER la forme de la
-voix : un creux dans le grave et un creux dans la présence, pendant qu'elle
-parle, et rien ailleurs. C'est l'esquive du mixage de cinéma faite par bande
+voix : on retire au rush les bandes où les mots vivent, pendant qu'ils sont
+dits, et rien ailleurs.
+
+ET UN CREUX PEUT ÊTRE POSITIF. Le premier réglage coupait aussi 11 dB sous
+130 Hz, au nom du masquage ascendant. C'était vrai et c'était trop : le grave
+EST le dragon, et le retirer l'a fait disparaître pour l'oreille alors que
+les mesures de la bande des consonnes ne s'en portaient pas mieux. Une bande
+peut donc porter un gain positif — on rend au rush son corps là où il ne gêne
+personne, pendant qu'on lui retire la place des mots là où il gêne. C'est l'esquive du mixage de cinéma faite par bande
 au lieu d'être faite au fader. Le rush garde son poids partout où la voix
 se tait, et son entrée — les trois premiers dixièmes, `--intact` — n'est
 jamais touchée : c'est là qu'est son impact.
@@ -84,6 +91,60 @@ def enveloppe(total: int, fenetres: list[tuple[float, float]],
     return numpy.convolve(e, noyau, mode="same")
 
 
+def enveloppe_suivie(total: int, prises: list[tuple[Path, float]],
+                     intact: float, montee: float) -> numpy.ndarray:
+    """La même, mais SUIVIE PAR LA VOIX — creusée syllabe par syllabe.
+
+    Une fenêtre plate creuse le rush pendant toute la réplique, silences
+    compris. Sur une phrase de deux secondes, cela retire le rush pendant
+    deux secondes pour une seconde de parole utile, et l'auditeur ne
+    l'entend plus du tout : « on n'entend plus le dragon » est le symptôme
+    exact de ce réglage-là.
+
+    L'énergie est relevée DANS LA BANDE DE LA VOIX — au-dessus de 300 Hz —
+    et pas en large bande : un rush qui gronde sous les cent hertz
+    déclencherait le creux aussi sûrement qu'une syllabe, et celui-ci se
+    creuserait lui-même.
+
+    Attaque courte, retour long : le creux doit être ouvert avant la
+    syllabe et se refermer sans qu'on l'entende revenir. C'est la même
+    asymétrie que tout esquiveur de mixage.
+    """
+    e = numpy.zeros(total)
+    for chemin, instant in prises:
+        voix = lire(chemin)[:, 0]
+        # au-dessus de 300 Hz : ce que le creux protège, et rien d'autre
+        spectre = numpy.fft.rfft(voix)
+        frq = numpy.fft.rfftfreq(len(voix), 1 / TAUX)
+        spectre[frq < 300] = 0
+        haut = numpy.fft.irfft(spectre, len(voix))
+        # l'énergie, fenêtre de 20 ms
+        pas = int(0.020 * TAUX)
+        blocs = numpy.array([numpy.sqrt((haut[d:d + pas] ** 2).mean())
+                             for d in range(0, len(haut) - pas, pas)])
+        if not len(blocs) or blocs.max() <= 0:
+            continue
+        forme = numpy.clip(blocs / blocs.max() * 3.2, 0, 1) ** 0.5
+        etiree = numpy.repeat(forme, pas)
+        # un instant négatif indexerait depuis la fin du tableau et creuserait
+        # la queue du rush au lieu de sa tête, sans rien signaler
+        debut = max(0, int(instant * TAUX))
+        n = min(len(etiree), total - debut)
+        if n > 0:
+            e[debut:debut + n] = numpy.maximum(e[debut:debut + n], etiree[:n])
+    e[:int(intact * TAUX)] = 0.0
+    # attaque courte, retour long
+    sortie = numpy.zeros(total)
+    monte = 1 - numpy.exp(-1 / max(1, montee * TAUX))
+    baisse = 1 - numpy.exp(-1 / max(1, 4 * montee * TAUX))
+    v = 0.0
+    for i in range(total):
+        v += (e[i] - v) * (monte if e[i] > v else baisse)
+        sortie[i] = v
+    sortie[:int(intact * TAUX)] = 0.0
+    return sortie
+
+
 def creuser(son: numpy.ndarray, forme: numpy.ndarray,
             creux: list[tuple[float, float, float]]) -> numpy.ndarray:
     """Applique un gain par bande, variable dans le temps, par TFCT."""
@@ -118,29 +179,46 @@ def main() -> None:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     a.add_argument("--media", required=True, type=Path)
     a.add_argument("--sortie", required=True, type=Path)
-    a.add_argument("--voix", nargs="+", required=True,
+    a.add_argument("--voix", nargs="+", default=[],
                    help="fenêtres « début:fin » en secondes, où la voix parle")
+    a.add_argument("--suivre", nargs="+", default=[], metavar="FICHIER:INSTANT",
+                   help="la prise de voix et l'instant où elle commence. Le "
+                        "creux suit alors les syllabes au lieu d'une fenêtre "
+                        "plate : entre deux mots, le rush revient entier.")
     a.add_argument("--intact", type=float, default=0.0,
                    help="secondes de tête qu'on ne touche jamais — l'attaque du rush")
     a.add_argument("--montee", type=float, default=0.10,
                    help="durée des flancs du creux, en secondes")
-    a.add_argument("--grave", type=float, default=-9.0,
-                   help="dB sous 130 Hz : le grondement qui masque la parole vers le haut")
-    a.add_argument("--presence", type=float, default=-7.0,
-                   help="dB entre 700 et 3500 Hz : la bande des consonnes")
+    a.add_argument("--creux", nargs="+", metavar="BAS:HAUT:DB",
+                   default=["0:130:-9", "700:3500:-7"],
+                   help="les bandes à creuser, « bas:haut:dB ». Un dB POSITIF "
+                        "renforce au lieu de creuser : c'est ainsi qu'on rend "
+                        "au rush son corps pendant qu'on lui retire la place "
+                        "des mots.")
     o = a.parse_args()
 
+    if not o.voix and not o.suivre:
+        sys.exit("il faut --voix ou --suivre : sans l'un des deux, rien à creuser")
     fenetres = []
     for f in o.voix:
         d, _, fin = f.partition(":")
         fenetres.append((float(d), float(fin)))
+    prises = []
+    for f in o.suivre:
+        chemin, _, instant = f.rpartition(":")
+        prises.append((Path(chemin).expanduser(), float(instant)))
+
+    creux = []
+    for c in o.creux:
+        bas, haut, db = c.split(":")
+        creux.append((float(bas), float(haut), float(db)))
 
     son = lire(o.media)
     if not len(son):
         sys.exit(f"{o.media} n'a pas de son")
-    forme = enveloppe(len(son), fenetres, o.intact, o.montee)
-    creuse = creuser(son, forme, [(0.0, 130.0, o.grave),
-                                  (700.0, 3500.0, o.presence)])
+    forme = (enveloppe_suivie(len(son), prises, o.intact, o.montee) if prises
+             else enveloppe(len(son), fenetres, o.intact, o.montee))
+    creuse = creuser(son, forme, creux)
 
     atelier = Path(tempfile.mkdtemp(prefix="creux-"))
     try:
@@ -160,8 +238,11 @@ def main() -> None:
     finally:
         shutil.rmtree(atelier, ignore_errors=True)
     print(f"  écrit {o.sortie}")
-    print(f"  creux : {o.grave:+.0f} dB sous 130 Hz, {o.presence:+.0f} dB de 700 à 3500 Hz")
+    for bas, haut, db in creux:
+        print(f"  {db:+5.1f} dB de {bas:.0f} à {haut:.0f} Hz")
     print(f"  intact : les {o.intact:.2f} premières secondes")
+    ouvert = float((forme < 0.30).mean())
+    print(f"  le rush revient entier sur {ouvert * 100:.0f} % de sa durée")
 
 
 if __name__ == "__main__":

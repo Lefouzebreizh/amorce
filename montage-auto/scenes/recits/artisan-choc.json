@@ -95,7 +95,50 @@
     "Au passage, un défaut que le bandeau causait tout seul : chaque carton",
     "dessinait le sien à son tour, donc celui de la signature repassait sur le",
     "carton déjà peint. « ÉCRIS SITE EN COMMENTAIRE » sortait gris derrière",
-    "« ARTISAN EXPRESS » — visible sur la vidéo livrée, et personne ne l'avait vu."
+    "« ARTISAN EXPRESS » — visible sur la vidéo livrée, et personne ne l'avait vu.",
+    "",
+    "LES CARTONS S'ÉCRIVENT AU LIEU D'APPARAÎTRE.",
+    "",
+    "Un carton qui arrive d'un bloc en 0,26 s est correct et il est mort : sur un",
+    "format où la rétention se joue à la seconde, un texte qui s'écrit devant le",
+    "spectateur le retient là où un texte déjà écrit le laisse partir. Les mots",
+    "arrivent donc un par un, chacun d'un ressaut d'échelle de 26 %, et tous sont",
+    "posés avant la MOITIÉ du carton — une phrase doit rester lisible assez",
+    "longtemps pour être lue, pas seulement pour être écrite.",
+    "",
+    "Le rang d'un mot est global au carton, pas propre à sa ligne : un carton qui",
+    "passe à la ligne continue de s'écrire au même rythme au lieu de repartir à",
+    "zéro en haut de la deuxième.",
+    "",
+    "DEUX COULEURS, ET ON NE LES DÉPENSE PAS PARTOUT.",
+    "",
+    "  VERT (#5fe0a8) — celui de la page de l'artisan : le bouton d'appel, le",
+    "  numéro, les puces des services. Le mot coloré renvoie à quelque chose que",
+    "  le spectateur voit à l'écran une seconde plus tard.",
+    "",
+    "  OR (#ffd24a) — le prix et l'appel à l'action, rien d'autre. C'est la",
+    "  teinte la plus éloignée du bleu du film sur la roue, donc celle qui saute",
+    "  le plus, et elle ne sert que deux fois. Une couleur qui sert partout ne",
+    "  signale plus rien.",
+    "",
+    "Un mot coloré par carton, deux quand la phrase en porte deux (« 48 HEURES »",
+    "et « 200 € »). Le reste reste blanc : c'est le contraste qui fait lire, pas",
+    "la couleur.",
+    "",
+    "ET LES COUPURES DE LIGNE SONT DÉCLARÉES, PLUS DEVINÉES.",
+    "",
+    "La scène coupe d'elle-même les lignes trop longues, et elle le fait bien —",
+    "mais gloutonnement, de gauche à droite. Le carton du prix sortait ainsi en",
+    "CINQ lignes (« POUR LES » puis « PREMIERS. » seul), et le premier laissait",
+    "« AS » orphelin au milieu. Invisible tant que le carton arrivait d'un bloc ;",
+    "flagrant dès que les mots arrivent un par un, parce qu'on regarde alors",
+    "chaque mot se poser.",
+    "",
+    "Les quatre lignes du prix sont donc écrites à la main, à 52 px au lieu de",
+    "56 : 533, 416, 400 et 602 px pour une boîte de 605. Le bloc monte de 233 →",
+    "574 à 271 → 529 — quarante-cinq pixels de moins, et autant d'air en plus",
+    "au-dessus du site. Les autres cartons sont coupés en deux lignes",
+    "équilibrées au lieu d'une longue et d'un reste."
   ],
   "T": {
     "etincelle": -1.2,
@@ -116,12 +159,19 @@
       "debut": 0.1,
       "fin": 1.7,
       "y": 330,
-      "taille": 56,
+      "taille": 52,
       "bandeau": false,
       "lignes": [
-        "... ET CE DONT TU AS",
+        "… ET CE DONT TU AS",
         "VRAIMENT BESOIN."
-      ]
+      ],
+      "anime": {
+        "accent": [
+          "VRAIMENT",
+          "BESOIN."
+        ],
+        "pas": 0.16
+      }
     },
     {
       "debut": 1.9,
@@ -130,8 +180,15 @@
       "taille": 60,
       "bandeau": false,
       "lignes": [
-        "UN BOUTON QUI APPELLE."
-      ]
+        "UN BOUTON",
+        "QUI APPELLE."
+      ],
+      "anime": {
+        "accent": [
+          "APPELLE."
+        ],
+        "pas": 0.18
+      }
     },
     {
       "debut": 4.0,
@@ -140,8 +197,15 @@
       "taille": 60,
       "bandeau": false,
       "lignes": [
-        "TES CHANTIERS EN PHOTOS."
-      ]
+        "TES CHANTIERS",
+        "EN PHOTOS."
+      ],
+      "anime": {
+        "accent": [
+          "PHOTOS."
+        ],
+        "pas": 0.18
+      }
     },
     {
       "debut": 6.0,
@@ -150,19 +214,38 @@
       "taille": 60,
       "bandeau": false,
       "lignes": [
-        "TES VRAIS AVIS CLIENTS."
-      ]
+        "TES VRAIS",
+        "AVIS CLIENTS."
+      ],
+      "anime": {
+        "accent": [
+          "VRAIS"
+        ],
+        "pas": 0.18
+      }
     },
     {
       "debut": 7.8,
       "fin": 12.0,
       "y": 400,
-      "taille": 56,
+      "taille": 52,
       "bandeau": false,
       "lignes": [
-        "TON SITE EN LIGNE EN 48 HEURES.",
-        "300 € — ET 200 € POUR LES PREMIERS."
-      ]
+        "TON SITE EN LIGNE",
+        "EN 48 HEURES.",
+        "300 €, ET 200 €",
+        "POUR LES PREMIERS."
+      ],
+      "anime": {
+        "accent": [
+          "48",
+          "HEURES.",
+          "300 €,",
+          "200 €"
+        ],
+        "or": true,
+        "pas": 0.22
+      }
     },
     {
       "debut": 12.2,
@@ -171,8 +254,16 @@
       "taille": 60,
       "bandeau": false,
       "lignes": [
-        "ÉCRIS « SITE » EN COMMENTAIRE."
-      ]
+        "ÉCRIS « SITE »",
+        "EN COMMENTAIRE."
+      ],
+      "anime": {
+        "accent": [
+          "« SITE »"
+        ],
+        "or": true,
+        "pas": 0.22
+      }
     }
   ],
   "signature": {

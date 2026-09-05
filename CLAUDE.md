@@ -1257,6 +1257,27 @@ et le §2 les borne toutes. Un son qui vit sous 400 Hz n'existe pas sur un
 téléphone, quel qu'en soit l'outil ; une vidéo verticale se juge entre 12 et
 45 % de hauteur ; et `/master-telephone` passe avant toute publication.
 
+### Une vidéo se livre PRÊTE À PUBLIER, pas prête à réexporter
+
+Mesuré le 05/09/2026 sur un montage renvoyé « voilà la version finale ». Il
+était **image pour image identique** à la livraison — décalage nul, durée à
+deux centièmes près — et son seul écart était le son, parce qu'il était passé
+par un éditeur de téléphone : **+3 dB sous 120 Hz, −8 dB entre 300 et 700,
+4 LUFS plus bas en tout.** Une courbe « loudness » d'éditeur, qui a vidé le
+rush de son corps à elle seule. Le retour reçu — « on n'entend plus du tout le
+dragon » — désignait donc un défaut qui n'était pas dans le fichier livré.
+
+Deux conséquences, et la seconde est la plus utile :
+
+1. **Le livrable doit pouvoir être publié tel quel.** Chaque réexport ajoute
+   une chaîne de traitement qu'on n'a pas mesurée et qu'on ne verra jamais.
+2. **Avant de repartir d'un fichier renvoyé par le propriétaire, le comparer à
+   ce qu'on a livré** — quelques images en niveaux de gris, une corrélation
+   sur trois secondes, le spectre par bandes. « J'ai coupé ce qu'il fallait »
+   ne veut pas dire que quelque chose a été coupé. Ici, la comparaison a évité
+   de reconstruire un montage sur une base qu'on aurait crue nouvelle, et a
+   désigné en trois mesures la seule chose qui avait réellement bougé.
+
 ### Par où prendre une vidéo : `/creation-video`
 
 **Douze compétences touchaient déjà la vidéo et le son, et aucune ne disait dans
