@@ -23,7 +23,17 @@
     "bascule n'est pas le bruitage, c'est le SILENCE qui suit — deux secondes",
     "presque nues avant que le lit revienne.",
     "",
-    "POUR LA VERSION SANS VOIX, retirer la clé « voix » avant le montage."
+    "POUR LA VERSION SANS VOIX, retirer la clé « voix » avant le montage.",
+    "",
+    "LE TEXTE DU HOOK EST DANS `sous_titres`, PAS DANS LA SCÈNE.",
+    "",
+    "Les deux premières secondes sont un rush, pas un rendu : la scène ne les",
+    "dessine pas, et son système de cartons ne peut donc rien y poser. Le hook",
+    "passe par le `drawtext` du montage, en cyan d'Aznaroth avec sa secousse —",
+    "il appartient encore à l'univers de la série, c'est la coupure qui en sort.",
+    "",
+    "Il y avait un vrai trou ici : la voix disait « ce que je sais faire avec",
+    "l'IA » et l'écran ne disait rien. Une part du fil se regarde sans le son."
   ],
   "bibliotheque": "sfx_library",
   "cadence": 30,
@@ -31,52 +41,208 @@
   "largeur_stereo": 2.4,
   "reverberation_s": 2.2,
   "plans": [
-    { "nom": "dragon", "source": "rushes/aznaroth-ep01.mp4",
-      "depart": 11.70, "duree": 2.00, "cible_db": -18.0,
-      "_note": "il porte sa propre bande son, celle de l'épisode. C'est elle qu'on entend." },
-    { "nom": "demo", "source": "rushes/choc-demo.mp4",
-      "depart": 0.0, "duree": 13.00, "cible_db": -30.0,
-      "_note": "muet de naissance — rendu de scène." }
+    {
+      "nom": "dragon",
+      "source": "rushes/aznaroth-ep01.mp4",
+      "depart": 11.7,
+      "duree": 2.0,
+      "cible_db": -18.0,
+      "_note": "il porte sa propre bande son, celle de l'épisode. C'est elle qu'on entend."
+    },
+    {
+      "nom": "demo",
+      "source": "rushes/choc-demo.mp4",
+      "depart": 0.0,
+      "duree": 13.0,
+      "cible_db": -30.0,
+      "_note": "muet de naissance — rendu de scène."
+    }
   ],
   "voix": [
-    { "instant": 0.12, "timbre": "tom", "vitesse": 1.0, "cible_db": -13.0,
-      "texte": "Ce que je sais faire avec l'IA." },
-    { "instant": 2.25, "timbre": "tom", "vitesse": 1.0, "cible_db": -14.0,
-      "texte": "Et ce dont tu as vraiment besoin." },
-    { "instant": 4.15, "timbre": "tom", "vitesse": 1.0, "cible_db": -14.0,
-      "texte": "Zéro blabla. Un bouton qui appelle." },
-    { "instant": 6.60, "timbre": "tom", "vitesse": 1.0, "cible_db": -14.0,
-      "texte": "Tes chantiers en photos, tes vrais avis." },
-    { "instant": 10.05, "timbre": "tom", "vitesse": 1.0, "cible_db": -14.0,
-      "texte": "En ligne en quarante-huit heures." },
-    { "instant": 12.20, "timbre": "tom", "vitesse": 1.0, "cible_db": -14.0,
-      "texte": "Écris SITE en commentaire." }
+    {
+      "instant": 0.12,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -13.0,
+      "texte": "Ce que je sais faire avec l'IA."
+    },
+    {
+      "instant": 2.25,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "Et ce dont tu as vraiment besoin."
+    },
+    {
+      "instant": 4.15,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "Zéro blabla. Un bouton qui appelle."
+    },
+    {
+      "instant": 6.6,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "Tes chantiers en photos, tes vrais avis."
+    },
+    {
+      "instant": 10.05,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "En ligne en quarante-huit heures."
+    },
+    {
+      "instant": 12.2,
+      "timbre": "tom",
+      "vitesse": 1.0,
+      "cible_db": -14.0,
+      "texte": "Écris SITE en commentaire."
+    }
+  ],
+  "sous_titres": [
+    {
+      "texte": "CE QUE JE SAIS FAIRE",
+      "debut": 0.06,
+      "fin": 1.98,
+      "y": 300,
+      "taille": 54,
+      "secousse": 8.0,
+      "couleur": "#00E5FF",
+      "halo": "#0090ff"
+    },
+    {
+      "texte": "AVEC L'IA...",
+      "debut": 0.22,
+      "fin": 1.98,
+      "y": 386,
+      "taille": 54,
+      "secousse": 8.0,
+      "couleur": "#00E5FF",
+      "halo": "#0090ff"
+    }
   ],
   "effets": [
-    { "son": "whoosh_retour", "instant": 1.90, "gain": 2, "distance": "moyen" },
-    { "son": "chute_sous_grave", "instant": 1.94, "gain": 6, "distance": "proche",
-      "parametres": { "duree": 0.55, "graine": 3, "depart_hz": 420.0 },
-      "_note": "le disque qui s'arrête. Une hauteur qui s'effondre, pas un bruitage de vinyle." },
-    { "son": "impact_lourd_court", "instant": 2.00, "gain": 2, "distance": "proche" },
-
-    { "son": "ui_apparition", "instant": 2.35, "gain": 2, "distance": "proche" },
-    { "son": "drone_sombre", "instant": 2.70, "gain": -6, "distance": "lointain" },
-    { "son": "drone_grave", "instant": 4.00, "gain": 11, "distance": "lointain" },
-
-    { "son": "ui_clic_doux", "instant": 4.10, "gain": 1, "distance": "proche" },
-    { "son": "ui_clic_doux", "instant": 6.20, "gain": 1, "distance": "proche" },
-    { "son": "ui_clic_doux", "instant": 8.30, "gain": 1, "distance": "proche" },
-
-    { "son": "whoosh_retour", "instant": 9.95, "gain": 2, "distance": "moyen" },
-    { "son": "braam_court", "instant": 10.00, "gain": 3, "distance": "proche" },
-    { "son": "nappe_sombre", "instant": 10.05, "gain": 15, "largeur": 18, "distance": "lointain",
-      "parametres": { "duree": 4.8, "fondamentale": 65.0, "graine": 12 } },
-
-    { "son": "ui_clic_doux", "instant": 12.65, "gain": 1, "distance": "proche" },
-    { "son": "transition_eclair", "instant": 13.10, "gain": 0, "distance": "moyen" },
-    { "son": "braam_court", "instant": 13.06, "gain": 4, "distance": "proche" },
-    { "son": "ui_validation", "instant": 13.15, "gain": 3, "distance": "proche" },
-    { "son": "carillon", "instant": 13.15, "gain": -2, "distance": "moyen",
-      "parametres": { "duree": 2.0, "fondamentale": 659.26, "graine": 9 } }
+    {
+      "son": "whoosh_retour",
+      "instant": 1.9,
+      "gain": 2,
+      "distance": "moyen"
+    },
+    {
+      "son": "chute_sous_grave",
+      "instant": 1.94,
+      "gain": 6,
+      "distance": "proche",
+      "parametres": {
+        "duree": 0.55,
+        "graine": 3,
+        "depart_hz": 420.0
+      },
+      "_note": "le disque qui s'arrête. Une hauteur qui s'effondre, pas un bruitage de vinyle."
+    },
+    {
+      "son": "impact_lourd_court",
+      "instant": 2.0,
+      "gain": 2,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_apparition",
+      "instant": 2.35,
+      "gain": 2,
+      "distance": "proche"
+    },
+    {
+      "son": "drone_sombre",
+      "instant": 2.7,
+      "gain": -6,
+      "distance": "lointain"
+    },
+    {
+      "son": "drone_grave",
+      "instant": 4.0,
+      "gain": 11,
+      "distance": "lointain"
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 4.1,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 6.2,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 8.3,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "whoosh_retour",
+      "instant": 9.95,
+      "gain": 2,
+      "distance": "moyen"
+    },
+    {
+      "son": "braam_court",
+      "instant": 10.0,
+      "gain": 3,
+      "distance": "proche"
+    },
+    {
+      "son": "nappe_sombre",
+      "instant": 10.05,
+      "gain": 15,
+      "largeur": 18,
+      "distance": "lointain",
+      "parametres": {
+        "duree": 4.8,
+        "fondamentale": 65.0,
+        "graine": 12
+      }
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 12.65,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
+      "son": "transition_eclair",
+      "instant": 13.1,
+      "gain": 0,
+      "distance": "moyen"
+    },
+    {
+      "son": "braam_court",
+      "instant": 13.06,
+      "gain": 4,
+      "distance": "proche"
+    },
+    {
+      "son": "ui_validation",
+      "instant": 13.15,
+      "gain": 3,
+      "distance": "proche"
+    },
+    {
+      "son": "carillon",
+      "instant": 13.15,
+      "gain": -2,
+      "distance": "moyen",
+      "parametres": {
+        "duree": 2.0,
+        "fondamentale": 659.26,
+        "graine": 9
+      }
+    }
   ]
 }
