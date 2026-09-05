@@ -42,7 +42,7 @@ du marché », et c'est elle qui donne l'ordre du tableau.
 
 | # | Produit | Marché | Concurrence | Premier euro | Réutilise |
 | --- | --- | --- | --- | --- | --- |
-| 5 | **Le Coffre** — papiers, échéances, abonnements | énorme, flou | forte mais mal placée | **semaines** | Life-Organizer + paper-manager |
+| 5 | **Le Coffre** — papiers, échéances, abonnements — **construit, voir `le-coffre/`** | énorme, flou | forte mais mal placée | **semaines** | Life-Organizer + paper-manager |
 | 2 | **Le Dossier** — MDPH / handicap invisible | 1 formulaire, ~1 M/an | quasi nulle | **1 à 2 mois** | paper-manager |
 | 4 | **Le Recours** — litiges du quotidien | universel | moyenne | 1 à 2 mois | paper-manager |
 | 1 | **Le Classeur** — l'après-décès | ~600 000 familles/an | faible, artisanale | 2 à 3 mois | Life-Organizer |
@@ -339,30 +339,39 @@ commerciale, pas une note technique.
 
 ### Le produit
 
-C'est **la productisation de ce que tu as déjà écrit**, et c'est pour ça qu'il
-est premier au classement du délai :
+Écrit le 02/09/2026, ce paragraphe décrivait deux chantiers à ouvrir. **Les
+deux sont faits** : `le-coffre/` existe depuis le lendemain, et porte
+exactement ce que celui-ci réclamait — voir `CLAUDE.md` § Stack et
+`le-coffre/README.md`.
 
-- `life-organizer` sait ranger par thème et par date, et lire les premières pages
-  d'un document quand son nom ne dit rien.
-- `paper-manager` sait extraire des champs.
-- Il manque **la couche d'échéances** — le module `calendrier` a d'ailleurs été
-  retiré de Life-Organizer le 01/09 pour éviter le doublon avec paper-manager,
-  ce qui est la bonne décision technique **et** le trou fonctionnel du produit.
-- Et il manque **une interface pour quelqu'un qui n'ouvre pas un terminal**.
-
-Ce sont deux chantiers, pas dix.
+- `life-organizer` range par thème et par date, et lit les premières pages d'un
+  document quand son nom ne dit rien — inchangé.
+- `paper-manager` extrait des champs — inchangé.
+- **La couche d'échéances n'est plus un manque** : PR #685 (04/09/2026) l'a
+  posée directement dans `le-coffre/`, en fonction Supabase
+  (`classer-document`), indépendamment de `paper-manager`. Le module
+  `calendrier` reste bien retiré de Life-Organizer — cette partie-là de la
+  phrase d'origine tient toujours — mais l'écosystème ne dépend plus
+  seulement de `paper-manager` pour cette fonction : deux détections
+  d'échéance coexistent maintenant, l'une en ligne de commande, l'autre dans
+  `le-coffre/`.
+- **L'interface existe aussi** : `le-coffre/` est un site Next.js, pas un
+  terminal — c'est la « couche d'interface » que ce paragraphe réclamait.
 
 ### Le modèle
 
-**Gratuit jusqu'à 30 documents, puis 29 € une fois** — ou 19 €/an si tu veux du
-récurrent. Le gratuit fait la démonstration en trois minutes : on photographie
-trois papiers, l'outil sort trois échéances qu'on avait oubliées.
+Non tranché ici : `le-coffre/README.md` ne fixe pas encore de prix. Ce que ce
+paragraphe décrivait comme un modèle à choisir reste une décision de produit
+ouverte, à prendre au moment de la commercialisation plutôt qu'à relire ici.
 
 ### Le risque
 
-Le plus faible des cinq, parce que le code existe. Le vrai risque est celui de
-tous tes projets : **il reste en ligne de commande**. Un outil formidable qu'un
-Français sur trois ne peut pas lancer n'a pas de marché.
+**Le risque décrit ici — « il reste en ligne de commande » — n'existe plus** :
+`le-coffre/` est déjà une interface web. Le risque qui reste à évaluer,
+lui, est nouveau et n'est pas mesuré dans ce fichier : deux implémentations
+de la détection d'échéance (`paper-manager/core/calendrier.py` et la fonction
+Supabase de `le-coffre/`) peuvent diverger avec le temps si l'une évolue sans
+l'autre.
 
 ---
 

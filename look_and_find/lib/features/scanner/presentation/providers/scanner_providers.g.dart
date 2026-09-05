@@ -329,13 +329,65 @@ final class ScannerRepositoryProvider
 
 String _$scannerRepositoryHash() => r'968d671689a1e24a6fd70baa4d01f69853a5d046';
 
+@ProviderFor(decrireObjet)
+final decrireObjetProvider = DecrireObjetProvider._();
+
+final class DecrireObjetProvider
+    extends $FunctionalProvider<DecrireObjet, DecrireObjet, DecrireObjet>
+    with $Provider<DecrireObjet> {
+  DecrireObjetProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'decrireObjetProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$decrireObjetHash();
+
+  @$internal
+  @override
+  $ProviderElement<DecrireObjet> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DecrireObjet create(Ref ref) {
+    return decrireObjet(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DecrireObjet value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DecrireObjet>(value),
+    );
+  }
+}
+
+String _$decrireObjetHash() => r'29fb72ab6dc7d56d49e70569af16e6bada84c25a';
+
+/// Le parcours du comparateur, gardé pour la version deux : plus personne ne le
+/// déclenche depuis le viseur, et il reste câblé et testé. Le remettre en
+/// service doit coûter une ligne de navigation.
+
 @ProviderFor(identifyProduct)
 final identifyProductProvider = IdentifyProductProvider._();
+
+/// Le parcours du comparateur, gardé pour la version deux : plus personne ne le
+/// déclenche depuis le viseur, et il reste câblé et testé. Le remettre en
+/// service doit coûter une ligne de navigation.
 
 final class IdentifyProductProvider
     extends
         $FunctionalProvider<IdentifyProduct, IdentifyProduct, IdentifyProduct>
     with $Provider<IdentifyProduct> {
+  /// Le parcours du comparateur, gardé pour la version deux : plus personne ne le
+  /// déclenche depuis le viseur, et il reste câblé et testé. Le remettre en
+  /// service doit coûter une ligne de navigation.
   IdentifyProductProvider._()
     : super(
         from: null,
@@ -370,6 +422,88 @@ final class IdentifyProductProvider
 }
 
 String _$identifyProductHash() => r'302875878bb8547f360be42d9fd572df0aea31fb';
+
+/// L'état d'**une** description, pas la liste des scans passés.
+///
+/// Jumeau de [ScanController] et non son remplaçant : les deux parcours ne
+/// rendent pas la même chose et n'ont pas les mêmes effets de bord — celui-ci
+/// n'écrit rien dans le journal de prix, la version un n'en ayant pas.
+///
+/// `autoDispose` par défaut : quitter le viseur annule l'appel en cours plutôt
+/// que de laisser courir une requête facturée dont plus personne ne lira le
+/// résultat.
+
+@ProviderFor(FicheController)
+final ficheControllerProvider = FicheControllerProvider._();
+
+/// L'état d'**une** description, pas la liste des scans passés.
+///
+/// Jumeau de [ScanController] et non son remplaçant : les deux parcours ne
+/// rendent pas la même chose et n'ont pas les mêmes effets de bord — celui-ci
+/// n'écrit rien dans le journal de prix, la version un n'en ayant pas.
+///
+/// `autoDispose` par défaut : quitter le viseur annule l'appel en cours plutôt
+/// que de laisser courir une requête facturée dont plus personne ne lira le
+/// résultat.
+final class FicheControllerProvider
+    extends $AsyncNotifierProvider<FicheController, FicheObjet?> {
+  /// L'état d'**une** description, pas la liste des scans passés.
+  ///
+  /// Jumeau de [ScanController] et non son remplaçant : les deux parcours ne
+  /// rendent pas la même chose et n'ont pas les mêmes effets de bord — celui-ci
+  /// n'écrit rien dans le journal de prix, la version un n'en ayant pas.
+  ///
+  /// `autoDispose` par défaut : quitter le viseur annule l'appel en cours plutôt
+  /// que de laisser courir une requête facturée dont plus personne ne lira le
+  /// résultat.
+  FicheControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'ficheControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$ficheControllerHash();
+
+  @$internal
+  @override
+  FicheController create() => FicheController();
+}
+
+String _$ficheControllerHash() => r'b6246368378f59b8b09e247eeceea0e9f6501eb2';
+
+/// L'état d'**une** description, pas la liste des scans passés.
+///
+/// Jumeau de [ScanController] et non son remplaçant : les deux parcours ne
+/// rendent pas la même chose et n'ont pas les mêmes effets de bord — celui-ci
+/// n'écrit rien dans le journal de prix, la version un n'en ayant pas.
+///
+/// `autoDispose` par défaut : quitter le viseur annule l'appel en cours plutôt
+/// que de laisser courir une requête facturée dont plus personne ne lira le
+/// résultat.
+
+abstract class _$FicheController extends $AsyncNotifier<FicheObjet?> {
+  FutureOr<FicheObjet?> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<FicheObjet?>, FicheObjet?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<FicheObjet?>, FicheObjet?>,
+              AsyncValue<FicheObjet?>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
 
 @ProviderFor(ScanController)
 final scanControllerProvider = ScanControllerProvider._();

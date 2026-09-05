@@ -14,7 +14,7 @@ library;
 
 import 'package:flutter/foundation.dart';
 
-import '../../data/echantillon_accord.dart';
+import '../../../color_reader/domain/usecases/echantillon_cadre.dart';
 import '../entities/resultat_accord.dart';
 import 'build_harmonies.dart';
 import 'judge_photo.dart';
@@ -28,7 +28,7 @@ class AnalyserPhoto {
 
 /// Fonction de haut niveau : `compute` ne sait pas transporter une fermeture.
 ResultatAccord _analyser(Uint8List octets) {
-  final pixels = EchantillonAccord.depuisOctets(octets);
+  final pixels = EchantillonCadre.depuisOctets(octets);
   if (pixels == null) return const ResultatAccord.panne();
 
   final verdict = JudgePhoto.juger(pixels);

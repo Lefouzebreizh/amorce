@@ -25,7 +25,7 @@ import '../../../../core/utils/async_view.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../favorites/presentation/pages/favorites_page.dart';
 import '../../../favorites/presentation/providers/favorites_providers.dart';
-import '../../../product_detail/presentation/pages/product_detail_page.dart';
+import '../../../fiche_objet/presentation/pages/fiche_objet_page.dart';
 import '../providers/camera_providers.dart';
 import 'api_key_page.dart';
 import '../providers/scanner_providers.dart';
@@ -104,16 +104,14 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
   }
 
   Future<void> _identifier(Uint8List bytes, String chemin) async {
-    final product = await ref
-        .read(scanControllerProvider.notifier)
-        .identify(bytes, imagePath: chemin);
+    final fiche = await ref
+        .read(ficheControllerProvider.notifier)
+        .decrire(bytes, imagePath: chemin);
 
-    if (!mounted || product == null) return;
+    if (!mounted || fiche == null) return;
 
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ProductDetailPage(product: product),
-      ),
+      MaterialPageRoute<void>(builder: (_) => FicheObjetPage(fiche: fiche)),
     );
 
     // Au retour de la fiche, le viseur repart propre : garder la photo
@@ -130,13 +128,13 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
 
   void _backToViewfinder() {
     setState(() => _frozen = null);
-    ref.read(scanControllerProvider.notifier).reset();
+    ref.read(ficheControllerProvider.notifier).reset();
   }
 
   Future<void> _retry() async {
     final photo = _frozen;
     if (photo == null) return;
-    await ref.read(scanControllerProvider.notifier).identify(photo);
+    await ref.read(ficheControllerProvider.notifier).decrire(photo);
   }
 
   void _focusAt(Offset local, Size size) {
@@ -163,7 +161,7 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
     }
 
     final session = ref.watch(cameraSessionProvider);
-    final scan = ref.watch(scanControllerProvider);
+    final scan = ref.watch(ficheControllerProvider);
     final flash = ref.watch(flashSettingProvider);
     final alerts = ref.watch(pendingAlertsProvider);
 

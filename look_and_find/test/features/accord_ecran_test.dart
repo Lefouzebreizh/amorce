@@ -11,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:look_and_find/features/accord/domain/entities/harmonie.dart';
 import 'package:look_and_find/features/accord/domain/entities/photo_verdict.dart';
 import 'package:look_and_find/features/accord/domain/usecases/build_harmonies.dart';
-import 'package:look_and_find/features/accord/domain/usecases/zone_visee.dart';
+import 'package:look_and_find/features/color_reader/domain/usecases/zone_visee.dart';
 import 'package:look_and_find/features/accord/presentation/widgets/cadre_visee.dart';
 import 'package:look_and_find/features/accord/presentation/widgets/panneau_accord.dart';
 

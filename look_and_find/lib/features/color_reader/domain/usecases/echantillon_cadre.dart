@@ -8,6 +8,19 @@
 /// une saturation TSV traitée comme une saturation TSL : la couleur restait
 /// crédible, seul un test de borne l'a attrapée.
 ///
+/// **Pourquoi ici et non chez Accord, d'où il vient.** Ce passage n'a rien qui
+/// appartienne à Accord : il découpe le cadre visé et rend ses pixels, ce dont
+/// a besoin quiconque veut nommer une couleur. Le laisser dans `accord/data/`
+/// le rendait inatteignable — la règle de dépendance interdit d'importer le
+/// `data` d'une autre fonctionnalité — et la seule issue aurait été d'en
+/// recopier le découpage ailleurs, ce que ce fichier passe justement son
+/// en-tête à déconseiller. `color_reader` est la brique partagée : il n'importe
+/// personne, et les deux appelants viennent à lui.
+///
+/// Il vit dans le `domain` bien qu'il décode une image, parce qu'il ne touche
+/// ni au réseau, ni au disque, ni à Flutter : des octets entrent, des pixels
+/// sortent. C'est ce qui le laisse atteignable depuis le `domain` d'Accord.
+///
 /// D'où deux décisions.
 ///
 /// *Le cadre n'est pas recalculé ici* : il vient de `ZoneVisee.cadre()`, la
@@ -24,10 +37,10 @@ import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 
-import '../domain/usecases/zone_visee.dart';
+import 'zone_visee.dart';
 
-class EchantillonAccord {
-  const EchantillonAccord._();
+class EchantillonCadre {
+  const EchantillonCadre._();
 
   /// Le côté de l'échantillon rendu, en pixels.
   ///
@@ -45,7 +58,17 @@ class EchantillonAccord {
     Uint8List octets, {
     double part = ZoneVisee.partParDefaut,
   }) {
-    final image = img.decodeImage(octets);
+    // `decodeImage` ne rend pas toujours `null` sur des octets qui ne sont pas
+    // une image : il essaie chaque décodeur, et celui du PSD lit au-delà de la
+    // fin d'un tampon trop court avant d'avoir pu conclure — il lève alors un
+    // `RangeError`. Sans cette garde, une photo tronquée ne coûte pas la
+    // couleur, elle fait échouer tout ce qui l'appelle.
+    final img.Image? image;
+    try {
+      image = img.decodeImage(octets);
+    } catch (_) {
+      return null;
+    }
     if (image == null) return null;
     return depuisImage(image, part: part);
   }

@@ -1,9 +1,18 @@
 # Look & Find — guide du sous-projet
 
-Application Flutter (iOS/Android) qui identifie un objet photographié, le
-compare chez les marchands, le projette dans la pièce en réalité augmentée et
-en suit le prix. **Elle est indépendante du studio Amorce** qui occupe la
-racine du dépôt : rien ici n'importe rien de `../src`, et réciproquement.
+Application Flutter (iOS/Android) qui **décrit un objet photographié** : ce que
+c'est, à quoi ça sert, de quoi c'est fait, de quelle couleur, et quelques gestes
+utiles pour sa catégorie. **Elle est indépendante du studio Amorce** qui occupe
+la racine du dépôt : rien ici n'importe rien de `../src`, et réciproquement.
+
+**Version un, et le périmètre est une décision, pas un état d'avancement.** Ni
+marque, ni modèle, ni prix, ni marchand : une reconnaissance de catégorie suffit
+à choisir la notice, et demander une référence exacte est précisément ce qui
+pousse un modèle de langage à inventer. Le comparateur de prix, le suivi de
+baisse et la projection en réalité augmentée **existent, sont testés, et sont
+hors du parcours** — ils reviendront en version deux. Les retrouver intacts
+coûtera moins cher que de les réécrire, et c'est la raison pour laquelle ils
+n'ont pas été supprimés.
 
 Le `README.md` de ce dossier s'adresse à qui utilise ou évalue l'application
 (parcours, décisions justifiées, ce qui est testé). Ce fichier-ci s'adresse à
@@ -76,11 +85,25 @@ lib/
 │   └── utils/       result, formatters, extensions, iterables, image_compressor
 └── features/
     ├── scanner/         viseur, capture, appel au modèle
-    ├── product_detail/  fiche, comparateur, alternatives  ← propriétaire du produit
+    ├── fiche_objet/     la fiche v1  ← propriétaire de la description
+    ├── product_detail/  comparateur, alternatives — dormant, v2  ← propriétaire du produit
+    ├── color_reader/    cadre visé, échantillon, nom de couleur  ← brique partagée
+    ├── accord/          harmonies d'une couleur relevée
+    ├── tout_seul/       gestes de l'enfant, reconnaissance locale
     ├── ar_view/         projection 3D et ancrage
     └── favorites/       stockage local, historique, alertes
 tool/                banc d'essai de l'invite et rejeu d'une réponse, hors Flutter
 ```
+
+**`color_reader` est la seconde fonctionnalité qui n'importe personne**, pour la
+même raison que `product_detail` : elle est empruntée. Toute la chaîne « du
+cadre visé au nom de la couleur » y est réunie — `ZoneVisee` (quel carré la
+personne vise), `EchantillonCadre` (ses pixels, réduits) et `LectureCadre` /
+`NameColor` (leur nom en français, avec l'hésitation dite). Les deux premiers
+venaient d'`accord/`, où la règle de dépendance les rendait inatteignables
+depuis ailleurs ; la seule autre issue était d'en recopier le découpage, ce que
+leur en-tête déconseille explicitement. Une fonctionnalité qui a besoin d'une
+couleur vient donc ici, et n'a jamais à connaître Accord.
 
 `tool/` s'exécute avec `dart run`, sans appareil ni émulateur — ce qui n'est
 possible que parce que le `domain` et le `data` du produit sont sans dépendance
@@ -130,9 +153,22 @@ d'y toucher.
 5. **La réponse brute est retenue avant le décodage.** Une réponse illisible
    est justement celle qu'on a le plus besoin de pouvoir regarder ; l'enregistrer
    après un décodage réussi la perdrait dans le seul cas qui compte.
-6. **Le schéma de `gemini_prompt.dart` et la lecture de `product_dto.dart` se
-   tiennent.** Modifier l'un sans l'autre fait silencieusement disparaître un
-   champ de la fiche, sans qu'aucun test ne l'attrape.
+6. **Un schéma d'invite et sa lecture se tiennent, et il y a deux paires.**
+   `fiche_prompt.dart` ↔ `fiche_objet_dto.dart` pour la version un,
+   `gemini_prompt.dart` ↔ `product_dto.dart` pour le comparateur dormant.
+   Modifier l'un sans l'autre fait silencieusement disparaître un champ ;
+   `contrat_fiche_lecture_test.dart` et `contrat_invite_lecture_test.dart`
+   l'attrapent, chacun pour sa paire.
+6 bis. **Une seule enveloppe de requête**, dans `corps_requete.dart`. Les deux
+   invites ne diffèrent que par la consigne et le schéma ; tout le reste — ordre
+   texte puis photo, type MIME, décodage contraint, température — est une
+   décision prise une fois. `tool/banc_invite.dart` en est le troisième
+   appelant, et il ne vaut que s'il envoie ce que l'application envoie.
+6 ter. **La couleur dominante est mesurée, jamais demandée au modèle.** Un
+   modèle de langage nomme une couleur avec le même aplomb qu'il nomme un
+   objet ; `color_reader` refuse de nommer une moyenne qui n'existe nulle part
+   et dit quand il hésite. Sur un champ que personne ne peut vérifier,
+   l'hésitation dite vaut mieux que l'assurance.
 7. **Le prix de référence d'un favori ne bouge pas.** C'est lui qui rend une
    baisse mesurable ; le recalculer ferait glisser le repère avec le prix et
    aucune baisse ne serait jamais visible.
@@ -229,6 +265,9 @@ méthode testée.
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé. Le patron du faux `Dio` est là si un autre test en a besoin. |
 | `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |
 | `requete_gemini_test.dart` | Ce qui part réellement vers Gemini, et l'égalité avec ce qu'enverrait `tool/banc_invite.dart`. |
+| `fiche_objet_dto_test.dart` | Ce que la lecture de la fiche v1 encaisse : liste rendue en une phrase, « null » écrit en toutes lettres, clé absente. |
+| `contrat_fiche_lecture_test.dart` | Le pacte de la version un, et le périmètre lui-même : l'invite doit continuer d'interdire marque et prix. |
+| `fiche_objet_page_test.dart` | La fiche v1 montée pour de vrai, et ce qu'elle ne montre plus — ni prix, ni marchand. |
 | `diagnostic_reponse_test.dart` | La fidélité du diagnostic de `tool/lecture_fiche.dart` : ne rien signaler que le DTO accepte, ne rien taire de ce qu'il écarte. Un verdict inversé fait corriger le mauvais fichier. |
 
 Trois recettes utiles quand on ajoute un test :
