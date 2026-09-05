@@ -22,6 +22,29 @@
 > « chat », jamais « chat qui a faim ». La tête acoustique reste donc sans
 > vérité de terrain, et sa licence CC BY-NC interdit d'embarquer ces fichiers
 > dans un produit vendu.
+>
+> **Et ce que l'application dit vraiment de ces quarante chats n'était pas
+> mesuré — 05/09/2026.** `mesurer_corpus.py` appelait le juge **sans la tête
+> acoustique** : sa colonne « intention » était celle de la porte seule. Le
+> défaut ne pouvait pas se voir sur ESC-50, dont aucun fichier ne porte
+> d'étiquette de contexte — personne n'y attendait autre chose qu'`indecis`.
+> Corrigé, l'outil rend ceci :
+>
+> | sur les 40 chats | verdict |
+> | --- | --- |
+> | **demande** | **26** |
+> | contentement, *mesuré* | 3 |
+> | stress, *provisoire* | 2 |
+> | indécis | 9 |
+>
+> **31 chats sur 40 reçoivent une intention**, et non trois. Sur les vingt
+> témoins, **zéro** : les quatre qui franchissent la porte ressortent tous
+> `indécis`. Le défaut de porte reste entier, mais il ne fait dire à
+> l'application rien de faux.
+>
+> Deux chats sur quarante ressortent en « Recule. » — stress *provisoire*, donc
+> sans pourcentage affiché. C'est le seul verdict de cette liste qui touche à
+> l'état de l'animal, et il vaut d'être surveillé pour cette raison-là.
 
 Le projet a un modèle qui écoute, une tête qui lit, 47 tests qui gardent — et
 **quatre sons réels** en tout. Ce fichier dit lesquels manquent, pourquoi ils ne
@@ -213,6 +236,44 @@ et il donne raison à celui qui trie.
 La feuille vit dans `.fixtures/`, hors de Git. Ce qui revient dans le dépôt est
 le verdict — quels fichiers tiennent, lesquels sautent et pourquoi — jamais les
 enregistrements.
+
+### Ce que l'oreille a rendu — 05/09/2026
+
+Trois vidéos écoutées, choisies pour trancher deux questions et pas plus : un
+chat qui veut sortir (12 s), un qui réclame à manger, un qui accueille (11 s).
+
+| question | ce qu'il a entendu | ce que ça change |
+| --- | --- | --- |
+| faim contre envie de sortir | **deux sons différents** | la fusion des cartes cesse d'être évidente — voir le bloc `CORRESPONDANCE` de `tete.py` |
+| le « bonjour » est-il plus court ? | **nettement** | cohérent avec `FRONTIERE_LONG = 0.7`, qui n'avait aucun témoin |
+
+**Aucune des deux ne renverse quoi que ce soit, et la raison est la même** :
+ce sont trois chats différents, dans trois maisons différentes. Une différence
+entendue entre deux enregistrements peut venir de l'animal autant que de
+l'intention. Ce qui trancherait la première question est déjà dans la liste —
+les neuf `demande`, six gamelles contre trois portes — à condition de chercher
+un trait qui survive **à travers** les chats.
+
+### Trois vrais chats, filmés par le propriétaire à 5 h 10
+
+Envoyés le 05/09/2026, hors de tout corpus téléchargé, contexte connu de lui.
+**Trois fois `demande`, trois fois sur trois.** Un chat qui réclame à cinq
+heures du matin : le verdict est le bon, et c'est la première fois que
+l'application est confrontée à un enregistrement dont quelqu'un connaît
+vraiment la situation.
+
+| fichier | cumul félin | `Meow` | `Caterwaul` | verdict |
+| --- | --- | --- | --- | --- |
+| `chat-05h10` | 1,742 | 0,586 | **0,414** | demande |
+| `chat-05h10-b` | 1,156 | 0,332 | 0,082 | demande |
+| `chat-05h10-c` | 1,598 | 0,586 | 0,148 | demande |
+
+Le premier confirme la correction de la veille sur un chat qu'ESC-50 n'a jamais
+vu : `Caterwaul` y vaut **71 % de `Meow`** sur un miaulement parfaitement
+ordinaire. Sous l'ancienne règle, ce chat-là sortait en « stress, mesuré ».
+
+Ces fichiers vivent dans `.fixtures/erwann/`, ignoré par Git, et n'en sortent
+pas.
 
 ### Ce que cette liste n'est pas
 
