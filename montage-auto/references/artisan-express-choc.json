@@ -52,7 +52,22 @@
     "",
     "LE `format=gbrp` N'EST PAS DÉCORATIF. Sans lui, `blend` travaille sur Y, U",
     "et V : un « écran » appliqué aux plans de chrominance vire toute l'image au",
-    "magenta. Vu, mesuré, corrigé — le mode Écran se fait en RVB."
+    "magenta. Vu, mesuré, corrigé — le mode Écran se fait en RVB.",
+    "",
+    "LE FLÉCHISSEMENT DU DRAGON EST GRAVÉ DANS LE PLAN, PAS DANS LE MIXAGE.",
+    "",
+    "Retour d'écoute : « les effets du dragon couvrent la voix ». Mesuré, le rush",
+    "tient entre -7 et -12 dB sur toute sa durée, et la voix parle du début à la",
+    "fin — elle n'avait aucune chance.",
+    "",
+    "`esquive` ne pouvait rien : elle agit sur la couche d'effets, pas sur le son",
+    "d'un plan. Le fléchissement est donc appliqué au rush lui-même, par une",
+    "expression `volume` : plein niveau jusqu'à 0,30 s — l'entrée du dragon garde",
+    "son impact, mesuré -9,7 dB avant comme après — puis -9 dB tenu tant que la",
+    "voix parle. Sous la voix : -11,2 dB avant, -20,2 dB après.",
+    "",
+    "La voix de la première réplique monte en parallèle de -13 à -11 dB. Onze",
+    "décibels gagnés au total, sans toucher à ce qui fait l'effet de la scène."
   ],
   "bibliotheque": "sfx_library",
   "cadence": 30,
@@ -66,7 +81,7 @@
       "depart": 0.0,
       "duree": 2.0,
       "cible_db": -18.0,
-      "_note": "le rush 11,70 → 13,70 d'AZNAROTH EP01, avec le hook déjà composé dessus en mode Écran. Recette dans scenes/recits/hook-dragon.json."
+      "_note": "le rush 11,70 → 13,70 d'AZNAROTH EP01, avec le hook composé en mode Écran ET un fléchissement de -9 dB gravé dans le son à partir de 0,45 s. Recette dans scenes/recits/hook-dragon.json."
     },
     {
       "nom": "demo",
@@ -82,7 +97,7 @@
       "instant": 0.12,
       "timbre": "tom",
       "vitesse": 1.0,
-      "cible_db": -13.0,
+      "cible_db": -11.0,
       "texte": "Ce que je sais faire avec l'IA."
     },
     {

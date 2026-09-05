@@ -66,6 +66,13 @@ const DEFAUT = {
      vraie page avec un navigateur, jamais à l'estime. Entre deux foyers, tout
      est interpolé. Sans foyers, la page défile simplement de haut en bas. */
   foyers: null,              // [{ instant, y, zoom }]
+  /* La dalle : sa taille, et où elle se pose dans le cadre.
+
+     `hautEcran` fixe le HAUT de la dalle au lieu de la centrer. C'est ce qui
+     permet de dégager la bande de texte au-dessus d'elle : un carton posé sur
+     le site cache le seul argument de vente qu'on ait. Sans ce réglage, la
+     dalle est centrée sur le cadre comme avant. */
+  dalle: { large: 604, haut: 1130, hautEcran: null },
   cartes: [
     { debut: 8.70,  fin: 10.35, lignes: ['CETTE VIDÉO A DEMANDÉ', 'DES HEURES.'], taille: 74 },
     { debut: 10.35, fin: 12.00, lignes: ['VOTRE SITE RECEVRA', 'LE MÊME SOIN.'],  taille: 74 }
@@ -333,7 +340,7 @@ function portail(t) {
 }
 
 /* --- Le site qui sort de la lumière ---------------------------------------- */
-const DALLE = { large: 604, haut: 1130 };
+const DALLE = Object.assign({}, DEFAUT.dalle, RECIT.dalle || {});
 
 function coinsArrondis(px, py, w, h, r) {
   x.beginPath();
@@ -363,7 +370,9 @@ function site(t, img) {
   const vise = foyer(t);
   const ech = (0.14 + 0.86 * monte) * (1 - 0.40 * recul) * (vise ? vise.zoom : 1);
   const w = DALLE.large * ech, h = DALLE.haut * ech;
-  const cy = CY + 150 * (1 - monte) + 330 * recul;
+  const cy = DALLE.hautEcran === null
+    ? CY + 150 * (1 - monte) + 330 * recul
+    : DALLE.hautEcran + h / 2 + 150 * (1 - monte) + 330 * recul;
   const px = CX - w / 2, py = cy - h / 2;
   const opacite = (1 - 0.58 * recul);
 

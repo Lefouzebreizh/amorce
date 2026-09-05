@@ -13,15 +13,18 @@
     "vraiment besoin » de l'autre. Un portail qui continuerait de tourner",
     "derrière la démonstration détruirait la bascule qu'on vient de payer.",
     "",
-    "LES FOYERS SONT MESURÉS, PAS ESTIMÉS. Les hauteurs sont relevées sur la",
-    "vraie page avec un navigateur, en pixels de la capture (840 × 4758) :",
+    "LE TEXTE NE RECOUVRE JAMAIS LE SITE. La dalle est posée à 500 px du haut au",
+    "lieu d'être centrée, et les cartons tiennent entre 230 et 494. Le site est",
+    "le seul argument de vente qu'on ait : un sous-titre par-dessus le cache.",
     "",
-    "  en-tête  258     bouton d'appel   620     services  1661",
-    "  galerie 2446     avis            3588     pied      4542",
+    "LE DÉFILEMENT EST CONTINU, du haut de la page au pied, de 0,60 à 7,60 s.",
+    "Une première version sautait d'un bloc à l'autre en s'approchant — bouton,",
+    "photos, avis. C'était démonstratif et faux : personne ne consulte un site",
+    "par coupes. Un visiteur fait défiler, et c'est ce mouvement-là qui donne",
+    "envie de cliquer.",
     "",
-    "La caméra s'approche à 1,42 sur le bouton puis 1,38 sur les photos et les",
-    "avis. Au-delà de 1,5 la dalle déborde du cadre et cesse d'être un",
-    "téléphone ; c'est la seule limite de ce réglage."
+    "3 090 px de page en 7 s, soit 368 px/s à l'écran : assez lent pour lire les",
+    "titres, assez vif pour ne pas ennuyer."
   ],
   "T": {
     "etincelle": -1.2,
@@ -37,63 +40,11 @@
     "portail": "lueur",
     "braises": false
   },
-  "foyers": [
-    {
-      "instant": 0.0,
-      "y": 258,
-      "zoom": 1.0
-    },
-    {
-      "instant": 1.7,
-      "y": 258,
-      "zoom": 1.0
-    },
-    {
-      "instant": 2.1,
-      "y": 620,
-      "zoom": 1.42
-    },
-    {
-      "instant": 3.9,
-      "y": 620,
-      "zoom": 1.42
-    },
-    {
-      "instant": 4.3,
-      "y": 2446,
-      "zoom": 1.38
-    },
-    {
-      "instant": 6.0,
-      "y": 2446,
-      "zoom": 1.38
-    },
-    {
-      "instant": 6.4,
-      "y": 3588,
-      "zoom": 1.38
-    },
-    {
-      "instant": 7.8,
-      "y": 3588,
-      "zoom": 1.38
-    },
-    {
-      "instant": 8.4,
-      "y": 4542,
-      "zoom": 1.08
-    },
-    {
-      "instant": 13.0,
-      "y": 4542,
-      "zoom": 1.04
-    }
-  ],
   "cartes": [
     {
       "debut": 0.05,
       "fin": 1.95,
-      "y": 390,
+      "y": 330,
       "taille": 56,
       "bandeau": true,
       "lignes": [
@@ -103,9 +54,9 @@
     },
     {
       "debut": 2.05,
-      "fin": 4.05,
-      "y": 350,
-      "taille": 62,
+      "fin": 3.3,
+      "y": 335,
+      "taille": 58,
       "bandeau": true,
       "lignes": [
         "ZÉRO BLABLA.",
@@ -113,20 +64,20 @@
       ]
     },
     {
-      "debut": 4.15,
-      "fin": 6.15,
-      "y": 320,
-      "taille": 64,
+      "debut": 3.4,
+      "fin": 5.4,
+      "y": 300,
+      "taille": 60,
       "bandeau": true,
       "lignes": [
         "TES CHANTIERS EN PHOTOS."
       ]
     },
     {
-      "debut": 6.25,
-      "fin": 7.95,
-      "y": 320,
-      "taille": 64,
+      "debut": 5.5,
+      "fin": 7.45,
+      "y": 300,
+      "taille": 60,
       "bandeau": true,
       "lignes": [
         "TES VRAIS AVIS CLIENTS."
@@ -135,8 +86,8 @@
     {
       "debut": 8.05,
       "fin": 10.55,
-      "y": 400,
-      "taille": 58,
+      "y": 365,
+      "taille": 56,
       "bandeau": true,
       "lignes": [
         "EN LIGNE EN 48 H.",
@@ -147,8 +98,8 @@
     {
       "debut": 10.65,
       "fin": 13.0,
-      "y": 350,
-      "taille": 66,
+      "y": 300,
+      "taille": 60,
       "lignes": [
         "ÉCRIS « SITE »",
         "EN COMMENTAIRE."
@@ -161,5 +112,14 @@
     "y": 640,
     "trait": 750,
     "taille": 80
+  },
+  "dalle": {
+    "large": 528,
+    "haut": 880,
+    "hautEcran": 470
+  },
+  "defilement": {
+    "debut": 0.8,
+    "fin": 7.7
   }
 }
