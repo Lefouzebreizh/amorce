@@ -24,20 +24,22 @@ const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et intern
 // le vrai garde-fou (voir SECURITY.md).
 const TAILLE_MAX_OCTETS = 20 * 1024 * 1024;
 
-// Une couleur reconnaissable par catégorie — les mêmes trois teintes que le
-// reste de l'appli (accent, violet, wine), jamais d'orange/jaune. La
-// couleur porte un sens grossier (santé/logement en accent, argent en
-// violet, urgence/abonnement en wine), pas une charte arbitraire par mot.
+// Une couleur reconnaissable par catégorie — vert (soutien discret) pour ce
+// qui touche au quotidien personnel, violet (dominant) pour l'administratif
+// et l'argent, wine pour ce qui presse (assurance/énergie, déjà lié à des
+// échéances de résiliation). Jamais d'orange/jaune, jamais de turquoise ni de
+// bleu ici : ces deux-là sont réservés aux titres/liens/actifs et aux
+// boutons/alertes, pas à un badge de catégorie.
 const STYLE_CATEGORIE: Record<string, { icone: LucideIcon; classe: string }> = {
   'Administratif': { icone: FileText, classe: 'bg-violet/15 text-violet' },
   'Impôts': { icone: Landmark, classe: 'bg-violet/15 text-violet' },
-  'Santé': { icone: Heart, classe: 'bg-accent/15 text-accent' },
-  'Logement': { icone: Home, classe: 'bg-accent/15 text-accent' },
+  'Santé': { icone: Heart, classe: 'bg-vert/15 text-vert' },
+  'Logement': { icone: Home, classe: 'bg-vert/15 text-vert' },
   'Banque': { icone: Wallet, classe: 'bg-violet/15 text-violet' },
   'Assurance': { icone: Shield, classe: 'bg-wine/15 text-wine' },
   'Énergie': { icone: Zap, classe: 'bg-wine/15 text-wine' },
   'Téléphonie et internet': { icone: Wifi, classe: 'bg-violet/15 text-violet' },
-  'Emploi': { icone: Briefcase, classe: 'bg-accent/15 text-accent' },
+  'Emploi': { icone: Briefcase, classe: 'bg-vert/15 text-vert' },
   'Véhicule': { icone: Car, classe: 'bg-violet/15 text-violet' },
 };
 const STYLE_CATEGORIE_DEFAUT = { icone: File, classe: 'bg-ink-soft/15 text-ink-soft' };
@@ -65,12 +67,19 @@ type Correction = { nom: string; categorie: string; montant: string };
 // Trois états lisibles d'un coup d'œil, dérivés du même calcul que la
 // bannière d'alerte — voir statutEcheance dans coffre.ts pour les seuils.
 // Jamais d'orange ni de jaune (préférence posée pour tous les projets,
-// voir globals.css) : violet pour l'intermédiaire, pas d'ambre.
+// voir globals.css) : violet pour l'intermédiaire, vert (soutien discret)
+// pour « rien à faire », jamais d'ambre.
 const LIBELLE_STATUT: Record<StatutEcheance, string> = {
   urgent: 'Urgent', bientot: 'Bientôt', calme: 'Calme',
 };
 const CLASSE_STATUT: Record<StatutEcheance, string> = {
-  urgent: 'bg-wine', bientot: 'bg-violet', calme: 'bg-accent',
+  urgent: 'bg-wine', bientot: 'bg-violet', calme: 'bg-vert',
+};
+// Même code couleur que le point, en texte — la couleur seule ne porte
+// jamais le statut à elle seule (voir BadgeStatut), et un mot visible sur la
+// carte évite d'avoir à ouvrir la fiche détail pour savoir où on en est.
+const CLASSE_STATUT_TEXTE: Record<StatutEcheance, string> = {
+  urgent: 'text-wine', bientot: 'text-violet', calme: 'text-vert',
 };
 // Point coloré seul dans la liste (comme la maquette), toujours doublé d'un
 // aria-label et d'un title — la couleur seule ne suffit jamais à porter un
@@ -627,7 +636,7 @@ export default function PageCoffre() {
           <Champ id="mdp2" name="mdp2" type="password" autoComplete="new-password" />
           {erreur && <p className="text-sm text-wine">{erreur}</p>}
           <button type="submit" disabled={enCours}
-            className="rounded-xl bg-accent px-4 py-3 font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+            className="rounded-xl bg-bleu px-4 py-3 font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
             {enCours ? 'Création…' : 'Créer le coffre'}
           </button>
         </form>
@@ -646,7 +655,7 @@ export default function PageCoffre() {
           <Champ name="mdp" type="password" autoComplete="current-password" autoFocus />
           {erreur && <p className="text-sm text-wine">{erreur}</p>}
           <button type="submit" disabled={enCours}
-            className="rounded-xl bg-accent px-4 py-3 font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+            className="rounded-xl bg-bleu px-4 py-3 font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
             {enCours ? 'Vérification…' : 'Déverrouiller'}
           </button>
         </form>
@@ -701,7 +710,7 @@ export default function PageCoffre() {
       </datalist>
       <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
         {/* En-tête */}
-        <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
+        <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised bg-gradient-to-br from-paper-raised via-paper-raised to-vert/10 p-6 sm:p-8">
           <div>
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
               Bonjour {prenom || 'toi'}
@@ -710,7 +719,7 @@ export default function PageCoffre() {
             <p className="mt-3 max-w-md text-ink-soft">
               Tout est déjà lu et rangé pour toi — il ne reste qu&apos;à jeter un œil.
             </p>
-            <p className="mt-4 flex items-center gap-2 text-sm text-accent">
+            <p className="mt-4 flex items-center gap-2 text-sm text-vert">
               <ShieldCheck size={16} /> Personne d&apos;autre ne peut voir tes papiers. Même nous.
             </p>
           </div>
@@ -760,7 +769,7 @@ export default function PageCoffre() {
                   type="button"
                   onClick={confirmerTout}
                   disabled={enCours || aValider.every((p) => p.enAnalyse)}
-                  className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60"
+                  className="rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
                 >
                   Déposer tout ({aValider.filter((p) => !p.enAnalyse).length})
                 </button>
@@ -799,8 +808,8 @@ export default function PageCoffre() {
                       </button>
                     </div>
                     {item.echeance.presente && (
-                      <div className="flex items-start gap-3 rounded-lg border border-accent/40 bg-accent/10 p-3 text-sm">
-                        <Bell size={16} className="mt-0.5 shrink-0 text-accent" />
+                      <div className="flex items-start gap-3 rounded-lg border border-bleu/40 bg-bleu/10 p-3 text-sm">
+                        <Bell size={16} className="mt-0.5 shrink-0 text-bleu" />
                         <div>
                           <p className="font-medium">Échéance détectée : {item.echeance.libelle}</p>
                           <p className="text-ink-soft">
@@ -839,7 +848,7 @@ export default function PageCoffre() {
                     )}
                     <div>
                       <button onClick={() => confirmerDepot(item)} disabled={enCours}
-                        className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                        className="rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                         Déposer
                       </button>
                     </div>
@@ -924,7 +933,15 @@ export default function PageCoffre() {
                             {info.montant ? ` · ${info.montant}` : ''}
                           </p>
                         </div>
-                        {jours !== null && <BadgeStatut jours={jours} />}
+                        {jours !== null && (
+                          <span className="hidden shrink-0 items-center gap-1.5 sm:flex">
+                            <BadgeStatut jours={jours} />
+                            <span className={`text-xs font-semibold ${CLASSE_STATUT_TEXTE[statutEcheance(jours)]}`}>
+                              {LIBELLE_STATUT[statutEcheance(jours)]}
+                            </span>
+                          </span>
+                        )}
+                        {jours !== null && <span className="sm:hidden"><BadgeStatut jours={jours} /></span>}
                         <ChevronRight size={18} className="shrink-0 text-ink-soft" />
                       </button>
                     </li>
@@ -942,7 +959,7 @@ export default function PageCoffre() {
                 <div className="flex gap-2">
                   <Champ name="date" type="date" required />
                   <button type="submit" disabled={enCours}
-                    className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    className="shrink-0 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Ajouter
                   </button>
                 </div>
@@ -984,11 +1001,11 @@ export default function PageCoffre() {
                 </div>
                 <div className="flex items-center gap-3">
                   <button type="submit" disabled={enCours}
-                    className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    className="rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Enregistrer
                   </button>
                   {identiteEnregistree && (
-                    <span className="text-sm text-accent">Identité enregistrée ✓</span>
+                    <span className="text-sm text-vert">Identité enregistrée ✓</span>
                   )}
                 </div>
               </form>
@@ -1008,7 +1025,7 @@ export default function PageCoffre() {
         <button
           type="button"
           onClick={() => entreeFichier.current?.click()}
-          className="pointer-events-auto flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 font-semibold text-paper shadow-lg transition hover:bg-accent-strong"
+          className="pointer-events-auto flex items-center gap-2 rounded-full bg-bleu px-6 py-3.5 font-semibold text-paper shadow-lg transition hover:bg-bleu-strong"
         >
           <Plus size={20} /> Ajouter un papier
         </button>
@@ -1117,7 +1134,7 @@ export default function PageCoffre() {
                       onChange={(e) => setCorrection({ ...correction, montant: e.target.value })} />
                   </div>
                   <button onClick={enregistrerCorrection} disabled={enCours}
-                    className="self-start rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    className="self-start rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Enregistrer
                   </button>
                 </div>

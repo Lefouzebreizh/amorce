@@ -1,20 +1,35 @@
 @import 'tailwindcss';
 
 /*
- * Même famille visuelle que l'interface locale de Life-Organizer
- * (interface_web/index.html) : fond sombre, un seul accent bleu-violet,
- * jamais d'orange ni de jaune (préférence posée pour tous les projets).
+ * Fond quasi noir, jamais d'orange ni de jaune (préférence posée pour tous
+ * les projets). Quatre teintes, quatre rôles distincts — pas une palette
+ * décorative, une répartition :
+ *
+ * - Turquoise (`accent`) et violet (`violet`) sont DOMINANTS : titres, liens,
+ *   éléments actifs (focus, sélection, survol). C'est l'identité visuelle du
+ *   Tiroir Secret, ce qu'on voit en premier.
+ * - Vert (`vert`) est un SOUTIEN DISCRET : dégradés de fond, badges de
+ *   catégorie, confirmations de succès — jamais un titre, jamais un bouton.
+ * - Bleu (`bleu`) est un ACCENT PONCTUEL : uniquement les boutons d'action
+ *   (créer, déposer, enregistrer) et les alertes. Jamais en fond de page, ni
+ *   en masse — un bouton bleu à la fois, jamais une bande bleue.
+ *
+ * `wine` reste la seule couleur de danger (suppression, erreur) : un
+ * cinquième rôle sémantique, pas une des quatre teintes ci-dessus.
  */
 @theme {
-  --color-paper: #16151a;
-  --color-paper-raised: #1f1e25;
-  --color-ink: #f1efea;
-  --color-ink-soft: #b7b3a9;
-  --color-line: #2e2c34;
-  --color-accent: #4fb39c;
-  --color-accent-strong: #6fcab4;
-  --color-violet: #9b8fe0;
-  --color-wine: #c97783;
+  --color-paper: #0b0c0f;
+  --color-paper-raised: #15171d;
+  --color-ink: #f2f1ee;
+  --color-ink-soft: #9ea3b0;
+  --color-line: #262a33;
+  --color-accent: #2dd4bf;
+  --color-accent-strong: #5eead4;
+  --color-violet: #a78bfa;
+  --color-vert: #34d399;
+  --color-bleu: #3b82f6;
+  --color-bleu-strong: #60a5fa;
+  --color-wine: #e8829a;
 
   --font-affiche: 'Instrument Serif', Georgia, serif;
   --font-corps: 'Plus Jakarta Sans', system-ui, sans-serif;
