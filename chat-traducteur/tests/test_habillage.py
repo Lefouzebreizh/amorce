@@ -20,11 +20,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from habillage.carte import (  # noqa: E402
-    BAS_SUR, COLONNE, HAUT_SUR, TAILLE_TITRE, blocs, couper, en_svg,
+    BAS_SUR, COLONNE, HAUT_SUR, NOM_FRANCAIS, TAILLE_TITRE, blocs, couper, en_svg,
 )
 from habillage.palette import PALETTES, palette  # noqa: E402
 from noyau.intentions import Intention, Source  # noqa: E402
-from noyau.verdict import juger  # noqa: E402
+from noyau.verdict import LECTURE_DIRECTE, juger  # noqa: E402
 
 # Un verdict par intention, et la liste doit **rester exhaustive** : c'est le
 # seul endroit où les quatre palettes sont mesurées contre la barre de 7:1.
@@ -139,6 +139,32 @@ class TestHonnetete(unittest.TestCase):
         self.assertIs(verdict.source, Source.MESUREE)
         textes = re.findall(r"<text[^>]*>([^<]*)</text>", en_svg(verdict))
         self.assertTrue(any("15%" in t for t in textes))
+
+    def test_la_mention_nomme_le_son_en_francais_pas_la_classe(self):
+        """Le chiffre porte le son, jamais l'état — et jamais en anglais.
+
+        Deux régressions gardées d'un coup. « Purr » sur une carte destinée à
+        TikTok est un défaut de forme ; « Purr · 15% » posé sous « il est
+        content » en est un de fond, parce qu'un chiffre a l'air d'une preuve
+        et faisait passer pour mesuré un état que personne n'a mesuré.
+        """
+        verdict = juger([{"Cat": 0.109, "Purr": 0.148}])
+        textes = re.findall(r"<text[^>]*>([^<]*)</text>", en_svg(verdict))
+        self.assertTrue(any("Ronronnement détecté" in t for t in textes))
+        self.assertFalse(any("Purr" in t for t in textes),
+                         "le nom de classe anglais ne doit plus atteindre la carte")
+
+    def test_toute_lecture_directe_a_son_nom_francais(self):
+        """Sans ce test, ajouter une classe porteuse ferait planter la carte.
+
+        `NOM_FRANCAIS` n'a volontairement pas de valeur par défaut : un repli
+        silencieux remettrait de l'anglais sur un artefact partagé. Le prix de
+        ce choix est qu'une classe oubliée lève une `KeyError` — ici, jamais
+        chez quelqu'un.
+        """
+        for classe in LECTURE_DIRECTE:
+            self.assertIn(classe, NOM_FRANCAIS,
+                          f"« {classe} » peut être lue mais n'a pas de phrase française")
 
 
 class TestPalette(unittest.TestCase):
