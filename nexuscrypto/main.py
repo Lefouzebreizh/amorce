@@ -269,7 +269,7 @@ def _rejeu(config, arguments) -> int:
 
     if getattr(arguments, "multi", None):
         from src.rejeu.donnees import lire_coinmetrics
-        from src.rejeu.rejeu import rejouer_multi
+        from src.rejeu.rejeu import config_portefeuille_reel, rejouer_multi
 
         series = {}
         for paire in arguments.multi:
@@ -285,15 +285,41 @@ def _rejeu(config, arguments) -> int:
             except DonneesIllisibles as erreur:
                 print(f"❌ {erreur}", file=sys.stderr)
                 return 2
+        # Le rejeu ne mesure que les symboles présents dans l'allocation du
+        # portefeuille — les autres sont écartés et les poids renormalisés.
+        # Silencieusement, jusqu'ici : quatre fichiers passés, trois mesurés,
+        # et un tableau parfaitement juste **pour un panier qui n'est pas celui
+        # demandé**. C'est la forme la plus coûteuse d'un défaut, parce qu'elle
+        # ne ressemble pas à un défaut mais à un résultat.
+        #
+        # La liste des retenus se demande à la fonction qui filtre, jamais en
+        # recopiant sa règle ici : deux endroits qui décident la même chose se
+        # désaccordent au premier changement, et c'est le second qui garde
+        # l'ancienne version. Elle lève déjà, comme avant, s'il ne reste rien.
+        retenus = list(
+            config_portefeuille_reel(config, list(series)).portefeuille.allocation
+        )
+        ecartes = [s for s in series if s not in retenus]
+
         dynamique = rejouer_multi(config, series, nom="DCA dynamique")
         temoin = rejouer_multi(config, series, nom="DCA plat (témoin)", plat=True)
-        comparaison = [(" + ".join(series), dynamique, temoin)]
+        # L'intitulé nomme ce qui a été **mesuré**, pas ce qui a été demandé :
+        # c'est lui qu'on lit pour savoir sur quoi porte la ligne du dessous.
+        comparaison = [(" + ".join(retenus), dynamique, temoin)]
         print(mise_en_forme.tableau_protection(comparaison))
         print()
         print(mise_en_forme.verdict_protection(comparaison))
         # Une ligne sans on-chain n'a pas un on-chain neutre : elle n'en a pas,
         # et le scoring redistribue. Le dire évite de croire le contraire.
-        muets = [s for s, r in series.items() if not r.onchain]
+        if ecartes:
+            print(f"\n⚠ Absent(s) de l'allocation, donc **non mesuré(s)** : "
+                  f"{', '.join(ecartes)} — les poids des autres ont été "
+                  "renormalisés. Ajouter la ligne au portefeuille pour les "
+                  "inclure.")
+        # Sur les **retenus** seulement : avertir de l'on-chain absent d'un
+        # actif qu'on ne mesure pas ferait chercher un défaut là où il n'y a
+        # rien, et contredirait l'avertissement du dessus.
+        muets = [s for s in retenus if not series[s].onchain]
         if muets:
             print(f"\n⚠ Sans données on-chain : {', '.join(muets)} — "
                   "le scoring y redistribue le poids de la famille absente.")

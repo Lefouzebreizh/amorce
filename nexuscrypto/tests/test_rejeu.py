@@ -529,6 +529,27 @@ class TestMultiActifs(unittest.TestCase):
         with self.assertRaises(ValueError):
             config_portefeuille_reel(config(), ["DOGE/USDT"])
 
+    def test_l_appelant_peut_savoir_ce_qui_a_ete_ecarte(self):
+        """Le contrat dont dépend l'avertissement du rejeu multi.
+
+        Le cas où **rien** ne reste lève, et c'est couvert au-dessus. Le retrait
+        **partiel**, lui, ne levait rien et ne disait rien : quatre fichiers
+        passés en ligne de commande, trois mesurés, et un tableau parfaitement
+        juste pour un panier qui n'est pas celui demandé. La forme la plus
+        coûteuse d'un défaut, parce qu'elle ressemble à un résultat.
+
+        `main.py` en déduit les écartés par différence, plutôt que de recopier
+        la règle de filtrage — deux endroits qui décident la même chose se
+        désaccordent au premier changement. C'est cette déduction-ci que le
+        test garde.
+        """
+        demandes = ["BTC/USDT", "ETH/USDT", "DOGE/USDT"]
+        retenus = list(
+            config_portefeuille_reel(config(), demandes).portefeuille.allocation
+        )
+        self.assertEqual([s for s in demandes if s not in retenus], ["DOGE/USDT"])
+        self.assertEqual(retenus, ["BTC/USDT", "ETH/USDT"])
+
     def test_les_dates_sont_l_union_pas_l_intersection(self):
         """Prendre l'intersection jetterait l'historique de l'actif le plus
         ancien pour aligner le plus jeune."""
