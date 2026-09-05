@@ -405,3 +405,53 @@ describe('la proposition de classement', () => {
     assert.equal(toutCeQuiEstSorti(f.journal).includes('avis-imposition'), false);
   });
 });
+
+// ─────────────────────────── Corriger un classement ───────────────────────────
+
+describe('modifier un objet', () => {
+  const depart = (): IndexCoffre => ({
+    objets: {
+      abc: {
+        nom: 'facture.pdf', taille: 10, type: 'application/pdf',
+        categorie: 'Divers', deposeLe: '2026-01-01T00:00:00Z',
+        echeance: ECHEANCE, emetteur: 'Orange', montant: '19,99 €',
+      },
+    },
+    rendezVous: { r1: { id: 'r1', libelle: 'Dentiste', date: '2026-10-02' } },
+    identite: IDENTITE,
+  });
+
+  it('conserve les rendez-vous et l’identité, comme les cinq autres écritures', async () => {
+    // Sixième fonction à réécrire l'index, donc sixième occasion de perdre ce
+    // qu'elle ne nomme pas. Elle est arrivée après la correction des cinq
+    // autres, et sans test : c'est la forme énumérée qui est le piège, pas
+    // telle fonction en particulier, et rien n'empêche la septième.
+    const f = poser(clientFactice());
+    await coffre.modifierObjet(UTILISATEUR, cle, 'abc', { categorie: 'Télécom' }, depart());
+
+    const index = await indexEnvoye(f);
+    assert.deepEqual(index.rendezVous, depart().rendezVous);
+    assert.deepEqual(index.identite, IDENTITE);
+  });
+
+  it('ne touche ni à l’échéance ni à ce qui a été lu au dépôt', async () => {
+    // Corriger un classement n'est pas redéposer : l'échéance vit aussi dans
+    // `coffre_echeances`, et la lettre de résiliation a été composée avec ces
+    // valeurs-là. Les toucher ici les désaccorderait en silence.
+    const f = poser(clientFactice());
+    await coffre.modifierObjet(UTILISATEUR, cle, 'abc', { nom: 'facture-orange.pdf' }, depart());
+
+    const objet = (await indexEnvoye(f)).objets.abc;
+    assert.equal(objet?.nom, 'facture-orange.pdf');
+    assert.deepEqual(objet?.echeance, ECHEANCE);
+    assert.equal(objet?.emetteur, 'Orange');
+    assert.equal(objet?.montant, '19,99 €');
+  });
+
+  it('refuse un document qu’elle ne trouve pas, plutôt que d’en créer un', async () => {
+    poser(clientFactice());
+    await assert.rejects(
+      () => coffre.modifierObjet(UTILISATEUR, cle, 'inconnu', { categorie: 'Impôts' }, depart()),
+    );
+  });
+});
