@@ -99,7 +99,11 @@ def commande_bilan(arguments) -> int:
     sans accès aux API de marché."""
     with Memoire(arguments.base) as memoire:
         liste = bilan.parcours(memoire, arguments.note)
-        print(bilan.tableau(liste, bilan.juger(liste)))
+        # Le témoin se lit sans filtre de note : les écartés n'ont pas été
+        # sélectionnés dessus, et leur en appliquer un choisirait le point de
+        # comparaison sur le critère qu'on cherche justement à éprouver.
+        temoins = bilan.parcours(memoire, temoins=True)
+        print(bilan.tableau(liste, bilan.juger(liste), temoin=bilan.juger(temoins)))
     return 0
 
 
