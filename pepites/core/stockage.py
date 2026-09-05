@@ -51,6 +51,17 @@ CREATE TABLE IF NOT EXISTS releves (
     -- Vide sur les relevés antérieurs à la migration : le nom n'était alors
     -- gardé que par `alertes`, donc uniquement au-dessus du seuil d'alerte.
     symbole       TEXT NOT NULL DEFAULT '',
+    -- Ajoutée après `symbole`, donc en dernier, pour la raison ci-dessus.
+    --
+    -- Un relevé « témoin » est celui d'un jeton que les filtres ont **écarté**.
+    -- Il n'est pas là par erreur : sans lui, le bulletin dit ce que les pépites
+    -- retenues sont devenues et jamais ce que le tout-venant a fait la même
+    -- semaine. Dans un marché qui monte, « 60 % de hausses » peut être une
+    -- contre-performance, et rien dans la base ne permettait de le voir.
+    --
+    -- Il ne coûte aucun appel réseau : ses données viennent du même tour de
+    -- découverte que les candidats, et sont jetées aujourd'hui par `filtrer`.
+    temoin        INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (chaine, adresse, vu_le)
 );
 -- La recherche se fait toujours « le dernier relevé de ce jeton avant telle
@@ -85,6 +96,7 @@ CREATE INDEX IF NOT EXISTS idx_apparitions_jeton ON apparitions (chaine, jeton);
 # l'être **aussi** dans `SCHEMA`, en dernière position de sa table.
 _COLONNES_AJOUTEES = (
     ("releves", "symbole", "TEXT NOT NULL DEFAULT ''"),
+    ("releves", "temoin", "INTEGER NOT NULL DEFAULT 0"),
 )
 
 
@@ -146,7 +158,10 @@ class Memoire:
     # -- relevés ------------------------------------------------------------
 
     def enregistrer(self, candidat: Candidat, metriques: Metriques, note: float,
-                    moment: datetime | None = None) -> None:
+                    moment: datetime | None = None, temoin: bool = False) -> None:
+        """`temoin` marque un jeton **écarté** par les filtres, relevé pour
+        servir de point de comparaison au bulletin. Le défaut est `False` : un
+        appelant qui ignore ce paramètre enregistre un candidat, comme avant."""
         moment = moment or datetime.now(timezone.utc)
         jeton = candidat.jeton
         chaine, adresse = jeton.identite
@@ -156,11 +171,11 @@ class Memoire:
         self.connexion.execute(
             "INSERT OR REPLACE INTO releves "
             "(chaine, adresse, vu_le, liquidite_usd, market_cap, volume_h1, "
-            " volume_h24, prix_usd, note, acceleration, symbole) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            " volume_h24, prix_usd, note, acceleration, symbole, temoin) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (chaine, adresse, _iso(moment), candidat.liquidite_usd, candidat.market_cap,
              candidat.volume_h1, candidat.volume_h24, candidat.paire_principale.prix_usd,
-             note, metriques.acceleration, jeton.symbole),
+             note, metriques.acceleration, jeton.symbole, int(temoin)),
         )
         self.connexion.commit()
 
@@ -207,7 +222,8 @@ class Memoire:
         maintenant = maintenant or datetime.now(timezone.utc)
         seuil = _iso(maintenant - timedelta(hours=depuis_heures))
         lignes = self.connexion.execute(
-            "SELECT DISTINCT chaine, adresse FROM releves WHERE vu_le >= ? AND note >= ?",
+            "SELECT DISTINCT chaine, adresse FROM releves "
+            "WHERE vu_le >= ? AND note >= ? AND temoin = 0",
             (seuil, minimum),
         ).fetchall()
         return [(ligne["chaine"], ligne["adresse"]) for ligne in lignes]

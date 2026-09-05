@@ -87,6 +87,26 @@ def scanner(reglages: Reglages, memoire: Memoire, client: ClientHttp | None = No
         memoire.enregistrer(candidat, observation.metriques, observation.note.total, debut)
     observations.sort(key=lambda o: o.note.total, reverse=True)
 
+    # --- le témoin : ce que le radar a écarté, relevé pour comparaison -------
+    #
+    # Sans lui, le bulletin dit ce que les pépites retenues sont devenues et
+    # jamais ce qu'a fait le tout-venant sur la même fenêtre. Or c'est le second
+    # chiffre qui décide : dans un marché qui monte, « 60 % de hausses » sur les
+    # retenues peut être une contre-performance.
+    #
+    # La note leur est calculée quand même, bien qu'ils n'aient pas passé les
+    # filtres — c'est du calcul pur, sans un appel réseau, et ça rend une
+    # question mesurable qui ne l'était pas : la note sépare-t-elle aussi *à
+    # l'intérieur* de ce que les filtres jettent ?
+    #
+    # Ils n'entrent nulle part ailleurs. `jetons_suivis` les exclut par une
+    # condition explicite, sans quoi chacun coûterait un appel DexScreener au
+    # tour suivant ; le bouclier ne les voit pas ; l'alerte non plus.
+    for candidat in bilan.temoins:
+        metriques = convergence.mesurer(candidat)
+        note = convergence.noter(candidat, metriques, reglages.convergence)
+        memoire.enregistrer(candidat, metriques, note.total, debut, temoin=True)
+
     # --- skills 2 et 4 : sécurité, puis portefeuilles ------------------------
     pepites: list[Pepite] = []
     for observation in _a_verifier(observations, reglages):
