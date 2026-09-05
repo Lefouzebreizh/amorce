@@ -439,7 +439,7 @@ export default function PageCoffre() {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <div>
-          <p className="text-sm tracking-widest text-ink-soft uppercase">Le Coffre</p>
+          <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
           <h1 className="mt-2 font-affiche text-4xl">Choisis ta phrase secrète</h1>
           <p className="mt-3 text-ink-soft">
             Elle chiffre chaque document déposé, entièrement dans ce navigateur. Nous ne la
@@ -469,7 +469,7 @@ export default function PageCoffre() {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <div>
-          <p className="text-sm tracking-widest text-ink-soft uppercase">Le Coffre</p>
+          <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
           <h1 className="mt-2 font-affiche text-4xl">Entre ta phrase secrète</h1>
         </div>
         <form onSubmit={deverrouiller} className="flex flex-col gap-3">
