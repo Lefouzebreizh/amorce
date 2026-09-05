@@ -124,6 +124,14 @@ liste fermée — mais se retapent moins : une `<datalist>` suggère les
 catégories déjà utilisées dans le coffre, et des puces de filtre au-dessus
 de la liste des papiers permettent de n'en voir qu'une à la fois.
 
+## Aperçu instantané, sans téléchargement (05/09/2026)
+
+La fiche détail déchiffre et affiche directement une image ou un PDF —
+`FichePreview`, montée avec `key={nom}` pour remonter à neuf à chaque
+document plutôt que de réinitialiser son état depuis un effet (évite le
+rendu en cascade que le lint React signale sur un `setState` synchrone en
+effet). Les autres types de fichiers gardent le seul bouton Télécharger.
+
 ## Architecture
 
 ```

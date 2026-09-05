@@ -12,7 +12,7 @@ import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, statutEcheance,
-  type IndexCoffre, type Echeance, type Identite, type StatutEcheance,
+  type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
 } from '@/lib/coffre';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
@@ -132,6 +132,49 @@ function LettrePreview({ identite, emetteur, referenceClient, date }: {
         <p className="text-wine">Manque : {lettre.mentionsManquantes.join(', ')}.</p>
       )}
     </div>
+  );
+}
+
+// Aperçu instantané dans la fiche détail, sans passer par un téléchargement.
+// Monté avec key={nom} par l'appelant : changer de document remonte ce
+// composant à neuf plutôt que de réinitialiser son état depuis un effet, qui
+// déclencherait un rendu en cascade évitable. Seuls image et PDF savent se
+// montrer dans la page — les autres types gardent le bouton Télécharger.
+function FichePreview({ nom, info, userId, cle }: {
+  nom: string; info: ObjetIndex; userId: string; cle: CryptoKey;
+}) {
+  const previsualisable = info.type.startsWith('image/') || info.type === 'application/pdf';
+  const [apercu, setApercu] = useState<{ url: string; type: string } | null>(null);
+  const [erreur, setErreur] = useState('');
+
+  useEffect(() => {
+    if (!previsualisable) return;
+    let annule = false;
+    recupererFichier(userId, cle, nom, info)
+      .then((blob) => { if (!annule) setApercu({ url: URL.createObjectURL(blob), type: info.type }); })
+      .catch((err) => { if (!annule) setErreur(err instanceof Error ? err.message : String(err)); });
+    return () => { annule = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    return () => { if (apercu) URL.revokeObjectURL(apercu.url); };
+  }, [apercu]);
+
+  if (!previsualisable) {
+    return (
+      <p className="text-sm text-ink-soft">
+        Aperçu non disponible pour ce type de fichier — télécharge-le pour l&apos;ouvrir.
+      </p>
+    );
+  }
+  if (erreur) return <p className="text-sm text-wine">Aperçu impossible : {erreur}</p>;
+  if (!apercu) return <p className="text-sm text-ink-soft">Déchiffrement de l&apos;aperçu…</p>;
+  return apercu.type === 'application/pdf' ? (
+    <iframe src={apercu.url} title={info.nom} className="h-80 w-full rounded-xl border border-line bg-paper" />
+  ) : (
+    // eslint-disable-next-line @next/next/no-img-element -- blob: local, next/image ne s'applique pas
+    <img src={apercu.url} alt={info.nom} className="max-h-80 w-full rounded-xl border border-line object-contain" />
   );
 }
 
@@ -882,6 +925,10 @@ export default function PageCoffre() {
                     <X size={20} />
                   </button>
                 </div>
+
+                {utilisateur && cle && (
+                  <FichePreview key={detailOuvert} nom={detailOuvert} info={info} userId={utilisateur.id} cle={cle} />
+                )}
 
                 {jours !== null && info.echeance && (
                   <div className="flex flex-wrap items-center gap-2">
