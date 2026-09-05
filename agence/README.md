@@ -332,6 +332,46 @@ Le pendant côté Supabase se règle dans **Authentication → URL Configuration
 la même adresse en *Site URL*, et `https://client.fr/auth/confirmer` dans les
 *Redirect URLs*. Les deux listes doivent dire la même chose.
 
+### Un site déployé peut être invisible, et l'ouvrir ne le dit pas
+
+Sur Vercel, un projet neuf naît avec *Deployment Protection* activée :
+`ssoProtection` à `all_except_custom_domains` met **toutes** les adresses en
+`.vercel.app` derrière l'authentification du compte. Le site est en ligne, il
+répond, et n'importe qui d'autre que le propriétaire tombe sur une porte de
+connexion.
+
+Ce qui rend ce piège cher, c'est que **le contrôle évident ne le voit pas** :
+depuis un navigateur connecté à Vercel, la page s'affiche normalement. « J'ouvre
+le lien, ça marche » conclut donc toujours au vert. Trois projets de ce dépôt
+sont partis avec le mur, dont un annoncé « servi publiquement » quelques heures
+avant qu'on mesure le contraire — et par quelqu'un qui venait d'écrire le piège.
+
+Deux façons de trancher, et une seule qui vaille :
+
+| Geste | Ce qu'il prouve |
+| --- | --- |
+| ouvrir l'adresse depuis son navigateur | **rien** — le compte est authentifié |
+| lire *Settings → Deployment Protection* | l'état réel |
+| ouvrir l'adresse en navigation privée | l'état réel, vu du dehors |
+
+Le réglage, jamais l'affichage. Un domaine propre échappe au mur — c'est le sens
+de `all_except_custom_domains` — donc un site livré sous le domaine du client
+n'est pas concerné, et c'est exactement pourquoi le défaut survit à la recette :
+il ne se manifeste que sur l'adresse de préversion, celle qu'on envoie au client
+avant que le domaine soit délégué.
+
+### La liste avant de dire « en ligne »
+
+1. les trois variables déclarées chez l'hébergeur, `NEXT_PUBLIC_SITE_URL` en
+   tête ;
+2. *Site URL* et *Redirect URLs* de Supabase accordées à la précédente ;
+3. *Deployment Protection* lue dans les réglages, pas devinée à l'écran ;
+4. `npm run etat:rls` sur la base livrée — il est en lecture seule et dit si le
+   schéma a dérivé depuis l'installation ;
+5. une inscription réelle, menée jusqu'au clic dans le courriel. C'est le seul
+   geste qui éprouve les points 1, 2 et 4 d'un coup, et le seul que rien ne
+   remplace.
+
 ## Annexe — cadrage client
 
 Les cinq questions à poser avant d'écrire la première ligne. Les réponses se

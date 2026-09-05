@@ -88,7 +88,28 @@ Deno.serve(async (requete: Request) => {
     `suggestion plausible mais fausse, surtout pour une date d'échéance.\n` +
     `Réponds UNIQUEMENT avec un objet JSON, sans texte autour, avec exactement ces champs :\n` +
     `{"lisible": booléen — vrai seulement si tu identifies avec certitude un vrai document lisible, ` +
-    `"categorie": une valeur parmi ${JSON.stringify(CATEGORIES)} si lisible sinon "", ` +
+    `"categorie": exactement une valeur parmi ${JSON.stringify(CATEGORIES)} si lisible sinon "" — ` +
+    `choisie sur l'objet réel du document, jamais sur son apparence (une facture n'est pas ` +
+    `automatiquement "Administratif"), en suivant ces frontières précises : ` +
+    `Administratif = identité et démarches personnelles non couvertes ailleurs (CNI, passeport, ` +
+    `livret de famille, état civil, casier judiciaire) ; ` +
+    `Impôts = avis d'imposition, déclarations fiscales, taxe foncière ou d'habitation ; ` +
+    `Santé = sécurité sociale, mutuelle, ordonnances, factures et remboursements médicaux ; ` +
+    `Logement = loyer, quittance, charges de copropriété, diagnostics du logement — jamais son ` +
+    `assurance, qui va dans Assurance ; ` +
+    `Banque = relevés de compte, crédits, épargne, contrats bancaires ; ` +
+    `Assurance = tout contrat ou attestation d'assurance quel qu'en soit le sujet (habitation, ` +
+    `auto, responsabilité civile), sauf la mutuelle santé elle-même qui reste dans Santé ; ` +
+    `Énergie = électricité, gaz, eau ; ` +
+    `Téléphonie et internet = forfait mobile, box internet ; ` +
+    `Emploi = contrat de travail, bulletin de salaire, formation professionnelle, démarches ` +
+    `France Travail — jamais un document qui concerne d'abord un véhicule ; ` +
+    `Véhicule = tout ce qui touche directement à un véhicule, y compris professionnel — carte ` +
+    `grise, permis de conduire, contrôle technique, facture de garage, amende, carte de ` +
+    `conducteur ; ` +
+    `Autre = rien de tout ça mais un vrai document lisible. ` +
+    `Dans le doute entre deux catégories proches, choisir la plus spécifique (ex. Véhicule ` +
+    `plutôt qu'Emploi pour une carte de conducteur professionnelle), ` +
     `"nomSuggere": un nom de fichier court et clair sans extension si lisible sinon "" (ex. "EDF facture juillet"), ` +
     `"emetteur": le nom de l'entreprise ou de l'organisme qui a émis ce document, écrit noir sur blanc, sinon null (jamais deviné à partir du logo ou du sujet), ` +
     `"referenceClient": le numéro de client/contrat/abonné s'il est écrit noir sur blanc, sinon null (jamais un numéro de facture ou une date prise pour une référence), ` +

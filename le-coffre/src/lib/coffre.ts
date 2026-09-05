@@ -54,8 +54,8 @@ export type StatutEcheance = 'urgent' | 'bientot' | 'calme';
 // mesurés sur un usage réel — à resserrer si l'usage montre qu'ils alertent
 // trop tôt ou trop tard. `jours` vient de joursRestants : négatif si la date
 // est dépassée, donc un retard est toujours "urgent".
-const SEUIL_URGENT_JOURS = 7;
-const SEUIL_BIENTOT_JOURS = 30;
+export const SEUIL_URGENT_JOURS = 7;
+export const SEUIL_BIENTOT_JOURS = 30;
 
 export function statutEcheance(jours: number): StatutEcheance {
   if (jours <= SEUIL_URGENT_JOURS) return 'urgent';
@@ -365,7 +365,8 @@ export async function deposerFichier(
 // repasser par un nouveau dépôt. N'importe jamais sur l'échéance ni sur la
 // lettre de résiliation, qui restent celles calculées au dépôt — les
 // toucher demanderait de retoucher aussi coffre_echeances et la lettre déjà
-// composée, hors du périmètre d'une simple correction de classement.
+// composée, hors du périmètre d'une simple correction de classement. Voir
+// `ecarterEcheance` pour ça, précisément.
 export async function modifierObjet(
   userId: string, cle: CryptoKey, nom: string,
   champs: Partial<Pick<ObjetIndex, 'nom' | 'categorie' | 'montant'>>, index: IndexCoffre,
@@ -376,6 +377,28 @@ export async function modifierObjet(
     ...index,
     objets: { ...index.objets, [nom]: { ...existant, ...champs } },
   };
+  await sauvegarderIndex(userId, cle, nouvel_index);
+  return nouvel_index;
+}
+
+// « Ce n'est pas une échéance » (ou : elle est réglée) — sans supprimer le
+// document. Avant cette fonction, la seule façon de faire taire une échéance
+// mal détectée était de supprimer tout le papier avec, ce qui perd le
+// document pour un faux positif sur une seule date. Efface aussi la lettre
+// de résiliation déjà composée : elle citait cette échéance précise, la
+// garder après coup affirmerait une date qui n'est plus.
+export async function ecarterEcheance(
+  userId: string, cle: CryptoKey, nom: string, index: IndexCoffre,
+): Promise<IndexCoffre> {
+  const existant = index.objets[nom];
+  if (!existant) throw new Error('Document introuvable.');
+  const { error } = await supabase.from('coffre_echeances').delete()
+    .eq('user_id', userId).eq('objet_nom', nom);
+  if (error) throw new Error(error.message);
+  const reste = { ...existant };
+  delete reste.echeance;
+  delete reste.lettre;
+  const nouvel_index: IndexCoffre = { ...index, objets: { ...index.objets, [nom]: reste } };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }

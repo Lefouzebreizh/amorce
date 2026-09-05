@@ -9,6 +9,15 @@
  * L'extension est rétablie ici plutôt que dans le code source : l'inverse
  * rendrait ces fichiers différents de tout ce que Next.js compile, pour la
  * seule commodité du banc d'essai.
+ *
+ * `registerHooks` s'applique à toute résolution du process, y compris les
+ * `require()` internes d'une dépendance CommonJS (pdf-lib, notamment) qui
+ * utilise elle-même des chemins relatifs sans extension dans son propre
+ * bundle. Rajouter `.ts` à l'aveugle casse alors CETTE résolution-là, qui
+ * n'a rien à voir avec le code source du projet. On tente donc d'abord la
+ * résolution normale, et on ne retombe sur `.ts` qu'en cas d'échec — jamais
+ * l'inverse, sans quoi on ne saurait plus dire laquelle des deux a réellement
+ * résolu le module.
  */
 import { registerHooks } from 'node:module';
 import path from 'node:path';
@@ -16,9 +25,13 @@ import path from 'node:path';
 registerHooks({
   resolve(specificateur, contexte, suivant) {
     const relatif = specificateur.startsWith('./') || specificateur.startsWith('../');
-    if (relatif && path.extname(specificateur) === '') {
+    if (!relatif || path.extname(specificateur) !== '') {
+      return suivant(specificateur, contexte);
+    }
+    try {
+      return suivant(specificateur, contexte);
+    } catch {
       return suivant(`${specificateur}.ts`, contexte);
     }
-    return suivant(specificateur, contexte);
   },
 });

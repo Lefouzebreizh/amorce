@@ -11,9 +11,11 @@ import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
-  enregistrerIdentite, composerLettreResiliation, modifierObjet, statutEcheance, rechercheCorrespond,
+  enregistrerIdentite, composerLettreResiliation, modifierObjet, ecarterEcheance, statutEcheance,
+  rechercheCorrespond, SEUIL_BIENTOT_JOURS,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
 } from '@/lib/coffre';
+import { RemplirFormulaire } from './RemplirFormulaire';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
 
@@ -24,20 +26,22 @@ const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et intern
 // le vrai garde-fou (voir SECURITY.md).
 const TAILLE_MAX_OCTETS = 20 * 1024 * 1024;
 
-// Une couleur reconnaissable par catégorie — les mêmes trois teintes que le
-// reste de l'appli (accent, violet, wine), jamais d'orange/jaune. La
-// couleur porte un sens grossier (santé/logement en accent, argent en
-// violet, urgence/abonnement en wine), pas une charte arbitraire par mot.
+// Une couleur reconnaissable par catégorie — vert (soutien discret) pour ce
+// qui touche au quotidien personnel, violet (dominant) pour l'administratif
+// et l'argent, wine pour ce qui presse (assurance/énergie, déjà lié à des
+// échéances de résiliation). Jamais d'orange/jaune, jamais de turquoise ni de
+// bleu ici : ces deux-là sont réservés aux titres/liens/actifs et aux
+// boutons/alertes, pas à un badge de catégorie.
 const STYLE_CATEGORIE: Record<string, { icone: LucideIcon; classe: string }> = {
   'Administratif': { icone: FileText, classe: 'bg-violet/15 text-violet' },
   'Impôts': { icone: Landmark, classe: 'bg-violet/15 text-violet' },
-  'Santé': { icone: Heart, classe: 'bg-accent/15 text-accent' },
-  'Logement': { icone: Home, classe: 'bg-accent/15 text-accent' },
+  'Santé': { icone: Heart, classe: 'bg-vert/15 text-vert' },
+  'Logement': { icone: Home, classe: 'bg-vert/15 text-vert' },
   'Banque': { icone: Wallet, classe: 'bg-violet/15 text-violet' },
   'Assurance': { icone: Shield, classe: 'bg-wine/15 text-wine' },
   'Énergie': { icone: Zap, classe: 'bg-wine/15 text-wine' },
   'Téléphonie et internet': { icone: Wifi, classe: 'bg-violet/15 text-violet' },
-  'Emploi': { icone: Briefcase, classe: 'bg-accent/15 text-accent' },
+  'Emploi': { icone: Briefcase, classe: 'bg-vert/15 text-vert' },
   'Véhicule': { icone: Car, classe: 'bg-violet/15 text-violet' },
 };
 const STYLE_CATEGORIE_DEFAUT = { icone: File, classe: 'bg-ink-soft/15 text-ink-soft' };
@@ -65,12 +69,19 @@ type Correction = { nom: string; categorie: string; montant: string };
 // Trois états lisibles d'un coup d'œil, dérivés du même calcul que la
 // bannière d'alerte — voir statutEcheance dans coffre.ts pour les seuils.
 // Jamais d'orange ni de jaune (préférence posée pour tous les projets,
-// voir globals.css) : violet pour l'intermédiaire, pas d'ambre.
+// voir globals.css) : violet pour l'intermédiaire, vert (soutien discret)
+// pour « rien à faire », jamais d'ambre.
 const LIBELLE_STATUT: Record<StatutEcheance, string> = {
   urgent: 'Urgent', bientot: 'Bientôt', calme: 'Calme',
 };
 const CLASSE_STATUT: Record<StatutEcheance, string> = {
-  urgent: 'bg-wine', bientot: 'bg-violet', calme: 'bg-accent',
+  urgent: 'bg-wine', bientot: 'bg-violet', calme: 'bg-vert',
+};
+// Même code couleur que le point, en texte — la couleur seule ne porte
+// jamais le statut à elle seule (voir BadgeStatut), et un mot visible sur la
+// carte évite d'avoir à ouvrir la fiche détail pour savoir où on en est.
+const CLASSE_STATUT_TEXTE: Record<StatutEcheance, string> = {
+  urgent: 'text-wine', bientot: 'text-violet', calme: 'text-vert',
 };
 // Point coloré seul dans la liste (comme la maquette), toujours doublé d'un
 // aria-label et d'un title — la couleur seule ne suffit jamais à porter un
@@ -84,6 +95,36 @@ function BadgeStatut({ jours }: { jours: number }) {
       title={LIBELLE_STATUT[statut]}
       className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${CLASSE_STATUT[statut]}`}
     />
+  );
+}
+
+// Un dégradé continu vert → turquoise → violet, jamais l'ambre demandé au
+// départ : cette appli a banni l'orange/jaune de toute sa palette (voir
+// globals.css). Le fond du rail porte le dégradé sur toute sa largeur ; un
+// cache de la couleur du rail vide recouvre la partie non atteinte depuis la
+// droite, si bien que la teinte visible avance en continu avec le temps au
+// lieu de sauter entre trois aplats — la jauge se lit comme un vrai dégradé,
+// pas comme un badge de statut redondant avec BadgeStatut.
+const HORIZON_JAUGE_JOURS = SEUIL_BIENTOT_JOURS + 15; // marge pour qu'« encore loin » ne soit pas déjà à moitié pleine
+function JaugeEcheance({ jours }: { jours: number }) {
+  const statut = statutEcheance(jours);
+  const rempli = Math.max(0, Math.min(100, ((HORIZON_JAUGE_JOURS - jours) / HORIZON_JAUGE_JOURS) * 100));
+  return (
+    <div
+      role="progressbar"
+      aria-valuenow={Math.round(rempli)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`Échéance : ${LIBELLE_STATUT[statut]}`}
+      title={`${LIBELLE_STATUT[statut]} — ${formatJours(jours)}`}
+      className="relative h-1.5 w-full overflow-hidden rounded-full bg-line"
+    >
+      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-vert via-accent to-violet" />
+      <div
+        className="absolute inset-y-0 right-0 rounded-r-full bg-line transition-all"
+        style={{ width: `${100 - rempli}%` }}
+      />
+    </div>
   );
 }
 
@@ -102,15 +143,18 @@ function formatJours(jours: number): string {
 }
 
 // La plus proche échéance ou rendez-vous, tous confondus — calculé côté
-// navigateur sur l'index déjà déchiffré, jamais envoyé nulle part.
-function prochaineAlerte(index: IndexCoffre): { libelle: string; date: string; jours: number } | null {
-  const items: { libelle: string; date: string; jours: number }[] = [];
-  for (const objet of Object.values(index.objets)) {
+// navigateur sur l'index déjà déchiffré, jamais envoyé nulle part. `nom`
+// n'est présent que pour une échéance de document (jamais un rendez-vous) :
+// c'est ce qui permet à la bannière d'ouvrir directement la fiche concernée.
+function prochaineAlerte(index: IndexCoffre): { libelle: string; date: string; jours: number; nom?: string } | null {
+  const items: { libelle: string; date: string; jours: number; nom?: string }[] = [];
+  for (const [nom, objet] of Object.entries(index.objets)) {
     if (objet.echeance?.presente && objet.echeance.date) {
       items.push({
         libelle: objet.echeance.libelle || objet.nom,
         date: objet.echeance.date,
         jours: joursRestants(objet.echeance.date),
+        nom,
       });
     }
   }
@@ -263,6 +307,7 @@ export default function PageCoffre() {
   const [survole, setSurvole] = useState(false);
   const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
+  const [formulaireOuvert, setFormulaireOuvert] = useState(false);
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
   const [recherche, setRecherche] = useState('');
   const [correction, setCorrection] = useState<Correction | null>(null);
@@ -279,6 +324,18 @@ export default function PageCoffre() {
       setEtape(existe ? 'deverrouiller' : 'creer');
     });
   }, [routeur]);
+
+  // Le bouton retour du téléphone déclenche cet événement plutôt que de
+  // recharger la page — voir ouvrirDetail/fermerDetail pour l'entrée
+  // d'historique correspondante.
+  useEffect(() => {
+    function surRetourArriere() {
+      setDetailOuvert(null);
+      setCorrection(null);
+    }
+    window.addEventListener('popstate', surRetourArriere);
+    return () => window.removeEventListener('popstate', surRetourArriere);
+  }, []);
 
   const seDeconnecter = useCallback(async () => {
     await supabase.auth.signOut();
@@ -363,7 +420,12 @@ export default function PageCoffre() {
     setAValider((precedent) => [...precedent, ...nouveaux]);
     if (entreeFichier.current) entreeFichier.current.value = '';
 
-    for (const item of nouveaux) {
+    // En parallèle, pas un par un : dix fichiers analysés en série, à
+    // deux ou trois secondes chacun, rendaient un dossier « interminable ».
+    // Chaque `setAValider` porte sa propre clé et utilise la forme
+    // fonctionnelle — les réponses qui reviennent dans le désordre ne
+    // s'écrasent jamais entre elles.
+    await Promise.all(nouveaux.map(async (item) => {
       const proposition = await proposerClassement(item.fichier);
       setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
         ...p, enAnalyse: false,
@@ -375,7 +437,7 @@ export default function PageCoffre() {
         montant: proposition.montant || '',
         texteExtrait: proposition.texteExtrait || '',
       } : p)));
-    }
+    }));
   }
 
   function modifierAttente(cleItem: string, champs: Partial<EnAttente>) {
@@ -403,6 +465,38 @@ export default function PageCoffre() {
     } finally {
       setEnCours(false);
     }
+  }
+
+  // Dépose tous les papiers prêts d'un coup, plutôt que de cliquer
+  // « Déposer » sur chacun — le geste qui rendait le dépôt d'un dossier
+  // interminable. Les dépôts s'enchaînent l'un après l'autre (jamais en
+  // parallèle) sur un index local plutôt que sur l'état React : deux appels
+  // à deposerFichier lancés côte à côte partiraient tous les deux du même
+  // index de départ, et le second écraserait le premier au lieu de s'y
+  // ajouter.
+  async function confirmerTout() {
+    if (!utilisateur || !cle) return;
+    const prets = aValider.filter((p) => !p.enAnalyse);
+    if (prets.length === 0) return;
+    setEnCours(true);
+    setErreur('');
+    let indexCourant = index;
+    const echecs: string[] = [];
+    for (const item of prets) {
+      try {
+        indexCourant = await deposerFichier(
+          utilisateur.id, cle, item.fichier, item.categorie, indexCourant, item.nomAffiche, item.echeance,
+          item.emetteur || null, item.referenceClient || null, item.montant || null,
+          item.texteExtrait || null,
+        );
+        setIndex(indexCourant);
+        retirerAttente(item.cle);
+      } catch (err) {
+        echecs.push(`${item.nomAffiche} (${err instanceof Error ? err.message : String(err)})`);
+      }
+    }
+    if (echecs.length > 0) setErreur(`Non déposés : ${echecs.join(', ')}.`);
+    setEnCours(false);
   }
 
   async function telecharger(nom: string) {
@@ -441,16 +535,31 @@ export default function PageCoffre() {
   // Fiche détail : ouverte au clic sur un document, porte la correction du
   // classement (nom, catégorie, montant) — jamais l'échéance ni la lettre,
   // qui restent celles calculées au dépôt.
+  //
+  // L'ouverture pousse une entrée d'historique : sans elle, le bouton retour
+  // du téléphone n'a rien à consommer dans l'app et saute directement à la
+  // page précédente (souvent le mail d'où vient le lien), donnant
+  // l'impression que la fiche fait quitter le site entier au lieu de se
+  // refermer. Voir le popstate ci-dessous et fermerDetail, qui consomme
+  // cette même entrée à la fermeture.
   function ouvrirDetail(nom: string) {
     const info = index.objets[nom];
     if (!info) return;
     setCorrection({ nom: info.nom, categorie: info.categorie, montant: info.montant || '' });
     setDetailOuvert(nom);
+    window.history.pushState({ ficheDetail: nom }, '');
   }
 
   function fermerDetail() {
-    setDetailOuvert(null);
-    setCorrection(null);
+    const etatHistorique = window.history.state as { ficheDetail?: string } | null;
+    if (etatHistorique?.ficheDetail) {
+      // Consomme l'entrée poussée par ouvrirDetail plutôt que d'en laisser
+      // une orpheline en avant — le popstate qui suit referme la fiche.
+      window.history.back();
+    } else {
+      setDetailOuvert(null);
+      setCorrection(null);
+    }
   }
 
   async function enregistrerCorrection() {
@@ -463,6 +572,24 @@ export default function PageCoffre() {
         categorie: correction.categorie.trim(),
         montant: correction.montant.trim() || null,
       }, index);
+      setIndex(nouvelIndex);
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : String(err));
+    } finally {
+      setEnCours(false);
+    }
+  }
+
+  // « Ce n'est pas une échéance » (faux positif) ou « c'est réglé » — retire
+  // seulement la date et la lettre associées, jamais le document lui-même.
+  // Avant cette fonction, la seule façon de faire taire une échéance mal
+  // détectée était de supprimer tout le papier avec.
+  async function ecarter(nom: string) {
+    if (!utilisateur || !cle) return;
+    setEnCours(true);
+    setErreur('');
+    try {
+      const nouvelIndex = await ecarterEcheance(utilisateur.id, cle, nom, index);
       setIndex(nouvelIndex);
     } catch (err) {
       setErreur(err instanceof Error ? err.message : String(err));
@@ -560,7 +687,7 @@ export default function PageCoffre() {
           <Champ id="mdp2" name="mdp2" type="password" autoComplete="new-password" />
           {erreur && <p className="text-sm text-wine">{erreur}</p>}
           <button type="submit" disabled={enCours}
-            className="rounded-xl bg-accent px-4 py-3 font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+            className="rounded-xl bg-bleu px-4 py-3 font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
             {enCours ? 'Création…' : 'Créer le coffre'}
           </button>
         </form>
@@ -579,7 +706,7 @@ export default function PageCoffre() {
           <Champ name="mdp" type="password" autoComplete="current-password" autoFocus />
           {erreur && <p className="text-sm text-wine">{erreur}</p>}
           <button type="submit" disabled={enCours}
-            className="rounded-xl bg-accent px-4 py-3 font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+            className="rounded-xl bg-bleu px-4 py-3 font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
             {enCours ? 'Vérification…' : 'Déverrouiller'}
           </button>
         </form>
@@ -589,12 +716,17 @@ export default function PageCoffre() {
   }
 
   const tousLesNoms = Object.keys(index.objets);
-  // Étiquettes existantes, dérivées des documents déjà déposés — jamais une
-  // liste fixe : l'utilisateur écrit ce qu'il veut dans le champ « Catégorie »
-  // (aValider comme fiche détail), et ce qu'il a déjà écrit revient en
-  // suggestion la fois suivante, via la <datalist> ci-dessous.
+  // Catégories déjà utilisées — sert aux chips de filtre : inutile de
+  // proposer un filtre pour une catégorie qui ne contient aucun papier.
   const categoriesConnues = Array.from(
     new Set(tousLesNoms.map((n) => index.objets[n]?.categorie).filter((c): c is string => Boolean(c))),
+  ).sort((a, b) => a.localeCompare(b, 'fr'));
+  // Les dix catégories prévues, plus celles déjà tapées à la main (aValider
+  // comme fiche détail) — jamais une liste fermée : la <datalist> ci-dessous
+  // suggère les dix, mais un nom personnalisé passe toujours, et revient en
+  // suggestion la fois suivante.
+  const categoriesSuggerees = Array.from(
+    new Set([...Object.keys(STYLE_CATEGORIE), ...categoriesConnues]),
   ).sort((a, b) => a.localeCompare(b, 'fr'));
   const noms = tousLesNoms
     .filter((n) => !filtreCategorie || index.objets[n]?.categorie === filtreCategorie)
@@ -630,11 +762,16 @@ export default function PageCoffre() {
       {/* Suggestions d'étiquettes déjà utilisées — jamais une liste imposée,
           juste ce que l'utilisateur a lui-même déjà tapé. */}
       <datalist id="categories-connues">
-        {categoriesConnues.map((c) => <option key={c} value={c} />)}
+        {categoriesSuggerees.map((c) => <option key={c} value={c} />)}
       </datalist>
       <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
+        {/* Marque persistante — visible sur le tableau de bord, pas
+            seulement sur l'écran de connexion. Violet plutôt que turquoise :
+            les deux sont censés dominer à parts égales, et le turquoise
+            porte déjà l'eyebrow « Bonjour » juste en dessous. */}
+        <p className="text-sm font-semibold tracking-widest text-violet uppercase">Le Tiroir Secret</p>
         {/* En-tête */}
-        <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
+        <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised bg-gradient-to-br from-paper-raised via-paper-raised to-vert/10 p-6 sm:p-8">
           <div>
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
               Bonjour {prenom || 'toi'}
@@ -643,7 +780,7 @@ export default function PageCoffre() {
             <p className="mt-3 max-w-md text-ink-soft">
               Tout est déjà lu et rangé pour toi — il ne reste qu&apos;à jeter un œil.
             </p>
-            <p className="mt-4 flex items-center gap-2 text-sm text-accent">
+            <p className="mt-4 flex items-center gap-2 text-sm text-vert">
               <ShieldCheck size={16} /> Personne d&apos;autre ne peut voir tes papiers. Même nous.
             </p>
           </div>
@@ -653,9 +790,18 @@ export default function PageCoffre() {
           </button>
         </header>
 
-        {/* Bannière d'alerte */}
+        {/* Bannière d'alerte — cliquable seulement quand elle porte sur un
+            document (jamais un rendez-vous, qui n'a pas de fiche) : ouvre
+            directement la fiche détail concernée. */}
         {alerte && (
-          <div className="flex items-start gap-4 rounded-2xl border border-line bg-paper-raised p-5">
+          <button
+            type="button"
+            onClick={alerte.nom ? () => ouvrirDetail(alerte.nom as string) : undefined}
+            disabled={!alerte.nom}
+            className={`flex w-full items-start gap-4 rounded-2xl border border-line bg-paper-raised p-5 text-left transition ${
+              alerte.nom ? 'cursor-pointer hover:border-accent/60' : 'cursor-default'
+            }`}
+          >
             <div className="rounded-xl bg-accent/15 p-2.5 text-accent"><Bell size={20} /></div>
             <div>
               <p className="text-sm tracking-widest text-ink-soft uppercase">On te prévient à l&apos;avance</p>
@@ -664,7 +810,7 @@ export default function PageCoffre() {
                 {' '}— {formatJours(alerte.jours)} ({alerte.date})
               </p>
             </div>
-          </div>
+          </button>
         )}
 
         {erreur && (
@@ -673,6 +819,23 @@ export default function PageCoffre() {
 
         {/* File d'attente de validation */}
         {aValider.length > 0 && (
+          <>
+            {aValider.length > 1 && (
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-ink-soft">
+                  {aValider.length} papiers en attente
+                  {aValider.some((p) => p.enAnalyse) && ' — lecture en cours…'}
+                </p>
+                <button
+                  type="button"
+                  onClick={confirmerTout}
+                  disabled={enCours || aValider.every((p) => p.enAnalyse)}
+                  className="rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
+                >
+                  Déposer tout ({aValider.filter((p) => !p.enAnalyse).length})
+                </button>
+              </div>
+            )}
           <ul className="flex flex-col gap-3">
             {aValider.map((item) => (
               <li key={item.cle} className="rounded-2xl border border-accent/40 bg-paper-raised p-5">
@@ -706,8 +869,8 @@ export default function PageCoffre() {
                       </button>
                     </div>
                     {item.echeance.presente && (
-                      <div className="flex items-start gap-3 rounded-lg border border-accent/40 bg-accent/10 p-3 text-sm">
-                        <Bell size={16} className="mt-0.5 shrink-0 text-accent" />
+                      <div className="flex items-start gap-3 rounded-lg border border-bleu/40 bg-bleu/10 p-3 text-sm">
+                        <Bell size={16} className="mt-0.5 shrink-0 text-bleu" />
                         <div>
                           <p className="font-medium">Échéance détectée : {item.echeance.libelle}</p>
                           <p className="text-ink-soft">
@@ -746,7 +909,7 @@ export default function PageCoffre() {
                     )}
                     <div>
                       <button onClick={() => confirmerDepot(item)} disabled={enCours}
-                        className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                        className="rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                         Déposer
                       </button>
                     </div>
@@ -755,6 +918,7 @@ export default function PageCoffre() {
               </li>
             ))}
           </ul>
+          </>
         )}
 
         {/* Grille principale : documents (large) + rendez-vous/identité (colonne) */}
@@ -829,8 +993,21 @@ export default function PageCoffre() {
                             {info.emetteur || info.categorie || 'Document'}
                             {info.montant ? ` · ${info.montant}` : ''}
                           </p>
+                          {jours !== null && (
+                            <div className="mt-2 max-w-40">
+                              <JaugeEcheance jours={jours} />
+                            </div>
+                          )}
                         </div>
-                        {jours !== null && <BadgeStatut jours={jours} />}
+                        {jours !== null && (
+                          <span className="hidden shrink-0 items-center gap-1.5 sm:flex">
+                            <BadgeStatut jours={jours} />
+                            <span className={`text-xs font-semibold ${CLASSE_STATUT_TEXTE[statutEcheance(jours)]}`}>
+                              {LIBELLE_STATUT[statutEcheance(jours)]}
+                            </span>
+                          </span>
+                        )}
+                        {jours !== null && <span className="sm:hidden"><BadgeStatut jours={jours} /></span>}
                         <ChevronRight size={18} className="shrink-0 text-ink-soft" />
                       </button>
                     </li>
@@ -848,7 +1025,7 @@ export default function PageCoffre() {
                 <div className="flex gap-2">
                   <Champ name="date" type="date" required />
                   <button type="submit" disabled={enCours}
-                    className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    className="shrink-0 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Ajouter
                   </button>
                 </div>
@@ -857,17 +1034,23 @@ export default function PageCoffre() {
                 <p className="text-sm text-ink-soft">Aucun rendez-vous noté.</p>
               ) : (
                 <ul className="flex flex-col gap-2">
-                  {rendezVousTries.map((rdv) => (
-                    <li key={rdv.id} className="flex items-center justify-between rounded-xl border border-line bg-paper-raised px-4 py-3">
-                      <div>
-                        <p className="font-medium">{rdv.libelle}</p>
-                        <p className="text-sm text-ink-soft">{rdv.date}</p>
-                      </div>
-                      <button onClick={() => retirerRendezVous(rdv.id)} className="text-sm text-wine hover:underline">
-                        Retirer
-                      </button>
-                    </li>
-                  ))}
+                  {rendezVousTries.map((rdv) => {
+                    const joursRdv = joursRestants(rdv.date);
+                    return (
+                      <li key={rdv.id} className="flex flex-col gap-2 rounded-xl border border-line bg-paper-raised px-4 py-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{rdv.libelle}</p>
+                            <p className="text-sm text-ink-soft">{rdv.date}</p>
+                          </div>
+                          <button onClick={() => retirerRendezVous(rdv.id)} className="text-sm text-wine hover:underline">
+                            Retirer
+                          </button>
+                        </div>
+                        <JaugeEcheance jours={joursRdv} />
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>
@@ -890,30 +1073,53 @@ export default function PageCoffre() {
                 </div>
                 <div className="flex items-center gap-3">
                   <button type="submit" disabled={enCours}
-                    className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    className="rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Enregistrer
                   </button>
                   {identiteEnregistree && (
-                    <span className="text-sm text-accent">Identité enregistrée ✓</span>
+                    <span className="text-sm text-vert">Identité enregistrée ✓</span>
                   )}
                 </div>
               </form>
+            </section>
+
+            <section>
+              <h2 className="mb-2 font-affiche text-2xl">Remplir un formulaire</h2>
+              <p className="mb-4 text-sm text-ink-soft">
+                Dépose un CERFA ou un mandat vierge : l&apos;appli détecte ses champs et les
+                propose remplis avec ton identité, jamais hors de ce navigateur.
+              </p>
+              <button
+                type="button"
+                onClick={() => setFormulaireOuvert(true)}
+                className="flex items-center gap-2 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong"
+              >
+                <FileText size={16} /> Remplir un PDF vierge
+              </button>
             </section>
           </div>
         </div>
       </div>
 
+      {formulaireOuvert && (
+        <RemplirFormulaire identite={index.identite} onFermer={() => setFormulaireOuvert(false)} />
+      )}
+
       {/* Bouton flottant : seul point d'entrée visible pour ajouter un papier
-          (la page entière reste aussi déposable, voir onDrop sur <main>). */}
-      <div className="fixed inset-x-0 bottom-6 z-40 flex flex-col items-center gap-2 px-4">
+          (la page entière reste aussi déposable, voir onDrop sur <main>).
+          `pointer-events-none` sur le conteneur pleine largeur, `auto` sur
+          le seul bouton : sans ça, toute la bande invisible du bas de
+          l'écran — pas seulement le bouton visible — interceptait les
+          taps destinés aux lignes de documents rendues dessous, quel que
+          soit le défilement (position `fixed`). */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
         <button
           type="button"
           onClick={() => entreeFichier.current?.click()}
-          className="flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 font-semibold text-paper shadow-lg transition hover:bg-accent-strong"
+          className="pointer-events-auto flex items-center gap-2 rounded-full bg-bleu px-6 py-3.5 font-semibold text-paper shadow-lg transition hover:bg-bleu-strong"
         >
           <Plus size={20} /> Ajouter un papier
         </button>
-        <span className="text-xs text-ink-soft">Une photo suffit — on s&apos;occupe du reste</span>
       </div>
 
       {/* Fiche détail : ouverte au clic sur un document, porte la correction
@@ -956,11 +1162,24 @@ export default function PageCoffre() {
                 )}
 
                 {jours !== null && info.echeance && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <BadgeStatut jours={jours} />
-                    <span className="text-sm text-ink-soft">
-                      {info.echeance.libelle} — {formatJours(jours)} ({info.echeance.date})
-                    </span>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <BadgeStatut jours={jours} />
+                        <span className="text-sm text-ink-soft">
+                          {info.echeance.libelle} — {formatJours(jours)} ({info.echeance.date})
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => ecarter(detailOuvert)}
+                        disabled={enCours}
+                        className="text-xs text-ink-soft underline decoration-dotted transition hover:text-wine disabled:opacity-60"
+                      >
+                        Ce n&apos;est pas une échéance
+                      </button>
+                    </div>
+                    <JaugeEcheance jours={jours} />
                   </div>
                 )}
 
@@ -1019,7 +1238,7 @@ export default function PageCoffre() {
                       onChange={(e) => setCorrection({ ...correction, montant: e.target.value })} />
                   </div>
                   <button onClick={enregistrerCorrection} disabled={enCours}
-                    className="self-start rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    className="self-start rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Enregistrer
                   </button>
                 </div>

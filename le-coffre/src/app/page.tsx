@@ -34,10 +34,10 @@ export default function PageAccueil() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-8 px-6 py-16">
+    <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-8 bg-gradient-to-b from-paper via-paper to-vert/5 px-6 py-16">
       <div>
-        <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
-        <h1 className="mt-2 font-affiche text-4xl leading-tight">Tes papiers, tes échéances</h1>
+        <p className="text-base font-semibold tracking-widest text-accent uppercase">Le Tiroir Secret</p>
+        <h1 className="mt-2 font-affiche text-4xl leading-tight">Tes papiers, tes corvées administratives</h1>
         <p className="mt-4 text-ink-soft">
           Dépose tes documents administratifs — chiffrés entièrement dans ton navigateur avant
           d&apos;être envoyés. Ni nous, ni personne d&apos;autre, ne pouvons les lire sans ta phrase
@@ -66,14 +66,14 @@ export default function PageAccueil() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-xl border border-line bg-paper-raised px-4 py-3 text-ink outline-none focus:border-accent"
+            className="rounded-xl border border-line bg-paper-raised px-4 py-3 text-ink outline-none focus:border-accent focus:ring-1 focus:ring-accent"
             placeholder="toi@exemple.fr"
           />
           {erreur && <p className="text-sm text-wine">{erreur}</p>}
           <button
             type="submit"
             disabled={enCours}
-            className="rounded-xl bg-accent px-4 py-3 font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60"
+            className="rounded-xl bg-bleu px-4 py-3 font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
           >
             {enCours ? 'Envoi…' : 'Recevoir un lien de connexion'}
           </button>
