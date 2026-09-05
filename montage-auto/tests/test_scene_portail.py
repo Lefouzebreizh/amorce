@@ -235,6 +235,15 @@ class Recits(unittest.TestCase):
         self.assertEqual(en_dur, {c: float(v) for c, v in RECITS["artisan-long.json"]["T"].items()})
 
     def test_aucun_carton_ne_sort_de_la_zone_sure(self):
+        """Borne les lignes DÉCLARÉES, et c'est tout ce qu'il peut faire.
+
+        La scène coupe les lignes trop longues : un carton de deux lignes peut
+        en dessiner quatre, et le bloc dessiné est alors plus haut que celui
+        calculé ici. Ce test est donc un premier filtre, pas une preuve — c'est
+        `montage-auto/mesurer_textes.py` qui mesure le résultat réel, dans le
+        navigateur, avec la police et le crénage du rendu. Un récit qui passe
+        ici peut encore sortir du cadre, et le mesureur le dira.
+        """
         for nom, recit in RECITS.items():
             for carte in recit.get("cartes", []):
                 taille = float(carte["taille"])

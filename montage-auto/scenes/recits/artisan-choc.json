@@ -1,0 +1,165 @@
+{
+  "_lisez_moi": [
+    "ARTISAN EXPRESS — « Choc & Décalage ». La moitié SERVICE, 13 s.",
+    "",
+    "Ce récit ne couvre pas toute la vidéo : les deux premières secondes sont un",
+    "vrai plan d'AZNAROTH EP01 (le dragon et l'éclair, 11,70 → 13,70 du rush),",
+    "assemblé devant par montage-auto/references/artisan-express-choc.json. Le",
+    "temps de la scène est donc celui de la vidéo MOINS 2 secondes.",
+    "",
+    "LE DÉCOR EST NU, ET C'EST LE SUJET. Le portail est en mode « lueur » — le",
+    "halo et les rais restent, la porte n'existe pas. L'opposition est le",
+    "message : « ce que je sais faire avec l'IA » d'un côté, « ce dont tu as",
+    "vraiment besoin » de l'autre. Un portail qui continuerait de tourner",
+    "derrière la démonstration détruirait la bascule qu'on vient de payer.",
+    "",
+    "LES FOYERS SONT MESURÉS, PAS ESTIMÉS. Les hauteurs sont relevées sur la",
+    "vraie page avec un navigateur, en pixels de la capture (840 × 4758) :",
+    "",
+    "  en-tête  258     bouton d'appel   620     services  1661",
+    "  galerie 2446     avis            3588     pied      4542",
+    "",
+    "La caméra s'approche à 1,42 sur le bouton puis 1,38 sur les photos et les",
+    "avis. Au-delà de 1,5 la dalle déborde du cadre et cesse d'être un",
+    "téléphone ; c'est la seule limite de ce réglage."
+  ],
+  "T": {
+    "etincelle": -1.2,
+    "anneaux": -1.1,
+    "fracture": -0.9,
+    "ouverture": -0.7,
+    "emergence": -0.5,
+    "lecture": -0.1,
+    "message": 8.0,
+    "fin": 13.0
+  },
+  "decor": {
+    "portail": "lueur",
+    "braises": false
+  },
+  "foyers": [
+    {
+      "instant": 0.0,
+      "y": 258,
+      "zoom": 1.0
+    },
+    {
+      "instant": 1.7,
+      "y": 258,
+      "zoom": 1.0
+    },
+    {
+      "instant": 2.1,
+      "y": 620,
+      "zoom": 1.42
+    },
+    {
+      "instant": 3.9,
+      "y": 620,
+      "zoom": 1.42
+    },
+    {
+      "instant": 4.3,
+      "y": 2446,
+      "zoom": 1.38
+    },
+    {
+      "instant": 6.0,
+      "y": 2446,
+      "zoom": 1.38
+    },
+    {
+      "instant": 6.4,
+      "y": 3588,
+      "zoom": 1.38
+    },
+    {
+      "instant": 7.8,
+      "y": 3588,
+      "zoom": 1.38
+    },
+    {
+      "instant": 8.4,
+      "y": 4542,
+      "zoom": 1.08
+    },
+    {
+      "instant": 13.0,
+      "y": 4542,
+      "zoom": 1.04
+    }
+  ],
+  "cartes": [
+    {
+      "debut": 0.05,
+      "fin": 1.95,
+      "y": 390,
+      "taille": 56,
+      "bandeau": true,
+      "lignes": [
+        "... ET CE DONT TU AS",
+        "VRAIMENT BESOIN."
+      ]
+    },
+    {
+      "debut": 2.05,
+      "fin": 4.05,
+      "y": 350,
+      "taille": 62,
+      "bandeau": true,
+      "lignes": [
+        "ZÉRO BLABLA.",
+        "UN BOUTON QUI APPELLE."
+      ]
+    },
+    {
+      "debut": 4.15,
+      "fin": 6.15,
+      "y": 320,
+      "taille": 64,
+      "bandeau": true,
+      "lignes": [
+        "TES CHANTIERS EN PHOTOS."
+      ]
+    },
+    {
+      "debut": 6.25,
+      "fin": 7.95,
+      "y": 320,
+      "taille": 64,
+      "bandeau": true,
+      "lignes": [
+        "TES VRAIS AVIS CLIENTS."
+      ]
+    },
+    {
+      "debut": 8.05,
+      "fin": 10.55,
+      "y": 400,
+      "taille": 58,
+      "bandeau": true,
+      "lignes": [
+        "EN LIGNE EN 48 H.",
+        "300 € — ET 200 €",
+        "POUR LES PREMIERS."
+      ]
+    },
+    {
+      "debut": 10.65,
+      "fin": 13.0,
+      "y": 350,
+      "taille": 66,
+      "lignes": [
+        "ÉCRIS « SITE »",
+        "EN COMMENTAIRE."
+      ]
+    }
+  ],
+  "signature": {
+    "debut": 11.1,
+    "texte": "ARTISAN EXPRESS",
+    "y": 640,
+    "trait": 750,
+    "taille": 80
+  }
+}

@@ -48,6 +48,7 @@ python3 montage-auto/rendre_scene.py \
 | --- | --- | --- |
 | `artisan-long.json` | 13,4 s | le portail s'installe 3,4 s avant le site ; le message parle du soin apporté |
 | `artisan-court.json` | 12,0 s | le portail tient en 1,3 s, le texte est là dès l'image zéro, chaque carton nomme ce qui est à l'écran |
+| `artisan-choc.json` | 13,0 s | la moitié SERVICE d'un montage à deux plans : deux secondes de vrai dragon d'Aznaroth, coupure sèche, puis la démonstration décor nu |
 
 **Le court n'est pas une coupe du long, c'est un pari inverse**, et il vient
 d'une critique juste : trois secondes de spectacle muet, sur un fil où l'on
@@ -137,6 +138,53 @@ sur les 3143 disponibles. Elle se déduit maintenant de la capture
 pied, quelle que soit sa longueur. Le montage y gagne un raccord : le pied de
 page dit « Site réalisé par Artisan Express » une seconde avant que le carton
 ne le dise à son tour.
+
+**7. Les foyers, et pourquoi ils sont mesurés.** `artisan-choc.json` ne fait
+plus défiler la page : il la **regarde**, en s'approchant du bouton d'appel,
+puis des photos, puis des avis. Les hauteurs ne sont pas estimées à l'œil —
+elles sont relevées sur la vraie page avec un navigateur, en pixels de la
+capture :
+
+| en-tête | bouton | services | galerie | avis | pied |
+| --- | --- | --- | --- | --- | --- |
+| 258 | **620** | 1661 | **2446** | **3588** | 4542 |
+
+Le foyer agrandit la **dalle**, il ne grossit pas l'image dedans : la fenêtre
+de page montrée reste la même, seule la caméra avance. Grossir à l'intérieur
+d'une dalle fixe donnerait une capture zoomée, pas un mouvement.
+
+**8. La zone sûre avait deux dimensions et les tests n'en tenaient qu'une.**
+« 300 € — 200 € POUR LES PREMIERS » sortait des **deux** côtés du cadre et se
+lisait « 00 € — 200 € POUR LES PREMIERS ». Le carton était pourtant à sa place
+en hauteur, et toute la suite passait au vert.
+
+Deux choses en sont sorties.
+
+**La boîte fait 56 %, pas 66 %.** `motion/` tient une boîte de 22 % à 88 %, mais
+son texte n'y est pas centré sur le cadre. Ici il l'est, et une boîte de 66 %
+centrée occupe 17 % → 83 % : son bord gauche entre de cinq points dans la bande
+des boutons Facebook, qui va de 14 % à 22 %. **Une boîte centrée ne peut pas
+dépasser 22 % → 78 %.**
+
+**Le texte passe à la ligne, il ne rétrécit pas sans fin.** Sous 48 px un titre
+n'est plus lisible — 1080 de large affichés sur environ 400 points, 48 px n'en
+font que 18. La scène coupe donc les lignes trop longues sur les espaces, et ne
+réduit la taille que si un **mot seul** dépasse la boîte, jamais sous le
+plancher.
+
+**Et un carton qui passe à la ligne devient plus haut.** C'est ainsi que quatre
+cartons sur six sont sortis par le HAUT après la correction, alors qu'ils
+tenaient avant. Les deux dimensions se tiennent : on ne peut pas régler l'une
+sans remesurer l'autre.
+
+```bash
+python3 montage-auto/mesurer_textes.py montage-auto/scenes/recits/artisan-choc.json
+```
+
+Le mesureur ouvre la scène, appelle `measureText` avec la vraie police, et rend
+le cadre occupé et la hauteur réelle de chaque carton. **C'est lui qui fait
+foi**, pas le test unitaire : celui-ci borne les lignes *déclarées*, et ne peut
+pas savoir qu'une ligne en deviendra trois.
 
 ## La zone sûre est câblée
 

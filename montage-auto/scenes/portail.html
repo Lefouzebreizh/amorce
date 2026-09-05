@@ -54,7 +54,18 @@ const DEFAUT = {
     fin       : 13.40
   },
   anneaux: { ecart: 0.26, rebond: 0.42, allumage: 0.16 },
+  /* Le décor. « plein » ouvre le portail comme dans la série ; « lueur » n'en
+     garde que le halo et les rais, sans la déchirure ni les anneaux ; `false`
+     n'en laisse rien. Un montage qui oppose le spectacle et le service a
+     besoin de la seconde moitié NUE — c'est l'opposition qui est le message,
+     et un portail qui continue de tourner derrière la détruit. */
+  decor: { portail: "plein", braises: true },
   defilement: null,          // { debut, fin } — sinon déduit des bornes
+  /* Les foyers : où la caméra regarde la page, et de combien elle s'approche.
+     `y` est en pixels de la CAPTURE, pas de l'écran — on les relève sur la
+     vraie page avec un navigateur, jamais à l'estime. Entre deux foyers, tout
+     est interpolé. Sans foyers, la page défile simplement de haut en bas. */
+  foyers: null,              // [{ instant, y, zoom }]
   cartes: [
     { debut: 8.70,  fin: 10.35, lignes: ['CETTE VIDÉO A DEMANDÉ', 'DES HEURES.'], taille: 74 },
     { debut: 10.35, fin: 12.00, lignes: ['VOTRE SITE RECEVRA', 'LE MÊME SOIN.'],  taille: 74 }
@@ -77,6 +88,24 @@ const EM = T.lecture - T.emergence;
    s'arrête juste avant que le texte prenne la place — mais un montage court
    veut souvent le lancer plus tôt et plus vite, d'où le réglage. */
 const DEFILE = RECIT.defilement || { debut: T.lecture - 0.40, fin: T.message - 0.10 };
+const DECOR = RECIT.decor || DEFAUT.decor;
+const FOYERS = RECIT.foyers;
+
+/* Le foyer de l'instant t. Deux foyers voisins se rejoignent par la même
+   courbe que le reste du montage : une caméra qui démarre et s'arrête sec se
+   voit, et sur un plan de démonstration c'est tout ce qu'on voit. */
+function foyer(t) {
+  if (!FOYERS || !FOYERS.length) return null;
+  if (t <= FOYERS[0].instant) return FOYERS[0];
+  for (let i = 0; i < FOYERS.length - 1; i++) {
+    const a = FOYERS[i], b = FOYERS[i + 1];
+    if (t < b.instant) {
+      const u = lisse(seg(t, a.instant, b.instant));
+      return { y: a.y + (b.y - a.y) * u, zoom: a.zoom + (b.zoom - a.zoom) * u };
+    }
+  }
+  return FOYERS[FOYERS.length - 1];
+}
 
 /* --- La zone sûre, câblée. CLAUDE.md §2 : 12 % à 45 % de la hauteur, soit
        230 à 865 sur 1920. C'est l'intersection des trois plateformes, pas la
@@ -156,6 +185,7 @@ const BRAISES = (() => {
 })();
 
 function braises(t) {
+  if (!DECOR.braises) return;
   const souffle = Math.pow(seg(t, T.fracture, T.emergence + EM * (1.20 / 2.2)), 1.7);
   x.globalCompositeOperation = 'lighter';
   for (const b of BRAISES) {
@@ -220,6 +250,7 @@ function anneaux(t) {
 
 /* --- Le portail : la déchirure, puis le vortex ----------------------------- */
 function portail(t) {
+  if (!DECOR.portail) return 0;
   const haut = 1250 * sortie(seg(t, T.fracture - 0.02, T.ouverture));
   if (haut <= 1) return 0;
   const large = 10 + 560 * Math.pow(seg(t, T.ouverture - 0.02, T.emergence + EM * (0.80 / 2.2)), 1.55);
@@ -262,6 +293,13 @@ function portail(t) {
     x.closePath(); x.fill();
   }
   x.restore();
+
+  if (DECOR.portail === "lueur") {
+    /* Mode « lueur » : le halo et les rais sont restés, la porte n'existe
+       pas. On garde l'air de famille sans rejouer l'ouverture. */
+    x.globalCompositeOperation = 'source-over';
+    return ampleur;
+  }
 
   /* la déchirure elle-même, en trois couches décalées : l'aberration
      chromatique est ici, sur le bord le plus lumineux du cadre. */
@@ -313,7 +351,11 @@ function site(t, img) {
   const monte = sortie(em);
   /* au moment du message, elle recule dans la lumière au lieu de disparaître */
   const recul = lisse(seg(t, T.message, T.message + 1.10));
-  const ech = (0.14 + 0.86 * monte) * (1 - 0.40 * recul);
+  /* Le foyer agrandit la DALLE, il ne grossit pas l'image dedans : la fenêtre
+     de page montrée reste la même, seule la caméra s'approche. Grossir dans
+     une dalle fixe donnerait une capture zoomée ; ici on avance. */
+  const vise = foyer(t);
+  const ech = (0.14 + 0.86 * monte) * (1 - 0.40 * recul) * (vise ? vise.zoom : 1);
   const w = DALLE.large * ech, h = DALLE.haut * ech;
   const cy = CY + 150 * (1 - monte) + 330 * recul;
   const px = CX - w / 2, py = cy - h / 2;
@@ -341,7 +383,9 @@ function site(t, img) {
      de page — « Site réalisé par Artisan Express » — juste avant le carton qui
      le dit à son tour. */
   const course = Math.max(0, img.height - visible);
-  const sy = course * lisse(seg(t, DEFILE.debut, DEFILE.fin));
+  const sy = vise
+    ? Math.max(0, Math.min(course, vise.y - visible / 2))
+    : course * lisse(seg(t, DEFILE.debut, DEFILE.fin));
   x.drawImage(img, 0, sy, img.width, visible, px, py, w, h);
   /* tant qu'elle n'a pas fini de monter, elle est encore faite de lumière */
   const voile = 1 - lisse(seg(em, 0.18, 0.62));
@@ -442,15 +486,74 @@ const SIGNATURE = RECIT.signature;
    elle vaut mieux qu'un texte qu'on déplace hors de sa zone sûre. */
 function bandeau(force) {
   const g = x.createLinearGradient(0, 0, 0, 980);
-  g.addColorStop(0.00, 'rgba(4,7,12,' + (0.86 * force).toFixed(3) + ')');
-  g.addColorStop(0.62, 'rgba(4,7,12,' + (0.55 * force).toFixed(3) + ')');
+  g.addColorStop(0.00, 'rgba(4,7,12,' + (0.94 * force).toFixed(3) + ')');
+  g.addColorStop(0.55, 'rgba(4,7,12,' + (0.82 * force).toFixed(3) + ')');
+  g.addColorStop(0.78, 'rgba(4,7,12,' + (0.42 * force).toFixed(3) + ')');
   g.addColorStop(1.00, 'rgba(4,7,12,0)');
   x.fillStyle = g;
   x.fillRect(0, 0, L, 980);
 }
 
+/* La boîte du texte, et pourquoi elle fait 56 % et non 66 %.
+
+   `motion/` tient une boîte de 22 % à 88 %, soit 66 % de large — mais son
+   texte n'est pas centré sur le cadre. Ici il l'est, et une boîte de 66 %
+   centrée occupe 17 % → 83 % : son bord gauche entre de cinq points dans la
+   bande des boutons Facebook, qui va de 14 % à 22 %. Une boîte CENTRÉE ne peut
+   donc pas dépasser 22 % → 78 %, soit 56 % du cadre.
+ 
+   Le défaut qui a imposé tout ceci : « 300 € — 200 € POUR LES PREMIERS »
+   sortait des DEUX côtés et se lisait « 00 € — 200 € POUR LES PREMIERS ».
+   Aucune mesure verticale ne pouvait le voir. */
+const BOITE = Math.round(L * (0.78 - 0.22));   // 605 px
+
+/* Sous 48 px un texte n'est plus lisible sur un téléphone : 1080 de large
+   affichés sur ~400 points, 48 px n'en font que 18. Une ligne trop longue
+   passe donc à la ligne — elle ne rétrécit pas indéfiniment. */
+const PLANCHER = 48;
+
+function police(taille) {
+  return '700 ' + taille + 'px "Liberation Sans","DejaVu Sans",sans-serif';
+}
+
+/* Le texte passe à la ligne au lieu de s'étirer ou de rétrécir sans fin.
+   Rend les lignes réellement dessinées, coupées sur les espaces. Les retours
+   voulus par le récit sont conservés : on ne recompose pas un carton écrit. */
+function decouper(lignes, taille, espacement) {
+  x.letterSpacing = espacement + 'px';
+  x.font = police(taille);
+  const sortie = [];
+  for (const ligne of lignes) {
+    if (x.measureText(ligne).width <= BOITE) { sortie.push(ligne); continue; }
+    let courante = '';
+    for (const mot of ligne.split(' ')) {
+      const essai = courante ? courante + ' ' + mot : mot;
+      if (courante && x.measureText(essai).width > BOITE) { sortie.push(courante); courante = mot; }
+      else courante = essai;
+    }
+    if (courante) sortie.push(courante);
+  }
+  x.letterSpacing = '0px';
+  return sortie;
+}
+
+/* La taille tenue. On ne descend que si un MOT seul dépasse la boîte — un mot
+   ne se coupe pas —, et jamais sous le plancher de lisibilité. */
+function tailleQuiTient(lignes, taille, espacement) {
+  x.letterSpacing = espacement + 'px';
+  let t = taille;
+  while (t > PLANCHER) {
+    x.font = police(t);
+    const mots = lignes.join(' ').split(' ');
+    if (mots.every(m => x.measureText(m).width <= BOITE)) break;
+    t -= 2;
+  }
+  x.letterSpacing = '0px';
+  return t;
+}
+
 function ligneCentree(texte, py, taille, teinte, halo, espacement) {
-  x.font = '700 ' + taille + 'px "Liberation Sans","DejaVu Sans",sans-serif';
+  x.font = police(taille);
   x.textAlign = 'center';
   x.textBaseline = 'middle';
   x.letterSpacing = espacement + 'px';
@@ -474,9 +577,11 @@ function textes(t) {
     x.save();
     if (c.bandeau) bandeau(e);
     x.globalAlpha = e;
-    const interligne = c.taille * 1.24;
-    const y0 = (c.y || 390) - (c.lignes.length - 1) * interligne / 2;
-    c.lignes.forEach((l, i) => ligneCentree(l, y0 + i * interligne + glisse, c.taille, '#f4fbff', HALO, 2));
+    const taille = tailleQuiTient(c.lignes, c.taille, 2);
+    const lignes = decouper(c.lignes, taille, 2);
+    const interligne = taille * 1.24;
+    const y0 = (c.y || 390) - (lignes.length - 1) * interligne / 2;
+    lignes.forEach((l, i) => ligneCentree(l, y0 + i * interligne + glisse, taille, '#f4fbff', HALO, 2));
     x.restore();
   }
 
@@ -495,7 +600,8 @@ function textes(t) {
     x.shadowBlur = 0;
     x.globalCompositeOperation = 'source-over';
     if (SIGNATURE.bandeau) bandeau(e);
-    ligneCentree(SIGNATURE.texte, SIGNATURE.y - (1 - e) * 16, SIGNATURE.taille, '#eafcff', CYAN, 9);
+    ligneCentree(SIGNATURE.texte, SIGNATURE.y - (1 - e) * 16,
+                 tailleQuiTient([SIGNATURE.texte], SIGNATURE.taille, 9), '#eafcff', CYAN, 9);
     x.restore();
   }
 }

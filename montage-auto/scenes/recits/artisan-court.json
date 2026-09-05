@@ -56,7 +56,7 @@
     {
       "debut": 0.06,
       "fin": 1.9,
-      "y": 350,
+      "y": 405,
       "taille": 72,
       "bandeau": true,
       "lignes": [
@@ -67,7 +67,7 @@
     {
       "debut": 1.95,
       "fin": 3.0,
-      "y": 330,
+      "y": 380,
       "taille": 62,
       "bandeau": true,
       "lignes": [
@@ -78,7 +78,7 @@
     {
       "debut": 3.05,
       "fin": 4.25,
-      "y": 320,
+      "y": 345,
       "taille": 64,
       "bandeau": true,
       "lignes": [
@@ -118,7 +118,7 @@
     {
       "debut": 7.75,
       "fin": 9.25,
-      "y": 360,
+      "y": 370,
       "taille": 78,
       "lignes": [
         "EN LIGNE",
@@ -128,7 +128,7 @@
     {
       "debut": 9.3,
       "fin": 12.0,
-      "y": 340,
+      "y": 390,
       "taille": 66,
       "lignes": [
         "COMMENTE « SITE »",
