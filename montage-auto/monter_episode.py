@@ -939,7 +939,22 @@ def couche_voix(entrees: list, total_s: float, atelier: Path) -> tuple[numpy.nda
         # ne bougeait pas d'un décibel entre deux rendus.
         crete = crete_db(brut)
         marge = 18.0 if crete is None else max(0.0, -0.5 - crete)
-        gain = max(-12.0, min(marge, gain))
+        # `ecretage_db` autorise à DÉPASSER cette marge, et dit de combien.
+        #
+        # Une prise réelle a un facteur de crête que la synthèse n'a pas :
+        # mesuré sur les sept répliques d'Erwann, 17,6 dB entre le niveau
+        # entendu (-24,5) et la crête (-6,9), contre 10 à 12 pour une voix
+        # de diffusion. Deux ou trois attaques tenaient donc toute la phrase
+        # 8 dB sous sa cible, et aucun réglage de la recette n'y touchait :
+        # la voix sortait au même niveau qu'on demande -13 ou -10.
+        #
+        # Rogner ces crêtes est le travail normal d'un limiteur, et c'est
+        # une opération sur la PRISE, pas un contournement de la règle : la
+        # règle « le gain se borne à la marge réelle » vaut toujours, elle
+        # s'applique simplement à une prise dont la crête a été ramenée.
+        # Le garde-fou reste la mesure — le repli spectral vérifie que la
+        # bande des consonnes, 1,6 à 3,5 kHz, n'a pas perdu au change.
+        gain = max(-12.0, min(marge + float(entree.get("ecretage_db", 0.0)), gain))
         subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", str(brut),
                         "-ar", str(TAUX), "-ac", "2",
                         "-af", f"volume={gain:.1f}dB,alimiter=limit=0.95",

@@ -76,10 +76,14 @@ rien n'y est maquetté, c'est le site qu'on vend qui apparaît.
 commande, une vidéo. C'est là qu'est la valeur : pas dans un montage, dans une
 fabrique.
 
-## Quatre défauts mesurés sur les images, et ce qu'ils enseignent
+## Dix défauts mesurés, et ce qu’ils enseignent
 
-Chacun était invisible dans le code et évident sur une planche de vignettes.
-**Regarder le rendu, pas l'intention.**
+Chacun était invisible dans le code, et évident dès qu'on regardait le rendu au
+bon endroit : une planche de vignettes pour l'image, une analyse par bandes pour
+le son, le rectangle publié par la scène pour la géométrie. **Mesurer le rendu,
+pas l'intention** — et la moitié de ces dix défauts enseigne surtout *où* poser
+la mesure : quatre d'entre eux passaient au vert dans tous les contrôles
+existants.
 
 **1. L'image zéro était noire.** La comète partait de `[L+240, -280]` avec une
 accélération cubique : relevé sur les vignettes, elle n'entrait dans le cadre
@@ -186,9 +190,99 @@ le cadre occupé et la hauteur réelle de chaque carton. **C'est lui qui fait
 foi**, pas le test unitaire : celui-ci borne les lignes *déclarées*, et ne peut
 pas savoir qu'une ligne en deviendra trois.
 
+**9. « On n'entend pas ma voix, le dragon couvre » — et le fader n'y pouvait
+rien.** Le premier réflexe est de baisser le rush et de monter la voix. Mesuré,
+il n'y avait rien à corriger de ce côté : au-dessus de 400 Hz la voix était
+**déjà 5 dB plus haut** que le dragon (−18,1 contre −23,8), et `entendu()` le
+disait. Baisser le lit n'aurait fait que perdre les deux.
+
+La faute était dans le spectre. Sur la fenêtre de la réplique, par bandes :
+
+| Hz | 20-120 | 120-300 | 300-700 | 700-1k6 | 1k6-3k5 | 3k5-8k |
+| --- | --- | --- | --- | --- | --- | --- |
+| dragon | **29,3** | 15,2 | 15,2 | 12,5 | **11,7** | 8,1 |
+| la voix | 4,1 | 16,6 | 27,4 | 12,8 | 9,5 | 2,2 |
+
+Vingt-cinq décibels au-dessus dans le grave — un grondement de ce niveau
+**masque la parole vers le haut**, et aucun niveau moyen ne le voit. Et surtout
+2 dB **au-dessus** de la voix entre 1,6 et 3,5 kHz, la bande des consonnes.
+D'où « il manque des mots par rapport au sous-titre » : ils étaient prononcés,
+ils étaient masqués. **Un déséquilibre voix/lit se lit par bandes avant de se
+régler au fader.**
+
+`creuser_pour_la_voix.py` creuse donc la forme de la voix **dans** le lit,
+pendant qu'elle parle et nulle part ailleurs : −9 dB sous 130 Hz, −7 dB de 700
+à 3 500 Hz, par transformée à court terme (Hann 2048, saut 512), flancs de
+0,10 s. Les 0,32 premières secondes ne sont jamais touchées — l'entrée du
+dragon y est intacte. Et `cible_db` passe de −22 à −23 : **creuser retire de
+l'énergie, donc la normalisation rendrait le plan plus fort.**
+
+**10. Une vraie prise plafonne là où la synthèse ne plafonnait pas.** Le gain
+d'une réplique se borne à la marge réelle sous 0 dBFS — règle juste, écrite
+contre une cible que le limiteur reprendrait. Mais la prise d'Erwann a **17,6 dB
+de facteur de crête** (−24,5 entendu, −6,9 de crête) là où une voix de diffusion
+en a 10 à 12 : deux ou trois attaques tenaient toute la phrase 8 dB sous sa
+cible, et demander −13 ou −10 ne changeait strictement rien. C'est le même
+symptôme qu'un réglage sans effet, et la cause n'est pas dans la recette.
+
+`ecretage_db` dit de combien on autorise à **dépasser** cette marge, le limiteur
+absorbant le reste. Six décibels rendent +2,9 dB de niveau entendu et +3,1 dB
+dans la bande des consonnes, **sans toucher au rapport consonnes/voyelles** :
+−17,8 avant, −17,8 après. Ce ne sont pas des consonnes écrasées, ce sont des
+crêtes rognées — et c'est la mesure qui fait la différence entre les deux.
+
 ## La zone sûre est câblée
 
 `ZONE = { haut: 230, bas: 865 }`, soit 12 % à 45 % de 1920 — l'intersection des
 trois plateformes, jamais la plus permissive (`CLAUDE.md §2`). Aucun texte de
 `portail.html` n'en sort. Le site, lui, a le droit de descendre plus bas : il
 est le décor, pas le message.
+
+## Et le texte ne passe pas sur le site
+
+Ce n'était vrai d'aucune des deux mesures. Le carton du prix fait quatre lignes
+là où les autres en font une : il descendait à 574 px pendant que la dalle
+commençait à 470, et « ARTISAN EXPRESS » se posait en travers du téléphone.
+La zone sûre était respectée, la boîte de 56 % aussi, et le mesureur de textes
+ne connaît que le texte.
+
+```bash
+python3 montage-auto/verifier_dalle.py montage-auto/scenes/recits/artisan-choc.json \
+    --site /chemin/vers/site.png
+```
+
+La scène publie le rectangle qu'elle vient de dessiner dans `window.__DALLE__`,
+et le vérificateur le relit **image par image**. Il le faut : la dalle bouge
+(elle monte à l'émergence, elle se range de `finale.descente` avant le carton
+du prix) et les cartons se succèdent — l'écart entre les deux ne se calcule pas
+une fois.
+
+Le chercher dans l'image rendue ne marche pas : le liseré de la dalle est cyan
+et les rais du portail aussi. Un détecteur de pixels l'a relevée à 558 là où
+elle était à 608.
+
+**Trois réglages tiennent cette règle**, et le premier est le seul qui permette
+les deux autres :
+
+- la dalle se met à l'échelle **en gardant son rapport `haut / large`**. La
+  fenêtre de page montrée vaut `imgW × haut / large` : rapport conservé, elle
+  ne dépend pas du zoom, et le défilement comme les cartons qui s'y accrochent
+  restent valables au dixième. Rapport changé, tout est à refaire ;
+- `finale.descente` sépare le RECUL du DÉPLACEMENT, qui étaient le même
+  réglage. Sans lui, ranger la dalle obligeait à l'effacer ;
+- `finale.avance` dit de combien de secondes le mouvement précède le message.
+  À zéro, la dalle descend pendant que le carton apparaît — mesuré, une demie
+  seconde de texte lisible posée sur le site.
+
+**Le bandeau, lui, a disparu du récit « choc ».** Il servait à séparer un
+carton de la page qui défilait dessous ; la page n'est plus dessous. Il
+descendait jusqu'à 980 px et voilait le haut du site à 85 % — « rien ne cache
+le site » était vrai du texte et faux du décor. Et comme chaque carton dessinait
+le sien à son tour, celui de la signature repassait sur le carton déjà peint :
+« ÉCRIS SITE EN COMMENTAIRE » sortait gris derrière « ARTISAN EXPRESS ».
+
+Ce qu'il faisait, chaque glyphe le fait maintenant pour lui-même : une ombre
+floue de `taille × 0,55` sous un contour net de `taille × 0,22`. Le halo suit
+le texte au lieu de le contenir, donc il s'arrête où le texte s'arrête. Mesuré
+sur le plan le plus clair du film — la lueur du portail à 5,0 s : glyphe à 200,
+anneau immédiat à 65 sur 255. Le contraste du bandeau, sans le bandeau.

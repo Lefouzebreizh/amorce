@@ -49,16 +49,53 @@
     "du bouton ne le permettait. Elle est devenue « Un bouton qui appelle »,",
     "1,41 s. Une phrase se coupe ; une page ne se déplace pas.",
     "",
-    "LE SITE RESTE À L'ÉCRAN JUSQU'AU BOUT.",
+    "LE SITE EST ENTIER, ET IL EST SOUS LE TEXTE — À CHAQUE IMAGE.",
     "",
-    "La dalle reculait et le cadre s'assombrissait dès que le prix apparaissait —",
-    "on ne voyait plus le site du tout sur les sept dernières secondes. C'est une",
-    "faute de raisonnement, pas de réglage : sur un montage qui VEND le site,",
-    "l'effacer pour lire le prix revient à ranger l'argument au moment de conclure.",
+    "Le site restait visible, mais le texte lui passait dessus : la dalle",
+    "commençait à 470 px et le carton du prix descendait jusqu'à 567, la",
+    "signature jusqu'à 573. Cent pixels de site sous les lettres, sur les six",
+    "dernières secondes — et « ARTISAN EXPRESS » posé en travers du téléphone.",
     "",
-    "`finale.recul` passe de 1,0 à 0,12 et `finale.voile` de 0,55 à 0,18. Le",
-    "bandeau sombre en haut du cadre suffit à détacher les cartons — il est donc",
-    "activé aussi sur le dernier, qui s'en passait."
+    "Trois réglages, et aucun n'est un compromis :",
+    "",
+    "  · la dalle passe de 528 × 880 à 471 × 785, RAPPORT CONSERVÉ. La fenêtre",
+    "    de page vaut `imgW × haut / large` : à rapport égal elle ne bouge pas,",
+    "    donc les fenêtres du défilement et les cartons qui s'y accrochent",
+    "    restent bons au dixième. C'est la seule façon de réduire la dalle sans",
+    "    tout recalculer.",
+    "  · `hautEcran` reste à 470 tant que les cartons tiennent en deux lignes",
+    "    (ils s'arrêtent à 434), puis `finale.descente` la pousse de 138 px",
+    "    pour le carton du prix, qui en fait quatre et descend à 574.",
+    "  · `finale.avance` : 1,1 s. À zéro, la dalle descendait PENDANT que le",
+    "    carton apparaissait — mesuré, une demi-seconde de texte lisible sur le",
+    "    site, et 22 px d'écart à 0,9 s. Elle a fini de se ranger AVANT que le",
+    "    carton arrive.",
+    "",
+    "Bilan par image : dalle 470 → 1255 avant le message, 608 → 1374 après ;",
+    "texte 233 → 434 puis 233 → 574. Trente-quatre pixels d'écart au pire,",
+    "jamais un recouvrement, et le bas de la dalle reste sous les 72 % où",
+    "commence l'interface de TikTok. Relevé image par image par",
+    "`montage-auto/verifier_dalle.py`, qui lit le rectangle que la scène publie",
+    "au lieu de le chercher dans l'image — le liseré de la dalle est cyan et les",
+    "rais du portail aussi, et un détecteur de pixels l'a relevée 50 px trop haut.",
+    "",
+    "ET PLUS RIEN NE L'ASSOMBRIT.",
+    "",
+    "`finale.voile` passe à zéro — il assombrissait tout le cadre pour détacher un",
+    "texte qui ne tombe plus sur rien. Et le bandeau des cartons disparaît : il",
+    "descendait à 980 px et voilait les 150 premiers pixels du site à 85 %, si",
+    "bien que « rien ne cache le site » était vrai du texte et faux du décor.",
+    "",
+    "Il faisait pourtant un vrai travail — sans lui, un carton perd son contraste",
+    "sur la lueur du portail à 5,0 s, le plan le plus clair du film. Ce travail",
+    "est repris par le texte lui-même : chaque glyphe porte son halo sombre, qui",
+    "suit le texte au lieu de le contenir et s'arrête donc où le texte s'arrête.",
+    "Mesuré sur ce plan-là : glyphe à 200, anneau immédiat à 65 sur 255.",
+    "",
+    "Au passage, un défaut que le bandeau causait tout seul : chaque carton",
+    "dessinait le sien à son tour, donc celui de la signature repassait sur le",
+    "carton déjà peint. « ÉCRIS SITE EN COMMENTAIRE » sortait gris derrière",
+    "« ARTISAN EXPRESS » — visible sur la vidéo livrée, et personne ne l'avait vu."
   ],
   "T": {
     "etincelle": -1.2,
@@ -80,7 +117,7 @@
       "fin": 1.7,
       "y": 330,
       "taille": 56,
-      "bandeau": true,
+      "bandeau": false,
       "lignes": [
         "... ET CE DONT TU AS",
         "VRAIMENT BESOIN."
@@ -91,7 +128,7 @@
       "fin": 3.2,
       "y": 335,
       "taille": 60,
-      "bandeau": true,
+      "bandeau": false,
       "lignes": [
         "UN BOUTON QUI APPELLE."
       ]
@@ -101,7 +138,7 @@
       "fin": 5.3,
       "y": 335,
       "taille": 60,
-      "bandeau": true,
+      "bandeau": false,
       "lignes": [
         "TES CHANTIERS EN PHOTOS."
       ]
@@ -111,7 +148,7 @@
       "fin": 7.25,
       "y": 335,
       "taille": 60,
-      "bandeau": true,
+      "bandeau": false,
       "lignes": [
         "TES VRAIS AVIS CLIENTS."
       ]
@@ -121,7 +158,7 @@
       "fin": 12.0,
       "y": 400,
       "taille": 56,
-      "bandeau": true,
+      "bandeau": false,
       "lignes": [
         "TON SITE EN LIGNE EN 48 HEURES.",
         "300 € — ET 200 € POUR LES PREMIERS."
@@ -132,7 +169,7 @@
       "fin": 14.1,
       "y": 335,
       "taille": 60,
-      "bandeau": true,
+      "bandeau": false,
       "lignes": [
         "ÉCRIS « SITE » EN COMMENTAIRE."
       ]
@@ -143,11 +180,12 @@
     "texte": "ARTISAN EXPRESS",
     "y": 495,
     "trait": 560,
-    "taille": 70
+    "taille": 70,
+    "bandeau": false
   },
   "dalle": {
-    "large": 528,
-    "haut": 880,
+    "large": 471,
+    "haut": 785,
     "hautEcran": 470
   },
   "defilement": {
@@ -155,7 +193,9 @@
     "fin": 8.5
   },
   "finale": {
-    "recul": 0.12,
-    "voile": 0.18
+    "recul": 0.06,
+    "voile": 0.0,
+    "descente": 138,
+    "avance": 1.1
   }
 }

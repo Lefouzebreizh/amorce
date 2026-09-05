@@ -26,6 +26,8 @@ RECETTE = json.loads(
 SCENE = (RACINE / "scenes/portail.html").read_text(encoding="utf-8")
 RECITS = {p.name: json.loads(p.read_text(encoding="utf-8"))
           for p in sorted((RACINE / "scenes/recits").glob("*.json"))}
+RECETTES = {p.name: json.loads(p.read_text(encoding="utf-8"))
+            for p in sorted((RACINE / "references").glob("*.json"))}
 # Le code seul, commentaires ôtés. Les commentaires de la scène nomment
 # volontiers ce qu'elle s'interdit — « pas de Math.random » — et une recherche
 # littérale s'y prendrait les pieds : le test tomberait sur la phrase qui dit
@@ -128,6 +130,62 @@ class Recette(unittest.TestCase):
                 self.assertLess(centroide, 200,
                                 f"« {nom} » est poussé à {pose['gain']:+g} dB avec un "
                                 f"centroïde de {centroide:.0f} Hz : ça siffle")
+
+
+class Ecretage(unittest.TestCase):
+    """`ecretage_db` rogne des crêtes ; au-delà, il écrase une voix.
+
+    La clé autorise le gain d'une réplique à dépasser sa marge réelle sous
+    0 dBFS, le limiteur absorbant le reste. C'est le bon outil pour une prise
+    à 17,6 dB de facteur de crête, où deux ou trois attaques tiennent la
+    phrase entière 8 dB sous sa cible. Mesuré sur la prise d'Erwann, six
+    décibels rendent +2,9 dB entendu et +3,1 dB dans la bande des consonnes
+    sans toucher au rapport consonnes/voyelles.
+
+    Le plafond est un jugement, pas une mesure : au-delà de huit, on ne rogne
+    plus des crêtes, on compresse — et une voix compressée perd les consonnes
+    qui la rendent intelligible. La règle qu'il assouplit est écrite juste
+    au-dessus de lui dans `monter_episode.py`, et elle reste vraie.
+    """
+
+    @staticmethod
+    def repliques(recette):
+        """Les répliques d'une recette, s'il y en a.
+
+        `voix` porte deux formes qu'il ne faut pas confondre : une LISTE de
+        répliques à poser dans le montage, et un OBJET qui ne sert qu'à
+        piloter l'esquive — un fichier joué à -60 dB, là seulement pour dire
+        quand quelqu'un parle. Parcourir la seconde comme la première itère
+        sur des noms de clés, et `"fichier" in "fichier"` est vrai.
+        """
+        voix = recette.get("voix")
+        return voix if isinstance(voix, list) else []
+
+    def test_l_ecretage_reste_un_rognage(self):
+        for nom, recette in RECETTES.items():
+            for rang, entree in enumerate(self.repliques(recette)):
+                if "ecretage_db" not in entree:
+                    continue
+                with self.subTest(recette=nom, replique=rang):
+                    self.assertGreaterEqual(float(entree["ecretage_db"]), 0.0)
+                    self.assertLessEqual(
+                        float(entree["ecretage_db"]), 8.0,
+                        "au-delà de 8 dB ce n'est plus un rognage de crêtes")
+
+    def test_une_prise_reelle_declare_son_fichier(self):
+        """`fichier` et `texte` disent deux choses, et les deux servent.
+
+        `texte` reste écrit même quand la prise vient d'un fichier : c'est lui
+        qui donne les sous-titres et qui permet de relire la recette sans
+        ouvrir les WAV.
+        """
+        for nom, recette in RECETTES.items():
+            for rang, entree in enumerate(self.repliques(recette)):
+                if "fichier" not in entree:
+                    continue
+                with self.subTest(recette=nom, replique=rang):
+                    self.assertTrue(entree.get("texte"),
+                                    "une réplique sur fichier doit dire ce qu'elle dit")
 
 
 class Scene(unittest.TestCase):
@@ -272,6 +330,54 @@ class Recits(unittest.TestCase):
                 with self.subTest(recit=nom, avant=avant["debut"], apres=apres["debut"]):
                     self.assertLessEqual(float(avant["fin"]), float(apres["debut"]),
                                          "deux cartons se recouvrent")
+
+    def test_la_dalle_ne_passe_jamais_sous_le_texte(self):
+        """Un récit qui pose la dalle sous le texte doit l'y garder.
+
+        Le carton du prix fait quatre lignes là où les autres en font une : il
+        descendait à 574 px pendant que la dalle commençait à 470, et
+        « ARTISAN EXPRESS » se posait en travers du téléphone. Rien ne pouvait
+        le dire — la zone sûre était respectée, le mesureur de textes ne
+        connaît que le texte.
+
+        Ce test est un premier filtre, comme celui de la zone sûre : il borne
+        les lignes DÉCLARÉES et ignore que la scène en coupe. La preuve est
+        `montage-auto/verifier_dalle.py`, qui relit image par image le
+        rectangle que la scène publie.
+        """
+        for nom, recit in RECITS.items():
+            dalle = recit.get("dalle") or {}
+            haut = dalle.get("hautEcran")
+            if haut is None:
+                continue
+            finale = recit.get("finale") or {}
+            descente = finale.get("descente")
+            if descente is None:
+                descente = 330 * float(finale.get("recul", 1.0))
+            message = float(recit["T"]["message"])
+            avance = float(finale.get("avance", 0.0))
+
+            def plafond(instant):
+                """Où commence la dalle à cet instant : elle se range avant le
+                message, et la descente est finie quand le carton arrive."""
+                return haut + (descente if instant >= message - avance else 0.0)
+
+            elements = [(float(c["debut"]),
+                         float(c["y"]) + (len(c["lignes"]) - 1) * float(c["taille"]) * 1.24 / 2
+                         + float(c["taille"]) * 0.62,
+                         c["lignes"][0]) for c in recit.get("cartes", [])]
+            signe = recit.get("signature")
+            if signe:
+                elements.append((float(signe["debut"]),
+                                 max(float(signe["y"]) + float(signe["taille"]) * 0.62,
+                                     float(signe.get("trait", 0))),
+                                 signe["texte"]))
+            for instant, bas, quoi in elements:
+                with self.subTest(recit=nom, texte=quoi):
+                    self.assertLessEqual(
+                        bas, plafond(instant),
+                        f"« {quoi} » descend à {bas:.0f}, la dalle commence à "
+                        f"{plafond(instant):.0f}")
 
     def test_rien_ne_joue_apres_la_derniere_image(self):
         for nom, recit in RECITS.items():

@@ -71,14 +71,39 @@ const DEFAUT = {
      `hautEcran` fixe le HAUT de la dalle au lieu de la centrer. C'est ce qui
      permet de dégager la bande de texte au-dessus d'elle : un carton posé sur
      le site cache le seul argument de vente qu'on ait. Sans ce réglage, la
-     dalle est centrée sur le cadre comme avant. */
+     dalle est centrée sur le cadre comme avant.
+
+     CE QU'ELLE NE DOIT JAMAIS TOUCHER, C'EST LE TEXTE. `hautEcran` la pose
+     sous le carton le plus bas, et `finale.descente` la pousse encore plus
+     bas quand le carton du prix, qui fait quatre lignes, arrive. Les deux ne
+     se recouvrent alors à aucun instant du film — ce n'est plus un bandeau
+     qui les sépare, c'est la géométrie, et `verifier_dalle.py` le relit image
+     par image.
+
+     Elle se met à l'échelle EN GARDANT SON RAPPORT `haut / large` : la
+     fenêtre de page montrée vaut `imgW × haut / large` et ne dépend pas du
+     zoom. Rapport conservé, le défilement et les cartons qui s'y accrochent
+     restent valables au dixième près. Rapport changé, tout est à refaire. */
   dalle: { large: 604, haut: 1130, hautEcran: null },
   /* La fin. `recul` dit de combien la dalle s'efface quand le texte prend la
      place, `voile` de combien le cadre s'assombrit. Les deux étaient câblés,
      et c'était une erreur d'appréciation : sur un montage qui VEND le site,
      l'effacer pour lire le prix revient à ranger l'argument au moment de
-     conclure. Le bandeau des cartons suffit à les détacher. */
-  finale: { recul: 1.0, voile: 0.55 },
+     conclure.
+
+     `descente` sépare le RECUL du DÉPLACEMENT, qui étaient le même réglage.
+     Le carton du prix fait quatre lignes là où les autres en font une : il
+     descend de 140 px de plus, et la dalle doit descendre d'autant pour
+     rester dessous. L'écrire avec `recul` obligerait à effacer le site pour
+     le déplacer. Sans valeur, `descente` vaut `330 × recul` — la formule
+     d'avant, donc aucun récit existant ne bouge.
+
+     `avance` dit de combien de secondes le mouvement PRÉCÈDE le message. À
+     zéro, la dalle descend pendant que le carton apparaît : mesuré, elle
+     passe 0,5 s sous un texte qui est déjà lisible. Une dalle qui se range
+     doit avoir fini de le faire quand le carton arrive, pas commencer avec
+     lui. */
+  finale: { recul: 1.0, voile: 0.55, descente: null, avance: 0 },
   cartes: [
     { debut: 8.70,  fin: 10.35, lignes: ['CETTE VIDÉO A DEMANDÉ', 'DES HEURES.'], taille: 74 },
     { debut: 10.35, fin: 12.00, lignes: ['VOTRE SITE RECEVRA', 'LE MÊME SOIN.'],  taille: 74 }
@@ -104,6 +129,8 @@ const DEFILE = RECIT.defilement || { debut: T.lecture - 0.40, fin: T.message - 0
 const DECOR = RECIT.decor || DEFAUT.decor;
 const FOYERS = RECIT.foyers;
 const FINALE = Object.assign({}, DEFAUT.finale, RECIT.finale || {});
+const DESCENTE = FINALE.descente === null || FINALE.descente === undefined
+  ? 330 * FINALE.recul : FINALE.descente;
 
 /* Le foyer de l'instant t. Deux foyers voisins se rejoignent par la même
    courbe que le reste du montage : une caméra qui démarre et s'arrête sec se
@@ -369,8 +396,13 @@ function site(t, img) {
   const em = seg(t, T.emergence, T.lecture);
   if (em <= 0) return;
   const monte = sortie(em);
-  /* au moment du message, elle recule dans la lumière au lieu de disparaître */
-  const recul = lisse(seg(t, T.message, T.message + 1.10)) * FINALE.recul;
+  /* au moment du message, elle recule dans la lumière au lieu de disparaître,
+     et elle DESCEND pour laisser la place au carton du prix, qui est le plus
+     haut du film. Les deux gestes sont réglés à part : reculer efface, se
+     ranger n'efface pas. */
+  const gagne = lisse(seg(t, T.message - FINALE.avance,
+                            T.message - FINALE.avance + 1.10));
+  const recul = gagne * FINALE.recul;
   /* Le foyer agrandit la DALLE, il ne grossit pas l'image dedans : la fenêtre
      de page montrée reste la même, seule la caméra s'approche. Grossir dans
      une dalle fixe donnerait une capture zoomée ; ici on avance. */
@@ -378,10 +410,16 @@ function site(t, img) {
   const ech = (0.14 + 0.86 * monte) * (1 - 0.40 * recul) * (vise ? vise.zoom : 1);
   const w = DALLE.large * ech, h = DALLE.haut * ech;
   const cy = DALLE.hautEcran === null
-    ? CY + 150 * (1 - monte) + 330 * recul
-    : DALLE.hautEcran + h / 2 + 150 * (1 - monte) + 330 * recul;
+    ? CY + 150 * (1 - monte) + DESCENTE * gagne
+    : DALLE.hautEcran + h / 2 + 150 * (1 - monte) + DESCENTE * gagne;
   const px = CX - w / 2, py = cy - h / 2;
   const opacite = (1 - 0.58 * recul);
+  /* Le rectangle réellement dessiné, publié pour qu'on puisse le MESURER.
+     Chercher le bord de la dalle dans l'image rendue ne marche pas : son
+     liseré est cyan et les rais du portail le sont aussi — un détecteur de
+     pixels a relevé 558 là où la dalle était à 608. `verifier_dalle.py` lit
+     donc cette valeur, image par image, plutôt que de l'estimer. */
+  window.__DALLE__ = { x: px, y: py, w: w, h: h };
 
   x.save();
   x.globalAlpha = opacite;
@@ -505,15 +543,26 @@ const SIGNATURE = RECIT.signature;
 /* Le bandeau. Un carton posé PENDANT que la page défile tombe sur elle, et les
    deux deviennent illisibles ensemble. Un dégradé sombre en haut du cadre les
    sépare sans rien cacher — c'est la solution de toutes les plateformes, et
-   elle vaut mieux qu'un texte qu'on déplace hors de sa zone sûre. */
-function bandeau(force) {
-  const g = x.createLinearGradient(0, 0, 0, 980);
+   elle vaut mieux qu'un texte qu'on déplace hors de sa zone sûre.
+
+   IL A UNE HAUTEUR, ET ELLE S'ARRÊTE AU HAUT DE LA DALLE.
+
+   Réglé à 980 px pour tout le monde, il couvrait les 150 premiers pixels du
+   site d'un voile à 70 % : « rien ne cache le site » était vrai du texte et
+   faux du bandeau, et sur la capture d'écran le haut du téléphone est
+   visiblement plus sombre que le reste. Le carton ne tombe plus sur la page
+   depuis qu'elle est rangée dessous ; le bandeau n'a donc plus à descendre
+   jusqu'à elle. Chaque carton dit où le sien s'arrête, et `true` garde les
+   980 px d'avant pour les récits qui n'en disent rien. */
+function bandeau(force, hauteur) {
+  const bas = typeof hauteur === 'number' ? hauteur : 980;
+  const g = x.createLinearGradient(0, 0, 0, bas);
   g.addColorStop(0.00, 'rgba(4,7,12,' + (0.94 * force).toFixed(3) + ')');
   g.addColorStop(0.55, 'rgba(4,7,12,' + (0.82 * force).toFixed(3) + ')');
   g.addColorStop(0.78, 'rgba(4,7,12,' + (0.42 * force).toFixed(3) + ')');
   g.addColorStop(1.00, 'rgba(4,7,12,0)');
   x.fillStyle = g;
-  x.fillRect(0, 0, L, 980);
+  x.fillRect(0, 0, L, bas);
 }
 
 /* La boîte du texte, et pourquoi elle fait 56 % et non 66 %.
@@ -574,14 +623,36 @@ function tailleQuiTient(lignes, taille, espacement) {
   return t;
 }
 
+/* Le texte porte son propre fond, lettre par lettre.
+
+   Le bandeau faisait ce travail pour toute la largeur du cadre. Il ne peut
+   plus : il descendait jusqu'à 980 px et le site commence maintenant à 470,
+   donc il le voilait à 85 %. Raccourci à 470, il ne vaut presque plus rien
+   là où le texte est — le bas d'un carton de deux lignes tombe à 434, à
+   trente pixels de sa fin.
+
+   Un halo sombre autour de chaque glyphe fait le même travail sans occuper
+   la largeur : il suit le texte au lieu de le contenir, et il s'arrête où le
+   texte s'arrête. Mesuré sur le plan le plus clair du film — la lueur du
+   portail à 5,0 s, la pire situation du montage —, il tient le contraste que
+   le bandeau donnait, et le site reste entier. */
 function ligneCentree(texte, py, taille, teinte, halo, espacement) {
   x.font = police(taille);
   x.textAlign = 'center';
   x.textBaseline = 'middle';
   x.letterSpacing = espacement + 'px';
   x.lineJoin = 'round';
+  /* deux passes : l'ombre floue creuse le fond, le contour net tient le bord.
+     Une seule passe floue bave, un seul contour net ne détache pas d'un fond
+     clair — il faut les deux, et dans cet ordre. */
+  x.strokeStyle = 'rgba(2,8,14,0.92)';
+  x.shadowColor = 'rgba(0,0,0,0.92)';
+  x.shadowBlur = taille * 0.55;
+  x.lineWidth = Math.max(8, taille * 0.22);
+  x.strokeText(texte, CX, py);
+  x.strokeText(texte, CX, py);
+  x.shadowBlur = 0;
   x.lineWidth = Math.max(6, taille * 0.13);
-  x.strokeStyle = 'rgba(2,8,14,0.88)';
   x.strokeText(texte, CX, py);
   x.shadowColor = halo; x.shadowBlur = 26;
   x.fillStyle = teinte;
@@ -597,7 +668,7 @@ function textes(t) {
     const e = lisse(v);
     const glisse = (1 - e) * 26;
     x.save();
-    if (c.bandeau) bandeau(e);
+    if (c.bandeau) bandeau(e, c.bandeau);
     x.globalAlpha = e;
     const taille = tailleQuiTient(c.lignes, c.taille, 2);
     const lignes = decouper(c.lignes, taille, 2);
@@ -621,7 +692,7 @@ function textes(t) {
     x.beginPath(); x.moveTo(CX - lg, SIGNATURE.trait); x.lineTo(CX + lg, SIGNATURE.trait); x.stroke();
     x.shadowBlur = 0;
     x.globalCompositeOperation = 'source-over';
-    if (SIGNATURE.bandeau) bandeau(e);
+    if (SIGNATURE.bandeau) bandeau(e, SIGNATURE.bandeau);
     ligneCentree(SIGNATURE.texte, SIGNATURE.y - (1 - e) * 16,
                  tailleQuiTient([SIGNATURE.texte], SIGNATURE.taille, 9), '#eafcff', CYAN, 9);
     x.restore();
