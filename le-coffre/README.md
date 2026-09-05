@@ -77,6 +77,31 @@ abonnement/urgence), une bannière signale l'échéance la plus proche en haut d
 page. Aucun impact sur la sécurité ou le flux de données : purement la mise en
 forme de ce que l'index déjà déchiffré contient.
 
+## La fiche détail par papier (05/09/2026)
+
+Refonte suivant une maquette dédiée (`coffre-maquette.html`) : chaque
+document s'ouvre en fiche détail au clic, plutôt que d'exposer ses actions
+directement dans la liste — bannière d'accueil, montant extrait (lu tel quel,
+jamais recalculé — même principe que l'émetteur), badge de statut à trois
+états (`urgent` / `bientôt` / `calme`, un simple point coloré dérivé de
+l'échéance), correction du classement après coup (nom, catégorie, montant,
+sans repasser par un nouveau dépôt), et un bouton flottant « Ajouter un
+papier » qui remplace la grande zone de dépôt — la page entière reste
+déposable au glisser-déposer, juste sans l'encart visuel qui prenait toute la
+largeur.
+
+**Périmètre tranché à l'ouverture de ce lot** : la maquette montrée est celle
+du Coffre seul, distincte de celle du « Bureau du soir » (`life-organizer`,
+chat + budget) montrée à titre de comparaison — les deux sont restées deux
+écrans séparés, aucune fusion des deux produits dans ce lot.
+
+**Un vrai bug corrigé au passage** : `deposerFichier`, `supprimerFichier`,
+`ajouterRendezVous` et `supprimerRendezVous` reconstruisaient l'index sans
+reprendre tous ses champs (`{ objets }` au lieu de `{ ...index, objets }`) —
+déposer un fichier, par exemple, effaçait silencieusement l'identité et les
+rendez-vous déjà enregistrés. Couvert par quatre tests de régression dans
+`coffre.test.ts`.
+
 ## Architecture
 
 ```

@@ -38,7 +38,26 @@ export type ObjetIndex = {
   emetteur?: string;
   referenceClient?: string;
   lettre?: Lettre;
+  // Tel que lu sur le document (ex. "89,90 €"), jamais recalculé ni reformaté
+  // — même principe que emetteur/referenceClient : null plutôt qu'un montant
+  // deviné.
+  montant?: string | null;
 };
+
+export type StatutEcheance = 'urgent' | 'bientot' | 'calme';
+
+// Seuils choisis pour rester lisibles avec un badge à trois états, pas
+// mesurés sur un usage réel — à resserrer si l'usage montre qu'ils alertent
+// trop tôt ou trop tard. `jours` vient de joursRestants : négatif si la date
+// est dépassée, donc un retard est toujours "urgent".
+const SEUIL_URGENT_JOURS = 7;
+const SEUIL_BIENTOT_JOURS = 30;
+
+export function statutEcheance(jours: number): StatutEcheance {
+  if (jours <= SEUIL_URGENT_JOURS) return 'urgent';
+  if (jours <= SEUIL_BIENTOT_JOURS) return 'bientot';
+  return 'calme';
+}
 
 export type RendezVous = {
   id: string;
@@ -65,6 +84,7 @@ export type PropositionClassement = {
   nomSuggere: string;
   emetteur: string | null;
   referenceClient: string | null;
+  montant: string | null;
   echeance: Echeance;
 };
 
@@ -128,7 +148,7 @@ function b64FromFichier(buf: ArrayBuffer): string {
 // panne, on renvoie une proposition vide plutôt que de bloquer le dépôt.
 export async function proposerClassement(fichier: File): Promise<PropositionClassement> {
   const vide: PropositionClassement = {
-    lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null,
+    lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null, montant: null,
     echeance: { presente: false, date: null, libelle: null, confiance: 'basse' },
   };
   try {
@@ -244,6 +264,7 @@ async function sauvegarderIndex(userId: string, cle: CryptoKey, index: IndexCoff
 export async function deposerFichier(
   userId: string, cle: CryptoKey, fichier: File, categorie: string, index: IndexCoffre,
   nomAffiche?: string, echeance?: Echeance, emetteur?: string | null, referenceClient?: string | null,
+  montant?: string | null,
 ): Promise<IndexCoffre> {
   const buf = await fichier.arrayBuffer();
   const paquet = await chiffrerOctets(cle, buf);
@@ -261,6 +282,7 @@ export async function deposerFichier(
     categorie,
     deposeLe: new Date().toISOString(),
   };
+  if (montant) objet.montant = montant;
   // L'échéance complète (libellé compris) reste chiffrée dans l'index, comme
   // le reste — visible seulement une fois le coffre déverrouillé. La date
   // seule, sans rien d'autre, part aussi vers coffre_echeances : c'est ce qui
@@ -287,7 +309,29 @@ export async function deposerFichier(
     }
   }
 
-  const nouvel_index: IndexCoffre = { objets: { ...index.objets, [nom]: objet } };
+  // On reprend tout l'index (`...index`), pas seulement `objets` : oublier
+  // rendezVous ou identite ici les efface silencieusement au dépôt suivant —
+  // un vrai bug trouvé en écrivant cette fonction, corrigé le 05/09/2026.
+  const nouvel_index: IndexCoffre = { ...index, objets: { ...index.objets, [nom]: objet } };
+  await sauvegarderIndex(userId, cle, nouvel_index);
+  return nouvel_index;
+}
+
+// Correction du classement après coup : nom, catégorie ou montant, sans
+// repasser par un nouveau dépôt. N'importe jamais sur l'échéance ni sur la
+// lettre de résiliation, qui restent celles calculées au dépôt — les
+// toucher demanderait de retoucher aussi coffre_echeances et la lettre déjà
+// composée, hors du périmètre d'une simple correction de classement.
+export async function modifierObjet(
+  userId: string, cle: CryptoKey, nom: string,
+  champs: Partial<Pick<ObjetIndex, 'nom' | 'categorie' | 'montant'>>, index: IndexCoffre,
+): Promise<IndexCoffre> {
+  const existant = index.objets[nom];
+  if (!existant) throw new Error('Document introuvable.');
+  const nouvel_index: IndexCoffre = {
+    ...index,
+    objets: { ...index.objets, [nom]: { ...existant, ...champs } },
+  };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }
@@ -310,7 +354,7 @@ export async function supprimerFichier(
   await supabase.from('coffre_echeances').delete().eq('user_id', userId).eq('objet_nom', nom);
   const objets = { ...index.objets };
   delete objets[nom];
-  const nouvel_index: IndexCoffre = { objets };
+  const nouvel_index: IndexCoffre = { ...index, objets };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }
@@ -329,7 +373,7 @@ export async function ajouterRendezVous(
   if (error) throw new Error(error.message);
 
   const nouvel_index: IndexCoffre = {
-    objets: index.objets,
+    ...index,
     rendezVous: { ...index.rendezVous, [id]: { id, libelle, date } },
   };
   await sauvegarderIndex(userId, cle, nouvel_index);
@@ -342,7 +386,7 @@ export async function supprimerRendezVous(
   await supabase.from('coffre_echeances').delete().eq('user_id', userId).eq('objet_nom', id);
   const rendezVous = { ...index.rendezVous };
   delete rendezVous[id];
-  const nouvel_index: IndexCoffre = { objets: index.objets, rendezVous };
+  const nouvel_index: IndexCoffre = { ...index, rendezVous };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }

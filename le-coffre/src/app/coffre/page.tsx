@@ -4,14 +4,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import {
-  Bell, Briefcase, Car, File, FileText, Heart, Home, Landmark, LogOut, Shield, UploadCloud,
-  Wallet, Wifi, X, Zap, type LucideIcon,
+  Bell, Briefcase, Car, ChevronRight, File, FileText, Heart, Home, Landmark, LogOut, Plus,
+  Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
-  enregistrerIdentite, composerLettreResiliation, type IndexCoffre, type Echeance, type Identite,
+  enregistrerIdentite, composerLettreResiliation, modifierObjet, statutEcheance,
+  type IndexCoffre, type Echeance, type Identite, type StatutEcheance,
 } from '@/lib/coffre';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
@@ -53,7 +54,35 @@ type EnAttente = {
   echeance: Echeance;
   emetteur: string;
   referenceClient: string;
+  montant: string;
 };
+
+type Correction = { nom: string; categorie: string; montant: string };
+
+// Trois états lisibles d'un coup d'œil, dérivés du même calcul que la
+// bannière d'alerte — voir statutEcheance dans coffre.ts pour les seuils.
+// Jamais d'orange ni de jaune (préférence posée pour tous les projets,
+// voir globals.css) : violet pour l'intermédiaire, pas d'ambre.
+const LIBELLE_STATUT: Record<StatutEcheance, string> = {
+  urgent: 'Urgent', bientot: 'Bientôt', calme: 'Calme',
+};
+const CLASSE_STATUT: Record<StatutEcheance, string> = {
+  urgent: 'bg-wine', bientot: 'bg-violet', calme: 'bg-accent',
+};
+// Point coloré seul dans la liste (comme la maquette), toujours doublé d'un
+// aria-label et d'un title — la couleur seule ne suffit jamais à porter un
+// sens pour qui ne la distingue pas.
+function BadgeStatut({ jours }: { jours: number }) {
+  const statut = statutEcheance(jours);
+  return (
+    <span
+      role="img"
+      aria-label={`Statut : ${LIBELLE_STATUT[statut]}`}
+      title={LIBELLE_STATUT[statut]}
+      className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${CLASSE_STATUT[statut]}`}
+    />
+  );
+}
 
 function joursRestants(dateIso: string): number {
   const cible = new Date(`${dateIso}T00:00:00`);
@@ -134,6 +163,8 @@ export default function PageCoffre() {
   const [aValider, setAValider] = useState<EnAttente[]>([]);
   const [survole, setSurvole] = useState(false);
   const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
+  const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
+  const [correction, setCorrection] = useState<Correction | null>(null);
   const entreeFichier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -226,7 +257,7 @@ export default function PageCoffre() {
     const nouveaux: EnAttente[] = fichiersValides.map((fichier) => ({
       cle: `${fichier.name}-${fichier.size}-${crypto.randomUUID()}`,
       fichier, enAnalyse: true, categorie: '', nomAffiche: fichier.name, echeance: ECHEANCE_VIDE,
-      emetteur: '', referenceClient: '',
+      emetteur: '', referenceClient: '', montant: '',
     }));
     setAValider((precedent) => [...precedent, ...nouveaux]);
     if (entreeFichier.current) entreeFichier.current.value = '';
@@ -240,6 +271,7 @@ export default function PageCoffre() {
         echeance: proposition.echeance,
         emetteur: proposition.emetteur || '',
         referenceClient: proposition.referenceClient || '',
+        montant: proposition.montant || '',
       } : p)));
     }
   }
@@ -259,7 +291,7 @@ export default function PageCoffre() {
     try {
       const nouvelIndex = await deposerFichier(
         utilisateur.id, cle, item.fichier, item.categorie, index, item.nomAffiche, item.echeance,
-        item.emetteur || null, item.referenceClient || null,
+        item.emetteur || null, item.referenceClient || null, item.montant || null,
       );
       setIndex(nouvelIndex);
       retirerAttente(item.cle);
@@ -297,8 +329,42 @@ export default function PageCoffre() {
     try {
       const nouvelIndex = await supprimerFichier(utilisateur.id, cle, nom, index);
       setIndex(nouvelIndex);
+      if (detailOuvert === nom) fermerDetail();
     } catch (err) {
       alert(`Suppression impossible : ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  // Fiche détail : ouverte au clic sur un document, porte la correction du
+  // classement (nom, catégorie, montant) — jamais l'échéance ni la lettre,
+  // qui restent celles calculées au dépôt.
+  function ouvrirDetail(nom: string) {
+    const info = index.objets[nom];
+    if (!info) return;
+    setCorrection({ nom: info.nom, categorie: info.categorie, montant: info.montant || '' });
+    setDetailOuvert(nom);
+  }
+
+  function fermerDetail() {
+    setDetailOuvert(null);
+    setCorrection(null);
+  }
+
+  async function enregistrerCorrection() {
+    if (!utilisateur || !cle || !detailOuvert || !correction) return;
+    setEnCours(true);
+    setErreur('');
+    try {
+      const nouvelIndex = await modifierObjet(utilisateur.id, cle, detailOuvert, {
+        nom: correction.nom.trim() || index.objets[detailOuvert]?.nom,
+        categorie: correction.categorie.trim(),
+        montant: correction.montant.trim() || null,
+      }, index);
+      setIndex(nouvelIndex);
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : String(err));
+    } finally {
+      setEnCours(false);
     }
   }
 
@@ -426,18 +492,36 @@ export default function PageCoffre() {
   const prenom = (index.identite?.nom || utilisateur?.email || '').trim().split(/\s+/)[0];
 
   return (
-    <main className="min-h-screen bg-paper pb-24">
+    <main
+      className={`min-h-screen bg-paper pb-32 transition ${survole ? 'ring-2 ring-accent ring-inset' : ''}`}
+      onDragOver={(e) => { e.preventDefault(); setSurvole(true); }}
+      onDragLeave={() => setSurvole(false)}
+      onDrop={(e) => { e.preventDefault(); setSurvole(false); surDepot(e.dataTransfer.files); }}
+    >
+      <input
+        ref={entreeFichier}
+        type="file"
+        multiple
+        hidden
+        onChange={(e) => surDepot(e.target.files)}
+      />
       <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
         {/* En-tête */}
-        <header className="flex flex-wrap items-center justify-between gap-4">
+        <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
           <div>
-            <p className="text-sm tracking-widest text-ink-soft uppercase">Le Coffre</p>
-            <h1 className="mt-1 font-affiche text-3xl sm:text-4xl">
+            <p className="text-sm font-semibold tracking-widest text-accent uppercase">
               Bonjour {prenom || 'toi'}
-            </h1>
+            </p>
+            <h1 className="mt-2 font-affiche text-3xl sm:text-4xl">Voici où en sont tes papiers</h1>
+            <p className="mt-3 max-w-md text-ink-soft">
+              Tout est déjà lu et rangé pour toi — il ne reste qu&apos;à jeter un œil.
+            </p>
+            <p className="mt-4 flex items-center gap-2 text-sm text-accent">
+              <ShieldCheck size={16} /> Personne d&apos;autre ne peut voir tes papiers. Même nous.
+            </p>
           </div>
           <button onClick={seDeconnecter}
-            className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-ink-soft transition hover:border-wine/60 hover:text-wine">
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-ink-soft transition hover:border-wine/60 hover:text-wine">
             <LogOut size={16} /> Se déconnecter
           </button>
         </header>
@@ -460,27 +544,6 @@ export default function PageCoffre() {
           <p className="rounded-lg border border-wine/40 bg-wine/10 px-4 py-3 text-sm text-wine">{erreur}</p>
         )}
 
-        {/* Dépôt */}
-        <label
-          onDragOver={(e) => { e.preventDefault(); setSurvole(true); }}
-          onDragLeave={() => setSurvole(false)}
-          onDrop={(e) => { e.preventDefault(); setSurvole(false); surDepot(e.dataTransfer.files); }}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-12 text-center transition ${
-            survole ? 'border-accent bg-accent/5' : 'border-line bg-paper-raised hover:border-accent/60'
-          }`}
-        >
-          <UploadCloud size={28} className="mb-1 text-accent" />
-          <span className="font-semibold">Choisir un ou plusieurs fichiers</span>
-          <span className="text-sm text-ink-soft">ou les déposer ici — une photo suffit</span>
-          <input
-            ref={entreeFichier}
-            type="file"
-            multiple
-            hidden
-            onChange={(e) => surDepot(e.target.files)}
-          />
-        </label>
-
         {/* File d'attente de validation */}
         {aValider.length > 0 && (
           <ul className="flex flex-col gap-3">
@@ -502,6 +565,12 @@ export default function PageCoffre() {
                           <Champ id={`cat-${item.cle}`} value={item.categorie}
                             placeholder="Non proposée — à préciser ou laisser vide"
                             onChange={(e) => modifierAttente(item.cle, { categorie: e.target.value })} />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-sm text-ink-soft" htmlFor={`montant-${item.cle}`}>Montant</label>
+                          <Champ id={`montant-${item.cle}`} value={item.montant}
+                            placeholder="Non lu — à préciser ou laisser vide"
+                            onChange={(e) => modifierAttente(item.cle, { montant: e.target.value })} />
                         </div>
                       </div>
                       <button onClick={() => retirerAttente(item.cle)}
@@ -564,10 +633,13 @@ export default function PageCoffre() {
         {/* Grille principale : documents (large) + rendez-vous/identité (colonne) */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <section className="lg:col-span-2">
-            <h2 className="mb-4 font-affiche text-2xl">Documents</h2>
+            <p className="mb-4 text-sm font-semibold tracking-widest text-ink-soft uppercase">
+              Vos papiers ({noms.length})
+            </p>
             {noms.length === 0 ? (
               <p className="rounded-2xl border border-line bg-paper-raised p-6 text-ink-soft">
-                Le coffre est vide pour l&apos;instant.
+                Le coffre est vide pour l&apos;instant — touche « Ajouter un papier » ci-dessous,
+                ou dépose une photo n&apos;importe où sur cette page.
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
@@ -575,39 +647,26 @@ export default function PageCoffre() {
                   const info = index.objets[nom];
                   if (!info) return null;
                   const { icone: Icone, classe } = styleCategorie(info.categorie);
+                  const jours = info.echeance?.presente && info.echeance.date
+                    ? joursRestants(info.echeance.date) : null;
                   return (
-                    <li key={nom} className="rounded-2xl border border-line bg-paper-raised p-4 transition hover:border-line/80">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className={`shrink-0 rounded-xl p-2.5 ${classe}`}><Icone size={18} /></div>
-                          <div className="min-w-0">
-                            <p className="truncate font-medium">{info.nom}</p>
-                            <p className="text-sm text-ink-soft">
-                              {formatTaille(info.taille)}{info.categorie ? ` · ${info.categorie}` : ''}
-                            </p>
-                            {info.echeance?.presente && (
-                              <p className="text-sm text-accent">
-                                {info.echeance.libelle} — {info.echeance.date}
-                              </p>
-                            )}
-                          </div>
+                    <li key={nom}>
+                      <button
+                        type="button"
+                        onClick={() => ouvrirDetail(nom)}
+                        className="flex w-full items-center gap-3 rounded-2xl border border-line bg-paper-raised p-4 text-left transition hover:border-accent/60"
+                      >
+                        <div className={`shrink-0 rounded-2xl p-3 ${classe}`}><Icone size={18} /></div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{info.nom}</p>
+                          <p className="text-sm leading-snug text-ink-soft">
+                            {info.emetteur || info.categorie || 'Document'}
+                            {info.montant ? ` · ${info.montant}` : ''}
+                          </p>
                         </div>
-                        <div className="flex shrink-0 gap-4 text-sm">
-                          <button onClick={() => telecharger(nom)} className="text-accent hover:underline">Télécharger</button>
-                          <button onClick={() => supprimer(nom)} className="text-wine hover:underline">Supprimer</button>
-                        </div>
-                      </div>
-                      {info.lettre && (
-                        <div className="mt-3 rounded-lg border border-line bg-paper p-3 text-sm">
-                          <p className="mb-2 font-medium">Lettre de résiliation (brouillon — à relire avant signature)</p>
-                          <pre className="mb-2 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans text-ink-soft">
-                            {info.lettre.objet}{'\n\n'}{info.lettre.corps}
-                          </pre>
-                          {info.lettre.mentionsManquantes.length > 0 && (
-                            <p className="text-wine">Manque : {info.lettre.mentionsManquantes.join(', ')}.</p>
-                          )}
-                        </div>
-                      )}
+                        {jours !== null && <BadgeStatut jours={jours} />}
+                        <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+                      </button>
                     </li>
                   );
                 })}
@@ -677,6 +736,137 @@ export default function PageCoffre() {
           </div>
         </div>
       </div>
+
+      {/* Bouton flottant : seul point d'entrée visible pour ajouter un papier
+          (la page entière reste aussi déposable, voir onDrop sur <main>). */}
+      <div className="fixed inset-x-0 bottom-6 z-40 flex flex-col items-center gap-2 px-4">
+        <button
+          type="button"
+          onClick={() => entreeFichier.current?.click()}
+          className="flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 font-semibold text-paper shadow-lg transition hover:bg-accent-strong"
+        >
+          <Plus size={20} /> Ajouter un papier
+        </button>
+        <span className="text-xs text-ink-soft">Une photo suffit — on s&apos;occupe du reste</span>
+      </div>
+
+      {/* Fiche détail : ouverte au clic sur un document, porte la correction
+          du classement et les actions (télécharger / supprimer). */}
+      {detailOuvert && index.objets[detailOuvert] && correction && (() => {
+        const info = index.objets[detailOuvert];
+        if (!info) return null;
+        const { icone: Icone, classe } = styleCategorie(info.categorie);
+        const jours = info.echeance?.presente && info.echeance.date
+          ? joursRestants(info.echeance.date) : null;
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 sm:items-center sm:p-6"
+            onClick={fermerDetail}
+          >
+            <div
+              className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl border border-line bg-paper-raised p-6 sm:max-w-lg sm:rounded-3xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col gap-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className={`shrink-0 rounded-xl p-2.5 ${classe}`}><Icone size={20} /></div>
+                    <div className="min-w-0">
+                      <p className="truncate font-affiche text-xl">{info.nom}</p>
+                      <p className="text-sm text-ink-soft">
+                        {formatTaille(info.taille)} · déposé le{' '}
+                        {new Date(info.deposeLe).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={fermerDetail}
+                    className="shrink-0 rounded-lg p-1.5 text-ink-soft transition hover:bg-line/40" aria-label="Fermer">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {jours !== null && info.echeance && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <BadgeStatut jours={jours} />
+                    <span className="text-sm text-ink-soft">
+                      {info.echeance.libelle} — {formatJours(jours)} ({info.echeance.date})
+                    </span>
+                  </div>
+                )}
+
+                {(info.montant || info.emetteur || info.referenceClient) && (
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    {info.montant && (
+                      <>
+                        <dt className="text-ink-soft">Montant</dt>
+                        <dd className="text-right font-medium">{info.montant}</dd>
+                      </>
+                    )}
+                    {info.emetteur && (
+                      <>
+                        <dt className="text-ink-soft">Émetteur</dt>
+                        <dd className="text-right">{info.emetteur}</dd>
+                      </>
+                    )}
+                    {info.referenceClient && (
+                      <>
+                        <dt className="text-ink-soft">Référence</dt>
+                        <dd className="text-right">{info.referenceClient}</dd>
+                      </>
+                    )}
+                  </dl>
+                )}
+
+                {info.lettre && (
+                  <div className="rounded-lg border border-line bg-paper p-3 text-sm">
+                    <p className="mb-2 font-medium">Lettre de résiliation (brouillon — à relire avant signature)</p>
+                    <pre className="mb-2 max-h-40 overflow-y-auto whitespace-pre-wrap font-sans text-ink-soft">
+                      {info.lettre.objet}{'\n\n'}{info.lettre.corps}
+                    </pre>
+                    {info.lettre.mentionsManquantes.length > 0 && (
+                      <p className="text-wine">Manque : {info.lettre.mentionsManquantes.join(', ')}.</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2 rounded-2xl border border-line p-4">
+                  <p className="text-sm font-medium text-ink-soft">Corriger le classement</p>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="flex-1">
+                      <label className="text-sm text-ink-soft" htmlFor="correction-nom">Nom</label>
+                      <Champ id="correction-nom" value={correction.nom}
+                        onChange={(e) => setCorrection({ ...correction, nom: e.target.value })} />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-sm text-ink-soft" htmlFor="correction-categorie">Catégorie</label>
+                      <Champ id="correction-categorie" value={correction.categorie}
+                        onChange={(e) => setCorrection({ ...correction, categorie: e.target.value })} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm text-ink-soft" htmlFor="correction-montant">Montant</label>
+                    <Champ id="correction-montant" value={correction.montant} placeholder="Non lu — à préciser"
+                      onChange={(e) => setCorrection({ ...correction, montant: e.target.value })} />
+                  </div>
+                  <button onClick={enregistrerCorrection} disabled={enCours}
+                    className="self-start rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    Enregistrer
+                  </button>
+                </div>
+
+                <div className="flex gap-4 text-sm">
+                  <button onClick={() => telecharger(detailOuvert)} className="text-accent hover:underline">
+                    Télécharger
+                  </button>
+                  <button onClick={() => supprimer(detailOuvert)} className="text-wine hover:underline">
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </main>
   );
 }
