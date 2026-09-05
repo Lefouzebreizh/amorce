@@ -9,32 +9,29 @@
     "LE DÉCOR EST NU, ET C'EST LE SUJET. Portail en mode « lueur » : le halo et",
     "les rais restent, la porte n'existe pas. L'opposition est le message.",
     "",
-    "CHAQUE CARTON DIT EXACTEMENT CE QUE LA VOIX DIT, ET DURE AUSSI LONGTEMPS.",
+    "CHAQUE CARTON DIT CE QUE LA VOIX DIT, ET TOMBE QUAND CE QU'IL NOMME EST À",
+    "L'ÉCRAN. Les deux conditions se contredisent si on les règle séparément.",
     "",
-    "Retour d'écoute : « il manque des mots par rapport au sous-titre, on ne voit",
-    "pas exactement la même chose que ce qu'on entend ». C'était vrai : la voix",
-    "disait « tes chantiers en photos, TES VRAIS AVIS » quand l'écran n'affichait",
-    "que la première moitié. Les cartons et les répliques sont désormais écrits",
-    "ensemble, et la durée de chaque carton vient de la durée MESURÉE de sa",
-    "réplique, plus trois dixièmes. C'est la réplique qui commande, pas l'inverse :",
-    "un carton trop court coupe la phrase, et c'est ce qu'on entend comme un",
-    "décalage.",
+    "Premier essai : les cartons écrits d'abord, le défilement ajusté ensuite. À",
+    "6,20 s l'écran disait « UN BOUTON QUI APPELLE » alors que le bouton était",
+    "déjà remonté hors du cadre. Le défilement ne peut pas être à la fois assez",
+    "tardif pour garder le bouton et assez précoce pour montrer la galerie : la",
+    "fenêtre visible fait 1 400 px de page, et les deux sections sont à 1 500 px",
+    "l'une de l'autre.",
     "",
-    "  ... ET CE DONT TU AS VRAIMENT BESOIN.        1,70 s de voix, 2,15 s de carton",
-    "  ZÉRO BLABLA. UN BOUTON QUI APPELLE.          2,42 s de voix, 2,80 s de carton",
-    "  TES CHANTIERS EN PHOTOS, TES VRAIS AVIS.     2,19 s de voix, 2,55 s de carton",
-    "  EN LIGNE EN 48 H. 300 €, ET 200 € POUR...    4,29 s de voix, 4,30 s de carton",
-    "  ÉCRIS « SITE » EN COMMENTAIRE.               1,71 s de voix, 2,20 s de carton",
+    "Les cartons se déduisent donc du défilement, et non l'inverse. Pour une",
+    "course de 3 090 px entre 1,60 et 8,50 s, chaque section est à l'écran :",
     "",
-    "LE DÉFILEMENT COMMENCE À 2,40, PAS AU DÉBUT. La page reste en haut tant que",
-    "le carton parle du bouton d'appel — qui est en haut. Elle descend ensuite,",
-    "et la galerie passe au centre à 5,43 s, les avis à 7,00 s, le pied à 8,20 :",
-    "chaque section est à l'écran pendant que son carton la nomme. Calculé sur la",
-    "course, pas estimé.",
+    "  bouton    1,60 → 4,00      carton 2,35 → 3,95",
+    "  galerie   3,61 → 7,37      carton 4,05 → 5,75",
+    "  avis      5,67 → 8,50      carton 5,85 → 7,55",
+    "  pied      7,58 → 8,50",
     "",
-    "LE TEXTE NE RECOUVRE JAMAIS LE SITE. La dalle est posée à 470 px du haut,",
-    "haute de 880, donc entre 470 et 1350 : sous les cartons, et au-dessus de la",
-    "barre TikTok qui prend tout à partir de 1382."
+    "Et la durée de chaque carton reste celle de sa réplique, mesurée, plus deux",
+    "dixièmes. La contrainte la plus dure a imposé de raccourcir une phrase :",
+    "« Zéro blabla. Un bouton qui appelle. » durait 2,42 s, plus que la fenêtre",
+    "du bouton ne le permettait. Elle est devenue « Un bouton qui appelle »,",
+    "1,41 s. Une phrase se coupe ; une page ne se déplace pas."
   ],
   "T": {
     "etincelle": -1.2,
@@ -43,8 +40,8 @@
     "ouverture": -0.7,
     "emergence": -0.5,
     "lecture": -0.1,
-    "message": 8.2,
-    "fin": 14.5
+    "message": 7.9,
+    "fin": 14.7
   },
   "decor": {
     "portail": "lueur",
@@ -64,29 +61,37 @@
     },
     {
       "debut": 2.35,
-      "fin": 5.15,
+      "fin": 3.95,
       "y": 335,
-      "taille": 58,
+      "taille": 60,
       "bandeau": true,
       "lignes": [
-        "ZÉRO BLABLA.",
         "UN BOUTON QUI APPELLE."
       ]
     },
     {
-      "debut": 5.25,
-      "fin": 7.8,
+      "debut": 4.05,
+      "fin": 5.75,
       "y": 335,
-      "taille": 56,
+      "taille": 60,
       "bandeau": true,
       "lignes": [
-        "TES CHANTIERS EN PHOTOS,",
-        "TES VRAIS AVIS."
+        "TES CHANTIERS EN PHOTOS."
+      ]
+    },
+    {
+      "debut": 5.85,
+      "fin": 7.55,
+      "y": 335,
+      "taille": 60,
+      "bandeau": true,
+      "lignes": [
+        "TES VRAIS AVIS CLIENTS."
       ]
     },
     {
       "debut": 7.9,
-      "fin": 12.2,
+      "fin": 12.4,
       "y": 365,
       "taille": 56,
       "bandeau": true,
@@ -97,8 +102,8 @@
       ]
     },
     {
-      "debut": 12.3,
-      "fin": 14.5,
+      "debut": 12.5,
+      "fin": 14.7,
       "y": 335,
       "taille": 60,
       "lignes": [
@@ -108,7 +113,7 @@
     }
   ],
   "signature": {
-    "debut": 12.3,
+    "debut": 12.5,
     "texte": "ARTISAN EXPRESS",
     "y": 640,
     "trait": 750,
@@ -120,7 +125,7 @@
     "hautEcran": 470
   },
   "defilement": {
-    "debut": 2.4,
-    "fin": 8.2
+    "debut": 1.6,
+    "fin": 8.5
   }
 }
