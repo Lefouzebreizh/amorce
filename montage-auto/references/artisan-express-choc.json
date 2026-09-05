@@ -25,15 +25,34 @@
     "",
     "POUR LA VERSION SANS VOIX, retirer la clé « voix » avant le montage.",
     "",
-    "LE TEXTE DU HOOK EST DANS `sous_titres`, PAS DANS LA SCÈNE.",
+    "LE TEXTE DU HOOK EST COMPOSÉ EN AMONT, PAS PAR `drawtext`.",
     "",
-    "Les deux premières secondes sont un rush, pas un rendu : la scène ne les",
-    "dessine pas, et son système de cartons ne peut donc rien y poser. Le hook",
-    "passe par le `drawtext` du montage, en cyan d'Aznaroth avec sa secousse —",
-    "il appartient encore à l'univers de la série, c'est la coupure qui en sort.",
+    "Les deux premières secondes sont un rush : le système de cartons de la scène",
+    "ne peut rien y poser. La voie normale serait `sous_titres` — mais le",
+    "`drawtext` de ffmpeg réclame une compilation avec freetype, et celui",
+    "d'`imageio-ffmpeg` ne l'a pas : « No such filter: 'drawtext' ». Le message",
+    "ne parle pas de police, il parle de filtre, et l'échec ressemble à un",
+    "problème de texte.",
     "",
-    "Il y avait un vrai trou ici : la voix disait « ce que je sais faire avec",
-    "l'IA » et l'écran ne disait rien. Une part du fil se regarde sans le son."
+    "Le hook est donc rendu PAR LA SCÈNE, sans capture (`--site` omis), puis",
+    "composé sur le rush en mode Écran — le noir tient lieu de canal alpha, comme",
+    "les cartons de `motion/`. Deux gains, et le second n'était pas cherché :",
+    "",
+    "  · plus de dépendance à un ffmpeg particulier ;",
+    "  · le hook a la typographie EXACTE des autres cartons — même boîte de 22 %",
+    "    à 78 %, même retour à la ligne, même mesureur.",
+    "",
+    "  python3 montage-auto/rendre_scene.py --scene montage-auto/scenes/portail.html \\",
+    "      --recit montage-auto/scenes/recits/hook-dragon.json --sortie hook.mp4",
+    "  ffmpeg -ss 11.70 -t 2.00 -i rushes/aznaroth-ep01.mp4 -i hook.mp4 \\",
+    "      -filter_complex \"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,\\",
+    "      crop=1080:1920,setsar=1,fps=30,format=gbrp[d];[1:v]fps=30,format=gbrp[h];\\",
+    "      [d][h]blend=all_mode=screen:shortest=1,format=yuv420p[v]\" \\",
+    "      -map \"[v]\" -map 0:a rushes/dragon-hook.mp4",
+    "",
+    "LE `format=gbrp` N'EST PAS DÉCORATIF. Sans lui, `blend` travaille sur Y, U",
+    "et V : un « écran » appliqué aux plans de chrominance vire toute l'image au",
+    "magenta. Vu, mesuré, corrigé — le mode Écran se fait en RVB."
   ],
   "bibliotheque": "sfx_library",
   "cadence": 30,
@@ -43,11 +62,11 @@
   "plans": [
     {
       "nom": "dragon",
-      "source": "rushes/aznaroth-ep01.mp4",
-      "depart": 11.7,
+      "source": "rushes/dragon-hook.mp4",
+      "depart": 0.0,
       "duree": 2.0,
       "cible_db": -18.0,
-      "_note": "il porte sa propre bande son, celle de l'épisode. C'est elle qu'on entend."
+      "_note": "le rush 11,70 → 13,70 d'AZNAROTH EP01, avec le hook déjà composé dessus en mode Écran. Recette dans scenes/recits/hook-dragon.json."
     },
     {
       "nom": "demo",
@@ -100,28 +119,6 @@
       "vitesse": 1.0,
       "cible_db": -14.0,
       "texte": "Écris SITE en commentaire."
-    }
-  ],
-  "sous_titres": [
-    {
-      "texte": "CE QUE JE SAIS FAIRE",
-      "debut": 0.06,
-      "fin": 1.98,
-      "y": 300,
-      "taille": 54,
-      "secousse": 8.0,
-      "couleur": "#00E5FF",
-      "halo": "#0090ff"
-    },
-    {
-      "texte": "AVEC L'IA...",
-      "debut": 0.22,
-      "fin": 1.98,
-      "y": 386,
-      "taille": 54,
-      "secousse": 8.0,
-      "couleur": "#00E5FF",
-      "halo": "#0090ff"
     }
   ],
   "effets": [

@@ -1,0 +1,44 @@
+{
+  "_lisez_moi": [
+    "Le hook du montage « choc » — deux lignes, 2 s, sur fond noir.",
+    "",
+    "Rendu SANS capture (`--site` omis) : la scène ne dessine alors que le",
+    "texte, et le noir tient lieu de canal alpha. Le clip se compose ensuite",
+    "sur le rush du dragon en mode Écran, comme les cartons de `motion/`.",
+    "",
+    "POURQUOI PAS `sous_titres`. Le `drawtext` de la chaîne réclame un ffmpeg",
+    "compilé avec freetype ; celui d'`imageio-ffmpeg` ne l'est pas et rend",
+    "« No such filter: 'drawtext' ». Passer par la scène supprime la",
+    "dépendance ET donne au hook la typographie exacte des autres cartons —",
+    "même boîte de 22 % à 78 %, même retour à la ligne, même mesureur.",
+    "",
+    "Le cyan est celui d'Aznaroth : ces deux secondes appartiennent encore à",
+    "la série, c'est la coupure qui en sort."
+  ],
+  "T": {
+    "etincelle": -3.0,
+    "anneaux": -2.9,
+    "fracture": -2.8,
+    "ouverture": -2.7,
+    "emergence": -2.6,
+    "lecture": -2.5,
+    "message": 1.9,
+    "fin": 2.0
+  },
+  "decor": {
+    "portail": false,
+    "braises": false
+  },
+  "cartes": [
+    {
+      "debut": 0.04,
+      "fin": 1.98,
+      "y": 355,
+      "taille": 66,
+      "lignes": [
+        "CE QUE JE SAIS FAIRE",
+        "AVEC L'IA..."
+      ]
+    }
+  ]
+}

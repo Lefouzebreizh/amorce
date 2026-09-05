@@ -346,6 +346,12 @@ function coinsArrondis(px, py, w, h, r) {
 }
 
 function site(t, img) {
+  /* Pas de capture, pas de dalle. La scène sert alors d'habillage pur —
+     du texte clair sur fond noir, à composer en mode Écran sur un rush,
+     comme les cartons de `motion/`. C'est ainsi que le hook du montage
+     « choc » est posé sur le dragon : le texte vient d'ici, donc il a la
+     même typographie, la même zone sûre et le même mesureur que le reste. */
+  if (!img) return;
   const em = seg(t, T.emergence, T.lecture);
   if (em <= 0) return;
   const monte = sortie(em);
