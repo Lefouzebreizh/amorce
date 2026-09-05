@@ -124,6 +124,15 @@ liste fermée — mais se retapent moins : une `<datalist>` suggère les
 catégories déjà utilisées dans le coffre, et des puces de filtre au-dessus
 de la liste des papiers permettent de n'en voir qu'une à la fois.
 
+## Recherche dans le contenu (05/09/2026)
+
+`classer-document` extrait aussi, à l'analyse, jusqu'à 500 caractères du
+texte lisible sur le document (`texteExtrait`) — chiffré dans l'index comme
+le reste, jamais affiché. Le champ de recherche au-dessus de la liste des
+papiers (`rechercheCorrespond` dans `coffre.ts`) filtre sur le nom, la
+catégorie, l'émetteur et ce texte, entièrement côté navigateur sur l'index
+déjà déchiffré — aucune requête n'est jamais envoyée nulle part.
+
 ## Aperçu instantané, sans téléchargement (05/09/2026)
 
 La fiche détail déchiffre et affiche directement une image ou un PDF —

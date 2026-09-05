@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import {
   Bell, Briefcase, Car, ChevronRight, File, FileText, Heart, Home, Landmark, LogOut, Plus,
-  Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
+  Search, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
-  enregistrerIdentite, composerLettreResiliation, modifierObjet, statutEcheance,
+  enregistrerIdentite, composerLettreResiliation, modifierObjet, statutEcheance, rechercheCorrespond,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
 } from '@/lib/coffre';
 
@@ -55,6 +55,9 @@ type EnAttente = {
   emetteur: string;
   referenceClient: string;
   montant: string;
+  // Jamais montré ni modifiable ici — sert uniquement à la recherche une
+  // fois le document déposé (voir rechercheCorrespond dans coffre.ts).
+  texteExtrait: string;
 };
 
 type Correction = { nom: string; categorie: string; montant: string };
@@ -261,6 +264,7 @@ export default function PageCoffre() {
   const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
+  const [recherche, setRecherche] = useState('');
   const [correction, setCorrection] = useState<Correction | null>(null);
   const entreeFichier = useRef<HTMLInputElement>(null);
 
@@ -354,7 +358,7 @@ export default function PageCoffre() {
     const nouveaux: EnAttente[] = fichiersValides.map((fichier) => ({
       cle: `${fichier.name}-${fichier.size}-${crypto.randomUUID()}`,
       fichier, enAnalyse: true, categorie: '', nomAffiche: fichier.name, echeance: ECHEANCE_VIDE,
-      emetteur: '', referenceClient: '', montant: '',
+      emetteur: '', referenceClient: '', montant: '', texteExtrait: '',
     }));
     setAValider((precedent) => [...precedent, ...nouveaux]);
     if (entreeFichier.current) entreeFichier.current.value = '';
@@ -369,6 +373,7 @@ export default function PageCoffre() {
         emetteur: proposition.emetteur || '',
         referenceClient: proposition.referenceClient || '',
         montant: proposition.montant || '',
+        texteExtrait: proposition.texteExtrait || '',
       } : p)));
     }
   }
@@ -389,6 +394,7 @@ export default function PageCoffre() {
       const nouvelIndex = await deposerFichier(
         utilisateur.id, cle, item.fichier, item.categorie, index, item.nomAffiche, item.echeance,
         item.emetteur || null, item.referenceClient || null, item.montant || null,
+        item.texteExtrait || null,
       );
       setIndex(nouvelIndex);
       retirerAttente(item.cle);
@@ -590,9 +596,12 @@ export default function PageCoffre() {
   const categoriesConnues = Array.from(
     new Set(tousLesNoms.map((n) => index.objets[n]?.categorie).filter((c): c is string => Boolean(c))),
   ).sort((a, b) => a.localeCompare(b, 'fr'));
-  const noms = filtreCategorie
-    ? tousLesNoms.filter((n) => index.objets[n]?.categorie === filtreCategorie)
-    : tousLesNoms;
+  const noms = tousLesNoms
+    .filter((n) => !filtreCategorie || index.objets[n]?.categorie === filtreCategorie)
+    .filter((n) => {
+      const objet = index.objets[n];
+      return objet ? rechercheCorrespond(objet, recherche) : false;
+    });
   const rendezVousTries = Object.values(index.rendezVous || {})
     .sort((a, b) => (a.date < b.date ? -1 : 1));
   const alerte = prochaineAlerte(index);
@@ -754,6 +763,18 @@ export default function PageCoffre() {
             <p className="mb-4 text-sm font-semibold tracking-widest text-ink-soft uppercase">
               Vos papiers ({noms.length})
             </p>
+            {tousLesNoms.length > 0 && (
+              <div className="relative mb-4">
+                <Search size={18} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft" />
+                <input
+                  type="search"
+                  value={recherche}
+                  onChange={(e) => setRecherche(e.target.value)}
+                  placeholder="Chercher un nom, un émetteur, un mot du document…"
+                  className="w-full rounded-xl border border-line bg-paper-raised py-2.5 pr-3 pl-10 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
+                />
+              </div>
+            )}
             {categoriesConnues.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
                 <button type="button" onClick={() => setFiltreCategorie(null)}
@@ -780,7 +801,11 @@ export default function PageCoffre() {
               </p>
             ) : noms.length === 0 ? (
               <p className="rounded-2xl border border-line bg-paper-raised p-6 text-ink-soft">
-                Aucun papier dans « {filtreCategorie} ».
+                {filtreCategorie && recherche.trim()
+                  ? `Aucun papier dans « ${filtreCategorie} » pour « ${recherche.trim()} ».`
+                  : filtreCategorie
+                    ? `Aucun papier dans « ${filtreCategorie} ».`
+                    : `Aucun papier pour « ${recherche.trim()} ».`}
               </p>
             ) : (
               <ul className="flex flex-col gap-3">

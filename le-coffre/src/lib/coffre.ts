@@ -42,6 +42,10 @@ export type ObjetIndex = {
   // — même principe que emetteur/referenceClient : null plutôt qu'un montant
   // deviné.
   montant?: string | null;
+  // Jusqu'à 500 caractères de ce qui est réellement lisible sur le document —
+  // sert uniquement à la recherche (voir rechercheCorrespond ci-dessous),
+  // jamais affiché tel quel dans l'interface.
+  texteExtrait?: string | null;
 };
 
 export type StatutEcheance = 'urgent' | 'bientot' | 'calme';
@@ -85,8 +89,27 @@ export type PropositionClassement = {
   emetteur: string | null;
   referenceClient: string | null;
   montant: string | null;
+  texteExtrait: string | null;
   echeance: Echeance;
 };
+
+// Sans accents et en minuscules, pour qu'« energie » retrouve « Énergie » —
+// une recherche qui exige les accents exacts sur un clavier de téléphone en
+// perd la moitié des résultats.
+function normaliser(texte: string): string {
+  // \u0300-\u036f : les diacritiques combinants, isolés par NFD (é → e + ´).
+  return texte.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+// Une correspondance sur le nom, la catégorie, l'émetteur ou le texte extrait
+// à l'analyse — jamais sur le contenu du fichier lui-même, qui n'est jamais
+// relu après son dépôt. Une requête vide correspond à tout.
+export function rechercheCorrespond(objet: ObjetIndex, requete: string): boolean {
+  const q = normaliser(requete.trim());
+  if (!q) return true;
+  const champs = [objet.nom, objet.categorie, objet.emetteur, objet.texteExtrait];
+  return champs.some((champ) => champ && normaliser(champ).includes(q));
+}
 
 // Catégories où un document a des chances d'être un abonnement résiliable —
 // sert seulement à décider si on propose une lettre, jamais à choisir un
@@ -149,6 +172,7 @@ function b64FromFichier(buf: ArrayBuffer): string {
 export async function proposerClassement(fichier: File): Promise<PropositionClassement> {
   const vide: PropositionClassement = {
     lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null, montant: null,
+    texteExtrait: null,
     echeance: { presente: false, date: null, libelle: null, confiance: 'basse' },
   };
   try {
@@ -264,7 +288,7 @@ async function sauvegarderIndex(userId: string, cle: CryptoKey, index: IndexCoff
 export async function deposerFichier(
   userId: string, cle: CryptoKey, fichier: File, categorie: string, index: IndexCoffre,
   nomAffiche?: string, echeance?: Echeance, emetteur?: string | null, referenceClient?: string | null,
-  montant?: string | null,
+  montant?: string | null, texteExtrait?: string | null,
 ): Promise<IndexCoffre> {
   const buf = await fichier.arrayBuffer();
   const paquet = await chiffrerOctets(cle, buf);
@@ -283,6 +307,7 @@ export async function deposerFichier(
     deposeLe: new Date().toISOString(),
   };
   if (montant) objet.montant = montant;
+  if (texteExtrait) objet.texteExtrait = texteExtrait;
   // L'échéance complète (libellé compris) reste chiffrée dans l'index, comme
   // le reste — visible seulement une fois le coffre déverrouillé. La date
   // seule, sans rien d'autre, part aussi vers coffre_echeances : c'est ce qui

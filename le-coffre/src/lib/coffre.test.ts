@@ -22,7 +22,8 @@ vi.mock('./supabase', () => ({
 
 import {
   composerLettreResiliation, statutEcheance, deposerFichier, supprimerFichier,
-  ajouterRendezVous, supprimerRendezVous, type Identite, type IndexCoffre,
+  ajouterRendezVous, supprimerRendezVous, rechercheCorrespond, type Identite, type IndexCoffre,
+  type ObjetIndex,
 } from './coffre';
 import { ITERATIONS, deriverCle } from './crypto';
 
@@ -146,5 +147,44 @@ describe("fusion de l'index — rien de déjà enregistré ne doit disparaître"
     const resultat = await supprimerRendezVous('user-1', cle, 'r1', index);
     expect(resultat.identite).toEqual(index.identite);
     expect(resultat.rendezVous?.r1).toBeUndefined();
+  });
+});
+
+describe('rechercheCorrespond', () => {
+  const OBJET: ObjetIndex = {
+    nom: 'Facture EDF septembre', taille: 100, type: 'application/pdf',
+    categorie: 'Énergie', deposeLe: '2026-09-01T00:00:00.000Z',
+    emetteur: 'EDF', texteExtrait: 'Contrat électricité — référence 12345',
+  };
+
+  it('une requête vide correspond à tout', () => {
+    expect(rechercheCorrespond(OBJET, '')).toBe(true);
+    expect(rechercheCorrespond(OBJET, '   ')).toBe(true);
+  });
+
+  it('trouve sur le nom, insensible à la casse', () => {
+    expect(rechercheCorrespond(OBJET, 'FACTURE')).toBe(true);
+  });
+
+  it('trouve sur la catégorie sans exiger l\'accent', () => {
+    expect(rechercheCorrespond(OBJET, 'energie')).toBe(true);
+  });
+
+  it('trouve sur l\'émetteur', () => {
+    expect(rechercheCorrespond(OBJET, 'edf')).toBe(true);
+  });
+
+  it('trouve sur le texte extrait à l\'analyse', () => {
+    expect(rechercheCorrespond(OBJET, '12345')).toBe(true);
+  });
+
+  it('ne trouve rien sur ce qui n\'apparaît nulle part', () => {
+    expect(rechercheCorrespond(OBJET, 'assurance habitation')).toBe(false);
+  });
+
+  it('ne casse pas sur un document sans texteExtrait ni émetteur', () => {
+    const minimal: ObjetIndex = { nom: 'Doc', taille: 1, type: 'image/png', categorie: '', deposeLe: '2026-01-01T00:00:00.000Z' };
+    expect(rechercheCorrespond(minimal, 'doc')).toBe(true);
+    expect(rechercheCorrespond(minimal, 'rien')).toBe(false);
   });
 });

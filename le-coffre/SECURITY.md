@@ -91,13 +91,20 @@ viennent du modèle ou de l'utilisateur ; la formulation elle-même ne varie
 pas. C'est le même principe que `paper-manager` : *le gabarit garantit le
 fond, jamais le modèle.*
 
-`emetteur`, `referenceClient` et, depuis le 05/09/2026, `montant` sont
-désormais aussi demandés à `classer-document`, dans le même appel que la
-catégorie et l'échéance — pas un second moment d'exposition. La consigne de
-ne jamais deviner s'applique pareil : `null` plutôt qu'un montant recalculé
-ou déduit d'un total partiel. `montant` reste dans l'index chiffré comme le
-reste ; il ne part jamais vers une table en clair (contrairement à la date
+`emetteur`, `referenceClient`, `montant` et, depuis le même jour,
+`texteExtrait` (jusqu'à 500 caractères du texte lisible sur le document)
+sont désormais aussi demandés à `classer-document`, dans le même appel que
+la catégorie et l'échéance — pas un second moment d'exposition. La
+consigne de ne jamais deviner s'applique pareil : `null` plutôt qu'un
+champ recalculé ou déduit. Tous restent dans l'index chiffré comme le
+reste ; aucun ne part vers une table en clair (contrairement à la date
 d'échéance, seule donnée qui sort pour permettre l'alerte).
+
+`texteExtrait` sert uniquement à `rechercheCorrespond` (`src/lib/coffre.ts`) :
+une recherche filtre les documents déjà déchiffrés, entièrement côté
+navigateur, sur leur nom, catégorie, émetteur et ce texte — jamais une
+requête envoyée où que ce soit. Il n'est jamais affiché tel quel dans
+l'interface, seulement comparé.
 
 **Toujours présentée comme un brouillon** : la fonction qui compose la
 lettre (`composerLettreResiliation`, purement côté navigateur, aucun appel
