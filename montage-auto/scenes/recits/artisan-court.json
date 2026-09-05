@@ -18,37 +18,129 @@
     "Ce qui n'est PAS négociable : la page reste un modèle, et elle le dit. Faire",
     "passer un exemple fabriqué pour une étude de cas, c'est une preuve sociale",
     "inventée — et « j'ai fait ce modèle pour les artisans » vend mieux, parce",
-    "que c'est vrai et que ça se vérifie en trois secondes."
+    "que c'est vrai et que ça se vérifie en trois secondes.",
+    "",
+    "LE DÉLAI ANNONCÉ EST 48 HEURES, ET IL SE VÉRIFIE AILLEURS QU'ICI.",
+    "",
+    "Le premier jet disait « EN LIGNE EN 7 JOURS », repris tel quel d'une",
+    "suggestion de script. Or l'offre réelle dit 48 heures — c'est écrit dans le",
+    "libellé du produit Stripe (« Site vitrine artisan, une page, livré en 48",
+    "heures ») et dans le SMS de relance. La vidéo promettait donc autre chose",
+    "que ce que le client paie.",
+    "",
+    "La leçon vaut au-delà de ce carton : un chiffre qui vient d'une suggestion",
+    "de rédaction n'est pas un chiffre de l'offre. Tout nombre affiché à l'écran",
+    "— prix, délai, garantie — se relit sur la source qui engage, pas sur celle",
+    "qui propose."
   ],
   "T": {
-    "etincelle": 0.00,
-    "anneaux":   0.16,
-    "fracture":  0.58,
+    "etincelle": 0.0,
+    "anneaux": 0.16,
+    "fracture": 0.58,
     "ouverture": 0.88,
-    "emergence": 1.30,
-    "lecture":   2.55,
-    "message":   7.55,
-    "fin":      12.00
+    "emergence": 1.3,
+    "lecture": 2.55,
+    "message": 7.55,
+    "fin": 12.0
   },
-  "anneaux": { "ecart": 0.14, "rebond": 0.24, "allumage": 0.10 },
-  "defilement": { "debut": 2.60, "fin": 7.35 },
+  "anneaux": {
+    "ecart": 0.14,
+    "rebond": 0.24,
+    "allumage": 0.1
+  },
+  "defilement": {
+    "debut": 2.6,
+    "fin": 7.35
+  },
   "cartes": [
-    { "debut": 0.06, "fin": 1.90, "y": 350, "taille": 72, "bandeau": true,
-      "lignes": ["TON SITE NE TE RAMÈNE", "AUCUN CHANTIER ?"] },
-    { "debut": 1.95, "fin": 3.00, "y": 330, "taille": 62, "bandeau": true,
-      "lignes": ["J'AI FAIT CE MODÈLE", "POUR LES ARTISANS."] },
-    { "debut": 3.05, "fin": 4.25, "y": 320, "taille": 64, "bandeau": true,
-      "lignes": ["UN BOUTON POUR T'APPELER."] },
-    { "debut": 4.30, "fin": 5.55, "y": 320, "taille": 64, "bandeau": true,
-      "lignes": ["TES CHANTIERS EN PHOTOS."] },
-    { "debut": 5.60, "fin": 6.65, "y": 320, "taille": 64, "bandeau": true,
-      "lignes": ["TES VRAIS AVIS CLIENTS."] },
-    { "debut": 6.70, "fin": 7.45, "y": 320, "taille": 64, "bandeau": true,
-      "lignes": ["FAIT POUR LE TÉLÉPHONE."] },
-    { "debut": 7.75, "fin": 9.25, "y": 360, "taille": 78,
-      "lignes": ["EN LIGNE", "EN 7 JOURS."] },
-    { "debut": 9.30, "fin": 12.00, "y": 340, "taille": 66,
-      "lignes": ["COMMENTE « SITE »", "ET JE T'ENVOIE LE MODÈLE."] }
+    {
+      "debut": 0.06,
+      "fin": 1.9,
+      "y": 350,
+      "taille": 72,
+      "bandeau": true,
+      "lignes": [
+        "TON SITE NE TE RAMÈNE",
+        "AUCUN CHANTIER ?"
+      ]
+    },
+    {
+      "debut": 1.95,
+      "fin": 3.0,
+      "y": 330,
+      "taille": 62,
+      "bandeau": true,
+      "lignes": [
+        "J'AI FAIT CE MODÈLE",
+        "POUR LES ARTISANS."
+      ]
+    },
+    {
+      "debut": 3.05,
+      "fin": 4.25,
+      "y": 320,
+      "taille": 64,
+      "bandeau": true,
+      "lignes": [
+        "UN BOUTON POUR T'APPELER."
+      ]
+    },
+    {
+      "debut": 4.3,
+      "fin": 5.55,
+      "y": 320,
+      "taille": 64,
+      "bandeau": true,
+      "lignes": [
+        "TES CHANTIERS EN PHOTOS."
+      ]
+    },
+    {
+      "debut": 5.6,
+      "fin": 6.65,
+      "y": 320,
+      "taille": 64,
+      "bandeau": true,
+      "lignes": [
+        "TES VRAIS AVIS CLIENTS."
+      ]
+    },
+    {
+      "debut": 6.7,
+      "fin": 7.45,
+      "y": 320,
+      "taille": 64,
+      "bandeau": true,
+      "lignes": [
+        "FAIT POUR LE TÉLÉPHONE."
+      ]
+    },
+    {
+      "debut": 7.75,
+      "fin": 9.25,
+      "y": 360,
+      "taille": 78,
+      "lignes": [
+        "EN LIGNE",
+        "EN 48 HEURES."
+      ]
+    },
+    {
+      "debut": 9.3,
+      "fin": 12.0,
+      "y": 340,
+      "taille": 66,
+      "lignes": [
+        "COMMENTE « SITE »",
+        "ET JE T'ENVOIE LE MODÈLE."
+      ]
+    }
   ],
-  "signature": { "debut": 9.90, "texte": "ARTISAN EXPRESS", "y": 640, "trait": 750, "taille": 80 }
+  "signature": {
+    "debut": 9.9,
+    "texte": "ARTISAN EXPRESS",
+    "y": 640,
+    "trait": 750,
+    "taille": 80
+  }
 }
