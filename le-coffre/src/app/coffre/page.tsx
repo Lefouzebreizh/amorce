@@ -11,7 +11,8 @@ import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
-  enregistrerIdentite, composerLettreResiliation, modifierObjet, statutEcheance, rechercheCorrespond,
+  enregistrerIdentite, composerLettreResiliation, modifierObjet, ecarterEcheance, statutEcheance,
+  rechercheCorrespond, SEUIL_BIENTOT_JOURS,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
 } from '@/lib/coffre';
 
@@ -93,6 +94,34 @@ function BadgeStatut({ jours }: { jours: number }) {
       title={LIBELLE_STATUT[statut]}
       className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${CLASSE_STATUT[statut]}`}
     />
+  );
+}
+
+// Une jauge horizontale, vert → violet → wine, jamais l'ambre demandé au
+// départ : cette appli a banni l'orange/jaune de toute sa palette (voir
+// globals.css), et les trois teintes de BadgeStatut portent déjà exactement
+// ce sens — la jauge en est juste la version continue. Se remplit à mesure
+// que l'échéance approche : vide loin dans le temps (SEUIL_BIENTOT_JOURS et
+// au-delà), pleine à l'échéance ou en retard.
+const HORIZON_JAUGE_JOURS = SEUIL_BIENTOT_JOURS + 15; // marge pour qu'« encore loin » ne soit pas déjà à moitié pleine
+function JaugeEcheance({ jours }: { jours: number }) {
+  const statut = statutEcheance(jours);
+  const rempli = Math.max(0, Math.min(100, ((HORIZON_JAUGE_JOURS - jours) / HORIZON_JAUGE_JOURS) * 100));
+  return (
+    <div
+      role="progressbar"
+      aria-valuenow={Math.round(rempli)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`Échéance : ${LIBELLE_STATUT[statut]}`}
+      title={`${LIBELLE_STATUT[statut]} — ${formatJours(jours)}`}
+      className="h-1.5 w-full overflow-hidden rounded-full bg-line"
+    >
+      <div
+        className={`h-full rounded-full transition-all ${CLASSE_STATUT[statut]}`}
+        style={{ width: `${rempli}%` }}
+      />
+    </div>
   );
 }
 
@@ -547,6 +576,24 @@ export default function PageCoffre() {
     }
   }
 
+  // « Ce n'est pas une échéance » (faux positif) ou « c'est réglé » — retire
+  // seulement la date et la lettre associées, jamais le document lui-même.
+  // Avant cette fonction, la seule façon de faire taire une échéance mal
+  // détectée était de supprimer tout le papier avec.
+  async function ecarter(nom: string) {
+    if (!utilisateur || !cle) return;
+    setEnCours(true);
+    setErreur('');
+    try {
+      const nouvelIndex = await ecarterEcheance(utilisateur.id, cle, nom, index);
+      setIndex(nouvelIndex);
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : String(err));
+    } finally {
+      setEnCours(false);
+    }
+  }
+
   async function surAjoutRendezVous(e: React.FormEvent) {
     e.preventDefault();
     if (!utilisateur || !cle) return;
@@ -665,12 +712,17 @@ export default function PageCoffre() {
   }
 
   const tousLesNoms = Object.keys(index.objets);
-  // Étiquettes existantes, dérivées des documents déjà déposés — jamais une
-  // liste fixe : l'utilisateur écrit ce qu'il veut dans le champ « Catégorie »
-  // (aValider comme fiche détail), et ce qu'il a déjà écrit revient en
-  // suggestion la fois suivante, via la <datalist> ci-dessous.
+  // Catégories déjà utilisées — sert aux chips de filtre : inutile de
+  // proposer un filtre pour une catégorie qui ne contient aucun papier.
   const categoriesConnues = Array.from(
     new Set(tousLesNoms.map((n) => index.objets[n]?.categorie).filter((c): c is string => Boolean(c))),
+  ).sort((a, b) => a.localeCompare(b, 'fr'));
+  // Les dix catégories prévues, plus celles déjà tapées à la main (aValider
+  // comme fiche détail) — jamais une liste fermée : la <datalist> ci-dessous
+  // suggère les dix, mais un nom personnalisé passe toujours, et revient en
+  // suggestion la fois suivante.
+  const categoriesSuggerees = Array.from(
+    new Set([...Object.keys(STYLE_CATEGORIE), ...categoriesConnues]),
   ).sort((a, b) => a.localeCompare(b, 'fr'));
   const noms = tousLesNoms
     .filter((n) => !filtreCategorie || index.objets[n]?.categorie === filtreCategorie)
@@ -706,9 +758,14 @@ export default function PageCoffre() {
       {/* Suggestions d'étiquettes déjà utilisées — jamais une liste imposée,
           juste ce que l'utilisateur a lui-même déjà tapé. */}
       <datalist id="categories-connues">
-        {categoriesConnues.map((c) => <option key={c} value={c} />)}
+        {categoriesSuggerees.map((c) => <option key={c} value={c} />)}
       </datalist>
       <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
+        {/* Marque persistante — visible sur le tableau de bord, pas
+            seulement sur l'écran de connexion. Violet plutôt que turquoise :
+            les deux sont censés dominer à parts égales, et le turquoise
+            porte déjà l'eyebrow « Bonjour » juste en dessous. */}
+        <p className="text-sm font-semibold tracking-widest text-violet uppercase">Le Tiroir Secret</p>
         {/* En-tête */}
         <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised bg-gradient-to-br from-paper-raised via-paper-raised to-vert/10 p-6 sm:p-8">
           <div>
@@ -932,6 +989,11 @@ export default function PageCoffre() {
                             {info.emetteur || info.categorie || 'Document'}
                             {info.montant ? ` · ${info.montant}` : ''}
                           </p>
+                          {jours !== null && (
+                            <div className="mt-2 max-w-40">
+                              <JaugeEcheance jours={jours} />
+                            </div>
+                          )}
                         </div>
                         {jours !== null && (
                           <span className="hidden shrink-0 items-center gap-1.5 sm:flex">
@@ -968,17 +1030,23 @@ export default function PageCoffre() {
                 <p className="text-sm text-ink-soft">Aucun rendez-vous noté.</p>
               ) : (
                 <ul className="flex flex-col gap-2">
-                  {rendezVousTries.map((rdv) => (
-                    <li key={rdv.id} className="flex items-center justify-between rounded-xl border border-line bg-paper-raised px-4 py-3">
-                      <div>
-                        <p className="font-medium">{rdv.libelle}</p>
-                        <p className="text-sm text-ink-soft">{rdv.date}</p>
-                      </div>
-                      <button onClick={() => retirerRendezVous(rdv.id)} className="text-sm text-wine hover:underline">
-                        Retirer
-                      </button>
-                    </li>
-                  ))}
+                  {rendezVousTries.map((rdv) => {
+                    const joursRdv = joursRestants(rdv.date);
+                    return (
+                      <li key={rdv.id} className="flex flex-col gap-2 rounded-xl border border-line bg-paper-raised px-4 py-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{rdv.libelle}</p>
+                            <p className="text-sm text-ink-soft">{rdv.date}</p>
+                          </div>
+                          <button onClick={() => retirerRendezVous(rdv.id)} className="text-sm text-wine hover:underline">
+                            Retirer
+                          </button>
+                        </div>
+                        <JaugeEcheance jours={joursRdv} />
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>
@@ -1071,11 +1139,24 @@ export default function PageCoffre() {
                 )}
 
                 {jours !== null && info.echeance && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <BadgeStatut jours={jours} />
-                    <span className="text-sm text-ink-soft">
-                      {info.echeance.libelle} — {formatJours(jours)} ({info.echeance.date})
-                    </span>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <BadgeStatut jours={jours} />
+                        <span className="text-sm text-ink-soft">
+                          {info.echeance.libelle} — {formatJours(jours)} ({info.echeance.date})
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => ecarter(detailOuvert)}
+                        disabled={enCours}
+                        className="text-xs text-ink-soft underline decoration-dotted transition hover:text-wine disabled:opacity-60"
+                      >
+                        Ce n&apos;est pas une échéance
+                      </button>
+                    </div>
+                    <JaugeEcheance jours={jours} />
                   </div>
                 )}
 
