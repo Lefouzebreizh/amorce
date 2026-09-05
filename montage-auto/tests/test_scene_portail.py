@@ -292,6 +292,36 @@ class Recits(unittest.TestCase):
         en_dur = {c: float(v) for c, v in re.findall(r"(\w+)\s*:\s*([\d.]+)", bloc[1])}
         self.assertEqual(en_dur, {c: float(v) for c, v in RECITS["artisan-long.json"]["T"].items()})
 
+    def test_les_bornes_d_un_recit_sont_croissantes(self):
+        """Une fenêtre dérivée de deux bornes mal ordonnées ne lève rien.
+
+        La scène construit ses fenêtres à partir des bornes : la fuite des
+        anneaux vaut `T.fracture → T.emergence + EM × 0,09`. En reculant
+        `T.emergence` de -0,50 à -2,00 — pour que l'écran existe dès la
+        première image — cette fenêtre est passée de « -0,90 → -0,46 » à
+        « -0,90 → -1,98 ». À l'envers.
+
+        `seg` rend 0 sur une fenêtre à l'envers. Donc `fuite` restait nulle,
+        donc les anneaux ne s'écartaient jamais : un cercle a tourné pendant
+        les seize secondes d'une vidéo livrée. Pas d'erreur, pas de test
+        rouge, rien à lire dans un diff — juste un décor qui ne s'en va pas.
+
+        Aucun test ne peut vérifier chaque fenêtre dérivée. Celui-ci vérifie
+        la CAUSE : des bornes dans l'ordre du film.
+        """
+        ordre = ["etincelle", "anneaux", "fracture", "ouverture",
+                 "emergence", "lecture", "message", "fin"]
+        for nom, recit in RECITS.items():
+            bornes = recit.get("T") or {}
+            connues = [(c, float(bornes[c])) for c in ordre if c in bornes]
+            for (avant_nom, avant_v), (apres_nom, apres_v) in zip(connues, connues[1:]):
+                with self.subTest(recit=nom, borne=apres_nom):
+                    self.assertLess(
+                        avant_v, apres_v,
+                        f"« {avant_nom} » ({avant_v}) tombe après « {apres_nom} » "
+                        f"({apres_v}) : toute fenêtre tirée de ces deux bornes "
+                        f"sera à l'envers, et s'éteindra en silence")
+
     def test_aucun_carton_ne_sort_de_la_zone_sure(self):
         """Borne les lignes DÉCLARÉES, et c'est tout ce qu'il peut faire.
 

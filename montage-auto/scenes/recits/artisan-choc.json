@@ -138,21 +138,44 @@
     "56 : 533, 416, 400 et 602 px pour une boîte de 605. Le bloc monte de 233 →",
     "574 à 271 → 529 — quarante-cinq pixels de moins, et autant d'air en plus",
     "au-dessus du site. Les autres cartons sont coupés en deux lignes",
-    "équilibrées au lieu d'une longue et d'un reste."
+    "équilibrées au lieu d'une longue et d'un reste.",
+    "",
+    "PLUS DE DÉCOR DERRIÈRE : `decor.fond = \"neutre\"`.",
+    "",
+    "Le cercle d'anneaux tournait pendant les seize secondes, et ce n'était pas",
+    "voulu — c'était un défaut introduit en reculant `T.emergence` à -2,00 pour",
+    "que l'écran existe dès la première image. La fenêtre de fuite des anneaux",
+    "vaut `T.fracture → T.emergence + EM × 0,09` : avec l'ancienne émergence elle",
+    "allait de -0,90 à -0,46, avec la nouvelle de -0,90 à -1,98. UNE FENÊTRE À",
+    "L'ENVERS, et `seg` y rend 0 — donc `fuite` restait nulle et les anneaux ne",
+    "partaient jamais. Rien ne le signalait : pas d'erreur, pas de test rouge,",
+    "juste un cercle qui tourne.",
+    "",
+    "Les bornes du portail passent donc AVANT l'émergence, et un test refuse",
+    "désormais un récit dont les bornes ne sont pas croissantes. C'est la seule",
+    "façon d'attraper cette famille de fautes : une fenêtre dérivée de deux",
+    "bornes mal ordonnées ne lève rien, elle s'éteint.",
+    "",
+    "Et le décor part en entier, pas anneau par anneau. Il rattachait le montage",
+    "à AZNAROTH du temps où il ouvrait sur un dragon ; depuis que le hook montre",
+    "l'outil qui construit le site, un cercle qui tourne derrière n'appartient",
+    "plus à rien. Le fond est un dégradé sombre immobile — pas un aplat, qui",
+    "banderait en plaques à 4 Mbit/s — et le grain de finition par-dessus."
   ],
   "T": {
-    "etincelle": -1.2,
-    "anneaux": -1.1,
-    "fracture": -0.9,
-    "ouverture": -0.7,
+    "etincelle": -2.6,
+    "anneaux": -2.5,
+    "fracture": -2.3,
+    "ouverture": -2.15,
     "emergence": -2.0,
     "lecture": -1.8,
     "message": 7.8,
     "fin": 14.1
   },
   "decor": {
-    "portail": "lueur",
-    "braises": false
+    "portail": false,
+    "braises": false,
+    "fond": "neutre"
   },
   "cartes": [
     {

@@ -72,7 +72,20 @@ const DEFAUT = {
      n'en laisse rien. Un montage qui oppose le spectacle et le service a
      besoin de la seconde moitié NUE — c'est l'opposition qui est le message,
      et un portail qui continue de tourner derrière la détruit. */
-  decor: { portail: "plein", braises: true },
+  decor: { portail: "plein", braises: true, fond: "portail" },
+  /* Le fond. « portail » est le décor de la série — la comète, l'éclat, les
+     anneaux qui tournent, le halo et les rais. « neutre » n'est RIEN : un
+     dégradé sombre immobile, et le grain de finition par-dessus.
+
+     Ce n'est pas un appauvrissement, c'est un choix de sujet. Le décor de la
+     série servait à rattacher le montage à AZNAROTH, à l'époque où il ouvrait
+     sur un dragon. Depuis que le hook montre l'outil qui construit le site,
+     un cercle qui tourne derrière n'appartient plus à rien : il décore.
+
+     Le dégradé n'est pas un aplat. Un aplat de #04070c sur 1080 × 1920 à
+     4 Mbit/s bande en larges plaques — le grain de `finition` le casse, mais
+     un dégradé lui donne d'abord de quoi varier. */
+  fond: null,
   defilement: null,          // { debut, fin } — sinon déduit des bornes
   /* Les foyers : où la caméra regarde la page, et de combien elle s'approche.
      `y` est en pixels de la CAPTURE, pas de l'écran — on les relève sur la
@@ -948,7 +961,18 @@ function dessiner(t) {
   x.setTransform(1, 0, 0, 1, 0, 0);
   x.globalAlpha = 1;
   x.globalCompositeOperation = 'source-over';
-  x.fillStyle = ENCRE;
+  if (DECOR.fond === 'neutre') {
+    /* le fond neutre : posé HORS de la caméra, donc immobile pour de bon.
+       Peint dedans, il serait agrandi de 6 % au fil du film — invisible sur
+       un décor animé, visible sur un dégradé lisse. */
+    const g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0.00, '#080d15');
+    g.addColorStop(0.55, '#05080e');
+    g.addColorStop(1.00, '#03050a');
+    x.fillStyle = g;
+  } else {
+    x.fillStyle = ENCRE;
+  }
   x.fillRect(0, 0, L, H);
 
   /* la caméra : elle avance sans arrêt, plus vite au moment du choc */
@@ -959,13 +983,19 @@ function dessiner(t) {
   x.scale(avance, avance);
   x.translate(-CX, -CY);
 
-  etincelle(t);
-  braises(t);
-  eclat(t);
-  anneaux(t);
-  portail(t);
+  /* Tout le décor de la série tient dans ces cinq appels, et `fond: "neutre"`
+     est exactement leur absence — pas un réglage de chacun. Les couper un par
+     un laisserait des restes : l'éclat sans les anneaux est un flash sans
+     cause, le voile d'avant sans le portail un voile sans porte. */
+  if (DECOR.fond !== 'neutre') {
+    etincelle(t);
+    braises(t);
+    eclat(t);
+    anneaux(t);
+    portail(t);
+  }
   site(t, window.__SITE__);
-  voileAvant(t);
+  if (DECOR.fond !== 'neutre') voileAvant(t);
 
   x.restore();
 
