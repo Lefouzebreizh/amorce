@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "ignoreCommand": "bash ../../scripts/vercel-ignorer.sh chat-traducteur scripts/vercel-ignorer.sh",
+  "buildCommand": "node outils/assembler.mjs",
+  "outputDirectory": "public",
+  "framework": null
+}

@@ -13,3 +13,10 @@ enregistrements/
 
 __pycache__/
 *.pyc
+
+# Le dossier statique assemblé par `web/outils/assembler.mjs` : 23 Mo dont
+# 4,1 de modèle et 16 de WASM, tous recopiés depuis `node_modules` ou
+# téléchargés. Le §8 refuse le binaire versionné, et celui-ci se refabrique
+# d'une commande — c'est la seule raison pour laquelle on peut ne pas le
+# garder. Vercel le reconstruit à chaque déploiement.
+web/public/
