@@ -76,7 +76,7 @@ rien n'y est maquetté, c'est le site qu'on vend qui apparaît.
 commande, une vidéo. C'est là qu'est la valeur : pas dans un montage, dans une
 fabrique.
 
-## Treize défauts mesurés, et ce qu’ils enseignent
+## Seize défauts mesurés, et ce qu’ils enseignent
 
 Chacun était invisible dans le code, et évident dès qu'on regardait le rendu au
 bon endroit : une planche de vignettes pour l'image, une analyse par bandes pour
@@ -306,6 +306,48 @@ La version renvoyée « j'ai coupé ce qu'il fallait » était image pour image
 identique à la livraison, décalage nul, durée à deux centièmes près. Le mesurer
 avant de repartir de zéro a évité de reconstruire un montage sur une base qu'on
 aurait crue nouvelle — et a désigné la seule chose qui avait bougé : le son.
+
+**14. Deux plans tirés de la même scène ne se raccordent pas si on décale un
+récit.** L'ouverture devait être un plan à part : la fiche qui se construit,
+puis le montage actuel à partir de quatre secondes. Un récit recopié avec des
+bornes décalées donnait 13 % d'écart de zoom au raccord — la caméra de la scène
+avance en continu, par un terme en `seg(t, T.lecture, T.fin)`, et deux récits
+aux bornes différentes ne sont pas à la même seconde de ce mouvement.
+
+`rendre_scene.py --depart` rend la scène **à partir d'un instant négatif** au
+lieu de recopier un récit décalé. La construction occupe les deux secondes qui
+précèdent zéro, le reste du film n'a pas bougé d'un instant, et **il n'y a plus
+de raccord du tout** — un seul plan de 16,10 s. La vidéo vaut « scène + 2,00 »,
+exactement comme quand elle ouvrait sur un rush de dragon : aucun instant de
+voix ni d'effet n'a été retouché.
+
+**15. Une page qui se construit se capture, elle ne s'anime pas.**
+`capturer_page.py` rend la page d'artisan à chaque étape de son montage, et la
+scène en choisit une selon l'instant. Ce qui rend les captures enchaînables
+tient en un mot : **`visibility: hidden`, jamais `display: none`.** Un bloc
+retiré du flux change la hauteur de la page, donc tout ce qui suit remonte, donc
+les captures ne sont plus superposables — le montage montrerait une page qui se
+réarrange, pas une page qui se construit. Le script refuse de rendre une étape
+qui change la hauteur.
+
+La dalle **grandit** pendant la construction, de 785 à 900 px : la fenêtre vaut
+`imgW × haut / large`, donc un cadre plus haut montre plus de page **au même
+grandissement**. Ce n'est pas un zoom, c'est un téléphone plus long — l'image
+dedans ne change pas d'échelle et rien du défilement n'est à recalculer. Quatre
+blocs tiennent à 900 là où trois tiennent à 785, et le bas reste à 71,4 % du
+cadre.
+
+**Ce qu'il faut savoir accepter :** la fenêtre montre 1 605 px de page, et les
+photos de chantier commencent à 1 934. Elles ne peuvent donc pas apparaître
+pendant la construction sans faire défiler la page — puis la faire remonter,
+ce qui est un rembobinage. Elles arrivent une seconde et demie plus tard, dans
+le défilement, où elles ont toujours été.
+
+**16. Le claquement n'est pas un ornement.** Un bloc qui paraît sans lui est un
+diaporama : l'œil voit que quelque chose a changé, il ne sent pas que ça vient
+d'arriver. Onze centièmes d'éclaircissement suffisent ; au-delà on voit le flash
+lui-même. C'est le seul endroit du fichier où un effet existe pour ce qu'il fait
+ressentir et non pour ce qu'il montre.
 
 ## La zone sûre est câblée
 

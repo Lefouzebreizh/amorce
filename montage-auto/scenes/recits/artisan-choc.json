@@ -145,8 +145,8 @@
     "anneaux": -1.1,
     "fracture": -0.9,
     "ouverture": -0.7,
-    "emergence": -0.5,
-    "lecture": -0.1,
+    "emergence": -2.0,
+    "lecture": -1.8,
     "message": 7.8,
     "fin": 14.1
   },
@@ -155,6 +155,23 @@
     "braises": false
   },
   "cartes": [
+    {
+      "debut": -1.96,
+      "fin": -0.02,
+      "y": 335,
+      "taille": 60,
+      "bandeau": false,
+      "anime": {
+        "accent": [
+          "L'IA…"
+        ],
+        "pas": 0.2
+      },
+      "lignes": [
+        "CE QUE JE SAIS",
+        "FAIRE AVEC L'IA…"
+      ]
+    },
     {
       "debut": 0.1,
       "fin": 1.7,
@@ -277,7 +294,29 @@
   "dalle": {
     "large": 471,
     "haut": 785,
-    "hautEcran": 470
+    "hautEcran": 470,
+    "hauteurs": [
+      {
+        "instant": -2.0,
+        "haut": 785
+      },
+      {
+        "instant": 0.05,
+        "haut": 785
+      },
+      {
+        "instant": 0.4,
+        "haut": 900
+      },
+      {
+        "instant": 1.45,
+        "haut": 900
+      },
+      {
+        "instant": 1.95,
+        "haut": 785
+      }
+    ]
   },
   "defilement": {
     "debut": 1.6,
@@ -288,5 +327,25 @@
     "voile": 0.0,
     "descente": 138,
     "avance": 1.1
+  },
+  "saisie": {
+    "debut": -1.88,
+    "frappe": -1.3,
+    "fin": 0.05,
+    "invite": "Ton métier, ta ville…",
+    "texte": "couvreur à Rennes"
+  },
+  "construction": {
+    "etapes": [
+      0.1,
+      0.48,
+      0.86,
+      1.24,
+      1.62,
+      1.62,
+      1.62,
+      1.62
+    ],
+    "eclat": 0.11
   }
 }

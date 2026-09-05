@@ -97,7 +97,22 @@ const DEFAUT = {
      fenêtre de page montrée vaut `imgW × haut / large` et ne dépend pas du
      zoom. Rapport conservé, le défilement et les cartons qui s'y accrochent
      restent valables au dixième près. Rapport changé, tout est à refaire. */
-  dalle: { large: 604, haut: 1130, hautEcran: null },
+  dalle: { large: 604, haut: 1130, hautEcran: null, hauteurs: null },
+  /* La construction : la page qui se monte devant le spectateur.
+
+     `etapes` donne l'instant où paraît CHAQUE capture, dans l'ordre rendu par
+     `capturer_page.py` — la première est la page vide, la dernière la page
+     entière. Sans cette clé, la scène ne montre que la dernière et se comporte
+     comme avant.
+
+     `eclat` est la durée du claquement : un bref éclaircissement de la dalle
+     quand un bloc tombe. C'est lui qui donne l'énergie ; sans lui, des blocs
+     qui apparaissent sont un diaporama. */
+  construction: null,        // { etapes: [instants], eclat: 0.10 }
+  /* Le champ de saisie : deux secondes où l'on ne voit qu'un écran vide et un
+     curseur qui bat, puis le nom qui s'écrit tout seul. C'est le hook — il dit
+     « voilà ce que je sais faire » en montrant l'outil, pas le résultat. */
+  saisie: null,              // { debut, frappe, fin, texte, invite }
   /* La fin. `recul` dit de combien la dalle s'efface quand le texte prend la
      place, `voile` de combien le cadre s'assombrit. Les deux étaient câblés,
      et c'était une erreur d'appréciation : sur un montage qui VEND le site,
@@ -388,6 +403,44 @@ function portail(t) {
 
 /* --- Le site qui sort de la lumière ---------------------------------------- */
 const DALLE = Object.assign({}, DEFAUT.dalle, RECIT.dalle || {});
+const CONSTRUCTION = RECIT.construction;
+const SAISIE = RECIT.saisie;
+
+/* La hauteur de la dalle à l'instant t.
+
+   Elle change pendant la construction : un cadre plus haut montre plus de page
+   au MÊME grandissement — la fenêtre vaut `imgW × haut / large`, donc quatre
+   blocs tiennent à 900 là où trois tiennent à 785. Ce n'est pas un zoom, c'est
+   un téléphone plus long ; l'image dedans ne change pas d'échelle, et rien du
+   défilement n'est à recalculer.
+
+   Sans `hauteurs`, la hauteur est celle de `dalle.haut`, comme avant. */
+function hauteurDalle(t) {
+  const h = DALLE.hauteurs;
+  if (!h || !h.length) return DALLE.haut;
+  if (t <= h[0].instant) return h[0].haut;
+  for (let i = 1; i < h.length; i++) {
+    if (t <= h[i].instant) {
+      const u = lisse((t - h[i - 1].instant) / (h[i].instant - h[i - 1].instant));
+      return h[i - 1].haut + (h[i].haut - h[i - 1].haut) * u;
+    }
+  }
+  return h[h.length - 1].haut;
+}
+
+/* Quelle capture, et depuis quand. Le « depuis quand » sert au claquement :
+   c'est lui qui distingue un bloc qui vient de tomber d'un bloc déjà là. */
+function etape(t) {
+  const c = CONSTRUCTION;
+  const captures = window.__CAPTURES__ || [];
+  const dernier = Math.max(0, captures.length - 1);
+  if (!c || !c.etapes || !c.etapes.length) return { rang: dernier, depuis: -9 };
+  let rang = 0, depuis = -9;
+  for (let i = 0; i < c.etapes.length; i++) {
+    if (t >= c.etapes[i]) { rang = i + 1; depuis = t - c.etapes[i]; }
+  }
+  return { rang: Math.min(rang, dernier), depuis: depuis };
+}
 
 function coinsArrondis(px, py, w, h, r) {
   x.beginPath();
@@ -399,6 +452,63 @@ function coinsArrondis(px, py, w, h, r) {
   x.closePath();
 }
 
+/* L'écran vide et son curseur, puis le nom qui s'écrit tout seul.
+
+   C'est le hook, et il dit la promesse au lieu de la décorer : on tape le
+   métier d'un artisan dans un champ, et le site se monte. Deux secondes où il
+   ne se passe presque rien — sauf un curseur qui bat, ce qui suffit à tenir
+   l'œil parce qu'on attend de voir ce qui va s'écrire.
+
+   Le battement est calé sur l'horloge de la scène, pas sur celle du
+   navigateur : `Math.floor(t * 2) % 2` bat deux fois par seconde et rend la
+   même image au même instant, à chaque rendu. Un `Date.now()` ici rendrait la
+   scène non déterministe, ce que tout le reste du fichier s'interdit. */
+function saisie(t, px, py, w, h, ech) {
+  const v = Math.min(seg(t, SAISIE.debut, SAISIE.debut + 0.22),
+                     1 - seg(t, SAISIE.fin - 0.14, SAISIE.fin));
+  if (v <= 0.002) return;
+  const e = lisse(v);
+  const bord = 34 * ech;
+  const hc = 92 * ech;
+  const cx0 = px + bord, cy0 = py + h * 0.30, cw = w - 2 * bord;
+
+  x.save();
+  x.globalAlpha *= e;
+  coinsArrondis(cx0, cy0, cw, hc, 14 * ech);
+  x.fillStyle = 'rgba(255,255,255,0.045)';
+  x.fill();
+  x.lineWidth = 2 * ech;
+  x.strokeStyle = 'rgba(0,229,255,0.55)';
+  x.shadowColor = CYAN; x.shadowBlur = 22 * ech;
+  x.stroke();
+  x.shadowBlur = 0;
+
+  const taille = Math.round(34 * ech);
+  x.font = '600 ' + taille + 'px "Liberation Sans","DejaVu Sans",sans-serif';
+  x.textAlign = 'left';
+  x.textBaseline = 'middle';
+  const gauche = cx0 + 24 * ech, milieu = cy0 + hc / 2;
+
+  const frappe = borne((t - SAISIE.frappe) / (SAISIE.fin - 0.20 - SAISIE.frappe));
+  const combien = Math.floor(frappe * SAISIE.texte.length);
+  const ecrit = SAISIE.texte.slice(0, combien);
+  if (combien === 0 && SAISIE.invite) {
+    x.fillStyle = 'rgba(200,225,240,0.34)';
+    x.fillText(SAISIE.invite, gauche, milieu);
+  } else {
+    x.fillStyle = '#eafcff';
+    x.fillText(ecrit, gauche, milieu);
+  }
+  /* le curseur : plein tant qu'on tape, clignotant quand on attend */
+  const bat = frappe > 0 && frappe < 1 ? true : Math.floor(t * 2) % 2 === 0;
+  if (bat) {
+    const dx = combien ? x.measureText(ecrit).width : 0;
+    x.fillStyle = CYAN;
+    x.fillRect(gauche + dx + 4 * ech, milieu - taille * 0.62, 3 * ech, taille * 1.24);
+  }
+  x.restore();
+}
+
 function site(t, img) {
   /* Pas de capture, pas de dalle. La scène sert alors d'habillage pur —
      du texte clair sur fond noir, à composer en mode Écran sur un rush,
@@ -406,6 +516,13 @@ function site(t, img) {
      « choc » est posé sur le dragon : le texte vient d'ici, donc il a la
      même typographie, la même zone sûre et le même mesureur que le reste. */
   if (!img) return;
+  /* La capture de l'instant : pendant la construction, ce n'est pas la page
+     finie mais son état à cette seconde-là. Toutes ont exactement la même
+     géométrie — `capturer_page.py` masque par `visibility`, jamais par
+     `display` —, donc les enchaîner ne déplace rien. */
+  const pas = etape(t);
+  const captures = window.__CAPTURES__ || [];
+  if (captures.length > 1 && captures[pas.rang]) img = captures[pas.rang];
   const em = seg(t, T.emergence, T.lecture);
   if (em <= 0) return;
   const monte = sortie(em);
@@ -421,7 +538,7 @@ function site(t, img) {
      une dalle fixe donnerait une capture zoomée ; ici on avance. */
   const vise = foyer(t);
   const ech = (0.14 + 0.86 * monte) * (1 - 0.40 * recul) * (vise ? vise.zoom : 1);
-  const w = DALLE.large * ech, h = DALLE.haut * ech;
+  const w = DALLE.large * ech, h = hauteurDalle(t) * ech;
   const cy = DALLE.hautEcran === null
     ? CY + 150 * (1 - monte) + DESCENTE * gagne
     : DALLE.hautEcran + h / 2 + 150 * (1 - monte) + DESCENTE * gagne;
@@ -460,6 +577,22 @@ function site(t, img) {
     ? Math.max(0, Math.min(course, vise.y - visible / 2))
     : course * lisse(seg(t, DEFILE.debut, DEFILE.fin));
   x.drawImage(img, 0, sy, img.width, visible, px, py, w, h);
+
+  /* Le champ de saisie, par-dessus l'écran vide. */
+  if (SAISIE) saisie(t, px, py, w, h, ech);
+
+  /* Le claquement. Un bloc qui paraît sans lui est un diaporama : l'œil voit
+     que quelque chose a changé, il ne sent pas que ça vient d'arriver. Une
+     dizaine de centièmes suffisent — au-delà on voit le flash lui-même. */
+  if (CONSTRUCTION && pas.depuis >= 0) {
+    const vif = 1 - borne(pas.depuis / (CONSTRUCTION.eclat || 0.10));
+    if (vif > 0.002) {
+      x.globalCompositeOperation = 'lighter';
+      x.fillStyle = 'rgba(150,220,255,' + (0.30 * vif * vif).toFixed(3) + ')';
+      x.fillRect(px, py, w, h);
+      x.globalCompositeOperation = 'source-over';
+    }
+  }
   /* tant qu'elle n'a pas fini de monter, elle est encore faite de lumière */
   const voile = 1 - lisse(seg(em, 0.18, 0.62));
   if (voile > 0.002) {
@@ -852,14 +985,30 @@ function dessiner(t) {
 window.dessiner = dessiner;
 window.DUREE = DUREE;
 
-/* --- Le chargement de la capture, promis à Playwright ---------------------- */
+/* --- Le chargement des captures, promis à Playwright -----------------------
+   Une capture, c'est la page finie qu'on parcourt. PLUSIEURS, c'est la même
+   page à chaque étape de sa construction — `capturer_page.py` les rend, et
+   `construction.etapes` dit quand chacune paraît. La dernière est la page
+   entière : un récit sans `construction` ne voit donc que celle-là et se
+   comporte comme avant. */
 window.pret = new Promise(resolve => {
   const p = new URLSearchParams(location.search);
-  const src = p.get('site') || 'site.png';
-  const img = new Image();
-  img.onload = () => { window.__SITE__ = img; resolve(true); };
-  img.onerror = () => resolve(false);
-  img.src = src;
+  const combien = parseInt(p.get('captures') || '0', 10);
+  const noms = combien > 0
+    ? Array.from({ length: combien }, (_, i) => 'site' + String(i).padStart(2, '0') + '.png')
+    : [p.get('site') || 'site.png'];
+  window.__CAPTURES__ = new Array(noms.length);
+  let restant = noms.length, bon = true;
+  noms.forEach((nom, i) => {
+    const img = new Image();
+    img.onload = () => { window.__CAPTURES__[i] = img; if (!--restant) fini(); };
+    img.onerror = () => { bon = false; if (!--restant) fini(); };
+    img.src = nom;
+  });
+  function fini() {
+    window.__SITE__ = window.__CAPTURES__[window.__CAPTURES__.length - 1] || null;
+    resolve(bon && !!window.__SITE__);
+  }
 });
 </script>
 </html>

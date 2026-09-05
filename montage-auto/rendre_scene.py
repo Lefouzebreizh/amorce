@@ -53,9 +53,10 @@ def chrome() -> str:
     sys.exit(f"Aucun Chromium — attendu dans {CHROME}")
 
 
-def rendre(scene: Path, site: Path | None, sortie: Path,
+def rendre(scene: Path, site: list[Path] | None, sortie: Path,
            images_s: int, duree: float | None, largeur: int, hauteur: int,
-           apercus: list[float], recit: Path | None = None) -> int:
+           apercus: list[float], recit: Path | None = None,
+           depart: float = 0.0) -> int:
     from playwright.sync_api import sync_playwright
 
     atelier = Path(tempfile.mkdtemp(prefix="scene-"))
@@ -63,8 +64,11 @@ def rendre(scene: Path, site: Path | None, sortie: Path,
         # La scène et sa capture voisinent : l'image se charge alors en même
         # origine, sans drapeau d'accès aux fichiers locaux.
         shutil.copy(scene, atelier / "scene.html")
-        if site:
-            shutil.copy(site, atelier / "site.png")
+        # Plusieurs captures : la scène en choisit une selon l'instant, ce qui
+        # lui permet de montrer la page SE CONSTRUIRE avant de la parcourir.
+        # Une seule reste le cas courant, et garde son nom d'avant.
+        for rang, chemin in enumerate(site or []):
+            shutil.copy(chemin, atelier / f"site{rang:02d}.png")
 
         with sync_playwright() as p:
             navigateur = p.chromium.launch(
@@ -79,16 +83,18 @@ def rendre(scene: Path, site: Path | None, sortie: Path,
                 # à l'exécution de son script, pas après.
                 page.add_init_script(
                     "window.__RECIT__ = " + recit.read_text(encoding="utf-8"))
-            page.goto((atelier / "scene.html").as_uri())
+            page.goto((atelier / "scene.html").as_uri()
+                      + (f"?captures={len(site)}" if site else ""))
             charge = page.evaluate("() => window.pret")
             if site and not charge:
                 print("  la capture ne s'est pas chargée — la dalle sera vide")
             total_scene = page.evaluate("() => window.DUREE") or 0
-            secondes = duree if duree else float(total_scene)
+            secondes = duree if duree else float(total_scene) - depart
             if not secondes:
                 sys.exit("La scène n'annonce pas de durée et --duree est absent.")
             images = int(round(secondes * images_s))
-            print(f"  {secondes:.2f} s · {images_s} i/s · {images} images")
+            print(f"  {secondes:.2f} s · {images_s} i/s · {images} images"
+                  + (f" · à partir de {depart:+.2f} s" if depart else ""))
 
             commande = [
                 ffmpeg(), "-y", "-v", "error",
@@ -101,7 +107,7 @@ def rendre(scene: Path, site: Path | None, sortie: Path,
 
             reste = sorted(apercus)
             for n in range(images):
-                t = n / images_s
+                t = depart + n / images_s
                 page.evaluate("t => window.dessiner(t)", t)
                 image = page.screenshot(type="png")
                 tube.stdin.write(image)
@@ -130,7 +136,14 @@ def main() -> int:
     a = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     a.add_argument("--scene", required=True, type=Path)
-    a.add_argument("--site", type=Path, default=None,
+    a.add_argument("--depart", type=float, default=0.0,
+                   help="l'instant de la SCÈNE où commence le rendu. Deux plans "
+                        "tirés de la même scène à deux instants se raccordent "
+                        "alors sans saut : même horloge, donc même caméra, même "
+                        "décor, même défilement. Un récit recopié avec des "
+                        "bornes décalées ne le garantit pas — mesuré, 13 % "
+                        "d'écart de zoom au raccord.")
+    a.add_argument("--site", type=Path, nargs="+", default=None,
                    help="la capture de page à faire apparaître dans la scène")
     a.add_argument("--sortie", required=True, type=Path)
     a.add_argument("--images-s", type=int, default=30)
@@ -145,7 +158,7 @@ def main() -> int:
     o = a.parse_args()
     o.sortie.parent.mkdir(parents=True, exist_ok=True)
     return rendre(o.scene, o.site, o.sortie, o.images_s, o.duree,
-                  o.largeur, o.hauteur, o.apercu, o.recit)
+                  o.largeur, o.hauteur, o.apercu, o.recit, o.depart)
 
 
 if __name__ == "__main__":

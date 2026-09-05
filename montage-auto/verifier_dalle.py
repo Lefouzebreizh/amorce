@@ -84,7 +84,7 @@ MESURE = """(t) => {
 }"""
 
 
-def verifier(recit: Path, site: Path | None, cadence: int) -> int:
+def verifier(recit: Path, site: Path | None, cadence: int, depart: float) -> int:
     from playwright.sync_api import sync_playwright
 
     atelier = Path(tempfile.mkdtemp(prefix="dalle-"))
@@ -106,8 +106,11 @@ def verifier(recit: Path, site: Path | None, cadence: int) -> int:
 
             pire = None
             releves = []
-            for n in range(int(round(duree * cadence)) + 1):
-                t = n / cadence
+            # La scène peut commencer AVANT zéro — la construction de la fiche
+            # occupe les deux secondes négatives du récit « choc ». Vérifier à
+            # partir de zéro laisserait donc le hook entier hors contrôle.
+            for n in range(int(round((duree - depart) * cadence)) + 1):
+                t = depart + n / cadence
                 r = page.evaluate(MESURE, t)
                 if not r["dalle"] or not r["bas"]:
                     continue
@@ -152,8 +155,11 @@ def main() -> None:
     a.add_argument("--site", type=Path, default=None,
                    help="la capture ; sans elle la scène ne dessine pas de dalle")
     a.add_argument("--cadence", type=int, default=30)
+    a.add_argument("--depart", type=float, default=0.0,
+                   help="l'instant où commence le rendu — négatif si le récit "
+                        "ouvre avant zéro")
     o = a.parse_args()
-    sys.exit(verifier(o.recit, o.site, o.cadence))
+    sys.exit(verifier(o.recit, o.site, o.cadence, o.depart))
 
 
 if __name__ == "__main__":
