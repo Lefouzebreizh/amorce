@@ -8,16 +8,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:look_and_find/core/constants/app_config.dart';
 import 'package:look_and_find/core/network/app_exception.dart';
 
-DioException _erreur(DioExceptionType type, {int? statut}) => DioException(
-  requestOptions: RequestOptions(path: '/x'),
-  type: type,
-  response: statut == null
-      ? null
-      : Response<void>(
-          requestOptions: RequestOptions(path: '/x'),
-          statusCode: statut,
-        ),
-);
+DioException _erreur(DioExceptionType type, {int? statut, Object? corps}) =>
+    DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      type: type,
+      response: statut == null
+          ? null
+          : Response<Object?>(
+              requestOptions: RequestOptions(path: '/x'),
+              statusCode: statut,
+              data: corps,
+            ),
+    );
 
 void main() {
   group('AppException.from', () {
@@ -59,6 +61,53 @@ void main() {
           reason: 'statut $statut',
         );
       });
+    });
+
+    test('un 400 répète la raison que le service donne', () {
+      // Sans elle, « reprenez la photo » invite à refaire un geste qui échouera
+      // toujours : un 400 se reproduit à l'identique, et seul ce message dit
+      // ce que la requête a de fautif.
+      final erreur = AppException.from(
+        _erreur(
+          DioExceptionType.badResponse,
+          statut: 400,
+          corps: {
+            'error': {
+              'code': 400,
+              'message': 'Invalid JSON payload received. Unknown name "couleur".',
+              'status': 'INVALID_ARGUMENT',
+            },
+          },
+        ),
+      );
+
+      expect(erreur, isA<InvalidRequestException>());
+      expect(erreur.message, contains('Unknown name'));
+    });
+
+    test('sans raison lisible, le message reste celui de l\'utilisateur', () {
+      // Une erreur sans corps exploitable ne doit pas afficher « null » ni du
+      // JSON brut : on retombe sur la phrase qui dit quoi faire.
+      final erreur = AppException.from(
+        _erreur(DioExceptionType.badResponse, statut: 400),
+      );
+
+      expect(erreur.message, contains('Reprenez-la'));
+    });
+
+    test('une raison interminable est bornée', () {
+      final erreur = AppException.from(
+        _erreur(
+          DioExceptionType.badResponse,
+          statut: 400,
+          corps: {
+            'error': {'message': 'x' * 900},
+          },
+        ),
+      );
+
+      expect(erreur.message.length, lessThan(400));
+      expect(erreur.message, endsWith('…'));
     });
 
     test('un 404 désigne le modèle, pas la photo', () {

@@ -150,9 +150,14 @@ d'y toucher.
 4. **Un seul DTO pour le réseau et pour Hive.** Pas de `TypeAdapter` généré :
    la boîte contient du JSON relu par le même parseur tolérant, ce qui évite
    une migration binaire à chaque champ ajouté à la fiche.
-5. **La réponse brute est retenue avant le décodage.** Une réponse illisible
-   est justement celle qu'on a le plus besoin de pouvoir regarder ; l'enregistrer
-   après un décodage réussi la perdrait dans le seul cas qui compte.
+5. **La réponse brute est retenue avant le décodage — et l'erreur aussi.** Une
+   réponse illisible est justement celle qu'on a le plus besoin de pouvoir
+   regarder ; l'enregistrer après un décodage réussi la perdrait dans le seul
+   cas qui compte. Même chose pour un refus du service : son corps part dans
+   `lastRawAnswer`, et la raison que Google écrit remonte dans le message
+   (`raisonDuServeur`). Les taire transformait un diagnostic d'une seconde en
+   une soirée — un 400 se répète à l'identique, et « Reprenez-la » invitait à
+   refaire un geste qui échouait toujours.
 6. **Un schéma d'invite et sa lecture se tiennent, et il y a deux paires.**
    `fiche_prompt.dart` ↔ `fiche_objet_dto.dart` pour la version un,
    `gemini_prompt.dart` ↔ `product_dto.dart` pour le comparateur dormant.

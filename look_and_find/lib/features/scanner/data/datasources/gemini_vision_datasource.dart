@@ -12,6 +12,7 @@
 /// [UnreadableAnswerException].
 library;
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -129,6 +130,12 @@ class GeminiVisionDataSource {
         data: corps(base64),
       );
     } on DioException catch (error) {
+      // La réponse d'erreur est retenue comme l'est une réponse réussie, et
+      // pour la même raison : c'est justement l'échec qu'on a besoin de pouvoir
+      // regarder. Un refus se répète à l'identique tant qu'on n'a pas lu ce que
+      // le service reproche à la requête.
+      final corps = error.response?.data;
+      if (corps != null) _lastRawAnswer = jsonEncode(corps);
       throw AppException.from(error);
     }
 
