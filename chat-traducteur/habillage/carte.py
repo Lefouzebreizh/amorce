@@ -92,6 +92,36 @@ def couper(texte: str, taille: int, largeur: int = COLONNE) -> list[str]:
     return lignes
 
 
+# Ce que la mention dit, et ce qu'elle ne dit plus — décidé le 05/09/2026.
+#
+# **Le chiffre porte le son, jamais l'état.** La carte affichait `Purr · 15%` :
+# le nom d'une classe de YAMNet, en anglais, collé à un pourcentage. Deux
+# défauts dans quatre caractères.
+#
+# Le premier est de forme — « Purr » n'est pas du français et n'a rien à faire
+# sur un artefact qui part sur TikTok.
+#
+# Le second est de fond, et c'est le propriétaire qui l'a tranché. Un chiffre a
+# l'air d'une preuve : posé à côté de « il est content », il faisait passer pour
+# mesuré un **état** que personne n'a mesuré. Ce que le modèle a mesuré est un
+# **son**. Un référentiel de vulgarisation, lu le même jour, rappelle qu'un chat
+# ronronne aussi malade, vulnérable ou grondé — donc l'état pouvait être
+# l'exact contraire de ce que le pourcentage semblait certifier.
+#
+# « Ronronnement détecté · 15% » dit vrai des deux côtés : ce nombre-là décrit
+# la confiance du modèle sur un **son**, et le titre de la carte reste
+# l'interprétation assumée qu'on en tire. Le produit ne cesse pas d'interpréter,
+# il cesse de faire passer son interprétation pour une mesure.
+#
+# Le dictionnaire n'a pas de valeur par défaut, à dessein : une classe qui
+# entrerait dans `LECTURE_DIRECTE` sans phrase française serait rattrapée par
+# `test_toute_lecture_directe_a_son_nom_francais`, jamais par un repli
+# silencieux qui remettrait de l'anglais sur la carte.
+NOM_FRANCAIS = {
+    "Purr": "Ronronnement détecté",
+}
+
+
 def blocs(verdict: Verdict) -> list[Ligne]:
     """Place tout le texte de la carte dans la bande sûre, et rien en dehors.
 
@@ -115,7 +145,7 @@ def blocs(verdict: Verdict) -> list[Ligne]:
     # afficher de pourcentage, même si l'appelant le demandait.
     mention = None
     if verdict.source is Source.MESUREE:
-        mention = f"{verdict.classe_dominante} · {verdict.confiance:.0%}"
+        mention = f"{NOM_FRANCAIS[verdict.classe_dominante]} · {verdict.confiance:.0%}"
 
     total = (len(titre) * pas_titre + ecart + len(sous) * pas_sous
              + (int(TAILLE_MENTION * INTERLIGNE) + 40 if mention else 0))

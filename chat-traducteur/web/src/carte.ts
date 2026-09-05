@@ -35,6 +35,14 @@ export const TAILLE_TITRE = 84;
 export const TAILLE_SOUS_TITRE = 52;
 export const TAILLE_MENTION = 30;
 export const INTERLIGNE = 1.22;
+
+// Le miroir de `NOM_FRANCAIS` du Python — la raison du choix y est écrite en
+// entier, et ne se recopie pas ici : deux exposés du même « pourquoi » finissent
+// par se contredire. Ce qui se recopie est la **valeur**, parce que les témoins
+// comparent les deux cartes au caractère près.
+export const NOM_FRANCAIS: Record<string, string> = {
+  Purr: 'Ronronnement détecté',
+};
 export const AVANCE = 0.56;
 
 export interface Ligne {
@@ -85,7 +93,7 @@ export function blocs(verdict: Verdict): Ligne[] {
 
   // ── La règle du §1, rendue structurelle ────────────────────────────────
   const mention = verdict.source === Source.MESUREE
-    ? `${verdict.classeDominante} · ${pourcent0(verdict.confiance)}`
+    ? `${NOM_FRANCAIS[verdict.classeDominante!]} · ${pourcent0(verdict.confiance)}`
     : null;
 
   const total =
