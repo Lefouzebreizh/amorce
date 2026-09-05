@@ -119,7 +119,7 @@
       "nom": "demo",
       "source": "rushes/choc-demo.mp4",
       "depart": 0.0,
-      "duree": 14.7,
+      "duree": 15.3,
       "cible_db": -30.0,
       "_note": "muet de naissance — rendu de scène."
     }
@@ -127,41 +127,41 @@
   "voix": [
     {
       "instant": 2.2,
-      "texte": "Et ce dont tu as vraiment besoin.",
+      "texte": "Et voilà ce dont tu as vraiment besoin.",
       "timbre": "tom",
       "vitesse": 1.0,
       "cible_db": -10.0
     },
     {
-      "instant": 4.45,
+      "instant": 4.55,
       "texte": "Un bouton qui appelle.",
       "timbre": "tom",
       "vitesse": 1.0,
       "cible_db": -10.0
     },
     {
-      "instant": 6.15,
-      "texte": "Tes chantiers en photos.",
+      "instant": 6.25,
+      "texte": "Tes chantiers. En photos.",
       "timbre": "tom",
       "vitesse": 1.0,
       "cible_db": -10.0
     },
     {
-      "instant": 7.95,
-      "texte": "Tes vrais avis clients.",
+      "instant": 8.05,
+      "texte": "Tes avis clients. Les vrais.",
       "timbre": "tom",
       "vitesse": 1.0,
       "cible_db": -10.0
     },
     {
       "instant": 10.0,
-      "texte": "En ligne en 48 heures. 300 euros, et 200 pour les premiers.",
+      "texte": "Ton site en ligne. En 48 heures. 300 euros. Et 200 pour les premiers.",
       "timbre": "tom",
       "vitesse": 1.0,
       "cible_db": -10.0
     },
     {
-      "instant": 14.6,
+      "instant": 15.2,
       "texte": "Écris SITE en commentaire.",
       "timbre": "tom",
       "vitesse": 1.0,
@@ -213,19 +213,19 @@
     },
     {
       "son": "ui_clic_doux",
-      "instant": 4.35,
+      "instant": 4.45,
       "gain": 1,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
-      "instant": 6.05,
+      "instant": 6.15,
       "gain": 1,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
-      "instant": 7.85,
+      "instant": 7.95,
       "gain": 1,
       "distance": "proche"
     },
@@ -248,38 +248,38 @@
       "largeur": 18,
       "distance": "lointain",
       "parametres": {
-        "duree": 5.6,
+        "duree": 6.0,
         "fondamentale": 65.0,
         "graine": 12
       }
     },
     {
       "son": "ui_clic_doux",
-      "instant": 14.5,
+      "instant": 15.1,
       "gain": 1,
       "distance": "proche"
     },
     {
       "son": "braam_court",
-      "instant": 14.5,
+      "instant": 15.1,
       "gain": 4,
       "distance": "proche"
     },
     {
       "son": "transition_eclair",
-      "instant": 14.540000000000001,
+      "instant": 15.14,
       "gain": 0,
       "distance": "moyen"
     },
     {
       "son": "ui_validation",
-      "instant": 14.6,
+      "instant": 15.2,
       "gain": 3,
       "distance": "proche"
     },
     {
       "son": "carillon",
-      "instant": 14.6,
+      "instant": 15.2,
       "gain": -2,
       "distance": "moyen",
       "parametres": {
@@ -292,32 +292,32 @@
   "esquive": [
     {
       "debut": 2.1,
-      "fin": 4.0,
+      "fin": 4.2,
       "gain": -15
     },
     {
-      "debut": 4.35,
-      "fin": 5.95,
+      "debut": 4.45,
+      "fin": 5.9,
       "gain": -15
     },
     {
-      "debut": 6.05,
-      "fin": 7.55,
+      "debut": 6.15,
+      "fin": 7.9,
       "gain": -15
     },
     {
-      "debut": 7.85,
-      "fin": 9.2,
+      "debut": 7.95,
+      "fin": 9.7,
       "gain": -15
     },
     {
       "debut": 9.9,
-      "fin": 14.4,
+      "fin": 14.8,
       "gain": -15
     },
     {
-      "debut": 14.5,
-      "fin": 16.45,
+      "debut": 15.1,
+      "fin": 17.1,
       "gain": -15
     }
   ]
