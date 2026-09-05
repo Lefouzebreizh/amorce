@@ -54,20 +54,24 @@
     "et V : un « écran » appliqué aux plans de chrominance vire toute l'image au",
     "magenta. Vu, mesuré, corrigé — le mode Écran se fait en RVB.",
     "",
-    "LE FLÉCHISSEMENT DU DRAGON EST GRAVÉ DANS LE PLAN, PAS DANS LE MIXAGE.",
+    "LE DRAGON JOUE PLEIN, ET LA VOIX COMMENCE APRÈS LUI.",
     "",
-    "Retour d'écoute : « les effets du dragon couvrent la voix ». Mesuré, le rush",
-    "tient entre -7 et -12 dB sur toute sa durée, et la voix parle du début à la",
-    "fin — elle n'avait aucune chance.",
+    "Première tentative : la voix parlait sur le dragon, et un fléchissement de",
+    "-9 dB gravé dans le rush lui faisait de la place. Retour d'écoute : on",
+    "n'entendait toujours pas la voix, et le dragon avait perdu de sa force.",
+    "Les deux exigences étaient incompatibles sur les mêmes deux secondes.",
     "",
-    "`esquive` ne pouvait rien : elle agit sur la couche d'effets, pas sur le son",
-    "d'un plan. Le fléchissement est donc appliqué au rush lui-même, par une",
-    "expression `volume` : plein niveau jusqu'à 0,30 s — l'entrée du dragon garde",
-    "son impact, mesuré -9,7 dB avant comme après — puis -9 dB tenu tant que la",
-    "voix parle. Sous la voix : -11,2 dB avant, -20,2 dB après.",
+    "Elles se séparent : le rush garde tout son niveau et ne porte AUCUNE voix —",
+    "le hook est à l'écran, pas dans les oreilles. La première réplique entre à",
+    "2,30 s, une fois la coupure passée.",
     "",
-    "La voix de la première réplique monte en parallèle de -13 à -11 dB. Onze",
-    "décibels gagnés au total, sans toucher à ce qui fait l'effet de la scène."
+    "L'ESQUIVE EST DÉCLARÉE À -11 dB, PAS LAISSÉE PAR DÉFAUT.",
+    "",
+    "Déduite des fenêtres de la voix, l'esquive du dépôt creuse de -5 dB. C'est",
+    "le réglage d'un lit sous une vraie prise ; sous une voix de synthèse, qui",
+    "n'a ni ses transitoires ni sa présence, il laisse le lit devant. Les fenêtres",
+    "sont donc écrites ici, un peu plus larges que la parole — les rampes de",
+    "l'enveloppe, 80 ms à la descente et 280 ms au retour, font le raccord."
   ],
   "bibliotheque": "sfx_library",
   "cadence": 30,
@@ -80,59 +84,52 @@
       "source": "rushes/dragon-hook.mp4",
       "depart": 0.0,
       "duree": 2.0,
-      "cible_db": -18.0,
-      "_note": "le rush 11,70 → 13,70 d'AZNAROTH EP01, avec le hook composé en mode Écran ET un fléchissement de -9 dB gravé dans le son à partir de 0,45 s. Recette dans scenes/recits/hook-dragon.json."
+      "cible_db": -15.0,
+      "_note": "le rush 11,70 → 13,70 d'AZNAROTH EP01, hook composé en mode Écran. PLEIN NIVEAU : aucune voix ne joue dessus, il n'a rien à esquiver."
     },
     {
       "nom": "demo",
       "source": "rushes/choc-demo.mp4",
       "depart": 0.0,
-      "duree": 13.0,
+      "duree": 14.5,
       "cible_db": -30.0,
       "_note": "muet de naissance — rendu de scène."
     }
   ],
   "voix": [
     {
-      "instant": 0.12,
+      "instant": 2.3,
       "timbre": "tom",
       "vitesse": 1.0,
-      "cible_db": -11.0,
-      "texte": "Ce que je sais faire avec l'IA."
-    },
-    {
-      "instant": 2.25,
-      "timbre": "tom",
-      "vitesse": 1.0,
-      "cible_db": -14.0,
+      "cible_db": -13.0,
       "texte": "Et ce dont tu as vraiment besoin."
     },
     {
-      "instant": 4.15,
+      "instant": 4.5,
       "timbre": "tom",
       "vitesse": 1.0,
-      "cible_db": -14.0,
+      "cible_db": -13.0,
       "texte": "Zéro blabla. Un bouton qui appelle."
     },
     {
-      "instant": 6.6,
+      "instant": 7.4,
       "timbre": "tom",
       "vitesse": 1.0,
-      "cible_db": -14.0,
+      "cible_db": -13.0,
       "texte": "Tes chantiers en photos, tes vrais avis."
     },
     {
       "instant": 10.05,
       "timbre": "tom",
       "vitesse": 1.0,
-      "cible_db": -14.0,
-      "texte": "En ligne en quarante-huit heures."
+      "cible_db": -13.0,
+      "texte": "En ligne en 48 heures. 300 euros, et 200 pour les premiers."
     },
     {
-      "instant": 12.2,
+      "instant": 14.45,
       "timbre": "tom",
       "vitesse": 1.0,
-      "cible_db": -14.0,
+      "cible_db": -13.0,
       "texte": "Écris SITE en commentaire."
     }
   ],
@@ -163,13 +160,13 @@
     },
     {
       "son": "ui_apparition",
-      "instant": 2.35,
+      "instant": 2.1,
       "gain": 2,
       "distance": "proche"
     },
     {
       "son": "drone_sombre",
-      "instant": 2.7,
+      "instant": 2.6,
       "gain": -6,
       "distance": "lointain"
     },
@@ -181,73 +178,67 @@
     },
     {
       "son": "ui_clic_doux",
-      "instant": 4.1,
+      "instant": 4.35,
       "gain": 1,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
-      "instant": 6.2,
-      "gain": 1,
-      "distance": "proche"
-    },
-    {
-      "son": "ui_clic_doux",
-      "instant": 8.3,
+      "instant": 7.25,
       "gain": 1,
       "distance": "proche"
     },
     {
       "son": "whoosh_retour",
-      "instant": 9.95,
+      "instant": 9.8,
       "gain": 2,
       "distance": "moyen"
     },
     {
       "son": "braam_court",
-      "instant": 10.0,
+      "instant": 9.85,
       "gain": 3,
       "distance": "proche"
     },
     {
       "son": "nappe_sombre",
-      "instant": 10.05,
+      "instant": 9.9,
       "gain": 15,
       "largeur": 18,
       "distance": "lointain",
       "parametres": {
-        "duree": 4.8,
+        "duree": 5.6,
         "fondamentale": 65.0,
         "graine": 12
       }
     },
     {
       "son": "ui_clic_doux",
-      "instant": 12.65,
+      "instant": 14.3,
       "gain": 1,
       "distance": "proche"
     },
     {
-      "son": "transition_eclair",
-      "instant": 13.1,
-      "gain": 0,
-      "distance": "moyen"
-    },
-    {
       "son": "braam_court",
-      "instant": 13.06,
+      "instant": 14.26,
       "gain": 4,
       "distance": "proche"
     },
     {
+      "son": "transition_eclair",
+      "instant": 14.3,
+      "gain": 0,
+      "distance": "moyen"
+    },
+    {
       "son": "ui_validation",
-      "instant": 13.15,
+      "instant": 14.36,
       "gain": 3,
       "distance": "proche"
     },
     {
       "son": "carillon",
-      "instant": 13.15,
+      "instant": 14.36,
       "gain": -2,
       "distance": "moyen",
       "parametres": {
@@ -255,6 +246,33 @@
         "fondamentale": 659.26,
         "graine": 9
       }
+    }
+  ],
+  "esquive": [
+    {
+      "debut": 2.2,
+      "fin": 4.15,
+      "gain": -11
+    },
+    {
+      "debut": 4.4,
+      "fin": 7.05,
+      "gain": -11
+    },
+    {
+      "debut": 7.3,
+      "fin": 9.75,
+      "gain": -11
+    },
+    {
+      "debut": 9.95,
+      "fin": 14.45,
+      "gain": -11
+    },
+    {
+      "debut": 14.35,
+      "fin": 16.35,
+      "gain": -11
     }
   ]
 }
