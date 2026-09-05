@@ -3,6 +3,18 @@
 Une vidéo, pas de code, pas de boutique. Ce fichier existe pour que le résultat
 soit **jugé contre une hypothèse écrite avant**, et non rationalisé après.
 
+> **Ce test n'a pas eu lieu, et il n'aura pas lieu sous cette forme.** Le
+> propriétaire a refusé de publier la vidéo le jour même : elle le montre chez
+> lui, avec son chat, dans un intérieur qu'il ne veut pas donner à voir. Le
+> refus est net et ne se contourne pas — il porte sur ce qui part en public à
+> son nom, ce que le §0 de `CLAUDE.md` range parmi les trois exceptions à
+> l'autonomie.
+>
+> Le reste du fichier est **conservé tel quel**, et ce n'est pas de la
+> paresse : l'hypothèse, les mesures et la table de décision restent justes.
+> Ce qui est tombé est le **véhicule**, pas la thèse. Ce qui le remplace est
+> écrit en fin de page.
+
 ## Pourquoi ce test précède tout le reste
 
 La route commerciale a été tranchée le 05/09/2026 : application **gratuite**,
@@ -72,3 +84,41 @@ n'a pas — ce qu'on attendait avant de regarder.
 **Ce que ce test ne mesure pas** : si l'application est bonne. Elle nomme une
 intention sur 31 vrais chats sur 40 et n'en invente aucune sur 20 témoins.
 Ça, c'est déjà mesuré, et ce n'est pas la question ici.
+
+## Ce que le refus a appris — 05/09/2026
+
+Le coût d'un test se compte rarement en euros, et « zéro euro » a fait passer
+celui-ci pour gratuit. Il ne l'était pas : il demandait au propriétaire de
+publier son domicile et son animal devant quarante-huit mille personnes. Un
+prix qui ne se chiffre pas reste un prix, et c'est celui-là qui a fait échouer
+le test — pas la thèse qu'il devait éprouver.
+
+**La leçon vaut au-delà de ce produit** : quand un plan repose sur un geste que
+seul le propriétaire peut faire, ce geste se décrit **avant** d'être chiffré à
+zéro. « Il suffit de publier une vidéo » n'est pas un coût nul, c'est un coût
+qu'on n'a pas regardé.
+
+## Ce qui peut le remplacer
+
+Deux véhicules restent, et ils ne mesurent pas la même chose. Aucun n'est
+engagé : la décision est au propriétaire, comme la précédente.
+
+| véhicule | ce qu'il mesure | ce qu'il coûte |
+| --- | --- | --- |
+| **l'application en ligne**, partagée en lien | l'**usage** — combien l'ouvrent, combien vont jusqu'à une carte | un déploiement, et un mot dans sa communauté |
+| une carte seule, sans vidéo ni intérieur | l'**accroche** de la carte, la thèse d'origine | une publication, mais sans le récit qui la portait |
+
+Le premier est le plus solide des deux, et pour une raison qui n'était pas
+visible avant le refus : une vidéo mesure si les gens **regardent**, une
+application mesure si les gens **s'en servent**. Pour décider d'une boutique
+d'habillages, c'est le second signal qui vaut — on ne vend pas un habillage à
+quelqu'un qui n'a jamais fabriqué de carte.
+
+**Ce qui manque pour l'atteindre, mesuré le 05/09/2026** : la page
+`web/page/index.html` tourne, mais elle n'est servie que par
+`outils/epreuve.mjs`, qui sert `dist/` et les trois fichiers de TensorFlow
+**depuis `node_modules`, à la volée**. Aucune étape ne rassemble un dossier
+statique déposable. Il en faut une — bâtir le TypeScript, recopier les trois
+`tf-*.js` et leur WASM, y joindre les 4,1 Mo de YAMNet — et elle n'existe pas.
+C'est une demi-journée, pas un chantier ; mais c'est une demi-journée qui ne se
+lance qu'après la décision, pas avant.
