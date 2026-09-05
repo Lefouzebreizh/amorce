@@ -77,6 +77,70 @@ abonnement/urgence), une bannière signale l'échéance la plus proche en haut d
 page. Aucun impact sur la sécurité ou le flux de données : purement la mise en
 forme de ce que l'index déjà déchiffré contient.
 
+## La fiche détail par papier (05/09/2026)
+
+Refonte suivant une maquette dédiée (`coffre-maquette.html`) : chaque
+document s'ouvre en fiche détail au clic, plutôt que d'exposer ses actions
+directement dans la liste — bannière d'accueil, montant extrait (lu tel quel,
+jamais recalculé — même principe que l'émetteur), badge de statut à trois
+états (`urgent` / `bientôt` / `calme`, un simple point coloré dérivé de
+l'échéance), correction du classement après coup (nom, catégorie, montant,
+sans repasser par un nouveau dépôt), et un bouton flottant « Ajouter un
+papier » qui remplace la grande zone de dépôt — la page entière reste
+déposable au glisser-déposer, juste sans l'encart visuel qui prenait toute la
+largeur.
+
+**Périmètre tranché à l'ouverture de ce lot** : la maquette montrée est celle
+du Coffre seul, distincte de celle du « Bureau du soir » (`life-organizer`,
+chat + budget) montrée à titre de comparaison — les deux sont restées deux
+écrans séparés, aucune fusion des deux produits dans ce lot.
+
+**Un vrai bug corrigé au passage** : `deposerFichier`, `supprimerFichier`,
+`ajouterRendezVous` et `supprimerRendezVous` reconstruisaient l'index sans
+reprendre tous ses champs (`{ objets }` au lieu de `{ ...index, objets }`) —
+déposer un fichier, par exemple, effaçait silencieusement l'identité et les
+rendez-vous déjà enregistrés. Couvert par quatre tests de régression dans
+`coffre.test.ts`.
+
+## Renommage en « Le Tiroir Secret » (05/09/2026)
+
+Textes visibles seulement — titre de page, en-têtes des trois écrans,
+sujet/corps/expéditeur de l'e-mail d'alerte. L'adresse `coffre-puce.vercel.app`,
+le projet Vercel `coffre` et le chemin `le-coffre/` restent inchangés :
+renommer l'infrastructure (domaine, redirection du lien magique Supabase)
+est une décision à part, plus risquée, laissée en attente.
+
+## Dépôt de dossiers entiers et étiquettes personnalisables (05/09/2026)
+
+Glisser un **dossier** sur la page dépose tout son contenu, sous-dossiers
+compris — `fichiersDuGlisserDeposer` explore l'arborescence via l'API
+File and Directory Entries (`webkitGetAsEntry`, non standardisée : hors
+Chrome/Edge, on retombe sur les fichiers à plat que `dataTransfer.files`
+donne déjà, sans erreur). La zone de survol s'illumine sur toute la page,
+pas seulement sur un encart.
+
+Les étiquettes (le champ « Catégorie ») restent du texte libre — jamais une
+liste fermée — mais se retapent moins : une `<datalist>` suggère les
+catégories déjà utilisées dans le coffre, et des puces de filtre au-dessus
+de la liste des papiers permettent de n'en voir qu'une à la fois.
+
+## Recherche dans le contenu (05/09/2026)
+
+`classer-document` extrait aussi, à l'analyse, jusqu'à 500 caractères du
+texte lisible sur le document (`texteExtrait`) — chiffré dans l'index comme
+le reste, jamais affiché. Le champ de recherche au-dessus de la liste des
+papiers (`rechercheCorrespond` dans `coffre.ts`) filtre sur le nom, la
+catégorie, l'émetteur et ce texte, entièrement côté navigateur sur l'index
+déjà déchiffré — aucune requête n'est jamais envoyée nulle part.
+
+## Aperçu instantané, sans téléchargement (05/09/2026)
+
+La fiche détail déchiffre et affiche directement une image ou un PDF —
+`FichePreview`, montée avec `key={nom}` pour remonter à neuf à chaque
+document plutôt que de réinitialiser son état depuis un effet (évite le
+rendu en cascade que le lint React signale sur un `setState` synchrone en
+effet). Les autres types de fichiers gardent le seul bouton Télécharger.
+
 ## Architecture
 
 ```

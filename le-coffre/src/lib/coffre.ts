@@ -38,7 +38,30 @@ export type ObjetIndex = {
   emetteur?: string;
   referenceClient?: string;
   lettre?: Lettre;
+  // Tel que lu sur le document (ex. "89,90 €"), jamais recalculé ni reformaté
+  // — même principe que emetteur/referenceClient : null plutôt qu'un montant
+  // deviné.
+  montant?: string | null;
+  // Jusqu'à 500 caractères de ce qui est réellement lisible sur le document —
+  // sert uniquement à la recherche (voir rechercheCorrespond ci-dessous),
+  // jamais affiché tel quel dans l'interface.
+  texteExtrait?: string | null;
 };
+
+export type StatutEcheance = 'urgent' | 'bientot' | 'calme';
+
+// Seuils choisis pour rester lisibles avec un badge à trois états, pas
+// mesurés sur un usage réel — à resserrer si l'usage montre qu'ils alertent
+// trop tôt ou trop tard. `jours` vient de joursRestants : négatif si la date
+// est dépassée, donc un retard est toujours "urgent".
+const SEUIL_URGENT_JOURS = 7;
+const SEUIL_BIENTOT_JOURS = 30;
+
+export function statutEcheance(jours: number): StatutEcheance {
+  if (jours <= SEUIL_URGENT_JOURS) return 'urgent';
+  if (jours <= SEUIL_BIENTOT_JOURS) return 'bientot';
+  return 'calme';
+}
 
 export type RendezVous = {
   id: string;
@@ -65,8 +88,28 @@ export type PropositionClassement = {
   nomSuggere: string;
   emetteur: string | null;
   referenceClient: string | null;
+  montant: string | null;
+  texteExtrait: string | null;
   echeance: Echeance;
 };
+
+// Sans accents et en minuscules, pour qu'« energie » retrouve « Énergie » —
+// une recherche qui exige les accents exacts sur un clavier de téléphone en
+// perd la moitié des résultats.
+function normaliser(texte: string): string {
+  // \u0300-\u036f : les diacritiques combinants, isolés par NFD (é → e + ´).
+  return texte.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+// Une correspondance sur le nom, la catégorie, l'émetteur ou le texte extrait
+// à l'analyse — jamais sur le contenu du fichier lui-même, qui n'est jamais
+// relu après son dépôt. Une requête vide correspond à tout.
+export function rechercheCorrespond(objet: ObjetIndex, requete: string): boolean {
+  const q = normaliser(requete.trim());
+  if (!q) return true;
+  const champs = [objet.nom, objet.categorie, objet.emetteur, objet.texteExtrait];
+  return champs.some((champ) => champ && normaliser(champ).includes(q));
+}
 
 // Catégories où un document a des chances d'être un abonnement résiliable —
 // sert seulement à décider si on propose une lettre, jamais à choisir un
@@ -139,7 +182,8 @@ function b64FromFichier(buf: ArrayBuffer): string {
 // panne, on renvoie une proposition vide plutôt que de bloquer le dépôt.
 export async function proposerClassement(fichier: File): Promise<PropositionClassement> {
   const vide: PropositionClassement = {
-    lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null,
+    lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null, montant: null,
+    texteExtrait: null,
     echeance: { presente: false, date: null, libelle: null, confiance: 'basse' },
   };
   try {
@@ -255,6 +299,7 @@ async function sauvegarderIndex(userId: string, cle: CryptoKey, index: IndexCoff
 export async function deposerFichier(
   userId: string, cle: CryptoKey, fichier: File, categorie: string, index: IndexCoffre,
   nomAffiche?: string, echeance?: Echeance, emetteur?: string | null, referenceClient?: string | null,
+  montant?: string | null, texteExtrait?: string | null,
 ): Promise<IndexCoffre> {
   const buf = await fichier.arrayBuffer();
   const paquet = await chiffrerOctets(cle, buf);
@@ -272,6 +317,8 @@ export async function deposerFichier(
     categorie,
     deposeLe: new Date().toISOString(),
   };
+  if (montant) objet.montant = montant;
+  if (texteExtrait) objet.texteExtrait = texteExtrait;
   // L'échéance complète (libellé compris) reste chiffrée dans l'index, comme
   // le reste — visible seulement une fois le coffre déverrouillé. La date
   // seule, sans rien d'autre, part aussi vers coffre_echeances : c'est ce qui
@@ -298,11 +345,37 @@ export async function deposerFichier(
     }
   }
 
-  // Étalé, jamais reconstruit : une opération qui renomme les champs qu'elle
-  // connaît efface ceux qu'elle ignore. Mesuré — un dépôt effaçait tous les
-  // rendez-vous et l'identité, donc les lettres de résiliation à venir, sans
-  // erreur et sans que rien ne s'affiche différemment.
+  // On reprend tout l'index (`...index`), pas seulement `objets` : oublier
+  // rendezVous ou identite ici les efface silencieusement au dépôt suivant.
+  //
+  // **Deux sessions l'ont trouvé séparément, et la seconde l'a mesuré.** Deux
+  // gestes ordinaires suffisaient — saisir son identité, puis déposer un
+  // document : l'identité perdue, plus aucune lettre de résiliation n'était
+  // composée, par la condition même écrite pour le cas légitime « l'utilisateur
+  // n'a pas renseigné son adresse ». Aucune erreur, aucun signal. TypeScript
+  // était d'accord : les deux champs sont optionnels, donc un index amputé
+  // reste un `IndexCoffre` valide. Le typage vérifie la forme, la perte est une
+  // question de contenu.
   const nouvel_index: IndexCoffre = { ...index, objets: { ...index.objets, [nom]: objet } };
+  await sauvegarderIndex(userId, cle, nouvel_index);
+  return nouvel_index;
+}
+
+// Correction du classement après coup : nom, catégorie ou montant, sans
+// repasser par un nouveau dépôt. N'importe jamais sur l'échéance ni sur la
+// lettre de résiliation, qui restent celles calculées au dépôt — les
+// toucher demanderait de retoucher aussi coffre_echeances et la lettre déjà
+// composée, hors du périmètre d'une simple correction de classement.
+export async function modifierObjet(
+  userId: string, cle: CryptoKey, nom: string,
+  champs: Partial<Pick<ObjetIndex, 'nom' | 'categorie' | 'montant'>>, index: IndexCoffre,
+): Promise<IndexCoffre> {
+  const existant = index.objets[nom];
+  if (!existant) throw new Error('Document introuvable.');
+  const nouvel_index: IndexCoffre = {
+    ...index,
+    objets: { ...index.objets, [nom]: { ...existant, ...champs } },
+  };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }

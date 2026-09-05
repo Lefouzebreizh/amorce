@@ -51,14 +51,14 @@ Deno.serve(async (requete: Request) => {
 
     const estRendezVous = echeance.type === "rendezvous";
     const sujet = estRendezVous
-      ? "Un rendez-vous approche dans Le Coffre"
-      : "Une échéance approche dans Le Coffre";
+      ? "Un rendez-vous approche dans Le Tiroir Secret"
+      : "Une échéance approche dans Le Tiroir Secret";
     const corps = estRendezVous
-      ? `Un rendez-vous noté dans Le Coffre est prévu le ${echeance.date}.\n\n` +
+      ? `Un rendez-vous noté dans Le Tiroir Secret est prévu le ${echeance.date}.\n\n` +
         `Connecte-toi et déverrouille ton coffre pour voir lequel — ` +
         `ce message ne le dit jamais : nous ne le savons pas nous-mêmes.\n\n` +
         `https://coffre-puce.vercel.app`
-      : `Un document déposé dans Le Coffre a une échéance le ${echeance.date}.\n\n` +
+      : `Un document déposé dans Le Tiroir Secret a une échéance le ${echeance.date}.\n\n` +
         `Connecte-toi et déverrouille ton coffre pour voir de quoi il s'agit — ` +
         `ce message ne dit jamais lequel, ni pourquoi : nous ne le savons pas nous-mêmes.\n\n` +
         `https://coffre-puce.vercel.app`;
@@ -70,7 +70,7 @@ Deno.serve(async (requete: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Le Coffre <alertes@erwannchevallier.com>",
+        from: "Le Tiroir Secret <alertes@erwannchevallier.com>",
         to: email,
         subject: sujet,
         text: corps,
