@@ -244,15 +244,27 @@ chat qui veut sortir (12 s), un qui réclame à manger, un qui accueille (11 s).
 
 | question | ce qu'il a entendu | ce que ça change |
 | --- | --- | --- |
-| faim contre envie de sortir | **deux sons différents** | la fusion des cartes cesse d'être évidente — voir le bloc `CORRESPONDANCE` de `tete.py` |
+| faim contre envie de sortir | **deux sons différents**, reconnaissables | la *raison* de la fusion, pas la décision — voir plus bas |
 | le « bonjour » est-il plus court ? | **nettement** | cohérent avec `FRONTIERE_LONG = 0.7`, qui n'avait aucun témoin |
 
-**Aucune des deux ne renverse quoi que ce soit, et la raison est la même** :
-ce sont trois chats différents, dans trois maisons différentes. Une différence
-entendue entre deux enregistrements peut venir de l'animal autant que de
-l'intention. Ce qui trancherait la première question est déjà dans la liste —
-les neuf `demande`, six gamelles contre trois portes — à condition de chercher
-un trait qui survive **à travers** les chats.
+**La première a été tranchée le même jour, et le résultat surprend** : l'oreille
+sépare les deux, et la carte unique reste. Verdict du propriétaire — *« chaque
+son est différent, on reconnaît quand il a faim, on reconnaît quand il sort. Donc
+on garde ce qu'il y a. »*
+
+Ce n'est pas une contradiction. **Il ne distingue pas avec ce que la tête
+mesure** : un humain reconnaît au timbre, au contexte, à l'heure, au chat qu'il
+connaît ; la tête ne lit que hauteur et durée. Ce qui change est donc la raison
+de la fusion, et elle en sort plus solide :
+
+| | pourquoi une seule carte |
+| --- | --- |
+| 04/09 | « c'est un seul son » — affirmation du référentiel |
+| 05/09 | « ce sont deux sons que *nous* ne savons pas séparer » |
+
+La seconde ne repose plus sur une phrase qu'une oreille vient de démentir. Ce
+qui rouvrirait la question, et rien d'autre : un trait mesurable qui sépare les
+deux groupes **à travers plusieurs animaux**.
 
 ### Trois vrais chats, filmés par le propriétaire à 5 h 10
 
