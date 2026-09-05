@@ -3,6 +3,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Qu'est-ce qu'il dit ?</title>
+<!-- En data-URI plutôt qu'en fichier : le §8 de CLAUDE.md refuse le binaire
+     versionné, et sans lui le navigateur réclame /favicon.ico à chaque
+     ouverture — un 404 dans le journal de tout hébergeur. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%90%B1%3C/text%3E%3C/svg%3E">
 <style>
   /* Le §2 de CLAUDE.md, appliqué : 18 px minimum, cibles ≥ 44 px, 100dvh et
      non 100vh — la barre d'adresse d'Android mange la différence et coupe le
@@ -47,6 +51,49 @@
     border-radius: 16px; display: block;
   }
   #telecharger { background: var(--panel); color: var(--texte); }
+
+  /* Les tiroirs de « ce qu'il sait reconnaître ». Ils existent parce que la
+     page, avant qu'on appuie, ne montrait rien du tout — ni ce que l'outil
+     cherche, ni ce qu'il s'autorise à dire. Un bouton seul sur fond noir ne
+     promet rien et n'explique rien. */
+  #savoir { width: min(100%, 420px); margin-top: 8px; }
+  #savoir > h2 {
+    font-size: 20px; margin: 0 0 4px; text-align: center; font-weight: 700;
+  }
+  #savoir > p {
+    color: var(--doux); margin: 0 0 14px; text-align: center; font-size: 16px;
+  }
+  details {
+    background: var(--slab); border-radius: 14px; margin-bottom: 10px;
+    overflow: hidden;
+  }
+  /* Le filet de couleur reprend l'accent de la carte : c'est le même code
+     visuel dedans et dehors, donc on reconnaît le tiroir en voyant la carte. */
+  details > summary {
+    /* 56 px de haut : la cible du §2, et la même que les boutons du dessus. */
+    min-height: 56px; display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; cursor: pointer; font-weight: 700;
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  summary .pastille {
+    width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto;
+  }
+  summary .chevron { margin-left: auto; color: var(--doux); font-weight: 400; }
+  details[open] summary .chevron { transform: rotate(180deg); }
+  .chevron { transition: transform .18s; display: inline-block; }
+  .corps { padding: 0 16px 16px; }
+  /* La carte réelle, engendrée par le même code que celle qu'on télécharge —
+     pas une maquette — et recadrée sur sa zone sûre, sans quoi son titre tombe
+     sous huit pixels. Pleine largeur : c'est ce qui la rend lisible. */
+  .corps svg {
+    width: 100%; height: auto; border-radius: 8px; display: block;
+  }
+  .corps .son { margin: 12px 0 0; font-size: 15px; color: var(--doux); }
+  #reserve {
+    color: var(--doux); font-size: 15px; text-align: center;
+    max-width: 40ch; margin: 4px 0 0; line-height: 1.45;
+  }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -61,6 +108,17 @@
 <p id="etat">Prêt.</p>
 <div id="carte" hidden></div>
 <button id="telecharger" hidden>Enregistrer la carte</button>
+
+<section id="savoir">
+  <h2>Ce qu'il sait reconnaître</h2>
+  <p>Trois cartes, et le droit de ne pas savoir.</p>
+</section>
+
+<p id="reserve">
+  Ce n'est pas une science exacte&nbsp;: on lit une hauteur et une durée, et on
+  fait au mieux. Quand le son ne dit rien de clair, l'application le dit — elle
+  n'invente pas une émotion pour avoir l'air maligne.
+</p>
 
 <script src="./tf/tf-core.js"></script>
 <script src="./tf/tf-backend-cpu.js"></script>

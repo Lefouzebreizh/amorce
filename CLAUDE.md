@@ -1939,10 +1939,18 @@ paragraphes suivants reste juste ; ce sont les noms et le compte qui ont bougé.
 | `amorce` (racine) | oui | **oui** |
 | `iptv` | oui | **oui** |
 | `coffre` (dossier `le-coffre/`) | oui | **oui** |
+| `chat-traducteur` (dossier `chat-traducteur/web/`) | oui | **oui** — né le 05/09/2026 |
 | `annuaire-ia` | non — dépôt de fichiers | non |
 | `artisan-express` | non — dépôt de fichiers | non |
 | `artisan-express-demos` | non — dépôt de fichiers | non |
 | `couverture-martin-demo` | non — dépôt de fichiers | non |
+
+**Quatre projets branchés depuis le 05/09/2026**, et le seuil de fusions
+descend avec : chaque fusion vaut désormais **quatre** déploiements plus le
+commit de fusion, donc **une douzaine de fusions par jour** avant le palier de
+cent. Le nouveau venu est `chat-traducteur`, qui sert l'application du
+traducteur de miaulements — elle ne pouvait pas partir en dépôt de fichiers,
+et c'est mesuré plus bas.
 
 **Trois projets branchés, et c'était deux le matin même.** `coffre` est arrivé
 dans la journée, lié à Git dès sa création — donc déclenché par **chaque**
@@ -2094,6 +2102,37 @@ cent : chaque fusion vaut au moins un déploiement par projet lié, plus le comm
 de fusion. Ce chiffre **suit le nombre de projets liés** et se recalcule quand
 il bouge — il valait une vingtaine à deux projets, il en vaut une quinzaine à
 trois.
+
+**`create_git_project` a *créé* au lieu de réutiliser — mesuré le 05/09/2026,
+et ce fichier disait le contraire.** Le paragraphe sur `artisan-express` plus
+bas raconte un appel qui a rendu « Reused project amorce-51up », et en tirait
+la règle générale que l'outil réutilise tout projet déjà lié au dépôt. Appelé
+le 05/09 avec `projectName: chat-traducteur` et
+`rootDirectory: chat-traducteur/web`, sur un dépôt qui portait déjà **trois**
+projets liés, il a rendu « Created project "chat-traducteur" ». Un quatrième
+projet lié existe donc, et il a bien le dossier racine demandé.
+
+Ce qui distingue les deux appels n'est pas mesuré et ne doit pas être inventé :
+l'outil a pu changer, ou le nom demandé a pu jouer. Ce qui est acquis est plus
+utile que l'explication — **l'observation de 02/09 ne vaut pas comme propriété
+de l'outil**, exactement comme le dit déjà la section Connecteurs à propos du
+MCP GitHub. On tente, on lit ce que l'appel rend, et on ne renonce pas sur la
+foi d'une phrase écrite un autre jour.
+
+**Et le dépôt de fichiers ne pouvait pas servir cette application-là.**
+`deploy_to_vercel` prend l'arbre **en ligne**, encodé dans l'appel : les 23 Mo
+du traducteur — 16 de WASM, 4,1 de modèle, 3,1 de TensorFlow — feraient plus de
+trente mégaoctets une fois en base64, ce qui ne traverse aucune conversation.
+Réduire ne sauve rien : même en ne gardant qu'une variante de WASM et les
+`tf-*.min.js`, il reste une quinzaine de mégaoctets.
+
+C'est ce qui a décidé du lien Git malgré son coût en quota : la construction
+tourne **chez Vercel**, où `outils/assembler.mjs` télécharge YAMNet depuis
+`storage.googleapis.com` et recopie ce qu'`npm install` vient de poser. Rien
+n'est versionné, le dossier `public/` est ignoré, et le journal de
+construction le confirme — 17 paquets, modèle à l'empreinte conforme, quatre
+secondes. La règle qui s'en dégage : **au-delà de quelques mégaoctets, le
+dépôt de fichiers n'est pas une option, c'est le lien Git ou rien.**
 
 **Et un projet de démos est né le 03/09/2026 : `artisan-express-demos`.** Dépôt
 de fichiers lui aussi, donc hors quota. Il sert les pages nominatives préparées

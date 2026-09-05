@@ -10,6 +10,8 @@
     "temoins": "python3 outils/engendrer-temoins.py",
     "bati": "tsc -p tsconfig.navigateur.json",
     "epreuve": "node outils/epreuve.mjs",
+    "assembler": "node outils/assembler.mjs",
+    "epreuve:public": "node outils/epreuve-public.mjs",
     "etiquettes": "python3 outils/extraire-etiquettes.py",
     "temoins:oreille": "python3 outils/engendrer-temoins-oreille.py",
     "temoins:chaine": "python3 outils/engendrer-temoin-chaine.py",
