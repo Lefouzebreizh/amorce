@@ -54,52 +54,18 @@
     "et V : un « écran » appliqué aux plans de chrominance vire toute l'image au",
     "magenta. Vu, mesuré, corrigé — le mode Écran se fait en RVB.",
     "",
-    "LE DRAGON JOUE PLEIN, ET LA VOIX COMMENCE APRÈS LUI.",
+    "LA VOIX EST UNE VRAIE PRISE, ET ELLE COMMENCE SUR LE DRAGON.",
     "",
-    "Première tentative : la voix parlait sur le dragon, et un fléchissement de",
-    "-9 dB gravé dans le rush lui faisait de la place. Retour d'écoute : on",
-    "n'entendait toujours pas la voix, et le dragon avait perdu de sa force.",
-    "Les deux exigences étaient incompatibles sur les mêmes deux secondes.",
+    "Sept répliques enregistrées par Erwann en une seule passe de 15,93 s,",
+    "découpées sur les silences et rangées dans rushes/voix/. La clé `fichier`",
+    "d'une réplique remplace la synthèse ; tout le reste — cible de niveau,",
+    "marge, esquive — s'applique à l'identique.",
     "",
-    "Elles se séparent : le rush garde tout son niveau et ne porte AUCUNE voix —",
-    "le hook est à l'écran, pas dans les oreilles. La première réplique entre à",
-    "2,30 s, une fois la coupure passée.",
-    "",
-    "L'ESQUIVE EST DÉCLARÉE À -11 dB, PAS LAISSÉE PAR DÉFAUT.",
-    "",
-    "Déduite des fenêtres de la voix, l'esquive du dépôt creuse de -5 dB. C'est",
-    "le réglage d'un lit sous une vraie prise ; sous une voix de synthèse, qui",
-    "n'a ni ses transitoires ni sa présence, il laisse le lit devant. Les fenêtres",
-    "sont donc écrites ici, un peu plus larges que la parole — les rampes de",
-    "l'enveloppe, 80 ms à la descente et 280 ms au retour, font le raccord.",
-    "",
-    "LES DEUX MOITIÉS DOIVENT SE TENIR, ET ELLES NE SE TENAIENT PAS.",
-    "",
-    "Relevé sur le rendu : le dragon à -10,2 dB, tout le reste entre -17 et",
-    "-18,5. Huit décibels d'écart. Une voix ne se défend pas contre ça, quelle",
-    "que soit l'esquive — ce n'est pas le lit qui la couvrait, c'est le plan",
-    "d'avant qui la faisait paraître faible. Le mastering le disait à sa façon :",
-    "« 3,3 LU de dynamique perdus, le mixage est écrasé », parce que le limiteur",
-    "travaillait sur le seul dragon.",
-    "",
-    "Le plan du dragon descend donc de -15 à -19, et les répliques montent de",
-    "-13 à -10. Le dragon reste le moment le plus fort du montage ; il cesse",
-    "d'être le seul.",
-    "",
-    "ON NE MONTE PAS LA VOIX DE SYNTHÈSE : ON DESCEND CE QUI L'ENTOURE.",
-    "",
-    "Porter `cible_db` de -13 à -10 n'a rien changé, et la raison est dans",
-    "`couche_voix` : le gain s'y borne à la MARGE RÉELLE du fichier, jamais à la",
-    "cible seule. La synthèse sort avec une crête vers -10 dB, donc environ neuf",
-    "décibels et demi de marge, et elle plafonne autour de -15 dB entendu quoi",
-    "qu'on demande. Le limiteur ne peut pas aider non plus — une voix compressée",
-    "perd ses consonnes, et ce sont elles qui la rendent intelligible.",
-    "",
-    "Relevé qui l'a montré : le lit SEUL, entre deux répliques, à -16,9 dB. Un",
-    "décibel et demi sous une voix à -15. Rien n'était couvert par accident.",
-    "",
-    "La couche d'effets descend donc de 6 à 2 dB, l'esquive de -11 à -15, et les",
-    "trois nappes qui tiennent le fond perdent 8 dB chacune."
+    "La première passe DESSUS le dragon, ce qui avait échoué avec la synthèse.",
+    "La contradiction n'en était pas une : une voix de synthèse n'a ni les",
+    "transitoires ni la présence d'une prise réelle, et aucun fléchissement ne",
+    "lui donnait sa place. Le dragon est à -22 dB avec -6 dB gravés à partir de",
+    "0,40 s ; l'entrée garde son impact à -9,5 dB."
   ],
   "bibliotheque": "sfx_library",
   "cadence": 30,
@@ -119,52 +85,52 @@
       "nom": "demo",
       "source": "rushes/choc-demo.mp4",
       "depart": 0.0,
-      "duree": 15.3,
+      "duree": 14.1,
       "cible_db": -30.0,
       "_note": "muet de naissance — rendu de scène."
     }
   ],
   "voix": [
     {
+      "instant": 0.25,
+      "fichier": "rushes/voix/01-hook.wav",
+      "texte": "Ce que je sais faire avec l'IA.",
+      "cible_db": -10.0
+    },
+    {
       "instant": 2.2,
-      "texte": "Et voilà ce dont tu as vraiment besoin.",
-      "timbre": "tom",
-      "vitesse": 1.0,
+      "fichier": "rushes/voix/02-besoin.wav",
+      "texte": "Et ce dont tu as vraiment besoin.",
       "cible_db": -10.0
     },
     {
-      "instant": 4.55,
+      "instant": 4.0,
+      "fichier": "rushes/voix/03-bouton.wav",
       "texte": "Un bouton qui appelle.",
-      "timbre": "tom",
-      "vitesse": 1.0,
       "cible_db": -10.0
     },
     {
-      "instant": 6.25,
-      "texte": "Tes chantiers. En photos.",
-      "timbre": "tom",
-      "vitesse": 1.0,
+      "instant": 6.1,
+      "fichier": "rushes/voix/04-photos.wav",
+      "texte": "Tes chantiers en photos.",
       "cible_db": -10.0
     },
     {
-      "instant": 8.05,
-      "texte": "Tes avis clients. Les vrais.",
-      "timbre": "tom",
-      "vitesse": 1.0,
+      "instant": 8.1,
+      "fichier": "rushes/voix/05-avis.wav",
+      "texte": "Tes vrais avis clients.",
       "cible_db": -10.0
     },
     {
-      "instant": 10.0,
-      "texte": "Ton site en ligne. En 48 heures. 300 euros. Et 200 pour les premiers.",
-      "timbre": "tom",
-      "vitesse": 1.0,
+      "instant": 9.9,
+      "fichier": "rushes/voix/06-offre.wav",
+      "texte": "Ton site en ligne en 48 heures. 300 euros, et 200 pour les premiers.",
       "cible_db": -10.0
     },
     {
-      "instant": 15.2,
+      "instant": 14.3,
+      "fichier": "rushes/voix/07-cta.wav",
       "texte": "Écris SITE en commentaire.",
-      "timbre": "tom",
-      "vitesse": 1.0,
       "cible_db": -10.0
     }
   ],
@@ -206,6 +172,12 @@
       "distance": "lointain"
     },
     {
+      "son": "ui_clic_doux",
+      "instant": 3.9,
+      "gain": 1,
+      "distance": "proche"
+    },
+    {
       "son": "drone_grave",
       "instant": 4.0,
       "gain": 3,
@@ -213,19 +185,13 @@
     },
     {
       "son": "ui_clic_doux",
-      "instant": 4.45,
+      "instant": 6.0,
       "gain": 1,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
-      "instant": 6.15,
-      "gain": 1,
-      "distance": "proche"
-    },
-    {
-      "son": "ui_clic_doux",
-      "instant": 7.95,
+      "instant": 8.0,
       "gain": 1,
       "distance": "proche"
     },
@@ -248,38 +214,32 @@
       "largeur": 18,
       "distance": "lointain",
       "parametres": {
-        "duree": 6.0,
+        "duree": 5.0,
         "fondamentale": 65.0,
         "graine": 12
       }
     },
     {
-      "son": "ui_clic_doux",
-      "instant": 15.1,
-      "gain": 1,
-      "distance": "proche"
-    },
-    {
       "son": "braam_court",
-      "instant": 15.1,
+      "instant": 13.9,
       "gain": 4,
       "distance": "proche"
     },
     {
       "son": "transition_eclair",
-      "instant": 15.14,
+      "instant": 13.940000000000001,
       "gain": 0,
       "distance": "moyen"
     },
     {
       "son": "ui_validation",
-      "instant": 15.2,
+      "instant": 14.0,
       "gain": 3,
       "distance": "proche"
     },
     {
       "son": "carillon",
-      "instant": 15.2,
+      "instant": 14.0,
       "gain": -2,
       "distance": "moyen",
       "parametres": {
@@ -287,37 +247,48 @@
         "fondamentale": 659.26,
         "graine": 9
       }
+    },
+    {
+      "son": "ui_clic_doux",
+      "instant": 14.2,
+      "gain": 1,
+      "distance": "proche"
     }
   ],
   "esquive": [
     {
+      "debut": 0.15,
+      "fin": 2.0,
+      "gain": -15
+    },
+    {
       "debut": 2.1,
-      "fin": 4.2,
+      "fin": 3.6,
       "gain": -15
     },
     {
-      "debut": 4.45,
-      "fin": 5.9,
+      "debut": 3.9,
+      "fin": 5.1,
       "gain": -15
     },
     {
-      "debut": 6.15,
-      "fin": 7.9,
+      "debut": 6.0,
+      "fin": 7.2,
       "gain": -15
     },
     {
-      "debut": 7.95,
-      "fin": 9.7,
+      "debut": 8.0,
+      "fin": 9.15,
       "gain": -15
     },
     {
-      "debut": 9.9,
-      "fin": 14.8,
+      "debut": 9.8,
+      "fin": 13.95,
       "gain": -15
     },
     {
-      "debut": 15.1,
-      "fin": 17.1,
+      "debut": 14.2,
+      "fin": 16.05,
       "gain": -15
     }
   ]

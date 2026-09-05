@@ -201,3 +201,9 @@ visual_library/**/*.mp4
 # propriétaire, et `kdp/tome1/DOSSIER.md` dit pourquoi ils ne se régénèrent
 # pas à l'identique — les invites d'origine ont été perdues.
 /kdp/.planches/
+
+# Les prises de voix découpées. Elles vivent dans `rushes/`, déjà ignoré, mais
+# la ligne est écrite pour que ce soit dit : une voix enregistrée est une donnée
+# personnelle, et elle n'a rien à faire dans un dépôt public même si le montage
+# qui s'en sert, lui, est versionné.
+/rushes/voix/

@@ -892,16 +892,31 @@ def couche_voix(entrees: list, total_s: float, atelier: Path) -> tuple[numpy.nda
     for rang, entree in enumerate(entrees):
         brut = atelier / f"_voix{rang:02d}.wav"
         rendu = atelier / f"_voix{rang:02d}_48k.wav"
-        resultat = subprocess.run(
-            [sys.executable, str(outil), "--texte", entree["texte"],
-             "--sortie", str(brut),
-             "--voix", entree.get("timbre", "upmc"),
-             "--vitesse", str(entree.get("vitesse", 0.95))],
-            capture_output=True, text=True)
-        if not brut.is_file():
-            print(f"   réplique {rang} non fabriquée : "
-                  f"{resultat.stderr.strip()[-160:]}", file=sys.stderr)
-            continue
+
+        # Une réplique peut venir d'un FICHIER plutôt que de la synthèse, et
+        # c'est le cas dès qu'on a la vraie voix de quelqu'un. Tout ce qui suit
+        # — cible de niveau, marge, conversion, fenêtre d'esquive — s'applique
+        # à l'identique : seule la fabrication change. Mesuré sur les mêmes
+        # phrases, une prise réelle porte deux fois l'ampleur mélodique de la
+        # synthèse (10,9 demi-tons contre 4,3 sur « tes chantiers en photos »),
+        # et c'est cette ampleur qui distingue « dit » de « récité ».
+        if entree.get("fichier"):
+            source = Path(entree["fichier"]).expanduser()
+            if not source.is_file():
+                print(f"   réplique {rang} : fichier introuvable ({source})", file=sys.stderr)
+                continue
+            shutil.copy(source, brut)
+        else:
+            resultat = subprocess.run(
+                [sys.executable, str(outil), "--texte", entree["texte"],
+                 "--sortie", str(brut),
+                 "--voix", entree.get("timbre", "upmc"),
+                 "--vitesse", str(entree.get("vitesse", 0.95))],
+                capture_output=True, text=True)
+            if not brut.is_file():
+                print(f"   réplique {rang} non fabriquée : "
+                      f"{resultat.stderr.strip()[-160:]}", file=sys.stderr)
+                continue
 
         # `voix.py` rend du 22 050 Hz mono ; tout le reste du montage travaille
         # en 48 kHz stéréo. Convertir ici plutôt qu'au mixage évite un

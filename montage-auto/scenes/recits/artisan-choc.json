@@ -9,29 +9,21 @@
     "LE DÉCOR EST NU, ET C'EST LE SUJET. Portail en mode « lueur » : le halo et",
     "les rais restent, la porte n'existe pas. L'opposition est le message.",
     "",
-    "LE TEXTE EST ÉCRIT POUR L'OREILLE, ET C'EST MESURABLE.",
+    "LA VOIX EST CELLE D'ERWANN, ET LES CARTONS SONT REDEVENUS SIMPLES.",
     "",
-    "« La voix récite » ne se corrige pas en changeant de modèle : la synthèse",
-    "tire sa mélodie de la PONCTUATION, chaque point remettant la hauteur à zéro.",
-    "Mesuré sur ces six répliques, en ampleur mélodique (l'écart entre les",
-    "hauteurs basses et hautes d'une phrase, en demi-tons) :",
+    "Tant que la voix était synthétique, les phrases étaient tordues pour lui",
+    "arracher de la mélodie : « Tes avis clients. Les vrais. » au lieu de « Tes",
+    "vrais avis clients », parce qu'un point de plus valait 2,3 demi-tons. Une",
+    "vraie prise n'a pas besoin de ces béquilles.",
     "",
-    "  « Tes chantiers en photos. »        4,3 dt",
-    "  « Tes chantiers. En photos. »       9,2 dt   ← un point",
+    "Mesuré sur les mêmes phrases, synthèse contre prise réelle :",
     "",
-    "  « Tes vrais avis clients. »         6,8 dt",
-    "  « Tes avis clients. Les vrais. »    9,1 dt   ← inversion et point",
+    "  « Tes chantiers en photos. »        4,3 dt  →  10,9 dt",
+    "  « Écris SITE en commentaire. »      7,7 dt  →  19,0 dt",
+    "  la phrase du prix                   7,9 dt  →  16,0 dt",
     "",
-    "  « En ligne en 48 heures. 300 euros, et 200 pour les premiers. »   7,5 dt",
-    "  « Ton site en ligne. En 48 heures. 300 euros. Et 200... »         7,9 dt",
-    "",
-    "Le dépôt situe à 8 demi-tons le plancher d'une voix qui ne récite pas.",
-    "Quatre répliques sur six le passent maintenant ; la moyenne va de 6,0 à 7,9.",
-    "",
-    "UNE RÉSISTE, ET IL FAUT LE DIRE. « Et ce dont tu as vraiment besoin » reste",
-    "entre 3,0 et 4,9 quoi qu'on lui fasse — c'est un fragment qui commence par",
-    "« et », et la synthèse le lit à plat. « Et voilà ce dont... » gagne 1,2 dt,",
-    "c'est tout ce qu'on peut en tirer sans le dénaturer.",
+    "Les cartons reprennent donc la formulation naturelle, et les durées sont",
+    "celles de la prise, relevées au dixième.",
     "",
     "CHAQUE CARTON DIT CE QUE LA VOIX DIT, ET TOMBE QUAND CE QU'IL NOMME EST À",
     "L'ÉCRAN. Les deux conditions se contredisent si on les règle séparément.",
@@ -75,8 +67,8 @@
     "ouverture": -0.7,
     "emergence": -0.5,
     "lecture": -0.1,
-    "message": 7.9,
-    "fin": 15.3
+    "message": 7.8,
+    "fin": 14.1
   },
   "decor": {
     "portail": "lueur",
@@ -85,18 +77,18 @@
   "cartes": [
     {
       "debut": 0.1,
-      "fin": 2.35,
+      "fin": 1.7,
       "y": 330,
       "taille": 56,
       "bandeau": true,
       "lignes": [
-        "... ET VOILÀ CE DONT TU AS",
+        "... ET CE DONT TU AS",
         "VRAIMENT BESOIN."
       ]
     },
     {
-      "debut": 2.45,
-      "fin": 4.05,
+      "debut": 1.9,
+      "fin": 3.2,
       "y": 335,
       "taille": 60,
       "bandeau": true,
@@ -105,49 +97,49 @@
       ]
     },
     {
-      "debut": 4.15,
-      "fin": 5.85,
+      "debut": 4.0,
+      "fin": 5.3,
       "y": 335,
       "taille": 60,
       "bandeau": true,
       "lignes": [
-        "TES CHANTIERS. EN PHOTOS."
+        "TES CHANTIERS EN PHOTOS."
       ]
     },
     {
-      "debut": 5.95,
-      "fin": 7.65,
+      "debut": 6.0,
+      "fin": 7.25,
       "y": 335,
       "taille": 60,
       "bandeau": true,
       "lignes": [
-        "TES AVIS CLIENTS. LES VRAIS."
+        "TES VRAIS AVIS CLIENTS."
       ]
     },
     {
-      "debut": 7.9,
-      "fin": 13.0,
+      "debut": 7.8,
+      "fin": 12.0,
       "y": 400,
       "taille": 56,
       "bandeau": true,
       "lignes": [
-        "TON SITE EN LIGNE. EN 48 HEURES.",
+        "TON SITE EN LIGNE EN 48 HEURES.",
         "300 € — ET 200 € POUR LES PREMIERS."
       ]
     },
     {
-      "debut": 13.1,
-      "fin": 15.3,
+      "debut": 12.2,
+      "fin": 14.1,
       "y": 335,
       "taille": 60,
+      "bandeau": true,
       "lignes": [
         "ÉCRIS « SITE » EN COMMENTAIRE."
-      ],
-      "bandeau": true
+      ]
     }
   ],
   "signature": {
-    "debut": 13.1,
+    "debut": 12.2,
     "texte": "ARTISAN EXPRESS",
     "y": 495,
     "trait": 560,
