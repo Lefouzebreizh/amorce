@@ -201,7 +201,20 @@
     "à 1 374 px, l'interface de TikTok commence à 1 382 : il n'y a pas huit",
     "pixels pour y poser un mot. La marque est de toute façon écrite une seconde",
     "fois DANS le téléphone — « Site réalisé par Artisan Express », en pied de",
-    "page, à l'image à ce moment précis."
+    "page, à l'image à ce moment précis.",
+    "",
+    "Vérifié image contre image face à la version précédente :",
+    "",
+    "    0,5 s à 8,0 s   écart moyen 0,000   —  identique au bit près",
+    "   12,0 s           écart moyen 0,136   —  bruit d'encodage, diffus sur",
+    "   14,0 s           écart moyen 0,362      0,94 % des pixels, de la ligne",
+    "                                           328 à 1 411, alors que la",
+    "                                           signature n'est dessinée qu'à",
+    "                                           partir de 14,20 s",
+    "",
+    "Un changement en fin de film redistribue le débit des groupes d'images qui",
+    "le précèdent : c'est du bruit de compression, pas de l'image qui bouge.",
+    "La zone de la signature, elle, passe de 29,6 à 24,8 de luminance moyenne."
   ],
   "T": {
     "etincelle": -2.6,
