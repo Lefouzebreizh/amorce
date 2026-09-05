@@ -51,6 +51,22 @@
     "d'un rugissement de dragon ; il n'y en a plus, et la frappe est le seul son",
     "de ces deux secondes. La creuser de quinze décibels la rendrait inaudible sous",
     "la voix, c'est-à-dire supprimerait l'ouverture pour protéger d'un bruit qui",
+    "",
+    "MESURÉ SUR LE FICHIER LIVRÉ, par soustraction d'un montage sans voix :",
+    "",
+    "    l'écran vide     0,05 → 0,70   voix -16,1   décor -32,8   +16,7 dB",
+    "    la frappe        0,72 → 1,90   voix -10,5   décor -23,9   +13,4 dB",
+    "    la montée        1,90 → 2,08   voix -12,9   décor -28,6   +15,7 dB",
+    "    l'en-tête tombe  2,08 → 2,45   voix -16,2   décor -13,3    -2,9 dB",
+    "    les blocs        2,45 → 3,62   voix -10,8   décor -23,2   +12,5 dB",
+    "",
+    "L'impact est le seul endroit du film où le décor passe DEVANT la voix, et",
+    "c'est le point d'énergie : trois décibels au-dessus, pendant quatre dixièmes.",
+    "La frappe, elle, a été remontée de 5 dB — à -28,9 elle était sous le seuil",
+    "d'un téléphone. Treize décibels sous la voix, c'est une texture ; dix-huit,",
+    "c'est un son qu'on a payé sans l'entendre.",
+    "",
+    "Master : -11,9 LUFS, vrai pic -1,5 dBTP, 16,10 s, 30 i/s.",
     "n'existe plus.",
     "LA VOIX EST UNE VRAIE PRISE.",
     "",
@@ -145,7 +161,7 @@
     {
       "son": "drone_sombre",
       "instant": 0.1,
-      "gain": -9,
+      "gain": -5,
       "distance": "lointain",
       "_note": "le lit de l ouverture. Sans dragon, c est lui qui tient les deux premieres secondes."
     },
@@ -159,56 +175,63 @@
     {
       "son": "ui_clic_doux",
       "instant": 0.72,
-      "gain": -2,
+      "gain": 3,
       "distance": "proche",
       "_note": "la frappe, neuf touches"
     },
     {
       "son": "ui_clic_doux",
       "instant": 0.86,
-      "gain": -2,
+      "gain": 3,
       "distance": "proche"
+    },
+    {
+      "son": "riser_moyen",
+      "instant": 0.9,
+      "gain": -3,
+      "distance": "moyen",
+      "_note": "la montee sous la frappe. A +16 dB il avait siffle sous le message ; a -3 il porte sans percer. C est le meme son, pas le meme geste."
     },
     {
       "son": "ui_clic_doux",
       "instant": 1.0,
-      "gain": -2,
+      "gain": 3,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
       "instant": 1.14,
-      "gain": -2,
+      "gain": 3,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
       "instant": 1.28,
-      "gain": -2,
+      "gain": 3,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
       "instant": 1.42,
-      "gain": -2,
+      "gain": 3,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
       "instant": 1.56,
-      "gain": -2,
+      "gain": 3,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
       "instant": 1.7,
-      "gain": -2,
+      "gain": 3,
       "distance": "proche"
     },
     {
       "son": "ui_clic_doux",
       "instant": 1.84,
-      "gain": -2,
+      "gain": 3,
       "distance": "proche"
     },
     {
@@ -240,6 +263,12 @@
       "_note": "les boutons d appel"
     },
     {
+      "son": "drone_sombre",
+      "instant": 2.6,
+      "gain": -10,
+      "distance": "lointain"
+    },
+    {
       "son": "ui_apparition",
       "instant": 2.86,
       "gain": 0,
@@ -259,12 +288,6 @@
       "gain": 2,
       "distance": "proche",
       "_note": "la fiche est finie"
-    },
-    {
-      "son": "drone_sombre",
-      "instant": 2.6,
-      "gain": -10,
-      "distance": "lointain"
     },
     {
       "son": "ui_clic_doux",
