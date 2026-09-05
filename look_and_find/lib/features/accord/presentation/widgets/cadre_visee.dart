@@ -19,7 +19,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../domain/usecases/zone_visee.dart';
+import '../../../color_reader/domain/usecases/zone_visee.dart';
 
 class CadreVisee extends StatelessWidget {
   const CadreVisee({super.key, this.part = ZoneVisee.partParDefaut, this.aide});

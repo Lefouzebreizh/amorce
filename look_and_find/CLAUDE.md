@@ -77,10 +77,23 @@ lib/
 └── features/
     ├── scanner/         viseur, capture, appel au modèle
     ├── product_detail/  fiche, comparateur, alternatives  ← propriétaire du produit
+    ├── color_reader/    cadre visé, échantillon, nom de couleur  ← brique partagée
+    ├── accord/          harmonies d'une couleur relevée
+    ├── tout_seul/       gestes de l'enfant, reconnaissance locale
     ├── ar_view/         projection 3D et ancrage
     └── favorites/       stockage local, historique, alertes
 tool/                banc d'essai de l'invite et rejeu d'une réponse, hors Flutter
 ```
+
+**`color_reader` est la seconde fonctionnalité qui n'importe personne**, pour la
+même raison que `product_detail` : elle est empruntée. Toute la chaîne « du
+cadre visé au nom de la couleur » y est réunie — `ZoneVisee` (quel carré la
+personne vise), `EchantillonCadre` (ses pixels, réduits) et `LectureCadre` /
+`NameColor` (leur nom en français, avec l'hésitation dite). Les deux premiers
+venaient d'`accord/`, où la règle de dépendance les rendait inatteignables
+depuis ailleurs ; la seule autre issue était d'en recopier le découpage, ce que
+leur en-tête déconseille explicitement. Une fonctionnalité qui a besoin d'une
+couleur vient donc ici, et n'a jamais à connaître Accord.
 
 `tool/` s'exécute avec `dart run`, sans appareil ni émulateur — ce qui n'est
 possible que parce que le `domain` et le `data` du produit sont sans dépendance

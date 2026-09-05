@@ -14,9 +14,9 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
-import 'package:look_and_find/features/accord/data/echantillon_accord.dart';
+import 'package:look_and_find/features/color_reader/domain/usecases/echantillon_cadre.dart';
 import 'package:look_and_find/features/accord/domain/usecases/judge_photo.dart';
-import 'package:look_and_find/features/accord/domain/usecases/zone_visee.dart';
+import 'package:look_and_find/features/color_reader/domain/usecases/zone_visee.dart';
 
 /// Une image d'une couleur unie, avec une bordure d'une autre couleur.
 img.Image _murEtBordure({
@@ -43,7 +43,7 @@ img.Image _murEtBordure({
 void main() {
   test('rend toujours 40 × 40, quelle que soit la photo', () {
     for (final (l, h) in const [(3060, 4080), (100, 100), (4032, 1816)]) {
-      final px = EchantillonAccord.depuisImage(
+      final px = EchantillonCadre.depuisImage(
         _murEtBordure(
           largeur: l,
           hauteur: h,
@@ -76,7 +76,7 @@ void main() {
       dedans: mur,
       dehors: (20, 240, 30), // un vert criard : il fausserait tout s'il entrait
     );
-    final px = EchantillonAccord.depuisImage(image);
+    final px = EchantillonCadre.depuisImage(image);
     final verdict = JudgePhoto.juger(px);
     expect(verdict.estAcceptee, isTrue, reason: verdict.toString());
     expect(verdict.rouge, closeTo(150, 6));
@@ -96,7 +96,7 @@ void main() {
     // À part 1, le cadre prend tout : 49 % de mur contre 51 % de bordure, deux
     // blocs francs que la porte doit voir.
     final verdict = JudgePhoto.juger(
-      EchantillonAccord.depuisImage(image, part: 1),
+      EchantillonCadre.depuisImage(image, part: 1),
     );
     expect(verdict.estAcceptee, isFalse,
         reason: 'deux surfaces franches dans le cadre : ${verdict.refus}');
@@ -116,7 +116,7 @@ void main() {
         }
       }
     }
-    final verdict = JudgePhoto.juger(EchantillonAccord.depuisImage(image));
+    final verdict = JudgePhoto.juger(EchantillonCadre.depuisImage(image));
     expect(verdict.estAcceptee, isTrue, reason: verdict.toString());
     expect(verdict.vert, greaterThan(verdict.rouge),
         reason: 'la dominante reste le vert du mur, pas le magenta du bruit');
@@ -127,7 +127,7 @@ void main() {
     // distinguer, sinon il affiche « surface trop sombre » sur un fichier
     // corrompu et envoie la personne rallumer la lumière.
     expect(
-      EchantillonAccord.depuisOctets(
+      EchantillonCadre.depuisOctets(
         Uint8List.fromList(const [0, 1, 2, 3, 4, 5]),
       ),
       isNull,
