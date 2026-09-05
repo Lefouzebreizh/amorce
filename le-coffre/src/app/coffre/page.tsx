@@ -133,6 +133,7 @@ export default function PageCoffre() {
   const [enCours, setEnCours] = useState(false);
   const [aValider, setAValider] = useState<EnAttente[]>([]);
   const [survole, setSurvole] = useState(false);
+  const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const entreeFichier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -347,9 +348,12 @@ export default function PageCoffre() {
     if (!identite.nom || !identite.adresse) return;
     setEnCours(true);
     setErreur('');
+    setIdentiteEnregistree(false);
     try {
       const nouvelIndex = await enregistrerIdentite(utilisateur.id, cle, identite, index);
       setIndex(nouvelIndex);
+      setIdentiteEnregistree(true);
+      setTimeout(() => setIdentiteEnregistree(false), 3000);
     } catch (err) {
       setErreur(err instanceof Error ? err.message : String(err));
     } finally {
@@ -659,10 +663,15 @@ export default function PageCoffre() {
                   <Champ name="ville" placeholder="Ville" defaultValue={index.identite?.ville}
                     autoComplete="address-level2" />
                 </div>
-                <button type="submit" disabled={enCours}
-                  className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
-                  Enregistrer
-                </button>
+                <div className="flex items-center gap-3">
+                  <button type="submit" disabled={enCours}
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-strong disabled:opacity-60">
+                    Enregistrer
+                  </button>
+                  {identiteEnregistree && (
+                    <span className="text-sm text-accent">Identité enregistrée ✓</span>
+                  )}
+                </div>
               </form>
             </section>
           </div>
