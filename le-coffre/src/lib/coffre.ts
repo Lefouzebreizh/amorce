@@ -112,7 +112,19 @@ export function rechercheCorrespond(objet: ObjetIndex, requete: string): boolean
   return champs.some((champ) => champ && normaliser(champ).includes(q));
 }
 
-export type ReponseQuestion = { reponse: string; noms: string[] };
+export type ReponseQuestion = { reponse: string; noms: string[]; action?: 'formulaire' | 'rangement' };
+
+// Verbes d'action tapés par erreur dans la recherche plutôt que dans « Demander
+// au coffre » — observé deux fois en usage réel (05/09/2026) : « range tout en
+// dossier », « remplir une demande de caf ». La recherche renvoie alors un
+// rapprochement de mots-clés sans rapport plutôt qu'une aide utile. On
+// reconnaît l'intention et on pointe vers l'outil qui fait vraiment le
+// travail, gratuitement et sans quitter le navigateur — contrairement à
+// demanderAuCoffre, qui reconnaît les mêmes intentions mais coûte un appel
+// serveur. Seuls les verbes, jamais le nom « formulaire »/« dossier » seul,
+// qui pourrait légitimement faire partie d'une recherche de document.
+const VEUT_RANGEMENT = /\b(range|ranger|rangement|class(e|er|ement)|tri(e|er)?|organis(e|er))\b/;
+const VEUT_FORMULAIRE = /\b(rempli(r|s|t)?|complet(e|er|ee)?|signe|signer|signature)\b/;
 
 // Verbes, articles et mots génériques d'une question posée en langage courant
 // (« trouve-moi le papier de la mutuelle ») — retirés pour isoler les vrais
@@ -133,6 +145,19 @@ export function interpreterQuestion(index: IndexCoffre, question: string): Repon
   const q = normaliser(question.trim());
   const tousLesNoms = Object.keys(index.objets);
   if (!q) return { reponse: '', noms: tousLesNoms };
+
+  if (VEUT_RANGEMENT.test(q)) {
+    return {
+      reponse: 'La vue « Ranger en dossiers » regroupe tes papiers par catégorie.',
+      noms: tousLesNoms, action: 'rangement',
+    };
+  }
+  if (VEUT_FORMULAIRE.test(q)) {
+    return {
+      reponse: 'L\'outil « Remplir un formulaire » s\'en charge, à partir d\'un PDF vierge.',
+      noms: tousLesNoms, action: 'formulaire',
+    };
+  }
 
   const veutImage = /\bimages?\b|\bphotos?\b/.test(q);
   const veutPdf = /\bpdf\b/.test(q);
