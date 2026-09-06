@@ -1,10 +1,14 @@
-// Le seul instant où un document du Coffre est lisible ailleurs que dans le
-// navigateur de son propriétaire : cette fonction reçoit le fichier en clair,
-// le fait lire par Claude (catégorie, nom, échéance éventuelle), renvoie le
-// résultat, et ne conserve rien — aucune écriture disque, aucune trace en
+// Le seul instant où un document du Coffre est lisible EN ENTIER ailleurs que
+// dans le navigateur de son propriétaire : cette fonction reçoit le fichier en
+// clair, le fait lire par Claude (catégorie, nom, échéance éventuelle), renvoie
+// le résultat, et ne conserve rien — aucune écriture disque, aucune trace en
 // base. Le fichier lui-même est chiffré côté navigateur juste après, comme
 // avant l'ajout de cette fonction. Voir SECURITY.md, section « Ce qui change
 // avec le classement automatique ».
+//
+// Assistant-coffre (ajoutée plus tard) ne revoit jamais le fichier — seulement
+// un résumé déjà réduit par CETTE fonction (texteExtrait, plafonné à 500
+// caractères) — voir SECURITY.md, section « L'assistant conversationnel ».
 
 const CLE_ANTHROPIC = Deno.env.get("ANTHROPIC_API_KEY");
 const MODELE = "claude-sonnet-4-5-20250929";

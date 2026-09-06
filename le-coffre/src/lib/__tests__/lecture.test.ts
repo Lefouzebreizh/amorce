@@ -37,8 +37,9 @@ mock.module(new URL('../supabase.ts', import.meta.url).href, {
   namedExports: { supabase: {} },
 });
 
-const { statutEcheance, rechercheCorrespond } = await import('../coffre');
+const { statutEcheance, rechercheCorrespond, interpreterQuestion } = await import('../coffre');
 type ObjetIndex = Parameters<typeof rechercheCorrespond>[0];
+type IndexCoffre = Parameters<typeof interpreterQuestion>[0];
 
 describe('le statut d’une échéance', () => {
   it('est urgent quand la date est dépassée', () => {
@@ -107,5 +108,57 @@ describe('la recherche dans les documents', () => {
     };
     assert.equal(rechercheCorrespond(minimal, 'doc'), true);
     assert.equal(rechercheCorrespond(minimal, 'rien'), false);
+  });
+});
+
+describe('interpréter une question posée en langage courant', () => {
+  const INDEX: IndexCoffre = {
+    objets: {
+      a: {
+        nom: 'Facture EDF septembre', taille: 100, type: 'application/pdf',
+        categorie: 'Énergie', deposeLe: '2026-09-01T00:00:00.000Z', emetteur: 'EDF',
+      },
+      b: {
+        nom: 'Photo carte grise', taille: 200, type: 'image/jpeg',
+        categorie: 'Véhicule', deposeLe: '2026-09-02T00:00:00.000Z',
+      },
+      c: {
+        nom: 'Attestation mutuelle', taille: 300, type: 'application/pdf',
+        categorie: 'Santé', deposeLe: '2026-09-03T00:00:00.000Z', emetteur: 'MGEN',
+      },
+    },
+  };
+
+  it('rend tous les noms sur une question vide', () => {
+    const { reponse, noms } = interpreterQuestion(INDEX, '   ');
+    assert.equal(reponse, '');
+    assert.deepEqual(noms.sort(), ['a', 'b', 'c']);
+  });
+
+  it('reconnaît une intention de type « photo »', () => {
+    const { noms } = interpreterQuestion(INDEX, 'trouve-moi mes photos');
+    assert.deepEqual(noms, ['b']);
+  });
+
+  it('reconnaît une intention de type « pdf »', () => {
+    const { noms } = interpreterQuestion(INDEX, 'un pdf');
+    assert.deepEqual(noms.sort(), ['a', 'c']);
+  });
+
+  it('retombe sur les mots-clés une fois les mots vides retirés', () => {
+    const { reponse, noms } = interpreterQuestion(INDEX, 'trouve-moi le papier de la mutuelle');
+    assert.deepEqual(noms, ['c']);
+    assert.match(reponse, /Attestation mutuelle/);
+  });
+
+  it('annonce le nombre de correspondances quand il y en a plusieurs', () => {
+    const { reponse } = interpreterQuestion(INDEX, 'edf mutuelle');
+    assert.match(reponse, /2 papiers/);
+  });
+
+  it('dit clairement qu’il ne trouve rien plutôt que de rendre une liste vide silencieuse', () => {
+    const { reponse, noms } = interpreterQuestion(INDEX, 'assurance habitation');
+    assert.deepEqual(noms, []);
+    assert.match(reponse, /Aucun papier/);
   });
 });

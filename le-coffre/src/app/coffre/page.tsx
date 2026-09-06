@@ -4,23 +4,28 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import {
-  Bell, Briefcase, Car, ChevronRight, File, FileText, Heart, Home, Landmark, LogOut, Plus,
-  Search, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
+  Bell, Briefcase, Car, ChevronRight, File, FileText, Folder, Heart, Home, Landmark, LogOut,
+  MessageCircle, Plus, Search, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, ecarterEcheance, statutEcheance,
-  rechercheCorrespond, SEUIL_BIENTOT_JOURS,
+  interpreterQuestion, SEUIL_BIENTOT_JOURS,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
 } from '@/lib/coffre';
 import { RemplirFormulaire } from './RemplirFormulaire';
+import { AssistantCoffre } from './AssistantCoffre';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
 
 const ECHEANCE_VIDE: Echeance = { presente: false, date: null, libelle: null, confiance: 'basse' };
 const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et internet'];
+// Dossier de repli pour la vue « Ranger en dossiers » — un papier sans
+// catégorie (proposition de classement non lisible, jamais corrigée) doit
+// quand même atterrir quelque part plutôt que de disparaître de la vue.
+const DOSSIER_SANS_CATEGORIE = 'À trier';
 // Doit correspondre à storage.buckets.file_size_limit sur coffre-objets — le
 // contrôle client donne un message clair et immédiat, celui du serveur reste
 // le vrai garde-fou (voir SECURITY.md).
@@ -308,8 +313,10 @@ export default function PageCoffre() {
   const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
+  const [assistantOuvert, setAssistantOuvert] = useState(false);
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
   const [recherche, setRecherche] = useState('');
+  const [vueDossiers, setVueDossiers] = useState(false);
   const [correction, setCorrection] = useState<Correction | null>(null);
   const entreeFichier = useRef<HTMLInputElement>(null);
 
@@ -657,6 +664,49 @@ export default function PageCoffre() {
     }
   }
 
+  // Une carte de document, partagée entre la vue liste et la vue dossiers —
+  // seul le conteneur autour change entre les deux.
+  function carteDocument(nom: string) {
+    const info = index.objets[nom];
+    if (!info) return null;
+    const { icone: Icone, classe } = styleCategorie(info.categorie);
+    const jours = info.echeance?.presente && info.echeance.date
+      ? joursRestants(info.echeance.date) : null;
+    return (
+      <li key={nom}>
+        <button
+          type="button"
+          onClick={() => ouvrirDetail(nom)}
+          className="flex w-full items-center gap-3 rounded-2xl border border-line bg-paper-raised p-4 text-left transition hover:border-accent/60"
+        >
+          <div className={`shrink-0 rounded-2xl p-3 ${classe}`}><Icone size={18} /></div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium">{info.nom}</p>
+            <p className="text-sm leading-snug text-ink-soft">
+              {info.emetteur || info.categorie || 'Document'}
+              {info.montant ? ` · ${info.montant}` : ''}
+            </p>
+            {jours !== null && (
+              <div className="mt-2 max-w-40">
+                <JaugeEcheance jours={jours} />
+              </div>
+            )}
+          </div>
+          {jours !== null && (
+            <span className="hidden shrink-0 items-center gap-1.5 sm:flex">
+              <BadgeStatut jours={jours} />
+              <span className={`text-xs font-semibold ${CLASSE_STATUT_TEXTE[statutEcheance(jours)]}`}>
+                {LIBELLE_STATUT[statutEcheance(jours)]}
+              </span>
+            </span>
+          )}
+          {jours !== null && <span className="sm:hidden"><BadgeStatut jours={jours} /></span>}
+          <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+        </button>
+      </li>
+    );
+  }
+
   if (etape === 'chargement') {
     return (
       <main className="flex min-h-screen items-center justify-center bg-paper text-ink-soft">
@@ -728,12 +778,28 @@ export default function PageCoffre() {
   const categoriesSuggerees = Array.from(
     new Set([...Object.keys(STYLE_CATEGORIE), ...categoriesConnues]),
   ).sort((a, b) => a.localeCompare(b, 'fr'));
+  // interpreterQuestion comprend « mes photos », « un pdf », un mot isolé, ou
+  // une phrase complète (« le papier de la mutuelle ») — rechercheCorrespond
+  // reste utilisée telle quelle à l'intérieur, pour chaque mot-clé retenu.
+  const { reponse: reponseRecherche, noms: nomsTrouves } = interpreterQuestion(index, recherche);
   const noms = tousLesNoms
     .filter((n) => !filtreCategorie || index.objets[n]?.categorie === filtreCategorie)
-    .filter((n) => {
-      const objet = index.objets[n];
-      return objet ? rechercheCorrespond(objet, recherche) : false;
+    .filter((n) => nomsTrouves.includes(n));
+  // Un dossier par catégorie déjà utilisée sur ces papiers, « À trier »
+  // toujours en dernier — jamais une liste fermée, juste ce qui existe dans
+  // les papiers affichés (mêmes filtres que la vue liste).
+  const dossiers = (() => {
+    const groupes: Record<string, string[]> = {};
+    for (const nom of noms) {
+      const categorie = index.objets[nom]?.categorie?.trim() || DOSSIER_SANS_CATEGORIE;
+      (groupes[categorie] ??= []).push(nom);
+    }
+    return Object.entries(groupes).sort(([a], [b]) => {
+      if (a === DOSSIER_SANS_CATEGORIE) return 1;
+      if (b === DOSSIER_SANS_CATEGORIE) return -1;
+      return a.localeCompare(b, 'fr');
     });
+  })();
   const rendezVousTries = Object.values(index.rendezVous || {})
     .sort((a, b) => (a.date < b.date ? -1 : 1));
   const alerte = prochaineAlerte(index);
@@ -924,19 +990,37 @@ export default function PageCoffre() {
         {/* Grille principale : documents (large) + rendez-vous/identité (colonne) */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <section className="lg:col-span-2">
-            <p className="mb-4 text-sm font-semibold tracking-widest text-ink-soft uppercase">
-              Vos papiers ({noms.length})
-            </p>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-semibold tracking-widest text-ink-soft uppercase">
+                Vos papiers ({noms.length})
+              </p>
+              <button
+                type="button"
+                onClick={() => setVueDossiers((v) => !v)}
+                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  vueDossiers ? 'border-accent bg-accent/10 text-accent' : 'border-line text-ink-soft hover:text-ink'
+                }`}
+              >
+                <Folder size={14} /> {vueDossiers ? 'Revenir à la liste' : 'Ranger en dossiers'}
+              </button>
+            </div>
             {tousLesNoms.length > 0 && (
-              <div className="relative mb-4">
-                <Search size={18} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft" />
-                <input
-                  type="search"
-                  value={recherche}
-                  onChange={(e) => setRecherche(e.target.value)}
-                  placeholder="Chercher un nom, un émetteur, un mot du document…"
-                  className="w-full rounded-xl border border-line bg-paper-raised py-2.5 pr-3 pl-10 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
-                />
+              <div className="mb-4 flex flex-col gap-2">
+                <div className="relative">
+                  <Search size={18} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft" />
+                  <input
+                    type="search"
+                    value={recherche}
+                    onChange={(e) => setRecherche(e.target.value)}
+                    placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
+                    className="w-full rounded-xl border border-line bg-paper-raised py-2.5 pr-3 pl-10 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+                {/* Réponse du coffre à la question posée — jamais affichée
+                    pour une recherche vide, où elle n'apporterait rien. */}
+                {recherche.trim() && (
+                  <p className="text-sm text-accent">{reponseRecherche}</p>
+                )}
               </div>
             )}
             {categoriesConnues.length > 0 && (
@@ -971,48 +1055,24 @@ export default function PageCoffre() {
                     ? `Aucun papier dans « ${filtreCategorie} ».`
                     : `Aucun papier pour « ${recherche.trim()} ».`}
               </p>
+            ) : vueDossiers ? (
+              <div className="flex flex-col gap-4">
+                {dossiers.map(([categorie, nomsDossier]) => (
+                  <div key={categorie} className="rounded-2xl border border-line bg-paper-raised p-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Folder size={16} className="shrink-0 text-ink-soft" />
+                      <p className="text-sm font-semibold text-ink-soft">{categorie}</p>
+                      <span className="text-xs text-ink-soft">({nomsDossier.length})</span>
+                    </div>
+                    <ul className="flex flex-col gap-3">
+                      {nomsDossier.map((nom) => carteDocument(nom))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             ) : (
               <ul className="flex flex-col gap-3">
-                {noms.map((nom) => {
-                  const info = index.objets[nom];
-                  if (!info) return null;
-                  const { icone: Icone, classe } = styleCategorie(info.categorie);
-                  const jours = info.echeance?.presente && info.echeance.date
-                    ? joursRestants(info.echeance.date) : null;
-                  return (
-                    <li key={nom}>
-                      <button
-                        type="button"
-                        onClick={() => ouvrirDetail(nom)}
-                        className="flex w-full items-center gap-3 rounded-2xl border border-line bg-paper-raised p-4 text-left transition hover:border-accent/60"
-                      >
-                        <div className={`shrink-0 rounded-2xl p-3 ${classe}`}><Icone size={18} /></div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium">{info.nom}</p>
-                          <p className="text-sm leading-snug text-ink-soft">
-                            {info.emetteur || info.categorie || 'Document'}
-                            {info.montant ? ` · ${info.montant}` : ''}
-                          </p>
-                          {jours !== null && (
-                            <div className="mt-2 max-w-40">
-                              <JaugeEcheance jours={jours} />
-                            </div>
-                          )}
-                        </div>
-                        {jours !== null && (
-                          <span className="hidden shrink-0 items-center gap-1.5 sm:flex">
-                            <BadgeStatut jours={jours} />
-                            <span className={`text-xs font-semibold ${CLASSE_STATUT_TEXTE[statutEcheance(jours)]}`}>
-                              {LIBELLE_STATUT[statutEcheance(jours)]}
-                            </span>
-                          </span>
-                        )}
-                        {jours !== null && <span className="sm:hidden"><BadgeStatut jours={jours} /></span>}
-                        <ChevronRight size={18} className="shrink-0 text-ink-soft" />
-                      </button>
-                    </li>
-                  );
-                })}
+                {noms.map((nom) => carteDocument(nom))}
               </ul>
             )}
           </section>
@@ -1105,14 +1165,31 @@ export default function PageCoffre() {
         <RemplirFormulaire identite={index.identite} onFermer={() => setFormulaireOuvert(false)} />
       )}
 
-      {/* Bouton flottant : seul point d'entrée visible pour ajouter un papier
-          (la page entière reste aussi déposable, voir onDrop sur <main>).
-          `pointer-events-none` sur le conteneur pleine largeur, `auto` sur
-          le seul bouton : sans ça, toute la bande invisible du bas de
-          l'écran — pas seulement le bouton visible — interceptait les
-          taps destinés aux lignes de documents rendues dessous, quel que
-          soit le défilement (position `fixed`). */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
+      {assistantOuvert && (
+        <AssistantCoffre
+          index={index}
+          onFermer={() => setAssistantOuvert(false)}
+          onOuvrirDocument={ouvrirDetail}
+          onOuvrirFormulaire={() => setFormulaireOuvert(true)}
+        />
+      )}
+
+      {/* Deux boutons flottants : ajouter un papier (seul point d'entrée
+          visible pour ça — la page entière reste aussi déposable, voir
+          onDrop sur <main>) et demander au coffre. `pointer-events-none` sur
+          le conteneur pleine largeur, `auto` sur chaque bouton : sans ça,
+          toute la bande invisible du bas de l'écran — pas seulement les
+          boutons visibles — interceptait les taps destinés aux lignes de
+          documents rendues dessous, quel que soit le défilement
+          (position `fixed`). */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center gap-3 px-4">
+        <button
+          type="button"
+          onClick={() => setAssistantOuvert(true)}
+          className="pointer-events-auto flex items-center gap-2 rounded-full border border-line bg-paper-raised px-5 py-3.5 font-semibold text-ink shadow-lg transition hover:border-accent/60"
+        >
+          <MessageCircle size={20} /> Demander au coffre
+        </button>
         <button
           type="button"
           onClick={() => entreeFichier.current?.click()}

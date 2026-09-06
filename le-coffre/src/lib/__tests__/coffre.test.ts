@@ -406,6 +406,50 @@ describe('la proposition de classement', () => {
   });
 });
 
+// ─────────────────────────────── L'assistant ───────────────────────────────
+
+describe('demander au coffre', () => {
+  const INDEX_ASSISTANT: IndexCoffre = {
+    objets: {
+      abc: {
+        nom: 'Facture EDF', taille: 100, type: 'application/pdf', categorie: 'Énergie',
+        deposeLe: '2026-09-01T00:00:00.000Z', emetteur: 'EDF', montant: '89,90 €',
+        texteExtrait: 'x'.repeat(500),
+      },
+    },
+  };
+
+  it('rend une réponse d’excuse plutôt que d’échouer quand la fonction tombe', async () => {
+    poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
+    const reponse = await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
+    assert.equal(reponse.documentsCites.length, 0);
+    assert.equal(reponse.rechercheWebEffectuee, false);
+    assert.ok(reponse.reponse.length > 0);
+  });
+
+  it('ne transmet jamais le fichier, seulement un résumé tronqué du texte extrait', async () => {
+    const f = poser(clientFactice({
+      fonction: { data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, rechercheWebEffectuee: false }, error: null },
+    }));
+    await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
+    const [nom, options] = f.premier('invoke') as [string, { body: { documents: Array<{ extrait?: string | null }> } }];
+    assert.equal(nom, 'assistant-coffre');
+    assert.deepEqual(Object.keys(options.body).sort(), ['documents', 'historique', 'question']);
+    const [document] = options.body.documents;
+    assert.ok(document?.extrait && document.extrait.length <= 200, 'le texte extrait doit être tronqué à 200 caractères');
+  });
+
+  it('transmet l’historique de la conversation', async () => {
+    const f = poser(clientFactice({
+      fonction: { data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, rechercheWebEffectuee: false }, error: null },
+    }));
+    const historique = [{ role: 'user' as const, texte: 'bonjour' }, { role: 'assistant' as const, texte: 'salut' }];
+    await coffre.demanderAuCoffre('et ensuite ?', historique, INDEX_ASSISTANT);
+    const [, options] = f.premier('invoke') as [string, { body: { historique: unknown } }];
+    assert.deepEqual(options.body.historique, historique);
+  });
+});
+
 // ─────────────────────────── Corriger un classement ───────────────────────────
 
 describe('modifier un objet', () => {
