@@ -161,4 +161,22 @@ describe('interpréter une question posée en langage courant', () => {
     assert.deepEqual(noms, []);
     assert.match(reponse, /Aucun papier/);
   });
+
+  it('reconnaît une commande de rangement plutôt que d’en faire une recherche sans résultat', () => {
+    const { noms, action } = interpreterQuestion(INDEX, 'Range tout dans des dossiers');
+    assert.equal(action, 'rangement');
+    // Une commande n'est pas un filtre : elle rend tous les papiers, pas zéro.
+    assert.deepEqual(noms.sort(), ['a', 'b', 'c']);
+  });
+
+  it('reconnaît une commande de remplissage plutôt que d’en faire une recherche sans résultat', () => {
+    const { noms, action } = interpreterQuestion(INDEX, 'Peux-tu me remplir une demande de CAF');
+    assert.equal(action, 'formulaire');
+    assert.deepEqual(noms.sort(), ['a', 'b', 'c']);
+  });
+
+  it('ne confond pas une recherche par nom avec une commande', () => {
+    const { action } = interpreterQuestion(INDEX, 'edf mutuelle');
+    assert.equal(action, undefined);
+  });
 });

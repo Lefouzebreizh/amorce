@@ -781,7 +781,7 @@ export default function PageCoffre() {
   // interpreterQuestion comprend « mes photos », « un pdf », un mot isolé, ou
   // une phrase complète (« le papier de la mutuelle ») — rechercheCorrespond
   // reste utilisée telle quelle à l'intérieur, pour chaque mot-clé retenu.
-  const { reponse: reponseRecherche, noms: nomsTrouves } = interpreterQuestion(index, recherche);
+  const { reponse: reponseRecherche, noms: nomsTrouves, action: actionRecherche } = interpreterQuestion(index, recherche);
   const noms = tousLesNoms
     .filter((n) => !filtreCategorie || index.objets[n]?.categorie === filtreCategorie)
     .filter((n) => nomsTrouves.includes(n));
@@ -992,7 +992,10 @@ export default function PageCoffre() {
           <section className="lg:col-span-2">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm font-semibold tracking-widest text-ink-soft uppercase">
-                Vos papiers ({noms.length})
+                {/* « X sur Y » dès qu'un filtre réduit la liste — un simple
+                    « (0) » a déjà fait croire à une perte de documents alors
+                    qu'il ne comptait que les résultats filtrés (06/09/2026). */}
+                Vos papiers ({noms.length === tousLesNoms.length ? noms.length : `${noms.length} sur ${tousLesNoms.length}`})
               </p>
               <button
                 type="button"
@@ -1019,7 +1022,27 @@ export default function PageCoffre() {
                 {/* Réponse du coffre à la question posée — jamais affichée
                     pour une recherche vide, où elle n'apporterait rien. */}
                 {recherche.trim() && (
-                  <p className="text-sm text-accent">{reponseRecherche}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm text-accent">{reponseRecherche}</p>
+                    {actionRecherche === 'rangement' && (
+                      <button
+                        type="button"
+                        onClick={() => { setRecherche(''); setVueDossiers(true); }}
+                        className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                      >
+                        <Folder size={12} /> Ranger en dossiers
+                      </button>
+                    )}
+                    {actionRecherche === 'formulaire' && (
+                      <button
+                        type="button"
+                        onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
+                        className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                      >
+                        <FileText size={12} /> Remplir un formulaire
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             )}
