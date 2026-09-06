@@ -27,13 +27,36 @@ Vercel. C'est le défaut le plus cher qu'un fichier de prospection puisse
 porter, et il ne se voyait nulle part — aucun test ne lit une adresse dans un
 Markdown.
 
-**La contrepartie du projet qui reste : il ne se met pas à jour tout seul.** Il
-est né d'un dépôt de fichiers, pas d'un lien Git. Une modification de
-`artisan-express/` n'atteint la page qu'après un nouveau dépôt, et l'arbre
-envoyé doit contenir `public/` — l'oubli d'`exemple.html` a déjà mis « Voir un
-site fini, en vrai » en 404 pendant que le reste servait parfaitement. Il a
-d'ailleurs été oublié une seconde fois au premier envoi du 03/09, et rattrapé
-avant mise en ligne.
+**Il est relié à Git depuis le 06/09/2026, et cette page décrivait l'inverse.**
+Le projet est né d'un dépôt de fichiers, sans lien Git : aucun commit ne le
+déclenchait, et une modification de `artisan-express/` n'atteignait la page
+qu'après un nouvel envoi manuel. Réglages posés au tableau de bord par le
+propriétaire — dépôt `Lefouzebreizh/amorce`, répertoire racine
+`artisan-express`, branche de production `main`.
+
+**Ce que ça a coûté avant d'être vu : trois jours.** La correction du tarif
+prêté à l'annuaire (#748) a été écrite, vérifiée et fusionnée le 06/09 au
+matin ; la page publique servait toujours la version du 3 septembre à midi,
+ligne fautive comprise, pendant qu'on s'apprêtait à envoyer douze SMS de
+prospection vers cette adresse. Une correction fusionnée n'est pas une
+correction en ligne — la leçon est écrite dans
+`second-brain/lecons/2026-09-06-une-correction-fusionnee-nest-pas-une-correction-en-ligne.md`.
+
+**Relier ne rejoue pas le passé** : le premier déploiement Git attend le
+premier commit qui touche `artisan-express/`. Celui qui porte ce paragraphe
+est ce commit-là.
+
+**Ce qui disparaît avec l'envoi manuel**, et c'est autant de gagné : l'arbre
+envoyé devait contenir `public/`, et l'oubli d'`exemple.html` a déjà mis
+« Voir un site fini, en vrai » en 404 pendant que le reste servait
+parfaitement — deux fois, dont une rattrapée de justesse le 03/09. Vercel
+construit maintenant depuis le dépôt, où `public/` est versionné : cet oubli-là
+n'est plus possible.
+
+**Ce qui ne change pas** : le filtre de chemins de `artisan-express/vercel.json`
+reste le garde-fou du quota, et le réglage *Inclure les fichiers situés en
+dehors du répertoire racine* doit rester activé — `scripts/vercel-ignorer.sh`
+vit à la racine du dépôt, un cran au-dessus du répertoire racine du projet.
 
 **Elle a pourtant été déployée et invisible, et c'est ce piège-là qu'il faut
 retenir.** Le projet portait `ssoProtection` à `all_except_custom_domains` :
