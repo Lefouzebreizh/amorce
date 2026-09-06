@@ -255,6 +255,7 @@ export type ReponseAssistant = {
   reponse: string;
   documentsCites: string[];
   ouvrirFormulaire: boolean;
+  ouvrirRangement: boolean;
   rechercheWebEffectuee: boolean;
 };
 
@@ -287,7 +288,7 @@ export async function demanderAuCoffre(
 ): Promise<ReponseAssistant> {
   const vide: ReponseAssistant = {
     reponse: "Je n'ai pas pu répondre à l'instant — réessaie dans un moment.",
-    documentsCites: [], ouvrirFormulaire: false, rechercheWebEffectuee: false,
+    documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false,
   };
   try {
     const { data, error } = await supabase.functions.invoke('assistant-coffre', {
