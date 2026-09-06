@@ -83,7 +83,9 @@ Deno.serve(async (requete: Request) => {
     `le contenu de ses papiers personnels.\n\n` +
     `Ne devine jamais un fait sur un papier qui n'est pas dans la liste ci-dessus : dans le ` +
     `doute, dis que tu ne le trouves pas plutôt que d'en inventer un.\n` +
-    `Réponds toujours en français, court et concret (quelques phrases maximum).\n\n` +
+    `Réponds toujours en français, court et concret (quelques phrases maximum), en texte ` +
+    `naturel uniquement : jamais de balise comme <cite> ou de crochet de note ([1], [2]…), ` +
+    `même après une recherche web — nomme la source dans la phrase si besoin.\n\n` +
     `Réponds UNIQUEMENT avec un objet JSON, sans texte autour, avec exactement ces champs : ` +
     `{"reponse": ta réponse en langage naturel, ` +
     `"documentsCites": [noms exacts trouvés dans la liste, tableau vide si aucun], ` +
@@ -138,6 +140,12 @@ Deno.serve(async (requete: Request) => {
     const resultat = JSON.parse(texte.slice(debut, fin + 1)) as Resultat;
     resultat.rechercheWebEffectuee = Boolean(resultat.rechercheWebEffectuee) || rechercheWebEffectuee;
     if (!Array.isArray(resultat.documentsCites)) resultat.documentsCites = [];
+    // Filet défensif : le modèle a déjà écrit du balisage de citation
+    // (<cite index="...">...</cite>) en clair malgré la consigne ci-dessus —
+    // on retire les balises sans perdre le texte qu'elles entourent.
+    if (typeof resultat.reponse === "string") {
+      resultat.reponse = resultat.reponse.replace(/<\/?[a-z][^>]*>/gi, "");
+    }
     return reponseJson(resultat);
   } catch {
     return reponseJson({ erreur: "Réponse de Claude illisible.", brut: texte.slice(0, 300) }, 502);
