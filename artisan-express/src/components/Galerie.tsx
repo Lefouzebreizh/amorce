@@ -58,7 +58,7 @@ type Modele = {
 const MODELES: readonly Modele[] = [
   {
     metier: 'Couvreur',
-    entreprise: 'Toitures Le Goff',
+    entreprise: 'Toitures Riou',
     ville: 'Ploërmel',
     promesse: 'Ardoise, zinc, Velux. Devis sous 48 h.',
     teinte: '#2f6f4e',

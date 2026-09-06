@@ -49,15 +49,26 @@ const MENTION =
 const MODELES = [
   {
     /*
-     * Pas « Couverture Tanguy » : c'est l'entreprise d'`exemple.html`, la page
-     * de démonstration que la page de vente montre déjà. Deux entrées de la
-     * galerie tombaient sur le même artisan, ce qui contredit à voix haute son
-     * argument — six métiers, six sites. Une entreprise par page, sans
-     * exception.
+     * Ce nom a déjà changé deux fois, et la deuxième fois pour rien.
+     *
+     * Il ne peut pas être « Couverture Tanguy » : c'est l'entreprise
+     * d'`exemple.html`, la démonstration que la page de vente montre déjà.
+     * Il a donc été mis à « Toitures Le Goff » — qui était le nom de la
+     * vignette « après » d'`AvantApres`, trois écrans plus haut sur cette
+     * même page. On s'était décollé d'une collision pour tomber dans
+     * l'autre, et le test ne l'a pas vu : il ne comparait qu'au titre
+     * d'`exemple.html`.
+     *
+     * La page de vente nomme donc trois couvreurs fictifs — la vignette, la
+     * démonstration, ce modèle — et les trois doivent porter trois noms.
+     * `artisan-express/tests/galerie.test.ts` les compare maintenant tous,
+     * sur l'ensemble de leurs mots significatifs : « LE GOFF TOITURES » et
+     * « Toitures Le Goff » sont le même nom pour un lecteur, et une
+     * comparaison de chaînes les aurait laissés passer une fois de plus.
      */
     fichier: 'couvreur',
     titre: 'Couvreur',
-    entreprise: 'Toitures Le Goff',
+    entreprise: 'Toitures Riou',
     ville: 'Ploërmel',
     couleur: '#2f6f4e',
     slogan: 'Couvreur zingueur à Ploërmel. Devis sous 48 h.',
