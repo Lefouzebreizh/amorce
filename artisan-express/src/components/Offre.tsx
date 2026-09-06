@@ -20,6 +20,54 @@ import { aUnStripe, contact } from '@/lib/config';
 const SIRET_ACTIF = true;
 const encaisseEnLigne = SIRET_ACTIF && aUnStripe;
 
+/*
+ * Combien de sites à la fois — et pourquoi ce n'est pas un argument de vente
+ * fabriqué.
+ *
+ * CE QUI A ÉTÉ ÉCARTÉ, ET LA RAISON.
+ *
+ * La proposition initiale était un tarif de lancement : trois cents euros
+ * affichés comme une remise sur un prix plus haut, pour les dix premiers.
+ * Elle est refusée, et pas par scrupule.
+ *
+ * Un prix de référence barré doit être un prix **réellement pratiqué**.
+ * Personne n'a jamais payé le tarif plein ici, puisqu'il n'existe pas : le
+ * barré serait une fausse réduction, c'est-à-dire une pratique commerciale
+ * trompeuse. Et le public visé est précisément celui qui applique cette règle
+ * à ses propres devis.
+ *
+ * Le coût n'est pourtant pas juridique, il est structurel. Toute cette page
+ * tient sur une seule chose : elle ne ment pas. « Cette place est vide »,
+ * « l'entreprise n'existe pas, le numéro ne sonne pas », « souvent un
+ * abonnement mensuel » au lieu d'un chiffre prêté au voisin, six modèles qui
+ * disent eux-mêmes qu'ils sont des modèles. Une remise inventée au milieu de
+ * ça serait le **seul** élément qu'un visiteur pourrait prendre en défaut — et
+ * il annulerait tout le reste.
+ *
+ * CE QUI EST RETENU À LA PLACE, ET POURQUOI C'EST PLUS FORT.
+ *
+ * La contrainte est déjà écrite trois lignes plus bas : **livré en 48 h**.
+ * Ce délai n'est tenable que si peu de chantiers tournent en même temps. La
+ * rareté n'a donc pas à être inventée : elle est la condition de la promesse
+ * que la page fait déjà.
+ *
+ * On annonce donc un nombre de places **simultanées**, pas un quota mensuel.
+ * La différence compte dans les deux sens : un quota mensuel plafonnerait le
+ * chiffre d'affaires sans raison, et il obligerait à tenir un compteur à jour
+ * — un décompte figé depuis six semaines se repère en une seconde et coûte la
+ * crédibilité qu'il cherchait à gagner. Ici il n'y a rien à tenir : le nombre
+ * est une règle de travail, pas un état.
+ *
+ * ET IL DOIT RESTER VRAI.
+ *
+ * Ce nombre est une affirmation sur la façon dont le propriétaire travaille,
+ * pas un réglage d'affichage. S'il en prend un troisième pendant que deux
+ * tournent, la phrase devient fausse — et c'est exactement le genre de détail
+ * qu'un client repère quand sa livraison glisse. Le changer se fait ici, sur
+ * une ligne, et nulle part ailleurs.
+ */
+const PLACES_SIMULTANEES = 2;
+
 const COMPRIS = [
   ['Paiement en une fois', '300 €, et c’est fini — aucun abonnement, aucun prélèvement ensuite.'],
   ['Livré en 48 h', 'Le compteur part quand j’ai tes infos et tes photos, pas quand tu paies.'],
@@ -72,6 +120,28 @@ export function Offre() {
             <strong className="text-encre">Ce qui n’est pas dedans&nbsp;:</strong> le nom de domaine
             à ton nom (une douzaine d’euros par an, payés directement au fournisseur, jamais à moi).
             Je te montre comment le prendre, ou je m’en occupe avec toi au téléphone.
+          </p>
+
+          {/*
+            Placé juste au-dessus des boutons, et pas ailleurs : le bouton dit
+            déjà « Je réserve ma place » depuis toujours, sans que rien
+            n'explique pourquoi il y a des places. Cet encadré-là rend ce mot
+            vrai au lieu de le laisser décoratif.
+
+            `border-accent` et non `border-edge` : c'est le seul endroit de la
+            page qui demande une décision maintenant. Mais le fond reste
+            `panel` — un aplat d'accent en ferait un second bouton plein, et la
+            page n'en porte qu'un.
+          */}
+          <p className="mt-7 rounded-xl border border-accent bg-panel p-4 text-lg leading-relaxed text-ardoise">
+            <strong className="text-encre">
+              {PLACES_SIMULTANEES === 2 ? 'Deux places à la fois' : `${PLACES_SIMULTANEES} places à la fois`}
+              , et c’est ce qui tient les 48&nbsp;h.
+            </strong>{' '}
+            Je travaille seul. Tant que {PLACES_SIMULTANEES === 2 ? 'deux' : PLACES_SIMULTANEES}{' '}
+            sites sont en cours, je n’en prends pas un de plus — c’est le seul moyen de livrer en
+            deux jours au lieu de faire attendre tout le monde. Quand les places sont prises, je te
+            le dis et on cale la suivante.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
