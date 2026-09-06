@@ -20,6 +20,13 @@ import { signatureValide } from './signature.ts';
  */
 
 export type Base = {
+  /**
+   * Consomme le `jti` d'un lien de connexion. Rend `true` si c'est la
+   * première fois — le lien peut alors ouvrir une session ; `false` si ce
+   * `jti` a déjà été consommé, auquel cas le lien est rejoué et doit être
+   * refusé. Idempotent par construction : `jti` est unique en base.
+   */
+  consommerLien(jti: string, exp: number): Promise<boolean>;
   /** Le compte lié à cette adresse, ou `null` s'il n'existe pas encore. */
   compteParEmail(email: string): Promise<{ id: string; solde: number } | null>;
   /** Crée le compte. Idempotent par construction : `email` est unique en base. */
@@ -92,7 +99,11 @@ async function connexion(requete: Request, r: Reglages): Promise<Response> {
     return reponseJson({ erreur: 'adresse illisible' }, 400, partage);
   }
 
-  const jeton = await sceller(r.secretJetons, { email, type: 'connexion' }, DUREE_LIEN_S);
+  // `jti` : un identifiant unique par lien, consommé à la première
+  // vérification pour rendre le lien à usage unique — voir `verifier` et la
+  // table `liens_consommes`. Le jeton reste scellé sans état ; c'est seulement
+  // sa consommation qui touche la base.
+  const jeton = await sceller(r.secretJetons, { email, type: 'connexion', jti: crypto.randomUUID() }, DUREE_LIEN_S);
   const lien = `${r.adresseSite}/verifier?jeton=${encodeURIComponent(jeton)}`;
   const envoye = await envoyerLienConnexion(r.cleResend, email, lien, r.expediteur);
 
@@ -108,10 +119,31 @@ async function connexion(requete: Request, r: Reglages): Promise<Response> {
 async function verifier(requete: Request, r: Reglages): Promise<Response> {
   const partage = entetesOrigine(requete, r.origines);
   const jetonBrut = new URL(requete.url).searchParams.get('jeton') ?? '';
-  const charge = await ouvrir<{ email: string; type: string }>(r.secretJetons, jetonBrut);
+  const charge = await ouvrir<{ email: string; type: string; jti?: string; exp: number }>(r.secretJetons, jetonBrut);
 
-  if (!charge || charge.type !== 'connexion' || typeof charge.email !== 'string') {
+  if (!charge || charge.type !== 'connexion' || typeof charge.email !== 'string' || typeof charge.jti !== 'string') {
     return reponseJson({ erreur: 'lien invalide ou expiré' }, 400, partage);
+  }
+
+  /*
+   * Usage unique : le lien ne vaut que pour sa première vérification réussie.
+   * On consomme le `jti` AVANT de créer le compte ou de mint une session —
+   * sinon un lien rejoué mint une seconde session de trente jours. Une fois
+   * consommé, le même lien est refusé.
+   *
+   * Le compromis, dit plutôt que tu : un service de sécurité de messagerie
+   * qui pré-visite les liens d'un courriel (Safe Links, Mimecast, Proofpoint
+   * — surtout en messagerie d'entreprise) consommerait le lien avant l'humain,
+   * qui devrait alors en redemander un. Le public d'Amorce est surtout en
+   * messagerie grand public, où cette pré-visite est rare ; le gain — un lien
+   * intercepté qui ne se rejoue plus — l'emporte. Si le cas se présente, la
+   * parade est un `/verifier` qui ne consomme que sur un geste humain (POST),
+   * et non sur le GET qu'un robot fait ; elle demande le concours du front et
+   * n'est pas faite ici.
+   */
+  const premierUsage = await r.base.consommerLien(charge.jti, charge.exp);
+  if (!premierUsage) {
+    return reponseJson({ erreur: 'lien déjà utilisé' }, 400, partage);
   }
 
   let compte = await r.base.compteParEmail(charge.email);

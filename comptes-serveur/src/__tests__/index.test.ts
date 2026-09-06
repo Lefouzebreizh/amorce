@@ -10,7 +10,13 @@ const SECRET_WEBHOOK = 'whsec_test';
 function baseEnMemoire() {
   const comptes = new Map<string, { id: string; email: string; solde: number }>();
   const mouvements = new Map<string, { compteId: string; delta: number }>();
+  const liens = new Set<string>();
   const base: Base = {
+    async consommerLien(jti) {
+      if (liens.has(jti)) return false; // rejoué, comme la vraie base
+      liens.add(jti);
+      return true;
+    },
     async compteParEmail(email) {
       for (const c of comptes.values()) if (c.email === email) return { id: c.id, solde: c.solde };
       return null;
@@ -47,6 +53,14 @@ function reglages(base: Base, extra: Partial<Reglages> = {}): Reglages {
     packs: {},
     ...extra,
   };
+}
+
+/**
+ * Un jeton de lien de connexion, tel que la route `connexion` le scelle — avec
+ * son `jti` unique. Le même appel avec le même `jti` rejoue le même lien.
+ */
+function lienConnexion(email: string, dureeS = 900, jti = crypto.randomUUID()) {
+  return sceller(SECRET_JETONS, { email, type: 'connexion', jti }, dureeS);
 }
 
 async function signer(corps: string, secret = SECRET_WEBHOOK, quand = Math.floor(Date.now() / 1000)) {
@@ -106,7 +120,7 @@ test('le parcours complet : demander, vérifier, lire le solde', async () => {
   // Le lien de connexion n'est jamais renvoyé par la route — on scelle le
   // même jeton que la route aurait envoyé par courriel, pour vérifier ce que
   // `/verifier` en fait.
-  const lienJeton = await sceller(SECRET_JETONS, { email: 'client@exemple.fr', type: 'connexion' }, 900);
+  const lienJeton = await lienConnexion('client@exemple.fr');
   const verif = await traiter(new Request(`https://x/verifier?jeton=${encodeURIComponent(lienJeton)}`), r);
   assert.equal(verif.status, 200);
   const { jeton: session, solde: soldeInitial } = await verif.json() as { jeton: string; solde: number };
@@ -119,23 +133,51 @@ test('le parcours complet : demander, vérifier, lire le solde', async () => {
   assert.deepEqual(await lecture.json(), { connecte: true, solde: 0 });
 });
 
-test('vérifier le même lien deux fois ne crée pas deux comptes', async () => {
-  // Un clic accidentel sur le lien, ou l'aperçu automatique d'un client de
-  // messagerie qui suit les liens des courriels reçus.
+test('un lien de connexion est à usage unique : le second usage est refusé', async () => {
+  // Le premier usage ouvre une session ; le second est rejeté. Ça vaut aussi
+  // bien pour un lien intercepté qu'on rejoue que pour le cas anodin d'un clic
+  // accidentel ou d'un aperçu automatique de client de messagerie qui suit le
+  // lien — dans tous les cas, un seul usage compte. Le compte n'est créé
+  // qu'une fois, la propriété d'origine de ce test.
   const { base, comptes } = baseEnMemoire();
   const r = reglages(base);
-  const jeton = await sceller(SECRET_JETONS, { email: 'deux-fois@exemple.fr', type: 'connexion' }, 900);
+  const jeton = await lienConnexion('deux-fois@exemple.fr');
 
   const a = await traiter(new Request(`https://x/verifier?jeton=${jeton}`), r);
   const b = await traiter(new Request(`https://x/verifier?jeton=${jeton}`), r);
 
-  const { jeton: sessionA } = await a.json() as { jeton: string };
-  const { jeton: sessionB } = await b.json() as { jeton: string };
-  const chargeA = await ouvrir<{ compteId: string }>(SECRET_JETONS, sessionA);
-  const chargeB = await ouvrir<{ compteId: string }>(SECRET_JETONS, sessionB);
-
-  assert.equal(chargeA?.compteId, chargeB?.compteId);
+  assert.equal(a.status, 200);
+  assert.equal(b.status, 400, 'le lien rejoué aurait dû être refusé');
+  const { jeton: session } = await a.json() as { jeton: string };
+  assert.ok(await ouvrir<{ compteId: string }>(SECRET_JETONS, session), 'le premier usage rend une session valide');
   assert.equal(comptes.size, 1);
+});
+
+test('deux liens distincts pour la même adresse ouvrent chacun une session', async () => {
+  // L'usage unique porte sur le `jti`, pas sur l'adresse : redemander un lien
+  // (le premier a expiré, ou on se connecte depuis un autre appareil) doit
+  // marcher. Le compte, lui, reste unique.
+  const { base, comptes } = baseEnMemoire();
+  const r = reglages(base);
+  const premier = await lienConnexion('multi@exemple.fr');
+  const second = await lienConnexion('multi@exemple.fr');
+
+  const a = await traiter(new Request(`https://x/verifier?jeton=${premier}`), r);
+  const b = await traiter(new Request(`https://x/verifier?jeton=${second}`), r);
+
+  assert.equal(a.status, 200);
+  assert.equal(b.status, 200, 'un second lien, avec un autre jti, doit rester valide');
+  assert.equal(comptes.size, 1);
+});
+
+test('un lien de connexion sans jti est refusé', async () => {
+  // Filet pour un jeton forgé, ou un vieux lien d'avant l'usage unique : un
+  // lien de connexion sans `jti` ne peut pas être consommé, donc n'ouvre rien.
+  const { base } = baseEnMemoire();
+  const r = reglages(base);
+  const sansJti = await sceller(SECRET_JETONS, { email: 'x@y.fr', type: 'connexion' }, 900);
+  const reponse = await traiter(new Request(`https://x/verifier?jeton=${encodeURIComponent(sansJti)}`), r);
+  assert.equal(reponse.status, 400);
 });
 
 test('un lien expiré, forgé ou d’un autre type est refusé', async () => {
@@ -176,7 +218,7 @@ test('sans jeton, avec un jeton faux ou périmé, le solde rend « non connecté
 test('un achat crédite le bon compte, du bon montant', async () => {
   const { base, comptes } = baseEnMemoire();
   const r = reglages(base, { packs: { '1900': 100 } });
-  const jeton = await sceller(SECRET_JETONS, { email: 'ach@exemple.fr', type: 'connexion' }, 900);
+  const jeton = await lienConnexion('ach@exemple.fr');
   const { jeton: session } = await (await traiter(new Request(`https://x/verifier?jeton=${jeton}`), r)).json() as { jeton: string };
   const { compteId } = await ouvrir<{ compteId: string }>(SECRET_JETONS, session) ?? {};
 
