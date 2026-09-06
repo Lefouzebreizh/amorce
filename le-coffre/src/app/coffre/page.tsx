@@ -314,6 +314,9 @@ export default function PageCoffre() {
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
   const [assistantOuvert, setAssistantOuvert] = useState(false);
+  // Posée par la barre de recherche du haut quand elle n'a rien trouvé
+  // localement, ou vide pour une question ouverte — voir demanderAAssistant.
+  const [questionAssistant, setQuestionAssistant] = useState('');
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
   const [recherche, setRecherche] = useState('');
   const [vueDossiers, setVueDossiers] = useState(false);
@@ -567,6 +570,23 @@ export default function PageCoffre() {
       setDetailOuvert(null);
       setCorrection(null);
     }
+  }
+
+  // Point d'entrée unique vers l'assistant, depuis la barre de recherche :
+  // avec une question, elle vient d'une recherche locale restée sans
+  // résultat (ou sans rapport avec un document précis) et part directement
+  // en premier message ; vide, le chat s'ouvre à blanc comme avant. Vide la
+  // recherche locale pour ne pas laisser un texte de recherche périmé une
+  // fois le chat refermé.
+  function demanderAAssistant(question: string) {
+    setQuestionAssistant(question);
+    setAssistantOuvert(true);
+    setRecherche('');
+  }
+
+  function fermerAssistant() {
+    setAssistantOuvert(false);
+    setQuestionAssistant('');
   }
 
   async function enregistrerCorrection() {
@@ -1020,7 +1040,12 @@ export default function PageCoffre() {
                   />
                 </div>
                 {/* Réponse du coffre à la question posée — jamais affichée
-                    pour une recherche vide, où elle n'apporterait rien. */}
+                    pour une recherche vide, où elle n'apporterait rien.
+                    Point d'entrée unique désormais : quand la recherche
+                    locale (gratuite, instantanée) ne trouve rien, une puce
+                    propose d'escalader vers l'assistant (payant) avec la
+                    même question — jamais automatique, pour ne pas facturer
+                    une simple faute de frappe. */}
                 {recherche.trim() && (
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm text-accent">{reponseRecherche}</p>
@@ -1042,7 +1067,29 @@ export default function PageCoffre() {
                         <FileText size={12} /> Remplir un formulaire
                       </button>
                     )}
+                    {nomsTrouves.length === 0 && !actionRecherche && (
+                      <button
+                        type="button"
+                        onClick={() => demanderAAssistant(recherche.trim())}
+                        className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-accent/60"
+                      >
+                        <MessageCircle size={12} /> Demander à l&apos;assistant
+                      </button>
+                    )}
                   </div>
+                )}
+                {/* Toujours visible, discret : la porte vers une question qui
+                    ne concerne aucun document précis (« comment résilier une
+                    assurance habitation »), sans dupliquer la barre du haut
+                    ni ouvrir un second champ de saisie. */}
+                {!recherche.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => demanderAAssistant('')}
+                    className="self-start text-xs text-ink-soft underline decoration-dotted transition hover:text-ink"
+                  >
+                    Une question plus large ? Demander à l&apos;assistant
+                  </button>
                 )}
               </div>
             )}
@@ -1191,29 +1238,27 @@ export default function PageCoffre() {
       {assistantOuvert && (
         <AssistantCoffre
           index={index}
-          onFermer={() => setAssistantOuvert(false)}
+          questionInitiale={questionAssistant}
+          onFermer={fermerAssistant}
           onOuvrirDocument={ouvrirDetail}
           onOuvrirFormulaire={() => setFormulaireOuvert(true)}
           onOuvrirRangement={() => setVueDossiers(true)}
         />
       )}
 
-      {/* Deux boutons flottants : ajouter un papier (seul point d'entrée
-          visible pour ça — la page entière reste aussi déposable, voir
-          onDrop sur <main>) et demander au coffre. `pointer-events-none` sur
-          le conteneur pleine largeur, `auto` sur chaque bouton : sans ça,
-          toute la bande invisible du bas de l'écran — pas seulement les
-          boutons visibles — interceptait les taps destinés aux lignes de
-          documents rendues dessous, quel que soit le défilement
-          (position `fixed`). */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center gap-3 px-4">
-        <button
-          type="button"
-          onClick={() => setAssistantOuvert(true)}
-          className="pointer-events-auto flex items-center gap-2 rounded-full border border-line bg-paper-raised px-5 py-3.5 font-semibold text-ink shadow-lg transition hover:border-accent/60"
-        >
-          <MessageCircle size={20} /> Demander au coffre
-        </button>
+      {/* Un seul bouton flottant désormais : ajouter un papier — seul point
+          d'entrée visible pour ça (la page entière reste aussi déposable,
+          voir onDrop sur <main>). « Demander au coffre » n'a plus de bouton
+          flottant séparé : la barre de recherche du haut est le point
+          d'entrée unique, qui n'ouvre l'assistant que sur une recherche
+          restée sans résultat ou une question explicitement plus large (voir
+          demanderAAssistant) — plus de deux entrées concurrentes pour le
+          même besoin. `pointer-events-none` sur le conteneur pleine largeur,
+          `auto` sur le bouton : sans ça, toute la bande invisible du bas de
+          l'écran — pas seulement le bouton visible — interceptait les taps
+          destinés aux lignes de documents rendues dessous, quel que soit le
+          défilement (position `fixed`). */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
         <button
           type="button"
           onClick={() => entreeFichier.current?.click()}
