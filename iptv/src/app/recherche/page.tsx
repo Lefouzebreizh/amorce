@@ -51,7 +51,9 @@ export default async function Recherche({
         </p>
       ) : (
         <>
-          <p className="mb-3 text-doux">{resultats.length} résultats</p>
+          <p className="mb-3 text-doux">
+            {`${resultats.length} résultat${resultats.length > 1 ? 's' : ''}`}
+          </p>
           <Grille elements={resultats} />
         </>
       )}

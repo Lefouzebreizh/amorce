@@ -40,8 +40,9 @@ export default function Accueil() {
         <header className="mb-4">
           <h1 className="text-2xl font-bold">Tout est masqué</h1>
           <p className="text-doux">
-            Les {totalReel.toLocaleString('fr-FR')} entrées du catalogue ont été jugées hors
-            service. Rien n’est effacé — un seul bouton les remet en jeu.
+            {totalReel === 1
+              ? 'L’unique entrée du catalogue a été jugée hors service. Rien n’est effacé — un seul bouton la remet en jeu.'
+              : `Les ${totalReel.toLocaleString('fr-FR')} entrées du catalogue ont été jugées hors service. Rien n’est effacé — un seul bouton les remet en jeu.`}
           </p>
         </header>
         <Entretien initial={entretien} />
@@ -58,14 +59,19 @@ export default function Accueil() {
   const reprises = cache.reprises(6)
   const favoris = cache.favoris().slice(0, 6)
   const chaines = cache.lister({ genre: 'direct', limite: 6 })
+  const nbDirect = cache.compter({ genre: 'direct' })
+  const nbFilms = cache.compter({ genre: 'film' })
+  const nbEpisodes = cache.compter({ genre: 'serie' })
 
   return (
     <>
       <header className="mb-6">
         <h1 className="text-2xl font-bold">Bonsoir</h1>
         <p className="text-doux">
-          {total.toLocaleString('fr-FR')} entrées — {cache.compter({ genre: 'direct' })} chaînes,{' '}
-          {cache.compter({ genre: 'film' })} films, {cache.compter({ genre: 'serie' })} épisodes.
+          {`${total.toLocaleString('fr-FR')} entrée${total > 1 ? 's' : ''} — ` +
+            `${nbDirect} chaîne${nbDirect > 1 ? 's' : ''}, ` +
+            `${nbFilms} film${nbFilms > 1 ? 's' : ''}, ` +
+            `${nbEpisodes} épisode${nbEpisodes > 1 ? 's' : ''}.`}
         </p>
       </header>
 

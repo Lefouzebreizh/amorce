@@ -136,7 +136,10 @@ async function principal(argv: readonly string[]): Promise<number> {
           adresse: 'demonstration',
         })
         const guide = await importerEpg(depot, guideDemo())
-        console.log(`Démonstration prête : ${resume.ecrits} entrées, ${guide.ecrits} programmes.`)
+        console.log(
+          `Démonstration prête : ${resume.ecrits} entrée${resume.ecrits > 1 ? 's' : ''}, ` +
+            `${guide.ecrits} programme${guide.ecrits > 1 ? 's' : ''}.`,
+        )
         console.log()
         console.log('Ensuite, dans cette fenêtre :        npm run dev')
         console.log('Et dans une seconde fenêtre :        npm run iptv -- adresse')
@@ -155,8 +158,9 @@ async function principal(argv: readonly string[]): Promise<number> {
         const source = await ouvrirSource(adresse)
         const resume = await importerM3U(depot, source, { adresse })
         console.log(
-          `Importé : ${resume.ecrits} entrées en ${(resume.dureeMs / 1000).toFixed(1)} s` +
-            (resume.retires > 0 ? `, ${resume.retires} retirées` : ''),
+          `Importé : ${resume.ecrits} entrée${resume.ecrits > 1 ? 's' : ''}` +
+            ` en ${(resume.dureeMs / 1000).toFixed(1)} s` +
+            (resume.retires > 0 ? `, ${resume.retires} retirée${resume.retires > 1 ? 's' : ''}` : ''),
         )
         return 0
       }
@@ -218,9 +222,10 @@ async function principal(argv: readonly string[]): Promise<number> {
           utilisateur: identifiants.utilisateur,
         })
         console.log(
-          `Importé : ${resume.ecrits} entrées et ${resume.fiches} séries` +
+          `Importé : ${resume.ecrits} entrée${resume.ecrits > 1 ? 's' : ''}` +
+            ` et ${resume.fiches} série${resume.fiches > 1 ? 's' : ''}` +
             ` en ${(resume.dureeMs / 1000).toFixed(1)} s` +
-            (resume.retires > 0 ? `, ${resume.retires} retirées` : ''),
+            (resume.retires > 0 ? `, ${resume.retires} retirée${resume.retires > 1 ? 's' : ''}` : ''),
         )
         console.log('Les épisodes d’une série se chargent à l’ouverture de sa fiche.')
         return 0
@@ -234,11 +239,17 @@ async function principal(argv: readonly string[]): Promise<number> {
         }
         const resume = await importerEpg(depot, await ouvrirSource(adresse))
         console.log(
-          `Guide : ${resume.ecrits} programmes sur ${resume.chaines} chaînes déclarées` +
+          `Guide : ${resume.ecrits} programme${resume.ecrits > 1 ? 's' : ''}` +
+            ` sur ${resume.chaines} chaîne${resume.chaines > 1 ? 's' : ''} déclarée${resume.chaines > 1 ? 's' : ''}` +
             ` en ${(resume.dureeMs / 1000).toFixed(1)} s` +
-            (resume.purges > 0 ? `, ${resume.purges} périmés retirés` : ''),
+            (resume.purges > 0
+              ? `, ${resume.purges} périmé${resume.purges > 1 ? 's' : ''} retiré${resume.purges > 1 ? 's' : ''}`
+              : ''),
         )
-        if (resume.ignores > 0) console.log(`  ${resume.ignores} entrées incomprises`)
+        if (resume.ignores > 0)
+          console.log(
+            `  ${resume.ignores} entrée${resume.ignores > 1 ? 's' : ''} incomprise${resume.ignores > 1 ? 's' : ''}`,
+          )
         return 0
       }
 
@@ -308,7 +319,8 @@ async function principal(argv: readonly string[]): Promise<number> {
       }
 
       case 'resume': {
-        console.log(`Total : ${depot.compter()} entrées`)
+        const totalResume = depot.compter()
+        console.log(`Total : ${totalResume} entrée${totalResume > 1 ? 's' : ''}`)
         for (const genre of ['direct', 'film', 'serie'] as const) {
           console.log(`  ${genre.padEnd(7)} ${depot.compter({ genre })}`)
         }
