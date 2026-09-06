@@ -53,6 +53,22 @@ Options :
   --tout                   Retester même ce qui l'a déjà été
 `
 
+/**
+ * La marque du pluriel, pour un compte donné.
+ *
+ * Ailleurs dans le projet l'accord s'écrit à même la phrase — `${n > 1 ? 's' :
+ * ''}` — et c'est lisible tant qu'il y a un mot à accorder. Les comptes rendus
+ * d'entretien en portent trois par phrase (« 2 entrées masquées comme
+ * étrangères »), et la même phrase écrite à même les ternaires cesse d'être
+ * relisible. Ce raccourci ne vaut donc que pour ce fichier-ci, où le cas se
+ * présente une vingtaine de fois ; le porter partout serait un autre lot.
+ *
+ * Le test est `> 1` et non `!== 1` : en français, zéro est un singulier.
+ */
+function s(compte: number): string {
+  return compte > 1 ? 's' : ''
+}
+
 function lireOption(args: readonly string[], nom: string): string | undefined {
   const prefixe = `--${nom}=`
   const trouve = args.find((arg) => arg.startsWith(prefixe))
@@ -346,7 +362,10 @@ async function principal(argv: readonly string[]): Promise<number> {
             const ou = retrait.serie ? ` — ${retrait.serie}` : ''
             console.log(`  ${retrait.retireLe.slice(0, 10)}  ${retrait.titre}${ou}`)
           }
-          if (retraits.length > 20) console.log(`  … et ${retraits.length - 20} autre(s)`)
+          if (retraits.length > 20) {
+            const reste = retraits.length - 20
+            console.log(`  … et ${reste} autre${s(reste)}`)
+          }
         }
         return 0
       }
@@ -390,8 +409,9 @@ async function principal(argv: readonly string[]): Promise<number> {
         })
 
         console.log(
-          `\n${String(bilan.ok)} vivants, ${String(bilan.mort)} hors service (masqués), ` +
-            `${String(bilan.inconnu)} indécis (laissés visibles).`,
+          `\n${String(bilan.ok)} vivant${s(bilan.ok)}, ` +
+            `${String(bilan.mort)} hors service (masqué${s(bilan.mort)}), ` +
+            `${String(bilan.inconnu)} indécis (laissé${s(bilan.inconnu)} visible${s(bilan.inconnu)}).`,
         )
         return 0
       }
@@ -400,53 +420,70 @@ async function principal(argv: readonly string[]): Promise<number> {
         const bilan = rangerCatalogue(depot)
         if (bilan.reclasses > 0) {
           console.log(
-            `${String(bilan.reclasses)} entrées changent de genre — classées par une règle ` +
-              `depuis corrigée, et figées jusqu'ici.`,
+            `${String(bilan.reclasses)} entrée${s(bilan.reclasses)} ` +
+              `${bilan.reclasses > 1 ? 'changent' : 'change'} de genre — ` +
+              `classée${s(bilan.reclasses)} par une règle depuis corrigée, ` +
+              `et figée${s(bilan.reclasses)} jusqu'ici.`,
           )
         }
         console.log(
-          `Avant : ${String(bilan.avant.chaines)} chaînes, ${String(bilan.avant.films)} films, ` +
-            `${String(bilan.avant.series)} séries.`,
+          `Avant : ${String(bilan.avant.chaines)} chaîne${s(bilan.avant.chaines)}, ` +
+            `${String(bilan.avant.films)} film${s(bilan.avant.films)}, ` +
+            `${String(bilan.avant.series)} série${s(bilan.avant.series)}.`,
         )
         if (bilan.doublonsMasques > 0 || bilan.fichesDoublons > 0) {
           console.log(
-            `${String(bilan.doublonsMasques)} chaîne(s)/film(s) en double masqué(s) (la meilleure ` +
-              `qualité reste), ${String(bilan.fichesDoublons)} fiche(s) de série en double retirée(s) ` +
+            `${String(bilan.doublonsMasques)} chaîne${s(bilan.doublonsMasques)}` +
+              `/film${s(bilan.doublonsMasques)} en double masqué${s(bilan.doublonsMasques)} ` +
+              `(la meilleure qualité reste), ` +
+              `${String(bilan.fichesDoublons)} fiche${s(bilan.fichesDoublons)} de série ` +
+              `en double retirée${s(bilan.fichesDoublons)} ` +
               `— rien n'est perdu, un titre seul n'est jamais touché.`,
           )
         }
         console.log(
-          `Après : ${String(bilan.apres.chaines)} chaînes, ${String(bilan.apres.films)} films, ` +
-            `${String(bilan.apres.series)} séries.`,
+          `Après : ${String(bilan.apres.chaines)} chaîne${s(bilan.apres.chaines)}, ` +
+            `${String(bilan.apres.films)} film${s(bilan.apres.films)}, ` +
+            `${String(bilan.apres.series)} série${s(bilan.apres.series)}.`,
         )
         console.log(
-          `${String(bilan.numerotees)} chaînes numérotées sur ${String(bilan.chaines)} ` +
+          `${String(bilan.numerotees)} chaîne${s(bilan.numerotees)} ` +
+            `numérotée${s(bilan.numerotees)} sur ${String(bilan.chaines)} ` +
             `(les autres suivent par familles : sport, cinéma, musique, puis le reste).`,
         )
         for (const dossier of bilan.dossiers) {
           console.log(
-            `${dossier.genre === 'film' ? 'Films' : 'Séries'} : ${String(dossier.nommes)} thèmes` +
+            `${dossier.genre === 'film' ? 'Films' : 'Séries'} : ` +
+              `${String(dossier.nommes)} thème${s(dossier.nommes)}` +
               (dossier.autres === 0
                 ? ''
                 : `, ${String(dossier.autres)} sans thème reconnu (dossier « Autres »)`),
           )
         }
         console.log(
-          `${String(bilan.etrangeres)} entrées masquées comme étrangères (chaîne d'un autre pays, ` +
-            `film ou série sans piste française) — rien n'est supprimé, seulement écarté de l'affichage.`,
+          `${String(bilan.etrangeres)} entrée${s(bilan.etrangeres)} ` +
+            `masquée${s(bilan.etrangeres)} comme étrangère${s(bilan.etrangeres)} ` +
+            `(chaîne d'un autre pays, film ou série sans piste française) ` +
+            `— rien n'est supprimé, seulement écarté de l'affichage.`,
         )
         return 0
       }
 
       case 'ranimer': {
         const remis = ranimerFlux(depot)
-        console.log(`${String(remis)} entrées remises en jeu. « tester » pour les réessayer.`)
+        console.log(
+          `${String(remis)} entrée${s(remis)} remise${s(remis)} en jeu. ` +
+            `« tester » pour ${remis > 1 ? 'les' : 'la'} réessayer.`,
+        )
         return 0
       }
 
       case 'series': {
         for (const serie of depot.series().slice(0, limite)) {
-          console.log(`  ${serie.serie} — ${serie.saisons} saison(s), ${serie.episodes} épisode(s)`)
+          console.log(
+            `  ${serie.serie} — ${serie.saisons} saison${s(serie.saisons)}, ` +
+              `${serie.episodes} épisode${s(serie.episodes)}`,
+          )
         }
         return 0
       }
