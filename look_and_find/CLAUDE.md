@@ -281,6 +281,7 @@ méthode testée.
 | `fiche_objet_dto_test.dart` | Ce que la lecture de la fiche v1 encaisse : liste rendue en une phrase, « null » écrit en toutes lettres, clé absente. |
 | `contrat_fiche_lecture_test.dart` | Le pacte de la version un, et le périmètre lui-même : l'invite doit continuer d'interdire marque et prix. |
 | `fiche_objet_page_test.dart` | La fiche v1 montée pour de vrai, et ce qu'elle ne montre plus — ni prix, ni marchand. |
+| `zoom_viseur_test.dart` | Le calcul du pincement et ses bornes : `setZoomLevel` **lève** hors bornes, donc un facteur mal borné ne donne pas un zoom trop fort mais un geste sans effet. |
 | `image_compressor_test.dart` | Le format lu dans les octets — JPEG, PNG, WebP décalé, famille HEIF — et ce qui doit rester inconnu : un MP4, un tampon trop court. |
 | `diagnostic_reponse_test.dart` | La fidélité du diagnostic de `tool/lecture_fiche.dart` : ne rien signaler que le DTO accepte, ne rien taire de ce qu'il écarte. Un verdict inversé fait corriger le mauvais fichier. |
 

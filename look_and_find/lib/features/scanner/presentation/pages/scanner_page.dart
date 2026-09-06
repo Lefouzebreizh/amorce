@@ -33,6 +33,7 @@ import '../widgets/blocking_notice.dart';
 import '../widgets/capture_bar.dart';
 import '../widgets/flash_button.dart';
 import '../widgets/focus_ring.dart';
+import '../widgets/indicateur_zoom.dart';
 import '../widgets/scan_status_sheet.dart';
 import '../widgets/viewfinder_overlay.dart';
 
@@ -144,6 +145,24 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
         .focusAt(Offset(local.dx / size.width, local.dy / size.height));
   }
 
+  /// Le zoom au premier contact des deux doigts. `ScaleUpdateDetails.scale`
+  /// est relatif au début du geste, jamais au niveau courant : sans ce
+  /// souvenir, chaque pincement repartirait de 1× et le second geste
+  /// annulerait le premier.
+  double _zoomAuContact = 1;
+
+  void _debutPincement() => _zoomAuContact = ref.read(zoomSettingProvider);
+
+  void _pincement(ScaleUpdateDetails details) {
+    // Un doigt unique passe aussi par ce rappel — le détecteur d'échelle
+    // reconnaît le glissement — avec un facteur qui reste à 1. On l'écarte
+    // pour que la mise au point ne se solde pas par un aller-retour de zoom.
+    if (details.pointerCount < 2) return;
+    ref
+        .read(zoomSettingProvider.notifier)
+        .pincer(depart: _zoomAuContact, facteur: details.scale);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (ref.watch(geminiApiKeyProvider).isEmpty) {
@@ -164,6 +183,7 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
     final scan = ref.watch(ficheControllerProvider);
     final flash = ref.watch(flashSettingProvider);
     final alerts = ref.watch(pendingAlertsProvider);
+    final zoom = ref.watch(zoomSettingProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -187,6 +207,8 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
               controller: controller,
               frozen: _frozen,
               onFocus: _focusAt,
+              onZoomStart: _debutPincement,
+              onZoom: _pincement,
             ),
           ),
 
@@ -201,6 +223,13 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
                 mode: flash,
                 onTap: ref.read(flashSettingProvider.notifier).cycle,
               ),
+            ),
+
+          if (_frozen == null && session.hasValue && zoom > 1)
+            Positioned(
+              top: MediaQuery.viewPaddingOf(context).top + 12,
+              left: 16,
+              child: IndicateurZoom(niveau: zoom),
             ),
 
           if (_focusPoint != null && _frozen == null)
@@ -249,11 +278,15 @@ class _Preview extends StatelessWidget {
     required this.controller,
     required this.frozen,
     required this.onFocus,
+    required this.onZoomStart,
+    required this.onZoom,
   });
 
   final CameraController controller;
   final Uint8List? frozen;
   final void Function(Offset local, Size size) onFocus;
+  final VoidCallback onZoomStart;
+  final void Function(ScaleUpdateDetails details) onZoom;
 
   @override
   Widget build(BuildContext context) {
@@ -272,6 +305,11 @@ class _Preview extends StatelessWidget {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapUp: (details) => onFocus(details.localPosition, size),
+          // Appui et pincement cohabitent sur le même détecteur : les séparer
+          // en deux couches ferait gagner celle du dessus, et l'une des deux
+          // commandes deviendrait injoignable.
+          onScaleStart: (_) => onZoomStart(),
+          onScaleUpdate: onZoom,
           child: ClipRect(
             child: FittedBox(
               fit: BoxFit.cover,

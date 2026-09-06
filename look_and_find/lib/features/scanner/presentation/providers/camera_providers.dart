@@ -18,6 +18,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/network/app_exception.dart';
 import '../../../../core/utils/extensions.dart';
+import 'bornes_zoom.dart';
 
 part 'camera_providers.g.dart';
 
@@ -123,6 +124,20 @@ class CameraSession extends _$CameraSession {
     }
   }
 
+  /// Applique un niveau de zoom déjà borné par [BornesZoom]. L'échec est
+  /// avalé comme celui de la mise au point : un capteur qui refuse le zoom
+  /// doit laisser le viseur utilisable, pas remonter une erreur au milieu
+  /// d'un pincement.
+  Future<void> applyZoom(double level) async {
+    final controller = state.value;
+    if (controller == null || !controller.value.isInitialized) return;
+    try {
+      await controller.setZoomLevel(level);
+    } on CameraException catch (error) {
+      debugPrint('zoom refusé : ${error.code}');
+    }
+  }
+
   /// `null` si la capture échoue : l'appelant réaffiche simplement le viseur.
   Future<XFile?> capture() async {
     final controller = state.value;
@@ -157,5 +172,62 @@ class FlashSetting extends _$FlashSetting {
       _ => FlashMode.off,
     };
     await ref.read(cameraSessionProvider.notifier).applyFlash(state);
+  }
+}
+
+/// Ce que ce capteur-ci sait faire, demandé une fois par contrôleur.
+///
+/// Dérivé de la session plutôt que lu à chaque pincement : `getMaxZoomLevel`
+/// est un aller-retour vers la plateforme, et le poser dans un geste qui émet
+/// soixante fois par seconde ferait ramer le viseur. Comme le provider suit la
+/// session, un changement de caméra ou un retour d'arrière-plan redemande les
+/// bornes du nouveau contrôleur au lieu de garder celles du précédent.
+@riverpod
+Future<BornesZoom> bornesZoom(Ref ref) async {
+  final controller = await ref.watch(cameraSessionProvider.future);
+  try {
+    return BornesZoom.duCapteur(
+      min: await controller.getMinZoomLevel(),
+      max: await controller.getMaxZoomLevel(),
+    );
+  } on CameraException catch (error) {
+    // Un capteur qui ne sait pas répondre est un capteur sans zoom : le
+    // viseur reste utilisable, simplement sans indicateur ni pincement.
+    debugPrint('bornes de zoom indisponibles : ${error.code}');
+    return BornesZoom.neutre;
+  }
+}
+
+/// Le grossissement courant de l'aperçu.
+///
+/// **Pourquoi il se remet à 1× avec la session.** Le zoom vit dans le
+/// contrôleur caméra, et celui-ci est libéré à chaque mise en arrière-plan.
+/// Au retour, le capteur repart à 1× quoi qu'on ait retenu : garder « 3× »
+/// dans l'état afficherait un indicateur qui ment sur ce que montre l'image.
+/// Le `watch` ci-dessous fait donc suivre l'état au matériel.
+///
+/// C'est l'inverse du flash, gardé en vie exprès : le flash est un réglage
+/// que l'utilisateur a choisi, le zoom est un cadrage lié à une image qui
+/// n'est plus à l'écran.
+@riverpod
+class ZoomSetting extends _$ZoomSetting {
+  @override
+  double build() {
+    ref.watch(cameraSessionProvider);
+    return 1;
+  }
+
+  /// Pendant un pincement : [depart] est le zoom au premier contact des deux
+  /// doigts, [facteur] leur écartement relatif depuis ce contact.
+  Future<void> pincer({required double depart, required double facteur}) =>
+      _appliquer(_bornes.pincement(depart, facteur));
+
+  BornesZoom get _bornes =>
+      ref.read(bornesZoomProvider).value ?? BornesZoom.neutre;
+
+  Future<void> _appliquer(double niveau) async {
+    if (niveau == state) return;
+    state = niveau;
+    await ref.read(cameraSessionProvider.notifier).applyZoom(niveau);
   }
 }

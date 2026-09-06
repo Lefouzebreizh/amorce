@@ -13,9 +13,12 @@ l'appareil hors la photo envoyée pour être décrite.
 ## Le parcours
 
 1. **Viser.** L'application s'ouvre sur le viseur. Pas de page d'accueil : le
-   geste qu'elle propose est à un appui de l'ouverture. Une photo déjà prise
-   fait aussi bien l'affaire — utile quand l'objet a été vu ailleurs, quand la
-   pièce est sombre, ou quand la caméra ne s'ouvre pas.
+   geste qu'elle propose est à un appui de l'ouverture. Un appui fait la mise
+   au point, un **pincement à deux doigts** rapproche l'objet. Ce dernier n'est
+   pas un confort : le modèle identifie ce qu'il voit, et un objet qui n'occupe
+   qu'un vingtième du cadre est décrit comme la pièce qui l'entoure. Une photo
+   déjà prise fait aussi bien l'affaire — utile quand l'objet a été vu ailleurs,
+   quand la pièce est sombre, ou quand la caméra ne s'ouvre pas.
 2. **Décrire.** La photo est réduite et envoyée au modèle, qui rend le nom
    courant de l'objet, sa catégorie, à quoi il sert, la matière apparente et ce
    qui se voit dessus. **Ni marque ni référence** : une catégorie suffit à
