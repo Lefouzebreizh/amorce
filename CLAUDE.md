@@ -827,8 +827,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Chacun porte sa source et ses deux dates, et **tant qu'un barème est périmé,
   aucun montant en euros ne s'affiche** — le constat sort sans son chiffre, et le
   rapport dit pourquoi. `VERIFIE_LE` est la seule date qui atteste qu'un humain a
-  regardé ; un test échoue au-delà de deux cents jours. Les valeurs livrées datent
-  d'août 2025 et sont **à confirmer avant toute mise en ligne**.
+  regardé ; un test échoue au-delà de deux cents jours. **Les valeurs ont été
+  relues le 03/09/2026** face aux quatre sources citées dans le README (Banque
+  de France, arrêté annuel, France Assureurs, INSEE) — ce n'est plus la table
+  d'août 2025, et `npm run exemple` affiche bien des montants en euros.
   **Un constat qui ne se chiffre pas ne fait rien bouger**, mais **l'urgence passe
   avant le montant** : une réserve trop mince devance une optimisation plus
   rentable — trouvé en lisant un bilan, où le tri par euros seul plaçait « droit
