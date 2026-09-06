@@ -22,6 +22,7 @@ import {
   ITERATIONS,
   TEXTE_VERIF,
   b64FromBuf,
+  chiffrerOctets,
   chiffrerTexte,
   dechiffrerTexte,
   bufFromB64,
@@ -130,6 +131,23 @@ describe('la lettre de résiliation', () => {
 });
 
 // ──────────────────────────── Ouvrir le coffre ────────────────────────────
+
+describe('l’existence du coffre', () => {
+  it('dit vrai quand une ligne existe déjà', async () => {
+    poser(clientFactice({ tables: { coffre_cles: { data: { user_id: UTILISATEUR }, error: null } } }));
+    assert.equal(await coffre.coffreExiste(UTILISATEUR), true);
+  });
+
+  it('dit faux quand rien n’a encore été initialisé', async () => {
+    poser(clientFactice({ tables: { coffre_cles: { data: null, error: null } } }));
+    assert.equal(await coffre.coffreExiste(UTILISATEUR), false);
+  });
+
+  it('remonte l’erreur du serveur plutôt que de la confondre avec « rien »', async () => {
+    poser(clientFactice({ tables: { coffre_cles: { data: null, error: { message: 'panne réseau' } } } }));
+    await assert.rejects(() => coffre.coffreExiste(UTILISATEUR), /panne réseau/);
+  });
+});
 
 describe('initialiser le coffre', () => {
   it('n’envoie jamais la phrase secrète, sous aucune forme', async () => {
@@ -303,6 +321,35 @@ describe('déposer un fichier', () => {
   });
 });
 
+// ─────────────────────────────── Récupérer ───────────────────────────────
+
+describe('récupérer un fichier', () => {
+  it('déchiffre ce qui a été téléchargé et lui redonne son type d’origine', async () => {
+    const clair = new TextEncoder().encode('contenu du document').buffer as ArrayBuffer;
+    const paquet = await chiffrerOctets(cle, clair);
+    poser(clientFactice({
+      telechargement: { data: { arrayBuffer: () => Promise.resolve(paquet) }, error: null },
+    }));
+    const info = {
+      nom: 'avis.pdf', taille: 10, type: 'application/pdf',
+      categorie: 'Impôts', deposeLe: '2026-01-01T00:00:00Z',
+    };
+    const blob = await coffre.recupererFichier(UTILISATEUR, cle, 'abc', info);
+    assert.equal(blob.type, 'application/pdf');
+    const relu = new Uint8Array(await blob.arrayBuffer());
+    assert.deepEqual(Array.from(relu), Array.from(new Uint8Array(clair)));
+  });
+
+  it('refuse quand le serveur ne trouve pas l’objet', async () => {
+    poser(clientFactice({ telechargement: { data: null, error: { message: 'absent' } } }));
+    const info = {
+      nom: 'avis.pdf', taille: 10, type: 'application/pdf',
+      categorie: 'Impôts', deposeLe: '2026-01-01T00:00:00Z',
+    };
+    await assert.rejects(() => coffre.recupererFichier(UTILISATEUR, cle, 'abc', info), /introuvable/);
+  });
+});
+
 // ─────────────────────────────── Supprimer ───────────────────────────────
 
 describe('supprimer un fichier', () => {
@@ -450,6 +497,45 @@ describe('demander au coffre', () => {
   });
 });
 
+// ─────────────────────────────── Échéances ───────────────────────────────
+
+describe('écarter une échéance', () => {
+  const depart = (): IndexCoffre => ({
+    objets: {
+      abc: {
+        nom: 'facture.pdf', taille: 10, type: 'application/pdf',
+        categorie: 'Assurance', deposeLe: '2026-01-01T00:00:00Z',
+        echeance: ECHEANCE, emetteur: 'Assureur X', referenceClient: 'CL-42',
+        lettre: coffre.composerLettreResiliation(IDENTITE, 'Assureur X', 'CL-42', '2026-11-15'),
+      },
+    },
+    rendezVous: { r1: { id: 'r1', libelle: 'Dentiste', date: '2026-10-02' } },
+    identite: IDENTITE,
+  });
+
+  it('retire l’échéance et la lettre déjà composée, sans supprimer le document', async () => {
+    const f = poser(clientFactice());
+    const index = await coffre.ecarterEcheance(UTILISATEUR, cle, 'abc', depart());
+    assert.equal(index.objets.abc?.echeance, undefined);
+    assert.equal(index.objets.abc?.lettre, undefined);
+    assert.equal(index.objets.abc?.nom, 'facture.pdf');
+    assert.ok(f.premier('delete'), 'l’échéance n’a pas été retirée de coffre_echeances');
+  });
+
+  it('conserve les rendez-vous et l’identité, comme les autres écritures', async () => {
+    const f = poser(clientFactice());
+    await coffre.ecarterEcheance(UTILISATEUR, cle, 'abc', depart());
+    const index = await indexEnvoye(f);
+    assert.deepEqual(index.rendezVous, depart().rendezVous);
+    assert.deepEqual(index.identite, IDENTITE);
+  });
+
+  it('refuse un document qu’elle ne trouve pas, plutôt que d’en créer un', async () => {
+    poser(clientFactice());
+    await assert.rejects(() => coffre.ecarterEcheance(UTILISATEUR, cle, 'inconnu', depart()));
+  });
+});
+
 // ─────────────────────────── Corriger un classement ───────────────────────────
 
 describe('modifier un objet', () => {
@@ -497,5 +583,28 @@ describe('modifier un objet', () => {
     await assert.rejects(
       () => coffre.modifierObjet(UTILISATEUR, cle, 'inconnu', { categorie: 'Impôts' }, depart()),
     );
+  });
+});
+
+// ─────────────────────────────── Identité ───────────────────────────────
+
+describe('enregistrer l’identité', () => {
+  it('conserve les documents et rendez-vous déjà présents dans l’index', async () => {
+    const f = poser(clientFactice());
+    const depart: IndexCoffre = {
+      objets: {
+        abc: {
+          nom: 'avis.pdf', taille: 1, type: 'application/pdf',
+          categorie: 'Impôts', deposeLe: '2026-01-01T00:00:00Z',
+        },
+      },
+      rendezVous: { r1: { id: 'r1', libelle: 'Dentiste', date: '2026-10-02' } },
+    };
+    await coffre.enregistrerIdentite(UTILISATEUR, cle, IDENTITE, depart);
+
+    const index = await indexEnvoye(f);
+    assert.deepEqual(index.objets, depart.objets);
+    assert.deepEqual(index.rendezVous, depart.rendezVous);
+    assert.deepEqual(index.identite, IDENTITE);
   });
 });
