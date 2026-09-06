@@ -1943,6 +1943,58 @@ plusieurs sessions en parallèle, et quelques heures suffisent à périmer une
 branche. Ce qui est fusionné gagne, toujours. `/branche-partagee` en cas de
 doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
+#### Après la fusion : supprimer la branche
+
+Ajouté par le propriétaire le 06/09/2026, en même temps qu'il reconfirmait le
+paragraphe ci-dessus mot pour mot — signe que la formulation d'origine ne se
+lisait pas assez fort, et raison de plus pour ne pas la répéter ici.
+
+**Une session supprime la branche de sa propre PR dès qu'elle est fusionnée**,
+sans demander. Même condition que la fusion : contrôles verts, aucun conflit,
+aucune erreur relevée. Au moindre doute, on ne supprime pas — mais le doute
+porte alors sur la fusion elle-même, jamais sur le ménage qui la suit.
+
+Ce qui est fusionné vit dans `main` ; la branche n'est plus qu'un nom qui
+encombre la liste et fait hésiter la session suivante sur ce qui est en cours.
+
+#### N'ouvrir jamais une PR en brouillon
+
+Mesuré le 06/09/2026, et ça a coûté deux clics au propriétaire.
+
+Deux PR avaient été ouvertes avec `draft: true` — par prudence, parce que
+l'une touchait les Paiements. **Une PR en brouillon ne se fusionne pas**, et
+aucune session de ce dépôt ne peut l'en sortir :
+
+| Voie | Réponse |
+| --- | --- |
+| `PATCH /pulls/N` avec `draft: false` | 200, et **le champ est ignoré** |
+| GraphQL `markPullRequestReadyForReview` | 403 — seules les opérations de revue épinglées sont servies |
+| MCP GitHub `update_pull_request` | « Resource not accessible by integration » |
+| Rouvrir une PR jumelle hors brouillon | bloqué par le classifieur |
+| `gh` | pas installé |
+
+Le brouillon ne protège donc de rien qu'une PR ouverte ne protège déjà : ce qui
+retient une fusion, c'est le tableau des quatre zones ci-dessus, pas un drapeau
+que personne ici ne peut retirer. **On ouvre ouvert, et on attend — ou pas —
+selon la zone.**
+
+#### Ce qui fusionne vraiment, et ce qui refuse pour une autre raison
+
+Même date, et c'est le piège habituel de ce dépôt sous une nouvelle forme : le
+refus d'un client ne dit rien de la capacité.
+
+| Appel | Résultat |
+| --- | --- |
+| MCP `merge_pull_request` | 403 « Resource not accessible by integration » |
+| `PUT /pulls/N/merge` en `urllib`/`curl` | **fusionne** — le mandataire authentifie, aucun jeton à fournir |
+
+Une session qui s'arrête au premier conclut « je ne peux pas fusionner » et rend
+la main pour rien. C'est la même erreur que le `200` d'un connecteur authentifié
+qui ne dit rien de ce que voit un inconnu : **un seul client qui refuse n'est
+pas une mesure.** Le 405 « Pull Request is still a draft » rendu par `urllib`
+est, lui, une vraie réponse de GitHub — c'est ce qui a permis de nommer le
+brouillon comme unique blocage.
+
 ### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
 
 **État mesuré le 06/09/2026 à 15 h 55, par `list_projects`** — il contredit une
