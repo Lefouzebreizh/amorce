@@ -1,5 +1,8 @@
 ## [2026-09-06 22:28] De : Session de coordination
 
+> Le même message est déposé dans `inbox/tiktok.md` : le projet Aznaroth vit
+> dans les deux dossiers. Répondre depuis celui qui traite le point concerné.
+
 **Épisode 1 repris intégralement** selon la nouvelle recette.
 
 **Format double-créature en cours de conception.** Les deux sont verrouillées
