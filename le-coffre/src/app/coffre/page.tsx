@@ -12,7 +12,7 @@ import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, ecarterEcheance, statutEcheance,
-  interpreterQuestion, SEUIL_BIENTOT_JOURS,
+  interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
 } from '@/lib/coffre';
 import { RemplirFormulaire } from './RemplirFormulaire';
@@ -649,11 +649,12 @@ export default function PageCoffre() {
     const forme = new FormData(e.target as HTMLFormElement);
     const libelle = String(forme.get('libelle') || '').trim();
     const date = String(forme.get('date') || '');
+    const heure = String(forme.get('heure') || '').trim();
     if (!libelle || !date) return;
     setEnCours(true);
     setErreur('');
     try {
-      const nouvelIndex = await ajouterRendezVous(utilisateur.id, cle, libelle, date, index);
+      const nouvelIndex = await ajouterRendezVous(utilisateur.id, cle, libelle, date, index, heure || null);
       setIndex(nouvelIndex);
       (e.target as HTMLFormElement).reset();
     } catch (err) {
@@ -661,6 +662,21 @@ export default function PageCoffre() {
     } finally {
       setEnCours(false);
     }
+  }
+
+  // Fabrique le .ics à la volée et le fait ouvrir par le téléphone, comme
+  // telecharger() pour un document — genererICS ne touche jamais le réseau.
+  function ajouterAuCalendrier(libelle: string, date: string, heure?: string) {
+    const contenu = genererICS(libelle, date, heure);
+    const blob = new Blob([contenu], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement('a');
+    lien.href = url;
+    lien.download = 'rendez-vous.ics';
+    document.body.appendChild(lien);
+    lien.click();
+    lien.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
 
   async function retirerRendezVous(id: string) {
@@ -1193,6 +1209,9 @@ export default function PageCoffre() {
                 <Champ name="libelle" placeholder="Dentiste, cabinet Martin…" required />
                 <div className="flex gap-2">
                   <Champ name="date" type="date" required />
+                  {/* Optionnelle : sans heure, le rendez-vous reste noté
+                      comme avant, juste sans rappel possible. */}
+                  <Champ name="heure" type="time" aria-label="Heure (optionnel)" />
                   <button type="submit" disabled={enCours}
                     className="shrink-0 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Ajouter
@@ -1210,13 +1229,20 @@ export default function PageCoffre() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">{rdv.libelle}</p>
-                            <p className="text-sm text-ink-soft">{rdv.date}</p>
+                            <p className="text-sm text-ink-soft">{rdv.date}{rdv.heure ? ` à ${rdv.heure}` : ''}</p>
                           </div>
                           <button onClick={() => retirerRendezVous(rdv.id)} className="text-sm text-wine hover:underline">
                             Retirer
                           </button>
                         </div>
                         <JaugeEcheance jours={joursRdv} />
+                        <button
+                          type="button"
+                          onClick={() => ajouterAuCalendrier(rdv.libelle, rdv.date, rdv.heure)}
+                          className="self-start text-sm text-accent hover:underline"
+                        >
+                          Ajouter au calendrier{rdv.heure ? ' (avec rappel)' : ''}
+                        </button>
                       </li>
                     );
                   })}

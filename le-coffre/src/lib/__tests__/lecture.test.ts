@@ -37,7 +37,7 @@ mock.module(new URL('../supabase.ts', import.meta.url).href, {
   namedExports: { supabase: {} },
 });
 
-const { statutEcheance, rechercheCorrespond, interpreterQuestion } = await import('../coffre');
+const { statutEcheance, rechercheCorrespond, interpreterQuestion, genererICS } = await import('../coffre');
 type ObjetIndex = Parameters<typeof rechercheCorrespond>[0];
 type IndexCoffre = Parameters<typeof interpreterQuestion>[0];
 
@@ -178,5 +178,30 @@ describe('interpréter une question posée en langage courant', () => {
   it('ne confond pas une recherche par nom avec une commande', () => {
     const { action } = interpreterQuestion(INDEX, 'edf mutuelle');
     assert.equal(action, undefined);
+  });
+});
+
+describe('le fichier .ics d’un rendez-vous', () => {
+  it('rend une journée entière et sans rappel quand aucune heure n’est donnée', () => {
+    const ics = genererICS('Dentiste', '2026-11-05');
+    assert.match(ics, /DTSTART;VALUE=DATE:20261105/);
+    assert.doesNotMatch(ics, /VALARM/);
+  });
+
+  it('pose l’heure et deux rappels (une heure et deux heures avant) quand elle est donnée', () => {
+    const ics = genererICS('Dentiste', '2026-11-05', '14:30');
+    assert.match(ics, /DTSTART:20261105T143000/);
+    assert.match(ics, /TRIGGER:-PT2H/);
+    assert.match(ics, /TRIGGER:-PT1H/);
+  });
+
+  it('échappe une virgule dans le libellé, qui casserait sinon la lecture par le calendrier', () => {
+    const ics = genererICS('Rendez-vous, cabinet Dupont', '2026-11-05');
+    assert.match(ics, /SUMMARY:Rendez-vous\\, cabinet Dupont/);
+  });
+
+  it('sépare ses lignes en CRLF, comme l’exige la norme iCalendar', () => {
+    const ics = genererICS('Dentiste', '2026-11-05');
+    assert.match(ics, /BEGIN:VCALENDAR\r\nVERSION:2\.0/);
   });
 });

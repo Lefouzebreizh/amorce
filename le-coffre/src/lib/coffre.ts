@@ -68,6 +68,10 @@ export type RendezVous = {
   id: string;
   libelle: string;
   date: string;
+  // Optionnelle : un rendez-vous plus ancien n'en a pas. Ne part jamais en
+  // clair vers coffre_echeances, exactement comme le libellé — voir
+  // ajouterRendezVous.
+  heure?: string;
 };
 
 export type Identite = {
@@ -558,8 +562,13 @@ export async function supprimerFichier(
 // Martin ») reste chiffré dans l'index, comme un nom de document — seule la
 // date part en clair vers coffre_echeances, avec type='rendezvous', pour que
 // la fonction d'alerte sache prévenir sans jamais savoir de quoi il s'agit.
+// L'heure, quand elle est donnée, suit la même règle que le libellé :
+// jamais en clair, jamais vers Supabase — seul genererICS la lit, dans le
+// navigateur, pour fabriquer un fichier à importer dans le calendrier du
+// téléphone.
 export async function ajouterRendezVous(
   userId: string, cle: CryptoKey, libelle: string, date: string, index: IndexCoffre,
+  heure?: string | null,
 ): Promise<IndexCoffre> {
   const id = nomOpaque();
   const { error } = await supabase
@@ -569,10 +578,54 @@ export async function ajouterRendezVous(
 
   const nouvel_index: IndexCoffre = {
     ...index,
-    rendezVous: { ...index.rendezVous, [id]: { id, libelle, date } },
+    rendezVous: { ...index.rendezVous, [id]: { id, libelle, date, ...(heure ? { heure } : {}) } },
   };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
+}
+
+// Échappe les caractères que la norme iCalendar (RFC 5545) réserve — sans
+// ça, une virgule ou un point-virgule dans un libellé casserait la lecture
+// par l'application calendrier qui importe le fichier.
+function echapperICS(texte: string): string {
+  return texte
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\n/g, '\\n');
+}
+
+// Fabrique un fichier .ics pour importer un rendez-vous dans le calendrier
+// du téléphone — entièrement local, en bibliothèque standard : aucune
+// donnée n'atteint un serveur de calendrier (Google, Apple ou autre), voir
+// SECURITY.md section « Le calendrier ». Sans heure, l'événement part en
+// journée entière et sans rappel — une alarme relative à minuit n'aurait
+// aucun sens. Avec une heure, deux rappels (une heure et deux heures avant)
+// sont ajoutés d'office, pour ne pas faire choisir entre les deux.
+export function genererICS(libelle: string, date: string, heure?: string | null): string {
+  const horodatage = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const uid = `${crypto.randomUUID()}@tiroir-secret`;
+  const resume = echapperICS(libelle);
+  const dateCompacte = date.replace(/-/g, '');
+  const lignes = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Le Tiroir Secret//FR',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${horodatage}`,
+    `SUMMARY:${resume}`,
+  ];
+  if (heure) {
+    lignes.push(`DTSTART:${dateCompacte}T${heure.replace(':', '')}00`);
+    for (const declenchement of ['-PT2H', '-PT1H']) {
+      lignes.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${resume}`, `TRIGGER:${declenchement}`, 'END:VALARM');
+    }
+  } else {
+    lignes.push(`DTSTART;VALUE=DATE:${dateCompacte}`);
+  }
+  lignes.push('END:VEVENT', 'END:VCALENDAR');
+  return lignes.join('\r\n');
 }
 
 export async function supprimerRendezVous(
