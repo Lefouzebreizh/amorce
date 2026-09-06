@@ -75,6 +75,34 @@ sur la même image : plus aucune invention. Cela ne garantit pas l'absence
 totale d'erreur sur un vrai document ambigu — d'où l'obligation de validation
 humaine avant tout dépôt, qui reste la vraie garde-fou, pas le prompt.
 
+## L'assistant conversationnel : une deuxième exception, plus étroite
+
+Depuis l'ajout de la fonction `assistant-coffre` (06/09/2026), une question posée
+dans le panneau « Demander au coffre » part vers cette fonction, qui la transmet
+à l'API Claude — **jamais les fichiers eux-mêmes**, seulement un résumé par
+document (`digestIndex` dans `src/lib/coffre.ts`) : nom, catégorie, type,
+émetteur, montant, libellé et date d'échéance, et jusqu'à 200 caractères du
+`texteExtrait` (lui-même déjà plafonné à 500 caractères à l'analyse — voir plus
+bas). C'est plus étroit que l'exception de `classer-document` : celle-là voit le
+document entier une fois, à l'instant du dépôt ; celle-ci ne voit jamais que ce
+résumé, à chaque question posée, aussi longtemps que le panneau reste ouvert.
+
+**Ce que ça permet** : retrouver un papier par une question en langage courant
+(« mes photos », « le papier de la mutuelle »), et — via l'outil de recherche
+web hébergé par Claude, plafonné à trois recherches par question
+(`RECHERCHES_WEB_MAX`) — répondre à une vraie question générale (démarche
+administrative, définition) qui déborde de la paperasse personnelle. La
+fonction ne conserve rien, comme `classer-document`, et la réponse précise
+elle-même si elle s'appuie sur une recherche web (`rechercheWebEffectuee`)
+plutôt que de laisser confondre les deux sources.
+
+**Ce que le prompt interdit explicitement** : citer un document (`documentsCites`)
+qui n'est pas dans la liste transmise, ou deviner un fait sur un papier plutôt
+que de répondre qu'il ne le trouve pas. Le client revérifie quand même côté
+navigateur (`nomExistant` dans `AssistantCoffre.tsx`) avant d'afficher un lien
+cliquable vers un document cité — une garantie de plus, indépendante du prompt,
+si jamais Claude recopiait mal un nom.
+
 ## La lettre de résiliation : un gabarit fixe, jamais du texte deviné
 
 Ajoutée le 04/09/2026, en version volontairement simplifiée par rapport à

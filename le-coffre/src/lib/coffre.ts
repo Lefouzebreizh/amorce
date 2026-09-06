@@ -43,8 +43,9 @@ export type ObjetIndex = {
   // deviné.
   montant?: string | null;
   // Jusqu'à 500 caractères de ce qui est réellement lisible sur le document —
-  // sert uniquement à la recherche (voir rechercheCorrespond ci-dessous),
-  // jamais affiché tel quel dans l'interface.
+  // sert à la recherche locale (rechercheCorrespond) et, tronqué à 200
+  // caractères, part vers assistant-coffre pour répondre aux questions
+  // (digestIndex) — jamais affiché tel quel dans l'interface, voir SECURITY.md.
   texteExtrait?: string | null;
 };
 
@@ -109,6 +110,56 @@ export function rechercheCorrespond(objet: ObjetIndex, requete: string): boolean
   if (!q) return true;
   const champs = [objet.nom, objet.categorie, objet.emetteur, objet.texteExtrait];
   return champs.some((champ) => champ && normaliser(champ).includes(q));
+}
+
+export type ReponseQuestion = { reponse: string; noms: string[] };
+
+// Verbes, articles et mots génériques d'une question posée en langage courant
+// (« trouve-moi le papier de la mutuelle ») — retirés pour isoler les vrais
+// mots-clés une fois l'intention de type (image/PDF) reconnue à part.
+const MOTS_VIDES_QUESTION = new Set([
+  'trouve', 'trouver', 'cherche', 'chercher', 'montre', 'montrer', 'ouvre', 'ouvrir',
+  'moi', 'me', 'mon', 'ma', 'mes', 'un', 'une', 'des', 'le', 'la', 'les', 'du', 'de',
+  'papier', 'papiers', 'document', 'documents', 'fichier', 'fichiers',
+  'ou', 'est', 'qui', 'concerne', 'sur', 'pour', 'avec', 'dans', 'coffre',
+]);
+
+// Une question posée en langage courant plutôt qu'un mot-clé isolé — reconnaît
+// d'abord une intention de type de fichier (« mes photos », « un pdf »), sinon
+// retombe sur les mots-clés restants comparés avec rechercheCorrespond.
+// Entièrement local : ne lit que l'index déjà déchiffré, ne quitte jamais le
+// navigateur — contrairement à demanderAuCoffre, qui elle appelle un serveur.
+export function interpreterQuestion(index: IndexCoffre, question: string): ReponseQuestion {
+  const q = normaliser(question.trim());
+  const tousLesNoms = Object.keys(index.objets);
+  if (!q) return { reponse: '', noms: tousLesNoms };
+
+  const veutImage = /\bimages?\b|\bphotos?\b/.test(q);
+  const veutPdf = /\bpdf\b/.test(q);
+
+  let noms = tousLesNoms;
+  if (veutImage) {
+    noms = noms.filter((n) => index.objets[n]?.type.startsWith('image/'));
+  } else if (veutPdf) {
+    noms = noms.filter((n) => index.objets[n]?.type === 'application/pdf');
+  }
+
+  const motsCles = q.split(/[^a-z0-9À-ÿ]+/)
+    .filter((mot) => mot && !MOTS_VIDES_QUESTION.has(mot) && !['image', 'images', 'photo', 'photos', 'pdf'].includes(mot));
+  if (motsCles.length > 0) {
+    noms = noms.filter((n) => {
+      const objet = index.objets[n];
+      return objet ? motsCles.some((mot) => rechercheCorrespond(objet, mot)) : false;
+    });
+  }
+
+  if (noms.length === 0) {
+    return { reponse: `Aucun papier ne correspond à « ${question.trim()} ».`, noms: [] };
+  }
+  if (noms.length === 1) {
+    return { reponse: `J'ai trouvé un papier : « ${index.objets[noms[0] as string]?.nom} ».`, noms };
+  }
+  return { reponse: `${noms.length} papiers correspondent à ta recherche.`, noms };
 }
 
 // Catégories où un document a des chances d'être un abonnement résiliable —
@@ -193,6 +244,57 @@ export async function proposerClassement(fichier: File): Promise<PropositionClas
     });
     if (error || !data || 'erreur' in data) return vide;
     return data as PropositionClassement;
+  } catch {
+    return vide;
+  }
+}
+
+export type TourConversation = { role: 'user' | 'assistant'; texte: string };
+
+export type ReponseAssistant = {
+  reponse: string;
+  documentsCites: string[];
+  ouvrirFormulaire: boolean;
+  rechercheWebEffectuee: boolean;
+};
+
+// Un résumé de chaque document — jamais le fichier, jamais tout le texte
+// extrait (tronqué à 200 caractères, juste de quoi situer le document, pas de
+// quoi le reconstituer) — c'est ce qui part vers assistant-coffre pour que
+// Claude puisse répondre « où est mon papier EDF ». Voir SECURITY.md,
+// section « L'assistant ».
+type DigestDocument = {
+  nom: string; categorie: string; type: string; emetteur?: string; montant?: string | null;
+  echeanceLibelle?: string | null; echeanceDate?: string | null; extrait?: string | null;
+};
+
+function digestIndex(index: IndexCoffre): DigestDocument[] {
+  return Object.values(index.objets).map((o) => ({
+    nom: o.nom, categorie: o.categorie, type: o.type,
+    emetteur: o.emetteur, montant: o.montant,
+    echeanceLibelle: o.echeance?.libelle ?? null, echeanceDate: o.echeance?.date ?? null,
+    extrait: o.texteExtrait ? o.texteExtrait.slice(0, 200) : null,
+  }));
+}
+
+// Envoie une question et un résumé des documents (jamais les fichiers
+// eux-mêmes) à la fonction serveur assistant-coffre, qui répond en s'appuyant
+// sur ce résumé et, si la question déborde de la paperasse personnelle, une
+// recherche web — voir SECURITY.md. N'échoue jamais bruyamment : une panne
+// rend une réponse d'excuse plutôt que de casser le fil de discussion.
+export async function demanderAuCoffre(
+  question: string, historique: TourConversation[], index: IndexCoffre,
+): Promise<ReponseAssistant> {
+  const vide: ReponseAssistant = {
+    reponse: "Je n'ai pas pu répondre à l'instant — réessaie dans un moment.",
+    documentsCites: [], ouvrirFormulaire: false, rechercheWebEffectuee: false,
+  };
+  try {
+    const { data, error } = await supabase.functions.invoke('assistant-coffre', {
+      body: { question, historique, documents: digestIndex(index) },
+    });
+    if (error || !data || 'erreur' in data) return vide;
+    return data as ReponseAssistant;
   } catch {
     return vide;
   }
