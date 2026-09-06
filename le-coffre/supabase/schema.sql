@@ -116,3 +116,71 @@ create policy "objets_proprietaire_supprime" on storage.objects
     bucket_id = 'coffre-objets'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- ---------------------------------------------------------------------------
+-- 4. Les échéances en clair : ce que la fonction d'alerte a le droit de voir.
+-- ---------------------------------------------------------------------------
+-- Ajoutée le 06/09/2026, après un audit interne : la table était interrogée par
+-- le client (`coffre.ts`) et lue par l'Edge Function d'alertes, mais **absente
+-- de ce schéma** — donc sa RLS n'était prouvée nulle part, et un clone neuf la
+-- créait sans garde. Sans RLS, n'importe quel compte authentifié lit par
+-- l'API PostgREST les dates d'échéance et les `user_id` de **tous** les autres.
+--
+-- Seules la date et un type ('rendezvous' ou rien) partent en clair : le libellé
+-- et le contenu restent chiffrés dans l'index. `alerte_envoyee_le` est écrit par
+-- la fonction d'alerte, en service_role, qui contourne la RLS par conception.
+create table if not exists public.coffre_echeances (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  objet_nom text not null,
+  date text not null,
+  type text,
+  alerte_envoyee_le timestamptz
+);
+
+alter table public.coffre_echeances enable row level security;
+
+-- Le client insère une échéance et la supprime avec le document — rien d'autre.
+-- Pas de `select` client : il ne lit jamais cette table (l'index chiffré porte
+-- ses échéances côté navigateur), et ne pas l'exposer évite qu'un compte lise
+-- les dates d'un autre. La fonction d'alerte lit en service_role, hors RLS.
+drop policy if exists "echeances_proprietaire_cree" on public.coffre_echeances;
+create policy "echeances_proprietaire_cree" on public.coffre_echeances
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "echeances_proprietaire_supprime" on public.coffre_echeances;
+create policy "echeances_proprietaire_supprime" on public.coffre_echeances
+  for delete using (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- 5. Le journal des tentatives : la deuxième barrière anti-force-brute.
+-- ---------------------------------------------------------------------------
+-- Même histoire que la table ci-dessus, et le trou y était plus grave. Le
+-- compteur d'échecs récents (`tropDeTentatives`) refuse d'aller plus loin après
+-- dix `reussie=false`. Sans RLS, un compte authentifié pouvait **supprimer ses
+-- propres échecs** pour remettre le compteur à zéro et forcer la phrase secrète
+-- sans fin — ou lire et polluer les tentatives d'autrui.
+create table if not exists public.coffre_tentatives (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  reussie boolean not null,
+  le timestamptz not null default now()
+);
+
+alter table public.coffre_tentatives enable row level security;
+
+-- Insert et select sur ses propres lignes, et **volontairement ni delete ni
+-- update** : c'est ce qui empêche d'effacer ses échecs pour contourner le
+-- plafond. Ce que la RLS ne peut pas faire, et qui reste une limite du design :
+-- le compteur est appelé par le client, donc un attaquant qui pilote le
+-- navigateur peut choisir de ne jamais journaliser un échec. Fermer cela
+-- demanderait de déplacer la vérification côté serveur (RPC ou Edge) — décision
+-- d'architecture, hors de ce correctif de schéma. Le PBKDF2 à 600 000
+-- itérations reste la première barrière, celle qui ne dépend pas du client.
+drop policy if exists "tentatives_proprietaire_cree" on public.coffre_tentatives;
+create policy "tentatives_proprietaire_cree" on public.coffre_tentatives
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "tentatives_proprietaire_lit" on public.coffre_tentatives;
+create policy "tentatives_proprietaire_lit" on public.coffre_tentatives
+  for select using (auth.uid() = user_id);
