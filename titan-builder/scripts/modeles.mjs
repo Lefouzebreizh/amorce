@@ -48,12 +48,19 @@ const MENTION =
 
 const MODELES = [
   {
+    /*
+     * Pas « Couverture Tanguy » : c'est l'entreprise d'`exemple.html`, la page
+     * de démonstration que la page de vente montre déjà. Deux entrées de la
+     * galerie tombaient sur le même artisan, ce qui contredit à voix haute son
+     * argument — six métiers, six sites. Une entreprise par page, sans
+     * exception.
+     */
     fichier: 'couvreur',
     titre: 'Couvreur',
-    entreprise: 'Couverture Tanguy',
-    ville: 'Auray',
+    entreprise: 'Toitures Le Goff',
+    ville: 'Ploërmel',
     couleur: '#2f6f4e',
-    slogan: 'Couvreur zingueur dans le Morbihan. Devis sous 48 h.',
+    slogan: 'Couvreur zingueur à Ploërmel. Devis sous 48 h.',
     metier: 'Je travaille seul, sur des toits que je connais. Ardoise, zinc, Velux. Je viens voir, je chiffre, et je dis non quand ce n’est pas mon métier.',
     services: 'Toiture ardoise et tuile\nZinguerie et gouttières\nPose de Velux\nDémoussage et entretien',
   },
