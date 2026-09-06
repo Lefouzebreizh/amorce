@@ -34,10 +34,15 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt-cinq chantiers actifs sans code commun, plus un en sommeil,
-et cinq ressources transverses qui ne sont pas des projets mais servent à tous.
-Une idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir
-un front de plus. La liste vieillit vite — recompter avant de noter.
+Ce dépôt héberge vingt et un chantiers actifs, plus un en sommeil, et cinq
+ressources transverses qui ne sont pas des projets mais servent à tous. Une
+idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un
+front de plus. La liste vieillit vite — recompter avant de noter.
+
+**« Sans code commun » a été retiré de cette phrase le 06/09/2026 : c'est
+faux.** Voir la section « Moteurs techniques partagés » juste en dessous —
+deux chantiers au moins portent du code explicitement porté ou copié d'un
+autre, et deux paires ont **ré-implémenté la même chose sans le savoir**.
 
 | Chantier | Ce que c'est | Pile | État |
 | --- | --- | --- | --- |
@@ -63,6 +68,30 @@ un front de plus. La liste vieillit vite — recompter avant de noter.
 | **Bilan Patrimoine** (`bilan-patrimoine/`) | Le produit grand public : diagnostic gratuit puis suivi payant. Lot 1 — calcul, barèmes et texte. | TypeScript | actif |
 | **Le Coffre** (`le-coffre/`) | Coffre-fort de documents chiffré côté navigateur, multi-utilisateurs. Productisation du coffre de Life-Organizer. | Next.js 16, Supabase | actif |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
+
+## Moteurs techniques partagés
+
+Écrit le 06/09/2026, à partir d'une recherche sur le code — pas sur la mémoire
+de qui a écrit quoi. **Avant de coder un stockage chiffré, une détection
+d'échéance, un classement de document par modèle de vision, ou toute autre
+brique généraliste, relire ce tableau.** C'est le geste que `/nouveau-projet`
+demande désormais, et l'endroit précis où deux sessions ont déjà recodé la
+même chose sans se voir — les deux dernières lignes ci-dessous.
+
+| Moteur | Où il vit | Qui s'en sert | État |
+| --- | --- | --- | --- |
+| Chiffrement + coffre de documents | `life-organizer/modules/coffre/stockage.py` | Porté **sans changement de logique** dans `le-coffre/src/lib/crypto.ts` (Web Crypto API) | Partagé, assumé — c'est la productisation documentée dans `le-coffre/README.md` |
+| Charte visuelle des sites artisans | `titan-builder/src/lib/charte.ts` | Copiée dans `artisan-express/`, synchronisation **testée** par `artisan-express/tests/charte.test.ts` | Partagé, gardé par un test — l'écart casse la CI |
+| Lettre de résiliation | `paper-manager/core/resiliation.py` (version complète) | `le-coffre/` en tire une version volontairement simplifiée — écart documenté dans son `SECURITY.md` | Divergence **assumée**, pas un doublon à corriger |
+| Détection d'échéance | `paper-manager/core/calendrier.py` (CLI, dates lues dans un document scanné) | **Ré-implémentée indépendamment** dans `le-coffre/supabase/functions/classer-document/` (vision, Supabase) | **Deux moteurs, pas un.** Non unifié — voir `second-brain/lecons/` (05/09/2026) |
+| Classement d'un document par modèle de vision | `life-organizer/modules/depot/traitement.py` (Python) | **Ré-implémenté indépendamment** dans `le-coffre/supabase/functions/classer-document/` (TypeScript) | **Deux moteurs, pas un** |
+| Voix off synthétisée localement, sans réseau | `.claude/skills/bande-son/scripts/voix.py` | Outil de compétence, pas encore un moteur applicatif — réutilisable par tout projet vidéo (`motion/`, `montage-auto/`, Amorce) | Existe, sous-utilisé |
+
+Les deux lignes en gras ne sont pas des fautes à corriger dans l'instant — les
+unifier est une décision de produit, pas un geste de ménage — mais elles
+doivent rester visibles ici tant que la décision n'est pas prise, pour qu'une
+troisième implémentation n'apparaisse pas avant les deux premières d'être
+réconciliées.
 
 ## Ressources transverses
 
