@@ -252,6 +252,18 @@ sautent directement à chacune, `scroll-mt-6` évitant qu'elles collent au bord
 de l'écran à l'arrivée. Masqués à partir de `lg` : la grille à trois colonnes
 y montre déjà tout côte à côte, sans défilement à raccourcir.
 
+## Heure de rendez-vous et export vers le calendrier du téléphone (06/09/2026)
+
+Le formulaire de rendez-vous porte désormais un champ heure, optionnel — un
+rendez-vous sans heure continue de fonctionner exactement comme avant.
+Chaque rendez-vous gagne un bouton « Ajouter au calendrier » qui télécharge
+un fichier `.ics` (`genererICS` dans `coffre.ts`) : ouvert une fois, il
+l'importe dans l'application calendrier du téléphone, avec **deux rappels
+automatiques** (une heure et deux heures avant) quand une heure a été
+donnée. Tout se fabrique dans le navigateur, sans appel réseau — voir
+`SECURITY.md`, section « Le calendrier », pour pourquoi ce choix plutôt
+qu'une vraie intégration Google Agenda ou iCloud.
+
 ## Architecture
 
 ```
