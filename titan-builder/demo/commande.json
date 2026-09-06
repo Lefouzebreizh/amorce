@@ -12,6 +12,18 @@
     "options": [
       "appel",
       "whatsapp"
+    ],
+    "avis": [
+      {
+        "texte": "Votre premier avis prendra cette place, avec les mots exacts de votre client.",
+        "prenom": "Prénom",
+        "commune": "commune"
+      },
+      {
+        "texte": "Le deuxième juste en dessous. Deux ou trois suffisent : au-delà, plus personne ne les lit.",
+        "prenom": "Prénom",
+        "commune": "commune"
+      }
     ]
   },
   "photos": []
