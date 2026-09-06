@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Bihan Électricité — Vannes</title>
+<meta name="description" content="Électricien à Vannes. Mise aux normes et dépannage.">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Le Bihan Électricité">
+<meta property="og:title" content="Le Bihan Électricité — Vannes">
+<meta property="og:description" content="Électricien à Vannes. Mise aux normes et dépannage.">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Le Bihan Électricité",
+  "telephone": "+33297000000",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Vannes",
+    "addressCountry": "FR"
+  },
+  "areaServed": "Vannes",
+  "description": "Tableau, rénovation complète, panne un dimanche soir. Je donne un prix avant de commencer, et il ne bouge pas. Cette page est un modèle : « Le Bihan Électricité » n’existe pas et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré — avec vos textes, vos photos et votre numéro à la place de ceux-ci.",
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Prestations — Le Bihan Électricité",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Mise aux normes"
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Tableau électrique"
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Rénovation complète"
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Dépannage"
+        }
+      }
+    ]
+  }
+}
+</script>
+<style>
+  /*
+   * La charte d'Artisan Express, posée en jetons.
+   *
+   * **Une seule teinte par site, et elle vient du métier** — pas d'un
+   * hexadécimal saisi au clavier. Elle est choisie dans une palette fermée de
+   * cinq valeurs froides, toutes mesurées au-dessus de 7:1 sur le fond de
+   * page : c'est le plancher que « CLAUDE.md » §2 bis impose à un accent, et il
+   * est plus haut que le minimum légal parce que ces pages se lisent dehors.
+   *
+   * Les noms de surface sont ceux du dépôt — « ink », « slab », « panel », « edge » —
+   * et non un vocabulaire propre à ce gabarit : une brique doit pouvoir se
+   * déplacer d'un projet à l'autre.
+   *
+   * Ce qui a disparu ici et qui ne doit pas revenir : le thème clair et son
+   * « prefers-color-scheme ». Deux palettes tenues en parallèle divergent au
+   * premier changement, et c'est toujours celle qu'on ne regarde pas qui part
+   * en vrille. Le sombre est la charte, sans variante.
+   */
+  :root {
+    color-scheme: dark;
+    --ink: #16151a; --slab: #1f1e25;
+    --panel: #26242d; --edge: #2e2c34;
+    --encre: #f1efea; --encre-douce: #b7b3a9;
+    --encre-eteinte: #6c6a72;
+    --accent: #69bcd3; --accent-vif: #90cedf;
+    /* Ce qu'on écrit **sur** l'accent : le libellé du bouton plein. */
+    --encre-entete: #05252e;
+    /* Le halo de l'entête et le fond des blocs discrets. */
+    --voile: #122f37;
+    /*
+     * L'accent en tant que **texte**. Sur fond clair il fallait l'assombrir ;
+     * sur le fond de la charte il se lit tel quel, et le jeton reste émis en
+     * clair pour qu'un test puisse le mesurer plutôt que le supposer.
+     */
+    --accent-texte: #69bcd3;
+  }
+  * { box-sizing: border-box; }
+  /*
+   * La page fait la largeur d'un telephone, partout.
+   *
+   * Sur un telephone la contrainte ne mord pas : le corps occupe deja 100 %
+   * du viewport, mesure a 390, 360 et 320 px sans un pixel de debordement.
+   * Elle mord sur un ecran large, ou une colonne de 40rem donnait 640 px --
+   * soit une page qui ne ressemblait plus du tout a ce que l'artisan voit
+   * quand il ouvre le lien, et c'est pourtant sur cet ecran-la qu'on la
+   * relit avant de l'envoyer. On jugeait donc une mise en page que personne
+   * ne verrait.
+   *
+   * 26rem = 416 px : entre les 390 px d'un iPhone 14 et les 430 d'un Max.
+   *
+   * Le fond va sur << html >> et pas seulement ici : un corps borne laisse
+   * voir la page derriere lui, et ce serait du blanc au bord d'un site sombre.
+   */
+  html { background: #16151a; }
+  body {
+    margin: 0 auto; max-width: 26rem;
+    background: var(--ink); color: var(--encre);
+    font: 18px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  /*
+   * L'entête en halo, jamais en aplat de couleur.
+   *
+   * C'est la signature qui se reconnaît d'un site à l'autre, et c'est aussi ce
+   * qui règle la lisibilité à la racine : un titre écrit sur un aplat dépend
+   * de la teinte, un titre écrit sur le fond de page n'en dépend plus.
+   */
+  header {
+    padding: 3rem 1.25rem 2.25rem;
+    background: radial-gradient(120% 150% at 15% 0%, var(--voile) 0%, var(--ink) 68%);
+    border-bottom: 1px solid var(--edge);
+  }
+  header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.2; letter-spacing: -.01em; }
+  header p { margin: 0; font-size: 1.15rem; color: var(--accent); font-weight: 600; }
+  main { padding: 0 1.25rem 3rem; }
+  .bloc { padding: 2rem 0; border-bottom: 1px solid var(--edge); }
+  .bloc:last-of-type { border-bottom: 0; }
+  /* Le filet vertical sous chaque titre : l'autre moitié de la signature. */
+  h2 {
+    font-size: 1.4rem; margin: 0 0 .9rem; padding-left: .8rem;
+    border-left: 3px solid var(--accent);
+  }
+  /*
+   * Les prestations en liste fléchée plutôt qu'en puces.
+   *
+   * La flèche porte l'accent et rien d'autre ne le porte dans ce bloc : elle
+   * indique, elle ne décore pas. Une puce ronde en accent aurait fait de la
+   * couleur un ornement, donc muet — ce que §2 bis interdit en propres termes.
+   */
+  .services { margin: 0; padding: 0; list-style: none; }
+  .services li { margin: .35rem 0; padding-left: 1.6rem; position: relative; }
+  .services li::before {
+    content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: 700;
+  }
+  .galerie { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
+  .galerie figure { margin: 0; }
+  .avis { display: grid; gap: 1rem; }
+  /* Un filet à gauche plutôt qu'un cadre : l'œil suit la colonne de texte, et
+     deux avis ne se lisent pas comme deux boutons. */
+  .avis blockquote {
+    margin: 0; padding: .25rem 0 .25rem 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .avis p { margin: 0 0 .4rem; }
+  .avis cite { font-style: normal; font-weight: 700; color: var(--encre-douce); }
+  /*
+   * La mention des avis d'exemple, et **pas de taille réduite**.
+   *
+   * Elle valait « font-size: 1rem », soit 16 px : sous le plancher de 18 px du
+   * §2. Le défaut dormait ici depuis l'écriture du bloc — aucune démonstration
+   * ne portait d'avis, donc la règle n'était jamais appliquée à rien. Il s'est
+   * réveillé le jour où les démos en ont reçu, et c'est le contrôle visuel qui
+   * l'a vu, pas les tests.
+   *
+   * C'est la troisième fois que « rem » piège cette page : il vaut 16 px, jamais
+   * les 18 px que le corps déclare. Toute fraction de rem, et « 1rem » lui-même,
+   * passent sous le plancher.
+   *
+   * Ce qui la met en retrait est donc l'encre et l'italique, pas la taille.
+   */
+  .mention { color: var(--encre-douce); font-style: italic; margin: -.25rem 0 1rem; }
+  .galerie img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: .6rem; display: block;
+    background: var(--slab);
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1.5rem 0; }
+  /* 56 px de haut : des mains de chantier, souvent gantées, et un téléphone
+     tenu à bout de bras au soleil. */
+  .action {
+    flex: 1 1 12rem; min-height: 56px; display: flex; align-items: center;
+    justify-content: center; border-radius: .75rem; text-decoration: none;
+    font-weight: 700; border: 2px solid var(--accent); color: var(--accent);
+    background: var(--slab);
+  }
+  /* Un bouton plein contre des boutons contour : une seule action principale
+     par écran, et on ne cherche jamais où appuyer. */
+  .action.principale { background: var(--accent); color: var(--encre-entete); border-color: var(--accent); }
+  footer {
+    padding: 2rem 1.25rem; color: var(--encre-douce); text-align: center;
+    background: var(--slab); border-top: 1px solid var(--edge);
+  }
+  /*
+   * Et cette ligne-là s'appelle. Elle était lisible et pas cliquable : le
+   * visiteur qui vient de faire défiler les photos et de lire « et les communes
+   * autour » — l'instant exact où il décide — devait remonter deux écrans pour
+   * trouver le bouton d'appel. Mesuré : 2,2 écrans dans le pire cas.
+   *
+   * 44 px et non les 56 des boutons du haut : c'est un numéro dans une phrase,
+   * pas une action principale. Le plancher du dépôt est tenu, la mise en page
+   * du pied ne se déforme pas.
+   */
+  footer a {
+    display: flex; align-items: center; justify-content: center;
+    width: fit-content; margin: .25rem auto 0;
+    min-height: 44px; padding: 0 .5rem; color: var(--accent-texte);
+    font-weight: 700; text-decoration: underline; text-underline-offset: .2em;
+  }
+  /*
+   * La signature, et **sans lien**.
+   *
+   * Elle n'est pas décorative : c'est elle qui fait qu'un voisin de chantier
+   * demande qui a fait le site. Elle ne porte volontairement aucune adresse —
+   * le dépôt s'interdit d'écrire une adresse qu'il n'a pas vérifiée servie, et
+   * une adresse morte en pied de page de tous les sites livrés coûterait plus
+   * que l'absence de lien.
+   *
+   * **Ni taille réduite, ni encre éteinte, et ce n'est pas un choix de goût.**
+   * Le premier jet portait « font-size: .95rem » et « --encre-eteinte » : le
+   * rendu est sorti à 15,2 px et 3,10:1, sous les deux planchers du §2 — et
+   * les soixante-dix tests de ce projet étaient verts. Deux pièges pour un
+   * seul défaut : « rem » vaut 16 px, pas les 18 px que le corps déclare,
+   * donc toute fraction de rem passe sous le plancher ; et l'encre éteinte
+   * n'était mesurée que sur le fond de page, alors que le pied est un cran
+   * plus clair.
+   *
+   * La discrétion se fait donc par l'espace et le trait, jamais en rapetissant.
+   */
+  .signature {
+    margin: 1.5rem 0 0; padding-top: 1.25rem;
+    border-top: 1px solid var(--edge); color: var(--encre-douce);
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Le Bihan Électricité</h1>
+  <p>Électricien à Vannes. Mise aux normes et dépannage.</p>
+</header>
+<main>
+  <div class="actions">
+      <a class="action principale" href="tel:+33297000000">Appeler Le Bihan Électricité</a>
+      <a class="action" href="https://wa.me/33297000000?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20votre%20site.">WhatsApp</a>
+  </div>
+  <section class="bloc">
+    <h2>Qui je suis</h2>
+    <p>Tableau, rénovation complète, panne un dimanche soir. Je donne un prix avant de commencer, et il ne bouge pas.</p>
+    <p>Cette page est un modèle : « Le Bihan Électricité » n’existe pas et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré — avec vos textes, vos photos et votre numéro à la place de ceux-ci.</p>
+  </section>
+  <section class="bloc">
+    <h2>Ce que je fais</h2>
+    <ul class="services">
+      <li>Mise aux normes</li>
+      <li>Tableau électrique</li>
+      <li>Rénovation complète</li>
+      <li>Dépannage</li>
+    </ul>
+  </section>
+  <section class="bloc">
+    <h2>Mes réalisations</h2>
+    <div class="galerie">
+      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJkMCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgo8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxMjJGMzciLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMxRjFFMjUiLz4KPC9saW5lYXJHcmFkaWVudD48L2RlZnM+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSJ1cmwoI2QwKSIvPgo8cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMzg0IiBoZWlnaHQ9IjI4NCIgcng9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2OUJDRDMiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWRhc2hhcnJheT0iMTIgOSIgb3BhY2l0eT0iMC43Ii8+CjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY5QkNEMyIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHBhdGggZD0iTTE3MiA5Nmg1NmwxMCAxOGgyMmExNCAxNCAwIDAgMSAxNCAxNHY1NGExNCAxNCAwIDAgMS0xNCAxNEgxNDBhMTQgMTQgMCAwIDEtMTQtMTR2LTU0YTE0IDE0IDAgMCAxIDE0LTE0aDIyeiIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSIxNTUiIHI9IjI2Ii8+CjwvZz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTU1IiByPSIxMSIgZmlsbD0iIzY5QkNEMyIvPgo8Y2lyY2xlIGN4PSIyNTIiIGN5PSIxMzIiIHI9IjUiIGZpbGw9IiM2OUJDRDMiLz4KPHRleHQgeD0iMjAwIiB5PSIyMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNGMUVGRUEiPlZvdHJlIHBob3RvIDE8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjYyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSIjQjdCM0E5Ij5BdmFudCAvIGFwcsOoczwvdGV4dD4KPC9zdmc+" alt="Emplacement d’une photo de chantier — Avant / après" loading="lazy"></figure>
+      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJkMSIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgo8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxMjJGMzciLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMxRjFFMjUiLz4KPC9saW5lYXJHcmFkaWVudD48L2RlZnM+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSJ1cmwoI2QxKSIvPgo8cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMzg0IiBoZWlnaHQ9IjI4NCIgcng9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2OUJDRDMiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWRhc2hhcnJheT0iMTIgOSIgb3BhY2l0eT0iMC43Ii8+CjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY5QkNEMyIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHBhdGggZD0iTTE3MiA5Nmg1NmwxMCAxOGgyMmExNCAxNCAwIDAgMSAxNCAxNHY1NGExNCAxNCAwIDAgMS0xNCAxNEgxNDBhMTQgMTQgMCAwIDEtMTQtMTR2LTU0YTE0IDE0IDAgMCAxIDE0LTE0aDIyeiIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSIxNTUiIHI9IjI2Ii8+CjwvZz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTU1IiByPSIxMSIgZmlsbD0iIzY5QkNEMyIvPgo8Y2lyY2xlIGN4PSIyNTIiIGN5PSIxMzIiIHI9IjUiIGZpbGw9IiM2OUJDRDMiLz4KPHRleHQgeD0iMjAwIiB5PSIyMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNGMUVGRUEiPlZvdHJlIHBob3RvIDI8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjYyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSIjQjdCM0E5Ij5VbmUgZmluaXRpb248L3RleHQ+Cjwvc3ZnPg==" alt="Emplacement d’une photo de chantier — Une finition" loading="lazy"></figure>
+      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJkMiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgo8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxMjJGMzciLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMxRjFFMjUiLz4KPC9saW5lYXJHcmFkaWVudD48L2RlZnM+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSJ1cmwoI2QyKSIvPgo8cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMzg0IiBoZWlnaHQ9IjI4NCIgcng9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2OUJDRDMiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWRhc2hhcnJheT0iMTIgOSIgb3BhY2l0eT0iMC43Ii8+CjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY5QkNEMyIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHBhdGggZD0iTTE3MiA5Nmg1NmwxMCAxOGgyMmExNCAxNCAwIDAgMSAxNCAxNHY1NGExNCAxNCAwIDAgMS0xNCAxNEgxNDBhMTQgMTQgMCAwIDEtMTQtMTR2LTU0YTE0IDE0IDAgMCAxIDE0LTE0aDIyeiIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSIxNTUiIHI9IjI2Ii8+CjwvZz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTU1IiByPSIxMSIgZmlsbD0iIzY5QkNEMyIvPgo8Y2lyY2xlIGN4PSIyNTIiIGN5PSIxMzIiIHI9IjUiIGZpbGw9IiM2OUJDRDMiLz4KPHRleHQgeD0iMjAwIiB5PSIyMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNGMUVGRUEiPlZvdHJlIHBob3RvIDM8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjYyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSIjQjdCM0E5Ij5MZSBjaGFudGllciBmaW5pPC90ZXh0Pgo8L3N2Zz4=" alt="Emplacement d’une photo de chantier — Le chantier fini" loading="lazy"></figure>
+    </div>
+  </section>
+  <section class="bloc">
+    <h2>Où j’interviens</h2>
+    <p>Vannes et les communes autour.</p>
+  </section>
+</main>
+<footer>Le Bihan Électricité — Vannes<a href="tel:+33297000000">02 97 00 00 00</a><p class="signature">Site réalisé par Artisan Express</p></footer>
+</body>
+</html>

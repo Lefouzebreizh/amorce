@@ -8,12 +8,26 @@ import { SECTION, TITRE_SECTION } from '@/components/ui';
  * être quatrième sur une liste, payer tous les mois, ne pas pouvoir changer une
  * ligne — et pas sur une marque. Une page de vente qui tape sur un concurrent
  * nommé se retourne, et la charte du dépôt interdit le procédé.
+ *
+ * ET LA MÊME RÈGLE VAUT POUR LES CHIFFRES, CE QUI AVAIT ÉTÉ MANQUÉ.
+ *
+ * La ligne annonçait « 49 € par mois, tous les mois » — un montant précis,
+ * affirmé comme si tout artisan le payait. Ne pas nommer l'annuaire et lui
+ * prêter un tarif exact revient au même : c'est une affirmation sur le
+ * contrat d'un tiers, invérifiable et fausse pour la plupart des lecteurs.
+ * Beaucoup ne paient rien, d'autres paient trois fois plus.
+ *
+ * Le défaut n'est pas seulement juridique. Un artisan qui paie 19 € lit le
+ * chiffre, sait qu'il est faux pour lui, et cesse de croire le reste de la
+ * page — y compris ce qui est vrai. La formulation dit donc ce qu'on sait
+ * (un abonnement, souvent, tant qu'on ne résilie pas) et se tait sur ce
+ * qu'on ne sait pas (combien, chez qui).
  */
 
 const AVANT = [
   'Tu es quatrième sur une liste, sous trois concurrents qui ont payé plus.',
   'Une photo, deux lignes, un numéro. Rien qui te ressemble.',
-  '49 € par mois, tous les mois, tant que tu ne résilies pas.',
+  'Souvent un abonnement mensuel, tant que tu ne résilies pas.',
   'Changer une ligne demande un appel et deux semaines.',
 ];
 
