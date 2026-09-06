@@ -14,6 +14,13 @@ class AppStrings {
   static const String scannerHint =
       'Cadrez l\'objet entier, de face, sur un fond dégagé.';
   static const String scannerAnalysing = 'Identification en cours…';
+
+  /// Ce que l'attente promet doit être ce que la fiche livre. Cette phrase
+  /// annonçait « recherche des prix et des marchands » — le parcours du
+  /// comparateur, remis à la version deux — et promettait donc quelque chose
+  /// que l'écran suivant ne montre pas.
+  static const String scannerAnalysingDetail =
+      'Reconnaissance de l\'objet, de sa matière et de sa couleur.';
   static const String scannerPermission =
       'L\'appareil photo est nécessaire pour identifier un objet.';
   static const String scannerPermissionAction = 'Autoriser l\'appareil photo';

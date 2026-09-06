@@ -66,7 +66,7 @@ class _Analysing extends StatelessWidget {
         Text(AppStrings.scannerAnalysing, style: context.texts.titleMedium),
         const SizedBox(height: 6),
         Text(
-          'Identification de l\'objet, recherche des prix et des marchands.',
+          AppStrings.scannerAnalysingDetail,
           textAlign: TextAlign.center,
           style: context.texts.bodySmall,
         ),
