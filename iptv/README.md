@@ -164,6 +164,19 @@ bon compromis, sur un wifi partagé ce n'en est pas un.
 
 ## S'en servir tout de suite
 
+**En une seule commande**, si vous voulez seulement voir à quoi ça ressemble :
+
+```bash
+./demarrer.sh
+```
+
+Elle installe si besoin, charge des chaînes de test **si et seulement si le
+catalogue est vide**, démarre le serveur, attend qu'il réponde vraiment, et
+affiche l'adresse à taper sur le téléphone. Ctrl-C arrête tout. Relancée sur un
+catalogue déjà rempli, elle ne touche à rien et se contente de servir.
+
+Le détail, commande par commande :
+
 ```bash
 # Un lien M3U…
 npm run iptv -- importer ma-liste.m3u
