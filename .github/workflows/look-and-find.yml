@@ -131,16 +131,40 @@ jobs:
         run: |
           if [ -n "$CLE" ]; then
             echo "Clé Gemini fournie par le secret du dépôt."
-            flutter build apk --debug --dart-define=GEMINI_API_KEY="$CLE"
+            DEFINE=(--dart-define=GEMINI_API_KEY="$CLE")
           else
             echo "::notice::Aucun secret GEMINI_API_KEY : l'APK démarrera sur son écran de configuration."
-            flutter build apk --debug
+            DEFINE=()
           fi
+          flutter build apk --debug "${DEFINE[@]}"
+          # Le second build réutilise le travail Gradle du premier : il ne
+          # recompile que l'empaquetage, quelques dizaines de secondes.
+          flutter build apk --debug --split-per-abi "${DEFINE[@]}"
 
-      - name: Publier l'APK
+      - name: Publier l'APK universel
         uses: actions/upload-artifact@v4
         with:
           name: look-and-find-debug-apk
           path: look_and_find/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      # L'APK d'un téléphone, et de lui seul : `arm64-v8a` couvre tout Android
+      # vendu depuis 2016. Environ 60 Mo là où l'universel en fait 200, parce
+      # que celui-ci embarque les trois jeux de bibliothèques natives et leurs
+      # symboles, dont un appareil donné n'utilise qu'un tiers.
+      #
+      # **Un seul fichier dans l'artéfact, et c'est le point.** Publier les
+      # trois d'un coup rendait le téléchargement plus lourd que l'universel —
+      # 178 Mo contre 98 — ce qui annulait exactement ce qu'on cherchait.
+      # Mesuré sur la première version de cette étape.
+      #
+      # L'universel reste publié à côté : c'est celui qu'on donne quand on
+      # ignore quel appareil recevra le fichier.
+      - name: Publier l'APK pour téléphone
+        uses: actions/upload-artifact@v4
+        with:
+          name: look-and-find-debug-apk-telephone
+          path: look_and_find/build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk
           if-no-files-found: error
           retention-days: 14
