@@ -1288,13 +1288,23 @@ compte connecté. Il a du **réseau**, et c'est tout ce que cette mesure dit.
 Détail et ce qui reste non vérifié dans
 `second-brain/lecons/2026-09-04-le-mandataire-du-runner-nest-pas-celui-de-la-session.md`.
 
-**Une session distante ne peut pas en joindre une autre.** Mesuré deux fois le
-29/08 : `ListAgents` ne rend aucun pair joignable et `SendMessage` refuse, alors
-que `list_sessions` montre les autres sessions du compte en train de tourner,
-dans le même environnement et sur le même dépôt. Le piège est là — leur fiche
-porte `cross_session_inbound: available`, ce qui dit qu'**elles** acceptent de
-recevoir, jamais qu'on sait router jusqu'à elles. Une session qui lit ce champ
-croit le canal ouvert et écrit un message qui ne partira pas.
+**Une session distante ne peut joindre qu'une session actuellement connectée —
+jamais une autre.** Mesuré deux fois le 29/08, avec une conclusion qui semblait
+catégorique : `ListAgents` ne rendait aucun pair joignable et `SendMessage`
+refusait, alors que `list_sessions` montrait d'autres sessions du compte
+tourner dans le même environnement. **Précisé, pas contredit, le 06/09/2026** :
+`ListAgents` répond désormais « peer messaging itself is available » — le
+mécanisme existe. L'échec ne vient pas de lui mais de la cible : une session
+trouvée par `list_sessions` avait `connection_status: disconnected`, et
+`SendMessage` l'a dit en clair, « No agent named … is reachable », plutôt que
+de refuser sans raison. Essayer coûte un appel ; ne pas essayer coûte de
+conclure à tort qu'aucun canal n'existe.
+
+Le piège reste entier pour la part qui ne s'est pas précisée : leur fiche porte
+`cross_session_inbound: available`, ce qui dit qu'**elles** acceptent de
+recevoir, jamais qu'on sait router jusqu'à elles **maintenant**. Une session
+lue `disconnected` refusera l'envoi, quel que soit ce champ — et une session
+vue `connected` reste le seul cas où tenter a une chance de marcher.
 
 Le lien entre sessions est donc le **dépôt**, et lui seul : ce fichier, les
 compétences, les agents, `second-brain/`. Une découverte qu'une autre session
@@ -1311,11 +1321,14 @@ déclarer un mur.** `list_sessions` le dit en une ligne :
 | `environment_kind: anthropic_cloud`, origine `android` ou `claude_code_mcp_seed` | un conteneur distant |
 | `connection_status: connected` | elle tourne **maintenant** |
 
-Voir n'est pas joindre : le paragraphe ci-dessus tient toujours, on ne lui parle
-pas. Le geste est donc de **nommer la session au propriétaire** — son
-identifiant et son titre — avec la tâche exacte à y reprendre, et de continuer
-sur ce qui ne dépend pas d'elle. C'est lui qui bascule d'un fil à l'autre ; ça
-lui coûte un geste, là où une impossibilité annoncée lui coûte la tâche.
+`connection_status: connected` est donc la seule condition qui rend une
+tentative sensée — sur tout le reste (`disconnected`, ou pas trouvée du tout
+par `list_sessions`), `SendMessage` échouera proprement, comme mesuré
+ci-dessus, et insister ne sert à rien. Le geste reste alors de **nommer la
+session au propriétaire** — son identifiant et son titre — avec la tâche
+exacte à y reprendre, et de continuer sur ce qui ne dépend pas d'elle. C'est
+lui qui bascule d'un fil à l'autre ; ça lui coûte un geste, là où une
+impossibilité annoncée à tort lui coûte la tâche.
 
 **Et le PC n'est pas d'office le meilleur endroit** : les deux murs ne sont pas
 les mêmes. Mesuré le 01/09/2026 sur l'agrandissement d'images — le PC tournait
@@ -2351,11 +2364,14 @@ compétences, le hook, et les fichiers transverses comme `SECURITY.md` ou un
 `AUDIT.md`. Elles doivent se coordonner **entre elles**, sans faire arbitrer
 Erwann à chaque fois.
 
-**Le canal est le dépôt, et lui seul.** Ce n'est pas un choix de style, c'est
-une contrainte mesurée deux fois (§7) : `SendMessage` refuse et `ListAgents` ne
-rend aucun pair, alors même que `list_sessions` montre les autres sessions en
-train de tourner. Une session ne peut donc pas en prévenir une autre ; elle peut
-seulement **lire ce qu'elles ont publié** et **publier ce qu'elles liront**.
+**Le canal durable est le dépôt, et lui seul.** §7 précise depuis le 06/09/2026
+qu'un message direct peut atteindre une autre session — mais seulement si elle
+est `connected` **au même instant**, ce qui n'est ni garanti ni observable à
+l'avance sans l'essayer. Le dépôt, lui, reste lisible et écrivable quel que
+soit l'état des autres sessions : c'est pour ça qu'il reste le canal par
+défaut, pas parce que l'autre serait impossible. Une session peut donc tenter
+de prévenir une autre, mais ne doit jamais **compter** dessus — elle peut
+toujours **lire ce qu'elles ont publié** et **publier ce qu'elles liront**.
 
 Ce que « se coordonner » veut dire concrètement, dans l'ordre :
 
