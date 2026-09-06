@@ -16,6 +16,7 @@
  */
 
 import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { motifsDuMetier } from './motifs.mjs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -47,9 +48,16 @@ const EXTENSIONS_IMAGE = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.g
  * Ils prennent donc la surface élevée de la charte et ses deux encres, comme
  * le reste de la page.
  */
-function cadresDeDemonstration(teinte, surfaces, encres) {
+function cadresDeDemonstration(teinte, surfaces, encres, metier) {
   const legendes = ['Avant / après', 'Une finition', 'Le chantier fini'];
   const accent = teinte.accent;
+
+  /*
+   * Le métier, quand on le connaît, remplace l'appareil photo par son propre
+   * trait — voir `motifs.mjs` pour ce que ces dessins n'ont pas le droit
+   * d'être. Inconnu, `motifs` vaut `null` et le cadre reste celui d'avant.
+   */
+  const motifs = motifsDuMetier(metier);
 
   return legendes.map((legende, rang) => {
     /*
@@ -70,18 +78,36 @@ function cadresDeDemonstration(teinte, surfaces, encres) {
      * croirait que c'est ce qu'il reçoit.
      */
     const id = `d${rang}`;
+
+    /*
+     * Le sujet du cadre : le motif du métier s'il est connu, l'appareil photo
+     * sinon.
+     *
+     * Les motifs sont tracés dans une boîte de 400 × 300 pleine, alors que le
+     * cadre réserve le bas aux deux lignes de légende (y = 232 et y = 262). La
+     * bande libre est donc y ∈ [30, 200], haute de 170 et centrée sur 115 ; les
+     * motifs, hauts de 180, y entrent à 88 %. Sans cette transformation le dessin
+     * passait sous « Votre photo 1 », et rien dans les tests ne l'aurait dit —
+     * c'est un SVG encodé, le contrôleur de lisibilité lit le HTML.
+     *
+     * L'épaisseur est portée à 7 parce que l'échelle la divise : 7 × 0,88 rend
+     * les 6,2 pixels qui font le même trait que l'appareil photo à 6.
+     */
+    const sujet = motifs
+      ? `<g fill="none" stroke="${accent}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" transform="translate(200 115) scale(0.88) translate(-200 -174)">${motifs[rang]}</g>`
+      : `<g fill="none" stroke="${accent}" stroke-width="6" stroke-linejoin="round">
+<path d="M172 96h56l10 18h22a14 14 0 0 1 14 14v54a14 14 0 0 1-14 14H140a14 14 0 0 1-14-14v-54a14 14 0 0 1 14-14h22z"/>
+<circle cx="200" cy="155" r="26"/>
+</g>
+<circle cx="200" cy="155" r="11" fill="${accent}"/>
+<circle cx="252" cy="132" r="5" fill="${accent}"/>`;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
 <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
 <stop offset="0" stop-color="${teinte.voile}"/><stop offset="1" stop-color="${surfaces.slab}"/>
 </linearGradient></defs>
 <rect width="400" height="300" fill="url(#${id})"/>
 <rect x="8" y="8" width="384" height="284" rx="14" fill="none" stroke="${accent}" stroke-width="3" stroke-dasharray="12 9" opacity="0.7"/>
-<g fill="none" stroke="${accent}" stroke-width="6" stroke-linejoin="round">
-<path d="M172 96h56l10 18h22a14 14 0 0 1 14 14v54a14 14 0 0 1-14 14H140a14 14 0 0 1-14-14v-54a14 14 0 0 1 14-14h22z"/>
-<circle cx="200" cy="155" r="26"/>
-</g>
-<circle cx="200" cy="155" r="11" fill="${accent}"/>
-<circle cx="252" cy="132" r="5" fill="${accent}"/>
+${sujet}
 <text x="200" y="232" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="${encres.vive}">Votre photo ${rang + 1}</text>
 <text x="200" y="262" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" fill="${encres.douce}">${legende}</text>
 </svg>`;
@@ -110,6 +136,18 @@ async function principal() {
    * parce qu'une entreprise fictive indexée se présente comme un vrai artisan.
    */
   const demonstration = arguments_.includes('--demonstration');
+
+  /*
+   * `--motif=couvreur` choisit le trait de métier des cadres de démonstration.
+   *
+   * Il passe par la ligne de commande et non par `commande.json` : ce fichier
+   * est écrit par la route d'API et relu par un type éprouvé dans
+   * `src/lib/site.ts`. Y ajouter un champ pour un détail de dessin ferait
+   * porter au contrat de commande une décision qui n'est pas la sienne.
+   *
+   * Absent ou inconnu, les cadres gardent l'appareil photo.
+   */
+  const motif = arguments_.find((a) => a.startsWith('--motif='))?.slice('--motif='.length);
 
   if (dossier === undefined) {
     console.error('usage : node scripts/generer.mjs <dossier de commande> [--domaine=exemple.fr]');
@@ -159,7 +197,7 @@ async function principal() {
   // Une démonstration sans photo montre des cadres : sans eux, le prospect ne
   // voit pas l'endroit où les siennes viendront.
   const aMontrer = demonstration && photos.length === 0
-    ? cadresDeDemonstration(teinteRetenue(complete), SURFACES, ENCRES)
+    ? cadresDeDemonstration(teinteRetenue(complete), SURFACES, ENCRES, motif)
     : photos;
 
   const html = genererSite(complete, aMontrer, { domaine, demonstration });
