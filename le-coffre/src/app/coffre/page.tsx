@@ -894,6 +894,27 @@ export default function PageCoffre() {
           </button>
         </header>
 
+        {/* Accès direct à rendez-vous / identité / formulaire, en un tap
+            depuis le haut de l'écran — sans ça, un coffre chargé (89 papiers
+            vus en usage réel) oblige à faire défiler tout le fil des
+            documents pour atteindre ce qui vit en dessous, sur téléphone où
+            tout s'empile en une seule colonne. Masqué à partir de `lg` : la
+            grille à trois colonnes y montre déjà tout côte à côte, sans
+            défilement à raccourcir. */}
+        {tousLesNoms.length > 0 && (
+          <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm lg:hidden">
+            <a href="#rendez-vous" className="text-ink-soft underline decoration-dotted transition hover:text-ink">
+              Aller aux rendez-vous
+            </a>
+            <a href="#mon-identite" className="text-ink-soft underline decoration-dotted transition hover:text-ink">
+              Aller à mon identité
+            </a>
+            <a href="#remplir-formulaire" className="text-ink-soft underline decoration-dotted transition hover:text-ink">
+              Aller au formulaire
+            </a>
+          </nav>
+        )}
+
         {/* Bannière d'alerte — cliquable seulement quand elle porte sur un
             document (jamais un rendez-vous, qui n'a pas de fiche) : ouvre
             directement la fiche détail concernée. */}
@@ -1166,7 +1187,7 @@ export default function PageCoffre() {
           </section>
 
           <div className="flex flex-col gap-8">
-            <section>
+            <section id="rendez-vous" className="scroll-mt-6">
               <h2 className="mb-4 font-affiche text-2xl">Rendez-vous</h2>
               <form onSubmit={surAjoutRendezVous} className="mb-4 flex flex-col gap-2">
                 <Champ name="libelle" placeholder="Dentiste, cabinet Martin…" required />
@@ -1203,7 +1224,7 @@ export default function PageCoffre() {
               )}
             </section>
 
-            <section>
+            <section id="mon-identite" className="scroll-mt-6">
               <h2 className="mb-2 font-affiche text-2xl">Mon identité</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Sert uniquement à remplir l&apos;en-tête des lettres de résiliation — chiffrée comme le reste.
@@ -1231,7 +1252,7 @@ export default function PageCoffre() {
               </form>
             </section>
 
-            <section>
+            <section id="remplir-formulaire" className="scroll-mt-6">
               <h2 className="mb-2 font-affiche text-2xl">Remplir un formulaire</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Dépose un CERFA ou un mandat vierge : l&apos;appli détecte ses champs et les
