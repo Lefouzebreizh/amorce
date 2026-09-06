@@ -141,7 +141,7 @@ fs.mkdirSync(SORTIE, { recursive: true });
 const fiche = [];
 for (const m of MODELES) {
   const dossier = ecrireDossier(m);
-  const r = spawnSync('node', [path.join(ICI, 'generer.mjs'), dossier, '--demonstration'], {
+  const r = spawnSync('node', [path.join(ICI, 'generer.mjs'), dossier, '--demonstration', `--motif=${m.fichier}`], {
     cwd: RACINE,
     encoding: 'utf-8',
   });

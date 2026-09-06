@@ -99,8 +99,26 @@
     --accent-texte: #67c1a0;
   }
   * { box-sizing: border-box; }
+  /*
+   * La page fait la largeur d'un telephone, partout.
+   *
+   * Sur un telephone la contrainte ne mord pas : le corps occupe deja 100 %
+   * du viewport, mesure a 390, 360 et 320 px sans un pixel de debordement.
+   * Elle mord sur un ecran large, ou une colonne de 40rem donnait 640 px --
+   * soit une page qui ne ressemblait plus du tout a ce que l'artisan voit
+   * quand il ouvre le lien, et c'est pourtant sur cet ecran-la qu'on la
+   * relit avant de l'envoyer. On jugeait donc une mise en page que personne
+   * ne verrait.
+   *
+   * 26rem = 416 px : entre les 390 px d'un iPhone 14 et les 430 d'un Max.
+   *
+   * Le fond va sur << html >> et pas seulement ici : un corps borne laisse
+   * voir la page derriere lui, et ce serait du blanc au bord d'un site sombre.
+   */
+  html { background: #16151a; }
   body {
-    margin: 0; background: var(--ink); color: var(--encre);
+    margin: 0 auto; max-width: 26rem;
+    background: var(--ink); color: var(--encre);
     font: 18px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   /*
@@ -117,7 +135,7 @@
   }
   header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.2; letter-spacing: -.01em; }
   header p { margin: 0; font-size: 1.15rem; color: var(--accent); font-weight: 600; }
-  main { max-width: 40rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
+  main { padding: 0 1.25rem 3rem; }
   .bloc { padding: 2rem 0; border-bottom: 1px solid var(--edge); }
   .bloc:last-of-type { border-bottom: 0; }
   /* Le filet vertical sous chaque titre : l'autre moitié de la signature. */
@@ -148,7 +166,22 @@
   }
   .avis p { margin: 0 0 .4rem; }
   .avis cite { font-style: normal; font-weight: 700; color: var(--encre-douce); }
-  .mention { color: var(--encre-douce); font-size: 1rem; margin: -.25rem 0 1rem; }
+  /*
+   * La mention des avis d'exemple, et **pas de taille réduite**.
+   *
+   * Elle valait « font-size: 1rem », soit 16 px : sous le plancher de 18 px du
+   * §2. Le défaut dormait ici depuis l'écriture du bloc — aucune démonstration
+   * ne portait d'avis, donc la règle n'était jamais appliquée à rien. Il s'est
+   * réveillé le jour où les démos en ont reçu, et c'est le contrôle visuel qui
+   * l'a vu, pas les tests.
+   *
+   * C'est la troisième fois que « rem » piège cette page : il vaut 16 px, jamais
+   * les 18 px que le corps déclare. Toute fraction de rem, et « 1rem » lui-même,
+   * passent sous le plancher.
+   *
+   * Ce qui la met en retrait est donc l'encre et l'italique, pas la taille.
+   */
+  .mention { color: var(--encre-douce); font-style: italic; margin: -.25rem 0 1rem; }
   .galerie img {
     width: 100%; height: 100%; object-fit: cover; border-radius: .6rem; display: block;
     background: var(--slab);
@@ -238,9 +271,9 @@
   <section class="bloc">
     <h2>Mes réalisations</h2>
     <div class="galerie">
-      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjFFMjUiLz4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyODQiIHJ4PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1kYXNoYXJyYXk9IjEyIDkiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTI2IiByPSIzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iMTUwIiB5PSI4NiIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiM2N0MxQTAiLz4KPHRleHQgeD0iMjAwIiB5PSIyMDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNGMUVGRUEiPlZvdHJlIHBob3RvIDE8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjM4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5IiBmaWxsPSIjQjdCM0E5Ij5BdmFudCAvIGFwcsOoczwvdGV4dD4KPC9zdmc+" alt="Emplacement d’une photo de chantier — Avant / après" loading="lazy"></figure>
-      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjFFMjUiLz4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyODQiIHJ4PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1kYXNoYXJyYXk9IjEyIDkiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTI2IiByPSIzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iMTUwIiB5PSI4NiIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiM2N0MxQTAiLz4KPHRleHQgeD0iMjAwIiB5PSIyMDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNGMUVGRUEiPlZvdHJlIHBob3RvIDI8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjM4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5IiBmaWxsPSIjQjdCM0E5Ij5VbmUgZmluaXRpb248L3RleHQ+Cjwvc3ZnPg==" alt="Emplacement d’une photo de chantier — Une finition" loading="lazy"></figure>
-      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjFFMjUiLz4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIyODQiIHJ4PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1kYXNoYXJyYXk9IjEyIDkiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTI2IiByPSIzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjdDMUEwIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iMTUwIiB5PSI4NiIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMiIgcng9IjYiIGZpbGw9IiM2N0MxQTAiLz4KPHRleHQgeD0iMjAwIiB5PSIyMDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNGMUVGRUEiPlZvdHJlIHBob3RvIDM8L3RleHQ+Cjx0ZXh0IHg9IjIwMCIgeT0iMjM4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5IiBmaWxsPSIjQjdCM0E5Ij5MZSBjaGFudGllciBmaW5pPC90ZXh0Pgo8L3N2Zz4=" alt="Emplacement d’une photo de chantier — Le chantier fini" loading="lazy"></figure>
+      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJkMCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgo8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxNTM1MjkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMxRjFFMjUiLz4KPC9saW5lYXJHcmFkaWVudD48L2RlZnM+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSJ1cmwoI2QwKSIvPgo8cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMzg0IiBoZWlnaHQ9IjI4NCIgcng9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2N0MxQTAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWRhc2hhcnJheT0iMTIgOSIgb3BhY2l0eT0iMC43Ii8+CjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY3QzFBMCIgc3Ryb2tlLXdpZHRoPSI3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwMCAxMTUpIHNjYWxlKDAuODgpIHRyYW5zbGF0ZSgtMjAwIC0xNzQpIj48cGF0aCBkPSJNNjAgMTkwIDIwMCAxMTAgMzQwIDE5MCIvPjxwYXRoIGQ9Ik02MCAxOTBoMjgwIi8+PHBhdGggZD0iTTIwMCAxMTB2ODAiLz48cGF0aCBkPSJNMTA0IDE2M2gxOTJNMTI2IDE3NmgxNDgiLz48L2c+Cjx0ZXh0IHg9IjIwMCIgeT0iMjMyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjRjFFRkVBIj5Wb3RyZSBwaG90byAxPC90ZXh0Pgo8dGV4dCB4PSIyMDAiIHk9IjI2MiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iI0I3QjNBOSI+QXZhbnQgLyBhcHLDqHM8L3RleHQ+Cjwvc3ZnPg==" alt="Emplacement d’une photo de chantier — Avant / après" loading="lazy"></figure>
+      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJkMSIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgo8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxNTM1MjkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMxRjFFMjUiLz4KPC9saW5lYXJHcmFkaWVudD48L2RlZnM+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSJ1cmwoI2QxKSIvPgo8cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMzg0IiBoZWlnaHQ9IjI4NCIgcng9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2N0MxQTAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWRhc2hhcnJheT0iMTIgOSIgb3BhY2l0eT0iMC43Ii8+CjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY3QzFBMCIgc3Ryb2tlLXdpZHRoPSI3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwMCAxMTUpIHNjYWxlKDAuODgpIHRyYW5zbGF0ZSgtMjAwIC0xNzQpIj48cGF0aCBkPSJNODggMTMwcTI0LTI4IDQ4IDBxMjQtMjggNDggMHEyNC0yOCA0OCAwcTI0LTI4IDQ4IDBxMjQtMjggNDggMCIvPjxwYXRoIGQ9Ik02NCAxNzZxMjQtMjggNDggMHEyNC0yOCA0OCAwcTI0LTI4IDQ4IDBxMjQtMjggNDggMHEyNC0yOCA0OCAwIi8+PHBhdGggZD0iTTg4IDIyMnEyNC0yOCA0OCAwcTI0LTI4IDQ4IDBxMjQtMjggNDggMHEyNC0yOCA0OCAwcTI0LTI4IDQ4IDAiLz48L2c+Cjx0ZXh0IHg9IjIwMCIgeT0iMjMyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjRjFFRkVBIj5Wb3RyZSBwaG90byAyPC90ZXh0Pgo8dGV4dCB4PSIyMDAiIHk9IjI2MiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iI0I3QjNBOSI+VW5lIGZpbml0aW9uPC90ZXh0Pgo8L3N2Zz4=" alt="Emplacement d’une photo de chantier — Une finition" loading="lazy"></figure>
+      <figure><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj4KPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJkMiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgo8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxNTM1MjkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMxRjFFMjUiLz4KPC9saW5lYXJHcmFkaWVudD48L2RlZnM+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSJ1cmwoI2QyKSIvPgo8cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMzg0IiBoZWlnaHQ9IjI4NCIgcng9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2N0MxQTAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWRhc2hhcnJheT0iMTIgOSIgb3BhY2l0eT0iMC43Ii8+CjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY3QzFBMCIgc3Ryb2tlLXdpZHRoPSI3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwMCAxMTUpIHNjYWxlKDAuODgpIHRyYW5zbGF0ZSgtMjAwIC0xNzQpIj48cGF0aCBkPSJNNzYgMTE4aDI0OHY0Mkg3NnoiLz48cGF0aCBkPSJNMjg4IDE2MHY3OGwtMzAgMjYiLz48L2c+Cjx0ZXh0IHg9IjIwMCIgeT0iMjMyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjRjFFRkVBIj5Wb3RyZSBwaG90byAzPC90ZXh0Pgo8dGV4dCB4PSIyMDAiIHk9IjI2MiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iI0I3QjNBOSI+TGUgY2hhbnRpZXIgZmluaTwvdGV4dD4KPC9zdmc+" alt="Emplacement d’une photo de chantier — Le chantier fini" loading="lazy"></figure>
     </div>
   </section>
   <section class="bloc">
