@@ -196,6 +196,40 @@ Trouvés sur des vidéos montrant l'appli en main, pas devinés :
   pousse maintenant une entrée d'historique, et un écouteur `popstate`
   referme la fiche au lieu de laisser le navigateur sortir de l'application.
 
+## L'assistant conversationnel (06/09/2026, non documenté ici jusqu'à présent)
+
+Depuis les PR #762 à #777, un second moteur de recherche existe à côté de
+`interpreterQuestion` (local, gratuit, entièrement décrit ci-dessus) :
+`AssistantCoffre` + `demanderAuCoffre`, qui envoient la question et un résumé
+des documents (jamais les fichiers) à la fonction serveur `assistant-coffre`
+(Claude, avec recherche web en repli si la question déborde de la paperasse
+personnelle). Voir `SECURITY.md`, section « L'assistant conversationnel »,
+pour ce que ça change à la promesse « rien de lisible ne sort ». Cette
+section README avait pris du retard sur le code — corrigé au passage.
+
+## Un seul point d'entrée pour chercher et demander (06/09/2026)
+
+Les deux moteurs ci-dessus vivaient derrière deux entrées séparées : la barre
+de recherche en haut d'écran, et un second bouton flottant « Demander au
+coffre » ouvrant l'assistant à blanc — une confusion réelle, vécue en usage
+(deux frappes au mauvais endroit le même soir). Fusion de l'**interface**,
+pas des deux moteurs (qui restent utiles séparément : l'un gratuit et
+instantané, l'autre payant) :
+
+- Le bouton flottant « Demander au coffre » disparaît. Il ne reste qu'un seul
+  bouton flottant : « Ajouter un papier ».
+- Quand la recherche locale ne trouve rien, une puce « Demander à
+  l'assistant » apparaît à côté du message d'échec et ouvre le chat avec
+  cette même question déjà posée en premier message (`AssistantCoffre`
+  accepte désormais une prop `questionInitiale`, envoyée une seule fois à
+  l'ouverture).
+- Un petit lien discret, sous la barre, reste disponible pour une question
+  qui ne concerne aucun document précis (« comment résilier une assurance
+  habitation ») — ouvre le chat à blanc, comme avant.
+- L'escalade n'est **jamais automatique** : une recherche locale qui échoue
+  ne déclenche pas d'appel payant tout seul (une faute de frappe ne coûte
+  rien) — il faut le geste explicite sur la puce ou le lien.
+
 ## Architecture
 
 ```
