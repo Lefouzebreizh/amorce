@@ -2506,6 +2506,16 @@ défaut, pas parce que l'autre serait impossible. Une session peut donc tenter
 de prévenir une autre, mais ne doit jamais **compter** dessus — elle peut
 toujours **lire ce qu'elles ont publié** et **publier ce qu'elles liront**.
 
+**La boîte aux lettres vit dans `inbox/`, un fichier par destinataire.** Un
+message adressé à un projet se dépose dans `inbox/<nom-du-projet>.md`, au
+format `## [AAAA-MM-JJ HH:MM] De : <expediteur>` suivi du texte. Chaque session
+consulte son fichier `inbox/<nom-du-projet>.md` **au démarrage**, avant le
+premier geste, et vide ou archive ce qu'elle y a lu une fois traité. Créée le
+06/09/2026 après plusieurs tentatives de messagerie directe entre sessions
+restées sans réponse fiable côté Windows/mobile - voir §7. La session de
+coordination peut y écrire directement via un jeton d'accès personnel, le
+connecteur GitHub natif ayant échoué sur ce dépôt au moment de la création.
+
 Ce que « se coordonner » veut dire concrètement, dans l'ordre :
 
 1. **Regarder avant d'écrire.** Avant de toucher un fichier partagé :
