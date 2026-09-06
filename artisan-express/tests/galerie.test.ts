@@ -86,18 +86,72 @@ test('la galerie reste avant le témoignage', () => {
 });
 
 /*
- * `exemple.html` porte une septième entreprise fictive, et c'est voulu : la
- * page de vente la montre déjà dans `AvantApres`. Deux entrées portant la même
- * entreprise contrediraient « six métiers, six sites » — c'est arrivé, le
- * modèle couvreur s'appelait « Couverture Tanguy » comme la démonstration.
+ * Trois couvreurs fictifs, trois noms. Et la comparaison se fait sur les mots.
+ *
+ * La page de vente nomme des entreprises inventées à trois endroits : la
+ * vignette « après » d'`AvantApres`, la démonstration `exemple.html` que le
+ * bouton « Voir un site fini » ouvre, et les six cartes de la galerie. Deux
+ * d'entre elles portant le même nom, la page se contredit à voix haute : son
+ * argument est « six métiers, six sites ».
+ *
+ * C'est arrivé deux fois. Le modèle couvreur s'appelait d'abord « Couverture
+ * Tanguy », comme `exemple.html` ; renommé « Toitures Le Goff », il est tombé
+ * sur la vignette d'`AvantApres`, qui affiche « LE GOFF TOITURES ». La version
+ * précédente de ce test n'a rien vu — elle ne regardait qu'`exemple.html`, et
+ * elle comparait des chaînes.
+ *
+ * D'où les deux corrections : on relève **toutes** les entreprises de la page,
+ * et on les compare sur l'ensemble de leurs mots significatifs. Pour un
+ * lecteur, « LE GOFF TOITURES » et « Toitures Le Goff » sont la même
+ * entreprise ; pour `===`, ce sont deux chaînes différentes. C'est le lecteur
+ * qui a raison.
  */
-test('aucun modèle ne reprend l’entreprise de la page de démonstration', () => {
+const AVANT_APRES = readFileSync(new URL('../src/components/AvantApres.tsx', import.meta.url), 'utf8');
+
+function motsSignifiants(nom: string): string {
+  return nom
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .split(/[^a-z0-9]+/)
+    .filter((mot) => mot.length > 2)
+    .sort()
+    .join(' ');
+}
+
+test('aucun modèle ne reprend une entreprise déjà nommée sur la page', () => {
   const demonstration = readFileSync(new URL('../public/exemple.html', import.meta.url), 'utf8');
-  const nom = /<title>([^<—]+)/.exec(demonstration)?.[1]?.trim();
-  assert.ok(nom, 'impossible de lire le nom de l’entreprise de exemple.html');
-  assert.doesNotMatch(
-    SOURCE,
-    new RegExp(`entreprise: '${nom}'`),
-    `« ${nom} » est déjà l’entreprise de exemple.html : deux liens mèneraient au même artisan`,
+  const ailleurs: readonly (readonly [string, string | undefined])[] = [
+    ['exemple.html', /<title>([^<—]+)/.exec(demonstration)?.[1]?.trim()],
+    /*
+     * La vignette « après » est `aria-hidden` — décorative pour un lecteur
+     * d'écran — mais c'est l'image la plus regardée de la section, et un
+     * visiteur la lit comme le reste.
+     */
+    ['la vignette d’AvantApres', /text-sm font-bold leading-tight">([^<]+)</.exec(AVANT_APRES)?.[1]?.trim()],
+  ];
+
+  const dansLaGalerie = [...SOURCE.matchAll(/entreprise: '([^']+)'/g)].flatMap((m) =>
+    m[1] === undefined ? [] : [m[1]],
   );
+  assert.equal(dansLaGalerie.length, 6, 'six entreprises attendues dans la galerie');
+
+  for (const [ou, nom] of ailleurs) {
+    assert.ok(nom, `impossible de relever l’entreprise de ${ou} — le repère a bougé`);
+    const empreinte = motsSignifiants(nom);
+    for (const candidate of dansLaGalerie) {
+      assert.notEqual(
+        motsSignifiants(candidate),
+        empreinte,
+        `« ${candidate} » et « ${nom} » (${ou}) sont la même entreprise pour un lecteur : deux blocs de la page mèneraient au même artisan`,
+      );
+    }
+  }
+});
+
+test('les six entreprises de la galerie sont six entreprises distinctes', () => {
+  const noms = [...SOURCE.matchAll(/entreprise: '([^']+)'/g)].flatMap((m) =>
+    m[1] === undefined ? [] : [motsSignifiants(m[1])],
+  );
+  assert.equal(new Set(noms).size, 6, 'deux cartes de la galerie portent la même entreprise');
 });
