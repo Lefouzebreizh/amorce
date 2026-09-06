@@ -1650,6 +1650,14 @@ le travail a été demandé, et c'est elle qui explique pourquoi ce fil-ci parle
 de référencement quand le voisin parle de montage. Sans prompt de rôle, le
 sujet seul suffit.
 
+**Et chaque session affiche une ligne fixe « Projet : nom-du-projet »**, posée
+par le propriétaire le 06/09/2026 — en tête de sa toute première réponse, et
+rappelée à chaque changement de sujet. Le nom est celui que le dépôt utilise
+pour désigner le chantier concerné (`amorce`, `le-coffre`, `nexuscrypto`…),
+jamais une paraphrase : c'est ce qui permet de savoir en un coup d'œil, sur un
+fil qui dérive au fil des heures, à quel projet la réponse en cours se
+rattache.
+
 **Et tout résumé de reprise s'ouvre sur le but à terme**, avant l'état et avant
 le prochain pas : une ligne qui dit ce que cette discussion cherche à obtenir au
 bout du compte, pas ce qu'elle fait ce matin. « Où on en est » et « le prochain
@@ -1837,6 +1845,16 @@ Posé par le propriétaire le 01/09/2026.
 validation manuelle : une correction de bogue, du texte, un ajustement de
 présentation, un test ajouté, une dépendance déjà présente. C'est le cas
 courant, et c'est ce que décrivent les paragraphes précédents.
+
+**Règle explicite, posée par le propriétaire le 06/09/2026** : une session
+fusionne elle-même sa propre pull request et supprime la branche associée,
+sans demander confirmation, à condition qu'il n'y ait **aucune erreur, aucun
+test qui échoue et aucun conflit** avec la base. Au moindre doute sur l'un des
+trois — un contrôle qui hésite, un conflit qui apparaît, une erreur dont la
+cause n'est pas claire — elle s'arrête et attend une validation plutôt que de
+trancher seule. Ça ne change rien aux quatre zones sensibles ci-dessous, qui
+attendent l'accord explicite même vertes : ce paragraphe couvre le cas
+courant, elles couvrent l'exception.
 
 **Quatre zones font exception. Une PR qui en touche une attend l'accord
 explicite du propriétaire, même verte, même minuscule.**
