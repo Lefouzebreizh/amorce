@@ -1571,6 +1571,49 @@ de mesurer plus, c'est de mesurer ailleurs et de regarder.
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
 
+### Une campagne se livre en page d'envoi, jamais en liste
+
+Posé par le propriétaire le 06/09/2026, après l'avoir utilisée : **dès qu'une
+campagne de messages à envoyer à la main est préparée — SMS ou courriel —, la
+proposer sous cette forme, sans attendre qu'il la demande.**
+
+Ce qui la remplaçait était un fichier texte : douze messages à sélectionner,
+copier, coller, avec le numéro à retaper. Sur un téléphone, à sept heures du
+matin, ça suffit à ce que la campagne ne parte pas. **Ce n'est pas le message
+qui bloque une prospection, c'est le geste.**
+
+**Ce que la page porte, et pourquoi chaque élément y est :**
+
+| Élément | Ce qu'il évite |
+| --- | --- |
+| Un bouton par destinataire, qui ouvre l'appli avec destinataire **et** texte déjà remplis | douze copier-coller, et le numéro retapé de travers |
+| Un bouton « Copier » à côté | le téléphone qui refuse le lien — la page reste utilisable |
+| Une case « envoyé » qui survit à la fermeture, et un compteur | reprendre au cinquième après une tournée, sans se rappeler où on en était |
+| Le texte affiché en entier, mention d'opposition en gras | envoyer sans relire ce qui part vraiment |
+
+**Le lien s'écrit `sms:0600000000?&body=…`**, le corps encodé. La forme `?&`
+convient aux deux familles de téléphones — iOS attend `&`, Android `?` — et une
+seule des deux écritures laisse la moitié des appareils sans texte. Pour un
+courriel, `mailto:` prend `?subject=` et `?body=` de la même façon.
+
+**Compter les segments, et le dire sur la fiche.** Un SMS est facturé par
+tranche de 160 caractères — mais **un seul caractère hors alphabet GSM-7 fait
+basculer le message entier en UCS-2, à 67 caractères par segment**. Le `ç`
+minuscule et le tiret cadratin `—` en font partie ; `é`, `è`, `à`, `ç`
+majuscule et `€` non. Un message de 420 caractères passe ainsi de 3 à 7
+segments à cause d'un seul accent dans le nom du destinataire. Mesuré sur
+« ACM Maçonnerie ». **On ne corrige pas l'orthographe d'une entreprise pour
+gagner trois centimes** : on affiche le coût et on l'assume.
+
+**Et on la livre en fichier, pas en page publiée**, tant qu'elle porte des
+coordonnées de tiers — c'est la règle de `prospects.md` appliquée à un autre
+support. L'adresse publique se propose, elle ne se décide pas.
+
+La règle de la mention d'opposition ne change pas : **tout SMS se termine par
+« STOP au [numéro] », jamais un courriel** (§ `PROSPECTION.md`). La page la
+montre en gras sur chaque fiche, ce qui la rend vérifiable d'un coup d'œil au
+lieu d'être supposée.
+
 ## 9. AU DÉMARRAGE
 
 **Lire ce fichier avant le premier geste, à chaque nouveau fil.** Il est joint au
