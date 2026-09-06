@@ -429,7 +429,7 @@ describe('demander au coffre', () => {
 
   it('ne transmet jamais le fichier, seulement un résumé tronqué du texte extrait', async () => {
     const f = poser(clientFactice({
-      fonction: { data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, rechercheWebEffectuee: false }, error: null },
+      fonction: { data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false }, error: null },
     }));
     await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
     const [nom, options] = f.premier('invoke') as [string, { body: { documents: Array<{ extrait?: string | null }> } }];
@@ -441,7 +441,7 @@ describe('demander au coffre', () => {
 
   it('transmet l’historique de la conversation', async () => {
     const f = poser(clientFactice({
-      fonction: { data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, rechercheWebEffectuee: false }, error: null },
+      fonction: { data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false }, error: null },
     }));
     const historique = [{ role: 'user' as const, texte: 'bonjour' }, { role: 'assistant' as const, texte: 'salut' }];
     await coffre.demanderAuCoffre('et ensuite ?', historique, INDEX_ASSISTANT);

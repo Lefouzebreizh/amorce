@@ -1171,6 +1171,7 @@ export default function PageCoffre() {
           onFermer={() => setAssistantOuvert(false)}
           onOuvrirDocument={ouvrirDetail}
           onOuvrirFormulaire={() => setFormulaireOuvert(true)}
+          onOuvrirRangement={() => setVueDossiers(true)}
         />
       )}
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FileText, Globe, Send, X } from 'lucide-react';
+import { FileText, Folder, Globe, Send, X } from 'lucide-react';
 import { demanderAuCoffre, type IndexCoffre, type TourConversation } from '@/lib/coffre';
 
 type Message = TourConversation & {
@@ -9,14 +9,16 @@ type Message = TourConversation & {
   // pour un message de l'utilisateur, qui n'a rien de tout ça.
   documentsCites?: string[];
   ouvrirFormulaire?: boolean;
+  ouvrirRangement?: boolean;
   rechercheWebEffectuee?: boolean;
 };
 
-export function AssistantCoffre({ index, onFermer, onOuvrirDocument, onOuvrirFormulaire }: {
+export function AssistantCoffre({ index, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement }: {
   index: IndexCoffre;
   onFermer: () => void;
   onOuvrirDocument: (nom: string) => void;
   onOuvrirFormulaire: () => void;
+  onOuvrirRangement: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState('');
@@ -49,6 +51,7 @@ export function AssistantCoffre({ index, onFermer, onOuvrirDocument, onOuvrirFor
         texte: reponse.reponse,
         documentsCites: reponse.documentsCites,
         ouvrirFormulaire: reponse.ouvrirFormulaire,
+        ouvrirRangement: reponse.ouvrirRangement,
         rechercheWebEffectuee: reponse.rechercheWebEffectuee,
       }]);
     } finally {
@@ -64,6 +67,11 @@ export function AssistantCoffre({ index, onFermer, onOuvrirDocument, onOuvrirFor
   function ouvrirFormulaireEtFermer() {
     onFermer();
     onOuvrirFormulaire();
+  }
+
+  function ouvrirRangementEtFermer() {
+    onFermer();
+    onOuvrirRangement();
   }
 
   return (
@@ -124,6 +132,15 @@ export function AssistantCoffre({ index, onFermer, onOuvrirDocument, onOuvrirFor
                       className="mt-2 flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
                     >
                       <FileText size={12} /> Remplir un formulaire
+                    </button>
+                  )}
+                  {m.ouvrirRangement && (
+                    <button
+                      type="button"
+                      onClick={ouvrirRangementEtFermer}
+                      className="mt-2 flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                    >
+                      <Folder size={12} /> Ranger en dossiers
                     </button>
                   )}
                 </div>
