@@ -1954,6 +1954,24 @@ sans demander. Même condition que la fusion : contrôles verts, aucun conflit,
 aucune erreur relevée. Au moindre doute, on ne supprime pas — mais le doute
 porte alors sur la fusion elle-même, jamais sur le ménage qui la suit.
 
+**En pratique, il n'y a rien à faire : GitHub s'en charge.** Mesuré le même
+jour, en essayant de le faire à la main sur les PR #773 et #774 :
+
+| Voie | Réponse |
+| --- | --- |
+| `DELETE /git/refs/heads/…` | 403 — « Write access to this GitHub API path is not permitted through this proxy » |
+| `git push origin --delete …` | « remote ref does not exist » — **elle était déjà partie** |
+
+Le réglage *Settings → General → Automatically delete head branches* est actif :
+la fusion emporte la branche. La règle ci-dessus est donc satisfaite sans geste,
+et le 403 de l'API n'est pas un blocage à contourner — c'est un appel inutile.
+
+**Ce qu'il faut en retenir, et qui ne se voit pas de la première ligne :** un
+403 sur un chemin d'écriture ne dit pas qu'une chose est impossible. Ici il
+portait sur une action **déjà faite**. Vérifier l'état avant de conclure au
+blocage coûte un `git ls-remote` ; conclure d'abord coûte un paragraphe faux
+dans ce fichier — celui-ci a failli l'être.
+
 Ce qui est fusionné vit dans `main` ; la branche n'est plus qu'un nom qui
 encombre la liste et fait hésiter la session suivante sur ce qui est en cours.
 
