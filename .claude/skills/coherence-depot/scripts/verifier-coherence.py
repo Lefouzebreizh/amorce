@@ -50,7 +50,16 @@ NOMBRES = {
     "treize": 13, "quatorze": 14, "quinze": 15, "seize": 16,
     "dix-sept": 17, "dix-huit": 18, "dix-neuf": 19, "vingt": 20,
     "vingt et un": 21, "vingt-deux": 22, "vingt-trois": 23, "vingt-quatre": 24,
+    "vingt-cinq": 25, "vingt-six": 26, "vingt-sept": 27, "vingt-huit": 28,
+    "vingt-neuf": 29, "trente": 30,
 }
+# Le 06/09/2026, ce dictionnaire s'arrêtait à 24 : « vingt-cinq » n'y était
+# pas, `NOMBRES.get(...)` rendait `None`, et les deux contrôles qui comparent
+# une annonce en toutes lettres au compte réel se désactivaient en silence
+# sur `attendu is not None`. INDEX.md annonçait « vingt-cinq chantiers actifs »
+# pour 21 lignes réelles, et rien ne le signalait. Étendu à 30 avec de la
+# marge plutôt que de reboucher le seul trou trouvé — le prochain palier
+# manquant produirait exactement le même silence.
 
 # Ce qui, à la racine, n'est pas un projet mais un dossier de service.
 PAS_DES_PROJETS = {

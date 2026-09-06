@@ -5,7 +5,22 @@ description: Ajouter un projet à ce dépôt multi-projets sans rien oublier —
 
 # Ajouter un projet ici
 
-Ce dépôt en héberge une dizaine, sans code commun. Un projet qui n'est déclaré
+Ce dépôt en héberge une vingtaine — 21 au dernier compte d'`INDEX.md`, qui se
+recompte tout seul. « Sans code commun » n'est plus vrai depuis longtemps :
+voir la section « Moteurs techniques partagés » du même fichier.
+
+## Avant d'écrire la première ligne : le doublon
+
+**Relire la table « Moteurs techniques partagés » d'`INDEX.md`** si le projet
+touche à du stockage chiffré, une détection d'échéance, un classement de
+document par modèle de vision, une authentification, ou toute autre brique
+généraliste. Deux paires de moteurs de ce dépôt ont déjà été ré-implémentées en
+double sans que personne ne s'en aperçoive avant coup — c'est écrit dans cette
+table pour que ça n'arrive pas une troisième fois. Un moteur qui ressemble
+existe → §0 bis règle 4 de `CLAUDE.md` : on s'arrête, on propose (étendre,
+remplacer, coexister), on ne tranche pas seul.
+
+Un projet qui n'est déclaré
 nulle part fonctionne chez celui qui l'écrit et nulle part ailleurs : ses
 dépendances manquent à la session suivante, ses tests ne gardent rien, et
 personne ne sait comment le vérifier.
