@@ -1930,7 +1930,7 @@ doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
 ### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
 
-**État mesuré le 03/09/2026 à 16 h 10, par `list_projects`** — il contredit une
+**État mesuré le 06/09/2026 à 15 h 55, par `list_projects`** — il contredit une
 partie de ce qui suit, et c'est cette liste-ci qui fait foi. Le raisonnement des
 paragraphes suivants reste juste ; ce sont les noms et le compte qui ont bougé.
 
@@ -1941,16 +1941,31 @@ paragraphes suivants reste juste ; ce sont les noms et le compte qui ont bougé.
 | `coffre` (dossier `le-coffre/`) | oui | **oui** |
 | `chat-traducteur` (dossier `chat-traducteur/web/`) | oui | **oui** — né le 05/09/2026 |
 | `annuaire-ia` | non — dépôt de fichiers | non |
-| `artisan-express` | non — dépôt de fichiers | non |
+| `artisan-express` | oui — **relié le 06/09/2026** | **oui** — dossier `artisan-express` |
 | `artisan-express-demos` | non — dépôt de fichiers | non |
 | `couverture-martin-demo` | non — dépôt de fichiers | non |
 
-**Quatre projets branchés depuis le 05/09/2026**, et le seuil de fusions
-descend avec : chaque fusion vaut désormais **quatre** déploiements plus le
-commit de fusion, donc **une douzaine de fusions par jour** avant le palier de
-cent. Le nouveau venu est `chat-traducteur`, qui sert l'application du
-traducteur de miaulements — elle ne pouvait pas partir en dépôt de fichiers,
-et c'est mesuré plus bas.
+**Cinq projets branchés depuis le 06/09/2026**, et le seuil de fusions
+descend encore : chaque fusion vaut désormais **cinq** déploiements plus le
+commit de fusion, donc **une dizaine de fusions par jour** avant le palier de
+cent. Les deux derniers venus sont `chat-traducteur`, qui sert l'application du
+traducteur de miaulements — elle ne pouvait pas partir en dépôt de fichiers, et
+c'est mesuré plus bas — et `artisan-express`, relié à la main par le
+propriétaire le 06/09.
+
+**Ce dernier n'a pas été branché pour le confort, mais parce que ne pas l'être
+avait coûté trois jours.** Sa page publique a servi une ligne de tarif déjà
+corrigée et fusionnée pendant que douze SMS de prospection s'apprêtaient à
+partir vers cette adresse. Le paragraphe plus bas qui le donne pour un dépôt de
+fichiers décrit l'état d'avant et est conservé pour sa mécanique ; c'est le
+tableau ci-dessus qui fait foi. Détail dans
+`second-brain/lecons/2026-09-06-une-correction-fusionnee-nest-pas-une-correction-en-ligne.md`.
+
+**Et le rebranchement ne se fait pas depuis une session** : `create_git_project`
+rend `409 conflict` sur un projet existant non lié — sa documentation dit en
+propres termes qu'il ne rebranche pas —, et le tableau de bord est injoignable,
+`vercel.com` rendant `000` et `api.vercel.com` `403` au mandataire, navigateur
+compris. Seul le propriétaire peut le faire.
 
 **Trois projets branchés, et c'était deux le matin même.** `coffre` est arrivé
 dans la journée, lié à Git dès sa création — donc déclenché par **chaque**
