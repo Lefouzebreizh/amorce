@@ -193,6 +193,14 @@ d'y toucher.
 12. **La photo est réduite hors du fil principal.** `ImageCompressor` passe par
    `compute` ; le faire sur le fil de l'interface fait sauter des images juste
    au moment où l'utilisateur attend le retour du déclencheur.
+13. **Le format de la photo se lit dans ses octets, et c'est lui qu'on annonce.**
+   Quand `package:image` ne sait pas décoder, l'original part tel quel — le
+   service lit plus de formats que nous — mais il partait annoncé `image/jpeg`
+   quoi qu'il arrive. Un cliché HEIF, format courant sur Android, était donc
+   refusé en 400 alors que le service l'accepte : c'était l'étiquette qui était
+   fausse, pas le format. Ne jamais recoder un type MIME en constante ;
+   `ImageCompressor.typeMimeDe` le lit, et un format hors
+   `typesAcceptes` se dit avant l'appel plutôt que de coûter une requête.
 
 ## Riverpod 3 — ce qui diffère de la version 2
 
@@ -273,6 +281,7 @@ méthode testée.
 | `fiche_objet_dto_test.dart` | Ce que la lecture de la fiche v1 encaisse : liste rendue en une phrase, « null » écrit en toutes lettres, clé absente. |
 | `contrat_fiche_lecture_test.dart` | Le pacte de la version un, et le périmètre lui-même : l'invite doit continuer d'interdire marque et prix. |
 | `fiche_objet_page_test.dart` | La fiche v1 montée pour de vrai, et ce qu'elle ne montre plus — ni prix, ni marchand. |
+| `image_compressor_test.dart` | Le format lu dans les octets — JPEG, PNG, WebP décalé, famille HEIF — et ce qui doit rester inconnu : un MP4, un tampon trop court. |
 | `diagnostic_reponse_test.dart` | La fidélité du diagnostic de `tool/lecture_fiche.dart` : ne rien signaler que le DTO accepte, ne rien taire de ce qu'il écarte. Un verdict inversé fait corriger le mauvais fichier. |
 
 Trois recettes utiles quand on ajoute un test :

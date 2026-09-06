@@ -105,10 +105,13 @@ Réponds uniquement avec le JSON demandé.
   /// L'enveloppe elle-même vit dans `corps_requete.dart`, partagée avec l'invite
   /// de la fiche v1 : seules la consigne et le schéma distinguent les deux
   /// appels, et deux copies de tout le reste finiraient par diverger.
-  static Map<String, Object?> corpsRequete(String photoBase64) =>
-      enveloppeGemini(
+  static Map<String, Object?> corpsRequete(
+    String photoBase64, {
+    String photoMimeType = 'image/jpeg',
+  }) => enveloppeGemini(
     instruction: instruction,
     schema: responseSchema,
     photoBase64: photoBase64,
+    photoMimeType: photoMimeType,
   );
 }

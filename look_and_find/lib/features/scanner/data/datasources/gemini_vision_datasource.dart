@@ -57,7 +57,8 @@ class GeminiVisionDataSource {
 
     final texte = await _demander(
       photo,
-      GeminiPrompt.corpsRequete,
+      (base64, type) =>
+          GeminiPrompt.corpsRequete(base64, photoMimeType: type),
       cancelToken: cancelToken,
     );
 
@@ -88,10 +89,11 @@ class GeminiVisionDataSource {
 
     final texte = await _demander(
       photo,
-      (base64) => enveloppeGemini(
+      (base64, type) => enveloppeGemini(
         instruction: FichePrompt.instruction,
         schema: FichePrompt.responseSchema,
         photoBase64: base64,
+        photoMimeType: type,
       ),
       cancelToken: cancelToken,
     );
@@ -116,10 +118,21 @@ class GeminiVisionDataSource {
   /// besoin de pouvoir regarder, quel que soit ce qu'on avait demandé.
   Future<String> _demander(
     Uint8List photo,
-    Map<String, Object?> Function(String base64) corps, {
+    Map<String, Object?> Function(String base64, String mimeType) corps, {
     CancelToken? cancelToken,
   }) async {
-    final base64 = await ImageCompressor.toBase64Jpeg(photo);
+    final preparee = await ImageCompressor.preparer(photo);
+
+    // Un format que le service n'accepte pas se dit ici, avant l'appel :
+    // l'envoyer coûterait une requête facturée pour un refus dont le message
+    // ne nommerait pas la vraie cause.
+    final type = preparee.mimeType;
+    if (type == null || !ImageCompressor.typesAcceptes.contains(type)) {
+      throw const UnreadableAnswerException(
+        'Ce format de photo n\'est pas reconnu. Reprenez-la avec l\'appareil '
+        'photo de l\'application.',
+      );
+    }
 
     final Response<Map<String, dynamic>> response;
     try {
@@ -127,7 +140,7 @@ class GeminiVisionDataSource {
         '/models/${AppConfig.geminiModel}:generateContent',
         queryParameters: {'key': _apiKey},
         cancelToken: cancelToken,
-        data: corps(base64),
+        data: corps(preparee.base64, type),
       );
     } on DioException catch (error) {
       // La réponse d'erreur est retenue comme l'est une réponse réussie, et
