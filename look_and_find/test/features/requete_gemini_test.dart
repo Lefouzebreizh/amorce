@@ -121,6 +121,27 @@ void main() {
     expect(config['temperature'], lessThanOrEqualTo(0.2));
   });
 
+  test('annonce le format réel de la photo, pas « jpeg » par défaut', () async {
+    // Le défaut qui bloquait le premier vrai scan : un cliché HEIF — format
+    // courant sur Android, que `package:image` ne sait pas décoder — partait
+    // annoncé `image/jpeg`, et le service refusait la requête entière en 400.
+    final heif = Uint8List(32)
+      ..setRange(0, 12, [
+        0, 0, 0, 24,
+        0x66, 0x74, 0x79, 0x70, // ftyp
+        0x68, 0x65, 0x69, 0x63, // heic
+      ]);
+
+    final espion = _DioEspion();
+    await GeminiVisionDataSource(espion, 'AIzaTest').identify(heif);
+
+    final parts =
+        (((espion.vue!.data! as Map)['contents']! as List).first
+                as Map)['parts']!
+            as List;
+    expect((parts[1] as Map)['inline_data']!['mime_type'], 'image/heic');
+  });
+
   test('le banc d\'essai enverrait exactement la même chose', () {
     // `tool/banc_invite.dart` sert à éprouver l'invite sans appareil ; il ne
     // vaut que s'il envoie la requête de l'application. Les deux passent par
@@ -130,6 +151,12 @@ void main() {
                 as Map)['inline_data']!
             as Map;
 
-    expect(GeminiPrompt.corpsRequete(image['data']! as String), corps);
+    expect(
+      GeminiPrompt.corpsRequete(
+        image['data']! as String,
+        photoMimeType: image['mime_type']! as String,
+      ),
+      corps,
+    );
   });
 }

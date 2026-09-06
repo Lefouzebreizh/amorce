@@ -17,6 +17,7 @@ Map<String, Object?> enveloppeGemini({
   required String instruction,
   required Map<String, Object?> schema,
   required String photoBase64,
+  required String photoMimeType,
 }) => {
   'contents': [
     {
@@ -26,7 +27,9 @@ Map<String, Object?> enveloppeGemini({
         // déjà regardé l'image.
         {'text': instruction},
         {
-          'inline_data': {'mime_type': 'image/jpeg', 'data': photoBase64},
+          // Le type vient de la photo, jamais d'une constante : annoncer
+          // « jpeg » sur des octets HEIF fait refuser la requête entière.
+          'inline_data': {'mime_type': photoMimeType, 'data': photoBase64},
         },
       ],
     },
