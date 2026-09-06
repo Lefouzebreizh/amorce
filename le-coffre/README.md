@@ -241,6 +241,17 @@ instantané, l'autre payant) :
   ne déclenche pas d'appel payant tout seul (une faute de frappe ne coûte
   rien) — il faut le geste explicite sur la puce ou le lien.
 
+## Accès direct aux rendez-vous, à l'identité et au formulaire (06/09/2026)
+
+Sur téléphone (une seule colonne), la colonne « Rendez-vous / Mon identité /
+Remplir un formulaire » vit **sous** la liste des documents dans la page —
+avec un coffre chargé (89 papiers vus en usage réel), il fallait faire défiler
+tout le fil des documents pour l'atteindre. Trois liens d'ancrage
+(`#rendez-vous`, `#mon-identite`, `#remplir-formulaire`) juste sous l'en-tête
+sautent directement à chacune, `scroll-mt-6` évitant qu'elles collent au bord
+de l'écran à l'arrivée. Masqués à partir de `lg` : la grille à trois colonnes
+y montre déjà tout côte à côte, sans défilement à raccourcir.
+
 ## Architecture
 
 ```
