@@ -16,6 +16,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:look_and_find/core/constants/app_strings.dart';
 import 'package:look_and_find/features/fiche_objet/data/models/fiche_objet_dto.dart';
 import 'package:look_and_find/features/scanner/data/datasources/fiche_prompt.dart';
 
@@ -82,6 +83,21 @@ void main() {
         (FichePrompt.responseSchema['properties']! as Map).keys,
         isNot(anyElement(anyOf('price', 'prix', 'merchants', 'brand'))),
       );
+    });
+
+    test('l\'attente ne promet pas ce que la fiche ne livre pas', () {
+      // Trouvé en regardant un vrai scan, pas en mesurant : l'écran d'attente
+      // annonçait « recherche des prix et des marchands » pendant que la fiche
+      // qui suivait n'en montrait aucun. Une promesse tenue trente secondes
+      // puis démentie coûte plus qu'un écran muet.
+      final attente = AppStrings.scannerAnalysingDetail.toLowerCase();
+      for (final mot in ['prix', 'marchand', 'acheter', 'offre']) {
+        expect(
+          attente,
+          isNot(contains(mot)),
+          reason: '« $mot » annonce le comparateur, remis à la version deux.',
+        );
+      }
     });
   });
 }
