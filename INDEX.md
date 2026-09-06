@@ -4,6 +4,13 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 `/projets-actifs/` (validée, fiche d'exécution écrite) ou en
 `/archives-backlog/` (bonne, mais pas maintenant).
 
+**`/inbox/` sert aussi de boîte aux lettres entre sessions depuis le
+06/09/2026** — voir `inbox/README.md`, qui fait foi pour cet usage-là. Les deux
+contenus se distinguent à l'œil et sans convention de nom : **un message porte
+un en-tête `## [AAAA-MM-JJ HH:MM] De : …`, une idée non.** Un message se vide
+quand le projet destinataire l'a lu ; une idée se note sur dix puis ressort.
+Une session de tri qui rencontre un en-tête `De :` passe son chemin.
+
 ## Statuts
 
 | Statut | Sens |
