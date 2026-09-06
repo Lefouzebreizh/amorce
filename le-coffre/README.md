@@ -133,13 +133,24 @@ papiers (`rechercheCorrespond` dans `coffre.ts`) filtre sur le nom, la
 catégorie, l'émetteur et ce texte, entièrement côté navigateur sur l'index
 déjà déchiffré — aucune requête n'est jamais envoyée nulle part.
 
-## Aperçu instantané, sans téléchargement (05/09/2026)
+## Aperçu instantané, sans téléchargement (05/09/2026, PDF corrigé le 06/09/2026)
 
 La fiche détail déchiffre et affiche directement une image ou un PDF —
 `FichePreview`, montée avec `key={nom}` pour remonter à neuf à chaque
 document plutôt que de réinitialiser son état depuis un effet (évite le
 rendu en cascade que le lint React signale sur un `setState` synchrone en
 effet). Les autres types de fichiers gardent le seul bouton Télécharger.
+
+**Le PDF ne s'affiche pas dans un cadre intégré, et c'est volontaire depuis
+le 06/09/2026.** Un `<iframe>` pointant sur le blob local semblait la bonne
+approche et cassait en usage réel sur Chrome Android : le navigateur bascule
+sur son intention de téléchargement natif — plein écran, nom de fichier
+illisible (l'identifiant opaque du stockage), et le bouton « Ouvrir » de
+cette boîte ne fait rien. Un bouton « Ouvrir l'aperçu du PDF » ouvre
+désormais le même blob dans un nouvel onglet plutôt que dans un cadre
+intégré : c'est le seul chemin que le lecteur PDF natif de Chrome sait
+prendre en charge de façon fiable. Rien n'est enregistré sur le téléphone
+dans les deux cas — l'octet ne quitte jamais le navigateur.
 
 ## Dépôt d'un dossier chargé : analyse en parallèle et dépôt groupé (05/09/2026)
 

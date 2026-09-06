@@ -187,11 +187,14 @@ function LettrePreview({ identite, emetteur, referenceClient, date }: {
   );
 }
 
-// Aperçu instantané dans la fiche détail, sans passer par un téléchargement.
-// Monté avec key={nom} par l'appelant : changer de document remonte ce
-// composant à neuf plutôt que de réinitialiser son état depuis un effet, qui
-// déclencherait un rendu en cascade évitable. Seuls image et PDF savent se
-// montrer dans la page — les autres types gardent le bouton Télécharger.
+// Aperçu instantané dans la fiche détail, sans passer par un téléchargement
+// (rien n'est écrit sur le disque du téléphone dans les deux cas). Monté
+// avec key={nom} par l'appelant : changer de document remonte ce composant
+// à neuf plutôt que de réinitialiser son état depuis un effet, qui
+// déclencherait un rendu en cascade évitable. Une image se montre
+// directement dans la page ; un PDF s'ouvre en un tap dans un nouvel onglet
+// — jamais dans un cadre intégré, que Chrome Android refuse de rendre. Les
+// autres types gardent le seul bouton Télécharger.
 function FichePreview({ nom, info, userId, cle }: {
   nom: string; info: ObjetIndex; userId: string; cle: CryptoKey;
 }) {
@@ -222,8 +225,23 @@ function FichePreview({ nom, info, userId, cle }: {
   }
   if (erreur) return <p className="text-sm text-wine">Aperçu impossible : {erreur}</p>;
   if (!apercu) return <p className="text-sm text-ink-soft">Déchiffrement de l&apos;aperçu…</p>;
+  // Un PDF ne s'affiche pas dans un <iframe> sur Chrome Android : au lieu du
+  // rendu attendu, le navigateur bascule sur son intention de téléchargement
+  // natif — plein écran, nom de fichier illisible (l'opaque du stockage), et
+  // le bouton « Ouvrir » de cette boîte ne fait rien (06/09/2026, vu en
+  // usage réel). Ouvrir le même blob en nouvel onglet, plutôt qu'en cadre
+  // intégré, est le chemin que le lecteur PDF intégré de Chrome sait
+  // réellement prendre en charge.
   return apercu.type === 'application/pdf' ? (
-    <iframe src={apercu.url} title={info.nom} className="h-80 w-full rounded-xl border border-line bg-paper" />
+    <button
+      type="button"
+      onClick={() => window.open(apercu.url, '_blank', 'noopener')}
+      className="flex w-full flex-col items-center gap-2 rounded-xl border border-line bg-paper p-6 text-center transition hover:border-accent/60"
+    >
+      <FileText size={28} className="text-ink-soft" />
+      <span className="text-sm font-medium">Ouvrir l&apos;aperçu du PDF</span>
+      <span className="text-xs text-ink-soft">Dans un nouvel onglet — rien n&apos;est enregistré sur le téléphone.</span>
+    </button>
   ) : (
     // eslint-disable-next-line @next/next/no-img-element -- blob: local, next/image ne s'applique pas
     <img src={apercu.url} alt={info.nom} className="max-h-80 w-full rounded-xl border border-line object-contain" />
