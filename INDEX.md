@@ -109,7 +109,12 @@ dans lesquelles les chantiers puisent.
 
 ## À faire sur le dépôt lui-même
 
-- `inbox/` est vide (seul un `.gitkeep`) — normal si tout a été trié, à surveiller.
+- `inbox/` porte depuis le 06/09/2026 **cinq messages de coordination**, un par
+  projet, déposés par une session de coordination — pas des idées à noter. Une
+  session de tri les reconnaît à leur en-tête `De : Session de coordination` et
+  les laisse : elles se suppriment quand le projet destinataire les a lues, pas
+  quand elles sont notées sur dix. Hors ces cinq, le dossier est vide, et c'est
+  normal si tout a été trié.
 - Le tableau ci-dessus **se recompte désormais tout seul**. Il ne le faisait
   pas, et ça s'est vu deux fois le même jour : `motion/` absent pendant
   plusieurs sessions alors que `CLAUDE.md` le documentait, puis un décompte

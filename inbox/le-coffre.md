@@ -1,16 +1,15 @@
-# Inbox — le-coffre
+## [2026-09-06 22:28] De : Session de coordination
 
-## [2026-09-06 21:50] De : session de coordination
+**Uploads — le palier 100 Mo est rejeté.** Erwann veut du gigaoctet, pas
+seulement un plafond plus haut.
 
-Sujet : limite d'upload — 100 Mo jugé insuffisant, chercher côté hébergement actuel
+Avant de choisir entre **Vercel Blob** et **Supabase Storage**, il faut savoir
+quel hébergement de fichiers est utilisé aujourd'hui — le choix ne se tranche
+pas dans l'abstrait.
 
-Le patch qui monte la limite d'upload de 20 Mo à 100 Mo n'est pas suffisant pour Erwann : il veut du gigaoctet, pas un palier arbitraire.
+Priorité constante, valable au-delà de cette décision : **la solution la moins
+chère avec le plus de marge de manœuvre.**
 
-Avant de valider quoi que ce soit, il faut d'abord savoir **quel hébergement de fichiers est actuellement utilisé par Le Coffre** (Supabase Storage ? autre chose ?), pour choisir la solution la moins chère et la plus simple **compte tenu de l'existant**, plutôt que de patcher une limite en l'air.
-
-Deux pistes déjà identifiées par recherche web, à évaluer selon la réponse ci-dessus :
-
-- **Vercel Blob** (upload direct navigateur) : jusqu'à 5 To par fichier, contourne la limite de 4,5 Mo des fonctions serverless Vercel.
-- **Supabase Storage** : 5 Go par fichier en upload standard, jusqu'à 50 Go en upload reprenable (TUS) sur l'offre Pro Plan et plus.
-
-Priorité constante d'Erwann sur ce projet : toujours la solution la moins chère avec le plus de marge de manœuvre, jamais un pansement qui tiendra six mois.
+**Correctif RLS validé (« GO »)** sur `coffre_echeances` et
+`coffre_tentatives`. En attente d'application via la branche
+`claude/coffre-rls-echeances-tentatives`.
