@@ -1,0 +1,18 @@
+{
+  "reference": "modele-serrurier",
+  "commande": {
+    "modele": "btp",
+    "entreprise": "Clé Douce Serrurerie",
+    "telephone": "02 97 00 00 00",
+    "ville": "Quimper",
+    "couleur": "#7a3f6d",
+    "slogan": "Serrurier à Quimper. Ouverture de porte, 7 j/7.",
+    "presentation": "Porte claquée, serrure forcée, blindage. J’annonce le prix au téléphone avant de me déplacer — personne n’aime les surprises à minuit.\n\nCette page est un modèle : « Clé Douce Serrurerie » n’existe pas et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré — avec vos textes, vos photos et votre numéro à la place de ceux-ci.",
+    "services": "Ouverture de porte\nChangement de serrure\nPorte blindée\nDépannage d’urgence",
+    "options": [
+      "appel",
+      "whatsapp"
+    ]
+  },
+  "photos": []
+}

@@ -1,0 +1,18 @@
+{
+  "reference": "modele-macon",
+  "commande": {
+    "modele": "btp",
+    "entreprise": "Maçonnerie Kervran",
+    "telephone": "02 97 00 00 00",
+    "ville": "Lorient",
+    "couleur": "#8a5a2b",
+    "slogan": "Maçonnerie générale à Lorient et 30 km autour.",
+    "presentation": "Murs, terrasses, ouvertures dans du porteur. Vingt ans sur les chantiers du pays, et le même numéro depuis le début.\n\nCette page est un modèle : « Maçonnerie Kervran » n’existe pas et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré — avec vos textes, vos photos et votre numéro à la place de ceux-ci.",
+    "services": "Murs et clôtures\nTerrasse et dallage\nOuverture dans un mur porteur\nRénovation de façade",
+    "options": [
+      "appel",
+      "whatsapp"
+    ]
+  },
+  "photos": []
+}

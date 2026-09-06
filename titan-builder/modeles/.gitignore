@@ -1,0 +1,4 @@
+# Les pages générées : la source est commande.json, le livrable est
+# artisan-express/public/modeles/. Versionner l intermédiaire ferait un
+# troisième exemplaire du même HTML, qui divergerait au premier oubli.
+index.html

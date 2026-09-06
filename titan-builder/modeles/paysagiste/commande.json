@@ -1,0 +1,18 @@
+{
+  "reference": "modele-paysagiste",
+  "commande": {
+    "modele": "btp",
+    "entreprise": "Jardins du Scorff",
+    "telephone": "02 97 00 00 00",
+    "ville": "Pontivy",
+    "couleur": "#4d7c2f",
+    "slogan": "Paysagiste à Pontivy. Création et entretien à l’année.",
+    "presentation": "Je dessine, je plante, je reviens. Un jardin se juge à trois ans, pas à la fin du chantier.\n\nCette page est un modèle : « Jardins du Scorff » n’existe pas et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré — avec vos textes, vos photos et votre numéro à la place de ceux-ci.",
+    "services": "Création de jardin\nTerrasse et clôture\nÉlagage et taille de haie\nEntretien à l’année",
+    "options": [
+      "appel",
+      "whatsapp"
+    ]
+  },
+  "photos": []
+}

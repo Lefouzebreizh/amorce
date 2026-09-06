@@ -1,0 +1,18 @@
+{
+  "reference": "modele-plombier",
+  "commande": {
+    "modele": "btp",
+    "entreprise": "Guillou Plomberie",
+    "telephone": "02 97 00 00 00",
+    "ville": "Saint-Brieuc",
+    "couleur": "#2a6f7a",
+    "slogan": "Plombier chauffagiste à Saint-Brieuc. Fuite traitée le jour même.",
+    "presentation": "Recherche de fuite, salle de bains complète, chauffe-eau. Je laisse le chantier propre, c’est la moitié du métier.\n\nCette page est un modèle : « Guillou Plomberie » n’existe pas et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré — avec vos textes, vos photos et votre numéro à la place de ceux-ci.",
+    "services": "Fuite et dépannage\nSalle de bains complète\nChauffe-eau et chaudière\nRecherche de fuite",
+    "options": [
+      "appel",
+      "whatsapp"
+    ]
+  },
+  "photos": []
+}

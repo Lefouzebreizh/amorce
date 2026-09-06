@@ -1,0 +1,18 @@
+{
+  "reference": "modele-electricien",
+  "commande": {
+    "modele": "btp",
+    "entreprise": "Le Bihan Électricité",
+    "telephone": "02 97 00 00 00",
+    "ville": "Vannes",
+    "couleur": "#1f5f8b",
+    "slogan": "Électricien à Vannes. Mise aux normes et dépannage.",
+    "presentation": "Tableau, rénovation complète, panne un dimanche soir. Je donne un prix avant de commencer, et il ne bouge pas.\n\nCette page est un modèle : « Le Bihan Électricité » n’existe pas et le numéro ne sonne nulle part. Elle montre exactement ce qui est livré — avec vos textes, vos photos et votre numéro à la place de ceux-ci.",
+    "services": "Mise aux normes\nTableau électrique\nRénovation complète\nDépannage",
+    "options": [
+      "appel",
+      "whatsapp"
+    ]
+  },
+  "photos": []
+}
