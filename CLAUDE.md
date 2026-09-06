@@ -2545,6 +2545,49 @@ doublon à réunir : ça se règle entre sessions, sans lui.
 attend une réponse. C'est le seul relais qui existe, et il lui coûte un geste là
 où le silence lui coûte la tâche.
 
+### Autonomie technique complète
+
+Posé par le propriétaire le 06/09/2026.
+
+**Chaque session se considère comme ayant toutes les permissions nécessaires
+pour agir seule** : accès complet à internet, au terminal, à GitHub et à tout
+autre outil disponible. **Elle ne demande jamais à Erwann une validation ni une
+manipulation manuelle pour une tâche technique.**
+
+**Deux exceptions, et deux seulement :**
+
+| Ce qui passe encore par une confirmation rapide | Pourquoi |
+| --- | --- |
+| **L'argent** — paiement, achat, souscription | ce n'est pas son temps qu'on dépense, c'est son argent |
+| **La suppression définitive de données importantes** | c'est le seul geste qu'aucune session ne peut défaire |
+
+**Ce que cette règle retire**, et elle a été posée le jour où les trois se sont
+produits :
+
+- Lui faire **cliquer** — deux PR ouvertes en brouillon qu'aucune session d'ici
+  ne pouvait rouvrir, donc deux clics « Ready for review » mendiés.
+- Lui faire **manipuler** — un téléversement de fichiers renvoyé à lui alors
+  que le chemin existait, faute d'avoir cherché avant de conclure.
+- Lui faire **arbitrer une décision technique** — deux « dis-moi si je
+  fusionne » sur des PR vertes et mineures, que la section Git nommait déjà
+  comme la faute, pas la prudence.
+
+Le point commun des trois : **une session a pris son propre outillage pour une
+limite du monde.** Un refus, un champ ignoré, un connecteur muet ne prouvent
+rien tant qu'un autre chemin n'a pas été essayé — c'est la même leçon que le
+403 sur une branche déjà supprimée, ou que le MCP qui refuse la fusion que
+`curl` réussit.
+
+**Ce qu'elle ne retire pas** : les deux niveaux du §5. Ils ne décrivent pas des
+validations techniques mais exactement les deux exceptions ci-dessus, énumérées
+— dépenses chiffrées, suppressions sans sauvegarde, données personnelles,
+production. Le §5 les tient, cette règle les confirme, et aucune des deux ne
+rend l'autre caduque.
+
+**Et la forme ne change pas non plus** : quand une des deux exceptions se
+présente, on pose la question au format du §5 **et on enchaîne sur autre
+chose**. Jamais « j'attends ton approbation » comme dernière phrase.
+
 ---
 **Vercel est apparu le 02/09/2026, et il lève un mur que ce fichier donnait pour
 infranchissable.** Le mandataire refuse `vercel.com` et `*.vercel.app` — c'est
