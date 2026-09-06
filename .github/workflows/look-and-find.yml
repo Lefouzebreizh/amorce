@@ -149,19 +149,22 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      # Un APK par architecture, autour de 60 Mo au lieu de 200 : l'universel
-      # embarque les trois jeux de bibliothèques natives et les symboles, dont
-      # un appareil donné n'utilise qu'un tiers. Le téléchargement et
-      # l'installation s'en ressentent — et sur un téléphone, l'installation
-      # d'un fichier de 200 Mo est le geste qui échoue le plus souvent.
+      # L'APK d'un téléphone, et de lui seul : `arm64-v8a` couvre tout Android
+      # vendu depuis 2016. Environ 60 Mo là où l'universel en fait 200, parce
+      # que celui-ci embarque les trois jeux de bibliothèques natives et leurs
+      # symboles, dont un appareil donné n'utilise qu'un tiers.
       #
-      # L'universel reste publié : c'est celui qu'on donne quand on ne sait pas
-      # quel appareil recevra l'APK. `arm64-v8a` couvre tout téléphone Android
-      # vendu depuis 2016.
-      - name: Publier les APK par architecture
+      # **Un seul fichier dans l'artéfact, et c'est le point.** Publier les
+      # trois d'un coup rendait le téléchargement plus lourd que l'universel —
+      # 178 Mo contre 98 — ce qui annulait exactement ce qu'on cherchait.
+      # Mesuré sur la première version de cette étape.
+      #
+      # L'universel reste publié à côté : c'est celui qu'on donne quand on
+      # ignore quel appareil recevra le fichier.
+      - name: Publier l'APK pour téléphone
         uses: actions/upload-artifact@v4
         with:
-          name: look-and-find-debug-apk-par-architecture
-          path: look_and_find/build/app/outputs/flutter-apk/app-*-debug.apk
+          name: look-and-find-debug-apk-telephone
+          path: look_and_find/build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk
           if-no-files-found: error
           retention-days: 14

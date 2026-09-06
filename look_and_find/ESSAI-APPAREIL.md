@@ -26,7 +26,7 @@ verte sur `main` ▸ tout en bas, artéfact **`look-and-find-debug-apk`**.
 
 | Artéfact | Ce que c'est |
 | --- | --- |
-| `look-and-find-debug-apk-par-architecture` | Trois APK d'environ 60 Mo. Prendre **`app-arm64-v8a-debug.apk`** — c'est l'architecture de tout téléphone Android vendu depuis 2016 |
+| **`look-and-find-debug-apk-telephone`** | Un APK d'environ 60 Mo, pour l'architecture `arm64-v8a` — celle de tout téléphone Android vendu depuis 2016. **C'est celui-ci qu'il faut** |
 | `look-and-find-debug-apk` | Un seul APK de 200 Mo, qui embarque les trois architectures. Utile quand on ignore quel appareil le recevra |
 
 Le téléchargement est un **zip**, pas un APK. Ouvrir *Fichiers* (l'application
