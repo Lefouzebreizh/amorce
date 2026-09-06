@@ -26,3 +26,26 @@ CREATE TABLE IF NOT EXISTS mouvements (
   motif       TEXT NOT NULL,
   horodatage  INTEGER NOT NULL
 );
+
+-- Un lien de connexion est à usage unique. Le jeton reste scellé sans état
+-- (HMAC, aucune lecture en base pour l'ouvrir), mais son `jti` — un identifiant
+-- tiré au hasard, glissé dans la charge — se consomme ici à la première
+-- vérification réussie. Une seconde vérification du même lien retombe sur un
+-- `jti` déjà présent et se fait refuser : un lien intercepté (fuite par
+-- l'en-tête Referer, historique d'un poste partagé, journal, transfert de
+-- courriel) ne vaut plus rien une fois qu'il a servi.
+--
+-- Même motif d'idempotence que `mouvements` : `jti` est la clé primaire, et
+-- `INSERT OR IGNORE` rend `changes: 0` sur un doublon. D1 sérialise les
+-- écritures d'une même base, donc deux vérifications concurrentes du même lien
+-- ne peuvent pas lire toutes les deux `changes: 1` — une seule mint une
+-- session, l'autre est refusée.
+--
+-- `exp` (l'expiration du lien, en secondes Unix) n'est pas relu pour décider :
+-- le sceau HMAC le fait déjà, et un jeton expiré est rejeté avant d'arriver
+-- ici. Il n'est stocké que pour permettre une purge des lignes dont la date
+-- est passée — un `jti` consommé ne sert plus à rien une fois le lien expiré.
+CREATE TABLE IF NOT EXISTS liens_consommes (
+  jti  TEXT PRIMARY KEY,
+  exp  INTEGER NOT NULL
+);

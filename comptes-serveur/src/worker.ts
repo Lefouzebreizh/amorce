@@ -29,6 +29,20 @@ type Environnement = {
 
 function base(d1: D1): Base {
   return {
+    async consommerLien(jti, exp) {
+      /*
+       * Même garantie que `crediter` : `INSERT OR IGNORE` sur la clé primaire
+       * `jti` rend `changes: 1` la première fois, `changes: 0` sur un rejeu.
+       * D1 sérialise les écritures d'une même base, donc deux vérifications
+       * concurrentes du même lien ne peuvent pas lire toutes les deux
+       * `changes: 1` : une seule ouvre une session, l'autre est refusée.
+       */
+      const insertion = await d1
+        .prepare('INSERT OR IGNORE INTO liens_consommes (jti, exp) VALUES (?, ?)')
+        .bind(jti, exp)
+        .run();
+      return insertion.meta.changes > 0;
+    },
     async compteParEmail(email) {
       const ligne = await d1
         .prepare('SELECT id, solde FROM comptes WHERE email = ?')
