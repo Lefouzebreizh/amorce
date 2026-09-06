@@ -71,7 +71,7 @@ export default async function UneSerie({ params }: { params: Promise<{ serie: st
           <p className="text-doux">
             {episodes.length === 0
               ? 'Aucun épisode chargé'
-              : `${saisons.size} saison${saisons.size > 1 ? 's' : ''} · ${episodes.length} épisodes`}
+              : `${saisons.size} saison${saisons.size > 1 ? 's' : ''} · ${episodes.length} épisode${episodes.length > 1 ? 's' : ''}`}
             {fiche?.annee !== undefined && ` · ${fiche.annee}`}
           </p>
           {fiche !== undefined && fiche.genres.length > 0 && (

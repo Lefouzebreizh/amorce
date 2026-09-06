@@ -121,7 +121,8 @@ export function Catalogue({
         <header className="mb-4">
           <h1 className="text-2xl font-bold">{titre}</h1>
           <p className="text-doux">
-            {totalOeuvres.toLocaleString('fr-FR')} titres, {dossiers.length} thèmes
+            {`${totalOeuvres.toLocaleString('fr-FR')} titre${totalOeuvres > 1 ? 's' : ''}, ` +
+              `${dossiers.length} thème${dossiers.length > 1 ? 's' : ''}`}
           </p>
         </header>
 
@@ -182,7 +183,9 @@ export function Catalogue({
         <h1 className="text-2xl font-bold">
           {parThemes && theme !== undefined ? nomTheme(theme) : titre}
         </h1>
-        <p className="text-doux">{total.toLocaleString('fr-FR')} entrées</p>
+        <p className="text-doux">
+          {`${total.toLocaleString('fr-FR')} entrée${total > 1 ? 's' : ''}`}
+        </p>
       </header>
 
       <div className="mb-3 flex flex-wrap gap-2">

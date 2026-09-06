@@ -169,8 +169,10 @@ export function Entretien({ initial }: { initial: Etat }) {
     <section className="mb-6 rounded-carte border border-bord bg-surface p-4">
       <h2 className="font-semibold">Entretien du catalogue</h2>
       <p className="mt-1 text-sm text-doux">
-        {etat.total.toLocaleString('fr-FR')} entrées — {etat.vivants} vérifiées vivantes,{' '}
-        {etat.morts} masquées, {etat.aTester} jamais éprouvées.
+        {`${etat.total.toLocaleString('fr-FR')} entrée${etat.total > 1 ? 's' : ''} — ` +
+          `${etat.vivants} vérifiée${etat.vivants > 1 ? 's' : ''} vivante${etat.vivants > 1 ? 's' : ''}, ` +
+          `${etat.morts} masquée${etat.morts > 1 ? 's' : ''}, ` +
+          `${etat.aTester} jamais éprouvée${etat.aTester > 1 ? 's' : ''}.`}
       </p>
 
       {etat.dernierImport !== undefined && (() => {

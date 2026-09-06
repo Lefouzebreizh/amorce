@@ -108,7 +108,8 @@ export default async function Series({
         <header className="mb-4">
           <h1 className="text-2xl font-bold">Séries</h1>
           <p className="text-doux">
-            {toutes.length.toLocaleString('fr-FR')} séries, {dossiers.length} thèmes
+            {`${toutes.length.toLocaleString('fr-FR')} série${toutes.length > 1 ? 's' : ''}, ` +
+              `${dossiers.length} thème${dossiers.length > 1 ? 's' : ''}`}
           </p>
         </header>
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -141,7 +142,9 @@ export default async function Series({
         <h1 className="text-2xl font-bold">
           {themeOuvert === undefined ? 'Séries' : themeOuvert === '' ? 'Autres' : themeOuvert}
         </h1>
-        <p className="text-doux">{series.length.toLocaleString('fr-FR')} séries</p>
+        <p className="text-doux">
+          {`${series.length.toLocaleString('fr-FR')} série${series.length > 1 ? 's' : ''}`}
+        </p>
       </header>
 
       {series.length === 0 ? (
