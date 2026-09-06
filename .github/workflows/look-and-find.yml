@@ -131,16 +131,37 @@ jobs:
         run: |
           if [ -n "$CLE" ]; then
             echo "Clé Gemini fournie par le secret du dépôt."
-            flutter build apk --debug --dart-define=GEMINI_API_KEY="$CLE"
+            DEFINE=(--dart-define=GEMINI_API_KEY="$CLE")
           else
             echo "::notice::Aucun secret GEMINI_API_KEY : l'APK démarrera sur son écran de configuration."
-            flutter build apk --debug
+            DEFINE=()
           fi
+          flutter build apk --debug "${DEFINE[@]}"
+          # Le second build réutilise le travail Gradle du premier : il ne
+          # recompile que l'empaquetage, quelques dizaines de secondes.
+          flutter build apk --debug --split-per-abi "${DEFINE[@]}"
 
-      - name: Publier l'APK
+      - name: Publier l'APK universel
         uses: actions/upload-artifact@v4
         with:
           name: look-and-find-debug-apk
           path: look_and_find/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      # Un APK par architecture, autour de 60 Mo au lieu de 200 : l'universel
+      # embarque les trois jeux de bibliothèques natives et les symboles, dont
+      # un appareil donné n'utilise qu'un tiers. Le téléchargement et
+      # l'installation s'en ressentent — et sur un téléphone, l'installation
+      # d'un fichier de 200 Mo est le geste qui échoue le plus souvent.
+      #
+      # L'universel reste publié : c'est celui qu'on donne quand on ne sait pas
+      # quel appareil recevra l'APK. `arm64-v8a` couvre tout téléphone Android
+      # vendu depuis 2016.
+      - name: Publier les APK par architecture
+        uses: actions/upload-artifact@v4
+        with:
+          name: look-and-find-debug-apk-par-architecture
+          path: look_and_find/build/app/outputs/flutter-apk/app-*-debug.apk
           if-no-files-found: error
           retention-days: 14

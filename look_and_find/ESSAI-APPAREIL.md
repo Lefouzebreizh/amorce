@@ -22,9 +22,19 @@ n'appelle aucun modèle et fonctionne sans elle.**
 GitHub ▸ onglet **Actions** ▸ workflow **Look & Find** ▸ la dernière exécution
 verte sur `main` ▸ tout en bas, artéfact **`look-and-find-debug-apk`**.
 
+**Deux artéfacts, et pour un téléphone c'est le second qu'il faut** :
+
+| Artéfact | Ce que c'est |
+| --- | --- |
+| `look-and-find-debug-apk-par-architecture` | Trois APK d'environ 60 Mo. Prendre **`app-arm64-v8a-debug.apk`** — c'est l'architecture de tout téléphone Android vendu depuis 2016 |
+| `look-and-find-debug-apk` | Un seul APK de 200 Mo, qui embarque les trois architectures. Utile quand on ignore quel appareil le recevra |
+
 Le téléchargement est un **zip**, pas un APK. Ouvrir *Fichiers* (l'application
-Xiaomi) ▸ Téléchargements ▸ appuyer sur le zip ▸ **Extraire**. L'APK est dedans,
-nommé `app-debug.apk`.
+Xiaomi) ▸ Téléchargements ▸ appuyer sur le zip ▸ **Extraire**. L'APK est dedans.
+
+Le poids compte plus qu'il n'y paraît : sur un téléphone, l'installation d'un
+fichier de 200 Mo est le geste qui échoue le plus souvent — place disponible,
+délai d'analyse, interruption.
 
 - ✅ **Réussite** : `app-debug.apk` visible dans Téléchargements.
 - ❌ **Aucune exécution verte** : la dernière poussée n'a pas touché
