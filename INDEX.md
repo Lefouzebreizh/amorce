@@ -116,12 +116,20 @@ dans lesquelles les chantiers puisent.
 
 ## À faire sur le dépôt lui-même
 
-- `inbox/` porte depuis le 06/09/2026 **cinq messages de coordination**, un par
-  projet, déposés par une session de coordination — pas des idées à noter. Une
-  session de tri les reconnaît à leur en-tête `De : Session de coordination` et
-  les laisse : elles se suppriment quand le projet destinataire les a lues, pas
-  quand elles sont notées sur dix. Hors ces cinq, le dossier est vide, et c'est
-  normal si tout a été trié.
+- `inbox/` porte depuis le 06/09/2026 des **messages de coordination**, un par
+  projet destinataire — pas des idées à noter. Une session de tri les reconnaît
+  à leur en-tête `De : Session de coordination` et les laisse : elles se
+  suppriment quand le projet destinataire les a lues, pas quand elles sont
+  notées sur dix. Hors ces messages, le dossier est vide, et c'est normal si
+  tout a été trié.
+- **`inbox/amorce-video-pipeline.md` n'a pas de destinataire.** Aucun dossier de
+  ce nom n'existe dans le dépôt, et « pipeline V3 » n'apparaît dans aucun
+  fichier : aucune session ne le lira au démarrage. **Ce message est donc à
+  récupérer à la main**, jusqu'à ce qu'un dossier dédié soit créé — et le jour
+  où il l'est, le message y déménage et cette ligne disparaît.
+- Les deux copies pour Aznaroth — `inbox/montage-auto.md` et `inbox/tiktok.md` —
+  portent le même texte à dessein : le projet vit dans les deux dossiers. Chacune
+  renvoie à l'autre pour qu'on ne les prenne pas pour un doublon accidentel.
 - Le tableau ci-dessus **se recompte désormais tout seul**. Il ne le faisait
   pas, et ça s'est vu deux fois le même jour : `motion/` absent pendant
   plusieurs sessions alors que `CLAUDE.md` le documentait, puis un décompte
