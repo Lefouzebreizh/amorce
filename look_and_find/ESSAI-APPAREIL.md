@@ -46,6 +46,30 @@ réessayer.
 - ✅ **Réussite** : l'icône **Look & Find** apparaît sur l'écran d'accueil.
 - ❌ **Échec** : noter le texte exact du refus MIUI et le renvoyer.
 
+## 2 bis. Réinstaller par-dessus une version précédente
+
+**Il faut désinstaller d'abord, à chaque fois.** Ce n'est pas une précaution :
+le workflow construit en `--debug` sans magasin de clés fourni, et chaque
+exécution GitHub Actions démarre sur une machine neuve qui **fabrique le sien**.
+Deux exécutions signent donc avec deux clés différentes, et Android refuse de
+mettre à jour une application dont la signature a changé. Le refus est sec —
+« Un problème est survenu. Appli non installée. » — et ne nomme jamais la
+signature.
+
+*Paramètres ▸ Applications ▸ Gérer les applications ▸ Look & Find ▸
+Désinstaller.* Un appui long sur l'icône ne suffit pas toujours sur MIUI.
+
+**La clé Gemini part avec.** Elle est rangée dans les données de l'application ;
+il faut la recoller au démarrage suivant. La garder sous la main évite d'aller
+la rechercher à chaque cycle.
+
+- ❌ **Ça refuse encore après désinstallation** : Play Protect. *Play Store ▸
+  avatar ▸ Play Protect ▸ roue dentée ▸ « Analyser les applications » désactivé*,
+  installer, réactiver.
+- ❌ **Toujours pas** : place disponible — il faut ~500 Mo libres pour installer
+  201 Mo. Le poids est normal : un APK de debug Flutter embarque toutes les
+  architectures et les symboles.
+
 ## 3. La clé — 1 min
 
 Au premier lancement, l'application ouvre son écran de configuration. Coller la
