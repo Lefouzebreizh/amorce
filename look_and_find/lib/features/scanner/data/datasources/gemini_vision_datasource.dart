@@ -5,11 +5,21 @@
 /// [AppException] — changer de fournisseur de vision ne touche que ce fichier
 /// et son invite.
 ///
-/// Deux échecs se ressemblent et ne doivent surtout pas être confondus :
-/// le réseau qui casse (on réessaie, la photo est bonne) et le modèle qui
-/// répond « je ne vois rien » (inutile de réessayer, il faut reprendre la
-/// photo). Le premier remonte en [NetworkException], le second en
-/// [UnreadableAnswerException].
+/// **Trois échecs se ressemblent et ne doivent surtout pas être confondus**,
+/// parce qu'ils appellent trois gestes différents :
+///
+/// | Ce qui s'est passé | Le geste qui corrige | L'échec levé |
+/// | --- | --- | --- |
+/// | le réseau casse, la photo est bonne | réessayer tel quel | [NetworkException] |
+/// | la réponse arrive tronquée ou illisible | réessayer tel quel | [UnreadableAnswerException] |
+/// | le modèle répond « je ne vois rien » | **reprendre la photo** | [ObjetNonReconnuException] |
+/// | la photo est refusée par les filtres | **reprendre la photo** | [PhotoRefuseeException] |
+///
+/// Les deux derniers ne portaient longtemps qu'un seul type, réessayable : le
+/// bouton « Réessayer » proposait donc de rejouer une photo dont on savait
+/// qu'elle échouerait à l'identique. C'est [AppException.isRetryable] qui
+/// décide de l'afficher, et lui seul — le texte d'un message n'a jamais
+/// empêché personne d'appuyer.
 library;
 
 import 'dart:convert';
@@ -72,7 +82,7 @@ class GeminiVisionDataSource {
     }
 
     final product = dto.toEntity();
-    if (product == null) throw const UnreadableAnswerException();
+    if (product == null) throw const ObjetNonReconnuException();
     return product;
   }
 
@@ -108,7 +118,11 @@ class GeminiVisionDataSource {
     }
 
     final fiche = dto.toEntity();
-    if (fiche == null) throw const UnreadableAnswerException();
+    // Le modèle a répondu dans la forme demandée, avec un nom vide : c'est ce
+    // que l'invite lui demande de faire sur une photo où il ne voit rien. Une
+    // réponse, donc, et pas une panne — d'où un échec qui ne propose pas de
+    // rejouer la même photo.
+    if (fiche == null) throw const ObjetNonReconnuException();
     return fiche;
   }
 
@@ -164,15 +178,10 @@ class GeminiVisionDataSource {
     if (body == null) throw const UnreadableAnswerException();
 
     // Photo refusée par les filtres de sécurité (visage, contenu sensible).
-    // Le message générique « objet non identifié » serait trompeur : ici,
-    // reprendre la même photo échouera toujours.
+    // Reprendre la même photo échouera toujours : l'échec le dit désormais
+    // dans son type, et non plus seulement dans son texte.
     final block = (body['promptFeedback'] as Map?)?['blockReason'];
-    if (block != null) {
-      throw const UnreadableAnswerException(
-        'Cette photo a été refusée par le service. Évitez les personnes et '
-        'les documents personnels dans le cadre.',
-      );
-    }
+    if (block != null) throw const PhotoRefuseeException();
 
     final candidates = body['candidates'];
     if (candidates is! List || candidates.isEmpty) {
