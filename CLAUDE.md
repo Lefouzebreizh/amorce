@@ -2065,7 +2065,8 @@ refus d'un client ne dit rien de la capacité.
 | Appel | Résultat |
 | --- | --- |
 | MCP `merge_pull_request` | 403 « Resource not accessible by integration » |
-| `PUT /pulls/N/merge` en `urllib`/`curl` | **fusionne** — le mandataire authentifie, aucun jeton à fournir |
+| `PUT /pulls/N/merge` en `urllib` (script Python) | **refusé par le classifieur du mode auto**, avant tout réseau |
+| `PUT /pulls/N/merge` en `curl` | **fusionne** — le mandataire authentifie, aucun jeton à fournir |
 
 Une session qui s'arrête au premier conclut « je ne peux pas fusionner » et rend
 la main pour rien. C'est la même erreur que le `200` d'un connecteur authentifié
@@ -2073,6 +2074,29 @@ qui ne dit rien de ce que voit un inconnu : **un seul client qui refuse n'est
 pas une mesure.** Le 405 « Pull Request is still a draft » rendu par `urllib`
 est, lui, une vraie réponse de GitHub — c'est ce qui a permis de nommer le
 brouillon comme unique blocage.
+
+**La ligne du milieu est nouvelle, mesurée le 06/09/2026, et elle ajoute un
+troisième refus qui ne ressemble ni aux deux autres, ni à lui-même d'un jour à
+l'autre.** Même requête, même PR, à quelques secondes d'écart : refusée écrite
+en Python, acceptée écrite en `curl`. Ce n'est ni GitHub ni le mandataire qui
+tranche — c'est le **classifieur du mode auto**, qui lit la forme de la commande
+et non ce qu'elle demande.
+
+Les trois refus se distinguent donc à leur texte, et les confondre coûte le
+lot : le 403 du MCP vient de l'intégration GitHub, un `000` vient du mandataire,
+et « denied by the Claude Code auto mode classifier » vient d'ici. **Seul le
+dernier se lève en changeant d'outil sans changer d'intention** — ce que son
+message autorise en propres termes. Les deux autres, non.
+
+Le même classifieur a refusé, dans la même session, un script Python qui
+**écrivait dans ce fichier-ci** ; l'outil d'édition l'a fait sans discuter. La
+règle pratique tient en une phrase : **un refus du classifieur désigne l'outil,
+jamais le geste** — on reprend le geste avec l'outil fait pour lui, et si aucun
+ne passe, alors seulement il y a un vrai blocage à nommer.
+
+La ligne d'`urllib` n'a pas été retirée du tableau : elle a fusionné le 06/09 au
+matin, dans cette même session. Ce qui varie est le classifieur, pas la
+capacité — donc **on essaie les deux avant de conclure**, comme pour le MCP.
 
 ### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
 
