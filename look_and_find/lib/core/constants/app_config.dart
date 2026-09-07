@@ -61,10 +61,18 @@ class AppConfig {
   static const int maxRetries = 2;
   static const Duration retryBaseDelay = Duration(milliseconds: 800);
 
-  /// Noms des boîtes Hive. Le stockage local est volontairement plat : deux
+  /// Noms des boîtes Hive. Le stockage local est volontairement plat : des
   /// boîtes de JSON, pas de schéma binaire à migrer à chaque champ ajouté à
   /// la fiche produit.
   static const String favoritesBox = 'favoris';
   static const String historyBox = 'historique';
   static const String settingsBox = 'reglages';
+
+  /// Les fiches de la version un, dans leur propre boîte.
+  ///
+  /// Séparée de [historyBox], qui contient des produits du comparateur : les
+  /// deux n'ont pas un champ en commun, et les mêler obligerait chaque lecture
+  /// à deviner ce qu'elle vient de lire. La version deux retrouvera son
+  /// historique intact à côté de celui-ci.
+  static const String fichesBox = 'fiches';
 }

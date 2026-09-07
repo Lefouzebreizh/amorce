@@ -23,9 +23,8 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/network/app_exception.dart';
 import '../../../../core/utils/async_view.dart';
 import '../../../../core/utils/extensions.dart';
-import '../../../favorites/presentation/pages/favorites_page.dart';
-import '../../../favorites/presentation/providers/favorites_providers.dart';
 import '../../../fiche_objet/presentation/pages/fiche_objet_page.dart';
+import '../../../fiche_objet/presentation/pages/mes_fiches_page.dart';
 import '../providers/camera_providers.dart';
 import 'api_key_page.dart';
 import '../providers/scanner_providers.dart';
@@ -182,7 +181,6 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
     final session = ref.watch(cameraSessionProvider);
     final scan = ref.watch(ficheControllerProvider);
     final flash = ref.watch(flashSettingProvider);
-    final alerts = ref.watch(pendingAlertsProvider);
     final zoom = ref.watch(zoomSettingProvider);
 
     return Scaffold(
@@ -250,13 +248,15 @@ class _ScannerPageState extends ConsumerState<ScannerPage>
               right: 0,
               bottom: 20 + context.bottomInset,
               child: CaptureBar(
-                alertCount: alerts.length,
+                // Pas de pastille : elle comptait les baisses de prix
+                // attendues, et la version un ne suit aucun prix. La laisser
+                // à zéro pour toujours aurait été une promesse muette.
                 busy: scan.isLoading,
                 onPickPhoto: _choisirPhoto,
                 onCapture: _capture,
                 onOpenList: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => const FavoritesPage(),
+                    builder: (_) => const MesFichesPage(),
                   ),
                 ),
               ),

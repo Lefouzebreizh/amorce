@@ -26,6 +26,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'core/constants/app_config.dart';
 import 'features/favorites/presentation/providers/favorites_providers.dart';
+import 'features/fiche_objet/presentation/providers/fiches_providers.dart';
 import 'features/scanner/presentation/providers/scanner_providers.dart';
 
 Future<void> main() async {
@@ -38,6 +39,7 @@ Future<void> main() async {
   final favorites = await Hive.openBox<String>(AppConfig.favoritesBox);
   final history = await Hive.openBox<String>(AppConfig.historyBox);
   final settings = await Hive.openBox<String>(AppConfig.settingsBox);
+  final fiches = await Hive.openBox<String>(AppConfig.fichesBox);
 
   runApp(
     ProviderScope(
@@ -45,6 +47,7 @@ Future<void> main() async {
         favoritesBoxProvider.overrideWithValue(favorites),
         historyBoxProvider.overrideWithValue(history),
         settingsBoxProvider.overrideWithValue(settings),
+        fichesBoxProvider.overrideWithValue(fiches),
       ],
       child: const LookAndFindApp(),
     ),
