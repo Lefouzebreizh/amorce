@@ -185,6 +185,14 @@ d'y toucher.
    — déclencheur, galerie, et ceux qui viendront. Un échec d'écriture **ne fait
    pas échouer le scan** : la fiche vient d'être payée en requête et en attente,
    la perdre pour un disque plein serait le pire des deux résultats.
+7 ter. **Un échec dit dans son type s'il vaut la peine d'être réessayé.**
+   `isRetryable` décide seul de l'affichage du bouton, et le texte du message
+   n'a jamais empêché personne d'appuyer. Trois réponses se ressemblent et
+   appellent trois gestes : réponse tronquée (réessayer),
+   `ObjetNonReconnuException` et `PhotoRefuseeException` (**reprendre la
+   photo**). Les deux dernières ont longtemps porté le type réessayable de la
+   première, si bien que « Réessayer » proposait de rejouer une photo dont on
+   savait qu'elle échouerait à l'identique, en coûtant une requête.
 8. **Un seul chemin d'identification.** Le déclencheur et le choix d'une photo
    dans la galerie passent tous deux par `_identifier` : deux chemins
    divergeraient au premier changement d'invite ou de compression.
@@ -291,6 +299,7 @@ méthode testée.
 | `fiche_objet_page_test.dart` | La fiche v1 montée pour de vrai, et ce qu'elle ne montre plus — ni prix, ni marchand. |
 | `fiches_gardees_test.dart` | La mémoire de la version un : l'aller-retour par le disque (couleur et hésitation comprises), l'enregistrement porté par le cas d'usage, et le refus de perdre une fiche quand le rangement échoue. |
 | `mes_fiches_page_test.dart` | « Mes fiches » montée pour de vrai — l'écran vide compris, qui est le premier que voit une installation neuve. |
+| `photo_sans_objet_test.dart` | La distinction entre « je ne vois rien sur ta photo », « photo refusée » et « réponse illisible » — du service jusqu'au bouton. Les deux premiers ne doivent jamais proposer de rejouer la même photo. |
 | `zoom_viseur_test.dart` | Le calcul du pincement et ses bornes : `setZoomLevel` **lève** hors bornes, donc un facteur mal borné ne donne pas un zoom trop fort mais un geste sans effet. |
 | `image_compressor_test.dart` | Le format lu dans les octets — JPEG, PNG, WebP décalé, famille HEIF — et ce qui doit rester inconnu : un MP4, un tampon trop court. |
 | `diagnostic_reponse_test.dart` | La fidélité du diagnostic de `tool/lecture_fiche.dart` : ne rien signaler que le DTO accepte, ne rien taire de ce qu'il écarte. Un verdict inversé fait corriger le mauvais fichier. |
