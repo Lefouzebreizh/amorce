@@ -21,6 +21,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:look_and_find/app.dart';
 import 'package:look_and_find/features/favorites/presentation/providers/favorites_providers.dart';
+import 'package:look_and_find/features/fiche_objet/presentation/providers/fiches_providers.dart';
 import 'package:look_and_find/features/scanner/data/datasources/api_key_store.dart';
 import 'package:look_and_find/features/scanner/presentation/pages/api_key_page.dart';
 import 'package:look_and_find/features/scanner/presentation/providers/scanner_providers.dart';
@@ -30,6 +31,7 @@ void main() {
   late Box<String> favoris;
   late Box<String> historique;
   late Box<String> reglages;
+  late Box<String> fiches;
 
   setUpAll(() async {
     dossier = await Directory.systemTemp.createTemp('look_and_find_demarrage');
@@ -37,6 +39,7 @@ void main() {
     favoris = await Hive.openBox<String>('favoris_dem');
     historique = await Hive.openBox<String>('historique_dem');
     reglages = await Hive.openBox<String>('reglages_dem');
+    fiches = await Hive.openBox<String>('fiches_dem');
   });
 
   setUp(() => reglages.clear());
@@ -57,6 +60,7 @@ void main() {
           favoritesBoxProvider.overrideWithValue(favoris),
           historyBoxProvider.overrideWithValue(historique),
           settingsBoxProvider.overrideWithValue(reglages),
+        fichesBoxProvider.overrideWithValue(fiches),
         ],
         child: const LookAndFindApp(),
       ),

@@ -22,6 +22,7 @@ import '../../../../core/constants/app_config.dart';
 import '../../../favorites/presentation/providers/favorites_providers.dart';
 import '../../../fiche_objet/domain/entities/fiche_objet.dart';
 import '../../../fiche_objet/domain/usecases/decrire_objet.dart';
+import '../../../fiche_objet/presentation/providers/fiches_providers.dart';
 import '../../../product_detail/domain/entities/product.dart';
 import '../../data/datasources/api_key_store.dart';
 import '../../data/datasources/gemini_vision_datasource.dart';
@@ -93,8 +94,10 @@ ScannerRepository scannerRepository(Ref ref) =>
     ScannerRepositoryImpl(ref.watch(geminiVisionDataSourceProvider));
 
 @Riverpod(keepAlive: true)
-DecrireObjet decrireObjet(Ref ref) =>
-    DecrireObjet(ref.watch(scannerRepositoryProvider));
+DecrireObjet decrireObjet(Ref ref) => DecrireObjet(
+  ref.watch(scannerRepositoryProvider),
+  ref.watch(fichesRepositoryProvider),
+);
 
 /// Le parcours du comparateur, gardé pour la version deux : plus personne ne le
 /// déclenche depuis le viseur, et il reste câblé et testé. Le remettre en
