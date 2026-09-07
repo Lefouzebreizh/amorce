@@ -184,3 +184,59 @@ create policy "tentatives_proprietaire_cree" on public.coffre_tentatives
 drop policy if exists "tentatives_proprietaire_lit" on public.coffre_tentatives;
 create policy "tentatives_proprietaire_lit" on public.coffre_tentatives
   for select using (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- 6. Quota de stockage par compte — le vrai garde-fou au-delà d'un fichier.
+-- ---------------------------------------------------------------------------
+-- `storage.buckets.file_size_limit` (section 3) ne protège qu'un fichier à la
+-- fois ; rien n'empêchait un compte de déposer des milliers de petits
+-- fichiers et de remplir tout le projet. Posé le 07/09/2026, à la demande
+-- explicite du propriétaire : raisonner en gigaoctets/téraoctets, pas
+-- remonter un chiffre de vingt fois — un réglage de bucket seul n'aurait pas
+-- tenu cette promesse.
+--
+-- Le contrôle client dans `surDepot` (src/app/coffre/page.tsx) donne un
+-- message immédiat ; celui-ci est le seul qui compte vraiment, parce qu'il
+-- vit dans Postgres et ne dépend pas du navigateur qui dépose.
+create or replace function public.coffre_verifier_quota()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  deja_utilise bigint;
+  quota_octets constant bigint := 107374182400; -- 100 Go — voir QUOTA_TOTAL_OCTETS
+begin
+  if new.bucket_id <> 'coffre-objets' then
+    return new;
+  end if;
+
+  select coalesce(sum((metadata->>'size')::bigint), 0) into deja_utilise
+  from storage.objects
+  where bucket_id = 'coffre-objets' and owner = new.owner;
+
+  if deja_utilise + coalesce((new.metadata->>'size')::bigint, 0) > quota_octets then
+    raise exception 'Quota de stockage dépassé (% Go).', quota_octets / 1024 / 1024 / 1024;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists coffre_verifier_quota on storage.objects;
+create trigger coffre_verifier_quota
+  before insert on storage.objects
+  for each row
+  execute function public.coffre_verifier_quota();
+
+-- Le plafond par fichier suit TAILLE_MAX_OCTETS (src/app/coffre/page.tsx) —
+-- 5 Go. **Sans effet tant que le projet reste sur le palier gratuit** :
+-- Supabase y plafonne tout upload à 50 Mo quel que soit ce réglage, tous
+-- buckets confondus (mesuré le 07/09/2026 via get_organization : plan
+-- `free`). Le passage au palier Pro (25 $/mois, 100 Go inclus puis environ
+-- 0,021 $/Go) est la décision qui débloque réellement ce chiffre — seul le
+-- propriétaire peut la prendre, depuis le tableau de bord Supabase.
+update storage.buckets
+set file_size_limit = 5368709120
+where id = 'coffre-objets';

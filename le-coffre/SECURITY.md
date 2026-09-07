@@ -247,13 +247,29 @@ la connexion elle-même réussissait (session créée), seule la redirection
 `https://coffre-puce.vercel.app` et en ajoutant
 `https://coffre-puce.vercel.app/**` aux Redirect URLs.
 
-## Limite de taille et limite de tentatives (05/09/2026)
+## Limite de taille, quota par compte et limite de tentatives (05/09/2026, revu le 07/09/2026)
 
-**Taille des dépôts** : `storage.buckets.coffre-objets.file_size_limit` posé
-à 20 Mo côté serveur (le vrai garde-fou), doublé d'un contrôle client dans
-`surDepot` pour un message immédiat sans même tenter le chiffrement. Les
-deux doivent rester synchronisés — voir `TAILLE_MAX_OCTETS` dans
-`src/app/coffre/page.tsx`.
+**Taille des dépôts et espace total** : demande explicite du propriétaire le
+07/09/2026 — raisonner en gigaoctets, voire en téraoctets, pas remonter le
+chiffre existant. Le vrai garde-fou n'est donc plus seulement
+`storage.buckets.coffre-objets.file_size_limit`, qui ne protège qu'un fichier
+à la fois : un trigger Postgres (`coffre_verifier_quota`, voir
+`supabase/schema.sql` §6) refuse tout dépôt qui ferait dépasser 100 Go par
+compte, calculé sur ce qui est déjà présent. Le contrôle client dans
+`surDepot` donne un message immédiat pour les deux limites, sans même
+tenter le chiffrement — voir `TAILLE_MAX_OCTETS` (5 Go, plafonné par la
+mémoire du navigateur qui chiffre le fichier entier d'un bloc) et
+`QUOTA_TOTAL_OCTETS` (100 Go, extensible au téraoctet en changeant ce seul
+chiffre) dans `src/app/coffre/page.tsx`. Les trois doivent rester
+synchronisés : le trigger, le réglage de bucket et les deux constantes.
+
+**Ça ne prend effet qu'après deux gestes que seul le propriétaire peut
+faire** : passer l'organisation Supabase au palier Pro (25 $/mois — le
+palier gratuit plafonne tout upload à 50 Mo quel que soit
+`file_size_limit`, mesuré le 07/09/2026 via `get_organization`), et
+appliquer la migration de `supabase/schema.sql` §6 sur le projet en
+production. Écrire dans une base de production est une action rouge de
+`CLAUDE.md` §5 : une session ne l'exécute pas seule.
 
 **Tentatives de déverrouillage** : le serveur ne voit jamais la phrase
 secrète, donc jamais si une tentative a réussi au moment où elle a lieu —
