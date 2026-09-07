@@ -11,8 +11,15 @@
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
 
+    <!-- Le nom affiché est celui du produit, pas celui du dossier Flutter.
+         « look_and_find » venait du gabarit et n'a jamais été changé : c'est
+         sous ce nom-là, avec le logo Flutter par défaut, que l'application
+         apparaissait dans le tiroir et dans Play Protect — introuvable pour
+         qui la cherchait sous son vrai nom. L'esperluette s'écrit en entité
+         XML ; en caractère brut, elle fait échouer la compilation des
+         ressources avec une erreur qui ne la nomme pas. -->
     <application
-        android:label="look_and_find"
+        android:label="Look &amp; Find"
         android:allowBackup="false"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

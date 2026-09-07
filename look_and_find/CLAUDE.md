@@ -290,6 +290,7 @@ méthode testée.
 | `favorites_page_test.dart` | « Ma liste » montée pour de vrai : bandeau d'alerte, cumul, acquittement. |
 | `api_key_test.dart` | D'où vient la clé et laquelle gagne. |
 | `demarrage_test.dart` | Le seul test qui monte `app.dart` : câblage du thème, de la locale et des surcharges. |
+| `identite_application_test.dart` | Le nom sous lequel le système présente l'application, lu dans les fichiers de plateforme. Le nom du gabarit Flutter ne se voit ni à l'analyse ni aux tests : il se découvre sur un téléphone, au moment où on cherche l'application et où on ne la trouve pas. |
 | `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé. Le patron du faux `Dio` est là si un autre test en a besoin. |
 | `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |
