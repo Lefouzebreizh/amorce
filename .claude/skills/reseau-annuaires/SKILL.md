@@ -136,6 +136,21 @@ toucher.
   contrôles verts — titres, filtres, modale, adresses — sur une page sans la
   moindre mise en page. Quand une demande touche à l'apparence, **prendre une
   capture et la regarder**, `verifier.mjs` ne le fera pas à votre place.
+- **Ajouter une fiche sans régénérer le sitemap casse le déploiement, et le
+  build ne dit pas pourquoi.** Mesuré le 06/09/2026 en posant la fiche Gamma :
+  `construire-sites.js` sort en **code 2** sur un sitemap qui ne colle plus aux
+  données, sans nommer le sitemap — sa dernière ligne parle des liens de
+  démonstration, ce qui envoie chercher au mauvais endroit. Le workflow Pages
+  lance cette commande telle quelle : le dépôt aurait échoué. C'est la barrière
+  qui a nommé le défaut (`ÉCHEC sitemap-generaliste.xml`), pas le build. Donc
+  `node generate-sitemap.js` **dans le même geste** que l'ajout d'un outil, et
+  le sitemap régénéré part dans le même commit — il est versionné.
+- **Un lien d'affiliation réel posé dans une niche en pause ne rapporte
+  rien.** Dix des onze niches portent `niche.actif: false`. Un vrai lien y
+  passe `valider.js`, passe la barrière, fait baisser le compteur des liens de
+  démonstration — et ne s'affiche **nulle part**. Lire `niche.actif` avant de
+  se réjouir d'un lien posé ; si la niche dort, créer aussi la fiche dans
+  `generaliste`, la seule servie aujourd'hui.
 
 ## Les recettes
 

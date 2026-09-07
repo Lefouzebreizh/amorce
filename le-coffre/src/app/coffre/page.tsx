@@ -12,7 +12,7 @@ import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, ecarterEcheance, statutEcheance,
-  interpreterQuestion, SEUIL_BIENTOT_JOURS,
+  interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
 } from '@/lib/coffre';
 import { RemplirFormulaire } from './RemplirFormulaire';
@@ -187,11 +187,14 @@ function LettrePreview({ identite, emetteur, referenceClient, date }: {
   );
 }
 
-// Aperçu instantané dans la fiche détail, sans passer par un téléchargement.
-// Monté avec key={nom} par l'appelant : changer de document remonte ce
-// composant à neuf plutôt que de réinitialiser son état depuis un effet, qui
-// déclencherait un rendu en cascade évitable. Seuls image et PDF savent se
-// montrer dans la page — les autres types gardent le bouton Télécharger.
+// Aperçu instantané dans la fiche détail, sans passer par un téléchargement
+// (rien n'est écrit sur le disque du téléphone dans les deux cas). Monté
+// avec key={nom} par l'appelant : changer de document remonte ce composant
+// à neuf plutôt que de réinitialiser son état depuis un effet, qui
+// déclencherait un rendu en cascade évitable. Une image se montre
+// directement dans la page ; un PDF s'ouvre en un tap dans un nouvel onglet
+// — jamais dans un cadre intégré, que Chrome Android refuse de rendre. Les
+// autres types gardent le seul bouton Télécharger.
 function FichePreview({ nom, info, userId, cle }: {
   nom: string; info: ObjetIndex; userId: string; cle: CryptoKey;
 }) {
@@ -222,8 +225,23 @@ function FichePreview({ nom, info, userId, cle }: {
   }
   if (erreur) return <p className="text-sm text-wine">Aperçu impossible : {erreur}</p>;
   if (!apercu) return <p className="text-sm text-ink-soft">Déchiffrement de l&apos;aperçu…</p>;
+  // Un PDF ne s'affiche pas dans un <iframe> sur Chrome Android : au lieu du
+  // rendu attendu, le navigateur bascule sur son intention de téléchargement
+  // natif — plein écran, nom de fichier illisible (l'opaque du stockage), et
+  // le bouton « Ouvrir » de cette boîte ne fait rien (06/09/2026, vu en
+  // usage réel). Ouvrir le même blob en nouvel onglet, plutôt qu'en cadre
+  // intégré, est le chemin que le lecteur PDF intégré de Chrome sait
+  // réellement prendre en charge.
   return apercu.type === 'application/pdf' ? (
-    <iframe src={apercu.url} title={info.nom} className="h-80 w-full rounded-xl border border-line bg-paper" />
+    <button
+      type="button"
+      onClick={() => window.open(apercu.url, '_blank', 'noopener')}
+      className="flex w-full flex-col items-center gap-2 rounded-xl border border-line bg-paper p-6 text-center transition hover:border-accent/60"
+    >
+      <FileText size={28} className="text-ink-soft" />
+      <span className="text-sm font-medium">Ouvrir l&apos;aperçu du PDF</span>
+      <span className="text-xs text-ink-soft">Dans un nouvel onglet — rien n&apos;est enregistré sur le téléphone.</span>
+    </button>
   ) : (
     // eslint-disable-next-line @next/next/no-img-element -- blob: local, next/image ne s'applique pas
     <img src={apercu.url} alt={info.nom} className="max-h-80 w-full rounded-xl border border-line object-contain" />
@@ -314,6 +332,9 @@ export default function PageCoffre() {
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
   const [assistantOuvert, setAssistantOuvert] = useState(false);
+  // Posée par la barre de recherche du haut quand elle n'a rien trouvé
+  // localement, ou vide pour une question ouverte — voir demanderAAssistant.
+  const [questionAssistant, setQuestionAssistant] = useState('');
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
   const [recherche, setRecherche] = useState('');
   const [vueDossiers, setVueDossiers] = useState(false);
@@ -569,6 +590,23 @@ export default function PageCoffre() {
     }
   }
 
+  // Point d'entrée unique vers l'assistant, depuis la barre de recherche :
+  // avec une question, elle vient d'une recherche locale restée sans
+  // résultat (ou sans rapport avec un document précis) et part directement
+  // en premier message ; vide, le chat s'ouvre à blanc comme avant. Vide la
+  // recherche locale pour ne pas laisser un texte de recherche périmé une
+  // fois le chat refermé.
+  function demanderAAssistant(question: string) {
+    setQuestionAssistant(question);
+    setAssistantOuvert(true);
+    setRecherche('');
+  }
+
+  function fermerAssistant() {
+    setAssistantOuvert(false);
+    setQuestionAssistant('');
+  }
+
   async function enregistrerCorrection() {
     if (!utilisateur || !cle || !detailOuvert || !correction) return;
     setEnCours(true);
@@ -611,11 +649,12 @@ export default function PageCoffre() {
     const forme = new FormData(e.target as HTMLFormElement);
     const libelle = String(forme.get('libelle') || '').trim();
     const date = String(forme.get('date') || '');
+    const heure = String(forme.get('heure') || '').trim();
     if (!libelle || !date) return;
     setEnCours(true);
     setErreur('');
     try {
-      const nouvelIndex = await ajouterRendezVous(utilisateur.id, cle, libelle, date, index);
+      const nouvelIndex = await ajouterRendezVous(utilisateur.id, cle, libelle, date, index, heure || null);
       setIndex(nouvelIndex);
       (e.target as HTMLFormElement).reset();
     } catch (err) {
@@ -623,6 +662,21 @@ export default function PageCoffre() {
     } finally {
       setEnCours(false);
     }
+  }
+
+  // Fabrique le .ics à la volée et le fait ouvrir par le téléphone, comme
+  // telecharger() pour un document — genererICS ne touche jamais le réseau.
+  function ajouterAuCalendrier(libelle: string, date: string, heure?: string) {
+    const contenu = genererICS(libelle, date, heure);
+    const blob = new Blob([contenu], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement('a');
+    lien.href = url;
+    lien.download = 'rendez-vous.ics';
+    document.body.appendChild(lien);
+    lien.click();
+    lien.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
 
   async function retirerRendezVous(id: string) {
@@ -856,6 +910,27 @@ export default function PageCoffre() {
           </button>
         </header>
 
+        {/* Accès direct à rendez-vous / identité / formulaire, en un tap
+            depuis le haut de l'écran — sans ça, un coffre chargé (89 papiers
+            vus en usage réel) oblige à faire défiler tout le fil des
+            documents pour atteindre ce qui vit en dessous, sur téléphone où
+            tout s'empile en une seule colonne. Masqué à partir de `lg` : la
+            grille à trois colonnes y montre déjà tout côte à côte, sans
+            défilement à raccourcir. */}
+        {tousLesNoms.length > 0 && (
+          <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm lg:hidden">
+            <a href="#rendez-vous" className="text-ink-soft underline decoration-dotted transition hover:text-ink">
+              Aller aux rendez-vous
+            </a>
+            <a href="#mon-identite" className="text-ink-soft underline decoration-dotted transition hover:text-ink">
+              Aller à mon identité
+            </a>
+            <a href="#remplir-formulaire" className="text-ink-soft underline decoration-dotted transition hover:text-ink">
+              Aller au formulaire
+            </a>
+          </nav>
+        )}
+
         {/* Bannière d'alerte — cliquable seulement quand elle porte sur un
             document (jamais un rendez-vous, qui n'a pas de fiche) : ouvre
             directement la fiche détail concernée. */}
@@ -1020,7 +1095,12 @@ export default function PageCoffre() {
                   />
                 </div>
                 {/* Réponse du coffre à la question posée — jamais affichée
-                    pour une recherche vide, où elle n'apporterait rien. */}
+                    pour une recherche vide, où elle n'apporterait rien.
+                    Point d'entrée unique désormais : quand la recherche
+                    locale (gratuite, instantanée) ne trouve rien, une puce
+                    propose d'escalader vers l'assistant (payant) avec la
+                    même question — jamais automatique, pour ne pas facturer
+                    une simple faute de frappe. */}
                 {recherche.trim() && (
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm text-accent">{reponseRecherche}</p>
@@ -1042,7 +1122,29 @@ export default function PageCoffre() {
                         <FileText size={12} /> Remplir un formulaire
                       </button>
                     )}
+                    {nomsTrouves.length === 0 && !actionRecherche && (
+                      <button
+                        type="button"
+                        onClick={() => demanderAAssistant(recherche.trim())}
+                        className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-accent/60"
+                      >
+                        <MessageCircle size={12} /> Demander à l&apos;assistant
+                      </button>
+                    )}
                   </div>
+                )}
+                {/* Toujours visible, discret : la porte vers une question qui
+                    ne concerne aucun document précis (« comment résilier une
+                    assurance habitation »), sans dupliquer la barre du haut
+                    ni ouvrir un second champ de saisie. */}
+                {!recherche.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => demanderAAssistant('')}
+                    className="self-start text-xs text-ink-soft underline decoration-dotted transition hover:text-ink"
+                  >
+                    Une question plus large ? Demander à l&apos;assistant
+                  </button>
                 )}
               </div>
             )}
@@ -1101,12 +1203,15 @@ export default function PageCoffre() {
           </section>
 
           <div className="flex flex-col gap-8">
-            <section>
+            <section id="rendez-vous" className="scroll-mt-6">
               <h2 className="mb-4 font-affiche text-2xl">Rendez-vous</h2>
               <form onSubmit={surAjoutRendezVous} className="mb-4 flex flex-col gap-2">
                 <Champ name="libelle" placeholder="Dentiste, cabinet Martin…" required />
                 <div className="flex gap-2">
                   <Champ name="date" type="date" required />
+                  {/* Optionnelle : sans heure, le rendez-vous reste noté
+                      comme avant, juste sans rappel possible. */}
+                  <Champ name="heure" type="time" aria-label="Heure (optionnel)" />
                   <button type="submit" disabled={enCours}
                     className="shrink-0 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Ajouter
@@ -1124,13 +1229,20 @@ export default function PageCoffre() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">{rdv.libelle}</p>
-                            <p className="text-sm text-ink-soft">{rdv.date}</p>
+                            <p className="text-sm text-ink-soft">{rdv.date}{rdv.heure ? ` à ${rdv.heure}` : ''}</p>
                           </div>
                           <button onClick={() => retirerRendezVous(rdv.id)} className="text-sm text-wine hover:underline">
                             Retirer
                           </button>
                         </div>
                         <JaugeEcheance jours={joursRdv} />
+                        <button
+                          type="button"
+                          onClick={() => ajouterAuCalendrier(rdv.libelle, rdv.date, rdv.heure)}
+                          className="self-start text-sm text-accent hover:underline"
+                        >
+                          Ajouter au calendrier{rdv.heure ? ' (avec rappel)' : ''}
+                        </button>
                       </li>
                     );
                   })}
@@ -1138,7 +1250,7 @@ export default function PageCoffre() {
               )}
             </section>
 
-            <section>
+            <section id="mon-identite" className="scroll-mt-6">
               <h2 className="mb-2 font-affiche text-2xl">Mon identité</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Sert uniquement à remplir l&apos;en-tête des lettres de résiliation — chiffrée comme le reste.
@@ -1166,7 +1278,7 @@ export default function PageCoffre() {
               </form>
             </section>
 
-            <section>
+            <section id="remplir-formulaire" className="scroll-mt-6">
               <h2 className="mb-2 font-affiche text-2xl">Remplir un formulaire</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Dépose un CERFA ou un mandat vierge : l&apos;appli détecte ses champs et les
@@ -1191,29 +1303,27 @@ export default function PageCoffre() {
       {assistantOuvert && (
         <AssistantCoffre
           index={index}
-          onFermer={() => setAssistantOuvert(false)}
+          questionInitiale={questionAssistant}
+          onFermer={fermerAssistant}
           onOuvrirDocument={ouvrirDetail}
           onOuvrirFormulaire={() => setFormulaireOuvert(true)}
           onOuvrirRangement={() => setVueDossiers(true)}
         />
       )}
 
-      {/* Deux boutons flottants : ajouter un papier (seul point d'entrée
-          visible pour ça — la page entière reste aussi déposable, voir
-          onDrop sur <main>) et demander au coffre. `pointer-events-none` sur
-          le conteneur pleine largeur, `auto` sur chaque bouton : sans ça,
-          toute la bande invisible du bas de l'écran — pas seulement les
-          boutons visibles — interceptait les taps destinés aux lignes de
-          documents rendues dessous, quel que soit le défilement
-          (position `fixed`). */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center gap-3 px-4">
-        <button
-          type="button"
-          onClick={() => setAssistantOuvert(true)}
-          className="pointer-events-auto flex items-center gap-2 rounded-full border border-line bg-paper-raised px-5 py-3.5 font-semibold text-ink shadow-lg transition hover:border-accent/60"
-        >
-          <MessageCircle size={20} /> Demander au coffre
-        </button>
+      {/* Un seul bouton flottant désormais : ajouter un papier — seul point
+          d'entrée visible pour ça (la page entière reste aussi déposable,
+          voir onDrop sur <main>). « Demander au coffre » n'a plus de bouton
+          flottant séparé : la barre de recherche du haut est le point
+          d'entrée unique, qui n'ouvre l'assistant que sur une recherche
+          restée sans résultat ou une question explicitement plus large (voir
+          demanderAAssistant) — plus de deux entrées concurrentes pour le
+          même besoin. `pointer-events-none` sur le conteneur pleine largeur,
+          `auto` sur le bouton : sans ça, toute la bande invisible du bas de
+          l'écran — pas seulement le bouton visible — interceptait les taps
+          destinés aux lignes de documents rendues dessous, quel que soit le
+          défilement (position `fixed`). */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
         <button
           type="button"
           onClick={() => entreeFichier.current?.click()}

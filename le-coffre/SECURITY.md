@@ -177,6 +177,33 @@ les droits de base sur la table) :
 grant select, insert, update, delete on public.coffre_echeances to service_role;
 ```
 
+## Le calendrier : un fichier .ics local, jamais une intégration Google/Apple
+
+Ajouté le 06/09/2026, à la demande d'Erwann : pouvoir mettre un rendez-vous
+dans le calendrier du téléphone, avec un rappel avant l'heure. Deux voies
+existaient — une vraie intégration à un service de calendrier (Google
+Agenda, iCloud), ou un fichier généré localement. La première aurait exigé
+d'envoyer le libellé du rendez-vous (« Dentiste, cabinet Martin ») à un
+service tiers, ce que rien d'autre dans ce projet ne fait — la seconde
+exception explicite, après le classement automatique et l'assistant, mais
+plus large qu'elles deux : celles-ci ne gardent rien après lecture, une
+intégration calendrier **stockerait** le rendez-vous chez le tiers en
+continu. Écartée pour cette raison.
+
+`genererICS` (dans `coffre.ts`) construit donc un fichier iCalendar
+(RFC 5545) **entièrement dans le navigateur**, à partir de ce que
+l'utilisateur voit déjà à l'écran — aucun appel réseau, aucune clé, aucun
+compte. Le fichier est téléchargé (`ajouterAuCalendrier` dans `page.tsx`,
+même mécanique que le téléchargement d'un document) et c'est l'utilisateur
+qui l'ouvre ensuite avec l'application calendrier de son choix : Le Tiroir
+Secret ne sait pas laquelle, et n'a pas besoin de le savoir.
+
+L'heure d'un rendez-vous suit exactement la même règle que son libellé :
+stockée uniquement dans l'index chiffré, jamais transmise en clair à
+Supabase (seule la date l'est déjà, voir la section précédente sur
+l'alerte proactive). Sans heure, l'export produit un événement en journée
+entière, sans rappel — une alarme relative à minuit n'aurait aucun sens.
+
 ## Suppression : une garantie plus faible qu'en local, à le dire
 
 La version locale écrase le contenu du fichier (deux passes aléatoires puis des

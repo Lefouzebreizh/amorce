@@ -1571,6 +1571,49 @@ de mesurer plus, c'est de mesurer ailleurs et de regarder.
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
 
+### Une campagne se livre en page d'envoi, jamais en liste
+
+Posé par le propriétaire le 06/09/2026, après l'avoir utilisée : **dès qu'une
+campagne de messages à envoyer à la main est préparée — SMS ou courriel —, la
+proposer sous cette forme, sans attendre qu'il la demande.**
+
+Ce qui la remplaçait était un fichier texte : douze messages à sélectionner,
+copier, coller, avec le numéro à retaper. Sur un téléphone, à sept heures du
+matin, ça suffit à ce que la campagne ne parte pas. **Ce n'est pas le message
+qui bloque une prospection, c'est le geste.**
+
+**Ce que la page porte, et pourquoi chaque élément y est :**
+
+| Élément | Ce qu'il évite |
+| --- | --- |
+| Un bouton par destinataire, qui ouvre l'appli avec destinataire **et** texte déjà remplis | douze copier-coller, et le numéro retapé de travers |
+| Un bouton « Copier » à côté | le téléphone qui refuse le lien — la page reste utilisable |
+| Une case « envoyé » qui survit à la fermeture, et un compteur | reprendre au cinquième après une tournée, sans se rappeler où on en était |
+| Le texte affiché en entier, mention d'opposition en gras | envoyer sans relire ce qui part vraiment |
+
+**Le lien s'écrit `sms:0600000000?&body=…`**, le corps encodé. La forme `?&`
+convient aux deux familles de téléphones — iOS attend `&`, Android `?` — et une
+seule des deux écritures laisse la moitié des appareils sans texte. Pour un
+courriel, `mailto:` prend `?subject=` et `?body=` de la même façon.
+
+**Compter les segments, et le dire sur la fiche.** Un SMS est facturé par
+tranche de 160 caractères — mais **un seul caractère hors alphabet GSM-7 fait
+basculer le message entier en UCS-2, à 67 caractères par segment**. Le `ç`
+minuscule et le tiret cadratin `—` en font partie ; `é`, `è`, `à`, `ç`
+majuscule et `€` non. Un message de 420 caractères passe ainsi de 3 à 7
+segments à cause d'un seul accent dans le nom du destinataire. Mesuré sur
+« ACM Maçonnerie ». **On ne corrige pas l'orthographe d'une entreprise pour
+gagner trois centimes** : on affiche le coût et on l'assume.
+
+**Et on la livre en fichier, pas en page publiée**, tant qu'elle porte des
+coordonnées de tiers — c'est la règle de `prospects.md` appliquée à un autre
+support. L'adresse publique se propose, elle ne se décide pas.
+
+La règle de la mention d'opposition ne change pas : **tout SMS se termine par
+« STOP au [numéro] », jamais un courriel** (§ `PROSPECTION.md`). La page la
+montre en gras sur chaque fiche, ce qui la rend vérifiable d'un coup d'œil au
+lieu d'être supposée.
+
 ## 9. AU DÉMARRAGE
 
 **Lire ce fichier avant le premier geste, à chaque nouveau fil.** Il est joint au
@@ -1649,6 +1692,14 @@ laquelle des trois garder. Le sujet seul, lui, perd la casquette sous laquelle
 le travail a été demandé, et c'est elle qui explique pourquoi ce fil-ci parle
 de référencement quand le voisin parle de montage. Sans prompt de rôle, le
 sujet seul suffit.
+
+**Et chaque session affiche une ligne fixe « Projet : nom-du-projet »**, posée
+par le propriétaire le 06/09/2026 — en tête de sa toute première réponse, et
+rappelée à chaque changement de sujet. Le nom est celui que le dépôt utilise
+pour désigner le chantier concerné (`amorce`, `le-coffre`, `nexuscrypto`…),
+jamais une paraphrase : c'est ce qui permet de savoir en un coup d'œil, sur un
+fil qui dérive au fil des heures, à quel projet la réponse en cours se
+rattache.
 
 **Et tout résumé de reprise s'ouvre sur le but à terme**, avant l'état et avant
 le prochain pas : une ligne qui dit ce que cette discussion cherche à obtenir au
@@ -1837,6 +1888,16 @@ Posé par le propriétaire le 01/09/2026.
 validation manuelle : une correction de bogue, du texte, un ajustement de
 présentation, un test ajouté, une dépendance déjà présente. C'est le cas
 courant, et c'est ce que décrivent les paragraphes précédents.
+
+**Règle explicite, posée par le propriétaire le 06/09/2026** : une session
+fusionne elle-même sa propre pull request et supprime la branche associée,
+sans demander confirmation, à condition qu'il n'y ait **aucune erreur, aucun
+test qui échoue et aucun conflit** avec la base. Au moindre doute sur l'un des
+trois — un contrôle qui hésite, un conflit qui apparaît, une erreur dont la
+cause n'est pas claire — elle s'arrête et attend une validation plutôt que de
+trancher seule. Ça ne change rien aux quatre zones sensibles ci-dessous, qui
+attendent l'accord explicite même vertes : ce paragraphe couvre le cas
+courant, elles couvrent l'exception.
 
 **Quatre zones font exception. Une PR qui en touche une attend l'accord
 explicite du propriétaire, même verte, même minuscule.**
@@ -2469,6 +2530,16 @@ défaut, pas parce que l'autre serait impossible. Une session peut donc tenter
 de prévenir une autre, mais ne doit jamais **compter** dessus — elle peut
 toujours **lire ce qu'elles ont publié** et **publier ce qu'elles liront**.
 
+**La boîte aux lettres vit dans `inbox/`, un fichier par destinataire.** Un
+message adressé à un projet se dépose dans `inbox/<nom-du-projet>.md`, au
+format `## [AAAA-MM-JJ HH:MM] De : <expediteur>` suivi du texte. Chaque session
+consulte son fichier `inbox/<nom-du-projet>.md` **au démarrage**, avant le
+premier geste, et vide ou archive ce qu'elle y a lu une fois traité. Créée le
+06/09/2026 après plusieurs tentatives de messagerie directe entre sessions
+restées sans réponse fiable côté Windows/mobile - voir §7. La session de
+coordination peut y écrire directement via un jeton d'accès personnel, le
+connecteur GitHub natif ayant échoué sur ce dépôt au moment de la création.
+
 Ce que « se coordonner » veut dire concrètement, dans l'ordre :
 
 1. **Regarder avant d'écrire.** Avant de toucher un fichier partagé :
@@ -2497,6 +2568,49 @@ doublon à réunir : ça se règle entre sessions, sans lui.
 à Erwann : son identifiant, son titre, et la question exacte à laquelle elle
 attend une réponse. C'est le seul relais qui existe, et il lui coûte un geste là
 où le silence lui coûte la tâche.
+
+### Autonomie technique complète
+
+Posé par le propriétaire le 06/09/2026.
+
+**Chaque session se considère comme ayant toutes les permissions nécessaires
+pour agir seule** : accès complet à internet, au terminal, à GitHub et à tout
+autre outil disponible. **Elle ne demande jamais à Erwann une validation ni une
+manipulation manuelle pour une tâche technique.**
+
+**Deux exceptions, et deux seulement :**
+
+| Ce qui passe encore par une confirmation rapide | Pourquoi |
+| --- | --- |
+| **L'argent** — paiement, achat, souscription | ce n'est pas son temps qu'on dépense, c'est son argent |
+| **La suppression définitive de données importantes** | c'est le seul geste qu'aucune session ne peut défaire |
+
+**Ce que cette règle retire**, et elle a été posée le jour où les trois se sont
+produits :
+
+- Lui faire **cliquer** — deux PR ouvertes en brouillon qu'aucune session d'ici
+  ne pouvait rouvrir, donc deux clics « Ready for review » mendiés.
+- Lui faire **manipuler** — un téléversement de fichiers renvoyé à lui alors
+  que le chemin existait, faute d'avoir cherché avant de conclure.
+- Lui faire **arbitrer une décision technique** — deux « dis-moi si je
+  fusionne » sur des PR vertes et mineures, que la section Git nommait déjà
+  comme la faute, pas la prudence.
+
+Le point commun des trois : **une session a pris son propre outillage pour une
+limite du monde.** Un refus, un champ ignoré, un connecteur muet ne prouvent
+rien tant qu'un autre chemin n'a pas été essayé — c'est la même leçon que le
+403 sur une branche déjà supprimée, ou que le MCP qui refuse la fusion que
+`curl` réussit.
+
+**Ce qu'elle ne retire pas** : les deux niveaux du §5. Ils ne décrivent pas des
+validations techniques mais exactement les deux exceptions ci-dessus, énumérées
+— dépenses chiffrées, suppressions sans sauvegarde, données personnelles,
+production. Le §5 les tient, cette règle les confirme, et aucune des deux ne
+rend l'autre caduque.
+
+**Et la forme ne change pas non plus** : quand une des deux exceptions se
+présente, on pose la question au format du §5 **et on enchaîne sur autre
+chose**. Jamais « j'attends ton approbation » comme dernière phrase.
 
 ---
 **Vercel est apparu le 02/09/2026, et il lève un mur que ce fichier donnait pour

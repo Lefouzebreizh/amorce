@@ -4,6 +4,13 @@ Tableau de bord unique. Toute idée entre par `/inbox/`, ressort en
 `/projets-actifs/` (validée, fiche d'exécution écrite) ou en
 `/archives-backlog/` (bonne, mais pas maintenant).
 
+**`/inbox/` sert aussi de boîte aux lettres entre sessions depuis le
+06/09/2026** — voir `inbox/README.md`, qui fait foi pour cet usage-là. Les deux
+contenus se distinguent à l'œil et sans convention de nom : **un message porte
+un en-tête `## [AAAA-MM-JJ HH:MM] De : …`, une idée non.** Un message se vide
+quand le projet destinataire l'a lu ; une idée se note sur dix puis ressort.
+Une session de tri qui rencontre un en-tête `De :` passe son chemin.
+
 ## Statuts
 
 | Statut | Sens |
@@ -109,7 +116,20 @@ dans lesquelles les chantiers puisent.
 
 ## À faire sur le dépôt lui-même
 
-- `inbox/` est vide (seul un `.gitkeep`) — normal si tout a été trié, à surveiller.
+- `inbox/` porte depuis le 06/09/2026 des **messages de coordination**, un par
+  projet destinataire — pas des idées à noter. Une session de tri les reconnaît
+  à leur en-tête `De : Session de coordination` et les laisse : elles se
+  suppriment quand le projet destinataire les a lues, pas quand elles sont
+  notées sur dix. Hors ces messages, le dossier est vide, et c'est normal si
+  tout a été trié.
+- **`inbox/amorce-video-pipeline.md` n'a pas de destinataire.** Aucun dossier de
+  ce nom n'existe dans le dépôt, et « pipeline V3 » n'apparaît dans aucun
+  fichier : aucune session ne le lira au démarrage. **Ce message est donc à
+  récupérer à la main**, jusqu'à ce qu'un dossier dédié soit créé — et le jour
+  où il l'est, le message y déménage et cette ligne disparaît.
+- Les deux copies pour Aznaroth — `inbox/montage-auto.md` et `inbox/tiktok.md` —
+  portent le même texte à dessein : le projet vit dans les deux dossiers. Chacune
+  renvoie à l'autre pour qu'on ne les prenne pas pour un doublon accidentel.
 - Le tableau ci-dessus **se recompte désormais tout seul**. Il ne le faisait
   pas, et ça s'est vu deux fois le même jour : `motion/` absent pendant
   plusieurs sessions alors que `CLAUDE.md` le documentait, puis un décompte

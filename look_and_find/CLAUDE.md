@@ -85,7 +85,7 @@ lib/
 │   └── utils/       result, formatters, extensions, iterables, image_compressor
 └── features/
     ├── scanner/         viseur, capture, appel au modèle
-    ├── fiche_objet/     la fiche v1  ← propriétaire de la description
+    ├── fiche_objet/     la fiche v1 et sa mémoire  ← propriétaire de la description
     ├── product_detail/  comparateur, alternatives — dormant, v2  ← propriétaire du produit
     ├── color_reader/    cadre visé, échantillon, nom de couleur  ← brique partagée
     ├── accord/          harmonies d'une couleur relevée
@@ -177,6 +177,22 @@ d'y toucher.
 7. **Le prix de référence d'un favori ne bouge pas.** C'est lui qui rend une
    baisse mesurable ; le recalculer ferait glisser le repère avec le prix et
    aucune baisse ne serait jamais visible.
+7 bis. **Une fiche identifiée est enregistrée par le cas d'usage, jamais par
+   l'écran.** C'est l'oubli qui a fait vivre la version un sans mémoire pendant
+   tout son développement : le parcours du comparateur écrit son journal depuis
+   son contrôleur, celui de la fiche n'avait pas d'équivalent, et aucun test ne
+   le signalait. Posé sur `DecrireObjet`, l'enregistrement suit tous les chemins
+   — déclencheur, galerie, et ceux qui viendront. Un échec d'écriture **ne fait
+   pas échouer le scan** : la fiche vient d'être payée en requête et en attente,
+   la perdre pour un disque plein serait le pire des deux résultats.
+7 ter. **Un échec dit dans son type s'il vaut la peine d'être réessayé.**
+   `isRetryable` décide seul de l'affichage du bouton, et le texte du message
+   n'a jamais empêché personne d'appuyer. Trois réponses se ressemblent et
+   appellent trois gestes : réponse tronquée (réessayer),
+   `ObjetNonReconnuException` et `PhotoRefuseeException` (**reprendre la
+   photo**). Les deux dernières ont longtemps porté le type réessayable de la
+   première, si bien que « Réessayer » proposait de rejouer une photo dont on
+   savait qu'elle échouerait à l'identique, en coûtant une requête.
 8. **Un seul chemin d'identification.** Le déclencheur et le choix d'une photo
    dans la galerie passent tous deux par `_identifier` : deux chemins
    divergeraient au premier changement d'invite ou de compression.
@@ -274,6 +290,7 @@ méthode testée.
 | `favorites_page_test.dart` | « Ma liste » montée pour de vrai : bandeau d'alerte, cumul, acquittement. |
 | `api_key_test.dart` | D'où vient la clé et laquelle gagne. |
 | `demarrage_test.dart` | Le seul test qui monte `app.dart` : câblage du thème, de la locale et des surcharges. |
+| `identite_application_test.dart` | Le nom sous lequel le système présente l'application, lu dans les fichiers de plateforme. Le nom du gabarit Flutter ne se voit ni à l'analyse ni aux tests : il se découvre sur un téléphone, au moment où on cherche l'application et où on ne la trouve pas. |
 | `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé. Le patron du faux `Dio` est là si un autre test en a besoin. |
 | `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |
@@ -281,6 +298,9 @@ méthode testée.
 | `fiche_objet_dto_test.dart` | Ce que la lecture de la fiche v1 encaisse : liste rendue en une phrase, « null » écrit en toutes lettres, clé absente. |
 | `contrat_fiche_lecture_test.dart` | Le pacte de la version un, et le périmètre lui-même : l'invite doit continuer d'interdire marque et prix. |
 | `fiche_objet_page_test.dart` | La fiche v1 montée pour de vrai, et ce qu'elle ne montre plus — ni prix, ni marchand. |
+| `fiches_gardees_test.dart` | La mémoire de la version un : l'aller-retour par le disque (couleur et hésitation comprises), l'enregistrement porté par le cas d'usage, et le refus de perdre une fiche quand le rangement échoue. |
+| `mes_fiches_page_test.dart` | « Mes fiches » montée pour de vrai — l'écran vide compris, qui est le premier que voit une installation neuve. |
+| `photo_sans_objet_test.dart` | La distinction entre « je ne vois rien sur ta photo », « photo refusée » et « réponse illisible » — du service jusqu'au bouton. Les deux premiers ne doivent jamais proposer de rejouer la même photo. |
 | `zoom_viseur_test.dart` | Le calcul du pincement et ses bornes : `setZoomLevel` **lève** hors bornes, donc un facteur mal borné ne donne pas un zoom trop fort mais un geste sans effet. |
 | `image_compressor_test.dart` | Le format lu dans les octets — JPEG, PNG, WebP décalé, famille HEIF — et ce qui doit rester inconnu : un MP4, un tampon trop court. |
 | `diagnostic_reponse_test.dart` | La fidélité du diagnostic de `tool/lecture_fiche.dart` : ne rien signaler que le DTO accepte, ne rien taire de ce qu'il écarte. Un verdict inversé fait corriger le mauvais fichier. |

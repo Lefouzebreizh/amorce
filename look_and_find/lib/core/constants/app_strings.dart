@@ -57,6 +57,22 @@ class AppStrings {
   static const String arHint =
       'Balayez lentement le sol, puis posez l\'objet. Il apparaît à sa taille réelle.';
 
+  // Mes fiches — la mémoire de la version un
+  static const String fichesTitle = 'Mes fiches';
+  static const String noFiches = 'Aucun objet identifié pour l\'instant.';
+  static const String noFichesBody =
+      'Visez un objet et appuyez sur le déclencheur : sa fiche restera ici.';
+
+  /// Le geste est irréversible et la formulation le dit. « Supprimer ? » ferait
+  /// croire à une corbeille ; il n'y en a pas, et la fiche coûte un appel au
+  /// modèle à refaire.
+  static const String supprimerFiche = 'Retirer cette fiche ?';
+  static const String supprimerFicheBody =
+      'Elle ne sera plus dans la liste. Il faudra reprendre une photo pour la '
+      'retrouver.';
+  static const String supprimer = 'Retirer';
+  static const String annuler = 'Annuler';
+
   // Favoris et historique
   static const String favoritesTitle = 'Ma liste';
   static const String tabFavorites = 'Favoris';

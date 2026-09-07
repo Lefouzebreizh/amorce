@@ -13,8 +13,12 @@ type Message = TourConversation & {
   rechercheWebEffectuee?: boolean;
 };
 
-export function AssistantCoffre({ index, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement }: {
+export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement }: {
   index: IndexCoffre;
+  // Posée par la recherche locale restée sans résultat, envoyée une seule
+  // fois à l'ouverture — voir l'effet ci-dessous. Absente ou vide : le chat
+  // s'ouvre à blanc, comme avant.
+  questionInitiale?: string;
   onFermer: () => void;
   onOuvrirDocument: (nom: string) => void;
   onOuvrirFormulaire: () => void;
@@ -24,6 +28,7 @@ export function AssistantCoffre({ index, onFermer, onOuvrirDocument, onOuvrirFor
   const [question, setQuestion] = useState('');
   const [enCours, setEnCours] = useState(false);
   const finDesMessages = useRef<HTMLDivElement>(null);
+  const dejaEnvoyee = useRef(false);
 
   useEffect(() => {
     finDesMessages.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,13 +41,10 @@ export function AssistantCoffre({ index, onFermer, onOuvrirDocument, onOuvrirFor
     return Object.values(index.objets).some((o) => o.nom === nom);
   }
 
-  async function envoyer(e: React.FormEvent) {
-    e.preventDefault();
-    const texte = question.trim();
+  async function envoyerTexte(texte: string) {
     if (!texte || enCours) return;
     const historique = messages.map(({ role, texte: t }) => ({ role, texte: t }));
     setMessages((precedent) => [...precedent, { role: 'user', texte }]);
-    setQuestion('');
     setEnCours(true);
     try {
       const reponse = await demanderAuCoffre(texte, historique, index);
@@ -57,6 +59,25 @@ export function AssistantCoffre({ index, onFermer, onOuvrirDocument, onOuvrirFor
     } finally {
       setEnCours(false);
     }
+  }
+
+  // Envoi automatique de la question posée dans la barre de recherche, une
+  // seule fois — `dejaEnvoyee` évite un doublon si le composant se
+  // remontait pour une autre raison sans que `questionInitiale` change.
+  useEffect(() => {
+    if (questionInitiale && !dejaEnvoyee.current) {
+      dejaEnvoyee.current = true;
+      envoyerTexte(questionInitiale);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function envoyer(e: React.FormEvent) {
+    e.preventDefault();
+    const texte = question.trim();
+    if (!texte || enCours) return;
+    setQuestion('');
+    await envoyerTexte(texte);
   }
 
   function ouvrirDocumentEtFermer(nom: string) {

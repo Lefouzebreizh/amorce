@@ -199,6 +199,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nSur la génération d'images, la question qui compte pour un professionnel n'est pas la beauté du rendu mais le droit de s'en servir. Firefly est entraîné sur des contenus sous licence et de l'imagerie du domaine public, et Adobe assume cette origine — ce qui change tout quand l'image part sur une plaquette client ou une campagne. Le rendu n'est pas toujours le plus spectaculaire du marché ; il est le plus défendable.\n\n## Points forts\n- Entraîné sur des contenus sous licence, ce qui sécurise l'usage commercial\n- Intégré aux outils Adobe déjà en place dans beaucoup d'ateliers\n- Fonctions d'extension et de remplissage utiles au quotidien, au-delà de la génération\n- Palier gratuit pour évaluer sans abonnement\n\n## Points faibles\n- Rendu parfois en retrait des générateurs les plus avancés\n- Système de crédits qui rend le coût réel difficile à anticiper\n- Pleine valeur uniquement pour ceux déjà équipés Creative Cloud\n- Restrictions de contenu plus strictes que chez les concurrents\n\n## Idéal pour\nCeux dont les images partent chez un client ou en publicité, et qui ne peuvent pas se permettre une incertitude sur les droits.",
       "date_ajout": "2026-09-01"
+    },
+    {
+      "id": "gamma",
+      "nom": "Gamma",
+      "categorie": "Design",
+      "prix": "Freemium — à partir de 10 $/mois",
+      "description_courte": "La présentation mise en forme toute seule : on écrit le plan, la mise en page suit sans qu'on y touche.",
+      "lien_affiliation": "https://try.gamma.app/1up6vnh79bvt",
+      "score_avis": 4.5,
+      "date_ajout": "2026-09-06",
+      "description_longue": "## Notre verdict\nGamma s'attaque à l'étape qui décourage tout le monde : la mise en page. On donne un plan, un document existant ou trois lignes d'intention, et il rend une présentation structurée, illustrée et cohérente — qui reste modifiable bloc par bloc, sans jamais rouvrir un gabarit. Le résultat se projette, se partage par lien ou s'exporte en PowerPoint et en PDF. Pour qui prépare des supports régulièrement, c'est une à deux heures récupérées par présentation, et c'est là que la dépense se justifie.\n\n## Points forts\n- La mise en page tient debout toute seule : plus de blocs qui débordent ni de titres à recadrer\n- Un document déjà rédigé devient un support en un passage, au lieu d'être recopié diapositive par diapositive\n- Partage par lien avec suivi de ce qui a réellement été consulté\n- Export vers PowerPoint et PDF, donc rien n'est enfermé dans l'outil\n- Fait aussi des pages web et des documents, pas seulement des diapositives\n\n## Points faibles\n- L'esthétique par défaut se reconnaît d'un support à l'autre : sans reprise du thème, tout le monde rend la même chose\n- Les illustrations générées sont souvent le maillon faible et demandent un remplacement\n- La formule gratuite marque les documents et limite les crédits\n- La reprise fine de la mise en page est moins libre que dans un vrai outil de présentation\n\n## Idéal pour\nUn indépendant, un formateur ou une petite équipe qui produit des supports souvent et passe plus de temps à les mettre en forme qu'à les écrire."
     }
   ]
 }

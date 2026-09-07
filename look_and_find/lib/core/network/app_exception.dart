@@ -155,12 +155,60 @@ final class CancelledException extends AppException {
 
 /// Le modèle a répondu, mais pas ce qu'on lui demandait. Distinct d'une erreur
 /// réseau : ici c'est la photo qu'il faut refaire, pas la connexion.
+/// Le service n'a pas rendu quelque chose qu'on sache lire.
+///
+/// Réponse tronquée, enveloppe sans texte, JSON malformé : la photo n'est pas
+/// en cause, et la même requête peut très bien aboutir au coup suivant. C'est
+/// donc le seul des trois échecs de réponse qui mérite « Réessayer ».
+///
+/// **Son message ne parle plus d'objet non identifié.** Il l'a fait longtemps,
+/// et c'était la même phrase que celle du cas ci-dessous : quand une seule
+/// formule couvre « je n'ai rien vu sur ta photo » et « je n'ai pas compris ce
+/// que le serveur m'a répondu », on ne peut plus savoir lequel des deux geste
+/// corrige la situation.
 final class UnreadableAnswerException extends AppException {
   const UnreadableAnswerException([String? detail])
     : super(
-        detail ??
-            'Objet non identifié. Rapprochez-vous et dégagez l\'arrière-plan.',
+        detail ?? 'Le service n\'a rien renvoyé d\'exploitable.',
       );
+}
+
+/// Le service a répondu, correctement, et n'a **rien reconnu**.
+///
+/// Ce n'est pas une panne : c'est une réponse, et c'est même celle que l'invite
+/// demande explicitement sur une photo floue, trop sombre ou vide. Elle était
+/// pourtant présentée comme un échec réessayable, si bien que le bouton
+/// « Réessayer » proposait de rejouer **la même photo** — qui échouerait
+/// exactement pareil, en coûtant une seconde requête. Le seul geste qui change
+/// quelque chose est de reprendre la photo, et c'est celui que l'écran offre
+/// désormais seul.
+final class ObjetNonReconnuException extends AppException {
+  const ObjetNonReconnuException()
+    : super(
+        'Aucun objet reconnu sur cette photo. Rapprochez-vous, éclairez, et '
+        'dégagez l\'arrière-plan.',
+      );
+
+  @override
+  bool get isRetryable => false;
+}
+
+/// La photo a été refusée par les filtres du service.
+///
+/// Visage, document personnel, contenu jugé sensible. Le refus est une
+/// propriété de **cette photo-là** : la renvoyer telle quelle sera refusée à
+/// l'identique, et le dire vaut mieux qu'un « Réessayer » qui consomme le quota
+/// pour rien. Le message nomme la cause probable, parce que « refusée » sans
+/// raison laisse croire à une panne du service.
+final class PhotoRefuseeException extends AppException {
+  const PhotoRefuseeException()
+    : super(
+        'Cette photo a été refusée par le service. Évitez les personnes et '
+        'les documents personnels dans le cadre.',
+      );
+
+  @override
+  bool get isRetryable => false;
 }
 
 final class MissingApiKeyException extends AppException {

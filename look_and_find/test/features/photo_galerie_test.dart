@@ -19,6 +19,7 @@ import 'package:look_and_find/core/constants/app_strings.dart';
 import 'package:look_and_find/core/theme/app_theme.dart';
 import 'package:look_and_find/core/utils/result.dart';
 import 'package:look_and_find/features/favorites/presentation/providers/favorites_providers.dart';
+import 'package:look_and_find/features/fiche_objet/presentation/providers/fiches_providers.dart';
 import 'package:look_and_find/features/fiche_objet/domain/entities/fiche_objet.dart';
 import 'package:look_and_find/features/fiche_objet/presentation/pages/fiche_objet_page.dart';
 import 'package:look_and_find/features/product_detail/domain/entities/product.dart';
@@ -89,6 +90,7 @@ void main() {
   late Box<String> favoris;
   late Box<String> historique;
   late Box<String> reglages;
+  late Box<String> fiches;
 
   setUpAll(() async {
     dossier = await Directory.systemTemp.createTemp('look_and_find_galerie');
@@ -96,6 +98,7 @@ void main() {
     favoris = await Hive.openBox<String>('favoris_gal');
     historique = await Hive.openBox<String>('historique_gal');
     reglages = await Hive.openBox<String>('reglages_gal');
+    fiches = await Hive.openBox<String>('fiches_gal');
   });
 
   setUp(() async {
@@ -122,6 +125,7 @@ void main() {
         favoritesBoxProvider.overrideWithValue(favoris),
         historyBoxProvider.overrideWithValue(historique),
         settingsBoxProvider.overrideWithValue(reglages),
+        fichesBoxProvider.overrideWithValue(fiches),
         cameraSessionProvider.overrideWith(_CameraAbsente.new),
         photoPickerProvider.overrideWithValue(selecteur),
         scannerRepositoryProvider.overrideWithValue(depot),

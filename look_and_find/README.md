@@ -30,6 +30,10 @@ l'appareil hors la photo envoyée pour être décrite.
    « rose » avec le même aplomb, et personne ne pourrait le vérifier.
 4. **Se servir de l'objet.** Quelques gestes utiles pour sa catégorie — usage,
    entretien, sécurité — numérotés pour se retrouver après avoir levé les yeux.
+5. **La retrouver.** La fiche est gardée sur le téléphone et se rouvre depuis
+   « Mes fiches », sans reprendre de photo ni redépenser un appel au modèle.
+   Deux photos du même objet font **deux** fiches et non une : chacune est une
+   observation datée, pas une entrée de catalogue qu'on mettrait à jour.
 
 ---
 

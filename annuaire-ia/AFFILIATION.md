@@ -25,14 +25,14 @@ perdre l'argent sans que rien ne le signale : une adresse qui n'est pas en
 `https`, l'adresse de démonstration recopiée par mégarde, et un hôte qui **ne
 résout pas** — la carte s'affiche, le visiteur clique, il tombe sur une erreur.
 
-## Combien reste-t-il vraiment : 42, pas 73
+## Combien reste-t-il vraiment : 41, pas 73
 
 Le compte brut décourage sans informer, et c'est ce qui fait repousser la
 soirée. Sur les 73 liens de démonstration :
 
 | | Combien | Ce que ça veut dire |
 | --- | --- | --- |
-| **À inscrire** | **42** | le vrai travail |
+| **À inscrire** | **41** | le vrai travail — **Gamma est fait depuis le 06/09/2026** |
 | « Sur devis » | 24 | vente par cycle commercial long, aucun programme derrière |
 | Sans programme | 7 | tranché ci-dessous, marqué `sans_programme` dans les données |
 
@@ -53,7 +53,7 @@ sans validation manuelle, et public du réseau qui achète réellement ce produi
 
 | # | Programme | Commission | Inscription | Couvre | Vérifié |
 | --- | --- | --- | --- | --- | --- |
-| 1 | **Gamma** | 30 % | **Candidature déposée le 03/09/2026 à 22 h 13** — le programme tourne sur PartnerStack, pas sur `help.gamma.app` ; voir la note ci-dessous | Gamma (éducation, généraliste) | Taux lu, conditions à confirmer |
+| 1 | **Gamma** | **25 % la première année** | ✅ **Accepté le 06/09/2026** — lien posé dans les deux niches ; voir la note ci-dessous | Gamma (généraliste + éducation) | Taux lu dans le courriel d'acceptation |
 | 2 | **Synthesia** | 25 % récurrent pendant 12 mois | Programme public, page partenaires du site | Synthesia (généraliste) | Taux et durée lus |
 | 3 | **ElevenLabs** | 22 % récurrent, cookie 60 à 90 j | Programme public | ElevenLabs (généraliste) | Taux et cookie lus |
 | 4 | **Klaviyo** | 20 % récurrent pendant 12 mois, cookie 90 j | Programme partenaires Klaviyo | Klaviyo (e-commerce) | Taux, durée et cookie lus |
@@ -67,14 +67,28 @@ sans validation manuelle, et public du réseau qui achète réellement ce produi
 Les quatre premiers sont récurrents : une inscription qui reste payée douze
 mois vaut mieux qu'une prime unique plus élevée.
 
-**Gamma, premier programme réellement demandé — état au 03/09/2026 à 22 h 14.**
-La candidature est déposée et **en attente de réponse** ; PartnerStack la montre
-comme reçue, et Gamma répondra par courriel. Le compte PartnerStack est créé au
-nom **Erwann Chevallier**, celui de l'immatriculation — un nom de partenaire qui
-s'écarte du titulaire du compte bancaire bloque le versement au moment où il y a
-enfin quelque chose à verser.
+**Gamma est accepté — premier programme du réseau à l'être, le 06/09/2026.**
+Le courriel d'acceptation donne le lien, `https://try.gamma.app/1up6vnh79bvt`,
+et **25 % de commission la première année** pour chaque client apporté. C'est
+donc 25 et non les 30 % que cette colonne annonçait : le taux lu sur une page
+de présentation n'engage personne, celui du courriel d'acceptation si.
 
-**Le chemin d'inscription n'était pas celui qui est écrit dans la colonne.**
+Le lien est posé dans `niches/education.json` **et** dans
+`niches/generaliste.json`, où la fiche a été créée — ce que la version
+précédente de ce paragraphe donnait justement comme reste à faire.
+
+**Ce que le courriel ne dit pas, et qu'il ne faut donc pas inventer** : la durée
+du cookie, le seuil de versement, et si les 25 % courent sur les
+renouvellements de la première année ou sur le seul premier paiement. Les trois
+se lisent sur le tableau de bord PartnerStack, pas ici.
+
+**Le compte PartnerStack est au nom Erwann Chevallier**, celui de
+l'immatriculation — un nom de partenaire qui s'écarte du titulaire du compte
+bancaire bloque le versement au moment où il y a enfin quelque chose à verser.
+**Les coordonnées de paiement restent à saisir** : sans elles, une commission
+gagnée s'accumule sans jamais partir.
+
+**Le chemin d'inscription n'était pas celui qui était écrit dans la colonne.**
 `help.gamma.app` explique le programme ; l'inscription elle-même se fait sur
 `dash.partnerstack.com`, parce que **Gamma gère ses partenariats sur
 PartnerStack** — la page le dit en toutes lettres. Une recherche « gamma
@@ -82,10 +96,11 @@ affiliation » remonte d'ailleurs d'abord **MyLead**, un intermédiaire qui
 revend l'accès : sa commission n'est pas celle de Gamma, ses conditions et son
 seuil de versement non plus. Quand le programme direct existe, il gagne.
 
-Reste à faire quand l'acceptation tombera : relever les quatre informations de
-la section « Ce qu'il faut noter », puis poser le lien dans le champ
-`lien_affiliation` de Gamma — outil à créer, il n'est pas encore dans
-`niches/generaliste.json`.
+**Et la leçon qui vaut pour les 41 programmes suivants** : `education` porte
+`actif: false`, comme neuf autres niches. Poser un lien réel dans une niche en
+pause ne rapporte rien — il ne s'affiche nulle part. C'est pour ça que la fiche
+a été créée dans `generaliste`, la seule niche servie aujourd'hui. Vérifier
+`niche.actif` **avant** de se réjouir d'un lien posé.
 
 ## À ne pas chercher — c'est déjà tranché
 
