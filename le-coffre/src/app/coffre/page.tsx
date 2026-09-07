@@ -26,10 +26,22 @@ const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et intern
 // catégorie (proposition de classement non lisible, jamais corrigée) doit
 // quand même atterrir quelque part plutôt que de disparaître de la vue.
 const DOSSIER_SANS_CATEGORIE = 'À trier';
-// Doit correspondre à storage.buckets.file_size_limit sur coffre-objets — le
-// contrôle client donne un message clair et immédiat, celui du serveur reste
-// le vrai garde-fou (voir SECURITY.md).
-const TAILLE_MAX_OCTETS = 20 * 1024 * 1024;
+// Le vrai garde-fou est un trigger Postgres sur storage.objects (voir
+// supabase/schema.sql §6) — storage.buckets.file_size_limit seul ne protège
+// qu'un fichier à la fois, jamais l'espace total d'un compte. Le contrôle
+// client donne un message immédiat sans même tenter le chiffrement ; les
+// trois doivent rester synchronisés avec SECURITY.md.
+//
+// 5 Go par fichier, pas plus : `deposerFichier` charge le fichier entier en
+// mémoire pour le chiffrer d'un bloc (chiffrerOctets). Un fichier plus gros
+// risquerait de faire planter l'onglet sur un téléphone d'entrée de gamme
+// avant même d'atteindre le réseau — c'est une limite de conception, pas un
+// chiffre choisi au hasard.
+const TAILLE_MAX_OCTETS = 5 * 1024 * 1024 * 1024;
+// Espace total par compte — 100 Go d'origine, le forfait Supabase Pro inclus.
+// Au-delà, chaque Go coûte environ 0,021 $/mois : un compte peut monter au
+// téraoctet en ne changeant que ce chiffre, au prix réel de l'usage.
+const QUOTA_TOTAL_OCTETS = 100 * 1024 * 1024 * 1024;
 
 // Une couleur reconnaissable par catégorie — vert (soutien discret) pour ce
 // qui touche au quotidien personnel, violet (dominant) pour l'administratif
@@ -251,7 +263,8 @@ function FichePreview({ nom, info, userId, cle }: {
 function formatTaille(octets: number): string {
   if (octets < 1024) return `${octets} o`;
   if (octets < 1024 * 1024) return `${(octets / 1024).toFixed(0)} Ko`;
-  return `${(octets / (1024 * 1024)).toFixed(1)} Mo`;
+  if (octets < 1024 * 1024 * 1024) return `${(octets / (1024 * 1024)).toFixed(1)} Mo`;
+  return `${(octets / (1024 * 1024 * 1024)).toFixed(2)} Go`;
 }
 
 // Surface minimale de l'API File and Directory Entries — non standardisée
@@ -339,6 +352,8 @@ export default function PageCoffre() {
   const [recherche, setRecherche] = useState('');
   const [vueDossiers, setVueDossiers] = useState(false);
   const [correction, setCorrection] = useState<Correction | null>(null);
+  const [triAutoEnCours, setTriAutoEnCours] = useState(false);
+  const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
   const entreeFichier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -427,14 +442,39 @@ export default function PageCoffre() {
     if (!fichiers.length || !utilisateur || !cle) return;
     setErreur('');
 
+    const messages: string[] = [];
     const tropGros = fichiers.filter((f) => f.size > TAILLE_MAX_OCTETS);
     if (tropGros.length > 0) {
-      setErreur(
+      messages.push(
         `${tropGros.map((f) => f.name).join(', ')} dépasse ${formatTaille(TAILLE_MAX_OCTETS)} — ` +
-        `non déposé. Le serveur refuserait aussi le dépôt au-delà de cette taille.`,
+        `non déposé. Le serveur refuserait aussi ce dépôt.`,
       );
     }
-    const fichiersValides = fichiers.filter((f) => f.size <= TAILLE_MAX_OCTETS);
+
+    // Quota par compte : la vraie garde vit dans le trigger Postgres (voir
+    // supabase/schema.sql §6) — ici on prévient avant même de chiffrer quoi
+    // que ce soit, plutôt que de laisser chaque dépôt échouer un par un.
+    const tailleDejaUtilisee = Object.values(index.objets).reduce((total, o) => total + o.taille, 0);
+    let tailleRestante = QUOTA_TOTAL_OCTETS - tailleDejaUtilisee;
+    const acceptesParQuota: File[] = [];
+    const refusesParQuota: File[] = [];
+    for (const f of fichiers.filter((f) => f.size <= TAILLE_MAX_OCTETS)) {
+      if (f.size <= tailleRestante) {
+        acceptesParQuota.push(f);
+        tailleRestante -= f.size;
+      } else {
+        refusesParQuota.push(f);
+      }
+    }
+    if (refusesParQuota.length > 0) {
+      messages.push(
+        `${refusesParQuota.map((f) => f.name).join(', ')} dépasserait ton espace total de ` +
+        `${formatTaille(QUOTA_TOTAL_OCTETS)} — non déposé. Le serveur refuserait aussi ce dépôt.`,
+      );
+    }
+
+    if (messages.length > 0) setErreur(messages.join(' '));
+    const fichiersValides = acceptesParQuota;
     if (fichiersValides.length === 0) {
       if (entreeFichier.current) entreeFichier.current.value = '';
       return;
@@ -525,6 +565,49 @@ export default function PageCoffre() {
     }
     if (echecs.length > 0) setErreur(`Non déposés : ${echecs.join(', ')}.`);
     setEnCours(false);
+  }
+
+  // Bouton « Trier automatiquement » : reclasse d'un coup tous les papiers
+  // sans catégorie (bouton « À trier » depuis l'accueil), en repassant chacun
+  // par classer-document — la même analyse que celle qui propose déjà une
+  // catégorie au dépôt. Séquentiel comme confirmerTout et pour la même
+  // raison : deux appels à modifierObjet lancés en parallèle partiraient
+  // tous deux du même index de départ, et le second écraserait le premier.
+  async function trierAutomatiquement() {
+    if (!utilisateur || !cle) return;
+    const aTrier = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
+    if (aTrier.length === 0) return;
+    setTriAutoEnCours(true);
+    setTriAutoProgres({ fait: 0, total: aTrier.length });
+    setErreur('');
+    let indexCourant = index;
+    const echecs: string[] = [];
+    for (const nom of aTrier) {
+      const info = indexCourant.objets[nom];
+      if (!info) continue;
+      try {
+        const blob = await recupererFichier(utilisateur.id, cle, nom, info);
+        // `File` est déjà importé plus haut comme icône lucide-react, qui
+        // masque le constructeur DOM — d'où `globalThis.File` ici.
+        const fichier = new globalThis.File([blob], info.nom, { type: info.type });
+        const proposition = await proposerClassement(fichier);
+        if (proposition.lisible) {
+          indexCourant = await modifierObjet(utilisateur.id, cle, nom, {
+            categorie: proposition.categorie,
+            montant: proposition.montant || undefined,
+          }, indexCourant);
+          setIndex(indexCourant);
+        } else {
+          echecs.push(info.nom);
+        }
+      } catch (err) {
+        echecs.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
+      }
+      setTriAutoProgres((p) => (p ? { ...p, fait: p.fait + 1 } : null));
+    }
+    if (echecs.length > 0) setErreur(`Non classés automatiquement : ${echecs.join(', ')}.`);
+    setTriAutoEnCours(false);
+    setTriAutoProgres(null);
   }
 
   async function telecharger(nom: string) {
@@ -820,6 +903,10 @@ export default function PageCoffre() {
   }
 
   const tousLesNoms = Object.keys(index.objets);
+  // Papiers sans catégorie — même critère que le dossier « À trier » de la
+  // vue « Ranger en dossiers » (DOSSIER_SANS_CATEGORIE), pour ne pas créer un
+  // second sens au même mot.
+  const nomsATrier = tousLesNoms.filter((n) => !index.objets[n]?.categorie?.trim());
   // Catégories déjà utilisées — sert aux chips de filtre : inutile de
   // proposer un filtre pour une catégorie qui ne contient aucun papier.
   const categoriesConnues = Array.from(
@@ -929,6 +1016,45 @@ export default function PageCoffre() {
               Aller au formulaire
             </a>
           </nav>
+        )}
+
+        {/* Bouton « À trier » : reclasse d'un coup tous les papiers déposés
+            sans catégorie, plutôt que de les corriger un par un — visible
+            seulement s'il y a quelque chose à trier. */}
+        {nomsATrier.length > 0 && (
+          <div className="flex flex-col gap-2 rounded-2xl border border-line bg-paper-raised p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-ink-soft">
+                {nomsATrier.length} papier{nomsATrier.length > 1 ? 's' : ''} {DOSSIER_SANS_CATEGORIE.toLowerCase()}
+              </p>
+              <button
+                type="button"
+                onClick={trierAutomatiquement}
+                disabled={triAutoEnCours}
+                className="shrink-0 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
+              >
+                {triAutoEnCours
+                  ? `Tri en cours… (${triAutoProgres?.fait ?? 0}/${triAutoProgres?.total ?? nomsATrier.length})`
+                  : `Trier automatiquement (${nomsATrier.length})`}
+              </button>
+            </div>
+            {triAutoProgres && (
+              <div
+                role="progressbar"
+                aria-valuenow={triAutoProgres.fait}
+                aria-valuemin={0}
+                aria-valuemax={triAutoProgres.total}
+                aria-label="Progression du tri automatique"
+                className="relative h-1.5 w-full overflow-hidden rounded-full bg-line"
+              >
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-vert via-accent to-violet" />
+                <div
+                  className="absolute inset-y-0 right-0 rounded-r-full bg-line transition-all"
+                  style={{ width: `${100 - (triAutoProgres.fait / triAutoProgres.total) * 100}%` }}
+                />
+              </div>
+            )}
+          </div>
         )}
 
         {/* Bannière d'alerte — cliquable seulement quand elle porte sur un
