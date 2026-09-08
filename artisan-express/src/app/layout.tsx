@@ -70,12 +70,12 @@ export const metadata: Metadata = {
  * avec, et une page qui ne déclare rien se fait appliquer un thème automatique.
  *
  * Il valait `#004aad`, le bleu d'avant la charte. Sur une page désormais
- * sombre, une barre d'adresse bleu vif au-dessus d'un fond `#16151a` fait une
+ * sombre, une barre d'adresse bleu vif au-dessus d'un fond `#0f1115` fait une
  * bande de couleur qui n'appartient à rien — le genre de détail qu'on ne voit
  * que sur l'appareil, jamais dans une capture de navigateur de bureau.
  */
 export const viewport: Viewport = {
-  themeColor: '#16151a',
+  themeColor: '#0f1115',
   width: 'device-width',
   initialScale: 1,
 };
