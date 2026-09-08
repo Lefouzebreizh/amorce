@@ -23,7 +23,7 @@ nexuscrypto/
 ├── .env.example              # secrets — le `.env` réel n'est jamais versionné
 ├── config/
 │   └── config.yaml           # ✅ tous les paramètres ajustables, en un seul endroit
-├── main.py                   # ✅ simulation | production | analyser | pepites | verifier
+├── main.py                   # ✅ simulation | production | analyser | verifier
 ├── src/
 │   ├── core/
 │   │   ├── modeles.py        # ✅ ce qui circule d'un module à l'autre, gelé

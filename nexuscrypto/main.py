@@ -4,7 +4,6 @@
     python3 main.py simulation                  # boucle en mode papier (défaut)
     python3 main.py simulation --une-passe      # une seule passe, puis on sort
     python3 main.py analyser                    # décide et affiche, sans exécuter
-    python3 main.py pepites --requete solana    # scan d'opportunités
     python3 main.py verifier                    # valide la configuration et sort
     python3 main.py production --je-confirme    # argent réel
 
@@ -13,6 +12,20 @@
 faute de frappe dans un fichier de service systemd, et ce système passe des
 ordres. Le second geste n'est pas de la cérémonie : c'est la seule barrière
 entre un `docker run` recopié et un compte vidé.
+
+**La commande `pepites` a été retirée le 08/09/2026, et ce n'est pas un
+oubli.** Elle scannait DexScreener pour afficher des candidats — exactement ce
+que fait le radar `pepites/` du même dépôt, sur la même source, en mieux : cinq
+étages de filtrage, une mémoire qui persiste entre deux tours, et un bulletin
+qui note le radar sur ses propres résultats. Deux outils qui font la même chose
+se déclenchent l'un à la place de l'autre, et le moins bon gagne une fois sur
+deux.
+
+Ce qui reste, et qui n'est pas la même chose : `src/strategy/pepites.py` et
+`SourceDexScreener` servent la **poche pépite du bot** — rôle `pepite`,
+plafond par jeton, bouclier obligatoire avant l'achat, dans le chemin d'ordre.
+Le module vit dans le moteur ; c'est seulement la ligne de commande qui
+doublonnait.
 """
 
 from __future__ import annotations
@@ -66,9 +79,6 @@ def _arguments() -> argparse.ArgumentParser:
 
     analyse = commandes.add_parser("analyser", help="décider et afficher, sans exécuter")
     analyse.add_argument("--json", action="store_true", help="sortie machine")
-
-    pepites = commandes.add_parser("pepites", help="scanner d'opportunités")
-    pepites.add_argument("--requete", default="solana", help="requête DexScreener")
 
     rejeu = commandes.add_parser(
         "rejeu", help="rejouer la stratégie sur des données passées"
@@ -145,66 +155,6 @@ async def _analyser(config) -> int:
                 print(f"   ⚠ sources muettes : {', '.join(contexte.sources_en_panne)}")
     finally:
         await orchestrateur.fermer()
-    return 0
-
-
-async def _pepites(config, requete: str) -> int:
-    from src.core.reseau import ClientHTTP
-    from src.data_engine.onchain import SourceDexScreener, candidat_depuis_paire
-    from src.notifications import messages
-    from src.strategy.pepites import scanner
-
-    client = ClientHTTP(config.reseau)
-    try:
-        source = SourceDexScreener(
-            client,
-            base=(config.sources.get("onchain") or {}).get(
-                "dexscreener_api", "https://api.dexscreener.com/latest/dex"
-            ),
-        )
-        paires = await source.rechercher(requete)
-        candidats = [c for c in (candidat_depuis_paire(p) for p in paires) if c]
-        retenues, rejets = scanner(candidats, config.strategie.pepites, maintenant())
-        print(f"{len(candidats)} paire(s) examinée(s), {len(retenues)} retenue(s).\n")
-
-        # Le bouclier passe sur les retenues seulement : trois appels par jeton,
-        # sur trois cents candidats ce serait neuf cents requêtes pour rien. Le
-        # scanner ramène déjà la liste à quelques unités, et c'est l'ordre des
-        # filtres que tout ce projet respecte — le gratuit avant le payé.
-        verdicts = {}
-        if config.strategie.bouclier.actif:
-            from src.data_engine import securite as sources
-            from src.strategy import bouclier as veto
-            for pepite in retenues:
-                candidat = pepite.candidat
-                constats = await sources.constats(
-                    client, candidat.chaine, candidat.adresse,
-                    delai_s=config.strategie.bouclier.delai_s,
-                )
-                verdicts[candidat.symbole] = veto.juger(
-                    constats, config.strategie.bouclier,
-                    est_evm=sources.est_evm(candidat.chaine),
-                )
-
-        for pepite in retenues:
-            print(messages.pepite_detectee(pepite))
-            verdict = verdicts.get(pepite.candidat.symbole)
-            if verdict is not None:
-                autorise, motif = veto.achat_autorise(verdict, config.strategie.bouclier)
-                # Le verdict est affiché même quand il autorise : savoir qu'un
-                # jeton a *passé* le bouclier vaut autant que savoir qu'il l'a
-                # heurté, et une ligne absente se lirait comme un contrôle sauté.
-                print(f"  {'✅' if autorise else '⛔'} {motif}")
-            print()
-        if not retenues:
-            # Le journal des rejets est ce qui permet de régler les seuils :
-            # un scanner qui rend une liste vide sans dire pourquoi se règle à
-            # l'aveugle, et on finit par ouvrir les vannes en grand.
-            print("Motifs de rejet les plus fréquents :")
-            for symbole, motif in list(rejets.items())[:10]:
-                print(f"  {symbole:<12} {motif}")
-    finally:
-        await client.fermer()
     return 0
 
 
@@ -480,8 +430,6 @@ def main(argv: list[str] | None = None) -> int:
 
     if arguments.commande == "rejeu":
         return _rejeu(config, arguments)
-    if arguments.commande == "pepites":
-        return _executer(_pepites(config, arguments.requete))
     if arguments.commande == "analyser":
         return _executer(_analyser(config))
 
