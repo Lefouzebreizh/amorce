@@ -530,11 +530,29 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   La sonde rend « reçus » et « lus » par point d'entrée et ne crie que sur
   l'écart. Un scan tient un **verrou de fichier** le temps du tour : deux tours
   simultanés valent deux fois le débit annoncé, et les 429 frappent les deux.
-  **Il tourne enfin tout seul depuis le 04/09/2026** : `radar-pepites.yml` le
-  lance toutes les trois heures, la sonde décidant à chaque tour si le scan a
-  lieu. Trois heures parce qu'un tour sur deux est alors espacé de six, soit le
-  plancher qui rend un jeton **jugeable** — et `bilan` en exige vingt avant de
-  se prononcer, si bien qu'un scan unique ne prouve rien, aussi bon soit-il. Sa
+  **Il tourne enfin tout seul depuis le 04/09/2026** : `radar-pepites.yml`
+  **demande** un tour toutes les trois heures, la sonde décidant à chaque tour
+  si le scan a lieu. Trois heures parce qu'un tour sur deux est alors espacé de
+  six, soit le plancher qui rend un jeton **jugeable** — et `bilan` en exige
+  vingt avant de se prononcer, si bien qu'un scan unique ne prouve rien, aussi
+  bon soit-il.
+  **Mais le cron demande, il n'obtient pas.** Mesuré sur les dix-huit premiers
+  tours, du 4 au 7 septembre : GitHub en a servi **cinq par jour au lieu de
+  huit**, espacés de **4 h 41 en moyenne** — de 2 h 15 à 7 h 53 — avec des
+  retards de 2 à 150 minutes sur l'heure demandée. Ça ne casse rien et
+  l'améliore même, puisqu'un tour sur deux franchit alors seul les six heures.
+  Mais la phrase « toutes les trois heures » décrivait une horloge qui n'existe
+  pas, et c'est sur elle qu'on calculait une date de verdict.
+  **Le compteur des jugeables monte trois fois moins vite qu'un compte de tours
+  ne le laisse croire** : **16 au tour 15, 17 au tour 18** — un seul en trois
+  tours, là où chaque tour verse quinze candidats au vivier. Un candidat ne
+  devient jugeable qu'en **repassant l'entonnoir** six heures plus tard ; celui
+  qui n'y repasse pas reste `indécidable` à vie, et ils étaient **13 des 33
+  lignes** du tableau au tour 18. Estimer la date du verdict sur le nombre de
+  tours donne donc trois fois trop tôt : c'est la persistance qui décide, pas la
+  cadence. Pourquoi ce silence-là penche toujours du même côté :
+  `second-brain/lecons/2026-09-08-un-jeton-qui-seffondre-sort-du-comptage.md`.
+  Sa
   mémoire vit dans le cache d'Actions et non dans Git, qui refuse les binaires,
   ni dans un commit, qui vaudrait vingt-quatre déploiements Vercel par jour.
   **Le cache s'évince au bout de sept jours sans usage** : si le planning
