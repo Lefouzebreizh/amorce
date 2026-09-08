@@ -29,6 +29,19 @@ const SPECS = [
   { name: 'rush2', hue: 330, label: 'PLAN 2', seconds: 3 },
   { name: 'rush3', hue: 95, label: 'PLAN 3', seconds: 5 },
   { name: 'rush4', hue: 35, label: 'PLAN 4', seconds: 3 },
+  /*
+   * Le cinquième est en paysage, et il n'est pas là pour faire nombre.
+   *
+   * Les quatre premiers sont en 9:16, comme tout ce que ce dossier fabriquait :
+   * ils n'ont **aucun côté à perdre**, donc aucune vérification de ce dépôt ne
+   * pouvait voir que le recouvrement gardait le milieu quoi qu'il arrive. Sur
+   * un 16:9, il en jette 68,4 %.
+   *
+   * Son sujet traverse toute la largeur, en sortant franchement de la fenêtre
+   * centrale : un cadrage centré le perd de vue, un cadrage qui suit le garde.
+   * C'est la seule matière avec laquelle la différence se regarde.
+   */
+  { name: 'rush-paysage', hue: 150, label: 'PAYSAGE', seconds: 4, width: 1920, height: 1080 },
 ];
 
 /**
@@ -53,10 +66,12 @@ const page = await browser.newPage();
 await page.goto('about:blank');
 
 for (const spec of SPECS) {
-  const base64 = await page.evaluate(async ({ hue, label, seconds }) => {
+  const base64 = await page.evaluate(async ({ hue, label, seconds, width, height }) => {
+    const L = width ?? 1080;
+    const H = height ?? 1920;
     const canvas = document.createElement('canvas');
-    canvas.width = 1080;
-    canvas.height = 1920;
+    canvas.width = L;
+    canvas.height = H;
     const ctx = canvas.getContext('2d');
 
     const audioCtx = new AudioContext();
@@ -88,17 +103,24 @@ for (const spec of SPECS) {
         // doivent différer, sinon les contrôles de « l'image change » seraient
         // satisfaits par une vidéo figée.
         ctx.fillStyle = `hsl(${hue + t * 12} 55% ${20 + Math.sin(t * 2) * 8}%)`;
-        ctx.fillRect(0, 0, 1080, 1920);
+        ctx.fillRect(0, 0, L, H);
         ctx.fillStyle = `hsl(${hue + 40} 80% 62%)`;
         ctx.beginPath();
-        ctx.arc(540 + Math.sin(t * 1.6) * 300, 960 + Math.cos(t * 1.2) * 400, 190, 0, Math.PI * 2);
+        // Sur un plan large, le sujet balaie toute la largeur — c'est ce qui
+        // fait sortir un cadrage centré. Sur un 9:16, il tourne comme avant.
+        const large = L > H;
+        const cx = large
+          ? L / 2 + Math.sin(t * 1.1) * (L / 2 - H * 0.16)
+          : L / 2 + Math.sin(t * 1.6) * (L * 0.28);
+        const cy = large ? H / 2 : H / 2 + Math.cos(t * 1.2) * (H * 0.21);
+        ctx.arc(cx, cy, Math.min(L, H) * 0.16, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#fff';
-        ctx.font = '900 150px sans-serif';
+        ctx.font = `900 ${Math.round(Math.min(L, H) * 0.13)}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(label, 540, 400);
-        ctx.font = '600 70px monospace';
-        ctx.fillText(`${t.toFixed(2)}s`, 540, 1650);
+        ctx.fillText(label, cx, cy + Math.min(L, H) * 0.045);
+        ctx.font = `600 ${Math.round(Math.min(L, H) * 0.06)}px monospace`;
+        ctx.fillText(`${t.toFixed(2)}s`, L / 2, H * 0.88);
         requestAnimationFrame(draw);
       };
       draw();

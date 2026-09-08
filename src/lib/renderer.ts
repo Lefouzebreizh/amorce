@@ -3,6 +3,7 @@
 import { captionsAt, drawCaption, type CaptionBox, type FontSet } from './captions.ts';
 import { getLook, GradePipeline } from './grade.ts';
 import { layoutClips, sliceAt, type ActiveLayer, type PlacedClip } from './timeline.ts';
+import { centreA, decalage } from './cadrage.ts';
 import { applyTransition, type LayerDrawer, type LayerTransform } from './transitions.ts';
 import { OUTPUT_HEIGHT, OUTPUT_WIDTH, type Clip, type MediaAsset, type Project } from './types.ts';
 
@@ -388,15 +389,51 @@ function layerDrawer(
   const progress = layer.placed.duration > 0 ? layer.localTime / layer.placed.duration : 0;
   const motion = motionTransform(layer.placed.clip, progress, layer.localTime);
 
+  /*
+   * Où regarder dans un rush plus large que le cadre.
+   *
+   * Jusqu'ici le recouvrement gardait le milieu, toujours : sur un 1920 × 1080,
+   * 68,4 % de la largeur partaient au panier sans que rien ne sache ce qu'il y
+   * avait dedans. La trajectoire, quand le rush en porte une, dit où viser.
+   *
+   * Elle arrive ici comme un `dx` de plus, exactement comme un mouvement de
+   * caméra — donc sans toucher au tracé, et le chemin de rendu reste unique.
+   *
+   * L'instant lu est celui de la **source**, pas de la timeline : un plan est
+   * une tranche du rush, et deux plans taillés au même endroit doivent voir le
+   * même cadrage. La vitesse entre dans le calcul pour la même raison.
+   */
+  const clip = layer.placed.clip;
+  const cadrage = asset?.cadrage;
+  const tempsSource = clip.inPoint + layer.localTime * clip.speed;
+  /*
+   * Le centre est ramené aux dimensions de ce qui est **réellement tracé**.
+   *
+   * Quand la vidéo n'a pas encore d'image, c'est la vignette qui tient l'écran
+   * — même rapport, autres pixels. Un décalage calculé sur la taille du rush et
+   * appliqué à la vignette viserait plusieurs fois trop loin, et le sujet
+   * sortirait du cadre le temps du décodage. On passe donc par la proportion,
+   * qui est la même des deux côtés.
+   */
+  const tracee = sourceSize(dessinable);
+  const centreSource = centreA(cadrage, tempsSource, asset?.width ?? 0);
+  const centreTrace = asset && asset.width > 0
+    ? (centreSource * tracee.width) / asset.width
+    : tracee.width / 2;
+
   return (transform: LayerTransform) => {
+    const echelle = transform.scale * motion.scale;
+    const dxCadrage = cadrage && tracee.width > 0
+      ? decalage(centreTrace, tracee.width, tracee.height, echelle)
+      : 0;
     drawCover(
       ctx,
       dessinable,
       {
         alpha: transform.alpha,
-        dx: transform.dx + motion.dx,
+        dx: transform.dx + motion.dx + dxCadrage,
         dy: transform.dy + motion.dy,
-        scale: transform.scale * motion.scale,
+        scale: echelle,
       },
       filter,
     );
