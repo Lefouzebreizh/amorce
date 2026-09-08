@@ -66,7 +66,30 @@ const encaisseEnLigne = SIRET_ACTIF && aUnStripe;
  * qu'un client repère quand sa livraison glisse. Le changer se fait ici, sur
  * une ligne, et nulle part ailleurs.
  */
-const PLACES_SIMULTANEES = 2;
+const PLACES_SIMULTANEES = 4;
+
+/*
+ * Le nombre s'écrit en toutes lettres, et ce n'est pas de la coquetterie.
+ *
+ * La première version traitait le cas « deux » à part et laissait tomber tout
+ * le reste sur le chiffre : passer à quatre a donc fait dire à la page
+ * « 4 places à la fois » et « tant que 4 sites sont en cours ». Un chiffre au
+ * milieu d'une phrase parlée sonne comme un formulaire, là où le reste du
+ * bloc parle comme quelqu'un.
+ *
+ * La table s'arrête à cinq parce que `tests/offre.test.ts` refuse au-delà —
+ * la promesse « livré en 48 h » ne tient plus. Un nombre hors table retombe
+ * sur le chiffre : la page perd une élégance, jamais son sens.
+ */
+const EN_LETTRES: Readonly<Record<number, string>> = {
+  1: 'une',
+  2: 'deux',
+  3: 'trois',
+  4: 'quatre',
+  5: 'cinq',
+};
+
+const PLACES_EN_LETTRES = EN_LETTRES[PLACES_SIMULTANEES] ?? String(PLACES_SIMULTANEES);
 
 const COMPRIS = [
   ['Paiement en une fois', '300 €, et c’est fini — aucun abonnement, aucun prélèvement ensuite.'],
@@ -135,11 +158,10 @@ export function Offre() {
           */}
           <p className="mt-7 rounded-xl border border-accent bg-panel p-4 text-lg leading-relaxed text-ardoise">
             <strong className="text-encre">
-              {PLACES_SIMULTANEES === 2 ? 'Deux places à la fois' : `${PLACES_SIMULTANEES} places à la fois`}
-              , et c’est ce qui tient les 48&nbsp;h.
+              {PLACES_EN_LETTRES.charAt(0).toUpperCase() + PLACES_EN_LETTRES.slice(1)} places à la
+              fois, et c’est ce qui tient les 48&nbsp;h.
             </strong>{' '}
-            Je travaille seul. Tant que {PLACES_SIMULTANEES === 2 ? 'deux' : PLACES_SIMULTANEES}{' '}
-            sites sont en cours, je n’en prends pas un de plus — c’est le seul moyen de livrer en
+            Je travaille seul. Tant que {PLACES_EN_LETTRES} sites sont en cours, je n’en prends pas un de plus — c’est le seul moyen de livrer en
             deux jours au lieu de faire attendre tout le monde. Quand les places sont prises, je te
             le dis et on cale la suivante.
           </p>
