@@ -275,7 +275,7 @@ propre projet** — c'est le pire cas, celui qui décide.
 | --- | --- | --- | --- |
 | Amorce | `#25e3c4` turquoise | **9,0:1** | la référence |
 | IPTV | `#4aa8ff` bleu | 5,1:1 | sous le standard de la maison |
-| TITAN Builder | `#7c3aed` violet | **2,6:1** | **inutilisable comme accent** — voir plus bas |
+| TITAN Builder | `#BCA6E3` lavande | **7,07:1** | corrigé, dans une palette par métier — voir plus bas |
 | Artisan Express | `#67C1A0` vert | **7,08:1** | sombre depuis le 03/09/2026 — voir plus bas |
 | Annuaria | `#7fd68a` sauge | **8,19:1** | posé le 03/09/2026 — voir plus bas |
 | `chat-traducteur` | `#7FD99A` sauge | **8,3:1** | quatre accents de contenu — voir plus bas |
@@ -309,10 +309,16 @@ reste de la page**. Le violet rendait 3,42:1 sur `--color-bord`, la sauge en ren
 8,19. Une mesure juste sur le mauvais objet laisse un défaut intact et donne
 l'impression du contraire.
 
-**Le violet de TITAN Builder est un défaut, pas un choix.** À 2,6:1 sur son
-propre `--color-bord`, il ne se lit pas. Le projet porte déjà deux valeurs qui
-tiennent — `#a78bfa` (5,4:1) et `#22d3ee` (8,1:1) ; c'est au projet de trancher,
-et cette ligne existe pour que le prochain qui y touche le sache.
+**Le violet de TITAN Builder était un défaut, et il est corrigé.** Ce paragraphe
+disait « c'est au projet de trancher » — c'est fait, et pas de la façon prévue
+ici : plutôt qu'un accent unique remplacé, `src/lib/charte.ts` porte désormais
+une **palette par métier** à cinq teintes (`sauge`, `vert`, `petrole`,
+`ardoise`, `lavande`), sur le même principe qu'Artisan Express plus bas. Chacune
+tient le plancher de 7:1 sur `panel`, la surface la plus claire — mesuré :
+7,07 à 7,17:1 — et un test le garde (`tests/charte.test.ts`, « chaque teinte
+tient le plancher de 7:1 »). L'ancien `#7c3aed` reste lisible dans
+`ANCIENNES`, une table de migration qui rattache les dossiers de commande déjà
+écrits à leur teinte, sans jamais servir de nouvel accent.
 
 ### Le cas du traducteur de chat : la couleur est le contenu
 
