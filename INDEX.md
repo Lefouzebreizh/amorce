@@ -41,7 +41,7 @@ Une session de tri qui rencontre un en-tête `De :` passe son chemin.
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt et un chantiers actifs, plus un en sommeil, et cinq
+Ce dépôt héberge vingt-deux chantiers actifs, plus un en sommeil, et cinq
 ressources transverses qui ne sont pas des projets mais servent à tous. Une
 idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un
 front de plus. La liste vieillit vite — recompter avant de noter.
@@ -60,6 +60,7 @@ autre, et deux paires ont **ré-implémenté la même chose sans le savoir**.
 | **Artisan Express** (`artisan-express/`) | Page de vente du site vitrine artisan à 300 €. | Next.js 16, Tailwind v4 | actif |
 | **Paper-Manager** (`paper-manager/`) | Assistant administratif : scan, échéances, résiliations. | Python | actif |
 | **Life-Organizer** (`life-organizer/`) | Rangement de fichiers personnels. | Python | actif |
+| **Moteur administratif** (`moteur-administratif/`) | Moteur partagé de cinq produits personnels : lecture, délais, rédaction, rappels. Aucune règle métier. | Python | actif |
 | **Répondeur Facebook** (`repondeur-facebook/`) | Réponses aux commentaires via l'API Graph. | Python | actif |
 | **Chaîne de montage** (`montage-auto/`) | Montage automatisé. | Python | actif |
 | **Habillages animés** (`motion/`) | Titres, cartons et logos verticaux, rendus puis posés dans CapCut. | Remotion 4, React 19 | actif |

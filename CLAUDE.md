@@ -520,6 +520,21 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   citant l'autre plutôt qu'en la recopiant.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
+- **moteur-administratif/** — le moteur partagé d'une famille de produits
+  personnels (Le Coffre, Le Dossier, Le Recours, Le Classeur, La Relève), Python.
+  Quatre briques indépendantes et 90 tests : lecture d'un document photographié,
+  règles de délais, rédaction d'un écrit à signer, rappels au format `.ics`.
+  **Il ne porte aucune règle métier** — pas un type de document, pas un gabarit,
+  pas un mot-clé : chaque brique reçoit sa configuration du produit appelant,
+  table de règles ou gabarits sur disque. C'est ce qui lui permet de servir cinq
+  produits sans qu'aucun n'ait à connaître les autres.
+  **L'OCR est local, Tesseract, et jamais un modèle de vision** — décidé le
+  03/09/2026 : un produit qui a besoin d'un chemin par modèle l'ajoute chez lui.
+  Aucune brique ne sort sur le réseau, aucune base de données, aucun état : la
+  rédaction produit un écrit **à relire et à signer**, jamais à expédier.
+  Il est né de `paper-manager` et `life-organizer`, qui avaient construit les
+  mêmes briques chacun de son côté ; son README dit ce qui vient d'où, et c'est
+  ce qui évite de le refaire une troisième fois.
 - **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
   lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
