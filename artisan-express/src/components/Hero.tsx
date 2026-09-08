@@ -7,7 +7,7 @@ export function Hero() {
     <header className="border-b border-edge bg-slab">
       <div className="mx-auto grid w-full max-w-5xl gap-10 px-5 pb-14 pt-10 sm:pt-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:gap-14 md:pb-20">
         <div>
-          <p className="text-base font-bold uppercase tracking-[0.18em] text-accent">
+          <p className="text-base font-semibold uppercase tracking-[0.2em] text-accent">
             Maçon, couvreur, électricien
           </p>
 
@@ -17,7 +17,7 @@ export function Hero() {
             droit de parler avant les mots : un artisan qui ouvre cette page au
             soleil doit savoir de quoi il s'agit avant d'avoir lu la ligne.
           */}
-          <h1 className="mt-3 font-titre text-[2.15rem] font-extrabold leading-[1.1] tracking-tight text-encre sm:text-[3.5rem]">
+          <h1 className="mt-4 font-titre text-[2.5rem] font-extrabold leading-[1.02] tracking-[-0.04em] text-encre sm:text-[4rem]">
             Ton site qui trouve des chantiers, livré en 48&nbsp;h.
           </h1>
 

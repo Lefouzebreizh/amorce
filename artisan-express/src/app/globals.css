@@ -1,100 +1,139 @@
 @import 'tailwindcss';
 
 /*
- * La charte d'Artisan Express, et c'est la **même** que celle des sites livrés.
+ * La charte d'Artisan Express — sa peau à elle, la structure de la maison.
  *
- * Elle était claire : blanc dominant, bleu de structure, et un orange réservé
- * aux boutons. Deux raisons de l'avoir retournée, et aucune n'est un goût.
+ * CE QUI A CHANGÉ LE 08/09/2026, ET POURQUOI CE N'EST PAS UN GOÛT.
  *
- * 1. **L'orange sortait du standard de la maison.** `#c74e00` rend 4,6:1 sur
- *    blanc : il passe le minimum WCAG et échoue au plancher de 7:1 que
- *    `CLAUDE.md` §2 bis impose à un accent — et le bouton qui porte toute la
- *    page en était fait.
- * 2. **Une page de vente doit ressembler à ce qu'elle vend.** Les sites livrés
- *    sont sombres et sobres depuis `titan-builder/src/lib/charte.ts` ; une
- *    vitrine blanche promettait autre chose que la marchandise.
+ * Ce fichier a longtemps recopié `titan-builder/src/lib/charte.ts` valeur par
+ * valeur, et `tests/charte.test.ts` refusait que les deux s'écartent. La raison
+ * tenait debout : « une page de vente doit ressembler à ce qu'elle vend », et
+ * deux palettes tenues en parallèle divergent au premier changement.
  *
- * Les valeurs viennent de ce fichier-là, pas d'ici : les recopier était le
- * risque, deux palettes tenues en parallèle divergeant au premier changement.
- * `tests/charte.test.ts` relit les deux et refuse qu'elles s'écartent.
+ * Le propriétaire a arrêté une palette pour la vitrine — fond #0F1115, cartes
+ * #202430, turquoise lagon #40E0D0, violet #7C3AED — et **elle ne peut pas
+ * descendre chez les sites livrés**. Deux mesures le disent, et aucune n'est
+ * une préférence :
  *
- * Les noms de surface sont ceux du dépôt — ink, slab, panel, edge — pour qu'une
- * brique se déplace d'un projet à l'autre. `encre` et `ardoise` gardent les
- * leurs : ils ont toujours désigné du texte, et c'est toujours vrai.
+ * 1. **Le turquoise est à 16° du vert et 19° du pétrole** dans la roue des
+ *    teintes. La charte des métiers exige 28° entre deux voisines, faute de
+ *    quoi un couvreur et un plombier reçoivent la même page. Là-bas la couleur
+ *    est une information ; ici c'est une identité.
+ * 2. **Les cinq teintes métier tombent à 6,44–6,53:1** sur un `panel` dérivé
+ *    de #202430, sous le plancher de 7:1 de la maison. Adopter ces surfaces
+ *    chez elles casserait la lisibilité de douze métiers pour repeindre une
+ *    vitrine.
+ *
+ * Les deux palettes sont donc **séparées à dessein**, et ce n'est plus un
+ * risque de dérive : ce qui devait rester commun l'est toujours, et c'est la
+ * structure — filet sous les titres, entête en halo, prestations fléchées, un
+ * seul bouton plein. C'est elle qu'on reconnaît d'une page à l'autre, pas
+ * l'hexadécimal.
+ *
+ * `tests/charte.test.ts` a changé d'objet en conséquence : il ne compare plus
+ * deux fichiers, il **mesure celui-ci** contre les planchers du §2 bis. Un test
+ * d'égalité qu'on relâche sans le remplacer est un test qui ne mesure plus rien.
+ *
+ * Les noms de surface restent ceux du dépôt — ink, slab, panel, edge — pour
+ * qu'une brique se déplace d'un projet à l'autre. `encre` et `ardoise` gardent
+ * les leurs : ils ont toujours désigné du texte, et c'est toujours vrai.
  */
 @theme {
-  /* Les surfaces, du fond de page à la carte la plus haute. */
-  --color-ink: #16151a;
-  --color-slab: #1f1e25;
-  --color-panel: #26242d;
-  --color-edge: #2e2c34;
-
-  /* Les encres. Un blanc cassé plutôt qu'un blanc pur : sur fond sombre, le
-     blanc pur vibre et fatigue à la lecture longue. */
-  --color-encre: #f1efea;
-  --color-ardoise: #b7b3a9;
-  --color-eteinte: #6c6a72;
+  /*
+   * Les surfaces, du fond de page à la carte la plus haute.
+   *
+   * `ink` et `slab` sont les deux valeurs arrêtées par le propriétaire le
+   * 08/09/2026 : #0F1115 pour le fond, #202430 pour les cartes. `panel` et
+   * `edge` sont dérivés dans la même famille bleu-nuit, parce qu'il en faut
+   * quatre — un encadré posé sur une carte, et le trait qui les sépare.
+   *
+   * Le rapport entre voisines vaut 1,22 / 1,11 / 1,23, là où la maison vise
+   * 1,07. C'est délibéré et c'est la demande : l'esprit linear.app sépare par
+   * l'espace et la taille, et veut des cartes qui se détachent franchement du
+   * fond plutôt que de s'y fondre.
+   */
+  --color-ink: #0f1115;
+  --color-slab: #202430;
+  --color-panel: #272c3a;
+  --color-edge: #333a4d;
 
   /*
-   * L'accent unique de ce produit : le vert de la charte, celui que reçoit un
-   * couvreur, et la teinte par défaut de la palette.
-   *
-   * Mesuré **7,08:1 sur `panel`**, la surface la plus claire — c'est le pire
-   * cas, et c'est celui que le §2 bis désigne. La première valeur, `#4fb39c`,
-   * rendait 7,1 sur le fond de page et seulement 6,0 sur les cartes : elle
-   * paraissait conforme parce qu'elle était mesurée au meilleur endroit.
-   *
-   * Il ne désigne qu'une chose : **l'action à faire.** S'en servir pour décorer
-   * le rendrait muet, ce que §2 bis interdit en propres termes.
+   * Les encres. `ardoise` a été remontée de #b7b3a9 à #b6becc — le beige
+   * n'allait plus sur un fond bleu-nuit, et la valeur est choisie pour tenir
+   * le plancher **sur `panel`**, la surface la plus claire : 7,45:1. La
+   * précédente y rendait 6,38, sous la barre de la maison.
    */
-  --color-accent: #67c1a0;
-  --color-accent-vif: #8bd0b7;
-  /* Ce qu'on écrit **sur** l'accent — le libellé d'un bouton plein. */
-  --color-accent-encre: #082b1e;
+  --color-encre: #edf0f5;
+  --color-ardoise: #b6becc;
+  --color-eteinte: #6b7383;
+
+  /*
+   * L'accent unique : le turquoise lagon, arrêté par le propriétaire.
+   *
+   * Mesuré **8,48:1 sur `panel`**, la surface la plus claire — c'est le pire
+   * cas, celui que le §2 bis désigne, et il passe le plancher de 7:1 avec de
+   * la marge. Sur le fond de page il rend 11,51:1.
+   *
+   * ET IL NE VIENT PLUS DE LA CHARTE DES MÉTIERS, POUR UNE RAISON MESURÉE.
+   *
+   * L'accent de cette page était jusqu'ici `#67C1A0`, c'est-à-dire la teinte
+   * du couvreur empruntée à `titan-builder/src/lib/charte.ts`. Le turquoise ne
+   * peut pas la remplacer là-bas : son angle de teinte est à **16° du vert et
+   * 19° du pétrole**, quand la charte des métiers exige **28°** d'écart entre
+   * deux teintes voisines. L'y forcer rendrait un couvreur et un plombier
+   * indiscernables — or chez eux la couleur est une information, pas une
+   * décoration.
+   *
+   * La page de vente porte donc sa propre peau, et les sites livrés gardent la
+   * leur. Ce qui reste partagé est la structure, qui est ce qui se reconnaît :
+   * filet sous les titres, entête en halo, un seul bouton plein.
+   */
+  --color-accent: #40e0d0;
+  --color-accent-vif: #7dede1;
+  /* Ce qu'on écrit **sur** l'accent — 11,51:1, le fond de page lui-même. */
+  --color-accent-encre: #0f1115;
   /* Le voile : halo d'entête et fond de bloc discret. */
-  --color-voile: #153529;
+  --color-voile: #10312f;
 
   /*
-   * Le danger. Il est commun à tous les produits et garde le même sens partout
-   * — §2 bis — et il est **assez loin de l'accent** pour ne pas s'y confondre.
-   *
-   * L'ancien `#b4231d` tenait sur blanc et rendait **2,52:1** sur la carte
-   * sombre : le message d'erreur du formulaire devenait illisible sur l'écran
-   * qui ramasse les prospects. Mesuré à 6,9:1 sur `slab`, 6,4:1 sur `panel`.
+   * Le danger, commun à tous les produits et assez loin de l'accent pour ne
+   * pas s'y confondre. Remonté à #ff8a80 : l'ancien rendait 5,78:1 sur le
+   * nouveau `panel`, et le message d'erreur du formulaire vit là.
    */
-  --color-danger: #f08b82;
+  --color-danger: #ff8a80;
 
   /*
-   * Le violet, et il n'a le droit de rien dire.
+   * Le violet, et il n'a le droit de rien dire — la mesure est sans appel.
    *
-   * Il vient de `annuaire-ia/styles.src.css`, où il est `--teinte-1` — c'est
-   * la cohérence demandée entre les sites du propriétaire. Mais ce fichier-là
-   * porte aussi sa mesure, et elle est sans appel : **3,42:1**, très en dessous
-   * du plancher de 7:1 du §2 bis. Il y a d'ailleurs été *rétrogradé* du rôle
-   * d'accent pour cette raison exacte.
+   * `#7C3AED` rend **3,32:1 sur le fond de page, 2,72 sur une carte et 2,44
+   * sur un encadré**. Le plancher d'un élément non textuel est 3:1 : il ne le
+   * tient que sur la surface la plus sombre, et il le rate partout ailleurs.
    *
-   * Il ne porte donc **jamais de texte et jamais une action**. Il vit dans les
-   * dégradés, les halos et les filets d'un pixel — là où le contraste ne se
-   * mesure pas parce qu'il n'y a rien à lire. L'accent turquoise reste seul à
-   * désigner ce qu'il faut faire : un produit, un accent.
+   * Il ne porte donc **jamais de texte, jamais une action, et jamais un trait
+   * qui désigne quelque chose**. Il vit dans les dégradés, les halos et les
+   * filets d'un pixel — là où le contraste ne se mesure pas parce qu'il n'y a
+   * rien à lire et rien à trouver. Partout où un trait signifie « c'est ici »,
+   * c'est le turquoise qui le porte.
+   *
+   * C'est la même valeur que le violet de TITAN Builder, dont `CLAUDE.md`
+   * §2 bis dit déjà qu'il est « inutilisable comme accent » à 2,6:1. Le
+   * mesurer une seconde fois ici évite qu'une prochaine session le promeuve
+   * en croyant bien faire.
    */
-  --color-violet: #8b5cf6;
-  --color-violet-voile: #1d1730;
+  --color-violet: #7c3aed;
+  --color-violet-voile: #1b1430;
 
   /*
    * Deux familles au lieu d'une, et chacune a un rôle.
    *
    * `--font-titre` porte les titres — Bricolage Grotesque, large et un peu
    * brute. `--font-sans` reste le nom de la lecture pour ne pas renommer cent
-   * trente classes ; il pointe désormais sur Inter, celle du réseau.
+   * trente classes ; il pointe sur Inter, celle du réseau.
    *
    * Les noms diffèrent de ceux que pose `next/font` (`--font-titrage`,
    * `--font-lecture`) : un jeton Tailwind qui porterait le même nom que la
    * variable qu'il consomme se référencerait lui-même, et la règle entière
    * serait ignorée sans rien dire.
-   *
-   * Les deux retombent sur la pile système si `next/font` n'a rien pu servir :
-   * une police absente change l'allure, elle ne doit jamais vider la page.
    */
   --font-titre:
     var(--font-titrage), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
