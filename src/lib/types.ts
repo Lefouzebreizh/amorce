@@ -53,6 +53,21 @@ export type MediaAsset = {
   /** Vignette en data URL, affichée dans la bibliothèque et la timeline. */
   thumbnail: string;
   /**
+   * Où regarder dans ce rush, seconde par seconde, quand il est plus large que 9:16.
+   *
+   * Absente — et c'est le cas de tout rush déjà vertical, et de tout rush dont
+   * le sujet n'a pas été cherché — le rendu garde le milieu, comme avant.
+   *
+   * Portée par le **rush** et non par le plan : la détection est une propriété
+   * de la source, pas du découpage. Deux plans taillés dans le même rush
+   * partagent donc la même trajectoire, et la recalculer pour chacun donnerait
+   * deux cadrages différents du même instant.
+   *
+   * `parSeconde` dit à quelle cadence les centres ont été relevés, pour que la
+   * lecture ne dépende pas de la cadence réelle du fichier.
+   */
+  cadrage?: { parSeconde: number; centres: number[] };
+  /**
    * Empreinte visuelle du rush, pour repérer deux plans qui montrent la même
    * chose. Absente des projets enregistrés avant cette mesure : ce qui la lit
    * doit traiter son absence comme « on ne sait pas », jamais comme « pareil ».

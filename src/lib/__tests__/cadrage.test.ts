@@ -5,6 +5,7 @@ import {
   VITESSE_LENTE,
   VITESSE_RAPIDE,
   ZONE_MORTE,
+  centreA,
   decalage,
   largeurVisible,
   trajectoire,
@@ -222,4 +223,34 @@ test('la trajectoire ne dépend pas de l’ordre dans lequel on la lit', () => {
   assert.deepEqual(rejouee, piste, 'l’ordre des visées données ne change rien');
   // Et deux calculs successifs rendent le même tableau, sans état résiduel.
   assert.deepEqual(suivre(visees, 60), piste);
+});
+
+test('le décalage suit l’échelle du moment', () => {
+  const recouvrement = Math.max(OUTPUT_WIDTH / 1920, OUTPUT_HEIGHT / 1080);
+  // Un zoom de 18 % : le point visé doit rester au milieu, pas glisser.
+  for (const echelle of [1, 1.06, 1.12, 1.18]) {
+    const dx = decalage(500, 1920, 1080, echelle);
+    const cover = recouvrement * echelle;
+    const x = (OUTPUT_WIDTH - 1920 * cover) / 2 + dx;
+    assert.ok(
+      Math.abs(x + 500 * cover - OUTPUT_WIDTH / 2) < 0.001,
+      `à l’échelle ${echelle}, le sujet glisse`,
+    );
+  }
+});
+
+test('un rush sans trajectoire est lu au milieu, comme avant', () => {
+  assert.equal(centreA(undefined, 3, 1920), 960);
+  assert.equal(centreA({ parSeconde: 10, centres: [] }, 3, 1920), 960);
+  assert.equal(centreA({ parSeconde: 0, centres: [700] }, 3, 1920), 960);
+});
+
+test('la lecture prend l’échantillon le plus proche et ne sort jamais du tableau', () => {
+  const cadrage = { parSeconde: 10, centres: [100, 200, 300, 400, 500] };
+  assert.equal(centreA(cadrage, 0, 1920), 100);
+  assert.equal(centreA(cadrage, 0.2, 1920), 300);
+  assert.equal(centreA(cadrage, 0.24, 1920), 300, 'au plus proche');
+  assert.equal(centreA(cadrage, 0.26, 1920), 400);
+  assert.equal(centreA(cadrage, 99, 1920), 500, 'au-delà de la fin, la dernière');
+  assert.equal(centreA(cadrage, -5, 1920), 100, 'avant le début, la première');
 });

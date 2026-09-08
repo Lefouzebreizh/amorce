@@ -205,7 +205,40 @@ export function decalage(
   centre: number,
   largeurSource: number,
   hauteurSource: number,
+  echelle = 1,
 ): number {
   const recouvrement = Math.max(OUTPUT_WIDTH / largeurSource, OUTPUT_HEIGHT / hauteurSource);
-  return (largeurSource / 2 - centre) * recouvrement;
+  /*
+   * L'échelle entre dans le calcul, et l'oublier décale tout.
+   *
+   * `drawCover` multiplie le recouvrement par l'échelle du moment — un zoom, un
+   * balayage — avant de placer l'image. Un décalage calculé à l'échelle 1 et
+   * appliqué à une image agrandie de 18 % viserait 18 % trop court, et le sujet
+   * glisserait hors du cadre pendant le zoom.
+   */
+  return (largeurSource / 2 - centre) * recouvrement * echelle;
+}
+
+/** La trajectoire d'un rush, telle qu'elle voyage avec lui. */
+export type Cadrage = { parSeconde: number; centres: number[] };
+
+/**
+ * Le centre visé à un instant de la source, ou son milieu si on ne sait pas.
+ *
+ * Lit au plus proche plutôt qu'en interpolant : le trépied avance de 3 px par
+ * image en régime normal, si bien qu'un demi-échantillon d'écart vaut moins
+ * d'un pixel à l'écran — et une interpolation lisserait les coupes, qui doivent
+ * rester nettes.
+ */
+export function centreA(
+  cadrage: Cadrage | undefined,
+  tempsSource: number,
+  largeurSource: number,
+): number {
+  if (!cadrage || cadrage.centres.length === 0 || cadrage.parSeconde <= 0) {
+    return largeurSource / 2;
+  }
+  const index = Math.round(tempsSource * cadrage.parSeconde);
+  const borne = Math.min(cadrage.centres.length - 1, Math.max(0, index));
+  return cadrage.centres[borne];
 }
