@@ -13,4 +13,4 @@ par projet, mets à jour plutôt que d'en ajouter une nouvelle.
 ## Projets
 
 - look-and-find — version 1 quasi terminée — reste la clé de signature Android et six fonctionnalités validées à ajouter — 2026-09-08
-- moteur-administratif — dépôt créé, le code fonctionne en local — push bloqué par l'authentification GitHub non aboutie sur le laptop — 2026-09-08
+- moteur-administratif — poussé avec succès sur GitHub (commit 9cf3c44, 08/09 06:45), les 4 briques sont fonctionnelles et testées (90 tests) — plus de blocage d'authentification à ce stade — 2026-09-08
