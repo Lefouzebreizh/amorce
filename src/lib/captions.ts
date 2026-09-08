@@ -277,6 +277,29 @@ export function popScale(elapsed: number): number {
  * produire le mouvement continu qui retient le regard.
  */
 export function activeWordIndex(caption: Caption, time: number, wordCount: number): number {
+  /*
+   * Quand les instants sont connus, on les lit ; sinon on partage la durée.
+   *
+   * Le partage égal reste le comportement d'un sous-titre écrit à la main :
+   * personne n'a dit quand chaque mot tombe, et inventer un rythme serait pire
+   * qu'un rythme régulier. Mais un texte issu d'une voix calée sur son signal
+   * porte ses `mots`, et là le partage égal était un mensonge visible — le
+   * surlignage passait au mot suivant pendant qu'on entendait encore le
+   * précédent.
+   *
+   * Le nombre de mots est comparé avant de s'y fier : le tracé découpe le
+   * texte *après* le passage à la ligne, et si les deux découpages ne tombent
+   * pas d'accord, un décalage d'un mot serait pire que le partage égal.
+   */
+  const mots = caption.mots;
+  if (mots && mots.length === wordCount) {
+    if (time < mots[0].start) return 0;
+    for (let i = mots.length - 1; i >= 0; i--) {
+      if (time >= mots[i].start) return i;
+    }
+    return 0;
+  }
+
   const span = Math.max(0.001, caption.end - caption.start);
   const progress = (time - caption.start) / span;
   return Math.min(wordCount - 1, Math.max(0, Math.floor(progress * wordCount)));

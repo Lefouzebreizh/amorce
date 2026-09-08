@@ -94,6 +94,23 @@ export type Clip = {
   volume: number;
 };
 
+/**
+ * Un mot et l'instant où il est prononcé, sur la timeline.
+ *
+ * Ce type existe parce que l'information était déjà calculée et se perdait.
+ * `voice.ts` cale chaque mot sur l'enveloppe d'énergie du signal, puis
+ * `captionsFromVoice` aplatissait le bloc en une chaîne : le tracé n'avait plus
+ * que le début et la fin du bloc entier, et redécoupait en parts égales. Un mot
+ * bref et un mot long recevaient la même tranche.
+ */
+export type MotDate = {
+  text: string;
+  /** Début sur la timeline, en secondes — même base que `Caption.start`. */
+  start: number;
+  /** Fin sur la timeline, en secondes. */
+  end: number;
+};
+
 /** Styles de sous-titres pensés pour la lisibilité en scroll. */
 export type CaptionStyleId = 'punch' | 'karaoke' | 'minimal' | 'neon' | 'subtitle';
 
@@ -134,6 +151,14 @@ export type Caption = {
    * la première.
    */
   voiceId?: string;
+  /**
+   * Les mots du texte avec l'instant où chacun est prononcé.
+   *
+   * Absent pour un sous-titre écrit à la main : on ne sait alors pas quand
+   * chaque mot tombe, et le karaoké répartit la durée en parts égales, comme
+   * avant. Présent quand le texte vient d'une voix calée sur son signal.
+   */
+  mots?: MotDate[];
 };
 
 /**

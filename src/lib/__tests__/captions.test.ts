@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { centreDuBloc, crochetsARemplir, BANDE_SURE, HAUTEURS_LIBRES, Y_PAR_DEFAUT, dansLaBandeSure, boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
+import { activeWordIndex, centreDuBloc, crochetsARemplir, BANDE_SURE, HAUTEURS_LIBRES, Y_PAR_DEFAUT, dansLaBandeSure, boxContains, CAPTION_STYLES, pulseScale, readableOn } from '../captions.ts';
 import { CAPTION_COLORS, CAPTION_SCALES, OUTPUT_HEIGHT, type Caption, type CaptionStyleId } from '../types.ts';
 
 test('la détection sous le doigt inclut les bords du rectangle', () => {
@@ -224,4 +224,74 @@ test('un bloc plus haut que la bande est centré dedans', () => {
   const bande = (BANDE_SURE.bas - BANDE_SURE.haut) * OUTPUT_HEIGHT;
   const centre = centreDuBloc(0.2, bande * 1.5);
   assert.equal(centre, ((BANDE_SURE.haut + BANDE_SURE.bas) / 2) * OUTPUT_HEIGHT);
+});
+
+/*
+ * Le surlignage suit la parole quand on sait quand elle tombe.
+ *
+ * Ce test est écrit sur un cas où les deux lectures **divergent franchement** :
+ * un mot qui dure quatre fois plus que ses voisins. Avec le partage égal,
+ * chacun reçoit un quart de la durée et le surlignage passe au suivant pendant
+ * qu'on entend encore le premier ; avec les instants réels, il s'y attarde.
+ *
+ * Retirer la lecture des `mots` fait tomber ce test — vérifié en la retirant.
+ */
+test('le surlignage s’attarde sur un mot long au lieu de partager la durée', () => {
+  // « alors » dure 4 s, les trois autres 1 s : 7 s en tout, pas 4 × 1,75.
+  const parle: Caption = {
+    id: 'c1',
+    text: 'alors on y va',
+    start: 0,
+    end: 7,
+    style: 'karaoke',
+    y: Y_PAR_DEFAUT,
+    mots: [
+      { text: 'alors', start: 0, end: 4 },
+      { text: 'on', start: 4, end: 5 },
+      { text: 'y', start: 5, end: 6 },
+      { text: 'va', start: 6, end: 7 },
+    ],
+  };
+  const ecrit: Caption = { ...parle, id: 'c2', mots: undefined };
+
+  // À 3 s, on entend encore « alors ».
+  assert.equal(activeWordIndex(parle, 3, 4), 0, 'le mot long tient jusqu’à sa fin');
+  // Le partage égal, lui, en est déjà au troisième mot : c'est le défaut.
+  assert.equal(activeWordIndex(ecrit, 3, 4), 1);
+
+  assert.equal(activeWordIndex(parle, 4.5, 4), 1);
+  assert.equal(activeWordIndex(parle, 6.5, 4), 3);
+  // Avant le premier mot — un blanc en tête de bloc — on reste sur le premier.
+  assert.equal(activeWordIndex(parle, -1, 4), 0);
+});
+
+/*
+ * Et le partage égal reste le comportement par défaut : un sous-titre écrit à
+ * la main ne doit rien changer. Sans ce test, on pourrait remplacer la
+ * répartition par une lecture des `mots` qui rendrait `NaN` quand ils manquent.
+ */
+test('un sous-titre sans mots datés garde le partage égal', () => {
+  const ecrit: Caption = {
+    id: 'c3', text: 'un deux trois quatre', start: 0, end: 4,
+    style: 'karaoke', y: Y_PAR_DEFAUT,
+  };
+  assert.equal(activeWordIndex(ecrit, 0, 4), 0);
+  assert.equal(activeWordIndex(ecrit, 2.5, 4), 2);
+  assert.equal(activeWordIndex(ecrit, 99, 4), 3);
+});
+
+/*
+ * Le garde-fou du désaccord de découpage. Le tracé compte les mots *après* le
+ * passage à la ligne ; si ce compte ne tombe pas d'accord avec `mots`, s'y fier
+ * décalerait le surlignage d'un cran sur toute la phrase — un défaut plus
+ * visible que le partage égal, et bien plus difficile à attribuer.
+ */
+test('des mots datés qui ne comptent pas juste sont ignorés, pas suivis', () => {
+  const bancal: Caption = {
+    id: 'c4', text: 'un deux trois', start: 0, end: 3,
+    style: 'karaoke', y: Y_PAR_DEFAUT,
+    mots: [{ text: 'un', start: 0, end: 2.9 }, { text: 'deux', start: 2.9, end: 3 }],
+  };
+  // Trois mots à l'écran, deux instants connus : on retombe sur le partage égal.
+  assert.equal(activeWordIndex(bancal, 2, 3), 2);
 });
