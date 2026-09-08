@@ -1623,9 +1623,28 @@ segments à cause d'un seul accent dans le nom du destinataire. Mesuré sur
 « ACM Maçonnerie ». **On ne corrige pas l'orthographe d'une entreprise pour
 gagner trois centimes** : on affiche le coût et on l'assume.
 
-**Et on la livre en fichier, pas en page publiée**, tant qu'elle porte des
-coordonnées de tiers — c'est la règle de `prospects.md` appliquée à un autre
-support. L'adresse publique se propose, elle ne se décide pas.
+**Elle doit s'ouvrir dans un vrai navigateur, et ça n'a rien d'un détail.**
+Mesuré le 07/09/2026, au prix d'une matinée de prospection perdue : livrée en
+fichier, la page s'ouvre dans la visionneuse de l'application Claude, qui est
+un bac à sable — **elle bloque la navigation vers `sms:` et `tel:`**. Le bouton
+ne fait rien, sans message d'erreur, et rien à l'écran ne dit pourquoi. Le
+propriétaire a coché ses douze cases, cru avoir envoyé, et n'avait rien envoyé.
+
+Donc, dans cet ordre :
+
+1. **Proposer la page publiée** — une adresse privée s'ouvre dans le navigateur
+   et les boutons marchent. C'est le seul chemin qui fonctionne du premier coup.
+2. **Si elle porte des coordonnées de tiers**, la publication se propose et ne
+   se décide pas — c'est la règle de `prospects.md` appliquée à un autre
+   support. Mais alors on **dit dans le même message** que le fichier doit être
+   téléchargé puis ouvert avec le navigateur, faute de quoi il ne servira à rien.
+3. **Prévoir le repli qui marche partout** : les textes en blocs à copier, dans
+   la conversation. Aucun bac à sable ne bloque un copier-coller.
+
+**Et une case ne dit jamais ce qu'elle ne peut pas savoir.** Celle-ci affichait
+« envoyé » alors qu'elle enregistrait un clic — aucune page web ne peut
+constater le départ d'un SMS. Elle dit « ouvert », et la page rappelle d'aller
+vérifier dans l'application Messages, qui est le seul endroit qui sache.
 
 La règle de la mention d'opposition ne change pas : **tout SMS se termine par
 « STOP au [numéro] », jamais un courriel** (§ `PROSPECTION.md`). La page la
