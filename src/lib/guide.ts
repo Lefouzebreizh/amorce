@@ -1,4 +1,4 @@
-import { analyzeProject, PLAFOND_BLOQUE, type Analysis } from './analysis.ts';
+import { analyzeProject, DUREE_PUBLIABLE, LONG_SHOT, PLAFOND_BLOQUE, type Analysis } from './analysis.ts';
 import type { StepId } from './steps.ts';
 import { clipDuration, MORCEAUX_MAX } from './timeline.ts';
 import type { Project } from './types.ts';
@@ -35,14 +35,8 @@ export type GuideStep = {
   done: boolean;
 };
 
-/** Durée en deçà de laquelle une vidéo n'a pas le temps d'exister. */
-const TOO_SHORT = 7;
-
 /** Durée au-delà de laquelle le taux de complétion s'effondre. */
 const TOO_LONG = 45;
-
-/** Au-delà, un plan s'étire et l'attention retombe. */
-const LONG_SHOT = 3.5;
 
 /** En deçà, la vidéo est trop peu sous-titrée pour être suivie sans le son. */
 const MIN_COVERAGE = 0.55;
@@ -69,7 +63,7 @@ export function nextStep(project: Project, analysis: Analysis = analyzeProject(p
     };
   }
 
-  if (analysis.duration < TOO_SHORT) {
+  if (analysis.duration < DUREE_PUBLIABLE) {
     return {
       title: `Ta vidéo ne dure que ${analysis.duration.toFixed(1)} s`,
       why: 'Trop court pour installer quoi que ce soit. Vise 15 à 30 s. Duplique un plan et modifie la copie.',

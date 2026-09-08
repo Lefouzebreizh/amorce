@@ -1,4 +1,4 @@
-import { HOOK_WINDOW, type Analysis } from './analysis.ts';
+import { DUREE_PUBLIABLE, HOOK_WINDOW, LONG_SHOT, type Analysis } from './analysis.ts';
 import { layoutClips, type PlacedClip } from './timeline.ts';
 import type { Project } from './types.ts';
 
@@ -100,21 +100,21 @@ export const HOOK_FAIBLE = 0.45;
 /**
  * Durée au-delà de laquelle un plan qui ne change pas se met à coûter.
  *
- * Ce n'est pas un nombre choisi ici : `analyzeProject` note la longueur du plus
- * long plan par `band(longestShot, 0, 3.5, 0, 9)` — plein jusqu'à 3,5 s, puis
- * décroissant jusqu'à zéro à neuf. 3,5 s est donc la borne que le dépôt a déjà
- * mesurée pour « ce plan traîne », et la reprendre évite d'en inventer une
- * seconde qui divergerait à la première retouche.
+ * Ce nom-ci reste, la valeur ne vit plus ici. Le commentaire d'origine disait
+ * déjà que « reprendre la borne du dépôt évite d'en inventer une seconde qui
+ * divergerait à la première retouche » — et il la recopiait quand même. Elle
+ * est désormais importée, si bien que la phrase est vraie par construction et
+ * non par vigilance.
  */
-export const PLAN_QUI_DORT = 3.5;
+export const PLAN_QUI_DORT = LONG_SHOT;
 
 /**
  * Durée à partir de laquelle un montage mérite sa miniature.
  *
- * En dessous, il n'est pas publiable : `format` note zéro sous deux secondes,
- * et une vidéo qu'on ne publie pas n'a pas besoin d'une image de couverture.
+ * Même borne que celle en deçà de laquelle `guide.ts` dit « trop court » : les
+ * deux polarités d'un seul nombre, qui vit dans `analysis.ts`.
  */
-export const DUREE_PUBLIABLE = 7;
+export { DUREE_PUBLIABLE };
 
 /** Le plan qui couvre cet instant, s'il existe. */
 function planA(places: PlacedClip[], instant: number): PlacedClip | undefined {
