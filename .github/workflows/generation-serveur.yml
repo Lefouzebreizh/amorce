@@ -1,0 +1,59 @@
+# Vérification de la passerelle de génération — même patron que
+# licence-serveur.yml et comptes-serveur.yml, posé dès la création du projet.
+# Ce n'est pas de la symétrie : `/coherence-depot` l'a réclamé en propres
+# termes à la minute où le dossier est apparu — « sait se tester mais aucun
+# workflow ne le surveille : ses tests ne tourneront jamais dans la CI, qui
+# restera verte en le disant ». Un projet gardé nulle part est pire qu'un
+# projet sans tests, parce qu'il en a l'air.
+#
+# Zéro dépendance d'exécution, comme ses deux voisins, et **rien à joindre** :
+# ses vingt-cinq tests tournent sans clé et sans atteindre MiniMax — dont les
+# cinq hôtes sont refusés au tunnel depuis une session distante. `tsc` est
+# installé sans être enregistré, pour que `package.json` continue à dire vrai.
+
+name: Passerelle de génération
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'generation-serveur/**'
+      - '.github/workflows/generation-serveur.yml'
+  pull_request:
+    paths:
+      - 'generation-serveur/**'
+      - '.github/workflows/generation-serveur.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: generation-serveur-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: generation-serveur
+
+jobs:
+  verifier:
+    name: Tests et types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Tests
+        if: ${{ !cancelled() }}
+        run: npm test
+
+      - name: Installer le compilateur
+        if: ${{ !cancelled() }}
+        run: npm install --no-save typescript@^5 @types/node@^22
+
+      - name: Types
+        if: ${{ !cancelled() }}
+        run: npm run typecheck

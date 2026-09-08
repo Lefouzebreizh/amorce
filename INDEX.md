@@ -113,6 +113,7 @@ dans lesquelles les chantiers puisent.
 | `visual_library/` | LUTs, recettes d'étalonnage et catalogues visuels, avec les bins Premiere / DaVinci. |
 | `licence-serveur/` | Serveur de licence d'Amorce : trois routes, zéro dépendance. Rattaché à Amorce, pas autonome. |
 | `comptes-serveur/` | Comptes et grand livre de crédits pour la génération intégrée d'Amorce. Rattaché à Amorce, pas autonome. |
+| `generation-serveur/` | La passerelle de génération d'Amorce — MiniMax, plafond de 20 $/mois en veto. Rattachée à Amorce, pas autonome. |
 | `scripts/` | Scripts de vérification et de fixtures pour Amorce à la racine. |
 
 ## À faire sur le dépôt lui-même

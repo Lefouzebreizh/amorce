@@ -647,6 +647,35 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   comme `eleven_sfx.py` ; ce qui la fera tourner pour de bon est soit la machine
   du propriétaire, soit **le runner du dépôt**, qui a du vrai réseau — mesuré le
   04/09 sur le radar de pépites, et non vérifié sur cet hôte-ci.
+- **generation-serveur/** — la passerelle de génération, phase 2, et le
+  troisième service sur la mesure des deux précédents : **zéro dépendance**,
+  tout ce qui décide derrière une interface, vingt-cinq tests qui tournent
+  **sans réseau et sans clé**. Il vit entre la détection (`src/lib/manques.ts`,
+  dans le studio) et un plan qui existe.
+  **Séparé du studio, et c'est la seule forme qui tienne la promesse** : le
+  moteur ne connaît pas le réseau, et un invariant de cette forme ne tient que
+  s'il n'y a rien à importer qui le casse — un module de génération posé dans
+  `src/` serait à un `import` de distance.
+  **Aucun média de l'appareil n'y monte.** L'API de MiniMax accepte une image de
+  départ (`first_frame_image`) et elle n'est **pas** branchée : ce serait le
+  rush de quelqu'un qui partirait chez un tiers. Un test relit le corps réel de
+  la requête et n'y accepte que `model`, `prompt`, `duration`, `aspect_ratio`.
+  **Le plafond de 20 $/mois est un veto, pas une note**, et il passe avant tout
+  appel — avec deux refus dans un ordre qui compte : *prix inconnu* d'abord,
+  *plafond* ensuite, parce qu'une dépense dont on ignore le montant ne peut pas
+  être plafonnée. **`TARIFS` est vide aujourd'hui, à dessein** : les cinq hôtes
+  de MiniMax rendent `000` d'ici, la grille n'a pas pu être lue à sa source, et
+  la remplir de mémoire donnerait un plafond qui a l'air de tenir. Tant qu'elle
+  est vide, rien ne part. Même décision que les barèmes de `bilan-patrimoine/`.
+  **La dépense se compte AVANT l'appel**, jamais après : une réponse perdue
+  entre les deux laisserait sinon une génération payée que le compteur ignore,
+  et le plafond dériverait vers le haut à chaque incident. `inscrire` est
+  idempotent sur l'identifiant, comme `crediter` chez `comptes-serveur`.
+  Le compteur d'ici compte ce que **nous** devons au fournisseur ; le grand
+  livre de `comptes-serveur` compte ce que **les clients** détiennent — les
+  confondre ferait payer un plafond par un crédit.
+  **Aucune route HTTP, aucune clé, aucun essai réel** : rien de ce code n'a
+  joint MiniMax. Se vérifie depuis son dossier.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un

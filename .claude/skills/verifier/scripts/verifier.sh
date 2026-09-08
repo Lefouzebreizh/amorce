@@ -105,6 +105,7 @@ while IFS= read -r f; do
     motion/*)        inscrire motion ;;
     licence-serveur/*) inscrire licence ;;
     comptes-serveur/*) inscrire comptes ;;
+    generation-serveur/*) inscrire generation ;;
     annuaire-ia/*)   inscrire annuaire ;;
     # Avant la découverte Python plus bas, qui inscrira *aussi* la suite
     # `chat-traducteur` : c'est voulu. Le Python fait foi, et les témoins de
@@ -322,6 +323,19 @@ lancer_comptes() {
   return $e
 }
 
+lancer_generation() {
+  # Troisième service sur la même mesure que les deux autres : zéro dépendance,
+  # rien à installer. Ses tests tournent sans clé et sans joindre MiniMax —
+  # c'est même la condition qui l'a fait écrire ainsi, ses cinq hôtes étant
+  # refusés au tunnel depuis une session distante.
+  local d="generation-serveur"; local j="$journal/generation"; local e=0
+  ( cd "$d" || exit 1; etape "$j.typecheck" "typecheck" npm run typecheck ) & local a=$!
+  ( cd "$d" || exit 1; etape "$j.test"      "tests"     npm test ) & local b=$!
+  wait $a || e=1; wait $b || e=1
+  cat "$j".{typecheck,test} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_motion() {
   # Deux étapes, et c'est délibéré : ici `npm run build` REND UNE VIDÉO — il
   # lance un Chromium, prend des minutes, et n'a rien à faire dans une
@@ -521,6 +535,7 @@ for p in $projets; do
     coffre)  lancer_coffre  & pid_de[coffre]=$! ;;
     licence) lancer_licence & pid_de[licence]=$! ;;
     comptes) lancer_comptes & pid_de[comptes]=$! ;;
+    generation) lancer_generation & pid_de[generation]=$! ;;
     annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
     outillage) lancer_outillage & pid_de[outillage]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
@@ -550,6 +565,7 @@ nom_lisible() {
     coffre)  echo "Le Coffre (chiffrement navigateur)" ;;
     licence) echo "Serveur de licence" ;;
     comptes) echo "Serveur de comptes" ;;
+    generation) echo "Passerelle de génération" ;;
     annuaire) echo "Réseau d'annuaires IA" ;;
     outillage) echo "Outillage du dépôt (syntaxe seule)" ;;
     py:*)    echo "${1#py:}" ;;
