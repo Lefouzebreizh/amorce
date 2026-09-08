@@ -1,15 +1,12 @@
-## [2026-09-06 22:28] De : Session de coordination
+## [2026-09-06 22:28] De : Session de coordination — traité le 08/09/2026
 
-**Uploads — le palier 100 Mo est rejeté.** Erwann veut du gigaoctet, pas
-seulement un plafond plus haut.
+Les deux points sont réglés, vérifié sur `main` :
 
-Avant de choisir entre **Vercel Blob** et **Supabase Storage**, il faut savoir
-quel hébergement de fichiers est utilisé aujourd'hui — le choix ne se tranche
-pas dans l'abstrait.
-
-Priorité constante, valable au-delà de cette décision : **la solution la moins
-chère avec le plus de marge de manœuvre.**
-
-**Correctif RLS validé (« GO »)** sur `coffre_echeances` et
-`coffre_tentatives`. En attente d'application via la branche
-`claude/coffre-rls-echeances-tentatives`.
+- **Correctif RLS** : fusionné le 06/09 (`d1d8a4c`, « Fermer la RLS des deux
+  tables du coffre absentes du schéma »). `coffre_echeances` et
+  `coffre_tentatives` sont créées et protégées dans `supabase/schema.sql`.
+- **Uploads** : tranché en faveur de rester sur **Supabase Storage** plutôt que
+  Vercel Blob (#794, 07/09). `TAILLE_MAX_OCTETS` passe à 5 Go par fichier
+  (plafonné par la mémoire du navigateur qui chiffre le fichier entier d'un
+  bloc), `QUOTA_TOTAL_OCTETS` ajoute un plafond de 100 Go par compte,
+  extensible au téraoctet en changeant un chiffre.
