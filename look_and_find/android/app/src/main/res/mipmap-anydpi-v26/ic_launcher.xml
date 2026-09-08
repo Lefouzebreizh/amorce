@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  L'icône adaptative, servie à partir d'Android 8.
+
+  Sans elle, le système prend l'icône héritée et la pose telle quelle dans une
+  pastille blanche : le carré sombre du cadre de visée s'y retrouve encadré de
+  blanc, à une taille réduite, et le dessin devient illisible. Le fond et
+  l'avant-plan sont donc séparés, ce qui laisse le lanceur appliquer sa propre
+  forme — ronde, carrée ou en goutte selon le constructeur.
+
+  `monochrome` est le même avant-plan : sur Android 13, le thème dynamique
+  recolore l'icône à partir du fond d'écran, et une application qui ne fournit
+  pas cette couche reste seule en couleur au milieu d'un écran teinté.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>
