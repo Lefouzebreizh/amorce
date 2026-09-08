@@ -1,0 +1,5 @@
+# Les fins de ligne sont figées en LF dans l'historique, quelle que soit la
+# machine qui commite. Sans cela, Git sous Windows enregistre du CRLF et le
+# premier commit fait ailleurs apparaît comme « tous les fichiers ont changé ».
+# Le répertoire de travail, lui, garde ce que la plateforme préfère.
+* text=auto eol=lf
