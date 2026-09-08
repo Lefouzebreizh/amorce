@@ -124,6 +124,26 @@
   --color-violet-voile: #1b1430;
 
   /*
+   * Le violet qui a le droit de tracer un trait, et pourquoi il en fallait un
+   * second.
+   *
+   * `--color-violet` reste la valeur arrêtée, `#7C3AED`, et elle reste au
+   * décor : 2,44:1 sur un encadré, sous le plancher de 3:1 d'un élément non
+   * textuel. Une bordure de cette couleur existe dans le code et pas à l'œil.
+   *
+   * `#A978FF` est la **même teinte** — 262°, mesurée — désaturée à 53 % et
+   * remontée jusqu'à franchir la barre : **4,52:1 sur `panel`, 5,03:1 sur une
+   * carte**. Elle passe le plancher d'un trait avec de la marge, et reste très
+   * loin des 7:1 d'un accent — ce qui est exactement ce qu'on veut : elle
+   * sépare, elle ne désigne pas. L'action reste au turquoise, seul.
+   *
+   * Choisie par le propriétaire le 08/09/2026 parmi trois valeurs mesurées, la
+   * plus basse tenant 3,01:1 et la plus haute 7,15:1. Celle-ci est la seule
+   * qui soit franchement visible sans se mettre à ressembler à un accent.
+   */
+  --color-violet-trait: #a978ff;
+
+  /*
    * Deux familles au lieu d'une, et chacune a un rôle.
    *
    * `--font-titre` porte les titres — Bricolage Grotesque, large et un peu

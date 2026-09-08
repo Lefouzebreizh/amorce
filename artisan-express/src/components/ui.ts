@@ -75,15 +75,16 @@ export const TITRE_SECTION =
   'sm:text-[3.25rem]';
 
 /*
- * Le filet violet, et c'est tout ce que le violet fait sur cette page.
+ * Le filet violet — un dégradé d'un pixel posé au-dessus d'une carte.
  *
- * Un dégradé d'un pixel posé au-dessus d'une carte : il donne le relief que
- * réclame une hiérarchie sombre, sans porter un mot ni une action. Sa mesure de
- * contraste ne s'applique pas — il n'y a rien à lire dessus.
+ * Il porte `violet-trait` et non `violet` : la valeur d'origine rendait 2,44:1
+ * sur un encadré, si bien que ce filet existait dans le code et pas vraiment à
+ * l'œil. À 4,52:1 il se voit, ce qui est la moindre des choses pour un élément
+ * dont c'est l'unique fonction.
  */
 export const FILET_VIOLET =
   'before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r ' +
-  'before:from-transparent before:via-violet before:to-transparent';
+  'before:from-transparent before:via-violet-trait before:to-transparent';
 
 /*
  * Une carte qui répond au doigt.
@@ -97,3 +98,22 @@ export const CARTE =
   'relative overflow-hidden rounded-xl border border-edge bg-slab ' +
   'transition-[background-color,border-color,transform] duration-150 ease-out ' +
   'hover:border-accent/50 hover:bg-panel motion-safe:hover:-translate-y-px';
+
+/*
+ * La carte à bordure violette : ce qui structure sans appeler à agir.
+ *
+ * C'est la place que le propriétaire a donnée au violet le 08/09/2026 — il
+ * **sépare**, le turquoise **désigne**. `violet-trait` rend **5,03:1** sur une
+ * carte, très au-dessus du plancher de 3:1 d'un trait et très en dessous des
+ * 7:1 d'un accent : exactement l'entre-deux qu'on cherche.
+ *
+ * **À pleine opacité, et ce n'est pas un détail.** Le premier jet écrivait
+ * `border-violet-trait/70` — et une opacité posée sur une couleur mange le
+ * contraste sans qu'aucun jeton ne le montre. Ce dépôt l'a déjà payé une fois,
+ * sur l'encre d'un bouton à 85 % qui rendait 2,58:1. La mesure de 5,03:1 vaut
+ * pour la couleur pleine, et seulement pour elle.
+ *
+ * Le survol passe la bordure à l'accent : c'est le seul moment où cette carte
+ * a quelque chose à dire, et c'est le turquoise qui le dit.
+ */
+export const CARTE_VIOLET = CARTE.replace('border-edge', 'border-violet-trait');

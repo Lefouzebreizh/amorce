@@ -175,14 +175,53 @@ test('le violet reste dans le décor, parce qu’il ne peut rien porter', () => 
   const composants = new URL('../src/components/', import.meta.url);
   for (const fichier of readdirSync(composants).filter((nom) => nom.endsWith('.tsx') || nom.endsWith('.ts'))) {
     const texte = readFileSync(new URL(fichier, composants), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-    for (const interdit of [/\btext-violet\b/, /\bbg-violet\b(?!-voile)/, /\bborder-violet\b/]) {
+    /*
+     * Les suffixes sont exclus à dessein : `violet-voile` est un fond de bloc
+     * très sombre, `violet-trait` est la valeur claire mesurée juste en
+     * dessous. C'est bien `--color-violet` seul — la valeur à 2,44:1 — qu'on
+     * interdit de faire travailler.
+     */
+    for (const interdit of [
+      /\btext-violet\b(?!-)/,
+      /\bbg-violet\b(?!-)/,
+      /\bborder-violet\b(?!-)/,
+      /\bvia-violet\b(?!-)/,
+    ]) {
       assert.doesNotMatch(
         texte,
         interdit,
-        `${fichier} fait porter au violet un texte, un fond de bouton ou une bordure — il rend 2,44:1 sur un encadré`,
+        `${fichier} fait porter au violet un texte, un fond, un trait ou un dégradé — il rend 2,44:1 sur un encadré`,
       );
     }
   }
+});
+
+test('le violet qui trace un trait, lui, se voit', () => {
+  /*
+   * Le propriétaire a voulu du violet sur les bordures. `#7C3AED` ne pouvait
+   * pas le faire — 2,44:1, une bordure qui n'existe qu'à la lecture du code.
+   * `violet-trait` est la même teinte remontée jusqu'à franchir le plancher.
+   *
+   * Ce test garde les deux bouts : il doit passer 3:1 sur la surface la plus
+   * claire, **et** rester sous les 7:1 d'un accent. Le second bout compte
+   * autant que le premier : un violet qui atteindrait le niveau d'un accent
+   * ferait deux couleurs d'action sur la page, et le §2 bis dit qu'un accent
+   * qui décore devient muet.
+   */
+  const ici = jetons();
+  const trait = ici.get('violet-trait');
+  const panel = ici.get('panel');
+  assert.ok(trait && panel, 'le violet de trait ou la surface la plus claire a disparu');
+
+  const mesure = contraste(trait!, panel!);
+  assert.ok(
+    mesure >= PLANCHER_TRAIT,
+    `le violet de trait rend ${mesure.toFixed(2)}:1 sur ${panel}, sous le plancher de ${PLANCHER_TRAIT}`,
+  );
+  assert.ok(
+    mesure < PLANCHER_ACCENT,
+    `le violet de trait rend ${mesure.toFixed(2)}:1 : il a rejoint le niveau d’un accent, et la page n’en porte qu’un`,
+  );
 });
 
 test('la barre d’adresse du téléphone porte le fond de la page', () => {
