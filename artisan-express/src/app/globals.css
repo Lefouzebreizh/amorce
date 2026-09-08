@@ -64,8 +64,43 @@
    */
   --color-danger: #f08b82;
 
+  /*
+   * Le violet, et il n'a le droit de rien dire.
+   *
+   * Il vient de `annuaire-ia/styles.src.css`, où il est `--teinte-1` — c'est
+   * la cohérence demandée entre les sites du propriétaire. Mais ce fichier-là
+   * porte aussi sa mesure, et elle est sans appel : **3,42:1**, très en dessous
+   * du plancher de 7:1 du §2 bis. Il y a d'ailleurs été *rétrogradé* du rôle
+   * d'accent pour cette raison exacte.
+   *
+   * Il ne porte donc **jamais de texte et jamais une action**. Il vit dans les
+   * dégradés, les halos et les filets d'un pixel — là où le contraste ne se
+   * mesure pas parce qu'il n'y a rien à lire. L'accent turquoise reste seul à
+   * désigner ce qu'il faut faire : un produit, un accent.
+   */
+  --color-violet: #8b5cf6;
+  --color-violet-voile: #1d1730;
+
+  /*
+   * Deux familles au lieu d'une, et chacune a un rôle.
+   *
+   * `--font-titre` porte les titres — Bricolage Grotesque, large et un peu
+   * brute. `--font-sans` reste le nom de la lecture pour ne pas renommer cent
+   * trente classes ; il pointe désormais sur Inter, celle du réseau.
+   *
+   * Les noms diffèrent de ceux que pose `next/font` (`--font-titrage`,
+   * `--font-lecture`) : un jeton Tailwind qui porterait le même nom que la
+   * variable qu'il consomme se référencerait lui-même, et la règle entière
+   * serait ignorée sans rien dire.
+   *
+   * Les deux retombent sur la pile système si `next/font` n'a rien pu servir :
+   * une police absente change l'allure, elle ne doit jamais vider la page.
+   */
+  --font-titre:
+    var(--font-titrage), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-sans:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    var(--font-lecture), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
 }
 
 /*

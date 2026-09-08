@@ -222,7 +222,7 @@ export function FormulaireDevis() {
 
         <div className="sm:col-span-2">
           <button className={`${BOUTON_PRINCIPAL} w-full sm:w-auto`} type="submit" disabled={etat.nom === 'envoi'}>
-            {etat.nom === 'envoi' ? 'Envoi…' : 'Envoyer, et rappelle-moi'}
+            {etat.nom === 'envoi' ? 'Envoi…' : 'J’envoie, et tu me rappelles'}
           </button>
         </div>
 
@@ -242,7 +242,7 @@ export function FormulaireDevis() {
               className={`${BOUTON_PRINCIPAL} mt-4 inline-flex`}
               href={lienMailtoDemande(etat.demande, contact.courrielDirect)}
             >
-              Envoyer depuis ma messagerie
+              J’envoie depuis ma messagerie
             </a>
           </div>
         ) : null}

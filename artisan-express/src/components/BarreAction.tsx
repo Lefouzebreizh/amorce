@@ -27,7 +27,8 @@ const SECONDAIRE =
   + 'border-2 border-edge bg-panel px-1.5 text-lg font-semibold text-encre';
 const PRINCIPAL =
   'flex min-h-14 flex-1 min-w-0 items-center justify-center whitespace-nowrap rounded-xl '
-  + 'bg-accent px-1.5 text-lg font-semibold text-accent-encre';
+  + 'bg-accent px-1.5 text-lg font-semibold text-accent-encre shadow-lg shadow-accent/20 '
+  + 'transition-transform duration-200 motion-safe:active:scale-[0.98]';
 export function BarreAction() {
   return (
     <div
@@ -40,7 +41,7 @@ export function BarreAction() {
             className={SECONDAIRE}
             href={contact.telephoneLien}
           >
-            Appeler
+            J’appelle
           </a>
         ) : null}
 
