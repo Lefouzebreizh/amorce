@@ -11,6 +11,42 @@ n'est pas une couverture.
 
 ---
 
+## Le titre, arrêté le 08/09/2026
+
+Le propriétaire a tranché :
+
+> **Les Aventures de Roussy et Zéphy**
+> *une histoire de sensibilité, d'amitié et de résilience*
+
+**Et l'orthographe du personnage est « Zéphy », pas « Zéfi ».** Ce n'était pas
+qu'une préférence : le nom est **peint dans les bulles de quinze planches, 54
+fois** — « Ne me parle pas, Zéphy », « Chut ! Je l'entends ». Seules les pages
+01, 15 et 26 portent du texte vectoriel. Changer l'orthographe aurait coûté
+quinze régénérations, dont chacune annule la chirurgie de glyphe, les sept
+écarts du jeu, les pupilles redessinées et le recadrage à 7 %. Les deux graphies
+se prononcent d'ailleurs à l'identique.
+
+### Ce que ce titre ne change pas : la couverture
+
+**Sur KDP, le titre et la couverture sont deux choses séparées.** Le champ
+« titre » et le champ « sous-titre » sont saisis dans le formulaire et indexés
+pour la recherche ; la couverture est une image, et rien n'oblige à y recopier
+les deux.
+
+C'est heureux, parce que le contrôle du haut de cette fiche ne pardonne pas :
+la vignette fait **150 pixels** dans une liste, et `vignette.py` mesure que
+« Roussy & Zéphy » y « se lit franchement ». Quatre-vingt-six caractères ne s'y
+liraient pas — ils feraient une tache grise.
+
+**Donc : le nom en grand sur l'image, la phrase complète dans le formulaire.**
+La couverture porte « Les Aventures de Roussy et Zéphy » — ou « Roussy &
+Zéphy » si la mesure à 150 px l'impose —, et le sous-titre vit dans le champ
+KDP, où il travaille pour le référencement sans encombrer le timbre-poste.
+
+**À mesurer avant dépôt** : passer la couverture retenue à `vignette.py` et
+lire ses cinq contrôles. C'est ce fichier qui l'exige, et la mesure existe.
+
+
 ## Le chemin le moins cher, mesuré le 31 août 2026
 
 Avant de chercher à faire fabriquer une image, trois faits chiffrés.
