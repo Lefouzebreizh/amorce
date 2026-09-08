@@ -41,7 +41,7 @@ Une session de tri qui rencontre un en-tête `De :` passe son chemin.
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt-deux chantiers actifs, plus un en sommeil, et cinq
+Ce dépôt héberge vingt-deux chantiers actifs, plus un en sommeil, et sept
 ressources transverses qui ne sont pas des projets mais servent à tous. Une
 idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un
 front de plus. La liste vieillit vite — recompter avant de noter.
