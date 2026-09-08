@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { analyzeProject } from '../analysis.ts';
+import { LONG_SHOT, analyzeProject } from '../analysis.ts';
 import { DUREE_PUBLIABLE, PLAN_QUI_DORT, detecterManques, matiereInutilisee } from '../manques.ts';
+import { nextStep } from '../guide.ts';
 import { emptyProject } from '../timeline.ts';
 import {
   DEFAULT_CLIP,
@@ -162,4 +163,67 @@ test('aucun fournisseur n’est nommé dans ce que la détection rend', () => {
   for (const interdit of ['kling', 'hailuo', 'meta', 'muse', 'minimax', 'http', 'api']) {
     assert.equal(rendu.includes(interdit), false, `« ${interdit} » n’a rien à faire ici`);
   }
+});
+
+/*
+ * Les deux modules décident sur la même frontière, et ce test la balaie plutôt
+ * que de la sonder en deux points.
+ *
+ * Deux tentatives ratées avant celle-ci, et elles valent d'être dites. Comparer
+ * `PLAN_QUI_DORT` à `LONG_SHOT` reste vert le jour où quelqu'un réécrit un
+ * littéral : deux nombres égaux sont égaux. Sonder « à la borne » et « au-delà »
+ * ne vaut pas mieux — vérifié en réintroduisant 3,8 face à 3,5 : les deux points
+ * de sonde encadraient les *deux* seuils de la même façon, et la suite restait
+ * verte. Un écart ne se voit qu'entre les deux bornes, donc il faut passer par là.
+ *
+ * Ce qui doit rester vrai n'est pas que les nombres se ressemblent, c'est que
+ * `guide.ts` et `manques.ts` **basculent au même endroit** — sinon le guide se
+ * tait sur un plan de 3,8 s pendant que la détection y ouvre un besoin de
+ * matière, et rien ne le signale.
+ */
+test('le guide et la détection basculent sur le même plan, au même instant', () => {
+  /*
+   * Deux plans, et une accroche : le guide ne donne qu'une consigne à la fois,
+   * et il faut avoir passé « trop court » puis « écris ton accroche » pour
+   * qu'il en arrive à la longueur des plans.
+   */
+  const montage = (duree: number) => montageMou({
+    clips: [plan(duree), plan(duree)],
+    captions: [texte(0, 2)],
+  });
+
+  const desaccords: string[] = [];
+  for (let pas = 20; pas <= 60; pas += 1) {
+    const duree = pas / 10;
+    const project = montage(duree);
+    const analysis = analyzeProject(project);
+    const decoupe = nextStep(project, analysis).action.kind === 'chopLongest';
+    const matiere = detecterManques(project, analysis).some((m) => m.nature === 'matiere');
+    if (decoupe !== matiere) {
+      desaccords.push(`${duree.toFixed(1)} s : guide ${decoupe ? 'découpe' : 'se tait'}, détection ${matiere ? 'ouvre un besoin' : 'ne voit rien'}`);
+    }
+  }
+
+  assert.deepEqual(desaccords, [], `les deux seuils ont divergé (LONG_SHOT = ${LONG_SHOT})`);
+});
+
+/*
+ * Même balayage sur l'autre borne : `guide.ts` la lit par en dessous (« trop
+ * court »), `manques.ts` par au-dessus (« ça mérite sa miniature »). Un seul
+ * nombre, deux polarités — donc exactement une durée où les deux basculent.
+ */
+test('la durée publiable se lit dans les deux sens sur le même nombre', () => {
+  const desaccords: string[] = [];
+  for (let pas = 30; pas <= 120; pas += 1) {
+    const duree = pas / 10;
+    const project = montageMou({ clips: [plan(duree)] });
+    const analysis = analyzeProject(project);
+    const tropCourt = nextStep(project, analysis).action.kind === 'duplicateLongest';
+    const miniature = detecterManques(project, analysis).some((m) => m.nature === 'miniature');
+    if (tropCourt === miniature) {
+      desaccords.push(`${duree.toFixed(1)} s : guide « trop court » ${tropCourt}, miniature ${miniature}`);
+    }
+  }
+
+  assert.deepEqual(desaccords, [], `les deux lectures de DUREE_PUBLIABLE (${DUREE_PUBLIABLE}) se sont décalées`);
 });

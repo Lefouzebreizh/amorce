@@ -19,6 +19,33 @@ import type { Caption, Project } from './types.ts';
 /** Fenêtre d'attention décisive : si c'est raté ici, le reste ne sera pas vu. */
 export const HOOK_WINDOW = 3;
 
+/**
+ * Durée au-delà de laquelle un plan s'étire et l'attention retombe.
+ *
+ * Ce n'est pas un nombre choisi : la note de structure ci-dessous mesure le
+ * plus long plan par `band(longestShot, 0, 3.5, 0, 9)` — plein jusqu'à 3,5 s,
+ * puis décroissant jusqu'à zéro à neuf. C'est donc la borne que le dépôt a
+ * déjà mesurée pour « ce plan traîne ».
+ *
+ * **Elle vit ici parce que quatre fichiers en dépendaient chacun de son
+ * côté** — `guide.ts`, `autoFinish.ts`, `ClipPanel.tsx` et `manques.ts`
+ * portaient tous les quatre leur propre `3.5`, l'un d'eux avec un commentaire
+ * qui disait « le seuil de `guide.ts` » sans que rien ne l'y attache. Ce
+ * module est le seul que les quatre importent déjà et qui n'importe aucun
+ * d'eux : le poser ailleurs aurait fabriqué un cycle.
+ */
+export const LONG_SHOT = 3.5;
+
+/**
+ * Durée à partir de laquelle un montage existe : en deçà, il n'a pas le temps
+ * d'installer quoi que ce soit, et il ne mérite pas sa miniature.
+ *
+ * Une seule borne, lue dans les deux sens : `guide.ts` regarde en dessous pour
+ * dire « trop court », `manques.ts` regarde au-dessus pour dire « publiable ».
+ * Les deux polarités d'un même nombre, et c'est pour ça qu'il n'y en a qu'un.
+ */
+export const DUREE_PUBLIABLE = 7;
+
 /** Fréquence d'échantillonnage de la courbe de tension, en Hz. */
 const SAMPLE_RATE = 20;
 
@@ -444,8 +471,15 @@ export const PLAFOND_BLOQUE = 40;
 /** Couverture texte en deçà de laquelle la vidéo ne se suit plus sans le son. */
 const COUVERTURE_BLOQUANTE = 0.25;
 
-/** Durée au-delà de laquelle un plan seul endort le film. */
-const PLAN_QUI_DORT = 6;
+/**
+ * Durée au-delà de laquelle un plan seul endort le film.
+ *
+ * Renommé : il s'appelait `PLAN_QUI_DORT`, comme la constante de `manques.ts`
+ * qui vaut 3,5 et désigne autre chose. Un même nom pour deux grandeurs est le
+ * défaut que `CLAUDE.md` nomme `MIN_SHOT`, et il n'a pas besoin d'être dans le
+ * même fichier pour tromper.
+ */
+const PLAN_INTERMINABLE = 6;
 
 /**
  * Les défauts qui empêchent un montage d'être bon, quoi que valent les autres.
@@ -514,11 +548,11 @@ export function defautsBloquants(
     });
   }
 
-  if (mesures.longestShot > PLAN_QUI_DORT) {
+  if (mesures.longestShot > PLAN_INTERMINABLE) {
     trouves.push({
       id: 'plan-qui-dort',
       probleme: `Un plan dure ${mesures.longestShot.toFixed(1)} s sans rien changer`,
-      remede: `Découpe-le : au-delà de ${PLAN_QUI_DORT} s sans coupe, on décroche.`,
+      remede: `Découpe-le : au-delà de ${PLAN_INTERMINABLE} s sans coupe, on décroche.`,
     });
   }
 

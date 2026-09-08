@@ -1,5 +1,5 @@
 import { Y_PAR_DEFAUT } from './captions.ts';
-import { SFX_PER_10S, type Analysis } from './analysis.ts';
+import { LONG_SHOT, SFX_PER_10S, type Analysis } from './analysis.ts';
 import { alterneLesRushes, chopped, layoutClips, totalDuration } from './timeline.ts';
 import {
   type Caption,
@@ -30,9 +30,6 @@ import {
  * les textes sont cohérents entre eux, avec des crochets à compléter, jamais un
  * texte qui parlerait du film. Et il ne peut pas inventer une musique.
  */
-
-/** Au-delà, un plan s'étire et l'attention retombe — le seuil de `guide.ts`. */
-const LONG_SHOT = 3.5;
 
 /** Durée visée par le découpage d'un plan trop long. */
 const CHOP_TARGET = 2;

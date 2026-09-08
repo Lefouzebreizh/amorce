@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useStudio } from '@/lib/store';
 import { analyseVoice } from '@/lib/voice';
+import { LONG_SHOT } from '@/lib/analysis';
 import { clipDuration } from '@/lib/timeline';
 import { TRANSITION_LABELS } from '@/lib/transitions';
 import { MIN_CLIP_DURATION, type ClipMotion, type TransitionKind } from '@/lib/types';
@@ -23,9 +24,6 @@ import { Actions, Button, Choice, Collapsible, EmptyState, Field, Hint, Panel, S
 
 /** Durée visée par le découpage automatique, en secondes. */
 const CHOP_TARGET = 2;
-
-/** Au-delà, un plan gagne à être découpé. */
-const LONG_SHOT = 3.5;
 
 /** Ce que chaque transition raconte, sans jargon de monteur. */
 const TRANSITION_HELP: Record<TransitionKind, string> = {
