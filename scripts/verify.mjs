@@ -25,8 +25,12 @@ const URL_BASE = (process.env.AMORCE_URL || 'http://localhost:3000') + '/studio'
 /** Durée attendue du montage express sur les rushes de test, en secondes. */
 const EXPECTED_DURATION = 7.5;
 
-if (!existsSync(join(RUSHES, 'rush1.webm'))) {
-  console.error('Rushes absents. Lance d’abord : npm run fixtures');
+// Le cinquième est nommé à part : une `.fixtures/` fabriquée avant qu'il
+// existe porte les quatre autres, et le parcours tomberait tout à la fin, sur
+// un import qui ne trouve pas son fichier.
+for (const nom of ['rush1.webm', 'rush-paysage.webm']) {
+  if (existsSync(join(RUSHES, nom))) continue;
+  console.error(`Rush ${nom} absent. Lance d’abord : npm run fixtures`);
   process.exit(1);
 }
 mkdirSync(SHOTS, { recursive: true });
@@ -1635,6 +1639,130 @@ if (exportPath) {
   console.log(`\n  fichier : ${((info.bytes ?? 0) / 1024 / 1024).toFixed(2)} Mo — ${exportPath}`);
   await probe.close();
 }
+
+// ------------------------------ 7. Un rush paysage remplit le cadre en entier
+/*
+ * Le cinquième rush est le seul de ce dossier à avoir des côtés à perdre.
+ *
+ * Les quatre autres sont déjà en 9:16 : aucun contrôle de ce dépôt ne pouvait
+ * donc voir ce que le recouvrement fait d'une source large. Il a été fabriqué
+ * avec le trépied (#833) et n'était encore exercé par rien — `verify.mjs`
+ * importe les rushes par leur nom, et le cinquième n'y était pas.
+ *
+ * Ce qui est mesuré ici n'est pas « le sujet est bien cadré » : personne ne
+ * sait encore où il est, la détection n'est pas branchée. C'est la borne qui
+ * empêche une bande vide. Aujourd'hui elle attrape le recouvrement : un
+ * « contain » à sa place laisse 68,4 % du cadre en noir, et c'est ce qui a été
+ * injecté pour voir ce contrôle rouge. Demain elle attrapera le décalage —
+ * l'échelle oubliée, une trajectoire non bornée font sortir la fenêtre de la
+ * source et découvrent le fond sur un côté. Ce second défaut n'est pas encore
+ * atteignable d'ici : rien ne pose `asset.cadrage`, donc le décalage vaut zéro
+ * sur tous les plans. Le contrôle est en place avant la détection, pas après.
+ *
+ * Placé après l'export à dessein : un cinquième plan allonge le montage, que
+ * la relecture du fichier compare à `EXPECTED_DURATION`.
+ */
+{
+  const curseur = page.locator('input[aria-label="Position dans le montage"]');
+  const finAvant = Number(await curseur.getAttribute('max'));
+
+  await allerAEtape(page, profile, 'Importer');
+  /*
+   * Compté **après** être arrivé sur l'étape, et le premier jet ne l'était pas.
+   * L'ordinateur ne monte qu'un panneau à la fois : lu depuis l'export, le
+   * comptage rendait zéro, et le contrôle réclamait un média là où il y en
+   * avait déjà quatre. Le téléphone, qui porte les sept panneaux d'un coup,
+   * n'en montrait rien — un même sélecteur ne mesure pas la même chose sur les
+   * deux coques.
+   */
+  const avant = await page.locator('li img').count();
+  await page.setInputFiles('input[type=file][accept*="video/*"]', join(RUSHES, 'rush-paysage.webm'));
+  let apres = avant;
+  try {
+    await page.waitForFunction((n) => document.querySelectorAll('li img').length === n, avant + 1, {
+      timeout: 90000,
+      polling: 500,
+    });
+    apres = avant + 1;
+  } catch {
+    apres = await page.locator('li img').count();
+  }
+  check('Le rush paysage entre dans la bibliothèque', apres === avant + 1, `${apres} médias pour ${avant + 1}`);
+
+  const ligne = page.locator('li').filter({ hasText: 'rush-paysage' }).first();
+  const meta = ((await ligne.locator('p').last().textContent()) ?? '').replace(/\s+/g, ' ').trim();
+  check(
+    'Il est lu comme un plan horizontal',
+    /1920×1080/.test(meta) && /horizontal/.test(meta),
+    meta,
+  );
+
+  await ligne.locator('button[title="Ajouter à la timeline"]').click();
+  await page.waitForTimeout(1500);
+  await remonterEnTete(page);
+
+  const finApres = Number(await curseur.getAttribute('max'));
+  check('Le plan paysage allonge le montage', finApres > finAvant + 0.5, `${finAvant.toFixed(1)} s → ${finApres.toFixed(1)} s`);
+
+  /*
+   * On vise le **milieu** du nouveau plan, jamais sa fin : un fondu de sortie
+   * ou une transition de raccord y assombrirait l'image, et le contrôle
+   * ci-dessous prendrait ce noir-là pour une bande vide.
+   */
+  await page.evaluate((v) => {
+    const champ = document.querySelector('input[aria-label="Position dans le montage"]');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(champ, String(v));
+    champ.dispatchEvent(new Event('input', { bubbles: true }));
+  }, (finAvant + finApres) / 2);
+  await page.waitForTimeout(1500);
+
+  /*
+   * Repasser en « Naturel » avant de mesurer, et ce n'est pas un détail de
+   * confort : c'est la condition pour que la mesure mesure quelque chose.
+   *
+   * Le parcours laisse l'étalonnage sur « Cinéma », qui pose une teinte
+   * d'ombres sur **tout** le cadre — bandes vides comprises — et remonte les
+   * noirs. Un trou noir y ressort à une vingtaine de niveaux. Le premier jet de
+   * ce contrôle mesurait donc 100 % d'image peinte avec le recouvrement
+   * remplacé par un « contain », c'est-à-dire au vert sur exactement le défaut
+   * qu'il annonce attraper. Vérifié en injectant `Math.min` à la place de
+   * `Math.max` dans `drawCover` : 118/118 au vert.
+   *
+   * Sous « Naturel », rien n'est posé par-dessus : le noir est noir, et la même
+   * injection fait tomber la mesure à 32 % — la part exacte qu'un 16:9 ajusté
+   * occupe dans un cadre 9:16.
+   */
+  await allerAEtape(page, profile, 'Cinéma');
+  await page.click('button:has-text("Naturel")');
+  await page.waitForTimeout(700);
+  await remonterEnTete(page);
+
+  /*
+   * Le seuil est bas — moyenne des trois canaux au-dessus de 8 — parce qu'il
+   * ne mesure pas la beauté de l'image mais l'absence de trou.
+   */
+  const peint = await page.evaluate(() => {
+    const source = document.querySelector('canvas');
+    const sonde = document.createElement('canvas');
+    sonde.width = 54;
+    sonde.height = 96;
+    const ctx = sonde.getContext('2d');
+    ctx.drawImage(source, 0, 0, sonde.width, sonde.height);
+    const { data } = ctx.getImageData(0, 0, sonde.width, sonde.height);
+    let comptes = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if ((data[i] + data[i + 1] + data[i + 2]) / 3 > 8) comptes += 1;
+    }
+    return comptes / (sonde.width * sonde.height);
+  });
+  check(
+    'Un rush 16:9 remplit le cadre vertical, sans bande vide',
+    peint >= 0.98,
+    `${(peint * 100).toFixed(1)} % de l’image peinte`,
+  );
+  await page.screenshot({ path: join(SHOTS, `07-paysage-${profile.id}.png`) });
+}
+
 
 if (consoleErrors.length) {
   console.log('  erreurs console :');
