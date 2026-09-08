@@ -373,6 +373,19 @@ export function captionsFromVoice(
     end: offset + block[block.length - 1].end,
     style,
     y,
+    /*
+     * Les instants par mot partent avec le bloc, au lieu d'être recalculés.
+     *
+     * Ils étaient jetés ici : le sous-titre ne gardait que le début et la fin
+     * de l'ensemble, et le tracé redécoupait en parts égales. Tout le travail
+     * de `alignWords` — les segments de parole, le prorata des syllabes —
+     * s'arrêtait donc à la frontière de ce type, à deux lignes de l'écran.
+     */
+    mots: block.map((word) => ({
+      text: word.text,
+      start: offset + word.start,
+      end: offset + word.end,
+    })),
   }));
 }
 
