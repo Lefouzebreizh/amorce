@@ -152,6 +152,7 @@ async function main() {
   fs.rmSync(dossierSortie, { recursive: true, force: true });
 
   let batis = 0;
+  const construites = [];
   for (const { base } of bases) {
     const { niche, outils } = base;
     if (outils.length === 0) {
@@ -169,7 +170,67 @@ async function main() {
     fs.writeFileSync(path.join(dossier, 'robots.txt'), robots(domaine), 'utf8');
 
     batis += 1;
+    construites.push({ id: niche.id, nom: niche.nom });
     console.log(`  dist/${niche.id.padEnd(14)} ${outils.length} outils — ${domaine}`);
+  }
+
+  /* Une page à la racine du dépôt Pages, et elle n'existait pas.
+     `dist/` ne contient que des dossiers de niche, si bien que
+     `lefouzebreizh.github.io/amorce/` rendait un 404 franc de GitHub —
+     mesuré le 08/09/2026 depuis un vrai navigateur. C'est l'adresse la plus
+     courte, donc celle qu'on tape de mémoire et celle que le journal des
+     déploiements donne comme `environment_url` : elle ne peut pas rester
+     morte.
+
+     Elle redirige plutôt qu'elle ne choisit : la cible est `generaliste`
+     quand elle est construite, sinon la première niche construite. Écrire
+     `generaliste` en dur casserait le jour où cette niche passe en pause,
+     et c'est exactement le genre de panne qu'aucun test ne voit.
+
+     `noindex` n'est pas décoratif : le gabarit d'une niche écrit sa balise
+     canonique depuis son propre domaine, et une page d'accueil indexée
+     concurrencerait la niche vers laquelle elle envoie. Elle sert les
+     humains, pas les moteurs. Et elle porte un vrai lien en plus des deux
+     redirections : sans JavaScript, la balise `refresh` suffit ; sans elle,
+     le lien reste cliquable. */
+  if (construites.length) {
+    const cible = construites.find((n) => n.id === 'generaliste') ?? construites[0];
+    const liens = construites
+      .map((n) => `<li><a href="${n.id}/">${n.nom}</a></li>`)
+      .join('\n      ');
+    fs.writeFileSync(
+      path.join(dossierSortie, 'index.html'),
+      `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, follow">
+<meta http-equiv="refresh" content="0; url=${cible.id}/">
+<title>${cible.nom}</title>
+<style>
+  body { margin: 0; min-height: 100dvh; display: grid; place-items: center;
+         background: #07070f; color: #c9c9e6; font: 18px/1.6 system-ui, sans-serif;
+         padding: 24px; text-align: center; }
+  a { color: #7fd68a; }
+  ul { list-style: none; padding: 0; }
+  li { margin: 12px 0; }
+</style>
+</head>
+<body>
+  <main>
+    <p>Redirection vers <strong>${cible.nom}</strong>…</p>
+    <ul>
+      ${liens}
+    </ul>
+  </main>
+  <script>location.replace('${cible.id}/');</script>
+</body>
+</html>
+`,
+      'utf8',
+    );
+    console.log(`  dist/index.html   redirige vers ${cible.id}/`);
   }
 
   console.log(`\n${batis} site(s) prêts dans dist/.`);
