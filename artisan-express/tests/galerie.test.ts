@@ -105,6 +105,13 @@ test('la galerie reste avant le témoignage', () => {
  * lecteur, « LE GOFF TOITURES » et « Toitures Le Goff » sont la même
  * entreprise ; pour `===`, ce sont deux chaînes différentes. C'est le lecteur
  * qui a raison.
+ *
+ * **La vignette d'`AvantApres` n'invente plus d'entreprise du tout**, et elle
+ * est donc sortie de cette liste : elle charge une page de la galerie au lieu
+ * de dessiner une septième couverture. Le test qui suit celui-ci garde cette
+ * propriété-là — car « il n'y a plus de nom à comparer » est une conclusion
+ * qui doit se vérifier, jamais se supposer. Sans lui, redessiner une vignette
+ * à la main passerait sans un mot.
  */
 const AVANT_APRES = readFileSync(new URL('../src/components/AvantApres.tsx', import.meta.url), 'utf8');
 
@@ -123,12 +130,6 @@ test('aucun modèle ne reprend une entreprise déjà nommée sur la page', () =>
   const demonstration = readFileSync(new URL('../public/exemple.html', import.meta.url), 'utf8');
   const ailleurs: readonly (readonly [string, string | undefined])[] = [
     ['exemple.html', /<title>([^<—]+)/.exec(demonstration)?.[1]?.trim()],
-    /*
-     * La vignette « après » est `aria-hidden` — décorative pour un lecteur
-     * d'écran — mais c'est l'image la plus regardée de la section, et un
-     * visiteur la lit comme le reste.
-     */
-    ['la vignette d’AvantApres', /text-sm font-bold leading-tight">([^<]+)</.exec(AVANT_APRES)?.[1]?.trim()],
   ];
 
   const dansLaGalerie = [...SOURCE.matchAll(/entreprise: '([^']+)'/g)].flatMap((m) =>
@@ -154,4 +155,34 @@ test('les six entreprises de la galerie sont six entreprises distinctes', () => 
     m[1] === undefined ? [] : [motsSignifiants(m[1])],
   );
   assert.equal(new Set(noms).size, 6, 'deux cartes de la galerie portent la même entreprise');
+});
+
+/*
+ * Ce que ce test garde, et pourquoi il vaut mieux qu'une comparaison de noms.
+ *
+ * Le panneau « après » d'`AvantApres` a longtemps dessiné à la main une
+ * miniature de site livré. Un dessin diverge du livrable sans que personne le
+ * voie, et celui-là mettait des carrés gris à la place des photos de chantier
+ * — ce qu'un artisan veut précisément voir avant de payer. Il porte désormais
+ * un `ApercuSite`, donc la page elle-même.
+ *
+ * Le garde ne vérifie pas que le dessin a disparu — un dessin peut revenir
+ * sous n'importe quelle forme et aucun motif ne les attrape tous. Il vérifie
+ * l'affirmation utile : **la page montrée dans ce panneau est l'un des six
+ * modèles de la galerie**, donc une entreprise déjà nommée et déjà gardée par
+ * le test du dessus, jamais une septième inventée en douce.
+ */
+test('le panneau « après » montre un modèle de la galerie, pas une septième entreprise', () => {
+  const montre = [...AVANT_APRES.matchAll(/fichier="(\/modeles\/[^"]+)"/g)].flatMap((m) =>
+    m[1] === undefined ? [] : [m[1]],
+  );
+  assert.equal(montre.length, 1, 'le panneau « après » doit montrer exactement un modèle');
+
+  const fichiersDeLaGalerie = new Set(
+    [...SOURCE.matchAll(/fichier: '([^']+)'/g)].flatMap((m) => (m[1] === undefined ? [] : [m[1]])),
+  );
+  assert.ok(
+    montre[0] !== undefined && fichiersDeLaGalerie.has(montre[0]),
+    `AvantApres montre ${montre[0]}, qui n’est pas l’un des six modèles de la galerie`,
+  );
 });
