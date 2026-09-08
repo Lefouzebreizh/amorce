@@ -230,6 +230,22 @@ create trigger coffre_verifier_quota
   for each row
   execute function public.coffre_verifier_quota();
 
+-- Rollback en une commande, testé le 07/09/2026 sur une branche Supabase
+-- jetable avant tout passage en production (dépôt sous quota accepté, dépôt
+-- au-dessus refusé, rollback qui laisse passer, remise en place qui bloque
+-- de nouveau — les quatre cas rejoués et vérifiés).
+--
+-- **`alter table storage.objects disable trigger …` échoue** : « must be
+-- owner of table objects » — la table appartient à Supabase, pas au rôle
+-- dont dispose une session. Le rollback qui marche avec ce même rôle est de
+-- neutraliser la fonction plutôt que la table, sans toucher au trigger :
+--
+--   create or replace function public.coffre_verifier_quota()
+--   returns trigger language plpgsql as $$ begin return new; end; $$;
+--
+-- Pour remettre le garde-fou en place, réappliquer le corps de la fonction
+-- ci-dessus. Aucune des deux commandes ne touche aux dépôts déjà en base.
+
 -- Le plafond par fichier suit TAILLE_MAX_OCTETS (src/app/coffre/page.tsx) —
 -- 5 Go. **Sans effet tant que le projet reste sur le palier gratuit** :
 -- Supabase y plafonne tout upload à 50 Mo quel que soit ce réglage, tous
