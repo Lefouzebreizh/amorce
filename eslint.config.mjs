@@ -16,6 +16,12 @@ const eslintConfig = defineConfig([
     // (`flutter analyze`) et ses propres règles ; ESLint n'y trouverait que
     // les milliers de fichiers JavaScript générés par le SDK dans
     // `look_and_find/build/`, qu'aucune règle de ce dépôt ne concerne.
+    // Les fichiers de MediaPipe, posés par `npm run mediapipe` dans `public/`.
+    // Ce sont des artefacts vendus — la colle Emscripten du WASM, 300 Ko de
+    // JavaScript engendré — et non du code de ce dépôt : les analyser rend six
+    // erreurs et six cent cinquante avertissements que personne ne corrigera
+    // jamais, puisqu'ils sont réécrits à chaque construction.
+    "public/mediapipe/**",
     "look_and_find/**",
     // Le socle de production livré aux clients. C'est un projet Next.js à part
     // entière, avec son propre `eslint.config.mjs`, son propre `tsconfig.json`
