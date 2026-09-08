@@ -1,0 +1,4 @@
+storePassword=TON_MOT_DE_PASSE_KEYSTORE
+keyPassword=TON_MOT_DE_PASSE_ALIAS
+keyAlias=look-and-find
+storeFile=C:/Users/Erwan/cles-signature-android/look-and-find-release.jks
