@@ -185,6 +185,28 @@ test('le violet reste dans le décor, parce qu’il ne peut rien porter', () => 
   }
 });
 
+test('la barre d’adresse du téléphone porte le fond de la page', () => {
+  /*
+   * `themeColor` colore la barre d'adresse de Chrome Android. Elle était restée
+   * sur l'ancien fond `#16151a` après le changement de palette : un liseré de
+   * l'ancienne couleur au-dessus de la nouvelle, visible seulement sur un vrai
+   * téléphone, et invisible à toute mesure de la page elle-même.
+   *
+   * Trouvé en relisant ce que la production **sert**, pas ce que le source dit
+   * — c'est la même leçon que le cadre vide : une valeur écrite en dur à côté
+   * d'un jeton ne suit pas le jeton.
+   */
+  const ici = jetons();
+  const source = readFileSync(new URL('../src/app/layout.tsx', import.meta.url), 'utf8');
+  const trouve = /themeColor:\s*'(#[0-9a-fA-F]{6})'/.exec(source);
+  assert.ok(trouve, 'themeColor a disparu de layout.tsx');
+  assert.equal(
+    trouve![1]!.toLowerCase(),
+    ici.get('ink'),
+    'la barre d’adresse ne porte plus le fond de page',
+  );
+});
+
 test('aucun orange ne subsiste dans la page de vente', () => {
   /*
    * La règle posée par le propriétaire, et qu'un test tient mieux qu'un
