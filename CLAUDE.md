@@ -2167,10 +2167,40 @@ paragraphes suivants reste juste ; ce sont les noms et le compte qui ont bougé.
 | `artisan-express-demos` | non — dépôt de fichiers | non |
 | `couverture-martin-demo` | non — dépôt de fichiers | non |
 
+**Et le compte est passé en Pro — mesuré le 08/09/2026, et tout le calcul
+ci-dessous en dépend.** Le relevé des projets a été refait à la bonne cadence,
+par la bonne commande, et il regardait la mauvaise colonne : neuf projets, cinq
+liés, rien n'avait bougé. Ce qui avait bougé était dans l'appel d'à côté, celui
+qu'on fait pour obtenir l'identifiant d'équipe et dont on jette la réponse —
+`list_teams` rend `plan: "pro"`.
+
+Le seuil de fusions quotidiennes de tout ce qui suit se déduit d'une phrase
+unique : « le palier **gratuit** plafonne à cent déploiements par jour ». Ce
+cent-là n'est plus celui du compte, et les nombres qui en descendent — une
+vingtaine, une quinzaine, une dizaine — ne se lisent plus comme une limite à
+respecter. Leur **mécanique** reste juste et n'est pas retirée : chaque fusion
+vaut un déploiement par projet lié, plus le commit de fusion.
+
+Trois choses ne sont pas mesurées et ne doivent pas être déduites : le plafond
+réel du plan Pro, jamais sondé ; la date du changement, illisible d'ici — le
+seul repère est l'erreur du 01/09, qui nomme le palier en toutes lettres
+(`api-deployments-free-per-day`), donc le compte était gratuit ce jour-là ; et
+le fait que le sujet soit clos, un plan payant se facturant, ce que le §5
+classe en zone de confirmation. Ce qui disparaît est un blocage technique, pas
+un coût. Détail dans
+`second-brain/lecons/2026-09-08-le-compte-vercel-nest-plus-gratuit-et-le-plafond-de-cent-avec.md`.
+
+**Et un sixième projet lié existe, sur un autre dépôt : `ensemble-mdph`**, créé
+le 07/09/2026 et lié au dépôt du même nom. Aucun commit d'ici ne le déclenche —
+il n'entre donc pas dans le tableau ci-dessus — mais il consomme le **même**
+compteur, qui est celui du compte et jamais celui d'un dépôt. Un décompte tenu
+« par dépôt » sous-estime toujours la consommation réelle, et l'écart grandit à
+chaque projet posé ailleurs.
+
 **Cinq projets branchés depuis le 06/09/2026**, et le seuil de fusions
 descend encore : chaque fusion vaut désormais **cinq** déploiements plus le
 commit de fusion, donc **une dizaine de fusions par jour** avant le palier de
-cent. Les deux derniers venus sont `chat-traducteur`, qui sert l'application du
+cent — chiffre à relire avec le paragraphe ci-dessus, qui en retire la base. Les deux derniers venus sont `chat-traducteur`, qui sert l'application du
 traducteur de miaulements — elle ne pouvait pas partir en dépôt de fichiers, et
 c'est mesuré plus bas — et `artisan-express`, relié à la main par le
 propriétaire le 06/09.
