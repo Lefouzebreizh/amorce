@@ -1,3 +1,4 @@
+import { ApercuSite } from '@/components/ApercuSite';
 import { SECTION, TITRE_SECTION } from '@/components/ui';
 
 /*
@@ -98,31 +99,42 @@ export function AvantApres() {
               Jeudi — ton site à toi
             </p>
 
-            <div className="mt-4 overflow-hidden rounded-lg border border-edge" aria-hidden="true">
-              <div className="bg-accent px-3 py-2 text-accent-encre">
-                <p className="text-[0.6rem] font-bold uppercase tracking-[0.16em] text-accent-encre/70">
-                  Couverture
-                </p>
-                <p className="text-sm font-bold leading-tight">LE GOFF TOITURES</p>
-              </div>
-              <div className="px-3 py-3">
-                <p className="text-[0.7rem] font-bold leading-snug text-encre">
-                  Toiture, zinguerie, fuite urgente — Quimper et alentours.
-                </p>
-                <div className="mt-2 flex gap-1.5">
-                  <span className="rounded bg-accent px-2 py-1 text-[0.55rem] font-bold text-accent-encre">
-                    Appeler
-                  </span>
-                  <span className="rounded bg-[#25D366] px-2 py-1 text-[0.55rem] font-bold text-white">
-                    WhatsApp
-                  </span>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-1">
-                  {['var(--color-panel)', 'var(--color-edge)', 'var(--color-slab)'].map((teinte) => (
-                    <div key={teinte} className="h-8 rounded" style={{ backgroundColor: teinte }} />
-                  ))}
-                </div>
-              </div>
+            {/*
+              * LE CÔTÉ DROIT MONTRE LA VRAIE PAGE, PAS UN DESSIN D'ELLE.
+              *
+              * Il portait une miniature dessinée à la main — un entête d'accent,
+              * deux boutons, trois carrés gris à la place des photos — sous le
+              * nom « LE GOFF TOITURES ». Trois défauts tenaient dans ces vingt
+              * lignes, et le commentaire quinze lignes plus bas les nommait déjà
+              * sans en tirer la conséquence : « la maquette ci-dessus est un
+              * dessin ; celui-ci est le vrai livrable ».
+              *
+              * 1. **Un dessin diverge du livrable** au premier changement de
+              *    charte, et personne ne s'en aperçoit — c'est exactement ce
+              *    qu'on vient de retirer du téléphone du haut de page.
+              * 2. **Les carrés gris étaient le pire endroit où mentir par
+              *    omission** : ils occupaient la place des photos de chantier,
+              *    c'est-à-dire ce qu'un artisan veut voir avant de payer.
+              * 3. **C'était une septième entreprise inventée.** Elle a déjà
+              *    coûté une collision — le modèle couvreur, renommé « Toitures
+              *    Le Goff », est tombé dessus, et `tests/galerie.test.ts` en
+              *    porte le récit.
+              *
+              * La page montrée est celle du couvreur, parce que le panneau parle
+              * de couverture et que le visiteur la retrouve en entier dans la
+              * galerie. Une entreprise inventée de moins sur la page.
+              */}
+            <div className="mt-4">
+              {/*
+                Pas de hauteur imposée : le défaut d'`ApercuSite` est réglé pour
+                laisser le bouton d'appel entier, et c'est lui l'argument de ce
+                panneau — « ton téléphone en gros ». Le premier jet le coupait
+                en deux à 16 rem.
+              */}
+              <ApercuSite
+                fichier="/modeles/couvreur.html"
+                titre="Aperçu du site livré à un couvreur"
+              />
             </div>
 
             <ul className="mt-5 space-y-3 text-base leading-relaxed text-encre">
