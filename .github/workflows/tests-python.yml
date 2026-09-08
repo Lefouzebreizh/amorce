@@ -135,8 +135,26 @@ jobs:
             ls "$tests"/test_*.py >/dev/null 2>&1 || continue
             projet="${tests#./}"; projet="${projet%/tests}"
             trouvees=$((trouvees + 1))
+
+            # Un dossier `tests/` qui porte un `__init__.py` est un **paquet**,
+            # et ses fichiers importent le projet par son nom
+            # (`from moteur_administratif.x import y`). `discover -s` seul pose
+            # alors la racine d'import sur `tests/` lui-même, d'où
+            # « ModuleNotFoundError » sur le projet qu'on teste : mesuré sur
+            # `moteur-administratif`, 90 tests verts devenus 6 erreurs de
+            # collecte, la CI rouge et la suite entière jamais exécutée.
+            #
+            # `-t <projet>` remonte cette racine d'un cran. Il ne se pose pas
+            # partout : `discover` exige alors que le dossier de départ soit
+            # **importable**, et les douze autres suites du dépôt n'ont pas
+            # d'`__init__.py` — leur en poser un les ferait toutes tomber sur
+            # « Start directory is not importable ». Éprouvé dans les deux sens
+            # avant d'écrire cette ligne.
+            racine=()
+            [ -f "$tests/__init__.py" ] && racine=(-t "$projet")
+
             echo "::group::$projet"
-            if python -m unittest discover -s "$tests" --verbose; then
+            if python -m unittest discover -s "$tests" "${racine[@]}" --verbose; then
               echo "::endgroup::"
             else
               echo "::endgroup::"
