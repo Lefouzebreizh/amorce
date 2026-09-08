@@ -632,10 +632,21 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   livre distingue le solde (lu à chaque appel) des mouvements (écrits à
   chaque achat), et `crediter` est **idempotent sur l'id du mouvement** — un
   webhook Stripe rejoué ne crédite qu'une fois.
-  **Le prix des packs de crédits n'est pas décidé** (`PACKS` vaut `{}`) et
-  **le fournisseur de génération vidéo non plus**, volontairement — à trancher
-  en phase 4, le marché bouge vite. Aucune route de dépense encore : elle
-  attend la passerelle de génération, phase 2, qui n'existe pas.
+  **Le prix des packs de crédits n'est toujours pas décidé** (`PACKS` vaut
+  `{}`). **Le fournisseur, lui, l'est depuis le 08/09/2026 : MiniMax, et lui
+  seul**, avec un **plafond de dépense de 20 $ par mois** — tranché par le
+  propriétaire. Un fournisseur unique plutôt que deux : une clé, une
+  intégration, un quota, et un plafond qui se surveille à un seul endroit.
+  Aucune route de dépense encore : elle attend la passerelle de génération,
+  phase 2, qui n'existe pas.
+  **Et MiniMax est injoignable depuis une session distante** — sondé le
+  08/09/2026 : `api.minimax.chat`, `api.minimaxi.chat`, `api.minimax.io`,
+  `platform.minimaxi.com` et `www.minimax.io` rendent tous `000`, le tunnel
+  refusé avant toute requête HTTP. Une clé n'y change rien, c'est le mur du §7.
+  L'intégration s'écrit donc contre l'API réelle et s'éprouve **hors ligne**,
+  comme `eleven_sfx.py` ; ce qui la fera tourner pour de bon est soit la machine
+  du propriétaire, soit **le runner du dépôt**, qui a du vrai réseau — mesuré le
+  04/09 sur le radar de pépites, et non vérifié sur cet hôte-ci.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un

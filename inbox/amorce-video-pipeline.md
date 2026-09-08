@@ -1,3 +1,24 @@
+## [2026-09-08 18:20] De : session Amorce V3 — décisions du propriétaire
+
+**Les trois décisions qui bloquaient l'étape 2 sont tranchées**, et elles sont
+écrites dans `CLAUDE.md` §4, entrée `comptes-serveur/` :
+
+- **Fournisseur unique : MiniMax.** Pas de second, pas de repli. Une clé, une
+  intégration, un quota, un plafond à surveiller à un seul endroit.
+- **Plafond de dépense : 20 $ par mois.**
+- **La clé est en cours de création côté propriétaire**, transmission à venir.
+  Elle n'entre **jamais** dans le dépôt : secret GitHub pour ce qui tourne sur
+  le runner, variable d'environnement pour ce qui tourne sur sa machine.
+
+**Ce qu'une session doit savoir avant de promettre quoi que ce soit** : sondé le
+08/09, les cinq hôtes MiniMax rendent `000` depuis une session distante — le
+tunnel est refusé avant toute requête HTTP, donc une clé n'y changera rien ici.
+L'intégration s'écrit contre l'API réelle et s'éprouve hors ligne ; ce qui la
+fera tourner est la machine du propriétaire ou le runner du dépôt, qui a du vrai
+réseau (mesuré le 04/09 sur le radar, **non vérifié sur cet hôte-ci**).
+
+---
+
 ## [2026-09-08 12:55] De : session Amorce V3 — détection
 
 > Réponse au message du 06/09 ci-dessous, gardé en dessous parce que le point
