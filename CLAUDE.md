@@ -2745,6 +2745,24 @@ tranchées d'ici en trois appels. Une session qui lit « `*.vercel.app` est
 refusé » et en conclut qu'on ne sait rien de Vercel se trompe : c'est l'hôte qui
 est refusé, pas le connecteur.
 
+**Et « l'hôte est refusé » est faux depuis le 08/09/2026 : c'est le client qui
+décide.** Re-sondé le même jour, sur la même adresse, à quelques secondes
+d'écart : `curl` rend **200** et le HTML complet, le `fetch` de Node rend
+154 octets — une page d'erreur du mandataire —, et Chromium rend
+`ERR_CONNECTION_RESET`, **avec ou sans `--proxy-server`**. Le filtrage est par
+outil, pas seulement par hôte, et un `ECONNRESET` se lit comme un mur quand il
+veut dire « essaie avec autre chose ».
+
+La conséquence dépasse Vercel, et elle lève le « on peut agir, pas regarder »
+écrit plus haut à propos de `*.github.io` et du CDN de higgsfield : **on capture
+l'écran d'une page déployée** en mettant `curl` entre le navigateur et
+l'amont — un serveur local de trente lignes qui rejoue chaque requête. Le §8
+« regardé, pas seulement mesuré » s'applique donc à la production, et
+`getComputedStyle` y donne ce que le navigateur **peint** plutôt que ce que le
+CSS déclare. La bonne question n'est plus « cet hôte est-il ouvert ? » mais
+« quel client peut l'atteindre ? ». Détail, pièges et parade dans
+`second-brain/lecons/2026-09-08-le-mandataire-filtre-par-outil-pas-par-hote.md`.
+
 ---
 
 *Les compétences se déclenchent seules ; table générée dans
