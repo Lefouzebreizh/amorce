@@ -38,8 +38,10 @@ const cover = Math.max(OUTPUT_WIDTH / vw, OUTPUT_HEIGHT / vh) * transform.scale;
 const x = (OUTPUT_WIDTH - width) / 2 + transform.dx;
 ```
 
-Sur un rush 1920 × 1080 ramené en 1080 × 1920, le recouvrement jette **65 % de
-la largeur** et garde le milieu. Un sujet dans le tiers gauche sort du cadre, et
+Sur un rush 1920 × 1080 ramené en 1080 × 1920, le facteur de recouvrement vaut
+1,778 : la source est dessinée en 3413 px de large pour une fenêtre de 1080.
+Il ne reste donc que **607,5 px des 1920 d'origine — 31,6 %, et 68,4 % jetés**,
+toujours par le milieu. Un sujet dans le tiers gauche sort du cadre, et
 rien dans le moteur ne peut le savoir : `grep` sur `face`, `visage`,
 `mediapipe`, `detector`, `saillance` rend **zéro** dans tout `src/`.
 
