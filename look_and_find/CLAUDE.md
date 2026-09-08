@@ -31,7 +31,16 @@ flutter run --dart-define=GEMINI_API_KEY=votre_clé
 dart run tool/rejouer.dart reponse.json   # une réponse du modèle, passée par la lecture
 GEMINI_API_KEY=… dart run tool/banc_invite.dart photo.jpg   # l'invite, sur une vraie photo
 GEMINI_API_KEY=… dart run tool/banc_invite.dart --modeles   # ce que Google sert encore
+
+python3 tool/icone.py --apercu   # la planche des tailles réelles, à regarder
+python3 tool/icone.py            # réécrit les 25 fichiers d'icône, Android et iOS
 ```
+
+**Pillow n'est pas dans le conteneur**, contrairement à ce qu'affirme le
+`CLAUDE.md` de la racine — sa mesure du 01/09/2026 portait sur un conteneur qui
+a depuis été repris. `pip install Pillow` le pose en quelques secondes, PyPI
+étant joignable ; c'est le même piège que le SDK Dart deux paragraphes plus
+bas.
 
 Avant de pousser : `flutter analyze && flutter test`. Si le changement touche
 au code annoté `@riverpod`, régénérer **et committer** les `.g.dart` — le
@@ -92,7 +101,7 @@ lib/
     ├── tout_seul/       gestes de l'enfant, reconnaissance locale
     ├── ar_view/         projection 3D et ancrage
     └── favorites/       stockage local, historique, alertes
-tool/                banc d'essai de l'invite et rejeu d'une réponse, hors Flutter
+tool/                banc d'essai de l'invite, rejeu d'une réponse, générateur d'icône
 ```
 
 **`color_reader` est la seconde fonctionnalité qui n'importe personne**, pour la
@@ -291,6 +300,7 @@ méthode testée.
 | `api_key_test.dart` | D'où vient la clé et laquelle gagne. |
 | `demarrage_test.dart` | Le seul test qui monte `app.dart` : câblage du thème, de la locale et des surcharges. |
 | `identite_application_test.dart` | Le nom sous lequel le système présente l'application, lu dans les fichiers de plateforme. Le nom du gabarit Flutter ne se voit ni à l'analyse ni aux tests : il se découvre sur un téléphone, au moment où on cherche l'application et où on ne la trouve pas. |
+| `icone_application_test.dart` | L'icône posée dans le paquet : fond sombre, tracé clair, centre vide, cinq densités, et l'avant-plan adaptatif qui tient dans la zone de 66 dp que le masque du lanceur ne rogne pas. Un débordement ne se voit que sur certains lanceurs — donc jamais chez celui qui a dessiné. |
 | `photo_galerie_test.dart` | Identifier une photo déjà prise, y compris quand la caméra ne s'ouvre pas. |
 | `reponse_brute_test.dart` | L'appel à Gemini de bout en bout, réseau simulé. Le patron du faux `Dio` est là si un autre test en a besoin. |
 | `contrat_invite_lecture_test.dart` | Le pacte entre le schéma de l'invite et la lecture du DTO : un champ ajouté d'un seul côté disparaîtrait en silence. |

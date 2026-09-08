@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AppColors.ink — le même fond que l'application, pour qu'ouvrir l'icône ne
+     change pas de couleur en cours de route. -->
+<resources>
+    <color name="ic_launcher_background">#0B0D10</color>
+</resources>
