@@ -1,5 +1,42 @@
 import type { Metadata, Viewport } from 'next';
+import { Bricolage_Grotesque, Inter } from 'next/font/google';
 import './globals.css';
+
+/*
+ * Deux polices, et aucune ne vient d'un CDN.
+ *
+ * `next/font` télécharge les fichiers **au build** et les sert depuis notre
+ * domaine, avec la balise de préchargement. C'est la leçon d'`annuaire-ia`,
+ * écrite dans sa feuille de style : « un CDN injoignable ne dégradait pas le
+ * site, il le détruisait » — mesuré, sans le script distant, une loupe de six
+ * cents pixels de haut et des boutons de dix-neuf. Sur une page lue au bord
+ * d'un chantier, avec une barre de réseau, la dépendance distante est le
+ * défaut à ne pas introduire.
+ *
+ * **Bricolage Grotesque** pour le titrage. Le nom n'est pas un hasard et le
+ * dessin non plus : une grotesque large, un peu brute, qui a du caractère sans
+ * faire studio de design. Elle parle à qui travaille de ses mains.
+ *
+ * **Inter** pour la lecture, parce que c'est celle du réseau — `annuaire-ia`
+ * la sert déjà. Deux sites du même propriétaire qui se ressemblent, c'est
+ * exactement ce qui est demandé.
+ *
+ * `display: 'swap'` : le texte s'affiche tout de suite dans la police système
+ * et bascule quand la nôtre arrive. L'inverse — attendre la police — laisse un
+ * écran blanc à quelqu'un de pressé.
+ */
+const titrage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['600', '700', '800'],
+  variable: '--font-titrage',
+});
+
+const lecture = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-lecture',
+});
 import { adresseDuSite } from '@/lib/config';
 
 export const metadata: Metadata = {
@@ -45,7 +82,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={`${titrage.variable} ${lecture.variable}`}>
       <body>{children}</body>
     </html>
   );

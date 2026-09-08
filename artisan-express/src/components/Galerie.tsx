@@ -1,4 +1,5 @@
-import { SECTION, TITRE_SECTION } from '@/components/ui';
+import { ApercuSite } from '@/components/ApercuSite';
+import { CARTE, SECTION, TITRE_SECTION } from '@/components/ui';
 
 /*
  * La galerie des six modèles de métier.
@@ -128,19 +129,18 @@ export function Galerie() {
       <ul className="mt-8 grid gap-4 sm:grid-cols-2">
         {MODELES.map((modele) => (
           <li key={modele.fichier}>
-            <a
-              className="flex h-full flex-col rounded-2xl border border-edge bg-slab p-5 transition-colors hover:bg-panel"
-              href={modele.fichier}
-            >
+            <a className={`${CARTE} group flex h-full flex-col p-5`} href={modele.fichier}>
               {/*
-                Le filet porte la teinte du métier. `aria-hidden` parce qu'il ne
-                dit rien qu'un lecteur d'écran ne lise déjà dans le nom du
-                métier, juste en dessous.
+                L'aperçu **est** la page qui s'ouvre en cliquant, pas une image
+                d'elle : le raisonnement complet est en tête d'`ApercuSite`. Le
+                filet de la teinte du métier a migré là-dedans, sur le bord haut
+                du cadre — il disait déjà la couleur de la page, il la dit
+                maintenant **contre** elle, ce qui se lit d'un coup d'œil.
               */}
-              <span
-                aria-hidden
-                className="block h-1.5 w-14 rounded-full"
-                style={{ backgroundColor: modele.teinte }}
+              <ApercuSite
+                fichier={modele.fichier}
+                teinte={modele.teinte}
+                titre={`Aperçu du site modèle pour un ${modele.metier.toLowerCase()}`}
               />
               {/*
                 Tout est à 18 px au moins — `text-lg` — et rien en dessous.
@@ -158,7 +158,22 @@ export function Galerie() {
                 {modele.entreprise} — {modele.ville}
               </span>
               <span className="mt-3 text-lg leading-relaxed text-ardoise">{modele.promesse}</span>
-              <span className="mt-4 text-lg font-semibold text-accent">Ouvrir le site →</span>
+              {/*
+                À la première personne, comme tous les boutons de la page : ce
+                n'est pas un ordre donné au visiteur, c'est ce qu'il se dit
+                avant d'appuyer. La flèche avance au survol — le seul mouvement
+                de la carte avec sa surface, et il est coupé par
+                `prefers-reduced-motion` comme tout le reste.
+              */}
+              <span className="mt-4 flex items-center gap-2 text-lg font-semibold text-accent">
+                Je regarde ce site
+                <span
+                  aria-hidden
+                  className="transition-transform duration-200 motion-safe:group-hover:translate-x-1"
+                >
+                  →
+                </span>
+              </span>
             </a>
           </li>
         ))}

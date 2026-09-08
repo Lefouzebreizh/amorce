@@ -11,7 +11,13 @@ export function Hero() {
             Maçon, couvreur, électricien
           </p>
 
-          <h1 className="mt-3 text-[2rem] font-bold leading-[1.15] tracking-tight text-encre sm:text-5xl">
+          {/*
+            `font-titre` — Bricolage Grotesque — et un cran de graisse au-dessus
+            du reste de la page. C'est le seul endroit où la typographie a le
+            droit de parler avant les mots : un artisan qui ouvre cette page au
+            soleil doit savoir de quoi il s'agit avant d'avoir lu la ligne.
+          */}
+          <h1 className="mt-3 font-titre text-[2.15rem] font-extrabold leading-[1.1] tracking-tight text-encre sm:text-[3.5rem]">
             Ton site qui trouve des chantiers, livré en 48&nbsp;h.
           </h1>
 
@@ -29,11 +35,11 @@ export function Hero() {
             </a>
             {aUnTelephone ? (
               <a className={BOUTON_CONTOUR} href={contact.telephoneLien}>
-                Appeler {contact.telephoneAffiche}
+                J’appelle&nbsp;{contact.telephoneAffiche}
               </a>
             ) : (
               <a className={BOUTON_CONTOUR} href="#formulaire">
-                Poser ma question d’abord
+                Je pose ma question d’abord
               </a>
             )}
           </div>
@@ -49,7 +55,9 @@ export function Hero() {
               ['1', 'modification offerte'],
             ].map(([chiffre, quoi]) => (
               <div key={chiffre}>
-                <dt className="text-2xl font-bold text-accent">{chiffre}</dt>
+                <dt className="font-titre text-3xl font-extrabold tracking-tight text-accent">
+                  {chiffre}
+                </dt>
                 <dd className="mt-1 text-base leading-snug text-ardoise">{quoi}</dd>
               </div>
             ))}

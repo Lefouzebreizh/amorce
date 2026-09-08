@@ -1,4 +1,4 @@
-import { SECTION, TITRE_SECTION } from '@/components/ui';
+import { CARTE, FILET_VIOLET, SECTION, TITRE_SECTION } from '@/components/ui';
 
 /*
  * Les pictogrammes sont dessinés à la main, en SVG, dans ce fichier.
@@ -85,11 +85,14 @@ export function CeQueTuAs() {
 
       <ul className="mt-10 grid gap-5 sm:grid-cols-2">
         {LOTS.map(({ icone: Icone, titre, texte }) => (
-          <li
-            key={titre}
-            className="rounded-2xl border border-edge bg-slab p-6 sm:p-7"
-          >
-            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-accent-encre">
+          /*
+            Le filet violet coiffe la carte d'un dégradé d'un pixel. C'est le
+            relief que réclame une hiérarchie sombre, et la seule chose que le
+            violet a le droit de faire ici : il ne porte ni mot ni action, donc
+            ses 3,42:1 ne s'appliquent pas — il n'y a rien à lire dessus.
+          */
+          <li key={titre} className={`${CARTE} ${FILET_VIOLET} p-6 sm:p-7`}>
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-accent-encre shadow-lg shadow-accent/20">
               <svg
                 width="26"
                 height="26"
