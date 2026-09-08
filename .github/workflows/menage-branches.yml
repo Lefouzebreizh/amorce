@@ -1,0 +1,107 @@
+# Supprimer les branches `claude/` dont la pull request est fusionnée.
+#
+# POURQUOI UN WORKFLOW ET PAS UNE COMMANDE.
+#
+# Une session distante ne peut pas supprimer une branche. Mesuré le 08/09/2026,
+# quatre chemins, quatre refus :
+#
+#   git push origin --delete …          « the remote end hung up unexpectedly »
+#   DELETE /git/refs/heads/…            403, refusé par le mandataire
+#   MCP GitHub                          403, « not accessible by integration »
+#   GraphQL deleteRef                   « only the pinned set of PR-review operations »
+#
+# Le message de GraphQL renvoie vers `gh api`, qui n'est pas installé dans le
+# conteneur. Un runner, lui, a `gh` et un jeton avec `contents: write` : c'est
+# le seul endroit du dépôt où ce geste est possible.
+#
+# CE QUI PROTÈGE DE LA BÊTISE.
+#
+# 1. **Déclenchement manuel seulement.** Aucun `schedule`, aucun `push` : ce
+#    workflow ne part jamais tout seul.
+# 2. **Simulation par défaut.** `pour_de_vrai` vaut `false` : le premier
+#    lancement liste et ne supprime rien. Il faut le mettre à `true` à la main.
+# 3. **Une branche n'est supprimée que si sa pull request est FUSIONNÉE.** Une
+#    PR ouverte, une PR close sans fusion, ou l'absence de PR épargnent la
+#    branche. C'est la seule question posée, et elle l'est à GitHub — pas à
+#    l'ascendance git, qui ne voit pas les fusions écrasées et donnait ici 95
+#    branches là où GitHub en compte 287.
+#
+# Ce qui est supprimé n'est jamais perdu : le contenu est dans `main`, et c'est
+# précisément ce que « fusionnée » veut dire.
+
+name: Ménage des branches fusionnées
+
+on:
+  workflow_dispatch:
+    inputs:
+      pour_de_vrai:
+        description: 'Supprimer réellement (false = simulation)'
+        type: boolean
+        default: false
+      prefixe:
+        description: 'Ne traiter que les branches sous ce préfixe'
+        type: string
+        default: 'claude/'
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  menage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compter, classer, puis supprimer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          POUR_DE_VRAI: ${{ inputs.pour_de_vrai }}
+          PREFIXE: ${{ inputs.prefixe }}
+        run: |
+          set -euo pipefail
+
+          git fetch --prune --quiet origin
+          git ls-remote --heads origin "refs/heads/${PREFIXE}*" \
+            | sed 's|.*refs/heads/||' | sort > /tmp/distantes.txt
+          AVANT=$(wc -l < /tmp/distantes.txt)
+          echo "AVANT : $AVANT branches sous « ${PREFIXE} »"
+
+          # L'état de chaque PR, demandé à GitHub : lui seul sait ce qu'une
+          # fusion écrasée a fait de la branche.
+          gh pr list --state merged --limit 1000 --json headRefName \
+            --jq '.[].headRefName' | sort -u > /tmp/fusionnees.txt
+          gh pr list --state open --limit 200 --json headRefName \
+            --jq '.[].headRefName' | sort -u > /tmp/ouvertes.txt
+
+          comm -12 /tmp/distantes.txt /tmp/fusionnees.txt > /tmp/candidates.txt
+          comm -23 /tmp/candidates.txt /tmp/ouvertes.txt > /tmp/a-supprimer.txt
+
+          A_SUPPRIMER=$(wc -l < /tmp/a-supprimer.txt)
+          echo "à supprimer (PR fusionnée) : $A_SUPPRIMER"
+          echo "épargnées                  : $((AVANT - A_SUPPRIMER))"
+          echo "--- liste ---"
+          cat /tmp/a-supprimer.txt
+
+          if [ "$POUR_DE_VRAI" != "true" ]; then
+            echo "SIMULATION — rien n'a été supprimé. Relancer avec pour_de_vrai = true."
+            exit 0
+          fi
+
+          ECHECS=0
+          while IFS= read -r branche; do
+            [ -z "$branche" ] && continue
+            if git push origin --delete "$branche" >/dev/null 2>&1; then
+              echo "supprimée : $branche"
+            else
+              echo "ÉCHEC : $branche"
+              ECHECS=$((ECHECS + 1))
+            fi
+          done < /tmp/a-supprimer.txt
+
+          git fetch --prune --quiet origin
+          APRES=$(git ls-remote --heads origin "refs/heads/${PREFIXE}*" | wc -l)
+          echo "=========================================="
+          echo "AVANT : $AVANT"
+          echo "APRÈS : $APRES"
+          echo "supprimées : $((AVANT - APRES))   échecs : $ECHECS"
