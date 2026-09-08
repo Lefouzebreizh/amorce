@@ -14,6 +14,10 @@ requests       # répondeur Facebook
 numpy          # chaîne pré-presse : mesure des planches
 Pillow         # chaîne pré-presse : ouverture des images
 pymupdf        # assistant administratif : lecture des PDF
+pypdf          # moteur administratif : le texte natif d'un PDF numérique se lit avec lui seul.
+               # `capacites()` le déclare absent et rend `possible=False` ; le test qui garde cette
+               # promesse échouait donc sur le runner, et le défaut est resté invisible tant que la
+               # suite entière tombait avant d'être exécutée (racine d'import, corrigée dans ce lot)
 pydantic       # assistant administratif : forme de ce que rend le modèle de vision
 PyYAML         # radar crypto, NexusCrypto et Conseiller Patrimoine : seuils et allocation en YAML
 opencv-python-headless<5  # chaîne KDP : piqué des planches, gradient de Sobel.
