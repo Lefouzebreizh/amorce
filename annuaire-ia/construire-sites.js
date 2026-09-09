@@ -71,13 +71,23 @@ function remplir(gabarit, { niche, domaine }) {
     sortie = sortie.replace(/<link rel="icon" href="[^"]*">/, `<link rel="icon" href="${favicon}">`);
   }
 
-  /* Les couleurs posées avant le premier rendu : sans cela le visiteur voit
-     un dixième de seconde de violet par défaut avant la charte de la niche. */
-  sortie = sortie.replace(
-    '<link rel="stylesheet" href="styles.css">',
-    '<link rel="stylesheet" href="styles.css">\n' +
-    `<style>:root{--teinte-1:${niche.theme.primaire};--teinte-2:${niche.theme.secondaire}}</style>`
-  );
+  /* Aucune couleur n'est plus injectée ici, et c'est le geste qui rend
+     l'identité de studio effective.
+
+     Ce bloc posait `theme.primaire` et `theme.secondaire` de la niche dans un
+     `<style>` inline placé **après** le lien vers la feuille — donc plus fort
+     qu'elle. Il servait à éviter un dixième de seconde de violet par défaut
+     avant que le JavaScript n'applique la charte de la niche.
+
+     Depuis le 09/09/2026 les teintes sont celles du studio et vivent dans
+     `styles.src.css` : il n'y a plus rien à pré-peindre, donc plus d'éclair à
+     éviter — et l'injection ne faisait plus qu'écraser la charte qu'elle était
+     censée devancer. Trouvé en regardant la page construite, pas en la
+     validant : les badges rendaient l'ancien violet pendant que tous les
+     contrôles étaient verts.
+
+     `niche.theme` reste dans les bases et dans `valider.js` ; il n'est
+     simplement plus lu pour peindre. */
 
   return sortie;
 }
