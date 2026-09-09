@@ -92,7 +92,15 @@
    * partout est #C8ABF7 (7,13:1) — même teinte, deux points de clarté de plus.
    */
   --teinte-1: #40E0D0;
-  --teinte-2: #C2A2F6;
+  /* Deux violets et non un, et c'est le studio qui l'impose — relevé sur
+     lefouzebreizh.github.io le 09/09/2026 : `--violet: #7c3aed` n'y sert
+     jamais de couleur de texte. Il porte la queue du dégradé de titre et les
+     traits à 50 % ; tout petit texte violet y est en #D4C6FB.
+     Mesuré sur la carte composite #1b1e28, sous voile 12 % : le profond rend
+     2,92:1, le clair 7,98:1. Un seul jeton pour les deux rôles obligerait à
+     choisir entre un violet délavé et un texte illisible. */
+  --teinte-2: #7C3AED;
+  --teinte-2-texte: #D4C6FB;
 }
 
 /* Le style vient d'un CDN : sur un réseau filtré ou lent, il peut arriver en
@@ -120,7 +128,7 @@ body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
  * Vertical, chaque ligne reçoit sa part quelle que soit sa largeur.
  */
 .degrade-texte {
-  background-image: linear-gradient(165deg, var(--teinte-1), var(--teinte-2));
+  background-image: linear-gradient(100deg, var(--teinte-1) 0%, var(--teinte-1) 35%, var(--teinte-2) 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 /*
@@ -188,9 +196,9 @@ body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
   box-shadow: inset 0 0 0 2px var(--color-sourdine);
 }
 .badge-1.choisi { box-shadow: inset 0 0 0 2px var(--teinte-1); }
-.badge-2.choisi { box-shadow: inset 0 0 0 2px var(--teinte-2); }
+.badge-2.choisi { box-shadow: inset 0 0 0 2px var(--teinte-2-texte); }
 .pastille-accent { background: var(--teinte-1); }
-.texte-accent { color: var(--teinte-2); }
+.texte-accent { color: var(--teinte-2-texte); }
 .bandeau-accent { background-image: linear-gradient(90deg, color-mix(in srgb, var(--teinte-1) 20%, transparent), color-mix(in srgb, var(--teinte-2) 8%, transparent)); }
 /*
  * Survol d'une carte : elle monte d'un cran et s'entoure d'un halo turquoise.
@@ -245,9 +253,9 @@ body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-1) 32%, transparent);
 }
 .badge-2 {
-  color: var(--teinte-2);
-  background: color-mix(in srgb, var(--teinte-2) 12%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-2) 32%, transparent);
+  color: var(--teinte-2-texte);
+  background: color-mix(in srgb, var(--teinte-2) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-2) 50%, transparent);
 }
 
 /*
@@ -271,7 +279,7 @@ body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
 .entree { animation: monter .45s ease both; }
 .champ:focus { border-color: var(--teinte-1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teinte-1) 35%, transparent); }
 .puce::before { background: var(--teinte-1); }
-.neuf { background: color-mix(in srgb, var(--teinte-1) 18%, transparent); color: var(--teinte-2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-1) 40%, transparent); }
+.neuf { background: color-mix(in srgb, var(--teinte-1) 18%, transparent); color: var(--teinte-2-texte); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-1) 40%, transparent); }
 
 html { scroll-behavior: smooth; }
 body.fige { overflow: hidden; }
