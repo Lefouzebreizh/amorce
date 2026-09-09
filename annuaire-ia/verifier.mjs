@@ -251,9 +251,28 @@ for (const { niche, outils } of aParcourir) {
       && (await page.getAttribute('#modale-lien', 'rel')).includes('sponsored')
       && (await page.getAttribute('#modale-lien', 'href')) === premier.lien_affiliation
     );
+  } else if (typeof premier.site_officiel === 'string' && premier.site_officiel.trim() !== '') {
+    /* Repli sur le site officiel. Ce contrôle a remplacé « adresse pas encore
+       posée → aucun bouton à cliquer », qui était juste tant qu'aucun repli
+       n'existait : sans lien affilié, le pied devait disparaître plutôt que de
+       mener au vide. Depuis le 09/09/2026 il mène quelque part, et la règle
+       n'est plus « masqué » mais « neutre et honnête ».
+
+       Les trois assertions tiennent ensemble et aucune ne suffit seule :
+       `sponsored` sur un lien qui ne rapporte rien est une déclaration fausse
+       aux moteurs ; l'accent sauge sur ce même lien lui ferait emprunter la
+       couleur réservée à ce qui rapporte (§2 bis, invariant 3) ; et les deux
+       se règlent au même endroit, donc se déréglent ensemble. */
+    verifier(
+      'pas de programme → lien direct, neutre et non sponsorisé',
+      piedVisible
+      && (await page.getAttribute('#modale-lien', 'href')) === premier.site_officiel.trim()
+      && !(await page.getAttribute('#modale-lien', 'rel')).includes('sponsored')
+      && !(await page.getAttribute('#modale-lien', 'class')).includes('bouton-accent')
+    );
   } else {
     verifier(
-      'adresse pas encore posée → aucun bouton à cliquer',
+      'ni programme ni site officiel → aucun bouton à cliquer',
       !piedVisible,
       piedVisible ? 'le pied de fenêtre reste affiché' : ''
     );

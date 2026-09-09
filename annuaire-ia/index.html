@@ -115,7 +115,8 @@
       <footer class="border-t border-bord/70 bg-relief/40 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <a id="modale-lien" href="#" target="_blank" rel="sponsored noopener"
           class="bouton-accent flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 font-semibold">
-          Voir l'outil <span class="text-xs font-normal opacity-80">(lien affilié)</span>
+          <span id="modale-lien-texte">Voir l'outil</span>
+          <span id="modale-lien-mention" class="text-xs font-normal opacity-80">(lien affilié)</span>
         </a>
       </footer>
     </article>
@@ -155,6 +156,23 @@
   const lienUtilisable = (outil) => {
     const adresse = typeof outil?.lien_affiliation === 'string' ? outil.lien_affiliation.trim() : '';
     return adresse !== '' && !LIEN_DEMO.test(adresse) ? adresse : null;
+  };
+
+  /* Le repli quand aucun lien affilié n'existe, et il en existe deux raisons
+     très différentes : un programme pas encore ouvert, ou pas de programme du
+     tout — OpenAI, Anthropic et Google ne rémunèrent pas l'apport
+     d'inscription, Canva et Notion ont fermé le leur. Dans les deux cas le
+     visiteur lisait une fiche sans aucune sortie vers l'outil : un
+     comparateur d'où l'on ne peut pas partir comparer.
+
+     Ce lien-ci n'est PAS l'accent du produit. La sauge désigne ce qui
+     rapporte, et elle seule — §2 bis, invariant 3. Un lien direct prend donc
+     l'habillage neutre, porte `noopener` et non `sponsored`, et dit en toutes
+     lettres qu'il ne rapporte rien : c'est ce qui rend l'autre mention
+     crédible. */
+  const lienDirect = (outil) => {
+    const adresse = typeof outil?.site_officiel === 'string' ? outil.site_officiel.trim() : '';
+    return /^https:\/\//.test(adresse) ? adresse : null;
   };
 
   const NICHE_DEFAUT = 'immobilier';
@@ -320,6 +338,20 @@
       mention.className = 'ml-1.5 text-[11px] font-normal opacity-80';
       mention.textContent = '(lien affilié)';
       lien.append(mention);
+    } else {
+      const direct = lienDirect(outil);
+      if (direct !== null) {
+        lien = document.createElement('a');
+        lien.href = direct;
+        lien.target = '_blank';
+        lien.rel = 'noopener';
+        lien.className = 'min-h-11 w-full rounded-xl border border-bord bg-relief/60 px-4 text-sm font-semibold text-brume transition hover:text-white flex items-center justify-center';
+        lien.textContent = 'Aller sur le site';
+        const mention = document.createElement('span');
+        mention.className = 'ml-1.5 text-[11px] font-normal text-sourdine';
+        mention.textContent = '(lien direct)';
+        lien.append(mention);
+      }
     }
 
     const savoir = document.createElement('button');
@@ -465,10 +497,26 @@
        Et c'est le pied de fenêtre entier qui se masque, pas seulement le lien :
        masquer le seul `<a>` laissait une bande de 33 px avec sa bordure et son
        fond — mesuré — qui se lit comme un défaut d'affichage. */
-    const adresseModale = lienUtilisable(outil);
+    const affilie = lienUtilisable(outil);
+    const adresseModale = affilie ?? lienDirect(outil);
     const boutonModale = $('#modale-lien');
     boutonModale.closest('footer').hidden = adresseModale === null;
-    if (adresseModale !== null) boutonModale.href = adresseModale;
+    if (adresseModale !== null) {
+      boutonModale.href = adresseModale;
+      /* Le pied de fenêtre change d'habillage ET de `rel` selon la nature du
+         lien. Laisser `sponsored` sur un lien qui ne rapporte rien serait une
+         déclaration fausse aux moteurs ; garder la sauge lui ferait emprunter
+         l'accent réservé à ce qui rapporte. Les deux se règlent ici, jamais
+         séparément — c'est ainsi qu'on se retrouve avec un bouton sauge qui
+         dit « lien direct ». */
+      const estAffilie = affilie !== null;
+      boutonModale.rel = estAffilie ? 'sponsored noopener' : 'noopener';
+      boutonModale.className = estAffilie
+        ? 'bouton-accent flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 font-semibold'
+        : 'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-bord bg-relief/60 px-5 font-semibold text-brume transition hover:text-white';
+      $('#modale-lien-texte').textContent = estAffilie ? 'Voir l’outil' : 'Aller sur le site';
+      $('#modale-lien-mention').textContent = estAffilie ? '(lien affilié)' : '(lien direct)';
+    }
 
     modale.classList.remove('hidden');
     document.body.classList.add('fige');
