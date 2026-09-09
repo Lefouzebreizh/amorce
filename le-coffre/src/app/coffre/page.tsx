@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase';
 import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
-  enregistrerIdentite, composerLettreResiliation, modifierObjet, ecarterEcheance, statutEcheance,
+  enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
   interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
 } from '@/lib/coffre';
@@ -26,6 +26,10 @@ const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et intern
 // catégorie (proposition de classement non lisible, jamais corrigée) doit
 // quand même atterrir quelque part plutôt que de disparaître de la vue.
 const DOSSIER_SANS_CATEGORIE = 'À trier';
+// Plafond d'un lot de tri automatique — voir `trierAutomatiquement` pour la
+// raison. Repris ici pour que le bouton annonce le bon compte avant de
+// démarrer.
+const LOT_MAX_TRI_AUTO = 24;
 // Le vrai garde-fou est un trigger Postgres sur storage.objects (voir
 // supabase/schema.sql §6) — storage.buckets.file_size_limit seul ne protège
 // qu'un fichier à la fois, jamais l'espace total d'un compte. Le contrôle
@@ -354,6 +358,8 @@ export default function PageCoffre() {
   const [correction, setCorrection] = useState<Correction | null>(null);
   const [triAutoEnCours, setTriAutoEnCours] = useState(false);
   const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
+  const [triAutoBilan, setTriAutoBilan] = useState<{ nonDocuments: string[]; erreursTechniques: string[] } | null>(null);
+  const [triAutoDetailOuvert, setTriAutoDetailOuvert] = useState(false);
   const entreeFichier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -567,59 +573,111 @@ export default function PageCoffre() {
     setEnCours(false);
   }
 
-  // Bouton « Trier automatiquement » : reclasse d'un coup tous les papiers
-  // sans catégorie (bouton « À trier » depuis l'accueil), en repassant chacun
-  // par classer-document — la même analyse que celle qui propose déjà une
-  // catégorie au dépôt. Séquentiel comme confirmerTout et pour la même
-  // raison : deux appels à modifierObjet lancés en parallèle partiraient
-  // tous deux du même index de départ, et le second écraserait le premier.
+  // Bouton « Trier automatiquement » : reclasse les papiers sans catégorie
+  // (bouton « À trier » depuis l'accueil), en repassant chacun par
+  // classer-document — la même analyse que celle qui propose déjà une
+  // catégorie au dépôt.
+  //
+  // Plafonné à LOT_MAX_TRI_AUTO par clic : sur un très gros lot (128 papiers
+  // vus en usage réel), traiter tout d'un coup prenait plusieurs minutes et
+  // multipliait les appels à un service externe sans retenue. Le bouton
+  // réaffiche le compte restant après chaque lot — on le reclique pour
+  // continuer, jamais tout en une fois.
+  //
+  // Le classement (lecture du fichier + appel à classer-document) est mené
+  // en parallèle, borné par CONCURRENCE_TRI_AUTO : c'est l'appel réseau qui
+  // domine le temps, et rien n'empêche de le mener sur plusieurs fichiers à
+  // la fois. Seule l'ÉCRITURE de l'index doit rester unique à un instant
+  // donné (verrouillée par `flush` ci-dessous) : `sauvegarderIndex`
+  // rechiffre et renvoie l'index ENTIER à chaque appel, et le faire une fois
+  // par document (128 fois sur un gros lot) dominait largement le temps
+  // passé — plus que le classement lui-même. `modifierPlusieursObjets`
+  // regroupe plusieurs classements en une seule sauvegarde ; `CHECKPOINT_TRI_AUTO`
+  // en déclenche une toutes les huit réussites plutôt qu'une seule à la fin,
+  // pour ne pas tout reperdre si la page se ferme en cours de lot.
   async function trierAutomatiquement() {
     if (!utilisateur || !cle) return;
-    const aTrier = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
-    if (aTrier.length === 0) return;
+    const CONCURRENCE_TRI_AUTO = 3;
+    const CHECKPOINT_TRI_AUTO = 8;
+
+    const tout = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
+    if (tout.length === 0) return;
+    const aTrier = tout.slice(0, LOT_MAX_TRI_AUTO);
+
     setTriAutoEnCours(true);
     setTriAutoProgres({ fait: 0, total: aTrier.length });
-    setErreur('');
+    setTriAutoBilan(null);
+    setTriAutoDetailOuvert(false);
+
+    const indexDepart = index;
     let indexCourant = index;
-    const echecs: string[] = [];
-    for (const nom of aTrier) {
-      const info = indexCourant.objets[nom];
-      if (!info) continue;
+    let enAttente: Record<string, { categorie: string; montant?: string }> = {};
+    let flushEnVol: Promise<void> | null = null;
+    const nonDocuments: string[] = [];
+    const erreursTechniques: string[] = [];
+
+    // Verrouillé : si un flush est déjà en vol, celui-ci se contente
+    // d'attendre — les entrées accumulées depuis seront prises par le flush
+    // suivant (le déclencheur du checkpoint, ou le flush final après la
+    // boucle), jamais perdues, jamais écrites deux fois sur un index périmé.
+    async function flush() {
+      if (flushEnVol) {
+        await flushEnVol;
+        return;
+      }
+      const nomsEnAttente = Object.keys(enAttente);
+      if (nomsEnAttente.length === 0) return;
+      const aEcrire = enAttente;
+      enAttente = {};
+      flushEnVol = (async () => {
+        indexCourant = await modifierPlusieursObjets(utilisateur!.id, cle!, aEcrire, indexCourant);
+        setIndex(indexCourant);
+      })();
       try {
-        const blob = await recupererFichier(utilisateur.id, cle, nom, info);
-        // `File` est déjà importé plus haut comme icône lucide-react, qui
-        // masque le constructeur DOM — d'où `globalThis.File` ici.
-        const fichier = new globalThis.File([blob], info.nom, { type: info.type });
-        const proposition = await proposerClassement(fichier);
-        if (proposition.lisible) {
-          indexCourant = await modifierObjet(utilisateur.id, cle, nom, {
-            categorie: proposition.categorie,
-            montant: proposition.montant || undefined,
-          }, indexCourant);
-          setIndex(indexCourant);
-        } else {
-          echecs.push(info.nom);
+        await flushEnVol;
+      } finally {
+        flushEnVol = null;
+      }
+    }
+
+    let curseur = 0;
+    async function suivant(): Promise<void> {
+      const i = curseur++;
+      if (i >= aTrier.length) return;
+      const nom = aTrier[i];
+      if (!nom) return suivant();
+      const info = indexDepart.objets[nom];
+      if (info) {
+        try {
+          const blob = await recupererFichier(utilisateur!.id, cle!, nom, info);
+          // `File` est déjà importé plus haut comme icône lucide-react, qui
+          // masque le constructeur DOM — d'où `globalThis.File` ici.
+          const fichier = new globalThis.File([blob], info.nom, { type: info.type });
+          const proposition = await proposerClassement(fichier);
+          if (proposition.lisible) {
+            enAttente[nom] = { categorie: proposition.categorie, montant: proposition.montant || undefined };
+            if (Object.keys(enAttente).length >= CHECKPOINT_TRI_AUTO) await flush();
+          } else if (proposition.erreurTechnique) {
+            // L'appel a échoué (réseau, quota, service surchargé) — le
+            // document reste sans catégorie et sera repris tel quel au
+            // prochain tri, à la différence d'un vrai non-document.
+            erreursTechniques.push(info.nom);
+          } else {
+            nonDocuments.push(info.nom);
+          }
+        } catch (err) {
+          erreursTechniques.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
         }
-      } catch (err) {
-        echecs.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
       }
       setTriAutoProgres((p) => (p ? { ...p, fait: p.fait + 1 } : null));
+      return suivant();
     }
-    if (echecs.length > 0) {
-      // `echecs` peut monter à plusieurs dizaines de noms quand un dossier
-      // entier de photos ou de vidéos sans rapport (souvenirs, rushes d'un
-      // autre projet) est glissé dans « à trier » : classer-document les
-      // rejette à raison — ce n'est ni une image de document ni un PDF —
-      // mais les lister tous rend la bannière illisible. On en montre
-      // quelques-uns et on compte le reste, avec la raison en clair.
-      const APERCU_ECHECS = 5;
-      const noms = echecs.length > APERCU_ECHECS
-        ? `${echecs.slice(0, APERCU_ECHECS).join(', ')} et ${echecs.length - APERCU_ECHECS} autre${echecs.length - APERCU_ECHECS > 1 ? 's' : ''}`
-        : echecs.join(', ');
-      setErreur(
-        `${echecs.length} fichier${echecs.length > 1 ? 's' : ''} non reconnu${echecs.length > 1 ? 's' : ''} comme document administratif ` +
-        `(photo, vidéo ou image sans texte lisible) : ${noms}.`
-      );
+
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCE_TRI_AUTO, aTrier.length) }, suivant));
+    await flush();
+
+    if (nonDocuments.length > 0 || erreursTechniques.length > 0) {
+      setTriAutoBilan({ nonDocuments, erreursTechniques });
     }
     setTriAutoEnCours(false);
     setTriAutoProgres(null);
@@ -1033,14 +1091,16 @@ export default function PageCoffre() {
           </nav>
         )}
 
-        {/* Bouton « À trier » : reclasse d'un coup tous les papiers déposés
-            sans catégorie, plutôt que de les corriger un par un — visible
-            seulement s'il y a quelque chose à trier. */}
+        {/* Bouton « À trier » : reclasse les papiers déposés sans catégorie,
+            plutôt que de les corriger un par un — visible seulement s'il y a
+            quelque chose à trier, et par lots de LOT_MAX_TRI_AUTO (voir
+            `trierAutomatiquement`) plutôt que tout d'un coup. */}
         {nomsATrier.length > 0 && (
           <div className="flex flex-col gap-2 rounded-2xl border border-line bg-paper-raised p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-ink-soft">
                 {nomsATrier.length} papier{nomsATrier.length > 1 ? 's' : ''} {DOSSIER_SANS_CATEGORIE.toLowerCase()}
+                {nomsATrier.length > LOT_MAX_TRI_AUTO && ` — traités par lots de ${LOT_MAX_TRI_AUTO}`}
               </p>
               <button
                 type="button"
@@ -1050,7 +1110,7 @@ export default function PageCoffre() {
               >
                 {triAutoEnCours
                   ? `Tri en cours… (${triAutoProgres?.fait ?? 0}/${triAutoProgres?.total ?? nomsATrier.length})`
-                  : `Trier automatiquement (${nomsATrier.length})`}
+                  : `Trier automatiquement (${Math.min(nomsATrier.length, LOT_MAX_TRI_AUTO)})`}
               </button>
             </div>
             {triAutoProgres && (
@@ -1067,6 +1127,50 @@ export default function PageCoffre() {
                   className="absolute inset-y-0 right-0 rounded-r-full bg-line transition-all"
                   style={{ width: `${100 - (triAutoProgres.fait / triAutoProgres.total) * 100}%` }}
                 />
+              </div>
+            )}
+            {/* Bilan du dernier lot : un compteur par nature d'échec, jamais
+                un mur de noms — le détail complet reste disponible mais
+                replié, dans une zone bornée en hauteur. */}
+            {triAutoBilan && (triAutoBilan.nonDocuments.length > 0 || triAutoBilan.erreursTechniques.length > 0) && (
+              <div className="flex flex-col gap-2 rounded-lg border border-line bg-paper px-4 py-3 text-sm">
+                {triAutoBilan.nonDocuments.length > 0 && (
+                  <p className="text-ink-soft">
+                    {triAutoBilan.nonDocuments.length} fichier{triAutoBilan.nonDocuments.length > 1 ? 's' : ''} non reconnu
+                    {triAutoBilan.nonDocuments.length > 1 ? 's' : ''} comme document administratif (photo, vidéo ou image
+                    sans texte lisible).
+                  </p>
+                )}
+                {triAutoBilan.erreursTechniques.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-wine">
+                      {triAutoBilan.erreursTechniques.length} fichier{triAutoBilan.erreursTechniques.length > 1 ? 's' : ''} non
+                      analysé{triAutoBilan.erreursTechniques.length > 1 ? 's' : ''} (problème réseau ou service surchargé).
+                    </p>
+                    <button
+                      type="button"
+                      onClick={trierAutomatiquement}
+                      disabled={triAutoEnCours}
+                      className="shrink-0 font-semibold text-wine underline decoration-dotted hover:text-ink disabled:opacity-60"
+                    >
+                      Réessayer
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setTriAutoDetailOuvert((v) => !v)}
+                  className="self-start text-ink-soft underline decoration-dotted hover:text-ink"
+                >
+                  {triAutoDetailOuvert ? 'Masquer le détail' : 'Voir le détail'}
+                </button>
+                {triAutoDetailOuvert && (
+                  <div className="max-h-40 overflow-y-auto rounded-lg bg-paper-raised p-3 text-xs text-ink-soft">
+                    {[...triAutoBilan.nonDocuments, ...triAutoBilan.erreursTechniques].map((nom, i) => (
+                      <p key={`${nom}-${i}`} className="truncate">{nom}</p>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

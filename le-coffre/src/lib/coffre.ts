@@ -96,6 +96,11 @@ export type PropositionClassement = {
   montant: string | null;
   texteExtrait: string | null;
   echeance: Echeance;
+  // Vrai seulement quand l'appel lui-même a échoué (réseau, quota, panne du
+  // service) — jamais quand Claude a répondu et jugé le document illisible.
+  // Sert au tri automatique en lot : un fichier qui a échoué techniquement
+  // mérite un nouvel essai, un vrai non-document non.
+  erreurTechnique?: boolean;
 };
 
 // Sans accents et en minuscules, pour qu'« energie » retrouve « Énergie » —
@@ -271,10 +276,10 @@ export async function proposerClassement(fichier: File): Promise<PropositionClas
     const { data, error } = await supabase.functions.invoke('classer-document', {
       body: { donnees: b64FromFichier(buf), type: fichier.type || 'application/octet-stream' },
     });
-    if (error || !data || 'erreur' in data) return vide;
+    if (error || !data || 'erreur' in data) return { ...vide, erreurTechnique: true };
     return data as PropositionClassement;
   } catch {
-    return vide;
+    return { ...vide, erreurTechnique: true };
   }
 }
 
@@ -509,6 +514,28 @@ export async function modifierObjet(
     ...index,
     objets: { ...index.objets, [nom]: { ...existant, ...champs } },
   };
+  await sauvegarderIndex(userId, cle, nouvel_index);
+  return nouvel_index;
+}
+
+// Même correction que `modifierObjet`, mais sur plusieurs documents à la
+// fois, avec une seule sauvegarde de l'index — utilisé par le tri
+// automatique en lot. `sauvegarderIndex` rechiffre et renvoie l'index
+// ENTIER à chaque appel : le faire une fois par document classé (128 fois
+// sur un gros lot) domine largement le temps passé, bien plus que l'appel
+// de classement lui-même.
+export async function modifierPlusieursObjets(
+  userId: string, cle: CryptoKey,
+  champsParNom: Record<string, Partial<Pick<ObjetIndex, 'nom' | 'categorie' | 'montant'>>>,
+  index: IndexCoffre,
+): Promise<IndexCoffre> {
+  const objets = { ...index.objets };
+  for (const [nom, champs] of Object.entries(champsParNom)) {
+    const existant = objets[nom];
+    if (!existant) continue;
+    objets[nom] = { ...existant, ...champs };
+  }
+  const nouvel_index: IndexCoffre = { ...index, objets };
   await sauvegarderIndex(userId, cle, nouvel_index);
   return nouvel_index;
 }
