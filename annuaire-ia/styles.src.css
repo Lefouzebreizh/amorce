@@ -119,16 +119,26 @@ body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
 .halo-3 { bottom: 0; left: 33%; height: 28rem; width: 28rem; background: color-mix(in srgb, var(--teinte-1) 14%, transparent); }
 
 /*
- * Le dégradé descend (165°) au lieu de traverser (90°), et ce n'est pas une
- * préférence : `background-clip: text` étale la course sur la **boîte** du
- * titre, pas sur chaque ligne. En 90°, un titre centré qui passe à la ligne
- * voit ses lignes courtes tomber toutes dans la même tranche — mesuré sur le
- * terrain de référence à 393 px, où « La Boîte à Outils IA des pros pressés »
- * tient sur trois lignes et n'affichait plus de turquoise après le premier mot.
- * Vertical, chaque ligne reçoit sa part quelle que soit sa largeur.
+ * Deux bornes franches, du turquoise au violet plein, décidé par le
+ * propriétaire le 09/09/2026 : le violet doit se voir. La version d'avant
+ * tenait le turquoise jusqu'à 35 % avant d'attaquer la course — recopiée du
+ * studio — et le violet n'arrivait qu'en toute fin de ligne. Sans palier, il
+ * occupe la moitié droite de chaque ligne.
+ *
+ * L'angle, lui, se garde et n'est pas une préférence : `background-clip: text`
+ * étale la course sur la **boîte** du titre, jamais sur chaque ligne. Un titre
+ * centré qui passe à la ligne voit donc ses lignes courtes tomber au milieu de
+ * la course — mesuré à 393 px, où « La Boîte à Outils IA des pros pressés »
+ * tient sur trois lignes. À 100°, elles reçoivent du violet ; à 90° pur, la
+ * répartition dépendrait de la seule largeur de chaque ligne.
+ *
+ * Le violet plein rend 2,92:1 sur le fond de page. C'est du gros texte gras
+ * (36 px et plus), dont le plancher est 3:1 — on est à trois centièmes en
+ * dessous, et c'est la valeur du studio, à l'identique. Corriger ici seul
+ * recréerait la divergence entre les sites de la maison.
  */
 .degrade-texte {
-  background-image: linear-gradient(100deg, var(--teinte-1) 0%, var(--teinte-1) 35%, var(--teinte-2) 100%);
+  background-image: linear-gradient(100deg, var(--teinte-1), var(--teinte-2));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 /*
@@ -196,7 +206,7 @@ body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
   box-shadow: inset 0 0 0 2px var(--color-sourdine);
 }
 .badge-1.choisi { box-shadow: inset 0 0 0 2px var(--teinte-1); }
-.badge-2.choisi { box-shadow: inset 0 0 0 2px var(--teinte-2-texte); }
+.badge-2.choisi { box-shadow: inset 0 0 0 2px var(--teinte-2); }
 .pastille-accent { background: var(--teinte-1); }
 .texte-accent { color: var(--teinte-2-texte); }
 .bandeau-accent { background-image: linear-gradient(90deg, color-mix(in srgb, var(--teinte-1) 20%, transparent), color-mix(in srgb, var(--teinte-2) 8%, transparent)); }
