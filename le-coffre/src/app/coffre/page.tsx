@@ -971,7 +971,7 @@ export default function PageCoffre() {
       <datalist id="categories-connues">
         {categoriesSuggerees.map((c) => <option key={c} value={c} />)}
       </datalist>
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
+      <div className="mx-auto flex max-w-[1700px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
         {/* Marque persistante — visible sur le tableau de bord, pas
             seulement sur l'écran de connexion. Violet plutôt que turquoise :
             les deux sont censés dominer à parts égales, et le turquoise
