@@ -442,6 +442,24 @@ describe('la proposition de classement', () => {
     assert.equal((await coffre.proposerClassement(fichier())).lisible, false);
   });
 
+  it('marque une panne (réseau ou erreur métier) comme technique, à réessayer', async () => {
+    // Le tri automatique en lot s'en sert pour distinguer « le service n'a
+    // pas répondu, à reprendre » d'« un vrai document jugé illisible » — les
+    // deux rendaient auparavant exactement la même proposition vide.
+    poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
+    assert.equal((await coffre.proposerClassement(fichier())).erreurTechnique, true);
+
+    poser(clientFactice({ fonction: { data: { erreur: 'illisible' }, error: null } }));
+    assert.equal((await coffre.proposerClassement(fichier())).erreurTechnique, true);
+  });
+
+  it('ne marque pas comme technique un document que Claude a réellement jugé illisible', async () => {
+    poser(clientFactice({ fonction: { data: { lisible: false, categorie: '' }, error: null } }));
+    const proposition = await coffre.proposerClassement(fichier());
+    assert.equal(proposition.lisible, false);
+    assert.equal(proposition.erreurTechnique, undefined);
+  });
+
   it('transmet le fichier et son type, et rien d’autre', async () => {
     const f = poser(clientFactice({ fonction: { data: { lisible: true }, error: null } }));
     await coffre.proposerClassement(fichier());
@@ -583,6 +601,60 @@ describe('modifier un objet', () => {
     await assert.rejects(
       () => coffre.modifierObjet(UTILISATEUR, cle, 'inconnu', { categorie: 'Impôts' }, depart()),
     );
+  });
+});
+
+describe('modifier plusieurs objets à la fois', () => {
+  const depart = (): IndexCoffre => ({
+    objets: {
+      abc: {
+        nom: 'facture.pdf', taille: 10, type: 'application/pdf',
+        categorie: '', deposeLe: '2026-01-01T00:00:00Z',
+      },
+      def: {
+        nom: 'avis.pdf', taille: 20, type: 'application/pdf',
+        categorie: '', deposeLe: '2026-01-02T00:00:00Z',
+      },
+    },
+    rendezVous: { r1: { id: 'r1', libelle: 'Dentiste', date: '2026-10-02' } },
+    identite: IDENTITE,
+  });
+
+  it('classe plusieurs documents en une seule sauvegarde de l’index — le tri automatique en lot', async () => {
+    const f = poser(clientFactice());
+    await coffre.modifierPlusieursObjets(UTILISATEUR, cle, {
+      abc: { categorie: 'Impôts' },
+      def: { categorie: 'Énergie', montant: '54,20 €' },
+    }, depart());
+
+    // Une seule ligne envoyée à `coffre_index`, pas une par document.
+    assert.equal(f.tous('upsert').length, 1);
+    const index = await indexEnvoye(f);
+    assert.equal(index.objets.abc?.categorie, 'Impôts');
+    assert.equal(index.objets.def?.categorie, 'Énergie');
+    assert.equal(index.objets.def?.montant, '54,20 €');
+  });
+
+  it('conserve les rendez-vous et l’identité, comme les six autres écritures', async () => {
+    const f = poser(clientFactice());
+    await coffre.modifierPlusieursObjets(UTILISATEUR, cle, { abc: { categorie: 'Impôts' } }, depart());
+    const index = await indexEnvoye(f);
+    assert.deepEqual(index.rendezVous, depart().rendezVous);
+    assert.deepEqual(index.identite, IDENTITE);
+  });
+
+  it('ignore un nom introuvable au lieu de faire échouer tout le lot', async () => {
+    // À la différence de `modifierObjet` : un tri automatique porte sur des
+    // dizaines de documents, et un seul nom déjà supprimé entre-temps ne doit
+    // pas perdre les classements de tous les autres.
+    const f = poser(clientFactice());
+    const index = await coffre.modifierPlusieursObjets(UTILISATEUR, cle, {
+      abc: { categorie: 'Impôts' },
+      inconnu: { categorie: 'Santé' },
+    }, depart());
+    assert.equal(index.objets.abc?.categorie, 'Impôts');
+    assert.equal('inconnu' in index.objets, false);
+    assert.equal((await indexEnvoye(f)).objets.abc?.categorie, 'Impôts');
   });
 });
 
