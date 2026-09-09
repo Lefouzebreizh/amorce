@@ -23,10 +23,25 @@
 @source "./index.html";
 
 @theme {
-  --color-nuit: #07070f;
-  --color-panneau: #101021;
-  --color-relief: #16162c;
-  --color-bord: #262647;
+  /*
+   * Échelle de surfaces du studio, posée le 09/09/2026. Le fond de page et la
+   * carte sont les valeurs demandées par le propriétaire ; `relief` et `bord`
+   * en découlent et sont mesurés.
+   *
+   * L'écart nuit→panneau vaut **1,22**, au-dessus de la bande de 1,07 du §2 bis.
+   * C'est un choix assumé et non un oubli : la carte doit se détacher nettement
+   * du fond pour porter le halo de survol. `panneau`→`relief` reste à 1,10,
+   * dans la bande.
+   *
+   * `bord` est un **trait**, jamais un fond — dix bordures, un anneau, un texte,
+   * et aucun `bg-bord` dans la page. La surface la plus claire du projet est
+   * donc `relief`, et c'est contre elle que tout accent se mesure. Confondre
+   * les deux est exactement le piège que le §2 bis raconte deux fois.
+   */
+  --color-nuit: #0F1115;
+  --color-panneau: #202430;
+  --color-relief: #262B3A;
+  --color-bord: #353D52;
   --color-brume: #c9c9e6;
   --color-sourdine: #8a8ab0;
   /*
@@ -56,8 +71,28 @@
    après le premier rendu. Une variable, elle, s'applique au moment où on
    l'écrit. Toutes les surfaces accentuées du site tapent dans ces deux-là. */
 :root {
-  --teinte-1: #8b5cf6;
-  --teinte-2: #3b82f6;
+  /*
+   * Turquoise et violet du studio, et ils ne dépendent plus de la niche.
+   *
+   * Jusqu'au 09/09/2026 ces deux variables portaient `theme.primaire` et
+   * `theme.secondaire` de chaque niche, posées au chargement par `habiller()` :
+   * onze sites, onze paires de couleurs. Le propriétaire a tranché pour une
+   * identité unique de studio — un visiteur qui passe d'un annuaire à l'autre
+   * doit reconnaître la même maison.
+   *
+   * Le champ `theme` reste dans les onze bases et dans `CHAMPS_NICHE` de
+   * `valider.js` : il n'est plus lu pour peindre, mais le retirer casserait la
+   * validation et onze fichiers pour rien.
+   *
+   * Mesuré sur `relief`, la surface la plus claire :
+   *   turquoise #40E0D0 → 8,59:1
+   *   violet    #C2A2F6 → 6,58:1 sur `relief`, **7,22:1 sur la carte**
+   * Les badges ne vivent que sur la carte, donc le violet y tient le plancher
+   * de 7. S'il devait un jour se poser sur `relief`, la valeur qui passe
+   * partout est #C8ABF7 (7,13:1) — même teinte, deux points de clarté de plus.
+   */
+  --teinte-1: #40E0D0;
+  --teinte-2: #C2A2F6;
 }
 
 /* Le style vient d'un CDN : sur un réseau filtré ou lent, il peut arriver en
@@ -65,7 +100,7 @@
    celles dont l'absence casse la page au lieu de l'enlaidir — sans `hidden`,
    la modale reste ouverte par-dessus le contenu et le site est inutilisable. */
 .hidden { display: none !important; }
-body { background: #07070f; color: #c9c9e6; font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
 
 /* Le halo du fond ne doit jamais intercepter un clic ni allonger la page :
    calque fixe, derrière tout, sans surface cliquable. */
@@ -128,7 +163,83 @@ body { background: #07070f; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
 .pastille-accent { background: var(--teinte-1); }
 .texte-accent { color: var(--teinte-2); }
 .bandeau-accent { background-image: linear-gradient(90deg, color-mix(in srgb, var(--teinte-1) 20%, transparent), color-mix(in srgb, var(--teinte-2) 8%, transparent)); }
-.carte:hover { border-color: color-mix(in srgb, var(--teinte-1) 60%, transparent); }
+/*
+ * Survol d'une carte : elle monte d'un cran et s'entoure d'un halo turquoise.
+ *
+ * Le lift existait déjà — `hover:-translate-y-1` sur la carte. Le halo est
+ * neuf, et il est en `box-shadow` : l'invariant 4 du §2 bis interdit
+ * d'animer ce qui recalcule la mise en page, or une ombre ne prend aucune
+ * place dans le flux. `transform`, `box-shadow` et `border-color` sont les
+ * trois seules propriétés touchées ici, et les trois sont composées par le
+ * navigateur sans reflow.
+ *
+ * Le halo ne fait pas concurrence au bouton d'affiliation : c'est une lueur
+ * diffuse à 22 % d'opacité, pas un aplat. La seule surface pleine et colorée
+ * d'une carte reste la sauge du lien affilié.
+ */
+.carte {
+  /* `translate` et non `transform`, et les deux plutôt qu'un seul.
+     Tailwind v4 rend `-translate-y-1` par la propriété **`translate`**, pas
+     par `transform` : une transition qui ne nomme que `transform` laisse donc
+     la carte *sauter* d'un coup pendant que le halo, lui, apparaît en fondu.
+     Mesuré à l'écran — `getComputedStyle` rendait `transform: matrix(1,0,0,1,0,0)`
+     et `translate: 0px -4px`, ce qu'aucun test ne regardait. `transform` reste
+     dans la liste pour le jour où une carte en portera un. */
+  transition: translate .18s ease, transform .18s ease, box-shadow .18s ease,
+              border-color .18s ease, background-color .18s ease;
+}
+.carte:hover {
+  border-color: color-mix(in srgb, var(--teinte-1) 60%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--teinte-1) 30%, transparent),
+    0 12px 32px -8px color-mix(in srgb, var(--teinte-1) 22%, transparent),
+    0 4px 12px -4px rgb(0 0 0 / .4);
+}
+
+/*
+ * Badges de catégorie : deux teintes du studio en alternance, plus jamais une
+ * couleur déduite du nom.
+ *
+ * `peindreBadge` hachait le nom de la catégorie pour en tirer une teinte HSL,
+ * si bien qu'une page portait autant de couleurs que de catégories — six sur
+ * la niche généraliste, sans rapport les unes avec les autres ni avec le
+ * produit. C'est ce que le propriétaire a demandé de retirer le 09/09/2026.
+ *
+ * Texte teinté sur voile léger, et non pastille pleine : un aplat coloré sur
+ * chaque carte reprendrait au bouton d'affiliation ce que la sauge lui a
+ * donné le 03/09. Un badge est une étiquette, pas une action — et l'invariant
+ * 3 du §2 bis tient à cette distinction.
+ */
+.badge-1 {
+  color: var(--teinte-1);
+  background: color-mix(in srgb, var(--teinte-1) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-1) 32%, transparent);
+}
+.badge-2 {
+  color: var(--teinte-2);
+  background: color-mix(in srgb, var(--teinte-2) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-2) 32%, transparent);
+}
+
+/*
+ * Entrée en cascade des cartes au défilement.
+ *
+ * La classe part de l'état **visible** et c'est délibéré : `.entree` n'est
+ * posée que par le JavaScript qui observe le défilement. Écrire l'inverse —
+ * cartes à `opacity: 0` par défaut, révélées par une classe — laisserait une
+ * page blanche à qui n'exécute pas le script, et c'est le genre de panne dont
+ * personne ne remonte la cause.
+ *
+ * `prefers-reduced-motion` est déjà couvert par la règle en fin de fichier,
+ * qui ramène toute durée à un millième de milliseconde : l'animation se
+ * termine alors instantanément, donc à `opacity: 1`. Le repli est visible, pas
+ * invisible.
+ */
+@keyframes monter {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+.entree { animation: monter .45s ease both; }
 .champ:focus { border-color: var(--teinte-1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teinte-1) 35%, transparent); }
 .puce::before { background: var(--teinte-1); }
 .neuf { background: color-mix(in srgb, var(--teinte-1) 18%, transparent); color: var(--teinte-2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-1) 40%, transparent); }

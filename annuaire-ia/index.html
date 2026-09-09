@@ -152,7 +152,7 @@
   };
 
   const NICHE_DEFAUT = 'immobilier';
-  const etat = { niche: null, outils: [], categorie: 'Tous', recherche: '', ouvert: null, dernierFocus: null };
+  const etat = { niche: null, outils: [], categoriesOrdonnees: [], categorie: 'Tous', recherche: '', ouvert: null, dernierFocus: null };
 
   const $ = (sel) => document.querySelector(sel);
   const grille = $('#grille');
@@ -176,18 +176,22 @@
     return identifiantValide(brut) ? brut : nicheDuDomaine();
   }
 
-  /* La couleur d'une sous-catégorie est déduite de son nom : une niche peut
-     inventer la sienne sans qu'on ait à déclarer quoi que ce soit ici. */
-  function teinteCategorie(nom) {
-    let h = 0;
-    for (const c of nom) h = (h * 31 + c.codePointAt(0)) % 360;
-    return h;
-  }
-  function peindreBadge(element, categorie) {
-    const h = teinteCategorie(categorie);
-    element.style.color = `hsl(${h} 80% 72%)`;
-    element.style.background = `hsl(${h} 80% 55% / .15)`;
-    element.style.boxShadow = `inset 0 0 0 1px hsl(${h} 80% 60% / .35)`;
+  /* Deux teintes de studio en alternance, et non plus une couleur déduite du
+     nom de la catégorie.
+
+     L'ancienne version hachait le nom pour en tirer un angle de teinte : une
+     niche pouvait inventer sa catégorie sans rien déclarer, ce qui était le
+     but — mais la page finissait avec autant de couleurs que de catégories,
+     six sur la généraliste, sans rapport entre elles ni avec le produit.
+
+     L'ordre est celui des catégories telles que la base les donne, et il ne
+     dépend ni du tri affiché ni du filtre courant : une catégorie garde donc
+     sa couleur d'un écran à l'autre, ce qu'une alternance calculée sur la
+     liste visible ne garantirait pas. Une catégorie inconnue — ajoutée à
+     chaud — retombe sur la première teinte plutôt que sur rien. */
+  function classeBadge(categorie) {
+    const rang = etat.categoriesOrdonnees.indexOf(categorie);
+    return rang < 0 || rang % 2 === 0 ? 'badge-1' : 'badge-2';
   }
 
   /* --- Étoiles ---------------------------------------------------------- */
@@ -260,9 +264,8 @@
     haut.className = 'flex items-start justify-between gap-3';
 
     const badge = document.createElement('span');
-    badge.className = 'rounded-full px-3 py-1 text-xs font-semibold';
+    badge.className = `${classeBadge(outil.categorie)} rounded-full px-3 py-1 text-xs font-semibold`;
     badge.textContent = outil.categorie;
-    peindreBadge(badge, outil.categorie);
 
     const note = document.createElement('span');
     note.className = 'flex shrink-0 items-center gap-1.5 text-sm font-semibold text-white';
@@ -288,7 +291,7 @@
     }
 
     const prix = document.createElement('p');
-    prix.className = 'mt-1 text-sm font-medium text-emerald-300';
+    prix.className = 'mt-1 text-sm font-medium text-brume';
     prix.textContent = outil.prix;
 
     const courte = document.createElement('p');
@@ -336,9 +339,41 @@
     });
   }
 
+  /* Entrée en cascade des cartes, au défilement.
+
+     L'observateur pose `.entree` quand une carte entre dans le cadre, avec un
+     retard proportionnel à son rang **dans la vague en cours** — pas dans la
+     grille entière : sur dix-sept outils, un retard indexé sur la grille ferait
+     attendre la dernière carte près d'une seconde après son apparition, ce qui
+     se lit comme une page qui rame et non comme une animation.
+
+     Le retard est plafonné à cinq crans. Au-delà, l'œil ne perçoit plus une
+     cascade mais un défaut de chargement.
+
+     `unobserve` dès que la carte est entrée : sans lui, remonter puis
+     redescendre rejouerait l'animation à chaque passage, et une page qui
+     clignote au défilement est pire que pas d'animation du tout.
+
+     Si `IntersectionObserver` manque — navigateur ancien —, rien n'est posé et
+     les cartes restent simplement visibles : c'est le repli écrit dans la
+     feuille de style. */
+  const observateur = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entrees, obs) => {
+        let rang = 0;
+        for (const entree of entrees) {
+          if (!entree.isIntersecting) continue;
+          entree.target.style.animationDelay = `${Math.min(rang, 5) * 60}ms`;
+          entree.target.classList.add('entree');
+          obs.unobserve(entree.target);
+          rang += 1;
+        }
+      }, { rootMargin: '0px 0px -10% 0px' })
+    : null;
+
   function afficher() {
     const resultats = filtrer();
     grille.replaceChildren(...resultats.map(carte));
+    if (observateur) for (const element of grille.children) observateur.observe(element);
     $('#vide').classList.toggle('hidden', resultats.length > 0);
     $('#compteur').textContent = resultats.length === etat.outils.length
       ? `${resultats.length} outils comparés`
@@ -406,7 +441,7 @@
     chiffre.textContent = `${Number(outil.score_avis).toFixed(1)}/5`;
     note.append(chiffre);
     const prix = document.createElement('span');
-    prix.className = 'font-medium text-emerald-300';
+    prix.className = 'font-medium text-brume';
     prix.textContent = outil.prix;
     meta.replaceChildren(note, prix);
 
@@ -485,8 +520,11 @@
 
   /* --- Habillage de la niche -------------------------------------------- */
   function habiller(niche) {
-    document.documentElement.style.setProperty('--teinte-1', niche.theme?.primaire || '#8b5cf6');
-    document.documentElement.style.setProperty('--teinte-2', niche.theme?.secondaire || '#3b82f6');
+    /* Les teintes ne sont plus posées ici. Elles valent celles du studio,
+       écrites une fois dans `styles.src.css` — turquoise et violet, les mêmes
+       sur les onze annuaires. `niche.theme` reste dans la base et dans la
+       validation ; il n'est simplement plus lu pour peindre. Décision du
+       propriétaire, 09/09/2026. */
 
     $('#h1-accent').textContent = niche.h1_accent;
     $('#h1-suite').textContent = niche.h1_suite;
@@ -579,6 +617,10 @@
 
     etat.niche = donnees.niche;
     etat.outils = donnees.outils;
+    /* Ordre figé à la lecture de la base, avant tout filtre : c'est lui qui
+       donne sa couleur à chaque badge, et il ne doit pas bouger quand le
+       visiteur filtre. */
+    etat.categoriesOrdonnees = [...new Set(donnees.outils.map((o) => o.categorie))];
     habiller(donnees.niche);
 
     $('#compteur-entete').textContent = etat.outils.length;

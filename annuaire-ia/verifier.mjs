@@ -100,6 +100,18 @@ async function ouvrir(suffixe) {
 }
 
 /* --- Ce qui ne dépend d'aucune niche en particulier ---------------------- */
+
+/* Les deux teintes du studio, lues dans la feuille compilée — la source, pas
+   une copie. Si `construire-styles.mjs` n'a pas tourné depuis la dernière
+   retouche de `styles.src.css`, ce parcours compare donc la page à la feuille
+   qu'elle sert réellement, ce qui est exactement ce qu'on veut vérifier. */
+const feuilleCompilee = fs.readFileSync(path.join(racine, 'styles.css'), 'utf8');
+const studio = ['--teinte-1', '--teinte-2'].map((jeton) => {
+  const valeur = new RegExp(`${jeton}:\\s*([^;}]+)`).exec(feuilleCompilee)?.[1]?.trim();
+  if (!valeur) throw new Error(`${jeton} introuvable dans styles.css — la feuille est-elle compilée ?`);
+  return valeur;
+});
+
 const parDefaut = /content="([a-z0-9-]+)"/.exec(
   /<meta name="niche-par-defaut"[^>]*>/.exec(fs.readFileSync(path.join(racine, 'index.html'), 'utf8'))?.[0] ?? ''
 )?.[1];
@@ -137,9 +149,27 @@ for (const { niche, outils } of aParcourir) {
   verifier('accroche de la niche', h1.includes(niche.h1_accent) && h1.includes(niche.h1_suite), h1);
   verifier('slogan de la niche', (await page.textContent('#slogan')).trim() === niche.slogan);
 
-  const teinte = await page.evaluate(() =>
-    getComputedStyle(document.documentElement).getPropertyValue('--teinte-1').trim());
-  verifier('charte graphique appliquée', teinte.toLowerCase() === niche.theme.primaire.toLowerCase(), teinte);
+  /* La charte est celle du **studio**, la même sur les onze annuaires, et plus
+     celle de la niche. Ce contrôle attendait `niche.theme.primaire` jusqu'au
+     09/09/2026 ; il tombait donc onze fois sur onze depuis que les teintes sont
+     unifiées, en signalant fidèlement une règle qui n'existe plus.
+
+     Les valeurs attendues se lisent dans la feuille compilée, jamais écrites en
+     dur ici : une attente en dur dans ce fichier a déjà coûté un rouge complet
+     le jour où l'auto-pilote a publié une quatrième carte, et la leçon est dans
+     `/reseau-annuaires`. Le contrôle garde donc son rôle — la charte est-elle
+     réellement appliquée à cette page — en suivant la source au lieu de la
+     doubler. */
+  const teintes = await page.evaluate(() => {
+    const s = getComputedStyle(document.documentElement);
+    return [s.getPropertyValue('--teinte-1').trim(), s.getPropertyValue('--teinte-2').trim()];
+  });
+  verifier(
+    'charte du studio appliquée',
+    teintes[0].toLowerCase() === studio[0].toLowerCase()
+      && teintes[1].toLowerCase() === studio[1].toLowerCase(),
+    teintes.join(' / '),
+  );
 
   const cartes = await page.locator('#grille article').count();
   verifier('tous les outils affichés', cartes === outils.length, `${cartes}/${outils.length}`);
