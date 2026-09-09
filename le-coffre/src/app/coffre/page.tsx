@@ -605,7 +605,22 @@ export default function PageCoffre() {
       }
       setTriAutoProgres((p) => (p ? { ...p, fait: p.fait + 1 } : null));
     }
-    if (echecs.length > 0) setErreur(`Non classés automatiquement : ${echecs.join(', ')}.`);
+    if (echecs.length > 0) {
+      // `echecs` peut monter à plusieurs dizaines de noms quand un dossier
+      // entier de photos ou de vidéos sans rapport (souvenirs, rushes d'un
+      // autre projet) est glissé dans « à trier » : classer-document les
+      // rejette à raison — ce n'est ni une image de document ni un PDF —
+      // mais les lister tous rend la bannière illisible. On en montre
+      // quelques-uns et on compte le reste, avec la raison en clair.
+      const APERCU_ECHECS = 5;
+      const noms = echecs.length > APERCU_ECHECS
+        ? `${echecs.slice(0, APERCU_ECHECS).join(', ')} et ${echecs.length - APERCU_ECHECS} autre${echecs.length - APERCU_ECHECS > 1 ? 's' : ''}`
+        : echecs.join(', ');
+      setErreur(
+        `${echecs.length} fichier${echecs.length > 1 ? 's' : ''} non reconnu${echecs.length > 1 ? 's' : ''} comme document administratif ` +
+        `(photo, vidéo ou image sans texte lisible) : ${noms}.`
+      );
+    }
     setTriAutoEnCours(false);
     setTriAutoProgres(null);
   }
