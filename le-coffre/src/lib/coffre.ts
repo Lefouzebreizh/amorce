@@ -285,13 +285,37 @@ export async function proposerClassement(fichier: File): Promise<PropositionClas
 
 export type TourConversation = { role: 'user' | 'assistant'; texte: string };
 
+// Une action que l'assistant propose sur un document précis — jamais
+// exécutée côté serveur (il n'a ni la clé ni le fichier), seulement
+// suggérée pour que le navigateur l'exécute après confirmation. `nom` est
+// le nom AFFICHÉ tel qu'envoyé dans le résumé (digestIndex), jamais la clé
+// opaque de stockage — voir `clesParNomAffiche` pour la résolution.
+export type ActionAssistant =
+  | { type: 'classer'; nom: string; categorie: string }
+  | { type: 'supprimer'; nom: string };
+
 export type ReponseAssistant = {
   reponse: string;
   documentsCites: string[];
   ouvrirFormulaire: boolean;
   ouvrirRangement: boolean;
   rechercheWebEffectuee: boolean;
+  actions: ActionAssistant[];
 };
+
+// Le résumé envoyé à l'assistant ne porte que le nom AFFICHÉ (`.nom`),
+// jamais la clé opaque (`nomOpaque()`, voir deposerFichier) qui identifie
+// réellement l'entrée dans `index.objets` : les deux ne sont pas le même
+// texte, et le confondre a longtemps laissé un document cité par
+// l'assistant impossible à ouvrir (aucune clé ne portait ce nom-là).
+// Plusieurs documents peuvent partager le même nom affiché — on rend donc
+// toutes les clés qui correspondent, à l'appelant de décider quoi faire
+// d'une ambiguïté plutôt que d'en choisir une au hasard.
+export function clesParNomAffiche(index: IndexCoffre, nomAffiche: string): string[] {
+  return Object.entries(index.objets)
+    .filter(([, o]) => o.nom === nomAffiche)
+    .map(([cle]) => cle);
+}
 
 // Un résumé de chaque document — jamais le fichier, jamais tout le texte
 // extrait (tronqué à 200 caractères, juste de quoi situer le document, pas de
@@ -323,13 +347,19 @@ export async function demanderAuCoffre(
   const vide: ReponseAssistant = {
     reponse: "Je n'ai pas pu répondre à l'instant — réessaie dans un moment.",
     documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false,
+    actions: [],
   };
   try {
     const { data, error } = await supabase.functions.invoke('assistant-coffre', {
       body: { question, historique, documents: digestIndex(index) },
     });
     if (error || !data || 'erreur' in data) return vide;
-    return data as ReponseAssistant;
+    const resultat = data as ReponseAssistant;
+    // Défensif : une fonction serveur pas encore redéployée peut ne pas
+    // encore porter ce champ — un tableau vide plutôt qu'un crash au premier
+    // accès à `.map` côté interface.
+    if (!Array.isArray(resultat.actions)) resultat.actions = [];
+    return resultat;
   } catch {
     return vide;
   }

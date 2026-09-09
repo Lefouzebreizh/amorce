@@ -513,6 +513,58 @@ describe('demander au coffre', () => {
     const [, options] = f.premier('invoke') as [string, { body: { historique: unknown } }];
     assert.deepEqual(options.body.historique, historique);
   });
+
+  it('transmet les actions proposées par la fonction serveur', async () => {
+    const actions = [{ type: 'classer' as const, nom: 'Facture EDF', categorie: 'Énergie' }];
+    poser(clientFactice({
+      fonction: {
+        data: {
+          reponse: 'Je classe ta facture.', documentsCites: ['Facture EDF'],
+          ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false, actions,
+        },
+        error: null,
+      },
+    }));
+    const reponse = await coffre.demanderAuCoffre('classe ma facture EDF dans Énergie', [], INDEX_ASSISTANT);
+    assert.deepEqual(reponse.actions, actions);
+  });
+
+  it('rend un tableau d’actions vide plutôt qu’un champ absent, sur une réponse serveur antérieure au champ', async () => {
+    poser(clientFactice({
+      fonction: {
+        data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false },
+        error: null,
+      },
+    }));
+    const reponse = await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
+    assert.deepEqual(reponse.actions, []);
+  });
+});
+
+describe('résoudre un nom affiché vers sa clé de stockage', () => {
+  const index: IndexCoffre = {
+    objets: {
+      abc: { nom: 'Facture EDF', taille: 1, type: 'application/pdf', categorie: 'Énergie', deposeLe: '2026-01-01' },
+      def: { nom: 'Facture EDF', taille: 1, type: 'application/pdf', categorie: '', deposeLe: '2026-01-02' },
+      ghi: { nom: 'Autre papier', taille: 1, type: 'application/pdf', categorie: '', deposeLe: '2026-01-03' },
+    },
+  };
+
+  it('trouve la clé réelle depuis le nom affiché, jamais l’inverse', () => {
+    // Le résumé envoyé à l'assistant ne porte que `.nom` (« Facture EDF »),
+    // jamais la clé opaque (« abc ») qui identifie l'entrée dans l'index —
+    // sans cette résolution, un document cité par l'assistant ne s'ouvrait
+    // jamais et une action ne pouvait rien classer ni supprimer.
+    assert.deepEqual(coffre.clesParNomAffiche(index, 'Autre papier'), ['ghi']);
+  });
+
+  it('rend toutes les clés qui partagent le même nom affiché, plutôt que d’en choisir une au hasard', () => {
+    assert.deepEqual(coffre.clesParNomAffiche(index, 'Facture EDF'), ['abc', 'def']);
+  });
+
+  it('rend un tableau vide pour un nom qui n’existe pas', () => {
+    assert.deepEqual(coffre.clesParNomAffiche(index, 'Fantôme'), []);
+  });
 });
 
 // ─────────────────────────────── Échéances ───────────────────────────────

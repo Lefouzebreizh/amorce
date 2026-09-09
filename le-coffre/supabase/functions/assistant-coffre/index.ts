@@ -31,12 +31,17 @@ type DigestDocument = {
   extrait?: string | null;
 };
 
+type ActionProposee =
+  | { type: "classer"; nom: string; categorie: string }
+  | { type: "supprimer"; nom: string };
+
 type Resultat = {
   reponse: string;
   documentsCites: string[];
   ouvrirFormulaire: boolean;
   ouvrirRangement: boolean;
   rechercheWebEffectuee: boolean;
+  actions: ActionProposee[];
 };
 
 function reponseJson(corps: unknown, statut = 200): Response {
@@ -71,17 +76,27 @@ Deno.serve(async (requete: Request) => {
     `Aujourd'hui : ${aujourdhui}.\n\n` +
     `Voici la liste des papiers déjà déposés par cet utilisateur, en JSON — jamais le contenu ` +
     `des fichiers eux-mêmes, seulement ce résumé :\n${JSON.stringify(documents ?? [])}\n\n` +
-    `Ton rôle a quatre volets :\n` +
+    `Ton rôle a cinq volets :\n` +
     `1. Retrouver un ou plusieurs papiers dans CETTE liste, jamais en inventer un qui n'y est ` +
     `pas. Mets leur "nom" exact (tel qu'écrit ci-dessus, caractère pour caractère) dans ` +
     `"documentsCites". Liste vide si aucun ne correspond, plutôt que d'en approcher un au hasard.\n` +
     `2. Si l'utilisateur veut remplir, compléter ou signer un document, explique dans "reponse" ` +
     `que l'outil « Remplir un formulaire » du tableau de bord fait ça, et mets ` +
     `"ouvrirFormulaire": true.\n` +
-    `3. Si l'utilisateur veut ranger, classer, trier ou organiser ses papiers en dossiers, ` +
-    `explique dans "reponse" que la vue « Ranger en dossiers » fait ça, et mets ` +
-    `"ouvrirRangement": true.\n` +
-    `4. Pour une vraie question générale (démarche administrative, définition, actualité) qui ` +
+    `3. Si l'utilisateur veut ranger, classer ou trier TOUS ses papiers ou un lot indéterminé ` +
+    `(« range tout », « trie mes papiers »), explique dans "reponse" que le bouton « Trier ` +
+    `automatiquement » du tableau de bord fait ça, et mets "ouvrirRangement": true — ne propose ` +
+    `aucune action précise dans ce cas, ce bouton traite un lot entier bien mieux qu'une action ` +
+    `par document.\n` +
+    `4. Si l'utilisateur désigne un ou plusieurs documents PRÉCIS (nommés ou clairement identifiables ` +
+    `dans la liste) et demande de les classer dans une catégorie — existante ou nouvelle, ce qui ` +
+    `revient à créer un dossier, un dossier n'étant qu'une catégorie partagée par des documents — ` +
+    `ou de les supprimer, propose une ou plusieurs entrées dans "actions" plutôt que de renvoyer ` +
+    `vers un outil : {"type": "classer", "nom": "...", "categorie": "..."} ou ` +
+    `{"type": "supprimer", "nom": "..."}. "nom" doit toujours être un nom EXACT de la liste ` +
+    `ci-dessus, jamais inventé ni approché. Dis dans "reponse" ce que tu proposes, en clair — ` +
+    `l'action ne s'exécute qu'après confirmation de l'utilisateur, jamais toute seule.\n` +
+    `5. Pour une vraie question générale (démarche administrative, définition, actualité) qui ` +
     `ne concerne pas directement ses papiers, tu peux chercher sur le web avec l'outil fourni — ` +
     `dis alors clairement dans "reponse" que ça vient d'une recherche web, jamais confondu avec ` +
     `le contenu de ses papiers personnels.\n\n` +
@@ -95,6 +110,7 @@ Deno.serve(async (requete: Request) => {
     `"documentsCites": [noms exacts trouvés dans la liste, tableau vide si aucun], ` +
     `"ouvrirFormulaire": booléen, ` +
     `"ouvrirRangement": booléen, ` +
+    `"actions": [actions précises proposées comme au point 4, tableau vide si aucune], ` +
     `"rechercheWebEffectuee": vrai seulement si tu as réellement utilisé l'outil de recherche ` +
     `web pour cette réponse précise}.`;
 
@@ -146,6 +162,21 @@ Deno.serve(async (requete: Request) => {
     resultat.rechercheWebEffectuee = Boolean(resultat.rechercheWebEffectuee) || rechercheWebEffectuee;
     if (!Array.isArray(resultat.documentsCites)) resultat.documentsCites = [];
     resultat.ouvrirRangement = Boolean(resultat.ouvrirRangement);
+    // Filet défensif sur les actions, la partie la plus sensible de la
+    // réponse : jamais une action sur un nom que la liste envoyée ne porte
+    // pas, jamais un type inconnu, jamais une catégorie vide pour un
+    // classement — la consigne dit déjà de ne rien inventer, ceci vérifie
+    // que c'est vrai plutôt que de le supposer.
+    const nomsConnus = new Set((documents ?? []).map((d) => d.nom));
+    resultat.actions = (Array.isArray(resultat.actions) ? resultat.actions : []).filter(
+      (a): a is ActionProposee => {
+        if (!a || typeof a !== "object" || !("type" in a) || !("nom" in a)) return false;
+        if (typeof a.nom !== "string" || !nomsConnus.has(a.nom)) return false;
+        if (a.type === "supprimer") return true;
+        if (a.type === "classer") return "categorie" in a && typeof a.categorie === "string" && a.categorie.trim() !== "";
+        return false;
+      },
+    );
     // Filet défensif : le modèle a déjà écrit du balisage de citation
     // (<cite index="...">...</cite>) en clair malgré la consigne ci-dessus —
     // on retire les balises sans perdre le texte qu'elles entourent.

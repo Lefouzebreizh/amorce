@@ -12,8 +12,8 @@ import {
   coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
-  interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS,
-  type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex,
+  interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
+  type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex, type ActionAssistant,
 } from '@/lib/coffre';
 import { RemplirFormulaire } from './RemplirFormulaire';
 import { AssistantCoffre } from './AssistantCoffre';
@@ -360,6 +360,9 @@ export default function PageCoffre() {
   const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
   const [triAutoBilan, setTriAutoBilan] = useState<{ nonDocuments: string[]; erreursTechniques: string[] } | null>(null);
   const [triAutoDetailOuvert, setTriAutoDetailOuvert] = useState(false);
+  // Dossiers dépliés dans la vue « Ranger en dossiers » — vide par défaut,
+  // donc tous repliés : voir le rendu de `dossiers.map` plus bas.
+  const [dossiersOuverts, setDossiersOuverts] = useState<Set<string>>(new Set());
   const entreeFichier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -763,6 +766,46 @@ export default function PageCoffre() {
     setQuestionAssistant('');
   }
 
+  // Exécute une action que l'assistant a proposée (classer, supprimer) —
+  // jamais depuis le serveur, qui n'a ni la clé de chiffrement ni le
+  // fichier : le nom affiché envoyé à l'assistant se résout d'abord vers sa
+  // ou ses clés de stockage réelles (voir clesParNomAffiche), puis l'action
+  // passe par les mêmes fonctions qu'un geste manuel. Rend un message court,
+  // affiché à la place du bouton une fois fait.
+  async function executerActionAssistant(action: ActionAssistant): Promise<string> {
+    if (!utilisateur || !cle) return 'Coffre verrouillé — réessaie une fois déverrouillé.';
+    const cles = clesParNomAffiche(index, action.nom);
+    if (cles.length === 0) return `« ${action.nom} » n'existe plus.`;
+    if (action.type === 'supprimer') {
+      if (cles.length > 1) {
+        return `Plusieurs papiers portent le nom « ${action.nom} » — supprime-le à la main pour choisir lequel.`;
+      }
+      const cleStockage = cles[0] as string;
+      try {
+        const nouvelIndex = await supprimerFichier(utilisateur.id, cle, cleStockage, index);
+        setIndex(nouvelIndex);
+        if (detailOuvert === cleStockage) fermerDetail();
+        return `« ${action.nom} » supprimé.`;
+      } catch (err) {
+        return `Suppression impossible : ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
+    try {
+      let indexCourant: IndexCoffre;
+      if (cles.length === 1) {
+        indexCourant = await modifierObjet(utilisateur.id, cle, cles[0] as string, { categorie: action.categorie }, index);
+      } else {
+        const champs: Record<string, { categorie: string }> = {};
+        for (const cleStockage of cles) champs[cleStockage] = { categorie: action.categorie };
+        indexCourant = await modifierPlusieursObjets(utilisateur.id, cle, champs, index);
+      }
+      setIndex(indexCourant);
+      return `« ${action.nom} » classé dans « ${action.categorie} ».`;
+    } catch (err) {
+      return `Classement impossible : ${err instanceof Error ? err.message : String(err)}`;
+    }
+  }
+
   async function enregistrerCorrection() {
     if (!utilisateur || !cle || !detailOuvert || !correction) return;
     setEnCours(true);
@@ -996,8 +1039,14 @@ export default function PageCoffre() {
   // une phrase complète (« le papier de la mutuelle ») — rechercheCorrespond
   // reste utilisée telle quelle à l'intérieur, pour chaque mot-clé retenu.
   const { reponse: reponseRecherche, noms: nomsTrouves, action: actionRecherche } = interpreterQuestion(index, recherche);
+  // Dérivé plutôt que synchronisé par effet : un filtre qui ne correspond
+  // plus à aucun papier (tri automatique, correction, suppression — tout ce
+  // qui a fait migrer les papiers d'une catégorie devenue vide) s'efface de
+  // lui-même au rendu suivant, sans laisser un « 0 sur N » sur un choix que
+  // l'utilisateur n'a pas refait lui-même.
+  const filtreCategorieEffectif = filtreCategorie && categoriesConnues.includes(filtreCategorie) ? filtreCategorie : null;
   const noms = tousLesNoms
-    .filter((n) => !filtreCategorie || index.objets[n]?.categorie === filtreCategorie)
+    .filter((n) => !filtreCategorieEffectif || index.objets[n]?.categorie === filtreCategorieEffectif)
     .filter((n) => nomsTrouves.includes(n));
   // Un dossier par catégorie déjà utilisée sur ces papiers, « À trier »
   // toujours en dernier — jamais une liste fermée, juste ce qui existe dans
@@ -1397,15 +1446,15 @@ export default function PageCoffre() {
               <div className="mb-4 flex flex-wrap gap-2">
                 <button type="button" onClick={() => setFiltreCategorie(null)}
                   className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                    filtreCategorie === null ? 'bg-accent text-paper' : 'bg-paper-raised text-ink-soft hover:text-ink'
+                    filtreCategorieEffectif === null ? 'bg-accent text-paper' : 'bg-paper-raised text-ink-soft hover:text-ink'
                   }`}>
                   Tout
                 </button>
                 {categoriesConnues.map((c) => (
                   <button key={c} type="button"
-                    onClick={() => setFiltreCategorie(filtreCategorie === c ? null : c)}
+                    onClick={() => setFiltreCategorie(filtreCategorieEffectif === c ? null : c)}
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                      filtreCategorie === c ? 'bg-accent text-paper' : 'bg-paper-raised text-ink-soft hover:text-ink'
+                      filtreCategorieEffectif === c ? 'bg-accent text-paper' : 'bg-paper-raised text-ink-soft hover:text-ink'
                     }`}>
                     {c}
                   </button>
@@ -1419,26 +1468,45 @@ export default function PageCoffre() {
               </p>
             ) : noms.length === 0 ? (
               <p className="rounded-2xl border border-line bg-paper-raised p-6 text-ink-soft">
-                {filtreCategorie && recherche.trim()
-                  ? `Aucun papier dans « ${filtreCategorie} » pour « ${recherche.trim()} ».`
-                  : filtreCategorie
-                    ? `Aucun papier dans « ${filtreCategorie} ».`
+                {filtreCategorieEffectif && recherche.trim()
+                  ? `Aucun papier dans « ${filtreCategorieEffectif} » pour « ${recherche.trim()} ».`
+                  : filtreCategorieEffectif
+                    ? `Aucun papier dans « ${filtreCategorieEffectif} ».`
                     : `Aucun papier pour « ${recherche.trim()} ».`}
               </p>
             ) : vueDossiers ? (
+              // Repliés par défaut (dossiersOuverts démarre vide) : avec des
+              // centaines de papiers, tout déplier d'un coup rend la page
+              // aussi injouable qu'une longue liste continue — seul ce qu'on
+              // a cliqué reste ouvert, le reste ne coûte qu'une ligne de titre.
               <div className="flex flex-col gap-4">
-                {dossiers.map(([categorie, nomsDossier]) => (
-                  <div key={categorie} className="rounded-2xl border border-line bg-paper-raised p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <Folder size={16} className="shrink-0 text-ink-soft" />
-                      <p className="text-sm font-semibold text-ink-soft">{categorie}</p>
-                      <span className="text-xs text-ink-soft">({nomsDossier.length})</span>
+                {dossiers.map(([categorie, nomsDossier]) => {
+                  const ouvert = dossiersOuverts.has(categorie);
+                  return (
+                    <div key={categorie} className="rounded-2xl border border-line bg-paper-raised p-4">
+                      <button
+                        type="button"
+                        aria-expanded={ouvert}
+                        onClick={() => setDossiersOuverts((precedent) => {
+                          const suivant = new Set(precedent);
+                          if (suivant.has(categorie)) suivant.delete(categorie); else suivant.add(categorie);
+                          return suivant;
+                        })}
+                        className="flex w-full items-center gap-2 text-left"
+                      >
+                        <ChevronRight size={16} className={`shrink-0 text-ink-soft transition-transform ${ouvert ? 'rotate-90' : ''}`} />
+                        <Folder size={16} className="shrink-0 text-ink-soft" />
+                        <p className="text-sm font-semibold text-ink-soft">{categorie}</p>
+                        <span className="text-xs text-ink-soft">({nomsDossier.length})</span>
+                      </button>
+                      {ouvert && (
+                        <ul className="mt-3 flex flex-col gap-3">
+                          {nomsDossier.map((nom) => carteDocument(nom))}
+                        </ul>
+                      )}
                     </div>
-                    <ul className="flex flex-col gap-3">
-                      {nomsDossier.map((nom) => carteDocument(nom))}
-                    </ul>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <ul className="flex flex-col gap-3">
@@ -1550,9 +1618,16 @@ export default function PageCoffre() {
           index={index}
           questionInitiale={questionAssistant}
           onFermer={fermerAssistant}
-          onOuvrirDocument={ouvrirDetail}
+          // `documentsCites` porte le nom AFFICHÉ (voir digestIndex côté
+          // serveur), jamais la clé opaque qu'attend ouvrirDetail — sans
+          // cette résolution, cliquer un document cité n'ouvrait rien.
+          onOuvrirDocument={(nomAffiche) => {
+            const cleStockage = clesParNomAffiche(index, nomAffiche)[0];
+            if (cleStockage) ouvrirDetail(cleStockage);
+          }}
           onOuvrirFormulaire={() => setFormulaireOuvert(true)}
           onOuvrirRangement={() => setVueDossiers(true)}
+          onExecuterAction={executerActionAssistant}
         />
       )}
 
