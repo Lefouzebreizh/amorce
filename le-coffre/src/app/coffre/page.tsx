@@ -360,6 +360,14 @@ export default function PageCoffre() {
   const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
   const [triAutoBilan, setTriAutoBilan] = useState<{ nonDocuments: string[]; erreursTechniques: string[] } | null>(null);
   const [triAutoDetailOuvert, setTriAutoDetailOuvert] = useState(false);
+  // Clés de stockage déjà confirmées comme non-documents CETTE session — un
+  // document rejeté ne gagne jamais de catégorie, donc rien ne le distingue
+  // des autres dans `tout` d'un lot au suivant : sans cette mémoire, un lot
+  // entièrement composé de photos/vidéos (observé en usage réel : 24 rejets
+  // sur 24) refaisait exactement le même lot à l'infini, sans jamais
+  // atteindre les documents suivants. Remise à zéro au rechargement de la
+  // page seulement — un rejet reste un rejet tant que la session dure.
+  const [triAutoIgnores, setTriAutoIgnores] = useState<Set<string>>(new Set());
   // Dossiers dépliés dans la vue « Ranger en dossiers » — vide par défaut,
   // donc tous repliés : voir le rendu de `dossiers.map` plus bas.
   const [dossiersOuverts, setDossiersOuverts] = useState<Set<string>>(new Set());
@@ -603,7 +611,9 @@ export default function PageCoffre() {
     const CONCURRENCE_TRI_AUTO = 3;
     const CHECKPOINT_TRI_AUTO = 8;
 
-    const tout = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
+    const tout = Object.keys(index.objets).filter(
+      (n) => !index.objets[n]?.categorie?.trim() && !triAutoIgnores.has(n),
+    );
     if (tout.length === 0) return;
     const aTrier = tout.slice(0, LOT_MAX_TRI_AUTO);
 
@@ -617,6 +627,7 @@ export default function PageCoffre() {
     let enAttente: Record<string, { categorie: string; montant?: string }> = {};
     let flushEnVol: Promise<void> | null = null;
     const nonDocuments: string[] = [];
+    const nonDocumentsCles: string[] = [];
     const erreursTechniques: string[] = [];
 
     // Verrouillé : si un flush est déjà en vol, celui-ci se contente
@@ -667,6 +678,7 @@ export default function PageCoffre() {
             erreursTechniques.push(info.nom);
           } else {
             nonDocuments.push(info.nom);
+            nonDocumentsCles.push(nom);
           }
         } catch (err) {
           erreursTechniques.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
@@ -679,6 +691,13 @@ export default function PageCoffre() {
     await Promise.all(Array.from({ length: Math.min(CONCURRENCE_TRI_AUTO, aTrier.length) }, suivant));
     await flush();
 
+    if (nonDocumentsCles.length > 0) {
+      setTriAutoIgnores((precedent) => {
+        const suivant = new Set(precedent);
+        for (const cleStockage of nonDocumentsCles) suivant.add(cleStockage);
+        return suivant;
+      });
+    }
     if (nonDocuments.length > 0 || erreursTechniques.length > 0) {
       setTriAutoBilan({ nonDocuments, erreursTechniques });
     }
@@ -1023,6 +1042,11 @@ export default function PageCoffre() {
   // vue « Ranger en dossiers » (DOSSIER_SANS_CATEGORIE), pour ne pas créer un
   // second sens au même mot.
   const nomsATrier = tousLesNoms.filter((n) => !index.objets[n]?.categorie?.trim());
+  // Ce qu'un prochain clic sur « Trier automatiquement » offre réellement :
+  // `nomsATrier` reste le compte brut (vrai, mais un document confirmé
+  // non-document cette session ne redeviendra pas classable pour autant),
+  // celui-ci exclut ce qui a déjà été vu et rejeté — voir triAutoIgnores.
+  const nomsATrierRestants = nomsATrier.filter((n) => !triAutoIgnores.has(n));
   // Catégories déjà utilisées — sert aux chips de filtre : inutile de
   // proposer un filtre pour une catégorie qui ne contient aucun papier.
   const categoriesConnues = Array.from(
@@ -1149,18 +1173,31 @@ export default function PageCoffre() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-ink-soft">
                 {nomsATrier.length} papier{nomsATrier.length > 1 ? 's' : ''} {DOSSIER_SANS_CATEGORIE.toLowerCase()}
-                {nomsATrier.length > LOT_MAX_TRI_AUTO && ` — traités par lots de ${LOT_MAX_TRI_AUTO}`}
+                {nomsATrierRestants.length > LOT_MAX_TRI_AUTO && ` — traités par lots de ${LOT_MAX_TRI_AUTO}`}
+                {/* Un papier déjà rejeté cette session (photo, vidéo…) ne
+                    redeviendra pas classable au clic suivant — sans le dire,
+                    le bouton semblerait proposer un lot qu'il ne peut plus
+                    faire avancer. */}
+                {triAutoIgnores.size > 0 && nomsATrierRestants.length > 0 &&
+                  ` (${triAutoIgnores.size} déjà vu${triAutoIgnores.size > 1 ? 's' : ''} comme non-document${triAutoIgnores.size > 1 ? 's' : ''}, mis de côté)`}
               </p>
-              <button
-                type="button"
-                onClick={trierAutomatiquement}
-                disabled={triAutoEnCours}
-                className="shrink-0 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
-              >
-                {triAutoEnCours
-                  ? `Tri en cours… (${triAutoProgres?.fait ?? 0}/${triAutoProgres?.total ?? nomsATrier.length})`
-                  : `Trier automatiquement (${Math.min(nomsATrier.length, LOT_MAX_TRI_AUTO)})`}
-              </button>
+              {nomsATrierRestants.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={trierAutomatiquement}
+                  disabled={triAutoEnCours}
+                  className="shrink-0 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
+                >
+                  {triAutoEnCours
+                    ? `Tri en cours… (${triAutoProgres?.fait ?? 0}/${triAutoProgres?.total ?? nomsATrierRestants.length})`
+                    : `Trier automatiquement (${Math.min(nomsATrierRestants.length, LOT_MAX_TRI_AUTO)})`}
+                </button>
+              ) : (
+                <p className="text-sm text-ink-soft">
+                  Tout le reste a déjà été vu comme non-document cette visite — recharge la page pour
+                  réessayer, ou classe-les à la main ci-dessous.
+                </p>
+              )}
             </div>
             {triAutoProgres && (
               <div
