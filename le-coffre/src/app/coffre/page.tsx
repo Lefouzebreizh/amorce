@@ -857,7 +857,7 @@ export default function PageCoffre() {
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <div>
           <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
-          <h1 className="mt-2 font-affiche text-4xl">Choisis ta phrase secrète</h1>
+          <h1 className="mt-2 font-affiche text-4xl texte-degrade">Choisis ta phrase secrète</h1>
           <p className="mt-3 text-ink-soft">
             Elle chiffre chaque document déposé, entièrement dans ce navigateur. Nous ne la
             recevons jamais.
@@ -887,7 +887,7 @@ export default function PageCoffre() {
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <div>
           <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
-          <h1 className="mt-2 font-affiche text-4xl">Entre ta phrase secrète</h1>
+          <h1 className="mt-2 font-affiche text-4xl texte-degrade">Entre ta phrase secrète</h1>
         </div>
         <form onSubmit={deverrouiller} className="flex flex-col gap-3">
           <Champ name="mdp" type="password" autoComplete="current-password" autoFocus />
@@ -983,7 +983,7 @@ export default function PageCoffre() {
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
               Bonjour {prenom || 'toi'}
             </p>
-            <h1 className="mt-2 font-affiche text-3xl sm:text-4xl">Voici où en sont tes papiers</h1>
+            <h1 className="mt-2 font-affiche text-3xl sm:text-4xl texte-degrade">Voici où en sont tes papiers</h1>
             <p className="mt-3 max-w-md text-ink-soft">
               Tout est déjà lu et rangé pour toi — il ne reste qu&apos;à jeter un œil.
             </p>

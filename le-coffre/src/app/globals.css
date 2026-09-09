@@ -18,13 +18,13 @@
  * cinquième rôle sémantique, pas une des quatre teintes ci-dessus.
  */
 @theme {
-  --color-paper: #0b0c0f;
-  --color-paper-raised: #15171d;
+  --color-paper: #0f1115;
+  --color-paper-raised: #202430;
   --color-ink: #f2f1ee;
   --color-ink-soft: #9ea3b0;
   --color-line: #262a33;
-  --color-accent: #2dd4bf;
-  --color-accent-strong: #5eead4;
+  --color-accent: #40e0d0;
+  --color-accent-strong: #6ee8da;
   --color-violet: #a78bfa;
   --color-vert: #34d399;
   --color-bleu: #3b82f6;
@@ -39,4 +39,89 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-corps);
+}
+
+/*
+ * Habillage « Lefouzebreizh Studio » demandé le 09/09/2026 — fond, cartes,
+ * dégradé turquoise-violet sur les boutons d'action, lift + glow au survol
+ * des cartes, entrée en cascade des sections. Palette exacte demandée :
+ * fond #0F1115, cartes #202430, turquoise lagon #40E0D0, violet #7C3AED.
+ *
+ * `#7c3aed` n'est PAS repris dans `--color-violet` ci-dessus : mesuré
+ * (formule WCAG), il ne rend que 3,3:1 sur `--color-paper` — sous le seuil
+ * de la maison (7:1) et sous le minimum légal (4,5:1), le même défaut déjà
+ * mesuré sur l'accent de TITAN Builder (2,6:1) dans `theme-partage.md`. Il
+ * reste donc réservé au dégradé et au glow ci-dessous, où c'est le blanc du
+ * texte de bouton qui doit rester lisible (5,7:1, mesuré), jamais posé seul
+ * comme couleur de texte.
+ */
+:root {
+  --violet-degrade: #7c3aed;
+}
+
+/* Remplace tous les boutons bleu plats par le dégradé validé, sans toucher
+   au balisage : .bg-bleu et .hover\:bg-bleu-strong sont déjà posés partout
+   dans page.tsx pour chaque bouton d'action. */
+.bg-bleu {
+  background: linear-gradient(135deg, var(--color-accent), var(--violet-degrade));
+}
+.hover\:bg-bleu-strong:hover {
+  filter: brightness(1.12);
+}
+
+/* Lift + glow au survol de chaque carte/bloc principal — cible la même
+   paire de classes déjà posée sur l'en-tête, la bannière d'alerte, le bloc
+   « À trier », les dossiers et chaque fiche document. */
+.border-line.bg-paper-raised {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.border-line.bg-paper-raised:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 25%, transparent),
+    0 12px 32px -12px color-mix(in srgb, var(--violet-degrade) 55%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .border-line.bg-paper-raised:hover {
+    transform: translateY(-3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .border-line.bg-paper-raised {
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+}
+
+/* Entrée en cascade des sections de la page — les enfants directs du grand
+   conteneur de page.tsx, jamais les fiches individuelles d'une liste. */
+@media (prefers-reduced-motion: no-preference) {
+  main > div.flex.flex-col.gap-8 > * {
+    animation: cascade-entree 0.55s ease-out backwards;
+  }
+  main > div.flex.flex-col.gap-8 > *:nth-child(1) { animation-delay: 0ms; }
+  main > div.flex.flex-col.gap-8 > *:nth-child(2) { animation-delay: 60ms; }
+  main > div.flex.flex-col.gap-8 > *:nth-child(3) { animation-delay: 120ms; }
+  main > div.flex.flex-col.gap-8 > *:nth-child(4) { animation-delay: 180ms; }
+  main > div.flex.flex-col.gap-8 > *:nth-child(5) { animation-delay: 240ms; }
+  main > div.flex.flex-col.gap-8 > *:nth-child(6) { animation-delay: 300ms; }
+  main > div.flex.flex-col.gap-8 > *:nth-child(7) { animation-delay: 360ms; }
+  main > div.flex.flex-col.gap-8 > *:nth-child(8) { animation-delay: 420ms; }
+}
+/* Dégradé turquoise → violet sur les titres et éléments d'accent. */
+.texte-degrade {
+  background: linear-gradient(135deg, var(--color-accent), var(--violet-degrade));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes cascade-entree {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

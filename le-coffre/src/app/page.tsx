@@ -37,7 +37,7 @@ export default function PageAccueil() {
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-8 bg-gradient-to-b from-paper via-paper to-vert/5 px-6 py-16">
       <div>
         <p className="text-base font-semibold tracking-widest text-accent uppercase">Le Tiroir Secret</p>
-        <h1 className="mt-2 font-affiche text-4xl leading-tight">Tes papiers, tes corvées administratives</h1>
+        <h1 className="mt-2 font-affiche text-4xl leading-tight texte-degrade">Tes papiers, tes corvées administratives</h1>
         <p className="mt-4 text-ink-soft">
           Dépose tes documents administratifs — chiffrés entièrement dans ton navigateur avant
           d&apos;être envoyés. Ni nous, ni personne d&apos;autre, ne pouvons les lire sans ta phrase
