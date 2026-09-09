@@ -455,10 +455,6 @@
     border-style: var(--tw-border-style);
     border-width: 1px;
   }
-  .border-2 {
-    border-style: var(--tw-border-style);
-    border-width: 2px;
-  }
   .border-t {
     border-top-style: var(--tw-border-style);
     border-top-width: 1px;
@@ -903,7 +899,7 @@ body {
   }
 }
 .degrade-texte {
-  background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
+  background-image: linear-gradient(165deg, var(--teinte-1), var(--teinte-2));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -916,10 +912,24 @@ body {
 .bouton-accent:hover {
   filter: brightness(1.15);
 }
-.filtre-actif {
-  background: var(--color-relief);
+.chip-neutre {
+  color: var(--color-sourdine);
+  background: var(--color-panneau);
+  box-shadow: inset 0 0 0 1px var(--color-bord);
+}
+.chip-neutre:hover {
   color: var(--color-brume);
-  border-color: var(--color-sourdine);
+}
+.chip-neutre.choisi {
+  color: var(--color-brume);
+  background: var(--color-relief);
+  box-shadow: inset 0 0 0 2px var(--color-sourdine);
+}
+.badge-1.choisi {
+  box-shadow: inset 0 0 0 2px var(--teinte-1);
+}
+.badge-2.choisi {
+  box-shadow: inset 0 0 0 2px var(--teinte-2);
 }
 .pastille-accent {
   background: var(--teinte-1);

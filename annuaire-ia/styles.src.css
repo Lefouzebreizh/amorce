@@ -110,8 +110,17 @@ body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
 .halo-2 { top: 6rem; right: -10rem; height: 32rem; width: 32rem; background: color-mix(in srgb, var(--teinte-2) 24%, transparent); }
 .halo-3 { bottom: 0; left: 33%; height: 28rem; width: 28rem; background: color-mix(in srgb, var(--teinte-1) 14%, transparent); }
 
+/*
+ * Le dégradé descend (165°) au lieu de traverser (90°), et ce n'est pas une
+ * préférence : `background-clip: text` étale la course sur la **boîte** du
+ * titre, pas sur chaque ligne. En 90°, un titre centré qui passe à la ligne
+ * voit ses lignes courtes tomber toutes dans la même tranche — mesuré sur le
+ * terrain de référence à 393 px, où « La Boîte à Outils IA des pros pressés »
+ * tient sur trois lignes et n'affichait plus de turquoise après le premier mot.
+ * Vertical, chaque ligne reçoit sa part quelle que soit sa largeur.
+ */
 .degrade-texte {
-  background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
+  background-image: linear-gradient(165deg, var(--teinte-1), var(--teinte-2));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 /*
@@ -155,11 +164,31 @@ body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
  * `sourdine` 5,35:1 — au-dessus du plancher de 3:1 des éléments non textuels.
  * Mesuré, pas choisi à l'œil.
  */
-.filtre-actif {
-  background: var(--color-relief);
-  color: var(--color-brume);
-  border-color: var(--color-sourdine);
+/*
+ * Chips de filtre. Ils reprennent `.badge-1` / `.badge-2` tels quels — même
+ * texte teinté, même voile, même trait — pour qu'un chip et le badge de sa
+ * catégorie se répondent d'un coup d'œil.
+ *
+ * L'état choisi se marque au **trait**, jamais en épaississant le voile, et
+ * c'est mesuré : le voile est fait de la teinte elle-même, donc l'épaissir
+ * éclaircit le fond sur lequel le texte est posé et fait chuter son contraste.
+ * Sur la carte composite #1b1e28, le violet rend 7,75:1 sans voile, 6,17 à 12 %
+ * et 5,96 à 14 %. Un trait, lui, est du non-texte : son plancher est 3:1, et la
+ * teinte pleine le tient largement.
+ */
+.chip-neutre {
+  color: var(--color-sourdine);
+  background: var(--color-panneau);
+  box-shadow: inset 0 0 0 1px var(--color-bord);
 }
+.chip-neutre:hover { color: var(--color-brume); }
+.chip-neutre.choisi {
+  color: var(--color-brume);
+  background: var(--color-relief);
+  box-shadow: inset 0 0 0 2px var(--color-sourdine);
+}
+.badge-1.choisi { box-shadow: inset 0 0 0 2px var(--teinte-1); }
+.badge-2.choisi { box-shadow: inset 0 0 0 2px var(--teinte-2); }
 .pastille-accent { background: var(--teinte-1); }
 .texte-accent { color: var(--teinte-2); }
 .bandeau-accent { background-image: linear-gradient(90deg, color-mix(in srgb, var(--teinte-1) 20%, transparent), color-mix(in srgb, var(--teinte-2) 8%, transparent)); }

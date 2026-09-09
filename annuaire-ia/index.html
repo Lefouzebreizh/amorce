@@ -45,8 +45,14 @@
     <span class="pastille-accent h-1.5 w-1.5 rounded-full"></span>
     Mise à jour <span id="date-maj">…</span> · <span id="compteur-entete">…</span> outils testés
   </p>
-  <h1 class="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl">
-    <span id="h1-accent" class="degrade-texte"></span><br class="hidden sm:block">
+  <!-- Le dégradé porte sur le h1 entier, jamais sur sa première ligne seule.
+       Posé sur chaque span, il repartirait du turquoise à chaque ligne et le
+       titre se lirait en deux morceaux ; posé sur le bloc, les deux lignes
+       partagent une seule course turquoise → violet. `text-white` est retiré
+       et non commenté : il gagnerait sur le `color: transparent` que
+       `background-clip: text` exige, et la ligne resterait blanche. -->
+  <h1 class="degrade-texte mt-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
+    <span id="h1-accent"></span><br class="hidden sm:block">
     <span id="h1-suite"></span>
   </h1>
   <p id="slogan" class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-sourdine sm:text-lg"></p>
@@ -395,9 +401,17 @@
   function peindreFiltres() {
     for (const b of filtres.children) {
       const actif = b.dataset.categorie === etat.categorie;
-      b.className = actif
-        ? 'filtre-actif min-h-11 rounded-xl border-2 px-4 text-sm font-semibold transition'
-        : 'min-h-11 rounded-xl border border-bord bg-panneau/70 px-4 text-sm font-medium text-sourdine transition hover:text-white';
+      /* Un chip porte exactement la teinte que sa catégorie porte en badge sur
+         les cartes : `classeBadge` est la même source pour les deux, si bien
+         qu'une catégorie garde sa couleur partout sur la page, quel que soit
+         le tri courant.
+         « Tous » en est écarté à dessein — ce n'est pas une catégorie, et le
+         faire passer par `classeBadge` lui donnerait la teinte du rang -1,
+         donc celle de la première catégorie : deux chips voisins identiques.
+         Le poids de police ne change plus entre les deux états : il déplaçait
+         la rangée entière à chaque clic. */
+      const teinte = b.dataset.categorie === 'Tous' ? 'chip-neutre' : classeBadge(b.dataset.categorie);
+      b.className = `${teinte}${actif ? ' choisi' : ''} min-h-11 rounded-xl px-4 text-sm font-semibold transition`;
       b.setAttribute('aria-pressed', String(actif));
     }
   }
