@@ -75,6 +75,27 @@ fichier n'est jamais ouvert. **Une session qui ne peut pas produire le lien le
 dit franchement et explique pourquoi**, plutôt que de décrire vaguement un
 emplacement — une adresse approximative coûte plus qu'une absence d'adresse.
 
+**Et le moment est fixé, posé par le propriétaire le 09/09/2026** : dès qu'une
+tâche de design ou de déploiement est terminée **et vérifiée en ligne**,
+l'adresse complète part dans le message qui l'annonce — sans qu'il ait à la
+redemander.
+
+Les trois lignes ci-dessus disaient déjà *comment* écrire une adresse ; aucune
+ne disait *quand* la donner. Alors elle se donnait quand on y pensait, c'est-à-
+dire au message d'après, sur demande. Le coût ne se voit pas dans la session
+qui l'omet : il se paie chez lui, en un aller-retour depuis un téléphone pour
+obtenir une chaîne de caractères que la session avait sous la main.
+
+Deux précisions, parce qu'elles décident du cas réel :
+
+- **« Vérifiée en ligne » veut dire mesurée à l'adresse même**, pas « la
+  fusion est passée ». Un déploiement fusionné n'est pas un déploiement servi
+  — c'est toute la leçon du 06/09 sur `artisan-express`. Tant que la page n'a
+  pas été atteinte, on donne l'adresse **en disant** qu'elle n'est pas encore
+  servie ; on ne la tait pas, et on ne la présente pas comme vivante.
+- **L'adresse se redonne à chaque fois**, même donnée dix messages plus haut.
+  Remonter un fil sur un écran de six pouces coûte plus cher que la relire.
+
 **Ce régime a été remis en question et reconduit, le 29/08/2026.** Un gabarit
 « Lead Architect » proposait de le remplacer par un mode où l'agent liste les
 fichiers dont il a besoin et attend l'accord avant de les lire, puis s'arrête au
