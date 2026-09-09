@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FileText, Folder, Globe, Send, X } from 'lucide-react';
-import { demanderAuCoffre, type IndexCoffre, type TourConversation } from '@/lib/coffre';
+import { FileText, Folder, Globe, Send, Trash2, X } from 'lucide-react';
+import { demanderAuCoffre, type ActionAssistant, type IndexCoffre, type TourConversation } from '@/lib/coffre';
 
 type Message = TourConversation & {
   // Présents seulement sur un message de l'assistant — jamais reconstruits
@@ -11,9 +11,20 @@ type Message = TourConversation & {
   ouvrirFormulaire?: boolean;
   ouvrirRangement?: boolean;
   rechercheWebEffectuee?: boolean;
+  actions?: ActionAssistant[];
+  // Résultat d'une action déjà exécutée, indexé sur sa position dans
+  // `actions` — jamais réinitialisé, pour qu'une action faite reste
+  // affichée comme faite plutôt que de reproposer un bouton « Confirmer ».
+  actionsExecutees?: Record<number, string>;
 };
 
-export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement }: {
+function libelleAction(a: ActionAssistant): string {
+  return a.type === 'classer'
+    ? `Classer « ${a.nom} » dans « ${a.categorie} »`
+    : `Supprimer « ${a.nom} »`;
+}
+
+export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement, onExecuterAction }: {
   index: IndexCoffre;
   // Posée par la recherche locale restée sans résultat, envoyée une seule
   // fois à l'ouverture — voir l'effet ci-dessous. Absente ou vide : le chat
@@ -23,10 +34,18 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
   onOuvrirDocument: (nom: string) => void;
   onOuvrirFormulaire: () => void;
   onOuvrirRangement: () => void;
+  // Exécute une action proposée par l'assistant (classer, supprimer) après
+  // confirmation de l'utilisateur — jamais toute seule. Rend un message
+  // court à afficher à la place du bouton, succès ou échec.
+  onExecuterAction: (action: ActionAssistant) => Promise<string>;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState('');
   const [enCours, setEnCours] = useState(false);
+  // Position (index de message, index d'action) de l'action en cours
+  // d'exécution — désactive son bouton le temps de l'appel, sans bloquer
+  // le reste du chat.
+  const [actionEnCours, setActionEnCours] = useState<string | null>(null);
   const finDesMessages = useRef<HTMLDivElement>(null);
   const dejaEnvoyee = useRef(false);
 
@@ -55,9 +74,25 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
         ouvrirFormulaire: reponse.ouvrirFormulaire,
         ouvrirRangement: reponse.ouvrirRangement,
         rechercheWebEffectuee: reponse.rechercheWebEffectuee,
+        actions: reponse.actions,
       }]);
     } finally {
       setEnCours(false);
+    }
+  }
+
+  async function confirmerAction(indexMessage: number, indexAction: number, action: ActionAssistant) {
+    const cle = `${indexMessage}-${indexAction}`;
+    if (actionEnCours) return;
+    setActionEnCours(cle);
+    try {
+      const resultat = await onExecuterAction(action);
+      setMessages((precedent) => precedent.map((m, i) => i !== indexMessage ? m : {
+        ...m,
+        actionsExecutees: { ...m.actionsExecutees, [indexAction]: resultat },
+      }));
+    } finally {
+      setActionEnCours(null);
     }
   }
 
@@ -114,8 +149,9 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
         <div className="flex-1 overflow-y-auto p-5">
           {messages.length === 0 && (
             <p className="rounded-2xl border border-dashed border-line bg-paper p-4 text-sm text-ink-soft">
-              Essaie « trouve mes photos », « le papier de la mutuelle », « comment résilier une
-              assurance habitation », ou « je veux remplir un formulaire ».
+              Essaie « trouve mes photos », « range la facture EDF dans Énergie », « supprime le
+              doublon de la carte grise », « comment résilier une assurance habitation », ou « je
+              veux remplir un formulaire ».
             </p>
           )}
           <ul className="flex flex-col gap-3">
@@ -163,6 +199,31 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
                     >
                       <Folder size={12} /> Ranger en dossiers
                     </button>
+                  )}
+                  {m.actions && m.actions.length > 0 && (
+                    <div className="mt-2 flex flex-col items-start gap-1.5">
+                      {m.actions.map((a, ai) => {
+                        const fait = m.actionsExecutees?.[ai];
+                        const cleAction = `${i}-${ai}`;
+                        if (fait) {
+                          return <p key={ai} className="text-xs text-ink-soft">{fait}</p>;
+                        }
+                        return (
+                          <button
+                            key={ai}
+                            type="button"
+                            disabled={actionEnCours === cleAction}
+                            onClick={() => confirmerAction(i, ai, a)}
+                            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-paper transition disabled:opacity-60 ${
+                              a.type === 'supprimer' ? 'bg-wine hover:bg-wine/80' : 'bg-bleu hover:bg-bleu-strong'
+                            }`}
+                          >
+                            {a.type === 'supprimer' ? <Trash2 size={12} /> : <Folder size={12} />}
+                            {actionEnCours === cleAction ? 'En cours…' : `Confirmer : ${libelleAction(a)}`}
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </li>

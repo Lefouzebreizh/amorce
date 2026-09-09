@@ -103,6 +103,29 @@ navigateur (`nomExistant` dans `AssistantCoffre.tsx`) avant d'afficher un lien
 cliquable vers un document cité — une garantie de plus, indépendante du prompt,
 si jamais Claude recopiait mal un nom.
 
+**Depuis le 09/09/2026, l'assistant peut aussi proposer une action** — classer
+un document précis dans une catégorie (existante ou nouvelle, ce qui crée un
+dossier) ou en supprimer un — jamais l'exécuter : la fonction serveur n'a
+toujours ni la clé de chiffrement ni le fichier, elle ne fait que renvoyer un
+champ `actions` dans sa réponse JSON. L'exécution reste entièrement côté
+navigateur, après un clic de confirmation explicite sur chaque action, par les
+mêmes fonctions qu'un geste manuel (`modifierObjet`, `modifierPlusieursObjets`,
+`supprimerFichier`). Trois gardes-fous, dans l'ordre où ils interviennent :
+
+1. Le serveur ne retient une action que si son `nom` figure mot pour mot dans
+   la liste transmise — un nom halluciné ou approché est rejeté avant même de
+   sortir de la fonction.
+2. `nom` est le nom AFFICHÉ (`.nom`), jamais la clé opaque de stockage
+   (`nomOpaque()`) qui identifie réellement l'entrée dans l'index — les deux
+   sont des textes différents, et le confondre a longtemps rendu impossible
+   d'ouvrir un document cité par l'assistant. `clesParNomAffiche` (dans
+   `src/lib/coffre.ts`) fait la résolution côté navigateur, jamais côté
+   serveur, et rend toutes les clés qui partagent ce nom plutôt que d'en
+   choisir une au hasard.
+3. Une suppression ne s'exécute jamais si plusieurs documents partagent le
+   même nom affiché — l'ambiguïté est signalée plutôt que résolue en
+   devinant lequel des deux effacer.
+
 ## La lettre de résiliation : un gabarit fixe, jamais du texte deviné
 
 Ajoutée le 04/09/2026, en version volontairement simplifiée par rapport à
