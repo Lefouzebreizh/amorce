@@ -845,7 +845,8 @@
 }
 :root {
   --teinte-1: #40E0D0;
-  --teinte-2: #C2A2F6;
+  --teinte-2: #7C3AED;
+  --teinte-2-texte: #D4C6FB;
 }
 .hidden {
   display: none !important;
@@ -899,7 +900,7 @@ body {
   }
 }
 .degrade-texte {
-  background-image: linear-gradient(165deg, var(--teinte-1), var(--teinte-2));
+  background-image: linear-gradient(100deg, var(--teinte-1) 0%, var(--teinte-1) 35%, var(--teinte-2) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -929,13 +930,13 @@ body {
   box-shadow: inset 0 0 0 2px var(--teinte-1);
 }
 .badge-2.choisi {
-  box-shadow: inset 0 0 0 2px var(--teinte-2);
+  box-shadow: inset 0 0 0 2px var(--teinte-2-texte);
 }
 .pastille-accent {
   background: var(--teinte-1);
 }
 .texte-accent {
-  color: var(--teinte-2);
+  color: var(--teinte-2-texte);
 }
 .bandeau-accent {
   background-image: linear-gradient(90deg, var(--teinte-1), var(--teinte-2));
@@ -973,14 +974,14 @@ body {
   }
 }
 .badge-2 {
-  color: var(--teinte-2);
+  color: var(--teinte-2-texte);
   background: var(--teinte-2);
   @supports (color: color-mix(in lab, red, red)) {
-    background: color-mix(in srgb, var(--teinte-2) 12%, transparent);
+    background: color-mix(in srgb, var(--teinte-2) 18%, transparent);
   }
   box-shadow: inset 0 0 0 1px var(--teinte-2);
   @supports (color: color-mix(in lab, red, red)) {
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-2) 32%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-2) 50%, transparent);
   }
 }
 @keyframes monter {
@@ -1011,7 +1012,7 @@ body {
   @supports (color: color-mix(in lab, red, red)) {
     background: color-mix(in srgb, var(--teinte-1) 18%, transparent);
   }
-  color: var(--teinte-2);
+  color: var(--teinte-2-texte);
   box-shadow: inset 0 0 0 1px var(--teinte-1);
   @supports (color: color-mix(in lab, red, red)) {
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte-1) 40%, transparent);
