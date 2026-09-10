@@ -45,6 +45,33 @@ for (const nom of ['rush1.webm', 'rush-paysage.webm']) {
 mkdirSync(SHOTS, { recursive: true });
 
 /**
+ * Le modèle de détection, posé ici plutôt que par le workflow.
+ *
+ * `npm run mediapipe` ne tourne qu'en `prebuild`, donc jamais avant ce
+ * parcours : l'intégration continue enchaîne `fixtures`, `dev`, `verify`, et
+ * `/mediapipe/visage.tflite` y rendait 404. Le contrôle de trajectoire tombait
+ * alors pour une raison qui n'a rien à voir avec le code éprouvé.
+ *
+ * Le poser depuis ce script plutôt que d'ajouter une étape au workflow n'est
+ * pas un contournement : c'est le même geste que `npm run fixtures`, dont ce
+ * parcours dépend déjà — la matière qu'il lui faut, il se la donne.
+ */
+const MODELE = join(ROOT, 'public', 'mediapipe', 'visage.tflite');
+if (!existsSync(MODELE)) {
+  const pose = spawnSync('node', [join(ROOT, 'scripts', 'assembler-mediapipe.mjs')], {
+    encoding: 'utf8',
+  });
+  if (pose.status !== 0) console.log(`     modèle non posé : ${(pose.stderr ?? '').trim().slice(0, 120)}`);
+}
+/*
+ * L'assembleur sort en succès même quand l'hôte du modèle a hoqueté — c'est
+ * voulu, une fonctionnalité facultative ne doit pas casser un déploiement. On
+ * relit donc le disque plutôt que le code de sortie.
+ */
+const MODELE_LA = existsSync(MODELE);
+if (!MODELE_LA) console.log('     modèle de détection absent : la trajectoire ne sera pas mesurée.');
+
+/**
  * Deux profils, une seule passe.
  *
  * Le téléphone n'est pas qu'un écran plus étroit : le pointeur est un doigt et
@@ -1786,6 +1813,9 @@ if (exportPath) {
    * la trajectoire attendue est centrée. Juger le suivi demande un rush filmé,
    * qu'aucune fixture ne fabrique.
    */
+  if (!MODELE_LA) {
+    console.log('  —    | Trajectoire non mesurée (modèle de détection absent)');
+  } else {
   const trajectoire = await page.evaluate(
     (parSeconde) =>
       new Promise((resolve) => {
@@ -1831,6 +1861,7 @@ if (exportPath) {
     trajectoire.parSeconde === PAR_SECONDE_CADRAGE && trajectoire.centres > 0,
     trajectoire.erreur ?? `${trajectoire.centres} échantillons à ${trajectoire.parSeconde}/s`,
   );
+  }
 }
 
 
