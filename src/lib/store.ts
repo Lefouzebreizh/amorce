@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { analyzeProject } from './analysis.ts';
+import type { Cadrage } from './cadrage.ts';
 import { HAUTEURS_LIBRES, Y_PAR_DEFAUT } from './captions.ts';
 import { uid } from './id.ts';
 import { applyAutoEdit } from './autoEdit.ts';
@@ -129,6 +130,37 @@ type StudioState = {
   // -- Médias ---------------------------------------------------------------
   addAssets: (assets: MediaAsset[]) => void;
   removeAsset: (assetId: string) => void;
+
+  /**
+   * Pose sur un rush la trajectoire de cadrage que la détection vient de
+   * mesurer.
+   *
+   * **N'entre pas dans l'historique**, et c'est le point qui décide de son
+   * écriture. Une trajectoire n'est pas un geste de montage : elle est une
+   * propriété de la **source**, comme sa durée ou sa définition. L'inscrire
+   * dans la pile d'annulation donnerait une entrée « annuler » qui ne
+   * correspond à rien de ce que l'utilisateur a fait, et une annulation
+   * ordinaire — défaire une coupe — ferait disparaître au passage un travail
+   * qu'il n'a pas demandé à défaire.
+   *
+   * Elle est donc recopiée dans l'état courant **et dans chaque instantané**
+   * déjà empilé, pour que remonter le temps ne la perde pas. C'est plus long à
+   * écrire qu'un `set` simple, et c'est ce qui rend l'annulation indifférente à
+   * la détection au lieu de la combattre.
+   */
+  poserCadrage: (assetId: string, cadrage: Cadrage) => void;
+
+  /**
+   * Vrai pendant qu'un export tourne.
+   *
+   * Sert à une seule chose, et elle relève de l'invariant n°3 : un navigateur
+   * Android n'accorde que six à huit décodeurs vidéo, et l'export les mobilise
+   * tous. La détection de cadrage, qui ouvre son propre `<video>`, s'arrête
+   * donc tant que ce drapeau est levé — un décodeur de trop fait sortir
+   * l'export noir, sans la moindre erreur.
+   */
+  exportEnCours: boolean;
+  setExportEnCours: (enCours: boolean) => void;
 
   /**
    * Monte tout d'un coup à partir des rushes importés.
@@ -309,6 +341,27 @@ export const useStudio = create<StudioState>((set, get) => {
 
   addAssets: (assets) =>
     mutate('import', (state) => ({ project: { ...state.project, assets: [...state.project.assets, ...assets] } })),
+
+  exportEnCours: false,
+  setExportEnCours: (exportEnCours) => set({ exportEnCours }),
+
+  poserCadrage: (assetId, cadrage) =>
+    set((state) => {
+      // Le rush a pu être retiré pendant que la détection tournait : elle dure
+      // plusieurs secondes, et rien n'empêche d'importer puis de supprimer.
+      if (!state.project.assets.some((a) => a.id === assetId)) return state;
+
+      const poser = (projet: Project): Project => ({
+        ...projet,
+        assets: projet.assets.map((a) => (a.id === assetId ? { ...a, cadrage } : a)),
+      });
+
+      return {
+        project: poser(state.project),
+        past: state.past.map((instantane) => ({ ...instantane, project: poser(instantane.project) })),
+        future: state.future.map((instantane) => ({ ...instantane, project: poser(instantane.project) })),
+      };
+    }),
 
   removeAsset: (assetId) =>
     mutate('import-retrait', (state) => {

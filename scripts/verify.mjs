@@ -22,6 +22,15 @@ const RUSHES = join(ROOT, '.fixtures', 'rushes');
 const SHOTS = join(ROOT, '.fixtures', 'captures');
 const URL_BASE = (process.env.AMORCE_URL || 'http://localhost:3000') + '/studio';
 
+/*
+ * Le pas d'échantillonnage de la détection de cadrage, recopié de
+ * `src/lib/detection.ts`. Recopié et non importé : ce script est du JavaScript
+ * nu conduit par Node, et le module est du TypeScript qui charge MediaPipe à la
+ * demande. Le contrôle ci-dessous compare la valeur trouvée en base à celle-ci,
+ * donc un changement de pas fait tomber le parcours au lieu de passer inaperçu.
+ */
+const PAR_SECONDE_CADRAGE = 10;
+
 /** Durée attendue du montage express sur les rushes de test, en secondes. */
 const EXPECTED_DURATION = 7.5;
 
@@ -1761,6 +1770,67 @@ if (exportPath) {
     `${(peint * 100).toFixed(1)} % de l’image peinte`,
   );
   await page.screenshot({ path: join(SHOTS, `07-paysage-${profile.id}.png`) });
+
+  /*
+   * La détection de sujet a-t-elle **vraiment** tourné sur ce rush ?
+   *
+   * On le lit dans IndexedDB plutôt que par un crochet de débogage posé sur
+   * `window` : la reprise enregistre déjà chaque rush avec ses champs, la
+   * trajectoire comprise. Rien n'est ajouté à l'application pour la vérifier —
+   * on lit ce qu'elle écrit de toute façon.
+   *
+   * Ce que ce contrôle prouve, et ce qu'il ne prouve pas : la file tourne, elle
+   * choisit bien le rush large, elle charge le modèle depuis notre propre
+   * origine et elle repose son résultat dans le projet. Il ne dit **rien** de la
+   * justesse du cadrage : le rush de test porte un disque, pas un visage, donc
+   * la trajectoire attendue est centrée. Juger le suivi demande un rush filmé,
+   * qu'aucune fixture ne fabrique.
+   */
+  const trajectoire = await page.evaluate(
+    (parSeconde) =>
+      new Promise((resolve) => {
+        const limite = Date.now() + 60000;
+        const lire = () => {
+          const ouverture = indexedDB.open('amorce');
+          ouverture.onerror = () => resolve({ erreur: 'base illisible' });
+          ouverture.onsuccess = () => {
+            const base = ouverture.result;
+            // `projet`, au singulier, et une seule entrée : voir `persistence.ts`.
+            if (!base.objectStoreNames.contains('projet')) {
+              base.close();
+              return resolve({ erreur: 'aucun projet enregistré' });
+            }
+            const demande = base.transaction('projet').objectStore('projet').getAll();
+            demande.onsuccess = () => {
+              const enregistres = demande.result ?? [];
+              const rushes = enregistres.flatMap((e) => e?.project?.assets ?? []);
+              const large = rushes.find((a) => a && a.width > a.height);
+              base.close();
+              if (large?.cadrage) {
+                return resolve({
+                  parSeconde: large.cadrage.parSeconde,
+                  centres: large.cadrage.centres?.length ?? 0,
+                  attendu: parSeconde,
+                });
+              }
+              if (Date.now() > limite) {
+                return resolve({ erreur: large ? 'rush large sans trajectoire' : 'rush large absent de la base' });
+              }
+              setTimeout(lire, 1000);
+            };
+            demande.onerror = () => resolve({ erreur: 'lecture refusée' });
+          };
+        };
+        lire();
+      }),
+    PAR_SECONDE_CADRAGE,
+  );
+
+  check(
+    'Le rush paysage reçoit une trajectoire de cadrage',
+    trajectoire.parSeconde === PAR_SECONDE_CADRAGE && trajectoire.centres > 0,
+    trajectoire.erreur ?? `${trajectoire.centres} échantillons à ${trajectoire.parSeconde}/s`,
+  );
 }
 
 

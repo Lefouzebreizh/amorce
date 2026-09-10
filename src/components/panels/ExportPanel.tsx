@@ -61,6 +61,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
   const renameProject = useStudio((s) => s.renameProject);
   const presetId = useStudio((s) => s.exportPreset);
   const setPreset = useStudio((s) => s.setExportPreset);
+  const setExportEnCours = useStudio((s) => s.setExportEnCours);
   /*
    * La licence décide de ce qui est **proposé**, jamais de ce que le moteur
    * fait d'un fichier. Elle n'agit ici que sur la liste des définitions.
@@ -163,6 +164,12 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
     setRestant(null);
     departRef.current = performance.now();
     arretRef.current = new AbortController();
+    /*
+     * Écarte la détection de cadrage le temps de l'export. Elle ouvre son
+     * propre `<video>`, et un décodeur de trop fait sortir l'export noir sans
+     * lever la moindre erreur — invariant n°3.
+     */
+    setExportEnCours(true);
 
     /*
      * L'avancement porte aussi l'estimation.
@@ -305,6 +312,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
         setError(cause instanceof Error ? cause.message : 'L’export a échoué.');
       }
     } finally {
+      setExportEnCours(false);
       setProgress(null);
       setRestant(null);
       arretRef.current = null;
