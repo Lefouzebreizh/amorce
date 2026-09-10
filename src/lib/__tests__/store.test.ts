@@ -9,9 +9,24 @@ import { PLACEHOLDER_HOOK } from '../autoEdit.ts';
 /**
  * Le studio est un magasin unique : chaque test repart d'un projet vierge,
  * sans quoi l'ordre d'exécution changerait les résultats.
+ *
+ * L'historique **et** l'état de regroupement en font partie, et ils y ont
+ * manqué longtemps. Deux tests du mixage ne passaient que grâce à cette fuite :
+ * un `setMix` d'un test précédent, encore dans la fenêtre de regroupement,
+ * empêchait l'empilement, si bien que l'annulation retombait sur un instantané
+ * étranger dont la valeur attendue s'y trouvait par hasard. Ils étaient verts
+ * et ne vérifiaient pas ce qu'ils annonçaient.
  */
 function reset() {
-  useStudio.setState({ project: emptyProject(), selection: null, playhead: 0, playing: false });
+  useStudio.setState({
+    project: emptyProject(),
+    selection: null,
+    playhead: 0,
+    playing: false,
+    past: [],
+    future: [],
+    regroupement: { label: '', instant: 0 },
+  });
 }
 
 function asset(id: string, duration: number): MediaAsset {
@@ -507,14 +522,13 @@ const CADRAGE = { parSeconde: 10, centres: [700, 705, 710] };
 
 test('poser une trajectoire n’ajoute rien à la pile d’annulation', () => {
   /*
-   * La pile est vidée ici, et ce n'est pas de la propreté : `reset` ne la
-   * touche pas, si bien qu'après deux cent cinquante tests elle est **saturée**
-   * à `HISTORY_LIMIT`. Pousser une entrée de plus en retire alors une, et la
-   * longueur ne bouge pas — la sonde ne mesurait plus rien. Vérifié en faisant
-   * passer `poserCadrage` par `mutate` : le test restait vert sur le défaut
-   * qu'il annonce, et ne devient rouge qu'une fois la pile vidée.
+   * La pile doit être **loin de sa borne** pour que sa longueur mesure encore
+   * quelque chose : plafonnée par `slice(-HISTORY_LIMIT)`, saturée, elle perd
+   * une entrée par le bas dès qu'on en pousse une, et ne bouge plus. C'est
+   * `reset` qui la vide depuis le 10/09/2026 ; avant lui, ce test restait vert
+   * en faisant passer `poserCadrage` par `mutate`, c'est-à-dire sur le défaut
+   * même qu'il annonce attraper.
    */
-  useStudio.setState({ past: [], future: [] });
   useStudio.getState().addAssets([asset('a', 5)]);
   const avant = useStudio.getState().past.length;
 
