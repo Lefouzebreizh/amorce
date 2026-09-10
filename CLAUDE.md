@@ -2002,6 +2002,18 @@ porte les dégradés et les traits, un violet clair porte les lettres. Seule la
 valeur du clair a changé, et une session qui recopierait `#C2A2F6` en croyant
 suivre la règle réintroduirait le défaut qu'elle vise.
 
+**Et `#D4C6FB` est la valeur du studio, pas une valeur à imposer aux autres
+produits — vérifié le 10/09/2026 avant d'y toucher.** Amorce porte
+`--color-violet-clair: #D3BEF9`, et ce n'est pas un écart à corriger : il est
+**dérivé** de son propre `#7C3AED`, teinte 261° et saturation 0,83 inchangées,
+la clarté seule remontée — la raison est écrite dans `src/app/globals.css`, et
+elle est plus forte qu'une ressemblance. Les deux tiennent le plancher de la
+maison sur la surface la plus claire d'Amorce : `#D3BEF9` rend **8,04:1**,
+`#D4C6FB` **8,54:1**. Le §2 bis tranche déjà ce genre de cas en propres termes
+— ce qui est partagé entre produits est la **structure** et le rapport de 1,07,
+jamais la teinte. Une session qui aligne les deux valeurs « pour la cohérence »
+casse une raison écrite pour satisfaire une règle qui n'existe pas.
+
 **« Visiter la vraie URL » est possible depuis une session distante**, et ce
 fichier a longtemps dit le contraire. `*.github.io` est refusé au mandataire —
 c'est toujours vrai pour `curl` d'ici — mais le bac à sable du connecteur
