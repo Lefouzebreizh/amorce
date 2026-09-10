@@ -709,11 +709,24 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   boucle en direct — **pas encore fait**, c'est le chantier suivant. Le témoin
   de rejeu passe d'un DCA plat à un achat unique conservé, l'étalon universel
   qui ne dépend plus d'aucun calendrier. **Ce qui n'a pas bougé** :
-  `risk_management/` et `execution/` intacts, 329 tests verts. **Ce qui reste
-  à faire avant tout capital réel** : rejouer ce nouveau moteur sur données
-  réelles — les mesures du README (§ 8 à 15) portent toutes sur l'ancien
-  moteur à DCA et sont désormais une archive de méthode, pas une description
-  de la stratégie actuelle.
+  `risk_management/` et `execution/` intacts, 329 tests verts, relu par
+  `garde-du-bot` sans violation trouvée. **Ce qui reste à faire avant tout
+  capital réel** : rejouer ce nouveau moteur sur données réelles — les
+  mesures du README (§ 8 à 15) portent toutes sur l'ancien moteur à DCA et
+  sont désormais une archive de méthode, pas une description de la stratégie
+  actuelle.
+  **Une mine posée pour le prochain chantier, trouvée par `garde-du-bot` en
+  relisant ce lot** : `orchestrateur._appliquer` ne lit `chaine`/`adresse`
+  que sur la ligne de watchlist de l'actif. Tant que le scanner n'est pas
+  branché, un actif hors watchlist n'a jamais d'adresse à vérifier — le veto
+  ne peut pas s'y appliquer, ce qui est correct puisque ce chemin est
+  aujourd'hui inatteignable. **Mais brancher le scanner sans corriger ce point
+  désactiverait silencieusement le bouclier anti-rugpull exactement sur les
+  jetons pour lesquels il existe** : une pépite découverte, avec une vraie
+  adresse de contrat, tomberait sur `ligne=None` → `adresse=None` → « pas
+  d'adresse, pas de bouclier » → achat autorisé sans aucune vérification. La
+  correction attendue : porter `chaine`/`adresse` sur la `Decision`
+  elle-même, jamais uniquement sur la ligne de watchlist.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
   sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
   reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de
