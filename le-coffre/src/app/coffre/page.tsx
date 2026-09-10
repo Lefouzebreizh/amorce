@@ -342,6 +342,14 @@ export default function PageCoffre() {
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [aValider, setAValider] = useState<EnAttente[]>([]);
+  // Miroir synchrone de aValider, pour confirmerTout ci-dessous : une
+  // boucle qui dépose « tout » doit voir l'état le plus frais à chaque
+  // tour, jamais l'instantané capturé à l'appel — c'est cet instantané qui
+  // laissait de côté les fichiers encore en lecture au moment du clic.
+  const aValiderRef = useRef<EnAttente[]>([]);
+  useEffect(() => {
+    aValiderRef.current = aValider;
+  }, [aValider]);
   const [survole, setSurvole] = useState(false);
   const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
@@ -590,25 +598,52 @@ export default function PageCoffre() {
   // à deposerFichier lancés côte à côte partiraient tous les deux du même
   // index de départ, et le second écraserait le premier au lieu de s'y
   // ajouter.
+  //
+  // Boucle plutôt qu'une seule passe sur `prets` : sur un gros lot, la
+  // lecture de chaque fichier (proposerClassement, un appel IA par fichier
+  // dans surDepot) prend plusieurs secondes et se termine en désordre —
+  // le bouton reste cliquable dès qu'UN SEUL fichier est prêt, pas tous. Une
+  // seule passe déposait alors ce sous-ensemble et abandonnait les fichiers
+  // encore « en lecture » à cet instant : ils restaient coincés dans la
+  // liste d'attente pour de bon, jamais redéposés tout seuls, et un tri
+  // automatique lancé juste après ne les voyait jamais — d'où un compteur
+  // de papiers plus bas que ce qui avait été réellement déposé. Tant qu'il
+  // reste un fichier en lecture, on l'attend au lieu de s'arrêter.
   async function confirmerTout() {
     if (!utilisateur || !cle) return;
-    const prets = aValider.filter((p) => !p.enAnalyse);
-    if (prets.length === 0) return;
+    if (aValiderRef.current.every((p) => p.enAnalyse)) return;
     setEnCours(true);
     setErreur('');
     let indexCourant = index;
     const echecs: string[] = [];
-    for (const item of prets) {
-      try {
-        indexCourant = await deposerFichier(
-          utilisateur.id, cle, item.fichier, item.categorie, indexCourant, item.nomAffiche, item.echeance,
-          item.emetteur || null, item.referenceClient || null, item.montant || null,
-          item.texteExtrait || null,
-        );
-        setIndex(indexCourant);
-        retirerAttente(item.cle);
-      } catch (err) {
-        echecs.push(`${item.nomAffiche} (${err instanceof Error ? err.message : String(err)})`);
+    // Un fichier dont le dépôt échoue reste dans la liste d'attente (pour
+    // que l'utilisateur le voie et le corrige) mais ne doit pas être
+    // retenté à chaque tour de la boucle ci-dessous — sinon un échec
+    // persistant (réseau, quota) transforme l'attente des fichiers encore
+    // en lecture en une boucle infinie sur ce même fichier en échec.
+    const dejaEnEchec = new Set<string>();
+    for (;;) {
+      const prets = aValiderRef.current.filter((p) => !p.enAnalyse && !dejaEnEchec.has(p.cle));
+      if (prets.length === 0) {
+        if (aValiderRef.current.some((p) => p.enAnalyse)) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          continue;
+        }
+        break;
+      }
+      for (const item of prets) {
+        try {
+          indexCourant = await deposerFichier(
+            utilisateur.id, cle, item.fichier, item.categorie, indexCourant, item.nomAffiche, item.echeance,
+            item.emetteur || null, item.referenceClient || null, item.montant || null,
+            item.texteExtrait || null,
+          );
+          setIndex(indexCourant);
+          retirerAttente(item.cle);
+        } catch (err) {
+          echecs.push(`${item.nomAffiche} (${err instanceof Error ? err.message : String(err)})`);
+          dejaEnEchec.add(item.cle);
+        }
       }
     }
     if (echecs.length > 0) setErreur(`Non déposés : ${echecs.join(', ')}.`);
