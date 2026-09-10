@@ -123,11 +123,23 @@ class TestNotation(unittest.TestCase):
 
     def test_capitalisation_absente_ne_casse_pas_la_note(self):
         """Une capitalisation absente n'est pas une capitalisation à zéro :
-        la moyenne se fait sur les trois composantes qui existent."""
+        elle note neutre (50) sur ce signal, comme `note_liquidite` le fait
+        déjà pour une variation de liquidité absente."""
 
         note, raisons = noter(candidat(capitalisation_usd=None), self.config)
         self.assertTrue(0.0 <= note <= 100.0)
         self.assertFalse(any("volume/capitalisation" in r for r in raisons))
+
+    def test_capitalisation_absente_ne_note_pas_mieux_quune_mauvaise_mesure(self):
+        """Trouvé par banc-du-bot le 10/09/2026 : en excluant la composante
+        de la moyenne au lieu de la neutraliser, un candidat sans
+        capitalisation connue notait mieux qu'un candidat dont la
+        capitalisation, connue, tombait en zone de distribution. Une absence
+        de donnée ne doit jamais valoir mieux qu'une mauvaise mesure."""
+
+        absente, _ = noter(candidat(capitalisation_usd=None), self.config)
+        distribuee, _ = noter(candidat(capitalisation_usd=240_000.0), self.config)  # ratio 5.0
+        self.assertGreaterEqual(absente, distribuee)
 
 
 class TestRatioVolumeCapitalisation(unittest.TestCase):

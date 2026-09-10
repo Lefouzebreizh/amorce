@@ -105,6 +105,17 @@ def _note_ratio_volume_mcap(ratio: float, config: ConfigPepites) -> tuple[float,
     `ratio_volume_mcap_haut`, la totalité (ou plus) de la capitalisation
     s'échange en un jour : ce n'est plus un afflux, c'est une distribution en
     cours, et la noter haut inverserait le sens du signal.
+
+    **Limite connue, non résolue** : ce signal ne croise pas
+    `variation_liquidite_24h`. Un ratio élevé accompagné d'une liquidité en
+    forte hausse (afflux réel, pas un carrousel — ce que `note_liquidite`
+    mesure déjà) est pénalisé ici comme une distribution, ce qui contredit
+    l'autre composante. Mesuré par `banc-du-bot` le 10/09/2026 : croiser les
+    deux proprement demanderait des données réelles pour calibrer, qui ne
+    sont pas joignables depuis une session distante (§7 CLAUDE.md) — voir
+    `second-brain/lecons/2026-09-10-nexuscrypto-existait-deja-avant-de-le-reconstruire.md`.
+    Les trois seuils par défaut (`ratio_volume_mcap_bas/sain/haut`) sont pour
+    la même raison des hypothèses plausibles, pas des valeurs mesurées.
     """
 
     bas, sain, haut = (
@@ -128,9 +139,16 @@ def _note_ratio_volume_mcap(ratio: float, config: ConfigPepites) -> tuple[float,
 
 
 def noter(candidat: Candidat, config: ConfigPepites) -> tuple[float, list[str]]:
-    """Note de 0 à 100. Quatre composantes à parts égales quand la
-    capitalisation est connue, trois sinon — une capitalisation absente n'est
-    pas une capitalisation à zéro (même règle que `scoring.calculer`)."""
+    """Note de 0 à 100, quatre composantes à parts égales.
+
+    Une capitalisation absente rend une note **neutre** (50) sur le ratio
+    volume/capitalisation, exactement comme `note_liquidite` le fait déjà
+    pour une variation de liquidité absente quelques lignes plus haut dans
+    cette même fonction. Écarter la composante de la moyenne plutôt que la
+    neutraliser a été essayé d'abord et rejeté, mesuré par `banc-du-bot` le
+    10/09/2026 : ça note un candidat sans capitalisation connue **mieux**
+    qu'un candidat dont la capitalisation est connue et défavorable — une
+    absence de donnée ne doit jamais valoir mieux qu'une mauvaise mesure."""
 
     raisons: list[str] = []
 
@@ -153,14 +171,14 @@ def noter(candidat: Candidat, config: ConfigPepites) -> tuple[float, list[str]]:
         if candidat.variation_liquidite_24h >= 0.3:
             raisons.append(f"liquidité +{candidat.variation_liquidite_24h:.0%} sur 24 h")
 
-    composantes = [note_volume, note_rotation, note_liquidite]
     if candidat.capitalisation_usd and candidat.capitalisation_usd > 0:
         ratio = candidat.volume_24h_usd / candidat.capitalisation_usd
         note_ratio, raisons_ratio = _note_ratio_volume_mcap(ratio, config)
-        composantes.append(note_ratio)
         raisons += raisons_ratio
+    else:
+        note_ratio = 50.0
 
-    note = sum(composantes) / len(composantes)
+    note = (note_volume + note_rotation + note_liquidite + note_ratio) / 4.0
     return note, raisons
 
 
