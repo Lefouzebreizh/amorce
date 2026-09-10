@@ -523,7 +523,19 @@ export default function PageCoffre() {
     // Chaque `setAValider` porte sa propre clé et utilise la forme
     // fonctionnelle — les réponses qui reviennent dans le désordre ne
     // s'écrasent jamais entre elles.
+    //
+    // Un fichier qu'on sait déjà illisible par l'IA (un SVG, par exemple —
+    // voir affinableParIA) n'est même pas soumis : l'appel échouerait à coup
+    // sûr, pour rien. Il garde directement sa catégorie instantanée, prête à
+    // être ajustée à la main dans la liste d'attente.
     await Promise.all(nouveaux.map(async (item) => {
+      const categorieLocale = categorieInstantanee(item.fichier.type);
+      if (!affinableParIA(categorieLocale, item.fichier.type)) {
+        setAValider((precedent) => precedent.map((p) => (p.cle === item.cle
+          ? { ...p, enAnalyse: false, categorie: categorieLocale }
+          : p)));
+        return;
+      }
       const proposition = await proposerClassement(item.fichier);
       setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
         ...p, enAnalyse: false,
