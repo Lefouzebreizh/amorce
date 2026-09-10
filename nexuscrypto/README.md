@@ -51,7 +51,7 @@ nexuscrypto/
 │   │   ├── courtier.py       # ✅ simulation réaliste + CCXT réel
 │   │   └── gestionnaire.py   # ✅ le seul chemin entre une décision et le marché
 │   ├── notifications/
-│   │   ├── canaux.py         # ✅ console, Telegram, Discord — en HTTP nu
+│   │   ├── canaux.py         # ✅ console, Discord — en HTTP nu (Telegram retiré le 10/09/2026)
 │   │   └── messages.py       # ✅ mise en forme, testée sans réseau
 │   ├── rejeu/
 │   │   ├── donnees.py        # ✅ CSV, CoinMetrics réel, six marchés fabriqués

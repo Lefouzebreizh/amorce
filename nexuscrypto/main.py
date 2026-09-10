@@ -40,6 +40,7 @@ if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
 from src.core import journal as journal_module  # noqa: E402
+from src.core import validation as validation_module  # noqa: E402
 from src.core.config import ConfigurationInvalide, charger  # noqa: E402
 from src.core.modeles import Mode, maintenant  # noqa: E402
 from src.core.reseau import ErreurReseau  # noqa: E402
@@ -56,6 +57,10 @@ def _arguments() -> argparse.ArgumentParser:
         "--config", default=None, help="chemin d'un config.yaml (défaut : config/config.yaml)"
     )
     analyseur.add_argument("--env", default=None, help="chemin d'un .env")
+    analyseur.add_argument(
+        "--validation", default=None,
+        help="chemin d'un validation.yaml (défaut : config/validation.yaml)",
+    )
     analyseur.add_argument(
         "--journal", default=None, help="niveau de journal (DEBUG, INFO, WARNING…)"
     )
@@ -396,6 +401,23 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
+
+    # Contrôlé avant même le chargement de la configuration principale, pour la
+    # même raison que le drapeau ci-dessus : `--je-confirme` prouve une
+    # intention, pas une preuve que le backtest et le paper trading ont eu
+    # lieu. Voir src/core/validation.py.
+    if mode is Mode.REEL:
+        etat = validation_module.charger(getattr(arguments, "validation", None))
+        pret, manques = validation_module.pret_pour_production(etat)
+        if not pret:
+            print(
+                "❌ Le mode production exige un état de validation documenté "
+                "(config/validation.yaml) — ce qui manque :",
+                file=sys.stderr,
+            )
+            for manque in manques:
+                print(f"   - {manque}", file=sys.stderr)
+            return 2
 
     try:
         config = charger(arguments.config, mode=mode, chemin_env=arguments.env)

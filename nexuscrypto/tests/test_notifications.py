@@ -18,7 +18,7 @@ from src.core.modeles import (
 from src.core.reseau import ErreurTemporaire
 from src.notifications import messages
 from src.notifications.canaux import (
-    CanalConsole, CanalDiscord, CanalTelegram, Notificateur, construire,
+    CanalConsole, CanalDiscord, Notificateur, construire,
 )
 from src.risk_management.coupe_circuit import Declenchement, Motif
 
@@ -99,21 +99,12 @@ class TestMessages(unittest.TestCase):
 
 
 class TestCanaux(unittest.IsolatedAsyncioTestCase):
-    async def test_telegram_envoie_du_texte_brut(self):
-        """Un `_` dans un nom de jeton suffit à faire rejeter un envoi en
-        Markdown, avec un 400 qui ne dit pas lequel des vingt caractères est en
-        cause."""
-
-        fetcher = FetcherFactice({"api.telegram.org": {"ok": True}})
-        canal = CanalTelegram(jeton="123:abc", salon="42", fetcher=fetcher)
-        self.assertTrue(await canal.envoyer("BTC/USDT -12 % _test_"))
-
     async def test_un_canal_qui_tombe_ne_leve_pas(self):
         """Une alerte perdue est regrettable ; un moteur qui s'interrompt parce
-        que Telegram a hoqueté est bien pire."""
+        qu'un canal a hoqueté est bien pire."""
 
-        fetcher = FetcherFactice({"api.telegram.org": ErreurTemporaire("503")})
-        canal = CanalTelegram(jeton="123:abc", salon="42", fetcher=fetcher)
+        fetcher = FetcherFactice({"discord.com": ErreurTemporaire("503")})
+        canal = CanalDiscord(url_crochet="https://discord.com/api/webhooks/x", fetcher=fetcher)
         self.assertFalse(await canal.envoyer("message"))
 
     async def test_discord_tronque_a_sa_limite(self):
@@ -149,7 +140,17 @@ class TestConstruction(unittest.TestCase):
         notificateur = construire(config(), None)
         self.assertEqual([c.nom for c in notificateur.canaux], ["console"])
 
-    def test_un_canal_sans_secret_est_ecarte_et_la_console_reste(self):
+    def test_discord_sans_secret_est_ecarte_et_la_console_reste(self):
+        charge = config()
+        object.__setattr__(charge.notifications, "canaux", ("discord",))
+        notificateur = construire(charge, None)
+        self.assertEqual([c.nom for c in notificateur.canaux], ["console"])
+
+    def test_un_canal_retire_ou_inconnu_est_ecarte_et_la_console_reste(self):
+        """Telegram a été retiré le 10/09/2026 : `construire` ne le reconnaît
+        plus, comme n'importe quel nom inconnu — c'est `charger` (config.py)
+        qui refuse de démarrer si un `config.yaml` le nomme encore."""
+
         charge = config()
         object.__setattr__(charge.notifications, "canaux", ("telegram",))
         notificateur = construire(charge, None)
