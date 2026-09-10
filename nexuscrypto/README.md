@@ -990,3 +990,87 @@ moins que les plafonds de risque, et l'une des trois n'a jamais été mesurée d
 tout. **Un balayage qui conclut « ne touchez à rien » a autant de valeur qu'un
 qui change un chiffre** — il empêche le prochain de refaire le travail, et
 surtout de croire qu'un gain de 0,22 point justifie de supprimer une source.
+
+---
+
+## 16. Le moteur d'opportunité pure, mesuré sur données réelles pour la première fois
+
+Les sections 8 à 15 ci-dessus sont archivées : elles mesurent l'ancien moteur
+à DCA, retiré le 10/09/2026 (§ 4 de `CLAUDE.md`). Celle-ci mesure le nouveau
+moteur — score contre `seuil_achat`, plus de calendrier — sur les six marchés
+fabriqués **et** sur du BTC/ETH/LINK réel (CoinMetrics), par `banc-du-bot` le
+jour même du retrait. **Verdict : ni clairement meilleur, ni clairement
+pire.**
+
+### Un défaut mesuré puis corrigé ici revient à l'identique — et c'est voulu
+
+Le § 8 (archivé) racontait l'histoire du « plancher de discipline » : sans
+lui, la stratégie n'achetait **rien** sur le scénario « hausse continue »
+pendant 398 échéances, parce que la note technique est contrarienne et reste
+collée au plancher pendant une tendance haussière régulière. Le plancher a
+disparu avec le calendrier qui le portait, et la mesure est catégorique :
+`profils.py` redonne aujourd'hui **la même abstention totale** sur ce même
+scénario — zéro ordre, pendant que le témoin (achat unique) gagne +79,6 %.
+
+Ce n'est pas une régression au sens où ce dépôt l'entendait avant le
+10/09/2026 : la nouvelle philosophie assume qu'une stratégie d'opportunité
+pure reste inactive tant qu'aucune occasion réelle ne se présente, et une
+hausse continue et régulière n'en présente structurellement aucune pour une
+note contrarienne. Mais c'est exactement le même mécanisme de fond qui a
+produit l'abstention d'origine — la note technique n'a pas changé, seul le
+filet qui la compensait a disparu — et ça vaut d'être dit en toutes lettres
+plutôt que découvert trois mois plus tard sur un relevé réel.
+
+### Ce qui s'améliore, mesuré et pas supposé : le plafond de risque mord enfin
+
+Le § 14 (archivé) mesurait `risque_par_position` **inerte à 0 %** sur 158
+dimensionnements — c'était l'enveloppe DCA qui décidait dans 62 % des cas. Le
+nouveau moteur demande la valeur totale du portefeuille plutôt qu'une petite
+enveloppe nominale (voir `strategy/moteur.py`), et `banc-du-bot` l'a
+instrumenté :
+
+| jeu de données | dimensionnements plafonnés par le risque |
+| --- | --- |
+| six marchés fabriqués (`profils.py`) | 130/562 (le reste : exposition par actif) |
+| BTC réel mono-actif, 2020-2023 | 25/26 |
+| BTC + ETH + LINK réel, 2021-2023 | 17/18 |
+
+C'est la confirmation de ce que le commentaire de `config/config.yaml`
+annonçait comme hypothèse au moment du retrait du DCA : le plafond de risque
+n'est plus une ligne qui rassure sans agir, c'est désormais le mécanisme qui
+décide la plupart du temps.
+
+### Le témoin change de nature, et les comparaisons avec lui deviennent instables
+
+L'« achat unique » (tout le capital au premier prix, puis on ne touche plus à
+rien) capture toute la composition dès le premier jour, sans jamais moyenner
+un mauvais point d'entrée — un étalon plus dur en tendance franche, plus
+fragile si la fenêtre s'ouvre près d'un sommet local. Mesuré sur du BTC réel,
+le verdict s'inverse selon la fenêtre et le nombre de lignes :
+
+| fenêtre | panier | stratégie | témoin | gain/douleur stratégie | gain/douleur témoin |
+| --- | --- | --- | --- | --- | --- |
+| 2021-2023 (baissière) | BTC seul | **−9,4 %** | −48,1 % | **−0,28** | −0,63 |
+| 2021-2023 (baissière) | BTC+ETH+LINK | −53,2 % | **−15,7 %** | plus mauvais | meilleur |
+| 2020-2023 (haussière) | BTC seul | **+80,0 %** | −25,0 % | **1,04** | −0,27 |
+| 2020-2023 (haussière) | BTC+ETH+LINK | **+402,3 %** | +29,1 % | **5,05** | 0,38 |
+
+Sur la même fenêtre baissière, la stratégie bat le témoin en mono-actif et
+perd nettement en multi-actifs. L'ancien témoin (« DCA plat », qui lissait ses
+entrées dans le temps) rendait les comparaisons entre fenêtres plus stables
+qu'un lump-sum qui joue tout sur le prix du premier jour — une conséquence à
+garder en tête avant de lire un futur tableau comparatif comme un verdict
+définitif sur un seul panier ou une seule fenêtre.
+
+### Ce que cette mesure ne couvre toujours pas
+
+Aucun balayage de réglage n'a été refait pour ce moteur (les tableaux des § 13
+à 15 sont ceux de l'ancienne enveloppe DCA) ; le scanner de pépites n'est
+toujours pas branché dans la boucle en direct, donc seule la watchlist fixe a
+été mesurée ; CoinMetrics ne publie qu'une clôture par jour, donc l'ATR — et
+le plafond de risque qui en dépend — reste probablement sous-estimé par
+rapport à des données intra-journalières réelles ; et aucune troisième fenêtre
+baissière indépendante (type 2018) n'a été essayée. **Ce moteur n'a donc
+toujours pas ce que l'exigence du 10/09/2026 demande avant tout capital
+réel** : un backtest multi-régimes concluant, documenté dans
+`config/validation.yaml`.

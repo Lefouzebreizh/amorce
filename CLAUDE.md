@@ -715,6 +715,19 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   mesures du README (§ 8 à 15) portent toutes sur l'ancien moteur à DCA et
   sont désormais une archive de méthode, pas une description de la stratégie
   actuelle.
+  **Premier rejeu du nouveau moteur, par `banc-du-bot` le jour même (README
+  § 16)** : ni clairement meilleur ni clairement pire. Deux faits mesurés,
+  pas supposés — `risque_par_position`, inerte à 0 % sous l'ancien moteur
+  (§ 14), plafonne désormais 25/26 achats sur du BTC réel mono-actif et
+  17/18 sur BTC+ETH+LINK ; et l'abstention totale en hausse continue que le
+  « plancher de discipline » avait corrigée (§ 8) **revient à l'identique**
+  une fois ce plancher retiré avec le calendrier — assumé par la nouvelle
+  philosophie, mais c'est le même mécanisme de fond, pas un nouveau défaut.
+  Le témoin (achat unique) rend aussi les comparaisons entre fenêtres bien
+  moins stables que l'ancien DCA plat : sur la même fenêtre baissière
+  2021-2023, la stratégie bat le témoin en mono-actif BTC et perd nettement
+  en BTC+ETH+LINK. Aucun balayage de réglage n'a encore été refait pour ce
+  moteur.
   **Une mine posée pour le prochain chantier, trouvée par `garde-du-bot` en
   relisant ce lot** : `orchestrateur._appliquer` ne lit `chaine`/`adresse`
   que sur la ligne de watchlist de l'actif. Tant que le scanner n'est pas
