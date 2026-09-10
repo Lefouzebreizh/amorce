@@ -35,14 +35,24 @@ aucune ligne de code, aucun dépôt.
 
 ### Le Coffre
 
-**Construit — trois fois, dans trois dépôts différents :**
+**Construit — trois fois, dans trois dépôts différents.** Précision qui
+manquait dans une première lecture : « Le Coffre » n'est le nom public
+d'aucun des trois — c'est le nom de code interne au dépôt. Le n°2 seul porte
+un nom public, et ce n'est plus « Le Coffre » depuis le 05/09/2026 :
+`le-coffre/README.md` documente son renommage en **« Le Tiroir Secret »**
+(textes visibles seulement — titre, en-têtes, e-mail d'alerte ; l'adresse
+`coffre-puce.vercel.app`, le projet Vercel `coffre` et le chemin `le-coffre/`
+restent inchangés). Le n°1 (`life-organizer`) n'a jamais porté ce nom : il
+reste un module interne sans identité publique.
 
 1. `life-organizer/modules/coffre/stockage.py` (dans `amorce/`) — coffre
-   local, Python/Flask, un seul utilisateur, servi sur `127.0.0.1`.
-2. `le-coffre/` (dans `amorce/`) — la productisation hébergée : Next.js 16 +
-   Supabase, multi-utilisateurs, chiffrement porté depuis le n°1 sans
-   changer la logique, plus un classement automatique par vision et des
-   alertes d'échéance par courriel.
+   local, Python/Flask, un seul utilisateur, servi sur `127.0.0.1`, sans nom
+   public.
+2. `le-coffre/` (dans `amorce/`) — la productisation hébergée, publiquement
+   **« Le Tiroir Secret »** depuis le 05/09/2026 : Next.js 16 + Supabase,
+   multi-utilisateurs, chiffrement porté depuis le n°1 sans changer la
+   logique, plus un classement automatique par vision et des alertes
+   d'échéance par courriel.
 3. `ensemble-mdph/js/coffre.js` (dépôt séparé) — un **troisième** coffre
    local chiffré, en JavaScript pur, propre au site statique. Le fichier le
    dit lui-même en commentaire : *« Même principe cryptographique que le
@@ -103,7 +113,7 @@ ailleurs.
 
 ## 2. Les zones de chevauchement
 
-### A. Le Coffre × Le Coffre × Ensemble Face à la MDPH — même besoin, trois moteurs de chiffrement
+### A. Le Coffre (life-organizer) × Le Tiroir Secret (le-coffre) × Ensemble Face à la MDPH — même besoin, trois moteurs de chiffrement
 
 **Le besoin couvert trois fois** : stocker localement, chiffré, des données
 sensibles (documents, suivis, échéances) sans qu'aucun serveur ne puisse les
