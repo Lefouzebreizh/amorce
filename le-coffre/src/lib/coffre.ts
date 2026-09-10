@@ -304,6 +304,26 @@ export function categorieInstantanee(type: string): string {
 // catégorie instantanée pour de bon.
 export const CATEGORIES_AFFINABLES_PAR_IA = new Set(['Images', 'Papiers']);
 
+// Les seuls formats d'image que Claude sait effectivement lire — vérifié le
+// 10/09/2026 contre platform.claude.com/docs/en/build-with-claude/vision :
+// jpeg, png, gif, webp, jamais svg (ni bmp, tiff...). Un fichier « Images »
+// hors de cette liste échouerait à coup sûr, à chaque tentative, si on le
+// soumettait à classer-document — exactement la boucle de retry infinie
+// qu'on veut éviter. Il vaut mieux qu'il reste dans « Images », sa catégorie
+// instantanée, plutôt que de rebondir sans fin sur un appel voué à échouer.
+const TYPES_IMAGE_LISIBLES_PAR_IA = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+
+// Remplace un simple test sur la catégorie (CATEGORIES_AFFINABLES_PAR_IA) par
+// un test qui tient compte du format réel : un PDF est toujours affinable,
+// une image seulement si son type MIME précis fait partie de ceux que Claude
+// sait lire — voir TYPES_IMAGE_LISIBLES_PAR_IA. Utilisé par
+// trierAutomatiquement (page.tsx) pour décider quoi soumettre à l'IA.
+export function affinableParIA(categorie: string, type: string): boolean {
+  if (categorie === 'Papiers') return type === 'application/pdf';
+  if (categorie === 'Images') return TYPES_IMAGE_LISIBLES_PAR_IA.has(type);
+  return false;
+}
+
 export type TourConversation = { role: 'user' | 'assistant'; texte: string };
 
 // Une action que l'assistant propose sur un document précis — jamais

@@ -13,7 +13,7 @@ import {
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
   interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
-  categorieInstantanee, CATEGORIES_AFFINABLES_PAR_IA,
+  categorieInstantanee, affinableParIA,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex, type ActionAssistant,
 } from '@/lib/coffre';
 import { RemplirFormulaire } from './RemplirFormulaire';
@@ -358,8 +358,29 @@ export default function PageCoffre() {
   // Plus de « non-documents » ici depuis le 10/09/2026 : tout fichier reçoit
   // toujours une catégorie (voir trierAutomatiquement) — ce bilan ne porte
   // plus que les vrais échecs techniques (réseau, quota).
-  const [triAutoBilan, setTriAutoBilan] = useState<{ erreursTechniques: string[] } | null>(null);
+  const [triAutoBilan, setTriAutoBilan] = useState<{ erreursTechniques: string[]; abandonnes: string[] } | null>(null);
   const [triAutoDetailOuvert, setTriAutoDetailOuvert] = useState(false);
+  // Clés de stockage déjà passées par l'IA cette session, verdict positif ou
+  // négatif peu importe — jamais remises en question tant que la page reste
+  // ouverte. Sans cette mémoire, « Réessayer » après un échec technique ne
+  // retrouvait plus le fichier concerné : la passe 1 lui avait déjà donné
+  // une catégorie instantanée (Images/Papiers), donc il ne comptait plus
+  // parmi les « non classés » que le prochain appel recalculait — mesuré le
+  // 10/09/2026, 7 fichiers restés bloqués sur un lot de 89, le bouton
+  // Réessayer ne faisant plus rien. Un échec technique ne rejoint PAS cet
+  // ensemble : c'est justement ce qui le rend réessayable.
+  const triAutoDejaAffines = useRef<Set<string>>(new Set());
+
+  // Combien de fois un même fichier a déjà échoué techniquement à l'affinage,
+  // toutes tentatives « Réessayer » cumulées cette session — posé le
+  // 10/09/2026 après une demande explicite : un fichier qui échouera pour de
+  // bon à chaque essai (ex. corrompu, format que classer-document a fini par
+  // refuser) ne doit jamais boucler sans fin. Au-delà du plafond, on
+  // l'ajoute à triAutoDejaAffines pour de bon : il garde sa catégorie
+  // instantanée (Images/Papiers/Vidéos/Audio), rien n'est perdu, seule la
+  // resoumission automatique s'arrête.
+  const triAutoTentatives = useRef<Map<string, number>>(new Map());
+  const TENTATIVES_TRI_AUTO_MAX = 3;
   // Dossiers dépliés dans la vue « Ranger en dossiers » — vide par défaut,
   // donc tous repliés : voir le rendu de `dossiers.map` plus bas.
   const [dossiersOuverts, setDossiersOuverts] = useState<Set<string>>(new Set());
@@ -502,7 +523,19 @@ export default function PageCoffre() {
     // Chaque `setAValider` porte sa propre clé et utilise la forme
     // fonctionnelle — les réponses qui reviennent dans le désordre ne
     // s'écrasent jamais entre elles.
+    //
+    // Un fichier qu'on sait déjà illisible par l'IA (un SVG, par exemple —
+    // voir affinableParIA) n'est même pas soumis : l'appel échouerait à coup
+    // sûr, pour rien. Il garde directement sa catégorie instantanée, prête à
+    // être ajustée à la main dans la liste d'attente.
     await Promise.all(nouveaux.map(async (item) => {
+      const categorieLocale = categorieInstantanee(item.fichier.type);
+      if (!affinableParIA(categorieLocale, item.fichier.type)) {
+        setAValider((precedent) => precedent.map((p) => (p.cle === item.cle
+          ? { ...p, enAnalyse: false, categorie: categorieLocale }
+          : p)));
+        return;
+      }
       const proposition = await proposerClassement(item.fichier);
       setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
         ...p, enAnalyse: false,
@@ -591,17 +624,19 @@ export default function PageCoffre() {
   // PDF — voir CATEGORIES_AFFINABLES_PAR_IA) : propose une catégorie
   // administrative précise si elle en reconnaît une ; sinon le fichier garde
   // la catégorie posée à la passe 1. Menée en parallèle, borné par
-  // CONCURRENCE_TRI_AUTO — Sonnet 4.x autorise 1 000 requêtes/minute au
-  // palier le plus bas publié par Anthropic (platform.claude.com/docs/en/api/rate-limits,
-  // relevé le 10/09/2026), très loin des 15 en vol ici ; le journal des
-  // en-têtes anthropic-ratelimit-* posé sur classer-document donnera le
-  // chiffre réellement mesuré sur ce compte. `modifierPlusieursObjets`
-  // regroupe plusieurs affinages en une seule sauvegarde ; `CHECKPOINT_TRI_AUTO`
-  // en déclenche une toutes les huit réussites plutôt qu'une seule à la fin,
-  // pour ne pas tout reperdre si la page se ferme en cours de lot.
+  // CONCURRENCE_TRI_AUTO — mesuré sur ce compte le 10/09/2026 via le journal
+  // des en-têtes anthropic-ratelimit-* posé sur classer-document (et non
+  // plus supposé depuis la doc publique) : 10 000 requêtes/minute et
+  // 10 000 000 de jetons d'entrée/minute, jamais entamés même sur un lot de
+  // 89 fichiers. Le débit n'est donc pas la limite d'Anthropic ; 25 en vol
+  // reste très en dessous, avec de la marge pour un compte moins généreux.
+  // `modifierPlusieursObjets` regroupe plusieurs affinages en une seule
+  // sauvegarde ; `CHECKPOINT_TRI_AUTO` en déclenche une toutes les huit
+  // réussites plutôt qu'une seule à la fin, pour ne pas tout reperdre si la
+  // page se ferme en cours de lot.
   async function trierAutomatiquement() {
     if (!utilisateur || !cle) return;
-    const CONCURRENCE_TRI_AUTO = 15;
+    const CONCURRENCE_TRI_AUTO = 25;
     const CHECKPOINT_TRI_AUTO = 8;
 
     const nonClasses = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
@@ -624,13 +659,22 @@ export default function PageCoffre() {
       indexCourant = await modifierPlusieursObjets(utilisateur.id, cle, instantanes, index);
       setIndex(indexCourant);
     } catch (err) {
-      setTriAutoBilan({ erreursTechniques: [err instanceof Error ? err.message : String(err)] });
+      setTriAutoBilan({ erreursTechniques: [err instanceof Error ? err.message : String(err)], abandonnes: [] });
       setTriAutoEnCours(false);
       return;
     }
 
-    // Passe 2 : seulement ce que l'IA peut réellement lire.
-    const aAffiner = nonClasses.filter((n) => CATEGORIES_AFFINABLES_PAR_IA.has(instantanes[n]?.categorie ?? ''));
+    // Passe 2 : tout ce qui est ACTUELLEMENT dans un dossier affinable et
+    // n'a pas encore reçu de verdict de l'IA cette session — jamais
+    // seulement ce qui vient d'être classé à l'instant (`nonClasses`),
+    // sinon un fichier resté en échec technique lors d'un tri précédent
+    // redevient introuvable au tri suivant : il a déjà sa catégorie
+    // instantanée, donc il ne compte plus parmi les « non classés ».
+    const aAffiner = Object.keys(indexCourant.objets).filter((n) => {
+      const info = indexCourant.objets[n];
+      if (!info || triAutoDejaAffines.current.has(n)) return false;
+      return affinableParIA(info.categorie ?? '', info.type);
+    });
     if (aAffiner.length === 0) {
       setTriAutoEnCours(false);
       return;
@@ -641,6 +685,11 @@ export default function PageCoffre() {
     let enAttente: Record<string, { categorie: string; montant?: string }> = {};
     let flushEnVol: Promise<void> | null = null;
     const erreursTechniques: string[] = [];
+    // Fichiers ayant atteint TENTATIVES_TRI_AUTO_MAX : distincts des erreurs
+    // techniques ci-dessus, qui restent réessayables — ceux-là ne le sont
+    // plus, « Réessayer » ne les reprendra pas, mais ils gardent leur
+    // catégorie générique (Images/Papiers), rien n'est perdu.
+    const abandonnes: string[] = [];
 
     // Verrouillé : si un flush est déjà en vol, celui-ci se contente
     // d'attendre — les entrées accumulées depuis seront prises par le flush
@@ -680,18 +729,39 @@ export default function PageCoffre() {
           // masque le constructeur DOM — d'où `globalThis.File` ici.
           const fichier = new globalThis.File([blob], info.nom, { type: info.type });
           const proposition = await proposerClassement(fichier);
-          if (proposition.lisible) {
-            enAttente[nom] = { categorie: proposition.categorie, montant: proposition.montant || undefined };
-            if (Object.keys(enAttente).length >= CHECKPOINT_TRI_AUTO) await flush();
-          } else if (proposition.erreurTechnique) {
+          if (proposition.erreurTechnique) {
             // L'appel a échoué (réseau, quota, service surchargé) — le
-            // fichier garde sa catégorie instantanée et sera repris au
-            // prochain tri. Une vraie réponse « pas administratif » ne
-            // déclenche rien ici : c'est le cas attendu, pas une erreur.
-            erreursTechniques.push(info.nom);
+            // fichier garde sa catégorie instantanée. En dessous du plafond
+            // de tentatives, il reste éligible au prochain tri (pas ajouté à
+            // triAutoDejaAffines) : c'est ce qui rend « Réessayer » capable
+            // de le retrouver. Au-delà, on arrête de le resoumettre — voir
+            // TENTATIVES_TRI_AUTO_MAX.
+            const tentatives = (triAutoTentatives.current.get(nom) ?? 0) + 1;
+            triAutoTentatives.current.set(nom, tentatives);
+            if (tentatives >= TENTATIVES_TRI_AUTO_MAX) {
+              triAutoDejaAffines.current.add(nom);
+              abandonnes.push(info.nom);
+            } else {
+              erreursTechniques.push(info.nom);
+            }
+          } else {
+            // Un vrai verdict est tombé, positif ou négatif — dans les deux
+            // cas ce fichier ne sera plus jamais resoumis automatiquement.
+            triAutoDejaAffines.current.add(nom);
+            if (proposition.lisible) {
+              enAttente[nom] = { categorie: proposition.categorie, montant: proposition.montant || undefined };
+              if (Object.keys(enAttente).length >= CHECKPOINT_TRI_AUTO) await flush();
+            }
           }
         } catch (err) {
-          erreursTechniques.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
+          const tentatives = (triAutoTentatives.current.get(nom) ?? 0) + 1;
+          triAutoTentatives.current.set(nom, tentatives);
+          if (tentatives >= TENTATIVES_TRI_AUTO_MAX) {
+            triAutoDejaAffines.current.add(nom);
+            abandonnes.push(info.nom);
+          } else {
+            erreursTechniques.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
+          }
         }
       }
       setTriAutoProgres((p) => (p ? { ...p, fait: p.fait + 1 } : null));
@@ -701,7 +771,9 @@ export default function PageCoffre() {
     await Promise.all(Array.from({ length: Math.min(CONCURRENCE_TRI_AUTO, aAffiner.length) }, suivant));
     await flush();
 
-    if (erreursTechniques.length > 0) setTriAutoBilan({ erreursTechniques });
+    if (erreursTechniques.length > 0 || abandonnes.length > 0) {
+      setTriAutoBilan({ erreursTechniques, abandonnes });
+    }
     setTriAutoEnCours(false);
     setTriAutoProgres(null);
   }
