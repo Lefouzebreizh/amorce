@@ -491,3 +491,71 @@ test('ajouter un lot ne fait qu’une seule annulation', () => {
   useStudio.getState().undo();
   assert.equal(useStudio.getState().project.clips.length, 1, 'les deux ajouts devraient se défaire d’un coup');
 });
+
+
+/*
+ * La trajectoire de cadrage : une propriété de la source, pas un geste de
+ * montage.
+ *
+ * Les deux tests ci-dessous ont été vus rouges en faisant passer `poserCadrage`
+ * par `mutate`, c'est-à-dire en la traitant comme une modification ordinaire :
+ * le premier échoue parce qu'une entrée d'annulation apparaît, le second parce
+ * que l'annulation d'une coupe emporte au passage une détection que personne
+ * n'a demandé de défaire.
+ */
+const CADRAGE = { parSeconde: 10, centres: [700, 705, 710] };
+
+test('poser une trajectoire n’ajoute rien à la pile d’annulation', () => {
+  /*
+   * La pile est vidée ici, et ce n'est pas de la propreté : `reset` ne la
+   * touche pas, si bien qu'après deux cent cinquante tests elle est **saturée**
+   * à `HISTORY_LIMIT`. Pousser une entrée de plus en retire alors une, et la
+   * longueur ne bouge pas — la sonde ne mesurait plus rien. Vérifié en faisant
+   * passer `poserCadrage` par `mutate` : le test restait vert sur le défaut
+   * qu'il annonce, et ne devient rouge qu'une fois la pile vidée.
+   */
+  useStudio.setState({ past: [], future: [] });
+  useStudio.getState().addAssets([asset('a', 5)]);
+  const avant = useStudio.getState().past.length;
+
+  useStudio.getState().poserCadrage('a', CADRAGE);
+
+  assert.equal(useStudio.getState().past.length, avant, 'aucune entrée d’annulation');
+  assert.deepEqual(useStudio.getState().project.assets[0].cadrage, CADRAGE);
+});
+
+test('annuler un geste de montage ne perd pas la trajectoire détectée', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5)]);
+  useStudio.getState().appendClip('a');
+  // La détection se termine après la coupe : c'est le cas réel, elle dure
+  // plusieurs secondes pendant que l'utilisateur continue de monter.
+  useStudio.getState().poserCadrage('a', CADRAGE);
+
+  useStudio.getState().undo();
+
+  const rush = useStudio.getState().project.assets.find((a) => a.id === 'a');
+  assert.ok(rush, 'le rush est toujours là');
+  assert.deepEqual(rush.cadrage, CADRAGE, 'la trajectoire a survécu à l’annulation');
+});
+
+test('rétablir non plus', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5)]);
+  useStudio.getState().appendClip('a');
+  useStudio.getState().poserCadrage('a', CADRAGE);
+  useStudio.getState().undo();
+  useStudio.getState().redo();
+
+  assert.deepEqual(useStudio.getState().project.assets[0].cadrage, CADRAGE);
+});
+
+test('une trajectoire posée sur un rush retiré entre-temps est ignorée', () => {
+  // La détection dure plusieurs secondes ; rien n'empêche d'importer puis de
+  // supprimer avant qu'elle ne rende son résultat.
+  useStudio.getState().addAssets([asset('a', 5)]);
+  useStudio.getState().removeAsset('a');
+  useStudio.getState().poserCadrage('a', CADRAGE);
+
+  assert.equal(useStudio.getState().project.assets.length, 0);
+});
