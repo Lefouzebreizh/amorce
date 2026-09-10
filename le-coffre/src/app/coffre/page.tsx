@@ -1453,7 +1453,16 @@ export default function PageCoffre() {
                         <FileText size={12} /> Remplir un formulaire
                       </button>
                     )}
-                    {nomsTrouves.length === 0 && !actionRecherche && (
+                    {/* Toujours proposé dès qu'il y a du texte, même quand la
+                        recherche locale trouve un document — une commande
+                        (« range X dans Y ») cite presque toujours le nom
+                        exact d'un document réel, donc « trouve quelque
+                        chose » ne veut pas dire « la recherche locale a
+                        répondu à la demande ». Restreindre ce bouton aux
+                        recherches sans résultat le rendait invisible pile
+                        pour les phrases qui en avaient le plus besoin
+                        (09/09/2026). */}
+                    {!actionRecherche && (
                       <button
                         type="button"
                         onClick={() => demanderAAssistant(recherche.trim())}
