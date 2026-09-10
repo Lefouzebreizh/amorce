@@ -471,6 +471,31 @@ describe('la proposition de classement', () => {
   });
 });
 
+describe('la catégorie instantanée', () => {
+  // Posée le 10/09/2026 : aucun fichier ne doit jamais rester sans catégorie
+  // après un tri, quel que soit son type — voir trierAutomatiquement.
+  it('range chaque type courant dans son dossier générique, sans appel réseau', () => {
+    assert.equal(coffre.categorieInstantanee('image/jpeg'), 'Images');
+    assert.equal(coffre.categorieInstantanee('image/png'), 'Images');
+    assert.equal(coffre.categorieInstantanee('video/mp4'), 'Vidéos');
+    assert.equal(coffre.categorieInstantanee('audio/mpeg'), 'Audio');
+    assert.equal(coffre.categorieInstantanee('application/pdf'), 'Papiers');
+  });
+
+  it('range dans « Autre » ce qu’elle ne reconnaît pas, jamais dans une catégorie vide', () => {
+    assert.equal(coffre.categorieInstantanee('application/zip'), 'Autre');
+    assert.equal(coffre.categorieInstantanee(''), 'Autre');
+  });
+
+  it('ne propose l’affinage IA que pour ce que classer-document sait lire', () => {
+    assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Images'), true);
+    assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Papiers'), true);
+    assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Vidéos'), false);
+    assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Audio'), false);
+    assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Autre'), false);
+  });
+});
+
 // ─────────────────────────────── L'assistant ───────────────────────────────
 
 describe('demander au coffre', () => {

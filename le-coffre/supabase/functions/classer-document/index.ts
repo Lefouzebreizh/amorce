@@ -143,6 +143,20 @@ Deno.serve(async (requete: Request) => {
     }),
   });
 
+  // Journal des vraies limites de débit d'Anthropic pour CE compte — posé le
+  // 10/09/2026 pour remplacer une supposition par une mesure. La doc publique
+  // (platform.claude.com/docs/en/api/rate-limits) donne 1 000 requêtes/minute
+  // pour Sonnet 4.x au palier le plus bas, mais un compte neuf peut démarrer
+  // en dessous (palier « Evaluation ») : ces en-têtes disent le vrai chiffre
+  // de CE compte, lisible dans les journaux de la fonction après un premier
+  // tri réel, plutôt que le défaut publié.
+  console.log("[classer-document] limites Anthropic mesurées :", JSON.stringify({
+    requetes_limite: reponse.headers.get("anthropic-ratelimit-requests-limit"),
+    requetes_restantes: reponse.headers.get("anthropic-ratelimit-requests-remaining"),
+    jetons_entree_limite: reponse.headers.get("anthropic-ratelimit-input-tokens-limit"),
+    jetons_entree_restants: reponse.headers.get("anthropic-ratelimit-input-tokens-remaining"),
+  }));
+
   if (!reponse.ok) {
     const detail = await reponse.text();
     return reponseJson({ erreur: `Appel Claude en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502);

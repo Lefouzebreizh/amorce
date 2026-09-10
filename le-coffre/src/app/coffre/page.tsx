@@ -13,6 +13,7 @@ import {
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
   interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
+  categorieInstantanee, CATEGORIES_AFFINABLES_PAR_IA,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex, type ActionAssistant,
 } from '@/lib/coffre';
 import { RemplirFormulaire } from './RemplirFormulaire';
@@ -26,10 +27,6 @@ const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et intern
 // catégorie (proposition de classement non lisible, jamais corrigée) doit
 // quand même atterrir quelque part plutôt que de disparaître de la vue.
 const DOSSIER_SANS_CATEGORIE = 'À trier';
-// Plafond d'un lot de tri automatique — voir `trierAutomatiquement` pour la
-// raison. Repris ici pour que le bouton annonce le bon compte avant de
-// démarrer.
-const LOT_MAX_TRI_AUTO = 24;
 // Le vrai garde-fou est un trigger Postgres sur storage.objects (voir
 // supabase/schema.sql §6) — storage.buckets.file_size_limit seul ne protège
 // qu'un fichier à la fois, jamais l'espace total d'un compte. Le contrôle
@@ -358,16 +355,11 @@ export default function PageCoffre() {
   const [correction, setCorrection] = useState<Correction | null>(null);
   const [triAutoEnCours, setTriAutoEnCours] = useState(false);
   const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
-  const [triAutoBilan, setTriAutoBilan] = useState<{ nonDocuments: string[]; erreursTechniques: string[] } | null>(null);
+  // Plus de « non-documents » ici depuis le 10/09/2026 : tout fichier reçoit
+  // toujours une catégorie (voir trierAutomatiquement) — ce bilan ne porte
+  // plus que les vrais échecs techniques (réseau, quota).
+  const [triAutoBilan, setTriAutoBilan] = useState<{ erreursTechniques: string[] } | null>(null);
   const [triAutoDetailOuvert, setTriAutoDetailOuvert] = useState(false);
-  // Clés de stockage déjà confirmées comme non-documents CETTE session — un
-  // document rejeté ne gagne jamais de catégorie, donc rien ne le distingue
-  // des autres dans `tout` d'un lot au suivant : sans cette mémoire, un lot
-  // entièrement composé de photos/vidéos (observé en usage réel : 24 rejets
-  // sur 24) refaisait exactement le même lot à l'infini, sans jamais
-  // atteindre les documents suivants. Remise à zéro au rechargement de la
-  // page seulement — un rejet reste un rejet tant que la session dure.
-  const [triAutoIgnores, setTriAutoIgnores] = useState<Set<string>>(new Set());
   // Dossiers dépliés dans la vue « Ranger en dossiers » — vide par défaut,
   // donc tous repliés : voir le rendu de `dossiers.map` plus bas.
   const [dossiersOuverts, setDossiersOuverts] = useState<Set<string>>(new Set());
@@ -584,50 +576,70 @@ export default function PageCoffre() {
     setEnCours(false);
   }
 
-  // Bouton « Trier automatiquement » : reclasse les papiers sans catégorie
-  // (bouton « À trier » depuis l'accueil), en repassant chacun par
-  // classer-document — la même analyse que celle qui propose déjà une
-  // catégorie au dépôt.
+  // Tri automatique en deux passes bien distinctes — voir le plan du
+  // 10/09/2026 (bilan point 10) : la première est gratuite, instantanée et
+  // sans appel réseau, la seconde affine avec l'IA. Aucun fichier ne reste
+  // jamais « non classé » après cet appel, quel que soit son type.
   //
-  // Plafonné à LOT_MAX_TRI_AUTO par clic : sur un très gros lot (128 papiers
-  // vus en usage réel), traiter tout d'un coup prenait plusieurs minutes et
-  // multipliait les appels à un service externe sans retenue. Le bouton
-  // réaffiche le compte restant après chaque lot — on le reclique pour
-  // continuer, jamais tout en une fois.
+  // Passe 1 — locale : chaque fichier sans catégorie reçoit tout de suite
+  // une catégorie générique selon son type (categorieInstantanee), sans
+  // solliciter personne. Couvre tout le retard d'un coup, quel que soit le
+  // nombre de fichiers — plus de plafond par lot, ce n'est plus nécessaire
+  // puisque rien ici ne coûte de temps réseau.
   //
-  // Le classement (lecture du fichier + appel à classer-document) est mené
-  // en parallèle, borné par CONCURRENCE_TRI_AUTO : c'est l'appel réseau qui
-  // domine le temps, et rien n'empêche de le mener sur plusieurs fichiers à
-  // la fois. Seule l'ÉCRITURE de l'index doit rester unique à un instant
-  // donné (verrouillée par `flush` ci-dessous) : `sauvegarderIndex`
-  // rechiffre et renvoie l'index ENTIER à chaque appel, et le faire une fois
-  // par document (128 fois sur un gros lot) dominait largement le temps
-  // passé — plus que le classement lui-même. `modifierPlusieursObjets`
-  // regroupe plusieurs classements en une seule sauvegarde ; `CHECKPOINT_TRI_AUTO`
+  // Passe 2 — IA, seulement sur ce que classer-document sait lire (image,
+  // PDF — voir CATEGORIES_AFFINABLES_PAR_IA) : propose une catégorie
+  // administrative précise si elle en reconnaît une ; sinon le fichier garde
+  // la catégorie posée à la passe 1. Menée en parallèle, borné par
+  // CONCURRENCE_TRI_AUTO — Sonnet 4.x autorise 1 000 requêtes/minute au
+  // palier le plus bas publié par Anthropic (platform.claude.com/docs/en/api/rate-limits,
+  // relevé le 10/09/2026), très loin des 15 en vol ici ; le journal des
+  // en-têtes anthropic-ratelimit-* posé sur classer-document donnera le
+  // chiffre réellement mesuré sur ce compte. `modifierPlusieursObjets`
+  // regroupe plusieurs affinages en une seule sauvegarde ; `CHECKPOINT_TRI_AUTO`
   // en déclenche une toutes les huit réussites plutôt qu'une seule à la fin,
   // pour ne pas tout reperdre si la page se ferme en cours de lot.
   async function trierAutomatiquement() {
     if (!utilisateur || !cle) return;
-    const CONCURRENCE_TRI_AUTO = 3;
+    const CONCURRENCE_TRI_AUTO = 15;
     const CHECKPOINT_TRI_AUTO = 8;
 
-    const tout = Object.keys(index.objets).filter(
-      (n) => !index.objets[n]?.categorie?.trim() && !triAutoIgnores.has(n),
-    );
-    if (tout.length === 0) return;
-    const aTrier = tout.slice(0, LOT_MAX_TRI_AUTO);
+    const nonClasses = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
+    if (nonClasses.length === 0) return;
 
     setTriAutoEnCours(true);
-    setTriAutoProgres({ fait: 0, total: aTrier.length });
+    setTriAutoProgres(null);
     setTriAutoBilan(null);
     setTriAutoDetailOuvert(false);
 
-    const indexDepart = index;
-    let indexCourant = index;
+    // Passe 1 : instantanée, un seul aller-retour de sauvegarde pour tout le
+    // lot, quelle que soit sa taille.
+    const instantanes: Record<string, { categorie: string }> = {};
+    for (const nom of nonClasses) {
+      const info = index.objets[nom];
+      if (info) instantanes[nom] = { categorie: categorieInstantanee(info.type) };
+    }
+    let indexCourant: IndexCoffre;
+    try {
+      indexCourant = await modifierPlusieursObjets(utilisateur.id, cle, instantanes, index);
+      setIndex(indexCourant);
+    } catch (err) {
+      setTriAutoBilan({ erreursTechniques: [err instanceof Error ? err.message : String(err)] });
+      setTriAutoEnCours(false);
+      return;
+    }
+
+    // Passe 2 : seulement ce que l'IA peut réellement lire.
+    const aAffiner = nonClasses.filter((n) => CATEGORIES_AFFINABLES_PAR_IA.has(instantanes[n]?.categorie ?? ''));
+    if (aAffiner.length === 0) {
+      setTriAutoEnCours(false);
+      return;
+    }
+    setTriAutoProgres({ fait: 0, total: aAffiner.length });
+
+    const indexDepart = indexCourant;
     let enAttente: Record<string, { categorie: string; montant?: string }> = {};
     let flushEnVol: Promise<void> | null = null;
-    const nonDocuments: string[] = [];
-    const nonDocumentsCles: string[] = [];
     const erreursTechniques: string[] = [];
 
     // Verrouillé : si un flush est déjà en vol, celui-ci se contente
@@ -657,8 +669,8 @@ export default function PageCoffre() {
     let curseur = 0;
     async function suivant(): Promise<void> {
       const i = curseur++;
-      if (i >= aTrier.length) return;
-      const nom = aTrier[i];
+      if (i >= aAffiner.length) return;
+      const nom = aAffiner[i];
       if (!nom) return suivant();
       const info = indexDepart.objets[nom];
       if (info) {
@@ -673,12 +685,10 @@ export default function PageCoffre() {
             if (Object.keys(enAttente).length >= CHECKPOINT_TRI_AUTO) await flush();
           } else if (proposition.erreurTechnique) {
             // L'appel a échoué (réseau, quota, service surchargé) — le
-            // document reste sans catégorie et sera repris tel quel au
-            // prochain tri, à la différence d'un vrai non-document.
+            // fichier garde sa catégorie instantanée et sera repris au
+            // prochain tri. Une vraie réponse « pas administratif » ne
+            // déclenche rien ici : c'est le cas attendu, pas une erreur.
             erreursTechniques.push(info.nom);
-          } else {
-            nonDocuments.push(info.nom);
-            nonDocumentsCles.push(nom);
           }
         } catch (err) {
           erreursTechniques.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
@@ -688,19 +698,10 @@ export default function PageCoffre() {
       return suivant();
     }
 
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCE_TRI_AUTO, aTrier.length) }, suivant));
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCE_TRI_AUTO, aAffiner.length) }, suivant));
     await flush();
 
-    if (nonDocumentsCles.length > 0) {
-      setTriAutoIgnores((precedent) => {
-        const suivant = new Set(precedent);
-        for (const cleStockage of nonDocumentsCles) suivant.add(cleStockage);
-        return suivant;
-      });
-    }
-    if (nonDocuments.length > 0 || erreursTechniques.length > 0) {
-      setTriAutoBilan({ nonDocuments, erreursTechniques });
-    }
+    if (erreursTechniques.length > 0) setTriAutoBilan({ erreursTechniques });
     setTriAutoEnCours(false);
     setTriAutoProgres(null);
   }
@@ -1038,15 +1039,6 @@ export default function PageCoffre() {
   }
 
   const tousLesNoms = Object.keys(index.objets);
-  // Papiers sans catégorie — même critère que le dossier « À trier » de la
-  // vue « Ranger en dossiers » (DOSSIER_SANS_CATEGORIE), pour ne pas créer un
-  // second sens au même mot.
-  const nomsATrier = tousLesNoms.filter((n) => !index.objets[n]?.categorie?.trim());
-  // Ce qu'un prochain clic sur « Trier automatiquement » offre réellement :
-  // `nomsATrier` reste le compte brut (vrai, mais un document confirmé
-  // non-document cette session ne redeviendra pas classable pour autant),
-  // celui-ci exclut ce qui a déjà été vu et rejeté — voir triAutoIgnores.
-  const nomsATrierRestants = nomsATrier.filter((n) => !triAutoIgnores.has(n));
   // Catégories déjà utilisées — sert aux chips de filtre : inutile de
   // proposer un filtre pour une catégorie qui ne contient aucun papier.
   const categoriesConnues = Array.from(
@@ -1401,8 +1393,6 @@ export default function PageCoffre() {
                   onOuvrirRangement={() => setVueDossiers(true)}
                   onExecuterAction={executerActionAssistant}
                   triAuto={{
-                    restants: nomsATrierRestants.length,
-                    lotMax: LOT_MAX_TRI_AUTO,
                     enCours: triAutoEnCours,
                     progres: triAutoProgres,
                     bilan: triAutoBilan,

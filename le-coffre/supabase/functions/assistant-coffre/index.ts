@@ -88,7 +88,8 @@ Deno.serve(async (requete: Request) => {
     `que l'outil « Remplir un formulaire » du tableau de bord fait ça, et mets ` +
     `"ouvrirFormulaire": true.\n` +
     `3. Si l'utilisateur veut ranger, classer ou trier TOUS ses papiers ou un lot indéterminé ` +
-    `(« range tout », « trie mes papiers »), propose dans "reponse" de lancer ce tri maintenant ` +
+    `(« range tout », « trie mes papiers »), dis dans "reponse" que tu t'en occupes maintenant ` +
+    `(jamais une question du genre « veux-tu que je... » — ça part automatiquement, sans clic) ` +
     `et mets "declencherTriAutomatique": true — ne propose aucune action précise dans ce cas, ` +
     `ce tri en lot traite tous les papiers non classés bien mieux qu'une action par document.\n` +
     `4. Si l'utilisateur désigne un ou plusieurs documents PRÉCIS (nommés ou clairement identifiables ` +
