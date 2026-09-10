@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import {
   Bell, Briefcase, Car, ChevronRight, File, FileText, Folder, Heart, Home, Landmark, LogOut,
-  Plus, Search, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
+  MessageCircle, Plus, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -1285,7 +1285,11 @@ export default function PageCoffre() {
             }}
             className="relative mx-auto mt-5 max-w-xl"
           >
-            <Search size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" />
+            {/* Bulle de discussion plutôt qu'une loupe (10/09/2026) : cette
+                barre interroge un assistant en langage naturel, elle ne
+                filtre pas une liste par mots-clés — la loupe suggérait le
+                mauvais geste. */}
+            <MessageCircle size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" />
             <input
               type="search"
               value={recherche}
