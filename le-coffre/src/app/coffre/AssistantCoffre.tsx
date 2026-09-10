@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FileText, Folder, Globe, Send, Trash2, X } from 'lucide-react';
+import { FileText, Folder, Globe, Trash2, Triangle, X } from 'lucide-react';
 import { demanderAuCoffre, type ActionAssistant, type IndexCoffre, type TourConversation } from '@/lib/coffre';
 
 type Message = TourConversation & {
@@ -437,7 +437,7 @@ export function AssistantCoffre({
             className="flex shrink-0 items-center justify-center rounded-lg bg-bleu px-4 py-2.5 text-paper transition hover:bg-bleu-strong disabled:opacity-60"
             aria-label="Envoyer"
           >
-            <Send size={18} />
+            <Triangle size={16} fill="currentColor" />
           </button>
         </form>
     </div>
