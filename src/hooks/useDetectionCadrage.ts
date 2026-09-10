@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { detecterCadrage } from '@/lib/detection.ts';
+import { FENETRE_PAROLE, PAR_SECONDE, detecterCadrage } from '@/lib/detection.ts';
+import { energieParFenetre } from '@/lib/parole.ts';
 import { useStudio } from '@/lib/store.ts';
 
 /**
@@ -37,7 +38,52 @@ import { useStudio } from '@/lib/store.ts';
  * Un seul rush à la fois, pour la même raison, et parce que deux détections
  * simultanées se disputeraient le fil principal sans rien accélérer : le coût
  * est dans les déplacements de tête de lecture, pas dans le modèle.
+ *
+ * ## Le son entre ici, et nulle part ailleurs
+ *
+ * Savoir **qui parle** demande le son du rush, et c'est cette file qui le
+ * fournit : `detecterCadrage` reçoit une énergie déjà mesurée et ne connaît ni
+ * fichier ni contexte audio. Le décodage se fait dans un `OfflineAudioContext`,
+ * qui n'a besoin d'aucun geste de l'utilisateur pour exister — un
+ * `AudioContext` ordinaire naîtrait suspendu et le studio n'a aucune raison
+ * d'en réveiller un pour analyser.
+ *
+ * Rien n'en dépend : un rush muet, un décodage refusé, un format que le
+ * navigateur ne sait pas lire donnent tous la même chose — pas d'énergie, donc
+ * pas de question posée, et le cadrage retombe sur la plus grande boîte comme
+ * avant.
  */
+/**
+ * L'énergie du son d'un rush, sur le début qui sert à savoir qui parle.
+ *
+ * On mesure **deux fois** la fenêtre de parole : le suivi des visages démarre
+ * au premier échantillon qui en porte un, qui peut être le vingtième du rush —
+ * il faut donc du son au-delà, sans quoi l'alignement tomberait dans le vide.
+ *
+ * Rend `undefined` à la moindre difficulté, et c'est un cas ordinaire : un rush
+ * sans piste sonore, un conteneur que le navigateur décode en image mais pas en
+ * son, une mémoire insuffisante. La question « qui parle » n'est alors pas
+ * posée, et rien d'autre ne change.
+ */
+async function energieDu(rush: { url: string; hasAudio: boolean }): Promise<number[] | undefined> {
+  if (!rush.hasAudio) return undefined;
+  try {
+    const octets = await (await fetch(rush.url)).arrayBuffer();
+    // Un contexte hors ligne minuscule : il ne sert qu'à décoder, il ne rend
+    // rien et ne joue rien.
+    const contexte = new OfflineAudioContext(1, 1, 44100);
+    const son = await contexte.decodeAudioData(octets);
+    return energieParFenetre(
+      son.getChannelData(0),
+      son.sampleRate,
+      PAR_SECONDE,
+      FENETRE_PAROLE * 2,
+    );
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Les rushes sur lesquels la détection a renoncé.
  *
@@ -87,7 +133,7 @@ export function useDetectionCadrage(): void {
           video.onerror = () => reject(new Error('rush illisible'));
         });
 
-        const cadrage = await detecterCadrage(video);
+        const cadrage = await detecterCadrage(video, { energie: await energieDu(aFaire) });
         if (!vivant) return;
         // `null` : modèle absent, navigateur qui refuse le WASM, rush illisible.
         // On note le refus pour ne pas repartir en boucle sur le même fichier.

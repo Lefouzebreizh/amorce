@@ -88,6 +88,8 @@ const FETCH_AUTORISES: Record<string, string> = {
   'src/lib/audioHorsLigne.ts': 'relit un lien objet pour décoder le mixage de l’export hors ligne',
   'src/lib/voice.ts': 'relit un lien objet pour décoder la voix hors ligne',
   'src/lib/persistence.ts': 'relit un lien objet pour ranger le fichier dans IndexedDB',
+  'src/hooks/useDetectionCadrage.ts':
+    'relit un lien objet pour décoder le son du rush et savoir qui parle',
 };
 
 test('aucun appel réseau ne s’ajoute au moteur en silence', () => {
