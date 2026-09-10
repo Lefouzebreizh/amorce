@@ -42,31 +42,43 @@ body {
 }
 
 /*
- * Habillage « Lefouzebreizh Studio » demandé le 09/09/2026 — fond, cartes,
- * dégradé turquoise-violet sur les boutons d'action, lift + glow au survol
- * des cartes, entrée en cascade des sections. Palette exacte demandée :
- * fond #0F1115, cartes #202430, turquoise lagon #40E0D0, violet #7C3AED.
+ * Habillage « Lefouzebreizh Studio » posé le 09/09/2026 (fond, cartes, lift
+ * + glow au survol, entrée en cascade des sections) puis corrigé le
+ * 10/09/2026 : le dégradé turquoise-violet des boutons d'action est
+ * remplacé par un dégradé turquoise pur, sur demande du propriétaire — les
+ * boutons ne portent plus que `--color-accent` → `--color-accent-strong`,
+ * les deux teintes déjà définies plus haut. `--violet-degrade` reste
+ * défini pour le glow des cartes au survol, juste en dessous : c'est là,
+ * et seulement là, qu'il sert encore.
  *
- * `#7c3aed` n'est PAS repris dans `--color-violet` ci-dessus : mesuré
+ * `#7c3aed` n'est PAS repris dans `--color-violet` plus haut : mesuré
  * (formule WCAG), il ne rend que 3,3:1 sur `--color-paper` — sous le seuil
  * de la maison (7:1) et sous le minimum légal (4,5:1), le même défaut déjà
- * mesuré sur l'accent de TITAN Builder (2,6:1) dans `theme-partage.md`. Il
- * reste donc réservé au dégradé et au glow ci-dessous, où c'est le blanc du
- * texte de bouton qui doit rester lisible (5,7:1, mesuré), jamais posé seul
- * comme couleur de texte.
+ * mesuré sur l'accent de TITAN Builder (2,6:1) dans `theme-partage.md`.
  */
 :root {
   --violet-degrade: #7c3aed;
 }
 
-/* Remplace tous les boutons bleu plats par le dégradé validé, sans toucher
-   au balisage : .bg-bleu et .hover\:bg-bleu-strong sont déjà posés partout
-   dans page.tsx pour chaque bouton d'action. */
+/* Remplace tous les boutons bleu plats par le dégradé turquoise validé,
+   sans toucher au balisage : .bg-bleu et .hover\:bg-bleu-strong sont déjà
+   posés partout dans page.tsx pour chaque bouton d'action. */
 .bg-bleu {
-  background: linear-gradient(135deg, var(--color-accent), var(--violet-degrade));
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
 }
 .hover\:bg-bleu-strong:hover {
   filter: brightness(1.12);
+}
+
+/* Champs de saisie : un bord `border-line` (#262a33) sur un fond `bg-paper`
+   (#0f1115, la couleur du fond de page lui-même) était quasi invisible à
+   côté des nouveaux boutons turquoise — signalé le 10/09/2026. Un bord
+   légèrement teinté turquoise au repos les rend lisibles sans les faire
+   rivaliser avec les boutons pleins ; l'état focus (déjà `focus:border-
+   accent` dans chaque composant) reste, lui, pleinement turquoise. */
+input.border-line.bg-paper,
+input.border-line.bg-paper-raised {
+  border-color: color-mix(in srgb, var(--color-accent) 25%, var(--color-line));
 }
 
 /* Lift + glow au survol de chaque carte/bloc principal — cible la même
