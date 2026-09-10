@@ -299,6 +299,9 @@ export type ReponseAssistant = {
   documentsCites: string[];
   ouvrirFormulaire: boolean;
   ouvrirRangement: boolean;
+  // Un seul bot (10/09/2026) : demande de tri en lot proposée depuis la
+  // conversation elle-même — voir trierAutomatiquement() dans page.tsx.
+  declencherTriAutomatique: boolean;
   rechercheWebEffectuee: boolean;
   actions: ActionAssistant[];
 };
@@ -346,7 +349,8 @@ export async function demanderAuCoffre(
 ): Promise<ReponseAssistant> {
   const vide: ReponseAssistant = {
     reponse: "Je n'ai pas pu répondre à l'instant — réessaie dans un moment.",
-    documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false,
+    documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false,
+    declencherTriAutomatique: false, rechercheWebEffectuee: false,
     actions: [],
   };
   try {
@@ -359,6 +363,7 @@ export async function demanderAuCoffre(
     // encore porter ce champ — un tableau vide plutôt qu'un crash au premier
     // accès à `.map` côté interface.
     if (!Array.isArray(resultat.actions)) resultat.actions = [];
+    resultat.declencherTriAutomatique = Boolean(resultat.declencherTriAutomatique);
     return resultat;
   } catch {
     return vide;
