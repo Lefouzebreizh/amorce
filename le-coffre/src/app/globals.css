@@ -35,8 +35,18 @@
   --font-corps: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
+/* Trois halos turquoise/violet fixes, flous, sous tout le contenu — demandé
+   le 10/09/2026 : sans couleur à révéler derrière elles, les cartes en verre
+   juste en dessous ne seraient qu'un gris translucide. `background-
+   attachment: fixed` les garde en place pendant le défilement, comme un
+   éclairage de la pièce plutôt qu'un élément qui glisse avec la page. */
 body {
-  background: var(--color-paper);
+  background:
+    radial-gradient(760px circle at 12% -8%, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent 62%),
+    radial-gradient(820px circle at 105% 28%, color-mix(in srgb, var(--violet-degrade) 22%, transparent), transparent 62%),
+    radial-gradient(640px circle at 18% 112%, color-mix(in srgb, var(--violet-degrade) 16%, transparent), transparent 60%),
+    var(--color-paper);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-corps);
 }
@@ -81,6 +91,23 @@ input.border-line.bg-paper-raised {
   border-color: color-mix(in srgb, var(--color-accent) 25%, var(--color-line));
 }
 
+/* Effet verre + violet demandé le 10/09/2026, sur toute la page — porté par
+   la même paire de classes déjà posée sur l'en-tête, la barre de recherche,
+   la bannière d'alerte, le bloc « À trier », les dossiers, chaque fiche
+   document et les panneaux de l'assistant. Fond translucide + flou
+   d'arrière-plan pour révéler les halos posés sur `body` ci-dessus, un fin
+   dégradé turquoise-violet par-dessus, bord éclairci façon tranche de
+   verre. `:not(input)` exclut les champs de saisie, qui gardent le
+   traitement de contraste dédié juste au-dessus — un fond flouté derrière du
+   texte tapé serait illisible. */
+.border-line.bg-paper-raised:not(input) {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 10%, transparent), color-mix(in srgb, var(--violet-degrade) 16%, transparent)),
+    color-mix(in srgb, var(--color-paper-raised) 68%, transparent);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border-color: color-mix(in srgb, var(--color-ink) 14%, var(--color-line));
+}
 /* Lift + glow au survol de chaque carte/bloc principal — cible la même
    paire de classes déjà posée sur l'en-tête, la bannière d'alerte, le bloc
    « À trier », les dossiers et chaque fiche document. */
