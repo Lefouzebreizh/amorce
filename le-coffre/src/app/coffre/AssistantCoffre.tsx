@@ -21,16 +21,15 @@ type Message = TourConversation & {
   actionsExecutees?: Record<number, string>;
 };
 
-// État du tri en lot, porté par page.tsx (qui garde `trierAutomatiquement`
-// inchangé) et seulement affiché ici — un seul moteur, deux endroits qui le
-// montraient avant le 10/09/2026 : le bouton séparé du tableau de bord a
-// disparu, ce bloc est désormais le seul point d'entrée.
+// État du tri en lot, porté par page.tsx (deux passes — instantanée puis IA,
+// voir trierAutomatiquement) et seulement affiché ici — un seul moteur, un
+// seul point d'entrée depuis le 10/09/2026. Plus de « non-documents » : tout
+// fichier reçoit toujours une catégorie, le bilan ne porte que les vraies
+// erreurs techniques.
 type EtatTriAutomatique = {
-  restants: number;
-  lotMax: number;
   enCours: boolean;
   progres: { fait: number; total: number } | null;
-  bilan: { nonDocuments: string[]; erreursTechniques: string[] } | null;
+  bilan: { erreursTechniques: string[] } | null;
   detailOuvert: boolean;
 };
 
@@ -72,10 +71,29 @@ export function AssistantCoffre({
   const [actionEnCours, setActionEnCours] = useState<string | null>(null);
   const finDesMessages = useRef<HTMLDivElement>(null);
   const dejaEnvoyee = useRef(false);
+  // Indices de message déjà exploités pour lancer le tri — sans cette
+  // mémoire, un nouveau rendu (ou un second message qui redemande la même
+  // chose) relancerait le tri en boucle sur un message déjà traité.
+  const triAutoDejaDeclenche = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     finDesMessages.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Un seul bot, aucune étape à valider (10/09/2026) : dès que la
+  // conversation propose de trier, ça part tout seul — ta phrase dans le
+  // chat vaut déjà l'accord, un second clic n'ajouterait rien. Ne se
+  // déclenche jamais si un tri est déjà en cours.
+  useEffect(() => {
+    if (triAuto.enCours) return;
+    const indexAtraiter = messages.findIndex(
+      (m, i) => m.declencherTriAutomatique && !triAutoDejaDeclenche.current.has(i),
+    );
+    if (indexAtraiter === -1) return;
+    triAutoDejaDeclenche.current.add(indexAtraiter);
+    onLancerTriAutomatique();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, triAuto.enCours]);
 
   // Retrouve le nom réel d'un document cité par son nom exact — jamais
   // deviné : si Claude a mal recopié un nom, on ne montre pas de lien plutôt
@@ -251,21 +269,21 @@ export function AssistantCoffre({
                   )}
                   {m.declencherTriAutomatique && (
                     <div className="mt-2 flex flex-col items-start gap-2">
-                      {triAuto.restants > 0 ? (
-                        <button
-                          type="button"
-                          onClick={onLancerTriAutomatique}
-                          disabled={triAuto.enCours}
-                          className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
-                        >
+                      {/* Aucun bouton : le tri part tout seul dès que ce
+                          message existe — voir l'effet de déclenchement
+                          plus haut. Ici, seulement le statut. */}
+                      {triAuto.progres ? (
+                        <p className="flex items-center gap-1.5 text-xs text-ink-soft">
                           <Folder size={12} />
-                          {triAuto.enCours
-                            ? `Tri en cours… (${triAuto.progres?.fait ?? 0}/${triAuto.progres?.total ?? triAuto.restants})`
-                            : `Lancer le tri (${Math.min(triAuto.restants, triAuto.lotMax)})`}
-                        </button>
+                          Affinage en cours… ({triAuto.progres.fait}/{triAuto.progres.total})
+                        </p>
+                      ) : triAuto.enCours ? (
+                        <p className="flex items-center gap-1.5 text-xs text-ink-soft">
+                          <Folder size={12} /> Classement en cours…
+                        </p>
                       ) : (
-                        <p className="text-xs text-ink-soft">
-                          Tout est déjà classé, il n&apos;y a rien à trier pour l&apos;instant.
+                        <p className="flex items-center gap-1.5 text-xs text-ink-soft">
+                          <Folder size={12} /> Fait.
                         </p>
                       )}
                       {triAuto.progres && (
@@ -284,30 +302,22 @@ export function AssistantCoffre({
                           />
                         </div>
                       )}
-                      {triAuto.bilan && (triAuto.bilan.nonDocuments.length > 0 || triAuto.bilan.erreursTechniques.length > 0) && (
+                      {triAuto.bilan && triAuto.bilan.erreursTechniques.length > 0 && (
                         <div className="flex w-full flex-col gap-2 rounded-lg border border-line bg-paper-raised px-3 py-2 text-xs">
-                          {triAuto.bilan.nonDocuments.length > 0 && (
-                            <p className="text-ink-soft">
-                              {triAuto.bilan.nonDocuments.length} fichier{triAuto.bilan.nonDocuments.length > 1 ? 's' : ''} non
-                              reconnu{triAuto.bilan.nonDocuments.length > 1 ? 's' : ''} comme document administratif.
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-wine">
+                              {triAuto.bilan.erreursTechniques.length} fichier{triAuto.bilan.erreursTechniques.length > 1 ? 's' : ''} non
+                              analysé{triAuto.bilan.erreursTechniques.length > 1 ? 's' : ''}.
                             </p>
-                          )}
-                          {triAuto.bilan.erreursTechniques.length > 0 && (
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="text-wine">
-                                {triAuto.bilan.erreursTechniques.length} fichier{triAuto.bilan.erreursTechniques.length > 1 ? 's' : ''} non
-                                analysé{triAuto.bilan.erreursTechniques.length > 1 ? 's' : ''}.
-                              </p>
-                              <button
-                                type="button"
-                                onClick={onLancerTriAutomatique}
-                                disabled={triAuto.enCours}
-                                className="shrink-0 font-semibold text-wine underline decoration-dotted hover:text-ink disabled:opacity-60"
-                              >
-                                Réessayer
-                              </button>
-                            </div>
-                          )}
+                            <button
+                              type="button"
+                              onClick={onLancerTriAutomatique}
+                              disabled={triAuto.enCours}
+                              className="shrink-0 font-semibold text-wine underline decoration-dotted hover:text-ink disabled:opacity-60"
+                            >
+                              Réessayer
+                            </button>
+                          </div>
                           <button
                             type="button"
                             onClick={onBasculerDetailTriAutomatique}
@@ -317,7 +327,7 @@ export function AssistantCoffre({
                           </button>
                           {triAuto.detailOuvert && (
                             <div className="max-h-40 overflow-y-auto rounded-lg bg-paper p-2 text-xs text-ink-soft">
-                              {[...triAuto.bilan.nonDocuments, ...triAuto.bilan.erreursTechniques].map((nom, ni) => (
+                              {triAuto.bilan.erreursTechniques.map((nom, ni) => (
                                 <p key={`${nom}-${ni}`} className="truncate">{nom}</p>
                               ))}
                             </div>

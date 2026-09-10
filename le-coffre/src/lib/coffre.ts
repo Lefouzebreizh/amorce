@@ -283,6 +283,27 @@ export async function proposerClassement(fichier: File): Promise<PropositionClas
   }
 }
 
+// Catégorie générique posée SANS appel réseau, dès qu'un fichier n'a encore
+// aucune catégorie — voir trierAutomatiquement dans page.tsx (plan du
+// 10/09/2026). C'est elle qui garantit qu'aucun fichier n'est jamais refusé
+// ni laissé de côté : l'IA (proposerClassement) n'intervient qu'ensuite,
+// pour affiner « Images » et « Papiers » vers une catégorie administrative
+// précise quand elle en reconnaît une — si elle n'en reconnaît aucune, le
+// fichier garde la catégorie posée ici, il ne redevient jamais « non classé ».
+export function categorieInstantanee(type: string): string {
+  if (type === 'application/pdf') return 'Papiers';
+  if (type.startsWith('image/')) return 'Images';
+  if (type.startsWith('video/')) return 'Vidéos';
+  if (type.startsWith('audio/')) return 'Audio';
+  return 'Autre';
+}
+
+// Les deux seuls types que classer-document sait lire (voir son code) — donc
+// les deux seules catégories instantanées qu'il vaut la peine de lui
+// soumettre pour affinage. Les deux autres (Vidéos, Audio) gardent leur
+// catégorie instantanée pour de bon.
+export const CATEGORIES_AFFINABLES_PAR_IA = new Set(['Images', 'Papiers']);
+
 export type TourConversation = { role: 'user' | 'assistant'; texte: string };
 
 // Une action que l'assistant propose sur un document précis — jamais
