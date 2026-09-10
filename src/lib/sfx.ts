@@ -1,4 +1,5 @@
 import type { SfxId } from './types.ts';
+import { seeded } from './alea.ts';
 
 /**
  * Bruitages de synthèse.
@@ -60,6 +61,9 @@ export function sfxDuration(id: SfxId): number {
  * Un tampon de bruit blanc par contexte, réutilisé par tous les bruitages.
  * Le régénérer à chaque déclenchement coûterait cher pour aucun bénéfice audible.
  */
+/** Graine du bruit blanc. Sa valeur n'a aucune importance ; sa fixité, toute. */
+const GRAINE_BRUIT = 0x9e3779b9;
+
 const noiseCache = new WeakMap<AnyAudioContext, AudioBuffer>();
 
 function noiseBuffer(ctx: AnyAudioContext): AudioBuffer {
@@ -69,7 +73,19 @@ function noiseBuffer(ctx: AnyAudioContext): AudioBuffer {
   const length = Math.floor(ctx.sampleRate * 2);
   const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
   const data = buffer.getChannelData(0);
-  for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+  /*
+   * Graine fixe, et c'est la même exigence que pour la réponse impulsionnelle
+   * plus bas — elle y était écrite, elle manquait ici.
+   *
+   * Le tampon est mis en cache **par contexte**, et l'export en ouvre un neuf :
+   * avec `Math.random`, chaque export gravait donc un bruit différent, et
+   * l'aperçu en entendait encore un autre. Mesuré sur le vrai pic du fichier
+   * livré, cinq tours du parcours complet : −0,85, −0,70, −0,41, −0,99, −0,73
+   * dBFS. Le contrôle qui le garde est tombé une fois sur cinq, sur un montage
+   * pourtant rigoureusement identique.
+   */
+  const tirage = seeded(GRAINE_BRUIT);
+  for (let i = 0; i < length; i++) data[i] = tirage() * 2 - 1;
 
   noiseCache.set(ctx, buffer);
   return buffer;
@@ -91,25 +107,6 @@ const SATURATION = (() => {
   }
   return curve;
 })();
-
-/**
- * Générateur pseudo-aléatoire à graine fixe.
- *
- * La réponse impulsionnelle doit être identique d'une exécution à l'autre :
- * `Math.random` ferait que la queue de réverbération entendue en
- * prévisualisation ne serait pas celle gravée à l'export.
- */
-function seeded(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state ^= state << 13;
-    state >>>= 0;
-    state ^= state >>> 17;
-    state ^= state << 5;
-    state >>>= 0;
-    return state / 0xffffffff;
-  };
-}
 
 const impulseCache = new WeakMap<AnyAudioContext, AudioBuffer>();
 

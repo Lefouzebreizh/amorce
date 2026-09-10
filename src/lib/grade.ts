@@ -1,4 +1,5 @@
 import { OUTPUT_HEIGHT, OUTPUT_WIDTH, type LookId } from './types.ts';
+import { seeded } from './alea.ts';
 
 /**
  * Étalonnage cinématographique.
@@ -138,6 +139,9 @@ export function getLook(id: LookId): Look {
   return LOOKS.find((l) => l.id === id) ?? LOOKS[0];
 }
 
+/** Graine du grain. Sa valeur n'a aucune importance ; sa fixité, toute. */
+const GRAINE_GRAIN = 0x85ebca6b;
+
 /** Taille du motif de grain. Assez grand pour ne pas se répéter visiblement. */
 const GRAIN_TILE = 256;
 
@@ -173,8 +177,17 @@ export class GradePipeline {
     if (!tileCtx) return null;
 
     const image = tileCtx.createImageData(GRAIN_TILE, GRAIN_TILE);
+    /*
+     * Graine fixe : la tuile est tirée une fois par session, puis **déplacée**
+     * d'une image à l'autre — c'est le déplacement qui fait la matière
+     * argentique, pas le tirage. Avec `Math.random`, deux exports du même
+     * montage ne rendaient pas le même fichier, et l'aperçu ne montrait pas le
+     * grain que l'export allait graver. Même exigence que le bruit blanc et la
+     * réverbération de `sfx.ts`.
+     */
+    const tirage = seeded(GRAINE_GRAIN);
     for (let i = 0; i < image.data.length; i += 4) {
-      const value = 110 + Math.random() * 90;
+      const value = 110 + tirage() * 90;
       image.data[i] = value;
       image.data[i + 1] = value;
       image.data[i + 2] = value;

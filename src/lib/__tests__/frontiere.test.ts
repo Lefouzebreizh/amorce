@@ -126,3 +126,42 @@ test('le moteur ne porte aucune adresse distante', () => {
   }
   assert.deepEqual(coupables, [], 'une adresse distante est écrite dans le moteur');
 });
+
+
+/**
+ * Le hasard non reproductible, et où il a le droit d'exister.
+ *
+ * Un rendu doit être identique d'une exécution à l'autre, et l'aperçu doit
+ * montrer ce que l'export gravera. `Math.random` casse les deux, et il l'a fait
+ * en silence pendant longtemps : la règle était écrite dans `sfx.ts`, appliquée
+ * à la réponse impulsionnelle de la réverbération, et **pas** au bruit blanc
+ * deux fonctions plus haut ni au grain de l'étalonnage.
+ *
+ * Ce garde existe parce que le défaut est né d'une incohérence, pas d'un oubli
+ * de principe : la quatrième occurrence s'ajouterait aussi facilement que la
+ * deuxième. Ce test vit ici plutôt que dans un fichier neuf pour employer le
+ * parcours de fichiers du moteur qui s'y trouve déjà.
+ */
+const RANDOM_AUTORISES: Record<string, string> = {
+  'src/lib/id.ts': 'fabrique un identifiant unique, que rien ne rejoue',
+};
+
+test('aucun hasard non reproductible ne s’ajoute au moteur en silence', () => {
+  const trouves: string[] = [];
+  for (const dossier of MOTEUR) {
+    for (const fichier of fichiers(dossier)) {
+      const texte = readFileSync(join(RACINE, fichier), 'utf8');
+      // Les commentaires ont le droit de nommer le piège — c'est même là qu'il
+      // s'explique. On ne cherche que les appels.
+      const sansCommentaires = texte
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '');
+      if (/\bMath\.random\s*\(/.test(sansCommentaires)) trouves.push(fichier);
+    }
+  }
+  assert.deepEqual(
+    trouves.sort(),
+    Object.keys(RANDOM_AUTORISES).sort(),
+    'un Math.random est apparu ou a disparu dans le moteur : le déclarer avec sa raison',
+  );
+});
