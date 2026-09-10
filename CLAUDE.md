@@ -697,7 +697,7 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   court à toute logique d'achat programmé — « je m'en fous du DCA » — pour un
   bot qui priorise les pépites dynamiquement découvertes sur les majors d'une
   watchlist, sans jamais cesser d'acheter une seule pour de bonnes raisons.
-  `strategy/dca.py` a été supprimé, `Action.TEMPORISER` avec, et
+  le module de calendrier `dca.py` est supprimé, `Action.TEMPORISER` avec, et
   `strategy/moteur.py` ne connaît plus qu'un score contre un seuil
   (`strategie.seuil_achat`) : sous le seuil il attend, au-dessus il achète ou
   renforce, sans calendrier ni montant nominal — c'est
