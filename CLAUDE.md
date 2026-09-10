@@ -663,6 +663,35 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Une grille vide ou un placeholder bloque la mise en production du garde-fou
   lui-même, pas seulement de la fonctionnalité qu'il protège — que ce soit ici
   ou dans un futur garde-fou financier du dépôt.
+  **Reconstruction du volet détection, décidée le 10/09/2026** après le
+  post-mortem du chantier crypto : le radar `pepites/` alertait sur un seuil
+  unique (volume) jamais franchi en 29 tours, et cette anomalie de volume
+  seule ne suffit plus à qualifier une pépite ici non plus. La détection
+  passe en multi-signaux — ratio volume/capitalisation, liquidité verrouillée
+  en DeFi (déjà un veto du bouclier, désormais aussi un critère de détection),
+  vitesse de croissance des détenteurs, exclusion sur revente d'initiés ou de
+  baleines après un pic — chaque signal backtestable séparément avant
+  combinaison. **Ce qui n'a pas été jeté, et à dessein** : `risk_management/`
+  (dimensionnement par distance au stop, stops ATR, prise de bénéfice
+  suiveuse, coupe-circuit à quatre déclencheurs), `execution/courtier.py`
+  (papier réaliste avec carnet et glissement, réel via CCXT) et le moteur
+  `strategy/moteur.py` existaient déjà et couvrent l'essentiel des exigences
+  de risque posées ce jour-là — les détruire pour les réécrire à l'identique
+  aurait jeté des mois de tests (337) sans rien gagner. Le §0 bis (« chirurgical,
+  jamais par écrasement ») s'applique ici comme ailleurs : on étend ce qui
+  marche, on remplace ce qui ne marche pas.
+  **Garde-fou permanent, posé le 10/09/2026 par le propriétaire** : aucun
+  paramètre critique de ce bot — seuils de décision, montant de capital
+  engagé, plateforme d'exécution — ne se change en autonomie. Toute session
+  qui en modifie un ouvre la question au propriétaire (format du §5) avant de
+  fusionner, même si la PR est par ailleurs verte. C'est exactement le type
+  de dérive — un paramètre déplacé sans que personne ne le voie — qui a rendu
+  l'ancien radar muet pendant six jours.
+  **Et un passage en mode réel exige désormais un état de validation
+  documenté**, pas seulement le drapeau `--je-confirme` : `config/validation.yaml`
+  doit attester un backtest multi-régimes concluant et une période de paper
+  trading conclusive, sans quoi la commande `production` refuse de démarrer.
+  Voir `nexuscrypto/src/core/validation.py`.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
   sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
   reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de

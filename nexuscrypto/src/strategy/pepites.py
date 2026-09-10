@@ -97,8 +97,40 @@ def _filtres_gratuits(
     return None
 
 
+def _note_ratio_volume_mcap(ratio: float, config: ConfigPepites) -> tuple[float, list[str]]:
+    """Trapèze : une zone saine entre deux plafonds, mordant des deux côtés.
+
+    En dessous de `ratio_volume_mcap_bas`, le volume n'existe pas rapporté à
+    la taille du jeton — personne ne s'y intéresse. Au-dessus de
+    `ratio_volume_mcap_haut`, la totalité (ou plus) de la capitalisation
+    s'échange en un jour : ce n'est plus un afflux, c'est une distribution en
+    cours, et la noter haut inverserait le sens du signal.
+    """
+
+    bas, sain, haut = (
+        config.ratio_volume_mcap_bas, config.ratio_volume_mcap_sain, config.ratio_volume_mcap_haut,
+    )
+    raisons: list[str] = []
+
+    if ratio < bas:
+        note = (ratio / bas) * 60.0 if bas > 0 else 0.0
+    elif ratio <= sain:
+        note = 60.0 + (ratio - bas) / (sain - bas) * 40.0 if sain > bas else 100.0
+    elif ratio <= haut:
+        note = 100.0 - (ratio - sain) / (haut - sain) * 60.0 if haut > sain else 100.0
+    else:
+        note = 20.0
+        raisons.append(
+            f"volume/capitalisation à {ratio:.2f} — au-delà de {haut:g}, "
+            "plus une distribution qu'un afflux"
+        )
+    return borner(note, 0.0, 100.0), raisons
+
+
 def noter(candidat: Candidat, config: ConfigPepites) -> tuple[float, list[str]]:
-    """Note de 0 à 100. Trois composantes, à parts égales."""
+    """Note de 0 à 100. Quatre composantes à parts égales quand la
+    capitalisation est connue, trois sinon — une capitalisation absente n'est
+    pas une capitalisation à zéro (même règle que `scoring.calculer`)."""
 
     raisons: list[str] = []
 
@@ -121,7 +153,14 @@ def noter(candidat: Candidat, config: ConfigPepites) -> tuple[float, list[str]]:
         if candidat.variation_liquidite_24h >= 0.3:
             raisons.append(f"liquidité +{candidat.variation_liquidite_24h:.0%} sur 24 h")
 
-    note = (note_volume + note_rotation + note_liquidite) / 3.0
+    composantes = [note_volume, note_rotation, note_liquidite]
+    if candidat.capitalisation_usd and candidat.capitalisation_usd > 0:
+        ratio = candidat.volume_24h_usd / candidat.capitalisation_usd
+        note_ratio, raisons_ratio = _note_ratio_volume_mcap(ratio, config)
+        composantes.append(note_ratio)
+        raisons += raisons_ratio
+
+    note = sum(composantes) / len(composantes)
     return note, raisons
 
 

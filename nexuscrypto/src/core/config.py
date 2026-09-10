@@ -133,6 +133,16 @@ class ConfigPepites:
     capitalisation_max_usd: float = 300_000_000
     score_minimum: float = 65
     candidats_max: int = 5
+    # Ratio volume 24 h / capitalisation — un signal indépendant de
+    # `croissance_volume` : celui-ci compare le jeton à lui-même, celui-là le
+    # compare à sa propre taille. En dessous de `bas`, personne ne s'y
+    # intéresse ; entre `bas` et `sain`, la note monte ; au-dessus de `haut`,
+    # ce n'est plus un afflux d'intérêt mais une distribution en cours — la
+    # totalité de la capitalisation qui s'échange en un jour est le signe
+    # d'une sortie, pas d'une accumulation.
+    ratio_volume_mcap_bas: float = 0.05
+    ratio_volume_mcap_sain: float = 0.30
+    ratio_volume_mcap_haut: float = 2.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -486,9 +496,19 @@ def charger(
     # -- Notifications -------------------------------------------------------
     brut_notif = _section(brut, "notifications")
     canaux = tuple(brut_notif.get("canaux") or ("console",))
-    connus = {"console", "telegram", "discord"}
+    connus = {"console", "discord"}
     for canal in canaux:
-        if canal not in connus:
+        if canal == "telegram":
+            # Retiré le 10/09/2026 : les résultats se lisent désormais dans
+            # une session Claude, pas dans une application tierce. Un message
+            # dédié plutôt que le « canal inconnu » générique, pour dire
+            # pourquoi plutôt que de laisser croire à une faute de frappe.
+            defauts.append(
+                "Canal « telegram » retiré du système le 10/09/2026 : les "
+                "résultats se lisent désormais dans une session Claude. "
+                "Retirer la ligne de `config.yaml`."
+            )
+        elif canal not in connus:
             defauts.append(f"Canal de notification inconnu : « {canal} ».")
     notifications = ConfigNotifications(
         canaux=canaux,
@@ -510,8 +530,6 @@ def charger(
                 f"Mode réel demandé mais {plateforme}_API_KEY / {plateforme}_API_SECRET "
                 "sont absents du `.env`."
             )
-    if "telegram" in canaux and not secrets.presents("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
-        defauts.append("Canal Telegram activé mais TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID absents.")
     if "discord" in canaux and not secrets.presents("DISCORD_WEBHOOK_URL"):
         defauts.append("Canal Discord activé mais DISCORD_WEBHOOK_URL absent.")
 

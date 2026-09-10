@@ -108,11 +108,15 @@ class TestRefus(unittest.TestCase):
             self._charger(lambda contenu: None, mode=Mode.REEL)
         self.assertTrue(any("Mode réel" in d for d in capture.exception.defauts))
 
-    def test_canal_telegram_sans_jeton_refuse(self):
+    def test_canal_telegram_retire_refuse(self):
+        """Retiré le 10/09/2026 : un `config.yaml` qui le nomme encore doit
+        être signalé, pas ignoré comme un canal inconnu parmi d'autres."""
+
         def mutation(contenu):
             contenu["notifications"]["canaux"] = ["console", "telegram"]
-        with self.assertRaises(ConfigurationInvalide):
+        with self.assertRaises(ConfigurationInvalide) as capture:
             self._charger(mutation)
+        self.assertTrue(any("retiré" in d for d in capture.exception.defauts))
 
     def test_canal_inconnu_refuse(self):
         def mutation(contenu):

@@ -13,7 +13,7 @@ from datetime import timedelta
 
 from aides import MAINTENANT, config
 
-from src.strategy.pepites import Candidat, noter, scanner
+from src.strategy.pepites import Candidat, _note_ratio_volume_mcap, noter, scanner
 
 
 def candidat(**remplacements) -> Candidat:
@@ -120,6 +120,51 @@ class TestNotation(unittest.TestCase):
     def test_liquidite_inconnue_reste_neutre(self):
         note, _ = noter(candidat(variation_liquidite_24h=None), self.config)
         self.assertTrue(0.0 <= note <= 100.0)
+
+    def test_capitalisation_absente_ne_casse_pas_la_note(self):
+        """Une capitalisation absente n'est pas une capitalisation à zéro :
+        la moyenne se fait sur les trois composantes qui existent."""
+
+        note, raisons = noter(candidat(capitalisation_usd=None), self.config)
+        self.assertTrue(0.0 <= note <= 100.0)
+        self.assertFalse(any("volume/capitalisation" in r for r in raisons))
+
+
+class TestRatioVolumeCapitalisation(unittest.TestCase):
+    def setUp(self):
+        self.config = config().strategie.pepites
+
+    def test_ratio_trop_bas_note_mal(self):
+        note, _ = _note_ratio_volume_mcap(0.01, self.config)
+        self.assertLess(note, 30.0)
+
+    def test_ratio_dans_la_zone_saine_note_bien(self):
+        note, _ = _note_ratio_volume_mcap(0.15, self.config)
+        self.assertGreaterEqual(note, 70.0)
+
+    def test_ratio_excessif_est_lu_comme_une_distribution(self):
+        """Toute la capitalisation qui s'échange en un jour n'est pas un
+        afflux d'intérêt, c'est une sortie en cours — le signal doit
+        s'inverser, pas culminer."""
+
+        note, raisons = _note_ratio_volume_mcap(5.0, self.config)
+        self.assertLess(note, 40.0)
+        self.assertTrue(any("distribution" in r for r in raisons))
+
+    def test_note_toujours_bornee(self):
+        for ratio in (0.0, 0.05, 0.3, 2.0, 50.0):
+            note, _ = _note_ratio_volume_mcap(ratio, self.config)
+            self.assertTrue(0.0 <= note <= 100.0, ratio)
+
+    def test_le_ratio_influence_la_note_globale(self):
+        """Le signal doit réellement peser sur `noter`, pas seulement exister
+        comme fonction isolée jamais appelée. Volume et liquidité identiques
+        des deux côtés : seule la capitalisation change, donc seul le nouveau
+        signal peut expliquer l'écart de note."""
+
+        sain = noter(candidat(capitalisation_usd=8_000_000.0), self.config)      # ratio 0.15
+        distribue = noter(candidat(capitalisation_usd=240_000.0), self.config)   # ratio 5.0
+        self.assertGreater(sain[0], distribue[0])
 
 
 if __name__ == "__main__":
