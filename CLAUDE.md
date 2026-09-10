@@ -1767,6 +1767,34 @@ convient aux deux familles de téléphones — iOS attend `&`, Android `?` — e
 seule des deux écritures laisse la moitié des appareils sans texte. Pour un
 courriel, `mailto:` prend `?subject=` et `?body=` de la même façon.
 
+**Sauf que `sms:` ne choisit pas l'application, et ça se paie — mesuré le
+10/09/2026 sur l'appareil du propriétaire.** Un lien `sms:` part vers l'appli
+SMS **par défaut** d'Android. Si ce n'est pas celle dont il se sert, il obtient
+une fenêtre « Nouveau message » **vide** — sans destinataire, sans texte — et
+rien à l'écran ne dit pourquoi. Le lien était pourtant juste : les six ont été
+vérifiés, forme `?&`, corps encodé, mention STOP présente. C'est la même famille
+que le bac à sable du 07/09 : le geste échoue en silence, et la vérification du
+lien ne le voit pas.
+
+**La parade tient dans le lien, et elle est éprouvée** — Google Messages s'est
+ouvert rempli au premier appui :
+
+```
+intent://0600000000#Intent;scheme=smsto;package=com.google.android.apps.messaging;S.sms_body=<corps encodé>;end
+```
+
+Deux précautions : le corps s'encode entièrement, car un `;` ou un `#` non
+encodé coupe la syntaxe de l'intention au milieu ; et on garde le `sms:` simple
+en repli sous le bouton, pour un appareil qui ne connaîtrait pas ce paquet.
+
+**Et le vrai correctif reste un réglage, à proposer une fois** : Paramètres →
+Applications → Applications par défaut → Application de SMS. Une fois posé,
+`sms:` suffit et toutes les campagnes suivantes marchent sans ruse.
+
+**Le bouton « Copier le texte » n'est donc pas décoratif, c'est le seul chemin
+qu'aucun réglage ne casse.** Il doit rester à côté du bouton d'envoi, pas en bas
+de page.
+
 **Compter les segments, et le dire sur la fiche.** Un SMS est facturé par
 tranche de 160 caractères — mais **un seul caractère hors alphabet GSM-7 fait
 basculer le message entier en UCS-2, à 67 caractères par segment**. Le `ç`
