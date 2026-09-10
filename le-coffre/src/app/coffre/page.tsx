@@ -365,7 +365,12 @@ export default function PageCoffre() {
   const [questionAssistant, setQuestionAssistant] = useState('');
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
   const [recherche, setRecherche] = useState('');
-  const [vueDossiers, setVueDossiers] = useState(false);
+  // Vue par défaut demandée le 10/09/2026 : des dossiers repliés, jamais la
+  // liste plate — avec des centaines de papiers, une liste continue oblige à
+  // défiler longtemps avant d'atteindre ce qui vit en dessous (rendez-vous,
+  // identité). `dossiersOuverts` démarre vide juste en dessous : les dossiers
+  // eux-mêmes restent repliés tant qu'on n'a pas cliqué dessus.
+  const [vueDossiers, setVueDossiers] = useState(true);
   const [correction, setCorrection] = useState<Correction | null>(null);
   const [triAutoEnCours, setTriAutoEnCours] = useState(false);
   const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
