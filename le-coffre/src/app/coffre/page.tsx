@@ -1499,6 +1499,29 @@ export default function PageCoffre() {
                 )}
               </div>
             )}
+            {/* Une seule barre, un seul bot (10/09/2026) : la conversation
+                s'affiche ici, directement sous la barre qui l'a ouverte —
+                plus de panneau plein écran séparé. */}
+            {assistantOuvert && (
+              <div className="mb-4">
+                <AssistantCoffre
+                  index={index}
+                  questionInitiale={questionAssistant}
+                  onFermer={fermerAssistant}
+                  // `documentsCites` porte le nom AFFICHÉ (voir digestIndex
+                  // côté serveur), jamais la clé opaque qu'attend
+                  // ouvrirDetail — sans cette résolution, cliquer un
+                  // document cité n'ouvrait rien.
+                  onOuvrirDocument={(nomAffiche) => {
+                    const cleStockage = clesParNomAffiche(index, nomAffiche)[0];
+                    if (cleStockage) ouvrirDetail(cleStockage);
+                  }}
+                  onOuvrirFormulaire={() => setFormulaireOuvert(true)}
+                  onOuvrirRangement={() => setVueDossiers(true)}
+                  onExecuterAction={executerActionAssistant}
+                />
+              </div>
+            )}
             {categoriesConnues.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
                 <button type="button" onClick={() => setFiltreCategorie(null)}
@@ -1668,24 +1691,6 @@ export default function PageCoffre() {
 
       {formulaireOuvert && (
         <RemplirFormulaire identite={index.identite} onFermer={() => setFormulaireOuvert(false)} />
-      )}
-
-      {assistantOuvert && (
-        <AssistantCoffre
-          index={index}
-          questionInitiale={questionAssistant}
-          onFermer={fermerAssistant}
-          // `documentsCites` porte le nom AFFICHÉ (voir digestIndex côté
-          // serveur), jamais la clé opaque qu'attend ouvrirDetail — sans
-          // cette résolution, cliquer un document cité n'ouvrait rien.
-          onOuvrirDocument={(nomAffiche) => {
-            const cleStockage = clesParNomAffiche(index, nomAffiche)[0];
-            if (cleStockage) ouvrirDetail(cleStockage);
-          }}
-          onOuvrirFormulaire={() => setFormulaireOuvert(true)}
-          onOuvrirRangement={() => setVueDossiers(true)}
-          onExecuterAction={executerActionAssistant}
-        />
       )}
 
       {/* Un seul bouton flottant désormais : ajouter un papier — seul point

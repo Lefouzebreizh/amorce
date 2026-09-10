@@ -131,30 +131,29 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 sm:items-center sm:p-6" onClick={onFermer}>
-      <div
-        className="flex h-[85vh] w-full flex-col overflow-hidden rounded-t-3xl border border-line bg-paper-raised sm:h-[80vh] sm:max-w-xl sm:rounded-3xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-line p-5">
-          <div>
-            <h2 className="font-affiche text-xl">Demander au coffre</h2>
-            <p className="text-sm text-ink-soft">Retrouve un papier, ou pose une question.</p>
-          </div>
-          <button onClick={onFermer} className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/40" aria-label="Fermer">
-            <X size={20} />
-          </button>
-        </div>
+    // Une seule barre, un seul bot (10/09/2026) : plus de panneau plein
+    // écran par-dessus la page — la conversation vit directement sous la
+    // barre de recherche, comme un bloc de plus dans le tableau de bord.
+    // Une hauteur bornée (pas `100dvh`) évite qu'un long échange n'avale
+    // tout l'écran ; `onFermer` referme le bloc sans jamais recouvrir quoi
+    // que ce soit d'autre à fermer par-dessus.
+    <div className="rounded-2xl border border-line bg-paper-raised">
+      <div className="flex items-center justify-between border-b border-line p-4">
+        <p className="text-sm font-semibold text-ink-soft">Conversation</p>
+        <button onClick={onFermer} className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/40" aria-label="Fermer la conversation">
+          <X size={18} />
+        </button>
+      </div>
 
-        <div className="flex-1 overflow-y-auto p-5">
-          {messages.length === 0 && (
-            <p className="rounded-2xl border border-dashed border-line bg-paper p-4 text-sm text-ink-soft">
-              Essaie « trouve mes photos », « range la facture EDF dans Énergie », « supprime le
-              doublon de la carte grise », « comment résilier une assurance habitation », ou « je
-              veux remplir un formulaire ».
-            </p>
-          )}
-          <ul className="flex flex-col gap-3">
+      <div className="max-h-[50vh] overflow-y-auto p-4">
+        {messages.length === 0 && (
+          <p className="rounded-2xl border border-dashed border-line bg-paper p-4 text-sm text-ink-soft">
+            Essaie « trouve mes photos », « range la facture EDF dans Énergie », « supprime le
+            doublon de la carte grise », « comment résilier une assurance habitation », ou « je
+            veux remplir un formulaire ».
+          </p>
+        )}
+        <ul className="flex flex-col gap-3">
             {messages.map((m, i) => (
               <li key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
@@ -258,7 +257,6 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
             <Send size={18} />
           </button>
         </form>
-      </div>
     </div>
   );
 }
