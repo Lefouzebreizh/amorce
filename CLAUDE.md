@@ -519,6 +519,22 @@ cesse d'être lu, et la mémoire meurt de son propre poids.
 Le résumé de reprise ne compte pas : il est lu une fois. **Le dépôt transporte
 la mémoire, le résumé ne transporte que l'état.**
 
+**Et un projet qui vit dans un dépôt GitHub séparé n'hérite de rien de tout
+ça.** `ensemble-mdph` n'a pas de `CLAUDE.md` : aucune leçon d'Amorce ne le
+protège (un piège déjà écrit ici, comme celui de `ssoProtection` plus bas, ne
+traverse pas jusqu'à lui), et aucune de ses propres leçons ne s'écrit nulle
+part — un défaut annoncé corrigé peut donc y ressurgir identique, rejoué par
+une deuxième session qui ne sait pas qu'une première l'a déjà mesuré une fois
+à tort. Mesuré le 08-09/09/2026 : un chevauchement de bouton sur du texte,
+annoncé réglé par un commit, a survécu à la vérification automatisée d'une
+session suivante avant d'être vu à l'œil par le propriétaire — deux fois de
+suite, faute d'un fichier qui aurait pu dire « déjà mesuré, et mal ». Tout
+projet distinct qui reçoit du travail sur plus d'une session se dote d'un
+fichier de mémoire minimal, même trois lignes — un `CLAUDE.md`, un `AGENTS.md`
+ou une simple note en tête de son `README.md` suffit, tant qu'il liste les
+pièges déjà rencontrés. Détail dans
+`second-brain/lecons/2026-09-10-post-mortem-ensemble-mdph-verifications-qui-regardent-a-cote.md`.
+
 ## 4. STACK
 
 Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
@@ -1888,6 +1904,30 @@ suivent un déploiement peut décrire la version d'avant — vider le cache avec
 paramètre d'URL avant de conclure, et le dire quand un écart apparaît entre ce
 qu'on mesure et ce que le propriétaire voit.
 
+**Un chevauchement se mesure contre le plus grand élément de la zone, jamais
+seulement contre les cibles cliquables.** Un commit sur `ensemble-mdph` a
+annoncé corriger le chevauchement d'un bouton de chat flottant sur le texte
+des cartes ; la vérification automatisée de la session suivante a confirmé
+« zéro chevauchement » à tort, le 08/09/2026, parce qu'elle ne testait le
+recouvrement qu'avec les boutons et les liens des cartes, jamais avec le
+paragraphe de texte courant — pourtant l'élément le plus large de chacune. Le
+défaut réel (jusqu'à 59 px de recouvrement) a survécu à deux vérifications
+distinctes jusqu'à ce que le propriétaire le voie à l'œil. Le point 2
+ci-dessus dit « chaque bouton et lien cliqué et vérifié » : ça ne suffit pas à
+couvrir un recouvrement purement visuel, qui ne casse aucune cible et ne se
+voit que sur le texte lui-même.
+
+**La checklist d'une vérification se construit à partir de la consigne, jamais
+à partir du diff qu'on vient d'écrire.** Une demande d'habillage visuel qui dit
+« toute la page » sans lister exhaustivement les éléments concernés se vérifie
+en se demandant quels éléments visibles ne portent **pas encore** le
+changement demandé — pas seulement si ce qu'on a touché est correct. Mesuré le
+09/09/2026 sur `ensemble-mdph` : une passe de dégradé de marque a couvert les
+cartes, les icônes, le survol et l'animation, et a laissé le titre du héro —
+l'élément le plus visible de la page — en blanc plat, visible sur les propres
+captures de vérification envoyées comme preuve. Il a fallu un message dédié du
+propriétaire pour le voir. Une vérification qui part de « qu'ai-je changé »
+ne peut jamais détecter un oubli.
 
 ## 9. AU DÉMARRAGE
 
@@ -1917,6 +1957,19 @@ git rev-list --count HEAD..origin/main   # 0 attendu ; sinon, se remettre à jou
 Ça vaut pour tout fil qui reprend, pas seulement après une semaine : ce fichier
 bouge plusieurs fois par jour, et le §2 le dit déjà pour les changements. Ici,
 c'est la lecture elle-même qui est en jeu.
+
+**Et avant le premier geste sur un sujet nommé par une branche ou une tâche,
+vérifier qu'il vit bien dans le dépôt attaché à la session.** Une tâche peut
+brancher une session sur `lefouzebreizh/amorce` en nommant dans sa branche un
+sujet qui vit en réalité dans un dépôt GitHub séparé — mesuré le 08/09/2026 :
+la branche `claude/ensemble-mdph-corrections-pdg3y8` vivait dans `amorce`,
+mais le site « Ensemble face aux démarches » n'y a jamais existé, il vit dans
+`Lefouzebreizh/ensemble-mdph`. Rien ne signale l'écart tant qu'on n'a pas
+cherché : un `grep` sur le nom du sujet (fichiers, textes cités, palette) qui
+ne rend rien dans le dépôt attaché est le signal pour appeler `list_repos`
+**avant** de continuer, jamais après plusieurs messages de confirmation passés
+à discuter du mauvais dossier. Détail dans
+`second-brain/lecons/2026-09-10-post-mortem-ensemble-mdph-verifications-qui-regardent-a-cote.md`.
 
 **Un « bonjour » se répond par un point et une sortie, jamais par « on fait
 quoi ? ».** Le propriétaire ouvre souvent un fil sans consigne, parfois fatigué,
@@ -2139,6 +2192,17 @@ règle de cartographie avant remplacement, sans savoir qu'une autre venait de l'
 plusieurs sessions parallèles, `main` a bougé depuis la dernière lecture : c'est
 le cas normal, pas l'exception, et `git fetch` avant d'écrire coûte moins qu'un
 doublon fusionné.
+
+**Et un troisième symétrique : vérifier avant de corriger.** Une demande de
+correction décrit un défaut (« le fond est en bleu-gris », « les couleurs sont
+plates ») — cette description est une hypothèse du demandeur, pas une mesure,
+même quand elle vient du propriétaire. Mesuré le 09/09/2026 sur
+`ensemble-mdph` : une demande de remplacer « le fond bleu-gris actuel » par
+une palette précise visait un fichier qui portait déjà exactement ces valeurs,
+posées à plat plutôt qu'en dégradé. Exécutée sans vérifier, la correction
+aurait écrasé des variables déjà justes en croyant les corriger. Le geste est
+le même que pour un remplacement de fonction : lire le fichier concerné en
+premier, jamais supposer la description du défaut exacte.
 
 ### Git
 
@@ -2728,6 +2792,19 @@ là-dessus pendant trois jours, chacun sur un indice, aucun sur une mesure. Ce
 qui tranche est **le réglage**, jamais l'affichage ; et de l'extérieur, seule la
 navigation privée le dit — le connecteur Vercel passe par l'authentification du
 compte, et le mandataire refuse `*.vercel.app`.
+
+**Et ce piège n'est pas propre à Amorce : il s'est reproduit à l'identique sur
+un dépôt séparé.** `ensemble-mdph` portait le même
+`ssoProtection: all_except_custom_domains` depuis la création de son projet Vercel
+(07/09/2026), trouvé et corrigé le 08/09/2026 — un site d'accompagnement aux
+démarches administratives, invisible pour quiconque hors du compte du
+propriétaire, pendant au moins une journée entière. La leçon écrite ici pour
+`amorce-51up` ne protège que les sessions qui lisent ce fichier-là ; un projet
+Vercel lié à un autre dépôt ne l'hérite pas. Sur **tout** projet Vercel
+nouvellement lié, quel que soit le dépôt, vérifier
+`get_project_deployment_protection` avant d'annoncer une adresse comme
+publique — en geste systématique de mise en ligne, pas en réflexe qui dépend
+de la mémoire d'une session en particulier.
 
 **Le journal de construction tranche ce que les statuts ne départagent pas.**
 Un statut dit qu'un déploiement a été annulé, jamais par quoi. Trois
