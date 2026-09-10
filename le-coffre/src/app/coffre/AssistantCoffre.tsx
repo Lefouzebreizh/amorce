@@ -74,7 +74,15 @@ export function AssistantCoffre({
   // le reste du chat.
   const [actionEnCours, setActionEnCours] = useState<string | null>(null);
   const finDesMessages = useRef<HTMLDivElement>(null);
-  const dejaEnvoyee = useRef(false);
+  // Dernière question envoyée depuis la barre de recherche — jamais un
+  // simple booléen : le panneau reste monté d'une commande à l'autre (un
+  // seul bot, jamais fermé entre deux questions), donc un booléen à « déjà
+  // envoyée » aurait bloqué tout ce qui suit la première. C'est la valeur
+  // elle-même qu'on compare : une NOUVELLE question posée dans la barre
+  // pendant que la conversation est déjà ouverte doit repartir vers le bot
+  // — sans ça, la barre avait l'air d'un simple filtre de recherche après
+  // le premier message, chaque commande suivante disparaissant en silence.
+  const derniereQuestionEnvoyee = useRef<string | null>(null);
   // Indices de message déjà exploités pour lancer le tri — sans cette
   // mémoire, un nouveau rendu (ou un second message qui redemande la même
   // chose) relancerait le tri en boucle sur un message déjà traité.
@@ -143,16 +151,18 @@ export function AssistantCoffre({
     }
   }
 
-  // Envoi automatique de la question posée dans la barre de recherche, une
-  // seule fois — `dejaEnvoyee` évite un doublon si le composant se
-  // remontait pour une autre raison sans que `questionInitiale` change.
+  // Envoi automatique de chaque question posée dans la barre de recherche —
+  // au premier message comme aux suivants, tant que le texte change. La
+  // conversation restant ouverte d'une commande à l'autre, ce n'est PAS
+  // seulement l'ouverture du panneau qui doit déclencher l'envoi : c'est
+  // chaque nouvelle valeur de `questionInitiale`.
   useEffect(() => {
-    if (questionInitiale && !dejaEnvoyee.current) {
-      dejaEnvoyee.current = true;
+    if (questionInitiale && questionInitiale !== derniereQuestionEnvoyee.current) {
+      derniereQuestionEnvoyee.current = questionInitiale;
       envoyerTexte(questionInitiale);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [questionInitiale]);
 
   async function envoyer(e: React.FormEvent) {
     e.preventDefault();
