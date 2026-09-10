@@ -386,11 +386,9 @@ paragraphe sur `artisan-express` du 06/09/2026) :
 - **Le correctif du point 6 (formulaire d'envoi) est confirmé** : le
   propriétaire a validé sa commande avec le clavier et la question est
   bien partie vers l'assistant — c'est ce qui a révélé le point 8.
-- **Le « second bot » (point 8) n'est toujours pas corrigé.** Le panneau de
-  chat reste un recouvrement plein écran avec sa propre boîte de saisie.
-  Aucune option de correction n'a encore été proposée ni validée — la
-  clarification demandée au propriétaire sur ce qui doit changer n'a pas
-  encore reçu de réponse au moment d'écrire ces lignes.
+- **Le « bouton Trier automatiquement » comme second bot (point 10) a un
+  correctif proposé (PR #867), non encore confirmé en ligne, connecté.**
+  Voir la limite de vérification nommée dans ce même point.
 - **La pagination de la vue « Tout »**, signalée comme chantier ouvert dans
   le résumé de la session précédente, n'a pas été commencée dans celle-ci —
   toute l'énergie est partie dans le diagnostic ci-dessus.
@@ -445,6 +443,81 @@ point 8) :
 > corrige. Un lecteur pressé retient la première affirmation forte, pas la
 > nuance qui la suit.
 
+## 10. Le mauvais problème corrigé pendant cinq jours : le panneau, pas le bouton
+
+**Quand** : la correction est arrivée après les points 8 et 9 — le
+propriétaire, confronté une énième fois à « toujours deux bottes » malgré
+trois PR fusionnées sur le panneau de chat (#847, #849, #861, #864), a
+reformulé lui-même le constat plutôt que d'attendre un quatrième correctif
+sur la même cible : « ce n'est pas le panneau que tu corrigeais depuis le
+début — mauvais problème pendant cinq jours ». Les « deux bots » désignaient
+le bouton **« Trier automatiquement »** du tableau de bord (une seconde
+surface qui déclenche de l'IA, `classer-document` en boucle) et le chat de
+l'assistant — pas la présentation visuelle du chat, que toute la session
+précédente avait pourtant retravaillée (overlay plein écran, puis bloc
+intégré sous la barre de recherche).
+
+**Ce qui s'est passé** : chaque signalement « toujours deux bots » a été lu
+comme portant sur ce qui avait déjà été touché — panneau modal trop visible,
+puis boîte de saisie dupliquée, puis lien redondant — parce que c'était la
+seule chose que ces sessions avaient sous les yeux et savaient corriger.
+Aucune n'a demandé, avant de coder, ce que « deux bots » désignait
+concrètement à l'écran. Le bouton « Trier automatiquement » — visible sur
+le même tableau de bord, appelant lui aussi une IA de classement sur un lot
+de documents — n'a jamais été mentionné ni par le propriétaire ni examiné
+par les sessions précédentes comme candidat possible, alors qu'il répondait
+exactement à la description qu'il donnait depuis le début : une seconde
+capacité d'IA visible séparément du chat.
+
+**Coût** : cinq jours de travail (l'expression du propriétaire) répartis sur
+plusieurs sessions et PR (#847, #849, #861, #864), dont la mécanique
+technique était juste — chaque correctif faisait ce qu'il annonçait — mais
+qui ne visait pas la chose que le propriétaire décrivait.
+
+**Pourquoi non détecté plus tôt** : « deux bots » est resté un terme du
+propriétaire jamais reformulé par une session en une question fermée du
+genre « tu veux dire le panneau qui s'ouvre par-dessus la page, ou une autre
+fonction du tableau de bord ? ». Une phrase ambiguë répétée plusieurs fois
+de la même façon a été prise, à chaque fois, pour une confirmation qu'on
+avait bien compris — alors qu'elle ne faisait que répéter l'incompréhension.
+
+**Déviation par rapport à la priorité annoncée** : oui, indirecte mais
+réelle — la priorité de départ (« guider le test, pas coder ») a glissé,
+sur plusieurs sessions, vers des cycles correctif → test → « toujours pareil »
+→ nouveau correctif sur la même cible, sans qu'aucune ne recule pour
+demander ce qui n'avait encore jamais été nommé explicitement : la liste des
+surfaces IA du tableau de bord.
+
+**Ce qui, dans le processus, a permis que ça traîne** : rien ne poussait à
+cartographier, avant de corriger, l'ensemble des points d'entrée IA d'une
+page — seulement le point d'entrée déjà connu et déjà modifié une première
+fois. Un correctif qui « a l'air juste » et qui ne change rien au
+signalement du propriétaire est un signal fort qu'on corrige la mauvaise
+chose, pas que le correctif est incomplet — ce signal n'a été lu comme tel
+qu'après trois répétitions.
+
+**Règle proposée pour CLAUDE.md** (section 0 bis, à la suite de la règle
+« un doublon arrête le geste ») :
+> Quand un signalement se répète après un correctif qui semblait juste,
+> vérifié et fusionné, ne pas corriger une seconde fois la même cible sans
+> d'abord demander une reformulation concrète : quel élément précis, à quel
+> endroit de l'écran. Un terme du propriétaire répété tel quel plusieurs
+> fois (« deux bots », « toujours pareil ») n'est pas une confirmation
+> qu'on a compris — c'est souvent la preuve du contraire. Avant de coder à
+> nouveau, cartographier tous les points d'entrée qui ressemblent à la
+> description, pas seulement celui déjà touché.
+
+**Correctif proposé** : PR #867 — le bouton « Trier automatiquement »
+disparaît du tableau de bord ; demander un tri en lot passe désormais par
+la conversation, qui propose de lancer le même moteur. **Limite de
+vérification à nommer, pas en réserve après une conclusion positive (règle
+du point 9 ci-dessus) : cette PR n'a été vérifiée que techniquement — types,
+lint, 113 tests, build — jamais regardée connectée, sur l'écran réel du
+propriétaire. « Vérifié » ici veut dire « le code fait ce qu'il annonce »,
+pas « le propriétaire voit désormais un seul bot ».**
+
+---
+
 ## Règles proposées, groupées pour relecture avant ajout à CLAUDE.md
 
 1. Vérifier explicitement qu'une fonction Supabase modifiée a été redéployée
@@ -470,3 +543,7 @@ point 8) :
 9. Nommer une limite de vérification en tête de phrase, jamais en réserve
    après une conclusion positive — un lecteur pressé retient la première
    affirmation forte, pas la nuance qui la suit (point 9).
+10. Quand un signalement se répète après un correctif qui semblait juste,
+    ne pas recorriger la même cible sans demander une reformulation
+    concrète, et cartographier tous les points d'entrée qui ressemblent à
+    la description avant de coder à nouveau (point 10).
