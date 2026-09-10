@@ -208,6 +208,17 @@ part sur ce qui ne dépend pas de la réponse, dans le même message.
 Test avant de livrer : **est-ce que ça aide une vraie personne à dormir mieux ce
 soir ?** Si non, ça ne sort pas.
 
+**Un signal qui porte sur la santé ou le bien-être — humain ou animal — ne
+compte comme mesuré que validé sur des données réelles, jamais seulement sur
+des données fabriquées.** Posé le 10/09/2026, après le signal « stress » de
+`chat-traducteur` : construit sur quinze sons fabriqués, il aurait dit à
+quatre propriétaires sur cinq que leur chat va mal, sur un simple bâillement
+ou ronronnement — et le dépôt savait, il écrivait lui-même que ce plancher
+n'avait « jamais » vu un vrai chat, sans que ce doute écrit ne bloque quoi que
+ce soit avant la confrontation à un vrai corpus. **Un doute écrit sur ce genre
+de confrontation est un motif de blocage avant d'avancer, pas une note de bas
+de page qu'on relira plus tard.**
+
 Interface : 18 px minimum, gros contrastes, pas d'autoplay,
 `prefers-reduced-motion` respecté, cibles ≥ 44 px, `100dvh` et non `100vh`.
 Terrain de référence : Redmi Note 12 Plus, Chrome Android, ~20:9, batterie sans
@@ -637,6 +648,14 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   l'achat. Mais **pas d'adresse, pas de bouclier** : les lignes du socle n'ont
   pas de contrat à auditer, et exiger une adresse pour LINK/USDT lui interdisait
   tout achat à chaque passe.
+  **Et un garde-fou d'argent ne compte comme vérifié que si un test l'a vu se
+  déclencher pour de vrai**, posé le 10/09/2026 après le plafond de 20 $/mois
+  de `generation-serveur` : sa grille tarifaire était vide à dessein, ce qui
+  rendait sa branche « plafond dépassé » **structurellement inatteignable**
+  par n'importe quel test, malgré une suite verte qui affirmait le contraire.
+  Une grille vide ou un placeholder bloque la mise en production du garde-fou
+  lui-même, pas seulement de la fonctionnalité qu'il protège — que ce soit ici
+  ou dans un futur garde-fou financier du dépôt.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
   sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
   reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de
@@ -1032,6 +1051,14 @@ passer par une PR, déployer en production,
 dépenser plus d'un dollar, modifier `~/.claude/`, installer une dépendance
 payante, supprimer une sauvegarde.
 
+**Et un changement de plan de facturation sur un compte connecté (Vercel ou
+autre) est une dépense au sens de cette liste, même sans geste explicite d'une
+session.** Posé le 10/09/2026 après que le compte Vercel du dépôt soit passé
+en plan payant pendant huit jours sans que personne ne le remarque, découvert
+par accident dans un appel qui vérifiait autre chose : ça se vérifie, ça ne se
+subit pas — le plan de facturation entre dans le même relevé périodique que le
+nombre de projets (voir § Déploiements Vercel).
+
 **Rouge — accord explicite** : supprimer sans sauvegarde, toucher aux données
 personnelles (Drive, Gmail, contacts), sortir la moindre donnée des 48 000,
 dépenser plus de cinq dollars, écrire dans une base de production, écraser un
@@ -1091,6 +1118,20 @@ préparation, pas de chance. `/jauge` avant un gros lot.
   mesure payée deux fois.
 
 ## 7. ANTI-BLOCAGE
+
+**Le principe qui gouverne tout ce qui suit, posé le 10/09/2026 après l'avoir
+vu se répéter une dizaine de fois en deux semaines** : un hôte refusé par LE
+client qu'on vient d'essayer (le mandataire de cette session, `curl` direct)
+prouve que ce client-là est bloqué — jamais que personne ne peut l'atteindre.
+Génération d'image, transcription YouTube, radar de pépites resté cinq jours à
+l'arrêt, GitHub Pages, recherche GitHub confondue avec lecture GitHub : à
+chaque fois, la même erreur — une impossibilité mesurée sur un chemin a été
+recopiée comme une impossibilité générale, avant d'essayer un autre client
+(un connecteur MCP, PyPI, un objet de release GitHub, un runner GitHub
+Actions, un navigateur réel). **Avant d'écrire « impossible », changer de
+client avant de changer de conclusion** — c'est le premier réflexe à avoir, pas
+le dernier après plusieurs jours perdus. Détail et chiffrage dans
+`second-brain/postmortem-2026-09-defauts-de-processus.md`.
 
 Capacité qui manque → `skill-creator`, on fabrique (dossier, code, doc), on s'en
 sert dans la foulée. Trois par session au plus. Vérifier la doc officielle avant
@@ -1684,6 +1725,20 @@ mesure disait vert et le fichier était faux** — mesurée au mauvais endroit, 
 le mauvais fichier, ou sur ce qui n'était pas le défaut. La parade n'est jamais
 de mesurer plus, c'est de mesurer ailleurs et de regarder.
 
+**Ce défaut-là ne se limite pas aux médias, posé le 10/09/2026.** Même
+mécanique sur l'accent d'Annuaria (mesuré contre le jeton déclaré, pas contre
+le fond composite réellement peint), sur la palette web-artisan (mesurée sur
+`ink`, le meilleur cas, au lieu de `panel`, le pire), sur un garde-fou
+anti-lien-mort (jugé sur ce qu'il retire, jamais sur ce qui reste — sept fiches
+d'`annuaire-ia` sans aucun lien d'affiliation depuis le lancement, seule chose
+qui rapporte sur ce site), sur un en-tête `X-Frame-Options` qui bloquait les
+aperçus du site (DOM correct, réponse HTTP fautive). **Avant de croire un
+vert, dire en une phrase ce qu'il mesure — contre quel fond, sur quel flux, à
+quelle étape, sur quelle coque** — et se demander si le défaut cherché
+survivrait au changement de cet objet-là. Un test de garde qu'on n'a jamais vu
+rougir sur l'injection réelle du défaut qu'il prétend garder n'est pas un
+test : le faire rougir une fois avant de lui faire confiance.
+
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
 
@@ -1743,6 +1798,13 @@ Donc, dans cet ordre :
 « envoyé » alors qu'elle enregistrait un clic — aucune page web ne peut
 constater le départ d'un SMS. Elle dit « ouvert », et la page rappelle d'aller
 vérifier dans l'application Messages, qui est le seul endroit qui sache.
+
+**Et la règle dépasse les campagnes SMS/courriel, posé le 10/09/2026.** Toute
+action censée déclencher un geste réel vers l'extérieur — un lien de paiement,
+une publication, un envoi — se valide dans un vrai navigateur, jamais dans la
+visionneuse de la session qui l'a produite : un bac à sable qui bloque un
+geste ne le signale pas forcément, et un clic qui ne fait rien ressemble à un
+clic qui a marché.
 
 La règle de la mention d'opposition ne change pas : **tout SMS se termine par
 « STOP au [numéro] », jamais un courriel** (§ `PROSPECTION.md`). La page la
@@ -2439,6 +2501,19 @@ capacité — donc **on essaie les deux avant de conclure**, comme pour le MCP.
 
 ### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
 
+**Contrôle périodique, posé le 10/09/2026** : après toute session qui a pu
+créer un projet Vercel (dépôt de fichiers ou lien Git), ou au moins une fois
+par semaine, `list_projects` — en lisant **la colonne du plan de facturation
+autant que celle des projets**, pas seulement celle-ci. Le quota crevé trois
+fois (31/08, 01/09, 02/09) et le compte passé payant huit jours sans que
+personne ne le remarque (08/09) ont la même cause : ce dépôt ne sait décrire
+un piège Vercel qu'après l'avoir payé, jamais en le vérifiant avant. La même
+logique vaut pour tout projet fini et gardé par des tests : vérifier qu'un
+déclencheur (workflow, cron) le lance réellement — le radar de pépites est
+resté fini, vert et **inexécuté dix jours**, puis **arrêté cinq jours de
+plus** sur une fausse conviction, avant que quelqu'un ne pense à vérifier s'il
+tournait pour de vrai.
+
 **État mesuré le 06/09/2026 à 15 h 55, par `list_projects`** — il contredit une
 partie de ce qui suit, et c'est cette liste-ci qui fait foi. Le raisonnement des
 paragraphes suivants reste juste ; ce sont les noms et le compte qui ont bougé.
@@ -2776,6 +2851,15 @@ choses à en retenir, et elles se paient toutes les deux en silence :
   signal**, et affiner les chemins surveillés ne desserre rien. Le levier est le
   **nombre de projets branchés**. Détail et ce qui reste non mesuré dans
   `/debloquer`.
+
+  **Et cette règle a été apprise sans son corollaire, posé le 10/09/2026** : au
+  moins une PR a fusionné avec une vraie suite rouge (« Cohérence du dépôt »)
+  restée invisible, découverte seulement après coup. `get_status` ne rend que
+  les *commit statuses* (Vercel) ; les suites GitHub Actions (tests, cohérence)
+  sont ailleurs, dans `get_check_runs`. **Avant de fusionner : les deux appels,
+  toujours, jamais un seul** — et toute règle qui apprend à ignorer une famille
+  d'alertes doit dire explicitement ce qu'elle ne couvre pas, sinon elle
+  enseigne à ignorer l'absence de vérification plutôt que le bruit.
 
 **Et un projet peut être déployé et invisible — mesuré le 02/09/2026.** Vercel
 pose par défaut une protection, *Deployment Protection*, dont le réglage
