@@ -345,6 +345,10 @@ export type ReponseAssistant = {
   declencherTriAutomatique: boolean;
   rechercheWebEffectuee: boolean;
   actions: ActionAssistant[];
+  // Un CERFA officiel trouvé par recherche web pour une démarche nommée par
+  // l'utilisateur — voir recupererFormulaireCerfa et RemplirFormulaire.tsx,
+  // qui le propose déjà rempli avant que l'utilisateur ne le valide.
+  formulaireCerfa: { demarche: string; url: string } | null;
 };
 
 // Le résumé envoyé à l'assistant ne porte que le nom AFFICHÉ (`.nom`),
@@ -366,12 +370,14 @@ export function clesParNomAffiche(index: IndexCoffre, nomAffiche: string): strin
 // quoi le reconstituer) — c'est ce qui part vers assistant-coffre pour que
 // Claude puisse répondre « où est mon papier EDF ». Voir SECURITY.md,
 // section « L'assistant ».
-type DigestDocument = {
+// Exporté : réutilisé par suggererChampsFormulaire, qui a besoin du même
+// résumé pour rapprocher les champs d'un formulaire du contenu des papiers.
+export type DigestDocument = {
   nom: string; categorie: string; type: string; emetteur?: string; montant?: string | null;
   echeanceLibelle?: string | null; echeanceDate?: string | null; extrait?: string | null;
 };
 
-function digestIndex(index: IndexCoffre): DigestDocument[] {
+export function digestIndex(index: IndexCoffre): DigestDocument[] {
   return Object.values(index.objets).map((o) => ({
     nom: o.nom, categorie: o.categorie, type: o.type,
     emetteur: o.emetteur, montant: o.montant,
@@ -392,7 +398,7 @@ export async function demanderAuCoffre(
     reponse: "Je n'ai pas pu répondre à l'instant — réessaie dans un moment.",
     documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false,
     declencherTriAutomatique: false, rechercheWebEffectuee: false,
-    actions: [],
+    actions: [], formulaireCerfa: null,
   };
   try {
     const { data, error } = await supabase.functions.invoke('assistant-coffre', {
@@ -405,9 +411,48 @@ export async function demanderAuCoffre(
     // accès à `.map` côté interface.
     if (!Array.isArray(resultat.actions)) resultat.actions = [];
     resultat.declencherTriAutomatique = Boolean(resultat.declencherTriAutomatique);
+    if (!resultat.formulaireCerfa || typeof resultat.formulaireCerfa !== 'object') resultat.formulaireCerfa = null;
     return resultat;
   } catch {
     return vide;
+  }
+}
+
+// Récupère les octets d'un CERFA officiel dont l'assistant a trouvé
+// l'adresse (voir formulaireCerfa) — jamais un fetch direct depuis le
+// navigateur : la plupart des sites publics n'envoient pas d'en-tête CORS
+// permissif, et c'est le serveur qui vérifie que l'adresse appartient bien à
+// un site officiel avant de la joindre (voir recuperer-formulaire-cerfa).
+export async function recupererFormulaireCerfa(url: string): Promise<ArrayBuffer> {
+  const { data, error } = await supabase.functions.invoke('recuperer-formulaire-cerfa', { body: { url } });
+  if (error || !data || 'erreur' in data) {
+    throw new Error(data && 'erreur' in data ? String(data.erreur) : 'Formulaire introuvable.');
+  }
+  const { donnees } = data as { donnees: string };
+  const binaire = atob(donnees);
+  const octets = new Uint8Array(binaire.length);
+  for (let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
+  return octets.buffer;
+}
+
+// Propose une valeur pour chaque champ d'un formulaire, déduite du résumé
+// des papiers déjà déposés et de l'identité — une suggestion, jamais un
+// remplissage : l'utilisateur la voit et la corrige avant de générer le PDF
+// (voir RemplirFormulaire.tsx). N'échoue jamais bruyamment : une panne rend
+// un objet vide, et les suggestions par nom de champ (identité) suffisent
+// encore à démarrer.
+export async function suggererChampsFormulaire(
+  champs: string[], index: IndexCoffre, demarche?: string,
+): Promise<Record<string, string>> {
+  try {
+    const { data, error } = await supabase.functions.invoke('suggerer-champs-formulaire', {
+      body: { champs, documents: digestIndex(index), identite: index.identite ?? null, demarche },
+    });
+    if (error || !data || 'erreur' in data) return {};
+    const { valeurs } = data as { valeurs?: Record<string, string> };
+    return valeurs && typeof valeurs === 'object' ? valeurs : {};
+  } catch {
+    return {};
   }
 }
 

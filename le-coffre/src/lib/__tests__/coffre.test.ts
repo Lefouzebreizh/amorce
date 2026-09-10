@@ -587,6 +587,92 @@ describe('demander au coffre', () => {
     const reponse = await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
     assert.deepEqual(reponse.actions, []);
   });
+
+  it('transmet le CERFA trouvé par la fonction serveur', async () => {
+    const formulaireCerfa = { demarche: 'Carte grise', url: 'https://www.service-public.fr/cerfa.pdf' };
+    poser(clientFactice({
+      fonction: {
+        data: {
+          reponse: 'J’ai trouvé le CERFA de la carte grise.', documentsCites: [],
+          ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: true, formulaireCerfa,
+        },
+        error: null,
+      },
+    }));
+    const reponse = await coffre.demanderAuCoffre('il me faut le formulaire de carte grise', [], INDEX_ASSISTANT);
+    assert.deepEqual(reponse.formulaireCerfa, formulaireCerfa);
+  });
+
+  it('rend formulaireCerfa à null plutôt qu’un champ absent, sur une réponse serveur antérieure au champ', async () => {
+    poser(clientFactice({
+      fonction: {
+        data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false },
+        error: null,
+      },
+    }));
+    const reponse = await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
+    assert.equal(reponse.formulaireCerfa, null);
+  });
+});
+
+describe('récupérer un formulaire CERFA trouvé par l’assistant', () => {
+  it('décode les octets renvoyés par la fonction serveur', async () => {
+    const octetsAttendus = new Uint8Array([37, 80, 68, 70]); // "%PDF"
+    const donnees = b64FromBuf(octetsAttendus.buffer as ArrayBuffer);
+    poser(clientFactice({ fonction: { data: { donnees, type: 'application/pdf' }, error: null } }));
+    const buf = await coffre.recupererFormulaireCerfa('https://www.service-public.fr/cerfa.pdf');
+    assert.deepEqual(new Uint8Array(buf), octetsAttendus);
+  });
+
+  it('transmet l’adresse exacte à la fonction serveur, et rien d’autre', async () => {
+    const donnees = b64FromBuf(new Uint8Array([37, 80, 68, 70]).buffer as ArrayBuffer);
+    const f = poser(clientFactice({ fonction: { data: { donnees, type: 'application/pdf' }, error: null } }));
+    await coffre.recupererFormulaireCerfa('https://www.service-public.fr/cerfa.pdf');
+    const [nom, options] = f.premier('invoke') as [string, { body: Record<string, unknown> }];
+    assert.equal(nom, 'recuperer-formulaire-cerfa');
+    assert.deepEqual(options.body, { url: 'https://www.service-public.fr/cerfa.pdf' });
+  });
+
+  it('lève une erreur explicite plutôt que de rendre des octets vides quand la fonction refuse', async () => {
+    poser(clientFactice({ fonction: { data: { erreur: 'domaine non autorisé' }, error: null } }));
+    await assert.rejects(
+      coffre.recupererFormulaireCerfa('https://exemple-malveillant.fr/faux.pdf'),
+      /domaine non autorisé/,
+    );
+  });
+});
+
+describe('suggérer des valeurs pour un formulaire à partir des papiers', () => {
+  const INDEX_SUGGESTION: IndexCoffre = {
+    objets: {
+      abc: {
+        nom: 'Facture EDF', taille: 100, type: 'application/pdf', categorie: 'Énergie',
+        deposeLe: '2026-09-01T00:00:00.000Z', emetteur: 'EDF', montant: '89,90 €',
+      },
+    },
+  };
+
+  it('rend les valeurs proposées par la fonction serveur', async () => {
+    poser(clientFactice({ fonction: { data: { valeurs: { numero_client: '123456789' } }, error: null } }));
+    const valeurs = await coffre.suggererChampsFormulaire(['numero_client'], INDEX_SUGGESTION, 'Carte grise');
+    assert.deepEqual(valeurs, { numero_client: '123456789' });
+  });
+
+  it('transmet les noms de champs, le résumé des papiers, l’identité et la démarche', async () => {
+    const f = poser(clientFactice({ fonction: { data: { valeurs: {} }, error: null } }));
+    await coffre.suggererChampsFormulaire(['numero_client'], INDEX_SUGGESTION, 'Carte grise');
+    const [nom, options] = f.premier('invoke') as [string, { body: Record<string, unknown> }];
+    assert.equal(nom, 'suggerer-champs-formulaire');
+    assert.deepEqual(Object.keys(options.body).sort(), ['champs', 'demarche', 'documents', 'identite']);
+    assert.deepEqual(options.body.champs, ['numero_client']);
+    assert.equal(options.body.demarche, 'Carte grise');
+  });
+
+  it('rend un objet vide plutôt que d’échouer quand la fonction tombe', async () => {
+    poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
+    const valeurs = await coffre.suggererChampsFormulaire(['numero_client'], INDEX_SUGGESTION, 'Carte grise');
+    assert.deepEqual(valeurs, {});
+  });
 });
 
 describe('résoudre un nom affiché vers sa clé de stockage', () => {
