@@ -1606,7 +1606,15 @@ export default function PageCoffre() {
           </section>
 
           <div className="flex flex-col gap-8">
-            <section id="rendez-vous" className="scroll-mt-6">
+            {/* Carte en verre demandée le 10/09/2026 : ces trois sections
+                n'avaient jamais reçu la même carte que le reste de la page
+                (en-tête, barre de recherche, fiches document) — sans
+                `border-line bg-paper-raised`, elles ne portent aucun fond,
+                donc pas la règle CSS partagée qui pose le dégradé
+                turquoise-violet. Seul le turquoise des boutons et des bords
+                de champ y ressortait, perçu comme « tout en vert » face au
+                duo turquoise-violet visible ailleurs. */}
+            <section id="rendez-vous" className="scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
               <h2 className="mb-4 font-affiche text-2xl">Rendez-vous</h2>
               <form onSubmit={surAjoutRendezVous} className="mb-4 flex flex-col gap-2">
                 <Champ name="libelle" placeholder="Dentiste, cabinet Martin…" required />
@@ -1653,7 +1661,7 @@ export default function PageCoffre() {
               )}
             </section>
 
-            <section id="mon-identite" className="scroll-mt-6">
+            <section id="mon-identite" className="scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
               <h2 className="mb-2 font-affiche text-2xl">Mon identité</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Sert uniquement à remplir l&apos;en-tête des lettres de résiliation — chiffrée comme le reste.
@@ -1681,7 +1689,7 @@ export default function PageCoffre() {
               </form>
             </section>
 
-            <section id="remplir-formulaire" className="scroll-mt-6">
+            <section id="remplir-formulaire" className="scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
               <h2 className="mb-2 font-affiche text-2xl">Remplir un formulaire</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Dépose un CERFA ou un mandat vierge : l&apos;appli détecte ses champs et les
