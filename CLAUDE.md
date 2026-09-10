@@ -590,7 +590,14 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   mêmes briques chacun de son côté ; son README dit ce qui vient d'où, et c'est
   ce qui évite de le refaire une troisième fois.
 - **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
-  lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
+  lourde. **Décision du 07/09/2026, écrite ici avec trois jours de retard** :
+  NexusCrypto cesse d'être l'axe principal du chantier crypto et devient un
+  filet de sécurité ; le radar devient l'outil de gain. La phrase avait été
+  recopiée de résumé en résumé sans jamais atteindre ce fichier — détail dans
+  `second-brain/post-mortem-chantier-crypto.md` (P10), qui en tire la règle :
+  une décision de direction s'écrit ici dans la séance où elle est prise, le
+  code qui la met en œuvre peut attendre, pas la phrase. Cinq étages en file
+  dont l'ordre n'est pas négociable : le calcul
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
   **`main.py sonde` avant le premier scan**, et après toute retouche de
