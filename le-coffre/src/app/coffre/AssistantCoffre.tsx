@@ -10,6 +10,9 @@ type Message = TourConversation & {
   documentsCites?: string[];
   ouvrirFormulaire?: boolean;
   ouvrirRangement?: boolean;
+  // Un seul bot (10/09/2026) : le message propose de lancer le tri en lot
+  // depuis la conversation même — voir le bloc TriAutomatique plus bas.
+  declencherTriAutomatique?: boolean;
   rechercheWebEffectuee?: boolean;
   actions?: ActionAssistant[];
   // Résultat d'une action déjà exécutée, indexé sur sa position dans
@@ -18,13 +21,29 @@ type Message = TourConversation & {
   actionsExecutees?: Record<number, string>;
 };
 
+// État du tri en lot, porté par page.tsx (qui garde `trierAutomatiquement`
+// inchangé) et seulement affiché ici — un seul moteur, deux endroits qui le
+// montraient avant le 10/09/2026 : le bouton séparé du tableau de bord a
+// disparu, ce bloc est désormais le seul point d'entrée.
+type EtatTriAutomatique = {
+  restants: number;
+  lotMax: number;
+  enCours: boolean;
+  progres: { fait: number; total: number } | null;
+  bilan: { nonDocuments: string[]; erreursTechniques: string[] } | null;
+  detailOuvert: boolean;
+};
+
 function libelleAction(a: ActionAssistant): string {
   return a.type === 'classer'
     ? `Classer « ${a.nom} » dans « ${a.categorie} »`
     : `Supprimer « ${a.nom} »`;
 }
 
-export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement, onExecuterAction }: {
+export function AssistantCoffre({
+  index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement,
+  onExecuterAction, triAuto, onLancerTriAutomatique, onBasculerDetailTriAutomatique,
+}: {
   index: IndexCoffre;
   // Posée par la recherche locale restée sans résultat, envoyée une seule
   // fois à l'ouverture — voir l'effet ci-dessous. Absente ou vide : le chat
@@ -38,6 +57,11 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
   // confirmation de l'utilisateur — jamais toute seule. Rend un message
   // court à afficher à la place du bouton, succès ou échec.
   onExecuterAction: (action: ActionAssistant) => Promise<string>;
+  // Tri en lot : état et déclencheurs portés par page.tsx, affichés ici
+  // seulement quand un message porte `declencherTriAutomatique`.
+  triAuto: EtatTriAutomatique;
+  onLancerTriAutomatique: () => void;
+  onBasculerDetailTriAutomatique: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState('');
@@ -73,6 +97,7 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
         documentsCites: reponse.documentsCites,
         ouvrirFormulaire: reponse.ouvrirFormulaire,
         ouvrirRangement: reponse.ouvrirRangement,
+        declencherTriAutomatique: reponse.declencherTriAutomatique,
         rechercheWebEffectuee: reponse.rechercheWebEffectuee,
         actions: reponse.actions,
       }]);
@@ -222,6 +247,83 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
                           </button>
                         );
                       })}
+                    </div>
+                  )}
+                  {m.declencherTriAutomatique && (
+                    <div className="mt-2 flex flex-col items-start gap-2">
+                      {triAuto.restants > 0 ? (
+                        <button
+                          type="button"
+                          onClick={onLancerTriAutomatique}
+                          disabled={triAuto.enCours}
+                          className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
+                        >
+                          <Folder size={12} />
+                          {triAuto.enCours
+                            ? `Tri en cours… (${triAuto.progres?.fait ?? 0}/${triAuto.progres?.total ?? triAuto.restants})`
+                            : `Lancer le tri (${Math.min(triAuto.restants, triAuto.lotMax)})`}
+                        </button>
+                      ) : (
+                        <p className="text-xs text-ink-soft">
+                          Tout est déjà classé, il n&apos;y a rien à trier pour l&apos;instant.
+                        </p>
+                      )}
+                      {triAuto.progres && (
+                        <div
+                          role="progressbar"
+                          aria-valuenow={triAuto.progres.fait}
+                          aria-valuemin={0}
+                          aria-valuemax={triAuto.progres.total}
+                          aria-label="Progression du tri automatique"
+                          className="relative h-1.5 w-full overflow-hidden rounded-full bg-line"
+                        >
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-vert via-accent to-violet" />
+                          <div
+                            className="absolute inset-y-0 right-0 rounded-r-full bg-line transition-all"
+                            style={{ width: `${100 - (triAuto.progres.fait / triAuto.progres.total) * 100}%` }}
+                          />
+                        </div>
+                      )}
+                      {triAuto.bilan && (triAuto.bilan.nonDocuments.length > 0 || triAuto.bilan.erreursTechniques.length > 0) && (
+                        <div className="flex w-full flex-col gap-2 rounded-lg border border-line bg-paper-raised px-3 py-2 text-xs">
+                          {triAuto.bilan.nonDocuments.length > 0 && (
+                            <p className="text-ink-soft">
+                              {triAuto.bilan.nonDocuments.length} fichier{triAuto.bilan.nonDocuments.length > 1 ? 's' : ''} non
+                              reconnu{triAuto.bilan.nonDocuments.length > 1 ? 's' : ''} comme document administratif.
+                            </p>
+                          )}
+                          {triAuto.bilan.erreursTechniques.length > 0 && (
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-wine">
+                                {triAuto.bilan.erreursTechniques.length} fichier{triAuto.bilan.erreursTechniques.length > 1 ? 's' : ''} non
+                                analysé{triAuto.bilan.erreursTechniques.length > 1 ? 's' : ''}.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={onLancerTriAutomatique}
+                                disabled={triAuto.enCours}
+                                className="shrink-0 font-semibold text-wine underline decoration-dotted hover:text-ink disabled:opacity-60"
+                              >
+                                Réessayer
+                              </button>
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={onBasculerDetailTriAutomatique}
+                            className="self-start text-ink-soft underline decoration-dotted hover:text-ink"
+                          >
+                            {triAuto.detailOuvert ? 'Masquer le détail' : 'Voir le détail'}
+                          </button>
+                          {triAuto.detailOuvert && (
+                            <div className="max-h-40 overflow-y-auto rounded-lg bg-paper p-2 text-xs text-ink-soft">
+                              {[...triAuto.bilan.nonDocuments, ...triAuto.bilan.erreursTechniques].map((nom, ni) => (
+                                <p key={`${nom}-${ni}`} className="truncate">{nom}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -40,6 +40,10 @@ type Resultat = {
   documentsCites: string[];
   ouvrirFormulaire: boolean;
   ouvrirRangement: boolean;
+  // Un seul bot (10/09/2026) : le tri en lot ne renvoie plus vers un bouton
+  // séparé du tableau de bord, il se déclenche depuis la conversation même —
+  // voir point 3 du système ci-dessous et trierAutomatiquement() côté client.
+  declencherTriAutomatique: boolean;
   rechercheWebEffectuee: boolean;
   actions: ActionProposee[];
 };
@@ -84,10 +88,9 @@ Deno.serve(async (requete: Request) => {
     `que l'outil « Remplir un formulaire » du tableau de bord fait ça, et mets ` +
     `"ouvrirFormulaire": true.\n` +
     `3. Si l'utilisateur veut ranger, classer ou trier TOUS ses papiers ou un lot indéterminé ` +
-    `(« range tout », « trie mes papiers »), explique dans "reponse" que le bouton « Trier ` +
-    `automatiquement » du tableau de bord fait ça, et mets "ouvrirRangement": true — ne propose ` +
-    `aucune action précise dans ce cas, ce bouton traite un lot entier bien mieux qu'une action ` +
-    `par document.\n` +
+    `(« range tout », « trie mes papiers »), propose dans "reponse" de lancer ce tri maintenant ` +
+    `et mets "declencherTriAutomatique": true — ne propose aucune action précise dans ce cas, ` +
+    `ce tri en lot traite tous les papiers non classés bien mieux qu'une action par document.\n` +
     `4. Si l'utilisateur désigne un ou plusieurs documents PRÉCIS (nommés ou clairement identifiables ` +
     `dans la liste) et demande de les classer dans une catégorie — existante ou nouvelle, ce qui ` +
     `revient à créer un dossier, un dossier n'étant qu'une catégorie partagée par des documents — ` +
@@ -109,7 +112,8 @@ Deno.serve(async (requete: Request) => {
     `{"reponse": ta réponse en langage naturel, ` +
     `"documentsCites": [noms exacts trouvés dans la liste, tableau vide si aucun], ` +
     `"ouvrirFormulaire": booléen, ` +
-    `"ouvrirRangement": booléen, ` +
+    `"ouvrirRangement": booléen (toujours faux désormais, conservé pour compatibilité), ` +
+    `"declencherTriAutomatique": booléen, ` +
     `"actions": [actions précises proposées comme au point 4, tableau vide si aucune], ` +
     `"rechercheWebEffectuee": vrai seulement si tu as réellement utilisé l'outil de recherche ` +
     `web pour cette réponse précise}.`;
@@ -162,6 +166,7 @@ Deno.serve(async (requete: Request) => {
     resultat.rechercheWebEffectuee = Boolean(resultat.rechercheWebEffectuee) || rechercheWebEffectuee;
     if (!Array.isArray(resultat.documentsCites)) resultat.documentsCites = [];
     resultat.ouvrirRangement = Boolean(resultat.ouvrirRangement);
+    resultat.declencherTriAutomatique = Boolean(resultat.declencherTriAutomatique);
     // Filet défensif sur les actions, la partie la plus sensible de la
     // réponse : jamais une action sur un nom que la liste envoyée ne porte
     // pas, jamais un type inconnu, jamais une catégorie vide pour un

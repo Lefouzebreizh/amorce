@@ -1164,104 +1164,6 @@ export default function PageCoffre() {
           </nav>
         )}
 
-        {/* Bouton « À trier » : reclasse les papiers déposés sans catégorie,
-            plutôt que de les corriger un par un — visible seulement s'il y a
-            quelque chose à trier, et par lots de LOT_MAX_TRI_AUTO (voir
-            `trierAutomatiquement`) plutôt que tout d'un coup. */}
-        {nomsATrier.length > 0 && (
-          <div className="flex flex-col gap-2 rounded-2xl border border-line bg-paper-raised p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-ink-soft">
-                {nomsATrier.length} papier{nomsATrier.length > 1 ? 's' : ''} {DOSSIER_SANS_CATEGORIE.toLowerCase()}
-                {nomsATrierRestants.length > LOT_MAX_TRI_AUTO && ` — traités par lots de ${LOT_MAX_TRI_AUTO}`}
-                {/* Un papier déjà rejeté cette session (photo, vidéo…) ne
-                    redeviendra pas classable au clic suivant — sans le dire,
-                    le bouton semblerait proposer un lot qu'il ne peut plus
-                    faire avancer. */}
-                {triAutoIgnores.size > 0 && nomsATrierRestants.length > 0 &&
-                  ` (${triAutoIgnores.size} déjà vu${triAutoIgnores.size > 1 ? 's' : ''} comme non-document${triAutoIgnores.size > 1 ? 's' : ''}, mis de côté)`}
-              </p>
-              {nomsATrierRestants.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={trierAutomatiquement}
-                  disabled={triAutoEnCours}
-                  className="shrink-0 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
-                >
-                  {triAutoEnCours
-                    ? `Tri en cours… (${triAutoProgres?.fait ?? 0}/${triAutoProgres?.total ?? nomsATrierRestants.length})`
-                    : `Trier automatiquement (${Math.min(nomsATrierRestants.length, LOT_MAX_TRI_AUTO)})`}
-                </button>
-              ) : (
-                <p className="text-sm text-ink-soft">
-                  Tout le reste a déjà été vu comme non-document cette visite — recharge la page pour
-                  réessayer, ou classe-les à la main ci-dessous.
-                </p>
-              )}
-            </div>
-            {triAutoProgres && (
-              <div
-                role="progressbar"
-                aria-valuenow={triAutoProgres.fait}
-                aria-valuemin={0}
-                aria-valuemax={triAutoProgres.total}
-                aria-label="Progression du tri automatique"
-                className="relative h-1.5 w-full overflow-hidden rounded-full bg-line"
-              >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-vert via-accent to-violet" />
-                <div
-                  className="absolute inset-y-0 right-0 rounded-r-full bg-line transition-all"
-                  style={{ width: `${100 - (triAutoProgres.fait / triAutoProgres.total) * 100}%` }}
-                />
-              </div>
-            )}
-            {/* Bilan du dernier lot : un compteur par nature d'échec, jamais
-                un mur de noms — le détail complet reste disponible mais
-                replié, dans une zone bornée en hauteur. */}
-            {triAutoBilan && (triAutoBilan.nonDocuments.length > 0 || triAutoBilan.erreursTechniques.length > 0) && (
-              <div className="flex flex-col gap-2 rounded-lg border border-line bg-paper px-4 py-3 text-sm">
-                {triAutoBilan.nonDocuments.length > 0 && (
-                  <p className="text-ink-soft">
-                    {triAutoBilan.nonDocuments.length} fichier{triAutoBilan.nonDocuments.length > 1 ? 's' : ''} non reconnu
-                    {triAutoBilan.nonDocuments.length > 1 ? 's' : ''} comme document administratif (photo, vidéo ou image
-                    sans texte lisible).
-                  </p>
-                )}
-                {triAutoBilan.erreursTechniques.length > 0 && (
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-wine">
-                      {triAutoBilan.erreursTechniques.length} fichier{triAutoBilan.erreursTechniques.length > 1 ? 's' : ''} non
-                      analysé{triAutoBilan.erreursTechniques.length > 1 ? 's' : ''} (problème réseau ou service surchargé).
-                    </p>
-                    <button
-                      type="button"
-                      onClick={trierAutomatiquement}
-                      disabled={triAutoEnCours}
-                      className="shrink-0 font-semibold text-wine underline decoration-dotted hover:text-ink disabled:opacity-60"
-                    >
-                      Réessayer
-                    </button>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setTriAutoDetailOuvert((v) => !v)}
-                  className="self-start text-ink-soft underline decoration-dotted hover:text-ink"
-                >
-                  {triAutoDetailOuvert ? 'Masquer le détail' : 'Voir le détail'}
-                </button>
-                {triAutoDetailOuvert && (
-                  <div className="max-h-40 overflow-y-auto rounded-lg bg-paper-raised p-3 text-xs text-ink-soft">
-                    {[...triAutoBilan.nonDocuments, ...triAutoBilan.erreursTechniques].map((nom, i) => (
-                      <p key={`${nom}-${i}`} className="truncate">{nom}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Bannière d'alerte — cliquable seulement quand elle porte sur un
             document (jamais un rendez-vous, qui n'a pas de fiche) : ouvre
             directement la fiche détail concernée. */}
@@ -1498,6 +1400,16 @@ export default function PageCoffre() {
                   onOuvrirFormulaire={() => setFormulaireOuvert(true)}
                   onOuvrirRangement={() => setVueDossiers(true)}
                   onExecuterAction={executerActionAssistant}
+                  triAuto={{
+                    restants: nomsATrierRestants.length,
+                    lotMax: LOT_MAX_TRI_AUTO,
+                    enCours: triAutoEnCours,
+                    progres: triAutoProgres,
+                    bilan: triAutoBilan,
+                    detailOuvert: triAutoDetailOuvert,
+                  }}
+                  onLancerTriAutomatique={trierAutomatiquement}
+                  onBasculerDetailTriAutomatique={() => setTriAutoDetailOuvert((v) => !v)}
                 />
               </div>
             )}
