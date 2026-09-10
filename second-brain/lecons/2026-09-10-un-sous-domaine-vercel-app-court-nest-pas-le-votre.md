@@ -82,10 +82,40 @@ qui elle est.** Les deux se mesurent séparément, et la seconde est la plus
 sournoise des deux — parce que l'adresse répond 200, se charge vite, et
 ressemble à un site fini.
 
+## Sondé ensuite : aucun nom court n'est à nous
+
+La règle a été vérifiée sur les autres adresses citées dans le dépôt, le même
+jour, en croisant le titre servi avec les `domains` que le connecteur Vercel
+donne pour chaque projet.
+
+| adresse courte | ce qu'elle sert | à nous ? |
+| --- | --- | --- |
+| `amorce.vercel.app` | *IdeaForge — Construis ton projet* | **non** |
+| `artisan-express.vercel.app` | *Artisan Express — Plombier à Bordeaux* | **non** — le projet ne porte que les formes longues |
+| `iptv.vercel.app` | *iptv-online* | **non** |
+| `amorce-51up.vercel.app` | 404 | projet supprimé le 03/09 |
+| `reseau-annuaires.vercel.app` | 404 | projet supprimé le 03/09 |
+| `artisan-express-ashy.vercel.app` | *Site vitrine artisan express — 300 €* | **oui** |
+| `coffre-puce.vercel.app` | *Le Tiroir Secret* | **oui** |
+
+**Le cas d'`artisan-express` est le plus instructif des trois.** Son README
+écrit qu'`artisan-express.vercel.app` « n'a jamais existé » — une adresse par
+défaut inventée dans `layout.tsx`, qu'une session avait lue comme une preuve de
+mise en ligne. Elle **existe** aujourd'hui et sert une page qui ressemble à
+notre marchandise, au point qu'on serait tenté d'aller corriger le README. Elle
+n'est toujours pas à nous : `get_project` ne lui donne que
+`artisan-express-erwannchevallier-6916s-projects.vercel.app` et sa jumelle en
+`-git-main`. **Une adresse qui sert un contenu plausible n'est pas une preuve de
+possession** ; les `domains` du projet en sont une.
+
+**La forme qui vaut, donc :** toutes nos adresses Vercel sans domaine propre
+s'écrivent `<projet>-erwannchevallier-6916s-projects.vercel.app`, ou portent un
+suffixe aléatoire (`-ashy`, `-puce`) pour un dépôt de fichiers. Un
+`<projet>.vercel.app` nu n'est à nous dans **aucun** cas mesuré ici.
+
 ## Ce qui n'est pas mesuré
 
-Les autres sous-domaines courts du compte n'ont pas été sondés un par un avec
-cette grille. `artisan-express-ashy.vercel.app` et `coffre-puce.vercel.app`
-portent un suffixe aléatoire, ce qui est justement la marque d'un nom déjà
-pris — donc ils sont probablement à nous, mais « probablement » n'est pas une
-mesure, et le geste ci-dessus coûte une seconde par adresse.
+Le contenu servi par ces trois sites tiers n'a pas été examiné au-delà de son
+titre, et rien ne dit qu'il restera le même. Le point de la leçon ne porte pas
+sur eux : il porte sur nous, et sur l'écart entre une adresse qui répond et une
+adresse qui nous appartient.

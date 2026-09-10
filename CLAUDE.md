@@ -2650,7 +2650,15 @@ https://amorce-erwannchevallier-6916s-projects.vercel.app
 Rien n'est cassé côté tableau de bord, et c'est ce qui rend le piège muet — il
 n'y a pas d'erreur à voir, seulement une adresse qui répond 200 et ressemble à
 un site fini. **Avant de croire qu'une adresse est la nôtre, lui demander son
-titre** : `curl -s <adresse> | grep -o '<title>[^<]*</title>'`. Deux endroits
+titre** : `curl -s <adresse> | grep -o '<title>[^<]*</title>'`. Sondés le
+même jour, **aucun** des noms courts n'est à nous — `amorce`,
+`artisan-express` et `iptv` servent trois sites étrangers, et le second sert
+une page si plausible qu'on serait tenté de corriger un README qui a raison.
+La forme qui vaut est donc
+`<projet>-erwannchevallier-6916s-projects.vercel.app`, ou un suffixe aléatoire
+(`-ashy`, `-puce`) pour un dépôt de fichiers ; ce que confirment les `domains`
+rendus par `get_project`, qui sont la seule preuve de possession — jamais le
+contenu servi. Deux endroits
 du dépôt citaient encore la mauvaise, et l'un d'eux n'est pas de l'archive :
 `comptes-serveur/README.md` la donne en exemple pour le secret `ADRESSE_SITE`,
 **celui qui construit le lien de connexion envoyé par courriel** — posé tel
