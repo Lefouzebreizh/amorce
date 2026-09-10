@@ -1,7 +1,7 @@
 # NexusCrypto — tous les paramètres ajustables du système.
 #
-# Rien de ce fichier n'est un secret : les clés d'API, le jeton Telegram et
-# l'URL de crochet Discord vivent dans `.env`, jamais ici. Ce fichier-ci est
+# Rien de ce fichier n'est un secret : les clés d'API et l'URL de crochet
+# Discord vivent dans `.env`, jamais ici. Ce fichier-ci est
 # versionné, il se relit en revue, et c'est précisément pour cela qu'il ne doit
 # rien contenir qu'on regretterait de publier.
 #
@@ -30,6 +30,21 @@ general:
 # refuse de démarrer sinon : une allocation à 97 % laisse 3 % de capital qui
 # n'est réclamé par personne et ne sera jamais investi.
 portefeuille:
+  # Capital de départ RÉEL fixé à 50 € (décision du 10/09/2026) — mais ce
+  # chiffre n'est **pas** recopié ici tel quel : mesuré le même jour, le
+  # faire tombe l'enveloppe DCA, le plafond des pépites et le seuil
+  # `montant_minimum_usd` du DCA dans l'incohérence les uns par rapport aux
+  # autres (une enveloppe de 200 $/semaine sur 50 $ de capital, un plafond de
+  # 150 $ par pépite sur le même total), et sept tests qui rejouaient ce
+  # fichier tel quel sont passés au rouge — plus aucun achat ne se
+  # déclenchait, la mécanique interne d'arrondi tombant sous les planchers.
+  # Recalibrer ces quatre nombres ensemble est une décision de produit
+  # (cadence, taille minimale d'ordre Binance, nombre de lignes tenables à ce
+  # montant), pas un changement d'une ligne — voir le compte rendu de session.
+  # En attendant cet arbitrage, la valeur livrée reste celle qui fait
+  # tourner la suite de tests et le rejeu : 10 000 $. Elle ne représente pas
+  # un capital réel tant que `config/validation.yaml` n'autorise pas le mode
+  # production.
   capital_initial_usd: 10000
   # Enveloppe DCA de référence, par passage de calendrier. Le DCA dynamique
   # multiplie ce montant, il ne le remplace pas.
@@ -336,7 +351,10 @@ execution:
 # Notifications
 # --------------------------------------------------------------------------
 notifications:
-  canaux: [console]          # console | telegram | discord
+  # Telegram a été retiré le 10/09/2026 : les résultats se lisent directement
+  # dans une session Claude. `console` (capturé par le journal) suffit à cet
+  # usage.
+  canaux: [console]          # console | discord
   alerter_sur:
     - signal
     - ordre

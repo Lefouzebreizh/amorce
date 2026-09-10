@@ -87,6 +87,21 @@ type StudioState = {
   past: Snapshot[];
   /** États annulés, prêts à être rétablis. */
   future: Snapshot[];
+  /**
+   * Nature et instant de la dernière modification, pour le regroupement des
+   * gestes continus.
+   *
+   * Dans l'état, et non dans deux variables de module comme jusqu'au
+   * 10/09/2026. Ce n'est pas un rangement de confort : ce couple **décide** si
+   * `past` reçoit une entrée, il appartient donc à l'historique et doit se
+   * réinitialiser avec lui. Gardé hors du store, il survivait à toute remise à
+   * zéro — et rendait l'ordre d'exécution des tests significatif : deux tests
+   * du mixage ne passaient que parce qu'un `setMix` d'un test précédent, encore
+   * dans la fenêtre de regroupement, empêchait l'empilement, et que
+   * l'annulation retombait alors sur un instantané étranger dont la valeur était
+   * la bonne par hasard.
+   */
+  regroupement: { label: string; instant: number };
   undo: () => void;
   redo: () => void;
   selection: Selection;
@@ -257,10 +272,6 @@ function reclamp<T extends { project: Project; playhead: number }>(state: T): T 
 }
 
 export const useStudio = create<StudioState>((set, get) => {
-  /** Nature et instant de la dernière modification, pour le regroupement. */
-  let lastLabel = '';
-  let lastAt = 0;
-
   /**
    * Applique une modification du projet en la rendant annulable.
    *
@@ -275,12 +286,14 @@ export const useStudio = create<StudioState>((set, get) => {
       if (!patch.project || patch.project === state.project) return patch;
 
       const now = Date.now();
-      const merge = COALESCING.has(label) && label === lastLabel && now - lastAt < COALESCE_MS;
-      lastLabel = label;
-      lastAt = now;
+      const merge =
+        COALESCING.has(label)
+        && label === state.regroupement.label
+        && now - state.regroupement.instant < COALESCE_MS;
 
       return {
         ...patch,
+        regroupement: { label, instant: now },
         past: merge ? state.past : [...state.past, { project: state.project, label }].slice(-HISTORY_LIMIT),
         future: [],
       };
@@ -290,16 +303,17 @@ export const useStudio = create<StudioState>((set, get) => {
   project: emptyProject(),
   past: [],
   future: [],
+  regroupement: { label: '', instant: 0 },
 
   undo: () =>
     set((state) => {
       const previous = state.past[state.past.length - 1];
       if (!previous) return state;
 
-      // Le regroupement est rompu : sans cela, la modification suivante
-      // viendrait se fondre dans une entrée qui n'existe plus.
-      lastLabel = '';
       return {
+        // Le regroupement est rompu : sans cela, la modification suivante
+        // viendrait se fondre dans une entrée qui n'existe plus.
+        regroupement: { label: '', instant: 0 },
         project: previous.project,
         past: state.past.slice(0, -1),
         future: [{ project: state.project, label: previous.label }, ...state.future].slice(0, HISTORY_LIMIT),
@@ -314,8 +328,8 @@ export const useStudio = create<StudioState>((set, get) => {
       const [next, ...rest] = state.future;
       if (!next) return state;
 
-      lastLabel = '';
       return {
+        regroupement: { label: '', instant: 0 },
         project: next.project,
         past: [...state.past, { project: state.project, label: next.label }].slice(-HISTORY_LIMIT),
         future: rest,

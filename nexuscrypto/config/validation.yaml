@@ -1,0 +1,32 @@
+# État de validation avant tout argent réel.
+#
+# Ce fichier n'est pas un réglage de stratégie, c'est une attestation humaine.
+# Rien ici ne se déduit d'un calcul : c'est la personne qui a regardé les
+# résultats du backtest et du paper trading qui coche, à la main, une fois
+# qu'elle a vraiment regardé. Voir `src/core/validation.py`.
+#
+# Tant que les champs ci-dessous sont à leur valeur par défaut, la commande
+# `production` refuse de démarrer — quel que soit l'état de `--je-confirme`.
+
+# Un backtest sur plusieurs régimes de marché (haussier, baissier, stagnant),
+# pas sur une seule fenêtre qui arrange les chiffres. `nexuscrypto rejeu
+# --profils` couvre les six marchés fabriqués ; `--coinmetrics` couvre seize
+# ans de BTC réel.
+backtest_multi_regimes_fait: false
+backtest_note: ""
+
+# Nombre de jours de paper trading réellement observés (mode simulation,
+# données de marché en direct). Quatorze jours au minimum — voir
+# PAPER_TRADING_JOURS_MINIMUM dans validation.py.
+paper_trading_jours: 0
+
+# Concluant veut dire : la stratégie a fait au moins ce qu'elle promettait,
+# sur cette période, sans surprise non expliquée. Ce n'est pas « rien n'a
+# planté » — c'est le §8 de CLAUDE.md : regardé, pas seulement mesuré.
+paper_trading_concluant: false
+paper_trading_note: ""
+
+# Qui a regardé et signé cet état, et quand. Une case cochée sans nom ni date
+# n'engage personne.
+valide_par: ""
+valide_le: ""
