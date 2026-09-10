@@ -3,10 +3,10 @@
 
 **La comparaison au témoin passe avant le résultat absolu.** Un rejeu qui
 annonce « +28 % » ne dit rien : le marché montait peut-être de 40 %. Ce qui se
-lit ici est toujours un écart — contre le DCA plat, et contre le prix moyen de
-la période.
+lit ici est toujours un écart — contre l'achat unique (témoin), et contre le
+prix moyen de la période.
 
-Trois nombres suffisent à juger un DCA, et ils sont en tête du tableau :
+Trois nombres suffisent à juger la stratégie, et ils sont en tête du tableau :
 
 - **le prix moyen d'achat**, comparé à celui du marché. C'est la seule mesure
   qui isole la qualité du *choix des montants*, indépendamment de savoir si le
@@ -65,7 +65,6 @@ def ligne_comparaison(
         "ordres": str(len(dynamique.executions)),
         "frais": f"{dynamique.frais:.0f} $",
         "coupures": str(len(dynamique.declenchements)),
-        "reports": str(dynamique.temporisations),
     }
 
 
@@ -117,8 +116,6 @@ def rapport_scenario(scenario: Scenario, dynamique: Resultat, temoin: Resultat) 
             sorted({d.motif.value.replace("_", " ") for d in dynamique.declenchements})
         )
         lignes.append(f"- coupe-circuit déclenché {len(dynamique.declenchements)}× : {motifs}")
-    if dynamique.temporisations:
-        lignes.append(f"- {dynamique.temporisations} passage(s) reportés par temporisation")
     return "\n".join(lignes)
 
 
@@ -213,13 +210,12 @@ def verdict(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
 
     Un harnais qui ne sait annoncer que des succès ne sert à rien.
 
-    **Une abstention est un échec, pas un match nul.** La première version de
-    cette fonction lisait le tableau mis en forme et comptait « — » comme
-    neutre : le scénario où la stratégie n'achète *rien* pendant que le témoin
-    gagne 8 % — le pire cas possible pour un DCA, dont toute la promesse est de
-    continuer d'acheter — était donc rangé avec les cas sans opinion. Elle
-    prend maintenant les résultats bruts, et l'abstention est comptée pour ce
-    qu'elle est.
+    **Une abstention n'est plus un échec en soi, depuis le retrait du DCA
+    calendaire (10/09/2026).** La stratégie n'a plus de promesse de continuer
+    d'acheter : elle attend une occasion, et une abstention totale sur un
+    marché sans occasion réelle peut être exactement le comportement voulu.
+    Elle reste dite — pour qu'on sache où elle survient — mais sans le jugement
+    qu'elle portait quand le moteur avait un calendrier à honorer.
     """
 
     mieux, pire, abstentions = 0, 0, []
@@ -237,10 +233,11 @@ def verdict(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
             pire += 1
 
     # Un prix moyen flatteur obtenu en achetant peu n'est pas une performance,
-    # c'est une abstention partielle. Mesuré sur BTC 2022-2023 : la modulation
-    # paie 7,2 % moins cher que le témoin et gagne **deux fois moins** (+20 %
-    # contre +39 %), parce qu'elle engage 1 400 $ de moins. Sans cette ligne, le
-    # verdict annonçait la victoire sur le seul prix.
+    # c'est un engagement partiel. Mesuré sur BTC 2022-2023, sur l'ancien
+    # moteur à DCA : la modulation payait 7,2 % moins cher que le témoin et
+    # gagnait **deux fois moins** (+20 % contre +39 %), parce qu'elle engageait
+    # 1 400 $ de moins. Sans cette ligne, le verdict annonçait la victoire sur
+    # le seul prix.
     perdants = [
         nom for nom, dyn, tem in comparaisons
         if dyn.achats and tem.achats and dyn.pnl_relatif < tem.pnl_relatif - 0.02
@@ -250,10 +247,11 @@ def verdict(comparaisons: list[tuple[str, Resultat, Resultat]]) -> str:
     phrases = []
     if abstentions:
         phrases.append(
-            f"⚠ La stratégie n'achète **rien** sur {len(abstentions)}/{total} "
-            f"scénario(s) — {', '.join(abstentions)} — alors que le témoin y "
-            "investit. Pour un DCA, une abstention totale est le pire résultat "
-            "possible : ce n'est pas de la prudence, c'est une panne de discipline."
+            f"ℹ La stratégie n'a pris aucune position sur {len(abstentions)}/{total} "
+            f"scénario(s) — {', '.join(abstentions)} — quand un achat unique "
+            "immédiat (témoin) y aurait suffi à profiter du marché. Sans "
+            "calendrier à honorer, ce n'est plus jugé en soi : à vérifier au cas "
+            "par cas si le score n'a manqué aucune occasion réelle."
         )
     if perdants:
         phrases.append(

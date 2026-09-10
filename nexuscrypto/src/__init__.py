@@ -1,4 +1,4 @@
-"""NexusCrypto — moteur d'investissement autonome à DCA dynamique.
+"""NexusCrypto — moteur d'investissement autonome, chasseur d'opportunités.
 
 Le paquet entier est importable sans aucune dépendance tierce : `aiohttp`,
 `ccxt` et le SDK Hyperliquid ne sont chargés qu'au moment où un client réseau

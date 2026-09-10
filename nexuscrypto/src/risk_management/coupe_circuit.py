@@ -14,7 +14,7 @@ Quatre déclencheurs, et chacun a sa raison d'être :
   au régime de marché. Elle ne se réarme pas toute seule : on veut qu'un humain
   regarde.
 - **Chute d'un actif sur une heure** — on ne rattrape pas un couteau qui tombe.
-  Le DCA achète les creux, pas les effondrements en cours.
+  La stratégie achète les creux, pas les effondrements en cours.
 - **Perte de vue du marché** — cinq échecs réseau d'affilée veulent dire qu'on
   décide sur des données périmées. Acheter à l'aveugle est pire que ne pas
   acheter.

@@ -633,15 +633,16 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   ni dans un commit, qui vaudrait vingt-quatre déploiements Vercel par jour.
   **Le cache s'évince au bout de sept jours sans usage** : si le planning
   s'arrête une semaine, le compteur des jugeables repart de zéro.
-- **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
-  asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
-  bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
-  `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend vérifiable
-  ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un chemin :
-  coupe-circuit, dimensionnement, courtier, portefeuille — sans raccourci. Le
-  mode papier est le défaut, le mode réel demande deux gestes. `profils.py`
-  rejoue six marchés fabriqués et compare la stratégie à un DCA aveugle : un
-  réglage se juge sur son effet, pas sur son intention.
+- **nexuscrypto/** — moteur d'investissement autonome, chasseur d'opportunités,
+  Python asynchrone. Le cœur — scoring, risque, simulation d'exécution — tourne
+  en bibliothèque standard **pure** : la suite entière passe avec `aiohttp`,
+  `ccxt`, `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend
+  vérifiable ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un
+  chemin : coupe-circuit, dimensionnement, courtier, portefeuille — sans
+  raccourci. Le mode papier est le défaut, le mode réel demande deux gestes.
+  `profils.py` rejoue six marchés fabriqués et compare la stratégie à un
+  témoin qui achète une fois et conserve : un réglage se juge sur son effet,
+  pas sur son intention.
   **Le levier se mesure, il ne s'exécute pas** : `rejeu --leviers 1,2,3,5,10`
   compte les liquidations qu'un compte à levier aurait subies, et le courtier
   ne connaît toujours pas le mot. Une option de levier posée dans le chemin
@@ -692,6 +693,27 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   doit attester un backtest multi-régimes concluant et une période de paper
   trading conclusive, sans quoi la commande `production` refuse de démarrer.
   Voir `nexuscrypto/src/core/validation.py`.
+  **Retrait du DCA calendaire, décidé et fait le 10/09/2026** : Erwann a coupé
+  court à toute logique d'achat programmé — « je m'en fous du DCA » — pour un
+  bot qui priorise les pépites dynamiquement découvertes sur les majors d'une
+  watchlist, sans jamais cesser d'acheter une seule pour de bonnes raisons.
+  `strategy/dca.py` a été supprimé, `Action.TEMPORISER` avec, et
+  `strategy/moteur.py` ne connaît plus qu'un score contre un seuil
+  (`strategie.seuil_achat`) : sous le seuil il attend, au-dessus il achète ou
+  renforce, sans calendrier ni montant nominal — c'est
+  `risk_management.sizing.dimensionner`, sur la distance au stop, qui décide
+  seul du montant réel. `ConfigPortefeuille.allocation` (poids figés sommant
+  à 100) devient `watchlist` (`LigneSurveillee`, sans poids) : un actif hors
+  watchlist reçoit exactement le même traitement qu'une ligne connue
+  d'avance, ce qui prépare le branchement du scanner de pépites dans la
+  boucle en direct — **pas encore fait**, c'est le chantier suivant. Le témoin
+  de rejeu passe d'un DCA plat à un achat unique conservé, l'étalon universel
+  qui ne dépend plus d'aucun calendrier. **Ce qui n'a pas bougé** :
+  `risk_management/` et `execution/` intacts, 329 tests verts. **Ce qui reste
+  à faire avant tout capital réel** : rejouer ce nouveau moteur sur données
+  réelles — les mesures du README (§ 8 à 15) portent toutes sur l'ancien
+  moteur à DCA et sont désormais une archive de méthode, pas une description
+  de la stratégie actuelle.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
   sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
   reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de

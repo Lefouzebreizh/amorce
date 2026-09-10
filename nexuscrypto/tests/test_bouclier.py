@@ -194,22 +194,22 @@ class TestDefautTrouveEnRegardant(unittest.TestCase):
     def test_sans_adresse_le_bouclier_ne_s_applique_pas(self):
         """Le défaut qui aurait bloqué tous les achats.
 
-        `LigneAllocation` ne porte ni chaîne ni adresse pour un actif établi
+        `LigneSurveillee` ne porte ni chaîne ni adresse pour un actif établi
         acheté sur une plateforme centralisée. La première version en tirait un
         `INCONNU`, donc un refus : LINK/USDT se serait vu interdire à chaque
         passe, et le journal aurait accusé les sources de sécurité.
         """
 
-        from src.core.config import LigneAllocation
+        from src.core.config import LigneSurveillee
 
-        ligne = LigneAllocation(symbole="LINK/USDT", poids=5, role="pepite")
+        ligne = LigneSurveillee(symbole="LINK/USDT", role="watchlist")
         self.assertIsNone(ligne.adresse)
         self.assertIsNone(ligne.chaine)
 
     def test_une_ligne_peut_desormais_designer_un_contrat(self):
-        from src.core.config import LigneAllocation
+        from src.core.config import LigneSurveillee
 
-        ligne = LigneAllocation(symbole="PEP/SOL", poids=2, role="pepite",
+        ligne = LigneSurveillee(symbole="PEP/SOL", role="watchlist",
                                 chaine="solana", adresse="So111")
         self.assertEqual(ligne.chaine, "solana")
 

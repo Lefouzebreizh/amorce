@@ -140,29 +140,31 @@ class TestFideliteAuDirect(unittest.TestCase):
         self.assertGreater(resultat.frais, 0.0)
 
     def test_config_mono_actif(self):
-        """Sans elle, rejouer un symbole hors allocation donne un poids nul,
-        donc un rejeu vide dont rien ne signale la cause."""
+        """Sans elle, rejouer un symbole hors watchlist ne porte ni
+        `vente_sur_signal` ni plafond spécifique, ce qui ne mesure pas ce
+        qu'on veut mesurer."""
 
         seule = config_mono_actif(config(), "TEST/USDT")
-        self.assertEqual(list(seule.portefeuille.allocation), ["TEST/USDT"])
-        self.assertAlmostEqual(seule.portefeuille.poids_de("TEST/USDT"), 1.0)
+        self.assertEqual(list(seule.portefeuille.watchlist), ["TEST/USDT"])
+        self.assertTrue(seule.portefeuille.watchlist["TEST/USDT"].vente_sur_signal)
 
 
 class TestTemoin(unittest.TestCase):
     def test_le_temoin_achete_sans_rien_regarder(self):
-        """Il n'a ni score, ni zone, ni stop : c'est ce qui en fait un étalon."""
+        """Il n'a ni score, ni stop, ni calendrier : c'est ce qui en fait un
+        étalon universel plutôt qu'une variante de la stratégie."""
 
         prix = descente()
         temoin = rejouer(config(), serie(prix), plat=True, nom="témoin")
         self.assertTrue(temoin.executions)
-        self.assertTrue(all(e.ordre.motif == "DCA plat" for e in temoin.executions))
+        self.assertTrue(all(e.ordre.motif == "achat unique (témoin)" for e in temoin.executions))
 
-    def test_le_temoin_respecte_le_calendrier(self):
-        """Une échéance hebdomadaire sur 320 bougies de 4 h — environ 53 jours —
-        ne peut pas produire plus d'une dizaine d'achats."""
+    def test_le_temoin_n_achete_qu_une_seule_fois(self):
+        """Tout le capital au premier prix atteignable, puis plus rien : ce
+        n'est plus un calendrier qui décide, il n'y en a plus."""
 
         temoin = rejouer(config(), serie(descente()), plat=True)
-        self.assertLessEqual(len(temoin.executions), 12)
+        self.assertEqual(len(temoin.executions), 1)
 
     def test_le_temoin_ne_declenche_aucune_coupure(self):
         temoin = rejouer(config(), serie(descente()), plat=True)
@@ -327,33 +329,6 @@ class TestScenarios(unittest.TestCase):
         self.assertTrue(temoin.executions)
 
 
-class TestAucuneAbstention(unittest.TestCase):
-    """Le garde-fou de la découverte du harnais.
-
-    Sans plancher de discipline, la configuration livrée produisait **zéro
-    ordre sur 398 échéances** dans une hausse continue. Ce test verrouille la
-    correction : si un réglage futur ramène une abstention totale sur l'un des
-    six marchés, il échoue ici et non trois mois plus tard sur un relevé.
-    """
-
-    def test_la_configuration_livree_achete_sur_les_six_marches(self):
-        muets = []
-        for scenario in scenarios():
-            dynamique, temoin = rejouer_scenario(config(), scenario)
-            if not dynamique.achats and temoin.achats:
-                muets.append(scenario.nom)
-        self.assertEqual(
-            muets, [],
-            "abstention totale — un DCA ne cesse jamais complètement d'acheter",
-        )
-
-    def test_le_plancher_livre_est_celui_qui_a_ete_mesure(self):
-        """15 % est la plus petite valeur qui supprime l'abstention. La changer
-        sans rejouer `profils.py`, c'est régler à l'aveugle."""
-
-        self.assertAlmostEqual(config().strategie.dca.plancher_enveloppe, 0.15)
-
-
 class TestLectureCSV(unittest.TestCase):
     def _ecrire(self, dossier: Path, lignes: list[list], entete: bool = True) -> Path:
         chemin = dossier / "donnees.csv"
@@ -515,17 +490,11 @@ class TestMultiActifs(unittest.TestCase):
 
         return SerieReelle(serie=serie(prix, symbole=symbole), onchain={})
 
-    def test_l_allocation_est_renormalisee_a_cent(self):
-        """Retirer une ligne sans renormaliser laisserait un portefeuille qui
-        somme à moins de 100 % : la trésorerie non réclamée ne serait jamais
-        investie, et le rejeu mesurerait un capital immobilisé."""
-
+    def test_la_watchlist_est_restreinte_aux_symboles_fournis(self):
         restreinte = config_portefeuille_reel(config(), ["BTC/USDT", "ETH/USDT"])
-        poids = [l.poids for l in restreinte.portefeuille.allocation.values()]
-        self.assertAlmostEqual(sum(poids), 100.0)
-        self.assertEqual(len(poids), 2)
+        self.assertEqual(set(restreinte.portefeuille.watchlist), {"BTC/USDT", "ETH/USDT"})
 
-    def test_un_symbole_hors_allocation_leve(self):
+    def test_un_symbole_hors_watchlist_leve(self):
         with self.assertRaises(ValueError):
             config_portefeuille_reel(config(), ["DOGE/USDT"])
 
@@ -545,7 +514,7 @@ class TestMultiActifs(unittest.TestCase):
         """
         demandes = ["BTC/USDT", "ETH/USDT", "DOGE/USDT"]
         retenus = list(
-            config_portefeuille_reel(config(), demandes).portefeuille.allocation
+            config_portefeuille_reel(config(), demandes).portefeuille.watchlist
         )
         self.assertEqual([s for s in demandes if s not in retenus], ["DOGE/USDT"])
         self.assertEqual(retenus, ["BTC/USDT", "ETH/USDT"])
@@ -566,34 +535,45 @@ class TestMultiActifs(unittest.TestCase):
 
     def test_la_tresorerie_est_partagee(self):
         """Ce que l'un prend, l'autre ne l'a pas : un rejeu multi-actifs n'est
-        pas la somme de rejeus indépendants."""
+        pas la somme de rejeus indépendants.
+
+        `capital_engage` cumule tous les achats, y compris ceux qui suivent
+        une vente — un stop qui solde une ligne puis la rachète plus tard peut
+        légitimement engager, au total, plus que le capital initial. Ce que la
+        trésorerie partagée garantit n'est pas ce plafond-là, c'est qu'on ne
+        peut jamais dépenser plus que ce que le pool commun contient à
+        l'instant T : la trésorerie ne descend jamais sous zéro."""
 
         series = {
             "BTC/USDT": self._serie_reelle("BTC/USDT", descente()),
             "ETH/USDT": self._serie_reelle("ETH/USDT", descente()),
         }
         multi = rejouer_multi(config(), series)
-        engage = multi.capital_engage
-        self.assertLessEqual(
-            engage, config().portefeuille.capital_initial_usd + 1.0
-        )
+        self.assertGreaterEqual(multi.portefeuille.liquidites_usd, -1e-6)
 
-    def test_le_temoin_multi_repartit_selon_les_poids(self):
+    def test_le_temoin_multi_repartit_le_capital_a_parts_egales(self):
+        """Sans poids cible depuis le 10/09/2026, le témoin multi-actifs
+        n'a plus qu'un partage possible : à parts égales entre les lignes."""
+
         series = {
             "BTC/USDT": self._serie_reelle("BTC/USDT", descente()),
             "ETH/USDT": self._serie_reelle("ETH/USDT", descente()),
         }
         temoin = rejouer_multi(config(), series, plat=True)
         self.assertTrue(temoin.executions)
-        self.assertTrue(all(e.ordre.motif == "DCA plat" for e in temoin.executions))
-        # BTC pèse cinq fois ETH dans l'allocation livrée : il reçoit plus.
+        self.assertTrue(all(e.ordre.motif == "achat unique (témoin)" for e in temoin.executions))
         from src.core.modeles import Sens
 
         par_actif: dict[str, float] = {}
         for e in temoin.executions:
             if e.ordre.sens is Sens.ACHAT:
                 par_actif[e.ordre.actif] = par_actif.get(e.ordre.actif, 0.0) + e.montant_usd
-        self.assertGreater(par_actif["BTC/USDT"], par_actif["ETH/USDT"])
+        # À 2 % près : la ligne servie en second voit sa part clampée par la
+        # trésorerie restante après frais et glissement de la première, un
+        # écart de l'ordre du pour cent qui n'est pas ce que le test garde.
+        self.assertAlmostEqual(
+            par_actif["BTC/USDT"], par_actif["ETH/USDT"], delta=par_actif["BTC/USDT"] * 0.02
+        )
 
     def test_le_socle_n_est_jamais_vendu_sur_signal(self):
         """BTC porte `vente_sur_signal: false`. Sur une descente qui déclenche
@@ -649,10 +629,12 @@ class TestMultiActifs(unittest.TestCase):
         }
         sans = rejouer_multi(config(), series)
         avec = rejouer_multi(config(), series, fear_greed=jours)
-        # C'est le **montant** que la zone de valorisation change, pas le
-        # nombre d'ordres : la peur extrême multiplie l'enveloppe, elle ne
-        # crée pas d'échéance supplémentaire.
-        self.assertGreater(avec.capital_engage, sans.capital_engage * 1.05)
+        # Le sens du changement n'est pas garanti — plus d'achats déclenchés
+        # plus tôt peut aussi bien mener à plus de sorties sur stop, donc à
+        # moins de capital engagé au total. Ce que ce test garde est que le
+        # poids cesse d'être **inerte** dès qu'un historique existe : le
+        # résultat change, point final.
+        self.assertNotAlmostEqual(avec.capital_engage, sans.capital_engage, places=2)
 
     def test_une_serie_trop_courte_ne_leve_pas(self):
         court = self._serie_reelle("BTC/USDT", [100.0])
@@ -675,16 +657,18 @@ class TestVerdict(unittest.TestCase):
             )
         return resultat
 
-    def test_une_abstention_est_un_echec_pas_un_match_nul(self):
-        """C'est le pire résultat possible pour un DCA, et la première version
-        de cette fonction le rangeait avec les cas sans opinion."""
+    def test_une_abstention_totale_est_dite_sans_etre_jugee(self):
+        """Depuis le retrait du DCA calendaire (10/09/2026), l'abstention
+        n'est plus jugée en soi : elle reste rapportée, pour qu'on sache où
+        elle survient, mais sans le verdict qu'elle portait quand le moteur
+        avait un calendrier à honorer."""
 
         texte = mise_en_forme.verdict([
             ("hausse", self._resultat(achats=False, prix=0),
              self._resultat(achats=True, prix=100.0)),
         ])
-        self.assertIn("n'achète **rien**", texte)
-        self.assertIn("panne de discipline", texte)
+        self.assertIn("aucune position", texte)
+        self.assertNotIn("panne de discipline", texte)
 
     def test_le_verdict_signale_un_meilleur_prix_qui_gagne_moins(self):
         """Mesuré sur BTC 2022-2023 : prix 7,2 % meilleur, PnL deux fois plus

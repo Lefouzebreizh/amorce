@@ -11,9 +11,10 @@ est touché. La quantité est donc `capital × risque / (prix − stop)`. Un act
 volatil a un stop plus loin, donc une position plus petite, **automatiquement**
 — sans qu'aucune table par actif n'ait à être tenue à jour.
 
-Quatre plafonds s'appliquent ensuite, et le plus contraignant gagne :
-l'enveloppe DCA du jour, la trésorerie disponible, l'exposition maximale par
-actif, et le plafond spécifique des jetons découverts par le scanner.
+Quatre plafonds s'appliquent ensuite, et le plus contraignant gagne : le
+montant demandé par la décision, la trésorerie disponible, l'exposition
+maximale par actif, et le plafond spécifique des jetons découverts par le
+scanner.
 """
 
 from __future__ import annotations
@@ -58,7 +59,7 @@ def dimensionner(
 
     detail: list[str] = []
     montant = montant_souhaite_usd
-    plafond_actif = "enveloppe DCA"
+    plafond_actif = "montant demandé"
 
     # 1. Le risque par position, quand un stop est calculable.
     if stop is not None and stop < prix:

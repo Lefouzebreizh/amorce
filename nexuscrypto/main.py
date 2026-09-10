@@ -49,7 +49,7 @@ from src.core.reseau import ErreurReseau  # noqa: E402
 def _arguments() -> argparse.ArgumentParser:
     analyseur = argparse.ArgumentParser(
         prog="nexuscrypto",
-        description="Moteur d'investissement autonome à DCA dynamique.",
+        description="Moteur d'investissement autonome, chasseur d'opportunités.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -145,7 +145,7 @@ async def _analyser(config) -> int:
             profondeur=config.general.profondeur_bougies,
             maintenant=maintenant(),
             plateformes={
-                s: l.plateforme for s, l in config.portefeuille.allocation.items()
+                s: l.plateforme for s, l in config.portefeuille.watchlist.items()
             },
         )
         if not contextes:
@@ -240,24 +240,24 @@ def _rejeu(config, arguments) -> int:
             except DonneesIllisibles as erreur:
                 print(f"❌ {erreur}", file=sys.stderr)
                 return 2
-        # Le rejeu ne mesure que les symboles présents dans l'allocation du
-        # portefeuille — les autres sont écartés et les poids renormalisés.
-        # Silencieusement, jusqu'ici : quatre fichiers passés, trois mesurés,
-        # et un tableau parfaitement juste **pour un panier qui n'est pas celui
-        # demandé**. C'est la forme la plus coûteuse d'un défaut, parce qu'elle
-        # ne ressemble pas à un défaut mais à un résultat.
+        # Le rejeu ne mesure que les symboles présents dans la watchlist —
+        # les autres sont écartés. Silencieusement, jusqu'ici : quatre
+        # fichiers passés, trois mesurés, et un tableau parfaitement juste
+        # **pour un panier qui n'est pas celui demandé**. C'est la forme la
+        # plus coûteuse d'un défaut, parce qu'elle ne ressemble pas à un
+        # défaut mais à un résultat.
         #
         # La liste des retenus se demande à la fonction qui filtre, jamais en
         # recopiant sa règle ici : deux endroits qui décident la même chose se
         # désaccordent au premier changement, et c'est le second qui garde
         # l'ancienne version. Elle lève déjà, comme avant, s'il ne reste rien.
         retenus = list(
-            config_portefeuille_reel(config, list(series)).portefeuille.allocation
+            config_portefeuille_reel(config, list(series)).portefeuille.watchlist
         )
         ecartes = [s for s in series if s not in retenus]
 
-        dynamique = rejouer_multi(config, series, nom="DCA dynamique")
-        temoin = rejouer_multi(config, series, nom="DCA plat (témoin)", plat=True)
+        dynamique = rejouer_multi(config, series, nom="opportuniste")
+        temoin = rejouer_multi(config, series, nom="achat unique (témoin)", plat=True)
         # L'intitulé nomme ce qui a été **mesuré**, pas ce qui a été demandé :
         # c'est lui qu'on lit pour savoir sur quoi porte la ligne du dessous.
         comparaison = [(" + ".join(retenus), dynamique, temoin)]
@@ -267,10 +267,8 @@ def _rejeu(config, arguments) -> int:
         # Une ligne sans on-chain n'a pas un on-chain neutre : elle n'en a pas,
         # et le scoring redistribue. Le dire évite de croire le contraire.
         if ecartes:
-            print(f"\n⚠ Absent(s) de l'allocation, donc **non mesuré(s)** : "
-                  f"{', '.join(ecartes)} — les poids des autres ont été "
-                  "renormalisés. Ajouter la ligne au portefeuille pour les "
-                  "inclure.")
+            print(f"\n⚠ Absent(s) de la watchlist, donc **non mesuré(s)** : "
+                  f"{', '.join(ecartes)} — ajouter la ligne pour les inclure.")
         # Sur les **retenus** seulement : avertir de l'on-chain absent d'un
         # actif qu'on ne mesure pas ferait chercher un défaut là où il n'y a
         # rien, et contredirait l'avertissement du dessus.
@@ -292,9 +290,9 @@ def _rejeu(config, arguments) -> int:
             print(f"❌ {erreur}", file=sys.stderr)
             return 2
         dynamique = rejouer(config, reelle.serie, onchain=reelle.onchain,
-                            nom="DCA dynamique")
+                            nom="opportuniste")
         temoin = rejouer(config, reelle.serie, onchain=reelle.onchain,
-                         nom="DCA plat (témoin)", plat=True)
+                         nom="achat unique (témoin)", plat=True)
         debut = reelle.serie.bougies[0].horodatage.date()
         fin = reelle.serie.bougies[-1].horodatage.date()
         ligne = mise_en_forme.ligne_comparaison(
@@ -358,9 +356,9 @@ def _rejeu(config, arguments) -> int:
         except DonneesIllisibles as erreur:
             print(f"❌ {erreur}", file=sys.stderr)
             return 2
-        dynamique = rejouer(config, serie, fear_greed=indices, nom="DCA dynamique")
+        dynamique = rejouer(config, serie, fear_greed=indices, nom="opportuniste")
         temoin = rejouer(config, serie, fear_greed=indices,
-                         nom="DCA plat (témoin)", plat=True)
+                         nom="achat unique (témoin)", plat=True)
         moyen_marche = sum(serie.clotures) / len(serie.clotures)
         ligne = mise_en_forme.ligne_comparaison(dynamique, temoin, moyen_marche)
         print(mise_en_forme.tableau([(arguments.symbole, ligne)]))
@@ -430,10 +428,9 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.commande == "verifier":
         print("✅ Configuration valide.")
         print(f"   Mode           : {config.mode.value}")
-        print(f"   Actifs         : {', '.join(config.portefeuille.symboles)}")
+        print(f"   Watchlist      : {', '.join(config.portefeuille.symboles)}")
         print(f"   Capital        : {config.portefeuille.capital_initial_usd:,.0f} $")
-        print(f"   Enveloppe DCA  : {config.portefeuille.enveloppe_dca_usd:,.0f} $ "
-              f"({config.portefeuille.cadence_dca})")
+        print(f"   Seuil d'achat  : score ≥ {config.strategie.seuil_achat:g}/100")
         print(f"   Canaux         : {', '.join(config.notifications.canaux)}")
         return 0
 

@@ -305,9 +305,9 @@ class Scenario:
 
     @property
     def prix_moyen_marche(self) -> float:
-        """Le prix moyen de la période. C'est l'étalon d'un DCA : acheter en
-        dessous, c'est faire mieux que le hasard ; acheter au-dessus, c'est
-        faire pire qu'un ordre permanent."""
+        """Le prix moyen de la période. C'est l'étalon d'un achat régulier :
+        payer en dessous, c'est faire mieux que le hasard ; payer au-dessus,
+        c'est faire pire qu'un ordre permanent."""
 
         clotures = self.serie.clotures
         return sum(clotures) / len(clotures)
@@ -377,7 +377,7 @@ def scenarios() -> list[Scenario]:
         _fabriquer(
             "chute puis reprise",
             "−70 % en marché baissier, puis retour au départ. Le cas pour lequel "
-            "un DCA dynamique existe : il doit acheter beaucoup dans le creux.",
+            "un score contrarien existe : il doit acheter beaucoup dans le creux.",
             lambda t: 1.0 - 0.7 * math.sin(math.pi * t) ** 2 * (1 if t < 0.5 else 1),
             lambda t: 50 - 40 * math.sin(math.pi * t) ** 2,
         ),
@@ -413,7 +413,7 @@ def scenarios() -> list[Scenario]:
         _fabriquer(
             "creux profond isolé",
             "Plat, un −60 % d'un mois, puis plat à nouveau. Le cas qui mesure "
-            "si le DCA sait concentrer ses achats sur une fenêtre courte.",
+            "si la stratégie sait concentrer ses achats sur une fenêtre courte.",
             lambda t: 1.0 - 0.6 * math.exp(-(((t - 0.5) / 0.06) ** 2)),
             lambda t: 50 - 35 * math.exp(-(((t - 0.5) / 0.06) ** 2)),
         ),
