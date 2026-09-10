@@ -1870,8 +1870,8 @@ ou en ❌. Détail au §7 et dans
 `second-brain/lecons/2026-09-08-un-hote-refuse-au-mandataire-se-regarde-depuis-un-bac-a-sable.md`.
 
 **Le point 1 se mesure sur le fond composité, jamais sur le jeton.** Une carte
-à `bg-panneau/70` n'est pas `--color-panneau` : elle est le composite de
-`panneau` sur `nuit`. Un contraste juste calculé contre le mauvais fond est un
+dont le fond est `panneau` posé à 70 % d'opacité n'est pas `--color-panneau` :
+elle est le composite de `panneau` sur `nuit`. Un contraste juste calculé contre le mauvais fond est un
 nombre juste sur un objet qui n'existe pas — c'est ainsi qu'un défaut d'accent
 est resté intact pendant des semaines derrière une mesure parfaitement exacte
 (§2 bis, le cas d'Annuaria).
