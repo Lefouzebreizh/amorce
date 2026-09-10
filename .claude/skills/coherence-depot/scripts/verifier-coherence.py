@@ -420,7 +420,26 @@ def controler_chemins_cites(claude_md: str, releve: Releve) -> None:
         # `next/font`, `node:test` : des paquets, pas des chemins du dépôt.
         if (RACINE / "node_modules" / propre.split("/")[0]).exists():
             continue
+        # `Lefouzebreizh/amorce` : un dépôt GitHub, pas un chemin de fichier.
+        # La forme est indistinguable d'un chemin — deux segments séparés par
+        # une barre — et c'est le propriétaire du dépôt qui décide de sa
+        # graphie : le §8 bis le cite ainsi, mot pour mot, dans une checklist
+        # que ce contrôle ne doit pas pouvoir faire réécrire. Sans cette
+        # ligne, l'alerte est permanente, et une alerte permanente apprend à
+        # ignorer le vérificateur — ce que `CLAUDE.md` §7 bis dit déjà en
+        # propres termes à propos d'un autre faux positif de ce même contrôle.
+        if propre.lower() == "lefouzebreizh/amorce":
+            continue
         # Dernier recours : le fichier existe peut-être ailleurs dans l'arbre.
+        #
+        # Attention, ce recours rend le contrôle **non reproductible** : il
+        # cherche la feuille du chemin n'importe où, y compris dans des
+        # dossiers ignorés par git qui n'existent pas sur un clone frais.
+        # Mesuré le 10/09/2026 — `bg-panneau/70` passait en local, où un
+        # fichier nommé `70` traînait dans l'arbre, et échouait en intégration
+        # continue. Vérifier un ajout à `CLAUDE.md` sur une archive du commit
+        # (`git archive HEAD | tar -x -C …`) et non sur la copie de travail :
+        # c'est ce que fait le runner, et lui seul dit vrai.
         feuille = propre.split("/")[-1]
         if feuille and any(RACINE.rglob(f"**/{feuille}")):
             continue
