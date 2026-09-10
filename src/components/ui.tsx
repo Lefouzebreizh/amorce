@@ -16,14 +16,25 @@ export function Panel({
   subtitle,
   children,
   action,
+  statique = false,
 }: {
   title: string;
   subtitle?: string;
   children: ReactNode;
   action?: ReactNode;
+  /**
+   * Retire la réaction au survol, pour les cartes qui portent une zone de
+   * manipulation continue — dépôt de fichier, tracé, poignée qu'on fait
+   * glisser. Le soulèvement d'un pixel y déplacerait la cible sous le doigt
+   * pendant le geste, et un dépôt raté coûte plus que l'animation ne rapporte.
+   * La règle CSS neutralise déjà le cas `:active` ; cette propriété couvre le
+   * survol prolongé, qu'un glisser-déposer entretient sans jamais activer quoi
+   * que ce soit.
+   */
+  statique?: boolean;
 }) {
   return (
-    <section className="rounded-2xl bg-panel p-4">
+    <section className={`rounded-2xl bg-panel p-4${statique ? '' : ' carte-vive'}`}>
       <header className="mb-3.5 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-display text-[15px] leading-tight tracking-tight text-mist">{title}</h3>

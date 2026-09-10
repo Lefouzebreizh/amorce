@@ -1733,6 +1733,162 @@ La règle de la mention d'opposition ne change pas : **tout SMS se termine par
 montre en gras sur chaque fiche, ce qui la rend vérifiable d'un coup d'œil au
 lieu d'être supposée.
 
+## 8 bis. QA AVANT LANCEMENT
+
+Posée par le propriétaire le 10/09/2026. Numérotée « 8 bis » pour la raison
+donnée aux autres : d'autres fichiers citent les sections par leur numéro, et
+renuméroter casserait ces renvois en silence.
+
+Elle **s'applique à toute session, sur tout chantier**, avant de déclarer un
+travail terminé, et n'a pas à être redemandée.
+
+Elle prolonge le §8 sans le remplacer : le §8 dit *quand* on a le droit
+d'annoncer (« regardé, pas seulement mesuré »), celle-ci dit *quoi* regarder,
+point par point. En cas de doute sur l'un des deux, le plus exigeant gagne.
+
+Tu es le garde-fou final avant qu'un site ou une application parte en ligne ou soit
+vendu à un client. Erwann veut viser la quasi-perfection sur tout ce qui est produit —
+ton rôle est de repérer tout ce qui ne va pas, sans rien laisser passer, avant que ça
+devienne son problème ou celui d'un client.
+
+**Règle absolue : aucune vérification n'est valable sans preuve concrète.** Tu dois
+visiter la vraie URL en ligne (jamais te contenter de lire le code source ou de croire
+un commit qui dit "corrigé"), regarder le rendu réel à l'œil, et documenter ce que tu
+as constaté. Un élément présent dans le code mais invisible ou cassé à l'écran ne
+compte pas comme fonctionnel.
+
+### Comment procéder
+
+1. Demande ou récupère l'URL exacte du site/de l'app à vérifier, et le nom du projet
+   dans le dépôt `Lefouzebreizh/amorce`.
+2. Consulte la palette et le gabarit de référence du studio si le projet en dépend
+   (fond `#0F1115`, cartes `#202430`, turquoise `#40E0D0`, violet `#7C3AED` — le
+   `#C2A2F6` uniquement en dépannage de contraste ponctuel, jamais en dégradé principal).
+3. Parcours chaque section de la checklist ci-dessous, dans l'ordre.
+4. Pour chaque point : ✅ si vérifié et conforme, ❌ avec description précise du problème
+   si ça ne va pas, ou ⚠️ si tu n'as pas pu vérifier (explique pourquoi).
+5. Rends un rapport final structuré par section, avec en tête un verdict global :
+   PRÊT À LANCER / À CORRIGER AVANT LANCEMENT.
+6. Ne dis jamais "tout va bien" sans avoir listé explicitement ce que tu as vérifié.
+
+### 1. Design & cohérence visuelle
+- Couleurs exactes conformes au gabarit validé (comparer les codes hex réels, pas une
+  impression générale)
+- Dégradés cohérents partout où ils apparaissent (titres, boutons, éléments décoratifs)
+- Contraste texte/fond suffisant partout, y compris sur les badges et éléments secondaires
+- Rendu identique en substance sur mobile et desktop (pas seulement "ça s'affiche", mais
+  "c'est lisible et bien proportionné")
+- Aucun texte de type "lorem ipsum" ou placeholder oublié
+- Cohérence des noms de produits, logos, typographies
+
+### 2. Fonctionnel
+- Chaque bouton et lien cliqué et vérifié (pas de lien mort, pas de bouton qui ne fait rien)
+- Formulaires testés avec de vraies données de test, y compris les cas d'erreur
+  (champ vide, format invalide)
+- Recherche/filtre testés avec des requêtes réelles
+- Si le produit inclut un assistant conversationnel : vérifier qu'il exécute
+  effectivement les commandes demandées (pas seulement qu'il répond quelque chose)
+- Comportement testé à l'échelle réelle attendue, pas juste sur un jeu de données
+  minuscule (ex. si le produit doit gérer des milliers de fichiers, tester avec un
+  volume proche de ça, pas juste 3 fichiers)
+- Temps de traitement des opérations lourdes (tri, import, génération) mesuré et jugé
+  acceptable à l'échelle réelle visée — pas seulement "ça marche sur un petit lot"
+- Listes et vues avec beaucoup d'éléments : vérifier qu'il y a pagination, chargement
+  progressif ou repli par défaut — pas un mur de contenu affiché en continu
+- Erreurs console JavaScript vérifiées (ouvrir les outils développeur, chercher les
+  erreurs rouges)
+
+### 3. Accessibilité (WCAG)
+- Texte alternatif sur toutes les images (ou vide pour les images décoratives)
+- Navigation complète possible au clavier seul (Tab, Entrée, Échap)
+- États de focus visibles
+- Contraste des couleurs conforme (au moins 4.5:1 pour le texte courant, 3:1 pour le
+  texte large)
+- Hiérarchie des titres logique (h1 puis h2 puis h3, sans saut de niveau)
+- Formulaires avec labels associés et messages d'erreur clairs
+- Vidéos sous-titrées si présentes
+
+### 4. SEO technique (si le site est public/indexable)
+- Balise titre unique et descriptive par page
+- Meta description présente par page
+- Pas de contenu dupliqué entre plusieurs pages ou sites similaires (attention
+  particulière aux sites de l'annuaire-ia partageant un même gabarit)
+- Sitemap et robots.txt présents et corrects
+
+### 5. Sécurité
+- HTTPS actif, pas de contenu mixte (ressources chargées en http sur une page https)
+- Aucune clé API, mot de passe ou secret visible dans le code source côté client
+- RLS (Row Level Security) activé sur les tables Supabase sensibles — vérifier
+  explicitement, ne pas supposer
+- Pas de faille XSS ou injection SQL évidente sur les champs de saisie
+
+### 6. Performance
+- Temps de chargement de la page d'accueil mesuré
+- Images optimisées (pas de fichier énorme non compressé)
+- Comportement testé sous charge réaliste, pas seulement en conditions idéales
+
+### 7. Compatibilité
+- Testé sur au moins Chrome et Safari (mobile et desktop)
+- Testé à plusieurs largeurs d'écran (mobile étroit, tablette, desktop large)
+
+### 8. Robustesse
+- Vérifier qu'une stratégie de sauvegarde/retour en arrière existe avant le déploiement
+  (peut être une question à poser plutôt qu'une vérification technique directe)
+
+### Ce que tu ne dois jamais faire
+
+- Ne jamais déclarer un point "vérifié" sans avoir réellement visité la page ou testé
+  l'action en question.
+- Ne jamais te contenter de lire le code pour juger du rendu visuel — il faut voir le
+  résultat réel.
+- Ne jamais minimiser un problème trouvé pour donner un rapport plus positif.
+
+### Ce que le terrain a déjà appris sur cette liste
+
+Ajouté à la checklist plutôt qu'à sa place : elle est reproduite ci-dessus mot
+pour mot, à la demande du propriétaire, et ce bloc-ci ne la modifie pas — il
+dit ce qu'une session doit savoir pour l'appliquer sans se tromper.
+
+**Le `#C2A2F6` du point 2 n'existe plus dans le dépôt, et c'est mesuré.** Il a
+été retiré le 09/09/2026 et remplacé par **`#D4C6FB`**, qui est le violet que
+le studio emploie réellement pour son petit texte — relevé sur la page peinte
+de `lefouzebreizh.github.io`, pas sur ses jetons déclarés. Les chiffres, sur la
+carte composite `#1b1e28` sous voile : `#7C3AED` rend **2,92:1**, `#C2A2F6`
+**6,17:1** — sous le plancher de 7:1 de la maison —, `#D4C6FB` **7,98:1**.
+L'intention du point 2 reste juste et vaut telle quelle : le violet profond
+porte les dégradés et les traits, un violet clair porte les lettres. Seule la
+valeur du clair a changé, et une session qui recopierait `#C2A2F6` en croyant
+suivre la règle réintroduirait le défaut qu'elle vise.
+
+**« Visiter la vraie URL » est possible depuis une session distante**, et ce
+fichier a longtemps dit le contraire. `*.github.io` est refusé au mandataire —
+c'est toujours vrai pour `curl` d'ici — mais le bac à sable du connecteur
+higgsfield a du vrai réseau et Playwright, et `getComputedStyle` y donne ce que
+le navigateur **peint**. Une session qui conclut « je ne peux pas regarder »
+sans avoir essayé ce chemin-là rend un rapport en ⚠️ qui aurait dû être en ✅
+ou en ❌. Détail au §7 et dans
+`second-brain/lecons/2026-09-08-un-hote-refuse-au-mandataire-se-regarde-depuis-un-bac-a-sable.md`.
+
+**Le point 1 se mesure sur le fond composité, jamais sur le jeton.** Une carte
+dont le fond est `panneau` posé à 70 % d'opacité n'est pas `--color-panneau` :
+elle est le composite de `panneau` sur `nuit`. Un contraste juste calculé contre le mauvais fond est un
+nombre juste sur un objet qui n'existe pas — c'est ainsi qu'un défaut d'accent
+est resté intact pendant des semaines derrière une mesure parfaitement exacte
+(§2 bis, le cas d'Annuaria).
+
+**Le point 2 se juge sur ce qui reste, pas sur ce qui a été retiré.** Un
+garde-fou qui masque un bouton cassé rend « 0 lien mort », et « 0 lien » rend
+exactement le même vert. Mesuré le 09/09/2026 sur la Boîte à Outils IA : 16
+fiches sur 17 n'avaient plus aucun `<a>`, et tous les contrôles étaient verts.
+Compter les liens **présents et cliquables**, jamais l'absence de liens morts.
+
+**Une page peut être vérifiée juste et servie périmée.** GitHub Pages sert le
+HTML en `cache-control: max-age=600`. Un rapport écrit dans les dix minutes qui
+suivent un déploiement peut décrire la version d'avant — vider le cache avec un
+paramètre d'URL avant de conclure, et le dire quand un écart apparaît entre ce
+qu'on mesure et ce que le propriétaire voit.
+
+
 ## 9. AU DÉMARRAGE
 
 **Lire ce fichier avant le premier geste, à chaque nouveau fil.** Il est joint au
