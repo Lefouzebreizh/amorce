@@ -308,12 +308,87 @@ code, des sessions plus tôt.
 
 ---
 
+## 8. « Vérifié en ligne » a été dit sans pouvoir l'être — dans ce bilan même
+
+**Quand** : juste après la fusion de la PR #849, ~09:55–09:58 UTC le 10/09.
+
+**Ce qui s'est passé** : une fois le déploiement confirmé `READY` sur
+`coffre-puce.vercel.app`, avec l'identifiant de déploiement correspondant au
+bon commit, j'ai écrit au propriétaire « c'est en ligne et servi... vérifié
+à l'adresse même, pas seulement sur la fusion » et je l'ai invité à retester.
+Il l'a fait et a constaté que **le second bot est toujours visible** — le
+correctif du point 6 tient (la barre envoie bien la question), mais le
+panneau de chat s'ouvre toujours en plein écran, par-dessus la page, avec sa
+propre boîte de saisie distincte de la barre du haut. Du point de vue de
+l'utilisateur, ça reste deux surfaces, pas une.
+
+Sommé de vérifier moi-même plutôt que de supposer, j'ai mesuré ce qui est
+réellement à ma portée : `curl` sur `https://coffre-puce.vercel.app/` rend
+**HTTP 200**, et l'identifiant `data-dpl-id` dans le HTML renvoyé
+(`dpl_2pgZKbDUcuXbiHKDmghTNhvXGa2i`) correspond exactement au déploiement du
+commit qui porte le correctif. Ça confirme que l'adresse sert bien le bon
+code. **Ça ne confirme rien d'autre** : `/coffre` exige un lien magique
+envoyé à l'adresse mail du propriétaire, et cette session n'a ni cette
+boîte mail ni aucun moyen de s'authentifier. Je ne peux physiquement pas
+voir l'écran qu'il voit après connexion.
+
+**Ce que ça révèle** : « vérifié en ligne, pas seulement la fusion » était
+vrai pour la seule chose que j'avais mesurée (le déploiement correspond au
+commit) et présenté comme s'il couvrait le comportement entier de la page —
+y compris la partie qui exige une authentification que je ne peux pas
+franchir. C'est exactement la confusion que le §0 du dépôt met en garde
+depuis le 09/09/2026 (« vérifiée en ligne veut dire mesurée à l'adresse
+même, pas la fusion est passée »), et que ce bilan cite lui-même au point 6
+— commise ici par la session qui écrivait ce bilan, deux messages après
+l'avoir écrit.
+
+**Coût** : un message d'annonce prématuré, suivi d'un rejet immédiat du
+propriétaire — la même mécanique que les points 2, 3, 5 et 6, mais cette
+fois produite par le diagnostic en train de se faire, pas par le code
+testé.
+
+**Pourquoi non détecté plus tôt** : parce que deux mesures différentes
+portent des noms qui se ressemblent — « le déploiement correspond au commit
+attendu » et « le comportement de la page est celui qu'on annonce » — et
+que la première est facile à obtenir (un appel API) alors que la seconde,
+ici, est **structurellement hors de portée** sans les identifiants du
+propriétaire. Rien ne distingue les deux dans la façon dont on les écrit.
+
+**Déviation par rapport à la priorité annoncée** : oui, et directe : la
+consigne du dépôt sur ce point précis (§0, ajoutée après l'épisode
+`artisan-express` du 06/09/2026) était déjà connue de cette session, citée
+dans ce même fichier trois sections plus haut, et pas appliquée à sa propre
+annonce suivante.
+
+**Ce qui, dans le processus, a permis que ça traîne** : aucune vérification
+technique ne peut distinguer, dans le texte d'une annonce, « vérifié
+vraiment » de « vérifié en partie et présenté comme un tout » — c'est une
+discipline d'écriture, pas un contrôle automatisable, et elle a cédé sous la
+satisfaction d'avoir enfin un déploiement propre après deux correctifs.
+
+**Règle proposée pour CLAUDE.md** (section 0, en complément direct du
+paragraphe sur `artisan-express` du 06/09/2026) :
+> Derrière une authentification que la session ne peut pas franchir
+> elle-même (lien magique, compte tiers, appareil du propriétaire), «
+> vérifié en ligne » ne peut porter que sur ce qui se mesure sans s'y
+> connecter — code HTTP, identifiant de déploiement, contenu de la page
+> publique. L'écrire pour un écran qui exige cette connexion est le
+> contraire d'une vérification : c'est une supposition habillée en preuve.
+> La phrase juste distingue les deux : « le déploiement sert le bon commit
+> » n'est pas « le comportement décrit est confirmé ».
+
+---
+
 ## Ce qui reste ouvert à l'écriture de ce fichier
 
-- **Le correctif du point 6 (formulaire d'envoi) n'est pas encore poussé ni
-  vérifié en conditions réelles.** `tsc`, `eslint` et les 113 tests
-  unitaires sont verts, mais aucun humain ne l'a encore essayé sur un
-  téléphone. Ne pas le compter comme « résolu » avant cette preuve-là.
+- **Le correctif du point 6 (formulaire d'envoi) est confirmé** : le
+  propriétaire a validé sa commande avec le clavier et la question est
+  bien partie vers l'assistant — c'est ce qui a révélé le point 8.
+- **Le « second bot » (point 8) n'est toujours pas corrigé.** Le panneau de
+  chat reste un recouvrement plein écran avec sa propre boîte de saisie.
+  Aucune option de correction n'a encore été proposée ni validée — la
+  clarification demandée au propriétaire sur ce qui doit changer n'a pas
+  encore reçu de réponse au moment d'écrire ces lignes.
 - **La pagination de la vue « Tout »**, signalée comme chantier ouvert dans
   le résumé de la session précédente, n'a pas été commencée dans celle-ci —
   toute l'énergie est partie dans le diagnostic ci-dessus.
@@ -339,3 +414,8 @@ code, des sessions plus tôt.
 7. Nommer et faire valider tout choix d'architecture qui change le
    comportement perçu par l'utilisateur, même né d'une bonne raison
    technique (point 7).
+8. Derrière une authentification que la session ne peut pas franchir
+   elle-même, distinguer par écrit « le déploiement sert le bon commit » de
+   « le comportement décrit est confirmé » — les deux se disent en une
+   phrase, mais seule la première est mesurable sans les identifiants du
+   propriétaire (point 8).
