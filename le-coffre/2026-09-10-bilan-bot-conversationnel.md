@@ -1,9 +1,11 @@
-# Bilan — pourquoi tester le bot conversationnel a pris deux sessions et cinq allers-retours
+# Bilan — pourquoi tester le bot conversationnel a pris deux sessions et de nombreux allers-retours
 
-Écrit le 10/09/2026, à la demande explicite du propriétaire, après le correctif
-de la barre de recherche (PR #847, fusionnée) et l'implémentation du « une
-seule barre, un seul bot » (en cours de vérification à l'écriture de ce
-fichier — **non confirmée en conditions réelles**, voir tout en bas).
+Écrit le 10/09/2026, à la demande explicite du propriétaire, puis complété au
+fil des mêmes défauts qui continuaient de se produire. Après le correctif de
+la barre de recherche (PR #847, fusionnée) et l'implémentation du « une seule
+barre, un seul bot » (PR #849, #861, fusionnées) — **le comportement réel une
+fois connecté reste non confirmé à l'écriture de ce fichier**, voir points 8
+et 9.
 
 Méthode : chaque horodatage ci-dessous vient d'une source vérifiable — les
 journaux Supabase (`function_logs`), les métadonnées Vercel, les horodatages
@@ -397,6 +399,52 @@ paragraphe sur `artisan-express` du 06/09/2026) :
   réels, jamais une mesure directe du temps perdu par le propriétaire lui-même
   sur son téléphone.
 
+---
+
+## 9. Le point 8 reproduit deux tours plus tard, par la session qui venait de l'écrire
+
+**Quand** : ~10:11–10:17 UTC le 10/09, après la fusion de PR #861.
+
+**Ce qui s'est passé** : dans le même message qui portait la réserve exacte du
+point 8 (« ça confirme que le bon code est en ligne, pas que l'affichage te
+convient »), le paragraphe **précédent** cette réserve ouvrait par « Fusionné
+et servi — vérifié à l'adresse même ». La réserve était vraie et bien écrite ;
+elle suivait une phrase de clôture qui, elle, se lit comme réglant le sujet.
+Le propriétaire a dû signaler une seconde fois, plus fermement, exactement le
+même défaut que le point 8 venait de nommer — commis par la session qui
+l'avait nommé, deux tours plus tôt dans le **même fil**.
+
+**Coût** : un troisième aller-retour sur le même sujet dans une seule session,
+avec une frustration croissante et légitime du propriétaire.
+
+**Pourquoi non détecté plus tôt** : écrire une réserve juste après une
+affirmation ne suffit pas à neutraliser l'affirmation — un lecteur pressé, sur
+un téléphone, retient la première phrase forte (« Fusionné et servi »), pas la
+nuance qui la suit deux lignes plus bas. La règle proposée au point 8 portait
+sur *la distinction à faire*, pas sur *l'ordre et la forme* dans lesquels
+l'écrire — et c'est cette seconde moitié qui manquait.
+
+**Déviation par rapport à la priorité annoncée** : oui, envers ma propre règle
+du point 8, écrite dans ce fichier même quelques minutes plus tôt et non
+appliquée à la phrase suivante que j'ai écrite.
+
+**Ce qui, dans le processus, a permis que ça traîne** : rien ne vérifie
+qu'une réserve de portée limitée est placée **avant** toute affirmation
+positive plutôt qu'après, ni qu'une phrase de clôture (« fusionné et servi »,
+« réglé », « en ligne ») n'est jamais utilisée quand la vérification est
+connue comme partielle. Une leçon écrite ne s'applique pas toute seule au
+message suivant.
+
+**Règle proposée pour CLAUDE.md** (section 0, à la suite directe de celle du
+point 8) :
+> Quand une vérification est partielle et connue comme telle, la limite se
+> nomme **en tête** de la phrase qui l'annonce, jamais en réserve après une
+> conclusion positive. Des mots qui supposent la totalité (« fusionné et
+> servi », « réglé », « en ligne », « c'est bon ») ne s'emploient jamais
+> devant une vérification qu'on sait partielle — même si la phrase suivante
+> corrige. Un lecteur pressé retient la première affirmation forte, pas la
+> nuance qui la suit.
+
 ## Règles proposées, groupées pour relecture avant ajout à CLAUDE.md
 
 1. Vérifier explicitement qu'une fonction Supabase modifiée a été redéployée
@@ -419,3 +467,6 @@ paragraphe sur `artisan-express` du 06/09/2026) :
    « le comportement décrit est confirmé » — les deux se disent en une
    phrase, mais seule la première est mesurable sans les identifiants du
    propriétaire (point 8).
+9. Nommer une limite de vérification en tête de phrase, jamais en réserve
+   après une conclusion positive — un lecteur pressé retient la première
+   affirmation forte, pas la nuance qui la suit (point 9).

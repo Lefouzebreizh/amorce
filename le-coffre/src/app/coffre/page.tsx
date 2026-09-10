@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import {
   Bell, Briefcase, Car, ChevronRight, File, FileText, Folder, Heart, Home, Landmark, LogOut,
-  MessageCircle, Plus, Search, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
+  Plus, Search, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -1443,6 +1443,16 @@ export default function PageCoffre() {
                     pour une recherche vide, où elle n'apporterait rien. Le
                     bouton ci-dessous reste un accès explicite à la souris ou
                     au clic, en plus de la validation du formulaire ci-dessus. */}
+                {/* Un seul geste pour parler au bot : valider le formulaire
+                    ci-dessus (Entrée, ou la touche d'envoi du clavier
+                    mobile). Les deux boutons qui vivaient ici — un pour « une
+                    question plus large » sur barre vide, un pour « Demander à
+                    l'assistant » sur barre pleine — ouvraient une seconde
+                    porte vers le même bot que la validation du formulaire.
+                    Retirés le 10/09/2026 : plus qu'une seule façon d'y
+                    entrer. Ne reste que ce que la recherche locale propose
+                    elle-même — un raccourci vers un autre écran, jamais vers
+                    le bot. */}
                 {recherche.trim() && (
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm text-accent">{reponseRecherche}</p>
@@ -1464,38 +1474,7 @@ export default function PageCoffre() {
                         <FileText size={12} /> Remplir un formulaire
                       </button>
                     )}
-                    {/* Toujours proposé dès qu'il y a du texte, même quand la
-                        recherche locale trouve un document — une commande
-                        (« range X dans Y ») cite presque toujours le nom
-                        exact d'un document réel, donc « trouve quelque
-                        chose » ne veut pas dire « la recherche locale a
-                        répondu à la demande ». Restreindre ce bouton aux
-                        recherches sans résultat le rendait invisible pile
-                        pour les phrases qui en avaient le plus besoin
-                        (09/09/2026). */}
-                    {!actionRecherche && (
-                      <button
-                        type="button"
-                        onClick={() => demanderAAssistant(recherche.trim())}
-                        className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-accent/60"
-                      >
-                        <MessageCircle size={12} /> Demander à l&apos;assistant
-                      </button>
-                    )}
                   </div>
-                )}
-                {/* Toujours visible, discret : la porte vers une question qui
-                    ne concerne aucun document précis (« comment résilier une
-                    assurance habitation »), sans dupliquer la barre du haut
-                    ni ouvrir un second champ de saisie. */}
-                {!recherche.trim() && (
-                  <button
-                    type="button"
-                    onClick={() => demanderAAssistant('')}
-                    className="self-start text-xs text-ink-soft underline decoration-dotted transition hover:text-ink"
-                  >
-                    Une question plus large ? Demander à l&apos;assistant
-                  </button>
                 )}
               </div>
             )}
