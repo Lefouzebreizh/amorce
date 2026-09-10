@@ -1415,7 +1415,21 @@ export default function PageCoffre() {
             </div>
             {tousLesNoms.length > 0 && (
               <div className="mb-4 flex flex-col gap-2">
-                <div className="relative">
+                {/* Une seule barre, un seul bot (10/09/2026) : elle filtre
+                    la liste localement à la frappe (gratuit, instantané),
+                    mais la valider — Entrée, ou la loupe native du clavier
+                    mobile, qui déclenche un `submit` sur un input type=search
+                    posé dans un <form>, pas un `keydown` — part toujours vers
+                    l'assistant. Avant ce `<form>`, ce geste n'était écouté
+                    nulle part : le bouton « recherche » du clavier Android ne
+                    déclenchait rien, aucune erreur, aucun signe. */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (recherche.trim()) demanderAAssistant(recherche.trim());
+                  }}
+                  className="relative"
+                >
                   <Search size={18} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft" />
                   <input
                     type="search"
@@ -1424,14 +1438,11 @@ export default function PageCoffre() {
                     placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
                     className="w-full rounded-xl border border-line bg-paper-raised py-2.5 pr-3 pl-10 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
                   />
-                </div>
+                </form>
                 {/* Réponse du coffre à la question posée — jamais affichée
-                    pour une recherche vide, où elle n'apporterait rien.
-                    Point d'entrée unique désormais : quand la recherche
-                    locale (gratuite, instantanée) ne trouve rien, une puce
-                    propose d'escalader vers l'assistant (payant) avec la
-                    même question — jamais automatique, pour ne pas facturer
-                    une simple faute de frappe. */}
+                    pour une recherche vide, où elle n'apporterait rien. Le
+                    bouton ci-dessous reste un accès explicite à la souris ou
+                    au clic, en plus de la validation du formulaire ci-dessus. */}
                 {recherche.trim() && (
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm text-accent">{reponseRecherche}</p>
