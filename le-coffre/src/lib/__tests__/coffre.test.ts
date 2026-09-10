@@ -494,6 +494,29 @@ describe('la catégorie instantanée', () => {
     assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Audio'), false);
     assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Autre'), false);
   });
+
+  // Posé le 10/09/2026 après un test réel : un SVG bucketé « Images » par
+  // categorieInstantanee ne doit jamais partir vers classer-document, qui le
+  // ferait échouer à coup sûr — Claude ne lit que jpeg/png/gif/webp (voir
+  // platform.claude.com/docs/en/build-with-claude/vision).
+  it('n’affine par IA que les formats d’image que Claude sait lire', () => {
+    assert.equal(coffre.affinableParIA('Images', 'image/jpeg'), true);
+    assert.equal(coffre.affinableParIA('Images', 'image/png'), true);
+    assert.equal(coffre.affinableParIA('Images', 'image/gif'), true);
+    assert.equal(coffre.affinableParIA('Images', 'image/webp'), true);
+    assert.equal(coffre.affinableParIA('Images', 'image/svg+xml'), false);
+    assert.equal(coffre.affinableParIA('Images', 'image/bmp'), false);
+  });
+
+  it('n’affine par IA un « Papier » que si c’est vraiment un PDF', () => {
+    assert.equal(coffre.affinableParIA('Papiers', 'application/pdf'), true);
+  });
+
+  it('n’affine jamais Vidéos, Audio ou Autre, quel que soit le type', () => {
+    assert.equal(coffre.affinableParIA('Vidéos', 'video/mp4'), false);
+    assert.equal(coffre.affinableParIA('Audio', 'audio/mpeg'), false);
+    assert.equal(coffre.affinableParIA('Autre', 'application/zip'), false);
+  });
 });
 
 // ─────────────────────────────── L'assistant ───────────────────────────────

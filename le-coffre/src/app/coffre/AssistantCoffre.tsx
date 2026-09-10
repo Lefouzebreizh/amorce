@@ -29,7 +29,11 @@ type Message = TourConversation & {
 type EtatTriAutomatique = {
   enCours: boolean;
   progres: { fait: number; total: number } | null;
-  bilan: { erreursTechniques: string[] } | null;
+  // erreursTechniques : encore réessayables (« Réessayer » les reprendra).
+  // abandonnes : ont atteint le plafond de tentatives — Réessayer ne les
+  // reprend plus, ils gardent leur catégorie générale (Images/Papiers) pour
+  // de bon, voir TENTATIVES_TRI_AUTO_MAX dans page.tsx.
+  bilan: { erreursTechniques: string[]; abandonnes: string[] } | null;
   detailOuvert: boolean;
 };
 
@@ -332,6 +336,17 @@ export function AssistantCoffre({
                               ))}
                             </div>
                           )}
+                        </div>
+                      )}
+                      {triAuto.bilan && triAuto.bilan.abandonnes.length > 0 && (
+                        <div className="flex w-full flex-col gap-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-xs text-ink-soft">
+                          <p>
+                            {triAuto.bilan.abandonnes.length} fichier{triAuto.bilan.abandonnes.length > 1 ? 's' : ''} n&apos;
+                            {triAuto.bilan.abandonnes.length > 1 ? 'ont' : 'a'} pas pu être analysé
+                            {triAuto.bilan.abandonnes.length > 1 ? 's' : ''} par l&apos;IA après plusieurs
+                            tentatives — {triAuto.bilan.abandonnes.length > 1 ? 'ils restent' : 'il reste'} classé
+                            {triAuto.bilan.abandonnes.length > 1 ? 's' : ''} dans leur dossier général (Images/Papiers).
+                          </p>
                         </div>
                       )}
                     </div>
