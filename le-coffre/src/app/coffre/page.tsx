@@ -616,8 +616,14 @@ export default function PageCoffre() {
     setErreur('');
     let indexCourant = index;
     const echecs: string[] = [];
+    // Un fichier dont le dépôt échoue reste dans la liste d'attente (pour
+    // que l'utilisateur le voie et le corrige) mais ne doit pas être
+    // retenté à chaque tour de la boucle ci-dessous — sinon un échec
+    // persistant (réseau, quota) transforme l'attente des fichiers encore
+    // en lecture en une boucle infinie sur ce même fichier en échec.
+    const dejaEnEchec = new Set<string>();
     for (;;) {
-      const prets = aValiderRef.current.filter((p) => !p.enAnalyse);
+      const prets = aValiderRef.current.filter((p) => !p.enAnalyse && !dejaEnEchec.has(p.cle));
       if (prets.length === 0) {
         if (aValiderRef.current.some((p) => p.enAnalyse)) {
           await new Promise((resolve) => setTimeout(resolve, 300));
@@ -636,6 +642,7 @@ export default function PageCoffre() {
           retirerAttente(item.cle);
         } catch (err) {
           echecs.push(`${item.nomAffiche} (${err instanceof Error ? err.message : String(err)})`);
+          dejaEnEchec.add(item.cle);
         }
       }
     }
