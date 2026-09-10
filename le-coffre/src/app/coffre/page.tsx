@@ -1266,6 +1266,91 @@ export default function PageCoffre() {
           </button>
         </header>
 
+        {/* Barre « pose ta question » — hors de la grille et juste sous
+            l'en-tête (10/09/2026), plus haut de page mais plus respirée :
+            avant, elle vivait tout en bas de la colonne de gauche, dans la
+            même condition que la liste de papiers (`tousLesNoms.length > 0`)
+            — donc absente du DOM pour un coffre encore vide, exactement le
+            moment où avoir un point d'entrée pour demander de l'aide compte
+            le plus. Elle est désormais toujours affichée, centrée dans son
+            propre bloc plutôt que collée au bord supérieur de l'écran. */}
+        <div className="rounded-3xl border border-line bg-paper-raised p-6 sm:p-10">
+          <p className="text-center font-affiche text-xl texte-degrade sm:text-2xl">
+            Qu&apos;est-ce que je cherche pour toi ?
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (recherche.trim()) demanderAAssistant(recherche.trim());
+            }}
+            className="relative mx-auto mt-5 max-w-xl"
+          >
+            <Search size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" />
+            <input
+              type="search"
+              value={recherche}
+              onChange={(e) => setRecherche(e.target.value)}
+              placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
+              className="w-full rounded-2xl border border-line bg-paper py-3.5 pr-4 pl-12 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+          </form>
+          {recherche.trim() && (
+            <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
+              <p className="text-sm text-accent">{reponseRecherche}</p>
+              {actionRecherche === 'rangement' && (
+                <button
+                  type="button"
+                  onClick={() => { setRecherche(''); setVueDossiers(true); }}
+                  className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                >
+                  <Folder size={12} /> Ranger en dossiers
+                </button>
+              )}
+              {actionRecherche === 'formulaire' && (
+                <button
+                  type="button"
+                  onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
+                  className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                >
+                  <FileText size={12} /> Remplir un formulaire
+                </button>
+              )}
+            </div>
+          )}
+          {/* Une seule barre, un seul bot (10/09/2026) : la conversation
+              s'affiche ici, directement sous la barre qui l'a ouverte — plus
+              de panneau plein écran séparé. */}
+          {assistantOuvert && (
+            <div className="mx-auto mt-5 max-w-xl">
+              <AssistantCoffre
+                index={index}
+                questionInitiale={questionAssistant}
+                onFermer={fermerAssistant}
+                // `documentsCites` porte le nom AFFICHÉ (voir digestIndex
+                // côté serveur), jamais la clé opaque qu'attend
+                // ouvrirDetail — sans cette résolution, cliquer un document
+                // cité n'ouvrait rien.
+                onOuvrirDocument={(nomAffiche) => {
+                  const cleStockage = clesParNomAffiche(index, nomAffiche)[0];
+                  if (cleStockage) ouvrirDetail(cleStockage);
+                }}
+                onOuvrirFormulaire={() => setFormulaireOuvert(true)}
+                onOuvrirRangement={() => setVueDossiers(true)}
+                onExecuterAction={executerActionAssistant}
+                onPreparerFormulaireCerfa={preparerFormulaireCerfa}
+                triAuto={{
+                  enCours: triAutoEnCours,
+                  progres: triAutoProgres,
+                  bilan: triAutoBilan,
+                  detailOuvert: triAutoDetailOuvert,
+                }}
+                onLancerTriAutomatique={trierAutomatiquement}
+                onBasculerDetailTriAutomatique={() => setTriAutoDetailOuvert((v) => !v)}
+              />
+            </div>
+          )}
+        </div>
+
         {/* Accès direct à rendez-vous / identité / formulaire, en un tap
             depuis le haut de l'écran — sans ça, un coffre chargé (89 papiers
             vus en usage réel) oblige à faire défiler tout le fil des
@@ -1438,103 +1523,6 @@ export default function PageCoffre() {
                 <Folder size={14} /> {vueDossiers ? 'Revenir à la liste' : 'Ranger en dossiers'}
               </button>
             </div>
-            {tousLesNoms.length > 0 && (
-              <div className="mb-4 flex flex-col gap-2">
-                {/* Une seule barre, un seul bot (10/09/2026) : elle filtre
-                    la liste localement à la frappe (gratuit, instantané),
-                    mais la valider — Entrée, ou la loupe native du clavier
-                    mobile, qui déclenche un `submit` sur un input type=search
-                    posé dans un <form>, pas un `keydown` — part toujours vers
-                    l'assistant. Avant ce `<form>`, ce geste n'était écouté
-                    nulle part : le bouton « recherche » du clavier Android ne
-                    déclenchait rien, aucune erreur, aucun signe. */}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (recherche.trim()) demanderAAssistant(recherche.trim());
-                  }}
-                  className="relative"
-                >
-                  <Search size={18} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft" />
-                  <input
-                    type="search"
-                    value={recherche}
-                    onChange={(e) => setRecherche(e.target.value)}
-                    placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
-                    className="w-full rounded-xl border border-line bg-paper-raised py-2.5 pr-3 pl-10 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
-                  />
-                </form>
-                {/* Réponse du coffre à la question posée — jamais affichée
-                    pour une recherche vide, où elle n'apporterait rien. Le
-                    bouton ci-dessous reste un accès explicite à la souris ou
-                    au clic, en plus de la validation du formulaire ci-dessus. */}
-                {/* Un seul geste pour parler au bot : valider le formulaire
-                    ci-dessus (Entrée, ou la touche d'envoi du clavier
-                    mobile). Les deux boutons qui vivaient ici — un pour « une
-                    question plus large » sur barre vide, un pour « Demander à
-                    l'assistant » sur barre pleine — ouvraient une seconde
-                    porte vers le même bot que la validation du formulaire.
-                    Retirés le 10/09/2026 : plus qu'une seule façon d'y
-                    entrer. Ne reste que ce que la recherche locale propose
-                    elle-même — un raccourci vers un autre écran, jamais vers
-                    le bot. */}
-                {recherche.trim() && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm text-accent">{reponseRecherche}</p>
-                    {actionRecherche === 'rangement' && (
-                      <button
-                        type="button"
-                        onClick={() => { setRecherche(''); setVueDossiers(true); }}
-                        className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                      >
-                        <Folder size={12} /> Ranger en dossiers
-                      </button>
-                    )}
-                    {actionRecherche === 'formulaire' && (
-                      <button
-                        type="button"
-                        onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
-                        className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                      >
-                        <FileText size={12} /> Remplir un formulaire
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-            {/* Une seule barre, un seul bot (10/09/2026) : la conversation
-                s'affiche ici, directement sous la barre qui l'a ouverte —
-                plus de panneau plein écran séparé. */}
-            {assistantOuvert && (
-              <div className="mb-4">
-                <AssistantCoffre
-                  index={index}
-                  questionInitiale={questionAssistant}
-                  onFermer={fermerAssistant}
-                  // `documentsCites` porte le nom AFFICHÉ (voir digestIndex
-                  // côté serveur), jamais la clé opaque qu'attend
-                  // ouvrirDetail — sans cette résolution, cliquer un
-                  // document cité n'ouvrait rien.
-                  onOuvrirDocument={(nomAffiche) => {
-                    const cleStockage = clesParNomAffiche(index, nomAffiche)[0];
-                    if (cleStockage) ouvrirDetail(cleStockage);
-                  }}
-                  onOuvrirFormulaire={() => setFormulaireOuvert(true)}
-                  onOuvrirRangement={() => setVueDossiers(true)}
-                  onExecuterAction={executerActionAssistant}
-                  onPreparerFormulaireCerfa={preparerFormulaireCerfa}
-                  triAuto={{
-                    enCours: triAutoEnCours,
-                    progres: triAutoProgres,
-                    bilan: triAutoBilan,
-                    detailOuvert: triAutoDetailOuvert,
-                  }}
-                  onLancerTriAutomatique={trierAutomatiquement}
-                  onBasculerDetailTriAutomatique={() => setTriAutoDetailOuvert((v) => !v)}
-                />
-              </div>
-            )}
             {categoriesConnues.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
                 <button type="button" onClick={() => setFiltreCategorie(null)}

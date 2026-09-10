@@ -1,15 +1,27 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { EnregistrerServiceWorker } from './EnregistrerServiceWorker';
 
 export const metadata: Metadata = {
   title: 'Le Tiroir Secret — tes papiers, tes échéances',
   description:
     'Dépose tes papiers administratifs, chiffrés de bout en bout — rien de lisible ne sort de ton navigateur, pas même vers nous.',
   robots: { index: true, follow: true },
+  // PWA installable, lancée sans chrome de navigateur visible — voir
+  // `manifest.ts` pour les icônes et `sw.js` pour ce qui la rend
+  // installable et rechargeable hors ligne.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Tiroir Secret',
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#16151a',
+  // Turquoise lagon (`--color-accent` de globals.css), la couleur d'action
+  // de l'application — remplace un `#16151a` qui ne correspondait à aucune
+  // teinte de la palette (10/09/2026).
+  themeColor: '#40e0d0',
 };
 
 export default function RacineMiseEnPage({ children }: { children: React.ReactNode }) {
@@ -23,7 +35,10 @@ export default function RacineMiseEnPage({ children }: { children: React.ReactNo
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <EnregistrerServiceWorker />
+      </body>
     </html>
   );
 }
