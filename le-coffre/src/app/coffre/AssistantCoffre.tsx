@@ -19,6 +19,9 @@ type Message = TourConversation & {
   // `actions` — jamais réinitialisé, pour qu'une action faite reste
   // affichée comme faite plutôt que de reproposer un bouton « Confirmer ».
   actionsExecutees?: Record<number, string>;
+  // Un CERFA officiel trouvé par recherche web pour une démarche nommée par
+  // l'utilisateur — voir onPreparerFormulaireCerfa plus bas.
+  formulaireCerfa?: { demarche: string; url: string } | null;
 };
 
 // État du tri en lot, porté par page.tsx (deux passes — instantanée puis IA,
@@ -45,7 +48,7 @@ function libelleAction(a: ActionAssistant): string {
 
 export function AssistantCoffre({
   index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement,
-  onExecuterAction, triAuto, onLancerTriAutomatique, onBasculerDetailTriAutomatique,
+  onExecuterAction, onPreparerFormulaireCerfa, triAuto, onLancerTriAutomatique, onBasculerDetailTriAutomatique,
 }: {
   index: IndexCoffre;
   // Posée par la recherche locale restée sans résultat, envoyée une seule
@@ -60,6 +63,12 @@ export function AssistantCoffre({
   // confirmation de l'utilisateur — jamais toute seule. Rend un message
   // court à afficher à la place du bouton, succès ou échec.
   onExecuterAction: (action: ActionAssistant) => Promise<string>;
+  // Télécharge le CERFA trouvé, en lit les champs et propose des valeurs
+  // tirées des papiers du coffre, puis ouvre l'écran de remplissage déjà
+  // rempli — jamais généré ni téléchargé sans que l'utilisateur ne le voie
+  // d'abord. Lève une erreur (message affiché) si le formulaire n'a pas pu
+  // être récupéré ou lu.
+  onPreparerFormulaireCerfa: (demarche: string, url: string) => Promise<void>;
   // Tri en lot : état et déclencheurs portés par page.tsx, affichés ici
   // seulement quand un message porte `declencherTriAutomatique`.
   triAuto: EtatTriAutomatique;
@@ -68,6 +77,10 @@ export function AssistantCoffre({
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState('');
+  // Préparation d'un CERFA en cours — indexé sur le message, pour désactiver
+  // seulement son propre bouton pendant l'appel, sans bloquer le reste du chat.
+  const [cerfaEnCours, setCerfaEnCours] = useState<number | null>(null);
+  const [erreurCerfa, setErreurCerfa] = useState<{ indexMessage: number; texte: string } | null>(null);
   const [enCours, setEnCours] = useState(false);
   // Position (index de message, index d'action) de l'action en cours
   // d'exécution — désactive son bouton le temps de l'appel, sans bloquer
@@ -130,9 +143,23 @@ export function AssistantCoffre({
         declencherTriAutomatique: reponse.declencherTriAutomatique,
         rechercheWebEffectuee: reponse.rechercheWebEffectuee,
         actions: reponse.actions,
+        formulaireCerfa: reponse.formulaireCerfa,
       }]);
     } finally {
       setEnCours(false);
+    }
+  }
+
+  async function surPreparerFormulaireCerfa(indexMessage: number, demarche: string, url: string) {
+    if (cerfaEnCours !== null) return;
+    setErreurCerfa(null);
+    setCerfaEnCours(indexMessage);
+    try {
+      await onPreparerFormulaireCerfa(demarche, url);
+    } catch (err) {
+      setErreurCerfa({ indexMessage, texte: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setCerfaEnCours(null);
     }
   }
 
@@ -279,6 +306,25 @@ export function AssistantCoffre({
                           </button>
                         );
                       })}
+                    </div>
+                  )}
+                  {m.formulaireCerfa && (
+                    <div className="mt-2 flex flex-col items-start gap-1.5">
+                      <button
+                        type="button"
+                        disabled={cerfaEnCours === i}
+                        onClick={() => surPreparerFormulaireCerfa(i, m.formulaireCerfa!.demarche, m.formulaireCerfa!.url)}
+                        className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
+                      >
+                        <FileText size={12} />
+                        {cerfaEnCours === i ? 'Préparation…' : `Préparer « ${m.formulaireCerfa.demarche} » pré-rempli`}
+                      </button>
+                      {cerfaEnCours === i && (
+                        <p className="text-xs text-ink-soft">Téléchargement du formulaire et lecture de tes papiers…</p>
+                      )}
+                      {erreurCerfa && erreurCerfa.indexMessage === i && (
+                        <p className="text-xs text-wine">{erreurCerfa.texte}</p>
+                      )}
                     </div>
                   )}
                   {m.declencherTriAutomatique && (

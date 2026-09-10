@@ -13,10 +13,11 @@ import {
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
   interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
-  categorieInstantanee, affinableParIA,
+  categorieInstantanee, affinableParIA, recupererFormulaireCerfa, suggererChampsFormulaire,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex, type ActionAssistant,
 } from '@/lib/coffre';
-import { RemplirFormulaire } from './RemplirFormulaire';
+import { champsFormulaire } from '@/lib/formulaire';
+import { RemplirFormulaire, type FormulairePreRempli } from './RemplirFormulaire';
 import { AssistantCoffre } from './AssistantCoffre';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
@@ -345,6 +346,11 @@ export default function PageCoffre() {
   const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
+  // Posé quand un CERFA a été trouvé et téléchargé par l'assistant (voir
+  // preparerFormulaireCerfa) — undefined pour un dépôt manuel classique,
+  // remis à undefined à la fermeture pour ne pas réutiliser un formulaire
+  // périmé au prochain « Remplir un formulaire ».
+  const [formulairePrerempli, setFormulairePrerempli] = useState<FormulairePreRempli | undefined>(undefined);
   const [assistantOuvert, setAssistantOuvert] = useState(false);
   // Posée par la barre de recherche du haut quand elle n'a rien trouvé
   // localement, ou vide pour une question ouverte — voir demanderAAssistant.
@@ -896,6 +902,24 @@ export default function PageCoffre() {
     } catch (err) {
       return `Classement impossible : ${err instanceof Error ? err.message : String(err)}`;
     }
+  }
+
+  // Télécharge le CERFA trouvé par l'assistant (voir formulaireCerfa),
+  // en lit les champs (pdf-lib, dans ce navigateur) et propose des valeurs
+  // tirées des papiers du coffre — puis ouvre l'écran de remplissage déjà
+  // rempli. Rien n'est jamais généré ni téléchargé ici : l'utilisateur voit
+  // et corrige chaque champ dans RemplirFormulaire avant de produire le PDF,
+  // exactement comme pour un formulaire déposé à la main.
+  async function preparerFormulaireCerfa(demarche: string, url: string): Promise<void> {
+    const bytes = await recupererFormulaireCerfa(url);
+    const champs = await champsFormulaire(bytes);
+    if (champs.length === 0) {
+      throw new Error("Ce formulaire n'a pas de champs détectables — dépose-le à la main pour le remplir.");
+    }
+    const suggestionsDocument = await suggererChampsFormulaire(champs.map((c) => c.nom), index, demarche);
+    setFormulairePrerempli({ nomFichier: `${demarche}.pdf`, demarche, bytes, suggestionsDocument });
+    setFormulaireOuvert(true);
+    fermerAssistant();
   }
 
   async function enregistrerCorrection() {
@@ -1464,6 +1488,7 @@ export default function PageCoffre() {
                   onOuvrirFormulaire={() => setFormulaireOuvert(true)}
                   onOuvrirRangement={() => setVueDossiers(true)}
                   onExecuterAction={executerActionAssistant}
+                  onPreparerFormulaireCerfa={preparerFormulaireCerfa}
                   triAuto={{
                     enCours: triAutoEnCours,
                     progres: triAutoProgres,
@@ -1643,7 +1668,11 @@ export default function PageCoffre() {
       </div>
 
       {formulaireOuvert && (
-        <RemplirFormulaire identite={index.identite} onFermer={() => setFormulaireOuvert(false)} />
+        <RemplirFormulaire
+          identite={index.identite}
+          prerempli={formulairePrerempli}
+          onFermer={() => { setFormulaireOuvert(false); setFormulairePrerempli(undefined); }}
+        />
       )}
 
       {/* Un seul bouton flottant désormais : ajouter un papier — seul point
