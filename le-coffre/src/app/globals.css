@@ -99,13 +99,23 @@ input.border-line.bg-paper-raised {
    dégradé turquoise-violet par-dessus, bord éclairci façon tranche de
    verre. `:not(input)` exclut les champs de saisie, qui gardent le
    traitement de contraste dédié juste au-dessus — un fond flouté derrière du
-   texte tapé serait illisible. */
+   texte tapé serait illisible.
+
+   Un seul et unique `backdrop-filter`, sans son alias `-webkit-` posé à la
+   main : mesuré le 10/09/2026 en conditions réelles, les deux propriétés
+   déclarées côte à côte faisaient disparaître purement et simplement la
+   version standard du CSS compilé — Lightning CSS (le minifieur de Next.js)
+   les traite comme redondantes et ne garde que le préfixe, que
+   `getComputedStyle().backdropFilter` ne lit jamais dans un Chromium
+   récent. Le flou restait alors invisible malgré un dégradé et une
+   translucidité bien posés. Lightning CSS ajoute lui-même le préfixe
+   nécessaire à la compilation — le lui laisser fait, il suffit d'écrire la
+   propriété standard une seule fois. */
 .border-line.bg-paper-raised:not(input) {
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 10%, transparent), color-mix(in srgb, var(--violet-degrade) 16%, transparent)),
     color-mix(in srgb, var(--color-paper-raised) 68%, transparent);
   backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
   border-color: color-mix(in srgb, var(--color-ink) 14%, var(--color-line));
 }
 /* Lift + glow au survol de chaque carte/bloc principal — cible la même
