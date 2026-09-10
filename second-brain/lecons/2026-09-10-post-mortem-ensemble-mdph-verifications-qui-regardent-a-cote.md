@@ -272,9 +272,11 @@ racine : `ensemble-mdph` est un dépôt sans mémoire propre, qui ne peut
 hériter ni des leçons d'Amorce (fragmentées par dépôt) ni de ses propres
 erreurs passées (aucun fichier ne les garde).
 
-**Ce que ce fichier ne fait pas.** Les cinq règles ci-dessus sont
-proposées, pas insérées. `amorce/CLAUDE.md` est le fichier le plus partagé
-et le plus disputé du dépôt — l'y écrire directement, sans que le
-propriétaire les ait vues, reviendrait à écrire sur de l'existant sans le
-menu que le §0 bis réclame précisément pour ce cas-là. Ce post-mortem est
-ce menu.
+**Mise à jour du 10/09/2026 : les cinq règles sont insérées.** Le propriétaire
+a validé le menu ci-dessus et demandé l'insertion directe. Chacune vit
+désormais au plus près de la section qu'elle concerne plutôt qu'en bloc à
+part : §9 (dépôt réel avant le premier geste), §3 (mémoire minimale pour un
+projet séparé), §10 « Modifier ce dépôt » (vérifier avant de corriger), §10
+Vercel (généralisation du piège `ssoProtection` à tout dépôt) et §8 bis (les
+deux pièges de vérification — le mauvais objet, la checklist qui vient du
+diff plutôt que de la consigne).
