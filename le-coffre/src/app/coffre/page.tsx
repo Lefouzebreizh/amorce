@@ -360,6 +360,16 @@ export default function PageCoffre() {
   // plus que les vrais échecs techniques (réseau, quota).
   const [triAutoBilan, setTriAutoBilan] = useState<{ erreursTechniques: string[] } | null>(null);
   const [triAutoDetailOuvert, setTriAutoDetailOuvert] = useState(false);
+  // Clés de stockage déjà passées par l'IA cette session, verdict positif ou
+  // négatif peu importe — jamais remises en question tant que la page reste
+  // ouverte. Sans cette mémoire, « Réessayer » après un échec technique ne
+  // retrouvait plus le fichier concerné : la passe 1 lui avait déjà donné
+  // une catégorie instantanée (Images/Papiers), donc il ne comptait plus
+  // parmi les « non classés » que le prochain appel recalculait — mesuré le
+  // 10/09/2026, 7 fichiers restés bloqués sur un lot de 89, le bouton
+  // Réessayer ne faisant plus rien. Un échec technique ne rejoint PAS cet
+  // ensemble : c'est justement ce qui le rend réessayable.
+  const triAutoDejaAffines = useRef<Set<string>>(new Set());
   // Dossiers dépliés dans la vue « Ranger en dossiers » — vide par défaut,
   // donc tous repliés : voir le rendu de `dossiers.map` plus bas.
   const [dossiersOuverts, setDossiersOuverts] = useState<Set<string>>(new Set());
@@ -591,17 +601,19 @@ export default function PageCoffre() {
   // PDF — voir CATEGORIES_AFFINABLES_PAR_IA) : propose une catégorie
   // administrative précise si elle en reconnaît une ; sinon le fichier garde
   // la catégorie posée à la passe 1. Menée en parallèle, borné par
-  // CONCURRENCE_TRI_AUTO — Sonnet 4.x autorise 1 000 requêtes/minute au
-  // palier le plus bas publié par Anthropic (platform.claude.com/docs/en/api/rate-limits,
-  // relevé le 10/09/2026), très loin des 15 en vol ici ; le journal des
-  // en-têtes anthropic-ratelimit-* posé sur classer-document donnera le
-  // chiffre réellement mesuré sur ce compte. `modifierPlusieursObjets`
-  // regroupe plusieurs affinages en une seule sauvegarde ; `CHECKPOINT_TRI_AUTO`
-  // en déclenche une toutes les huit réussites plutôt qu'une seule à la fin,
-  // pour ne pas tout reperdre si la page se ferme en cours de lot.
+  // CONCURRENCE_TRI_AUTO — mesuré sur ce compte le 10/09/2026 via le journal
+  // des en-têtes anthropic-ratelimit-* posé sur classer-document (et non
+  // plus supposé depuis la doc publique) : 10 000 requêtes/minute et
+  // 10 000 000 de jetons d'entrée/minute, jamais entamés même sur un lot de
+  // 89 fichiers. Le débit n'est donc pas la limite d'Anthropic ; 25 en vol
+  // reste très en dessous, avec de la marge pour un compte moins généreux.
+  // `modifierPlusieursObjets` regroupe plusieurs affinages en une seule
+  // sauvegarde ; `CHECKPOINT_TRI_AUTO` en déclenche une toutes les huit
+  // réussites plutôt qu'une seule à la fin, pour ne pas tout reperdre si la
+  // page se ferme en cours de lot.
   async function trierAutomatiquement() {
     if (!utilisateur || !cle) return;
-    const CONCURRENCE_TRI_AUTO = 15;
+    const CONCURRENCE_TRI_AUTO = 25;
     const CHECKPOINT_TRI_AUTO = 8;
 
     const nonClasses = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
@@ -629,8 +641,16 @@ export default function PageCoffre() {
       return;
     }
 
-    // Passe 2 : seulement ce que l'IA peut réellement lire.
-    const aAffiner = nonClasses.filter((n) => CATEGORIES_AFFINABLES_PAR_IA.has(instantanes[n]?.categorie ?? ''));
+    // Passe 2 : tout ce qui est ACTUELLEMENT dans un dossier affinable et
+    // n'a pas encore reçu de verdict de l'IA cette session — jamais
+    // seulement ce qui vient d'être classé à l'instant (`nonClasses`),
+    // sinon un fichier resté en échec technique lors d'un tri précédent
+    // redevient introuvable au tri suivant : il a déjà sa catégorie
+    // instantanée, donc il ne compte plus parmi les « non classés ».
+    const aAffiner = Object.keys(indexCourant.objets).filter((n) => {
+      const categorie = indexCourant.objets[n]?.categorie ?? '';
+      return CATEGORIES_AFFINABLES_PAR_IA.has(categorie) && !triAutoDejaAffines.current.has(n);
+    });
     if (aAffiner.length === 0) {
       setTriAutoEnCours(false);
       return;
@@ -680,15 +700,20 @@ export default function PageCoffre() {
           // masque le constructeur DOM — d'où `globalThis.File` ici.
           const fichier = new globalThis.File([blob], info.nom, { type: info.type });
           const proposition = await proposerClassement(fichier);
-          if (proposition.lisible) {
-            enAttente[nom] = { categorie: proposition.categorie, montant: proposition.montant || undefined };
-            if (Object.keys(enAttente).length >= CHECKPOINT_TRI_AUTO) await flush();
-          } else if (proposition.erreurTechnique) {
+          if (proposition.erreurTechnique) {
             // L'appel a échoué (réseau, quota, service surchargé) — le
-            // fichier garde sa catégorie instantanée et sera repris au
-            // prochain tri. Une vraie réponse « pas administratif » ne
-            // déclenche rien ici : c'est le cas attendu, pas une erreur.
+            // fichier garde sa catégorie instantanée et reste éligible au
+            // prochain tri (jamais ajouté à triAutoDejaAffines) : c'est
+            // justement ce qui rend « Réessayer » capable de le retrouver.
             erreursTechniques.push(info.nom);
+          } else {
+            // Un vrai verdict est tombé, positif ou négatif — dans les deux
+            // cas ce fichier ne sera plus jamais resoumis automatiquement.
+            triAutoDejaAffines.current.add(nom);
+            if (proposition.lisible) {
+              enAttente[nom] = { categorie: proposition.categorie, montant: proposition.montant || undefined };
+              if (Object.keys(enAttente).length >= CHECKPOINT_TRI_AUTO) await flush();
+            }
           }
         } catch (err) {
           erreursTechniques.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
