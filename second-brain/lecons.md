@@ -5058,6 +5058,13 @@ workflow dont la présence implique l'état cherché — ou remonter par un
 
 *Mesuré le 02/09/2026, sur `https://amorce.vercel.app` depuis une session distante.*
 
+> **Correction du 10/09/2026 :** `amorce.vercel.app` n'est pas Amorce — ce
+> sous-domaine court appartient à un autre compte Vercel. La mesure ci-dessous
+> reste juste, parce qu'elle porte sur le **client** et non sur le site : c'est
+> bien `curl` qui passe là où Chromium est réinitialisé. Seul l'hôte cité est
+> mal attribué. L'adresse du studio est
+> `amorce-erwannchevallier-6916s-projects.vercel.app`.
+
 Les deux ne passent pas par le même chemin, et rien ne le signale :
 
 | outil | résultat |
@@ -5286,6 +5293,13 @@ sujet. Et la façon de les trouver n'est pas de les chercher : c'est de demander
 
 *Mesuré le 02/09/2026 sur `amorce.vercel.app`, après deux diagnostics faux.*
 
+> **Correction du 10/09/2026 : il y avait un troisième diagnostic faux, et
+> c'est celui-ci.** `amorce.vercel.app` n'appartient pas au projet — c'est le
+> site d'un autre compte. « L'adresse publique servait la version d'avant »
+> parce qu'elle n'a jamais servi aucune de nos versions. La leçon générale
+> ci-dessous tient et vaut d'être lue ; la liste de causes qu'elle donne, non —
+> voir la quatrième, ajoutée plus bas.
+
 Trois fusions vertes, un déploiement Production marqué **Ready**, et l'adresse
 publique servait toujours la version d'avant. Les deux hypothèses avancées
 étaient plausibles et fausses : d'abord le quota quotidien crevé, puis une
@@ -5319,6 +5333,16 @@ pas à un changement d'alias — donc l'alias lui-même n'a pas bougé.
 Trois causes possibles, à départager dans le tableau de bord et non d'ici : la
 branche de production n'est pas celle qu'on fusionne, le domaine est assigné à
 la main à un déploiement précis, ou la promotion n'a pas eu lieu.
+
+**Et une quatrième, ajoutée le 10/09/2026, qui était la vraie ici :
+l'adresse n'appartient pas au projet.** Les sous-domaines `*.vercel.app` sont
+globaux : un nom commun est pris par le premier projet de la plateforme qui le
+demande, et le nôtre reçoit alors la forme longue `<projet>-<équipe>`. Celle-là
+ne se départage justement **pas** dans le tableau de bord du projet, qui n'a
+rien à dire d'un site qui n'est pas le sien. Elle se départage en demandant son
+titre à l'adresse : `curl -s <adresse> | grep -o '<title>[^<]*</title>'`.
+Détail dans
+`second-brain/lecons/2026-09-10-un-sous-domaine-vercel-app-court-nest-pas-le-votre.md`.
 
 **La leçon qui se généralise, et c'est elle qui compte :** l'état d'un
 déploiement décrit une **construction**, jamais ce qu'une **adresse** rend.

@@ -2002,6 +2002,18 @@ porte les dégradés et les traits, un violet clair porte les lettres. Seule la
 valeur du clair a changé, et une session qui recopierait `#C2A2F6` en croyant
 suivre la règle réintroduirait le défaut qu'elle vise.
 
+**Et `#D4C6FB` est la valeur du studio, pas une valeur à imposer aux autres
+produits — vérifié le 10/09/2026 avant d'y toucher.** Amorce porte
+`--color-violet-clair: #D3BEF9`, et ce n'est pas un écart à corriger : il est
+**dérivé** de son propre `#7C3AED`, teinte 261° et saturation 0,83 inchangées,
+la clarté seule remontée — la raison est écrite dans `src/app/globals.css`, et
+elle est plus forte qu'une ressemblance. Les deux tiennent le plancher de la
+maison sur la surface la plus claire d'Amorce : `#D3BEF9` rend **8,04:1**,
+`#D4C6FB` **8,54:1**. Le §2 bis tranche déjà ce genre de cas en propres termes
+— ce qui est partagé entre produits est la **structure** et le rapport de 1,07,
+jamais la teinte. Une session qui aligne les deux valeurs « pour la cohérence »
+casse une raison écrite pour satisfaire une règle qui n'existe pas.
+
 **« Visiter la vraie URL » est possible depuis une session distante**, et ce
 fichier a longtemps dit le contraire. `*.github.io` est refusé au mandataire —
 c'est toujours vrai pour `curl` d'ici — mais le bac à sable du connecteur
@@ -2213,6 +2225,14 @@ tourne, contrairement aux autres. Les tests unitaires ne
 voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
+
+**Et `npm run regarder <adresse>` pour regarder une page déjà déployée.**
+Chromium ne peut pas ouvrir `*.vercel.app` d'ici — `ERR_CONNECTION_RESET` —
+quand `curl` rend 200 sur la même adresse : le mandataire filtre par **outil**,
+pas par hôte. Le script met `curl` entre le navigateur et l'amont et sert la
+production sur `127.0.0.1`, de sorte que Playwright et `getComputedStyle` y
+donnent enfin ce que le navigateur **peint**. C'est ce que le §8 bis exige, et
+ce n'était outillé nulle part — chaque session réécrivait le relais.
 
 **Et `npm run planche [nombre de rushes]` pour regarder au lieu de mesurer.**
 Elle fabrique ses rushes numérotés, conduit le studio, exporte, et rend une
@@ -2622,6 +2642,42 @@ il n'entre donc pas dans le tableau ci-dessus — mais il consomme le **même**
 compteur, qui est celui du compte et jamais celui d'un dépôt. Un décompte tenu
 « par dépôt » sous-estime toujours la consommation réelle, et l'écart grandit à
 chaque projet posé ailleurs.
+
+**Et un septième, `orientation-express`, créé le 09/09/2026** sur un dépôt du
+même nom — relevé le 10/09 par `list_projects`. Dix projets en tout, sept liés
+à Git, dont **cinq sur ce dépôt-ci** : le seuil de fusions écrit plus bas ne
+change donc pas, mais le compteur du compte, lui, reçoit deux sources de plus
+qu'aucun commit d'ici ne déclenche. C'est précisément ce que le relevé
+périodique existe pour voir.
+
+**Et l'adresse courte d'un projet n'est pas d'office la sienne — mesuré le
+10/09/2026, et c'est un défaut qui dormait depuis des jours.**
+`amorce.vercel.app` sert le site d'un **autre compte** (titre : *IdeaForge*).
+Les sous-domaines `*.vercel.app` sont globaux : un nom commun est pris par le
+premier projet de la plateforme qui le demande, et le nôtre reçoit alors la
+forme longue. Le studio est servi à :
+
+https://amorce-erwannchevallier-6916s-projects.vercel.app
+
+Rien n'est cassé côté tableau de bord, et c'est ce qui rend le piège muet — il
+n'y a pas d'erreur à voir, seulement une adresse qui répond 200 et ressemble à
+un site fini. **Avant de croire qu'une adresse est la nôtre, lui demander son
+titre** : `curl -s <adresse> | grep -o '<title>[^<]*</title>'`. Sondés le
+même jour, **aucun** des noms courts n'est à nous — `amorce`,
+`artisan-express` et `iptv` servent trois sites étrangers, et le second sert
+une page si plausible qu'on serait tenté de corriger un README qui a raison.
+La forme qui vaut est donc
+`<projet>-erwannchevallier-6916s-projects.vercel.app`, ou un suffixe aléatoire
+(`-ashy`, `-puce`) pour un dépôt de fichiers ; ce que confirment les `domains`
+rendus par `get_project`, qui sont la seule preuve de possession — jamais le
+contenu servi. Deux endroits
+du dépôt citaient encore la mauvaise, et l'un d'eux n'est pas de l'archive :
+`comptes-serveur/README.md` la donne en exemple pour le secret `ADRESSE_SITE`,
+**celui qui construit le lien de connexion envoyé par courriel** — posé tel
+quel le jour du déploiement, il enverrait les clients chez un inconnu. À
+corriger avant toute mise en service de ce service-là. Détail dans
+`second-brain/lecons/2026-09-10-un-sous-domaine-vercel-app-court-nest-pas-le-votre.md`.
+
 
 **Cinq projets branchés depuis le 06/09/2026**, et le seuil de fusions
 descend encore : chaque fusion vaut désormais **cinq** déploiements plus le

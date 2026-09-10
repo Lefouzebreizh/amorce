@@ -17,7 +17,8 @@
     "verify:reprise": "node scripts/verify-reprise.mjs",
     "verify:partage": "node scripts/verify-partage.mjs",
     "verify:images": "node scripts/verify-images.mjs",
-    "verify:licence": "node scripts/verify-licence.mjs"
+    "verify:licence": "node scripts/verify-licence.mjs",
+    "regarder": "node scripts/regarder-en-ligne.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",
