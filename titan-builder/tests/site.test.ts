@@ -498,28 +498,40 @@ test('une démonstration montre le bloc d’avis, et dit que ce sont des exemple
   assert.doesNotMatch(vrai, /Avis d’exemple/, 'la mention doit disparaître sur un vrai site');
 });
 
-test('la page fait la largeur d’un téléphone, et rien ne la rélargit', () => {
+test('la colonne fait la largeur d’un téléphone, et la page remplit l’écran', () => {
   const html = genererSite(commande());
 
-  // Le corps est borné à une largeur de téléphone. Sur un téléphone la règle
-  // ne mord pas — le corps y occupe déjà tout le viewport, mesuré à 390, 360
-  // et 320 px sans un pixel de débordement ; elle mord sur l'écran large où
-  // la page se relit avant d'être envoyée.
-  const corps = /body\s*\{[^}]*\}/.exec(html)?.[0] ?? '';
-  assert.match(corps, /max-width:\s*26rem/, 'le corps doit être borné à 26rem');
-  assert.match(corps, /margin:\s*0 auto/, 'le corps doit être centré');
+  // C'est « .dedans » qui porte la mesure, et plus « body ». Sur un téléphone
+  // la règle ne mord pas — la colonne y vaut la fenêtre moins les marges,
+  // mesuré à 390, 360 et 320 px sans un pixel de débordement.
+  const dedans = /\.dedans\s*\{[^}]*\}/.exec(html)?.[0] ?? '';
+  assert.match(dedans, /max-width:\s*26rem/, 'la colonne doit être bornée à 26rem');
+  assert.match(dedans, /margin:\s*0 auto/, 'la colonne doit être centrée');
 
-  // Le fond va sur « html » : un corps borné laisse voir la page derrière lui,
-  // et ce serait du blanc au bord d'un site sombre.
+  // Le corps, lui, va bord à bord. Le borner à 26rem donnait une bande de
+  // 416 px au milieu d'un écran de 1440 — moins d'un tiers occupé — et c'est
+  // le premier regard extérieur posé sur ces pages qui l'a signalé, pas un
+  // test. Remettre une largeur ici rendrait le défaut à l'identique.
+  const corps = /body\s*\{[^}]*\}/.exec(html)?.[0] ?? '';
+  assert.doesNotMatch(corps, /max-width/, 'le corps doit aller bord à bord');
+
+  // Ce qui suppose que chaque région enveloppe son contenu : sans cela le
+  // texte irait bord à bord avec elle, ce qui est pire que la bande étroite.
+  for (const region of ['header', 'main', 'footer']) {
+    assert.match(html, new RegExp(`<${region}><div class="dedans">`),
+      `${region} doit envelopper son contenu dans la colonne`);
+  }
+
+  // Le fond va sur « html » : la page derrière le corps se voit dès que le
+  // contenu est plus court que l'écran, et ce serait du blanc sur un site sombre.
   assert.match(html, /html\s*\{[^}]*background:\s*#16151a/,
     'le fond doit couvrir l’écran au-delà du corps');
 
-  // Et surtout : aucune autre règle ne doit rouvrir la page plus large que
-  // ça. C'est « main { max-width: 40rem } » qui donnait 640 px, et c'est
-  // exactement ce qu'une prochaine session réintroduirait sans y penser.
+  // Et rien ne va au-delà de 40rem : passé cette longueur de ligne, l'œil perd
+  // le début en arrivant à la fin. C'est la nouvelle borne à ne pas rouvrir.
   const sansCommentaires = html.replace(/\/\*[\s\S]*?\*\//g, '');
   for (const [, valeur] of sansCommentaires.matchAll(/max-width:\s*([\d.]+)rem/g)) {
-    assert.ok(Number(valeur) <= 26,
-      `une largeur de ${valeur}rem dépasse celle d’un téléphone`);
+    assert.ok(Number(valeur) <= 40,
+      `une largeur de ${valeur}rem dépasse la mesure de lecture`);
   }
 });
