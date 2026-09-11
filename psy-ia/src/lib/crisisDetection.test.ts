@@ -216,3 +216,80 @@ test('trois tournures de désespoir supplémentaires déclenchent le niveau mod�
 test('la contraction phonétique « jv » (comme « jve ») est reconnue', () => {
   assert.equal(detecterCrise(['jv en finir ce soir']).niveau, 'fort');
 });
+
+// Second cas signalé par Erwann, testé en direct sur l'app après la fusion
+// du premier correctif : « j'ai des envies bizarres ce soir j'ai peur »
+// n'avait rien déclenché. Différent du premier bug (une expression connue
+// absente d'une liste) : ici aucun mot seul n'est assez spécifique pour un
+// motif, la peur ordinaire étant extrêmement fréquente. Le signal tient à
+// la CO-OCCURRENCE de « peur » et d'une pulsion qualifiée de bizarre/
+// étrange, dans le même message.
+test('« peur » et « envie bizarre » ensemble dans le même message déclenchent le niveau modéré', () => {
+  assert.equal(detecterCrise(["j'ai des envies bizarres ce soir j'ai peur"]).niveau, 'modere');
+  assert.equal(detecterCrise(["j'ai peur, j'ai une pulsion bizarre"]).niveau, 'modere');
+});
+
+test('« peur » seul, sans pulsion inquiétante, ne déclenche rien — trop fréquent pour être un motif', () => {
+  assert.equal(detecterCrise(["j'ai peur de l'examen de demain"]).niveau, 'aucun');
+  assert.equal(detecterCrise(["j'ai peur des araignées"]).niveau, 'aucun');
+});
+
+test('« envie bizarre » seule, sans peur exprimée, ne déclenche rien', () => {
+  assert.equal(detecterCrise(["j'ai eu une envie bizarre de manger une pizza à trois heures du matin"]).niveau, 'aucun');
+});
+
+test('la co-occurrence doit être dans le MÊME message, pas seulement la même conversation', () => {
+  const resultat = detecterCrise(["j'ai peur de l'examen", "et sinon j'ai eu une drôle d'envie bizarre hier"]);
+  assert.equal(resultat.niveau, 'aucun');
+});
+
+// Recherche demandée par Erwann le 11/09/2026 : couvrir systématiquement
+// les formulations indirectes, pas seulement les cas remontés un par un.
+// Les huit premiers exemples viennent de lui, textuellement.
+test('les formulations indirectes données par Erwann déclenchent', () => {
+  const exemples: Array<[string, 'fort' | 'modere']> = [
+    ['quelle vie de merde', 'modere'],
+    ['je vais faire une bêtise', 'fort'],
+    ['je vais péter un câble', 'modere'],
+    ['ça va pas du tout', 'modere'],
+    ['la fin est proche', 'fort'],
+    ['quel monde de merde', 'modere'],
+    ["pourquoi tout ça m'arrive à moi", 'modere'],
+  ];
+  for (const [exemple, niveauAttendu] of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, niveauAttendu, `"${exemple}" aurait dû déclencher le niveau ${niveauAttendu}`);
+  }
+});
+
+test('les adieux explicites déclenchent le niveau fort', () => {
+  const exemples = ['je te dis adieu', "c'est un adieu", 'je vais faire une connerie'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'fort', `"${exemple}" aurait dû déclencher le niveau fort`);
+  }
+});
+
+test("« je veux que tout s'arrête » et « dormir et ne plus me réveiller » déclenchent le niveau fort", () => {
+  assert.equal(detecterCrise(["je veux que tout s'arrête"]).niveau, 'fort');
+  assert.equal(detecterCrise(['je veux dormir et ne plus me réveiller']).niveau, 'fort');
+});
+
+test("le sentiment d'être pris au piège, sans issue perçue, déclenche le niveau modéré", () => {
+  const exemples = ['je me sens pris au piège', "il n'y a pas d'autre solution", 'je suis dans une impasse'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test('le vide intérieur et la perte de sens déclenchent le niveau modéré', () => {
+  const exemples = ["plus rien n'a de sens", 'je ne ressens plus rien', "je me sens vide à l'intérieur"];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test("l'obsession de la mort et l'auto-mutilation générale déclenchent le niveau modéré", () => {
+  const exemples = ['je pense tout le temps à la mort', 'je me fais du mal'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});

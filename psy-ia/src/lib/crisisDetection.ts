@@ -133,6 +133,30 @@ const PHRASES_FORTES = [
   // Euphémisme direct pour la mort volontaire, équivalent à « disparaître »
   // mais avec un verbe différent — absent jusqu'ici.
   'plus exister',
+  // Recherche demandée par Erwann le 11/09/2026, après deux faux négatifs
+  // réels de suite : « la plupart des gens en détresse ne le disent pas
+  // explicitement, il faut couvrir toutes les formulations indirectes ».
+  // Ce bloc rassemble des marqueurs établis dans la littérature sur la
+  // prévention du suicide (signaux d'alerte, euphémismes de la mort
+  // volontaire), pas seulement des cas remontés un par un.
+  //
+  // Adieux et annonce d'un départ définitif — signal d'alerte classique
+  // (la personne « dit au revoir » avant un passage à l'acte).
+  'je te dis adieu',
+  'je vous dis adieu',
+  "c'est un adieu",
+  // Euphémisme très répandu en français : « faire une bêtise » désigne un
+  // geste auto-destructeur, pas une maladresse, dans la bouche d'un adulte
+  // qui décrit son propre état à un outil d'accompagnement — le contexte de
+  // la conversation lève l'ambiguïté que le mot porterait ailleurs.
+  'je vais faire une bêtise',
+  'je vais faire une connerie',
+  // Euphémisme direct pour la mort, au même titre que « disparaître » ou
+  // « partir pour de bon ».
+  'la fin est proche',
+  "je veux que tout s'arrête",
+  'je veux dormir et ne plus me réveiller',
+  "j'aimerais m'endormir et ne plus me réveiller",
 ];
 
 // Mention d'un plan concret ou d'un moyen — niveau fort lui aussi.
@@ -214,6 +238,54 @@ const PHRASES_MODEREES = [
   'aucune raison de continuer',
   'goût à rien',
   'à quoi bon continuer',
+  // Recherche demandée par Erwann le 11/09/2026, après deux faux négatifs
+  // réels de suite : « la plupart des gens ne le disent pas explicitement,
+  // il faut couvrir toutes les formulations indirectes ». Regroupé par
+  // thème plutôt qu'ajouté au coup par coup — chaque thème correspond à un
+  // signal d'alerte documenté dans la prévention du suicide, même quand la
+  // formulation elle-même reste ambiguë. Posé en MODÉRÉ, pas en FORT : ces
+  // tournures peuvent aussi être de simples exclamations sans lien avec une
+  // crise (voir « mourir bête » plus haut, faux positif déjà assumé) — le
+  // niveau modéré déclenche déjà le même message figé au moindre doute.
+  //
+  // Exemples donnés tels quels par Erwann :
+  'quelle vie de merde',
+  'quel monde de merde',
+  'ça va pas du tout',
+  'je vais péter un câble',
+  "pourquoi tout ça m'arrive à moi",
+  // Sentiment d'être pris au piège, sans issue perçue — signal d'alerte
+  // documenté, distinct du désespoir général déjà couvert plus haut.
+  'pris au piège',
+  "pas d'autre solution",
+  'aucune autre solution',
+  "pas d'autre issue",
+  'aucune issue',
+  'dans une impasse',
+  // Vide intérieur, perte de sens — distinct de l'épuisement (qui exige une
+  // répétition) : ici la personne ne dit pas qu'elle est fatiguée, elle dit
+  // que plus rien ne compte.
+  "plus rien n'a de sens",
+  "rien n'a plus de sens",
+  'je ne ressens plus rien',
+  "vide à l'intérieur",
+  // Obsession de la mort en général, sans forcément nommer son propre
+  // passage à l'acte — signal à prendre au sérieux dans un outil qui
+  // s'adresse à des personnes en détresse, même si la phrase reste
+  // philosophique la plupart du temps ailleurs.
+  'je pense tout le temps à la mort',
+  "la mort m'obsède",
+  // Auto-mutilation générale, sans moyen précis nommé (les moyens précis
+  // sont déjà couverts en FORT, PHRASES_MOYENS) — geste réel mais non
+  // circonstancié, donc plus ambigu.
+  'je me fais du mal',
+  "je m'inflige de la douleur",
+  // Annonce indirecte, moins explicite que les adieux du niveau fort :
+  // la formule est aussi utilisée avant un simple voyage, d'où le niveau
+  // modéré plutôt que fort.
+  "au cas où il m'arriverait quelque chose",
+  'je ne serai plus là longtemps',
+  'je ne serai plus un problème',
 ];
 
 // Épuisement extrême : ne déclenche que s'il est exprimé de façon RÉPÉTÉE
@@ -227,6 +299,28 @@ const PHRASES_EPUISEMENT = [
   'plus aucune force',
   'vidé de toute énergie',
 ];
+
+// Signal par CO-OCCURRENCE, pas par phrase isolée — cas signalé par Erwann
+// le 11/09/2026 : « j'ai des envies bizarres ce soir j'ai peur » n'a rien
+// déclenché. Ni « peur » (l'immense majorité des messages anxieux le
+// contiennent, sans rapport avec une crise) ni « envie bizarre » seuls ne
+// peuvent être des motifs sans faire exploser les faux positifs — mais leur
+// PRÉSENCE ENSEMBLE dans le même message est un marqueur reconnu : la peur
+// de ses propres pulsions inhabituelles. Chaque mot reste inoffensif seul ;
+// c'est la combinaison qui compte, et elle doit apparaître dans le MÊME
+// message, pas seulement la même conversation.
+const MOTS_PEUR = compiler(['peur']);
+const MOTS_PULSION_INQUIETANTE = compiler([
+  'envie bizarre',
+  'envies bizarres',
+  'pulsion bizarre',
+  'pulsions bizarres',
+  'envie étrange',
+  'envies étranges',
+  'envie inquiétante',
+  'peur de mes pulsions',
+  'peur de moi',
+]);
 
 const MOTIFS_FORTS = compiler(PHRASES_FORTES);
 const MOTIFS_PLAN = compiler(PHRASES_PLAN);
@@ -266,6 +360,12 @@ export function detecterCrise(messagesPersonne: string[]): ResultatDetectionCris
   ).length;
   if (messagesAvecEpuisement >= 2) {
     trouves.add('épuisement extrême répété');
+  }
+  const messageAvecPeurEtPulsion = normalises.some(
+    (texte) => chercher(texte, MOTS_PEUR).length > 0 && chercher(texte, MOTS_PULSION_INQUIETANTE).length > 0,
+  );
+  if (messageAvecPeurEtPulsion) {
+    trouves.add('peur de ses propres pulsions inhabituelles');
   }
 
   return {
