@@ -203,6 +203,58 @@ part sur ce qui ne dépend pas de la réponse, dans le même message.
 - **Zéro cringe, zéro procédé qui manipule.** Le public visé est exactement
   celui que l'urgence fabriquée et la culpabilisation blessent le plus.
 
+## 1 bis. LA VISION HUMAINE PRIME SUR LE VERT
+
+Posée par le propriétaire le 11/09/2026. Numérotée « 1 bis » pour la raison
+donnée aux autres : d'autres fichiers citent les sections par leur numéro, et
+renuméroter casserait ces renvois en silence.
+
+**L'avis humain prime toujours sur le vert des tests automatiques.** Si
+l'utilisateur dit qu'un résultat ne va pas, c'est vrai, même si tous les
+contrôles techniques passent. Le vert mesure la mécanique — pas si le résultat
+est bon à regarder ou à écouter. **Un retour humain répété sur le même défaut
+est un signal plus fort qu'une suite de tests verts**, et ne se classe jamais
+comme déjà réglé sans preuve concrète que la cause a été corrigée.
+
+**Avant de livrer, se poser la question à la place de celui qui reçoit : « si
+j'étais la personne qui regarde et écoute ce montage, est-ce que je le
+trouverais bon ? »** — pas seulement « est-ce que les contrôles passent ». Un
+résultat ne se présente jamais comme terminé ou réussi sur la seule foi de
+tests automatiques si personne — humain ou session — n'a vérifié le résultat
+**perçu** : à l'œil, à l'oreille, sur la durée complète. Si ça n'a pas été
+fait, on le dit, plutôt que d'annoncer avec une confiance que le travail n'a
+pas. L'objectif tient en une phrase : **la session doit se méfier de son propre
+vert avant que l'humain n'ait à le faire à sa place.**
+
+### Le cas qui l'a posée, et il est mesuré
+
+Erwann a dit plusieurs fois que le montage d'Amorce ne convenait pas. Le défaut
+réel n'a jamais été corrigé à la racine — mesuré, parfois noté, jamais traité —
+pendant que **149 contrôles restaient verts**. Trois défauts, une seule cause :
+
+| Ce qui est vécu | Ce que le vert mesurait à la place |
+| --- | --- |
+| Une phrase de texte sur trente secondes — **12,8 %** de couverture, contre un plancher maison de 55 % | qu'un texte est **visible**. Présence, jamais couverture. |
+| Des bruitages plaqués sur les coupes, sans rapport avec le contenu | que le curseur « Bruitages » existe et que sa valeur bouge |
+| Cinquante coupes sur cinquante secondes, sans un mot à l'utilisateur | qu'un plan ne descend pas sous 0,3 s — le fragment invisible, rien d'autre |
+
+**La cause commune : le studio sait juger, et il ne juge jamais au moment du
+geste.** `src/lib/analysis.ts` porte les bons seuils — plan moyen entre 1,1 et
+2,8 s, texte entre 55 et 95 % de la durée — et rien ne les consulte au moment
+où l'on produit. Ils ne servent qu'à noter après coup, dans un panneau qu'il
+faut aller ouvrir.
+
+D'où la conséquence pratique, qui dépasse Amorce : **une suite de contrôles a
+besoin d'une deuxième famille, orientée résultat perçu.** La première mesure
+que la mécanique fonctionne ; la seconde mesure que le résultat est bon —
+couverture réelle sur la durée, pertinence et pas seulement présence,
+garde-fou assorti d'un signal explicite. Un produit qui ne porte que la
+première sort en vert et se fait rejeter au premier regard.
+
+Cette section ne remplace ni le §8 ni le §8 bis : le §8 dit *quand* on a le
+droit d'annoncer, le §8 bis dit *quoi* regarder, celle-ci dit **qui tranche
+quand les deux se contredisent** — l'humain, toujours.
+
 ## 2. FILTRE 48K
 
 Test avant de livrer : **est-ce que ça aide une vraie personne à dormir mieux ce
