@@ -46,6 +46,7 @@ commandes=(
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
   "Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests"
   "Conseiller Patrimoine : cd conseiller-patrimoine && python3 -m unittest discover -s tests"
+  "Moteur administratif : cd moteur-administratif && python3 -m unittest discover -s tests"
   "Bilan Patrimoine : cd bilan-patrimoine && npm test"
   "Motion : (dans motion/) npm test, npm run typecheck — jamais `build`, qui rend une vidéo"
   "Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"
@@ -54,6 +55,7 @@ commandes=(
   "Paper-Manager : python3 -m unittest discover -s paper-manager/tests"
   "Réseau d'annuaires : (dans annuaire-ia/) npm test, puis npm run valider|verifier|sites"
   "TITAN Builder : (dans titan-builder/) npm run lint|typecheck|test|build"
+  "Psy IA : (dans psy-ia/) npm run lint|typecheck|test|build — squelette architectural, voir psy-ia/TODO.md avant toute mise en ligne"
   "IPTV / VOD : (dans iptv/) npm test, npm run check"
   "Radar crypto : cd pepites && python3 -m unittest discover -s tests"
   "Traducteur de chat : python3 -m unittest discover -s chat-traducteur/tests"
@@ -110,6 +112,14 @@ echo "── Artisan Express : dépendances npm"
 # sans `cd`, npm remonte à la racine et installe dans l'arbre d'Amorce.
 cd "$racine/artisan-express"
 npm install --no-audit --no-fund --silent
+
+echo "── Psy IA : dépendances npm"
+# Même raison que Le Coffre et TITAN Builder : projet Next.js indépendant,
+# avec son propre package.json — les dépendances de la racine ne lui servent
+# à rien, et les siennes ne doivent pas y remonter.
+cd "$racine/psy-ia"
+npm install --no-audit --no-fund --silent
+cd "$racine"
 
 echo "── TITAN Builder : dépendances npm"
 # Même raison, et une conséquence de plus : la CI de TITAN n'installe que son

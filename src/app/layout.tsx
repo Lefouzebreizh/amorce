@@ -60,7 +60,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#08080c',
+  themeColor: '#0f1115',
   width: 'device-width',
   initialScale: 1,
   // L'interface va jusque sous l'encoche et la barre système ; les marges de
@@ -80,8 +80,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           et rend tout visible d'emblée.
         */}
         <noscript>
-          <style>{'.revele{opacity:1 !important;transform:none !important;}'}</style>
+          <style>
+            {'.revele,.cascade>*{opacity:1 !important;transform:none !important;}'}
+          </style>
         </noscript>
+        {/*
+          Le fond animé de la refonte, posé une seule fois pour toute
+          l'application. Il est `aria-hidden` et sans interaction : ce n'est pas
+          du contenu, et une couche décorative qu'un lecteur d'écran annonce est
+          une nuisance. Sa raison d'être ici plutôt que dans chaque page est
+          dans `globals.css` — hors du flux, il ne partage aucun ancêtre repeint
+          avec la frise de montage.
+        */}
+        <div className="fond-anime" aria-hidden="true" />
         {children}
       </body>
     </html>

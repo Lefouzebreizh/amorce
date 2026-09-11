@@ -283,6 +283,47 @@ export async function proposerClassement(fichier: File): Promise<PropositionClas
   }
 }
 
+// Catégorie générique posée SANS appel réseau, dès qu'un fichier n'a encore
+// aucune catégorie — voir trierAutomatiquement dans page.tsx (plan du
+// 10/09/2026). C'est elle qui garantit qu'aucun fichier n'est jamais refusé
+// ni laissé de côté : l'IA (proposerClassement) n'intervient qu'ensuite,
+// pour affiner « Images » et « Papiers » vers une catégorie administrative
+// précise quand elle en reconnaît une — si elle n'en reconnaît aucune, le
+// fichier garde la catégorie posée ici, il ne redevient jamais « non classé ».
+export function categorieInstantanee(type: string): string {
+  if (type === 'application/pdf') return 'Papiers';
+  if (type.startsWith('image/')) return 'Images';
+  if (type.startsWith('video/')) return 'Vidéos';
+  if (type.startsWith('audio/')) return 'Audio';
+  return 'Autre';
+}
+
+// Les deux seuls types que classer-document sait lire (voir son code) — donc
+// les deux seules catégories instantanées qu'il vaut la peine de lui
+// soumettre pour affinage. Les deux autres (Vidéos, Audio) gardent leur
+// catégorie instantanée pour de bon.
+export const CATEGORIES_AFFINABLES_PAR_IA = new Set(['Images', 'Papiers']);
+
+// Les seuls formats d'image que Claude sait effectivement lire — vérifié le
+// 10/09/2026 contre platform.claude.com/docs/en/build-with-claude/vision :
+// jpeg, png, gif, webp, jamais svg (ni bmp, tiff...). Un fichier « Images »
+// hors de cette liste échouerait à coup sûr, à chaque tentative, si on le
+// soumettait à classer-document — exactement la boucle de retry infinie
+// qu'on veut éviter. Il vaut mieux qu'il reste dans « Images », sa catégorie
+// instantanée, plutôt que de rebondir sans fin sur un appel voué à échouer.
+const TYPES_IMAGE_LISIBLES_PAR_IA = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+
+// Remplace un simple test sur la catégorie (CATEGORIES_AFFINABLES_PAR_IA) par
+// un test qui tient compte du format réel : un PDF est toujours affinable,
+// une image seulement si son type MIME précis fait partie de ceux que Claude
+// sait lire — voir TYPES_IMAGE_LISIBLES_PAR_IA. Utilisé par
+// trierAutomatiquement (page.tsx) pour décider quoi soumettre à l'IA.
+export function affinableParIA(categorie: string, type: string): boolean {
+  if (categorie === 'Papiers') return type === 'application/pdf';
+  if (categorie === 'Images') return TYPES_IMAGE_LISIBLES_PAR_IA.has(type);
+  return false;
+}
+
 export type TourConversation = { role: 'user' | 'assistant'; texte: string };
 
 // Une action que l'assistant propose sur un document précis — jamais
@@ -299,8 +340,15 @@ export type ReponseAssistant = {
   documentsCites: string[];
   ouvrirFormulaire: boolean;
   ouvrirRangement: boolean;
+  // Un seul bot (10/09/2026) : demande de tri en lot proposée depuis la
+  // conversation elle-même — voir trierAutomatiquement() dans page.tsx.
+  declencherTriAutomatique: boolean;
   rechercheWebEffectuee: boolean;
   actions: ActionAssistant[];
+  // Un CERFA officiel trouvé par recherche web pour une démarche nommée par
+  // l'utilisateur — voir recupererFormulaireCerfa et RemplirFormulaire.tsx,
+  // qui le propose déjà rempli avant que l'utilisateur ne le valide.
+  formulaireCerfa: { demarche: string; url: string } | null;
 };
 
 // Le résumé envoyé à l'assistant ne porte que le nom AFFICHÉ (`.nom`),
@@ -322,12 +370,14 @@ export function clesParNomAffiche(index: IndexCoffre, nomAffiche: string): strin
 // quoi le reconstituer) — c'est ce qui part vers assistant-coffre pour que
 // Claude puisse répondre « où est mon papier EDF ». Voir SECURITY.md,
 // section « L'assistant ».
-type DigestDocument = {
+// Exporté : réutilisé par suggererChampsFormulaire, qui a besoin du même
+// résumé pour rapprocher les champs d'un formulaire du contenu des papiers.
+export type DigestDocument = {
   nom: string; categorie: string; type: string; emetteur?: string; montant?: string | null;
   echeanceLibelle?: string | null; echeanceDate?: string | null; extrait?: string | null;
 };
 
-function digestIndex(index: IndexCoffre): DigestDocument[] {
+export function digestIndex(index: IndexCoffre): DigestDocument[] {
   return Object.values(index.objets).map((o) => ({
     nom: o.nom, categorie: o.categorie, type: o.type,
     emetteur: o.emetteur, montant: o.montant,
@@ -346,8 +396,9 @@ export async function demanderAuCoffre(
 ): Promise<ReponseAssistant> {
   const vide: ReponseAssistant = {
     reponse: "Je n'ai pas pu répondre à l'instant — réessaie dans un moment.",
-    documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false,
-    actions: [],
+    documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false,
+    declencherTriAutomatique: false, rechercheWebEffectuee: false,
+    actions: [], formulaireCerfa: null,
   };
   try {
     const { data, error } = await supabase.functions.invoke('assistant-coffre', {
@@ -359,9 +410,49 @@ export async function demanderAuCoffre(
     // encore porter ce champ — un tableau vide plutôt qu'un crash au premier
     // accès à `.map` côté interface.
     if (!Array.isArray(resultat.actions)) resultat.actions = [];
+    resultat.declencherTriAutomatique = Boolean(resultat.declencherTriAutomatique);
+    if (!resultat.formulaireCerfa || typeof resultat.formulaireCerfa !== 'object') resultat.formulaireCerfa = null;
     return resultat;
   } catch {
     return vide;
+  }
+}
+
+// Récupère les octets d'un CERFA officiel dont l'assistant a trouvé
+// l'adresse (voir formulaireCerfa) — jamais un fetch direct depuis le
+// navigateur : la plupart des sites publics n'envoient pas d'en-tête CORS
+// permissif, et c'est le serveur qui vérifie que l'adresse appartient bien à
+// un site officiel avant de la joindre (voir recuperer-formulaire-cerfa).
+export async function recupererFormulaireCerfa(url: string): Promise<ArrayBuffer> {
+  const { data, error } = await supabase.functions.invoke('recuperer-formulaire-cerfa', { body: { url } });
+  if (error || !data || 'erreur' in data) {
+    throw new Error(data && 'erreur' in data ? String(data.erreur) : 'Formulaire introuvable.');
+  }
+  const { donnees } = data as { donnees: string };
+  const binaire = atob(donnees);
+  const octets = new Uint8Array(binaire.length);
+  for (let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
+  return octets.buffer;
+}
+
+// Propose une valeur pour chaque champ d'un formulaire, déduite du résumé
+// des papiers déjà déposés et de l'identité — une suggestion, jamais un
+// remplissage : l'utilisateur la voit et la corrige avant de générer le PDF
+// (voir RemplirFormulaire.tsx). N'échoue jamais bruyamment : une panne rend
+// un objet vide, et les suggestions par nom de champ (identité) suffisent
+// encore à démarrer.
+export async function suggererChampsFormulaire(
+  champs: string[], index: IndexCoffre, demarche?: string,
+): Promise<Record<string, string>> {
+  try {
+    const { data, error } = await supabase.functions.invoke('suggerer-champs-formulaire', {
+      body: { champs, documents: digestIndex(index), identite: index.identite ?? null, demarche },
+    });
+    if (error || !data || 'erreur' in data) return {};
+    const { valeurs } = data as { valeurs?: Record<string, string> };
+    return valeurs && typeof valeurs === 'object' ? valeurs : {};
+  } catch {
+    return {};
   }
 }
 

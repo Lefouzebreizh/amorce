@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, FileUp } from 'lucide-react';
 import {
   champsFormulaire, remplirFormulaire, libelleSource,
@@ -14,7 +14,27 @@ const SOURCES_DISPONIBLES: SourceChamp[] = [
 
 type ValeurChamp = SourceChamp | 'libre' | '';
 
-export function RemplirFormulaire({ identite, onFermer }: { identite: Identite | undefined; onFermer: () => void }) {
+// Posé par l'assistant (voir formulaireCerfa côté serveur) quand il a
+// trouvé et téléchargé lui-même le CERFA officiel d'une démarche nommée par
+// l'utilisateur : le fichier arrive déjà en mémoire, avec des suggestions
+// tirées des papiers du coffre — pas seulement de l'identité, contrairement
+// au dépôt manuel ci-dessous. Le champ « choisir un fichier » disparaît
+// alors, remplacé par ce que l'assistant a trouvé ; tout le reste (édition,
+// validation avant de générer) reste identique.
+export type FormulairePreRempli = {
+  nomFichier: string;
+  demarche: string;
+  bytes: ArrayBuffer;
+  suggestionsDocument: Record<string, string>;
+};
+
+export function RemplirFormulaire({
+  identite, onFermer, prerempli,
+}: {
+  identite: Identite | undefined;
+  onFermer: () => void;
+  prerempli?: FormulairePreRempli;
+}) {
   const [fichier, setFichier] = useState<File | null>(null);
   const [champs, setChamps] = useState<ChampFormulaire[]>([]);
   const [valeurs, setValeurs] = useState<Record<string, ValeurChamp>>({});
@@ -23,6 +43,41 @@ export function RemplirFormulaire({ identite, onFermer }: { identite: Identite |
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState('');
 
+  function repartirDesChamps(trouves: ChampFormulaire[], suggestionsDocument: Record<string, string>) {
+    setChamps(trouves);
+    const valeursInitiales: Record<string, ValeurChamp> = {};
+    const texteLibreInitial: Record<string, string> = {};
+    for (const champ of trouves) {
+      if (champ.sourceSuggeree) {
+        valeursInitiales[champ.nom] = champ.sourceSuggeree;
+      } else if (suggestionsDocument[champ.nom]) {
+        // Une suggestion tirée des papiers, jamais de l'identité : ce n'est
+        // pas une des cinq sources fixes, donc portée en texte libre — déjà
+        // rempli à l'écran, mais toujours modifiable avant de générer.
+        valeursInitiales[champ.nom] = 'libre';
+        texteLibreInitial[champ.nom] = suggestionsDocument[champ.nom] as string;
+      } else {
+        valeursInitiales[champ.nom] = '';
+      }
+    }
+    setValeurs(valeursInitiales);
+    setTexteLibre(texteLibreInitial);
+    setCases({});
+  }
+
+  useEffect(() => {
+    if (!prerempli) return;
+    // Pas de setErreur('') ici : RemplirFormulaire est remontée à chaque
+    // ouverture (voir {formulaireOuvert && (...)} dans page.tsx), donc
+    // `erreur` part déjà de son état initial vide.
+    champsFormulaire(prerempli.bytes)
+      .then((trouves) => {
+        setFichier(new File([prerempli.bytes], prerempli.nomFichier, { type: 'application/pdf' }));
+        repartirDesChamps(trouves, prerempli.suggestionsDocument);
+      })
+      .catch(() => setErreur("Le formulaire trouvé n'a pas pu être lu — dépose-le à la main ci-dessous."));
+  }, [prerempli]);
+
   async function surChoixFichier(f: File | null) {
     setFichier(f);
     setErreur('');
@@ -30,14 +85,7 @@ export function RemplirFormulaire({ identite, onFermer }: { identite: Identite |
     try {
       const buf = await f.arrayBuffer();
       const trouves = await champsFormulaire(buf);
-      setChamps(trouves);
-      const valeursInitiales: Record<string, ValeurChamp> = {};
-      for (const champ of trouves) {
-        valeursInitiales[champ.nom] = champ.sourceSuggeree ?? '';
-      }
-      setValeurs(valeursInitiales);
-      setCases({});
-      setTexteLibre({});
+      repartirDesChamps(trouves, {});
     } catch {
       setErreur("Ce fichier n'est pas un PDF lisible, ou n'a pas de champs de formulaire.");
       setChamps([]);
@@ -84,16 +132,25 @@ export function RemplirFormulaire({ identite, onFermer }: { identite: Identite |
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="font-affiche text-xl">Remplir un formulaire</h2>
+          <h2 className="font-affiche text-xl">
+            {prerempli ? `Formulaire trouvé : ${prerempli.demarche}` : 'Remplir un formulaire'}
+          </h2>
           <button onClick={onFermer} className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/40" aria-label="Fermer">
             <X size={20} />
           </button>
         </div>
 
-        <p className="mb-4 text-sm text-ink-soft">
-          Dépose un formulaire PDF vierge (CERFA, mandat…). Ses champs sont lus dans ton navigateur —
-          il ne quitte jamais cet appareil, ni pour être lu ni pour être rempli.
-        </p>
+        {prerempli ? (
+          <p className="mb-4 text-sm text-ink-soft">
+            Le CERFA officiel de cette démarche a été trouvé et pré-rempli avec ce que tes papiers
+            permettent — vérifie chaque champ avant de générer, comme pour un formulaire déposé à la main.
+          </p>
+        ) : (
+          <p className="mb-4 text-sm text-ink-soft">
+            Dépose un formulaire PDF vierge (CERFA, mandat…). Ses champs sont lus dans ton navigateur —
+            il ne quitte jamais cet appareil, ni pour être lu ni pour être rempli.
+          </p>
+        )}
 
         {!identite && (
           <div className="mb-4 rounded-lg border border-wine/40 bg-wine/10 p-3 text-sm">

@@ -57,6 +57,11 @@ next-env.d.ts
 # Rushes de test et captures produits par les scripts de vérification
 .fixtures/
 
+# Le WASM et le modèle de MediaPipe, posés par `npm run mediapipe` et par
+# `prebuild`. Onze mégaoctets de binaire qui n'ont rien à faire dans Git —
+# invariant n°8 — et qui se récupèrent en une commande.
+/public/mediapipe/
+
 # Bibliotheque d'effets sonores : entierement regeneree par
 # montage-auto/download_blockbuster_sfx.py, et l'invariant du depot interdit
 # tout binaire versionne. Seul le script fait foi.
@@ -157,6 +162,10 @@ visual_library/**/*.mp4
 /iptv/.essai/
 /iptv/donnees/
 /iptv/*.db
+
+# Psy IA : Next.js autonome, comme le-coffre et titan-builder.
+/psy-ia/node_modules/
+/psy-ia/.next/
 /iptv/*.db-journal
 /iptv/*.m3u
 /iptv/*.m3u8

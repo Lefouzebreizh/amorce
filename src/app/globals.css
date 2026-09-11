@@ -13,18 +13,28 @@
    * Les bordures sont donc réservées à ce qui sépare vraiment — bandeaux, barre
    * d'étapes — et à ce qui est sélectionné.
    *
-   * Les cinq surfaces partagent une même teinte violette très désaturée. Un
-   * gris strictement neutre laissait l'accent seul porter la couleur, et
-   * l'interface paraissait éteinte entre deux boutons ; une teinte commune,
-   * même à peine perceptible, donne à l'ensemble une famille sans jamais
-   * concurrencer les images qu'on y juge. Les écarts entre voisines restent
-   * autour de 1,07 — au-dessus, on retomberait sur des boîtes empilées.
+   * Les cinq surfaces partagent une même teinte **bleu-gris** très désaturée,
+   * 225°, depuis la refonte du 10/09/2026 — elles tiraient sur le violet
+   * jusque-là. Un gris strictement neutre laissait l'accent seul porter la
+   * couleur, et l'interface paraissait éteinte entre deux boutons ; une teinte
+   * commune, même à peine perceptible, donne à l'ensemble une famille sans
+   * jamais concurrencer les images qu'on y juge.
+   *
+   * Deux valeurs sont **données** et non calculées : `ink` est le fond de page
+   * demandé, `panel` le fond des cartes — c'est la surface que rend `Panel`,
+   * donc celle que la demande désignait. Les trois autres s'en déduisent.
+   *
+   * Les écarts entre voisines : 1,100, 1,110, 1,070, 1,071. Les deux du haut
+   * tiennent la règle du dépôt ; les deux du bas sont **imposés** par l'écart
+   * entre les deux valeurs données, qui vaut 1,221 en luminance sur deux crans.
+   * Au-dessus de 1,07 on retombe sur des boîtes empilées : c'est le prix, il
+   * est faible et il est dit plutôt que tu.
    */
-  --color-ink: #08060f;
-  --color-slab: #110e1e;
-  --color-panel: #191529;
-  --color-raised: #221d35;
-  --color-edge: #2a2440;
+  --color-ink: #0f1115;
+  --color-slab: #181b25;
+  --color-panel: #202430;
+  --color-raised: #252937;
+  --color-edge: #292e3e;
 
   /*
    * Texte plus clair qu'auparavant.
@@ -34,20 +44,30 @@
    * ne sert alors plus à rien.
    */
   --color-mist: #f2effc;
-  --color-muted: #aaa4c6;
+  /*
+   * Remonté avec les surfaces, et pas d'un choix de goût : le fond le plus
+   * clair est passé de #2a2440 à #292e3e, ce qui aurait fait tomber ce gris de
+   * 6,20:1 à 5,68:1 sans que rien ne le signale. Même teinte, même saturation,
+   * la clarté seule monte de 0,710 à 0,736 — et il rend de nouveau 6,21:1.
+   */
+  --color-muted: #b2accb;
 
   /*
    * L'accent ne désigne qu'une chose : l'action à faire, et ce qui va bien.
    * L'employer aussi pour les états actifs le rendait décoratif — donc muet.
    *
-   * Turquoise plutôt que vert : posé sur des surfaces violettes, il en est
+   * Turquoise plutôt que vert : posé sur des surfaces froides, il en est
    * presque le complémentaire, et c'est ce qui le fait ressortir sur les cinq
-   * à la fois — 9,0:1 dans le pire cas, sur la surface la plus haute. Un vert
-   * y aurait perdu de la séparation à mesure que les fonds s'éclaircissent, et
-   * un accent qui ne fonctionne que sur le fond le plus sombre oblige à des
+   * à la fois — **8,23:1 dans le pire cas**, sur la surface la plus haute. Un
+   * vert y aurait perdu de la séparation à mesure que les fonds s'éclaircissent,
+   * et un accent qui ne fonctionne que sur le fond le plus sombre oblige à des
    * exceptions.
+   *
+   * Le turquoise lagon de la refonte remplace le précédent sans rien coûter :
+   * les deux se tenaient à trois centièmes l'un de l'autre sur le fond des
+   * cartes — 9,43:1 contre 9,48:1.
    */
-  --color-accent: #25e3c4;
+  --color-accent: #40e0d0;
   /*
    * Valeur de **fond**, pas de texte : ce jeton n'est employé nulle part
    * aujourd'hui, et son contraste se jugera sur ce qu'on posera dessus le jour
@@ -55,7 +75,8 @@
    */
   --color-accent-deep: #0a7d6b;
   --color-warn: #ffb340;
-  --color-danger: #ff5c8a;
+  /* Remonté pour la même raison que `muted`, et de la même façon : 5,02:1. */
+  --color-danger: #ff6c96;
 
   /*
    * Ce qui est **choisi**, et rien d'autre.
@@ -66,7 +87,27 @@
    * apercevoir. Un violet clair sépare les deux sans ajouter de famille : il
    * appartient déjà à celle des surfaces, en beaucoup plus clair.
    */
-  --color-select: #9d7bff;
+  --color-select: #c4a8ff;
+
+  /*
+   * Le violet de la refonte, et il en faut **deux** — la mesure l'impose.
+   *
+   * `--color-violet` est le violet demandé, tel quel. C'est une valeur de
+   * **fond** : dégradé d'arrière-plan, halo, lueur. Il rend 2,37:1 sur la
+   * surface la plus claire et 3,32:1 sur le fond de page — donc il ne porte
+   * jamais de texte, pas même un grand titre, qui exige 3:1 sur *toutes* les
+   * surfaces qu'il peut rencontrer. C'est exactement le violet que TITAN
+   * Builder portait comme accent et qui a été corrigé le 09/09/2026 pour cette
+   * raison-là ; le réintroduire en texte serait refaire le même défaut deux
+   * jours plus tard.
+   *
+   * `--color-violet-clair` est le même violet — teinte 262° et saturation 0,83
+   * inchangées, la clarté seule monte de 0,578 à 0,86 — et il rend **8,04:1**
+   * sur la surface la plus claire. C'est lui qui termine le dégradé des titres.
+   * L'œil y lit le même violet ; le contraste, lui, change du tout au tout.
+   */
+  --color-violet: #7c3aed;
+  --color-violet-clair: #d3bef9;
 
   /*
    * L'échelle des jauges de qualité.
@@ -244,6 +285,266 @@ input[type='range']::-moz-range-thumb {
   transform: translateY(0);
 }
 
+/*
+ * ---------------------------------------------------------------------------
+ * Les quatre touches de la refonte du 10/09/2026.
+ *
+ * Une contrainte les gouverne toutes, et elle est la raison d'être de la
+ * moitié du code ci-dessous : **rien de ce qui bouge ne doit toucher une zone
+ * où le doigt travaille.** La frise et la zone de dépôt reçoivent des gestes
+ * continus — on fait glisser une poignée, on maintient un fichier au-dessus
+ * d'un cadre — et une animation qui repeint sous ces gestes-là se paie en
+ * images perdues, pas en beauté.
+ *
+ * D'où trois règles tenues partout ici :
+ *   1. on n'anime que `opacity` et `transform`, jamais une propriété que le
+ *      navigateur doit remettre en page ou repeindre — c'est déjà l'invariant
+ *      n°4 du §2 bis, il est simplement appliqué à la lettre ;
+ *   2. le fond animé est une couche `fixed`, hors du flux, `pointer-events:
+ *      none`, qui ne partage aucun ancêtre repeint avec la frise ;
+ *   3. le survol des cartes s'annule sur celles qui portent une zone de
+ *      manipulation — voir la propriété `statique` de `Panel`.
+ * ---------------------------------------------------------------------------
+ */
+
+/*
+ * 1. Le titre en dégradé, et sa brillance au chargement.
+ *
+ * Le dégradé est peint dans le texte lui-même (`background-clip: text`), donc
+ * aucune boîte supplémentaire, aucun risque de décalage de mise en page. Il
+ * court du turquoise vers le violet **clair** : la moitié droite d'un titre
+ * doit se lire aussi bien que sa moitié gauche, et c'est ce que le violet brut
+ * ne permet pas.
+ *
+ * La brillance est une bande blanche très diluée qui traverse le titre une
+ * fois, à l'ouverture. Elle ne se répète pas : un reflet qui repasse en boucle
+ * cesse d'être un accueil et devient un tic.
+ */
+.titre-degrade {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-accent) 0%,
+    var(--color-accent) 28%,
+    var(--color-violet-clair) 78%,
+    var(--color-violet-clair) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /*
+   * Repli explicite : si `background-clip: text` n'est pas honoré, `color`
+   * vaut `transparent` et le titre disparaît. `@supports` le rétablit — un
+   * titre sans dégradé vaut infiniment mieux qu'un titre invisible.
+   */
+}
+
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .titre-degrade {
+    background-image: none;
+    color: var(--color-mist);
+  }
+}
+
+.titre-degrade.eclat {
+  background-image: linear-gradient(
+      100deg,
+      transparent 0%,
+      transparent 38%,
+      rgb(255 255 255 / 0.55) 50%,
+      transparent 62%,
+      transparent 100%
+    ),
+    linear-gradient(
+      100deg,
+      var(--color-accent) 0%,
+      var(--color-accent) 28%,
+      var(--color-violet-clair) 78%,
+      var(--color-violet-clair) 100%
+    );
+  background-size:
+    220% 100%,
+    100% 100%;
+  background-repeat: no-repeat;
+  animation: eclat-titre 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.35s 1 both;
+}
+
+@keyframes eclat-titre {
+  from {
+    background-position:
+      -120% 0,
+      0 0;
+  }
+  to {
+    background-position:
+      220% 0,
+      0 0;
+  }
+}
+
+/*
+ * 2. Le fond animé.
+ *
+ * Deux taches de couleur très diluées qui dérivent lentement. Elles vivent
+ * dans une couche `fixed` posée derrière tout le reste, sans interaction
+ * possible : c'est ce qui garantit qu'aucun repaint ne descend dans la frise.
+ * Seuls `transform` et `opacity` bougent, donc le compositeur suffit et le fil
+ * principal n'est jamais sollicité.
+ *
+ * Quarante secondes par cycle, et c'est délibéré : en dessous d'une trentaine,
+ * le mouvement se remarque, et un fond qu'on remarque concurrence les images
+ * qu'on est venu juger.
+ */
+.fond-anime {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+}
+
+/*
+ * Le dégradé radial fait le flou, et ce n'est pas un choix d'écriture : c'est
+ * la correction d'une régression **mesurée**.
+ *
+ * Premier jet : deux disques pleins adoucis par `filter: blur(90px)` et animés
+ * en `translate3d` **et** `scale`. Le parcours complet est resté vert — ses
+ * seuils sont larges — mais son relevé de cadence est passé de **17 ms par
+ * image à 85 ms** sur le profil téléphone bridé, soit cinq fois plus lent.
+ * Deux causes qui s'additionnent : un `blur` de 90 px s'applique à une surface
+ * de 90 vmax de côté, et un `scale` sur une couche floutée oblige le
+ * navigateur à la **re-tramer** à chaque image au lieu de la déplacer.
+ *
+ * Ici, le dégradé est déjà doux à la peinture : aucun filtre, aucune mise à
+ * l'échelle, seule une translation — que le compositeur exécute sans jamais
+ * revenir au fil principal. C'est ce qui permet à un fond qui bouge de
+ * coexister avec une frise qu'on manipule au doigt.
+ */
+.fond-anime::before,
+.fond-anime::after {
+  content: '';
+  position: absolute;
+  width: 110vmax;
+  height: 110vmax;
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.fond-anime::before {
+  background: radial-gradient(
+    circle closest-side,
+    color-mix(in srgb, var(--color-accent) 16%, transparent) 0%,
+    transparent 100%
+  );
+  top: -55vmax;
+  left: -40vmax;
+  animation: derive-a 40s ease-in-out infinite alternate;
+}
+
+.fond-anime::after {
+  background: radial-gradient(
+    circle closest-side,
+    color-mix(in srgb, var(--color-violet) 22%, transparent) 0%,
+    transparent 100%
+  );
+  bottom: -55vmax;
+  right: -40vmax;
+  animation: derive-b 46s ease-in-out infinite alternate;
+}
+
+@keyframes derive-a {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(14vmax, 9vmax, 0);
+  }
+}
+
+@keyframes derive-b {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-12vmax, -10vmax, 0);
+  }
+}
+
+/*
+ * 3. Le survol des cartes.
+ *
+ * Un soulèvement d'un pixel et un liseré turquoise très faible : assez pour
+ * que la carte réponde, trop peu pour qu'on la voie « bouger ». `transform` et
+ * `box-shadow` seulement — aucune marge, aucune bordure réelle, donc rien qui
+ * décale ce qu'il y a autour.
+ *
+ * `@media (hover: hover)` : sur un écran tactile, `:hover` reste collé après
+ * un appui et la carte resterait soulevée sans raison.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .carte-vive {
+    transition:
+      transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .carte-vive:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 6px 20px -12px rgb(0 0 0 / 0.6),
+      0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent);
+  }
+
+  /*
+   * Le garde-fou, et il n'est pas décoratif : `:has(:active)` neutralise le
+   * soulèvement pendant qu'un doigt ou une souris manipule quelque chose
+   * **dans** la carte. Sans lui, empoigner une poignée de réglage près du bord
+   * d'une carte survolée déplacerait la carte d'un pixel sous le curseur, et
+   * le geste raterait sa cible.
+   */
+  .carte-vive:has(:active) {
+    transform: none;
+  }
+}
+
+/*
+ * 4. La cascade.
+ *
+ * `.revele` faisait déjà entrer un bloc entier d'un coup. La cascade décale
+ * ses enfants directs les uns après les autres, pour que le regard suive
+ * l'ordre de lecture. Quatre-vingts millisecondes entre deux : en dessous on
+ * ne voit plus de décalage, au-dessus on attend.
+ *
+ * Elle ne se pose que sur du contenu qu'on lit, jamais sur une zone qu'on
+ * manipule : un panneau du studio qui entrerait en fondu pendant qu'on essaie
+ * de l'atteindre est une régression, pas une finition.
+ */
+.cascade > * {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cascade.est-visible > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cascade.est-visible > *:nth-child(2) {
+  transition-delay: 0.08s;
+}
+.cascade.est-visible > *:nth-child(3) {
+  transition-delay: 0.16s;
+}
+.cascade.est-visible > *:nth-child(4) {
+  transition-delay: 0.24s;
+}
+.cascade.est-visible > *:nth-child(n + 5) {
+  transition-delay: 0.32s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -253,10 +554,32 @@ input[type='range']::-moz-range-thumb {
   }
 
   .entree,
-  .revele {
+  .revele,
+  .cascade > * {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /*
+   * Le fond cesse de dériver et le titre de briller — mais ni l'un ni l'autre
+   * ne disparaît : ce sont des couleurs, et les couper changerait l'aspect de
+   * l'application pour qui demande seulement moins de mouvement.
+   */
+  .fond-anime::before,
+  .fond-anime::after {
+    animation: none !important;
+  }
+
+  .titre-degrade.eclat {
+    animation: none !important;
+    background-position:
+      220% 0,
+      0 0;
+  }
+
+  .carte-vive:hover {
     transform: none !important;
   }
 }

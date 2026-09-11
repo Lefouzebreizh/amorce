@@ -9,9 +9,24 @@ import { PLACEHOLDER_HOOK } from '../autoEdit.ts';
 /**
  * Le studio est un magasin unique : chaque test repart d'un projet vierge,
  * sans quoi l'ordre d'exécution changerait les résultats.
+ *
+ * L'historique **et** l'état de regroupement en font partie, et ils y ont
+ * manqué longtemps. Deux tests du mixage ne passaient que grâce à cette fuite :
+ * un `setMix` d'un test précédent, encore dans la fenêtre de regroupement,
+ * empêchait l'empilement, si bien que l'annulation retombait sur un instantané
+ * étranger dont la valeur attendue s'y trouvait par hasard. Ils étaient verts
+ * et ne vérifiaient pas ce qu'ils annonçaient.
  */
 function reset() {
-  useStudio.setState({ project: emptyProject(), selection: null, playhead: 0, playing: false });
+  useStudio.setState({
+    project: emptyProject(),
+    selection: null,
+    playhead: 0,
+    playing: false,
+    past: [],
+    future: [],
+    regroupement: { label: '', instant: 0 },
+  });
 }
 
 function asset(id: string, duration: number): MediaAsset {
@@ -490,4 +505,71 @@ test('ajouter un lot ne fait qu’une seule annulation', () => {
 
   useStudio.getState().undo();
   assert.equal(useStudio.getState().project.clips.length, 1, 'les deux ajouts devraient se défaire d’un coup');
+});
+
+
+/*
+ * La trajectoire de cadrage : une propriété de la source, pas un geste de
+ * montage.
+ *
+ * Les deux tests ci-dessous ont été vus rouges en faisant passer `poserCadrage`
+ * par `mutate`, c'est-à-dire en la traitant comme une modification ordinaire :
+ * le premier échoue parce qu'une entrée d'annulation apparaît, le second parce
+ * que l'annulation d'une coupe emporte au passage une détection que personne
+ * n'a demandé de défaire.
+ */
+const CADRAGE = { parSeconde: 10, centres: [700, 705, 710] };
+
+test('poser une trajectoire n’ajoute rien à la pile d’annulation', () => {
+  /*
+   * La pile doit être **loin de sa borne** pour que sa longueur mesure encore
+   * quelque chose : plafonnée par `slice(-HISTORY_LIMIT)`, saturée, elle perd
+   * une entrée par le bas dès qu'on en pousse une, et ne bouge plus. C'est
+   * `reset` qui la vide depuis le 10/09/2026 ; avant lui, ce test restait vert
+   * en faisant passer `poserCadrage` par `mutate`, c'est-à-dire sur le défaut
+   * même qu'il annonce attraper.
+   */
+  useStudio.getState().addAssets([asset('a', 5)]);
+  const avant = useStudio.getState().past.length;
+
+  useStudio.getState().poserCadrage('a', CADRAGE);
+
+  assert.equal(useStudio.getState().past.length, avant, 'aucune entrée d’annulation');
+  assert.deepEqual(useStudio.getState().project.assets[0].cadrage, CADRAGE);
+});
+
+test('annuler un geste de montage ne perd pas la trajectoire détectée', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5)]);
+  useStudio.getState().appendClip('a');
+  // La détection se termine après la coupe : c'est le cas réel, elle dure
+  // plusieurs secondes pendant que l'utilisateur continue de monter.
+  useStudio.getState().poserCadrage('a', CADRAGE);
+
+  useStudio.getState().undo();
+
+  const rush = useStudio.getState().project.assets.find((a) => a.id === 'a');
+  assert.ok(rush, 'le rush est toujours là');
+  assert.deepEqual(rush.cadrage, CADRAGE, 'la trajectoire a survécu à l’annulation');
+});
+
+test('rétablir non plus', () => {
+  const store = useStudio.getState();
+  store.addAssets([asset('a', 5)]);
+  useStudio.getState().appendClip('a');
+  useStudio.getState().poserCadrage('a', CADRAGE);
+  useStudio.getState().undo();
+  useStudio.getState().redo();
+
+  assert.deepEqual(useStudio.getState().project.assets[0].cadrage, CADRAGE);
+});
+
+test('une trajectoire posée sur un rush retiré entre-temps est ignorée', () => {
+  // La détection dure plusieurs secondes ; rien n'empêche d'importer puis de
+  // supprimer avant qu'elle ne rende son résultat.
+  useStudio.getState().addAssets([asset('a', 5)]);
+  useStudio.getState().removeAsset('a');
+  useStudio.getState().poserCadrage('a', CADRAGE);
+
+  assert.equal(useStudio.getState().project.assets.length, 0);
 });

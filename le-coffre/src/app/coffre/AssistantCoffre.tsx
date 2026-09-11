@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FileText, Folder, Globe, Send, Trash2, X } from 'lucide-react';
+import { FileText, Folder, Globe, Trash2, Triangle, X } from 'lucide-react';
 import { demanderAuCoffre, type ActionAssistant, type IndexCoffre, type TourConversation } from '@/lib/coffre';
 
 type Message = TourConversation & {
@@ -10,12 +10,34 @@ type Message = TourConversation & {
   documentsCites?: string[];
   ouvrirFormulaire?: boolean;
   ouvrirRangement?: boolean;
+  // Un seul bot (10/09/2026) : le message propose de lancer le tri en lot
+  // depuis la conversation même — voir le bloc TriAutomatique plus bas.
+  declencherTriAutomatique?: boolean;
   rechercheWebEffectuee?: boolean;
   actions?: ActionAssistant[];
   // Résultat d'une action déjà exécutée, indexé sur sa position dans
   // `actions` — jamais réinitialisé, pour qu'une action faite reste
   // affichée comme faite plutôt que de reproposer un bouton « Confirmer ».
   actionsExecutees?: Record<number, string>;
+  // Un CERFA officiel trouvé par recherche web pour une démarche nommée par
+  // l'utilisateur — voir onPreparerFormulaireCerfa plus bas.
+  formulaireCerfa?: { demarche: string; url: string } | null;
+};
+
+// État du tri en lot, porté par page.tsx (deux passes — instantanée puis IA,
+// voir trierAutomatiquement) et seulement affiché ici — un seul moteur, un
+// seul point d'entrée depuis le 10/09/2026. Plus de « non-documents » : tout
+// fichier reçoit toujours une catégorie, le bilan ne porte que les vraies
+// erreurs techniques.
+type EtatTriAutomatique = {
+  enCours: boolean;
+  progres: { fait: number; total: number } | null;
+  // erreursTechniques : encore réessayables (« Réessayer » les reprendra).
+  // abandonnes : ont atteint le plafond de tentatives — Réessayer ne les
+  // reprend plus, ils gardent leur catégorie générale (Images/Papiers) pour
+  // de bon, voir TENTATIVES_TRI_AUTO_MAX dans page.tsx.
+  bilan: { erreursTechniques: string[]; abandonnes: string[] } | null;
+  detailOuvert: boolean;
 };
 
 function libelleAction(a: ActionAssistant): string {
@@ -24,7 +46,10 @@ function libelleAction(a: ActionAssistant): string {
     : `Supprimer « ${a.nom} »`;
 }
 
-export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement, onExecuterAction }: {
+export function AssistantCoffre({
+  index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement,
+  onExecuterAction, onPreparerFormulaireCerfa, triAuto, onLancerTriAutomatique, onBasculerDetailTriAutomatique,
+}: {
   index: IndexCoffre;
   // Posée par la recherche locale restée sans résultat, envoyée une seule
   // fois à l'ouverture — voir l'effet ci-dessous. Absente ou vide : le chat
@@ -38,20 +63,62 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
   // confirmation de l'utilisateur — jamais toute seule. Rend un message
   // court à afficher à la place du bouton, succès ou échec.
   onExecuterAction: (action: ActionAssistant) => Promise<string>;
+  // Télécharge le CERFA trouvé, en lit les champs et propose des valeurs
+  // tirées des papiers du coffre, puis ouvre l'écran de remplissage déjà
+  // rempli — jamais généré ni téléchargé sans que l'utilisateur ne le voie
+  // d'abord. Lève une erreur (message affiché) si le formulaire n'a pas pu
+  // être récupéré ou lu.
+  onPreparerFormulaireCerfa: (demarche: string, url: string) => Promise<void>;
+  // Tri en lot : état et déclencheurs portés par page.tsx, affichés ici
+  // seulement quand un message porte `declencherTriAutomatique`.
+  triAuto: EtatTriAutomatique;
+  onLancerTriAutomatique: () => void;
+  onBasculerDetailTriAutomatique: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState('');
+  // Préparation d'un CERFA en cours — indexé sur le message, pour désactiver
+  // seulement son propre bouton pendant l'appel, sans bloquer le reste du chat.
+  const [cerfaEnCours, setCerfaEnCours] = useState<number | null>(null);
+  const [erreurCerfa, setErreurCerfa] = useState<{ indexMessage: number; texte: string } | null>(null);
   const [enCours, setEnCours] = useState(false);
   // Position (index de message, index d'action) de l'action en cours
   // d'exécution — désactive son bouton le temps de l'appel, sans bloquer
   // le reste du chat.
   const [actionEnCours, setActionEnCours] = useState<string | null>(null);
   const finDesMessages = useRef<HTMLDivElement>(null);
-  const dejaEnvoyee = useRef(false);
+  // Dernière question envoyée depuis la barre de recherche — jamais un
+  // simple booléen : le panneau reste monté d'une commande à l'autre (un
+  // seul bot, jamais fermé entre deux questions), donc un booléen à « déjà
+  // envoyée » aurait bloqué tout ce qui suit la première. C'est la valeur
+  // elle-même qu'on compare : une NOUVELLE question posée dans la barre
+  // pendant que la conversation est déjà ouverte doit repartir vers le bot
+  // — sans ça, la barre avait l'air d'un simple filtre de recherche après
+  // le premier message, chaque commande suivante disparaissant en silence.
+  const derniereQuestionEnvoyee = useRef<string | null>(null);
+  // Indices de message déjà exploités pour lancer le tri — sans cette
+  // mémoire, un nouveau rendu (ou un second message qui redemande la même
+  // chose) relancerait le tri en boucle sur un message déjà traité.
+  const triAutoDejaDeclenche = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     finDesMessages.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Un seul bot, aucune étape à valider (10/09/2026) : dès que la
+  // conversation propose de trier, ça part tout seul — ta phrase dans le
+  // chat vaut déjà l'accord, un second clic n'ajouterait rien. Ne se
+  // déclenche jamais si un tri est déjà en cours.
+  useEffect(() => {
+    if (triAuto.enCours) return;
+    const indexAtraiter = messages.findIndex(
+      (m, i) => m.declencherTriAutomatique && !triAutoDejaDeclenche.current.has(i),
+    );
+    if (indexAtraiter === -1) return;
+    triAutoDejaDeclenche.current.add(indexAtraiter);
+    onLancerTriAutomatique();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, triAuto.enCours]);
 
   // Retrouve le nom réel d'un document cité par son nom exact — jamais
   // deviné : si Claude a mal recopié un nom, on ne montre pas de lien plutôt
@@ -73,11 +140,26 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
         documentsCites: reponse.documentsCites,
         ouvrirFormulaire: reponse.ouvrirFormulaire,
         ouvrirRangement: reponse.ouvrirRangement,
+        declencherTriAutomatique: reponse.declencherTriAutomatique,
         rechercheWebEffectuee: reponse.rechercheWebEffectuee,
         actions: reponse.actions,
+        formulaireCerfa: reponse.formulaireCerfa,
       }]);
     } finally {
       setEnCours(false);
+    }
+  }
+
+  async function surPreparerFormulaireCerfa(indexMessage: number, demarche: string, url: string) {
+    if (cerfaEnCours !== null) return;
+    setErreurCerfa(null);
+    setCerfaEnCours(indexMessage);
+    try {
+      await onPreparerFormulaireCerfa(demarche, url);
+    } catch (err) {
+      setErreurCerfa({ indexMessage, texte: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setCerfaEnCours(null);
     }
   }
 
@@ -96,16 +178,18 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
     }
   }
 
-  // Envoi automatique de la question posée dans la barre de recherche, une
-  // seule fois — `dejaEnvoyee` évite un doublon si le composant se
-  // remontait pour une autre raison sans que `questionInitiale` change.
+  // Envoi automatique de chaque question posée dans la barre de recherche —
+  // au premier message comme aux suivants, tant que le texte change. La
+  // conversation restant ouverte d'une commande à l'autre, ce n'est PAS
+  // seulement l'ouverture du panneau qui doit déclencher l'envoi : c'est
+  // chaque nouvelle valeur de `questionInitiale`.
   useEffect(() => {
-    if (questionInitiale && !dejaEnvoyee.current) {
-      dejaEnvoyee.current = true;
+    if (questionInitiale && questionInitiale !== derniereQuestionEnvoyee.current) {
+      derniereQuestionEnvoyee.current = questionInitiale;
       envoyerTexte(questionInitiale);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [questionInitiale]);
 
   async function envoyer(e: React.FormEvent) {
     e.preventDefault();
@@ -131,30 +215,29 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 sm:items-center sm:p-6" onClick={onFermer}>
-      <div
-        className="flex h-[85vh] w-full flex-col overflow-hidden rounded-t-3xl border border-line bg-paper-raised sm:h-[80vh] sm:max-w-xl sm:rounded-3xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-line p-5">
-          <div>
-            <h2 className="font-affiche text-xl">Demander au coffre</h2>
-            <p className="text-sm text-ink-soft">Retrouve un papier, ou pose une question.</p>
-          </div>
-          <button onClick={onFermer} className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/40" aria-label="Fermer">
-            <X size={20} />
-          </button>
-        </div>
+    // Une seule barre, un seul bot (10/09/2026) : plus de panneau plein
+    // écran par-dessus la page — la conversation vit directement sous la
+    // barre de recherche, comme un bloc de plus dans le tableau de bord.
+    // Une hauteur bornée (pas `100dvh`) évite qu'un long échange n'avale
+    // tout l'écran ; `onFermer` referme le bloc sans jamais recouvrir quoi
+    // que ce soit d'autre à fermer par-dessus.
+    <div className="rounded-2xl border border-line bg-paper-raised">
+      <div className="flex items-center justify-between border-b border-line p-4">
+        <p className="text-sm font-semibold text-ink-soft">Conversation</p>
+        <button onClick={onFermer} className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/40" aria-label="Fermer la conversation">
+          <X size={18} />
+        </button>
+      </div>
 
-        <div className="flex-1 overflow-y-auto p-5">
-          {messages.length === 0 && (
-            <p className="rounded-2xl border border-dashed border-line bg-paper p-4 text-sm text-ink-soft">
-              Essaie « trouve mes photos », « range la facture EDF dans Énergie », « supprime le
-              doublon de la carte grise », « comment résilier une assurance habitation », ou « je
-              veux remplir un formulaire ».
-            </p>
-          )}
-          <ul className="flex flex-col gap-3">
+      <div className="max-h-[50vh] overflow-y-auto p-4">
+        {messages.length === 0 && (
+          <p className="rounded-2xl border border-dashed border-line bg-paper p-4 text-sm text-ink-soft">
+            Essaie « trouve mes photos », « range la facture EDF dans Énergie », « supprime le
+            doublon de la carte grise », « comment résilier une assurance habitation », ou « je
+            veux remplir un formulaire ».
+          </p>
+        )}
+        <ul className="flex flex-col gap-3">
             {messages.map((m, i) => (
               <li key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
@@ -225,6 +308,105 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
                       })}
                     </div>
                   )}
+                  {m.formulaireCerfa && (
+                    <div className="mt-2 flex flex-col items-start gap-1.5">
+                      <button
+                        type="button"
+                        disabled={cerfaEnCours === i}
+                        onClick={() => surPreparerFormulaireCerfa(i, m.formulaireCerfa!.demarche, m.formulaireCerfa!.url)}
+                        className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
+                      >
+                        <FileText size={12} />
+                        {cerfaEnCours === i ? 'Préparation…' : `Préparer « ${m.formulaireCerfa.demarche} » pré-rempli`}
+                      </button>
+                      {cerfaEnCours === i && (
+                        <p className="text-xs text-ink-soft">Téléchargement du formulaire et lecture de tes papiers…</p>
+                      )}
+                      {erreurCerfa && erreurCerfa.indexMessage === i && (
+                        <p className="text-xs text-wine">{erreurCerfa.texte}</p>
+                      )}
+                    </div>
+                  )}
+                  {m.declencherTriAutomatique && (
+                    <div className="mt-2 flex flex-col items-start gap-2">
+                      {/* Aucun bouton : le tri part tout seul dès que ce
+                          message existe — voir l'effet de déclenchement
+                          plus haut. Ici, seulement le statut. */}
+                      {triAuto.progres ? (
+                        <p className="flex items-center gap-1.5 text-xs text-ink-soft">
+                          <Folder size={12} />
+                          Affinage en cours… ({triAuto.progres.fait}/{triAuto.progres.total})
+                        </p>
+                      ) : triAuto.enCours ? (
+                        <p className="flex items-center gap-1.5 text-xs text-ink-soft">
+                          <Folder size={12} /> Classement en cours…
+                        </p>
+                      ) : (
+                        <p className="flex items-center gap-1.5 text-xs text-ink-soft">
+                          <Folder size={12} /> Fait.
+                        </p>
+                      )}
+                      {triAuto.progres && (
+                        <div
+                          role="progressbar"
+                          aria-valuenow={triAuto.progres.fait}
+                          aria-valuemin={0}
+                          aria-valuemax={triAuto.progres.total}
+                          aria-label="Progression du tri automatique"
+                          className="relative h-1.5 w-full overflow-hidden rounded-full bg-line"
+                        >
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-vert via-accent to-violet" />
+                          <div
+                            className="absolute inset-y-0 right-0 rounded-r-full bg-line transition-all"
+                            style={{ width: `${100 - (triAuto.progres.fait / triAuto.progres.total) * 100}%` }}
+                          />
+                        </div>
+                      )}
+                      {triAuto.bilan && triAuto.bilan.erreursTechniques.length > 0 && (
+                        <div className="flex w-full flex-col gap-2 rounded-lg border border-line bg-paper-raised px-3 py-2 text-xs">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-wine">
+                              {triAuto.bilan.erreursTechniques.length} fichier{triAuto.bilan.erreursTechniques.length > 1 ? 's' : ''} non
+                              analysé{triAuto.bilan.erreursTechniques.length > 1 ? 's' : ''}.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={onLancerTriAutomatique}
+                              disabled={triAuto.enCours}
+                              className="shrink-0 font-semibold text-wine underline decoration-dotted hover:text-ink disabled:opacity-60"
+                            >
+                              Réessayer
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={onBasculerDetailTriAutomatique}
+                            className="self-start text-ink-soft underline decoration-dotted hover:text-ink"
+                          >
+                            {triAuto.detailOuvert ? 'Masquer le détail' : 'Voir le détail'}
+                          </button>
+                          {triAuto.detailOuvert && (
+                            <div className="max-h-40 overflow-y-auto rounded-lg bg-paper p-2 text-xs text-ink-soft">
+                              {triAuto.bilan.erreursTechniques.map((nom, ni) => (
+                                <p key={`${nom}-${ni}`} className="truncate">{nom}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {triAuto.bilan && triAuto.bilan.abandonnes.length > 0 && (
+                        <div className="flex w-full flex-col gap-1 rounded-lg border border-line bg-paper-raised px-3 py-2 text-xs text-ink-soft">
+                          <p>
+                            {triAuto.bilan.abandonnes.length} fichier{triAuto.bilan.abandonnes.length > 1 ? 's' : ''} n&apos;
+                            {triAuto.bilan.abandonnes.length > 1 ? 'ont' : 'a'} pas pu être analysé
+                            {triAuto.bilan.abandonnes.length > 1 ? 's' : ''} par l&apos;IA après plusieurs
+                            tentatives — {triAuto.bilan.abandonnes.length > 1 ? 'ils restent' : 'il reste'} classé
+                            {triAuto.bilan.abandonnes.length > 1 ? 's' : ''} dans leur dossier général (Images/Papiers).
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </li>
             ))}
@@ -255,10 +437,9 @@ export function AssistantCoffre({ index, questionInitiale, onFermer, onOuvrirDoc
             className="flex shrink-0 items-center justify-center rounded-lg bg-bleu px-4 py-2.5 text-paper transition hover:bg-bleu-strong disabled:opacity-60"
             aria-label="Envoyer"
           >
-            <Send size={18} />
+            <Triangle size={16} fill="currentColor" />
           </button>
         </form>
-      </div>
     </div>
   );
 }

@@ -107,6 +107,7 @@ while IFS= read -r f; do
     comptes-serveur/*) inscrire comptes ;;
     generation-serveur/*) inscrire generation ;;
     annuaire-ia/*)   inscrire annuaire ;;
+    psy-ia/*)        inscrire psyia ;;
     # Avant la découverte Python plus bas, qui inscrira *aussi* la suite
     # `chat-traducteur` : c'est voulu. Le Python fait foi, et les témoins de
     # conformité du portage sont engendrés depuis lui — toucher au TypeScript
@@ -367,6 +368,31 @@ lancer_titan() {
   return $e
 }
 
+lancer_psyia() {
+  # Même mesure que TITAN Builder : Next.js indépendant, dépendances réelles
+  # installées (`npm install` posé par le hook de démarrage). Lint et
+  # typecheck ne se lisent pas l'un l'autre : ils partent ensemble.
+  #
+  # Un vert ici ne garde que la mécanique — le code fait ce que la note
+  # d'initialisation demande. Il ne dit rien de la validation clinique de la
+  # liste de mots-clés ni du prompt système : voir psy-ia/SECURITY.md et
+  # psy-ia/TODO.md, qu'aucun test unitaire ne remplace.
+  local d="psy-ia"; local j="$journal/psyia"; local e=0
+  ( cd "$d" || exit 1; etape "$j.lint"      "lint"      npm run lint ) & local a=$!
+  ( cd "$d" || exit 1; etape "$j.typecheck" "typecheck" npm run typecheck ) & local b=$!
+  ( cd "$d" || exit 1; etape "$j.test"      "tests"     npm test ) & local c=$!
+  # `regarder` n'est pas une suite de tests et ne peut pas échouer : il AFFICHE
+  # ce que la détection de crise fait sur des messages ordinaires — « mort de
+  # rire », « ce film m'a tué » —, faux positif connu compris. Il est ici parce
+  # que sur ce projet-là, le vert des trois étapes ci-dessus ne dit rien du
+  # résultat perçu, et que sa sortie se lit à l'œil en deux secondes.
+  ( cd "$d" || exit 1; etape "$j.regarder"  "regarder"  npm run regarder ) & local r=$!
+  wait $a || e=1; wait $b || e=1; wait $c || e=1; wait $r || e=1
+  ( cd "$d" || exit 1; etape "$j.build" "build" npm run build || exit 1 ) || e=1
+  cat "$j".{lint,typecheck,test,regarder,build} > "$j" 2>/dev/null
+  return $e
+}
+
 lancer_bilan() {
   local d="bilan-patrimoine"; local j="$journal/bilan"; local e=0
   # Ni build ni interface : ce lot est du calcul pur. Les deux étapes ne se
@@ -537,6 +563,7 @@ for p in $projets; do
     comptes) lancer_comptes & pid_de[comptes]=$! ;;
     generation) lancer_generation & pid_de[generation]=$! ;;
     annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
+    psyia)   lancer_psyia  & pid_de[psyia]=$! ;;
     outillage) lancer_outillage & pid_de[outillage]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
   esac
@@ -567,6 +594,7 @@ nom_lisible() {
     comptes) echo "Serveur de comptes" ;;
     generation) echo "Passerelle de génération" ;;
     annuaire) echo "Réseau d'annuaires IA" ;;
+    psyia)   echo "Psy IA (squelette architectural)" ;;
     outillage) echo "Outillage du dépôt (syntaxe seule)" ;;
     py:*)    echo "${1#py:}" ;;
   esac

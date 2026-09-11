@@ -11,7 +11,7 @@
  * Usage : npm run verify
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -22,18 +22,63 @@ const RUSHES = join(ROOT, '.fixtures', 'rushes');
 const SHOTS = join(ROOT, '.fixtures', 'captures');
 const URL_BASE = (process.env.AMORCE_URL || 'http://localhost:3000') + '/studio';
 
+/*
+ * Le pas d'échantillonnage de la détection de cadrage, recopié de
+ * `src/lib/detection.ts`. Recopié et non importé : ce script est du JavaScript
+ * nu conduit par Node, et le module est du TypeScript qui charge MediaPipe à la
+ * demande. Le contrôle ci-dessous compare la valeur trouvée en base à celle-ci,
+ * donc un changement de pas fait tomber le parcours au lieu de passer inaperçu.
+ */
+const PAR_SECONDE_CADRAGE = 10;
+
 /** Durée attendue du montage express sur les rushes de test, en secondes. */
 const EXPECTED_DURATION = 7.5;
 
 // Le cinquième est nommé à part : une `.fixtures/` fabriquée avant qu'il
 // existe porte les quatre autres, et le parcours tomberait tout à la fin, sur
 // un import qui ne trouve pas son fichier.
+//
+// Et on mesure la **taille**, pas la présence. Ce garde ne lisait que
+// `existsSync` : un `rush-paysage.webm` de zéro octet le passait sans un mot,
+// et le parcours tombait quatre minutes plus tard sur « 4 médias pour 5 »,
+// puis plantait sur une attente de 30 s à un endroit qui ne dit rien de la
+// cause. Mesuré le 11/09/2026 sur le runner. Un fichier vide compte comme
+// présent tant que personne ne regarde ce qu'il pèse.
 for (const nom of ['rush1.webm', 'rush-paysage.webm']) {
-  if (existsSync(join(RUSHES, nom))) continue;
-  console.error(`Rush ${nom} absent. Lance d’abord : npm run fixtures`);
+  const chemin = join(RUSHES, nom);
+  if (existsSync(chemin) && statSync(chemin).size > 0) continue;
+  const etat = existsSync(chemin) ? 'vide' : 'absent';
+  console.error(`Rush ${nom} ${etat}. Lance d’abord : npm run fixtures`);
   process.exit(1);
 }
 mkdirSync(SHOTS, { recursive: true });
+
+/**
+ * Le modèle de détection, posé ici plutôt que par le workflow.
+ *
+ * `npm run mediapipe` ne tourne qu'en `prebuild`, donc jamais avant ce
+ * parcours : l'intégration continue enchaîne `fixtures`, `dev`, `verify`, et
+ * `/mediapipe/visage.tflite` y rendait 404. Le contrôle de trajectoire tombait
+ * alors pour une raison qui n'a rien à voir avec le code éprouvé.
+ *
+ * Le poser depuis ce script plutôt que d'ajouter une étape au workflow n'est
+ * pas un contournement : c'est le même geste que `npm run fixtures`, dont ce
+ * parcours dépend déjà — la matière qu'il lui faut, il se la donne.
+ */
+const MODELE = join(ROOT, 'public', 'mediapipe', 'visage.tflite');
+if (!existsSync(MODELE)) {
+  const pose = spawnSync('node', [join(ROOT, 'scripts', 'assembler-mediapipe.mjs')], {
+    encoding: 'utf8',
+  });
+  if (pose.status !== 0) console.log(`     modèle non posé : ${(pose.stderr ?? '').trim().slice(0, 120)}`);
+}
+/*
+ * L'assembleur sort en succès même quand l'hôte du modèle a hoqueté — c'est
+ * voulu, une fonctionnalité facultative ne doit pas casser un déploiement. On
+ * relit donc le disque plutôt que le code de sortie.
+ */
+const MODELE_LA = existsSync(MODELE);
+if (!MODELE_LA) console.log('     modèle de détection absent : la trajectoire ne sera pas mesurée.');
 
 /**
  * Deux profils, une seule passe.
@@ -129,6 +174,38 @@ let profileLabel = '';
 const check = (name, ok, detail = '') => {
   results.push({ name: `[${profileLabel}] ${name}`, ok });
   console.log(`${ok ? '  OK  ' : ' ECHEC'} | ${name}${detail ? ` — ${detail}` : ''}`);
+};
+
+/*
+ * Un contrôle sauté n'est pas un contrôle passé.
+ *
+ * Cinq contrôles de ce parcours dépendent de quelque chose que la machine
+ * n'a pas forcément : ffmpeg pour quatre d'entre eux, le modèle de détection
+ * pour le cinquième. Quand l'outil manquait, la ligne s'imprimait en « — » et
+ * le contrôle **disparaissait du décompte** : le bilan annonçait
+ * « 112/112 vérifications passées » sur un parcours qui en avait mesuré 108,
+ * et l'intégration continue le comptait vert. Mesuré le 11/09/2026 — ffmpeg
+ * est absent du runner `ubuntu-latest`, et quatre contrôles s'y sautaient à
+ * chaque passage sans que rien ne le signale.
+ *
+ * Un saut se déclare donc ici : il s'imprime, il compte dans le bilan, et il
+ * fait **échouer** le parcours. Une machine qui assume de ne pas les mesurer
+ * le dit explicitement par `AMORCE_SAUTS_TOLERES=1` ; l'aveu remplace le
+ * silence.
+ *
+ * **Un seul des cinq est toléré, et la raison tient à ce dont il dépend** :
+ * la trajectoire de recadrage demande un modèle **téléchargé sur le réseau**,
+ * pas un outil qu'on installe. Le rendre bloquant ferait rougir le parcours
+ * chaque fois que l'hôte du modèle hoquète, pour un défaut qui n'est pas dans
+ * le code — et un rouge qui s'allume sans cause apprend à ignorer les rouges.
+ * Tranché par le propriétaire le 11/09/2026. Il se déclare et se compte comme
+ * les autres : ce qui change est seulement le code de sortie. C'est la seule forme qui rende la différence visible entre « tout
+ * est vert » et « tout ce qui a tourné est vert ».
+ */
+const sauts = [];
+const saute = (nom, raison, { bloquant = true } = {}) => {
+  sauts.push({ nom: `[${profileLabel}] ${nom}`, raison, bloquant });
+  console.log(`  —    | ${nom} — non mesuré (${raison})${bloquant ? '' : ', toléré'}`);
 };
 
 /**
@@ -285,9 +362,24 @@ for (const profile of PROFILES.filter((p) => !only || p.id === only)) {
 await browser.close();
 
 const failed = results.filter((r) => !r.ok);
-console.log(`\n--- BILAN : ${results.length - failed.length}/${results.length} vérifications passées ---`);
+const sautsTolerés = process.env.AMORCE_SAUTS_TOLERES === '1';
+const bloquants = sautsTolerés ? [] : sauts.filter((saut) => saut.bloquant);
+console.log(
+  `\n--- BILAN : ${results.length - failed.length}/${results.length} vérifications passées`
+  + `${sauts.length ? `, ${sauts.length} sautée(s)` : ''} ---`,
+);
 for (const failure of failed) console.log(`  échec : ${failure.name}`);
-process.exit(failed.length ? 1 : 0);
+for (const saut of sauts) {
+  console.log(`  sauté : ${saut.nom} — ${saut.raison}${saut.bloquant ? '' : ' (toléré)'}`);
+}
+if (bloquants.length) {
+  console.log(
+    `\n  ${bloquants.length} contrôle(s) n'ont pas pu s'exécuter : ce parcours échoue plutôt`
+    + ' que de les compter passés. Installe l’outil manquant — ffmpeg pour la plupart —'
+    + ' ou relance avec AMORCE_SAUTS_TOLERES=1 pour assumer explicitement de ne pas les mesurer.',
+  );
+}
+process.exit(failed.length || bloquants.length ? 1 : 0);
 
 async function runProfile(profile) {
 const context = await browser.newContext({
@@ -1117,7 +1209,7 @@ if (profile.mobile) {
 
   const ouverture = await secondesVues();
   if (ouverture === null) {
-    console.log('  —    | Échelle de frise non mesurée (frise absente)');
+    saute('Échelle de frise', 'frise absente');
   } else {
     check(
       'La frise montre le montage entier à l’ouverture',
@@ -1307,7 +1399,17 @@ check('Un format d’export est disponible', !/non pris en charge/.test(format ?
  * Sans bouton d'arrêt, la seule issue d'un export trop long était de fermer
  * l'onglet, donc de perdre le montage.
  */
-await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
+/*
+ * Les deux libellés, parce que le bouton dit la vérité sur ce qu'il exporte.
+ *
+ * Il annonce « Exporter quand même » tant que des crochets restent à remplir,
+ * et « Exporter la vidéo » sinon. Le parcours ne visait que le second : depuis
+ * que le montage express pose une trame à compléter plutôt qu'un seul texte,
+ * c'est le premier qui s'affiche ici, et l'étape entière tombait en attente
+ * d'un bouton qui n'existait pas — sans que rien ne dise que c'était le
+ * libellé, et non l'export, qui manquait.
+ */
+await page.locator('button').filter({ hasText: /⬇ Exporter (la vidéo|quand même)/ }).first().click();
 await page.waitForTimeout(1200);
 
 const boutonArret = page.locator('button:has-text("Arrêter l’export")');
@@ -1325,7 +1427,7 @@ if ((await boutonArret.count()) === 1) {
     'Le bouton d’export redevient disponible après un arrêt',
     await page.evaluate(() => {
       const boutons = [...document.querySelectorAll('button')];
-      const cible = boutons.find((b) => b.textContent?.includes('⬇ Exporter la vidéo'));
+      const cible = boutons.find((b) => /⬇ Exporter (la vidéo|quand même)/.test(b.textContent ?? ''));
       return cible !== undefined && !cible.disabled;
     }),
   );
@@ -1349,7 +1451,7 @@ if ((await boutonArret.count()) === 1) {
  * Le délai ne coûte que dans le cas où quelque chose est vraiment cassé.
  */
 const downloading = page.waitForEvent('download', { timeout: 300000 });
-await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
+await page.locator('button').filter({ hasText: /⬇ Exporter (la vidéo|quand même)/ }).first().click();
 await page.waitForTimeout(2500);
 await page.screenshot({ path: join(SHOTS, `05-export-${profile.id}.png`) });
 
@@ -1517,7 +1619,7 @@ if (exportPath) {
    */
   const cadence = mesurerCadence(exportPath);
   if (cadence === null) {
-    console.log('  —    | Cadence non mesurée (ffprobe absent)');
+    saute('Cadence de l’export', 'ffprobe absent');
   } else {
     /*
      * La cadence de l'export, devenue un contrôle.
@@ -1585,7 +1687,7 @@ if (exportPath) {
 
   const creux = mesurerImagesVides(exportPath);
   if (creux === null) {
-    console.log('  —    | Images vides non mesurées (ffmpeg absent)');
+    saute('Images vides de l’export', 'ffmpeg absent');
   } else {
     check(
       'Aucune image de l’export n’est vide',
@@ -1596,7 +1698,7 @@ if (exportPath) {
 
   const silence = mesurerSilence(exportPath);
   if (silence === null) {
-    console.log('  —    | Silence non mesuré (ffmpeg absent)');
+    saute('Silence en cours de montage', 'ffmpeg absent');
   } else {
     check(
       'Le son ne s’interrompt pas en cours de montage',
@@ -1627,7 +1729,7 @@ if (exportPath) {
    */
   const pic = mesurerPic(exportPath);
   if (pic === null) {
-    console.log('  —    | Vrai pic non mesuré (ffmpeg absent)');
+    saute('Vrai pic du fichier livré', 'ffmpeg absent');
   } else {
     check(
       'Le fichier livré n’écrête pas',
@@ -1761,6 +1863,71 @@ if (exportPath) {
     `${(peint * 100).toFixed(1)} % de l’image peinte`,
   );
   await page.screenshot({ path: join(SHOTS, `07-paysage-${profile.id}.png`) });
+
+  /*
+   * La détection de sujet a-t-elle **vraiment** tourné sur ce rush ?
+   *
+   * On le lit dans IndexedDB plutôt que par un crochet de débogage posé sur
+   * `window` : la reprise enregistre déjà chaque rush avec ses champs, la
+   * trajectoire comprise. Rien n'est ajouté à l'application pour la vérifier —
+   * on lit ce qu'elle écrit de toute façon.
+   *
+   * Ce que ce contrôle prouve, et ce qu'il ne prouve pas : la file tourne, elle
+   * choisit bien le rush large, elle charge le modèle depuis notre propre
+   * origine et elle repose son résultat dans le projet. Il ne dit **rien** de la
+   * justesse du cadrage : le rush de test porte un disque, pas un visage, donc
+   * la trajectoire attendue est centrée. Juger le suivi demande un rush filmé,
+   * qu'aucune fixture ne fabrique.
+   */
+  if (!MODELE_LA) {
+    saute('Trajectoire de recadrage', 'modèle de détection absent', { bloquant: false });
+  } else {
+  const trajectoire = await page.evaluate(
+    (parSeconde) =>
+      new Promise((resolve) => {
+        const limite = Date.now() + 60000;
+        const lire = () => {
+          const ouverture = indexedDB.open('amorce');
+          ouverture.onerror = () => resolve({ erreur: 'base illisible' });
+          ouverture.onsuccess = () => {
+            const base = ouverture.result;
+            // `projet`, au singulier, et une seule entrée : voir `persistence.ts`.
+            if (!base.objectStoreNames.contains('projet')) {
+              base.close();
+              return resolve({ erreur: 'aucun projet enregistré' });
+            }
+            const demande = base.transaction('projet').objectStore('projet').getAll();
+            demande.onsuccess = () => {
+              const enregistres = demande.result ?? [];
+              const rushes = enregistres.flatMap((e) => e?.project?.assets ?? []);
+              const large = rushes.find((a) => a && a.width > a.height);
+              base.close();
+              if (large?.cadrage) {
+                return resolve({
+                  parSeconde: large.cadrage.parSeconde,
+                  centres: large.cadrage.centres?.length ?? 0,
+                  attendu: parSeconde,
+                });
+              }
+              if (Date.now() > limite) {
+                return resolve({ erreur: large ? 'rush large sans trajectoire' : 'rush large absent de la base' });
+              }
+              setTimeout(lire, 1000);
+            };
+            demande.onerror = () => resolve({ erreur: 'lecture refusée' });
+          };
+        };
+        lire();
+      }),
+    PAR_SECONDE_CADRAGE,
+  );
+
+  check(
+    'Le rush paysage reçoit une trajectoire de cadrage',
+    trajectoire.parSeconde === PAR_SECONDE_CADRAGE && trajectoire.centres > 0,
+    trajectoire.erreur ?? `${trajectoire.centres} échantillons à ${trajectoire.parSeconde}/s`,
+  );
+  }
 }
 
 

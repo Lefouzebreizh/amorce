@@ -143,6 +143,22 @@ Deno.serve(async (requete: Request) => {
     }),
   });
 
+  // Journal des vraies limites de débit d'Anthropic pour CE compte, et du
+  // statut HTTP réel de l'appel — posé le 10/09/2026 pour remplacer une
+  // supposition par une mesure. Mesuré le même jour sur un vrai lot de 89
+  // fichiers : 10 000 requêtes/minute, 10 000 000 de jetons d'entrée/minute,
+  // jamais entamés — bien au-dessus du palier le plus bas publié par
+  // Anthropic (platform.claude.com/docs/en/api/rate-limits). Le statut HTTP
+  // est journalisé pour tout distinguer d'un futur échec sans devoir
+  // reconstituer la cause après coup.
+  console.log("[classer-document] appel Anthropic :", JSON.stringify({
+    statut: reponse.status,
+    requetes_limite: reponse.headers.get("anthropic-ratelimit-requests-limit"),
+    requetes_restantes: reponse.headers.get("anthropic-ratelimit-requests-remaining"),
+    jetons_entree_limite: reponse.headers.get("anthropic-ratelimit-input-tokens-limit"),
+    jetons_entree_restants: reponse.headers.get("anthropic-ratelimit-input-tokens-remaining"),
+  }));
+
   if (!reponse.ok) {
     const detail = await reponse.text();
     return reponseJson({ erreur: `Appel Claude en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502);

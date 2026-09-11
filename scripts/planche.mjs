@@ -127,7 +127,7 @@ const section = page.locator('#etape-export');
 await section.waitFor({ state: 'attached' });
 await section.scrollIntoViewIfNeeded();
 await page.waitForTimeout(800);
-const exporter = page.locator('button:has-text("⬇ Exporter la vidéo")');
+const exporter = page.locator('button').filter({ hasText: /⬇ Exporter (la vidéo|quand même)/ }).first();
 await exporter.scrollIntoViewIfNeeded();
 const attente = page.waitForEvent('download', { timeout: 600000 });
 await exporter.click();

@@ -420,15 +420,26 @@ def controler_chemins_cites(claude_md: str, releve: Releve) -> None:
         # `next/font`, `node:test` : des paquets, pas des chemins du dépôt.
         if (RACINE / "node_modules" / propre.split("/")[0]).exists():
             continue
-        # `Lefouzebreizh/amorce` : un dépôt GitHub, pas un chemin de fichier.
-        # La forme est indistinguable d'un chemin — deux segments séparés par
-        # une barre — et c'est le propriétaire du dépôt qui décide de sa
-        # graphie : le §8 bis le cite ainsi, mot pour mot, dans une checklist
-        # que ce contrôle ne doit pas pouvoir faire réécrire. Sans cette
-        # ligne, l'alerte est permanente, et une alerte permanente apprend à
-        # ignorer le vérificateur — ce que `CLAUDE.md` §7 bis dit déjà en
-        # propres termes à propos d'un autre faux positif de ce même contrôle.
-        if propre.lower() == "lefouzebreizh/amorce":
+        # `Lefouzebreizh/amorce`, `Lefouzebreizh/ensemble-mdph` : des dépôts
+        # GitHub, pas des chemins de fichier. La forme est indistinguable d'un
+        # chemin — deux segments séparés par une barre — et c'est le
+        # propriétaire du dépôt qui décide de sa graphie : le §8 bis et le §10
+        # bis les citent ainsi, mot pour mot. Sans cette ligne, l'alerte est
+        # permanente, et une alerte permanente apprend à ignorer le
+        # vérificateur — ce que `CLAUDE.md` §7 bis dit déjà en propres termes
+        # à propos d'un autre faux positif de ce même contrôle. Généralisé sur
+        # le préfixe plutôt que sur un seul nom : mesuré le 10/09/2026, une
+        # deuxième citation d'un dépôt séparé (`Lefouzebreizh/ensemble-mdph`,
+        # dans la leçon sur la fragmentation de la mémoire par dépôt) a refait
+        # échouer ce contrôle pour la même raison — un hardcode par nom ne
+        # tient qu'une fois.
+        if propre.lower().startswith("lefouzebreizh/"):
+            continue
+        # `claude/ensemble-mdph-corrections-pdg3y8` : un nom de branche, pas un
+        # chemin — ce dépôt réserve le préfixe `claude/…` aux branches (§10
+        # Git : « Une branche `claude/…` par sujet »), jamais à un dossier de
+        # premier niveau. Même mesure le 10/09/2026, sur la même leçon.
+        if propre.startswith("claude/"):
             continue
         # Dernier recours : le fichier existe peut-être ailleurs dans l'arbre.
         #

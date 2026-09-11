@@ -38,7 +38,7 @@ npx wrangler secret put SECRET_JETONS          # une chaîne longue, tirée au h
 npx wrangler secret put SECRET_WEBHOOK         # celui que Stripe affiche pour CE webhook — différent de celui de licence-serveur
 npx wrangler secret put CLE_RESEND             # la clé d'API Resend
 npx wrangler secret put EXPEDITEUR             # "Amorce <compte@ton-domaine>"
-npx wrangler secret put ADRESSE_SITE           # "https://amorce.vercel.app" — sert à construire le lien de connexion
+npx wrangler secret put ADRESSE_SITE           # "https://amorce-five.vercel.app" — sert à construire le lien de connexion
 npx wrangler deploy
 ```
 

@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
-"""État du capital, dérive par rapport à l'allocation cible, application des
-exécutions.
+"""État du capital et application des exécutions.
 
 Le portefeuille est **immuable** : appliquer une exécution rend un nouveau
 portefeuille. C'est ce qui permet de rejouer une journée entière de décisions
 sur une copie, de comparer, puis de garder ou de jeter — et c'est ce qui rend
 la simulation exacte plutôt qu'approchée.
+
+Retiré le 10/09/2026, avec le DCA calendaire qui seul en avait besoin : la
+dérive par rapport à une allocation cible (`Derive`, `derives`,
+`doit_reequilibrer`). Sans poids cible, un écart à une cible n'a plus de sens
+à mesurer — le moteur d'opportunité pure ordonne ses actifs autrement, voir
+`Orchestrateur._ordre_de_service`.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import replace
 
-from ..core.config import ConfigPortefeuille
 from ..core.modeles import Execution, Portefeuille, Position, Sens
 
 
@@ -81,45 +85,23 @@ def appliquer(portefeuille: Portefeuille, execution: Execution) -> Portefeuille:
     )
 
 
-@dataclass(frozen=True, slots=True)
-class Derive:
-    """Écart entre le poids réel d'une ligne et son poids cible."""
+def ordre_par_engagement(
+    portefeuille: Portefeuille, prix: dict[str, float], symboles
+) -> list[str]:
+    """Ordonne des actifs par valeur engagée croissante — absents ou plus
+    petites lignes en tête.
 
-    actif: str
-    poids_reel: float
-    poids_cible: float
-
-    @property
-    def ecart(self) -> float:
-        return self.poids_reel - self.poids_cible
-
-    @property
-    def sur_pondere(self) -> bool:
-        return self.ecart > 0
-
-
-def derives(
-    portefeuille: Portefeuille, prix: dict[str, float], config: ConfigPortefeuille
-) -> list[Derive]:
-    """Dérive de chaque ligne cible, la plus sous-pondérée en tête.
-
-    L'ordre a un effet direct : quand la trésorerie ne suffit pas pour tout, le
-    moteur sert dans cet ordre, donc il comble d'abord le plus grand trou. Un
-    ordre alphabétique servirait Bitcoin en premier tous les mois et laisserait
-    la ligne la plus en retard toujours en retard.
+    Remplace, depuis le retrait du DCA calendaire (10/09/2026), l'ancien tri
+    par dérive vers un poids cible (`derives`, retiré le même jour) : sans
+    cible, rien ne peut plus dériver. Ce qui reste utile est plus modeste —
+    quand la trésorerie ne suffit pas pour servir tout le monde, mieux vaut
+    répartir l'occasion que la concentrer sur la ligne déjà la plus grosse.
     """
 
-    reelles = portefeuille.allocation(prix)
-    resultat = [
-        Derive(actif=symbole, poids_reel=reelles.get(symbole, 0.0), poids_cible=ligne.fraction)
-        for symbole, ligne in config.allocation.items()
-    ]
-    resultat.sort(key=lambda d: d.ecart)
-    return resultat
+    def valeur(actif: str) -> float:
+        position = portefeuille.positions.get(actif)
+        if position is None:
+            return 0.0
+        return position.valeur(prix.get(actif, position.prix_moyen))
 
-
-def doit_reequilibrer(derive: Derive, tolerance: float) -> bool:
-    """Sous la tolérance, on ne bouge pas : les frais d'un rééquilibrage à 2 %
-    coûtent plus que l'imprécision qu'ils corrigent."""
-
-    return abs(derive.ecart) > tolerance
+    return sorted(symboles, key=valeur)

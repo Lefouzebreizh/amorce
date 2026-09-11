@@ -195,7 +195,14 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
           étape, le reléguer sous la zone d'import le mettrait hors de vue. */}
       <SharedTray engine={engine} />
 
+      {/*
+        `statique` : cette carte porte la zone de dépôt. Un glisser-déposer
+        maintient le survol pendant toute la traversée du fichier sans jamais
+        déclencher d'`:active` — la carte resterait donc soulevée, et sa cible
+        déplacée d'un pixel, exactement pendant le geste qui vise cette cible.
+      */}
       <Panel
+        statique
         title="1 · Importer"
         subtitle="Tes fichiers restent sur ton ordinateur : rien n’est envoyé sur un serveur."
       >

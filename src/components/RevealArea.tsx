@@ -38,10 +38,16 @@ function classes(visible: boolean, ...reste: string[]): string {
   return ['revele', visible ? 'est-visible' : '', ...reste].filter(Boolean).join(' ');
 }
 
+/**
+ * `cascade` décale l'entrée des enfants directs les uns après les autres —
+ * ici le titre, puis chaque paragraphe. Elle ne s'ajoute qu'aux sections de
+ * lecture : le studio, lui, n'en reçoit aucune, un panneau qui entre en fondu
+ * pendant qu'on essaie de l'atteindre étant une régression et non une finition.
+ */
 export function Section({ titre, children }: { titre: string; children: React.ReactNode }) {
   const { ref, visible } = useRevele<HTMLElement>();
   return (
-    <section ref={ref} className={classes(visible, 'flex flex-col gap-4')}>
+    <section ref={ref} className={classes(visible, 'cascade flex flex-col gap-4')}>
       <h2 className="text-balance text-2xl font-semibold leading-tight text-mist sm:text-3xl">
         {titre}
       </h2>

@@ -16,6 +16,12 @@ const eslintConfig = defineConfig([
     // (`flutter analyze`) et ses propres règles ; ESLint n'y trouverait que
     // les milliers de fichiers JavaScript générés par le SDK dans
     // `look_and_find/build/`, qu'aucune règle de ce dépôt ne concerne.
+    // Les fichiers de MediaPipe, posés par `npm run mediapipe` dans `public/`.
+    // Ce sont des artefacts vendus — la colle Emscripten du WASM, 300 Ko de
+    // JavaScript engendré — et non du code de ce dépôt : les analyser rend six
+    // erreurs et six cent cinquante avertissements que personne ne corrigera
+    // jamais, puisqu'ils sont réécrits à chaque construction.
+    "public/mediapipe/**",
     "look_and_find/**",
     // Le socle de production livré aux clients. C'est un projet Next.js à part
     // entière, avec son propre `eslint.config.mjs`, son propre `tsconfig.json`
@@ -47,6 +53,17 @@ const eslintConfig = defineConfig([
     // racine ne connaît pas, et des Pages Functions qui n'ont rien de Next.js.
     // Il se vérifie depuis son dossier : `npm run check`, `npm test`.
     "hypersensible-bienveillance/**",
+    // Psy IA : projet Next.js autonome, sa propre config ESLint et son propre
+    // `tsconfig.json` — même raison que les précédents. Et la même raison de
+    // plus qu'`artisan-express`, mesurée le 11/09/2026 : `.next/**` plus haut
+    // est **ancré à la racine** et ne couvre pas `psy-ia/.next/`. Sans cette
+    // ligne, le premier `npm run dev` lancé dans ce dossier fait entrer le lint
+    // de la racine dans les fichiers engendrés par Turbopack — **338 erreurs et
+    // 4701 avertissements**, tous dans du code que personne n'a écrit et que le
+    // prochain build réécrira. Le lint du projet lui-même, lancé depuis
+    // `psy-ia/`, restait vert pendant ce temps : la mesure était juste, c'est le
+    // périmètre qui était faux.
+    "psy-ia/**",
     // La copie de travail que le rejeu local de la CI dépose ici. Ce sont les
     // mêmes fichiers que ci-dessus, à un autre chemin : sans cette ligne, les
     // projets qu'on vient d'exclure reviennent par la porte de derrière.

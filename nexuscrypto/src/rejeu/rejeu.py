@@ -23,42 +23,50 @@ résultat : il n'y a pas de carnet d'ordres historique. Le courtier papier
 retombe donc sur son glissement forfaitaire au lieu de parcourir un carnet. Sur
 Bitcoin l'écart est négligeable ; sur une pépite peu liquide, le rejeu est
 optimiste et il l'est en silence.
+
+**Retiré le 10/09/2026, avec le DCA calendaire** : le témoin n'est plus un
+« DCA plat » (l'enveloppe pleine à chaque échéance) mais un **achat unique** —
+tout le capital disponible investi la première fois qu'un prix est atteignable,
+puis on ne touche plus à rien. C'est l'étalon universel d'une stratégie
+active : battre « ne rien faire d'intelligent après le premier geste » est la
+barre la plus basse qui vaille d'être mesurée, et elle ne dépend plus d'un
+calendrier que le moteur n'a plus.
 """
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 
-from ..core.config import Config, LigneAllocation
+from ..core.config import Config, LigneSurveillee
 from ..core.modeles import (
-    Action, Contexte, Execution, MetriqueOnchain, Portefeuille, SerieOHLCV,
-    SignalSentiment, Sens,
+    Action, Contexte, Execution, MetriqueOnchain, Ordre, Portefeuille, SerieOHLCV,
+    SignalSentiment, Sens, TypeOrdre,
 )
 from ..execution.courtier import CourtierPapier, OrdreRefuse
 from ..risk_management import coupe_circuit as cc
 from ..risk_management import portefeuille as pf
 from ..risk_management import stops
+from ..risk_management.sizing import dimensionner
 from ..strategy.moteur import Moteur
 from .donnees import Scenario
 
 
 def config_mono_actif(config: Config, symbole: str, *, role: str = "croissance") -> Config:
-    """Une configuration dont l'allocation ne contient que cet actif, à 100 %.
+    """Une configuration dont la watchlist ne contient que cet actif.
 
-    Sans cela, rejouer « TEST/USDT » sur la configuration livrée donne un poids
-    de zéro, donc un montant de zéro, donc un rejeu parfaitement vide dont rien
-    ne signale la cause.
+    Sans cela, rejouer « TEST/USDT » sur la configuration livrée donne un
+    actif hors watchlist — le moteur l'analyserait quand même, mais aucune
+    ligne ne porterait `vente_sur_signal` ni de plafond spécifique, ce qui ne
+    mesure pas ce qu'on veut mesurer.
     """
 
     portefeuille_config = replace(
         config.portefeuille,
-        allocation={
-            symbole: LigneAllocation(
-                symbole=symbole, poids=100.0, role=role, vente_sur_signal=True
-            )
+        watchlist={
+            symbole: LigneSurveillee(symbole=symbole, role=role, vente_sur_signal=True)
         },
-        reserve_decouverte_poids=0.0,
     )
     return replace(config, portefeuille=portefeuille_config)
 
@@ -78,7 +86,6 @@ class Resultat:
     # stratégie dort en grande partie en liquide, et du liquide ne recule pas.
     courbe_exposee: list[tuple[datetime, float]] = field(default_factory=list)
     declenchements: list[cc.Declenchement] = field(default_factory=list)
-    temporisations: int = 0
 
     @property
     def valeur_finale(self) -> float:
@@ -102,13 +109,8 @@ class Resultat:
 
     @property
     def prix_moyen_achat(self) -> float | None:
-        """Le prix moyen pondéré payé. C'est **la** mesure d'un DCA.
-
-        Comparé au prix moyen de la période, il dit en un nombre si la
-        modulation des montants a servi : acheter sous la moyenne, c'est faire
-        mieux qu'un ordre permanent ; au-dessus, c'est faire pire, et toute la
-        complexité du moteur est alors à jeter.
-        """
+        """Le prix moyen pondéré payé, comparé à celui du marché sur la même
+        période : payer sous la moyenne, c'est faire mieux que le hasard."""
 
         achats = self.achats
         quantite = sum(e.quantite_executee for e in achats)
@@ -122,11 +124,6 @@ class Resultat:
 
     # ----------------------------------------------------------------------
     # Ce que la stratégie protège
-    #
-    # Elle perd contre un DCA aveugle sur le rendement, sur les cinq fenêtres
-    # de BTC réel mesurées. Si sa valeur est ailleurs — dormir pendant un
-    # krach — elle doit se mesurer sur ce terrain-là, sinon on continue de
-    # l'optimiser contre un étalon qu'elle ne peut pas battre.
     #
     # **Et le piège de cette famille est énorme : une stratégie qui n'investit
     # rien a un recul nul.** Comparer des reculs bruts entre deux stratégies
@@ -210,10 +207,7 @@ class Resultat:
         C'est le seul recul qui décrive ce que le marché fait subir. Le recul du
         portefeuille entier mélange deux choses — la baisse des positions, et le
         fait qu'une grande part dorme en liquide — et flatte donc toute
-        stratégie qui investit peu. Le piège est consigné dans
-        `second-brain/lecons.md` : « une mesure qui inclut ce qui n'est pas
-        exposé flatte ». Il avait déjà coûté un aller-retour sur la mesure du
-        levier ; il était encore ici, dans la mesure de la protection.
+        stratégie qui investit peu.
 
         `None` quand rien n'a jamais été exposé : n'avoir rien risqué n'est pas
         un recul de zéro, c'est une absence de mesure.
@@ -254,15 +248,15 @@ def rejouer(
     *,
     fear_greed: dict[str, int] | None = None,
     onchain: dict[str, MetriqueOnchain] | None = None,
-    nom: str = "dynamique",
+    nom: str = "opportuniste",
     plat: bool = False,
 ) -> Resultat:
     """Rejoue la stratégie sur une série.
 
-    `plat=True` désactive toute la modulation et achète l'enveloppe pleine à
-    chaque échéance : c'est le **témoin**. Sans lui, un beau résultat ne dit
-    pas si la modulation a servi ou si c'est le marché qui montait — et c'est
-    la seule question qui vaille.
+    `plat=True` désactive le moteur et achète tout le capital disponible dès
+    le premier prix atteignable, puis ne fait plus rien : c'est le **témoin**.
+    Sans lui, un beau résultat ne dit pas si le score a servi ou si c'est le
+    marché qui montait — et c'est la seule question qui vaille.
     """
 
     config = config_mono_actif(config, serie.symbole)
@@ -327,11 +321,6 @@ def rejouer(
             if declenchement is not None:
                 resultat.declenchements.append(declenchement)
 
-        analyse = moteur.analyser(contexte, portefeuille, instant)
-        decision = analyse.decision
-        if decision.action is Action.TEMPORISER:
-            resultat.temporisations += 1
-
         # L'exécution se fait à l'ouverture de la bougie suivante. C'est le
         # premier prix réellement atteignable après la clôture qui a décidé.
         prix_execution = bougies[i + 1].ouverture
@@ -339,15 +328,14 @@ def rejouer(
             continue
 
         if plat:
-            portefeuille = _achat_plat(
-                config, courtier, portefeuille, serie.symbole, prix_execution,
-                instant, moteur, resultat,
+            portefeuille = _achat_et_conserver(
+                courtier, portefeuille, serie.symbole, prix_execution, instant, resultat,
             )
             continue
 
+        analyse = moteur.analyser(contexte, portefeuille, instant)
         portefeuille = _appliquer(
-            config, courtier, disjoncteur, portefeuille, analyse,
-            prix_execution, instant, moteur, resultat,
+            config, courtier, disjoncteur, portefeuille, analyse, prix_execution, instant, resultat,
         )
 
     dernier = bougies[-1]
@@ -360,26 +348,29 @@ def rejouer(
     return resultat
 
 
-def _achat_plat(config, courtier, portefeuille, symbole, prix, instant, moteur, resultat):
-    """Le témoin : l'enveloppe pleine à chaque échéance, sans rien regarder."""
+def _achat_et_conserver(courtier, portefeuille, symbole, prix, instant, resultat):
+    """Le témoin : tout le capital disponible au premier prix atteignable,
+    puis plus rien. Il n'a ni score, ni stop, ni calendrier — c'est ce qui en
+    fait un étalon universel plutôt qu'une variante de la stratégie.
 
-    from ..strategy import dca
+    **99 % et non 100 %** : viser la trésorerie exacte laisse le glissement et
+    les frais du courtier papier — quelques dixièmes de pour cent — pousser le
+    coût final au-dessus de ce qui est disponible, et `pf.appliquer` refuse
+    alors l'achat en silence. Un pour cent de marge l'absorbe très largement.
+    """
 
-    if not dca.echeance_atteinte(
-        config.portefeuille.cadence_dca, moteur.dernier_dca.get(symbole), instant
-    ):
+    if portefeuille.positions.get(symbole) is not None:
         return portefeuille
-    montant = config.portefeuille.enveloppe_dca_usd
-    if montant > portefeuille.liquidites_usd:
+    montant = portefeuille.liquidites_usd * 0.99
+    if montant <= 0:
         return portefeuille
     return _passer(
         courtier, portefeuille, symbole, Sens.ACHAT, montant / prix, prix,
-        "DCA plat", instant, moteur, resultat, config,
+        "achat unique (témoin)", instant, resultat,
     )
 
 
-def _appliquer(config, courtier, disjoncteur, portefeuille, analyse, prix, instant,
-               moteur, resultat):
+def _appliquer(config, courtier, disjoncteur, portefeuille, analyse, prix, instant, resultat):
     decision = analyse.decision
     symbole = decision.actif
 
@@ -389,16 +380,13 @@ def _appliquer(config, courtier, disjoncteur, portefeuille, analyse, prix, insta
             return portefeuille
         return _passer(
             courtier, portefeuille, symbole, Sens.VENTE, position.quantite, prix,
-            " ; ".join(decision.raisons), instant, moteur, resultat, config,
-            marquer=False,
+            " ; ".join(decision.raisons), instant, resultat,
         )
 
     if decision.action not in (Action.ACHETER, Action.RENFORCER):
         return portefeuille
     if not disjoncteur.passe:
         return portefeuille
-
-    from ..risk_management.sizing import dimensionner
 
     stop = stops.stop_initial(prix, analyse.lecture.atr, config.risque)
     dimension = dimensionner(
@@ -411,23 +399,18 @@ def _appliquer(config, courtier, disjoncteur, portefeuille, analyse, prix, insta
         config_risque=config.risque,
         config_portefeuille=config.portefeuille,
     )
-    if dimension.montant_usd < config.strategie.dca.montant_minimum_usd:
+    if dimension.montant_usd < config.risque.montant_minimum_usd:
         return portefeuille
     return _passer(
         courtier, portefeuille, symbole, Sens.ACHAT, dimension.quantite, prix,
-        " ; ".join(decision.raisons[:2]), instant, moteur, resultat, config,
+        " ; ".join(decision.raisons[:2]), instant, resultat,
     )
 
 
-def _passer(courtier, portefeuille, symbole, sens, quantite, prix, motif, instant,
-            moteur, resultat, config, *, marquer: bool = True):
+def _passer(courtier, portefeuille, symbole, sens, quantite, prix, motif, instant, resultat):
     """Passe l'ordre par le **vrai** courtier papier : frais et glissement
     compris. Court-circuiter ici donnerait un rejeu flatteur, ce qui est
     exactement ce qu'un harnais ne doit pas faire."""
-
-    import uuid
-
-    from ..core.modeles import Ordre, TypeOrdre
 
     if quantite <= 0:
         return portefeuille
@@ -450,21 +433,19 @@ def _passer(courtier, portefeuille, symbole, sens, quantite, prix, motif, instan
     except (pf.FondsInsuffisants, pf.PositionIntrouvable):
         return portefeuille
     resultat.executions.append(execution)
-    if marquer and sens is Sens.ACHAT:
-        moteur.marquer_dca(symbole, instant)
     return nouveau
 
 
 def rejouer_scenario(config: Config, scenario: Scenario) -> tuple[Resultat, Resultat]:
-    """Rejoue un scénario en dynamique **et** en témoin. Toujours les deux :
+    """Rejoue un scénario en stratégie **et** en témoin. Toujours les deux :
     un résultat seul ne se juge pas."""
 
     dynamique = rejouer(
-        config, scenario.serie, fear_greed=scenario.fear_greed, nom="DCA dynamique"
+        config, scenario.serie, fear_greed=scenario.fear_greed, nom="opportuniste"
     )
     temoin = rejouer(
         config, scenario.serie, fear_greed=scenario.fear_greed,
-        nom="DCA plat (témoin)", plat=True,
+        nom="achat unique (témoin)", plat=True,
     )
     return dynamique, temoin
 
@@ -475,60 +456,43 @@ def rejouer_scenario(config: Config, scenario: Scenario) -> tuple[Resultat, Resu
 
 
 def config_portefeuille_reel(config: Config, symboles: list[str]) -> Config:
-    """Restreint l'allocation aux actifs dont on a les données, et renormalise.
-
-    Sans renormalisation, retirer une ligne laisse un portefeuille qui somme à
-    moins de 100 % : la trésorerie non réclamée ne serait jamais investie, et le
-    rejeu mesurerait un capital immobilisé plutôt qu'une stratégie.
-    """
+    """Restreint la watchlist aux actifs dont on a les données."""
 
     presentes = {
         symbole: ligne
-        for symbole, ligne in config.portefeuille.allocation.items()
+        for symbole, ligne in config.portefeuille.watchlist.items()
         if symbole in symboles
     }
     if not presentes:
-        raise ValueError(f"Aucun des symboles {symboles} n'est dans l'allocation.")
-    total = sum(l.poids for l in presentes.values())
-    renormalisees = {
-        symbole: replace(ligne, poids=ligne.poids * 100.0 / total)
-        for symbole, ligne in presentes.items()
-    }
+        raise ValueError(f"Aucun des symboles {symboles} n'est dans la watchlist.")
     return replace(
         config,
-        portefeuille=replace(
-            config.portefeuille,
-            allocation=renormalisees,
-            reserve_decouverte_poids=0.0,
-        ),
+        portefeuille=replace(config.portefeuille, watchlist=presentes),
     )
 
 
 def rejouer_multi(config: Config, series: dict, *, fear_greed: dict[str, int] | None = None,
-                  nom: str = "dynamique", plat: bool = False) -> Resultat:
+                  nom: str = "opportuniste", plat: bool = False) -> Resultat:
     """Rejoue la stratégie sur **plusieurs actifs partageant une trésorerie**.
 
     C'est la seule configuration qui ressemble à ce que le moteur fera en
-    direct, et elle tranche deux questions que le rejeu mono-actif ne pouvait
-    pas trancher.
+    direct, et elle tranche une question que le rejeu mono-actif ne pouvait
+    pas trancher : **le plafond d'exposition cesse de tout geler.** Sur un
+    seul actif, les 75 % par ligne sont atteints définitivement dès que la
+    position s'apprécie, et un rejeu long ne mesure alors que le plafond. À
+    plusieurs lignes, chacune a sa place et la contrainte redevient ce qu'elle
+    est : une limite de concentration.
 
-    **Le plafond d'exposition cesse de tout geler.** Sur un seul actif, les
-    55 % par ligne sont atteints définitivement dès que la position s'apprécie,
-    et un rejeu long ne mesure alors que le plafond. À plusieurs lignes, chacune
-    a sa place et la contrainte redevient ce qu'elle est : une limite de
-    concentration.
-
-    **La trésorerie est disputée.** Les actifs sont servis dans l'ordre de leur
-    dérive — le plus sous-pondéré d'abord — exactement comme l'orchestrateur en
-    direct. C'est ce qui fait qu'un rejeu multi-actifs n'est pas la somme de
-    rejeus indépendants : ce que l'un prend, l'autre ne l'a pas.
+    **La trésorerie est disputée.** Les actifs sont servis dans l'ordre de
+    `risk_management.portefeuille.ordre_par_engagement` — la ligne la moins
+    engagée d'abord — exactement comme l'orchestrateur en direct. C'est ce qui
+    fait qu'un rejeu multi-actifs n'est pas la somme de rejeus indépendants :
+    ce que l'un prend, l'autre ne l'a pas.
 
     Les dates sont l'**union** des séries, pas leur intersection : SOL commence
     en 2020, prendre l'intersection jetterait dix ans de Bitcoin pour aligner
     tout le monde. Un actif absent d'une date est simplement absent ce jour-là.
     """
-
-    from ..risk_management import portefeuille as pf_module
 
     symboles = list(series)
     config = config_portefeuille_reel(config, symboles)
@@ -593,12 +557,11 @@ def rejouer_multi(config: Config, series: dict, *, fear_greed: dict[str, int] | 
             if declenchement is not None:
                 resultat.declenchements.append(declenchement)
 
-        # L'ordre de service : le plus sous-pondéré d'abord. C'est lui qui
-        # décide qui est servi quand la trésorerie ne suffit pas pour tous.
+        # L'ordre de service : la ligne la moins engagée d'abord. C'est lui
+        # qui décide qui est servi quand la trésorerie ne suffit pas pour tous.
         ordre = [
-            d.actif
-            for d in pf_module.derives(portefeuille, prix_courant, config.portefeuille)
-            if d.actif in prix_courant
+            actif for actif in pf.ordre_par_engagement(portefeuille, prix_courant, symboles)
+            if actif in prix_courant
         ]
 
         for symbole in ordre:
@@ -612,9 +575,9 @@ def rejouer_multi(config: Config, series: dict, *, fear_greed: dict[str, int] | 
                 continue
 
             if plat:
-                portefeuille = _achat_plat_multi(
+                portefeuille = _achat_et_conserver_multi(
                     config, courtier, portefeuille, symbole, prix_execution,
-                    instant, moteur, resultat,
+                    instant, resultat, len(symboles),
                 )
                 continue
 
@@ -634,11 +597,8 @@ def rejouer_multi(config: Config, series: dict, *, fear_greed: dict[str, int] | 
                 portefeuille,
                 instant,
             )
-            if analyse.decision.action is Action.TEMPORISER:
-                resultat.temporisations += 1
             portefeuille = _appliquer(
-                config, courtier, disjoncteur, portefeuille, analyse,
-                prix_execution, instant, moteur, resultat,
+                config, courtier, disjoncteur, portefeuille, analyse, prix_execution, instant, resultat,
             )
 
     dernier = jours[-1]
@@ -654,23 +614,20 @@ def rejouer_multi(config: Config, series: dict, *, fear_greed: dict[str, int] | 
     return resultat
 
 
-def _achat_plat_multi(config, courtier, portefeuille, symbole, prix, instant,
-                      moteur, resultat):
-    """Le témoin multi-actifs : l'enveloppe répartie selon les poids cibles, à
-    chaque échéance, sans rien regarder."""
+def _achat_et_conserver_multi(config, courtier, portefeuille, symbole, prix, instant,
+                              resultat, nombre_lignes):
+    """Le témoin multi-actifs : le capital initial réparti à parts égales
+    entre les lignes, chacune achetée une fois puis conservée."""
 
-    from ..strategy import dca
-
-    if not dca.echeance_atteinte(
-        config.portefeuille.cadence_dca, moteur.dernier_dca.get(symbole), instant
-    ):
+    if portefeuille.positions.get(symbole) is not None:
         return portefeuille
-    montant = config.portefeuille.enveloppe_dca_usd * config.portefeuille.poids_de(symbole)
-    if montant < config.strategie.dca.montant_minimum_usd:
-        return portefeuille
-    if montant > portefeuille.liquidites_usd:
+    montant = min(
+        config.portefeuille.capital_initial_usd / nombre_lignes,
+        portefeuille.liquidites_usd * 0.99,
+    )
+    if montant <= 0:
         return portefeuille
     return _passer(
         courtier, portefeuille, symbole, Sens.ACHAT, montant / prix, prix,
-        "DCA plat", instant, moteur, resultat, config,
+        "achat unique (témoin)", instant, resultat,
     )

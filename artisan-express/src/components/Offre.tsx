@@ -1,4 +1,4 @@
-import { BOUTON_CONTOUR, BOUTON_PRINCIPAL, SECTION, TITRE_SECTION } from '@/components/ui';
+import { BOUTON_CONTOUR, BOUTON_PRINCIPAL, MESURE, SECTION, TITRE_SECTION } from '@/components/ui';
 import { aUnStripe, contact } from '@/lib/config';
 /*
  * Le SIRET est actif — SIREN 109356972, confirmé par le propriétaire le
@@ -139,7 +139,7 @@ export function Offre() {
           {/* `panel` et non `slab` : posé sur une carte `slab`, cet encadré
               avait exactement la couleur de son fond et ne se détachait plus —
               or c'est le seul bloc de la page qu'on veut faire remarquer. */}
-          <p className="mt-7 rounded-xl border border-edge bg-panel p-4 text-base leading-relaxed text-ardoise">
+          <p className={`mt-7 rounded-xl border border-edge bg-panel p-4 text-base leading-relaxed text-ardoise ${MESURE}`}>
             <strong className="text-encre">Ce qui n’est pas dedans&nbsp;:</strong> le nom de domaine
             à ton nom (une douzaine d’euros par an, payés directement au fournisseur, jamais à moi).
             Je te montre comment le prendre, ou je m’en occupe avec toi au téléphone.
@@ -156,7 +156,7 @@ export function Offre() {
             `panel` — un aplat d'accent en ferait un second bouton plein, et la
             page n'en porte qu'un.
           */}
-          <p className="mt-7 rounded-xl border border-accent bg-panel p-4 text-lg leading-relaxed text-ardoise">
+          <p className={`mt-7 rounded-xl border border-accent bg-panel p-4 text-lg leading-relaxed text-ardoise ${MESURE}`}>
             <strong className="text-encre">
               {PLACES_EN_LETTRES.charAt(0).toUpperCase() + PLACES_EN_LETTRES.slice(1)} places à la
               fois, et c’est ce qui tient les 48&nbsp;h.
@@ -184,7 +184,7 @@ export function Offre() {
             * n'encaisse pas ferait rebrousser chemin à quelqu'un de décidé.
             * On dit donc ce qui se passe vraiment — on convient ensemble.
             */}
-          <p className="mt-4 text-base text-ardoise">
+          <p className={`mt-4 text-base text-ardoise ${MESURE}`}>
             {encaisseEnLigne
               ? 'Paiement chez Stripe. Ta carte ne passe jamais par ce site.'
               : 'Je réserve ta place, on convient du paiement ensemble. Rien à régler depuis cette page.'}

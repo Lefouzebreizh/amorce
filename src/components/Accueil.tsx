@@ -69,7 +69,7 @@ export function Accueil() {
           </p>
 
           <h1
-            className="entree text-balance text-4xl font-bold leading-[1.08] text-mist sm:text-5xl"
+            className="entree titre-degrade eclat text-balance text-4xl font-bold leading-[1.08] sm:text-5xl"
             style={{ animationDelay: '70ms' }}
           >
             Monte ta vidéo verticale sans rien envoyer à personne.

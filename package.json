@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "node scripts/assembler-mediapipe.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -10,14 +11,18 @@
     "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "fixtures": "node scripts/make-fixtures.mjs",
+    "mediapipe": "node scripts/assembler-mediapipe.mjs",
     "verify": "node scripts/verify.mjs",
     "planche": "node scripts/planche.mjs",
+    "ecouter": "node scripts/ecouter-bruitages.mjs",
     "verify:reprise": "node scripts/verify-reprise.mjs",
     "verify:partage": "node scripts/verify-partage.mjs",
     "verify:images": "node scripts/verify-images.mjs",
-    "verify:licence": "node scripts/verify-licence.mjs"
+    "verify:licence": "node scripts/verify-licence.mjs",
+    "regarder": "node scripts/regarder-en-ligne.mjs"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "mp4-muxer": "^5.2.2",
     "next": "16.3.2",
     "react": "19.2.8",

@@ -100,27 +100,46 @@
   }
   * { box-sizing: border-box; }
   /*
-   * La page fait la largeur d'un telephone, partout.
+   * La colonne fait la largeur d’un téléphone ; la page, elle, remplit l’écran.
    *
-   * Sur un telephone la contrainte ne mord pas : le corps occupe deja 100 %
-   * du viewport, mesure a 390, 360 et 320 px sans un pixel de debordement.
-   * Elle mord sur un ecran large, ou une colonne de 40rem donnait 640 px --
-   * soit une page qui ne ressemblait plus du tout a ce que l'artisan voit
-   * quand il ouvre le lien, et c'est pourtant sur cet ecran-la qu'on la
-   * relit avant de l'envoyer. On jugeait donc une mise en page que personne
-   * ne verrait.
+   * L’état précédent bornait « body » à 26rem, donc 416 px au milieu d’une
+   * fenêtre de 1440 : moins d’un tiers de l’écran occupé, le reste vide. Le
+   * choix était délibéré et son motif est resté écrit ici — la page se
+   * relisant sur un ordinateur, la brider à la largeur d’un téléphone évitait
+   * de juger une mise en page que l’artisan ne verrait jamais.
    *
-   * 26rem = 416 px : entre les 390 px d'un iPhone 14 et les 430 d'un Max.
+   * Ce raisonnement servait la relecture. Il était payé par le visiteur, qui
+   * ouvre le site d’un artisan sur un ordinateur aussi, et par la
+   * démonstration commerciale : le premier regard extérieur porté sur ces
+   * pages a vu une bande étroite et a dit qu’il y avait un problème. C’est ce
+   * regard-là qui avait raison, et il a coûté moins cher que la règle.
    *
-   * Le fond va sur << html >> et pas seulement ici : un corps borne laisse
-   * voir la page derriere lui, et ce serait du blanc au bord d'un site sombre.
+   * La contrainte descend donc de « body » vers « .dedans », la mesure du
+   * texte. Ce qui change : l’entête et son halo, le pied et son aplat vont
+   * maintenant bord à bord, ce qui est précisément ce qui manquait. Ce qui ne
+   * change pas : sous 48rem la colonne vaut toujours la fenêtre moins les
+   * marges, au pixel près — l’invariant que « tests/site.test.ts » garde,
+   * parce que le téléphone reste l’écran depuis lequel on appelle un artisan.
+   *
+   * 26rem = 416 px : entre les 390 px d’un iPhone 14 et les 430 d’un Max.
+   *
+   * Le fond va sur « html » et pas seulement ici : la page derrière le corps
+   * se voit dès que le contenu est plus court que l’écran, et ce serait du
+   * blanc au bord d’un site sombre.
    */
   html { background: #16151a; }
   body {
-    margin: 0 auto; max-width: 26rem;
+    margin: 0;
     background: var(--ink); color: var(--encre);
     font: 18px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
+  .dedans { margin: 0 auto; max-width: 26rem; }
+  /*
+   * 40rem = 640 px, à partir de 768 px de fenêtre, et pas un pixel de plus :
+   * au-delà, l’œil perd le début de la ligne en arrivant à sa fin, et le site
+   * d’un artisan n’a de toute façon pas assez de contenu pour meubler une
+   * pleine largeur. L’entête grandit avec la colonne, sinon le titre flotte.
+   */
   /*
    * L'entête en halo, jamais en aplat de couleur.
    *
@@ -134,7 +153,7 @@
     border-bottom: 1px solid var(--edge);
   }
   header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.2; letter-spacing: -.01em; }
-  header p { margin: 0; font-size: 1.15rem; color: var(--accent-vif); font-weight: 600; }
+  header p { margin: 0; font-size: 1.15rem; color: var(--accent); font-weight: 600; }
   main { padding: 0 1.25rem 3rem; }
   .bloc { padding: 2rem 0; border-bottom: 1px solid var(--edge); }
   .bloc:last-of-type { border-bottom: 0; }
@@ -242,14 +261,75 @@
     margin: 1.5rem 0 0; padding-top: 1.25rem;
     border-top: 1px solid var(--edge); color: var(--encre-douce);
   }
+  /*
+   * LES RÈGLES D'ÉCRAN LARGE VIENNENT EN DERNIER, ET C'EST OBLIGATOIRE.
+   *
+   * Elles étaient plus haut, juste après « body », là où on les écrit
+   * naturellement. Résultat : « .bloc { border-bottom: 0 } » n'avait aucun
+   * effet, parce que la règle de base « .bloc » se trouvait trente lignes plus
+   * bas et l'emportait à spécificité égale par simple ordre du fichier. La
+   * grille, elle, s'appliquait — « main > .dedans » est plus spécifique — d'où
+   * une page en deux colonnes gardant des filets horizontaux qui ne séparaient
+   * plus rien. Rien ne le signalait : ni test, ni build, ni mesure de largeur.
+   */
+  @media (min-width: 48rem) {
+    .dedans { max-width: 40rem; }
+    header { padding: 4.5rem 2rem 3.5rem; }
+    header h1 { font-size: 2.6rem; }
+    main { padding: 0 2rem 4rem; }
+  }
+  /*
+   * Sur un ordinateur, deux colonnes plutôt qu’une colonne plus large.
+   *
+   * Une colonne unique étirée ne règle rien : à 1920 px de fenêtre elle laisse
+   * du vide de chaque côté quoi qu’on fasse, et la seule façon de le combler
+   * serait une ligne de 120 caractères — l’œil perd alors le début en arrivant
+   * à la fin. C’est le compromis qu’on refuse : ce n’est pas la largeur du
+   * texte qui doit grandir, c’est la page qui doit se servir de la place.
+   *
+   * Les quatre blocs se rangent donc côte à côte, et chaque colonne garde une
+   * mesure de lecture honnête — environ 60 caractères. Les boutons d’appel
+   * traversent, parce qu’ils sont l’action de la page et non un bloc parmi
+   * d’autres.
+   *
+   * Les filets horizontaux disparaissent ici : entre deux colonnes de hauteurs
+   * différentes, un trait sous un bloc ne sépare plus rien et souligne au
+   * hasard. C’est le filet vertical des « h2 » qui porte seul la séparation,
+   * et il la portait déjà.
+   */
+  @media (min-width: 64rem) {
+    .dedans { max-width: 64rem; }
+    header { padding: 2.75rem 2rem 2.25rem; }
+    header h1 { font-size: 2.8rem; }
+    main > .dedans {
+      display: grid; grid-template-columns: 1fr 1fr;
+      column-gap: 3.5rem; align-items: start;
+    }
+    .actions { grid-column: 1 / -1; padding: 1rem 0; }
+    .bloc { border-bottom: 0; padding: 1.25rem 0 .5rem; }
+    main { padding: 0 2rem 1.25rem; }
+    /*
+     * Le pied se met sur une ligne. Empilé, il pesait 216 px — un cinquième
+     * de la page pour trois informations qui tiennent côte à côte, et c'est
+     * lui qui empêchait la page d'entrer dans un écran.
+     */
+    footer { padding: 1rem 2rem; }
+    footer .dedans {
+      display: flex; flex-wrap: wrap; align-items: baseline;
+      justify-content: center; gap: .35rem 1.5rem;
+    }
+    footer a { margin: 0; min-height: 0; }
+    .signature { margin: 0; padding-top: 0; border-top: 0; }
+  }
+  @media (min-width: 90rem) { .dedans { max-width: 84rem; } }
 </style>
 </head>
 <body>
-<header>
+<header><div class="dedans">
   <h1>Clé Douce Serrurerie</h1>
   <p>Serrurier à Quimper. Ouverture de porte, 7 j/7.</p>
-</header>
-<main>
+</div></header>
+<main><div class="dedans">
   <div class="actions">
       <a class="action principale" href="tel:+33297000000">Appeler Clé Douce Serrurerie</a>
       <a class="action" href="https://wa.me/33297000000?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20votre%20site.">WhatsApp</a>
@@ -280,7 +360,7 @@
     <h2>Où j’interviens</h2>
     <p>Quimper et les communes autour.</p>
   </section>
-</main>
-<footer>Clé Douce Serrurerie — Quimper<a href="tel:+33297000000">02 97 00 00 00</a><p class="signature">Site réalisé par Artisan Express</p></footer>
+</div></main>
+<footer><div class="dedans">Clé Douce Serrurerie — Quimper<a href="tel:+33297000000">02 97 00 00 00</a><p class="signature">Site réalisé par Artisan Express</p></div></footer>
 </body>
 </html>

@@ -144,7 +144,7 @@ class ProfilVolume:
     `poc` est le prix où le plus de volume s'est échangé — le niveau que le
     marché considère comme juste. `zone_valeur` encadre 70 % du volume : sous
     sa borne basse, on achète dans une zone que le marché a désertée, ce qui
-    est exactement le creux que le DCA dynamique cherche.
+    est exactement le creux qu'un score contrarien cherche.
     """
 
     poc: float

@@ -94,10 +94,10 @@ class Gestionnaire:
             config_portefeuille=self.config.portefeuille,
             plafond_specifique_usd=plafond_specifique_usd,
         )
-        if dimension.montant_usd < self.config.strategie.dca.montant_minimum_usd:
+        if dimension.montant_usd < self.config.risque.montant_minimum_usd:
             motif = (
                 f"montant ramené à {dimension.montant_usd:.2f} $ par « {dimension.plafond_actif} », "
-                f"sous le minimum de {self.config.strategie.dca.montant_minimum_usd:g} $"
+                f"sous le minimum de {self.config.risque.montant_minimum_usd:g} $"
             )
             _journal.info("%s : %s", decision.actif, motif)
             return Resultat(False, None, portefeuille, motif)

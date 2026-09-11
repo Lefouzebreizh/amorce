@@ -7,8 +7,18 @@ import { DEFAULT_CLIP, type Caption, type Clip, type MediaAsset, type Project, t
 let counter = 0;
 const id = () => `g${counter++}`;
 
+/*
+ * Le rush de référence est **muet**, et il ne l'était pas.
+ *
+ * Il portait `hasAudio: true` alors que les contrôles qui s'en servent parlent
+ * d'un montage muet — celui d'une voix off qu'on ajoute, celui d'une coupe
+ * qu'on ponctue. Tant que rien ne lisait ce champ, la contradiction ne coûtait
+ * rien ; depuis que la note du son et le guide comptent le son que les rushes
+ * portent eux-mêmes (11/09/2026), elle rendait ces contrôles faux. Un rush qui
+ * doit être muet le dit.
+ */
 function asset(duration = 30): MediaAsset {
-  return { id: 'a', name: 'r.mp4', kind: 'video', url: 'blob:a', duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
+  return { id: 'a', name: 'r.mp4', kind: 'video', url: 'blob:a', duration, width: 1080, height: 1920, thumbnail: '', hasAudio: false };
 }
 
 function clip(seconds: number): Clip {

@@ -6,15 +6,26 @@ aucun réseau**. Il lit un `Contexte` et rend une `Decision`. C'est ce qui perme
 de le rejouer sur six mois d'archives en quelques secondes, et de vérifier
 l'effet d'un réglage sans rien exécuter.
 
+**Retiré le 10/09/2026 : tout calendrier.** Le moteur n'achète plus « parce que
+c'est l'heure » — il achète quand le score de confiance dit qu'il y a une
+occasion, jamais autrement. C'est la décision du 10/09/2026 : NexusCrypto
+cesse d'être un DCA modulé pour devenir un chasseur d'opportunités pur. La
+seule enveloppe restante est le risque : `montant_usd` porte un montant
+*souhaité*, volontairement non borné — c'est
+`risk_management.sizing.dimensionner` qui le ramène à ce que la distance au
+stop, l'exposition maximale et la trésorerie acceptent réellement, jamais la
+conviction du score elle-même.
+
 La séquence, pour chaque actif :
 
 1. lire la série (indicateurs) ;
 2. calculer l'indice de confiance ;
-3. demander au DCA quelle enveloppe il propose, calendrier compris ;
-4. si une position existe, regarder si un stop ou une prise de bénéfice
-   suiveuse est franchi — et **cette branche prime sur tout le reste**.
+3. si une position existe, regarder si un stop ou une prise de bénéfice
+   suiveuse est franchi — et **cette branche prime sur tout le reste** ;
+4. sinon, acheter ou renforcer si le score franchit `seuil_achat`, attendre
+   sinon.
 
-L'ordre du point 4 compte : une sortie de protection ne doit jamais être
+L'ordre du point 3 compte : une sortie de protection ne doit jamais être
 annulée par un signal d'achat sur le même actif à la même passe. Le cas se
 produit exactement au pire moment — un actif qui s'effondre a un RSI en
 survente, donc un excellent score d'achat, alors même que le stop vient d'être
@@ -27,9 +38,9 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from ..core.config import Config
-from ..core.modeles import Action, Contexte, Decision, Portefeuille, Zone
+from ..core.modeles import Action, Contexte, Decision, Portefeuille
 from ..risk_management import stops
-from . import dca, scoring
+from . import scoring
 from .indicateurs import Lecture, lire
 
 
@@ -47,9 +58,6 @@ class Analyse:
 class Moteur:
     def __init__(self, config: Config) -> None:
         self.config = config
-        # Date du dernier passage DCA, par actif. Vit dans le moteur et non
-        # dans la configuration : c'est un état d'exécution, pas un réglage.
-        self.dernier_dca: dict[str, datetime] = {}
 
     def analyser(
         self,
@@ -72,13 +80,13 @@ class Moteur:
 
         # 1. Sortie de protection — examinée avant tout signal d'entrée.
         position = portefeuille.positions.get(contexte.actif)
-        ligne = self.config.portefeuille.allocation.get(contexte.actif)
+        ligne = self.config.portefeuille.watchlist.get(contexte.actif)
         sortie: stops.NiveauxSortie | None = None
         if position is not None:
             sortie = stops.evaluer(position, prix, lecture.atr, self.config.risque)
-            # Le socle ne se vend pas sur signal : c'est la réserve du
-            # portefeuille, et la vendre au premier stop revient à faire du
-            # trading avec ce qui devait ne pas bouger.
+            # Une ligne peut être protégée contre la vente sur signal — la
+            # réserve du portefeuille — et la seule chose qui la fait bouger
+            # est un choix explicite, jamais le premier stop touché.
             if sortie.doit_sortir and (ligne is None or ligne.vente_sur_signal):
                 return Analyse(
                     contexte=contexte,
@@ -94,26 +102,18 @@ class Moteur:
                     sortie=sortie,
                 )
 
-        # 2. DCA dynamique.
-        zone = contexte.sentiment.zone if contexte.sentiment else Zone.NEUTRE
-        echeance = dca.echeance_atteinte(
-            self.config.portefeuille.cadence_dca,
-            self.dernier_dca.get(contexte.actif),
-            maintenant,
-        )
-        enveloppe = dca.planifier(
-            enveloppe_usd=self.config.portefeuille.enveloppe_dca_usd,
-            poids_actif=ligne.fraction if ligne else 0.0,
-            zone=zone,
-            lecture=lecture,
-            score=score,
-            config=self.config.strategie.dca,
-            echeance=echeance,
-        )
-
-        action = enveloppe.action
-        if action is Action.ACHETER and position is not None:
-            action = Action.RENFORCER
+        # 2. Opportunité pure : le score contre le seuil, rien d'autre.
+        seuil = self.config.strategie.seuil_achat
+        if score.total >= seuil:
+            action = Action.RENFORCER if position is not None else Action.ACHETER
+            # Montant demandé, volontairement non borné : le chemin de risque
+            # (stop → dimensionnement) décide seul du montant réel.
+            montant_souhaite = portefeuille.valeur_totale({contexte.actif: prix})
+            raisons = (f"score {score.total:.0f} ≥ seuil {seuil:.0f}",) + score.raisons
+        else:
+            action = Action.ATTENDRE
+            montant_souhaite = 0.0
+            raisons = (f"score {score.total:.0f} sous le seuil {seuil:.0f}",) + score.raisons
 
         return Analyse(
             contexte=contexte,
@@ -121,20 +121,10 @@ class Moteur:
             decision=Decision(
                 actif=contexte.actif,
                 action=action,
-                montant_usd=enveloppe.montant_usd,
+                montant_usd=montant_souhaite,
                 score=score,
                 prix_reference=prix,
-                raisons=enveloppe.raisons + score.raisons,
+                raisons=raisons,
             ),
             sortie=sortie,
         )
-
-    def marquer_dca(self, actif: str, quand: datetime) -> None:
-        """Appelé par l'orchestrateur **après** une exécution réussie.
-
-        Marquer avant l'exécution ferait sauter une échéance à chaque ordre
-        refusé — un refus pour trésorerie insuffisante annulerait le DCA de la
-        semaine, en silence.
-        """
-
-        self.dernier_dca[actif] = quand

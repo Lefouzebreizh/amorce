@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import {
   Bell, Briefcase, Car, ChevronRight, File, FileText, Folder, Heart, Home, Landmark, LogOut,
-  MessageCircle, Plus, Search, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
+  MessageCircle, Plus, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -13,9 +13,11 @@ import {
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
   interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
+  categorieInstantanee, affinableParIA, recupererFormulaireCerfa, suggererChampsFormulaire,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex, type ActionAssistant,
 } from '@/lib/coffre';
-import { RemplirFormulaire } from './RemplirFormulaire';
+import { champsFormulaire } from '@/lib/formulaire';
+import { RemplirFormulaire, type FormulairePreRempli } from './RemplirFormulaire';
 import { AssistantCoffre } from './AssistantCoffre';
 
 type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
@@ -26,10 +28,6 @@ const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et intern
 // catégorie (proposition de classement non lisible, jamais corrigée) doit
 // quand même atterrir quelque part plutôt que de disparaître de la vue.
 const DOSSIER_SANS_CATEGORIE = 'À trier';
-// Plafond d'un lot de tri automatique — voir `trierAutomatiquement` pour la
-// raison. Repris ici pour que le bouton annonce le bon compte avant de
-// démarrer.
-const LOT_MAX_TRI_AUTO = 24;
 // Le vrai garde-fou est un trigger Postgres sur storage.objects (voir
 // supabase/schema.sql §6) — storage.buckets.file_size_limit seul ne protège
 // qu'un fichier à la fois, jamais l'espace total d'un compte. Le contrôle
@@ -344,30 +342,64 @@ export default function PageCoffre() {
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [aValider, setAValider] = useState<EnAttente[]>([]);
+  // Miroir synchrone de aValider, pour confirmerTout ci-dessous : une
+  // boucle qui dépose « tout » doit voir l'état le plus frais à chaque
+  // tour, jamais l'instantané capturé à l'appel — c'est cet instantané qui
+  // laissait de côté les fichiers encore en lecture au moment du clic.
+  const aValiderRef = useRef<EnAttente[]>([]);
+  useEffect(() => {
+    aValiderRef.current = aValider;
+  }, [aValider]);
   const [survole, setSurvole] = useState(false);
   const [identiteEnregistree, setIdentiteEnregistree] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
+  // Posé quand un CERFA a été trouvé et téléchargé par l'assistant (voir
+  // preparerFormulaireCerfa) — undefined pour un dépôt manuel classique,
+  // remis à undefined à la fermeture pour ne pas réutiliser un formulaire
+  // périmé au prochain « Remplir un formulaire ».
+  const [formulairePrerempli, setFormulairePrerempli] = useState<FormulairePreRempli | undefined>(undefined);
   const [assistantOuvert, setAssistantOuvert] = useState(false);
   // Posée par la barre de recherche du haut quand elle n'a rien trouvé
   // localement, ou vide pour une question ouverte — voir demanderAAssistant.
   const [questionAssistant, setQuestionAssistant] = useState('');
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
   const [recherche, setRecherche] = useState('');
-  const [vueDossiers, setVueDossiers] = useState(false);
+  // Vue par défaut demandée le 10/09/2026 : des dossiers repliés, jamais la
+  // liste plate — avec des centaines de papiers, une liste continue oblige à
+  // défiler longtemps avant d'atteindre ce qui vit en dessous (rendez-vous,
+  // identité). `dossiersOuverts` démarre vide juste en dessous : les dossiers
+  // eux-mêmes restent repliés tant qu'on n'a pas cliqué dessus.
+  const [vueDossiers, setVueDossiers] = useState(true);
   const [correction, setCorrection] = useState<Correction | null>(null);
   const [triAutoEnCours, setTriAutoEnCours] = useState(false);
   const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
-  const [triAutoBilan, setTriAutoBilan] = useState<{ nonDocuments: string[]; erreursTechniques: string[] } | null>(null);
+  // Plus de « non-documents » ici depuis le 10/09/2026 : tout fichier reçoit
+  // toujours une catégorie (voir trierAutomatiquement) — ce bilan ne porte
+  // plus que les vrais échecs techniques (réseau, quota).
+  const [triAutoBilan, setTriAutoBilan] = useState<{ erreursTechniques: string[]; abandonnes: string[] } | null>(null);
   const [triAutoDetailOuvert, setTriAutoDetailOuvert] = useState(false);
-  // Clés de stockage déjà confirmées comme non-documents CETTE session — un
-  // document rejeté ne gagne jamais de catégorie, donc rien ne le distingue
-  // des autres dans `tout` d'un lot au suivant : sans cette mémoire, un lot
-  // entièrement composé de photos/vidéos (observé en usage réel : 24 rejets
-  // sur 24) refaisait exactement le même lot à l'infini, sans jamais
-  // atteindre les documents suivants. Remise à zéro au rechargement de la
-  // page seulement — un rejet reste un rejet tant que la session dure.
-  const [triAutoIgnores, setTriAutoIgnores] = useState<Set<string>>(new Set());
+  // Clés de stockage déjà passées par l'IA cette session, verdict positif ou
+  // négatif peu importe — jamais remises en question tant que la page reste
+  // ouverte. Sans cette mémoire, « Réessayer » après un échec technique ne
+  // retrouvait plus le fichier concerné : la passe 1 lui avait déjà donné
+  // une catégorie instantanée (Images/Papiers), donc il ne comptait plus
+  // parmi les « non classés » que le prochain appel recalculait — mesuré le
+  // 10/09/2026, 7 fichiers restés bloqués sur un lot de 89, le bouton
+  // Réessayer ne faisant plus rien. Un échec technique ne rejoint PAS cet
+  // ensemble : c'est justement ce qui le rend réessayable.
+  const triAutoDejaAffines = useRef<Set<string>>(new Set());
+
+  // Combien de fois un même fichier a déjà échoué techniquement à l'affinage,
+  // toutes tentatives « Réessayer » cumulées cette session — posé le
+  // 10/09/2026 après une demande explicite : un fichier qui échouera pour de
+  // bon à chaque essai (ex. corrompu, format que classer-document a fini par
+  // refuser) ne doit jamais boucler sans fin. Au-delà du plafond, on
+  // l'ajoute à triAutoDejaAffines pour de bon : il garde sa catégorie
+  // instantanée (Images/Papiers/Vidéos/Audio), rien n'est perdu, seule la
+  // resoumission automatique s'arrête.
+  const triAutoTentatives = useRef<Map<string, number>>(new Map());
+  const TENTATIVES_TRI_AUTO_MAX = 3;
   // Dossiers dépliés dans la vue « Ranger en dossiers » — vide par défaut,
   // donc tous repliés : voir le rendu de `dossiers.map` plus bas.
   const [dossiersOuverts, setDossiersOuverts] = useState<Set<string>>(new Set());
@@ -510,7 +542,19 @@ export default function PageCoffre() {
     // Chaque `setAValider` porte sa propre clé et utilise la forme
     // fonctionnelle — les réponses qui reviennent dans le désordre ne
     // s'écrasent jamais entre elles.
+    //
+    // Un fichier qu'on sait déjà illisible par l'IA (un SVG, par exemple —
+    // voir affinableParIA) n'est même pas soumis : l'appel échouerait à coup
+    // sûr, pour rien. Il garde directement sa catégorie instantanée, prête à
+    // être ajustée à la main dans la liste d'attente.
     await Promise.all(nouveaux.map(async (item) => {
+      const categorieLocale = categorieInstantanee(item.fichier.type);
+      if (!affinableParIA(categorieLocale, item.fichier.type)) {
+        setAValider((precedent) => precedent.map((p) => (p.cle === item.cle
+          ? { ...p, enAnalyse: false, categorie: categorieLocale }
+          : p)));
+        return;
+      }
       const proposition = await proposerClassement(item.fichier);
       setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
         ...p, enAnalyse: false,
@@ -559,76 +603,139 @@ export default function PageCoffre() {
   // à deposerFichier lancés côte à côte partiraient tous les deux du même
   // index de départ, et le second écraserait le premier au lieu de s'y
   // ajouter.
+  //
+  // Boucle plutôt qu'une seule passe sur `prets` : sur un gros lot, la
+  // lecture de chaque fichier (proposerClassement, un appel IA par fichier
+  // dans surDepot) prend plusieurs secondes et se termine en désordre —
+  // le bouton reste cliquable dès qu'UN SEUL fichier est prêt, pas tous. Une
+  // seule passe déposait alors ce sous-ensemble et abandonnait les fichiers
+  // encore « en lecture » à cet instant : ils restaient coincés dans la
+  // liste d'attente pour de bon, jamais redéposés tout seuls, et un tri
+  // automatique lancé juste après ne les voyait jamais — d'où un compteur
+  // de papiers plus bas que ce qui avait été réellement déposé. Tant qu'il
+  // reste un fichier en lecture, on l'attend au lieu de s'arrêter.
   async function confirmerTout() {
     if (!utilisateur || !cle) return;
-    const prets = aValider.filter((p) => !p.enAnalyse);
-    if (prets.length === 0) return;
+    if (aValiderRef.current.every((p) => p.enAnalyse)) return;
     setEnCours(true);
     setErreur('');
     let indexCourant = index;
     const echecs: string[] = [];
-    for (const item of prets) {
-      try {
-        indexCourant = await deposerFichier(
-          utilisateur.id, cle, item.fichier, item.categorie, indexCourant, item.nomAffiche, item.echeance,
-          item.emetteur || null, item.referenceClient || null, item.montant || null,
-          item.texteExtrait || null,
-        );
-        setIndex(indexCourant);
-        retirerAttente(item.cle);
-      } catch (err) {
-        echecs.push(`${item.nomAffiche} (${err instanceof Error ? err.message : String(err)})`);
+    // Un fichier dont le dépôt échoue reste dans la liste d'attente (pour
+    // que l'utilisateur le voie et le corrige) mais ne doit pas être
+    // retenté à chaque tour de la boucle ci-dessous — sinon un échec
+    // persistant (réseau, quota) transforme l'attente des fichiers encore
+    // en lecture en une boucle infinie sur ce même fichier en échec.
+    const dejaEnEchec = new Set<string>();
+    for (;;) {
+      const prets = aValiderRef.current.filter((p) => !p.enAnalyse && !dejaEnEchec.has(p.cle));
+      if (prets.length === 0) {
+        if (aValiderRef.current.some((p) => p.enAnalyse)) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          continue;
+        }
+        break;
+      }
+      for (const item of prets) {
+        try {
+          indexCourant = await deposerFichier(
+            utilisateur.id, cle, item.fichier, item.categorie, indexCourant, item.nomAffiche, item.echeance,
+            item.emetteur || null, item.referenceClient || null, item.montant || null,
+            item.texteExtrait || null,
+          );
+          setIndex(indexCourant);
+          retirerAttente(item.cle);
+        } catch (err) {
+          echecs.push(`${item.nomAffiche} (${err instanceof Error ? err.message : String(err)})`);
+          dejaEnEchec.add(item.cle);
+        }
       }
     }
     if (echecs.length > 0) setErreur(`Non déposés : ${echecs.join(', ')}.`);
     setEnCours(false);
   }
 
-  // Bouton « Trier automatiquement » : reclasse les papiers sans catégorie
-  // (bouton « À trier » depuis l'accueil), en repassant chacun par
-  // classer-document — la même analyse que celle qui propose déjà une
-  // catégorie au dépôt.
+  // Tri automatique en deux passes bien distinctes — voir le plan du
+  // 10/09/2026 (bilan point 10) : la première est gratuite, instantanée et
+  // sans appel réseau, la seconde affine avec l'IA. Aucun fichier ne reste
+  // jamais « non classé » après cet appel, quel que soit son type.
   //
-  // Plafonné à LOT_MAX_TRI_AUTO par clic : sur un très gros lot (128 papiers
-  // vus en usage réel), traiter tout d'un coup prenait plusieurs minutes et
-  // multipliait les appels à un service externe sans retenue. Le bouton
-  // réaffiche le compte restant après chaque lot — on le reclique pour
-  // continuer, jamais tout en une fois.
+  // Passe 1 — locale : chaque fichier sans catégorie reçoit tout de suite
+  // une catégorie générique selon son type (categorieInstantanee), sans
+  // solliciter personne. Couvre tout le retard d'un coup, quel que soit le
+  // nombre de fichiers — plus de plafond par lot, ce n'est plus nécessaire
+  // puisque rien ici ne coûte de temps réseau.
   //
-  // Le classement (lecture du fichier + appel à classer-document) est mené
-  // en parallèle, borné par CONCURRENCE_TRI_AUTO : c'est l'appel réseau qui
-  // domine le temps, et rien n'empêche de le mener sur plusieurs fichiers à
-  // la fois. Seule l'ÉCRITURE de l'index doit rester unique à un instant
-  // donné (verrouillée par `flush` ci-dessous) : `sauvegarderIndex`
-  // rechiffre et renvoie l'index ENTIER à chaque appel, et le faire une fois
-  // par document (128 fois sur un gros lot) dominait largement le temps
-  // passé — plus que le classement lui-même. `modifierPlusieursObjets`
-  // regroupe plusieurs classements en une seule sauvegarde ; `CHECKPOINT_TRI_AUTO`
-  // en déclenche une toutes les huit réussites plutôt qu'une seule à la fin,
-  // pour ne pas tout reperdre si la page se ferme en cours de lot.
+  // Passe 2 — IA, seulement sur ce que classer-document sait lire (image,
+  // PDF — voir CATEGORIES_AFFINABLES_PAR_IA) : propose une catégorie
+  // administrative précise si elle en reconnaît une ; sinon le fichier garde
+  // la catégorie posée à la passe 1. Menée en parallèle, borné par
+  // CONCURRENCE_TRI_AUTO — mesuré sur ce compte le 10/09/2026 via le journal
+  // des en-têtes anthropic-ratelimit-* posé sur classer-document (et non
+  // plus supposé depuis la doc publique) : 10 000 requêtes/minute et
+  // 10 000 000 de jetons d'entrée/minute, jamais entamés même sur un lot de
+  // 89 fichiers. Le débit n'est donc pas la limite d'Anthropic ; 25 en vol
+  // reste très en dessous, avec de la marge pour un compte moins généreux.
+  // `modifierPlusieursObjets` regroupe plusieurs affinages en une seule
+  // sauvegarde ; `CHECKPOINT_TRI_AUTO` en déclenche une toutes les huit
+  // réussites plutôt qu'une seule à la fin, pour ne pas tout reperdre si la
+  // page se ferme en cours de lot.
   async function trierAutomatiquement() {
     if (!utilisateur || !cle) return;
-    const CONCURRENCE_TRI_AUTO = 3;
+    const CONCURRENCE_TRI_AUTO = 25;
     const CHECKPOINT_TRI_AUTO = 8;
 
-    const tout = Object.keys(index.objets).filter(
-      (n) => !index.objets[n]?.categorie?.trim() && !triAutoIgnores.has(n),
-    );
-    if (tout.length === 0) return;
-    const aTrier = tout.slice(0, LOT_MAX_TRI_AUTO);
+    const nonClasses = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
+    if (nonClasses.length === 0) return;
 
     setTriAutoEnCours(true);
-    setTriAutoProgres({ fait: 0, total: aTrier.length });
+    setTriAutoProgres(null);
     setTriAutoBilan(null);
     setTriAutoDetailOuvert(false);
 
-    const indexDepart = index;
-    let indexCourant = index;
+    // Passe 1 : instantanée, un seul aller-retour de sauvegarde pour tout le
+    // lot, quelle que soit sa taille.
+    const instantanes: Record<string, { categorie: string }> = {};
+    for (const nom of nonClasses) {
+      const info = index.objets[nom];
+      if (info) instantanes[nom] = { categorie: categorieInstantanee(info.type) };
+    }
+    let indexCourant: IndexCoffre;
+    try {
+      indexCourant = await modifierPlusieursObjets(utilisateur.id, cle, instantanes, index);
+      setIndex(indexCourant);
+    } catch (err) {
+      setTriAutoBilan({ erreursTechniques: [err instanceof Error ? err.message : String(err)], abandonnes: [] });
+      setTriAutoEnCours(false);
+      return;
+    }
+
+    // Passe 2 : tout ce qui est ACTUELLEMENT dans un dossier affinable et
+    // n'a pas encore reçu de verdict de l'IA cette session — jamais
+    // seulement ce qui vient d'être classé à l'instant (`nonClasses`),
+    // sinon un fichier resté en échec technique lors d'un tri précédent
+    // redevient introuvable au tri suivant : il a déjà sa catégorie
+    // instantanée, donc il ne compte plus parmi les « non classés ».
+    const aAffiner = Object.keys(indexCourant.objets).filter((n) => {
+      const info = indexCourant.objets[n];
+      if (!info || triAutoDejaAffines.current.has(n)) return false;
+      return affinableParIA(info.categorie ?? '', info.type);
+    });
+    if (aAffiner.length === 0) {
+      setTriAutoEnCours(false);
+      return;
+    }
+    setTriAutoProgres({ fait: 0, total: aAffiner.length });
+
+    const indexDepart = indexCourant;
     let enAttente: Record<string, { categorie: string; montant?: string }> = {};
     let flushEnVol: Promise<void> | null = null;
-    const nonDocuments: string[] = [];
-    const nonDocumentsCles: string[] = [];
     const erreursTechniques: string[] = [];
+    // Fichiers ayant atteint TENTATIVES_TRI_AUTO_MAX : distincts des erreurs
+    // techniques ci-dessus, qui restent réessayables — ceux-là ne le sont
+    // plus, « Réessayer » ne les reprendra pas, mais ils gardent leur
+    // catégorie générique (Images/Papiers), rien n'est perdu.
+    const abandonnes: string[] = [];
 
     // Verrouillé : si un flush est déjà en vol, celui-ci se contente
     // d'attendre — les entrées accumulées depuis seront prises par le flush
@@ -657,8 +764,8 @@ export default function PageCoffre() {
     let curseur = 0;
     async function suivant(): Promise<void> {
       const i = curseur++;
-      if (i >= aTrier.length) return;
-      const nom = aTrier[i];
+      if (i >= aAffiner.length) return;
+      const nom = aAffiner[i];
       if (!nom) return suivant();
       const info = indexDepart.objets[nom];
       if (info) {
@@ -668,38 +775,50 @@ export default function PageCoffre() {
           // masque le constructeur DOM — d'où `globalThis.File` ici.
           const fichier = new globalThis.File([blob], info.nom, { type: info.type });
           const proposition = await proposerClassement(fichier);
-          if (proposition.lisible) {
-            enAttente[nom] = { categorie: proposition.categorie, montant: proposition.montant || undefined };
-            if (Object.keys(enAttente).length >= CHECKPOINT_TRI_AUTO) await flush();
-          } else if (proposition.erreurTechnique) {
+          if (proposition.erreurTechnique) {
             // L'appel a échoué (réseau, quota, service surchargé) — le
-            // document reste sans catégorie et sera repris tel quel au
-            // prochain tri, à la différence d'un vrai non-document.
-            erreursTechniques.push(info.nom);
+            // fichier garde sa catégorie instantanée. En dessous du plafond
+            // de tentatives, il reste éligible au prochain tri (pas ajouté à
+            // triAutoDejaAffines) : c'est ce qui rend « Réessayer » capable
+            // de le retrouver. Au-delà, on arrête de le resoumettre — voir
+            // TENTATIVES_TRI_AUTO_MAX.
+            const tentatives = (triAutoTentatives.current.get(nom) ?? 0) + 1;
+            triAutoTentatives.current.set(nom, tentatives);
+            if (tentatives >= TENTATIVES_TRI_AUTO_MAX) {
+              triAutoDejaAffines.current.add(nom);
+              abandonnes.push(info.nom);
+            } else {
+              erreursTechniques.push(info.nom);
+            }
           } else {
-            nonDocuments.push(info.nom);
-            nonDocumentsCles.push(nom);
+            // Un vrai verdict est tombé, positif ou négatif — dans les deux
+            // cas ce fichier ne sera plus jamais resoumis automatiquement.
+            triAutoDejaAffines.current.add(nom);
+            if (proposition.lisible) {
+              enAttente[nom] = { categorie: proposition.categorie, montant: proposition.montant || undefined };
+              if (Object.keys(enAttente).length >= CHECKPOINT_TRI_AUTO) await flush();
+            }
           }
         } catch (err) {
-          erreursTechniques.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
+          const tentatives = (triAutoTentatives.current.get(nom) ?? 0) + 1;
+          triAutoTentatives.current.set(nom, tentatives);
+          if (tentatives >= TENTATIVES_TRI_AUTO_MAX) {
+            triAutoDejaAffines.current.add(nom);
+            abandonnes.push(info.nom);
+          } else {
+            erreursTechniques.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
+          }
         }
       }
       setTriAutoProgres((p) => (p ? { ...p, fait: p.fait + 1 } : null));
       return suivant();
     }
 
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCE_TRI_AUTO, aTrier.length) }, suivant));
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCE_TRI_AUTO, aAffiner.length) }, suivant));
     await flush();
 
-    if (nonDocumentsCles.length > 0) {
-      setTriAutoIgnores((precedent) => {
-        const suivant = new Set(precedent);
-        for (const cleStockage of nonDocumentsCles) suivant.add(cleStockage);
-        return suivant;
-      });
-    }
-    if (nonDocuments.length > 0 || erreursTechniques.length > 0) {
-      setTriAutoBilan({ nonDocuments, erreursTechniques });
+    if (erreursTechniques.length > 0 || abandonnes.length > 0) {
+      setTriAutoBilan({ erreursTechniques, abandonnes });
     }
     setTriAutoEnCours(false);
     setTriAutoProgres(null);
@@ -823,6 +942,24 @@ export default function PageCoffre() {
     } catch (err) {
       return `Classement impossible : ${err instanceof Error ? err.message : String(err)}`;
     }
+  }
+
+  // Télécharge le CERFA trouvé par l'assistant (voir formulaireCerfa),
+  // en lit les champs (pdf-lib, dans ce navigateur) et propose des valeurs
+  // tirées des papiers du coffre — puis ouvre l'écran de remplissage déjà
+  // rempli. Rien n'est jamais généré ni téléchargé ici : l'utilisateur voit
+  // et corrige chaque champ dans RemplirFormulaire avant de produire le PDF,
+  // exactement comme pour un formulaire déposé à la main.
+  async function preparerFormulaireCerfa(demarche: string, url: string): Promise<void> {
+    const bytes = await recupererFormulaireCerfa(url);
+    const champs = await champsFormulaire(bytes);
+    if (champs.length === 0) {
+      throw new Error("Ce formulaire n'a pas de champs détectables — dépose-le à la main pour le remplir.");
+    }
+    const suggestionsDocument = await suggererChampsFormulaire(champs.map((c) => c.nom), index, demarche);
+    setFormulairePrerempli({ nomFichier: `${demarche}.pdf`, demarche, bytes, suggestionsDocument });
+    setFormulaireOuvert(true);
+    fermerAssistant();
   }
 
   async function enregistrerCorrection() {
@@ -1038,15 +1175,6 @@ export default function PageCoffre() {
   }
 
   const tousLesNoms = Object.keys(index.objets);
-  // Papiers sans catégorie — même critère que le dossier « À trier » de la
-  // vue « Ranger en dossiers » (DOSSIER_SANS_CATEGORIE), pour ne pas créer un
-  // second sens au même mot.
-  const nomsATrier = tousLesNoms.filter((n) => !index.objets[n]?.categorie?.trim());
-  // Ce qu'un prochain clic sur « Trier automatiquement » offre réellement :
-  // `nomsATrier` reste le compte brut (vrai, mais un document confirmé
-  // non-document cette session ne redeviendra pas classable pour autant),
-  // celui-ci exclut ce qui a déjà été vu et rejeté — voir triAutoIgnores.
-  const nomsATrierRestants = nomsATrier.filter((n) => !triAutoIgnores.has(n));
   // Catégories déjà utilisées — sert aux chips de filtre : inutile de
   // proposer un filtre pour une catégorie qui ne contient aucun papier.
   const categoriesConnues = Array.from(
@@ -1124,7 +1252,7 @@ export default function PageCoffre() {
             porte déjà l'eyebrow « Bonjour » juste en dessous. */}
         <p className="text-sm font-semibold tracking-widest text-violet uppercase">Le Tiroir Secret</p>
         {/* En-tête */}
-        <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised bg-gradient-to-br from-paper-raised via-paper-raised to-vert/10 p-6 sm:p-8">
+        <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised bg-gradient-to-br from-paper-raised via-violet/10 to-vert/10 p-6 sm:p-8">
           <div>
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
               Bonjour {prenom || 'toi'}
@@ -1142,6 +1270,95 @@ export default function PageCoffre() {
             <LogOut size={16} /> Se déconnecter
           </button>
         </header>
+
+        {/* Barre « pose ta question » — hors de la grille et juste sous
+            l'en-tête (10/09/2026), plus haut de page mais plus respirée :
+            avant, elle vivait tout en bas de la colonne de gauche, dans la
+            même condition que la liste de papiers (`tousLesNoms.length > 0`)
+            — donc absente du DOM pour un coffre encore vide, exactement le
+            moment où avoir un point d'entrée pour demander de l'aide compte
+            le plus. Elle est désormais toujours affichée, centrée dans son
+            propre bloc plutôt que collée au bord supérieur de l'écran. */}
+        <div className="rounded-3xl border border-line bg-paper-raised p-6 sm:p-10">
+          <p className="text-center font-affiche text-xl texte-degrade sm:text-2xl">
+            Qu&apos;est-ce que je cherche pour toi ?
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (recherche.trim()) demanderAAssistant(recherche.trim());
+            }}
+            className="relative mx-auto mt-5 max-w-xl"
+          >
+            {/* Bulle de discussion plutôt qu'une loupe (10/09/2026) : cette
+                barre interroge un assistant en langage naturel, elle ne
+                filtre pas une liste par mots-clés — la loupe suggérait le
+                mauvais geste. */}
+            <MessageCircle size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" />
+            <input
+              type="search"
+              value={recherche}
+              onChange={(e) => setRecherche(e.target.value)}
+              placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
+              className="w-full rounded-2xl border border-line bg-paper py-3.5 pr-4 pl-12 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+          </form>
+          {recherche.trim() && (
+            <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
+              <p className="text-sm text-accent">{reponseRecherche}</p>
+              {actionRecherche === 'rangement' && (
+                <button
+                  type="button"
+                  onClick={() => { setRecherche(''); setVueDossiers(true); }}
+                  className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                >
+                  <Folder size={12} /> Ranger en dossiers
+                </button>
+              )}
+              {actionRecherche === 'formulaire' && (
+                <button
+                  type="button"
+                  onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
+                  className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                >
+                  <FileText size={12} /> Remplir un formulaire
+                </button>
+              )}
+            </div>
+          )}
+          {/* Une seule barre, un seul bot (10/09/2026) : la conversation
+              s'affiche ici, directement sous la barre qui l'a ouverte — plus
+              de panneau plein écran séparé. */}
+          {assistantOuvert && (
+            <div className="mx-auto mt-5 max-w-xl">
+              <AssistantCoffre
+                index={index}
+                questionInitiale={questionAssistant}
+                onFermer={fermerAssistant}
+                // `documentsCites` porte le nom AFFICHÉ (voir digestIndex
+                // côté serveur), jamais la clé opaque qu'attend
+                // ouvrirDetail — sans cette résolution, cliquer un document
+                // cité n'ouvrait rien.
+                onOuvrirDocument={(nomAffiche) => {
+                  const cleStockage = clesParNomAffiche(index, nomAffiche)[0];
+                  if (cleStockage) ouvrirDetail(cleStockage);
+                }}
+                onOuvrirFormulaire={() => setFormulaireOuvert(true)}
+                onOuvrirRangement={() => setVueDossiers(true)}
+                onExecuterAction={executerActionAssistant}
+                onPreparerFormulaireCerfa={preparerFormulaireCerfa}
+                triAuto={{
+                  enCours: triAutoEnCours,
+                  progres: triAutoProgres,
+                  bilan: triAutoBilan,
+                  detailOuvert: triAutoDetailOuvert,
+                }}
+                onLancerTriAutomatique={trierAutomatiquement}
+                onBasculerDetailTriAutomatique={() => setTriAutoDetailOuvert((v) => !v)}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Accès direct à rendez-vous / identité / formulaire, en un tap
             depuis le haut de l'écran — sans ça, un coffre chargé (89 papiers
@@ -1162,104 +1379,6 @@ export default function PageCoffre() {
               Aller au formulaire
             </a>
           </nav>
-        )}
-
-        {/* Bouton « À trier » : reclasse les papiers déposés sans catégorie,
-            plutôt que de les corriger un par un — visible seulement s'il y a
-            quelque chose à trier, et par lots de LOT_MAX_TRI_AUTO (voir
-            `trierAutomatiquement`) plutôt que tout d'un coup. */}
-        {nomsATrier.length > 0 && (
-          <div className="flex flex-col gap-2 rounded-2xl border border-line bg-paper-raised p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-ink-soft">
-                {nomsATrier.length} papier{nomsATrier.length > 1 ? 's' : ''} {DOSSIER_SANS_CATEGORIE.toLowerCase()}
-                {nomsATrierRestants.length > LOT_MAX_TRI_AUTO && ` — traités par lots de ${LOT_MAX_TRI_AUTO}`}
-                {/* Un papier déjà rejeté cette session (photo, vidéo…) ne
-                    redeviendra pas classable au clic suivant — sans le dire,
-                    le bouton semblerait proposer un lot qu'il ne peut plus
-                    faire avancer. */}
-                {triAutoIgnores.size > 0 && nomsATrierRestants.length > 0 &&
-                  ` (${triAutoIgnores.size} déjà vu${triAutoIgnores.size > 1 ? 's' : ''} comme non-document${triAutoIgnores.size > 1 ? 's' : ''}, mis de côté)`}
-              </p>
-              {nomsATrierRestants.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={trierAutomatiquement}
-                  disabled={triAutoEnCours}
-                  className="shrink-0 rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
-                >
-                  {triAutoEnCours
-                    ? `Tri en cours… (${triAutoProgres?.fait ?? 0}/${triAutoProgres?.total ?? nomsATrierRestants.length})`
-                    : `Trier automatiquement (${Math.min(nomsATrierRestants.length, LOT_MAX_TRI_AUTO)})`}
-                </button>
-              ) : (
-                <p className="text-sm text-ink-soft">
-                  Tout le reste a déjà été vu comme non-document cette visite — recharge la page pour
-                  réessayer, ou classe-les à la main ci-dessous.
-                </p>
-              )}
-            </div>
-            {triAutoProgres && (
-              <div
-                role="progressbar"
-                aria-valuenow={triAutoProgres.fait}
-                aria-valuemin={0}
-                aria-valuemax={triAutoProgres.total}
-                aria-label="Progression du tri automatique"
-                className="relative h-1.5 w-full overflow-hidden rounded-full bg-line"
-              >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-vert via-accent to-violet" />
-                <div
-                  className="absolute inset-y-0 right-0 rounded-r-full bg-line transition-all"
-                  style={{ width: `${100 - (triAutoProgres.fait / triAutoProgres.total) * 100}%` }}
-                />
-              </div>
-            )}
-            {/* Bilan du dernier lot : un compteur par nature d'échec, jamais
-                un mur de noms — le détail complet reste disponible mais
-                replié, dans une zone bornée en hauteur. */}
-            {triAutoBilan && (triAutoBilan.nonDocuments.length > 0 || triAutoBilan.erreursTechniques.length > 0) && (
-              <div className="flex flex-col gap-2 rounded-lg border border-line bg-paper px-4 py-3 text-sm">
-                {triAutoBilan.nonDocuments.length > 0 && (
-                  <p className="text-ink-soft">
-                    {triAutoBilan.nonDocuments.length} fichier{triAutoBilan.nonDocuments.length > 1 ? 's' : ''} non reconnu
-                    {triAutoBilan.nonDocuments.length > 1 ? 's' : ''} comme document administratif (photo, vidéo ou image
-                    sans texte lisible).
-                  </p>
-                )}
-                {triAutoBilan.erreursTechniques.length > 0 && (
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-wine">
-                      {triAutoBilan.erreursTechniques.length} fichier{triAutoBilan.erreursTechniques.length > 1 ? 's' : ''} non
-                      analysé{triAutoBilan.erreursTechniques.length > 1 ? 's' : ''} (problème réseau ou service surchargé).
-                    </p>
-                    <button
-                      type="button"
-                      onClick={trierAutomatiquement}
-                      disabled={triAutoEnCours}
-                      className="shrink-0 font-semibold text-wine underline decoration-dotted hover:text-ink disabled:opacity-60"
-                    >
-                      Réessayer
-                    </button>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setTriAutoDetailOuvert((v) => !v)}
-                  className="self-start text-ink-soft underline decoration-dotted hover:text-ink"
-                >
-                  {triAutoDetailOuvert ? 'Masquer le détail' : 'Voir le détail'}
-                </button>
-                {triAutoDetailOuvert && (
-                  <div className="max-h-40 overflow-y-auto rounded-lg bg-paper-raised p-3 text-xs text-ink-soft">
-                    {[...triAutoBilan.nonDocuments, ...triAutoBilan.erreursTechniques].map((nom, i) => (
-                      <p key={`${nom}-${i}`} className="truncate">{nom}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
         )}
 
         {/* Bannière d'alerte — cliquable seulement quand elle porte sur un
@@ -1413,81 +1532,6 @@ export default function PageCoffre() {
                 <Folder size={14} /> {vueDossiers ? 'Revenir à la liste' : 'Ranger en dossiers'}
               </button>
             </div>
-            {tousLesNoms.length > 0 && (
-              <div className="mb-4 flex flex-col gap-2">
-                <div className="relative">
-                  <Search size={18} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft" />
-                  <input
-                    type="search"
-                    value={recherche}
-                    onChange={(e) => setRecherche(e.target.value)}
-                    placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
-                    className="w-full rounded-xl border border-line bg-paper-raised py-2.5 pr-3 pl-10 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-                {/* Réponse du coffre à la question posée — jamais affichée
-                    pour une recherche vide, où elle n'apporterait rien.
-                    Point d'entrée unique désormais : quand la recherche
-                    locale (gratuite, instantanée) ne trouve rien, une puce
-                    propose d'escalader vers l'assistant (payant) avec la
-                    même question — jamais automatique, pour ne pas facturer
-                    une simple faute de frappe. */}
-                {recherche.trim() && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm text-accent">{reponseRecherche}</p>
-                    {actionRecherche === 'rangement' && (
-                      <button
-                        type="button"
-                        onClick={() => { setRecherche(''); setVueDossiers(true); }}
-                        className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                      >
-                        <Folder size={12} /> Ranger en dossiers
-                      </button>
-                    )}
-                    {actionRecherche === 'formulaire' && (
-                      <button
-                        type="button"
-                        onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
-                        className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                      >
-                        <FileText size={12} /> Remplir un formulaire
-                      </button>
-                    )}
-                    {/* Toujours proposé dès qu'il y a du texte, même quand la
-                        recherche locale trouve un document — une commande
-                        (« range X dans Y ») cite presque toujours le nom
-                        exact d'un document réel, donc « trouve quelque
-                        chose » ne veut pas dire « la recherche locale a
-                        répondu à la demande ». Restreindre ce bouton aux
-                        recherches sans résultat le rendait invisible pile
-                        pour les phrases qui en avaient le plus besoin
-                        (09/09/2026). */}
-                    {!actionRecherche && (
-                      <button
-                        type="button"
-                        onClick={() => demanderAAssistant(recherche.trim())}
-                        className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-accent/60"
-                      >
-                        <MessageCircle size={12} /> Demander à l&apos;assistant
-                      </button>
-                    )}
-                  </div>
-                )}
-                {/* Toujours visible, discret : la porte vers une question qui
-                    ne concerne aucun document précis (« comment résilier une
-                    assurance habitation »), sans dupliquer la barre du haut
-                    ni ouvrir un second champ de saisie. */}
-                {!recherche.trim() && (
-                  <button
-                    type="button"
-                    onClick={() => demanderAAssistant('')}
-                    className="self-start text-xs text-ink-soft underline decoration-dotted transition hover:text-ink"
-                  >
-                    Une question plus large ? Demander à l&apos;assistant
-                  </button>
-                )}
-              </div>
-            )}
             {categoriesConnues.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
                 <button type="button" onClick={() => setFiltreCategorie(null)}
@@ -1562,7 +1606,15 @@ export default function PageCoffre() {
           </section>
 
           <div className="flex flex-col gap-8">
-            <section id="rendez-vous" className="scroll-mt-6">
+            {/* Carte en verre demandée le 10/09/2026 : ces trois sections
+                n'avaient jamais reçu la même carte que le reste de la page
+                (en-tête, barre de recherche, fiches document) — sans
+                `border-line bg-paper-raised`, elles ne portent aucun fond,
+                donc pas la règle CSS partagée qui pose le dégradé
+                turquoise-violet. Seul le turquoise des boutons et des bords
+                de champ y ressortait, perçu comme « tout en vert » face au
+                duo turquoise-violet visible ailleurs. */}
+            <section id="rendez-vous" className="scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
               <h2 className="mb-4 font-affiche text-2xl">Rendez-vous</h2>
               <form onSubmit={surAjoutRendezVous} className="mb-4 flex flex-col gap-2">
                 <Champ name="libelle" placeholder="Dentiste, cabinet Martin…" required />
@@ -1609,7 +1661,7 @@ export default function PageCoffre() {
               )}
             </section>
 
-            <section id="mon-identite" className="scroll-mt-6">
+            <section id="mon-identite" className="scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
               <h2 className="mb-2 font-affiche text-2xl">Mon identité</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Sert uniquement à remplir l&apos;en-tête des lettres de résiliation — chiffrée comme le reste.
@@ -1637,7 +1689,7 @@ export default function PageCoffre() {
               </form>
             </section>
 
-            <section id="remplir-formulaire" className="scroll-mt-6">
+            <section id="remplir-formulaire" className="scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
               <h2 className="mb-2 font-affiche text-2xl">Remplir un formulaire</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Dépose un CERFA ou un mandat vierge : l&apos;appli détecte ses champs et les
@@ -1656,24 +1708,10 @@ export default function PageCoffre() {
       </div>
 
       {formulaireOuvert && (
-        <RemplirFormulaire identite={index.identite} onFermer={() => setFormulaireOuvert(false)} />
-      )}
-
-      {assistantOuvert && (
-        <AssistantCoffre
-          index={index}
-          questionInitiale={questionAssistant}
-          onFermer={fermerAssistant}
-          // `documentsCites` porte le nom AFFICHÉ (voir digestIndex côté
-          // serveur), jamais la clé opaque qu'attend ouvrirDetail — sans
-          // cette résolution, cliquer un document cité n'ouvrait rien.
-          onOuvrirDocument={(nomAffiche) => {
-            const cleStockage = clesParNomAffiche(index, nomAffiche)[0];
-            if (cleStockage) ouvrirDetail(cleStockage);
-          }}
-          onOuvrirFormulaire={() => setFormulaireOuvert(true)}
-          onOuvrirRangement={() => setVueDossiers(true)}
-          onExecuterAction={executerActionAssistant}
+        <RemplirFormulaire
+          identite={index.identite}
+          prerempli={formulairePrerempli}
+          onFermer={() => { setFormulaireOuvert(false); setFormulairePrerempli(undefined); }}
         />
       )}
 

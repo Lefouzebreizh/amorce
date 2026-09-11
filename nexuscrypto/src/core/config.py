@@ -47,10 +47,21 @@ class ConfigurationInvalide(Exception):
 
 
 @dataclass(frozen=True, slots=True)
-class LigneAllocation:
+class LigneSurveillee:
+    """Un actif que le moteur regarde à chaque passe, sans montant ni
+    calendrier imposés — c'est le score qui décide, jamais le fichier.
+
+    Jusqu'au 10/09/2026 cette ligne portait un `poids` d'allocation cible :
+    retiré avec le DCA calendaire qui seul en avait besoin. Ce qui reste sert
+    encore : `vente_sur_signal` protège un socle qu'on ne veut jamais voir
+    sortir sur un simple stop, `chaine`/`adresse` arment le bouclier
+    anti-rugpull quand l'actif en a un, `plafond_usd` borne une ligne
+    spécifique — un jeton plus risqué qu'un LINK ou un BTC — sans attendre
+    qu'elle soit découverte par le scanner.
+    """
+
     symbole: str
-    poids: float
-    role: str = "croissance"
+    role: str = "watchlist"
     vente_sur_signal: bool = True
     plateforme: str | None = None
     # Chaîne et contrat, pour les jetons qu'on peut désigner sur une chaîne.
@@ -59,29 +70,26 @@ class LigneAllocation:
     # lui ferait refuser un achat parfaitement légitime.
     chaine: str | None = None
     adresse: str | None = None
-
-    @property
-    def fraction(self) -> float:
-        return self.poids / 100.0
+    # Plafond spécifique à cette ligne, tous renforcements compris. `None` :
+    # seuls l'exposition maximale et la trésorerie bornent l'achat — c'est le
+    # cas normal d'un actif établi (BTC, ETH...).
+    plafond_usd: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class ConfigPortefeuille:
+    """Retiré le 10/09/2026, avec la logique DCA calendaire qui les
+    utilisait : `enveloppe_dca_usd`, `cadence_dca`, `reserve_decouverte_poids`,
+    `plafond_par_jeton_usd` (déplacé sur `ConfigPepites`, une notion propre
+    aux jetons découverts par le scanner) et `tolerance_derive` (n'avait de
+    sens que contre un poids cible, qui n'existe plus)."""
+
     capital_initial_usd: float
-    enveloppe_dca_usd: float
-    cadence_dca: str
-    allocation: dict[str, LigneAllocation]
-    reserve_decouverte_poids: float
-    plafond_par_jeton_usd: float
-    tolerance_derive: float
+    watchlist: dict[str, LigneSurveillee]
 
     @property
     def symboles(self) -> tuple[str, ...]:
-        return tuple(self.allocation)
-
-    def poids_de(self, symbole: str) -> float:
-        ligne = self.allocation.get(symbole)
-        return ligne.fraction if ligne else 0.0
+        return tuple(self.watchlist)
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,23 +116,6 @@ class ConfigTechnique:
 
 
 @dataclass(frozen=True, slots=True)
-class ConfigDCA:
-    multiplicateurs_zone: dict[str, float]
-    bonus_sous_ema_longue: float = 1.3
-    bonus_sous_ema_moyenne: float = 1.1
-    malus_au_dessus_ema_longue: float = 0.85
-    influence_score: float = 0.4
-    multiplicateur_min: float = 0.0
-    multiplicateur_max: float = 2.5
-    score_minimum_achat: float = 45.0
-    montant_minimum_usd: float = 20.0
-    # Fraction de l'enveloppe achetée malgré tout quand la valorisation dit
-    # non. Zéro rétablit l'abstention totale de la première version — mesurée
-    # comme un défaut, voir le bloc d'en-tête de `_replier` dans `dca.py`.
-    plancher_enveloppe: float = 0.15
-
-
-@dataclass(frozen=True, slots=True)
 class ConfigPepites:
     croissance_volume_min: float = 3.0
     liquidite_min_usd: float = 250_000
@@ -133,6 +124,21 @@ class ConfigPepites:
     capitalisation_max_usd: float = 300_000_000
     score_minimum: float = 65
     candidats_max: int = 5
+    # Ratio volume 24 h / capitalisation — un signal indépendant de
+    # `croissance_volume` : celui-ci compare le jeton à lui-même, celui-là le
+    # compare à sa propre taille. En dessous de `bas`, personne ne s'y
+    # intéresse ; entre `bas` et `sain`, la note monte ; au-dessus de `haut`,
+    # ce n'est plus un afflux d'intérêt mais une distribution en cours — la
+    # totalité de la capitalisation qui s'échange en un jour est le signe
+    # d'une sortie, pas d'une accumulation.
+    ratio_volume_mcap_bas: float = 0.05
+    ratio_volume_mcap_sain: float = 0.30
+    ratio_volume_mcap_haut: float = 2.0
+    # Plafond par jeton découvert, tous renforcements compris. Déplacé ici le
+    # 10/09/2026 depuis `ConfigPortefeuille.plafond_par_jeton_usd` : c'est une
+    # notion propre à un jeton que le scanner ramène, pas au portefeuille
+    # cible qui n'existe plus.
+    plafond_par_jeton_usd: float = 100.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,9 +165,13 @@ class ConfigStrategie:
     poids: dict[str, float]
     redistribuer_poids_absents: bool
     technique: ConfigTechnique
-    dca: ConfigDCA
     pepites: ConfigPepites
     bouclier: ConfigBouclier
+    # Score de confiance à partir duquel le moteur achète ou renforce. Seul
+    # signal d'entrée depuis le retrait du DCA calendaire le 10/09/2026 : plus
+    # de calendrier à satisfaire, plus de montant nominal à moduler — une
+    # opportunité ou rien.
+    seuil_achat: float = 60.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,6 +192,10 @@ class ConfigRisque:
     atr_multiple_stop: float = 4.0
     trailing_activation: float = 0.20
     trailing_distance: float = 0.12
+    # Un achat sous ce montant coûte plus en frais qu'il n'apporte. Vivait sur
+    # `ConfigDCA` avant le 10/09/2026 ; c'est une règle de dimensionnement, pas
+    # une règle de calendrier, donc elle vit ici désormais.
+    montant_minimum_usd: float = 20.0
     coupe_circuit: ConfigCoupeCircuit = field(default_factory=ConfigCoupeCircuit)
 
 
@@ -348,51 +362,36 @@ def charger(
 
     general = _depuis(ConfigGeneral, _section(brut, "general"))
 
-    # -- Portefeuille --------------------------------------------------------
+    # -- Portefeuille (liste de surveillance) --------------------------------
     brut_pf = _section(brut, "portefeuille")
-    brut_alloc = brut_pf.get("allocation") or {}
-    lignes: dict[str, LigneAllocation] = {}
-    for symbole, details in brut_alloc.items():
-        if not isinstance(details, Mapping) or "poids" not in details:
-            defauts.append(f"Allocation « {symbole} » : il manque un poids.")
+    brut_watchlist = brut_pf.get("watchlist") or {}
+    lignes: dict[str, LigneSurveillee] = {}
+    for symbole, details in brut_watchlist.items():
+        details = details or {}
+        if not isinstance(details, Mapping):
+            defauts.append(f"Watchlist « {symbole} » : entrée illisible.")
             continue
-        lignes[symbole] = LigneAllocation(
+        lignes[symbole] = LigneSurveillee(
             symbole=symbole,
-            poids=float(details["poids"]),
-            role=str(details.get("role", "croissance")),
+            role=str(details.get("role", "watchlist")),
             vente_sur_signal=bool(details.get("vente_sur_signal", True)),
             plateforme=details.get("plateforme"),
+            chaine=details.get("chaine"),
+            adresse=details.get("adresse"),
+            plafond_usd=(
+                float(details["plafond_usd"]) if details.get("plafond_usd") is not None else None
+            ),
         )
 
-    reserve = _section(brut_pf, "reserve_decouverte")
-    poids_reserve = _flottant(reserve, "poids", 0.0)
-    somme = sum(l.poids for l in lignes.values()) + poids_reserve
-    if lignes and abs(somme - 100.0) > 1e-6:
-        defauts.append(
-            f"L'allocation somme à {somme:g} % au lieu de 100 % — "
-            f"{100 - somme:+g} % de capital ne serait réclamé par personne."
-        )
     if not lignes:
-        defauts.append("Aucune ligne d'allocation : le portefeuille cible est vide.")
+        defauts.append("Watchlist vide : aucun actif à surveiller.")
 
     portefeuille = ConfigPortefeuille(
         capital_initial_usd=_flottant(brut_pf, "capital_initial_usd", 0.0),
-        enveloppe_dca_usd=_flottant(brut_pf, "enveloppe_dca_usd", 0.0),
-        cadence_dca=str(brut_pf.get("cadence_dca", "hebdomadaire")),
-        allocation=lignes,
-        reserve_decouverte_poids=poids_reserve,
-        plafond_par_jeton_usd=_flottant(reserve, "plafond_par_jeton_usd", 0.0),
-        tolerance_derive=_flottant(brut_pf, "tolerance_derive", 0.05),
+        watchlist=lignes,
     )
-    if portefeuille.cadence_dca not in {"quotidienne", "hebdomadaire", "mensuelle"}:
-        defauts.append(
-            f"Cadence DCA inconnue : « {portefeuille.cadence_dca} » "
-            "(quotidienne, hebdomadaire ou mensuelle)."
-        )
     if portefeuille.capital_initial_usd <= 0:
         defauts.append("Le capital initial doit être strictement positif.")
-    if portefeuille.enveloppe_dca_usd <= 0:
-        defauts.append("L'enveloppe DCA doit être strictement positive.")
 
     # -- Stratégie -----------------------------------------------------------
     brut_strat = _section(brut, "strategie")
@@ -410,37 +409,9 @@ def charger(
             f"Les poids du score somment à {sum(poids.values()):g} au lieu de 1.0."
         )
 
-    brut_dca = _section(brut_strat, "dca")
-    multiplicateurs = {
-        str(k): float(v) for k, v in (brut_dca.get("multiplicateurs_zone") or {}).items()
-    }
-    zones_attendues = {"peur_extreme", "peur", "neutre", "avidite", "avidite_extreme"}
-    if multiplicateurs and set(multiplicateurs) != zones_attendues:
-        defauts.append(
-            "Multiplicateurs DCA : il faut exactement les cinq zones "
-            f"({', '.join(sorted(zones_attendues))})."
-        )
-    dca = _depuis(
-        ConfigDCA,
-        brut_dca,
-        multiplicateurs_zone=multiplicateurs or {z: 1.0 for z in zones_attendues},
-    )
-    if dca.multiplicateur_min > dca.multiplicateur_max:
-        defauts.append("DCA : le multiplicateur minimum dépasse le maximum.")
-    if not 0.0 <= dca.plancher_enveloppe <= 1.0:
-        defauts.append(
-            f"DCA : plancher_enveloppe à {dca.plancher_enveloppe:g} — c'est une "
-            "fraction de l'enveloppe, entre 0 et 1."
-        )
-    if dca.influence_score >= 1 / 3:
-        # Démonstration dans le bloc d'en-tête de `strategy/dca.py` : au-delà
-        # d'un tiers, un bon score en zone neutre achète plus qu'un mauvais
-        # score en peur extrême, et la zone de valorisation cesse d'être le
-        # signal dominant du DCA.
-        defauts.append(
-            f"DCA : influence_score à {dca.influence_score:g} — au-delà de 0,333 le score "
-            "domine la zone de valorisation, ce qu'un DCA doit refuser."
-        )
+    seuil_achat = _flottant(brut_strat, "seuil_achat", 60.0)
+    if not 0.0 <= seuil_achat <= 100.0:
+        defauts.append(f"seuil_achat à {seuil_achat:g} — un score vit entre 0 et 100.")
 
     technique = _depuis(ConfigTechnique, _section(brut_strat, "technique"))
     if not technique.ema_courte < technique.ema_moyenne < technique.ema_longue:
@@ -456,9 +427,9 @@ def charger(
         poids=poids or {"technique": 0.5, "sentiment": 0.2, "onchain": 0.3},
         redistribuer_poids_absents=bool(brut_strat.get("redistribuer_poids_absents", True)),
         technique=technique,
-        dca=dca,
         pepites=pepites,
         bouclier=bouclier,
+        seuil_achat=seuil_achat,
     )
 
     # -- Risque --------------------------------------------------------------
@@ -486,9 +457,19 @@ def charger(
     # -- Notifications -------------------------------------------------------
     brut_notif = _section(brut, "notifications")
     canaux = tuple(brut_notif.get("canaux") or ("console",))
-    connus = {"console", "telegram", "discord"}
+    connus = {"console", "discord"}
     for canal in canaux:
-        if canal not in connus:
+        if canal == "telegram":
+            # Retiré le 10/09/2026 : les résultats se lisent désormais dans
+            # une session Claude, pas dans une application tierce. Un message
+            # dédié plutôt que le « canal inconnu » générique, pour dire
+            # pourquoi plutôt que de laisser croire à une faute de frappe.
+            defauts.append(
+                "Canal « telegram » retiré du système le 10/09/2026 : les "
+                "résultats se lisent désormais dans une session Claude. "
+                "Retirer la ligne de `config.yaml`."
+            )
+        elif canal not in connus:
             defauts.append(f"Canal de notification inconnu : « {canal} ».")
     notifications = ConfigNotifications(
         canaux=canaux,
@@ -510,8 +491,6 @@ def charger(
                 f"Mode réel demandé mais {plateforme}_API_KEY / {plateforme}_API_SECRET "
                 "sont absents du `.env`."
             )
-    if "telegram" in canaux and not secrets.presents("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
-        defauts.append("Canal Telegram activé mais TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID absents.")
     if "discord" in canaux and not secrets.presents("DISCORD_WEBHOOK_URL"):
         defauts.append("Canal Discord activé mais DISCORD_WEBHOOK_URL absent.")
 

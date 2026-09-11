@@ -10,6 +10,7 @@ import { FournisseurLicence } from '@/licence/contexte';
 import { useLicence } from '@/licence/useLicence';
 import { usePersistence } from '@/hooks/usePersistence';
 import { useSharedFiles } from '@/hooks/useSharedFiles';
+import { useDetectionCadrage } from '@/hooks/useDetectionCadrage';
 import { StudioDesktop } from './StudioDesktop';
 import { StudioMobile } from './StudioMobile';
 import { STEP_FOR_SELECTION, type StepId } from '@/lib/steps';
@@ -61,6 +62,13 @@ export function Studio() {
   const engine = usePlayback(fonts, signatureAAfficher(licence.etat));
   const compact = useIsCompact();
   usePersistence();
+  /*
+   * La détection de sujet tourne en fond, derrière l'import. Montée ici plutôt
+   * que dans le panneau d'import : elle doit survivre au changement d'étape,
+   * sans quoi passer à « Monter » pendant qu'un rush s'analyse annulerait le
+   * travail à mi-chemin.
+   */
+  useDetectionCadrage();
 
   // Sur téléphone, aucun panneau n'est ouvert au départ : l'aperçu occupe tout
   // l'écran, et le parcours s'offre dans la barre du bas.

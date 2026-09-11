@@ -203,10 +203,123 @@ part sur ce qui ne dépend pas de la réponse, dans le même message.
 - **Zéro cringe, zéro procédé qui manipule.** Le public visé est exactement
   celui que l'urgence fabriquée et la culpabilisation blessent le plus.
 
+## 1 bis. LA VISION HUMAINE PRIME SUR LE VERT
+
+Posée par le propriétaire le 11/09/2026. Numérotée « 1 bis » pour la raison
+donnée aux autres : d'autres fichiers citent les sections par leur numéro, et
+renuméroter casserait ces renvois en silence.
+
+**L'avis humain prime toujours sur le vert des tests automatiques.** Si
+l'utilisateur dit qu'un résultat ne va pas, c'est vrai, même si tous les
+contrôles techniques passent. Le vert mesure la mécanique — pas si le résultat
+est bon à regarder ou à écouter. **Un retour humain répété sur le même défaut
+est un signal plus fort qu'une suite de tests verts**, et ne se classe jamais
+comme déjà réglé sans preuve concrète que la cause a été corrigée.
+
+**Avant de livrer, se poser la question à la place de celui qui reçoit : « si
+j'étais la personne qui regarde et écoute ce montage, est-ce que je le
+trouverais bon ? »** — pas seulement « est-ce que les contrôles passent ». Un
+résultat ne se présente jamais comme terminé ou réussi sur la seule foi de
+tests automatiques si personne — humain ou session — n'a vérifié le résultat
+**perçu** : à l'œil, à l'oreille, sur la durée complète. Si ça n'a pas été
+fait, on le dit, plutôt que d'annoncer avec une confiance que le travail n'a
+pas. L'objectif tient en une phrase : **la session doit se méfier de son propre
+vert avant que l'humain n'ait à le faire à sa place.**
+
+### Le cas qui l'a posée, et il est mesuré
+
+Erwann a dit plusieurs fois que le montage d'Amorce ne convenait pas. Le défaut
+réel n'a jamais été corrigé à la racine — mesuré, parfois noté, jamais traité —
+pendant que **149 contrôles restaient verts**. Trois défauts, une seule cause :
+
+| Ce qui est vécu | Ce que le vert mesurait à la place |
+| --- | --- |
+| Une phrase de texte sur trente secondes — **12,8 %** de couverture, contre un plancher maison de 55 % | qu'un texte est **visible**. Présence, jamais couverture. |
+| Des bruitages plaqués sur les coupes, sans rapport avec le contenu | que le curseur « Bruitages » existe et que sa valeur bouge |
+| Cinquante coupes sur cinquante secondes, sans un mot à l'utilisateur | qu'un plan ne descend pas sous 0,3 s — le fragment invisible, rien d'autre |
+
+**La cause commune : le studio sait juger, et il ne juge jamais au moment du
+geste.** `src/lib/analysis.ts` porte les bons seuils — plan moyen entre 1,1 et
+2,8 s, texte entre 55 et 95 % de la durée — et rien ne les consulte au moment
+où l'on produit. Ils ne servent qu'à noter après coup, dans un panneau qu'il
+faut aller ouvrir.
+
+D'où la conséquence pratique, qui dépasse Amorce : **une suite de contrôles a
+besoin d'une deuxième famille, orientée résultat perçu.** La première mesure
+que la mécanique fonctionne ; la seconde mesure que le résultat est bon —
+couverture réelle sur la durée, pertinence et pas seulement présence,
+garde-fou assorti d'un signal explicite. Un produit qui ne porte que la
+première sort en vert et se fait rejeter au premier regard.
+
+Cette section ne remplace ni le §8 ni le §8 bis : le §8 dit *quand* on a le
+droit d'annoncer, le §8 bis dit *quoi* regarder, celle-ci dit **qui tranche
+quand les deux se contredisent** — l'humain, toujours.
+
+## 1 ter. NE JAMAIS SE SATISFAIRE D'UN MINIMUM QUI FONCTIONNE
+
+Posée par le propriétaire le 11/09/2026, le jour même où le §1 bis a été
+écrit. Numérotée « 1 ter » pour la raison donnée aux autres : d'autres fichiers
+citent les sections par leur numéro, et renuméroter casserait ces renvois en
+silence.
+
+**Elle vaut pour toutes les sessions et pour tous les projets du dépôt**, pas
+seulement pour le studio de montage. C'est un principe transversal, et c'est la
+moitié qui se perd le plus vite quand on le range dans un seul projet.
+
+**Quand une fonctionnalité ou une brique est livrée, elle doit être retravaillée
+jusqu'à un niveau vraiment abouti — pas seulement jusqu'à ce qu'elle marche, ni
+jusqu'à ce que les tests passent au vert.** « Ça fonctionne » est le début du
+travail, pas sa fin. Un lot qui tient debout se fusionne (section Git), et le
+fusionner ne le déclare pas fini : ce qui est fini est ce dont on n'a plus rien
+à redire en le regardant ou en l'écoutant.
+
+Elle complète les deux règles voisines sans les répéter :
+
+| Règle | Ce qu'elle tranche |
+| --- | --- |
+| §1 bis | **qui** décide quand le vert et l'humain se contredisent — l'humain |
+| §8 bis | **quoi** regarder avant d'annoncer, point par point |
+| **§1 ter** | **jusqu'où** aller — et la réponse n'est pas « jusqu'à ce que ça marche » |
+
+### Le cas qui l'a posée, et il est concret
+
+Le montage express plaquait des bruitages sur les raccords, y compris sur des
+rushes qui portent déjà leur propre son — une voix recouverte à chaque coupe.
+La correction du 11/09/2026 les retire entièrement dans ce cas : **zéro
+bruitage sur un rush sonore**, ce qui fonctionne et ne gêne plus personne.
+
+Le propriétaire l'a validée **comme réglage par défaut, et en disant pourquoi** :
+non par principe, mais parce que le niveau actuel des bruitages n'est pas assez
+bon pour être réactivé. Un réglage qui fonctionne — rien — a été préféré à un
+réglage qui fonctionne mal — des bruitages mal raccordés.
+
+**C'est exactement là que cette section mord.** Le lot aurait pu s'arrêter là :
+tests verts, plainte close, défaut disparu. Il n'est pas fini pour autant. Ce
+qui est attendu est que la version **avec** bruitages atteigne elle-même le
+niveau — vraiment raccordés, cohérents avec ce qui sonne déjà dans le rush en
+ambiance, en niveau et en texture — de sorte que la réactivation redevienne une
+vraie question.
+
+Et le juge de ce niveau-là n'est pas une suite de tests : c'est l'oreille du
+propriétaire, à qui le résultat se **fait écouter** avant toute réactivation.
+Le §1 bis le dit déjà pour le principe ; ce cas-ci en donne la forme
+opérationnelle — on n'annonce pas qu'un son est bon, on l'envoie.
+
 ## 2. FILTRE 48K
 
 Test avant de livrer : **est-ce que ça aide une vraie personne à dormir mieux ce
 soir ?** Si non, ça ne sort pas.
+
+**Un signal qui porte sur la santé ou le bien-être — humain ou animal — ne
+compte comme mesuré que validé sur des données réelles, jamais seulement sur
+des données fabriquées.** Posé le 10/09/2026, après le signal « stress » de
+`chat-traducteur` : construit sur quinze sons fabriqués, il aurait dit à
+quatre propriétaires sur cinq que leur chat va mal, sur un simple bâillement
+ou ronronnement — et le dépôt savait, il écrivait lui-même que ce plancher
+n'avait « jamais » vu un vrai chat, sans que ce doute écrit ne bloque quoi que
+ce soit avant la confrontation à un vrai corpus. **Un doute écrit sur ce genre
+de confrontation est un motif de blocage avant d'avancer, pas une note de bas
+de page qu'on relira plus tard.**
 
 Interface : 18 px minimum, gros contrastes, pas d'autoplay,
 `prefers-reduced-motion` respecté, cibles ≥ 44 px, `100dvh` et non `100vh`.
@@ -519,6 +632,43 @@ cesse d'être lu, et la mémoire meurt de son propre poids.
 Le résumé de reprise ne compte pas : il est lu une fois. **Le dépôt transporte
 la mémoire, le résumé ne transporte que l'état.**
 
+**Et un projet qui vit dans un dépôt GitHub séparé n'hérite de rien de tout
+ça** — sauf ce qu'on y a explicitement posé. `ensemble-mdph` en a fait les
+frais tant qu'il n'avait pas son propre `CLAUDE.md` : aucune leçon d'Amorce ne
+le protégeait (un piège déjà écrit ici, comme celui de `ssoProtection` plus
+bas, ne traversait pas jusqu'à lui), et aucune de ses propres leçons ne
+s'écrivait nulle part — un défaut annoncé corrigé pouvait y ressurgir
+identique, rejoué par une deuxième session qui ne savait pas qu'une première
+l'avait déjà mesuré une fois à tort. Mesuré le 08-09/09/2026 : un
+chevauchement de bouton sur du texte, annoncé réglé par un commit, a survécu à
+la vérification automatisée d'une session suivante avant d'être vu à l'œil par
+le propriétaire — deux fois de suite, faute d'un fichier qui aurait pu dire
+« déjà mesuré, et mal ». `ensemble-mdph` a depuis son `CLAUDE.md`, posé le
+11/09/2026 — et la règle qui suit change le moment où ce geste se fait pour
+tout projet à venir, plutôt que d'attendre qu'un défaut le justifie après coup.
+
+**Et depuis le 11/09/2026, ce geste se fait dès le départ, jamais après
+coup.** Posé par le propriétaire en toutes lettres : pour tout **nouveau**
+projet qui démarre dans un dépôt séparé, poser son `CLAUDE.md` avant le
+premier vrai développement — pas après qu'un défaut ait forcé à le faire.
+Deux règles y vont au minimum, dès la première ligne, sur le modèle
+d'`ensemble-mdph/CLAUDE.md` :
+
+1. **L'avis humain prime toujours sur le vert des tests automatiques.** Un
+   contrôle qui passe mesure la mécanique, jamais si le résultat est bon à
+   regarder ou à utiliser. Si le propriétaire dit que ça ne va pas, c'est
+   vrai, même si tout est vert.
+2. **Parcourir soi-même chaque fonctionnalité comme un utilisateur réel avant
+   de déclarer un travail terminé** — tous les parcours, tous les chemins d'un
+   site ou d'une application — jamais en comptant sur lui pour repérer les
+   coquilles restantes.
+
+Tout projet distinct qui reçoit du travail sur plus d'une session se dote en
+plus, au fil de l'eau, de ses propres pièges déjà rencontrés — même trois
+lignes ajoutées à ce même fichier suffisent, pas besoin d'attendre un format
+plus élaboré. Détail du cas d'origine dans
+`second-brain/lecons/2026-09-10-post-mortem-ensemble-mdph-verifications-qui-regardent-a-cote.md`.
+
 ## 4. STACK
 
 Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
@@ -563,7 +713,14 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   mêmes briques chacun de son côté ; son README dit ce qui vient d'où, et c'est
   ce qui évite de le refaire une troisième fois.
 - **pepites/** — radar de pépites crypto multi-chaînes, Python, sans dépendance
-  lourde. Cinq étages en file dont l'ordre n'est pas négociable : le calcul
+  lourde. **Décision du 07/09/2026, écrite ici avec trois jours de retard** :
+  NexusCrypto cesse d'être l'axe principal du chantier crypto et devient un
+  filet de sécurité ; le radar devient l'outil de gain. La phrase avait été
+  recopiée de résumé en résumé sans jamais atteindre ce fichier — détail dans
+  `second-brain/post-mortem-chantier-crypto.md` (P10), qui en tire la règle :
+  une décision de direction s'écrit ici dans la séance où elle est prise, le
+  code qui la met en œuvre peut attendre, pas la phrase. Cinq étages en file
+  dont l'ordre n'est pas négociable : le calcul
   gratuit ramène des centaines de jetons à vingt-cinq avant le premier appel
   aux API de sécurité, qui répondent trente fois par minute.
   **`main.py sonde` avant le premier scan**, et après toute retouche de
@@ -599,15 +756,16 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   ni dans un commit, qui vaudrait vingt-quatre déploiements Vercel par jour.
   **Le cache s'évince au bout de sept jours sans usage** : si le planning
   s'arrête une semaine, le compteur des jugeables repart de zéro.
-- **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
-  asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
-  bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
-  `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend vérifiable
-  ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un chemin :
-  coupe-circuit, dimensionnement, courtier, portefeuille — sans raccourci. Le
-  mode papier est le défaut, le mode réel demande deux gestes. `profils.py`
-  rejoue six marchés fabriqués et compare la stratégie à un DCA aveugle : un
-  réglage se juge sur son effet, pas sur son intention.
+- **nexuscrypto/** — moteur d'investissement autonome, chasseur d'opportunités,
+  Python asynchrone. Le cœur — scoring, risque, simulation d'exécution — tourne
+  en bibliothèque standard **pure** : la suite entière passe avec `aiohttp`,
+  `ccxt`, `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend
+  vérifiable ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un
+  chemin : coupe-circuit, dimensionnement, courtier, portefeuille — sans
+  raccourci. Le mode papier est le défaut, le mode réel demande deux gestes.
+  `profils.py` rejoue six marchés fabriqués et compare la stratégie à un
+  témoin qui achète une fois et conserve : un réglage se juge sur son effet,
+  pas sur son intention.
   **Le levier se mesure, il ne s'exécute pas** : `rejeu --leviers 1,2,3,5,10`
   compte les liquidations qu'un compte à levier aurait subies, et le courtier
   ne connaît toujours pas le mot. Une option de levier posée dans le chemin
@@ -621,6 +779,90 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   l'achat. Mais **pas d'adresse, pas de bouclier** : les lignes du socle n'ont
   pas de contrat à auditer, et exiger une adresse pour LINK/USDT lui interdisait
   tout achat à chaque passe.
+  **Et un garde-fou d'argent ne compte comme vérifié que si un test l'a vu se
+  déclencher pour de vrai**, posé le 10/09/2026 après le plafond de 20 $/mois
+  de `generation-serveur` : sa grille tarifaire était vide à dessein, ce qui
+  rendait sa branche « plafond dépassé » **structurellement inatteignable**
+  par n'importe quel test, malgré une suite verte qui affirmait le contraire.
+  Une grille vide ou un placeholder bloque la mise en production du garde-fou
+  lui-même, pas seulement de la fonctionnalité qu'il protège — que ce soit ici
+  ou dans un futur garde-fou financier du dépôt.
+  **Reconstruction du volet détection, décidée le 10/09/2026** après le
+  post-mortem du chantier crypto : le radar `pepites/` alertait sur un seuil
+  unique (volume) jamais franchi en 29 tours, et cette anomalie de volume
+  seule ne suffit plus à qualifier une pépite ici non plus. La détection
+  passe en multi-signaux — ratio volume/capitalisation, liquidité verrouillée
+  en DeFi (déjà un veto du bouclier, désormais aussi un critère de détection),
+  vitesse de croissance des détenteurs, exclusion sur revente d'initiés ou de
+  baleines après un pic — chaque signal backtestable séparément avant
+  combinaison. **Ce qui n'a pas été jeté, et à dessein** : `risk_management/`
+  (dimensionnement par distance au stop, stops ATR, prise de bénéfice
+  suiveuse, coupe-circuit à quatre déclencheurs), `execution/courtier.py`
+  (papier réaliste avec carnet et glissement, réel via CCXT) et le moteur
+  `strategy/moteur.py` existaient déjà et couvrent l'essentiel des exigences
+  de risque posées ce jour-là — les détruire pour les réécrire à l'identique
+  aurait jeté des mois de tests (337) sans rien gagner. Le §0 bis (« chirurgical,
+  jamais par écrasement ») s'applique ici comme ailleurs : on étend ce qui
+  marche, on remplace ce qui ne marche pas.
+  **Garde-fou permanent, posé le 10/09/2026 par le propriétaire** : aucun
+  paramètre critique de ce bot — seuils de décision, montant de capital
+  engagé, plateforme d'exécution — ne se change en autonomie. Toute session
+  qui en modifie un ouvre la question au propriétaire (format du §5) avant de
+  fusionner, même si la PR est par ailleurs verte. C'est exactement le type
+  de dérive — un paramètre déplacé sans que personne ne le voie — qui a rendu
+  l'ancien radar muet pendant six jours.
+  **Et un passage en mode réel exige désormais un état de validation
+  documenté**, pas seulement le drapeau `--je-confirme` : `config/validation.yaml`
+  doit attester un backtest multi-régimes concluant et une période de paper
+  trading conclusive, sans quoi la commande `production` refuse de démarrer.
+  Voir `nexuscrypto/src/core/validation.py`.
+  **Retrait du DCA calendaire, décidé et fait le 10/09/2026** : Erwann a coupé
+  court à toute logique d'achat programmé — « je m'en fous du DCA » — pour un
+  bot qui priorise les pépites dynamiquement découvertes sur les majors d'une
+  watchlist, sans jamais cesser d'acheter une seule pour de bonnes raisons.
+  le module de calendrier `dca.py` est supprimé, `Action.TEMPORISER` avec, et
+  `strategy/moteur.py` ne connaît plus qu'un score contre un seuil
+  (`strategie.seuil_achat`) : sous le seuil il attend, au-dessus il achète ou
+  renforce, sans calendrier ni montant nominal — c'est
+  `risk_management.sizing.dimensionner`, sur la distance au stop, qui décide
+  seul du montant réel. `ConfigPortefeuille.allocation` (poids figés sommant
+  à 100) devient `watchlist` (`LigneSurveillee`, sans poids) : un actif hors
+  watchlist reçoit exactement le même traitement qu'une ligne connue
+  d'avance, ce qui prépare le branchement du scanner de pépites dans la
+  boucle en direct — **pas encore fait**, c'est le chantier suivant. Le témoin
+  de rejeu passe d'un DCA plat à un achat unique conservé, l'étalon universel
+  qui ne dépend plus d'aucun calendrier. **Ce qui n'a pas bougé** :
+  `risk_management/` et `execution/` intacts, 329 tests verts, relu par
+  `garde-du-bot` sans violation trouvée. **Ce qui reste à faire avant tout
+  capital réel** : rejouer ce nouveau moteur sur données réelles — les
+  mesures du README (§ 8 à 15) portent toutes sur l'ancien moteur à DCA et
+  sont désormais une archive de méthode, pas une description de la stratégie
+  actuelle.
+  **Premier rejeu du nouveau moteur, par `banc-du-bot` le jour même (README
+  § 16)** : ni clairement meilleur ni clairement pire. Deux faits mesurés,
+  pas supposés — `risque_par_position`, inerte à 0 % sous l'ancien moteur
+  (§ 14), plafonne désormais 25/26 achats sur du BTC réel mono-actif et
+  17/18 sur BTC+ETH+LINK ; et l'abstention totale en hausse continue que le
+  « plancher de discipline » avait corrigée (§ 8) **revient à l'identique**
+  une fois ce plancher retiré avec le calendrier — assumé par la nouvelle
+  philosophie, mais c'est le même mécanisme de fond, pas un nouveau défaut.
+  Le témoin (achat unique) rend aussi les comparaisons entre fenêtres bien
+  moins stables que l'ancien DCA plat : sur la même fenêtre baissière
+  2021-2023, la stratégie bat le témoin en mono-actif BTC et perd nettement
+  en BTC+ETH+LINK. Aucun balayage de réglage n'a encore été refait pour ce
+  moteur.
+  **Une mine posée pour le prochain chantier, trouvée par `garde-du-bot` en
+  relisant ce lot** : `orchestrateur._appliquer` ne lit `chaine`/`adresse`
+  que sur la ligne de watchlist de l'actif. Tant que le scanner n'est pas
+  branché, un actif hors watchlist n'a jamais d'adresse à vérifier — le veto
+  ne peut pas s'y appliquer, ce qui est correct puisque ce chemin est
+  aujourd'hui inatteignable. **Mais brancher le scanner sans corriger ce point
+  désactiverait silencieusement le bouclier anti-rugpull exactement sur les
+  jetons pour lesquels il existe** : une pépite découverte, avec une vraie
+  adresse de contrat, tomberait sur `ligne=None` → `adresse=None` → « pas
+  d'adresse, pas de bouclier » → achat autorisé sans aucune vérification. La
+  correction attendue : porter `chaine`/`adresse` sur la `Decision`
+  elle-même, jamais uniquement sur la ligne de watchlist.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
   sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
   reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de
@@ -969,6 +1211,29 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   n'est pas accordé d'ici. La leçon dépasse ce dossier : un doublon ne fait pas
   que dédoubler, il **couvre** ce qui manque à celui qu'on garde, et c'est en le
   retirant qu'on le voit.
+- **psy-ia/** — accompagnement conversationnel de bien-être psychologique,
+  posé le 11/09/2026 sur le même principe technique qu'`ensemble-mdph`
+  (dépôt séparé, hors de portée d'ici) : React, fonction Edge Supabase,
+  Vercel. Écarté du `tsconfig.json` de la racine, comme les autres projets à
+  pile propre.
+  **Exigence fondatrice, non négociable : la sécurité ne repose jamais sur
+  le LLM seul.** Quatre couches indépendantes, détaillées dans
+  `psy-ia/SECURITY.md` : détection de crise déterministe hors LLM
+  (`src/lib/crisisDetection.ts`, mots-clés et motifs, aucun appel réseau,
+  tourne **avant** tout appel au modèle et peut intercepter la réponse sans
+  qu'un jeton n'ait été généré), prompt système anti-sycophancie
+  (`src/lib/systemPrompt.ts`), limites structurelles de session
+  (`src/lib/sessionLimits.ts`, à l'opposé d'un modèle qui maximiserait le
+  temps passé), et une revue humaine par un professionnel de santé mentale
+  qu'aucun code ne peut remplacer.
+  **Squelette architectural, pas un produit livrable** : la liste de
+  mots-clés de la couche 1 reprend telle quelle celle de la note
+  d'initialisation, jamais validée cliniquement ; le fournisseur LLM
+  (Claude, dans `supabase/functions/repondre/`) est provisoire ; le seuil 2
+  de la couche 3 (détresse répétée entre sessions) suppose un projet
+  Supabase qui n'existe pas encore. Tout est écrit dans `psy-ia/TODO.md`, et
+  tant que cette liste n'est pas cochée, ce projet ne doit recevoir aucun
+  vrai utilisateur, même en bêta.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.
@@ -1015,6 +1280,14 @@ Par défaut, autonomie : tu ne demandes pas. Deux niveaux font exception.
 passer par une PR, déployer en production,
 dépenser plus d'un dollar, modifier `~/.claude/`, installer une dépendance
 payante, supprimer une sauvegarde.
+
+**Et un changement de plan de facturation sur un compte connecté (Vercel ou
+autre) est une dépense au sens de cette liste, même sans geste explicite d'une
+session.** Posé le 10/09/2026 après que le compte Vercel du dépôt soit passé
+en plan payant pendant huit jours sans que personne ne le remarque, découvert
+par accident dans un appel qui vérifiait autre chose : ça se vérifie, ça ne se
+subit pas — le plan de facturation entre dans le même relevé périodique que le
+nombre de projets (voir § Déploiements Vercel).
 
 **Rouge — accord explicite** : supprimer sans sauvegarde, toucher aux données
 personnelles (Drive, Gmail, contacts), sortir la moindre donnée des 48 000,
@@ -1075,6 +1348,20 @@ préparation, pas de chance. `/jauge` avant un gros lot.
   mesure payée deux fois.
 
 ## 7. ANTI-BLOCAGE
+
+**Le principe qui gouverne tout ce qui suit, posé le 10/09/2026 après l'avoir
+vu se répéter une dizaine de fois en deux semaines** : un hôte refusé par LE
+client qu'on vient d'essayer (le mandataire de cette session, `curl` direct)
+prouve que ce client-là est bloqué — jamais que personne ne peut l'atteindre.
+Génération d'image, transcription YouTube, radar de pépites resté cinq jours à
+l'arrêt, GitHub Pages, recherche GitHub confondue avec lecture GitHub : à
+chaque fois, la même erreur — une impossibilité mesurée sur un chemin a été
+recopiée comme une impossibilité générale, avant d'essayer un autre client
+(un connecteur MCP, PyPI, un objet de release GitHub, un runner GitHub
+Actions, un navigateur réel). **Avant d'écrire « impossible », changer de
+client avant de changer de conclusion** — c'est le premier réflexe à avoir, pas
+le dernier après plusieurs jours perdus. Détail et chiffrage dans
+`second-brain/postmortem-2026-09-defauts-de-processus.md`.
 
 Capacité qui manque → `skill-creator`, on fabrique (dossier, code, doc), on s'en
 sert dans la foulée. Trois par session au plus. Vérifier la doc officielle avant
@@ -1668,6 +1955,54 @@ mesure disait vert et le fichier était faux** — mesurée au mauvais endroit, 
 le mauvais fichier, ou sur ce qui n'était pas le défaut. La parade n'est jamais
 de mesurer plus, c'est de mesurer ailleurs et de regarder.
 
+**Ce défaut-là ne se limite pas aux médias, posé le 10/09/2026.** Même
+mécanique sur l'accent d'Annuaria (mesuré contre le jeton déclaré, pas contre
+le fond composite réellement peint), sur la palette web-artisan (mesurée sur
+`ink`, le meilleur cas, au lieu de `panel`, le pire), sur un garde-fou
+anti-lien-mort (jugé sur ce qu'il retire, jamais sur ce qui reste — sept fiches
+d'`annuaire-ia` sans aucun lien d'affiliation depuis le lancement, seule chose
+qui rapporte sur ce site), sur un en-tête `X-Frame-Options` qui bloquait les
+aperçus du site (DOM correct, réponse HTTP fautive). **Avant de croire un
+vert, dire en une phrase ce qu'il mesure — contre quel fond, sur quel flux, à
+quelle étape, sur quelle coque** — et se demander si le défaut cherché
+survivrait au changement de cet objet-là. Un test de garde qu'on n'a jamais vu
+rougir sur l'injection réelle du défaut qu'il prétend garder n'est pas un
+test : le faire rougir une fois avant de lui faire confiance.
+
+**Et le pire des faux verts n'est pas un contrôle qui se trompe : c'est un
+contrôle qui ne tourne pas et que personne ne compte.** Posé le 11/09/2026
+après un audit de processus. Un contrôle qui dépend d'un outil que la machine
+n'a pas — ffmpeg, ffprobe, un modèle, un binaire tiers — ne doit **jamais**
+disparaître en silence : il fait échouer la vérification, ou la machine déclare
+explicitement qu'elle assume de ne pas le mesurer. Les deux sont acceptables ;
+le troisième comportement, imprimer une ligne grise et sortir en zéro, ne l'est
+pas.
+
+Le cas est mesuré sur le runner lui-même, `ubuntu-latest`, le 11/09/2026 :
+le parcours y annonçait **« 112/112 vérifications passées »** et sortait en
+zéro, alors qu'il en portait **120** — quatre contrôles par profil, huit en
+tout, avaient quitté le dénominateur faute de ffmpeg. C'est **exactement le
+« 112/112 verts » de la PR #903**, que personne n'avait su expliquer. La
+bannière annonçait le plein succès d'un parcours amputé, et le nombre qu'elle
+donnait était juste : elle ne mentait pas sur ce qu'elle mesurait, elle mentait
+sur ce qu'elle avait mesuré.
+Le vert ne mentait pas sur ce qu'il mesurait ; il mentait sur ce qu'il avait
+mesuré. Depuis, un saut se déclare, se compte et fait rougir, et
+`AMORCE_SAUTS_TOLERES=1` est le seul moyen de passer outre — un aveu, pas un
+silence. Leçon :
+`second-brain/lecons/2026-09-11-un-controle-saute-est-compte-comme-passe.md`.
+
+**Un saut peut être toléré, jamais tu.** Le cinquième de ce parcours l'est :
+la trajectoire de recadrage dépend d'un modèle **téléchargé sur le réseau**,
+pas d'un outil qu'on installe sur le runner. Le rendre bloquant ferait rougir
+le parcours chaque fois que l'hôte du modèle hoquète, pour un défaut qui n'est
+pas dans le code — et un rouge qui s'allume sans cause apprend à ignorer les
+rouges, ce que ce fichier reproche déjà au rouge permanent de Vercel (§10).
+Tranché par le propriétaire le 11/09/2026. **Ce qui ne se négocie pas est la
+déclaration** : il s'imprime et il se compte comme les quatre autres. La
+frontière est donc « dépend d'un outil installable » — bloquant — contre
+« dépend d'un tiers qu'on ne contrôle pas » — toléré et nommé.
+
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
 
@@ -1695,6 +2030,34 @@ qui bloque une prospection, c'est le geste.**
 convient aux deux familles de téléphones — iOS attend `&`, Android `?` — et une
 seule des deux écritures laisse la moitié des appareils sans texte. Pour un
 courriel, `mailto:` prend `?subject=` et `?body=` de la même façon.
+
+**Sauf que `sms:` ne choisit pas l'application, et ça se paie — mesuré le
+10/09/2026 sur l'appareil du propriétaire.** Un lien `sms:` part vers l'appli
+SMS **par défaut** d'Android. Si ce n'est pas celle dont il se sert, il obtient
+une fenêtre « Nouveau message » **vide** — sans destinataire, sans texte — et
+rien à l'écran ne dit pourquoi. Le lien était pourtant juste : les six ont été
+vérifiés, forme `?&`, corps encodé, mention STOP présente. C'est la même famille
+que le bac à sable du 07/09 : le geste échoue en silence, et la vérification du
+lien ne le voit pas.
+
+**La parade tient dans le lien, et elle est éprouvée** — Google Messages s'est
+ouvert rempli au premier appui :
+
+```
+intent://0600000000#Intent;scheme=smsto;package=com.google.android.apps.messaging;S.sms_body=<corps encodé>;end
+```
+
+Deux précautions : le corps s'encode entièrement, car un `;` ou un `#` non
+encodé coupe la syntaxe de l'intention au milieu ; et on garde le `sms:` simple
+en repli sous le bouton, pour un appareil qui ne connaîtrait pas ce paquet.
+
+**Et le vrai correctif reste un réglage, à proposer une fois** : Paramètres →
+Applications → Applications par défaut → Application de SMS. Une fois posé,
+`sms:` suffit et toutes les campagnes suivantes marchent sans ruse.
+
+**Le bouton « Copier le texte » n'est donc pas décoratif, c'est le seul chemin
+qu'aucun réglage ne casse.** Il doit rester à côté du bouton d'envoi, pas en bas
+de page.
 
 **Compter les segments, et le dire sur la fiche.** Un SMS est facturé par
 tranche de 160 caractères — mais **un seul caractère hors alphabet GSM-7 fait
@@ -1727,6 +2090,13 @@ Donc, dans cet ordre :
 « envoyé » alors qu'elle enregistrait un clic — aucune page web ne peut
 constater le départ d'un SMS. Elle dit « ouvert », et la page rappelle d'aller
 vérifier dans l'application Messages, qui est le seul endroit qui sache.
+
+**Et la règle dépasse les campagnes SMS/courriel, posé le 10/09/2026.** Toute
+action censée déclencher un geste réel vers l'extérieur — un lien de paiement,
+une publication, un envoi — se valide dans un vrai navigateur, jamais dans la
+visionneuse de la session qui l'a produite : un bac à sable qui bloque un
+geste ne le signale pas forcément, et un clic qui ne fait rien ressemble à un
+clic qui a marché.
 
 La règle de la mention d'opposition ne change pas : **tout SMS se termine par
 « STOP au [numéro] », jamais un courriel** (§ `PROSPECTION.md`). La page la
@@ -1860,6 +2230,18 @@ porte les dégradés et les traits, un violet clair porte les lettres. Seule la
 valeur du clair a changé, et une session qui recopierait `#C2A2F6` en croyant
 suivre la règle réintroduirait le défaut qu'elle vise.
 
+**Et `#D4C6FB` est la valeur du studio, pas une valeur à imposer aux autres
+produits — vérifié le 10/09/2026 avant d'y toucher.** Amorce porte
+`--color-violet-clair: #D3BEF9`, et ce n'est pas un écart à corriger : il est
+**dérivé** de son propre `#7C3AED`, teinte 261° et saturation 0,83 inchangées,
+la clarté seule remontée — la raison est écrite dans `src/app/globals.css`, et
+elle est plus forte qu'une ressemblance. Les deux tiennent le plancher de la
+maison sur la surface la plus claire d'Amorce : `#D3BEF9` rend **8,04:1**,
+`#D4C6FB` **8,54:1**. Le §2 bis tranche déjà ce genre de cas en propres termes
+— ce qui est partagé entre produits est la **structure** et le rapport de 1,07,
+jamais la teinte. Une session qui aligne les deux valeurs « pour la cohérence »
+casse une raison écrite pour satisfaire une règle qui n'existe pas.
+
 **« Visiter la vraie URL » est possible depuis une session distante**, et ce
 fichier a longtemps dit le contraire. `*.github.io` est refusé au mandataire —
 c'est toujours vrai pour `curl` d'ici — mais le bac à sable du connecteur
@@ -1888,6 +2270,30 @@ suivent un déploiement peut décrire la version d'avant — vider le cache avec
 paramètre d'URL avant de conclure, et le dire quand un écart apparaît entre ce
 qu'on mesure et ce que le propriétaire voit.
 
+**Un chevauchement se mesure contre le plus grand élément de la zone, jamais
+seulement contre les cibles cliquables.** Un commit sur `ensemble-mdph` a
+annoncé corriger le chevauchement d'un bouton de chat flottant sur le texte
+des cartes ; la vérification automatisée de la session suivante a confirmé
+« zéro chevauchement » à tort, le 08/09/2026, parce qu'elle ne testait le
+recouvrement qu'avec les boutons et les liens des cartes, jamais avec le
+paragraphe de texte courant — pourtant l'élément le plus large de chacune. Le
+défaut réel (jusqu'à 59 px de recouvrement) a survécu à deux vérifications
+distinctes jusqu'à ce que le propriétaire le voie à l'œil. Le point 2
+ci-dessus dit « chaque bouton et lien cliqué et vérifié » : ça ne suffit pas à
+couvrir un recouvrement purement visuel, qui ne casse aucune cible et ne se
+voit que sur le texte lui-même.
+
+**La checklist d'une vérification se construit à partir de la consigne, jamais
+à partir du diff qu'on vient d'écrire.** Une demande d'habillage visuel qui dit
+« toute la page » sans lister exhaustivement les éléments concernés se vérifie
+en se demandant quels éléments visibles ne portent **pas encore** le
+changement demandé — pas seulement si ce qu'on a touché est correct. Mesuré le
+09/09/2026 sur `ensemble-mdph` : une passe de dégradé de marque a couvert les
+cartes, les icônes, le survol et l'animation, et a laissé le titre du héro —
+l'élément le plus visible de la page — en blanc plat, visible sur les propres
+captures de vérification envoyées comme preuve. Il a fallu un message dédié du
+propriétaire pour le voir. Une vérification qui part de « qu'ai-je changé »
+ne peut jamais détecter un oubli.
 
 ## 9. AU DÉMARRAGE
 
@@ -1917,6 +2323,19 @@ git rev-list --count HEAD..origin/main   # 0 attendu ; sinon, se remettre à jou
 Ça vaut pour tout fil qui reprend, pas seulement après une semaine : ce fichier
 bouge plusieurs fois par jour, et le §2 le dit déjà pour les changements. Ici,
 c'est la lecture elle-même qui est en jeu.
+
+**Et avant le premier geste sur un sujet nommé par une branche ou une tâche,
+vérifier qu'il vit bien dans le dépôt attaché à la session.** Une tâche peut
+brancher une session sur `lefouzebreizh/amorce` en nommant dans sa branche un
+sujet qui vit en réalité dans un dépôt GitHub séparé — mesuré le 08/09/2026 :
+la branche `claude/ensemble-mdph-corrections-pdg3y8` vivait dans `amorce`,
+mais le site « Ensemble face aux démarches » n'y a jamais existé, il vit dans
+`Lefouzebreizh/ensemble-mdph`. Rien ne signale l'écart tant qu'on n'a pas
+cherché : un `grep` sur le nom du sujet (fichiers, textes cités, palette) qui
+ne rend rien dans le dépôt attaché est le signal pour appeler `list_repos`
+**avant** de continuer, jamais après plusieurs messages de confirmation passés
+à discuter du mauvais dossier. Détail dans
+`second-brain/lecons/2026-09-10-post-mortem-ensemble-mdph-verifications-qui-regardent-a-cote.md`.
 
 **Un « bonjour » se répond par un point et une sortie, jamais par « on fait
 quoi ? ».** Le propriétaire ouvre souvent un fil sans consigne, parfois fatigué,
@@ -2035,6 +2454,25 @@ voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
 
+**Quatre contrôles de `verify` demandent ffmpeg**, et sans lui le parcours
+**échoue** au lieu de les sauter en silence — voir §8. Le runner l'installe
+depuis le 11/09/2026, donc ils tournent pour de bon : le bilan annonce 120 sur
+120 là où il annonçait « 112/112 ». Une machine qui n'a pas ffmpeg et l'assume
+lance `AMORCE_SAUTS_TOLERES=1 npm run verify` : le bilan nomme alors chaque
+contrôle non mesuré au lieu de le faire disparaître du décompte.
+
+**Un cinquième saut existe et il est toléré** : la trajectoire de recadrage,
+qui dépend d'un modèle téléchargé sur le réseau. Il s'imprime, il se compte, il
+ne fait pas rougir — la raison est au §8, et ce n'est pas un oubli à corriger.
+
+**Et `npm run regarder <adresse>` pour regarder une page déjà déployée.**
+Chromium ne peut pas ouvrir `*.vercel.app` d'ici — `ERR_CONNECTION_RESET` —
+quand `curl` rend 200 sur la même adresse : le mandataire filtre par **outil**,
+pas par hôte. Le script met `curl` entre le navigateur et l'amont et sert la
+production sur `127.0.0.1`, de sorte que Playwright et `getComputedStyle` y
+donnent enfin ce que le navigateur **peint**. C'est ce que le §8 bis exige, et
+ce n'était outillé nulle part — chaque session réécrivait le relais.
+
 **Et `npm run planche [nombre de rushes]` pour regarder au lieu de mesurer.**
 Elle fabrique ses rushes numérotés, conduit le studio, exporte, et rend une
 planche de quarante images sur toute la durée, dernière seconde comprise. Elle
@@ -2139,6 +2577,17 @@ règle de cartographie avant remplacement, sans savoir qu'une autre venait de l'
 plusieurs sessions parallèles, `main` a bougé depuis la dernière lecture : c'est
 le cas normal, pas l'exception, et `git fetch` avant d'écrire coûte moins qu'un
 doublon fusionné.
+
+**Et un troisième symétrique : vérifier avant de corriger.** Une demande de
+correction décrit un défaut (« le fond est en bleu-gris », « les couleurs sont
+plates ») — cette description est une hypothèse du demandeur, pas une mesure,
+même quand elle vient du propriétaire. Mesuré le 09/09/2026 sur
+`ensemble-mdph` : une demande de remplacer « le fond bleu-gris actuel » par
+une palette précise visait un fichier qui portait déjà exactement ces valeurs,
+posées à plat plutôt qu'en dégradé. Exécutée sans vérifier, la correction
+aurait écrasé des variables déjà justes en croyant les corriger. Le geste est
+le même que pour un remplacement de fonction : lire le fichier concerné en
+premier, jamais supposer la description du défaut exacte.
 
 ### Git
 
@@ -2279,6 +2728,22 @@ plusieurs sessions en parallèle, et quelques heures suffisent à périmer une
 branche. Ce qui est fusionné gagne, toujours. `/branche-partagee` en cas de
 doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
+**Rebase avant PR.** Avant d'ouvrir une pull request, chaque session doit
+rebaser sa branche sur `main` à jour. Objectif : faire remonter les conflits
+de fusion tout de suite, pendant que la session a encore le contexte frais
+de son propre travail, plutôt que de les laisser s'accumuler et retomber sur
+Erwann plus tard. Si le rebase déclenche des conflits, les résoudre avant
+d'ouvrir la PR, pas après.
+
+Posée le 11/09/2026 sur un cas réel : deux sessions ont construit `psy-ia/`
+en parallèle sans se voir — l'une fusionnée (#901, #904), l'autre restée
+ouverte (#905) et retombée en conflit sur `main` une fois la première
+passée. Aucune des deux n'était en tort : chacune avait fetché `main` avant
+d'écrire, comme le paragraphe ci-dessus le demande déjà. Ce que ce
+paragraphe ne demandait pas encore, c'est de revérifier **juste avant
+d'ouvrir la PR**, une fois le travail terminé — le seul moment qui capture
+ce qu'une autre session a fusionné entre-temps.
+
 #### Après la fusion : supprimer la branche
 
 Ajouté par le propriétaire le 06/09/2026, en même temps qu'il reconfirmait le
@@ -2375,6 +2840,19 @@ capacité — donc **on essaie les deux avant de conclure**, comme pour le MCP.
 
 ### Déploiements Vercel — un `vercel.json` par projet, sinon tout se déclenche
 
+**Contrôle périodique, posé le 10/09/2026** : après toute session qui a pu
+créer un projet Vercel (dépôt de fichiers ou lien Git), ou au moins une fois
+par semaine, `list_projects` — en lisant **la colonne du plan de facturation
+autant que celle des projets**, pas seulement celle-ci. Le quota crevé trois
+fois (31/08, 01/09, 02/09) et le compte passé payant huit jours sans que
+personne ne le remarque (08/09) ont la même cause : ce dépôt ne sait décrire
+un piège Vercel qu'après l'avoir payé, jamais en le vérifiant avant. La même
+logique vaut pour tout projet fini et gardé par des tests : vérifier qu'un
+déclencheur (workflow, cron) le lance réellement — le radar de pépites est
+resté fini, vert et **inexécuté dix jours**, puis **arrêté cinq jours de
+plus** sur une fausse conviction, avant que quelqu'un ne pense à vérifier s'il
+tournait pour de vrai.
+
 **État mesuré le 06/09/2026 à 15 h 55, par `list_projects`** — il contredit une
 partie de ce qui suit, et c'est cette liste-ci qui fait foi. Le raisonnement des
 paragraphes suivants reste juste ; ce sont les noms et le compte qui ont bougé.
@@ -2419,6 +2897,57 @@ il n'entre donc pas dans le tableau ci-dessus — mais il consomme le **même**
 compteur, qui est celui du compte et jamais celui d'un dépôt. Un décompte tenu
 « par dépôt » sous-estime toujours la consommation réelle, et l'écart grandit à
 chaque projet posé ailleurs.
+
+**Et un septième, `orientation-express`, créé le 09/09/2026** sur un dépôt du
+même nom — relevé le 10/09 par `list_projects`. Dix projets en tout, sept liés
+à Git, dont **cinq sur ce dépôt-ci** : le seuil de fusions écrit plus bas ne
+change donc pas, mais le compteur du compte, lui, reçoit deux sources de plus
+qu'aucun commit d'ici ne déclenche. C'est précisément ce que le relevé
+périodique existe pour voir.
+
+**Et l'adresse courte d'un projet n'est pas d'office la sienne — mesuré le
+10/09/2026, et c'est un défaut qui dormait depuis des jours.**
+`amorce.vercel.app` sert le site d'un **autre compte** (titre : *IdeaForge*).
+Les sous-domaines `*.vercel.app` sont globaux : un nom commun est pris par le
+premier projet de la plateforme qui le demande, et le nôtre reçoit alors la
+forme longue. Le studio est servi à :
+
+https://amorce-five.vercel.app
+
+Rien n'est cassé côté tableau de bord, et c'est ce qui rend le piège muet — il
+n'y a pas d'erreur à voir, seulement une adresse qui répond 200 et ressemble à
+un site fini. **Avant de croire qu'une adresse est la nôtre, lui demander son
+titre** : `curl -s <adresse> | grep -o '<title>[^<]*</title>'`. Sondés le
+même jour, **aucun** des noms courts n'est à nous — `amorce`,
+`artisan-express` et `iptv` servent trois sites étrangers, et le second sert
+une page si plausible qu'on serait tenté de corriger un README qui a raison.
+Ce que confirment les `domains` rendus par
+`get_project`, qui sont la seule preuve de possession — jamais le contenu
+servi.
+
+**Et c'est ce même appel qui a corrigé la correction, le 11/09/2026.** Le
+paragraphe ci-dessus donnait la forme longue comme « l'adresse du studio », et
+concluait qu'aucun nom court n'est à nous. `get_project` sur `amorce` rend
+**trois** domaines, dont **`amorce-five.vercel.app`** — un nom court, avec le
+suffixe que Vercel accole quand le nom nu est déjà pris, et il est bien à nous :
+il sert la page d'accueil comme la page du studio. La phrase « un suffixe aléatoire pour un
+**dépôt de fichiers** » était donc trop étroite : ce suffixe arrive aussi sur un
+projet **lié à Git**, et c'est le cas d'Amorce.
+
+Ce qu'il faut en retenir dépasse l'adresse : la session qui a écrit cette règle
+— « la preuve de possession est la liste `domains` » — **ne l'avait pas
+appliquée au projet dont elle parlait**. Elle a sondé `artisan-express` et
+`iptv`, pas `amorce`, et a donné pendant deux messages une adresse trois fois
+plus longue que nécessaire. Une règle écrite dans la foulée d'une découverte ne
+s'applique pas rétroactivement à la découverte elle-même : **repasser sur le cas
+d'origine est le premier geste, pas le dernier.** Deux endroits
+du dépôt citaient encore la mauvaise, et l'un d'eux n'est pas de l'archive :
+`comptes-serveur/README.md` la donne en exemple pour le secret `ADRESSE_SITE`,
+**celui qui construit le lien de connexion envoyé par courriel** — posé tel
+quel le jour du déploiement, il enverrait les clients chez un inconnu. À
+corriger avant toute mise en service de ce service-là. Détail dans
+`second-brain/lecons/2026-09-10-un-sous-domaine-vercel-app-court-nest-pas-le-votre.md`.
+
 
 **Cinq projets branchés depuis le 06/09/2026**, et le seuil de fusions
 descend encore : chaque fusion vaut désormais **cinq** déploiements plus le
@@ -2713,6 +3242,15 @@ choses à en retenir, et elles se paient toutes les deux en silence :
   **nombre de projets branchés**. Détail et ce qui reste non mesuré dans
   `/debloquer`.
 
+  **Et cette règle a été apprise sans son corollaire, posé le 10/09/2026** : au
+  moins une PR a fusionné avec une vraie suite rouge (« Cohérence du dépôt »)
+  restée invisible, découverte seulement après coup. `get_status` ne rend que
+  les *commit statuses* (Vercel) ; les suites GitHub Actions (tests, cohérence)
+  sont ailleurs, dans `get_check_runs`. **Avant de fusionner : les deux appels,
+  toujours, jamais un seul** — et toute règle qui apprend à ignorer une famille
+  d'alertes doit dire explicitement ce qu'elle ne couvre pas, sinon elle
+  enseigne à ignorer l'absence de vérification plutôt que le bruit.
+
 **Et un projet peut être déployé et invisible — mesuré le 02/09/2026.** Vercel
 pose par défaut une protection, *Deployment Protection*, dont le réglage
 `ssoProtection` à `all_except_custom_domains` met **toutes** les adresses en
@@ -2728,6 +3266,19 @@ là-dessus pendant trois jours, chacun sur un indice, aucun sur une mesure. Ce
 qui tranche est **le réglage**, jamais l'affichage ; et de l'extérieur, seule la
 navigation privée le dit — le connecteur Vercel passe par l'authentification du
 compte, et le mandataire refuse `*.vercel.app`.
+
+**Et ce piège n'est pas propre à Amorce : il s'est reproduit à l'identique sur
+un dépôt séparé.** `ensemble-mdph` portait le même
+`ssoProtection: all_except_custom_domains` depuis la création de son projet Vercel
+(07/09/2026), trouvé et corrigé le 08/09/2026 — un site d'accompagnement aux
+démarches administratives, invisible pour quiconque hors du compte du
+propriétaire, pendant au moins une journée entière. La leçon écrite ici pour
+`amorce-51up` ne protège que les sessions qui lisent ce fichier-là ; un projet
+Vercel lié à un autre dépôt ne l'hérite pas. Sur **tout** projet Vercel
+nouvellement lié, quel que soit le dépôt, vérifier
+`get_project_deployment_protection` avant d'annoncer une adresse comme
+publique — en geste systématique de mise en ligne, pas en réflexe qui dépend
+de la mémoire d'une session en particulier.
 
 **Le journal de construction tranche ce que les statuts ne départagent pas.**
 Un statut dit qu'un déploiement a été annulé, jamais par quoi. Trois

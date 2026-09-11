@@ -1,5 +1,5 @@
 import { ApercuSite } from '@/components/ApercuSite';
-import { SECTION, TITRE_SECTION } from '@/components/ui';
+import { MESURE, SECTION, TITRE_SECTION } from '@/components/ui';
 
 /*
  * L'avant et l'après, côte à côte.
@@ -158,7 +158,7 @@ export function AvantApres() {
           * l'entreprise n'existe pas, elle ne doit pas apparaître dans les
           * résultats comme un vrai artisan.
           */}
-        <p className="mt-8 text-center text-lg leading-relaxed text-ardoise">
+        <p className={`mx-auto mt-8 text-center text-lg leading-relaxed text-ardoise ${MESURE}`}>
           <a
             className="inline-flex min-h-14 items-center justify-center rounded-xl border-2 border-accent bg-slab px-6 text-lg font-semibold text-accent"
             href="/exemple.html"
