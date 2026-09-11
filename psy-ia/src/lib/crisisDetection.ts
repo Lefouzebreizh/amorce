@@ -80,7 +80,12 @@ const PHRASES_FORTES = [
   'envie de mourir',
   'je veux en finir',
   'plus envie de vivre',
-  'je veux plus vivre',
+  // Sans "je" en tête, à dessein : "veux plus vivre" matche aussi bien "je
+  // veux plus vivre" que sa forme niée "je ne veux plus vivre" — la négation
+  // ne casse pas la contiguïté du fragment, alors qu'un préfixe "je veux"
+  // figé l'aurait fait échouer sur la forme niée (voir le test de non-
+  // régression sur la négation directe, plus bas).
+  'veux plus vivre',
   'je vais me suicider',
   'je vais me tuer',
   'je pense au suicide',
@@ -131,6 +136,18 @@ const PHRASES_MODEREES = [
   "j'en peux plus",
   'je vois pas comment continuer',
   'je ne vois pas comment continuer',
+  // Négation inversée — ajoutée le 11/09/2026 suite à une relecture externe
+  // de la note de cadrage. La négation directe ("je ne veux plus vivre")
+  // est déjà couverte plus haut ("je veux plus vivre" matche son sous-texte,
+  // "ne" n'empêchant pas la phrase de matcher) ; ce qui manquait était la
+  // forme inversée — une personne qui dit craindre ou refuser la mort peut
+  // signaler la même détresse par ambivalence, un marqueur documenté. Posé
+  // en MODÉRÉ et non FORT : la phrase peut aussi être parfaitement anodine
+  // ("je veux pas mourir bête", tournure familière sans rapport avec le
+  // suicide) — le niveau modéré déclenche déjà le même message figé au
+  // moindre doute, sans sur-classer un motif plus ambigu que les autres.
+  'veux pas mourir',
+  'veut pas mourir',
 ];
 
 // Épuisement extrême : ne déclenche que s'il est exprimé de façon RÉPÉTÉE
