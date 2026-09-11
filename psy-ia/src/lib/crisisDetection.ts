@@ -228,6 +228,28 @@ const PHRASES_EPUISEMENT = [
   'vidé de toute énergie',
 ];
 
+// Signal par CO-OCCURRENCE, pas par phrase isolée — cas signalé par Erwann
+// le 11/09/2026 : « j'ai des envies bizarres ce soir j'ai peur » n'a rien
+// déclenché. Ni « peur » (l'immense majorité des messages anxieux le
+// contiennent, sans rapport avec une crise) ni « envie bizarre » seuls ne
+// peuvent être des motifs sans faire exploser les faux positifs — mais leur
+// PRÉSENCE ENSEMBLE dans le même message est un marqueur reconnu : la peur
+// de ses propres pulsions inhabituelles. Chaque mot reste inoffensif seul ;
+// c'est la combinaison qui compte, et elle doit apparaître dans le MÊME
+// message, pas seulement la même conversation.
+const MOTS_PEUR = compiler(['peur']);
+const MOTS_PULSION_INQUIETANTE = compiler([
+  'envie bizarre',
+  'envies bizarres',
+  'pulsion bizarre',
+  'pulsions bizarres',
+  'envie étrange',
+  'envies étranges',
+  'envie inquiétante',
+  'peur de mes pulsions',
+  'peur de moi',
+]);
+
 const MOTIFS_FORTS = compiler(PHRASES_FORTES);
 const MOTIFS_PLAN = compiler(PHRASES_PLAN);
 const MOTIFS_MOYENS = compiler(PHRASES_MOYENS);
@@ -266,6 +288,12 @@ export function detecterCrise(messagesPersonne: string[]): ResultatDetectionCris
   ).length;
   if (messagesAvecEpuisement >= 2) {
     trouves.add('épuisement extrême répété');
+  }
+  const messageAvecPeurEtPulsion = normalises.some(
+    (texte) => chercher(texte, MOTS_PEUR).length > 0 && chercher(texte, MOTS_PULSION_INQUIETANTE).length > 0,
+  );
+  if (messageAvecPeurEtPulsion) {
+    trouves.add('peur de ses propres pulsions inhabituelles');
   }
 
   return {

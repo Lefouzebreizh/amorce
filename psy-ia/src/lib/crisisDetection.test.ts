@@ -216,3 +216,29 @@ test('trois tournures de désespoir supplémentaires déclenchent le niveau mod�
 test('la contraction phonétique « jv » (comme « jve ») est reconnue', () => {
   assert.equal(detecterCrise(['jv en finir ce soir']).niveau, 'fort');
 });
+
+// Second cas signalé par Erwann, testé en direct sur l'app après la fusion
+// du premier correctif : « j'ai des envies bizarres ce soir j'ai peur »
+// n'avait rien déclenché. Différent du premier bug (une expression connue
+// absente d'une liste) : ici aucun mot seul n'est assez spécifique pour un
+// motif, la peur ordinaire étant extrêmement fréquente. Le signal tient à
+// la CO-OCCURRENCE de « peur » et d'une pulsion qualifiée de bizarre/
+// étrange, dans le même message.
+test('« peur » et « envie bizarre » ensemble dans le même message déclenchent le niveau modéré', () => {
+  assert.equal(detecterCrise(["j'ai des envies bizarres ce soir j'ai peur"]).niveau, 'modere');
+  assert.equal(detecterCrise(["j'ai peur, j'ai une pulsion bizarre"]).niveau, 'modere');
+});
+
+test('« peur » seul, sans pulsion inquiétante, ne déclenche rien — trop fréquent pour être un motif', () => {
+  assert.equal(detecterCrise(["j'ai peur de l'examen de demain"]).niveau, 'aucun');
+  assert.equal(detecterCrise(["j'ai peur des araignées"]).niveau, 'aucun');
+});
+
+test('« envie bizarre » seule, sans peur exprimée, ne déclenche rien', () => {
+  assert.equal(detecterCrise(["j'ai eu une envie bizarre de manger une pizza à trois heures du matin"]).niveau, 'aucun');
+});
+
+test('la co-occurrence doit être dans le MÊME message, pas seulement la même conversation', () => {
+  const resultat = detecterCrise(["j'ai peur de l'examen", "et sinon j'ai eu une drôle d'envie bizarre hier"]);
+  assert.equal(resultat.niveau, 'aucun');
+});
