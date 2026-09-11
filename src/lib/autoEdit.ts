@@ -331,8 +331,15 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
          * Et elle ne se pose que devant un choc : annoncer un fondu par une
          * aspiration promet un impact qui n'arrive jamais.
          */
+        /*
+         * Elle se demande **sur** la coupe, et non 0,55 s avant. Ce nombre-là
+         * était écrit à la main pour compenser la forme du son, et il le
+         * faisait mal : l'aspiration culmine 0,82 s après son déclenchement,
+         * donc elle tombait 0,27 s après la coupe qu'elle devait annoncer.
+         * `scheduleSfx` connaît maintenant ce délai et avance le déclenchement.
+         */
         if (at > 1.2 && TRANSITIONS_A_ANTICIPER.includes(clip.transition) && !porteSonPropre(clips[index - 1])) {
-          cues.push({ id: uid('sfx'), sfx: 'reverse', time: at - 0.55, gain: 0.55 });
+          cues.push({ id: uid('sfx'), sfx: 'reverse', time: at, gain: 0.55 });
         }
       }
     }

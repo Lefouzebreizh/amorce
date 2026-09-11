@@ -14,6 +14,7 @@
     "mediapipe": "node scripts/assembler-mediapipe.mjs",
     "verify": "node scripts/verify.mjs",
     "planche": "node scripts/planche.mjs",
+    "ecouter": "node scripts/ecouter-bruitages.mjs",
     "verify:reprise": "node scripts/verify-reprise.mjs",
     "verify:partage": "node scripts/verify-partage.mjs",
     "verify:images": "node scripts/verify-images.mjs",
