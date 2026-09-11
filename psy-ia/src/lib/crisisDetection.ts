@@ -383,6 +383,14 @@ const PHRASES_MODEREES = [
   'je dérange tout le monde',
   'je suis un boulet',
   'un boulet pour tout le monde',
+  // « fardeau » manquait alors que c'est le mot le plus courant pour ce
+  // signal — trouvé en testant en production juste après la fusion du bloc
+  // ci-dessus : « j'ai l'impression d'être un fardeau pour ma famille » ne
+  // déclenchait pas.
+  'je suis un fardeau',
+  'un fardeau pour ma famille',
+  'un fardeau pour mes proches',
+  'un fardeau pour tout le monde',
   'je ne compte pour personne',
   'je ne compte plus pour personne',
   "personne ne s'apercevrait de mon absence",
