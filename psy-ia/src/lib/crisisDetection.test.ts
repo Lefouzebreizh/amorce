@@ -242,3 +242,54 @@ test('la co-occurrence doit être dans le MÊME message, pas seulement la même 
   const resultat = detecterCrise(["j'ai peur de l'examen", "et sinon j'ai eu une drôle d'envie bizarre hier"]);
   assert.equal(resultat.niveau, 'aucun');
 });
+
+// Recherche demandée par Erwann le 11/09/2026 : couvrir systématiquement
+// les formulations indirectes, pas seulement les cas remontés un par un.
+// Les huit premiers exemples viennent de lui, textuellement.
+test('les formulations indirectes données par Erwann déclenchent', () => {
+  const exemples: Array<[string, 'fort' | 'modere']> = [
+    ['quelle vie de merde', 'modere'],
+    ['je vais faire une bêtise', 'fort'],
+    ['je vais péter un câble', 'modere'],
+    ['ça va pas du tout', 'modere'],
+    ['la fin est proche', 'fort'],
+    ['quel monde de merde', 'modere'],
+    ["pourquoi tout ça m'arrive à moi", 'modere'],
+  ];
+  for (const [exemple, niveauAttendu] of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, niveauAttendu, `"${exemple}" aurait dû déclencher le niveau ${niveauAttendu}`);
+  }
+});
+
+test('les adieux explicites déclenchent le niveau fort', () => {
+  const exemples = ['je te dis adieu', "c'est un adieu", 'je vais faire une connerie'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'fort', `"${exemple}" aurait dû déclencher le niveau fort`);
+  }
+});
+
+test("« je veux que tout s'arrête » et « dormir et ne plus me réveiller » déclenchent le niveau fort", () => {
+  assert.equal(detecterCrise(["je veux que tout s'arrête"]).niveau, 'fort');
+  assert.equal(detecterCrise(['je veux dormir et ne plus me réveiller']).niveau, 'fort');
+});
+
+test("le sentiment d'être pris au piège, sans issue perçue, déclenche le niveau modéré", () => {
+  const exemples = ['je me sens pris au piège', "il n'y a pas d'autre solution", 'je suis dans une impasse'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test('le vide intérieur et la perte de sens déclenchent le niveau modéré', () => {
+  const exemples = ["plus rien n'a de sens", 'je ne ressens plus rien', "je me sens vide à l'intérieur"];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test("l'obsession de la mort et l'auto-mutilation générale déclenchent le niveau modéré", () => {
+  const exemples = ['je pense tout le temps à la mort', 'je me fais du mal'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
