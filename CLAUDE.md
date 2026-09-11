@@ -1288,9 +1288,9 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Supabase qui n'existe pas encore. Tout est écrit dans `psy-ia/TODO.md`, et
   tant que cette liste n'est pas cochée, ce projet ne doit recevoir aucun
   vrai utilisateur, même en bêta.
-- **audit-landing/** — la brique de capture visuelle du futur produit « Audit
-  de page de vente en 24h », Python, une seule dépendance (`playwright`).
-  `capturer_page.py` ouvre une URL, ferme le bandeau de cookies (clic sur les
+- **audit-landing/** — le futur produit « Audit de page de vente en 24h »,
+  Python, deux étages. `capturer_page.py` (une dépendance, `playwright`)
+  ouvre une URL, ferme le bandeau de cookies (clic sur les
   CMP les plus répandus, puis masquage de tout ce qui reste en `position:
   fixed`), scrolle pour déclencher le lazy-loading, attend `networkidle` ou
   5 s de secours, puis capture **chaque segment pendant qu'il est réellement
@@ -1318,10 +1318,32 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   ponctuel, et règle les deux à la fois — plus `content-visibility: auto` —
   puisqu'une capture par segment ne fait jamais plus que 2880×1800 px :
   chaque segment est désormais capturé en étant réellement scrollé dans le
-  viewport. **Mesuré sur la page de Qonto elle-même : plus aucune tranche
-  vide** — la vérification à l'œil du fichier final restait en cours au
-  moment d'écrire cette ligne, détail dans `audit-landing/README.md`.
-  Pas encore fait : le prompt d'analyse, le rapport, la page de vente, Stripe.
+  viewport. **Vérifié en conditions réelles sur les quatre sites de test, à
+  l'œil, par le propriétaire sur sa machine** : plus aucune tranche vide. Ça a
+  aussi trouvé un second défaut, résiduel du même correctif : le fichier de
+  référence `00-pleine-page.png`, resté à `full_page=True`, pouvait encore
+  franchir le plafond de hauteur sur une page suffisamment haute — corrigé en
+  le rendant à `scale="css"` (échelle 1x) plutôt qu'à l'échelle 2x des
+  segments. **Un point reste ouvert, en cours de diagnostic sur la page de
+  Payfit en français** : une bande identique au pixel près sur plusieurs
+  segments consécutifs, probablement un en-tête `position: sticky` qui
+  apparaît, à raison, à la même position sur chaque segment où il est
+  réellement visible au scroll — ce que ce fichier donnait jusqu'ici pour
+  acquis (« un sticky ne se duplique de toute façon jamais ») sans avoir
+  distingué ce cas-là de l'ancien bug de duplication en composite pleine
+  page. Détail dans `audit-landing/README.md`.
+  **Deuxième étage depuis le 12/09/2026 : `analyser_captures.py`**, une
+  dépendance de plus (`anthropic`). Montre les segments à Claude, jamais du
+  texte extrait, et rend un rapport structuré à six catégories fixes
+  (message et promesse, preuve sociale, appel à l'action, objections et
+  confiance, lisibilité et hiérarchie visuelle, cohérence de marque), chacune
+  notée et assortie de constats triés par sévérité et référencés au segment
+  où ils se voient. **Non exercé depuis cette session** : `api.anthropic.com`
+  n'a jamais été sondé ni appelé d'ici, comme les quatre URLs de test —
+  écrit contre la surface réelle du SDK (signatures et classes d'erreur
+  relevées dans le paquet téléchargé, jamais de mémoire) et testé sur tout
+  ce qui ne dépend ni du réseau ni d'une clé.
+  Pas encore fait : le rapport en page web, la page de vente, Stripe.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.
