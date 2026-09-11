@@ -10,6 +10,53 @@ mots.
 d'image, la génération du rapport, la page de vente du produit et Stripe
 viennent après — voir la consigne d'origine, pas encore commencée ici.
 
+## Défaut connu, en cours d'investigation : tranches blanches sur `qonto.com/fr`
+
+Mesuré par le propriétaire le 11/09/2026, sur la machine où le script a du
+vrai réseau (impossible à reproduire depuis une session distante — voir plus
+bas) : 3 tranches sur 13 (`04-milieu`, `09-milieu`, `13-bas`) sont sorties
+**totalement blanches**, sans aucun contenu, sur `qonto.com/fr`. Aucune
+tranche blanche sur `payfit.com/fr` ni `pennylane.com` capturés dans la même
+session.
+
+**Une hypothèse a été testée et écartée, pour une bonne raison.**
+`masquer_elements_fixes` masque tout élément en `position: sticky`, sans
+filtre de taille — l'idée étant qu'une grande section « épinglée » (technique
+de mise en page très répandue sur les sites de storytelling comme Qonto) se
+fasse effacer comme un vulgaire bandeau de cookies. **Vérifié sur une fixture
+locale : c'est un vrai défaut, mais il ne produit pas le symptôme observé.**
+Un élément `sticky` reste dans le flux normal du document (contrairement à
+`fixed`) : le masquer avec `display:none` **fait disparaître l'espace qu'il
+occupait**, donc la page se raccourcit et tout ce qui suit remonte — ce qui
+décale et fait perdre du contenu, mais ne rend jamais une tranche blanche à
+sa position attendue. Le symptôme décrit (tranches blanches, aux bonnes
+positions, dans un total de 13 qui a l'air normal) ne colle pas à ce
+mécanisme-là.
+
+**Hypothèse plus probante, pas encore vérifiée : `content-visibility:
+auto`.** Beaucoup de sites marketing modernes l'utilisent pour la
+performance : la section réserve son espace (`contain-intrinsic-size`,
+d'où le total de 13 tranches qui reste cohérent) mais Chromium ne peint son
+contenu que si elle a été effectivement « pertinente » pour l'utilisateur —
+et rien ne garantit que ça survit jusqu'au moment où `capturer_page.py` prend
+sa capture pleine page, même après le passage de scroll de
+`forcer_chargement_complet`. C'est exactement la forme du défaut observé :
+espace correct, contenu absent. Une seconde piste, de la même famille : un
+`<canvas>`/WebGL/vidéo qui n'a pas eu le temps de peindre sa première image.
+
+**Prochain pas** : reproduire `content-visibility: auto` sur une fixture
+locale (une section avec `contain-intrinsic-size` posé, hors du viewport au
+moment de la capture), confirmer que ça blanchit une tranche à la bonne
+position, puis corriger — piste la plus directe : injecter une feuille de
+style forçant `content-visibility: visible !important` sur toute la page
+avant la capture, ce qui neutralise le mécanisme sans toucher au
+lazy-loading JS des images (mécanisme différent, indépendant).
+
+**Non vérifié depuis cette session, et ce n'est pas nouveau** : la politique
+réseau de cet environnement bloque `qonto.com` (voir plus bas) — toute
+correction doit être vérifiée par le propriétaire, sur sa machine, avant
+d'être crue réglée.
+
 ## Utiliser
 
 ```bash
