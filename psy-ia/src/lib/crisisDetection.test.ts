@@ -73,6 +73,27 @@ test('le signal peut apparaître dans un message antérieur, pas seulement le de
   assert.equal(resultat.niveau, 'fort');
 });
 
+test('la négation directe ("je ne veux plus vivre") déclenche', () => {
+  const resultat = detecterCrise(['je ne veux plus vivre']);
+  assert.equal(resultat.niveau, 'fort');
+});
+
+test('la négation inversée ("je ne veux pas mourir") déclenche aussi, en modéré', () => {
+  const resultat = detecterCrise(['je ne veux pas mourir']);
+  assert.equal(resultat.niveau, 'modere');
+  assert.ok(resultat.motifs.includes('négation inversée (peur de mourir)'));
+});
+
+test('faux positif connu et assumé : "mourir bête" (tournure familière sans rapport) déclenche aussi', () => {
+  // Documenté plutôt que corrigé : la note d'initialisation pose « en cas de
+  // doute, on déclenche — un faux positif est gênant, un faux négatif est
+  // inacceptable ». Exclure cette tournure demanderait une liste
+  // d'exceptions qui n'a pas sa place dans une liste de motifs non encore
+  // validée par un professionnel (voir TODO.md).
+  const resultat = detecterCrise(['je veux pas mourir bête, explique-moi comment ça marche']);
+  assert.equal(resultat.niveau, 'modere');
+});
+
 test('les six tournures de désespoir/fardeau déclenchent le niveau modéré', () => {
   const exemples = [
     'je sers à rien',

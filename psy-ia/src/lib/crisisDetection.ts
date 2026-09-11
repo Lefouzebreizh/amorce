@@ -92,6 +92,21 @@ const MOTIFS_MODERES: Motif[] = [
   { motif: "ça ne s'arrangera jamais", regex: /\bca\s+(ne\s+)?s\s+arangera\s+jamais\b/ },
   { motif: "n'en peut plus", regex: /\ben\s+peux\s+plus\b/ },
   { motif: 'ne voit pas comment continuer', regex: /\bvois\s+pas\s+coment\s+continuer\b/ },
+  // Négation inversée — ajoutée le 11/09/2026 suite à une relecture externe
+  // de la note de cadrage. « Je veux mourir » (négation directe absente) est
+  // déjà couvert en niveau fort ; « je ne veux plus vivre » (négation
+  // directe) l'est déjà via le motif « veut plus vivre » ci-dessus, puisque
+  // « ne » n'empêche pas le sous-texte de matcher. Ce qui manquait était la
+  // forme inversée : une personne qui dit craindre ou refuser la mort peut
+  // signaler la même détresse par ambivalence — l'hésitation entre vouloir
+  // vivre et vouloir mourir est un marqueur documenté, pas un non-signal.
+  // Posé en niveau MODÉRÉ et non FORT : contrairement aux tournures
+  // ci-dessus, la phrase peut aussi être parfaitement anodine (« je veux pas
+  // mourir bête », tournure familière sans rapport avec le suicide) — le
+  // niveau modéré déclenche déjà le même message figé au moindre doute
+  // (principe directeur de la couche 1), sans sur-classer un motif plus
+  // ambigu que les autres.
+  { motif: 'négation inversée (peur de mourir)', regex: /\bveu[xt]\s+pas\s+mourir\b/ },
 ];
 
 // Épuisement extrême : ne déclenche que s'il est exprimé de façon RÉPÉTÉE
