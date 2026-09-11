@@ -121,7 +121,11 @@ class ConfigPepites:
     liquidite_min_usd: float = 250_000
     age_minimum_heures: float = 72
     variation_liquidite_24h_min: float = 0.15
-    capitalisation_max_usd: float = 300_000_000
+    # Aligné le 11/09/2026 sur `pepites/config/reglages.yaml` (30 M$) : les deux
+    # modules visaient le même mot « pépite » avec un plafond dix fois plus
+    # large ici, trouvé en préparant le branchement du scanner dans la boucle
+    # en direct. Au-delà, ce n'est plus une pépite, c'est un actif déjà établi.
+    capitalisation_max_usd: float = 30_000_000
     score_minimum: float = 65
     candidats_max: int = 5
     # Ratio volume 24 h / capitalisation — un signal indépendant de

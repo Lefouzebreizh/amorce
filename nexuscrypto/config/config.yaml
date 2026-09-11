@@ -161,7 +161,10 @@ strategie:
     liquidite_min_usd: 250000
     age_minimum_heures: 72
     variation_liquidite_24h_min: 0.15
-    capitalisation_max_usd: 300000000
+    # Aligné le 11/09/2026 sur pepites/config/reglages.yaml (30 M$), sur
+    # décision explicite du propriétaire : les deux modules visaient le même
+    # mot « pépite » avec un plafond dix fois plus large ici.
+    capitalisation_max_usd: 30000000
     score_minimum: 65
     candidats_max: 5
     # Plafond par jeton découvert, tous renforcements compris. Vivait sur
