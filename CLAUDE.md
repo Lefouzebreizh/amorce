@@ -1516,6 +1516,30 @@ faux, c'est la conséquence qu'on en avait tirée — et une conséquence fausse
 attachée à une mesure juste se relit comme si elle avait été mesurée elle
 aussi.
 
+**Et « GitHub répond » ne vaut pas pour les artéfacts d'Actions — mesuré le
+11/09/2026.** Le paragraphe suivant dit que les objets de release GitHub
+répondent, et c'est vrai. Un **artéfact d'exécution** — l'APK que publie
+`look-and-find.yml`, par exemple — ne s'y télécharge pourtant pas.
+
+L'API accepte la requête et rend **302**, vers un stockage Azure signé :
+`productionresultssa15.blob.core.windows.net`. Le mandataire y répond
+**`CONNECT tunnel failed, 403`** : le tunnel tombe avant toute requête HTTP, et
+aucune clé n'y change rien. Ce n'est donc pas un problème d'autorisation GitHub,
+c'est un **hôte hors de la politique réseau** — exactement comme le CDN de
+higgsfield deux paragraphes plus haut.
+
+Deux choses en découlent, et la seconde est la plus utile :
+
+- **Une session ne peut pas rapatrier l'APK qu'elle vient de faire construire.**
+  Elle voit le run vert, elle lit le nom et la taille de l'artéfact, elle ne
+  touche pas les octets. Ce qu'elle peut faire est **donner le lien du run**, et
+  c'est ce qu'attend le §0 : un fichier se livre, il ne se décrit pas.
+- **Le nom d'hôte décide, jamais le nom du service.** `api.github.com` répond,
+  `release-assets.githubusercontent.com` répond, et le stockage des artéfacts ne
+  répond pas — trois hôtes, un seul « GitHub ». Sonder le service ne dit rien de
+  l'hôte qui sert réellement le fichier ; seul un `curl` sur l'adresse finale le
+  dit, et l'adresse finale se lit dans l'en-tête `Location` de la redirection.
+
 **La transcription, elle, marche** — et ce blocage-ci a coûté deux sessions
 avant d'être levé. `huggingface.co` est refusé par le mandataire, comme
 `alphacephei.com` et `openaipublic.azureedge.net` : aucun poids de
