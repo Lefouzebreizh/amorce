@@ -1,4 +1,4 @@
-import { analyzeProject, DUREE_PUBLIABLE, LONG_SHOT, PLAFOND_BLOQUE, type Analysis } from './analysis.ts';
+import { analyzeProject, DUREE_PUBLIABLE, LONG_SHOT, PLAFOND_BLOQUE, rushesSonores, type Analysis } from './analysis.ts';
 import type { StepId } from './steps.ts';
 import { clipDuration, MORCEAUX_MAX } from './timeline.ts';
 import type { Project } from './types.ts';
@@ -145,10 +145,22 @@ export function nextStep(project: Project, analysis: Analysis = analyzeProject(p
     };
   }
 
-  // Bruitages de synthèse et fichiers déposés comptent ensemble : l'oreille ne
-  // les distingue pas, et réclamer des whooshs à quelqu'un qui a déposé ses
-  // propres impacts serait absurde.
-  if (project.cues.length + project.samples.length < Math.max(2, Math.floor(analysis.duration / 8))) {
+  /*
+   * Bruitages de synthèse et fichiers déposés comptent ensemble : l'oreille ne
+   * les distingue pas, et réclamer des whooshs à quelqu'un qui a déposé ses
+   * propres impacts serait absurde.
+   *
+   * Le son que les rushes portent eux-mêmes relève du même raisonnement, et il
+   * manquait. Mesuré le 11/09/2026 : depuis que le montage express ne plaque
+   * plus de souffle sur une parole, un montage de douze rushes parlants
+   * recevait aussitôt « Ponctue tes coupes » — le studio retirait les
+   * bruitages d'un côté et les réclamait de l'autre.
+   */
+  const sonneDeja = project.voices.some((v) => v.duration > 0) || rushesSonores(project);
+  if (
+    !sonneDeja &&
+    project.cues.length + project.samples.length < Math.max(2, Math.floor(analysis.duration / 8))
+  ) {
     return {
       title: 'Ponctue tes coupes',
       why: 'Un bruitage sur chaque raccord transforme une suite de plans en rythme. C’est ce qui s’entend le plus.',

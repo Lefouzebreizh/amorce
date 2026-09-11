@@ -264,8 +264,14 @@ function occupied(captions: Caption[], start: number, end: number): boolean {
  * Un emplacement vide ne compte dans aucune couverture — `captionCoverage`
  * écarte les textes vides — et c'est voulu : il sert à dire *où* il reste à
  * écrire, pas à gonfler la note d'un texte qui n'existe pas.
+ *
+ * **Exportée pour le montage express**, qui posait un seul sous-titre écrit en
+ * dur et rendait 12,8 % de couverture là où le produit en exige 55. Il aurait
+ * été plus court d'y recopier quatre positions ; deux géométries de créneaux
+ * se seraient alors écartées au premier réglage, et la moins bonne aurait
+ * gagné une fois sur deux.
  */
-function captionsFor(
+export function captionsFor(
   set: CaptionSet,
   existing: Caption[],
   duration: number,

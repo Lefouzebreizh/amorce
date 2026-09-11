@@ -1,3 +1,4 @@
+import { CAPTION_SETS, captionsFor } from './autoFinish.ts';
 import { uid } from './id.ts';
 import { MOUVEMENTS_ALTERNES, totalDuration } from './timeline.ts';
 import {
@@ -89,12 +90,40 @@ export const PLANS_MAX = Math.floor(DUREE_MAX / MIN_SHOT_VU);
 const TRANSITION_CYCLE: TransitionKind[] = ['zoomPunch', 'whipPan', 'fade', 'slideUp', 'flash'];
 
 /**
- * Bruitages de raccord, alternés eux aussi.
+ * Le bruitage d'un raccord suit la transition qui le porte.
  *
- * Le même souffle répété à chaque coupe cesse d'être entendu au bout de trois
- * occurrences : c'est la variation qui maintient l'effet.
+ * Il suivait un compteur qui tourne — `RACCORD_CYCLE[(index - 1) % 6]` — donc
+ * **le rang du plan, et rien d'autre**. Deux jeux de rushes sans aucun rapport,
+ * du moment qu'ils faisaient le même nombre de plans, recevaient la même suite
+ * de sons au son près. C'est ce que le propriétaire a entendu et nommé
+ * « plaqué automatiquement, sans rapport avec le contenu ».
+ *
+ * La table ci-dessous rattache chaque son au **geste visible** qu'il
+ * accompagne : un balayé reçoit un souffle qui balaye, un fondu reçoit une
+ * descente et jamais un impact, un éclair reçoit un éclat. Ce n'est pas de la
+ * décoration cohérente pour le plaisir : un impact sur un fondu s'entend comme
+ * une erreur, parce que l'oreille attend ce que l'œil annonce.
+ *
+ * La variation que l'ancien cycle cherchait ne disparaît pas — elle vient
+ * désormais de la variation des transitions, qui est elle-même visible.
  */
-const RACCORD_CYCLE: SfxId[] = ['boom', 'whoosh', 'punch', 'swipe', 'whoosh', 'subdrop'];
+const SFX_PAR_TRANSITION: Record<TransitionKind, SfxId> = {
+  cut: 'punch',
+  zoomPunch: 'boom',
+  whipPan: 'whoosh',
+  slideUp: 'swipe',
+  flash: 'sparkle',
+  glitch: 'zap',
+  fade: 'subdrop',
+};
+
+/**
+ * Les transitions qui appellent une anticipation, et celles qui la refusent.
+ *
+ * L'aspiration `reverse` annonce un choc. Posée avant un fondu, elle annonce
+ * quelque chose qui n'arrive pas.
+ */
+const TRANSITIONS_A_ANTICIPER: TransitionKind[] = ['zoomPunch', 'whipPan', 'flash', 'glitch'];
 
 /** Texte d'accroche déposé par défaut, explicitement à remplacer. */
 export const PLACEHOLDER_HOOK = 'Attends la fin 👀';
@@ -185,15 +214,37 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
 
   const duration = totalDuration(clips);
 
+  /*
+   * L'accroche, puis la trame qui tient le reste de la durée.
+   *
+   * Ce tableau ne portait qu'**un** élément, écrit en dur, quelle que soit la
+   * durée du montage : 2,4 s de texte sur trente secondes de film, soit 12,8 %
+   * de couverture là où `analysis.ts` en exige 55 pour ne pas pénaliser. Le
+   * produit savait donc noter ce qu'il venait lui-même de produire, et le
+   * notait mal — sans que rien ne le signale, parce que le seul contrôle
+   * existant vérifiait qu'un texte est *visible*.
+   *
+   * Les créneaux viennent de `autoFinish`, et c'est exprès : ce sont les mêmes
+   * que le bouton « Poser les réglages » propose, aux mêmes instants. Les deux
+   * gestes s'accordent au lieu de proposer deux squelettes différents, et le
+   * second n'a plus rien à ajouter derrière le premier.
+   *
+   * Les crochets restent des crochets. Un texte plausible écrit à la place de
+   * l'utilisateur est la seule chose que ce studio ne fera jamais : ce sont
+   * ses mots qui portent la vidéo, pas les nôtres.
+   */
+  const accroche: Caption = {
+    id: uid('cap'),
+    text: PLACEHOLDER_HOOK,
+    start: 0,
+    end: Math.min(2.4, duration),
+    style: 'punch',
+    y: 0.28,
+  };
+
   const captions: Caption[] = [
-    {
-      id: uid('cap'),
-      text: PLACEHOLDER_HOOK,
-      start: 0,
-      end: Math.min(2.4, duration),
-      style: 'punch',
-      y: 0.28,
-    },
+    accroche,
+    ...captionsFor(CAPTION_SETS[0], [accroche], duration, () => uid('cap')),
   ];
 
   /*
@@ -224,15 +275,37 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
   const voulus = Math.max(1, Math.round((duration / 10) * RACCORDS_SONORISES_PAR_10S));
   const pasBruitage = Math.max(1, Math.round(raccords / voulus));
 
+  /*
+   * Un rush qui porte déjà sa bande son n'en reçoit aucun par-dessus.
+   *
+   * C'est la moitié de la correction qui compte le plus, et la seule qui parle
+   * vraiment de **contenu** : `hasAudio` dit que quelque chose s'entend déjà
+   * dans ce plan — quelqu'un qui parle, le plus souvent. Un souffle posé
+   * là-dessus ne ponctue rien, il recouvre. Le dépôt le savait déjà pour le
+   * montage à la main — « le rush qui porte déjà sa bande son et qu'on
+   * recouvre », dans `/montage-sans-refaire` — et le montage express le
+   * faisait quand même, à chaque coupe.
+   *
+   * La règle vaut pour tous les sons plaqués, pas seulement les raccords :
+   * l'impact d'ouverture, l'aspiration, la ponctuation de mi-plan et la note
+   * finale tombent tous sur de l'image et du son qui existent.
+   */
+  const porteSonPropre = (clip: Clip) =>
+    assets.find((asset) => asset.id === clip.assetId)?.hasAudio === true;
+
   const cues: SoundCue[] = [];
   let cursor = 0;
 
   // Un impact sur la toute première image : le son fait partie de l'accroche
-  // autant que le texte, et c'est lui qui fait lever les yeux.
-  cues.push({ id: uid('sfx'), sfx: 'punch', time: 0.02, gain: 0.9 });
+  // autant que le texte, et c'est lui qui fait lever les yeux. Sauf si le
+  // premier plan parle déjà — on n'ouvre pas en couvrant une phrase.
+  if (!porteSonPropre(clips[0])) {
+    cues.push({ id: uid('sfx'), sfx: 'punch', time: 0.02, gain: 0.9 });
+  }
 
   clips.forEach((clip, index) => {
     const clipLength = (clip.outPoint - clip.inPoint) / clip.speed;
+    const muet = !porteSonPropre(clip);
 
     if (index > 0) {
       cursor -= clip.transitionDuration;
@@ -241,16 +314,19 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
       // Un raccord sur `pasBruitage` reçoit un souffle : c'est ce qui
       // transforme une succession de plans en rythme perçu. Les autres restent
       // nus, et c'est ce qui rend audibles ceux qui sonnent.
-      if ((index - 1) % pasBruitage === 0) {
-        cues.push({ id: uid('sfx'), sfx: RACCORD_CYCLE[(index - 1) % RACCORD_CYCLE.length], time: at, gain: 0.85 });
+      if ((index - 1) % pasBruitage === 0 && muet) {
+        cues.push({ id: uid('sfx'), sfx: SFX_PAR_TRANSITION[clip.transition], time: at, gain: 0.85 });
 
         /*
          * L'aspiration ne se pose que si le plan précédent est assez long pour
          * la porter. Sur des plans courts, une anticipation de 0,55 s tombe
          * avant la coupe **précédente** : elle n'annonce plus rien, elle brouille
          * ce qui vient de sonner.
+         *
+         * Et elle ne se pose que devant un choc : annoncer un fondu par une
+         * aspiration promet un impact qui n'arrive jamais.
          */
-        if (at > 1.2) {
+        if (at > 1.2 && TRANSITIONS_A_ANTICIPER.includes(clip.transition) && !porteSonPropre(clips[index - 1])) {
           cues.push({ id: uid('sfx'), sfx: 'reverse', time: at - 0.55, gain: 0.55 });
         }
       }
@@ -259,14 +335,16 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
     cursor += clipLength;
 
     // Un plan qui s'étire est le premier endroit où l'attention retombe : on y
-    // pose une ponctuation à mi-parcours plutôt que de le laisser nu.
-    if (clipLength > 3.2) {
+    // pose une ponctuation à mi-parcours plutôt que de le laisser nu. Un plan
+    // qui parle, lui, ne s'étire pas dans le silence — il n'a rien à relancer.
+    if (clipLength > 3.2 && muet) {
       cues.push({ id: uid('sfx'), sfx: 'sparkle', time: cursor - clipLength / 2, gain: 0.6 });
     }
   });
 
-  // Une note finale signale que c'est terminé et appelle la boucle suivante.
-  if (duration > 1.5) {
+  // Une note finale signale que c'est terminé et appelle la boucle suivante —
+  // sauf si le dernier plan parle jusqu'au bout, où elle couperait la chute.
+  if (duration > 1.5 && !porteSonPropre(clips[clips.length - 1])) {
     cues.push({ id: uid('sfx'), sfx: 'ding', time: Math.max(0, duration - 0.45), gain: 0.8 });
   }
 
