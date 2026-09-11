@@ -109,7 +109,14 @@ export async function traiterMessage(
     return { corps: { reponse: '', crise: false, erreur: 'Le fournisseur LLM a refusé la requête.' }, statut: 502 };
   }
   const resultat = await reponseAnthropic.json();
-  const texte = resultat?.content?.[0]?.text ?? '';
+  // claude-sonnet-5 réfléchit en amont par défaut (réflexion adaptative, sans
+  // paramètre `thinking` à poser) : le premier bloc de `content` est alors de
+  // type `thinking` (pas de champ `.text`), et le texte réel arrive dans un
+  // bloc `text` plus loin dans le tableau. Lire `content[0].text` à l'aveugle
+  // rendait donc une chaîne vide à chaque appel, sans jamais planter.
+  interface BlocContenu { type: string; text?: string }
+  const blocTexte = (resultat?.content as BlocContenu[] | undefined)?.find((bloc) => bloc.type === 'text');
+  const texte = blocTexte?.text ?? '';
 
   return {
     corps: {
