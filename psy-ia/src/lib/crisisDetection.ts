@@ -341,21 +341,39 @@ const PHRASES_MODEREES = [
   // appliqué à chaque ajout : une lecture de détresse en est-elle une
   // interprétation raisonnable, même minoritaire ? Si oui, elle entre ici.
   //
-  // Effondrement / craquage.
+  // Effondrement / craquage. Chaque état s'écrit sous les deux tournures
+  // les plus courantes pour le dire à la première personne (« je suis X »
+  // et « je me sens X ») — trouvé le 11/09/2026 en testant en production :
+  // « je me sens complètement effondrée » ne déclenchait pas, seule la
+  // forme « je suis effondrée » étant couverte.
   'je craque',
   "je m'effondre",
   'je suis effondré',
   'je suis effondrée',
+  'je me sens effondré',
+  'je me sens effondrée',
   'je suis anéanti',
   'je suis anéantie',
+  'je me sens anéanti',
+  'je me sens anéantie',
   'je suis brisé',
   'je suis brisée',
+  'je me sens brisé',
+  'je me sens brisée',
   "j'ai le cœur brisé",
   'je suis submergé',
   'je suis submergée',
+  'je me sens submergé',
+  'je me sens submergée',
   "je m'écroule",
   "je n'y arrive plus",
   "j'abandonne",
+  // Perte de repère, très courante et absente jusqu'ici — distincte de
+  // « je ne sais plus qui je suis » plus bas, qui est une forme plus forte.
+  'je suis perdu',
+  'je suis perdue',
+  'je me sens perdu',
+  'je me sens perdue',
   //
   // Isolement et sentiment de fardeau, au-delà de ce qui était déjà couvert.
   'personne ne me comprend',
@@ -375,6 +393,7 @@ const PHRASES_MODEREES = [
   'envie de rien',
   'rien ne me fait plus envie',
   'je suis vide',
+  'je me sens vide',
   'complètement vide',
   //
   // Perte de contrôle ou de repère sur soi-même.
@@ -389,6 +408,8 @@ const PHRASES_MODEREES = [
   // objet ou situation extérieure sans rapport avec la personne elle-même.
   'je suis désespéré',
   'je suis désespérée',
+  'je me sens désespéré',
+  'je me sens désespérée',
   'ma vie est invivable',
   'ma vie est insupportable',
 ];
