@@ -479,26 +479,51 @@ ${ficheEtablissement(commande, domaine)}
   }
   * { box-sizing: border-box; }
   /*
-   * La page fait la largeur d'un telephone, partout.
+   * La colonne fait la largeur d’un téléphone ; la page, elle, remplit l’écran.
    *
-   * Sur un telephone la contrainte ne mord pas : le corps occupe deja 100 %
-   * du viewport, mesure a 390, 360 et 320 px sans un pixel de debordement.
-   * Elle mord sur un ecran large, ou une colonne de 40rem donnait 640 px --
-   * soit une page qui ne ressemblait plus du tout a ce que l'artisan voit
-   * quand il ouvre le lien, et c'est pourtant sur cet ecran-la qu'on la
-   * relit avant de l'envoyer. On jugeait donc une mise en page que personne
-   * ne verrait.
+   * L’état précédent bornait « body » à 26rem, donc 416 px au milieu d’une
+   * fenêtre de 1440 : moins d’un tiers de l’écran occupé, le reste vide. Le
+   * choix était délibéré et son motif est resté écrit ici — la page se
+   * relisant sur un ordinateur, la brider à la largeur d’un téléphone évitait
+   * de juger une mise en page que l’artisan ne verrait jamais.
    *
-   * 26rem = 416 px : entre les 390 px d'un iPhone 14 et les 430 d'un Max.
+   * Ce raisonnement servait la relecture. Il était payé par le visiteur, qui
+   * ouvre le site d’un artisan sur un ordinateur aussi, et par la
+   * démonstration commerciale : le premier regard extérieur porté sur ces
+   * pages a vu une bande étroite et a dit qu’il y avait un problème. C’est ce
+   * regard-là qui avait raison, et il a coûté moins cher que la règle.
    *
-   * Le fond va sur << html >> et pas seulement ici : un corps borne laisse
-   * voir la page derriere lui, et ce serait du blanc au bord d'un site sombre.
+   * La contrainte descend donc de « body » vers « .dedans », la mesure du
+   * texte. Ce qui change : l’entête et son halo, le pied et son aplat vont
+   * maintenant bord à bord, ce qui est précisément ce qui manquait. Ce qui ne
+   * change pas : sous 48rem la colonne vaut toujours la fenêtre moins les
+   * marges, au pixel près — l’invariant que « tests/site.test.ts » garde,
+   * parce que le téléphone reste l’écran depuis lequel on appelle un artisan.
+   *
+   * 26rem = 416 px : entre les 390 px d’un iPhone 14 et les 430 d’un Max.
+   *
+   * Le fond va sur « html » et pas seulement ici : la page derrière le corps
+   * se voit dès que le contenu est plus court que l’écran, et ce serait du
+   * blanc au bord d’un site sombre.
    */
   html { background: #16151a; }
   body {
-    margin: 0 auto; max-width: 26rem;
+    margin: 0;
     background: var(--ink); color: var(--encre);
     font: 18px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .dedans { margin: 0 auto; max-width: 26rem; }
+  /*
+   * 40rem = 640 px, à partir de 768 px de fenêtre, et pas un pixel de plus :
+   * au-delà, l’œil perd le début de la ligne en arrivant à sa fin, et le site
+   * d’un artisan n’a de toute façon pas assez de contenu pour meubler une
+   * pleine largeur. L’entête grandit avec la colonne, sinon le titre flotte.
+   */
+  @media (min-width: 48rem) {
+    .dedans { max-width: 40rem; }
+    header { padding: 4.5rem 2rem 3.5rem; }
+    header h1 { font-size: 2.6rem; }
+    main { padding: 0 2rem 4rem; }
   }
   /*
    * L'entête en halo, jamais en aplat de couleur.
@@ -624,19 +649,19 @@ ${ficheEtablissement(commande, domaine)}
 </style>
 </head>
 <body>
-<header>
+<header><div class="dedans">
   <h1>${entreprise}</h1>
   <p>${accroche}</p>
-</header>
-<main>
+</div></header>
+<main><div class="dedans">
 ${actions.length > 0 ? `  <div class="actions">\n${actions.join('\n')}\n  </div>` : ''}
 ${blocs.join('\n')}
-</main>
-<footer>${entreprise} — ${ville}${
+</div></main>
+<footer><div class="dedans">${entreprise} — ${ville}${
   telephone === ''
     ? ''
     : `<a href="tel:${echapper(lienTelephonique(telephone))}">${echapper(telephone)}</a>`
-}<p class="signature">Site réalisé par Artisan Express</p></footer>
+}<p class="signature">Site réalisé par Artisan Express</p></div></footer>
 </body>
 </html>
 `;
