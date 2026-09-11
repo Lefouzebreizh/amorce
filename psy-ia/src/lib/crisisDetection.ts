@@ -228,8 +228,15 @@ const PHRASES_MODEREES = [
   'je ne sers à rien',
   'tout le monde irait mieux sans moi',
   'un poids pour tout le monde',
+  // Trouvés en testant en production juste après la fusion du motif
+  // « fardeau » : deux formulations tout aussi courantes et absentes,
+  // proches de motifs déjà couverts mais avec un verbe différent.
+  'je pèse sur tout le monde',
+  'peser sur tout le monde',
   "ça ne s'arrangera jamais",
   "ça s'arrangera jamais",
+  "ça n'ira jamais mieux",
+  'ça ira jamais mieux',
   "je n'en peux plus",
   "j'en peux plus",
   'je vois pas comment continuer',
