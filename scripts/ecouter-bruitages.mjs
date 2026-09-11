@@ -271,9 +271,10 @@ for (const { id, duration } of LISTE) {
   writeFileSync(join(SORTIE, `${id}-seul.wav`), versWav(seul, TAUX));
   const a = niveaux(seul, TAUX, duree / 3, duration);
 
+  // Le fichier mêlé sert à la mesure de masquage, jamais à l'écoute : sa voix
+  // est fabriquée, et une voix fabriquée s'entend comme une sonnerie.
   const mele = await rendre(id, { avecVoix: true, gain: 0.85, duree });
   writeFileSync(join(SORTIE, `${id}-sur-voix.wav`), versWav(mele, TAUX));
-  const b = niveaux(mele, TAUX, duree / 3, duration);
 
   const { part, voix } = partDansLaVoix(seul, TAUX);
   const dB = (x) => (x <= 0 ? -99 : 10 * Math.log10(x / seul[0].length));
@@ -296,31 +297,49 @@ for (const { id, duration } of LISTE) {
  * gestes, pas un dossier à explorer.
  */
 const PAS = 2.4;
-const planche = await page.evaluate(
-  async ({ ids, pas, taux }) => {
+
+/*
+ * Deux planches, et l'ordre compte : les bruitages **seuls** d'abord.
+ *
+ * La première version n'en rendait qu'une, avec la voix de synthèse dessous.
+ * Envoyée au propriétaire, elle a reçu « c'est quoi ça c'est horrible » — et
+ * il avait raison : cette voix est une dent-de-scie à 178 Hz hachée toutes les
+ * 260 ms, présente sans interruption pendant trente-deux secondes à
+ * −28,9 dBFS. Ce n'est pas une voix, c'est une sonnerie, et elle domine tout
+ * ce qu'on voulait faire juger.
+ *
+ * **Une voix fabriquée sert à mesurer un masquage, jamais à faire écouter.**
+ * Elle reste donc, parce que le chiffre qu'elle donne est juste ; mais ce
+ * qu'on envoie pour un jugement à l'oreille est la planche sans elle.
+ */
+async function rendrePlanche(avecVoix) {
+  return page.evaluate(
+  async ({ ids, pas, taux, avecVoix }) => {
     const duree = ids.length * pas + 1;
     const ctx = new OfflineAudioContext(2, Math.ceil(duree * taux), taux);
     const sortie = ctx.createGain();
     sortie.connect(ctx.destination);
 
-    const voix = ctx.createGain();
-    voix.gain.value = 0;
-    voix.connect(sortie);
-    for (const [rang, poids] of [[1, 1], [2, 0.5], [3, 0.32], [4, 0.18], [6, 0.08]]) {
-      const osc = ctx.createOscillator();
-      osc.type = 'sawtooth';
-      osc.frequency.value = 178 * rang;
-      const g = ctx.createGain();
-      g.gain.value = poids * 0.09;
-      osc.connect(g);
-      g.connect(voix);
-      osc.start(0);
-      osc.stop(duree);
-    }
-    for (let t = 0.05; t < duree - 0.1; t += 0.26) {
-      voix.gain.setValueAtTime(0.02, t);
-      voix.gain.linearRampToValueAtTime(1, t + 0.05);
-      voix.gain.setTargetAtTime(0.05, t + 0.12, 0.05);
+    if (avecVoix) {
+      const voix = ctx.createGain();
+      voix.gain.value = 0;
+      voix.connect(sortie);
+      for (const [rang, poids] of [[1, 1], [2, 0.5], [3, 0.32], [4, 0.18], [6, 0.08]]) {
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 178 * rang;
+        const g = ctx.createGain();
+        g.gain.value = poids * 0.09;
+        osc.connect(g);
+        g.connect(voix);
+        osc.start(0);
+        osc.stop(duree);
+      }
+      for (let t = 0.05; t < duree - 0.1; t += 0.26) {
+        voix.gain.setValueAtTime(0.02, t);
+        voix.gain.linearRampToValueAtTime(1, t + 0.05);
+        voix.gain.setTargetAtTime(0.05, t + 0.12, 0.05);
+      }
     }
 
     ids.forEach((id, i) => window.__sfx.scheduleSfx(ctx, sortie, id, 0.6 + i * pas, 0.85));
@@ -328,17 +347,24 @@ const planche = await page.evaluate(
     const rendu = await ctx.startRendering();
     return [Array.from(rendu.getChannelData(0)), Array.from(rendu.getChannelData(1))];
   },
-  { ids: LISTE.map((s) => s.id), pas: PAS, taux: TAUX },
-);
+    { ids: LISTE.map((s) => s.id), pas: PAS, taux: TAUX, avecVoix },
+  );
+}
 
-const chemin = join(SORTIE, 'planche-sonore.wav');
-writeFileSync(chemin, versWav(planche, TAUX));
-const p = niveaux(planche, TAUX);
-console.log(
-  `\nplanche sonore : ${chemin}` +
-    `\n  ${LISTE.length} bruitages toutes les ${PAS} s, sur une voix — ` +
-    `crête ${p.crete.toFixed(1)} dBFS, efficace ${p.rms.toFixed(1)} dBFS`,
-);
-console.log(`  ordre : ${LISTE.map((s) => s.id).join(' · ')}`);
+for (const [avecVoix, nom, quoi] of [
+  [false, 'planche-bruitages-seuls.wav', 'les bruitages seuls — la planche à écouter'],
+  [true, 'planche-sur-voix.wav', 'les mêmes sur une voix fabriquée — pour mesurer, pas pour juger'],
+]) {
+  const planche = await rendrePlanche(avecVoix);
+  const chemin = join(SORTIE, nom);
+  writeFileSync(chemin, versWav(planche, TAUX));
+  const p = niveaux(planche, TAUX);
+  console.log(
+    `\n${chemin}\n  ${quoi}` +
+      `\n  ${LISTE.length} bruitages toutes les ${PAS} s — ` +
+      `crête ${p.crete.toFixed(1)} dBFS, efficace ${p.rms.toFixed(1)} dBFS`,
+  );
+}
+console.log(`\n  ordre : ${LISTE.map((s) => s.id).join(' · ')}`);
 
 await navigateur.close();
