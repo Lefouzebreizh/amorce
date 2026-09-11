@@ -11,6 +11,27 @@ un en-tête `## [AAAA-MM-JJ HH:MM] De : …`, une idée non.** Un message se vid
 quand le projet destinataire l'a lu ; une idée se note sur dix puis ressort.
 Une session de tri qui rencontre un en-tête `De :` passe son chemin.
 
+## Une session qui démarre : trois lectures, dans cet ordre
+
+Posé le 11/09/2026, à la demande du propriétaire, après un audit de processus.
+Plusieurs sessions travaillent ce dépôt en parallèle et ne se voient pas : la
+première cause de travail perdu n'est pas une erreur de code, c'est une session
+qui **devine** dans quel dossier elle est et ce qui s'y est déjà passé.
+
+1. **`inbox/<projet>.md`** — ce qu'une autre session a laissé pour celle-ci.
+   Chaque chantier du tableau « Terrain existant » plus bas a désormais le
+   sien ; un fichier qui dit « aucun message en attente » est une réponse, pas
+   un trou. Format et règles dans [`inbox/README.md`](inbox/README.md).
+2. **Le tableau « Terrain existant »** de cette page — le dossier exact, la
+   pile réelle, le moteur partagé s'il y en a un. La colonne « Moteur partagé »
+   dit **avant** d'écrire si la brique qu'on s'apprête à coder existe déjà
+   ailleurs ; le tableau « Moteurs techniques partagés » en donne le détail.
+3. **Le `CLAUDE.md` du projet**, puis celui de la racine. Chaque chantier porte
+   le sien depuis le 11/09/2026 : il rappelle la barre de qualité, la ligne
+   `Projet : nom` et le rebase avant PR, puis renvoie à la racine pour tout le
+   reste plutôt que de le recopier — une règle écrite à deux endroits diverge au
+   premier changement.
+
 ## Statuts
 
 | Statut | Sens |
@@ -41,7 +62,7 @@ Une session de tri qui rencontre un en-tête `De :` passe son chemin.
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt-trois chantiers actifs, plus un en sommeil, et sept
+Ce dépôt héberge vingt-trois chantiers actifs, plus un en sommeil, et dix
 ressources transverses qui ne sont pas des projets mais servent à tous. Une
 idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un
 front de plus. La liste vieillit vite — recompter avant de noter.
@@ -51,32 +72,32 @@ faux.** Voir la section « Moteurs techniques partagés » juste en dessous —
 deux chantiers au moins portent du code explicitement porté ou copié d'un
 autre, et deux paires ont **ré-implémenté la même chose sans le savoir**.
 
-| Chantier | Ce que c'est | Pile | État |
-| --- | --- | --- | --- |
-| **Amorce** (racine) | Studio de montage vertical pour rushes IA, 100 % navigateur. | Next.js 15, React 19, Tailwind v4 | actif |
-| **Look & Find** (`look_and_find/`) | Application mobile de scan / recherche. | Flutter, Riverpod 3 | actif |
-| **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures et validation de niches. | Python | actif |
-| **Socle Agence** (`agence/`) | Socle de production livré aux clients. | Next.js 16, Supabase | actif |
-| **Artisan Express** (`artisan-express/`) | Page de vente du site vitrine artisan à 300 €. | Next.js 16, Tailwind v4 | actif |
-| **Paper-Manager** (`paper-manager/`) | Assistant administratif : scan, échéances, résiliations. | Python | actif |
-| **Life-Organizer** (`life-organizer/`) | Rangement de fichiers personnels. | Python | actif |
-| **Moteur administratif** (`moteur-administratif/`) | Moteur partagé de cinq produits personnels : lecture, délais, rédaction, rappels. Aucune règle métier. | Python | actif |
-| **Répondeur Facebook** (`repondeur-facebook/`) | Réponses aux commentaires via l'API Graph. | Python | actif |
-| **Chaîne de montage** (`montage-auto/`) | Montage automatisé. | Python | actif |
-| **Habillages animés** (`motion/`) | Titres, cartons et logos verticaux, rendus puis posés dans CapCut. | Remotion 4, React 19 | actif |
-| **Volet TikTok** (`tiktok/`) | Concepts et scripts, sans code. | — | actif |
-| **Annuaire IA** (`annuaire-ia/`) | Annuaire et comparateur d'outils IA, affiliation. | HTML, Tailwind CDN, JS natif | actif |
-| **IPTV / VOD** (`iptv/`) | Gestion et lecture de listes IPTV : direct, films, séries. | TypeScript, sans dépendance | actif |
-| **Hypersensible & Bienveillance** (`hypersensible-bienveillance/`) | Deux outils gratuits pour hypersensibles, plus un radar des prix. | Astro, Cloudflare Workers, Tailwind | actif |
-| **NexusCrypto** (`nexuscrypto/`) | Moteur d'investissement crypto autonome à DCA dynamique. | Python | actif |
-| **Pépites** (`pepites/`) | Radar multi-chaînes de jetons en phase d'accumulation. | Python | actif |
-| **Traducteur de chat** (`chat-traducteur/`) | Miaulement enregistré → intention probable, habillée pour le partage. | Python, YAMNet TFLite | actif |
-| **Titan Builder** (`titan-builder/`) | Plateforme où le client configure son site en cinq étapes. | Web | actif |
-| **Conseiller Patrimoine** (`conseiller-patrimoine/`) | Vue d'ensemble du patrimoine et rééquilibrage, en lecture seule stricte. | Python | actif |
-| **Bilan Patrimoine** (`bilan-patrimoine/`) | Le produit grand public : diagnostic gratuit puis suivi payant. Lot 1 — calcul, barèmes et texte. | TypeScript | actif |
-| **Le Coffre** (`le-coffre/`) | Coffre-fort de documents chiffré côté navigateur, multi-utilisateurs. Productisation du coffre de Life-Organizer. | Next.js 16, Supabase | actif |
-| **Psy IA** (`psy-ia/`) | Accompagnement conversationnel de bien-être psychologique — détection de crise déterministe hors LLM. Squelette architectural, pas encore validé pour un vrai utilisateur (voir `psy-ia/TODO.md`). | Next.js 16, Supabase | actif |
-| _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
+| Chantier | Ce que c'est | Pile | Moteur partagé | État |
+| --- | --- | --- | --- | --- |
+| **Amorce** (racine) | Studio de montage vertical pour rushes IA, 100 % navigateur. | Next.js 16.3.2, React 19, Tailwind v4 | `licence-serveur/`, `comptes-serveur/`, `generation-serveur/` | actif |
+| **Look & Find** (`look_and_find/`) | Application mobile de scan / recherche. | Flutter, Riverpod 3 | — | actif |
+| **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures et validation de niches. | Python | — | actif |
+| **Socle Agence** (`agence/`) | Socle de production livré aux clients. | Next.js 16, Supabase | — | actif |
+| **Artisan Express** (`artisan-express/`) | Page de vente du site vitrine artisan à 300 €. | Next.js 16, Tailwind v4 | charte de `titan-builder/src/lib/charte.ts`, copiée et tenue par un test | actif |
+| **Paper-Manager** (`paper-manager/`) | Assistant administratif : scan, échéances, résiliations. | Python | source de la lettre de résiliation et de la détection d’échéance | actif |
+| **Life-Organizer** (`life-organizer/`) | Rangement de fichiers personnels. | Python | source du coffre chiffré et du classement par vision | actif |
+| **Moteur administratif** (`moteur-administratif/`) | Moteur partagé de cinq produits personnels : lecture, délais, rédaction, rappels. Aucune règle métier. | Python | **est** le moteur de Le Coffre, Le Dossier, Le Recours, Le Classeur, La Relève | actif |
+| **Répondeur Facebook** (`repondeur-facebook/`) | Réponses aux commentaires via l'API Graph. | Python | — | actif |
+| **Chaîne de montage** (`montage-auto/`) | Montage automatisé. | Python | — | actif |
+| **Habillages animés** (`motion/`) | Titres, cartons et logos verticaux, rendus puis posés dans CapCut. | Remotion 4, React 19 | — | actif |
+| **Volet TikTok** (`tiktok/`) | Concepts et scripts, sans code. | — | — | actif |
+| **Annuaire IA** (`annuaire-ia/`) | Annuaire et comparateur d'outils IA, affiliation. | HTML, Tailwind CDN, JS natif | gabarit partagé par les onze sites | actif |
+| **IPTV / VOD** (`iptv/`) | Gestion et lecture de listes IPTV : direct, films, séries. | TypeScript, sans dépendance | — | actif |
+| **Hypersensible & Bienveillance** (`hypersensible-bienveillance/`) | Deux outils gratuits pour hypersensibles, plus un radar des prix. | Astro, Cloudflare Workers, Tailwind | — | actif |
+| **NexusCrypto** (`nexuscrypto/`) | Moteur d'investissement crypto autonome à DCA dynamique. | Python | — | actif |
+| **Pépites** (`pepites/`) | Radar multi-chaînes de jetons en phase d'accumulation. | Python | — | actif |
+| **Traducteur de chat** (`chat-traducteur/`) | Miaulement enregistré → intention probable, habillée pour le partage. | Python, YAMNet TFLite | noyau Python porté en TypeScript dans `web/`, tenu par des témoins | actif |
+| **Titan Builder** (`titan-builder/`) | Plateforme où le client configure son site en cinq étapes. | Web | source de la charte artisan | actif |
+| **Conseiller Patrimoine** (`conseiller-patrimoine/`) | Vue d'ensemble du patrimoine et rééquilibrage, en lecture seule stricte. | Python | lit NexusCrypto et Pépites, **sans jamais y écrire** | actif |
+| **Bilan Patrimoine** (`bilan-patrimoine/`) | Le produit grand public : diagnostic gratuit puis suivi payant. Lot 1 — calcul, barèmes et texte. | TypeScript | produit grand public de `conseiller-patrimoine/` | actif |
+| **Le Coffre** (`le-coffre/`) | Coffre-fort de documents chiffré côté navigateur, multi-utilisateurs. Productisation du coffre de Life-Organizer. | Next.js 16, Supabase | coffre chiffré de `life-organizer/` ; échéance et vision **ré-implémentées** | actif |
+| **Psy IA** (`psy-ia/`) | Accompagnement conversationnel de bien-être psychologique — détection de crise déterministe hors LLM. Squelette architectural, pas encore validé pour un vrai utilisateur (voir `psy-ia/TODO.md`). | Next.js 16, Supabase | — | actif |
+| _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | — | en sommeil |
 
 ## Moteurs techniques partagés
 
@@ -116,6 +137,9 @@ dans lesquelles les chantiers puisent.
 | `comptes-serveur/` | Comptes et grand livre de crédits pour la génération intégrée d'Amorce. Rattaché à Amorce, pas autonome. |
 | `generation-serveur/` | La passerelle de génération d'Amorce — MiniMax, plafond de 20 $/mois en veto. Rattachée à Amorce, pas autonome. |
 | `scripts/` | Scripts de vérification et de fixtures pour Amorce à la racine. |
+| `inbox/` | La boîte aux lettres entre sessions — un fichier par chantier — **et** la porte d'entrée des idées non triées. Les deux se distinguent à l'en-tête `De :`. |
+| `projets-actifs/` | Les fiches d'exécution des idées validées. |
+| `archives-backlog/` | Les fiches des idées bonnes mais pas maintenant, et `mon-app-audio/`, en sommeil. |
 
 ## À faire sur le dépôt lui-même
 
@@ -125,11 +149,19 @@ dans lesquelles les chantiers puisent.
   suppriment quand le projet destinataire les a lues, pas quand elles sont
   notées sur dix. Hors ces messages, le dossier est vide, et c'est normal si
   tout a été trié.
-- **`inbox/amorce-video-pipeline.md` n'a pas de destinataire.** Aucun dossier de
-  ce nom n'existe dans le dépôt, et « pipeline V3 » n'apparaît dans aucun
-  fichier : aucune session ne le lira au démarrage. **Ce message est donc à
-  récupérer à la main**, jusqu'à ce qu'un dossier dédié soit créé — et le jour
-  où il l'est, le message y déménage et cette ligne disparaît.
+- **La décision du 06/09 est déployée depuis le 11/09/2026** : les vingt-trois
+  chantiers du tableau ci-dessus ont leur `inbox/<projet>.md`, plus les trois
+  serveurs rattachés à Amorce et `visual_library/`. Elle ne l'était pas — sept
+  fichiers existaient sur vingt-sept, et un message déposé pour un projet sans
+  fichier n'était lu par personne. Un fichier qui dit « aucun message en
+  attente » **est** la réponse attendue : son absence, elle, ne se distingue pas
+  d'un silence.
+- **`inbox/amorce-video-pipeline.md` a trouvé son destinataire, et c'est
+  `inbox/amorce.md`.** Ce message portait les trois décisions du propriétaire
+  sur la génération intégrée — fournisseur MiniMax, plafond de 20 $/mois, clé à
+  venir — et aucune session ne le lisait au démarrage, faute d'un dossier de ce
+  nom. Le chantier qu'il concerne est Amorce elle-même, à la racine : il y a
+  déménagé le 11/09/2026, sans une ligne de changée.
 - Les deux copies pour Aznaroth — `inbox/montage-auto.md` et `inbox/tiktok.md` —
   portent le même texte à dessein : le projet vit dans les deux dossiers. Chacune
   renvoie à l'autre pour qu'on ne les prenne pas pour un doublon accidentel.
