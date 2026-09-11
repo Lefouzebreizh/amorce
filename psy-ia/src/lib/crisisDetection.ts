@@ -8,9 +8,34 @@
 // validée cliniquement : elle reprend telle quelle la note d'initialisation
 // du projet (voir TODO.md, couche 4). Elle doit être enrichie et validée par
 // un professionnel de santé mentale avant toute mise en ligne, même en
-// bêta. Principe directeur, explicitement posé dans cette même note : en cas
-// de doute, on déclenche — un faux positif est gênant, un faux négatif est
-// inacceptable.
+// bêta.
+//
+// PRINCIPE DE DÉCISION, reformulé par Erwann le 11/09/2026 après plusieurs
+// faux négatifs corrigés cas par cas (ce qui ne finit jamais — il y aura
+// toujours une formulation à laquelle on n'a pas pensé) : la question n'est
+// plus « ce message est-il probablement une crise ? » mais « existe-t-il une
+// interprétation plausible et raisonnable de ce message qui indique une
+// détresse — même si ce n'est pas la lecture la plus probable, même si
+// d'autres lectures plus anodines existent ? ». Si oui, la couche 1
+// déclenche, sans attendre de répétition ni de confirmation. Test mental :
+// si un professionnel de santé mentale examinait ce message après coup et
+// qu'un vrai signal était passé inaperçu, pourrait-il reprocher à l'outil
+// de ne pas avoir réagi ? Si oui, même partiellement, on déclenche.
+// Conséquence assumée et voulue : plus de faux positifs (des messages
+// anodins recevront le message de sécurité) contre moins de faux négatifs.
+// C'est un compromis explicitement choisi, pas un défaut à corriger.
+//
+// Cette reformulation a une limite structurelle qu'il faut dire, pas taire :
+// un moteur à motifs, aussi large soit son lexique, ne reconnaît que les
+// formulations qu'on lui a explicitement données — il ne « comprend » rien
+// à une tournure vraiment inédite, ce qu'un LLM ferait. Le principe
+// fondateur du projet (SECURITY.md : « la sécurité ne repose jamais sur le
+// LLM seul ») interdit d'y répondre en faisant juger ce message par le LLM
+// conversationnel lui-même. Élargir malgré cette limite, en couvrant des
+// FAMILLES de signaux plutôt que des cas isolés, est donc la meilleure
+// approximation déterministe du principe ci-dessus — pas son accomplissement
+// complet. Voir SECURITY.md pour la suite (l'option d'un second verrou,
+// distinct du LLM conversationnel, reste une décision de produit non prise).
 //
 // Les motifs s'écrivent en FRANÇAIS ORDINAIRE, jamais en expression
 // régulière, et c'est une décision de fond : un psychologue doit pouvoir
@@ -45,6 +70,13 @@ function normaliser(texte: string): string {
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .toLowerCase()
+    // « œ » et « æ » ne sont pas décomposés par NFD (ce ne sont pas des
+    // lettres accentuées mais des ligatures) : sans cette ligne, ils
+    // tombent dans le nettoyage non-alphanumérique plus bas et laissent un
+    // trou (« cœur » → « c ur »). Trouvé le 11/09/2026 en écrivant
+    // « j'ai le cœur brisé » dans la liste de motifs.
+    .replace(/œ/g, 'oe')
+    .replace(/æ/g, 'ae')
     .replace(/(.)\1+/g, '$1')
     .replace(/\bjeveux?\b/g, 'je veux')
     .replace(/\bjve\b/g, 'je veux')
@@ -262,9 +294,9 @@ const PHRASES_MODEREES = [
   "pas d'autre issue",
   'aucune issue',
   'dans une impasse',
-  // Vide intérieur, perte de sens — distinct de l'épuisement (qui exige une
-  // répétition) : ici la personne ne dit pas qu'elle est fatiguée, elle dit
-  // que plus rien ne compte.
+  // Vide intérieur, perte de sens — distinct de l'épuisement (fatigue) :
+  // ici la personne ne dit pas qu'elle est fatiguée, elle dit que plus rien
+  // ne compte.
   "plus rien n'a de sens",
   "rien n'a plus de sens",
   'je ne ressens plus rien',
@@ -286,26 +318,79 @@ const PHRASES_MODEREES = [
   "au cas où il m'arriverait quelque chose",
   'je ne serai plus là longtemps',
   'je ne serai plus un problème',
-  // « à bout » était dans la liste d'épuisement ci-dessous, qui exige une
-  // répétition sur deux messages distincts. Erwann a explicitement demandé
-  // le 11/09/2026 qu'une seule occurrence suffise ici aussi : la sortir de
-  // ce groupe et la faire déclencher comme les autres motifs modérés,
-  // conformément au principe du projet (en cas de doute, on déclenche).
-  // Le reste de la liste d'épuisement (« épuisé », « plus aucune force »,
-  // « vidé de toute énergie ») garde l'exigence de répétition, faute d'une
-  // demande explicite équivalente pour elles.
+  // « à bout » était dans un groupe d'épuisement qui exigeait une répétition
+  // sur deux messages distincts. Erwann a demandé le 11/09/2026 qu'une seule
+  // occurrence suffise — et la reformulation du principe de décision, le
+  // même jour, a supprimé l'idée même d'exiger une répétition ou une
+  // confirmation pour N'IMPORTE QUEL motif modéré. Les autres membres de cet
+  // ancien groupe (« épuisé », « plus aucune force », « vidé de toute
+  // énergie ») rejoignent donc « à bout » ci-dessous, dans ce même bloc,
+  // pour la même raison — pas seulement lui.
   'à bout',
-];
-
-// Épuisement extrême : ne déclenche que s'il est exprimé de façon RÉPÉTÉE
-// dans la conversation — au moins deux messages distincts — comme demandé
-// explicitement par la note d'initialisation. Un seul « je suis épuisé·e »
-// isolé ne suffit pas à lui seul.
-const PHRASES_EPUISEMENT = [
   'épuisé',
   'épuisée',
   'plus aucune force',
   'vidé de toute énergie',
+  //
+  // Bloc ajouté le 11/09/2026 suite à la reformulation du principe de
+  // décision : plutôt que de continuer à corriger cas par cas (ce qui ne
+  // finit jamais), ce bloc couvre des FAMILLES de signaux — effondrement,
+  // isolement, perte d'élan, perte de contrôle — chacune écrite en phrases
+  // à la première personne pour rester ancrée sur l'état de la personne
+  // elle-même, jamais sur un objet ou une situation extérieure. Le test
+  // appliqué à chaque ajout : une lecture de détresse en est-elle une
+  // interprétation raisonnable, même minoritaire ? Si oui, elle entre ici.
+  //
+  // Effondrement / craquage.
+  'je craque',
+  "je m'effondre",
+  'je suis effondré',
+  'je suis effondrée',
+  'je suis anéanti',
+  'je suis anéantie',
+  'je suis brisé',
+  'je suis brisée',
+  "j'ai le cœur brisé",
+  'je suis submergé',
+  'je suis submergée',
+  "je m'écroule",
+  "je n'y arrive plus",
+  "j'abandonne",
+  //
+  // Isolement et sentiment de fardeau, au-delà de ce qui était déjà couvert.
+  'personne ne me comprend',
+  'je me sens seul au monde',
+  'je me sens seule au monde',
+  'je gêne tout le monde',
+  'je dérange tout le monde',
+  'je suis un boulet',
+  'un boulet pour tout le monde',
+  'je ne compte pour personne',
+  'je ne compte plus pour personne',
+  "personne ne s'apercevrait de mon absence",
+  'personne ne remarquerait mon absence',
+  //
+  // Perte d'élan, anhédonie — distinct du vide déjà couvert plus haut.
+  'plus envie de rien',
+  'envie de rien',
+  'rien ne me fait plus envie',
+  'je suis vide',
+  'complètement vide',
+  //
+  // Perte de contrôle ou de repère sur soi-même.
+  'je perds pied',
+  "j'ai perdu pied",
+  'je perds le contrôle',
+  'je ne me reconnais plus',
+  'je ne sais plus qui je suis',
+  //
+  // Désespoir direct, ancré à la première personne pour éviter qu'un mot
+  // isolé ("insupportable", "invivable") ne déclenche sur n'importe quel
+  // objet ou situation extérieure sans rapport avec la personne elle-même.
+  'je suis désespéré',
+  'je suis désespérée',
+  'ma vie est invivable',
+  'ma vie est insupportable',
 ];
 
 // Signal par CO-OCCURRENCE, pas par phrase isolée — cas signalé par Erwann
@@ -317,7 +402,7 @@ const PHRASES_EPUISEMENT = [
 // de ses propres pulsions inhabituelles. Chaque mot reste inoffensif seul ;
 // c'est la combinaison qui compte, et elle doit apparaître dans le MÊME
 // message, pas seulement la même conversation.
-const MOTS_PEUR = compiler(['peur']);
+const MOTS_PEUR = compiler(['peur', 'terreur', 'effroi']);
 const MOTS_PULSION_INQUIETANTE = compiler([
   'envie bizarre',
   'envies bizarres',
@@ -328,13 +413,21 @@ const MOTS_PULSION_INQUIETANTE = compiler([
   'envie inquiétante',
   'peur de mes pulsions',
   'peur de moi',
+  // Élargi le 11/09/2026, même famille de signal : une pulsion, une pensée
+  // ou une idée qualifiée d'étrange/bizarre reste gênante à nommer par un
+  // mot précis, quel que soit le mot que la personne choisit pour la dire.
+  'pulsion étrange',
+  'pulsions étranges',
+  'pensée bizarre',
+  'pensées bizarres',
+  'idée bizarre',
+  'idées bizarres',
 ]);
 
 const MOTIFS_FORTS = compiler(PHRASES_FORTES);
 const MOTIFS_PLAN = compiler(PHRASES_PLAN);
 const MOTIFS_MOYENS = compiler(PHRASES_MOYENS);
 const MOTIFS_MODERES = compiler(PHRASES_MODEREES);
-const MOTIFS_EPUISEMENT = compiler(PHRASES_EPUISEMENT);
 
 function chercher(texteNormalise: string, motifs: Motif[]): string[] {
   return motifs.filter(({ regex }) => regex.test(texteNormalise)).map(({ phrase }) => phrase);
@@ -362,12 +455,6 @@ export function detecterCrise(messagesPersonne: string[]): ResultatDetectionCris
 
   for (const texte of normalises) {
     chercher(texte, MOTIFS_MODERES).forEach((phrase) => trouves.add(phrase));
-  }
-  const messagesAvecEpuisement = normalises.filter(
-    (texte) => chercher(texte, MOTIFS_EPUISEMENT).length > 0,
-  ).length;
-  if (messagesAvecEpuisement >= 2) {
-    trouves.add('épuisement extrême répété');
   }
   const messageAvecPeurEtPulsion = normalises.some(
     (texte) => chercher(texte, MOTS_PEUR).length > 0 && chercher(texte, MOTS_PULSION_INQUIETANTE).length > 0,
