@@ -27,6 +27,13 @@ export default function PageAccueil() {
         Ce projet est encore en construction et n&apos;a pas encore été validé par un professionnel
         de santé mentale — voir TODO.md dans le dépôt.
       </p>
+
+      <a
+        href="/chat"
+        className="mt-2 inline-flex min-h-[44px] w-fit items-center rounded-xl border border-line px-4 text-lg text-ink"
+      >
+        Ouvrir l&apos;aperçu de conversation (privé)
+      </a>
     </main>
   );
 }
