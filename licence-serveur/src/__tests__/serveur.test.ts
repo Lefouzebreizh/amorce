@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fabriquerCle, referenceDeLaCle } from '../cles.ts';
 import { traiter, type Base, type Reglages } from '../index.ts';
@@ -275,4 +276,44 @@ test('la remise ne s’ouvre qu’aux origines nommées', async () => {
     new Request('https://licence/remise?session=cs_test_origine_003', { headers: { Origin: 'https://ailleurs.example' } }), r,
   );
   assert.equal(inconnue.headers.get('access-control-allow-origin'), null);
+});
+
+/*
+ * La liste des origines n'est pas du code, et c'est pourquoi rien ne la gardait.
+ *
+ * Mesuré le 11/09/2026 : les deux serveurs portaient
+ * `ORIGINES = "https://amorce.vercel.app"`, une adresse qui appartient à un
+ * autre compte Vercel. Posée telle quelle en production, elle **ferme** le
+ * partage au vrai studio — donc une vérification de licence qui échoue dans le
+ * navigateur, sans message, sans rouge nulle part — et l'**ouvre** à un
+ * inconnu. Le défaut a vécu des jours au milieu d'une suite verte : les tests
+ * ci-dessus se donnent leurs propres origines fictives, si bien qu'aucun ne
+ * regardait jamais la valeur réellement livrée.
+ *
+ * Ce test-ci regarde le fichier de configuration lui-même, comme
+ * `artisan-express/tests/charte.test.ts` relit son voisin en texte. Il ne sait
+ * pas quelle est la bonne adresse — il refuse celles dont on a la preuve
+ * qu'elles sont fausses, et la forme qui n'en est pas une.
+ */
+test('les origines livrées ne portent aucune adresse qui n’est pas à nous', () => {
+  const config = readFileSync(new URL('../../wrangler.toml', import.meta.url), 'utf8');
+  const ligne = config.split(/\r?\n/).find((l) => l.trimStart().startsWith('ORIGINES'));
+  assert.ok(ligne, 'wrangler.toml ne déclare plus ORIGINES');
+
+  const valeur = ligne.slice(ligne.indexOf('=') + 1).trim().replace(/^"|"$/g, '');
+  const origines = valeur.split(',').map((o) => o.trim()).filter(Boolean);
+
+  assert.ok(origines.length > 0, 'ORIGINES est vide : le partage se fermerait à tout le monde');
+
+  for (const origine of origines) {
+    assert.ok(origine.startsWith('https://'), `origine sans https : ${origine}`);
+    assert.ok(!origine.endsWith('/'), `origine avec barre finale : ${origine} — l’en-tête Origin n’en porte jamais`);
+    // Un `<projet>.vercel.app` nu n'est à nous dans aucun cas mesuré : ces
+    // sous-domaines sont globaux, et les noms communs sont déjà pris.
+    assert.doesNotMatch(
+      origine,
+      /^https:\/\/(amorce|iptv|coffre|artisan-express)\.vercel\.app$/,
+      `${origine} est un sous-domaine court qui appartient à un autre compte — voir second-brain/lecons/2026-09-10-un-sous-domaine-vercel-app-court-nest-pas-le-votre.md`,
+    );
+  }
 });

@@ -108,10 +108,25 @@ n'est toujours pas à nous : `get_project` ne lui donne que
 `-git-main`. **Une adresse qui sert un contenu plausible n'est pas une preuve de
 possession** ; les `domains` du projet en sont une.
 
-**La forme qui vaut, donc :** toutes nos adresses Vercel sans domaine propre
-s'écrivent `<projet>-erwannchevallier-6916s-projects.vercel.app`, ou portent un
-suffixe aléatoire (`-ashy`, `-puce`) pour un dépôt de fichiers. Un
-`<projet>.vercel.app` nu n'est à nous dans **aucun** cas mesuré ici.
+**La forme qui vaut, donc :** un `<projet>.vercel.app` **nu** n'est à nous dans
+aucun cas mesuré ici. Ce qui l'est : la forme longue
+`<projet>-erwannchevallier-6916s-projects.vercel.app`, et **tout nom court
+portant un suffixe** — `-five`, `-ashy`, `-puce`.
+
+**Cette dernière moitié a été écrite trop étroite, et corrigée le lendemain.**
+Le premier jet réservait le suffixe aléatoire aux dépôts de fichiers. Faux :
+`get_project` sur `amorce` — un projet **lié à Git** — rend trois domaines, dont
+`amorce-five.vercel.app`, qui sert le studio. C'est l'adresse la plus courte que
+nous ayons, et celle à donner.
+
+**Le plus instructif est comment l'erreur a tenu une journée.** Cette leçon-ci
+énonce que la preuve de possession est la liste `domains`, et la session qui
+l'écrivait ne l'a pas demandée pour `amorce` : elle l'a fait pour
+`artisan-express` et `iptv`, puis a déduit l'adresse du studio d'une requête
+`curl` qui répondait. Elle a donc donné deux fois une adresse trois fois trop
+longue, en croyant appliquer sa propre règle. **Une règle née d'un cas doit
+d'abord être repassée sur ce cas-là** — c'est l'endroit qu'on saute, parce qu'on
+croit le connaître.
 
 ## Ce qui n'est pas mesuré
 

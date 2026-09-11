@@ -2657,7 +2657,7 @@ Les sous-domaines `*.vercel.app` sont globaux : un nom commun est pris par le
 premier projet de la plateforme qui le demande, et le nôtre reçoit alors la
 forme longue. Le studio est servi à :
 
-https://amorce-erwannchevallier-6916s-projects.vercel.app
+https://amorce-five.vercel.app
 
 Rien n'est cassé côté tableau de bord, et c'est ce qui rend le piège muet — il
 n'y a pas d'erreur à voir, seulement une adresse qui répond 200 et ressemble à
@@ -2666,11 +2666,26 @@ titre** : `curl -s <adresse> | grep -o '<title>[^<]*</title>'`. Sondés le
 même jour, **aucun** des noms courts n'est à nous — `amorce`,
 `artisan-express` et `iptv` servent trois sites étrangers, et le second sert
 une page si plausible qu'on serait tenté de corriger un README qui a raison.
-La forme qui vaut est donc
-`<projet>-erwannchevallier-6916s-projects.vercel.app`, ou un suffixe aléatoire
-(`-ashy`, `-puce`) pour un dépôt de fichiers ; ce que confirment les `domains`
-rendus par `get_project`, qui sont la seule preuve de possession — jamais le
-contenu servi. Deux endroits
+Ce que confirment les `domains` rendus par
+`get_project`, qui sont la seule preuve de possession — jamais le contenu
+servi.
+
+**Et c'est ce même appel qui a corrigé la correction, le 11/09/2026.** Le
+paragraphe ci-dessus donnait la forme longue comme « l'adresse du studio », et
+concluait qu'aucun nom court n'est à nous. `get_project` sur `amorce` rend
+**trois** domaines, dont **`amorce-five.vercel.app`** — un nom court, avec le
+suffixe que Vercel accole quand le nom nu est déjà pris, et il est bien à nous :
+il sert la page d'accueil comme la page du studio. La phrase « un suffixe aléatoire pour un
+**dépôt de fichiers** » était donc trop étroite : ce suffixe arrive aussi sur un
+projet **lié à Git**, et c'est le cas d'Amorce.
+
+Ce qu'il faut en retenir dépasse l'adresse : la session qui a écrit cette règle
+— « la preuve de possession est la liste `domains` » — **ne l'avait pas
+appliquée au projet dont elle parlait**. Elle a sondé `artisan-express` et
+`iptv`, pas `amorce`, et a donné pendant deux messages une adresse trois fois
+plus longue que nécessaire. Une règle écrite dans la foulée d'une découverte ne
+s'applique pas rétroactivement à la découverte elle-même : **repasser sur le cas
+d'origine est le premier geste, pas le dernier.** Deux endroits
 du dépôt citaient encore la mauvaise, et l'un d'eux n'est pas de l'archive :
 `comptes-serveur/README.md` la donne en exemple pour le secret `ADRESSE_SITE`,
 **celui qui construit le lien de connexion envoyé par courriel** — posé tel

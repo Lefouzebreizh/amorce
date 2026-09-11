@@ -46,6 +46,7 @@ commandes=(
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
   "Studio audio : python3 -m unittest discover -s archives-backlog/mon-app-audio/tests"
   "Conseiller Patrimoine : cd conseiller-patrimoine && python3 -m unittest discover -s tests"
+  "Moteur administratif : cd moteur-administratif && python3 -m unittest discover -s tests"
   "Bilan Patrimoine : cd bilan-patrimoine && npm test"
   "Motion : (dans motion/) npm test, npm run typecheck — jamais `build`, qui rend une vidéo"
   "Chaîne de montage : python3 -m unittest discover -s montage-auto/tests"

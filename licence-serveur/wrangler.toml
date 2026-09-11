@@ -4,8 +4,18 @@ compatibility_date = "2026-08-01"
 
 # Les origines autorisées à interroger /etat. Une liste, jamais « * » :
 # sinon n'importe quel site peut interroger le serveur avec la clé d'un autre.
+# **`amorce.vercel.app` n'est pas à nous** — corrigé le 11/09/2026. Ce
+# sous-domaine court sert le site d'un autre compte : les `*.vercel.app` sont
+# globaux, et le premier projet de la plateforme à demander un nom commun le
+# garde. Posée telle quelle, cette liste laissait entrer un inconnu et
+# **fermait le partage au vrai studio** — un refus CORS silencieux, donc une
+# vérification de licence qui échoue dans le navigateur sans rien afficher.
+# Les trois adresses ci-dessous sont celles que `get_project` donne pour le
+# projet `amorce`, et c'est la seule preuve de possession qui vaille : le
+# contenu servi n'en est pas une. Le jour où un domaine propre est délégué,
+# il s'ajoute ici — sinon le studio cesse d'être servi par cette liste.
 [vars]
-ORIGINES = "https://amorce.vercel.app"
+ORIGINES = "https://amorce-five.vercel.app,https://amorce-erwannchevallier-6916s-projects.vercel.app,https://amorce-git-main-erwannchevallier-6916s-projects.vercel.app"
 
 [[d1_databases]]
 binding = "BASE"
