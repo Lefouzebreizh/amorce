@@ -1211,6 +1211,29 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   n'est pas accordé d'ici. La leçon dépasse ce dossier : un doublon ne fait pas
   que dédoubler, il **couvre** ce qui manque à celui qu'on garde, et c'est en le
   retirant qu'on le voit.
+- **psy-ia/** — accompagnement conversationnel de bien-être psychologique,
+  posé le 11/09/2026 sur le même principe technique qu'`ensemble-mdph`
+  (dépôt séparé, hors de portée d'ici) : React, fonction Edge Supabase,
+  Vercel. Écarté du `tsconfig.json` de la racine, comme les autres projets à
+  pile propre.
+  **Exigence fondatrice, non négociable : la sécurité ne repose jamais sur
+  le LLM seul.** Quatre couches indépendantes, détaillées dans
+  `psy-ia/SECURITY.md` : détection de crise déterministe hors LLM
+  (`src/lib/crisisDetection.ts`, mots-clés et motifs, aucun appel réseau,
+  tourne **avant** tout appel au modèle et peut intercepter la réponse sans
+  qu'un jeton n'ait été généré), prompt système anti-sycophancie
+  (`src/lib/systemPrompt.ts`), limites structurelles de session
+  (`src/lib/sessionLimits.ts`, à l'opposé d'un modèle qui maximiserait le
+  temps passé), et une revue humaine par un professionnel de santé mentale
+  qu'aucun code ne peut remplacer.
+  **Squelette architectural, pas un produit livrable** : la liste de
+  mots-clés de la couche 1 reprend telle quelle celle de la note
+  d'initialisation, jamais validée cliniquement ; le fournisseur LLM
+  (Claude, dans `supabase/functions/repondre/`) est provisoire ; le seuil 2
+  de la couche 3 (détresse répétée entre sessions) suppose un projet
+  Supabase qui n'existe pas encore. Tout est écrit dans `psy-ia/TODO.md`, et
+  tant que cette liste n'est pas cochée, ce projet ne doit recevoir aucun
+  vrai utilisateur, même en bêta.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.

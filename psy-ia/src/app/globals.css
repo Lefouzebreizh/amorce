@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+/* Palette minimale, reprise du fond quasi noir commun aux produits du
+   studio (voir CLAUDE.md racine, §2 bis) — pas encore d'accent propre à ce
+   projet, à choisir une fois l'interface du parcours guidé posée. */
+@theme {
+  --color-paper: #0f1115;
+  --color-ink: #f2f1ee;
+  --color-ink-soft: #9ea3b0;
+  --color-line: #262a33;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: system-ui, sans-serif;
+}

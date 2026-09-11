@@ -1,0 +1,59 @@
+# Barrière de Psy IA.
+#
+# Même raison que TITAN Builder et Le Coffre : projet Next.js indépendant,
+# niché dans un dépôt qui en porte d'autres. `npm ci` **dans** `psy-ia`, et
+# rien d'autre installé à la racine — le runner n'a que ce dossier, un paquet
+# oublié dans son propre `package.json` s'y verrait, pas ici.
+#
+# Ce contrôle ne garde que la mécanique (le code fait ce qu'il annonce). Il
+# ne dit rien de la validation clinique de la liste de mots-clés ni du prompt
+# système — voir psy-ia/SECURITY.md et psy-ia/TODO.md, qu'aucun vert ici ne
+# remplace.
+
+name: Psy IA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'psy-ia/**'
+      - '.github/workflows/psy-ia.yml'
+  pull_request:
+    paths:
+      - 'psy-ia/**'
+      - '.github/workflows/psy-ia.yml'
+
+jobs:
+  verifier:
+    name: Psy IA
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: psy-ia
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: psy-ia/package-lock.json
+
+      - name: Installer les dépendances du projet
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typage
+        if: '!cancelled()'
+        run: npm run typecheck
+
+      - name: Tests
+        if: '!cancelled()'
+        run: npm test
+
+      - name: Build
+        if: '!cancelled()'
+        run: npm run build

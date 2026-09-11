@@ -41,7 +41,7 @@ Une session de tri qui rencontre un en-tête `De :` passe son chemin.
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt-deux chantiers actifs, plus un en sommeil, et sept
+Ce dépôt héberge vingt-trois chantiers actifs, plus un en sommeil, et sept
 ressources transverses qui ne sont pas des projets mais servent à tous. Une
 idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un
 front de plus. La liste vieillit vite — recompter avant de noter.
@@ -75,6 +75,7 @@ autre, et deux paires ont **ré-implémenté la même chose sans le savoir**.
 | **Conseiller Patrimoine** (`conseiller-patrimoine/`) | Vue d'ensemble du patrimoine et rééquilibrage, en lecture seule stricte. | Python | actif |
 | **Bilan Patrimoine** (`bilan-patrimoine/`) | Le produit grand public : diagnostic gratuit puis suivi payant. Lot 1 — calcul, barèmes et texte. | TypeScript | actif |
 | **Le Coffre** (`le-coffre/`) | Coffre-fort de documents chiffré côté navigateur, multi-utilisateurs. Productisation du coffre de Life-Organizer. | Next.js 16, Supabase | actif |
+| **Psy IA** (`psy-ia/`) | Accompagnement conversationnel de bien-être psychologique — détection de crise déterministe hors LLM. Squelette architectural, pas encore validé pour un vrai utilisateur (voir `psy-ia/TODO.md`). | Next.js 16, Supabase | actif |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | en sommeil |
 
 ## Moteurs techniques partagés
