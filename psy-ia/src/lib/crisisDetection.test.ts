@@ -358,6 +358,20 @@ test('isolement et sentiment de fardeau élargis déclenchent le niveau modéré
   }
 });
 
+// « fardeau » est le mot le plus courant pour ce signal et manquait —
+// trouvé en testant en production juste après la fusion du bloc ci-dessus :
+// « j'ai l'impression d'être un fardeau pour ma famille » ne déclenchait pas.
+test('« fardeau » déclenche le niveau modéré', () => {
+  const exemples = [
+    'je suis un fardeau',
+    "j'ai l'impression d'être un fardeau pour ma famille",
+    'un fardeau pour tout le monde',
+  ];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
 test("perte d'élan et anhédonie déclenchent le niveau modéré", () => {
   const exemples = ['plus envie de rien', 'rien ne me fait plus envie', 'je suis vide', 'complètement vide'];
   for (const exemple of exemples) {
