@@ -64,11 +64,30 @@ export async function traiterMessage(
     };
   }
 
+  // Une clé qui contient un espace ou un saut de ligne n'est jamais valide
+  // — c'est le signe d'un copier-coller accidentel (valeur dupliquée, retour
+  // à la ligne collé avec). Sans ce garde-fou, `fetch` plante avec un
+  // `TypeError: Headers.append: … is an invalid header value` qui ne dit
+  // rien de la cause, et le message d'erreur brut finit dans les journaux —
+  // exactement l'endroit où une clé ne doit jamais apparaître deux fois.
+  const cleNettoyee = cleAnthropic.trim();
+  if (/\s/.test(cleNettoyee)) {
+    return {
+      corps: {
+        reponse: '',
+        crise: false,
+        erreur:
+          "ANTHROPIC_API_KEY contient un espace ou un saut de ligne — probablement collée en double. Revoir la variable d'environnement côté Vercel.",
+      },
+      statut: 500,
+    };
+  }
+
   // --- Couche 2 : prompt système anti-sycophancie, puis appel au modèle. ---
   const reponseAnthropic = await appelerLlm('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'x-api-key': cleAnthropic,
+      'x-api-key': cleNettoyee,
       'anthropic-version': '2023-06-01',
       'content-type': 'application/json',
     },
