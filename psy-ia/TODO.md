@@ -23,6 +23,21 @@ tant qu'elle ne l'est pas, personne d'externe à cette adresse.
       vivre »), et la couche 2 resserrée vers une validation empathique mais
       objective ancrée dans les TCC. Ces deux ajouts restent, comme le reste
       de la liste, non validés cliniquement.
+      **Faux négatif réel corrigé le 11/09/2026** : « j'ai des idées très
+      noires », tapé par Erwann en production, n'avait rien déclenché — deux
+      causes cumulées (« idées noires » absent de toute liste, et un simple
+      intensificateur comme « très » cassait la contiguïté stricte exigée
+      entre les mots d'un motif). Une batterie de vingt formulations
+      (directes, indirectes, avec fautes, avec intensificateurs) a été
+      rejouée après coup et a trouvé six trous supplémentaires, tous
+      corrigés dans la foulée. **Limite connue et assumée, non corrigée** :
+      la tolérance ajoutée ne couvre qu'un mot intercalé et les lettres
+      répétées (« mourrrir ») — une faute qui change un mot
+      ailleurs (« veu » pour « veux », « finire » pour « finir ») reste
+      invisible. Corriger ça demanderait une tolérance aux fautes de frappe
+      par mot (distance de Levenshtein ou approchant), qui n'existe pas
+      aujourd'hui et qui est exactement le genre de calibrage qui doit
+      passer par le professionnel de la couche 4, pas être décidé seul.
 - [ ] Contact professionnel de santé mentale trouvé pour la revue du prompt
       système et du message de crise (couche 4, voir SECURITY.md).
 - [x] **Choix du fournisseur LLM — tranché le 11/09/2026 : Claude, et lui

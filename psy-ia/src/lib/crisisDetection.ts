@@ -48,6 +48,10 @@ function normaliser(texte: string): string {
     .replace(/(.)\1+/g, '$1')
     .replace(/\bjeveux?\b/g, 'je veux')
     .replace(/\bjve\b/g, 'je veux')
+    // Trouvé le 11/09/2026 en confrontant la liste à une batterie de
+    // formulations réalistes : « jv en finir » ne matchait pas, la
+    // contraction n'ayant pas été anticipée à côté de « jve ».
+    .replace(/\bjv\b/g, 'je veux')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -59,6 +63,16 @@ interface Motif {
   regex: RegExp;
 }
 
+// Mots que la tolérance d'un mot intercalé (ci-dessous) refuse d'avaler.
+// Sans cette exclusion, « je veux mourir » matchait aussi « je NE veux PAS
+// mourir » — deux négations, une de chaque côté du verbe, chacune passant
+// pour le mot intercalé toléré d'un des deux intervalles du motif, et
+// inversant complètement le sens de la phrase. Trouvé en écrivant le test de
+// non-régression de la négation directe, qui passait au niveau FORT au lieu
+// du MODÉRÉ attendu.
+const PARTICULES_NEGATION_EXCLUES = ['ne', 'pas', 'plus', 'jamais', 'guere', 'point'];
+const NEGATION_EXCLUE = PARTICULES_NEGATION_EXCLUES.join('|');
+
 /**
  * Compile des phrases en motifs. La phrase subit exactement la même
  * normalisation que le message reçu, puis ses espaces deviennent « une ou
@@ -69,7 +83,21 @@ interface Motif {
 function compiler(phrases: string[]): Motif[] {
   return phrases.map((phrase) => ({
     phrase,
-    regex: new RegExp(`\\b${normaliser(phrase).replace(/ /g, '\\s+')}\\b`),
+    // Un mot intercalé est toléré entre deux mots du motif — trouvé en
+    // production le 11/09/2026 : « j'ai des idées très noires » ne
+    // déclenchait pas, le motif « idées noires » exigeant une contiguïté
+    // stricte qu'un simple intensificateur ("très", "vraiment", "un peu")
+    // suffit à casser. Le principe du projet est qu'en cas de doute on
+    // déclenche ; exiger l'énumération de chaque intensificateur possible
+    // pour chaque motif serait l'inverse. Le mot toléré ne peut pas être une
+    // négation (voir PARTICULES_NEGATION_EXCLUES ci-dessus) — sans quoi la
+    // tolérance elle-même deviendrait le trou par lequel une négation se
+    // glisse sans être vue. Le reste n'ajoute que des correspondances par
+    // rapport à l'ancienne contiguïté stricte : un motif qui matchait avant
+    // matche toujours.
+    regex: new RegExp(
+      `\\b${normaliser(phrase).replace(/ /g, `\\s+(?:(?!(?:${NEGATION_EXCLUE})\\b)\\S+\\s+)?`)}\\b`,
+    ),
   }));
 }
 
@@ -91,6 +119,20 @@ const PHRASES_FORTES = [
   'je pense au suicide',
   'je veux disparaître',
   'je veux partir pour de bon',
+  // Ajoutées le 11/09/2026 : aussi directes que « je pense au suicide »,
+  // et absentes jusqu'ici — un vrai trou, pas une nuance.
+  'idées suicidaires',
+  'pensées suicidaires',
+  'envie de me suicider',
+  // Trouvés le 11/09/2026 en confrontant la liste à une batterie de
+  // formulations réalistes (pas seulement le cas signalé) : « je veux
+  // disparaître » exige « veux », et ne matche donc pas « j'aimerais
+  // disparaître pour de bon » — même tournure suffixée que « je veux partir
+  // pour de bon » deux lignes plus haut, sans exiger de verbe précis avant.
+  'disparaître pour de bon',
+  // Euphémisme direct pour la mort volontaire, équivalent à « disparaître »
+  // mais avec un verbe différent — absent jusqu'ici.
+  'plus exister',
 ];
 
 // Mention d'un plan concret ou d'un moyen — niveau fort lui aussi.
@@ -148,6 +190,30 @@ const PHRASES_MODEREES = [
   // moindre doute, sans sur-classer un motif plus ambigu que les autres.
   'veux pas mourir',
   'veut pas mourir',
+  // Même négation inversée, avec « jamais » plutôt que « pas » — trouvée en
+  // écrivant un test de non-régression pour la tolérance ci-dessus, restée
+  // absente jusqu'ici pour la même raison que « pas » avant elle.
+  'veux jamais mourir',
+  'veut jamais mourir',
+  // Cas signalé par Erwann le 11/09/2026 : « j'ai des idées très noires »,
+  // tapé en production, n'a rien déclenché — absent de toute liste. « idées
+  // noires » est un euphémisme français établi pour les idées suicidaires,
+  // mais reste plus polysémique que « je pense au suicide » (peut aussi
+  // désigner des pensées sombres sans lien avec le suicide) : posé en
+  // MODÉRÉ, au même niveau que « veux pas mourir » plus haut, pas en FORT.
+  // Le message figé se déclenche de toute façon à l'identique aux deux
+  // niveaux — seul le journal d'audit distingue les deux.
+  'idées noires',
+  'pensées noires',
+  'idées sombres',
+  'pensées sombres',
+  // Trouvés le 11/09/2026 en confrontant la liste à une batterie de
+  // formulations réalistes, distinctes de « je vois pas comment continuer »
+  // déjà couvert (celui-ci exige « comment ») : trois tournures de
+  // désespoir tout aussi courantes, absentes jusqu'ici.
+  'aucune raison de continuer',
+  'goût à rien',
+  'à quoi bon continuer',
 ];
 
 // Épuisement extrême : ne déclenche que s'il est exprimé de façon RÉPÉTÉE

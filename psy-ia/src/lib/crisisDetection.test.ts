@@ -138,3 +138,81 @@ test('les motifs rendus sont les phrases de la liste, jamais le texte de la pers
   const resultat = detecterCrise(['je veux mourir, je suis désolée de te dire ça comme ça']);
   assert.deepEqual(resultat.motifs, ['je veux mourir']);
 });
+
+// Régression du 11/09/2026 : ce message exact, tapé en production, n'avait
+// rien déclenché. Deux causes cumulées — voir crisisDetection.ts et
+// second-brain/lecons/ pour le détail : « idées noires » absent de toute
+// liste, et un motif à deux mots exige une contiguïté stricte qu'un simple
+// intensificateur suffit à casser.
+test('"j\'ai des idées très noires", le message exact resté sans détection en production, déclenche désormais', () => {
+  const resultat = detecterCrise(["j'ai des idées très noires"]);
+  assert.equal(resultat.niveau, 'modere');
+  assert.ok(resultat.motifs.includes('idées noires'));
+});
+
+test('les variantes directes autour de « idées noires » déclenchent aussi', () => {
+  const exemples = ['des idées noires', 'plein de pensées noires', "j'ai des idées sombres", 'des pensées sombres'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test('« idées suicidaires » et « pensées suicidaires » déclenchent le niveau fort, sans intensificateur ou avec', () => {
+  const exemples = ['des idées suicidaires', "j'ai des pensées suicidaires", "j'ai vraiment des idées suicidaires"];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'fort', `"${exemple}" aurait dû déclencher le niveau fort`);
+  }
+});
+
+test('un seul mot intercalé entre deux mots d\'un motif ne casse plus la détection', () => {
+  // Le motif exact "je veux mourir" reste contigu ici, mais on vérifie le
+  // mécanisme général sur un autre motif à deux mots.
+  assert.equal(detecterCrise(['je veux vraiment en finir']).niveau, 'fort');
+  // "plus envie de vivre" avec "aucune" intercalé entre "plus" et "envie" —
+  // sans la tolérance, cette tournure très courante ("plus aucune envie de
+  // vivre") ne matcherait pas.
+  assert.equal(detecterCrise(["j'ai plus aucune envie de vivre"]).niveau, 'fort');
+});
+
+test('deux mots ou plus intercalés ne déclenchent toujours pas — la tolérance reste bornée à un seul mot', () => {
+  const resultat = detecterCrise(['des idées un peu tristes et noires parfois']);
+  assert.equal(resultat.niveau, 'aucun');
+});
+
+// Piège trouvé en écrivant la tolérance ci-dessus, avant même la fusion :
+// sans exclusion, « je veux mourir » (FORT) matchait aussi « je ne veux pas
+// mourir » (négation directe, MODÉRÉ) — « ne » et « pas » passaient chacun
+// pour le mot intercalé toléré d'un des deux intervalles du motif FORT,
+// inversant le sens de la phrase. Couvert aussi par le test de négation
+// directe plus haut ; celui-ci documente explicitement pourquoi.
+test('la tolérance à un mot intercalé ne doit jamais avaler une négation', () => {
+  assert.equal(detecterCrise(['je ne veux pas mourir']).niveau, 'modere');
+  assert.equal(detecterCrise(['je ne veux jamais mourir']).niveau, 'modere');
+});
+
+// Six cas trouvés le 11/09/2026 en confrontant la liste à une batterie de
+// vingt formulations réalistes (directes, indirectes, avec fautes, avec
+// intensificateurs) — demandée par Erwann après le bug signalé, pour ne pas
+// se contenter d'un seul cas corrigé. Chacun documente un trou distinct.
+test('« disparaître pour de bon » déclenche sans exiger le verbe « veux »', () => {
+  assert.equal(detecterCrise(["j'aimerais disparaître pour de bon"]).niveau, 'fort');
+});
+
+test('« ne plus exister » déclenche, comme équivalent de « disparaître »', () => {
+  assert.equal(detecterCrise(['je voudrais juste ne plus exister']).niveau, 'fort');
+});
+
+test('trois tournures de désespoir supplémentaires déclenchent le niveau modéré', () => {
+  const exemples = [
+    'je vois plus aucune raison de continuer',
+    "j'ai plus goût à rien",
+    'à quoi bon continuer comme ça',
+  ];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test('la contraction phonétique « jv » (comme « jve ») est reconnue', () => {
+  assert.equal(detecterCrise(['jv en finir ce soir']).niveau, 'fort');
+});
