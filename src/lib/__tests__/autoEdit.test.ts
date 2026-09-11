@@ -8,6 +8,20 @@ function asset(id: string, duration: number): MediaAsset {
   return { id, name: `${id}.mp4`, kind: 'video', url: `blob:${id}`, duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
 }
 
+/*
+ * Un rush **sans** bande son.
+ *
+ * `asset()` en pose une, et c'est le cas courant. Mais depuis le 11/09/2026
+ * l'express ne plaque plus de bruitage par-dessus un rush qui sonne déjà —
+ * le propriétaire avait entendu ces souffles et les avait nommés « ridicules ».
+ * Les contrôles de ponctuation sonore ci-dessous portent donc sur des rushes
+ * muets, où poser un son est la bonne chose à faire. Le cas symétrique — rien
+ * ne se pose sur une parole — est tenu par `resultat-percu.test.ts`.
+ */
+function muet(id: string, duration: number): MediaAsset {
+  return { ...asset(id, duration), hasAudio: false };
+}
+
 function image(id: string): MediaAsset {
   return { ...asset(id, IMAGE_DURATION), name: `${id}.png`, kind: 'image', hasAudio: false };
 }
@@ -54,10 +68,17 @@ test('le premier plan démarre toujours sans transition', () => {
 });
 
 test('le montage express pose une accroche et de quoi ponctuer', () => {
-  const { captions, cues } = buildAutoEdit([asset('a', 20), asset('b', 20), asset('c', 20)]);
+  const { captions, cues } = buildAutoEdit([muet('a', 20), muet('b', 20), muet('c', 20)]);
 
-  assert.equal(captions.length, 1);
+  /*
+   * Ce contrôle attendait **un seul** sous-titre, et c'est ce qui le rendait
+   * vert sur le défaut qu'il aurait dû attraper : 2,4 s de texte sur tout le
+   * film, soit 12,8 % de couverture là où le produit en exige 55. L'accroche
+   * ouvre désormais une trame qui tient la durée — la couverture elle-même est
+   * mesurée dans `resultat-percu.test.ts`.
+   */
   assert.equal(captions[0].start, 0, 'l’accroche doit tomber sur la première image');
+  assert.ok(captions.length > 1, 'l’accroche reste seule sur toute la durée');
   assert.ok(cues.length >= 3, `${cues.length} bruitage(s) seulement`);
   assert.ok(cues.some((c) => c.time < 0.1), 'rien ne marque la première image');
 });
@@ -193,7 +214,7 @@ test('les bruitages ponctuent au lieu de tapisser', () => {
    * pénalisée par sa propre mesure.
    */
   for (const n of [6, 12, 20, 50]) {
-    const { clips, cues } = buildAutoEdit(Array.from({ length: n }, (_, i) => asset(`g${i}`, 4)));
+    const { clips, cues } = buildAutoEdit(Array.from({ length: n }, (_, i) => muet(`g${i}`, 4)));
     const duree = totalDuration(clips);
     const par10 = (cues.length * 10) / duree;
     assert.ok(par10 <= 6, `${n} rushes : ${par10.toFixed(1)} bruitages pour 10 s`);
@@ -204,7 +225,7 @@ test('les bruitages ponctuent au lieu de tapisser', () => {
 test('l’ouverture et la fin sont toujours sonorisées', () => {
   // Ce sont les deux instants qui décident : l'un fait lever les yeux, l'autre
   // appelle la boucle suivante. L'espacement ne doit jamais les emporter.
-  const { clips, cues } = buildAutoEdit(Array.from({ length: 20 }, (_, i) => asset(`h${i}`, 4)));
+  const { clips, cues } = buildAutoEdit(Array.from({ length: 20 }, (_, i) => muet(`h${i}`, 4)));
   const duree = totalDuration(clips);
   assert.ok(cues.some((c) => c.time < 0.2), 'aucun impact sur la première image');
   assert.ok(cues.some((c) => c.time > duree - 1), 'aucune note à la fin');

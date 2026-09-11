@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { alerteSurDecoupage } from '@/lib/analysis';
 import { useStudio } from '@/lib/store';
 import { formatTime } from '@/lib/media';
 import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
@@ -167,6 +168,23 @@ function Transport({ engine, playing }: { engine: PlaybackEngine; playing: boole
   const duration = useStudio((s) => s.duration());
   const disabled = clips.length === 0;
 
+  /*
+   * Le garde-fou du sur-découpage, là où le geste se fait.
+   *
+   * Rien n'indiquait quand s'arrêter de couper : le seul plancher existant,
+   * 0,3 s par plan, laisse passer cinquante coupes sur cinquante secondes.
+   * Le produit savait pourtant les juger — `analysis.ts` tient qu'un plan doit
+   * durer au moins 1,1 s — mais ne le disait qu'à la fin, dans un panneau
+   * qu'il faut aller ouvrir.
+   *
+   * Il se calcule à chaque rendu plutôt que de se retenir dans le magasin :
+   * un message rangé quelque part survit au geste qui le corrige, et il
+   * faudrait alors l'effacer à la main à chaque suppression de plan comme à
+   * chaque annulation. Celui-ci s'allume et s'éteint tout seul, parce qu'il
+   * décrit l'état plutôt qu'un évènement.
+   */
+  const alerte = alerteSurDecoupage(clips);
+
   return (
     <div
       role="group"
@@ -204,6 +222,15 @@ function Transport({ engine, playing }: { engine: PlaybackEngine; playing: boole
           ✂
         </Button>
       </div>
+
+      {alerte && (
+        <p
+          role="status"
+          className="mt-2 rounded-xl bg-raised px-3 py-2 text-[13px] leading-snug text-warn"
+        >
+          {alerte}
+        </p>
+      )}
     </div>
   );
 }

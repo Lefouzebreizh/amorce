@@ -7,6 +7,16 @@ import { DEFAULT_CINEMA, DEFAULT_CLIP, DEFAULT_MIX, type Caption, type Clip, typ
 let counter = 0;
 const nextId = () => `id${counter++}`;
 
+/*
+ * Le rush de référence est **muet**, et il ne l'était pas.
+ *
+ * Il portait `hasAudio: true` alors que les contrôles qui s'en servent parlent
+ * d'un montage muet — celui d'une voix off qu'on ajoute, celui d'une coupe
+ * qu'on ponctue. Tant que rien ne lisait ce champ, la contradiction ne coûtait
+ * rien ; depuis que la note du son et le guide comptent le son que les rushes
+ * portent eux-mêmes (11/09/2026), elle rendait ces contrôles faux. Un rush qui
+ * doit être muet le dit.
+ */
 function asset(overrides: Partial<MediaAsset> = {}): MediaAsset {
   return {
     id: 'a1',
@@ -17,7 +27,7 @@ function asset(overrides: Partial<MediaAsset> = {}): MediaAsset {
     width: 1080,
     height: 1920,
     thumbnail: '',
-    hasAudio: true,
+    hasAudio: false,
     ...overrides,
   };
 }

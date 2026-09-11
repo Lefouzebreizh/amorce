@@ -189,6 +189,62 @@ export function captionCoverage(captions: Caption[], duration: number): number {
 }
 
 /**
+ * Vrai quand les rushes du montage portent eux-mêmes du son qu'on entend.
+ *
+ * Exportée pour que `guide.ts` lise la même chose que la note : les deux
+ * décident de réclamer ou non des bruitages, et deux mesures écrites
+ * séparément se contredisent au premier réglage. Un plan coupé au silence ne
+ * compte pas — `volume` à zéro veut dire que cette bande-là n'est pas entendue.
+ */
+export function rushesSonores(project: Project): boolean {
+  return project.clips.some((clip) => {
+    if (clip.volume <= 0) return false;
+    return project.assets.find((asset) => asset.id === clip.assetId)?.hasAudio === true;
+  });
+}
+
+/**
+ * Le plan moyen sous lequel un montage cesse d'être lisible.
+ *
+ * C'est le bas de la bande que `scoreRythme` récompense déjà —
+ * `band(averageShot, 1.1, 2.8, …)`. Il est nommé ici plutôt que recopié :
+ * une borne écrite deux fois est une borne qui s'écarte au premier réglage.
+ */
+export const PLAN_MOYEN_PLANCHER = 1.1;
+
+/**
+ * Ce qu'il faut dire à quelqu'un qui vient de couper une fois de trop.
+ *
+ * Ce module savait juger un découpage depuis toujours, et ne le disait qu'à
+ * la fin, dans un panneau qu'il faut aller ouvrir. Pendant ce temps le seul
+ * garde-fou du geste lui-même était `MIN_CLIP_DURATION`, 0,3 s, qui empêche
+ * un fragment invisible et rien d'autre : cinquante coupes sur cinquante
+ * secondes le passent toutes, et le propriétaire s'est retrouvé avec une
+ * vidéo fractionnée en cinquante plans sans qu'un mot l'ait averti.
+ *
+ * Rend `null` tant qu'il n'y a rien à dire. Ce n'est pas un refus — on ne
+ * bloque pas un geste que l'utilisateur a demandé, et un découpage serré peut
+ * être exactement ce qu'il veut. C'est une phrase, au moment où elle sert
+ * encore à quelque chose.
+ */
+export function alerteSurDecoupage(clips: Project['clips']): string | null {
+  const placed = layoutClips(clips);
+  if (placed.length < 2) return null;
+
+  const duree = totalDuration(clips);
+  if (duree <= 0) return null;
+
+  const planMoyen = duree / placed.length;
+  if (planMoyen >= PLAN_MOYEN_PLANCHER) return null;
+
+  return (
+    `${placed.length} plans pour ${duree.toFixed(1)} s, soit ${planMoyen.toFixed(1)} s par plan. ` +
+    `En dessous de ${PLAN_MOYEN_PLANCHER.toFixed(1)} s un plan n’a pas le temps d’être lu : ` +
+    'annule tes dernières coupes, ou supprime les plans en trop.'
+  );
+}
+
+/**
  * Construit la courbe de tension.
  *
  * Chaque évènement de montage injecte de l'énergie qui retombe ensuite : une
@@ -320,7 +376,24 @@ export function analyzeProject(project: Project): Analysis {
   // rien ne les distingue, et n'en retenir qu'une sorte notait à zéro un
   // montage entièrement ponctué de fichiers déposés.
   const cuesPer10s = ((project.cues.length + project.samples.length) / duration) * 10;
-  const hasVoice = project.voices.some((v) => v.duration > 0);
+  /*
+   * Ce qui s'entend déjà dans le montage, voix off **et son des rushes**.
+   *
+   * Le bloc ci-dessous raconte comment la voix off a rejoint cette note : un
+   * montage entièrement porté par une voix était compté comme muet, et le
+   * guide réclamait des bruitages par-dessus une bande déjà pleine. Le son que
+   * les rushes portent eux-mêmes est le même cas, et il était resté dehors —
+   * personne n'avait regardé.
+   *
+   * Mesuré le 11/09/2026, sur un montage express de douze rushes parlants une
+   * fois que l'express a cessé de plaquer des souffles sur la parole : note
+   * son à 0 %, et le guide répondait « Ponctue tes coupes ». Le studio
+   * retirait les bruitages d'un côté et les réclamait de l'autre.
+   *
+   * Un plan coupé au silence ne compte pas : `volume` à zéro veut dire que
+   * cette bande-là n'est pas entendue.
+   */
+  const hasVoice = project.voices.some((v) => v.duration > 0) || rushesSonores(project);
 
   // Le plan le plus long donne le meilleur signal d'un montage qui s'endort.
   const longestShot = Math.max(...placed.map((p) => p.duration));
@@ -336,7 +409,8 @@ export function analyzeProject(project: Project): Analysis {
    * La voix off n'y pesait rien : un montage entièrement porté par une voix —
    * le cas de toute vidéo qui raconte quelque chose — était noté comme un
    * montage muet, et le guide continuait à réclamer des bruitages par-dessus
-   * une bande déjà pleine.
+   * une bande déjà pleine. Le son des rushes a rejoint le même apport le
+   * 11/09/2026, pour exactement la même raison : voir `rushesSonores`.
    *
    * La ponctuation garde la part principale : c'est elle qui donne le rythme,
    * et c'est le seul apport dont l'absence s'entend immédiatement.
