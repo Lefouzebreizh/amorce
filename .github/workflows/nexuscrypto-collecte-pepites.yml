@@ -1,0 +1,85 @@
+# Volet A du rejeu représentatif de NexusCrypto : un historique OHLCV pour
+# des jetons qui ont vraiment eu le profil « pépite », pas des majors.
+#
+# Erwann a bloqué le rejeu CoinMetrics BTC/ETH/LINK le 11/09/2026 : ça ne
+# mesure rien sur le comportement du moteur une fois branché sur des petites
+# capitalisations. `nexuscrypto/scripts/collecter_historique_pepites.py`
+# détaille pourquoi aucune archive publique de cotations low-cap n'existe et
+# comment ce script contourne le biais du survivant.
+#
+# Pourquoi ici et pas depuis une session : le mandataire des sessions
+# distantes refuse GeckoTerminal, DexScreener, Birdeye et DefiLlama — mesuré
+# le 11/09/2026, comme les neuf hôtes de marché du radar de pépites avant lui.
+# Un runner GitHub n'a pas ce mandataire, et c'est la même parade que
+# `radar-pepites.yml`.
+#
+# Manuel, pas planifié : ce n'est pas un flux à surveiller en continu comme le
+# radar, mais un jeu de données à reconstituer à la demande — quand la liste
+# de candidats change, ou quand un rejeu a besoin d'un historique frais.
+
+name: NexusCrypto — collecte de l'historique pépites
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  collecte:
+    name: Sonde puis collecte
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Avant de dépenser tous les candidats : un aller-retour léger. La
+      # première exécution de ce script est diagnostique, pas une formalité —
+      # la forme exacte des réponses de GeckoTerminal n'a jamais pu être
+      # vérifiée depuis une session distante (voir l'en-tête du script).
+      - name: GeckoTerminal répond-il, et se lit-il ?
+        working-directory: nexuscrypto
+        run: python3 scripts/collecter_historique_pepites.py --sonde
+
+      - name: Collecter l'historique des candidats
+        working-directory: nexuscrypto
+        run: python3 scripts/collecter_historique_pepites.py --sortie donnees_pepites
+
+      # Le pilotage se fait depuis un téléphone : le résumé s'ouvre en deux
+      # gestes sur la page du run, là où un artefact demande un
+      # téléchargement. `always()` parce qu'un tour où la sonde a crié est
+      # précisément celui qu'on veut lire.
+      - name: Poser le résultat sur la page du run
+        if: always()
+        working-directory: nexuscrypto
+        run: |
+          {
+            echo "## Collecte de l'historique pépites"
+            echo
+            if [ -d donnees_pepites ] && [ -n "$(ls -A donnees_pepites 2>/dev/null)" ]; then
+              echo "Fichiers écrits :"
+              for f in donnees_pepites/*.csv; do
+                echo "- \`$f\` ($(wc -l < "$f") lignes)"
+              done
+            else
+              echo "_Aucun fichier écrit — voir le journal de l'étape précédente._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Pas dans Git : CLAUDE.md interdit tout binaire versionné, et même en
+      # texte, un commit sur ce dépôt vaut des déploiements Vercel sur les
+      # projets liés. L'artefact garde le résultat sans toucher à l'un ni à
+      # l'autre — même raisonnement que la mémoire du radar de pépites.
+      - name: Garder les CSV en artefact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: historique-pepites
+          path: nexuscrypto/donnees_pepites/
+          if-no-files-found: warn
+          retention-days: 30

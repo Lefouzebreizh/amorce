@@ -1074,3 +1074,70 @@ baissière indépendante (type 2018) n'a été essayée. **Ce moteur n'a donc
 toujours pas ce que l'exigence du 10/09/2026 demande avant tout capital
 réel** : un backtest multi-régimes concluant, documenté dans
 `config/validation.yaml`.
+
+## 16 bis. CoinMetrics BTC/ETH/LINK ne valide rien pour un chasseur de pépites
+
+Erwann a bloqué le rejeu prévu de la section précédente sur ce point précis
+le 11/09/2026 : NexusCrypto vise des jetons dynamiquement découverts par le
+scanner (`strategy/pepites.py`), pas les majors d'une watchlist figée — les
+mesures ci-dessus, toutes sur BTC/ETH/LINK, ne disent donc rien du
+comportement du moteur une fois branché sur des petites capitalisations.
+
+**Deux choses distinctes ont besoin d'être validées, et un seul rejeu ne peut
+pas répondre aux deux.** Le comportement du *moteur* (seuil, stops ATR,
+dimensionnement) sur un prix volatil et une liquidité fine se mesure sur un
+historique OHLCV, même approximatif. La qualité du *scanner* — est-ce que sa
+note repère vraiment une pépite avant le mouvement — demande des
+**instantanés** DexScreener dans le temps (liquidité, croissance de volume,
+âge du pool), et ceux-là n'existent nulle part en historique :
+`pepites/temoin.py`, le banc d'essai du radar lui-même, l'avait déjà mesuré
+avant nous — « il n'y a pas d'historique de pépites à rejouer ».
+
+**Volet A, pour le moteur** — `nexuscrypto/scripts/collecter_historique_pepites.py`
+et le workflow `nexuscrypto-collecte-pepites.yml` (déclenchement manuel,
+runner GitHub — GeckoTerminal, DexScreener, Birdeye et DefiLlama sont tous les
+quatre refusés depuis une session distante, mesuré le 11/09/2026, même mur
+qu'au § 7 de `CLAUDE.md`). Il collecte l'historique OHLCV d'une liste
+volontairement **mixte** de jetons ayant eu le profil pépite — des survivants
+partis d'un lancement micro-cap et des effondrements documentés — pour éviter
+le biais du survivant qu'un échantillonnage sur les seuls candidats
+d'aujourd'hui produirait par construction. Les CSV rendus se lisent par
+`rejeu.donnees.lire_csv`, comme n'importe quel export CCXT ; ils ne sont
+**jamais versionnés** (`/nexuscrypto/donnees_pepites/` dans le `.gitignore`
+racine) et se reconstruisent à la demande, sur le même principe que les
+commandes `curl` déjà documentées au § 7 de `CLAUDE.md` pour CoinMetrics et
+freqtrade.
+
+**Volet B, pour le scanner — une vraie fourche, pas encore tranchée.**
+Brancher `strategy/pepites.py` dans `orchestrateur.une_passe()` a fait
+apparaître un obstacle d'architecture qui n'était pas visible avant d'y
+regarder : `data_engine.agregateur.Agregateur.contexte()` exige une série
+OHLCV (`marche.ohlcv(...)`) pour construire le moindre `Contexte`, et aucune
+plateforme CCXT ne connaît un pool DexScreener — un jeton découvert par le
+scanner n'a donc **aucun** chemin pour obtenir la série de bougies dont
+`strategy/moteur.py` a besoin pour calculer son score technique et son ATR.
+La phrase du § 4 de `CLAUDE.md` — « un actif hors watchlist reçoit exactement
+le même traitement qu'une ligne connue d'avance » — ne peut donc pas se
+réaliser telle quelle sans une décision de produit :
+
+1. **Le score du scanner devient la décision d'achat**, sans passer par
+   `strategy/moteur.py` : `Pepite.score` contre `ConfigPepites.score_minimum`
+   directement, avec un stop en pourcentage fixe (pas d'ATR, faute de
+   bougies). `chaine`/`adresse` arrivent alors correctement sur la `Decision`
+   dès l'origine, ce qui referme au passage la mine que `garde-du-bot` avait
+   trouvée en relisant PR #886.
+2. **Fabriquer une série approchée** depuis les variations 1 h/6 h/24 h que
+   DexScreener fournit, pour faire passer une pépite par le même chemin que
+   les majors — au prix d'une série qui n'est pas mesurée mais reconstruite,
+   ce que ce dépôt évite ailleurs (voir la mise en garde de CoinMetrics sur
+   ses bougies plates au § 7 de `CLAUDE.md`).
+3. **Attendre qu'une source OHLCV pour des pools DEX soit vérifiée**
+   joignable depuis le runner (le volet A ci-dessus le testera le jour de sa
+   première exécution) avant de décider laquelle des deux options précédentes
+   tient la route.
+
+Aucune des trois n'a été choisie ici : c'est exactement le genre de fourche
+que `CLAUDE.md` (§0) demande de nommer au propriétaire plutôt que de trancher
+en silence, plus large que l'écart de seuil déjà corrigé le même jour
+(`ConfigPepites.capitalisation_max_usd`, aligné de 300 M$ à 30 M$ sur
+`pepites/config/reglages.yaml`).
