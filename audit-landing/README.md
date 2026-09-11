@@ -36,21 +36,39 @@ sur une fixture dédiée :
 - `content-visibility: auto` : ne reproduit rien sur une fixture minimale —
   le rendu pleine page de Chromium gère correctement ce cas précis.
 
+**Une seconde cause réelle, indépendante, a été confirmée en testant le
+vrai site.** Le propriétaire l'a mesurée directement sur `qonto.com/fr`, sur
+sa machine : **la capture pleine page de Chromium a un plafond de hauteur
+d'image**, et `device_scale_factor=2` le fait franchir sur une page de cette
+taille — 11 311 px logiques, donc 22 622 px physiques à l'échelle 2, contre
+un plafond mesuré autour de 19 768 px physiques. Tout ce qui dépasse ce
+plafond sort blanc. C'est pour ça que `payfit.com/fr` et `pennylane.com`,
+plus courtes, ne montraient rien : elles ne l'atteignaient jamais. Les deux
+causes cohabitaient probablement sur `qonto.com/fr` — la révélation
+réversible pour certaines tranches, le plafond de hauteur pour d'autres.
+
 **Le correctif est architectural : chaque segment est désormais capturé
 pendant qu'il est réellement scrollé dans le viewport**, pas recomposé après
 coup depuis une capture unique. `capturer_et_decouper` scrolle à la position
 de chaque segment, laisse un court instant à une révélation en cours de se
 terminer, puis prend une capture du viewport à cet endroit précis — ce qui
-correspond exactement à ce qu'un utilisateur réel verrait, et règle du même
-coup `content-visibility: auto` et les animations canvas/vidéo qui ne
-peignent qu'à l'écran, sans qu'aucun des deux n'ait eu besoin d'un correctif
-séparé. Revérifié sur les quatre fixtures (cookies + lazy-loading, section
-épinglée, `content-visibility`, révélation réversible) : plus aucune tranche
-blanche.
+correspond exactement à ce qu'un utilisateur réel verrait — et une capture
+qui ne fait jamais plus que 2880×1800 px n'approche jamais le plafond de
+hauteur de Chromium. Ça règle les trois causes à la fois (révélation
+réversible, plafond de hauteur, `content-visibility: auto`) sans qu'aucune
+n'ait eu besoin d'un correctif séparé. Revérifié sur les quatre fixtures
+(cookies + lazy-loading, section épinglée, `content-visibility`, révélation
+réversible) : plus aucune tranche blanche.
 
-**Non revérifié sur `qonto.com` lui-même depuis cette session** : la
-politique réseau de cet environnement bloque toujours le site (voir plus
-bas) — à confirmer par le propriétaire, sur sa machine.
+**Mesuré sur `qonto.com/fr` lui-même par le propriétaire, sur sa machine**
+— ce que cette session ne peut toujours pas faire (mur réseau, voir plus
+bas) : plus aucune tranche vide, et deux tranches auparavant partiellement
+blanches (jusqu'à 91,9 % de blanc) se peignent désormais en entier — la
+capture par segment règle donc aussi des cas de peinture partielle, pas
+seulement les tranches totalement vides. **La vérification à l'œil sur le
+fichier final était en cours au moment d'écrire cette ligne** : ce
+paragraphe rapporte une mesure, pas encore un regard complet — voir §8 de
+`CLAUDE.md` sur la différence entre les deux.
 
 ## Utiliser
 

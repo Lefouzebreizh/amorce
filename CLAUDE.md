@@ -1309,12 +1309,18 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   fixture : une capture pleine page composite, prise depuis une seule
   position de défilement, ne peut pas satisfaire toutes les sections d'un
   site qui les révèle au scroll par une animation d'opacité réversible —
-  très répandu sur les sites de storytelling. Le correctif est architectural,
-  pas un correctif ponctuel : chaque segment est désormais capturé en étant
-  réellement scrollé dans le viewport, ce qui règle du même coup
-  `content-visibility: auto` et les animations canvas/vidéo. Non revérifié
-  sur `qonto.com` lui-même depuis cette session (même mur réseau) — détail et
-  les trois hypothèses écartées avant celle-ci dans `audit-landing/README.md`.
+  très répandu sur les sites de storytelling. **Une seconde cause,
+  indépendante, a été mesurée en parallèle directement sur le vrai site, par
+  le propriétaire sur sa machine** : la capture pleine page de Chromium a un
+  plafond de hauteur d'image, franchi par `device_scale_factor=2` sur une
+  page de cette taille (11 311 px logiques → 22 622 px physiques, contre un
+  plafond mesuré autour de 19 768). Le correctif est architectural, pas
+  ponctuel, et règle les deux à la fois — plus `content-visibility: auto` —
+  puisqu'une capture par segment ne fait jamais plus que 2880×1800 px :
+  chaque segment est désormais capturé en étant réellement scrollé dans le
+  viewport. **Mesuré sur la page de Qonto elle-même : plus aucune tranche
+  vide** — la vérification à l'œil du fichier final restait en cours au
+  moment d'écrire cette ligne, détail dans `audit-landing/README.md`.
   Pas encore fait : le prompt d'analyse, le rapport, la page de vente, Stripe.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
