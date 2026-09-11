@@ -315,6 +315,25 @@ test('effondrement et craquage déclenchent le niveau modéré', () => {
     "je m'écroule",
     "je n'y arrive plus",
     "j'abandonne",
+    'je suis perdu',
+    'je me sens perdue',
+  ];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+// Trou trouvé le 11/09/2026 en testant en production, juste après la fusion
+// du bloc ci-dessus : seule la forme « je suis effondrée » était couverte,
+// pas « je me sens effondrée » — pourtant au moins aussi courante à l'oral.
+test('« je me sens X » déclenche aussi bien que « je suis X », pour chaque état ajouté', () => {
+  const exemples = [
+    'je me sens complètement effondrée depuis ce matin',
+    'je me sens anéanti',
+    'je me sens brisée',
+    'je me sens submergé',
+    'je me sens vide',
+    'je me sens désespérée',
   ];
   for (const exemple of exemples) {
     assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
