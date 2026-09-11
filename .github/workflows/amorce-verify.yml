@@ -67,6 +67,22 @@ jobs:
       - name: Installer Chromium
         run: npx playwright install --with-deps chromium
 
+      # Quatre contrôles du parcours mesurent le fichier exporté avec ffmpeg :
+      # cadence réelle, images sans relief, silence en cours de montage, vrai
+      # pic. L'image `ubuntu-latest` ne le fournit pas, et `verify.mjs` les
+      # sautait alors **en silence** : mesuré ici même le 11/09/2026, le bilan
+      # annonçait « 112/112 vérifications passées » et sortait en zéro sur un
+      # parcours qui en porte 120 — huit contrôles, quatre par profil, avaient
+      # quitté le dénominateur. C'est le « 112/112 verts » de la PR #903. Depuis le
+      # 11/09/2026, un saut fait échouer le parcours — cette étape est donc ce
+      # qui le garde vert pour la bonne raison, et non l'inverse.
+      - name: Installer ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
+
       # Les rushes de test sont fabriqués, jamais versionnés — le dépôt
       # n'accepte aucun binaire. Vingt secondes.
       - name: Fabriquer les rushes de test
