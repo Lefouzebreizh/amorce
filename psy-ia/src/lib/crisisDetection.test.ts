@@ -408,6 +408,38 @@ test('la perte de contrôle ou de repère sur soi-même déclenche le niveau mod
   }
 });
 
+// Cas exact du retest personnel d'Erwann le 11/09/2026, avec et sans la
+// négation « ne » que la personne peut très bien omettre à l'oral.
+test('« je ne sais plus quoi faire » et sa forme orale sans négation déclenchent le niveau modéré', () => {
+  const exemples = ['pas bien ce soir je ne sais plus quoi faire', 'je sais plus quoi faire'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+// Audit du 11/09/2026 des signaux ambigus/diffus, à la demande d'Erwann :
+// « à quoi bon », dit seul sans nommer ce qu'il n'y a plus lieu de
+// continuer, ne déclenchait pas — seule la forme suivie de « continuer »
+// l'était.
+test('« à quoi bon » dit seul, sans « continuer », déclenche le niveau modéré', () => {
+  const exemples = ['à quoi bon', 'à quoi bon franchement'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+// Même audit : « fatigué de tout » n'était couvert par aucun motif — seul
+// « épuisé » l'était. Le qualificatif « de tout » est vérifié explicitement
+// dans ce test : « fatigué » tout seul, lui, ne doit PAS déclencher, sans
+// quoi la quasi-totalité des messages du soir basculerait en crise.
+test('« fatigué de tout » / « fatiguée de tout » déclenchent le niveau modéré, mais pas « fatigué » seul', () => {
+  const exemples = ['je suis fatigué de tout', 'je suis fatiguée de tout', 'je me sens fatigué de tout'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+  assert.equal(detecterCrise(['je suis fatigué, je vais me coucher']).niveau, 'aucun');
+});
+
 test('le désespoir direct, ancré à la première personne, déclenche le niveau modéré', () => {
   const exemples = ['je suis désespéré', 'je suis désespérée', 'ma vie est invivable', 'ma vie est insupportable'];
   for (const exemple of exemples) {

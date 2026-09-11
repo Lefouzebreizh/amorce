@@ -285,6 +285,12 @@ const PHRASES_MODEREES = [
   'aucune raison de continuer',
   'goût à rien',
   'à quoi bon continuer',
+  // Revue du 11/09/2026 (audit des signaux ambigus/diffus, à la demande
+  // d'Erwann) : « à quoi bon continuer » exige le mot « continuer », qui
+  // manque souvent — la personne dit juste « à quoi bon », en soupir, sans
+  // rien continuer à nommer. C'est une lecture de détresse raisonnable même
+  // isolée ; posé en MODÉRÉ comme le reste de ce bloc.
+  'à quoi bon',
   // Recherche demandée par Erwann le 11/09/2026, après deux faux négatifs
   // réels de suite : « la plupart des gens ne le disent pas explicitement,
   // il faut couvrir toutes les formulations indirectes ». Regroupé par
@@ -346,6 +352,15 @@ const PHRASES_MODEREES = [
   'épuisée',
   'plus aucune force',
   'vidé de toute énergie',
+  // Revue du 11/09/2026 (audit des signaux ambigus/diffus, à la demande
+  // d'Erwann) : « je suis fatigué de tout » n'était couvert par aucun motif
+  // — seul « épuisé » l'était, un mot différent. Le qualificatif « de tout »
+  // distingue cette lassitude totalisante d'une simple fatigue physique
+  // passagère ("je suis fatigué, je vais me coucher") : sans lui, « fatigué »
+  // seul ferait déclencher la quasi-totalité des messages du soir, bien
+  // au-delà du compromis faux positifs/faux négatifs assumé par ce projet.
+  'fatigué de tout',
+  'fatiguée de tout',
   //
   // Bloc ajouté le 11/09/2026 suite à la reformulation du principe de
   // décision : plutôt que de continuer à corriger cas par cas (ce qui ne
@@ -425,6 +440,13 @@ const PHRASES_MODEREES = [
   'je perds le contrôle',
   'je ne me reconnais plus',
   'je ne sais plus qui je suis',
+  // Trouvé le 11/09/2026 dans le retest personnel d'Erwann : « pas bien ce
+  // soir je ne sais plus quoi faire » n'a rien déclenché. Le motif s'écrit
+  // sans « je » ni « ne » en tête, comme « veux plus vivre » plus haut dans
+  // PHRASES_FORTES — ainsi il matche aussi bien la forme « je ne sais plus
+  // quoi faire » que sa forme orale sans négation, « je sais plus quoi
+  // faire », sans dépendre d'un mot que la personne peut très bien omettre.
+  'sais plus quoi faire',
   //
   // Désespoir direct, ancré à la première personne pour éviter qu'un mot
   // isolé ("insupportable", "invivable") ne déclenche sur n'importe quel
