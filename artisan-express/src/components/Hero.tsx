@@ -5,7 +5,7 @@ import { aUnTelephone, contact } from '@/lib/config';
 export function Hero() {
   return (
     <header className="border-b border-edge bg-slab">
-      <div className="mx-auto grid w-full max-w-5xl gap-10 px-5 pb-14 pt-10 sm:pt-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:gap-14 md:pb-20">
+      <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 pb-14 pt-10 sm:pt-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:gap-14 md:pb-20">
         <div>
           <p className="text-base font-semibold uppercase tracking-[0.2em] text-accent">
             Maçon, couvreur, électricien
