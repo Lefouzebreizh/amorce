@@ -55,16 +55,24 @@ la nature IA, logique de redirection ferme plutôt que de rétention.
 Squelette architectural : les trois couches logicielles (détection,
 prompt, limites de session) sont écrites et testées unitairement contre ce
 que la note d'initialisation décrit. Rien de tout cela n'a encore été validé
-par un professionnel de santé mentale, ni testé en conditions réelles contre
-un vrai LLM, ni ouvert à un seul vrai utilisateur. Voir TODO.md avant d'aller
-plus loin.
+par un professionnel de santé mentale, ni éprouvé en conditions de crise
+réelles. Voir TODO.md avant tout accès externe.
 
-**Adresse de travail, posée le 11/09/2026 — non publique, aperçu interne
+**Un écran de conversation existe depuis le 11/09/2026** — `src/app/chat/`
+et `src/app/api/repondre/`, branchés sur les trois couches ci-dessus et sur
+Claude — précisément pour que le propriétaire et le professionnel de santé
+mentale consulté puissent lui parler pour de vrai avant de juger sa
+pertinence clinique, plutôt que de lire une liste de motifs en markdown.
+C'est un correctif de méthode voulu par le propriétaire : le garde-fou de
+TODO.md portait à tort sur le développement, il porte en réalité sur la
+mise en ligne **publique** — voir TODO.md pour le détail du raisonnement.
+
+**Adresse de travail, posée le 11/09/2026 — non publique, usage interne
 seulement.** Un projet Vercel existe (`psy-ia`), lié au dépôt sur `main`,
 protégé par l'authentification Vercel (`ssoProtection`, portée `all` — les
 deux valeurs plus restreintes, `preview` et `all_except_custom_domains`,
 laissaient passer en clair l'alias court sans domaine personnalisé, mesuré
 avant correction). Non indexé (`noindex, nofollow` en meta et en en-tête
-HTTP). Ce n'est ni un lancement ni une bêta : c'est un aperçu visuel du
-squelette pour le propriétaire, rien de plus — voir TODO.md pour ce qui
-manque avant tout accès réel.
+HTTP). Ce n'est ni un lancement ni une bêta : c'est l'adresse où le
+propriétaire et le professionnel consulté testent l'application, rien de
+plus — voir TODO.md pour ce qui reste avant tout accès public.

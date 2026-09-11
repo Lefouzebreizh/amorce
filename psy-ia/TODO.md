@@ -1,8 +1,19 @@
-# À faire avant tout développement ultérieur ou mise en ligne
+# À faire avant toute mise en ligne PUBLIQUE
 
-Repris tel quel de la note d'initialisation du projet (11/09/2026). Cette
-liste est un **portail**, pas une formalité : tant qu'elle n'est pas cochée,
-ce projet ne doit recevoir aucun vrai utilisateur, même en bêta.
+Repris tel quel de la note d'initialisation du projet (11/09/2026), puis
+**le garde-fou a changé de moment, pas de force — corrigé le 11/09/2026 par
+le propriétaire.** Cette liste est un **portail avant tout vrai utilisateur
+externe, même en bêta**, pas un portail avant le développement lui-même.
+
+Raison du correctif : un professionnel de santé mentale ne peut pas juger
+sérieusement la pertinence clinique d'un système conversationnel sur une
+liste de mots-clés lue en markdown — il doit pouvoir lui parler pour de
+vrai, exactement comme le propriétaire avant de le montrer à qui que ce
+soit. Construire et éprouver l'interface **en interne** (propriétaire, puis
+le professionnel consulté ci-dessous, sur l'adresse de travail privée
+protégée par l'authentification Vercel) n'est donc plus ce que cette liste
+retarde : c'est ce qui permet de la cocher. Ce qui ne bouge pas d'un pouce :
+tant qu'elle ne l'est pas, personne d'externe à cette adresse.
 
 - [ ] Liste de mots-clés de détection (`src/lib/crisisDetection.ts`)
       enrichie et validée par un professionnel de santé mentale. **Deux
@@ -35,11 +46,16 @@ ce projet ne doit recevoir aucun vrai utilisateur, même en bêta.
   distinctes) n'est pas branché : il faut créer le projet Supabase, y
   rejouer `supabase/schema.sql`, et écrire la requête qui interroge
   `journal_crise` pour calculer `detressePersistanteInterSessions`.
-- Le parcours guidé à choix (mode 1, `src/app/page.tsx`) n'est qu'un
-  squelette d'accueil — les écrans du parcours lui-même restent à écrire, et
-  ne devraient l'être qu'après validation du prompt système et de la liste
-  de mots-clés : construire l'interface avant que le contenu ne soit
-  clinique reviendrait à polir une façade sur des fondations pas coulées.
+- **Un écran de conversation minimal existe désormais**, posé le
+  11/09/2026 : `src/app/chat/page.tsx` et `src/app/api/repondre/route.ts`,
+  branchés sur les trois couches déjà écrites et sur le LLM, déployés sur
+  l'adresse de travail privée — précisément pour permettre la revue
+  humaine en conditions réelles décrite plus haut, plutôt que de l'attendre.
+  Ce n'est **pas** le parcours guidé à choix prévu pour la V1 (pas
+  d'écrans à embranchements, pas de choix pré-écrits) : ce dernier reste à
+  construire, et peut avancer dès maintenant en parallèle de la revue
+  clinique — toujours réservé à un usage interne tant que la liste
+  ci-dessus n'est pas cochée.
 - Mode conversation vocale libre au micro (V2) — explicitement après le
   parcours guidé, pas en parallèle.
 - Authentification et projet Supabase réels : aucun n'existe encore, la
