@@ -519,12 +519,6 @@ ${ficheEtablissement(commande, domaine)}
    * d’un artisan n’a de toute façon pas assez de contenu pour meubler une
    * pleine largeur. L’entête grandit avec la colonne, sinon le titre flotte.
    */
-  @media (min-width: 48rem) {
-    .dedans { max-width: 40rem; }
-    header { padding: 4.5rem 2rem 3.5rem; }
-    header h1 { font-size: 2.6rem; }
-    main { padding: 0 2rem 4rem; }
-  }
   /*
    * L'entête en halo, jamais en aplat de couleur.
    *
@@ -646,6 +640,67 @@ ${ficheEtablissement(commande, domaine)}
     margin: 1.5rem 0 0; padding-top: 1.25rem;
     border-top: 1px solid var(--edge); color: var(--encre-douce);
   }
+  /*
+   * LES RÈGLES D'ÉCRAN LARGE VIENNENT EN DERNIER, ET C'EST OBLIGATOIRE.
+   *
+   * Elles étaient plus haut, juste après « body », là où on les écrit
+   * naturellement. Résultat : « .bloc { border-bottom: 0 } » n'avait aucun
+   * effet, parce que la règle de base « .bloc » se trouvait trente lignes plus
+   * bas et l'emportait à spécificité égale par simple ordre du fichier. La
+   * grille, elle, s'appliquait — « main > .dedans » est plus spécifique — d'où
+   * une page en deux colonnes gardant des filets horizontaux qui ne séparaient
+   * plus rien. Rien ne le signalait : ni test, ni build, ni mesure de largeur.
+   */
+  @media (min-width: 48rem) {
+    .dedans { max-width: 40rem; }
+    header { padding: 4.5rem 2rem 3.5rem; }
+    header h1 { font-size: 2.6rem; }
+    main { padding: 0 2rem 4rem; }
+  }
+  /*
+   * Sur un ordinateur, deux colonnes plutôt qu’une colonne plus large.
+   *
+   * Une colonne unique étirée ne règle rien : à 1920 px de fenêtre elle laisse
+   * du vide de chaque côté quoi qu’on fasse, et la seule façon de le combler
+   * serait une ligne de 120 caractères — l’œil perd alors le début en arrivant
+   * à la fin. C’est le compromis qu’on refuse : ce n’est pas la largeur du
+   * texte qui doit grandir, c’est la page qui doit se servir de la place.
+   *
+   * Les quatre blocs se rangent donc côte à côte, et chaque colonne garde une
+   * mesure de lecture honnête — environ 60 caractères. Les boutons d’appel
+   * traversent, parce qu’ils sont l’action de la page et non un bloc parmi
+   * d’autres.
+   *
+   * Les filets horizontaux disparaissent ici : entre deux colonnes de hauteurs
+   * différentes, un trait sous un bloc ne sépare plus rien et souligne au
+   * hasard. C’est le filet vertical des « h2 » qui porte seul la séparation,
+   * et il la portait déjà.
+   */
+  @media (min-width: 64rem) {
+    .dedans { max-width: 64rem; }
+    header { padding: 2.75rem 2rem 2.25rem; }
+    header h1 { font-size: 2.8rem; }
+    main > .dedans {
+      display: grid; grid-template-columns: 1fr 1fr;
+      column-gap: 3.5rem; align-items: start;
+    }
+    .actions { grid-column: 1 / -1; padding: 1rem 0; }
+    .bloc { border-bottom: 0; padding: 1.25rem 0 .5rem; }
+    main { padding: 0 2rem 1.25rem; }
+    /*
+     * Le pied se met sur une ligne. Empilé, il pesait 216 px — un cinquième
+     * de la page pour trois informations qui tiennent côte à côte, et c'est
+     * lui qui empêchait la page d'entrer dans un écran.
+     */
+    footer { padding: 1rem 2rem; }
+    footer .dedans {
+      display: flex; flex-wrap: wrap; align-items: baseline;
+      justify-content: center; gap: .35rem 1.5rem;
+    }
+    footer a { margin: 0; min-height: 0; }
+    .signature { margin: 0; padding-top: 0; border-top: 0; }
+  }
+  @media (min-width: 90rem) { .dedans { max-width: 84rem; } }
 </style>
 </head>
 <body>

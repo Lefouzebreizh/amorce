@@ -508,30 +508,58 @@ test('la colonne fait la largeur d’un téléphone, et la page remplit l’écr
   assert.match(dedans, /max-width:\s*26rem/, 'la colonne doit être bornée à 26rem');
   assert.match(dedans, /margin:\s*0 auto/, 'la colonne doit être centrée');
 
-  // Le corps, lui, va bord à bord. Le borner à 26rem donnait une bande de
-  // 416 px au milieu d'un écran de 1440 — moins d'un tiers occupé — et c'est
-  // le premier regard extérieur posé sur ces pages qui l'a signalé, pas un
-  // test. Remettre une largeur ici rendrait le défaut à l'identique.
+  // Le corps, lui, va bord à bord. Le borner donnait une bande étroite au
+  // milieu d'un grand écran, signalée par le premier regard extérieur.
   const corps = /body\s*\{[^}]*\}/.exec(html)?.[0] ?? '';
   assert.doesNotMatch(corps, /max-width/, 'le corps doit aller bord à bord');
 
-  // Ce qui suppose que chaque région enveloppe son contenu : sans cela le
-  // texte irait bord à bord avec elle, ce qui est pire que la bande étroite.
   for (const region of ['header', 'main', 'footer']) {
     assert.match(html, new RegExp(`<${region}><div class="dedans">`),
       `${region} doit envelopper son contenu dans la colonne`);
   }
 
-  // Le fond va sur « html » : la page derrière le corps se voit dès que le
-  // contenu est plus court que l'écran, et ce serait du blanc sur un site sombre.
   assert.match(html, /html\s*\{[^}]*background:\s*#16151a/,
     'le fond doit couvrir l’écran au-delà du corps');
 
-  // Et rien ne va au-delà de 40rem : passé cette longueur de ligne, l'œil perd
-  // le début en arrivant à la fin. C'est la nouvelle borne à ne pas rouvrir.
+  // Sur écran large la page passe en deux colonnes. C'est ce qui lui permet
+  // d'occuper la largeur sans étirer une ligne de texte au-delà de ce qui se
+  // lit : une colonne unique élargie donnerait 120 caractères, mesuré.
+  assert.match(html, /@media \(min-width: 64rem\)/, 'il faut un régime d’écran large');
+  assert.match(html, /main > \.dedans\s*\{[^}]*grid-template-columns:\s*1fr 1fr/,
+    'les blocs doivent se ranger en deux colonnes');
+
+  // Et la mesure ne dépasse jamais 84rem : au-delà, même en deux colonnes, la
+  // ligne redevient trop longue.
   const sansCommentaires = html.replace(/\/\*[\s\S]*?\*\//g, '');
   for (const [, valeur] of sansCommentaires.matchAll(/max-width:\s*([\d.]+)rem/g)) {
-    assert.ok(Number(valeur) <= 40,
-      `une largeur de ${valeur}rem dépasse la mesure de lecture`);
+    assert.ok(Number(valeur) <= 84, `une largeur de ${valeur}rem dépasse la mesure de lecture`);
+  }
+});
+
+test('les règles d’écran large sont écrites après les règles de base', () => {
+  /*
+   * Ce test-là existe parce que la faute a été commise, et qu'aucun autre ne
+   * la voyait.
+   *
+   * Les « @media » avaient été écrits juste après « body », là où on les place
+   * naturellement. À spécificité égale, c'est l'ordre du fichier qui tranche :
+   * « .bloc { border-bottom: 0 } » n'avait donc aucun effet, la règle de base
+   * « .bloc » se trouvant plus bas. La page passait bien en deux colonnes — la
+   * grille, plus spécifique, s'appliquait — mais gardait des filets
+   * horizontaux qui ne séparaient plus rien. Build vert, types verts, largeur
+   * correcte : seule une capture d'écran l'a montré.
+   */
+  const css = genererSite(commande()).replace(/\/\*[\s\S]*?\*\//g, '');
+  const premierMedia = css.indexOf('@media');
+  assert.ok(premierMedia > 0, 'il faut au moins un régime d’écran large');
+
+  // Tout ce qui précède le premier « @media » : c'est là que les règles de
+  // base doivent vivre. Chercher leur position dans la feuille entière ne
+  // marcherait pas — les mêmes sélecteurs sont redéclarés dans les media
+  // queries, et c'est précisément le but.
+  const avantLesMedia = css.slice(0, premierMedia);
+  for (const base of ['.bloc {', '.actions {', 'footer {', 'main {', 'header {']) {
+    assert.ok(avantLesMedia.includes(base),
+      `${base} n’est pas déclarée avant les media queries : elles seront sans effet`);
   }
 });
