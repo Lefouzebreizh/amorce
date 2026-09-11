@@ -286,6 +286,15 @@ const PHRASES_MODEREES = [
   "au cas où il m'arriverait quelque chose",
   'je ne serai plus là longtemps',
   'je ne serai plus un problème',
+  // « à bout » était dans la liste d'épuisement ci-dessous, qui exige une
+  // répétition sur deux messages distincts. Erwann a explicitement demandé
+  // le 11/09/2026 qu'une seule occurrence suffise ici aussi : la sortir de
+  // ce groupe et la faire déclencher comme les autres motifs modérés,
+  // conformément au principe du projet (en cas de doute, on déclenche).
+  // Le reste de la liste d'épuisement (« épuisé », « plus aucune force »,
+  // « vidé de toute énergie ») garde l'exigence de répétition, faute d'une
+  // demande explicite équivalente pour elles.
+  'à bout',
 ];
 
 // Épuisement extrême : ne déclenche que s'il est exprimé de façon RÉPÉTÉE
@@ -295,7 +304,6 @@ const PHRASES_MODEREES = [
 const PHRASES_EPUISEMENT = [
   'épuisé',
   'épuisée',
-  'à bout',
   'plus aucune force',
   'vidé de toute énergie',
 ];
