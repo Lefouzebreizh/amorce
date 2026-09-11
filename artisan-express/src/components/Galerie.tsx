@@ -1,5 +1,5 @@
 import { ApercuSite } from '@/components/ApercuSite';
-import { CARTE, SECTION, TITRE_SECTION } from '@/components/ui';
+import { CARTE, MESURE, SECTION, TITRE_SECTION } from '@/components/ui';
 
 /*
  * La galerie des six modèles de métier.
@@ -112,7 +112,7 @@ export function Galerie() {
     <section className={SECTION} id="galerie">
       <h2 className={TITRE_SECTION}>Six métiers, six sites</h2>
 
-      <div className="mt-6 space-y-4 text-lg leading-relaxed text-ardoise">
+      <div className={`mt-6 space-y-4 text-lg leading-relaxed text-ardoise ${MESURE}`}>
         <p>
           Voilà ce que je produis. Ce ne sont pas mes clients :{' '}
           <strong className="text-encre">ces six entreprises n’existent pas</strong>, et chaque page
@@ -126,7 +126,7 @@ export function Galerie() {
         </p>
       </div>
 
-      <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {MODELES.map((modele) => (
           <li key={modele.fichier}>
             <a className={`${CARTE} group flex h-full flex-col p-5`} href={modele.fichier}>
@@ -179,7 +179,7 @@ export function Galerie() {
         ))}
       </ul>
 
-      <p className="mt-6 text-lg leading-relaxed text-ardoise">
+      <p className={`mt-6 text-lg leading-relaxed text-ardoise ${MESURE}`}>
         Chacune de ces pages sort en <code className="text-encre">noindex</code> : une entreprise
         inventée n’a rien à faire dans les résultats de recherche à côté de vrais artisans.
       </p>

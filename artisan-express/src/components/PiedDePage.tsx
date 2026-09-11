@@ -1,9 +1,10 @@
+import { MESURE } from '@/components/ui';
 import { aUnTelephone, aUnWhatsapp, contact } from '@/lib/config';
 
 export function PiedDePage() {
   return (
     <footer className="border-t border-edge bg-slab">
-      <div className="mx-auto w-full max-w-5xl px-5 py-10">
+      <div className="mx-auto w-full max-w-7xl px-5 py-10">
         <p className="text-lg font-bold text-encre">Site vitrine artisan express</p>
         {/*
           Ce paragraphe répétait mot pour mot la présentation du Hero — « artisan
@@ -15,7 +16,7 @@ export function PiedDePage() {
           La place est rendue à ce que la charte demande en fin de page : une
           invitation, jamais un rappel commercial.
         */}
-        <p className="mt-2 max-w-2xl leading-relaxed text-ardoise">
+        <p className={`mt-2 leading-relaxed text-ardoise ${MESURE}`}>
           Une question avant de te décider ? Écris-moi — même juste pour savoir si ça vaut le coup
           pour ton métier.
         </p>
@@ -49,7 +50,7 @@ export function PiedDePage() {
           Dit parce que c'est vrai, et parce que personne d'autre ne le dit :
           cette page ne charge aucun script de mesure et ne dépose aucun témoin.
         */}
-        <p className="mt-6 border-t border-edge pt-5 text-base leading-relaxed text-ardoise">
+        <p className={`mt-6 border-t border-edge pt-5 text-base leading-relaxed text-ardoise ${MESURE}`}>
           Cette page ne dépose aucun cookie et ne charge aucun mouchard. Ce que tu écris dans le
           formulaire m’arrive par courriel et n’est enregistré nulle part ailleurs.
         </p>

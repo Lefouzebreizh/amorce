@@ -59,7 +59,31 @@ export const BOUTON_CONTOUR =
  * blanc-là qui dit « nouvelle idée », sans qu'aucun trait ni aucun aplat n'ait
  * à le dire.
  */
-export const SECTION = 'mx-auto w-full max-w-5xl px-5 py-20 sm:py-32';
+export const SECTION = 'mx-auto w-full max-w-7xl px-5 py-20 sm:py-32';
+
+/*
+ * La mesure de lecture, qui n'est pas la largeur de la page.
+ *
+ * Les deux étaient confondues, et la page payait des deux côtés : sur un écran
+ * de 1920 px elle n'occupait que 1152 px — 384 px de noir de chaque côté — et
+ * ses paragraphes atteignaient pourtant 109 caractères par ligne, jusqu'à 123
+ * sur le pied. Trop étroite comme page, trop large comme texte, par une seule
+ * et même valeur. L'élargir sans rien d'autre les a portés à 155.
+ *
+ * `SECTION` porte donc la largeur de la page — 80rem, soit 1440 px avec la
+ * racine à 18 px — et ce jeton-ci borne le texte courant à 70 caractères.
+ *
+ * L'unité est le `ch`, la largeur du zéro, et non le `rem` : la borne suit
+ * alors la taille de police au lieu d'être recalculée à la main pour chacune.
+ * Le même jeton donne 70 caractères sur un paragraphe en `text-lg` et sur un
+ * autre en `text-base`, là où une valeur en `rem` en aurait donné 75 et 84.
+ *
+ * Au-delà d'environ 75 caractères l'œil ne retrouve plus le début de la ligne
+ * suivante ; en deçà de 45 il saute trop souvent. Les titres, les grilles et
+ * les cartes ne sont pas concernés — ils ne se lisent pas ligne à ligne, et
+ * c'est à eux d'occuper la largeur gagnée.
+ */
+export const MESURE = 'max-w-[70ch]';
 
 /*
  * Le titrage porte la police de titre, et il a gagné en échelle.
