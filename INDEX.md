@@ -62,7 +62,7 @@ qui **devine** dans quel dossier elle est et ce qui s'y est déjà passé.
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt-trois chantiers actifs, plus un en sommeil, et dix
+Ce dépôt héberge vingt-quatre chantiers actifs, plus un en sommeil, et dix
 ressources transverses qui ne sont pas des projets mais servent à tous. Une
 idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un
 front de plus. La liste vieillit vite — recompter avant de noter.
@@ -97,6 +97,7 @@ autre, et deux paires ont **ré-implémenté la même chose sans le savoir**.
 | **Bilan Patrimoine** (`bilan-patrimoine/`) | Le produit grand public : diagnostic gratuit puis suivi payant. Lot 1 — calcul, barèmes et texte. | TypeScript | produit grand public de `conseiller-patrimoine/` | actif |
 | **Le Coffre** (`le-coffre/`) | Coffre-fort de documents chiffré côté navigateur, multi-utilisateurs. Productisation du coffre de Life-Organizer. | Next.js 16, Supabase | coffre chiffré de `life-organizer/` ; échéance et vision **ré-implémentées** | actif |
 | **Psy IA** (`psy-ia/`) | Accompagnement conversationnel de bien-être psychologique — détection de crise déterministe hors LLM. Squelette architectural, pas encore validé pour un vrai utilisateur (voir `psy-ia/TODO.md`). | Next.js 16, Supabase | — | actif |
+| **Audit de page de vente** (`audit-landing/`) | Capture visuelle segmentée d'une page de vente, pour un futur rapport d'audit en 24h généré par modèle de vision. Capture seule pour l'instant — pas de prompt d'analyse, pas de rapport, pas de page de vente. | Python, Playwright | — | actif |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | — | en sommeil |
 
 ## Moteurs techniques partagés

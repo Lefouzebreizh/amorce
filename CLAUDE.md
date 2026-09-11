@@ -1304,8 +1304,8 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   tous en `connect_rejected`/`EGRESS_BLOCKED`), donc pas un piège propre à ces
   quatre sites comme `*.vercel.app` plus bas.
   **Un défaut réel, lui, a été mesuré et corrigé** : testé par le
-  propriétaire sur sa machine, `qonto.com/fr` rendait 3 tranches sur 13
-  totalement blanches, à leur position attendue. Cause reproduite sur
+  propriétaire sur sa machine, la page marketing de Qonto en français rendait
+  3 tranches sur 13 totalement blanches, à leur position attendue. Cause reproduite sur
   fixture : une capture pleine page composite, prise depuis une seule
   position de défilement, ne peut pas satisfaire toutes les sections d'un
   site qui les révèle au scroll par une animation d'opacité réversible —
