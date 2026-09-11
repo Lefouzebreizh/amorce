@@ -1343,7 +1343,17 @@ check('Un format d’export est disponible', !/non pris en charge/.test(format ?
  * Sans bouton d'arrêt, la seule issue d'un export trop long était de fermer
  * l'onglet, donc de perdre le montage.
  */
-await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
+/*
+ * Les deux libellés, parce que le bouton dit la vérité sur ce qu'il exporte.
+ *
+ * Il annonce « Exporter quand même » tant que des crochets restent à remplir,
+ * et « Exporter la vidéo » sinon. Le parcours ne visait que le second : depuis
+ * que le montage express pose une trame à compléter plutôt qu'un seul texte,
+ * c'est le premier qui s'affiche ici, et l'étape entière tombait en attente
+ * d'un bouton qui n'existait pas — sans que rien ne dise que c'était le
+ * libellé, et non l'export, qui manquait.
+ */
+await page.locator('button').filter({ hasText: /⬇ Exporter (la vidéo|quand même)/ }).first().click();
 await page.waitForTimeout(1200);
 
 const boutonArret = page.locator('button:has-text("Arrêter l’export")');
@@ -1361,7 +1371,7 @@ if ((await boutonArret.count()) === 1) {
     'Le bouton d’export redevient disponible après un arrêt',
     await page.evaluate(() => {
       const boutons = [...document.querySelectorAll('button')];
-      const cible = boutons.find((b) => b.textContent?.includes('⬇ Exporter la vidéo'));
+      const cible = boutons.find((b) => /⬇ Exporter (la vidéo|quand même)/.test(b.textContent ?? ''));
       return cible !== undefined && !cible.disabled;
     }),
   );
@@ -1385,7 +1395,7 @@ if ((await boutonArret.count()) === 1) {
  * Le délai ne coûte que dans le cas où quelque chose est vraiment cassé.
  */
 const downloading = page.waitForEvent('download', { timeout: 300000 });
-await page.locator('button:has-text("⬇ Exporter la vidéo")').click();
+await page.locator('button').filter({ hasText: /⬇ Exporter (la vidéo|quand même)/ }).first().click();
 await page.waitForTimeout(2500);
 await page.screenshot({ path: join(SHOTS, `05-export-${profile.id}.png`) });
 

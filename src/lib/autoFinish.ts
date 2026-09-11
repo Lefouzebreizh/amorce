@@ -196,6 +196,36 @@ export const CAPTION_SETS: CaptionSet[] = [
       { text: '[Ce que je fais maintenant]', style: 'minimal', y: 0.34, at: 0.82, span: 0.18 },
     ],
   },
+  /*
+   * La trame sans genre, et c'est le montage express qui la demandait.
+   *
+   * Branché sur le premier jeu de cette liste, il posait « QUEL [ROYAUME]
+   * TOMBE ENSUITE ? » en rouge au milieu de quatre rushes quelconques — vu à
+   * l'œil sur la capture d'étalonnage, pas dans une mesure. Un bouton qui
+   * monte tout seul n'a aucun moyen de savoir si la vidéo est une
+   * bande-annonce, un tutoriel ou un journal de bord : présumer le genre est
+   * une faute plus visible que l'absence de texte qu'elle corrigeait.
+   *
+   * Elle ne porte donc **ni couleur ni rendu** : les deux appartiennent à un
+   * parti pris, et le parti pris appartient à celui qui écrit. Elle garde la
+   * géométrie des autres — c'est elle qui tient la couverture sur la durée —
+   * et ses crochets nomment une fonction, jamais un contenu.
+   *
+   * Dernière de la liste à dessein : le panneau propose toujours un genre en
+   * premier, parce que quelqu'un qui vient y choisir cherche une direction.
+   * Le bouton automatique, lui, n'a rien à imposer.
+   */
+  {
+    id: 'trame-neutre',
+    label: 'Structure simple',
+    why: 'La charpente sans genre : ce qu’on annonce, ce qu’on montre, ce qui compte, ce qu’on demande.',
+    slots: [
+      { text: '[Ton accroche]', style: 'punch', y: 0.28, at: 0, span: 0.18 },
+      { text: '[Ce que tu montres]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.24, span: 0.2 },
+      { text: '[Le moment qui compte]', style: 'punch', y: Y_PAR_DEFAUT, at: 0.5, span: 0.2 },
+      { text: '[Ce que tu demandes]', style: 'punch', y: 0.32, at: 0.82, span: 0.18 },
+    ],
+  },
 ];
 
 export function captionSet(id: string): CaptionSet {

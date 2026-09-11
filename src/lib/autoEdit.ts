@@ -1,4 +1,4 @@
-import { CAPTION_SETS, captionsFor } from './autoFinish.ts';
+import { captionSet, captionsFor } from './autoFinish.ts';
 import { uid } from './id.ts';
 import { MOUVEMENTS_ALTERNES, totalDuration } from './timeline.ts';
 import {
@@ -229,6 +229,11 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
    * gestes s'accordent au lieu de proposer deux squelettes différents, et le
    * second n'a plus rien à ajouter derrière le premier.
    *
+   * La trame visée est celle **sans genre**. Le premier jeu de la liste est
+   * une bande-annonce : branché là-dessus, le bouton posait un texte rouge
+   * « QUEL [ROYAUME] TOMBE ENSUITE ? » sur n'importe quels rushes. Un montage
+   * automatique n'a aucun moyen de savoir ce qu'on raconte.
+   *
    * Les crochets restent des crochets. Un texte plausible écrit à la place de
    * l'utilisateur est la seule chose que ce studio ne fera jamais : ce sont
    * ses mots qui portent la vidéo, pas les nôtres.
@@ -244,7 +249,7 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
 
   const captions: Caption[] = [
     accroche,
-    ...captionsFor(CAPTION_SETS[0], [accroche], duration, () => uid('cap')),
+    ...captionsFor(captionSet('trame-neutre'), [accroche], duration, () => uid('cap')),
   ];
 
   /*
