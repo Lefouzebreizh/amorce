@@ -372,6 +372,14 @@ test('« fardeau » déclenche le niveau modéré', () => {
   }
 });
 
+// Deux formulations de plus, trouvées dans le même tour de tests en
+// production : proches de motifs déjà couverts (fardeau, « ça ne
+// s'arrangera jamais »), mais avec un verbe différent.
+test('« peser sur » et « ça n\'ira jamais mieux » déclenchent le niveau modéré', () => {
+  assert.equal(detecterCrise(["j'ai vraiment l'impression de peser sur tout le monde autour de moi"]).niveau, 'modere');
+  assert.equal(detecterCrise(["j'ai l'impression que ça n'ira jamais mieux"]).niveau, 'modere');
+});
+
 test("perte d'élan et anhédonie déclenchent le niveau modéré", () => {
   const exemples = ['plus envie de rien', 'rien ne me fait plus envie', 'je suis vide', 'complètement vide'];
   for (const exemple of exemples) {
