@@ -863,6 +863,60 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   d'adresse, pas de bouclier » → achat autorisé sans aucune vérification. La
   correction attendue : porter `chaine`/`adresse` sur la `Decision`
   elle-même, jamais uniquement sur la ligne de watchlist.
+  **Le rejeu CoinMetrics BTC/ETH/LINK a été bloqué par le propriétaire le
+  11/09/2026** : NexusCrypto vise des pépites dynamiquement découvertes, pas
+  les majors d'une watchlist figée, et les valider sur BTC/ETH/LINK ne prouve
+  rien sur leur comportement réel. Deux volets ouverts en parallèle. Le
+  **plafond de capitalisation pépite** (`ConfigPepites.capitalisation_max_usd`)
+  a été aligné le jour même sur celui du radar `pepites/` — 300 M$ ici contre
+  30 M$ là-bas, la même définition de « pépite » portait deux plafonds
+  incompatibles. Le **volet A** (historique OHLCV d'une liste volontairement
+  mixte de jetons pépite-profile — survivants et effondrements documentés,
+  pour éviter le biais du survivant) est écrit :
+  `scripts/collecter_historique_pepites.py`, réseau via GeckoTerminal sur un
+  workflow GitHub (`nexuscrypto-collecte-pepites.yml`), CoinMetrics ni
+  DexScreener ni GeckoTerminal ni Birdeye ni DeFiLlama n'étant joignables
+  depuis une session distante — mesuré ce jour, même mur que le radar. Le
+  **volet B** (brancher le scanner en direct) a fait apparaître une vraie
+  fourche jamais posée avant d'y regarder : `data_engine.agregateur` exige une
+  série OHLCV pour construire un `Contexte`, et aucune plateforme CCXT n'en
+  fournit pour un pool DexScreener — un jeton découvert par le scanner n'a
+  donc aucun chemin vers `strategy/moteur.py`. Trois options posées dans
+  `nexuscrypto/README.md` § 16 bis, **tranchées par le propriétaire le jour
+  même** : le score du scanner devient directement la décision d'achat
+  (`Pepite.score` contre `score_minimum`), sans passer par `strategy/moteur.py` ;
+  stop en pourcentage fixe (`ConfigPepites.stop_pct`, proposé à 15 %, **pas
+  encore confirmé**) faute d'ATR calculable. Les deux autres options sont
+  écartées — une série de bougies approchée depuis les variations DexScreener
+  aurait fabriqué une précision qu'on n'a pas, contraire à la mise en garde de
+  ce fichier sur les bougies plates de CoinMetrics deux paragraphes plus haut ;
+  attendre une source OHLCV de pools DEX vérifiée n'apportait rien de plus.
+  **`Decision` porte désormais `chaine`/`adresse` elle-même** (peuplées par
+  `strategy/moteur.py` pour une ligne de watchlist, par la nouvelle
+  `Orchestrateur._passe_pepites` pour une pépite du scanner) : c'est la
+  correction de la mine trouvée en relisant la PR #886, et
+  `test_bouclier_actif_bloque_lachat_sur_verdict_rejete` la garde en faisant
+  vraiment appeler le service de sécurité puis en vérifiant qu'un verdict
+  rejeté bloque vraiment l'achat. `risk_management/`, `execution/` et
+  `strategy/pepites.py` restent intacts — la mémoire chaîne/adresse d'une
+  pépite tenue vit à part, dans `Etat.pepites_suivies`, pour ne pas cascader
+  jusqu'à `execution/courtier.py`. `ConfigPepites.termes_recherche` est
+  **vide par défaut, à dessein** (même décision que `TARIFS` vide dans
+  `generation-serveur/`) : sans terme configuré, ce chemin ne fait
+  strictement rien de plus qu'avant.
+  **`garde-du-bot` a relu ce lot deux fois, et la seconde relecture a trouvé un
+  défaut que la première n'avait pas vu** : le coupe-circuit de portefeuille
+  calculait la valeur d'une pépite détenue sur son prix d'**achat**, jamais
+  sur son cours réel, parce que `_passe_pepites` rafraîchissait le prix
+  *après* l'appel à `_verifier_coupe_circuit`. Le garde-fou de drawdown
+  restait donc aveugle à la perte latente d'une pépite tant qu'elle n'était
+  pas vendue — le stop individuel de la position fonctionnait, pas le
+  garde-fou agrégé. Corrigé en scindant `_passe_pepites` en deux étages
+  (`_evaluer_sorties_pepites` avant le coupe-circuit, `_decouvrir_pepites`
+  après), gardé par un test qui fait **vraiment** se déclencher le
+  coupe-circuit sur une chute de pépite qui ne touche pas son stop
+  individuel. 361 tests verts, `garde-du-bot` et `banc-du-bot` relus sur ce
+  lot.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
   sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
   reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de

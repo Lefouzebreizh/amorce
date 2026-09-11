@@ -161,13 +161,28 @@ strategie:
     liquidite_min_usd: 250000
     age_minimum_heures: 72
     variation_liquidite_24h_min: 0.15
-    capitalisation_max_usd: 300000000
+    # Aligné le 11/09/2026 sur pepites/config/reglages.yaml (30 M$), sur
+    # décision explicite du propriétaire : les deux modules visaient le même
+    # mot « pépite » avec un plafond dix fois plus large ici.
+    capitalisation_max_usd: 30000000
     score_minimum: 65
     candidats_max: 5
     # Plafond par jeton découvert, tous renforcements compris. Vivait sur
     # `portefeuille.reserve_decouverte` avant le 10/09/2026 ; c'est une notion
     # propre au jeton découvert, pas au portefeuille cible qui n'existe plus.
     plafond_par_jeton_usd: 100
+    # Décidé le 11/09/2026 : une pépite du scanner n'a pas de bougies, donc pas
+    # d'ATR — son stop est un pourcentage fixe du prix d'entrée. 15 % est une
+    # proposition, pas une valeur mesurée : à confirmer par le propriétaire
+    # avant toute fusion qui active ce chemin (garde-fou permanent).
+    stop_pct: 0.15
+    # Vide à dessein — même décision que `TARIFS` vide dans
+    # generation-serveur/ : sans terme configuré ici, aucun appel réseau de
+    # découverte n'a lieu. Remplir cette liste de mémoire donnerait une
+    # découverte qui a l'air de marcher sans jamais avoir été vérifiée à sa
+    # source (GeckoTerminal, DexScreener... sont refusés depuis une session
+    # distante — voir CLAUDE.md §7).
+    termes_recherche: []
 
   # ------------------------------------------------------------------------
   # Bouclier anti-rugpull — un veto, pas une note.

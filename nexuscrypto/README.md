@@ -1074,3 +1074,158 @@ baissière indépendante (type 2018) n'a été essayée. **Ce moteur n'a donc
 toujours pas ce que l'exigence du 10/09/2026 demande avant tout capital
 réel** : un backtest multi-régimes concluant, documenté dans
 `config/validation.yaml`.
+
+## 16 bis. CoinMetrics BTC/ETH/LINK ne valide rien pour un chasseur de pépites
+
+Erwann a bloqué le rejeu prévu de la section précédente sur ce point précis
+le 11/09/2026 : NexusCrypto vise des jetons dynamiquement découverts par le
+scanner (`strategy/pepites.py`), pas les majors d'une watchlist figée — les
+mesures ci-dessus, toutes sur BTC/ETH/LINK, ne disent donc rien du
+comportement du moteur une fois branché sur des petites capitalisations.
+
+**Deux choses distinctes ont besoin d'être validées, et un seul rejeu ne peut
+pas répondre aux deux.** Le comportement du *moteur* (seuil, stops ATR,
+dimensionnement) sur un prix volatil et une liquidité fine se mesure sur un
+historique OHLCV, même approximatif. La qualité du *scanner* — est-ce que sa
+note repère vraiment une pépite avant le mouvement — demande des
+**instantanés** DexScreener dans le temps (liquidité, croissance de volume,
+âge du pool), et ceux-là n'existent nulle part en historique :
+`pepites/temoin.py`, le banc d'essai du radar lui-même, l'avait déjà mesuré
+avant nous — « il n'y a pas d'historique de pépites à rejouer ».
+
+**Volet A, pour le moteur** — `nexuscrypto/scripts/collecter_historique_pepites.py`
+et le workflow `nexuscrypto-collecte-pepites.yml` (déclenchement manuel,
+runner GitHub — GeckoTerminal, DexScreener, Birdeye et DefiLlama sont tous les
+quatre refusés depuis une session distante, mesuré le 11/09/2026, même mur
+qu'au § 7 de `CLAUDE.md`). Il collecte l'historique OHLCV d'une liste
+volontairement **mixte** de jetons ayant eu le profil pépite — des survivants
+partis d'un lancement micro-cap et des effondrements documentés — pour éviter
+le biais du survivant qu'un échantillonnage sur les seuls candidats
+d'aujourd'hui produirait par construction. Les CSV rendus se lisent par
+`rejeu.donnees.lire_csv`, comme n'importe quel export CCXT ; ils ne sont
+**jamais versionnés** (`/nexuscrypto/donnees_pepites/` dans le `.gitignore`
+racine) et se reconstruisent à la demande, sur le même principe que les
+commandes `curl` déjà documentées au § 7 de `CLAUDE.md` pour CoinMetrics et
+freqtrade.
+
+**Volet B, pour le scanner — la fourche a été tranchée le 11/09/2026, par le
+propriétaire.** Brancher `strategy/pepites.py` dans `orchestrateur.une_passe()`
+avait fait apparaître un obstacle d'architecture qui n'était pas visible avant
+d'y regarder : `data_engine.agregateur.Agregateur.contexte()` exige une série
+OHLCV (`marche.ohlcv(...)`) pour construire le moindre `Contexte`, et aucune
+plateforme CCXT ne connaît un pool DexScreener — un jeton découvert par le
+scanner n'a donc **aucun** chemin pour obtenir la série de bougies dont
+`strategy/moteur.py` a besoin pour calculer son score technique et son ATR. La
+phrase du § 4 de `CLAUDE.md` — « un actif hors watchlist reçoit exactement le
+même traitement qu'une ligne connue d'avance » — ne pouvait donc pas se
+réaliser telle quelle sans une décision de produit. Trois options avaient été
+posées, aucune choisie en silence :
+
+1. **Le score du scanner devient la décision d'achat**, sans passer par
+   `strategy/moteur.py` : `Pepite.score` contre `ConfigPepites.score_minimum`
+   directement, avec un stop en pourcentage fixe (pas d'ATR, faute de
+   bougies).
+2. Fabriquer une série approchée depuis les variations 1 h/6 h/24 h que
+   DexScreener fournit, pour faire passer une pépite par le même chemin que
+   les majors.
+3. Attendre qu'une source OHLCV pour des pools DEX soit vérifiée joignable
+   depuis le runner avant de décider laquelle des deux options précédentes
+   tient la route.
+
+**L'option 1 est retenue, et c'est elle qui est implémentée.** Deux raisons,
+données par le propriétaire :
+
+- Elle referme au passage la mine que `garde-du-bot` avait trouvée en relisant
+  la PR #886 : `chaine`/`adresse` vivent désormais sur la `Decision`
+  elle-même — jamais uniquement sur la ligne de watchlist — dès la
+  construction de la décision, qu'elle vienne d'une ligne connue d'avance
+  (`strategy/moteur.py`) ou d'un `Candidat` du scanner
+  (`orchestrateur._passe_pepites`).
+- L'option 2 est explicitement écartée : ce dépôt met déjà en garde ailleurs
+  (CoinMetrics, § 7 de `CLAUDE.md`, ses bougies plates faute de haut/bas
+  publiés) contre les séries **reconstruites** plutôt que mesurées. Pour du
+  papier trading dont le but est justement d'observer un comportement réel,
+  fabriquer une précision qu'on n'a pas serait contre-productif — la stratégie
+  s'entraînerait à réagir à un bruit qu'elle a elle-même inventé.
+- L'option 3 devient sans objet une fois l'option 1 en place : elle
+  n'apportait rien que l'option 1 n'ait déjà, et elle retardait le paper
+  trading que `config/validation.yaml` exige avant tout capital réel.
+
+**Ce que ça change concrètement**, dans `orchestrateur.py` :
+
+- `Etat.pepites_suivies : dict[str, tuple[chaine, adresse]]` — la mémoire
+  propre aux positions pépites entre deux passes. Nécessaire parce que
+  `Position` ne porte pas ces deux champs ; les y ajouter aurait cascadé
+  jusqu'à `Ordre`/`Execution`/`execution/courtier.py`, qu'aucune session ne
+  touche. `risk_management/`, `execution/` et `strategy/pepites.py` restent
+  donc **intacts**.
+- `_passe_pepites(maintenant, prix)`, appelée à chaque `une_passe()` : rafraîchit
+  le prix et évalue la sortie (`stops.evaluer(..., stop_force=...)`, nouveau
+  paramètre) de chaque position pépite déjà ouverte, puis — seulement si
+  `ConfigPepites.termes_recherche` est configuré et si de la place reste sous
+  `candidats_max` — cherche de nouveaux candidats et achète le mieux noté qui
+  passe le bouclier.
+- `ConfigPepites.termes_recherche : tuple[str, ...] = ()` — **vide à dessein**,
+  même décision que `TARIFS` vide dans `generation-serveur/` : sans terme
+  configuré, aucun appel réseau de découverte n'a lieu, et remplir cette liste
+  de mémoire donnerait une découverte qui a l'air de marcher sans jamais avoir
+  été vérifiée à sa source (GeckoTerminal, DexScreener… sont refusés depuis
+  une session distante).
+- `ConfigPepites.stop_pct = 0.15` — **une proposition, pas une valeur
+  mesurée**, faute d'historique intra-journalier de pool DEX pour la calibrer
+  (voir volet A ci-dessus). C'est un seuil de décision au sens du garde-fou
+  permanent de `CLAUDE.md` : elle attend une confirmation explicite avant
+  toute fusion qui active ce chemin, comme `capitalisation_max_usd` l'a reçue
+  le même jour.
+
+**Ce qui a été vérifié, et comment.** `garde-du-bot` a relu ce lot contre les
+six règles qui protègent l'argent, et `banc-du-bot` a mesuré son effet sur la
+stratégie. `nexuscrypto/tests/test_orchestrateur_pepites.py`
+fait tourner le chemin entier avec un client réseau factice, et le test qui
+compte le plus s'appelle `test_bouclier_actif_bloque_lachat_sur_verdict_rejete` :
+il prouve, en vérifiant que le service de sécurité a **vraiment été appelé**
+puis en constatant qu'un verdict rejeté **bloque vraiment l'achat**, que la
+mine de la PR #886 est refermée pour de bon — pas seulement documentée. Un
+second défaut, plus mineur, a été trouvé en lisant la sortie réelle d'une
+vente de test : le message annonçait « stop touché… 4 ATR sous l'entrée » pour
+une sortie qui n'avait calculé aucun ATR, puisqu'elle venait du pourcentage
+fixe. Corrigé dans `risk_management/stops.py` (`evaluer` dit désormais
+« pourcentage fixe » quand `stop_force` a décidé), et gardé par
+`test_le_motif_dun_stop_force_ne_parle_pas_datr`.
+
+**Un troisième défaut, plus sérieux, trouvé par `garde-du-bot` en relisant ce
+lot une seconde fois.** `_passe_pepites` rafraîchissait le prix d'une pépite
+détenue *après* l'appel à `_verifier_coupe_circuit` dans `une_passe()` — le
+coupe-circuit calculait donc la valeur du portefeuille avec
+`Portefeuille.valeur_totale(prix)`, qui retombe sur le prix d'achat
+(`prix_moyen`) pour tout actif absent du dict `prix`. Le garde-fou de
+drawdown restait ainsi **aveugle à la perte latente d'une pépite tant qu'elle
+n'était pas vendue**, exactement sur la classe d'actifs la plus volatile que
+ce lot introduit dans la boucle en direct. Corrigé en scindant
+`_passe_pepites` en deux étages appelés séparément par `une_passe()` :
+`_evaluer_sorties_pepites` (rafraîchit `prix` en place et vend au besoin)
+tourne **avant** `_verifier_coupe_circuit`, `_decouvrir_pepites` tourne après
+la boucle watchlist comme avant. `_passe_pepites` reste l'entrée directe des
+tests, qui enchaîne les deux dans le même ordre. Gardé par
+`test_le_coupe_circuit_voit_la_perte_latente_dune_pepite`, qui fait
+**vraiment** se déclencher le coupe-circuit sur une chute de pépite (-20 %,
+sous le seuil du stop individuel à 50 % pour isoler le garde-fou de
+portefeuille) — un garde-fou d'argent ne compte comme vérifié que si un test
+l'a vu se déclencher pour de vrai (`CLAUDE.md`).
+
+**Trois trous de couverture identifiés par `banc-du-bot`, comblés dans la
+foulée** : `test_le_montant_achete_est_borne_par_le_plafond_du_jeton` (rien ne
+garantissait que `plafond_par_jeton_usd` borne vraiment le montant exécuté —
+il s'avère qu'il mord systématiquement avant le plafond de risque avec les
+réglages livrés, donc c'est bien lui qui décide de la taille réelle d'un
+achat de pépite), `test_candidats_max_atteint_arrete_la_decouverte` (aucun
+test ne vérifiait que la découverte s'arrête une fois le plafond de positions
+atteint) et `test_la_prise_de_benefice_suiveuse_sort_sans_attendre_le_stop`
+(seules des sorties sur stop étaient couvertes — rien ne prouvait que la
+stratégie sait aussi *garder* un gain sur une pépite via le trailing).
+
+**Ce qui reste hors de ce lot.** Aucun terme de recherche n'est configuré :
+tant que `ConfigPepites.termes_recherche` reste vide, ce chemin ne fait
+strictement rien de plus qu'avant, quel que soit l'état du reste. Le remplir
+avec de vraies adresses de jetons de cotation, confirmer `stop_pct`, et
+observer un vrai cycle de paper trading restent devant nous.

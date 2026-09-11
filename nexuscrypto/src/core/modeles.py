@@ -338,6 +338,13 @@ class Decision:
     score: Score
     prix_reference: float
     raisons: tuple[str, ...] = ()
+    # Portées par la décision elle-même, jamais retrouvées après coup sur une
+    # ligne de watchlist : c'est ce qui arme le bouclier anti-rugpull aussi
+    # bien sur un actif connu d'avance que sur une pépite du scanner, sans
+    # dépendre de l'origine de l'actif. Absentes (`None`) pour un actif sans
+    # contrat à auditer (le socle : BTC/USDT...) — voir `orchestrateur`.
+    chaine: str | None = None
+    adresse: str | None = None
 
     @property
     def agit(self) -> bool:

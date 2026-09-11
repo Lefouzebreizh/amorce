@@ -109,6 +109,58 @@ class TestMoteur(unittest.TestCase):
         analyse = self.moteur.analyser(ctx, portefeuille(), MAINTENANT)
         self.assertIs(analyse.decision.action, Action.ACHETER)
 
+    def test_la_decision_porte_la_chaine_et_ladresse_de_la_watchlist(self):
+        """La correction de la mine trouvée par `garde-du-bot` en relisant la
+        PR #886 : la chaîne/adresse vivent désormais sur la `Decision`
+        elle-même, pas seulement retrouvées après coup sur la ligne de
+        watchlist — c'est ce qui arme le bouclier sans distinguer une pépite
+        du scanner d'une ligne connue d'avance."""
+
+        from src.core.config import LigneSurveillee
+
+        watchlist = dict(self.config.portefeuille.watchlist)
+        watchlist["PEP/SOL"] = LigneSurveillee(
+            symbole="PEP/SOL", role="watchlist", chaine="solana", adresse="So111",
+        )
+        config_avec_adresse = replace(
+            self.config,
+            portefeuille=replace(self.config.portefeuille, watchlist=watchlist),
+        )
+        ctx = contexte(actif="PEP/SOL", nombre=260, depart=200.0, pente=-0.2, fear_greed=15)
+        analyse = Moteur(config_avec_adresse).analyser(ctx, portefeuille(), MAINTENANT)
+        self.assertEqual(analyse.decision.chaine, "solana")
+        self.assertEqual(analyse.decision.adresse, "So111")
+
+    def test_un_actif_du_socle_sans_adresse_ne_porte_ni_chaine_ni_adresse(self):
+        """Pas d'adresse configurée, pas d'adresse sur la décision — c'est ce
+        qui laisse `_bouclier_autorise` conclure « pas de bouclier » plutôt
+        que d'inventer une chaîne par défaut."""
+
+        ctx = contexte(actif="BTC/USDT", nombre=260, depart=30000.0, pente=-0.2, fear_greed=15)
+        analyse = self.moteur.analyser(ctx, portefeuille(), MAINTENANT)
+        self.assertIsNone(analyse.decision.chaine)
+        self.assertIsNone(analyse.decision.adresse)
+
+    def test_la_sortie_porte_aussi_la_chaine_et_ladresse(self):
+        from src.core.config import LigneSurveillee
+
+        watchlist = dict(self.config.portefeuille.watchlist)
+        watchlist["PEP/SOL"] = LigneSurveillee(
+            symbole="PEP/SOL", role="watchlist", chaine="solana", adresse="So111",
+        )
+        config_avec_adresse = replace(
+            self.config,
+            portefeuille=replace(self.config.portefeuille, watchlist=watchlist),
+        )
+        ctx = contexte(actif="PEP/SOL", nombre=260, depart=300.0, pente=-1.0, fear_greed=10)
+        pfl = portefeuille(
+            positions={"PEP/SOL": position(actif="PEP/SOL", quantite=1.0, prix_moyen=300.0)}
+        )
+        analyse = Moteur(config_avec_adresse).analyser(ctx, pfl, MAINTENANT)
+        self.assertIs(analyse.decision.action, Action.SORTIR)
+        self.assertEqual(analyse.decision.chaine, "solana")
+        self.assertEqual(analyse.decision.adresse, "So111")
+
 
 if __name__ == "__main__":
     unittest.main()

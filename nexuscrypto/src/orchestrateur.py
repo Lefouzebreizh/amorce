@@ -23,13 +23,15 @@ from datetime import datetime
 from .core.config import Config
 from .core.journal import obtenir
 from .core.modeles import (
-    Action, Contexte, Execution, Mode, Portefeuille, maintenant as instant,
+    Action, Contexte, Decision, Execution, Mode, Portefeuille, Score, maintenant as instant,
 )
 from .core.reseau import ClientHTTP, ErreurReseau
 from .data_engine.agregateur import Agregateur
 from .data_engine.macro import IngestionMacro
 from .data_engine.marche import MarcheCCXT, MarcheHyperliquid
-from .data_engine.onchain import IngestionOnchain, SourceDeFiLlama, SourceDexScreener
+from .data_engine.onchain import (
+    IngestionOnchain, SourceDeFiLlama, SourceDexScreener, candidat_depuis_paire,
+)
 from .data_engine.sentiment import IngestionSentiment, SourceFearGreed, SourceReddit
 from .execution.courtier import Courtier, CourtierCCXT, CourtierPapier
 from .execution.gestionnaire import Gestionnaire
@@ -37,6 +39,7 @@ from .notifications import canaux as canaux_module, messages
 from .risk_management import coupe_circuit as cc
 from .risk_management import portefeuille as pf
 from .risk_management import stops
+from .strategy import pepites as pepites_module
 from .strategy.moteur import Analyse, Moteur
 
 _journal = obtenir("orchestrateur")
@@ -50,6 +53,13 @@ class Etat:
     executions_du_jour: list[Execution] = field(default_factory=list)
     jour_courant: int = -1
     dernier_recapitulatif: int = -1
+    # Mémoire propre aux pépites du scanner : `actif -> (chaine, adresse)`.
+    # Nécessaire parce que `Position` ne porte pas ces deux champs — les y
+    # ajouter cascaderait jusqu'à `Ordre`/`Execution`/`execution/courtier.py`,
+    # qu'aucune session ne touche (voir CLAUDE.md). Une ligne de watchlist n'a
+    # pas besoin de cette mémoire : sa chaîne/adresse vit dans la configuration
+    # et `strategy/moteur.py` la relit à chaque passe.
+    pepites_suivies: dict[str, tuple[str, str]] = field(default_factory=dict)
 
 
 class Orchestrateur:
@@ -112,6 +122,13 @@ class Orchestrateur:
             return []
 
         prix = {symbole: contexte.prix for symbole, contexte in contextes.items()}
+        # Rafraîchir le prix des pépites détenues **avant** le coupe-circuit :
+        # trouvé par `garde-du-bot` en relisant ce lot, `prix` ne portait sinon
+        # jamais la valeur réelle d'une pépite tant qu'elle n'était pas vendue —
+        # le garde-fou de portefeuille agrégé restait aveugle à sa perte
+        # latente, exactement sur la classe d'actifs la plus volatile de la
+        # boucle. Voir `_evaluer_sorties_pepites`.
+        await self._evaluer_sorties_pepites(maintenant, prix)
         variations = {
             symbole: contexte.serie.clotures[-1] / contexte.serie.clotures[-2] - 1.0
             for symbole, contexte in contextes.items()
@@ -128,6 +145,7 @@ class Orchestrateur:
             analyses.append(analyse)
             await self._appliquer(analyse, prix, maintenant)
 
+        await self._decouvrir_pepites(maintenant, prix)
         await self._recapitulatif_si_lheure(maintenant, prix)
         return analyses
 
@@ -181,8 +199,10 @@ class Orchestrateur:
         # Le bouclier passe **avant** le dimensionnement et avant le courtier :
         # un jeton dont on ne peut pas sortir ne doit pas même consommer un
         # calcul de taille. « Pas d'adresse, pas de bouclier » le rend
-        # inoffensif sur un actif établi (BTC, ETH...) qui n'en désigne pas.
-        if not await self._bouclier_autorise(decision, ligne):
+        # inoffensif sur un actif établi (BTC, ETH...) qui n'en désigne pas —
+        # et la chaîne/adresse vivent désormais sur la décision elle-même,
+        # jamais retrouvées après coup sur la seule ligne de watchlist.
+        if not await self._bouclier_autorise(decision):
             return
 
         stop = stops.stop_initial(decision.prix_reference, analyse.lecture.atr, self.config.risque)
@@ -206,12 +226,17 @@ class Orchestrateur:
             _journal.info("%s : achat non passé — %s", decision.actif, resultat.motif)
             await self.notificateur.diffuser(messages.signal(decision), categorie="signal")
 
-    async def _bouclier_autorise(self, decision, jeton=None) -> bool:
+    async def _bouclier_autorise(self, decision) -> bool:
         """Le veto de sécurité. Rend faux quand l'achat est refusé.
 
-        `jeton` est la ligne de watchlist de l'actif, ou `None` s'il vient du
-        scanner de pépites — dans les deux cas c'est sa `chaine`/`adresse` qui
-        arme le bouclier, jamais son origine.
+        `decision.chaine`/`decision.adresse` arment le bouclier — qu'elles
+        viennent d'une ligne de watchlist (`strategy/moteur.py`) ou d'une
+        pépite du scanner (`_passe_pepites`), sans distinction d'origine.
+        C'est la correction de la mine trouvée en relisant la PR #886 :
+        avant, `orchestrateur` ne relisait ces deux champs que sur la ligne de
+        watchlist, ce qui aurait désactivé silencieusement le bouclier sur
+        exactement les jetons pour lesquels il existe le jour où le scanner
+        aurait été branché sans cette correction.
 
         **Un refus est annoncé, jamais silencieux.** Une pépite qui disparaît du
         flux sans un mot se lit comme une pépite que la stratégie n'a pas
@@ -226,8 +251,8 @@ class Orchestrateur:
         from .data_engine import securite as sources
         from .strategy import bouclier
 
-        chaine = getattr(jeton, "chaine", None) or "ethereum"
-        adresse = getattr(jeton, "adresse", None)
+        chaine = decision.chaine or "ethereum"
+        adresse = decision.adresse
         if not adresse:
             # **Pas d'adresse, pas de bouclier** — et non « pas d'adresse, donc
             # refus ». La première version refusait tout : les lignes du socle
@@ -251,6 +276,154 @@ class Orchestrateur:
                 f"\u26d4 {decision.actif} — achat refusé.\n{motif}", categorie="signal",
             )
         return autorise
+
+    async def _passe_pepites(self, maintenant: datetime, prix: dict[str, float]) -> None:
+        """Le scanner de pépites, en direct — décidé le 11/09/2026 (option 1
+        de `nexuscrypto/README.md` § 16 bis) : le score du scanner devient
+        directement la décision d'achat, sans passer par `strategy/moteur.py`,
+        qui exige une série de bougies qu'aucune plateforme CCXT ne fournit
+        pour un pool DexScreener. Stop en pourcentage fixe
+        (`ConfigPepites.stop_pct`), faute d'ATR calculable — les deux autres
+        options (série de bougies approchée, ou attendre une vraie source
+        OHLCV de pools DEX) sont écartées et leur raison est écrite au même
+        endroit.
+
+        Enchaîne les deux étages ci-dessous dans l'ordre. `une_passe()` les
+        appelle séparément — le premier avant le coupe-circuit, le second
+        après la boucle watchlist — mais cette méthode reste l'entrée directe
+        pour qui veut les deux (les tests, notamment).
+        """
+
+        if self.client is None:
+            return
+        await self._evaluer_sorties_pepites(maintenant, prix)
+        await self._decouvrir_pepites(maintenant, prix)
+
+    async def _evaluer_sorties_pepites(self, maintenant: datetime, prix: dict[str, float]) -> None:
+        """Rafraîchit le prix des pépites détenues et vend celles dont le
+        stop (pourcentage fixe) ou la prise de bénéfice suiveuse est touché.
+
+        Mute `prix` en place : c'est ce qui permet à `une_passe()` d'appeler
+        cette méthode **avant** `_verifier_coupe_circuit`, de sorte que le
+        garde-fou de portefeuille voie la vraie valeur d'une pépite plutôt que
+        son prix d'achat — trouvé par `garde-du-bot` en relisant ce lot.
+        """
+
+        config = self.config.strategie.pepites
+        if self.client is None:
+            return
+
+        dexscreener = SourceDexScreener(self.client)
+
+        # `Position` ne porte pas chaîne/adresse — voir `Etat.pepites_suivies`.
+        for actif, (chaine, adresse) in list(self.etat.pepites_suivies.items()):
+            position = self.etat.portefeuille.positions.get(actif)
+            if position is None:
+                self.etat.pepites_suivies.pop(actif, None)
+                continue
+            try:
+                paires = await dexscreener.paires_du_jeton(chaine, adresse)
+            except ErreurReseau as erreur:
+                _journal.info("%s : prix indisponible cette passe — %s", actif, erreur)
+                continue
+            meilleure = SourceDexScreener.meilleure_paire(paires)
+            prix_actif = float((meilleure or {}).get("priceUsd") or 0.0)
+            if prix_actif <= 0:
+                continue
+            prix[actif] = prix_actif
+            stop = stops.stop_initial_pct(position.prix_moyen, config.stop_pct)
+            sortie = stops.evaluer(
+                position, prix_actif, atr=None, config=self.config.risque, stop_force=stop
+            )
+            if not sortie.doit_sortir:
+                continue
+            resultat = await self.gestionnaire.vendre(
+                actif, position.quantite, self.etat.portefeuille,
+                prix_reference=prix_actif, motif=sortie.raison,
+            )
+            if resultat.accepte and resultat.execution:
+                self.etat.portefeuille = resultat.portefeuille
+                self.etat.executions_du_jour.append(resultat.execution)
+                self.etat.pepites_suivies.pop(actif, None)
+                await self.notificateur.diffuser(
+                    messages.ordre_execute(resultat.execution, simule=self.config.simule),
+                    categorie="ordre",
+                )
+
+    async def _decouvrir_pepites(self, maintenant: datetime, prix: dict[str, float]) -> None:
+        """Cherche de nouvelles pépites et achète la première retenue,
+        s'il reste de la place et si des termes de recherche sont configurés
+        — vide par défaut, voir `ConfigPepites.termes_recherche`."""
+
+        config = self.config.strategie.pepites
+        if self.client is None:
+            return
+        if not config.termes_recherche or len(self.etat.pepites_suivies) >= config.candidats_max:
+            return
+
+        dexscreener = SourceDexScreener(self.client)
+        candidats = []
+        for terme in config.termes_recherche:
+            try:
+                paires_brutes = await dexscreener.rechercher(terme)
+            except ErreurReseau as erreur:
+                _journal.info("Recherche « %s » indisponible cette passe — %s", terme, erreur)
+                continue
+            for brute in paires_brutes:
+                candidat = candidat_depuis_paire(brute)
+                if candidat is not None:
+                    candidats.append(candidat)
+        if not candidats:
+            return
+
+        retenues, _rejets = pepites_module.scanner(candidats, config, maintenant)
+        for pepite in retenues:
+            actif = f"{pepite.candidat.symbole}/{pepite.candidat.chaine}"
+            if actif in self.etat.portefeuille.positions or actif in self.etat.pepites_suivies:
+                continue
+
+            score = Score(
+                total=pepite.score, technique=0.0, sentiment=0.0, onchain=0.0,
+                raisons=pepite.raisons,
+            )
+            decision = Decision(
+                actif=actif,
+                action=Action.ACHETER,
+                # Montant demandé, volontairement non borné — même logique que
+                # `strategy/moteur.py` : le chemin de risque décide seul du
+                # montant réel.
+                montant_usd=self.etat.portefeuille.valeur_totale(
+                    {**prix, actif: pepite.candidat.prix_usd}
+                ),
+                score=score,
+                prix_reference=pepite.candidat.prix_usd,
+                raisons=(
+                    f"score pépite {pepite.score:.0f} ≥ seuil {config.score_minimum:g}",
+                ) + pepite.raisons,
+                chaine=pepite.candidat.chaine,
+                adresse=pepite.candidat.adresse,
+            )
+            if not await self._bouclier_autorise(decision):
+                continue
+
+            stop = stops.stop_initial_pct(decision.prix_reference, config.stop_pct)
+            resultat = await self.gestionnaire.acheter(
+                decision, self.etat.portefeuille,
+                prix={**prix, actif: pepite.candidat.prix_usd},
+                stop=stop, carnet=None,
+                plafond_specifique_usd=config.plafond_par_jeton_usd,
+            )
+            if resultat.accepte and resultat.execution:
+                self.etat.portefeuille = resultat.portefeuille
+                self.etat.executions_du_jour.append(resultat.execution)
+                self.etat.pepites_suivies[actif] = (pepite.candidat.chaine, pepite.candidat.adresse)
+                await self.notificateur.diffuser(
+                    messages.ordre_execute(resultat.execution, simule=self.config.simule),
+                    categorie="ordre",
+                )
+                break  # une seule pépite achetée par passe
+            _journal.info("%s : achat non passé — %s", actif, resultat.motif)
+            await self.notificateur.diffuser(messages.signal(decision), categorie="signal")
 
     async def _verifier_coupe_circuit(
         self,

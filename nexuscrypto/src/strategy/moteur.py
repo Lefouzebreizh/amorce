@@ -98,6 +98,8 @@ class Moteur:
                         score=score,
                         prix_reference=prix,
                         raisons=(sortie.raison,),
+                        chaine=ligne.chaine if ligne is not None else None,
+                        adresse=ligne.adresse if ligne is not None else None,
                     ),
                     sortie=sortie,
                 )
@@ -125,6 +127,8 @@ class Moteur:
                 score=score,
                 prix_reference=prix,
                 raisons=raisons,
+                chaine=ligne.chaine if ligne is not None else None,
+                adresse=ligne.adresse if ligne is not None else None,
             ),
             sortie=sortie,
         )
