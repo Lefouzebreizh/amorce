@@ -583,19 +583,40 @@ Le résumé de reprise ne compte pas : il est lu une fois. **Le dépôt transpor
 la mémoire, le résumé ne transporte que l'état.**
 
 **Et un projet qui vit dans un dépôt GitHub séparé n'hérite de rien de tout
-ça.** `ensemble-mdph` n'a pas de `CLAUDE.md` : aucune leçon d'Amorce ne le
-protège (un piège déjà écrit ici, comme celui de `ssoProtection` plus bas, ne
-traverse pas jusqu'à lui), et aucune de ses propres leçons ne s'écrit nulle
-part — un défaut annoncé corrigé peut donc y ressurgir identique, rejoué par
-une deuxième session qui ne sait pas qu'une première l'a déjà mesuré une fois
-à tort. Mesuré le 08-09/09/2026 : un chevauchement de bouton sur du texte,
-annoncé réglé par un commit, a survécu à la vérification automatisée d'une
-session suivante avant d'être vu à l'œil par le propriétaire — deux fois de
-suite, faute d'un fichier qui aurait pu dire « déjà mesuré, et mal ». Tout
-projet distinct qui reçoit du travail sur plus d'une session se dote d'un
-fichier de mémoire minimal, même trois lignes — un `CLAUDE.md`, un `AGENTS.md`
-ou une simple note en tête de son `README.md` suffit, tant qu'il liste les
-pièges déjà rencontrés. Détail dans
+ça** — sauf ce qu'on y a explicitement posé. `ensemble-mdph` en a fait les
+frais tant qu'il n'avait pas son propre `CLAUDE.md` : aucune leçon d'Amorce ne
+le protégeait (un piège déjà écrit ici, comme celui de `ssoProtection` plus
+bas, ne traversait pas jusqu'à lui), et aucune de ses propres leçons ne
+s'écrivait nulle part — un défaut annoncé corrigé pouvait y ressurgir
+identique, rejoué par une deuxième session qui ne savait pas qu'une première
+l'avait déjà mesuré une fois à tort. Mesuré le 08-09/09/2026 : un
+chevauchement de bouton sur du texte, annoncé réglé par un commit, a survécu à
+la vérification automatisée d'une session suivante avant d'être vu à l'œil par
+le propriétaire — deux fois de suite, faute d'un fichier qui aurait pu dire
+« déjà mesuré, et mal ». `ensemble-mdph` a depuis son `CLAUDE.md`, posé le
+11/09/2026 — et la règle qui suit change le moment où ce geste se fait pour
+tout projet à venir, plutôt que d'attendre qu'un défaut le justifie après coup.
+
+**Et depuis le 11/09/2026, ce geste se fait dès le départ, jamais après
+coup.** Posé par le propriétaire en toutes lettres : pour tout **nouveau**
+projet qui démarre dans un dépôt séparé, poser son `CLAUDE.md` avant le
+premier vrai développement — pas après qu'un défaut ait forcé à le faire.
+Deux règles y vont au minimum, dès la première ligne, sur le modèle
+d'`ensemble-mdph/CLAUDE.md` :
+
+1. **L'avis humain prime toujours sur le vert des tests automatiques.** Un
+   contrôle qui passe mesure la mécanique, jamais si le résultat est bon à
+   regarder ou à utiliser. Si le propriétaire dit que ça ne va pas, c'est
+   vrai, même si tout est vert.
+2. **Parcourir soi-même chaque fonctionnalité comme un utilisateur réel avant
+   de déclarer un travail terminé** — tous les parcours, tous les chemins d'un
+   site ou d'une application — jamais en comptant sur lui pour repérer les
+   coquilles restantes.
+
+Tout projet distinct qui reçoit du travail sur plus d'une session se dote en
+plus, au fil de l'eau, de ses propres pièges déjà rencontrés — même trois
+lignes ajoutées à ce même fichier suffisent, pas besoin d'attendre un format
+plus élaboré. Détail du cas d'origine dans
 `second-brain/lecons/2026-09-10-post-mortem-ensemble-mdph-verifications-qui-regardent-a-cote.md`.
 
 ## 4. STACK
