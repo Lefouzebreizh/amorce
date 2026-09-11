@@ -61,8 +61,12 @@ se coche par Erwann, jamais par une session.
   messages de personnes en détresse, ni relue par un professionnel.
 - Le prompt système n'a jamais été testé contre un utilisateur insistant
   simulé (ce que la note d'initialisation demande explicitement).
-- Aucun fournisseur LLM n'est arrêté — la fonction Edge utilise Claude à
-  titre provisoire (voir son en-tête), pas comme décision définitive.
+- **Le fournisseur LLM est tranché depuis le 11/09/2026 : Claude, et lui
+  seul** (voir TODO.md) — cette ligne datait d'avant la décision et disait
+  le contraire. Fiabilité et sécurité priment sur le coût pour ce projet ;
+  ce qui reste non mesuré n'est plus *quel* fournisseur, mais que ce
+  fournisseur réponde correctement en conditions réelles (voir l'incident
+  de clé invalide du 11/09/2026, second-brain).
 - Le seuil 2 de la couche 3 (détresse répétée entre sessions) n'est pas
   branché : `detressePersistanteInterSessions` doit être calculé par
   l'appelant, qui n'existe pas encore.
