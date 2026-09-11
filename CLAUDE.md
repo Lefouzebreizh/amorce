@@ -863,6 +863,29 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   d'adresse, pas de bouclier » → achat autorisé sans aucune vérification. La
   correction attendue : porter `chaine`/`adresse` sur la `Decision`
   elle-même, jamais uniquement sur la ligne de watchlist.
+  **Le rejeu CoinMetrics BTC/ETH/LINK a été bloqué par le propriétaire le
+  11/09/2026** : NexusCrypto vise des pépites dynamiquement découvertes, pas
+  les majors d'une watchlist figée, et les valider sur BTC/ETH/LINK ne prouve
+  rien sur leur comportement réel. Deux volets ouverts en parallèle. Le
+  **plafond de capitalisation pépite** (`ConfigPepites.capitalisation_max_usd`)
+  a été aligné le jour même sur celui du radar `pepites/` — 300 M$ ici contre
+  30 M$ là-bas, la même définition de « pépite » portait deux plafonds
+  incompatibles. Le **volet A** (historique OHLCV d'une liste volontairement
+  mixte de jetons pépite-profile — survivants et effondrements documentés,
+  pour éviter le biais du survivant) est écrit :
+  `scripts/collecter_historique_pepites.py`, réseau via GeckoTerminal sur un
+  workflow GitHub (`nexuscrypto-collecte-pepites.yml`), CoinMetrics ni
+  DexScreener ni GeckoTerminal ni Birdeye ni DeFiLlama n'étant joignables
+  depuis une session distante — mesuré ce jour, même mur que le radar. Le
+  **volet B** (brancher le scanner en direct) a fait apparaître une vraie
+  fourche jamais posée avant d'y regarder : `data_engine.agregateur` exige une
+  série OHLCV pour construire un `Contexte`, et aucune plateforme CCXT n'en
+  fournit pour un pool DexScreener — un jeton découvert par le scanner n'a
+  donc aujourd'hui aucun chemin vers `strategy/moteur.py`. Trois options
+  posées dans `nexuscrypto/README.md` § 16 bis, aucune tranchée : le score du
+  scanner décide seul (sans ATR), une série approchée depuis les variations
+  DexScreener, ou attendre qu'une source OHLCV de pools DEX soit vérifiée
+  joignable — nommé au propriétaire plutôt que choisi en silence.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
   sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
   reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de
