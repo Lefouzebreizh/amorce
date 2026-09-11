@@ -479,7 +479,10 @@ echo "── Audit de page de vente (audit-landing/) : bibliothèques Python"
 # Le paquet Python `playwright`, pas le navigateur : Chromium est déjà posé sur
 # cette image à `/opt/pw-browsers/chromium` (voir le repli `playwright` de
 # `/capacites-session`), et `playwright install` est interdit dans ce dépôt.
-python3 -m pip install --quiet --break-system-packages playwright Pillow
+# Pillow n'est plus nécessaire : chaque segment est désormais une capture de
+# viewport écrite directement par Playwright, sans passer par un découpage
+# d'image après coup.
+python3 -m pip install --quiet --break-system-packages playwright
 
 # Réseau d'annuaires IA : rien à installer — il emprunte les dépendances
 # d'Amorce (Tailwind pour compiler sa feuille, Playwright pour son parcours) et

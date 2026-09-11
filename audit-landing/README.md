@@ -10,57 +10,52 @@ mots.
 d'image, la génération du rapport, la page de vente du produit et Stripe
 viennent après — voir la consigne d'origine, pas encore commencée ici.
 
-## Défaut connu, en cours d'investigation : tranches blanches sur `qonto.com/fr`
+## Défaut corrigé : tranches blanches sur `qonto.com/fr`
 
-Mesuré par le propriétaire le 11/09/2026, sur la machine où le script a du
-vrai réseau (impossible à reproduire depuis une session distante — voir plus
-bas) : 3 tranches sur 13 (`04-milieu`, `09-milieu`, `13-bas`) sont sorties
-**totalement blanches**, sans aucun contenu, sur `qonto.com/fr`. Aucune
-tranche blanche sur `payfit.com/fr` ni `pennylane.com` capturés dans la même
-session.
+Mesuré par le propriétaire le 11/09/2026 : 3 tranches sur 13 sorties
+**totalement blanches**, sans aucun contenu, sur `qonto.com/fr` — aucune sur
+`payfit.com/fr` ni `pennylane.com` dans la même session.
 
-**Une hypothèse a été testée et écartée, pour une bonne raison.**
-`masquer_elements_fixes` masque tout élément en `position: sticky`, sans
-filtre de taille — l'idée étant qu'une grande section « épinglée » (technique
-de mise en page très répandue sur les sites de storytelling comme Qonto) se
-fasse effacer comme un vulgaire bandeau de cookies. **Vérifié sur une fixture
-locale : c'est un vrai défaut, mais il ne produit pas le symptôme observé.**
-Un élément `sticky` reste dans le flux normal du document (contrairement à
-`fixed`) : le masquer avec `display:none` **fait disparaître l'espace qu'il
-occupait**, donc la page se raccourcit et tout ce qui suit remonte — ce qui
-décale et fait perdre du contenu, mais ne rend jamais une tranche blanche à
-sa position attendue. Le symptôme décrit (tranches blanches, aux bonnes
-positions, dans un total de 13 qui a l'air normal) ne colle pas à ce
-mécanisme-là.
+**Cause identifiée et reproduite sur fixture locale** : beaucoup de sites de
+storytelling révèlent leurs sections au scroll par une animation d'opacité
+(0 → 1) qui **se réinitialise dès que la section ressort du viewport** — GSAP
+ScrollTrigger, Framer Motion `whileInView`, AOS.js sans `data-aos-once`. La
+version précédente du script prenait une seule capture pleine page composite,
+depuis une seule position de défilement (`page.screenshot(full_page=True)`) :
+sur une page qui révèle plusieurs sections à des points différents, aucune
+position unique ne peut toutes les satisfaire à la fois. C'est exactement la
+forme du défaut observé — espace correct (donc un total de 13 tranches qui
+avait l'air normal), contenu absent.
 
-**Hypothèse plus probante, pas encore vérifiée : `content-visibility:
-auto`.** Beaucoup de sites marketing modernes l'utilisent pour la
-performance : la section réserve son espace (`contain-intrinsic-size`,
-d'où le total de 13 tranches qui reste cohérent) mais Chromium ne peint son
-contenu que si elle a été effectivement « pertinente » pour l'utilisateur —
-et rien ne garantit que ça survit jusqu'au moment où `capturer_page.py` prend
-sa capture pleine page, même après le passage de scroll de
-`forcer_chargement_complet`. C'est exactement la forme du défaut observé :
-espace correct, contenu absent. Une seconde piste, de la même famille : un
-`<canvas>`/WebGL/vidéo qui n'a pas eu le temps de peindre sa première image.
+**Deux autres hypothèses ont été testées avant celle-ci et écartées**, chacune
+sur une fixture dédiée :
 
-**Prochain pas** : reproduire `content-visibility: auto` sur une fixture
-locale (une section avec `contain-intrinsic-size` posé, hors du viewport au
-moment de la capture), confirmer que ça blanchit une tranche à la bonne
-position, puis corriger — piste la plus directe : injecter une feuille de
-style forçant `content-visibility: visible !important` sur toute la page
-avant la capture, ce qui neutralise le mécanisme sans toucher au
-lazy-loading JS des images (mécanisme différent, indépendant).
+- Le masquage de `position: sticky` (l'ancienne version de
+  `masquer_elements_fixes`) : un vrai défaut, mais il raccourcit la page et
+  décale son contenu — il ne blanchit jamais une tranche en place.
+- `content-visibility: auto` : ne reproduit rien sur une fixture minimale —
+  le rendu pleine page de Chromium gère correctement ce cas précis.
 
-**Non vérifié depuis cette session, et ce n'est pas nouveau** : la politique
-réseau de cet environnement bloque `qonto.com` (voir plus bas) — toute
-correction doit être vérifiée par le propriétaire, sur sa machine, avant
-d'être crue réglée.
+**Le correctif est architectural : chaque segment est désormais capturé
+pendant qu'il est réellement scrollé dans le viewport**, pas recomposé après
+coup depuis une capture unique. `capturer_et_decouper` scrolle à la position
+de chaque segment, laisse un court instant à une révélation en cours de se
+terminer, puis prend une capture du viewport à cet endroit précis — ce qui
+correspond exactement à ce qu'un utilisateur réel verrait, et règle du même
+coup `content-visibility: auto` et les animations canvas/vidéo qui ne
+peignent qu'à l'écran, sans qu'aucun des deux n'ait eu besoin d'un correctif
+séparé. Revérifié sur les quatre fixtures (cookies + lazy-loading, section
+épinglée, `content-visibility`, révélation réversible) : plus aucune tranche
+blanche.
+
+**Non revérifié sur `qonto.com` lui-même depuis cette session** : la
+politique réseau de cet environnement bloque toujours le site (voir plus
+bas) — à confirmer par le propriétaire, sur sa machine.
 
 ## Utiliser
 
 ```bash
-pip install playwright Pillow   # PyPI est ouvert, pas besoin de plus
+pip install playwright   # PyPI est ouvert, pas besoin de plus — Pillow n'est plus nécessaire
 python3 capturer_page.py "https://exemple.com" --sortie captures/
 ```
 
@@ -89,11 +84,17 @@ Chaque URL produit un dossier (`captures/<domaine-nettoyé>/`) contenant :
    Cookiebot, TrustArc, Google Funding Choices) puis, en repli, sur un
    bouton dont le texte visible ressemble à « Tout accepter » / « Accept
    all ». Best effort, silencieux si rien ne matche.
-3. **Masquage de tout ce qui reste en `position: fixed`/`sticky`** — bandeau
-   qui a résisté au clic, bannière promo, chat en direct, en-tête collant.
-   Nécessaire même après l'étape 2 : sans lui, ces éléments se dupliquent
-   sur chaque tranche découpée, puisqu'un élément fixe apparaît à la même
-   position d'écran à chaque « hauteur » de la page composite.
+3. **Masquage de tout ce qui reste en `position: fixed`** — bandeau qui a
+   résisté au clic, bannière promo, chat en direct, en-tête collant.
+   Nécessaire même après l'étape 2 : un élément fixe est pinné au viewport, il
+   apparaîtrait donc identique sur les treize segments si on ne le retirait
+   pas. `position: sticky` n'est **pas** masqué : un site de storytelling
+   l'utilise souvent pour une grande section de mise en page (pas seulement
+   un petit en-tête), et le masquer avec `display:none` la retire du flux du
+   document — la page se raccourcit et tout son contenu suivant se décale
+   (mesuré sur fixture). Comme chaque segment est désormais un vrai viewport
+   scrollé à sa position (étape 6), un `sticky` ne se duplique de toute façon
+   jamais : il se comporte exactement comme sous les yeux d'un utilisateur.
 4. **Scroll progressif jusqu'en bas** (pas de 700 px, pause de 150 ms) pour
    déclencher le lazy-loading des images sous la ligne de flottaison —
    la plupart se chargent via `IntersectionObserver` et ne se déclenchent
@@ -103,9 +104,13 @@ Chaque URL produit un dossier (`captures/<domaine-nettoyé>/`) contenant :
    B2B avec chat en direct ou traqueurs ne devient parfois jamais inactive ;
    s'y fier seul bloquerait le script jusqu'au long timeout par défaut de
    Playwright.
-6. **Une capture pleine page, puis un découpage en tranches d'une hauteur
-   d'écran chacune** (1800 px physiques = 900 px logiques × échelle 2),
-   nommées `hero` / `milieu` / `bas`.
+6. **Un segment à la fois, capturé pendant qu'il est réellement scrollé dans
+   le viewport** — jamais une capture pleine page composite découpée après
+   coup. Le script scrolle à la position de chaque segment, laisse un court
+   instant à une révélation au scroll de se terminer, puis capture le
+   viewport à cet endroit précis (voir « Défaut corrigé » plus bas pour la
+   raison). Une capture pleine page de référence (`00-pleine-page.png`) est
+   prise en plus, en dernier.
 
 ### Pourquoi découper en tranches d'écran plutôt qu'en trois blocs fixes
 
@@ -154,22 +159,25 @@ en direct) :
 - les 12 images de test passent de « en attente » à « chargées » après le
   scroll forcé (vérifié par script, pas seulement à l'œil : 12 → 0 en
   attente) ;
-- l'en-tête collant et le reliquat du bandeau sont bien masqués, donc absents
-  de toutes les tranches — y compris de `01-hero.png`, ce qui est un
-  compromis assumé : masquer *tout* élément fixe/collant avant la capture
-  pleine page est ce qui évite sa duplication sur les tranches suivantes,
-  au prix de sa disparition de la tranche où il apparaîtrait naturellement ;
+- le reliquat du bandeau de cookies (`position: fixed`) est bien masqué,
+  absent de toutes les tranches ; un en-tête collant (`position: sticky`),
+  lui, reste visible sur chaque tranche où il apparaît réellement au scroll —
+  c'est le comportement voulu depuis le correctif ci-dessous, pas un oubli ;
 - le script ne reste pas bloqué par le trafic réseau perpétuel : il capture
   en une dizaine de secondes grâce au délai de secours de 5 s, jamais au
   timeout par défaut de Playwright (30 s) ;
-- les tranches produites sont nettes, correctement dimensionnées
-  (2880×1800 px à l'échelle 2, sauf la dernière tranche partielle), et
-  couvrent toute la hauteur de la page sans trou ni chevauchement (garanti
-  par `calculer_segments`, testé unitairement).
+- les tranches produites sont nettes, correctement dimensionnées (2880×1800
+  px à l'échelle 2, sauf la dernière), et couvrent toute la hauteur de la
+  page sans trou ni chevauchement (garanti par `calculer_segments`, testé
+  unitairement).
 
-Le script de la fixture n'est pas versionné ici (c'est un outil de test
-ponctuel, pas une dépendance du produit) ; il tient en une page dans
-l'historique de cette session si besoin de le rejouer.
+Trois fixtures supplémentaires ont servi à diagnostiquer et corriger le défaut
+des tranches blanches sur `qonto.com/fr` — voir « Défaut corrigé » plus haut :
+une grande section `position: sticky`, une section `content-visibility:
+auto`, et une révélation au scroll réversible (opacity 0 → 1, la cause
+réelle). Aucun des scripts de fixture n'est versionné ici (outils de test
+ponctuels, pas des dépendances du produit) ; ils tiennent chacun en une page
+dans l'historique de cette session si besoin de les rejouer.
 
 ## Tests
 
