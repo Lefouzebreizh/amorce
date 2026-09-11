@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { detecterCrise } from './crisisDetection';
+import { detecterCrise } from './crisisDetection.ts';
 
-// Ces tests couvrent la liste de motifs telle qu'écrite dans la note
+// Ces tests couvrent la liste de phrases telle qu'écrite dans la note
 // d'initialisation du projet — ils prouvent que le code fait ce que la note
-// demande, pas que la liste est cliniquement juste ou complète. Cette
+// demande, jamais que la liste est cliniquement juste ou complète. Cette
 // deuxième chose ne se mesure pas par des tests unitaires : elle demande un
 // professionnel de santé mentale (voir TODO.md, couche 4).
 
-test("un message anodin ne déclenche rien", () => {
+test('un message anodin ne déclenche rien', () => {
   const resultat = detecterCrise(["j'ai passé une journée difficile au travail"]);
   assert.equal(resultat.niveau, 'aucun');
   assert.deepEqual(resultat.motifs, []);
@@ -27,31 +27,40 @@ test('les neuf tournures explicites du niveau fort déclenchent', () => {
     'je veux partir pour de bon',
   ];
   for (const exemple of exemples) {
-    const resultat = detecterCrise([exemple]);
-    assert.equal(resultat.niveau, 'fort', `"${exemple}" aurait dû déclencher le niveau fort`);
+    assert.equal(detecterCrise([exemple]).niveau, 'fort', `"${exemple}" aurait dû déclencher le niveau fort`);
   }
 });
 
-test('la mention d\'un plan ou d\'un moyen déclenche le niveau fort', () => {
+test("la mention d'un plan ou d'un moyen déclenche le niveau fort", () => {
   const exemples = [
     "j'ai les médicaments qu'il faut",
     "j'ai tout préparé",
-    'ce soir c\'est le bon moment',
+    "ce soir c'est le bon moment",
     'je vais me pendre',
+    'je veux me couper les veines',
   ];
   for (const exemple of exemples) {
-    const resultat = detecterCrise([exemple]);
-    assert.equal(resultat.niveau, 'fort', `"${exemple}" aurait dû déclencher le niveau fort`);
+    assert.equal(detecterCrise([exemple]).niveau, 'fort', `"${exemple}" aurait dû déclencher le niveau fort`);
   }
 });
 
-test('les motifs contenant des doubles lettres survivent au ramenage à une seule occurrence', () => {
-  // Régression : la normalisation ramène "immeuble" à "imeuble" et
-  // "arrangera" à "arangera" avant comparaison — les motifs eux-mêmes
-  // doivent être écrits sous leur forme déjà ramenée, sans quoi ils ne
-  // matchent plus jamais leur propre texte normalisé.
-  assert.equal(detecterCrise(['je vais sauter du immeuble']).niveau, 'fort');
+test('les motifs contenant des doubles lettres survivent au repli des répétitions', () => {
+  // Régression, et elle a changé de nature le 11/09/2026. La normalisation
+  // ramène « immeuble » à « imeuble » et « arrangera » à « arangera » avant
+  // comparaison. La première parade avait été d'écrire les motifs eux-mêmes
+  // sous leur forme déjà repliée — ce qui marchait, mais laissait dans le
+  // code des fautes apparentes (« imeuble », « arangera ») qu'un relecteur
+  // « corrigerait » de bonne foi, cassant la détection en silence. Or ce
+  // relecteur est justement le professionnel de santé mentale de la couche 4.
+  //
+  // La parade actuelle est structurelle : `compiler()` fait passer les motifs
+  // par la MÊME normalisation que les messages, donc ils s'écrivent en
+  // français correct et ne peuvent plus se désaccorder.
   assert.equal(detecterCrise(["ça ne s'arrangera jamais"]).niveau, 'modere');
+  assert.equal(detecterCrise(['je vais sauter du immeuble']).niveau, 'fort');
+  // La tournure correcte, qui ne matchait PAS la première version : son motif
+  // exigeait « du ».
+  assert.equal(detecterCrise(["je vais sauter de l'immeuble"]).niveau, 'fort');
 });
 
 test('les variantes phonétiques données en exemple déclenchent aussi', () => {
@@ -64,16 +73,15 @@ test('les fautes de frappe par lettres répétées ne cassent pas la détection'
 });
 
 test('le signal peut apparaître dans un message antérieur, pas seulement le dernier', () => {
-  const conversation = [
+  const resultat = detecterCrise([
     'je voulais juste dire bonjour',
     'je pense au suicide depuis ce matin',
     "et sinon aujourd'hui il fait beau",
-  ];
-  const resultat = detecterCrise(conversation);
+  ]);
   assert.equal(resultat.niveau, 'fort');
 });
 
-test('les six tournures de désespoir/fardeau déclenchent le niveau modéré', () => {
+test('les six tournures de désespoir ou de fardeau déclenchent le niveau modéré', () => {
   const exemples = [
     'je sers à rien',
     'tout le monde irait mieux sans moi',
@@ -83,31 +91,29 @@ test('les six tournures de désespoir/fardeau déclenchent le niveau modéré', 
     'je vois pas comment continuer',
   ];
   for (const exemple of exemples) {
-    const resultat = detecterCrise([exemple]);
-    assert.equal(resultat.niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
   }
 });
 
-test("l'épuisement isolé (une seule fois) ne déclenche rien", () => {
-  const resultat = detecterCrise(['je suis épuisée en ce moment']);
-  assert.equal(resultat.niveau, 'aucun');
+test("l'épuisement isolé, une seule fois, ne déclenche rien", () => {
+  assert.equal(detecterCrise(['je suis épuisée en ce moment']).niveau, 'aucun');
 });
 
-test("l'épuisement répété (deux fois dans la conversation) déclenche le niveau modéré", () => {
+test("l'épuisement répété dans deux messages déclenche le niveau modéré", () => {
   const resultat = detecterCrise([
     'je suis épuisée en ce moment',
     "aujourd'hui ça va un peu mieux",
     'je suis épuisée, encore',
   ]);
   assert.equal(resultat.niveau, 'modere');
+  assert.ok(resultat.motifs.includes('épuisement extrême répété'));
 });
 
 test('le niveau fort prime sur un signal modéré présent dans la même conversation', () => {
-  const resultat = detecterCrise(["je sers à rien", 'je veux en finir']);
-  assert.equal(resultat.niveau, 'fort');
+  assert.equal(detecterCrise(['je sers à rien', 'je veux en finir']).niveau, 'fort');
 });
 
-test('les motifs déclencheurs sont rendus pour le journal, sans texte brut de la personne', () => {
-  const resultat = detecterCrise(['je veux mourir']);
-  assert.ok(resultat.motifs.includes('veut mourir'));
+test('les motifs rendus sont les phrases de la liste, jamais le texte de la personne', () => {
+  const resultat = detecterCrise(['je veux mourir, je suis désolée de te dire ça comme ça']);
+  assert.deepEqual(resultat.motifs, ['je veux mourir']);
 });

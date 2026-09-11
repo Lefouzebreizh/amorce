@@ -54,6 +54,15 @@ jobs:
         if: '!cancelled()'
         run: npm test
 
+      # Pas une suite de tests, et c'est pour ça qu'elle tourne ici : elle
+      # affiche ce que la détection fait vraiment sur des messages ordinaires,
+      # faux positif connu compris. Elle ne peut pas échouer — elle n'affirme
+      # rien —, mais sa sortie reste dans le journal du job, et un écart s'y
+      # voit à l'œil avant d'avoir atteint quelqu'un.
+      - name: Regarder la détection
+        if: '!cancelled()'
+        run: npm run regarder
+
       - name: Build
         if: '!cancelled()'
         run: npm run build
