@@ -36,15 +36,15 @@ class Mode(str, Enum):
 class Action(str, Enum):
     """Ce que le moteur de décision peut proposer.
 
-    `TEMPORISER` n'est pas `ATTENDRE` : le premier veut dire « le calendrier
-    DCA dit d'acheter, mais la valorisation est en surchauffe, on reporte » ;
-    le second veut dire « rien à faire aujourd'hui ». La distinction compte
-    pour le récapitulatif : un report se raconte, une absence non.
+    Retiré le 10/09/2026 : `TEMPORISER`, qui n'avait de sens que face à un
+    calendrier d'achat obligatoire — « le calendrier dit d'acheter, mais la
+    valorisation est en surchauffe, on reporte ». Le moteur n'a plus de
+    calendrier : `ATTENDRE` couvre désormais tous les cas où le score ne
+    franchit pas le seuil d'achat.
     """
 
     ACHETER = "acheter"
     RENFORCER = "renforcer"
-    TEMPORISER = "temporiser"
     ATTENDRE = "attendre"
     ALLEGER = "alleger"
     SORTIR = "sortir"
@@ -70,7 +70,12 @@ class Gravite(int, Enum):
 
 
 class Zone(str, Enum):
-    """Zone de valorisation, telle que le DCA dynamique la lit."""
+    """Zone de valorisation du marché, dérivée de l'indice Fear & Greed.
+
+    N'entre plus dans une décision d'achat depuis le retrait du DCA
+    calendaire (10/09/2026) : elle reste lue par `scoring.note_sentiment`,
+    qui l'utilise pour motiver un score, jamais pour moduler un montant.
+    """
 
     PEUR_EXTREME = "peur_extreme"
     PEUR = "peur"

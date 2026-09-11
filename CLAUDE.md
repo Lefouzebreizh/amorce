@@ -685,15 +685,16 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   ni dans un commit, qui vaudrait vingt-quatre déploiements Vercel par jour.
   **Le cache s'évince au bout de sept jours sans usage** : si le planning
   s'arrête une semaine, le compteur des jugeables repart de zéro.
-- **nexuscrypto/** — moteur d'investissement autonome à DCA dynamique, Python
-  asynchrone. Le cœur — scoring, DCA, risque, simulation d'exécution — tourne en
-  bibliothèque standard **pure** : la suite entière passe avec `aiohttp`, `ccxt`,
-  `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend vérifiable
-  ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un chemin :
-  coupe-circuit, dimensionnement, courtier, portefeuille — sans raccourci. Le
-  mode papier est le défaut, le mode réel demande deux gestes. `profils.py`
-  rejoue six marchés fabriqués et compare la stratégie à un DCA aveugle : un
-  réglage se juge sur son effet, pas sur son intention.
+- **nexuscrypto/** — moteur d'investissement autonome, chasseur d'opportunités,
+  Python asynchrone. Le cœur — scoring, risque, simulation d'exécution — tourne
+  en bibliothèque standard **pure** : la suite entière passe avec `aiohttp`,
+  `ccxt`, `pandas` et `numpy` bloqués à l'import, et c'est ce qui la rend
+  vérifiable ailleurs que sur la machine qui l'a écrite. Un ordre n'a qu'un
+  chemin : coupe-circuit, dimensionnement, courtier, portefeuille — sans
+  raccourci. Le mode papier est le défaut, le mode réel demande deux gestes.
+  `profils.py` rejoue six marchés fabriqués et compare la stratégie à un
+  témoin qui achète une fois et conserve : un réglage se juge sur son effet,
+  pas sur son intention.
   **Le levier se mesure, il ne s'exécute pas** : `rejeu --leviers 1,2,3,5,10`
   compte les liquidations qu'un compte à levier aurait subies, et le courtier
   ne connaît toujours pas le mot. Une option de levier posée dans le chemin
@@ -744,6 +745,53 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   doit attester un backtest multi-régimes concluant et une période de paper
   trading conclusive, sans quoi la commande `production` refuse de démarrer.
   Voir `nexuscrypto/src/core/validation.py`.
+  **Retrait du DCA calendaire, décidé et fait le 10/09/2026** : Erwann a coupé
+  court à toute logique d'achat programmé — « je m'en fous du DCA » — pour un
+  bot qui priorise les pépites dynamiquement découvertes sur les majors d'une
+  watchlist, sans jamais cesser d'acheter une seule pour de bonnes raisons.
+  le module de calendrier `dca.py` est supprimé, `Action.TEMPORISER` avec, et
+  `strategy/moteur.py` ne connaît plus qu'un score contre un seuil
+  (`strategie.seuil_achat`) : sous le seuil il attend, au-dessus il achète ou
+  renforce, sans calendrier ni montant nominal — c'est
+  `risk_management.sizing.dimensionner`, sur la distance au stop, qui décide
+  seul du montant réel. `ConfigPortefeuille.allocation` (poids figés sommant
+  à 100) devient `watchlist` (`LigneSurveillee`, sans poids) : un actif hors
+  watchlist reçoit exactement le même traitement qu'une ligne connue
+  d'avance, ce qui prépare le branchement du scanner de pépites dans la
+  boucle en direct — **pas encore fait**, c'est le chantier suivant. Le témoin
+  de rejeu passe d'un DCA plat à un achat unique conservé, l'étalon universel
+  qui ne dépend plus d'aucun calendrier. **Ce qui n'a pas bougé** :
+  `risk_management/` et `execution/` intacts, 329 tests verts, relu par
+  `garde-du-bot` sans violation trouvée. **Ce qui reste à faire avant tout
+  capital réel** : rejouer ce nouveau moteur sur données réelles — les
+  mesures du README (§ 8 à 15) portent toutes sur l'ancien moteur à DCA et
+  sont désormais une archive de méthode, pas une description de la stratégie
+  actuelle.
+  **Premier rejeu du nouveau moteur, par `banc-du-bot` le jour même (README
+  § 16)** : ni clairement meilleur ni clairement pire. Deux faits mesurés,
+  pas supposés — `risque_par_position`, inerte à 0 % sous l'ancien moteur
+  (§ 14), plafonne désormais 25/26 achats sur du BTC réel mono-actif et
+  17/18 sur BTC+ETH+LINK ; et l'abstention totale en hausse continue que le
+  « plancher de discipline » avait corrigée (§ 8) **revient à l'identique**
+  une fois ce plancher retiré avec le calendrier — assumé par la nouvelle
+  philosophie, mais c'est le même mécanisme de fond, pas un nouveau défaut.
+  Le témoin (achat unique) rend aussi les comparaisons entre fenêtres bien
+  moins stables que l'ancien DCA plat : sur la même fenêtre baissière
+  2021-2023, la stratégie bat le témoin en mono-actif BTC et perd nettement
+  en BTC+ETH+LINK. Aucun balayage de réglage n'a encore été refait pour ce
+  moteur.
+  **Une mine posée pour le prochain chantier, trouvée par `garde-du-bot` en
+  relisant ce lot** : `orchestrateur._appliquer` ne lit `chaine`/`adresse`
+  que sur la ligne de watchlist de l'actif. Tant que le scanner n'est pas
+  branché, un actif hors watchlist n'a jamais d'adresse à vérifier — le veto
+  ne peut pas s'y appliquer, ce qui est correct puisque ce chemin est
+  aujourd'hui inatteignable. **Mais brancher le scanner sans corriger ce point
+  désactiverait silencieusement le bouclier anti-rugpull exactement sur les
+  jetons pour lesquels il existe** : une pépite découverte, avec une vraie
+  adresse de contrat, tomberait sur `ligne=None` → `adresse=None` → « pas
+  d'adresse, pas de bouclier » → achat autorisé sans aucune vérification. La
+  correction attendue : porter `chaine`/`adresse` sur la `Decision`
+  elle-même, jamais uniquement sur la ligne de watchlist.
 - **licence-serveur/** — le serveur de licence d'Amorce, et l'unique exception à
   sa promesse. **Trois routes** — `GET /etat` dit si une clé vaut, `POST /webhook`
   reçoit Stripe, `GET /remise` rend sa clé à l'acheteur contre son identifiant de

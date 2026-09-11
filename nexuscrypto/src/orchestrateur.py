@@ -90,7 +90,7 @@ class Orchestrateur:
 
         plateformes = {
             symbole: ligne.plateforme
-            for symbole, ligne in self.config.portefeuille.allocation.items()
+            for symbole, ligne in self.config.portefeuille.watchlist.items()
         }
         try:
             contextes = await self.agregateur.tous(
@@ -132,16 +132,12 @@ class Orchestrateur:
         return analyses
 
     def _ordre_de_service(self, prix: dict[str, float]) -> list[str]:
-        """Sert d'abord la ligne la plus sous-pondérée.
+        """Sert d'abord la ligne la moins engagée — voir
+        `risk_management.portefeuille.ordre_par_engagement`."""
 
-        Quand la trésorerie ne suffit pas pour tout, cet ordre décide qui est
-        servi. L'ordre du fichier de configuration servirait Bitcoin en premier
-        tous les mois et laisserait la ligne la plus en retard toujours en
-        retard.
-        """
-
-        derives = pf.derives(self.etat.portefeuille, prix, self.config.portefeuille)
-        return [d.actif for d in derives]
+        return pf.ordre_par_engagement(
+            self.etat.portefeuille, prix, self.config.portefeuille.symboles
+        )
 
     async def _appliquer(
         self, analyse: Analyse, prix: dict[str, float], maintenant: datetime
@@ -171,19 +167,22 @@ class Orchestrateur:
             return
 
         if decision.action not in (Action.ACHETER, Action.RENFORCER):
-            if decision.action is Action.TEMPORISER:
-                await self.notificateur.diffuser(messages.signal(decision), categorie="signal")
             return
 
-        ligne = self.config.portefeuille.allocation.get(decision.actif)
-        est_pepite = bool(ligne and ligne.role == "pepite")
-        plafond = self.config.portefeuille.plafond_par_jeton_usd if est_pepite else None
+        ligne = self.config.portefeuille.watchlist.get(decision.actif)
+        # Un actif de la watchlist qui porte son propre plafond l'utilise ;
+        # un actif absent de la watchlist — donc découvert par le scanner de
+        # pépites — utilise le plafond générique des jetons découverts.
+        plafond = (
+            ligne.plafond_usd if ligne is not None
+            else self.config.strategie.pepites.plafond_par_jeton_usd
+        )
 
         # Le bouclier passe **avant** le dimensionnement et avant le courtier :
         # un jeton dont on ne peut pas sortir ne doit pas même consommer un
-        # calcul de taille. Il ne s'applique qu'aux pépites — les lignes du
-        # socle sont des actifs établis, dont le contrat n'est pas la question.
-        if est_pepite and not await self._bouclier_autorise(decision):
+        # calcul de taille. « Pas d'adresse, pas de bouclier » le rend
+        # inoffensif sur un actif établi (BTC, ETH...) qui n'en désigne pas.
+        if not await self._bouclier_autorise(decision, ligne):
             return
 
         stop = stops.stop_initial(decision.prix_reference, analyse.lecture.atr, self.config.risque)
@@ -199,9 +198,6 @@ class Orchestrateur:
         if resultat.accepte and resultat.execution:
             self.etat.portefeuille = resultat.portefeuille
             self.etat.executions_du_jour.append(resultat.execution)
-            # Le calendrier n'avance qu'après une exécution réussie : un refus
-            # pour trésorerie insuffisante ne doit pas consommer l'échéance.
-            self.moteur.marquer_dca(decision.actif, maintenant)
             await self.notificateur.diffuser(
                 messages.ordre_execute(resultat.execution, simule=self.config.simule),
                 categorie="ordre",
@@ -210,8 +206,12 @@ class Orchestrateur:
             _journal.info("%s : achat non passé — %s", decision.actif, resultat.motif)
             await self.notificateur.diffuser(messages.signal(decision), categorie="signal")
 
-    async def _bouclier_autorise(self, decision) -> bool:
-        """Le veto de sécurité sur une pépite. Rend faux quand l'achat est refusé.
+    async def _bouclier_autorise(self, decision, jeton=None) -> bool:
+        """Le veto de sécurité. Rend faux quand l'achat est refusé.
+
+        `jeton` est la ligne de watchlist de l'actif, ou `None` s'il vient du
+        scanner de pépites — dans les deux cas c'est sa `chaine`/`adresse` qui
+        arme le bouclier, jamais son origine.
 
         **Un refus est annoncé, jamais silencieux.** Une pépite qui disparaît du
         flux sans un mot se lit comme une pépite que la stratégie n'a pas
@@ -226,7 +226,6 @@ class Orchestrateur:
         from .data_engine import securite as sources
         from .strategy import bouclier
 
-        jeton = self.config.portefeuille.allocation.get(decision.actif)
         chaine = getattr(jeton, "chaine", None) or "ethereum"
         adresse = getattr(jeton, "adresse", None)
         if not adresse:
@@ -234,7 +233,7 @@ class Orchestrateur:
             # refus ». La première version refusait tout : les lignes du socle
             # n'ont pas de contrat, et LINK/USDT se serait vu interdire à chaque
             # passe au motif qu'aucune source ne répondait. Un jeton nommé à la
-            # main dans l'allocation est un choix délibéré sur un actif établi ;
+            # main dans la watchlist est un choix délibéré sur un actif établi ;
             # ce module garde les contrats qu'on peut désigner, pas ceux-là.
             _journal.debug("%s sans adresse de contrat : bouclier non applicable",
                            decision.actif)

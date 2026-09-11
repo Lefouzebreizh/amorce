@@ -27,7 +27,7 @@ class TestPasseComplete(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.config = config()
         # Une tendance longuement baissière puis un marché en peur : le cas où
-        # le DCA dynamique doit acheter, et acheter plus que d'habitude.
+        # le score de confiance franchit largement le seuil d'achat.
         marches = {
             plateforme: MarcheFactice(
                 serie(nombre=260, depart=300.0, pente=-0.4), carnet(milieu=196.0, taille=50.0)
@@ -73,20 +73,6 @@ class TestPasseComplete(unittest.IsolatedAsyncioTestCase):
         valeur = etat.portefeuille.valeur_totale(prix)
         depart = self.config.portefeuille.capital_initial_usd
         self.assertLess(abs(valeur - depart), depart * 0.02)
-
-    async def test_le_calendrier_bloque_la_passe_suivante(self):
-        """Deux passes le même jour ne doivent pas déclencher deux DCA."""
-
-        await self._passe()
-        premiere = len(self.orchestrateur.gestionnaire.executions)
-        await self._passe(MAINTENANT + timedelta(hours=4))
-        self.assertEqual(len(self.orchestrateur.gestionnaire.executions), premiere)
-
-    async def test_l_echeance_revient_la_semaine_suivante(self):
-        await self._passe()
-        premiere = len(self.orchestrateur.gestionnaire.executions)
-        await self._passe(MAINTENANT + timedelta(days=8))
-        self.assertGreater(len(self.orchestrateur.gestionnaire.executions), premiere)
 
     async def test_le_coupe_circuit_arrete_les_achats(self):
         # Deux relevés le même jour : le premier pose la référence

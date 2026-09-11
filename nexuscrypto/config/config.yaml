@@ -23,67 +23,49 @@ general:
   journal_niveau: INFO
 
 # --------------------------------------------------------------------------
-# Portefeuille cible
+# Portefeuille — une liste de surveillance, plus de cible à sommer
 # --------------------------------------------------------------------------
 #
-# La somme des poids doit faire exactement 100. Le chargeur le vérifie et
-# refuse de démarrer sinon : une allocation à 97 % laisse 3 % de capital qui
-# n'est réclamé par personne et ne sera jamais investi.
+# Retiré le 10/09/2026, avec le DCA calendaire : plus de poids figés à sommer
+# à 100 %. Chaque ligne est un actif que le moteur regarde à chaque passe ;
+# c'est le score de confiance (`strategie.seuil_achat` ci-dessous), jamais un
+# pourcentage de ce fichier, qui décide s'il achète et combien — via
+# `risk_management.sizing`, sur la distance au stop.
 portefeuille:
-  # Capital de départ RÉEL fixé à 50 € (décision du 10/09/2026) — mais ce
-  # chiffre n'est **pas** recopié ici tel quel : mesuré le même jour, le
-  # faire tombe l'enveloppe DCA, le plafond des pépites et le seuil
-  # `montant_minimum_usd` du DCA dans l'incohérence les uns par rapport aux
-  # autres (une enveloppe de 200 $/semaine sur 50 $ de capital, un plafond de
-  # 150 $ par pépite sur le même total), et sept tests qui rejouaient ce
-  # fichier tel quel sont passés au rouge — plus aucun achat ne se
-  # déclenchait, la mécanique interne d'arrondi tombant sous les planchers.
-  # Recalibrer ces quatre nombres ensemble est une décision de produit
-  # (cadence, taille minimale d'ordre Binance, nombre de lignes tenables à ce
-  # montant), pas un changement d'une ligne — voir le compte rendu de session.
-  # En attendant cet arbitrage, la valeur livrée reste celle qui fait
-  # tourner la suite de tests et le rejeu : 10 000 $. Elle ne représente pas
-  # un capital réel tant que `config/validation.yaml` n'autorise pas le mode
-  # production.
+  # Capital de départ RÉEL fixé à 50 € par le propriétaire le 10/09/2026 —
+  # mais ce chiffre n'est **pas** recopié ici tel quel. Sous l'ancien moteur à
+  # DCA, le faire tombait l'enveloppe hebdomadaire et le plafond des pépites
+  # dans l'incohérence avec 50 $ de capital total, et sept tests rejouant ce
+  # fichier passaient au rouge. Le retrait de l'enveloppe DCA lève cette
+  # incohérence précise — il ne reste plus que le plafond des pépites
+  # (`strategie.pepites.plafond_par_jeton_usd`, 100 $) et le montant minimum
+  # d'ordre (`risque.montant_minimum_usd`, 20 $) à confronter à 50 $ de
+  # capital, ce qui reste jouable sur une seule ligne à la fois. Mais passer
+  # ce nombre en production reste une décision de produit distincte, qui
+  # attend le garde-fou de `config/validation.yaml` (backtest multi-régimes
+  # et paper trading documentés) avant d'engager le moindre euro réel. En
+  # attendant cet arbitrage, la valeur livrée reste celle qui fait tourner la
+  # suite de tests et le rejeu : 10 000 $.
   capital_initial_usd: 10000
-  # Enveloppe DCA de référence, par passage de calendrier. Le DCA dynamique
-  # multiplie ce montant, il ne le remplace pas.
-  enveloppe_dca_usd: 200
-  cadence_dca: hebdomadaire     # quotidienne | hebdomadaire | mensuelle
-  allocation:
+  watchlist:
     BTC/USDT:
-      poids: 50
       role: socle
       # Le socle ne se vend pas sur signal technique : c'est la réserve, et la
-      # seule chose qui la fait bouger est le rééquilibrage.
+      # seule chose qui la fait bouger est un choix explicite.
       vente_sur_signal: false
     SOL/USDT:
-      poids: 20
       role: croissance
       vente_sur_signal: true
     ETH/USDT:
-      poids: 10
       role: croissance
       vente_sur_signal: true
-    # Les 20 % restants sont une enveloppe, pas une ligne : deux positions
-    # nommées et la place pour ce que le scanner ramène.
     HYPE/USDC:
-      poids: 10
-      role: pepite
+      role: watchlist
       vente_sur_signal: true
       plateforme: hyperliquid
     LINK/USDT:
-      poids: 5
-      role: pepite
+      role: watchlist
       vente_sur_signal: true
-  # Réserve de l'enveloppe « pépites » laissée libre pour les jetons que le
-  # scanner détecte. Compte dans les 100 %.
-  reserve_decouverte:
-    poids: 5
-    plafond_par_jeton_usd: 150
-  # En deçà de cet écart, on ne rééquilibre pas : le coût des frais dépasse le
-  # gain de précision.
-  tolerance_derive: 0.05
 
 # --------------------------------------------------------------------------
 # Sources de données
@@ -167,51 +149,12 @@ strategie:
     # meilleur partout — il perd 10 points sur 2023-2025 — mais il supprime le
     # cas catastrophique, et c'est ce qui décide.
     ecart_ema_relatif: true
-  dca:
-    # Multiplicateurs appliqués à l'enveloppe, par zone de valorisation.
-    # « avidite_extreme » à 0 est la temporisation demandée : on n'achète pas
-    # le sommet, on garde la balle.
-    multiplicateurs_zone:
-      peur_extreme: 2.0
-      peur: 1.4
-      neutre: 1.0
-      avidite: 0.6
-      avidite_extreme: 0.0
-    # Bonus quand le prix est sous une moyenne mobile clé.
-    bonus_sous_ema_longue: 1.3
-    bonus_sous_ema_moyenne: 1.1
-    malus_au_dessus_ema_longue: 0.85
-    # Le score de confiance module encore le montant. Plafonné à 1/3 par
-    # construction : au-delà, un bon score en zone neutre achèterait plus qu'un
-    # mauvais score en peur extrême, et la zone cesserait d'être le signal
-    # dominant. La démonstration est dans le bloc d'en-tête de `strategy/dca.py`.
-    influence_score: 0.3
-    multiplicateur_min: 0.0
-    multiplicateur_max: 2.5
-    # En dessous de ce score, on n'achète plus que le plancher ci-dessous.
-    score_minimum_achat: 45
-    # Le plancher de discipline : la fraction de l'enveloppe achetée malgré
-    # tout quand la valorisation dit non — score sous le seuil, ou
-    # multiplicateur de zone à zéro.
-    #
-    # Sa valeur est **mesurée**, pas choisie. Sans lui (plancher à 0), le rejeu
-    # du scénario « hausse continue » rend zéro ordre sur 398 échéances : la
-    # note technique étant contrarienne, elle stagne sous le seuil pendant
-    # toute une tendance haussière, et la temporisation devient une abstention
-    # d'un an. Le balayage complet, sur les six marchés :
-    #
-    #   plancher   abstentions   gain moyen vs DCA aveugle
-    #      0 %         1/6              +13,9 %
-    #     15 %         0/6              +13,0 %   ← retenu
-    #     25 %         0/6              +12,2 %
-    #     40 %         0/6              +11,1 %
-    #
-    # 15 % est la plus petite valeur qui supprime l'abstention, et elle coûte
-    # 0,9 point de performance relative. Rejouer `python3 profils.py` après
-    # tout changement de seuil : c'est ce tableau qui décide, pas l'intention.
-    plancher_enveloppe: 0.15
-    # Un achat sous ce montant coûte plus en frais qu'il n'apporte.
-    montant_minimum_usd: 20
+  # Score de confiance à partir duquel le moteur achète ou renforce. Retiré le
+  # 10/09/2026 avec lui tout le bloc `dca` (calendrier, multiplicateurs de
+  # zone, plancher de discipline) : plus de calendrier à honorer, plus de
+  # montant nominal à moduler — une opportunité ou rien. Valeur posée à dire
+  # sur le fabriqué (§ profils.py), à confronter au réel avant tout capital.
+  seuil_achat: 60
   pepites:
     # Croissance de volume exigée par rapport à la moyenne de la fenêtre.
     croissance_volume_min: 3.0
@@ -221,6 +164,10 @@ strategie:
     capitalisation_max_usd: 300000000
     score_minimum: 65
     candidats_max: 5
+    # Plafond par jeton découvert, tous renforcements compris. Vivait sur
+    # `portefeuille.reserve_decouverte` avant le 10/09/2026 ; c'est une notion
+    # propre au jeton découvert, pas au portefeuille cible qui n'existe plus.
+    plafond_par_jeton_usd: 100
 
   # ------------------------------------------------------------------------
   # Bouclier anti-rugpull — un veto, pas une note.
@@ -253,17 +200,15 @@ strategie:
 risque:
   # Fraction du capital total risquée sur une entrée, avant tout levier.
   #
-  # **Mesuré inerte à l'enveloppe actuelle**, et il faut le savoir avant de
-  # croire que le dimensionnement suit le risque. Sur 158 dimensionnements d'un
-  # rejeu multi-actifs, le plafond qui mord est l'enveloppe DCA (62 %) ou
-  # l'exposition par actif (38 %) — celui-ci **jamais**. Le faire varier de 1 %
-  # à 8 % ne change pas un seul ordre.
-  #
-  # La raison est arithmétique : avec un stop à 4 ATR, la distance au stop vaut
-  # ~15 % du prix, donc ce plafond autorise ~6,7 % du capital, quand
-  # l'enveloppe DCA d'une ligne en demande dix fois moins. Il mordrait avec une
-  # enveloppe bien plus grosse ou des stops bien plus serrés — il est conservé
-  # pour ce cas, pas parce qu'il agit aujourd'hui.
+  # **Mesuré inerte sous l'ancien moteur à DCA**, et il faut le savoir avant de
+  # croire que le dimensionnement suit systématiquement le risque. Sur 158
+  # dimensionnements d'un rejeu multi-actifs mesurés avant le retrait du DCA
+  # (10/09/2026), le plafond qui mordait était l'enveloppe DCA (62 %) ou
+  # l'exposition par actif (38 %) — celui-ci **jamais**. Sous le nouveau moteur
+  # d'opportunité pure, le montant demandé n'est plus une petite enveloppe
+  # nominale mais la valeur totale du portefeuille (voir `strategy/moteur.py`)
+  # : c'est ce plafond-ci qui doit désormais mordre le premier. À revérifier
+  # par un rejeu une fois le moteur d'opportunité mesuré sur données réelles.
   risque_par_position: 0.01
   # Plafond de la valeur d'une ligne, tous renforcements compris.
   #
@@ -309,6 +254,9 @@ risque:
   # le plus haut atteint à cette distance.
   trailing_activation: 0.20
   trailing_distance: 0.12
+  # Un achat sous ce montant coûte plus en frais qu'il n'apporte. Vivait sur
+  # `strategie.dca.montant_minimum_usd` avant le 10/09/2026.
+  montant_minimum_usd: 20
   coupe_circuit:
     # Perte journalière du portefeuille au-delà de laquelle tout s'arrête.
     drawdown_journalier_max: 0.07

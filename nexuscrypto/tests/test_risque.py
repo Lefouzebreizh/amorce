@@ -59,7 +59,7 @@ class TestPortefeuille(unittest.TestCase):
         self.assertNotIn("BTC/USDT", apres.positions)
         self.assertAlmostEqual(apres.liquidites_usd, 119.0)
 
-    def test_derive_la_plus_sous_ponderee_en_tete(self):
+    def test_ordre_par_engagement_sert_d_abord_le_moins_engage(self):
         """Cet ordre décide qui est servi quand la trésorerie ne suffit pas :
         l'ordre du fichier servirait Bitcoin en premier tous les mois."""
 
@@ -68,16 +68,9 @@ class TestPortefeuille(unittest.TestCase):
             positions={"BTC/USDT": position(quantite=90.0, prix_moyen=100.0)},
         )
         prix = {s: 100.0 for s in config().portefeuille.symboles}
-        derives = pf.derives(pfl, prix, config().portefeuille)
-        self.assertLess(derives[0].ecart, 0)
-        self.assertEqual(derives[-1].actif, "BTC/USDT")
-        self.assertTrue(derives[-1].sur_pondere)
-
-    def test_tolerance_de_derive(self):
-        petite = pf.Derive("BTC/USDT", poids_reel=0.52, poids_cible=0.50)
-        grande = pf.Derive("BTC/USDT", poids_reel=0.62, poids_cible=0.50)
-        self.assertFalse(pf.doit_reequilibrer(petite, 0.05))
-        self.assertTrue(pf.doit_reequilibrer(grande, 0.05))
+        ordre = pf.ordre_par_engagement(pfl, prix, config().portefeuille.symboles)
+        self.assertEqual(ordre[-1], "BTC/USDT")
+        self.assertNotEqual(ordre[0], "BTC/USDT")
 
 
 class TestSizing(unittest.TestCase):

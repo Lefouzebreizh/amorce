@@ -163,7 +163,7 @@ class TestGestionnaire(unittest.IsolatedAsyncioTestCase):
 
     async def test_une_action_qui_n_achete_pas_est_ecartee(self):
         resultat = await self.gestionnaire.acheter(
-            decision(action=Action.TEMPORISER), portefeuille(), prix=self.prix
+            decision(action=Action.ATTENDRE), portefeuille(), prix=self.prix
         )
         self.assertFalse(resultat.accepte)
 

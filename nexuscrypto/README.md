@@ -1,16 +1,30 @@
-# NexusCrypto — moteur d'investissement autonome à DCA dynamique
+# NexusCrypto — moteur d'investissement autonome, chasseur d'opportunités
 
 Ossature logicielle d'un système d'investissement crypto qui décide seul : il
 lit le marché, les données on-chain, la température communautaire et
-l'actualité macro, en tire un indice de confiance, et fait varier le **montant**
-de ses achats programmés — sans jamais toucher au calendrier.
+l'actualité macro, en tire un indice de confiance, et achète ou renforce dès
+que ce score franchit un seuil — jamais sur un calendrier.
 
-> **Ce que cet outil n'est pas.** Il ne prédit rien et ne promet rien. Il
-> applique une discipline d'achat régulier en modulant les montants selon la
-> zone de valorisation, et il refuse d'agir plus souvent qu'il n'agit. Le mode
+> **Reconstruction du 10/09/2026 : plus de calendrier.** Ce dépôt portait
+> jusque-là un DCA dynamique — un achat obligatoire à échéance fixe, dont
+> seul le montant variait. Le propriétaire a tranché : NexusCrypto devient un
+> chasseur d'opportunités pur, qui n'achète que quand le score dit qu'il y a
+> une occasion réelle, et qui peut rester des mois sans rien acheter si le
+> marché n'en offre aucune — ce n'est plus une panne de discipline, c'est le
+> comportement voulu. `risk_management/` (dimensionnement, stops, coupe-circuit)
+> et `execution/` n'ont pas bougé : ce qui a changé est uniquement *quand* le
+> moteur décide d'acheter, jamais *comment* il protège l'argent une fois qu'il
+> a acheté. Détail dans `CLAUDE.md` et
+> `second-brain/lecons/2026-09-10-nexuscrypto-existait-deja-avant-de-le-reconstruire.md`.
+
+> **Ce que cet outil n'est pas.** Il ne prédit rien et ne promet rien. Le mode
 > simulation est le défaut, le mode réel demande deux gestes explicites, et
 > aucun réglage de ce dépôt n'a été éprouvé sur de l'argent. Un backtest vert
-> n'est pas une performance future.
+> n'est pas une performance future — et le nouveau moteur n'a **pas encore**
+> été rejoué sur données réelles : les mesures des § 8 à 15 ci-dessous portent
+> toutes sur l'ancien moteur à DCA, retiré. Elles sont conservées comme
+> archive de méthode, pas comme description de la stratégie actuelle — voir
+> le bandeau au-dessus du § 8.
 
 ---
 
@@ -39,11 +53,10 @@ nexuscrypto/
 │   ├── strategy/
 │   │   ├── indicateurs.py    # ✅ RSI, EMA, ATR, profil de volume — Python pur
 │   │   ├── scoring.py        # ✅ indice de confiance 0-100, poids redistribués
-│   │   ├── dca.py            # ✅ calendrier d'un côté, montant de l'autre
 │   │   ├── pepites.py        # ✅ scanner d'anomalies de volume
-│   │   └── moteur.py         # ✅ contexte → décision, sans réseau ni ordre
+│   │   └── moteur.py         # ✅ contexte → décision, score contre seuil, sans calendrier
 │   ├── risk_management/
-│   │   ├── portefeuille.py   # ✅ état immuable, dérive contre l'allocation cible
+│   │   ├── portefeuille.py   # ✅ état immuable, ordre de service par engagement
 │   │   ├── sizing.py         # ✅ taille décidée par la distance au stop
 │   │   ├── stops.py          # ✅ stop à l'ATR, prise de bénéfice suiveuse
 │   │   └── coupe_circuit.py  # ✅ quatre déclencheurs, réarmement gradué
@@ -60,10 +73,10 @@ nexuscrypto/
 │   └── orchestrateur.py      # ✅ l'assemblage et la boucle
 ├── profils.py                # ✅ l'effet d'un réglage sur six marchés connus
 ├── logs/                     # journal tournant (ignoré par Git)
-└── tests/                    # ✅ 337 tests, aucun ne touche au réseau
+└── tests/                    # ✅ 329 tests, aucun ne touche au réseau
 ```
 
-`python3 -m unittest discover -s tests` : **337 tests, une dizaine de secondes.**
+`python3 -m unittest discover -s tests` : **329 tests, une dizaine de secondes.**
 La suite entière passe avec `aiohttp`, `ccxt`, `pandas` et `numpy` bloqués à
 l'import — c'est vérifié, et c'est la propriété qui rend le moteur de décision
 reproductible ailleurs que sur la machine qui l'a écrit.
@@ -95,20 +108,26 @@ faute de frappe dans un fichier de service, et ce programme passe des ordres.
 
 ---
 
-## 3. Le portefeuille cible
+## 3. La watchlist
 
-| Ligne | Poids | Rôle | Vendu sur signal |
-| --- | --- | --- | --- |
-| BTC | 50 % | socle et tendance de marché | **non** — c'est la réserve |
-| SOL | 20 % | écosystème haute performance | oui |
-| ETH | 10 % | contrats intelligents et DeFi | oui |
-| HYPE | 10 % | pépite, via Hyperliquid | oui |
-| LINK | 5 % | pépite | oui |
-| réserve de découverte | 5 % | ce que le scanner ramène, 150 $ par jeton | oui |
+Retiré le 10/09/2026 avec le DCA : plus de poids cible à sommer à 100. Chaque
+ligne est un actif que le moteur regarde à chaque passe, sans montant ni
+calendrier imposés — c'est le score de confiance qui décide s'il achète et
+`risk_management.sizing` combien, jamais un pourcentage de ce fichier.
 
-La somme fait exactement 100, et le chargeur **refuse de démarrer** sinon : une
-allocation à 97 % laisse 3 % de capital que personne ne réclame et qui ne sera
-jamais investi.
+| Ligne | Rôle | Vendu sur signal |
+| --- | --- | --- |
+| BTC | socle et tendance de marché | **non** — c'est la réserve |
+| SOL | écosystème haute performance | oui |
+| ETH | contrats intelligents et DeFi | oui |
+| HYPE | via Hyperliquid | oui |
+| LINK | — | oui |
+
+Un jeton découvert par le scanner de pépites (`strategy/pepites.py`), hors
+watchlist, reçoit le même traitement : c'est le score qui décide, jamais la
+présence dans ce fichier. Son plafond par ligne vient alors de
+`strategie.pepites.plafond_par_jeton_usd` plutôt que d'un `plafond_usd`
+propre à sa ligne.
 
 ---
 
@@ -153,24 +172,30 @@ meilleur, il faut `2(1−i) > 1(1+i)`, donc `i < 1/3`. Au-delà, le signal le pl
 bruyant prend la main sur le plus robuste. Le chargeur de configuration refuse
 un `influence_score` supérieur à un tiers.
 
-### Zéro est une décision, pas une panne
+### Une absence n'est plus une temporisation
 
-En avidité extrême le multiplicateur vaut 0 et le système **temporise** : le
-montant non dépensé reste en trésorerie et gonfle les achats futurs. D'où
-`TEMPORISER` distinct d'`ATTENDRE` — un report se raconte dans le
-récapitulatif, une absence non.
+Retiré le 10/09/2026, avec `TEMPORISER` : sous le seuil d'achat, le moteur
+`ATTEND`, point final. L'enum distinguait un report d'un calendrier — « le
+montant non dépensé gonfle les achats futurs » — d'une absence sans suite.
+Sans calendrier, il n'y a plus rien à reporter : ATTENDRE couvre les deux cas
+d'avant, et le moteur peut rester des mois sans agir sur un marché sans
+occasion, sans que ce soit une panne de discipline.
 
-### La taille se décide sur la distance au stop — en théorie
+### La taille se décide sur la distance au stop
 
 `capital × risque / (prix − stop)`. Un actif volatil a un stop plus loin, donc
 une position plus petite, automatiquement, sans table par actif à tenir à jour.
 
-**Sauf qu'à l'enveloppe actuelle, ce plafond ne mord jamais.** Mesuré sur 158
-dimensionnements d'un rejeu multi-actifs : c'est l'enveloppe DCA qui décide
-62 % du temps, l'exposition par actif 38 %, et le risque par position **jamais**
-— voir le § 14. Le mécanisme est écrit, il est juste, et il est aujourd'hui
-inerte. Le dire évite de croire que le dimensionnement suit le risque quand il
-suit le calendrier.
+**Sous l'ancien moteur à DCA, ce plafond ne mordait presque jamais** — mesuré
+sur 158 dimensionnements d'un rejeu multi-actifs (§ 14, archivé) : l'enveloppe
+DCA décidait 62 % du temps, l'exposition par actif 38 %, le risque par
+position jamais. La raison était l'enveloppe elle-même : une petite somme
+nominale hebdomadaire, bien en deçà de ce que le risque autorisait. **Le
+moteur d'opportunité n'a plus d'enveloppe nominale** — `strategy/moteur.py`
+demande la valeur totale du portefeuille et laisse `sizing.dimensionner`
+trancher — donc ce plafond redevient, en principe, le premier qui devrait
+mordre. Non mesuré depuis le retrait du DCA : à vérifier par un rejeu sur
+données réelles avant de le croire.
 
 ### La simulation est réaliste ou elle ne sert à rien
 
@@ -308,7 +333,7 @@ Le supprimer par souci de propreté retirerait cette assurance sans rien gagner.
 
 ```bash
 cd nexuscrypto
-python3 -m unittest discover -s tests    # 337 tests, aucun ne touche au réseau
+python3 -m unittest discover -s tests    # 329 tests, aucun ne touche au réseau
 python3 main.py verifier                 # la configuration livrée est-elle valide
 python3 main.py analyser                 # la seule commande qui touche vraiment le réseau
 ```
@@ -318,6 +343,17 @@ python3 main.py analyser                 # la seule commande qui touche vraiment
 changé de forme.
 
 ---
+
+> **Archive, du § 8 au § 15 : ces mesures portent sur l'ancien moteur à DCA
+> dynamique, retiré le 10/09/2026.** Le harnais de rejeu, les scénarios
+> fabriqués et la méthode de mesure (témoin, recul exposé, gain par unité de
+> douleur) restent ceux d'aujourd'hui — c'est ce qui rend cette section utile
+> à relire. Mais chaque chiffre — prix moyen contre le DCA aveugle, effet du
+> plancher de discipline, poids et seuils balayés — a été mesuré sur un
+> moteur qui achetait à échéance fixe et modulait un montant. Le nouveau
+> moteur d'opportunité pure n'a **pas encore** été rejoué sur données
+> réelles : c'est le prochain travail de mesure, avant tout capital réel
+> (exigence du 10/09/2026, § CLAUDE.md).
 
 ## 8. Rejeu — mesurer un réglage au lieu de le raisonner
 
@@ -954,3 +990,87 @@ moins que les plafonds de risque, et l'une des trois n'a jamais été mesurée d
 tout. **Un balayage qui conclut « ne touchez à rien » a autant de valeur qu'un
 qui change un chiffre** — il empêche le prochain de refaire le travail, et
 surtout de croire qu'un gain de 0,22 point justifie de supprimer une source.
+
+---
+
+## 16. Le moteur d'opportunité pure, mesuré sur données réelles pour la première fois
+
+Les sections 8 à 15 ci-dessus sont archivées : elles mesurent l'ancien moteur
+à DCA, retiré le 10/09/2026 (§ 4 de `CLAUDE.md`). Celle-ci mesure le nouveau
+moteur — score contre `seuil_achat`, plus de calendrier — sur les six marchés
+fabriqués **et** sur du BTC/ETH/LINK réel (CoinMetrics), par `banc-du-bot` le
+jour même du retrait. **Verdict : ni clairement meilleur, ni clairement
+pire.**
+
+### Un défaut mesuré puis corrigé ici revient à l'identique — et c'est voulu
+
+Le § 8 (archivé) racontait l'histoire du « plancher de discipline » : sans
+lui, la stratégie n'achetait **rien** sur le scénario « hausse continue »
+pendant 398 échéances, parce que la note technique est contrarienne et reste
+collée au plancher pendant une tendance haussière régulière. Le plancher a
+disparu avec le calendrier qui le portait, et la mesure est catégorique :
+`profils.py` redonne aujourd'hui **la même abstention totale** sur ce même
+scénario — zéro ordre, pendant que le témoin (achat unique) gagne +79,6 %.
+
+Ce n'est pas une régression au sens où ce dépôt l'entendait avant le
+10/09/2026 : la nouvelle philosophie assume qu'une stratégie d'opportunité
+pure reste inactive tant qu'aucune occasion réelle ne se présente, et une
+hausse continue et régulière n'en présente structurellement aucune pour une
+note contrarienne. Mais c'est exactement le même mécanisme de fond qui a
+produit l'abstention d'origine — la note technique n'a pas changé, seul le
+filet qui la compensait a disparu — et ça vaut d'être dit en toutes lettres
+plutôt que découvert trois mois plus tard sur un relevé réel.
+
+### Ce qui s'améliore, mesuré et pas supposé : le plafond de risque mord enfin
+
+Le § 14 (archivé) mesurait `risque_par_position` **inerte à 0 %** sur 158
+dimensionnements — c'était l'enveloppe DCA qui décidait dans 62 % des cas. Le
+nouveau moteur demande la valeur totale du portefeuille plutôt qu'une petite
+enveloppe nominale (voir `strategy/moteur.py`), et `banc-du-bot` l'a
+instrumenté :
+
+| jeu de données | dimensionnements plafonnés par le risque |
+| --- | --- |
+| six marchés fabriqués (`profils.py`) | 130/562 (le reste : exposition par actif) |
+| BTC réel mono-actif, 2020-2023 | 25/26 |
+| BTC + ETH + LINK réel, 2021-2023 | 17/18 |
+
+C'est la confirmation de ce que le commentaire de `config/config.yaml`
+annonçait comme hypothèse au moment du retrait du DCA : le plafond de risque
+n'est plus une ligne qui rassure sans agir, c'est désormais le mécanisme qui
+décide la plupart du temps.
+
+### Le témoin change de nature, et les comparaisons avec lui deviennent instables
+
+L'« achat unique » (tout le capital au premier prix, puis on ne touche plus à
+rien) capture toute la composition dès le premier jour, sans jamais moyenner
+un mauvais point d'entrée — un étalon plus dur en tendance franche, plus
+fragile si la fenêtre s'ouvre près d'un sommet local. Mesuré sur du BTC réel,
+le verdict s'inverse selon la fenêtre et le nombre de lignes :
+
+| fenêtre | panier | stratégie | témoin | gain/douleur stratégie | gain/douleur témoin |
+| --- | --- | --- | --- | --- | --- |
+| 2021-2023 (baissière) | BTC seul | **−9,4 %** | −48,1 % | **−0,28** | −0,63 |
+| 2021-2023 (baissière) | BTC+ETH+LINK | −53,2 % | **−15,7 %** | plus mauvais | meilleur |
+| 2020-2023 (haussière) | BTC seul | **+80,0 %** | −25,0 % | **1,04** | −0,27 |
+| 2020-2023 (haussière) | BTC+ETH+LINK | **+402,3 %** | +29,1 % | **5,05** | 0,38 |
+
+Sur la même fenêtre baissière, la stratégie bat le témoin en mono-actif et
+perd nettement en multi-actifs. L'ancien témoin (« DCA plat », qui lissait ses
+entrées dans le temps) rendait les comparaisons entre fenêtres plus stables
+qu'un lump-sum qui joue tout sur le prix du premier jour — une conséquence à
+garder en tête avant de lire un futur tableau comparatif comme un verdict
+définitif sur un seul panier ou une seule fenêtre.
+
+### Ce que cette mesure ne couvre toujours pas
+
+Aucun balayage de réglage n'a été refait pour ce moteur (les tableaux des § 13
+à 15 sont ceux de l'ancienne enveloppe DCA) ; le scanner de pépites n'est
+toujours pas branché dans la boucle en direct, donc seule la watchlist fixe a
+été mesurée ; CoinMetrics ne publie qu'une clôture par jour, donc l'ATR — et
+le plafond de risque qui en dépend — reste probablement sous-estimé par
+rapport à des données intra-journalières réelles ; et aucune troisième fenêtre
+baissière indépendante (type 2018) n'a été essayée. **Ce moteur n'a donc
+toujours pas ce que l'exigence du 10/09/2026 demande avant tout capital
+réel** : un backtest multi-régimes concluant, documenté dans
+`config/validation.yaml`.

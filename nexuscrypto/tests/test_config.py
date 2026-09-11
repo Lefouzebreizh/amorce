@@ -33,21 +33,17 @@ class TestConfigurationLivree(unittest.TestCase):
     def test_le_fichier_livre_est_valide(self):
         charge = config()
         self.assertIs(charge.mode, Mode.SIMULATION)
-        self.assertEqual(len(charge.portefeuille.allocation), 5)
+        self.assertEqual(len(charge.portefeuille.watchlist), 5)
 
-    def test_l_allocation_livree_somme_a_cent(self):
-        """L'allocation cible du projet : 50 BTC, 20 SOL, 10 ETH, 20 pépites."""
-
+    def test_la_watchlist_livree_couvre_les_actifs_annonces(self):
         charge = config()
-        somme = sum(l.poids for l in charge.portefeuille.allocation.values())
-        somme += charge.portefeuille.reserve_decouverte_poids
-        self.assertAlmostEqual(somme, 100.0)
-        self.assertAlmostEqual(charge.portefeuille.poids_de("BTC/USDT"), 0.50)
-        self.assertAlmostEqual(charge.portefeuille.poids_de("SOL/USDT"), 0.20)
-        self.assertAlmostEqual(charge.portefeuille.poids_de("ETH/USDT"), 0.10)
+        self.assertEqual(
+            set(charge.portefeuille.watchlist),
+            {"BTC/USDT", "SOL/USDT", "ETH/USDT", "HYPE/USDC", "LINK/USDT"},
+        )
 
     def test_le_socle_ne_se_vend_pas_sur_signal(self):
-        self.assertFalse(config().portefeuille.allocation["BTC/USDT"].vente_sur_signal)
+        self.assertFalse(config().portefeuille.watchlist["BTC/USDT"].vente_sur_signal)
 
 
 class TestRefus(unittest.TestCase):
@@ -58,12 +54,12 @@ class TestRefus(unittest.TestCase):
             chemin = _ecrire(Path(dossier), contenu)
             return charger(chemin, chemin_env=Path(dossier) / "absent.env", **arguments)
 
-    def test_allocation_qui_ne_somme_pas_a_cent(self):
+    def test_watchlist_vide_refusee(self):
         def mutation(contenu):
-            contenu["portefeuille"]["allocation"]["BTC/USDT"]["poids"] = 40
+            contenu["portefeuille"]["watchlist"] = {}
         with self.assertRaises(ConfigurationInvalide) as capture:
             self._charger(mutation)
-        self.assertTrue(any("somme à" in d for d in capture.exception.defauts))
+        self.assertTrue(any("vide" in d for d in capture.exception.defauts))
 
     def test_poids_de_score_qui_ne_somment_pas_a_un(self):
         def mutation(contenu):
@@ -71,21 +67,12 @@ class TestRefus(unittest.TestCase):
         with self.assertRaises(ConfigurationInvalide):
             self._charger(mutation)
 
-    def test_influence_du_score_trop_forte(self):
-        """Au-delà d'un tiers, le score domine la zone de valorisation."""
-
+    def test_seuil_achat_hors_bornes(self):
         def mutation(contenu):
-            contenu["strategie"]["dca"]["influence_score"] = 0.6
+            contenu["strategie"]["seuil_achat"] = 150
         with self.assertRaises(ConfigurationInvalide) as capture:
             self._charger(mutation)
-        self.assertTrue(any("influence_score" in d for d in capture.exception.defauts))
-
-    def test_plancher_hors_bornes(self):
-        def mutation(contenu):
-            contenu["strategie"]["dca"]["plancher_enveloppe"] = 1.8
-        with self.assertRaises(ConfigurationInvalide) as capture:
-            self._charger(mutation)
-        self.assertTrue(any("plancher_enveloppe" in d for d in capture.exception.defauts))
+        self.assertTrue(any("seuil_achat" in d for d in capture.exception.defauts))
 
     def test_ema_non_croissantes(self):
         def mutation(contenu):
@@ -129,9 +116,9 @@ class TestRefus(unittest.TestCase):
         erreur à la fois se paie à chaque installation."""
 
         def mutation(contenu):
-            contenu["portefeuille"]["allocation"]["BTC/USDT"]["poids"] = 40
+            contenu["portefeuille"]["watchlist"] = {}
             contenu["strategie"]["poids"]["technique"] = 0.9
-            contenu["portefeuille"]["cadence_dca"] = "trimestrielle"
+            contenu["strategie"]["seuil_achat"] = -5
         with self.assertRaises(ConfigurationInvalide) as capture:
             self._charger(mutation)
         self.assertGreaterEqual(len(capture.exception.defauts), 3)
