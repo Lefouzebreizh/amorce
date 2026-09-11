@@ -28,3 +28,6 @@ pyloudnorm     # chaîne de montage : la mesure de sonie. Aucun test ne tombe sa
 imageio-ffmpeg # kits : le repli de `indexer.outil("ffmpeg")`. Le runner n'a pas ffmpeg, donc sans ce paquet
                # le repli ne peut pas jouer et `test_ffmpeg_a_bien_un_repli_lui` échoue — un test qui garde
                # un repli est le premier à tomber quand le repli n'est déclaré nulle part
+playwright     # audit-landing : capturer_page.py importe playwright.sync_api au chargement du module,
+               # donc la suite de tests (logique pure, aucun navigateur lancé) échouerait dès la
+               # collecte sans ce paquet — même s'il n'est jamais utilisé pour de vrai en CI

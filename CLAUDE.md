@@ -1288,6 +1288,25 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   Supabase qui n'existe pas encore. Tout est écrit dans `psy-ia/TODO.md`, et
   tant que cette liste n'est pas cochée, ce projet ne doit recevoir aucun
   vrai utilisateur, même en bêta.
+- **audit-landing/** — la brique de capture visuelle du futur produit « Audit
+  de page de vente en 24h », Python, deux dépendances (`playwright`,
+  `Pillow`). `capturer_page.py` ouvre une URL, ferme le bandeau de cookies
+  (clic sur les CMP les plus répandus, puis masquage de tout ce qui reste en
+  `position: fixed`/`sticky`), scrolle pour déclencher le lazy-loading,
+  attend `networkidle` ou 5 s de secours, et découpe la capture en tranches
+  d'une hauteur d'écran — jamais un bandeau de 8000 px d'un bloc, qui
+  écraserait le texte au redimensionnement pour le futur modèle de vision.
+  **Les quatre URLs de test (`qonto.com`, `payfit.com`, `spendesk.com`,
+  `pennylane.com`) n'ont pas pu être capturées depuis une session distante** :
+  la politique réseau de cet environnement bloque la navigation générale vers
+  l'internet public — mesuré sur quatre clients (`curl`, `WebFetch`,
+  `example.com` et `wikipedia.org` témoins, Chromium/Playwright lui-même,
+  tous en `connect_rejected`/`EGRESS_BLOCKED`), donc pas un piège propre à ces
+  quatre sites comme `*.vercel.app` plus bas. Vérifié à l'œil à la place sur
+  une page fabriquée localement reproduisant les trois difficultés nommées
+  dans la consigne (bandeau fixe, lazy-loading, trafic réseau perpétuel) —
+  détail dans `audit-landing/README.md`. Pas encore fait : le prompt
+  d'analyse, le rapport, la page de vente, Stripe.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.

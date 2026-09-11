@@ -210,6 +210,11 @@ visual_library/**/*.mp4
 # d'une hypothèse sur leur sécurité : elle reste locale, comme `prospects.md`.
 /projets-actifs/cibles-audit.md
 
+# Les captures d'écran de pages tierces produites par audit-landing/ : des
+# mégaoctets de PNG, jetables et régénérables à la demande — même raison que
+# les rushes de test d'Amorce, deux blocs plus haut.
+/audit-landing/captures/
+
 # Les planches de « Roussy & Zéphy » déposées pour faire tourner la chaîne KDP.
 # Trente mégaoctets d'illustrations : l'invariant du §8 les tient dehors, et le
 # §4 dit où vont les fichiers lourds — R2, jamais Git.
