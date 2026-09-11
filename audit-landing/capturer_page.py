@@ -36,6 +36,13 @@ DELAI_RESEAU_STABLE_MS = 5_000  # plafond de secours : certaines pages B2B
 # avec trackers ou chat en direct ne deviennent jamais complètement inactives
 DELAI_RESEAU_STABLE_APRES_SCROLL_MS = 2_500
 
+# Laisse le temps à une révélation au scroll (opacity 0 → 1, très répandue
+# sur les sites de storytelling) de se terminer avant la capture du segment.
+# Mesuré nécessaire : sans lui, une capture pleine page composite prise une
+# fois pour toutes ratait des sections encore invisibles — voir
+# capturer_et_decouper.
+PAUSE_AVANT_CAPTURE_SEGMENT_S = 0.3
+
 PAS_SCROLL_PX = 700
 PAUSE_ENTRE_PAS_S = 0.15
 MAX_PAS_SCROLL = 80  # garde-fou contre une page à défilement infini
@@ -76,17 +83,27 @@ TEXTES_CONSENTEMENT = [
 DELAI_CLIC_CONSENTEMENT_MS = 1_200
 
 # Étape 2 de l'énoncé : après avoir tenté un clic, tout ce qui reste affiché
-# en `position: fixed` ou `sticky` est masqué — bandeau de cookies qui a
-# résisté au clic, bannière de promo, chat en direct, en-tête collant. Sans
-# ça, ces éléments se dupliquent sur chaque segment découpé plus bas, puisque
-# chacun est capturé comme si on l'avait sous les yeux au même endroit.
+# en `position: fixed` est masqué — bandeau de cookies qui a résisté au clic,
+# bannière de promo, chat en direct, en-tête collant. Chaque segment étant
+# désormais capturé pendant qu'il est réellement scrollé dans le viewport
+# (voir capturer_et_decouper), un élément fixe apparaîtrait, pinné, sur
+# chacun des treize segments — c'est ce que le masquage évite.
+#
+# `position: sticky` n'est délibérément PAS masqué, et ça a été mesuré :
+# masquer un sticky avec `display:none` le retire du flux normal du document
+# (contrairement à `fixed`), ce qui raccourcit la page et décale tout ce qui
+# suit — vérifié sur une fixture avec une grande section « épinglée » de
+# storytelling, une technique de mise en page très répandue et pas du tout
+# limitée à un petit bandeau. Et depuis que chaque segment est un vrai
+# viewport scrollé à sa position, un sticky ne se duplique plus jamais : il
+# se comporte exactement comme sous les yeux d'un utilisateur réel.
 JS_MASQUER_ELEMENTS_FIXES = """
 () => {
   const noeuds = document.querySelectorAll('body *');
   let masques = 0;
   for (const noeud of noeuds) {
     const style = window.getComputedStyle(noeud);
-    if (style.position === 'fixed' || style.position === 'sticky') {
+    if (style.position === 'fixed') {
       noeud.style.setProperty('display', 'none', 'important');
       masques += 1;
     }
@@ -225,11 +242,18 @@ def forcer_chargement_complet(page: Page) -> None:
     # instant pour finir de télécharger avant la capture.
     attendre_stabilite(page, DELAI_RESEAU_STABLE_APRES_SCROLL_MS)
 
-    # Remonter en haut : la capture pleine page de Playwright ne dépend pas
-    # de la position de défilement courante, mais un remise à zéro évite
-    # tout effet de bord sur un en-tête qui changerait d'apparence au scroll.
-    page.evaluate("window.scrollTo(0, 0)")
-    time.sleep(0.2)
+    # Ne PAS remonter en haut avant la capture. Beaucoup de sites de
+    # storytelling (mesuré sur qonto.com/fr) révèlent leurs sections au
+    # scroll par une animation d'opacité (GSAP ScrollTrigger, Framer Motion
+    # whileInView, AOS.js…) qui **repasse à 0 dès que la section ressort du
+    # viewport** — un remise à zéro juste avant la capture pleine page
+    # réinvisibilise donc tout ce qui a été révélé plus bas, sans toucher à
+    # la mise en page : la tranche sort blanche, à la bonne position, avec
+    # un total de tranches par ailleurs correct. La capture pleine page de
+    # Playwright ne dépend pas de la position de défilement courante, donc
+    # rien n'oblige à revenir en haut — l'en-tête collant, seul concerné par
+    # un changement d'apparence au scroll, est de toute façon masqué juste
+    # après par `masquer_elements_fixes`.
 
 
 def masquer_elements_fixes(page: Page) -> int:
@@ -243,31 +267,52 @@ def capturer_et_decouper(
     dossier_sortie: Path,
     hauteur_segment_px: int | None = None,
 ) -> list[Path]:
-    """Capture une page déjà chargée et rend la liste des fichiers écrits."""
-    # Import différé : PIL n'est nécessaire qu'à cette étape, jamais pour la
-    # seule logique de découpage (voir calculer_segments, testée sans lui).
-    from PIL import Image
-    import io
+    """Capture chaque segment pendant qu'il est réellement scrollé à l'écran.
 
+    Une seule capture pleine page composite (`page.screenshot(full_page=True)`
+    puis découpage a posteriori) a été essayée d'abord, et abandonnée :
+    mesuré sur `qonto.com/fr`, des tranches entières sortaient totalement
+    blanches, à leur position attendue, alors que le total de tranches restait
+    cohérent. Cause reproduite sur une fixture locale : beaucoup de sites de
+    storytelling révèlent leurs sections au scroll par une animation
+    d'opacité qui **se réinitialise dès que la section ressort du viewport**
+    (GSAP ScrollTrigger, Framer Motion `whileInView`, AOS.js sans
+    `data-aos-once`…). Une capture composite est prise depuis UNE seule
+    position de défilement : aucune position unique ne peut satisfaire toutes
+    les sections à la fois sur une page qui en révèle plusieurs.
+
+    Scroller réellement chaque segment dans le viewport avant de le capturer
+    évite le problème à la racine, pour cette raison-là comme pour
+    `content-visibility: auto` et les animations canvas/vidéo qui ne peignent
+    qu'à l'écran : c'est aussi exactement ce qu'un utilisateur réel verrait.
+    """
     dossier_page = dossier_sortie / nom_dossier_pour_url(url)
     dossier_page.mkdir(parents=True, exist_ok=True)
 
-    octets_pleine_page = page.screenshot(full_page=True, type="png")
-    image = Image.open(io.BytesIO(octets_pleine_page))
-    largeur_px, hauteur_totale_px = image.size
+    hauteur_totale_logique = page.evaluate("document.documentElement.scrollHeight")
+    hauteur_totale_px = hauteur_totale_logique * FACTEUR_ECHELLE
 
     pas = hauteur_segment_px or (HAUTEUR_VIEWPORT * FACTEUR_ECHELLE)
     segments = calculer_segments(hauteur_totale_px, pas)
 
+    # Un segment ne peut jamais scroller plus bas que ce qu'il reste de page :
+    # au-delà, le navigateur clampe de toute façon, mais borner explicitement
+    # évite de dépendre de ce comportement implicite.
+    y_max_logique = max(0, hauteur_totale_logique - HAUTEUR_VIEWPORT)
+
     fichiers_ecrits: list[Path] = []
     for segment in segments:
-        tranche = image.crop((0, segment.y_debut_px, largeur_px, segment.y_fin_px))
+        y_cible_logique = min(segment.y_debut_px // FACTEUR_ECHELLE, y_max_logique)
+        page.evaluate(f"window.scrollTo(0, {y_cible_logique})")
+        time.sleep(PAUSE_AVANT_CAPTURE_SEGMENT_S)
+
         chemin = dossier_page / f"{segment.nom}.png"
-        tranche.save(chemin)
+        page.screenshot(path=str(chemin))
         fichiers_ecrits.append(chemin)
 
+    page.evaluate("window.scrollTo(0, 0)")
     chemin_pleine_page = dossier_page / "00-pleine-page.png"
-    image.save(chemin_pleine_page)
+    page.screenshot(path=str(chemin_pleine_page), full_page=True)
     fichiers_ecrits.append(chemin_pleine_page)
 
     return fichiers_ecrits
