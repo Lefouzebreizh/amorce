@@ -85,6 +85,10 @@ patrimoine/config.json
 montage-auto/models/
 montage-auto/Wav2Lip/
 
+# NexusCrypto : historique OHLCV collecté par le workflow de collecte
+# pépites — jamais versionné, reconstruit à la demande (voir le script).
+/nexuscrypto/donnees_pepites/
+
 # Life-Organizer : état local et configuration de travail
 /life-organizer/donnees/
 /life-organizer/config.json
