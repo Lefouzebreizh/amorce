@@ -11,7 +11,7 @@
  * Usage : npm run verify
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -37,9 +37,18 @@ const EXPECTED_DURATION = 7.5;
 // Le cinquième est nommé à part : une `.fixtures/` fabriquée avant qu'il
 // existe porte les quatre autres, et le parcours tomberait tout à la fin, sur
 // un import qui ne trouve pas son fichier.
+//
+// Et on mesure la **taille**, pas la présence. Ce garde ne lisait que
+// `existsSync` : un `rush-paysage.webm` de zéro octet le passait sans un mot,
+// et le parcours tombait quatre minutes plus tard sur « 4 médias pour 5 »,
+// puis plantait sur une attente de 30 s à un endroit qui ne dit rien de la
+// cause. Mesuré le 11/09/2026 sur le runner. Un fichier vide compte comme
+// présent tant que personne ne regarde ce qu'il pèse.
 for (const nom of ['rush1.webm', 'rush-paysage.webm']) {
-  if (existsSync(join(RUSHES, nom))) continue;
-  console.error(`Rush ${nom} absent. Lance d’abord : npm run fixtures`);
+  const chemin = join(RUSHES, nom);
+  if (existsSync(chemin) && statSync(chemin).size > 0) continue;
+  const etat = existsSync(chemin) ? 'vide' : 'absent';
+  console.error(`Rush ${nom} ${etat}. Lance d’abord : npm run fixtures`);
   process.exit(1);
 }
 mkdirSync(SHOTS, { recursive: true });
