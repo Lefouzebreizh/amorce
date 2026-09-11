@@ -63,6 +63,7 @@ commandes=(
   "NexusCrypto : cd nexuscrypto && python3 -m unittest discover -s tests"
   "Bibliothèque visuelle : cd visual_library && python3 -m unittest discover -s tests"
   "Kits (index des sons) : cd kits && python3 -m unittest discover -s tests"
+  "Audit de page de vente : (dans audit-landing/) python3 -m unittest discover -s tests"
 )
 
 echo "── Amorce : dépendances npm"
@@ -473,6 +474,12 @@ if git -C "$racine" fetch --quiet --prune origin \
 else
   echo "   dépôt distant injoignable, liste non consultée"
 fi
+
+echo "── Audit de page de vente (audit-landing/) : bibliothèques Python"
+# Le paquet Python `playwright`, pas le navigateur : Chromium est déjà posé sur
+# cette image à `/opt/pw-browsers/chromium` (voir le repli `playwright` de
+# `/capacites-session`), et `playwright install` est interdit dans ce dépôt.
+python3 -m pip install --quiet --break-system-packages playwright Pillow
 
 # Réseau d'annuaires IA : rien à installer — il emprunte les dépendances
 # d'Amorce (Tailwind pour compiler sa feuille, Playwright pour son parcours) et
