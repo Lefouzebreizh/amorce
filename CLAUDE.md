@@ -255,6 +255,56 @@ Cette section ne remplace ni le §8 ni le §8 bis : le §8 dit *quand* on a le
 droit d'annoncer, le §8 bis dit *quoi* regarder, celle-ci dit **qui tranche
 quand les deux se contredisent** — l'humain, toujours.
 
+## 1 ter. NE JAMAIS SE SATISFAIRE D'UN MINIMUM QUI FONCTIONNE
+
+Posée par le propriétaire le 11/09/2026, le jour même où le §1 bis a été
+écrit. Numérotée « 1 ter » pour la raison donnée aux autres : d'autres fichiers
+citent les sections par leur numéro, et renuméroter casserait ces renvois en
+silence.
+
+**Elle vaut pour toutes les sessions et pour tous les projets du dépôt**, pas
+seulement pour le studio de montage. C'est un principe transversal, et c'est la
+moitié qui se perd le plus vite quand on le range dans un seul projet.
+
+**Quand une fonctionnalité ou une brique est livrée, elle doit être retravaillée
+jusqu'à un niveau vraiment abouti — pas seulement jusqu'à ce qu'elle marche, ni
+jusqu'à ce que les tests passent au vert.** « Ça fonctionne » est le début du
+travail, pas sa fin. Un lot qui tient debout se fusionne (section Git), et le
+fusionner ne le déclare pas fini : ce qui est fini est ce dont on n'a plus rien
+à redire en le regardant ou en l'écoutant.
+
+Elle complète les deux règles voisines sans les répéter :
+
+| Règle | Ce qu'elle tranche |
+| --- | --- |
+| §1 bis | **qui** décide quand le vert et l'humain se contredisent — l'humain |
+| §8 bis | **quoi** regarder avant d'annoncer, point par point |
+| **§1 ter** | **jusqu'où** aller — et la réponse n'est pas « jusqu'à ce que ça marche » |
+
+### Le cas qui l'a posée, et il est concret
+
+Le montage express plaquait des bruitages sur les raccords, y compris sur des
+rushes qui portent déjà leur propre son — une voix recouverte à chaque coupe.
+La correction du 11/09/2026 les retire entièrement dans ce cas : **zéro
+bruitage sur un rush sonore**, ce qui fonctionne et ne gêne plus personne.
+
+Le propriétaire l'a validée **comme réglage par défaut, et en disant pourquoi** :
+non par principe, mais parce que le niveau actuel des bruitages n'est pas assez
+bon pour être réactivé. Un réglage qui fonctionne — rien — a été préféré à un
+réglage qui fonctionne mal — des bruitages mal raccordés.
+
+**C'est exactement là que cette section mord.** Le lot aurait pu s'arrêter là :
+tests verts, plainte close, défaut disparu. Il n'est pas fini pour autant. Ce
+qui est attendu est que la version **avec** bruitages atteigne elle-même le
+niveau — vraiment raccordés, cohérents avec ce qui sonne déjà dans le rush en
+ambiance, en niveau et en texture — de sorte que la réactivation redevienne une
+vraie question.
+
+Et le juge de ce niveau-là n'est pas une suite de tests : c'est l'oreille du
+propriétaire, à qui le résultat se **fait écouter** avant toute réactivation.
+Le §1 bis le dit déjà pour le principe ; ce cas-ci en donne la forme
+opérationnelle — on n'annonce pas qu'un son est bon, on l'envoie.
+
 ## 2. FILTRE 48K
 
 Test avant de livrer : **est-ce que ça aide une vraie personne à dormir mieux ce
