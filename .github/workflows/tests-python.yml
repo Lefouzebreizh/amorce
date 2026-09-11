@@ -60,6 +60,19 @@ jobs:
       - name: Installer ce que les tests atteignent
         run: python -m pip install --quiet -r .github/requirements-tests.txt
 
+      # L'OCR du moteur administratif est Tesseract, local, appelé en ligne de
+      # commande — et ses deux tests appellent le vrai binaire, parce que c'est
+      # la seule façon de vérifier l'entrée standard, `--tessdata-dir` et le
+      # décodage de la sortie. Sans lui, `TestOcr` se désactivait tout seul :
+      # « Ran 90 tests … OK (skipped=2) », sortie 0, workflow vert. Mesuré le
+      # 11/09/2026 — Tesseract installé, les deux tests passent et la suite rend
+      # 90 sur 90.
+      - name: Installer Tesseract, que l'OCR appelle pour de vrai
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-fra
+          tesseract --version | head -1
+
       # Les tests de lettrage kdp ouvrent la police pour de vrai — ils
       # vérifient quels glyphes Lora dessine, ce qu'aucun bouchon ne peut
       # simuler. Le dépôt ne versionne pas de binaire et le chemin par défaut

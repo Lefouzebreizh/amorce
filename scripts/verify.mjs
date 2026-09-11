@@ -11,7 +11,7 @@
  * Usage : npm run verify
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -37,9 +37,18 @@ const EXPECTED_DURATION = 7.5;
 // Le cinquième est nommé à part : une `.fixtures/` fabriquée avant qu'il
 // existe porte les quatre autres, et le parcours tomberait tout à la fin, sur
 // un import qui ne trouve pas son fichier.
+//
+// Et on mesure la **taille**, pas la présence. Ce garde ne lisait que
+// `existsSync` : un `rush-paysage.webm` de zéro octet le passait sans un mot,
+// et le parcours tombait quatre minutes plus tard sur « 4 médias pour 5 »,
+// puis plantait sur une attente de 30 s à un endroit qui ne dit rien de la
+// cause. Mesuré le 11/09/2026 sur le runner. Un fichier vide compte comme
+// présent tant que personne ne regarde ce qu'il pèse.
 for (const nom of ['rush1.webm', 'rush-paysage.webm']) {
-  if (existsSync(join(RUSHES, nom))) continue;
-  console.error(`Rush ${nom} absent. Lance d’abord : npm run fixtures`);
+  const chemin = join(RUSHES, nom);
+  if (existsSync(chemin) && statSync(chemin).size > 0) continue;
+  const etat = existsSync(chemin) ? 'vide' : 'absent';
+  console.error(`Rush ${nom} ${etat}. Lance d’abord : npm run fixtures`);
   process.exit(1);
 }
 mkdirSync(SHOTS, { recursive: true });
@@ -165,6 +174,38 @@ let profileLabel = '';
 const check = (name, ok, detail = '') => {
   results.push({ name: `[${profileLabel}] ${name}`, ok });
   console.log(`${ok ? '  OK  ' : ' ECHEC'} | ${name}${detail ? ` — ${detail}` : ''}`);
+};
+
+/*
+ * Un contrôle sauté n'est pas un contrôle passé.
+ *
+ * Cinq contrôles de ce parcours dépendent de quelque chose que la machine
+ * n'a pas forcément : ffmpeg pour quatre d'entre eux, le modèle de détection
+ * pour le cinquième. Quand l'outil manquait, la ligne s'imprimait en « — » et
+ * le contrôle **disparaissait du décompte** : le bilan annonçait
+ * « 112/112 vérifications passées » sur un parcours qui en avait mesuré 108,
+ * et l'intégration continue le comptait vert. Mesuré le 11/09/2026 — ffmpeg
+ * est absent du runner `ubuntu-latest`, et quatre contrôles s'y sautaient à
+ * chaque passage sans que rien ne le signale.
+ *
+ * Un saut se déclare donc ici : il s'imprime, il compte dans le bilan, et il
+ * fait **échouer** le parcours. Une machine qui assume de ne pas les mesurer
+ * le dit explicitement par `AMORCE_SAUTS_TOLERES=1` ; l'aveu remplace le
+ * silence.
+ *
+ * **Un seul des cinq est toléré, et la raison tient à ce dont il dépend** :
+ * la trajectoire de recadrage demande un modèle **téléchargé sur le réseau**,
+ * pas un outil qu'on installe. Le rendre bloquant ferait rougir le parcours
+ * chaque fois que l'hôte du modèle hoquète, pour un défaut qui n'est pas dans
+ * le code — et un rouge qui s'allume sans cause apprend à ignorer les rouges.
+ * Tranché par le propriétaire le 11/09/2026. Il se déclare et se compte comme
+ * les autres : ce qui change est seulement le code de sortie. C'est la seule forme qui rende la différence visible entre « tout
+ * est vert » et « tout ce qui a tourné est vert ».
+ */
+const sauts = [];
+const saute = (nom, raison, { bloquant = true } = {}) => {
+  sauts.push({ nom: `[${profileLabel}] ${nom}`, raison, bloquant });
+  console.log(`  —    | ${nom} — non mesuré (${raison})${bloquant ? '' : ', toléré'}`);
 };
 
 /**
@@ -321,9 +362,24 @@ for (const profile of PROFILES.filter((p) => !only || p.id === only)) {
 await browser.close();
 
 const failed = results.filter((r) => !r.ok);
-console.log(`\n--- BILAN : ${results.length - failed.length}/${results.length} vérifications passées ---`);
+const sautsTolerés = process.env.AMORCE_SAUTS_TOLERES === '1';
+const bloquants = sautsTolerés ? [] : sauts.filter((saut) => saut.bloquant);
+console.log(
+  `\n--- BILAN : ${results.length - failed.length}/${results.length} vérifications passées`
+  + `${sauts.length ? `, ${sauts.length} sautée(s)` : ''} ---`,
+);
 for (const failure of failed) console.log(`  échec : ${failure.name}`);
-process.exit(failed.length ? 1 : 0);
+for (const saut of sauts) {
+  console.log(`  sauté : ${saut.nom} — ${saut.raison}${saut.bloquant ? '' : ' (toléré)'}`);
+}
+if (bloquants.length) {
+  console.log(
+    `\n  ${bloquants.length} contrôle(s) n'ont pas pu s'exécuter : ce parcours échoue plutôt`
+    + ' que de les compter passés. Installe l’outil manquant — ffmpeg pour la plupart —'
+    + ' ou relance avec AMORCE_SAUTS_TOLERES=1 pour assumer explicitement de ne pas les mesurer.',
+  );
+}
+process.exit(failed.length || bloquants.length ? 1 : 0);
 
 async function runProfile(profile) {
 const context = await browser.newContext({
@@ -1153,7 +1209,7 @@ if (profile.mobile) {
 
   const ouverture = await secondesVues();
   if (ouverture === null) {
-    console.log('  —    | Échelle de frise non mesurée (frise absente)');
+    saute('Échelle de frise', 'frise absente');
   } else {
     check(
       'La frise montre le montage entier à l’ouverture',
@@ -1563,7 +1619,7 @@ if (exportPath) {
    */
   const cadence = mesurerCadence(exportPath);
   if (cadence === null) {
-    console.log('  —    | Cadence non mesurée (ffprobe absent)');
+    saute('Cadence de l’export', 'ffprobe absent');
   } else {
     /*
      * La cadence de l'export, devenue un contrôle.
@@ -1631,7 +1687,7 @@ if (exportPath) {
 
   const creux = mesurerImagesVides(exportPath);
   if (creux === null) {
-    console.log('  —    | Images vides non mesurées (ffmpeg absent)');
+    saute('Images vides de l’export', 'ffmpeg absent');
   } else {
     check(
       'Aucune image de l’export n’est vide',
@@ -1642,7 +1698,7 @@ if (exportPath) {
 
   const silence = mesurerSilence(exportPath);
   if (silence === null) {
-    console.log('  —    | Silence non mesuré (ffmpeg absent)');
+    saute('Silence en cours de montage', 'ffmpeg absent');
   } else {
     check(
       'Le son ne s’interrompt pas en cours de montage',
@@ -1673,7 +1729,7 @@ if (exportPath) {
    */
   const pic = mesurerPic(exportPath);
   if (pic === null) {
-    console.log('  —    | Vrai pic non mesuré (ffmpeg absent)');
+    saute('Vrai pic du fichier livré', 'ffmpeg absent');
   } else {
     check(
       'Le fichier livré n’écrête pas',
@@ -1824,7 +1880,7 @@ if (exportPath) {
    * qu'aucune fixture ne fabrique.
    */
   if (!MODELE_LA) {
-    console.log('  —    | Trajectoire non mesurée (modèle de détection absent)');
+    saute('Trajectoire de recadrage', 'modèle de détection absent', { bloquant: false });
   } else {
   const trajectoire = await page.evaluate(
     (parSeconde) =>

@@ -1969,6 +1969,40 @@ survivrait au changement de cet objet-là. Un test de garde qu'on n'a jamais vu
 rougir sur l'injection réelle du défaut qu'il prétend garder n'est pas un
 test : le faire rougir une fois avant de lui faire confiance.
 
+**Et le pire des faux verts n'est pas un contrôle qui se trompe : c'est un
+contrôle qui ne tourne pas et que personne ne compte.** Posé le 11/09/2026
+après un audit de processus. Un contrôle qui dépend d'un outil que la machine
+n'a pas — ffmpeg, ffprobe, un modèle, un binaire tiers — ne doit **jamais**
+disparaître en silence : il fait échouer la vérification, ou la machine déclare
+explicitement qu'elle assume de ne pas le mesurer. Les deux sont acceptables ;
+le troisième comportement, imprimer une ligne grise et sortir en zéro, ne l'est
+pas.
+
+Le cas est mesuré sur le runner lui-même, `ubuntu-latest`, le 11/09/2026 :
+le parcours y annonçait **« 112/112 vérifications passées »** et sortait en
+zéro, alors qu'il en portait **120** — quatre contrôles par profil, huit en
+tout, avaient quitté le dénominateur faute de ffmpeg. C'est **exactement le
+« 112/112 verts » de la PR #903**, que personne n'avait su expliquer. La
+bannière annonçait le plein succès d'un parcours amputé, et le nombre qu'elle
+donnait était juste : elle ne mentait pas sur ce qu'elle mesurait, elle mentait
+sur ce qu'elle avait mesuré.
+Le vert ne mentait pas sur ce qu'il mesurait ; il mentait sur ce qu'il avait
+mesuré. Depuis, un saut se déclare, se compte et fait rougir, et
+`AMORCE_SAUTS_TOLERES=1` est le seul moyen de passer outre — un aveu, pas un
+silence. Leçon :
+`second-brain/lecons/2026-09-11-un-controle-saute-est-compte-comme-passe.md`.
+
+**Un saut peut être toléré, jamais tu.** Le cinquième de ce parcours l'est :
+la trajectoire de recadrage dépend d'un modèle **téléchargé sur le réseau**,
+pas d'un outil qu'on installe sur le runner. Le rendre bloquant ferait rougir
+le parcours chaque fois que l'hôte du modèle hoquète, pour un défaut qui n'est
+pas dans le code — et un rouge qui s'allume sans cause apprend à ignorer les
+rouges, ce que ce fichier reproche déjà au rouge permanent de Vercel (§10).
+Tranché par le propriétaire le 11/09/2026. **Ce qui ne se négocie pas est la
+déclaration** : il s'imprime et il se compte comme les quatre autres. La
+frontière est donc « dépend d'un outil installable » — bloquant — contre
+« dépend d'un tiers qu'on ne contrôle pas » — toléré et nommé.
+
 **Jamais** : procédé qui manipule, faux témoignage, promesse de guérison,
 pistage sans consentement, binaire versionné.
 
@@ -2419,6 +2453,17 @@ tourne, contrairement aux autres. Les tests unitaires ne
 voient ni le canvas,
 ni le son, ni l'export, ni le mobile — seul `verify` les couvre, et il se lance
 à part. `/verifier` garde le pourquoi de chaque étape.
+
+**Quatre contrôles de `verify` demandent ffmpeg**, et sans lui le parcours
+**échoue** au lieu de les sauter en silence — voir §8. Le runner l'installe
+depuis le 11/09/2026, donc ils tournent pour de bon : le bilan annonce 120 sur
+120 là où il annonçait « 112/112 ». Une machine qui n'a pas ffmpeg et l'assume
+lance `AMORCE_SAUTS_TOLERES=1 npm run verify` : le bilan nomme alors chaque
+contrôle non mesuré au lieu de le faire disparaître du décompte.
+
+**Un cinquième saut existe et il est toléré** : la trajectoire de recadrage,
+qui dépend d'un modèle téléchargé sur le réseau. Il s'imprime, il se compte, il
+ne fait pas rougir — la raison est au §8, et ce n'est pas un oubli à corriger.
 
 **Et `npm run regarder <adresse>` pour regarder une page déjà déployée.**
 Chromium ne peut pas ouvrir `*.vercel.app` d'ici — `ERR_CONNECTION_RESET` —

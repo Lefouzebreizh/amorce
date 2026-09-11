@@ -138,6 +138,23 @@ for (const spec of SPECS) {
   }, spec);
 
   const buffer = Buffer.from(base64, 'base64');
+  /*
+   * Un rush de zéro octet n'est pas un rush, et il ne se voyait nulle part.
+   *
+   * Mesuré le 11/09/2026 sur le runner : `rush-paysage.webm  0 Ko` s'est
+   * imprimé comme les quatre autres, la fabrique est sortie en succès, et le
+   * parcours est tombé quatre minutes plus tard sur « 4 médias pour 5 » — puis
+   * a planté sur une attente de 30 s, loin de la cause. L'enregistreur du
+   * navigateur avait rendu zéro morceau, sans erreur.
+   *
+   * C'est la même famille que le contrôle sauté compté comme passé : **un
+   * fichier vide compte comme présent** tant que personne ne regarde sa
+   * taille. On regarde ici, et on tombe tout de suite.
+   */
+  if (buffer.length === 0) {
+    console.error(`${spec.name}.webm est vide — l'enregistreur n'a rendu aucun morceau.`);
+    process.exit(1);
+  }
   writeFileSync(join(OUT, `${spec.name}.webm`), buffer);
   console.log(`${spec.name}.webm  ${(buffer.length / 1024).toFixed(0)} Ko`);
 }
