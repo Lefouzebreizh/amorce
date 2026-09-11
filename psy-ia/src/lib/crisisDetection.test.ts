@@ -189,3 +189,30 @@ test('la tolérance à un mot intercalé ne doit jamais avaler une négation', (
   assert.equal(detecterCrise(['je ne veux pas mourir']).niveau, 'modere');
   assert.equal(detecterCrise(['je ne veux jamais mourir']).niveau, 'modere');
 });
+
+// Six cas trouvés le 11/09/2026 en confrontant la liste à une batterie de
+// vingt formulations réalistes (directes, indirectes, avec fautes, avec
+// intensificateurs) — demandée par Erwann après le bug signalé, pour ne pas
+// se contenter d'un seul cas corrigé. Chacun documente un trou distinct.
+test('« disparaître pour de bon » déclenche sans exiger le verbe « veux »', () => {
+  assert.equal(detecterCrise(["j'aimerais disparaître pour de bon"]).niveau, 'fort');
+});
+
+test('« ne plus exister » déclenche, comme équivalent de « disparaître »', () => {
+  assert.equal(detecterCrise(['je voudrais juste ne plus exister']).niveau, 'fort');
+});
+
+test('trois tournures de désespoir supplémentaires déclenchent le niveau modéré', () => {
+  const exemples = [
+    'je vois plus aucune raison de continuer',
+    "j'ai plus goût à rien",
+    'à quoi bon continuer comme ça',
+  ];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test('la contraction phonétique « jv » (comme « jve ») est reconnue', () => {
+  assert.equal(detecterCrise(['jv en finir ce soir']).niveau, 'fort');
+});

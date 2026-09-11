@@ -48,6 +48,10 @@ function normaliser(texte: string): string {
     .replace(/(.)\1+/g, '$1')
     .replace(/\bjeveux?\b/g, 'je veux')
     .replace(/\bjve\b/g, 'je veux')
+    // Trouvé le 11/09/2026 en confrontant la liste à une batterie de
+    // formulations réalistes : « jv en finir » ne matchait pas, la
+    // contraction n'ayant pas été anticipée à côté de « jve ».
+    .replace(/\bjv\b/g, 'je veux')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -120,6 +124,15 @@ const PHRASES_FORTES = [
   'idées suicidaires',
   'pensées suicidaires',
   'envie de me suicider',
+  // Trouvés le 11/09/2026 en confrontant la liste à une batterie de
+  // formulations réalistes (pas seulement le cas signalé) : « je veux
+  // disparaître » exige « veux », et ne matche donc pas « j'aimerais
+  // disparaître pour de bon » — même tournure suffixée que « je veux partir
+  // pour de bon » deux lignes plus haut, sans exiger de verbe précis avant.
+  'disparaître pour de bon',
+  // Euphémisme direct pour la mort volontaire, équivalent à « disparaître »
+  // mais avec un verbe différent — absent jusqu'ici.
+  'plus exister',
 ];
 
 // Mention d'un plan concret ou d'un moyen — niveau fort lui aussi.
@@ -194,6 +207,13 @@ const PHRASES_MODEREES = [
   'pensées noires',
   'idées sombres',
   'pensées sombres',
+  // Trouvés le 11/09/2026 en confrontant la liste à une batterie de
+  // formulations réalistes, distinctes de « je vois pas comment continuer »
+  // déjà couvert (celui-ci exige « comment ») : trois tournures de
+  // désespoir tout aussi courantes, absentes jusqu'ici.
+  'aucune raison de continuer',
+  'goût à rien',
+  'à quoi bon continuer',
 ];
 
 // Épuisement extrême : ne déclenche que s'il est exprimé de façon RÉPÉTÉE
