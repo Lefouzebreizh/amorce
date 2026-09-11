@@ -178,7 +178,19 @@ test('un seul mot intercalé entre deux mots d\'un motif ne casse plus la détec
   assert.equal(detecterCrise(["j'ai plus aucune envie de vivre"]).niveau, 'fort');
 });
 
-test('deux mots ou plus intercalés ne déclenchent toujours pas — la tolérance reste bornée à un seul mot', () => {
+// Trouvé en production le 11/09/2026 : « je suis chafoinje vais faire une
+// bétise » (un mot-valise de frappe, "chafoin" et "je" collés sans espace)
+// ne déclenchait pas, alors que "je vais faire une bêtise" y est bien
+// présent — entre le "je" repérable ("je SUIS...") et "vais" s'intercalaient
+// deux mots ("suis" et "chafoinje"), pas un seul. La tolérance est passée de
+// un à deux mots intercalés le jour même pour cette raison précise.
+test('deux mots intercalés, dont un mot-valise de frappe, ne cassent plus la détection', () => {
+  const resultat = detecterCrise(['je suis chafoinje vais faire une bétise']);
+  assert.equal(resultat.niveau, 'fort');
+  assert.ok(resultat.motifs.includes('je vais faire une bêtise'));
+});
+
+test('trois mots ou plus intercalés ne déclenchent toujours pas — la tolérance reste bornée à deux mots', () => {
   const resultat = detecterCrise(['des idées un peu tristes et noires parfois']);
   assert.equal(resultat.niveau, 'aucun');
 });
@@ -186,10 +198,12 @@ test('deux mots ou plus intercalés ne déclenchent toujours pas — la toléran
 // Piège trouvé en écrivant la tolérance ci-dessus, avant même la fusion :
 // sans exclusion, « je veux mourir » (FORT) matchait aussi « je ne veux pas
 // mourir » (négation directe, MODÉRÉ) — « ne » et « pas » passaient chacun
-// pour le mot intercalé toléré d'un des deux intervalles du motif FORT,
+// pour un mot intercalé toléré d'un des deux intervalles du motif FORT,
 // inversant le sens de la phrase. Couvert aussi par le test de négation
-// directe plus haut ; celui-ci documente explicitement pourquoi.
-test('la tolérance à un mot intercalé ne doit jamais avaler une négation', () => {
+// directe plus haut ; celui-ci documente explicitement pourquoi. Vérifié à
+// nouveau après le passage à deux mots de tolérance : le nombre de mots
+// tolérés ne change rien, chacun est vérifié individuellement.
+test('la tolérance aux mots intercalés ne doit jamais avaler une négation', () => {
   assert.equal(detecterCrise(['je ne veux pas mourir']).niveau, 'modere');
   assert.equal(detecterCrise(['je ne veux jamais mourir']).niveau, 'modere');
 });
