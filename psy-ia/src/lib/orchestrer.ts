@@ -100,6 +100,12 @@ export async function traiterMessage(
   });
 
   if (!reponseAnthropic.ok) {
+    // Journalisé côté serveur uniquement (jamais renvoyé au client) : sans
+    // ça, un refus d'Anthropic (clé invalide, facturation absente, modèle
+    // inconnu, quota) rend tous le même message générique et un diagnostic
+    // à distance devient impossible.
+    const corpsErreur = await reponseAnthropic.text().catch(() => '(corps illisible)');
+    console.error(`Anthropic a refusé la requête : ${reponseAnthropic.status} ${corpsErreur}`);
     return { corps: { reponse: '', crise: false, erreur: 'Le fournisseur LLM a refusé la requête.' }, statut: 502 };
   }
   const resultat = await reponseAnthropic.json();
