@@ -162,6 +162,10 @@ visual_library/**/*.mp4
 /iptv/.essai/
 /iptv/donnees/
 /iptv/*.db
+
+# Psy IA : Next.js autonome, comme le-coffre et titan-builder.
+/psy-ia/node_modules/
+/psy-ia/.next/
 /iptv/*.db-journal
 /iptv/*.m3u
 /iptv/*.m3u8
