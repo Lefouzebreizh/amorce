@@ -285,6 +285,12 @@ const PHRASES_MODEREES = [
   'aucune raison de continuer',
   'goût à rien',
   'à quoi bon continuer',
+  // Revue du 11/09/2026 (audit des signaux ambigus/diffus, à la demande
+  // d'Erwann) : « à quoi bon continuer » exige le mot « continuer », qui
+  // manque souvent — la personne dit juste « à quoi bon », en soupir, sans
+  // rien continuer à nommer. C'est une lecture de détresse raisonnable même
+  // isolée ; posé en MODÉRÉ comme le reste de ce bloc.
+  'à quoi bon',
   // Recherche demandée par Erwann le 11/09/2026, après deux faux négatifs
   // réels de suite : « la plupart des gens ne le disent pas explicitement,
   // il faut couvrir toutes les formulations indirectes ». Regroupé par
@@ -346,6 +352,15 @@ const PHRASES_MODEREES = [
   'épuisée',
   'plus aucune force',
   'vidé de toute énergie',
+  // Revue du 11/09/2026 (audit des signaux ambigus/diffus, à la demande
+  // d'Erwann) : « je suis fatigué de tout » n'était couvert par aucun motif
+  // — seul « épuisé » l'était, un mot différent. Le qualificatif « de tout »
+  // distingue cette lassitude totalisante d'une simple fatigue physique
+  // passagère ("je suis fatigué, je vais me coucher") : sans lui, « fatigué »
+  // seul ferait déclencher la quasi-totalité des messages du soir, bien
+  // au-delà du compromis faux positifs/faux négatifs assumé par ce projet.
+  'fatigué de tout',
+  'fatiguée de tout',
   //
   // Bloc ajouté le 11/09/2026 suite à la reformulation du principe de
   // décision : plutôt que de continuer à corriger cas par cas (ce qui ne
