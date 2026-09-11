@@ -4,37 +4,49 @@
 // même » n'a jamais l'occasion de le faire, puisque ce filtre n'invoque
 // aucun modèle et ne peut donc pas être « discuté ». Voir SECURITY.md.
 //
-// La liste de motifs ci-dessous est un POINT DE DÉPART, pas une liste
+// La liste de phrases ci-dessous est un POINT DE DÉPART, pas une liste
 // validée cliniquement : elle reprend telle quelle la note d'initialisation
 // du projet (voir TODO.md, couche 4). Elle doit être enrichie et validée par
 // un professionnel de santé mentale avant toute mise en ligne, même en
 // bêta. Principe directeur, explicitement posé dans cette même note : en cas
 // de doute, on déclenche — un faux positif est gênant, un faux négatif est
 // inacceptable.
+//
+// Les motifs s'écrivent en FRANÇAIS ORDINAIRE, jamais en expression
+// régulière, et c'est une décision de fond : un psychologue doit pouvoir
+// relire et compléter cette liste sans savoir lire du code. La machinerie
+// (accents, fautes de frappe, apostrophes) est entièrement dans
+// `normaliser` ci-dessous, appliquée des DEUX côtés — au message reçu comme
+// au motif écrit ici.
 
 export type NiveauCrise = 'aucun' | 'modere' | 'fort';
 
 export interface ResultatDetectionCrise {
   niveau: NiveauCrise;
-  /** Motifs qui ont déclenché, pour le journal d'audit — jamais montré à la personne. */
+  /** Phrases qui ont déclenché, pour le journal d'audit — jamais montré à la personne. */
   motifs: string[];
 }
 
 /**
- * Normalise un message pour la détection : accents retirés, minuscules,
- * lettres répétées ramenées à une seule occurrence ("mourrrir" → "mourir"), quelques
+ * Normalise un texte pour la détection : accents retirés, minuscules,
+ * lettres répétées ramenées à une seule ("mourrrir" → "mourir"), quelques
  * contractions phonétiques citées dans la note d'initialisation ("jve",
- * "jeveu"), puis toute ponctuation ramenée à une espace. Un professionnel
- * pourra enrichir ce dictionnaire de contractions ; la structure ne change
- * pas.
+ * "jeveu"), puis toute ponctuation ramenée à une espace.
+ *
+ * Le repli des lettres répétées mange aussi les doubles lettres légitimes
+ * ("arrangera" → "arangera"), et c'est sans conséquence à une condition :
+ * que les motifs passent par cette même fonction. C'est ce que fait
+ * `compiler` juste en dessous. Un motif écrit à la main en expression
+ * régulière contournerait cette garantie et ne matcherait jamais — le défaut
+ * a été mesuré sur « ça ne s'arrangera jamais », qui passait au travers.
  */
 function normaliser(texte: string): string {
   return texte
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\p{M}/gu, '')
     .toLowerCase()
     .replace(/(.)\1+/g, '$1')
-    .replace(/\bjeveu(x)?\b/g, 'je veux')
+    .replace(/\bjeveux?\b/g, 'je veux')
     .replace(/\bjve\b/g, 'je veux')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
@@ -42,121 +54,156 @@ function normaliser(texte: string): string {
 }
 
 interface Motif {
-  motif: string;
+  /** La phrase telle qu'elle est écrite plus bas — c'est elle qui part au journal. */
+  phrase: string;
   regex: RegExp;
 }
 
+/**
+ * Compile des phrases en motifs. La phrase subit exactement la même
+ * normalisation que le message reçu, puis ses espaces deviennent « une ou
+ * plusieurs espaces ». Après normalisation il ne reste que des lettres, des
+ * chiffres et des espaces : aucun métacaractère d'expression régulière ne
+ * peut donc survivre, et la construction est sûre.
+ */
+function compiler(phrases: string[]): Motif[] {
+  return phrases.map((phrase) => ({
+    phrase,
+    regex: new RegExp(`\\b${normaliser(phrase).replace(/ /g, '\\s+')}\\b`),
+  }));
+}
+
 // --- Niveau fort : tournures explicites autour du suicide et de la mort
-// volontaire (déclenchement systématique). ---
-const MOTIFS_FORTS: Motif[] = [
-  { motif: 'veut mourir', regex: /\bveu[xt]\s+mourir\b/ },
-  { motif: 'envie de mourir', regex: /\benvie\s+de\s+mourir\b/ },
-  { motif: 'veut en finir', regex: /\bveu[xt]\s+en\s+finir\b/ },
-  { motif: 'plus envie de vivre', regex: /\bplus\s+envie\s+de\s+vivre\b/ },
-  { motif: 'veut plus vivre', regex: /\bveu[xt]\s+plus\s+vivre\b/ },
-  { motif: 'va se suicider', regex: /\bvais\s+me\s+suicider\b/ },
-  { motif: 'va se tuer', regex: /\bvais\s+me\s+tuer\b/ },
-  { motif: 'pense au suicide', regex: /\bpense\s+au\s+suicide\b/ },
-  { motif: 'veut disparaitre', regex: /\bveu[xt]\s+disparaitre\b/ },
-  { motif: 'veut partir pour de bon', regex: /\bveu[xt]\s+partir\s+pour\s+de\s+bon\b/ },
+// volontaire. Déclenchement systématique. ---
+const PHRASES_FORTES = [
+  'je veux mourir',
+  'envie de mourir',
+  'je veux en finir',
+  'plus envie de vivre',
+  // Sans "je" en tête, à dessein : "veux plus vivre" matche aussi bien "je
+  // veux plus vivre" que sa forme niée "je ne veux plus vivre" — la négation
+  // ne casse pas la contiguïté du fragment, alors qu'un préfixe "je veux"
+  // figé l'aurait fait échouer sur la forme niée (voir le test de non-
+  // régression sur la négation directe, plus bas).
+  'veux plus vivre',
+  'je vais me suicider',
+  'je vais me tuer',
+  'je pense au suicide',
+  'je veux disparaître',
+  'je veux partir pour de bon',
 ];
 
 // Mention d'un plan concret ou d'un moyen — niveau fort lui aussi.
-const MOTIFS_PLAN: Motif[] = [
-  { motif: 'moyen médicamenteux préparé', regex: /\bmedicaments\s+qu\s+il\s+faut\b/ },
-  { motif: 'tout préparé', regex: /\btout\s+prepare\b/ },
-  { motif: 'moment choisi', regex: /\bce\s+soir\s+c\s+est\s+le\s+bon\s+moment\b/ },
+const PHRASES_PLAN = [
+  "les médicaments qu'il faut",
+  'tout préparé',
+  "c'est le bon moment",
 ];
 
 // Moyens précis mentionnés isolément — la note dit « toute mention d'un
-// moyen précis ». Liste non exhaustive et volontairement resserrée : au-delà
-// de ces termes très explicites, le risque de faux positif mal calibré est
-// trop élevé sans validation professionnelle (voir TODO.md).
-const MOTIFS_MOYENS: RegExp[] = [
-  /\bpendaison\b/,
-  /\bme\s+pendre\b/,
-  /\bsauter\s+du\s+(pont|toit|imeuble)\b/,
-  /\bme\s+jeter\s+sous\s+(un|le)\s+train\b/,
-  /\barme\s+a\s+feu\b/,
-  /\bavaler\s+(tous|toutes)?\s*(les|des)\s+(cachets|comprimes|medicaments)\b/,
-  /\bfaire\s+une\s+overdose\b/,
-  /\bme\s+couper\s+les\s+veines\b/,
+// moyen précis ». Liste volontairement resserrée aux tournures les plus
+// explicites : au-delà, le risque de faux positif mal calibré est trop élevé
+// sans validation professionnelle (voir TODO.md).
+const PHRASES_MOYENS = [
+  'me pendre',
+  'pendaison',
+  'sauter du pont',
+  'sauter du toit',
+  "sauter de l'immeuble",
+  // La tournure agrammaticale est listée à côté de la correcte, et c'est
+  // volontaire : quelqu'un qui écrit à trois heures du matin ne relit pas sa
+  // syntaxe, et le principe du projet est qu'en cas de doute on déclenche.
+  'sauter du immeuble',
+  'sauter par la fenêtre',
+  'me jeter sous un train',
+  'arme à feu',
+  'avaler tous les cachets',
+  'avaler tous mes médicaments',
+  'faire une overdose',
+  'me couper les veines',
 ];
 
-// --- Niveau modéré : désespoir profond et sentiment de fardeau (bascule au
-// moindre doute, dès une seule occurrence). ---
-const MOTIFS_MODERES: Motif[] = [
-  { motif: 'sert à rien', regex: /\bje\s+sers?\s+a\s+rien\b/ },
-  { motif: "tout le monde irait mieux sans moi", regex: /\btout\s+le\s+monde\s+irait\s+mieux\s+sans\s+moi\b/ },
-  { motif: 'poids pour tout le monde', regex: /\bpoids\s+pour\s+tout\s+le\s+monde\b/ },
-  { motif: "ça ne s'arrangera jamais", regex: /\bca\s+(ne\s+)?s\s+arangera\s+jamais\b/ },
-  { motif: "n'en peut plus", regex: /\ben\s+peux\s+plus\b/ },
-  { motif: 'ne voit pas comment continuer', regex: /\bvois\s+pas\s+coment\s+continuer\b/ },
+// --- Niveau modéré : désespoir profond et sentiment de fardeau. Bascule au
+// moindre doute, dès une seule occurrence. ---
+const PHRASES_MODEREES = [
+  'je sers à rien',
+  'je ne sers à rien',
+  'tout le monde irait mieux sans moi',
+  'un poids pour tout le monde',
+  "ça ne s'arrangera jamais",
+  "ça s'arrangera jamais",
+  "je n'en peux plus",
+  "j'en peux plus",
+  'je vois pas comment continuer',
+  'je ne vois pas comment continuer',
   // Négation inversée — ajoutée le 11/09/2026 suite à une relecture externe
-  // de la note de cadrage. « Je veux mourir » (négation directe absente) est
-  // déjà couvert en niveau fort ; « je ne veux plus vivre » (négation
-  // directe) l'est déjà via le motif « veut plus vivre » ci-dessus, puisque
-  // « ne » n'empêche pas le sous-texte de matcher. Ce qui manquait était la
-  // forme inversée : une personne qui dit craindre ou refuser la mort peut
-  // signaler la même détresse par ambivalence — l'hésitation entre vouloir
-  // vivre et vouloir mourir est un marqueur documenté, pas un non-signal.
-  // Posé en niveau MODÉRÉ et non FORT : contrairement aux tournures
-  // ci-dessus, la phrase peut aussi être parfaitement anodine (« je veux pas
-  // mourir bête », tournure familière sans rapport avec le suicide) — le
-  // niveau modéré déclenche déjà le même message figé au moindre doute
-  // (principe directeur de la couche 1), sans sur-classer un motif plus
-  // ambigu que les autres.
-  { motif: 'négation inversée (peur de mourir)', regex: /\bveu[xt]\s+pas\s+mourir\b/ },
+  // de la note de cadrage. La négation directe ("je ne veux plus vivre")
+  // est déjà couverte plus haut ("je veux plus vivre" matche son sous-texte,
+  // "ne" n'empêchant pas la phrase de matcher) ; ce qui manquait était la
+  // forme inversée — une personne qui dit craindre ou refuser la mort peut
+  // signaler la même détresse par ambivalence, un marqueur documenté. Posé
+  // en MODÉRÉ et non FORT : la phrase peut aussi être parfaitement anodine
+  // ("je veux pas mourir bête", tournure familière sans rapport avec le
+  // suicide) — le niveau modéré déclenche déjà le même message figé au
+  // moindre doute, sans sur-classer un motif plus ambigu que les autres.
+  'veux pas mourir',
+  'veut pas mourir',
 ];
 
 // Épuisement extrême : ne déclenche que s'il est exprimé de façon RÉPÉTÉE
 // dans la conversation — au moins deux messages distincts — comme demandé
 // explicitement par la note d'initialisation. Un seul « je suis épuisé·e »
 // isolé ne suffit pas à lui seul.
-const MOTIFS_EPUISEMENT: RegExp[] = [
-  /\bepuise/,
-  /\ba\s+bout\b/,
-  /\bvide[e]?\s+de\s+toute\s+energie\b/,
-  /\bplus\s+(aucune|de)\s+force\b/,
+const PHRASES_EPUISEMENT = [
+  'épuisé',
+  'épuisée',
+  'à bout',
+  'plus aucune force',
+  'vidé de toute énergie',
 ];
 
-function chercherMotifs(texteNormalise: string, table: Motif[]): string[] {
-  return table.filter(({ regex }) => regex.test(texteNormalise)).map(({ motif }) => motif);
+const MOTIFS_FORTS = compiler(PHRASES_FORTES);
+const MOTIFS_PLAN = compiler(PHRASES_PLAN);
+const MOTIFS_MOYENS = compiler(PHRASES_MOYENS);
+const MOTIFS_MODERES = compiler(PHRASES_MODEREES);
+const MOTIFS_EPUISEMENT = compiler(PHRASES_EPUISEMENT);
+
+function chercher(texteNormalise: string, motifs: Motif[]): string[] {
+  return motifs.filter(({ regex }) => regex.test(texteNormalise)).map(({ phrase }) => phrase);
 }
 
 /**
  * Détecte un signal de crise sur l'ENSEMBLE de la conversation, pas
  * seulement le dernier message : le signal peut se construire
- * progressivement (note d'initialisation, couche 1). `messagesUtilisateur`
+ * progressivement (note d'initialisation, couche 1). `messagesPersonne`
  * doit porter tous les messages de la personne depuis le début de la
  * session, dans l'ordre — jamais seulement le dernier.
  */
-export function detecterCrise(messagesUtilisateur: string[]): ResultatDetectionCrise {
-  const normalises = messagesUtilisateur.map(normaliser);
-  const motifsTrouves = new Set<string>();
-  let niveau: NiveauCrise = 'aucun';
+export function detecterCrise(messagesPersonne: string[]): ResultatDetectionCrise {
+  const normalises = messagesPersonne.map(normaliser);
+  const trouves = new Set<string>();
 
   for (const texte of normalises) {
-    chercherMotifs(texte, MOTIFS_FORTS).forEach((m) => motifsTrouves.add(m));
-    chercherMotifs(texte, MOTIFS_PLAN).forEach((m) => motifsTrouves.add(m));
-    if (MOTIFS_MOYENS.some((regex) => regex.test(texte))) {
-      motifsTrouves.add("mention d'un moyen précis");
+    for (const table of [MOTIFS_FORTS, MOTIFS_PLAN, MOTIFS_MOYENS]) {
+      chercher(texte, table).forEach((phrase) => trouves.add(phrase));
     }
   }
-  if (motifsTrouves.size > 0) niveau = 'fort';
-
-  if (niveau !== 'fort') {
-    for (const texte of normalises) {
-      chercherMotifs(texte, MOTIFS_MODERES).forEach((m) => motifsTrouves.add(m));
-    }
-    const messagesAvecEpuisement = normalises.filter((texte) =>
-      MOTIFS_EPUISEMENT.some((regex) => regex.test(texte)),
-    ).length;
-    if (messagesAvecEpuisement >= 2) {
-      motifsTrouves.add('épuisement extrême répété');
-    }
-    if (motifsTrouves.size > 0) niveau = 'modere';
+  if (trouves.size > 0) {
+    return { niveau: 'fort', motifs: Array.from(trouves) };
   }
 
-  return { niveau, motifs: Array.from(motifsTrouves) };
+  for (const texte of normalises) {
+    chercher(texte, MOTIFS_MODERES).forEach((phrase) => trouves.add(phrase));
+  }
+  const messagesAvecEpuisement = normalises.filter(
+    (texte) => chercher(texte, MOTIFS_EPUISEMENT).length > 0,
+  ).length;
+  if (messagesAvecEpuisement >= 2) {
+    trouves.add('épuisement extrême répété');
+  }
+
+  return {
+    niveau: trouves.size > 0 ? 'modere' : 'aucun',
+    motifs: Array.from(trouves),
+  };
 }

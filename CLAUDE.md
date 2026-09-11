@@ -2683,6 +2683,22 @@ plusieurs sessions en parallèle, et quelques heures suffisent à périmer une
 branche. Ce qui est fusionné gagne, toujours. `/branche-partagee` en cas de
 doute. `AGENTS.md` est réécrit par `next dev` : le committer avec le reste.
 
+**Rebase avant PR.** Avant d'ouvrir une pull request, chaque session doit
+rebaser sa branche sur `main` à jour. Objectif : faire remonter les conflits
+de fusion tout de suite, pendant que la session a encore le contexte frais
+de son propre travail, plutôt que de les laisser s'accumuler et retomber sur
+Erwann plus tard. Si le rebase déclenche des conflits, les résoudre avant
+d'ouvrir la PR, pas après.
+
+Posée le 11/09/2026 sur un cas réel : deux sessions ont construit `psy-ia/`
+en parallèle sans se voir — l'une fusionnée (#901, #904), l'autre restée
+ouverte (#905) et retombée en conflit sur `main` une fois la première
+passée. Aucune des deux n'était en tort : chacune avait fetché `main` avant
+d'écrire, comme le paragraphe ci-dessus le demande déjà. Ce que ce
+paragraphe ne demandait pas encore, c'est de revérifier **juste avant
+d'ouvrir la PR**, une fois le travail terminé — le seul moment qui capture
+ce qu'une autre session a fusionné entre-temps.
+
 #### Après la fusion : supprimer la branche
 
 Ajouté par le propriétaire le 06/09/2026, en même temps qu'il reconfirmait le

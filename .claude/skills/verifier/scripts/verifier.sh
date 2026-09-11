@@ -381,9 +381,15 @@ lancer_psyia() {
   ( cd "$d" || exit 1; etape "$j.lint"      "lint"      npm run lint ) & local a=$!
   ( cd "$d" || exit 1; etape "$j.typecheck" "typecheck" npm run typecheck ) & local b=$!
   ( cd "$d" || exit 1; etape "$j.test"      "tests"     npm test ) & local c=$!
-  wait $a || e=1; wait $b || e=1; wait $c || e=1
+  # `regarder` n'est pas une suite de tests et ne peut pas échouer : il AFFICHE
+  # ce que la détection de crise fait sur des messages ordinaires — « mort de
+  # rire », « ce film m'a tué » —, faux positif connu compris. Il est ici parce
+  # que sur ce projet-là, le vert des trois étapes ci-dessus ne dit rien du
+  # résultat perçu, et que sa sortie se lit à l'œil en deux secondes.
+  ( cd "$d" || exit 1; etape "$j.regarder"  "regarder"  npm run regarder ) & local r=$!
+  wait $a || e=1; wait $b || e=1; wait $c || e=1; wait $r || e=1
   ( cd "$d" || exit 1; etape "$j.build" "build" npm run build || exit 1 ) || e=1
-  cat "$j".{lint,typecheck,test,build} > "$j" 2>/dev/null
+  cat "$j".{lint,typecheck,test,regarder,build} > "$j" 2>/dev/null
   return $e
 }
 
