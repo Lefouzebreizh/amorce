@@ -22,13 +22,24 @@ run ne s'était pas périmée. Rien dans la première ne signale qu'elle est vie
 — pas d'horodatage de rafraîchissement, pas de `completed_at` absent qui
 alerterait.
 
-## Le geste qui tranche
+## Le geste qui tranche, corrigé par le cas suivant
 
-Quand `get_check_runs` reste sur `in_progress` plus longtemps que le job ne
-devrait durer, **ne pas réinterroger la même vue** : demander le run
-(`actions_get` / `get_workflow_run` avec l'identifiant que la fiche du check
-porte déjà dans son `html_url`), ou lire le journal du job. L'un des deux dit
-la vérité en un appel.
+La première rédaction disait « demander le run, ou lire le journal ». Éprouvée
+une heure plus tard sur la PR #895, elle s'est révélée insuffisante :
+
+- le **journal** rend `HTTP 404` tant que le job tourne — il ne distingue donc
+  pas « fini » de « en cours », il n'existe qu'après ;
+- le **run** ne bouge pas son `updated_at` pendant qu'un job avance : figé dix
+  minutes, il ressemble à la vue périmée qu'on cherchait à éviter.
+
+**La vue qui tranche vraiment est `actions_get` / `get_workflow_job`**, avec
+l'identifiant du check. Elle rend le job **étape par étape**, avec l'heure de
+début et de fin de chacune — sur #895, elle a nommé en un appel l'étape qui
+retenait tout : *« Confronter les dépendances aux vulnérabilités connues »*,
+en cours depuis treize minutes, les suites de tests encore en `pending`.
+
+Aucune des trois autres vues ne dit ça. C'est la seule qui sépare « le job est
+bloqué **là** » de « le job est fini et l'affichage traîne ».
 
 Ça ne retire rien à la règle du `CLAUDE.md` — `get_status` **et**
 `get_check_runs` avant toute fusion, toujours les deux. Ça ajoute seulement
