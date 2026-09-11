@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { detecterCrise } from './crisisDetection.ts';
+import { detecterCrise } from './crisisDetection';
 
 // Ces tests couvrent la liste de phrases telle qu'écrite dans la note
 // d'initialisation du projet — ils prouvent que le code fait ce que la note

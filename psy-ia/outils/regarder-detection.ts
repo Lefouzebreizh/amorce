@@ -12,7 +12,7 @@
 // Cet outil n'affirme rien : il affiche, et c'est l'œil qui décide. Il est
 // destiné à être relu avec le professionnel de santé mentale de la couche 4.
 
-import { detecterCrise } from '../src/lib/crisisDetection.ts';
+import { detecterCrise } from '../src/lib/crisisDetection';
 
 interface Cas {
   message: string;
