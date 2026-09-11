@@ -65,10 +65,34 @@ réversible) : plus aucune tranche blanche.
 bas) : plus aucune tranche vide, et deux tranches auparavant partiellement
 blanches (jusqu'à 91,9 % de blanc) se peignent désormais en entier — la
 capture par segment règle donc aussi des cas de peinture partielle, pas
-seulement les tranches totalement vides. **La vérification à l'œil sur le
-fichier final était en cours au moment d'écrire cette ligne** : ce
-paragraphe rapporte une mesure, pas encore un regard complet — voir §8 de
-`CLAUDE.md` sur la différence entre les deux.
+seulement les tranches totalement vides.
+
+**Un second défaut a été trouvé par cette même vérification en conditions
+réelles, sur `payfit.com/fr` cette fois : `00-pleine-page.png` restait
+tronqué.** C'est le fichier de référence pleine page, laissé à
+`full_page=True` par le correctif ci-dessus — lui seul, pas les segments —
+peut donc encore franchir le plafond de hauteur de Chromium sur une page
+suffisamment haute, exactement la cause déjà mesurée. Corrigé en rendant
+cette seule capture à `scale="css"` (échelle 1x) au lieu de l'échelle 2x des
+segments, ce qui divise par deux la hauteur physique demandée. Et
+`analyser_captures.py`, écrit dans la foulée, exclut ce fichier de ce qu'il
+envoie au modèle de vision — un aplat blanc éventuel sur ce fichier de
+référence ne doit jamais se substituer au dernier segment numéroté, qui
+couvre le même contenu sans ce risque.
+
+**Un point reste ouvert, en cours de diagnostic sur `payfit.com/fr` au
+moment d'écrire cette ligne** : plusieurs segments consécutifs (02 à 05)
+portent une bande de tête identique au pixel près. Hypothèse la plus
+probable : un en-tête `position: sticky` qui apparaît, à raison, à la même
+position d'écran sur chaque segment où il est réellement épinglé au
+scroll — ce n'est donc pas nécessairement un défaut de la capture, mais un
+vrai sujet pour l'usage en aval (un modèle de vision verrait quatre fois le
+même en-tête). La section « Ce que le script fait » plus bas est corrigée en
+conséquence : elle affirmait qu'un sticky « ne se duplique de toute façon
+jamais », ce qui confondait ce cas avec l'ancien bug de duplication en
+composite pleine page. Pas encore tranché : si un re-masquage sélectif du
+sticky au-delà de son premier segment se justifie, ou si la fidélité au
+parcours réel prime.
 
 ## Utiliser
 
@@ -76,6 +100,32 @@ paragraphe rapporte une mesure, pas encore un regard complet — voir §8 de
 pip install playwright   # PyPI est ouvert, pas besoin de plus — Pillow n'est plus nécessaire
 python3 capturer_page.py "https://exemple.com" --sortie captures/
 ```
+
+Puis, une fois les segments écrits, les faire juger par un modèle de vision :
+
+```bash
+pip install anthropic
+export ANTHROPIC_API_KEY="…"
+python3 analyser_captures.py captures/exemple-com/
+```
+
+Écrit `rapport.md` dans le dossier de capture : verdict global, six catégories
+notées sur 10 (message et promesse, preuve sociale, appel à l'action,
+objections et confiance, lisibilité et hiérarchie visuelle, cohérence de
+marque), des constats triés par sévérité et référencés au segment où ils se
+voient, et les trois priorités à corriger en premier. Voir l'en-tête de
+`analyser_captures.py` pour le détail du prompt et du schéma.
+
+**Non exercé depuis cette session, pour la même raison que la capture elle-
+même** : `api.anthropic.com` n'a jamais été sondé ni appelé d'ici. Le module
+est écrit contre la surface réelle du SDK — signatures et classes d'erreur
+relevées directement dans le paquet téléchargé sans l'installer, jamais de
+mémoire (voir `/api-tierce-verifiee`) — et sa partie qui ne dépend ni du
+réseau ni d'une clé (lister les segments, encoder une image, parser et
+valider la réponse, rendre le Markdown) est couverte par
+`tests/test_analyser_captures.py`, 16 tests. L'appel réel reste à faire
+tourner sur la machine du propriétaire, ou sur un environnement dont la
+politique réseau laisse joindre `api.anthropic.com`.
 
 Sans argument, le script capture les quatre URLs de test de la consigne
 (`qonto.com/fr`, `payfit.com/fr`, `app.spendesk.com`, `pennylane.com`).
@@ -111,8 +161,15 @@ Chaque URL produit un dossier (`captures/<domaine-nettoyé>/`) contenant :
    un petit en-tête), et le masquer avec `display:none` la retire du flux du
    document — la page se raccourcit et tout son contenu suivant se décale
    (mesuré sur fixture). Comme chaque segment est désormais un vrai viewport
-   scrollé à sa position (étape 6), un `sticky` ne se duplique de toute façon
-   jamais : il se comporte exactement comme sous les yeux d'un utilisateur.
+   scrollé à sa position (étape 6), un `sticky` se comporte exactement comme
+   sous les yeux d'un utilisateur — **et ça inclut d'apparaître, à raison, à
+   la même position sur plusieurs segments consécutifs une fois épinglé** :
+   un ancien texte de ce README disait qu'un sticky « ne se duplique de
+   toute façon jamais », en confondant ce cas-là avec l'ancien bug de
+   duplication en composite pleine page (mesuré identique au pixel près sur
+   `payfit.com/fr`, diagnostic en cours — voir plus haut). Ce n'est pas un
+   défaut de la capture, qui reste fidèle à ce qu'un visiteur voit vraiment ;
+   c'est la phrase qui était fausse.
 4. **Scroll progressif jusqu'en bas** (pas de 700 px, pause de 150 ms) pour
    déclencher le lazy-loading des images sous la ligne de flottaison —
    la plupart se chargent via `IntersectionObserver` et ne se déclenchent

@@ -94,9 +94,12 @@ DELAI_CLIC_CONSENTEMENT_MS = 1_200
 # (contrairement à `fixed`), ce qui raccourcit la page et décale tout ce qui
 # suit — vérifié sur une fixture avec une grande section « épinglée » de
 # storytelling, une technique de mise en page très répandue et pas du tout
-# limitée à un petit bandeau. Et depuis que chaque segment est un vrai
-# viewport scrollé à sa position, un sticky ne se duplique plus jamais : il
-# se comporte exactement comme sous les yeux d'un utilisateur réel.
+# limitée à un petit bandeau. Depuis que chaque segment est un vrai viewport
+# scrollé à sa position, un sticky se comporte exactement comme sous les
+# yeux d'un utilisateur réel — ce qui inclut d'apparaître, à raison, à la
+# même position sur plusieurs segments consécutifs une fois épinglé (mesuré
+# sur payfit.com/fr, voir README.md) : ce n'est pas la même chose que la
+# duplication de l'ancien bug en composite pleine page.
 JS_MASQUER_ELEMENTS_FIXES = """
 () => {
   const noeuds = document.querySelectorAll('body *');
@@ -310,9 +313,17 @@ def capturer_et_decouper(
         page.screenshot(path=str(chemin))
         fichiers_ecrits.append(chemin)
 
+    # `scale="css"` : cette capture de référence reste en full_page=True, donc
+    # peut retomber dans le même plafond de hauteur d'image de Chromium que
+    # les segments évitent depuis le correctif ci-dessus (mesuré tronqué au-
+    # delà d'environ 19 768 px physiques, voir le README). Rendre à l'échelle
+    # CSS (1x) au lieu de l'échelle device (2x, celle des segments) divise par
+    # deux la hauteur physique demandée, ce qui suffit à rester sous le
+    # plafond sur des pages deux fois plus hautes qu'avant que ce fichier de
+    # référence, seul, n'y retombe.
     page.evaluate("window.scrollTo(0, 0)")
     chemin_pleine_page = dossier_page / "00-pleine-page.png"
-    page.screenshot(path=str(chemin_pleine_page), full_page=True)
+    page.screenshot(path=str(chemin_pleine_page), full_page=True, scale="css")
     fichiers_ecrits.append(chemin_pleine_page)
 
     return fichiers_ecrits
