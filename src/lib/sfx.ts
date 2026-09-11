@@ -298,6 +298,195 @@ function impact(
   return osc;
 }
 
+/** Un rapport de gain depuis des décibels. */
+function enDecibels(dB: number): number {
+  return 10 ** (dB / 20);
+}
+
+/**
+ * Ce qu'il faut corriger sur chaque bruitage pour qu'ils sonnent pareil.
+ *
+ * Ils ne sonnaient pas pareil du tout : mesuré le 11/09/2026 par
+ * `scripts/ecouter-bruitages.mjs`, sur la fenêtre où chacun sonne, l'écart
+ * entre le plus discret — `swipe` à −32,4 dBFS efficaces — et le plus fort —
+ * `punch` à −15,9 — atteignait **16,5 dB**. Deux sons censés ponctuer une
+ * coupe au même titre : l'un passe inaperçu, l'autre fait sursauter. Posés au
+ * hasard sur un montage, ils donnent exactement l'impression de quelque chose
+ * qui n'a pas été réglé.
+ *
+ * Chaque valeur est l'écart mesuré à la cible ci-dessous, pas une intention.
+ * La refaire après un changement de synthèse : le script l'imprime.
+ */
+const NIVEAU_VISE_DBFS = -21;
+
+const CORRECTION_DB: Record<SfxId, number> = {
+  whoosh: 4,
+  boom: -1.5,
+  punch: -5.1,
+  subdrop: -0.4,
+  riser: -2.9,
+  reverse: 0.4,
+  ding: -3.7,
+  sparkle: 0.3,
+  zap: -0.5,
+  swipe: 3,
+  wind: 3,
+  pop: -1.6,
+  click: 0.4,
+};
+
+/*
+ * Pourquoi `whoosh`, `swipe` et `wind` ne sont pas remontés jusqu'à la cible.
+ *
+ * Ils y ont été, et c'était une faute — mesurée dans le même tour. Ce sont des
+ * souffles : leur énergie vit à 69–79 % dans la bande de la parole. Les
+ * remonter de huit décibels pour égaliser un niveau efficace les a fait
+ * monter d'autant **dans la voix** : `whoosh` est passé de −14,1 à −7,5 dBFS
+ * dans cette bande, `swipe` de −23,2 à −15,5. Le tableau des crêtes était
+ * meilleur et le masquage bien pire, exactement le défaut que tout ceci
+ * prétend corriger.
+ *
+ * Une égalisation de niveau ne se juge donc pas sur le niveau global quand les
+ * sons n'occupent pas les mêmes bandes. Un souffle discret est discret parce
+ * qu'il est large : le rendre aussi « fort » qu'un impact grave revient à le
+ * poser dans la voix.
+ */
+
+/**
+ * Part de l'énergie de chaque bruitage qui tombe entre 300 et 3400 Hz.
+ *
+ * Mesurée, et c'est le chiffre qui explique le reproche d'origine. La voix
+ * porte son intelligibilité dans cette bande — c'est la bande téléphonique,
+ * le minimum pour comprendre des mots. Huit bruitages sur treize y logent 68 à
+ * 100 % de leur énergie : `ding` et `pop` entièrement, `sparkle` 87 %,
+ * `zap` 80 %, `whoosh` 79 %, `wind` 78 %.
+ *
+ * Ceux-là masquent la parole **par construction**, quel que soit leur niveau
+ * et quel que soit l'endroit où on les pose. Aucun réglage de volume ne le
+ * rattrape : il faut que le son sonne autour de la voix, pas dessus.
+ */
+const PART_DANS_LA_VOIX: Record<SfxId, number> = {
+  whoosh: 0.79,
+  boom: 0,
+  punch: 0.01,
+  subdrop: 0,
+  riser: 0.48,
+  reverse: 0.46,
+  ding: 1,
+  sparkle: 0.87,
+  zap: 0.8,
+  swipe: 0.68,
+  wind: 0.78,
+  pop: 1,
+  click: 0.36,
+};
+
+/**
+ * Combien de temps s'écoule entre le déclenchement et la frappe entendue.
+ *
+ * Mesuré, et c'est la moitié du reproche « pas raccordé » : un bruitage de
+ * coupe doit frapper **sur** la coupe, et plusieurs frappaient bien après.
+ * `whoosh` culmine 108 ms après son déclenchement — un tiers d'une transition
+ * de 300 ms — donc il ne ponctuait pas le raccord, il commentait le plan
+ * suivant. `riser` culmine à 1,1 s, `reverse` à 0,82 s, `wind` à 0,71 s : ce
+ * sont des montées, faites pour culminer plus tard, et personne ne le disait
+ * au code qui les place.
+ *
+ * `scheduleSfx` avance donc le déclenchement de cette durée, pour que ce qu'on
+ * entend tombe à l'instant demandé. L'appelant demande un instant ; il n'a pas
+ * à connaître la forme interne de chaque son, et c'est ce qu'il devait deviner
+ * jusqu'ici — `autoEdit` posait l'aspiration « 0,55 s avant la coupe », un
+ * nombre écrit à la main qui la faisait culminer 0,27 s **après** elle.
+ */
+const FRAPPE_S: Record<SfxId, number> = {
+  whoosh: 0.108,
+  boom: 0.015,
+  punch: 0.012,
+  subdrop: 0.059,
+  riser: 1.097,
+  reverse: 0.823,
+  ding: 0.014,
+  sparkle: 0.096,
+  zap: 0.01,
+  swipe: 0.018,
+  wind: 0.706,
+  pop: 0.01,
+  click: 0.008,
+};
+
+/** Délai entre le déclenchement d'un bruitage et sa frappe entendue. */
+export function sfxFrappe(id: SfxId): number {
+  return FRAPPE_S[id] ?? 0;
+}
+
+/**
+ * Creux maximal dans la bande de la parole, pour un bruitage qui y vit tout
+ * entier.
+ *
+ * Sept décibels et pas quatre : à 4,5, le masquage de `pop` — 100 % de son
+ * énergie dans la bande — descendait de −2,3 à −5,6 dBFS, ce qui s'entend
+ * encore par-dessus une phrase. Au-delà de sept, le son perd son identité et
+ * l'on n'entend plus qu'un bruit sourd : c'est le point où corriger le défaut
+ * détruirait l'objet.
+ */
+const CREUX_PAROLE_DB = 7;
+
+/**
+ * L'étage que tous les bruitages traversent avant la sortie.
+ *
+ * Un étage commun plutôt que treize retouches : les treize fabrications
+ * portent chacune une raison écrite, et les reprendre une par une aurait
+ * détruit ces raisons pour appliquer la même correction treize fois.
+ *
+ * Il fait deux choses, toutes deux mesurées comme manquantes :
+ *
+ * 1. **Un creux dans la bande de la parole**, proportionnel à ce que le
+ *    bruitage y loge. C'est le « raccord » qui manquait : le son se range
+ *    autour de la voix au lieu de lui rentrer dedans. Un bruitage qui vit déjà
+ *    hors de cette bande — `boom`, `subdrop` — n'est pas touché.
+ * 2. **Un limiteur de crête.** Trois bruitages sortaient **au-dessus de
+ *    0 dBFS** — `ding` à +3,0, `punch` à +2,5, `riser` à +2,3 — donc en
+ *    distorsion numérique franche. Ça ne s'entend pas comme un son fort, ça
+ *    s'entend comme un craquement, et c'est une part du « ridicule » rapporté.
+ *
+ * La réverbération ne traverse pas cet étage : elle est partagée par tous les
+ * bruitages d'une même sortie, donc la placer ici en fabriquerait une par
+ * déclenchement. Sa queue est de toute façon vingt décibels sous la frappe,
+ * et c'est la frappe qui écrêtait.
+ */
+function etageDeSortie(ctx: AnyAudioContext, sortie: AudioNode, id: SfxId): AudioNode {
+  const entree = ctx.createGain();
+  entree.gain.value = 1;
+
+  const part = PART_DANS_LA_VOIX[id];
+  let dernier: AudioNode = entree;
+
+  if (part > 0.05) {
+    const creux = ctx.createBiquadFilter();
+    creux.type = 'peaking';
+    // Centre géométrique de 300–3400 Hz : le creux couvre la bande entière
+    // sans mordre sur le grave qui porte le corps ni sur l'aigu qui brille.
+    creux.frequency.value = 1010;
+    creux.Q.value = 0.75;
+    creux.gain.value = -CREUX_PAROLE_DB * part;
+    dernier.connect(creux);
+    dernier = creux;
+  }
+
+  const limiteur = ctx.createDynamicsCompressor();
+  limiteur.threshold.value = -2;
+  limiteur.knee.value = 0;
+  limiteur.ratio.value = 20;
+  // Une milliseconde d'attaque : assez pour attraper la crête d'un impact sans
+  // en manger la frappe, qui est tout ce qu'on entend d'un coup sec.
+  limiteur.attack.value = 0.001;
+  limiteur.release.value = 0.09;
+  dernier.connect(limiteur);
+  limiteur.connect(sortie);
+
+  return entree;
+}
+
 /**
  * Planifie un bruitage sur le contexte audio, à l'instant `when`.
  *
@@ -308,18 +497,37 @@ function impact(
  */
 export function scheduleSfx(
   ctx: AnyAudioContext,
-  dest: AudioNode,
+  sortie: AudioNode,
   id: SfxId,
   when: number,
   gain = 0.8,
 ): AudioScheduledSourceNode[] {
-  // Un déclenchement dans le passé ferait lever une exception au navigateur.
-  const at = Math.max(when, ctx.currentTime);
-  const level = Math.max(0, Math.min(1, gain));
+  /*
+   * On avance le déclenchement pour que la **frappe** tombe sur `when`.
+   *
+   * L'appelant demande un instant — la coupe. Sans ce décalage il obtenait le
+   * début du son, ce qui n'est pas la même chose : un souffle qui culmine
+   * 108 ms plus tard sonnait un tiers de transition trop tard, et une montée
+   * de 1,1 s n'annonçait plus rien du tout.
+   *
+   * Un déclenchement dans le passé ferait lever une exception au navigateur :
+   * près de zéro, on perd l'alignement plutôt que le son.
+   */
+  const at = Math.max(when - sfxFrappe(id), ctx.currentTime);
+  /*
+   * Le niveau demandé, corrigé de ce que ce bruitage-là rend réellement.
+   *
+   * La correction s'applique **avant** la fabrication et non sur un gain de
+   * sortie : la réverbération part du son lui-même, et une correction posée
+   * après elle laisserait la queue au niveau d'origine — un souffle discret
+   * suivi d'une queue forte, ce qui s'entend comme un défaut d'écho.
+   */
+  const level = Math.max(0, Math.min(1, gain)) * enDecibels(CORRECTION_DB[id]);
   const sources: AudioScheduledSourceNode[] = [];
   if (level === 0) return sources;
 
-  const send = reverbSend(ctx, dest);
+  const send = reverbSend(ctx, sortie);
+  const dest = etageDeSortie(ctx, sortie, id);
 
   switch (id) {
     case 'whoosh': {
