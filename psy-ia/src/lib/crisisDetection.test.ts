@@ -130,6 +130,15 @@ test("l'épuisement répété dans deux messages déclenche le niveau modéré",
   assert.ok(resultat.motifs.includes('épuisement extrême répété'));
 });
 
+// « à bout » a été signalé en production par Erwann le 11/09/2026 (capture
+// d'écran : « Je suis complètement à bout » n'avait eu qu'une réponse
+// empathique du LLM) — demande explicite qu'une seule occurrence suffise,
+// contrairement au reste de la liste d'épuisement ci-dessus.
+test('« à bout », même une seule fois, déclenche le niveau modéré', () => {
+  assert.equal(detecterCrise(['je suis complètement à bout']).niveau, 'modere');
+  assert.equal(detecterCrise(['à bout']).niveau, 'modere');
+});
+
 test('le niveau fort prime sur un signal modéré présent dans la même conversation', () => {
   assert.equal(detecterCrise(['je sers à rien', 'je veux en finir']).niveau, 'fort');
 });
