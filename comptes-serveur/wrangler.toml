@@ -3,9 +3,20 @@ main = "src/worker.ts"
 compatibility_date = "2026-08-01"
 
 # Les origines autorisées à interroger ce serveur. Jamais « * » — voir
-# licence-serveur/wrangler.toml pour la même raison.
+# licence-serveur/wrangler.toml pour la même raison, et pour le détail de
+# l'adresse : les deux fichiers portaient la même valeur fausse.
+# **`amorce.vercel.app` n'est pas à nous** — corrigé le 11/09/2026. Ce
+# sous-domaine court sert le site d'un autre compte : les `*.vercel.app` sont
+# globaux, et le premier projet de la plateforme à demander un nom commun le
+# garde. Posée telle quelle, cette liste laissait entrer un inconnu et
+# **fermait le partage au vrai studio** — un refus CORS silencieux, donc une
+# vérification de licence qui échoue dans le navigateur sans rien afficher.
+# Les trois adresses ci-dessous sont celles que `get_project` donne pour le
+# projet `amorce`, et c'est la seule preuve de possession qui vaille : le
+# contenu servi n'en est pas une. Le jour où un domaine propre est délégué,
+# il s'ajoute ici — sinon le studio cesse d'être servi par cette liste.
 [vars]
-ORIGINES = "https://amorce.vercel.app"
+ORIGINES = "https://amorce-five.vercel.app,https://amorce-erwannchevallier-6916s-projects.vercel.app,https://amorce-git-main-erwannchevallier-6916s-projects.vercel.app"
 # Les paliers restent vides tant que le prix des packs n'est pas décidé — le
 # webhook ignore alors tout paiement sans le perdre, voir src/index.ts.
 PACKS = "{}"
