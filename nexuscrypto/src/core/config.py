@@ -143,6 +143,20 @@ class ConfigPepites:
     # notion propre à un jeton que le scanner ramène, pas au portefeuille
     # cible qui n'existe plus.
     plafond_par_jeton_usd: float = 100.0
+    # Décidé le 11/09/2026 : une pépite du scanner n'a pas de bougies, donc pas
+    # d'ATR — son stop est un pourcentage fixe du prix d'entrée
+    # (`risk_management.stops.stop_initial_pct`), jamais utilisé pour un actif
+    # de la watchlist. 15 % est une proposition, pas une valeur mesurée : à
+    # confirmer par le propriétaire avant toute fusion qui active ce chemin
+    # (garde-fou permanent, seuil de décision).
+    stop_pct: float = 0.15
+    # Termes de recherche DexScreener (adresse de jeton de cotation, ou terme
+    # libre) qui déclenchent la découverte. Vide par défaut, à dessein — même
+    # décision que `TARIFS` vide dans generation-serveur/ : sans terme
+    # configuré, `Orchestrateur._passe_pepites` ne fait aucun appel réseau, et
+    # remplir cette liste de mémoire donnerait une découverte qui a l'air de
+    # marcher sans jamais avoir été vérifiée à sa source.
+    termes_recherche: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -424,7 +438,15 @@ def charger(
             f"(reçu {technique.ema_courte}, {technique.ema_moyenne}, {technique.ema_longue})."
         )
 
-    pepites = _depuis(ConfigPepites, _section(brut_strat, "pepites"))
+    brut_pepites = _section(brut_strat, "pepites")
+    pepites = _depuis(
+        ConfigPepites, brut_pepites,
+        termes_recherche=tuple(brut_pepites.get("termes_recherche") or ()),
+    )
+    if not 0.0 < pepites.stop_pct < 1.0:
+        defauts.append(
+            f"strategie.pepites.stop_pct à {pepites.stop_pct:g} — attendu entre 0 et 1."
+        )
     bouclier = _depuis(ConfigBouclier, _section(brut_strat, "bouclier"))
 
     strategie = ConfigStrategie(

@@ -50,12 +50,27 @@ def stop_initial(prix_entree: float, atr: float | None, config: ConfigRisque) ->
     return max(prix_entree - atr * config.atr_multiple_stop, 0.0)
 
 
-def evaluer(
-    position: Position, prix: float, atr: float | None, config: ConfigRisque
-) -> NiveauxSortie:
-    """Décide si la position doit sortir, et par quel mécanisme."""
+def stop_initial_pct(prix_entree: float, pct: float) -> float:
+    """Le seul stop possible pour une pépite du scanner : elle n'a pas de
+    bougies, donc pas d'ATR. Un pourcentage fixe du prix d'entrée, jamais
+    utilisé pour un actif de la watchlist — voir `evaluer`, paramètre
+    `stop_force`."""
 
-    stop = stop_initial(position.prix_moyen, atr, config)
+    return max(prix_entree * (1.0 - pct), 0.0)
+
+
+def evaluer(
+    position: Position, prix: float, atr: float | None, config: ConfigRisque,
+    *, stop_force: float | None = None,
+) -> NiveauxSortie:
+    """Décide si la position doit sortir, et par quel mécanisme.
+
+    `stop_force` court-circuite le calcul par ATR quand il est fourni — c'est
+    le seul cas d'une pépite sans bougies, dont le stop vient de
+    `stop_initial_pct`. Absent (le cas par défaut, watchlist), rien ne change
+    ici."""
+
+    stop = stop_force if stop_force is not None else stop_initial(position.prix_moyen, atr, config)
     gain = position.pnl_relatif(prix)
     plus_haut = max(position.plus_haut_atteint, prix)
 
@@ -77,11 +92,20 @@ def evaluer(
         )
 
     if stop is not None and prix <= stop:
+        # `stop_force` n'est jamais un multiple d'ATR : le dire quand même
+        # trompe la seule ligne qu'un journal donne pour comprendre une sortie
+        # après coup — trouvé en relisant la notification réelle d'une vente
+        # de pépite, qui annonçait « 4 ATR sous l'entrée » sans qu'aucun ATR
+        # n'ait été calculé.
+        cause = (
+            "pourcentage fixe" if stop_force is not None
+            else f"{config.atr_multiple_stop:g} ATR sous l'entrée"
+        )
         return NiveauxSortie(
             stop=stop, trailing=trailing, declencheur=Declencheur.STOP,
             raison=(
                 f"stop touché : {prix:.4g} sous {stop:.4g} "
-                f"({config.atr_multiple_stop:g} ATR sous l'entrée, perte {gain:+.1%})"
+                f"({cause}, perte {gain:+.1%})"
             ),
         )
 

@@ -210,6 +210,45 @@ class TestStops(unittest.TestCase):
         niveaux = stops.evaluer(position(prix_moyen=100.0), 105.0, 4.0, self.config)
         self.assertFalse(niveaux.doit_sortir)
 
+    def test_stop_initial_pct_est_un_pourcentage_du_prix_dentree(self):
+        # Le seul stop possible pour une pépite du scanner : pas de bougies,
+        # donc pas d'ATR (voir orchestrateur._passe_pepites).
+        self.assertAlmostEqual(stops.stop_initial_pct(100.0, 0.15), 85.0)
+
+    def test_stop_initial_pct_ne_descend_jamais_sous_zero(self):
+        self.assertEqual(stops.stop_initial_pct(10.0, 1.5), 0.0)
+
+    def test_stop_force_court_circuite_le_calcul_par_atr(self):
+        """`stop_force` est ce qu'utilise une pépite sans ATR — passer un ATR
+        en même temps ne doit rien changer, `stop_force` gagne toujours."""
+
+        niveaux = stops.evaluer(
+            position(prix_moyen=100.0), 84.0, atr=999.0, config=self.config, stop_force=85.0,
+        )
+        self.assertIs(niveaux.declencheur, stops.Declencheur.STOP)
+        self.assertEqual(niveaux.stop, 85.0)
+
+    def test_le_motif_dun_stop_force_ne_parle_pas_datr(self):
+        """Un stop en pourcentage fixe n'est jamais un multiple d'ATR : la
+        notification ne doit pas le prétendre. Trouvé en relisant la sortie
+        réelle d'une vente de pépite, qui annonçait « 4 ATR sous l'entrée »
+        sans qu'aucun ATR n'ait été calculé."""
+
+        niveaux = stops.evaluer(
+            position(prix_moyen=100.0), 84.0, atr=None, config=self.config, stop_force=85.0,
+        )
+        self.assertIn("pourcentage fixe", niveaux.raison)
+        self.assertNotIn("ATR", niveaux.raison)
+
+    def test_stop_force_absent_laisse_le_comportement_par_atr_inchange(self):
+        """Le chemin watchlist, non touché : sans `stop_force`, `evaluer` se
+        comporte exactement comme avant son ajout."""
+
+        seuil = stops.stop_initial(100.0, 4.0, self.config)
+        niveaux = stops.evaluer(position(prix_moyen=100.0), seuil - 1.0, 4.0, self.config)
+        self.assertIs(niveaux.declencheur, stops.Declencheur.STOP)
+        self.assertEqual(niveaux.stop, seuil)
+
 
 class TestCoupeCircuit(unittest.TestCase):
     def setUp(self):
