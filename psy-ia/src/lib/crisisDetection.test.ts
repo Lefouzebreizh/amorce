@@ -3,10 +3,12 @@ import { test } from 'node:test';
 import { detecterCrise } from './crisisDetection';
 
 // Ces tests couvrent la liste de phrases telle qu'écrite dans la note
-// d'initialisation du projet — ils prouvent que le code fait ce que la note
-// demande, jamais que la liste est cliniquement juste ou complète. Cette
-// deuxième chose ne se mesure pas par des tests unitaires : elle demande un
-// professionnel de santé mentale (voir TODO.md, couche 4).
+// d'initialisation du projet, puis élargie selon le principe reformulé par
+// Erwann le 11/09/2026 (voir crisisDetection.ts) — ils prouvent que le code
+// fait ce que ce principe demande, jamais que la liste est cliniquement
+// juste ou complète. Cette deuxième chose ne se mesure pas par des tests
+// unitaires : elle demande un professionnel de santé mentale (voir TODO.md,
+// couche 4).
 
 test('un message anodin ne déclenche rien', () => {
   const resultat = detecterCrise(["j'ai passé une journée difficile au travail"]);
@@ -116,27 +118,20 @@ test('les six tournures de désespoir ou de fardeau déclenchent le niveau modé
   }
 });
 
-test("l'épuisement isolé, une seule fois, ne déclenche rien", () => {
-  assert.equal(detecterCrise(['je suis épuisée en ce moment']).niveau, 'aucun');
-});
-
-test("l'épuisement répété dans deux messages déclenche le niveau modéré", () => {
-  const resultat = detecterCrise([
-    'je suis épuisée en ce moment',
-    "aujourd'hui ça va un peu mieux",
-    'je suis épuisée, encore',
-  ]);
-  assert.equal(resultat.niveau, 'modere');
-  assert.ok(resultat.motifs.includes('épuisement extrême répété'));
-});
-
-// « à bout » a été signalé en production par Erwann le 11/09/2026 (capture
-// d'écran : « Je suis complètement à bout » n'avait eu qu'une réponse
-// empathique du LLM) — demande explicite qu'une seule occurrence suffise,
-// contrairement au reste de la liste d'épuisement ci-dessus.
-test('« à bout », même une seule fois, déclenche le niveau modéré', () => {
-  assert.equal(detecterCrise(['je suis complètement à bout']).niveau, 'modere');
-  assert.equal(detecterCrise(['à bout']).niveau, 'modere');
+// Ancien comportement (jusqu'au 11/09/2026 après-midi) : l'épuisement
+// n'exigeait pas de trigger sur une seule occurrence, seulement une
+// répétition sur deux messages distincts. Erwann a d'abord demandé une
+// exception pour « à bout » (signalé en production, capture d'écran :
+// « Je suis complètement à bout » n'avait eu qu'une réponse empathique du
+// LLM), puis reformulé le principe de décision le jour même pour supprimer
+// toute exigence de répétition, pour n'importe quel motif modéré. Ce test
+// documente donc le comportement ACTUEL — une seule occurrence suffit pour
+// tout le groupe — plutôt que l'ancienne exception ponctuelle.
+test("l'épuisement déclenche dès une seule occurrence, sans attendre de répétition", () => {
+  const exemples = ['je suis complètement à bout', 'à bout', 'je suis épuisée en ce moment', 'plus aucune force', 'vidé de toute énergie'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
 });
 
 test('le niveau fort prime sur un signal modéré présent dans la même conversation', () => {
@@ -301,4 +296,74 @@ test("l'obsession de la mort et l'auto-mutilation générale déclenchent le niv
   for (const exemple of exemples) {
     assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
   }
+});
+
+// Reformulation du principe de décision par Erwann le 11/09/2026 : la
+// question n'est plus « ce message est-il probablement une crise ? » mais
+// « existe-t-il une interprétation plausible et raisonnable qui indique une
+// détresse, même minoritaire ? ». Ce bloc de tests couvre les nouvelles
+// familles de signaux ajoutées en conséquence — voir crisisDetection.ts.
+test('effondrement et craquage déclenchent le niveau modéré', () => {
+  const exemples = [
+    'je craque',
+    "je m'effondre",
+    'je suis effondré',
+    'je suis anéantie',
+    'je suis brisé',
+    "j'ai le cœur brisé",
+    'je suis submergée',
+    "je m'écroule",
+    "je n'y arrive plus",
+    "j'abandonne",
+  ];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test('« œ » se normalise comme « oe », sans quoi « cœur » se romprait en deux fragments', () => {
+  assert.equal(detecterCrise(["j'ai vraiment le cœur brisé depuis hier"]).niveau, 'modere');
+});
+
+test('isolement et sentiment de fardeau élargis déclenchent le niveau modéré', () => {
+  const exemples = [
+    'personne ne me comprend',
+    'je me sens seul au monde',
+    'je gêne tout le monde',
+    'je suis un boulet',
+    'je ne compte pour personne',
+    "personne ne s'apercevrait de mon absence",
+  ];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test("perte d'élan et anhédonie déclenchent le niveau modéré", () => {
+  const exemples = ['plus envie de rien', 'rien ne me fait plus envie', 'je suis vide', 'complètement vide'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test('la perte de contrôle ou de repère sur soi-même déclenche le niveau modéré', () => {
+  const exemples = ['je perds pied', "j'ai perdu pied", 'je perds le contrôle', 'je ne me reconnais plus', 'je ne sais plus qui je suis'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+test('le désespoir direct, ancré à la première personne, déclenche le niveau modéré', () => {
+  const exemples = ['je suis désespéré', 'je suis désespérée', 'ma vie est invivable', 'ma vie est insupportable'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
+// Le lexique de co-occurrence peur/pulsion a été élargi le même jour, mais
+// le mécanisme reste : chaque mot pris seul ne doit rien déclencher.
+test('le lexique élargi de peur et de pulsion inquiétante reste soumis à la co-occurrence', () => {
+  assert.equal(detecterCrise(["j'ai une pensée bizarre, ça me fait un peu peur"]).niveau, 'modere');
+  assert.equal(detecterCrise(["j'ai une idée bizarre pour le dîner de ce soir"]).niveau, 'aucun');
+  assert.equal(detecterCrise(["j'ai la terreur des araignées"]).niveau, 'aucun');
 });

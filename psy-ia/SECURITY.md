@@ -23,9 +23,42 @@ DOIT être enrichie et validée par un professionnel de santé mentale avant
 toute mise en ligne, même en bêta (voir TODO.md). Tant que ce n'est pas
 fait, ce projet ne doit recevoir aucun vrai utilisateur.
 
-Principe directeur, explicite dans la note d'initialisation et repris tel
-quel dans le code : **en cas de doute, on déclenche.** Un faux positif est
-gênant ; un faux négatif est inacceptable.
+Principe directeur, explicite dans la note d'initialisation : **en cas de
+doute, on déclenche.** Un faux positif est gênant ; un faux négatif est
+inacceptable.
+
+**Ce principe a été reformulé et durci par Erwann le 11/09/2026**, après
+plusieurs faux négatifs corrigés cas par cas — une liste de motifs corrigée
+au coup par coup ne finit jamais, il y aura toujours une formulation à
+laquelle on n'a pas pensé. La question posée pour chaque message n'est plus
+« ce message est-il probablement une crise ? » mais **« existe-t-il une
+interprétation plausible et raisonnable de ce message qui indique une
+détresse, même si ce n'est pas la lecture la plus probable ? »**. Si oui, la
+couche 1 déclenche, sans attendre de répétition ni de confirmation.
+Conséquence assumée et voulue : plus de faux positifs (messages anodins
+recevant le message de sécurité), en échange de moins de faux négatifs.
+
+**Limite structurelle de ce principe, à ne pas dissimuler.** Un moteur à
+motifs, aussi large soit son lexique, ne reconnaît que les formulations
+qu'on lui a explicitement données : il ne comprend rien à une tournure
+vraiment inédite. C'est exactement ce qu'un LLM saurait faire — mais
+l'exigence non négociable ci-dessus interdit de confier ce jugement au LLM
+conversationnel lui-même. `crisisDetection.ts` a donc été élargi le
+11/09/2026 pour couvrir des FAMILLES de signaux (effondrement, isolement,
+perte d'élan, perte de contrôle) plutôt que des cas isolés — la meilleure
+approximation déterministe du principe reformulé, pas son accomplissement
+complet.
+
+**Ce qui reste une décision de produit non prise, à trancher explicitement
+par Erwann s'il juge l'approximation ci-dessus encore insuffisante** : un
+second verrou automatisé, distinct du LLM conversationnel — un classifieur
+dédié à la seule question « ce message indique-t-il une détresse plausible ? »,
+avec son propre prompt système invariable, tournant lui aussi avant toute
+génération de réponse et pouvant à lui seul déclencher le message figé.
+Cela resterait cohérent avec « la sécurité ne repose jamais sur le LLM
+conversationnel seul », mais introduirait un appel réseau et une dépendance
+à un modèle dans une couche qui n'en avait aucun jusqu'ici — un changement
+d'architecture qui ne doit pas être décidé par une session seule.
 
 ### Couche 2 — prompt système anti-sycophancie (`src/lib/systemPrompt.ts`)
 
