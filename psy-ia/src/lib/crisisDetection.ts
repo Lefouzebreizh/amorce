@@ -115,20 +115,28 @@ const NEGATION_EXCLUE = PARTICULES_NEGATION_EXCLUES.join('|');
 function compiler(phrases: string[]): Motif[] {
   return phrases.map((phrase) => ({
     phrase,
-    // Un mot intercalé est toléré entre deux mots du motif — trouvé en
-    // production le 11/09/2026 : « j'ai des idées très noires » ne
-    // déclenchait pas, le motif « idées noires » exigeant une contiguïté
-    // stricte qu'un simple intensificateur ("très", "vraiment", "un peu")
-    // suffit à casser. Le principe du projet est qu'en cas de doute on
-    // déclenche ; exiger l'énumération de chaque intensificateur possible
-    // pour chaque motif serait l'inverse. Le mot toléré ne peut pas être une
+    // Jusqu'à deux mots intercalés sont tolérés entre deux mots du motif.
+    // Un seul suffisait jusqu'au 11/09/2026 — trouvé en production ce
+    // jour-là : « j'ai des idées très noires » ne déclenchait pas, le motif
+    // « idées noires » exigeant une contiguïté stricte qu'un simple
+    // intensificateur ("très", "vraiment", "un peu") suffit à casser.
+    // Le passage à deux mots, le même jour, vient d'un second cas réel :
+    // « je suis chafoinje vais faire une bétise » (un mot-valise de frappe,
+    // "chafoin" + "je" collés sans espace) ne déclenchait pas non plus,
+    // alors que "je vais faire une bêtise" y est bien présent — mais entre
+    // le "je" repérable (celui de "je suis") et "vais" s'intercalaient DEUX
+    // mots, "suis" et "chafoinje", pas un seul. Le principe du projet est
+    // qu'en cas de doute on déclenche ; exiger l'énumération de chaque
+    // intensificateur ou de chaque accident de frappe possible pour chaque
+    // motif serait l'inverse. Aucun des mots tolérés ne peut être une
     // négation (voir PARTICULES_NEGATION_EXCLUES ci-dessus) — sans quoi la
     // tolérance elle-même deviendrait le trou par lequel une négation se
-    // glisse sans être vue. Le reste n'ajoute que des correspondances par
-    // rapport à l'ancienne contiguïté stricte : un motif qui matchait avant
-    // matche toujours.
+    // glisse sans être vue ; c'est vrai quel que soit le nombre de mots
+    // tolérés, chacun étant vérifié individuellement. Le reste n'ajoute que
+    // des correspondances par rapport à l'ancienne contiguïté stricte : un
+    // motif qui matchait avant matche toujours.
     regex: new RegExp(
-      `\\b${normaliser(phrase).replace(/ /g, `\\s+(?:(?!(?:${NEGATION_EXCLUE})\\b)\\S+\\s+)?`)}\\b`,
+      `\\b${normaliser(phrase).replace(/ /g, `\\s+(?:(?!(?:${NEGATION_EXCLUE})\\b)\\S+\\s+){0,2}`)}\\b`,
     ),
   }));
 }
