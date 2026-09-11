@@ -408,6 +408,15 @@ test('la perte de contrôle ou de repère sur soi-même déclenche le niveau mod
   }
 });
 
+// Cas exact du retest personnel d'Erwann le 11/09/2026, avec et sans la
+// négation « ne » que la personne peut très bien omettre à l'oral.
+test('« je ne sais plus quoi faire » et sa forme orale sans négation déclenchent le niveau modéré', () => {
+  const exemples = ['pas bien ce soir je ne sais plus quoi faire', 'je sais plus quoi faire'];
+  for (const exemple of exemples) {
+    assert.equal(detecterCrise([exemple]).niveau, 'modere', `"${exemple}" aurait dû déclencher le niveau modéré`);
+  }
+});
+
 test('le désespoir direct, ancré à la première personne, déclenche le niveau modéré', () => {
   const exemples = ['je suis désespéré', 'je suis désespérée', 'ma vie est invivable', 'ma vie est insupportable'];
   for (const exemple of exemples) {

@@ -425,6 +425,13 @@ const PHRASES_MODEREES = [
   'je perds le contrôle',
   'je ne me reconnais plus',
   'je ne sais plus qui je suis',
+  // Trouvé le 11/09/2026 dans le retest personnel d'Erwann : « pas bien ce
+  // soir je ne sais plus quoi faire » n'a rien déclenché. Le motif s'écrit
+  // sans « je » ni « ne » en tête, comme « veux plus vivre » plus haut dans
+  // PHRASES_FORTES — ainsi il matche aussi bien la forme « je ne sais plus
+  // quoi faire » que sa forme orale sans négation, « je sais plus quoi
+  // faire », sans dépendre d'un mot que la personne peut très bien omettre.
+  'sais plus quoi faire',
   //
   // Désespoir direct, ancré à la première personne pour éviter qu'un mot
   // isolé ("insupportable", "invivable") ne déclenche sur n'importe quel
