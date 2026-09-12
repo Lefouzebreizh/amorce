@@ -22,10 +22,6 @@ export type Reglages = {
   idPrixStripe: string;
   /** Secret de signature du webhook Stripe. */
   secretWebhook: string;
-  /** Jeton GitHub à portée minimale (`repository_dispatch` seulement). */
-  jetonDeclenchement: string;
-  /** Dépôt à notifier, forme `proprietaire/depot`. */
-  depotDeclenchement: string;
   /** Origines autorisées à appeler `/creer-session` depuis un navigateur. */
   origines: string[];
   urlSucces: string;
@@ -117,6 +113,14 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
 
   const session = (await reponse.json()) as { url?: string };
   if (!session.url) return erreur('réponse Stripe sans adresse de paiement', 502, partage);
+  try {
+    const adressePaiement = new URL(session.url);
+    if (adressePaiement.protocol !== 'https:' || adressePaiement.hostname !== 'checkout.stripe.com') {
+      return erreur('réponse Stripe avec adresse de paiement refusée', 502, partage);
+    }
+  } catch {
+    return erreur('réponse Stripe avec adresse de paiement invalide', 502, partage);
+  }
 
   return new Response(JSON.stringify({ url: session.url }), {
     status: 200,
