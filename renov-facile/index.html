@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="MaPrimeRénov', CEE, artisan RGE, délais de l'Anah : on t'accompagne étape par étape dans ta rénovation énergétique, sans jargon, avec les délais qui comptent vraiment." />
+<meta name="theme-color" content="#0f1115" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<title>Rénov Facile</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600&display=swap" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="entete">
+      <button type="button" id="lien-accueil" class="lien-accueil" hidden>← Accueil</button>
+      <button type="button" id="lien-numeros" class="lien-numeros">☎ Numéros utiles</button>
+    </header>
+
+    <main id="vue-accueil">
+      <section class="hero">
+        <div class="hero-fond" aria-hidden="true"></div>
+        <div class="hero-contenu">
+          <p class="kicker">Rénov Facile</p>
+          <h1>Ta rénovation énergétique, sans y laisser des plumes</h1>
+          <p class="lede">MaPrimeRénov', CEE, artisan RGE, délais de l'Anah — trois questions pour savoir où tu en es, sans jargon administratif, une étape à la fois.</p>
+        </div>
+      </section>
+
+      <button type="button" id="lien-reprise" class="lien-discret lien-reprise" hidden>🔄 Reprendre là où j'en étais</button>
+
+      <div id="zone-bandeaux" class="zone-bandeaux" hidden>
+        <section id="zone-brouillon" class="zone-brouillon" hidden></section>
+
+        <section id="zone-coffre" class="zone-coffre" hidden></section>
+      </div>
+
+      <section id="carte-unique" class="liste-demarches"></section>
+
+      <footer class="pied-accueil">
+        Ce site t'accompagne, il ne te remplace pas dans tes démarches — et il ne remplace pas un conseiller France Rénov' ou un professionnel en cas de doute.
+        <a href="confidentialite.html">Vie privée</a>
+      </footer>
+    </main>
+
+    <section id="vue-questionnaire" hidden>
+      <div id="racine-questionnaire" class="racine-questionnaire"></div>
+    </section>
+  </div>
+
+  <script src="js/dates.js"></script>
+  <script src="js/ics.js"></script>
+  <script src="js/brouillon.js"></script>
+  <script src="js/coffre.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/data/renovation.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/numeros.js"></script>
+</body>
+</html>

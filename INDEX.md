@@ -62,7 +62,7 @@ qui **devine** dans quel dossier elle est et ce qui s'y est déjà passé.
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt-quatre chantiers actifs, plus un en sommeil, et dix
+Ce dépôt héberge vingt-cinq chantiers actifs, plus un en sommeil, et dix
 ressources transverses qui ne sont pas des projets mais servent à tous. Une
 idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un
 front de plus. La liste vieillit vite — recompter avant de noter.
@@ -98,6 +98,7 @@ autre, et deux paires ont **ré-implémenté la même chose sans le savoir**.
 | **Le Coffre** (`le-coffre/`) | Coffre-fort de documents chiffré côté navigateur, multi-utilisateurs. Productisation du coffre de Life-Organizer. | Next.js 16, Supabase | coffre chiffré de `life-organizer/` ; échéance et vision **ré-implémentées** | actif |
 | **Psy IA** (`psy-ia/`) | Accompagnement conversationnel de bien-être psychologique — détection de crise déterministe hors LLM. Squelette architectural, pas encore validé pour un vrai utilisateur (voir `psy-ia/TODO.md`). | Next.js 16, Supabase | — | actif |
 | **Audit de page de vente** (`audit-landing/`) | Capture visuelle segmentée d'une page de vente, pour un futur rapport d'audit en 24h généré par modèle de vision. Capture seule pour l'instant — pas de prompt d'analyse, pas de rapport, pas de page de vente. | Python, Playwright | — | actif |
+| **Rénov Facile** (`renov-facile/`) | Accompagnement pas à pas pour une demande MaPrimeRénov'/CEE : avant dépôt, pendant l'instruction, en cas de refus ou de blocage. | HTML/CSS/JS natif, zéro dépendance | moteur de questionnaire, coffre chiffré, `.ics` portés depuis `Lefouzebreizh/ensemble-mdph` (dépôt séparé) | actif |
 | _Studio audio_ (`archives-backlog/mon-app-audio/`) | Outil audio. | Python, Streamlit | — | en sommeil |
 
 ## Moteurs techniques partagés
@@ -117,6 +118,7 @@ même chose sans se voir — les deux dernières lignes ci-dessous.
 | Détection d'échéance | `paper-manager/core/calendrier.py` (CLI, dates lues dans un document scanné) | **Ré-implémentée indépendamment** dans `le-coffre/supabase/functions/classer-document/` (vision, Supabase) | **Deux moteurs, pas un.** Non unifié — voir `second-brain/lecons/` (05/09/2026) |
 | Classement d'un document par modèle de vision | `life-organizer/modules/depot/traitement.py` (Python) | **Ré-implémenté indépendamment** dans `le-coffre/supabase/functions/classer-document/` (TypeScript) | **Deux moteurs, pas un** |
 | Voix off synthétisée localement, sans réseau | `.claude/skills/bande-son/scripts/voix.py` | Outil de compétence, pas encore un moteur applicatif — réutilisable par tout projet vidéo (`motion/`, `montage-auto/`, Amorce) | Existe, sous-utilisé |
+| Moteur générique de questionnaire (étapes, coffre chiffré, brouillon de reprise, `.ics`) | `Lefouzebreizh/ensemble-mdph` (dépôt séparé, hors de portée d'ici), `js/engine.js` et voisins | Porté **sans changement de logique** dans `renov-facile/js/` — voir son `README.md` pour ce qui n'a pas été repris (personnalisation LLM, e-mail, chat) | Partagé entre deux dépôts, assumé |
 
 Les deux lignes en gras ne sont pas des fautes à corriger dans l'instant — les
 unifier est une décision de produit, pas un geste de ménage — mais elles

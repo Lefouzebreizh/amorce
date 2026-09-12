@@ -1,0 +1,53 @@
+# Vérification de Rénov Facile.
+#
+# Le projet vit à côté d'Amorce avec son propre `package.json` : la racine
+# l'écarte de son typecheck, et **rien ne le vérifierait sans ce workflow**.
+# Chaque projet npm de ce dépôt a le sien, et l'oubli ne se voit nulle part —
+# les tests passent en local, la CI reste verte, et personne ne sait qu'elle
+# ne les a jamais lancés. C'est `verifier-coherence.py` qui a réclamé ce
+# fichier, le jour où le projet a gagné un script `test`.
+#
+# **Zéro dépendance, pas même de dev** : site statique, HTML/CSS/JS natif, pas
+# de build, pas de TypeScript à retirer. Il n'y a donc ni verrou ni `npm ci` —
+# `npm test` lance directement la suite `node:vm` de `tests/`.
+
+name: Rénov Facile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'renov-facile/**'
+      - '.github/workflows/renov-facile.yml'
+  pull_request:
+    paths:
+      - 'renov-facile/**'
+      - '.github/workflows/renov-facile.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: renov-facile-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: renov-facile
+
+jobs:
+  verifier:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Aucune dépendance à installer : dates, coffre, structure de la
+      # démarche, .ics et brouillon tournent tous en bibliothèque standard
+      # Node (node:vm, node:fs, node:assert).
+      - name: Tests
+        run: npm test
