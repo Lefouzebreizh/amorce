@@ -440,6 +440,14 @@ test('« fatigué de tout » / « fatiguée de tout » déclenchent le niveau mo
   assert.equal(detecterCrise(['je suis fatigué, je vais me coucher']).niveau, 'aucun');
 });
 
+// Retest personnel d'Erwann le 12/09/2026, même famille que « fatigué de
+// tout » : « marre de tout », dit seul, ne déclenchait pas non plus.
+test('« marre de tout » déclenche le niveau modéré, mais pas « marre » seul sur un agacement ponctuel', () => {
+  assert.equal(detecterCrise(['marre de tout']).niveau, 'modere');
+  assert.equal(detecterCrise(["j'en ai marre de tout"]).niveau, 'modere');
+  assert.equal(detecterCrise(["j'en ai marre de cette pluie"]).niveau, 'aucun');
+});
+
 test('le désespoir direct, ancré à la première personne, déclenche le niveau modéré', () => {
   const exemples = ['je suis désespéré', 'je suis désespérée', 'ma vie est invivable', 'ma vie est insupportable'];
   for (const exemple of exemples) {

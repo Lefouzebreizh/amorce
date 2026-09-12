@@ -361,6 +361,12 @@ const PHRASES_MODEREES = [
   // au-delà du compromis faux positifs/faux négatifs assumé par ce projet.
   'fatigué de tout',
   'fatiguée de tout',
+  // Retest personnel d'Erwann le 12/09/2026 : « marre de tout » n'a rien
+  // déclenché. Même famille et même garde-fou que « fatigué de tout »
+  // juste au-dessus : c'est le qualificatif « de tout » qui distingue le
+  // ras-le-bol général d'un agacement ponctuel et anodin ("j'en ai marre
+  // de cette pluie") — « marre » seul ne doit pas devenir un motif.
+  'marre de tout',
   //
   // Bloc ajouté le 11/09/2026 suite à la reformulation du principe de
   // décision : plutôt que de continuer à corriger cas par cas (ce qui ne
