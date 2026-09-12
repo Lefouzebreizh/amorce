@@ -15,7 +15,7 @@
 # poussée, pour une information qui arrive de toute façon plus tard. Deux
 # signaux séparés valent mieux qu'un signal lent.
 #
-# Les captures et les fichiers exportés partent en artéfact **en cas d'échec** :
+# Les captures et les fichiers exportés partent en artéfact à chaque passage :
 # ce parcours juge sur les pixels et sur le signal sonore, et un échec qu'on ne
 # peut pas regarder est un échec qu'on relance sans le lire.
 
@@ -129,8 +129,8 @@ jobs:
 
       # Sans ces fichiers, un échec sur les pixels ou sur le son ne se diagnostique
       # pas : il n'y a rien à regarder, et la seule issue est de relancer.
-      - name: Publier les captures en cas d'échec
-        if: failure()
+      - name: Conserver les captures et les exports, même au vert
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: amorce-captures
