@@ -235,6 +235,16 @@ test('la contraction phonétique « jv » (comme « jve ») est reconnue', () =>
   assert.equal(detecterCrise(['jv en finir ce soir']).niveau, 'fort');
 });
 
+// Retest personnel d'Erwann le 12/09/2026 sur l'app en production :
+// « jen peux plus » n'avait rien déclenché, alors que « j'en peux plus »
+// est bien dans PHRASES_MODEREES — la contraction orale sans apostrophe
+// n'était pas anticipée, même famille que « jve »/« jv » ci-dessus.
+test('la contraction orale « jen » (pour « j\'en ») est reconnue', () => {
+  assert.equal(detecterCrise(['jen peux plus']).niveau, 'modere');
+  assert.equal(detecterCrise(["j'en peux plus"]).niveau, 'modere');
+  assert.equal(detecterCrise(['je n en peux plus']).niveau, 'modere');
+});
+
 // Second cas signalé par Erwann, testé en direct sur l'app après la fusion
 // du premier correctif : « j'ai des envies bizarres ce soir j'ai peur »
 // n'avait rien déclenché. Différent du premier bug (une expression connue
