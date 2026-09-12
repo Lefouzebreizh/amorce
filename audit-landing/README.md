@@ -1,7 +1,7 @@
-# Audit de page de vente en 24h — capture, analyse et rapport
+# Audit de page de vente en 24h — capture, analyse, rapport et vente
 
-Trois briques du futur produit « Audit de page de vente en 24h », dans
-l'ordre où elles s'enchaînent :
+Cinq briques du produit « Audit de page de vente en 24h », dans l'ordre où
+elles s'enchaînent :
 
 1. `capturer_page.py` — transforme une URL en une poignée d'images nettes,
    prêtes à être montrées à un modèle de vision — pas du texte brut. Juger
@@ -11,9 +11,30 @@ l'ordre où elles s'enchaînent :
    structuré (`rapport.json`, `rapport.md`).
 3. `rapport_html.py` — transforme ce rapport structuré en une page HTML
    autonome, prête à être envoyée à un client.
+4. `site/index.html` — la page de vente du produit lui-même : proposition de
+   valeur, comment ça marche, ce que contient le rapport, un exemple réel
+   (`site/exemple-rapport.html`, produit par la brique 3 ci-dessus), et un
+   bouton d'achat.
+5. Stripe — brancher ce bouton, déclencher l'analyse une fois le paiement
+   confirmé. **Pas encore commencé.**
 
-**Ce qui reste à construire : la page de vente du produit lui-même et
-Stripe** — voir la consigne d'origine, pas encore commencées ici.
+## La page de vente (`site/`)
+
+Statique, autonome, aucune dépendance : `site/index.html` s'ouvre directement
+dans un navigateur, sans serveur ni build. `site/exemple-rapport.html` est un
+vrai rapport produit par `rapport_html.py` sur un site fictif
+(`exemple-saas.com`) — pas une maquette, le même rendu qu'un client recevrait.
+
+**Le bouton d'achat ne fait encore rien**, à dessein : les deux boutons
+(« Commander mon audit ») pointent vers `#tarif` et affichent « Paiement en
+ligne sécurisé — bientôt disponible » plutôt que de laisser croire qu'un
+paiement est possible. C'est la brique 5 (Stripe) qui les branchera. Même
+principe que `artisan-express/` : ce qui n'est pas réglé (ici, le prix et le
+lien de paiement) ne s'invente pas, il se dit absent.
+
+Vérifié à l'œil, dans un vrai Chromium, plein format et largeur téléphone
+(393 px) : aucun débordement horizontal, aucune erreur console, le lien vers
+l'exemple de rapport navigue bien vers `exemple-rapport.html`.
 
 ## Défaut corrigé : tranches blanches sur `qonto.com/fr`
 
