@@ -34,6 +34,7 @@ const evenementPaye = (sessionId: string, url: string, email: string | null = 'c
     data: {
       object: {
         id: sessionId,
+        payment_status: 'paid',
         metadata: { url_a_auditer: url },
         customer_details: { email },
       },
@@ -130,7 +131,7 @@ test('une signature forgée, absente ou rejouée est refusée', async () => {
       body: corps,
       headers: entete ? { 'Stripe-Signature': entete } : {},
     });
-    const reponse = await traiter(requete, reglages());
+    const reponse = await traiter(requete, reglages({ fetch: async () => new Response(null, {status: 204}) }));
     if (nom === 'signée juste') assert.equal(reponse.status, 200, nom);
     else assert.equal(reponse.status, 400, nom);
   }
@@ -140,7 +141,7 @@ test('un paiement confirmé déclenche repository_dispatch avec l\'URL et la ses
   let requeteGitHub: Request | null = null;
   const fetchFactice: typeof fetch = async (url, init) => {
     requeteGitHub = new Request(url as string, init);
-    return new Response('', { status: 204 });
+    return new Response(null, { status: 204 });
   };
 
   const corps = evenementPaye('cs_test_42', 'https://client-exemple.com/vente', 'ada@exemple.com');
@@ -180,7 +181,7 @@ test('un type d\'événement non écouté rend 200 sans appeler GitHub', async (
   assert.equal(appele, false);
 });
 
-test('un échec de repository_dispatch ne fait pas échouer la réponse au webhook', async () => {
+test('un échec de repository_dispatch rend 503 pour permettre une nouvelle tentative', async () => {
   // Stripe rejouerait pendant des jours un webhook en erreur, pour une cause
   // (GitHub indisponible) qui n'est jamais la sienne.
   const fetchFactice: typeof fetch = async () => new Response('erreur', { status: 500 });
@@ -191,10 +192,29 @@ test('un échec de repository_dispatch ne fait pas échouer la réponse au webho
     headers: { 'Stripe-Signature': await signer(corps) },
   });
   const reponse = await traiter(requete, reglages({ fetch: fetchFactice }));
-  assert.equal(reponse.status, 200);
+  assert.equal(reponse.status, 503);
 });
 
 test('un chemin inconnu rend 404', async () => {
   const reponse = await traiter(new Request('https://x/autre-chose', { method: 'GET' }), reglages());
   assert.equal(reponse.status, 404);
+});
+
+
+test('le prévol CORS autorise uniquement une origine configurée', async () => {
+  for (const [origin, status] of [['https://audit-page-de-vente.example', 204], ['https://intrus.example', 403]] as const) {
+    const response = await traiter(new Request('https://x/creer-session', {method: 'OPTIONS', headers: {Origin: origin}}), reglages());
+    assert.equal(response.status, status);
+    if (status === 204) assert.equal(response.headers.get('access-control-allow-headers'), 'content-type');
+  }
+});
+
+test('une session non payée ne déclenche pas d’analyse', async () => {
+  const event = JSON.parse(evenementPaye('cs_pending', 'https://example.com'));
+  event.data.object.payment_status = 'unpaid';
+  const body = JSON.stringify(event);
+  let calls = 0;
+  const response = await traiter(new Request('https://x/webhook', {method: 'POST', body, headers: {'Stripe-Signature': await signer(body)}}), reglages({fetch: async () => { calls++; return new Response(null, {status: 204}); }}));
+  assert.equal(response.status, 200);
+  assert.equal(calls, 0);
 });

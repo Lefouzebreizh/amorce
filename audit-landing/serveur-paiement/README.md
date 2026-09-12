@@ -61,8 +61,7 @@ explicite, pas en silence. Ce qui est vérifié à la place, en tests hors ligne
 - le déclenchement de `repository_dispatch` avec l'URL et l'identifiant de
   session sur un paiement confirmé, et son absence sur tout autre type
   d'événement ;
-- qu'un échec du déclenchement ne fait pas échouer la réponse au webhook
-  (sans quoi Stripe rejouerait l'événement pendant des jours).
+- qu’un échec du déclenchement rend 503 pour permettre une nouvelle tentative.
 
 **Et le formulaire de commande de `site/index.html` est vérifié à l'œil**,
 dans un vrai Chromium : sans backend déployé, il affiche la même note
@@ -81,3 +80,20 @@ encore déclenché. Voir son en-tête.
 npm test        # dix tests, sans réseau ni clé
 npm run typecheck
 ```
+
+
+## Contrôle du 12/09/2026 — proposition Codex
+
+12 tests hors réseau réussis. Le prévol OPTIONS est pris en charge pour les
+origines configurées. Seul un statut `paid` déclenche l’analyse ; les paiements
+asynchrones confirmés sont également écoutés. Un refus GitHub rend 503 au lieu
+d’accuser réception d’une commande perdue.
+
+Références : https://docs.stripe.com/checkout/fulfillment et
+https://docs.stripe.com/webhooks .
+
+Blocages avant ouverture : déduplication durable par session Stripe (la
+concurrence du workflow ne suffit pas), livraison au client après relecture,
+configuration réelle et essai complet. Les nouvelles tentatives peuvent
+actuellement produire plusieurs audits : ne pas ouvrir la vente en cet état.
+Le rapport stocké en artefact GitHub ne constitue pas une livraison client.

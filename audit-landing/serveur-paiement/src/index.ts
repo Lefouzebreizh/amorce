@@ -131,12 +131,8 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
 /**
  * Notifie GitHub Actions qu'un audit payé attend d'être lancé.
  *
- * N'échoue jamais bruyamment vers l'appelant : un `repository_dispatch`
- * raté ne doit pas faire échouer la réponse au webhook Stripe, sans quoi
- * Stripe rejoue l'événement pendant des jours pour une cause qui n'est pas
- * la sienne (voir `licence-serveur/src/index.ts`, même raison pour le 200
- * systématique). Rend `true`/`false` pour que l'appelant puisse au moins le
- * journaliser.
+ * Rend false en cas de refus ou de panne : le webhook doit alors rendre
+ * un 503 pour conserver les nouvelles tentatives de Stripe.
  */
 async function declencherAnalyse(
   r: Reglages,
@@ -179,8 +175,9 @@ async function webhook(requete: Request, r: Reglages): Promise<Response> {
     return new Response('corps illisible', { status: 400 });
   }
 
-  if (evenement.type === 'checkout.session.completed') {
+  if (evenement.type === 'checkout.session.completed' || evenement.type === 'checkout.session.async_payment_succeeded') {
     const objet = evenement.data?.object ?? {};
+    if (objet.payment_status !== 'paid') return new Response('paiement en attente', { status: 200 });
     const sessionId = typeof objet.id === 'string' ? objet.id : '';
     const metadata = (objet.metadata ?? {}) as Record<string, unknown>;
     const url = typeof metadata.url_a_auditer === 'string' ? metadata.url_a_auditer : '';
@@ -188,20 +185,30 @@ async function webhook(requete: Request, r: Reglages): Promise<Response> {
     const email = typeof details.email === 'string' ? details.email : null;
 
     if (sessionId && url) {
-      await declencherAnalyse(r, { url, sessionId, email });
+      if (!await declencherAnalyse(r, { url, sessionId, email })) {
+        return new Response('déclenchement temporairement indisponible', { status: 503 });
+      }
     }
     // Une session sans URL en métadonnée ne devrait pas exister (elle vient
     // toujours de /creer-session, qui l'y pose) — mais si Stripe l'envoie
     // quand même, on ne bloque pas le webhook pour autant : rien à déclencher.
   }
 
-  // Toujours 200, même pour un type qu'on n'écoute pas : Stripe réessaie
-  // tout ce qui n'est pas un 2xx pendant des jours.
+  // Accuser réception des événements ignorés et des déclenchements acceptés.
   return new Response('ok', { status: 200 });
 }
 
 export async function traiter(requete: Request, r: Reglages): Promise<Response> {
   const chemin = new URL(requete.url).pathname;
+  if (chemin === '/creer-session' && requete.method === 'OPTIONS') {
+    const origine = requete.headers.get('Origin');
+    if (!origine || !r.origines.includes(origine)) return new Response('origine refusée', { status: 403 });
+    return new Response(null, { status: 204, headers: {
+      ...entetesOrigine(requete, r.origines),
+      'access-control-allow-methods': 'POST',
+      'access-control-allow-headers': 'content-type',
+    } });
+  }
   if (chemin === '/creer-session' && requete.method === 'POST') return creerSession(requete, r);
   if (chemin === '/webhook' && requete.method === 'POST') return webhook(requete, r);
   return new Response('introuvable', { status: 404 });
