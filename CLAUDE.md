@@ -1349,11 +1349,29 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   (message et promesse, preuve sociale, appel à l'action, objections et
   confiance, lisibilité et hiérarchie visuelle, cohérence de marque), chacune
   notée et assortie de constats triés par sévérité et référencés au segment
-  où ils se voient. **Non exercé depuis cette session** : `api.anthropic.com`
-  n'a jamais été sondé ni appelé d'ici, comme les quatre URLs de test —
-  écrit contre la surface réelle du SDK (signatures et classes d'erreur
-  relevées dans le paquet téléchargé, jamais de mémoire) et testé sur tout
-  ce qui ne dépend ni du réseau ni d'une clé.
+  où ils se voient. **Exercé pour de vrai le 12/09/2026 sur la machine du
+  propriétaire, et le premier appel a échoué cinq fois de suite, pour cinq
+  causes différentes** — alors que le module était écrit contre la surface
+  réelle du SDK, testé et relu : le schéma de sortie structurée n'accepte
+  qu'un **sous-ensemble de JSON Schema** (ni `minItems`/`maxItems`, ni
+  `minimum`/`maximum` — contraintes reportées sur la validation Python, avec
+  trois tests qui les gardent) ; `content[0]` peut être un **bloc de
+  réflexion** et non du texte ; le budget de jetons est **partagé avec cette
+  réflexion**, et une troncature se présente comme un « JSON invalide » et non
+  comme une troncature (d'où un contrôle de `stop_reason`) ; enfin une
+  génération longue en appel bloquant **se fait couper la connexion** — deux
+  fois, rendues en « injoignable » pour un serveur qui répondait très bien —
+  d'où le passage en `messages.stream`. **« Écrit contre la surface réelle de
+  l'API » n'est donc pas « exercé »** : lire les signatures d'un SDK ne dit
+  rien de ce que le serveur accepte, de ce que le modèle rend, ni de ce que le
+  réseau tolère. Leçon, et la liste des autres modules du dépôt dans le même
+  angle mort, dans
+  `second-brain/lecons/2026-09-12-cinq-defauts-quun-seul-appel-reel-a-reveles.md`.
+  **Un faux positif a aussi été trouvé en lisant le rapport produit** : le
+  modèle signalait un témoignage « tronqué en fin de segment », ce qui est
+  vrai de l'image et faux de la page — c'est le découpage qui coupe. Un audit
+  vendu aurait fait payer un défaut inexistant ; le prompt distingue désormais
+  une coupure au bord d'un segment d'une coupure à l'intérieur.
   Pas encore fait : le rapport en page web, la page de vente, Stripe.
 - **renov-facile/** — accompagnement pas à pas pour une demande d'aide à la
   rénovation énergétique (MaPrimeRénov', CEE) : avant le dépôt, pendant

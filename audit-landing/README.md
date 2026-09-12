@@ -149,16 +149,59 @@ marque), des constats triés par sévérité et référencés au segment où ils
 voient, et les trois priorités à corriger en premier. Voir l'en-tête de
 `analyser_captures.py` pour le détail du prompt et du schéma.
 
-**Non exercé depuis cette session, pour la même raison que la capture elle-
-même** : `api.anthropic.com` n'a jamais été sondé ni appelé d'ici. Le module
-est écrit contre la surface réelle du SDK — signatures et classes d'erreur
-relevées directement dans le paquet téléchargé sans l'installer, jamais de
-mémoire (voir `/api-tierce-verifiee`) — et sa partie qui ne dépend ni du
-réseau ni d'une clé (lister les segments, encoder une image, parser et
-valider la réponse, rendre le Markdown) est couverte par
-`tests/test_analyser_captures.py`, 16 tests. L'appel réel reste à faire
-tourner sur la machine du propriétaire, ou sur un environnement dont la
-politique réseau laisse joindre `api.anthropic.com`.
+### Exercé pour de vrai le 12/09/2026, et il a fallu cinq correctifs
+
+Le module était écrit contre la surface réelle du SDK (signatures relevées dans
+le paquet, jamais de mémoire), il passait ses tests, et cette section disait
+honnêtement « non exercé ». **Le premier appel réel a échoué cinq fois de
+suite, pour cinq causes différentes** — aucune détectable sans appeler :
+
+| Ce qui a échoué | Ce que le serveur ou Python a répondu |
+| --- | --- |
+| `minItems: 6` dans le schéma | 400 — « For 'array' type, 'minItems' values other than 0 or 1 are not supported » |
+| `minimum`/`maximum` sur un entier | 400 — « For 'integer' type, properties maximum, minimum are not supported » |
+| `reponse.content[0].text` | `AttributeError: 'ThinkingBlock' object has no attribute 'text'` |
+| `max_tokens = 4096` | JSON coupé au caractère 799, rendu comme « réponse non JSON » |
+| appel bloquant, génération longue | `APIConnectionError` à 299 s puis 239 s |
+
+Ce que chacun a changé dans le code :
+
+- **Le schéma de sortie structurée n'accepte qu'un sous-ensemble de JSON
+  Schema.** Les contraintes de cardinalité (`minItems`, `maxItems`) et de
+  bornes numériques (`minimum`, `maximum`) en sont absentes. Elles n'ont pas
+  disparu pour autant : elles sont **reportées sur `analyser_reponse_json`**,
+  qui refuse un rapport auquel il manque une catégorie, une note hors de
+  l'échelle 0–10, ou aucune priorité — avec trois tests qui le gardent. Une
+  contrainte retirée d'un endroit se réinstalle ailleurs, sinon elle s'évapore.
+- **Le premier bloc de la réponse n'est pas forcément du texte** : un bloc de
+  réflexion peut le précéder. On cherche désormais le premier bloc de type
+  `text` au lieu de supposer sa place.
+- **Le budget de jetons est partagé avec la réflexion du modèle**, et une
+  troncature ne se présente pas comme telle — elle se présente comme un JSON
+  invalide. D'où un plafond relevé **et** un contrôle explicite de
+  `stop_reason`, qui dit la vraie cause pendant qu'on la connaît.
+- **Une génération longue en appel bloquant se fait couper la connexion.** Les
+  essais courts passaient, les longs mouraient en « injoignable » pour un
+  serveur qui répondait parfaitement. L'appel passe donc par
+  `messages.stream`, qui fait circuler des données pendant toute la génération.
+
+**Et un faux positif que seule la lecture du rapport a vu.** Le premier rapport
+produit signalait « le témoignage client est tronqué en fin de segment » : vrai
+de l'image, faux de la page — c'est le découpage à hauteur d'écran fixe qui
+coupe, et un visiteur fait défiler en continu. Un audit vendu l'aurait fait
+payer pour un défaut inexistant. Le prompt système distingue maintenant une
+coupure au **bord** d'un segment (artefact, à ignorer) d'une coupure **à
+l'intérieur** d'un segment (vrai défaut). Vérifié en relançant : le faux
+positif a disparu, et le vrai constat de la même famille — des logos
+partenaires coupés par le bord de leur cadre CSS sur `06-milieu.png` — est
+resté, confirmé à l'œil sur l'image.
+
+Détail et portée générale dans
+`second-brain/lecons/2026-09-12-cinq-defauts-quun-seul-appel-reel-a-reveles.md`.
+
+**Ce qui reste vrai d'une session distante** : `api.anthropic.com` n'y est pas
+joignable, comme les quatre URLs de test. L'appel réel se fait sur la machine
+du propriétaire.
 
 Sans argument, le script capture les quatre URLs de test de la consigne
 (`qonto.com/fr`, `payfit.com/fr`, `app.spendesk.com`, `pennylane.com`).
