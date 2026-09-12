@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit de page de vente en 24h</title>
+<meta name="description" content="Un audit visuel complet de votre page de vente, livré en 24 heures : ce qu'un vrai visiteur voit, pas ce que votre page prétend faire.">
+<style>
+:root {
+  --accent: #1a5391;
+  --accent-clair: #eaf1f9;
+  --encre: #14181f;
+  --encre-douce: #4a5361;
+  --fond: #ffffff;
+  --fond-carte: #f7f8fa;
+  --bordure: #e2e5e9;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--fond);
+  color: var(--encre);
+  line-height: 1.55;
+}
+a { color: var(--accent); }
+.enveloppe { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+/* Héros */
+.hero {
+  background: var(--encre);
+  color: #f4f5f7;
+  padding: 72px 24px 64px;
+  text-align: center;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 13px;
+  color: #9aa4b2;
+  margin: 0 0 16px;
+  font-weight: 600;
+}
+.hero h1 {
+  margin: 0 0 20px;
+  font-size: 36px;
+  line-height: 1.2;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.hero p.souligne {
+  max-width: 560px;
+  margin: 0 auto 32px;
+  color: #cbd2db;
+  font-size: 17px;
+}
+.cta {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 14px 32px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+.cta:hover { opacity: 0.92; }
+.lien-secondaire {
+  display: block;
+  margin-top: 18px;
+  color: #cbd2db;
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+/* Sections génériques */
+section { padding: 56px 0; }
+h2 {
+  font-size: 26px;
+  text-align: center;
+  margin: 0 0 40px;
+}
+
+/* Comment ça marche */
+.etapes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+.etape {
+  text-align: center;
+}
+.etape-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--accent-clair);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+.etape h3 { font-size: 17px; margin: 0 0 8px; }
+.etape p { font-size: 15px; color: var(--encre-douce); margin: 0; }
+
+/* Ce que contient le rapport */
+.categories {
+  background: var(--fond-carte);
+}
+.grille-categories {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.carte-categorie {
+  background: #fff;
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  padding: 20px;
+}
+.carte-categorie h3 { font-size: 15px; margin: 0 0 6px; }
+.carte-categorie p { font-size: 13px; color: var(--encre-douce); margin: 0; }
+.note-echelle {
+  margin-top: 60px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--encre-douce);
+}
+
+/* Exemple de rapport */
+.apercu-carte {
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 480px;
+  margin: 0 auto 24px;
+  box-shadow: 0 4px 16px rgba(20,24,31,0.08);
+}
+.apercu-barre {
+  background: var(--encre);
+  padding: 10px 16px;
+  display: flex;
+  gap: 6px;
+}
+.apercu-barre span { width: 9px; height: 9px; border-radius: 999px; background: #4a5361; }
+.apercu-corps { padding: 20px 20px 16px; }
+.apercu-verdict {
+  display: inline-block;
+  background: #b3690a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+.apercu-titre { font-size: 15px; font-weight: 600; margin: 0 0 12px; }
+.apercu-ligne { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.apercu-barre-note { flex: 1; height: 7px; background: #e7e9ec; border-radius: 999px; overflow: hidden; }
+.apercu-barre-note div { height: 100%; background: var(--accent); }
+.apercu-chiffre { font-size: 11px; color: var(--encre-douce); width: 32px; text-align: right; }
+.exemple-lien-wrap { text-align: center; }
+
+/* CTA final */
+.cta-final {
+  background: var(--accent-clair);
+  text-align: center;
+}
+.cta-final h2 { margin-bottom: 16px; }
+.cta-final p.detail { max-width: 520px; margin: 0 auto 28px; color: var(--encre-douce); font-size: 15px; }
+.note-paiement { margin-top: 16px; font-size: 13px; color: var(--encre-douce); }
+
+footer {
+  padding: 32px 24px 48px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--encre-douce);
+}
+
+@media (max-width: 720px) {
+  .hero { padding: 48px 20px 44px; }
+  .hero h1 { font-size: 27px; }
+  .etapes, .grille-categories { grid-template-columns: 1fr; }
+  section { padding: 40px 0; }
+  h2 { font-size: 22px; margin-bottom: 28px; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="enveloppe">
+    <p class="eyebrow">Audit de page de vente en 24h</p>
+    <h1>Votre page de vente perd des visiteurs. Sachez exactement où — et quoi corriger — en 24 heures.</h1>
+    <p class="souligne">
+      Un audit visuel complet, mené comme le ferait un visiteur qui découvre
+      votre page pour la première fois — pas une checklist générique, pas un
+      score SEO : ce qui se voit vraiment, à l'écran.
+    </p>
+    <a href="#tarif" class="cta">Commander mon audit</a>
+    <a href="exemple-rapport.html" class="lien-secondaire">Voir un exemple de rapport complet →</a>
+  </div>
+</header>
+
+<section class="comment">
+  <div class="enveloppe">
+    <h2>Comment ça marche</h2>
+    <div class="etapes">
+      <div class="etape">
+        <div class="etape-numero">1</div>
+        <h3>Vous envoyez l'adresse</h3>
+        <p>L'URL de la page que vous voulez faire auditer — c'est tout ce qu'il faut pour commencer.</p>
+      </div>
+      <div class="etape">
+        <div class="etape-numero">2</div>
+        <h3>On la capture et on l'analyse</h3>
+        <p>Chaque section de la page, telle qu'un visiteur la voit en faisant défiler l'écran — jamais un résumé de texte hors contexte.</p>
+      </div>
+      <div class="etape">
+        <div class="etape-numero">3</div>
+        <h3>Vous recevez votre rapport</h3>
+        <p>Sous 24 heures : un verdict global, des constats précis par section, et les trois priorités à corriger en premier.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="categories">
+  <div class="enveloppe">
+    <h2>Ce que contient votre rapport</h2>
+    <div class="grille-categories">
+      <div class="carte-categorie">
+        <h3>Message et promesse</h3>
+        <p>Ce que la page dit — et si c'est clair en cinq secondes.</p>
+      </div>
+      <div class="carte-categorie">
+        <h3>Preuve sociale</h3>
+        <p>Ce qui rassure un visiteur avant qu'il ne s'engage.</p>
+      </div>
+      <div class="carte-categorie">
+        <h3>Appel à l'action</h3>
+        <p>Le bouton qui compte : visible, contrasté, au bon endroit.</p>
+      </div>
+      <div class="carte-categorie">
+        <h3>Objections et confiance</h3>
+        <p>Ce qui pourrait faire hésiter — et si la page y répond.</p>
+      </div>
+      <div class="carte-categorie">
+        <h3>Lisibilité et hiérarchie visuelle</h3>
+        <p>Ce que l'œil voit en premier, et dans quel ordre.</p>
+      </div>
+      <div class="carte-categorie">
+        <h3>Cohérence de marque</h3>
+        <p>Si la page tient une seule promesse, du haut jusqu'en bas.</p>
+      </div>
+    </div>
+    <p class="note-echelle">Chaque catégorie est notée sur 10, avec des constats classés par sévérité et une recommandation concrète pour chacun — jamais un conseil générique.</p>
+  </div>
+</section>
+
+<section class="exemple">
+  <div class="enveloppe">
+    <h2>Un exemple, en vrai</h2>
+    <div class="apercu-carte">
+      <div class="apercu-barre"><span></span><span></span><span></span></div>
+      <div class="apercu-corps">
+        <span class="apercu-verdict">À améliorer</span>
+        <p class="apercu-titre">Preuve sociale</p>
+        <div class="apercu-ligne">
+          <div class="apercu-barre-note"><div style="width:30%"></div></div>
+          <span class="apercu-chiffre">3/10</span>
+        </div>
+        <p class="apercu-titre" style="margin-top:14px">Appel à l'action</p>
+        <div class="apercu-ligne">
+          <div class="apercu-barre-note"><div style="width:50%"></div></div>
+          <span class="apercu-chiffre">5/10</span>
+        </div>
+      </div>
+    </div>
+    <p class="exemple-lien-wrap"><a href="exemple-rapport.html">Voir le rapport complet, avec les six catégories et les constats détaillés →</a></p>
+  </div>
+</section>
+
+<section class="cta-final" id="tarif">
+  <div class="enveloppe">
+    <h2>Prêt à savoir ce que voit vraiment votre visiteur ?</h2>
+    <p class="detail">
+      Rapport livré sous 24 heures, au format HTML — prêt à être partagé avec
+      votre équipe ou votre agence, sans dossier ni logiciel à installer.
+    </p>
+    <a href="#tarif" class="cta">Commander mon audit</a>
+    <p class="note-paiement">Paiement en ligne sécurisé — bientôt disponible.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Audit de page de vente en 24h.</p>
+</footer>
+
+</body>
+</html>
