@@ -23,6 +23,15 @@ DOIT être enrichie et validée par un professionnel de santé mentale avant
 toute mise en ligne, même en bêta (voir TODO.md). Tant que ce n'est pas
 fait, ce projet ne doit recevoir aucun vrai utilisateur.
 
+**Le message renvoyé (`crisisMessage.ts`) reste figé au sens fort du terme,
+même depuis le 12/09/2026** : il n'est jamais généré par le LLM, mais depuis
+cette date, une fonction déterministe (`construireMessageCrise`) y insère le
+motif qui a déclenché, choisi dans la même liste de phrases pré-écrites que
+la détection — jamais du texte brut et non borné de la personne. La garantie
+de fiabilité (texte connu à l'avance, jamais halluciné, jamais minimisé) ne
+change pas : seule la valeur d'un paramètre varie, dans un ensemble fini et
+relu d'avance. Voir l'entête de `crisisMessage.ts` pour le détail.
+
 Principe directeur, explicite dans la note d'initialisation : **en cas de
 doute, on déclenche.** Un faux positif est gênant ; un faux négatif est
 inacceptable.

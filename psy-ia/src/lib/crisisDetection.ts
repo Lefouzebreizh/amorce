@@ -474,6 +474,16 @@ const PHRASES_MODEREES = [
 // de ses propres pulsions inhabituelles. Chaque mot reste inoffensif seul ;
 // c'est la combinaison qui compte, et elle doit apparaître dans le MÊME
 // message, pas seulement la même conversation.
+// Libellé SYNTHÉTIQUE ajouté au journal quand la co-occurrence ci-dessous
+// déclenche : ce n'est jamais une phrase que la personne a prononcée, juste
+// une description de la combinaison qui a fait déclencher. `crisisMessage.ts`
+// porte SA PROPRE copie de cette chaîne (jamais un import de ce fichier :
+// même raison que le duplicata Deno documenté dans orchestrer.ts — un fichier
+// de couche 1 ne dépend d'aucun autre fichier de couche 1) pour ne JAMAIS le
+// citer comme si la personne l'avait dit — les deux doivent rester identiques
+// mot pour mot.
+const MOTIF_NON_CITABLE = 'peur de ses propres pulsions inhabituelles';
+
 const MOTS_PEUR = compiler(['peur', 'terreur', 'effroi']);
 const MOTS_PULSION_INQUIETANTE = compiler([
   'envie bizarre',
@@ -532,7 +542,7 @@ export function detecterCrise(messagesPersonne: string[]): ResultatDetectionCris
     (texte) => chercher(texte, MOTS_PEUR).length > 0 && chercher(texte, MOTS_PULSION_INQUIETANTE).length > 0,
   );
   if (messageAvecPeurEtPulsion) {
-    trouves.add('peur de ses propres pulsions inhabituelles');
+    trouves.add(MOTIF_NON_CITABLE);
   }
 
   return {

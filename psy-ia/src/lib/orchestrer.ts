@@ -16,7 +16,7 @@
 // « la sécurité ne repose jamais sur le LLM seul ».
 
 import { detecterCrise } from './crisisDetection';
-import { MESSAGE_CRISE } from './crisisMessage';
+import { construireMessageCrise } from './crisisMessage';
 import { PROMPT_SYSTEME } from './systemPrompt';
 import { evaluerLimitesSession, type EtatSession } from './sessionLimits';
 
@@ -47,9 +47,19 @@ export async function traiterMessage(
   const detection = detecterCrise(messagesPersonne);
 
   if (detection.niveau !== 'aucun') {
-    // Le message figé part TEL QUEL, jamais généré, jamais reformulé par le
-    // LLM — voir crisisMessage.ts. Aucun appel au modèle n'a lieu ici.
-    return { corps: { reponse: MESSAGE_CRISE, crise: true, niveau: detection.niveau }, statut: 200 };
+    // Le squelette du message part TEL QUEL, jamais généré, jamais reformulé
+    // par le LLM — voir crisisMessage.ts. Aucun appel au modèle n'a lieu ici.
+    // Seul le motif reflété varie, et il vient d'une liste figée elle aussi :
+    // on préfère le motif détecté sur le DERNIER message ("ce qu'elle vit là,
+    // maintenant") ; s'il ne matche qu'un message antérieur de la
+    // conversation, on retombe sur le premier motif global plutôt que de ne
+    // rien citer.
+    const motifDernierMessage = detecterCrise([message]).motifs[0];
+    const motifAReflex = motifDernierMessage ?? detection.motifs[0];
+    return {
+      corps: { reponse: construireMessageCrise(motifAReflex), crise: true, niveau: detection.niveau },
+      statut: 200,
+    };
   }
 
   // --- Couche 3 : limites structurelles de session. ---

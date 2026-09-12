@@ -15,7 +15,7 @@
 // n'est PAS la décision définitive.
 
 import { detecterCrise } from '../../../src/lib/crisisDetection.ts';
-import { MESSAGE_CRISE } from '../../../src/lib/crisisMessage.ts';
+import { construireMessageCrise } from '../../../src/lib/crisisMessage.ts';
 import { PROMPT_SYSTEME } from '../../../src/lib/systemPrompt.ts';
 import { evaluerLimitesSession, type EtatSession } from '../../../src/lib/sessionLimits.ts';
 
@@ -77,9 +77,13 @@ Deno.serve(async (requete: Request) => {
 
   if (detection.niveau !== 'aucun') {
     await journaliserDeclenchementCrise(session?.demarreeLe ? String(session.demarreeLe) : 'inconnue', detection.niveau);
-    // Le message figé part TEL QUEL, jamais généré, jamais reformulé par le
-    // LLM — voir crisisMessage.ts. Aucun appel au modèle n'a lieu ici.
-    return reponseJson({ reponse: MESSAGE_CRISE, crise: true, niveau: detection.niveau });
+    // Le squelette du message part TEL QUEL, jamais généré, jamais reformulé
+    // par le LLM — voir crisisMessage.ts. Aucun appel au modèle n'a lieu ici.
+    // Voir orchestrer.ts pour le choix du motif reflété (dernier message en
+    // priorité, sinon premier motif détecté sur toute la conversation).
+    const motifDernierMessage = detecterCrise([message]).motifs[0];
+    const motifAReflex = motifDernierMessage ?? detection.motifs[0];
+    return reponseJson({ reponse: construireMessageCrise(motifAReflex), crise: true, niveau: detection.niveau });
   }
 
   // --- Couche 3 : limites structurelles de session. ---
