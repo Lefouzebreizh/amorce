@@ -399,6 +399,20 @@ def analyser_page(dossier_page: Path, modele: str = MODELE_PAR_DEFAUT) -> Rappor
             output_config={"format": {"type": "json_schema", "schema": SCHEMA_RAPPORT}},
         ) as flux:
             reponse = flux.get_final_message()
+    except TypeError as erreur:
+        # Mesuré le 12/09/2026 : quand ANTHROPIC_API_KEY est absente (pas
+        # seulement invalide), le SDK lève un TypeError générique côté client,
+        # avant tout appel réseau — jamais anthropic.AuthenticationError, qui
+        # ne survient qu'en retour d'un vrai 401 du serveur. Les deux causes
+        # se ressemblent pour l'utilisateur, pas pour le code : sans ce
+        # rattrapage, l'absence de clé remontait comme une trace Python brute
+        # au lieu du message clair ci-dessous.
+        if "authentication" not in str(erreur).lower():
+            raise
+        raise RuntimeError(
+            "Aucune clé API configurée — définir ANTHROPIC_API_KEY dans "
+            "l'environnement."
+        ) from erreur
     except anthropic.AuthenticationError as erreur:
         raise RuntimeError(
             "Clé API refusée — vérifier ANTHROPIC_API_KEY dans l'environnement."
