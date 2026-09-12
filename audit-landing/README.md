@@ -1,14 +1,19 @@
-# Audit de page de vente en 24h — capture visuelle
+# Audit de page de vente en 24h — capture, analyse et rapport
 
-Brique de capture pour le futur produit « Audit de page de vente en 24h » :
-transformer une URL en une poignée d'images nettes, prêtes à être montrées à
-un modèle de vision — pas du texte brut. Juger l'ergonomie et le
-copywriting *en contexte* demande de voir la page, pas d'en extraire les
-mots.
+Trois briques du futur produit « Audit de page de vente en 24h », dans
+l'ordre où elles s'enchaînent :
 
-**Ce dossier ne fait que ça : capturer et découper.** Le prompt d'analyse
-d'image, la génération du rapport, la page de vente du produit et Stripe
-viennent après — voir la consigne d'origine, pas encore commencée ici.
+1. `capturer_page.py` — transforme une URL en une poignée d'images nettes,
+   prêtes à être montrées à un modèle de vision — pas du texte brut. Juger
+   l'ergonomie et le copywriting *en contexte* demande de voir la page, pas
+   d'en extraire les mots.
+2. `analyser_captures.py` — montre ces images à Claude et rend un rapport
+   structuré (`rapport.json`, `rapport.md`).
+3. `rapport_html.py` — transforme ce rapport structuré en une page HTML
+   autonome, prête à être envoyée à un client.
+
+**Ce qui reste à construire : la page de vente du produit lui-même et
+Stripe** — voir la consigne d'origine, pas encore commencées ici.
 
 ## Défaut corrigé : tranches blanches sur `qonto.com/fr`
 
@@ -142,12 +147,23 @@ export ANTHROPIC_API_KEY="…"
 python3 analyser_captures.py captures/exemple-com/
 ```
 
-Écrit `rapport.md` dans le dossier de capture : verdict global, six catégories
-notées sur 10 (message et promesse, preuve sociale, appel à l'action,
-objections et confiance, lisibilité et hiérarchie visuelle, cohérence de
-marque), des constats triés par sévérité et référencés au segment où ils se
-voient, et les trois priorités à corriger en premier. Voir l'en-tête de
-`analyser_captures.py` pour le détail du prompt et du schéma.
+Écrit `rapport.md` et `rapport.json` dans le dossier de capture : verdict
+global, six catégories notées sur 10 (message et promesse, preuve sociale,
+appel à l'action, objections et confiance, lisibilité et hiérarchie visuelle,
+cohérence de marque), des constats triés par sévérité et référencés au
+segment où ils se voient, et les trois priorités à corriger en premier. Voir
+l'en-tête de `analyser_captures.py` pour le détail du prompt et du schéma.
+
+Puis, à partir du JSON, produire la page à envoyer au client :
+
+```bash
+python3 rapport_html.py captures/exemple-com/
+```
+
+Écrit `rapport.html` dans le dossier : un unique fichier HTML autonome
+(aucune ressource externe, polices et vignettes des segments cités
+embarquées en base64) — s'ouvre et se transmet tel quel, sans dossier joint.
+Voir l'en-tête de `rapport_html.py` pour le détail du rendu.
 
 ### Exercé pour de vrai le 12/09/2026, et il a fallu cinq correctifs
 
