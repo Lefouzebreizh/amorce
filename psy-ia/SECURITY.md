@@ -69,6 +69,21 @@ rattrape pas — c'est la limite assumée d'un prompt, qui reste un texte que
 le modèle peut in fine choisir d'ignorer sous pression. D'où la nécessité
 d'une couche 1 fiable en amont, jamais l'inverse.
 
+**Règle 7 ajoutée le 12/09/2026**, après un bug confirmé en production par
+Erwann : sur « marre de tout », le modèle a répondu en avançant une
+interprétation basse non vérifiée (« ça sonne comme de la fatigue
+accumulée ») avant même de poser une question. Cette règle interdit
+désormais toute interprétation — douce ou alarmiste — d'une formulation
+vague de mal-être : le modèle doit poser une question neutre et ouverte
+qui laisse la personne qualifier elle-même ce qu'elle vit, systématiquement,
+avant toute reformulation qui nomme une cause ou une intensité. Elle ne
+déplace pas la frontière de cette couche : elle ne décide toujours pas
+d'intercepter une réponse (ça reste le rôle exclusif de la couche 1) — elle
+régit seulement comment le modèle parle quand la couche 1 n'a rien détecté,
+avec la même limite assumée qu'un prompt reste un texte que le modèle
+pourrait in fine choisir d'ignorer sous pression (couche 4 : à éprouver par
+simulation avant mise en ligne, voir TODO.md).
+
 ### Couche 3 — limites structurelles de session (`src/lib/sessionLimits.ts`)
 
 Logique inverse d'un modèle économique qui chercherait à maximiser le temps
