@@ -403,3 +403,27 @@ Aucun envoi automatique ni ouverture de vente n'est activé par ce module.
 
 Vérification : 47 tests Python réussis, dont 5 tests du registre (redémarrage,
 concurrence, relecture, intégrité du rapport et envoi interrompu).
+
+### Adaptateur Resend (`livraison.py`)
+
+`livrer(base, session, cle_resend=..., expediteur=...)` raccorde le registre
+à l'API Resend. Il joint les octets exacts du rapport HTML approuvé, adresse
+le courriel au destinataire enregistré et conserve l'identifiant fournisseur.
+Aucun envoi n'a lieu à l'import. Clé et expéditeur vérifié sont obligatoires ;
+ils ne sont ni inventés ni enregistrés dans Git.
+
+La pièce jointe permet de remettre le rapport sans exposer un artefact GitHub
+privé au client. Le brouillon Resend à lien créé précédemment n'est pas utilisé
+par cet adaptateur. L'acceptation de pièces jointes HTML par les boîtes clientes
+reste à vérifier par un essai réel avant ouverture.
+
+L'appel possède une clé d'idempotence stable ; la documentation Resend indique
+une conservation de 24 heures. La prévention durable des réémissions repose
+sur le registre, pas sur cette durée. Toute panne ou réponse sans identifiant
+laisse `envoi` visible et nécessite rapprochement avec les journaux Resend.
+Source : https://resend.com/docs/api-reference/emails/send-email .
+
+52 tests Python passent, dont 5 scénarios de livraison avec transport simulé.
+Aucun courriel réel n'a été envoyé. Restent le raccordement du webhook au
+registre persistant, le déploiement, la reprise opérateur et la validation du
+parcours externe complet. Le module d'envoi seul ne résout pas ces étapes.
