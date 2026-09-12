@@ -63,7 +63,13 @@ function demarrerDemarche(demarche) {
 
 function rendreCarteUnique() {
   carteUnique.innerHTML = "";
-  const carte = creerEl("div", "carte-demarche disponible");
+  // .carte-demarche naît en opacity:0 (style.css) — sur ensemble-mdph.js/main.js,
+  // dont c'est le gabarit, un IntersectionObserver ajoute .carte-visible quand
+  // chaque carte de la grille entre dans l'écran au défilement. Une seule
+  // carte, posée directement sous le héro, n'a pas besoin de ce mécanisme :
+  // elle est déjà dans le premier écran, donc visible tout de suite plutôt
+  // qu'en attendant un scroll qui ne viendra pas.
+  const carte = creerEl("div", "carte-demarche disponible carte-visible");
   carte.appendChild(creerEl("p", "carte-kicker", DEMARCHE_RENOVATION.titreCourt));
   carte.appendChild(creerEl("p", "carte-accroche", DEMARCHE_RENOVATION.accroche));
   const bouton = creerEl("button", "bouton-primaire", DEMARCHE_RENOVATION.boutonDemarrer);
