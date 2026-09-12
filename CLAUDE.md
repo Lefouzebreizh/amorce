@@ -1324,14 +1324,25 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   référence `00-pleine-page.png`, resté à `full_page=True`, pouvait encore
   franchir le plafond de hauteur sur une page suffisamment haute — corrigé en
   le rendant à `scale="css"` (échelle 1x) plutôt qu'à l'échelle 2x des
-  segments. **Un point reste ouvert, en cours de diagnostic sur la page de
-  Payfit en français** : une bande identique au pixel près sur plusieurs
-  segments consécutifs, probablement un en-tête `position: sticky` qui
-  apparaît, à raison, à la même position sur chaque segment où il est
-  réellement visible au scroll — ce que ce fichier donnait jusqu'ici pour
-  acquis (« un sticky ne se duplique de toute façon jamais ») sans avoir
-  distingué ce cas-là de l'ancien bug de duplication en composite pleine
-  page. Détail dans `audit-landing/README.md`.
+  segments. **Le point qui restait ouvert — la bande identique sur plusieurs
+  segments de Payfit — a été tranché le 12/09/2026 par le regard** : cet
+  en-tête `position: sticky` est **posé par-dessus le titre de la section**,
+  qui en ressort coupé, sur quatre segments sur douze chez Payfit comme chez
+  Pennylane. Ce n'est donc pas « quatre fois le même en-tête » pour le modèle
+  de vision, c'est du **texte perdu** quatre fois. Le partage retenu, qui
+  satisfait aussi la raison qui avait fait épargner les sticky :
+  `display:none` pour un `fixed`, **`visibility:hidden` pour un `sticky`** —
+  invisible en gardant sa place, donc rien ne se décale (hauteur du document
+  identique **au pixel** sur trois sites) — la règle visant aussi les
+  **descendants**, car un enfant qui déclare `visibility: visible`
+  réapparaît. Le masquage est **rejoué avant chaque segment** (un en-tête ne
+  devient collant qu'une fois le hero dépassé) et passe par une **feuille de
+  style** : mesuré, `element.style.setProperty` ne s'applique pas sur certains
+  nœuds **sans lever la moindre erreur**, et `bypass_csp` n'y change rien.
+  Les deux fois, un contrôle automatique écrit en même temps que le correctif
+  déclarait le défaut réglé — leçon dans
+  `second-brain/lecons/2026-09-12-masquer-ce-qui-flotte-sur-une-page-web.md`.
+  Détail dans `audit-landing/README.md`.
   **Deuxième étage depuis le 12/09/2026 : `analyser_captures.py`**, une
   dépendance de plus (`anthropic`). Montre les segments à Claude, jamais du
   texte extrait, et rend un rapport structuré à six catégories fixes
