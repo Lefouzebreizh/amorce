@@ -8,11 +8,8 @@ import { CARTE, MESURE, SECTION, TITRE_SECTION } from '@/components/ui';
  *
  * « Voilà ce que je produis », jamais « voilà mes clients ». Les six
  * entreprises sont inventées, et chaque page le dit dans sa propre
- * présentation — pas en petits caractères en bas. C'est la condition pour que
- * cette section coexiste avec `Temoignage`, qui dit courageusement que la
- * place du premier client est vide : une galerie de six « réalisations »
- * démentirait cette phrase à trois écrans d'intervalle, et c'est la phrase qui
- * a raison.
+ * présentation — pas en petits caractères en bas. La galerie montre des
+ * exemples de sites, jamais des références clients.
  *
  * Le dépôt n'a pourtant pas manqué de matière : dix-sept pages nominatives
  * existent, préparées pour de vraies entreprises qui n'ont rien demandé. Les

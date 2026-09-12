@@ -19,7 +19,6 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
  */
 
 const SOURCE = readFileSync(new URL('../src/components/Galerie.tsx', import.meta.url), 'utf8');
-const PAGE = readFileSync(new URL('../src/app/page.tsx', import.meta.url), 'utf8');
 const DOSSIER = new URL('../public/modeles/', import.meta.url);
 
 /*
@@ -60,11 +59,8 @@ test('aucune page de modèle n’est laissée hors de la galerie', () => {
 /*
  * Le fond du contrat, et il n'est pas technique.
  *
- * La galerie coexiste avec `Temoignage`, qui dit que la place du premier client
- * est vide. Si la galerie cessait de dire que ses six entreprises sont
- * inventées, la page se contredirait à trois écrans d'intervalle — et le dépôt
- * interdit le faux témoignage. Aucune relecture ne rattrape ça six mois plus
- * tard : c'est ce test qui le tient.
+ * La galerie doit annoncer ses entreprises fictives, même en l’absence
+ * de témoignages clients ailleurs sur la page.
  */
 test('la galerie dit que ses entreprises n’existent pas', () => {
   assert.match(
@@ -74,16 +70,6 @@ test('la galerie dit que ses entreprises n’existent pas', () => {
   );
 });
 
-test('la galerie reste avant le témoignage', () => {
-  const galerie = PAGE.indexOf('<Galerie />');
-  const temoignage = PAGE.indexOf('<Temoignage />');
-  assert.ok(galerie > 0, '<Galerie /> n’est plus dans la page');
-  assert.ok(temoignage > 0, '<Temoignage /> n’est plus dans la page');
-  assert.ok(
-    galerie < temoignage,
-    'la galerie passe après le témoignage : on lirait les six modèles comme des clients',
-  );
-});
 
 /*
  * Trois couvreurs fictifs, trois noms. Et la comparaison se fait sur les mots.
