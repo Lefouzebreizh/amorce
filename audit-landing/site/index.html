@@ -319,8 +319,9 @@ footer {
   <div class="enveloppe">
     <h2>Prêt à savoir ce que voit vraiment votre visiteur ?</h2>
     <p class="detail">
-      Rapport livré sous 24 heures, au format HTML — prêt à être partagé avec
-      votre équipe ou votre agence, sans dossier ni logiciel à installer.
+      Rapport illustré au format HTML — prêt à être partagé avec votre équipe
+      ou votre agence, sans logiciel à installer. Le délai sera confirmé avant
+      toute commande pilote.
     </p>
     <form class="form-commande" id="form-commande">
       <label class="label-champ" for="url-a-auditer">Adresse de la page à auditer</label>
@@ -335,16 +336,13 @@ footer {
 </section>
 
 <footer>
-  <p>Audit de page de vente en 24h.</p>
+  <p>Audit visuel de page de vente.</p>
 </footer>
 
 <script>
 (function () {
   // Adresse du serveur de paiement (audit-landing/serveur-paiement/), une
-  // fois déployé. Tant qu'elle pointe sur ce nom de repli, la requête échoue
-  // et le formulaire l'affiche honnêtement — jamais un bouton qui ne fait
-  // rien en silence (voir CLAUDE.md §8, la règle des campagnes SMS étendue
-  // à tout geste censé déclencher une action réelle).
+  // fois déployé et validé. Vide, elle maintient les commandes fermées.
   var ADRESSE_SERVEUR_PAIEMENT = ''; // À renseigner après validation du parcours de commande.
 
   var formulaire = document.getElementById('form-commande');
