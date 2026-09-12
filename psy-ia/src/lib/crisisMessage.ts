@@ -9,15 +9,20 @@
 // délibérément identique et validé par lui sur "ça va pas bien du tout" :
 // validation sincère sans minimiser, transparence sur le statut d'outil non
 // professionnel, distinction claire entre le 3114 (soutien, non-urgence) et
-// le 15/112 (danger immédiat). Deux changements, rien d'autre : (1) la
+// le 15/112 (danger immédiat). Trois changements, rien d'autre : (1) la
 // validation et le rappel du cadre sont fondus en un seul paragraphe qui
 // s'enchaîne comme une phrase parlée, au lieu de blocs séparés façon liste —
 // les deux numéros restent chacun sur leur propre ligne, à dessein, pour
 // rester immédiatement repérables et non noyés dans un paragraphe dense ;
 // (2) la phrase de fin n'est plus une question ("dis-moi comment tu te
 // sens") mais une offre de présence, pour ne pas refermer le message en
-// remettant la charge sur la personne.
-export const MESSAGE_CRISE = `Ce que tu me dis me touche, et je veux que tu saches que tu comptes. Ce que tu traverses est réel, tu n'as pas à le porter seul·e — et parce que je suis un outil d'accompagnement, pas un professionnel, pour ce que tu vis là il faut vraiment pouvoir en parler à quelqu'un qui peut t'aider pour de vrai.
+// remettant la charge sur la personne ; (3) l'ouverture ne prétend plus
+// ressentir quelque chose ("ce que tu me dis me touche", "tu comptes") — une
+// IA qui affiche une émotion qu'elle n'éprouve pas sonne faux et fragilise
+// la confiance au moment où la personne est le plus vulnérable. Elle ouvre
+// directement sur la réalité de ce que la personne traverse, jamais sur un
+// ressenti déclaré de l'IA.
+export const MESSAGE_CRISE = `Ce que tu traverses est réel, et tu n'as pas à le porter seul·e. Je suis un outil d'accompagnement, pas un professionnel, et pour ce que tu vis là il faut vraiment pouvoir en parler à quelqu'un qui peut t'aider pour de vrai.
 
 3114, le numéro national de prévention du suicide : gratuit, confidentiel, 24h/24 et 7j/7, avec des professionnels formés qui écoutent sans jugement.
 
