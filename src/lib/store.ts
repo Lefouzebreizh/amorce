@@ -5,7 +5,7 @@ import { analyzeProject } from './analysis.ts';
 import type { Cadrage } from './cadrage.ts';
 import { HAUTEURS_LIBRES, Y_PAR_DEFAUT } from './captions.ts';
 import { uid } from './id.ts';
-import { applyAutoEdit } from './autoEdit.ts';
+import { applyAutoEdit, type AutoEditOptions } from './autoEdit.ts';
 import { applyFinish, soundsOnCuts, tensionFills, thinCues } from './autoFinish.ts';
 import type { SharedFile } from './share.ts';
 import { captionsFromVoice } from './voice.ts';
@@ -186,7 +186,7 @@ type StudioState = {
    * donc le seul qu'on ne pouvait pas défaire. Pire, l'annulation suivante
    * remontait alors à un état antérieur sans le dire.
    */
-  montageExpress: () => void;
+  montageExpress: (options?: AutoEditOptions) => void;
 
   /** Ajoute des rushes à la fin du montage, sans toucher au reste. */
   ajouterAuMontage: (assetIds: string[]) => void;
@@ -392,9 +392,9 @@ export const useStudio = create<StudioState>((set, get) => {
       });
     }),
 
-  montageExpress: () =>
+  montageExpress: (options) =>
     mutate('montage-express', (state) => ({
-      project: applyAutoEdit(state.project),
+      project: applyAutoEdit(state.project, options),
       selection: null,
       playhead: 0,
       playing: false,
