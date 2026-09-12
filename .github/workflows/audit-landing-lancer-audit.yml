@@ -1,0 +1,75 @@
+# Lance le pipeline complet (capture, analyse, rapport) pour un audit payé.
+#
+# Déclenché par `repository_dispatch` depuis `serveur-paiement/`, à la
+# confirmation d'un paiement Stripe — voir `audit-landing/serveur-paiement/`.
+# **Non exercé depuis une session distante** : aucun paiement réel n'a
+# déclenché cet événement, et ce fichier n'a donc jamais tourné pour de
+# vrai — même limite que `analyser_captures.py` avant son premier appel réel
+# (voir `second-brain/lecons/2026-09-12-cinq-defauts-quun-seul-appel-reel-a-reveles.md`) :
+# écrit contre la forme documentée d'un `repository_dispatch` et des trois
+# scripts déjà vérifiés séparément, mais l'enchaînement des trois n'a encore
+# jamais été mesuré d'un bout à l'autre.
+#
+# Le runner a du vrai réseau (voir CLAUDE.md §7, radar-pepites) : c'est ce qui
+# rend ce pipeline exécutable ici alors qu'il ne l'est pas depuis une session
+# distante — api.anthropic.com y est injoignable, pas depuis un runner.
+#
+# Livraison : le rapport part en artefact de ce run, pas encore par
+# courriel — ça demanderait Resend, comme `comptes-serveur/`, et n'est pas
+# fait ici. Le lien de l'artefact est donc, pour l'instant, ce qu'on peut
+# donner à l'acheteur — avec le rappel du §7 : une session distante ne peut
+# pas rapatrier un artefact d'exécution (mur réseau différent de celui de
+# l'API), seulement en donner le lien.
+
+name: Lancer un audit payé
+
+on:
+  repository_dispatch:
+    types: [nouvel-audit-paye]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL de la page à auditer'
+        required: true
+
+concurrency:
+  group: audit-landing-lancer-audit-${{ github.event.client_payload.session_id || github.run_id }}
+
+jobs:
+  auditer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      URL_A_AUDITER: ${{ github.event.client_payload.url || inputs.url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Dépendances
+        run: pip install playwright anthropic
+
+      - name: Chromium
+        run: python3 -m playwright install --with-deps chromium
+
+      - name: Capturer la page
+        run: |
+          python3 audit-landing/capturer_page.py "$URL_A_AUDITER" --sortie audit-landing/captures/
+
+      - name: Analyser et rendre le rapport
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          DOSSIER=$(find audit-landing/captures -mindepth 1 -maxdepth 1 -type d | head -1)
+          python3 audit-landing/analyser_captures.py "$DOSSIER"
+          python3 audit-landing/rapport_html.py "$DOSSIER"
+          echo "DOSSIER_RAPPORT=$DOSSIER" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rapport-audit
+          path: ${{ env.DOSSIER_RAPPORT }}/rapport.html
+          retention-days: 30

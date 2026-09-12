@@ -1,0 +1,55 @@
+# Vérification du serveur de paiement d'« Audit de page de vente en 24h ».
+#
+# Même patron que licence-serveur.yml : zéro dépendance d'exécution, le
+# compilateur est installé sans être enregistré dans package.json (qui doit
+# continuer à dire vrai — ce projet n'en a aucune), et `@types/node` est
+# installé explicitement plutôt qu'espéré présent, pour la même raison
+# mesurée là-bas : un exécuteur GitHub n'a pas de `node_modules` de racine
+# à qui l'emprunter.
+
+name: Serveur de paiement — audit de page de vente
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'audit-landing/serveur-paiement/**'
+      - '.github/workflows/audit-landing-serveur-paiement.yml'
+  pull_request:
+    paths:
+      - 'audit-landing/serveur-paiement/**'
+      - '.github/workflows/audit-landing-serveur-paiement.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: audit-landing-serveur-paiement-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: audit-landing/serveur-paiement
+
+jobs:
+  verifier:
+    name: Tests et types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Tests
+        if: ${{ !cancelled() }}
+        run: npm test
+
+      - name: Installer le compilateur
+        if: ${{ !cancelled() }}
+        run: npm install --no-save typescript@^5 @types/node@^22
+
+      - name: Types
+        if: ${{ !cancelled() }}
+        run: npm run typecheck

@@ -15,8 +15,8 @@ elles s'enchaînent :
    valeur, comment ça marche, ce que contient le rapport, un exemple réel
    (`site/exemple-rapport.html`, produit par la brique 3 ci-dessus), et un
    bouton d'achat.
-5. Stripe — brancher ce bouton, déclencher l'analyse une fois le paiement
-   confirmé. **Pas encore commencé.**
+5. `serveur-paiement/` — le serveur Stripe qui reçoit la commande et
+   déclenche l'analyse une fois le paiement confirmé.
 
 ## La page de vente (`site/`)
 
@@ -25,16 +25,19 @@ dans un navigateur, sans serveur ni build. `site/exemple-rapport.html` est un
 vrai rapport produit par `rapport_html.py` sur un site fictif
 (`exemple-saas.com`) — pas une maquette, le même rendu qu'un client recevrait.
 
-**Le bouton d'achat ne fait encore rien**, à dessein : les deux boutons
-(« Commander mon audit ») pointent vers `#tarif` et affichent « Paiement en
-ligne sécurisé — bientôt disponible » plutôt que de laisser croire qu'un
-paiement est possible. C'est la brique 5 (Stripe) qui les branchera. Même
-principe que `artisan-express/` : ce qui n'est pas réglé (ici, le prix et le
-lien de paiement) ne s'invente pas, il se dit absent.
+Le formulaire de commande (adresse de la page à auditer + bouton) appelle
+`serveur-paiement/` — voir son README pour ce qui est vérifié et ce qui reste
+à déployer. **Tant que ce serveur n'est pas déployé et configuré**, le
+formulaire échoue proprement et affiche « Paiement en ligne sécurisé —
+bientôt disponible » plutôt que de laisser croire qu'un paiement est
+possible — même principe que `artisan-express/` : ce qui n'est pas réglé (ici,
+le prix et l'adresse du serveur) ne s'invente pas, il se dit absent.
 
 Vérifié à l'œil, dans un vrai Chromium, plein format et largeur téléphone
 (393 px) : aucun débordement horizontal, aucune erreur console, le lien vers
-l'exemple de rapport navigue bien vers `exemple-rapport.html`.
+l'exemple de rapport navigue bien, et les deux chemins du formulaire ont été
+exercés — sans backend (message honnête affiché) et avec un backend simulé
+(redirection réelle vers l'adresse de paiement rendue).
 
 ## Défaut corrigé : tranches blanches sur `qonto.com/fr`
 

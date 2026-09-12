@@ -74,6 +74,36 @@ a { color: var(--accent); }
   text-decoration: underline;
 }
 
+/* Formulaire de commande */
+.form-commande { max-width: 440px; margin: 0 auto; }
+.label-champ {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: left;
+}
+.ligne-champ {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.champ-url {
+  flex: 1;
+  min-width: 220px;
+  padding: 13px 14px;
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+}
+.champ-url:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.form-commande .cta {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 /* Sections génériques */
 section { padding: 56px 0; }
 h2 {
@@ -292,14 +322,59 @@ footer {
       Rapport livré sous 24 heures, au format HTML — prêt à être partagé avec
       votre équipe ou votre agence, sans dossier ni logiciel à installer.
     </p>
-    <a href="#tarif" class="cta">Commander mon audit</a>
-    <p class="note-paiement">Paiement en ligne sécurisé — bientôt disponible.</p>
+    <form class="form-commande" id="form-commande" novalidate>
+      <label class="label-champ" for="url-a-auditer">Adresse de la page à auditer</label>
+      <div class="ligne-champ">
+        <input class="champ-url" type="url" id="url-a-auditer" name="url"
+               placeholder="https://votre-page-de-vente.com" required>
+        <button type="submit" class="cta">Commander mon audit</button>
+      </div>
+    </form>
+    <p class="note-paiement" id="message-commande" role="status"></p>
   </div>
 </section>
 
 <footer>
   <p>Audit de page de vente en 24h.</p>
 </footer>
+
+<script>
+(function () {
+  // Adresse du serveur de paiement (audit-landing/serveur-paiement/), une
+  // fois déployé. Tant qu'elle pointe sur ce nom de repli, la requête échoue
+  // et le formulaire l'affiche honnêtement — jamais un bouton qui ne fait
+  // rien en silence (voir CLAUDE.md §8, la règle des campagnes SMS étendue
+  // à tout geste censé déclencher une action réelle).
+  var ADRESSE_SERVEUR_PAIEMENT = 'https://serveur-paiement-a-configurer.exemple';
+
+  var formulaire = document.getElementById('form-commande');
+  var message = document.getElementById('message-commande');
+
+  formulaire.addEventListener('submit', function (evenement) {
+    evenement.preventDefault();
+    var url = document.getElementById('url-a-auditer').value;
+    message.hidden = false;
+    message.textContent = 'Redirection vers le paiement…';
+
+    fetch(ADRESSE_SERVEUR_PAIEMENT + '/creer-session', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url: url }),
+    })
+      .then(function (reponse) {
+        if (!reponse.ok) throw new Error('refuse');
+        return reponse.json();
+      })
+      .then(function (donnees) {
+        if (!donnees.url) throw new Error('sans-adresse');
+        window.location.href = donnees.url;
+      })
+      .catch(function () {
+        message.textContent = 'Paiement en ligne sécurisé — bientôt disponible.';
+      });
+  });
+})();
+</script>
 
 </body>
 </html>
