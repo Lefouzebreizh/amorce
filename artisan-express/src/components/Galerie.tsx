@@ -113,8 +113,7 @@ export function Galerie() {
         <p>
           Voilà ce que je produis. Ce ne sont pas mes clients :{' '}
           <strong className="text-encre">ces six entreprises n’existent pas</strong>, et chaque page
-          le dit d’elle-même, en toutes lettres. Le jour où un vrai artisan sera là, il sera plus bas
-          — à la place qui l’attend.
+          le dit d’elle-même, en toutes lettres.
         </p>
         <p>
           Ce qui change d’une page à l’autre, c’est la couleur et les mots du métier. Ce qui ne
