@@ -1,23 +1,29 @@
 // Couche 1 : message figé, jamais généré par le LLM. Toujours affiché en
 // entier, identique à chaque déclenchement — c'est ce qui le rend fiable :
 // un texte généré pourrait varier, minimiser, ou omettre un numéro selon
-// l'humeur du modèle ce jour-là. Texte posé mot pour mot dans la note
-// d'initialisation du projet. NE PAS reformuler sans repasser par Erwann :
+// l'humeur du modèle ce jour-là. NE PAS reformuler sans repasser par Erwann :
 // un professionnel de santé mentale doit encore le relire (couche 4,
 // TODO.md) avant toute mise en ligne, même en bêta.
-export const MESSAGE_CRISE = `Ce que tu me dis me touche, et je veux que tu saches que tu comptes.
-Ce que tu traverses est réel, et tu n'as pas à le porter seul·e.
+//
+// Retouche de FORME demandée par Erwann le 12/09/2026, le FOND restant
+// délibérément identique et validé par lui sur "ça va pas bien du tout" :
+// validation sincère sans minimiser, transparence sur le statut d'outil non
+// professionnel, distinction claire entre le 3114 (soutien, non-urgence) et
+// le 15/112 (danger immédiat). Deux changements, rien d'autre : (1) la
+// validation et le rappel du cadre sont fondus en un seul paragraphe qui
+// s'enchaîne comme une phrase parlée, au lieu de blocs séparés façon liste —
+// les deux numéros restent chacun sur leur propre ligne, à dessein, pour
+// rester immédiatement repérables et non noyés dans un paragraphe dense ;
+// (2) la phrase de fin n'est plus une question ("dis-moi comment tu te
+// sens") mais une offre de présence, pour ne pas refermer le message en
+// remettant la charge sur la personne.
+export const MESSAGE_CRISE = `Ce que tu me dis me touche, et je veux que tu saches que tu comptes. Ce que tu traverses est réel, tu n'as pas à le porter seul·e — et parce que je suis un outil d'accompagnement, pas un professionnel, pour ce que tu vis là il faut vraiment pouvoir en parler à quelqu'un qui peut t'aider pour de vrai.
 
-Je suis un outil d'accompagnement, pas un professionnel — pour ce que
-tu vis là, il faut parler à quelqu'un qui peut vraiment t'aider.
+3114, le numéro national de prévention du suicide : gratuit, confidentiel, 24h/24 et 7j/7, avec des professionnels formés qui écoutent sans jugement.
 
-3114 — le numéro national de prévention du suicide. Gratuit,
-confidentiel, 24h/24, 7j/7. Des professionnels formés t'écoutent,
-sans jugement.
+Si le danger est immédiat, c'est le 15 (SAMU) ou le 112.
 
-Si le danger est immédiat : 15 (SAMU) ou 112.
-
-Je reste là. Dis-moi comment tu te sens, là, maintenant.`;
+Je suis là si tu as besoin de parler.`;
 
 /**
  * Après ce message, la conversation ne reprend JAMAIS son cours normal
