@@ -144,6 +144,10 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
   const [busy, setBusy] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [shorten, setShorten] = useState(false);
+  const [visualEffects, setVisualEffects] = useState(false);
+  const [soundEffects, setSoundEffects] = useState(false);
+  const [captionGuide, setCaptionGuide] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const ready = useIsHydrated();
 
@@ -282,11 +286,47 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
       {assets.length > 0 && !monte && (
         <Panel
           title="Montage express"
-          subtitle="Assemble tout automatiquement : plans courts, transitions, bruitages, rendu cinéma."
+          subtitle="Choisis ce qu’Amorce peut modifier. Les vidéos entières sont conservées par défaut."
         >
-          <Button variant="primary" className="w-full" onClick={montageExpress}>
+          <fieldset className="mb-3 space-y-2 text-lg text-mist">
+            <legend className="mb-2 font-semibold">Découpage</legend>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3">
+              <input type="radio" name="decoupage-express" checked={!shorten}
+                onChange={() => setShorten(false)} />
+              Conserver mes plans entiers
+            </label>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3">
+              <input type="radio" name="decoupage-express" checked={shorten}
+                onChange={() => setShorten(true)} />
+              Prélever des débuts de plans courts
+            </label>
+            {shorten && <p className="text-lg text-muted">
+              Ce choix raccourcit les rushes sans détecter leurs moments forts.
+              Vérifie que les actions importantes restent visibles.
+            </p>}
+          </fieldset>
+          <details className="mb-3 text-lg text-mist">
+            <summary className="min-h-11 cursor-pointer py-2 font-semibold">Habillage facultatif</summary>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3">
+              <input type="checkbox" checked={visualEffects}
+                onChange={(event) => setVisualEffects(event.target.checked)} />
+              Ajouter des mouvements et transitions
+            </label>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3">
+              <input type="checkbox" checked={soundEffects}
+                onChange={(event) => setSoundEffects(event.target.checked)} />
+              Ajouter des bruitages aux plans muets
+            </label>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3">
+              <input type="checkbox" checked={captionGuide}
+                onChange={(event) => setCaptionGuide(event.target.checked)} />
+              Ajouter une trame de textes à compléter
+            </label>
+          </details>
+          <Button variant="primary" className="w-full"
+            onClick={() => montageExpress({ shorten, visualEffects, soundEffects, captionGuide })}>
             ⚡ Monter automatiquement (
-            {assets.length > PLANS_MAX
+            {shorten && assets.length > PLANS_MAX
               ? `${PLANS_MAX} des ${assets.length} rushes`
               : `${assets.length} rush${assets.length > 1 ? 'es' : ''}`}
             )
@@ -301,10 +341,10 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
             trente-cinq secondes au-delà desquelles l'analyse elle-même
             pénalise le film.
           */}
-          {assets.length > PLANS_MAX && (
+          {shorten && assets.length > PLANS_MAX && (
             <p className="mt-1 text-xs leading-relaxed text-muted">
               Les {assets.length - PLANS_MAX} autres restent dans ta bibliothèque : au-delà, le
-              montage dépasse 35 s et on décroche avant la fin.
+              sélection courte est limitée à 35 s. Tu peux aussi conserver tous tes plans.
             </p>
           )}
         </Panel>
@@ -337,8 +377,8 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
             {cues.length > 0 && ` et tes ${cues.length} bruitage${cues.length > 1 ? 's' : ''}`}. Tu
             pourras l’annuler, mais autant le savoir avant.
           </Hint>
-          <Button variant="ghost" className="mt-2 w-full" onClick={montageExpress}>
-            ⚡ Tout refaire depuis les rushes
+          <Button variant="ghost" className="mt-2 w-full" onClick={() => montageExpress()}>
+            ⚡ Repartir des rushes entiers, sans habillage
           </Button>
         </Panel>
       )}
