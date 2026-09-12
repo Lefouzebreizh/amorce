@@ -10,8 +10,6 @@ function reglages(partiel: Partial<Reglages> = {}): Reglages {
     receptionCommandes: {url: 'https://registre.example/commandes', secret: 's'.repeat(32)},
     idPrixStripe: 'price_test_abc',
     secretWebhook: SECRET_WEBHOOK,
-    jetonDeclenchement: 'ghp_test',
-    depotDeclenchement: 'Lefouzebreizh/amorce',
     origines: ['https://audit-page-de-vente.example'],
     urlSucces: 'https://audit-page-de-vente.example/merci',
     urlAnnulation: 'https://audit-page-de-vente.example/annule',
@@ -116,6 +114,16 @@ test('un refus de Stripe rend une erreur générique, sans détail interne', asy
   assert.ok(!donnees.erreur.includes('price_bidon'));
 });
 
+test('refuse une redirection qui ne vient pas de Stripe Checkout', async () => {
+  const fetchFactice: typeof fetch = async () =>
+    new Response(JSON.stringify({ url: 'https://attaquant.example/payer' }), { status: 200 });
+  const requete = new Request('https://x/creer-session', {
+    method: 'POST', body: JSON.stringify({ url: 'https://exemple.com' }),
+  });
+  const reponse = await traiter(requete, reglages({ fetch: fetchFactice }));
+  assert.equal(reponse.status, 502);
+});
+
 // -------------------------------------------------------------- /webhook
 
 test('une signature forgée, absente ou rejouée est refusée', async () => {
@@ -139,9 +147,9 @@ test('une signature forgée, absente ou rejouée est refusée', async () => {
 });
 
 test('un paiement confirmé déclenche la réception durable avec l\'URL et la session', async () => {
-  let requeteGitHub: Request | null = null;
+  let requeteReception: Request | null = null;
   const fetchFactice: typeof fetch = async (url, init) => {
-    requeteGitHub = new Request(url as string, init);
+    requeteReception = new Request(url as string, init);
     return new Response(null, { status: 201 });
   };
 
@@ -154,8 +162,8 @@ test('un paiement confirmé déclenche la réception durable avec l\'URL et la s
   const reponse = await traiter(requete, reglages({ fetch: fetchFactice }));
 
   assert.equal(reponse.status, 200);
-  if (!requeteGitHub) throw new Error('aucune requête envoyée à GitHub');
-  const requeteG: Request = requeteGitHub;
+  if (!requeteReception) throw new Error('aucune requête envoyée à la réception');
+  const requeteG: Request = requeteReception;
   assert.equal(requeteG.url, 'https://registre.example/commandes');
   assert.equal(requeteG.headers.get('authorization'), 'Bearer ' + 's'.repeat(32));
   const charge = JSON.parse(await requeteG.text());
@@ -164,7 +172,7 @@ test('un paiement confirmé déclenche la réception durable avec l\'URL et la s
   assert.equal(charge.email, 'ada@exemple.com');
 });
 
-test('un type d\'événement non écouté rend 200 sans appeler GitHub', async () => {
+test('un type d\'événement non écouté rend 200 sans appeler la réception', async () => {
   let appele = false;
   const fetchFactice: typeof fetch = async () => {
     appele = true;
