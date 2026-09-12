@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import dataclasses
 import json
 import sys
 from dataclasses import dataclass, field
@@ -483,6 +484,18 @@ def main() -> None:
     sortie = args.sortie or (args.dossier_page / "rapport.md")
     sortie.write_text(markdown, encoding="utf-8")
     print(f"Rapport écrit : {sortie}")
+
+    # Persisté à côté du Markdown pour la brique suivante (rapport_html.py) :
+    # elle a besoin de la donnée structurée, pas du texte déjà mis en forme,
+    # et ne doit pas repasser par un appel payant pour l'obtenir. La forme
+    # écrite ici (dataclasses.asdict) est exactement celle qu'attend
+    # analyser_reponse_json en entrée — un test le garde.
+    sortie_json = sortie.with_suffix(".json")
+    sortie_json.write_text(
+        json.dumps(dataclasses.asdict(rapport), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    print(f"Rapport structuré écrit : {sortie_json}")
 
 
 if __name__ == "__main__":
