@@ -229,3 +229,7 @@ visual_library/**/*.mp4
 # propriétaire, et `kdp/tome1/DOSSIER.md` dit pourquoi ils ne se régénèrent
 # pas à l'identique — les invites d'origine ont été perdues.
 /kdp/.planches/
+
+# Liste des artisans démarchés (export), mêmes coordonnées de tiers que
+# prospects.md dont elle est extraite : reste locale pour la même raison.
+/artisan-express/demarches.md
