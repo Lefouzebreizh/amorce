@@ -379,3 +379,27 @@ donc exécutable sur n'importe quel runner. La partie qui pilote réellement
 Chromium (fermeture des bandeaux, scroll, capture) n'est pas testée
 unitairement : c'est un parcours d'intégration, vérifié à l'œil ci-dessus
 plutôt que simulé.
+
+## Registre durable des commandes (`commandes.py`)
+
+Module préparatoire pour un processus hébergé sur disque persistant (VPS, par
+exemple). SQLite est fourni par Python : aucune base de production existante
+n'a été modifiée. La session Stripe identifie une seule commande ; une session
+rejouée avec une autre URL ou un autre destinataire est refusée. Une transition
+atomique réserve le traitement à un processus. Le rapport doit passer par
+relecture puis approbation nominative ; son empreinte est contrôlée avant
+préparation de l'envoi, qui retourne exactement les octets approuvés.
+
+Un envoi incertain reste en état `envoi`, visible via `a_traiter()` : vérifier
+le journal du fournisseur avant toute reprise. `envoye` signifie accepté par
+le fournisseur avec identifiant, pas livré dans la boîte du client.
+
+**Portée : module testé localement, pas encore raccordé au webhook, au
+workflow GitHub ou à Resend.** Il ne doit pas être utilisé sur le disque
+éphémère d'un runner GitHub pour prétendre garantir une déduplication durable.
+Le prochain raccordement doit choisir un hébergement persistant, protéger les
+opérations de relecture et organiser la reprise des traitements interrompus.
+Aucun envoi automatique ni ouverture de vente n'est activé par ce module.
+
+Vérification : 47 tests Python réussis, dont 5 tests du registre (redémarrage,
+concurrence, relecture, intégrité du rapport et envoi interrompu).
