@@ -7,6 +7,7 @@ const SECRET_WEBHOOK = 'whsec_test';
 function reglages(partiel: Partial<Reglages> = {}): Reglages {
   return {
     cleSecreteStripe: 'sk_test_123',
+    receptionCommandes: {url: 'https://registre.example/commandes', secret: 's'.repeat(32)},
     idPrixStripe: 'price_test_abc',
     secretWebhook: SECRET_WEBHOOK,
     jetonDeclenchement: 'ghp_test',
@@ -131,17 +132,17 @@ test('une signature forgée, absente ou rejouée est refusée', async () => {
       body: corps,
       headers: entete ? { 'Stripe-Signature': entete } : {},
     });
-    const reponse = await traiter(requete, reglages({ fetch: async () => new Response(null, {status: 204}) }));
+    const reponse = await traiter(requete, reglages({ fetch: async () => new Response(null, {status: 201}) }));
     if (nom === 'signée juste') assert.equal(reponse.status, 200, nom);
     else assert.equal(reponse.status, 400, nom);
   }
 });
 
-test('un paiement confirmé déclenche repository_dispatch avec l\'URL et la session', async () => {
+test('un paiement confirmé déclenche la réception durable avec l\'URL et la session', async () => {
   let requeteGitHub: Request | null = null;
   const fetchFactice: typeof fetch = async (url, init) => {
     requeteGitHub = new Request(url as string, init);
-    return new Response(null, { status: 204 });
+    return new Response(null, { status: 201 });
   };
 
   const corps = evenementPaye('cs_test_42', 'https://client-exemple.com/vente', 'ada@exemple.com');
@@ -155,13 +156,12 @@ test('un paiement confirmé déclenche repository_dispatch avec l\'URL et la ses
   assert.equal(reponse.status, 200);
   if (!requeteGitHub) throw new Error('aucune requête envoyée à GitHub');
   const requeteG: Request = requeteGitHub;
-  assert.equal(requeteG.url, 'https://api.github.com/repos/Lefouzebreizh/amorce/dispatches');
-  assert.equal(requeteG.headers.get('authorization'), 'Bearer ghp_test');
+  assert.equal(requeteG.url, 'https://registre.example/commandes');
+  assert.equal(requeteG.headers.get('authorization'), 'Bearer ' + 's'.repeat(32));
   const charge = JSON.parse(await requeteG.text());
-  assert.equal(charge.event_type, 'nouvel-audit-paye');
-  assert.equal(charge.client_payload.url, 'https://client-exemple.com/vente');
-  assert.equal(charge.client_payload.session_id, 'cs_test_42');
-  assert.equal(charge.client_payload.email, 'ada@exemple.com');
+  assert.equal(charge.url, 'https://client-exemple.com/vente');
+  assert.equal(charge.sessionId, 'cs_test_42');
+  assert.equal(charge.email, 'ada@exemple.com');
 });
 
 test('un type d\'événement non écouté rend 200 sans appeler GitHub', async () => {
@@ -181,9 +181,8 @@ test('un type d\'événement non écouté rend 200 sans appeler GitHub', async (
   assert.equal(appele, false);
 });
 
-test('un échec de repository_dispatch rend 503 pour permettre une nouvelle tentative', async () => {
-  // Stripe rejouerait pendant des jours un webhook en erreur, pour une cause
-  // (GitHub indisponible) qui n'est jamais la sienne.
+test('un échec de la réception durable rend 503 pour permettre une nouvelle tentative', async () => {
+  // Un échec d'enregistrement doit rester rejouable.
   const fetchFactice: typeof fetch = async () => new Response('erreur', { status: 500 });
   const corps = evenementPaye('cs_2', 'https://exemple.com');
   const requete = new Request('https://x/webhook', {
@@ -214,7 +213,7 @@ test('une session non payée ne déclenche pas d’analyse', async () => {
   event.data.object.payment_status = 'unpaid';
   const body = JSON.stringify(event);
   let calls = 0;
-  const response = await traiter(new Request('https://x/webhook', {method: 'POST', body, headers: {'Stripe-Signature': await signer(body)}}), reglages({fetch: async () => { calls++; return new Response(null, {status: 204}); }}));
+  const response = await traiter(new Request('https://x/webhook', {method: 'POST', body, headers: {'Stripe-Signature': await signer(body)}}), reglages({fetch: async () => { calls++; return new Response(null, {status: 201}); }}));
   assert.equal(response.status, 200);
   assert.equal(calls, 0);
 });

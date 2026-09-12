@@ -1,22 +1,14 @@
 import { signatureValide } from './signature.ts';
 
-/**
- * Le serveur de paiement de « Audit de page de vente en 24h ».
- *
- * Deux routes : `/creer-session` crée une session Stripe Checkout pour la
- * page que le client veut faire auditer, `/webhook` reçoit la confirmation
- * de paiement et déclenche l'analyse. Sans dépendance — comme
- * `licence-serveur/`, dont il reprend la mécanique de vérification de
- * signature — la plateforme fournit `Request`, `Response`, `fetch` et
- * `crypto.subtle`.
- *
- * **Ce qu'il ne fait pas** : il ne stocke rien. Contrairement à
- * `licence-serveur/`, aucune clé à vérifier plus tard — la seule question
- * qu'il tranche est « ce paiement vient-il de se confirmer », et la réponse
- * part immédiatement vers GitHub Actions plutôt que dans une base.
+/** Serveur Checkout et webhook Stripe.
+ * Après vérification du paiement, transmet la commande à une réception HTTPS
+ * qui l'enregistre durablement. Aucun repository_dispatch dans cette version.
+ * Le traitement et la livraison sont assurés séparément sur stockage persistant.
  */
 
 export type Reglages = {
+  /** Réception HTTPS sur disque persistant ; vide : livraison durable indisponible. */
+  receptionCommandes?: { url: string; secret: string };
   /** Clé secrète Stripe (test ou live selon le déploiement) — jamais committée. */
   cleSecreteStripe: string;
   /**
@@ -83,6 +75,10 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
     return erreur('produit pas encore configuré (prix manquant)', 503, partage);
   }
 
+  if (!r.receptionCommandes || r.receptionCommandes.secret.length < 32) {
+    return erreur('réception des commandes non configurée', 503, partage);
+  }
+
   let corps: unknown;
   try {
     corps = await requete.json();
@@ -129,7 +125,7 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
 }
 
 /**
- * Notifie GitHub Actions qu'un audit payé attend d'être lancé.
+ * Enregistre un audit payé auprès de la réception durable.
  *
  * Rend false en cas de refus ou de panne : le webhook doit alors rendre
  * un 503 pour conserver les nouvelles tentatives de Stripe.
@@ -139,23 +135,22 @@ async function declencherAnalyse(
   charge: { url: string; sessionId: string; email: string | null },
 ): Promise<boolean> {
   const appelerFetch = r.fetch ?? fetch;
+  const reception = r.receptionCommandes;
+  if (!reception || reception.secret.length < 32) return false;
   try {
-    const reponse = await appelerFetch(
-      `https://api.github.com/repos/${r.depotDeclenchement}/dispatches`,
-      {
-        method: 'POST',
-        headers: {
-          'authorization': `Bearer ${r.jetonDeclenchement}`,
-          'accept': 'application/vnd.github+json',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          event_type: 'nouvel-audit-paye',
-          client_payload: { url: charge.url, session_id: charge.sessionId, email: charge.email },
-        }),
+    const adresse = new URL(reception.url);
+    if (adresse.protocol !== 'https:' || adresse.username || adresse.password) return false;
+    const reponse = await appelerFetch(reception.url, {
+      method: 'POST',
+      redirect: 'error',
+      signal: AbortSignal.timeout(10000),
+      headers: {
+        'authorization': `Bearer ${reception.secret}`,
+        'content-type': 'application/json',
       },
-    );
-    return reponse.ok;
+      body: JSON.stringify(charge),
+    });
+    return reponse.status === 200 || reponse.status === 201;
   } catch {
     return false;
   }

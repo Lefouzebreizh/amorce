@@ -97,3 +97,18 @@ concurrence du workflow ne suffit pas), livraison au client après relecture,
 configuration réelle et essai complet. Les nouvelles tentatives peuvent
 actuellement produire plusieurs audits : ne pas ouvrir la vente en cet état.
 Le rapport stocké en artefact GitHub ne constitue pas une livraison client.
+
+## Raccordement durable préparé (branche Codex)
+
+Le webhook utilise désormais `receptionCommandes: {url, secret}` pour appeler
+`reception.py` sur `/commandes`, après vérification de signature et du statut
+payé. La réception acquitte seulement après l'écriture SQLite. Les doublons
+identiques rendent 200 ; une commande incompatible rend 409 ; une panne rend
+503. La création Checkout refuse une configuration de réception absente.
+
+Cette version remplace l'appel direct à GitHub : le workflow historique ne se
+lance donc plus depuis ce webhook. Le consommateur de la file, l'hébergement
+WSGI avec HTTPS et les secrets restent à configurer avant toute ouverture.
+Ce changement n'est pas déployé. Les scénarios locaux ne prouvent pas un
+parcours Stripe réel. Le secret partagé ne remplace pas la signature Stripe :
+la réception est un service interne réservé au serveur qui l'a vérifiée.
