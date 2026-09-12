@@ -56,7 +56,8 @@ export interface ResultatDetectionCrise {
  * Normalise un texte pour la détection : accents retirés, minuscules,
  * lettres répétées ramenées à une seule ("mourrrir" → "mourir"), quelques
  * contractions phonétiques citées dans la note d'initialisation ("jve",
- * "jeveu"), puis toute ponctuation ramenée à une espace.
+ * "jeveu") ou trouvées en production ("jen" → "j en"), puis toute
+ * ponctuation ramenée à une espace.
  *
  * Le repli des lettres répétées mange aussi les doubles lettres légitimes
  * ("arrangera" → "arangera"), et c'est sans conséquence à une condition :
@@ -84,6 +85,15 @@ function normaliser(texte: string): string {
     // formulations réalistes : « jv en finir » ne matchait pas, la
     // contraction n'ayant pas été anticipée à côté de « jve ».
     .replace(/\bjv\b/g, 'je veux')
+    // Retest personnel d'Erwann le 12/09/2026 en production : « jen peux
+    // plus » (contraction orale très courante de « j'en peux plus », sans
+    // apostrophe et les deux lettres collées) n'a rien déclenché. Le motif
+    // « j'en peux plus » se normalise en "j en peux plus" — deux mots
+    // distincts — mais le message tapé "jen peux plus" ne contient nulle
+    // part le mot isolé "j" : `\bj\b` ne matche jamais à l'intérieur de
+    // "jen". Même famille de contraction que « jve »/« jv » ci-dessus, donc
+    // même parade : on la déplie AVANT la compilation, des deux côtés.
+    .replace(/\bjen\b/g, 'j en')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
