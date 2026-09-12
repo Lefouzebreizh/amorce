@@ -25,19 +25,19 @@ dans un navigateur, sans serveur ni build. `site/exemple-rapport.html` est un
 vrai rapport produit par `rapport_html.py` sur un site fictif
 (`exemple-saas.com`) — pas une maquette, le même rendu qu'un client recevrait.
 
-Le formulaire de commande (adresse de la page à auditer + bouton) appelle
-`serveur-paiement/` — voir son README pour ce qui est vérifié et ce qui reste
-à déployer. **Tant que ce serveur n'est pas déployé et configuré**, le
-formulaire échoue proprement et affiche « Paiement en ligne sécurisé —
-bientôt disponible » plutôt que de laisser croire qu'un paiement est
-possible — même principe que `artisan-express/` : ce qui n'est pas réglé (ici,
-le prix et l'adresse du serveur) ne s'invente pas, il se dit absent.
+Les commandes sont fermées par défaut : bouton désactivé et indisponibilité
+annoncée avant toute saisie. Aucun appel ne part vers un serveur fictif.
+Avant ouverture : valider le prix, afficher le tarif et un contact réel,
+renseigner le serveur de paiement, puis tester paiement, déclenchement,
+relecture et livraison. Aucun délai réel de livraison n'a été vérifié ici.
 
-Vérifié à l'œil, dans un vrai Chromium, plein format et largeur téléphone
-(393 px) : aucun débordement horizontal, aucune erreur console, le lien vers
-l'exemple de rapport navigue bien, et les deux chemins du formulaire ont été
-exercés — sans backend (message honnête affiché) et avec un backend simulé
-(redirection réelle vers l'adresse de paiement rendue).
+Contrôle qualité ajouté le 12/09/2026 : les constats doivent référencer une
+capture effectivement envoyée au modèle ; notes non entières et observations
+vides sont refusées. Le prompt distingue hypothèses et observations et interdit
+les preuves commerciales inventées. Cela ne remplace pas une relecture humaine.
+
+Vérification de ce lot : tests Python de l'analyse et du rendu HTML. Le contrôle
+visuel reste à faire : le navigateur de cette session refuse l'aperçu local.
 
 ## Défaut corrigé : tranches blanches sur `qonto.com/fr`
 

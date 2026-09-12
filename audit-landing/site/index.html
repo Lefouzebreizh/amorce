@@ -65,6 +65,7 @@ a { color: var(--accent); }
   border-radius: 8px;
   text-decoration: none;
 }
+.cta:disabled { opacity: 0.65; cursor: not-allowed; }
 .cta:hover { opacity: 0.92; }
 .lien-secondaire {
   display: block;
@@ -225,13 +226,12 @@ footer {
 <header class="hero">
   <div class="enveloppe">
     <p class="eyebrow">Audit de page de vente en 24h</p>
-    <h1>Votre page de vente perd des visiteurs. Sachez exactement où — et quoi corriger — en 24 heures.</h1>
+    <h1>Identifiez ce qui manque de clarté sur votre page de vente et les corrections à prioriser.</h1>
     <p class="souligne">
-      Un audit visuel complet, mené comme le ferait un visiteur qui découvre
-      votre page pour la première fois — pas une checklist générique, pas un
-      score SEO : ce qui se voit vraiment, à l'écran.
+      Une analyse visuelle des captures de votre page, pour examiner ce que découvre
+      un visiteur pour la première fois. Les recommandations sont des pistes à tester, pas une mesure des abandons ni une garantie de conversion.
     </p>
-    <a href="#tarif" class="cta">Commander mon audit</a>
+    <a href="#tarif" class="cta">Consulter la disponibilité</a>
     <a href="exemple-rapport.html" class="lien-secondaire">Voir un exemple de rapport complet →</a>
   </div>
 </header>
@@ -294,7 +294,7 @@ footer {
 
 <section class="exemple">
   <div class="enveloppe">
-    <h2>Un exemple, en vrai</h2>
+    <h2>Un exemple de format, sur un site fictif</h2>
     <div class="apercu-carte">
       <div class="apercu-barre"><span></span><span></span><span></span></div>
       <div class="apercu-corps">
@@ -322,15 +322,15 @@ footer {
       Rapport livré sous 24 heures, au format HTML — prêt à être partagé avec
       votre équipe ou votre agence, sans dossier ni logiciel à installer.
     </p>
-    <form class="form-commande" id="form-commande" novalidate>
+    <form class="form-commande" id="form-commande">
       <label class="label-champ" for="url-a-auditer">Adresse de la page à auditer</label>
       <div class="ligne-champ">
         <input class="champ-url" type="url" id="url-a-auditer" name="url"
                placeholder="https://votre-page-de-vente.com" required>
-        <button type="submit" class="cta">Commander mon audit</button>
+        <button type="submit" class="cta" disabled>Commandes bientôt ouvertes</button>
       </div>
     </form>
-    <p class="note-paiement" id="message-commande" role="status"></p>
+    <p class="note-paiement" id="message-commande" role="status">Les commandes ne sont pas encore ouvertes. Le tarif sera affiché avant leur ouverture.</p>
   </div>
 </section>
 
@@ -345,14 +345,29 @@ footer {
   // et le formulaire l'affiche honnêtement — jamais un bouton qui ne fait
   // rien en silence (voir CLAUDE.md §8, la règle des campagnes SMS étendue
   // à tout geste censé déclencher une action réelle).
-  var ADRESSE_SERVEUR_PAIEMENT = 'https://serveur-paiement-a-configurer.exemple';
+  var ADRESSE_SERVEUR_PAIEMENT = ''; // À renseigner après validation du parcours de commande.
 
   var formulaire = document.getElementById('form-commande');
   var message = document.getElementById('message-commande');
 
+  var bouton = formulaire.querySelector('button');
+  if (!ADRESSE_SERVEUR_PAIEMENT) return;
+  bouton.disabled = false;
+  bouton.textContent = 'Commander mon audit';
+  message.textContent = '';
+
   formulaire.addEventListener('submit', function (evenement) {
     evenement.preventDefault();
-    var url = document.getElementById('url-a-auditer').value;
+    if (bouton.disabled || !formulaire.reportValidity()) return;
+    var url = document.getElementById('url-a-auditer').value.trim();
+    try {
+      var adresse = new URL(url);
+      if (!['https:', 'http:'].includes(adresse.protocol)) throw new Error();
+    } catch (_) {
+      message.textContent = 'Saisissez une adresse commençant par https:// ou http://.';
+      return;
+    }
+    bouton.disabled = true;
     message.hidden = false;
     message.textContent = 'Redirection vers le paiement…';
 
@@ -370,7 +385,8 @@ footer {
         window.location.href = donnees.url;
       })
       .catch(function () {
-        message.textContent = 'Paiement en ligne sécurisé — bientôt disponible.';
+        message.textContent = 'Impossible d’ouvrir le paiement. Aucune commande n’a été confirmée ici. Réessayez dans quelques instants.';
+        bouton.disabled = false;
       });
   });
 })();

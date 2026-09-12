@@ -113,6 +113,20 @@ class TestConstruireMessages(unittest.TestCase):
 
 
 class TestAnalyserReponseJson(unittest.TestCase):
+    def test_capture_inventee_refusee(self):
+        texte = json.dumps(self._rapport_brut_valide())
+        with self.assertRaisesRegex(ValueError, "Capture inconnue"):
+            analyser_reponse_json(texte, {"02-bas.png"})
+        analyser_reponse_json(texte, {"01-hero.png"})
+
+    def test_notes_non_entieres_refusees(self):
+        for note in (True, 8.9, "8"):
+            with self.subTest(note=note):
+                brut = self._rapport_brut_valide()
+                brut["categories"][0]["note"] = note
+                with self.assertRaises(ValueError):
+                    analyser_reponse_json(json.dumps(brut))
+
     def _rapport_brut_valide(self) -> dict:
         # Les six catégories, parce qu'un rapport valide les porte toutes :
         # la contrainte vivait dans le schéma JSON envoyé à l'API, qui la
