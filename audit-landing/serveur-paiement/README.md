@@ -6,7 +6,8 @@ copie assumée, voir son en-tête) :
 
 - **`POST /creer-session`** — reçoit `{ url }`, crée une session Stripe
   Checkout (mode paiement unique) pour le prix configuré, pose l'URL du
-  client en métadonnée (`url_a_auditer`) et rend l'adresse de paiement.
+  client en métadonnée (`url_a_auditer`) et rend uniquement une adresse HTTPS
+  de `checkout.stripe.com`.
 - **`POST /webhook`** — vérifie la signature Stripe, et sur
   `checkout.session.completed`, relit l'URL en métadonnée et déclenche
   `.github/workflows/audit-landing-lancer-audit.yml` via
@@ -23,13 +24,11 @@ inventé. **Ce qui manque avant tout déploiement réel** :
 1. Créer le produit et son prix dans le tableau de bord Stripe (test, puis
    live une fois validé), et renseigner `idPrixStripe` avec l'ID du prix
    (`price_...`).
-2. Un jeton GitHub à portée strictement limitée à `repository_dispatch` sur
-   ce dépôt, pour `jetonDeclenchement`.
-3. Le secret du webhook Stripe (`whsec_...`), obtenu en créant l'endpoint
+2. Le secret du webhook Stripe (`whsec_...`), obtenu en créant l'endpoint
    dans le tableau de bord Stripe une fois ce serveur déployé.
-4. `secrets.ANTHROPIC_API_KEY` sur ce dépôt GitHub, pour que
+3. Une clé d'analyse disponible sur le processus opérateur, pour que
    `audit-landing-lancer-audit.yml` puisse appeler `analyser_captures.py`.
-5. Le déploiement lui-même (Cloudflare Worker, comme `licence-serveur/`) —
+4. Le déploiement lui-même (Cloudflare Worker, comme `licence-serveur/`) —
    **pas fait depuis cette session**, et volontairement : c'est un geste
    d'infrastructure sur un compte auquel cette session n'a pas la main, et
    toucher aux paiements est une zone sensible du dépôt (`CLAUDE.md`,
