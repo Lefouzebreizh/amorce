@@ -170,6 +170,11 @@ visual_library/**/*.mp4
 # Psy IA : Next.js autonome, comme le-coffre et titan-builder.
 /psy-ia/node_modules/
 /psy-ia/.next/
+
+# Serveur de paiement d'audit-landing : même mesure que licence-serveur —
+# zéro dépendance d'exécution revendiquée, tsc s'installe sans s'enregistrer
+# (voir .github/workflows/audit-landing-serveur-paiement.yml).
+/audit-landing/serveur-paiement/node_modules/
 /iptv/*.db-journal
 /iptv/*.m3u
 /iptv/*.m3u8
