@@ -1,0 +1,1426 @@
+/* Palette fixée définitivement — un seul thème, sombre, cohérent avec
+   lefouzebreizh.github.io et l'esprit "vitrine créative" plutôt qu'un
+   clair/sombre conditionnel. Les 4 couleurs de marque (fond, carte,
+   turquoise, violet) sont les codes hex donnés tels quels, sans dérivé
+   inventé à leur place — le reste (teintes translucides, gris de texte)
+   est dérivé de ces 4 couleurs via color-mix/rgba. */
+:root {
+  --fond: #0f1115;
+  --fond-douce: #171a21;
+  --carte-fond: #202430;
+  --encre: #eef1f5;
+  --encre-douce: #99a3b0;
+  --lagon: #40e0d0;
+  --lagon-profond: #40e0d0;
+  --lagon-douce: rgba(64, 224, 208, 0.14);
+  --violet: #7c3aed;
+  --violet-profond: #7c3aed;
+  --violet-douce: rgba(124, 58, 237, 0.18);
+  --alerte: #ff7a68;
+  --alerte-douce: rgba(255, 122, 104, 0.16);
+  --bordure: rgba(255, 255, 255, 0.09);
+  --ombre: 0 20px 50px -20px rgba(0, 0, 0, 0.65);
+  --bouton-texte: #0f1115;
+  --rayon: 22px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--encre);
+  font-family: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  font-family: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0 0 0.5em;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.page {
+  position: relative;
+  max-width: clamp(1100px, 94vw, 1760px);
+  margin: 0 auto;
+  padding: clamp(14px, 2.6vh, 40px) clamp(24px, 4.5vw, 72px) clamp(14px, 2.2vh, 32px);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#vue-accueil {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+#vue-accueil[hidden] {
+  display: none;
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: clamp(6px, 1.2vh, 16px);
+}
+
+.lien-numeros {
+  background: var(--violet-douce);
+  color: var(--violet-profond);
+  border: none;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  white-space: nowrap;
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lien-numeros:hover {
+  transform: translateY(-1px);
+}
+
+/* Bouton "← Accueil" du bandeau, visible uniquement pendant une démarche
+   (basculé par afficherAccueil/afficherQuestionnaire dans main.js) — même
+   famille visuelle que .lien-numeros, en retrait pour ne pas lui faire
+   concurrence, et poussé à gauche pendant que .lien-numeros reste à droite. */
+.lien-accueil {
+  background: none;
+  border: 1px solid var(--bordure);
+  color: var(--encre-douce);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  white-space: nowrap;
+  margin-right: auto;
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lien-accueil:hover {
+  transform: translateY(-1px);
+}
+
+/* Un simple hidden ne suffit pas : cette règle de classe fixe display et
+   passerait donc devant [hidden]{display:none} du navigateur, quelle que
+   soit la spécificité — même piège déjà rencontré sur .zone-bandeaux et
+   .lien-reprise dans ce même fichier. */
+.lien-accueil[hidden] {
+  display: none;
+}
+
+/* Hero pleine présence, façon vitrine créative (Seasats/Adveris) : le titre
+   sort du conteneur centré de la page pour aller bord à bord de l'écran,
+   avec une vraie illustration (pas un simple dégradé) en fond, dans une
+   ambiance sombre et posée. Le dégradé turquoise/violet reste en scrim
+   au-dessus de l'image, uniquement pour garder le texte lisible. */
+.hero {
+  position: relative;
+  isolation: isolate;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-bottom: clamp(24px, 3.5vh, 40px);
+  min-height: clamp(440px, 62vh, 760px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-fond {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(15, 17, 21, 0.1) 0%, rgba(15, 17, 21, 0.6) 65%, var(--fond) 100%),
+    url("../img/hero-ocean.svg") center / cover no-repeat;
+}
+
+.hero-contenu {
+  width: 100%;
+  max-width: clamp(1100px, 94vw, 1760px);
+  margin: 0 auto;
+  padding: 0 clamp(24px, 4.5vw, 72px);
+}
+
+.kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: clamp(0.74rem, 0.85vw, 0.86rem);
+  font-weight: 600;
+  color: var(--lagon);
+  margin-bottom: clamp(10px, 2vh, 20px);
+}
+
+.hero h1 {
+  font-size: clamp(3rem, 9vw, 8.2rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.96;
+  max-width: 13ch;
+  margin-bottom: clamp(18px, 2.8vh, 30px);
+  /* Dégradé de marque, comme sur la vitrine du studio et les autres
+     projets — plus de version blanche plate pour ce titre. */
+  background: linear-gradient(90deg, var(--lagon), var(--violet));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.lede {
+  color: var(--encre-douce);
+  font-size: clamp(0.98rem, 1.15vw, 1.18rem);
+  max-width: 52ch;
+  margin-bottom: 0;
+}
+
+.liste-demarches {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: clamp(10px, 1.4vw, 20px);
+  margin-bottom: clamp(8px, 1.8vh, 22px);
+}
+
+@media (min-width: 560px) {
+  .liste-demarches {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 860px) {
+  /* Quatre colonnes fixes plutôt qu'un auto-fill : sur les douze cartes,
+     ça donne toujours trois rangées de quatre pleines plutôt qu'un 5+4+3
+     qui dépend de la largeur exacte du conteneur. */
+  .liste-demarches {
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(6px, 0.8vw, 12px);
+    margin-bottom: clamp(4px, 0.6vh, 8px);
+  }
+
+  .page {
+    padding-top: clamp(10px, 1.8vh, 20px);
+    padding-bottom: clamp(8px, 1.4vh, 16px);
+  }
+
+  /* Les marges resserrées ci-dessous compriment chaque section au minimum :
+     avec huit cartes, ça suffisait à tenir sur un seul écran sans défiler —
+     à douze, un peu de défilement est redevenu normal, mais l'objectif
+     reste le même : ne jamais laisser un excédent d'espace retomber en un
+     seul bloc mort sous le pied de page. Le héro reste collé en haut, le
+     pied de page vient border le bas de l'écran, et l'espace réel de
+     l'écran se partage entre les deux — jamais un vide isolé qui ne sert
+     personne. */
+  #vue-accueil {
+    justify-content: space-between;
+  }
+
+  .hero {
+    min-height: clamp(220px, 27vh, 340px);
+    margin-bottom: clamp(10px, 1.4vh, 18px);
+  }
+
+  .hero h1 {
+    font-size: clamp(2.2rem, 4.4vw, 4.4rem);
+    margin-bottom: clamp(10px, 1.4vh, 16px);
+  }
+
+  .kicker {
+    margin-bottom: clamp(6px, 1vh, 12px);
+  }
+
+  .lede {
+    font-size: clamp(0.9rem, 0.95vw, 1rem);
+  }
+
+  /* Les deux bandeaux (brouillon et coffre) prennent chacun toute la
+     largeur par défaut, empilés. Quand les deux sont réellement visibles à
+     la fois (js/main.js pose cette classe), les mettre côte à côte libère
+     la hauteur qu'ils prenaient l'un sous l'autre — ça laisse plus de
+     cartes visibles sur le premier écran plutôt que d'être repoussées
+     par deux bandeaux empilés. */
+  .zone-bandeaux.deux-colonnes {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Cascade au DÉFILEMENT, pas au chargement : la version précédente jouait
+   l'animation dès l'ouverture de la page, donc pour toute carte encore
+   hors écran (la quasi-totalité des douze, sur mobile) l'entrée se jouait
+   dans le vide avant que l'utilisateur ne scrolle jusque-là. `main.js`
+   ajoute .carte-visible via IntersectionObserver quand la carte apparaît
+   réellement à l'écran ; ici on ne fait que décrire l'état avant/après et
+   le décalage en cascade, jamais l'exécution du calcul lui-même. */
+@media (prefers-reduced-motion: no-preference) {
+  .liste-demarches .carte-demarche {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .liste-demarches .carte-demarche.carte-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .liste-demarches .carte-demarche:nth-child(1) { transition-delay: 0s; }
+  .liste-demarches .carte-demarche:nth-child(2) { transition-delay: 0.06s; }
+  .liste-demarches .carte-demarche:nth-child(3) { transition-delay: 0.12s; }
+  .liste-demarches .carte-demarche:nth-child(4) { transition-delay: 0.18s; }
+  .liste-demarches .carte-demarche:nth-child(5) { transition-delay: 0.06s; }
+  .liste-demarches .carte-demarche:nth-child(6) { transition-delay: 0.12s; }
+  .liste-demarches .carte-demarche:nth-child(7) { transition-delay: 0.18s; }
+  .liste-demarches .carte-demarche:nth-child(8) { transition-delay: 0.24s; }
+  .liste-demarches .carte-demarche:nth-child(9) { transition-delay: 0.12s; }
+  .liste-demarches .carte-demarche:nth-child(10) { transition-delay: 0.18s; }
+  .liste-demarches .carte-demarche:nth-child(11) { transition-delay: 0.24s; }
+  .liste-demarches .carte-demarche:nth-child(12) { transition-delay: 0.3s; }
+}
+
+.carte-demarche {
+  border-radius: var(--rayon);
+  padding: clamp(16px, 2vh, 26px) clamp(18px, 1.8vw, 26px);
+}
+
+.carte-demarche .bouton-primaire {
+  padding: clamp(9px, 1vh, 12px) clamp(16px, 1.4vw, 22px);
+  font-size: clamp(0.86rem, 0.9vw, 0.95rem);
+}
+
+.carte-demarche.disponible {
+  --accent: var(--lagon);
+  --accent-texte: var(--lagon-profond);
+  /* Couleur croisée : le mot-clé du titre et le bouton d'action prennent
+     l'accent OPPOSÉ à la bordure/fond dominants de la carte, pour un vrai
+     jeu de contraste plutôt qu'une simple teinte unique déclinée partout. */
+  --accent-croise: var(--violet);
+  --accent-croise-texte: var(--violet-profond);
+  --bouton-croise-texte: var(--encre);
+  position: relative;
+  overflow: hidden;
+  /* Dégradé diagonal dominant → croisé, au lieu d'une teinte plate : la
+     carte porte les deux couleurs de marque plutôt qu'une seule. */
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--accent) 13%, var(--carte-fond)) 0%,
+    var(--carte-fond) 48%,
+    color-mix(in srgb, var(--accent-croise) 9%, var(--carte-fond)) 100%
+  );
+  box-shadow: var(--ombre);
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--bordure));
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.12s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Le bandeau du haut, qui était une bordure plate d'une seule couleur,
+   devient un dégradé dominant → croisé (une bordure ne peut pas dégrader
+   proprement sur un coin arrondi, un pseudo-élément le peut). */
+.carte-demarche.disponible::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-croise));
+}
+
+.carte-demarche.disponible:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent) 65%, var(--bordure));
+  /* Trois couches : l'ombre portée d'origine, une lueur serrée à l'accent
+     dominant, une lueur plus large et plus douce à l'accent croisé — un
+     vrai halo à deux couleurs plutôt qu'une ombre plus sombre. */
+  box-shadow:
+    0 18px 38px -14px color-mix(in srgb, var(--accent) 50%, transparent),
+    0 0 30px -6px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 0 54px -10px color-mix(in srgb, var(--accent-croise) 40%, transparent);
+}
+
+.carte-demarche.disponible:hover .carte-icone {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+.carte-demarche.disponible .bouton-primaire {
+  margin-top: auto;
+  align-self: flex-start;
+  background: var(--accent-croise);
+  color: var(--bouton-croise-texte);
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--accent-croise) 55%, transparent);
+}
+
+.carte-icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  /* Même logique que le fond de carte : un dégradé dominant → croisé sur
+     le badge, plutôt qu'une seule teinte plate, et un anneau assorti au
+     lieu d'aucune bordure — le badge porte la même identité que la carte
+     qui le contient. */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 30%, var(--carte-fond)),
+    color-mix(in srgb, var(--accent-croise) 18%, var(--carte-fond))
+  );
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent-texte);
+  margin-bottom: clamp(12px, 1.6vh, 16px);
+  transition: transform 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carte-icone svg {
+  width: 23px;
+  height: 23px;
+}
+
+.carte-demarche.accent-violet {
+  --accent: var(--violet);
+  --accent-texte: var(--violet-profond);
+  --accent-croise: var(--lagon);
+  --accent-croise-texte: var(--lagon-profond);
+  --bouton-croise-texte: var(--bouton-texte);
+}
+
+.carte-kicker {
+  font-family: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  font-size: clamp(0.98rem, 1.05vw, 1.08rem);
+  color: var(--encre);
+  margin-bottom: clamp(4px, 0.8vh, 8px);
+}
+
+/* Seul le mot-clé de chaque titre de carte prend une couleur — le reste
+   ("Face à...") reste en blanc, pour que l'œil aille droit au nom de la
+   démarche. Il prend la couleur CROISÉE (opposée à la bordure de la carte),
+   comme le bouton d'action juste en dessous : les deux accents secondaires
+   d'une carte s'accordent entre eux, en contraste avec sa couleur dominante. */
+.carte-kicker-motcle {
+  color: var(--accent-croise-texte);
+}
+
+.carte-accroche {
+  font-size: clamp(0.86rem, 0.95vw, 0.95rem);
+  line-height: 1.45;
+  color: var(--encre-douce);
+  margin-bottom: clamp(8px, 1.4vh, 16px);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* Réserve la place du bouton de chat flottant (fixe, coin bas-droit de
+     l'écran) : sous 860px les cartes défilent en une colonne pleine largeur,
+     et sans cette marge la dernière ligne du texte peut se retrouver juste
+     derrière le bouton au repos du défilement — mesuré sur la carte
+     "démarche médicale", le défaut valant pour toutes les cartes en dessous
+     d'elle. Retirée en desktop (voir plus bas). */
+  padding-right: 40px;
+}
+
+.carte-demarche.a-venir {
+  background: transparent;
+  border: 1.5px dashed var(--bordure);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--encre-douce);
+}
+
+.carte-titre {
+  font-weight: 500;
+}
+
+.carte-bientot {
+  font-size: 0.85rem;
+  background: var(--fond-douce);
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.bouton-primaire {
+  background: var(--lagon);
+  color: var(--bouton-texte);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--lagon) 55%, transparent);
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bouton-primaire:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--lagon) 65%, transparent);
+}
+
+.bouton-primaire:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.bouton-secondaire {
+  background: var(--lagon-douce);
+  color: var(--lagon-profond);
+  border: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-weight: 600;
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bouton-secondaire:hover {
+  transform: translateY(-1px);
+}
+
+.bouton-secondaire:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.pied-accueil {
+  color: var(--encre-douce);
+  font-size: clamp(0.82rem, 0.9vw, 0.92rem);
+  border-top: 1px solid var(--bordure);
+  padding-top: clamp(8px, 1.5vh, 18px);
+  margin-top: clamp(8px, 1.5vh, 18px);
+}
+
+.pied-accueil a {
+  color: var(--encre-douce);
+  text-decoration: underline;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+/* Desktop : cartes et pied de page resserrés (tailles en vh) par rapport à
+   la version mobile, pour limiter le défilement — avec huit cartes, ça
+   suffisait à tout faire tenir sur un seul écran ; à douze, un peu de
+   défilement reste normal, mais l'esprit (compresser plutôt que gonfler)
+   ne change pas. Placé après les règles de base des mêmes sélecteurs pour
+   gagner la cascade à spécificité égale. */
+@media (min-width: 860px) {
+  .carte-demarche {
+    padding: clamp(10px, 1.3vh, 15px) clamp(14px, 1.3vw, 20px);
+  }
+
+
+  .carte-icone {
+    width: 32px;
+    height: 32px;
+    margin-bottom: clamp(5px, 0.7vh, 8px);
+  }
+
+  .carte-icone svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .carte-kicker {
+    font-size: clamp(0.92rem, 0.95vw, 1rem);
+    margin-bottom: clamp(3px, 0.5vh, 6px);
+  }
+
+  .carte-accroche {
+    font-size: clamp(0.78rem, 0.8vw, 0.86rem);
+    -webkit-line-clamp: 2;
+    margin-bottom: clamp(6px, 0.9vh, 10px);
+    /* La grille desktop tient entière à l'écran, sans défilement : le
+       bouton de chat ne croise jamais le texte des cartes ici (mesuré). */
+    padding-right: 0;
+  }
+
+  .carte-demarche .bouton-primaire {
+    padding: clamp(7px, 0.8vh, 9px) clamp(13px, 1.1vw, 17px);
+    font-size: clamp(0.8rem, 0.82vw, 0.88rem);
+  }
+
+  .pied-accueil {
+    font-size: clamp(0.72rem, 0.75vw, 0.8rem);
+    padding-top: clamp(4px, 0.6vh, 8px);
+    margin-top: clamp(4px, 0.6vh, 8px);
+  }
+}
+
+/* Point d'entrée unique et replié par défaut : un nouveau visiteur qui n'a
+   ni brouillon ni coffre ne voit jamais cette ligne (js/main.js la garde en
+   [hidden] dans ce cas) ; qui en a un voit ce lien, jamais le bloc complet,
+   tant qu'il n'a pas cliqué. C'est ce qui laisse la grille de cartes remonter
+   juste sous l'accroche pour la grande majorité des visiteurs. */
+.lien-reprise {
+  display: block;
+  margin: 0 0 20px;
+}
+
+/* Même piège que .zone-bandeaux[hidden] plus bas : un sélecteur de classe
+   qui pose `display` gagne sur le display:none par défaut de [hidden], côté
+   navigateur, quelle que soit la spécificité — l'origine « auteur » prime
+   sur l'origine « agent utilisateur ». Sans cette règle, le lien restait
+   visible à l'écran même masqué par JS (vu à l'œil, pas seulement mesuré). */
+.lien-reprise[hidden] {
+  display: none;
+}
+
+@media (min-width: 860px) {
+  .lien-reprise {
+    margin-bottom: clamp(8px, 1.2vh, 14px);
+  }
+}
+
+/* Conteneur commun au brouillon et au coffre : les deux bandeaux sont
+   indépendants et peuvent être visibles ensemble (un suivi chiffré sur une
+   démarche n'empêche pas un brouillon frais sur une autre). Une seule
+   colonne par défaut — chaque bandeau prend alors toute la largeur, qu'il
+   soit seul ou que la classe .deux-colonnes n'ait pas cours (mobile). La
+   marge qui les séparait individuellement du reste de la page vit ici, pas
+   sur chaque section, pour ne jamais la compter deux fois. */
+.zone-bandeaux {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+/* Un sélecteur de classe qui pose `display` gagne sur le display:none par
+   défaut de [hidden] à spécificité égale — déjà vu sur #vue-accueil. Sans
+   cette ligne, le conteneur resterait affiché (grille vide, marge fantôme)
+   même masqué par JS. */
+.zone-bandeaux[hidden] {
+  display: none;
+}
+
+/* Brouillon automatique (reprise après interruption, sans mot de passe) */
+
+.zone-brouillon {
+  background: var(--violet-douce);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: 22px 24px;
+}
+
+.brouillon-titre {
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.brouillon-texte {
+  color: var(--encre-douce);
+  font-size: 0.92rem;
+  margin: 0 0 16px;
+}
+
+.brouillon-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Coffre / suivis enregistrés */
+
+.zone-coffre {
+  background: var(--lagon-douce);
+  border-radius: var(--rayon);
+  padding: 24px;
+}
+
+.coffre-titre {
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.coffre-vide {
+  color: var(--encre-douce);
+  margin-bottom: 12px;
+}
+
+.carte-suivi {
+  background: var(--carte-fond);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.suivi-resume {
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.suivi-echeance {
+  display: inline-block;
+  font-size: 0.85rem;
+  background: var(--fond-douce);
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.suivi-echeance.en-retard {
+  background: var(--alerte-douce);
+  color: var(--alerte);
+}
+
+.suivi-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Même resserrage que les cartes de démarche (plus haut, même media query
+   ailleurs dans ce fichier), pour la même raison : sur cet écran, chaque
+   pixel de marge se paie en cartes repoussées hors du premier écran. Placé
+   ici et non avec l'autre bloc @media (min-width: 860px) : à spécificité
+   égale, c'est l'ordre dans le fichier qui tranche, et un correctif posé
+   avant les règles de base qu'il vise se fait recouvrir par elles. */
+@media (min-width: 860px) {
+  .zone-bandeaux {
+    gap: clamp(10px, 1.2vw, 20px);
+    margin-bottom: clamp(8px, 1.2vh, 14px);
+  }
+
+  .zone-brouillon,
+  .zone-coffre {
+    padding: clamp(14px, 1.6vh, 20px) clamp(16px, 1.4vw, 22px);
+  }
+
+  .brouillon-titre,
+  .coffre-titre {
+    margin-bottom: clamp(4px, 0.6vh, 6px);
+  }
+
+  .brouillon-texte {
+    font-size: 0.88rem;
+    margin-bottom: clamp(8px, 1vh, 14px);
+  }
+
+  .carte-suivi {
+    padding: clamp(10px, 1.3vh, 14px) clamp(14px, 1.2vw, 16px);
+    margin-bottom: clamp(6px, 0.8vh, 10px);
+  }
+}
+
+.lien-discret {
+  background: none;
+  border: none;
+  color: var(--lagon-profond);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 4px 0;
+}
+
+.discret-danger {
+  color: var(--encre-douce);
+}
+
+.sauvegarde-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.champ-mdp,
+.champ-texte {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--bordure);
+  background: var(--carte-fond);
+  color: var(--encre);
+  flex: 1;
+  min-width: 180px;
+}
+
+/* Rappel par e-mail : même famille que la zone de sauvegarde, distincte
+   d'elle (l'e-mail part sur un serveur, la sauvegarde reste chiffrée sur
+   l'appareil — la note ci-dessous le dit en clair). */
+.alerte-email {
+  margin-top: 14px;
+}
+
+.alerte-email-confidentialite {
+  color: var(--encre-douce);
+  font-size: 0.82rem;
+  margin: 10px 0 0;
+}
+
+/* Questionnaire */
+
+.racine-questionnaire {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.racine-questionnaire.entree {
+  animation: apparaitre 0.45s ease forwards;
+}
+
+@keyframes apparaitre {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.etape-duree {
+  color: var(--encre-douce);
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.etape-texte {
+  font-size: clamp(1.4rem, 4.5vw, 1.9rem);
+  max-width: 24ch;
+}
+
+.etape-aide {
+  color: var(--encre-douce);
+  margin-top: -6px;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  max-width: 560px;
+}
+
+.option {
+  text-align: left;
+  background: var(--carte-fond);
+  border: 1.5px solid var(--bordure);
+  border-radius: 16px;
+  padding: 18px 22px;
+  font-size: 1.05rem;
+  color: var(--encre);
+  transition: border-color 0.12s cubic-bezier(0.4, 0, 0.2, 1), transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.option:hover {
+  border-color: var(--lagon);
+  transform: translateY(-1px);
+}
+
+.option:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.champs-date {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 24px 0 16px;
+}
+
+.champ-mois, .champ-jour {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--bordure);
+  background: var(--carte-fond);
+}
+
+.champ-annee {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--bordure);
+  background: var(--carte-fond);
+  width: 110px;
+}
+
+.champ-erreur {
+  color: var(--alerte);
+  font-size: 0.9rem;
+}
+
+/* Étape à saisie libre */
+
+.champ-texte-libre {
+  width: 100%;
+  max-width: 560px;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--bordure);
+  background: var(--carte-fond);
+  color: var(--encre);
+  resize: vertical;
+  margin-top: 20px;
+}
+
+.texte-libre-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.lien-retour {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--encre-douce);
+  font-size: 0.9rem;
+  margin-top: 32px;
+  padding: 4px 0;
+}
+
+/* Notices */
+
+.etape-notice {
+  text-align: left;
+}
+
+.message-dynamique {
+  border-radius: 18px;
+  padding: 18px 22px;
+  font-size: 1.08rem;
+  margin-bottom: 22px;
+}
+
+.message-dynamique.ton-ok {
+  background: var(--lagon-douce);
+}
+
+.message-dynamique.ton-attention {
+  background: var(--alerte-douce);
+}
+
+.encart {
+  background: var(--fond-douce);
+  border-left: 4px solid var(--lagon);
+  border-radius: 4px 16px 16px 4px;
+  padding: 16px 20px;
+  margin-bottom: 22px;
+  font-size: 0.98rem;
+}
+
+.bloc-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--lagon-profond);
+  margin-bottom: 6px;
+}
+
+.bloc-titre {
+  font-size: clamp(1.4rem, 4vw, 1.8rem);
+}
+
+.bloc-intro {
+  font-size: 1.05rem;
+  color: var(--encre-douce);
+  max-width: 68ch;
+}
+
+.bloc-section {
+  margin-top: 22px;
+}
+
+.bloc-section p {
+  max-width: 68ch;
+}
+
+.bloc-section h3 {
+  font-size: 1.1rem;
+  font-family: "Public Sans", sans-serif;
+  font-weight: 600;
+}
+
+.bloc-section ul {
+  padding-left: 20px;
+}
+
+.bloc-section li {
+  margin-bottom: 8px;
+}
+
+.checklist {
+  background: var(--carte-fond);
+  border: 1px solid var(--bordure);
+  border-radius: 18px;
+  padding: 20px 22px;
+  margin-top: 26px;
+}
+
+.checklist-titre {
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.checklist-item input[type="checkbox"] {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--lagon);
+}
+
+.en-bref {
+  background: var(--lagon-douce);
+  border-radius: 18px;
+  padding: 20px 22px;
+  margin-top: 26px;
+}
+
+.en-bref-titre {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.en-bref ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.zone-sauvegarde {
+  background: var(--carte-fond);
+  border: 1px solid var(--bordure);
+  border-radius: 18px;
+  padding: 20px 22px;
+  margin-top: 26px;
+}
+
+.sauvegarde-generique {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.sauvegarde-generique.ouverte {
+  background: var(--carte-fond);
+  border: 1px solid var(--bordure);
+  border-radius: 18px;
+  padding: 20px 22px;
+}
+
+.sauvegarde-titre {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.sauvegarde-texte {
+  color: var(--encre-douce);
+  font-size: 0.95rem;
+}
+
+.sauvegarde-confirmee {
+  color: var(--lagon-profond);
+  font-weight: 600;
+  margin: 0;
+}
+
+.liens-officiels {
+  margin-top: 26px;
+}
+
+.liens-officiels-titre {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.liens-officiels ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.liens-officiels li {
+  margin-bottom: 8px;
+}
+
+.liens-officiels a {
+  color: var(--lagon-profond);
+  font-weight: 600;
+}
+
+.lien-description {
+  color: var(--encre-douce);
+  font-weight: 400;
+}
+
+.avertissement-legal {
+  font-size: 0.85rem;
+  color: var(--encre-douce);
+  border-top: 1px solid var(--bordure);
+  padding-top: 16px;
+  margin-top: 30px;
+}
+
+.lien-imprimer {
+  display: block;
+  margin-top: 20px;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 18px 16px 60px;
+  }
+}
+
+/* Chat */
+
+/* Bouton rond, compact (façon FAB Material) plutôt qu'une pastille large
+   avec libellé : sur mobile, une pastille "💬 J'ai une question" en position
+   fixe finissait par recouvrir complètement le texte des cartes qu'elle
+   croisait pendant le défilement. Un disque de 52px dans le coin ne peut
+   plus masquer une ligne de texte pleine largeur. */
+.chat-bouton-ouvrir {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lagon);
+  color: var(--bouton-texte);
+  border: none;
+  border-radius: 50%;
+  font-size: 1.35rem;
+  box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--lagon) 50%, transparent);
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chat-bouton-ouvrir:hover {
+  transform: translateY(-1px);
+}
+
+.chat-panneau {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+  width: min(380px, calc(100vw - 40px));
+  height: min(520px, calc(100vh - 40px));
+  background: var(--carte-fond);
+  border: 1px solid var(--bordure);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-panneau[hidden] {
+  display: none;
+}
+
+.chat-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--carte-fond);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.chat-titre {
+  font-family: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.chat-fermer {
+  background: none;
+  border: none;
+  color: var(--encre-douce);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 4px;
+}
+
+.chat-avertissement {
+  font-size: 0.78rem;
+  color: var(--encre-douce);
+  background: var(--fond-douce);
+  padding: 10px 16px;
+  margin: 0;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-message {
+  max-width: 88%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+}
+
+.chat-utilisateur {
+  align-self: flex-end;
+  background: var(--lagon-douce);
+  border-bottom-right-radius: 4px;
+}
+
+.chat-assistant {
+  align-self: flex-start;
+  background: var(--carte-fond);
+  border: 1px solid var(--bordure);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--bordure);
+  background: var(--carte-fond);
+}
+
+.chat-champ {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--bordure);
+  resize: none;
+}
+
+.chat-envoyer {
+  background: var(--lagon);
+  color: var(--bouton-texte);
+  border: none;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-weight: 600;
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chat-envoyer:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.chat-envoyer:disabled {
+  opacity: 0.6;
+}
+
+@media (max-width: 480px) {
+  .chat-panneau {
+    right: 10px;
+    left: 10px;
+    bottom: 10px;
+    width: auto;
+  }
+}
+
+/* Numéros utiles */
+
+.numeros-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(20, 40, 44, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.numeros-fond[hidden] {
+  display: none;
+}
+
+.numeros-modale {
+  background: var(--carte-fond);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px -16px rgba(13, 100, 120, 0.4);
+  max-width: 560px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 22px 24px 26px;
+  text-align: left;
+}
+
+.numeros-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.numeros-titre {
+  font-family: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.numeros-fermer {
+  background: none;
+  border: none;
+  color: var(--encre-douce);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 4px;
+}
+
+.numeros-intro {
+  color: var(--encre-douce);
+  font-size: 0.95rem;
+  margin-bottom: 18px;
+}
+
+.numeros-section {
+  border-top: 1px solid var(--bordure);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.numeros-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.numeros-section-titre {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.numeros-ligne {
+  font-size: 0.92rem;
+  margin-bottom: 6px;
+}
+
+.numeros-liens {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.numeros-liens a {
+  color: var(--violet-profond);
+}
+
+.numeros-avertissement {
+  font-size: 0.8rem;
+  color: var(--encre-douce);
+  border-top: 1px solid var(--bordure);
+  padding-top: 14px;
+  margin: 18px 0 0;
+}
+
+@media print {
+  :root {
+    /* Le site est en thème sombre fixe à l'écran, mais le papier est
+       toujours blanc — on repasse explicitement sur des teintes foncées
+       lisibles pour éviter du texte clair sur fond blanc à l'impression. */
+    --encre: #1c2128;
+    --encre-douce: #4d5762;
+    --bordure: #d8dde3;
+    --lagon-profond: #0f8f81;
+    --violet-profond: #6a2fd0;
+    --alerte: #c1483a;
+  }
+  .no-print,
+  .chat-bouton-ouvrir,
+  .chat-panneau,
+  .numeros-fond,
+  .hero-fond,
+  .entete,
+  .lien-retour,
+  .zone-sauvegarde {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: var(--encre);
+  }
+  .hero {
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
+    min-height: 0;
+  }
+  .hero-contenu {
+    padding: 0;
+  }
+  .hero h1 {
+    font-size: 1.8rem;
+    /* Le dégradé (background-clip: text) rendrait le titre invisible sur
+       une page blanche : on repasse sur un texte plein, comme le reste
+       de la palette d'impression juste au-dessus. */
+    background: none;
+    color: var(--encre);
+    -webkit-text-fill-color: currentColor;
+  }
+  .page {
+    max-width: none;
+    padding: 0;
+  }
+  .message-dynamique,
+  .encart,
+  .en-bref,
+  .checklist,
+  .liens-officiels {
+    break-inside: avoid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

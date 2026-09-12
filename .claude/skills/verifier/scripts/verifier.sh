@@ -108,6 +108,7 @@ while IFS= read -r f; do
     generation-serveur/*) inscrire generation ;;
     annuaire-ia/*)   inscrire annuaire ;;
     psy-ia/*)        inscrire psyia ;;
+    renov-facile/*)  inscrire renov ;;
     # Avant la découverte Python plus bas, qui inscrira *aussi* la suite
     # `chat-traducteur` : c'est voulu. Le Python fait foi, et les témoins de
     # conformité du portage sont engendrés depuis lui — toucher au TypeScript
@@ -297,6 +298,15 @@ lancer_coffre() {
   # rien installer — Web Crypto vient de Node, et le client Supabase est
   # remplacé avant d'être chargé, si bien que son SDK n'est jamais importé.
   local d="le-coffre"; local j="$journal/coffre"
+  ( cd "$d" || exit 1; etape "$j.test" "tests" npm test ) || return 1
+  cat "$j".test > "$j" 2>/dev/null
+  return 0
+}
+
+lancer_renov() {
+  # Une seule étape, comme le-coffre : site statique, zéro dépendance, zéro
+  # build. Les tests tournent en `node:vm`, sans rien installer.
+  local d="renov-facile"; local j="$journal/renov"
   ( cd "$d" || exit 1; etape "$j.test" "tests" npm test ) || return 1
   cat "$j".test > "$j" 2>/dev/null
   return 0
@@ -564,6 +574,7 @@ for p in $projets; do
     generation) lancer_generation & pid_de[generation]=$! ;;
     annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
     psyia)   lancer_psyia  & pid_de[psyia]=$! ;;
+    renov)   lancer_renov  & pid_de[renov]=$! ;;
     outillage) lancer_outillage & pid_de[outillage]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
   esac
@@ -595,6 +606,7 @@ nom_lisible() {
     generation) echo "Passerelle de génération" ;;
     annuaire) echo "Réseau d'annuaires IA" ;;
     psyia)   echo "Psy IA (squelette architectural)" ;;
+    renov)   echo "Rénov Facile" ;;
     outillage) echo "Outillage du dépôt (syntaxe seule)" ;;
     py:*)    echo "${1#py:}" ;;
   esac

@@ -1,0 +1,8 @@
+{
+  "name": "renov-facile",
+  "private": true,
+  "description": "Rénov Facile — accompagnement pas à pas pour une demande d'aide à la rénovation énergétique (MaPrimeRénov', CEE) : avant le dépôt, pendant l'instruction, en cas de refus ou de blocage.",
+  "scripts": {
+    "test": "node tests/dates.test.mjs && node tests/coffre.test.mjs && node tests/demarches.test.mjs && node tests/ics.test.mjs && node tests/brouillon.test.mjs"
+  }
+}

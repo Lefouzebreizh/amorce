@@ -1355,6 +1355,20 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   relevées dans le paquet téléchargé, jamais de mémoire) et testé sur tout
   ce qui ne dépend ni du réseau ni d'une clé.
   Pas encore fait : le rapport en page web, la page de vente, Stripe.
+- **renov-facile/** — accompagnement pas à pas pour une demande d'aide à la
+  rénovation énergétique (MaPrimeRénov', CEE) : avant le dépôt, pendant
+  l'instruction, en cas de refus ou de blocage. Site statique, HTML/CSS/JS
+  natif, **zéro dépendance, aucun serveur**. Le moteur générique de
+  questionnaire, le coffre chiffré, le brouillon de reprise et le rappel
+  `.ics` sont **portés sans changement de logique** depuis
+  `Lefouzebreizh/ensemble-mdph` (dépôt séparé, hors de portée d'ici) — voir
+  `renov-facile/README.md`. Deux choses du gabarit d'origine n'ont
+  volontairement pas été reprises : la personnalisation de notice par LLM
+  (appelait un serveur qui n'existe pas ici — l'appel a été retiré du moteur
+  plutôt que laissé échouer en boucle) et le rappel par e-mail / le chat
+  (Supabase, Resend), hors du périmètre de ce lot. Tout le contenu propre à
+  la démarche vit dans `renov-facile/js/data/renovation.js`, fourni par le
+  propriétaire du produit.
 - **tiktok/** — concepts et scripts, sans code. **archives-backlog/** — un
   chantier en sommeil : `mon-app-audio/`, tests verts, mis de côté et non
   abandonné.
