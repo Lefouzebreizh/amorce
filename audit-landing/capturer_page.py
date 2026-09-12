@@ -89,25 +89,66 @@ DELAI_CLIC_CONSENTEMENT_MS = 1_200
 # (voir capturer_et_decouper), un élément fixe apparaîtrait, pinné, sur
 # chacun des treize segments — c'est ce que le masquage évite.
 #
-# `position: sticky` n'est délibérément PAS masqué, et ça a été mesuré :
-# masquer un sticky avec `display:none` le retire du flux normal du document
+# **`fixed` et `sticky` se masquent tous les deux, mais pas de la même
+# façon**, et chaque moitié de la règle a été mesurée séparément.
+#
+# `display:none` sur un `sticky` le retire du flux normal du document
 # (contrairement à `fixed`), ce qui raccourcit la page et décale tout ce qui
 # suit — vérifié sur une fixture avec une grande section « épinglée » de
 # storytelling, une technique de mise en page très répandue et pas du tout
-# limitée à un petit bandeau. Depuis que chaque segment est un vrai viewport
-# scrollé à sa position, un sticky se comporte exactement comme sous les
-# yeux d'un utilisateur réel — ce qui inclut d'apparaître, à raison, à la
-# même position sur plusieurs segments consécutifs une fois épinglé (mesuré
-# sur payfit.com/fr, voir README.md) : ce n'est pas la même chose que la
-# duplication de l'ancien bug en composite pleine page.
+# limitée à un petit bandeau. C'est la raison pour laquelle `sticky` avait
+# d'abord été retiré du masquage, et elle reste juste.
+#
+# Ce qui a tranché la question restée ouverte — fidélité au parcours réel, ou
+# masquage ? — est une mesure du 12/09/2026 sur `payfit.com/fr` et
+# `pennylane.com` : leur en-tête collant se retrouve en tête de quatre
+# segments sur douze, identique au pixel près, et **posé par-dessus le titre
+# de la section**, qui en ressort coupé. Un utilisateur réel le voit défiler
+# et ne s'en plaint pas ; un modèle de vision qui reçoit douze images y perd
+# du texte, quatre fois. C'est donc bien un défaut du livrable.
+#
+# D'où le partage, qui satisfait les deux contraintes : `visibility: hidden`
+# pour un `sticky` — invisible **en gardant sa place**, donc rien ne se décale
+# (hauteur du document identique au pixel sur les trois sites mesurés) — et
+# `display:none` pour un `fixed`, qui n'occupe aucune place de toute façon.
+#
+# Deux pièges mesurés en chemin, et chacun a coûté un tour :
+#
+# 1. **Le style en ligne ne prend pas toujours.** Sur l'en-tête de Payfit,
+#    `noeud.style.setProperty('display','none','important')` ne s'enregistre
+#    même pas — `style.display` est encore vide juste après l'appel — alors
+#    qu'un `setAttribute` sur le **même nœud**, dans la **même boucle**, passe
+#    sans problème. La cause n'a pas été élucidée ; ce qui est mesuré est que
+#    `bypass_csp=True` n'y change rien (ce n'est donc pas la CSP) et qu'une
+#    feuille de style injectée, elle, s'applique. D'où le passage par une
+#    feuille plutôt que par `element.style`.
+# 2. **`visibility` s'hérite, mais un enfant peut la reprendre** : un
+#    descendant qui déclare `visibility: visible` réapparaît malgré un ancêtre
+#    caché, contrairement à `display:none` qui emporte tout le sous-arbre.
+#    Sans la seconde moitié du sélecteur, les libellés du menu de Payfit
+#    restaient posés sur le titre — et un contrôle qui ne regardait que les
+#    éléments *collants* les déclarait masqués, parce que les enfants sont en
+#    `static`. C'est le regard sur l'image qui l'a vu, pas la mesure.
 JS_MASQUER_ELEMENTS_FIXES = """
 () => {
-  const noeuds = document.querySelectorAll('body *');
+  const IDENTIFIANT = 'audit-landing-masquage';
+  if (!document.getElementById(IDENTIFIANT)) {
+    const feuille = document.createElement('style');
+    feuille.id = IDENTIFIANT;
+    feuille.textContent =
+      '[data-audit-fixe]{display:none !important}' +
+      '[data-audit-collant],[data-audit-collant] *{visibility:hidden !important}';
+    document.head.appendChild(feuille);
+  }
+
   let masques = 0;
-  for (const noeud of noeuds) {
-    const style = window.getComputedStyle(noeud);
-    if (style.position === 'fixed') {
-      noeud.style.setProperty('display', 'none', 'important');
+  for (const noeud of document.querySelectorAll('body *')) {
+    const position = window.getComputedStyle(noeud).position;
+    if (position === 'fixed') {
+      noeud.setAttribute('data-audit-fixe', '');
+      masques += 1;
+    } else if (position === 'sticky') {
+      noeud.setAttribute('data-audit-collant', '');
       masques += 1;
     }
   }
@@ -308,6 +349,13 @@ def capturer_et_decouper(
         y_cible_logique = min(segment.y_debut_px // FACTEUR_ECHELLE, y_max_logique)
         page.evaluate(f"window.scrollTo(0, {y_cible_logique})")
         time.sleep(PAUSE_AVANT_CAPTURE_SEGMENT_S)
+
+        # Re-masquer **avant chaque segment**, et pas seulement une fois en
+        # haut de page : un en-tête ne devient collant qu'une fois le hero
+        # dépassé, un bouton flottant n'apparaît qu'après quelques écrans. Un
+        # masquage unique au départ ne peut pas attraper ce qui n'existe pas
+        # encore à ce moment-là.
+        masquer_elements_fixes(page)
 
         chemin = dossier_page / f"{segment.nom}.png"
         page.screenshot(path=str(chemin))

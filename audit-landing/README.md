@@ -80,19 +80,52 @@ envoie au modèle de vision — un aplat blanc éventuel sur ce fichier de
 référence ne doit jamais se substituer au dernier segment numéroté, qui
 couvre le même contenu sans ce risque.
 
-**Un point reste ouvert, en cours de diagnostic sur `payfit.com/fr` au
-moment d'écrire cette ligne** : plusieurs segments consécutifs (02 à 05)
-portent une bande de tête identique au pixel près. Hypothèse la plus
-probable : un en-tête `position: sticky` qui apparaît, à raison, à la même
-position d'écran sur chaque segment où il est réellement épinglé au
-scroll — ce n'est donc pas nécessairement un défaut de la capture, mais un
-vrai sujet pour l'usage en aval (un modèle de vision verrait quatre fois le
-même en-tête). La section « Ce que le script fait » plus bas est corrigée en
-conséquence : elle affirmait qu'un sticky « ne se duplique de toute façon
-jamais », ce qui confondait ce cas avec l'ancien bug de duplication en
-composite pleine page. Pas encore tranché : si un re-masquage sélectif du
-sticky au-delà de son premier segment se justifie, ou si la fidélité au
-parcours réel prime.
+### Le point resté ouvert a été tranché, et c'est un regard qui l'a fait
+
+La bande de tête identique sur les segments 02 à 05 de `payfit.com/fr` était
+bien un en-tête `position: sticky` épinglé — et la question posée était : vraie
+fidélité au parcours, ou défaut à corriger ? **Regardée à l'œil le 12/09/2026,
+la réponse est nette : l'en-tête est posé par-dessus le titre de la section**,
+qui en ressort coupé. Ce n'est donc pas seulement « quatre fois le même
+en-tête » pour un modèle de vision : c'est du **texte perdu**, quatre fois. La
+même chose sur `pennylane.com`.
+
+**Le partage retenu satisfait les deux contraintes** — celle qui avait fait
+épargner les `sticky`, et celle-ci :
+
+| Ce qui flotte | Comment | Pourquoi |
+| --- | --- | --- |
+| `position: fixed` | `display: none` | n'occupe aucune place, rien ne bouge |
+| `position: sticky` | `visibility: hidden` | invisible **en gardant sa place** : la hauteur du document reste identique **au pixel** sur les trois sites mesurés, donc rien ne se décale |
+
+Et le masquage est **rejoué avant chaque segment** : un en-tête ne devient
+collant qu'une fois le hero dépassé, un bouton flottant n'apparaît qu'après
+quelques écrans — un masquage unique au départ ne peut pas attraper ce qui
+n'existe pas encore.
+
+Deux pièges mesurés en chemin, chacun ayant coûté un tour :
+
+- **Le style en ligne ne prend pas toujours, et ne le dit pas.** Sur l'en-tête
+  de Payfit, `noeud.style.setProperty('display','none','important')` ne
+  s'enregistre même pas — `style.display` est encore vide juste après l'appel —
+  alors qu'un `setAttribute` sur le **même nœud**, dans la **même boucle**,
+  passe. La cause n'a pas été élucidée ; ce qui est mesuré est que
+  `bypass_csp=True` n'y change rien (ce n'est donc pas la CSP) et qu'une
+  **feuille de style** injectée, elle, s'applique. Le masquage passe désormais
+  par là.
+- **`visibility` s'hérite, mais un enfant peut la reprendre.** Un descendant
+  qui déclare `visibility: visible` réapparaît malgré un ancêtre caché,
+  contrairement à `display:none`. Sans la seconde moitié du sélecteur
+  (`[marque] *`), les libellés du menu restaient posés sur le titre — et le
+  contrôle automatique les déclarait masqués, parce qu'il ne regardait que les
+  éléments *en position collante* et que les enfants sont en `static`. Une
+  mesure juste sur le mauvais objet, attrapée par le regard sur l'image.
+
+**Vérifié sur les quatre URLs le 12/09/2026**, sur la machine du propriétaire :
+aucune tranche vide, **aucune bande de tête ni de pied identique entre deux
+segments** sur les quatre sites, pleines pages peintes à 99,3 / 99,8 / 100 %,
+et les tranches regardées à l'œil — dont celle qui portait l'en-tête, où le
+titre est désormais entier.
 
 ## Utiliser
 
@@ -152,24 +185,21 @@ Chaque URL produit un dossier (`captures/<domaine-nettoyé>/`) contenant :
    Cookiebot, TrustArc, Google Funding Choices) puis, en repli, sur un
    bouton dont le texte visible ressemble à « Tout accepter » / « Accept
    all ». Best effort, silencieux si rien ne matche.
-3. **Masquage de tout ce qui reste en `position: fixed`** — bandeau qui a
-   résisté au clic, bannière promo, chat en direct, en-tête collant.
-   Nécessaire même après l'étape 2 : un élément fixe est pinné au viewport, il
-   apparaîtrait donc identique sur les treize segments si on ne le retirait
-   pas. `position: sticky` n'est **pas** masqué : un site de storytelling
-   l'utilise souvent pour une grande section de mise en page (pas seulement
-   un petit en-tête), et le masquer avec `display:none` la retire du flux du
-   document — la page se raccourcit et tout son contenu suivant se décale
-   (mesuré sur fixture). Comme chaque segment est désormais un vrai viewport
-   scrollé à sa position (étape 6), un `sticky` se comporte exactement comme
-   sous les yeux d'un utilisateur — **et ça inclut d'apparaître, à raison, à
-   la même position sur plusieurs segments consécutifs une fois épinglé** :
-   un ancien texte de ce README disait qu'un sticky « ne se duplique de
-   toute façon jamais », en confondant ce cas-là avec l'ancien bug de
-   duplication en composite pleine page (mesuré identique au pixel près sur
-   `payfit.com/fr`, diagnostic en cours — voir plus haut). Ce n'est pas un
-   défaut de la capture, qui reste fidèle à ce qu'un visiteur voit vraiment ;
-   c'est la phrase qui était fausse.
+3. **Masquage de ce qui flotte, différemment selon le cas, et rejoué avant
+   chaque segment** — bandeau qui a résisté au clic, bannière promo, chat en
+   direct, en-tête collant. Nécessaire même après l'étape 2 : un élément fixe
+   est pinné au viewport, il apparaîtrait donc identique sur les treize
+   segments si on ne le retirait pas. Un `position: fixed` reçoit
+   `display:none` ; un `position: sticky` reçoit `visibility:hidden`, qui le
+   rend invisible **sans le retirer du flux** — `display:none` sur un sticky
+   raccourcirait la page et décalerait tout son contenu suivant (mesuré sur
+   fixture), un vrai risque puisqu'un site de storytelling s'en sert souvent
+   pour de grandes sections de mise en page et pas seulement pour un petit
+   en-tête. Le masquage est **rejoué avant chaque segment** parce qu'un
+   en-tête ne devient collant qu'une fois le hero dépassé. Il passe par une
+   **feuille de style**, le style en ligne ne s'appliquant pas sur certains
+   nœuds — voir « Le point resté ouvert » plus haut pour les deux pièges
+   mesurés.
 4. **Scroll progressif jusqu'en bas** (pas de 700 px, pause de 150 ms) pour
    déclencher le lazy-loading des images sous la ligne de flottaison —
    la plupart se chargent via `IntersectionObserver` et ne se déclenchent
