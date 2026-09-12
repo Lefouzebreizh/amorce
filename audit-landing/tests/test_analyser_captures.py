@@ -17,6 +17,7 @@ from tempfile import TemporaryDirectory
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analyser_captures import (
+    CATEGORIES,
     Categorie,
     Constat,
     Rapport,
@@ -113,12 +114,17 @@ class TestConstruireMessages(unittest.TestCase):
 
 class TestAnalyserReponseJson(unittest.TestCase):
     def _rapport_brut_valide(self) -> dict:
+        # Les six catégories, parce qu'un rapport valide les porte toutes :
+        # la contrainte vivait dans le schéma JSON envoyé à l'API, qui la
+        # refuse (`minItems` non supporté au-delà de 1), et elle est depuis
+        # portée par `analyser_reponse_json`. Un jeu d'essai à une seule
+        # catégorie décrivait donc un rapport que le produit n'accepte pas.
         return {
             "verdict_global": "solide",
             "resume": "Page claire, appel à l'action peu visible en bas.",
             "categories": [
                 {
-                    "nom": "Message et promesse",
+                    "nom": nom,
                     "note": 8,
                     "constats": [
                         {
@@ -129,6 +135,7 @@ class TestAnalyserReponseJson(unittest.TestCase):
                         }
                     ],
                 }
+                for nom in CATEGORIES
             ],
             "priorites": ["Contraster le bouton principal"],
         }
@@ -137,13 +144,39 @@ class TestAnalyserReponseJson(unittest.TestCase):
         rapport = analyser_reponse_json(json.dumps(self._rapport_brut_valide()))
         self.assertIsInstance(rapport, Rapport)
         self.assertEqual(rapport.verdict_global, "solide")
-        self.assertEqual(len(rapport.categories), 1)
+        self.assertEqual(len(rapport.categories), len(CATEGORIES))
         self.assertEqual(rapport.categories[0].note, 8)
         self.assertEqual(rapport.categories[0].constats[0].severite, "mineur")
 
     def test_json_invalide_leve_valueerror_jamais_silencieux(self):
         with self.assertRaises(ValueError):
             analyser_reponse_json("ceci n'est pas du JSON")
+
+    def test_categorie_manquante_est_refusee(self):
+        """La garantie retirée du schéma JSON doit vivre ici, ou nulle part.
+
+        L'API refuse `minItems` au-delà de 1 : sans ce contrôle, un rapport
+        amputé d'une catégorie passerait pour complet et deux audits ne se
+        compareraient plus.
+        """
+        brut = self._rapport_brut_valide()
+        brut["categories"] = brut["categories"][:-1]
+        with self.assertRaises(ValueError) as capture:
+            analyser_reponse_json(json.dumps(brut))
+        self.assertIn(CATEGORIES[-1], str(capture.exception))
+
+    def test_note_hors_echelle_est_refusee(self):
+        """Même raison : `minimum`/`maximum` ne sont pas supportés non plus."""
+        brut = self._rapport_brut_valide()
+        brut["categories"][0]["note"] = 42
+        with self.assertRaises(ValueError):
+            analyser_reponse_json(json.dumps(brut))
+
+    def test_rapport_sans_priorite_est_refuse(self):
+        brut = self._rapport_brut_valide()
+        brut["priorites"] = []
+        with self.assertRaises(ValueError):
+            analyser_reponse_json(json.dumps(brut))
 
     def test_champ_racine_manquant_leve_erreur(self):
         brut = self._rapport_brut_valide()

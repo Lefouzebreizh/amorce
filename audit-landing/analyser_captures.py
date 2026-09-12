@@ -37,10 +37,19 @@ from pathlib import Path
 # plus récent n'est pas le plus disponible »).
 MODELE_PAR_DEFAUT = "claude-sonnet-5"
 
-# Le rapport tient en JSON structuré (moins de 4000 jetons mesurés sur un
-# brouillon de six catégories avec trois constats chacune) ; une marge large
-# évite une troncature silencieuse plutôt que d'optimiser le coût ici.
-TOKENS_MAX_REPONSE = 4096
+# Le rapport lui-même tient en JSON structuré (moins de 4000 jetons mesurés
+# sur un brouillon de six catégories avec trois constats chacune) — mais ce
+# budget-ci est **partagé avec le bloc de réflexion du modèle**, et 4096 n'y
+# suffisait pas : mesuré le 12/09/2026 au premier appel réel, le JSON sortait
+# coupé net au caractère 799. La troncature ne se présentait pas comme telle,
+# elle se présentait comme un « JSON invalide » — d'où le contrôle explicite
+# de `stop_reason` dans `analyser_page`, qui vaut plus que le chiffre
+# ci-dessous.
+TOKENS_MAX_REPONSE = 16_000
+
+# Treize images pleine page à analyser, c'est une à deux minutes de
+# génération — largement au-delà de ce que le SDK accorde tout seul.
+DELAI_APPEL_S = 900.0
 
 # Six catégories fixes, dans cet ordre. Fixées plutôt que laissées au libre
 # choix du modèle : un rapport dont les catégories changent d'un audit à
@@ -69,17 +78,28 @@ SCHEMA_RAPPORT = {
     "properties": {
         "verdict_global": {"type": "string", "enum": list(VERDICTS)},
         "resume": {"type": "string"},
+        # Pas de `minItems`/`maxItems` ici, et ce n'est pas un oubli :
+        # l'API les refuse sur un tableau au-delà de 0 ou 1 — mesuré au
+        # premier appel réel, le 12/09/2026, par un 400 explicite (« For
+        # 'array' type, 'minItems' values other than 0 or 1 are not
+        # supported »). La garantie des six catégories ne disparaît pas pour
+        # autant : elle est reportée sur `analyser_reponse_json`, qui refuse
+        # un rapport incomplet. C'est exactement ce que le §8 du dépôt
+        # demande — une contrainte qu'on retire d'un endroit se réinstalle
+        # ailleurs, elle ne s'évapore pas.
         "categories": {
             "type": "array",
-            "minItems": len(CATEGORIES),
-            "maxItems": len(CATEGORIES),
             "items": {
                 "type": "object",
                 "additionalProperties": False,
                 "required": ["nom", "note", "constats"],
                 "properties": {
                     "nom": {"type": "string", "enum": list(CATEGORIES)},
-                    "note": {"type": "integer", "minimum": 0, "maximum": 10},
+                    # Pas de `minimum`/`maximum` : refusés eux aussi sur un
+                    # entier (« For 'integer' type, properties maximum,
+                    # minimum are not supported »). La borne 0–10 est
+                    # vérifiée dans `analyser_reponse_json`.
+                    "note": {"type": "integer"},
                     "constats": {
                         "type": "array",
                         "items": {
@@ -102,9 +122,13 @@ SCHEMA_RAPPORT = {
                 },
             },
         },
+        # `maxItems` retiré pour la même raison que `minItems` plus haut. Le
+        # nombre de priorités est donc porté par le prompt seul, et non plus
+        # garanti par le schéma : c'est une préférence de format, pas une
+        # garantie de justesse, et une quatrième priorité n'abîmerait pas le
+        # rapport. Ce qui reste vérifié est qu'il y en a au moins une.
         "priorites": {
             "type": "array",
-            "maxItems": 3,
             "items": {"type": "string"},
         },
     },
@@ -128,6 +152,15 @@ capturés dans l'ordre de lecture (haut vers bas), chacun à la hauteur d'un \
 Juge exactement ce que voit un visiteur, pas ce que la page prétend faire. \
 Un bouton d'appel à l'action existant mais peu contrasté est un défaut, même \
 si le texte du bouton est parfait.
+
+Les segments sont un découpage mécanique, à hauteur d'écran fixe : un titre, \
+une phrase ou une carte peut donc se trouver coupé entre la fin d'un segment \
+et le début du suivant. **Ce n'est jamais un défaut de la page** — c'est un \
+artefact de la capture, et le visiteur réel ne le voit pas, puisqu'il fait \
+défiler la page en continu. Ne signale donc jamais qu'un élément est « coupé \
+», « tronqué » ou « incomplet » au bord d'un segment : lis-le sur les deux \
+segments voisins, qui se suivent, et juge-le entier. Ne signale une coupure \
+que si elle est visible *à l'intérieur* d'un même segment, loin de ses bords.
 
 Rends ton jugement sur ces six catégories, toujours dans cet ordre :
 {categories_listees}
@@ -268,9 +301,25 @@ def analyser_reponse_json(texte: str) -> Rapport:
                     recommandation=constat_brut["recommandation"],
                 )
             )
-        categories.append(
-            Categorie(nom=brute["nom"], note=int(brute["note"]), constats=constats)
-        )
+        note = int(brute["note"])
+        if not 0 <= note <= 10:
+            raise ValueError(f"Note hors de l'échelle 0–10 : {note} ({brute['nom']})")
+        categories.append(Categorie(nom=brute["nom"], note=note, constats=constats))
+
+    # Les six catégories sont vérifiées ici, et plus dans le schéma JSON, qui
+    # ne sait pas exprimer la contrainte (voir SCHEMA_RAPPORT). Un rapport
+    # auquel il manque une catégorie n'est pas comparable d'un site à l'autre,
+    # ce qui est toute la raison d'avoir des catégories fixes : mieux vaut le
+    # refuser bruyamment que rendre un audit amputé qui aura l'air complet.
+    noms_rendus = [categorie.nom for categorie in categories]
+    manquantes = [nom for nom in CATEGORIES if nom not in noms_rendus]
+    if manquantes:
+        raise ValueError(f"Catégories absentes du rapport : {', '.join(manquantes)}")
+    if len(noms_rendus) != len(set(noms_rendus)):
+        raise ValueError(f"Catégorie rendue en double : {', '.join(noms_rendus)}")
+
+    if not donnees["priorites"]:
+        raise ValueError("Rapport sans aucune priorité : rien à faire en sortant.")
 
     return Rapport(
         verdict_global=donnees["verdict_global"],
@@ -332,24 +381,64 @@ def analyser_page(dossier_page: Path, modele: str = MODELE_PAR_DEFAUT) -> Rappor
     client = anthropic.Anthropic()
 
     try:
-        reponse = client.messages.create(
+        # **En flux, et pas en un seul appel bloquant.** Mesuré le 12/09/2026 :
+        # avec un plafond de jetons large, la génération dure assez longtemps
+        # pour qu'une connexion muette se fasse fermer en route — deux essais
+        # coupés à 299 s et 239 s, rendus en `APIConnectionError`, c'est-à-dire
+        # « injoignable » pour un serveur qui répondait parfaitement (les
+        # essais plus courts, eux, passaient). Le flux fait circuler des
+        # données pendant toute la génération, ce qui tient la connexion
+        # ouverte ; c'est aussi ce que recommande le SDK au-delà de quelques
+        # milliers de jetons de réponse.
+        with client.messages.stream(
             model=modele,
+            timeout=DELAI_APPEL_S,
             max_tokens=TOKENS_MAX_REPONSE,
             system=construire_prompt_systeme(),
             messages=construire_messages(segments),
             output_config={"format": {"type": "json_schema", "schema": SCHEMA_RAPPORT}},
-        )
+        ) as flux:
+            reponse = flux.get_final_message()
     except anthropic.AuthenticationError as erreur:
         raise RuntimeError(
             "Clé API refusée — vérifier ANTHROPIC_API_KEY dans l'environnement."
         ) from erreur
+    except anthropic.APITimeoutError as erreur:
+        raise RuntimeError(
+            f"Pas de réponse au bout de {DELAI_APPEL_S:.0f} s. Le serveur n'est "
+            "pas en cause : une analyse de nombreux segments est simplement "
+            "longue — réduire le nombre de segments ou relever DELAI_APPEL_S."
+        ) from erreur
     except anthropic.APIConnectionError as erreur:
+        # Le timeout est attrapé au-dessus, à dessein : il tombait ici avant,
+        # et faisait lire « injoignable » pour un serveur qui répondait.
         raise RuntimeError(
             "api.anthropic.com injoignable — mur réseau connu depuis une "
             "session distante de ce dépôt, voir CLAUDE.md §7."
         ) from erreur
 
-    return analyser_reponse_json(reponse.content[0].text)
+    # Une réponse coupée par le plafond de jetons donne un JSON tronqué, donc
+    # une erreur de parsing qui accuse le modèle d'avoir mal répondu alors
+    # qu'il a été interrompu. Le dire ici, pendant qu'on sait pourquoi.
+    if reponse.stop_reason == "max_tokens":
+        raise RuntimeError(
+            f"Réponse coupée par le plafond de {TOKENS_MAX_REPONSE} jetons "
+            f"(réflexion du modèle comprise) — relancer avec un plafond plus haut."
+        )
+
+    # Le premier bloc de la réponse n'est pas forcément le texte : mesuré au
+    # premier appel réel, le 12/09/2026, `content[0]` était un `ThinkingBlock`
+    # et l'accès à `.text` levait un AttributeError après quatre-vingt-onze
+    # secondes de génération — donc après avoir payé l'appel. On cherche le
+    # premier bloc qui porte réellement du texte, sans supposer sa place.
+    textes = [bloc.text for bloc in reponse.content if getattr(bloc, "type", None) == "text"]
+    if not textes:
+        types_recus = ", ".join(getattr(bloc, "type", "?") for bloc in reponse.content) or "aucun"
+        raise RuntimeError(
+            f"Aucun bloc de texte dans la réponse du modèle (blocs reçus : {types_recus})."
+        )
+
+    return analyser_reponse_json(textes[0])
 
 
 def main() -> None:
